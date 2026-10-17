@@ -18,6 +18,7 @@ This is the operating manual for building Pipeline with Claude Code. It sits nex
 Read docs/process.md, docs/design.md and docs/prototype.md in full.
 Use the existing Git repo and its GitHub remote (origin).
 Write the hook scripts as Node scripts so they run on Windows.
+Add the GitHub Pages preview workflow from the "Preview builds" section.
 Bootstrap the repo exactly as the "Starter files" and "Repo layout"
 sections of process.md describe: scaffold Phaser 4 + TypeScript + Vite,
 create CLAUDE.md, .claude/rules, .claude/commands, .claude/agents,
@@ -38,6 +39,7 @@ After that, every feature goes through the loop below, one backlog item at a tim
 - [ ] Git
 - [ ] Claude Code installed and signed in
 - [ ] The three docs exported as Markdown into `docs/`
+- [ ] GitHub Pages available on the repo (a private repo needs a paid plan, and the published site is public)
 
 **Before art work starts (not needed for the first slices):**
 
@@ -59,6 +61,7 @@ docs/
   progress.md             session log and handoff notes
   decisions.md            technical decisions and why
   specs/NNN-name.md       one spec per feature
+  plans/NNN-name.md       plans written by unattended /next runs
 src/
   sim/                    pure TypeScript game logic, no Phaser
   render/                 Phaser scenes, sprites, input, UI
@@ -71,8 +74,10 @@ assets/sprites/           sprite source grids (text)
 assets/build/             rendered sprite sheets
 assets/maps/              Tiled maps
 scripts/build-art.ts      renders sprite grids to PNG
+.github/workflows/
+  pages.yml               builds every branch and publishes a playable preview
 .claude/
-  rules/  commands/  agents/  skills/phaser/  settings.json
+  rules/  commands/  agents/  skills/phaser/  hooks/  settings.json
 ```
 
 **Architecture rules** (these keep AI output accurate and testable):
@@ -95,7 +100,7 @@ _Loop: Spec, then you approve, then Plan, Build, Verify, Review, then you playte
 3. **Build** (`/build`): sim tests are written first, then the code. Small commits on a feature branch.
 4. **Verify** (`/verify`): typecheck, lint, unit tests and Playwright game tests must all pass. A hook enforces this, so Claude can't declare done with failing checks.
 5. **Review** (`/review`): a separate reviewer agent with fresh context checks the diff against the spec, the architecture rules and the design doc. It never sees the build session's reasoning, so the work isn't grading itself.
-6. **Log** (`/wrapup`): you playtest, then Claude marks the spec done, updates `docs/progress.md`, and turns any repeated mistake into a new rule in `.claude/rules`. That's how the process improves over time.
+6. **Log** (`/wrapup`): you playtest the branch's preview build, then Claude marks the spec done, updates `docs/progress.md`, and turns any repeated mistake into a new rule in `.claude/rules`. That's how the process improves over time.
 
 Failures loop back to Build. If the spec itself turns out wrong, Claude stops and asks rather than redesigning on its own.
 
@@ -220,8 +225,8 @@ One file per command, each a short instruction:
 - **build.md:** "Create a branch for the spec. Write failing sim tests, then the code, in small commits. Follow the plan; if it's wrong, stop and say why."
 - **verify.md:** "Run npm run check and npm run test:e2e. Delegate to the qa agent for screenshots against the acceptance criteria. Fix failures and rerun until green."
 - **review.md:** "Delegate to the reviewer agent with the spec path and the branch diff. Address every blocking issue, then rerun /verify."
-- **wrapup.md:** "After I confirm the playtest: set the spec to done, update docs/backlog.md and docs/progress.md, record technical choices in docs/decisions.md, and if a mistake happened twice, propose a new rule for .claude/rules. Commit, push the branch and open a pull request into main that links the spec and summarizes the change. Never merge it yourself; I merge after reviewing the PR."
-- **next.md:** "Take the first spec in docs/backlog.md with status: approved. Run /plan (auto-approve only if the plan stays inside the spec), /build, /verify and /review. Push the branch, open a draft pull request into main that links the spec and lists the verify and review results, and stop. Never merge, never start a second spec, never write or approve specs."
+- **wrapup.md:** "After I confirm the playtest: set the spec to done, update docs/backlog.md and docs/progress.md, record technical choices in docs/decisions.md, and if a mistake happened twice, propose a new rule for .claude/rules. Commit, push the branch and open a pull request into main that links the spec, summarizes the change and gives the preview link. Merge it only when I explicitly say so in chat for that PR."
+- **next.md:** "Take the first spec in docs/backlog.md with status: approved. Plan it as /plan would, but write the plan to docs/plans/NNN-name.md instead of entering plan mode, since nobody is there to approve it; continue only if the plan stays inside the spec. Then run /build, /verify and /review. Push the branch, open a draft pull request into main that links the spec and lists the verify and review results and the preview link, and stop. Never merge, never start a second spec, never write or approve specs."
 
 ### .claude/agents/reviewer.md
 
@@ -261,19 +266,29 @@ errors. Output pass/fail per criterion with evidence.
 {
   "hooks": {
     "Stop": [
-      { "hooks": [{ "type": "command", "command": ".claude/hooks/check.sh" }] }
+      { "hooks": [{ "type": "command", "command": "node .claude/hooks/check.mjs" }] }
     ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
-        "hooks": [{ "type": "command", "command": ".claude/hooks/lint-file.sh" }]
+        "hooks": [{ "type": "command", "command": "node .claude/hooks/lint-file.mjs" }]
       }
     ]
   }
 }
 ```
 
-`check.sh` runs `npm run check` and exits with code 2 on failure, which blocks Claude from finishing and sends it the errors. `lint-file.sh` reads the edited file path from the hook input and runs ESLint with autofix on it. Claude writes both scripts during bootstrap and confirms them against the current Claude Code hooks documentation.
+Both are Node scripts so they run the same on Windows, macOS and Linux. `check.mjs` runs `npm run check` and exits with code 2 on failure, which blocks Claude from finishing and sends it the errors. It exits 0 without running anything when there's no `package.json` yet or no file outside `docs/` has changed, so spec interviews and doc edits aren't blocked. `lint-file.mjs` reads the edited file path from the hook input and runs ESLint with autofix on it. Claude writes both scripts during bootstrap and confirms them against the current Claude Code hooks documentation.
+
+## Preview builds
+
+Every pushed branch gets a playable build on GitHub Pages, so playtesting needs only a browser, including on a phone.
+
+- `.github/workflows/pages.yml` runs on every push: `npm ci`, `npm run build`, then commits the build to the `gh-pages` branch. `main` goes to the site root; any other branch goes to `/branch/<branch-name>/`. It uses plain `git` commands, no third-party deploy action.
+- When a branch is deleted, the workflow removes its folder from `gh-pages`.
+- Vite builds with a relative base (`base: './'`) so the same build works at any path.
+- Pages is set once in the repo settings: source "Deploy from a branch", branch `gh-pages`, folder `/`.
+- Every PR from `/wrapup` or `/next` includes its preview link. Preview builds are production builds, so `window.__GAME__` is not exposed there.
 
 ## Spec template and backlog
 
