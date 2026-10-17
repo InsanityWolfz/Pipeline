@@ -28,7 +28,11 @@ export const VIEW_TILES: Readonly<Record<ViewMode, { floor: string; wall: string
 export interface AnimDef {
   key: string;
   frames: number;
-  /** Frames per second, or 'roll' to stretch the frames over exactly one roll. */
+  /**
+   * Frames per second, or 'roll' to stretch the frames over exactly one roll.
+   * The roll rate is computed in src/render/PlayerView.ts, since this file can't
+   * import tuning (the art build loads it on its own).
+   */
   frameRate: number | 'roll';
   loop: boolean;
 }

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { TILE_SIZE } from '../../src/data/config';
+import { TICK_RATE, TILE_SIZE } from '../../src/data/config';
 import { FEET_BOX, ROLL_TICKS, WALK_SPEED } from '../../src/data/player';
-import { TICK_RATE } from '../../src/data/config';
 import { DEFAULT_ROOM, ROOMS } from '../../src/data/rooms';
 import { boxHitsSolid } from '../../src/sim/collision';
 import type { Axis } from '../../src/sim/input';
@@ -38,21 +37,43 @@ describe('collision', () => {
     run(p, room, cmd(1, 1), 30);
     expect(p.y).toBe(y);
     expect(p.vy).toBe(0);
-    // The blocked axis is dropped, so x keeps the diagonal's x share of top speed.
+    // Walking still steers toward the full diagonal and the blocked axis is zeroed
+    // after each move, so x settles near the diagonal's x share of top speed.
     expect(p.vx).toBeCloseTo(TOP * Math.SQRT1_2, 1);
     expect(p.x).toBeGreaterThan(x);
   });
 
+  // A ruin block one tile right of spawn (spawn is tile 15,15).
+  const blockRoom = () => openRoom(30, 30, { 15: `#${'.'.repeat(15)}B${'.'.repeat(12)}#` });
+
+  it('stops walking at a ruin block', () => {
+    const room = blockRoom();
+    const p = playerIn(room);
+    run(p, room, cmd(1, 0), 60);
+    expect(p.x + FEET_BOX.w / 2).toBe(16 * TILE_SIZE);
+    expect(p.vx).toBe(0);
+  });
+
   it('stops a roll at a ruin block and still ends it on time', () => {
-    // Block one tile right of spawn (spawn is tile 15,15).
-    const row = `#${'.'.repeat(15)}B${'.'.repeat(12)}#`;
-    const room = openRoom(30, 30, { 15: row });
+    const room = blockRoom();
     const p = playerIn(room);
     stepPlayer(p, room, cmd(1, 0, true));
     run(p, room, cmd(), ROLL_TICKS - 1);
     expect(p.x + FEET_BOX.w / 2).toBe(16 * TILE_SIZE);
+    expect(isRolling(p)).toBe(true);
+    expect(p.vx).toBe(0);
     stepPlayer(p, room, cmd());
     expect(isRolling(p)).toBe(false);
+  });
+
+  it('stops a roll at an outer wall', () => {
+    const room = openRoom(10, 10);
+    const p = playerIn(room);
+    run(p, room, cmd(-1, 0), 30);
+    stepPlayer(p, room, cmd(-1, 0, true));
+    run(p, room, cmd(), ROLL_TICKS - 1);
+    expect(p.x - FEET_BOX.w / 2).toBe(TILE_SIZE);
+    expect(boxHitsSolid(room, p.x, p.y, FEET_BOX)).toBe(false);
   });
 
   it('never overlaps a solid tile under random input in the real room', () => {

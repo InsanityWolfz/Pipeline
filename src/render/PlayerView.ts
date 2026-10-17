@@ -1,12 +1,9 @@
 import type { GameObjects, Scene } from 'phaser';
 import { animFrames, ATLAS_KEY, PLAYER_ANIMS, VIEWS, type PlayerAnim, type ViewMode } from '../data/assets';
-import { TICK_RATE } from '../data/config';
+import { IDLE_SPEED, TICK_RATE } from '../data/config';
 import { FEET_BOX, ROLL_TICKS } from '../data/player';
 import { isRolling } from '../sim/movement';
 import type { PlayerState } from '../sim/player';
-
-/** Below this speed (px per tick) the player shows idle instead of walking. */
-const IDLE_SPEED = 0.1;
 
 // Draws the player from sim state. In three-quarter view the sprite stands on
 // the bottom of the feet box and sorts by that point against walls and ruin

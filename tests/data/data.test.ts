@@ -45,10 +45,11 @@ describe('palette', () => {
 });
 
 describe('assets', () => {
+  const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as {
+    frames: Record<string, unknown>;
+  };
+
   it('has kebab-case keys that exist in the built atlas', () => {
-    const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as {
-      frames: Record<string, unknown>;
-    };
     for (const key of Object.values(SPRITES)) {
       expect(key).toMatch(KEBAB);
       expect(Object.keys(atlas.frames)).toContain(key);
@@ -56,9 +57,6 @@ describe('assets', () => {
   });
 
   it('has every player animation frame in the built atlas, for both views', () => {
-    const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as {
-      frames: Record<string, unknown>;
-    };
     for (const view of VIEWS) {
       for (const anim of Object.values(PLAYER_ANIMS[view])) {
         expect(anim.key).toMatch(KEBAB);

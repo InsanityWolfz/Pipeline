@@ -15,8 +15,8 @@ export interface Room {
   rows: readonly string[];
   /** Spawn tile; the player stands at its centre. */
   spawn: { tx: number; ty: number };
-  /** Decoration tile for the ley crystal from 001. No gameplay. */
-  crystal: { tx: number; ty: number };
+  /** Optional decoration tile for the ley crystal from 001. No gameplay, no collision. */
+  crystal?: { tx: number; ty: number };
 }
 
 export const ROOMS: Readonly<Record<string, Room>> = {

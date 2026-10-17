@@ -2,6 +2,14 @@
 
 Newest entry first.
 
+## 2026-10-17: 002 Movement build
+**Changed:** built 002 on `claude/002-movement`: walk, roll and feet-box collision in `src/sim`, movement tuning and the `ruin-hall` room in `src/data`, keyboard commands, room and player views, clamped camera and the `?view=` / V toggle in `src/render`; `__GAME__.step(frames, command)` and `setView()`. Sprites for both views drawn and approved by Shaun. Verify (check, e2e, qa screenshots) green; review addressed.
+**Next:** Shaun playtests the Pages preview (`/branch/claude/002-movement/`, `?view=top` and V) and compares the two views; then `/wrapup`.
+**Notes:**
+- Shaun asked (in chat) that every reply end with what's needed from Shaun next; it's now a line in CLAUDE.md, committed on this branch.
+- Chosen here, not by the spec, to check in the playtest: after a roll the player keeps walk speed in the roll direction (drifts ~5 px when no key is held); sliding diagonally along a wall runs at ~71% of walk speed; diagonals show the side sprite.
+- At wrapup, update CLAUDE.md's hook line to `getState()`, `step(frames, command?)` and `setView()`.
+
 ## 2026-10-17: 002 Movement spec
 **Changed:** interviewed Shaun and wrote `docs/specs/002-movement.md` (status: draft). Decisions: i-frame roll on Space in the move direction (facing when still), committed, with cooldown; snappy 8-way walk; 40×30 walled room with ruin blocks as data; smooth clamped camera; both three-quarter and straight-down views with `?view=` and a V toggle, each with its own sprite set.
 **Next:** Shaun reviews and approves the spec, then `/plan`.

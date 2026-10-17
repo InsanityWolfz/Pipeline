@@ -49,11 +49,10 @@ export function stepPlayer(p: PlayerState, room: Room, cmd: Command): void {
   }
 
   const { hitX, hitY } = moveBox(room, p, FEET_BOX, p.vx, p.vy);
-  // A blocked roll keeps its speed so its timer runs out as normal; walking stops dead.
-  if (!rolling) {
-    if (hitX) p.vx = 0;
-    if (hitY) p.vy = 0;
-  }
+  // Velocity reports actual movement. A blocked roll still runs out its timer,
+  // since its speed is set again from its direction each tick.
+  if (hitX) p.vx = 0;
+  if (hitY) p.vy = 0;
 }
 
 function startRoll(p: PlayerState, cmd: Command): void {

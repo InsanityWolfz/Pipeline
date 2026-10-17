@@ -33,6 +33,7 @@ export class RoomView {
       }
     }
     const crystal = this.room.crystal;
+    if (!crystal) return;
     const cx = (crystal.tx + 0.5) * TILE_SIZE;
     const cy = (crystal.ty + 1) * TILE_SIZE;
     this.images.push(this.scene.add.image(cx, cy, ATLAS_KEY, SPRITES.leyCrystal).setOrigin(0.5, 1).setDepth(cy));

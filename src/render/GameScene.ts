@@ -2,9 +2,9 @@ import { Scene } from 'phaser';
 import atlasImage from '../../assets/build/sprites.png?url';
 import atlasData from '../../assets/build/sprites.json?url';
 import { ATLAS_KEY } from '../data/assets';
-import { CAMERA_LERP, TILE_SIZE } from '../data/config';
+import { CAMERA_LERP } from '../data/config';
 import { advanceClock, createClock } from '../sim/clock';
-import { roomOf, type SimState } from '../sim/state';
+import { roomOf, roomSize, type SimState } from '../sim/state';
 import { stepSim } from '../sim/step';
 import { KeyboardInput } from './keyboard';
 import { PlayerView } from './PlayerView';
@@ -44,7 +44,8 @@ export class GameScene extends Scene {
     this.playerView.update(this.sim.player);
 
     const camera = this.cameras.main;
-    camera.setBounds(0, 0, (room.rows[0]?.length ?? 0) * TILE_SIZE, room.rows.length * TILE_SIZE);
+    const { width, height } = roomSize(room);
+    camera.setBounds(0, 0, width, height);
     camera.setRoundPixels(true);
     // Start centred on the player so the first frame doesn't visibly snap.
     camera.centerOn(this.sim.player.x, this.sim.player.y);

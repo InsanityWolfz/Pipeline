@@ -13,9 +13,18 @@ export interface SimState {
 }
 
 export function createSim(seed: number, roomId = DEFAULT_ROOM): SimState {
-  const { spawn } = roomOf({ roomId });
-  const player = createPlayer({ x: (spawn.tx + 0.5) * TILE_SIZE, y: (spawn.ty + 0.5) * TILE_SIZE });
+  const player = createPlayer(tileCentre(roomOf({ roomId }).spawn));
   return { tick: 0, seed, rng: createRng(seed), roomId, player };
+}
+
+/** The pixel centre of a tile. */
+export function tileCentre(t: { tx: number; ty: number }): { x: number; y: number } {
+  return { x: (t.tx + 0.5) * TILE_SIZE, y: (t.ty + 0.5) * TILE_SIZE };
+}
+
+/** A room's size in pixels. */
+export function roomSize(room: Room): { width: number; height: number } {
+  return { width: (room.rows[0]?.length ?? 0) * TILE_SIZE, height: room.rows.length * TILE_SIZE };
 }
 
 /** The room data the sim is in. Throws on an unknown id. */

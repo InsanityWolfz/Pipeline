@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { FEET_BOX } from '../../src/data/player';
 import { DEFAULT_ROOM, ROOMS, TILE } from '../../src/data/rooms';
-import { TILE_SIZE } from '../../src/data/config';
 import { boxHitsSolid } from '../../src/sim/collision';
+import { tileCentre } from '../../src/sim/state';
 
 const room = ROOMS[DEFAULT_ROOM];
 const SYMBOLS: string[] = Object.values(TILE);
@@ -33,12 +33,13 @@ describe('rooms', () => {
     if (!room) throw new Error('no room');
     const { tx, ty } = room.spawn;
     expect(room.rows[ty]?.[tx]).toBe(TILE.floor);
-    const x = (tx + 0.5) * TILE_SIZE;
-    const y = (ty + 0.5) * TILE_SIZE;
+    const { x, y } = tileCentre(room.spawn);
     expect(boxHitsSolid(room, x, y, FEET_BOX)).toBe(false);
   });
 
   it('puts the crystal on open floor', () => {
-    expect(room?.rows[room.crystal.ty]?.[room.crystal.tx]).toBe(TILE.floor);
+    const crystal = room?.crystal;
+    if (!crystal) return;
+    expect(room.rows[crystal.ty]?.[crystal.tx]).toBe(TILE.floor);
   });
 });
