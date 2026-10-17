@@ -6,7 +6,10 @@ import type { GameScene } from './GameScene';
 
 export interface GameTestHook {
   getState(): SimSummary;
-  /** Steps `frames` ticks holding `command`. Its dodge press applies on the first tick only. */
+  /**
+   * Steps `frames` ticks holding `command`. Its dodge and load presses apply on the
+   * first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
+   */
   step(frames: number, command?: Partial<Command>): SimSummary;
 }
 
@@ -24,8 +27,8 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
     step: (frames, command = {}) => {
       if (!Number.isInteger(frames) || frames < 0) throw new Error(`step() needs a whole number of frames, got ${frames}`);
       scene.manualStepping = true;
-      const held: Command = { ...NO_COMMAND, ...command };
-      for (let i = 0; i < frames; i++) stepSim(sim, i === 0 ? held : { ...held, dodge: false });
+      const held: Command = { ...NO_COMMAND, aimX: sim.player.aimX, aimY: sim.player.aimY, ...command };
+      for (let i = 0; i < frames; i++) stepSim(sim, i === 0 ? held : { ...held, dodge: false, load: false });
       return summarize(sim);
     },
   };

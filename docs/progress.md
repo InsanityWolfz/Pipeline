@@ -2,6 +2,23 @@
 
 Newest entry first.
 
+## 2026-10-17: 003 Tube firing
+**Changed:** built 003 on `claude/003-tube-firing`.
+- **Sim:** inventory; the tube (tap R loads one round per 15 ticks into 6, hold left mouse fires at 4 shots/s, empty tube dry-fires, no firing or loading in a roll); arrows at 480 px/s that stop at walls or after 320 px.
+- **Data:** the arrow item and ammo, tube tuning, a starting stack of 30.
+- **Render:** mouse aim, the tube held toward the aim, firing poses, arrows over ground shadows, a one-slot HUD with a sprite digit font, the crosshair.
+
+Shaun approved the sprites by eye and playtested the preview: it's good. 89 unit tests and 8 e2e tests pass; review found no blocking issues.
+
+**Next:** Shaun merges the 003 PR when ready, then `/spec 004` (enemies: the Husk, health, damage, death, drops).
+
+**Notes:**
+- Arrow damage 10 is a placeholder for 004 to tune. Arrows already carry damage and type.
+- When not firing, the tube points at the cursor while the body faces the walk direction (per spec). It passed the playtest, but revisit it if it reads oddly once enemies exist.
+- `NO_COMMAND` aims at the world origin. Code that steps the sim without an aim moves the tube's draw direction; the test hook avoids this by keeping the last aim.
+- The reviewer's unaddressed suggestion: render depth constants (`FLOOR_DEPTH`, `SHADOW_DEPTH`, `TUBE_DEPTH_NUDGE`, `HUD_DEPTH`) could move into one table in `src/data`. Pick it up when those files are next touched.
+- No mistake happened twice this slice, so no new rule.
+
 ## 2026-10-17: 002 Movement
 **Changed:** built 002 on `claude/002-movement`: walk, roll and feet-box collision in `src/sim`, movement tuning and the `ruin-hall` room in `src/data`, keyboard commands, room and player views, clamped camera and the `?view=` / V toggle in `src/render`; `__GAME__.step(frames, command)` and `setView()`. Sprites for both views drawn and approved by Shaun. Verify (check, e2e, qa screenshots) green; review addressed. Shaun playtested the preview: everything feels fine, and **three-quarter view wins**. Then, at Shaun's request, a cleanup removed the straight-down view, its sprites, `?view=`, V and `__GAME__.setView()`. 60 unit tests and 4 e2e tests pass.
 **Next:** `/spec 003` (tube firing).

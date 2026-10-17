@@ -10,8 +10,9 @@ import {
 } from '../data/player';
 import type { Room } from '../data/rooms';
 import { moveBox } from './collision';
+import { facingOf, facingVector, unit } from './direction';
 import type { Command } from './input';
-import type { Facing, PlayerState } from './player';
+import type { PlayerState } from './player';
 
 // Walking and the dodge roll, one tick at a time.
 
@@ -82,20 +83,4 @@ function walk(p: PlayerState, cmd: Command): void {
     p.vy += (dy / gap) * ACCEL_PER_TICK;
   }
   p.facing = facingOf(cmd.moveX, cmd.moveY, p.facing);
-}
-
-function unit(x: number, y: number): [number, number] {
-  const len = Math.hypot(x, y);
-  return len === 0 ? [0, 0] : [x / len, y / len];
-}
-
-/** Snaps a direction to 4 ways; horizontal wins on diagonals. Zero keeps the current facing. */
-function facingOf(x: number, y: number, current: Facing): Facing {
-  if (x !== 0) return x > 0 ? 'right' : 'left';
-  if (y !== 0) return y > 0 ? 'down' : 'up';
-  return current;
-}
-
-function facingVector(f: Facing): [number, number] {
-  return f === 'up' ? [0, -1] : f === 'down' ? [0, 1] : f === 'left' ? [-1, 0] : [1, 0];
 }

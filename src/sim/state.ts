@@ -1,7 +1,11 @@
 import { TILE_SIZE } from '../data/config';
+import { STARTING_INVENTORY } from '../data/player';
 import { DEFAULT_ROOM, ROOMS, type Room } from '../data/rooms';
+import type { ArrowState } from './arrows';
+import type { Inventory } from './inventory';
 import { createPlayer, type PlayerState } from './player';
 import { createRng, type RngState } from './rng';
+import { createTube, type TubeState } from './tube';
 
 /** The whole sim: plain serializable data. */
 export interface SimState {
@@ -10,11 +14,27 @@ export interface SimState {
   rng: RngState;
   roomId: string;
   player: PlayerState;
+  inventory: Inventory;
+  tube: TubeState;
+  /** Arrows in flight. */
+  arrows: ArrowState[];
+  /** Id for the next arrow fired. */
+  nextArrowId: number;
 }
 
 export function createSim(seed: number, roomId = DEFAULT_ROOM): SimState {
   const player = createPlayer(tileCentre(roomOf({ roomId }).spawn));
-  return { tick: 0, seed, rng: createRng(seed), roomId, player };
+  return {
+    tick: 0,
+    seed,
+    rng: createRng(seed),
+    roomId,
+    player,
+    inventory: { ...STARTING_INVENTORY },
+    tube: createTube(),
+    arrows: [],
+    nextArrowId: 0,
+  };
 }
 
 /** The pixel centre of a tile. */

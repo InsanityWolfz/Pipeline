@@ -32,3 +32,17 @@ Technical choices and why. Newest last.
 - **Depth:** in three-quarter view, walls, ruin blocks, the crystal and the player sort by the bottom of their footprint. Tall sprites (32×48) use a bottom origin at their footprint's bottom edge.
 - **Camera:** Phaser `startFollow` with lerp `CAMERA_LERP`, `setRoundPixels(true)` and bounds set to the room, centred on the player before following so the first frame doesn't snap.
 - **Assets:** `src/data/assets.ts` stays import-free because the art build loads it on its own; the roll animation's frame rate (`'roll'` marker) is computed in `PlayerView` from `ROLL_TICKS`. Left-facing frames are the side frames flipped.
+
+## 2026-10-17: 003 Tube firing
+- **Commands:** `Command` gains `aimX`/`aimY` (world px), `fire` (held) and `load` (a press edge, latched like dodge). Render reads the cursor's world point each frame with `camera.getWorldPoint`. `NO_COMMAND` aims at the world origin, so callers that care about aim set one. `src/render/controls.ts` (`Controls`) replaces `keyboard.ts`.
+- **Tick order:** movement, then arrows, then the tube. Roll checks see a roll on the tick it starts. A new arrow sits at the muzzle until the next tick's step, and that step checks both the point it starts on and the point it reaches, so an arrow spawned in a wall is gone on its first tick.
+- **Tube timing:** the cooldown counts down at the start of each tick. With a 15-tick interval, held fire shoots on ticks 1, 16, 31… A dry fire also spends the interval, and both firing and dry-firing stop loading. Loading moves one round on its 15th tick.
+- **Arrows:** a plain array in `SimState` with ids from `nextArrowId`, so render can pool sprites by id. Collision is a point test at the ground point against the tile grid. Steps are 8 px, under a tile, so arrows can't tunnel. Damage and type are copied onto each arrow from `src/data/ammo.ts` for 004.
+- **Inventory:** `Record<itemId, count>` in `SimState`, seeded from `STARTING_INVENTORY`. The slot's item comes from `slotItem()` in `src/sim/tube.ts`, which the sim and the HUD share.
+- **Render:**
+  - The tube is a separate sprite at a per-direction grip offset (`TUBE_GRIP` in `src/data/assets.ts`), sorted just in front of or behind the player and hidden during a roll.
+  - Arrows are drawn `DRAW_HEIGHT` above their ground point and sort by it. Their shadows draw at depth 0, above the floor.
+  - The HUD and crosshair use scroll factor 0, and the system cursor is hidden.
+- **HUD font:** the numbers are the `hud-digits` sprite font (0–9 and `/`), because Phaser text blurs at 640×360 under integer zoom. The slot layout numbers live in `HUD_SLOT_LAYOUT`.
+- **Test hook:** `step()` keeps the player's last aim when a command gives none, as a still mouse would. The load press applies on the first tick only, like dodge.
+- **TypeScript:** `erasableSyntaxOnly` rules out constructor parameter properties, so classes assign their fields in the constructor.

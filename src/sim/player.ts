@@ -17,8 +17,11 @@ export interface PlayerState {
   rollDirY: number;
   /** Ticks left before another roll can start. */
   cooldown: number;
+  /** The last aim point, world px. */
+  aimX: number;
+  aimY: number;
 }
 
 export function createPlayer(at: { x: number; y: number }): PlayerState {
-  return { x: at.x, y: at.y, vx: 0, vy: 0, facing: 'down', rollTick: 0, rollDirX: 0, rollDirY: 0, cooldown: 0 };
+  return { x: at.x, y: at.y, vx: 0, vy: 0, facing: 'down', rollTick: 0, rollDirX: 0, rollDirY: 0, cooldown: 0, aimX: at.x, aimY: at.y };
 }

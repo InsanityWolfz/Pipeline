@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { advanceClock, createClock } from '../../src/sim/clock';
+import { NO_COMMAND, type Command } from '../../src/sim/input';
 import { createSim } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
@@ -8,6 +9,25 @@ import { MAX_TICKS_PER_FRAME, TICK_RATE } from '../../src/data/config';
 function stepped(seed: number, ticks: number) {
   const sim = createSim(seed);
   for (let i = 0; i < ticks; i++) stepSim(sim);
+  return sim;
+}
+
+/** A scripted mix of walking, loading, rolling and firing at a sweeping aim. */
+function scripted(seed: number, ticks: number) {
+  const sim = createSim(seed);
+  for (let t = 0; t < ticks; t++) {
+    const command: Command = {
+      ...NO_COMMAND,
+      moveX: t % 90 < 45 ? 1 : -1,
+      moveY: t % 70 < 20 ? 1 : 0,
+      load: t % 120 === 0,
+      dodge: t % 150 === 75,
+      fire: t % 120 > 100,
+      aimX: sim.player.x + Math.cos(t / 10) * 100,
+      aimY: sim.player.y + Math.sin(t / 10) * 100,
+    };
+    stepSim(sim, command);
+  }
   return sim;
 }
 
@@ -29,6 +49,12 @@ describe('sim state', () => {
 
   it('is identical for the same seed and steps', () => {
     expect(stepped(11, 200)).toEqual(stepped(11, 200));
+  });
+
+  it('is identical for the same seed and a load and fire sequence', () => {
+    const a = scripted(11, 600);
+    expect(a.nextArrowId).toBeGreaterThan(0);
+    expect(a).toEqual(scripted(11, 600));
   });
 
   it('round-trips through JSON unchanged', () => {

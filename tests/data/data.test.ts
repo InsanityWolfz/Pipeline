@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { hexToRgb, OUTLINE_ID, PALETTE, TRANSPARENT } from '../../src/data/palette';
-import { animFrames, PLAYER_ANIMS, SPRITES } from '../../src/data/assets';
+import { AMMO } from '../../src/data/ammo';
+import { animFrames, digitFrame, HUD_DIGITS, PLAYER_ANIMS, SPRITES, TUBE_SPRITES } from '../../src/data/assets';
+import { ITEMS } from '../../src/data/items';
+import { STARTING_INVENTORY } from '../../src/data/player';
+import { SLOT_AMMO } from '../../src/data/tube';
 
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -50,7 +54,7 @@ describe('assets', () => {
   };
 
   it('has kebab-case keys that exist in the built atlas', () => {
-    for (const key of Object.values(SPRITES)) {
+    for (const key of [...Object.values(SPRITES), ...Object.values(TUBE_SPRITES)]) {
       expect(key).toMatch(KEBAB);
       expect(Object.keys(atlas.frames)).toContain(key);
     }
@@ -61,5 +65,29 @@ describe('assets', () => {
       expect(anim.key).toMatch(KEBAB);
       for (const frame of animFrames(anim)) expect(Object.keys(atlas.frames)).toContain(frame);
     }
+  });
+
+  it('has a HUD font frame for every glyph', () => {
+    for (const ch of HUD_DIGITS.glyphs) expect(Object.keys(atlas.frames)).toContain(digitFrame(ch));
+    expect(() => digitFrame('x')).toThrow();
+  });
+});
+
+describe('items and ammo', () => {
+  it('have kebab-case ids that match their keys', () => {
+    for (const [key, item] of Object.entries(ITEMS)) {
+      expect(item.id).toMatch(KEBAB);
+      expect(item.id).toBe(key);
+    }
+    for (const [key, ammo] of Object.entries(AMMO)) {
+      expect(ammo.id).toMatch(KEBAB);
+      expect(ammo.id).toBe(key);
+    }
+  });
+
+  it('reference items and ammo that exist', () => {
+    for (const ammo of Object.values(AMMO)) expect(ITEMS[ammo.itemId]).toBeDefined();
+    expect(AMMO[SLOT_AMMO]).toBeDefined();
+    for (const id of Object.keys(STARTING_INVENTORY)) expect(ITEMS[id]).toBeDefined();
   });
 });

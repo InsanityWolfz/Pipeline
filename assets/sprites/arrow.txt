@@ -1,0 +1,7 @@
+# Arrow in flight, pointing right; render rotates it. 14x5.
+# Violet fletching, earth shaft, pale stone head.
+.oo........o..
+oPPooooooooLo.
+oppEEEEEEEELmo
+oPPooooooooLo.
+.oo........o..
