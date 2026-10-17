@@ -1,5 +1,5 @@
 # 002: Movement
-status: draft
+status: approved
 
 ## Goal
 The player walks around a walled ruin room with WASD and rolls out of the way with Space, while the camera follows. The room can be shown in three-quarter or straight-down view, toggled live, so Shaun can compare the two.
