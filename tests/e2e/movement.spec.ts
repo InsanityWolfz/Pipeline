@@ -10,8 +10,8 @@ function watchErrors(page: Page): string[] {
   return errors;
 }
 
-async function boot(page: Page, query = ''): Promise<void> {
-  await page.goto(`/${query}`);
+async function boot(page: Page): Promise<void> {
+  await page.goto('/');
   await page.waitForFunction(() => window.__GAME__ !== undefined);
   // step(0) takes the sim off the real-time loop, so nothing ticks between reads.
   await page.evaluate(() => window.__GAME__?.step(0));
@@ -48,18 +48,4 @@ test('stops at the room wall', async ({ page }) => {
   const at600 = await page.evaluate(() => window.__GAME__?.step(100, { moveX: -1 }));
   expect(at600?.player.x).toBe(at500?.player.x);
   expect(at600?.player.vx).toBe(0);
-});
-
-test('loads straight-down from the URL and V swaps views without moving the player', async ({ page }) => {
-  const errors = watchErrors(page);
-  await boot(page, '?view=top');
-  const top = await page.evaluate(() => window.__GAME__?.step(30, { moveX: 1, moveY: 1 }));
-  expect(top?.view).toBe('top');
-  await page.keyboard.press('v');
-  const swapped = await state(page);
-  expect(swapped?.view).toBe('34');
-  expect(swapped?.player).toEqual(top?.player);
-  const back = await page.evaluate(() => window.__GAME__?.setView('top'));
-  expect(back?.view).toBe('top');
-  expect(errors).toEqual([]);
 });

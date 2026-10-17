@@ -74,3 +74,6 @@ The player walks around a walled ruin room with WASD and rolls out of the way wi
 
 ## Open questions
 None.
+
+## After the playtest
+Shaun chose three-quarter view. At Shaun's request, the straight-down view, its sprites, `?view=` and the V toggle were removed in a cleanup on this branch. The view criteria above were met and tested before that removal.

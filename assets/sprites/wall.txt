@@ -1,4 +1,4 @@
-# Ruin wall, three-quarter. 32x48: 16-row top face, 32-row carved block front face.
+# Ruin wall. 32x48: 16-row top face, 32-row carved block front face.
 # Origin is the bottom of its tile footprint. Walls get no outline.
 LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 Llllllllllllllllllllllllllllllll
