@@ -21,7 +21,7 @@ The player carries a stack of arrows, loads them into the dormant tube by hand w
 - [ ] The tube has one slot (slot 1) holding arrows, with a capacity of 6 loaded rounds.
 - [ ] Tapping R starts loading if the tube isn't full and the inventory has arrows. One round moves from the inventory into the tube every 15 ticks (0.25 s). Loading continues on its own until the tube is full or the inventory is empty.
 - [ ] Fire held (any fire input, including a dry fire) or starting a roll stops loading. Rounds already loaded stay loaded; partial progress on the next round is lost, and that round stays in the inventory.
-- [ ] R does nothing while already loading, while the tube is full, or with no arrows in the inventory.
+- [ ] R does nothing while already loading, while the tube is full, or with no arrows in the inventory, or during a roll (presses are not buffered).
 
 **Firing (sim)**
 - [ ] While fire is held and the tube has a loaded round, the tube fires one arrow, then at most one every 15 ticks (4 shots/s). A single-tick press fires one arrow if the fire interval has passed.
