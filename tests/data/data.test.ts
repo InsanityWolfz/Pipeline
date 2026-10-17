@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { hexToRgb, OUTLINE_ID, PALETTE, TRANSPARENT } from '../../src/data/palette';
-import { SPRITES } from '../../src/data/assets';
+import { animFrames, PLAYER_ANIMS, SPRITES, VIEWS } from '../../src/data/assets';
 
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -52,6 +52,18 @@ describe('assets', () => {
     for (const key of Object.values(SPRITES)) {
       expect(key).toMatch(KEBAB);
       expect(Object.keys(atlas.frames)).toContain(key);
+    }
+  });
+
+  it('has every player animation frame in the built atlas, for both views', () => {
+    const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as {
+      frames: Record<string, unknown>;
+    };
+    for (const view of VIEWS) {
+      for (const anim of Object.values(PLAYER_ANIMS[view])) {
+        expect(anim.key).toMatch(KEBAB);
+        for (const frame of animFrames(anim)) expect(Object.keys(atlas.frames)).toContain(frame);
+      }
     }
   });
 });
