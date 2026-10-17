@@ -227,6 +227,13 @@ describe('firing', () => {
     expect(s.arrows[0]).toMatchObject({ dx: -1, dy: 0 });
   });
 
+  it('stores the aim from the command and reports it', () => {
+    const s = sim();
+    stepSim(s, command({ aimX: 123.456, aimY: 78 }));
+    expect(s.player).toMatchObject({ aimX: 123.456, aimY: 78 });
+    expect(summarize(s).player.aim).toEqual({ x: 123.46, y: 78 });
+  });
+
   it('faces the aim while firing, then follows movement again', () => {
     const s = sim();
     stepSim(s, fireAt(s, 10, 40, { moveX: 1 }));

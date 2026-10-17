@@ -62,11 +62,14 @@ test('fires an arrow that flies toward the aim', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test('arrows stop at a ruin block before their range', async ({ page }) => {
+test('arrows stop at a wall before their range', async ({ page }) => {
+  const errors = watchErrors(page);
   await boot(page);
   await loadFull(page);
-  // The ruin blocks at tiles (12-13, 20) sit about 220 px left of and below the spawn.
-  const shot = await page.evaluate(() => window.__GAME__?.step(1, { fire: true, aimX: 416, aimY: 656 }));
+  // Walk toward the bottom wall until it's well inside an arrow's range, then fire at it.
+  await page.evaluate(() => window.__GAME__?.step(60, { moveY: 1 }));
+  await page.evaluate(() => window.__GAME__?.step(10));
+  const shot = await fire(page, 1, 0, 100);
   expect(shot?.arrows).toHaveLength(1);
   let ticks = 0;
   for (; ticks < 40; ticks++) {
@@ -74,6 +77,7 @@ test('arrows stop at a ruin block before their range', async ({ page }) => {
     if (s?.arrows.length === 0) break;
   }
   expect(ticks).toBeLessThan(35);
+  expect(errors).toEqual([]);
 });
 
 test('an empty tube dry-fires', async ({ page }) => {

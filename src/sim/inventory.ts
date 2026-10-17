@@ -6,10 +6,10 @@ export function count(inv: Inventory, itemId: string): number {
   return inv[itemId] ?? 0;
 }
 
-/** Removes `n` of an item. Returns false, changing nothing, if there aren't enough. */
-export function take(inv: Inventory, itemId: string, n = 1): boolean {
+/** Removes one of an item. Returns false, changing nothing, if there is none. */
+export function take(inv: Inventory, itemId: string): boolean {
   const have = count(inv, itemId);
-  if (have < n) return false;
-  inv[itemId] = have - n;
+  if (have < 1) return false;
+  inv[itemId] = have - 1;
   return true;
 }

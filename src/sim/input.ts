@@ -17,6 +17,7 @@ export interface Command {
   load: boolean;
 }
 
+/** No input. Its aim is the world origin, so callers that care about aim must set one. */
 export const NO_COMMAND: Readonly<Command> = {
   moveX: 0,
   moveY: 0,

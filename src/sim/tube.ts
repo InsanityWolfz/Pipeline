@@ -28,7 +28,7 @@ export function createTube(): TubeState {
 }
 
 /** The item a slot-1 round is loaded from. */
-function slotItem(): string {
+export function slotItem(): string {
   const ammo = AMMO[SLOT_AMMO];
   if (!ammo) throw new Error(`Unknown slot ammo '${SLOT_AMMO}'`);
   return ammo.itemId;

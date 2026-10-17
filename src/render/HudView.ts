@@ -1,13 +1,12 @@
 import { Display, type GameObjects, type Scene } from 'phaser';
-import { AMMO } from '../data/ammo';
 import { ATLAS_KEY, digitFrame, HUD_DIGITS, HUD_SLOT_LAYOUT, SPRITES } from '../data/assets';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { ITEMS } from '../data/items';
 import { paletteHex } from '../data/palette';
-import { LOAD_TICKS, SLOT_AMMO, TUBE_CAPACITY } from '../data/tube';
+import { LOAD_TICKS, TUBE_CAPACITY } from '../data/tube';
 import type { Inventory } from '../sim/inventory';
 import { count } from '../sim/inventory';
-import type { TubeState } from '../sim/tube';
+import { slotItem, type TubeState } from '../sim/tube';
 
 /** Above everything in the world. */
 const HUD_DEPTH = 1_000_000;
@@ -55,9 +54,8 @@ export class HudView {
 
   constructor(scene: Scene) {
     this.scene = scene;
-    const ammo = AMMO[SLOT_AMMO];
-    const item = ammo && ITEMS[ammo.itemId];
-    if (!item) throw new Error(`Slot ammo '${SLOT_AMMO}' has no item`);
+    const item = ITEMS[slotItem()];
+    if (!item) throw new Error(`Unknown slot item '${slotItem()}'`);
     this.itemId = item.id;
 
     const fixed = <T extends GameObjects.Components.ScrollFactor & GameObjects.Components.Depth>(o: T): T => {

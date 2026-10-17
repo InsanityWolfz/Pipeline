@@ -41,7 +41,7 @@ export function stepArrows(arrows: ArrowState[], room: Room): void {
 function flies(arrow: ArrowState, room: Room): boolean {
   if (inSolid(room, arrow.x, arrow.y)) return false;
   const ammo = AMMO[arrow.ammoId];
-  if (!ammo) return false;
+  if (!ammo) throw new Error(`Unknown ammo '${arrow.ammoId}'`);
   const step = ammo.speed / TICK_RATE;
   arrow.x += arrow.dx * step;
   arrow.y += arrow.dy * step;
