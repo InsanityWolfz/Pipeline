@@ -4,11 +4,12 @@ import { OUTLINE_ID, paletteHex } from './data/palette';
 import { GameScene } from './render/GameScene';
 import { keepIntegerZoom } from './render/scale';
 import { parseSeed } from './render/seed';
+import { parseView } from './render/view';
 import { installTestHook } from './render/testHook';
 import { createSim } from './sim/state';
 
 const sim = createSim(parseSeed(window.location.search));
-const scene = new GameScene(sim);
+const scene = new GameScene(sim, parseView(window.location.search));
 
 const game = new Game({
   type: AUTO,
