@@ -1,0 +1,4 @@
+# An arrow's ground shadow. 10x3, no outline.
+.tttttttt.
+tttttttttt
+.tttttttt.
