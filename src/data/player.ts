@@ -20,3 +20,6 @@ export const ROLL_COOLDOWN_TICKS = 30;
 
 /** Collision box at the player's feet, px, centred on the feet position. */
 export const FEET_BOX = { w: 16, h: 8 } as const;
+
+/** What the player carries at the start, item id to count. */
+export const STARTING_INVENTORY: Readonly<Record<string, number>> = { arrow: 30 };
