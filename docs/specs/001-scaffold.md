@@ -1,5 +1,5 @@
 # 001: Scaffold
-status: draft
+status: approved
 
 ## Goal
 The game has its technical foundation: a deterministic sim that runs separately from Phaser, a test hook that steps the game frame by frame, a Playwright smoke test, and a working art pipeline. The game shows a small floor of generated tiles with a ley crystal in the middle, so the Pages preview already looks like the game's art.
