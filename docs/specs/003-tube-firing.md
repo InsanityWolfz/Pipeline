@@ -1,5 +1,5 @@
 # 003: Tube firing
-status: draft
+status: approved
 
 ## Goal
 The player carries a stack of arrows, loads them into the dormant tube by hand with R, and holds the left mouse button to fire arrows at the cursor. Arrows fly straight and stop at walls or after a set range.

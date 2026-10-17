@@ -4,8 +4,8 @@ Newest entry first.
 
 ## 2026-10-17: 003 Tube firing spec
 **Changed:** reviewed docs/process.md, interviewed Shaun and wrote `docs/specs/003-tube-firing.md` (status: draft). Decisions: arrows only, from a starting stack of 30; tap R to load one round per 0.25 s into a 6-round tube, stopped by firing or rolling; hold left mouse to fire at 4 shots/s; an empty tube dry-fires and never auto-loads; free movement while firing, no firing during a roll; face the aim while firing; arrows at 480 px/s that stop at walls or after 320 px, colliding at their ground point and drawn at chest height; a minimal one-slot HUD and a crosshair; new sprites for the tube, firing pose, arrow, HUD and crosshair.
-**Next:** Shaun reviews and approves the spec, then `/plan`.
-**Notes:** arrow damage 10 is a placeholder for 004 to tune. All tuning values in the spec are starting points for the playtest.
+**Next:** Shaun approved the spec and the `/plan` (saved outside the repo; summary: sim tests first for tube, loading and arrows, then data, sim, sprites with an approval stop, render, e2e). Run `/build` next.
+**Notes:** planning added one rule to fold into the spec on the first build commit: R pressed during a roll is ignored, not buffered. Arrow damage 10 is a placeholder for 004 to tune. All tuning values in the spec are starting points for the playtest.
 
 ## 2026-10-17: 002 Movement
 **Changed:** built 002 on `claude/002-movement`: walk, roll and feet-box collision in `src/sim`, movement tuning and the `ruin-hall` room in `src/data`, keyboard commands, room and player views, clamped camera and the `?view=` / V toggle in `src/render`; `__GAME__.step(frames, command)` and `setView()`. Sprites for both views drawn and approved by Shaun. Verify (check, e2e, qa screenshots) green; review addressed. Shaun playtested the preview: everything feels fine, and **three-quarter view wins**. Then, at Shaun's request, a cleanup removed the straight-down view, its sprites, `?view=`, V and `__GAME__.setView()`. 60 unit tests and 4 e2e tests pass.
