@@ -1,5 +1,5 @@
 # 003: Tube firing
-status: approved
+status: done
 
 ## Goal
 The player carries a stack of arrows, loads them into the dormant tube by hand with R, and holds the left mouse button to fire arrows at the cursor. Arrows fly straight and stop at walls or after a set range.
@@ -13,47 +13,47 @@ The player carries a stack of arrows, loads them into the dormant tube by hand w
 ## Acceptance criteria
 
 **Input and commands**
-- [ ] The per-tick command gains an aim point (world px), fire held (left mouse) and a load press (R, an edge). Render converts the cursor to world coordinates; the sim never reads the mouse or keyboard.
-- [ ] `window.__GAME__.step(frames, command)` accepts the new fields, so tests aim, fire and load without real input.
+- [x] The per-tick command gains an aim point (world px), fire held (left mouse) and a load press (R, an edge). Render converts the cursor to world coordinates; the sim never reads the mouse or keyboard.
+- [x] `window.__GAME__.step(frames, command)` accepts the new fields, so tests aim, fire and load without real input.
 
 **Inventory and loading (sim)**
-- [ ] The player has an inventory of item counts by item id. It starts with 30 arrows, set in data. The tube starts empty.
-- [ ] The tube has one slot (slot 1) holding arrows, with a capacity of 6 loaded rounds.
-- [ ] Tapping R starts loading if the tube isn't full and the inventory has arrows. One round moves from the inventory into the tube every 15 ticks (0.25 s). Loading continues on its own until the tube is full or the inventory is empty.
-- [ ] Fire held (any fire input, including a dry fire) or starting a roll stops loading. Rounds already loaded stay loaded; partial progress on the next round is lost, and that round stays in the inventory.
-- [ ] R does nothing while already loading, while the tube is full, or with no arrows in the inventory, or during a roll (presses are not buffered).
+- [x] The player has an inventory of item counts by item id. It starts with 30 arrows, set in data. The tube starts empty.
+- [x] The tube has one slot (slot 1) holding arrows, with a capacity of 6 loaded rounds.
+- [x] Tapping R starts loading if the tube isn't full and the inventory has arrows. One round moves from the inventory into the tube every 15 ticks (0.25 s). Loading continues on its own until the tube is full or the inventory is empty.
+- [x] Fire held (any fire input, including a dry fire) or starting a roll stops loading. Rounds already loaded stay loaded; partial progress on the next round is lost, and that round stays in the inventory.
+- [x] R does nothing while already loading, while the tube is full, or with no arrows in the inventory, or during a roll (presses are not buffered).
 
 **Firing (sim)**
-- [ ] While fire is held and the tube has a loaded round, the tube fires one arrow, then at most one every 15 ticks (4 shots/s). A single-tick press fires one arrow if the fire interval has passed.
-- [ ] Each shot uses one loaded round. Spent arrows are gone.
-- [ ] Holding fire with an empty tube dry-fires: nothing launches and loading does not start. A dry fire happens at most once per fire interval and sets a short dry-fire flag (10 ticks) in the state, for the HUD.
-- [ ] The player can't fire during a roll. Fire still held when the roll ends fires as normal.
-- [ ] Walking is unaffected by firing or loading.
-- [ ] Aim direction is from the player's feet to the aim point. If the aim point is on the feet, the shot goes in the facing direction.
-- [ ] While fire is held, the player faces the aim direction, snapped to 4 directions. Otherwise facing follows movement, as in 002.
+- [x] While fire is held and the tube has a loaded round, the tube fires one arrow, then at most one every 15 ticks (4 shots/s). A single-tick press fires one arrow if the fire interval has passed.
+- [x] Each shot uses one loaded round. Spent arrows are gone.
+- [x] Holding fire with an empty tube dry-fires: nothing launches and loading does not start. A dry fire happens at most once per fire interval and sets a short dry-fire flag (10 ticks) in the state, for the HUD.
+- [x] The player can't fire during a roll. Fire still held when the roll ends fires as normal.
+- [x] Walking is unaffected by firing or loading.
+- [x] Aim direction is from the player's feet to the aim point. If the aim point is on the feet, the shot goes in the facing direction.
+- [x] While fire is held, the player faces the aim direction, snapped to 4 directions. Otherwise facing follows movement, as in 002.
 
 **Arrows (sim)**
-- [ ] An arrow spawns 12 px from the player's feet along the aim direction, and flies straight at 480 px/s.
-- [ ] An arrow's position is its ground (shadow) point; collision uses that point. It is removed when that point enters a wall or ruin block, or after 320 px of travel. One spawned inside a wall is removed on its first tick.
-- [ ] Each arrow carries its damage (10) and damage type (physical) from data. Nothing uses them yet; 004 does.
-- [ ] The same seed and command sequence give the same arrows, tick for tick.
+- [x] An arrow spawns 12 px from the player's feet along the aim direction, and flies straight at 480 px/s.
+- [x] An arrow's position is its ground (shadow) point; collision uses that point. It is removed when that point enters a wall or ruin block, or after 320 px of travel. One spawned inside a wall is removed on its first tick.
+- [x] Each arrow carries its damage (10) and damage type (physical) from data. Nothing uses them yet; 004 does.
+- [x] The same seed and command sequence give the same arrows, tick for tick.
 
 **State**
-- [ ] `getState()` adds the inventory counts, the tube (loaded, capacity, loading, load progress, fire cooldown, dry-fire flag) and the live arrows (position, direction, distance travelled).
+- [x] `getState()` adds the inventory counts, the tube (loaded, capacity, loading, load progress, fire cooldown, dry-fire flag) and the live arrows (position, direction, distance travelled).
 
 **Render**
-- [ ] Arrows are drawn rotated to their direction, raised 14 px above their ground point (chest height), with a small shadow at the ground point. They are depth-sorted by their ground point like other sprites.
-- [ ] The player holds the tube, drawn pointing toward the aim (snapped to 4 directions), in its dormant look. A firing pose shows while firing.
-- [ ] A minimal HUD: one hotbar slot at the bottom of the screen with the arrow icon, loaded/capacity (e.g. `4/6`), the inventory count, and a load progress indicator while loading. The slot flashes on a dry fire. The HUD stays fixed on screen as the camera moves.
-- [ ] The mouse cursor is a crosshair sprite over the game.
+- [x] Arrows are drawn rotated to their direction, raised 14 px above their ground point (chest height), with a small shadow at the ground point. They are depth-sorted by their ground point like other sprites.
+- [x] The player holds the tube, drawn pointing toward the aim (snapped to 4 directions), in its dormant look. A firing pose shows while firing.
+- [x] A minimal HUD: one hotbar slot at the bottom of the screen with the arrow icon, loaded/capacity (e.g. `4/6`), the inventory count, and a load progress indicator while loading. The slot flashes on a dry fire. The HUD stays fixed on screen as the camera moves.
+- [x] The mouse cursor is a crosshair sprite over the game.
 
 **Art**
-- [ ] New sprites following docs/art.md: the tube on the player (dormant, 4 directions), a player firing pose (4 directions), the arrow projectile and its shadow, the hotbar slot frame, the arrow icon and the crosshair.
-- [ ] All asset keys are registered in `src/data/assets.ts`.
-- [ ] Shaun approves every new sprite by eye at 4×.
+- [x] New sprites following docs/art.md: the tube on the player (dormant, 4 directions), a player firing pose (4 directions), the arrow projectile and its shadow, the hotbar slot frame, the arrow icon and the crosshair.
+- [x] All asset keys are registered in `src/data/assets.ts`.
+- [x] Shaun approves every new sprite by eye at 4×.
 
 **Checks**
-- [ ] `npm run check` and `npm run test:e2e` pass.
+- [x] `npm run check` and `npm run test:e2e` pass.
 
 ## Data changes
 - Items (new, e.g. `src/data/items.ts`): the `arrow` item with its HUD icon key.
@@ -81,3 +81,10 @@ The player carries a stack of arrows, loads them into the dormant tube by hand w
 
 ## Open questions
 None.
+
+## Build notes
+Choices made in the build, not by the spec, and accepted in Shaun's playtest:
+- The HUD numbers are a small sprite font (`hud-digits`), since Phaser text blurs at 640×360 under integer zoom. The hotbar slot is 44×24, with the icon on the left and the counts stacked on the right.
+- The tube is hidden during a roll; the roll sprite has no tube.
+- `getState()` also reports `tube.ammo`, `tube.firing` and `player.aim`.
+- `__GAME__.step()` keeps the player's last aim when a command gives none, as a still mouse would.
