@@ -3,13 +3,14 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "npm run art && tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run --passWithNoTests",
     "check": "npm run typecheck && npm run lint && npm run test",
-    "test:e2e": "playwright test --pass-with-no-tests"
+    "test:e2e": "playwright test --pass-with-no-tests",
+    "art": "node scripts/build-art.ts"
   },
   "dependencies": {
     "phaser": "4.2.1"
