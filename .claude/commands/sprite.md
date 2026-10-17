@@ -1,0 +1,1 @@
+Read docs/art.md. Draw the requested sprite or animation as grids in assets/sprites, run npm run art, view the rendered PNG at 4x, and revise until it reads clearly at game size and matches the art spec. Register its key in src/data/assets.ts. Show me the result for approval.

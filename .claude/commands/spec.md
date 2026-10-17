@@ -1,0 +1,1 @@
+Read docs/design.md, docs/prototype.md and the backlog item $ARGUMENTS. Interview me with AskUserQuestion until the feature is unambiguous. Write docs/specs/NNN-name.md from the spec template in docs/process.md with status: draft. Stop.
