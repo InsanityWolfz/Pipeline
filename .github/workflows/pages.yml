@@ -27,6 +27,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - name: Check the test hook is dev-only
+        run: "! grep -rq __GAME__ dist"
       - name: Publish to gh-pages
         env:
           BRANCH: ${{ github.ref_name }}

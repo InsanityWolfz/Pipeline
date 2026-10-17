@@ -1,13 +1,25 @@
-import { Game, AUTO, Scale } from 'phaser';
-import { BootScene } from './render/BootScene';
+import { AUTO, Game, Scale } from 'phaser';
+import { VIEW_HEIGHT, VIEW_WIDTH } from './data/config';
+import { OUTLINE_ID, paletteHex } from './data/palette';
+import { GameScene } from './render/GameScene';
+import { keepIntegerZoom } from './render/scale';
+import { parseSeed } from './render/seed';
+import { installTestHook } from './render/testHook';
+import { createSim } from './sim/state';
 
-new Game({
+const sim = createSim(parseSeed(window.location.search));
+const scene = new GameScene(sim);
+
+const game = new Game({
   type: AUTO,
   parent: 'game',
-  width: 640,
-  height: 360,
+  width: VIEW_WIDTH,
+  height: VIEW_HEIGHT,
   pixelArt: true,
-  backgroundColor: '#0b0f14',
-  scale: { mode: Scale.FIT, autoCenter: Scale.CENTER_BOTH },
-  scene: [BootScene],
+  backgroundColor: paletteHex(OUTLINE_ID),
+  scale: { mode: Scale.NONE, autoCenter: Scale.CENTER_BOTH, zoom: Scale.MAX_ZOOM },
+  scene: [scene],
 });
+keepIntegerZoom(game);
+
+if (import.meta.env.DEV) installTestHook(sim, scene);
