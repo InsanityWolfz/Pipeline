@@ -1,5 +1,5 @@
-// What the player asks for on one tick. Render builds these from the keyboard;
-// the sim never reads input devices.
+// What the player asks for on one tick. Render builds these from the keyboard
+// and mouse; the sim never reads input devices.
 
 export type Axis = -1 | 0 | 1;
 
@@ -8,6 +8,21 @@ export interface Command {
   moveY: Axis;
   /** Dodge was pressed this tick (an edge, not held). */
   dodge: boolean;
+  /** Where the cursor points, world px. */
+  aimX: number;
+  aimY: number;
+  /** Fire is held. */
+  fire: boolean;
+  /** Load was pressed this tick (an edge, not held). */
+  load: boolean;
 }
 
-export const NO_COMMAND: Readonly<Command> = { moveX: 0, moveY: 0, dodge: false };
+export const NO_COMMAND: Readonly<Command> = {
+  moveX: 0,
+  moveY: 0,
+  dodge: false,
+  aimX: 0,
+  aimY: 0,
+  fire: false,
+  load: false,
+};

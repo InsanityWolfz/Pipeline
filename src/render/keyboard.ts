@@ -1,6 +1,6 @@
 import type { Scene } from 'phaser';
 import { Input } from 'phaser';
-import type { Axis, Command } from '../sim/input';
+import { NO_COMMAND, type Axis, type Command } from '../sim/input';
 
 // Turns WASD and Space into sim commands. A Space press is latched until a
 // tick consumes it, so a press on a frame that runs no ticks isn't lost and
@@ -32,6 +32,7 @@ export class KeyboardInput {
     const axis = (neg: Input.Keyboard.Key, pos: Input.Keyboard.Key): Axis =>
       ((pos.isDown ? 1 : 0) - (neg.isDown ? 1 : 0)) as Axis;
     const command: Command = {
+      ...NO_COMMAND,
       moveX: axis(this.keys.left, this.keys.right),
       moveY: axis(this.keys.up, this.keys.down),
       dodge: this.dodgePending,

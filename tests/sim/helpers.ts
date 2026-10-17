@@ -1,5 +1,5 @@
 import type { Room } from '../../src/data/rooms';
-import type { Command } from '../../src/sim/input';
+import { NO_COMMAND, type Command } from '../../src/sim/input';
 import { createPlayer, type PlayerState } from '../../src/sim/player';
 import { stepPlayer } from '../../src/sim/movement';
 import { tileCentre } from '../../src/sim/state';
@@ -17,7 +17,12 @@ export function playerIn(room: Room): PlayerState {
   return createPlayer(tileCentre(room.spawn));
 }
 
-export const cmd = (moveX: -1 | 0 | 1 = 0, moveY: -1 | 0 | 1 = 0, dodge = false): Command => ({ moveX, moveY, dodge });
+export const cmd = (moveX: -1 | 0 | 1 = 0, moveY: -1 | 0 | 1 = 0, dodge = false): Command => ({
+  ...NO_COMMAND,
+  moveX,
+  moveY,
+  dodge,
+});
 
 export function run(player: PlayerState, room: Room, command: Command, ticks: number): void {
   for (let i = 0; i < ticks; i++) stepPlayer(player, room, command);

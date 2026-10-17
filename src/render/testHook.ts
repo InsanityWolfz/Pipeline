@@ -6,7 +6,7 @@ import type { GameScene } from './GameScene';
 
 export interface GameTestHook {
   getState(): SimSummary;
-  /** Steps `frames` ticks holding `command`. Its dodge press applies on the first tick only. */
+  /** Steps `frames` ticks holding `command`. Its dodge and load presses apply on the first tick only. */
   step(frames: number, command?: Partial<Command>): SimSummary;
 }
 
@@ -25,7 +25,7 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
       if (!Number.isInteger(frames) || frames < 0) throw new Error(`step() needs a whole number of frames, got ${frames}`);
       scene.manualStepping = true;
       const held: Command = { ...NO_COMMAND, ...command };
-      for (let i = 0; i < frames; i++) stepSim(sim, i === 0 ? held : { ...held, dodge: false });
+      for (let i = 0; i < frames; i++) stepSim(sim, i === 0 ? held : { ...held, dodge: false, load: false });
       return summarize(sim);
     },
   };
