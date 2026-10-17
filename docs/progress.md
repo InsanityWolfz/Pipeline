@@ -4,7 +4,7 @@ Newest entry first.
 
 ## 2026-10-17: 003 Tube firing spec
 **Changed:** reviewed docs/process.md, interviewed Shaun and wrote `docs/specs/003-tube-firing.md` (status: draft). Decisions: arrows only, from a starting stack of 30; tap R to load one round per 0.25 s into a 6-round tube, stopped by firing or rolling; hold left mouse to fire at 4 shots/s; an empty tube dry-fires and never auto-loads; free movement while firing, no firing during a roll; face the aim while firing; arrows at 480 px/s that stop at walls or after 320 px, colliding at their ground point and drawn at chest height; a minimal one-slot HUD and a crosshair; new sprites for the tube, firing pose, arrow, HUD and crosshair.
-**Next:** Shaun approved the spec and the `/plan` (saved outside the repo; summary: sim tests first for tube, loading and arrows, then data, sim, sprites with an approval stop, render, e2e). Run `/build` next.
+**Next:** Shaun approved the spec and the `/plan` (saved outside the repo; summary: sim tests first for tube, loading and arrows, then data, sim, sprites with an approval stop, render, e2e). `/build` in progress: sim (inventory, tube, arrows, getState fields) done with tests, 88 unit tests pass; sprites drawn and waiting on Shaun's approval; render and e2e not started.
 **Notes:** planning added one rule to fold into the spec on the first build commit: R pressed during a roll is ignored, not buffered. Arrow damage 10 is a placeholder for 004 to tune. All tuning values in the spec are starting points for the playtest.
 
 ## 2026-10-17: 002 Movement
