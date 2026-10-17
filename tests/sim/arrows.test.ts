@@ -9,7 +9,8 @@ import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
 import { openRoom } from './helpers';
 
-const STEP = AMMO.arrow!.speed / TICK_RATE;
+const ARROW = AMMO.arrow ?? expect.unreachable('arrow ammo is missing');
+const STEP = ARROW.speed / TICK_RATE;
 
 /** An arrow flying from the centre of tile (tx, ty). */
 function arrowAt(tx: number, ty: number, dx: number, dy: number): ArrowState {
@@ -44,7 +45,7 @@ describe('arrows', () => {
   it('vanish after flying their range', () => {
     const arrows = [arrowAt(2, 15, 1, 0)];
     const room = openRoom(60, 30);
-    expect(ticksToRemove(arrows, room)).toBe(AMMO.arrow!.range / STEP);
+    expect(ticksToRemove(arrows, room)).toBe(ARROW.range / STEP);
   });
 
   it('stop at walls', () => {
