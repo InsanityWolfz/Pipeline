@@ -1,5 +1,5 @@
 # 002: Movement
-status: approved
+status: done
 
 ## Goal
 The player walks around a walled ruin room with WASD and rolls out of the way with Space, while the camera follows. The room can be shown in three-quarter or straight-down view, toggled live, so Shaun can compare the two.
@@ -13,42 +13,42 @@ The player walks around a walled ruin room with WASD and rolls out of the way wi
 ## Acceptance criteria
 
 **Input and commands**
-- [ ] Render turns WASD and Space into a per-tick command (a move vector and a dodge press) that the sim consumes. The sim never reads the keyboard.
-- [ ] `window.__GAME__` can set the command for the ticks it steps, so tests drive movement without real key presses.
+- [x] Render turns WASD and Space into a per-tick command (a move vector and a dodge press) that the sim consumes. The sim never reads the keyboard.
+- [x] `window.__GAME__` can set the command for the ticks it steps, so tests drive movement without real key presses.
 
 **Walking (sim)**
-- [ ] The player moves in 8 directions. Diagonal movement is normalized, so it is no faster than straight movement.
-- [ ] Walk top speed is 120 px/s. The player reaches top speed from rest in about 6 ticks, and comes to rest about as fast after input stops.
-- [ ] The player keeps a facing: the last non-zero move direction, snapped to one of 4 directions (up, down, left, right) for the sprite. It starts facing down.
+- [x] The player moves in 8 directions. Diagonal movement is normalized, so it is no faster than straight movement.
+- [x] Walk top speed is 120 px/s. The player reaches top speed from rest in about 6 ticks, and comes to rest about as fast after input stops.
+- [x] The player keeps a facing: the last non-zero move direction, snapped to one of 4 directions (up, down, left, right) for the sprite. It starts facing down.
 
 **Roll (sim)**
-- [ ] Pressing dodge starts a roll in the current move direction, or in the facing direction when standing still.
-- [ ] A roll covers 96 px over 18 ticks on open floor. Its direction is fixed once it starts; move input doesn't steer it.
-- [ ] The player is invulnerable for the first 12 ticks of the roll. The sim exposes this as a flag (nothing can hit the player yet; 004 uses it).
-- [ ] After a roll ends, a new roll can't start for 30 ticks (0.5 s). Dodge presses during a roll or its cooldown do nothing and are not buffered.
-- [ ] Walls and ruin blocks stop a roll the same way they stop walking.
+- [x] Pressing dodge starts a roll in the current move direction, or in the facing direction when standing still.
+- [x] A roll covers 96 px over 18 ticks on open floor. Its direction is fixed once it starts; move input doesn't steer it.
+- [x] The player is invulnerable for the first 12 ticks of the roll. The sim exposes this as a flag (nothing can hit the player yet; 004 uses it).
+- [x] After a roll ends, a new roll can't start for 30 ticks (0.5 s). Dodge presses during a roll or its cooldown do nothing and are not buffered.
+- [x] Walls and ruin blocks stop a roll the same way they stop walking.
 
 **Room and collision (sim + data)**
-- [ ] The room is 40×30 tiles (1280×960 px), bounded by walls, with a few ruin blocks inside. The layout is data in `src/data`, not code.
-- [ ] The player has a small collision box at their feet. It can't overlap walls or ruin blocks, and slides along them when moving diagonally into one.
-- [ ] The player spawns at a fixed open spot set in the room data.
+- [x] The room is 40×30 tiles (1280×960 px), bounded by walls, with a few ruin blocks inside. The layout is data in `src/data`, not code.
+- [x] The player has a small collision box at their feet. It can't overlap walls or ruin blocks, and slides along them when moving diagonally into one.
+- [x] The player spawns at a fixed open spot set in the room data.
 
 **Camera (render)**
-- [ ] The camera eases toward the player and is clamped to the room, so nothing beyond the walls is ever shown. It stays pixel-snapped (no shimmering at integer zoom).
+- [x] The camera eases toward the player and is clamped to the room, so nothing beyond the walls is ever shown. It stays pixel-snapped (no shimmering at integer zoom).
 
 **Views (render)**
-- [ ] Two views exist: three-quarter (default) and straight-down. `?view=34` or `?view=top` picks one at load, and V swaps live.
-- [ ] The view changes only what is drawn. The sim, collision and state are identical in both.
-- [ ] In three-quarter view, sprites are depth-sorted by their feet, so the player is drawn behind a ruin block when standing above it and in front when below it.
-- [ ] `getState()` includes the player's position, velocity, facing, roll state (rolling, invulnerable, cooldown remaining) and the current view.
+- [x] Two views exist: three-quarter (default) and straight-down. `?view=34` or `?view=top` picks one at load, and V swaps live.
+- [x] The view changes only what is drawn. The sim, collision and state are identical in both.
+- [x] In three-quarter view, sprites are depth-sorted by their feet, so the player is drawn behind a ruin block when standing above it and in front when below it.
+- [x] `getState()` includes the player's position, velocity, facing, roll state (rolling, invulnerable, cooldown remaining) and the current view.
 
 **Art**
-- [ ] For each view: a player sprite with idle and a walk loop in 4 directions plus a roll animation, a floor tile, a wall tile and a ruin block, all following docs/art.md. Each view's set is drawn for that camera angle.
-- [ ] All asset keys are registered in `src/data/assets.ts`.
-- [ ] Shaun approves every new sprite by eye at 4×.
+- [x] For each view: a player sprite with idle and a walk loop in 4 directions plus a roll animation, a floor tile, a wall tile and a ruin block, all following docs/art.md. Each view's set is drawn for that camera angle.
+- [x] All asset keys are registered in `src/data/assets.ts`.
+- [x] Shaun approves every new sprite by eye at 4×.
 
 **Checks**
-- [ ] `npm run check` and `npm run test:e2e` pass.
+- [x] `npm run check` and `npm run test:e2e` pass.
 
 ## Data changes
 - Movement tuning (new, e.g. `src/data/player.ts`): walk speed 120 px/s, acceleration and deceleration (~6 ticks to full and to rest), roll distance 96 px, roll duration 18 ticks, invulnerable ticks 12, roll cooldown 30 ticks, feet collision box size.
