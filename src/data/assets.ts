@@ -53,6 +53,9 @@ export const HUD_SLOT_LAYOUT = {
   loadBar: { x: 4, y: 18, w: 36, h: 2 },
   /** Gap below the slot to the bottom of the screen. */
   margin: 6,
+  /** Palette ids: the load bar fill, and the slot tint while a dry fire shows. */
+  loadBarColor: 'mist',
+  dryFireTint: 'ember',
 } as const;
 
 /** An animation: the sprite grid `key` with `frames` frames (`key/0`..), or a single frame `key`. */
