@@ -16,7 +16,7 @@ This is the operating manual for building Pipeline with Claude Code. It sits nex
 
 ```
 Read docs/process.md, docs/design.md and docs/prototype.md in full.
-Initialize a local Git repo if there isn't one (no remote yet).
+Use the existing Git repo and its GitHub remote (origin).
 Write the hook scripts as Node scripts so they run on Windows.
 Bootstrap the repo exactly as the "Starter files" and "Repo layout"
 sections of process.md describe: scaffold Phaser 4 + TypeScript + Vite,
@@ -33,7 +33,7 @@ After that, every feature goes through the loop below, one backlog item at a tim
 
 **Before the first session:**
 
-- [ ] A local Git repo in the project folder (push to GitHub later, once the prototype proves out)
+- [ ] A Git repo in the project folder with a GitHub remote, since finished work lands through pull requests
 - [ ] Node.js LTS and npm
 - [ ] Git
 - [ ] Claude Code installed and signed in
@@ -121,8 +121,8 @@ Keep the team small. More agents means more tokens and more places for drift.
 | `/build` | Implements the plan, tests first |
 | `/verify` | Runs all checks and the `qa` agent |
 | `/review` | Runs the `reviewer` agent on the branch diff |
-| `/wrapup` | Marks done, updates progress and rules, merges the branch into main |
-| `/next` | Unattended mode: takes the top approved spec and runs plan through review |
+| `/wrapup` | Marks done, updates progress and rules, opens a pull request into main |
+| `/next` | Unattended mode: takes the top approved spec, runs plan through review, opens a draft pull request |
 
 **Hooks** (deterministic, unlike CLAUDE.md, which is advisory):
 
@@ -220,8 +220,8 @@ One file per command, each a short instruction:
 - **build.md:** "Create a branch for the spec. Write failing sim tests, then the code, in small commits. Follow the plan; if it's wrong, stop and say why."
 - **verify.md:** "Run npm run check and npm run test:e2e. Delegate to the qa agent for screenshots against the acceptance criteria. Fix failures and rerun until green."
 - **review.md:** "Delegate to the reviewer agent with the spec path and the branch diff. Address every blocking issue, then rerun /verify."
-- **wrapup.md:** "After I confirm the playtest: set the spec to done, update docs/backlog.md and docs/progress.md, record technical choices in docs/decisions.md, and if a mistake happened twice, propose a new rule for .claude/rules. Merge the branch into main."
-- **next.md:** "Take the first spec in docs/backlog.md with status: approved. Run /plan (auto-approve only if the plan stays inside the spec), /build, /verify and /review. Leave the branch for my review and stop. Never merge, never start a second spec, never write or approve specs."
+- **wrapup.md:** "After I confirm the playtest: set the spec to done, update docs/backlog.md and docs/progress.md, record technical choices in docs/decisions.md, and if a mistake happened twice, propose a new rule for .claude/rules. Commit, push the branch and open a pull request into main that links the spec and summarizes the change. Never merge it yourself; I merge after reviewing the PR."
+- **next.md:** "Take the first spec in docs/backlog.md with status: approved. Run /plan (auto-approve only if the plan stays inside the spec), /build, /verify and /review. Push the branch, open a draft pull request into main that links the spec and lists the verify and review results, and stop. Never merge, never start a second spec, never write or approve specs."
 
 ### .claude/agents/reviewer.md
 
@@ -332,7 +332,7 @@ The starting contents of `docs/backlog.md`, in build order: combat first, then t
 
 ## Unattended runs and token discipline
 
-**Unattended runs.** Because every bit of context lives in files, a fresh session can pick up work at any time, including a scheduled one after usage limits reset. A scheduled run executes `/next`: it takes the top approved spec, runs plan, build, verify and review on its own branch, and stops with the branch ready for your review. With a local-only repo, scheduled runs happen on your computer, so it needs to be on with Claude Code available. It never merges, never writes or approves specs, and never makes design decisions. Your job is to keep a few specs approved ahead of time and review finished branches.
+**Unattended runs.** Because every bit of context lives in files, a fresh session can pick up work at any time, including a scheduled one after usage limits reset. A scheduled run executes `/next`: it takes the top approved spec, runs plan, build, verify and review on its own branch, and stops with a draft pull request ready for your review. Scheduled runs can happen on your computer (it needs to be on with Claude Code available) or in a Claude Code cloud session, since the repo is on GitHub. It never merges, never writes or approves specs, and never makes design decisions. Your job is to keep a few specs approved ahead of time and review the pull requests it opens.
 
 **Token discipline:**
 
