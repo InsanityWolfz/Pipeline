@@ -5,7 +5,7 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 
 | # | Item | Status |
 | --- | --- | --- |
-| 001 | Scaffold: sim/render split, seeded RNG, fixed timestep, `window.__GAME__` hook, Playwright smoke test, docs/art.md and the art pipeline (`npm run art`) | approved |
+| 001 | Scaffold: sim/render split, seeded RNG, fixed timestep, `window.__GAME__` hook, Playwright smoke test, docs/art.md and the art pipeline (`npm run art`) | done |
 | 002 | Movement: walk and dodge in three-quarter view with camera follow | idea |
 | 003 | Tube firing: hand-loaded ammo in an inventory, cursor aiming, projectiles in the sim | idea |
 | 004 | Enemies: Husk with a telegraphed swipe, health, damage, death, raw material drops | idea |
