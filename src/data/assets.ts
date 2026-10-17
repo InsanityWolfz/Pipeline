@@ -31,7 +31,7 @@ const WALK_FPS = 8;
 const WALK_FRAMES = 4;
 const ROLL_FRAMES = 4;
 
-const def = (name: PlayerAnim, frames: number, frameRate: AnimDef['frameRate'], loop: boolean): AnimDef => ({
+const playerAnim = (name: PlayerAnim, frames: number, frameRate: AnimDef['frameRate'], loop: boolean): AnimDef => ({
   key: `player-${name}`,
   frames,
   frameRate,
@@ -39,13 +39,13 @@ const def = (name: PlayerAnim, frames: number, frameRate: AnimDef['frameRate'], 
 });
 
 export const PLAYER_ANIMS: Readonly<Record<PlayerAnim, AnimDef>> = {
-  'idle-down': def('idle-down', 1, 1, true),
-  'idle-up': def('idle-up', 1, 1, true),
-  'idle-side': def('idle-side', 1, 1, true),
-  'walk-down': def('walk-down', WALK_FRAMES, WALK_FPS, true),
-  'walk-up': def('walk-up', WALK_FRAMES, WALK_FPS, true),
-  'walk-side': def('walk-side', WALK_FRAMES, WALK_FPS, true),
-  roll: def('roll', ROLL_FRAMES, 'roll', false),
+  'idle-down': playerAnim('idle-down', 1, 1, true),
+  'idle-up': playerAnim('idle-up', 1, 1, true),
+  'idle-side': playerAnim('idle-side', 1, 1, true),
+  'walk-down': playerAnim('walk-down', WALK_FRAMES, WALK_FPS, true),
+  'walk-up': playerAnim('walk-up', WALK_FRAMES, WALK_FPS, true),
+  'walk-side': playerAnim('walk-side', WALK_FRAMES, WALK_FPS, true),
+  roll: playerAnim('roll', ROLL_FRAMES, 'roll', false),
 };
 
 /** Atlas frame names for an animation. */

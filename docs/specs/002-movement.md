@@ -40,7 +40,7 @@ The player walks around a walled ruin room with WASD and rolls out of the way wi
 - [x] Two views exist: three-quarter (default) and straight-down. `?view=34` or `?view=top` picks one at load, and V swaps live.
 - [x] The view changes only what is drawn. The sim, collision and state are identical in both.
 - [x] In three-quarter view, sprites are depth-sorted by their feet, so the player is drawn behind a ruin block when standing above it and in front when below it.
-- [x] `getState()` includes the player's position, velocity, facing, roll state (rolling, invulnerable, cooldown remaining) and the current view.
+- [x] `getState()` includes the player's position, velocity, facing, roll state (rolling, invulnerable, cooldown remaining) and the current view (view removed in the post-playtest cleanup).
 
 **Art**
 - [x] For each view: a player sprite with idle and a walk loop in 4 directions plus a roll animation, a floor tile, a wall tile and a ruin block, all following docs/art.md. Each view's set is drawn for that camera angle.
