@@ -1,16 +1,21 @@
 import { Scene } from 'phaser';
 import atlasImage from '../../assets/build/sprites.png?url';
 import atlasData from '../../assets/build/sprites.json?url';
-import { ATLAS_KEY, SPRITES } from '../data/assets';
-import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
+import { ATLAS_KEY } from '../data/assets';
+import { CAMERA_LERP } from '../data/config';
 import { advanceClock, createClock } from '../sim/clock';
-import type { SimState } from '../sim/state';
+import { roomOf, roomSize, type SimState } from '../sim/state';
 import { stepSim } from '../sim/step';
+import { KeyboardInput } from './keyboard';
+import { PlayerView } from './PlayerView';
+import { drawRoom } from './room';
 
 // Draws the sim and drives it in real time. Holds no game rules.
 export class GameScene extends Scene {
   private readonly sim: SimState;
   private readonly clock = createClock();
+  private keyboard?: KeyboardInput;
+  private playerView?: PlayerView;
   /** Set by the test hook: the real-time loop stops advancing the sim. */
   manualStepping = false;
 
@@ -24,17 +29,28 @@ export class GameScene extends Scene {
   }
 
   create(): void {
-    for (let y = 0; y < VIEW_HEIGHT; y += TILE_SIZE) {
-      for (let x = 0; x < VIEW_WIDTH; x += TILE_SIZE) {
-        this.add.image(x, y, ATLAS_KEY, SPRITES.floorRune).setOrigin(0);
-      }
-    }
-    this.add.image(VIEW_WIDTH / 2, VIEW_HEIGHT / 2, ATLAS_KEY, SPRITES.leyCrystal);
+    const room = roomOf(this.sim);
+    drawRoom(this, room);
+    this.playerView = new PlayerView(this);
+    this.playerView.update(this.sim.player);
+
+    const camera = this.cameras.main;
+    const { width, height } = roomSize(room);
+    camera.setBounds(0, 0, width, height);
+    camera.setRoundPixels(true);
+    // Start centred on the player so the first frame doesn't visibly snap.
+    camera.centerOn(this.sim.player.x, this.sim.player.y);
+    camera.startFollow(this.playerView.sprite, true, CAMERA_LERP, CAMERA_LERP);
+
+    this.keyboard = new KeyboardInput(this);
   }
 
   override update(_time: number, delta: number): void {
-    if (this.manualStepping) return;
-    const ticks = advanceClock(this.clock, delta);
-    for (let i = 0; i < ticks; i++) stepSim(this.sim);
+    if (!this.manualStepping && this.keyboard) {
+      this.keyboard.poll();
+      const ticks = advanceClock(this.clock, delta);
+      for (let i = 0; i < ticks; i++) stepSim(this.sim, this.keyboard.nextCommand());
+    }
+    this.playerView?.update(this.sim.player);
   }
 }

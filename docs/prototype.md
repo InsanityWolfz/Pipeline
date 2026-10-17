@@ -112,5 +112,5 @@ The prototype leaves these out: the skill tree, bosses and boss cores, more than
 
 ## Open questions
 
-- [ ] Three-quarter view or straight top-down, decided by testing both early
+- [x] Three-quarter view or straight top-down, decided by testing both early: three-quarter (Shaun, 002 playtest, 2026-10-17)
 - [ ] The locked palette for docs/art.md

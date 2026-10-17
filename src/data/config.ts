@@ -15,3 +15,9 @@ export const VIEW_HEIGHT = 360;
 
 /** World tile size in pixels. */
 export const TILE_SIZE = 32;
+
+/** Below this speed (px per tick) the player sprite shows idle instead of walking. */
+export const IDLE_SPEED = 0.1;
+
+/** Camera follow easing per frame (0..1, lower is smoother). */
+export const CAMERA_LERP = 0.12;

@@ -22,13 +22,14 @@ How we work: docs/process.md. Current state: docs/progress.md.
   src/sim/rng.ts, no Math.random or wall-clock time
 - src/render: Phaser scenes and views only, no game rules
 - src/data: content as typed data; new content = new data, not new code
-- Dev builds expose window.__GAME__ with getState() and step(frames)
+- Dev builds expose window.__GAME__ with getState() and step(frames, command?)
 - One system per file, ~300 lines max, no `any`
 
 ## Workflow
 Every feature runs /spec -> /plan -> /build -> /verify -> /review -> /wrapup.
 One backlog item per branch. Never skip verify or review.
 Never report done while checks fail.
+End every reply with what you need from Shaun next (or say nothing is needed).
 
 ## Never
 - Invent design. If docs/design.md or the spec doesn't say, ask, or add

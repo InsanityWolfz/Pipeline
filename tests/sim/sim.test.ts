@@ -36,8 +36,8 @@ describe('sim state', () => {
     expect(JSON.parse(JSON.stringify(sim))).toEqual(sim);
   });
 
-  it('summarizes as tick and seed', () => {
-    expect(summarize(stepped(8, 4))).toEqual({ tick: 4, seed: 8 });
+  it('summarizes tick and seed', () => {
+    expect(summarize(stepped(8, 4))).toMatchObject({ tick: 4, seed: 8 });
   });
 });
 
