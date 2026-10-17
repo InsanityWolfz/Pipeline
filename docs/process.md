@@ -1,10 +1,10 @@
-# Factory ARPG — Build Process
+# Pipeline — Build Process
 
 Oct 17, 2026 · @Shaun
 
 ## How to use this doc
 
-This is the operating manual for building Factory ARPG with Claude Code. It sits next to two other docs: the design doc (what the game is) and the prototype plan (what to build first). Claude Code reads all three from the repo, so every session starts with the same context.
+This is the operating manual for building Pipeline with Claude Code. It sits next to two other docs: the design doc (what the game is) and the prototype plan (what to build first). Claude Code reads all three from the repo, so every session starts with the same context.
 
 **Setup:**
 
@@ -136,7 +136,7 @@ The first session creates these files exactly as written. Later sessions may ref
 ### CLAUDE.md
 
 ```markdown
-# Factory ARPG
+# Pipeline
 
 Solo fantasy action RPG. The player's tube weapon is a portal to a factory
 they build; the factory's layout shapes every shot.

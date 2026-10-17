@@ -1,4 +1,4 @@
-# Factory ARPG — Prototype Plan
+# Pipeline — Prototype Plan
 
 Oct 17, 2026 · @Shaun
 

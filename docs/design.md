@@ -1,4 +1,4 @@
-# Factory ARPG — Design Doc
+# Pipeline — Design Doc
 
 Oct 17, 2026 · @Shaun
 
@@ -8,7 +8,7 @@ A solo fantasy action RPG where your weapon is a portal to your factory. You fin
 
 The core verb is **conquer, claim, automate**. You clear a region by hand, reactivate its ley pylon, and its materials flow home to feed your ammo lines. The layout of each line decides what the shot does: five assembly lines set at five angles fire a five-arrow spread.
 
-Every ARPG hand-waves infinite arrows. This game is about where they come from. Working title: **Factory ARPG**.
+Every ARPG hand-waves infinite arrows. This game is about where they come from. Working title: **Pipeline**.
 
 ## Pillars and design rules
 
@@ -175,4 +175,4 @@ Example modifiers:
 - [ ] Reservoir sizes and refill speeds
 - [ ] Whether identification is free or costs materials
 - [ ] Whether melee exists, for example as blade constructs
-- [ ] Final names for the game and the foundry
+- [ ] Final names for the foundry and the tube
