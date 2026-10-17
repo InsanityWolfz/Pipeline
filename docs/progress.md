@@ -2,10 +2,27 @@
 
 Newest entry first.
 
-## 2026-10-17: 003 Tube firing spec
-**Changed:** reviewed docs/process.md, interviewed Shaun and wrote `docs/specs/003-tube-firing.md` (status: draft). Decisions: arrows only, from a starting stack of 30; tap R to load one round per 0.25 s into a 6-round tube, stopped by firing or rolling; hold left mouse to fire at 4 shots/s; an empty tube dry-fires and never auto-loads; free movement while firing, no firing during a roll; face the aim while firing; arrows at 480 px/s that stop at walls or after 320 px, colliding at their ground point and drawn at chest height; a minimal one-slot HUD and a crosshair; new sprites for the tube, firing pose, arrow, HUD and crosshair.
-**Next:** Shaun approved the spec and the `/plan` (saved outside the repo; summary: sim tests first for tube, loading and arrows, then data, sim, sprites with an approval stop, render, e2e). `/build` in progress: sim (inventory, tube, arrows, getState fields) done with tests, 88 unit tests pass; sprites drawn and waiting on Shaun's approval; render and e2e not started.
-**Notes:** planning added one rule to fold into the spec on the first build commit: R pressed during a roll is ignored, not buffered. Arrow damage 10 is a placeholder for 004 to tune. All tuning values in the spec are starting points for the playtest.
+## 2026-10-17: 003 Tube firing
+**Changed:** spec written and approved, then planned and built on `claude/003-tube-firing`.
+- **Sim:** inventory, the tube (tap R loads one round per 15 ticks into 6; hold fire for 4 shots/s; dry fire; no firing or loading in a roll) and arrows that stop at walls or after 320 px.
+- **Data:** the arrow item and ammo, and tube tuning.
+- **Render:** mouse aim; the tube held toward the aim; firing poses; arrows with shadows; a one-slot HUD with a sprite digit font; the crosshair.
+- **Sprites:** approved by Shaun.
+- **Checks:** verify green (89 unit, 8 e2e, qa screenshots pass); review found no blocking issues, and the code suggestions are done.
+
+**Next:** Shaun playtests the Pages preview (`/branch/claude/003-tube-firing/`), then `/wrapup`.
+
+**Notes:**
+- For `/wrapup`: tick the spec's criteria; add a 003 section to decisions.md covering:
+  - the `hud-digits` sprite font (Phaser text blurs at integer zoom)
+  - the test hook keeping the last aim
+  - aim, fire and load added to the command
+  - `controls.ts` replacing `keyboard.ts`
+  - the tube hidden during a roll (not in the spec)
+  - the extra summary fields `tube.ammo`, `tube.firing` and `player.aim`
+- Planning added "R during a roll is ignored, not buffered" to the spec (Shaun's call).
+- When not firing, the tube points at the cursor while the body faces the walk direction, as the spec says; QA noted it can look odd. Worth judging in the playtest.
+- Arrow damage 10 is a placeholder for 004.
 
 ## 2026-10-17: 002 Movement
 **Changed:** built 002 on `claude/002-movement`: walk, roll and feet-box collision in `src/sim`, movement tuning and the `ruin-hall` room in `src/data`, keyboard commands, room and player views, clamped camera and the `?view=` / V toggle in `src/render`; `__GAME__.step(frames, command)` and `setView()`. Sprites for both views drawn and approved by Shaun. Verify (check, e2e, qa screenshots) green; review addressed. Shaun playtested the preview: everything feels fine, and **three-quarter view wins**. Then, at Shaun's request, a cleanup removed the straight-down view, its sprites, `?view=`, V and `__GAME__.setView()`. 60 unit tests and 4 e2e tests pass.
