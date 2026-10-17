@@ -20,6 +20,7 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
   window.__GAME__ = {
     getState: () => summarize(sim),
     step: (frames) => {
+      if (!Number.isInteger(frames) || frames < 0) throw new Error(`step() needs a whole number of frames, got ${frames}`);
       scene.manualStepping = true;
       for (let i = 0; i < frames; i++) stepSim(sim);
       return summarize(sim);

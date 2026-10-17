@@ -1,5 +1,6 @@
 import { AUTO, Game, Scale } from 'phaser';
 import { VIEW_HEIGHT, VIEW_WIDTH } from './data/config';
+import { OUTLINE_ID, paletteHex } from './data/palette';
 import { GameScene } from './render/GameScene';
 import { keepIntegerZoom } from './render/scale';
 import { parseSeed } from './render/seed';
@@ -15,7 +16,7 @@ const game = new Game({
   width: VIEW_WIDTH,
   height: VIEW_HEIGHT,
   pixelArt: true,
-  backgroundColor: '#120e1f',
+  backgroundColor: paletteHex(OUTLINE_ID),
   scale: { mode: Scale.NONE, autoCenter: Scale.CENTER_BOTH, zoom: Scale.MAX_ZOOM },
   scene: [scene],
 });

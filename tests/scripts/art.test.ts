@@ -1,6 +1,11 @@
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { inflateSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
+import { buildArt } from '../../scripts/art/build';
 import { parseSprite } from '../../scripts/art/parse';
+import { ATLAS_KEY } from '../../src/data/assets';
 import { encodePng } from '../../scripts/art/png';
 import { PALETTE } from '../../src/data/palette';
 
@@ -56,5 +61,33 @@ describe('png encoder', () => {
     expect(png.subarray(37, 41).toString('ascii')).toBe('IDAT');
     const raw = inflateSync(png.subarray(41, 41 + idatLength));
     expect([...raw]).toEqual([0, ...rgba]);
+  });
+});
+
+describe('art build', () => {
+  it('packs single and animated sprites into an atlas', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'art-'));
+    const sprites = join(dir, 'sprites');
+    mkdirSync(sprites);
+    writeFileSync(join(sprites, 'dot.txt'), `${a}\n`);
+    writeFileSync(join(sprites, 'blink.txt'), `${a}${b}\n---\n${b}${a}\n`);
+    const names = buildArt(sprites, join(dir, 'build'));
+
+    expect(names.sort()).toEqual(['blink/0', 'blink/1', 'dot']);
+    const atlas = JSON.parse(readFileSync(join(dir, 'build', `${ATLAS_KEY}.json`), 'utf8')) as {
+      frames: Record<string, { frame: { x: number; y: number; w: number; h: number } }>;
+    };
+    expect(atlas.frames['blink/1']?.frame).toMatchObject({ w: 2, h: 1 });
+    expect(atlas.frames.dot?.frame).toMatchObject({ w: 1, h: 1 });
+    rmSync(dir, { recursive: true });
+  });
+
+  it('matches the committed atlas, so sprites were rebuilt after editing', () => {
+    const out = mkdtempSync(join(tmpdir(), 'art-'));
+    buildArt('assets/sprites', out);
+    for (const file of [`${ATLAS_KEY}.png`, `${ATLAS_KEY}.json`]) {
+      expect(readFileSync(join(out, file)).equals(readFileSync(join('assets/build', file))), `${file} is stale: run npm run art`).toBe(true);
+    }
+    rmSync(out, { recursive: true });
   });
 });

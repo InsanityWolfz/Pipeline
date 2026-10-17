@@ -5,7 +5,7 @@ Locks the look so every sprite matches. Approved by Shaun before any sprite goes
 ## Style
 - **View:** three-quarter top-down. You see the tops and fronts of things. Pure art convention, no 3D.
 - **Light:** from the top left. Top and left edges are lit; bottom and right edges and cast shadows are dark.
-- **Scale:** 32-pixel tiles. Characters are 32 wide and 32 to 48 tall. Items and pickups are 16 to 24.
+- **Scale:** 32-pixel tiles. Characters are 32 wide and 32 to 48 tall.
 - **Resolution:** the game renders at 640×360 and scales up in whole-pixel steps, so one sprite pixel is always a square block on screen.
 - **Outline:** characters, enemies, items and machines get a one-pixel outline in `outline`, the palette's darkest color. Floor and wall tiles don't, though mortar lines may use it.
 - **Mood:** dusk ruins. Cool slate and violet stone, deep teal shadows, moss, warm ember highlights. Ley-line cyan is the signature accent: it marks magic, so it stays rare on ordinary surfaces.

@@ -3,6 +3,9 @@
 
 export type RngState = [number, number, number, number];
 
+// Outputs discarded after seeding so similar seeds diverge quickly.
+const WARM_UP = 12;
+
 function splitmix32(seed: number): () => number {
   let s = seed >>> 0;
   return () => {
@@ -17,8 +20,7 @@ function splitmix32(seed: number): () => number {
 export function createRng(seed: number): RngState {
   const next = splitmix32(seed);
   const state: RngState = [next(), next(), next(), next()];
-  // Discard the first outputs so similar seeds diverge quickly.
-  for (let i = 0; i < 12; i++) nextUint32(state);
+  for (let i = 0; i < WARM_UP; i++) nextUint32(state);
   return state;
 }
 

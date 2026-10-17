@@ -2,15 +2,16 @@
 // review images: the palette swatch sheet and each sprite at 4x.
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
-import { PALETTE } from '../../src/data/palette.ts';
+import { ATLAS_KEY } from '../../src/data/assets.ts';
+import { hexToRgb, OUTLINE_ID, PALETTE, paletteHex } from '../../src/data/palette.ts';
 import { parseSprite } from './parse.ts';
 import { encodePng } from './png.ts';
 
-const ATLAS_NAME = 'sprites';
 const ATLAS_MAX_WIDTH = 512;
 const PADDING = 1;
 const REVIEW_SCALE = 4;
 const REVIEW_BACKGROUND = 'slate-dark';
+const REVIEW_MARGIN = 8;
 const SWATCH = { size: 32, gap: 4, columns: 6 };
 
 interface Frame {
@@ -27,8 +28,7 @@ interface Image {
 }
 
 function rgb(id: string): number[] {
-  const hex = PALETTE.find((c) => c.id === id)?.hex ?? '#000000';
-  return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  return hexToRgb(paletteHex(id));
 }
 
 function blit(target: Image, source: Image, left: number, top: number, scale = 1): void {
@@ -66,8 +66,9 @@ function pack(frames: Frame[]): { atlas: Image; placed: Map<string, { x: number;
     shelf = Math.max(shelf, frame.height);
     width = Math.max(width, x - PADDING);
   }
-  const atlas = { width: Math.max(width, 1), height: Math.max(y + shelf, 1), pixels: new Uint8Array() };
-  atlas.pixels = new Uint8Array(atlas.width * atlas.height * 4);
+  const atlasWidth = Math.max(width, 1);
+  const atlasHeight = Math.max(y + shelf, 1);
+  const atlas = { width: atlasWidth, height: atlasHeight, pixels: new Uint8Array(atlasWidth * atlasHeight * 4) };
   for (const frame of sorted) {
     const at = placed.get(frame.name);
     if (at) blit(atlas, frame, at.x, at.y);
@@ -78,7 +79,7 @@ function pack(frames: Frame[]): { atlas: Image; placed: Map<string, { x: number;
 function paletteSheet(): Image {
   const rows = Math.ceil(PALETTE.length / SWATCH.columns);
   const step = SWATCH.size + SWATCH.gap;
-  const sheet = filled(SWATCH.columns * step + SWATCH.gap, rows * step + SWATCH.gap, rgb('outline'));
+  const sheet = filled(SWATCH.columns * step + SWATCH.gap, rows * step + SWATCH.gap, rgb(OUTLINE_ID));
   PALETTE.forEach((color, i) => {
     const swatch = filled(SWATCH.size, SWATCH.size, rgb(color.id));
     blit(sheet, swatch, SWATCH.gap + (i % SWATCH.columns) * step, SWATCH.gap + Math.floor(i / SWATCH.columns) * step);
@@ -102,9 +103,10 @@ export function buildArt(spritesDir: string, outDir: string): string[] {
 
     // Review strip: every frame side by side at 4x on a dark background.
     const cell = { width: sprite.width * REVIEW_SCALE, height: sprite.height * REVIEW_SCALE };
-    const review = filled((cell.width + 8) * sprite.frames.length + 8, cell.height + 16, rgb(REVIEW_BACKGROUND));
+    const m = REVIEW_MARGIN;
+    const review = filled((cell.width + m) * sprite.frames.length + m, cell.height + 2 * m, rgb(REVIEW_BACKGROUND));
     sprite.frames.forEach((pixels, i) => {
-      blit(review, { width: sprite.width, height: sprite.height, pixels }, 8 + i * (cell.width + 8), 8, REVIEW_SCALE);
+      blit(review, { width: sprite.width, height: sprite.height, pixels }, m + i * (cell.width + m), m, REVIEW_SCALE);
     });
     writeFileSync(join(reviewDir, `${key}.png`), encodePng(review.width, review.height, review.pixels));
   }
@@ -126,10 +128,10 @@ export function buildArt(spritesDir: string, outDir: string): string[] {
         ];
       }),
     ),
-    meta: { image: `${ATLAS_NAME}.png`, size: { w: atlas.width, h: atlas.height }, scale: '1' },
+    meta: { image: `${ATLAS_KEY}.png`, size: { w: atlas.width, h: atlas.height }, scale: '1' },
   };
-  writeFileSync(join(outDir, `${ATLAS_NAME}.png`), encodePng(atlas.width, atlas.height, atlas.pixels));
-  writeFileSync(join(outDir, `${ATLAS_NAME}.json`), `${JSON.stringify(json, null, 2)}\n`);
+  writeFileSync(join(outDir, `${ATLAS_KEY}.png`), encodePng(atlas.width, atlas.height, atlas.pixels));
+  writeFileSync(join(outDir, `${ATLAS_KEY}.json`), `${JSON.stringify(json, null, 2)}\n`);
 
   const sheet = paletteSheet();
   writeFileSync(join(reviewDir, 'palette.png'), encodePng(sheet.width, sheet.height, sheet.pixels));

@@ -44,3 +44,15 @@ export const PALETTE: readonly PaletteColor[] = [
   { id: 'ley-glow', char: 'w', hex: '#a8fff4' },
   { id: 'white', char: 'W', hex: '#f4f7fb' },
 ];
+
+/** The hex of a palette color by id. Throws on an unknown id. */
+export function paletteHex(id: string): string {
+  const color = PALETTE.find((c) => c.id === id);
+  if (!color) throw new Error(`Unknown palette color '${id}'`);
+  return color.hex;
+}
+
+/** `#rrggbb` as [r, g, b]. */
+export function hexToRgb(hex: string): [number, number, number] {
+  return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
+}
