@@ -15,3 +15,6 @@ export const VIEW_HEIGHT = 360;
 
 /** World tile size in pixels. */
 export const TILE_SIZE = 32;
+
+/** Camera follow easing per frame (0..1, lower is smoother). */
+export const CAMERA_LERP = 0.12;
