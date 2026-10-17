@@ -48,9 +48,9 @@ export function digitFrame(ch: string): string {
 export const HUD_SLOT_LAYOUT = {
   icon: { x: 4, y: 4 },
   loaded: { x: 25, y: 5 },
-  carried: { x: 25, y: 13 },
-  /** The load progress bar inside the well, along its bottom edge. */
-  loadBar: { x: 4, y: 18, w: 36, h: 2 },
+  carried: { x: 25, y: 12 },
+  /** The load progress bar, under the counts and clear of the icon. */
+  loadBar: { x: 23, y: 18, w: 16, h: 2 },
   /** Gap below the slot to the bottom of the screen. */
   margin: 6,
   /** Palette ids: the load bar fill, and the slot tint while a dry fire shows. */
