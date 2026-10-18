@@ -149,6 +149,8 @@ describe('Husk leash', () => {
 
   it('finishes a swipe before the leash applies', () => {
     const { s, e } = windingUp();
+    // A home away from where it stands, so heading home takes a while.
+    e.homeX += 100;
     movePlayer(s, AWAY.x, AWAY.y);
     const states = new Set<string>();
     for (let i = 0; i < SWIPE_LANDS + swipe.swipeTicks + swipe.recoverTicks - 2; i++) {

@@ -26,26 +26,32 @@ export function createArrow(id: number, ammoId: string, x: number, y: number, dx
   return { id, ammoId, x, y, dx, dy, travelled: 0, damage: ammo.damage, damageType: ammo.damageType };
 }
 
+/** Tries an arrow against targets at its current point; true if it hit one and is spent. */
+export type ArrowHitTest = (arrow: ArrowState) => boolean;
+
 /**
- * Moves every arrow one tick and removes those that hit a wall or ruin block or
- * run out of range. Steps are under a tile, so arrows can't tunnel through walls.
+ * Moves every arrow one tick and removes those that hit a target, a wall or a
+ * ruin block, or run out of range. Targets are tried before walls at both the
+ * start and end point, so a target standing against a wall still gets hit.
+ * Steps are under a tile, so arrows can't tunnel through walls.
  */
-export function stepArrows(arrows: ArrowState[], room: Room): void {
+export function stepArrows(arrows: ArrowState[], room: Room, hits: ArrowHitTest = () => false): void {
   let kept = 0;
   for (const arrow of arrows) {
-    if (flies(arrow, room)) arrows[kept++] = arrow;
+    if (flies(arrow, room, hits)) arrows[kept++] = arrow;
   }
   arrows.length = kept;
 }
 
-function flies(arrow: ArrowState, room: Room): boolean {
-  if (inSolid(room, arrow.x, arrow.y)) return false;
+function flies(arrow: ArrowState, room: Room, hits: ArrowHitTest): boolean {
+  if (hits(arrow) || inSolid(room, arrow.x, arrow.y)) return false;
   const ammo = AMMO[arrow.ammoId];
   if (!ammo) throw new Error(`Unknown ammo '${arrow.ammoId}'`);
   const step = ammo.speed / TICK_RATE;
   arrow.x += arrow.dx * step;
   arrow.y += arrow.dy * step;
   arrow.travelled += step;
+  if (hits(arrow)) return false;
   return arrow.travelled < ammo.range && !inSolid(room, arrow.x, arrow.y);
 }
 

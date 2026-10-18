@@ -31,20 +31,30 @@ function scripted(seed: number, ticks: number) {
   return sim;
 }
 
-/** Walks at the Husk pack, firing at the nearest one and reloading when empty, then stands to take hits. */
+/** One step toward a point: -1, 0 or 1 per axis. */
+const toward = (from: number, to: number): -1 | 0 | 1 => (Math.abs(to - from) < 4 ? 0 : to > from ? 1 : -1);
+
+/**
+ * Walks into the Husk pack and stands there until KO'd, then fights the reset
+ * pack from range, reloading when empty, and collects the drops.
+ */
 function scriptedFight(seed: number, ticks: number) {
   const sim = createSim(seed);
   for (let t = 0; t < ticks; t++) {
+    const p = sim.player;
     const target = sim.enemies[0];
+    const loot = sim.groundItems[0];
+    const fighting = sim.nextEnemyId > 3;
     const empty = sim.tube.loaded === 0;
+    const goal = !fighting ? target : target ? { x: 900, y: 300 } : loot;
     const command: Command = {
       ...NO_COMMAND,
-      moveX: t < 400 ? 1 : 0,
-      moveY: t < 400 ? -1 : 0,
-      load: empty && !sim.tube.loading,
-      fire: !empty && target !== undefined,
-      aimX: target?.x ?? sim.player.x,
-      aimY: target?.y ?? sim.player.y,
+      moveX: goal ? toward(p.x, goal.x) : 0,
+      moveY: goal ? toward(p.y, goal.y) : 0,
+      load: fighting && empty && !sim.tube.loading,
+      fire: fighting && !empty && target !== undefined,
+      aimX: target?.x ?? p.x,
+      aimY: target?.y ?? p.y,
     };
     stepSim(sim, command);
   }
@@ -79,7 +89,9 @@ describe('sim state', () => {
 
   it('replays a fight with hits, deaths, drops and a KO identically', () => {
     const a = scriptedFight(11, 3000);
-    expect(a.nextEnemyId).toBeGreaterThan(3);
+    expect(a.nextEnemyId).toBe(6);
+    expect(a.enemies).toEqual([]);
+    expect(a.inventory['husk-resin']).toBeGreaterThanOrEqual(3);
     expect(a).toEqual(scriptedFight(11, 3000));
   });
 
