@@ -15,7 +15,9 @@ import {
   FOUNDRY_LAYOUT,
   ICON_RISE,
   HOPPER_SPRITES,
-  MACHINE_HOUSINGS,
+  JAM_SHAKE,
+  MACHINE_SPRITES,
+  machineLook,
   STATUS_MARKERS,
   type PieceView,
 } from '../data/foundryAssets';
@@ -66,7 +68,7 @@ function firstFrame(p: PieceState): string {
   const view = viewOf(p.facing);
   if (p.kind === 'conduit') return animFrames(conduitLook(p.facing, p.inFrom).anim)[0] ?? '';
   if (p.kind === 'sorter') return animFrames(sorterLook(p.facing, p.mirrored).anim)[0] ?? '';
-  if (p.kind === 'machine') return MACHINE_HOUSINGS[pieceDef(p.pieceId).footprint][view].idle;
+  if (p.kind === 'machine') return machineLook(p.pieceId, view).idle;
   if (p.kind === 'stager') return animFrames(STAGER_SPRITE)[0] ?? '';
   return p.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE;
 }
@@ -99,7 +101,7 @@ export class FoundryView {
   constructor(scene: Scene) {
     this.scene = scene;
     this.fan = scene.add.graphics().setDepth(DEPTHS.spreadFan);
-    for (const views of Object.values(MACHINE_HOUSINGS)) for (const v of Object.values(views)) registerAnim(scene, v.working);
+    for (const views of Object.values(MACHINE_SPRITES)) for (const v of Object.values(views)) registerAnim(scene, v.working);
     for (const anim of [...Object.values(CONDUIT_ANIMS), ...Object.values(CONDUIT_CORNERS), ...Object.values(SORTER_ANIMS)]) registerAnim(scene, anim);
     registerAnim(scene, STATUS_MARKERS.working);
   }
@@ -161,7 +163,6 @@ export class FoundryView {
       d.icon.setDepth(FOUNDRY_LAYOUT.itemDepth);
     } else if (p.kind === 'machine') {
       const footprint = pieceDef(p.pieceId).footprint;
-      d.body.setFrame(MACHINE_HOUSINGS[footprint][view].idle);
       d.icon.setPosition(r.x, bottom - ICON_RISE[footprint][view]).setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge);
       d.marker = addVectorSprite(this.scene, r.x, 0, STATUS_MARKERS.blocked).setOrigin(0.5, 1).setDepth(DEPTHS.worldUi);
       d.markerIcon = addVector(this.scene, r.x, 0, pieceIcon(p.pieceId)).setOrigin(0.5).setDepth(DEPTHS.worldUi + 1);
@@ -248,9 +249,13 @@ export class FoundryView {
   }
 
   private drawMachine(p: Extract<PieceState, { kind: 'machine' }>, d: Drawn): void {
-    const housing = MACHINE_HOUSINGS[pieceDef(p.pieceId).footprint][viewOf(p.facing)];
-    if (p.status === 'working') d.body.play(housing.working.key, true);
-    else if (d.body.anims.isPlaying || d.body.frame.name !== housing.idle) d.body.stop().setFrame(housing.idle);
+    // The mechanism moves while working, stands still while idle or starved, and jams (stuck, shaking) while blocked.
+    const look = machineLook(p.pieceId, viewOf(p.facing));
+    const still = p.status === 'blocked' ? look.jammed : look.idle;
+    if (p.status === 'working') d.body.play(look.working.key, true);
+    else if (d.body.anims.isPlaying || d.body.frame.name !== still) d.body.stop().setFrame(still);
+    const shake = p.status === 'blocked' && Math.floor(this.scene.time.now / JAM_SHAKE.ms) % 2 === 0 ? JAM_SHAKE.px : 0;
+    d.body.setX(pieceRect(p).x + shake);
     const marker = d.marker;
     const icon = d.markerIcon;
     if (!marker || !icon) return;

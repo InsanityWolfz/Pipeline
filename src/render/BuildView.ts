@@ -7,7 +7,7 @@ import {
   FACING_ARROWS,
   ICON_RISE,
   HOPPER_SPRITES,
-  MACHINE_HOUSINGS,
+  machineLook,
 } from '../data/foundryAssets';
 import { STAGER_ANGLES, STAGER_START_ANGLE } from '../data/foundry';
 import { BUILD_BAR_LAYOUT, GHOST } from '../data/hudLayout';
@@ -27,7 +27,7 @@ const FIRST_PIECE = BUILD_BAR[0] ?? '';
 function bodyFrame(pieceId: string, facing: Facing, inFrom: Facing): string {
   const def = pieceDef(pieceId);
   const view = viewOf(facing);
-  if (def.kind === 'machine') return MACHINE_HOUSINGS[def.footprint][view].idle;
+  if (def.kind === 'machine') return machineLook(def.id, view).idle;
   if (def.kind === 'conduit') return animFrames(conduitLook(facing, inFrom).anim)[0] ?? '';
   if (def.kind === 'stager') return animFrames(STAGER_SPRITE)[STAGER_ANGLES.indexOf(STAGER_START_ANGLE)] ?? '';
   return def.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE;

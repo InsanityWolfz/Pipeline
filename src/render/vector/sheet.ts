@@ -3,8 +3,9 @@ import { drawWanderer, type WandererPose } from './wandererRig';
 import { sheetPoses } from './wandererPoses';
 import { ENEMY_RIGS } from '../../data/art/enemies';
 import { vectorFrames } from './catalog';
+import { MACHINE_IDS } from '../../data/foundryAssets';
 
-// The contact sheet (016, dev only): every vector sprite, pose and facing at 4×.
+// The contact sheet (016, dev only): every vector sprite, pose and facing at 4×, grouped by family (020).
 
 const ZOOM = 4;
 
@@ -56,10 +57,23 @@ for (const view of ['side', 'down', 'up'] as const satisfies readonly WandererVi
 const sideIdle = sheetPoses('side')[0];
 if (sideIdle) section('Wanderer: facing left', [wandererCell('idle', { ...sideIdle.pose, flip: true })]);
 
-const frames = vectorFrames();
+// Grouped for review (020): each machine on its own row, then each family of sprites.
+const FAMILIES: readonly [title: string, test: (name: string) => boolean][] = [
+  ...MACHINE_IDS.map((id): [string, (n: string) => boolean] => [`Machine: ${id} (idle, jammed, working)`, (n) => n.startsWith(`machine-${id}-`)]),
+  ['Conduits and sorters', (n) => n.startsWith('conduit-') || n.startsWith('sorter-')],
+  ['Hoppers, crates and the gravity stager', (n) => n.startsWith('hopper-') || n === 'crate' || n.startsWith('gravity-stager')],
+  ['Build arrows and status markers', (n) => n.includes('-arrow-') || n.startsWith('status-')],
+  ['Items, ammo and emblems', (n) => n.startsWith('item-') || n.startsWith('icon-') || n.startsWith('emblem-')],
+  ['Fixtures, the pylon and the foundry', (n) => /^(identification-bench|stash|supply-port|doorway-side|waystone|pylon-|door-rubble|ley-crystal|intake-|floor-|wall|prop-|ruin-)/.test(n)],
+  ['Gathering nodes', (n) => n.startsWith('node-')],
+  ['Overworld', (n) => n.startsWith('ow-')],
+  ['HUD and menus', (n) => n.startsWith('hud-') || n.startsWith('craft-') || n.startsWith('menu-') || n === 'key-cap' || n === 'crosshair' || n === 'objective-tick'],
+];
+
 const groups = new Map<string, Cell[]>();
-for (const f of frames) {
-  const group = ENEMY_RIGS.find((r) => f.name.startsWith(`${r.id}-`))?.id ?? 'Projectiles, effects and the tube stone';
+for (const f of vectorFrames()) {
+  const group =
+    ENEMY_RIGS.find((r) => f.name.startsWith(`${r.id}-`))?.id ?? FAMILIES.find(([, test]) => test(f.name))?.[0] ?? 'Projectiles, effects and the tube stone';
   const list = groups.get(group) ?? [];
   list.push({ label: f.name, size: f.size, anchor: f.anchor, draw: (c, px) => f.draw(c, px) });
   groups.set(group, list);

@@ -27,7 +27,8 @@ import {
   DOORWAY_SPRITE,
   FACING_ARROWS,
   HOPPER_SPRITES,
-  MACHINE_HOUSINGS,
+  MACHINE_IDS,
+  MACHINE_SPRITES,
   LOGISTICS_ICONS,
   STATUS_MARKERS,
 } from '../../src/data/foundryAssets';
@@ -135,9 +136,12 @@ describe('assets', () => {
 
   it('draws every foundry sprite and animation frame (atlas or vector), and an icon per logistics piece', () => {
     const frames = drawnFrames();
-    for (const views of Object.values(MACHINE_HOUSINGS)) {
-      for (const { idle, working } of Object.values(views)) {
+    // Every machine piece has its own look in every view (020): still, jammed and a working loop.
+    expect([...MACHINE_IDS].sort()).toEqual(Object.values(PIECES).filter((d) => d.kind === 'machine').map((d) => d.id).sort());
+    for (const views of Object.values(MACHINE_SPRITES)) {
+      for (const { idle, jammed, working } of Object.values(views)) {
         expect(frames).toContain(idle);
+        expect(frames).toContain(jammed);
         for (const frame of animFrames(working)) expect(frames).toContain(frame);
       }
     }

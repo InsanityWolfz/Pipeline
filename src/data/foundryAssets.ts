@@ -11,28 +11,47 @@ const FLOW_FPS = 4;
 
 const loop = (key: string, frames: number, frameRate: number): AnimDef => ({ key, frames, frameRate, loop: true });
 
-/** Machine housings by footprint and view (`side` faces right; left is flipped): an idle frame and a working loop. */
-export const MACHINE_HOUSINGS: Readonly<Record<'1x1' | '3x1', Record<PieceView, { idle: string; working: AnimDef }>>> =
-  {
-    '1x1': {
-      down: { idle: 'machine-1x1-down', working: loop('machine-1x1-down-working', 2, WORK_FPS) },
-      up: { idle: 'machine-1x1-up', working: loop('machine-1x1-up-working', 2, WORK_FPS) },
-      side: { idle: 'machine-1x1-side', working: loop('machine-1x1-side-working', 2, WORK_FPS) },
-    },
-    '3x1': {
-      down: { idle: 'machine-3x1-down', working: loop('machine-3x1-down-working', 2, WORK_FPS) },
-      up: { idle: 'machine-3x1-up', working: loop('machine-3x1-up-working', 2, WORK_FPS) },
-      side: { idle: 'machine-3x1-side', working: loop('machine-3x1-side-working', 2, WORK_FPS) },
-    },
-  };
+/** Every machine (020), in build bar order; a test checks it matches the machine pieces. */
+export const MACHINE_IDS = ['cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser'] as const;
+
+/** A machine's look in one view: still (idle or starved), jammed (blocked), and its working loop. */
+export interface MachineLook {
+  idle: string;
+  jammed: string;
+  working: AnimDef;
+}
+
+/** Working loops play this many frames, at this rate (020: smooth enough to watch the mechanism). */
+export const MACHINE_WORK = { frames: 4, frameRate: 8 } as const;
+
+const lookOf = (id: string, view: PieceView): MachineLook => ({
+  idle: `machine-${id}-${view}`,
+  jammed: `machine-${id}-${view}-jammed`,
+  working: loop(`machine-${id}-${view}-working`, MACHINE_WORK.frames, MACHINE_WORK.frameRate),
+});
+
+/** Each machine's looks by view (`side` faces right; left is flipped): its own mechanism working in its housing (020). */
+export const MACHINE_SPRITES: Readonly<Record<string, Record<PieceView, MachineLook>>> = Object.fromEntries(
+  MACHINE_IDS.map((id) => [id, { down: lookOf(id, 'down'), up: lookOf(id, 'up'), side: lookOf(id, 'side') }]),
+);
+
+/** A machine's look in a view. */
+export function machineLook(id: string, view: PieceView): MachineLook {
+  const look = MACHINE_SPRITES[id]?.[view];
+  if (!look) throw new Error(`No look for machine '${id}'`);
+  return look;
+}
+
+/** A blocked machine shakes this far either side, px, every `ms`, as its jammed mechanism strains. */
+export const JAM_SHAKE = { px: 0.6, ms: 90 } as const;
 
 /**
  * Where the icon on a housing's top face is centred above the sprite's bottom (the footprint's
- * bottom edge), px: the middle of its top face. The 3x1 side view has a taller top face.
+ * bottom edge), px: the middle of its top face. The 3x1 side view's long top face holds its mechanism, so the icon sits near the back.
  */
 export const ICON_RISE: Readonly<Record<'1x1' | '3x1', Record<PieceView, number>>> = {
-  '1x1': { down: 31, up: 31, side: 31 },
-  '3x1': { down: 31, up: 31, side: 63 },
+  '1x1': { down: 33, up: 33, side: 33 },
+  '3x1': { down: 33, up: 33, side: 92 },
 };
 
 /**
