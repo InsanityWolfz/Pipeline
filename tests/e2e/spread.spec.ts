@@ -21,7 +21,7 @@ test('three stagers into the intake fire a three-bolt spread', async ({ page }) 
       place('hopper', tx, 5, 'up');
       window.__helpers?.walkTo((tx + 0.5) * 32, 6.25 * 32);
       const hopper = g.getState().foundry.pieces.find((p) => p.kind === 'hopper' && p.tx === tx && p.ty === 5);
-      if (hopper) g.step(1, { deposit: { id: hopper.id, itemId: 'ley-crystal' } });
+      if (hopper) g.step(1, { deposit: { id: hopper.id, itemId: 'ley-crystal', amount: 'all' } });
     }
     window.__helpers?.walkTo(16 * 32, 8 * 32);
     for (const tx of columns) {

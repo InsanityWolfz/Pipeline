@@ -5,6 +5,12 @@ import type { Facing } from './player';
 
 export type Axis = -1 | 0 | 1;
 
+/**
+ * How many a hopper deposit or withdraw moves (022), like an inventory stack: one,
+ * half the stack (rounded up), or all of it.
+ */
+export type HopperAmount = 'one' | 'half' | 'all';
+
 export interface Command {
   moveX: Axis;
   moveY: Axis;
@@ -29,10 +35,10 @@ export interface Command {
   place: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing; mirrored?: boolean } | null;
   /** A tile whose piece to pick up this tick (an edge), or null. */
   pickUp: { tx: number; ty: number } | null;
-  /** Put all of a held item into an empty hopper (by piece id) this tick (an edge), or null. */
-  deposit: { id: number; itemId: string } | null;
-  /** Take everything out of a hopper (by piece id) this tick (an edge), or null. */
-  withdraw: { id: number } | null;
+  /** Put some of a held item into a hopper (by piece id) that's empty or holds it, this tick (an edge), or null (022: how many by `amount`). */
+  deposit: { id: number; itemId: string; amount: HopperAmount } | null;
+  /** Take some of what's in a hopper (by piece id) out, this tick (an edge), or null (022: how many by `amount`). */
+  withdraw: { id: number; amount: HopperAmount } | null;
   /** Turn a gravity stager (by piece id) to its next angle this tick (an edge), or null. */
   setAngle: { id: number } | null;
   /** Set the item a sorter in reach sends out its side (null: pass everything), this tick (an edge), or null (015). */

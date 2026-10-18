@@ -60,7 +60,7 @@ test('a line fills the reservoir, which fires once the carried rounds run out', 
   const placed = await step(page, 1);
   const hopperId = placed.foundry.pieces.find((p) => p.pieceId === 'hopper')?.id;
   if (hopperId === undefined) throw new Error('no hopper');
-  await step(page, 1, { deposit: { id: hopperId, itemId: 'ley-crystal' } });
+  await step(page, 1, { deposit: { id: hopperId, itemId: 'ley-crystal', amount: 'all' } });
   await step(page, 1, { selectAmmo: 'ley-bolt' });
   const filled = await page.evaluate(() => {
     const g = window.__GAME__;
@@ -107,7 +107,7 @@ test('a full reservoir backs the line into the intake up', async ({ page }) => {
   await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [below.x, below.y - 8] as const);
   const hopperId = (await step(page, 1)).foundry.pieces.find((p) => p.pieceId === 'hopper')?.id;
   if (hopperId === undefined) throw new Error('no hopper');
-  await step(page, 1, { deposit: { id: hopperId, itemId: 'ley-crystal' } });
+  await step(page, 1, { deposit: { id: hopperId, itemId: 'ley-crystal', amount: 'all' } });
   const full = await page.evaluate(() => {
     const g = window.__GAME__;
     let s = g?.getState();

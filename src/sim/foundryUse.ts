@@ -2,7 +2,7 @@ import { USE_REACH } from '../data/foundry';
 import { FEET_BOX } from '../data/player';
 import { ITEMS } from '../data/items';
 import { FOUNDRY_ROOM } from '../data/rooms';
-import type { Command } from './input';
+import type { Command, HopperAmount } from './input';
 import { count } from './inventory';
 import { pieceRect, type CrateState, type HopperState, type PieceState, type SorterState, type StagerState } from './pieces';
 import { cycleAngle } from './spread';
@@ -10,8 +10,9 @@ import type { SimState } from './state';
 
 // Using hoppers, crates, stagers and sorters: E empties a crate into the
 // inventory and turns a gravity stager to its next angle. E on a hopper or a
-// sorter opens render's menu, whose choices arrive as deposit (put all of a held
-// item in), withdraw (take everything out) and setFilter commands.
+// sorter opens render's menu, whose choices arrive as deposit (put some of a held
+// item in), withdraw (take some out) and setFilter commands. Deposits and
+// withdraws move one, half (rounded up) or all of the stack they draw from (022).
 
 type Usable = HopperState | CrateState | StagerState | SorterState;
 
@@ -45,26 +46,36 @@ export function usableInReach(state: SimState): Usable | undefined {
   return best;
 }
 
-/** Moves all of a held item into a hopper in reach that's empty or already holds it. */
-export function deposit(state: SimState, id: number, itemId: string): void {
+/** How many of a stack of `n` an amount moves: one, half rounded up, or all; never more than `n`. */
+export function amountOf(amount: HopperAmount, n: number): number {
+  if (n <= 0) return 0;
+  if (amount === 'one') return 1;
+  if (amount === 'half') return Math.ceil(n / 2);
+  return n;
+}
+
+/** Moves some of a held item into a hopper in reach that's empty or already holds it. */
+export function deposit(state: SimState, id: number, itemId: string, amount: HopperAmount): void {
   const h = state.foundry.pieces.find((p) => p.id === id);
   if (h?.kind !== 'hopper' || !inReach(state, h) || (h.item !== null && h.item !== itemId)) return;
-  const n = count(state.inventory, itemId);
+  const n = amountOf(amount, count(state.inventory, itemId));
   if (n === 0) return;
-  state.inventory[itemId] = 0;
+  state.inventory[itemId] = count(state.inventory, itemId) - n;
   h.item = itemId;
   h.count += n;
   state.events.deposits.push({ id, itemId, count: n });
 }
 
-/** Moves everything in a hopper in reach back into the inventory; the hopper forgets its type. */
-export function withdraw(state: SimState, id: number): void {
+/** Moves some of what's in a hopper in reach back into the inventory; at 0 the hopper forgets its type. */
+export function withdraw(state: SimState, id: number, amount: HopperAmount): void {
   const h = state.foundry.pieces.find((p) => p.id === id);
   if (h?.kind !== 'hopper' || !inReach(state, h) || !h.item || h.count === 0) return;
-  state.inventory[h.item] = count(state.inventory, h.item) + h.count;
-  state.events.withdraws.push({ id, itemId: h.item, count: h.count });
+  const n = amountOf(amount, h.count);
+  state.inventory[h.item] = count(state.inventory, h.item) + n;
+  state.events.withdraws.push({ id, itemId: h.item, count: n });
+  h.count -= n;
+  if (h.count > 0) return;
   h.item = null;
-  h.count = 0;
   h.timer = 0;
 }
 
@@ -89,9 +100,9 @@ export function setFilter(state: SimState, id: number, itemId: string | null): v
  * hopper or sorter does nothing here; render opens its menu.
  */
 export function stepFoundryUse(state: SimState, cmd: Command): void {
-  if (cmd.withdraw) withdraw(state, cmd.withdraw.id);
+  if (cmd.withdraw) withdraw(state, cmd.withdraw.id, cmd.withdraw.amount);
   if (cmd.setFilter) setFilter(state, cmd.setFilter.id, cmd.setFilter.itemId);
-  if (cmd.deposit) deposit(state, cmd.deposit.id, cmd.deposit.itemId);
+  if (cmd.deposit) deposit(state, cmd.deposit.id, cmd.deposit.itemId, cmd.deposit.amount);
   if (!cmd.interact) return;
   const target = usableInReach(state);
   if (target?.kind === 'crate') takeCrate(state, target);

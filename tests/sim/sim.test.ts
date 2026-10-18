@@ -129,7 +129,7 @@ function scriptedFoundry(seed: number, ticks: number) {
       moveY: toward(p.y, goal.y),
       toggleBuild: t === 59,
       place: placing ? { pieceId: placing[0], tx: placing[1], ty: 5, facing: 'right' } : null,
-      deposit: t === 250 ? { id: 0, itemId: 'ley-crystal' } : null,
+      deposit: t === 250 ? { id: 0, itemId: 'ley-crystal', amount: 'all' } : null,
       interact: t === 850,
       aimX: p.x,
       aimY: p.y,

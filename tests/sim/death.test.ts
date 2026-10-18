@@ -97,7 +97,7 @@ describe('dying', () => {
     const h = put<HopperState>(s, 'hopper', 20, 12, 'down');
     h.item = 'stone';
     h.count = 4;
-    run(s, 1, { withdraw: { id: h.id } });
+    run(s, 1, { withdraw: { id: h.id, amount: 'all' } });
     expect(s.inventory).toEqual({ wood: 5, stone: 4 });
     die(s);
     expect(s.inventory).toEqual({ wood: 5 });

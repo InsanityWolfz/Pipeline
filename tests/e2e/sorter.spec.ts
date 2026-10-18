@@ -49,7 +49,7 @@ test('a sorter placed and flipped with the mouse, set from its picker, sends its
   // Fill the hopper with the 30 starting arrows, then stand by the sorter and pick arrows from its menu.
   const hopper = pieceAt(placed, 12, 8);
   if (!hopper) throw new Error('no hopper');
-  await step(page, 1, { deposit: { id: hopper.id, itemId: 'arrow' }, toggleBuild: true });
+  await step(page, 1, { deposit: { id: hopper.id, itemId: 'arrow', amount: 'all' }, toggleBuild: true });
   const beside = centre(11, 9);
   await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [beside.x, beside.y] as const);
   await page.keyboard.press('e');

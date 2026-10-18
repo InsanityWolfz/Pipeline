@@ -146,7 +146,7 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     // Just below the hopper, well in reach (USE_REACH), to fill it with every ley crystal carried.
     h.walkTo(12.5 * tile, 5.25 * tile);
     const hopper = g.getState().foundry.pieces.find((p) => p.kind === 'hopper');
-    if (hopper) g.step(1, { deposit: { id: hopper.id, itemId: 'ley-crystal' } });
+    if (hopper) g.step(1, { deposit: { id: hopper.id, itemId: 'ley-crystal', amount: 'all' } });
     let s = g.getState();
     for (let t = 0; t < 4000 && !s.firstLineFull; t++) s = g.step(1);
     return s.firstLineFull;
