@@ -62,7 +62,7 @@ export interface SimEvents {
   /** The tube attuned to the foundry (once ever). */
   attunes: Record<string, never>[];
   /** A tube socket put a round in the reservoir. */
-  refills: { id: number; ammoId: string }[];
+  refills: { id: number; itemId: string }[];
   /** The player was KO'd and the room reset this tick. */
   ko: boolean;
 }

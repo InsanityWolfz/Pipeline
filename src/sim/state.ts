@@ -88,7 +88,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     harvest: null,
     bombs: [],
     nextBombId: 0,
-    crafted: [...start.crafted].sort(),
+    crafted: [...start.crafted],
     foundry: createFoundry(),
     building: false,
     events: createEvents(),

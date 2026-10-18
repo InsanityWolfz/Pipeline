@@ -64,6 +64,9 @@ export const CRATE_SPRITE = 'crate';
 /** The tube socket (007): at rest, and the frame it flares to as a round goes to the tube. */
 export const SOCKET_SPRITES = { idle: 'tube-socket', refill: 'tube-socket-refill' } as const;
 
+/** The hover readout's icon for a socket whose reservoir is empty: the socket's own emblem. */
+export const SOCKET_EMPTY_ICON = 'emblem-tube-socket';
+
 /**
  * Build-mode arrows on a piece's edges, also on the ghost: cyan pointing out of its
  * output side, gold pointing in on each side that takes items. `side` points right.

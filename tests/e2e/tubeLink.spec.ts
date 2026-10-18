@@ -61,7 +61,7 @@ test('a line fills the reservoir, which fires once the carried rounds run out', 
     for (let t = 0; t < 1200 && s && s.link.reservoir.count < 10; t++) s = g?.step(1);
     return s;
   });
-  expect(filled?.link.reservoir).toMatchObject({ ammo: 'ley-bolt' });
+  expect(filled?.link.reservoir).toMatchObject({ item: 'ley-bolt' });
   expect(filled?.link.reservoir.count).toBeGreaterThanOrEqual(10);
 
   // Fire away the 99 carried bolts, then one more shot comes from the reservoir.

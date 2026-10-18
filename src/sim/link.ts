@@ -8,8 +8,8 @@ import type { SimState } from './state';
 // Both survive a KO.
 
 export interface ReservoirState {
-  /** The one ammo it holds, or null when empty. */
-  ammoId: string | null;
+  /** The one ammo item it holds, or null when empty. */
+  itemId: string | null;
   count: number;
 }
 
@@ -21,7 +21,7 @@ export interface LinkState {
 }
 
 export function createLink(): LinkState {
-  return { attuned: false, attunePulse: 0, reservoir: { ammoId: null, count: 0 } };
+  return { attuned: false, attunePulse: 0, reservoir: { itemId: null, count: 0 } };
 }
 
 /** Runs after doorways: the first entry into the foundry attunes the tube. Counts the pulse down. */
@@ -37,23 +37,23 @@ export function stepLink(state: SimState): void {
 /** Whether the reservoir would take one of this item: ammo only, its own type (or empty), under the cap. */
 export function reservoirAccepts(reservoir: ReservoirState, itemId: string): boolean {
   if (itemDef(itemId).kind !== 'ammo') return false;
-  if (reservoir.ammoId !== null && reservoir.ammoId !== itemId) return false;
+  if (reservoir.itemId !== null && reservoir.itemId !== itemId) return false;
   return reservoir.count < RESERVOIR_CAP;
 }
 
 /** Puts one item in the reservoir if it accepts it. Returns whether it was taken. */
 export function fillReservoir(reservoir: ReservoirState, itemId: string): boolean {
   if (!reservoirAccepts(reservoir, itemId)) return false;
-  reservoir.ammoId = itemId;
+  reservoir.itemId = itemId;
   reservoir.count += 1;
   return true;
 }
 
-/** Takes one round of the ammo from the reservoir. It forgets its type at 0. */
-export function takeFromReservoir(link: LinkState, ammoId: string): boolean {
+/** Takes one round of an ammo item from the reservoir. It forgets its type at 0. */
+export function takeFromReservoir(link: LinkState, itemId: string): boolean {
   const r = link.reservoir;
-  if (r.ammoId !== ammoId || r.count < 1) return false;
+  if (r.itemId !== itemId || r.count < 1) return false;
   r.count -= 1;
-  if (r.count === 0) r.ammoId = null;
+  if (r.count === 0) r.itemId = null;
   return true;
 }

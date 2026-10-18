@@ -1,7 +1,7 @@
 import type { GameObjects, Scene } from 'phaser';
 import { ATLAS_KEY, DEPTHS } from '../data/assets';
 import { READOUT_LAYOUT } from '../data/hudLayout';
-import { LOGISTICS_ICONS } from '../data/foundryAssets';
+import { SOCKET_EMPTY_ICON } from '../data/foundryAssets';
 import { itemDef } from '../data/items';
 import { machineDef } from '../data/pieces';
 import { recipeDef, RECIPES } from '../data/recipes';
@@ -29,7 +29,7 @@ export function machineLines(m: MachineState): Line[] {
 
 /** A tube socket's line: the reservoir's ammo (or the socket's icon when empty) and count out of the cap. */
 export function socketLines(r: ReservoirState): Line[] {
-  const icon = r.ammoId ? itemDef(r.ammoId).icon : (LOGISTICS_ICONS['tube-socket'] ?? '');
+  const icon = r.itemId ? itemDef(r.itemId).icon : SOCKET_EMPTY_ICON;
   return [[icon, `${r.count}/${RESERVOIR_CAP}`]];
 }
 

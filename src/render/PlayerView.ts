@@ -88,7 +88,7 @@ export class PlayerView {
     }
     this.attune.play(TUBE_ATTUNE[viewOf(facing)].key, true);
     this.attune.setPosition(this.tube.x, this.tube.y).setFlipX(this.tube.flipX);
-    this.attune.setDepth(this.tube.depth + DEPTHS.tubeNudge / 2);
+    this.attune.setDepth(this.tube.depth + DEPTHS.attuneNudge);
   }
 
   /** Holds the tube toward the aim, snapped to 4 directions. */

@@ -34,7 +34,7 @@ test('fires carried arrows straight from the inventory', async ({ page }) => {
   await boot(page);
   const start = await page.evaluate(() => window.__GAME__?.getState());
   expect(start?.inventory.arrow).toBe(30);
-  expect(start?.link).toMatchObject({ attuned: false, reservoir: { ammo: null, count: 0 } });
+  expect(start?.link).toMatchObject({ attuned: false, reservoir: { item: null, count: 0 } });
   const shot = await fire(page, 1, 200, 0);
   expect(shot?.inventory.arrow).toBe(29);
   expect(shot?.tube.fromReservoir).toBe(false);

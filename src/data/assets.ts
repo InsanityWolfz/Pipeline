@@ -260,6 +260,8 @@ export const DEPTHS = {
   groundFx: 0.5,
   /** Nudge that puts the tube just in front of or behind the player. */
   tubeNudge: 0.01,
+  /** Nudge that puts the attuning pulse just in front of the tube. */
+  attuneNudge: 0.005,
   /** Nudge that puts a burn flame just in front of the enemy it's on. */
   flameNudge: 0.01,
   /** Health bars, sparkles and popups over the world. */

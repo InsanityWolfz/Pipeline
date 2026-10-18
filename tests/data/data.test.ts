@@ -7,6 +7,7 @@ import {
   digitFrame,
   BURN_FLAME,
   ENEMY_ANIMS,
+  TUBE_ATTUNE,
   FIRE_BURST,
   NODE_SPRITES,
   HUD_DIGITS,
@@ -31,6 +32,7 @@ import { ENEMIES } from '../../src/data/enemies';
 import { ROOMS, TILE } from '../../src/data/rooms';
 import { ITEMS } from '../../src/data/items';
 import { STARTING_INVENTORY } from '../../src/data/player';
+import { PLAYTEST_START } from '../../src/data/playtest';
 import { SLOT_AMMOS, STARTING_AMMO } from '../../src/data/tube';
 import { CRAFT_GROUPS, RECIPES } from '../../src/data/recipes';
 import { NODES } from '../../src/data/nodes';
@@ -106,8 +108,8 @@ describe('assets', () => {
     }
   });
 
-  it('has the fire burst and burn flame in the built atlas', () => {
-    for (const anim of [FIRE_BURST, BURN_FLAME]) {
+  it('has the fire burst, burn flame and tube attune pulse in the built atlas', () => {
+    for (const anim of [FIRE_BURST, BURN_FLAME, ...Object.values(TUBE_ATTUNE)]) {
       expect(anim.key).toMatch(KEBAB);
       for (const frame of animFrames(anim)) expect(Object.keys(atlas.frames)).toContain(frame);
     }
@@ -301,5 +303,18 @@ describe('foundry pieces', () => {
 
   it('are each on the build bar exactly once', () => {
     expect([...BUILD_BAR].sort()).toEqual(Object.keys(PIECES).sort());
+  });
+});
+
+describe('the tube link (007)', () => {
+  it('puts the tube socket on the build bar, one at a time', () => {
+    expect(BUILD_BAR).toContain('tube-socket');
+    expect(PIECES['tube-socket']).toMatchObject({ kind: 'socket', footprint: '1x1', limit: 1 });
+  });
+
+  it('gives the playtest start only real items, and every recipe output as crafted', () => {
+    for (const id of Object.keys(PLAYTEST_START.inventory)) expect(ITEMS[id]).toBeDefined();
+    const outputs = new Set(Object.values(RECIPES).map((r) => r.output.itemId));
+    expect(new Set(PLAYTEST_START.crafted)).toEqual(outputs);
   });
 });

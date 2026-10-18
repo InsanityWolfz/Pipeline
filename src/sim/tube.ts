@@ -47,10 +47,11 @@ export function selectAmmo(state: SimState, ammoId: string): void {
  * reservoir's count if it holds the slot's ammo (fired from the foundry), else 0.
  */
 export function slotCount(state: Pick<SimState, 'tube' | 'inventory' | 'link'>): { count: number; fromReservoir: boolean } {
-  const carried = count(state.inventory, slotItem(state.tube));
+  const item = slotItem(state.tube);
+  const carried = count(state.inventory, item);
   if (carried > 0) return { count: carried, fromReservoir: false };
   const { reservoir } = state.link;
-  if (reservoir.ammoId === state.tube.ammoId && reservoir.count > 0) return { count: reservoir.count, fromReservoir: true };
+  if (reservoir.itemId === item && reservoir.count > 0) return { count: reservoir.count, fromReservoir: true };
   return { count: 0, fromReservoir: false };
 }
 
@@ -72,8 +73,9 @@ export function stepTube(state: SimState, cmd: Command): void {
 
 /** Takes one round of the slot's ammo: carried first, then the reservoir. Returns where it came from. */
 function takeRound(state: SimState): 'inventory' | 'reservoir' | null {
-  if (take(state.inventory, slotItem(state.tube))) return 'inventory';
-  if (takeFromReservoir(state.link, state.tube.ammoId)) return 'reservoir';
+  const item = slotItem(state.tube);
+  if (take(state.inventory, item)) return 'inventory';
+  if (takeFromReservoir(state.link, item)) return 'reservoir';
   return null;
 }
 

@@ -3,6 +3,7 @@ import { REFILL_PULSE_TICKS } from '../data/tube';
 import { machineDef } from '../data/pieces';
 import { recipeDef, type RecipeDef } from '../data/recipes';
 import { count } from './inventory';
+import type { SimEvents } from './events';
 import { fillReservoir, type ReservoirState } from './link';
 import {
   footprint,
@@ -26,7 +27,7 @@ import {
 interface FlowContext {
   grid: ReadonlyMap<string, PieceState>;
   reservoir: ReservoirState;
-  refills: { id: number; ammoId: string }[];
+  refills: SimEvents['refills'];
 }
 
 const recipeOf = (m: MachineState): RecipeDef => recipeDef(machineDef(m.pieceId).recipeId);
@@ -75,7 +76,7 @@ function offer(ctx: FlowContext, to: Tile, from: Tile, item: string): boolean {
   if (target.kind === 'socket') {
     if (!fillReservoir(ctx.reservoir, item)) return false;
     target.pulse = REFILL_PULSE_TICKS;
-    ctx.refills.push({ id: target.id, ammoId: item });
+    ctx.refills.push({ id: target.id, itemId: item });
     return true;
   }
   if (target.kind === 'conduit') {
@@ -142,7 +143,7 @@ const key = (t: Tile): string => `${t.tx},${t.ty}`;
 export function stepFoundry(
   foundry: FoundryState,
   reservoir: ReservoirState,
-  refills: { id: number; ammoId: string }[] = [],
+  refills: SimEvents['refills'],
 ): void {
   const grid = new Map<string, PieceState>();
   for (const p of foundry.pieces) for (const t of footprint(p.pieceId, p.tx, p.ty, p.facing)) grid.set(key(t), p);

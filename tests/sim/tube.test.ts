@@ -34,7 +34,7 @@ function firedOn(s: SimState, c: Command): boolean {
 }
 
 describe('firing from the inventory', () => {
-  it('starts with the starting arrows and no loading', () => {
+  it('starts with the starting arrows, ready to fire', () => {
     const s = sim();
     expect(s.inventory.arrow).toBe(STARTING_INVENTORY.arrow);
     expect(STARTING_INVENTORY.arrow).toBe(30);

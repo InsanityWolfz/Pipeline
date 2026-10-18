@@ -63,7 +63,8 @@ export interface SimSummary {
     attuned: boolean;
     /** Ticks left on the attuning pulse. */
     attunePulse: number;
-    reservoir: { ammo: string | null; count: number; cap: number };
+    /** The ammo item it holds, or null when empty. */
+    reservoir: { item: string | null; count: number; cap: number };
   };
   /** Arrows and ley bolts in flight; x, y is the ground point. */
   arrows: ArrowSummary[];
@@ -116,7 +117,7 @@ export function summarize(state: SimState): SimSummary {
     link: {
       attuned: state.link.attuned,
       attunePulse: state.link.attunePulse,
-      reservoir: { ammo: state.link.reservoir.ammoId, count: state.link.reservoir.count, cap: RESERVOIR_CAP },
+      reservoir: { item: state.link.reservoir.itemId, count: state.link.reservoir.count, cap: RESERVOIR_CAP },
     },
     arrows: state.arrows.map(arrowSummary),
     enemies: state.enemies.map(enemySummary),
