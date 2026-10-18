@@ -2,7 +2,19 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { hexToRgb, OUTLINE_ID, PALETTE, TRANSPARENT } from '../../src/data/palette';
 import { AMMO } from '../../src/data/ammo';
-import { animFrames, digitFrame, HUD_DIGITS, PLAYER_ANIMS, SPRITES, TUBE_SPRITES } from '../../src/data/assets';
+import {
+  animFrames,
+  digitFrame,
+  ENEMY_ANIMS,
+  HUD_DIGITS,
+  PICKUP_SPARKLE,
+  PLAYER_ANIMS,
+  SPRITES,
+  TUBE_SPRITES,
+} from '../../src/data/assets';
+import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
+import { ENEMIES } from '../../src/data/enemies';
+import { ROOMS, TILE } from '../../src/data/rooms';
 import { ITEMS } from '../../src/data/items';
 import { STARTING_INVENTORY } from '../../src/data/player';
 import { SLOT_AMMO } from '../../src/data/tube';
@@ -67,7 +79,17 @@ describe('assets', () => {
     }
   });
 
+  it('has every enemy animation and the pickup sparkle in the built atlas', () => {
+    for (const set of Object.values(ENEMY_ANIMS)) {
+      for (const anim of [...Object.values(set), PICKUP_SPARKLE]) {
+        expect(anim.key).toMatch(KEBAB);
+        for (const frame of animFrames(anim)) expect(Object.keys(atlas.frames)).toContain(frame);
+      }
+    }
+  });
+
   it('has a HUD font frame for every glyph', () => {
+    expect(HUD_DIGITS.glyphs).toContain('+');
     for (const ch of HUD_DIGITS.glyphs) expect(Object.keys(atlas.frames)).toContain(digitFrame(ch));
     expect(() => digitFrame('x')).toThrow();
   });
@@ -89,5 +111,47 @@ describe('items and ammo', () => {
     for (const ammo of Object.values(AMMO)) expect(ITEMS[ammo.itemId]).toBeDefined();
     expect(AMMO[SLOT_AMMO]).toBeDefined();
     for (const id of Object.keys(STARTING_INVENTORY)) expect(ITEMS[id]).toBeDefined();
+  });
+});
+
+describe('enemies and rooms', () => {
+  it('have kebab-case enemy ids that match their keys, with known animation sets', () => {
+    for (const [key, enemy] of Object.entries(ENEMIES)) {
+      expect(enemy.id).toMatch(KEBAB);
+      expect(enemy.id).toBe(key);
+      expect(ENEMY_ANIMS[enemy.anims]).toBeDefined();
+    }
+  });
+
+  it('drop items that exist', () => {
+    for (const enemy of Object.values(ENEMIES)) {
+      const { always, oneOf, chance } = enemy.drops;
+      for (const d of always) {
+        expect(ITEMS[d.itemId]).toBeDefined();
+        expect(d.min).toBeLessThanOrEqual(d.max);
+      }
+      for (const id of oneOf) expect(ITEMS[id]).toBeDefined();
+      expect(chance).toBeGreaterThanOrEqual(0);
+      expect(chance).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('place known enemies on floor tiles', () => {
+    for (const room of Object.values(ROOMS)) {
+      for (const e of room.enemies ?? []) {
+        expect(ENEMIES[e.enemyId]).toBeDefined();
+        expect(room.rows[e.ty]?.[e.tx]).toBe(TILE.floor);
+      }
+    }
+  });
+
+  it('start the ruin hall Husks off screen from the spawn', () => {
+    const room = ROOMS['ruin-hall'];
+    expect(room?.enemies?.length).toBe(3);
+    for (const e of room?.enemies ?? []) {
+      const offX = Math.abs(e.tx - (room?.spawn.tx ?? 0)) * 32 > VIEW_WIDTH / 2;
+      const offY = Math.abs(e.ty - (room?.spawn.ty ?? 0)) * 32 > VIEW_HEIGHT / 2;
+      expect(offX || offY).toBe(true);
+    }
   });
 });

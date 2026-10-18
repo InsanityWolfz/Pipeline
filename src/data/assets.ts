@@ -14,6 +14,12 @@ export const SPRITES = {
   crosshair: 'crosshair',
   hudSlot: 'hud-slot',
   iconArrow: 'icon-arrow',
+  itemHuskResin: 'item-husk-resin',
+  itemWood: 'item-wood',
+  itemStone: 'item-stone',
+  itemFiber: 'item-fiber',
+  itemShadow: 'item-shadow',
+  hudHealth: 'hud-health',
 } as const;
 
 /** The tube held by the player, by direction. `side` points right; left is drawn flipped. */
@@ -34,8 +40,8 @@ export const TUBE_GRIP: Readonly<Record<keyof typeof TUBE_SPRITES, { x: number; 
   side: { x: 2, y: -22, behind: true },
 };
 
-/** The HUD number font: frames `hud-digits/0`..`/9`, then `/` as frame 10. */
-export const HUD_DIGITS = { key: 'hud-digits', glyphs: '0123456789/', advance: 4 } as const;
+/** The HUD number font: frames `hud-digits/0`..`/9`, then `/` as frame 10 and `+` as frame 11. */
+export const HUD_DIGITS = { key: 'hud-digits', glyphs: '0123456789/+', advance: 4 } as const;
 
 /** Atlas frame for one HUD font character. */
 export function digitFrame(ch: string): string {
@@ -82,6 +88,9 @@ export type PlayerAnim =
   | 'fire-down'
   | 'fire-up'
   | 'fire-side'
+  | 'hit-down'
+  | 'hit-up'
+  | 'hit-side'
   | 'roll';
 
 const WALK_FPS = 8;
@@ -105,8 +114,45 @@ export const PLAYER_ANIMS: Readonly<Record<PlayerAnim, AnimDef>> = {
   'fire-down': playerAnim('fire-down', 1, 1, true),
   'fire-up': playerAnim('fire-up', 1, 1, true),
   'fire-side': playerAnim('fire-side', 1, 1, true),
+  'hit-down': playerAnim('hit-down', 1, 1, true),
+  'hit-up': playerAnim('hit-up', 1, 1, true),
+  'hit-side': playerAnim('hit-side', 1, 1, true),
   roll: playerAnim('roll', ROLL_FRAMES, 'roll', false),
 };
+
+/** Enemy animations. `side` faces right; left is drawn flipped. Death has one view. */
+export type EnemyAnim = `${'idle' | 'walk' | 'windup' | 'swipe' | 'hit'}-${'down' | 'up' | 'side'}` | 'death';
+
+const ENEMY_WALK_FPS = 6;
+const SWIPE_FPS = 20;
+const DEATH_FPS = 8;
+
+function enemyAnims(prefix: string): Readonly<Record<EnemyAnim, AnimDef>> {
+  const anim = (name: EnemyAnim, frames: number, frameRate: number, loop: boolean): AnimDef => ({
+    key: `${prefix}-${name}`,
+    frames,
+    frameRate,
+    loop,
+  });
+  const views = ['down', 'up', 'side'] as const;
+  const out: Partial<Record<EnemyAnim, AnimDef>> = { death: anim('death', 4, DEATH_FPS, false) };
+  for (const v of views) {
+    out[`idle-${v}`] = anim(`idle-${v}`, 1, 1, true);
+    out[`walk-${v}`] = anim(`walk-${v}`, WALK_FRAMES, ENEMY_WALK_FPS, true);
+    out[`windup-${v}`] = anim(`windup-${v}`, 1, 1, true);
+    out[`swipe-${v}`] = anim(`swipe-${v}`, 2, SWIPE_FPS, false);
+    out[`hit-${v}`] = anim(`hit-${v}`, 1, 1, true);
+  }
+  return out as Record<EnemyAnim, AnimDef>;
+}
+
+/** Animation sets by the `anims` key in src/data/enemies.ts. */
+export const ENEMY_ANIMS: Readonly<Record<string, Readonly<Record<EnemyAnim, AnimDef>>>> = {
+  husk: enemyAnims('husk'),
+};
+
+/** The sparkle played where an item is picked up. */
+export const PICKUP_SPARKLE: AnimDef = { key: 'pickup-sparkle', frames: 4, frameRate: 16, loop: false };
 
 /** Atlas frame names for an animation. */
 export function animFrames(anim: AnimDef): string[] {
