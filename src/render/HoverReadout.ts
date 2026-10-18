@@ -8,7 +8,7 @@ import { recipeDef, RECIPES } from '../data/recipes';
 import { RESERVOIR_CAP } from '../data/tube';
 import { count } from '../sim/inventory';
 import type { ReservoirState } from '../sim/link';
-import type { MachineState } from '../sim/pieces';
+import type { MachineState, PieceState } from '../sim/pieces';
 import { colorOf } from './color';
 import { GlyphLine } from './glyphLine';
 
@@ -40,6 +40,14 @@ export function stagerLines(angle: number): Line[] {
   return [[icon, angle > 0 ? `+${angle}` : String(angle)]];
 }
 
+/** The readout for any piece: machines, the tube socket and stagers have one; other pieces show nothing. */
+export function pieceLines(p: PieceState, reservoir: ReservoirState): Line[] {
+  if (p.kind === 'machine') return machineLines(p);
+  if (p.kind === 'socket') return socketLines(reservoir);
+  if (p.kind === 'stager') return stagerLines(p.angle);
+  return [];
+}
+
 // Over the machine, tube socket or stager under the cursor, a small panel of icon and text lines.
 export class HoverReadout {
   private readonly back: GameObjects.Graphics;
@@ -59,8 +67,9 @@ export class HoverReadout {
   /**
    * Shows `lines` with the panel's bottom-centre at (x, bottom); no lines hides it.
    * It never rises above `minTop` (the top of the camera's view), so it stays on screen.
+   * Returns the panel's top and bottom, so a name can sit clear of it.
    */
-  show(lines: readonly Line[], x: number, bottom: number, minTop = -Infinity): void {
+  show(lines: readonly Line[], x: number, bottom: number, minTop = -Infinity): { top: number; bottom: number } {
     const L = READOUT_LAYOUT;
     this.back.clear();
     const h = lines.length * L.lineHeight + 2 * L.pad;
@@ -83,5 +92,6 @@ export class HoverReadout {
       text.moveTo(left + L.pad + L.count.x, y + L.count.y);
       text.set(line[1]);
     }
+    return { top, bottom: top + h };
   }
 }

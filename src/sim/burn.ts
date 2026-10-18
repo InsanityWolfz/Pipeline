@@ -5,7 +5,7 @@ import type { SimState } from './state';
 // Fire's damage over time. Runs before bombs, so a burn started this tick
 // first ticks on the next, and deals its first damage `everyTicks` after the burst.
 
-const BURN_HIT = { knock: false, flash: false } as const;
+const BURN_HIT = { knock: false, flash: false, damageType: 'fire' } as const;
 
 export function stepBurns(state: SimState): void {
   for (const e of state.enemies) {

@@ -1,3 +1,4 @@
+import { FOUNDRY_ROOM } from '../data/rooms';
 import { ammoDef } from '../data/ammo';
 import { DRY_FIRE_TICKS, MUZZLE_OFFSET, SLOT_AMMOS, STARTING_AMMO } from '../data/tube';
 import { createArrow } from './arrows';
@@ -65,12 +66,20 @@ export function stepTube(state: SimState, cmd: Command): void {
   player.aimY = cmd.aimY;
   if (tube.fireCooldown > 0) tube.fireCooldown -= 1;
   if (tube.dryFire > 0) tube.dryFire -= 1;
+  // Without the tube (012) there's nothing to switch or fire.
+  if (!state.hasTube) {
+    tube.firing = false;
+    tube.fromReservoir = false;
+    tube.shotCount = 0;
+    return;
+  }
   if (cmd.selectAmmo !== null) selectAmmo(state, cmd.selectAmmo);
 
   tube.firing = false;
   tube.fromReservoir = false;
   tube.shotCount = 0;
-  if (isRolling(player) || !cmd.fire) return;
+  // The tube is quiet in the foundry (015): clicks there are for building and menus, never shots.
+  if (isRolling(player) || !cmd.fire || state.roomId === FOUNDRY_ROOM) return;
   tube.firing = true;
   fire(state, cmd);
 }

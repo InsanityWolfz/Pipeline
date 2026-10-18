@@ -1,4 +1,5 @@
-import { enemyDef } from '../../src/data/enemies';
+import { DYING_TICKS } from '../../src/data/player';
+import { meleeDef } from '../../src/data/enemies';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import { NO_COMMAND, type Command } from '../../src/sim/input';
 import { createNode, type NodeState } from '../../src/sim/nodes';
@@ -9,7 +10,7 @@ import { stepSim } from '../../src/sim/step';
 
 export const SEED = 7;
 export const HALL = 'ruin-hall';
-export const HUSK = enemyDef('husk');
+export const HUSK = meleeDef('husk');
 
 /** Where the player stands in an arena: the aggro box around it is all floor. */
 export const PLAYER_AT = { x: 400, y: 448 } as const;
@@ -67,4 +68,15 @@ export function placeNode(s: SimState, nodeId: string, x: number, y: number, roo
   const n = createNode(s.nodes.length, nodeId, { x, y }, roomId);
   s.nodes.push(n);
   return n;
+}
+
+/** Runs until a KO lands (the death animation plays out first), failing past `limit` ticks. */
+export function runUntilKo(s: SimState, limit = SWIPE_LANDS + DYING_TICKS + 5): number {
+  return runUntil(s, (x) => x.events.ko, limit);
+}
+
+/** Drops the player to 0 health and runs out the death: they wake in the foundry. */
+export function die(s: SimState): void {
+  s.player.health = 0;
+  runUntilKo(s, DYING_TICKS + 3);
 }

@@ -2,6 +2,7 @@ import { CONDUIT_TICKS, CRATE_CAP, HOPPER_TICKS, INPUT_CAP, OUTPUT_CAP, STAGER_T
 import { REFILL_PULSE_TICKS } from '../data/tube';
 import { machineDef } from '../data/pieces';
 import { recipeDef, type RecipeDef } from '../data/recipes';
+import { opposite } from './direction';
 import { count } from './inventory';
 import type { SimEvents } from './events';
 import { fillReservoir, type ReservoirState } from './link';
@@ -9,7 +10,10 @@ import {
   footprint,
   frontSide,
   frontTile,
+  pieceAt,
+  sideTile,
   sameTile,
+  sorterExit,
   type FoundryState,
   type HopperState,
   type MachineState,
@@ -18,9 +22,10 @@ import {
 } from './pieces';
 
 // Items moving through the foundry, one tick at a time. Every piece hands items
-// out of its front. First everything advances (items cross conduits, crafts
-// finish and start, hoppers count down), then items move in piece order. An
-// item that arrives this tick starts from zero, so nothing moves two hops in one tick.
+// out of its front, except a sorter's chosen item, which leaves by its side.
+// First everything advances (items cross conduits, crafts finish and start,
+// hoppers count down), then items move in piece order. An item that arrives
+// this tick starts from zero, so nothing moves two hops in one tick.
 // A tube socket passes what it takes straight into the tube's reservoir.
 
 /** What a tick's flow needs beyond the grid: the reservoir sockets fill, and where refills are recorded. */
@@ -59,6 +64,7 @@ function advanceMachine(m: MachineState): void {
 function advance(p: PieceState): void {
   if (p.kind === 'conduit' && p.item && p.progress < CONDUIT_TICKS) p.progress += 1;
   if (p.kind === 'stager' && p.item && p.progress < STAGER_TICKS) p.progress += 1;
+  if (p.kind === 'sorter' && p.item && p.progress < CONDUIT_TICKS) p.progress += 1;
   if (p.kind === 'hopper' && p.count > 0 && p.timer < HOPPER_TICKS) p.timer += 1;
   if (p.kind === 'machine') advanceMachine(p);
   if (p.kind === 'socket' && p.pulse > 0) p.pulse -= 1;
@@ -80,7 +86,10 @@ function offer(ctx: FlowContext, to: Tile, from: Tile, item: string): boolean {
     ctx.refills.push({ id: target.id, itemId: item });
     return true;
   }
-  if (target.kind === 'conduit' || target.kind === 'stager') {
+  // A conduit takes items only from the side it's shaped to take them from (013); a sorter only from its back (015).
+  if (target.kind === 'conduit' && !sameTile(from, sideTile(target, target.inFrom))) return false;
+  if (target.kind === 'sorter' && !sameTile(from, sideTile(target, opposite(target.facing)))) return false;
+  if (target.kind === 'conduit' || target.kind === 'stager' || target.kind === 'sorter') {
     if (target.item) return false;
     target.item = item;
     target.progress = 0;
@@ -113,6 +122,12 @@ function transfer(ctx: FlowContext, p: PieceState): void {
       p.item = null;
       p.progress = 0;
     }
+  } else if (p.kind === 'sorter') {
+    // A refused item waits, so a blocked exit stalls the sorter and the line behind it.
+    if (p.item && p.progress >= CONDUIT_TICKS && offer(ctx, sorterExit(p, p.item), p, p.item)) {
+      p.item = null;
+      p.progress = 0;
+    }
   } else if (p.kind === 'hopper') {
     if (p.item && p.timer >= HOPPER_TICKS) offerFromHopper(ctx, to, p, p.item);
   } else if (p.kind === 'machine') {
@@ -120,10 +135,10 @@ function transfer(ctx: FlowContext, p: PieceState): void {
   }
 }
 
-/** Hoppers feed conduits, stagers and machines, never crates or sockets. */
+/** Hoppers feed conduits, sorters, stagers and machines, never crates or sockets. */
 function offerFromHopper(ctx: FlowContext, to: Tile, h: HopperState, item: string): void {
   const kind = ctx.grid.get(key(to))?.kind;
-  if (kind !== 'conduit' && kind !== 'stager' && kind !== 'machine') return;
+  if (kind !== 'conduit' && kind !== 'sorter' && kind !== 'stager' && kind !== 'machine') return;
   if (!offer(ctx, to, h, item)) return;
   h.count -= 1;
   h.timer = 0;
@@ -141,6 +156,21 @@ function setStatus(m: MachineState): void {
 }
 
 const key = (t: Tile): string => `${t.tx},${t.ty}`;
+
+/** Hands one item to the foundry piece on `to` from outside the grid (the supply port). Returns whether it was taken. */
+export function offerFromOutside(
+  foundry: FoundryState,
+  reservoir: ReservoirState,
+  refills: SimEvents['refills'],
+  to: Tile,
+  from: Tile,
+  item: string,
+): boolean {
+  const target = pieceAt(foundry, to.tx, to.ty);
+  if (!target) return false;
+  const grid = new Map<string, PieceState>([[key(to), target]]);
+  return offer({ grid, reservoir, refills }, to, from, item);
+}
 
 /**
  * Runs every piece one tick. The foundry ticks wherever the player is. Sockets

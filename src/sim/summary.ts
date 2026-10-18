@@ -1,10 +1,14 @@
 import { MAX_HEALTH } from '../data/player';
 import { RESERVOIR_CAP } from '../data/tube';
+import { OBJECTIVES } from '../data/objectives';
 import { ROOMS } from '../data/rooms';
 import type { SimEvents } from './events';
 import { unlockedPieces } from './placement';
 import { isInvulnerable, isRolling } from './movement';
 import type { Facing } from './player';
+import type { ArmorPiece } from './armor';
+import { fixtureDef } from './fixtures';
+import { currentObjective } from './objectives';
 import { socketStreams } from './spread';
 import type { SimState } from './state';
 import {
@@ -48,6 +52,8 @@ export interface SimSummary {
     hitInvulnerable: boolean;
     /** KO'd this tick; the room has already reset. */
     ko: boolean;
+    /** Ticks left on the death animation; 0 when alive. */
+    dying: number;
   };
   /** Item id to count. */
   inventory: Record<string, number>;
@@ -83,6 +89,32 @@ export interface SimSummary {
   unlocked: string[];
   building: boolean;
   foundry: { pieces: PieceSummary[] };
+  /** Wisp orbs in flight; x, y is the ground point. */
+  orbs: { id: number; room: string; x: number; y: number; dx: number; dy: number }[];
+  /** Claimed room ids. */
+  claims: string[];
+  /** The claim hold in progress: its room and ticks into it. */
+  claimHold: { room: string; progress: number } | null;
+  /** Ticks left on a pylon's activation. */
+  activatePulse: number;
+  /** The foundry's fixed furniture: id, kind, tile, and a port's raw waiting to go out. */
+  fixtures: { id: string; kind: string; tx: number; ty: number; item: string | null }[];
+  /** What the stash holds. */
+  stash: Record<string, number>;
+  /** Identified armor (010); unidentified pieces are carried as the `unidentified-armor` item. */
+  armorPieces: (ArmorPiece & { identified: true })[];
+  /** The worn piece's id, or null. */
+  equippedArmor: number | null;
+  firstHuskDropped: boolean;
+  /** The tutorial (012): the tube in hand, gates open, the first line full, the current goal, the end. */
+  hasTube: boolean;
+  gates: { foundry: boolean; shrine: boolean };
+  firstLineFull: boolean;
+  /** The first unfinished objective (index and text), or null once all are done. */
+  objective: { index: number; text: string } | null;
+  prototypeComplete: boolean;
+  /** What a death keeps: the inventory as last banked. */
+  banked: Record<string, number>;
   /** What happened on the last tick. */
   events: SimEvents;
 }
@@ -109,6 +141,7 @@ export function summarize(state: SimState): SimSummary {
       maxHealth: MAX_HEALTH,
       hitInvulnerable: p.hurtTicks > 0,
       ko: state.events.ko,
+      dying: p.dying,
     },
     inventory: { ...state.inventory },
     tube: {
@@ -134,6 +167,30 @@ export function summarize(state: SimState): SimSummary {
     unlocked: unlockedPieces(state),
     building: state.building,
     foundry: { pieces: state.foundry.pieces.map((p) => pieceSummary(p, streams)) },
+    orbs: state.orbs.map((o) => ({ id: o.id, room: o.roomId, x: round(o.x), y: round(o.y), dx: round(o.dx), dy: round(o.dy) })),
+    claims: [...state.claims],
+    claimHold: state.claimHold ? { room: state.claimHold.roomId, progress: state.claimHold.progress } : null,
+    activatePulse: state.activatePulse,
+    fixtures: state.fixtures.map((f) => {
+      const d = fixtureDef(f.id);
+      return { id: f.id, kind: d.kind, tx: d.tx, ty: d.ty, item: f.item };
+    }),
+    stash: { ...state.stash },
+    armorPieces: state.armor.map((a) => ({ ...a, identified: true as const })),
+    equippedArmor: state.equipped,
+    firstHuskDropped: state.firstHuskDropped,
+    banked: { ...state.banked },
+    hasTube: state.hasTube,
+    gates: { ...state.gates },
+    firstLineFull: state.firstLineFull,
+    objective: objectiveSummary(state),
+    prototypeComplete: state.prototypeComplete,
     events: structuredClone(state.events),
   };
+}
+
+function objectiveSummary(state: SimState): SimSummary['objective'] {
+  const i = currentObjective(state);
+  const def = i === null ? undefined : OBJECTIVES[i];
+  return i === null || !def ? null : { index: i, text: def.text };
 }

@@ -6,10 +6,12 @@ import { MAX_HEALTH } from '../data/player';
 import { STARTING_AMMO } from '../data/tube';
 import type { Inventory } from '../sim/inventory';
 import { count } from '../sim/inventory';
+import type { ArmorPiece } from '../sim/armor';
 import type { LinkState } from '../sim/link';
 import type { PlayerState } from '../sim/player';
 import { slotCount, slotItem, type TubeState } from '../sim/tube';
 import { AmmoStripView } from './AmmoStripView';
+import { HUD_ARMOR_LAYOUT } from '../data/hudLayout';
 import { colorOf } from './color';
 import { GlyphLine } from './glyphLine';
 
@@ -32,8 +34,21 @@ export class HudView {
   private readonly crosshair: GameObjects.Image;
   private readonly scene: Scene;
   private readonly healthFill: GameObjects.Graphics;
+  private readonly health: GameObjects.Image;
   private readonly materials: MaterialRow[];
   private readonly strip: AmmoStripView;
+  private readonly armorIcon: GameObjects.Image;
+  private readonly armorCount: GlyphLine;
+
+  /** A screen point on any part of the HUD: a press there never fires (015). */
+  overUi(x: number, y: number): boolean {
+    const inBox = (b: { x: number; y: number; w: number; h: number }): boolean => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h;
+    const imageBox = (o: GameObjects.Image) => ({ x: o.x, y: o.y, w: o.width, h: o.height });
+    const rows = this.materials.filter((m) => m.icon.visible).map((m) => ({ ...imageBox(m.icon), w: HUD_MATERIALS_LAYOUT.rowWidth }));
+    const parts = [imageBox(this.slot), this.strip.box, imageBox(this.health), ...rows];
+    if (this.armorIcon.visible) parts.push(imageBox(this.armorIcon));
+    return parts.some(inBox);
+  }
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -53,8 +68,11 @@ export class HudView {
     this.strip = new AmmoStripView(scene, left + this.slot.width, top + this.slot.height);
 
     const hp = HUD_HEALTH_LAYOUT;
-    fixed(scene.add.image(hp.x, hp.y, ATLAS_KEY, SPRITES.hudHealth).setOrigin(0));
+    this.health = fixed(scene.add.image(hp.x, hp.y, ATLAS_KEY, SPRITES.hudHealth).setOrigin(0));
     this.healthFill = fixed(scene.add.graphics({ x: hp.x + hp.fill.x, y: hp.y + hp.fill.y }));
+    const ar = HUD_ARMOR_LAYOUT;
+    this.armorIcon = fixed(scene.add.image(ar.x, ar.y, ATLAS_KEY, SPRITES.iconArmorLight).setOrigin(0)).setVisible(false);
+    this.armorCount = new GlyphLine(scene, ar.x + ar.count.x, ar.y + ar.count.y);
 
     // Raw materials and parts, in ITEMS order; ammo shows in the hotbar instead. Rows are placed each frame.
     this.materials = Object.values(ITEMS)
@@ -70,7 +88,14 @@ export class HudView {
     this.crosshair = fixed(scene.add.image(0, 0, ATLAS_KEY, SPRITES.crosshair)).setDepth(DEPTHS.menu + 1);
   }
 
-  update(tube: TubeState, inventory: Inventory, player: PlayerState, link: LinkState): void {
+  update(tube: TubeState, inventory: Inventory, player: PlayerState, link: LinkState, worn: ArmorPiece | undefined, hasTube: boolean): void {
+    // No tube yet (012): no hotbar.
+    for (const o of [this.slot, this.icon]) o.setVisible(hasTube);
+    this.count.setVisible(hasTube);
+    this.strip.setVisible(hasTube);
+    this.armorIcon.setVisible(worn !== undefined);
+    if (worn) this.armorIcon.setFrame(worn.weight === 'heavy' ? SPRITES.iconArmorHeavy : SPRITES.iconArmorLight);
+    this.armorCount.set(worn ? String(worn.armor) : '');
     const fill = HUD_HEALTH_LAYOUT.fill;
     this.healthFill.clear();
     this.healthFill.fillStyle(colorOf(HUD_HEALTH_LAYOUT.fillColor));
@@ -95,7 +120,7 @@ export class HudView {
     this.icon.setFrame(itemDef(item).icon);
     const shown = slotCount({ tube, inventory, link });
     this.count.set(String(shown.count));
-    this.glow.setVisible(shown.fromReservoir);
+    this.glow.setVisible(hasTube && shown.fromReservoir);
     this.strip.update(tube, inventory);
 
     if (tube.dryFire > 0) this.slot.setTint(colorOf(HUD_SLOT_LAYOUT.dryFireTint));

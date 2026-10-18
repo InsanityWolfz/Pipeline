@@ -1,9 +1,12 @@
 import { DROP_SCATTER, DROP_SCATTER_TRIES, type DropTable, type EnemyDef } from '../data/enemies';
 import { FEET_BOX, PICKUP_RADIUS } from '../data/player';
 import { TILE_SIZE } from '../data/config';
+import { UNIDENTIFIED_ARMOR } from '../data/armor';
 import type { Room } from '../data/rooms';
 import { isSolid, overlapsRect, type Rect } from './collision';
 import { nextFloat, nextInt, type RngState } from './rng';
+import { rollArmorDrop } from './armor';
+import { tileRect } from './fixtures';
 import { nodeRects } from './nodes';
 import { roomById, type SimState } from './state';
 
@@ -60,8 +63,12 @@ export function scatterPoint(
 /** Rolls an enemy's drops and scatters them on the ground around (x, y) in its room. */
 export function spawnDrops(state: SimState, def: EnemyDef, x: number, y: number, roomId: string): void {
   const room = roomById(roomId);
-  const rects = nodeRects(state.nodes, roomId);
-  for (const itemId of rollDrops(def.drops, state.rng)) {
+  // Never inside something solid the player can't walk onto: nodes, the pylon, the tube stone.
+  const fixed = [room.pylon, room.tubeStone].flatMap((t) => (t ? [tileRect(t)] : []));
+  const rects = [...nodeRects(state.nodes, roomId), ...fixed];
+  const items = rollDrops(def.drops, state.rng);
+  if (rollArmorDrop(state, def.id)) items.push(UNIDENTIFIED_ARMOR);
+  for (const itemId of items) {
     const at = scatterPoint(room, state.rng, x, y, rects);
     state.groundItems.push({ id: state.nextGroundItemId++, itemId, roomId, ...at });
   }

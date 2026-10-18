@@ -1,3 +1,5 @@
+import { CLEARING_ROOM, DEFAULT_ROOM, FOUNDRY_ROOM } from './rooms';
+
 // Player movement tuning. Starting values from spec 002; tune in playtest.
 
 /** Walk top speed, px per second. */
@@ -24,13 +26,48 @@ export const FEET_BOX = { w: 16, h: 8 } as const;
 /** What the player carries at the start, item id to count. */
 export const STARTING_INVENTORY: Readonly<Record<string, number>> = { arrow: 30 };
 
-/** How a run starts: what the player carries (and gets back on a KO), and what counts as already hand-crafted. */
+/**
+ * How a run starts: where, what the player carries (banked), what counts as
+ * already hand-crafted, whether they hold the tube and it's attuned, and
+ * whether the tutorial's gates (012) start open.
+ */
 export interface StartDef {
+  room: string;
   inventory: Readonly<Record<string, number>>;
   crafted: readonly string[];
+  hasTube: boolean;
+  attuned: boolean;
+  gatesOpen: boolean;
 }
 
-export const DEFAULT_START: StartDef = { inventory: STARTING_INVENTORY, crafted: [] };
+/**
+ * The sandbox start: the ruin hall, 30 arrows, the tube in hand, gates open.
+ * The sim's default, so tests start here; the game reaches it with `?start=hall`.
+ */
+export const DEFAULT_START: StartDef = {
+  room: DEFAULT_ROOM,
+  inventory: STARTING_INVENTORY,
+  crafted: [],
+  hasTube: true,
+  attuned: false,
+  gatesOpen: true,
+};
+
+/** The real game's start (012): waking in the clearing with nothing, the tube still on its stone, every gate shut. */
+export const TUTORIAL_START: StartDef = {
+  room: CLEARING_ROOM,
+  inventory: {},
+  crafted: [],
+  hasTube: false,
+  attuned: false,
+  gatesOpen: false,
+};
+
+/** Where a death wakes the player (011). */
+export const RESPAWN_ROOM = FOUNDRY_ROOM;
+
+/** Ticks the death animation plays before the player wakes in the foundry (011). */
+export const DYING_TICKS = 60;
 
 /** Health at the start and after a KO. Spec 004; no regen yet. */
 export const MAX_HEALTH = 100;
