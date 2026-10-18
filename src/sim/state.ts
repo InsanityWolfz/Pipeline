@@ -10,6 +10,8 @@ import { createEvents, type SimEvents } from './events';
 import type { ClaimHold } from './claims';
 import { startingFixtures, type FixtureState } from './fixtures';
 import type { HarvestState } from './harvest';
+import { createGates, type Gates } from './tutorial';
+import { OBJECTIVES } from '../data/objectives';
 import type { OrbState } from './orbs';
 import type { Inventory } from './inventory';
 import { createLink, type LinkState } from './link';
@@ -74,6 +76,20 @@ export interface SimState {
   nextArmorId: number;
   /** The worn piece's id, or null. */
   equipped: number | null;
+  /** The player holds the tube (012); without it nothing fires. Kept through a KO. */
+  hasTube: boolean;
+  /** The tutorial's gates (012), true once open. Kept through a KO. */
+  gates: Gates;
+  /** The reservoir has filled from a line at least once (opens the shrine gate). */
+  firstLineFull: boolean;
+  /** Raw materials ever harvested, for the gathering objective. */
+  gathered: string[];
+  /** Which objectives are done, in OBJECTIVES order. */
+  objectives: boolean[];
+  /** Ticks in a row outside the foundry with a line built into the tube socket, once every other goal is done. */
+  awayTicks: number;
+  /** Every objective done: the prototype's end. */
+  prototypeComplete: boolean;
   /** What a death keeps (011): what the player held when they last entered the foundry or deposited at a pylon. */
   banked: Inventory;
   /** The first Husk ever killed has dropped its guaranteed armor. Kept through a KO. */
@@ -92,8 +108,8 @@ export interface SimOptions {
 }
 
 export function createSim(seed: number, options: SimOptions = {}): SimState {
-  const roomId = options.roomId ?? DEFAULT_ROOM;
   const start = options.start ?? DEFAULT_START;
+  const roomId = options.roomId ?? start.room;
   const state: SimState = {
     tick: 0,
     seed,
@@ -102,7 +118,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     player: createPlayer({ x: 0, y: 0 }),
     inventory: { ...start.inventory },
     tube: createTube(),
-    link: createLink(),
+    link: { ...createLink(), attuned: start.attuned },
     start,
     arrows: [],
     nextArrowId: 0,
@@ -128,6 +144,13 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     equipped: null,
     firstHuskDropped: false,
     banked: { ...start.inventory },
+    hasTube: start.hasTube,
+    gates: createGates(start.gatesOpen),
+    firstLineFull: false,
+    gathered: [],
+    objectives: OBJECTIVES.map(() => false),
+    awayTicks: 0,
+    prototypeComplete: false,
     building: false,
     events: createEvents(),
   };

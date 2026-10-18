@@ -1,5 +1,5 @@
 # 013: Conduit corners
-status: approved
+status: done
 
 Approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18). He reviews it in the morning report.
 
@@ -56,3 +56,13 @@ Conduits can turn corners. Dragging a conduit run around a bend makes the turn t
 
 ## Open questions
 - None.
+
+## Build notes
+These choices were made in the overnight build, not by the spec. They're logged for Shaun to accept or overturn in the morning report.
+- **A drag's first tile faces the drag, not the ghost.** The spec says it uses the ghost's facing. That breaks a run whenever you drag in a direction other than the ghost's: the first piece would point away from the second. So every dragged tile faces the next one, and the first tile also auto-joins a side feeder, as a click does. A click still uses the ghost's facing.
+- **The tile under the cursor is held back during a drag** until the next tile says which way it faces. It's laid on release, including a release outside the canvas. A click therefore places on release rather than on press.
+- **The ghost during a drag** shows the held tile as it would be laid: straight on from the side the drag came in by. A turn tile becomes a corner, and is laid, the moment the cursor leaves it in the new direction. So the corner shows as a real piece rather than as a ghost.
+- **Eight corner sprites, no flips.** All 8 in/out pairs are drawn separately, because a flipped corner would light the wrong edges. The spec said "4 drawn plus flips".
+- **Drag logic** lives in `src/render/dragPath.ts` as pure functions, unit-tested (`tests/render/dragPath.test.ts`) for straight, L, zig-zag, U and fast diagonal drags.
+- **Side feeds are refused.** A straight conduit no longer takes items from a hopper or machine at its side (006 allowed it). Turn the conduit into a corner instead.
+- `portFront` moved from `claims.ts` to `fixtures.ts`, which breaks an import cycle with `placement.ts`.

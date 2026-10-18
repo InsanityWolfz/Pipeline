@@ -24,6 +24,8 @@ import { stepOrbs } from './orbs';
 import { solidRects } from './pieces';
 import { roomById, type SimState } from './state';
 import { stepTube } from './tube';
+import { stepObjectives } from './objectives';
+import { stepGates, stepTubeStone, tutorialRects } from './tutorial';
 
 /** Each room's tiles and solid things (nodes, pylons, and solid pieces and fixtures in the foundry), built once per tick on first use. */
 function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
@@ -34,7 +36,8 @@ function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
       const room = roomById(roomId);
       const pieces = roomId === FOUNDRY_ROOM ? [...solidRects(state.foundry), ...fixtureRects(state.fixtures)] : [];
       const pylon = room.pylon ? [tileRect(room.pylon)] : [];
-      bodies = { room, obstacles: [...nodeRects(state.nodes, roomId), ...pieces, ...pylon] };
+      const tutorial = tutorialRects(state, roomId);
+      bodies = { room, obstacles: [...nodeRects(state.nodes, roomId), ...pieces, ...pylon, ...tutorial] };
       cache.set(roomId, bodies);
     }
     return bodies;
@@ -57,7 +60,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepNodes(state.nodes);
   // Before the tube, so fire this tick cancels a harvest in progress.
   // Build mode keeps E for hoppers and crates, not harvesting.
-  const used = stepClaims(state, cmd);
+  const used = stepClaims(state, stepTubeStone(state, cmd));
   if (cmd.identify) identifyAll(state);
   if (cmd.equip) equip(state, cmd.equip.id);
   stepHarvest(state, state.building ? { ...used, interact: false } : used);
@@ -75,5 +78,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
     offerFromOutside(state.foundry, state.link.reservoir, state.events.refills, to, from, item),
   );
   stepPickups(state);
+  stepGates(state);
+  stepObjectives(state);
   checkKo(state);
 }

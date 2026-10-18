@@ -52,7 +52,8 @@ describe('drop scatter', () => {
     const s = arena();
     const room = roomOf(s);
     for (let i = 0; i < 200; i++) {
-      const p = scatterPoint(room, s.rng, 36, 36);
+      // Tile (1,4) has wall on its left and above (014 shaped the corner).
+      const p = scatterPoint(room, s.rng, 36, 132);
       expect(isSolid(room, Math.floor(p.x / 32), Math.floor(p.y / 32))).toBe(false);
     }
   });

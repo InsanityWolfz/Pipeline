@@ -1,3 +1,5 @@
+import type { DamageType } from '../data/ammo';
+import type { GateId } from '../data/rooms';
 import type { ArmorPiece } from './armor';
 import type { PlaceFail } from './pieces';
 import type { Facing } from './player';
@@ -7,7 +9,7 @@ import type { Facing } from './player';
 // between ticks and land in the list of the tick before.
 
 export type HitEvent =
-  | { target: 'enemy'; id: number; x: number; y: number; damage: number }
+  | { target: 'enemy'; id: number; x: number; y: number; damage: number; damageType: DamageType }
   | { target: 'player'; x: number; y: number; damage: number };
 
 export interface DeathEvent {
@@ -80,6 +82,12 @@ export interface SimEvents {
   identifies: ArmorPiece[];
   /** The worn piece changed (null: taken off). */
   equips: { id: number | null }[];
+  /** The tube was taken from its stone (012). */
+  tubeTaken: boolean;
+  /** A tutorial gate opened. */
+  gates: { gate: GateId }[];
+  /** An objective completed (index into OBJECTIVES). */
+  objectives: { index: number }[];
   /** A gravity stager turned to a new angle. */
   angles: { id: number; angle: number }[];
   /** What the player carried was banked (on entering the foundry or depositing). */
@@ -110,6 +118,9 @@ export function createEvents(): SimEvents {
     attunes: [],
     refills: [],
     angles: [],
+    tubeTaken: false,
+    gates: [],
+    objectives: [],
     identifies: [],
     equips: [],
     sealed: [],
@@ -143,6 +154,9 @@ export function clearEvents(events: SimEvents): void {
   events.attunes.length = 0;
   events.refills.length = 0;
   events.angles.length = 0;
+  events.tubeTaken = false;
+  events.gates.length = 0;
+  events.objectives.length = 0;
   events.identifies.length = 0;
   events.equips.length = 0;
   events.sealed.length = 0;

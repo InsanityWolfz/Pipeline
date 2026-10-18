@@ -45,12 +45,14 @@ describe('rooms', () => {
     }
   });
 
-  it('has an empty walled foundry to build in', () => {
+  it('has an empty walled foundry to build in, with only its corners fallen in', () => {
     const f = ROOMS[FOUNDRY_ROOM];
     if (!f) throw new Error('no foundry');
     expect(f.rows).toHaveLength(16);
     for (const row of f.rows) expect(row).toHaveLength(24);
-    for (const row of f.rows.slice(1, -1)) expect(row.slice(1, -1)).toBe('.'.repeat(22));
+    for (const row of f.rows) expect(row.replace(/[#.D]/g, '')).toBe('');
+    // The building floor in the middle is all open (014 shaped only the edges).
+    for (const row of f.rows.slice(3, 13)) expect(row.slice(3, 21)).toBe('.'.repeat(18));
     expect(f.enemies ?? []).toEqual([]);
     expect(f.nodes ?? []).toEqual([]);
   });

@@ -2,6 +2,95 @@
 
 Newest entry first.
 
+## 2026-10-18: 007–015 merged
+**Changed:** Shaun said "Merge all". Specs 007–015 are marked done in their specs and in `docs/backlog.md`, and their technical choices are in `docs/decisions.md`. The stacked PRs #9–#17 are merged top down, each into the branch below it and #9 into main.
+**Next:** Shaun's playtest notes on main, then the next spec. Carried over from 014: the rest of the sprite redraws (walk, enemies, machines, icons, HUD frame), the pause title card, menu hover sounds, squash on pickups, and the HUD covering the hall's west door.
+**Notes:** the sorter sprite, the 014 art and the build-bar descriptions are first drafts for Shaun to revise.
+
+## 2026-10-18: 015 Fixes after the overnight run (build)
+**Changed:** built 015 on `claude/015-after-overnight` (stacked on 014). Shaun approved the spec and asked me to carry it through on my own.
+- **Sorter:**
+  - It's a new piece: free, unlocked from the start, and second on the build bar.
+  - It takes items from its back. Its chosen item leaves by its right side (left after F), and everything else goes out the front. A blocked exit stalls it.
+  - E opens a picker (Clear plus every item), which sends the new `setFilter` command.
+  - It's walkable, like a conduit.
+- **No wasted ammo:**
+  - The tube doesn't fire in the foundry. This is a sim rule.
+  - A press that starts on any UI never fires.
+- **Camera:** the lead toward the aim is gone.
+- **Hover:**
+  - Names on mouse-over for everything in the world.
+  - A name and description panel on the build bar.
+  - The hook gains `ui()`.
+
+Verify: 473 unit and 32 e2e tests pass. QA confirmed:
+- The sorter chain splits the supply port: wood 6, stone 5, and fiber plus ley crystal 10.
+- F, the picker, every description and every world name work.
+- There's no fire in the foundry, and the camera stays centred.
+
+QA's three failures are fixed: the green sort arrow, a name on its readout at the top wall, and HUD parts that still fired. Review's blocking items are fixed: the "Clear" label, a real front-and-side split through the picker in e2e, and a test of a UI press dragged into the world. Most suggestions are in too:
+- `setFilter` validation
+- more sorter tests
+- walkable sorters
+- shared sort-side logic
+- data constants
+- glyph coverage for world names
+- `controls.ts` back under 300 lines
+
+**Next:** Shaun playtests 015 (the preview for `claude/015-after-overnight`, with `?playtest`) and reviews the sorter sprites. Then he decides merges for #9–#17.
+**Notes:** see the 015 spec's build notes. The open calls are walkable sorters, the art, and the description wording.
+
+## 2026-10-18: 015 Fixes after the overnight run (spec)
+**Changed:** interviewed Shaun after his look at 007–014 and wrote `docs/specs/015-after-overnight.md` (status: draft) on `claude/015-after-overnight` (stacked on 014).
+- **Sorter:** a free sorter piece splits one chosen item off a line. E opens a picker to set the item. It leaves by the right side, and F mirrors that to the left. A blocked exit stalls the sorter.
+- **Firing:** no firing in the foundry, and never from a menu click.
+- **Camera:** the camera lead while shooting is removed.
+- **Hover:** names on mouse-over for everything in the world, and descriptions on the build bar.
+- **Gear:** stays at the bench as it is.
+
+**Next:** Shaun reviews and approves the spec, then `/plan`.
+**Notes:** Shaun first asked what happens to gear once it's worn. It's managed only at the bench menu: clicking the worn piece takes it off, and the HUD shows its icon and value. He's happy with that.
+
+## 2026-10-18: 014 Look and feel (overnight build)
+**Changed:** built 014 on `claude/014-look-and-feel` (stacked on 013).
+- **Rooms:** floor variants by tile hash, 3/4-view walls (face over floor, lit top over wall), shaped corners in every room, and props as data. Columns and rune stones stand on ruin blocks; banners, vines and braziers stand on wall faces; cracks, rubble, tufts and mushrooms lie on the floor.
+- **Light and air:** pooled ley glow on veins, crystals, cracks, rune stones, braziers, conduit items, the socket, the claimed pylon and the attuned tube. Motes everywhere, fireflies in the clearing, and a dusk tint and vignette per room.
+- **Juice:** shake by size, a per-enemy hit-stop, outlined damage numbers that stack, and pixel particles (sparks by damage type, death motes, embers, dust, chips, puffs, refill shimmer, pickups). Placed pieces drop in, and the camera leads the aim while firing.
+- **Sound:** `npm run sound` synthesizes 32 WAVs with no new dependency. Effects play off events and state changes, and room loops crossfade. M mutes and [ ] set the volume (both saved). It's muted under test.
+- **Art:** floor variants, wall tops and lips, 9 props, and the player's breathing idle, all pending review.
+
+Verify: 445 unit and 30 e2e tests pass. QA passed 6 of 9 checks with notes; the floor lattice, foundry shape, stacked numbers, weak embers and faint brazier glow are fixed. Review: the blocking items are fixed, covering white enemy numbers, sparks by damage type, keys and tuning moved into data, and data reference tests. The not-built items are listed in the spec's build notes.
+**Next:** Shaun reviews the morning report, playtests, and decides merges for #9–#16.
+**Notes:** see the 014 spec's build notes. The rest of the spec's sprite redraws (walk, enemies, machines, icons, HUD frame, title card) and menu hover sounds are not done, and are listed there.
+
+## 2026-10-18: 013 Conduit corners (overnight build)
+**Changed:** built 013 on `claude/013-conduit-corners` (stacked on 012).
+- **Shape:** conduits have an `inFrom` side and take items only from it. A straight conduit takes from its back, a corner from one side.
+- **Auto-join:** a single conduit placed beside a lone side feeder (a piece's front, or the supply port) becomes a corner from it. Neighbours never change.
+- **Drags:** a drag that turns lays a corner at the turn. Drag logic is in pure `src/render/dragPath.ts`.
+- **Render:** 8 corner sprites (pending review), items ride the bend on an L path, a gold input arrow on each conduit's `inFrom` edge in build mode, and the ghost previews corners.
+- **Hook:** the conduit summary has `inFrom`.
+
+Verify: 424 unit and 30 e2e tests pass. QA passed L, U and zig-zag runs, item paths, arrows and the auto-join ghost. Review and QA both caught the ghost being wrong mid-drag; it's fixed (it now shows the held tile).
+**Next:** 014 Look and feel on `claude/014-look-and-feel`.
+**Notes:** see the 013 spec's build notes. The biggest call is that a drag's first tile faces the drag, not the ghost. Side feeds into straight conduits are now refused.
+
+## 2026-10-18: 012 Tutorial flow (overnight build)
+**Changed:** built 012 on `claude/012-tutorial-flow` (stacked on 011).
+- **The clearing:** a new room where the real game starts. You wake with nothing; the dormant tube lies on a stone and E takes it.
+- **Soft gates:**
+  - rubble on the foundry door until the hall's pack is dead
+  - bomb and ley bolt recipes hidden until the tube attunes
+  - a ley barrier on the shrine door until the first line fills the tube
+- **Objectives:** 12, shown as one line at the top centre in the new font, completing in any order, ending in `prototypeComplete`.
+- **Prompts:** floating key prompts (E, C, B).
+- **Starts:** three of them: tutorial (default), `?playtest`, and `?start=hall` (the sandbox the tests use).
+- **End-to-end test:** a full scripted run through every beat from a fresh start, `tests/e2e/tutorial.spec.ts`.
+
+Verify: 399 unit and 30 e2e tests pass.
+**Next:** 013 on `claude/013-conduit-corners`. QA (all 7 pass) and review fixes are in: KO before the foundry opens wakes in the clearing; prompts dim until usable; objective line on a dark band; hopper prompt; harvest unaffected by fire without the tube.
+**Notes:** see the 012 spec's build notes. The spread objective needs one stager, because only one warden core exists.
+
 ## 2026-10-18: 011 Death (overnight build)
 **Changed:** built 011 on `claude/011-death` (stacked on 010).
 - **Banking:** entering the foundry banks what you carry, and so does a pylon deposit.

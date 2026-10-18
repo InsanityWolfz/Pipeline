@@ -6,6 +6,7 @@ import { arena, die } from './fight';
 describe('crafting', () => {
   it.each(Object.values(RECIPES))('$id takes its inputs and adds its output', (recipe) => {
     const s = arena();
+    s.link.attuned = true;
     s.inventory = { ...recipe.inputs };
     expect(craft(s, recipe.id)).toBe(true);
     for (const id of Object.keys(recipe.inputs)) if (id !== recipe.output.itemId) expect(s.inventory[id]).toBe(0);
@@ -15,6 +16,7 @@ describe('crafting', () => {
 
   it('makes the specced amounts', () => {
     const s = arena();
+    s.link.attuned = true;
     s.inventory = { wood: 1, shaft: 0, arrowhead: 1, rope: 1, arrow: 0 };
     craft(s, 'shaft');
     expect(s.inventory.shaft).toBe(2);
@@ -23,6 +25,16 @@ describe('crafting', () => {
     s.inventory = { casing: 1, fuse: 1, 'ley-shard': 1 };
     craft(s, 'bomb');
     expect(s.inventory.bomb).toBe(2);
+  });
+
+  it('refuses bomb and ley bolt recipes until the tube attunes (012)', () => {
+    const s = arena();
+    s.inventory = { 'ley-crystal': 1, stone: 1 };
+    expect(craft(s, 'ley-shard')).toBe(false);
+    expect(craft(s, 'casing')).toBe(false);
+    expect(s.events.craftFails).toEqual([{ recipeId: 'ley-shard' }, { recipeId: 'casing' }]);
+    s.link.attuned = true;
+    expect(craft(s, 'ley-shard')).toBe(true);
   });
 
   it('does nothing when any input is short, and records the failure', () => {

@@ -39,7 +39,7 @@ test('harvesting each node type gathers wood, stone, fiber and ley crystal', asy
 
 test('the full arrow, bomb and ley bolt chains craft from gathered materials', async ({ page }) => {
   const errors = watchErrors(page);
-  await boot(page);
+  await boot(page, '?start=hall&attuned');
   await page.evaluate(() => window.__GAME__?.step(0));
   await gatherEverything(page);
   await page.evaluate(() => window.__helpers?.killHusk());
@@ -58,7 +58,7 @@ test('the full arrow, bomb and ley bolt chains craft from gathered materials', a
 
 test('the crafting menu pauses the world and crafts on a click', async ({ page }) => {
   const errors = watchErrors(page);
-  await boot(page);
+  await boot(page, '?start=hall&attuned');
   // Real time first: C pauses, Esc resumes.
   await page.waitForTimeout(300);
   await page.keyboard.press('c');
@@ -96,7 +96,7 @@ test('the crafting menu pauses the world and crafts on a click', async ({ page }
 
 test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page }) => {
   const errors = watchErrors(page);
-  await boot(page);
+  await boot(page, '?start=hall&attuned');
   await page.evaluate(() => window.__GAME__?.step(0));
   await gatherEverything(page);
   await page.evaluate(
