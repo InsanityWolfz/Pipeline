@@ -80,6 +80,9 @@ Every colour comes from a palette, by id. The source of truth is `src/data/palet
 | `cinder` | #ff7a2a |
 | `cinder-light` | #ffd27a |
 | `flame-dark` | #d8361f |
+| `resin-dark` | #c4552e |
+| `resin` | #f0a14a |
+| `resin-light` | #f4d27a |
 | `wisp-dark` | #5b2f8f |
 | `wisp` | #9b5de5 |
 | `wisp-light` | #d7b8ff |

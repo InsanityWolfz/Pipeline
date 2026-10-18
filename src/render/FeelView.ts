@@ -1,7 +1,7 @@
 import type { Scene } from 'phaser';
 import { TILE_SIZE } from '../data/config';
 import { enemyDef } from '../data/enemies';
-import { DUST, GLOWS, HIT_STOP_MS } from '../data/juice';
+import { DUST, GLOWS, HARVEST_BURSTS, HARVEST_WORK, HIT_STOP_MS } from '../data/juice';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { FIRE_SOUNDS, SOUND_LEVELS, SOUNDS, WINDUP_SOUNDS } from '../data/sounds';
 import { isClaimed } from '../sim/claims';
@@ -31,6 +31,7 @@ export class FeelView {
   private rolling = false;
   private dryFire = false;
   private dustMs = 0;
+  private workMs = 0;
 
   static preload(scene: Scene): void {
     SoundView.preload(scene);
@@ -108,7 +109,7 @@ export class FeelView {
     }
     for (const h of ev.harvests) {
       s.play(SOUNDS.harvest);
-      j.burst('harvestChips', h.x, h.y);
+      j.burst(HARVEST_BURSTS[h.nodeId] ?? 'harvestChips', h.x, h.y);
     }
     for (const p of ev.places) {
       s.play(SOUNDS.place);
@@ -188,6 +189,14 @@ export class FeelView {
     if ((moving || rolling) && this.dustMs >= every && shown === sim.roomId) {
       this.dustMs = 0;
       j.burst(rolling ? 'rollDust' : 'footDust', player.x, player.y, player.y - 1);
+    }
+
+    // A node being worked gives off a little of its burst as it goes (018).
+    const worked = sim.harvest ? sim.nodes.find((n) => n.id === sim.harvest?.nodeId) : undefined;
+    this.workMs = worked ? this.workMs + deltaMs : 0;
+    if (worked && this.workMs >= HARVEST_WORK.burstMs) {
+      this.workMs = 0;
+      j.burst(HARVEST_BURSTS[worked.nodeId] ?? 'harvestChips', worked.x, worked.y);
     }
   }
 

@@ -65,12 +65,21 @@ export const SPRITES = {
   hudAmmoSelect: 'hud-ammo-select',
 } as const;
 
-/** Gathering node sprites by node id: full, and depleted. */
-export const NODE_SPRITES: Readonly<Record<string, { full: string; depleted: string }>> = {
-  tree: { full: 'node-tree', depleted: 'node-tree-depleted' },
-  rubble: { full: 'node-rubble', depleted: 'node-rubble-depleted' },
-  reeds: { full: 'node-reeds', depleted: 'node-reeds-depleted' },
-  'ley-vein': { full: 'node-ley-vein', depleted: 'node-ley-vein-depleted' },
+/**
+ * A node type's vector frames (018): `uses[i]` with i + 1 uses left, and `regrow[0]` the bare remains,
+ * then each regrow stage. The counts match NODES' uses and REGROW_STAGES (src/data/art/nodes.ts checks).
+ */
+const nodeFrames = (id: string, uses: number, stages: number) => ({
+  uses: Array.from({ length: uses }, (_, i) => `node-${id}-${i + 1}`),
+  regrow: Array.from({ length: stages + 1 }, (_, i) => `node-${id}-regrow-${i}`),
+});
+
+/** Gathering node frames by node id. */
+export const NODE_SPRITES: Readonly<Record<string, { uses: readonly string[]; regrow: readonly string[] }>> = {
+  tree: nodeFrames('tree', 3, 3),
+  rubble: nodeFrames('rubble', 3, 3),
+  reeds: nodeFrames('reeds', 3, 3),
+  'ley-vein': nodeFrames('ley-vein', 3, 3),
 };
 
 /** The HUD number font: frames `hud-digits/0`..`/9`, then `/` as frame 10, `+` as frame 11 and `-` as frame 12. */
@@ -273,9 +282,6 @@ export const DEPTHS = {
   /** The crafting menu, above the HUD. */
   menu: 2_000_000,
 } as const;
-
-/** A node's sprite bottom sits this far below its position (the centre of its feet box), px. */
-export const NODE_SPRITE_DROP = 5;
 
 /** Bombs draw this far above their arc height, so they leave the hand at tube height, px. */
 export const BOMB_LIFT = 10;

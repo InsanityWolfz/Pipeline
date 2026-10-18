@@ -145,9 +145,21 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
       // How far the farther Husk's feet are off the bolt's line, px.
       const off = Math.abs((far.x - p.x) * ny - (far.y - p.y) * nx) / len;
       const lined = off < 4 && len < 220 && s.arrows.length === 0;
+      // Back away when they're close, toward the open east half of the ruin field unless they stand that way (the stair
+      // mound snags chasers, and groves line the meadow); step back in when they drift off, so they never go home.
+      const back = !lined && len < 120;
+      const closeIn = !lined && len > 200;
+      const cx = 45.5 * 32 - p.x;
+      const cy = 15.5 * 32 - p.y;
+      const open = cx * nx + cy * ny < 0 && Math.hypot(cx, cy) > 48;
+      const sign = (v: number): -1 | 0 | 1 => (Math.abs(v) < 2 ? 0 : v > 0 ? 1 : -1);
+      const away = open ? { moveX: sign(cx), moveY: sign(cy) } : { moveX: sign(-nx), moveY: sign(-ny) };
+      // In between, strafe across their line (turning back every so often) until the far one lines up behind the near.
+      const turn = Math.floor(t / 120) % 2 === 0 ? 1 : -1;
+      const strafe = !lined && !back && !closeIn;
       s = g.step(1, {
-        moveX: !lined && len < 120 ? (nx > 0 ? -1 : 1) : 0,
-        moveY: !lined && len < 120 ? (ny > 0 ? -1 : 1) : 0,
+        moveX: back ? away.moveX : closeIn ? sign(nx) : strafe ? sign(-ny * turn) : 0,
+        moveY: back ? away.moveY : closeIn ? sign(ny) : strafe ? sign(nx * turn) : 0,
         fire: lined && carried() > 0,
         aimX: near.x,
         aimY: near.y,

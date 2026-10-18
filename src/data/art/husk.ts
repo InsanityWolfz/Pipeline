@@ -2,7 +2,8 @@ import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, flat, line, path, rect, solid } from './types';
 
 // The Husk (016): a hunched bundle of straw bound with leather, stick arms with
-// claws, and two ember eyes under a straw hood. From the style test.
+// claws, and two ember eyes under a straw hood. From the style test. Amber resin
+// (018) oozes where the bindings pinch the straw: what it drops as husk resin.
 
 const eye = (id: string, x: number): EnemyPart => ({
   id,
@@ -33,8 +34,23 @@ const body = (shadeX: number): EnemyPart => ({
     ellipse(-4, -24, 3, 6, flat('straw-light')),
     rect(-10, -12, 20, 2.4, 1, flat('strap')),
     rect(-10, -24, 20, 2.4, 1, flat('strap')),
+    ...resin(RESIN.blob[0], RESIN.blob[1]),
+    ...resin(-5, -22.6),
   ],
 });
+
+/** Where the resin oozes from the lower binding, and its slow drip and glint (drawn over the baked frames by EnemyView). Rig px; ms. */
+export const RESIN = { enemyId: 'husk', blob: [6, -10.6] as const, dripMs: 2600, fallMs: 700, fallPx: 7, glintMs: 1700 } as const;
+
+/** A bead of amber resin at a binding, with a hanging drop. */
+function resin(x: number, y: number) {
+  return [
+    ellipse(x, y, 2.4, 1.8, solid('resin')),
+    ellipse(x + 0.4, y + 2.2, 0.9, 1.3, solid('resin-dark')),
+    ellipse(x - 0.6, y - 0.6, 0.8, 0.5, flat('resin-light')),
+  ];
+}
+
 const hood = (front: boolean): EnemyPart => ({
   id: 'hood',
   role: 'head',

@@ -114,6 +114,10 @@ export const DAYLIGHT_PALETTE: readonly VectorColor[] = [
   { id: 'cinder', hex: '#ff7a2a' },
   { id: 'cinder-light', hex: '#ffd27a' },
   { id: 'flame-dark', hex: '#d8361f' },
+  // Husk resin (018): the same amber as the resin item's icon.
+  { id: 'resin-dark', hex: '#c4552e' },
+  { id: 'resin', hex: '#f0a14a' },
+  { id: 'resin-light', hex: '#f4d27a' },
   // The Wisp
   { id: 'wisp-dark', hex: '#5b2f8f' },
   { id: 'wisp', hex: '#9b5de5' },

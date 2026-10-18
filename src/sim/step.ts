@@ -28,17 +28,22 @@ import { stepObjectives } from './objectives';
 import { stepGates, stepTubeStone, tutorialRects } from './tutorial';
 import { stepPopulation } from './population';
 
-/** Each room's tiles and solid things (nodes, pylons, and solid pieces and fixtures in the foundry), built once per tick on first use. */
+/** A room's tiles and solid things: nodes, pylons, the tutorial's seals, and solid pieces and fixtures in the foundry. */
+export function roomBodies(state: SimState, roomId: string): RoomBodies {
+  const room = roomById(roomId);
+  const pieces = roomId === FOUNDRY_ROOM ? [...solidRects(state.foundry), ...fixtureRects(state.fixtures)] : [];
+  const pylon = room.pylon ? [tileRect(room.pylon)] : [];
+  const tutorial = tutorialRects(state, roomId);
+  return { room, obstacles: [...nodeRects(state.nodes, roomId), ...pieces, ...pylon, ...tutorial] };
+}
+
+/** Each room's bodies, built once per tick on first use. */
 function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
   const cache = new Map<string, RoomBodies>();
   return (roomId) => {
     let bodies = cache.get(roomId);
     if (!bodies) {
-      const room = roomById(roomId);
-      const pieces = roomId === FOUNDRY_ROOM ? [...solidRects(state.foundry), ...fixtureRects(state.fixtures)] : [];
-      const pylon = room.pylon ? [tileRect(room.pylon)] : [];
-      const tutorial = tutorialRects(state, roomId);
-      bodies = { room, obstacles: [...nodeRects(state.nodes, roomId), ...pieces, ...pylon, ...tutorial] };
+      bodies = roomBodies(state, roomId);
       cache.set(roomId, bodies);
     }
     return bodies;

@@ -45,3 +45,28 @@ export const SITE_LOOK = {
   /** The green wash's strength and the ley ring's, drawn once into a square texture this many px across. */
   safe: { wash: 0.35, ring: 0.6, ringWidth: 2, color: 'leaf-light', ringColor: 'cyan', textureSize: 256 },
 } as const;
+
+/**
+ * The claimed pylon's harvest, made visible (018): a ley tendril reaches from the pylon to a node, the node
+ * pulses, then a mote of the raw runs along the shrine's ley line to the foundry's stairs and sinks in.
+ * Times ms, sizes px, speed px/s.
+ */
+export const SUPPLY_LOOK = {
+  tendrilMs: 500,
+  tendrilColor: 'cyan-glow',
+  tendrilWidth: 1.5,
+  /** The tendril's sideways wave, px, and how many waves along it. */
+  wobble: 4,
+  waves: 3,
+  /** The tendril leaves the pylon this far above its base. */
+  pylonRise: 26,
+  pulseMs: 500,
+  pulseRadius: 18,
+  moteSpeed: 200,
+  moteRadius: 2.5,
+  haloRadius: 6,
+  halo: 'cyan',
+  sinkMs: 400,
+  /** A mote takes its raw's colour. */
+  moteColors: { wood: 'wood-light', stone: 'rock-pale', fiber: 'leaf-light', 'ley-crystal': 'cyan-glow' } as Readonly<Record<string, string>>,
+} as const;

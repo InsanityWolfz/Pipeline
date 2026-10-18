@@ -108,7 +108,7 @@ describe('assets', () => {
   const known = [...Object.keys(atlas.frames), ...vectors];
 
   it('has kebab-case keys that exist in the atlas or as vector frames', () => {
-    const nodeKeys = Object.values(NODE_SPRITES).flatMap((n) => [n.full, n.depleted]);
+    const nodeKeys = Object.values(NODE_SPRITES).flatMap((n) => [...n.uses, ...n.regrow]);
     for (const key of [...Object.values(SPRITES), ...nodeKeys]) {
       expect(key).toMatch(KEBAB);
       expect(known).toContain(key);

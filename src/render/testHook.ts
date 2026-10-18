@@ -1,6 +1,10 @@
 import { NO_COMMAND, type Command } from '../sim/input';
 import type { SimState } from '../sim/state';
 import { summarize, type SimSummary } from '../sim/summary';
+import { TILE_SIZE } from '../data/config';
+import { FEET_BOX } from '../data/player';
+import { isSolid, overlapsRect } from '../sim/collision';
+import { roomBodies } from '../sim/step';
 import type { GameScene } from './GameScene';
 
 export interface GameTestHook {
@@ -12,8 +16,23 @@ export interface GameTestHook {
   step(frames: number, command?: Partial<Command>): SimSummary;
   /** Crafts a recipe once between ticks, as clicking its menu row does. */
   craft(recipeId: string): SimSummary;
-  /** What the mouse-over shows (015): the world name under the cursor and the build bar tip's piece, or null; and the minimap (017) with its markers in view px. */
-  ui(): { hoverName: string | null; buildTip: string | null; minimap: { shown: boolean; markers: { kind: string; x: number; y: number }[] } };
+  ui(): UiState;
+  /** The player's room as rows of tiles a player can stand on ('.') or not ('#'), solid things included: for test helpers that find paths. */
+  passable(): string[];
+}
+
+/**
+ * What the render shows, for tests: the world name under the cursor and its description (018), the build bar
+ * tip's piece; the minimap (017) with its markers in view px; each node's frame by node id; and the claimed
+ * pylon's supply motes (018), how many have started and those on their way.
+ */
+export interface UiState {
+  hoverName: string | null;
+  hoverDescription: string | null;
+  buildTip: string | null;
+  minimap: { shown: boolean; markers: { kind: string; x: number; y: number }[] };
+  nodes: Record<number, string>;
+  supply: { started: number; inFlight: { itemId: string; progress: number }[] };
 }
 
 declare global {
@@ -74,5 +93,17 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
       return summarize(sim);
     },
     ui: () => scene.hoverText(),
+    passable: () => {
+      const { room, obstacles } = roomBodies(sim, sim.roomId);
+      return room.rows.map((row, ty) =>
+        [...row]
+          .map((_, tx) => {
+            const cx = (tx + 0.5) * TILE_SIZE;
+            const cy = (ty + 0.5) * TILE_SIZE;
+            return isSolid(room, tx, ty) || obstacles.some((r) => overlapsRect(cx, cy, FEET_BOX, r)) ? '#' : '.';
+          })
+          .join(''),
+      );
+    },
   };
 }

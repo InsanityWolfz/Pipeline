@@ -1,5 +1,3 @@
-import { NODE_SPRITES } from './assets';
-
 // Gathering nodes. Starting values from spec 005; tune in playtest.
 
 /**
@@ -23,28 +21,19 @@ export interface NodeDef {
   regrowTicks: number;
   /** Solid box at the base, px, centred on the node's position. */
   feetBox: { w: number; h: number };
-  /** Atlas frames for full and depleted. */
-  sprite: string;
-  depletedSprite: string;
 }
 
-const node = (id: string, name: string, itemId: string, placement: Placement, feetBox: NodeDef['feetBox']): NodeDef => {
-  const sprites = NODE_SPRITES[id];
-  if (!sprites) throw new Error(`No sprites for node '${id}'`);
-  return {
-    id,
-    name,
-    itemId,
-    placement,
-    uses: 3,
-    harvestTicks: 30,
-    yield: 1,
-    regrowTicks: 1800,
-    feetBox,
-    sprite: sprites.full,
-    depletedSprite: sprites.depleted,
-  };
-};
+const node = (id: string, name: string, itemId: string, placement: Placement, feetBox: NodeDef['feetBox']): NodeDef => ({
+  id,
+  name,
+  itemId,
+  placement,
+  uses: 3,
+  harvestTicks: 30,
+  yield: 1,
+  regrowTicks: 1800,
+  feetBox,
+});
 
 export const NODES: Readonly<Record<string, NodeDef>> = {
   tree: node('tree', 'Tree', 'wood', 'grove', { w: 16, h: 10 }),

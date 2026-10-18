@@ -2,8 +2,9 @@ import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, flat, line, path, rect, solid } from './types';
 
 // The Pylon Warden (016, draft for Shaun's review): a mossy stone guardian with
-// boulder fists, a ley rune on its chest and one cyan eye slit. It raises both
-// fists overhead, slams, then stays crouched to recover.
+// boulder fists, one cyan eye slit, and (018) a glowing ley core set in its chest:
+// what it drops as the warden core. It raises both fists overhead, slams, then
+// stays crouched to recover.
 
 const leg = (id: string, role: 'leg-back' | 'leg-front', x: number, fill: string): EnemyPart => ({
   id,
@@ -27,7 +28,24 @@ const torso = (front: boolean): EnemyPart => ({
     path('M 8 -44 Q 16 -30 12 -14 L 12 -14 Q 18 -26 16 -42 Z', flat('warden-dark')),
     ellipse(-12, -43, 5, 2.5, flat('moss-tuft')),
     ellipse(11, -44, 4, 2, flat('moss-tuft')),
-    ...(front ? [ellipse(0, -30, 6, 6, solid('warden-dark')), path('M -3.5 -33 L 0 -27 L 3.5 -33', { stroke: { color: 'cyan', width: 1.4 }, glow: { color: 'cyan', blur: 4 } })] : [path('M -8 -36 L 8 -24', { stroke: { color: 'warden-dark', width: 1.2 } })]),
+    ...(front ? [ellipse(0, -30, 6, 6, solid('warden-dark'))] : [path('M -8 -36 L 8 -24', { stroke: { color: 'warden-dark', width: 1.2 } }), ellipse(CORE.side, -30, 4, 5, solid('warden-dark'))]),
+  ],
+});
+
+/** The core in the chest socket (rig px; side view sits forward), and its halo's pulse while winding up (drawn over the baked frames by EnemyView). */
+export const CORE = { enemyId: 'pylon-warden', at: [0, -30] as const, side: 7, halo: 9, pulseMs: 420, rest: 0.25, peak: 0.75 } as const;
+
+/** The core: a ley crystal in the socket. A glow part, so it brightens in the wind-up and fades out as the Warden falls. */
+const core = (x: number): EnemyPart => ({
+  id: 'core',
+  role: 'glow',
+  pivot: [x, CORE.at[1]],
+  shapes: [
+    ellipse(x, CORE.at[1], 3.8, 3.8, {
+      fill: { radial: [x - 1, CORE.at[1] - 1, 4], stops: [{ at: 0, color: 'snow' }, { at: 0.4, color: 'cyan-glow' }, { at: 1, color: 'cyan' }] },
+      outline: true,
+      glow: { color: 'cyan', blur: 5 },
+    }),
   ],
 });
 const head: EnemyPart = { id: 'head', role: 'head', pivot: [0, -46], shapes: [rect(-6, -53, 12, 9, 3, solid('warden-light'))] };
@@ -49,6 +67,7 @@ export const WARDEN_RIG: EnemyRigDef = {
       arm('arm-back', 'arm-back', [-3, -38], [3, -22], 'warden-dark'),
       leg('leg-front', 'leg-front', 1, 'warden'),
       torso(false),
+      core(CORE.side),
       head,
       eye(3),
       arm('arm-front', 'arm-front', [4, -37], [10, -21], 'warden'),
@@ -58,6 +77,7 @@ export const WARDEN_RIG: EnemyRigDef = {
       leg('leg-front', 'leg-front', 2, 'warden'),
       arm('arm-back', 'arm-back', [-15, -38], [-19, -22], 'warden-dark'),
       torso(true),
+      core(0),
       head,
       eye(0),
       arm('arm-front', 'arm-front', [15, -38], [19, -22], 'warden', true),

@@ -53,19 +53,16 @@ test('out in ring 2 a fight fills the screen with 10-15 enemies, and never more 
       rings.add(s.area.ring);
       ko ||= s.events.ko;
     };
-    const axis = (d: number): -1 | 0 | 1 => (Math.abs(d) < 3 ? 0 : d > 0 ? 1 : -1);
-    // Up the path round the start stone, east along it into ring 2, then a loop through ring 2 waking packs
-    // (src/data/overworld.ts), and hold ground rolling while they close in.
+    // Into ring 2 where it's busiest: beside the ring-2 enemy with the most others within a screen of it, by path.
     h.walkTo(41.5 * 32, g.getState().player.y);
-    for (const [tx, ty] of [[41.5, 22.5], [52.5, 21.5], [60.5, 18.5], [67.5, 17.5], [72, 25], [70, 36], [66, 30]] as const) {
-      for (let t = 0; t < 1500; t++) {
-        const p = g.getState().player;
-        const mx = axis(tx * 32 - p.x);
-        const my = axis(ty * 32 - p.y);
-        if (mx === 0 && my === 0) break;
-        sample(g.step(1, { moveX: mx, moveY: my }));
-      }
-    }
+    h.walkTo(41.5 * 32, 22.5 * 32);
+    const ring2 = g.getState().enemies.filter((e) => e.group.startsWith('pop-2-'));
+    const crowd = (e: { x: number; y: number }) => ring2.filter((o) => Math.abs(o.x - e.x) <= 320 && Math.abs(o.y - e.y) <= 180).length;
+    const busiest = [...ring2].sort((a, b) => crowd(b) - crowd(a))[0];
+    if (!busiest) throw new Error('no ring 2 packs');
+    for (let t = 0; t < 30; t++) sample(g.step(1));
+    h.walkTo(busiest.x, busiest.y + 160);
+    sample(g.getState());
     for (let t = 0; t < 600 && !ko; t++) sample(g.step(1, { dodge: t % 30 === 0 }));
     return { onScreen, awake, rings: [...rings], populated: g.getState().populated, ko };
   });

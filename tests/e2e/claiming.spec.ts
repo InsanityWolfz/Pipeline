@@ -1,4 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
+import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
+import { DESCRIPTIONS } from '../../src/data/descriptions';
+import { OVERWORLD } from '../../src/data/overworld';
+import { FEET_BOX } from '../../src/data/player';
 import { menuRows } from '../../src/render/foundryLayout';
 import { screenPoint, state } from './foundryPage';
 import { boot, watchErrors } from './helpers';
@@ -39,6 +43,7 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
     // Fight with piercing ley bolts: back off from anything close, fire at the nearest (any wanderer that
     // follows in first, else the nearest guard).
     g.step(1, { selectAmmo: 'ley-bolt' });
+    let stuck = 0;
     for (let t = 0; t < 12000 && guards().length > 0; t++) {
       const p = s.player;
       const dist = (e: { x: number; y: number }) => Math.hypot(e.x - p.x, e.y - p.y);
@@ -60,6 +65,17 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
         aimY: near.y,
       });
       if (s.events.ko) return { arrived, failed: `knocked out at tick ${s.tick}` };
+      // Closing in but stuck on something (018: the shrine has a grove, a pond and rocks): go round it.
+      stuck = far && Math.hypot(s.player.x - p.x, s.player.y - p.y) < 0.1 ? stuck + 1 : 0;
+      if (stuck > 20) {
+        stuck = 0;
+        try {
+          h.walkTo(near.x, near.y + 64);
+        } catch {
+          // Unreachable from here; the fight goes on.
+        }
+        s = g.getState();
+      }
     }
     const cleared = guards().length === 0;
     // Claim: stand below the pylon, E, stand still.
@@ -80,6 +96,34 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
   expect(result.arrived).toBe('shrine');
   expect(result.cleared).toBe(true);
   expect(result.claimed).toBe(true);
+
+  // The pylon's harvest (018): the moment the supply port produces a raw, a mote of it sets off home along the ley line.
+  const supplied = await page.evaluate(() => {
+    const g = window.__GAME__;
+    let s = g?.getState();
+    for (let t = 0; t < 400 && s && s.events.supplies.length === 0; t++) s = g?.step(1);
+    return s?.events.supplies.map((e) => e.itemId) ?? [];
+  });
+  expect(supplied).toEqual(['wood']);
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().supply))?.inFlight.map((m) => m.itemId)).toEqual(['wood']);
+  expect((await page.evaluate(() => window.__GAME__?.ui().supply))?.started).toBe(1);
+
+  // Hovering the pylon says where the materials come from.
+  const at = await state(page);
+  const camX = Math.min(Math.max(at.player.x - VIEW_WIDTH / 2, 0), OVERWORLD.width * TILE_SIZE - VIEW_WIDTH);
+  const camY = Math.min(Math.max(at.player.y + FEET_BOX.h / 2 - VIEW_HEIGHT / 2, 0), OVERWORLD.height * TILE_SIZE - VIEW_HEIGHT);
+  const pylon = await screenPoint(page, (OVERWORLD.shrine.pylon.tx + 0.5) * TILE_SIZE - camX, (OVERWORLD.shrine.pylon.ty + 0.5) * TILE_SIZE - camY);
+  await expect
+    .poll(
+      async () => {
+        await page.mouse.move(pylon.x + 1, pylon.y);
+        await page.mouse.move(pylon.x, pylon.y);
+        await page.waitForTimeout(100);
+        return page.evaluate(() => window.__GAME__?.ui().hoverDescription);
+      },
+      { timeout: 10_000 },
+    )
+    .toBe(DESCRIPTIONS.pylon);
 
   // E at the claimed pylon opens its menu (017: found by the pylon's site, the player being in the overworld room):
   // send the haul home, then travel to the foundry.

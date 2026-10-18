@@ -40,7 +40,7 @@ import { FeelView } from './FeelView';
 import { TutorialUi } from './TutorialUi';
 import { currentFit, type ScreenFit } from './scale';
 import { bakeVectors } from './vector/textures';
-import type { MinimapMarker } from './MinimapView';
+import type { UiState } from './testHook';
 import { RoomViews } from './RoomViews';
 import { SceneCameras } from './SceneCameras';
 
@@ -204,11 +204,14 @@ export class GameScene extends Scene {
   }
 
   /** The mouse-over text on show, for the test hook (015). */
-  hoverText(): { hoverName: string | null; buildTip: string | null; minimap: { shown: boolean; markers: MinimapMarker[] } } {
+  hoverText(): UiState {
     return {
       hoverName: this.hover?.shown ?? null,
+      hoverDescription: this.hover?.shownDescription ?? null,
       buildTip: this.buildView?.tip.shown ?? null,
       minimap: this.roomViews?.map ?? { shown: false, markers: [] },
+      nodes: this.nodeView?.frames ?? {},
+      supply: this.roomViews?.motes ?? { started: 0, inFlight: [] },
     };
   }
 
@@ -277,10 +280,11 @@ export class GameScene extends Scene {
     if (this.pending.ko) this.wake?.show(this.pending.lost);
     const shown = this.shownRoomId;
     this.feel?.update(sim, this.pending, shown, this.game.loop.delta);
+    this.roomViews?.update(sim, this.pending, shown, this.game.loop.delta);
     clearEvents(this.pending);
     const inFoundry = shown === FOUNDRY_ROOM;
     this.foundryView?.update(sim.foundry, inFoundry, sim.building);
-    this.nodeView?.update(inRoom(sim.nodes, shown), sim.harvest);
+    this.nodeView?.update(inRoom(sim.nodes, shown), sim.harvest, this.game.loop.delta);
     this.groundItemView?.update(inRoom(sim.groundItems, shown));
     this.enemyView?.update(inRoom(sim.enemies, shown));
     // Through a door's fade the player is already in the next room; hide them until it shows.
@@ -289,7 +293,6 @@ export class GameScene extends Scene {
     this.bombView?.update(inRoom(sim.bombs, shown));
     this.site?.update(sim, shown);
     this.siteMenus?.update(sim);
-    this.roomViews?.update(sim);
     this.tutorial?.update(sim, shown);
     this.hud?.update(sim.tube, sim.inventory, sim.player, sim.link, worn(sim), sim.hasTube);
     this.menu?.update(sim.inventory, sim.link);

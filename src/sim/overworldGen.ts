@@ -86,8 +86,9 @@ const KEEP: readonly string[] = [TILE.path, TILE.wall, TILE.ruinBlock, TILE.door
 
 /**
  * Stamps a hand-placed feature round its node (018). A grove or rock field fills
- * its disc (a rock field speckled) but leaves a pocket of grass one tile round
- * every node; a pond's water reaches up to a reed node, which stands in its shallows.
+ * the back half of its disc, the rows up to its centre, so its node stays open
+ * from the front, and leaves a pocket of grass one tile round every node; a pond's
+ * water reaches up to a reed node, which stands in its shallows.
  */
 function feature(grid: Grid, f: Feature): Pond | null {
   const node = (tx: number, ty: number) => OVERWORLD.nodes.some((n) => n.tx === tx && n.ty === ty);
@@ -106,8 +107,7 @@ function feature(grid: Grid, f: Feature): Pond | null {
       }
       if (Math.hypot(tx - f.cx, ty - f.cy) > f.r) continue;
       if (pocket(tx, ty)) set(grid, tx, ty, TILE.floor);
-      else if (f.kind === 'grove') set(grid, tx, ty, TILE.tree);
-      else if ((tx + ty) % 2 === 0) set(grid, tx, ty, TILE.rock);
+      else if (ty <= f.cy) set(grid, tx, ty, f.kind === 'grove' ? TILE.tree : TILE.rock);
     }
   }
   return f.kind === 'pond' ? { cx: f.cx, cy: f.cy, rx: f.rx, ry: f.ry } : null;

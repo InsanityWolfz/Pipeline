@@ -153,7 +153,8 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
   if (crate?.kind !== 'crate') throw new Error('no crate');
   expect(crate.contents['ley-bolt']).toBeGreaterThanOrEqual(4);
 
-  const beside = centre(12, 7);
+  // Just below the crate, well in reach (USE_REACH).
+  const beside = { x: centre(12, 7).x, y: centre(12, 7).y - 8 };
   await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [beside.x, beside.y] as const);
   const taken = await step(page, 1, { interact: true });
   expect(taken.inventory['ley-bolt']).toBeGreaterThanOrEqual(5);

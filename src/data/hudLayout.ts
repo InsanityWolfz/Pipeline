@@ -111,6 +111,11 @@ export const HOVER_NAME = {
   /** A hover still hits this fraction of a box's height below its ground point. */
   below: 0.25,
   tile: { rise: 40 },
+  /** A ley line (018) hovers within this many px of its seam, and names itself this far above the cursor. */
+  leyLine: 8,
+  leyLineRise: 14,
+  /** The description line (018) sits this far under the name, px. */
+  descriptionGap: 2,
   gap: 4,
   /** The name's backing: padding px, its palette colour and alpha. */
   pad: 2,
@@ -124,6 +129,7 @@ export const WORLD_NAMES = {
   tubeStone: 'Tube stone',
   dormantTube: 'Dormant tube',
   crystal: 'Ley crystal',
+  leyLine: 'Ley line',
 } as const;
 
 /** The build bar's hover panel (015): wrap width in glyphs, padding and line height, px, and its gap above the bar. */

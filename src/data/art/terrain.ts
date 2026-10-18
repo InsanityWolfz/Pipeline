@@ -12,10 +12,10 @@ const sprite = (key: string, size: readonly [number, number], anchor: readonly [
   frames: [shapes],
 });
 
-const shadow = (rx: number, ry: number, y = -3): Shape => ellipse(0, y, rx, ry, { fill: { id: 'ground-shade', alpha: 0.3 } });
+export const shadow = (rx: number, ry: number, y = -3): Shape => ellipse(0, y, rx, ry, { fill: { id: 'ground-shade', alpha: 0.3 } });
 
 /** A canopy of overlapping circles, drawn dark to light so the sun sits on its top left. */
-function canopy(circles: readonly (readonly [number, number, number])[]): Shape[] {
+export function canopy(circles: readonly (readonly [number, number, number])[]): Shape[] {
   return [
     ...circles.map(([x, y, r]) => ellipse(x, y, r + 0.75, r + 0.75, flat('ink'))),
     ...circles.map(([x, y, r]) => ellipse(x, y, r, r, flat('leaf-dark'))),
@@ -25,7 +25,7 @@ function canopy(circles: readonly (readonly [number, number, number])[]): Shape[
   ];
 }
 
-const trunk = (h: number): Shape[] => [
+export const trunk = (h: number): Shape[] => [
   path(`M -5.4 0 Q -3.6 -1.2 -3.6 ${-h} L 3.6 ${-h} Q 3.6 -1.2 6 0 Z`, solid('wood')),
   rect(0.6, -h, 3, h - 0.6, 1.2, flat('wood-dark')),
   rect(-3, -h + 1.2, 1.2, h * 0.65, 0.6, flat('wood-light')),
@@ -39,7 +39,7 @@ export const TREES: readonly VectorSprite[] = [
 ];
 
 /** A rounded boulder, light on its top left, with a crack. */
-function boulder(k: number): Shape[] {
+export function boulder(k: number): Shape[] {
   const pts = (list: readonly (readonly [number, number])[]): string => {
     const mid = (a: readonly [number, number], b: readonly [number, number]) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2] as const;
     const n = list.length;

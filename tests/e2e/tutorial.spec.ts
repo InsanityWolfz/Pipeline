@@ -41,6 +41,7 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     /** Fights until a group is dead, kiting and rolling, picking ammo it has; anything else that comes close is fought first. */
     w.clearGroup = (group: string) => {
       let s = g.getState();
+      let stuck = 0;
       for (let t = 0; t < 20000; t++) {
         const foes = s.enemies.filter((e) => e.group === group);
         if (foes.length === 0) break;
@@ -63,6 +64,17 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
           aimX: near.x,
           aimY: near.y,
         });
+        // Closing in but stuck on something (018: groves, ponds and rocks): go round it.
+        stuck = close && Math.hypot(s.player.x - p.x, s.player.y - p.y) < 0.1 ? stuck + 1 : 0;
+        if (stuck > 20) {
+          stuck = 0;
+          try {
+            h.walkTo(near.x, near.y + 64);
+          } catch {
+            // Unreachable from here; the fight goes on.
+          }
+          s = g.getState();
+        }
       }
       h.collect();
     };
@@ -131,8 +143,8 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     for (const [pieceId, tx] of [['hopper', 4], ['grinder', 5], ['focuser', 6], ['tube-socket', 7]] as const) {
       g.step(1, { place: { pieceId, tx, ty: 4, facing: 'right' } });
     }
-    // Below the hopper, in reach, to fill it with every ley crystal carried.
-    h.walkTo(4.5 * tile, 5.5 * tile);
+    // Just below the hopper, well in reach (USE_REACH), to fill it with every ley crystal carried.
+    h.walkTo(4.5 * tile, 5.25 * tile);
     const hopper = g.getState().foundry.pieces.find((p) => p.kind === 'hopper');
     if (hopper) g.step(1, { deposit: { id: hopper.id, itemId: 'ley-crystal' } });
     let s = g.getState();

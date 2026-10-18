@@ -41,12 +41,13 @@ function installHelpers(): void {
     return g;
   };
   const toward = (from: number, to: number): -1 | 0 | 1 => (Math.abs(to - from) < 2 ? 0 : to > from ? 1 : -1);
-  // Straight toward the point; when something solid stops the player (017: the overworld has trees,
-  // rocks and nodes in the way), sidestep along one axis for a while, then try again.
-  const walkTo = (x: number, y: number): void => {
+  // Straight toward the point; when something solid stops the player, sidestep along one axis for a
+  // while, then try again.
+  const walkStraight = (x: number, y: number): void => {
     const g = game();
     let stuck = 0;
     let detour = 0;
+    let tries = 0;
     let side: { moveX: -1 | 0 | 1; moveY: -1 | 0 | 1 } = { moveX: 0, moveY: 0 };
     for (let t = 0; t < 1500; t++) {
       const p = g.getState().player;
@@ -62,13 +63,66 @@ function installHelpers(): void {
       stuck = Math.hypot(after.x - p.x, after.y - p.y) < 0.1 ? stuck + 1 : 0;
       if (stuck > 4) {
         stuck = 0;
-        detour = 20;
-        // Slide past along the axis that isn't blocked: the one the player is furthest from done on, turned.
-        side = Math.abs(x - p.x) > Math.abs(y - p.y) ? { moveX: 0, moveY: y >= p.y ? 1 : -1 } : { moveX: x >= p.x ? 1 : -1, moveY: 0 };
-        if (side.moveX === 0 && side.moveY === 0) side = { moveX: 1, moveY: 0 };
+        tries += 1;
+        // Slide past across the line to the point: toward it first, then the other way, further each time.
+        detour = 20 * Math.ceil(tries / 2);
+        const flip = tries % 2 === 1 ? 1 : -1;
+        side =
+          Math.abs(x - p.x) > Math.abs(y - p.y)
+            ? { moveX: 0, moveY: ((y >= p.y ? 1 : -1) * flip) as -1 | 1 }
+            : { moveX: ((x >= p.x ? 1 : -1) * flip) as -1 | 1, moveY: 0 };
       }
     }
     throw new Error(`could not reach (${x}, ${y})`);
+  };
+  // Finds a way round what's in the way (018: groves, rock fields and ponds stand by the nodes): a
+  // shortest path over the tiles the player can stand on, walked corner to corner, then the last
+  // straight bit to the point. With no path (e.g. the point is in a solid thing), it walks straight.
+  const walkTo = (x: number, y: number): void => {
+    const g = game();
+    const rows = g.passable();
+    const T = 32;
+    const p = g.getState().player;
+    const from = { tx: Math.floor(p.x / T), ty: Math.floor(p.y / T) };
+    const goal = { tx: Math.floor(x / T), ty: Math.floor(y / T) };
+    const open = (tx: number, ty: number) => rows[ty]?.[tx] === '.';
+    const key = (tx: number, ty: number) => ty * 1000 + tx;
+    const came = new Map<number, number>([[key(from.tx, from.ty), -1]]);
+    const queue = [from];
+    let end: { tx: number; ty: number } | undefined;
+    // The goal tile, or one beside it when the goal itself is solid.
+    const reached = (t: { tx: number; ty: number }) => Math.abs(t.tx - goal.tx) + Math.abs(t.ty - goal.ty) <= (open(goal.tx, goal.ty) ? 0 : 1);
+    for (let i = 0; i < queue.length && !end; i++) {
+      const t = queue[i];
+      if (!t) break;
+      if (reached(t)) end = t;
+      for (const [dx, dy] of [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+      ] as const) {
+        const n = { tx: t.tx + dx, ty: t.ty + dy };
+        if (!open(n.tx, n.ty) || came.has(key(n.tx, n.ty))) continue;
+        came.set(key(n.tx, n.ty), key(t.tx, t.ty));
+        queue.push(n);
+      }
+    }
+    if (!end) {
+      walkStraight(x, y);
+      return;
+    }
+    const tiles: { tx: number; ty: number }[] = [];
+    for (let k = key(end.tx, end.ty); k !== -1; k = came.get(k) ?? -1) tiles.unshift({ tx: k % 1000, ty: Math.floor(k / 1000) });
+    // Walk to each corner of the path (where it turns), from the tile after the start.
+    for (let i = 1; i < tiles.length - 1; i++) {
+      const [a, b, c] = [tiles[i - 1], tiles[i], tiles[i + 1]];
+      if (!a || !b || !c) continue;
+      if (b.tx - a.tx !== c.tx - b.tx || b.ty - a.ty !== c.ty - b.ty) walkStraight((b.tx + 0.5) * T, (b.ty + 0.5) * T);
+    }
+    const last = tiles[tiles.length - 1];
+    if (last && tiles.length > 1) walkStraight((last.tx + 0.5) * T, (last.ty + 0.5) * T);
+    walkStraight(x, y);
   };
   const collect = (): void => {
     const g = game();
@@ -154,6 +208,19 @@ function installHelpers(): void {
         const target = [...s.enemies.filter((e) => e.room === s.room)].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
         if (!target) break;
         const far = Math.hypot(target.x - p.x, target.y - p.y) > 200;
+        // Far off, walk most of the way by path, round whatever's in between (018).
+        if (Math.hypot(target.x - p.x, target.y - p.y) > 320) {
+          try {
+            walkTo(target.x, target.y + 160);
+          } catch {
+            // No way there from here; close in straight instead.
+          }
+          s = g.getState();
+          if (Math.hypot(target.x - s.player.x, target.y - s.player.y) > 320) {
+            s = g.step(1, { moveX: toward(s.player.x, target.x), moveY: toward(s.player.y, target.y) });
+          }
+          continue;
+        }
         s = g.step(1, {
           moveX: far ? toward(p.x, target.x) : 0,
           moveY: far ? toward(p.y, target.y) : 0,
