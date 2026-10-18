@@ -213,11 +213,28 @@ export class Controls {
     this.depositPending = null;
   }
 
+  /**
+   * The build toggle, one queued place or pick-up, and a picker deposit, consumed.
+   * The test hook merges these into its own commands, so mouse building works under it.
+   */
+  takeUiCommand(): Pick<Command, 'toggleBuild' | 'place' | 'pickUp' | 'deposit'> {
+    const action = this.queue.shift();
+    const ui = {
+      toggleBuild: this.buildPending,
+      place: action?.place ?? null,
+      pickUp: action?.pickUp ?? null,
+      deposit: this.depositPending,
+    };
+    this.buildPending = false;
+    this.depositPending = null;
+    return ui;
+  }
+
   /** The command for the next tick. Consumes pending presses and one queued build action. */
   nextCommand(): Command {
     const axis = (neg: Input.Keyboard.Key, pos: Input.Keyboard.Key): Axis =>
       ((pos.isDown ? 1 : 0) - (neg.isDown ? 1 : 0)) as Axis;
-    const action = this.queue.shift();
+    const ui = this.takeUiCommand();
     const command: Command = {
       ...NO_COMMAND,
       moveX: axis(this.keys.left, this.keys.right),
@@ -229,10 +246,7 @@ export class Controls {
       load: this.loadPending,
       interact: this.interactPending,
       selectAmmo: this.selectPending,
-      toggleBuild: this.buildPending,
-      place: action?.place ?? null,
-      pickUp: action?.pickUp ?? null,
-      deposit: this.depositPending,
+      ...ui,
     };
     this.clearPresses();
     return command;

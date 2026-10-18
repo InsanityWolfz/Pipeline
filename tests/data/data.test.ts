@@ -22,7 +22,7 @@ import {
   DOORWAY_SPRITE,
   HOPPER_SPRITES,
   MACHINE_HOUSINGS,
-  PIECE_EMBLEMS,
+  LOGISTICS_ICONS,
   STATUS_MARKERS,
 } from '../../src/data/foundryAssets';
 import { ENEMIES } from '../../src/data/enemies';
@@ -124,14 +124,15 @@ describe('assets', () => {
     }
     const singles = [
       ...Object.values(HOPPER_SPRITES),
-      ...Object.values(PIECE_EMBLEMS),
+      ...Object.values(LOGISTICS_ICONS),
       CRATE_SPRITE,
       DOORWAY_SPRITE,
       STATUS_MARKERS.blocked,
       STATUS_MARKERS.starved,
     ];
     for (const key of singles) expect(frames).toContain(key);
-    expect(Object.keys(PIECE_EMBLEMS).sort()).toEqual(Object.keys(PIECES).sort());
+    const logistics = Object.values(PIECES).filter((d) => d.kind !== 'machine');
+    expect(Object.keys(LOGISTICS_ICONS).sort()).toEqual(logistics.map((d) => d.id).sort());
   });
 
   it('has a HUD font frame for every glyph', () => {

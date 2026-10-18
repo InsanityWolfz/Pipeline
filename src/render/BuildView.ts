@@ -7,7 +7,6 @@ import {
   EMBLEM_RISE,
   HOPPER_SPRITES,
   MACHINE_HOUSINGS,
-  PIECE_EMBLEMS,
 } from '../data/foundryAssets';
 import { BUILD_BAR_LAYOUT, GHOST } from '../data/hudLayout';
 import { pieceDef } from '../data/pieces';
@@ -15,7 +14,7 @@ import { pieceRect, type Tile } from '../sim/pieces';
 import type { PlaceFail } from '../sim/placement';
 import type { Facing } from '../sim/player';
 import { colorOf } from './color';
-import { buildBarCells, inRect } from './foundryLayout';
+import { buildBarCells, inRect, pieceIcon } from './foundryLayout';
 import { viewOf } from './FoundryView';
 
 /** The resting frame of a piece's body as placed with `facing`. */
@@ -48,7 +47,7 @@ export class BuildView {
       .setScrollFactor(0)
       .setDepth(DEPTHS.hud + 2);
     this.ghost = scene.add.image(0, 0, ATLAS_KEY, bodyFrame('conduit', 'right')).setAlpha(GHOST.alpha);
-    this.ghostEmblem = scene.add.image(0, 0, ATLAS_KEY, PIECE_EMBLEMS.conduit ?? '').setAlpha(GHOST.alpha);
+    this.ghostEmblem = scene.add.image(0, 0, ATLAS_KEY, pieceIcon('conduit')).setAlpha(GHOST.alpha);
     for (const o of [this.ghost, this.ghostEmblem]) o.setDepth(DEPTHS.worldUi - 1);
     this.setVisible(false);
   }
@@ -103,7 +102,7 @@ export class BuildView {
     this.ghostEmblem.setVisible(machine).setTint(tint);
     if (machine) {
       const rise = EMBLEM_RISE[def.footprint][viewOf(facing)];
-      this.ghostEmblem.setFrame(PIECE_EMBLEMS[pieceId] ?? '').setPosition(r.x, bottom - rise);
+      this.ghostEmblem.setFrame(pieceIcon(pieceId)).setPosition(r.x, bottom - rise);
     }
   }
 
@@ -115,7 +114,7 @@ export class BuildView {
       const fixed = (o: GameObjects.Image, depth: number): GameObjects.Image =>
         o.setOrigin(0).setScrollFactor(0).setDepth(depth).setVisible(this.visible);
       const frame = fixed(this.scene.add.image(c.x, c.y, ATLAS_KEY, SPRITES.hudAmmoCell), DEPTHS.hud);
-      const icon = this.scene.add.image(c.x + L.icon.x, c.y + L.icon.y, ATLAS_KEY, PIECE_EMBLEMS[c.pieceId] ?? '');
+      const icon = this.scene.add.image(c.x + L.icon.x, c.y + L.icon.y, ATLAS_KEY, pieceIcon(c.pieceId));
       fixed(icon, DEPTHS.hud + 1);
       return { pieceId: c.pieceId, images: [frame, icon] };
     });

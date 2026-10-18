@@ -1,15 +1,10 @@
 import type { GameObjects, Scene } from 'phaser';
 import { ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
 import { PICKER_LAYOUT } from '../data/hudLayout';
-import { itemDef, ITEMS } from '../data/items';
+import { itemDef } from '../data/items';
 import { count, type Inventory } from '../sim/inventory';
-import { inRect, pickerRows } from './foundryLayout';
+import { heldItems, inRect, pickerRows } from './foundryLayout';
 import { GlyphLine } from './glyphLine';
-
-/** The items the player holds, in ITEMS order: what the picker lists. */
-export function heldItems(inventory: Inventory): string[] {
-  return Object.keys(ITEMS).filter((id) => count(inventory, id) > 0);
-}
 
 // The hopper picker: opened by E on an empty hopper, it lists every item the
 // player holds; clicking one puts all of it in the hopper. The world keeps running.

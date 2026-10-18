@@ -40,7 +40,18 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
         pickUp: null,
         deposit: null,
       };
-      for (let i = 0; i < frames; i++) scene.stepOnce(i === 0 ? held : after);
+      for (let i = 0; i < frames; i++) {
+        // Building with the mouse and keys works under the hook: the scene's queued actions join each tick.
+        const base = i === 0 ? held : after;
+        const ui = scene.takeUiCommand();
+        scene.stepOnce({
+          ...base,
+          toggleBuild: base.toggleBuild || ui.toggleBuild,
+          place: base.place ?? ui.place,
+          pickUp: base.pickUp ?? ui.pickUp,
+          deposit: base.deposit ?? ui.deposit,
+        });
+      }
       return summarize(sim);
     },
     craft: (recipeId) => {

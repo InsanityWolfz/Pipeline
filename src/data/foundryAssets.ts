@@ -27,7 +27,7 @@ export const MACHINE_HOUSINGS: Readonly<Record<'1x1' | '3x1', Record<PieceView, 
   };
 
 /**
- * Where a housing's emblem centre sits above the sprite's bottom (the footprint's
+ * Where the icon on a housing's top face is centred above the sprite's bottom (the footprint's
  * bottom edge), px: the middle of its top face. The 3x1 side view has a taller top face.
  */
 export const EMBLEM_RISE: Readonly<Record<'1x1' | '3x1', Record<PieceView, number>>> = {
@@ -35,20 +35,14 @@ export const EMBLEM_RISE: Readonly<Record<'1x1' | '3x1', Record<PieceView, numbe
   '3x1': { down: 31, up: 31, side: 63 },
 };
 
-/** Each piece's 16x16 emblem: drawn on a machine's top face, and its icon on the build bar. */
-export const PIECE_EMBLEMS: Readonly<Record<string, string>> = {
+/**
+ * Build bar icons for the logistics pieces. A machine has no emblem of its own:
+ * the icon of the item it makes is drawn on its top face and on the bar.
+ */
+export const LOGISTICS_ICONS: Readonly<Record<string, string>> = {
   conduit: 'emblem-conduit',
   hopper: 'emblem-hopper',
   crate: 'emblem-crate',
-  cutter: 'emblem-cutter',
-  knapper: 'emblem-knapper',
-  spinner: 'emblem-spinner',
-  assembler: 'emblem-assembler',
-  shaper: 'emblem-shaper',
-  'fuse-maker': 'emblem-fuse-maker',
-  grinder: 'emblem-grinder',
-  packer: 'emblem-packer',
-  focuser: 'emblem-focuser',
 };
 
 /** Conduits flow toward their front; `side` flows right. They lie flat on the floor. */

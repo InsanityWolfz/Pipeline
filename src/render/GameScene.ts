@@ -164,6 +164,11 @@ export class GameScene extends Scene {
     craft(this.sim, recipeId);
   }
 
+  /** Build actions made with the mouse and keys since the last tick, for the test hook to merge into its steps. */
+  takeUiCommand(): Pick<Command, 'toggleBuild' | 'place' | 'pickUp' | 'deposit'> {
+    return this.controls?.takeUiCommand() ?? { toggleBuild: false, place: null, pickUp: null, deposit: null };
+  }
+
   /** Steps the sim one tick and keeps its events for the next draw. The test hook steps through here too. */
   stepOnce(cmd: Command): void {
     stepSim(this.sim, cmd);

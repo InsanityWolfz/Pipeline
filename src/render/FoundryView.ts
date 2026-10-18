@@ -9,7 +9,6 @@ import {
   FOUNDRY_LAYOUT,
   HOPPER_SPRITES,
   MACHINE_HOUSINGS,
-  PIECE_EMBLEMS,
   STATUS_MARKERS,
   type PieceView,
 } from '../data/foundryAssets';
@@ -19,13 +18,14 @@ import { facingVector } from '../sim/direction';
 import { pieceRect, type FoundryState, type PieceState } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { registerAnim } from './anims';
+import { pieceIcon } from './foundryLayout';
 import { GlyphLine } from './glyphLine';
 
 export const viewOf = (f: Facing): PieceView => (f === 'up' || f === 'down' ? f : 'side');
 
 interface Drawn {
   body: GameObjects.Sprite;
-  /** Machines: the emblem on the top face. Hoppers and crates: the item they hold. Conduits: the item riding it. */
+  /** Machines: what they make, on the top face. Hoppers and crates: the item they hold. Conduits: the item riding it. */
   icon: GameObjects.Image;
   marker?: GameObjects.Sprite;
   markerIcon?: GameObjects.Image;
@@ -76,7 +76,7 @@ export class FoundryView {
     const left = p.facing === 'left';
     const d: Drawn = {
       body: add.sprite(r.x, bottom, ATLAS_KEY).setOrigin(0.5, 1).setFlipX(left).setDepth(bottom),
-      icon: add.image(r.x, bottom, ATLAS_KEY, PIECE_EMBLEMS[p.pieceId] ?? '').setOrigin(0.5),
+      icon: add.image(r.x, bottom, ATLAS_KEY, pieceIcon(p.pieceId)).setOrigin(0.5),
     };
     if (p.kind === 'conduit') {
       d.body.setOrigin(0).setPosition(r.x - TILE_SIZE / 2, r.y - TILE_SIZE / 2).setDepth(FOUNDRY_LAYOUT.conduitDepth);
