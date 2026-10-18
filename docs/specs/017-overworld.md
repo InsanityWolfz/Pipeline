@@ -65,7 +65,8 @@ The game happens outside on one open map, like Realm of the Mad God. You wake ne
   - Packs spawn at points chosen by the seeded RNG on open ground, at least 1.5 screens from the player and never inside a safe zone.
   - Each enemy's home is its spawn point, so the existing aggro and leash rules apply unchanged.
 - [ ] When a pack is wiped out, a replacement spawns in the same ring after a delay (starting value 20 s), out of view.
-- [ ] A busy fight in ring 2 can reach 10–15 enemies on screen, and never more than 15 awake within a screen of the player. A new pack never spawns while 15 enemies are within that range. A scripted e2e scenario proves it.
+- [ ] A busy fight in ring 2 can reach 10–15 enemies on screen. A new pack never spawns while 15 enemies are within that range. A scripted e2e scenario proves it.
+  - Changed by Shaun, 2026-10-18: there is no cap on how many are awake. Anything on screen aggroes, so a player who rounds up a crowd gets the crowd. This replaces "never more than 15 awake within a screen of the player".
 - [ ] The on-screen cap of 15, the population numbers, pack makeup per ring, spawn distance and respawn delay are data in `src/data/population.ts`.
 - [ ] Death keeps today's rule: unclaimed land resets. The population and the tutorial packs respawn, and claimed land stays claimed.
 
@@ -148,7 +149,7 @@ The game happens outside on one open map, like Realm of the Mad God. You wake ne
 - **Playwright:**
   - The full tutorial run is rewritten for the overworld.
   - Enter and leave the foundry through the entrance.
-  - A ring-2 scenario with 10–15 enemies on screen and never more than 15.
+  - A ring-2 scenario with 10 or more enemies on screen.
   - The minimap's markers.
   - The `?playtest` and `?start=field` starts.
 - **Screenshots (qa):**
@@ -165,9 +166,7 @@ The game happens outside on one open map, like Realm of the Mad God. You wake ne
   - every member stands outside the camera's view, clamped to the map's edges, plus a 64 px margin
 
   The literal 960 px leaves almost no ring-1 ground while the player is near the foundry, so the view check is what keeps spawns out of sight. See the open question.
-- **The awake cap is enforced in two places.** "Never more than 15 awake within a screen" holds two ways:
-  - enemies don't wake on sight while 15 nearby are already awake
-  - a hit doesn't wake a 16th either: it takes the damage and stays asleep
+- **No awake cap.** The build first capped enemies awake within a screen at 15, on sight and on hit. Shaun removed the cap: anything on screen aggroes, and a hit always wakes. Only spawning is capped.
 - **The spawn cap counts the whole pack.** A pack spawns only if even its largest size would keep the enemies within a screen at 15 or fewer.
 - **"On screen" and "within a screen" differ.** "Within a screen" is a view's width and height either way of the player (`POPULATION.screen`). "On screen" is what the camera shows; the summary reports it as `onScreen`.
 - **Tuning.** Ring 2 went from 4 packs of 3–5 to 8 packs of 4–5. With 4, the busiest scripted ring-2 fight showed 4–11 enemies on screen; with 8 it shows 10–13. Ring 1 is unchanged.
@@ -200,4 +199,4 @@ The game happens outside on one open map, like Realm of the Mad God. You wake ne
 ## Open questions
 None. Shaun answered both, 2026-10-18:
 - **Spawn distance:** "Packs spawning is fine as long as the player never sees a pack spawn on their screen." The build keeps 480 px plus every member out of the clamped view.
-- **Hits past the cap:** "if they hit an enemy off screen not waking it up is fine because the player didn't see it anyways." A hit doesn't wake an enemy while 15 are awake near the player.
+- **The awake cap:** "if enemies are in your screen then they should aggro. if the player runs by a bunch of enemies and collects them then they could get pack sizes as large as they wanted as long as they rounded them up and kept them on screen we shouldnt hard cap it." The wake cap is removed; spawning stays capped.

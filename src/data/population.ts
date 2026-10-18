@@ -24,7 +24,7 @@ export const POPULATION = {
   respawnTicks: 1200,
   /** Pack members stand within this many tiles of the pack's centre. */
   spread: 2,
-  /** No new pack spawns that could take the enemies within a screen of the player past this, and no more than this many wake there. */
+  /** No new pack spawns that could take the enemies within a screen of the player past this. It caps spawning only: everything on screen wakes, however many the player rounds up (Shaun, 2026-10-18). */
   screenCap: 15,
   /** "Within a screen" of the player: this far either way, px (a whole view). */
   screen: { x: 640, y: 360 },
