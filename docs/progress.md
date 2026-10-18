@@ -9,7 +9,8 @@ Newest entry first.
 - **Render:** `EnemyView` (poses, white hit flash, health bar, swipe telegraph on the ground), `GroundItemView`, `EffectsView` (corpse, sparkle, "+1 [icon]" popup, KO fade), player hit pose and flicker, HUD health bar and material column. `GameScene.stepOnce()` collects events from every tick for the next draw; the test hook steps through it.
 - **Art:** Husk (idle, walk, wind-up, swipe, hit in 3 views; death), four materials, item shadow, pickup sparkle, player hit poses, HUD health frame, `+` glyph. Not yet approved by Shaun.
 - 150 unit tests and 14 e2e tests pass.
-**Next:** Shaun approves the sprites at 4×, then `/verify` and `/review`.
+**Verify:** `npm run check` (150 unit tests) and `npm run test:e2e` (14 tests) green. The qa agent passed every screenshot criterion with no console errors. Two of its notes need Shaun's eye: the player hit pose barely differs from idle at game size (the flicker carries the feedback), and the KO fade-out already shows the reset room, with the camera panning to spawn during the fade (the spec allows this).
+**Next:** Shaun approved the sprites at 4×. Run `/review`.
 **Notes:**
 - The Husk grids came from a scratch shape script (body, limbs and mask with auto outline and shading). It isn't committed, so revise the grids by hand.
 - Built as planned, plus: the white hit flash uses the palette's `white`; a material's one 16×16 sprite is both its ground sprite and its HUD icon.
