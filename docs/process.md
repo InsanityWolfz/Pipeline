@@ -361,6 +361,8 @@ The starting contents of `docs/backlog.md`, in build order: combat first, then t
 
 ## Art pipeline
 
+**Since 016:** sprites are vector shape data in `src/data/art/`, drawn into textures at boot, and reviewed on the `/sheet.html` contact sheet. See `docs/art.md`. The pixel grid pipeline below remains for the sprites 020 hasn't replaced yet.
+
 Claude generates all the art itself: crude but consistent 32-pixel top-down sprites in one signature style. No asset packs, so anything the game needs can be made to fit.
 
 **Art spec first.** `docs/art.md` locks the style so every sprite matches:

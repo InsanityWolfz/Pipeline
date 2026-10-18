@@ -108,3 +108,11 @@ describe('enemy rigs', () => {
     }
   });
 });
+
+describe('docs/art.md', () => {
+  it('lists every daylight colour with its hex', async () => {
+    const { readFileSync } = await import('node:fs');
+    const doc = readFileSync('docs/art.md', 'utf8');
+    for (const c of DAYLIGHT_PALETTE) expect(doc).toContain(`| \`${c.id}\` | ${c.hex} |`);
+  });
+});
