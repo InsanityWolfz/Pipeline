@@ -25,13 +25,13 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 018 | Believable resources: nodes where they make sense, visible remains and regrowth, Husk resin, the Warden's core, the claimed pylon visibly harvesting and sending motes home | done |
 | 019 | Foundry intake pipe: the placeable socket becomes a fixed 3-tile ringed cyan pipe on the north wall that matches the tube, with a reservoir gauge and fill pulses | done |
 | 020 | Vector pass: the foundry interior, machines with visible mechanisms, pieces, fixtures, items, HUD and menus in vector with bundled fonts; the pixel pipeline is removed | done |
-| 021 | Playtest fixes: 2-tile pickup reach through obstacles, no screen shake on firing, a menu pointer above buttons, the arrowhead without wood; Shaun's playtest rant 2026-10-18 | draft |
-| 022 | Hopper amounts: click one, Shift+click half, Ctrl+click all, both in and out | draft |
-| 023 | Melee: with no tube or nothing to fire, a quick punch toward the cursor (small damage, knockback except bosses); closes the melee open question | draft |
-| 024 | Spread from the intake: the gravity stager is removed; each fed entrance has its own reservoir and adds a round to the volley (arrows fan, bombs land side by side, mixes fire together); the warden core opens entrances 2 and 3 | draft |
-| 025 | Bottom HUD: hotbar 1-2-3 centred, the tube slot centred above it and larger, showing the round, the volley or a fist | draft |
-| 026 | Menu labels: item names in the crafting menu; build bar grouped into Logistics, Arrows, Bombs and Ley | draft |
-| 027 | Foundry tutorial: step-by-step objectives for building the first arrow line into the intake | draft |
+| 021 | Playtest fixes: 2-tile pickup reach through obstacles, no screen shake on firing, a menu pointer above buttons, the arrowhead without wood; Shaun's playtest rant 2026-10-18 | approved |
+| 022 | Hopper amounts: click one, Shift+click half, Ctrl+click all, both in and out | approved |
+| 023 | Melee: with no tube or nothing to fire, a quick punch toward the cursor (small damage, knockback except bosses); closes the melee open question | approved |
+| 024 | Spread from the intake: the gravity stager is removed; each fed entrance has its own reservoir and adds a round to the volley (arrows fan, bombs land side by side, mixes fire together); the warden core opens entrances 2 and 3 | approved |
+| 025 | Bottom HUD: hotbar 1-2-3 centred, the tube slot centred above it and larger, showing the round, the volley or a fist | approved |
+| 026 | Menu labels: item names in the crafting menu; build bar grouped into Logistics, Arrows, Bombs and Ley | approved |
+| 027 | Foundry tutorial: step-by-step objectives for building the first arrow line into the intake | approved |
 | 028 | Leveling and skill tree: rough plan for XP, levels and the tree's lanes (to discuss with Shaun before any spec) | idea |
 | 029 | Factory depth: rough plan to make lines more diverse and complex than "three bomb makers into the intake" (to discuss with Shaun before any spec) | idea |
 
@@ -40,3 +40,4 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 016–020 were approved by Shaun on 2026-10-18 ("I approve all") for an unattended run after the spec interviews. The enemy cap was lowered to 10–15 at approval. They were merged to main on 2026-10-18 for Shaun's playtest and wrapped up as done at his request.
 
 021–029 come from Shaun's playtest notes and spec interview on 2026-10-18. Suggested build order: 021, 022, 023, 024, 025, 026, 027 (025 needs 023 and 024; 027 needs 024 and 026).
+021–027 were approved by Shaun in chat on 2026-10-18 ("approve 21-27").

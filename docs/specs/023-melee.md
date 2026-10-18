@@ -1,5 +1,7 @@
 # 023: Melee when the tube is empty
-status: draft
+status: approved
+
+Approved by Shaun in chat, 2026-10-18 ("approve 21-27").
 
 ## Goal
 With no tube yet, or nothing to fire, the fire button throws a quick punch toward the cursor. The punch does a little damage and knocks back any enemy that isn't a boss. The player is never left helpless.

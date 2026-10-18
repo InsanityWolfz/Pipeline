@@ -1,5 +1,7 @@
 # 025: Bottom HUD: centred hotbar, active ammo above it, fist when empty
-status: draft
+status: approved
+
+Approved by Shaun in chat, 2026-10-18 ("approve 21-27").
 
 ## Goal
 The bottom of the screen reads at a glance. The three hotbar cells (1, 2 and 3) sit centred along the bottom. Above them, also centred and a little larger, is the tube slot, which shows exactly what the next fire press does: the round, the volley, or a fist for melee.

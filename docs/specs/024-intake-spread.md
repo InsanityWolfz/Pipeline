@@ -1,5 +1,7 @@
 # 024: Spread from the intake: each fed entrance is a stream
-status: draft
+status: approved
+
+Approved by Shaun in chat, 2026-10-18 ("approve 21-27").
 
 ## Goal
 The gravity stager is gone. The game builds the spread itself from which intake entrances are being fed:
@@ -97,4 +99,4 @@ The intake starts with one entrance open. The Pylon Warden's core opens the othe
   - a two-arrow-and-bomb volley in flight
 
 ## Open questions
-- [ ] **Cap size.** Per-entrance cap of 30 makes 90 total once all three are open, against 30 today. Is that OK, or should the three share the 30 (10 each)?
+None. Resolved by Shaun, 2026-10-18: each entrance has a cap of 30, so 90 once all three are open ("90 is fine and makes sense").

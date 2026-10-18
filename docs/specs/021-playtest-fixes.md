@@ -1,5 +1,7 @@
 # 021: Playtest fixes: pickup reach, no fire shake, menu pointer, arrowhead
-status: draft
+status: approved
+
+Approved by Shaun in chat, 2026-10-18 ("approve 21-27").
 
 ## Goal
 Four small fixes from Shaun's playtest:

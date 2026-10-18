@@ -1,5 +1,7 @@
 # 027: Foundry tutorial: building your first line, step by step
-status: draft
+status: approved
+
+Approved by Shaun in chat, 2026-10-18 ("approve 21-27").
 
 ## Goal
 Once the player enters the foundry, the objective line walks them through building an arrow line, one small step at a time: hoppers, the three part machines, the assembler, and a conduit into the intake. Each step ticks off as they do it, so nobody has to guess how machines feed the tube.
@@ -64,4 +66,4 @@ Once the player enters the foundry, the objective line walks them through buildi
 - **Screenshots:** step 3 with the cutter cell pulsing, and step 7 with the intake marker.
 
 ## Open questions
-- [ ] **Which line.** The tutorial teaches the arrow line, the design doc's own example. Would you rather it teach a shorter line, such as ley crystal → grinder → focuser (two machines, no assembler)?
+None. Resolved by Shaun, 2026-10-18: teach the arrow line.

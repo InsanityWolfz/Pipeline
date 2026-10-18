@@ -1,5 +1,7 @@
 # 022: Hopper amounts: one, half or all
-status: draft
+status: approved
+
+Approved by Shaun in chat, 2026-10-18 ("approve 21-27").
 
 ## Goal
 Putting items into a hopper and taking them out works like an inventory stack:

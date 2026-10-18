@@ -6,7 +6,7 @@ Oct 17, 2026 · @Shaun
 
 A solo fantasy action RPG where your weapon is a portal to your factory. You find an ancient tube relic that links to your magical foundry, and everything the foundry makes comes out the end of it: arrows, bombs, knives, ley bolts. Build a bigger, smarter factory and you hit harder.
 
-The core verb is **conquer, claim, automate**. You clear a region by hand, reactivate its ley pylon, and its materials flow home to feed your ammo lines. The layout of each line decides what the shot does: five assembly lines set at five angles fire a five-arrow spread.
+The core verb is **conquer, claim, automate**. You clear a region by hand, reactivate its ley pylon, and its materials flow home to feed your ammo lines. The layout of each line decides what the shot does: feed arrows into three of the tube's intake entrances and it fires a three-arrow spread.
 
 Every ARPG hand-waves infinite arrows. This game is about where they come from. Working title: **Pipeline**.
 
@@ -42,6 +42,7 @@ Combat is deliberate and hands-on, closer to WoW than Vampire Survivors. Nothing
 - **Reservoir:** the tube holds a reservoir of each ammo that drains in bursts and refills from the foundry. Factory throughput sets the refill speed, and reservoir size is an upgrade.
 - **Ley range:** the link is strongest near claimed pylons. Deep in unclaimed land, refill slows and ammo quality drops, so pushing into new regions is dangerous until you claim a foothold.
 - **Enemies:** the field is dangerous, at Realm of the Mad God density. Packs roam unclaimed land and keep coming back, and a busy fight can hold 10 to 15 enemies. Every enemy still telegraphs attacks you read and dodge, and nothing becomes a mindless horde. (Changed from "few enemies" on 2026-10-18, Shaun, spec 017.)
+- **Empty tube:** with no tube yet, or nothing to fire, the fire button throws a quick, weak punch toward the cursor that knocks back anything but a boss, so you're never helpless. (Added 2026-10-18, Shaun, spec 023.)
 - **Running away is always allowed.** You keep your haul but leave without the kill.
 
 **Skill tree.** One character, one big tree branching in every direction with connecting paths. Its lanes map to ammo families: the knife lane makes knives hit harder, chain, and so on. You take whatever mix you want.
@@ -68,7 +69,7 @@ The foundry makes ammo. Each supply slot feeds one ammo line, and everything a l
 
 **Ammo is built physically.** An arrow takes three chains: wood into a cutter makes shafts, stone into a knapper makes heads, and fiber into a spinner makes binding rope. An assembler combines them into arrows. Bombs, knives and ley bolts each have their own chains.
 
-**The layout is the ability.** Five assembly lines set at five angles, feeding gravity stagers, fire a five-arrow spread. A hardening stage adds pierce, a ley guide adds homing, and refinement stages raise quality and damage. Every extra projectile costs real materials, so balance is built in.
+**The layout is the ability.** The foundry's intake has several entrances, each with its own reservoir, and one press fires a round from every fed entrance: arrows fed into two entrances fan out as a two-arrow spread, two bomb lines lob two bombs side by side, and two arrow lines plus a bomb line fire both together. The intake starts with one entrance open; the first boss's core opens more, and later unlocks add more. (Changed from angled gravity stagers on 2026-10-18, Shaun, spec 024.) A hardening stage adds pierce, a ley guide adds homing, and refinement stages raise quality and damage. Every extra projectile costs real materials, so balance is built in.
 
 **Scaling lives inside each line.** There are at most four lines, but each can grow into a large complex: more raw supply, parallel machines, more refinement stages. More resources mean more throughput, and better machines mean stronger ammo.
 
@@ -95,7 +96,7 @@ Your base is your magical foundry, built and abandoned by a lost magical civiliz
 
 **Theme rule:** every enemy, machine, system and piece of art must fit the lost civilization and its ley lines. Nothing modern or out of place.
 
-- **Fantasy machines:** cutters, knappers, spinners, gravity stagers, ley guides, runeforges. Mana flows through crystal conduits, and ley conduits carry materials home.
+- **Fantasy machines:** cutters, knappers, spinners, ley guides, runeforges. Mana flows through crystal conduits, and ley conduits carry materials home.
 - **Difficulty by distance:** enemies near the foundry are weak, and biomes get deadlier the farther out you go (Realm of the Mad God style).
 - **Claiming:** clear a site, then set it up as a supply line to the foundry. Reactivating its ley pylon makes monsters stop roaming there and extends the tube's range. Claims are permanent, and nothing ever threatens them. NPCs may move in, so cleansed sites become small hubs.
 - **Pylons are deposit points:** reach any claimed pylon and your haul is sent home safe.
@@ -136,7 +137,7 @@ The player should do the whole core loop at tiny scale in the first 10 minutes. 
 5. Commit the one starting supply slot to a favorite and build its line. The tube now fires straight from the factory: the "I did it by hand, now it does itself" moment.
 6. Identify the armor found on the way and equip it.
 7. Clear a nearby site guarded by a tougher pack and an elite, reactivate its pylon, and claim it as a supply line.
-8. Return to see the line running at full speed, add a stager to try a spread version, then push toward the first boss.
+8. Return to see the line running at full speed, feed a second intake entrance to try a spread version, then push toward the first boss.
 
 ## Endgame: Ascension
 
@@ -162,7 +163,7 @@ Example modifiers:
 
 - [ ] The tube: hand-loaded at first, then linked to the foundry, with a reservoir
 - [ ] Three beginner ammo types, each with its crafting chain
-- [ ] One supply slot and one ammo line, plus a gravity stager for a spread version
+- [ ] One supply slot and one ammo line, plus extra intake entrances for a spread version
 - [ ] One region with 2 to 3 enemy types, telegraphed attacks and an elite
 - [ ] One claimable site with a supply line, pylon deposit and fast travel
 - [ ] Unidentified armor drops, identified at the foundry
@@ -174,5 +175,5 @@ Example modifiers:
 - [ ] Which beginner ammo types ship, and their crafting chains
 - [ ] Reservoir sizes and refill speeds
 - [ ] Whether identification is free or costs materials
-- [ ] Whether melee exists, for example as blade constructs
+- [x] Whether melee exists: yes, as a fallback. With no tube or nothing to fire, the fire button throws a weak punch that knocks back non-boss enemies (2026-10-18, Shaun, spec 023).
 - [ ] Final names for the foundry and the tube

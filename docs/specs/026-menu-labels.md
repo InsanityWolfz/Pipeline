@@ -1,5 +1,7 @@
 # 026: Labels in the crafting menu and categories in the build bar
-status: draft
+status: approved
+
+Approved by Shaun in chat, 2026-10-18 ("approve 21-27").
 
 ## Goal
 The crafting menu names every item, so it no longer reads like hieroglyphics. The build bar is grouped into labelled categories, one per ammo chain plus logistics.
