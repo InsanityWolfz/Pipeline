@@ -74,7 +74,7 @@ export function spawnDrops(state: SimState, def: EnemyDef, x: number, y: number,
   }
 }
 
-/** Moves ground items in the player's room within PICKUP_RADIUS of their feet box into the inventory. */
+/** Moves ground items in the player's room within PICKUP_RADIUS of their feet box into the inventory, whatever stands in between (021). */
 export function stepPickups(state: SimState): void {
   const p = state.player;
   let kept = 0;

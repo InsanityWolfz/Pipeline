@@ -88,5 +88,5 @@ export const MAX_HEALTH = 100;
 /** Ticks a hit leaves the player invulnerable. */
 export const HIT_INVULN_TICKS = 30;
 
-/** A ground item this close to the feet box is picked up, px. */
-export const PICKUP_RADIUS = 8;
+/** A ground item this close to the feet box is picked up, px: about two tiles, through anything in between (021). */
+export const PICKUP_RADIUS = 64;

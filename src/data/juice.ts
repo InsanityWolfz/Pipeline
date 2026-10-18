@@ -130,3 +130,10 @@ export const ROOM_MOOD: Readonly<Record<string, { tint: string; alpha: number }>
 
 /** The vignette: edge darkness, and where the darkening starts (fraction of the corner distance). */
 export const VIGNETTE = { alpha: 0.55, inner: 0.45 } as const;
+
+/**
+ * A picked-up item (021) slides from where it lay into the player over this many ms, shrinking to
+ * `endScale`, drawn over whatever stands between (a tree it lay behind). Cosmetic: the sim has already
+ * moved it into the inventory.
+ */
+export const PICKUP_SLIDE = { ms: 140, endScale: 0.6 } as const;

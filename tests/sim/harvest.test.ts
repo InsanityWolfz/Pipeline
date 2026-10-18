@@ -43,30 +43,27 @@ describe('harvesting', () => {
     expect(s.harvest?.nodeId).toBe(near.id);
   });
 
-  it('completes on tick 30: one use gone and one item on the ground outside every node', () => {
+  it('completes on tick 30: one use gone and one item dropped outside every node', () => {
     const { s, n } = harvesting(TREE.harvestTicks - 1);
-    expect(s.groundItems).toHaveLength(0);
+    expect(s.inventory.wood).toBeUndefined();
     run(s, 1);
     expect(s.harvest).toBeNull();
     expect(n.uses).toBe(TREE.uses - 1);
-    expect(s.groundItems.map((g) => g.itemId)).toEqual(['wood']);
     expect(s.events.harvests).toEqual([{ id: n.id, nodeId: 'tree', itemId: 'wood', x: n.x, y: n.y }]);
-    const g = s.groundItems[0];
+    // The player stands within pickup reach (021), so the drop goes straight into the pack.
+    expect(s.events.pickups.map((p) => p.itemId)).toEqual(['wood']);
+    const g = s.events.pickups[0];
     for (const r of nodeRects(s.nodes, 'ruin-hall')) {
       const inside = Math.abs((g?.x ?? 0) - r.x) < r.w / 2 && Math.abs((g?.y ?? 0) - r.y) < r.h / 2;
       expect(inside).toBe(false);
     }
   });
 
-  it('drops an item the player can walk over and pick up', () => {
+  it('picks up the drop without the player moving (021)', () => {
     const { s } = harvesting(TREE.harvestTicks);
-    const g = s.groundItems[0];
-    if (!g) throw new Error('no drop');
-    runUntil(s, () => s.inventory.wood === 1, 120, {
-      moveX: g.x > s.player.x + 2 ? 1 : g.x < s.player.x - 2 ? -1 : 0,
-      moveY: g.y > s.player.y + 2 ? 1 : g.y < s.player.y - 2 ? -1 : 0,
-    });
-    expect(s.events.pickups[0]?.itemId).toBe('wood');
+    expect(s.inventory.wood).toBe(1);
+    expect(s.groundItems).toEqual([]);
+    expect({ x: s.player.x, y: s.player.y }).toEqual(PLAYER_AT);
   });
 
   it('does nothing with no node in reach, or a depleted one', () => {
