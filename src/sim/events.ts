@@ -63,6 +63,10 @@ export interface SimEvents {
   attunes: Record<string, never>[];
   /** A tube socket put a round in the reservoir. */
   refills: { id: number; itemId: string }[];
+  /** A projectile left the tube's mouth (a spread fires several at once). */
+  shots: { x: number; y: number; ammoId: string }[];
+  /** A gravity stager turned to a new angle. */
+  angles: { id: number; angle: number }[];
   /** The player was KO'd and the room reset this tick. */
   ko: boolean;
 }
@@ -86,6 +90,8 @@ export function createEvents(): SimEvents {
     withdraws: [],
     attunes: [],
     refills: [],
+    angles: [],
+    shots: [],
     ko: false,
   };
 }
@@ -108,5 +114,7 @@ export function clearEvents(events: SimEvents): void {
   events.withdraws.length = 0;
   events.attunes.length = 0;
   events.refills.length = 0;
+  events.angles.length = 0;
+  events.shots.length = 0;
   events.ko = false;
 }

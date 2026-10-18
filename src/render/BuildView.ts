@@ -5,11 +5,13 @@ import {
   CONDUIT_ANIMS,
   CRATE_SPRITE,
   SOCKET_SPRITES,
+  STAGER_SPRITE,
   FACING_ARROWS,
   ICON_RISE,
   HOPPER_SPRITES,
   MACHINE_HOUSINGS,
 } from '../data/foundryAssets';
+import { STAGER_ANGLES, STAGER_START_ANGLE } from '../data/foundry';
 import { BUILD_BAR_LAYOUT, GHOST } from '../data/hudLayout';
 import { BUILD_BAR, pieceDef } from '../data/pieces';
 import { pieceRect, type PlaceFail, type Tile } from '../sim/pieces';
@@ -27,6 +29,7 @@ function bodyFrame(pieceId: string, facing: Facing): string {
   if (def.kind === 'machine') return MACHINE_HOUSINGS[def.footprint][view].idle;
   if (def.kind === 'conduit') return animFrames(CONDUIT_ANIMS[view])[0] ?? '';
   if (def.kind === 'socket') return SOCKET_SPRITES.idle;
+  if (def.kind === 'stager') return animFrames(STAGER_SPRITE)[STAGER_ANGLES.indexOf(STAGER_START_ANGLE)] ?? '';
   return def.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE;
 }
 

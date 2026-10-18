@@ -25,7 +25,7 @@ import { EnemyView } from './EnemyView';
 import { FoundryView } from './FoundryView';
 import { GroundItemView } from './GroundItemView';
 import { HopperPicker } from './HopperPicker';
-import { HoverReadout, machineLines, socketLines } from './HoverReadout';
+import { HoverReadout, machineLines, socketLines, stagerLines } from './HoverReadout';
 import { HudView } from './HudView';
 import { NodeView } from './NodeView';
 import { PlayerView } from './PlayerView';
@@ -108,6 +108,10 @@ export class GameScene extends Scene {
         pieceId: () => this.buildView?.selected ?? FIRST_PIECE,
         overUi: (x, y) => (this.buildView?.overUi(x, y) ?? false) || (this.picker?.overUi(x, y) ?? false),
         clickUi: (x, y) => this.clickUi(controls, x, y),
+        stagerAt: (t) => {
+          const piece = pieceAt(this.sim.foundry, t.tx, t.ty);
+          return piece?.kind === 'stager' ? piece.id : null;
+        },
       });
       this.handleUi(controls);
       if (this.menuOpen) {
@@ -170,7 +174,14 @@ export class GameScene extends Scene {
   /** Build actions made with the mouse and keys since the last tick, for the test hook to merge into its steps. */
   takeUiCommand(): UiCommand {
     return (
-      this.controls?.takeUiCommand() ?? { toggleBuild: false, place: null, pickUp: null, deposit: null, withdraw: null }
+      this.controls?.takeUiCommand() ?? {
+        toggleBuild: false,
+        place: null,
+        pickUp: null,
+        deposit: null,
+        withdraw: null,
+        setAngle: null,
+      }
     );
   }
 
@@ -244,7 +255,13 @@ export class GameScene extends Scene {
     );
     const hovered = cursor ? pieceAt(sim.foundry, cursor.tx, cursor.ty) : undefined;
     const lines =
-      hovered?.kind === 'machine' ? machineLines(hovered) : hovered?.kind === 'socket' ? socketLines(sim.link.reservoir) : [];
+      hovered?.kind === 'machine'
+        ? machineLines(hovered)
+        : hovered?.kind === 'socket'
+          ? socketLines(sim.link.reservoir)
+          : hovered?.kind === 'stager'
+            ? stagerLines(hovered.angle)
+            : [];
     if (hovered && lines.length > 0) {
       const r = pieceRect(hovered);
       const top = this.foundryView?.topOf(hovered.id) ?? r.y;

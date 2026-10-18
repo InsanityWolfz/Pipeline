@@ -86,8 +86,8 @@ export interface ArrowSpot extends Tile {
 
 /**
  * Where a piece's build-mode arrows go. Its front edge gets one output arrow
- * pointing out (machines and hoppers). Every outer edge that takes items gets an
- * input arrow pointing in: machines on all but their front side, crates and tube
+ * pointing out (machines, hoppers and stagers). Every outer edge that takes items gets an
+ * input arrow pointing in: machines and stagers on all but their front side, crates and tube
  * sockets on every side. Conduits show their flow instead, so they get none.
  */
 export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing: Facing }): ArrowSpot[] {
@@ -102,7 +102,7 @@ export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing:
   for (const t of tiles) {
     for (const edge of SIDES) {
       const [dx, dy] = facingVector(edge);
-      if (covered(t.tx + dx, t.ty + dy) || (kind === 'machine' && edge === p.facing)) continue;
+      if (covered(t.tx + dx, t.ty + dy) || (hasOutput && edge === p.facing)) continue;
       spots.push({ kind: 'in', tx: t.tx, ty: t.ty, edge, points: OPPOSITE[edge] });
     }
   }

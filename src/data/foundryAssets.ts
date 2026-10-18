@@ -44,6 +44,7 @@ export const LOGISTICS_ICONS: Readonly<Record<string, string>> = {
   hopper: 'emblem-hopper',
   crate: 'emblem-crate',
   'tube-socket': 'emblem-tube-socket',
+  'gravity-stager': 'emblem-gravity-stager',
 };
 
 /** Conduits flow toward their front; `side` flows right. They lie flat on the floor. */
@@ -63,6 +64,18 @@ export const CRATE_SPRITE = 'crate';
 
 /** The tube socket (007): at rest, and the frame it flares to as a round goes to the tube. */
 export const SOCKET_SPRITES = { idle: 'tube-socket', refill: 'tube-socket-refill' } as const;
+
+/** The gravity stager (008): one frame per angle, `gravity-stager/<i>` for STAGER_ANGLES[i]. */
+export const STAGER_SPRITE = { key: 'gravity-stager', frames: 5, frameRate: 1, loop: false } as const satisfies AnimDef;
+
+/**
+ * Build mode draws a faint fan from the tube socket: one line per stream at its
+ * angle from straight up, so the spread's shape reads before firing. Px and palette id.
+ */
+export const SPREAD_FAN = { length: 56, width: 1, color: 'ley-cyan', alpha: 0.55 } as const;
+
+/** A stager holding an item pulses its alpha between 1 and this. */
+export const STAGER_PULSE_ALPHA = 0.7;
 
 /** The hover readout's icon for a socket whose reservoir is empty: the socket's own emblem. */
 export const SOCKET_EMPTY_ICON = 'emblem-tube-socket';

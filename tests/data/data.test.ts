@@ -8,6 +8,7 @@ import {
   BURN_FLAME,
   ENEMY_ANIMS,
   TUBE_ATTUNE,
+  MUZZLE_FLASH,
   FIRE_BURST,
   NODE_SPRITES,
   HUD_DIGITS,
@@ -20,6 +21,7 @@ import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import {
   CONDUIT_ANIMS,
   CRATE_SPRITE,
+  STAGER_SPRITE,
   SOCKET_SPRITES,
   DOORWAY_SPRITE,
   FACING_ARROWS,
@@ -37,6 +39,7 @@ import { SLOT_AMMOS, STARTING_AMMO } from '../../src/data/tube';
 import { CRAFT_GROUPS, RECIPES } from '../../src/data/recipes';
 import { NODES } from '../../src/data/nodes';
 import { BUILD_BAR, PIECES } from '../../src/data/pieces';
+import { STAGER_ANGLES, STAGER_START_ANGLE } from '../../src/data/foundry';
 
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -109,7 +112,7 @@ describe('assets', () => {
   });
 
   it('has the fire burst, burn flame and tube attune pulse in the built atlas', () => {
-    for (const anim of [FIRE_BURST, BURN_FLAME, ...Object.values(TUBE_ATTUNE)]) {
+    for (const anim of [FIRE_BURST, BURN_FLAME, MUZZLE_FLASH, STAGER_SPRITE, ...Object.values(TUBE_ATTUNE)]) {
       expect(anim.key).toMatch(KEBAB);
       for (const frame of animFrames(anim)) expect(Object.keys(atlas.frames)).toContain(frame);
     }
@@ -316,5 +319,20 @@ describe('the tube link (007)', () => {
     for (const id of Object.keys(PLAYTEST_START.inventory)) expect(ITEMS[id]).toBeDefined();
     const outputs = new Set(Object.values(RECIPES).map((r) => r.output.itemId));
     expect(new Set(PLAYTEST_START.crafted)).toEqual(outputs);
+  });
+});
+
+describe('spreads (008)', () => {
+  it('has a gravity stager on the build bar costing a warden core', () => {
+    expect(BUILD_BAR).toContain('gravity-stager');
+    expect(PIECES['gravity-stager']).toMatchObject({ kind: 'stager', footprint: '1x1', cost: { 'warden-core': 1 } });
+    for (const def of Object.values(PIECES)) for (const id of Object.keys(def.cost ?? {})) expect(ITEMS[id]).toBeDefined();
+    expect(ITEMS['warden-core']).toMatchObject({ kind: 'part' });
+    expect(PLAYTEST_START.inventory['warden-core']).toBe(5);
+  });
+
+  it('has one stager frame per angle, starting at 0', () => {
+    expect(STAGER_ANGLES).toContain(STAGER_START_ANGLE);
+    expect(STAGER_SPRITE.frames).toBe(STAGER_ANGLES.length);
   });
 });

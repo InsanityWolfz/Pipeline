@@ -31,6 +31,7 @@ export const SPRITES = {
   itemCasing: 'item-casing',
   itemFuse: 'item-fuse',
   itemLeyShard: 'item-ley-shard',
+  itemWardenCore: 'item-warden-core',
   leyBolt: 'ley-bolt',
   leyBoltShadow: 'ley-bolt-shadow',
   bomb: 'bomb',
@@ -76,8 +77,8 @@ export const TUBE_GRIP: Readonly<Record<keyof typeof TUBE_SPRITES, { x: number; 
   side: { x: 2, y: -22, behind: true },
 };
 
-/** The HUD number font: frames `hud-digits/0`..`/9`, then `/` as frame 10 and `+` as frame 11. */
-export const HUD_DIGITS = { key: 'hud-digits', glyphs: '0123456789/+', advance: 4 } as const;
+/** The HUD number font: frames `hud-digits/0`..`/9`, then `/` as frame 10, `+` as frame 11 and `-` as frame 12. */
+export const HUD_DIGITS = { key: 'hud-digits', glyphs: '0123456789/+-', advance: 4 } as const;
 
 /** Atlas frame for one HUD font character. */
 export function digitFrame(ch: string): string {
@@ -189,6 +190,9 @@ export const PICKUP_SPARKLE: AnimDef = { key: 'pickup-sparkle', frames: 4, frame
 
 /** A bomb's fire burst, drawn scaled to the burst's real radius. */
 export const FIRE_BURST: AnimDef = { key: 'fire-burst', frames: 4, frameRate: 14, loop: false };
+
+/** A ley burst at the tube's mouth for each projectile fired (008). */
+export const MUZZLE_FLASH: AnimDef = { key: 'muzzle-flash', frames: 2, frameRate: 20, loop: false };
 
 /** The flame over a burning enemy. */
 export const BURN_FLAME: AnimDef = { key: 'burn-flame', frames: 3, frameRate: 10, loop: true };

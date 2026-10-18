@@ -29,6 +29,8 @@ export interface Command {
   deposit: { id: number; itemId: string } | null;
   /** Take everything out of a hopper (by piece id) this tick (an edge), or null. */
   withdraw: { id: number } | null;
+  /** Turn a gravity stager (by piece id) to its next angle this tick (an edge), or null. */
+  setAngle: { id: number } | null;
 }
 
 /** No input. Its aim is the world origin, so callers that care about aim must set one. */
@@ -46,4 +48,5 @@ export const NO_COMMAND: Readonly<Command> = {
   pickUp: null,
   deposit: null,
   withdraw: null,
+  setAngle: null,
 };

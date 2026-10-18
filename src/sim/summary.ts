@@ -5,6 +5,7 @@ import type { SimEvents } from './events';
 import { unlockedPieces } from './placement';
 import { isInvulnerable, isRolling } from './movement';
 import type { Facing } from './player';
+import { socketStreams } from './spread';
 import type { SimState } from './state';
 import {
   arrowSummary,
@@ -57,6 +58,8 @@ export interface SimSummary {
     firing: boolean;
     /** This tick's shot came from the reservoir. */
     fromReservoir: boolean;
+    /** Projectiles this tick's shot fired (a spread fires several). */
+    shotCount: number;
   };
   /** The tube's link to the foundry. */
   link: {
@@ -86,6 +89,7 @@ export interface SimSummary {
 
 export function summarize(state: SimState): SimSummary {
   const { player: p, tube } = state;
+  const streams = socketStreams(state.foundry);
   return {
     tick: state.tick,
     seed: state.seed,
@@ -113,6 +117,7 @@ export function summarize(state: SimState): SimSummary {
       dryFire: tube.dryFire > 0,
       firing: tube.firing,
       fromReservoir: tube.fromReservoir,
+      shotCount: tube.shotCount,
     },
     link: {
       attuned: state.link.attuned,
@@ -128,7 +133,7 @@ export function summarize(state: SimState): SimSummary {
     crafted: [...state.crafted],
     unlocked: unlockedPieces(state),
     building: state.building,
-    foundry: { pieces: state.foundry.pieces.map(pieceSummary) },
+    foundry: { pieces: state.foundry.pieces.map((p) => pieceSummary(p, streams)) },
     events: structuredClone(state.events),
   };
 }

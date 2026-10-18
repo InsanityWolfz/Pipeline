@@ -1,7 +1,7 @@
 import type { GameObjects, Scene } from 'phaser';
 import { ATLAS_KEY, DEPTHS } from '../data/assets';
 import { READOUT_LAYOUT } from '../data/hudLayout';
-import { SOCKET_EMPTY_ICON } from '../data/foundryAssets';
+import { LOGISTICS_ICONS, SOCKET_EMPTY_ICON } from '../data/foundryAssets';
 import { itemDef } from '../data/items';
 import { machineDef } from '../data/pieces';
 import { recipeDef, RECIPES } from '../data/recipes';
@@ -33,7 +33,14 @@ export function socketLines(r: ReservoirState): Line[] {
   return [[icon, `${r.count}/${RESERVOIR_CAP}`]];
 }
 
-// Over the machine or tube socket under the cursor, a small panel of icon and count lines.
+/** A gravity stager's line: its emblem and its angle in degrees, signed. */
+export function stagerLines(angle: number): Line[] {
+  const icon = LOGISTICS_ICONS['gravity-stager'];
+  if (!icon) throw new Error('No gravity stager emblem');
+  return [[icon, angle > 0 ? `+${angle}` : String(angle)]];
+}
+
+// Over the machine, tube socket or stager under the cursor, a small panel of icon and text lines.
 export class HoverReadout {
   private readonly back: GameObjects.Graphics;
   private readonly icons: GameObjects.Image[] = [];

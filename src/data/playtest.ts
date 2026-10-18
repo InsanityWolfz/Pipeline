@@ -11,7 +11,10 @@ const PART_COUNT = 20;
 
 const COUNTS = { ammo: AMMO_COUNT, raw: RAW_COUNT, part: PART_COUNT } as const;
 
+/** Items with their own count: warden cores are rare, enough for a few gravity stagers (008). */
+const OVERRIDES: Readonly<Record<string, number>> = { 'warden-core': 5 };
+
 export const PLAYTEST_START: StartDef = {
-  inventory: Object.fromEntries(Object.values(ITEMS).map((it) => [it.id, COUNTS[it.kind]])),
+  inventory: Object.fromEntries(Object.values(ITEMS).map((it) => [it.id, OVERRIDES[it.id] ?? COUNTS[it.kind]])),
   crafted: [...new Set(Object.values(RECIPES).map((r) => r.output.itemId))].sort(),
 };

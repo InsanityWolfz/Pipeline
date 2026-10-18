@@ -90,6 +90,6 @@ test('?playtest starts with plenty of everything and every machine unlocked', as
   await boot(page, '?playtest');
   const s = await step(page, 0);
   expect(s.inventory).toMatchObject({ arrow: 99, bomb: 99, 'ley-bolt': 99, wood: 99, stone: 99, fiber: 99, 'ley-crystal': 99, 'husk-resin': 99, shaft: 20, 'ley-shard': 20 });
-  expect(s.unlocked).toEqual(['conduit', 'hopper', 'crate', 'cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser']);
+  expect(s.unlocked).toEqual(['conduit', 'hopper', 'crate', 'gravity-stager', 'cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser']);
   expect(errors).toEqual([]);
 });

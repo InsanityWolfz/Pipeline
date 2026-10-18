@@ -128,15 +128,18 @@ export type PieceSummary = { id: number; pieceId: string; tx: number; ty: number
     }
   | { kind: 'hopper'; item: string | null; count: number }
   | { kind: 'crate'; contents: Record<string, number> }
-  | { kind: 'socket'; pulse: number }
+  | { kind: 'socket'; pulse: number; streams: number[] }
+  | { kind: 'stager'; item: string | null; progress: number; angle: number }
 );
 
-export function pieceSummary(p: PieceState): PieceSummary {
+/** `streams` is the tube socket's stream angles (see socketStreams), shown on the socket. */
+export function pieceSummary(p: PieceState, streams: readonly number[] = []): PieceSummary {
   const common = { id: p.id, pieceId: p.pieceId, tx: p.tx, ty: p.ty, facing: p.facing };
   if (p.kind === 'conduit') return { ...common, kind: p.kind, item: p.item, progress: p.progress };
   if (p.kind === 'hopper') return { ...common, kind: p.kind, item: p.item, count: p.count };
   if (p.kind === 'crate') return { ...common, kind: p.kind, contents: { ...p.contents } };
-  if (p.kind === 'socket') return { ...common, kind: p.kind, pulse: p.pulse };
+  if (p.kind === 'socket') return { ...common, kind: p.kind, pulse: p.pulse, streams: [...streams] };
+  if (p.kind === 'stager') return { ...common, kind: p.kind, item: p.item, progress: p.progress, angle: p.angle };
   const { buffer, output, crafting, progress, status, missing } = p;
   return { ...common, kind: p.kind, buffer: { ...buffer }, output, crafting, progress, status, missing: [...missing] };
 }

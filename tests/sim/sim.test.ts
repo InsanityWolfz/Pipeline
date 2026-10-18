@@ -220,6 +220,8 @@ describe('sim state', () => {
       withdraws: [],
       attunes: [],
       refills: [],
+      angles: [],
+      shots: [],
       ko: false,
     });
   });
@@ -227,7 +229,7 @@ describe('sim state', () => {
   it('summarizes rooms, build mode, unlocks and the foundry', () => {
     const s = createSim(8);
     expect(summarize(s)).toMatchObject({ room: 'ruin-hall', rooms: ['ruin-hall', 'foundry'], building: false });
-    expect(summarize(s).unlocked).toEqual(['conduit', 'hopper', 'crate']);
+    expect(summarize(s).unlocked).toEqual(['conduit', 'hopper', 'crate', 'gravity-stager']);
     expect(summarize(s).enemies.every((e) => e.room === 'ruin-hall')).toBe(true);
     s.roomId = 'foundry';
     s.player.x = 300;

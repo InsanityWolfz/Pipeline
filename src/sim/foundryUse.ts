@@ -3,16 +3,18 @@ import { FEET_BOX } from '../data/player';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import type { Command } from './input';
 import { count } from './inventory';
-import { pieceRect, type CrateState, type HopperState, type PieceState } from './pieces';
+import { pieceRect, type CrateState, type HopperState, type PieceState, type StagerState } from './pieces';
+import { cycleAngle } from './spread';
 import type { SimState } from './state';
 
-// Using hoppers and crates: E empties a crate into the inventory. E on a hopper
-// opens render's menu, whose choices arrive as deposit (put all of a held item
-// in) and withdraw (take everything out) commands.
+// Using hoppers, crates and stagers: E empties a crate into the inventory and
+// turns a gravity stager to its next angle. E on a hopper opens render's menu,
+// whose choices arrive as deposit (put all of a held item in) and withdraw (take
+// everything out) commands.
 
-type Usable = HopperState | CrateState;
+type Usable = HopperState | CrateState | StagerState;
 
-const usable = (p: PieceState): p is Usable => p.kind === 'hopper' || p.kind === 'crate';
+const usable = (p: PieceState): p is Usable => p.kind === 'hopper' || p.kind === 'crate' || p.kind === 'stager';
 
 /** Gap between the player's feet box and a piece's box, px; 0 when they touch. */
 function gapTo(state: SimState, p: PieceState): number {
@@ -26,7 +28,7 @@ function gapTo(state: SimState, p: PieceState): number {
 const inReach = (state: SimState, p: PieceState): boolean =>
   state.roomId === FOUNDRY_ROOM && gapTo(state, p) <= USE_REACH;
 
-/** The nearest hopper or crate in reach, by centre distance; the first placed wins ties. */
+/** The nearest hopper, crate or stager in reach, by centre distance; the first placed wins ties. */
 export function usableInReach(state: SimState): Usable | undefined {
   let best: Usable | undefined;
   let bestDist = Infinity;
@@ -73,11 +75,12 @@ function takeCrate(state: SimState, c: CrateState): void {
   state.events.crateTakes.push({ id: c.id, items });
 }
 
-/** Withdraws, deposits, then E on the nearest crate. E on a hopper does nothing here; render opens its menu. */
+/** Withdraws, deposits, then E on the nearest crate or stager. E on a hopper does nothing here; render opens its menu. */
 export function stepFoundryUse(state: SimState, cmd: Command): void {
   if (cmd.withdraw) withdraw(state, cmd.withdraw.id);
   if (cmd.deposit) deposit(state, cmd.deposit.id, cmd.deposit.itemId);
   if (!cmd.interact) return;
   const target = usableInReach(state);
   if (target?.kind === 'crate') takeCrate(state, target);
+  if (target?.kind === 'stager') cycleAngle(state, target.id);
 }

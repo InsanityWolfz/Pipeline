@@ -29,19 +29,22 @@ export interface BuildInput {
   overUi: (x: number, y: number) => boolean;
   /** Handles a left click on that UI at once, so a world click in the same frame sees its result. */
   clickUi: (x: number, y: number) => void;
+  /** The id of the gravity stager on a tile, if any: a left click there turns it rather than placing. */
+  stagerAt: (tile: Tile) => number | null;
 }
 
-type BuildAction = Pick<Command, 'place' | 'pickUp'>;
+type BuildAction = Pick<Command, 'place' | 'pickUp' | 'setAngle'>;
 
 /** The commands that come from build mode and the hopper menu rather than held keys. */
-export type UiCommand = Pick<Command, 'toggleBuild' | 'place' | 'pickUp' | 'deposit' | 'withdraw'>;
+export type UiCommand = Pick<Command, 'toggleBuild' | 'place' | 'pickUp' | 'deposit' | 'withdraw' | 'setAngle'>;
 
 // Turns WASD, Space, R, E, B, 1–3 and the mouse into sim commands, and C and Esc
 // into menu toggles for the scene. Presses are latched from the keys' down
 // events until consumed, so a tap shorter than a frame isn't lost, a press on a
 // frame that runs no ticks isn't lost, and a frame that runs several ticks only
 // acts on the first. In build mode, R turns the ghost (it does nothing outside it),
-// clicks place and pick up pieces (queued, one per tick), and dragging lays conduits.
+// clicks place and pick up pieces or turn a stager (queued, one per tick), and
+// dragging lays conduits.
 export class Controls {
   private readonly keys: Record<Key, Input.Keyboard.Key>;
   private readonly ammoKeys: Input.Keyboard.Key[];
@@ -64,6 +67,7 @@ export class Controls {
     pieceId: () => BUILD_BAR[0] ?? '',
     overUi: () => false,
     clickUi: () => undefined,
+    stagerAt: () => null,
   };
   private aimX = 0;
   private aimY = 0;
@@ -143,11 +147,16 @@ export class Controls {
     if (!this.build.building) return;
     const tile = this.tileUnder(p);
     if (p.rightButtonDown()) {
-      this.queue.push({ place: null, pickUp: tile });
+      this.queue.push({ place: null, pickUp: tile, setAngle: null });
       return;
     }
     if (!p.leftButtonDown()) return;
-    this.queue.push({ place: { pieceId: this.build.pieceId(), ...tile, facing: this.facing }, pickUp: null });
+    const stager = this.build.stagerAt(tile);
+    if (stager !== null) {
+      this.queue.push({ place: null, pickUp: null, setAngle: { id: stager } });
+      return;
+    }
+    this.queue.push({ place: { pieceId: this.build.pieceId(), ...tile, facing: this.facing }, pickUp: null, setAngle: null });
     this.dragTile = tile;
   }
 
@@ -159,7 +168,7 @@ export class Controls {
     if (this.build.overUi(p.x, p.y)) return;
     const tile = this.tileUnder(p);
     for (const t of tilesBetween(drag, tile)) {
-      this.queue.push({ place: { pieceId, ...t, facing: this.facing }, pickUp: null });
+      this.queue.push({ place: { pieceId, ...t, facing: this.facing }, pickUp: null, setAngle: null });
     }
     this.dragTile = tile;
   }
@@ -232,6 +241,7 @@ export class Controls {
       toggleBuild: this.buildPending,
       place: action?.place ?? null,
       pickUp: action?.pickUp ?? null,
+      setAngle: action?.setAngle ?? null,
       deposit: this.depositPending,
       withdraw: this.withdrawPending,
     };

@@ -28,6 +28,8 @@ export const ITEMS: Readonly<Record<string, ItemDef>> = {
   casing: { id: 'casing', name: 'Casing', kind: 'part', icon: SPRITES.itemCasing },
   fuse: { id: 'fuse', name: 'Fuse', kind: 'part', icon: SPRITES.itemFuse },
   'ley-shard': { id: 'ley-shard', name: 'Ley shard', kind: 'part', icon: SPRITES.itemLeyShard },
+  /** The Pylon Warden's machine part (009); a gravity stager costs one. */
+  'warden-core': { id: 'warden-core', name: 'Warden core', kind: 'part', icon: SPRITES.itemWardenCore },
 };
 
 export function itemDef(id: string): ItemDef {

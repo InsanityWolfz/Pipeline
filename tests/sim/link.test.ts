@@ -242,7 +242,7 @@ describe('the playtest start', () => {
     const s = createSim(SEED, { start: PLAYTEST_START });
     expect(s.inventory).toMatchObject({ arrow: 99, bomb: 99, 'ley-bolt': 99, wood: 99, 'husk-resin': 99, shaft: 20, fuse: 20 });
     expect(s.crafted).toEqual(PLAYTEST_START.crafted);
-    expect(unlockedPieces(s)).toEqual(['conduit', 'hopper', 'crate', 'cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser']);
+    expect(unlockedPieces(s)).toEqual(['conduit', 'hopper', 'crate', 'gravity-stager', 'cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser']);
     s.inventory = { wood: 1 };
     s.player.health = 0;
     stepSim(s);

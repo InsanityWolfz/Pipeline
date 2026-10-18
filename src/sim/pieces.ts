@@ -1,4 +1,5 @@
 import { TILE_SIZE } from '../data/config';
+import { STAGER_START_ANGLE } from '../data/foundry';
 import { isSolidPiece, pieceDef } from '../data/pieces';
 import type { Rect } from './collision';
 import { facingVector } from './direction';
@@ -63,10 +64,20 @@ export interface SocketState extends PieceCommon {
   pulse: number;
 }
 
-export type PieceState = ConduitState | MachineState | HopperState | CrateState | SocketState;
+/** Passes items on like a conduit; facing the tube socket, it adds a stream at its angle to the tube's spread. */
+export interface StagerState extends PieceCommon {
+  kind: 'stager';
+  item: string | null;
+  /** Ticks the item has spent passing through. */
+  progress: number;
+  /** Degrees from the aim, one of STAGER_ANGLES. */
+  angle: number;
+}
+
+export type PieceState = ConduitState | MachineState | HopperState | CrateState | SocketState | StagerState;
 
 /** Why a piece can't be placed. */
-export type PlaceFail = 'locked' | 'not-foundry' | 'blocked' | 'occupied' | 'player' | 'limit';
+export type PlaceFail = 'locked' | 'not-foundry' | 'blocked' | 'occupied' | 'player' | 'limit' | 'cost';
 
 export interface FoundryState {
   /** In placement order, which is also the order they act in. */
@@ -85,6 +96,7 @@ export function createPiece(id: number, pieceId: string, tx: number, ty: number,
   if (kind === 'hopper') return { ...common, kind, item: null, count: 0, timer: 0 };
   if (kind === 'crate') return { ...common, kind, contents: {} };
   if (kind === 'socket') return { ...common, kind, pulse: 0 };
+  if (kind === 'stager') return { ...common, kind, item: null, progress: 0, angle: STAGER_START_ANGLE };
   return { ...common, kind, buffer: {}, output: 0, crafting: false, progress: 0, status: 'idle', missing: [] };
 }
 

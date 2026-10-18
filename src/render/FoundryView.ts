@@ -1,11 +1,14 @@
 import type { GameObjects, Scene } from 'phaser';
 import { ATLAS_KEY, DEPTHS } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
-import { CONDUIT_TICKS } from '../data/foundry';
+import { CONDUIT_TICKS, STAGER_ANGLES } from '../data/foundry';
 import {
   CONDUIT_ANIMS,
   CRATE_SPRITE,
   SOCKET_SPRITES,
+  SPREAD_FAN,
+  STAGER_PULSE_ALPHA,
+  STAGER_SPRITE,
   FACING_ARROWS,
   FOUNDRY_LAYOUT,
   ICON_RISE,
@@ -17,10 +20,12 @@ import {
 import { itemDef } from '../data/items';
 import { pieceDef } from '../data/pieces';
 import { facingVector } from '../sim/direction';
+import { rotate, socketStreams } from '../sim/spread';
 import { pieceRect, type FoundryState, type PieceState } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { registerAnim } from './anims';
 import { arrowSpots, pieceIcon } from './foundryLayout';
+import { colorOf } from './color';
 import { GlyphLine } from './glyphLine';
 
 export const viewOf = (f: Facing): PieceView => (f === 'up' || f === 'down' ? f : 'side');
@@ -69,9 +74,12 @@ interface Drawn {
 export class FoundryView {
   private readonly scene: Scene;
   private readonly drawn = new Map<number, Drawn>();
+  /** Build mode's spread fan over the tube socket. */
+  private readonly fan: GameObjects.Graphics;
 
   constructor(scene: Scene) {
     this.scene = scene;
+    this.fan = scene.add.graphics().setDepth(DEPTHS.worldUi - 2);
     for (const views of Object.values(MACHINE_HOUSINGS)) for (const v of Object.values(views)) registerAnim(scene, v.working);
     for (const anim of Object.values(CONDUIT_ANIMS)) registerAnim(scene, anim);
     registerAnim(scene, STATUS_MARKERS.working);
@@ -86,6 +94,7 @@ export class FoundryView {
       this.draw(p, d);
       placeArrows(d.arrows, p, building);
     }
+    this.drawFan(foundry, shown && building);
     for (const [id, d] of this.drawn) {
       if (live.has(id)) continue;
       for (const o of [d.body, d.icon, ...d.arrows, d.marker, d.markerIcon]) o?.destroy();
@@ -124,6 +133,8 @@ export class FoundryView {
     } else if (p.kind === 'socket') {
       d.body.setFrame(SOCKET_SPRITES.idle);
       d.icon.setVisible(false);
+    } else if (p.kind === 'stager') {
+      d.icon.setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge).setVisible(false);
     } else {
       d.body.setFrame(p.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE);
       d.icon.setPosition(r.x, bottom - FOUNDRY_LAYOUT.contentsRise).setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge);
@@ -137,6 +148,12 @@ export class FoundryView {
     if (p.kind === 'conduit') this.drawConduit(p, d);
     else if (p.kind === 'machine') this.drawMachine(p, d);
     else if (p.kind === 'socket') d.body.setFrame(p.pulse > 0 ? SOCKET_SPRITES.refill : SOCKET_SPRITES.idle);
+    else if (p.kind === 'stager') {
+      d.body.setFrame(`${STAGER_SPRITE.key}/${Math.max(0, STAGER_ANGLES.indexOf(p.angle))}`);
+      // A held item makes the ring throb as it passes through.
+      const throb = p.item ? STAGER_PULSE_ALPHA + (1 - STAGER_PULSE_ALPHA) * Math.abs(Math.cos(p.progress / 3)) : 1;
+      d.body.setAlpha(throb);
+    }
     else {
       const items = p.kind === 'hopper' ? (p.item ? { [p.item]: p.count } : {}) : p.contents;
       const first = Object.entries(items).find(([, n]) => n > 0);
@@ -146,6 +163,19 @@ export class FoundryView {
       d.count?.set(total > 0 ? String(total) : '');
       // Beside the icon, clear of the crate's lock.
       d.count?.moveTo(Math.round(d.body.x + FOUNDRY_LAYOUT.countX), Math.round(d.icon.y + FOUNDRY_LAYOUT.countY));
+    }
+  }
+
+  /** One faint line per stream from the socket's centre, at its angle from straight up. */
+  private drawFan(foundry: FoundryState, on: boolean): void {
+    this.fan.clear();
+    const socket = foundry.pieces.find((p) => p.kind === 'socket');
+    if (!on || !socket) return;
+    const r = pieceRect(socket);
+    this.fan.lineStyle(SPREAD_FAN.width, colorOf(SPREAD_FAN.color), SPREAD_FAN.alpha);
+    for (const angle of socketStreams(foundry)) {
+      const [dx, dy] = rotate(0, -1, angle);
+      this.fan.lineBetween(r.x, r.y, r.x + dx * SPREAD_FAN.length, r.y + dy * SPREAD_FAN.length);
     }
   }
 
