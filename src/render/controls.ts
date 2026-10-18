@@ -36,7 +36,7 @@ export interface BuildInput {
 type BuildAction = Pick<Command, 'place' | 'pickUp' | 'setAngle'>;
 
 /** The commands that come from build mode and the hopper menu rather than held keys. */
-export type UiCommand = Pick<Command, 'toggleBuild' | 'place' | 'pickUp' | 'deposit' | 'withdraw' | 'setAngle'>;
+export type UiCommand = Pick<Command, 'toggleBuild' | 'place' | 'pickUp' | 'deposit' | 'withdraw' | 'setAngle' | 'pylon' | 'takeStash'>;
 
 // Turns WASD, Space, R, E, B, 1–3 and the mouse into sim commands, and C and Esc
 // into menu toggles for the scene. Presses are latched from the keys' down
@@ -60,6 +60,8 @@ export class Controls {
   private wheelPending = 0;
   private depositPending: Command['deposit'] = null;
   private withdrawPending: Command['withdraw'] = null;
+  private pylonPending: Command['pylon'] = null;
+  private takeStashPending: Command['takeStash'] = null;
   private readonly queue: BuildAction[] = [];
   private dragTile: Tile | null = null;
   private build: BuildInput = {
@@ -216,6 +218,16 @@ export class Controls {
     this.withdrawPending = { id };
   }
 
+  /** Sends the claimed pylon's menu choice on the next tick. */
+  requestPylon(action: NonNullable<Command['pylon']>): void {
+    this.pylonPending = action;
+  }
+
+  /** Takes a stack (or everything, for null) out of the stash on the next tick. */
+  requestTakeStash(itemId: string | null): void {
+    this.takeStashPending = { itemId };
+  }
+
   /** Drops game presses and queued build actions made while the menu is open, so none fire when it closes. */
   discardPending(): void {
     this.clearPresses();
@@ -229,6 +241,8 @@ export class Controls {
     this.buildPending = false;
     this.depositPending = null;
     this.withdrawPending = null;
+    this.pylonPending = null;
+    this.takeStashPending = null;
   }
 
   /**
@@ -244,10 +258,14 @@ export class Controls {
       setAngle: action?.setAngle ?? null,
       deposit: this.depositPending,
       withdraw: this.withdrawPending,
+      pylon: this.pylonPending,
+      takeStash: this.takeStashPending,
     };
     this.buildPending = false;
     this.depositPending = null;
     this.withdrawPending = null;
+    this.pylonPending = null;
+    this.takeStashPending = null;
     return ui;
   }
 

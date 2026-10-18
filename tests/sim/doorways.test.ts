@@ -158,10 +158,11 @@ describe('rooms tick apart', () => {
     run(s, 1);
     const hall = ROOMS[HALL];
     if (!hall?.enemies || !hall.nodes) throw new Error('no hall data');
-    expect(s.enemies.map((e) => ({ x: e.x, y: e.y, health: e.health }))).toEqual(
+    expect(s.enemies.filter((e) => e.roomId === HALL).map((e) => ({ x: e.x, y: e.y, health: e.health }))).toEqual(
       hall.enemies.map((p) => ({ ...tileCentre(p), health: HUSK.maxHealth })),
     );
-    expect(s.nodes).toHaveLength(hall.nodes.length);
+    const hallNodes = s.nodes.filter((n) => n.roomId === HALL);
+    expect(hallNodes).toHaveLength(hall.nodes.length);
     expect(s.nodes.every((n) => n.uses > 0)).toBe(true);
     expect(s.groundItems).toEqual([]);
   });

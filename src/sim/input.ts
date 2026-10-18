@@ -31,6 +31,10 @@ export interface Command {
   withdraw: { id: number } | null;
   /** Turn a gravity stager (by piece id) to its next angle this tick (an edge), or null. */
   setAngle: { id: number } | null;
+  /** The claimed pylon's menu choice this tick (an edge), or null. */
+  pylon: 'deposit' | 'travel' | null;
+  /** Take a stack (or everything, for a null item) out of the stash this tick (an edge), or null. */
+  takeStash: { itemId: string | null } | null;
 }
 
 /** No input. Its aim is the world origin, so callers that care about aim must set one. */
@@ -49,4 +53,6 @@ export const NO_COMMAND: Readonly<Command> = {
   deposit: null,
   withdraw: null,
   setAngle: null,
+  pylon: null,
+  takeStash: null,
 };

@@ -1,4 +1,4 @@
-import { enemyDef } from '../../src/data/enemies';
+import { meleeDef } from '../../src/data/enemies';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import { NO_COMMAND, type Command } from '../../src/sim/input';
 import { createNode, type NodeState } from '../../src/sim/nodes';
@@ -9,7 +9,7 @@ import { stepSim } from '../../src/sim/step';
 
 export const SEED = 7;
 export const HALL = 'ruin-hall';
-export const HUSK = enemyDef('husk');
+export const HUSK = meleeDef('husk');
 
 /** Where the player stands in an arena: the aggro box around it is all floor. */
 export const PLAYER_AT = { x: 400, y: 448 } as const;

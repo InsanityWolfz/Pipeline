@@ -2,7 +2,7 @@ import type { GameObjects, Scene } from 'phaser';
 import { TintModes } from 'phaser';
 import { animFrames, ATLAS_KEY, BURN_FLAME, BURN_FLAME_HEIGHT, DEPTHS, ENEMY_ANIMS, ENEMY_FX } from '../data/assets';
 import { IDLE_SPEED } from '../data/config';
-import { enemyDef } from '../data/enemies';
+import { attackOf, enemyDef } from '../data/enemies';
 import type { EnemyState } from '../sim/enemies';
 import type { Facing } from '../sim/player';
 import { registerAnim } from './anims';
@@ -85,15 +85,36 @@ export class EnemyView {
     g.fillStyle(colorOf(ENEMY_FX.healthBarColor)).fillRect(x, y, Math.max(1, Math.round((w * e.health) / max)), h);
   }
 
-  /** The swipe arc at its real reach and angle, filling in as the wind-up runs. */
+  /**
+   * The wind-up's telegraph, filling in as it runs: a Husk's swipe arc at its
+   * real reach and angle, a Wisp's tightening ring and aim line, and the
+   * Warden's slam circle at its real radius.
+   */
   private drawTelegraph(g: GameObjects.Graphics, e: EnemyState): void {
     g.clear();
     if (e.mode !== 'windup') return;
-    const { swipe } = enemyDef(e.enemyId);
+    const def = enemyDef(e.enemyId);
+    const progress = Math.min(1, e.modeTicks / attackOf(def).windupTicks);
+    if (def.kind === 'caster') {
+      const { castRing, castLine } = ENEMY_FX;
+      const color = colorOf(ENEMY_FX.castColor);
+      const top = e.y + def.hurtbox.offsetY;
+      g.lineStyle(castRing.width, color, 0.4 + 0.6 * progress);
+      g.strokeCircle(e.x, top, castRing.from + (castRing.to - castRing.from) * progress);
+      g.lineStyle(1, color, ENEMY_FX.telegraphAlpha);
+      g.lineBetween(e.x, e.y, e.x + e.swipeDirX * castLine, e.y + e.swipeDirY * castLine);
+      return;
+    }
+    if (def.kind === 'slammer') {
+      const color = colorOf(ENEMY_FX.telegraphColor);
+      g.fillStyle(color, ENEMY_FX.telegraphAlpha).fillCircle(e.x, e.y, def.slam.radius);
+      g.fillStyle(color, ENEMY_FX.telegraphFillAlpha).fillCircle(e.x, e.y, def.slam.radius * progress);
+      return;
+    }
+    const { swipe } = def;
     const angle = Math.atan2(e.swipeDirY, e.swipeDirX);
     const half = (swipe.arcDegrees * Math.PI) / 360;
     const color = colorOf(ENEMY_FX.telegraphColor);
-    const progress = Math.min(1, e.modeTicks / swipe.windupTicks);
     g.fillStyle(color, ENEMY_FX.telegraphAlpha);
     g.slice(e.x, e.y, swipe.reach, angle - half, angle + half, false);
     g.fillPath();

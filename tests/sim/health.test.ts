@@ -109,7 +109,8 @@ describe('placeholder KO', () => {
     expect(s.inventory).toEqual(STARTING_INVENTORY);
     expect(s.arrows).toEqual([]);
     expect(s.groundItems).toEqual([]);
-    expect(s.enemies.map((e) => ({ x: e.x, y: e.y, health: e.health, mode: e.mode }))).toEqual(
+    const hall = s.enemies.filter((e) => e.roomId === 'ruin-hall');
+    expect(hall.map((e) => ({ x: e.x, y: e.y, health: e.health, mode: e.mode }))).toEqual(
       room.enemies.map((p) => ({ ...tileCentre(p), health: HUSK.maxHealth, mode: 'idle' })),
     );
     for (const e of s.enemies) expect(idsBefore).not.toContain(e.id);

@@ -65,6 +65,16 @@ export interface SimEvents {
   refills: { id: number; itemId: string }[];
   /** A projectile left the tube's mouth (a spread fires several at once). */
   shots: { x: number; y: number; ammoId: string }[];
+  /** E at a pylon whose room still has enemies. */
+  sealed: { roomId: string }[];
+  /** A room was claimed. */
+  claims: { roomId: string }[];
+  /** The haul went into the stash from a claimed pylon. */
+  stashDeposits: { items: Record<string, number> }[];
+  /** Items came out of the stash. */
+  stashTakes: { items: Record<string, number> }[];
+  /** Fast travel by pylon or waystone (also recorded as a room change). */
+  travels: { from: string; to: string }[];
   /** A gravity stager turned to a new angle. */
   angles: { id: number; angle: number }[];
   /** The player was KO'd and the room reset this tick. */
@@ -91,6 +101,11 @@ export function createEvents(): SimEvents {
     attunes: [],
     refills: [],
     angles: [],
+    sealed: [],
+    claims: [],
+    stashDeposits: [],
+    stashTakes: [],
+    travels: [],
     shots: [],
     ko: false,
   };
@@ -115,6 +130,11 @@ export function clearEvents(events: SimEvents): void {
   events.attunes.length = 0;
   events.refills.length = 0;
   events.angles.length = 0;
+  events.sealed.length = 0;
+  events.claims.length = 0;
+  events.stashDeposits.length = 0;
+  events.stashTakes.length = 0;
+  events.travels.length = 0;
   events.shots.length = 0;
   events.ko = false;
 }

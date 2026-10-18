@@ -9,6 +9,7 @@ import {
   footprint,
   frontSide,
   frontTile,
+  pieceAt,
   sameTile,
   type FoundryState,
   type HopperState,
@@ -141,6 +142,21 @@ function setStatus(m: MachineState): void {
 }
 
 const key = (t: Tile): string => `${t.tx},${t.ty}`;
+
+/** Hands one item to the foundry piece on `to` from outside the grid (the supply port). Returns whether it was taken. */
+export function offerFromOutside(
+  foundry: FoundryState,
+  reservoir: ReservoirState,
+  refills: SimEvents['refills'],
+  to: Tile,
+  from: Tile,
+  item: string,
+): boolean {
+  const target = pieceAt(foundry, to.tx, to.ty);
+  if (!target) return false;
+  const grid = new Map<string, PieceState>([[key(to), target]]);
+  return offer({ grid, reservoir, refills }, to, from, item);
+}
 
 /**
  * Runs every piece one tick. The foundry ticks wherever the player is. Sockets

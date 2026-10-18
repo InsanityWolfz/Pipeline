@@ -2,6 +2,7 @@ import { HIT_INVULN_TICKS } from '../data/player';
 import { startKnock } from './knockback';
 import { isInvulnerable } from './movement';
 import { resetWorld, type SimState } from './state';
+import { cancelClaim } from './claims';
 import { cancelHarvest } from './harvest';
 
 // Player damage and the placeholder KO. Spec 004; 011 replaces the KO with death.
@@ -25,6 +26,7 @@ export function damagePlayer(
   p.hurtTicks = HIT_INVULN_TICKS;
   startKnock(p, dirX, dirY, knockback, knockTicks);
   cancelHarvest(state);
+  cancelClaim(state);
   state.events.hits.push({ target: 'player', x: p.x, y: p.y, damage: amount });
   return true;
 }

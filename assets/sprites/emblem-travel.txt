@@ -1,0 +1,17 @@
+# Travel icon: a ley-lit archway home, for the pylon menu. 16x16.
+................
+................
+................
+...oooooooooo...
+..oLLLLLLLLLLo..
+..oLSSoooSSSSo..
+..oLSocccoSSSo..
+..oLSocccoSSSo..
+..oLSccwccSSSo..
+..oLScccccSSSo..
+..oLSoccCoSSSo..
+..oLSocccoSSSo..
+..oLSSoooSSSSo..
+.osssssssssssso.
+.osssssssssssso.
+..oooooooooooo..

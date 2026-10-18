@@ -23,6 +23,11 @@ import {
   CRATE_SPRITE,
   STAGER_SPRITE,
   SOCKET_SPRITES,
+  PYLON_SPRITES,
+  FIXTURE_SPRITES,
+  ORB_SPRITES,
+  SITE_ICONS,
+  FLOOR_SPRITES,
   DOORWAY_SPRITE,
   FACING_ARROWS,
   HOPPER_SPRITES,
@@ -31,6 +36,7 @@ import {
   STATUS_MARKERS,
 } from '../../src/data/foundryAssets';
 import { ENEMIES } from '../../src/data/enemies';
+import { FIXTURES, PORT_CYCLE } from '../../src/data/claims';
 import { ROOMS, TILE } from '../../src/data/rooms';
 import { ITEMS } from '../../src/data/items';
 import { STARTING_INVENTORY } from '../../src/data/player';
@@ -334,5 +340,31 @@ describe('spreads (008)', () => {
   it('has one stager frame per angle, starting at 0', () => {
     expect(STAGER_ANGLES).toContain(STAGER_START_ANGLE);
     expect(STAGER_SPRITE.frames).toBe(STAGER_ANGLES.length);
+  });
+});
+
+describe('claiming (009)', () => {
+  it('has every site sprite in the built atlas', () => {
+    const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as { frames: Record<string, unknown> };
+    const frames = Object.keys(atlas.frames);
+    const anims = [PYLON_SPRITES.activating, PYLON_SPRITES.active, FIXTURE_SPRITES.port, FIXTURE_SPRITES.waystone];
+    for (const anim of anims) for (const frame of animFrames(anim)) expect(frames).toContain(frame);
+    const singles = [PYLON_SPRITES.off, FIXTURE_SPRITES.stash, ORB_SPRITES.orb, ORB_SPRITES.shadow, ...Object.values(SITE_ICONS), ...Object.values(FLOOR_SPRITES)];
+    for (const key of singles) expect(frames).toContain(key);
+  });
+
+  it('places only known enemies, and every room theme has a floor', () => {
+    for (const room of Object.values(ROOMS)) {
+      for (const e of room.enemies ?? []) expect(ENEMIES[e.enemyId]).toBeDefined();
+      if (room.floor) expect(FLOOR_SPRITES[room.floor]).toBeDefined();
+      if (room.pylon) expect(room.rows[room.pylon.ty]?.[room.pylon.tx]).toBe(TILE.floor);
+    }
+    for (const def of Object.values(ENEMIES)) expect(ENEMY_ANIMS[def.anims]).toBeDefined();
+  });
+
+  it('puts fixtures on open foundry floor, and the port cycles real raws', () => {
+    const foundry = ROOMS.foundry;
+    for (const f of FIXTURES) expect(foundry?.rows[f.ty]?.[f.tx]).toBe(TILE.floor);
+    for (const id of PORT_CYCLE) expect(ITEMS[id]?.kind).toBe('raw');
   });
 });

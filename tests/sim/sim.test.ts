@@ -1,3 +1,4 @@
+import { ROOMS } from '../../src/data/rooms';
 import { describe, expect, it } from 'vitest';
 import { advanceClock, createClock } from '../../src/sim/clock';
 import { NO_COMMAND, type Command } from '../../src/sim/input';
@@ -6,6 +7,9 @@ import { createSim, tileCentre } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
 import { MAX_TICKS_PER_FRAME, TICK_RATE } from '../../src/data/config';
+
+/** Enemies placed across every room at the start. */
+const STARTING_ENEMIES = Object.values(ROOMS).reduce((n, r) => n + (r.enemies?.length ?? 0), 0);
 
 function stepped(seed: number, ticks: number) {
   const sim = createSim(seed);
@@ -42,9 +46,10 @@ function scriptedFight(seed: number, ticks: number) {
   const sim = createSim(seed);
   for (let t = 0; t < ticks; t++) {
     const p = sim.player;
-    const target = sim.enemies[0];
+    const target = sim.enemies.find((e) => e.roomId === sim.roomId);
     const loot = sim.groundItems[0];
-    const fighting = sim.nextEnemyId > 3;
+    // The first KO respawns every unclaimed room's enemies, so ids pass the starting count.
+    const fighting = sim.nextEnemyId > STARTING_ENEMIES;
     const empty = (sim.inventory.arrow ?? 0) === 0;
     const goal = !fighting ? target : target ? { x: 900, y: 300 } : loot;
     const command: Command = {
@@ -72,7 +77,7 @@ function scriptedSession(seed: number, ticks: number) {
     if (t === 100) for (const r of ['shaft', 'arrowhead', 'rope', 'arrow', 'casing', 'fuse', 'ley-shard', 'bomb', 'ley-bolt']) craft(sim, r);
     const p = sim.player;
     const node = sim.nodes[9];
-    const pack = sim.enemies[0];
+    const pack = sim.enemies.find((e) => e.roomId === sim.roomId);
     const gathering = t < 400;
     const goal = gathering ? node : pack;
     const command: Command = {
@@ -157,8 +162,8 @@ describe('sim state', () => {
 
   it('replays a fight with hits, deaths, drops and a KO identically', () => {
     const a = scriptedFight(11, 3000);
-    expect(a.nextEnemyId).toBe(6);
-    expect(a.enemies).toEqual([]);
+    expect(a.nextEnemyId).toBe(STARTING_ENEMIES * 2);
+    expect(a.enemies.filter((e) => e.roomId === 'ruin-hall')).toEqual([]);
     expect(a.inventory['husk-resin']).toBeGreaterThanOrEqual(3);
     expect(a).toEqual(scriptedFight(11, 3000));
   });
@@ -199,7 +204,7 @@ describe('sim state', () => {
 
   it('summarizes enemies, ground items and events', () => {
     const summary = summarize(createSim(8));
-    expect(summary.enemies).toHaveLength(3);
+    expect(summary.enemies.filter((e) => e.room === 'ruin-hall')).toHaveLength(3);
     expect(summary.enemies[0]).toMatchObject({ enemyId: 'husk', mode: 'idle', health: 40, maxHealth: 40 });
     expect(summary.groundItems).toEqual([]);
     expect(summary.events).toEqual({
@@ -222,15 +227,20 @@ describe('sim state', () => {
       refills: [],
       angles: [],
       shots: [],
+      sealed: [],
+      claims: [],
+      stashDeposits: [],
+      stashTakes: [],
+      travels: [],
       ko: false,
     });
   });
 
   it('summarizes rooms, build mode, unlocks and the foundry', () => {
     const s = createSim(8);
-    expect(summarize(s)).toMatchObject({ room: 'ruin-hall', rooms: ['ruin-hall', 'foundry'], building: false });
+    expect(summarize(s)).toMatchObject({ room: 'ruin-hall', rooms: ['ruin-hall', 'shrine', 'foundry'], building: false });
     expect(summarize(s).unlocked).toEqual(['conduit', 'hopper', 'crate', 'gravity-stager']);
-    expect(summarize(s).enemies.every((e) => e.room === 'ruin-hall')).toBe(true);
+    expect(summarize(s).enemies.every((e) => e.room === 'ruin-hall' || e.room === 'shrine')).toBe(true);
     s.roomId = 'foundry';
     s.player.x = 300;
     s.player.y = 300;
@@ -242,7 +252,7 @@ describe('sim state', () => {
 
   it('summarizes nodes, the harvest, ammo, bombs, burns and the crafted set', () => {
     const summary = summarize(createSim(8));
-    expect(summary.nodes).toHaveLength(11);
+    expect(summary.nodes.filter((n) => n.room === 'ruin-hall')).toHaveLength(11);
     expect(summary.nodes[0]).toMatchObject({ nodeId: 'tree', uses: 3, regrow: 0 });
     expect(summary.harvest).toBeNull();
     expect(summary.tube.ammo).toBe('arrow');

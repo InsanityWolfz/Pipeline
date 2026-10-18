@@ -25,6 +25,10 @@ export interface Room {
   nodes?: readonly { nodeId: string; tx: number; ty: number }[];
   /** Door tiles on the outer wall, each linked to a door in another room (by its index there). */
   doorways?: readonly Doorway[];
+  /** A ley pylon (009): solid, and claiming it claims the room. */
+  pylon?: { tx: number; ty: number };
+  /** The floor's look, a key into FLOOR_SPRITES in src/data/assets.ts; the ruin flagstone by default. */
+  floor?: string;
 }
 
 export interface Doorway {
@@ -38,7 +42,7 @@ export const ROOMS: Readonly<Record<string, Room>> = {
   'ruin-hall': {
     id: 'ruin-hall',
     rows: [
-      '########################################',
+      '##########D#############################',
       '#......................................#',
       '#......................................#',
       '#......................................#',
@@ -89,7 +93,56 @@ export const ROOMS: Readonly<Record<string, Room>> = {
       { nodeId: 'ley-vein', tx: 17, ty: 14 },
       { nodeId: 'ley-vein', tx: 24, ty: 15 },
     ],
-    doorways: [{ tx: 0, ty: 12, to: 'foundry', toDoor: 0 }],
+    doorways: [
+      { tx: 0, ty: 12, to: 'foundry', toDoor: 0 },
+      { tx: 10, ty: 0, to: 'shrine', toDoor: 0 },
+    ],
+  },
+  // The overgrown shrine (009): Wisps, Husks and the Pylon Warden guard its pylon.
+  shrine: {
+    id: 'shrine',
+    rows: [
+      '##############################',
+      '#............................#',
+      '#............................#',
+      '#....BB..............BB......#',
+      '#............................#',
+      '#............................#',
+      '#..B......................B..#',
+      '#............................#',
+      '#............................#',
+      '#............................#',
+      '#............................#',
+      '#............................#',
+      '#............................#',
+      '#..B......................B..#',
+      '#............................#',
+      '#............................#',
+      '#............................#',
+      '#.....BB..............BB.....#',
+      '#............................#',
+      '#............................#',
+      '#............................#',
+      '###############D##############',
+    ],
+    spawn: { tx: 15, ty: 20 },
+    pylon: { tx: 15, ty: 8 },
+    floor: 'shrine',
+    enemies: [
+      { enemyId: 'pylon-warden', tx: 15, ty: 10 },
+      { enemyId: 'wisp', tx: 8, ty: 5 },
+      { enemyId: 'wisp', tx: 22, ty: 5 },
+      { enemyId: 'wisp', tx: 15, ty: 4 },
+      { enemyId: 'husk', tx: 7, ty: 12 },
+      { enemyId: 'husk', tx: 23, ty: 12 },
+    ],
+    nodes: [
+      { nodeId: 'ley-vein', tx: 4, ty: 9 },
+      { nodeId: 'ley-vein', tx: 26, ty: 9 },
+      { nodeId: 'tree', tx: 4, ty: 19 },
+      { nodeId: 'reeds', tx: 26, ty: 19 },
+    ],
+    doorways: [{ tx: 15, ty: 21, to: 'ruin-hall', toDoor: 1 }],
   },
   // The sealed ruin the player rebuilds; empty floor to build on.
   foundry: {
@@ -119,6 +172,9 @@ export const ROOMS: Readonly<Record<string, Room>> = {
 
 /** Where the player starts, and where a KO sends them. */
 export const DEFAULT_ROOM = 'ruin-hall';
+
+/** The claimable site with its pylon (009). */
+export const SHRINE_ROOM = 'shrine';
 
 /** The room that holds the buildable foundry grid. */
 export const FOUNDRY_ROOM = 'foundry';

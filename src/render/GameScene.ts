@@ -30,6 +30,8 @@ import { HudView } from './HudView';
 import { NodeView } from './NodeView';
 import { PlayerView } from './PlayerView';
 import { RoomView } from './room';
+import { SiteMenus } from './SiteMenus';
+import { SiteView } from './SiteView';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -55,6 +57,8 @@ export class GameScene extends Scene {
   private readout?: HoverReadout;
   private picker?: HopperPicker;
   private menu?: CraftMenuView;
+  private site?: SiteView;
+  private siteMenus?: SiteMenus;
   /** The room on screen. It lags the player's room through a door's fade. */
   private shownRoomId: string;
   private fading = false;
@@ -87,6 +91,8 @@ export class GameScene extends Scene {
     this.buildView = new BuildView(this);
     this.readout = new HoverReadout(this);
     this.picker = new HopperPicker(this);
+    this.site = new SiteView(this);
+    this.siteMenus = new SiteMenus(this);
     this.menu = new CraftMenuView(this, (recipeId) => this.craft(recipeId));
     this.showRoom(this.sim.roomId);
     this.draw();
@@ -106,7 +112,8 @@ export class GameScene extends Scene {
       controls.poll({
         building: this.sim.building,
         pieceId: () => this.buildView?.selected ?? FIRST_PIECE,
-        overUi: (x, y) => (this.buildView?.overUi(x, y) ?? false) || (this.picker?.overUi(x, y) ?? false),
+        overUi: (x, y) =>
+          (this.buildView?.overUi(x, y) ?? false) || (this.picker?.overUi(x, y) ?? false) || (this.siteMenus?.overUi(x, y) ?? false),
         clickUi: (x, y) => this.clickUi(controls, x, y),
         stagerAt: (t) => {
           const piece = pieceAt(this.sim.foundry, t.tx, t.ty);
@@ -129,7 +136,8 @@ export class GameScene extends Scene {
   private handleUi(controls: Controls): void {
     const toggle = controls.takeMenuToggle();
     const close = controls.takeMenuClose();
-    if (close && this.picker?.isOpen) this.picker.close();
+    if (close && this.siteMenus?.isOpen) this.siteMenus.close();
+    else if (close && this.picker?.isOpen) this.picker.close();
     else if (close && this.sim.building && !this.menuOpen) controls.requestBuildToggle();
     else if (toggle || (close && this.menuOpen)) this.setMenuOpen(toggle ? !this.menuOpen : false);
     if (this.menuOpen) return;
@@ -139,6 +147,7 @@ export class GameScene extends Scene {
     if (controls.takeInteractPress()) {
       const target = usableInReach(this.sim);
       if (target?.kind === 'hopper') this.picker?.open(target.id);
+      else this.siteMenus?.interact(this.sim);
     }
     const open = this.picker?.hopperId;
     if (open !== null && open !== undefined && usableInReach(this.sim)?.id !== open) this.picker?.close();
@@ -146,7 +155,7 @@ export class GameScene extends Scene {
 
   /** A click on the build bar picks a piece; on the hopper menu, it takes out or puts in. */
   private clickUi(controls: Controls, x: number, y: number): void {
-    if (this.menuOpen || this.buildView?.click(x, y)) return;
+    if (this.menuOpen || this.buildView?.click(x, y) || this.siteMenus?.click(controls, x, y)) return;
     const entry = this.picker?.entryAt(x, y);
     const hopper = this.picker?.hopperId;
     if (!entry || hopper === null || hopper === undefined) return;
@@ -181,6 +190,8 @@ export class GameScene extends Scene {
         deposit: null,
         withdraw: null,
         setAngle: null,
+        pylon: null,
+        takeStash: null,
       }
     );
   }
@@ -245,6 +256,8 @@ export class GameScene extends Scene {
     this.playerView?.update(sim.player, sim.tube, sim.link, shown === sim.roomId);
     this.arrowView?.update(inRoom(sim.arrows, shown));
     this.bombView?.update(inRoom(sim.bombs, shown));
+    this.site?.update(sim, shown);
+    this.siteMenus?.update(sim);
     this.hud?.update(sim.tube, sim.inventory, sim.player, sim.link);
     this.menu?.update(sim.inventory);
     const hopper = sim.foundry.pieces.find((p) => p.id === this.picker?.hopperId);

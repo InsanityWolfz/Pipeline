@@ -183,6 +183,8 @@ function enemyAnims(prefix: string): Readonly<Record<EnemyAnim, AnimDef>> {
 /** Animation sets by the `anims` key in src/data/enemies.ts. */
 export const ENEMY_ANIMS: Readonly<Record<string, Readonly<Record<EnemyAnim, AnimDef>>>> = {
   husk: enemyAnims('husk'),
+  wisp: enemyAnims('wisp'),
+  warden: enemyAnims('warden'),
 };
 
 /** The sparkle played where an item is picked up. */
@@ -229,6 +231,10 @@ export const ENEMY_FX = {
   telegraphColor: 'ember',
   telegraphAlpha: 0.25,
   telegraphFillAlpha: 0.55,
+  /** The Wisp's cast telegraph: a ley ring tightening on it and a faint line along its locked aim (009). */
+  castColor: 'ley-cyan',
+  castRing: { from: 22, to: 10, width: 2 },
+  castLine: 48,
   /** Health bar over a damaged enemy: size, and gap above the sprite's top. */
   healthBar: { w: 20, h: 3, gap: 2, border: 1 },
   healthBarColor: 'ember',

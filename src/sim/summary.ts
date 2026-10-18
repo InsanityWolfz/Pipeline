@@ -5,6 +5,7 @@ import type { SimEvents } from './events';
 import { unlockedPieces } from './placement';
 import { isInvulnerable, isRolling } from './movement';
 import type { Facing } from './player';
+import { fixtureDef } from './claims';
 import { socketStreams } from './spread';
 import type { SimState } from './state';
 import {
@@ -83,6 +84,18 @@ export interface SimSummary {
   unlocked: string[];
   building: boolean;
   foundry: { pieces: PieceSummary[] };
+  /** Wisp orbs in flight; x, y is the ground point. */
+  orbs: { id: number; room: string; x: number; y: number; dx: number; dy: number }[];
+  /** Claimed room ids. */
+  claims: string[];
+  /** The claim hold in progress: its room and ticks into it. */
+  claimHold: { room: string; progress: number } | null;
+  /** Ticks left on a pylon's activation. */
+  activatePulse: number;
+  /** The foundry's fixed furniture: id, kind, tile, and a port's raw waiting to go out. */
+  fixtures: { id: string; kind: string; tx: number; ty: number; item: string | null }[];
+  /** What the stash holds. */
+  stash: Record<string, number>;
   /** What happened on the last tick. */
   events: SimEvents;
 }
@@ -134,6 +147,15 @@ export function summarize(state: SimState): SimSummary {
     unlocked: unlockedPieces(state),
     building: state.building,
     foundry: { pieces: state.foundry.pieces.map((p) => pieceSummary(p, streams)) },
+    orbs: state.orbs.map((o) => ({ id: o.id, room: o.roomId, x: round(o.x), y: round(o.y), dx: round(o.dx), dy: round(o.dy) })),
+    claims: [...state.claims],
+    claimHold: state.claimHold ? { room: state.claimHold.roomId, progress: state.claimHold.progress } : null,
+    activatePulse: state.activatePulse,
+    fixtures: state.fixtures.map((f) => {
+      const d = fixtureDef(f.id);
+      return { id: f.id, kind: d.kind, tx: d.tx, ty: d.ty, item: f.item };
+    }),
+    stash: { ...state.stash },
     events: structuredClone(state.events),
   };
 }

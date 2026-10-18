@@ -6,7 +6,9 @@ import type { BombState } from './bombs';
 import type { GroundItem } from './drops';
 import { createEnemy, type EnemyState } from './enemies';
 import { createEvents, type SimEvents } from './events';
+import { startingFixtures, type ClaimHold, type FixtureState } from './claims';
 import type { HarvestState } from './harvest';
+import type { OrbState } from './orbs';
 import type { Inventory } from './inventory';
 import { createLink, type LinkState } from './link';
 import { createNodes, type NodeState } from './nodes';
@@ -52,6 +54,19 @@ export interface SimState {
   crafted: string[];
   /** The buildable grid in the foundry room. Kept through a KO. */
   foundry: FoundryState;
+  /** Wisp orbs in flight (009). */
+  orbs: OrbState[];
+  nextOrbId: number;
+  /** Rooms claimed at their pylon (009). Kept through a KO. */
+  claims: string[];
+  /** The claim in progress, if any. */
+  claimHold: ClaimHold | null;
+  /** Ticks left on a pylon's activation (cosmetic). */
+  activatePulse: number;
+  /** The foundry's fixed furniture (stash, and what claims add). Kept through a KO. */
+  fixtures: FixtureState[];
+  /** What pylon deposits have sent home. Kept through a KO. */
+  stash: Inventory;
   /** Build mode: only in the foundry; fire, load, ammo select and harvest are off. */
   building: boolean;
   /** What happened on the last tick. */
@@ -90,6 +105,13 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     nextBombId: 0,
     crafted: [...start.crafted],
     foundry: createFoundry(),
+    orbs: [],
+    nextOrbId: 0,
+    claims: [],
+    claimHold: null,
+    activatePulse: 0,
+    fixtures: startingFixtures(),
+    stash: {},
     building: false,
     events: createEvents(),
   };
@@ -102,7 +124,8 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
  * health, the starting inventory, the tube on its starting ammo, every
  * room's enemies at home and nodes at full, and nothing harvesting, on the
  * ground or in flight, and build mode off. The tick, seed, RNG, id counters,
- * the crafted set, the tube's link and reservoir, and the whole foundry carry on.
+ * the crafted set, the tube's link and reservoir, claims, the stash and the
+ * whole foundry carry on. Claimed rooms get no enemies back.
  */
 export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   const rooms = Object.values(ROOMS);
@@ -115,8 +138,11 @@ export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   state.nodes = createNodes(rooms);
   state.harvest = null;
   state.bombs = [];
+  state.orbs = [];
+  state.claimHold = null;
   state.building = false;
-  state.enemies = rooms.flatMap((room) =>
+  // A claimed room's enemies are gone for good.
+  state.enemies = rooms.filter((room) => !state.claims.includes(room.id)).flatMap((room) =>
     (room.enemies ?? []).map((p) => createEnemy(state.nextEnemyId++, p.enemyId, tileCentre(p), room.id)),
   );
 }

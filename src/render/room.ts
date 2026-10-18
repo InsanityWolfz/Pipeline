@@ -1,7 +1,7 @@
 import type { GameObjects, Scene } from 'phaser';
 import { ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
-import { DOORWAY_SPRITE } from '../data/foundryAssets';
+import { DOORWAY_SPRITE, FLOOR_SPRITES } from '../data/foundryAssets';
 import { TILE, type Room } from '../data/rooms';
 
 // Draws one room's tiles. Walls, doors and ruin blocks sort by the bottom of their
@@ -19,6 +19,7 @@ export class RoomView {
     for (const o of this.objects) o.destroy();
     this.objects = [];
     const width = room.rows[0]?.length ?? 0;
+    const floor = (room.floor && FLOOR_SPRITES[room.floor]) ?? SPRITES.floor;
     const add = (x: number, y: number, frame: string): GameObjects.Image => {
       const image = this.scene.add.image(x, y, ATLAS_KEY, frame);
       this.objects.push(image);
@@ -28,11 +29,12 @@ export class RoomView {
       for (const [tx, symbol] of [...row].entries()) {
         const left = tx * TILE_SIZE;
         const bottom = (ty + 1) * TILE_SIZE;
-        add(left, ty * TILE_SIZE, SPRITES.floor).setOrigin(0).setDepth(DEPTHS.floor);
+        add(left, ty * TILE_SIZE, floor).setOrigin(0).setDepth(DEPTHS.floor);
         if (symbol === TILE.floor) continue;
         if (symbol === TILE.door) {
           // The sprite is drawn for the right wall; a door on the left wall mirrors it.
-          add(left, bottom, DOORWAY_SPRITE).setOrigin(0, 1).setDepth(bottom).setFlipX(tx < width / 2);
+          // A door in the top or bottom wall uses the same arch, unflipped.
+          add(left, bottom, DOORWAY_SPRITE).setOrigin(0, 1).setDepth(bottom).setFlipX(tx < width / 2 && tx === 0);
           continue;
         }
         const frame = symbol === TILE.wall ? SPRITES.wall : SPRITES.ruinBlock;

@@ -118,3 +118,26 @@ export const FOUNDRY_LAYOUT = {
   onTopNudge: 0.01,
   itemDepth: 0.3,
 } as const;
+
+/** The claimable site (009): the pylon's three looks, the foundry's fixtures, and the orb. */
+export const PYLON_SPRITES = {
+  off: 'pylon-off',
+  activating: { key: 'pylon-activating', frames: 4, frameRate: 4, loop: false },
+  active: { key: 'pylon-active', frames: 2, frameRate: 3, loop: true },
+} as const satisfies { off: string; activating: AnimDef; active: AnimDef };
+
+/** Fixture sprites by kind. The port's second frame glows while a raw waits to go out. */
+export const FIXTURE_SPRITES = {
+  stash: 'stash',
+  port: { key: 'supply-port', frames: 2, frameRate: 1, loop: false },
+  waystone: { key: 'waystone', frames: 2, frameRate: 3, loop: true },
+} as const satisfies { stash: string; port: AnimDef; waystone: AnimDef };
+
+/** A Wisp's orb and its ground shadow; the orb flies this far above its ground point, px. */
+export const ORB_SPRITES = { orb: 'wisp-orb', shadow: 'wisp-orb-shadow', lift: 14 } as const;
+
+/** Floor tiles by a room's `floor` theme; rooms without one use the ruin flagstone. */
+export const FLOOR_SPRITES: Readonly<Record<string, string>> = { shrine: 'floor-shrine' };
+
+/** Menu icons for the claimed pylon and the stash (009). */
+export const SITE_ICONS = { stash: 'emblem-stash', travel: 'emblem-travel' } as const;

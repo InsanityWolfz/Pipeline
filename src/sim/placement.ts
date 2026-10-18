@@ -2,6 +2,7 @@ import { FEET_BOX } from '../data/player';
 import { BUILD_BAR, isSolidPiece, machineDef, pieceDef } from '../data/pieces';
 import { recipeDef } from '../data/recipes';
 import { FOUNDRY_ROOM, TILE } from '../data/rooms';
+import { fixtureAt } from './claims';
 import { overlapsRect } from './collision';
 import { count, type Inventory } from './inventory';
 import { createPiece, footprint, pieceAt, pieceRect, type PieceState, type PlaceFail } from './pieces';
@@ -30,7 +31,7 @@ export function canPlace(state: SimState, pieceId: string, tx: number, ty: numbe
   const room = roomById(FOUNDRY_ROOM);
   const tiles = footprint(pieceId, tx, ty, facing);
   if (tiles.some((t) => room.rows[t.ty]?.[t.tx] !== TILE.floor)) return 'blocked';
-  if (tiles.some((t) => pieceAt(state.foundry, t.tx, t.ty))) return 'occupied';
+  if (tiles.some((t) => pieceAt(state.foundry, t.tx, t.ty) || fixtureAt(state.fixtures, t.tx, t.ty))) return 'occupied';
   const { limit, cost } = pieceDef(pieceId);
   if (limit !== undefined && state.foundry.pieces.filter((p) => p.pieceId === pieceId).length >= limit) return 'limit';
   if (cost && Object.entries(cost).some(([itemId, n]) => count(state.inventory, itemId) < n)) return 'cost';
@@ -76,7 +77,11 @@ export function pieceContents(p: PieceState): Inventory {
 
 /** Removes the piece covering a tile, putting what it held in the inventory. Only in the foundry. */
 export function pickUp(state: SimState, tx: number, ty: number): void {
-  if (state.roomId !== FOUNDRY_ROOM) return;
+  if (state.roomId === FOUNDRY_ROOM) removePieceAt(state, tx, ty);
+}
+
+/** Removes the piece covering a foundry tile wherever the player is, putting what it held in the inventory. */
+export function removePieceAt(state: SimState, tx: number, ty: number): void {
   const piece = pieceAt(state.foundry, tx, ty);
   if (!piece) return;
   const items = pieceContents(piece);

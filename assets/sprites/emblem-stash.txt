@@ -1,0 +1,17 @@
+# Stash icon: the rune-banded chest, for the pylon and stash menus. 16x16.
+................
+................
+................
+................
+..oooooooooooo..
+.oLLLYLLLLYLLLo.
+.oPPPYPPPPYPPPo.
+.oPPPYPPPPYPPPo.
+.oPPPYPCCPYPPPo.
+.opppYpCCpYpppo.
+.opppYpCCpYpppo.
+.opppYppppYpppo.
+.opvvYvvvvYvvpo.
+.opvvYvvvvYvvpo.
+..oooooooooooo..
+................

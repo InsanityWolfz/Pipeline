@@ -75,10 +75,10 @@ function installHelpers(): void {
     killHusk() {
       const g = game();
       let s = g.getState();
-      const before = s.enemies.length;
-      for (let t = 0; t < 2400 && s.enemies.length === before; t++) {
+      const before = s.enemies.filter((e) => e.room === s.room).length;
+      for (let t = 0; t < 2400 && s.enemies.filter((e) => e.room === s.room).length === before; t++) {
         const p = s.player;
-        const target = [...s.enemies].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+        const target = [...s.enemies.filter((e) => e.room === s.room)].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
         if (!target) break;
         const far = Math.hypot(target.x - p.x, target.y - p.y) > 200;
         s = g.step(1, {

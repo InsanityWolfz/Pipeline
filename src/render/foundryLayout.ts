@@ -60,6 +60,11 @@ export function pickerRows(entries: readonly PickerEntry[]): (ScreenRect & Picke
   return entries.map((e, i) => ({ ...e, x, y: top + i * step, w: L.rowWidth, h: L.rowHeight }));
 }
 
+/** A menu of `n` rows laid out like the hopper picker: a centred column (009's pylon and stash menus). */
+export function menuRows(n: number): ScreenRect[] {
+  return pickerRows(Array.from({ length: n }, () => ({ action: 'put' as const, itemId: '' }))).map(({ x, y, w, h }) => ({ x, y, w, h }));
+}
+
 /** The items the player holds, in ITEMS order: what the hopper picker lists. */
 export function heldItems(inventory: Readonly<Record<string, number>>): string[] {
   return Object.keys(ITEMS).filter((id) => (inventory[id] ?? 0) > 0);
