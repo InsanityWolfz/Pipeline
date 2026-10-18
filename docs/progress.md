@@ -2,6 +2,20 @@
 
 Newest entry first.
 
+## 2026-10-18: 019 Foundry intake pipe (unattended build)
+**Changed:** built 019 on `claude/019-intake-pipe`, stacked on 018, from `docs/plans/019-intake-pipe.md`.
+- **The tube socket is gone.** In its place is a fixed waterslide pipe in the centre of the foundry's north wall.
+  - Its mouth is three wall tiles, each fed from the floor tile directly below it, and nothing goes in before the tube attunes.
+  - Everything fills the one reservoir with the old rules.
+  - Stagers facing the mouth make the spread, capped at 3 streams.
+- **The look:** it matches the carried tube. Dormant it is grey-cyan; its rings light one by one on attuning. A 10-ring gauge column shows the reservoir, and a ring of light runs up the pipe for each item.
+- **Build mode** shows input arrows under the mouth and a fan from each facing stager. Hovering the pipe shows its name and the reservoir count.
+- **Framing:** tiled rooms show 48 px more wall above their top row, so the pipe can rise up it (an open question).
+
+Verify: all 536 unit tests and all 39 e2e tests pass. QA screenshots pass on mechanism; its visual fixes are in. Review found three blocking items, all fixed.
+
+**Next:** Shaun answers three framing questions in the 019 spec: the extra wall, the attune off-screen, and the banner over the pipe. The run continues with 020.
+
 ## 2026-10-18: 018 Believable resources (unattended build)
 **Changed:** built 018 on `claude/018-believable-resources`, stacked on 017, from `docs/plans/018-believable-resources.md`.
 - **Every node stands where its material comes from:** trees in sunlit groves, boulders in rock fields, reeds at pond edges, veins on ley lines. A data test checks each placement rule. The shrine site holds one node of each type.

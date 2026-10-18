@@ -105,5 +105,20 @@ The placeable tube socket is replaced by the foundry intake: a waterslide-sized 
   - an objective test
   - stale comments fixed
 
+- **From QA.** Everything passes in mechanism:
+  - the mouth tiles, south-only feeding, the reservoir rules
+  - streams capped at 3 and sorted
+  - the socket's removal
+  - the gauge at 0, 15 and 30
+  - the hover readout
+  - build arrows and fans
+  - z-order
+
+  Its visual findings:
+  - The dark rings and unlit gauge rings looked bright, because QA ran on the build before the review fix. They now draw dark.
+  - The fill pulse was faint; it is now a brighter, wider ring.
+
 ## Open questions
+- **The attune isn't on screen (for Shaun).** The player enters at the east door, where the camera can't see the north wall, and the 60-tick attune is over before they reach the pipe. So the rings lighting one by one is never seen in play. Should the camera look at the pipe while attuning, or the attune last until the pipe is in view?
+- **The objective banner covers the pipe's top (for Shaun).** It sits at the top centre of the screen, over the pipe's elbow. Move the banner, or leave it?
 - **The extra wall above the foundry (for Shaun).** Showing 48 px more wall above the foundry's top row is a render change the spec didn't ask for; it lets the pipe rise visibly. Keep it, or squeeze the pipe into the top wall row?
