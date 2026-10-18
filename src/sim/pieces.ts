@@ -59,14 +59,7 @@ export interface CrateState extends PieceCommon {
   contents: Inventory;
 }
 
-/** Sends the ammo it takes into the tube's reservoir. */
-export interface SocketState extends PieceCommon {
-  kind: 'socket';
-  /** Ticks left on its refill frame. */
-  pulse: number;
-}
-
-/** Passes items on like a conduit; facing the tube socket, it adds a stream at its angle to the tube's spread. */
+/** Passes items on like a conduit; facing the foundry intake (019), it adds a stream at its angle to the tube's spread. */
 export interface StagerState extends PieceCommon {
   kind: 'stager';
   item: string | null;
@@ -89,7 +82,7 @@ export interface SorterState extends PieceCommon {
   mirrored: boolean;
 }
 
-export type PieceState = ConduitState | MachineState | HopperState | CrateState | SocketState | StagerState | SorterState;
+export type PieceState = ConduitState | MachineState | HopperState | CrateState | StagerState | SorterState;
 
 /** How a new piece is shaped: a conduit's intake side (013), a sorter's mirrored side (015). */
 export interface PieceShape {
@@ -98,7 +91,7 @@ export interface PieceShape {
 }
 
 /** Why a piece can't be placed. */
-export type PlaceFail = 'locked' | 'not-foundry' | 'blocked' | 'occupied' | 'player' | 'limit' | 'cost';
+export type PlaceFail = 'locked' | 'not-foundry' | 'blocked' | 'occupied' | 'player' | 'cost';
 
 export interface FoundryState {
   /** In placement order, which is also the order they act in. */
@@ -118,7 +111,6 @@ export function createPiece(id: number, pieceId: string, tx: number, ty: number,
   if (kind === 'sorter') return { ...common, kind, item: null, progress: 0, filter: null, mirrored: shape.mirrored ?? false };
   if (kind === 'hopper') return { ...common, kind, item: null, count: 0, timer: 0 };
   if (kind === 'crate') return { ...common, kind, contents: {} };
-  if (kind === 'socket') return { ...common, kind, pulse: 0 };
   if (kind === 'stager') return { ...common, kind, item: null, progress: 0, angle: STAGER_START_ANGLE };
   return { ...common, kind, buffer: {}, output: 0, crafting: false, progress: 0, status: 'idle', missing: [] };
 }

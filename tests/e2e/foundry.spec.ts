@@ -88,7 +88,7 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
     window.__GAME__?.craft('ley-shard');
     window.__GAME__?.craft('ley-bolt');
   }, LEY_VEIN);
-  expect((await state(page)).unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'tube-socket', 'gravity-stager', 'grinder', 'focuser']);
+  expect((await state(page)).unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'gravity-stager', 'grinder', 'focuser']);
   await enterFoundry(page);
   await standStill(page);
   await toggleBuild(page);

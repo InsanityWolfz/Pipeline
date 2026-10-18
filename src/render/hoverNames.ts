@@ -1,5 +1,6 @@
 import { TILE_SIZE } from '../data/config';
 import { DESCRIPTIONS } from '../data/descriptions';
+import { INTAKE } from '../data/foundry';
 import { enemyDef } from '../data/enemies';
 import { HOVER_NAME, WORLD_NAMES } from '../data/hudLayout';
 import { itemDef } from '../data/items';
@@ -24,6 +25,8 @@ export interface HoverName {
   pieceId?: number;
   /** A line under the name saying where materials come from (018). */
   description?: string;
+  /** The foundry intake (019): render shows the reservoir's readout under the name. */
+  intake?: boolean;
 }
 
 /** Distance from a point to a polyline of tile points, px. */
@@ -58,6 +61,11 @@ export function nameAt(sim: SimState, roomId: string, px: number, py: number): H
   if (roomId === FOUNDRY_ROOM) {
     const piece = pieceAt(sim.foundry, tx, ty);
     if (piece) return { name: pieceDef(piece.pieceId).name, ...centre(piece), rise: HOVER_NAME.tile.rise, pieceId: piece.id };
+    // The intake's mouth (019), or the pipe rising above it on the same wall tiles.
+    if (INTAKE.mouth.some((m) => m.tx === tx && m.ty === ty)) {
+      const middle = INTAKE.mouth[1] ?? { tx, ty };
+      return { name: WORLD_NAMES.intake, ...centre(middle), rise: HOVER_NAME.tile.rise, intake: true };
+    }
     const fixture = fixtureAt(sim.fixtures, tx, ty);
     if (fixture) {
       const def = fixtureDef(fixture.id);

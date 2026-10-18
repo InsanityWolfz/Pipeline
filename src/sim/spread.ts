@@ -1,18 +1,21 @@
-import { STAGER_ANGLES } from '../data/foundry';
+import { INTAKE, STAGER_ANGLES } from '../data/foundry';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { frontTile, sameTile, type FoundryState } from './pieces';
 import type { SimState } from './state';
 
-// Spreads (008): every gravity stager facing the tube socket is a stream at its
-// angle. A shot from the reservoir fires one projectile per stream.
+// Spreads (008): every gravity stager facing the foundry intake's mouth (019) is
+// a stream at its angle. A shot from the reservoir fires one projectile per stream.
 
-/** The angles of the stagers whose front is the tube socket, nearest 0° first (then left before right). */
-export function socketStreams(foundry: FoundryState): number[] {
-  const socket = foundry.pieces.find((p) => p.kind === 'socket');
-  if (!socket) return [];
+/** The angles of the stagers whose front is a mouth tile of the intake, nearest 0° first (then left before right). */
+export function intakeStreams(foundry: FoundryState): number[] {
   return foundry.pieces
-    .flatMap((p) => (p.kind === 'stager' && sameTile(frontTile(p), socket) ? [p.angle] : []))
+    .flatMap((p) => (p.kind === 'stager' && INTAKE.mouth.some((m) => sameTile(frontTile(p), m)) ? [p.angle] : []))
     .sort((a, b) => Math.abs(a) - Math.abs(b) || a - b);
+}
+
+/** A line feeds the intake: some piece that hands items on (not a hopper or crate) has a mouth tile as its front. */
+export function feedsIntake(foundry: FoundryState): boolean {
+  return foundry.pieces.some((p) => p.kind !== 'hopper' && p.kind !== 'crate' && INTAKE.mouth.some((m) => sameTile(frontTile(p), m)));
 }
 
 /** Steps a stager to its next angle, wrapping around. Only in the foundry; records an angle event. */

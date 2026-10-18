@@ -131,18 +131,15 @@ export type PieceSummary = { id: number; pieceId: string; tx: number; ty: number
     }
   | { kind: 'hopper'; item: string | null; count: number }
   | { kind: 'crate'; contents: Record<string, number> }
-  | { kind: 'socket'; pulse: number; streams: number[] }
   | { kind: 'stager'; item: string | null; progress: number; angle: number }
   | { kind: 'sorter'; item: string | null; progress: number; filter: string | null; mirrored: boolean }
 );
 
-/** `streams` is the tube socket's stream angles (see socketStreams), shown on the socket. */
-export function pieceSummary(p: PieceState, streams: readonly number[] = []): PieceSummary {
+export function pieceSummary(p: PieceState): PieceSummary {
   const common = { id: p.id, pieceId: p.pieceId, tx: p.tx, ty: p.ty, facing: p.facing };
   if (p.kind === 'conduit') return { ...common, kind: p.kind, inFrom: p.inFrom, item: p.item, progress: p.progress };
   if (p.kind === 'hopper') return { ...common, kind: p.kind, item: p.item, count: p.count };
   if (p.kind === 'crate') return { ...common, kind: p.kind, contents: { ...p.contents } };
-  if (p.kind === 'socket') return { ...common, kind: p.kind, pulse: p.pulse, streams: [...streams] };
   if (p.kind === 'stager') return { ...common, kind: p.kind, item: p.item, progress: p.progress, angle: p.angle };
   if (p.kind === 'sorter') return { ...common, kind: p.kind, item: p.item, progress: p.progress, filter: p.filter, mirrored: p.mirrored };
   const { buffer, output, crafting, progress, status, missing } = p;

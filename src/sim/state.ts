@@ -92,7 +92,7 @@ export interface SimState {
   gathered: string[];
   /** Which objectives are done, in OBJECTIVES order. */
   objectives: boolean[];
-  /** Ticks in a row outside the foundry with a line built into the tube socket, once every other goal is done. */
+  /** Ticks in a row outside the foundry with a line built into the intake, once every other goal is done. */
   awayTicks: number;
   /** Every objective done: the prototype's end. */
   prototypeComplete: boolean;

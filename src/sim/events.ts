@@ -64,8 +64,8 @@ export interface SimEvents {
   withdraws: { id: number; itemId: string; count: number }[];
   /** The tube attuned to the foundry (once ever). */
   attunes: Record<string, never>[];
-  /** A tube socket put a round in the reservoir. */
-  refills: { id: number; itemId: string }[];
+  /** The foundry intake put a round in the reservoir (019), through mouth tile `mouth` (an index into INTAKE.mouth). */
+  refills: { mouth: number; itemId: string }[];
   /** A projectile left the tube's mouth (a spread fires several at once). */
   shots: { x: number; y: number; ammoId: string }[];
   /** E at a pylon whose room still has enemies. */

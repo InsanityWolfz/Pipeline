@@ -105,14 +105,14 @@ export const AMBIENT = {
 /** The glow texture: its radius px, the alpha steps it falls off in (so it stays crisp), and its peak alpha. */
 export const GLOW_TEXTURE = { radius: 32, bands: 5, alpha: 0.6 } as const;
 
-/** Ley light around things that aren't props: palette colour and radius, px. A refilling socket's glow swells by `pulse`. */
+/** Ley light around things that aren't props: palette colour and radius, px. The intake's glow (019) swells by `pulse` for `ms` as an item goes in. */
 export const GLOWS = {
   crystal: { color: 'ley-cyan', radius: 30 },
   vein: { color: 'ley-cyan', radius: 22 },
   pylon: { color: 'ley-glow', radius: 44 },
   conduitItem: { color: 'ley-cyan', radius: 9 },
   tube: { color: 'ley-cyan', radius: 14 },
-  socket: { color: 'ley-glow', radius: 20, pulse: 1.4 },
+  intake: { color: 'ley-glow', radius: 40, pulse: 1.4, ms: 300 },
 } as const;
 
 /** The dusk tint over each room (a palette id and alpha). */

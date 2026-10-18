@@ -4,7 +4,7 @@ import { ATTUNE_TICKS, RESERVOIR_CAP } from '../data/tube';
 import type { SimState } from './state';
 
 // The tube's link to the foundry: it attunes the first time the player walks
-// into the foundry, and from then on a tube socket fills its one reservoir.
+// into the foundry, and from then on the foundry intake (019) fills its one reservoir.
 // Both survive a KO.
 
 export interface ReservoirState {

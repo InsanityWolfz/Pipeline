@@ -9,7 +9,8 @@ import type { Facing } from './player';
 import type { ArmorPiece } from './armor';
 import { fixtureDef } from './fixtures';
 import { currentObjective } from './objectives';
-import { socketStreams } from './spread';
+import { intakeStreams } from './spread';
+import { INTAKE } from '../data/foundry';
 import type { SimState } from './state';
 import {
   arrowSummary,
@@ -122,6 +123,8 @@ export interface SimSummary {
   /** The first unfinished objective (index and text), or null once all are done. */
   objective: { index: number; text: string } | null;
   prototypeComplete: boolean;
+  /** The foundry intake (019): its mouth tiles, and the stream angles of the stagers facing them (see intakeStreams). */
+  intake: { mouth: { tx: number; ty: number }[]; streams: number[] };
   /** What a death keeps: the inventory as last banked. */
   banked: Record<string, number>;
   /** What happened on the last tick. */
@@ -130,7 +133,6 @@ export interface SimSummary {
 
 export function summarize(state: SimState): SimSummary {
   const { player: p, tube } = state;
-  const streams = socketStreams(state.foundry);
   return {
     tick: state.tick,
     seed: state.seed,
@@ -183,7 +185,8 @@ export function summarize(state: SimState): SimSummary {
     crafted: [...state.crafted],
     unlocked: unlockedPieces(state),
     building: state.building,
-    foundry: { pieces: state.foundry.pieces.map((p) => pieceSummary(p, streams)) },
+    foundry: { pieces: state.foundry.pieces.map((p) => pieceSummary(p)) },
+    intake: { mouth: INTAKE.mouth.map((t) => ({ tx: t.tx, ty: t.ty })), streams: intakeStreams(state.foundry) },
     orbs: state.orbs.map((o) => ({ id: o.id, room: o.roomId, x: round(o.x), y: round(o.y), dx: round(o.dx), dy: round(o.dy) })),
     claims: [...state.claims],
     claimHold: state.claimHold ? { site: state.claimHold.site, progress: state.claimHold.progress } : null,

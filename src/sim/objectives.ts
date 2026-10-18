@@ -1,5 +1,5 @@
 import { OBJECTIVES, type ObjectiveCheck } from '../data/objectives';
-import { socketStreams } from './spread';
+import { feedsIntake, intakeStreams } from './spread';
 import type { SimState } from './state';
 import { FOUNDRY_ROOM } from '../data/rooms';
 
@@ -20,8 +20,8 @@ function holds(state: SimState, check: ObjectiveCheck): boolean {
       return state.gates[check.gate];
     case 'inRoom':
       return state.roomId === check.room;
-    case 'socketPlaced':
-      return state.foundry.pieces.some((p) => p.kind === 'socket');
+    case 'intakeFed':
+      return feedsIntake(state.foundry);
     case 'lineFull':
       return state.firstLineFull;
     case 'identified':
@@ -29,7 +29,7 @@ function holds(state: SimState, check: ObjectiveCheck): boolean {
     case 'claimed':
       return state.claims.includes(check.site);
     case 'streams':
-      return socketStreams(state.foundry).length >= check.min;
+      return intakeStreams(state.foundry).length >= check.min;
     case 'awayRunning':
       return state.awayTicks >= check.ticks;
   }
@@ -40,7 +40,7 @@ export function stepObjectives(state: SimState): void {
   for (const h of state.events.harvests) if (!state.gathered.includes(h.itemId)) state.gathered.push(h.itemId);
   // The last goal is heading out once everything else is done, so its clock only runs then.
   const rest = state.objectives.slice(0, -1).every(Boolean);
-  const running = state.foundry.pieces.some((p) => p.kind === 'socket');
+  const running = feedsIntake(state.foundry);
   state.awayTicks = rest && running && state.roomId !== FOUNDRY_ROOM ? state.awayTicks + 1 : 0;
   for (const [i, def] of OBJECTIVES.entries()) {
     if (state.objectives[i] || !holds(state, def.check)) continue;

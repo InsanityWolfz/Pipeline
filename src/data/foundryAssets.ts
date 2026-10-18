@@ -43,7 +43,6 @@ export const LOGISTICS_ICONS: Readonly<Record<string, string>> = {
   conduit: 'emblem-conduit',
   hopper: 'emblem-hopper',
   crate: 'emblem-crate',
-  'tube-socket': 'emblem-tube-socket',
   'gravity-stager': 'emblem-gravity-stager',
   sorter: 'emblem-sorter',
 };
@@ -92,14 +91,14 @@ export const HOPPER_SPRITES: Readonly<Record<PieceView, string>> = {
 
 export const CRATE_SPRITE = 'crate';
 
-/** The tube socket (007): at rest, and the frame it flares to as a round goes to the tube. */
-export const SOCKET_SPRITES = { idle: 'tube-socket', refill: 'tube-socket-refill' } as const;
+/** The foundry intake's pipe (019), vector frames: dormant before the tube attunes, then lit. */
+export const INTAKE_SPRITES = { dormant: 'intake-dormant', attuned: 'intake-attuned' } as const;
 
 /** The gravity stager (008): one frame per angle, `gravity-stager/<i>` for STAGER_ANGLES[i]. */
 export const STAGER_SPRITE = { key: 'gravity-stager', frames: 5, frameRate: 1, loop: false } as const satisfies AnimDef;
 
 /**
- * Build mode draws a faint fan from the tube socket: one line per stream at its
+ * Build mode draws a faint fan from each stager facing the intake: one line at its
  * angle from straight up, so the spread's shape reads before firing. Px and palette id.
  */
 export const SPREAD_FAN = { length: 56, width: 1, color: 'ley-cyan', alpha: 0.55 } as const;
@@ -107,8 +106,8 @@ export const SPREAD_FAN = { length: 56, width: 1, color: 'ley-cyan', alpha: 0.55
 /** A stager holding an item pulses its alpha between 1 and `alpha`, one beat every `ticksPerBeat` ticks. */
 export const STAGER_PULSE = { alpha: 0.7, ticksPerBeat: 9 } as const;
 
-/** The hover readout's icon for a socket whose reservoir is empty: the socket's own emblem. */
-export const SOCKET_EMPTY_ICON = 'emblem-tube-socket';
+/** The hover readout's icon for the intake when the reservoir is empty: the tube emblem. */
+export const INTAKE_EMPTY_ICON = 'emblem-tube-socket';
 
 /**
  * Build-mode arrows on a piece's edges, also on the ghost: cyan pointing out of its

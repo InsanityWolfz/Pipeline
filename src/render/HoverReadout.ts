@@ -1,7 +1,7 @@
 import type { GameObjects, Scene } from 'phaser';
 import { ATLAS_KEY, DEPTHS } from '../data/assets';
 import { READOUT_LAYOUT } from '../data/hudLayout';
-import { LOGISTICS_ICONS, SOCKET_EMPTY_ICON } from '../data/foundryAssets';
+import { LOGISTICS_ICONS, INTAKE_EMPTY_ICON } from '../data/foundryAssets';
 import { itemDef } from '../data/items';
 import { machineDef } from '../data/pieces';
 import { recipeDef, RECIPES } from '../data/recipes';
@@ -27,9 +27,9 @@ export function machineLines(m: MachineState): Line[] {
   ];
 }
 
-/** A tube socket's line: the reservoir's ammo (or the socket's icon when empty) and count out of the cap. */
-export function socketLines(r: ReservoirState): Line[] {
-  const icon = r.itemId ? itemDef(r.itemId).icon : SOCKET_EMPTY_ICON;
+/** The intake's line (019): the reservoir's ammo (or the tube emblem when empty) and count out of the cap. */
+export function intakeLines(r: ReservoirState): Line[] {
+  const icon = r.itemId ? itemDef(r.itemId).icon : INTAKE_EMPTY_ICON;
   return [[icon, `${r.count}/${RESERVOIR_CAP}`]];
 }
 
@@ -40,10 +40,9 @@ export function stagerLines(angle: number): Line[] {
   return [[icon, angle > 0 ? `+${angle}` : String(angle)]];
 }
 
-/** The readout for any piece: machines, the tube socket and stagers have one; other pieces show nothing. */
-export function pieceLines(p: PieceState, reservoir: ReservoirState): Line[] {
+/** The readout for any piece: machines and stagers have one; other pieces show nothing. */
+export function pieceLines(p: PieceState): Line[] {
   if (p.kind === 'machine') return machineLines(p);
-  if (p.kind === 'socket') return socketLines(reservoir);
   if (p.kind === 'stager') return stagerLines(p.angle);
   return [];
 }

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { ammoDef } from '../../src/data/ammo';
-import { CONDUIT_TICKS, STAGER_ANGLES, STAGER_TICKS } from '../../src/data/foundry';
+import { CONDUIT_TICKS, INTAKE, STAGER_ANGLES, STAGER_TICKS } from '../../src/data/foundry';
 import type { ConduitState, HopperState, StagerState } from '../../src/sim/pieces';
-import { rotate, socketStreams } from '../../src/sim/spread';
+import { intakeStreams, rotate } from '../../src/sim/spread';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
 import { fireAt, movePlayer, run, runUntil } from './fight';
@@ -103,36 +103,13 @@ describe('angles', () => {
   });
 });
 
-describe('streams', () => {
-  it('are the stagers facing the socket, nearest 0 first; a conduit into the socket adds none', () => {
-    const s = attuned();
-    put(s, 'tube-socket', 6, 6);
-    stager(s, 5, 6, 'right', 30);
-    stager(s, 7, 6, 'left', -15);
-    stager(s, 6, 5, 'down', 0);
-    put(s, 'conduit', 6, 7, 'up');
-    // A stager next to the socket but facing away isn't a stream.
-    stager(s, 8, 8, 'right', 15);
-    expect(socketStreams(s.foundry)).toEqual([0, -15, 30]);
-    const socket = summarize(s).foundry.pieces.find((p) => p.kind === 'socket');
-    expect(socket).toMatchObject({ streams: [0, -15, 30] });
-  });
-});
-
 describe('spread shots', () => {
-  /** A socket with stagers at `angles` and a reservoir of `rounds` ley bolts; nothing carried. */
+  /** Stagers at `angles` under the intake's mouth (019), each facing up into a mouth tile, and a reservoir of `rounds` ley bolts; nothing carried. */
   function spread(angles: number[], rounds: number, item = 'ley-bolt') {
     const s = attuned();
-    put(s, 'tube-socket', 6, 6);
-    const spots: [number, number, 'right' | 'left' | 'down' | 'up'][] = [
-      [5, 6, 'right'],
-      [7, 6, 'left'],
-      [6, 5, 'down'],
-      [6, 7, 'up'],
-    ];
     angles.forEach((a, i) => {
-      const spot = spots[i];
-      if (spot) stager(s, spot[0], spot[1], spot[2], a);
+      const mouth = INTAKE.mouth[i];
+      if (mouth) stager(s, mouth.tx, mouth.ty + 1, 'up', a);
     });
     s.inventory = {};
     s.tube.ammoId = item;
@@ -211,23 +188,16 @@ describe('spread shots', () => {
     const s = attuned();
     s.inventory = { 'warden-core': 3 };
     s.tube.ammoId = 'ley-bolt';
-    put(s, 'tube-socket', 10, 6);
-    // Three rows: hopper → grinder → focuser → stager, each stager facing the socket.
-    const rows: [number, number, 'right' | 'down' | 'up'][] = [
-      [6, 6, 'right'],
-      [10, 2, 'down'],
-      [10, 10, 'up'],
-    ];
-    for (const [tx, ty, f] of rows) {
-      const [dx, dy] = f === 'right' ? [1, 0] : f === 'down' ? [0, 1] : [0, -1];
-      const h = put<HopperState>(s, 'hopper', tx, ty, f);
+    // Three columns up into the intake's three mouth tiles (019): hopper → grinder → focuser → stager.
+    for (const mouth of INTAKE.mouth) {
+      const h = put<HopperState>(s, 'hopper', mouth.tx, 4, 'up');
       h.item = 'ley-crystal';
       h.count = 10;
-      put(s, 'grinder', tx + dx, ty + dy, f);
-      put(s, 'focuser', tx + 2 * dx, ty + 2 * dy, f);
-      put<StagerState>(s, 'gravity-stager', tx + 3 * dx, ty + 3 * dy, f);
+      put(s, 'grinder', mouth.tx, 3, 'up');
+      put(s, 'focuser', mouth.tx, 2, 'up');
+      put<StagerState>(s, 'gravity-stager', mouth.tx, 1, 'up');
     }
-    expect(socketStreams(s.foundry)).toHaveLength(3);
+    expect(intakeStreams(s.foundry)).toHaveLength(3);
     runUntil(s, (x) => x.link.reservoir.count >= 9, 1500);
     stepOutside(s);
     movePlayer(s, 400, 400);
@@ -241,14 +211,13 @@ describe('spread shots', () => {
       const s = attuned();
       s.inventory = { 'warden-core': 2 };
       s.tube.ammoId = 'ley-bolt';
-      put(s, 'tube-socket', 10, 6);
-      const h = put<HopperState>(s, 'hopper', 6, 6, 'right');
+      const h = put<HopperState>(s, 'hopper', 12, 4, 'up');
       h.item = 'ley-crystal';
       h.count = 8;
-      put(s, 'grinder', 7, 6);
-      put(s, 'focuser', 8, 6);
-      const a = put<StagerState>(s, 'gravity-stager', 9, 6, 'right');
-      const b = put<StagerState>(s, 'gravity-stager', 10, 5, 'down');
+      put(s, 'grinder', 12, 3, 'up');
+      put(s, 'focuser', 12, 2, 'up');
+      const a = put<StagerState>(s, 'gravity-stager', 12, 1, 'up');
+      const b = put<StagerState>(s, 'gravity-stager', 11, 1, 'up');
       run(s, 1, { setAngle: { id: a.id } });
       run(s, 3, { setAngle: { id: b.id } });
       movePlayer(s, 400, 400);

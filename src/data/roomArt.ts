@@ -33,3 +33,9 @@ export const WALL_MOSS_ONE_IN = 7;
  * from their tile (× phaseX, × phaseY), so rows of them don't move in step.
  */
 export const PROP_LAYOUT = { wallNudge: 0.5, standingInset: 8, phaseX: 7, phaseY: 3 } as const;
+
+/**
+ * Tiled rooms show this much more wall above their top row, px (019): the camera may scroll that far up, so
+ * what's built into the north wall (the foundry intake) has room to rise up it. Collision and layout are unchanged.
+ */
+export const ROOM_TOP_MARGIN = 48;

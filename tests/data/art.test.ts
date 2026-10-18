@@ -1,3 +1,4 @@
+import { INTAKE_SPRITES_VECTOR } from '../../src/data/art/intake';
 import { NODE_SPRITES_VECTOR } from '../../src/data/art/nodes';
 import { describe, expect, it } from 'vitest';
 import { ENEMY_ANIMS } from '../../src/data/assets';
@@ -47,6 +48,7 @@ describe('vector shapes', () => {
       ...ENEMY_RIGS.flatMap((r) => Object.values(r.views).flatMap((parts) => parts.flatMap((p) => p.shapes))),
       ...VECTOR_SPRITES.flatMap((s) => s.frames.flat()),
       ...NODE_SPRITES_VECTOR.flatMap((s) => s.frames.flat()),
+      ...INTAKE_SPRITES_VECTOR.flatMap((s) => s.frames.flat()),
     ];
     const limbs = (Object.values(WANDERER.limbs) as LimbStyle[]).flatMap((l) => [l.color, ...(l.bands ? [l.bands.color] : [])]);
     const used = [...shapes.flatMap(inksOf), ...limbs.map((i) => (typeof i === 'string' ? i : i.id))];
@@ -142,6 +144,7 @@ describe('vector frame registration', () => {
       foundry.ORB_SPRITES.shadow,
       ...Object.values(assets.OVERWORLD_SPRITES).flat(),
       ...Object.values(assets.NODE_SPRITES).flatMap((n) => [...n.uses, ...n.regrow]),
+      ...Object.values(foundry.INTAKE_SPRITES),
     ]);
     for (const f of vectorFrames()) expect(registered, f.name).toContain(f.name);
   });

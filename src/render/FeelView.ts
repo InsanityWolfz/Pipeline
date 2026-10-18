@@ -1,6 +1,7 @@
 import type { Scene } from 'phaser';
 import { TILE_SIZE } from '../data/config';
 import { enemyDef } from '../data/enemies';
+import { INTAKE } from '../data/foundry';
 import { DUST, GLOWS, HARVEST_BURSTS, HARVEST_WORK, HIT_STOP_MS } from '../data/juice';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { FIRE_SOUNDS, SOUND_LEVELS, SOUNDS, WINDUP_SOUNDS } from '../data/sounds';
@@ -32,6 +33,8 @@ export class FeelView {
   private dryFire = false;
   private dustMs = 0;
   private workMs = 0;
+  /** Ms left on the intake's glow swelling after an item went in (019). */
+  private intakeMs = 0;
 
   static preload(scene: Scene): void {
     SoundView.preload(scene);
@@ -52,6 +55,7 @@ export class FeelView {
     if (here) this.play(sim, events);
     this.watch(sim, shown, deltaMs);
     this.juice.update(deltaMs);
+    this.intakeMs = Math.max(0, this.intakeMs - deltaMs);
     this.ambient.update(deltaMs, this.movingGlows(sim, shown));
     this.sound.endFrame();
   }
@@ -122,11 +126,10 @@ export class FeelView {
     if (ev.deposits.length > 0 || ev.withdraws.length > 0 || ev.crateTakes.length > 0) s.play(SOUNDS.pickUpPiece, SOUND_LEVELS.under);
     for (const r of ev.refills) {
       s.play(SOUNDS.refill, SOUND_LEVELS.quiet);
-      const piece = sim.foundry.pieces.find((p) => p.id === r.id);
-      if (piece) {
-        const rect = pieceRect(piece);
-        j.burst('refill', rect.x, rect.y);
-      }
+      // Sparks at the inlet the item went into.
+      const mouth = INTAKE.mouth[r.mouth];
+      if (mouth) j.burst('refill', (mouth.tx + 0.5) * TILE_SIZE, (mouth.ty + 1) * TILE_SIZE);
+      this.intakeMs = GLOWS.intake.ms;
     }
     if (ev.attunes.length > 0) s.play(SOUNDS.attune);
     if (ev.claims.length > 0) s.play(SOUNDS.claim);
@@ -210,7 +213,12 @@ export class FeelView {
       for (const p of sim.foundry.pieces) {
         const r = pieceRect(p);
         if (p.kind === 'conduit' && p.item) spots.push({ x: r.x, y: r.y, ...GLOWS.conduitItem });
-        if (p.kind === 'socket') spots.push({ x: r.x, y: r.y, ...GLOWS.socket, radius: GLOWS.socket.radius * (p.pulse > 0 ? GLOWS.socket.pulse : 1) });
+      }
+      // The intake glows once attuned, swelling as each item goes in.
+      const middle = INTAKE.mouth[1];
+      if (middle && sim.link.attuned) {
+        const swell = this.intakeMs > 0 ? GLOWS.intake.pulse : 1;
+        spots.push({ x: (middle.tx + 0.5) * TILE_SIZE, y: (middle.ty + 1) * TILE_SIZE, color: GLOWS.intake.color, radius: GLOWS.intake.radius * swell });
       }
     }
     if (sim.hasTube && sim.link.attuned && shown === sim.roomId) spots.push({ x: sim.player.x, y: sim.player.y, ...GLOWS.tube });

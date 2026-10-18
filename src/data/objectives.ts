@@ -12,14 +12,15 @@ export type ObjectiveCheck =
   | { kind: 'crafted'; items: readonly string[] }
   | { kind: 'gate'; gate: GateId }
   | { kind: 'inRoom'; room: string }
-  | { kind: 'socketPlaced' }
+  /** A line feeds the foundry intake (019): a piece's front is one of its mouth tiles. */
+  | { kind: 'intakeFed' }
   /** The reservoir has filled from a line at least once. */
   | { kind: 'lineFull' }
   | { kind: 'identified' }
   | { kind: 'claimed'; site: string }
-  /** At least this many gravity stagers stream into the socket. */
+  /** At least this many gravity stagers stream into the intake. */
   | { kind: 'streams'; min: number }
-  /** This long outside the foundry with a line built into the tube socket. */
+  /** This long outside the foundry with a line built into the intake. */
   | { kind: 'awayRunning'; ticks: number };
 
 /** Which key a goal's prompt shows, and what it floats over (see PromptView). */
@@ -42,7 +43,7 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
   { text: 'Clear the ruin field of Husks', check: { kind: 'gate', gate: 'foundry' } },
   { text: 'Enter the foundry', check: { kind: 'inRoom', room: 'foundry' } },
   { text: 'Craft a bomb and a ley bolt (C)', check: { kind: 'crafted', items: ['bomb', 'ley-bolt'] }, prompt: { key: 'C', over: 'player' } },
-  { text: 'Build an ammo line into the tube socket (B)', check: { kind: 'socketPlaced' }, prompt: { key: 'B', over: 'player' } },
+  { text: 'Build an ammo line into the intake (B)', check: { kind: 'intakeFed' }, prompt: { key: 'B', over: 'player' } },
   { text: 'Fill the tube from your line', check: { kind: 'lineFull' }, prompt: { key: 'E', over: 'hopper' } },
   { text: 'Identify your armor at the bench (E)', check: { kind: 'identified' }, prompt: { key: 'E', over: 'bench' } },
   { text: "Claim the shrine's pylon", check: { kind: 'claimed', site: 'shrine' }, prompt: { key: 'E', over: 'pylon' } },

@@ -14,13 +14,12 @@ import { roomById, type SimState } from './state';
 
 /**
  * Pieces the player can place, in build bar order: logistics always, machines
- * once their output is hand-crafted, and the tube socket once the tube is attuned.
+ * once their output is hand-crafted.
  */
-export function unlockedPieces(state: Pick<SimState, 'crafted' | 'link'>): string[] {
+export function unlockedPieces(state: Pick<SimState, 'crafted'>): string[] {
   return BUILD_BAR.filter((id) => {
     const def = pieceDef(id);
     if (def.kind === 'machine') return state.crafted.includes(recipeDef(def.recipeId).output.itemId);
-    if (def.kind === 'socket') return state.link.attuned;
     return true;
   });
 }
@@ -33,8 +32,7 @@ export function canPlace(state: SimState, pieceId: string, tx: number, ty: numbe
   const tiles = footprint(pieceId, tx, ty, facing);
   if (tiles.some((t) => room.rows[t.ty]?.[t.tx] !== TILE.floor)) return 'blocked';
   if (tiles.some((t) => pieceAt(state.foundry, t.tx, t.ty) || fixtureAt(state.fixtures, t.tx, t.ty))) return 'occupied';
-  const { limit, cost } = pieceDef(pieceId);
-  if (limit !== undefined && state.foundry.pieces.filter((p) => p.pieceId === pieceId).length >= limit) return 'limit';
+  const { cost } = pieceDef(pieceId);
   if (cost && Object.entries(cost).some(([itemId, n]) => count(state.inventory, itemId) < n)) return 'cost';
   const p = state.player;
   if (isSolidPiece(pieceId) && overlapsRect(p.x, p.y, FEET_BOX, pieceRect({ pieceId, tx, ty, facing }))) {
@@ -58,7 +56,7 @@ export function conduitInFrom(state: SimState, tx: number, ty: number, facing: F
     const t = sideTile(here, side);
     const piece = pieceAt(state.foundry, t.tx, t.ty);
     if (piece?.kind === 'sorter') return sameTile(frontTile(piece), here) || sameTile(sideTile(piece, sortSide(piece)), here);
-    if (piece) return piece.kind !== 'crate' && piece.kind !== 'socket' && sameTile(frontTile(piece), here);
+    if (piece) return piece.kind !== 'crate' && sameTile(frontTile(piece), here);
     const port = fixtureAt(state.fixtures, t.tx, t.ty);
     return port !== undefined && fixtureDef(port.id).kind === 'port' && sameTile(portFront(port), here);
   };

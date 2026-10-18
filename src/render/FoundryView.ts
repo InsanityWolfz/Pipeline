@@ -2,14 +2,13 @@ import type { GameObjects, Scene } from 'phaser';
 import { TintModes } from 'phaser';
 import { animFrames, ATLAS_KEY, DEPTHS } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
-import { CONDUIT_TICKS, STAGER_ANGLES } from '../data/foundry';
+import { CONDUIT_TICKS, INTAKE, STAGER_ANGLES } from '../data/foundry';
 import {
   CONDUIT_ANIMS,
   CONDUIT_CORNERS,
   SORTER_ANIMS,
   SORTER_LOOK,
   CRATE_SPRITE,
-  SOCKET_SPRITES,
   SPREAD_FAN,
   STAGER_PULSE,
   STAGER_SPRITE,
@@ -24,8 +23,8 @@ import {
 import { itemDef } from '../data/items';
 import { pieceDef } from '../data/pieces';
 import { facingVector, opposite } from '../sim/direction';
-import { rotate, socketStreams } from '../sim/spread';
-import { pieceRect, sorterOut, type FoundryState, type PieceState } from '../sim/pieces';
+import { rotate } from '../sim/spread';
+import { frontTile, pieceRect, sameTile, sorterOut, type FoundryState, type PieceState } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { SQUASH } from '../data/juice';
 import { registerAnim } from './anims';
@@ -80,12 +79,12 @@ interface Drawn {
 
 // Draws the foundry's pieces from sim state: machines showing what they make, a
 // working loop and a status marker; conduits flowing with the item they carry;
-// hoppers and crates with what they hold; tube sockets flaring as they refill.
+// hoppers and crates with what they hold. The intake pipe is IntakeView's (019).
 // Sorted by the bottom of their footprint.
 export class FoundryView {
   private readonly scene: Scene;
   private readonly drawn = new Map<number, Drawn>();
-  /** Build mode's spread fan over the tube socket. */
+  /** Build mode's spread fans from the stagers facing the intake. */
   private readonly fan: GameObjects.Graphics;
   /** Pieces just placed, which drop in with a bounce when next drawn (014). */
   private readonly dropping = new Set<number>();
@@ -164,9 +163,6 @@ export class FoundryView {
       d.body.setFlip(look.flipX, look.flipY).play(look.anim.key);
       d.icon.setDepth(FOUNDRY_LAYOUT.itemDepth);
       d.slot = add.image(r.x, r.y, ATLAS_KEY).setScale(SORTER_LOOK.slotScale).setDepth(FOUNDRY_LAYOUT.conduitDepth + FOUNDRY_LAYOUT.onTopNudge);
-    } else if (p.kind === 'socket') {
-      d.body.setFrame(SOCKET_SPRITES.idle);
-      d.icon.setVisible(false);
     } else if (p.kind === 'stager') {
       d.icon.setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge).setVisible(false);
     } else {
@@ -182,7 +178,6 @@ export class FoundryView {
     if (p.kind === 'conduit') this.drawConduit(p, d);
     else if (p.kind === 'sorter') this.drawSorter(p, d);
     else if (p.kind === 'machine') this.drawMachine(p, d);
-    else if (p.kind === 'socket') d.body.setFrame(p.pulse > 0 ? SOCKET_SPRITES.refill : SOCKET_SPRITES.idle);
     else if (p.kind === 'stager') {
       const frame = animFrames(STAGER_SPRITE)[STAGER_ANGLES.indexOf(p.angle)];
       if (!frame) throw new Error(`No stager frame for angle ${p.angle}`);
@@ -204,15 +199,15 @@ export class FoundryView {
     }
   }
 
-  /** One faint line per stream from the socket's centre, at its angle from straight up. */
+  /** One faint line from each stager facing the intake's mouth (019), at its stream's angle from straight up. */
   private drawFan(foundry: FoundryState, on: boolean): void {
     this.fan.clear();
-    const socket = foundry.pieces.find((p) => p.kind === 'socket');
-    if (!on || !socket) return;
-    const r = pieceRect(socket);
+    if (!on) return;
     this.fan.lineStyle(SPREAD_FAN.width, colorOf(SPREAD_FAN.color), SPREAD_FAN.alpha);
-    for (const angle of socketStreams(foundry)) {
-      const [dx, dy] = rotate(0, -1, angle);
+    for (const p of foundry.pieces) {
+      if (p.kind !== 'stager' || !INTAKE.mouth.some((m) => sameTile(frontTile(p), m))) continue;
+      const r = pieceRect(p);
+      const [dx, dy] = rotate(0, -1, p.angle);
       this.fan.lineBetween(r.x, r.y, r.x + dx * SPREAD_FAN.length, r.y + dy * SPREAD_FAN.length);
     }
   }

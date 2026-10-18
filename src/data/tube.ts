@@ -12,8 +12,6 @@ export const RESERVOIR_CAP = 30;
 /** Ticks the tube's attuning pulse plays, about 1 s. */
 export const ATTUNE_TICKS = 60;
 
-/** Ticks a tube socket shows its refill frame after taking a round. */
-export const REFILL_PULSE_TICKS = 8;
 
 /** Ticks the dry-fire flag stays set after an empty-tube shot. */
 export const DRY_FIRE_TICKS = 10;

@@ -130,6 +130,7 @@ export const WORLD_NAMES = {
   dormantTube: 'Dormant tube',
   crystal: 'Ley crystal',
   leyLine: 'Ley line',
+  intake: 'Foundry intake',
 } as const;
 
 /** The build bar's hover panel (015): wrap width in glyphs, padding and line height, px, and its gap above the bar. */

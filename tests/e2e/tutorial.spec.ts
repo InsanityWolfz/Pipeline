@@ -134,17 +134,17 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
   });
   expect(await done(page)).toBe(6);
 
-  // 7-8. A ley bolt line into the tube socket, fed until the tube is full.
+  // 7-8. A ley bolt line up into the intake's middle mouth tile (019), fed until the tube is full.
   const filled = await page.evaluate((tile) => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
-    h.walkTo(6.5 * tile, 5.5 * tile);
-    for (const [pieceId, tx] of [['hopper', 4], ['grinder', 5], ['focuser', 6], ['tube-socket', 7]] as const) {
-      g.step(1, { place: { pieceId, tx, ty: 4, facing: 'right' } });
+    h.walkTo(14.5 * tile, 5.5 * tile);
+    for (const [pieceId, ty] of [['hopper', 4], ['grinder', 3], ['focuser', 2], ['conduit', 1]] as const) {
+      g.step(1, { place: { pieceId, tx: 12, ty, facing: 'up' } });
     }
     // Just below the hopper, well in reach (USE_REACH), to fill it with every ley crystal carried.
-    h.walkTo(4.5 * tile, 5.25 * tile);
+    h.walkTo(12.5 * tile, 5.25 * tile);
     const hopper = g.getState().foundry.pieces.find((p) => p.kind === 'hopper');
     if (hopper) g.step(1, { deposit: { id: hopper.id, itemId: 'ley-crystal' } });
     let s = g.getState();
@@ -179,15 +179,15 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
   }, T);
   expect(await done(page)).toBe(10);
 
-  // 11. Home by the pylon, and a gravity stager (the Warden's core) facing the socket.
+  // 11. Home by the pylon, and a gravity stager (the Warden's core) facing the intake.
   await page.evaluate(() => {
     const g = window.__GAME__;
     g?.step(1, { pylon: 'travel' });
     g?.step(1, { takeStash: { itemId: null } });
   });
-  // The Warden's core came home in hand; place the stager below the socket, facing up into it.
+  // The Warden's core came home in hand; place the stager under the intake's east mouth tile, facing up into it.
   await page.evaluate(() => {
-    window.__GAME__?.step(1, { place: { pieceId: 'gravity-stager', tx: 7, ty: 5, facing: 'up' } });
+    window.__GAME__?.step(1, { place: { pieceId: 'gravity-stager', tx: 13, ty: 1, facing: 'up' } });
   });
   expect(await done(page)).toBe(11);
 

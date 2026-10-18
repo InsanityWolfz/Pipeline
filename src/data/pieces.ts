@@ -9,8 +9,6 @@ interface PieceBase {
   /** A line or two for the build bar's hover panel (015), in the pixel font's glyphs. */
   description: string;
   footprint: Footprint;
-  /** At most this many can be on the grid at once. */
-  limit?: number;
   /** Items placing it takes from the inventory; picking it up gives them back. */
   cost?: Readonly<Record<string, number>>;
 }
@@ -24,12 +22,12 @@ export interface MachineDef extends PieceBase {
 
 /**
  * Moves or holds items: conduits carry them, hoppers feed a line, crates collect
- * what it makes, the tube socket sends ammo into the tube's reservoir (007), and
- * a gravity stager facing the socket adds a stream to the tube's spread (008),
+ * what it makes, a gravity stager facing the foundry intake adds a stream to the
+ * tube's spread (008, 019),
  * and a sorter sends one chosen item out its side (015).
  */
 export interface LogisticsDef extends PieceBase {
-  kind: 'conduit' | 'hopper' | 'crate' | 'socket' | 'stager' | 'sorter';
+  kind: 'conduit' | 'hopper' | 'crate' | 'stager' | 'sorter';
 }
 
 export type PieceDef = MachineDef | LogisticsDef;
@@ -58,12 +56,8 @@ export const PIECES: Readonly<Record<string, PieceDef>> = {
   sorter: logistics('sorter', 'Sorter', 'Sends one chosen item out its side. E sets it, F flips the side.'),
   hopper: logistics('hopper', 'Hopper', 'Holds one kind of item, put in with E, and feeds it forward.'),
   crate: logistics('crate', 'Crate', 'Collects whatever reaches it from any side. E empties it.'),
-  'tube-socket': {
-    ...logistics('socket', 'Tube socket', 'Feeds the tube. It fires from here once carried rounds run out.', 'tube-socket'),
-    limit: 1,
-  },
   'gravity-stager': {
-    ...logistics('stager', 'Gravity stager', 'Facing the socket, it adds a stream to the spread. E turns it.', 'gravity-stager'),
+    ...logistics('stager', 'Gravity stager', 'Facing the intake, it adds a stream to the spread. E turns it.', 'gravity-stager'),
     cost: { 'warden-core': 1 },
   },
   cutter: machine('cutter', 'Cutter', 'shaft', '1x1', 60, 'Cuts wood into shafts.'),
@@ -83,7 +77,6 @@ export const BUILD_BAR: readonly string[] = [
   'sorter',
   'hopper',
   'crate',
-  'tube-socket',
   'gravity-stager',
   'cutter',
   'knapper',

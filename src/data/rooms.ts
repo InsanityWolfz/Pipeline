@@ -110,7 +110,6 @@ export const STATIC_ROOMS: Readonly<Record<string, Room>> = {
     spawn: { tx: 22, ty: 8 },
     props: [
       { propId: 'brazier', tx: 4, ty: 0 },
-      { propId: 'brazier', tx: 12, ty: 0 },
       { propId: 'brazier', tx: 20, ty: 0 },
       { propId: 'banner', tx: 8, ty: 0 },
       { propId: 'banner', tx: 16, ty: 0 },

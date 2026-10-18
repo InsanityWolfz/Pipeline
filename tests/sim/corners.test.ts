@@ -104,7 +104,7 @@ describe('placing a conduit without a side', () => {
     expect(put<ConduitState>(s, 'conduit', 14, 5, 'down').inFrom).toBe('up');
   });
 
-  it('ignores neighbours that do not face in, crates and sockets', () => {
+  it('ignores neighbours that do not face in, and crates', () => {
     const s = foundry();
     put(s, 'conduit', 4, 5, 'up');
     put<CrateState>(s, 'crate', 6, 5);

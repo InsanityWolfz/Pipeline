@@ -22,7 +22,6 @@ import {
   CONDUIT_CORNERS,
   CRATE_SPRITE,
   STAGER_SPRITE,
-  SOCKET_SPRITES,
   TUTORIAL_SPRITES,
   PYLON_SPRITES,
   FIXTURE_SPRITES,
@@ -153,8 +152,6 @@ describe('assets', () => {
       ...Object.values(HOPPER_SPRITES),
       ...Object.values(LOGISTICS_ICONS),
       CRATE_SPRITE,
-      SOCKET_SPRITES.idle,
-      SOCKET_SPRITES.refill,
       DOORWAY_SPRITE,
       ...Object.values(FACING_ARROWS.in),
       ...Object.values(FACING_ARROWS.out),
@@ -332,9 +329,9 @@ describe('foundry pieces', () => {
 });
 
 describe('the tube link (007)', () => {
-  it('puts the tube socket on the build bar, one at a time', () => {
-    expect(BUILD_BAR).toContain('tube-socket');
-    expect(PIECES['tube-socket']).toMatchObject({ kind: 'socket', footprint: '1x1', limit: 1 });
+  it('feeds the tube through the fixed foundry intake, not a placeable socket (019)', () => {
+    expect(BUILD_BAR).not.toContain('tube-socket');
+    expect(PIECES['tube-socket']).toBeUndefined();
   });
 
   it('gives the playtest start only real items, and every recipe output as crafted', () => {

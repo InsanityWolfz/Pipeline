@@ -3,7 +3,7 @@ import { animFrames, ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
 import { DOORWAY_SPRITE } from '../data/foundryAssets';
 import { PROPS, type PropDef, type PropPlacement } from '../data/props';
-import { PROP_LAYOUT, WALL_SPRITES } from '../data/roomArt';
+import { PROP_LAYOUT, ROOM_TOP_MARGIN, WALL_SPRITES } from '../data/roomArt';
 import { TILE, type Room } from '../data/rooms';
 import { registerAnim } from './anims';
 import { floorFrame, wallPieces } from './roomTiles';
@@ -31,6 +31,11 @@ export class RoomView {
       this.objects.push(image);
       return image;
     };
+    // More wall above the top row, behind everything (019).
+    const width = room.rows[0]?.length ?? 0;
+    for (let y = -TILE_SIZE; y > -ROOM_TOP_MARGIN - TILE_SIZE; y -= TILE_SIZE) {
+      for (let tx = 0; tx < width; tx++) add(tx * TILE_SIZE, y, WALL_SPRITES.top).setOrigin(0).setDepth(DEPTHS.floor);
+    }
     const blockProps = new Set((room.props ?? []).filter((p) => PROPS[p.propId].layer === 'block').map((p) => `${p.tx},${p.ty}`));
     for (const p of room.props ?? []) this.prop(p);
     for (const [ty, row] of room.rows.entries()) {

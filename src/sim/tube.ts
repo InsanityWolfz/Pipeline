@@ -9,7 +9,7 @@ import type { Command } from './input';
 import { count, take } from './inventory';
 import { takeFromReservoir } from './link';
 import { isRolling } from './movement';
-import { rotate, socketStreams } from './spread';
+import { intakeStreams, rotate } from './spread';
 import type { SimState } from './state';
 
 // The tube: picking the slot's ammo and firing it. Carried rounds fire straight
@@ -121,7 +121,7 @@ function fire(state: SimState, cmd: Command): void {
   }
   tube.fromReservoir = source === 'reservoir';
   // A reservoir shot fires one projectile per stream, each costing a round; carried rounds never spread.
-  const streams = tube.fromReservoir ? socketStreams(state.foundry) : [];
+  const streams = tube.fromReservoir ? intakeStreams(state.foundry) : [];
   const angles = streams.length > 0 ? streams : [0];
   let fired = 0;
   for (const angle of angles) {
