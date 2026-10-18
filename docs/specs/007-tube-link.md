@@ -1,5 +1,5 @@
 # 007: Tube link
-status: draft
+status: approved
 
 ## Goal
 The first time the player walks into the foundry, the tube attunes and links to it. The player can then build a tube socket at the end of a line. Ammo the line pushes into the socket fills the tube's reservoir, and once the player's carried ammo of that type runs out, shots drain the reservoir. The hotbar glows cyan when it's firing foundry ammo. Hand-loading is gone: the tube fires carried ammo straight from the inventory.
