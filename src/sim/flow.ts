@@ -53,11 +53,13 @@ function advance(p: PieceState): void {
 
 /**
  * Hands one item to the piece covering `to`, coming from the tile `from`. Pieces
- * never take items from their front side. Returns whether it was taken.
+ * other than crates never take items from their front side. Returns whether it was taken.
  */
 function offer(grid: ReadonlyMap<string, PieceState>, to: Tile, from: Tile, item: string): boolean {
   const target = grid.get(key(to));
-  if (!target || frontSide(target).some((t) => sameTile(t, from))) return false;
+  if (!target) return false;
+  // A crate has no output, so it takes items from every side.
+  if (target.kind !== 'crate' && frontSide(target).some((t) => sameTile(t, from))) return false;
   if (target.kind === 'conduit') {
     if (target.item) return false;
     target.item = item;

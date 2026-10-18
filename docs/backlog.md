@@ -17,3 +17,4 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 010 | Armor: unidentified drops, identification at the foundry, equip, heavy versus light | idea |
 | 011 | Death: return to the foundry and lose the carried haul | idea |
 | 012 | Tutorial flow: the prototype's player flow end to end, plus a final art-spec pass | idea |
+| 013 | Conduit corners: a conduit placed between two neighbours joins them as an L (auto-facing rules, corner sprites); from the 006 playtest | idea |

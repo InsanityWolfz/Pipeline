@@ -306,3 +306,20 @@ describe('3x1 input sides', () => {
     expect(cutter.output).toBe(2);
   });
 });
+
+describe('crate sides', () => {
+  it('take items from every side, its facing aside', () => {
+    const s = foundry();
+    const crate = put<CrateState>(s, 'crate', 6, 6, 'right');
+    // One conduit pointing in from each side, including the side the crate faces.
+    const feeds = [
+      put<ConduitState>(s, 'conduit', 5, 6, 'right'),
+      put<ConduitState>(s, 'conduit', 7, 6, 'left'),
+      put<ConduitState>(s, 'conduit', 6, 5, 'down'),
+      put<ConduitState>(s, 'conduit', 6, 7, 'up'),
+    ];
+    for (const c of feeds) c.item = 'arrow';
+    run(s, CONDUIT_TICKS);
+    expect(crate.contents).toEqual({ arrow: 4 });
+  });
+});
