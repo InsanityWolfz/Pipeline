@@ -58,9 +58,7 @@ export const SOUNDS = {
   gateOpen: 'gate-open',
   roll: 'roll',
   ambientClearing: 'ambient-clearing',
-  ambientRuin: 'ambient-ruin',
   ambientFoundry: 'ambient-foundry',
-  ambientShrine: 'ambient-shrine',
 } as const;
 
 export type SoundKey = (typeof SOUNDS)[keyof typeof SOUNDS];
@@ -69,12 +67,6 @@ const birds = (times: readonly number[], pitch: number): SoundLayer[] =>
   times.flatMap((t, i) => [
     { wave: 'sine', from: pitch + i * 140, to: pitch + 900 + i * 90, delay: t, dur: 0.07, attack: 0.01, volume: 0.12 },
     { wave: 'sine', from: pitch + 700 + i * 60, to: pitch + 200, delay: t + 0.09, dur: 0.09, attack: 0.01, volume: 0.1 },
-  ]);
-
-const chimes = (notes: readonly [number, number][], volume: number): SoundLayer[] =>
-  notes.flatMap(([t, f]) => [
-    { wave: 'sine', from: f, to: f, delay: t, dur: 2.6, attack: 0.01, volume },
-    { wave: 'sine', from: f * 2.76, to: f * 2.76, delay: t, dur: 1.2, attack: 0.01, volume: volume * 0.35 },
   ]);
 
 export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
@@ -210,13 +202,6 @@ export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
       ...birds([0.8, 1.15, 4.6, 6.9, 7.2], 2400),
     ],
   },
-  'ambient-ruin': {
-    loop: 8,
-    layers: [
-      { wave: 'noise', from: 300, to: 300, dur: 8, attack: 0, volume: 0.1, tremolo: { rate: 0.125, depth: 0.7 } },
-      ...chimes([[2, 523], [6.5, 392]], 0.04),
-    ],
-  },
   'ambient-foundry': {
     loop: 8,
     layers: [
@@ -225,21 +210,13 @@ export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
       { wave: 'noise', from: 200, to: 200, dur: 8, attack: 0, volume: 0.05 },
     ],
   },
-  'ambient-shrine': {
-    loop: 8,
-    layers: [
-      { wave: 'sine', from: 220, to: 220, dur: 8, attack: 0, volume: 0.06, tremolo: { rate: 0.25, depth: 0.5 } },
-      ...chimes([[0.5, 659], [2.5, 880], [4.5, 784], [6.5, 988]], 0.07),
-    ],
-  },
 };
 
 /** The ambient loop for each room; rooms not listed are silent. */
 export const ROOM_AMBIENCE: Readonly<Record<string, SoundKey>> = {
-  clearing: SOUNDS.ambientClearing,
-  'ruin-hall': SOUNDS.ambientRuin,
+  // Wind and birds outside (017).
+  overworld: SOUNDS.ambientClearing,
   foundry: SOUNDS.ambientFoundry,
-  shrine: SOUNDS.ambientShrine,
 };
 
 /** Mixing: master volume to start with, how loud loops sit under effects, and the room crossfade. */

@@ -22,15 +22,22 @@ import { boot, watchErrors } from './helpers';
 test('the doorway leads to the foundry and back', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page);
-  await enterFoundry(page);
+  await enterFoundry(page, false);
   const s = await state(page);
-  expect(s.events.roomChanges).toEqual([{ from: 'ruin-hall', to: 'foundry' }]);
+  expect(s.events.roomChanges).toEqual([{ from: 'overworld', to: 'foundry' }]);
   expect({ x: s.player.x, y: s.player.y }).toEqual(centre(22, 8));
+  // The first walk in attunes the tube (019): the player is held still till it ends.
+  const held = await page.evaluate(() => {
+    const g = window.__GAME__;
+    while ((g?.getState().link.attunePulse ?? 0) > 0) g?.step(1, { moveX: 1 });
+    return g?.getState().player;
+  });
+  expect({ x: held?.x, y: held?.y }).toEqual(centre(22, 8));
   await page.evaluate(() => {
     const g = window.__GAME__;
-    for (let i = 0; i < 60 && g?.getState().room !== 'ruin-hall'; i++) g?.step(1, { moveX: 1 });
+    for (let i = 0; i < 60 && g?.getState().room !== 'overworld'; i++) g?.step(1, { moveX: 1 });
   });
-  expect((await state(page)).room).toBe('ruin-hall');
+  expect((await state(page)).room).toBe('overworld');
   expect(errors).toEqual([]);
 });
 
@@ -81,14 +88,14 @@ test('build mode places, turns, picks up and drags pieces with the mouse', async
 
 test('a ley bolt line built by hand fills its crate, and the bolts fire', async ({ page }) => {
   const errors = watchErrors(page);
-  await boot(page, '?start=hall&attuned');
+  await boot(page, '?start=field&attuned');
   await page.evaluate((vein) => {
     window.__GAME__?.step(0);
     window.__helpers?.harvest(vein, 3);
     window.__GAME__?.craft('ley-shard');
     window.__GAME__?.craft('ley-bolt');
   }, LEY_VEIN);
-  expect((await state(page)).unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'tube-socket', 'gravity-stager', 'grinder', 'focuser']);
+  expect((await state(page)).unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'gravity-stager', 'grinder', 'focuser']);
   await enterFoundry(page);
   await standStill(page);
   await toggleBuild(page);
@@ -110,20 +117,23 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
   // E on the empty hopper opens the picker; clicking ley crystal fills it.
   const below = centre(8, 7);
   await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [below.x, below.y] as const);
+  // walkTo stops a step short of the hopper's reach: one more step up closes it.
+  await step(page, 1, { moveY: -1 });
   const rows = pickerRows(pickerEntries({ item: null, count: 0 }, (await state(page)).inventory));
   const crystal = rows.find((r) => r.itemId === 'ley-crystal');
   if (!crystal) throw new Error('no ley crystal row');
   const p = await screenPoint(page, crystal.x + 40, crystal.y + crystal.h / 2);
   // Esc closes the picker: a click where its row was then does nothing.
+  const picker = () => page.evaluate(() => window.__GAME__?.ui().pickerOpen);
   await page.keyboard.press('e');
-  await page.waitForTimeout(100);
+  await expect.poll(picker).toBe(true);
   await page.keyboard.press('Escape');
-  await page.waitForTimeout(100);
+  await expect.poll(picker).toBe(false);
   await page.mouse.click(p.x, p.y);
   await page.waitForTimeout(50);
   expect(pieceAt(await step(page, 1), 8, 6)).toMatchObject({ kind: 'hopper', item: null });
   await page.keyboard.press('e');
-  await page.waitForTimeout(100);
+  await expect.poll(picker).toBe(true);
   await page.mouse.click(p.x, p.y);
   await page.waitForTimeout(50);
   const filled = await step(page, 1);
@@ -153,7 +163,8 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
   if (crate?.kind !== 'crate') throw new Error('no crate');
   expect(crate.contents['ley-bolt']).toBeGreaterThanOrEqual(4);
 
-  const beside = centre(12, 7);
+  // Just below the crate, well in reach (USE_REACH).
+  const beside = { x: centre(12, 7).x, y: centre(12, 7).y - 8 };
   await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [beside.x, beside.y] as const);
   const taken = await step(page, 1, { interact: true });
   expect(taken.inventory['ley-bolt']).toBeGreaterThanOrEqual(5);

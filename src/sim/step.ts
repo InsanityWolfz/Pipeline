@@ -1,10 +1,8 @@
-import { FOUNDRY_ROOM } from '../data/rooms';
 import { equip, identifyAll, walkScale } from './armor';
 import { stepArrows } from './arrows';
 import { stepBombs } from './bombs';
 import { maskCommand, stepBuild } from './build';
 import { stepClaims, stepPorts } from './claims';
-import { fixtureRects, tileRect } from './fixtures';
 import { stepBurns } from './burn';
 import { arrowHits, removeDead } from './combat';
 import { stepDoorways } from './doorways';
@@ -19,25 +17,22 @@ import { checkKo } from './health';
 import { stepEnemies } from './enemyAi';
 import { NO_COMMAND, type Command } from './input';
 import { stepPlayer } from './movement';
-import { nodeRects, stepNodes } from './nodes';
+import { stepNodes } from './nodes';
 import { stepOrbs } from './orbs';
-import { solidRects } from './pieces';
 import { roomById, type SimState } from './state';
-import { stepTube } from './tube';
+import { firingWalkScale, stepTube } from './tube';
 import { stepObjectives } from './objectives';
-import { stepGates, stepTubeStone, tutorialRects } from './tutorial';
+import { stepGates, stepTubeStone } from './tutorial';
+import { roomBodies } from './bodies';
+import { stepPopulation } from './population';
 
-/** Each room's tiles and solid things (nodes, pylons, and solid pieces and fixtures in the foundry), built once per tick on first use. */
+/** Each room's bodies, built once per tick on first use. */
 function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
   const cache = new Map<string, RoomBodies>();
   return (roomId) => {
     let bodies = cache.get(roomId);
     if (!bodies) {
-      const room = roomById(roomId);
-      const pieces = roomId === FOUNDRY_ROOM ? [...solidRects(state.foundry), ...fixtureRects(state.fixtures)] : [];
-      const pylon = room.pylon ? [tileRect(room.pylon)] : [];
-      const tutorial = tutorialRects(state, roomId);
-      bodies = { room, obstacles: [...nodeRects(state.nodes, roomId), ...pieces, ...pylon, ...tutorial] };
+      bodies = roomBodies(state, roomId);
       cache.set(roomId, bodies);
     }
     return bodies;
@@ -48,14 +43,16 @@ function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
 export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   clearEvents(state.events);
   state.tick += 1;
-  // A dying player takes no input but keeps their aim.
-  const cmd = state.player.dying > 0 ? { ...NO_COMMAND, aimX: state.player.aimX, aimY: state.player.aimY } : maskCommand(state, input);
+  // A dying player, or one held still while the tube attunes (019), takes no input but keeps their aim.
+  const held = state.player.dying > 0 || state.link.attunePulse > 0;
+  const cmd = held ? { ...NO_COMMAND, aimX: state.player.aimX, aimY: state.player.aimY } : maskCommand(state, input);
   const bodies = bodiesOf(state);
   const here = bodies(state.roomId);
-  stepPlayer(state.player, here.room, cmd, here.obstacles, walkScale(state));
+  stepPlayer(state.player, here.room, cmd, here.obstacles, walkScale(state) * firingWalkScale(state));
   stepDoorways(state);
   stepLink(state);
   // Enemies act after the player moves, so a swipe lands on where the player stands now.
+  stepPopulation(state);
   stepEnemies(state, bodies);
   stepNodes(state.nodes);
   // Before the tube, so fire this tick cancels a harvest in progress.
@@ -73,10 +70,8 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepTube(state, cmd);
   stepBuild(state, cmd);
   stepFoundryUse(state, cmd);
-  stepFoundry(state.foundry, state.link.reservoir, state.events.refills);
-  stepPorts(state, (to, from, item) =>
-    offerFromOutside(state.foundry, state.link.reservoir, state.events.refills, to, from, item),
-  );
+  stepFoundry(state.foundry, state.link.reservoir, state.events.refills, state.link.attuned);
+  stepPorts(state, (to, from, item) => offerFromOutside(state.foundry, to, from, item));
   stepPickups(state);
   stepGates(state);
   stepObjectives(state);

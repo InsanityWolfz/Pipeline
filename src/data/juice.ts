@@ -21,9 +21,9 @@ export const DAMAGE_NUMBERS = {
   lifeMs: 700,
   scale: 2,
   pop: 3,
-  enemy: 'white',
-  player: 'ember-light',
-  outline: 'outline',
+  enemy: 'snow',
+  player: 'cinder-light',
+  outline: 'ink',
   /** Start this far above the hit point, px: enemies, and the player. */
   enemyAbove: 24,
   playerAbove: 30,
@@ -50,20 +50,36 @@ export interface ParticleBurst {
   lift?: number;
 }
 
+// Daylight colours (016).
 export const PARTICLES = {
-  hitPhysical: { colors: ['white', 'mist', 'gold'], count: 14, speed: [60, 150], gravity: 220, lifeMs: [220, 380], size: 2, lift: 12 },
-  hitFire: { colors: ['ember-light', 'ember', 'gold'], count: 16, speed: [50, 140], gravity: -60, lifeMs: [260, 460], size: 2, lift: 12 },
-  hitPlayer: { colors: ['ember', 'ember-dark', 'white'], count: 12, speed: [40, 120], gravity: 180, lifeMs: [200, 360], size: 2, lift: 14 },
-  deathMotes: { colors: ['ley-cyan', 'ley-glow', 'ley-deep'], count: 26, speed: [10, 50], gravity: -70, lifeMs: [600, 1100], size: 2, lift: 10 },
-  embers: { colors: ['ember-light', 'ember', 'gold', 'ember-dark'], count: 44, speed: [30, 120], gravity: -45, lifeMs: [500, 1100], size: 3 },
-  footDust: { colors: ['stone-pale', 'slate-light'], count: 2, speed: [6, 18], gravity: -10, lifeMs: [200, 320], size: 1 },
-  rollDust: { colors: ['stone-pale', 'slate-light', 'mist'], count: 4, speed: [10, 35], gravity: -15, lifeMs: [250, 420], size: 2 },
-  harvestChips: { colors: ['earth-light', 'earth', 'stone-pale'], count: 8, speed: [40, 90], gravity: 260, lifeMs: [250, 420], size: 2, lift: 8 },
-  craftPuff: { colors: ['mist', 'stone-pale', 'slate-light'], count: 6, speed: [8, 24], gravity: -50, lifeMs: [400, 650], size: 2, lift: 14 },
-  refill: { colors: ['ley-cyan', 'ley-glow'], count: 5, speed: [10, 30], gravity: -60, lifeMs: [300, 500], size: 1, lift: 6 },
-  pickup: { colors: ['gold', 'ley-glow', 'white'], count: 8, speed: [20, 55], gravity: -40, lifeMs: [250, 450], size: 2, lift: 6 },
-  place: { colors: ['slate-light', 'stone-pale'], count: 6, speed: [20, 50], gravity: 60, lifeMs: [200, 320], size: 1 },
+  hitPhysical: { colors: ['snow', 'rock-pale', 'gold-trim'], count: 14, speed: [60, 150], gravity: 220, lifeMs: [220, 380], size: 2, lift: 12 },
+  hitFire: { colors: ['cinder-light', 'cinder', 'gold-trim'], count: 16, speed: [50, 140], gravity: -60, lifeMs: [260, 460], size: 2, lift: 12 },
+  hitPlayer: { colors: ['cinder', 'flame-dark', 'snow'], count: 12, speed: [40, 120], gravity: 180, lifeMs: [200, 360], size: 2, lift: 14 },
+  deathMotes: { colors: ['cyan', 'cyan-glow', 'cyan-deep'], count: 26, speed: [10, 50], gravity: -70, lifeMs: [600, 1100], size: 2, lift: 10 },
+  embers: { colors: ['cinder-light', 'cinder', 'gold-trim', 'flame-dark'], count: 44, speed: [30, 120], gravity: -45, lifeMs: [500, 1100], size: 3 },
+  footDust: { colors: ['dirt-light', 'dirt'], count: 2, speed: [6, 18], gravity: -10, lifeMs: [200, 320], size: 1 },
+  rollDust: { colors: ['dirt-light', 'dirt', 'rock-pale'], count: 4, speed: [10, 35], gravity: -15, lifeMs: [250, 420], size: 2 },
+  // Each node type reacts as it's worked (018): leaves off a tree, chips off a boulder, cut stalks, ley sparks.
+  harvestLeaves: { colors: ['leaf-light', 'leaf-pale', 'sun'], count: 12, speed: [25, 70], gravity: 70, lifeMs: [600, 1000], size: 3, lift: 40 },
+  harvestChips: { colors: ['rock-pale', 'snow', 'rock-light'], count: 10, speed: [50, 110], gravity: 260, lifeMs: [300, 480], size: 3, lift: 14 },
+  harvestStalks: { colors: ['leaf-light', 'straw-light', 'straw'], count: 8, speed: [20, 55], gravity: 140, lifeMs: [500, 800], size: 3, lift: 22 },
+  harvestSparks: { colors: ['cyan-glow', 'cyan', 'snow'], count: 14, speed: [50, 130], gravity: 120, lifeMs: [250, 450], size: 2, lift: 14 },
+  craftPuff: { colors: ['rock-pale', 'dirt-light', 'dirt'], count: 6, speed: [8, 24], gravity: -50, lifeMs: [400, 650], size: 2, lift: 14 },
+  refill: { colors: ['cyan', 'cyan-glow'], count: 5, speed: [10, 30], gravity: -60, lifeMs: [300, 500], size: 1, lift: 6 },
+  pickup: { colors: ['gold-trim', 'cyan-glow', 'snow'], count: 8, speed: [20, 55], gravity: -40, lifeMs: [250, 450], size: 2, lift: 6 },
+  place: { colors: ['dirt', 'dirt-light'], count: 6, speed: [20, 50], gravity: 60, lifeMs: [200, 320], size: 1 },
 } as const satisfies Record<string, ParticleBurst>;
+
+/** The burst each node type gives off while worked and when a harvest lands (018). */
+export const HARVEST_BURSTS: Readonly<Record<string, keyof typeof PARTICLES>> = {
+  tree: 'harvestLeaves',
+  rubble: 'harvestChips',
+  reeds: 'harvestStalks',
+  'ley-vein': 'harvestSparks',
+};
+
+/** While a node is worked: a small burst this often, ms; a tree shakes this far either way, px, this many times a second. */
+export const HARVEST_WORK = { burstMs: 220, shakeNodeId: 'tree', shakePx: 1.5, shakeHz: 9 } as const;
 
 /** Footstep dust every this many ms of walking, roll dust every this many ms of rolling; walking is moving faster than `minSpeed` px/tick. */
 export const DUST = { walkMs: 260, rollMs: 50, minSpeed: 0.2 } as const;
@@ -71,16 +87,13 @@ export const DUST = { walkMs: 260, rollMs: 50, minSpeed: 0.2 } as const;
 /** Squash and stretch: the drop-in on placed pieces. The squash settles `settle` × `ms`. */
 export const SQUASH = { dropPx: 6, ms: 180, squash: 0.18, settle: 1.5 } as const;
 
-/** Ambient life: ley motes per room, fireflies in the clearing, and how they drift and flicker. */
+/** Ambient life: ley motes per room, and how they drift and flicker. */
 export const AMBIENT = {
   motes: 18,
   moteSpeed: [4, 10] as const,
-  moteColors: ['ley-cyan', 'ley-glow'] as const,
-  fireflies: 10,
-  fireflyColor: 'gold',
-  /** Sway speed (radians/s) and size (px/s): motes, and fireflies. */
+  moteColors: ['cyan', 'cyan-glow'] as const,
+  /** Sway speed (radians/s) and size (px/s). */
   moteSway: { rate: 0.8, x: 3, y: 2, flicker: 1.3, minAlpha: 0.25, alphaRange: 0.5 },
-  fireflySway: { rate: 2.2, x: 8, y: 6, flicker: 3 },
   glowBreatheMs: 2200,
   glowAlpha: [0.55, 0.9] as const,
   /** Motes sway up and down at this fraction of their side-to-side rate. */
@@ -92,22 +105,27 @@ export const AMBIENT = {
 /** The glow texture: its radius px, the alpha steps it falls off in (so it stays crisp), and its peak alpha. */
 export const GLOW_TEXTURE = { radius: 32, bands: 5, alpha: 0.6 } as const;
 
-/** Ley light around things that aren't props: palette colour and radius, px. A refilling socket's glow swells by `pulse`. */
+/** Ley light around things that aren't props: palette colour and radius, px. The intake's glow (019) swells by `pulse` for `ms` as an item goes in. */
 export const GLOWS = {
-  crystal: { color: 'ley-cyan', radius: 30 },
-  vein: { color: 'ley-cyan', radius: 22 },
-  pylon: { color: 'ley-glow', radius: 44 },
-  conduitItem: { color: 'ley-cyan', radius: 9 },
-  tube: { color: 'ley-cyan', radius: 14 },
-  socket: { color: 'ley-glow', radius: 20, pulse: 1.4 },
+  crystal: { color: 'cyan', radius: 30 },
+  vein: { color: 'cyan', radius: 22 },
+  pylon: { color: 'cyan-glow', radius: 44 },
+  conduitItem: { color: 'cyan', radius: 9 },
+  /** Ley light pooling along every conduit and sorter (020). */
+  conduit: { color: 'cyan', radius: 13 },
+  tube: { color: 'cyan', radius: 14 },
+  intake: { color: 'cyan-glow', radius: 40, pulse: 1.4, ms: 300 },
 } as const;
+
+/** While attuning (019), the tube's glow and then the intake's grow from nothing to this times their radius as their rings light, then settle. */
+export const ATTUNE_GLOW_SWELL = 2.2;
 
 /** The dusk tint over each room (a palette id and alpha). */
 export const ROOM_MOOD: Readonly<Record<string, { tint: string; alpha: number }>> = {
-  clearing: { tint: 'violet', alpha: 0.1 },
-  'ruin-hall': { tint: 'shadow-violet', alpha: 0.14 },
-  foundry: { tint: 'ember-dark', alpha: 0.08 },
-  shrine: { tint: 'teal-deep', alpha: 0.16 },
+  // Daylight outside (017): a faint warm wash, no dusk.
+  overworld: { tint: 'sun', alpha: 0.04 },
+  // A warm forge glow over the sandstone (020).
+  foundry: { tint: 'flame-dark', alpha: 0.1 },
 };
 
 /** The vignette: edge darkness, and where the darkening starts (fraction of the corner distance). */

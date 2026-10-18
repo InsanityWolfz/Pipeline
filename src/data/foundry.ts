@@ -26,3 +26,20 @@ export const STAGER_ANGLES: readonly number[] = [-30, -15, 0, 15, 30];
 
 /** The angle a new stager starts at. */
 export const STAGER_START_ANGLE = 0;
+
+/**
+ * The foundry intake (019): the waterslide pipe built into the centre of the north wall. Lines feed its mouth, three
+ * wall tiles, each from the floor tile directly south of it, into the tube's one reservoir. `gaugeRings`: how many
+ * rings of its gauge light as the reservoir fills; a ring of light runs up the pipe for `pulseMs` after each item.
+ */
+export const INTAKE = {
+  mouth: [
+    { tx: 11, ty: 0 },
+    { tx: 12, ty: 0 },
+    { tx: 13, ty: 0 },
+  ],
+  gaugeRings: 10,
+  pulseMs: 450,
+  /** While attuning, the camera looks at this point on the pipe: px above the middle of its mouth. */
+  lookRise: 36,
+} as const;

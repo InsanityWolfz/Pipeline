@@ -11,28 +11,47 @@ const FLOW_FPS = 4;
 
 const loop = (key: string, frames: number, frameRate: number): AnimDef => ({ key, frames, frameRate, loop: true });
 
-/** Machine housings by footprint and view (`side` faces right; left is flipped): an idle frame and a working loop. */
-export const MACHINE_HOUSINGS: Readonly<Record<'1x1' | '3x1', Record<PieceView, { idle: string; working: AnimDef }>>> =
-  {
-    '1x1': {
-      down: { idle: 'machine-1x1-down', working: loop('machine-1x1-down-working', 2, WORK_FPS) },
-      up: { idle: 'machine-1x1-up', working: loop('machine-1x1-up-working', 2, WORK_FPS) },
-      side: { idle: 'machine-1x1-side', working: loop('machine-1x1-side-working', 2, WORK_FPS) },
-    },
-    '3x1': {
-      down: { idle: 'machine-3x1-down', working: loop('machine-3x1-down-working', 2, WORK_FPS) },
-      up: { idle: 'machine-3x1-up', working: loop('machine-3x1-up-working', 2, WORK_FPS) },
-      side: { idle: 'machine-3x1-side', working: loop('machine-3x1-side-working', 2, WORK_FPS) },
-    },
-  };
+/** Every machine (020), in build bar order. Listed here because this file has no runtime imports (pieces.ts would be one); a test checks it matches the machine pieces. */
+export const MACHINE_IDS = ['cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser'] as const;
+
+/** A machine's look in one view: still (idle or starved), jammed (blocked), and its working loop. */
+export interface MachineLook {
+  idle: string;
+  jammed: string;
+  working: AnimDef;
+}
+
+/** Working loops play this many frames, at this rate (020: smooth enough to watch the mechanism). */
+export const MACHINE_WORK = { frames: 4, frameRate: 8 } as const;
+
+const lookOf = (id: string, view: PieceView): MachineLook => ({
+  idle: `machine-${id}-${view}`,
+  jammed: `machine-${id}-${view}-jammed`,
+  working: loop(`machine-${id}-${view}-working`, MACHINE_WORK.frames, MACHINE_WORK.frameRate),
+});
+
+/** Each machine's looks by view (`side` faces right; left is flipped): its own mechanism working in its housing (020). */
+export const MACHINE_SPRITES: Readonly<Record<string, Record<PieceView, MachineLook>>> = Object.fromEntries(
+  MACHINE_IDS.map((id) => [id, { down: lookOf(id, 'down'), up: lookOf(id, 'up'), side: lookOf(id, 'side') }]),
+);
+
+/** A machine's look in a view. */
+export function machineLook(id: string, view: PieceView): MachineLook {
+  const look = MACHINE_SPRITES[id]?.[view];
+  if (!look) throw new Error(`No look for machine '${id}'`);
+  return look;
+}
+
+/** A blocked machine shakes this far either side, px, every `ms`, as its jammed mechanism strains. */
+export const JAM_SHAKE = { px: 0.6, ms: 90 } as const;
 
 /**
  * Where the icon on a housing's top face is centred above the sprite's bottom (the footprint's
- * bottom edge), px: the middle of its top face. The 3x1 side view has a taller top face.
+ * bottom edge), px: the middle of its top face. The 3x1 side view's long top face holds its mechanism, so the icon sits near the back.
  */
 export const ICON_RISE: Readonly<Record<'1x1' | '3x1', Record<PieceView, number>>> = {
-  '1x1': { down: 31, up: 31, side: 31 },
-  '3x1': { down: 31, up: 31, side: 63 },
+  '1x1': { down: 33, up: 33, side: 33 },
+  '3x1': { down: 33, up: 33, side: 92 },
 };
 
 /**
@@ -43,7 +62,6 @@ export const LOGISTICS_ICONS: Readonly<Record<string, string>> = {
   conduit: 'emblem-conduit',
   hopper: 'emblem-hopper',
   crate: 'emblem-crate',
-  'tube-socket': 'emblem-tube-socket',
   'gravity-stager': 'emblem-gravity-stager',
   sorter: 'emblem-sorter',
 };
@@ -66,8 +84,8 @@ export const SORTER_ANIMS: Readonly<Record<PieceView, AnimDef>> = {
   side: loop('sorter-side', 2, FLOW_FPS),
 };
 
-/** The sorter's filter icon shows at this scale in its slot, and its sort-side arrow is tinted this palette colour. */
-export const SORTER_LOOK = { slotScale: 0.5, sortArrowTint: 'gold' } as const;
+/** The sorter's filter icon shows at this scale in its slot. */
+export const SORTER_LOOK = { slotScale: 0.5 } as const;
 
 /** Conduit corners (013) by the side items come in from and the side they leave by: `${in}-${out}`. Flat on the floor like the straights. */
 export const CONDUIT_CORNERS = {
@@ -92,31 +110,33 @@ export const HOPPER_SPRITES: Readonly<Record<PieceView, string>> = {
 
 export const CRATE_SPRITE = 'crate';
 
-/** The tube socket (007): at rest, and the frame it flares to as a round goes to the tube. */
-export const SOCKET_SPRITES = { idle: 'tube-socket', refill: 'tube-socket-refill' } as const;
+/** The foundry intake's pipe (019), vector frames: dormant before the tube attunes, then lit. */
+export const INTAKE_SPRITES = { dormant: 'intake-dormant', attuned: 'intake-attuned' } as const;
 
 /** The gravity stager (008): one frame per angle, `gravity-stager/<i>` for STAGER_ANGLES[i]. */
 export const STAGER_SPRITE = { key: 'gravity-stager', frames: 5, frameRate: 1, loop: false } as const satisfies AnimDef;
 
 /**
- * Build mode draws a faint fan from the tube socket: one line per stream at its
+ * Build mode draws a faint fan from each stager facing the intake: one line at its
  * angle from straight up, so the spread's shape reads before firing. Px and palette id.
  */
-export const SPREAD_FAN = { length: 56, width: 1, color: 'ley-cyan', alpha: 0.55 } as const;
+export const SPREAD_FAN = { length: 56, width: 1, color: 'cyan', alpha: 0.55 } as const;
 
 /** A stager holding an item pulses its alpha between 1 and `alpha`, one beat every `ticksPerBeat` ticks. */
 export const STAGER_PULSE = { alpha: 0.7, ticksPerBeat: 9 } as const;
 
-/** The hover readout's icon for a socket whose reservoir is empty: the socket's own emblem. */
-export const SOCKET_EMPTY_ICON = 'emblem-tube-socket';
+/** The hover readout's icon for the intake when the reservoir is empty: the tube emblem. */
+export const INTAKE_EMPTY_ICON = 'emblem-intake';
 
 /**
  * Build-mode arrows on a piece's edges, also on the ghost: cyan pointing out of its
- * output side, gold pointing in on each side that takes items. `side` points right.
+ * output side, ember pointing in on each side that takes items, gold out of a
+ * sorter's sort side (020: its own frames, no longer a tint). `side` points right.
  */
-export const FACING_ARROWS: Readonly<Record<'in' | 'out', Record<PieceView, string>>> = {
+export const FACING_ARROWS: Readonly<Record<'in' | 'out' | 'sort', Record<PieceView, string>>> = {
   out: { down: 'facing-arrow-down', up: 'facing-arrow-up', side: 'facing-arrow-side' },
   in: { down: 'input-arrow-down', up: 'input-arrow-up', side: 'input-arrow-side' },
+  sort: { down: 'sort-arrow-down', up: 'sort-arrow-up', side: 'sort-arrow-side' },
 };
 
 /** A door in a side wall, drawn as is on the right wall and flipped on the left. */
@@ -131,8 +151,12 @@ export const STATUS_MARKERS = {
 
 /** Foundry render layout, px. */
 export const FOUNDRY_LAYOUT = {
-  /** Gap between the top of a machine's sprite and the bottom of its status marker. */
-  markerGap: 2,
+  /**
+   * A machine's status marker stands on the back of its top face (020), not a tile above it, so in a line it doesn't
+   * cover the piece in front: its bottom this far below the sprite's top, and this far right of its centre.
+   */
+  markerDrop: 9,
+  markerX: 8,
   /** A conduit item icon sits this far above its ground point, so it reads as riding the channel. */
   itemLift: 3,
   /** A hopper's or crate's item icon and count sit this far above its sprite's bottom. */
@@ -171,9 +195,6 @@ export const BENCH_FLARE_MS = 600;
 /** A Wisp's orb and its ground shadow; the orb flies this far above its ground point, px. */
 export const ORB_SPRITES = { orb: 'wisp-orb', shadow: 'wisp-orb-shadow', lift: 14 } as const;
 
-/** Floor tiles by a room's `floor` theme; rooms without one use the ruin flagstone. */
-export const FLOOR_SPRITES: Readonly<Record<string, string>> = { shrine: 'floor-shrine', clearing: 'floor-clearing' };
-
 /** Menu icons for the claimed pylon and the stash (009). */
 export const SITE_ICONS = { stash: 'emblem-stash', travel: 'emblem-travel' } as const;
 
@@ -182,16 +203,17 @@ export const TUTORIAL_SPRITES = {
   stone: 'tube-stone',
   stoneEmpty: 'tube-stone-empty',
   rubble: 'door-rubble',
-  barrier: { key: 'ley-barrier', frames: 2, frameRate: 4, loop: true },
   keyCap: 'key-cap',
   tick: 'objective-tick',
 } as const satisfies Record<string, string | AnimDef>;
 
 /** Tutorial layout, px: the objective line's top, the tick's gap left of it, a prompt's lift over its target, a gate's crumble. */
 export const TUTORIAL_LAYOUT = {
-  objectiveTop: 6,
-  /** The objective line's backing panel: padding round the text, palette ids and alpha. */
-  objectivePanel: { padX: 6, padY: 3, back: 'outline', alpha: 0.7 },
+  /** The objective line sits on the right of the screen (019), right-aligned `objectiveRight` px from the edge, below the minimap. */
+  objectiveTop: 86,
+  objectiveRight: 10,
+  /** The objective line's tablet (020): padding round the text, and its alpha. */
+  objectivePanel: { padX: 6, padY: 3, alpha: 0.85 },
   /** The line fades in over this when it moves on to the next goal, ms. */
   objectiveFadeMs: 300,
   /** The tick sits this far above the text's top, px. */
@@ -200,7 +222,8 @@ export const TUTORIAL_LAYOUT = {
   tickMs: 1200,
   /** A prompt floats this far above the top of its target's tile, px. */
   promptLift: 6,
-  keyText: { x: 4, y: 3 },
+  /** The key's letter: its capitals' top this far below the cap's top (it's centred across). */
+  keyText: { y: 2.5 },
   /** A prompt not yet usable (out of reach) shows at this alpha. */
   promptDimAlpha: 0.45,
   gateFadeMs: 500,

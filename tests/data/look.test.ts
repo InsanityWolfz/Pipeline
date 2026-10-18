@@ -1,28 +1,40 @@
-import { readFileSync } from 'node:fs';
+import { SITE_LOOK, SUPPLY_LOOK } from '../../src/data/art/ground';
+import { RESIN } from '../../src/data/art/husk';
+import { NODE_DAPPLE } from '../../src/data/art/nodes';
+import { CORE } from '../../src/data/art/warden';
+import { PORT_CYCLE } from '../../src/data/claims';
+import { ITEMS } from '../../src/data/items';
+import { NODES } from '../../src/data/nodes';
 import { describe, expect, it } from 'vitest';
 import { FLOOR_VARIANTS, WALL_SPRITES } from '../../src/data/roomArt';
-import { animFrames } from '../../src/data/assets';
+import { animFrames, ENEMY_FX, HUD_HEALTH_LAYOUT, HUD_SLOT_LAYOUT, PLAYER_HIT_FX } from '../../src/data/assets';
+import { ARMOR_TINTS, GHOST, HARVEST_BAR, MINIMAP, TABLET } from '../../src/data/hudLayout';
 import { ENEMIES } from '../../src/data/enemies';
-import { LOGISTICS_ICONS, SORTER_ANIMS } from '../../src/data/foundryAssets';
-import { AMBIENT, DAMAGE_NUMBERS, GLOWS, PARTICLES, ROOM_MOOD } from '../../src/data/juice';
-import { PALETTE } from '../../src/data/palette';
+import { LOGISTICS_ICONS, SORTER_ANIMS, SPREAD_FAN } from '../../src/data/foundryAssets';
+import { AMBIENT, DAMAGE_NUMBERS, GLOWS, HARVEST_BURSTS, HARVEST_WORK, PARTICLES, ROOM_MOOD } from '../../src/data/juice';
+import { DAYLIGHT_PALETTE } from '../../src/data/palette';
 import { FIRE_SOUNDS, ROOM_AMBIENCE, SOUNDS, WINDUP_SOUNDS } from '../../src/data/sounds';
 import { SLOT_AMMOS } from '../../src/data/tube';
 import { PROPS, type PropDef } from '../../src/data/props';
-import { ROOMS, TILE } from '../../src/data/rooms';
+import { TILE } from '../../src/data/rooms';
+import { WORLD } from '../../src/sim/world';
+import { vectorFrames } from '../../src/render/vector/catalog';
+
+/** Rooms drawn from pixel tiles (the foundry); the overworld (017) is drawn in vector from its terrain. */
+const ROOMS = Object.fromEntries(Object.entries(WORLD).filter(([, r]) => !r.terrain));
 
 // Look and feel (014): every new frame exists, and room dressing stays out of the way.
 
-const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as { frames: Record<string, unknown> };
-const frames = Object.keys(atlas.frames);
+/** Every frame drawn (vector data, since 020 the only source). */
+const frames = vectorFrames().map((f) => f.name);
 
 describe('room art', () => {
   it('has every floor variant and wall piece in the atlas', () => {
-    for (const key of [...Object.values(FLOOR_VARIANTS).flatMap((v) => v.tiles), ...Object.values(WALL_SPRITES)]) expect(frames).toContain(key);
+    for (const key of [...FLOOR_VARIANTS.tiles, ...Object.values(WALL_SPRITES)]) expect(frames).toContain(key);
   });
 
   it('has variants for every room floor theme', () => {
-    for (const room of Object.values(ROOMS)) expect(new Set(FLOOR_VARIANTS[room.floor ?? 'ruin']?.tiles).size).toBeGreaterThanOrEqual(4);
+    expect(new Set(FLOOR_VARIANTS.tiles).size).toBeGreaterThanOrEqual(4);
   });
 });
 
@@ -66,7 +78,7 @@ describe('props', () => {
 });
 
 describe('feel and sound references', () => {
-  const known = new Set(PALETTE.map((c) => c.id));
+  const known = new Set(DAYLIGHT_PALETTE.map((c) => c.id));
 
   it('use only palette colours', () => {
     const ids = [
@@ -77,18 +89,58 @@ describe('feel and sound references', () => {
       DAMAGE_NUMBERS.player,
       DAMAGE_NUMBERS.outline,
       ...AMBIENT.moteColors,
-      AMBIENT.fireflyColor,
+      SITE_LOOK.dome.color,
+      SITE_LOOK.safe.color,
+      SITE_LOOK.safe.ringColor,
+      SUPPLY_LOOK.tendrilColor,
+      SUPPLY_LOOK.halo,
+      ...Object.values(SUPPLY_LOOK.moteColors),
+      NODE_DAPPLE.color,
+      RESIN.glint.color,
+      RESIN.drop.color,
+      CORE.haloColor,
       ...Object.values(PROPS).flatMap((p) => {
         const def: PropDef = p;
         return def.glow ? [def.glow.color] : [];
       }),
+      // HUD and render layout colours (020: the pixel palette is gone, so each must be a daylight id).
+      TABLET.fill,
+      TABLET.edge,
+      TABLET.bevel,
+      TABLET.base,
+      TABLET.brass,
+      GHOST.okTint,
+      GHOST.badTint,
+      HARVEST_BAR.color,
+      HARVEST_BAR.back,
+      ...Object.values(MINIMAP.terrain),
+      ...Object.values(MINIMAP.markers).map((m) => m.color),
+      ...Object.values(ARMOR_TINTS),
+      HUD_SLOT_LAYOUT.dryFireTint,
+      HUD_HEALTH_LAYOUT.fillColor,
+      ENEMY_FX.flashColor,
+      ENEMY_FX.telegraphColor,
+      ENEMY_FX.castColor,
+      ENEMY_FX.healthBarColor,
+      ENEMY_FX.healthBarBack,
+      PLAYER_HIT_FX.flashColor,
+      SPREAD_FAN.color,
     ];
     for (const id of ids) expect(known.has(id), id).toBe(true);
   });
 
+  it('key node reactions by real node types and enemies, and give every raw the shrine sends a mote colour (018)', () => {
+    expect(Object.keys(HARVEST_BURSTS).sort()).toEqual(Object.keys(NODES).sort());
+    for (const burst of Object.values(HARVEST_BURSTS)) expect(PARTICLES[burst]).toBeDefined();
+    for (const id of [NODE_DAPPLE.nodeId, HARVEST_WORK.shakeNodeId]) expect(NODES[id], id).toBeDefined();
+    for (const id of [RESIN.enemyId, CORE.enemyId]) expect(ENEMIES[id], id).toBeDefined();
+    for (const id of Object.keys(SUPPLY_LOOK.moteColors)) expect(ITEMS[id], id).toBeDefined();
+    for (const id of PORT_CYCLE) expect(SUPPLY_LOOK.moteColors[id], id).toBeDefined();
+  });
+
   it('key moods and ambience by real rooms, fire sounds by real ammo, and wind-ups by real enemy kinds', () => {
-    for (const roomId of [...Object.keys(ROOM_MOOD), ...Object.keys(ROOM_AMBIENCE)]) expect(ROOMS[roomId], roomId).toBeDefined();
-    for (const room of Object.keys(ROOMS)) expect(ROOM_AMBIENCE[room], room).toBeDefined();
+    for (const roomId of [...Object.keys(ROOM_MOOD), ...Object.keys(ROOM_AMBIENCE)]) expect(WORLD[roomId], roomId).toBeDefined();
+    for (const room of Object.keys(WORLD)) expect(ROOM_AMBIENCE[room], room).toBeDefined();
     for (const ammoId of SLOT_AMMOS) expect(FIRE_SOUNDS[ammoId], ammoId).toBeDefined();
     const kinds = new Set(Object.values(ENEMIES).map((e) => e.kind));
     for (const kind of kinds) expect(WINDUP_SOUNDS[kind], kind).toBeDefined();

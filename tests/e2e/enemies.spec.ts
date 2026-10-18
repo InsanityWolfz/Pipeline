@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import type {} from '../../src/render/testHook';
 
-// The ruin hall's Husk pack sits up and to the right of the spawn, off screen.
+// The ruin field's Husk pack (017: group `field`) sits up and to the right of the field start, off screen.
 // Each test drives the game tick by tick through window.__GAME__ inside the page.
 
 function watchErrors(page: Page): string[] {
@@ -14,19 +14,21 @@ function watchErrors(page: Page): string[] {
 }
 
 async function boot(page: Page): Promise<void> {
-  await page.goto('/?start=hall');
-  await page.waitForFunction(() => window.__GAME__ !== undefined);
+  await page.goto('/?start=field');
+  await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
   await page.evaluate(() => window.__GAME__?.step(0));
 }
 
-/** Walks toward the pack until a Husk aggros. Returns the ticks taken. */
+/** Walks toward the pack until a Husk aggros: east of the mound, then north up the open side of the ruin field (017). Returns the ticks taken. */
 function approachPack(page: Page) {
   return page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
     for (let t = 1; t <= 600; t++) {
-      const s = g.step(1, { moveX: 1, moveY: -1 });
-      if (s.enemies.filter((e) => e.room === s.room).some((e) => e.mode === 'chase')) return t;
+      // Up to row 19, beside the mound: the nearest Husk then has a clear line to the player.
+      const p = g.getState().player;
+      const s = g.step(1, p.x < 44.5 * 32 ? { moveX: 1 } : p.y > 19.5 * 32 ? { moveY: -1 } : {});
+      if (s.player.y <= 19.5 * 32 + 2 && s.enemies.filter((e) => e.group === 'field').some((e) => e.mode === 'chase')) return t;
     }
     return -1;
   });
@@ -36,7 +38,7 @@ test('Husks aggro when the player comes near', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page);
   const start = await page.evaluate(() => window.__GAME__?.getState());
-  expect(start?.enemies.filter((e) => e.room === start?.room).map((e) => e.mode)).toEqual(['idle', 'idle', 'idle']);
+  expect(start?.enemies.filter((e) => e.group === 'field').map((e) => e.mode)).toEqual(['idle', 'idle', 'idle']);
   expect(start?.player.health).toBe(100);
   expect(await approachPack(page)).toBeGreaterThan(0);
   expect(errors).toEqual([]);
@@ -69,7 +71,7 @@ test('rolling through a wind-up avoids the swipe', async ({ page }) => {
     // Wait for a wind-up two ticks from landing, then roll.
     for (let t = 0; t < 600; t++) {
       const s = g.step(1);
-      if (s.enemies.filter((e) => e.room === s.room).some((e) => e.mode === 'windup' && e.modeTicks === 35)) break;
+      if (s.enemies.filter((e) => e.group === 'field').some((e) => e.mode === 'windup' && e.modeTicks === 35)) break;
     }
     g.step(1, { dodge: true, moveY: 1 });
     const after = g.step(3);
@@ -90,7 +92,7 @@ test('shooting a Husk dead drops items the player can pick up', async ({ page })
     // Shoot the nearest Husk until one dies.
     for (let t = 0; t < 1200 && s.groundItems.length === 0; t++) {
       const p = s.player;
-      const target = [...s.enemies.filter((e) => e.room === s.room)].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+      const target = [...s.enemies.filter((e) => e.group === 'field')].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
       s = g.step(1, {
         fire: target !== undefined,
         aimX: target?.x ?? p.x,
@@ -106,7 +108,7 @@ test('shooting a Husk dead drops items the player can pick up', async ({ page })
       const dy = item.y - s.player.y;
       s = g.step(1, { moveX: Math.abs(dx) < 2 ? 0 : dx > 0 ? 1 : -1, moveY: Math.abs(dy) < 2 ? 0 : dy > 0 ? 1 : -1 });
     }
-    return { dropped, left: s.groundItems.length, resin: s.inventory['husk-resin'] ?? 0, enemies: s.enemies.filter((e) => e.room === s.room).length };
+    return { dropped, left: s.groundItems.length, resin: s.inventory['husk-resin'] ?? 0, enemies: s.enemies.filter((e) => e.group === 'field').length };
   });
   expect(result.dropped).toBeGreaterThan(0);
   expect(result.left).toBe(0);
@@ -123,27 +125,30 @@ test('Husks walk home and heal once the player runs away', async ({ page }) => {
     if (!g) throw new Error('no game');
     // Wing one Husk so there is something to heal, then run back past the spawn.
     let s = g.step(30);
-    const target = s.enemies.filter((e) => e.room === s.room)[0];
+    // The nearest chaser, so the shot isn't blocked by the mound or a wall.
+    const p0 = s.player;
+    const target = s.enemies.filter((e) => e.group === 'field' && e.mode === 'chase').sort((a, b) => Math.hypot(a.x - p0.x, a.y - p0.y) - Math.hypot(b.x - p0.x, b.y - p0.y))[0];
     if (!target) throw new Error('no Husk');
-    for (let t = 0; t < 120 && s.enemies.filter((e) => e.room === s.room).every((e) => e.health === 40); t++) {
-      s = g.step(1, { fire: true, aimX: target.x, aimY: target.y });
+    for (let t = 0; t < 120 && s.enemies.filter((e) => e.group === 'field').every((e) => e.health === 40); t++) {
+      const now = s.enemies.find((e) => e.id === target.id) ?? target;
+      s = g.step(1, { fire: true, aimX: now.x, aimY: now.y });
     }
-    const hurt = s.enemies.filter((e) => e.room === s.room).some((e) => e.health < 40);
-    for (let t = 0; t < 2400 && !s.enemies.filter((e) => e.room === s.room).every((e) => e.mode === 'idle'); t++) {
+    const hurt = s.enemies.filter((e) => e.group === 'field').some((e) => e.health < 40);
+    for (let t = 0; t < 2400 && !s.enemies.filter((e) => e.group === 'field').every((e) => e.mode === 'idle'); t++) {
       s = g.step(1, { moveX: -1, moveY: 1, dodge: t % 60 === 0 });
     }
     return {
       hurt,
-      modes: s.enemies.filter((e) => e.room === s.room).map((e) => e.mode),
-      healths: s.enemies.filter((e) => e.room === s.room).map((e) => e.health),
-      home: s.enemies.filter((e) => e.room === s.room).every((e) => Math.hypot(e.x - e.home.x, e.y - e.home.y) <= 4),
+      modes: s.enemies.filter((e) => e.group === 'field').map((e) => e.mode),
+      healths: s.enemies.filter((e) => e.group === 'field').map((e) => e.health),
+      home: s.enemies.filter((e) => e.group === 'field').every((e) => Math.hypot(e.x - e.home.x, e.y - e.home.y) <= 4),
     };
   });
   expect(result).toEqual({ hurt: true, modes: ['idle', 'idle', 'idle'], healths: [40, 40, 40], home: true });
   expect(errors).toEqual([]);
 });
 
-test('a KO wakes the player in the foundry and resets the hall', async ({ page }) => {
+test('a KO wakes the player in the foundry and resets the ruin field', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page);
   await approachPack(page);
@@ -158,7 +163,7 @@ test('a KO wakes the player in the foundry and resets the hall', async ({ page }
           room: s.room,
           health: s.player.health,
           arrows: s.inventory.arrow,
-          enemies: s.enemies.filter((e) => e.room === 'ruin-hall').map((e) => [e.mode, e.health]),
+          enemies: s.enemies.filter((e) => e.group === 'field').map((e) => [e.mode, e.health]),
           ground: s.groundItems.length,
         };
       }

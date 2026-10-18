@@ -1,13 +1,10 @@
 import { type Cameras, type GameObjects, type Scene } from 'phaser';
 import {
   animFrames,
-  ATLAS_KEY,
   DEPTHS,
-  digitFrame,
   ENEMY_ANIMS,
   ENEMY_FX,
   FIRE_BURST,
-  HUD_DIGITS,
   DEPOSIT_SWIRL,
   KO_FADE_MS,
   MUZZLE_FLASH,
@@ -17,10 +14,13 @@ import {
 import { CAMERA_LERP, DOOR_FADE_MS } from '../data/config';
 import { enemyDef } from '../data/enemies';
 import { ITEMS } from '../data/items';
-import { OUTLINE_ID, hexToRgb, paletteHex } from '../data/palette';
+import { INK_ID, hexToRgb, paletteHex } from '../data/palette';
 import { DRAW_HEIGHT } from '../data/tube';
 import type { SimEvents } from '../sim/events';
 import { registerAnim } from './anims';
+import { phaserStyle } from './fonts';
+import { addVector, addVectorSprite, textureScale } from './vector/textures';
+import { UI_CAMERA } from './scale';
 
 // One-shot effects driven by sim events: corpses, pickup sparkles and popups,
 // fire bursts, muzzle flashes, the deposit swirl, and the KO fade. Nothing here feeds back into the sim.
@@ -28,11 +28,11 @@ export class EffectsView {
   private readonly scene: Scene;
   private readonly camera: Cameras.Scene2D.Camera;
   /** What the camera follows, re-followed after a KO. */
-  private readonly followed: GameObjects.Sprite;
+  private readonly followed: GameObjects.Image;
   /** Corpses still on screen; a KO clears them with the rest of the room. */
   private readonly corpses = new Set<GameObjects.Sprite>();
 
-  constructor(scene: Scene, followed: GameObjects.Sprite) {
+  constructor(scene: Scene, followed: GameObjects.Image) {
     this.scene = scene;
     this.camera = scene.cameras.main;
     this.followed = followed;
@@ -63,9 +63,7 @@ export class EffectsView {
     const death = ENEMY_ANIMS[def.anims]?.death;
     if (!death) return;
     const bottom = y + def.feetBox.h / 2;
-    const sprite = this.scene.add
-      .sprite(x, bottom, ATLAS_KEY, animFrames(death)[0])
-      .setOrigin(0.5, 1)
+    const sprite = addVectorSprite(this.scene, x, bottom, animFrames(death)[0] ?? '')
       .setDepth(bottom)
       .setFlipX(flip);
     this.corpses.add(sprite);
@@ -84,50 +82,50 @@ export class EffectsView {
 
   /** Ley light spiralling up off the player's feet as the haul is banked. */
   private swirl(player: { x: number; y: number }): void {
-    const sprite = this.scene.add.sprite(player.x, player.y, ATLAS_KEY, animFrames(DEPOSIT_SWIRL)[0]);
-    sprite.setOrigin(0.5, 1).setDepth(player.y + DRAW_HEIGHT);
+    const sprite = addVectorSprite(this.scene, player.x, player.y, animFrames(DEPOSIT_SWIRL)[0] ?? '');
+    sprite.setDepth(player.y + DRAW_HEIGHT);
     sprite.once('animationcomplete', () => sprite.destroy());
     sprite.play(DEPOSIT_SWIRL.key);
   }
 
   /** A flash at the tube's mouth, at the height shots fly, in front of the player. */
   private muzzle(x: number, y: number): void {
-    const sprite = this.scene.add.sprite(x, y - DRAW_HEIGHT, ATLAS_KEY, animFrames(MUZZLE_FLASH)[0]).setDepth(y + DRAW_HEIGHT);
+    const sprite = addVectorSprite(this.scene, x, y - DRAW_HEIGHT, animFrames(MUZZLE_FLASH)[0] ?? '').setDepth(y + DRAW_HEIGHT);
     sprite.once('animationcomplete', () => sprite.destroy());
     sprite.play(MUZZLE_FLASH.key);
   }
 
   /** The burst drawn at its real radius, in front of what stands inside it. */
   private burst(x: number, y: number, radius: number): void {
-    const sprite = this.scene.add.sprite(x, y, ATLAS_KEY, animFrames(FIRE_BURST)[0]).setDepth(y + radius);
+    const sprite = addVectorSprite(this.scene, x, y, animFrames(FIRE_BURST)[0] ?? '').setDepth(y + radius);
     sprite.setScale((radius * 2) / sprite.width);
     sprite.play(FIRE_BURST.key);
     sprite.once('animationcomplete', () => sprite.destroy());
   }
 
   private pickup(itemId: string, x: number, y: number, player: { x: number; y: number }, index: number): void {
-    const sparkle = this.scene.add.sprite(x, y, ATLAS_KEY, animFrames(PICKUP_SPARKLE)[0]).setDepth(DEPTHS.worldUi);
+    const sparkle = addVectorSprite(this.scene, x, y, animFrames(PICKUP_SPARKLE)[0] ?? '').setDepth(DEPTHS.worldUi);
     sparkle.play(PICKUP_SPARKLE.key);
     sparkle.once('animationcomplete', () => sparkle.destroy());
 
     const icon = ITEMS[itemId]?.icon;
     if (!icon) return;
-    const text = '+1';
-    const iconX = text.length * HUD_DIGITS.advance + PICKUP_POPUP.gap;
-    const glyphs = [...text].map((ch, i) =>
-      this.scene.add.image(i * HUD_DIGITS.advance, 0, ATLAS_KEY, digitFrame(ch)).setOrigin(0, 0.5),
-    );
-    const iconImage = this.scene.add.image(iconX, 0, ATLAS_KEY, icon).setOrigin(0, 0.5);
-    const parts: GameObjects.Image[] = [...glyphs, iconImage];
-    const width = iconX + iconImage.width;
+    // The label and icon rise and fade together.
     const top = Math.round(player.y - PICKUP_POPUP.startHeight - index * PICKUP_POPUP.stack);
-    const popup = this.scene.add.container(Math.round(player.x - width / 2), top, parts).setDepth(DEPTHS.worldUi);
+    const label = this.scene.add.text(0, top, '+1', phaserStyle('float', textureScale())).setOrigin(0, 0.5);
+    const iconImage = addVector(this.scene, 0, top, icon).setOrigin(0, 0.5);
+    const width = label.width + PICKUP_POPUP.gap + iconImage.displayWidth;
+    const left = Math.round(player.x - width / 2);
+    label.setX(left);
+    iconImage.setX(left + label.width + PICKUP_POPUP.gap);
+    const parts = [label, iconImage];
+    for (const p of parts) p.setDepth(DEPTHS.worldUi);
     this.scene.tweens.add({
-      targets: popup,
+      targets: parts,
       y: top - PICKUP_POPUP.rise,
       alpha: 0,
       duration: PICKUP_POPUP.durationMs,
-      onComplete: () => popup.destroy(),
+      onComplete: () => parts.forEach((p) => p.destroy()),
     });
   }
 
@@ -141,12 +139,16 @@ export class EffectsView {
       corpse.destroy();
     }
     this.camera.stopFollow();
-    const [r, g, b] = hexToRgb(paletteHex(OUTLINE_ID));
+    const [r, g, b] = hexToRgb(paletteHex(INK_ID));
+    // The HUD fades with the world (016: it draws on its own camera).
+    const ui = this.scene.cameras.getCamera(UI_CAMERA);
+    ui?.fadeOut(KO_FADE_MS, r, g, b);
     this.camera.fadeOut(KO_FADE_MS, r, g, b, (_cam: Cameras.Scene2D.Camera, progress: number) => {
       if (progress < 1) return;
       this.camera.centerOn(player.x, player.y);
       this.camera.startFollow(this.followed, true, CAMERA_LERP, CAMERA_LERP);
       this.camera.fadeIn(KO_FADE_MS, r, g, b);
+      ui?.fadeIn(KO_FADE_MS, r, g, b);
     });
   }
 }

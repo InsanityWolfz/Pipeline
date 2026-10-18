@@ -16,22 +16,15 @@ export interface PropDef {
   glow?: { color: string; radius: number };
 }
 
-const still = (key: string): AnimDef => ({ key, frames: 1, frameRate: 1, loop: true });
 const loop = (key: string, frames: number, frameRate: number): AnimDef => ({ key, frames, frameRate, loop: true });
 
-export const PROPS = {
-  column: { anim: still('prop-column'), layer: 'block' },
-  runestone: { anim: loop('prop-runestone', 2, 1.5), layer: 'block', glow: { color: 'ley-cyan', radius: 18 } },
-  tuft: { anim: loop('prop-tuft', 4, 3), layer: 'standing' },
-  mushrooms: { anim: still('prop-mushrooms'), layer: 'standing' },
-  rubble: { anim: still('prop-rubble'), layer: 'floor' },
-  'ley-crack': { anim: loop('prop-ley-crack', 2, 2), layer: 'floor', glow: { color: 'ley-cyan', radius: 22 } },
-  vines: { anim: still('prop-vines'), layer: 'wall', drop: -2 },
-  banner: { anim: loop('prop-banner', 2, 1.5), layer: 'wall', drop: -6 },
-  brazier: { anim: loop('prop-brazier', 4, 9), layer: 'wall', drop: 6, glow: { color: 'ember-light', radius: 48 } },
-} as const satisfies Record<string, PropDef>;
+/** The prop ids (017: only the foundry's dressing is left; the overworld draws its own in vector). */
+export type PropId = 'banner' | 'brazier';
 
-export type PropId = keyof typeof PROPS;
+export const PROPS: Readonly<Record<PropId, PropDef>> = {
+  banner: { anim: loop('prop-banner', 2, 1.5), layer: 'wall', drop: -6 },
+  brazier: { anim: loop('prop-brazier', 4, 9), layer: 'wall', drop: 6, glow: { color: 'cinder', radius: 64 } },
+};
 
 /** A prop in a room, by tile. */
 export interface PropPlacement {

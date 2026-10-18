@@ -36,6 +36,10 @@ export class SoundView {
     scene.events.once('shutdown', () => this.ambient?.sound.destroy());
   }
 
+  get volume(): number {
+    return this.settings.volume;
+  }
+
   get muted(): boolean {
     return this.settings.muted;
   }

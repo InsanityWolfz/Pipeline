@@ -1,7 +1,8 @@
 import type { GameObjects, Scene } from 'phaser';
 import { ammoDef } from '../data/ammo';
-import { ATLAS_KEY, BOMB_LIFT, DEPTHS } from '../data/assets';
+import { BOMB_LIFT, DEPTHS } from '../data/assets';
 import type { BombState } from '../sim/bombs';
+import { addVector } from './vector/textures';
 
 interface Drawn {
   bomb: GameObjects.Image;
@@ -37,8 +38,8 @@ export class BombView {
   private create(b: BombState): Drawn {
     const ammo = ammoDef(b.ammoId);
     const d: Drawn = {
-      bomb: this.scene.add.image(0, 0, ATLAS_KEY, ammo.sprite),
-      shadow: this.scene.add.image(0, 0, ATLAS_KEY, ammo.shadow).setDepth(DEPTHS.shadow),
+      bomb: addVector(this.scene, 0, 0, ammo.sprite),
+      shadow: addVector(this.scene, 0, 0, ammo.shadow).setDepth(DEPTHS.shadow),
     };
     this.drawn.set(b.id, d);
     return d;

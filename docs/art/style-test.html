@@ -1,0 +1,548 @@
+<title>Pipeline Style Test</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@500;700&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: one column of three stacked style panels, each a big scene plus a close-up and notes. Single dark look so the bright scenes pop. */
+:root {
+  --ink: #12151f;
+  --panel: #1b2030;
+  --line: #2c3348;
+  --fg: #e9ecf4;
+  --muted: #a3abc2;
+  --ley: #2ee6e0;
+  --gold: #f2c45a;
+  --display: "Alegreya SC", "Palatino Linotype", Georgia, serif;
+  --body: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+html, body { background: var(--ink); color: var(--fg); }
+body {
+  font-family: var(--body); font-size: 17px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+}
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 36px; }
+header { display: grid; gap: 10px; max-width: 70ch; }
+.eyebrow { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--ley); font-weight: 700; }
+h1 { font-family: var(--display); font-size: clamp(30px, 5vw, 46px); line-height: 1.05; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-size: 26px; margin: 0; line-height: 1.1; }
+p { margin: 0; }
+.lede { color: var(--muted); }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+button {
+  font: 600 15px var(--body); color: var(--fg); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 6px; padding: 8px 14px; cursor: pointer;
+}
+button[aria-pressed="true"] { border-color: var(--ley); color: var(--ley); }
+button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.hint { color: var(--muted); font-size: 15px; }
+section.style { display: grid; gap: 14px; border-top: 1px solid var(--line); padding-top: 22px; }
+.head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+.tag { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+.row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.row > * { min-width: 0; }
+canvas { display: block; width: 100%; height: auto; border-radius: 4px; background: #5cc850; touch-action: none; }
+canvas.px { image-rendering: pixelated; }
+.side { display: grid; gap: 12px; }
+figcaption { font-size: 13px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-top: 6px; }
+figure { margin: 0; }
+ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 15.5px; }
+li b { color: var(--fg); }
+.note { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; display: grid; gap: 10px; max-width: 80ch; }
+.note h2 { font-size: 22px; }
+@media (max-width: 760px) { .row { grid-template-columns: minmax(0, 1fr); } .side { grid-template-columns: minmax(0, 140px) minmax(0, 1fr); } }
+@media (max-width: 420px) { .side { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Pipeline · art direction test · round 2</div>
+    <h1>The wanderer and the tube</h1>
+    <p class="lede">Style C, clean vector. The player is a hooded wanderer of the lost civilization: a rust, gold-trimmed cloak over a pale robe, wrapped forearms and heavy boots. There is no face, only the same ley glow as the tube, burning brighter with each shot. The cloak trails and flaps harder while firing, and the brass reliquary tank on their back feeds the tube through the ringed hose.</p>
+    <div class="controls">
+      <span class="hint">Cloak:</span>
+      <button class="cloak" type="button" data-cloak="teal" aria-pressed="false">Ley teal</button>
+      <button class="cloak" type="button" data-cloak="rust" aria-pressed="true">Ember rust</button>
+      <button class="cloak" type="button" data-cloak="violet" aria-pressed="false">Dusk violet</button>
+      <button class="cloak" type="button" data-cloak="moss" aria-pressed="false">Moss</button>
+    </div>
+    <div class="controls">
+      <button id="pause" type="button" aria-pressed="false">Pause</button>
+      <button id="hold" type="button" aria-pressed="false">Hold fire</button>
+      <span class="hint">Point at the scene to aim, and press to fire. Left alone, it fires on its own.</span>
+    </div>
+  </header>
+
+  <section class="style" data-mode="vec">
+    <div class="row">
+      <canvas class="main" width="960" height="600" aria-label="Scene drawn as smooth vector art"></canvas>
+      <figure><canvas class="close" width="480" height="480" aria-label="Close-up of the player"></canvas><figcaption>Close-up</figcaption></figure>
+    </div>
+  </section>
+
+  <div class="note">
+    <h2>Questions for this round</h2>
+    <ul>
+      <li><b>Decided:</b> style C, rust cloak, glowing hood instead of a face, brass tank (can change later).</li>
+      <li><b>Open:</b> is the lean and shove per shot enough, too much, or should walking slow while firing?</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(() => {
+const W = 480, H = 300;
+const C = {
+  out:'#1e1a2e',
+  g0:'#2f8a3a', g1:'#45ad45', g2:'#5cc850', g3:'#8ee060', sun:'#d6f27a', tuft:'#33963a', shadow:'#1e4a28',
+  fl1:'#fff6d8', fl2:'#ffd23f', fl3:'#ff8fb4',
+  dirt:'#d9b26e', dirtD:'#b88d4f', dirtL:'#ecd096',
+  w0:'#1f6fc0', w1:'#3a9be8', w2:'#7fd0ff', w3:'#d4f4ff', sand:'#e3cf96',
+  r0:'#5f6880', r1:'#8e97ab', r2:'#c3cad8', r3:'#e6ebf3',
+  t0:'#5e3a22', t1:'#8a5a33', t2:'#b07a48',
+  l0:'#1f7a35', l1:'#2f9a42', l2:'#4fc24f', l3:'#9ae86a',
+  ley0:'#138f9c', ley1:'#2ee6e0', ley2:'#b8fff8',
+  skin:'#f2c29a', skinD:'#d69a72', hair:'#e8a23a', hairD:'#b8742a',
+  tun:'#e04a3c', tunD:'#a8302a', pants:'#3b5aa8', pantsD:'#2a4080', boot:'#5a3a26', bootD:'#3e2818',
+  brass:'#e0b04a', brassD:'#a8782a', brassL:'#f6dc8a', strap:'#6a4426',
+  straw:'#d9b65a', strawD:'#a57c34', strawL:'#f0d88a', ember:'#ff7a2a', emberL:'#ffd27a',
+  white:'#ffffff'
+};
+const PAL = Object.values(C).map(h => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)]);
+const OUT = PAL[0];
+
+// Seeded RNG so the grass never shimmers between frames.
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const rand = rng(7);
+const inPool = (x, y) => ((x-395)/70)**2 + ((y-80)/36)**2 < 1;
+const onPath = (x, y) => { const py = x < 260 ? 290 - (x/260)*55 + Math.sin(x/90)*4 : 238 + Math.sin((x-260)/70)*10; return Math.abs(y - py) < 18; };
+const BLOTS = [], TUFTS = [];
+for (let i = 0; i < 26; i++) BLOTS.push({ x: rand()*W, y: rand()*H, rx: 18 + rand()*30, ry: 8 + rand()*12, c: rand() < .55 ? 'g1' : 'g3' });
+for (let i = 0; i < 150; i++) { const x = rand()*W, y = rand()*H; if (inPool(x,y) || onPath(x,y)) continue; const r = rand(); TUFTS.push({ x, y, k: r < .78 ? 't' : r < .86 ? 'fl1' : r < .94 ? 'fl2' : 'fl3' }); }
+
+// ---------- simulation ----------
+const S = {
+  t: 0, shake: 0, flow: 0, paused: false, hold: false,
+  mouse: { active: false, down: false, x: 0, y: 0 },
+  p: { x: 200, y: 212, f: 1, a: 0, lean: 0, stance: 5, crouch: 0, push: 0, kick: 0, cd: 0, flashT: 0, firing: false },
+  h: { x: 400, y: 204, hp: 14, flash: 0, alive: true, deathT: 0, phase: 0 },
+  arrows: [], parts: []
+};
+const sr = rng(99);
+
+function gunToWorld(gx, gy) {
+  const P = S.p;
+  let x = gx - P.kick, y = gy;
+  let c = Math.cos(P.a), s = Math.sin(P.a);
+  [x, y] = [x*c - y*s + 4, x*s + y*c - 8];
+  c = Math.cos(P.lean); s = Math.sin(P.lean);
+  [x, y] = [x*c - y*s, x*s + y*c - 22 + P.crouch];
+  x += P.push;
+  return [P.x + x*P.f, P.y + y];
+}
+
+function step() {
+  S.t++;
+  const P = S.p, Hk = S.h;
+  let tx, ty, firing;
+  if (S.mouse.active) { tx = S.mouse.x; ty = S.mouse.y; firing = S.mouse.down; }
+  else { tx = Hk.alive ? Hk.x : 420; ty = (Hk.alive ? Hk.y : 200) - 18; firing = Hk.alive && Hk.x < 470 && (S.t % 240) < 150; }
+  if (S.hold) firing = true;
+  P.firing = firing;
+  P.f = tx < P.x ? -1 : 1;
+  P.a = Math.max(-.7, Math.min(.7, Math.atan2(ty - (P.y - 30), (tx - P.x) * P.f)));
+  const ease = (k, v) => P[k] += (v - P[k]) * .2;
+  ease('lean', firing ? -.16 : Math.sin(S.t * .05) * .02);
+  ease('stance', firing ? 8.5 : 5);
+  ease('crouch', firing ? 2.2 : 0);
+  ease('push', firing ? -2.5 : 0);
+  if (firing && --P.cd <= 0) {
+    P.cd = 6; P.kick = 3.5; P.lean -= .045; S.shake = 1.3; P.flashT = 3;
+    const [mx, my] = gunToWorld(33, 0);
+    const ang = Math.atan2(ty - my, tx - mx) + (sr() - .5) * .08;
+    S.arrows.push({ x: mx, y: my, vx: Math.cos(ang) * 7, vy: Math.sin(ang) * 7, life: 70 });
+  }
+  P.kick *= .7; S.shake *= .8; if (P.flashT > 0) P.flashT--;
+  S.flow += firing ? 1.4 : .15;
+
+  if (Hk.alive) {
+    if (Hk.x - P.x > 75) { Hk.x -= .35; Hk.phase += .12; }
+    Hk.y += (P.y - 6 - Hk.y) * .004;
+    if (Hk.flash > 0) Hk.flash--;
+  } else if (++Hk.deathT > 90) {
+    Object.assign(Hk, { x: 505, y: 185 + sr() * 35, hp: 14, alive: true, deathT: 0, flash: 0 });
+  }
+  for (const A of S.arrows) {
+    A.x += A.vx; A.y += A.vy; A.life--;
+    if (Hk.alive && Math.abs(A.x - Hk.x) < 11 && A.y > Hk.y - 40 && A.y < Hk.y - 2) {
+      A.life = 0; Hk.hp--; Hk.flash = 4; Hk.x += 2.5 * Math.sign(A.vx);
+      for (let i = 0; i < 3; i++) S.parts.push({ x: A.x, y: A.y, vx: Math.sign(A.vx) * (1 + sr()*2), vy: -1 - sr()*2, life: 22, c: sr() < .5 ? C.straw : C.strawL, g: .15 });
+      if (Hk.hp <= 0) {
+        Hk.alive = false;
+        for (let i = 0; i < 22; i++) { const a = sr() * 6.28, v = .6 + sr() * 2.2; S.parts.push({ x: Hk.x, y: Hk.y - 18, vx: Math.cos(a)*v, vy: Math.sin(a)*v - .6, life: 30 + sr()*20, c: [C.straw, C.strawD, C.strawL, C.emberL][i % 4], g: .05 }); }
+      }
+    }
+  }
+  S.arrows = S.arrows.filter(A => A.life > 0 && A.x > -20 && A.x < W + 20);
+  for (const q of S.parts) { q.x += q.vx; q.y += q.vy; q.vy += q.g; q.vx *= .96; q.life--; }
+  S.parts = S.parts.filter(q => q.life > 0);
+}
+
+// ---------- drawing helpers ----------
+function rr(c, x, y, w, h, r) { c.beginPath(); c.roundRect(x, y, w, h, r); }
+function ell(c, x, y, rx, ry) { c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); }
+function F(c, col, o) { c.fillStyle = col; c.fill(); if (o.s) { c.lineWidth = o.lw; c.strokeStyle = C.out; c.stroke(); } }
+function limb(c, pts, w, col, o) {
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  const path = () => { c.beginPath(); c.moveTo(pts[0], pts[1]); if (pts.length === 4) c.lineTo(pts[2], pts[3]); else c.bezierCurveTo(pts[2], pts[3], pts[4], pts[5], pts[6], pts[7]); };
+  if (o.s) { path(); c.strokeStyle = C.out; c.lineWidth = w + o.lw * 2; c.stroke(); }
+  path(); c.strokeStyle = col; c.lineWidth = w; c.stroke();
+}
+function blob(c, pts) {
+  c.beginPath();
+  const n = pts.length;
+  const mid = i => [(pts[i][0] + pts[(i+1)%n][0]) / 2, (pts[i][1] + pts[(i+1)%n][1]) / 2];
+  const m0 = mid(n - 1); c.moveTo(m0[0], m0[1]);
+  for (let i = 0; i < n; i++) { const m = mid(i); c.quadraticCurveTo(pts[i][0], pts[i][1], m[0], m[1]); }
+  c.closePath();
+}
+function glow(c, o, col, blur) { if (o.vec) { c.shadowColor = col; c.shadowBlur = blur * o.z; } }
+function noGlow(c) { c.shadowBlur = 0; }
+
+// ---------- ground layer: no outlines ----------
+function drawGround(c, o) {
+  c.fillStyle = C.g2; c.fillRect(0, 0, W, H);
+  for (const b of BLOTS) { ell(c, b.x, b.y, b.rx, b.ry); c.fillStyle = C[b.c]; c.fill(); }
+  // sun dapple round the tree
+  for (const [x, y, rx, ry] of [[70,150,26,9],[150,160,22,8],[118,168,30,8],[60,128,14,5]]) { ell(c, x, y, rx, ry); c.fillStyle = C.sun; c.fill(); }
+  // dirt path
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  const path = () => { c.beginPath(); c.moveTo(-20, 296); c.quadraticCurveTo(150, 222, 260, 238); c.quadraticCurveTo(380, 256, 500, 230); };
+  path(); c.strokeStyle = C.dirtD; c.lineWidth = 30; c.stroke();
+  path(); c.strokeStyle = C.dirt; c.lineWidth = 24; c.stroke();
+  for (const [x, y] of [[90,262],[180,236],[300,242],[350,248],[420,240],[140,248]]) { ell(c, x, y, 2.2, 1.4); c.fillStyle = C.dirtL; c.fill(); }
+  // pool
+  ell(c, 395, 80, 68, 33); c.fillStyle = C.sand; c.fill();
+  ell(c, 395, 82, 61, 27); c.fillStyle = C.w0; c.fill();
+  ell(c, 392, 78, 53, 21); c.fillStyle = C.w1; c.fill();
+  ell(c, 374, 70, 20, 5); c.fillStyle = C.w2; c.fill();
+  const rip = (S.t * .25) % 18;
+  c.beginPath(); c.ellipse(412, 86, 6 + rip, 2 + rip * .35, 0, 0, Math.PI * 2); c.strokeStyle = C.w3; c.lineWidth = 1.2; c.globalAlpha = 1 - rip / 18; c.stroke(); c.globalAlpha = 1;
+  // rune stone and ley line
+  const pulse = .6 + .4 * Math.sin(S.t * .06);
+  ell(c, 70, 258, 34, 13); c.fillStyle = C.r0; c.fill();
+  ell(c, 70, 254, 34, 13); c.fillStyle = C.r2; c.fill();
+  ell(c, 70, 254, 24, 9); c.strokeStyle = C.r1; c.lineWidth = 1.5; c.stroke();
+  c.beginPath(); c.moveTo(103, 256); c.lineTo(140, 266); c.lineTo(158, 284); c.lineTo(205, 304);
+  c.strokeStyle = C.ley0; c.lineWidth = 4; c.stroke();
+  glow(c, o, C.ley1, 10); c.globalAlpha = o.vec ? pulse : 1; c.strokeStyle = C.ley1; c.lineWidth = 2; c.stroke(); c.globalAlpha = 1;
+  c.beginPath(); c.moveTo(56, 254); c.lineTo(64, 249); c.lineTo(72, 256); c.lineTo(80, 249); c.lineTo(86, 254);
+  c.strokeStyle = C.ley1; c.lineWidth = 1.6; c.stroke(); noGlow(c);
+  // tufts and flowers
+  for (const t of TUFTS) {
+    if (t.k === 't') { c.beginPath(); c.moveTo(t.x - 2, t.y); c.lineTo(t.x - 3, t.y - 4); c.moveTo(t.x, t.y); c.lineTo(t.x, t.y - 5); c.moveTo(t.x + 2, t.y); c.lineTo(t.x + 3, t.y - 4); c.strokeStyle = C.tuft; c.lineWidth = 1.2; c.stroke(); }
+    else { ell(c, t.x, t.y, 1.6, 1.6); c.fillStyle = C[t.k]; c.fill(); }
+  }
+  // shadows
+  c.fillStyle = C.shadow; c.globalAlpha = .32;
+  for (const [x, y, rx, ry] of [[114,137,46,12],[430,254,26,6],[458,268,15,4],[36,180,18,5],[S.p.x,S.p.y,16,5]]) { ell(c, x, y, rx, ry); c.fill(); }
+  if (S.h.alive) { ell(c, S.h.x, S.h.y, 13, 4); c.fill(); }
+  c.globalAlpha = 1;
+}
+
+// ---------- sprites: outlined ----------
+function drawTree(c, x, y, o) {
+  c.save(); c.translate(x, y);
+  c.beginPath(); c.moveTo(-9, 1); c.quadraticCurveTo(-6, -2, -6, -30); c.lineTo(6, -30); c.quadraticCurveTo(6, -2, 10, 1); c.closePath(); F(c, C.t1, o);
+  rr(c, 1, -30, 5, 29, 2); c.fillStyle = C.t0; c.fill();
+  rr(c, -5, -28, 2, 20, 1); c.fillStyle = C.t2; c.fill();
+  const CAN = [[0,-56,28],[-23,-44,19],[23,-44,19],[-13,-70,19],[13,-70,19],[0,-80,16]];
+  if (o.s) for (const [cx, cy, r] of CAN) { ell(c, cx, cy, r + o.lw, r + o.lw); c.fillStyle = C.out; c.fill(); }
+  for (const [cx, cy, r] of CAN) { ell(c, cx, cy, r, r); c.fillStyle = C.l0; c.fill(); }
+  for (const [cx, cy, r] of CAN) { ell(c, cx - 2, cy - 3, r - 3, r - 3); c.fillStyle = C.l1; c.fill(); }
+  for (const [cx, cy, r] of CAN) { ell(c, cx - 5, cy - 7, r * .5, r * .45); c.fillStyle = C.l2; c.fill(); }
+  for (const [cx, cy, r] of CAN) { ell(c, cx - 7, cy - 10, r * .18, r * .15); c.fillStyle = C.l3; c.fill(); }
+  c.restore();
+}
+function drawRock(c, x, y, k, o) {
+  c.save(); c.translate(x, y); c.scale(k, k);
+  blob(c, [[-24,0],[-26,-11],[-15,-23],[2,-27],[17,-21],[26,-9],[22,0]]); F(c, C.r1, o);
+  blob(c, [[22,0],[26,-9],[18,-13],[9,-5],[4,0]]); c.fillStyle = C.r0; c.fill();
+  blob(c, [[-18,-12],[-11,-21],[3,-24],[14,-19],[10,-12],[-6,-9]]); c.fillStyle = C.r2; c.fill();
+  blob(c, [[-12,-16],[-6,-20],[1,-20],[-4,-16]]); c.fillStyle = C.r3; c.fill();
+  c.beginPath(); c.moveTo(-2, -9); c.lineTo(2, -4); c.lineTo(0, 0); c.strokeStyle = C.r0; c.lineWidth = 1.4 / k; c.stroke();
+  c.restore();
+}
+function drawReeds(c, o) {
+  for (let i = 0; i < 7; i++) {
+    const bx = 318 + i * 6, by = 100 + (i % 2) * 5, h = 24 + (i * 7) % 10, sw = Math.sin(S.t * .03 + i) * 2;
+    limb(c, [bx, by, bx + sw, by - h], 2, C.l0, o);
+    limb(c, [bx, by - 2, bx - 4 + sw * .5, by - h * .55], 1.6, C.l2, o);
+    ell(c, bx + sw, by - h + 2, 2.4, 5.5); F(c, C.t1, o);
+  }
+}
+const CLOAKS = {
+  teal:   { c: '#2f6f7a', d: '#1d4750', l: '#56a3ab' },
+  rust:   { c: '#b5532f', d: '#7a321d', l: '#dc7d4f' },
+  violet: { c: '#5a4a8a', d: '#3a2f60', l: '#8571b8' },
+  moss:   { c: '#4f7a3a', d: '#334f25', l: '#77a656' }
+};
+let cloak = CLOAKS.rust;
+const GOLD = '#f2c45a', GOLDD = '#b8862e', BEARD = '#e4dfd2', BEARDD = '#b9b2a2', ROBE = '#e9dcc0';
+function drawPlayer(c, o) {
+  const P = S.p, K = cloak;
+  c.save(); c.translate(P.x, P.y); c.scale(P.f, 1); c.translate(P.push, 0);
+  const st = P.stance, hipY = -22 + P.crouch;
+  const flap = Math.sin(S.t * .09) * (P.firing ? 2.4 : 1);
+  // legs: only the shins and boots show below the cloak
+  limb(c, [-2, hipY + 12, -st, -3], 6.5, C.bootD, o);
+  rr(c, -st - 4, -5, 9, 5, 2.5); F(c, C.bootD, o);
+  limb(c, [2, hipY + 12, st + 1, -3], 6.5, C.boot, o);
+  rr(c, st - 2, -5, 9.5, 5.2, 2.5); F(c, C.boot, o);
+  // upper body leans from the hip
+  c.save(); c.translate(0, hipY); c.rotate(P.lean);
+  const gc = Math.cos(P.a), gs = Math.sin(P.a);
+  const gun = (gx, gy) => { const x = gx - P.kick; return [x * gc - gy * gs + 4, x * gs + gy * gc - 8]; };
+  // trailing back of the cloak
+  c.beginPath(); c.moveTo(-5, -24); c.quadraticCurveTo(-20 + flap, -6, -21 + flap * 1.5, 14);
+  c.quadraticCurveTo(-15, 17, -10, 14); c.lineTo(-4, 4); c.closePath(); F(c, K.d, o);
+  // backpack: a brass reliquary tank with a ley window
+  rr(c, -22, -27, 14, 24, 4); F(c, C.brass, o);
+  rr(c, -12, -27, 4, 24, 2); c.fillStyle = C.brassD; c.fill();
+  rr(c, -20, -22, 8, 12, 2); F(c, C.ley0, o);
+  rr(c, -19, -21 + (S.flow * .3) % 9, 6, 3, 1); c.fillStyle = C.ley2; c.fill();
+  rr(c, -23, -7, 16, 3.4, 1); F(c, C.brassD, o);
+  rr(c, -23, -29, 16, 3.4, 1); F(c, C.brassD, o);
+  rr(c, -20, -26, 3, 2, 1); c.fillStyle = C.brassL; c.fill();
+  // far arm to the front grip
+  const fg = gun(15, 5);
+  limb(c, [-2, -18, fg[0] - 4, fg[1] - 2], 6, K.d, o);
+  // the cloak over the body, flaring to a gold-trimmed hem
+  const hem = () => { c.moveTo(-14, 17); c.quadraticCurveTo(-9, 20.5, -4.5, 17.5); c.quadraticCurveTo(0, 20.5, 4.5, 17.5); c.quadraticCurveTo(9, 20.5, 13, 16.5); };
+  c.beginPath(); c.moveTo(-9, -24); c.quadraticCurveTo(-15, -2, -14, 17); hem(); c.quadraticCurveTo(12, -2, 9, -24); c.closePath(); F(c, K.c, o);
+  c.beginPath(); c.moveTo(4, -22); c.quadraticCurveTo(10, -2, 9, 17); c.lineTo(13, 16.5); c.quadraticCurveTo(12, -2, 9, -24); c.closePath(); c.fillStyle = K.d; c.fill();
+  c.beginPath(); c.moveTo(-7, -20); c.quadraticCurveTo(-11, -2, -10, 12); c.strokeStyle = K.l; c.lineWidth = 1.6; c.stroke();
+  // robe showing through the front opening, with a belt and a ley buckle
+  c.beginPath(); c.moveTo(1, -16); c.quadraticCurveTo(-1, 2, 0, 18); c.lineTo(5, 17.5); c.quadraticCurveTo(4, 2, 4, -16); c.closePath(); F(c, ROBE, o);
+  rr(c, -10, -6, 20, 4, 1.5); F(c, C.strap, o);
+  ell(c, 2.5, -4, 2.2, 2.2); F(c, C.ley1, o);
+  c.beginPath(); hem(); c.strokeStyle = GOLD; c.lineWidth = 1.8; c.stroke();
+  // shoulder mantle with a gold clasp
+  c.beginPath(); c.moveTo(-11, -20); c.quadraticCurveTo(0, -29, 11, -20); c.quadraticCurveTo(10, -13, 0, -12); c.quadraticCurveTo(-10, -13, -11, -20); c.closePath(); F(c, K.l, o);
+  c.beginPath(); c.moveTo(-10, -17); c.quadraticCurveTo(0, -11, 10, -17); c.strokeStyle = GOLD; c.lineWidth = 1.4; c.stroke();
+  ell(c, 4, -15, 2.4, 2.4); F(c, GOLD, o);
+  // head in a pointed hood
+  c.beginPath(); c.moveTo(-14 + flap * .5, -26); c.quadraticCurveTo(-9, -42, 2, -41); c.quadraticCurveTo(14, -42, 14, -28); c.quadraticCurveTo(13, -19, 3, -19.5); c.quadraticCurveTo(-7, -20, -14 + flap * .5, -26); c.closePath(); F(c, K.c, o);
+  c.beginPath(); c.moveTo(-6, -38); c.quadraticCurveTo(0, -42, 6, -40); c.strokeStyle = K.l; c.lineWidth = 1.6; c.stroke();
+  // no face: the hood holds the same ley glow as the tube
+  ell(c, 6.5, -29.5, 7.6, 8.6); F(c, '#0d1c24', o);
+  const fp = P.flashT > 0 ? 1 : .75 + .25 * Math.sin(S.t * .06);
+  const fg2 = c.createRadialGradient(7.5, -30, 0, 7.5, -30, 7);
+  fg2.addColorStop(0, C.ley2); fg2.addColorStop(.45, C.ley1); fg2.addColorStop(1, 'rgba(19,143,156,0)');
+  glow(c, o, C.ley1, 12 * fp); c.globalAlpha = fp;
+  ell(c, 7, -29.5, 6.4, 7.4); c.fillStyle = fg2; c.fill();
+  c.globalAlpha = 1; noGlow(c);
+  // hose: backpack bottom, round the hip, into the gun's rear
+  const rear = gun(-7, 2);
+  const hp = [-14, -4, -14, 10, rear[0] - 10, rear[1] + 12, rear[0], rear[1]];
+  limb(c, hp, 5.5, C.ley1, o);
+  c.save(); c.setLineDash([1.6, 3.6]); c.lineDashOffset = -S.flow; limb(c, hp, 5.5, C.ley0, { s: false }); c.restore();
+  // the tube
+  c.save(); c.translate(4, -8); c.rotate(P.a); c.translate(-P.kick, 0);
+  rr(c, -9, -5, 15, 10, 3); F(c, C.brass, o);
+  rr(c, -9, 1, 15, 4, 2); c.fillStyle = C.brassD; c.fill();
+  rr(c, 12, 4, 4, 6, 1); F(c, C.strap, o);
+  rr(c, 4, -4, 26, 8, 4); F(c, C.ley1, o);
+  rr(c, 5, -3, 24, 2.2, 1); c.fillStyle = C.ley2; c.fill();
+  for (const rx of [8, 13.5, 19, 24.5]) { rr(c, rx, -4.6, 2.4, 9.2, 1); F(c, C.ley0, o); }
+  rr(c, 28, -5.5, 6, 11, 2); F(c, C.ley0, o);
+  glow(c, o, C.ley1, P.firing ? 10 : 4); ell(c, 32.5, 0, 1.8, 3.2); c.fillStyle = C.ley2; c.fill(); noGlow(c);
+  c.restore();
+  // near arm to the rear grip: a wide sleeve, then a wrapped forearm
+  const ng = gun(-1, 5);
+  const ex = (5 + ng[0]) / 2 - 1, ey = (-18 + ng[1]) / 2 + 1;
+  limb(c, [ex, ey, ng[0], ng[1]], 4.2, C.strap, o);
+  c.beginPath(); c.moveTo(1, -21); c.quadraticCurveTo(10, -19, ex + 3, ey + 2); c.lineTo(ex - 3, ey + 3); c.quadraticCurveTo(-1, -12, 1, -21); c.closePath(); F(c, K.c, o);
+  ell(c, ng[0], ng[1], 2.8, 2.8); F(c, C.skin, o);
+  ell(c, fg[0] - 3, fg[1] - 1, 2.8, 2.8); F(c, C.skin, o);
+  c.restore();
+  c.restore();
+}
+function drawHusk(c, o) {
+  const Hk = S.h; if (!Hk.alive) return;
+  const fl = Hk.flash > 0, col = k => fl ? C.white : C[k];
+  const bob = Math.sin(Hk.phase) * 1.2, sw = Math.sin(Hk.phase) * 3;
+  c.save(); c.translate(Hk.x, Hk.y); c.scale(-1, 1);
+  limb(c, [-4, -10, -5 - sw, -1], 2.4, col('t0'), o);
+  limb(c, [4, -10, 5 + sw, -1], 2.4, col('t0'), o);
+  limb(c, [8, -24 + bob, 18, -14 + bob], 2.2, col('t0'), o);
+  ell(c, 0, -19 + bob, 11, 14); F(c, col('straw'), o);
+  ell(c, 4, -18 + bob, 5, 11); c.fillStyle = col('strawD'); c.fill();
+  ell(c, -4, -24 + bob, 3, 6); c.fillStyle = col('strawL'); c.fill();
+  for (const by of [-12, -24]) { rr(c, -10, by + bob, 20, 2.4, 1); c.fillStyle = col('strap'); c.fill(); }
+  limb(c, [-8, -24 + bob, -17, -12 + bob], 2.2, col('t0'), o);
+  c.beginPath(); c.moveTo(-9, -32 + bob); c.quadraticCurveTo(1, -48 + bob, 11, -32 + bob); c.quadraticCurveTo(1, -26 + bob, -9, -32 + bob); F(c, col('strawD'), o);
+  glow(c, o, C.ember, 6);
+  ell(c, -3, -33 + bob, 1.6, 1.6); c.fillStyle = fl ? C.white : C.ember; c.fill();
+  ell(c, 3, -33 + bob, 1.6, 1.6); c.fill(); noGlow(c);
+  c.restore();
+}
+function drawSprites(c, o) {
+  const list = [
+    [137, () => drawTree(c, 114, 137, o)],
+    [254, () => drawRock(c, 430, 254, 1, o)],
+    [268, () => drawRock(c, 458, 268, .6, o)],
+    [180, () => drawRock(c, 36, 180, .7, o)],
+    [100, () => drawReeds(c, o)],
+    [S.p.y, () => drawPlayer(c, o)],
+    [S.h.y, () => drawHusk(c, o)]
+  ];
+  list.sort((a, b) => a[0] - b[0]).forEach(e => e[1]());
+}
+
+// ---------- effects: no outline ----------
+function drawFx(c, o) {
+  c.lineCap = 'round';
+  for (const A of S.arrows) {
+    const n = Math.hypot(A.vx, A.vy), ux = A.vx / n, uy = A.vy / n;
+    glow(c, o, C.ley1, 6);
+    c.beginPath(); c.moveTo(A.x - ux * 16, A.y - uy * 16); c.lineTo(A.x - ux * 8, A.y - uy * 8);
+    c.strokeStyle = C.ley1; c.globalAlpha = o.vec ? .55 : 1; c.lineWidth = 1.6; c.stroke(); c.globalAlpha = 1; noGlow(c);
+    c.beginPath(); c.moveTo(A.x - ux * 9, A.y - uy * 9); c.lineTo(A.x, A.y); c.strokeStyle = C.t2; c.lineWidth = 2; c.stroke();
+    c.beginPath(); c.moveTo(A.x + ux * 3, A.y + uy * 3); c.lineTo(A.x - uy * 2, A.y + ux * 2); c.lineTo(A.x + uy * 2, A.y - ux * 2); c.closePath(); c.fillStyle = C.r3; c.fill();
+  }
+  if (S.p.flashT > 0) {
+    const [mx, my] = gunToWorld(36, 0), r = 4 + S.p.flashT * 1.6;
+    glow(c, o, C.ley1, 16);
+    c.beginPath();
+    for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5 + S.t, rad = i % 2 ? r * .45 : r; c.lineTo(mx + Math.cos(a) * rad, my + Math.sin(a) * rad); }
+    c.closePath(); c.fillStyle = C.ley2; c.fill();
+    ell(c, mx, my, r * .35, r * .35); c.fillStyle = C.white; c.fill(); noGlow(c);
+  }
+  for (const q of S.parts) { c.fillStyle = q.c; c.globalAlpha = o.vec ? Math.min(1, q.life / 12) : 1; c.fillRect(q.x - 1, q.y - 1, 2, 2); }
+  c.globalAlpha = 1;
+}
+
+// ---------- pixel output: quantize to the palette, outline sprites ----------
+const qCache = new Map();
+function nearest(r, g, b) {
+  const key = (r << 16) | (g << 8) | b;
+  let v = qCache.get(key);
+  if (v === undefined) {
+    let best = 0, bd = 1e9;
+    for (let i = 0; i < PAL.length; i++) { const p = PAL[i], d = (p[0]-r)**2*.3 + (p[1]-g)**2*.59 + (p[2]-b)**2*.11; if (d < bd) { bd = d; best = i; } }
+    v = best; qCache.set(key, v);
+  }
+  return PAL[v];
+}
+function quantize(cv, alphaCut, outline) {
+  const c = cv.getContext('2d'), w = cv.width, h = cv.height;
+  const img = c.getImageData(0, 0, w, h), d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const a = d[i+3];
+    if (a < alphaCut) { d[i+3] = 0; continue; }
+    const k = 255 / a, p = nearest(Math.min(255, d[i]*k|0), Math.min(255, d[i+1]*k|0), Math.min(255, d[i+2]*k|0));
+    d[i] = p[0]; d[i+1] = p[1]; d[i+2] = p[2]; d[i+3] = 255;
+  }
+  if (outline) {
+    const src = new Uint8ClampedArray(d);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      if (src[i+3]) continue;
+      const on = (xx, yy) => xx >= 0 && yy >= 0 && xx < w && yy < h && src[(yy * w + xx) * 4 + 3];
+      if (on(x-1,y) || on(x+1,y) || on(x,y-1) || on(x,y+1)) { d[i] = OUT[0]; d[i+1] = OUT[1]; d[i+2] = OUT[2]; d[i+3] = 255; }
+    }
+  }
+  c.putImageData(img, 0, 0);
+}
+const mk = (w, h) => { const cv = document.createElement('canvas'); cv.width = w; cv.height = h; return cv; };
+
+class PixelPanel {
+  constructor(sec, div) {
+    this.main = sec.querySelector('.main'); this.close = sec.querySelector('.close'); this.div = div;
+    const w = W / div, h = H / div;
+    this.bg = mk(w, h); this.sp = mk(w, h); this.fx = mk(w, h); this.comp = mk(w, h);
+  }
+  render() {
+    const o = { s: false, vec: false, lw: 0, z: 1 }, k = 1 / this.div;
+    for (const [cv, fn] of [[this.bg, drawGround], [this.sp, drawSprites], [this.fx, drawFx]]) {
+      const c = cv.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, cv.width, cv.height); c.setTransform(k, 0, 0, k, 0, 0); fn(c, o);
+    }
+    quantize(this.bg, 0, false); quantize(this.sp, 110, true); quantize(this.fx, 90, false);
+    const cc = this.comp.getContext('2d');
+    cc.drawImage(this.bg, 0, 0); cc.drawImage(this.sp, 0, 0); cc.drawImage(this.fx, 0, 0);
+    const m = this.main.getContext('2d'); m.imageSmoothingEnabled = false;
+    const sx = Math.round(S.shake * (sr() - .5) * 2), sy = Math.round(S.shake * (sr() - .5) * 2);
+    m.fillStyle = C.g2; m.fillRect(0, 0, 960, 600);
+    const px = 960 / this.comp.width;
+    m.drawImage(this.comp, sx * px, sy * px, 960, 600);
+    const z = this.close.getContext('2d'); z.imageSmoothingEnabled = false;
+    const side = 90 / this.div, x0 = Math.round((S.p.x - 45) / this.div), y0 = Math.round((S.p.y - 66) / this.div);
+    z.drawImage(this.comp, x0, y0, side, side, 0, 0, 300, 300);
+  }
+}
+class VectorPanel {
+  constructor(sec) { this.main = sec.querySelector('.main'); this.close = sec.querySelector('.close'); }
+  scene(c, a, e, f, z) {
+    const o = { s: true, vec: true, lw: 1.1, z };
+    c.setTransform(a, 0, 0, a, e, f); drawGround(c, o); drawSprites(c, o);
+    c.globalCompositeOperation = 'lighter'; drawFx(c, o); c.globalCompositeOperation = 'source-over';
+    drawFx(c, { ...o, vec: false, z });
+    // warm sun from the top left
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    const g = c.createRadialGradient(0, 0, 0, 0, 0, c.canvas.width * 1.1);
+    g.addColorStop(0, 'rgba(255,240,170,0.18)'); g.addColorStop(1, 'rgba(255,240,170,0)');
+    c.fillStyle = g; c.fillRect(0, 0, c.canvas.width, c.canvas.height);
+  }
+  render() {
+    const m = this.main.getContext('2d');
+    this.scene(m, 2, S.shake * (sr() - .5) * 4, S.shake * (sr() - .5) * 4, 2);
+    const z = this.close.getContext('2d'), k = 480 / 90;
+    this.scene(z, k, -(S.p.x - 45) * k, -(S.p.y - 76) * k, k);
+  }
+}
+
+const panels = [];
+const visible = new Set();
+document.querySelectorAll('section.style').forEach(sec => {
+  const mode = sec.dataset.mode;
+  const p = mode === 'vec' ? new VectorPanel(sec) : new PixelPanel(sec, mode === 'px2' ? 2 : 1);
+  panels.push(p); p.sec = sec; visible.add(p);
+  const cv = sec.querySelector('.main');
+  const toWorld = e => { const r = cv.getBoundingClientRect(); S.mouse.x = (e.clientX - r.left) / r.width * W; S.mouse.y = (e.clientY - r.top) / r.height * H; };
+  cv.addEventListener('pointermove', e => { S.mouse.active = true; toWorld(e); });
+  cv.addEventListener('pointerdown', e => { S.mouse.active = true; S.mouse.down = true; toWorld(e); try { cv.setPointerCapture(e.pointerId); } catch (_) {} });
+  cv.addEventListener('pointerup', () => { S.mouse.down = false; });
+  cv.addEventListener('pointercancel', () => { S.mouse.down = false; S.mouse.active = false; });
+  cv.addEventListener('pointerleave', () => { if (!S.mouse.down) S.mouse.active = false; });
+});
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver(es => es.forEach(en => { const p = panels.find(q => q.sec === en.target); if (en.isIntersecting) visible.add(p); else visible.delete(p); }));
+  panels.forEach(p => io.observe(p.sec));
+}
+const pauseBtn = document.getElementById('pause'), holdBtn = document.getElementById('hold');
+pauseBtn.addEventListener('click', () => { S.paused = !S.paused; pauseBtn.setAttribute('aria-pressed', S.paused); pauseBtn.textContent = S.paused ? 'Play' : 'Pause'; });
+holdBtn.addEventListener('click', () => { S.hold = !S.hold; holdBtn.setAttribute('aria-pressed', S.hold); });
+document.querySelectorAll('button.cloak').forEach(b => b.addEventListener('click', () => {
+  cloak = CLOAKS[b.dataset.cloak];
+  document.querySelectorAll('button.cloak').forEach(x => x.setAttribute('aria-pressed', x === b));
+  panels.forEach(p => p.render());
+}));
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+for (let i = 0; i < 40; i++) step();
+panels.forEach(p => p.render());
+if (reduce && !S.paused) { S.paused = true; pauseBtn.setAttribute('aria-pressed', 'true'); pauseBtn.textContent = 'Play'; }
+let last = performance.now(), acc = 0;
+function frame(now) {
+  acc += Math.min(100, now - last); last = now;
+  let stepped = false;
+  while (acc >= 1000 / 60) { acc -= 1000 / 60; if (!S.paused) { step(); stepped = true; } }
+  if (stepped) visible.forEach(p => p.render());
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>

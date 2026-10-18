@@ -5,20 +5,23 @@ import { NO_COMMAND, type Command } from '../../src/sim/input';
 import { createNode, type NodeState } from '../../src/sim/nodes';
 import { createSim, type SimState } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
+import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
+import { tileCentre } from '../../src/sim/tiles';
 
-// Fight scenarios in the ruin hall's open middle (rows 11–16 have no blocks).
+// Fight scenarios in the overworld's meadow (017): open ground beside the ruin field, the sandbox start.
 
 export const SEED = 7;
-export const HALL = 'ruin-hall';
+/** The room fights happen in (the overworld since 017; the name stays from the ruin hall). */
+export const HALL = OVERWORLD_ROOM;
 export const HUSK = meleeDef('husk');
 
-/** Where the player stands in an arena: the aggro box around it is all floor. */
-export const PLAYER_AT = { x: 400, y: 448 } as const;
+/** Where the player stands in an arena: the meadow's centre, open ground well past the aggro box sideways. */
+export const PLAYER_AT = tileCentre(OVERWORLD.field);
 
 /** Ticks from a wind-up starting to its swipe landing (the wind-up tick counts as 1). */
 export const SWIPE_LANDS = HUSK.swipe.windupTicks + 1;
 
-/** The ruin hall with its own Husks and nodes cleared and the player at `at`. */
+/** The overworld with its own enemies and nodes cleared and the player at `at`. */
 export function arena(seed = SEED, at: { x: number; y: number } = PLAYER_AT): SimState {
   const s = createSim(seed);
   s.enemies = [];
@@ -79,4 +82,26 @@ export function runUntilKo(s: SimState, limit = SWIPE_LANDS + DYING_TICKS + 5): 
 export function die(s: SimState): void {
   s.player.health = 0;
   runUntilKo(s, DYING_TICKS + 3);
+}
+
+/** The ruin hall's arena centre, where pre-017 tests measured from. */
+const HALL_AT = { x: 400, y: 448 } as const;
+
+/** A point given in the old ruin hall's coordinates, moved to the same spot relative to the meadow arena (017). */
+export function at(x: number, y: number = HALL_AT.y): { x: number; y: number } {
+  return { x: x - HALL_AT.x + PLAYER_AT.x, y: y - HALL_AT.y + PLAYER_AT.y };
+}
+
+/** Stands the player in the overworld one tile below the shrine's pylon (017: the shrine is a site there). */
+export function atPylon(s: SimState): void {
+  s.roomId = OVERWORLD_ROOM;
+  const below = tileCentre({ tx: OVERWORLD.shrine.pylon.tx, ty: OVERWORLD.shrine.pylon.ty + 1 });
+  movePlayer(s, below.x, below.y);
+}
+
+/** Stands the player on the tile in front of the foundry's stairs, so walking up goes down them (017). */
+export function atEntrance(s: SimState): void {
+  s.roomId = OVERWORLD_ROOM;
+  const front = tileCentre(OVERWORLD.entrance.arrive);
+  movePlayer(s, front.x, front.y);
 }

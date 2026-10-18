@@ -6,7 +6,7 @@ import { rollDrops, scatterPoint, spawnDrops } from '../../src/sim/drops';
 import { createRng } from '../../src/sim/rng';
 import { roomOf } from '../../src/sim/state';
 import { openRoom } from './helpers';
-import { arena, HALL, HUSK, PLAYER_AT, run } from './fight';
+import { arena, at, HALL, HUSK, PLAYER_AT, run } from './fight';
 
 const EXTRAS = ['wood', 'stone', 'fiber'];
 
@@ -52,8 +52,8 @@ describe('drop scatter', () => {
     const s = arena();
     const room = roomOf(s);
     for (let i = 0; i < 200; i++) {
-      // Tile (1,4) has wall on its left and above (014 shaped the corner).
-      const p = scatterPoint(room, s.rng, 36, 132);
+      // Tile (32, 13) has the ruin field's wall on its left and above (017).
+      const p = scatterPoint(room, s.rng, 32 * 32 + 4, 13 * 32 + 4);
       expect(isSolid(room, Math.floor(p.x / 32), Math.floor(p.y / 32))).toBe(false);
     }
   });
@@ -65,8 +65,8 @@ describe('drop scatter', () => {
 
   it('spawns one ground item per dropped item, with fresh ids', () => {
     const s = arena();
-    spawnDrops(s, HUSK, 500, 448, HALL);
-    spawnDrops(s, HUSK, 600, 448, HALL);
+    spawnDrops(s, HUSK, at(500).x, at(500).y, HALL);
+    spawnDrops(s, HUSK, at(600).x, at(600).y, HALL);
     const ids = s.groundItems.map((g) => g.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(s.groundItems.length).toBeGreaterThanOrEqual(2);

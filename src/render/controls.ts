@@ -10,6 +10,7 @@ import type { Facing } from '../sim/player';
 import { dragTo, release, type ConduitLay, type HeldConduit } from './dragPath';
 import { AMMO_KEYS, bindKeys, type Key } from './keys';
 import { MenuRequests, type UiCommand } from './menuRequests';
+import { toView } from './scale';
 
 /** What the scene tells the controls each frame about build mode and the screen's UI. */
 export interface BuildInput {
@@ -125,9 +126,20 @@ export class Controls {
     return { tx: Math.floor(this.aimX / TILE_SIZE), ty: Math.floor(this.aimY / TILE_SIZE) };
   }
 
+  /** A pointer's position in view px (the HUD's 640×360 layout), whatever the backbuffer resolution (016). */
+  private view(p: { x: number; y: number }): { x: number; y: number } {
+    return toView(p.x, p.y, this.camera.zoom);
+  }
+
+  /** The cursor in view px (020: for menu rows lighting under it). */
+  viewPointer(): { x: number; y: number } {
+    return this.view(this.pointer);
+  }
+
   /** The cursor is over the world, not the screen's UI. */
   overWorld(): boolean {
-    return !this.build.overUi(this.pointer.x, this.pointer.y);
+    const v = this.view(this.pointer);
+    return !this.build.overUi(v.x, v.y);
   }
 
   private tileUnder(p: Input.Pointer): Tile {
@@ -141,9 +153,10 @@ export class Controls {
   }
 
   private pointerDown(p: Input.Pointer): void {
-    if (this.build.overUi(p.x, p.y)) {
+    const v = this.view(p);
+    if (this.build.overUi(v.x, v.y)) {
       this.uiPress = true;
-      if (p.leftButtonDown()) this.build.clickUi(p.x, p.y);
+      if (p.leftButtonDown()) this.build.clickUi(v.x, v.y);
       return;
     }
     if (!this.build.building) return;
@@ -187,7 +200,8 @@ export class Controls {
     const drag = this.dragTile;
     const pieceId = this.build.pieceId();
     if (!drag || !this.build.building || pieceDef(pieceId).kind !== 'conduit' || !p.leftButtonDown()) return;
-    if (this.build.overUi(p.x, p.y)) return;
+    const v = this.view(p);
+    if (this.build.overUi(v.x, v.y)) return;
     const tile = this.tileUnder(p);
     // Each tile faces the next one, so a drag that turns lays a corner.
     const step = dragTo(this.held ?? { tile: drag }, tile);

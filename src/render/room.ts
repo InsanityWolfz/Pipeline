@@ -1,12 +1,13 @@
 import type { GameObjects, Scene } from 'phaser';
-import { animFrames, ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
+import { animFrames, DEPTHS, SPRITES } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
-import { DOORWAY_SPRITE, FLOOR_SPRITES } from '../data/foundryAssets';
+import { DOORWAY_SPRITE } from '../data/foundryAssets';
 import { PROPS, type PropDef, type PropPlacement } from '../data/props';
-import { PROP_LAYOUT, WALL_SPRITES } from '../data/roomArt';
+import { PROP_LAYOUT, ROOM_TOP_MARGIN, WALL_SPRITES } from '../data/roomArt';
 import { TILE, type Room } from '../data/rooms';
 import { registerAnim } from './anims';
 import { floorFrame, wallPieces } from './roomTiles';
+import { addVectorSprite, addVector } from './vector/textures';
 
 const FLOOR_PROP_DEPTH = (DEPTHS.floor + DEPTHS.shadow) / 2;
 
@@ -24,19 +25,25 @@ export class RoomView {
   show(room: Room): void {
     for (const o of this.objects) o.destroy();
     this.objects = [];
-    const floor = (room.floor && FLOOR_SPRITES[room.floor]) ?? SPRITES.floor;
+    // The overworld (017) is drawn by OverworldView from its terrain, not from tiles.
+    if (room.terrain) return;
     const add = (x: number, y: number, frame: string): GameObjects.Image => {
-      const image = this.scene.add.image(x, y, ATLAS_KEY, frame);
+      const image = addVector(this.scene, x, y, frame);
       this.objects.push(image);
       return image;
     };
+    // More wall above the top row, behind everything (019).
+    const width = room.rows[0]?.length ?? 0;
+    for (let y = -TILE_SIZE; y > -ROOM_TOP_MARGIN - TILE_SIZE; y -= TILE_SIZE) {
+      for (let tx = 0; tx < width; tx++) add(tx * TILE_SIZE, y, WALL_SPRITES.top).setOrigin(0).setDepth(DEPTHS.floor);
+    }
     const blockProps = new Set((room.props ?? []).filter((p) => PROPS[p.propId].layer === 'block').map((p) => `${p.tx},${p.ty}`));
     for (const p of room.props ?? []) this.prop(p);
     for (const [ty, row] of room.rows.entries()) {
       for (const [tx, symbol] of [...row].entries()) {
         const left = tx * TILE_SIZE;
         const bottom = (ty + 1) * TILE_SIZE;
-        add(left, ty * TILE_SIZE, floorFrame(room.floor, floor, tx, ty)).setOrigin(0).setDepth(DEPTHS.floor);
+        add(left, ty * TILE_SIZE, floorFrame(SPRITES.floor, tx, ty)).setOrigin(0).setDepth(DEPTHS.floor);
         if (symbol === TILE.floor) continue;
         if (symbol === TILE.door) {
           // The sprite is drawn for the right wall; a door on the left wall mirrors it.
@@ -65,7 +72,7 @@ export class RoomView {
     registerAnim(this.scene, def.anim);
     const cx = (p.tx + 0.5) * TILE_SIZE;
     const bottom = (p.ty + 1) * TILE_SIZE;
-    const sprite = this.scene.add.sprite(cx, bottom, ATLAS_KEY, animFrames(def.anim)[0]).setOrigin(0.5, 1);
+    const sprite = addVectorSprite(this.scene, cx, bottom, animFrames(def.anim)[0] ?? '').setOrigin(0.5, 1);
     this.objects.push(sprite);
     if (def.layer === 'floor') sprite.setOrigin(0.5).setPosition(cx, bottom - TILE_SIZE / 2).setDepth(FLOOR_PROP_DEPTH);
     else if (def.layer === 'wall') sprite.setY(bottom + (def.drop ?? 0)).setDepth(bottom + PROP_LAYOUT.wallNudge);

@@ -1,9 +1,9 @@
-import { CRAFT_MENU_LAYOUT } from '../data/hudLayout';
+import { CRAFT_MENU_LAYOUT, PAUSE_MENU, PICKER_LAYOUT } from '../data/hudLayout';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { CRAFT_GROUPS } from '../data/recipes';
 
-// Where the crafting menu's panel, headers and rows sit on screen. No Phaser, so
-// e2e tests can find a row to click.
+// Where the crafting menu's panel, headers and rows, and the pause menu's rows (020), sit
+// on screen. No Phaser, so e2e tests can find a row to click.
 
 export interface MenuLine {
   kind: 'header' | 'recipe';
@@ -39,3 +39,16 @@ export function craftMenuLines(): MenuLine[] {
   }
   return lines;
 }
+
+/** The pause menu's rows (sound, volume, resume), centred on screen, px. */
+export function pauseRows(): { x: number; y: number; w: number; h: number }[] {
+  const L = PICKER_LAYOUT;
+  const step = L.rowHeight + PAUSE_MENU.rowGap;
+  const n = PAUSE_ROWS.length;
+  const top = Math.round((VIEW_HEIGHT - n * step) / 2);
+  const x = Math.round((VIEW_WIDTH - L.rowWidth) / 2);
+  return PAUSE_ROWS.map((_, i) => ({ x, y: top + i * step, w: L.rowWidth, h: L.rowHeight }));
+}
+
+/** The pause menu's rows, top to bottom. */
+export const PAUSE_ROWS = ['sound', 'volume', 'resume'] as const;

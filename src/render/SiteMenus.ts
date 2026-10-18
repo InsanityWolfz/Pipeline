@@ -3,7 +3,7 @@ import { UNIDENTIFIED_ARMOR } from '../data/armor';
 import { SPRITES } from '../data/assets';
 import { SITE_ICONS } from '../data/foundryAssets';
 import { itemDef, ITEMS } from '../data/items';
-import { fixtureInReach, isClaimed, pylonInReach } from '../sim/claims';
+import { claimedPylonInReach, fixtureInReach } from '../sim/claims';
 import { usableInReach } from '../sim/foundryUse';
 import type { SimState } from '../sim/state';
 import { ChoiceMenu, type Choice } from './ChoiceMenu';
@@ -53,13 +53,18 @@ export class SiteMenus {
     for (const m of this.menus) m.close();
   }
 
+  /** The cursor is at a screen point: the open menu lights the row under it (020). */
+  pointAt(x: number, y: number): void {
+    for (const m of this.menus) m.pointAt(x, y);
+  }
+
   /** E was pressed: opens the menu of a sorter, a claimed pylon, the stash or the bench in reach. */
   interact(sim: SimState): void {
     const piece = usableInReach(sim);
     if (piece?.kind === 'sorter') {
       this.sorterId = piece.id;
       this.sorter.open();
-    } else if (pylonInReach(sim) && isClaimed(sim, sim.roomId)) this.pylon.open();
+    } else if (claimedPylonInReach(sim)) this.pylon.open();
     else if (fixtureInReach(sim, 'stash')) this.stash.open();
     else if (fixtureInReach(sim, 'bench')) this.bench.open();
   }
@@ -76,13 +81,14 @@ export class SiteMenus {
     else if (b && 'identify' in b) controls.menus.identify();
     else if (b) controls.menus.equip(b.equip);
     else return false;
+    for (const m of this.menus) m.flashAt(x, y);
     this.close();
     return true;
   }
 
   /** Refreshes the rows; walking out of reach closes a menu. */
   update(sim: SimState): void {
-    if (this.pylon.isOpen && !(pylonInReach(sim) && isClaimed(sim, sim.roomId))) this.pylon.close();
+    if (this.pylon.isOpen && !claimedPylonInReach(sim)) this.pylon.close();
     if (this.stash.isOpen && !fixtureInReach(sim, 'stash')) this.stash.close();
     const held = Object.values(sim.inventory).reduce((a, b) => a + b, 0);
     const pylonRows: Choice<PylonChoice>[] = [

@@ -6,22 +6,22 @@ describe('floor variants', () => {
   it('come from a stable hash, so a tile always gets the same one', () => {
     expect(tileHash(3, 7)).toBe(tileHash(3, 7));
     expect(tileHash(3, 7)).not.toBe(tileHash(7, 3));
-    for (let i = 0; i < 50; i++) expect(floorFrame('shrine', 'floor-shrine', i, 2 * i)).toBe(floorFrame('shrine', 'floor-shrine', i, 2 * i));
+    for (let i = 0; i < 50; i++) expect(floorFrame('floor-flag', i, 2 * i)).toBe(floorFrame('floor-flag', i, 2 * i));
   });
 
   it('show on about the set share of tiles, using every variant', () => {
     const seen = new Map<string, number>();
     for (let ty = 0; ty < 60; ty++) {
       for (let tx = 0; tx < 60; tx++) {
-        const f = floorFrame(undefined, 'floor-rune', tx, ty);
+        const f = floorFrame('floor-flag', tx, ty);
         seen.set(f, (seen.get(f) ?? 0) + 1);
       }
     }
-    const varied = 3600 - (seen.get('floor-rune') ?? 0);
-    const percent = FLOOR_VARIANTS.ruin?.percent ?? 0;
+    const varied = 3600 - (seen.get('floor-flag') ?? 0);
+    const percent = FLOOR_VARIANTS.percent;
     expect(varied / 3600).toBeGreaterThan(percent / 100 - 0.05);
     expect(varied / 3600).toBeLessThan(percent / 100 + 0.05);
-    for (const v of FLOOR_VARIANTS.ruin?.tiles ?? []) expect(seen.get(v)).toBeGreaterThan(0);
+    for (const v of FLOOR_VARIANTS.tiles) expect(seen.get(v)).toBeGreaterThan(0);
   });
 });
 

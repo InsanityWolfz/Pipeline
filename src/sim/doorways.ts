@@ -14,6 +14,7 @@ export function arrivalTile(roomId: string, door: number): { tx: number; ty: num
   const room = roomById(roomId);
   const d = room.doorways?.[door];
   if (!d) throw new Error(`Room '${roomId}' has no door ${door}`);
+  if (d.arrive) return d.arrive;
   const w = room.rows[0]?.length ?? 0;
   if (d.tx === 0) return { tx: 1, ty: d.ty };
   if (d.tx === w - 1) return { tx: d.tx - 1, ty: d.ty };

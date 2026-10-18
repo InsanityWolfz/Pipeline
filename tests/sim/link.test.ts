@@ -3,35 +3,38 @@ import { ammoDef } from '../../src/data/ammo';
 import { PLAYTEST_START } from '../../src/data/playtest';
 import { DEFAULT_START } from '../../src/data/player';
 import { FOUNDRY_ROOM } from '../../src/data/rooms';
-import { ATTUNE_TICKS, REFILL_PULSE_TICKS, RESERVOIR_CAP } from '../../src/data/tube';
-import { arrivalTile } from '../../src/sim/doorways';
+import { ATTUNE_TICKS, RESERVOIR_CAP } from '../../src/data/tube';
 import { unlockedPieces } from '../../src/sim/placement';
-import type { ConduitState, HopperState, SocketState } from '../../src/sim/pieces';
+import type { HopperState } from '../../src/sim/pieces';
 import { createSim } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
 import { slotCount } from '../../src/sim/tube';
-import { tileCentre } from '../../src/sim/tiles';
-import { CONDUIT_TICKS } from '../../src/data/foundry';
-import { arena, command, die, runUntilKo, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, SEED } from './fight';
+import { arena, atEntrance, command, die, runUntilKo, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, SEED } from './fight';
 import { foundry, put, stepOutside } from './foundryKit';
+import { OVERWORLD_ROOM } from '../../src/data/overworld';
 
-const HALL = 'ruin-hall';
+const HALL = OVERWORLD_ROOM;
 const FIRE_TICKS = ammoDef('arrow').fireTicks;
 
-/** The ruin hall with the player just inside its foundry door. */
+/** The overworld with the player in front of the foundry's stairs (017). */
 function atHallDoor() {
   const s = arena();
-  const inside = tileCentre(arrivalTile(HALL, 0));
-  movePlayer(s, inside.x, inside.y);
+  atEntrance(s);
   return s;
 }
 
 /** A foundry sim, attuned, with an empty reservoir. */
 function attuned() {
+  return foundry();
+}
+
+/** A foundry sim the player has just walked into for the first time: the attune is playing. */
+function attuning() {
   const s = foundry();
+  s.link.attuned = false;
   run(s, 1);
-  expect(s.link.attuned).toBe(true);
+  expect(s.link).toMatchObject({ attuned: true, attunePulse: ATTUNE_TICKS });
   return s;
 }
 
@@ -47,11 +50,12 @@ describe('attunement', () => {
         return x.roomId === FOUNDRY_ROOM;
       },
       60,
-      { moveX: -1 },
+      { moveY: -1 },
     );
     expect(s.link).toMatchObject({ attuned: true, attunePulse: ATTUNE_TICKS });
     expect(attunes).toHaveLength(1);
-    // Out and back in again: nothing more.
+    // Out and back in again, once the attune lets go: nothing more.
+    run(s, ATTUNE_TICKS);
     runUntil(s, (x) => x.roomId === HALL, 120, { moveX: 1 });
     runUntil(
       s,
@@ -60,19 +64,23 @@ describe('attunement', () => {
         return x.roomId === FOUNDRY_ROOM;
       },
       120,
-      { moveX: -1 },
+      { moveY: -1 },
     );
     expect(attunes).toHaveLength(1);
   });
 
-  it('the attuning pulse counts down and the player keeps control', () => {
-    const s = attuned();
+  it('holds the player still while the attune plays, then gives control back', () => {
+    const s = attuning();
     const x = s.player.x;
-    run(s, 10, { moveX: -1 });
+    run(s, 10, { moveX: -1, fire: true, toggleBuild: true });
     expect(s.link.attunePulse).toBe(ATTUNE_TICKS - 10);
-    expect(s.player.x).toBeLessThan(x);
-    run(s, ATTUNE_TICKS);
+    expect(s.player.x).toBe(x);
+    expect(s.building).toBe(false);
+    run(s, ATTUNE_TICKS - 10, { moveX: -1 });
     expect(s.link.attunePulse).toBe(0);
+    expect(s.player.x).toBe(x);
+    run(s, 10, { moveX: -1 });
+    expect(s.player.x).toBeLessThan(x);
   });
 
   it('survives a KO, and so does the reservoir', () => {
@@ -92,89 +100,9 @@ describe('attunement', () => {
     s.link.reservoir = { itemId: 'bomb', count: 3 };
     expect(summarize(s).link).toEqual({
       attuned: true,
-      attunePulse: ATTUNE_TICKS,
+      attunePulse: 0,
       reservoir: { item: 'bomb', count: 3, cap: RESERVOIR_CAP },
     });
-  });
-});
-
-describe('the tube socket', () => {
-  it('is locked until the tube attunes, then sits after the crate on the build bar', () => {
-    const s = foundry();
-    expect(unlockedPieces(s)).not.toContain('tube-socket');
-    run(s, 1);
-    const unlocked = unlockedPieces(s);
-    expect(unlocked.indexOf('tube-socket')).toBe(unlocked.indexOf('crate') + 1);
-  });
-
-  it('only one can be on the grid; picking it up frees the slot and keeps the reservoir', () => {
-    const s = attuned();
-    put(s, 'tube-socket', 5, 5);
-    run(s, 1, { place: { pieceId: 'tube-socket', tx: 8, ty: 5, facing: 'right' } });
-    expect(s.events.placeFails).toEqual([{ pieceId: 'tube-socket', tx: 8, ty: 5, reason: 'limit' }]);
-    s.link.reservoir = { itemId: 'arrow', count: 4 };
-    const before = { ...s.inventory };
-    run(s, 1, { pickUp: { tx: 5, ty: 5 } });
-    expect(s.events.pickUps).toEqual([{ id: 0, pieceId: 'tube-socket', items: {} }]);
-    expect(s.inventory).toEqual(before);
-    expect(s.link.reservoir).toEqual({ itemId: 'arrow', count: 4 });
-    put(s, 'tube-socket', 8, 5);
-  });
-
-  it('is solid to the player', () => {
-    const s = attuned();
-    const { x, y } = tileCentre({ tx: 10, ty: 5 });
-    put(s, 'tube-socket', 10, 5);
-    movePlayer(s, x - 32, y);
-    run(s, 30, { moveX: 1 });
-    expect(s.player.x).toBeLessThan(x - 16);
-  });
-
-  it('takes ammo from any side into the reservoir, pulsing and recording a refill', () => {
-    const s = attuned();
-    const socket = put<SocketState>(s, 'tube-socket', 6, 6);
-    const sides: [number, number, 'right' | 'left' | 'down' | 'up'][] = [
-      [5, 6, 'right'],
-      [7, 6, 'left'],
-      [6, 5, 'down'],
-      [6, 7, 'up'],
-    ];
-    const conduits = sides.map(([tx, ty, f]) => put<ConduitState>(s, 'conduit', tx, ty, f));
-    for (const c of conduits) c.item = 'arrow';
-    run(s, CONDUIT_TICKS);
-    expect(s.events.refills).toHaveLength(4);
-    expect(s.events.refills[0]).toEqual({ id: socket.id, itemId: 'arrow' });
-    expect(s.link.reservoir).toEqual({ itemId: 'arrow', count: 4 });
-    expect(socket.pulse).toBe(REFILL_PULSE_TICKS);
-    run(s, REFILL_PULSE_TICKS);
-    expect(socket.pulse).toBe(0);
-  });
-
-  it.each([
-    ['a part', 'shaft', null, 0],
-    ['a raw', 'wood', null, 0],
-    ['another ammo', 'bomb', 'arrow', 5],
-    ['anything once full', 'arrow', 'arrow', RESERVOIR_CAP],
-  ])('refuses %s, stalling the conduit', (_name, item, held, n) => {
-    const s = attuned();
-    put(s, 'tube-socket', 6, 6);
-    s.link.reservoir = { itemId: held, count: n };
-    const c = put<ConduitState>(s, 'conduit', 5, 6, 'right');
-    c.item = item;
-    run(s, CONDUIT_TICKS * 3);
-    expect(c.item).toBe(item);
-    expect(s.link.reservoir).toEqual({ itemId: held, count: n });
-  });
-
-  it('a hopper never pushes into it', () => {
-    const s = attuned();
-    put(s, 'tube-socket', 6, 6);
-    const h = put<HopperState>(s, 'hopper', 5, 6, 'right');
-    h.item = 'arrow';
-    h.count = 3;
-    run(s, 60);
-    expect(h.count).toBe(3);
-    expect(s.link.reservoir.count).toBe(0);
   });
 });
 
@@ -216,16 +144,17 @@ describe('firing from the reservoir', () => {
     expect(slotCount(s)).toEqual({ count: 0, fromReservoir: false });
   });
 
-  it('a ley bolt line into a socket refills the reservoir while the player fires from it', () => {
+  it('a ley bolt line into the intake refills the reservoir while the player fires from it', () => {
     const s = attuned();
     s.inventory = {};
     s.tube.ammoId = 'ley-bolt';
-    const h = put<HopperState>(s, 'hopper', 4, 5, 'right');
+    // Up the middle into the intake's middle mouth tile (019).
+    const h = put<HopperState>(s, 'hopper', 12, 4, 'up');
     h.item = 'ley-crystal';
     h.count = 20;
-    put(s, 'grinder', 5, 5);
-    put(s, 'focuser', 6, 5);
-    put(s, 'tube-socket', 7, 5);
+    put(s, 'grinder', 12, 3, 'up');
+    put(s, 'focuser', 12, 2, 'up');
+    put(s, 'conduit', 12, 1, 'up');
     runUntil(s, (x) => x.link.reservoir.count >= 6, 900);
     stepOutside(s);
     let fromReservoir = 0;
@@ -242,7 +171,7 @@ describe('the playtest start', () => {
     const s = createSim(SEED, { start: PLAYTEST_START });
     expect(s.inventory).toMatchObject({ arrow: 99, bomb: 99, 'ley-bolt': 99, wood: 99, 'husk-resin': 99, shaft: 20, fuse: 20 });
     expect(s.crafted).toEqual(PLAYTEST_START.crafted);
-    expect(unlockedPieces(s)).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'tube-socket', 'gravity-stager', 'cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser']);
+    expect(unlockedPieces(s)).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'gravity-stager', 'cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser']);
     // The start is banked, so a death keeps what's still carried of it (011).
     s.inventory = { wood: 1 };
     die(s);

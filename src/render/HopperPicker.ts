@@ -1,27 +1,31 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
+import { DEPTHS, SPRITES } from '../data/assets';
 import { PICKER_LAYOUT } from '../data/hudLayout';
 import { itemDef } from '../data/items';
 import { count, type Inventory } from '../sim/inventory';
 import type { HopperState } from '../sim/pieces';
-import { colorOf } from './color';
+import { drawTablet } from './tablet';
 import { inRect, pickerEntries, pickerRows, pieceIcon, type PickerEntry } from './foundryLayout';
-import { GlyphLine } from './glyphLine';
+import { flashRow, RowHover } from './menuFeedback';
+import { TextLine } from './textLine';
+import { addVector } from './vector/textures';
 
 // The hopper menu: opened by E next to a hopper. A filled hopper offers to take
 // everything out, and to put in more of the same; an empty one lists every held
 // item to put in. Clicking a row does it. The world keeps running.
 export class HopperPicker {
   private readonly scene: Scene;
-  private rows: { entry: PickerEntry; images: GameObjects.Image[]; count: GlyphLine }[] = [];
+  private rows: { entry: PickerEntry; images: GameObjects.Image[]; count: TextLine }[] = [];
   private entries: PickerEntry[] = [];
   private readonly panel: GameObjects.Graphics;
+  private readonly hover: RowHover;
   /** The hopper's piece id while open. */
   hopperId: number | null = null;
 
   constructor(scene: Scene) {
     this.scene = scene;
     this.panel = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.menu - 1);
+    this.hover = new RowHover(scene);
   }
 
   get isOpen(): boolean {
@@ -42,6 +46,19 @@ export class HopperPicker {
     return this.isOpen && pickerRows(this.entries).some((r) => inRect(r, x, y));
   }
 
+  /** The cursor is at a screen point (020): its row lights, with the hover sound on a new row. */
+  pointAt(x: number, y: number): void {
+    const i = this.isOpen ? pickerRows(this.entries).findIndex((r) => inRect(r, x, y)) : -1;
+    if (!this.hover.set(i)) return;
+    for (const [k, r] of this.rows.entries()) r.images[0]?.setFrame(this.hover.frame(k));
+  }
+
+  /** Flashes the row under a screen point, as it's pressed. */
+  flashAt(x: number, y: number): void {
+    const r = this.isOpen ? pickerRows(this.entries).find((rect) => inRect(rect, x, y)) : undefined;
+    if (r) flashRow(this.scene, r.x, r.y);
+  }
+
   /** The row under a screen point, if the menu is open. */
   entryAt(x: number, y: number): PickerEntry | undefined {
     const row = this.isOpen ? pickerRows(this.entries).find((r) => inRect(r, x, y)) : undefined;
@@ -60,7 +77,7 @@ export class HopperPicker {
   private rebuild(entries: PickerEntry[]): void {
     for (const r of this.rows) {
       for (const o of r.images) o.destroy();
-      r.count.set('');
+      r.count.destroy();
     }
     this.entries = entries;
     const L = PICKER_LAYOUT;
@@ -69,13 +86,13 @@ export class HopperPicker {
     const fixed = (o: GameObjects.Image, depth: number): GameObjects.Image =>
       o.setOrigin(0).setScrollFactor(0).setDepth(depth);
     const add = (x: number, y: number, frame: string, depth: number): GameObjects.Image =>
-      fixed(this.scene.add.image(x, y, ATLAS_KEY, frame), depth);
+      fixed(addVector(this.scene, x, y, frame), depth);
     this.rows = rects.map((r) => {
       const shift = r.action === 'take' ? L.takeShift : 0;
       const images = [add(r.x, r.y, SPRITES.craftRow, DEPTHS.menu)];
       if (r.action === 'take') images.push(add(r.x + L.icon.x, r.y + L.icon.y, pieceIcon('hopper'), DEPTHS.menu + 1));
       images.push(add(r.x + L.icon.x + shift, r.y + L.icon.y, itemDef(r.itemId).icon, DEPTHS.menu + 1));
-      const text = new GlyphLine(this.scene, r.x + L.count.x + shift, r.y + L.count.y, DEPTHS.menu + 1);
+      const text = new TextLine(this.scene, r.x + L.count.x + shift, r.y + L.count.y, DEPTHS.menu + 1, false, 'count');
       return { entry: { action: r.action, itemId: r.itemId }, images, count: text };
     });
   }
@@ -90,7 +107,6 @@ export class HopperPicker {
     const y = first.y - L.pad;
     const w = first.w + 2 * L.pad;
     const h = last.y + last.h - first.y + 2 * L.pad;
-    this.panel.fillStyle(colorOf(L.border)).fillRect(x - 1, y - 1, w + 2, h + 2);
-    this.panel.fillStyle(colorOf(L.back)).fillRect(x, y, w, h);
+    drawTablet(this.panel, x, y, w, h);
   }
 }

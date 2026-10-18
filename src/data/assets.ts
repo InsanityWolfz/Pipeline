@@ -1,12 +1,26 @@
 // Asset keys. Render code loads and draws by these keys, never string literals.
 
-/** The sprite atlas built by `npm run art` (assets/build/sprites.png + .json). */
-export const ATLAS_KEY = 'sprites';
+/** Vector frames drawn at boot (016): one texture of shelf-packed canvas pages, holding every sprite frame by name. */
+export const VECTOR_KEY = 'vectors';
 
-/** Frame names in the atlas for single-frame sprites, one per sprite grid in assets/sprites. */
+/** The wanderer's canvas, redrawn every frame (016). */
+export const WANDERER_KEY = 'wanderer';
+
+/** The overworld (017): standing sprites drawn from src/data/art/terrain.ts, its ground chunk textures, and the minimap. */
+export const OVERWORLD_SPRITES = {
+  trees: ['ow-tree-0', 'ow-tree-1', 'ow-tree-2'],
+  rocks: ['ow-rock-0', 'ow-rock-1'],
+  ruinStone: 'ow-ruin-stone',
+  ruinWall: 'ow-ruin-wall',
+  entrance: 'ow-entrance',
+  column: 'ow-column',
+} as const;
+export const OVERWORLD_TEXTURES = { ground: 'ow-ground', safeGlow: 'ow-safe-glow', minimap: 'ow-minimap' } as const;
+
+/** Frame names for single-frame sprites (vector shape data in src/data/art). */
 export const SPRITES = {
   leyCrystal: 'ley-crystal',
-  floor: 'floor-rune',
+  floor: 'floor-flag',
   wall: 'wall',
   ruinBlock: 'ruin-block',
   arrow: 'arrow',
@@ -43,61 +57,29 @@ export const SPRITES = {
   craftPanel: 'craft-panel',
   craftRow: 'craft-row',
   craftRowHover: 'craft-row-hover',
+  /** A menu row's look for a moment after it's pressed (020). */
+  craftRowPress: 'craft-row-press',
   craftArrow: 'craft-arrow',
   hudAmmoCell: 'hud-ammo-cell',
   hudAmmoSelect: 'hud-ammo-select',
 } as const;
 
-/** Gathering node sprites by node id: full, and depleted. */
-export const NODE_SPRITES: Readonly<Record<string, { full: string; depleted: string }>> = {
-  tree: { full: 'node-tree', depleted: 'node-tree-depleted' },
-  rubble: { full: 'node-rubble', depleted: 'node-rubble-depleted' },
-  reeds: { full: 'node-reeds', depleted: 'node-reeds-depleted' },
-  'ley-vein': { full: 'node-ley-vein', depleted: 'node-ley-vein-depleted' },
-};
-
-/** The tube held by the player, by direction. `side` points right; left is drawn flipped. */
-export const TUBE_SPRITES = {
-  down: 'tube-down',
-  up: 'tube-up',
-  side: 'tube-side',
-} as const;
-
-/** The tube's attuning pulse (007), drawn over the tube in the same spot: 2-frame loops by direction. */
-export const TUBE_ATTUNE = {
-  down: { key: 'tube-attune-down', frames: 2, frameRate: 8, loop: true },
-  up: { key: 'tube-attune-up', frames: 2, frameRate: 8, loop: true },
-  side: { key: 'tube-attune-side', frames: 2, frameRate: 8, loop: true },
-} as const satisfies Record<keyof typeof TUBE_SPRITES, AnimDef>;
-
 /**
- * Where the tube's top-left corner sits relative to the player's feet (the bottom
- * centre of the player sprite), px, for the right-facing side; left mirrors it.
- * `behind` draws it under the player.
+ * A node type's vector frames (018): `uses[i]` with i + 1 uses left, and `regrow[0]` the bare remains,
+ * then each regrow stage. The counts match NODES' uses and REGROW_STAGES (src/data/art/nodes.ts checks).
  */
-export const TUBE_GRIP: Readonly<Record<keyof typeof TUBE_SPRITES, { x: number; y: number; behind: boolean }>> = {
-  down: { x: -5, y: -24, behind: false },
-  up: { x: 3, y: -37, behind: true },
-  side: { x: 2, y: -22, behind: true },
+const nodeFrames = (id: string, uses: number, stages: number) => ({
+  uses: Array.from({ length: uses }, (_, i) => `node-${id}-${i + 1}`),
+  regrow: Array.from({ length: stages + 1 }, (_, i) => `node-${id}-regrow-${i}`),
+});
+
+/** Gathering node frames by node id. */
+export const NODE_SPRITES: Readonly<Record<string, { uses: readonly string[]; regrow: readonly string[] }>> = {
+  tree: nodeFrames('tree', 3, 3),
+  rubble: nodeFrames('rubble', 3, 3),
+  reeds: nodeFrames('reeds', 3, 3),
+  'ley-vein': nodeFrames('ley-vein', 3, 3),
 };
-
-/** The HUD number font: frames `hud-digits/0`..`/9`, then `/` as frame 10, `+` as frame 11 and `-` as frame 12. */
-export const HUD_DIGITS = { key: 'hud-digits', glyphs: '0123456789/+-', advance: 4 } as const;
-
-/** The HUD letter font (010): uppercase letters, space and a little punctuation, the same 3x5 size and advance as the digits. */
-/** Height of the HUD font's glyphs (digits and letters), px. */
-export const GLYPH_HEIGHT = 5;
-
-export const HUD_LETTERS = { key: 'hud-letters', glyphs: "ABCDEFGHIJKLMNOPQRSTUVWXYZ .,'!?():—" } as const;
-
-/** Atlas frame for one HUD font character: a digit (or / + -), else a letter (lowercase draws as uppercase). */
-export function digitFrame(ch: string): string {
-  const digit = HUD_DIGITS.glyphs.indexOf(ch);
-  if (digit >= 0) return `${HUD_DIGITS.key}/${digit}`;
-  const letter = HUD_LETTERS.glyphs.indexOf(ch.toUpperCase());
-  if (letter < 0) throw new Error(`No HUD glyph for '${ch}'`);
-  return `${HUD_LETTERS.key}/${letter}`;
-}
 
 /** Hotbar slot layout, px from the slot's top-left. */
 export const HUD_SLOT_LAYOUT = {
@@ -107,71 +89,19 @@ export const HUD_SLOT_LAYOUT = {
   /** Gap below the slot to the bottom of the screen. */
   margin: 6,
   /** Palette id: the slot tint while a dry fire shows. */
-  dryFireTint: 'ember',
+  dryFireTint: 'rust',
 } as const;
 
 /** An animation: the sprite grid `key` with `frames` frames (`key/0`..), or a single frame `key`. */
 export interface AnimDef {
   key: string;
   frames: number;
-  /**
-   * Frames per second, or 'roll' to stretch the frames over exactly one roll.
-   * The roll rate is computed in src/render/PlayerView.ts, since this file can't
-   * import tuning (the art build loads it on its own).
-   */
-  frameRate: number | 'roll';
+  /** Frames per second. */
+  frameRate: number;
   loop: boolean;
 }
 
-/** Player animations. `side` faces right; left is drawn flipped. */
-export type PlayerAnim =
-  | 'idle-down'
-  | 'idle-up'
-  | 'idle-side'
-  | 'walk-down'
-  | 'walk-up'
-  | 'walk-side'
-  | 'fire-down'
-  | 'fire-up'
-  | 'fire-side'
-  | 'hit-down'
-  | 'death'
-  | 'hit-up'
-  | 'hit-side'
-  | 'roll';
-
-const WALK_FPS = 8;
 const WALK_FRAMES = 4;
-const ROLL_FRAMES = 4;
-
-/** The idle breathe (014): frames, and frames per second. */
-const IDLE_FRAMES = 4;
-const IDLE_FPS = 3;
-
-const playerAnim = (name: PlayerAnim, frames: number, frameRate: AnimDef['frameRate'], loop: boolean): AnimDef => ({
-  key: `player-${name}`,
-  frames,
-  frameRate,
-  loop,
-});
-
-export const PLAYER_ANIMS: Readonly<Record<PlayerAnim, AnimDef>> = {
-  'idle-down': playerAnim('idle-down', IDLE_FRAMES, IDLE_FPS, true),
-  'idle-up': playerAnim('idle-up', IDLE_FRAMES, IDLE_FPS, true),
-  'idle-side': playerAnim('idle-side', IDLE_FRAMES, IDLE_FPS, true),
-  'walk-down': playerAnim('walk-down', WALK_FRAMES, WALK_FPS, true),
-  'walk-up': playerAnim('walk-up', WALK_FRAMES, WALK_FPS, true),
-  'walk-side': playerAnim('walk-side', WALK_FRAMES, WALK_FPS, true),
-  'fire-down': playerAnim('fire-down', 1, 1, true),
-  'fire-up': playerAnim('fire-up', 1, 1, true),
-  'fire-side': playerAnim('fire-side', 1, 1, true),
-  'hit-down': playerAnim('hit-down', 1, 1, true),
-  'hit-up': playerAnim('hit-up', 1, 1, true),
-  'hit-side': playerAnim('hit-side', 1, 1, true),
-  roll: playerAnim('roll', ROLL_FRAMES, 'roll', false),
-  /** Played once over the death (011): it should finish inside DYING_TICKS. */
-  death: playerAnim('death', 4, 6, false),
-};
 
 /** Enemy animations. `side` faces right; left is drawn flipped. Death has one view. `recover` is optional: without it, a recovering enemy shows idle. */
 export type EnemyAnim = `${'idle' | 'walk' | 'windup' | 'swipe' | 'recover' | 'hit'}-${'down' | 'up' | 'side'}` | 'death';
@@ -223,10 +153,10 @@ export const DEPOSIT_SWIRL: AnimDef = { key: 'deposit-swirl', frames: 4, frameRa
 /**
  * After a KO (011): the wake-up text shows once the KO fade has played, holds for
  * `holdMs`, then fades over `fadeMs`. `top` is its first line's offset from the
- * screen's centre and `lineStep` the gap between lines, px. `title` and
+ * screen's centre and `lineStep` the gap between lines, px; it sits on a stone tablet `pad` px round it (020). `title` and
  * `lostTitle` are the words shown.
  */
-export const WAKE_TEXT = { holdMs: 3000, fadeMs: 400, top: -24, lineStep: 9, title: 'You wake in the foundry', lostTitle: 'Lost' } as const;
+export const WAKE_TEXT = { holdMs: 3000, fadeMs: 400, top: -24, lineStep: 10, pad: 8, title: 'You wake in the foundry', lostTitle: 'Lost' } as const;
 
 /** A ley burst at the tube's mouth for each projectile fired (008). */
 export const MUZZLE_FLASH: AnimDef = { key: 'muzzle-flash', frames: 2, frameRate: 20, loop: false };
@@ -234,7 +164,7 @@ export const MUZZLE_FLASH: AnimDef = { key: 'muzzle-flash', frames: 2, frameRate
 /** The flame over a burning enemy. */
 export const BURN_FLAME: AnimDef = { key: 'burn-flame', frames: 3, frameRate: 10, loop: true };
 
-/** Atlas frame names for an animation. */
+/** Frame names for an animation. */
 export function animFrames(anim: AnimDef): string[] {
   return anim.frames === 1 ? [anim.key] : Array.from({ length: anim.frames }, (_, i) => `${anim.key}/${i}`);
 }
@@ -246,7 +176,7 @@ export const HUD_HEALTH_LAYOUT = {
   /** The well the fill is drawn in, relative to the frame. */
   fill: { x: 2, y: 2, w: 48, h: 4 },
   /** Palette id of the fill. */
-  fillColor: 'ember',
+  fillColor: 'rust',
 } as const;
 
 export const HUD_MATERIALS_LAYOUT = {
@@ -263,19 +193,19 @@ export const HUD_MATERIALS_LAYOUT = {
 /** Enemy effects drawn in the world. Colours are palette ids. */
 export const ENEMY_FX = {
   /** Fill colour of a hit flash (the palette's white). */
-  flashColor: 'white',
+  flashColor: 'snow',
   /** The swipe telegraph: a faint arc of the full reach, filling in with the wind-up. */
-  telegraphColor: 'ember',
+  telegraphColor: 'rust',
   telegraphAlpha: 0.25,
   telegraphFillAlpha: 0.55,
   /** The Wisp's cast telegraph: a ley ring tightening on it and a faint line along its locked aim (009). */
-  castColor: 'ley-cyan',
+  castColor: 'cyan',
   castRing: { from: 22, to: 10, width: 2, alphaFrom: 0.4 },
   castLine: { length: 64, width: 2, alpha: 0.5 },
   /** Health bar over a damaged enemy: size, and gap above the sprite's top. */
   healthBar: { w: 20, h: 3, gap: 2, border: 1 },
-  healthBarColor: 'ember',
-  healthBarBack: 'outline',
+  healthBarColor: 'rust',
+  healthBarBack: 'ink',
   /** A corpse lingers this long after its death animation, then fades over `corpseFadeMs`. */
   corpseLingerMs: 600,
   corpseFadeMs: 600,
@@ -287,7 +217,7 @@ export const PLAYER_HIT_FX = {
   poseTicks: 8,
   /** While invulnerable the player flashes white and back every this-many ticks, starting white. */
   flickerTicks: 4,
-  flashColor: 'white',
+  flashColor: 'snow',
 } as const;
 
 /** The "+1 [icon]" popup on pickup, and the KO fade. */
@@ -308,10 +238,8 @@ export const DEPTHS = {
   shadow: 0,
   /** Ground decals like the swipe telegraph, above shadows. */
   groundFx: 0.5,
-  /** Nudge that puts the tube just in front of or behind the player. */
+  /** Nudge that puts a tutorial seal just in front of its door. */
   tubeNudge: 0.01,
-  /** Nudge that puts the attuning pulse just in front of the tube. */
-  attuneNudge: 0.005,
   /** Nudge that puts a burn flame just in front of the enemy it's on. */
   flameNudge: 0.01,
   /** Health bars, sparkles and popups over the world. */
@@ -322,11 +250,13 @@ export const DEPTHS = {
   buildTip: 1_000_005,
   /** Tutorial key prompts, over other world UI. */
   prompt: 100_005,
-  /** Build mode's spread fan over the tube socket, just under the build arrows. */
+  /** The claimed pylon's tendril and the motes on the ley line (018): over everything standing in the world, under world UI. */
+  supplyLine: 99_990,
+  /** Build mode's spread fans from the stagers facing the intake, just under the build arrows. */
   spreadFan: 99_998,
   /** Soft ley light pooled on the floor (014), over shadows and under anything standing. */
   glow: 0.25,
-  /** Drifting motes and fireflies, over the world. */
+  /** Drifting motes, over the world. */
   motes: 99_000,
   /** A room's dusk tint and vignette, over the world and under the HUD. */
   mood: 500_000,
@@ -335,9 +265,6 @@ export const DEPTHS = {
   /** The crafting menu, above the HUD. */
   menu: 2_000_000,
 } as const;
-
-/** A node's sprite bottom sits this far below its position (the centre of its feet box), px. */
-export const NODE_SPRITE_DROP = 5;
 
 /** Bombs draw this far above their arc height, so they leave the hand at tube height, px. */
 export const BOMB_LIFT = 10;

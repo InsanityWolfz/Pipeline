@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { straightAmmo } from '../../src/data/ammo';
 import { damageEnemy } from '../../src/sim/enemies';
-import { arena, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, at, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
 const DAMAGE = straightAmmo('arrow').damage;
 
@@ -9,7 +9,7 @@ describe('arrows hitting Husks', () => {
   it('removes the arrow and deals its damage', () => {
     const s = arena();
     const e = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
-    run(s, 1, fireAt(1000, PLAYER_AT.y));
+    run(s, 1, fireAt(at(1000).x, PLAYER_AT.y));
     runUntil(s, () => s.arrows.length === 0, 30);
     expect(DAMAGE).toBe(10);
     expect(e.health).toBe(HUSK.maxHealth - DAMAGE);
@@ -18,7 +18,7 @@ describe('arrows hitting Husks', () => {
   it('records the hit and flashes the Husk', () => {
     const s = arena();
     const e = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
-    run(s, 1, fireAt(1000, PLAYER_AT.y));
+    run(s, 1, fireAt(at(1000).x, PLAYER_AT.y));
     runUntil(s, () => s.events.hits.length > 0, 30);
     expect(s.events.hits).toEqual([{ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: DAMAGE, damageType: 'physical' }]);
     expect(e.flash).toBe(HUSK.hitFlashTicks);
@@ -30,7 +30,7 @@ describe('arrows hitting Husks', () => {
     const s = arena();
     const first = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     const second = placeHusk(s, PLAYER_AT.x + 130, PLAYER_AT.y);
-    run(s, 1, fireAt(1000, PLAYER_AT.y));
+    run(s, 1, fireAt(at(1000).x, PLAYER_AT.y));
     runUntil(s, () => s.arrows.length === 0, 30);
     expect(first.health).toBe(HUSK.maxHealth - DAMAGE);
     expect(second.health).toBe(HUSK.maxHealth);
@@ -41,18 +41,20 @@ describe('arrows hitting Husks', () => {
     // First in the array but 1 px further along the flight, with hurtboxes overlapping.
     const far = placeHusk(s, PLAYER_AT.x + 101, PLAYER_AT.y);
     const near = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y + HUSK.feetBox.h);
-    run(s, 1, fireAt(1000, PLAYER_AT.y));
+    run(s, 1, fireAt(at(1000).x, PLAYER_AT.y));
     runUntil(s, () => s.arrows.length === 0, 30);
     expect(near.health).toBe(HUSK.maxHealth - DAMAGE);
     expect(far.health).toBe(HUSK.maxHealth);
   });
 
   it('hits a Husk standing against a wall', () => {
-    const s = arena(undefined, { x: 1000, y: PLAYER_AT.y });
-    const e = placeHusk(s, 1240, PLAYER_AT.y);
+    // The ruin field's east wall is tile column 49 (017); the Husk stands 40 px left of it.
+    const y = 14.5 * 32;
+    const s = arena(undefined, { x: 49 * 32 - 280, y });
+    const e = placeHusk(s, 49 * 32 - 40, y);
     e.mode = 'recover';
     e.modeTicks = 1;
-    run(s, 1, fireAt(1300, PLAYER_AT.y));
+    run(s, 1, fireAt(49 * 32 + 60, y));
     runUntil(s, () => s.arrows.length === 0, 40);
     expect(e.health).toBe(HUSK.maxHealth - DAMAGE);
   });
@@ -74,12 +76,14 @@ describe('Husk knockback', () => {
   });
 
   it('stops at a wall', () => {
-    const s = arena(undefined, { x: 60, y: PLAYER_AT.y });
-    const e = placeHusk(s, 40, PLAYER_AT.y);
+    // The ruin field's west wall is tile column 31 (017): its east face is x = 1024.
+    const y = 14.5 * 32;
+    const s = arena(undefined, { x: 1024 + 28, y });
+    const e = placeHusk(s, 1024 + 8, y);
     run(s, 1);
     damageEnemy(s, e, DAMAGE, -1, 0);
     run(s, HUSK.hitKnockTicks);
-    expect(e.x).toBe(40);
+    expect(e.x).toBe(1024 + 8);
   });
 });
 
@@ -95,7 +99,7 @@ describe('Husk death', () => {
         return st.enemies.length === 0;
       },
       120,
-      fireAt(1000, PLAYER_AT.y),
+      fireAt(at(1000).x, PLAYER_AT.y),
     );
     expect(s.inventory.arrow).toBe(26);
     expect(deaths).toEqual([{ id: e.id, enemyId: 'husk', x: e.x, y: e.y, facing: e.facing }]);
@@ -171,8 +175,8 @@ describe('ley bolts', () => {
 
   it('stop at a wall', () => {
     const s = bolted();
-    // The ruin hall's left wall is tile column 0; fire at it from 3 tiles away.
-    movePlayer(s, 3.5 * 32, 14.5 * 32);
+    // The ruin field's west wall is tile column 31 (017); fire at it from 3 tiles away.
+    movePlayer(s, 34.5 * 32, 14.5 * 32);
     run(s, 1, fireAt(0, 14.5 * 32));
     let lastX = s.player.x;
     runUntil(
@@ -183,14 +187,14 @@ describe('ley bolts', () => {
       },
       100,
     );
-    expect(lastX).toBeGreaterThanOrEqual(32 - 5);
+    expect(lastX).toBeGreaterThanOrEqual(32 * 32 - 5);
   });
 
   it('stop at a ruin block', () => {
     const s = bolted();
-    // The ruin hall has a block at tile (20, 10), straight above (20, 14).
-    movePlayer(s, 20.5 * 32, 14.5 * 32);
-    run(s, 1, fireAt(20.5 * 32, 0));
+    // The ruin field has a block at tile (49, 15), two tiles straight above open (49, 17) (017).
+    movePlayer(s, 49.5 * 32, 17.5 * 32);
+    run(s, 1, fireAt(49.5 * 32, 0));
     let lastY = s.player.y;
     runUntil(
       s,
@@ -201,6 +205,6 @@ describe('ley bolts', () => {
       100,
     );
     // Removed at the block's bottom edge, well short of its 320 px range.
-    expect(lastY).toBeGreaterThanOrEqual(11 * 32 - 5);
+    expect(lastY).toBeGreaterThanOrEqual(16 * 32 - 5);
   });
 });

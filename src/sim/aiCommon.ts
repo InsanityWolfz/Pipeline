@@ -100,6 +100,7 @@ export function engage(state: SimState, e: EnemyState, sees: boolean): [number, 
     e.modeTicks = 0;
   }
   if (e.mode === 'idle' || e.mode === 'return') {
+    // Anything on screen wakes, however many (Shaun, 017: a player who rounds up a crowd gets the crowd).
     if (!here || !sees) return e.mode === 'return' ? walkHome(e, enemyDef(e.enemyId)) : [0, 0];
     aggro(e);
   }

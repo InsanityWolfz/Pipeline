@@ -1,14 +1,13 @@
 import type { GameObjects, Scene } from 'phaser';
-import { animFrames, ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
+import { animFrames, DEPTHS, SPRITES } from '../data/assets';
 import { TILE_SIZE, VIEW_WIDTH } from '../data/config';
 import {
   CRATE_SPRITE,
-  SOCKET_SPRITES,
   STAGER_SPRITE,
   FACING_ARROWS,
   ICON_RISE,
   HOPPER_SPRITES,
-  MACHINE_HOUSINGS,
+  machineLook,
 } from '../data/foundryAssets';
 import { STAGER_ANGLES, STAGER_START_ANGLE } from '../data/foundry';
 import { BUILD_BAR_LAYOUT, GHOST } from '../data/hudLayout';
@@ -19,6 +18,8 @@ import { colorOf } from './color';
 import { buildBarCells, conduitLook, inRect, pieceIcon, sorterLook } from './foundryLayout';
 import { BuildTip } from './BuildTip';
 import { MAX_ARROWS, placeArrows, viewOf } from './FoundryView';
+import { toView } from './scale';
+import { addVector, showFrame } from './vector/textures';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -26,9 +27,8 @@ const FIRST_PIECE = BUILD_BAR[0] ?? '';
 function bodyFrame(pieceId: string, facing: Facing, inFrom: Facing): string {
   const def = pieceDef(pieceId);
   const view = viewOf(facing);
-  if (def.kind === 'machine') return MACHINE_HOUSINGS[def.footprint][view].idle;
+  if (def.kind === 'machine') return machineLook(def.id, view).idle;
   if (def.kind === 'conduit') return animFrames(conduitLook(facing, inFrom).anim)[0] ?? '';
-  if (def.kind === 'socket') return SOCKET_SPRITES.idle;
   if (def.kind === 'stager') return animFrames(STAGER_SPRITE)[STAGER_ANGLES.indexOf(STAGER_START_ANGLE)] ?? '';
   return def.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE;
 }
@@ -50,14 +50,13 @@ export class BuildView {
 
   constructor(scene: Scene) {
     this.scene = scene;
-    this.highlight = scene.add
-      .image(0, 0, ATLAS_KEY, SPRITES.hudAmmoSelect)
+    this.highlight = addVector(scene, 0, 0, SPRITES.hudAmmoSelect)
       .setOrigin(0)
       .setScrollFactor(0)
       .setDepth(DEPTHS.hud + 2);
-    this.ghost = scene.add.image(0, 0, ATLAS_KEY, bodyFrame(FIRST_PIECE, 'right', 'left')).setAlpha(GHOST.alpha);
-    this.ghostIcon = scene.add.image(0, 0, ATLAS_KEY, pieceIcon(FIRST_PIECE)).setAlpha(GHOST.alpha);
-    this.ghostArrows = Array.from({ length: MAX_ARROWS }, () => scene.add.image(0, 0, ATLAS_KEY, FACING_ARROWS.out.down));
+    this.ghost = addVector(scene, 0, 0, bodyFrame(FIRST_PIECE, 'right', 'left')).setAlpha(GHOST.alpha);
+    this.ghostIcon = addVector(scene, 0, 0, pieceIcon(FIRST_PIECE)).setAlpha(GHOST.alpha);
+    this.ghostArrows = Array.from({ length: MAX_ARROWS }, () => addVector(scene, 0, 0, FACING_ARROWS.out.down));
     for (const o of [this.ghost, this.ghostIcon, ...this.ghostArrows]) o.setDepth(DEPTHS.worldUi - 1);
     this.tip = new BuildTip(scene);
     this.setVisible(false);
@@ -88,7 +87,8 @@ export class BuildView {
     if (!unlocked.includes(this.selected)) this.selected = unlocked[0] ?? FIRST_PIECE;
     this.setVisible(building);
     const pointer = this.scene.input.activePointer;
-    const hovered = building ? buildBarCells(unlocked).find((c) => inRect(c, pointer.x, pointer.y)) : undefined;
+    const at = toView(pointer.x, pointer.y, this.scene.cameras.main.zoom);
+    const hovered = building ? buildBarCells(unlocked).find((c) => inRect(c, at.x, at.y)) : undefined;
     this.tip.show(hovered?.pieceId ?? null, (hovered?.x ?? 0) + (hovered?.w ?? 0) / 2, hovered?.y ?? 0, VIEW_WIDTH);
     if (!building) return;
     const cell = buildBarCells(unlocked).find((c) => c.pieceId === this.selected);
@@ -120,10 +120,10 @@ export class BuildView {
     if (def.kind === 'sorter') {
       // A sorter's ghost shows which side its item will leave by; F flips it (015).
       const look = sorterLook(facing, mirrored);
-      this.ghost.setFrame(animFrames(look.anim)[0] ?? '').setFlip(look.flipX, look.flipY);
+      showFrame(this.ghost, animFrames(look.anim)[0] ?? '').setFlip(look.flipX, look.flipY);
     } else {
       const flip = def.kind === 'conduit' ? conduitLook(facing, inFrom).flip : facing === 'left';
-      this.ghost.setFrame(bodyFrame(pieceId, facing, inFrom)).setFlip(flip, false);
+      showFrame(this.ghost, bodyFrame(pieceId, facing, inFrom)).setFlip(flip, false);
     }
     if (def.kind === 'conduit' || def.kind === 'sorter') this.ghost.setOrigin(0).setPosition(r.x - TILE_SIZE / 2, r.y - TILE_SIZE / 2);
     else this.ghost.setOrigin(0.5, 1).setPosition(r.x, bottom);
@@ -145,8 +145,8 @@ export class BuildView {
     this.cells = buildBarCells(unlocked).map((c) => {
       const fixed = (o: GameObjects.Image, depth: number): GameObjects.Image =>
         o.setOrigin(0).setScrollFactor(0).setDepth(depth).setVisible(this.visible);
-      const frame = fixed(this.scene.add.image(c.x, c.y, ATLAS_KEY, SPRITES.hudAmmoCell), DEPTHS.hud);
-      const icon = this.scene.add.image(c.x + L.icon.x, c.y + L.icon.y, ATLAS_KEY, pieceIcon(c.pieceId));
+      const frame = fixed(addVector(this.scene, c.x, c.y, SPRITES.hudAmmoCell), DEPTHS.hud);
+      const icon = addVector(this.scene, c.x + L.icon.x, c.y + L.icon.y, pieceIcon(c.pieceId));
       fixed(icon, DEPTHS.hud + 1);
       return { pieceId: c.pieceId, images: [frame, icon] };
     });

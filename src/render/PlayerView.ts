@@ -1,29 +1,20 @@
-import type { GameObjects, Scene } from 'phaser';
+import type { GameObjects, Scene, Textures } from 'phaser';
 import { TintModes } from 'phaser';
-import {
-  animFrames,
-  ATLAS_KEY,
-  DEPTHS,
-  PLAYER_ANIMS,
-  PLAYER_HIT_FX,
-  TUBE_ATTUNE,
-  TUBE_GRIP,
-  TUBE_SPRITES,
-  type PlayerAnim,
-} from '../data/assets';
-import { IDLE_SPEED, TICK_RATE } from '../data/config';
-import { DYING_TICKS, FEET_BOX, HIT_INVULN_TICKS, ROLL_TICKS } from '../data/player';
+import { PLAYER_HIT_FX, WANDERER_KEY } from '../data/assets';
+import { WANDERER, WANDERER_FEEL, type WandererView } from '../data/art/wanderer';
+import { IDLE_SPEED } from '../data/config';
+import { DYING_TICKS, FEET_BOX, HIT_INVULN_TICKS } from '../data/player';
+import type { ArmorWeight } from '../data/armor';
+import { ARMOR_TINTS } from '../data/hudLayout';
 import { aimFacing } from '../sim/direction';
 import { isRolling } from '../sim/movement';
 import type { Facing, PlayerState } from '../sim/player';
-import type { ArmorWeight } from '../data/armor';
-import { ARMOR_TINTS } from '../data/hudLayout';
 import type { LinkState } from '../sim/link';
-import type { TubeState } from '../sim/tube';
-import { registerAnim } from './anims';
+import { isFiringHeavy, type TubeState } from '../sim/tube';
+import { attuneBeat } from './attune';
 import { colorOf } from './color';
-
-type View = 'down' | 'up' | 'side';
+import { textureScale } from './vector/textures';
+import { drawWanderer, REST_POSE, type WandererPose } from './vector/wandererRig';
 
 /** The share of a death, at its end, over which the remains fade out. */
 const DEATH_FADE_SHARE = 1 / 3;
@@ -31,93 +22,140 @@ const DEATH_FADE_SHARE = 1 / 3;
 /** A multiply tint that leaves a corner's colour as drawn. */
 const UNTINTED = 0xffffff;
 
-const viewOf = (f: Facing): View => (f === 'up' || f === 'down' ? f : 'side');
+const FEEL = WANDERER_FEEL;
 
-// Draws the player and the held tube from sim state. The sprite stands on the
-// bottom of the feet box and sorts by that point against walls and ruin blocks.
-// While the tube attunes, a ley pulse plays over it.
+const viewOf = (f: Facing): WandererView => (f === 'up' || f === 'down' ? f : 'side');
+
+const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v));
+
+/** The tube's local angle for the view: side aims within ±spread of level, down and up around straight down and up. */
+function localAim(view: WandererView, dx: number, dy: number, flip: boolean): number {
+  const a = FEEL.aimSpread;
+  if (view === 'side') return clamp(Math.atan2(dy, flip ? -dx : dx), -a, a);
+  const angle = Math.atan2(dy, dx);
+  const axis = view === 'down' ? Math.PI / 2 : -Math.PI / 2;
+  let off = angle - axis;
+  while (off > Math.PI) off -= Math.PI * 2;
+  while (off < -Math.PI) off += Math.PI * 2;
+  return axis + clamp(off, -a, a);
+}
+
+// Draws the player from sim state (016): the wanderer rig posed each frame into a
+// canvas texture. It stands on the bottom of the feet box and sorts by that point.
 export class PlayerView {
-  readonly sprite: GameObjects.Sprite;
-  private readonly tube: GameObjects.Image;
-  private readonly attune: GameObjects.Sprite;
-  private lastRollTick = 0;
+  readonly sprite: GameObjects.Image;
+  private readonly canvas: Textures.CanvasTexture;
+  private readonly scale: number;
+  private pose: WandererPose = { ...REST_POSE };
+  private lastX = 0;
+  private lastY = 0;
+  private flapClock = 0;
+  private lastTime = -1;
 
   constructor(scene: Scene) {
-    for (const anim of Object.values(PLAYER_ANIMS)) {
-      registerAnim(scene, anim, anim.frameRate === 'roll' ? (anim.frames * TICK_RATE) / ROLL_TICKS : undefined);
-    }
-    this.sprite = scene.add.sprite(0, 0, ATLAS_KEY, animFrames(PLAYER_ANIMS['idle-down'])[0]).setOrigin(0.5, 1);
-    this.tube = scene.add.image(0, 0, ATLAS_KEY, TUBE_SPRITES.down).setOrigin(0, 0);
-    for (const anim of Object.values(TUBE_ATTUNE)) registerAnim(scene, anim);
-    this.attune = scene.add.sprite(0, 0, ATLAS_KEY).setOrigin(0, 0).setVisible(false);
+    this.scale = textureScale();
+    const [w, h] = WANDERER.box.size;
+    const canvas = scene.textures.createCanvas(WANDERER_KEY, Math.ceil(w * this.scale), Math.ceil(h * this.scale));
+    if (!canvas) throw new Error('Could not create the wanderer canvas');
+    this.canvas = canvas;
+    this.sprite = scene.add
+      .image(0, 0, WANDERER_KEY)
+      .setScale(1 / this.scale)
+      .setOrigin(WANDERER.box.anchor[0] / w, WANDERER.box.anchor[1] / h);
   }
 
-  /** Draws the player; `shown` false hides them (they're in a room not yet on screen). */
-  /** `hasTube` false (012) draws the player empty-handed. */
+  /** Draws the player; `shown` false hides them (they're in a room not yet on screen). `hasTube` false (012) draws them empty-handed. */
   update(p: PlayerState, tube: TubeState, link: LinkState, armor: ArmorWeight | null, hasTube: boolean, shown = true): void {
+    const now = this.sprite.scene.time.now;
+    const dt = this.lastTime < 0 ? FEEL.frameMs : Math.min(FEEL.maxFrameMs, now - this.lastTime);
+    this.lastTime = now;
     this.sprite.setVisible(shown);
     const bottom = p.y + FEET_BOX.h / 2;
     this.sprite.setPosition(p.x, bottom).setDepth(bottom);
-    const rolling = isRolling(p);
-    // The body faces the aim like the tube does; a roll shows its own direction.
-    const facing = rolling ? p.facing : aimFacing(p.aimX - p.x, p.aimY - p.y, p.facing);
-    this.sprite.setFlipX(facing === 'left');
-
-    // The last stretch of a death fades the remains out before waking in the foundry.
     this.sprite.setAlpha(p.dying > 0 ? Math.min(1, p.dying / (DYING_TICKS * DEATH_FADE_SHARE)) : 1);
-    if (p.dying > 0) {
-      if (this.sprite.anims.currentAnim?.key !== PLAYER_ANIMS.death.key) this.sprite.play(PLAYER_ANIMS.death.key);
-    } else if (rolling) {
-      // Restart on a new roll, even one that follows straight after another.
-      const fresh = p.rollTick < this.lastRollTick || this.sprite.anims.currentAnim?.key !== PLAYER_ANIMS.roll.key;
-      if (fresh) this.sprite.play(PLAYER_ANIMS.roll.key);
-    } else {
-      const moving = Math.hypot(p.vx, p.vy) >= IDLE_SPEED;
-      const hit = p.hurtTicks > HIT_INVULN_TICKS - PLAYER_HIT_FX.poseTicks;
-      const pose = hit ? 'hit' : tube.firing ? 'fire' : moving ? 'walk' : 'idle';
-      const name: PlayerAnim = `${pose}-${viewOf(facing)}`;
-      this.sprite.play(PLAYER_ANIMS[name].key, true);
-    }
-    this.lastRollTick = p.rollTick;
+
+    this.pose = this.nextPose(p, tube, link, hasTube, dt);
+    this.redraw(p);
 
     // Hit invulnerability flickers between a white flash and normal, starting white.
     const elapsed = HIT_INVULN_TICKS - p.hurtTicks;
     const white = p.hurtTicks > 0 && Math.floor(elapsed / PLAYER_HIT_FX.flickerTicks) % 2 === 0;
-    for (const o of [this.sprite, this.tube]) {
-      if (white) o.setTint(colorOf(PLAYER_HIT_FX.flashColor)).setTintMode(TintModes.FILL);
-      else o.clearTint();
-    }
-    // Worn armor shades the body below the head by its weight (the tube stays its own colour).
-    if (!white && armor) {
+    if (white) this.sprite.setTint(colorOf(PLAYER_HIT_FX.flashColor)).setTintMode(TintModes.FILL);
+    else if (armor) {
+      // Worn armor shades the body below the hood by its weight.
       const body = colorOf(ARMOR_TINTS[armor]);
       this.sprite.setTint(UNTINTED, UNTINTED, body, body).setTintMode(TintModes.MULTIPLY);
-    }
-    this.tube.setVisible(shown && hasTube && !rolling && p.dying === 0);
-    if (!rolling) this.placeTube(p, facing, bottom);
-    this.placeAttune(facing, shown && hasTube && !rolling && link.attunePulse > 0);
+    } else this.sprite.clearTint();
   }
 
-  /** The attuning pulse sits exactly over the tube, a hair in front of it. */
-  private placeAttune(facing: Facing, on: boolean): void {
-    this.attune.setVisible(on);
-    if (!on) {
-      this.attune.stop();
-      return;
-    }
-    this.attune.play(TUBE_ATTUNE[viewOf(facing)].key, true);
-    this.attune.setPosition(this.tube.x, this.tube.y).setFlipX(this.tube.flipX);
-    this.attune.setDepth(this.tube.depth + DEPTHS.attuneNudge);
-  }
+  private nextPose(p: PlayerState, tube: TubeState, link: LinkState, hasTube: boolean, dt: number): WandererPose {
+    const prev = this.pose;
+    const frames = dt / FEEL.frameMs;
+    const k = 1 - Math.pow(1 - FEEL.ease, frames);
+    const ease = (from: number, to: number): number => from + (to - from) * k;
 
-  /** Holds the tube toward the aim, snapped to 4 directions. */
-  private placeTube(p: PlayerState, facing: Facing, bottom: number): void {
+    const rolling = isRolling(p);
+    const dx = p.aimX - p.x;
+    const dy = p.aimY - (p.y - FEEL.aimHeight);
+    const facing = rolling ? p.facing : aimFacing(p.aimX - p.x, p.aimY - p.y, p.facing);
     const view = viewOf(facing);
-    const grip = TUBE_GRIP[view];
-    this.tube.setFrame(TUBE_SPRITES[view]);
-    const left = facing === 'left';
-    const x = left ? -(grip.x + this.tube.width) : grip.x;
-    this.tube.setFlipX(left);
-    this.tube.setPosition(p.x + x, bottom + grip.y);
-    this.tube.setDepth(bottom + (grip.behind ? -DEPTHS.tubeNudge : DEPTHS.tubeNudge));
+    const flip = facing === 'left';
+    const heavy = hasTube && isFiringHeavy(tube);
+    const shot = heavy && tube.shotCount > 0;
+    const hit = p.hurtTicks > HIT_INVULN_TICKS - PLAYER_HIT_FX.poseTicks;
+    const dying = p.dying > 0 ? 1 - p.dying / DYING_TICKS : 0;
+
+    let target: { lean: number; crouch: number; stance: number; push: number } = { lean: 0, crouch: 0, stance: WANDERER.rig.restStance, push: 0 };
+    if (heavy) target = { ...FEEL.firing };
+    if (hit) target = { ...target, lean: FEEL.hit.lean, push: FEEL.hit.push };
+    if (rolling) target = { ...target, lean: FEEL.roll.lean, crouch: FEEL.roll.crouch, stance: FEEL.roll.stance, push: 0 };
+    if (dying > 0) target = { lean: FEEL.death.lean * dying, crouch: FEEL.death.crouch * dying, stance: FEEL.death.stance, push: 0 };
+
+    const moved = Math.hypot(p.x - this.lastX, p.y - this.lastY);
+    this.lastX = p.x;
+    this.lastY = p.y;
+    const walking = !rolling && Math.hypot(p.vx, p.vy) >= IDLE_SPEED;
+    this.flapClock += dt * FEEL.flapSpeed;
+    const swing = heavy ? FEEL.flap.firing : walking ? FEEL.flap.walk : FEEL.flap.rest;
+
+    return {
+      view,
+      flip,
+      aim: hasTube ? localAim(view, dx, dy, flip) : prev.aim,
+      lean: ease(prev.lean, target.lean) + (shot ? FEEL.shot.lean : 0),
+      crouch: ease(prev.crouch, target.crouch),
+      stance: ease(prev.stance, target.stance),
+      push: ease(prev.push, target.push) + (shot ? FEEL.shot.push : 0),
+      kick: shot ? FEEL.shot.kick : prev.kick * Math.pow(FEEL.kickDecay, frames),
+      stride: walking ? prev.stride + moved * FEEL.stride : prev.stride,
+      stepping: ease(prev.stepping, walking ? 1 : 0),
+      flap: Math.sin(this.flapClock) * swing,
+      flow: prev.flow + dt * (heavy ? FEEL.flow.firing : FEEL.flow.idle),
+      glow: (shot ? FEEL.glow.shot : FEEL.glow.rest + FEEL.glow.pulse * Math.sin(this.sprite.scene.time.now * FEEL.glow.speed)) * (1 - dying),
+      hasTube,
+      attuned: link.attuned,
+      attuning: attuneBeat(link.attunePulse).gun,
+      muzzle: shot ? FEEL.muzzle.shot : FEEL.muzzle.rest,
+    };
+  }
+
+  private redraw(p: PlayerState): void {
+    const c = this.canvas.context;
+    const s = this.scale;
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    c.setTransform(s, 0, 0, s, WANDERER.box.anchor[0] * s, WANDERER.box.anchor[1] * s);
+    if (isRolling(p)) {
+      // The roll's smear: fading copies trail behind along the roll.
+      for (const back of FEEL.smear.steps) {
+        c.save();
+        c.globalAlpha = FEEL.smear.alpha;
+        c.translate(-p.rollDirX * back, -p.rollDirY * back);
+        drawWanderer(c, this.pose, s);
+        c.restore();
+      }
+    }
+    drawWanderer(c, this.pose, s);
+    this.canvas.refresh();
   }
 }

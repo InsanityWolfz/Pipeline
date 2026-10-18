@@ -3,7 +3,7 @@ import { PORT_TICKS } from '../../src/data/claims';
 import { TILE_SIZE } from '../../src/data/config';
 import { CONDUIT_TICKS, HOPPER_TICKS } from '../../src/data/foundry';
 import { BUILD_BAR } from '../../src/data/pieces';
-import { SHRINE_ROOM } from '../../src/data/rooms';
+import { SHRINE_SITE } from '../../src/data/rooms';
 import { claim } from '../../src/sim/claims';
 import { place, unlockedPieces } from '../../src/sim/placement';
 import type { ConduitState, CrateState, HopperState } from '../../src/sim/pieces';
@@ -191,7 +191,7 @@ describe('setting a sorter', () => {
 describe('splitting the supply line', () => {
   it('sorts wood and stone off the port onto their own belts into crates', () => {
     const s = foundry();
-    claim(s, SHRINE_ROOM);
+    claim(s, SHRINE_SITE);
     // The port at (1,8) hands right into (2,8). Wood drops out at (2,9), stone at (3,9), the rest runs on to (4,8).
     const a = sorter(s, 2, 8, 'wood');
     const b = sorter(s, 3, 8, 'stone');
@@ -210,7 +210,7 @@ describe('splitting the supply line', () => {
   it('is deterministic', () => {
     const build = () => {
       const s = foundry();
-      claim(s, SHRINE_ROOM);
+      claim(s, SHRINE_SITE);
       sorter(s, 2, 8, 'wood');
       put(s, 'crate', 2, 9);
       put(s, 'crate', 3, 8);

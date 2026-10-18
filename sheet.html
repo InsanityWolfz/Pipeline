@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Pipeline contact sheet</title>
+    <style>
+      body { margin: 0; padding: 16px; background: #5cc850; font: 14px system-ui, sans-serif; color: #1e1a2e; } /* daylight `grass-bright` and `ink` */
+      h2 { margin: 18px 0 6px; font-size: 16px; }
+      .row { display: flex; flex-wrap: wrap; gap: 10px; }
+      figure { margin: 0; display: grid; gap: 2px; justify-items: center; }
+      figcaption { font-size: 11px; }
+      canvas { background: rgba(255, 255, 255, 0.18); }
+    </style>
+  </head>
+  <body>
+    <!-- Dev only (016): every vector sprite, pose and facing at 4×, for art review. npm run dev, then open /sheet.html. -->
+    <div id="sheet"></div>
+    <script type="module" src="./src/render/vector/sheet.ts"></script>
+  </body>
+</html>

@@ -1,18 +1,23 @@
 import type { GameObjects, Scene } from 'phaser';
-import { TintModes } from 'phaser';
-import { animFrames, ATLAS_KEY, BURN_FLAME, BURN_FLAME_HEIGHT, DEPTHS, ENEMY_ANIMS, ENEMY_FX } from '../data/assets';
+import { BlendModes, TintModes } from 'phaser';
+import { animFrames, BURN_FLAME, BURN_FLAME_HEIGHT, DEPTHS, ENEMY_ANIMS, ENEMY_FX } from '../data/assets';
+import { HUSK_RIG, RESIN } from '../data/art/husk';
+import { CORE, WARDEN_RIG } from '../data/art/warden';
 import { IDLE_SPEED } from '../data/config';
 import { attackOf, enemyDef } from '../data/enemies';
 import type { EnemyState } from '../sim/enemies';
 import type { Facing } from '../sim/player';
 import { registerAnim } from './anims';
 import { colorOf } from './color';
+import { addVectorSprite } from './vector/textures';
 
 interface Drawn {
   sprite: GameObjects.Sprite;
   telegraph: GameObjects.Graphics;
   bar: GameObjects.Graphics;
   flame: GameObjects.Sprite;
+  /** A Husk's resin drip and glint, or the Warden's core halo (018). */
+  overlay?: GameObjects.Graphics;
 }
 
 const viewOf = (f: Facing): 'down' | 'up' | 'side' => (f === 'up' || f === 'down' ? f : 'side');
@@ -66,9 +71,11 @@ export class EnemyView {
       if (d.sprite.anims.currentAnim?.key !== key) d.sprite.play(key);
       if (e.flash > 0) d.sprite.setTint(colorOf(ENEMY_FX.flashColor)).setTintMode(TintModes.FILL);
       else d.sprite.clearTint();
-      this.drawBar(d.bar, e, bottom - d.sprite.height);
+      this.drawBar(d.bar, e, bottom - d.sprite.displayHeight * d.sprite.originY);
       this.drawTelegraph(d.telegraph, e);
       d.flame.setVisible(e.burnTicks > 0).setPosition(e.x, bottom - BURN_FLAME_HEIGHT).setDepth(bottom + DEPTHS.flameNudge);
+      if (d.overlay && e.enemyId === RESIN.enemyId) this.drawResin(d.overlay, e, bottom, view, now);
+      if (d.overlay && e.enemyId === CORE.enemyId) this.drawCore(d.overlay, e, bottom, view, now);
     }
     for (const [id, d] of this.drawn) {
       if (live.has(id)) continue;
@@ -77,6 +84,7 @@ export class EnemyView {
       d.telegraph.destroy();
       d.bar.destroy();
       d.flame.destroy();
+      d.overlay?.destroy();
       this.drawn.delete(id);
     }
   }
@@ -85,14 +93,46 @@ export class EnemyView {
     const anims = ENEMY_ANIMS[enemyDef(e.enemyId).anims];
     const first = anims ? animFrames(anims['idle-down'])[0] : undefined;
     const d: Drawn = {
-      sprite: this.scene.add.sprite(0, 0, ATLAS_KEY, first).setOrigin(0.5, 1),
+      sprite: addVectorSprite(this.scene, 0, 0, first ?? ''),
       telegraph: this.scene.add.graphics().setDepth(DEPTHS.groundFx),
       bar: this.scene.add.graphics().setDepth(DEPTHS.worldUi),
-      flame: this.scene.add.sprite(0, 0, ATLAS_KEY, animFrames(BURN_FLAME)[0]).setVisible(false),
+      flame: addVectorSprite(this.scene, 0, 0, animFrames(BURN_FLAME)[0] ?? '').setVisible(false),
     };
     d.flame.play(BURN_FLAME.key);
+    if (e.enemyId === RESIN.enemyId) d.overlay = this.scene.add.graphics();
+    // The core's halo is light, added over the stone.
+    if (e.enemyId === CORE.enemyId) d.overlay = this.scene.add.graphics().setBlendMode(BlendModes.ADD);
     this.drawn.set(e.id, d);
     return d;
+  }
+
+  /** A slow drop of resin falling from the binding, and a glint on the bead; out of step from Husk to Husk. Hidden from behind. */
+  private drawResin(g: GameObjects.Graphics, e: EnemyState, bottom: number, view: 'down' | 'up' | 'side', now: number): void {
+    g.clear();
+    if (view === 'up') return;
+    const k = HUSK_RIG.scale;
+    const x = e.x + RESIN.blob[0] * k * (e.facing === 'left' ? -1 : 1);
+    const y = bottom + RESIN.blob[1] * k;
+    g.setDepth(bottom + DEPTHS.flameNudge);
+    const { glint: gl, drop } = RESIN;
+    const glint = (Math.sin(((now + e.id * RESIN.phase.glint) / RESIN.glintMs) * Math.PI * 2) + 1) / 2;
+    g.fillStyle(colorOf(gl.color), glint * gl.alpha).fillCircle(x + gl.at[0] * k, y + gl.at[1] * k, gl.r);
+    const t = (now + e.id * RESIN.phase.drip) % RESIN.dripMs;
+    if (t >= RESIN.fallMs) return;
+    const p = t / RESIN.fallMs;
+    g.fillStyle(colorOf(drop.color), 1 - p).fillEllipse(x + drop.at[0] * k, y + drop.at[1] * k + RESIN.fallPx * p * p, drop.size[0], drop.size[1]);
+  }
+
+  /** A halo round the Warden's chest core: a faint glow at rest, pulsing hard through the wind-up. Hidden from behind. */
+  private drawCore(g: GameObjects.Graphics, e: EnemyState, bottom: number, view: 'down' | 'up' | 'side', now: number): void {
+    g.clear();
+    if (view === 'up') return;
+    const k = WARDEN_RIG.scale;
+    const x = e.x + (view === 'side' ? CORE.side * (e.facing === 'left' ? -1 : 1) : CORE.at[0]) * k;
+    const y = bottom + CORE.at[1] * k;
+    const pulse = e.mode === 'windup' ? (Math.sin((now / CORE.pulseMs) * Math.PI * 2) + 1) / 2 : 0;
+    g.setDepth(bottom + DEPTHS.flameNudge);
+    g.fillStyle(colorOf(CORE.haloColor), CORE.rest + (CORE.peak - CORE.rest) * pulse).fillCircle(x, y, CORE.halo * k * (1 + CORE.swell * pulse));
   }
 
   /** A small bar over the sprite, only once the enemy has taken damage. */

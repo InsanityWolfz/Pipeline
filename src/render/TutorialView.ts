@@ -1,15 +1,15 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS } from '../data/assets';
+import { DEPTHS } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
 import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
 import type { GateId } from '../data/rooms';
 import { roomById, type SimState } from '../sim/state';
 import { doorOpen } from '../sim/tutorial';
-import { registerAnim } from './anims';
+import { addVector, addVectorSprite, showFrame } from './vector/textures';
 
 // The tutorial's world pieces (012): the tube on its stone (then the bare stone),
-// rubble over the foundry door and a ley barrier over the shrine door while their
-// gates are shut, crumbling away as each opens.
+// rubble over the foundry's stairs while its gate is shut, crumbling away as it
+// opens. The shrine site's barrier is a dome (OverworldView, 017).
 export class TutorialView {
   private readonly scene: Scene;
   private readonly stone: GameObjects.Image;
@@ -18,15 +18,14 @@ export class TutorialView {
 
   constructor(scene: Scene) {
     this.scene = scene;
-    registerAnim(scene, TUTORIAL_SPRITES.barrier);
-    this.stone = scene.add.image(0, 0, ATLAS_KEY, TUTORIAL_SPRITES.stone).setOrigin(0.5, 1).setVisible(false);
+    this.stone = addVector(scene, 0, 0, TUTORIAL_SPRITES.stone).setVisible(false);
   }
 
   update(sim: SimState, shown: string): void {
     if (shown !== this.room) this.show(sim, shown);
     const stone = roomById(shown).tubeStone;
     this.stone.setVisible(stone !== undefined);
-    if (stone) this.stone.setFrame(sim.hasTube ? TUTORIAL_SPRITES.stoneEmpty : TUTORIAL_SPRITES.stone);
+    if (stone) showFrame(this.stone, sim.hasTube ? TUTORIAL_SPRITES.stoneEmpty : TUTORIAL_SPRITES.stone);
     for (const seal of this.seals) {
       if (!doorOpen(sim, seal.gate) || seal.fading) continue;
       // The gate just opened: the seal crumbles away.
@@ -43,9 +42,7 @@ export class TutorialView {
     this.seals = (room.doorways ?? []).flatMap((d) => {
       if (!d.gate || doorOpen(sim, d.gate)) return [];
       const bottom = (d.ty + 1) * TILE_SIZE;
-      const sprite = this.scene.add.sprite(d.tx * TILE_SIZE, bottom, ATLAS_KEY).setOrigin(0, 1).setDepth(bottom + DEPTHS.tubeNudge);
-      if (d.gate === 'shrine') sprite.play(TUTORIAL_SPRITES.barrier.key);
-      else sprite.setFrame(TUTORIAL_SPRITES.rubble);
+      const sprite = addVectorSprite(this.scene, d.tx * TILE_SIZE, bottom, TUTORIAL_SPRITES.rubble).setOrigin(0, 1).setDepth(bottom + DEPTHS.tubeNudge);
       return [{ gate: d.gate, sprite, fading: false }];
     });
     const stone = room.tubeStone;

@@ -1,5 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS, HUD_HEALTH_LAYOUT, HUD_MATERIALS_LAYOUT, HUD_SLOT_LAYOUT, SPRITES } from '../data/assets';
+import { DEPTHS, HUD_HEALTH_LAYOUT, HUD_MATERIALS_LAYOUT, HUD_SLOT_LAYOUT, SPRITES } from '../data/assets';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { itemDef, ITEMS } from '../data/items';
 import { MAX_HEALTH } from '../data/player';
@@ -13,13 +13,15 @@ import { slotCount, slotItem, type TubeState } from '../sim/tube';
 import { AmmoStripView } from './AmmoStripView';
 import { HUD_ARMOR_LAYOUT } from '../data/hudLayout';
 import { colorOf } from './color';
-import { GlyphLine } from './glyphLine';
+import { TextLine } from './textLine';
+import { toView } from './scale';
+import { addVector } from './vector/textures';
 
 /** One material row: its icon and count, shown only while the player holds some. */
 interface MaterialRow {
   itemId: string;
   icon: GameObjects.Image;
-  count: GlyphLine;
+  count: TextLine;
 }
 
 // The hotbar: slot 1 with its selected ammo's icon and count (carried rounds,
@@ -30,7 +32,7 @@ export class HudView {
   private readonly slot: GameObjects.Image;
   private readonly icon: GameObjects.Image;
   private readonly glow: GameObjects.Image;
-  private readonly count: GlyphLine;
+  private readonly count: TextLine;
   private readonly crosshair: GameObjects.Image;
   private readonly scene: Scene;
   private readonly healthFill: GameObjects.Graphics;
@@ -38,12 +40,12 @@ export class HudView {
   private readonly materials: MaterialRow[];
   private readonly strip: AmmoStripView;
   private readonly armorIcon: GameObjects.Image;
-  private readonly armorCount: GlyphLine;
+  private readonly armorCount: TextLine;
 
   /** A screen point on any part of the HUD: a press there never fires (015). */
   overUi(x: number, y: number): boolean {
     const inBox = (b: { x: number; y: number; w: number; h: number }): boolean => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h;
-    const imageBox = (o: GameObjects.Image) => ({ x: o.x, y: o.y, w: o.width, h: o.height });
+    const imageBox = (o: GameObjects.Image) => ({ x: o.x, y: o.y, w: o.displayWidth, h: o.displayHeight });
     const rows = this.materials.filter((m) => m.icon.visible).map((m) => ({ ...imageBox(m.icon), w: HUD_MATERIALS_LAYOUT.rowWidth }));
     const parts = [imageBox(this.slot), this.strip.box, imageBox(this.health), ...rows];
     if (this.armorIcon.visible) parts.push(imageBox(this.armorIcon));
@@ -56,36 +58,36 @@ export class HudView {
       o.setScrollFactor(0).setDepth(DEPTHS.hud);
       return o;
     };
-    this.slot = fixed(scene.add.image(0, 0, ATLAS_KEY, SPRITES.hudSlot).setOrigin(0));
-    const left = Math.round((VIEW_WIDTH - this.slot.width) / 2);
-    const top = VIEW_HEIGHT - this.slot.height - HUD_SLOT_LAYOUT.margin;
+    this.slot = fixed(addVector(scene, 0, 0, SPRITES.hudSlot).setOrigin(0));
+    const left = Math.round((VIEW_WIDTH - this.slot.displayWidth) / 2);
+    const top = VIEW_HEIGHT - this.slot.displayHeight - HUD_SLOT_LAYOUT.margin;
     this.slot.setPosition(left, top);
     const { icon, count: at } = HUD_SLOT_LAYOUT;
     const startIcon = itemDef(slotItem({ ammoId: STARTING_AMMO })).icon;
-    this.icon = fixed(scene.add.image(left + icon.x, top + icon.y, ATLAS_KEY, startIcon).setOrigin(0));
-    this.glow = fixed(scene.add.image(left, top, ATLAS_KEY, SPRITES.hudSlotGlow).setOrigin(0)).setVisible(false);
-    this.count = new GlyphLine(scene, left + at.x, top + at.y);
-    this.strip = new AmmoStripView(scene, left + this.slot.width, top + this.slot.height);
+    this.icon = fixed(addVector(scene, left + icon.x, top + icon.y, startIcon).setOrigin(0));
+    this.glow = fixed(addVector(scene, left, top, SPRITES.hudSlotGlow).setOrigin(0)).setVisible(false);
+    this.count = new TextLine(scene, left + at.x, top + at.y, DEPTHS.hud, false, 'count');
+    this.strip = new AmmoStripView(scene, left + this.slot.displayWidth, top + this.slot.displayHeight);
 
     const hp = HUD_HEALTH_LAYOUT;
-    this.health = fixed(scene.add.image(hp.x, hp.y, ATLAS_KEY, SPRITES.hudHealth).setOrigin(0));
+    this.health = fixed(addVector(scene, hp.x, hp.y, SPRITES.hudHealth).setOrigin(0));
     this.healthFill = fixed(scene.add.graphics({ x: hp.x + hp.fill.x, y: hp.y + hp.fill.y }));
     const ar = HUD_ARMOR_LAYOUT;
-    this.armorIcon = fixed(scene.add.image(ar.x, ar.y, ATLAS_KEY, SPRITES.iconArmorLight).setOrigin(0)).setVisible(false);
-    this.armorCount = new GlyphLine(scene, ar.x + ar.count.x, ar.y + ar.count.y);
+    this.armorIcon = fixed(addVector(scene, ar.x, ar.y, SPRITES.iconArmorLight).setOrigin(0)).setVisible(false);
+    this.armorCount = new TextLine(scene, ar.x + ar.count.x, ar.y + ar.count.y, DEPTHS.hud, false, 'count');
 
     // Raw materials and parts, in ITEMS order; ammo shows in the hotbar instead. Rows are placed each frame.
     this.materials = Object.values(ITEMS)
       .filter((it) => it.kind !== 'ammo')
       .map((it) => ({
         itemId: it.id,
-        icon: fixed(scene.add.image(0, 0, ATLAS_KEY, it.icon).setOrigin(0)),
-        count: new GlyphLine(scene, 0, 0),
+        icon: fixed(addVector(scene, 0, 0, it.icon).setOrigin(0)),
+        count: new TextLine(scene, 0, 0, DEPTHS.hud, false, 'count'),
       }));
 
     scene.input.setDefaultCursor('none');
     // Over the crafting menu too, where it's the pointer for clicking rows.
-    this.crosshair = fixed(scene.add.image(0, 0, ATLAS_KEY, SPRITES.crosshair)).setDepth(DEPTHS.menu + 1);
+    this.crosshair = fixed(addVector(scene, 0, 0, SPRITES.crosshair)).setDepth(DEPTHS.menu + 1);
   }
 
   update(tube: TubeState, inventory: Inventory, player: PlayerState, link: LinkState, worn: ArmorPiece | undefined, hasTube: boolean): void {
@@ -127,6 +129,7 @@ export class HudView {
     else this.slot.clearTint();
 
     const pointer = this.scene.input.activePointer;
-    this.crosshair.setPosition(Math.round(pointer.x), Math.round(pointer.y));
+    const at = toView(pointer.x, pointer.y, this.scene.cameras.main.zoom);
+    this.crosshair.setPosition(at.x, at.y);
   }
 }

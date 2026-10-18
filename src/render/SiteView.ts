@@ -1,5 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
-import { animFrames, ATLAS_KEY, DEPTHS } from '../data/assets';
+import { animFrames, DEPTHS } from '../data/assets';
 import { CLAIM_TICKS } from '../data/claims';
 import { TILE_SIZE } from '../data/config';
 import { BENCH_FLARE_MS, FIXTURE_SPRITES, ORB_SPRITES, PYLON_SPRITES } from '../data/foundryAssets';
@@ -10,10 +10,18 @@ import { fixtureDef } from '../sim/fixtures';
 import { roomById, type SimState } from '../sim/state';
 import { registerAnim } from './anims';
 import { colorOf } from './color';
+import { addVector, addVectorSprite } from './vector/textures';
 
 // The claimable site and what claiming brings (009): the room's pylon (dormant,
 // activating, or glowing once claimed) with the claim hold's bar, the foundry's
 // fixtures (with 010's bench), and Wisp orbs in flight.
+/** The frame a fixture shows first. */
+function fixtureFrame(kind: string): string {
+  if (kind === 'stash') return FIXTURE_SPRITES.stash;
+  const anim = kind === 'waystone' ? FIXTURE_SPRITES.waystone : kind === 'port' ? FIXTURE_SPRITES.port : FIXTURE_SPRITES.bench;
+  return animFrames(anim)[0] ?? '';
+}
+
 export class SiteView {
   private readonly scene: Scene;
   private readonly pylon: GameObjects.Sprite;
@@ -28,7 +36,7 @@ export class SiteView {
     registerAnim(scene, PYLON_SPRITES.activating);
     registerAnim(scene, PYLON_SPRITES.active);
     registerAnim(scene, FIXTURE_SPRITES.waystone);
-    this.pylon = scene.add.sprite(0, 0, ATLAS_KEY, PYLON_SPRITES.off).setOrigin(0.5, 1).setVisible(false);
+    this.pylon = addVectorSprite(scene, 0, 0, PYLON_SPRITES.off).setOrigin(0.5, 1).setVisible(false);
     this.bar = scene.add.graphics().setDepth(DEPTHS.worldUi);
   }
 
@@ -52,17 +60,17 @@ export class SiteView {
     const bottom = (at.ty + 1) * TILE_SIZE;
     this.pylon.setPosition(x, bottom).setDepth(bottom);
     const anim = this.pylon.anims.currentAnim?.key;
-    if (!isClaimed(sim, shown)) {
+    if (!isClaimed(sim, at.site)) {
       if (anim) this.pylon.stop();
       this.pylon.setFrame(PYLON_SPRITES.off);
     } else if (sim.activatePulse > 0) {
       if (anim !== PYLON_SPRITES.activating.key) this.pylon.play(PYLON_SPRITES.activating.key);
     } else if (anim !== PYLON_SPRITES.active.key) this.pylon.play(PYLON_SPRITES.active.key);
     const hold = sim.claimHold;
-    if (!hold || hold.roomId !== shown) return;
+    if (!hold || hold.site !== at.site) return;
     const { w, h, gap, border } = HARVEST_BAR;
     const left = Math.round(x - w / 2);
-    const top = Math.round(bottom - this.pylon.height - gap - h);
+    const top = Math.round(bottom - this.pylon.displayHeight - gap - h);
     this.bar.fillStyle(colorOf(HARVEST_BAR.back)).fillRect(left - border, top - border, w + 2 * border, h + 2 * border);
     this.bar.fillStyle(colorOf(HARVEST_BAR.color)).fillRect(left, top, Math.round((w * hold.progress) / CLAIM_TICKS), h);
   }
@@ -74,9 +82,8 @@ export class SiteView {
       if (!sprite) {
         const x = (def.tx + 0.5) * TILE_SIZE;
         const bottom = (def.ty + 1) * TILE_SIZE;
-        sprite = this.scene.add.sprite(x, bottom, ATLAS_KEY).setOrigin(0.5, 1).setDepth(bottom);
+        sprite = addVectorSprite(this.scene, x, bottom, fixtureFrame(def.kind)).setOrigin(0.5, 1).setDepth(bottom);
         if (def.kind === 'waystone') sprite.play(FIXTURE_SPRITES.waystone.key);
-        if (def.kind === 'stash') sprite.setFrame(FIXTURE_SPRITES.stash);
         this.fixtures.set(f.id, sprite);
       }
       sprite.setVisible(true);
@@ -94,8 +101,8 @@ export class SiteView {
       let d = this.orbs.get(o.id);
       if (!d) {
         d = {
-          shadow: this.scene.add.image(0, 0, ATLAS_KEY, ORB_SPRITES.shadow).setDepth(DEPTHS.groundFx),
-          orb: this.scene.add.image(0, 0, ATLAS_KEY, ORB_SPRITES.orb),
+          shadow: addVector(this.scene, 0, 0, ORB_SPRITES.shadow).setDepth(DEPTHS.groundFx),
+          orb: addVector(this.scene, 0, 0, ORB_SPRITES.orb),
         };
         this.orbs.set(o.id, d);
       }

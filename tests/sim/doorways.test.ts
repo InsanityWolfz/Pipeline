@@ -1,33 +1,38 @@
 import { describe, expect, it } from 'vitest';
 import { TILE_SIZE } from '../../src/data/config';
-import { FOUNDRY_ROOM, ROOMS } from '../../src/data/rooms';
+import { FOUNDRY_ROOM } from '../../src/data/rooms';
+import { ATTUNE_TICKS } from '../../src/data/tube';
+import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
+import { WORLD } from '../../src/sim/world';
 import { arrivalTile } from '../../src/sim/doorways';
+import { enemyDef } from '../../src/data/enemies';
 import { tileCentre } from '../../src/sim/state';
-import { arena, die, fireAt, HUSK, movePlayer, placeHusk, placeNode, run, runUntil, SWIPE_LANDS } from './fight';
+import { arena, at, atEntrance, die, fireAt, HUSK, movePlayer, placeHusk, placeNode, run, runUntil, SWIPE_LANDS } from './fight';
 
-const HALL = 'ruin-hall';
-const HALL_DOOR = ROOMS[HALL]?.doorways?.[0];
-const FOUNDRY_DOOR = ROOMS[FOUNDRY_ROOM]?.doorways?.[0];
+// 017: the foundry's stairs sit in the overworld; the name HALL stays for the outside.
+const HALL = OVERWORLD_ROOM;
+const HALL_DOOR = WORLD[HALL]?.doorways?.[0];
+const FOUNDRY_DOOR = WORLD[FOUNDRY_ROOM]?.doorways?.[0];
 if (!HALL_DOOR || !FOUNDRY_DOOR) throw new Error('rooms need doorways');
 
-/** The ruin hall with the player standing on the floor tile inside its door. */
+/** The overworld with the player on the tile in front of the foundry's stairs. */
 function atHallDoor() {
   const s = arena();
-  const inside = tileCentre(arrivalTile(HALL, 0));
-  movePlayer(s, inside.x, inside.y);
+  atEntrance(s);
   return s;
 }
 
-/** Walks left through the hall door into the foundry. */
+/** Walks up and down the stairs into the foundry. */
 function intoFoundry() {
   const s = atHallDoor();
-  runUntil(s, (x) => x.roomId === FOUNDRY_ROOM, 60, { moveX: -1 });
+  runUntil(s, (x) => x.roomId === FOUNDRY_ROOM, 60, { moveY: -1 });
   return s;
 }
 
 describe('doorways', () => {
   it('links each door to a floor tile inside the other room', () => {
-    expect(arrivalTile(HALL, 0)).toEqual({ tx: 1, ty: 12 });
+    // The stairs open south (017): coming out lands on the tile in front of them.
+    expect(arrivalTile(HALL, 0)).toEqual(OVERWORLD.entrance.arrive);
     expect(arrivalTile(FOUNDRY_ROOM, 0)).toEqual({ tx: 22, ty: 8 });
   });
 
@@ -40,19 +45,21 @@ describe('doorways', () => {
 
   it('walks back the other way', () => {
     const s = intoFoundry();
+    // The first walk in attunes the tube, which holds the player still till it ends.
+    run(s, ATTUNE_TICKS);
     runUntil(s, (x) => x.roomId === HALL, 120, { moveX: 1 });
     expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre(arrivalTile(HALL, 0)));
   });
 
   it('a roll into the door changes room too', () => {
     const s = atHallDoor();
-    run(s, 1, { moveX: -1, dodge: true });
+    run(s, 1, { moveY: -1, dodge: true });
     runUntil(s, (x) => x.roomId === FOUNDRY_ROOM, 30);
   });
 
   it('door tiles stop arrows', () => {
     const s = atHallDoor();
-    run(s, 1, fireAt(0, s.player.y));
+    run(s, 1, fireAt(s.player.x, 0));
     runUntil(s, (x) => x.arrows.length === 0, 30);
     expect(s.roomId).toBe(HALL);
   });
@@ -61,9 +68,10 @@ describe('doorways', () => {
     const s = atHallDoor();
     const e = placeHusk(s, s.player.x + 4, s.player.y);
     e.mode = 'return';
-    e.homeX = -200;
+    e.homeY = -200;
     run(s, 120);
-    expect(e.x).toBeGreaterThanOrEqual(TILE_SIZE + HUSK.feetBox.w / 2);
+    // The door's bottom edge, with the mound's blocks either side.
+    expect(e.y).toBeGreaterThanOrEqual((OVERWORLD.entrance.door.ty + 1) * TILE_SIZE + HUSK.feetBox.h / 2);
   });
 });
 
@@ -92,7 +100,7 @@ describe('rooms tick apart', () => {
 
   it('nodes regrow and ground items stay while the player is away', () => {
     const s = atHallDoor();
-    const n = placeNode(s, 'tree', 400, 448);
+    const n = placeNode(s, 'tree', at(400).x, at(400).y);
     n.uses = 0;
     n.regrow = 5;
     s.groundItems.push({
@@ -126,9 +134,9 @@ describe('rooms tick apart', () => {
 
   it('shots keep their room: a bolt in the hall never hits a foundry Husk at the same spot', () => {
     const s = arena();
-    movePlayer(s, 200, 200);
-    const e = placeHusk(s, 260, 200, FOUNDRY_ROOM);
-    run(s, 1, fireAt(260, 200));
+    movePlayer(s, at(200).x, at(200).y);
+    const e = placeHusk(s, at(260).x, at(260).y, FOUNDRY_ROOM);
+    run(s, 1, fireAt(at(260).x, at(260).y));
     expect(s.arrows[0]?.roomId).toBe(HALL);
     run(s, 20);
     expect(e.health).toBe(HUSK.maxHealth);
@@ -136,27 +144,27 @@ describe('rooms tick apart', () => {
 
   it('a bomb burst in the hall never hits a foundry Husk', () => {
     const s = arena();
-    movePlayer(s, 200, 200);
-    const e = placeHusk(s, 260, 200, FOUNDRY_ROOM);
+    movePlayer(s, at(200).x, at(200).y);
+    const e = placeHusk(s, at(260).x, at(260).y, FOUNDRY_ROOM);
     s.tube.ammoId = 'bomb';
     s.inventory.bomb = 1;
-    run(s, 1, fireAt(260, 200));
+    run(s, 1, fireAt(at(260).x, at(260).y));
     expect(s.bombs[0]?.roomId).toBe(HALL);
     runUntil(s, (x) => x.bombs.length === 0, 60);
     expect(e.health).toBe(HUSK.maxHealth);
   });
 
-  it('a KO in the foundry resets the hall: Husks home, nodes full, nothing on the ground', () => {
+  it('a KO in the foundry resets the outside: packs home, nodes full, nothing on the ground', () => {
     const s = intoFoundry();
     s.enemies = [];
-    placeHusk(s, 300, 300).health = 1;
-    placeNode(s, 'tree', 400, 448).uses = 0;
-    s.groundItems.push({ id: s.nextGroundItemId++, itemId: 'wood', x: 500, y: 448, roomId: HALL });
+    placeHusk(s, at(300).x, at(300).y).health = 1;
+    placeNode(s, 'tree', at(400).x, at(400).y).uses = 0;
+    s.groundItems.push({ id: s.nextGroundItemId++, itemId: 'wood', ...at(500), roomId: HALL });
     die(s);
-    const hall = ROOMS[HALL];
-    if (!hall?.enemies || !hall.nodes) throw new Error('no hall data');
+    const hall = WORLD[HALL];
+    if (!hall?.enemies || !hall.nodes) throw new Error('no overworld data');
     expect(s.enemies.filter((e) => e.roomId === HALL).map((e) => ({ x: e.x, y: e.y, health: e.health }))).toEqual(
-      hall.enemies.map((p) => ({ ...tileCentre(p), health: HUSK.maxHealth })),
+      hall.enemies.map((p) => ({ ...tileCentre(p), health: enemyDef(p.enemyId).maxHealth })),
     );
     const hallNodes = s.nodes.filter((n) => n.roomId === HALL);
     expect(hallNodes).toHaveLength(hall.nodes.length);
@@ -168,7 +176,7 @@ describe('rooms tick apart', () => {
     const s = atHallDoor();
     die(s);
     expect(s.roomId).toBe(FOUNDRY_ROOM);
-    const spawn = ROOMS[FOUNDRY_ROOM]?.spawn;
+    const spawn = WORLD[FOUNDRY_ROOM]?.spawn;
     if (!spawn) throw new Error('no spawn');
     expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre(spawn));
   });

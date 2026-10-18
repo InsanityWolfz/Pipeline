@@ -7,6 +7,7 @@ import { isRolling } from '../../src/sim/movement';
 import { createSim, type SimState } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
+import { FIRING_WALK_MULTIPLIER } from '../../src/data/player';
 
 const SEED = 7;
 const FIRE_TICKS = ammoDef('arrow').fireTicks;
@@ -117,14 +118,13 @@ describe('firing', () => {
     expect(s.tube.firing).toBe(true);
   });
 
-  it('leaves walking unchanged while firing', () => {
+  it('slows walking only by the firing multiplier (016)', () => {
     const walker = sim();
     const shooter = sim();
     run(walker, command({ moveX: 1, moveY: 1 }), 40);
     run(shooter, (s) => fireAt(s, -50, 20, { moveX: 1, moveY: 1 }), 40);
-    expect(shooter.player.x).toBe(walker.player.x);
-    expect(shooter.player.y).toBe(walker.player.y);
-    expect(shooter.player.vx).toBe(walker.player.vx);
+    expect(shooter.player.vx).toBeCloseTo(walker.player.vx * FIRING_WALK_MULTIPLIER);
+    expect(shooter.player.vy).toBeCloseTo(walker.player.vy * FIRING_WALK_MULTIPLIER);
   });
 
   it('aims from the feet to the aim point', () => {

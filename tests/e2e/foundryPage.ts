@@ -2,14 +2,15 @@ import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { FEET_BOX } from '../../src/data/player';
+import { ATTUNE_TICKS } from '../../src/data/tube';
 import { buildBarCells } from '../../src/render/foundryLayout';
 import type { SimSummary } from '../../src/sim/summary';
 
 // Driving the foundry from a spec: entering it, standing where the camera is
 // predictable, and clicking tiles and the build bar with the real mouse.
 
-/** The ruin hall's first ley vein (node index). */
-export const LEY_VEIN = 9;
+/** The meadow's ley vein (node index, 017). */
+export const LEY_VEIN = 8;
 /** Where the player stands in the foundry for the build tests: the camera is centred on them there. */
 export const STAND = { tx: 11, ty: 8 } as const;
 
@@ -27,16 +28,18 @@ export async function step(page: Page, frames: number, command: object = {}): Pr
   return s;
 }
 
-/** Walks from the spawn through the ruin hall's door, then waits out the fade. */
-export async function enterFoundry(page: Page): Promise<void> {
+/**
+ * Walks from the field start to the foundry's stairs and down them (017), then waits out the fade.
+ * Unless told not to, it then plays the first walk-in's attune (019) through, which holds the player still.
+ */
+export async function enterFoundry(page: Page, playAttune = true): Promise<void> {
   await page.evaluate(() => {
-    const g = window.__GAME__;
-    g?.step(0);
-    window.__helpers?.walkTo(48, 400);
-    for (let i = 0; i < 60 && g?.getState().room !== 'foundry'; i++) g?.step(1, { moveX: -1 });
+    window.__GAME__?.step(0);
+    window.__helpers?.toFoundry();
   });
   expect((await state(page)).room).toBe('foundry');
   await page.waitForTimeout(500);
+  if (playAttune) await page.evaluate((ticks) => window.__GAME__?.step(ticks), ATTUNE_TICKS);
 }
 
 /** Walks to STAND and waits for the camera to settle on the player. */

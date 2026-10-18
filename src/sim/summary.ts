@@ -1,7 +1,7 @@
 import { MAX_HEALTH } from '../data/player';
 import { RESERVOIR_CAP } from '../data/tube';
 import { OBJECTIVES } from '../data/objectives';
-import { ROOMS } from '../data/rooms';
+import { WORLD } from './world';
 import type { SimEvents } from './events';
 import { unlockedPieces } from './placement';
 import { isInvulnerable, isRolling } from './movement';
@@ -9,7 +9,8 @@ import type { Facing } from './player';
 import type { ArmorPiece } from './armor';
 import { fixtureDef } from './fixtures';
 import { currentObjective } from './objectives';
-import { socketStreams } from './spread';
+import { intakeStreams } from './spread';
+import { INTAKE } from '../data/foundry';
 import type { SimState } from './state';
 import {
   arrowSummary,
@@ -24,6 +25,9 @@ import {
   type NodeSummary,
   type PieceSummary,
 } from './summaryParts';
+import { OVERWORLD, ringOf } from '../data/overworld';
+import { TILE_SIZE } from '../data/config';
+import { enemiesNearPlayer, enemiesOnScreen } from './population';
 
 /** The compact JSON summary that window.__GAME__.getState() returns. */
 export interface SimSummary {
@@ -31,6 +35,12 @@ export interface SimSummary {
   seed: number;
   /** The room the player is in. */
   room: string;
+  /** Where the player is (017): the room, the overworld's ring there (null elsewhere), and live enemies in the room. */
+  area: { room: string; ring: 0 | 1 | 2 | null; liveEnemies: number };
+  /** The living population is out (017), how many enemies are within a screen of the player, and how many the camera shows. */
+  populated: boolean;
+  nearPlayer: number;
+  onScreen: number;
   /** Every room id. */
   rooms: string[];
   player: {
@@ -94,7 +104,7 @@ export interface SimSummary {
   /** Claimed room ids. */
   claims: string[];
   /** The claim hold in progress: its room and ticks into it. */
-  claimHold: { room: string; progress: number } | null;
+  claimHold: { site: string; progress: number } | null;
   /** Ticks left on a pylon's activation. */
   activatePulse: number;
   /** The foundry's fixed furniture: id, kind, tile, and a port's raw waiting to go out. */
@@ -113,6 +123,8 @@ export interface SimSummary {
   /** The first unfinished objective (index and text), or null once all are done. */
   objective: { index: number; text: string } | null;
   prototypeComplete: boolean;
+  /** The foundry intake (019): its mouth tiles, and the stream angles of the stagers facing them (see intakeStreams). */
+  intake: { mouth: { tx: number; ty: number }[]; streams: number[] };
   /** What a death keeps: the inventory as last banked. */
   banked: Record<string, number>;
   /** What happened on the last tick. */
@@ -121,12 +133,19 @@ export interface SimSummary {
 
 export function summarize(state: SimState): SimSummary {
   const { player: p, tube } = state;
-  const streams = socketStreams(state.foundry);
   return {
     tick: state.tick,
     seed: state.seed,
     room: state.roomId,
-    rooms: Object.keys(ROOMS),
+    area: {
+      room: state.roomId,
+      ring: state.roomId === OVERWORLD.id ? ringOf(Math.floor(state.player.x / TILE_SIZE), Math.floor(state.player.y / TILE_SIZE)) : null,
+      liveEnemies: state.enemies.filter((e) => e.roomId === state.roomId).length,
+    },
+    populated: state.populated,
+    nearPlayer: enemiesNearPlayer(state),
+    onScreen: enemiesOnScreen(state),
+    rooms: Object.keys(WORLD),
     player: {
       x: round(p.x),
       y: round(p.y),
@@ -166,10 +185,11 @@ export function summarize(state: SimState): SimSummary {
     crafted: [...state.crafted],
     unlocked: unlockedPieces(state),
     building: state.building,
-    foundry: { pieces: state.foundry.pieces.map((p) => pieceSummary(p, streams)) },
+    foundry: { pieces: state.foundry.pieces.map((p) => pieceSummary(p)) },
+    intake: { mouth: INTAKE.mouth.map((t) => ({ tx: t.tx, ty: t.ty })), streams: intakeStreams(state.foundry) },
     orbs: state.orbs.map((o) => ({ id: o.id, room: o.roomId, x: round(o.x), y: round(o.y), dx: round(o.dx), dy: round(o.dy) })),
     claims: [...state.claims],
-    claimHold: state.claimHold ? { room: state.claimHold.roomId, progress: state.claimHold.progress } : null,
+    claimHold: state.claimHold ? { site: state.claimHold.site, progress: state.claimHold.progress } : null,
     activatePulse: state.activatePulse,
     fixtures: state.fixtures.map((f) => {
       const d = fixtureDef(f.id);

@@ -2,7 +2,7 @@
 // tuned by eye; colours are palette ids.
 
 /** The harvest progress bar over a node: size, gap above the sprite, and palette ids. */
-export const HARVEST_BAR = { w: 20, h: 3, gap: 2, border: 1, color: 'ley-cyan', back: 'outline' } as const;
+export const HARVEST_BAR = { w: 20, h: 3, gap: 2, border: 1, color: 'cyan', back: 'ink' } as const;
 
 /**
  * The ammo strip right of the hotbar slot: one cell per ammo in key order,
@@ -38,6 +38,8 @@ export const CRAFT_MENU_LAYOUT = {
   headerIcon: { x: 2, y: 0 },
   /** Alpha of a row the player can't afford. */
   greyAlpha: 0.35,
+  /** The title card over the panel (020): a tablet `w` x `h` px, `gap` px above the panel, the title `titleY` px down it. */
+  title: { text: 'Crafting', w: 128, h: 22, gap: 4, titleY: 4 },
 } as const;
 
 /**
@@ -55,7 +57,7 @@ export const BUILD_BAR_LAYOUT = {
 } as const;
 
 /** The ghost of the piece to place: palette tints for where it can and can't go, and its alpha. */
-export const GHOST = { okTint: 'ley-cyan', badTint: 'ember', alpha: 0.6 } as const;
+export const GHOST = { okTint: 'cyan', badTint: 'rust', alpha: 0.6 } as const;
 
 /**
  * The hopper menu: a column of craft rows, centred on screen. A take-out row shows
@@ -63,10 +65,8 @@ export const GHOST = { okTint: 'ley-cyan', badTint: 'ember', alpha: 0.6 } as con
  * item and how many are held. Px on screen, then per row.
  */
 export const PICKER_LAYOUT = {
-  /** The panel behind the rows: padding round them and palette ids. */
+  /** The tablet behind the rows (020): padding round them. */
   pad: 4,
-  back: 'outline',
-  border: 'ley-deep',
   rowWidth: 184,
   rowHeight: 20,
   rowGap: 1,
@@ -84,8 +84,6 @@ export const READOUT_LAYOUT = {
   count: { x: 19, y: 6 },
   /** Gap above the machine's sprite. */
   gap: 4,
-  back: 'outline',
-  border: 'ley-deep',
 } as const;
 
 /** Pylon and stash menus (009): rows per column before wrapping, and the gap between columns, px. */
@@ -96,7 +94,7 @@ export const MENU_COLUMN_GAP = 8;
 export const HUD_ARMOR_LAYOUT = { x: 62, y: 2, count: { x: 18, y: 6 } } as const;
 
 /** Palette tints on the player's body for the worn armor's weight (010). */
-export const ARMOR_TINTS = { light: 'moss-light', heavy: 'slate-light' } as const;
+export const ARMOR_TINTS = { light: 'leaf-light', heavy: 'rock' } as const;
 
 /**
  * World names on mouse-over (015). Things without a tile (enemies, nodes, ground
@@ -111,10 +109,14 @@ export const HOVER_NAME = {
   /** A hover still hits this fraction of a box's height below its ground point. */
   below: 0.25,
   tile: { rise: 40 },
+  /** A ley line (018) hovers within this many px of its seam, and names itself this far above the cursor. */
+  leyLine: 8,
+  leyLineRise: 14,
+  /** The description line (018) sits this far under the name, px. */
+  descriptionGap: 2,
   gap: 4,
-  /** The name's backing: padding px, its palette colour and alpha. */
+  /** The name's tablet (020): padding px, and its alpha. */
   pad: 2,
-  back: 'outline',
   alpha: 0.85,
 } as const;
 
@@ -124,7 +126,72 @@ export const WORLD_NAMES = {
   tubeStone: 'Tube stone',
   dormantTube: 'Dormant tube',
   crystal: 'Ley crystal',
+  leyLine: 'Ley line',
+  intake: 'Foundry intake',
 } as const;
 
-/** The build bar's hover panel (015): wrap width in glyphs, padding and line height, px, and its gap above the bar. */
-export const BUILD_TIP = { wrap: 34, maxLines: 2, pad: 4, lineHeight: 8, gap: 4, back: 'outline', alpha: 0.9, edge: 'slate-light' } as const;
+/** The build bar's hover tablet (015): wrap width in characters, padding and line height, px, and its gap above the bar. */
+export const BUILD_TIP = { wrap: 34, maxLines: 2, pad: 4, lineHeight: 10, gap: 4 } as const;
+
+/**
+ * The minimap (017): the overworld's terrain at `scale` view px per tile in the
+ * top-right corner, a stone frame, and markers. Colours are palette ids; no
+ * enemies are shown.
+ */
+export const MINIMAP = {
+  scale: 1.5,
+  margin: 6,
+  /** The stone tablet framing it (020), px beyond the map. */
+  frame: { width: 2 },
+  terrain: {
+    '.': 'grass-bright',
+    ',': 'dirt',
+    ':': 'water-light',
+    '~': 'water',
+    T: 'leaf-dark',
+    R: 'rock',
+    B: 'rock-light',
+    '#': 'rock-dark',
+    D: 'gold-trim',
+  } as Readonly<Record<string, string>>,
+  markers: {
+    player: { color: 'snow', r: 2 },
+    entrance: { color: 'gold-trim', r: 2 },
+    shrine: { color: 'wisp-light', r: 2 },
+    claimed: { color: 'cyan', r: 3 },
+  },
+} as const;
+
+/**
+ * Panels that change size (020), drawn live in the look of the HUD's vector tablets (src/data/art/hud.ts):
+ * carved stone with an ink edge, a lit top bevel, a dark base line and brass corner brackets `corner` px long.
+ * Palette ids and alphas.
+ */
+export const TABLET = {
+  fill: 'carve-dark',
+  fillAlpha: 0.94,
+  edge: 'ink',
+  bevel: 'carve-light',
+  base: 'mortar',
+  brass: 'brass',
+  corner: 4,
+} as const;
+
+/** Menu rows (020): a pressed row flashes brass for this long, ms. */
+export const MENU_FEEDBACK = { pressMs: 160 } as const;
+
+/**
+ * The pause menu (020, Esc): a dim over the world, a title card, and rows for sound on/off, the master volume
+ * (its − and + by the row's right end, px from the row's left) and resume. Rows use the menu row frames.
+ */
+export const PAUSE_MENU = {
+  title: 'Paused',
+  note: 'Esc to resume',
+  card: { w: 128, h: 30, gap: 6, titleY: 4, noteY: 19 },
+  dim: { color: 'ink', alpha: 0.5 },
+  rowGap: 4,
+  label: { x: 10, y: 6 },
+  value: { x: 150, y: 6 },
+  volume: { down: 128, up: 170, hit: 12 },
+  rows: { sound: 'Sound', volume: 'Volume', resume: 'Resume' },
+} as const;

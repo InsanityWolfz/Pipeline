@@ -1,9 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 import { TILE_SIZE } from '../../src/data/config';
+import { OVERWORLD } from '../../src/data/overworld';
 import type { SimSummary } from '../../src/sim/summary';
 import { boot, watchErrors } from './helpers';
 
-// The tube link (007): attuning in the foundry, a line into the tube socket,
+// The tube link (007): attuning in the foundry, a line into the foundry intake (019),
 // firing reservoir rounds once the carried ones run out, and the ?playtest start.
 
 const centre = (tx: number, ty: number) => ({ x: (tx + 0.5) * TILE_SIZE, y: (ty + 0.5) * TILE_SIZE });
@@ -20,9 +21,12 @@ async function enterFoundry(page: Page): Promise<number> {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
     g.step(0);
-    window.__helpers?.walkTo(48, 400);
+    // In front of the foundry's stairs (017), round the tube's stone, then down them.
+    window.__helpers?.walkTo(41.5 * 32, g.getState().player.y);
+    window.__helpers?.walkTo(41.5 * 32, 21.5 * 32);
+    window.__helpers?.walkTo(40.5 * 32, 21.5 * 32);
     let attunes = 0;
-    for (let i = 0; i < 60 && g.getState().room !== 'foundry'; i++) attunes += g.step(1, { moveX: -1 }).events.attunes.length;
+    for (let i = 0; i < 60 && g.getState().room !== 'foundry'; i++) attunes += g.step(1, { moveY: -1 }).events.attunes.length;
     return attunes;
   });
 }
@@ -35,7 +39,9 @@ test('entering the foundry attunes the tube once', async ({ page }) => {
   const s = await step(page, 1);
   expect(s.link.attuned).toBe(true);
   expect(s.link.attunePulse).toBeGreaterThan(0);
-  expect(s.unlocked).toContain('tube-socket');
+  // The intake is the foundry's own, in the north wall: nothing to unlock or place (019).
+  expect(s.intake.mouth).toHaveLength(3);
+  expect(s.unlocked).not.toContain('tube-socket');
   expect(errors).toEqual([]);
 });
 
@@ -43,12 +49,13 @@ test('a line fills the reservoir, which fires once the carried rounds run out', 
   const errors = watchErrors(page);
   await boot(page, '?playtest');
   await enterFoundry(page);
-  // A ley crystal hopper feeding a grinder, a focuser and the socket, all handing off directly.
-  const hopper = { tx: 4, ty: 4 };
-  for (const [pieceId, tx] of [['hopper', 4], ['grinder', 5], ['focuser', 6], ['tube-socket', 7]] as const) {
-    await step(page, 1, { place: { pieceId, tx, ty: hopper.ty, facing: 'right' } });
+  // A ley crystal hopper feeding a grinder, a focuser and a conduit up into the intake's middle mouth tile (019).
+  const hopper = { tx: 12, ty: 4 };
+  for (const [pieceId, ty] of [['hopper', 4], ['grinder', 3], ['focuser', 2], ['conduit', 1]] as const) {
+    await step(page, 1, { place: { pieceId, tx: hopper.tx, ty, facing: 'up' } });
   }
-  const beside = centre(hopper.tx, hopper.ty + 1);
+  // Just below the hopper, well in reach.
+  const beside = { x: centre(hopper.tx, hopper.ty + 1).x, y: centre(hopper.tx, hopper.ty + 1).y - 8 };
   await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [beside.x, beside.y] as const);
   const placed = await step(page, 1);
   const hopperId = placed.foundry.pieces.find((p) => p.pieceId === 'hopper')?.id;
@@ -89,11 +96,41 @@ test('a line fills the reservoir, which fires once the carried rounds run out', 
   expect(errors).toEqual([]);
 });
 
+test('a full reservoir backs the line into the intake up', async ({ page }) => {
+  const errors = watchErrors(page);
+  await boot(page, '?playtest');
+  await enterFoundry(page);
+  for (const [pieceId, ty] of [['hopper', 4], ['grinder', 3], ['focuser', 2], ['conduit', 1]] as const) {
+    await step(page, 1, { place: { pieceId, tx: 12, ty, facing: 'up' } });
+  }
+  const below = centre(12, 5);
+  await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [below.x, below.y - 8] as const);
+  const hopperId = (await step(page, 1)).foundry.pieces.find((p) => p.pieceId === 'hopper')?.id;
+  if (hopperId === undefined) throw new Error('no hopper');
+  await step(page, 1, { deposit: { id: hopperId, itemId: 'ley-crystal' } });
+  const full = await page.evaluate(() => {
+    const g = window.__GAME__;
+    let s = g?.getState();
+    for (let t = 0; t < 4000 && s && s.link.reservoir.count < s.link.reservoir.cap; t++) s = g?.step(1);
+    // Well past full: nothing more goes in, and the conduit under the mouth holds its bolt.
+    s = g?.step(300);
+    const conduit = s?.foundry.pieces.find((p) => p.tx === 12 && p.ty === 1);
+    return { reservoir: s?.link.reservoir, held: conduit?.kind === 'conduit' ? conduit.item : null };
+  });
+  expect(full.reservoir).toMatchObject({ item: 'ley-bolt', count: 30, cap: 30 });
+  expect(full.held).toBe('ley-bolt');
+  expect(errors).toEqual([]);
+});
+
 test('?playtest starts with plenty of everything and every machine unlocked', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page, '?playtest');
   const s = await step(page, 0);
+  // At the start stone, with the land already full of packs (017).
+  expect({ x: s.player.x, y: s.player.y }).toEqual(centre(OVERWORLD.wake.tx, OVERWORLD.wake.ty));
+  expect(s.populated).toBe(true);
+  expect(s.area.ring).toBe(0);
   expect(s.inventory).toMatchObject({ arrow: 99, bomb: 99, 'ley-bolt': 99, wood: 99, stone: 99, fiber: 99, 'ley-crystal': 99, 'husk-resin': 99, shaft: 20, 'ley-shard': 20 });
-  expect(s.unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'tube-socket', 'gravity-stager', 'cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser']);
+  expect(s.unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'gravity-stager', 'cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser']);
   expect(errors).toEqual([]);
 });

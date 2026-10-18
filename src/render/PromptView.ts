@@ -1,5 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS } from '../data/assets';
+import { DEPTHS } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
 import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
 import { OBJECTIVES, PROMPT_RANGE, type PromptTarget } from '../data/objectives';
@@ -11,7 +11,8 @@ import { nodeInReach } from '../sim/harvest';
 import { currentObjective } from '../sim/objectives';
 import { roomById, type SimState } from '../sim/state';
 import { stoneInReach } from '../sim/tutorial';
-import { GlyphLine } from './glyphLine';
+import { TextLine } from './textLine';
+import { addVector } from './vector/textures';
 
 /** A world point, px: where a prompt's target stands. */
 type Point = { x: number; y: number };
@@ -22,11 +23,11 @@ type Point = { x: number; y: number };
 // player anywhere; the build prompt only in the foundry, where building works.
 export class PromptView {
   private readonly cap: GameObjects.Image;
-  private readonly key: GlyphLine;
+  private readonly key: TextLine;
 
   constructor(scene: Scene) {
-    this.cap = scene.add.image(0, 0, ATLAS_KEY, TUTORIAL_SPRITES.keyCap).setOrigin(0.5, 1).setDepth(DEPTHS.prompt);
-    this.key = new GlyphLine(scene, 0, 0, DEPTHS.prompt + 1, true);
+    this.cap = addVector(scene, 0, 0, TUTORIAL_SPRITES.keyCap).setOrigin(0.5, 1).setDepth(DEPTHS.prompt);
+    this.key = new TextLine(scene, 0, 0, DEPTHS.prompt + 1, true);
   }
 
   update(sim: SimState, shown: string): void {
@@ -45,7 +46,8 @@ export class PromptView {
     this.cap.setPosition(x, bottom).setAlpha(alpha);
     this.key.set(prompt.key);
     this.key.setAlpha(alpha);
-    this.key.moveTo(x - this.cap.width / 2 + TUTORIAL_LAYOUT.keyText.x, bottom - this.cap.height + TUTORIAL_LAYOUT.keyText.y);
+    // The letter centred on the cap's face.
+    this.key.moveTo(Math.round(x - this.key.width / 2), bottom - this.cap.displayHeight + TUTORIAL_LAYOUT.keyText.y);
   }
 
   /** Where a prompt floats, and whether its key would work right now; undefined when nothing fits in this room. */
@@ -73,6 +75,8 @@ export class PromptView {
         return hopper ? { at: hopper, usable: usableInReach(sim)?.id === hopper.id } : undefined;
       }
       case 'node': {
+        // Hidden while a harvest runs, so the prompt never sits on the harvest bar (018).
+        if (sim.harvest) return undefined;
         const node = nearest(sim.nodes.filter((n) => n.roomId === sim.roomId && n.uses > 0));
         return node ? { at: node, usable: nodeInReach(sim)?.id === node.id } : undefined;
       }

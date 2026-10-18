@@ -13,10 +13,11 @@ import { arena, HALL, movePlayer } from './fight';
 /** Where the player stands in a foundry test, clear of the pieces tests place. */
 export const STAND = { tx: 20, ty: 13 } as const;
 
-/** A sim with the player in the foundry at STAND and every machine unlocked. */
+/** A sim with the player in the foundry at STAND, the tube already attuned (so no attune holds them still), and every machine unlocked. */
 export function foundry(unlockAll = true): SimState {
   const s = arena();
   s.roomId = FOUNDRY_ROOM;
+  s.link.attuned = true;
   const at = tileCentre(STAND);
   movePlayer(s, at.x, at.y);
   if (unlockAll) {

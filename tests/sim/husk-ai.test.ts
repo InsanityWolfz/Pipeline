@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { TICK_RATE, VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { damageEnemy } from '../../src/sim/enemies';
-import { arena, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, SWIPE_LANDS } from './fight';
+import { arena, at, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, SWIPE_LANDS } from './fight';
 
 const HALF_W = VIEW_WIDTH / 2;
 const HALF_H = VIEW_HEIGHT / 2;
 const STEP = HUSK.walkSpeed / TICK_RATE;
 const { swipe } = HUSK;
-/** Far enough west that a Husk at x >= 400 is off screen. */
-const AWAY = { x: 40, y: PLAYER_AT.y };
+/** Far enough west that a Husk at the arena's centre or east of it is off screen. */
+const AWAY = { x: at(40).x, y: PLAYER_AT.y };
 
 /** A Husk winding up at the player's east, its swipe locked pointing west. */
 function windingUp(gap = swipe.triggerRange) {
@@ -100,7 +100,7 @@ describe('Husk chase', () => {
 describe('Husk leash', () => {
   function chasing() {
     const s = arena();
-    const e = placeHusk(s, 700, PLAYER_AT.y);
+    const e = placeHusk(s, at(700).x, PLAYER_AT.y);
     run(s, 1);
     expect(e.mode).toBe('chase');
     movePlayer(s, AWAY.x, AWAY.y);
@@ -148,8 +148,8 @@ describe('Husk leash', () => {
 
   it('heals to full and idles once home', () => {
     const s = arena(undefined, AWAY);
-    const e = placeHusk(s, 700, PLAYER_AT.y);
-    e.x = 760;
+    const e = placeHusk(s, at(700).x, PLAYER_AT.y);
+    e.x = at(760).x;
     e.mode = 'return';
     e.health = 10;
     const ticks = runUntil(s, () => e.mode === 'idle', 120);
@@ -286,20 +286,20 @@ describe('Husk bodies', () => {
 
   it('push apart instead of overlapping', () => {
     const s = arena(undefined, AWAY);
-    const a = placeHusk(s, 700, PLAYER_AT.y);
-    const b = placeHusk(s, 700, PLAYER_AT.y);
+    const a = placeHusk(s, at(700).x, PLAYER_AT.y);
+    const b = placeHusk(s, at(700).x, PLAYER_AT.y);
     run(s, 1);
     expect(overlap(a, b)).toBe(false);
   });
 
   it('are not pushed into walls', () => {
-    const s = arena(undefined, { x: 400, y: 448 });
-    s.player.x = 1000;
-    const a = placeHusk(s, 40, 100);
-    const b = placeHusk(s, 40, 100);
+    // Both against the east face (x = 1024) of the ruin field's west wall, tile column 31 (017).
+    const s = arena();
+    const a = placeHusk(s, 1024 + 8, 14.5 * 32);
+    const b = placeHusk(s, 1024 + 8, 14.5 * 32);
     run(s, 10);
     expect(overlap(a, b)).toBe(false);
-    expect(Math.min(a.x, b.x)).toBeGreaterThanOrEqual(40);
+    expect(Math.min(a.x, b.x)).toBeGreaterThanOrEqual(1024 + 8);
   });
 
   it('do not block the player', () => {

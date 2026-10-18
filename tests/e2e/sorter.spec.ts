@@ -2,14 +2,14 @@ import { expect, test } from '@playwright/test';
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { ITEMS } from '../../src/data/items';
 import { FEET_BOX } from '../../src/data/player';
-import { ROOMS } from '../../src/data/rooms';
+import { OVERWORLD } from '../../src/data/overworld';
 import { buildBarCells, menuRows } from '../../src/render/foundryLayout';
 import { centre, clickBar, enterFoundry, pieceAt, screenPoint, standStill, state, step, tileOnCanvas, toggleBuild } from './foundryPage';
 import { boot, watchErrors } from './helpers';
 
-const hall = ROOMS['ruin-hall'];
-const HALL_W = (hall?.rows[0]?.length ?? 0) * TILE_SIZE;
-const HALL_H = (hall?.rows.length ?? 0) * TILE_SIZE;
+// The overworld (017) the camera is clamped to.
+const HALL_W = OVERWORLD.width * TILE_SIZE;
+const HALL_H = OVERWORLD.height * TILE_SIZE;
 
 // 015: the sorter built and set with the mouse and keys, the build bar's
 // descriptions, names on mouse-over, and clicks on the HUD never firing.
@@ -98,13 +98,22 @@ test('hovering a Husk names it, and a press that starts on the hotbar never fire
   const camX = clamp(now.player.x - VIEW_WIDTH / 2, HALL_W - VIEW_WIDTH);
   const camY = clamp(now.player.y + FEET_BOX.h / 2 - VIEW_HEIGHT / 2, HALL_H - VIEW_HEIGHT);
   const p = await screenPoint(page, target.x - camX, target.y - 12 - camY);
-  await page.mouse.move(p.x, p.y);
-  await page.waitForTimeout(100);
-  expect(await page.evaluate(() => window.__GAME__?.ui().hoverName)).toBe('Husk');
+  // Under load the camera can take a while to settle on the player: keep nudging the mouse until it does.
+  await expect
+    .poll(
+      async () => {
+        await page.mouse.move(p.x + 1, p.y);
+        await page.mouse.move(p.x, p.y);
+        await page.waitForTimeout(100);
+        return page.evaluate(() => window.__GAME__?.ui().hoverName);
+      },
+      { timeout: 10_000 },
+    )
+    .toBe('Husk');
 
   // Back on the real-time clock: a press that starts on the hotbar never fires, even dragged out into the world.
   await page.reload();
-  await page.waitForFunction(() => window.__GAME__ !== undefined);
+  await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
   await page.waitForTimeout(500);
   const slot = await screenPoint(page, VIEW_WIDTH / 2, VIEW_HEIGHT - 18);
   const world = await screenPoint(page, VIEW_WIDTH / 2 + 120, VIEW_HEIGHT / 2);

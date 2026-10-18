@@ -1,5 +1,6 @@
 import { DYING_TICKS } from '../../src/data/player';
-import { ROOMS } from '../../src/data/rooms';
+import { OVERWORLD } from '../../src/data/overworld';
+import { WORLD } from '../../src/sim/world';
 import { describe, expect, it } from 'vitest';
 import { advanceClock, createClock } from '../../src/sim/clock';
 import { NO_COMMAND, type Command } from '../../src/sim/input';
@@ -10,7 +11,7 @@ import { summarize } from '../../src/sim/summary';
 import { MAX_TICKS_PER_FRAME, TICK_RATE } from '../../src/data/config';
 
 /** Enemies placed across every room at the start. */
-const STARTING_ENEMIES = Object.values(ROOMS).reduce((n, r) => n + (r.enemies?.length ?? 0), 0);
+const STARTING_ENEMIES = Object.values(WORLD).reduce((n, r) => n + (r.enemies?.length ?? 0), 0);
 
 function stepped(seed: number, ticks: number) {
   const sim = createSim(seed);
@@ -53,9 +54,9 @@ function scriptedFight(seed: number, ticks: number) {
     // The first KO respawns every unclaimed room's enemies, so ids pass the starting count.
     const fighting = sim.nextEnemyId > STARTING_ENEMIES;
     const empty = (sim.inventory.arrow ?? 0) === 0;
-    // Waking in the foundry after the KO, walk back out through its door to the hall.
+    // Waking in the foundry after the KO, walk back out through its door to the overworld.
     const door = sim.roomId === 'foundry' ? { x: 24 * 32, y: 8.5 * 32 } : undefined;
-    const goal = door ?? (!fighting ? target : target ? { x: 900, y: 300 } : loot);
+    const goal = door ?? (!fighting ? target : target ? tileCentre({ tx: 40, ty: 22 }) : loot);
     const command: Command = {
       ...NO_COMMAND,
       moveX: goal ? toward(p.x, goal.x) : 0,
@@ -80,7 +81,7 @@ function scriptedSession(seed: number, ticks: number) {
   for (let t = 0; t < ticks; t++) {
     if (t === 100) for (const r of ['shaft', 'arrowhead', 'rope', 'arrow', 'casing', 'fuse', 'ley-shard', 'bomb', 'ley-bolt']) craft(sim, r);
     const p = sim.player;
-    const node = sim.nodes[9];
+    const node = sim.nodes[8];
     const pack = sim.enemies.find((e) => e.roomId === sim.roomId);
     const gathering = t < 400;
     const goal = gathering ? node : pack;
@@ -106,8 +107,9 @@ function scriptedSession(seed: number, ticks: number) {
 function scriptedFoundry(seed: number, ticks: number) {
   const sim = createSim(seed);
   sim.crafted = ['ley-bolt', 'ley-shard'];
+  sim.link.attuned = true;
   sim.inventory = { 'ley-crystal': 3 };
-  const door = tileCentre({ tx: 1, ty: 12 });
+  const door = tileCentre(OVERWORLD.entrance.arrive);
   sim.player.x = door.x;
   sim.player.y = door.y;
   const build: [string, number][] = [
@@ -119,7 +121,7 @@ function scriptedFoundry(seed: number, ticks: number) {
   for (let t = 0; t < ticks; t++) {
     const p = sim.player;
     const goal =
-      t < 60 ? { x: -100, y: p.y } : t < 300 ? tileCentre({ tx: 18, ty: 6 }) : t < 900 ? tileCentre({ tx: 21, ty: 6 }) : { x: 2000, y: 272 };
+      t < 60 ? { x: p.x, y: -100 } : t < 300 ? tileCentre({ tx: 18, ty: 6 }) : t < 900 ? tileCentre({ tx: 21, ty: 6 }) : { x: 2000, y: 272 };
     const placing = t >= 60 && t < 64 ? build[t - 60] : undefined;
     const command: Command = {
       ...NO_COMMAND,
@@ -210,13 +212,13 @@ describe('sim state', () => {
 
   it('summarizes enemies, ground items and events', () => {
     const summary = summarize(createSim(8));
-    expect(summary.enemies.filter((e) => e.room === 'ruin-hall')).toHaveLength(3);
+    expect(summary.enemies.filter((e) => e.group === 'field')).toHaveLength(3);
     expect(summary.enemies[0]).toMatchObject({ enemyId: 'husk', mode: 'idle', health: 40, maxHealth: 40 });
     expect(summary.groundItems).toEqual([]);
     // Every event list, empty, and no KO: a key missing from createEvents fails here.
     const lists = ['hits', 'deaths', 'pickups', 'harvests', 'crafts', 'craftFails', 'bursts', 'selects', 'roomChanges'] as const;
     const later = ['places', 'placeFails', 'pickUps', 'deposits', 'crateTakes', 'withdraws', 'attunes', 'refills', 'shots', 'banks'] as const;
-    const site = ['sealed', 'claims', 'stashDeposits', 'stashTakes', 'travels', 'identifies', 'equips', 'angles', 'gates', 'objectives'] as const;
+    const site = ['sealed', 'claims', 'stashDeposits', 'stashTakes', 'supplies', 'travels', 'identifies', 'equips', 'angles', 'gates', 'objectives'] as const;
     expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, 'lost', 'ko', 'tubeTaken'].sort());
     for (const name of [...lists, ...later, ...site]) expect(summary.events[name], name).toEqual([]);
     expect(summary.events.ko).toBe(false);
@@ -226,9 +228,9 @@ describe('sim state', () => {
 
   it('summarizes rooms, build mode, unlocks and the foundry', () => {
     const s = createSim(8);
-    expect(summarize(s)).toMatchObject({ room: 'ruin-hall', rooms: ['ruin-hall', 'clearing', 'shrine', 'foundry'], building: false });
+    expect(summarize(s)).toMatchObject({ room: 'overworld', rooms: ['foundry', 'overworld'], building: false });
     expect(summarize(s).unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'gravity-stager']);
-    expect(summarize(s).enemies.every((e) => e.room === 'ruin-hall' || e.room === 'shrine')).toBe(true);
+    expect(summarize(s).enemies.every((e) => e.room === 'overworld')).toBe(true);
     s.roomId = 'foundry';
     s.player.x = 300;
     s.player.y = 300;
@@ -240,7 +242,7 @@ describe('sim state', () => {
 
   it('summarizes nodes, the harvest, ammo, bombs, burns and the crafted set', () => {
     const summary = summarize(createSim(8));
-    expect(summary.nodes.filter((n) => n.room === 'ruin-hall')).toHaveLength(11);
+    expect(summary.nodes.filter((n) => n.room === 'overworld')).toHaveLength(OVERWORLD.nodes.length);
     expect(summary.nodes[0]).toMatchObject({ nodeId: 'tree', uses: 3, regrow: 0 });
     expect(summary.harvest).toBeNull();
     expect(summary.tube.ammo).toBe('arrow');

@@ -1,6 +1,8 @@
 import { TILE_SIZE } from '../data/config';
 import { DEFAULT_START, type StartDef } from '../data/player';
-import { DEFAULT_ROOM, ROOMS, type Room } from '../data/rooms';
+import { DEFAULT_ROOM, type Room } from '../data/rooms';
+import { createPopulation, resetPopulation, type PopulationState } from './population';
+import { WORLD } from './world';
 import type { ArmorPiece } from './armor';
 import type { ArrowState } from './arrows';
 import type { BombState } from './bombs';
@@ -82,11 +84,15 @@ export interface SimState {
   gates: Gates;
   /** The reservoir has filled from a line at least once (opens the shrine gate). */
   firstLineFull: boolean;
+  /** The overworld's living population is out (017): from the first full line on, or from a populated start. Kept through a KO. */
+  populated: boolean;
+  /** The population's pack slots (017). */
+  population: PopulationState;
   /** Raw materials ever harvested, for the gathering objective. */
   gathered: string[];
   /** Which objectives are done, in OBJECTIVES order. */
   objectives: boolean[];
-  /** Ticks in a row outside the foundry with a line built into the tube socket, once every other goal is done. */
+  /** Ticks in a row outside the foundry with a line built into the intake, once every other goal is done. */
   awayTicks: number;
   /** Every objective done: the prototype's end. */
   prototypeComplete: boolean;
@@ -147,6 +153,8 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     hasTube: start.hasTube,
     gates: createGates(start.gatesOpen),
     firstLineFull: false,
+    populated: start.populated,
+    population: createPopulation(),
     gathered: [],
     objectives: OBJECTIVES.map(() => false),
     awayTicks: 0,
@@ -167,9 +175,11 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
  * reservoir, claims, the stash, armor and the whole foundry carry on. Claimed rooms get no enemies back.
  */
 export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
-  const rooms = Object.values(ROOMS);
+  const rooms = Object.values(WORLD);
   state.roomId = spawnRoomId;
-  state.player = createPlayer(tileCentre(roomOf(state).spawn));
+  // The start's own spawn when waking in its room (017: the overworld has several), else the room's.
+  const spawn = spawnRoomId === state.start.room ? state.start.spawn : roomOf(state).spawn;
+  state.player = createPlayer(tileCentre(spawn));
   state.tube = createTube();
   state.arrows = [];
   state.groundItems = [];
@@ -179,10 +189,13 @@ export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   state.orbs = [];
   state.claimHold = null;
   state.building = false;
-  // A claimed room's enemies are gone for good.
-  state.enemies = rooms.filter((room) => !state.claims.includes(room.id)).flatMap((room) =>
-    (room.enemies ?? []).map((p) => createEnemy(state.nextEnemyId++, p.enemyId, tileCentre(p), room.id)),
+  // A claimed site's guards are gone for good (017: a site is a group of the room's enemies).
+  state.enemies = rooms.flatMap((room) =>
+    (room.enemies ?? [])
+      .filter((p) => !p.group || !state.claims.includes(p.group))
+      .map((p) => createEnemy(state.nextEnemyId++, p.enemyId, tileCentre(p), room.id, p.group)),
   );
+  resetPopulation(state);
 }
 
 export { tileCentre } from './tiles';
@@ -194,7 +207,7 @@ export function roomSize(room: Room): { width: number; height: number } {
 
 /** Room data by id. Throws on an unknown id. */
 export function roomById(roomId: string): Room {
-  const room = ROOMS[roomId];
+  const room = WORLD[roomId];
   if (!room) throw new Error(`Unknown room '${roomId}'`);
   return room;
 }

@@ -1,9 +1,11 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
+import { DEPTHS, SPRITES } from '../data/assets';
 import { PICKER_LAYOUT } from '../data/hudLayout';
-import { colorOf } from './color';
+import { drawTablet } from './tablet';
 import { inRect, menuRows } from './foundryLayout';
-import { GlyphLine } from './glyphLine';
+import { flashRow, RowHover } from './menuFeedback';
+import { TextLine } from './textLine';
+import { addVector } from './vector/textures';
 
 /** One row: up to two icons, a number beside them, and what clicking it means. */
 export interface Choice<T> {
@@ -17,13 +19,15 @@ export interface Choice<T> {
 export class ChoiceMenu<T> {
   private readonly scene: Scene;
   private readonly panel: GameObjects.Graphics;
-  private rows: { images: GameObjects.Image[]; text: GlyphLine }[] = [];
+  private rows: { images: GameObjects.Image[]; text: TextLine }[] = [];
   private choices: Choice<T>[] = [];
   private key = '';
+  private readonly hover: RowHover;
   isOpen = false;
 
   constructor(scene: Scene) {
     this.scene = scene;
+    this.hover = new RowHover(scene);
     this.panel = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.menu - 1);
   }
 
@@ -47,6 +51,19 @@ export class ChoiceMenu<T> {
     return this.choices[i]?.value;
   }
 
+  /** The cursor is at a screen point (020): its row lights, with the hover sound on a new row. */
+  pointAt(x: number, y: number): void {
+    const i = this.isOpen ? menuRows(this.choices.length).findIndex((r) => inRect(r, x, y)) : -1;
+    if (!this.hover.set(i)) return;
+    for (const [k, r] of this.rows.entries()) r.images[0]?.setFrame(this.hover.frame(k));
+  }
+
+  /** Flashes the row under a screen point, as it's pressed. */
+  flashAt(x: number, y: number): void {
+    const r = this.isOpen ? menuRows(this.choices.length).find((rect) => inRect(rect, x, y)) : undefined;
+    if (r) flashRow(this.scene, r.x, r.y);
+  }
+
   /** Shows these rows (while open), rebuilding only on a change. */
   show(choices: readonly Choice<T>[]): void {
     const list = this.isOpen ? [...choices] : [];
@@ -55,7 +72,7 @@ export class ChoiceMenu<T> {
     this.key = key;
     for (const r of this.rows) {
       for (const o of r.images) o.destroy();
-      r.text.set('');
+      r.text.destroy();
     }
     this.choices = list;
     const L = PICKER_LAYOUT;
@@ -66,18 +83,17 @@ export class ChoiceMenu<T> {
       const y0 = Math.min(...rects.map((r) => r.y)) - L.pad;
       const x1 = Math.max(...rects.map((r) => r.x + r.w)) + L.pad;
       const y1 = Math.max(...rects.map((r) => r.y + r.h)) + L.pad;
-      this.panel.fillStyle(colorOf(L.border)).fillRect(x0 - 1, y0 - 1, x1 - x0 + 2, y1 - y0 + 2);
-      this.panel.fillStyle(colorOf(L.back)).fillRect(x0, y0, x1 - x0, y1 - y0);
+      drawTablet(this.panel, x0, y0, x1 - x0, y1 - y0);
     }
     const add = (x: number, y: number, frame: string, depth: number): GameObjects.Image =>
-      this.scene.add.image(x, y, ATLAS_KEY, frame).setOrigin(0).setScrollFactor(0).setDepth(depth);
+      addVector(this.scene, x, y, frame).setOrigin(0).setScrollFactor(0).setDepth(depth);
     this.rows = rects.map((r, i) => {
       const c = list[i];
       const images = [add(r.x, r.y, SPRITES.craftRow, DEPTHS.menu)];
       const icons = c?.icons ?? [];
       icons.forEach((icon, k) => images.push(add(r.x + L.icon.x + k * L.takeShift, r.y + L.icon.y, icon, DEPTHS.menu + 1)));
       const shift = Math.max(0, icons.length - 1) * L.takeShift;
-      const text = new GlyphLine(this.scene, r.x + L.count.x + shift, r.y + L.count.y, DEPTHS.menu + 1);
+      const text = new TextLine(this.scene, r.x + L.count.x + shift, r.y + L.count.y, DEPTHS.menu + 1);
       text.set(c?.text ?? '');
       return { images, text };
     });

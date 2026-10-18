@@ -4,7 +4,7 @@ import { boot, watchErrors } from './helpers';
 // Death (011): gather wood, stand in the Husk pack until KO'd, and wake in the
 // foundry without the unbanked wood but with the banked arrows.
 
-/** The ruin hall's first tree (node index). */
+/** The meadow's first tree (node index). */
 const TREE = 0;
 
 test('a death keeps the banked arrows and loses the unbanked wood', async ({ page }) => {
@@ -18,7 +18,9 @@ test('a death keeps the banked arrows and loses the unbanked wood', async ({ pag
     g.step(0);
     h.harvest(tree, 2);
     const wood = g.getState().inventory.wood ?? 0;
-    // Into the pack and stand there until the death plays out.
+    // Over to the pack by path (018: the tree stands in a grove), into it, and stand there until the death plays out.
+    const first = g.getState().enemies.find((e) => e.group === 'field');
+    if (first) h.walkTo(first.x, first.y + 96);
     let s = g.getState();
     let died = false;
     for (let t = 0; t < 4000 && !s.events.ko; t++) {

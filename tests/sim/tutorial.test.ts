@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { PLAYTEST_START } from '../../src/data/playtest';
 import { TUTORIAL_START } from '../../src/data/player';
-import { CLEARING_ROOM, FOUNDRY_ROOM, ROOMS } from '../../src/data/rooms';
+import { FOUNDRY_ROOM } from '../../src/data/rooms';
+import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
+import { WORLD } from '../../src/sim/world';
 import { RESERVOIR_CAP } from '../../src/data/tube';
-import { arrivalTile } from '../../src/sim/doorways';
 import { currentObjective } from '../../src/sim/objectives';
 import { createSim, type SimState } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
@@ -13,10 +14,12 @@ import { tileCentre } from '../../src/sim/tiles';
 import { knownRecipe } from '../../src/sim/tutorial';
 import { RECIPES } from '../../src/data/recipes';
 import { placeNode } from './fight';
-import { command, die, fireAt, movePlayer, run, runUntil, SEED } from './fight';
+import { atEntrance, command, die, fireAt, movePlayer, run, runUntil, SEED } from './fight';
 
-const CLEARING = ROOMS[CLEARING_ROOM];
-if (!CLEARING?.tubeStone) throw new Error('the clearing needs its tube stone');
+// 017: the tutorial wakes in the overworld's meadow, by the tube's stone.
+const CLEARING_ROOM = OVERWORLD_ROOM;
+const CLEARING = WORLD[CLEARING_ROOM];
+if (!CLEARING?.tubeStone) throw new Error('the overworld needs its tube stone');
 const STONE = CLEARING.tubeStone;
 
 function tutorial(): SimState {
@@ -32,9 +35,10 @@ function atStone(): SimState {
 }
 
 describe('the tutorial start', () => {
-  it('wakes in the clearing with nothing, no tube, and every gate shut', () => {
+  it('wakes by the tube stone with nothing, no tube, and every gate shut', () => {
     const s = tutorial();
     expect(s.roomId).toBe(CLEARING_ROOM);
+    expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre(OVERWORLD.wake));
     expect(s.inventory).toEqual({});
     expect(s.hasTube).toBe(false);
     expect(s.gates).toEqual({ foundry: false, shrine: false });
@@ -73,11 +77,12 @@ describe('the tube', () => {
     expect(s.tube.ammoId).toBe('arrow');
   });
 
-  it('a KO before the foundry is open wakes the player back in the clearing', () => {
+  it('a KO before the foundry is open wakes the player back by the stone', () => {
     const s = tutorial();
-    s.roomId = 'ruin-hall';
+    movePlayer(s, tileCentre(OVERWORLD.field).x, tileCentre(OVERWORLD.field).y);
     die(s);
     expect(s.roomId).toBe(CLEARING_ROOM);
+    expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre(OVERWORLD.wake));
     expect(s.link.attuned).toBe(false);
     s.gates.foundry = true;
     die(s);
@@ -93,21 +98,33 @@ describe('the tube', () => {
 });
 
 describe('gates', () => {
-  it("the foundry door is solid and does nothing until the hall's pack is dead, then stays open", () => {
-    const s = createSim(SEED, { start: TUTORIAL_START, roomId: 'ruin-hall' });
+  it("the foundry's stairs are solid and do nothing until the ruin field's pack is dead, then stay open", () => {
+    const s = tutorial();
     s.hasTube = true;
-    const inside = tileCentre(arrivalTile('ruin-hall', 0));
-    movePlayer(s, inside.x, inside.y);
-    run(s, 30, { moveX: -1 });
-    expect(s.roomId).toBe('ruin-hall');
-    s.enemies = s.enemies.filter((e) => e.roomId !== 'ruin-hall');
+    atEntrance(s);
+    run(s, 30, { moveY: -1 });
+    expect(s.roomId).toBe(OVERWORLD_ROOM);
+    s.enemies = s.enemies.filter((e) => e.group !== 'field');
     run(s, 1);
     expect(s.gates.foundry).toBe(true);
     expect(s.events.gates).toEqual([{ gate: 'foundry' }]);
-    runUntil(s, (x) => x.roomId === FOUNDRY_ROOM, 60, { moveX: -1 });
+    runUntil(s, (x) => x.roomId === FOUNDRY_ROOM, 60, { moveY: -1 });
     die(s);
     expect(s.gates.foundry).toBe(true);
-    expect(s.enemies.some((e) => e.roomId === 'ruin-hall')).toBe(true);
+    expect(s.enemies.some((e) => e.group === 'field')).toBe(true);
+  });
+
+  it("the shrine site's gap is sealed until its gate opens (017)", () => {
+    const s = tutorial();
+    s.enemies = [];
+    const gap = OVERWORLD.shrine.gate[1];
+    if (!gap) throw new Error('no gate tile');
+    const below = tileCentre({ tx: gap.tx, ty: gap.ty + 2 });
+    movePlayer(s, below.x, below.y);
+    run(s, 40, { moveY: -1 });
+    expect(s.player.y).toBeGreaterThan(tileCentre(gap).y);
+    s.gates.shrine = true;
+    runUntil(s, (x) => x.player.y < tileCentre(gap).y - 32, 60, { moveY: -1 });
   });
 
   it('the shrine opens the first time the reservoir fills', () => {
@@ -164,8 +181,9 @@ describe('objectives', () => {
     const s = createSim(SEED, { start: PLAYTEST_START });
     s.objectives = OBJECTIVES.map((_, i) => i < OBJECTIVES.length - 1);
     s.roomId = FOUNDRY_ROOM;
-    stepSim(s, command({ place: { pieceId: 'tube-socket', tx: 5, ty: 5, facing: 'right' } }));
-    s.roomId = 'ruin-hall';
+    // A conduit feeding the intake's middle mouth tile (019) is a line running.
+    stepSim(s, command({ place: { pieceId: 'conduit', tx: 12, ty: 1, facing: 'up' } }));
+    s.roomId = OVERWORLD_ROOM;
     const last = OBJECTIVES[OBJECTIVES.length - 1]?.check;
     const ticks = last?.kind === 'awayRunning' ? last.ticks : 0;
     run(s, ticks - 1);

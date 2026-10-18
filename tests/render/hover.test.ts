@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { HUD_DIGITS, HUD_LETTERS } from '../../src/data/assets';
 import { BUILD_TIP, WORLD_NAMES } from '../../src/data/hudLayout';
 import { FIXTURES } from '../../src/data/claims';
-import { ENEMIES } from '../../src/data/enemies';
-import { ITEMS } from '../../src/data/items';
-import { NODES } from '../../src/data/nodes';
+import { DESCRIPTIONS } from '../../src/data/descriptions';
+import { SHRINE_SITE } from '../../src/data/rooms';
+import { claim } from '../../src/sim/claims';
 import { BUILD_BAR, PIECES } from '../../src/data/pieces';
-import { ROOMS } from '../../src/data/rooms';
+import { OVERWORLD } from '../../src/data/overworld';
+import { WORLD } from '../../src/sim/world';
 import { arrowSpots, sorterLook, wrapText } from '../../src/render/foundryLayout';
 import { sortSideOf } from '../../src/sim/pieces';
 import { nameAt } from '../../src/render/hoverNames';
@@ -38,50 +38,50 @@ describe('world names on mouse-over', () => {
     expect(nameAt(s, HALL, 500, 498)?.name).toBe('Wood');
   });
 
-  it('names the pylon, the tube stone and the crystal, and nothing on bare floor', () => {
+  it('names the pylon and the tube stone, and nothing on bare ground (017: both in the overworld)', () => {
     const s = createSim(SEED, { roomId: HALL });
-    const shrine = ROOMS.shrine?.pylon;
+    const outside = WORLD[HALL];
+    const shrine = outside?.pylon;
     if (!shrine) throw new Error('no pylon');
     const p = centre(shrine.tx, shrine.ty);
-    expect(nameAt(s, 'shrine', p.x, p.y)?.name).toBe(WORLD_NAMES.pylon);
-    const stone = ROOMS.clearing?.tubeStone;
+    expect(nameAt(s, HALL, p.x, p.y)?.name).toBe(WORLD_NAMES.pylon);
+    const stone = outside.tubeStone;
     if (!stone) throw new Error('no stone');
     const t = centre(stone.tx, stone.ty);
-    expect(nameAt(s, 'clearing', t.x, t.y)?.name).toBe(WORLD_NAMES.tubeStone);
+    expect(nameAt(s, HALL, t.x, t.y)?.name).toBe(WORLD_NAMES.tubeStone);
     s.hasTube = false;
-    expect(nameAt(s, 'clearing', t.x, t.y)?.name).toBe(WORLD_NAMES.dormantTube);
-    const crystal = ROOMS[HALL]?.crystal;
-    if (!crystal) throw new Error('no crystal');
-    const c = centre(crystal.tx, crystal.ty);
-    expect(nameAt(s, HALL, c.x, c.y)?.name).toBe(WORLD_NAMES.crystal);
+    expect(nameAt(s, HALL, t.x, t.y)?.name).toBe(WORLD_NAMES.dormantTube);
     s.enemies = [];
-    expect(nameAt(s, HALL, centre(36, 13).x, centre(36, 13).y)).toBeNull();
+    s.nodes = [];
+    const field = centre(OVERWORLD.field.tx, OVERWORLD.field.ty);
+    expect(nameAt(s, HALL, field.x, field.y)).toBeNull();
   });
-});
 
-describe('world names in the pixel font', () => {
-  it('only use glyphs the font has, for everything that can be hovered', () => {
-    const glyphs = new Set([...HUD_LETTERS.glyphs, ...HUD_DIGITS.glyphs]);
-    const names = [
-      ...Object.values(ENEMIES).map((e) => e.name),
-      ...Object.values(NODES).map((n) => n.name),
-      ...Object.values(ITEMS).map((i) => i.name),
-      ...FIXTURES.map((f) => f.name),
-      ...Object.values(PIECES).map((p) => p.name),
-      ...Object.values(WORLD_NAMES),
-    ];
-    for (const name of names) for (const ch of name.toUpperCase()) expect(glyphs.has(ch), `${name}: '${ch}'`).toBe(true);
+  it('says where materials come from over the pylon, a ley line and the supply port (018)', () => {
+    const s = createSim(SEED, { roomId: HALL });
+    s.enemies = [];
+    s.nodes = [];
+    const pylon = centre(OVERWORLD.shrine.pylon.tx, OVERWORLD.shrine.pylon.ty);
+    expect(nameAt(s, HALL, pylon.x, pylon.y)?.description).toBe(DESCRIPTIONS.pylonDormant);
+    claim(s, SHRINE_SITE);
+    expect(nameAt(s, HALL, pylon.x, pylon.y)?.description).toBe(DESCRIPTIONS.pylon);
+    // Halfway along the shrine's ley line, between two of its points.
+    const [a, b] = OVERWORLD.leyLines.shrine.slice(2, 4);
+    if (!a || !b) throw new Error('short ley line');
+    const seam = { x: ((a.tx + b.tx) / 2 + 0.5) * 32, y: ((a.ty + b.ty) / 2 + 0.5) * 32 };
+    expect(nameAt(s, HALL, seam.x, seam.y)).toMatchObject({ name: WORLD_NAMES.leyLine, description: DESCRIPTIONS.leyLine });
+    const port = FIXTURES.find((f) => f.kind === 'port');
+    if (!port) throw new Error('no port');
+    const at = centre(port.tx, port.ty);
+    expect(nameAt(s, 'foundry', at.x, at.y)).toMatchObject({ name: port.name, description: DESCRIPTIONS.port });
   });
 });
 
 describe('build bar descriptions', () => {
-  const glyphs = new Set([...HUD_LETTERS.glyphs, ...HUD_DIGITS.glyphs]);
-
-  it('every buildable piece has one, written only in glyphs the pixel font has', () => {
+  it('every buildable piece has one, short enough for the tip', () => {
     for (const id of BUILD_BAR) {
       const def = PIECES[id];
       expect(def?.description.length, id).toBeGreaterThan(0);
-      for (const ch of `${def?.name ?? ''} ${def?.description ?? ''}`.toUpperCase()) expect(glyphs.has(ch), `${id}: '${ch}'`).toBe(true);
       expect(wrapText(def?.description ?? '', BUILD_TIP.wrap).length, id).toBeLessThanOrEqual(BUILD_TIP.maxLines);
     }
   });

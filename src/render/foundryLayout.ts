@@ -1,4 +1,5 @@
-import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
+import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
+import { INTAKE } from '../data/foundry';
 import { BUILD_BAR_LAYOUT, MENU_COLUMN_GAP, MENU_MAX_ROWS, PICKER_LAYOUT } from '../data/hudLayout';
 import type { AnimDef } from '../data/assets';
 import { CONDUIT_ANIMS, CONDUIT_CORNERS, LOGISTICS_ICONS, SORTER_ANIMS, type CornerKey } from '../data/foundryAssets';
@@ -109,8 +110,8 @@ export interface ArrowSpot extends Tile {
 /**
  * Where a piece's build-mode arrows go. Its front edge gets one output arrow
  * pointing out (machines, hoppers and stagers). Every outer edge that takes items gets an
- * input arrow pointing in: machines and stagers on all but their front side, crates and tube
- * sockets on every side. Conduits show their flow instead, so they get none.
+ * input arrow pointing in: machines and stagers on all but their front side, crates on every
+ * side. Conduits show their flow instead, so they get none. The intake's arrows are IntakeView's.
  */
 export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing; mirrored?: boolean }): ArrowSpot[] {
   const { kind } = pieceDef(p.pieceId);
@@ -130,7 +131,7 @@ export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing:
     return [{ kind: 'in', tx: p.tx, ty: p.ty, edge, points: opposite(edge) }];
   }
   const spots: ArrowSpot[] = [];
-  const hasOutput = kind !== 'crate' && kind !== 'socket';
+  const hasOutput = kind !== 'crate';
   if (hasOutput) spots.push({ kind: 'out', tx: p.tx, ty: p.ty, edge: p.facing, points: p.facing });
   if (kind === 'hopper') return spots;
   const tiles = footprint(p.pieceId, p.tx, p.ty, p.facing);
@@ -182,4 +183,11 @@ export function wrapText(text: string, width: number): string[] {
   }
   if (line) lines.push(line);
   return lines;
+}
+
+/** The foundry intake's anchor (019): the middle of its mouth's bottom edge, where the north wall meets the floor, px. */
+export function intakeAnchor(): { x: number; y: number } {
+  const middle = INTAKE.mouth[1];
+  if (!middle) throw new Error('The intake needs three mouth tiles');
+  return { x: (middle.tx + 0.5) * TILE_SIZE, y: (middle.ty + 1) * TILE_SIZE };
 }

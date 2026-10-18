@@ -1,15 +1,13 @@
 import type { GameObjects, Scene } from 'phaser';
-import { TintModes } from 'phaser';
-import { animFrames, ATLAS_KEY, DEPTHS } from '../data/assets';
+import { animFrames, DEPTHS } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
-import { CONDUIT_TICKS, STAGER_ANGLES } from '../data/foundry';
+import { CONDUIT_TICKS, INTAKE, STAGER_ANGLES } from '../data/foundry';
 import {
   CONDUIT_ANIMS,
   CONDUIT_CORNERS,
   SORTER_ANIMS,
   SORTER_LOOK,
   CRATE_SPRITE,
-  SOCKET_SPRITES,
   SPREAD_FAN,
   STAGER_PULSE,
   STAGER_SPRITE,
@@ -17,21 +15,24 @@ import {
   FOUNDRY_LAYOUT,
   ICON_RISE,
   HOPPER_SPRITES,
-  MACHINE_HOUSINGS,
+  JAM_SHAKE,
+  MACHINE_SPRITES,
+  machineLook,
   STATUS_MARKERS,
   type PieceView,
 } from '../data/foundryAssets';
 import { itemDef } from '../data/items';
 import { pieceDef } from '../data/pieces';
 import { facingVector, opposite } from '../sim/direction';
-import { rotate, socketStreams } from '../sim/spread';
-import { pieceRect, sorterOut, type FoundryState, type PieceState } from '../sim/pieces';
+import { rotate } from '../sim/spread';
+import { frontTile, pieceRect, sameTile, sorterOut, type FoundryState, type PieceState } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { SQUASH } from '../data/juice';
 import { registerAnim } from './anims';
 import { arrowSpots, conduitLook, pieceIcon, sorterLook } from './foundryLayout';
 import { colorOf } from './color';
-import { GlyphLine } from './glyphLine';
+import { TextLine } from './textLine';
+import { addVector, addVectorSprite, textureScale } from './vector/textures';
 
 export const viewOf = (f: Facing): PieceView => (f === 'up' || f === 'down' ? f : 'side');
 
@@ -56,13 +57,20 @@ export function placeArrows(
     const [ex, ey] = facingVector(spot.edge);
     const x = (spot.tx + 0.5) * TILE_SIZE + ex * reach;
     const y = (spot.ty + 0.5) * TILE_SIZE + ey * reach;
-    // A sorter's side exit is an output arrow in gold.
-    arrow.setFrame(FACING_ARROWS[spot.kind === 'sort' ? 'out' : spot.kind][viewOf(spot.points)]).setFlipX(spot.points === 'left');
-    // Filled, not multiplied: a multiply tint would turn the cyan arrow green.
-    if (spot.kind === 'sort') arrow.setTint(colorOf(SORTER_LOOK.sortArrowTint)).setTintMode(TintModes.FILL);
-    else arrow.clearTint().setTintMode(TintModes.MULTIPLY);
+    // A sorter's side exit has its own gold output arrow.
+    arrow.setFrame(FACING_ARROWS[spot.kind][viewOf(spot.points)]).setFlipX(spot.points === 'left');
     arrow.setPosition(Math.round(x), Math.round(y));
   }
+}
+
+/** The frame a piece's body shows first, before `draw` animates or turns it. */
+function firstFrame(p: PieceState): string {
+  const view = viewOf(p.facing);
+  if (p.kind === 'conduit') return animFrames(conduitLook(p.facing, p.inFrom).anim)[0] ?? '';
+  if (p.kind === 'sorter') return animFrames(sorterLook(p.facing, p.mirrored).anim)[0] ?? '';
+  if (p.kind === 'machine') return machineLook(p.pieceId, view).idle;
+  if (p.kind === 'stager') return animFrames(STAGER_SPRITE)[0] ?? '';
+  return p.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE;
 }
 
 interface Drawn {
@@ -73,19 +81,19 @@ interface Drawn {
   arrows: GameObjects.Image[];
   marker?: GameObjects.Sprite;
   markerIcon?: GameObjects.Image;
-  count?: GlyphLine;
+  count?: TextLine;
   /** Sorters: the chosen item's icon in the slot. */
   slot?: GameObjects.Image;
 }
 
 // Draws the foundry's pieces from sim state: machines showing what they make, a
 // working loop and a status marker; conduits flowing with the item they carry;
-// hoppers and crates with what they hold; tube sockets flaring as they refill.
+// hoppers and crates with what they hold. The intake pipe is IntakeView's (019).
 // Sorted by the bottom of their footprint.
 export class FoundryView {
   private readonly scene: Scene;
   private readonly drawn = new Map<number, Drawn>();
-  /** Build mode's spread fan over the tube socket. */
+  /** Build mode's spread fans from the stagers facing the intake. */
   private readonly fan: GameObjects.Graphics;
   /** Pieces just placed, which drop in with a bounce when next drawn (014). */
   private readonly dropping = new Set<number>();
@@ -93,7 +101,7 @@ export class FoundryView {
   constructor(scene: Scene) {
     this.scene = scene;
     this.fan = scene.add.graphics().setDepth(DEPTHS.spreadFan);
-    for (const views of Object.values(MACHINE_HOUSINGS)) for (const v of Object.values(views)) registerAnim(scene, v.working);
+    for (const views of Object.values(MACHINE_SPRITES)) for (const v of Object.values(views)) registerAnim(scene, v.working);
     for (const anim of [...Object.values(CONDUIT_ANIMS), ...Object.values(CONDUIT_CORNERS), ...Object.values(SORTER_ANIMS)]) registerAnim(scene, anim);
     registerAnim(scene, STATUS_MARKERS.working);
   }
@@ -125,27 +133,28 @@ export class FoundryView {
   private bounce(id: number, body: GameObjects.Sprite): void {
     if (!this.dropping.delete(id)) return;
     const y = body.y;
-    body.setY(y - SQUASH.dropPx).setScale(1 - SQUASH.squash, 1 + SQUASH.squash);
+    // Relative to its resting scale: a vector frame rests at 1 / texture scale.
+    const rest = 1 / textureScale();
+    body.setY(y - SQUASH.dropPx).setScale(rest * (1 - SQUASH.squash), rest * (1 + SQUASH.squash));
     this.scene.tweens.add({ targets: body, y, duration: SQUASH.ms, ease: 'Bounce.Out' });
-    this.scene.tweens.add({ targets: body, scaleX: 1, scaleY: 1, duration: SQUASH.ms * SQUASH.settle, ease: 'Back.Out' });
+    this.scene.tweens.add({ targets: body, scaleX: rest, scaleY: rest, duration: SQUASH.ms * SQUASH.settle, ease: 'Back.Out' });
   }
 
   /** The top of a drawn piece's sprite, world px. */
   topOf(id: number): number | undefined {
     const d = this.drawn.get(id);
-    return d ? d.body.y - d.body.height : undefined;
+    return d ? d.body.y - d.body.displayHeight : undefined;
   }
 
   private create(p: PieceState): Drawn {
-    const add = this.scene.add;
     const view = viewOf(p.facing);
     const r = pieceRect(p);
     const bottom = r.y + r.h / 2;
     const left = p.facing === 'left';
     const d: Drawn = {
-      body: add.sprite(r.x, bottom, ATLAS_KEY).setOrigin(0.5, 1).setFlipX(left).setDepth(bottom),
-      icon: add.image(r.x, bottom, ATLAS_KEY, pieceIcon(p.pieceId)).setOrigin(0.5),
-      arrows: arrowSpots(p).map(() => add.image(0, 0, ATLAS_KEY, FACING_ARROWS.out.down).setDepth(DEPTHS.worldUi - 1)),
+      body: addVectorSprite(this.scene, r.x, bottom, firstFrame(p)).setOrigin(0.5, 1).setFlipX(left).setDepth(bottom),
+      icon: addVector(this.scene, r.x, bottom, pieceIcon(p.pieceId)).setOrigin(0.5),
+      arrows: arrowSpots(p).map(() => addVector(this.scene, 0, 0, FACING_ARROWS.out.down).setDepth(DEPTHS.worldUi - 1)),
     };
     if (p.kind === 'conduit') {
       const look = conduitLook(p.facing, p.inFrom);
@@ -154,25 +163,21 @@ export class FoundryView {
       d.icon.setDepth(FOUNDRY_LAYOUT.itemDepth);
     } else if (p.kind === 'machine') {
       const footprint = pieceDef(p.pieceId).footprint;
-      d.body.setFrame(MACHINE_HOUSINGS[footprint][view].idle);
       d.icon.setPosition(r.x, bottom - ICON_RISE[footprint][view]).setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge);
-      d.marker = add.sprite(r.x, 0, ATLAS_KEY).setOrigin(0.5, 1).setDepth(DEPTHS.worldUi);
-      d.markerIcon = add.image(r.x, 0, ATLAS_KEY).setOrigin(0.5).setDepth(DEPTHS.worldUi + 1);
+      d.marker = addVectorSprite(this.scene, r.x, 0, STATUS_MARKERS.blocked).setOrigin(0.5, 1).setDepth(DEPTHS.worldUi);
+      d.markerIcon = addVector(this.scene, r.x, 0, pieceIcon(p.pieceId)).setOrigin(0.5).setDepth(DEPTHS.worldUi + 1);
     } else if (p.kind === 'sorter') {
       const look = sorterLook(p.facing, p.mirrored);
       d.body.setOrigin(0.5).setPosition(r.x, r.y).setDepth(FOUNDRY_LAYOUT.conduitDepth);
       d.body.setFlip(look.flipX, look.flipY).play(look.anim.key);
       d.icon.setDepth(FOUNDRY_LAYOUT.itemDepth);
-      d.slot = add.image(r.x, r.y, ATLAS_KEY).setScale(SORTER_LOOK.slotScale).setDepth(FOUNDRY_LAYOUT.conduitDepth + FOUNDRY_LAYOUT.onTopNudge);
-    } else if (p.kind === 'socket') {
-      d.body.setFrame(SOCKET_SPRITES.idle);
-      d.icon.setVisible(false);
+      d.slot = addVector(this.scene, r.x, r.y, pieceIcon(p.pieceId)).setScale(SORTER_LOOK.slotScale / textureScale()).setDepth(FOUNDRY_LAYOUT.conduitDepth + FOUNDRY_LAYOUT.onTopNudge);
     } else if (p.kind === 'stager') {
       d.icon.setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge).setVisible(false);
     } else {
       d.body.setFrame(p.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE);
       d.icon.setPosition(r.x, bottom - FOUNDRY_LAYOUT.contentsRise).setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge);
-      d.count = new GlyphLine(this.scene, r.x, bottom, bottom + 2 * FOUNDRY_LAYOUT.onTopNudge, true);
+      d.count = new TextLine(this.scene, r.x, bottom, bottom + 2 * FOUNDRY_LAYOUT.onTopNudge, true, 'count');
     }
     this.drawn.set(p.id, d);
     return d;
@@ -182,7 +187,6 @@ export class FoundryView {
     if (p.kind === 'conduit') this.drawConduit(p, d);
     else if (p.kind === 'sorter') this.drawSorter(p, d);
     else if (p.kind === 'machine') this.drawMachine(p, d);
-    else if (p.kind === 'socket') d.body.setFrame(p.pulse > 0 ? SOCKET_SPRITES.refill : SOCKET_SPRITES.idle);
     else if (p.kind === 'stager') {
       const frame = animFrames(STAGER_SPRITE)[STAGER_ANGLES.indexOf(p.angle)];
       if (!frame) throw new Error(`No stager frame for angle ${p.angle}`);
@@ -204,15 +208,15 @@ export class FoundryView {
     }
   }
 
-  /** One faint line per stream from the socket's centre, at its angle from straight up. */
+  /** One faint line from each stager facing the intake's mouth (019), at its stream's angle from straight up. */
   private drawFan(foundry: FoundryState, on: boolean): void {
     this.fan.clear();
-    const socket = foundry.pieces.find((p) => p.kind === 'socket');
-    if (!on || !socket) return;
-    const r = pieceRect(socket);
+    if (!on) return;
     this.fan.lineStyle(SPREAD_FAN.width, colorOf(SPREAD_FAN.color), SPREAD_FAN.alpha);
-    for (const angle of socketStreams(foundry)) {
-      const [dx, dy] = rotate(0, -1, angle);
+    for (const p of foundry.pieces) {
+      if (p.kind !== 'stager' || !INTAKE.mouth.some((m) => sameTile(frontTile(p), m))) continue;
+      const r = pieceRect(p);
+      const [dx, dy] = rotate(0, -1, p.angle);
       this.fan.lineBetween(r.x, r.y, r.x + dx * SPREAD_FAN.length, r.y + dy * SPREAD_FAN.length);
     }
   }
@@ -245,14 +249,18 @@ export class FoundryView {
   }
 
   private drawMachine(p: Extract<PieceState, { kind: 'machine' }>, d: Drawn): void {
-    const housing = MACHINE_HOUSINGS[pieceDef(p.pieceId).footprint][viewOf(p.facing)];
-    if (p.status === 'working') d.body.play(housing.working.key, true);
-    else if (d.body.anims.isPlaying || d.body.frame.name !== housing.idle) d.body.stop().setFrame(housing.idle);
+    // The mechanism moves while working, stands still while idle or starved, and jams (stuck, shaking) while blocked.
+    const look = machineLook(p.pieceId, viewOf(p.facing));
+    const still = p.status === 'blocked' ? look.jammed : look.idle;
+    if (p.status === 'working') d.body.play(look.working.key, true);
+    else if (d.body.anims.isPlaying || d.body.frame.name !== still) d.body.stop().setFrame(still);
+    const shake = p.status === 'blocked' && Math.floor(this.scene.time.now / JAM_SHAKE.ms) % 2 === 0 ? JAM_SHAKE.px : 0;
+    d.body.setX(pieceRect(p).x + shake);
     const marker = d.marker;
     const icon = d.markerIcon;
     if (!marker || !icon) return;
-    const top = d.body.y - d.body.height - FOUNDRY_LAYOUT.markerGap;
-    marker.setY(top).setVisible(p.status !== 'idle');
+    const top = d.body.y - d.body.displayHeight + FOUNDRY_LAYOUT.markerDrop;
+    marker.setPosition(pieceRect(p).x + FOUNDRY_LAYOUT.markerX, top).setVisible(p.status !== 'idle');
     icon.setVisible(p.status === 'starved');
     if (p.status === 'working') marker.play(STATUS_MARKERS.working.key, true);
     else marker.stop();
@@ -260,7 +268,7 @@ export class FoundryView {
     if (p.status === 'starved') {
       marker.setFrame(STATUS_MARKERS.starved);
       const missing = p.missing[0];
-      if (missing) icon.setFrame(itemDef(missing).icon).setY(top - marker.height / 2);
+      if (missing) icon.setFrame(itemDef(missing).icon).setPosition(marker.x, top - marker.displayHeight / 2);
     }
   }
 }

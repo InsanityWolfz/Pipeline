@@ -2,6 +2,161 @@
 
 Newest entry first.
 
+## 2026-10-18: 020 Vector pass (unattended build)
+**Changed:** built 020 on `claude/020-vector-pass`, stacked on 019, from `docs/plans/020-vector-pass.md`:
+- **Fonts:** two bundled OFL fonts (Cinzel, Source Sans 3) replace the glyph fonts.
+- **Vector art for everything:**
+  - items and emblems
+  - conduits and the logistics pieces
+  - fixtures and the pylon
+  - nine machines with visible mechanisms: idle, jammed and working, in three views
+  - the sandstone foundry interior with a warm forge glow
+  - a carved stone and brass HUD and menus, with row hover and press feedback
+- **Removed:** the pixel pipeline (grids, atlas, `npm run art`, the pixel palette, nearest filtering).
+- **Contact sheet:** `/sheet.html`, with screenshots in `docs/review/020/`.
+
+**Tests:**
+- Unit tests updated for vector-only assets. A new test checks the pipeline is gone, and another checks the fonts and their licences.
+- The smoke test checks the fonts load offline.
+- Boot waits for `ui().ready`.
+- QA fixes: the status markers no longer cover the piece in front, and the press flash is see-through. The "missing" damage numbers were screenshot timing, not a bug. Review fixes are in.
+- `npm run check` (unit tests) and `npm run test:e2e` (39 tests) pass.
+
+**Follow-up (Shaun's answer):**
+- Crafting no longer pauses the world.
+- Esc opens a pause menu (Sound on/off, Volume, Resume) that stops it.
+- An e2e test that only passed by luck (E pressed out of the hopper's reach) now steps into reach first.
+
+**Next:** Shaun kept the floor variety and asked for 016–020 merged to main for a playtest. That ends the 016–020 run.
+
+## 2026-10-18: 019 follow-up: Shaun's answers
+**Changed:** on `claude/019-intake-pipe`:
+- **The attune cutscene.**
+  - The first walk into the foundry holds the player still (sim: no input while `link.attunePulse > 0`).
+  - The beats are in `ATTUNE` (`src/data/tube.ts`):
+    - the tube's rings light with a growing glow (1 s)
+    - the camera pans to the intake pipe
+    - the pipe's rings light with the same growing glow, and it turns cyan
+    - the camera pans back
+  - The render reads the beats from `src/render/attune.ts`.
+- **The objective line** is now right-aligned on the right of the screen, below the minimap.
+- **The extra wall** above the foundry stays.
+
+**Tests:** the link test for the hold; test kits start the foundry already attuned; e2e `enterFoundry` plays the attune through.
+
+**Next:** the run continues with 020 (vector pass), stacked on 019.
+
+## 2026-10-18: 019 Foundry intake pipe (unattended build)
+**Changed:** built 019 on `claude/019-intake-pipe`, stacked on 018, from `docs/plans/019-intake-pipe.md`.
+- **The tube socket is gone.** In its place is a fixed waterslide pipe in the centre of the foundry's north wall.
+  - Its mouth is three wall tiles, each fed from the floor tile directly below it, and nothing goes in before the tube attunes.
+  - Everything fills the one reservoir with the old rules.
+  - Stagers facing the mouth make the spread, capped at 3 streams.
+- **The look:** it matches the carried tube. Dormant it is grey-cyan; its rings light one by one on attuning. A 10-ring gauge column shows the reservoir, and a ring of light runs up the pipe for each item.
+- **Build mode** shows input arrows under the mouth and a fan from each facing stager. Hovering the pipe shows its name and the reservoir count.
+- **Framing:** tiled rooms show 48 px more wall above their top row, so the pipe can rise up it (an open question).
+
+Verify: all 536 unit tests and all 39 e2e tests pass. QA screenshots pass on mechanism; its visual fixes are in. Review found three blocking items, all fixed.
+
+**Next:** Shaun answers three framing questions in the 019 spec: the extra wall, the attune off-screen, and the banner over the pipe. The run continues with 020.
+
+## 2026-10-18: 018 Believable resources (unattended build)
+**Changed:** built 018 on `claude/018-believable-resources`, stacked on 017, from `docs/plans/018-believable-resources.md`.
+- **Every node stands where its material comes from:** trees in sunlit groves, boulders in rock fields, reeds at pond edges, veins on ley lines. A data test checks each placement rule. The shrine site holds one node of each type.
+- **Vector nodes:**
+  - Each shows its uses left by its shape, then its remains (stump and sapling, pebbles, cut stubs, dark crystal stumps), growing back in three stages.
+  - Each type reacts as it's worked.
+- **Drops:** Husks ooze amber resin with a slow drip. The Warden's core, a violet heart-stone like its drop (Shaun's call), glows in its chest and pulses through the wind-up.
+- **The claimed pylon's harvest, made visible:** a tendril to a node, then a mote along the ley line into the foundry. The pylon, ley lines and supply port describe themselves on hover.
+- **Also, at Shaun's call during the run (017):** the wake cap is gone. Anything on screen aggroes; only spawning is capped.
+
+Verify: all 538 unit tests and all 38 e2e tests pass. QA screenshots pass; its seven fixes are in. Review found three blocking items, all fixed.
+
+**Next:** Shaun playtests the preview (`branch/claude/018-believable-resources/`). The run continues with 019, stacked on 018.
+**Notes:**
+- The e2e helpers' `walkTo` now finds a path over a passable grid from the dev hook, because groves and ponds block straight walks.
+- Ground item icons and the HUD font are still pixel art until 020.
+
+## 2026-10-18: 017 Overworld and danger (unattended build)
+**Changed:** built 017 on `claude/017-overworld`, stacked on 016, from `docs/plans/017-overworld.md`.
+- **One open map.** An 80×45 overworld is generated from a fixed seed: groves, rock fields, ponds, ruin stones, a forest edge and dirt paths. Fixed landmarks sit on top:
+  - the start stone in a meadow
+  - the foundry as a buried ruin with stairs, in a ruin field
+  - the walled shrine site
+- **Danger rings:**
+  - ring 0, round the foundry, stays calm
+  - rings 1 and 2 keep packs alive once the first line fills, with respawns out of view
+  - no more than 15 enemies wake within a screen of the player
+- **Safe ground.** A claimed pylon makes a 10-tile safe zone.
+- **Minimap** in the corner.
+- **Shrine and stash.** The shrine's gap is sealed by a ley dome until the first line fills. Claims are by site.
+- **Removed:** the old clearing, hall and shrine rooms, and their floors, props and ambience.
+
+Verify: all 514 unit tests and all 36 e2e tests pass.
+- The e2e suite was rewritten for the map, plus new tests:
+  - minimap markers
+  - a ring-2 crowd: 10+ enemies on screen, never more than 15 awake
+- QA screenshots pass:
+  - **Shortfall it found:** the crowd on screen was below 10, so ring 2 was tuned to 8 packs.
+- Review found seven blocking items. All are fixed; the biggest was that the claimed pylon's menu, glow and claim bar didn't work in play.
+
+**Next:** Shaun reviews the draft PR and answers the 017 spec's two open questions: spawn distance, and whether hits wake past the cap. The run continues with 018 on a branch stacked on this one.
+**Notes:** see the 017 spec's build notes. QA thought the ruin-field flagstones look flat and the shrine dome faint; both are left for 020's visual pass or Shaun's call.
+
+## 2026-10-18: 016 Art direction (unattended build)
+**Changed:** built 016 on `claude/016-art-direction` from `docs/plans/016-art-direction.md`.
+- **Vector art:**
+  - Typed shape data in `src/data/art/`, drawn into textures at boot.
+  - A daylight palette, with the old palette renamed to `PIXEL_PALETTE`.
+- **The wanderer:** a rig in three facings, drawn every frame. It braces, leans and kicks while firing, and the tube has dormant, attuning and attuned states.
+- **Combat art:** the Husk, Wisp and Warden as baked rigs, plus vector projectiles and effects.
+- **Rendering:**
+  - The game draws at the device's resolution, with a world camera and a UI camera.
+  - The pixel atlas uses nearest filtering.
+- **Sim:** firing slows the walk to 0.7×.
+- **Docs:** `/sheet.html` is a contact sheet of every vector sprite. `art.md` and `/sprite` are rewritten.
+
+Verify: 491 unit and 34 e2e tests pass.
+- QA passed with screenshots. The fixes it led to:
+  - clipped death and slam frames
+  - the Wisp's charge orb when it faces up
+  - bolder hose rings
+- Review's three blocking items are fixed, and most of its suggestions are in.
+
+**Next:** Shaun reviews the draft PR and the contact sheet, and playtests the preview. The run continues with 017 on a branch stacked on this one.
+**Notes:** see the 016 spec's build notes. Headless rendering is slower at full resolution (software GL), but e2e stays green.
+
+## 2026-10-18: Specs 017–020 (interviews)
+**Changed:** interviewed Shaun and wrote four draft specs on `claude/016-art-direction`:
+- **017 Overworld and danger:** absorbs the "more enemies" idea, at Shaun's call.
+- **018 Believable resources.**
+- **019 Foundry intake pipe.**
+- **020 Vector pass:** it ends the pixel pipeline.
+
+`docs/design.md` "Combat", Enemies, now says RotMG density, 15 to 20 in a busy fight, every attack still telegraphed. This follows Shaun's answer "RotMG density" to the question of what the rule should become. The backlog is renumbered 016–020.
+**Next:** Shaun approved 016–020 ("I approve all") with the enemy cap lowered to 10–15 (design.md and 017 updated). Next they are built, then they are built in order as stacked branches, like the 007–015 overnight run.
+**Notes:**
+- All tuning numbers in the specs are proposals: pack sizes, respawn delay, safe radius, walk multiplier and ring bounds.
+- 019 caps spreads at 3 streams (3-tile mouth, Shaun's pick), down from 4 sides on today's socket.
+- 020 bundles two OFL fonts, which are asset files and not an npm dependency (Shaun chose bundled fonts).
+
+## 2026-10-18: Playtest notes and 016 Art direction (spec)
+**Changed:** Shaun's playtest notes became backlog items 016–021. On the branch `claude/016-art-direction`:
+- **Style test:** 016 started with a style test of one scene in three styles (`docs/art/style-test.html`, https://claude.ai/artifact/J3ssrCe2V7mHMHyVuEnfxx).
+- **Shaun's choices:**
+  - clean vector style (C), and the environment as shown
+  - a rust-cloaked hooded wanderer with a cyan face glow and leather gloves
+  - a brass tank for now
+  - firing slows the walk
+  - scope: the pipeline, the player and combat
+- **Docs:** wrote `docs/specs/016-art-direction.md` (status: draft). Updated `docs/design.md` (stack, camera and art) and `docs/prototype.md` (art style, sourcing, tools) from pixel art to vector, with Shaun's explicit approval.
+
+**Next:** Shaun reviews and approves 016, then `/plan`.
+**Notes:**
+- 017 (more enemies) conflicts with design.md's "few enemies, no hordes"; its spec needs that call first.
+- `docs/art.md` is rewritten in the 016 build, not here.
+- The style-test numbers are proposals: the 0.7 walk multiplier and the lean and shove amounts.
+
 ## 2026-10-18: 007–015 merged
 **Changed:** Shaun said "Merge all". Specs 007–015 are marked done in their specs and in `docs/backlog.md`, and their technical choices are in `docs/decisions.md`. The stacked PRs #9–#17 are merged top down, each into the branch below it and #9 into main.
 **Next:** Shaun's playtest notes on main, then the next spec. Carried over from 014: the rest of the sprite redraws (walk, enemies, machines, icons, HUD frame), the pause title card, menu hover sounds, squash on pickups, and the HUD covering the hall's west door.

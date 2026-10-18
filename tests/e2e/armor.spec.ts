@@ -17,17 +17,16 @@ test('the first Husk drops armor, the bench identifies it, and wearing it soften
     let s = g.getState();
     const carried = s.inventory['unidentified-armor'] ?? 0;
     // Into the foundry and over to the bench (tile 1,12), standing on its right.
-    h.walkTo(48, 400);
-    for (let i = 0; i < 60 && g.getState().room !== 'foundry'; i++) g.step(1, { moveX: -1 });
-    h.walkTo(2.5 * 32, 12.5 * 32);
+    // The rest of the field pack guards the stairs (017): duck straight down them, where Husks don't follow.
+    h.toFoundry();
+    h.walkTo(2.3 * 32, 12.5 * 32);
     s = g.step(1, { identify: true });
     const piece = s.armorPieces[0];
-    if (!piece) return { carried, failed: 'nothing identified' };
+    if (!piece) return { carried, failed: `nothing identified (carried ${carried}, now ${s.inventory['unidentified-armor'] ?? 0})` };
     s = g.step(1, { equip: { id: piece.id } });
     const equipped = s.equippedArmor;
-    // Back to the hall and into a Husk's reach until it lands a swipe.
-    h.walkTo(22.5 * 32, 8.5 * 32);
-    for (let i = 0; i < 60 && g.getState().room !== 'ruin-hall'; i++) g.step(1, { moveX: 1 });
+    // Back outside and into a Husk's reach until it lands a swipe.
+    h.toHall();
     s = g.getState();
     let damage = 0;
     for (let t = 0; t < 3000 && damage === 0; t++) {

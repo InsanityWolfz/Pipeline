@@ -1,6 +1,7 @@
 import { ITEMS } from './items';
 import type { StartDef } from './player';
 import { RECIPES } from './recipes';
+import { OVERWORLD } from './overworld';
 import { DEFAULT_ROOM } from './rooms';
 
 // The `?playtest` start (spec 007): plenty of everything and every machine
@@ -19,6 +20,9 @@ const OVERRIDES: Readonly<Record<string, number>> = { 'warden-core': 5 };
 
 export const PLAYTEST_START: StartDef = {
   room: DEFAULT_ROOM,
+  // At the start stone, with the land already full of packs (017).
+  spawn: OVERWORLD.wake,
+  populated: true,
   hasTube: true,
   attuned: true,
   gatesOpen: true,

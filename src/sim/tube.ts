@@ -1,4 +1,5 @@
 import { FOUNDRY_ROOM } from '../data/rooms';
+import { FIRING_WALK_MULTIPLIER } from '../data/player';
 import { ammoDef } from '../data/ammo';
 import { DRY_FIRE_TICKS, MUZZLE_OFFSET, SLOT_AMMOS, STARTING_AMMO } from '../data/tube';
 import { createArrow } from './arrows';
@@ -8,7 +9,7 @@ import type { Command } from './input';
 import { count, take } from './inventory';
 import { takeFromReservoir } from './link';
 import { isRolling } from './movement';
-import { rotate, socketStreams } from './spread';
+import { intakeStreams, rotate } from './spread';
 import type { SimState } from './state';
 
 // The tube: picking the slot's ammo and firing it. Carried rounds fire straight
@@ -21,6 +22,8 @@ export interface TubeState {
   fireCooldown: number;
   /** Ticks left on the dry-fire flag. */
   dryFire: number;
+  /** The last shot attempt found no round (016): holding fire on an empty tube is a dry fire, not a heavy one. */
+  dry: boolean;
   /** Fire was held this tick and the player could fire (not rolling). */
   firing: boolean;
   /** This tick's shot came from the reservoir. */
@@ -30,7 +33,7 @@ export interface TubeState {
 }
 
 export function createTube(): TubeState {
-  return { ammoId: STARTING_AMMO, fireCooldown: 0, dryFire: 0, firing: false, fromReservoir: false, shotCount: 0 };
+  return { ammoId: STARTING_AMMO, fireCooldown: 0, dryFire: 0, dry: false, firing: false, fromReservoir: false, shotCount: 0 };
 }
 
 /** The item a round of the slot's ammo is. */
@@ -57,6 +60,16 @@ export function slotCount(state: Pick<SimState, 'tube' | 'inventory' | 'link'>):
   const { reservoir } = state.link;
   if (reservoir.itemId === item && reservoir.count > 0) return { count: reservoir.count, fromReservoir: true };
   return { count: 0, fromReservoir: false };
+}
+
+/** The walk multiplier from the tube (016): slower while it really fires, by last tick's state. */
+export function firingWalkScale(state: Pick<SimState, 'tube'>): number {
+  return isFiringHeavy(state.tube) ? FIRING_WALK_MULTIPLIER : 1;
+}
+
+/** The tube is really firing (016): fire held, rounds coming out, not a dry fire, the foundry or a roll. */
+export function isFiringHeavy(tube: Pick<TubeState, 'firing' | 'dry'>): boolean {
+  return tube.firing && !tube.dry;
 }
 
 /** Runs after the player has moved this tick, so shots leave from where they stand now. */
@@ -101,13 +114,14 @@ function fire(state: SimState, cmd: Command): void {
   const ammo = ammoDef(tube.ammoId);
   tube.fireCooldown = ammo.fireTicks;
   const source = takeRound(state);
+  tube.dry = !source;
   if (!source) {
     tube.dryFire = DRY_FIRE_TICKS;
     return;
   }
   tube.fromReservoir = source === 'reservoir';
   // A reservoir shot fires one projectile per stream, each costing a round; carried rounds never spread.
-  const streams = tube.fromReservoir ? socketStreams(state.foundry) : [];
+  const streams = tube.fromReservoir ? intakeStreams(state.foundry) : [];
   const angles = streams.length > 0 ? streams : [0];
   let fired = 0;
   for (const angle of angles) {
