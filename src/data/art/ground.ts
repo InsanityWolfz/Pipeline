@@ -1,0 +1,46 @@
+import { OVERWORLD } from '../overworld';
+
+// How the overworld's ground is drawn (017): palette ids and how often each
+// touch appears, by a fixed hash per tile. Render-only tuning.
+
+export const GROUND = {
+  base: 'grass-bright',
+  patchLight: 'grass-light',
+  patchDark: 'grass',
+  forest: 'grass-dark',
+  patchEvery: 5,
+  patchRadius: [22, 46] as const,
+  sun: 'sun',
+  dappleEvery: 2,
+  paving: 'rock-light',
+  pavingGapEvery: 3,
+  pavingAlpha: 0.28,
+  /** The ruin field's old paving round the stairs. */
+  fieldPaving: { x0: 33, y0: 13, x1: 47, y1: 22 },
+  path: 'dirt',
+  pathEdge: 'dirt-dark',
+  pathFleck: 'dirt-light',
+  pathWidth: 52,
+  sand: 'sand',
+  shallows: 'water-light',
+  water: 'water',
+  deep: 'water-deep',
+  foam: 'foam',
+  ley: 'cyan',
+  leyDeep: 'cyan-deep',
+  /** A seam bends every this many px, by up to 4 × `leyJag` px either way. */
+  leyStep: 18,
+  leyJag: 1.6,
+  /** Ley seams in tiles: from the start stone and from the shrine, both into the foundry's stairs. */
+  leySeams: [
+    [OVERWORLD.startStone, { tx: 38, ty: 29 }, { tx: 39, ty: 24 }, { tx: 40, ty: 21 }],
+    [OVERWORLD.shrine.pylon, { tx: 64, ty: 12 }, { tx: 58, ty: 17 }, { tx: 50, ty: 19 }, { tx: 43, ty: 20 }],
+  ],
+  tuft: 'grass-dark',
+  tuftEvery: 4,
+  flowers: ['snow', 'gold-trim', 'wisp-light'],
+  flowerEvery: 11,
+  /** Ground chunks are drawn at up to this many texels per world px (memory), in squares of this many world px. */
+  maxScale: 2,
+  chunk: 640,
+} as const;

@@ -41,6 +41,9 @@ import { FeelView } from './FeelView';
 import { TutorialUi } from './TutorialUi';
 import { currentFit, UI_CAMERA, type ScreenFit } from './scale';
 import { bakeVectors } from './vector/textures';
+import { OverworldView } from './overworld/OverworldView';
+import { MinimapView, type MinimapMarker } from './MinimapView';
+import { OVERWORLD } from '../data/overworld';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -71,6 +74,8 @@ export class GameScene extends Scene {
   private wake?: WakeView;
   private tutorial?: TutorialUi;
   private feel?: FeelView;
+  private overworld?: OverworldView;
+  private minimap?: MinimapView;
   /** The room on screen. It lags the player's room through a door's fade. */
   private shownRoomId: string;
   private fading = false;
@@ -103,6 +108,8 @@ export class GameScene extends Scene {
     // Each frame, screen-space objects go to the UI camera and world objects to the main one.
     this.events.on('prerender', () => this.routeCameras());
     this.roomView = new RoomView(this);
+    this.overworld = new OverworldView(this);
+    this.minimap = new MinimapView(this, roomById(OVERWORLD.id));
     this.foundryView = new FoundryView(this);
     this.nodeView = new NodeView(this);
     this.groundItemView = new GroundItemView(this);
@@ -219,8 +226,12 @@ export class GameScene extends Scene {
   }
 
   /** The mouse-over text on show, for the test hook (015). */
-  hoverText(): { hoverName: string | null; buildTip: string | null } {
-    return { hoverName: this.hover?.shown ?? null, buildTip: this.buildView?.tip.shown ?? null };
+  hoverText(): { hoverName: string | null; buildTip: string | null; minimap: { shown: boolean; markers: MinimapMarker[] } } {
+    return {
+      hoverName: this.hover?.shown ?? null,
+      buildTip: this.buildView?.tip.shown ?? null,
+      minimap: { shown: this.minimap?.shown ?? false, markers: this.minimap?.markers ?? [] },
+    };
   }
 
   get menuOpen(): boolean {
@@ -257,6 +268,7 @@ export class GameScene extends Scene {
     const room = roomById(roomId);
     this.shownRoomId = roomId;
     this.roomView?.show(room);
+    this.overworld?.show(room.terrain ? room : null);
     const { width, height } = roomSize(room);
     this.cameras.main.setBounds(0, 0, width, height);
   }
@@ -308,6 +320,8 @@ export class GameScene extends Scene {
     this.bombView?.update(inRoom(sim.bombs, shown));
     this.site?.update(sim, shown);
     this.siteMenus?.update(sim);
+    this.overworld?.update(sim);
+    this.minimap?.update(sim);
     this.tutorial?.update(sim, shown);
     this.hud?.update(sim.tube, sim.inventory, sim.player, sim.link, worn(sim), sim.hasTube);
     this.menu?.update(sim.inventory, sim.link);

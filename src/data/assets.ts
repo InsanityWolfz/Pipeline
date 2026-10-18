@@ -9,6 +9,17 @@ export const VECTOR_KEY = 'vectors';
 /** The wanderer's canvas, redrawn every frame (016). */
 export const WANDERER_KEY = 'wanderer';
 
+/** The overworld (017): standing sprites drawn from src/data/art/terrain.ts, its ground chunk textures, and the minimap. */
+export const OVERWORLD_SPRITES = {
+  trees: ['ow-tree-0', 'ow-tree-1', 'ow-tree-2'],
+  rocks: ['ow-rock-0', 'ow-rock-1'],
+  ruinStone: 'ow-ruin-stone',
+  ruinWall: 'ow-ruin-wall',
+  entrance: 'ow-entrance',
+  column: 'ow-column',
+} as const;
+export const OVERWORLD_TEXTURES = { ground: 'ow-ground', safeGlow: 'ow-safe-glow', minimap: 'ow-minimap' } as const;
+
 /** Frame names in the atlas for single-frame sprites, one per sprite grid in assets/sprites. */
 export const SPRITES = {
   leyCrystal: 'ley-crystal',

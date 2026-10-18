@@ -69,7 +69,7 @@ export const OVERWORLD = {
   /** The map edge: this many tiles of dense forest, ragged by up to `ragged` more. */
   edge: { depth: 2, ragged: 2 },
   /** Danger rings by straight-line distance in tiles from the foundry entrance: ring 0 inside the first bound, ring 1 inside the second, ring 2 beyond. */
-  rings: { centre: ENTRANCE, bounds: [10, 22] as const },
+  rings: { centre: ENTRANCE, bounds: [17, 26] as const },
   /** Generated features. Radii in tiles; density is the chance a tile near the centre fills. */
   groves: { count: 18, radius: [3, 7] as const, density: 0.75 },
   rockFields: { count: 8, radius: [2, 4] as const, density: 0.5 },

@@ -59,11 +59,11 @@ Names are placeholders.
 - **Wisp:** ranged caster, slow projectiles to dodge. Second area.
 - **Pylon Warden:** elite guarding the pylon, with a telegraphed ground slam. Drops a machine part.
 
-**Areas:**
+**Areas (017):** one open overworld, about 4×4 screens, with danger rising in rings from the foundry:
 
-- Starting clearing and the path to the ruins
-- The foundry (sealed ruin, becomes the base)
-- The claimable site with its pylon
+- The start stone in the meadow, where the dormant tube lies
+- The ruin field: broken walls round the foundry's entrance, a half-sunken archway and stairs into a grassy mound (the foundry itself is the one interior)
+- The shrine site: an open-air walled ruin in the second ring with its pylon, sealed by a ley barrier dome until the first line fills the tube
 
 **Materials and drops:**
 

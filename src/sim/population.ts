@@ -111,7 +111,8 @@ function spawn(state: SimState, slot: PackSlot): boolean {
     const spots: { tx: number; ty: number }[] = [];
     for (let k = 0; k < size * 4 && spots.length < size; k++) {
       const s = { tx: tx + nextInt(state.rng, -POPULATION.spread, POPULATION.spread), ty: ty + nextInt(state.rng, -POPULATION.spread, POPULATION.spread) };
-      if (walkableOpen(s.tx, s.ty) && !spots.some((o) => o.tx === s.tx && o.ty === s.ty)) spots.push(s);
+      // Every member stands in the pack's own ring, so ring 0 stays calm.
+      if (walkableOpen(s.tx, s.ty) && ringOf(s.tx, s.ty) === slot.ring && !spots.some((o) => o.tx === s.tx && o.ty === s.ty)) spots.push(s);
     }
     if (spots.length < size) continue;
     for (const s of spots) {

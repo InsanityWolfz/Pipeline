@@ -24,6 +24,8 @@ export class RoomView {
   show(room: Room): void {
     for (const o of this.objects) o.destroy();
     this.objects = [];
+    // The overworld (017) is drawn by OverworldView from its terrain, not from tiles.
+    if (room.terrain) return;
     const floor = (room.floor && FLOOR_SPRITES[room.floor]) ?? SPRITES.floor;
     const add = (x: number, y: number, frame: string): GameObjects.Image => {
       const image = this.scene.add.image(x, y, ATLAS_KEY, frame);

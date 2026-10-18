@@ -3,6 +3,7 @@ import { ENEMY_RIGS } from '../../data/art/enemies';
 import type { EnemyPoseName, EnemyRigDef } from '../../data/art/enemyRig';
 import { OUTLINE_WIDTH } from '../../data/art/style';
 import { VECTOR_SPRITES } from '../../data/art/sprites';
+import { TERRAIN_SPRITES } from '../../data/art/terrain';
 import { drawShapes } from './draw';
 import { drawEnemy } from './enemyRig';
 
@@ -45,7 +46,7 @@ function enemyFrames(rig: EnemyRigDef): VectorFrame[] {
 }
 
 export function vectorFrames(): VectorFrame[] {
-  const sprites = VECTOR_SPRITES.flatMap((s) =>
+  const sprites = [...VECTOR_SPRITES, ...TERRAIN_SPRITES].flatMap((s) =>
     s.frames.map((shapes, i) => ({
       name: s.frames.length === 1 ? s.key : `${s.key}/${i}`,
       size: s.size,

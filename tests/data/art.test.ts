@@ -138,6 +138,7 @@ describe('vector frame registration', () => {
       foundry.TUTORIAL_SPRITES.stoneEmpty,
       foundry.ORB_SPRITES.orb,
       foundry.ORB_SPRITES.shadow,
+      ...Object.values(assets.OVERWORLD_SPRITES).flat(),
     ]);
     for (const f of vectorFrames()) expect(registered, f.name).toContain(f.name);
   });

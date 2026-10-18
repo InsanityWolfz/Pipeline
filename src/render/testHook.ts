@@ -12,8 +12,8 @@ export interface GameTestHook {
   step(frames: number, command?: Partial<Command>): SimSummary;
   /** Crafts a recipe once between ticks, as clicking its menu row does. */
   craft(recipeId: string): SimSummary;
-  /** What the mouse-over shows (015): the world name under the cursor and the build bar tip's piece, or null. */
-  ui(): { hoverName: string | null; buildTip: string | null };
+  /** What the mouse-over shows (015): the world name under the cursor and the build bar tip's piece, or null; and the minimap (017) with its markers in view px. */
+  ui(): { hoverName: string | null; buildTip: string | null; minimap: { shown: boolean; markers: { kind: string; x: number; y: number }[] } };
 }
 
 declare global {

@@ -128,3 +128,31 @@ export const WORLD_NAMES = {
 
 /** The build bar's hover panel (015): wrap width in glyphs, padding and line height, px, and its gap above the bar. */
 export const BUILD_TIP = { wrap: 34, maxLines: 2, pad: 4, lineHeight: 8, gap: 4, back: 'outline', alpha: 0.9, edge: 'slate-light' } as const;
+
+/**
+ * The minimap (017): the overworld's terrain at `scale` view px per tile in the
+ * top-right corner, a stone frame, and markers. Colours are palette ids; no
+ * enemies are shown.
+ */
+export const MINIMAP = {
+  scale: 1.5,
+  margin: 6,
+  frame: { width: 2, color: 'outline', edge: 'slate-light', alpha: 0.85 },
+  terrain: {
+    '.': 'grass-bright',
+    ',': 'dirt',
+    ':': 'water-light',
+    '~': 'water',
+    T: 'leaf-dark',
+    R: 'rock',
+    B: 'rock-light',
+    '#': 'rock-dark',
+    D: 'gold-trim',
+  } as Readonly<Record<string, string>>,
+  markers: {
+    player: { color: 'white', r: 2 },
+    entrance: { color: 'gold-trim', r: 2 },
+    shrine: { color: 'wisp-light', r: 2 },
+    claimed: { color: 'cyan', r: 3 },
+  },
+} as const;

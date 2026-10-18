@@ -11,11 +11,6 @@ export const DEFAULT_FLOOR_THEME = 'ruin';
  */
 export const FLOOR_VARIANTS: Readonly<Record<string, { percent: number; tiles: readonly string[] }>> = {
   ruin: { percent: 40, tiles: ['floor-rune-cracked', 'floor-rune-moss', 'floor-rune-inlay', 'floor-rune-sand'] },
-  shrine: { percent: 35, tiles: ['floor-shrine-cracked', 'floor-shrine-moss', 'floor-shrine-inlay', 'floor-shrine-roots'] },
-  clearing: {
-    percent: 22,
-    tiles: ['floor-clearing-flowers', 'floor-clearing-flowers', 'floor-clearing-tufts', 'floor-clearing-tufts', 'floor-clearing-stones', 'floor-clearing-dirt'],
-  },
 };
 
 /**
