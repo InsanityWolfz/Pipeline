@@ -26,6 +26,8 @@ export const SPRITES = {
   arrow: 'arrow',
   arrowShadow: 'arrow-shadow',
   crosshair: 'crosshair',
+  /** The arrow pointer shown instead of the crosshair over menus and the build bar (021). */
+  pointer: 'pointer',
   hudSlot: 'hud-slot',
   /** Ley rim over the hotbar slot while it fires from the reservoir (007). */
   hudSlotGlow: 'hud-slot-glow',
@@ -264,6 +266,8 @@ export const DEPTHS = {
   hud: 1_000_000,
   /** The crafting menu, above the HUD. */
   menu: 2_000_000,
+  /** The crosshair and the menu pointer (021), above every menu and HUD layer. Nothing draws over them. */
+  cursor: 3_000_000,
 } as const;
 
 /** Bombs draw this far above their arc height, so they leave the hand at tube height, px. */

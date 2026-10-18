@@ -14,7 +14,6 @@ import { AmmoStripView } from './AmmoStripView';
 import { HUD_ARMOR_LAYOUT } from '../data/hudLayout';
 import { colorOf } from './color';
 import { TextLine } from './textLine';
-import { toView } from './scale';
 import { addVector } from './vector/textures';
 
 /** One material row: its icon and count, shown only while the player holds some. */
@@ -33,8 +32,6 @@ export class HudView {
   private readonly icon: GameObjects.Image;
   private readonly glow: GameObjects.Image;
   private readonly count: TextLine;
-  private readonly crosshair: GameObjects.Image;
-  private readonly scene: Scene;
   private readonly healthFill: GameObjects.Graphics;
   private readonly health: GameObjects.Image;
   private readonly materials: MaterialRow[];
@@ -53,7 +50,6 @@ export class HudView {
   }
 
   constructor(scene: Scene) {
-    this.scene = scene;
     const fixed = <T extends GameObjects.Components.ScrollFactor & GameObjects.Components.Depth>(o: T): T => {
       o.setScrollFactor(0).setDepth(DEPTHS.hud);
       return o;
@@ -84,10 +80,6 @@ export class HudView {
         icon: fixed(addVector(scene, 0, 0, it.icon).setOrigin(0)),
         count: new TextLine(scene, 0, 0, DEPTHS.hud, false, 'count'),
       }));
-
-    scene.input.setDefaultCursor('none');
-    // Over the crafting menu too, where it's the pointer for clicking rows.
-    this.crosshair = fixed(addVector(scene, 0, 0, SPRITES.crosshair)).setDepth(DEPTHS.menu + 1);
   }
 
   update(tube: TubeState, inventory: Inventory, player: PlayerState, link: LinkState, worn: ArmorPiece | undefined, hasTube: boolean): void {
@@ -127,9 +119,5 @@ export class HudView {
 
     if (tube.dryFire > 0) this.slot.setTint(colorOf(HUD_SLOT_LAYOUT.dryFireTint));
     else this.slot.clearTint();
-
-    const pointer = this.scene.input.activePointer;
-    const at = toView(pointer.x, pointer.y, this.scene.cameras.main.zoom);
-    this.crosshair.setPosition(at.x, at.y);
   }
 }

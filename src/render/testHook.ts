@@ -5,7 +5,9 @@ import { TILE_SIZE } from '../data/config';
 import { FEET_BOX } from '../data/player';
 import { isSolid, overlapsRect } from '../sim/collision';
 import { roomBodies } from '../sim/bodies';
+import { layItem } from '../sim/drops';
 import type { GameScene } from './GameScene';
+import type { CursorState } from './CursorView';
 
 export interface GameTestHook {
   getState(): SimSummary;
@@ -19,6 +21,10 @@ export interface GameTestHook {
   ui(): UiState;
   /** The sound settings (020: set from the pause menu). */
   sound(): { muted: boolean; volume: number };
+  /** Lays an item on the ground at a world point in the player's room, as a drop would land (021: for the pickup screenshots). */
+  drop(itemId: string, x: number, y: number): SimSummary;
+  /** Scales the speed of every tween (1 is normal), so a screenshot can catch a short effect mid-way. */
+  tweenSpeed(scale: number): void;
   /** The player's room as rows of tiles a player can stand on ('.') or not ('#'), solid things included: for test helpers that find paths. */
   passable(): string[];
 }
@@ -42,6 +48,12 @@ export interface UiState {
   minimap: { shown: boolean; markers: { kind: string; x: number; y: number }[] };
   nodes: Record<number, string>;
   supply: { started: number; inFlight: { itemId: string; progress: number }[] };
+  /** The camera shakes asked for since boot, oldest first (the last 50) (021). */
+  shakes: string[];
+  /** Which cursor shows (021: the menu pointer or the crosshair), its depth, and the highest depth of anything else. */
+  cursor: CursorState | null;
+  /** Picked-up items still sliding into the player (021). */
+  sliding: number;
 }
 
 declare global {
@@ -103,6 +115,13 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
     },
     ui: () => scene.hoverText(),
     sound: () => scene.soundSettings(),
+    drop: (itemId, x, y) => {
+      layItem(sim, itemId, sim.roomId, x, y);
+      return summarize(sim);
+    },
+    tweenSpeed: (scale) => {
+      scene.tweens.timeScale = scale;
+    },
     passable: () => {
       const { room, obstacles } = roomBodies(sim, sim.roomId);
       return room.rows.map((row, ty) =>

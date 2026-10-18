@@ -15,6 +15,9 @@ export type ShakeSize = keyof typeof SHAKE;
 
 const SHAKE_ORDER: readonly ShakeSize[] = ['small', 'medium', 'big'];
 
+/** How many recent shakes the log keeps. */
+const SHAKE_LOG_MAX = 50;
+
 export class JuiceView {
   private readonly scene: Scene;
   private readonly camera: Cameras.Scene2D.Camera;
@@ -32,7 +35,12 @@ export class JuiceView {
     this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
+  /** Every shake asked for, oldest first, up to SHAKE_LOG_MAX: the test hook reports it (021). */
+  readonly shakes: ShakeSize[] = [];
+
   shake(size: ShakeSize): void {
+    this.shakes.push(size);
+    if (this.shakes.length > SHAKE_LOG_MAX) this.shakes.shift();
     if (this.reducedMotion) return;
     const now = this.scene.time.now;
     const running = this.shaking && now < this.shaking.until ? this.shaking.size : null;

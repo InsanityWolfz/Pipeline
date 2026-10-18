@@ -21,7 +21,8 @@ Four independent fixes, each its own commit:
 - **Playwright** (`tests/e2e/playtestFixes.spec.ts`):
   - with the craft menu open, `ui().cursor` is the pointer, and its depth is above every other object's; closed, it's the crosshair
   - firing several shots records no shake; a bomb explosion records one
-  - screenshots into `docs/review/021/`: craft menu with the pointer over a row, the arrowhead icon (zoomed contact-sheet crop), a log being picked up from behind a tree (slide mid-way)
+  - screenshots into `docs/review/021/` (run with `REVIEW_SHOTS=1`): craft menu with the pointer over a row, the arrowhead icon (contact-sheet figure, beside the unchanged shaft and arrow), a log lying behind a tree and then sliding in
+  - Harvest drops land on the player's side of a node, so the screenshot can't get a log behind a tree by harvesting. Two dev-only hook additions make it: `drop(itemId, x, y)` lays an item in the player's room (through a new `layItem` in `src/sim/drops.ts`, which `spawnDrops` uses too), and `tweenSpeed(scale)` slows every tween so the slide is caught mid-way. `ui()` reports `sliding`.
 
 ## Risks
 - Existing sim and e2e tests that leave drops on the ground near the player (harvest, enemy drops) now see them picked up at once. Fix the tests, not the rule.

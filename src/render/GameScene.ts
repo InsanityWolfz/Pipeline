@@ -42,6 +42,7 @@ import { MENU_HOVER_EVENT } from './menuFeedback';
 import { MenuRouter } from './MenuRouter';
 import { PauseMenuView } from './PauseMenuView';
 import { SceneCameras } from './SceneCameras';
+import { CursorView } from './CursorView';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -74,6 +75,7 @@ export class GameScene extends Scene {
   private wake?: WakeView;
   private tutorial?: TutorialUi;
   private feel?: FeelView;
+  private cursorView?: CursorView;
   /** The room on screen. It lags the player's room through a door's fade. */
   private shownRoomId: string;
   private fading = false;
@@ -119,6 +121,7 @@ export class GameScene extends Scene {
     this.tutorial = new TutorialUi(this);
     this.menu = new CraftMenuView(this, (recipeId) => this.craft(recipeId));
     this.pause = new PauseMenuView(this);
+    this.cursorView = new CursorView(this);
     this.feel = new FeelView(
       this,
       (id) => this.foundryView?.dropIn(id),
@@ -182,6 +185,9 @@ export class GameScene extends Scene {
       minimap: this.roomViews?.map ?? { shown: false, markers: [] },
       nodes: this.nodeView?.frames ?? {},
       supply: this.roomViews?.motes ?? { started: 0, inFlight: [] },
+      shakes: [...(this.feel?.juice.shakes ?? [])],
+      cursor: this.cursorView?.state ?? null,
+      sliding: this.groundItemView?.sliding ?? 0,
     };
   }
 
@@ -279,6 +285,9 @@ export class GameScene extends Scene {
     // Menu rows light under the cursor (020).
     const pointer = controls?.viewPointer();
     if (pointer) for (const menu of [this.siteMenus, this.picker, this.pause]) menu?.pointAt(pointer.x, pointer.y);
+    // The arrow pointer while a menu is open or over the build bar, else the crosshair (021).
+    const inMenu = [this.menu, this.pause, this.picker, this.siteMenus].some((m) => m?.isOpen) || (this.wake?.isShown ?? false);
+    this.cursorView?.update(inMenu || (pointer !== undefined && (this.buildView?.overUi(pointer.x, pointer.y) ?? false)));
     if (this.feel) this.pause?.update(this.feel.sound);
     const point = controls?.overWorld() ? controls.cursorPoint() : null;
     this.hover?.update(sim, shown, point, (id) => this.foundryView?.topOf(id), this.cameras.main.worldView);

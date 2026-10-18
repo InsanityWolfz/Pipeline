@@ -78,8 +78,8 @@ export class FeelView {
     const s = this.sound;
     for (const shot of ev.shots) {
       const key = FIRE_SOUNDS[shot.ammoId];
+      // No shake on firing (021): too jarring.
       if (key) s.play(key);
-      j.shake('small');
     }
     for (const h of ev.hits) {
       if (h.target === 'enemy') {

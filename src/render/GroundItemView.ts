@@ -17,6 +17,8 @@ export class GroundItemView {
   private readonly scene: Scene;
   /** Where the player stands now, followed by items sliding in. */
   private player = { x: 0, y: 0 };
+  /** Picked-up items still sliding in (for the test hook). */
+  sliding = 0;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -51,6 +53,7 @@ export class GroundItemView {
   private slide(image: GameObjects.Image): void {
     const from = { x: image.x, y: image.y, scale: image.scaleX };
     image.setDepth(DEPTHS.worldUi - 2);
+    this.sliding += 1;
     this.scene.tweens.addCounter({
       from: 0,
       to: 1,
@@ -62,7 +65,10 @@ export class GroundItemView {
         image.setPosition(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t);
         image.setScale(from.scale * (1 + (PICKUP_SLIDE.endScale - 1) * t));
       },
-      onComplete: () => image.destroy(),
+      onComplete: () => {
+        this.sliding -= 1;
+        image.destroy();
+      },
     });
   }
 }

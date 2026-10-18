@@ -70,8 +70,13 @@ export function spawnDrops(state: SimState, def: EnemyDef, x: number, y: number,
   if (rollArmorDrop(state, def.id)) items.push(UNIDENTIFIED_ARMOR);
   for (const itemId of items) {
     const at = scatterPoint(room, state.rng, x, y, rects);
-    state.groundItems.push({ id: state.nextGroundItemId++, itemId, roomId, ...at });
+    layItem(state, itemId, roomId, at.x, at.y);
   }
+}
+
+/** Lays one item on the ground at (x, y) in a room. */
+export function layItem(state: SimState, itemId: string, roomId: string, x: number, y: number): void {
+  state.groundItems.push({ id: state.nextGroundItemId++, itemId, roomId, x, y });
 }
 
 /** Moves ground items in the player's room within PICKUP_RADIUS of their feet box into the inventory, whatever stands in between (021). */

@@ -21,6 +21,11 @@ export class WakeView {
     this.back = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.menu + 1);
   }
 
+  /** The wake panel is on screen (021: the menu pointer shows over it). */
+  get isShown(): boolean {
+    return this.lines.length > 0;
+  }
+
   /** Shows the wake-up text for a KO that lost `lost` (item id to count), once the KO's fade has played. */
   show(lost: Readonly<Record<string, number>>): void {
     this.clear();

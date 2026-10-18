@@ -82,6 +82,12 @@ const CROSSHAIR: Shape[] = [
   ellipse(0, 0, 0.6, 0.6, { fill: 'snow' }),
 ];
 
+// The menu pointer (10x14, round its tip at (0, 0), near the top-left): a pale stone arrow with a cyan edge, outlined like the crosshair (021).
+const POINTER: Shape[] = [
+  path('M 0 0 L 0 10.6 L 2.7 8.2 L 4.6 12.2 L 6.5 11.3 L 4.6 7.4 L 8 7.4 Z', { fill: vertical('snow', 'rock-pale', 0, 12), outline: true }),
+  line([0.9, 1.8, 0.9, 8.4], 0.7, 'cyan-glow'),
+];
+
 // A key prompt's cap (11x11): a little stone key with a brass rim; the letter is drawn over it.
 const KEY_CAP: Shape[] = [
   rect(0.5, 1.5, 10, 9, 2, { fill: 'carve-dark', outline: true }),
@@ -103,6 +109,7 @@ export const HUD_SPRITES_VECTOR: readonly VectorSprite[] = [
   sprite(SPRITES.craftRowPress, [ROW.w, ROW.h], CRAFT_ROW_PRESS),
   sprite(SPRITES.craftArrow, [7, 5], CRAFT_ARROW),
   { key: SPRITES.crosshair, size: [11, 11], anchor: [5.5, 5.5], frames: [CROSSHAIR] },
+  { key: SPRITES.pointer, size: [10, 14], anchor: [1, 1], frames: [POINTER] },
   sprite(TUTORIAL_SPRITES.keyCap, [11, 11], KEY_CAP),
   sprite(TUTORIAL_SPRITES.tick, [9, 9], TICK),
 ];

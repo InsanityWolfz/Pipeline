@@ -68,7 +68,7 @@ const FAMILIES: readonly [title: string, test: (name: string) => boolean][] = [
   ['Fixtures, the pylon and the foundry', (n) => /^(identification-bench|stash|supply-port|doorway-side|waystone|pylon-|door-rubble|ley-crystal|intake-|floor-|wall|prop-|ruin-)/.test(n)],
   ['Gathering nodes', (n) => n.startsWith('node-')],
   ['Overworld', (n) => n.startsWith('ow-')],
-  ['HUD and menus', (n) => n.startsWith('hud-') || n.startsWith('craft-') || n.startsWith('menu-') || n === 'key-cap' || n === 'crosshair' || n === 'objective-tick'],
+  ['HUD and menus', (n) => n.startsWith('hud-') || n.startsWith('craft-') || n.startsWith('menu-') || n === 'key-cap' || n === 'crosshair' || n === 'pointer' || n === 'objective-tick'],
 ];
 
 const groups = new Map<string, Cell[]>();
