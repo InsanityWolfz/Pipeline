@@ -41,7 +41,7 @@ const eye = (x: number): EnemyPart => ({
 export const WARDEN_RIG: EnemyRigDef = {
   id: 'warden',
   scale: 0.95,
-  box: { size: [80, 66], anchor: [40, 62] },
+  box: { size: [80, 80], anchor: [40, 70] },
   hip: [0, -14],
   views: {
     side: [

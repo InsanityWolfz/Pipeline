@@ -47,7 +47,7 @@ const hood = (front: boolean): EnemyPart => ({
 export const HUSK_RIG: EnemyRigDef = {
   id: 'husk',
   scale: 0.8,
-  box: { size: [48, 46], anchor: [24, 44] },
+  box: { size: [48, 54], anchor: [24, 44] },
   hip: [0, -10],
   views: {
     side: [

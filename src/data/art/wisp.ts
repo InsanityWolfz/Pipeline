@@ -41,12 +41,12 @@ const orb = (x: number): EnemyPart => ({
 export const WISP_RIG: EnemyRigDef = {
   id: 'wisp',
   scale: 0.9,
-  box: { size: [48, 46], anchor: [24, 44] },
+  box: { size: [48, 54], anchor: [24, 44] },
   hip: [0, -20],
   views: {
     side: [ground, hand('hand-back', 'arm-back', 8), body, mask(3, 4.2), orb(12), hand('hand-front', 'arm-front', 6)],
     down: [ground, body, mask(0, 5.5), orb(0), hand('hand-back', 'arm-back', -11), hand('hand-front', 'arm-front', 11, true)],
-    up: [ground, orb(0), hand('hand-back', 'arm-back', -11), hand('hand-front', 'arm-front', 11, true), body],
+    up: [ground, hand('hand-back', 'arm-back', -11), hand('hand-front', 'arm-front', 11, true), body, orb(0)],
   },
   poses: {
     idle: [{ bob: -3 }],

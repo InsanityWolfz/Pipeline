@@ -198,8 +198,8 @@ export const WANDERER = {
     sleeveFar: { width: 6, color: 'rust-dark', outline: true },
     sleeveNear: { width: 6.5, color: 'rust', outline: true },
     forearm: { width: 4.2, color: 'leather', outline: true },
-    hose: { width: 5.5, color: 'cyan', outline: true, bands: { color: 'cyan-deep', dash: [1.6, 3.6] } },
-    hoseDormant: { width: 5.5, color: 'dormant', outline: true, bands: { color: 'dormant-dark', dash: [1.6, 3.6] } },
+    hose: { width: 5.5, color: 'cyan', outline: true, bands: { color: 'cyan-deep', dash: [2.4, 2.6] } },
+    hoseDormant: { width: 5.5, color: 'dormant', outline: true, bands: { color: 'dormant-dark', dash: [2.4, 2.6] } },
   } satisfies Record<string, LimbStyle>,
   boot: { back: rect(-4.5, -5, 9, 5, 2.5, solid('leather-dark')), front: rect(-4, -5.2, 9.5, 5.2, 2.5, solid('leather')) },
   /** A gloved hand. */
