@@ -1,5 +1,15 @@
 import type { GameObjects, Scene } from 'phaser';
-import { animFrames, ATLAS_KEY, PLAYER_ANIMS, PLAYER_HIT_FX, TUBE_GRIP, TUBE_SPRITES, type PlayerAnim } from '../data/assets';
+import { TintModes } from 'phaser';
+import {
+  animFrames,
+  ATLAS_KEY,
+  DEPTHS,
+  PLAYER_ANIMS,
+  PLAYER_HIT_FX,
+  TUBE_GRIP,
+  TUBE_SPRITES,
+  type PlayerAnim,
+} from '../data/assets';
 import { IDLE_SPEED, TICK_RATE } from '../data/config';
 import { FEET_BOX, HIT_INVULN_TICKS, ROLL_TICKS } from '../data/player';
 import { aimFacing } from '../sim/direction';
@@ -7,9 +17,7 @@ import { isRolling } from '../sim/movement';
 import type { Facing, PlayerState } from '../sim/player';
 import type { TubeState } from '../sim/tube';
 import { registerAnim } from './anims';
-
-/** Depth nudge that puts the tube just in front of or behind the player. */
-const TUBE_DEPTH_NUDGE = 0.01;
+import { colorOf } from './color';
 
 type View = 'down' | 'up' | 'side';
 
@@ -49,10 +57,14 @@ export class PlayerView {
     }
     this.lastRollTick = p.rollTick;
 
-    // Hit invulnerability shows as a flicker.
-    const hidden = p.hurtTicks > 0 && Math.floor(p.hurtTicks / PLAYER_HIT_FX.flickerTicks) % 2 === 1;
-    this.sprite.setVisible(!hidden);
-    this.tube.setVisible(!rolling && !hidden);
+    // Hit invulnerability flickers between a white flash and normal, starting white.
+    const elapsed = HIT_INVULN_TICKS - p.hurtTicks;
+    const white = p.hurtTicks > 0 && Math.floor(elapsed / PLAYER_HIT_FX.flickerTicks) % 2 === 0;
+    for (const o of [this.sprite, this.tube]) {
+      if (white) o.setTint(colorOf(PLAYER_HIT_FX.flashColor)).setTintMode(TintModes.FILL);
+      else o.clearTint();
+    }
+    this.tube.setVisible(!rolling);
     if (!rolling) this.placeTube(p, bottom);
   }
 
@@ -66,6 +78,6 @@ export class PlayerView {
     const x = left ? -(grip.x + this.tube.width) : grip.x;
     this.tube.setFlipX(left);
     this.tube.setPosition(p.x + x, bottom + grip.y);
-    this.tube.setDepth(bottom + (grip.behind ? -TUBE_DEPTH_NUDGE : TUBE_DEPTH_NUDGE));
+    this.tube.setDepth(bottom + (grip.behind ? -DEPTHS.tubeNudge : DEPTHS.tubeNudge));
   }
 }

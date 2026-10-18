@@ -72,6 +72,18 @@ describe('Husk chase', () => {
     expect(e.x).toBeCloseTo(PLAYER_AT.x + 200 - 60 * STEP, 6);
   });
 
+  it('keeps chasing with no time limit while on screen', () => {
+    const s = arena();
+    const e = placeHusk(s, PLAYER_AT.x + 250, PLAYER_AT.y);
+    // The player backs off west at walk speed, faster than the Husk, for a long time.
+    run(s, 1);
+    for (let i = 0; i < 600; i++) {
+      movePlayer(s, e.x - 250, PLAYER_AT.y);
+      run(s, 1);
+      expect(e.mode).toBe('chase');
+    }
+  });
+
   it('holds position in swipe range while its cooldown runs', () => {
     const { s, e } = windingUp();
     run(s, SWIPE_LANDS + swipe.swipeTicks + swipe.recoverTicks - 2);
@@ -174,6 +186,17 @@ describe('Husk swipe', () => {
   it('keeps chasing just outside trigger range', () => {
     const { e } = windingUp(swipe.triggerRange + 2);
     expect(e.mode).toBe('chase');
+  });
+
+  it('keeps facing its locked direction through swipe and recover while the player circles', () => {
+    const { s, e } = windingUp();
+    const total = SWIPE_LANDS + swipe.swipeTicks + swipe.recoverTicks - 2;
+    for (let i = 0; i < total; i++) {
+      const a = (i / 10) * Math.PI;
+      movePlayer(s, e.x + Math.cos(a) * 25, e.y + Math.sin(a) * 25);
+      run(s, 1);
+      expect(e.facing).toBe('left');
+    }
   });
 
   it('does not move during the wind-up', () => {

@@ -1,6 +1,7 @@
 import type { GameObjects, Scene } from 'phaser';
 import {
   ATLAS_KEY,
+  DEPTHS,
   digitFrame,
   HUD_DIGITS,
   HUD_HEALTH_LAYOUT,
@@ -17,9 +18,6 @@ import { count } from '../sim/inventory';
 import type { PlayerState } from '../sim/player';
 import { slotItem, type TubeState } from '../sim/tube';
 import { colorOf } from './color';
-
-/** Above everything in the world. */
-const HUD_DEPTH = 1_000_000;
 
 /** A line of HUD font glyphs that only rebuilds when its text changes. */
 class GlyphLine {
@@ -56,7 +54,7 @@ class GlyphLine {
         .image(this.x + i * HUD_DIGITS.advance, this.y, ATLAS_KEY, digitFrame(ch))
         .setOrigin(0)
         .setScrollFactor(0)
-        .setDepth(HUD_DEPTH),
+        .setDepth(DEPTHS.hud),
     );
   }
 }
@@ -89,7 +87,7 @@ export class HudView {
     this.itemId = item.id;
 
     const fixed = <T extends GameObjects.Components.ScrollFactor & GameObjects.Components.Depth>(o: T): T => {
-      o.setScrollFactor(0).setDepth(HUD_DEPTH);
+      o.setScrollFactor(0).setDepth(DEPTHS.hud);
       return o;
     };
     this.slot = fixed(scene.add.image(0, 0, ATLAS_KEY, SPRITES.hudSlot).setOrigin(0));

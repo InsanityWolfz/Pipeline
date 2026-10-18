@@ -1,10 +1,8 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, GROUND_ITEM_LIFT, SPRITES } from '../data/assets';
+import { ATLAS_KEY, DEPTHS, GROUND_ITEM_LIFT, SPRITES } from '../data/assets';
 import { ITEMS } from '../data/items';
 import type { GroundItem } from '../sim/drops';
 
-/** Depth for ground shadows: above the floor, under everything that sorts by feet. */
-const SHADOW_DEPTH = 0;
 
 interface Drawn {
   item: GameObjects.Image;
@@ -30,7 +28,7 @@ export class GroundItemView {
       const x = Math.round(g.x);
       const y = Math.round(g.y);
       this.drawn.set(g.id, {
-        shadow: this.scene.add.image(x, y, ATLAS_KEY, SPRITES.itemShadow).setDepth(SHADOW_DEPTH),
+        shadow: this.scene.add.image(x, y, ATLAS_KEY, SPRITES.itemShadow).setDepth(DEPTHS.shadow),
         item: this.scene.add.image(x, y + GROUND_ITEM_LIFT, ATLAS_KEY, def.icon).setOrigin(0.5, 1).setDepth(y),
       });
     }

@@ -47,8 +47,8 @@ export class GameScene extends Scene {
     drawRoom(this, room);
     this.groundItemView = new GroundItemView(this);
     this.enemyView = new EnemyView(this);
-    this.effects = new EffectsView(this);
     this.playerView = new PlayerView(this);
+    this.effects = new EffectsView(this, this.playerView.sprite);
     this.arrowView = new ArrowView(this);
     this.hud = new HudView(this);
     this.draw();
@@ -76,8 +76,8 @@ export class GameScene extends Scene {
   /** Steps the sim one tick and keeps its events for the next draw. The test hook steps through here too. */
   stepOnce(cmd: Command): void {
     stepSim(this.sim, cmd);
-    const { hits, deaths, pickups, ko } = this.sim.events;
-    this.pending.hits.push(...hits);
+    // Hits aren't drawn from events (flashes read sim state), so they aren't kept.
+    const { deaths, pickups, ko } = this.sim.events;
     this.pending.deaths.push(...deaths);
     this.pending.pickups.push(...pickups);
     this.pending.ko ||= ko;

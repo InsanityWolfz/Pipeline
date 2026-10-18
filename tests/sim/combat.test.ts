@@ -39,6 +39,18 @@ describe('arrows hitting Husks', () => {
     expect(second.health).toBe(HUSK.maxHealth);
   });
 
+  it('hits the Husk the arrow reaches first when hurtboxes overlap', () => {
+    const s = arena();
+    loadFull(s);
+    // First in the array but 1 px further along the flight, with hurtboxes overlapping.
+    const far = placeHusk(s, PLAYER_AT.x + 101, PLAYER_AT.y);
+    const near = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y + HUSK.feetBox.h);
+    run(s, 1, fireAt(1000, PLAYER_AT.y));
+    runUntil(s, () => s.arrows.length === 0, 30);
+    expect(near.health).toBe(HUSK.maxHealth - DAMAGE);
+    expect(far.health).toBe(HUSK.maxHealth);
+  });
+
   it('hits a Husk standing against a wall', () => {
     const s = arena(undefined, { x: 1000, y: PLAYER_AT.y });
     loadFull(s);

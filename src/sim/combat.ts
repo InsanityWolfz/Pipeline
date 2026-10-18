@@ -1,15 +1,27 @@
 import { enemyDef } from '../data/enemies';
 import type { ArrowState } from './arrows';
-import { damageEnemy, inHurtbox } from './enemies';
+import { damageEnemy, inHurtbox, type EnemyState } from './enemies';
 import { spawnDrops } from './drops';
 import type { SimState } from './state';
 
 // Arrows against enemies, and what happens when an enemy dies.
 
-/** An arrow-hit test for stepArrows: damages the first live enemy under the arrow. */
+/**
+ * An arrow-hit test for stepArrows: damages the live enemy under the arrow that it
+ * reached first, the one furthest back along its flight, when hurtboxes overlap.
+ */
 export function arrowHits(state: SimState): (arrow: ArrowState) => boolean {
   return (arrow) => {
-    const e = state.enemies.find((en) => en.health > 0 && inHurtbox(en, arrow.x, arrow.y));
+    let e: EnemyState | undefined;
+    let first = Infinity;
+    for (const en of state.enemies) {
+      if (en.health <= 0 || !inHurtbox(en, arrow.x, arrow.y)) continue;
+      const along = (en.x - arrow.x) * arrow.dx + (en.y - arrow.y) * arrow.dy;
+      if (along < first) {
+        first = along;
+        e = en;
+      }
+    }
     if (!e) return false;
     damageEnemy(state, e, arrow.damage, arrow.dx, arrow.dy);
     return true;

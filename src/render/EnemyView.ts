@@ -1,17 +1,12 @@
 import type { GameObjects, Scene } from 'phaser';
 import { TintModes } from 'phaser';
-import { animFrames, ATLAS_KEY, ENEMY_ANIMS, ENEMY_FX } from '../data/assets';
+import { animFrames, ATLAS_KEY, DEPTHS, ENEMY_ANIMS, ENEMY_FX } from '../data/assets';
 import { IDLE_SPEED } from '../data/config';
 import { enemyDef } from '../data/enemies';
 import type { EnemyState } from '../sim/enemies';
 import type { Facing } from '../sim/player';
 import { registerAnim } from './anims';
 import { colorOf } from './color';
-
-/** Ground decals: above shadows, under everything that sorts by feet. */
-const TELEGRAPH_DEPTH = 0.5;
-/** Health bars sit over the world but under the HUD. */
-const WORLD_UI_DEPTH = 100_000;
 
 interface Drawn {
   sprite: GameObjects.Sprite;
@@ -64,8 +59,8 @@ export class EnemyView {
     const first = anims ? animFrames(anims['idle-down'])[0] : undefined;
     const d: Drawn = {
       sprite: this.scene.add.sprite(0, 0, ATLAS_KEY, first).setOrigin(0.5, 1),
-      telegraph: this.scene.add.graphics().setDepth(TELEGRAPH_DEPTH),
-      bar: this.scene.add.graphics().setDepth(WORLD_UI_DEPTH),
+      telegraph: this.scene.add.graphics().setDepth(DEPTHS.groundFx),
+      bar: this.scene.add.graphics().setDepth(DEPTHS.worldUi),
     };
     this.drawn.set(e.id, d);
     return d;
@@ -76,10 +71,10 @@ export class EnemyView {
     g.clear();
     const max = enemyDef(e.enemyId).maxHealth;
     if (e.health >= max) return;
-    const { w, h, gap } = ENEMY_FX.healthBar;
+    const { w, h, gap, border } = ENEMY_FX.healthBar;
     const x = Math.round(e.x - w / 2);
     const y = Math.round(top - gap - h);
-    g.fillStyle(colorOf(ENEMY_FX.healthBarBack)).fillRect(x - 1, y - 1, w + 2, h + 2);
+    g.fillStyle(colorOf(ENEMY_FX.healthBarBack)).fillRect(x - border, y - border, w + 2 * border, h + 2 * border);
     g.fillStyle(colorOf(ENEMY_FX.healthBarColor)).fillRect(x, y, Math.max(1, Math.round((w * e.health) / max)), h);
   }
 

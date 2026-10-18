@@ -12,6 +12,9 @@ import type { SimState } from './state';
 // on screen, head home after a grace period off screen, re-aggro on the way.
 // A wind-up locks the swipe direction; the swipe lands once, then recovers.
 
+/** Absorbs float error so a player exactly on the arc's edge is hit. */
+const EPSILON = 1e-9;
+
 /** True if the enemy's feet are inside the view-sized box centred on the player's feet. */
 export function inAggroBox(e: EnemyState, player: { x: number; y: number }): boolean {
   return Math.abs(e.x - player.x) <= VIEW_WIDTH / 2 && Math.abs(e.y - player.y) <= VIEW_HEIGHT / 2;
@@ -122,8 +125,6 @@ function landSwipe(state: SimState, e: EnemyState, def: EnemyDef): void {
   const dist = Math.hypot(dx, dy);
   if (dist > swipe.reach) return;
   const halfArc = (swipe.arcDegrees * Math.PI) / 360;
-  // Absorbs float error so a player exactly on the arc's edge is hit.
-  const EPSILON = 1e-9;
   if (dist > 0 && (dx * e.swipeDirX + dy * e.swipeDirY) / dist < Math.cos(halfArc) - EPSILON) return;
   const [kx, ky] = dist > 0 ? [dx / dist, dy / dist] : [e.swipeDirX, e.swipeDirY];
   damagePlayer(state, swipe.damage, kx, ky, swipe.knockback, swipe.knockTicks);

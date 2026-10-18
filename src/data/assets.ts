@@ -187,7 +187,7 @@ export const ENEMY_FX = {
   telegraphAlpha: 0.25,
   telegraphFillAlpha: 0.55,
   /** Health bar over a damaged enemy: size, and gap above the sprite's top. */
-  healthBar: { w: 20, h: 3, gap: 2 },
+  healthBar: { w: 20, h: 3, gap: 2, border: 1 },
   healthBarColor: 'ember',
   healthBarBack: 'outline',
   /** A corpse lingers this long after its death animation, then fades over `corpseFadeMs`. */
@@ -199,8 +199,9 @@ export const ENEMY_FX = {
 export const PLAYER_HIT_FX = {
   /** The hit pose shows for the first this-many ticks of a hit. */
   poseTicks: 8,
-  /** The player flickers on and off every this-many ticks while invulnerable. */
+  /** While invulnerable the player flashes white and back every this-many ticks, starting white. */
   flickerTicks: 4,
+  flashColor: 'white',
 } as const;
 
 /** The "+1 [icon]" popup on pickup, and the KO fade. */
@@ -209,3 +210,19 @@ export const KO_FADE_MS = 250;
 
 /** A ground item's sprite bottom sits this far below its ground point, so it rests on its shadow, px. */
 export const GROUND_ITEM_LIFT = 3;
+
+/** Render depths. World sprites sort by the bottom of their footprint (px); these sit around that. */
+export const DEPTHS = {
+  /** Flat floor tiles, under everything. */
+  floor: -1,
+  /** Ground shadows, above the floor and under anything sorted by feet. */
+  shadow: 0,
+  /** Ground decals like the swipe telegraph, above shadows. */
+  groundFx: 0.5,
+  /** Nudge that puts the tube just in front of or behind the player. */
+  tubeNudge: 0.01,
+  /** Health bars, sparkles and popups over the world. */
+  worldUi: 100_000,
+  /** The HUD, above everything. */
+  hud: 1_000_000,
+} as const;
