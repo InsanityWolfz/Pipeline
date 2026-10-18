@@ -12,7 +12,7 @@ import {
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { ITEMS } from '../data/items';
 import { MAX_HEALTH } from '../data/player';
-import { LOAD_TICKS, TUBE_CAPACITY } from '../data/tube';
+import { LOAD_TICKS, STARTING_AMMO, TUBE_CAPACITY } from '../data/tube';
 import type { Inventory } from '../sim/inventory';
 import { count } from '../sim/inventory';
 import type { PlayerState } from '../sim/player';
@@ -82,8 +82,8 @@ export class HudView {
 
   constructor(scene: Scene) {
     this.scene = scene;
-    const item = ITEMS[slotItem()];
-    if (!item) throw new Error(`Unknown slot item '${slotItem()}'`);
+    const item = ITEMS[slotItem({ ammoId: STARTING_AMMO })];
+    if (!item) throw new Error("Unknown slot item");
     this.itemId = item.id;
 
     const fixed = <T extends GameObjects.Components.ScrollFactor & GameObjects.Components.Depth>(o: T): T => {
