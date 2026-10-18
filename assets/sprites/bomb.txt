@@ -1,0 +1,11 @@
+# Bomb in flight, drawn upright (not rotated). 10x10.
+......oo..
+.....oYo..
+....oRo...
+..ooRoo...
+.oSLSSso..
+oSLlSSsso.
+oSlSSSsso.
+oSSScSsso.
+.oSSssso..
+..ooooo...
