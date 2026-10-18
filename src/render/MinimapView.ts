@@ -1,4 +1,4 @@
-import { Textures, type GameObjects, type Scene } from 'phaser';
+import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, OVERWORLD_TEXTURES } from '../data/assets';
 import { TILE_SIZE, VIEW_WIDTH } from '../data/config';
 import { MINIMAP } from '../data/hudLayout';
@@ -6,7 +6,9 @@ import { OVERWORLD } from '../data/overworld';
 import type { Room } from '../data/rooms';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
+import { drawTablet } from './tablet';
 import { inkCss } from './vector/draw';
+import { textureScale } from './vector/textures';
 
 // The minimap (017): the overworld's terrain in the top-right corner, with the
 // player, the foundry's stairs, the shrine and claimed pylons marked. No enemies.
@@ -32,12 +34,14 @@ export class MinimapView {
   constructor(scene: Scene, room: Room) {
     const w = room.rows[0]?.length ?? 0;
     const h = room.rows.length;
-    const tex = scene.textures.exists(OVERWORLD_TEXTURES.minimap) ? null : scene.textures.createCanvas(OVERWORLD_TEXTURES.minimap, w, h);
+    // Each tile is a crisp square of `k` texels, drawn at the screen's scale (020: no nearest filtering).
+    const k = Math.max(1, Math.ceil(MINIMAP.scale * textureScale()));
+    const tex = scene.textures.exists(OVERWORLD_TEXTURES.minimap) ? null : scene.textures.createCanvas(OVERWORLD_TEXTURES.minimap, w * k, h * k);
     if (tex) {
       for (const [ty, row] of room.rows.entries()) {
         for (const [tx, symbol] of [...row].entries()) {
           tex.context.fillStyle = inkCss(MINIMAP.terrain[symbol] ?? 'grass-bright');
-          tex.context.fillRect(tx, ty, 1, 1);
+          tex.context.fillRect(tx * k, ty * k, k, k);
         }
       }
       tex.refresh();
@@ -48,11 +52,8 @@ export class MinimapView {
     this.y = MINIMAP.margin;
     const f = MINIMAP.frame;
     this.frame = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.hud);
-    this.frame.fillStyle(colorOf(f.color), f.alpha).fillRect(this.x - f.width, this.y - f.width, width + f.width * 2, height + f.width * 2);
-    this.frame.lineStyle(1, colorOf(f.edge), 1).strokeRect(this.x - f.width, this.y - f.width, width + f.width * 2, height + f.width * 2);
-    this.map = scene.add.image(this.x, this.y, OVERWORLD_TEXTURES.minimap).setOrigin(0).setScale(MINIMAP.scale).setScrollFactor(0).setDepth(DEPTHS.hud + 1);
-    // Each map pixel is a whole tile: keep them crisp squares.
-    this.map.texture.setFilter(Textures.FilterMode.NEAREST);
+    drawTablet(this.frame, this.x - f.width, this.y - f.width, width + f.width * 2, height + f.width * 2);
+    this.map = scene.add.image(this.x, this.y, OVERWORLD_TEXTURES.minimap).setOrigin(0).setScale(MINIMAP.scale / k).setScrollFactor(0).setDepth(DEPTHS.hud + 1);
     this.marks = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.hud + 2);
   }
 
@@ -74,7 +75,7 @@ export class MinimapView {
     this.marks.clear();
     for (const m of this.markers) {
       const style = MINIMAP.markers[m.kind];
-      this.marks.fillStyle(colorOf('outline'), 1).fillCircle(m.x, m.y, style.r + 1);
+      this.marks.fillStyle(colorOf('ink'), 1).fillCircle(m.x, m.y, style.r + 1);
       this.marks.fillStyle(colorOf(style.color), 1).fillCircle(m.x, m.y, style.r);
     }
   }

@@ -1,6 +1,6 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
-import { AMMO_STRIP_LAYOUT } from '../data/hudLayout';
+import { DEPTHS, SPRITES } from '../data/assets';
+import { AMMO_STRIP_LAYOUT, BUILD_BAR_LAYOUT } from '../data/hudLayout';
 import { ammoDef } from '../data/ammo';
 import { itemDef } from '../data/items';
 import { SLOT_AMMOS } from '../data/tube';
@@ -31,8 +31,8 @@ export class AmmoStripView {
       return o;
     };
     this.left = right + L.gap;
-    const frame = scene.textures.getFrame(ATLAS_KEY, SPRITES.hudAmmoCell);
-    const top = bottom - frame.height;
+    const cell = { w: BUILD_BAR_LAYOUT.cellWidth, h: BUILD_BAR_LAYOUT.cellHeight };
+    const top = bottom - cell.h;
     this.cells = SLOT_AMMOS.map((ammoId, i) => {
       const x = this.left + i * L.cellStep;
       this.parts.push(fixed(addVector(scene, x, top, SPRITES.hudAmmoCell).setOrigin(0)));
@@ -47,7 +47,7 @@ export class AmmoStripView {
     this.highlight = fixed(addVector(scene, this.left, top, SPRITES.hudAmmoSelect).setOrigin(0));
     this.highlight.setDepth(DEPTHS.hud + 1);
     this.parts.push(this.highlight);
-    this.box = { x: this.left, y: top, w: (SLOT_AMMOS.length - 1) * L.cellStep + frame.width, h: frame.height };
+    this.box = { x: this.left, y: top, w: (SLOT_AMMOS.length - 1) * L.cellStep + cell.w, h: cell.h };
   }
 
   /** The strip's screen rect, so clicks on it never fire (015). */

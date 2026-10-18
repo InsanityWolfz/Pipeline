@@ -45,7 +45,7 @@ export class HudView {
   /** A screen point on any part of the HUD: a press there never fires (015). */
   overUi(x: number, y: number): boolean {
     const inBox = (b: { x: number; y: number; w: number; h: number }): boolean => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h;
-    const imageBox = (o: GameObjects.Image) => ({ x: o.x, y: o.y, w: o.width, h: o.height });
+    const imageBox = (o: GameObjects.Image) => ({ x: o.x, y: o.y, w: o.displayWidth, h: o.displayHeight });
     const rows = this.materials.filter((m) => m.icon.visible).map((m) => ({ ...imageBox(m.icon), w: HUD_MATERIALS_LAYOUT.rowWidth }));
     const parts = [imageBox(this.slot), this.strip.box, imageBox(this.health), ...rows];
     if (this.armorIcon.visible) parts.push(imageBox(this.armorIcon));
@@ -59,15 +59,15 @@ export class HudView {
       return o;
     };
     this.slot = fixed(addVector(scene, 0, 0, SPRITES.hudSlot).setOrigin(0));
-    const left = Math.round((VIEW_WIDTH - this.slot.width) / 2);
-    const top = VIEW_HEIGHT - this.slot.height - HUD_SLOT_LAYOUT.margin;
+    const left = Math.round((VIEW_WIDTH - this.slot.displayWidth) / 2);
+    const top = VIEW_HEIGHT - this.slot.displayHeight - HUD_SLOT_LAYOUT.margin;
     this.slot.setPosition(left, top);
     const { icon, count: at } = HUD_SLOT_LAYOUT;
     const startIcon = itemDef(slotItem({ ammoId: STARTING_AMMO })).icon;
     this.icon = fixed(addVector(scene, left + icon.x, top + icon.y, startIcon).setOrigin(0));
     this.glow = fixed(addVector(scene, left, top, SPRITES.hudSlotGlow).setOrigin(0)).setVisible(false);
     this.count = new TextLine(scene, left + at.x, top + at.y, DEPTHS.hud, false, 'count');
-    this.strip = new AmmoStripView(scene, left + this.slot.width, top + this.slot.height);
+    this.strip = new AmmoStripView(scene, left + this.slot.displayWidth, top + this.slot.displayHeight);
 
     const hp = HUD_HEALTH_LAYOUT;
     this.health = fixed(addVector(scene, hp.x, hp.y, SPRITES.hudHealth).setOrigin(0));

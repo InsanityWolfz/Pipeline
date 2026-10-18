@@ -1,5 +1,5 @@
 import { AUTO, Game, Scale } from 'phaser';
-import { OUTLINE_ID, paletteHex } from './data/palette';
+import { INK_ID, paletteHex } from './data/palette';
 import { loadFonts } from './render/fonts';
 import { GameScene } from './render/GameScene';
 import { currentFit, keepScreenFit } from './render/scale';
@@ -19,14 +19,14 @@ function start(): void {
   const game = new Game({
     type: AUTO,
     parent: 'game',
-    // Vector art (016) draws at the device's resolution; the pixel atlas keeps nearest filtering itself.
+    // Vector art (016) draws at the device's resolution.
     // Textures are smoothed when baked, so the canvas needs no multisampling, which is costly at full resolution.
     width: fit.width,
     height: fit.height,
     pixelArt: false,
     antialiasGL: false,
     roundPixels: true,
-    backgroundColor: paletteHex(OUTLINE_ID),
+    backgroundColor: paletteHex(INK_ID),
     scale: { mode: Scale.NONE, autoCenter: Scale.CENTER_BOTH, zoom: fit.zoom / fit.scale },
     scene: [scene],
   });

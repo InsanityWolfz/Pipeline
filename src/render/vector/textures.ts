@@ -1,5 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, VECTOR_KEY } from '../../data/assets';
+import { VECTOR_KEY } from '../../data/assets';
 import { MAX_TEXTURE_SCALE } from '../../data/art/style';
 import { vectorFrames } from './catalog';
 import { shelfPack } from './pack';
@@ -23,11 +23,6 @@ export function textureScale(): number {
 
 export function isVector(frame: string): boolean {
   return anchors.has(frame);
-}
-
-/** The texture that holds `frame`: the vector texture, else the pixel atlas. */
-export function textureOf(frame: string): string {
-  return isVector(frame) ? VECTOR_KEY : ATLAS_KEY;
 }
 
 /** Draws every vector frame at `screenScale` (backbuffer px per world px) and registers them. Once per game. */
@@ -68,14 +63,12 @@ export function bakeVectors(scene: Scene, screenScale: number): void {
   });
 }
 
-/** Shows `frame` on `obj` from whichever texture has it; a vector frame also sets the object's scale and origin. */
+/** Shows `frame` on `obj`, at the texture's scale and with the frame's anchor as its origin. */
 export function showFrame<T extends GameObjects.Image | GameObjects.Sprite>(obj: T, frame: string): T {
   const anchor = anchors.get(frame);
   if (!anchor) {
-    // A frame neither texture has would draw as a blank square: say so, so tests catch it.
-    if (!obj.scene.textures.get(ATLAS_KEY).has(frame)) console.error(`No frame named '${frame}'`);
-    obj.setTexture(ATLAS_KEY, frame);
-    obj.setScale(1);
+    // A frame that was never drawn would show as a blank square: say so, so tests catch it.
+    console.error(`No frame named '${frame}'`);
     return obj;
   }
   obj.setTexture(VECTOR_KEY, frame);
@@ -86,10 +79,10 @@ export function showFrame<T extends GameObjects.Image | GameObjects.Sprite>(obj:
 
 /** A vector image at `x, y` with its anchor there. */
 export function addVector(scene: Scene, x: number, y: number, frame: string): GameObjects.Image {
-  return showFrame(scene.add.image(x, y, textureOf(frame), frame), frame);
+  return showFrame(scene.add.image(x, y, VECTOR_KEY, frame), frame);
 }
 
 /** A vector sprite (for animations) at `x, y` showing `frame` first. */
 export function addVectorSprite(scene: Scene, x: number, y: number, frame: string): GameObjects.Sprite {
-  return showFrame(scene.add.sprite(x, y, textureOf(frame), frame), frame);
+  return showFrame(scene.add.sprite(x, y, VECTOR_KEY, frame), frame);
 }

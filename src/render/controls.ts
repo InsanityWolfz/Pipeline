@@ -131,6 +131,11 @@ export class Controls {
     return toView(p.x, p.y, this.camera.zoom);
   }
 
+  /** The cursor in view px (020: for menu rows lighting under it). */
+  viewPointer(): { x: number; y: number } {
+    return this.view(this.pointer);
+  }
+
   /** The cursor is over the world, not the screen's UI. */
   overWorld(): boolean {
     const v = this.view(this.pointer);

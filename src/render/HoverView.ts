@@ -5,7 +5,7 @@ import { HOVER_NAME, MINIMAP } from '../data/hudLayout';
 import { OVERWORLD } from '../data/overworld';
 import { pieceRect } from '../sim/pieces';
 import type { SimState } from '../sim/state';
-import { colorOf } from './color';
+import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import { HoverReadout, intakeLines, pieceLines } from './HoverReadout';
 import { nameAt } from './hoverNames';
@@ -77,7 +77,7 @@ export class HoverView {
     this.name.moveTo(Math.round(cx - this.name.width / 2), y);
     if (hit.description !== undefined) this.description.moveTo(Math.round(cx - this.description.width / 2), y + this.name.lineHeight + descriptionGap);
     const left = Math.round(cx - w / 2);
-    this.back.fillStyle(colorOf(HOVER_NAME.back), HOVER_NAME.alpha).fillRect(left - pad, y - pad, w + 2 * pad, h + 2 * pad);
+    drawTablet(this.back, left - pad, y - pad, w + 2 * pad, h + 2 * pad, HOVER_NAME.alpha);
   }
 }
 

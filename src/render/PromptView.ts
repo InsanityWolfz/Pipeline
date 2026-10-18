@@ -46,7 +46,8 @@ export class PromptView {
     this.cap.setPosition(x, bottom).setAlpha(alpha);
     this.key.set(prompt.key);
     this.key.setAlpha(alpha);
-    this.key.moveTo(x - this.cap.width / 2 + TUTORIAL_LAYOUT.keyText.x, bottom - this.cap.height + TUTORIAL_LAYOUT.keyText.y);
+    // The letter centred on the cap's face.
+    this.key.moveTo(Math.round(x - this.key.width / 2), bottom - this.cap.displayHeight + TUTORIAL_LAYOUT.keyText.y);
   }
 
   /** Where a prompt floats, and whether its key would work right now; undefined when nothing fits in this room. */

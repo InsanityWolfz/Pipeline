@@ -1,5 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
-import { animFrames, ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
+import { animFrames, DEPTHS, SPRITES } from '../data/assets';
 import { TILE_SIZE, VIEW_WIDTH } from '../data/config';
 import {
   CRATE_SPRITE,
@@ -50,8 +50,7 @@ export class BuildView {
 
   constructor(scene: Scene) {
     this.scene = scene;
-    this.highlight = scene.add
-      .image(0, 0, ATLAS_KEY, SPRITES.hudAmmoSelect)
+    this.highlight = addVector(scene, 0, 0, SPRITES.hudAmmoSelect)
       .setOrigin(0)
       .setScrollFactor(0)
       .setDepth(DEPTHS.hud + 2);

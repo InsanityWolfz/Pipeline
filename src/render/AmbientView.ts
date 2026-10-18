@@ -2,7 +2,7 @@ import { BlendModes, type GameObjects, type Scene } from 'phaser';
 import { DEPTHS, FX_TEXTURES } from '../data/assets';
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { AMBIENT, GLOW_TEXTURE, GLOWS, ROOM_MOOD, VIGNETTE } from '../data/juice';
-import { OUTLINE_ID, hexToRgb, paletteHex } from '../data/palette';
+import { INK_ID, hexToRgb, paletteHex } from '../data/palette';
 import { PROPS, type PropDef } from '../data/props';
 import type { Room } from '../data/rooms';
 import { colorOf } from './color';
@@ -79,7 +79,7 @@ export class AmbientView {
   private mote(): Mote {
     const x = Math.random() * this.bounds.w;
     const y = Math.random() * this.bounds.h;
-    const color = AMBIENT.moteColors[Math.floor(Math.random() * AMBIENT.moteColors.length)] ?? 'white';
+    const color = AMBIENT.moteColors[Math.floor(Math.random() * AMBIENT.moteColors.length)] ?? 'snow';
     const dot = this.scene.add.rectangle(x, y, 1, 1, colorOf(color)).setOrigin(0).setDepth(DEPTHS.motes);
     const speed = AMBIENT.moteSpeed[0] + Math.random() * (AMBIENT.moteSpeed[1] - AMBIENT.moteSpeed[0]);
     const angle = -Math.PI / 2 + (Math.random() - 0.5);
@@ -139,7 +139,7 @@ function makeTextures(scene: Scene): void {
     if (tex && ctx) {
       const r = Math.hypot(VIEW_WIDTH, VIEW_HEIGHT) / 2;
       const grad = ctx.createRadialGradient(VIEW_WIDTH / 2, VIEW_HEIGHT / 2, r * VIGNETTE.inner, VIEW_WIDTH / 2, VIEW_HEIGHT / 2, r);
-      const [r8, g8, b8] = hexToRgb(paletteHex(OUTLINE_ID));
+      const [r8, g8, b8] = hexToRgb(paletteHex(INK_ID));
       grad.addColorStop(0, `rgba(${r8},${g8},${b8},0)`);
       grad.addColorStop(1, `rgba(${r8},${g8},${b8},${VIGNETTE.alpha})`);
       ctx.fillStyle = grad;

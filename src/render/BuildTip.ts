@@ -2,7 +2,7 @@ import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { BUILD_TIP } from '../data/hudLayout';
 import { pieceDef } from '../data/pieces';
-import { colorOf } from './color';
+import { drawTablet } from './tablet';
 import { wrapText } from './foundryLayout';
 import { TextLine } from './textLine';
 
@@ -36,8 +36,7 @@ export class BuildTip {
     const h = text.length * lineHeight + 2 * pad;
     const left = Math.round(Math.min(Math.max(x - w / 2, pad), screenWidth - w - pad));
     const y = Math.round(top - gap - h);
-    this.back.fillStyle(colorOf(BUILD_TIP.edge)).fillRect(left - 1, y - 1, w + 2, h + 2);
-    this.back.fillStyle(colorOf(BUILD_TIP.back), BUILD_TIP.alpha).fillRect(left, y, w, h);
+    drawTablet(this.back, left, y, w, h);
     for (const [i, l] of this.lines.entries()) {
       const t = text[i];
       l.setVisible(t !== undefined);

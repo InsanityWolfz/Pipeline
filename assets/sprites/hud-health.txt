@@ -1,9 +1,0 @@
-# HUD health bar frame: rune-carved stone around a dark well. 52x8. The fill is drawn in the well (x 2-49, y 2-5).
-.oooooooooooooooooooooooooooooooooooooooooooooooooo.
-oLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLo
-oLooooooooooooooooooooooooooooooooooooooooooooooooso
-oLooooooooooooooooooooooooooooooooooooooooooooooooso
-oLooooooooooooooooooooooooooooooooooooooooooooooooso
-oLooooooooooooooooooooooooooooooooooooooooooooooooso
-osssssssssssssssssssssssssssssssssssssssssssssssssso
-.oooooooooooooooooooooooooooooooooooooooooooooooooo.

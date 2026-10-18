@@ -30,7 +30,7 @@ export class Particles {
   /** Throws a burst from a ground point; it draws `lift` px up and sorts just in front of it. */
   emit(burst: ParticleBurst, x: number, y: number, depth = y + 1): void {
     for (let i = 0; i < burst.count; i++) {
-      const color = burst.colors[Math.floor(Math.random() * burst.colors.length)] ?? 'white';
+      const color = burst.colors[Math.floor(Math.random() * burst.colors.length)] ?? 'snow';
       const angle = burst.angle === undefined ? Math.random() * Math.PI * 2 : burst.angle + (Math.random() - 0.5) * (burst.spread ?? 0);
       const speed = between(burst.speed);
       const rect = this.scene.add.rectangle(x, y, burst.size, burst.size, colorOf(color)).setOrigin(0).setDepth(depth);

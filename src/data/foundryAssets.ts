@@ -120,7 +120,7 @@ export const STAGER_SPRITE = { key: 'gravity-stager', frames: 5, frameRate: 1, l
  * Build mode draws a faint fan from each stager facing the intake: one line at its
  * angle from straight up, so the spread's shape reads before firing. Px and palette id.
  */
-export const SPREAD_FAN = { length: 56, width: 1, color: 'ley-cyan', alpha: 0.55 } as const;
+export const SPREAD_FAN = { length: 56, width: 1, color: 'cyan', alpha: 0.55 } as const;
 
 /** A stager holding an item pulses its alpha between 1 and `alpha`, one beat every `ticksPerBeat` ticks. */
 export const STAGER_PULSE = { alpha: 0.7, ticksPerBeat: 9 } as const;
@@ -208,8 +208,8 @@ export const TUTORIAL_LAYOUT = {
   /** The objective line sits on the right of the screen (019), right-aligned `objectiveRight` px from the edge, below the minimap. */
   objectiveTop: 86,
   objectiveRight: 10,
-  /** The objective line's backing panel: padding round the text, palette ids and alpha. */
-  objectivePanel: { padX: 6, padY: 3, back: 'outline', alpha: 0.7 },
+  /** The objective line's tablet (020): padding round the text, and its alpha. */
+  objectivePanel: { padX: 6, padY: 3, alpha: 0.85 },
   /** The line fades in over this when it moves on to the next goal, ms. */
   objectiveFadeMs: 300,
   /** The tick sits this far above the text's top, px. */
@@ -218,7 +218,8 @@ export const TUTORIAL_LAYOUT = {
   tickMs: 1200,
   /** A prompt floats this far above the top of its target's tile, px. */
   promptLift: 6,
-  keyText: { x: 4, y: 3 },
+  /** The key's letter: its capitals' top this far below the cap's top (it's centred across). */
+  keyText: { y: 2.5 },
   /** A prompt not yet usable (out of reach) shows at this alpha. */
   promptDimAlpha: 0.45,
   gateFadeMs: 500,

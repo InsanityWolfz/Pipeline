@@ -21,9 +21,9 @@ export const DAMAGE_NUMBERS = {
   lifeMs: 700,
   scale: 2,
   pop: 3,
-  enemy: 'white',
-  player: 'ember-light',
-  outline: 'outline',
+  enemy: 'snow',
+  player: 'cinder-light',
+  outline: 'ink',
   /** Start this far above the hit point, px: enemies, and the player. */
   enemyAbove: 24,
   playerAbove: 30,
@@ -91,7 +91,7 @@ export const SQUASH = { dropPx: 6, ms: 180, squash: 0.18, settle: 1.5 } as const
 export const AMBIENT = {
   motes: 18,
   moteSpeed: [4, 10] as const,
-  moteColors: ['ley-cyan', 'ley-glow'] as const,
+  moteColors: ['cyan', 'cyan-glow'] as const,
   /** Sway speed (radians/s) and size (px/s). */
   moteSway: { rate: 0.8, x: 3, y: 2, flicker: 1.3, minAlpha: 0.25, alphaRange: 0.5 },
   glowBreatheMs: 2200,
@@ -107,14 +107,14 @@ export const GLOW_TEXTURE = { radius: 32, bands: 5, alpha: 0.6 } as const;
 
 /** Ley light around things that aren't props: palette colour and radius, px. The intake's glow (019) swells by `pulse` for `ms` as an item goes in. */
 export const GLOWS = {
-  crystal: { color: 'ley-cyan', radius: 30 },
-  vein: { color: 'ley-cyan', radius: 22 },
-  pylon: { color: 'ley-glow', radius: 44 },
-  conduitItem: { color: 'ley-cyan', radius: 9 },
+  crystal: { color: 'cyan', radius: 30 },
+  vein: { color: 'cyan', radius: 22 },
+  pylon: { color: 'cyan-glow', radius: 44 },
+  conduitItem: { color: 'cyan', radius: 9 },
   /** Ley light pooling along every conduit and sorter (020). */
-  conduit: { color: 'ley-cyan', radius: 13 },
-  tube: { color: 'ley-cyan', radius: 14 },
-  intake: { color: 'ley-glow', radius: 40, pulse: 1.4, ms: 300 },
+  conduit: { color: 'cyan', radius: 13 },
+  tube: { color: 'cyan', radius: 14 },
+  intake: { color: 'cyan-glow', radius: 40, pulse: 1.4, ms: 300 },
 } as const;
 
 /** While attuning (019), the tube's glow and then the intake's grow from nothing to this times their radius as their rings light, then settle. */

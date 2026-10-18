@@ -4,8 +4,9 @@ import { PICKER_LAYOUT } from '../data/hudLayout';
 import { itemDef } from '../data/items';
 import { count, type Inventory } from '../sim/inventory';
 import type { HopperState } from '../sim/pieces';
-import { colorOf } from './color';
+import { drawTablet } from './tablet';
 import { inRect, pickerEntries, pickerRows, pieceIcon, type PickerEntry } from './foundryLayout';
+import { flashRow, RowHover } from './menuFeedback';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
 
@@ -17,12 +18,14 @@ export class HopperPicker {
   private rows: { entry: PickerEntry; images: GameObjects.Image[]; count: TextLine }[] = [];
   private entries: PickerEntry[] = [];
   private readonly panel: GameObjects.Graphics;
+  private readonly hover: RowHover;
   /** The hopper's piece id while open. */
   hopperId: number | null = null;
 
   constructor(scene: Scene) {
     this.scene = scene;
     this.panel = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.menu - 1);
+    this.hover = new RowHover(scene);
   }
 
   get isOpen(): boolean {
@@ -41,6 +44,19 @@ export class HopperPicker {
   /** True if a screen point is over a row. */
   overUi(x: number, y: number): boolean {
     return this.isOpen && pickerRows(this.entries).some((r) => inRect(r, x, y));
+  }
+
+  /** The cursor is at a screen point (020): its row lights, with the hover sound on a new row. */
+  pointAt(x: number, y: number): void {
+    const i = this.isOpen ? pickerRows(this.entries).findIndex((r) => inRect(r, x, y)) : -1;
+    this.hover.set(i);
+    for (const [k, r] of this.rows.entries()) r.images[0]?.setFrame(this.hover.frame(k));
+  }
+
+  /** Flashes the row under a screen point, as it's pressed. */
+  flashAt(x: number, y: number): void {
+    const r = this.isOpen ? pickerRows(this.entries).find((rect) => inRect(rect, x, y)) : undefined;
+    if (r) flashRow(this.scene, r.x, r.y);
   }
 
   /** The row under a screen point, if the menu is open. */
@@ -91,7 +107,6 @@ export class HopperPicker {
     const y = first.y - L.pad;
     const w = first.w + 2 * L.pad;
     const h = last.y + last.h - first.y + 2 * L.pad;
-    this.panel.fillStyle(colorOf(L.border)).fillRect(x - 1, y - 1, w + 2, h + 2);
-    this.panel.fillStyle(colorOf(L.back)).fillRect(x, y, w, h);
+    drawTablet(this.panel, x, y, w, h);
   }
 }

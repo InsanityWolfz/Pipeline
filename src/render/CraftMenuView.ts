@@ -9,6 +9,8 @@ import type { LinkState } from '../sim/link';
 import { knownRecipe } from '../sim/tutorial';
 import { count, type Inventory } from '../sim/inventory';
 import { craftMenuLines, craftPanelAt } from './craftMenuLayout';
+import { flashRow, MENU_HOVER_EVENT } from './menuFeedback';
+import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
 
@@ -37,6 +39,8 @@ export class CraftMenuView {
   private link: Pick<LinkState, 'attuned'> = { attuned: false };
   /** Each group's header icon, by ammo id: hidden while none of its recipes is known (012). */
   private readonly headers = new Map<string, GameObjects.Image>();
+  /** The title card's tablet. */
+  private readonly card: GameObjects.Graphics;
 
   constructor(scene: Scene, onCraft: (recipeId: string) => void) {
     const L = CRAFT_MENU_LAYOUT;
@@ -52,6 +56,20 @@ export class CraftMenuView {
     };
     const panel = craftPanelAt();
     add(panel.x, panel.y, SPRITES.craftPanel);
+    // The title card: a carved tablet over the panel naming the menu, and that the world is paused while it's open.
+    const T = L.title;
+    const cardX = Math.round(panel.x + (L.width - T.w) / 2);
+    const cardY = panel.y - T.gap - T.h;
+    this.card = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.menu);
+    drawTablet(this.card, cardX, cardY, T.w, T.h);
+    for (const [style, words, y] of [
+      ['title', T.text, cardY + 4],
+      ['body', T.note, cardY + T.noteY],
+    ] as const) {
+      const line = new TextLine(scene, 0, y, DEPTHS.menu + 2, false, style).set(words);
+      line.moveTo(Math.round(panel.x + L.width / 2 - line.width / 2), y);
+      this.lines.push(line);
+    }
 
     for (const line of craftMenuLines()) {
       if (line.kind === 'header') {
@@ -83,9 +101,14 @@ export class CraftMenuView {
         outputId: recipe.output.itemId,
       };
       frame.on('pointerdown', () => {
-        if (this.open && canCraft({ inventory: this.inventory, link: this.link }, row.recipeId)) onCraft(row.recipeId);
+        if (!this.open || !canCraft({ inventory: this.inventory, link: this.link }, row.recipeId)) return;
+        flashRow(scene, frame.x, frame.y);
+        onCraft(row.recipeId);
       });
-      frame.on('pointerover', () => (this.hovered = row));
+      frame.on('pointerover', () => {
+        this.hovered = row;
+        scene.events.emit(MENU_HOVER_EVENT);
+      });
       frame.on('pointerout', () => {
         if (this.hovered === row) this.hovered = undefined;
       });
@@ -101,6 +124,7 @@ export class CraftMenuView {
   setOpen(open: boolean): void {
     this.open = open;
     for (const o of this.objects) o.setVisible(open);
+    this.card.setVisible(open);
     for (const l of this.lines) l.setVisible(open);
     for (const r of this.rows) {
       if (open) r.frame.setInteractive();

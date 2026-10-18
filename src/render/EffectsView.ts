@@ -14,7 +14,7 @@ import {
 import { CAMERA_LERP, DOOR_FADE_MS } from '../data/config';
 import { enemyDef } from '../data/enemies';
 import { ITEMS } from '../data/items';
-import { OUTLINE_ID, hexToRgb, paletteHex } from '../data/palette';
+import { INK_ID, hexToRgb, paletteHex } from '../data/palette';
 import { DRAW_HEIGHT } from '../data/tube';
 import type { SimEvents } from '../sim/events';
 import { registerAnim } from './anims';
@@ -136,7 +136,7 @@ export class EffectsView {
       corpse.destroy();
     }
     this.camera.stopFollow();
-    const [r, g, b] = hexToRgb(paletteHex(OUTLINE_ID));
+    const [r, g, b] = hexToRgb(paletteHex(INK_ID));
     // The HUD fades with the world (016: it draws on its own camera).
     const ui = this.scene.cameras.getCamera(UI_CAMERA);
     ui?.fadeOut(KO_FADE_MS, r, g, b);

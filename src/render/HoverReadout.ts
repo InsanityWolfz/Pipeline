@@ -9,7 +9,7 @@ import { RESERVOIR_CAP } from '../data/tube';
 import { count } from '../sim/inventory';
 import type { ReservoirState } from '../sim/link';
 import type { MachineState, PieceState } from '../sim/pieces';
-import { colorOf } from './color';
+import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
 
@@ -76,8 +76,7 @@ export class HoverReadout {
     const left = Math.round(x - L.width / 2);
     const top = Math.round(Math.max(bottom - L.gap - h, minTop + L.pad));
     if (lines.length > 0) {
-      this.back.fillStyle(colorOf(L.border)).fillRect(left - 1, top - 1, L.width + 2, h + 2);
-      this.back.fillStyle(colorOf(L.back)).fillRect(left, top, L.width, h);
+      drawTablet(this.back, left, top, L.width, h);
     }
     for (let i = 0; i < MAX_LINES; i++) {
       const line = lines[i];

@@ -1,7 +1,4 @@
-import { Scene, Textures } from 'phaser';
-import atlasImage from '../../assets/build/sprites.png?url';
-import atlasData from '../../assets/build/sprites.json?url';
-import { ATLAS_KEY } from '../data/assets';
+import { Scene } from 'phaser';
 import { CAMERA_LERP } from '../data/config';
 import { BUILD_BAR } from '../data/pieces';
 import { SOUNDS } from '../data/sounds';
@@ -43,6 +40,7 @@ import { bakeVectors } from './vector/textures';
 import type { UiState } from './testHook';
 import { RoomViews } from './RoomViews';
 import { fontsReady } from './fonts';
+import { MENU_HOVER_EVENT } from './menuFeedback';
 import { SceneCameras } from './SceneCameras';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
@@ -92,15 +90,14 @@ export class GameScene extends Scene {
   }
 
   preload(): void {
-    this.load.atlas(ATLAS_KEY, atlasImage, atlasData);
     FeelView.preload(this);
   }
 
   create(): void {
-    // Pixel art stays crisp at any zoom; vector frames (016) are drawn once at the screen's scale.
-    this.textures.get(ATLAS_KEY).setFilter(Textures.FilterMode.NEAREST);
+    // Every sprite is vector (016, 020): drawn once at the screen's scale.
     bakeVectors(this, this.fit.scale);
     this.sceneCameras = new SceneCameras(this, this.fit);
+    this.events.on(MENU_HOVER_EVENT, () => this.feel?.sound.play(SOUNDS.menuHover));
     this.roomViews = new RoomViews(this);
     this.foundryView = new FoundryView(this);
     this.nodeView = new NodeView(this);
@@ -199,6 +196,7 @@ export class GameScene extends Scene {
     const hopper = this.picker?.hopperId;
     if (!entry || hopper === null || hopper === undefined) return;
     this.feel?.sound.play(SOUNDS.menuClick);
+    this.picker?.flashAt(x, y);
     if (entry.action === 'take') controls.menus.withdraw(hopper);
     else controls.menus.deposit(hopper, entry.itemId);
     this.picker?.close();
@@ -312,6 +310,12 @@ export class GameScene extends Scene {
       (...a) => canPlace(sim, ...a),
       (t, f) => ghostShape(controls?.heldLay() ?? null, t, f, (u, g) => conduitInFrom(sim, u.tx, u.ty, g)),
     );
+    // Menu rows light under the cursor (020).
+    const pointer = controls?.viewPointer();
+    if (pointer) {
+      this.siteMenus?.pointAt(pointer.x, pointer.y);
+      this.picker?.pointAt(pointer.x, pointer.y);
+    }
     const point = controls?.overWorld() ? controls.cursorPoint() : null;
     this.hover?.update(sim, shown, point, (id) => this.foundryView?.topOf(id), this.cameras.main.worldView);
   }

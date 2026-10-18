@@ -5,7 +5,7 @@ import { ENEMY_ANIMS } from '../../src/data/assets';
 import { inksOf, svg, type LimbStyle, type Shape } from '../../src/data/art/types';
 import { VECTOR_SPRITES } from '../../src/data/art/sprites';
 import { TUBE_PARTS, WANDERER, WANDERER_DYNAMIC } from '../../src/data/art/wanderer';
-import { DAYLIGHT_PALETTE, PIXEL_PALETTE } from '../../src/data/palette';
+import { DAYLIGHT_PALETTE } from '../../src/data/palette';
 import { ENEMY_RIGS } from '../../src/data/art/enemies';
 import { poseOfAnim } from '../../src/render/vector/catalog';
 
@@ -31,8 +31,8 @@ const wandererShapes = (): Shape[] => [
 ];
 
 describe('the daylight palette', () => {
-  it('has kebab-case ids unique across both palettes, and valid hexes', () => {
-    const ids = [...PIXEL_PALETTE, ...DAYLIGHT_PALETTE].map((c) => c.id);
+  it('has unique kebab-case ids and valid hexes', () => {
+    const ids = DAYLIGHT_PALETTE.map((c) => c.id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const c of DAYLIGHT_PALETTE) {
       expect(c.id).toMatch(KEBAB);

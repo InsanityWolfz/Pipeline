@@ -53,6 +53,11 @@ export class SiteMenus {
     for (const m of this.menus) m.close();
   }
 
+  /** The cursor is at a screen point: the open menu lights the row under it (020). */
+  pointAt(x: number, y: number): void {
+    for (const m of this.menus) m.pointAt(x, y);
+  }
+
   /** E was pressed: opens the menu of a sorter, a claimed pylon, the stash or the bench in reach. */
   interact(sim: SimState): void {
     const piece = usableInReach(sim);
@@ -76,6 +81,7 @@ export class SiteMenus {
     else if (b && 'identify' in b) controls.menus.identify();
     else if (b) controls.menus.equip(b.equip);
     else return false;
+    for (const m of this.menus) m.flashAt(x, y);
     this.close();
     return true;
   }

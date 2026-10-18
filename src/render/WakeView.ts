@@ -1,7 +1,8 @@
-import type { Scene, Time } from 'phaser';
+import type { GameObjects, Scene, Time } from 'phaser';
 import { DEPTHS, KO_FADE_MS, WAKE_TEXT } from '../data/assets';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { itemDef } from '../data/items';
+import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 
 // After a KO (011): "You wake in the foundry", then what the death cost, centred
@@ -9,10 +10,13 @@ import { TextLine } from './textLine';
 export class WakeView {
   private readonly scene: Scene;
   private lines: TextLine[] = [];
+  /** The stone tablet behind the lines (020). */
+  private readonly back: GameObjects.Graphics;
   private timer: Time.TimerEvent | null = null;
 
   constructor(scene: Scene) {
     this.scene = scene;
+    this.back = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.menu + 1);
   }
 
   /** Shows the wake-up text for a KO that lost `lost` (item id to count), once the KO's fade has played. */
@@ -34,6 +38,9 @@ export class WakeView {
       y += i === 0 ? line.lineHeight : WAKE_TEXT.lineStep;
       return line;
     });
+    const w = Math.max(...this.lines.map((l) => l.width)) + 2 * WAKE_TEXT.pad;
+    this.back.clear().setAlpha(1);
+    drawTablet(this.back, Math.round(cx - w / 2), top - WAKE_TEXT.pad, Math.ceil(w), y - top + WAKE_TEXT.pad);
     this.timer = this.scene.time.delayedCall(WAKE_TEXT.holdMs, () => this.fade());
   }
 
@@ -45,6 +52,7 @@ export class WakeView {
       duration: WAKE_TEXT.fadeMs,
       onUpdate: (tween) => {
         for (const l of lines) l.setAlpha(tween.getValue() ?? 0);
+        this.back.setAlpha(tween.getValue() ?? 0);
       },
       onComplete: () => {
         if (lines === this.lines) this.clear();
@@ -55,7 +63,8 @@ export class WakeView {
   private clear(): void {
     this.timer?.remove();
     this.timer = null;
-    for (const l of this.lines) l.set('');
+    for (const l of this.lines) l.destroy();
     this.lines = [];
+    this.back.clear();
   }
 }

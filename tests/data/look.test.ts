@@ -5,14 +5,13 @@ import { CORE } from '../../src/data/art/warden';
 import { PORT_CYCLE } from '../../src/data/claims';
 import { ITEMS } from '../../src/data/items';
 import { NODES } from '../../src/data/nodes';
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { FLOOR_VARIANTS, WALL_SPRITES } from '../../src/data/roomArt';
 import { animFrames } from '../../src/data/assets';
 import { ENEMIES } from '../../src/data/enemies';
 import { LOGISTICS_ICONS, SORTER_ANIMS } from '../../src/data/foundryAssets';
 import { AMBIENT, DAMAGE_NUMBERS, GLOWS, HARVEST_BURSTS, HARVEST_WORK, PARTICLES, ROOM_MOOD } from '../../src/data/juice';
-import { DAYLIGHT_PALETTE, PIXEL_PALETTE } from '../../src/data/palette';
+import { DAYLIGHT_PALETTE } from '../../src/data/palette';
 import { FIRE_SOUNDS, ROOM_AMBIENCE, SOUNDS, WINDUP_SOUNDS } from '../../src/data/sounds';
 import { SLOT_AMMOS } from '../../src/data/tube';
 import { PROPS, type PropDef } from '../../src/data/props';
@@ -25,9 +24,8 @@ const ROOMS = Object.fromEntries(Object.entries(WORLD).filter(([, r]) => !r.terr
 
 // Look and feel (014): every new frame exists, and room dressing stays out of the way.
 
-const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as { frames: Record<string, unknown> };
-/** Every frame drawn, from the atlas or from vector data. */
-const frames = [...Object.keys(atlas.frames), ...vectorFrames().map((f) => f.name)];
+/** Every frame drawn (vector data, since 020 the only source). */
+const frames = vectorFrames().map((f) => f.name);
 
 describe('room art', () => {
   it('has every floor variant and wall piece in the atlas', () => {
@@ -79,7 +77,7 @@ describe('props', () => {
 });
 
 describe('feel and sound references', () => {
-  const known = new Set([...PIXEL_PALETTE, ...DAYLIGHT_PALETTE].map((c) => c.id));
+  const known = new Set(DAYLIGHT_PALETTE.map((c) => c.id));
 
   it('use only palette colours', () => {
     const ids = [

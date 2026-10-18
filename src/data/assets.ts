@@ -1,9 +1,6 @@
 // Asset keys. Render code loads and draws by these keys, never string literals.
 
-/** The sprite atlas built by `npm run art` (assets/build/sprites.png + .json). */
-export const ATLAS_KEY = 'sprites';
-
-/** Vector frames drawn at boot (016): one texture of shelf-packed canvas pages, frames named as the atlas names them. */
+/** Vector frames drawn at boot (016): one texture of shelf-packed canvas pages, holding every sprite frame by name. */
 export const VECTOR_KEY = 'vectors';
 
 /** The wanderer's canvas, redrawn every frame (016). */
@@ -20,7 +17,7 @@ export const OVERWORLD_SPRITES = {
 } as const;
 export const OVERWORLD_TEXTURES = { ground: 'ow-ground', safeGlow: 'ow-safe-glow', minimap: 'ow-minimap' } as const;
 
-/** Frame names in the atlas for single-frame sprites, one per sprite grid in assets/sprites. */
+/** Frame names for single-frame sprites (vector shape data in src/data/art). */
 export const SPRITES = {
   leyCrystal: 'ley-crystal',
   floor: 'floor-flag',
@@ -60,6 +57,8 @@ export const SPRITES = {
   craftPanel: 'craft-panel',
   craftRow: 'craft-row',
   craftRowHover: 'craft-row-hover',
+  /** A menu row's look for a moment after it's pressed (020). */
+  craftRowPress: 'craft-row-press',
   craftArrow: 'craft-arrow',
   hudAmmoCell: 'hud-ammo-cell',
   hudAmmoSelect: 'hud-ammo-select',
@@ -90,7 +89,7 @@ export const HUD_SLOT_LAYOUT = {
   /** Gap below the slot to the bottom of the screen. */
   margin: 6,
   /** Palette id: the slot tint while a dry fire shows. */
-  dryFireTint: 'ember',
+  dryFireTint: 'rust',
 } as const;
 
 /** An animation: the sprite grid `key` with `frames` frames (`key/0`..), or a single frame `key`. */
@@ -154,10 +153,10 @@ export const DEPOSIT_SWIRL: AnimDef = { key: 'deposit-swirl', frames: 4, frameRa
 /**
  * After a KO (011): the wake-up text shows once the KO fade has played, holds for
  * `holdMs`, then fades over `fadeMs`. `top` is its first line's offset from the
- * screen's centre and `lineStep` the gap between lines, px. `title` and
+ * screen's centre and `lineStep` the gap between lines, px; it sits on a stone tablet `pad` px round it (020). `title` and
  * `lostTitle` are the words shown.
  */
-export const WAKE_TEXT = { holdMs: 3000, fadeMs: 400, top: -24, lineStep: 9, title: 'You wake in the foundry', lostTitle: 'Lost' } as const;
+export const WAKE_TEXT = { holdMs: 3000, fadeMs: 400, top: -24, lineStep: 10, pad: 8, title: 'You wake in the foundry', lostTitle: 'Lost' } as const;
 
 /** A ley burst at the tube's mouth for each projectile fired (008). */
 export const MUZZLE_FLASH: AnimDef = { key: 'muzzle-flash', frames: 2, frameRate: 20, loop: false };
@@ -165,7 +164,7 @@ export const MUZZLE_FLASH: AnimDef = { key: 'muzzle-flash', frames: 2, frameRate
 /** The flame over a burning enemy. */
 export const BURN_FLAME: AnimDef = { key: 'burn-flame', frames: 3, frameRate: 10, loop: true };
 
-/** Atlas frame names for an animation. */
+/** Frame names for an animation. */
 export function animFrames(anim: AnimDef): string[] {
   return anim.frames === 1 ? [anim.key] : Array.from({ length: anim.frames }, (_, i) => `${anim.key}/${i}`);
 }
@@ -177,7 +176,7 @@ export const HUD_HEALTH_LAYOUT = {
   /** The well the fill is drawn in, relative to the frame. */
   fill: { x: 2, y: 2, w: 48, h: 4 },
   /** Palette id of the fill. */
-  fillColor: 'ember',
+  fillColor: 'rust',
 } as const;
 
 export const HUD_MATERIALS_LAYOUT = {
@@ -194,19 +193,19 @@ export const HUD_MATERIALS_LAYOUT = {
 /** Enemy effects drawn in the world. Colours are palette ids. */
 export const ENEMY_FX = {
   /** Fill colour of a hit flash (the palette's white). */
-  flashColor: 'white',
+  flashColor: 'snow',
   /** The swipe telegraph: a faint arc of the full reach, filling in with the wind-up. */
-  telegraphColor: 'ember',
+  telegraphColor: 'rust',
   telegraphAlpha: 0.25,
   telegraphFillAlpha: 0.55,
   /** The Wisp's cast telegraph: a ley ring tightening on it and a faint line along its locked aim (009). */
-  castColor: 'ley-cyan',
+  castColor: 'cyan',
   castRing: { from: 22, to: 10, width: 2, alphaFrom: 0.4 },
   castLine: { length: 64, width: 2, alpha: 0.5 },
   /** Health bar over a damaged enemy: size, and gap above the sprite's top. */
   healthBar: { w: 20, h: 3, gap: 2, border: 1 },
-  healthBarColor: 'ember',
-  healthBarBack: 'outline',
+  healthBarColor: 'rust',
+  healthBarBack: 'ink',
   /** A corpse lingers this long after its death animation, then fades over `corpseFadeMs`. */
   corpseLingerMs: 600,
   corpseFadeMs: 600,
@@ -218,7 +217,7 @@ export const PLAYER_HIT_FX = {
   poseTicks: 8,
   /** While invulnerable the player flashes white and back every this-many ticks, starting white. */
   flickerTicks: 4,
-  flashColor: 'white',
+  flashColor: 'snow',
 } as const;
 
 /** The "+1 [icon]" popup on pickup, and the KO fade. */

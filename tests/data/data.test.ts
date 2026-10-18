@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { hexToRgb, OUTLINE_ID, PIXEL_PALETTE, TRANSPARENT } from '../../src/data/palette';
+import { DAYLIGHT_PALETTE, hexToRgb, INK_ID } from '../../src/data/palette';
 import { AMMO } from '../../src/data/ammo';
 import {
   animFrames,
@@ -57,54 +57,45 @@ function luminance(hex: string): number {
 }
 
 describe('palette', () => {
-  it('has about 24 colors', () => {
-    expect(PIXEL_PALETTE.length).toBeGreaterThanOrEqual(20);
-    expect(PIXEL_PALETTE.length).toBeLessThanOrEqual(28);
-  });
-
-  it('has unique kebab-case ids, unique single-char symbols and valid hex', () => {
-    expect(new Set(PIXEL_PALETTE.map((c) => c.id)).size).toBe(PIXEL_PALETTE.length);
-    expect(new Set(PIXEL_PALETTE.map((c) => c.char)).size).toBe(PIXEL_PALETTE.length);
-    for (const color of PIXEL_PALETTE) {
+  it('has unique kebab-case ids and valid hex', () => {
+    expect(new Set(DAYLIGHT_PALETTE.map((c) => c.id)).size).toBe(DAYLIGHT_PALETTE.length);
+    for (const color of DAYLIGHT_PALETTE) {
       expect(color.id).toMatch(KEBAB);
-      expect(color.char).toHaveLength(1);
-      expect(color.char).not.toBe(TRANSPARENT);
       expect(color.hex).toMatch(/^#[0-9a-f]{6}$/);
     }
   });
 
   it('includes ley-line cyan', () => {
-    expect(PIXEL_PALETTE.some((c) => c.id === 'ley-cyan')).toBe(true);
+    expect(DAYLIGHT_PALETTE.some((c) => c.id === 'cyan')).toBe(true);
   });
 
-  it('uses its darkest color, not pure black, as the outline', () => {
-    const darkest = [...PIXEL_PALETTE].sort((a, b) => luminance(a.hex) - luminance(b.hex))[0];
-    expect(darkest?.id).toBe(OUTLINE_ID);
-    expect(darkest?.hex).not.toBe('#000000');
-  });
-
-  it('is the palette docs/art.md names', () => {
-    const doc = readFileSync('docs/art.md', 'utf8');
-    for (const color of PIXEL_PALETTE) expect(doc).toContain(color.hex);
-    expect(doc).toContain(`\`${OUTLINE_ID}\``);
+  it('outlines in its ink, a dark not pure black', () => {
+    const ink = DAYLIGHT_PALETTE.find((c) => c.id === INK_ID);
+    expect(ink).toBeDefined();
+    expect(ink?.hex).not.toBe('#000000');
+    expect(luminance(ink?.hex ?? '#000000')).toBeLessThan(40);
   });
 });
 
-/** Every frame the game can show: the pixel atlas's and the vector catalog's (016). */
+/** Every frame the game can show: the vector catalog's (016; the only source since 020). */
 function drawnFrames(): string[] {
-  const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as { frames: Record<string, unknown> };
-  return [...Object.keys(atlas.frames), ...vectorFrames().map((f) => f.name)];
+  return vectorFrames().map((f) => f.name);
 }
 
-describe('assets', () => {
-  const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as {
-    frames: Record<string, unknown>;
-  };
-  // A frame is drawn from a pixel grid (the atlas) or from vector data (016), never both.
-  const vectors = vectorFrames().map((f) => f.name);
-  const known = [...Object.keys(atlas.frames), ...vectors];
+describe('no pixel pipeline (020)', () => {
+  it('has no sprite grids, atlas, art build script or art npm script left', () => {
+    for (const path of ['assets/sprites', 'assets/build/sprites.json', 'assets/build/sprites.png', 'scripts/build-art.ts', 'scripts/art']) expect(existsSync(path), path).toBe(false);
+    const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as { scripts: Record<string, string> };
+    expect(pkg.scripts.art).toBeUndefined();
+    expect(Object.values(pkg.scripts).join(' ')).not.toContain('npm run art');
+  });
+});
 
-  it('has kebab-case keys that exist in the atlas or as vector frames', () => {
+describe('assets', () => {
+  const vectors = vectorFrames().map((f) => f.name);
+  const known = vectors;
+
+  it('has kebab-case keys that exist as vector frames', () => {
     const nodeKeys = Object.values(NODE_SPRITES).flatMap((n) => [...n.uses, ...n.regrow]);
     for (const key of [...Object.values(SPRITES), ...nodeKeys]) {
       expect(key).toMatch(KEBAB);
@@ -112,8 +103,7 @@ describe('assets', () => {
     }
   });
 
-  it('draws no frame both as a pixel grid and as vector data', () => {
-    for (const name of vectors) expect(Object.keys(atlas.frames)).not.toContain(name);
+  it('names every frame once', () => {
     expect(new Set(vectors).size).toBe(vectors.length);
   });
 

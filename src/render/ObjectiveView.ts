@@ -1,12 +1,13 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS } from '../data/assets';
+import { DEPTHS } from '../data/assets';
 import { VIEW_WIDTH } from '../data/config';
 import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
 import { OBJECTIVES } from '../data/objectives';
 import { currentObjective } from '../sim/objectives';
 import type { SimState } from '../sim/state';
-import { colorOf } from './color';
+import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
+import { addVector } from './vector/textures';
 
 // The objective line (012): the first unfinished goal, on the right of the screen
 // below the minimap (019). Finishing one flashes a ley tick beside the line before it moves on.
@@ -22,8 +23,7 @@ export class ObjectiveView {
     this.line = new TextLine(scene, 0, TUTORIAL_LAYOUT.objectiveTop, DEPTHS.hud, false, 'display');
     const L = TUTORIAL_LAYOUT;
     this.panel = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.hud - 1);
-    this.tick = scene.add
-      .image(0, L.objectiveTop - L.tickRise, ATLAS_KEY, TUTORIAL_SPRITES.tick)
+    this.tick = addVector(scene, 0, L.objectiveTop - L.tickRise, TUTORIAL_SPRITES.tick)
       .setOrigin(1, 0)
       .setScrollFactor(0)
       .setDepth(DEPTHS.hud)
@@ -39,7 +39,7 @@ export class ObjectiveView {
     this.line.set(text);
     const x = VIEW_WIDTH - TUTORIAL_LAYOUT.objectiveRight - this.line.width;
     this.line.moveTo(x, TUTORIAL_LAYOUT.objectiveTop);
-    this.drawPanel(x - TUTORIAL_LAYOUT.tickGap - this.tick.width, text);
+    this.drawPanel(x - TUTORIAL_LAYOUT.tickGap - this.tick.displayWidth, text);
     if (!finished) return;
     // The new goal fades in beside the tick for the one just done.
     this.line.setAlpha(0);
@@ -64,6 +64,6 @@ export class ObjectiveView {
     if (!text) return;
     const w = VIEW_WIDTH - TUTORIAL_LAYOUT.objectiveRight - x;
     this.band = { x: x - P.padX, y: objectiveTop - P.padY, w: w + 2 * P.padX, h: this.line.lineHeight + 2 * P.padY };
-    this.panel.fillStyle(colorOf(P.back), P.alpha).fillRect(x - P.padX, objectiveTop - P.padY, w + 2 * P.padX, this.line.lineHeight + 2 * P.padY);
+    drawTablet(this.panel, x - P.padX, objectiveTop - P.padY, w + 2 * P.padX, this.line.lineHeight + 2 * P.padY, P.alpha);
   }
 }
