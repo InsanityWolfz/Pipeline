@@ -1,5 +1,5 @@
 # 005: Hand crafting
-status: approved
+status: done
 
 ## Goal
 The player harvests wood, stone, fiber and ley crystal from nodes in the ruin hall, opens a crafting menu, and hand-crafts the parts of each beginner ammo chain and then the ammo itself: arrows, bombs and ley bolts. Keys 1–3 choose which ammo the tube's one slot loads and fires. Bombs arc to the cursor and burst into fire; ley bolts fly slower and pierce.
@@ -14,22 +14,22 @@ The player harvests wood, stone, fiber and ley crystal from nodes in the ruin ha
 ## Acceptance criteria
 
 **Items (data)**
-- [ ] New items with icons: `ley-crystal` (raw); parts `shaft`, `arrowhead`, `rope`, `casing`, `fuse`, `ley-shard`; ammo `bomb`, `ley-bolt`. Existing: `arrow`, `wood`, `stone`, `fiber`, `husk-resin`.
-- [ ] Each item has a kind: `raw`, `part` or `ammo`.
+- [x] New items with icons: `ley-crystal` (raw); parts `shaft`, `arrowhead`, `rope`, `casing`, `fuse`, `ley-shard`; ammo `bomb`, `ley-bolt`. Existing: `arrow`, `wood`, `stone`, `fiber`, `husk-resin`.
+- [x] Each item has a kind: `raw`, `part` or `ammo`.
 
 **Gathering nodes (sim)**
-- [ ] Node types are data: `tree` (gives wood), `rubble` (stone), `reeds` (fiber), `ley-vein` (ley crystal). Each has uses 3, harvest time 30 ticks, 1 item per harvest, regrow 1800 ticks (30 s), a feet box and sprites for full and depleted.
-- [ ] Node placements are part of the room data. `ruin-hall` gets 3 trees, 3 rubble, 3 reeds and 2 ley veins, in the spawn half of the room, away from the Husk pack (tiles chosen in /plan). The 001 ley crystal decoration stays as decoration.
-- [ ] Nodes are solid to the player and Husks (feet-box collision, sliding), full or depleted. Projectiles pass over them; only walls and ruin blocks stop projectiles, as before.
-- [ ] **Harvest:** pressing E (an edge, like R) with the player's feet box within 12 px of a non-depleted node's feet box starts a harvest of the nearest such node. Nothing happens if none is in reach.
-- [ ] A harvest completes after the node's harvest time, unless it's cancelled by moving, rolling, firing, loading, switching ammo, opening the menu or taking a hit. A cancelled harvest loses its progress and uses nothing.
-- [ ] Starting a harvest stops loading, as firing does.
-- [ ] On completion the node loses one use and its item drops as a ground item at a seeded scatter spot next to the node (004's drop rules), picked up by walking over it. A pickup event is recorded as in 004.
-- [ ] At 0 uses the node is depleted: it can't be harvested and its regrow timer starts. When the timer ends it's back to full uses. The timer only runs while the sim ticks (play time only).
-- [ ] Husks ignore nodes apart from colliding with them.
+- [x] Node types are data: `tree` (gives wood), `rubble` (stone), `reeds` (fiber), `ley-vein` (ley crystal). Each has uses 3, harvest time 30 ticks, 1 item per harvest, regrow 1800 ticks (30 s), a feet box and sprites for full and depleted.
+- [x] Node placements are part of the room data. `ruin-hall` gets 3 trees, 3 rubble, 3 reeds and 2 ley veins, in the spawn half of the room, away from the Husk pack (tiles chosen in /plan). The 001 ley crystal decoration stays as decoration.
+- [x] Nodes are solid to the player and Husks (feet-box collision, sliding), full or depleted. Projectiles pass over them; only walls and ruin blocks stop projectiles, as before.
+- [x] **Harvest:** pressing E (an edge, like R) with the player's feet box within 12 px of a non-depleted node's feet box starts a harvest of the nearest such node. Nothing happens if none is in reach.
+- [x] A harvest completes after the node's harvest time, unless it's cancelled by moving, rolling, firing, loading, switching ammo, opening the menu or taking a hit. A cancelled harvest loses its progress and uses nothing.
+- [x] Starting a harvest stops loading, as firing does.
+- [x] On completion the node loses one use and its item drops as a ground item at a seeded scatter spot next to the node (004's drop rules), picked up by walking over it. A pickup event is recorded as in 004.
+- [x] At 0 uses the node is depleted: it can't be harvested and its regrow timer starts. When the timer ends it's back to full uses. The timer only runs while the sim ticks (play time only).
+- [x] Husks ignore nodes apart from colliding with them.
 
 **Crafting (sim)**
-- [ ] Recipes are data: id, inputs (item id → count), output item id and count. Every recipe is available from the start. Starting recipes (tuning):
+- [x] Recipes are data: id, inputs (item id → count), output item id and count. Every recipe is available from the start. Starting recipes (tuning):
 
   | Recipe | Inputs | Output |
   | --- | --- | --- |
@@ -43,55 +43,55 @@ The player harvests wood, stone, fiber and ley crystal from nodes in the ruin ha
   | `bomb` | 1 casing, 1 fuse, 1 ley-shard | 2 bomb |
   | `ley-bolt` | 1 ley-shard | 2 ley-bolt |
 
-- [ ] Crafting a recipe takes its inputs from the inventory and adds its output, instantly. If any input is short it does nothing and records a craft-failed event; otherwise a craft event (recipe id) is recorded.
-- [ ] Crafting is a sim action, deterministic and replayable, drivable through `window.__GAME__` (the exact route, a command field or a call, is chosen in /plan).
-- [ ] The sim keeps the set of item ids the player has hand-crafted at least once. Nothing uses it yet (006 unlocks machines from it). It survives the KO reset.
-- [ ] There's no inventory cap.
+- [x] Crafting a recipe takes its inputs from the inventory and adds its output, instantly. If any input is short it does nothing and records a craft-failed event; otherwise a craft event (recipe id) is recorded.
+- [x] Crafting is a sim action, deterministic and replayable, drivable through `window.__GAME__` (the exact route, a command field or a call, is chosen in /plan).
+- [x] The sim keeps the set of item ids the player has hand-crafted at least once. Nothing uses it yet (006 unlocks machines from it). It survives the KO reset.
+- [x] There's no inventory cap.
 
 **Ammo select and loading (sim)**
-- [ ] The one hotbar slot has a selected ammo: `arrow`, `bomb` or `ley-bolt`, set by a select command (keys 1, 2, 3). It starts as `arrow`.
-- [ ] Selecting a different ammo moves the tube's loaded rounds back into the inventory as that ammo's item, stops loading (partial progress lost) and sets the selection. Selecting the current ammo does nothing.
-- [ ] Loading (R), capacity, dry fire and the roll and hit rules from 003 and 004 work the same for every ammo, using the selected ammo's item.
-- [ ] Each ammo has its own fire interval (data): arrow 15 ticks (unchanged), ley bolt 20, bomb 40.
+- [x] The one hotbar slot has a selected ammo: `arrow`, `bomb` or `ley-bolt`, set by a select command (keys 1, 2, 3). It starts as `arrow`.
+- [x] Selecting a different ammo moves the tube's loaded rounds back into the inventory as that ammo's item, stops loading (partial progress lost) and sets the selection. Selecting the current ammo does nothing.
+- [x] Loading (R), capacity, dry fire and the roll and hit rules from 003 and 004 work the same for every ammo, using the selected ammo's item.
+- [x] Each ammo has its own fire interval (data): arrow 15 ticks (unchanged), ley bolt 20, bomb 40.
 
 **Ley bolts (sim)**
-- [ ] A ley bolt flies straight at the cursor at 300 px/s for up to 320 px, physical damage 14, and stops at walls and ruin blocks like an arrow.
-- [ ] It pierces: it hits every Husk whose hurtbox contains its ground point, each Husk at most once per bolt, and keeps flying. Each hit applies the arrow's knockback and hit flash rules (004) and aggros the Husk.
+- [x] A ley bolt flies straight at the cursor at 300 px/s for up to 320 px, physical damage 14, and stops at walls and ruin blocks like an arrow.
+- [x] It pierces: it hits every Husk whose hurtbox contains its ground point, each Husk at most once per bolt, and keeps flying. Each hit applies the arrow's knockback and hit flash rules (004) and aggros the Husk.
 
 **Bombs (sim)**
-- [ ] A bomb is thrown from the muzzle toward the cursor and lands at the cursor point, or at 192 px along the aim if the cursor is farther. It flies at 200 px/s along the ground (flight ticks = distance / speed, at least 1) and ignores walls, ruin blocks, nodes and Husks while in flight. Its height follows an arc for render, peaking at 32 px (reported in `getState()`).
-- [ ] On landing it bursts: every Husk whose feet are within 32 px of the landing point takes 15 fire damage, gets a hit flash (no knockback) and aggros. A burst event (position, radius) is recorded.
-- [ ] Each Husk hit by a burst starts burning: 3 fire damage every 30 ticks, 4 times (the first 30 ticks after the burst). A new burst on a burning Husk restarts the burn; burns never stack. Burns don't spread.
-- [ ] A Husk killed by a burst or a burn dies and drops as in 004.
-- [ ] Bombs and their bursts never hurt the player.
+- [x] A bomb is thrown from the muzzle toward the cursor and lands at the cursor point, or at 192 px along the aim if the cursor is farther. It flies at 200 px/s along the ground (flight ticks = distance / speed, at least 1) and ignores walls, ruin blocks, nodes and Husks while in flight. Its height follows an arc for render, peaking at 32 px (reported in `getState()`).
+- [x] On landing it bursts: every Husk whose feet are within 32 px of the landing point takes 15 fire damage, gets a hit flash (no knockback) and aggros. A burst event (position, radius) is recorded.
+- [x] Each Husk hit by a burst starts burning: 3 fire damage every 30 ticks, 4 times (the first 30 ticks after the burst). A new burst on a burning Husk restarts the burn; burns never stack. Burns don't spread.
+- [x] A Husk killed by a burst or a burn dies and drops as in 004.
+- [x] Bombs and their bursts never hurt the player.
 
 **KO reset and determinism**
-- [ ] The KO reset also puts every node back to full uses with no regrow timer, clears bombs, bolts and burns, and sets the selected ammo back to `arrow`. The crafted-items set is kept.
-- [ ] The same seed and command sequence (including crafts and ammo selects) give the same harvests, crafts, shots, bursts, burns and drops, tick for tick.
-- [ ] `getState()` adds: the nodes (id, type, position, uses left, regrow ticks left); the current harvest (node id, progress) or none; the selected ammo; bombs in flight (id, position, target, height); ley bolts in flight (id, position, Husks already hit); each Husk's burn (ticks left); the crafted-items set; and this tick's harvest, craft, craft-failed, burst and select events.
+- [x] The KO reset also puts every node back to full uses with no regrow timer, clears bombs, bolts and burns, and sets the selected ammo back to `arrow`. The crafted-items set is kept.
+- [x] The same seed and command sequence (including crafts and ammo selects) give the same harvests, crafts, shots, bursts, burns and drops, tick for tick.
+- [x] `getState()` adds: the nodes (id, type, position, uses left, regrow ticks left); the current harvest (node id, progress) or none; the selected ammo; bombs in flight (id, position, target, height); ley bolts in flight (id, position, Husks already hit); each Husk's burn (ticks left); the crafted-items set; and this tick's harvest, craft, craft-failed, burst and select events.
 
 **Crafting menu (render)**
-- [ ] C toggles the crafting menu; Esc also closes it. While it's open the sim runs no ticks, so the world is paused, and game input (move, fire, load, roll, harvest, 1–3) is ignored.
-- [ ] The menu lists every recipe grouped by ammo (arrows, bombs, ley bolts), each row showing its inputs with the owned and needed counts and its output with the owned count. Rows the player can't afford are greyed out.
-- [ ] Clicking an affordable row crafts it once, and the counts update straight away. Clicking a greyed row does nothing.
-- [ ] The menu is drawn from palette colours and sprites, fixed on screen above the HUD, and fits the theme rule (rune-carved stone, ley cyan accents).
+- [x] C toggles the crafting menu; Esc also closes it. While it's open the sim runs no ticks, so the world is paused, and game input (move, fire, load, roll, harvest, 1–3) is ignored.
+- [x] The menu lists every recipe grouped by ammo (arrows, bombs, ley bolts), each row showing its inputs with the owned and needed counts and its output with the owned count. Rows the player can't afford are greyed out.
+- [x] Clicking an affordable row crafts it once, and the counts update straight away. Clicking a greyed row does nothing.
+- [x] The menu is drawn from palette colours and sprites, fixed on screen above the HUD, and fits the theme rule (rune-carved stone, ley cyan accents).
 
 **World and HUD (render)**
-- [ ] Nodes are drawn with full and depleted sprites, depth-sorted by their feet. While harvesting, a small progress bar shows over the node. When a node regrows it switches back to its full sprite.
-- [ ] The player shows the idle pose while harvesting (no new player animation).
-- [ ] Ley bolts are drawn as their projectile over a ground shadow, like arrows.
-- [ ] Bombs are drawn at their arc height over a ground shadow that stays on the ground path.
-- [ ] A burst plays a fire burst effect at its real radius. A burning Husk shows a small flame effect while it burns.
-- [ ] The hotbar slot shows the selected ammo's icon, loaded and carried counts. Beside it, a small strip shows the three ammo with their key number and carried count, the selected one highlighted.
-- [ ] The HUD material column lists raw materials and parts the player holds (count above 0), not ammo.
+- [x] Nodes are drawn with full and depleted sprites, depth-sorted by their feet. While harvesting, a small progress bar shows over the node. When a node regrows it switches back to its full sprite.
+- [x] The player shows the idle pose while harvesting (no new player animation).
+- [x] Ley bolts are drawn as their projectile over a ground shadow, like arrows.
+- [x] Bombs are drawn at their arc height over a ground shadow that stays on the ground path.
+- [x] A burst plays a fire burst effect at its real radius. A burning Husk shows a small flame effect while it burns.
+- [x] The hotbar slot shows the selected ammo's icon, loaded and carried counts. Beside it, a small strip shows the three ammo with their key number and carried count, the selected one highlighted.
+- [x] The HUD material column lists raw materials and parts the player holds (count above 0), not ammo.
 
 **Art**
-- [ ] New sprites following docs/art.md: icons for ley crystal and the six parts; bomb and ley bolt icons; tree, rubble, reeds and ley vein nodes, each full and depleted; bomb and ley bolt projectiles with shadows; the fire burst and burn flame effects; the crafting menu panel and row frames; the ammo strip. All fit the theme rule.
-- [ ] All asset keys are registered in `src/data/assets.ts`.
-- [ ] Shaun approves every new sprite by eye at 4×.
+- [x] New sprites following docs/art.md: icons for ley crystal and the six parts; bomb and ley bolt icons; tree, rubble, reeds and ley vein nodes, each full and depleted; bomb and ley bolt projectiles with shadows; the fire burst and burn flame effects; the crafting menu panel and row frames; the ammo strip. All fit the theme rule.
+- [x] All asset keys are registered in `src/data/assets.ts`.
+- [x] Shaun approves every new sprite by eye at 4×.
 
 **Checks**
-- [ ] `npm run check` and `npm run test:e2e` pass.
+- [x] `npm run check` and `npm run test:e2e` pass.
 
 ## Data changes
 - Items (`src/data/items.ts`): a `kind` on every item (`raw`, `part`, `ammo`); new `ley-crystal`, `shaft`, `arrowhead`, `rope`, `casing`, `fuse`, `ley-shard`, `bomb`, `ley-bolt`.
@@ -130,3 +130,12 @@ The player harvests wood, stone, fiber and ley crystal from nodes in the ruin ha
 
 ## Open questions
 None. Every number above is a starting value for Shaun to adjust when approving.
+
+## Build notes
+Choices made in the build, not by the spec, and accepted with Shaun's playtest:
+- Burn ticks deal damage without a hit flash; only the burst flashes.
+- Key presses latch from each key's down event instead of `JustDown`, so a tap shorter than a frame registers. This also applies to Space and R.
+- The crafting menu works under the test hook's clock, and the crosshair draws above the menu as its pointer.
+- Harvest drops land on the side of the node facing the player, never inside a node.
+- Switching ammo with nothing loaded leaves the inventory untouched.
+- Fuse, ley shard, ley bolt, casing and bomb were redrawn after review so the look-alike pairs differ in shape.

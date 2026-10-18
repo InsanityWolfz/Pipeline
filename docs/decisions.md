@@ -80,3 +80,6 @@ Technical choices and why. Newest last.
 - **Controls:** presses are latched from each key's `down` event instead of `JustDown`. Phaser's `Key.onUp` clears `_justDown`, so a tap that went down and up between two frames was lost. That also fixes the same loss for Space and R.
 - **Menu:** `GameScene` handles C, Esc and menu clicks even under the test hook's manual clock, so e2e tests can gather with `step()` and then craft by clicking. While the menu is open the real-time loop skips the clock entirely, so no time is banked and the game doesn't catch up on close.
 - **Render:** `GlyphLine` moved to `src/render/glyphLine.ts` for the HUD, the ammo strip and the menu. The menu's row positions come from `src/render/craftMenuLayout.ts`, which has no Phaser import, so e2e tests can click rows.
+- **Modules added in review:** `src/sim/tiles.ts` holds `tileCentre`, so `nodes.ts` and `state.ts` don't import each other. `src/data/hudLayout.ts` holds the harvest bar, ammo strip and menu layouts, so `assets.ts` stays under 300 lines and import-free.
+- **Ammo keys** follow `SLOT_AMMOS`, up to 4 number keys; more slot ammo than keys throws at load.
+

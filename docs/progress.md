@@ -2,7 +2,7 @@
 
 Newest entry first.
 
-## 2026-10-18: 005 Hand crafting build
+## 2026-10-18: 005 Hand crafting
 **Changed:** built 005 on `claude/005-hand-crafting`, following `docs/plans/005-hand-crafting.md`.
 - **Sim:** solid nodes with regrow (`nodes.ts`, obstacle rects in `collision.ts`); E harvesting (`harvest.ts`); crafting between ticks and the crafted set (`crafting.ts`); ammo select on 1–3 (`tube.ts`); piercing ley bolts (`combat.ts`); bombs, bursts and burns (`bombs.ts`, `burn.ts`); KO resets nodes, bombs, the harvest and the selection, and keeps the crafted set.
 - **Data:** item kinds and 9 new items, the 9 recipes and menu groups, the 4 nodes and 11 placements in `ruin-hall`, the ammo union with ley bolt and bomb, `SLOT_AMMOS`.
@@ -29,7 +29,16 @@ Also fixed, from its suggestions:
 
 Re-verify: 223 unit and 18 e2e tests pass; qa re-checked real 1–3, C/Esc, E and the harvest bar with no regressions.
 
-**Next:** Shaun approves the sprites and confirms two build choices (burn ticks don't flash; key presses latch from down events, which also changes Space and R), then playtests the preview and runs `/wrapup`.
+**Art revision:** at Shaun's request, fuse (a wound cord bundle), ley shard (crystal chunks), ley bolt (a head on a glow trail), casing (an open shell) and bomb (a dark ball with an ember band) were redrawn so the look-alike pairs differ in shape.
+
+**Wrapup:** Shaun ran `/wrapup`, confirming the playtest. That accepts the sprites and the build choices listed in the spec's build notes. 005 is done; the PR into main is open, waiting for Shaun to say merge.
+
+**Next:** Shaun merges the 005 PR when ready, then `/spec 006` (foundry building: grid placement of machines with facing, items moving between them, one working ammo line). The crafted set in `SimState.crafted` is ready for 006's machine unlocks.
+
+**Notes:**
+- No mistake happened twice this slice, so no new rule.
+- Left from review: the real E and 1–3 keys are covered by a qa check, not an e2e test, since `step()` takes the clock from real-time input.
+- The qa notes still open: the menu panel reads as plain rather than rune-carved, the material column has no backing panel, and the harvest bar draws over the player when they stand above the node.
 
 **Notes:**
 - Build choices beyond the plan:
