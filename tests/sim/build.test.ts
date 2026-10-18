@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { LOAD_TICKS } from '../../src/data/tube';
 import { arrivalTile } from '../../src/sim/doorways';
 import { tileCentre } from '../../src/sim/tiles';
 import { HALL, movePlayer, placeNode, run, runUntil } from './fight';
@@ -26,17 +25,15 @@ describe('build mode', () => {
     expect(s.building).toBe(false);
   });
 
-  it('ignores fire, load, ammo select and harvest, but not moving, rolling or building', () => {
+  it('ignores fire, ammo select and harvest, but not moving, rolling or building', () => {
     const s = foundry();
     run(s, 1, { toggleBuild: true });
-    s.tube.loaded = 1;
     s.inventory.bomb = 2;
     placeNode(s, 'tree', s.player.x + 20, s.player.y, 'foundry');
     run(s, 1, { fire: true, aimX: s.player.x + 100, aimY: s.player.y, interact: true, selectAmmo: 'bomb' });
-    run(s, 1, { load: true });
-    run(s, LOAD_TICKS);
     expect(s.arrows).toEqual([]);
-    expect(s.tube).toMatchObject({ loaded: 1, ammoId: 'arrow', loading: false });
+    expect(s.tube.ammoId).toBe('arrow');
+    expect(s.inventory.arrow).toBe(30);
     expect(s.harvest).toBeNull();
     const x = s.player.x;
     run(s, 1, { moveX: -1, dodge: true });

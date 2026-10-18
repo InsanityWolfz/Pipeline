@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TICK_RATE, VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { damageEnemy } from '../../src/sim/enemies';
-import { arena, fireAt, HUSK, loadFull, movePlayer, placeHusk, PLAYER_AT, run, runUntil, SWIPE_LANDS } from './fight';
+import { arena, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, SWIPE_LANDS } from './fight';
 
 const HALF_W = VIEW_WIDTH / 2;
 const HALF_H = VIEW_HEIGHT / 2;
@@ -53,7 +53,6 @@ describe('Husk aggro box', () => {
   it('aggros when an arrow hits it from off screen', () => {
     const s = arena();
     const e = placeHusk(s, PLAYER_AT.x, PLAYER_AT.y - HALF_H - 20);
-    loadFull(s);
     expect(e.mode).toBe('idle');
     runUntil(s, () => e.health < HUSK.maxHealth, 60, fireAt(PLAYER_AT.x, 0));
     expect(e.mode).toBe('chase');

@@ -1,0 +1,18 @@
+# Tube attuning, side: a ley pulse runs along the barrel, drawn over the tube. 20x8, 2 frames.
+...c..c..c..c.......
+cwCCwwCCwwCCww.c..c.
+cwCCwwCCwwCCww.CwwC.
+cwCCwwCCwwCCww.CwwC.
+cwCCwwCCwwCCww.CwwC.
+cwCCwwCCwwCCww.CwwC.
+...c..c..c..c..c..c.
+....................
+---
+..c..c..c..c........
+.CwwCCwwCCwwCCc..c..
+.CwwCCwwCCwwCCcwCCw.
+.CwwCCwwCCwwCCcwCCw.
+.CwwCCwwCCwwCCcwCCw.
+.CwwCCwwCCwwCCcwCCw.
+..c..c..c..c..c..c..
+....................

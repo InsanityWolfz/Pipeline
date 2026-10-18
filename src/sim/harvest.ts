@@ -5,7 +5,6 @@ import type { Command } from './input';
 import { isRolling } from './movement';
 import { nodeRects, useNode, type NodeState } from './nodes';
 import { roomById, type SimState } from './state';
-import { stopLoading } from './tube';
 
 // Harvesting a gathering node with E: stand in reach and keep still until it's done.
 
@@ -49,7 +48,7 @@ export function cancelHarvest(state: SimState): void {
 /** Anything the player does this tick other than standing still ends a harvest. */
 function interrupted(state: SimState, cmd: Command): boolean {
   const switching = cmd.selectAmmo !== null && cmd.selectAmmo !== state.tube.ammoId;
-  return cmd.moveX !== 0 || cmd.moveY !== 0 || isRolling(state.player) || cmd.fire || cmd.load || switching;
+  return cmd.moveX !== 0 || cmd.moveY !== 0 || isRolling(state.player) || cmd.fire || switching;
 }
 
 /** Runs after the player and enemies act, before the tube. */
@@ -69,7 +68,6 @@ export function stepHarvest(state: SimState, cmd: Command): void {
   const n = nodeInReach(state);
   if (!n) return;
   state.harvest = { nodeId: n.id, progress: 1 };
-  stopLoading(state);
 }
 
 function complete(state: SimState, n: NodeState): void {

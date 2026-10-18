@@ -13,7 +13,7 @@ function stepped(seed: number, ticks: number) {
   return sim;
 }
 
-/** A scripted mix of walking, loading, rolling and firing at a sweeping aim. */
+/** A scripted mix of walking, rolling and firing at a sweeping aim. */
 function scripted(seed: number, ticks: number) {
   const sim = createSim(seed);
   for (let t = 0; t < ticks; t++) {
@@ -21,7 +21,6 @@ function scripted(seed: number, ticks: number) {
       ...NO_COMMAND,
       moveX: t % 90 < 45 ? 1 : -1,
       moveY: t % 70 < 20 ? 1 : 0,
-      load: t % 120 === 0,
       dodge: t % 150 === 75,
       fire: t % 120 > 100,
       aimX: sim.player.x + Math.cos(t / 10) * 100,
@@ -37,7 +36,7 @@ const toward = (from: number, to: number): -1 | 0 | 1 => (Math.abs(to - from) < 
 
 /**
  * Walks into the Husk pack and stands there until KO'd, then fights the reset
- * pack from range, reloading when empty, and collects the drops.
+ * pack from range while it has arrows, and collects the drops.
  */
 function scriptedFight(seed: number, ticks: number) {
   const sim = createSim(seed);
@@ -46,13 +45,12 @@ function scriptedFight(seed: number, ticks: number) {
     const target = sim.enemies[0];
     const loot = sim.groundItems[0];
     const fighting = sim.nextEnemyId > 3;
-    const empty = sim.tube.loaded === 0;
+    const empty = (sim.inventory.arrow ?? 0) === 0;
     const goal = !fighting ? target : target ? { x: 900, y: 300 } : loot;
     const command: Command = {
       ...NO_COMMAND,
       moveX: goal ? toward(p.x, goal.x) : 0,
       moveY: goal ? toward(p.y, goal.y) : 0,
-      load: fighting && empty && !sim.tube.loading,
       fire: fighting && !empty && target !== undefined,
       aimX: target?.x ?? p.x,
       aimY: target?.y ?? p.y,
@@ -64,7 +62,7 @@ function scriptedFight(seed: number, ticks: number) {
 
 /**
  * Harvests the nearest node until it runs dry, crafts between ticks, then
- * switches through every ammo, loading and firing each at the Husk pack.
+ * switches through every ammo, firing each at the Husk pack.
  */
 function scriptedSession(seed: number, ticks: number) {
   const sim = createSim(seed);
@@ -83,7 +81,6 @@ function scriptedSession(seed: number, ticks: number) {
       moveY: goal && !sim.harvest ? toward(p.y, goal.y + 20) : 0,
       interact: gathering && t % 40 === 0,
       selectAmmo: !gathering && t % 300 === 0 ? (ammo[(t / 300) % 3] ?? null) : null,
-      load: !gathering && sim.tube.loaded === 0 && !sim.tube.loading,
       fire: !gathering && t % 50 > 30,
       aimX: pack?.x ?? p.x,
       aimY: pack?.y ?? p.y,
@@ -221,6 +218,8 @@ describe('sim state', () => {
       deposits: [],
       crateTakes: [],
       withdraws: [],
+      attunes: [],
+      refills: [],
       ko: false,
     });
   });

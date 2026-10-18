@@ -24,6 +24,14 @@ export const FEET_BOX = { w: 16, h: 8 } as const;
 /** What the player carries at the start, item id to count. */
 export const STARTING_INVENTORY: Readonly<Record<string, number>> = { arrow: 30 };
 
+/** How a run starts: what the player carries (and gets back on a KO), and what counts as already hand-crafted. */
+export interface StartDef {
+  inventory: Readonly<Record<string, number>>;
+  crafted: readonly string[];
+}
+
+export const DEFAULT_START: StartDef = { inventory: STARTING_INVENTORY, crafted: [] };
+
 /** Health at the start and after a KO. Spec 004; no regen yet. */
 export const MAX_HEALTH = 100;
 

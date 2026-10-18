@@ -15,8 +15,6 @@ export interface Command {
   aimY: number;
   /** Fire is held. */
   fire: boolean;
-  /** Load was pressed this tick (an edge, not held). */
-  load: boolean;
   /** Interact (harvest) was pressed this tick (an edge, not held). */
   interact: boolean;
   /** An ammo picked for the slot this tick (an edge), or null. */
@@ -41,7 +39,6 @@ export const NO_COMMAND: Readonly<Command> = {
   aimX: 0,
   aimY: 0,
   fire: false,
-  load: false,
   interact: false,
   selectAmmo: null,
   toggleBuild: false,

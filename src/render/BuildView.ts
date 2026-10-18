@@ -4,6 +4,7 @@ import { TILE_SIZE } from '../data/config';
 import {
   CONDUIT_ANIMS,
   CRATE_SPRITE,
+  SOCKET_SPRITES,
   FACING_ARROWS,
   ICON_RISE,
   HOPPER_SPRITES,
@@ -25,6 +26,7 @@ function bodyFrame(pieceId: string, facing: Facing): string {
   const view = viewOf(facing);
   if (def.kind === 'machine') return MACHINE_HOUSINGS[def.footprint][view].idle;
   if (def.kind === 'conduit') return animFrames(CONDUIT_ANIMS[view])[0] ?? '';
+  if (def.kind === 'socket') return SOCKET_SPRITES.idle;
   return def.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE;
 }
 

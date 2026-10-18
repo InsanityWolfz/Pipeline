@@ -19,6 +19,7 @@ import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import {
   CONDUIT_ANIMS,
   CRATE_SPRITE,
+  SOCKET_SPRITES,
   DOORWAY_SPRITE,
   FACING_ARROWS,
   HOPPER_SPRITES,
@@ -127,6 +128,8 @@ describe('assets', () => {
       ...Object.values(HOPPER_SPRITES),
       ...Object.values(LOGISTICS_ICONS),
       CRATE_SPRITE,
+      SOCKET_SPRITES.idle,
+      SOCKET_SPRITES.refill,
       DOORWAY_SPRITE,
       ...Object.values(FACING_ARROWS.in),
       ...Object.values(FACING_ARROWS.out),

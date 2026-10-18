@@ -169,7 +169,6 @@ describe('piece bodies', () => {
     const s = foundry();
     const { x, y } = tileCentre(STAND);
     put(s, 'hopper', STAND.tx - 3, STAND.ty);
-    s.tube.loaded = 1;
     run(s, 1, fireAt(x - 200, y));
     run(s, 20);
     expect(s.arrows).toHaveLength(1);

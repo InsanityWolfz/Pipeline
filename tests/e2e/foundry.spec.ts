@@ -1,7 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { FEET_BOX } from '../../src/data/player';
-import { LOAD_TICKS } from '../../src/data/tube';
 import { buildBarCells, pickerEntries, pickerRows } from '../../src/render/foundryLayout';
 import type { SimSummary } from '../../src/sim/summary';
 import { boot, watchErrors } from './helpers';
@@ -139,11 +138,9 @@ test('build mode places, turns, picks up and drags pieces with the mouse', async
     'conduit',
   ]);
 
-  // Fire and R don't shoot or load while building.
-  await page.keyboard.press('r');
+  // Fire doesn't shoot while building.
   const s = await step(page, 2, { fire: true, aimX: 0, aimY: 0 });
   expect(s.arrows).toEqual([]);
-  expect(s.tube.loading).toBe(false);
 
   // Esc leaves build mode.
   await page.keyboard.press('Escape');
@@ -232,8 +229,6 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
   expect(taken.inventory['ley-bolt']).toBeGreaterThanOrEqual(5);
 
   await step(page, 1, { selectAmmo: 'ley-bolt' });
-  await step(page, 1, { load: true });
-  await step(page, LOAD_TICKS);
   const shot = await step(page, 1, { fire: true, aimX: beside.x, aimY: beside.y + 200 });
   expect(shot.arrows.map((a) => a.ammoId)).toEqual(['ley-bolt']);
   expect(errors).toEqual([]);

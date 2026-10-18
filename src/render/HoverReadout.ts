@@ -1,10 +1,13 @@
 import type { GameObjects, Scene } from 'phaser';
 import { ATLAS_KEY, DEPTHS } from '../data/assets';
 import { READOUT_LAYOUT } from '../data/hudLayout';
+import { LOGISTICS_ICONS } from '../data/foundryAssets';
 import { itemDef } from '../data/items';
 import { machineDef } from '../data/pieces';
 import { recipeDef, RECIPES } from '../data/recipes';
+import { RESERVOIR_CAP } from '../data/tube';
 import { count } from '../sim/inventory';
+import type { ReservoirState } from '../sim/link';
 import type { MachineState } from '../sim/pieces';
 import { colorOf } from './color';
 import { GlyphLine } from './glyphLine';
@@ -12,8 +15,25 @@ import { GlyphLine } from './glyphLine';
 /** The most lines a readout needs: the largest recipe's inputs, plus the output. */
 const MAX_LINES = Math.max(...Object.values(RECIPES).map((r) => Object.keys(r.inputs).length)) + 1;
 
-// Over the machine under the cursor: one line per input with how many are
-// buffered, then the output with how many are waiting to go out.
+/** One readout line: an atlas frame for its icon, and the text beside it. */
+type Line = [frame: string, text: string];
+
+/** A machine's lines: each input with how many are buffered, then the output waiting to go out. */
+export function machineLines(m: MachineState): Line[] {
+  const recipe = recipeDef(machineDef(m.pieceId).recipeId);
+  return [
+    ...Object.keys(recipe.inputs).map((id): Line => [itemDef(id).icon, String(count(m.buffer, id))]),
+    [itemDef(recipe.output.itemId).icon, String(m.output)],
+  ];
+}
+
+/** A tube socket's line: the reservoir's ammo (or the socket's icon when empty) and count out of the cap. */
+export function socketLines(r: ReservoirState): Line[] {
+  const icon = r.ammoId ? itemDef(r.ammoId).icon : (LOGISTICS_ICONS['tube-socket'] ?? '');
+  return [[icon, `${r.count}/${RESERVOIR_CAP}`]];
+}
+
+// Over the machine or tube socket under the cursor, a small panel of icon and count lines.
 export class HoverReadout {
   private readonly back: GameObjects.Graphics;
   private readonly icons: GameObjects.Image[] = [];
@@ -26,20 +46,16 @@ export class HoverReadout {
       this.icons.push(scene.add.image(0, 0, ATLAS_KEY).setOrigin(0).setDepth(depth + 1));
       this.counts.push(new GlyphLine(scene, 0, 0, depth + 1, true));
     }
-    this.show(null, 0, 0);
+    this.show([], 0, 0);
   }
 
   /**
-   * Shows the readout for `m` with its bottom-centre at (x, bottom), or hides it.
+   * Shows `lines` with the panel's bottom-centre at (x, bottom); no lines hides it.
    * It never rises above `minTop` (the top of the camera's view), so it stays on screen.
    */
-  show(m: MachineState | null, x: number, bottom: number, minTop = -Infinity): void {
+  show(lines: readonly Line[], x: number, bottom: number, minTop = -Infinity): void {
     const L = READOUT_LAYOUT;
     this.back.clear();
-    const recipe = m ? recipeDef(machineDef(m.pieceId).recipeId) : null;
-    const lines: [string, number][] = m && recipe
-      ? [...Object.keys(recipe.inputs).map((id): [string, number] => [id, count(m.buffer, id)]), [recipe.output.itemId, m.output]]
-      : [];
     const h = lines.length * L.lineHeight + 2 * L.pad;
     const left = Math.round(x - L.width / 2);
     const top = Math.round(Math.max(bottom - L.gap - h, minTop + L.pad));
@@ -56,9 +72,9 @@ export class HoverReadout {
       text.setVisible(line !== undefined);
       if (!line) continue;
       const y = top + L.pad + i * L.lineHeight;
-      icon.setFrame(itemDef(line[0]).icon).setPosition(left + L.pad, y);
+      icon.setFrame(line[0]).setPosition(left + L.pad, y);
       text.moveTo(left + L.pad + L.count.x, y + L.count.y);
-      text.set(String(line[1]));
+      text.set(line[1]);
     }
   }
 }

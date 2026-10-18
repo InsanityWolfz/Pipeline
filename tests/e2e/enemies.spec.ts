@@ -87,14 +87,12 @@ test('shooting a Husk dead drops items the player can pick up', async ({ page })
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
     let s = g.getState();
-    // Shoot the nearest Husk, reloading when empty, until one dies.
+    // Shoot the nearest Husk until one dies.
     for (let t = 0; t < 1200 && s.groundItems.length === 0; t++) {
       const p = s.player;
       const target = [...s.enemies].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
-      const empty = s.tube.loaded === 0;
       s = g.step(1, {
-        load: empty && !s.tube.loading,
-        fire: !empty && target !== undefined,
+        fire: target !== undefined,
         aimX: target?.x ?? p.x,
         aimY: target?.y ?? p.y,
       });
@@ -124,7 +122,6 @@ test('Husks walk home and heal once the player runs away', async ({ page }) => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
     // Wing one Husk so there is something to heal, then run back past the spawn.
-    g.step(1, { load: true });
     let s = g.step(30);
     const target = s.enemies[0];
     if (!target) throw new Error('no Husk');

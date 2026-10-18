@@ -3,11 +3,12 @@ import { ATLAS_KEY, DEPTHS, HUD_HEALTH_LAYOUT, HUD_MATERIALS_LAYOUT, HUD_SLOT_LA
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { itemDef, ITEMS } from '../data/items';
 import { MAX_HEALTH } from '../data/player';
-import { LOAD_TICKS, STARTING_AMMO, TUBE_CAPACITY } from '../data/tube';
+import { STARTING_AMMO } from '../data/tube';
 import type { Inventory } from '../sim/inventory';
 import { count } from '../sim/inventory';
+import type { LinkState } from '../sim/link';
 import type { PlayerState } from '../sim/player';
-import { slotItem, type TubeState } from '../sim/tube';
+import { slotCount, slotItem, type TubeState } from '../sim/tube';
 import { AmmoStripView } from './AmmoStripView';
 import { colorOf } from './color';
 import { GlyphLine } from './glyphLine';
@@ -19,15 +20,15 @@ interface MaterialRow {
   count: GlyphLine;
 }
 
-// The hotbar: slot 1 with its selected ammo's icon, loaded/capacity, the carried
-// count and a load bar, and the ammo strip beside it; the health bar and the
-// raw materials and parts held, top-left. Fixed to the screen; reads sim state only.
+// The hotbar: slot 1 with its selected ammo's icon and count (carried rounds,
+// else the reservoir's, with a ley glow while it fires from the foundry), and the
+// ammo strip beside it; the health bar and the raw materials and parts held,
+// top-left. Fixed to the screen; reads sim state only.
 export class HudView {
   private readonly slot: GameObjects.Image;
   private readonly icon: GameObjects.Image;
-  private readonly loaded: GlyphLine;
-  private readonly carried: GlyphLine;
-  private readonly loadBar: GameObjects.Graphics;
+  private readonly glow: GameObjects.Image;
+  private readonly count: GlyphLine;
   private readonly crosshair: GameObjects.Image;
   private readonly scene: Scene;
   private readonly healthFill: GameObjects.Graphics;
@@ -44,12 +45,11 @@ export class HudView {
     const left = Math.round((VIEW_WIDTH - this.slot.width) / 2);
     const top = VIEW_HEIGHT - this.slot.height - HUD_SLOT_LAYOUT.margin;
     this.slot.setPosition(left, top);
-    const { icon, loaded, carried } = HUD_SLOT_LAYOUT;
+    const { icon, count: at } = HUD_SLOT_LAYOUT;
     const startIcon = itemDef(slotItem({ ammoId: STARTING_AMMO })).icon;
     this.icon = fixed(scene.add.image(left + icon.x, top + icon.y, ATLAS_KEY, startIcon).setOrigin(0));
-    this.loaded = new GlyphLine(scene, left + loaded.x, top + loaded.y);
-    this.carried = new GlyphLine(scene, left + carried.x, top + carried.y);
-    this.loadBar = fixed(scene.add.graphics({ x: left, y: top }));
+    this.glow = fixed(scene.add.image(left, top, ATLAS_KEY, SPRITES.hudSlotGlow).setOrigin(0)).setVisible(false);
+    this.count = new GlyphLine(scene, left + at.x, top + at.y);
     this.strip = new AmmoStripView(scene, left + this.slot.width, top + this.slot.height);
 
     const hp = HUD_HEALTH_LAYOUT;
@@ -70,7 +70,7 @@ export class HudView {
     this.crosshair = fixed(scene.add.image(0, 0, ATLAS_KEY, SPRITES.crosshair)).setDepth(DEPTHS.menu + 1);
   }
 
-  update(tube: TubeState, inventory: Inventory, player: PlayerState): void {
+  update(tube: TubeState, inventory: Inventory, player: PlayerState, link: LinkState): void {
     const fill = HUD_HEALTH_LAYOUT.fill;
     this.healthFill.clear();
     this.healthFill.fillStyle(colorOf(HUD_HEALTH_LAYOUT.fillColor));
@@ -93,16 +93,10 @@ export class HudView {
 
     const item = slotItem(tube);
     this.icon.setFrame(itemDef(item).icon);
-    this.loaded.set(`${tube.loaded}/${TUBE_CAPACITY}`);
-    this.carried.set(String(count(inventory, item)));
+    const shown = slotCount({ tube, inventory, link });
+    this.count.set(String(shown.count));
+    this.glow.setVisible(shown.fromReservoir);
     this.strip.update(tube, inventory);
-
-    const bar = HUD_SLOT_LAYOUT.loadBar;
-    this.loadBar.clear();
-    if (tube.loading) {
-      this.loadBar.fillStyle(colorOf(HUD_SLOT_LAYOUT.loadBarColor));
-      this.loadBar.fillRect(bar.x, bar.y, Math.round((bar.w * tube.loadProgress) / LOAD_TICKS), bar.h);
-    }
 
     if (tube.dryFire > 0) this.slot.setTint(colorOf(HUD_SLOT_LAYOUT.dryFireTint));
     else this.slot.clearTint();

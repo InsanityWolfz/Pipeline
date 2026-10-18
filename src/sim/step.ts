@@ -11,6 +11,7 @@ import { clearEvents } from './events';
 import { stepFoundry } from './flow';
 import { stepFoundryUse } from './foundryUse';
 import { stepHarvest } from './harvest';
+import { stepLink } from './link';
 import { checkKo } from './health';
 import { stepEnemies } from './huskAi';
 import { NO_COMMAND, type Command } from './input';
@@ -43,10 +44,11 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   const here = bodies(state.roomId);
   stepPlayer(state.player, here.room, cmd, here.obstacles);
   stepDoorways(state);
+  stepLink(state);
   // Enemies act after the player moves, so a swipe lands on where the player stands now.
   stepEnemies(state, bodies);
   stepNodes(state.nodes);
-  // Before the tube, so a harvest started this tick stops loading and fire or load cancels it.
+  // Before the tube, so fire this tick cancels a harvest in progress.
   // Build mode keeps E for hoppers and crates, not harvesting.
   stepHarvest(state, state.building ? { ...cmd, interact: false } : cmd);
   // Shots fired this tick stay at the muzzle until next tick's step.
@@ -57,7 +59,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepTube(state, cmd);
   stepBuild(state, cmd);
   stepFoundryUse(state, cmd);
-  stepFoundry(state.foundry);
+  stepFoundry(state.foundry, state.link.reservoir, state.events.refills);
   stepPickups(state);
   checkKo(state);
 }

@@ -10,11 +10,16 @@ import { roomById, type SimState } from './state';
 
 // Placing pieces on the foundry grid and picking them back up. Both are free.
 
-/** Pieces the player can place, in build bar order: logistics always, machines once their output is hand-crafted. */
-export function unlockedPieces(state: Pick<SimState, 'crafted'>): string[] {
+/**
+ * Pieces the player can place, in build bar order: logistics always, machines
+ * once their output is hand-crafted, and the tube socket once the tube is attuned.
+ */
+export function unlockedPieces(state: Pick<SimState, 'crafted' | 'link'>): string[] {
   return BUILD_BAR.filter((id) => {
     const def = pieceDef(id);
-    return def.kind !== 'machine' || state.crafted.includes(recipeDef(def.recipeId).output.itemId);
+    if (def.kind === 'machine') return state.crafted.includes(recipeDef(def.recipeId).output.itemId);
+    if (def.kind === 'socket') return state.link.attuned;
+    return true;
   });
 }
 
@@ -26,6 +31,8 @@ export function canPlace(state: SimState, pieceId: string, tx: number, ty: numbe
   const tiles = footprint(pieceId, tx, ty, facing);
   if (tiles.some((t) => room.rows[t.ty]?.[t.tx] !== TILE.floor)) return 'blocked';
   if (tiles.some((t) => pieceAt(state.foundry, t.tx, t.ty))) return 'occupied';
+  const { limit } = pieceDef(pieceId);
+  if (limit !== undefined && state.foundry.pieces.filter((p) => p.pieceId === pieceId).length >= limit) return 'limit';
   const p = state.player;
   if (isSolidPiece(pieceId) && overlapsRect(p.x, p.y, FEET_BOX, pieceRect({ pieceId, tx, ty, facing }))) {
     return 'player';

@@ -1,5 +1,4 @@
 import { enemyDef } from '../../src/data/enemies';
-import { LOAD_TICKS, TUBE_CAPACITY } from '../../src/data/tube';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import { NO_COMMAND, type Command } from '../../src/sim/input';
 import { createNode, type NodeState } from '../../src/sim/nodes';
@@ -53,12 +52,6 @@ export function run(s: SimState, ticks: number, c: Partial<Command> | ((s: SimSt
 
 /** Fire held at a world point. */
 export const fireAt = (x: number, y: number): Partial<Command> => ({ fire: true, aimX: x, aimY: y });
-
-/** Taps load and waits until the tube is full. */
-export function loadFull(s: SimState): void {
-  run(s, 1, { load: true });
-  run(s, LOAD_TICKS * TUBE_CAPACITY);
-}
 
 /** Runs until `done` holds, failing after `limit` ticks. Returns the ticks taken. */
 export function runUntil(s: SimState, done: (s: SimState) => boolean, limit: number, c: Partial<Command> = {}): number {

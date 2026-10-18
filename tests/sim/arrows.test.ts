@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { straightAmmo } from '../../src/data/ammo';
 import { TILE_SIZE, TICK_RATE } from '../../src/data/config';
-import { LOAD_TICKS, MUZZLE_OFFSET, TUBE_CAPACITY } from '../../src/data/tube';
+import { MUZZLE_OFFSET } from '../../src/data/tube';
 import { createArrow, stepArrows, type ArrowState } from '../../src/sim/arrows';
 import { NO_COMMAND } from '../../src/sim/input';
 import { createSim } from '../../src/sim/state';
@@ -28,8 +28,6 @@ function ticksToRemove(arrows: ArrowState[], room = openRoom(), limit = 200): nu
 describe('arrows', () => {
   it('spawn at the muzzle and fly at the ammo speed with its damage', () => {
     const s = createSim(3);
-    stepSim(s, { ...NO_COMMAND, load: true });
-    for (let i = 0; i < LOAD_TICKS * TUBE_CAPACITY; i++) stepSim(s);
     const { x, y } = s.player;
     stepSim(s, { ...NO_COMMAND, fire: true, aimX: x, aimY: y + 200 });
     const arrow = s.arrows[0];

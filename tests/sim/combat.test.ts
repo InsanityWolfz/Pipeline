@@ -1,14 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { straightAmmo } from '../../src/data/ammo';
 import { damageEnemy } from '../../src/sim/enemies';
-import { arena, fireAt, HUSK, loadFull, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
 const DAMAGE = straightAmmo('arrow').damage;
 
 describe('arrows hitting Husks', () => {
   it('removes the arrow and deals its damage', () => {
     const s = arena();
-    loadFull(s);
     const e = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     run(s, 1, fireAt(1000, PLAYER_AT.y));
     runUntil(s, () => s.arrows.length === 0, 30);
@@ -18,7 +17,6 @@ describe('arrows hitting Husks', () => {
 
   it('records the hit and flashes the Husk', () => {
     const s = arena();
-    loadFull(s);
     const e = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     run(s, 1, fireAt(1000, PLAYER_AT.y));
     runUntil(s, () => s.events.hits.length > 0, 30);
@@ -30,7 +28,6 @@ describe('arrows hitting Husks', () => {
 
   it('does not pierce: only the first Husk in line is hit', () => {
     const s = arena();
-    loadFull(s);
     const first = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     const second = placeHusk(s, PLAYER_AT.x + 130, PLAYER_AT.y);
     run(s, 1, fireAt(1000, PLAYER_AT.y));
@@ -41,7 +38,6 @@ describe('arrows hitting Husks', () => {
 
   it('hits the Husk the arrow reaches first when hurtboxes overlap', () => {
     const s = arena();
-    loadFull(s);
     // First in the array but 1 px further along the flight, with hurtboxes overlapping.
     const far = placeHusk(s, PLAYER_AT.x + 101, PLAYER_AT.y);
     const near = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y + HUSK.feetBox.h);
@@ -53,7 +49,6 @@ describe('arrows hitting Husks', () => {
 
   it('hits a Husk standing against a wall', () => {
     const s = arena(undefined, { x: 1000, y: PLAYER_AT.y });
-    loadFull(s);
     const e = placeHusk(s, 1240, PLAYER_AT.y);
     e.mode = 'recover';
     e.modeTicks = 1;
@@ -91,7 +86,6 @@ describe('Husk knockback', () => {
 describe('Husk death', () => {
   it('dies to 4 arrows, recording a death and dropping items', () => {
     const s = arena();
-    loadFull(s);
     const e = placeHusk(s, PLAYER_AT.x + 160, PLAYER_AT.y);
     const deaths: unknown[] = [];
     runUntil(
@@ -103,7 +97,7 @@ describe('Husk death', () => {
       120,
       fireAt(1000, PLAYER_AT.y),
     );
-    expect(s.tube.loaded).toBe(2);
+    expect(s.inventory.arrow).toBe(26);
     expect(deaths).toEqual([{ id: e.id, enemyId: 'husk', x: e.x, y: e.y, facing: e.facing }]);
     expect(s.groundItems.length).toBeGreaterThanOrEqual(1);
     expect(s.groundItems.length).toBeLessThanOrEqual(3);
@@ -117,7 +111,6 @@ describe('ley bolts', () => {
     const s = arena();
     s.inventory['ley-bolt'] = 6;
     run(s, 1, { selectAmmo: 'ley-bolt' });
-    loadFull(s);
     return s;
   }
 

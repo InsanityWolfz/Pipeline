@@ -13,6 +13,8 @@ export const SPRITES = {
   arrowShadow: 'arrow-shadow',
   crosshair: 'crosshair',
   hudSlot: 'hud-slot',
+  /** Ley rim over the hotbar slot while it fires from the reservoir (007). */
+  hudSlotGlow: 'hud-slot-glow',
   iconArrow: 'icon-arrow',
   itemHuskResin: 'item-husk-resin',
   itemWood: 'item-wood',
@@ -56,6 +58,13 @@ export const TUBE_SPRITES = {
   side: 'tube-side',
 } as const;
 
+/** The tube's attuning pulse (007), drawn over the tube in the same spot: 2-frame loops by direction. */
+export const TUBE_ATTUNE = {
+  down: { key: 'tube-attune-down', frames: 2, frameRate: 8, loop: true },
+  up: { key: 'tube-attune-up', frames: 2, frameRate: 8, loop: true },
+  side: { key: 'tube-attune-side', frames: 2, frameRate: 8, loop: true },
+} as const satisfies Record<keyof typeof TUBE_SPRITES, AnimDef>;
+
 /**
  * Where the tube's top-left corner sits relative to the player's feet (the bottom
  * centre of the player sprite), px, for the right-facing side; left mirrors it.
@@ -80,14 +89,11 @@ export function digitFrame(ch: string): string {
 /** Hotbar slot layout, px from the slot's top-left. */
 export const HUD_SLOT_LAYOUT = {
   icon: { x: 4, y: 4 },
-  loaded: { x: 25, y: 5 },
-  carried: { x: 25, y: 12 },
-  /** The load progress bar, under the counts and clear of the icon. */
-  loadBar: { x: 23, y: 18, w: 16, h: 2 },
+  /** The count: carried rounds, or the reservoir's once none are carried. */
+  count: { x: 25, y: 9 },
   /** Gap below the slot to the bottom of the screen. */
   margin: 6,
-  /** Palette ids: the load bar fill, and the slot tint while a dry fire shows. */
-  loadBarColor: 'mist',
+  /** Palette id: the slot tint while a dry fire shows. */
   dryFireTint: 'ember',
 } as const;
 

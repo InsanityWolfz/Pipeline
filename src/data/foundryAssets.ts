@@ -43,6 +43,7 @@ export const LOGISTICS_ICONS: Readonly<Record<string, string>> = {
   conduit: 'emblem-conduit',
   hopper: 'emblem-hopper',
   crate: 'emblem-crate',
+  'tube-socket': 'emblem-tube-socket',
 };
 
 /** Conduits flow toward their front; `side` flows right. They lie flat on the floor. */
@@ -59,6 +60,9 @@ export const HOPPER_SPRITES: Readonly<Record<PieceView, string>> = {
 };
 
 export const CRATE_SPRITE = 'crate';
+
+/** The tube socket (007): at rest, and the frame it flares to as a round goes to the tube. */
+export const SOCKET_SPRITES = { idle: 'tube-socket', refill: 'tube-socket-refill' } as const;
 
 /**
  * Build-mode arrows on a piece's edges, also on the ghost: cyan pointing out of its

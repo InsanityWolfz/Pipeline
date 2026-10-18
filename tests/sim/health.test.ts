@@ -5,7 +5,7 @@ import { damagePlayer } from '../../src/sim/health';
 import { nextFloat } from '../../src/sim/rng';
 import { createSim, tileCentre } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
-import { arena, HUSK, loadFull, placeHusk, PLAYER_AT, run, SEED, SWIPE_LANDS } from './fight';
+import { arena, HUSK, placeHusk, PLAYER_AT, run, SEED, SWIPE_LANDS } from './fight';
 
 const { damage, knockback, knockTicks } = HUSK.swipe;
 
@@ -78,23 +78,12 @@ describe('player health', () => {
     expect(s.player.x).toBe(40);
   });
 
-  it('stops loading on a hit, keeping loaded rounds', () => {
-    const s = arena();
-    run(s, 1, { load: true });
-    run(s, 19);
-    expect(s.tube).toMatchObject({ loaded: 1, loading: true });
-    hitFromEast(s);
-    expect(s.tube).toMatchObject({ loaded: 1, loading: false, loadProgress: 0 });
-    expect(s.inventory.arrow).toBe(29);
-  });
-
   it('keeps firing through a hit', () => {
     const s = arena();
-    loadFull(s);
     run(s, 1, { fire: true, aimX: 0, aimY: PLAYER_AT.y });
     hitFromEast(s);
     run(s, 15, { fire: true, aimX: 0, aimY: PLAYER_AT.y });
-    expect(s.tube.loaded).toBe(4);
+    expect(s.inventory.arrow).toBe(28);
   });
 });
 
@@ -104,7 +93,6 @@ describe('placeholder KO', () => {
     placeHusk(s, PLAYER_AT.x + 20, PLAYER_AT.y);
     s.player.health = damage;
     s.inventory.arrow = 3;
-    s.tube.loaded = 2;
     s.groundItems.push({ id: s.nextGroundItemId++, itemId: 'wood', roomId: 'ruin-hall', x: 600, y: 448 });
     return s;
   }
@@ -119,7 +107,6 @@ describe('placeholder KO', () => {
     if (!room?.enemies) throw new Error('no room enemies');
     expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre(room.spawn));
     expect(s.inventory).toEqual(STARTING_INVENTORY);
-    expect(s.tube.loaded).toBe(0);
     expect(s.arrows).toEqual([]);
     expect(s.groundItems).toEqual([]);
     expect(s.enemies.map((e) => ({ x: e.x, y: e.y, health: e.health, mode: e.mode }))).toEqual(
@@ -134,7 +121,6 @@ describe('placeholder KO', () => {
     s.nodes = fresh.nodes.map((n) => ({ ...n, uses: 0, regrow: 99 }));
     s.inventory.bomb = 2;
     run(s, 1, { selectAmmo: 'bomb' });
-    s.tube.loaded = 1;
     run(s, 1, { fire: true, aimX: PLAYER_AT.x - 150, aimY: PLAYER_AT.y });
     expect(s.bombs).toHaveLength(1);
     s.harvest = { nodeId: 0, progress: 5 };

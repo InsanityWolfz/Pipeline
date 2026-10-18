@@ -5,6 +5,7 @@ import { CONDUIT_TICKS } from '../data/foundry';
 import {
   CONDUIT_ANIMS,
   CRATE_SPRITE,
+  SOCKET_SPRITES,
   FACING_ARROWS,
   FOUNDRY_LAYOUT,
   ICON_RISE,
@@ -63,7 +64,8 @@ interface Drawn {
 
 // Draws the foundry's pieces from sim state: machines showing what they make, a
 // working loop and a status marker; conduits flowing with the item they carry;
-// hoppers and crates with what they hold. Sorted by the bottom of their footprint.
+// hoppers and crates with what they hold; tube sockets flaring as they refill.
+// Sorted by the bottom of their footprint.
 export class FoundryView {
   private readonly scene: Scene;
   private readonly drawn = new Map<number, Drawn>();
@@ -119,6 +121,9 @@ export class FoundryView {
       d.icon.setPosition(r.x, bottom - ICON_RISE[footprint][view]).setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge);
       d.marker = add.sprite(r.x, 0, ATLAS_KEY).setOrigin(0.5, 1).setDepth(DEPTHS.worldUi);
       d.markerIcon = add.image(r.x, 0, ATLAS_KEY).setOrigin(0.5).setDepth(DEPTHS.worldUi + 1);
+    } else if (p.kind === 'socket') {
+      d.body.setFrame(SOCKET_SPRITES.idle);
+      d.icon.setVisible(false);
     } else {
       d.body.setFrame(p.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE);
       d.icon.setPosition(r.x, bottom - FOUNDRY_LAYOUT.contentsRise).setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge);
@@ -131,6 +136,7 @@ export class FoundryView {
   private draw(p: PieceState, d: Drawn): void {
     if (p.kind === 'conduit') this.drawConduit(p, d);
     else if (p.kind === 'machine') this.drawMachine(p, d);
+    else if (p.kind === 'socket') d.body.setFrame(p.pulse > 0 ? SOCKET_SPRITES.refill : SOCKET_SPRITES.idle);
     else {
       const items = p.kind === 'hopper' ? (p.item ? { [p.item]: p.count } : {}) : p.contents;
       const first = Object.entries(items).find(([, n]) => n > 0);

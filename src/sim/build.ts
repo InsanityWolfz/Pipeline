@@ -4,11 +4,11 @@ import { pickUp, place } from './placement';
 import type { SimState } from './state';
 
 // Build mode: toggled in the foundry. While it's on the player can still walk,
-// roll and use hoppers and crates, but not fire, load, switch ammo or harvest.
+// roll and use hoppers and crates, but not fire, switch ammo or harvest.
 
-/** The command the rest of the tick sees: build mode drops fire, load, ammo select and harvest. */
+/** The command the rest of the tick sees: build mode drops fire, ammo select and harvest. */
 export function maskCommand(state: SimState, cmd: Command): Command {
-  return state.building ? { ...cmd, fire: false, load: false, selectAmmo: null } : cmd;
+  return state.building ? { ...cmd, fire: false, selectAmmo: null } : cmd;
 }
 
 /** Toggles build mode, then places and picks up. Placing and picking up only work in the foundry. */

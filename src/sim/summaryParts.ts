@@ -128,6 +128,7 @@ export type PieceSummary = { id: number; pieceId: string; tx: number; ty: number
     }
   | { kind: 'hopper'; item: string | null; count: number }
   | { kind: 'crate'; contents: Record<string, number> }
+  | { kind: 'socket'; pulse: number }
 );
 
 export function pieceSummary(p: PieceState): PieceSummary {
@@ -135,6 +136,7 @@ export function pieceSummary(p: PieceState): PieceSummary {
   if (p.kind === 'conduit') return { ...common, kind: p.kind, item: p.item, progress: p.progress };
   if (p.kind === 'hopper') return { ...common, kind: p.kind, item: p.item, count: p.count };
   if (p.kind === 'crate') return { ...common, kind: p.kind, contents: { ...p.contents } };
+  if (p.kind === 'socket') return { ...common, kind: p.kind, pulse: p.pulse };
   const { buffer, output, crafting, progress, status, missing } = p;
   return { ...common, kind: p.kind, buffer: { ...buffer }, output, crafting, progress, status, missing: [...missing] };
 }

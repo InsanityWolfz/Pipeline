@@ -7,6 +7,8 @@ interface PieceBase {
   id: string;
   name: string;
   footprint: Footprint;
+  /** At most this many can be on the grid at once. */
+  limit?: number;
 }
 
 /** Runs a hand-crafting recipe on its own, from items handed in. */
@@ -16,9 +18,12 @@ export interface MachineDef extends PieceBase {
   craftTicks: number;
 }
 
-/** Moves or holds items: conduits carry them, hoppers feed a line, crates collect what it makes. */
+/**
+ * Moves or holds items: conduits carry them, hoppers feed a line, crates collect
+ * what it makes, and the tube socket sends ammo into the tube's reservoir (007).
+ */
 export interface LogisticsDef extends PieceBase {
-  kind: 'conduit' | 'hopper' | 'crate';
+  kind: 'conduit' | 'hopper' | 'crate' | 'socket';
 }
 
 export type PieceDef = MachineDef | LogisticsDef;
@@ -33,12 +38,18 @@ const machine = (id: string, name: string, recipeId: string, footprint: Footprin
   craftTicks,
 });
 
-const logistics = (kind: LogisticsDef['kind'], name: string): LogisticsDef => ({ kind, id: kind, name, footprint: '1x1' });
+const logistics = (kind: LogisticsDef['kind'], name: string, id: string = kind): LogisticsDef => ({
+  kind,
+  id,
+  name,
+  footprint: '1x1',
+});
 
 export const PIECES: Readonly<Record<string, PieceDef>> = {
   conduit: logistics('conduit', 'Ley conduit'),
   hopper: logistics('hopper', 'Hopper'),
   crate: logistics('crate', 'Crate'),
+  'tube-socket': { ...logistics('socket', 'Tube socket', 'tube-socket'), limit: 1 },
   cutter: machine('cutter', 'Cutter', 'shaft', '1x1', 60),
   knapper: machine('knapper', 'Knapper', 'arrowhead', '1x1', 60),
   spinner: machine('spinner', 'Spinner', 'rope', '1x1', 60),
@@ -55,6 +66,7 @@ export const BUILD_BAR: readonly string[] = [
   'conduit',
   'hopper',
   'crate',
+  'tube-socket',
   'cutter',
   'knapper',
   'spinner',

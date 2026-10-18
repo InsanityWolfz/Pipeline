@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FEET_BOX } from '../../src/data/player';
 import { HARVEST_REACH, nodeDef } from '../../src/data/nodes';
-import { LOAD_TICKS } from '../../src/data/tube';
 import { cancelHarvest } from '../../src/sim/harvest';
 import { nodeRects } from '../../src/sim/nodes';
 import { arena, fireAt, HUSK, placeHusk, placeNode, PLAYER_AT, run, runUntil, SWIPE_LANDS } from './fight';
@@ -84,7 +83,6 @@ describe('harvesting', () => {
     ['moving', { moveX: 1 as const }],
     ['rolling', { dodge: true }],
     ['firing', fireAt(PLAYER_AT.x - 100, PLAYER_AT.y)],
-    ['loading', { load: true }],
     ['switching ammo', { selectAmmo: 'bomb' }],
   ])('is cancelled by %s, losing progress and using nothing', (_name, c) => {
     const { s, n } = harvesting(10);
@@ -123,18 +121,6 @@ describe('harvesting', () => {
     expect(n.uses).toBe(TREE.uses);
   });
 
-  it('stops loading when it starts, keeping loaded rounds', () => {
-    const s = arena();
-    placeNode(s, 'tree', rightOf(4), PLAYER_AT.y);
-    run(s, 1, { load: true });
-    run(s, LOAD_TICKS + 3);
-    expect(s.tube.loaded).toBe(1);
-    run(s, 1, { interact: true });
-    expect(s.tube.loading).toBe(false);
-    expect(s.tube.loadProgress).toBe(0);
-    expect(s.tube.loaded).toBe(1);
-    expect(s.inventory.arrow).toBe(29);
-  });
 });
 
 describe('nodes', () => {
@@ -183,14 +169,10 @@ describe('nodes', () => {
     s.inventory['ley-bolt'] = 1;
     s.inventory.bomb = 1;
     run(s, 1, { selectAmmo: 'ley-bolt' });
-    run(s, 1, { load: true });
-    run(s, LOAD_TICKS);
     run(s, 1, fireAt(PLAYER_AT.x + 400, PLAYER_AT.y));
     runUntil(s, () => e.health < HUSK.maxHealth, 60);
     // A bomb aimed at the node itself lands on it and bursts there.
     run(s, 1, { selectAmmo: 'bomb' });
-    run(s, 1, { load: true });
-    run(s, LOAD_TICKS);
     run(s, 1, fireAt(PLAYER_AT.x + 60, PLAYER_AT.y));
     runUntil(s, () => s.events.bursts.length > 0, 60);
     expect(s.events.bursts[0]?.x).toBeCloseTo(PLAYER_AT.x + 60);
@@ -200,8 +182,6 @@ describe('nodes', () => {
     const s = arena();
     placeNode(s, 'tree', PLAYER_AT.x + 60, PLAYER_AT.y);
     const e = placeHusk(s, PLAYER_AT.x + 140, PLAYER_AT.y);
-    run(s, 1, { load: true });
-    run(s, LOAD_TICKS);
     run(s, 1, fireAt(PLAYER_AT.x + 400, PLAYER_AT.y));
     runUntil(s, () => s.arrows.length === 0, 60);
     expect(e.health).toBeLessThan(HUSK.maxHealth);

@@ -52,7 +52,6 @@ describe('doorways', () => {
 
   it('door tiles stop arrows', () => {
     const s = atHallDoor();
-    s.tube.loaded = 1;
     run(s, 1, fireAt(0, s.player.y));
     runUntil(s, (x) => x.arrows.length === 0, 30);
     expect(s.roomId).toBe(HALL);
@@ -130,7 +129,6 @@ describe('rooms tick apart', () => {
     s.roomId = FOUNDRY_ROOM;
     movePlayer(s, 200, 200);
     const e = placeHusk(s, 260, 200);
-    s.tube.loaded = 1;
     run(s, 1, fireAt(260, 200));
     expect(s.arrows[0]?.roomId).toBe(FOUNDRY_ROOM);
     run(s, 20);
@@ -143,7 +141,7 @@ describe('rooms tick apart', () => {
     movePlayer(s, 200, 200);
     const e = placeHusk(s, 260, 200);
     s.tube.ammoId = 'bomb';
-    s.tube.loaded = 1;
+    s.inventory.bomb = 1;
     run(s, 1, fireAt(260, 200));
     expect(s.bombs[0]?.roomId).toBe(FOUNDRY_ROOM);
     runUntil(s, (x) => x.bombs.length === 0, 60);

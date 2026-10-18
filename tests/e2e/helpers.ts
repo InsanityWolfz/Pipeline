@@ -81,12 +81,10 @@ function installHelpers(): void {
         const target = [...s.enemies].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
         if (!target) break;
         const far = Math.hypot(target.x - p.x, target.y - p.y) > 200;
-        const empty = s.tube.loaded === 0;
         s = g.step(1, {
           moveX: far ? toward(p.x, target.x) : 0,
           moveY: far ? toward(p.y, target.y) : 0,
-          load: !far && empty && !s.tube.loading,
-          fire: !far && !empty,
+          fire: !far,
           aimX: target.x,
           aimY: target.y,
         });
@@ -96,9 +94,10 @@ function installHelpers(): void {
   };
 }
 
-export async function boot(page: Page): Promise<void> {
+/** Opens the game (at `query`, e.g. `?playtest`) with the helpers installed. */
+export async function boot(page: Page, query = ''): Promise<void> {
   await page.addInitScript(installHelpers);
-  await page.goto('/');
+  await page.goto(`/${query}`);
   await page.waitForFunction(() => window.__GAME__ !== undefined);
 }
 

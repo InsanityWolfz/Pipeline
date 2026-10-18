@@ -6,7 +6,7 @@ import type { GameScene } from './GameScene';
 export interface GameTestHook {
   getState(): SimSummary;
   /**
-   * Steps `frames` ticks holding `command`. Its dodge, load, interact, ammo
+   * Steps `frames` ticks holding `command`. Its dodge, interact, ammo
    * select, build toggle, place, pick-up, deposit and withdraw apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
    */
   step(frames: number, command?: Partial<Command>): SimSummary;
@@ -32,7 +32,6 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
       const after: Command = {
         ...held,
         dodge: false,
-        load: false,
         interact: false,
         selectAmmo: null,
         toggleBuild: false,

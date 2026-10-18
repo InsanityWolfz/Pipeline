@@ -8,7 +8,7 @@ import { BUILD_BAR, pieceDef } from '../data/pieces';
 import { tilesBetween, type Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 
-type Key = 'up' | 'down' | 'left' | 'right' | 'dodge' | 'load' | 'interact' | 'menu' | 'close' | 'build';
+type Key = 'up' | 'down' | 'left' | 'right' | 'dodge' | 'rotate' | 'interact' | 'menu' | 'close' | 'build';
 
 /** Number keys pick the slot's ammo in SLOT_AMMOS order: 1 for the first, and so on. */
 const NUMBER_KEYS = [
@@ -40,7 +40,7 @@ export type UiCommand = Pick<Command, 'toggleBuild' | 'place' | 'pickUp' | 'depo
 // into menu toggles for the scene. Presses are latched from the keys' down
 // events until consumed, so a tap shorter than a frame isn't lost, a press on a
 // frame that runs no ticks isn't lost, and a frame that runs several ticks only
-// acts on the first. In build mode, R turns the ghost instead of loading,
+// acts on the first. In build mode, R turns the ghost (it does nothing outside it),
 // clicks place and pick up pieces (queued, one per tick), and dragging lays conduits.
 export class Controls {
   private readonly keys: Record<Key, Input.Keyboard.Key>;
@@ -48,7 +48,6 @@ export class Controls {
   private readonly pointer: Input.Pointer;
   private readonly camera: Cameras.Scene2D.Camera;
   private dodgePending = false;
-  private loadPending = false;
   private interactPending = false;
   private interactPress = false;
   private selectPending: string | null = null;
@@ -81,7 +80,7 @@ export class Controls {
       left: keyboard.addKey(codes.A),
       right: keyboard.addKey(codes.D),
       dodge: keyboard.addKey(codes.SPACE),
-      load: keyboard.addKey(codes.R),
+      rotate: keyboard.addKey(codes.R),
       interact: keyboard.addKey(codes.E),
       menu: keyboard.addKey(codes.C),
       close: keyboard.addKey(codes.ESC),
@@ -89,9 +88,8 @@ export class Controls {
     };
     this.ammoKeys = AMMO_KEYS.map((code) => keyboard.addKey(code));
     this.keys.dodge.on('down', () => (this.dodgePending = true));
-    this.keys.load.on('down', () => {
+    this.keys.rotate.on('down', () => {
       if (this.build.building) this.facing = rotateCw(this.facing);
-      else this.loadPending = true;
     });
     this.keys.interact.on('down', () => {
       this.interactPending = true;
@@ -217,7 +215,6 @@ export class Controls {
 
   private clearPresses(): void {
     this.dodgePending = false;
-    this.loadPending = false;
     this.interactPending = false;
     this.selectPending = null;
     this.buildPending = false;
@@ -257,7 +254,6 @@ export class Controls {
       aimX: this.aimX,
       aimY: this.aimY,
       fire: this.pointer.leftButtonDown() && !this.build.building && this.overWorld(),
-      load: this.loadPending,
       interact: this.interactPending,
       selectAmmo: this.selectPending,
       ...ui,

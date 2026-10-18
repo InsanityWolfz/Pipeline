@@ -1,5 +1,5 @@
 import { TILE_SIZE } from '../data/config';
-import { STARTING_INVENTORY } from '../data/player';
+import { DEFAULT_START, type StartDef } from '../data/player';
 import { DEFAULT_ROOM, ROOMS, type Room } from '../data/rooms';
 import type { ArrowState } from './arrows';
 import type { BombState } from './bombs';
@@ -8,6 +8,7 @@ import { createEnemy, type EnemyState } from './enemies';
 import { createEvents, type SimEvents } from './events';
 import type { HarvestState } from './harvest';
 import type { Inventory } from './inventory';
+import { createLink, type LinkState } from './link';
 import { createNodes, type NodeState } from './nodes';
 import { createFoundry, type FoundryState } from './pieces';
 import { createPlayer, type PlayerState } from './player';
@@ -25,6 +26,10 @@ export interface SimState {
   player: PlayerState;
   inventory: Inventory;
   tube: TubeState;
+  /** The tube's link to the foundry and its reservoir. Kept through a KO. */
+  link: LinkState;
+  /** How this run started; a KO restores its inventory. */
+  start: StartDef;
   /** Straight shots in flight: arrows and ley bolts. */
   arrows: ArrowState[];
   /** Id for the next arrow fired. */
@@ -53,7 +58,16 @@ export interface SimState {
   events: SimEvents;
 }
 
-export function createSim(seed: number, roomId = DEFAULT_ROOM): SimState {
+export interface SimOptions {
+  /** The room the player starts in. */
+  roomId?: string;
+  /** The starting inventory and crafted set, e.g. the playtest start. */
+  start?: StartDef;
+}
+
+export function createSim(seed: number, options: SimOptions = {}): SimState {
+  const roomId = options.roomId ?? DEFAULT_ROOM;
+  const start = options.start ?? DEFAULT_START;
   const state: SimState = {
     tick: 0,
     seed,
@@ -62,6 +76,8 @@ export function createSim(seed: number, roomId = DEFAULT_ROOM): SimState {
     player: createPlayer({ x: 0, y: 0 }),
     inventory: {},
     tube: createTube(),
+    link: createLink(),
+    start,
     arrows: [],
     nextArrowId: 0,
     enemies: [],
@@ -72,7 +88,7 @@ export function createSim(seed: number, roomId = DEFAULT_ROOM): SimState {
     harvest: null,
     bombs: [],
     nextBombId: 0,
-    crafted: [],
+    crafted: [...start.crafted].sort(),
     foundry: createFoundry(),
     building: false,
     events: createEvents(),
@@ -83,16 +99,16 @@ export function createSim(seed: number, roomId = DEFAULT_ROOM): SimState {
 
 /**
  * Puts the world back to its start: player at the spawn room's spawn with full
- * health, the starting inventory, an empty tube on its starting ammo, every
+ * health, the starting inventory, the tube on its starting ammo, every
  * room's enemies at home and nodes at full, and nothing harvesting, on the
  * ground or in flight, and build mode off. The tick, seed, RNG, id counters,
- * the crafted set and the whole foundry carry on.
+ * the crafted set, the tube's link and reservoir, and the whole foundry carry on.
  */
 export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   const rooms = Object.values(ROOMS);
   state.roomId = spawnRoomId;
   state.player = createPlayer(tileCentre(roomOf(state).spawn));
-  state.inventory = { ...STARTING_INVENTORY };
+  state.inventory = { ...state.start.inventory };
   state.tube = createTube();
   state.arrows = [];
   state.groundItems = [];

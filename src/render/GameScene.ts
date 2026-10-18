@@ -25,7 +25,7 @@ import { EnemyView } from './EnemyView';
 import { FoundryView } from './FoundryView';
 import { GroundItemView } from './GroundItemView';
 import { HopperPicker } from './HopperPicker';
-import { HoverReadout } from './HoverReadout';
+import { HoverReadout, machineLines, socketLines } from './HoverReadout';
 import { HudView } from './HudView';
 import { NodeView } from './NodeView';
 import { PlayerView } from './PlayerView';
@@ -230,10 +230,10 @@ export class GameScene extends Scene {
     this.groundItemView?.update(inRoom(sim.groundItems, shown));
     this.enemyView?.update(inRoom(sim.enemies, shown));
     // Through a door's fade the player is already in the next room; hide them until it shows.
-    this.playerView?.update(sim.player, sim.tube, shown === sim.roomId);
+    this.playerView?.update(sim.player, sim.tube, sim.link, shown === sim.roomId);
     this.arrowView?.update(inRoom(sim.arrows, shown));
     this.bombView?.update(inRoom(sim.bombs, shown));
-    this.hud?.update(sim.tube, sim.inventory, sim.player);
+    this.hud?.update(sim.tube, sim.inventory, sim.player, sim.link);
     this.menu?.update(sim.inventory);
     const hopper = sim.foundry.pieces.find((p) => p.id === this.picker?.hopperId);
     this.picker?.update(sim.inventory, hopper?.kind === 'hopper' ? hopper : undefined);
@@ -243,10 +243,12 @@ export class GameScene extends Scene {
       canPlace(sim, ...a),
     );
     const hovered = cursor ? pieceAt(sim.foundry, cursor.tx, cursor.ty) : undefined;
-    if (hovered?.kind === 'machine') {
+    const lines =
+      hovered?.kind === 'machine' ? machineLines(hovered) : hovered?.kind === 'socket' ? socketLines(sim.link.reservoir) : [];
+    if (hovered && lines.length > 0) {
       const r = pieceRect(hovered);
       const top = this.foundryView?.topOf(hovered.id) ?? r.y;
-      this.readout?.show(hovered, r.x, top, this.cameras.main.worldView.y);
-    } else this.readout?.show(null, 0, 0);
+      this.readout?.show(lines, r.x, top, this.cameras.main.worldView.y);
+    } else this.readout?.show([], 0, 0);
   }
 }

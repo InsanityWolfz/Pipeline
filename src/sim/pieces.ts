@@ -56,10 +56,17 @@ export interface CrateState extends PieceCommon {
   contents: Inventory;
 }
 
-export type PieceState = ConduitState | MachineState | HopperState | CrateState;
+/** Sends the ammo it takes into the tube's reservoir. */
+export interface SocketState extends PieceCommon {
+  kind: 'socket';
+  /** Ticks left on its refill frame. */
+  pulse: number;
+}
+
+export type PieceState = ConduitState | MachineState | HopperState | CrateState | SocketState;
 
 /** Why a piece can't be placed. */
-export type PlaceFail = 'locked' | 'not-foundry' | 'blocked' | 'occupied' | 'player';
+export type PlaceFail = 'locked' | 'not-foundry' | 'blocked' | 'occupied' | 'player' | 'limit';
 
 export interface FoundryState {
   /** In placement order, which is also the order they act in. */
@@ -77,6 +84,7 @@ export function createPiece(id: number, pieceId: string, tx: number, ty: number,
   if (kind === 'conduit') return { ...common, kind, item: null, progress: 0 };
   if (kind === 'hopper') return { ...common, kind, item: null, count: 0, timer: 0 };
   if (kind === 'crate') return { ...common, kind, contents: {} };
+  if (kind === 'socket') return { ...common, kind, pulse: 0 };
   return { ...common, kind, buffer: {}, output: 0, crafting: false, progress: 0, status: 'idle', missing: [] };
 }
 

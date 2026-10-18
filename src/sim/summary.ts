@@ -1,5 +1,5 @@
 import { MAX_HEALTH } from '../data/player';
-import { TUBE_CAPACITY } from '../data/tube';
+import { RESERVOIR_CAP } from '../data/tube';
 import { ROOMS } from '../data/rooms';
 import type { SimEvents } from './events';
 import { unlockedPieces } from './placement';
@@ -52,14 +52,18 @@ export interface SimSummary {
   inventory: Record<string, number>;
   tube: {
     ammo: string;
-    loaded: number;
-    capacity: number;
-    loading: boolean;
-    /** Ticks into loading the next round. */
-    loadProgress: number;
     fireCooldown: number;
     dryFire: boolean;
     firing: boolean;
+    /** This tick's shot came from the reservoir. */
+    fromReservoir: boolean;
+  };
+  /** The tube's link to the foundry. */
+  link: {
+    attuned: boolean;
+    /** Ticks left on the attuning pulse. */
+    attunePulse: number;
+    reservoir: { ammo: string | null; count: number; cap: number };
   };
   /** Arrows and ley bolts in flight; x, y is the ground point. */
   arrows: ArrowSummary[];
@@ -104,13 +108,15 @@ export function summarize(state: SimState): SimSummary {
     inventory: { ...state.inventory },
     tube: {
       ammo: tube.ammoId,
-      loaded: tube.loaded,
-      capacity: TUBE_CAPACITY,
-      loading: tube.loading,
-      loadProgress: tube.loadProgress,
       fireCooldown: tube.fireCooldown,
       dryFire: tube.dryFire > 0,
       firing: tube.firing,
+      fromReservoir: tube.fromReservoir,
+    },
+    link: {
+      attuned: state.link.attuned,
+      attunePulse: state.link.attunePulse,
+      reservoir: { ammo: state.link.reservoir.ammoId, count: state.link.reservoir.count, cap: RESERVOIR_CAP },
     },
     arrows: state.arrows.map(arrowSummary),
     enemies: state.enemies.map(enemySummary),
