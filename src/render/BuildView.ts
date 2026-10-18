@@ -28,7 +28,6 @@ function bodyFrame(pieceId: string, facing: Facing, inFrom: Facing): string {
   const view = viewOf(facing);
   if (def.kind === 'machine') return MACHINE_HOUSINGS[def.footprint][view].idle;
   if (def.kind === 'conduit') return animFrames(conduitLook(facing, inFrom).anim)[0] ?? '';
-  if (def.kind === 'sorter') return animFrames(sorterLook(facing, false).anim)[0] ?? '';
   if (def.kind === 'socket') return SOCKET_SPRITES.idle;
   if (def.kind === 'stager') return animFrames(STAGER_SPRITE)[STAGER_ANGLES.indexOf(STAGER_START_ANGLE)] ?? '';
   return def.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE;

@@ -108,11 +108,12 @@ export const HOVER_NAME = {
   enemy: { w: 24, h: 34, rise: 40 },
   node: { w: 24, h: 34, rise: 40 },
   item: { w: 12, h: 12, rise: 14 },
+  /** A hover still hits this fraction of a box's height below its ground point. */
+  below: 0.25,
   tile: { rise: 40 },
   gap: 4,
-  /** The name's backing: padding px, the font's glyph height px, its palette colour and alpha. */
+  /** The name's backing: padding px, its palette colour and alpha. */
   pad: 2,
-  glyphH: 5,
   back: 'outline',
   alpha: 0.85,
 } as const;
@@ -126,4 +127,4 @@ export const WORLD_NAMES = {
 } as const;
 
 /** The build bar's hover panel (015): wrap width in glyphs, padding and line height, px, and its gap above the bar. */
-export const BUILD_TIP = { wrap: 34, maxLines: 4, pad: 4, lineHeight: 8, gap: 4, back: 'outline', alpha: 0.9, edge: 'slate-light' } as const;
+export const BUILD_TIP = { wrap: 34, maxLines: 2, pad: 4, lineHeight: 8, gap: 4, back: 'outline', alpha: 0.9, edge: 'slate-light' } as const;

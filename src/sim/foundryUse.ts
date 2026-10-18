@@ -1,5 +1,6 @@
 import { USE_REACH } from '../data/foundry';
 import { FEET_BOX } from '../data/player';
+import { ITEMS } from '../data/items';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import type { Command } from './input';
 import { count } from './inventory';
@@ -28,7 +29,7 @@ function gapTo(state: SimState, p: PieceState): number {
 const inReach = (state: SimState, p: PieceState): boolean =>
   state.roomId === FOUNDRY_ROOM && gapTo(state, p) <= USE_REACH;
 
-/** The nearest hopper, crate or stager in reach, by centre distance; the first placed wins ties. */
+/** The nearest hopper, crate, stager or sorter in reach, by centre distance; the first placed wins ties. */
 export function usableInReach(state: SimState): Usable | undefined {
   let best: Usable | undefined;
   let bestDist = Infinity;
@@ -79,6 +80,7 @@ function takeCrate(state: SimState, c: CrateState): void {
 export function setFilter(state: SimState, id: number, itemId: string | null): void {
   const p = state.foundry.pieces.find((q) => q.id === id);
   if (p?.kind !== 'sorter' || !inReach(state, p)) return;
+  if (itemId !== null && !(itemId in ITEMS)) return;
   p.filter = itemId;
 }
 

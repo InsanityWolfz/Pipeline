@@ -5,8 +5,8 @@ import { CONDUIT_ANIMS, CONDUIT_CORNERS, LOGISTICS_ICONS, SORTER_ANIMS, type Cor
 import { itemDef, ITEMS } from '../data/items';
 import { pieceDef } from '../data/pieces';
 import { recipeDef } from '../data/recipes';
-import { facingVector, opposite, rotateCw } from '../sim/direction';
-import { footprint, type Tile } from '../sim/pieces';
+import { facingVector, opposite } from '../sim/direction';
+import { footprint, sortSideOf, type Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 
 // Where the build bar's cells and the hopper picker's rows sit on screen. No
@@ -117,7 +117,7 @@ export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing:
   // A sorter takes from its back and hands out of its front and, for its item, its sort side.
   if (kind === 'sorter') {
     const back = opposite(p.facing);
-    const side = sorterSide(p.facing, p.mirrored ?? false);
+    const side = sortSideOf(p.facing, p.mirrored ?? false);
     return [
       { kind: 'in', tx: p.tx, ty: p.ty, edge: back, points: p.facing },
       { kind: 'out', tx: p.tx, ty: p.ty, edge: p.facing, points: p.facing },
@@ -157,11 +157,6 @@ export function conduitLook(facing: Facing, inFrom: Facing): { anim: AnimDef; fl
 }
 
 const isCorner = (key: string): key is CornerKey => key in CONDUIT_CORNERS;
-
-/** The side a sorter's item leaves by: right of its facing, or left when mirrored (matches the sim's sortSide). */
-export function sorterSide(facing: Facing, mirrored: boolean): Facing {
-  return mirrored ? rotateCw(rotateCw(rotateCw(facing))) : rotateCw(facing);
-}
 
 /**
  * A sorter's animation and flips (015). The side sprite flows right and sorts

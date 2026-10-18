@@ -23,7 +23,7 @@ export interface HoverName {
 }
 
 const inBox = (px: number, py: number, x: number, y: number, box: { w: number; h: number }): boolean =>
-  Math.abs(px - x) <= box.w / 2 && py <= y + box.h / 4 && py >= y - box.h;
+  Math.abs(px - x) <= box.w / 2 && py <= y + box.h * HOVER_NAME.below && py >= y - box.h;
 
 /**
  * The name of the thing at world point (px, py) in `roomId`, in order: foundry

@@ -54,16 +54,16 @@ const logistics = (kind: LogisticsDef['kind'], name: string, description: string
 });
 
 export const PIECES: Readonly<Record<string, PieceDef>> = {
-  conduit: logistics('conduit', 'Ley conduit', 'Carries one item at a time toward its front. Drag to lay a run. It bends at turns.'),
-  sorter: logistics('sorter', 'Sorter', 'Sends one chosen item out its side, the rest out its front. E sets the item, F flips the side.'),
-  hopper: logistics('hopper', 'Hopper', 'Holds one kind of item you put in with E, and feeds it out its front.'),
+  conduit: logistics('conduit', 'Ley conduit', 'Carries items toward its front. Drag to lay a run that bends.'),
+  sorter: logistics('sorter', 'Sorter', 'Sends one chosen item out its side. E sets it, F flips the side.'),
+  hopper: logistics('hopper', 'Hopper', 'Holds one kind of item, put in with E, and feeds it forward.'),
   crate: logistics('crate', 'Crate', 'Collects whatever reaches it from any side. E empties it.'),
   'tube-socket': {
-    ...logistics('socket', 'Tube socket', 'Sends ammo into the tube: it fires from here once your carried rounds run out.', 'tube-socket'),
+    ...logistics('socket', 'Tube socket', 'Feeds the tube. It fires from here once carried rounds run out.', 'tube-socket'),
     limit: 1,
   },
   'gravity-stager': {
-    ...logistics('stager', 'Gravity stager', 'Passes items on. Facing the socket, it adds a stream to the spread. E turns its angle.', 'gravity-stager'),
+    ...logistics('stager', 'Gravity stager', 'Facing the socket, it adds a stream to the spread. E turns it.', 'gravity-stager'),
     cost: { 'warden-core': 1 },
   },
   cutter: machine('cutter', 'Cutter', 'shaft', '1x1', 60, 'Cuts wood into shafts.'),
@@ -110,5 +110,7 @@ export function machineDef(id: string): MachineDef {
 
 /** Conduits can be walked over; every other piece blocks the player. */
 export function isSolidPiece(id: string): boolean {
-  return pieceDef(id).kind !== 'conduit';
+  const { kind } = pieceDef(id);
+  // Conduits and sorters lie flat on the floor, so the player walks over them.
+  return kind !== 'conduit' && kind !== 'sorter';
 }

@@ -2,6 +2,39 @@
 
 Newest entry first.
 
+## 2026-10-18: 015 Fixes after the overnight run (build)
+**Changed:** built 015 on `claude/015-after-overnight` (stacked on 014). Shaun approved the spec and asked me to carry it through on my own.
+- **Sorter:**
+  - It's a new piece: free, unlocked from the start, and second on the build bar.
+  - It takes items from its back. Its chosen item leaves by its right side (left after F), and everything else goes out the front. A blocked exit stalls it.
+  - E opens a picker (Clear plus every item), which sends the new `setFilter` command.
+  - It's walkable, like a conduit.
+- **No wasted ammo:**
+  - The tube doesn't fire in the foundry. This is a sim rule.
+  - A press that starts on any UI never fires.
+- **Camera:** the lead toward the aim is gone.
+- **Hover:**
+  - Names on mouse-over for everything in the world.
+  - A name and description panel on the build bar.
+  - The hook gains `ui()`.
+
+Verify: 473 unit and 32 e2e tests pass. QA confirmed:
+- The sorter chain splits the supply port: wood 6, stone 5, and fiber plus ley crystal 10.
+- F, the picker, every description and every world name work.
+- There's no fire in the foundry, and the camera stays centred.
+
+QA's three failures are fixed: the green sort arrow, a name on its readout at the top wall, and HUD parts that still fired. Review's blocking items are fixed: the "Clear" label, a real front-and-side split through the picker in e2e, and a test of a UI press dragged into the world. Most suggestions are in too:
+- `setFilter` validation
+- more sorter tests
+- walkable sorters
+- shared sort-side logic
+- data constants
+- glyph coverage for world names
+- `controls.ts` back under 300 lines
+
+**Next:** Shaun playtests 015 (the preview for `claude/015-after-overnight`, with `?playtest`) and reviews the sorter sprites. Then he decides merges for #9–#17.
+**Notes:** see the 015 spec's build notes. The open calls are walkable sorters, the art, and the description wording.
+
 ## 2026-10-18: 015 Fixes after the overnight run (spec)
 **Changed:** interviewed Shaun after his look at 007–014 and wrote `docs/specs/015-after-overnight.md` (status: draft) on `claude/015-after-overnight` (stacked on 014).
 - **Sorter:** a free sorter piece splits one chosen item off a line. E opens a picker to set the item. It leaves by the right side, and F mirrors that to the left. A blocked exit stalls the sorter.

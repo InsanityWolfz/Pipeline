@@ -14,7 +14,7 @@ const HALL_H = (hall?.rows.length ?? 0) * TILE_SIZE;
 // 015: the sorter built and set with the mouse and keys, the build bar's
 // descriptions, names on mouse-over, and clicks on the HUD never firing.
 
-test('a sorter placed and flipped with the mouse, set from its picker, sends its item into the side crate', async ({ page }) => {
+test('a sorter placed and flipped with the mouse, set from its picker, sends its item out the side, and Clear sends the rest out the front', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page);
   await enterFoundry(page);
@@ -55,23 +55,33 @@ test('a sorter placed and flipped with the mouse, set from its picker, sends its
   await page.keyboard.press('e');
   await page.waitForTimeout(100);
   const rows = menuRows(1 + Object.keys(ITEMS).length);
-  const row = rows[1 + Object.keys(ITEMS).indexOf('arrow')];
-  if (!row) throw new Error('no arrow row');
-  const r = await screenPoint(page, row.x + row.w / 2, row.y + row.h / 2);
-  await page.mouse.click(r.x, r.y);
-  await page.waitForTimeout(50);
+  const pick = async (index: number): Promise<void> => {
+    await page.keyboard.press('e');
+    await page.waitForTimeout(100);
+    const row = rows[index];
+    if (!row) throw new Error(`no row ${index}`);
+    const r = await screenPoint(page, row.x + row.w / 2, row.y + row.h / 2);
+    await page.mouse.click(r.x, r.y);
+    await page.waitForTimeout(50);
+  };
+  await pick(1 + Object.keys(ITEMS).indexOf('arrow'));
   expect(pieceAt(await step(page, 1), 12, 9)).toMatchObject({ filter: 'arrow' });
 
+  // Some arrows go out the side; then Clear passes the rest out the front.
+  await step(page, 120);
+  await pick(0);
+  expect(pieceAt(await step(page, 1), 12, 9)).toMatchObject({ filter: null });
   const ran = await step(page, 900);
   const side = pieceAt(ran, 13, 9);
   const front = pieceAt(ran, 12, 10);
   if (side?.kind !== 'crate' || front?.kind !== 'crate') throw new Error('no crates');
   expect(side.contents.arrow ?? 0).toBeGreaterThan(0);
-  expect(front.contents).toEqual({});
+  expect(front.contents.arrow ?? 0).toBeGreaterThan(0);
+  expect((side.contents.arrow ?? 0) + (front.contents.arrow ?? 0)).toBe(30);
   expect(errors).toEqual([]);
 });
 
-test('hovering a Husk names it, and a click on the hotbar never fires', async ({ page }) => {
+test('hovering a Husk names it, and a press that starts on the hotbar never fires', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page);
   const s = await step(page, 0);
@@ -92,18 +102,26 @@ test('hovering a Husk names it, and a click on the hotbar never fires', async ({
   await page.waitForTimeout(100);
   expect(await page.evaluate(() => window.__GAME__?.ui().hoverName)).toBe('Husk');
 
-  // Back on the real-time clock: hold the mouse down on the hotbar slot; nothing fires.
+  // Back on the real-time clock: a press that starts on the hotbar never fires, even dragged out into the world.
   await page.reload();
   await page.waitForFunction(() => window.__GAME__ !== undefined);
   await page.waitForTimeout(500);
   const slot = await screenPoint(page, VIEW_WIDTH / 2, VIEW_HEIGHT - 18);
+  const world = await screenPoint(page, VIEW_WIDTH / 2 + 120, VIEW_HEIGHT / 2);
   const before = (await state(page)).inventory.arrow;
   await page.mouse.move(slot.x, slot.y);
   await page.mouse.down();
+  await page.waitForTimeout(150);
+  await page.mouse.move(world.x, world.y, { steps: 4 });
   await page.waitForTimeout(400);
   await page.mouse.up();
   const after = await state(page);
   expect(after.inventory.arrow).toBe(before);
   expect(after.arrows).toEqual([]);
+  // A press that starts in the world does fire, so the check above means something.
+  await page.mouse.down();
+  await page.waitForTimeout(200);
+  await page.mouse.up();
+  expect((await state(page)).inventory.arrow).toBeLessThan(before ?? 0);
   expect(errors).toEqual([]);
 });

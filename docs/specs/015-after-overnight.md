@@ -102,3 +102,19 @@ Shaun's changes from playing 007–014. A sorter piece pulls one chosen item off
 
 ## Open questions
 - None. The descriptions are a first draft written in the build, for Shaun to edit.
+
+## Build notes
+These choices were made in the build, not by the spec. They're logged for Shaun to accept or overturn.
+- **Sorters are walkable.** They lie flat like conduits, so the player walks over them. The spec didn't say either way.
+- **Sorter art.** The sprite is a conduit with a gold-rimmed slot in the middle (the chosen item's icon sits in it, small) and a side arm with gold chevrons. There's no separate gate shape. The side, down and up sprites are rotations of each other. A mirrored sorter is drawn flipped across its flow. Pending review.
+- **The sort-side arrow** is a solid gold arrow in build mode. Tinting the cyan output arrow turned it green.
+- **The picker** lists "Clear" and then every item. A click sets the item and closes the menu. The current item isn't marked in the list; its icon shows on the sorter.
+- **E on a sorter** opens its picker even when a crate or hopper is closer by a hair, the same rule as hoppers: the nearest usable piece wins.
+- **`setFilter`** ignores ids that aren't items.
+- **No firing in the foundry** is a sim rule: `stepTube` returns early there. The sim tests that fired from inside the foundry now step out to the hall first. "Arrows fly over pieces" became "the tube never fires in the foundry", since pieces only exist there. The two room-isolation tests now fire in the hall at a Husk placed in the foundry.
+- **Presses on UI.** A press that starts on the build bar, a menu, the hopper picker, the hotbar, the ammo strip, the health bar, the armor icon, the inventory list or the objective band never fires, even if the mouse is then dragged into the world.
+- **Menu click sound** now plays only when a click hits something.
+- **Hover names** are drawn in capitals in the pixel font, on a dark band. Over a machine, socket or stager the name sits above its readout. Near the top of the view it drops below the readout instead. Names for things without a tile (enemies, nodes, ground items) hit within a small box over their ground point.
+- **Descriptions** are a first draft, for Shaun to edit in `src/data/pieces.ts`. Each fits in two lines.
+- **The camera lead was removed.** Shake is unchanged.
+- **`controls.ts`** was split: key bindings moved to `src/render/keys.ts`. The e2e foundry helpers moved to `tests/e2e/foundryPage.ts`.

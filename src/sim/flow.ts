@@ -22,9 +22,10 @@ import {
 } from './pieces';
 
 // Items moving through the foundry, one tick at a time. Every piece hands items
-// out of its front, except a sorter's chosen item, which leaves by its side. First everything advances (items cross conduits, crafts
-// finish and start, hoppers count down), then items move in piece order. An
-// item that arrives this tick starts from zero, so nothing moves two hops in one tick.
+// out of its front, except a sorter's chosen item, which leaves by its side.
+// First everything advances (items cross conduits, crafts finish and start,
+// hoppers count down), then items move in piece order. An item that arrives
+// this tick starts from zero, so nothing moves two hops in one tick.
 // A tube socket passes what it takes straight into the tube's reservoir.
 
 /** What a tick's flow needs beyond the grid: the reservoir sockets fill, and where refills are recorded. */

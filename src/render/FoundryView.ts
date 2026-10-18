@@ -1,4 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
+import { TintModes } from 'phaser';
 import { animFrames, ATLAS_KEY, DEPTHS } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
 import { CONDUIT_TICKS, STAGER_ANGLES } from '../data/foundry';
@@ -24,11 +25,11 @@ import { itemDef } from '../data/items';
 import { pieceDef } from '../data/pieces';
 import { facingVector, opposite } from '../sim/direction';
 import { rotate, socketStreams } from '../sim/spread';
-import { pieceRect, type FoundryState, type PieceState } from '../sim/pieces';
+import { pieceRect, sorterOut, type FoundryState, type PieceState } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { SQUASH } from '../data/juice';
 import { registerAnim } from './anims';
-import { arrowSpots, conduitLook, pieceIcon, sorterLook, sorterSide } from './foundryLayout';
+import { arrowSpots, conduitLook, pieceIcon, sorterLook } from './foundryLayout';
 import { colorOf } from './color';
 import { GlyphLine } from './glyphLine';
 
@@ -57,8 +58,9 @@ export function placeArrows(
     const y = (spot.ty + 0.5) * TILE_SIZE + ey * reach;
     // A sorter's side exit is an output arrow in gold.
     arrow.setFrame(FACING_ARROWS[spot.kind === 'sort' ? 'out' : spot.kind][viewOf(spot.points)]).setFlipX(spot.points === 'left');
-    if (spot.kind === 'sort') arrow.setTint(colorOf(SORTER_LOOK.sortArrowTint));
-    else arrow.clearTint();
+    // Filled, not multiplied: a multiply tint would turn the cyan arrow green.
+    if (spot.kind === 'sort') arrow.setTint(colorOf(SORTER_LOOK.sortArrowTint)).setTintMode(TintModes.FILL);
+    else arrow.clearTint().setTintMode(TintModes.MULTIPLY);
     arrow.setPosition(Math.round(x), Math.round(y));
   }
 }
@@ -234,7 +236,7 @@ export class FoundryView {
     d.icon.setVisible(p.item !== null);
     if (!p.item) return;
     const t = p.progress / CONDUIT_TICKS;
-    const out = p.item === p.filter ? sorterSide(p.facing, p.mirrored) : p.facing;
+    const out = sorterOut(p, p.item);
     const [vx, vy] = t < 0.5 ? facingVector(opposite(p.facing)) : facingVector(out);
     const k = t < 0.5 ? 0.5 - t : t - 0.5;
     const r = pieceRect(p);

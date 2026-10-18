@@ -34,16 +34,20 @@ export class HudView {
   private readonly crosshair: GameObjects.Image;
   private readonly scene: Scene;
   private readonly healthFill: GameObjects.Graphics;
+  private readonly health: GameObjects.Image;
   private readonly materials: MaterialRow[];
   private readonly strip: AmmoStripView;
   private readonly armorIcon: GameObjects.Image;
   private readonly armorCount: GlyphLine;
 
-  /** A screen point on the hotbar slot or the ammo strip: a press there never fires (015). */
+  /** A screen point on any part of the HUD: a press there never fires (015). */
   overUi(x: number, y: number): boolean {
-    const s = this.slot;
-    const b = this.strip.box;
-    return (x >= s.x && x < s.x + s.width && y >= s.y && y < s.y + s.height) || (x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
+    const inBox = (b: { x: number; y: number; w: number; h: number }): boolean => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h;
+    const imageBox = (o: GameObjects.Image) => ({ x: o.x, y: o.y, w: o.width, h: o.height });
+    const rows = this.materials.filter((m) => m.icon.visible).map((m) => ({ ...imageBox(m.icon), w: HUD_MATERIALS_LAYOUT.rowWidth }));
+    const parts = [imageBox(this.slot), this.strip.box, imageBox(this.health), ...rows];
+    if (this.armorIcon.visible) parts.push(imageBox(this.armorIcon));
+    return parts.some(inBox);
   }
 
   constructor(scene: Scene) {
@@ -64,7 +68,7 @@ export class HudView {
     this.strip = new AmmoStripView(scene, left + this.slot.width, top + this.slot.height);
 
     const hp = HUD_HEALTH_LAYOUT;
-    fixed(scene.add.image(hp.x, hp.y, ATLAS_KEY, SPRITES.hudHealth).setOrigin(0));
+    this.health = fixed(scene.add.image(hp.x, hp.y, ATLAS_KEY, SPRITES.hudHealth).setOrigin(0));
     this.healthFill = fixed(scene.add.graphics({ x: hp.x + hp.fill.x, y: hp.y + hp.fill.y }));
     const ar = HUD_ARMOR_LAYOUT;
     this.armorIcon = fixed(scene.add.image(ar.x, ar.y, ATLAS_KEY, SPRITES.iconArmorLight).setOrigin(0)).setVisible(false);

@@ -2,7 +2,7 @@ import { TILE_SIZE } from '../data/config';
 import { STAGER_START_ANGLE } from '../data/foundry';
 import { isSolidPiece, pieceDef } from '../data/pieces';
 import type { Rect } from './collision';
-import { facingVector, opposite, rotateCw } from './direction';
+import { facingVector, opposite, rotateCcw, rotateCw } from './direction';
 import type { Inventory } from './inventory';
 import type { Facing } from './player';
 
@@ -138,14 +138,20 @@ export function frontTile(p: PieceState): Tile {
 
 export const sameTile = (a: Tile, b: Tile): boolean => a.tx === b.tx && a.ty === b.ty;
 
-/** The side a sorter's filter item leaves by: right of its facing, or left when mirrored. */
-export function sortSide(p: SorterState): Facing {
-  return p.mirrored ? rotateCw(rotateCw(rotateCw(p.facing))) : rotateCw(p.facing);
+/** The side a sorter facing `facing` sends its filter item out of: its right, or its left when mirrored. */
+export function sortSideOf(facing: Facing, mirrored: boolean): Facing {
+  return mirrored ? rotateCcw(facing) : rotateCw(facing);
 }
 
-/** Where a sorter hands `item`: its sort side for the filter item, else its front. */
+/** The side a sorter's filter item leaves by. */
+export const sortSide = (p: SorterState): Facing => sortSideOf(p.facing, p.mirrored);
+
+/** Where a sorter sends `item`: its sort side for the filter item, else its front. */
+export const sorterOut = (p: SorterState, item: string): Facing => (item === p.filter ? sortSide(p) : p.facing);
+
+/** The tile a sorter hands `item` to. */
 export function sorterExit(p: SorterState, item: string): Tile {
-  return item === p.filter ? sideTile(p, sortSide(p)) : frontTile(p);
+  return sideTile(p, sorterOut(p, item));
 }
 
 /** The tile on one side of a 1x1 piece. */

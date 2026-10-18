@@ -130,11 +130,7 @@ export class GameScene extends Scene {
       controls.poll({
         building: this.sim.building,
         pieceId: () => this.buildView?.selected ?? FIRST_PIECE,
-        overUi: (x, y) =>
-          (this.buildView?.overUi(x, y) ?? false) ||
-          (this.picker?.overUi(x, y) ?? false) ||
-          (this.siteMenus?.overUi(x, y) ?? false) ||
-          (this.hud?.overUi(x, y) ?? false),
+        overUi: (x, y) => [this.buildView, this.picker, this.siteMenus, this.hud, this.tutorial].some((v) => v?.overUi(x, y)),
         clickUi: (x, y) => this.clickUi(controls, x, y),
         stagerAt: (t) => {
           const piece = pieceAt(this.sim.foundry, t.tx, t.ty);
@@ -195,7 +191,7 @@ export class GameScene extends Scene {
     return { hoverName: this.hover?.shown ?? null, buildTip: this.buildView?.tip.shown ?? null };
   }
 
-    get menuOpen(): boolean {
+  get menuOpen(): boolean {
     return this.menu?.isOpen ?? false;
   }
 

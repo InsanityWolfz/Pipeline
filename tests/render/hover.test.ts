@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { HUD_DIGITS, HUD_LETTERS } from '../../src/data/assets';
 import { BUILD_TIP, WORLD_NAMES } from '../../src/data/hudLayout';
+import { FIXTURES } from '../../src/data/claims';
+import { ENEMIES } from '../../src/data/enemies';
+import { ITEMS } from '../../src/data/items';
+import { NODES } from '../../src/data/nodes';
 import { BUILD_BAR, PIECES } from '../../src/data/pieces';
 import { ROOMS } from '../../src/data/rooms';
-import { arrowSpots, sorterLook, sorterSide, wrapText } from '../../src/render/foundryLayout';
+import { arrowSpots, sorterLook, wrapText } from '../../src/render/foundryLayout';
+import { sortSideOf } from '../../src/sim/pieces';
 import { nameAt } from '../../src/render/hoverNames';
 import { createSim } from '../../src/sim/state';
 import { HALL, placeHusk, SEED } from '../sim/fight';
@@ -54,6 +59,21 @@ describe('world names on mouse-over', () => {
   });
 });
 
+describe('world names in the pixel font', () => {
+  it('only use glyphs the font has, for everything that can be hovered', () => {
+    const glyphs = new Set([...HUD_LETTERS.glyphs, ...HUD_DIGITS.glyphs]);
+    const names = [
+      ...Object.values(ENEMIES).map((e) => e.name),
+      ...Object.values(NODES).map((n) => n.name),
+      ...Object.values(ITEMS).map((i) => i.name),
+      ...FIXTURES.map((f) => f.name),
+      ...Object.values(PIECES).map((p) => p.name),
+      ...Object.values(WORLD_NAMES),
+    ];
+    for (const name of names) for (const ch of name.toUpperCase()) expect(glyphs.has(ch), `${name}: '${ch}'`).toBe(true);
+  });
+});
+
 describe('build bar descriptions', () => {
   const glyphs = new Set([...HUD_LETTERS.glyphs, ...HUD_DIGITS.glyphs]);
 
@@ -74,10 +94,10 @@ describe('build bar descriptions', () => {
 
 describe('the sorter on screen', () => {
   it('sorts right of its facing, or left mirrored, matching its sprite turns', () => {
-    expect(sorterSide('right', false)).toBe('down');
-    expect(sorterSide('right', true)).toBe('up');
-    expect(sorterSide('down', false)).toBe('left');
-    expect(sorterSide('up', false)).toBe('right');
+    expect(sortSideOf('right', false)).toBe('down');
+    expect(sortSideOf('right', true)).toBe('up');
+    expect(sortSideOf('down', false)).toBe('left');
+    expect(sortSideOf('up', false)).toBe('right');
     expect(sorterLook('left', false)).toMatchObject({ flipX: true, flipY: true });
     expect(sorterLook('down', true)).toMatchObject({ flipX: true, flipY: false });
   });

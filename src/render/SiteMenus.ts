@@ -1,13 +1,14 @@
 import type { Scene } from 'phaser';
 import { UNIDENTIFIED_ARMOR } from '../data/armor';
 import { SPRITES } from '../data/assets';
-import { LOGISTICS_ICONS, SITE_ICONS } from '../data/foundryAssets';
+import { SITE_ICONS } from '../data/foundryAssets';
 import { itemDef, ITEMS } from '../data/items';
 import { fixtureInReach, isClaimed, pylonInReach } from '../sim/claims';
 import { usableInReach } from '../sim/foundryUse';
 import type { SimState } from '../sim/state';
 import { ChoiceMenu, type Choice } from './ChoiceMenu';
 import type { Controls } from './controls';
+import { pieceIcon } from './foundryLayout';
 
 type PylonChoice = 'deposit' | 'travel';
 /** A stash row: one item's stack, or null for everything. */
@@ -115,7 +116,7 @@ export class SiteMenus {
     this.bench.show(benchRows);
     if (this.sorter.isOpen && usableInReach(sim)?.id !== this.sorterId) this.sorter.close();
     const sorterRows: Choice<SorterChoice>[] = [
-      { icons: [LOGISTICS_ICONS.sorter ?? SITE_ICONS.stash], text: 'Pass everything', value: { itemId: null } },
+      { icons: [pieceIcon('sorter')], text: 'Clear', value: { itemId: null } },
       ...Object.keys(ITEMS).map((id) => ({ icons: [itemDef(id).icon], text: itemDef(id).name, value: { itemId: id } })),
     ];
     this.sorter.show(sorterRows);

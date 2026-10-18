@@ -4,7 +4,7 @@ import { FOUNDRY_ROOM } from '../../src/data/rooms';
 import { place } from '../../src/sim/placement';
 import type { Facing } from '../../src/sim/player';
 import type { PieceState } from '../../src/sim/pieces';
-import type { SimState } from '../../src/sim/state';
+import { roomById, type SimState } from '../../src/sim/state';
 import { tileCentre } from '../../src/sim/tiles';
 import { arena, HALL, movePlayer } from './fight';
 
@@ -42,10 +42,12 @@ export function put<T extends PieceState = PieceState>(
 }
 
 /**
- * Steps the player out into the ruin hall where they stand, so they can fire:
+ * Steps the player out to the ruin hall's spawn, so they can fire:
  * the tube is quiet in the foundry (015). The foundry keeps running.
  */
 export function stepOutside(s: SimState): SimState {
   s.roomId = HALL;
+  const at = tileCentre(roomById(HALL).spawn);
+  movePlayer(s, at.x, at.y);
   return s;
 }

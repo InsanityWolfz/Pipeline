@@ -1,5 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS, HUD_DIGITS } from '../data/assets';
+import { ATLAS_KEY, DEPTHS, HUD_DIGITS, GLYPH_HEIGHT } from '../data/assets';
 import { VIEW_WIDTH } from '../data/config';
 import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
 import { OBJECTIVES } from '../data/objectives';
@@ -9,7 +9,6 @@ import { colorOf } from './color';
 import { GlyphLine } from './glyphLine';
 
 /** The HUD font's glyph height, px. */
-const GLYPH_HEIGHT = 5;
 
 // The objective line (012): the first unfinished goal, centred at the top of the
 // screen. Finishing one flashes a ley tick beside the line before it moves on.
@@ -51,12 +50,22 @@ export class ObjectiveView {
     this.scene.tweens.add({ targets: this.tick, alpha: 0, delay: TUTORIAL_LAYOUT.tickMs / 2, duration: TUTORIAL_LAYOUT.tickMs / 2 });
   }
 
+  /** The band's screen rect while it shows, so a press on it never fires (015). */
+  private band: { x: number; y: number; w: number; h: number } | null = null;
+
+  overUi(x: number, y: number): boolean {
+    const b = this.band;
+    return b !== null && x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h;
+  }
+
   /** A dark band behind the text, so it reads over doors, barriers and busy floors. */
   private drawPanel(x: number, text: string): void {
     const { objectivePanel: P, objectiveTop } = TUTORIAL_LAYOUT;
     this.panel.clear();
+    this.band = null;
     if (!text) return;
     const w = text.length * HUD_DIGITS.advance;
+    this.band = { x: x - P.padX, y: objectiveTop - P.padY, w: w + 2 * P.padX, h: GLYPH_HEIGHT + 2 * P.padY };
     this.panel.fillStyle(colorOf(P.back), P.alpha).fillRect(x - P.padX, objectiveTop - P.padY, w + 2 * P.padX, GLYPH_HEIGHT + 2 * P.padY);
   }
 }

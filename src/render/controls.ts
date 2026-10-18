@@ -8,19 +8,8 @@ import { BUILD_BAR, pieceDef } from '../data/pieces';
 import type { Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { dragTo, release, type ConduitLay, type HeldConduit } from './dragPath';
+import { AMMO_KEYS, bindKeys, type Key } from './keys';
 import { MenuRequests, type UiCommand } from './menuRequests';
-
-type Key = 'up' | 'down' | 'left' | 'right' | 'dodge' | 'rotate' | 'flip' | 'interact' | 'menu' | 'close' | 'build';
-
-/** Number keys pick the slot's ammo in SLOT_AMMOS order: 1 for the first, and so on. */
-const NUMBER_KEYS = [
-  Input.Keyboard.KeyCodes.ONE,
-  Input.Keyboard.KeyCodes.TWO,
-  Input.Keyboard.KeyCodes.THREE,
-  Input.Keyboard.KeyCodes.FOUR,
-];
-if (SLOT_AMMOS.length > NUMBER_KEYS.length) throw new Error(`Only ${NUMBER_KEYS.length} ammo keys for ${SLOT_AMMOS.length} slot ammo`);
-const AMMO_KEYS = NUMBER_KEYS.slice(0, SLOT_AMMOS.length);
 
 /** What the scene tells the controls each frame about build mode and the screen's UI. */
 export interface BuildInput {
@@ -84,20 +73,7 @@ export class Controls {
   constructor(scene: Scene) {
     const keyboard = scene.input.keyboard;
     if (!keyboard) throw new Error('Keyboard input is unavailable');
-    const codes = Input.Keyboard.KeyCodes;
-    this.keys = {
-      up: keyboard.addKey(codes.W),
-      down: keyboard.addKey(codes.S),
-      left: keyboard.addKey(codes.A),
-      right: keyboard.addKey(codes.D),
-      dodge: keyboard.addKey(codes.SPACE),
-      rotate: keyboard.addKey(codes.R),
-      flip: keyboard.addKey(codes.F),
-      interact: keyboard.addKey(codes.E),
-      menu: keyboard.addKey(codes.C),
-      close: keyboard.addKey(codes.ESC),
-      build: keyboard.addKey(codes.B),
-    };
+    this.keys = bindKeys(keyboard);
     this.ammoKeys = AMMO_KEYS.map((code) => keyboard.addKey(code));
     this.keys.dodge.on('down', () => (this.dodgePending = true));
     this.keys.rotate.on('down', () => {

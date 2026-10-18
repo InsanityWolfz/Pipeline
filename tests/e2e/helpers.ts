@@ -90,6 +90,7 @@ function installHelpers(): void {
     },
     toHall() {
       const g = game();
+      // The foundry's door is on its right wall at row 8 (src/data/rooms.ts); stand inside it and walk out.
       walkTo(22.5 * 32, 8.5 * 32);
       for (let t = 0; t < 60 && g.getState().room === 'foundry'; t++) g.step(1, { moveX: 1 });
       if (g.getState().room === 'foundry') throw new Error('could not leave the foundry');
