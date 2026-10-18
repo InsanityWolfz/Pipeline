@@ -11,7 +11,9 @@ Newest entry first.
 
 220 unit tests and 18 e2e tests pass.
 
-**Next:** Shaun approves the new sprites, then `/verify` and `/review`.
+**Verify:** `npm run check` (220) and `npm run test:e2e` (18) pass. The qa agent passed every visible criterion with screenshots (nodes full, depleted and regrown, the harvest bar, the menu with greyed rows, hotbar and strip per ammo, a bomb mid-arc, the burst, a burning Husk, a bolt through a Husk, parts in the HUD column) and saw no console errors. Its notes for Shaun's sprite review: fuse vs shaft, ley shard vs ley bolt, and casing vs bomb look alike, especially greyed; the menu panel reads as plain rather than rune-carved; the material column has no backing.
+
+**Next:** Shaun approves the new sprites (or asks for changes), then `/review`.
 
 **Notes:**
 - Build choices beyond the plan:
