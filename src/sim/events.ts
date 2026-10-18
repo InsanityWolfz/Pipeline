@@ -76,6 +76,8 @@ export interface SimEvents {
   stashDeposits: { items: Record<string, number> }[];
   /** Items came out of the stash. */
   stashTakes: { items: Record<string, number> }[];
+  /** A claimed site's supply port produced a raw (018): the render shows it harvested and sent home along the ley line. */
+  supplies: { id: string; itemId: string }[];
   /** Fast travel by pylon or waystone (also recorded as a room change). */
   travels: { from: string; to: string }[];
   /** An unidentified piece was identified at the bench (010). */
@@ -127,6 +129,7 @@ export function createEvents(): SimEvents {
     claims: [],
     stashDeposits: [],
     stashTakes: [],
+    supplies: [],
     travels: [],
     shots: [],
     banks: [],
@@ -163,6 +166,7 @@ export function clearEvents(events: SimEvents): void {
   events.claims.length = 0;
   events.stashDeposits.length = 0;
   events.stashTakes.length = 0;
+  events.supplies.length = 0;
   events.travels.length = 0;
   events.shots.length = 0;
   events.banks.length = 0;

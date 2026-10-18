@@ -5,6 +5,15 @@
 
 export type TilePos = { readonly tx: number; readonly ty: number };
 
+/**
+ * A small hand-placed feature that explains a node (018), stamped over the terrain:
+ * a grove or rock field round a pocket of grass the node stands in, or a pond the
+ * reeds stand at the edge of. Radii in tiles; centres may sit between tiles.
+ */
+export type Feature =
+  | { readonly kind: 'grove' | 'rocks'; readonly cx: number; readonly cy: number; readonly r: number }
+  | { readonly kind: 'pond'; readonly cx: number; readonly cy: number; readonly rx: number; readonly ry: number };
+
 /** A rectangle of tiles, inclusive. */
 export interface TileRect {
   readonly x0: number;
@@ -135,9 +144,36 @@ export const OVERWORLD = {
     { group: 'shrine', enemyId: 'wisp', tx: 71, ty: 6 },
     { group: 'shrine', enemyId: 'wisp', tx: 66, ty: 5 },
     { group: 'shrine', enemyId: 'husk', tx: 61, ty: 12 },
-    { group: 'shrine', enemyId: 'husk', tx: 71, ty: 12 },
+    { group: 'shrine', enemyId: 'husk', tx: 69, ty: 11 },
   ],
-  /** Gathering nodes in sensible spots (018 gives them proper sources). */
+  /**
+   * Ley lines (018): glowing seams in the ground where ley comes near the surface,
+   * all leading to the foundry's stairs, directly or through the shrine's pylon.
+   * Ley veins stand on them. Tile points; `shrine` is the line the pylon's haul runs home along.
+   */
+  leyLines: {
+    start: [{ tx: 40, ty: 33 }, { tx: 38, ty: 29 }, { tx: 39, ty: 24 }, { tx: 40, ty: 21 }],
+    meadow: [{ tx: 44, ty: 31 }, { tx: 43, ty: 27 }, { tx: 42, ty: 23 }, { tx: 41, ty: 21 }],
+    shrine: [{ tx: 66, ty: 8 }, { tx: 64, ty: 12 }, { tx: 58, ty: 17 }, { tx: 50, ty: 19 }, { tx: 43, ty: 20 }],
+    'shrine-west': [{ tx: 60, ty: 9 }, { tx: 63, ty: 9 }, { tx: 66, ty: 8 }],
+    'shrine-east': [{ tx: 72, ty: 9 }, { tx: 69, ty: 9 }, { tx: 66, ty: 8 }],
+  } satisfies Record<string, TilePos[]>,
+  /** What explains each node that isn't a vein (018): groves and rock fields hold their node in a pocket of grass, ponds hold reeds at their edge. */
+  features: [
+    { kind: 'grove', cx: 27, cy: 24, r: 2.5 },
+    { kind: 'grove', cx: 25, cy: 28, r: 2.5 },
+    { kind: 'grove', cx: 54, cy: 24, r: 2.5 },
+    { kind: 'rocks', cx: 53, cy: 31, r: 2.5 },
+    { kind: 'rocks', cx: 50, cy: 35, r: 2.5 },
+    { kind: 'rocks', cx: 30, cy: 35, r: 2.5 },
+    { kind: 'pond', cx: 24.5, cy: 37, rx: 1.2, ry: 1.2 },
+    { kind: 'pond', cx: 56.5, cy: 37, rx: 1.2, ry: 1.2 },
+    // The shrine site's own, inside the claimed pylon's safe zone.
+    { kind: 'grove', cx: 60, cy: 12, r: 2.5 },
+    { kind: 'pond', cx: 70.5, cy: 13, rx: 1.2, ry: 1.2 },
+    { kind: 'rocks', cx: 63, cy: 4, r: 2.5 },
+  ] satisfies Feature[],
+  /** Gathering nodes, each where its material comes from (018: see each node type's placement rule). Indices are stable: tests name nodes by them. */
   nodes: [
     { nodeId: 'tree', tx: 27, ty: 25 },
     { nodeId: 'tree', tx: 25, ty: 29 },
@@ -152,6 +188,7 @@ export const OVERWORLD = {
     { nodeId: 'ley-vein', tx: 72, ty: 9 },
     { nodeId: 'tree', tx: 60, ty: 13 },
     { nodeId: 'reeds', tx: 72, ty: 13 },
+    { nodeId: 'rubble', tx: 63, ty: 5 },
   ],
 } as const;
 

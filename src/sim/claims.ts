@@ -193,6 +193,7 @@ export function stepPorts(state: SimState, offer: (to: Tile, from: Tile, item: s
       if (f.timer < PORT_TICKS) continue;
       f.item = PORT_CYCLE[f.next % PORT_CYCLE.length] ?? null;
       f.next += 1;
+      if (f.item) state.events.supplies.push({ id: f.id, itemId: f.item });
     }
     if (f.item && offer(portFront(f), fixtureDef(f.id), f.item)) {
       f.item = null;

@@ -48,7 +48,8 @@ describe('generation', () => {
     expect(count(TILE.water)).toBeGreaterThan(0);
     expect(count(TILE.shallow)).toBeGreaterThan(0);
     expect(room.terrain?.ponds.length).toBeGreaterThan(0);
-    for (const p of room.terrain?.ponds ?? []) expect(at({ tx: p.cx, ty: p.cy })).toBe(TILE.water);
+    // A hand-placed pond (018) may centre between tiles: the tile under its centre is water.
+    for (const p of room.terrain?.ponds ?? []) expect(at({ tx: Math.round(p.cx), ty: Math.round(p.cy) })).toBe(TILE.water);
   });
 
   it('lets landmarks override the terrain', () => {
@@ -57,9 +58,13 @@ describe('generation', () => {
     for (const t of OVERWORLD.ruinField.walls) expect(at(t)).toBe(TILE.ruinBlock);
     for (const t of OVERWORLD.shrine.walls) expect(at(t)).toBe(TILE.wall);
     for (const t of [OVERWORLD.startStone, OVERWORLD.shrine.pylon, ...OVERWORLD.shrine.gate, ...OVERWORLD.nodes]) expect(WALKABLE).toContain(at(t));
-    // Clearings hold no trees, rocks or water.
+    // Clearings hold no trees, rocks or water, but for the hand-placed features round the nodes (018).
+    const inFeature = (tx: number, ty: number) =>
+      OVERWORLD.features.some((f) => (f.kind === 'pond' ? Math.hypot((tx - f.cx) / f.rx, (ty - f.cy) / f.ry) <= OVERWORLD.ponds.shore : Math.hypot(tx - f.cx, ty - f.cy) <= f.r));
     for (const r of OVERWORLD.clearings) {
-      for (let ty = r.y0; ty <= r.y1; ty++) for (let tx = r.x0; tx <= r.x1; tx++) expect([TILE.tree, TILE.rock, TILE.water]).not.toContain(at({ tx, ty }));
+      for (let ty = r.y0; ty <= r.y1; ty++) {
+        for (let tx = r.x0; tx <= r.x1; tx++) if (!inFeature(tx, ty)) expect([TILE.tree, TILE.rock, TILE.water]).not.toContain(at({ tx, ty }));
+      }
     }
   });
 
@@ -70,10 +75,8 @@ describe('generation', () => {
     expect(seen.has(key(OVERWORLD.entrance.door))).toBe(true);
     expect(seen.has(key(OVERWORLD.shrine.pylon))).toBe(true);
     for (const p of OVERWORLD.packs) expect(seen.has(key(p)), `${p.enemyId} at ${key(p)}`).toBe(true);
-    for (const n of OVERWORLD.nodes) {
-      const beside = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx = 0, dy = 0]) => seen.has(key({ tx: n.tx + dx, ty: n.ty + dy })));
-      expect(beside, `${n.nodeId} at ${key(n)}`).toBe(true);
-    }
+    // Every node is gathered standing just below it.
+    for (const n of OVERWORLD.nodes) expect(seen.has(key({ tx: n.tx, ty: n.ty + 1 })), `${n.nodeId} at ${key(n)}`).toBe(true);
   });
 });
 

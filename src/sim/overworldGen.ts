@@ -1,4 +1,4 @@
-import { OVERWORLD, type TilePos, type TileRect } from '../data/overworld';
+import { OVERWORLD, type Feature, type TilePos, type TileRect } from '../data/overworld';
 import { TILE, type Doorway, type Pond, type Room } from '../data/rooms';
 import { createRng, nextFloat, nextInt, type RngState } from './rng';
 
@@ -81,6 +81,38 @@ function edge(grid: Grid, rng: RngState): void {
   }
 }
 
+/** Tiles a feature never covers: the landmarks' paths, walls and door. */
+const KEEP: readonly string[] = [TILE.path, TILE.wall, TILE.ruinBlock, TILE.door];
+
+/**
+ * Stamps a hand-placed feature round its node (018). A grove or rock field fills
+ * its disc (a rock field speckled) but leaves a pocket of grass one tile round
+ * every node; a pond's water reaches up to a reed node, which stands in its shallows.
+ */
+function feature(grid: Grid, f: Feature): Pond | null {
+  const node = (tx: number, ty: number) => OVERWORLD.nodes.some((n) => n.tx === tx && n.ty === ty);
+  const pocket = (tx: number, ty: number) => OVERWORLD.nodes.some((n) => Math.abs(n.tx - tx) <= 1 && Math.abs(n.ty - ty) <= 1);
+  const rx = f.kind === 'pond' ? f.rx * OVERWORLD.ponds.shore : f.r;
+  const ry = f.kind === 'pond' ? f.ry * OVERWORLD.ponds.shore : f.r;
+  for (let ty = Math.floor(f.cy - ry); ty <= Math.ceil(f.cy + ry); ty++) {
+    for (let tx = Math.floor(f.cx - rx); tx <= Math.ceil(f.cx + rx); tx++) {
+      const here = grid[ty]?.[tx];
+      if (here === undefined || KEEP.includes(here)) continue;
+      if (f.kind === 'pond') {
+        const d = Math.hypot((tx - f.cx) / f.rx, (ty - f.cy) / f.ry);
+        if (d <= 1 && !node(tx, ty)) set(grid, tx, ty, TILE.water);
+        else if (d <= OVERWORLD.ponds.shore) set(grid, tx, ty, TILE.shallow);
+        continue;
+      }
+      if (Math.hypot(tx - f.cx, ty - f.cy) > f.r) continue;
+      if (pocket(tx, ty)) set(grid, tx, ty, TILE.floor);
+      else if (f.kind === 'grove') set(grid, tx, ty, TILE.tree);
+      else if ((tx + ty) % 2 === 0) set(grid, tx, ty, TILE.rock);
+    }
+  }
+  return f.kind === 'pond' ? { cx: f.cx, cy: f.cy, rx: f.rx, ry: f.ry } : null;
+}
+
 /** Builds the overworld room from `seed` (the data's by default). */
 export function generateOverworld(seed: number = OVERWORLD.seed): Room {
   const rng = createRng(seed);
@@ -113,6 +145,10 @@ export function generateOverworld(seed: number = OVERWORLD.seed): Room {
   for (const t of [...OVERWORLD.ruinField.walls, ...OVERWORLD.entrance.mound]) set(grid, t.tx, t.ty, TILE.ruinBlock);
   for (const t of OVERWORLD.shrine.walls) set(grid, t.tx, t.ty, TILE.wall);
   for (const t of [OVERWORLD.shrine.pylon, OVERWORLD.startStone, ...OVERWORLD.nodes, ...OVERWORLD.shrine.gate]) set(grid, t.tx, t.ty, TILE.floor);
+  for (const f of OVERWORLD.features) {
+    const p = feature(grid, f);
+    if (p) ponds.push(p);
+  }
   const door = OVERWORLD.entrance.door;
   set(grid, door.tx, door.ty, TILE.door);
   set(grid, OVERWORLD.entrance.arrive.tx, OVERWORLD.entrance.arrive.ty, TILE.path);

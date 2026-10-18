@@ -1,5 +1,3 @@
-import { OVERWORLD } from '../overworld';
-
 // How the overworld's ground is drawn (017): palette ids and how often each
 // touch appears, by a fixed hash per tile. Render-only tuning.
 
@@ -31,11 +29,6 @@ export const GROUND = {
   /** A seam bends every this many px, by up to 4 × `leyJag` px either way. */
   leyStep: 18,
   leyJag: 1.6,
-  /** Ley seams in tiles: from the start stone and from the shrine, both into the foundry's stairs. */
-  leySeams: [
-    [OVERWORLD.startStone, { tx: 38, ty: 29 }, { tx: 39, ty: 24 }, { tx: 40, ty: 21 }],
-    [OVERWORLD.shrine.pylon, { tx: 64, ty: 12 }, { tx: 58, ty: 17 }, { tx: 50, ty: 19 }, { tx: 43, ty: 20 }],
-  ],
   tuft: 'grass-dark',
   tuftEvery: 4,
   flowers: ['snow', 'gold-trim', 'wisp-light'],

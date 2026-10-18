@@ -110,7 +110,7 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
   c.save();
   c.shadowColor = inkCss(GROUND.ley);
   c.shadowBlur = 6 * pxPerUnit;
-  for (const seam of GROUND.leySeams) {
+  for (const seam of Object.values(OVERWORLD.leyLines)) {
     // A crack in the ground, not a beam: jagged between its points, deep cyan with a thin bright core.
     const pts: [number, number][] = [];
     seam.forEach((t, i) => {

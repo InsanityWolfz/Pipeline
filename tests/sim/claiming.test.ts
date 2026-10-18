@@ -175,6 +175,25 @@ describe('the supply port', () => {
     expect(gaps.slice(0, 2)).toEqual([PORT_TICKS, PORT_TICKS]);
   });
 
+  it('reports each raw it produces as a supply (018), in the cycle, even while the player is out', () => {
+    const s = claimed();
+    const port = s.fixtures.find((f) => f.id === 'supply-port');
+    if (!port) throw new Error('no port');
+    const front = portFront(port);
+    // Placed from inside the foundry; then the player heads back out.
+    s.roomId = FOUNDRY_ROOM;
+    const c = put<ConduitState>(s, 'conduit', front.tx, front.ty, 'down');
+    s.roomId = OVERWORLD_ROOM;
+    const supplies: string[] = [];
+    for (let t = 0; t < PORT_TICKS * 2 + 5; t++) {
+      run(s, 1);
+      for (const e of summarize(s).events.supplies) supplies.push(e.itemId);
+      // Empty the conduit each tick so the line never stalls.
+      c.item = null;
+    }
+    expect(supplies).toEqual(PORT_CYCLE.slice(0, 2));
+  });
+
   it('a raw the next piece cannot use stalls the line, as in 006', () => {
     const s = claimed();
     s.roomId = FOUNDRY_ROOM;
