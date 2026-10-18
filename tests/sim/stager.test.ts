@@ -8,7 +8,6 @@ import { tileCentre } from '../../src/sim/tiles';
 import { fireAt, movePlayer, run, runUntil } from './fight';
 import { foundry, put } from './foundryKit';
 
-const BOLT_TICKS = ammoDef('ley-bolt').fireTicks;
 const BOMB_TICKS = ammoDef('bomb').fireTicks;
 
 /** An attuned foundry sim carrying `cores` warden cores. */
@@ -156,6 +155,24 @@ describe('spread shots', () => {
     }
   });
 
+  it('fires along every stager angle', () => {
+    for (const angle of STAGER_ANGLES) {
+      const s = spread([angle], 2);
+      run(s, 1, fireAt(600, 400));
+      const [wx, wy] = rotate(1, 0, angle);
+      expect(s.arrows[0]?.dx).toBeCloseTo(wx);
+      expect(s.arrows[0]?.dy).toBeCloseTo(wy);
+    }
+  });
+
+  it('two streams at the same angle fire a stacked double shot', () => {
+    const s = spread([15, 15], 4);
+    run(s, 1, fireAt(600, 400));
+    expect(s.arrows).toHaveLength(2);
+    expect(s.arrows[0]?.dy).toBeCloseTo(s.arrows[1]?.dy ?? NaN);
+    expect(s.link.reservoir.count).toBe(2);
+  });
+
   it('fires as many as there are rounds, nearest 0 first', () => {
     const s = spread([30, 0, -30], 2);
     run(s, 1, fireAt(600, 400));
@@ -186,7 +203,7 @@ describe('spread shots', () => {
     expect(s.bombs).toHaveLength(2);
     for (const b of s.bombs) expect(Math.hypot(b.toX - 400, b.toY - 400)).toBeCloseTo(150);
     expect(s.bombs[1]?.toY).toBeCloseTo(400 + 150 * Math.sin(Math.PI / 6));
-    run(s, BOMB_TICKS);
+    runUntil(s, (x) => x.events.bursts.length === 2, BOMB_TICKS * 3);
   });
 
   it('a three-stream ley bolt line fires three bolts per shot from its refills', () => {
@@ -215,6 +232,27 @@ describe('spread shots', () => {
     run(s, 1, fireAt(600, 400));
     expect(s.tube.shotCount).toBe(3);
     expect(s.arrows).toHaveLength(3);
-    run(s, BOLT_TICKS);
+  });
+
+  it('a stager build, angle turns and spread shots replay exactly', () => {
+    const play = () => {
+      const s = attuned();
+      s.inventory = { 'warden-core': 2 };
+      s.tube.ammoId = 'ley-bolt';
+      put(s, 'tube-socket', 10, 6);
+      const h = put<HopperState>(s, 'hopper', 6, 6, 'right');
+      h.item = 'ley-crystal';
+      h.count = 8;
+      put(s, 'grinder', 7, 6);
+      put(s, 'focuser', 8, 6);
+      const a = put<StagerState>(s, 'gravity-stager', 9, 6, 'right');
+      const b = put<StagerState>(s, 'gravity-stager', 10, 5, 'down');
+      run(s, 1, { setAngle: { id: a.id } });
+      run(s, 3, { setAngle: { id: b.id } });
+      movePlayer(s, 400, 400);
+      run(s, 900, (x) => ({ ...fireAt(560 + (x.tick % 40), 420), moveX: x.tick % 90 < 45 ? 1 : -1 }));
+      return summarize(s);
+    };
+    expect(play()).toEqual(play());
   });
 });

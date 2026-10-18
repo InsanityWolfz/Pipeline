@@ -48,15 +48,21 @@ test('three stagers into the socket fire a three-bolt spread', async ({ page }) 
     s = g.getState();
     for (let t = 0; t < 99 * 20 + 40 && (s.inventory['ley-bolt'] ?? 0) > 0; t++) s = g.step(1, { fire: true, aimX: 16 * 32, aimY: 12 * 32 + 200 });
     let shot = 0;
+    let bolts = 0;
     for (let t = 0; t < 40 && shot === 0; t++) {
+      const before = new Set(s.arrows.map((a) => a.id));
       s = g.step(1, { fire: true, aimX: 16 * 32, aimY: 12 * 32 + 200 });
-      if (s.tube.fromReservoir) shot = s.tube.shotCount;
+      if (s.tube.fromReservoir) {
+        shot = s.tube.shotCount;
+        bolts = s.arrows.filter((a) => !before.has(a.id) && a.ammoId === 'ley-bolt').length;
+      }
     }
     const streams = s.foundry.pieces.find((p) => p.kind === 'socket');
-    return { shot, streams: streams?.kind === 'socket' ? streams.streams : [], angles: stagers.length };
+    return { shot, bolts, streams: streams?.kind === 'socket' ? streams.streams : [], angles: stagers.length };
   });
   expect(result.angles).toBe(3);
   expect(result.streams).toHaveLength(3);
   expect(result.shot).toBe(3);
+  expect(result.bolts).toBe(3);
   expect(errors).toEqual([]);
 });
