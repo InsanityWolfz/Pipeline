@@ -9,7 +9,7 @@ A doorway in the ruin hall leads to the foundry, an empty walled room. There the
 - docs/prototype.md: "Player flow" beats 4 and 6, "Content list" (beginner ammo chains; foundry placement; foundry pieces: machines for the ammo chains), "Crude animations needed" (machine idle and working loops, ammo moving between machines)
 - docs/process.md: "Prototype backlog" item 006
 - docs/specs/005-hand-crafting.md: recipes, the crafted-items set, E interaction
-- Interview decisions (Shaun, 2026-10-18): the foundry is a new room reached by a doorway; items move on placeable conduits; raw materials go in through an input hopper; ammo comes out into an output crate; all three chains get machines; placing is free; machines unlock by hand-crafting their output once; combiners (assembler, packer) are 3×1, everything else 1×1; B toggles build mode, R rotates, left-click places, right-click picks up, the world keeps running; build anywhere on the foundry floor under the cursor; each hopper holds one item type, chosen with a small picker; an item a machine can't use stalls its conduit; the doorway uses a short fade, the player still spawns in the ruin hall; the foundry ticks wherever the player is; a KO keeps the whole foundry; machines show working, starved and blocked markers, with buffers on hover. Follow-up (Shaun, 2026-10-18): machines can hand items straight to the next machine; the three-input combiners are 3×1 so each input can have its own conduit; hoppers take raw materials only; conduits are walkable and other pieces solid. Claude proposes the tuning below for Shaun to adjust.
+- Interview decisions (Shaun, 2026-10-18): the foundry is a new room reached by a doorway; items move on placeable conduits; materials go in through an input hopper; ammo comes out into an output crate; all three chains get machines; placing is free; machines unlock by hand-crafting their output once; combiners (assembler, packer) are 3×1, everything else 1×1; B toggles build mode, R rotates, left-click places, right-click picks up, the world keeps running; build anywhere on the foundry floor under the cursor; each hopper holds one item type, chosen with a small picker; an item a machine can't use stalls its conduit; the doorway uses a short fade, the player still spawns in the ruin hall; the foundry ticks wherever the player is; a KO keeps the whole foundry; machines show working, starved and blocked markers, with buffers on hover. Follow-up (Shaun, 2026-10-18): machines can hand items straight to the next machine; the three-input combiners are 3×1 so each input can have its own conduit; conduits are walkable and other pieces solid; hoppers take any item the player holds (so leftover hand-crafted parts can start a line mid-chain) and can push straight into a machine. Claude proposes the tuning below for Shaun to adjust.
 
 ## Acceptance criteria
 
@@ -53,7 +53,7 @@ A doorway in the ruin hall leads to the foundry, an empty walled room. There the
 - [ ] **Conduit:** holds at most 1 item. An item in a conduit needs 15 ticks to cross it, then moves into its front if that accepts it, and waits there otherwise. Conduits accept items from any side but their front.
 - [ ] **Machine:** accepts an item from a conduit or another machine whose front is the machine, on any side but its own front, if the item is one of its recipe's inputs and its buffer for that item holds fewer than 4. When every input is buffered, it takes them and crafts for its craft time, then holds the output (up to 4). It pushes one output item at a time into its front if that's a conduit, a machine or a crate that accepts it, so a machine facing straight into the next machine needs no conduit between them. It doesn't start a craft while its output is full.
 - [ ] **Stall:** an item at the end of a conduit that its front doesn't accept (wrong item, full buffer, or nothing there) waits, and the conduits behind it back up.
-- [ ] **Hopper:** holds one item type, any count. A deposit (E within 12 px of an empty hopper's feet box, with the item picked from the player's held raw materials) moves all of that item from the inventory into it. E on a hopper that already holds a type deposits all of that type the player holds. It pushes one item every 15 ticks into its front if that's a conduit that accepts it. An empty hopper with no items forgets its type.
+- [ ] **Hopper:** holds one item type, any count. A deposit (E within 12 px of an empty hopper's feet box, with the item picked from any item the player holds: raw, part or ammo) moves all of that item from the inventory into it. E on a hopper that already holds a type deposits all of that type the player holds. It pushes one item every 15 ticks into its front if that's a conduit or a machine that accepts it. An empty hopper with no items forgets its type.
 - [ ] **Crate:** accepts items from a conduit or machine whose front is the crate, any item, up to 99 in total. E within 12 px of its feet box moves everything in it into the inventory and records a pickup event.
 - [ ] Machines report a status each tick: `working` (crafting), `starved` (missing at least one input; lists which), `blocked` (output full), or `idle` (nothing buffered).
 - [ ] The foundry ticks every step whichever room the player is in. Nothing ticks while the sim doesn't (crafting menu open), so it runs on play time only.
@@ -68,7 +68,7 @@ A doorway in the ruin hall leads to the foundry, an empty walled room. There the
 - [ ] A bar along the bottom of the screen shows every unlocked piece with its icon, the selected one highlighted. Clicking a piece or scrolling the wheel selects it.
 - [ ] A ghost of the selected piece snaps to the tile under the cursor with its facing shown, tinted ley cyan where it can be placed and red where it can't. R rotates it. Left-click places it, right-click picks up the piece under the cursor.
 - [ ] Holding left-click and dragging places conduits along the tiles the cursor crosses, all with the current facing.
-- [ ] E on an empty hopper opens a small picker of the player's held raw materials; clicking one deposits it. Esc or moving away closes it. The world keeps running.
+- [ ] E on an empty hopper opens a small picker of every item the player holds; clicking one deposits it. Esc or moving away closes it. The world keeps running.
 
 **Foundry views (render)**
 - [ ] Every piece is drawn with its facing, depth-sorted by its feet. Machines play an idle loop and a working loop. Conduits show their flow direction.
@@ -94,7 +94,7 @@ A doorway in the ruin hall leads to the foundry, an empty walled room. There the
 - The tube link and reservoir (007): ammo only reaches the tube through the crate and the inventory.
 - Gravity stagers and spreads (008), supply lines and pylons (009).
 - Machine parts or any build cost, schematics, foundry wings, upgrades.
-- Splitters, mergers, underground conduits, sorting or filtering. Hoppers taking parts or ammo.
+- Splitters, mergers, underground conduits, sorting or filtering.
 - Blueprints, copy-paste, undo, multi-select, area pick-up.
 - Building outside the foundry; enemies entering the foundry or changing rooms.
 - Recipe gating and tutorial order beyond the unlock rule (012). Uncovering or attuning the foundry (007/012).
@@ -106,9 +106,9 @@ A doorway in the ruin hall leads to the foundry, an empty walled room. There the
   - Rooms: walking into a doorway moves the player to the linked room one tile inside, velocity cleared, event recorded; rolling in works; both rooms tick while the player is in either; Husks stay in their room; KO returns the player to the ruin hall spawn.
   - Unlocks: a machine is locked until its output is crafted by hand; logistics pieces always unlocked.
   - Placement: valid placement; rejects locked, off-floor, wall, overlapping and (for solid pieces) under-the-player tiles with place-failed; 3×1 footprints in all four facings; rotate cycles clockwise; pick-up returns every held item; machines, hoppers and crates are solid and conduits aren't; only in the foundry.
-  - Flow: conduit crossing time and one-item capacity; conduits don't accept from their front; machine accepts only its inputs, buffers up to 4, crafts after its time, holds up to 4 output and stops when full; a machine facing another machine hands its output over directly, and a machine facing one that can't use the item is blocked; wrong items stall and back up the line; hopper pushes every 15 ticks, keeps one type, forgets it when empty; crate caps at 99; E on a crate empties it into the inventory.
+  - Flow: conduit crossing time and one-item capacity; conduits don't accept from their front; machine accepts only its inputs, buffers up to 4, crafts after its time, holds up to 4 output and stops when full; a machine facing another machine hands its output over directly, and a machine facing one that can't use the item is blocked; wrong items stall and back up the line; hopper pushes every 15 ticks into a conduit or straight into a machine, takes any item type (raw, part or ammo), keeps one type, forgets it when empty; crate caps at 99; E on a crate empties it into the inventory.
   - Status: working, starved (with missing inputs), blocked and idle.
-  - Lines: a full arrow line (three hoppers, cutter, knapper, spinner, assembler, crate), a bomb line and a ley bolt line each produce their ammo from raw materials.
+  - Lines: a full arrow line (three hoppers, cutter, knapper, spinner, assembler, crate), a bomb line and a ley bolt line each produce their ammo from raw materials; a hopper of hand-crafted shafts feeding an assembler directly starts a line mid-chain.
   - KO keeps the foundry; determinism of a build-and-run session tick for tick.
 - **Vitest (data test):** every machine's recipe exists; footprints are 1×1 or 3×1; every doorway links to a doorway in an existing room; every new sprite key is in the atlas.
 - **Playwright (`tests/e2e/foundry.spec.ts`):** walk through the doorway and back; in build mode place, rotate and pick up pieces with the mouse; drag a conduit run; deposit into a hopper through the picker; build a ley bolt line, step until the crate holds bolts, empty it with E, load and fire one; firing and loading are ignored in build mode; no console errors.
@@ -116,5 +116,4 @@ A doorway in the ruin hall leads to the foundry, an empty walled room. There the
 - **Shaun's review:** every new sprite at 4×, then the Pages preview playtest (is placing quick? can you read where a line is stuck? does the first full line feel like "it does itself"?).
 
 ## Open questions
-- Can a hopper push straight into a machine, or only into a conduit? This draft says conduit only. Shaun to confirm.
 - Every number above is a starting value for Shaun to adjust when approving.
