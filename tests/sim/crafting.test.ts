@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RECIPES } from '../../src/data/recipes';
 import { craft } from '../../src/sim/crafting';
-import { resetRoom } from '../../src/sim/state';
+import { resetWorld } from '../../src/sim/state';
 import { arena } from './fight';
 
 describe('crafting', () => {
@@ -49,7 +49,7 @@ describe('crafting', () => {
     const s = arena();
     s.inventory = { fiber: 1 };
     craft(s, 'rope');
-    resetRoom(s);
+    resetWorld(s);
     expect(s.crafted).toEqual(['rope']);
     expect(s.inventory.rope).toBeUndefined();
   });

@@ -9,6 +9,8 @@ import type { SimState } from './state';
 export interface BombState {
   id: number;
   ammoId: string;
+  /** The room it was thrown in; it only bursts on enemies there. */
+  roomId: string;
   fromX: number;
   fromY: number;
   toX: number;
@@ -44,6 +46,7 @@ export function throwBomb(
   state.bombs.push({
     id: state.nextBombId++,
     ammoId,
+    roomId: state.roomId,
     fromX: from.x,
     fromY: from.y,
     toX,
@@ -84,7 +87,8 @@ const BURST_HIT = { knock: false, flash: true } as const;
 function burst(state: SimState, b: BombState): void {
   const ammo = lobAmmo(b.ammoId);
   for (const e of state.enemies) {
-    if (e.health <= 0 || Math.hypot(e.x - b.x, e.y - b.y) > ammo.burstRadius) continue;
+    if (e.roomId !== b.roomId || e.health <= 0) continue;
+    if (Math.hypot(e.x - b.x, e.y - b.y) > ammo.burstRadius) continue;
     damageEnemy(state, e, ammo.burstDamage, e.x - b.x, e.y - b.y, BURST_HIT);
     // A new burst restarts the burn; burns never stack.
     e.burnTicks = ammo.burn.everyTicks * ammo.burn.times;

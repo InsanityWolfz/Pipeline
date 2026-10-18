@@ -105,7 +105,7 @@ describe('placeholder KO', () => {
     s.player.health = damage;
     s.inventory.arrow = 3;
     s.tube.loaded = 2;
-    s.groundItems.push({ id: s.nextGroundItemId++, itemId: 'wood', x: 600, y: 448 });
+    s.groundItems.push({ id: s.nextGroundItemId++, itemId: 'wood', roomId: 'ruin-hall', x: 600, y: 448 });
     return s;
   }
 

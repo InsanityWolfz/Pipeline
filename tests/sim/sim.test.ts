@@ -161,6 +161,7 @@ describe('sim state', () => {
       craftFails: [],
       bursts: [],
       selects: [],
+      roomChanges: [],
       ko: false,
     });
   });

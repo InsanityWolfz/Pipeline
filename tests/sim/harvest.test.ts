@@ -53,7 +53,7 @@ describe('harvesting', () => {
     expect(s.groundItems.map((g) => g.itemId)).toEqual(['wood']);
     expect(s.events.harvests).toEqual([{ id: n.id, nodeId: 'tree', itemId: 'wood', x: n.x, y: n.y }]);
     const g = s.groundItems[0];
-    for (const r of nodeRects(s.nodes)) {
+    for (const r of nodeRects(s.nodes, 'ruin-hall')) {
       const inside = Math.abs((g?.x ?? 0) - r.x) < r.w / 2 && Math.abs((g?.y ?? 0) - r.y) < r.h / 2;
       expect(inside).toBe(false);
     }

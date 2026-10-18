@@ -5,13 +5,14 @@ import type { Room } from '../data/rooms';
 import { isSolid, overlapsRect, type Rect } from './collision';
 import { nextFloat, nextInt, type RngState } from './rng';
 import { nodeRects } from './nodes';
-import { roomOf, type SimState } from './state';
+import { roomById, type SimState } from './state';
 
 // Items dropped on the ground, and picking them up by walking over them.
 
 export interface GroundItem {
   id: number;
   itemId: string;
+  roomId: string;
   x: number;
   y: number;
 }
@@ -56,21 +57,25 @@ export function scatterPoint(
   return { x, y };
 }
 
-/** Rolls an enemy's drops and scatters them on the ground around (x, y). */
-export function spawnDrops(state: SimState, def: EnemyDef, x: number, y: number): void {
-  const room = roomOf(state);
-  const rects = nodeRects(state.nodes);
+/** Rolls an enemy's drops and scatters them on the ground around (x, y) in its room. */
+export function spawnDrops(state: SimState, def: EnemyDef, x: number, y: number, roomId: string): void {
+  const room = roomById(roomId);
+  const rects = nodeRects(state.nodes, roomId);
   for (const itemId of rollDrops(def.drops, state.rng)) {
     const at = scatterPoint(room, state.rng, x, y, rects);
-    state.groundItems.push({ id: state.nextGroundItemId++, itemId, ...at });
+    state.groundItems.push({ id: state.nextGroundItemId++, itemId, roomId, ...at });
   }
 }
 
-/** Moves ground items within PICKUP_RADIUS of the player's feet box into the inventory. */
+/** Moves ground items in the player's room within PICKUP_RADIUS of their feet box into the inventory. */
 export function stepPickups(state: SimState): void {
   const p = state.player;
   let kept = 0;
   for (const item of state.groundItems) {
+    if (item.roomId !== state.roomId) {
+      state.groundItems[kept++] = item;
+      continue;
+    }
     const gapX = Math.max(0, Math.abs(item.x - p.x) - FEET_BOX.w / 2);
     const gapY = Math.max(0, Math.abs(item.y - p.y) - FEET_BOX.h / 2);
     if (Math.hypot(gapX, gapY) <= PICKUP_RADIUS) {

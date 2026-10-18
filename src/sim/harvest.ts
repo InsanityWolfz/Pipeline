@@ -4,7 +4,7 @@ import { scatterPoint } from './drops';
 import type { Command } from './input';
 import { isRolling } from './movement';
 import { nodeRects, useNode, type NodeState } from './nodes';
-import { roomOf, type SimState } from './state';
+import { roomById, type SimState } from './state';
 import { stopLoading } from './tube';
 
 // Harvesting a gathering node with E: stand in reach and keep still until it's done.
@@ -25,13 +25,13 @@ function gapTo(state: SimState, n: NodeState): number {
   return Math.hypot(gapX, gapY);
 }
 
-/** The nearest harvestable node in reach, by centre distance; the first placed wins ties. */
+/** The nearest harvestable node in reach in the player's room, by centre distance; the first placed wins ties. */
 export function nodeInReach(state: SimState): NodeState | undefined {
   const p = state.player;
   let best: NodeState | undefined;
   let bestDist = Infinity;
   for (const n of state.nodes) {
-    if (n.uses === 0 || gapTo(state, n) > HARVEST_REACH) continue;
+    if (n.roomId !== state.roomId || n.uses === 0 || gapTo(state, n) > HARVEST_REACH) continue;
     const d = Math.hypot(n.x - p.x, n.y - p.y);
     if (d < bestDist) {
       bestDist = d;
@@ -77,13 +77,13 @@ function complete(state: SimState, n: NodeState): void {
   state.harvest = null;
   useNode(n);
   // Drops land on the side facing the player, never inside a node.
-  const rects = nodeRects(state.nodes);
+  const rects = nodeRects(state.nodes, n.roomId);
   const p = state.player;
   const edgeX = Math.min(Math.max(p.x, n.x - def.feetBox.w / 2), n.x + def.feetBox.w / 2);
   const edgeY = Math.min(Math.max(p.y, n.y - def.feetBox.h / 2), n.y + def.feetBox.h / 2);
   for (let i = 0; i < def.yield; i++) {
-    const at = scatterPoint(roomOf(state), state.rng, edgeX, edgeY, rects);
-    state.groundItems.push({ id: state.nextGroundItemId++, itemId: def.itemId, ...at });
+    const at = scatterPoint(roomById(n.roomId), state.rng, edgeX, edgeY, rects);
+    state.groundItems.push({ id: state.nextGroundItemId++, itemId: def.itemId, roomId: n.roomId, ...at });
   }
   state.events.harvests.push({ id: n.id, nodeId: n.nodeId, itemId: def.itemId, x: n.x, y: n.y });
 }

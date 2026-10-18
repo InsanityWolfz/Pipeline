@@ -9,6 +9,7 @@ import { stepSim } from '../../src/sim/step';
 // Fight scenarios in the ruin hall's open middle (rows 11–16 have no blocks).
 
 export const SEED = 7;
+export const HALL = 'ruin-hall';
 export const HUSK = enemyDef('husk');
 
 /** Where the player stands in an arena: the aggro box around it is all floor. */
@@ -33,9 +34,9 @@ export function movePlayer(s: SimState, x: number, y: number): void {
   s.player.aimY = y;
 }
 
-/** Adds a Husk whose home is where it stands. */
-export function placeHusk(s: SimState, x: number, y: number): EnemyState {
-  const e = createEnemy(s.nextEnemyId++, 'husk', { x, y });
+/** Adds a Husk whose home is where it stands, in the ruin hall unless told otherwise. */
+export function placeHusk(s: SimState, x: number, y: number, roomId = HALL): EnemyState {
+  const e = createEnemy(s.nextEnemyId++, 'husk', { x, y }, roomId);
   s.enemies.push(e);
   return e;
 }
@@ -68,9 +69,9 @@ export function runUntil(s: SimState, done: (s: SimState) => boolean, limit: num
   throw new Error(`condition not met in ${limit} ticks`);
 }
 
-/** Adds a gathering node standing at (x, y). */
-export function placeNode(s: SimState, nodeId: string, x: number, y: number): NodeState {
-  const n = createNode(s.nodes.length, nodeId, { x, y });
+/** Adds a gathering node standing at (x, y), in the ruin hall unless told otherwise. */
+export function placeNode(s: SimState, nodeId: string, x: number, y: number, roomId = HALL): NodeState {
+  const n = createNode(s.nodes.length, nodeId, { x, y }, roomId);
   s.nodes.push(n);
   return n;
 }

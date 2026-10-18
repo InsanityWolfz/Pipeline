@@ -47,12 +47,14 @@ export interface SimEvents {
   craftFails: { recipeId: string }[];
   bursts: BurstEvent[];
   selects: { ammoId: string }[];
+  /** The player walked through a door. */
+  roomChanges: { from: string; to: string }[];
   /** The player was KO'd and the room reset this tick. */
   ko: boolean;
 }
 
 export function createEvents(): SimEvents {
-  return { hits: [], deaths: [], pickups: [], harvests: [], crafts: [], craftFails: [], bursts: [], selects: [], ko: false };
+  return { hits: [], deaths: [], pickups: [], harvests: [], crafts: [], craftFails: [], bursts: [], selects: [], roomChanges: [], ko: false };
 }
 
 export function clearEvents(events: SimEvents): void {
@@ -64,5 +66,6 @@ export function clearEvents(events: SimEvents): void {
   events.craftFails.length = 0;
   events.bursts.length = 0;
   events.selects.length = 0;
+  events.roomChanges.length = 0;
   events.ko = false;
 }

@@ -14,12 +14,12 @@ const STEP = ARROW.speed / TICK_RATE;
 
 /** An arrow flying from the centre of tile (tx, ty). */
 function arrowAt(tx: number, ty: number, dx: number, dy: number): ArrowState {
-  return createArrow(0, 'arrow', (tx + 0.5) * TILE_SIZE, (ty + 0.5) * TILE_SIZE, dx, dy);
+  return createArrow(0, 'arrow', 'test', (tx + 0.5) * TILE_SIZE, (ty + 0.5) * TILE_SIZE, dx, dy);
 }
 
 function ticksToRemove(arrows: ArrowState[], room = openRoom(), limit = 200): number {
   for (let t = 1; t <= limit; t++) {
-    stepArrows(arrows, room);
+    stepArrows(arrows, () => room);
     if (arrows.length === 0) return t;
   }
   return -1;
@@ -66,7 +66,7 @@ describe('arrows', () => {
 
   it('keep flying on open floor', () => {
     const arrows = [arrowAt(10, 10, 0, 1)];
-    stepArrows(arrows, openRoom());
+    stepArrows(arrows, () => openRoom());
     expect(arrows).toHaveLength(1);
     expect(arrows[0]?.travelled).toBe(STEP);
   });
