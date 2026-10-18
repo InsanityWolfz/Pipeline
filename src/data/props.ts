@@ -23,7 +23,7 @@ export type PropId = 'banner' | 'brazier';
 
 export const PROPS: Readonly<Record<PropId, PropDef>> = {
   banner: { anim: loop('prop-banner', 2, 1.5), layer: 'wall', drop: -6 },
-  brazier: { anim: loop('prop-brazier', 4, 9), layer: 'wall', drop: 6, glow: { color: 'ember-light', radius: 48 } },
+  brazier: { anim: loop('prop-brazier', 4, 9), layer: 'wall', drop: 6, glow: { color: 'cinder', radius: 64 } },
 };
 
 /** A prop in a room, by tile. */

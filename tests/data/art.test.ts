@@ -137,7 +137,9 @@ describe('vector frame registration', () => {
         Object.values(v).forEach(walk);
       }
     };
-    walk({ ...assets, ...foundry });
+    const room = await import('../../src/data/roomArt');
+    const props = await import('../../src/data/props');
+    walk({ ...assets, ...foundry, ...room, ...props });
     for (const f of vectorFrames()) expect(registered, f.name).toContain(f.name);
   });
 });

@@ -1,4 +1,0 @@
-# 014: the far edge of a wall top where floor lies above it. Drawn over wall-top.
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-ssssssssssssssssssssssssssssssss
-LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL

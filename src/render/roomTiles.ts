@@ -1,4 +1,4 @@
-import { FLOOR_VARIANTS, WALL_MOSS_ONE_IN, WALL_SPRITES } from '../data/roomArt';
+import { FLOOR_VARIANTS, WALL_ALT_ONE_IN, WALL_SPRITES } from '../data/roomArt';
 import { TILE } from '../data/rooms';
 
 // Which tile art goes where (014). Pure, so tests can pin it down: variants come
@@ -39,7 +39,7 @@ export function wallPieces(rows: readonly string[], tx: number, ty: number): Wal
   if (!isWall(rows, tx, ty + 1)) return { kind: 'face', frame: WALL_SPRITES.face, edgeLeft: false, edgeRight: false, edgeTop: false };
   return {
     kind: 'top',
-    frame: tileHash(tx, ty) % WALL_MOSS_ONE_IN === 0 ? WALL_SPRITES.topMoss : WALL_SPRITES.top,
+    frame: tileHash(tx, ty) % WALL_ALT_ONE_IN === 0 ? WALL_SPRITES.topAlt : WALL_SPRITES.top,
     edgeLeft: !isWall(rows, tx - 1, ty),
     edgeRight: !isWall(rows, tx + 1, ty),
     edgeTop: !isWall(rows, tx, ty - 1),

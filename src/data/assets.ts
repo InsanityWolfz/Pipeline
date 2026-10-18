@@ -23,7 +23,7 @@ export const OVERWORLD_TEXTURES = { ground: 'ow-ground', safeGlow: 'ow-safe-glow
 /** Frame names in the atlas for single-frame sprites, one per sprite grid in assets/sprites. */
 export const SPRITES = {
   leyCrystal: 'ley-crystal',
-  floor: 'floor-rune',
+  floor: 'floor-flag',
   wall: 'wall',
   ruinBlock: 'ruin-block',
   arrow: 'arrow',

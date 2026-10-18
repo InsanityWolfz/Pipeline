@@ -72,6 +72,8 @@ export function bakeVectors(scene: Scene, screenScale: number): void {
 export function showFrame<T extends GameObjects.Image | GameObjects.Sprite>(obj: T, frame: string): T {
   const anchor = anchors.get(frame);
   if (!anchor) {
+    // A frame neither texture has would draw as a blank square: say so, so tests catch it.
+    if (!obj.scene.textures.get(ATLAS_KEY).has(frame)) console.error(`No frame named '${frame}'`);
     obj.setTexture(ATLAS_KEY, frame);
     obj.setScale(1);
     return obj;

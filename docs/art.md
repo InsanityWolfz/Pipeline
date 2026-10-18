@@ -93,6 +93,13 @@ Every colour comes from a palette, by id. The source of truth is `src/data/palet
 | `warden` | #7d8f6e |
 | `warden-light` | #b2c29a |
 | `moss-tuft` | #5fae3e |
+| `mortar` | #3b2b21 |
+| `flag-dark` | #6f553f |
+| `flag` | #8a6c4f |
+| `flag-light` | #a2815e |
+| `carve-dark` | #4f3b2f |
+| `carve` | #6f5442 |
+| `carve-light` | #93745a |
 | `snow` | #ffffff |
 | `hit-red` | #ff4d4d |
 

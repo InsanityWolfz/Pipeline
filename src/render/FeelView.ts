@@ -214,6 +214,7 @@ export class FeelView {
     if (shown === FOUNDRY_ROOM) {
       for (const p of sim.foundry.pieces) {
         const r = pieceRect(p);
+        if (p.kind === 'conduit' || p.kind === 'sorter') spots.push({ x: r.x, y: r.y, ...GLOWS.conduit });
         if (p.kind === 'conduit' && p.item) spots.push({ x: r.x, y: r.y, ...GLOWS.conduitItem });
       }
       // The intake glows once attuned (growing as its rings light), swelling as each item goes in.

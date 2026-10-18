@@ -131,6 +131,14 @@ export const DAYLIGHT_PALETTE: readonly VectorColor[] = [
   { id: 'warden', hex: '#7d8f6e' },
   { id: 'warden-light', hex: '#b2c29a' },
   { id: 'moss-tuft', hex: '#5fae3e' },
+  // The foundry interior (020): warm sandstone flags and carved walls, lit by forge glow
+  { id: 'mortar', hex: '#3b2b21' },
+  { id: 'flag-dark', hex: '#6f553f' },
+  { id: 'flag', hex: '#8a6c4f' },
+  { id: 'flag-light', hex: '#a2815e' },
+  { id: 'carve-dark', hex: '#4f3b2f' },
+  { id: 'carve', hex: '#6f5442' },
+  { id: 'carve-light', hex: '#93745a' },
   // Highlights
   { id: 'snow', hex: '#ffffff' },
   { id: 'hit-red', hex: '#ff4d4d' },

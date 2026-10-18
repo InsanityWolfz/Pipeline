@@ -111,6 +111,8 @@ export const GLOWS = {
   vein: { color: 'ley-cyan', radius: 22 },
   pylon: { color: 'ley-glow', radius: 44 },
   conduitItem: { color: 'ley-cyan', radius: 9 },
+  /** Ley light pooling along every conduit and sorter (020). */
+  conduit: { color: 'ley-cyan', radius: 13 },
   tube: { color: 'ley-cyan', radius: 14 },
   intake: { color: 'ley-glow', radius: 40, pulse: 1.4, ms: 300 },
 } as const;
@@ -122,7 +124,8 @@ export const ATTUNE_GLOW_SWELL = 2.2;
 export const ROOM_MOOD: Readonly<Record<string, { tint: string; alpha: number }>> = {
   // Daylight outside (017): a faint warm wash, no dusk.
   overworld: { tint: 'sun', alpha: 0.04 },
-  foundry: { tint: 'ember-dark', alpha: 0.08 },
+  // A warm forge glow over the sandstone (020).
+  foundry: { tint: 'flame-dark', alpha: 0.1 },
 };
 
 /** The vignette: edge darkness, and where the darkening starts (fraction of the corner distance). */
