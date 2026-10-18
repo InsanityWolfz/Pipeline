@@ -2,6 +2,17 @@
 
 Newest entry first.
 
+## 2026-10-18: 015 Fixes after the overnight run (spec)
+**Changed:** interviewed Shaun after his look at 007–014 and wrote `docs/specs/015-after-overnight.md` (status: draft) on `claude/015-after-overnight` (stacked on 014).
+- **Sorter:** a free sorter piece splits one chosen item off a line. E opens a picker to set the item. It leaves by the right side, and F mirrors that to the left. A blocked exit stalls the sorter.
+- **Firing:** no firing in the foundry, and never from a menu click.
+- **Camera:** the camera lead while shooting is removed.
+- **Hover:** names on mouse-over for everything in the world, and descriptions on the build bar.
+- **Gear:** stays at the bench as it is.
+
+**Next:** Shaun reviews and approves the spec, then `/plan`.
+**Notes:** Shaun first asked what happens to gear once it's worn. It's managed only at the bench menu: clicking the worn piece takes it off, and the HUD shows its icon and value. He's happy with that.
+
 ## 2026-10-18: 014 Look and feel (overnight build)
 **Changed:** built 014 on `claude/014-look-and-feel` (stacked on 013).
 - **Rooms:** floor variants by tile hash, 3/4-view walls (face over floor, lit top over wall), shaped corners in every room, and props as data. Columns and rune stones stand on ruin blocks; banners, vines and braziers stand on wall faces; cracks, rubble, tufts and mushrooms lie on the floor.
