@@ -9,7 +9,9 @@ import { installTestHook } from './render/testHook';
 import { createSim } from './sim/state';
 
 // The bundled fonts (020) load before the game starts, so no text draws with a fallback.
-void loadFonts().then(start);
+void loadFonts()
+  .catch((e: unknown) => console.error('Fonts failed to load; drawing with the fallback', e))
+  .then(start);
 
 function start(): void {
   const sim = createSim(parseSeed(window.location.search), { start: parseStart(window.location.search) });

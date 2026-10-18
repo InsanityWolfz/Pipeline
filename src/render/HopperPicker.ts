@@ -49,7 +49,7 @@ export class HopperPicker {
   /** The cursor is at a screen point (020): its row lights, with the hover sound on a new row. */
   pointAt(x: number, y: number): void {
     const i = this.isOpen ? pickerRows(this.entries).findIndex((r) => inRect(r, x, y)) : -1;
-    this.hover.set(i);
+    if (!this.hover.set(i)) return;
     for (const [k, r] of this.rows.entries()) r.images[0]?.setFrame(this.hover.frame(k));
   }
 
@@ -77,7 +77,7 @@ export class HopperPicker {
   private rebuild(entries: PickerEntry[]): void {
     for (const r of this.rows) {
       for (const o of r.images) o.destroy();
-      r.count.set('');
+      r.count.destroy();
     }
     this.entries = entries;
     const L = PICKER_LAYOUT;

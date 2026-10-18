@@ -11,7 +11,7 @@ const FLOW_FPS = 4;
 
 const loop = (key: string, frames: number, frameRate: number): AnimDef => ({ key, frames, frameRate, loop: true });
 
-/** Every machine (020), in build bar order; a test checks it matches the machine pieces. */
+/** Every machine (020), in build bar order. Listed here because this file has no runtime imports (pieces.ts would be one); a test checks it matches the machine pieces. */
 export const MACHINE_IDS = ['cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser'] as const;
 
 /** A machine's look in one view: still (idle or starved), jammed (blocked), and its working loop. */
@@ -151,8 +151,12 @@ export const STATUS_MARKERS = {
 
 /** Foundry render layout, px. */
 export const FOUNDRY_LAYOUT = {
-  /** Gap between the top of a machine's sprite and the bottom of its status marker. */
-  markerGap: 2,
+  /**
+   * A machine's status marker stands on the back of its top face (020), not a tile above it, so in a line it doesn't
+   * cover the piece in front: its bottom this far below the sprite's top, and this far right of its centre.
+   */
+  markerDrop: 9,
+  markerX: 8,
   /** A conduit item icon sits this far above its ground point, so it reads as riding the channel. */
   itemLift: 3,
   /** A hopper's or crate's item icon and count sit this far above its sprite's bottom. */

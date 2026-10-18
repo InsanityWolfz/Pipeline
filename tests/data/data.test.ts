@@ -146,6 +146,8 @@ describe('assets', () => {
       DOORWAY_SPRITE,
       ...Object.values(FACING_ARROWS.in),
       ...Object.values(FACING_ARROWS.out),
+      ...Object.values(FACING_ARROWS.sort),
+      SPRITES.craftRowPress,
       STATUS_MARKERS.blocked,
       STATUS_MARKERS.starved,
     ];

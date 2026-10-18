@@ -42,7 +42,7 @@ export const CRAFT_MENU_LAYOUT = {
    * The title card over the panel (020): the craft menu is the game's pause, so its card names both.
    * A tablet `w` x `h` px, `gap` px above the panel, the title then the note under it.
    */
-  title: { text: 'Crafting', note: 'Paused', w: 128, h: 30, gap: 4, noteY: 19 },
+  title: { text: 'Crafting', note: 'Paused', w: 128, h: 30, gap: 4, titleY: 4, noteY: 19 },
 } as const;
 
 /**
@@ -178,8 +178,6 @@ export const TABLET = {
   base: 'mortar',
   brass: 'brass',
   corner: 4,
-  /** A dark well inside a panel, for rows. */
-  well: 'ink',
 } as const;
 
 /** Menu rows (020): a pressed row flashes brass for this long, ms. */

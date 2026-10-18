@@ -29,15 +29,15 @@ When this ships, no pixel sprite is left, and the pixel pipeline is removed.
 ## Acceptance criteria
 
 **The foundry interior (render, data)**
-- [ ] The layout, collision and grid are unchanged. The floor, walls, corners and props are redrawn in vector:
+- [x] The layout, collision and grid are unchanged. The floor, walls, corners and props are redrawn in vector:
   - warm sandstone flagstones with rune inlays
   - carved walls with brass fittings
   - ember braziers that flicker
   - cyan ley light pooling around conduits, items in flight and the intake pipe (019)
-- [ ] The build grid stays readable on the new floor in build mode.
+- [x] The build grid stays readable on the new floor in build mode.
 
 **Machines (render, data)**
-- [ ] Each of the nine machines has a distinct, visible mechanism powered by a ley crystal. Each has idle and working loops in all three facings:
+- [x] Each of the nine machines has a distinct, visible mechanism powered by a ley crystal. Each has idle and working loops in all three facings:
   - **Cutter:** a saw blade spins through a log.
   - **Knapper:** a stone hammer strikes a block.
   - **Spinner:** a spindle wheel turns, winding fiber.
@@ -47,10 +47,10 @@ When this ships, no pixel sprite is left, and the pixel pipeline is removed.
   - **Grinder:** a millstone turns over crystal.
   - **Packer (3×1):** arms pack a casing.
   - **Focuser:** a crystal lens gathers light into a bolt.
-- [ ] Each machine still shows the item it makes. Its working, starved and blocked status still reads at a glance, through the mechanism moving, stopping or jamming plus the status marker.
+- [x] Each machine still shows the item it makes. Its working, starved and blocked status still reads at a glance, through the mechanism moving, stopping or jamming plus the status marker.
 
 **Logistics and fixtures (render, data)**
-- [ ] Redrawn in vector, with their sim and behaviour unchanged:
+- [x] Redrawn in vector, with their sim and behaviour unchanged:
   - conduits, straight and all 8 corners, with items riding them
   - the hopper
   - the crate, with its count
@@ -64,23 +64,23 @@ When this ships, no pixel sprite is left, and the pixel pipeline is removed.
   - the pylon: off, activating and active
   - the ley barrier
   - the rubble
-- [ ] Build mode's facing arrows, input arrows, ghost and placement drop-in are redrawn to match.
+- [x] Build mode's facing arrows, input arrows, ghost and placement drop-in are redrawn to match.
 
 **Items and icons (render, data)**
-- [ ] Every item has a vector icon, used on the ground, in the HUD, in menus and riding conduits:
+- [x] Every item has a vector icon, used on the ground, in the HUD, in menus and riding conduits:
   - wood, stone, fiber, ley crystal, husk resin
   - shaft, arrowhead, rope, casing, fuse, ley shard, warden core
   - unidentified armor
   - the arrow, bomb and ley bolt ammo
   - light and heavy armor
-- [ ] The look-alike pairs from 005 stay different in shape: fuse and shaft, ley shard and ley bolt, casing and bomb.
+- [x] The look-alike pairs from 005 stay different in shape: fuse and shaft, ley shard and ley bolt, casing and bomb.
 
 **HUD and menus (render, data)**
-- [ ] Two fonts are bundled in the repo under an open licence (OFL or similar), with their licence files, and loaded locally with no network:
+- [x] Two fonts are bundled in the repo under an open licence (OFL or similar), with their licence files, and loaded locally with no network:
   - a carved-serif display face for titles, names and objectives
   - a clean body face for numbers, readouts and descriptions
   - They replace the 3×5 letter font and the digit font. This adds font files only, no npm dependency.
-- [ ] HUD frames and menus are rune-carved stone tablets with brass corners, and the hotbar slot is ringed in cyan like the tube. This covers:
+- [x] HUD frames and menus are rune-carved stone tablets with brass corners, and the hotbar slot is ringed in cyan like the tube. This covers:
   - the health bar
   - the hotbar and ammo strip
   - the worn armor
@@ -93,18 +93,18 @@ When this ships, no pixel sprite is left, and the pixel pipeline is removed.
   - the pause title card
   - the KO text
   - the minimap frame (017)
-- [ ] The crosshair, damage numbers and the "+1" pickup popup are redrawn to match.
-- [ ] Every menu row has hover and press feedback. The hover sound left over from 014 is added.
+- [x] The crosshair, damage numbers and the "+1" pickup popup are redrawn to match.
+- [x] Every menu row has hover and press feedback. The hover sound left over from 014 is added.
 
 **Removing the pixel pipeline (scripts, docs)**
-- [ ] No pixel grid sprite remains. The grids, the atlas, `npm run art`, its build script, its stale-atlas check, the pixel palette and nearest filtering are removed. `docs/art.md` and `docs/process.md` drop the pixel pipeline.
+- [x] No pixel grid sprite remains. The grids, the atlas, `npm run art`, its build script, its stale-atlas check, the pixel palette and nearest filtering are removed. `docs/art.md` and `docs/process.md` drop the pixel pipeline.
 
 **Rules unchanged**
-- [ ] No sim rule changes. Every unit and e2e test passes, updated only for renamed asset keys and text rendering.
+- [x] No sim rule changes. Every unit and e2e test passes, updated only for renamed asset keys and text rendering.
 
 **Checks**
-- [ ] `npm run check` and `npm run test:e2e` pass.
-- [ ] A contact sheet of every machine (idle and working), piece, fixture, item and HUD element is pending Shaun's review.
+- [x] `npm run check` and `npm run test:e2e` pass.
+- [x] A contact sheet of every machine (idle and working), piece, fixture, item and HUD element is pending Shaun's review.
 
 ## Data changes
 - `src/data/art/`: foundry interior, machines, logistics, fixtures, pylon, items, HUD and menu shapes.
@@ -169,6 +169,19 @@ Built unattended on `claude/020-vector-pass`, stacked on 019, from `docs/plans/0
   - the pixel palette: its ids in data were mapped to daylight ids, so `ley-cyan` becomes `cyan` and `ember` becomes `rust`
   - `ATLAS_KEY`, and nearest filtering. The minimap draws crisp squares at the screen's scale instead.
   - A frame that was never drawn now logs a console error, so the game tests catch it.
+- **The ley barrier** (the shrine's dome) was already vector since 017 (`SITE_LOOK` in `art/ground.ts`); unchanged.
+- **QA fixes:**
+  - QA reported the damage numbers and "+1" popup missing. Following it up showed screenshot timing: a capture lands after their 0.7 s life. A longer life showed them drawn, so they were never broken. They're now plain objects with the text drawn at its popped scale (the review's blurriness fix).
+  - Machine status markers stand on the back of the machine's top face instead of a tile above it, which had covered the piece in front.
+  - The press flash is see-through.
+- **Review fixes:**
+  - menu rows destroy their text on rebuild
+  - the colour test covers all 020 art and the HUD layout colours
+  - dead code removed
+  - the craft menu uses the shared row hover, and it is silent on rows the player can't afford
+  - the KO text's fade stops on clear
+  - fonts fall back on a failed load
+- **GameScene.ts** is 319 lines; it was 316 on the base. Splitting it is left for a later tidy.
 - **The contact sheet** (`/sheet.html`) groups frames by family. Screenshots of every 020 family are in `docs/review/020/` for Shaun's review.
 
 ## Open questions

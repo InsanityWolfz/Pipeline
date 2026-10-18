@@ -312,10 +312,7 @@ export class GameScene extends Scene {
     );
     // Menu rows light under the cursor (020).
     const pointer = controls?.viewPointer();
-    if (pointer) {
-      this.siteMenus?.pointAt(pointer.x, pointer.y);
-      this.picker?.pointAt(pointer.x, pointer.y);
-    }
+    if (pointer) for (const menu of [this.siteMenus, this.picker]) menu?.pointAt(pointer.x, pointer.y);
     const point = controls?.overWorld() ? controls.cursorPoint() : null;
     this.hover?.update(sim, shown, point, (id) => this.foundryView?.topOf(id), this.cameras.main.worldView);
   }

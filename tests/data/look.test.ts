@@ -7,9 +7,10 @@ import { ITEMS } from '../../src/data/items';
 import { NODES } from '../../src/data/nodes';
 import { describe, expect, it } from 'vitest';
 import { FLOOR_VARIANTS, WALL_SPRITES } from '../../src/data/roomArt';
-import { animFrames } from '../../src/data/assets';
+import { animFrames, ENEMY_FX, HUD_HEALTH_LAYOUT, HUD_SLOT_LAYOUT, PLAYER_HIT_FX } from '../../src/data/assets';
+import { ARMOR_TINTS, GHOST, HARVEST_BAR, MINIMAP, TABLET } from '../../src/data/hudLayout';
 import { ENEMIES } from '../../src/data/enemies';
-import { LOGISTICS_ICONS, SORTER_ANIMS } from '../../src/data/foundryAssets';
+import { LOGISTICS_ICONS, SORTER_ANIMS, SPREAD_FAN } from '../../src/data/foundryAssets';
 import { AMBIENT, DAMAGE_NUMBERS, GLOWS, HARVEST_BURSTS, HARVEST_WORK, PARTICLES, ROOM_MOOD } from '../../src/data/juice';
 import { DAYLIGHT_PALETTE } from '../../src/data/palette';
 import { FIRE_SOUNDS, ROOM_AMBIENCE, SOUNDS, WINDUP_SOUNDS } from '../../src/data/sounds';
@@ -102,6 +103,28 @@ describe('feel and sound references', () => {
         const def: PropDef = p;
         return def.glow ? [def.glow.color] : [];
       }),
+      // HUD and render layout colours (020: the pixel palette is gone, so each must be a daylight id).
+      TABLET.fill,
+      TABLET.edge,
+      TABLET.bevel,
+      TABLET.base,
+      TABLET.brass,
+      GHOST.okTint,
+      GHOST.badTint,
+      HARVEST_BAR.color,
+      HARVEST_BAR.back,
+      ...Object.values(MINIMAP.terrain),
+      ...Object.values(MINIMAP.markers).map((m) => m.color),
+      ...Object.values(ARMOR_TINTS),
+      HUD_SLOT_LAYOUT.dryFireTint,
+      HUD_HEALTH_LAYOUT.fillColor,
+      ENEMY_FX.flashColor,
+      ENEMY_FX.telegraphColor,
+      ENEMY_FX.castColor,
+      ENEMY_FX.healthBarColor,
+      ENEMY_FX.healthBarBack,
+      PLAYER_HIT_FX.flashColor,
+      SPREAD_FAN.color,
     ];
     for (const id of ids) expect(known.has(id), id).toBe(true);
   });

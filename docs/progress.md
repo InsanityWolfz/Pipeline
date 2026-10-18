@@ -19,6 +19,8 @@ Newest entry first.
 - Unit tests updated for vector-only assets. A new test checks the pipeline is gone, and another checks the fonts and their licences.
 - The smoke test checks the fonts load offline.
 - Boot waits for `ui().ready`.
+- QA fixes: the status markers no longer cover the piece in front, and the press flash is see-through. The "missing" damage numbers were screenshot timing, not a bug. Review fixes are in.
+- `npm run check` (unit tests) and `npm run test:e2e` (39 tests) pass.
 
 **Next:** Shaun reviews the contact sheet and the preview, and answers the two open questions in the 020 spec (the pause title card, the floor's variants). That ends the 016–020 run.
 

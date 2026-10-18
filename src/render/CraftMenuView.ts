@@ -9,7 +9,7 @@ import type { LinkState } from '../sim/link';
 import { knownRecipe } from '../sim/tutorial';
 import { count, type Inventory } from '../sim/inventory';
 import { craftMenuLines, craftPanelAt } from './craftMenuLayout';
-import { flashRow, MENU_HOVER_EVENT } from './menuFeedback';
+import { flashRow, RowHover } from './menuFeedback';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
@@ -33,7 +33,7 @@ export class CraftMenuView {
   private readonly objects: (GameObjects.Image & GameObjects.Components.Visible)[] = [];
   private readonly lines: TextLine[] = [];
   private readonly rows: Row[] = [];
-  private hovered: Row | undefined;
+  private readonly hover: RowHover;
   private open = false;
   private inventory: Inventory = {};
   private link: Pick<LinkState, 'attuned'> = { attuned: false };
@@ -44,6 +44,7 @@ export class CraftMenuView {
 
   constructor(scene: Scene, onCraft: (recipeId: string) => void) {
     const L = CRAFT_MENU_LAYOUT;
+    this.hover = new RowHover(scene);
     const add = (x: number, y: number, frame: string, depth: number = DEPTHS.menu): GameObjects.Image => {
       const image = addVector(scene, x, y, frame).setOrigin(0).setScrollFactor(0).setDepth(depth);
       this.objects.push(image);
@@ -63,7 +64,7 @@ export class CraftMenuView {
     this.card = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.menu);
     drawTablet(this.card, cardX, cardY, T.w, T.h);
     for (const [style, words, y] of [
-      ['title', T.text, cardY + 4],
+      ['title', T.text, cardY + T.titleY],
       ['body', T.note, cardY + T.noteY],
     ] as const) {
       const line = new TextLine(scene, 0, y, DEPTHS.menu + 2, false, style).set(words);
@@ -105,13 +106,9 @@ export class CraftMenuView {
         flashRow(scene, frame.x, frame.y);
         onCraft(row.recipeId);
       });
-      frame.on('pointerover', () => {
-        this.hovered = row;
-        scene.events.emit(MENU_HOVER_EVENT);
-      });
-      frame.on('pointerout', () => {
-        if (this.hovered === row) this.hovered = undefined;
-      });
+      const index = this.rows.length;
+      frame.on('pointerover', () => this.hover.set(index, canCraft({ inventory: this.inventory, link: this.link }, row.recipeId)));
+      frame.on('pointerout', () => this.hover.leave(index));
       this.rows.push(row);
     }
     this.setOpen(false);
@@ -130,7 +127,7 @@ export class CraftMenuView {
       if (open) r.frame.setInteractive();
       else r.frame.disableInteractive();
     }
-    if (!open) this.hovered = undefined;
+    if (!open) this.hover.set(-1);
     // Hide unknown recipes straight away, not a frame later.
     else this.update(this.inventory, this.link);
   }
@@ -141,7 +138,7 @@ export class CraftMenuView {
     this.link = link;
     if (!this.open) return;
     for (const group of CRAFT_GROUPS) this.headers.get(group.ammoId)?.setVisible(group.recipes.some((id) => knownRecipe({ link }, id)));
-    for (const r of this.rows) {
+    for (const [i, r] of this.rows.entries()) {
       const known = knownRecipe({ link }, r.recipeId);
       for (const o of [r.frame, ...r.parts]) o.setVisible(known);
       for (const t of [...r.inputs.map((i) => i.text), r.made, r.owned]) t.setVisible(known);
@@ -157,7 +154,7 @@ export class CraftMenuView {
       r.owned.setAlpha(alpha);
       for (const p of r.parts) p.setAlpha(alpha);
       r.frame.setAlpha(alpha);
-      r.frame.setFrame(affordable && this.hovered === r ? SPRITES.craftRowHover : SPRITES.craftRow);
+      r.frame.setFrame(this.hover.frame(i, affordable));
     }
   }
 }

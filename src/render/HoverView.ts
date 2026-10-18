@@ -61,7 +61,7 @@ export class HoverView {
     if (!hit) return;
     this.name.set(hit.name);
     const { pad, descriptionGap } = HOVER_NAME;
-    const extra = hit.description !== undefined ? descriptionGap + this.name.lineHeight : 0;
+    const extra = hit.description !== undefined ? descriptionGap + this.description.lineHeight : 0;
     if (hit.description !== undefined) this.description.set(hit.description);
     const w = Math.max(this.name.width, hit.description !== undefined ? this.description.width : 0);
     const h = this.name.lineHeight + extra;

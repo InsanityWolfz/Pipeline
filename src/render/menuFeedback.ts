@@ -19,10 +19,17 @@ export class RowHover {
     this.scene = scene;
   }
 
-  /** The row under the cursor is now `index` (-1 for none). */
-  set(index: number): void {
-    if (index !== this.index && index >= 0) this.scene.events.emit(MENU_HOVER_EVENT);
+  /** The row under the cursor is now `index` (-1 for none). Returns whether that changed. A row that can't be used lights and sounds nothing. */
+  set(index: number, usable = true): boolean {
+    if (index === this.index) return false;
+    if (index >= 0 && usable) this.scene.events.emit(MENU_HOVER_EVENT);
     this.index = index;
+    return true;
+  }
+
+  /** The cursor left row `index`. */
+  leave(index: number): void {
+    if (index === this.index) this.index = -1;
   }
 
   /** The frame row `index` shows: lit under the cursor (if it can be used), else plain. */

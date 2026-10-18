@@ -1,7 +1,8 @@
-import type { Cameras, GameObjects, Scene } from 'phaser';
+import type { Cameras, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { DAMAGE_NUMBERS, PARTICLES, SHAKE, type ParticleBurst } from '../data/juice';
 import { paletteHex } from '../data/palette';
+import { TEXT_STYLES } from '../data/fonts';
 import { phaserStyle } from './fonts';
 import { textureScale } from './vector/textures';
 import { Particles } from './Particles';
@@ -56,17 +57,17 @@ export class JuiceView {
     const startY = top - stacked * n.stackPx;
     this.recent.push({ x, y: top, at: now });
 
-    const text = String(Math.round(amount));
-    // The float face's dark outline keeps it readable over a white hit flash.
-    const glyphs: GameObjects.Text[] = [
-      this.scene.add
-        .text(0, 0, text, { ...phaserStyle('float', textureScale()), color: paletteHex(onPlayer ? n.player : n.enemy), stroke: paletteHex(n.outline) })
-        .setOrigin(0.5),
-    ];
+    // One Text sized at its settled scale and drawn at the resolution of its biggest pop, so it stays sharp (020).
+    // The float face's dark outline reads over a white hit flash.
+    const style = phaserStyle('float', textureScale() * (n.pop / n.scale));
+    const size = TEXT_STYLES.float.size * n.scale;
+    const box = this.scene.add
+      .text(0, 0, String(Math.round(amount)), { ...style, fontSize: `${size}px`, strokeThickness: TEXT_STYLES.float.strokeWidth * n.scale, color: paletteHex(onPlayer ? n.player : n.enemy), stroke: paletteHex(n.outline) })
+      .setOrigin(0.5)
+      .setDepth(DEPTHS.worldUi + 1);
     const jitter = (Math.random() - 0.5) * n.jitter;
-    const box = this.scene.add.container(Math.round(x + jitter), Math.round(startY), glyphs).setDepth(DEPTHS.worldUi + 1);
-    box.setScale(n.pop);
-    this.scene.tweens.add({ targets: box, scale: n.scale, duration: n.lifeMs / 5, ease: 'Back.Out' });
+    box.setPosition(Math.round(x + jitter), Math.round(startY)).setScale(n.pop / n.scale);
+    this.scene.tweens.add({ targets: box, scale: 1, duration: n.lifeMs / 5, ease: 'Back.Out' });
     this.scene.tweens.add({
       targets: box,
       y: startY - n.rise,

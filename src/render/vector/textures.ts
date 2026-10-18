@@ -21,10 +21,6 @@ export function textureScale(): number {
   return bakeScale;
 }
 
-export function isVector(frame: string): boolean {
-  return anchors.has(frame);
-}
-
 /** Draws every vector frame at `screenScale` (backbuffer px per world px) and registers them. Once per game. */
 export function bakeVectors(scene: Scene, screenScale: number): void {
   if (scene.textures.exists(VECTOR_KEY)) return;

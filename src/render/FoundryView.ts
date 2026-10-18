@@ -134,7 +134,7 @@ export class FoundryView {
     if (!this.dropping.delete(id)) return;
     const y = body.y;
     // Relative to its resting scale: a vector frame rests at 1 / texture scale.
-    const rest = body.scaleX;
+    const rest = 1 / textureScale();
     body.setY(y - SQUASH.dropPx).setScale(rest * (1 - SQUASH.squash), rest * (1 + SQUASH.squash));
     this.scene.tweens.add({ targets: body, y, duration: SQUASH.ms, ease: 'Bounce.Out' });
     this.scene.tweens.add({ targets: body, scaleX: rest, scaleY: rest, duration: SQUASH.ms * SQUASH.settle, ease: 'Back.Out' });
@@ -259,8 +259,8 @@ export class FoundryView {
     const marker = d.marker;
     const icon = d.markerIcon;
     if (!marker || !icon) return;
-    const top = d.body.y - d.body.displayHeight - FOUNDRY_LAYOUT.markerGap;
-    marker.setY(top).setVisible(p.status !== 'idle');
+    const top = d.body.y - d.body.displayHeight + FOUNDRY_LAYOUT.markerDrop;
+    marker.setPosition(pieceRect(p).x + FOUNDRY_LAYOUT.markerX, top).setVisible(p.status !== 'idle');
     icon.setVisible(p.status === 'starved');
     if (p.status === 'working') marker.play(STATUS_MARKERS.working.key, true);
     else marker.stop();
@@ -268,7 +268,7 @@ export class FoundryView {
     if (p.status === 'starved') {
       marker.setFrame(STATUS_MARKERS.starved);
       const missing = p.missing[0];
-      if (missing) icon.setFrame(itemDef(missing).icon).setY(top - marker.displayHeight / 2);
+      if (missing) icon.setFrame(itemDef(missing).icon).setPosition(marker.x, top - marker.displayHeight / 2);
     }
   }
 }

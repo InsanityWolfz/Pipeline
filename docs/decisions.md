@@ -112,3 +112,14 @@ Each spec's build notes hold its design calls; these are the technical ones.
 - **Sound is synthesized at build time** by `npm run sound` (`scripts/sound/*.ts`, no dependency) into committed WAVs. The staleness test allows a few units of sample difference, because float maths can differ between Node versions.
 - **Hit events carry a damage type** (014) so render can colour sparks; it's event data, not a rule.
 - **Test hook `ui()`** (015) reports the hover name and build tip, so e2e can check mouse-over text without reading pixels.
+
+## 2026-10-18: 020 Vector pass
+Supersedes the bootstrap's art decisions: the committed atlas, the art script, the stale-art guard and the pixel palette. It also replaces 002's `GlyphLine`.
+- **Every sprite is vector shape data**, baked at boot into one texture (016). There is no atlas, no `npm run art`, no grid files and no nearest filtering. The minimap draws its tiles as squares of texels at the screen's scale instead.
+- **One palette:** the daylight palette. The old pixel ids in data were mapped to daylight ids: `outline` to `ink`, `ley-cyan`, `ley-glow` and `ley-deep` to `cyan`, `cyan-glow` and `cyan-deep`, `ember` to `rust`, `ember-light` to `cinder-light`, `white` to `snow`, `slate-light` to `rock` and `moss-light` to `leaf-light`. The page background is `ink`.
+- **Fonts:**
+  - Cinzel and Source Sans 3 are variable TrueType files with their OFL licences in `assets/fonts/`, served by Vite and registered with `FontFace` before the game is created. A failed load logs and falls back.
+  - `TextLine` wraps a Phaser `Text` drawn at the bake scale, so it is sharp under the camera's zoom. `(x, y)` is the top of the capitals.
+- **Boot readiness:** `ui().ready` is true once the scene's views exist and the fonts are loaded. Every e2e boot waits for it.
+- **Floating text** (damage numbers, the "+1" popup) is plain objects tweened together, the text drawn at the resolution of its biggest pop. QA had reported them missing; that was screenshot timing, since a capture lands after their 0.7 s life. They were drawn all along.
+- **A frame that was never drawn** logs a console error from `showFrame`, so e2e catches it.

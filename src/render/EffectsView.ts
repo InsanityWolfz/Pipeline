@@ -110,19 +110,22 @@ export class EffectsView {
 
     const icon = ITEMS[itemId]?.icon;
     if (!icon) return;
-    const label = this.scene.add.text(0, 0, '+1', phaserStyle('float', textureScale())).setOrigin(0, 0.5);
-    const iconX = label.width + PICKUP_POPUP.gap;
-    const iconImage = addVector(this.scene, iconX, 0, icon).setOrigin(0, 0.5);
-    const parts: GameObjects.GameObject[] = [label, iconImage];
-    const width = iconX + iconImage.displayWidth;
+    // The label and icon rise and fade together.
     const top = Math.round(player.y - PICKUP_POPUP.startHeight - index * PICKUP_POPUP.stack);
-    const popup = this.scene.add.container(Math.round(player.x - width / 2), top, parts).setDepth(DEPTHS.worldUi);
+    const label = this.scene.add.text(0, top, '+1', phaserStyle('float', textureScale())).setOrigin(0, 0.5);
+    const iconImage = addVector(this.scene, 0, top, icon).setOrigin(0, 0.5);
+    const width = label.width + PICKUP_POPUP.gap + iconImage.displayWidth;
+    const left = Math.round(player.x - width / 2);
+    label.setX(left);
+    iconImage.setX(left + label.width + PICKUP_POPUP.gap);
+    const parts = [label, iconImage];
+    for (const p of parts) p.setDepth(DEPTHS.worldUi);
     this.scene.tweens.add({
-      targets: popup,
+      targets: parts,
       y: top - PICKUP_POPUP.rise,
       alpha: 0,
       duration: PICKUP_POPUP.durationMs,
-      onComplete: () => popup.destroy(),
+      onComplete: () => parts.forEach((p) => p.destroy()),
     });
   }
 

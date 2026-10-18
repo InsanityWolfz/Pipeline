@@ -57,7 +57,8 @@ for (const view of ['side', 'down', 'up'] as const satisfies readonly WandererVi
 const sideIdle = sheetPoses('side')[0];
 if (sideIdle) section('Wanderer: facing left', [wandererCell('idle', { ...sideIdle.pose, flip: true })]);
 
-// Grouped for review (020): each machine on its own row, then each family of sprites.
+// Grouped for review (020): each machine on its own row, then each family of sprites. A dev-only page: it groups
+// by frame-name prefixes rather than the asset tables, which is fine for a review sheet that ships in no build.
 const FAMILIES: readonly [title: string, test: (name: string) => boolean][] = [
   ...MACHINE_IDS.map((id): [string, (n: string) => boolean] => [`Machine: ${id} (idle, jammed, working)`, (n) => n.startsWith(`machine-${id}-`)]),
   ['Conduits and sorters', (n) => n.startsWith('conduit-') || n.startsWith('sorter-')],

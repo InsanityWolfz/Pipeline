@@ -1,4 +1,10 @@
 import { INTAKE_SPRITES_VECTOR } from '../../src/data/art/intake';
+import { ITEM_SPRITES_VECTOR } from '../../src/data/art/items';
+import { LOGISTICS_SPRITES_VECTOR } from '../../src/data/art/logistics';
+import { FIXTURE_SPRITES_VECTOR } from '../../src/data/art/fixtures';
+import { MACHINE_SPRITES_VECTOR } from '../../src/data/art/machines';
+import { INTERIOR_SPRITES_VECTOR } from '../../src/data/art/interior';
+import { HUD_SPRITES_VECTOR } from '../../src/data/art/hud';
 import { NODE_SPRITES_VECTOR } from '../../src/data/art/nodes';
 import { describe, expect, it } from 'vitest';
 import { ENEMY_ANIMS } from '../../src/data/assets';
@@ -49,6 +55,9 @@ describe('vector shapes', () => {
       ...VECTOR_SPRITES.flatMap((s) => s.frames.flat()),
       ...NODE_SPRITES_VECTOR.flatMap((s) => s.frames.flat()),
       ...INTAKE_SPRITES_VECTOR.flatMap((s) => s.frames.flat()),
+      ...[ITEM_SPRITES_VECTOR, LOGISTICS_SPRITES_VECTOR, FIXTURE_SPRITES_VECTOR, MACHINE_SPRITES_VECTOR, INTERIOR_SPRITES_VECTOR, HUD_SPRITES_VECTOR].flatMap((set) =>
+        set.flatMap((s) => s.frames.flat()),
+      ),
     ];
     const limbs = (Object.values(WANDERER.limbs) as LimbStyle[]).flatMap((l) => [l.color, ...(l.bands ? [l.bands.color] : [])]);
     const used = [...shapes.flatMap(inksOf), ...limbs.map((i) => (typeof i === 'string' ? i : i.id))];

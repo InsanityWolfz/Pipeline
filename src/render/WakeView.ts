@@ -1,6 +1,7 @@
-import type { GameObjects, Scene, Time } from 'phaser';
+import type { GameObjects, Scene, Time, Tweens } from 'phaser';
 import { DEPTHS, KO_FADE_MS, WAKE_TEXT } from '../data/assets';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
+import type { TextStyleKey } from '../data/fonts';
 import { itemDef } from '../data/items';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
@@ -13,6 +14,7 @@ export class WakeView {
   /** The stone tablet behind the lines (020). */
   private readonly back: GameObjects.Graphics;
   private timer: Time.TimerEvent | null = null;
+  private fading: Tweens.Tween | null = null;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -27,15 +29,20 @@ export class WakeView {
 
   private draw(lost: Readonly<Record<string, number>>): void {
     const items = Object.entries(lost).filter(([, n]) => n > 0);
-    const text = [WAKE_TEXT.title, ...(items.length > 0 ? ['', WAKE_TEXT.lostTitle, ...items.map(([id, n]) => `${itemDef(id).name} ${n}`)] : [])];
+    // The title, then (after a gap) what was lost: its heading in the display face, each item in the body face.
+    const text: [string, TextStyleKey][] = [
+      [WAKE_TEXT.title, 'title'],
+      ...(items.length > 0
+        ? [['', 'body'] as [string, TextStyleKey], [WAKE_TEXT.lostTitle, 'display'] as [string, TextStyleKey], ...items.map(([id, n]): [string, TextStyleKey] => [`${itemDef(id).name} ${n}`, 'body'])]
+        : []),
+    ];
     const cx = VIEW_WIDTH / 2;
     const top = VIEW_HEIGHT / 2 + WAKE_TEXT.top;
-    // The title in the display face, then what was lost below it.
     let y = top;
-    this.lines = text.map((t, i) => {
-      const line = new TextLine(this.scene, 0, y, DEPTHS.menu + 2, false, i === 0 ? 'title' : i === 2 ? 'display' : 'body');
+    this.lines = text.map(([t, style]) => {
+      const line = new TextLine(this.scene, 0, y, DEPTHS.menu + 2, false, style);
       line.set(t).moveTo(Math.round(cx - line.width / 2), y);
-      y += i === 0 ? line.lineHeight : WAKE_TEXT.lineStep;
+      y += style === 'title' ? line.lineHeight : WAKE_TEXT.lineStep;
       return line;
     });
     const w = Math.max(...this.lines.map((l) => l.width)) + 2 * WAKE_TEXT.pad;
@@ -46,7 +53,7 @@ export class WakeView {
 
   private fade(): void {
     const lines = this.lines;
-    this.scene.tweens.addCounter({
+    this.fading = this.scene.tweens.addCounter({
       from: 1,
       to: 0,
       duration: WAKE_TEXT.fadeMs,
@@ -63,6 +70,8 @@ export class WakeView {
   private clear(): void {
     this.timer?.remove();
     this.timer = null;
+    this.fading?.stop();
+    this.fading = null;
     for (const l of this.lines) l.destroy();
     this.lines = [];
     this.back.clear();

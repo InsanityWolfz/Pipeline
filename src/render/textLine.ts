@@ -40,10 +40,6 @@ export class TextLine {
     return TEXT_STYLES[this.style].lineHeight;
   }
 
-  get current(): string {
-    return this.text;
-  }
-
   setVisible(visible: boolean): this {
     this.obj.setVisible(visible);
     return this;
@@ -51,22 +47,6 @@ export class TextLine {
 
   setAlpha(alpha: number): this {
     this.obj.setAlpha(alpha);
-    return this;
-  }
-
-  setDepth(depth: number): this {
-    this.obj.setDepth(depth);
-    return this;
-  }
-
-  /** Recolours the text (a palette hex colour as a number); `clearTint` puts its own colour back. */
-  setTint(color: number): this {
-    this.obj.setTint(color);
-    return this;
-  }
-
-  clearTint(): this {
-    this.obj.clearTint();
     return this;
   }
 
