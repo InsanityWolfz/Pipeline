@@ -1,3 +1,5 @@
+import { DYING_TICKS } from '../../src/data/player';
+import { ROOMS } from '../../src/data/rooms';
 import { describe, expect, it } from 'vitest';
 import { advanceClock, createClock } from '../../src/sim/clock';
 import { NO_COMMAND, type Command } from '../../src/sim/input';
@@ -7,13 +9,16 @@ import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
 import { MAX_TICKS_PER_FRAME, TICK_RATE } from '../../src/data/config';
 
+/** Enemies placed across every room at the start. */
+const STARTING_ENEMIES = Object.values(ROOMS).reduce((n, r) => n + (r.enemies?.length ?? 0), 0);
+
 function stepped(seed: number, ticks: number) {
   const sim = createSim(seed);
   for (let i = 0; i < ticks; i++) stepSim(sim);
   return sim;
 }
 
-/** A scripted mix of walking, loading, rolling and firing at a sweeping aim. */
+/** A scripted mix of walking, rolling and firing at a sweeping aim. */
 function scripted(seed: number, ticks: number) {
   const sim = createSim(seed);
   for (let t = 0; t < ticks; t++) {
@@ -21,7 +26,6 @@ function scripted(seed: number, ticks: number) {
       ...NO_COMMAND,
       moveX: t % 90 < 45 ? 1 : -1,
       moveY: t % 70 < 20 ? 1 : 0,
-      load: t % 120 === 0,
       dodge: t % 150 === 75,
       fire: t % 120 > 100,
       aimX: sim.player.x + Math.cos(t / 10) * 100,
@@ -36,23 +40,26 @@ function scripted(seed: number, ticks: number) {
 const toward = (from: number, to: number): -1 | 0 | 1 => (Math.abs(to - from) < 4 ? 0 : to > from ? 1 : -1);
 
 /**
- * Walks into the Husk pack and stands there until KO'd, then fights the reset
- * pack from range, reloading when empty, and collects the drops.
+ * Walks into the Husk pack and stands there until KO'd, wakes in the foundry and
+ * walks back out, then fights the reset pack from range while it has arrows, and
+ * collects the drops.
  */
 function scriptedFight(seed: number, ticks: number) {
   const sim = createSim(seed);
   for (let t = 0; t < ticks; t++) {
     const p = sim.player;
-    const target = sim.enemies[0];
+    const target = sim.enemies.find((e) => e.roomId === sim.roomId);
     const loot = sim.groundItems[0];
-    const fighting = sim.nextEnemyId > 3;
-    const empty = sim.tube.loaded === 0;
-    const goal = !fighting ? target : target ? { x: 900, y: 300 } : loot;
+    // The first KO respawns every unclaimed room's enemies, so ids pass the starting count.
+    const fighting = sim.nextEnemyId > STARTING_ENEMIES;
+    const empty = (sim.inventory.arrow ?? 0) === 0;
+    // Waking in the foundry after the KO, walk back out through its door to the hall.
+    const door = sim.roomId === 'foundry' ? { x: 24 * 32, y: 8.5 * 32 } : undefined;
+    const goal = door ?? (!fighting ? target : target ? { x: 900, y: 300 } : loot);
     const command: Command = {
       ...NO_COMMAND,
       moveX: goal ? toward(p.x, goal.x) : 0,
       moveY: goal ? toward(p.y, goal.y) : 0,
-      load: fighting && empty && !sim.tube.loading,
       fire: fighting && !empty && target !== undefined,
       aimX: target?.x ?? p.x,
       aimY: target?.y ?? p.y,
@@ -64,7 +71,7 @@ function scriptedFight(seed: number, ticks: number) {
 
 /**
  * Harvests the nearest node until it runs dry, crafts between ticks, then
- * switches through every ammo, loading and firing each at the Husk pack.
+ * switches through every ammo, firing each at the Husk pack.
  */
 function scriptedSession(seed: number, ticks: number) {
   const sim = createSim(seed);
@@ -74,7 +81,7 @@ function scriptedSession(seed: number, ticks: number) {
     if (t === 100) for (const r of ['shaft', 'arrowhead', 'rope', 'arrow', 'casing', 'fuse', 'ley-shard', 'bomb', 'ley-bolt']) craft(sim, r);
     const p = sim.player;
     const node = sim.nodes[9];
-    const pack = sim.enemies[0];
+    const pack = sim.enemies.find((e) => e.roomId === sim.roomId);
     const gathering = t < 400;
     const goal = gathering ? node : pack;
     const command: Command = {
@@ -83,7 +90,6 @@ function scriptedSession(seed: number, ticks: number) {
       moveY: goal && !sim.harvest ? toward(p.y, goal.y + 20) : 0,
       interact: gathering && t % 40 === 0,
       selectAmmo: !gathering && t % 300 === 0 ? (ammo[(t / 300) % 3] ?? null) : null,
-      load: !gathering && sim.tube.loaded === 0 && !sim.tube.loading,
       fire: !gathering && t % 50 > 30,
       aimX: pack?.x ?? p.x,
       aimY: pack?.y ?? p.y,
@@ -160,9 +166,9 @@ describe('sim state', () => {
 
   it('replays a fight with hits, deaths, drops and a KO identically', () => {
     const a = scriptedFight(11, 3000);
-    expect(a.nextEnemyId).toBe(6);
-    expect(a.enemies).toEqual([]);
-    expect(a.inventory['husk-resin']).toBeGreaterThanOrEqual(3);
+    // At least one KO (the rooms respawned), and the fight went on afterwards.
+    expect(a.nextEnemyId).toBeGreaterThanOrEqual(STARTING_ENEMIES * 2);
+    expect(a.nextArrowId).toBeGreaterThan(0);
     expect(a).toEqual(scriptedFight(11, 3000));
   });
 
@@ -173,11 +179,13 @@ describe('sim state', () => {
   });
 
   it('replays building, running and emptying a foundry line identically', () => {
-    const a = scriptedFoundry(11, 1051);
+    // Health drops to 0 at tick 1050; the KO lands once the death animation ends.
+    const ko = 1051 + DYING_TICKS;
+    const a = scriptedFoundry(11, ko);
     expect(a.foundry.pieces.map((p) => p.pieceId)).toEqual(['hopper', 'grinder', 'focuser', 'crate']);
-    expect(a.roomId).toBe('ruin-hall');
+    expect(a.roomId).toBe('foundry');
     expect(a.events.ko).toBe(true);
-    expect(a).toEqual(scriptedFoundry(11, 1051));
+    expect(a).toEqual(scriptedFoundry(11, ko));
   });
 
   it('carries the foundry line through to bolts in hand', () => {
@@ -202,34 +210,25 @@ describe('sim state', () => {
 
   it('summarizes enemies, ground items and events', () => {
     const summary = summarize(createSim(8));
-    expect(summary.enemies).toHaveLength(3);
+    expect(summary.enemies.filter((e) => e.room === 'ruin-hall')).toHaveLength(3);
     expect(summary.enemies[0]).toMatchObject({ enemyId: 'husk', mode: 'idle', health: 40, maxHealth: 40 });
     expect(summary.groundItems).toEqual([]);
-    expect(summary.events).toEqual({
-      hits: [],
-      deaths: [],
-      pickups: [],
-      harvests: [],
-      crafts: [],
-      craftFails: [],
-      bursts: [],
-      selects: [],
-      roomChanges: [],
-      places: [],
-      placeFails: [],
-      pickUps: [],
-      deposits: [],
-      crateTakes: [],
-      withdraws: [],
-      ko: false,
-    });
+    // Every event list, empty, and no KO: a key missing from createEvents fails here.
+    const lists = ['hits', 'deaths', 'pickups', 'harvests', 'crafts', 'craftFails', 'bursts', 'selects', 'roomChanges'] as const;
+    const later = ['places', 'placeFails', 'pickUps', 'deposits', 'crateTakes', 'withdraws', 'attunes', 'refills', 'shots', 'banks'] as const;
+    const site = ['sealed', 'claims', 'stashDeposits', 'stashTakes', 'travels', 'identifies', 'equips', 'angles', 'gates', 'objectives'] as const;
+    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, 'lost', 'ko', 'tubeTaken'].sort());
+    for (const name of [...lists, ...later, ...site]) expect(summary.events[name], name).toEqual([]);
+    expect(summary.events.ko).toBe(false);
+    expect(summary.events.lost).toEqual({});
+    expect(summary.events.tubeTaken).toBe(false);
   });
 
   it('summarizes rooms, build mode, unlocks and the foundry', () => {
     const s = createSim(8);
-    expect(summarize(s)).toMatchObject({ room: 'ruin-hall', rooms: ['ruin-hall', 'foundry'], building: false });
-    expect(summarize(s).unlocked).toEqual(['conduit', 'hopper', 'crate']);
-    expect(summarize(s).enemies.every((e) => e.room === 'ruin-hall')).toBe(true);
+    expect(summarize(s)).toMatchObject({ room: 'ruin-hall', rooms: ['ruin-hall', 'clearing', 'shrine', 'foundry'], building: false });
+    expect(summarize(s).unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'gravity-stager']);
+    expect(summarize(s).enemies.every((e) => e.room === 'ruin-hall' || e.room === 'shrine')).toBe(true);
     s.roomId = 'foundry';
     s.player.x = 300;
     s.player.y = 300;
@@ -241,7 +240,7 @@ describe('sim state', () => {
 
   it('summarizes nodes, the harvest, ammo, bombs, burns and the crafted set', () => {
     const summary = summarize(createSim(8));
-    expect(summary.nodes).toHaveLength(11);
+    expect(summary.nodes.filter((n) => n.room === 'ruin-hall')).toHaveLength(11);
     expect(summary.nodes[0]).toMatchObject({ nodeId: 'tree', uses: 3, regrow: 0 });
     expect(summary.harvest).toBeNull();
     expect(summary.tube.ammo).toBe('arrow');

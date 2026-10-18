@@ -1,5 +1,5 @@
-import { enemyDef } from '../../src/data/enemies';
-import { LOAD_TICKS, TUBE_CAPACITY } from '../../src/data/tube';
+import { DYING_TICKS } from '../../src/data/player';
+import { meleeDef } from '../../src/data/enemies';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import { NO_COMMAND, type Command } from '../../src/sim/input';
 import { createNode, type NodeState } from '../../src/sim/nodes';
@@ -10,7 +10,7 @@ import { stepSim } from '../../src/sim/step';
 
 export const SEED = 7;
 export const HALL = 'ruin-hall';
-export const HUSK = enemyDef('husk');
+export const HUSK = meleeDef('husk');
 
 /** Where the player stands in an arena: the aggro box around it is all floor. */
 export const PLAYER_AT = { x: 400, y: 448 } as const;
@@ -54,12 +54,6 @@ export function run(s: SimState, ticks: number, c: Partial<Command> | ((s: SimSt
 /** Fire held at a world point. */
 export const fireAt = (x: number, y: number): Partial<Command> => ({ fire: true, aimX: x, aimY: y });
 
-/** Taps load and waits until the tube is full. */
-export function loadFull(s: SimState): void {
-  run(s, 1, { load: true });
-  run(s, LOAD_TICKS * TUBE_CAPACITY);
-}
-
 /** Runs until `done` holds, failing after `limit` ticks. Returns the ticks taken. */
 export function runUntil(s: SimState, done: (s: SimState) => boolean, limit: number, c: Partial<Command> = {}): number {
   for (let i = 1; i <= limit; i++) {
@@ -74,4 +68,15 @@ export function placeNode(s: SimState, nodeId: string, x: number, y: number, roo
   const n = createNode(s.nodes.length, nodeId, { x, y }, roomId);
   s.nodes.push(n);
   return n;
+}
+
+/** Runs until a KO lands (the death animation plays out first), failing past `limit` ticks. */
+export function runUntilKo(s: SimState, limit = SWIPE_LANDS + DYING_TICKS + 5): number {
+  return runUntil(s, (x) => x.events.ko, limit);
+}
+
+/** Drops the player to 0 health and runs out the death: they wake in the foundry. */
+export function die(s: SimState): void {
+  s.player.health = 0;
+  runUntilKo(s, DYING_TICKS + 3);
 }

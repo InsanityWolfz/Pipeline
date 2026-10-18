@@ -4,7 +4,7 @@ import { TICK_RATE } from '../../src/data/config';
 import { MUZZLE_OFFSET } from '../../src/data/tube';
 import { stepBombs, throwBomb } from '../../src/sim/bombs';
 import type { EnemyState } from '../../src/sim/enemies';
-import { arena, fireAt, HUSK, loadFull, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
 const BOMB = lobAmmo('bomb');
 const STEP = BOMB.speed / TICK_RATE;
@@ -13,7 +13,6 @@ function armed(at: { x: number; y: number } = PLAYER_AT) {
   const s = arena(undefined, at);
   s.inventory.bomb = 6;
   run(s, 1, { selectAmmo: 'bomb' });
-  loadFull(s);
   return s;
 }
 
@@ -144,6 +143,12 @@ describe('burns', () => {
     }
     return at;
   }
+
+  it('record their hits as fire damage, for render to colour', () => {
+    const { s, e } = burning();
+    runUntil(s, () => s.events.hits.some((h) => h.target === 'enemy' && h.id === e.id), 40);
+    expect(s.events.hits.find((h) => h.target === 'enemy' && h.id === e.id)).toMatchObject({ damageType: 'fire' });
+  });
 
   it('deal 3 every 30 ticks, 4 times, then stop', () => {
     const { s, e } = burning();

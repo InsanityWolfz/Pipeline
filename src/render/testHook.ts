@@ -6,12 +6,14 @@ import type { GameScene } from './GameScene';
 export interface GameTestHook {
   getState(): SimSummary;
   /**
-   * Steps `frames` ticks holding `command`. Its dodge, load, interact, ammo
-   * select, build toggle, place, pick-up, deposit and withdraw apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
+   * Steps `frames` ticks holding `command`. Its dodge, interact, ammo
+   * select, build toggle, place, pick-up, deposit, withdraw, setFilter, setAngle, pylon, takeStash, identify and equip apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
    */
   step(frames: number, command?: Partial<Command>): SimSummary;
   /** Crafts a recipe once between ticks, as clicking its menu row does. */
   craft(recipeId: string): SimSummary;
+  /** What the mouse-over shows (015): the world name under the cursor and the build bar tip's piece, or null. */
+  ui(): { hoverName: string | null; buildTip: string | null };
 }
 
 declare global {
@@ -32,7 +34,6 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
       const after: Command = {
         ...held,
         dodge: false,
-        load: false,
         interact: false,
         selectAmmo: null,
         toggleBuild: false,
@@ -40,6 +41,12 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
         pickUp: null,
         deposit: null,
         withdraw: null,
+        setFilter: null,
+        setAngle: null,
+        pylon: null,
+        takeStash: null,
+        identify: false,
+        equip: null,
       };
       for (let i = 0; i < frames; i++) {
         // Building with the mouse and keys works under the hook: the scene's queued actions join each tick.
@@ -52,6 +59,12 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
           pickUp: base.pickUp ?? ui.pickUp,
           deposit: base.deposit ?? ui.deposit,
           withdraw: base.withdraw ?? ui.withdraw,
+          setFilter: base.setFilter ?? ui.setFilter,
+          setAngle: base.setAngle ?? ui.setAngle,
+          pylon: base.pylon ?? ui.pylon,
+          takeStash: base.takeStash ?? ui.takeStash,
+          identify: base.identify || ui.identify,
+          equip: base.equip ?? ui.equip,
         });
       }
       return summarize(sim);
@@ -60,5 +73,6 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
       scene.craft(recipeId);
       return summarize(sim);
     },
+    ui: () => scene.hoverText(),
   };
 }

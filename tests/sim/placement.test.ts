@@ -12,15 +12,16 @@ import {
 } from '../../src/sim/pieces';
 import { canPlace, pickUp, place, unlockedPieces } from '../../src/sim/placement';
 import { tileCentre } from '../../src/sim/tiles';
-import { fireAt, HALL, run } from './fight';
+import { FOUNDRY_ROOM } from '../../src/data/rooms';
+import { die, fireAt, HALL, run } from './fight';
 import { foundry, put, STAND } from './foundryKit';
 
 describe('unlocks', () => {
   it('locks each machine until its output has been hand-crafted; logistics are always open', () => {
     const s = foundry(false);
-    expect(unlockedPieces(s)).toEqual(['conduit', 'hopper', 'crate']);
+    expect(unlockedPieces(s)).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'gravity-stager']);
     s.crafted = ['ley-shard'];
-    expect(unlockedPieces(s)).toEqual(['conduit', 'hopper', 'crate', 'grinder']);
+    expect(unlockedPieces(s)).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'gravity-stager', 'grinder']);
   });
 
   it('refuses a locked piece', () => {
@@ -165,15 +166,15 @@ describe('piece bodies', () => {
     expect(s.player.y).toBeLessThan(tileCentre(STAND).y);
   });
 
-  it('arrows fly over pieces', () => {
+  it('the tube never fires in the foundry: no shot, no round spent, no dry fire', () => {
     const s = foundry();
     const { x, y } = tileCentre(STAND);
-    put(s, 'hopper', STAND.tx - 3, STAND.ty);
-    s.tube.loaded = 1;
+    s.inventory = { arrow: 5 };
+    run(s, 30, fireAt(x - 200, y));
+    expect([s.arrows.length, s.inventory.arrow, s.tube.dryFire, s.tube.firing]).toEqual([0, 5, 0, false]);
+    s.inventory = {};
     run(s, 1, fireAt(x - 200, y));
-    run(s, 20);
-    expect(s.arrows).toHaveLength(1);
-    expect(s.arrows[0]?.x).toBeLessThan((STAND.tx - 3) * TILE_SIZE);
+    expect(s.tube.dryFire).toBe(0);
   });
 
   it('a KO keeps the whole foundry', () => {
@@ -182,10 +183,8 @@ describe('piece bodies', () => {
     c.item = 'wood';
     const before = structuredClone(s.foundry);
     s.building = true;
-    s.player.health = 0;
-    run(s, 1);
-    expect(s.events.ko).toBe(true);
-    expect(s.roomId).toBe(HALL);
+    die(s);
+    expect(s.roomId).toBe(FOUNDRY_ROOM);
     expect(s.building).toBe(false);
     // The conduit's item kept moving; everything else is as it was.
     expect(s.foundry.pieces.map((p) => ({ ...p, progress: 0 }))).toEqual(

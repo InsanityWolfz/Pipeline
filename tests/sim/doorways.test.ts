@@ -3,7 +3,7 @@ import { TILE_SIZE } from '../../src/data/config';
 import { FOUNDRY_ROOM, ROOMS } from '../../src/data/rooms';
 import { arrivalTile } from '../../src/sim/doorways';
 import { tileCentre } from '../../src/sim/state';
-import { arena, fireAt, HUSK, movePlayer, placeHusk, placeNode, run, runUntil, SWIPE_LANDS } from './fight';
+import { arena, die, fireAt, HUSK, movePlayer, placeHusk, placeNode, run, runUntil, SWIPE_LANDS } from './fight';
 
 const HALL = 'ruin-hall';
 const HALL_DOOR = ROOMS[HALL]?.doorways?.[0];
@@ -52,7 +52,6 @@ describe('doorways', () => {
 
   it('door tiles stop arrows', () => {
     const s = atHallDoor();
-    s.tube.loaded = 1;
     run(s, 1, fireAt(0, s.player.y));
     runUntil(s, (x) => x.arrows.length === 0, 30);
     expect(s.roomId).toBe(HALL);
@@ -125,27 +124,24 @@ describe('rooms tick apart', () => {
     expect(s.harvest).toBeNull();
   });
 
-  it('shots keep their room: a bolt in the foundry never hits a hall Husk at the same spot', () => {
+  it('shots keep their room: a bolt in the hall never hits a foundry Husk at the same spot', () => {
     const s = arena();
-    s.roomId = FOUNDRY_ROOM;
     movePlayer(s, 200, 200);
-    const e = placeHusk(s, 260, 200);
-    s.tube.loaded = 1;
+    const e = placeHusk(s, 260, 200, FOUNDRY_ROOM);
     run(s, 1, fireAt(260, 200));
-    expect(s.arrows[0]?.roomId).toBe(FOUNDRY_ROOM);
+    expect(s.arrows[0]?.roomId).toBe(HALL);
     run(s, 20);
     expect(e.health).toBe(HUSK.maxHealth);
   });
 
-  it('a bomb burst in the foundry never hits a hall Husk', () => {
+  it('a bomb burst in the hall never hits a foundry Husk', () => {
     const s = arena();
-    s.roomId = FOUNDRY_ROOM;
     movePlayer(s, 200, 200);
-    const e = placeHusk(s, 260, 200);
+    const e = placeHusk(s, 260, 200, FOUNDRY_ROOM);
     s.tube.ammoId = 'bomb';
-    s.tube.loaded = 1;
+    s.inventory.bomb = 1;
     run(s, 1, fireAt(260, 200));
-    expect(s.bombs[0]?.roomId).toBe(FOUNDRY_ROOM);
+    expect(s.bombs[0]?.roomId).toBe(HALL);
     runUntil(s, (x) => x.bombs.length === 0, 60);
     expect(e.health).toBe(HUSK.maxHealth);
   });
@@ -156,24 +152,23 @@ describe('rooms tick apart', () => {
     placeHusk(s, 300, 300).health = 1;
     placeNode(s, 'tree', 400, 448).uses = 0;
     s.groundItems.push({ id: s.nextGroundItemId++, itemId: 'wood', x: 500, y: 448, roomId: HALL });
-    s.player.health = 0;
-    run(s, 1);
+    die(s);
     const hall = ROOMS[HALL];
     if (!hall?.enemies || !hall.nodes) throw new Error('no hall data');
-    expect(s.enemies.map((e) => ({ x: e.x, y: e.y, health: e.health }))).toEqual(
+    expect(s.enemies.filter((e) => e.roomId === HALL).map((e) => ({ x: e.x, y: e.y, health: e.health }))).toEqual(
       hall.enemies.map((p) => ({ ...tileCentre(p), health: HUSK.maxHealth })),
     );
-    expect(s.nodes).toHaveLength(hall.nodes.length);
+    const hallNodes = s.nodes.filter((n) => n.roomId === HALL);
+    expect(hallNodes).toHaveLength(hall.nodes.length);
     expect(s.nodes.every((n) => n.uses > 0)).toBe(true);
     expect(s.groundItems).toEqual([]);
   });
 
-  it('a KO in the foundry sends the player to the hall spawn', () => {
-    const s = intoFoundry();
-    s.player.health = 0;
-    run(s, 1);
-    expect(s.roomId).toBe(HALL);
-    const spawn = ROOMS[HALL]?.spawn;
+  it('a KO anywhere wakes the player at the foundry spawn (011)', () => {
+    const s = atHallDoor();
+    die(s);
+    expect(s.roomId).toBe(FOUNDRY_ROOM);
+    const spawn = ROOMS[FOUNDRY_ROOM]?.spawn;
     if (!spawn) throw new Error('no spawn');
     expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre(spawn));
   });

@@ -39,7 +39,7 @@ test('harvesting each node type gathers wood, stone, fiber and ley crystal', asy
 
 test('the full arrow, bomb and ley bolt chains craft from gathered materials', async ({ page }) => {
   const errors = watchErrors(page);
-  await boot(page);
+  await boot(page, '?start=hall&attuned');
   await page.evaluate(() => window.__GAME__?.step(0));
   await gatherEverything(page);
   await page.evaluate(() => window.__helpers?.killHusk());
@@ -58,7 +58,7 @@ test('the full arrow, bomb and ley bolt chains craft from gathered materials', a
 
 test('the crafting menu pauses the world and crafts on a click', async ({ page }) => {
   const errors = watchErrors(page);
-  await boot(page);
+  await boot(page, '?start=hall&attuned');
   // Real time first: C pauses, Esc resumes.
   await page.waitForTimeout(300);
   await page.keyboard.press('c');
@@ -96,7 +96,7 @@ test('the crafting menu pauses the world and crafts on a click', async ({ page }
 
 test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page }) => {
   const errors = watchErrors(page);
-  await boot(page);
+  await boot(page, '?start=hall&attuned');
   await page.evaluate(() => window.__GAME__?.step(0));
   await gatherEverything(page);
   await page.evaluate(
@@ -117,21 +117,17 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
     let s = g.getState();
     const nearest = () => {
       const p = s.player;
-      return [...s.enemies].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+      return [...s.enemies.filter((e) => e.room === s.room)].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
     };
-    const reload = () => {
-      s = g.step(1, { load: true });
-      for (let t = 0; t < 120 && s.tube.loading; t++) s = g.step(1);
-    };
+    const carried = () => s.inventory[s.tube.ammo] ?? 0;
 
     // Pierce: back away from the two chasing Husks and fire only once the farther one
     // stands on the line through the nearer one, so one bolt can pass through both.
     s = g.step(1, { selectAmmo: 'ley-bolt' });
-    reload();
     let pierced = 0;
-    for (let t = 0; t < 3000 && pierced < 2 && s.enemies.length === 2; t++) {
+    for (let t = 0; t < 3000 && pierced < 2 && s.enemies.filter((e) => e.room === s.room).length === 2; t++) {
       const p = s.player;
-      const [near, far] = [...s.enemies].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y));
+      const [near, far] = [...s.enemies.filter((e) => e.room === s.room)].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y));
       if (!near || !far) break;
       const nx = near.x - p.x;
       const ny = near.y - p.y;
@@ -139,11 +135,10 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
       // How far the farther Husk's feet are off the bolt's line, px.
       const off = Math.abs((far.x - p.x) * ny - (far.y - p.y) * nx) / len;
       const lined = off < 4 && len < 220 && s.arrows.length === 0;
-      if (s.tube.loaded === 0 && !s.tube.loading) reload();
       s = g.step(1, {
         moveX: !lined && len < 120 ? (nx > 0 ? -1 : 1) : 0,
         moveY: !lined && len < 120 ? (ny > 0 ? -1 : 1) : 0,
-        fire: lined && s.tube.loaded > 0,
+        fire: lined && carried() > 0,
         aimX: near.x,
         aimY: near.y,
       });
@@ -156,15 +151,13 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
 
     // Burn kill: bring the nearest Husk to 16–27 health with arrows, then bomb it and keep away.
     s = g.step(1, { selectAmmo: 'arrow' });
-    reload();
     const target = nearest();
     if (!target) throw new Error(`no Husk left; pierced ${pierced}, tick ${s.tick}`);
     const id = target.id;
-    const health = () => s.enemies.find((e) => e.id === id)?.health ?? 0;
+    const health = () => s.enemies.filter((e) => e.room === s.room).find((e) => e.id === id)?.health ?? 0;
     for (let t = 0; t < 600 && health() > 27; t++) {
-      const e = s.enemies.find((en) => en.id === id);
+      const e = s.enemies.filter((e) => e.room === s.room).find((en) => en.id === id);
       if (!e) break;
-      if (s.tube.loaded === 0) reload();
       // One arrow at a time, so the health steps down by 10s.
       const before = health();
       s = g.step(1, { fire: true, aimX: e.x, aimY: e.y });
@@ -172,12 +165,11 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
     }
     const beforeBomb = health();
     s = g.step(1, { selectAmmo: 'bomb' });
-    reload();
     let bursts = 0;
     let lastDamage = 0;
     let died = false;
     for (let t = 0; t < 900 && !died; t++) {
-      const e = s.enemies.find((en) => en.id === id);
+      const e = s.enemies.filter((e) => e.room === s.room).find((en) => en.id === id);
       if (!e) break;
       const p = s.player;
       const dist = Math.hypot(e.x - p.x, e.y - p.y);

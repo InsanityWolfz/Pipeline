@@ -1,3 +1,6 @@
+import type { DamageType } from '../data/ammo';
+import type { GateId } from '../data/rooms';
+import type { ArmorPiece } from './armor';
 import type { PlaceFail } from './pieces';
 import type { Facing } from './player';
 
@@ -6,7 +9,7 @@ import type { Facing } from './player';
 // between ticks and land in the list of the tick before.
 
 export type HitEvent =
-  | { target: 'enemy'; id: number; x: number; y: number; damage: number }
+  | { target: 'enemy'; id: number; x: number; y: number; damage: number; damageType: DamageType }
   | { target: 'player'; x: number; y: number; damage: number };
 
 export interface DeathEvent {
@@ -59,6 +62,38 @@ export interface SimEvents {
   crateTakes: { id: number; items: Record<string, number> }[];
   /** A hopper was emptied back into the inventory. */
   withdraws: { id: number; itemId: string; count: number }[];
+  /** The tube attuned to the foundry (once ever). */
+  attunes: Record<string, never>[];
+  /** A tube socket put a round in the reservoir. */
+  refills: { id: number; itemId: string }[];
+  /** A projectile left the tube's mouth (a spread fires several at once). */
+  shots: { x: number; y: number; ammoId: string }[];
+  /** E at a pylon whose room still has enemies. */
+  sealed: { roomId: string }[];
+  /** A room was claimed. */
+  claims: { roomId: string }[];
+  /** The haul went into the stash from a claimed pylon. */
+  stashDeposits: { items: Record<string, number> }[];
+  /** Items came out of the stash. */
+  stashTakes: { items: Record<string, number> }[];
+  /** Fast travel by pylon or waystone (also recorded as a room change). */
+  travels: { from: string; to: string }[];
+  /** An unidentified piece was identified at the bench (010). */
+  identifies: ArmorPiece[];
+  /** The worn piece changed (null: taken off). */
+  equips: { id: number | null }[];
+  /** The tube was taken from its stone (012). */
+  tubeTaken: boolean;
+  /** A tutorial gate opened. */
+  gates: { gate: GateId }[];
+  /** An objective completed (index into OBJECTIVES). */
+  objectives: { index: number }[];
+  /** A gravity stager turned to a new angle. */
+  angles: { id: number; angle: number }[];
+  /** What the player carried was banked (on entering the foundry or depositing). */
+  banks: Record<string, number>[];
+  /** On a KO, what was lost: item id to count. */
+  lost: Record<string, number>;
   /** The player was KO'd and the room reset this tick. */
   ko: boolean;
 }
@@ -80,6 +115,22 @@ export function createEvents(): SimEvents {
     deposits: [],
     crateTakes: [],
     withdraws: [],
+    attunes: [],
+    refills: [],
+    angles: [],
+    tubeTaken: false,
+    gates: [],
+    objectives: [],
+    identifies: [],
+    equips: [],
+    sealed: [],
+    claims: [],
+    stashDeposits: [],
+    stashTakes: [],
+    travels: [],
+    shots: [],
+    banks: [],
+    lost: {},
     ko: false,
   };
 }
@@ -100,5 +151,21 @@ export function clearEvents(events: SimEvents): void {
   events.deposits.length = 0;
   events.crateTakes.length = 0;
   events.withdraws.length = 0;
+  events.attunes.length = 0;
+  events.refills.length = 0;
+  events.angles.length = 0;
+  events.tubeTaken = false;
+  events.gates.length = 0;
+  events.objectives.length = 0;
+  events.identifies.length = 0;
+  events.equips.length = 0;
+  events.sealed.length = 0;
+  events.claims.length = 0;
+  events.stashDeposits.length = 0;
+  events.stashTakes.length = 0;
+  events.travels.length = 0;
+  events.shots.length = 0;
+  events.banks.length = 0;
+  events.lost = {};
   events.ko = false;
 }

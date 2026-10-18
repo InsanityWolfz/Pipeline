@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { HIT_INVULN_TICKS, INVULN_TICKS, MAX_HEALTH, STARTING_INVENTORY } from '../../src/data/player';
+import { HIT_INVULN_TICKS, INVULN_TICKS, MAX_HEALTH } from '../../src/data/player';
 import { ROOMS } from '../../src/data/rooms';
 import { damagePlayer } from '../../src/sim/health';
 import { nextFloat } from '../../src/sim/rng';
 import { createSim, tileCentre } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
-import { arena, HUSK, loadFull, placeHusk, PLAYER_AT, run, SEED, SWIPE_LANDS } from './fight';
+import { DYING_TICKS } from '../../src/data/player';
+import { arena, runUntilKo, HUSK, placeHusk, PLAYER_AT, run, SEED, SWIPE_LANDS } from './fight';
 
 const { damage, knockback, knockTicks } = HUSK.swipe;
 
@@ -78,51 +79,42 @@ describe('player health', () => {
     expect(s.player.x).toBe(40);
   });
 
-  it('stops loading on a hit, keeping loaded rounds', () => {
-    const s = arena();
-    run(s, 1, { load: true });
-    run(s, 19);
-    expect(s.tube).toMatchObject({ loaded: 1, loading: true });
-    hitFromEast(s);
-    expect(s.tube).toMatchObject({ loaded: 1, loading: false, loadProgress: 0 });
-    expect(s.inventory.arrow).toBe(29);
-  });
-
   it('keeps firing through a hit', () => {
     const s = arena();
-    loadFull(s);
     run(s, 1, { fire: true, aimX: 0, aimY: PLAYER_AT.y });
     hitFromEast(s);
     run(s, 15, { fire: true, aimX: 0, aimY: PLAYER_AT.y });
-    expect(s.tube.loaded).toBe(4);
+    expect(s.inventory.arrow).toBe(28);
   });
 });
 
-describe('placeholder KO', () => {
+describe('death and the KO (011)', () => {
   function koSim() {
     const s = arena();
     placeHusk(s, PLAYER_AT.x + 20, PLAYER_AT.y);
     s.player.health = damage;
     s.inventory.arrow = 3;
-    s.tube.loaded = 2;
     s.groundItems.push({ id: s.nextGroundItemId++, itemId: 'wood', roomId: 'ruin-hall', x: 600, y: 448 });
     return s;
   }
 
-  it('resets the room when health reaches 0', () => {
+  it('at 0 health plays the death, then wakes the player in the foundry with the rooms reset', () => {
     const s = koSim();
     const idsBefore = s.enemies.map((e) => e.id);
     run(s, SWIPE_LANDS);
-    expect(s.events.ko).toBe(true);
-    expect(summarize(s).player).toMatchObject({ health: 100, ko: true });
+    expect(s.player.dying).toBe(DYING_TICKS);
+    runUntilKo(s);
+    expect(summarize(s).player).toMatchObject({ health: 100, ko: true, dying: 0 });
     const room = ROOMS['ruin-hall'];
     if (!room?.enemies) throw new Error('no room enemies');
-    expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre(room.spawn));
-    expect(s.inventory).toEqual(STARTING_INVENTORY);
-    expect(s.tube.loaded).toBe(0);
+    expect(s.roomId).toBe('foundry');
+    expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre(ROOMS.foundry?.spawn ?? { tx: 0, ty: 0 }));
+    // Banked at the start: 30 arrows; it carried 3, so it keeps 3.
+    expect(s.inventory).toEqual({ arrow: 3 });
     expect(s.arrows).toEqual([]);
     expect(s.groundItems).toEqual([]);
-    expect(s.enemies.map((e) => ({ x: e.x, y: e.y, health: e.health, mode: e.mode }))).toEqual(
+    const hall = s.enemies.filter((e) => e.roomId === 'ruin-hall');
+    expect(hall.map((e) => ({ x: e.x, y: e.y, health: e.health, mode: e.mode }))).toEqual(
       room.enemies.map((p) => ({ ...tileCentre(p), health: HUSK.maxHealth, mode: 'idle' })),
     );
     for (const e of s.enemies) expect(idsBefore).not.toContain(e.id);
@@ -134,13 +126,11 @@ describe('placeholder KO', () => {
     s.nodes = fresh.nodes.map((n) => ({ ...n, uses: 0, regrow: 99 }));
     s.inventory.bomb = 2;
     run(s, 1, { selectAmmo: 'bomb' });
-    s.tube.loaded = 1;
     run(s, 1, { fire: true, aimX: PLAYER_AT.x - 150, aimY: PLAYER_AT.y });
     expect(s.bombs).toHaveLength(1);
     s.harvest = { nodeId: 0, progress: 5 };
     s.crafted = ['shaft'];
-    run(s, SWIPE_LANDS - 2);
-    expect(s.events.ko).toBe(true);
+    runUntilKo(s);
     expect(s.nodes).toEqual(fresh.nodes);
     expect(s.bombs).toEqual([]);
     expect(s.harvest).toBeNull();
@@ -150,8 +140,7 @@ describe('placeholder KO', () => {
 
   it('sets the KO flag for one tick only', () => {
     const s = koSim();
-    run(s, SWIPE_LANDS);
-    expect(s.events.ko).toBe(true);
+    runUntilKo(s);
     run(s, 1);
     expect(s.events.ko).toBe(false);
     expect(summarize(s).player.ko).toBe(false);
@@ -160,15 +149,16 @@ describe('placeholder KO', () => {
   it('keeps the RNG running instead of reseeding it', () => {
     const s = koSim();
     nextFloat(s.rng);
-    const before = [...s.rng];
     run(s, SWIPE_LANDS);
+    const before = [...s.rng];
+    runUntilKo(s);
     expect(s.rng).toEqual(before);
     expect(s.rng).not.toEqual(createSim(SEED).rng);
   });
 
   it('gives the reset player no velocity, hurt timer or knockback', () => {
     const s = koSim();
-    run(s, SWIPE_LANDS);
+    runUntilKo(s);
     expect(s.player.vx).toBe(0);
     expect(s.player.hurtTicks).toBe(0);
     expect(s.player.knockTicks).toBe(0);

@@ -19,6 +19,8 @@ export class AmmoStripView {
   private readonly cells: Cell[];
   private readonly highlight: GameObjects.Image;
   private readonly left: number;
+  /** Every image and number the strip draws, for showing and hiding it whole. */
+  private readonly parts: { setVisible(visible: boolean): unknown }[] = [];
 
   /** (right, bottom) is the hotbar slot's bottom-right corner; the strip sits beside it. */
   constructor(scene: Scene, right: number, bottom: number) {
@@ -32,14 +34,26 @@ export class AmmoStripView {
     const top = bottom - frame.height;
     this.cells = SLOT_AMMOS.map((ammoId, i) => {
       const x = this.left + i * L.cellStep;
-      fixed(scene.add.image(x, top, ATLAS_KEY, SPRITES.hudAmmoCell).setOrigin(0));
+      this.parts.push(fixed(scene.add.image(x, top, ATLAS_KEY, SPRITES.hudAmmoCell).setOrigin(0)));
       const icon = itemDef(ammoDef(ammoId).itemId).icon;
-      fixed(scene.add.image(x + L.icon.x, top + L.icon.y, ATLAS_KEY, icon).setOrigin(0));
-      new GlyphLine(scene, x + L.key.x, top + L.key.y).set(String(i + 1));
-      return { ammoId, count: new GlyphLine(scene, x + L.count.x, top + L.count.y) };
+      this.parts.push(fixed(scene.add.image(x + L.icon.x, top + L.icon.y, ATLAS_KEY, icon).setOrigin(0)));
+      const key = new GlyphLine(scene, x + L.key.x, top + L.key.y);
+      key.set(String(i + 1));
+      const cellCount = new GlyphLine(scene, x + L.count.x, top + L.count.y);
+      this.parts.push(key, cellCount);
+      return { ammoId, count: cellCount };
     });
     this.highlight = fixed(scene.add.image(this.left, top, ATLAS_KEY, SPRITES.hudAmmoSelect).setOrigin(0));
     this.highlight.setDepth(DEPTHS.hud + 1);
+    this.parts.push(this.highlight);
+    this.box = { x: this.left, y: top, w: (SLOT_AMMOS.length - 1) * L.cellStep + frame.width, h: frame.height };
+  }
+
+  /** The strip's screen rect, so clicks on it never fire (015). */
+  readonly box: { x: number; y: number; w: number; h: number };
+
+  setVisible(visible: boolean): void {
+    for (const p of this.parts) p.setVisible(visible);
   }
 
   update(tube: TubeState, inventory: Inventory): void {

@@ -11,16 +11,10 @@ function watchErrors(page: Page): string[] {
 }
 
 async function boot(page: Page): Promise<void> {
-  await page.goto('/');
+  await page.goto('/?start=hall');
   await page.waitForFunction(() => window.__GAME__ !== undefined);
   // step(0) takes the sim off the real-time loop, so nothing ticks between reads.
   await page.evaluate(() => window.__GAME__?.step(0));
-}
-
-/** Taps load and waits until the tube is full. */
-async function loadFull(page: Page) {
-  await page.evaluate(() => window.__GAME__?.step(1, { load: true }));
-  return page.evaluate(() => window.__GAME__?.step(90));
 }
 
 /** Holds fire for `frames` ticks, aimed `dx, dy` px from the player's feet. */
@@ -35,25 +29,24 @@ function fire(page: Page, frames: number, dx: number, dy: number) {
   );
 }
 
-test('loads the tube from the inventory', async ({ page }) => {
+test('fires carried arrows straight from the inventory', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page);
   const start = await page.evaluate(() => window.__GAME__?.getState());
-  expect(start?.tube).toMatchObject({ loaded: 0, capacity: 6 });
   expect(start?.inventory.arrow).toBe(30);
-  const full = await loadFull(page);
-  expect(full?.tube).toMatchObject({ loaded: 6, loading: false });
-  expect(full?.inventory.arrow).toBe(24);
+  expect(start?.link).toMatchObject({ attuned: false, reservoir: { item: null, count: 0 } });
+  const shot = await fire(page, 1, 200, 0);
+  expect(shot?.inventory.arrow).toBe(29);
+  expect(shot?.tube.fromReservoir).toBe(false);
   expect(errors).toEqual([]);
 });
 
 test('fires an arrow that flies toward the aim', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page);
-  await loadFull(page);
   const shot = await fire(page, 1, 200, 0);
   expect(shot?.arrows).toHaveLength(1);
-  expect(shot?.tube.loaded).toBe(5);
+  expect(shot?.inventory.arrow).toBe(29);
   expect(shot?.player.facing).toBe('right');
   const x0 = shot?.arrows[0]?.x ?? 0;
   const later = await page.evaluate(() => window.__GAME__?.step(10));
@@ -65,7 +58,6 @@ test('fires an arrow that flies toward the aim', async ({ page }) => {
 test('arrows stop at a wall before their range', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page);
-  await loadFull(page);
   // Walk toward the bottom wall until it's well inside an arrow's range, then fire at it.
   await page.evaluate(() => window.__GAME__?.step(60, { moveY: 1 }));
   await page.evaluate(() => window.__GAME__?.step(10));
@@ -80,14 +72,13 @@ test('arrows stop at a wall before their range', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test('an empty tube dry-fires', async ({ page }) => {
+test('the tube dry-fires once the carried arrows run out', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page);
-  await loadFull(page);
-  const emptied = await fire(page, 15 * 5 + 1, 0, 100);
-  expect(emptied?.tube.loaded).toBe(0);
+  const emptied = await fire(page, 15 * 29 + 1, 0, 100);
+  expect(emptied?.inventory.arrow).toBe(0);
   const dry = await fire(page, 15, 0, 100);
-  expect(dry?.tube).toMatchObject({ loaded: 0, dryFire: true, loading: false });
-  expect(dry?.inventory.arrow).toBe(24);
+  expect(dry?.tube).toMatchObject({ dryFire: true });
+  expect(dry?.inventory.arrow).toBe(0);
   expect(errors).toEqual([]);
 });
