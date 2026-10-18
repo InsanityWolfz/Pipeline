@@ -113,6 +113,21 @@ Each spec's build notes hold its design calls; these are the technical ones.
 - **Hit events carry a damage type** (014) so render can colour sparks; it's event data, not a rule.
 - **Test hook `ui()`** (015) reports the hover name and build tip, so e2e can check mouse-over text without reading pixels.
 
+## 2026-10-18: 016–019 (unattended run)
+- **016 vector art:**
+  - Sprites are shape data in `src/data/art`, baked once at boot into one shelf-packed canvas texture at the screen's scale (capped at 4 texels per world px). Objects show them at `1 / textureScale()`.
+  - The wanderer is redrawn on its own canvas every frame from a rig posed by sim state.
+  - Two cameras: the world one zoomed by the screen fit, and a UI camera for everything with scroll factor 0. Each frame routes every object to one of them.
+- **017 overworld:**
+  - Claims are by site, not room.
+  - Packs spawn only out of view (`viewRect` plus a margin) and out of safe zones. The spawn cap counts whole packs.
+  - There is no cap on how many enemies wake (Shaun): anything on screen aggros.
+- **018 resources:** where nodes stand (grove, rock field, pond edge, ley line) and how they regrow (`REGROW_STAGES`) are data. Render picks the frame from the sim's uses and timer. The claimed pylon reports `supplies` events, which render turns into motes.
+- **019 intake:**
+  - The intake is room data, not a piece. Each mouth tile takes only from the tile south of it, once attuned.
+  - **The attune cutscene:** the sim only counts `attunePulse` down and holds the player still. Render reads its beats (gun, pan to, pipe, pan back) from `ATTUNE`.
+  - Tests start the foundry already attuned.
+
 ## 2026-10-18: 020 Vector pass
 Supersedes the bootstrap's art decisions: the committed atlas, the art script, the stale-art guard and the pixel palette. It also replaces 002's `GlyphLine`.
 - **Every sprite is vector shape data**, baked at boot into one texture (016). There is no atlas, no `npm run art`, no grid files and no nearest filtering. The minimap draws its tiles as squares of texels at the screen's scale instead.

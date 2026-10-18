@@ -2,6 +2,16 @@
 
 Newest entry first.
 
+## 2026-10-18: 016–020 wrapped up
+**Changed:**
+- 016–020 were merged to main (one merge of PR #22, which carried the stack) and the Pages build for main went green.
+- At Shaun's request, all five specs and their backlog rows are now done.
+- `docs/decisions.md` gains a 016–019 entry beside 020's.
+
+**Next:**
+- Shaun playtests main and rants.
+- The backlog has no approved specs left, so the next run starts with new `/spec` interviews.
+
 ## 2026-10-18: 020 Vector pass (unattended build)
 **Changed:** built 020 on `claude/020-vector-pass`, stacked on 019, from `docs/plans/020-vector-pass.md`:
 - **Fonts:** two bundled OFL fonts (Cinzel, Source Sans 3) replace the glyph fonts.
