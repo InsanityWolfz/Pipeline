@@ -15,9 +15,12 @@ const game = new Game({
   type: AUTO,
   parent: 'game',
   // Vector art (016) draws at the device's resolution; the pixel atlas keeps nearest filtering itself.
+  // Textures are smoothed when baked, so the canvas needs no multisampling, which is costly at full resolution.
   width: fit.width,
   height: fit.height,
   pixelArt: false,
+  antialiasGL: false,
+  roundPixels: true,
   backgroundColor: paletteHex(OUTLINE_ID),
   scale: { mode: Scale.NONE, autoCenter: Scale.CENTER_BOTH, zoom: fit.zoom / fit.scale },
   scene: [scene],
