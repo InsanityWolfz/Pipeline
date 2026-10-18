@@ -145,6 +145,9 @@ describe('vector frame registration', () => {
       ...Object.values(assets.OVERWORLD_SPRITES).flat(),
       ...Object.values(assets.NODE_SPRITES).flatMap((n) => [...n.uses, ...n.regrow]),
       ...Object.values(foundry.INTAKE_SPRITES),
+      ...Object.values(foundry.LOGISTICS_ICONS),
+      ...Object.values(foundry.SITE_ICONS),
+      foundry.INTAKE_EMPTY_ICON,
     ]);
     for (const f of vectorFrames()) expect(registered, f.name).toContain(f.name);
   });

@@ -10,7 +10,7 @@ import { fixtureDef } from '../sim/fixtures';
 import { roomById, type SimState } from '../sim/state';
 import { registerAnim } from './anims';
 import { colorOf } from './color';
-import { addVector } from './vector/textures';
+import { addVector, addVectorSprite } from './vector/textures';
 
 // The claimable site and what claiming brings (009): the room's pylon (dormant,
 // activating, or glowing once claimed) with the claim hold's bar, the foundry's
@@ -29,7 +29,7 @@ export class SiteView {
     registerAnim(scene, PYLON_SPRITES.activating);
     registerAnim(scene, PYLON_SPRITES.active);
     registerAnim(scene, FIXTURE_SPRITES.waystone);
-    this.pylon = scene.add.sprite(0, 0, ATLAS_KEY, PYLON_SPRITES.off).setOrigin(0.5, 1).setVisible(false);
+    this.pylon = addVectorSprite(scene, 0, 0, PYLON_SPRITES.off).setOrigin(0.5, 1).setVisible(false);
     this.bar = scene.add.graphics().setDepth(DEPTHS.worldUi);
   }
 

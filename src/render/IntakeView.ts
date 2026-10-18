@@ -1,5 +1,5 @@
 import { BlendModes, type GameObjects, type Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS } from '../data/assets';
+import { DEPTHS } from '../data/assets';
 import { INTAKE_LOOK } from '../data/art/intake';
 import { TILE_SIZE } from '../data/config';
 import { INTAKE } from '../data/foundry';
@@ -38,7 +38,7 @@ export class IntakeView {
     this.lights = scene.add.graphics().setDepth(DEPTH + 2 * FOUNDRY_LAYOUT.onTopNudge).setBlendMode(BlendModes.ADD);
     const reach = TILE_SIZE / 2 + FOUNDRY_LAYOUT.arrowOffset;
     this.arrows = INTAKE.mouth.map((m) =>
-      scene.add.image((m.tx + 0.5) * TILE_SIZE, (m.ty + 0.5) * TILE_SIZE + reach, ATLAS_KEY, FACING_ARROWS.in.up).setDepth(DEPTHS.worldUi - 1),
+      addVector(scene, (m.tx + 0.5) * TILE_SIZE, (m.ty + 0.5) * TILE_SIZE + reach, FACING_ARROWS.in.up).setDepth(DEPTHS.worldUi - 1),
     );
   }
 

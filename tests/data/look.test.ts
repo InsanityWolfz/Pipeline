@@ -18,6 +18,7 @@ import { SLOT_AMMOS } from '../../src/data/tube';
 import { PROPS, type PropDef } from '../../src/data/props';
 import { TILE } from '../../src/data/rooms';
 import { WORLD } from '../../src/sim/world';
+import { vectorFrames } from '../../src/render/vector/catalog';
 
 /** Rooms drawn from pixel tiles (the foundry); the overworld (017) is drawn in vector from its terrain. */
 const ROOMS = Object.fromEntries(Object.entries(WORLD).filter(([, r]) => !r.terrain));
@@ -25,7 +26,8 @@ const ROOMS = Object.fromEntries(Object.entries(WORLD).filter(([, r]) => !r.terr
 // Look and feel (014): every new frame exists, and room dressing stays out of the way.
 
 const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as { frames: Record<string, unknown> };
-const frames = Object.keys(atlas.frames);
+/** Every frame drawn, from the atlas or from vector data. */
+const frames = [...Object.keys(atlas.frames), ...vectorFrames().map((f) => f.name)];
 
 describe('room art', () => {
   it('has every floor variant and wall piece in the atlas', () => {

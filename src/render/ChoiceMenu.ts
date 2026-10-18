@@ -1,9 +1,10 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
+import { DEPTHS, SPRITES } from '../data/assets';
 import { PICKER_LAYOUT } from '../data/hudLayout';
 import { colorOf } from './color';
 import { inRect, menuRows } from './foundryLayout';
 import { TextLine } from './textLine';
+import { addVector } from './vector/textures';
 
 /** One row: up to two icons, a number beside them, and what clicking it means. */
 export interface Choice<T> {
@@ -70,7 +71,7 @@ export class ChoiceMenu<T> {
       this.panel.fillStyle(colorOf(L.back)).fillRect(x0, y0, x1 - x0, y1 - y0);
     }
     const add = (x: number, y: number, frame: string, depth: number): GameObjects.Image =>
-      this.scene.add.image(x, y, ATLAS_KEY, frame).setOrigin(0).setScrollFactor(0).setDepth(depth);
+      addVector(this.scene, x, y, frame).setOrigin(0).setScrollFactor(0).setDepth(depth);
     this.rows = rects.map((r, i) => {
       const c = list[i];
       const images = [add(r.x, r.y, SPRITES.craftRow, DEPTHS.menu)];

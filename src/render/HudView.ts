@@ -1,5 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS, HUD_HEALTH_LAYOUT, HUD_MATERIALS_LAYOUT, HUD_SLOT_LAYOUT, SPRITES } from '../data/assets';
+import { DEPTHS, HUD_HEALTH_LAYOUT, HUD_MATERIALS_LAYOUT, HUD_SLOT_LAYOUT, SPRITES } from '../data/assets';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { itemDef, ITEMS } from '../data/items';
 import { MAX_HEALTH } from '../data/player';
@@ -15,6 +15,7 @@ import { HUD_ARMOR_LAYOUT } from '../data/hudLayout';
 import { colorOf } from './color';
 import { TextLine } from './textLine';
 import { toView } from './scale';
+import { addVector } from './vector/textures';
 
 /** One material row: its icon and count, shown only while the player holds some. */
 interface MaterialRow {
@@ -57,22 +58,22 @@ export class HudView {
       o.setScrollFactor(0).setDepth(DEPTHS.hud);
       return o;
     };
-    this.slot = fixed(scene.add.image(0, 0, ATLAS_KEY, SPRITES.hudSlot).setOrigin(0));
+    this.slot = fixed(addVector(scene, 0, 0, SPRITES.hudSlot).setOrigin(0));
     const left = Math.round((VIEW_WIDTH - this.slot.width) / 2);
     const top = VIEW_HEIGHT - this.slot.height - HUD_SLOT_LAYOUT.margin;
     this.slot.setPosition(left, top);
     const { icon, count: at } = HUD_SLOT_LAYOUT;
     const startIcon = itemDef(slotItem({ ammoId: STARTING_AMMO })).icon;
-    this.icon = fixed(scene.add.image(left + icon.x, top + icon.y, ATLAS_KEY, startIcon).setOrigin(0));
-    this.glow = fixed(scene.add.image(left, top, ATLAS_KEY, SPRITES.hudSlotGlow).setOrigin(0)).setVisible(false);
+    this.icon = fixed(addVector(scene, left + icon.x, top + icon.y, startIcon).setOrigin(0));
+    this.glow = fixed(addVector(scene, left, top, SPRITES.hudSlotGlow).setOrigin(0)).setVisible(false);
     this.count = new TextLine(scene, left + at.x, top + at.y, DEPTHS.hud, false, 'count');
     this.strip = new AmmoStripView(scene, left + this.slot.width, top + this.slot.height);
 
     const hp = HUD_HEALTH_LAYOUT;
-    this.health = fixed(scene.add.image(hp.x, hp.y, ATLAS_KEY, SPRITES.hudHealth).setOrigin(0));
+    this.health = fixed(addVector(scene, hp.x, hp.y, SPRITES.hudHealth).setOrigin(0));
     this.healthFill = fixed(scene.add.graphics({ x: hp.x + hp.fill.x, y: hp.y + hp.fill.y }));
     const ar = HUD_ARMOR_LAYOUT;
-    this.armorIcon = fixed(scene.add.image(ar.x, ar.y, ATLAS_KEY, SPRITES.iconArmorLight).setOrigin(0)).setVisible(false);
+    this.armorIcon = fixed(addVector(scene, ar.x, ar.y, SPRITES.iconArmorLight).setOrigin(0)).setVisible(false);
     this.armorCount = new TextLine(scene, ar.x + ar.count.x, ar.y + ar.count.y, DEPTHS.hud, false, 'count');
 
     // Raw materials and parts, in ITEMS order; ammo shows in the hotbar instead. Rows are placed each frame.
@@ -80,13 +81,13 @@ export class HudView {
       .filter((it) => it.kind !== 'ammo')
       .map((it) => ({
         itemId: it.id,
-        icon: fixed(scene.add.image(0, 0, ATLAS_KEY, it.icon).setOrigin(0)),
+        icon: fixed(addVector(scene, 0, 0, it.icon).setOrigin(0)),
         count: new TextLine(scene, 0, 0, DEPTHS.hud, false, 'count'),
       }));
 
     scene.input.setDefaultCursor('none');
     // Over the crafting menu too, where it's the pointer for clicking rows.
-    this.crosshair = fixed(scene.add.image(0, 0, ATLAS_KEY, SPRITES.crosshair)).setDepth(DEPTHS.menu + 1);
+    this.crosshair = fixed(addVector(scene, 0, 0, SPRITES.crosshair)).setDepth(DEPTHS.menu + 1);
   }
 
   update(tube: TubeState, inventory: Inventory, player: PlayerState, link: LinkState, worn: ArmorPiece | undefined, hasTube: boolean): void {

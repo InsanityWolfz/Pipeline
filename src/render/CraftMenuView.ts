@@ -1,6 +1,6 @@
 import type { GameObjects, Scene } from 'phaser';
 import { ammoDef } from '../data/ammo';
-import { ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
+import { DEPTHS, SPRITES } from '../data/assets';
 import { CRAFT_MENU_LAYOUT } from '../data/hudLayout';
 import { itemDef } from '../data/items';
 import { CRAFT_GROUPS, recipeDef } from '../data/recipes';
@@ -10,6 +10,7 @@ import { knownRecipe } from '../sim/tutorial';
 import { count, type Inventory } from '../sim/inventory';
 import { craftMenuLines, craftPanelAt } from './craftMenuLayout';
 import { TextLine } from './textLine';
+import { addVector } from './vector/textures';
 
 interface Row {
   recipeId: string;
@@ -40,7 +41,7 @@ export class CraftMenuView {
   constructor(scene: Scene, onCraft: (recipeId: string) => void) {
     const L = CRAFT_MENU_LAYOUT;
     const add = (x: number, y: number, frame: string, depth: number = DEPTHS.menu): GameObjects.Image => {
-      const image = scene.add.image(x, y, ATLAS_KEY, frame).setOrigin(0).setScrollFactor(0).setDepth(depth);
+      const image = addVector(scene, x, y, frame).setOrigin(0).setScrollFactor(0).setDepth(depth);
       this.objects.push(image);
       return image;
     };

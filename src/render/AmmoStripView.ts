@@ -7,6 +7,7 @@ import { SLOT_AMMOS } from '../data/tube';
 import { count, type Inventory } from '../sim/inventory';
 import type { TubeState } from '../sim/tube';
 import { TextLine } from './textLine';
+import { addVector } from './vector/textures';
 
 interface Cell {
   ammoId: string;
@@ -34,16 +35,16 @@ export class AmmoStripView {
     const top = bottom - frame.height;
     this.cells = SLOT_AMMOS.map((ammoId, i) => {
       const x = this.left + i * L.cellStep;
-      this.parts.push(fixed(scene.add.image(x, top, ATLAS_KEY, SPRITES.hudAmmoCell).setOrigin(0)));
+      this.parts.push(fixed(addVector(scene, x, top, SPRITES.hudAmmoCell).setOrigin(0)));
       const icon = itemDef(ammoDef(ammoId).itemId).icon;
-      this.parts.push(fixed(scene.add.image(x + L.icon.x, top + L.icon.y, ATLAS_KEY, icon).setOrigin(0)));
+      this.parts.push(fixed(addVector(scene, x + L.icon.x, top + L.icon.y, icon).setOrigin(0)));
       const key = new TextLine(scene, x + L.key.x, top + L.key.y, DEPTHS.hud, false, 'count');
       key.set(String(i + 1));
       const cellCount = new TextLine(scene, x + L.count.x, top + L.count.y, DEPTHS.hud, false, 'count');
       this.parts.push(key, cellCount);
       return { ammoId, count: cellCount };
     });
-    this.highlight = fixed(scene.add.image(this.left, top, ATLAS_KEY, SPRITES.hudAmmoSelect).setOrigin(0));
+    this.highlight = fixed(addVector(scene, this.left, top, SPRITES.hudAmmoSelect).setOrigin(0));
     this.highlight.setDepth(DEPTHS.hud + 1);
     this.parts.push(this.highlight);
     this.box = { x: this.left, y: top, w: (SLOT_AMMOS.length - 1) * L.cellStep + frame.width, h: frame.height };

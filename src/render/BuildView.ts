@@ -19,6 +19,7 @@ import { buildBarCells, conduitLook, inRect, pieceIcon, sorterLook } from './fou
 import { BuildTip } from './BuildTip';
 import { MAX_ARROWS, placeArrows, viewOf } from './FoundryView';
 import { toView } from './scale';
+import { addVector } from './vector/textures';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -54,9 +55,9 @@ export class BuildView {
       .setOrigin(0)
       .setScrollFactor(0)
       .setDepth(DEPTHS.hud + 2);
-    this.ghost = scene.add.image(0, 0, ATLAS_KEY, bodyFrame(FIRST_PIECE, 'right', 'left')).setAlpha(GHOST.alpha);
-    this.ghostIcon = scene.add.image(0, 0, ATLAS_KEY, pieceIcon(FIRST_PIECE)).setAlpha(GHOST.alpha);
-    this.ghostArrows = Array.from({ length: MAX_ARROWS }, () => scene.add.image(0, 0, ATLAS_KEY, FACING_ARROWS.out.down));
+    this.ghost = addVector(scene, 0, 0, bodyFrame(FIRST_PIECE, 'right', 'left')).setAlpha(GHOST.alpha);
+    this.ghostIcon = addVector(scene, 0, 0, pieceIcon(FIRST_PIECE)).setAlpha(GHOST.alpha);
+    this.ghostArrows = Array.from({ length: MAX_ARROWS }, () => addVector(scene, 0, 0, FACING_ARROWS.out.down));
     for (const o of [this.ghost, this.ghostIcon, ...this.ghostArrows]) o.setDepth(DEPTHS.worldUi - 1);
     this.tip = new BuildTip(scene);
     this.setVisible(false);
@@ -145,8 +146,8 @@ export class BuildView {
     this.cells = buildBarCells(unlocked).map((c) => {
       const fixed = (o: GameObjects.Image, depth: number): GameObjects.Image =>
         o.setOrigin(0).setScrollFactor(0).setDepth(depth).setVisible(this.visible);
-      const frame = fixed(this.scene.add.image(c.x, c.y, ATLAS_KEY, SPRITES.hudAmmoCell), DEPTHS.hud);
-      const icon = this.scene.add.image(c.x + L.icon.x, c.y + L.icon.y, ATLAS_KEY, pieceIcon(c.pieceId));
+      const frame = fixed(addVector(this.scene, c.x, c.y, SPRITES.hudAmmoCell), DEPTHS.hud);
+      const icon = addVector(this.scene, c.x + L.icon.x, c.y + L.icon.y, pieceIcon(c.pieceId));
       fixed(icon, DEPTHS.hud + 1);
       return { pieceId: c.pieceId, images: [frame, icon] };
     });

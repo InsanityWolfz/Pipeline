@@ -1,5 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
-import { animFrames, ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
+import { animFrames, DEPTHS, SPRITES } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
 import { DOORWAY_SPRITE } from '../data/foundryAssets';
 import { PROPS, type PropDef, type PropPlacement } from '../data/props';
@@ -7,6 +7,7 @@ import { PROP_LAYOUT, ROOM_TOP_MARGIN, WALL_SPRITES } from '../data/roomArt';
 import { TILE, type Room } from '../data/rooms';
 import { registerAnim } from './anims';
 import { floorFrame, wallPieces } from './roomTiles';
+import { addVectorSprite, addVector } from './vector/textures';
 
 const FLOOR_PROP_DEPTH = (DEPTHS.floor + DEPTHS.shadow) / 2;
 
@@ -27,7 +28,7 @@ export class RoomView {
     // The overworld (017) is drawn by OverworldView from its terrain, not from tiles.
     if (room.terrain) return;
     const add = (x: number, y: number, frame: string): GameObjects.Image => {
-      const image = this.scene.add.image(x, y, ATLAS_KEY, frame);
+      const image = addVector(this.scene, x, y, frame);
       this.objects.push(image);
       return image;
     };
@@ -71,7 +72,7 @@ export class RoomView {
     registerAnim(this.scene, def.anim);
     const cx = (p.tx + 0.5) * TILE_SIZE;
     const bottom = (p.ty + 1) * TILE_SIZE;
-    const sprite = this.scene.add.sprite(cx, bottom, ATLAS_KEY, animFrames(def.anim)[0]).setOrigin(0.5, 1);
+    const sprite = addVectorSprite(this.scene, cx, bottom, animFrames(def.anim)[0] ?? '').setOrigin(0.5, 1);
     this.objects.push(sprite);
     if (def.layer === 'floor') sprite.setOrigin(0.5).setPosition(cx, bottom - TILE_SIZE / 2).setDepth(FLOOR_PROP_DEPTH);
     else if (def.layer === 'wall') sprite.setY(bottom + (def.drop ?? 0)).setDepth(bottom + PROP_LAYOUT.wallNudge);

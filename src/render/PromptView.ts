@@ -1,5 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS } from '../data/assets';
+import { DEPTHS } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
 import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
 import { OBJECTIVES, PROMPT_RANGE, type PromptTarget } from '../data/objectives';
@@ -12,6 +12,7 @@ import { currentObjective } from '../sim/objectives';
 import { roomById, type SimState } from '../sim/state';
 import { stoneInReach } from '../sim/tutorial';
 import { TextLine } from './textLine';
+import { addVector } from './vector/textures';
 
 /** A world point, px: where a prompt's target stands. */
 type Point = { x: number; y: number };
@@ -25,7 +26,7 @@ export class PromptView {
   private readonly key: TextLine;
 
   constructor(scene: Scene) {
-    this.cap = scene.add.image(0, 0, ATLAS_KEY, TUTORIAL_SPRITES.keyCap).setOrigin(0.5, 1).setDepth(DEPTHS.prompt);
+    this.cap = addVector(scene, 0, 0, TUTORIAL_SPRITES.keyCap).setOrigin(0.5, 1).setDepth(DEPTHS.prompt);
     this.key = new TextLine(scene, 0, 0, DEPTHS.prompt + 1, true);
   }
 

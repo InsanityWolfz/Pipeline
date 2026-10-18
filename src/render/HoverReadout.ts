@@ -1,5 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS } from '../data/assets';
+import { DEPTHS } from '../data/assets';
 import { READOUT_LAYOUT } from '../data/hudLayout';
 import { LOGISTICS_ICONS, INTAKE_EMPTY_ICON } from '../data/foundryAssets';
 import { itemDef } from '../data/items';
@@ -11,6 +11,7 @@ import type { ReservoirState } from '../sim/link';
 import type { MachineState, PieceState } from '../sim/pieces';
 import { colorOf } from './color';
 import { TextLine } from './textLine';
+import { addVector } from './vector/textures';
 
 /** The most lines a readout needs: the largest recipe's inputs, plus the output. */
 const MAX_LINES = Math.max(...Object.values(RECIPES).map((r) => Object.keys(r.inputs).length)) + 1;
@@ -57,7 +58,7 @@ export class HoverReadout {
     const depth = DEPTHS.worldUi + 10;
     this.back = scene.add.graphics().setDepth(depth);
     for (let i = 0; i < MAX_LINES; i++) {
-      this.icons.push(scene.add.image(0, 0, ATLAS_KEY).setOrigin(0).setDepth(depth + 1));
+      this.icons.push(addVector(scene, 0, 0, INTAKE_EMPTY_ICON).setOrigin(0).setDepth(depth + 1));
       this.counts.push(new TextLine(scene, 0, 0, depth + 1, true));
     }
     this.show([], 0, 0);

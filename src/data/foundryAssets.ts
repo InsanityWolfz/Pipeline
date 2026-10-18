@@ -107,7 +107,7 @@ export const SPREAD_FAN = { length: 56, width: 1, color: 'ley-cyan', alpha: 0.55
 export const STAGER_PULSE = { alpha: 0.7, ticksPerBeat: 9 } as const;
 
 /** The hover readout's icon for the intake when the reservoir is empty: the tube emblem. */
-export const INTAKE_EMPTY_ICON = 'emblem-tube-socket';
+export const INTAKE_EMPTY_ICON = 'emblem-intake';
 
 /**
  * Build-mode arrows on a piece's edges, also on the ghost: cyan pointing out of its

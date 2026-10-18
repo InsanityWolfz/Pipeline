@@ -1,5 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
+import { DEPTHS, SPRITES } from '../data/assets';
 import { PICKER_LAYOUT } from '../data/hudLayout';
 import { itemDef } from '../data/items';
 import { count, type Inventory } from '../sim/inventory';
@@ -7,6 +7,7 @@ import type { HopperState } from '../sim/pieces';
 import { colorOf } from './color';
 import { inRect, pickerEntries, pickerRows, pieceIcon, type PickerEntry } from './foundryLayout';
 import { TextLine } from './textLine';
+import { addVector } from './vector/textures';
 
 // The hopper menu: opened by E next to a hopper. A filled hopper offers to take
 // everything out, and to put in more of the same; an empty one lists every held
@@ -69,7 +70,7 @@ export class HopperPicker {
     const fixed = (o: GameObjects.Image, depth: number): GameObjects.Image =>
       o.setOrigin(0).setScrollFactor(0).setDepth(depth);
     const add = (x: number, y: number, frame: string, depth: number): GameObjects.Image =>
-      fixed(this.scene.add.image(x, y, ATLAS_KEY, frame), depth);
+      fixed(addVector(this.scene, x, y, frame), depth);
     this.rows = rects.map((r) => {
       const shift = r.action === 'take' ? L.takeShift : 0;
       const images = [add(r.x, r.y, SPRITES.craftRow, DEPTHS.menu)];

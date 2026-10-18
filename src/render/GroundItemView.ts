@@ -1,7 +1,8 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS, GROUND_ITEM_LIFT, SPRITES } from '../data/assets';
+import { DEPTHS, GROUND_ITEM_LIFT, SPRITES } from '../data/assets';
 import { ITEMS } from '../data/items';
 import type { GroundItem } from '../sim/drops';
+import { addVector } from './vector/textures';
 
 
 interface Drawn {
@@ -28,8 +29,8 @@ export class GroundItemView {
       const x = Math.round(g.x);
       const y = Math.round(g.y);
       this.drawn.set(g.id, {
-        shadow: this.scene.add.image(x, y, ATLAS_KEY, SPRITES.itemShadow).setDepth(DEPTHS.shadow),
-        item: this.scene.add.image(x, y + GROUND_ITEM_LIFT, ATLAS_KEY, def.icon).setOrigin(0.5, 1).setDepth(y),
+        shadow: addVector(this.scene, x, y, SPRITES.itemShadow).setDepth(DEPTHS.shadow),
+        item: addVector(this.scene, x, y + GROUND_ITEM_LIFT, def.icon).setOrigin(0.5, 1).setDepth(y),
       });
     }
     for (const [id, d] of this.drawn) {

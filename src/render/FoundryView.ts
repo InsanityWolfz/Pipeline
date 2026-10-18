@@ -31,6 +31,7 @@ import { registerAnim } from './anims';
 import { arrowSpots, conduitLook, pieceIcon, sorterLook } from './foundryLayout';
 import { colorOf } from './color';
 import { TextLine } from './textLine';
+import { addVector, textureScale } from './vector/textures';
 
 export const viewOf = (f: Facing): PieceView => (f === 'up' || f === 'down' ? f : 'side');
 
@@ -143,7 +144,7 @@ export class FoundryView {
     const left = p.facing === 'left';
     const d: Drawn = {
       body: add.sprite(r.x, bottom, ATLAS_KEY).setOrigin(0.5, 1).setFlipX(left).setDepth(bottom),
-      icon: add.image(r.x, bottom, ATLAS_KEY, pieceIcon(p.pieceId)).setOrigin(0.5),
+      icon: addVector(this.scene, r.x, bottom, pieceIcon(p.pieceId)).setOrigin(0.5),
       arrows: arrowSpots(p).map(() => add.image(0, 0, ATLAS_KEY, FACING_ARROWS.out.down).setDepth(DEPTHS.worldUi - 1)),
     };
     if (p.kind === 'conduit') {
@@ -156,13 +157,13 @@ export class FoundryView {
       d.body.setFrame(MACHINE_HOUSINGS[footprint][view].idle);
       d.icon.setPosition(r.x, bottom - ICON_RISE[footprint][view]).setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge);
       d.marker = add.sprite(r.x, 0, ATLAS_KEY).setOrigin(0.5, 1).setDepth(DEPTHS.worldUi);
-      d.markerIcon = add.image(r.x, 0, ATLAS_KEY).setOrigin(0.5).setDepth(DEPTHS.worldUi + 1);
+      d.markerIcon = addVector(this.scene, r.x, 0, pieceIcon(p.pieceId)).setOrigin(0.5).setDepth(DEPTHS.worldUi + 1);
     } else if (p.kind === 'sorter') {
       const look = sorterLook(p.facing, p.mirrored);
       d.body.setOrigin(0.5).setPosition(r.x, r.y).setDepth(FOUNDRY_LAYOUT.conduitDepth);
       d.body.setFlip(look.flipX, look.flipY).play(look.anim.key);
       d.icon.setDepth(FOUNDRY_LAYOUT.itemDepth);
-      d.slot = add.image(r.x, r.y, ATLAS_KEY).setScale(SORTER_LOOK.slotScale).setDepth(FOUNDRY_LAYOUT.conduitDepth + FOUNDRY_LAYOUT.onTopNudge);
+      d.slot = addVector(this.scene, r.x, r.y, pieceIcon(p.pieceId)).setScale(SORTER_LOOK.slotScale / textureScale()).setDepth(FOUNDRY_LAYOUT.conduitDepth + FOUNDRY_LAYOUT.onTopNudge);
     } else if (p.kind === 'stager') {
       d.icon.setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge).setVisible(false);
     } else {
