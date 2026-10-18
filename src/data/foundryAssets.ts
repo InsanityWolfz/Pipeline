@@ -74,8 +74,8 @@ export const STAGER_SPRITE = { key: 'gravity-stager', frames: 5, frameRate: 1, l
  */
 export const SPREAD_FAN = { length: 56, width: 1, color: 'ley-cyan', alpha: 0.55 } as const;
 
-/** A stager holding an item pulses its alpha between 1 and this. */
-export const STAGER_PULSE_ALPHA = 0.7;
+/** A stager holding an item pulses its alpha between 1 and `alpha`, one beat every `ticksPerBeat` ticks. */
+export const STAGER_PULSE = { alpha: 0.7, ticksPerBeat: 9 } as const;
 
 /** The hover readout's icon for a socket whose reservoir is empty: the socket's own emblem. */
 export const SOCKET_EMPTY_ICON = 'emblem-tube-socket';

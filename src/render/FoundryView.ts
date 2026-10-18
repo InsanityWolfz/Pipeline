@@ -1,5 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS } from '../data/assets';
+import { animFrames, ATLAS_KEY, DEPTHS } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
 import { CONDUIT_TICKS, STAGER_ANGLES } from '../data/foundry';
 import {
@@ -7,7 +7,7 @@ import {
   CRATE_SPRITE,
   SOCKET_SPRITES,
   SPREAD_FAN,
-  STAGER_PULSE_ALPHA,
+  STAGER_PULSE,
   STAGER_SPRITE,
   FACING_ARROWS,
   FOUNDRY_LAYOUT,
@@ -79,7 +79,7 @@ export class FoundryView {
 
   constructor(scene: Scene) {
     this.scene = scene;
-    this.fan = scene.add.graphics().setDepth(DEPTHS.worldUi - 2);
+    this.fan = scene.add.graphics().setDepth(DEPTHS.spreadFan);
     for (const views of Object.values(MACHINE_HOUSINGS)) for (const v of Object.values(views)) registerAnim(scene, v.working);
     for (const anim of Object.values(CONDUIT_ANIMS)) registerAnim(scene, anim);
     registerAnim(scene, STATUS_MARKERS.working);
@@ -149,9 +149,12 @@ export class FoundryView {
     else if (p.kind === 'machine') this.drawMachine(p, d);
     else if (p.kind === 'socket') d.body.setFrame(p.pulse > 0 ? SOCKET_SPRITES.refill : SOCKET_SPRITES.idle);
     else if (p.kind === 'stager') {
-      d.body.setFrame(`${STAGER_SPRITE.key}/${Math.max(0, STAGER_ANGLES.indexOf(p.angle))}`);
+      const frame = animFrames(STAGER_SPRITE)[STAGER_ANGLES.indexOf(p.angle)];
+      if (!frame) throw new Error(`No stager frame for angle ${p.angle}`);
+      d.body.setFrame(frame);
       // A held item makes the ring throb as it passes through.
-      const throb = p.item ? STAGER_PULSE_ALPHA + (1 - STAGER_PULSE_ALPHA) * Math.abs(Math.cos(p.progress / 3)) : 1;
+      const beat = Math.abs(Math.cos((Math.PI * p.progress) / STAGER_PULSE.ticksPerBeat));
+      const throb = p.item ? STAGER_PULSE.alpha + (1 - STAGER_PULSE.alpha) * beat : 1;
       d.body.setAlpha(throb);
     }
     else {

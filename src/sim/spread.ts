@@ -1,4 +1,5 @@
 import { STAGER_ANGLES } from '../data/foundry';
+import { FOUNDRY_ROOM } from '../data/rooms';
 import { frontTile, sameTile, type FoundryState } from './pieces';
 import type { SimState } from './state';
 
@@ -16,6 +17,7 @@ export function socketStreams(foundry: FoundryState): number[] {
 
 /** Steps a stager to its next angle, wrapping around. Only in the foundry; records an angle event. */
 export function cycleAngle(state: SimState, id: number): void {
+  if (state.roomId !== FOUNDRY_ROOM) return;
   const p = state.foundry.pieces.find((piece) => piece.id === id);
   if (p?.kind !== 'stager') return;
   const i = STAGER_ANGLES.indexOf(p.angle);

@@ -17,5 +17,5 @@ export function stepBuild(state: SimState, cmd: Command): void {
   if (cmd.toggleBuild) state.building = !state.building && state.roomId === FOUNDRY_ROOM;
   if (cmd.place) place(state, cmd.place.pieceId, cmd.place.tx, cmd.place.ty, cmd.place.facing);
   if (cmd.pickUp) pickUp(state, cmd.pickUp.tx, cmd.pickUp.ty);
-  if (cmd.setAngle && state.roomId === FOUNDRY_ROOM) cycleAngle(state, cmd.setAngle.id);
+  if (cmd.setAngle) cycleAngle(state, cmd.setAngle.id);
 }

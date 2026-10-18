@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-18: 008 Spread (overnight build)
+**Changed:** built 008 on `claude/008-spread` (stacked on 007) from `docs/plans/008-spread.md`. A gravity stager costs a warden core (refunded on pick-up). It passes items like a conduit and adds a stream when it faces the tube socket; E or a build-mode click turns it through -30..+30. A reservoir shot fires one projectile per stream. Build mode shows the spread fan, and every shot gets a muzzle flash. Verify: 327 unit and 25 e2e tests pass. QA found that the muzzle flash never reached render (fixed). Review: fixed 3 blocking issues (a determinism test, a stacked-shot test, a magic number) and most suggestions.
+**Next:** 009 Claiming on `claude/009-claiming`.
+**Notes:** the build-mode fan always points up, not along the aim (my call). The needle tilt at ±15 is subtle. The stager reads more like a glass dome than a stone ring; Shaun's art review will decide.
+
 ## 2026-10-18: 007 Tube link (overnight build)
 **Changed:** built 007 on `claude/cool-thompson-dxlx4b` from `docs/plans/007-tube-link.md`. The tube attunes on the first foundry entry. One `tube-socket` (unlocked by attuning) fills a reservoir (cap 30) from a line. Hand-loading and R are gone, so carried ammo fires first, then the reservoir, with a cyan hotbar. `?playtest` gives a boosted start. Verify: 309 unit and 24 e2e tests pass, and the qa screenshots pass. Review: fixed the one blocking issue (data tests) and most suggestions. Draft PR InsanityWolfz/Pipeline#9.
 **Next:** 008, stacked on this branch (`claude/008-spread`).
