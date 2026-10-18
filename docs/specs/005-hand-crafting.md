@@ -1,5 +1,5 @@
 # 005: Hand crafting
-status: draft
+status: approved
 
 ## Goal
 The player harvests wood, stone, fiber and ley crystal from nodes in the ruin hall, opens a crafting menu, and hand-crafts the parts of each beginner ammo chain and then the ammo itself: arrows, bombs and ley bolts. Keys 1–3 choose which ammo the tube's one slot loads and fires. Bombs arc to the cursor and burst into fire; ley bolts fly slower and pierce.
