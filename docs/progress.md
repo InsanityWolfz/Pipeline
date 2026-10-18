@@ -7,6 +7,7 @@ Newest entry first.
 - 016–020 were merged to main (one merge of PR #22, which carried the stack) and the Pages build for main went green.
 - At Shaun's request, all five specs and their backlog rows are now done.
 - `docs/decisions.md` gains a 016–019 entry beside 020's.
+- A new rule, `.claude/rules/tests.md`: e2e waits on state, not time (Shaun approved it after timing mistakes repeated in this run).
 
 **Next:**
 - Shaun playtests main and rants.
