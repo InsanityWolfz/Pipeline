@@ -5,7 +5,7 @@ import { CRAFT_MENU_LAYOUT } from '../data/hudLayout';
 import { itemDef } from '../data/items';
 import { CRAFT_GROUPS, recipeDef } from '../data/recipes';
 import { canCraft } from '../sim/crafting';
-import { createLink, type LinkState } from '../sim/link';
+import type { LinkState } from '../sim/link';
 import { knownRecipe } from '../sim/tutorial';
 import { count, type Inventory } from '../sim/inventory';
 import { craftMenuLines, craftPanelAt } from './craftMenuLayout';
@@ -33,7 +33,7 @@ export class CraftMenuView {
   private hovered: Row | undefined;
   private open = false;
   private inventory: Inventory = {};
-  private link: LinkState = createLink();
+  private link: Pick<LinkState, 'attuned'> = { attuned: false };
   /** Each group's header icon, by ammo id: hidden while none of its recipes is known (012). */
   private readonly headers = new Map<string, GameObjects.Image>();
 
@@ -106,10 +106,12 @@ export class CraftMenuView {
       else r.frame.disableInteractive();
     }
     if (!open) this.hovered = undefined;
+    // Hide unknown recipes straight away, not a frame later.
+    else this.update(this.inventory, this.link);
   }
 
   /** Refreshes counts and greying while open; recipes not yet known (012) stay hidden. */
-  update(inventory: Inventory, link: LinkState): void {
+  update(inventory: Inventory, link: Pick<LinkState, 'attuned'>): void {
     this.inventory = inventory;
     this.link = link;
     if (!this.open) return;

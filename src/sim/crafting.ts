@@ -25,7 +25,7 @@ export function craft(state: SimState, recipeId: string): boolean {
 }
 
 /** True if the recipe is known (012) and the inventory holds every input. */
-export function canCraft(state: Pick<SimState, 'inventory' | 'link'>, recipeId: string): boolean {
+export function canCraft(state: Pick<SimState, 'inventory'> & { link: Pick<SimState['link'], 'attuned'> }, recipeId: string): boolean {
   if (!knownRecipe(state, recipeId)) return false;
   return Object.entries(recipeDef(recipeId).inputs).every(([itemId, n]) => count(state.inventory, itemId) >= n);
 }

@@ -15,7 +15,7 @@ Newest entry first.
 - **End-to-end test:** a full scripted run through every beat from a fresh start, `tests/e2e/tutorial.spec.ts`.
 
 Verify: 399 unit and 30 e2e tests pass.
-**Next:** QA and review, then 013 and 014.
+**Next:** 013 on `claude/013-conduit-corners`. QA (all 7 pass) and review fixes are in: KO before the foundry opens wakes in the clearing; prompts dim until usable; objective line on a dark band; hopper prompt; harvest unaffected by fire without the tube.
 **Notes:** see the 012 spec's build notes. The spread objective needs one stager, because only one warden core exists.
 
 ## 2026-10-18: 011 Death (overnight build)

@@ -304,6 +304,8 @@ export const DEPTHS = {
   flameNudge: 0.01,
   /** Health bars, sparkles and popups over the world. */
   worldUi: 100_000,
+  /** Tutorial key prompts, over other world UI. */
+  prompt: 100_005,
   /** Build mode's spread fan over the tube socket, just under the build arrows. */
   spreadFan: 99_998,
   /** The HUD, above the world. */

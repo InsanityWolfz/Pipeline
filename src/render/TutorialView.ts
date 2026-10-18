@@ -2,6 +2,7 @@ import type { GameObjects, Scene } from 'phaser';
 import { ATLAS_KEY, DEPTHS } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
 import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
+import type { GateId } from '../data/rooms';
 import { roomById, type SimState } from '../sim/state';
 import { doorOpen } from '../sim/tutorial';
 import { registerAnim } from './anims';
@@ -12,7 +13,7 @@ import { registerAnim } from './anims';
 export class TutorialView {
   private readonly scene: Scene;
   private readonly stone: GameObjects.Image;
-  private seals: { gate: 'foundry' | 'shrine'; sprite: GameObjects.Sprite }[] = [];
+  private seals: { gate: GateId; sprite: GameObjects.Sprite; fading: boolean }[] = [];
   private room = '';
 
   constructor(scene: Scene) {
@@ -27,10 +28,10 @@ export class TutorialView {
     this.stone.setVisible(stone !== undefined);
     if (stone) this.stone.setFrame(sim.hasTube ? TUTORIAL_SPRITES.stoneEmpty : TUTORIAL_SPRITES.stone);
     for (const seal of this.seals) {
-      if (!doorOpen(sim, seal.gate) || seal.sprite.alpha < 1) continue;
+      if (!doorOpen(sim, seal.gate) || seal.fading) continue;
       // The gate just opened: the seal crumbles away.
+      seal.fading = true;
       this.scene.tweens.add({ targets: seal.sprite, alpha: 0, duration: TUTORIAL_LAYOUT.gateFadeMs, onComplete: () => seal.sprite.setVisible(false) });
-      seal.sprite.setAlpha(0.99);
     }
   }
 
@@ -45,7 +46,7 @@ export class TutorialView {
       const sprite = this.scene.add.sprite(d.tx * TILE_SIZE, bottom, ATLAS_KEY).setOrigin(0, 1).setDepth(bottom + DEPTHS.tubeNudge);
       if (d.gate === 'shrine') sprite.play(TUTORIAL_SPRITES.barrier.key);
       else sprite.setFrame(TUTORIAL_SPRITES.rubble);
-      return [{ gate: d.gate, sprite }];
+      return [{ gate: d.gate, sprite, fading: false }];
     });
     const stone = room.tubeStone;
     if (stone) {

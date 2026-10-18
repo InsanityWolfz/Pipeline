@@ -10,7 +10,9 @@ import { createSim, type SimState } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
-import { knownRecipes } from '../../src/sim/tutorial';
+import { knownRecipe } from '../../src/sim/tutorial';
+import { RECIPES } from '../../src/data/recipes';
+import { placeNode } from './fight';
 import { command, die, fireAt, movePlayer, run, runUntil, SEED } from './fight';
 
 const CLEARING = ROOMS[CLEARING_ROOM];
@@ -61,6 +63,27 @@ describe('the tube', () => {
     expect(s.hasTube).toBe(true);
   });
 
+  it('without it, fire and ammo select do not interrupt a harvest', () => {
+    const s = tutorial();
+    const n = placeNode(s, 'tree', s.player.x + 20, s.player.y, CLEARING_ROOM);
+    run(s, 1, { interact: true });
+    expect(s.harvest?.nodeId).toBe(n.id);
+    run(s, 1, { fire: true, selectAmmo: 'bomb', aimX: s.player.x + 50, aimY: s.player.y });
+    expect(s.harvest).not.toBeNull();
+    expect(s.tube.ammoId).toBe('arrow');
+  });
+
+  it('a KO before the foundry is open wakes the player back in the clearing', () => {
+    const s = tutorial();
+    s.roomId = 'ruin-hall';
+    die(s);
+    expect(s.roomId).toBe(CLEARING_ROOM);
+    expect(s.link.attuned).toBe(false);
+    s.gates.foundry = true;
+    die(s);
+    expect(s.roomId).toBe(FOUNDRY_ROOM);
+  });
+
   it('its stone is solid', () => {
     const s = atStone();
     const y = s.player.y;
@@ -98,15 +121,18 @@ describe('gates', () => {
     s.link.reservoir.count = 0;
     run(s, 1);
     expect(s.gates.shrine).toBe(true);
+    die(s);
+    expect(s.gates.shrine).toBe(true);
   });
 });
 
 describe('recipes', () => {
   it('only the arrow chain is known until the tube attunes', () => {
     const s = tutorial();
-    expect(knownRecipes(s)).toEqual(['shaft', 'arrowhead', 'rope', 'arrow']);
+    const known = () => Object.keys(RECIPES).filter((id) => knownRecipe(s, id));
+    expect(known()).toEqual(['shaft', 'arrowhead', 'rope', 'arrow']);
     s.link.attuned = true;
-    expect(knownRecipes(s)).toHaveLength(9);
+    expect(known()).toHaveLength(9);
   });
 });
 

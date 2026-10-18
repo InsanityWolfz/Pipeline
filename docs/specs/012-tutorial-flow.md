@@ -89,4 +89,9 @@ These choices were made in the overnight build, not by the spec. They're logged 
 - **Gated doors** are solid to the player while shut: rubble on the foundry door, a ley barrier on the shrine door. Both fade out when they open.
 - **Drops** never land inside the pylon or the tube stone. Before this they could be unreachable.
 - **Layout.** The clearing is 24×18. Its door joins the ruin hall's bottom wall at (20,29), and the tube stone is at (12,11).
+- **Waking after a KO.** Until the foundry gate opens, a KO wakes the player in the clearing, not the sealed foundry, so they can't be attuned before reaching it. From then on they wake in the foundry, as 011 says. Nothing is banked before the first trip home, so a KO in the first fight loses what was gathered (the death rule).
+- **Prompts.** Each prompt shows within 64 px, dimmed, and at full strength once its key would work. The C (craft) prompt floats over the player anywhere. The B (build) prompt floats over the player only in the foundry. "Fill the tube from your line" prompts E over the nearest hopper. No objective uses the stash, so it never gets a prompt.
+- **The objective line** sits on a dark band so it reads over doors and barriers, and fades in as it moves on.
+- **Gates.** Doors carry `gate: GateId` (the spec named it `sealedBy`). Each gate's opening condition lives in `src/sim/tutorial.ts`.
+- **"Build an ammo line into the tube socket"** completes when a socket is placed, and the last objective's "line running" only checks that a socket exists. "Fill the tube" checks the actual flow.
 

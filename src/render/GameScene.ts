@@ -34,9 +34,7 @@ import { RoomView } from './room';
 import { SiteMenus } from './SiteMenus';
 import { SiteView } from './SiteView';
 import { WakeView } from './WakeView';
-import { ObjectiveView } from './ObjectiveView';
-import { PromptView } from './PromptView';
-import { TutorialView } from './TutorialView';
+import { TutorialUi } from './TutorialUi';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -65,9 +63,7 @@ export class GameScene extends Scene {
   private site?: SiteView;
   private siteMenus?: SiteMenus;
   private wake?: WakeView;
-  private tutorial?: TutorialView;
-  private objective?: ObjectiveView;
-  private prompt?: PromptView;
+  private tutorial?: TutorialUi;
   /** The room on screen. It lags the player's room through a door's fade. */
   private shownRoomId: string;
   private fading = false;
@@ -103,9 +99,7 @@ export class GameScene extends Scene {
     this.site = new SiteView(this);
     this.siteMenus = new SiteMenus(this);
     this.wake = new WakeView(this);
-    this.tutorial = new TutorialView(this);
-    this.objective = new ObjectiveView(this);
-    this.prompt = new PromptView(this);
+    this.tutorial = new TutorialUi(this);
     this.menu = new CraftMenuView(this, (recipeId) => this.craft(recipeId));
     this.showRoom(this.sim.roomId);
     this.draw();
@@ -279,8 +273,6 @@ export class GameScene extends Scene {
     this.site?.update(sim, shown);
     this.siteMenus?.update(sim);
     this.tutorial?.update(sim, shown);
-    this.objective?.update(sim);
-    this.prompt?.update(sim, shown);
     this.hud?.update(sim.tube, sim.inventory, sim.player, sim.link, worn(sim), sim.hasTube);
     this.menu?.update(sim.inventory, sim.link);
     const hopper = sim.foundry.pieces.find((p) => p.id === this.picker?.hopperId);

@@ -4,8 +4,7 @@ import { DEFAULT_START, TUTORIAL_START, type StartDef } from '../data/player';
 /**
  * The start a URL asks for: `?playtest` the boosted playtest start (007), `?start=hall`
  * the sandbox start in the ruin hall (what the e2e tests use; `&attuned` attunes
- * it), and otherwise the
- * real game: waking in the clearing (012).
+ * it), and otherwise the real game: waking in the clearing (012).
  */
 export function parseStart(search: string): StartDef {
   const params = new URLSearchParams(search);

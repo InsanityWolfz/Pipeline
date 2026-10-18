@@ -158,4 +158,20 @@ export const TUTORIAL_SPRITES = {
 } as const satisfies Record<string, string | AnimDef>;
 
 /** Tutorial layout, px: the objective line's top, the tick's gap left of it, a prompt's lift over its target, a gate's crumble. */
-export const TUTORIAL_LAYOUT = { objectiveTop: 6, tickGap: 4, tickMs: 1200, promptLift: 6, keyText: { x: 4, y: 3 }, gateFadeMs: 500 } as const;
+export const TUTORIAL_LAYOUT = {
+  objectiveTop: 6,
+  /** The objective line's backing panel: padding round the text, palette ids and alpha. */
+  objectivePanel: { padX: 6, padY: 3, back: 'outline', alpha: 0.7 },
+  /** The line fades in over this when it moves on to the next goal, ms. */
+  objectiveFadeMs: 300,
+  /** The tick sits this far above the text's top, px. */
+  tickRise: 2,
+  tickGap: 4,
+  tickMs: 1200,
+  /** A prompt floats this far above the top of its target's tile, px. */
+  promptLift: 6,
+  keyText: { x: 4, y: 3 },
+  /** A prompt not yet usable (out of reach) shows at this alpha. */
+  promptDimAlpha: 0.45,
+  gateFadeMs: 500,
+} as const;

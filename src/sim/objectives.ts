@@ -1,7 +1,7 @@
 import { OBJECTIVES, type ObjectiveCheck } from '../data/objectives';
 import { socketStreams } from './spread';
 import type { SimState } from './state';
-import { inFoundry } from './tutorial';
+import { FOUNDRY_ROOM } from '../data/rooms';
 
 // The tutorial's objectives (012). Each one completes the first tick its check
 // holds and stays done, so they can finish in any order. The objective line shows
@@ -41,7 +41,7 @@ export function stepObjectives(state: SimState): void {
   // The last goal is heading out once everything else is done, so its clock only runs then.
   const rest = state.objectives.slice(0, -1).every(Boolean);
   const running = state.foundry.pieces.some((p) => p.kind === 'socket');
-  state.awayTicks = rest && running && !inFoundry(state) ? state.awayTicks + 1 : 0;
+  state.awayTicks = rest && running && state.roomId !== FOUNDRY_ROOM ? state.awayTicks + 1 : 0;
   for (const [i, def] of OBJECTIVES.entries()) {
     if (state.objectives[i] || !holds(state, def.check)) continue;
     state.objectives[i] = true;

@@ -1,5 +1,4 @@
 import { expect, test, type Page } from '@playwright/test';
-import type { SimSummary } from '../../src/sim/summary';
 import { boot, watchErrors } from './helpers';
 
 // The prototype end to end (012): a fresh tutorial start, no ?playtest, every
@@ -185,4 +184,3 @@ test('the whole prototype plays through from the clearing', async ({ page }) => 
   expect(errors).toEqual([]);
 });
 
-export type { SimSummary };

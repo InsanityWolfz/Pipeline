@@ -1,3 +1,4 @@
+import type { GateId } from '../data/rooms';
 import type { ArmorPiece } from './armor';
 import type { PlaceFail } from './pieces';
 import type { Facing } from './player';
@@ -83,7 +84,7 @@ export interface SimEvents {
   /** The tube was taken from its stone (012). */
   tubeTaken: boolean;
   /** A tutorial gate opened. */
-  gates: { gate: 'foundry' | 'shrine' }[];
+  gates: { gate: GateId }[];
   /** An objective completed (index into OBJECTIVES). */
   objectives: { index: number }[];
   /** A gravity stager turned to a new angle. */

@@ -1,4 +1,4 @@
-import { DYING_TICKS, HIT_INVULN_TICKS, RESPAWN_ROOM } from '../data/player';
+import { DYING_TICKS, HIT_INVULN_TICKS } from '../data/player';
 import { afterArmor } from './armor';
 import { startKnock } from './knockback';
 import { endRoll, isInvulnerable } from './movement';
@@ -6,6 +6,7 @@ import { resetWorld, type SimState } from './state';
 import { cancelClaim } from './claims';
 import { cancelHarvest } from './harvest';
 import { count, type Inventory } from './inventory';
+import { wakeRoom } from './tutorial';
 
 // Player damage, banking and death. Specs 004 and 011.
 
@@ -66,7 +67,7 @@ function wake(state: SimState): void {
     if (held > keep) lost[itemId] = held - keep;
   }
   state.inventory = kept;
-  resetWorld(state, RESPAWN_ROOM);
+  resetWorld(state, wakeRoom(state));
   state.banked = { ...kept };
   state.events.ko = true;
   state.events.lost = lost;
