@@ -2,6 +2,23 @@
 
 Newest entry first.
 
+## 2026-10-18: 018 Believable resources (unattended build)
+**Changed:** built 018 on `claude/018-believable-resources`, stacked on 017, from `docs/plans/018-believable-resources.md`.
+- **Every node stands where its material comes from:** trees in sunlit groves, boulders in rock fields, reeds at pond edges, veins on ley lines. A data test checks each placement rule. The shrine site holds one node of each type.
+- **Vector nodes:**
+  - Each shows its uses left by its shape, then its remains (stump and sapling, pebbles, cut stubs, dark crystal stumps), growing back in three stages.
+  - Each type reacts as it's worked.
+- **Drops:** Husks ooze amber resin with a slow drip. The Warden's core, a violet heart-stone like its drop (Shaun's call), glows in its chest and pulses through the wind-up.
+- **The claimed pylon's harvest, made visible:** a tendril to a node, then a mote along the ley line into the foundry. The pylon, ley lines and supply port describe themselves on hover.
+- **Also, at Shaun's call during the run (017):** the wake cap is gone. Anything on screen aggroes; only spawning is capped.
+
+Verify: all 538 unit tests and all 38 e2e tests pass. QA screenshots pass; its seven fixes are in. Review found three blocking items, all fixed.
+
+**Next:** Shaun playtests the preview (`branch/claude/018-believable-resources/`). The run continues with 019, stacked on 018.
+**Notes:**
+- The e2e helpers' `walkTo` now finds a path over a passable grid from the dev hook, because groves and ponds block straight walks.
+- Ground item icons and the HUD font are still pixel art until 020.
+
 ## 2026-10-18: 017 Overworld and danger (unattended build)
 **Changed:** built 017 on `claude/017-overworld`, stacked on 016, from `docs/plans/017-overworld.md`.
 - **One open map.** An 80×45 overworld is generated from a fixed seed: groves, rock fields, ponds, ruin stones, a forest edge and dirt paths. Fixed landmarks sit on top:

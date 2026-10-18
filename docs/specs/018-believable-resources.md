@@ -140,6 +140,18 @@ A claimed pylon visibly harvests the land around it and sends the haul home alon
   - regrow ticks read from data
 
   `GameScene` is 315 lines, slightly over the ~300 guideline.
+- **From QA.** These are fixed:
+  - Tendrils and motes draw over standing things; a stone on the line hid them.
+  - Motes keep their raw's colour; only the halo glows.
+  - A long frame no longer skips a mote's run.
+  - Harvest particles are bigger and lighter.
+  - Hover descriptions stay on screen and clear of the minimap.
+  - The E prompt hides while a node's harvest bar shows.
+  - The shrine's ley line now ends in front of the stairs.
+
+  These are left for 020:
+  - **The "E" glyph sometimes drops its middle bar.** It's the old pixel font, which 020 replaces.
+  - **Ground item icons are still pixel art.** 020 redraws every item.
 
 ## Open questions
 None.

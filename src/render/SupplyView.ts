@@ -44,12 +44,16 @@ function along(d: number): { x: number; y: number } {
 
 export class SupplyView {
   private readonly g: GameObjects.Graphics;
+  /** The motes' soft halos, added as light over whatever's beneath. */
+  private readonly glow: GameObjects.Graphics;
   private motes: Mote[] = [];
   /** Motes started since boot, for the test hook. */
   started = 0;
 
   constructor(scene: Scene) {
-    this.g = scene.add.graphics().setDepth(DEPTHS.glow).setBlendMode(BlendModes.ADD);
+    // Over everything standing in the world, so a stone or tree on the line never hides the haul going home.
+    this.glow = scene.add.graphics().setDepth(DEPTHS.supplyLine).setBlendMode(BlendModes.ADD);
+    this.g = scene.add.graphics().setDepth(DEPTHS.supplyLine + 1);
   }
 
   /** Motes on their way, for the test hook: the raw and how far along (0..1, past 1 while sinking). */
@@ -65,10 +69,14 @@ export class SupplyView {
       this.started += 1;
     }
     const L = SUPPLY_LOOK;
-    for (const m of this.motes) m.ageMs += deltaMs;
+    // A long frame (a hitch, a background tab) moves motes no further than a short one, so none skips its run.
+    const step = Math.min(deltaMs, L.maxStepMs);
+    for (const m of this.motes) m.ageMs += step;
     this.motes = this.motes.filter((m) => this.travelled(m) < LENGTH || m.ageMs < this.arriveMs() + L.sinkMs);
     this.g.clear();
+    this.glow.clear();
     this.g.setVisible(shown === OVERWORLD.id);
+    this.glow.setVisible(shown === OVERWORLD.id);
     for (const m of this.motes) this.draw(m, pylon);
   }
 
@@ -112,7 +120,7 @@ export class SupplyView {
     const p = along(d);
     const colour = L.moteColors[m.itemId] ?? L.tendrilColor;
     const shrink = 1 - sink * L.sinkShrink;
-    g.fillStyle(colorOf(L.halo), L.haloAlpha * (1 - sink)).fillCircle(p.x, p.y, L.haloRadius * shrink);
+    this.glow.fillStyle(colorOf(L.halo), L.haloAlpha * (1 - sink)).fillCircle(p.x, p.y, L.haloRadius * shrink);
     g.fillStyle(colorOf(colour), 1 - sink).fillCircle(p.x, p.y, L.moteRadius * shrink);
   }
 }

@@ -73,6 +73,8 @@ export class PromptView {
         return hopper ? { at: hopper, usable: usableInReach(sim)?.id === hopper.id } : undefined;
       }
       case 'node': {
+        // Hidden while a harvest runs, so the prompt never sits on the harvest bar (018).
+        if (sim.harvest) return undefined;
         const node = nearest(sim.nodes.filter((n) => n.roomId === sim.roomId && n.uses > 0));
         return node ? { at: node, usable: nodeInReach(sim)?.id === node.id } : undefined;
       }

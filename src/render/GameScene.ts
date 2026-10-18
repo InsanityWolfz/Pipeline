@@ -310,6 +310,6 @@ export class GameScene extends Scene {
       (t, f) => ghostShape(controls?.heldLay() ?? null, t, f, (u, g) => conduitInFrom(sim, u.tx, u.ty, g)),
     );
     const point = controls?.overWorld() ? controls.cursorPoint() : null;
-    this.hover?.update(sim, shown, point, (id) => this.foundryView?.topOf(id), this.cameras.main.worldView.y);
+    this.hover?.update(sim, shown, point, (id) => this.foundryView?.topOf(id), this.cameras.main.worldView);
   }
 }

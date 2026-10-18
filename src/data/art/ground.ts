@@ -76,6 +76,8 @@ export const SUPPLY_LOOK = {
   /** Sinking into the stairs, a mote shrinks by this fraction as it fades. */
   sinkMs: 400,
   sinkShrink: 0.6,
+  /** No frame moves a mote on further than this many ms, so a hitch never skips its run. */
+  maxStepMs: 50,
   /** A mote takes its raw's colour. */
   moteColors: { wood: 'wood-light', stone: 'rock-pale', fiber: 'leaf-light', 'ley-crystal': 'cyan-glow' } as Readonly<Record<string, string>>,
 } as const;

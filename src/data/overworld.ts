@@ -154,7 +154,7 @@ export const OVERWORLD = {
   leyLines: {
     start: [{ tx: 40, ty: 33 }, { tx: 38, ty: 29 }, { tx: 39, ty: 24 }, { tx: 40, ty: 21 }],
     meadow: [{ tx: 44, ty: 31 }, { tx: 43, ty: 27 }, { tx: 42, ty: 23 }, { tx: 41, ty: 21 }],
-    shrine: [{ tx: 66, ty: 8 }, { tx: 64, ty: 12 }, { tx: 58, ty: 17 }, { tx: 50, ty: 19 }, { tx: 43, ty: 20 }],
+    shrine: [{ tx: 66, ty: 8 }, { tx: 64, ty: 12 }, { tx: 58, ty: 17 }, { tx: 50, ty: 19 }, { tx: 43, ty: 21 }, { tx: 41, ty: 21 }],
     'shrine-west': [{ tx: 60, ty: 9 }, { tx: 63, ty: 9 }, { tx: 66, ty: 8 }],
     'shrine-east': [{ tx: 72, ty: 9 }, { tx: 69, ty: 9 }, { tx: 66, ty: 8 }],
   } satisfies Record<string, TilePos[]>,

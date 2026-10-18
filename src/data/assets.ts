@@ -269,6 +269,8 @@ export const DEPTHS = {
   buildTip: 1_000_005,
   /** Tutorial key prompts, over other world UI. */
   prompt: 100_005,
+  /** The claimed pylon's tendril and the motes on the ley line (018): over everything standing in the world, under world UI. */
+  supplyLine: 99_990,
   /** Build mode's spread fan over the tube socket, just under the build arrows. */
   spreadFan: 99_998,
   /** Soft ley light pooled on the floor (014), over shadows and under anything standing. */
