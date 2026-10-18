@@ -1,15 +1,21 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
+import { animFrames, ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
 import { DOORWAY_SPRITE, FLOOR_SPRITES } from '../data/foundryAssets';
+import { PROPS, type PropDef, type PropPlacement } from '../data/props';
+import { PROP_LAYOUT, WALL_SPRITES } from '../data/roomArt';
 import { TILE, type Room } from '../data/rooms';
+import { registerAnim } from './anims';
+import { floorFrame, wallPieces } from './roomTiles';
 
-// Draws one room's tiles. Walls, doors and ruin blocks sort by the bottom of their
+const FLOOR_PROP_DEPTH = (DEPTHS.floor + DEPTHS.shadow) / 2;
+
+// Draws one room's tiles: floors with variants by a fixed hash, walls in 3/4 view (014). Walls, doors and ruin blocks sort by the bottom of their
 // footprint, so their tall front faces overlap whatever stands behind them.
 // Walking through a door swaps the room drawn.
 export class RoomView {
   private readonly scene: Scene;
-  private objects: GameObjects.Image[] = [];
+  private objects: (GameObjects.Image | GameObjects.Sprite)[] = [];
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -24,11 +30,13 @@ export class RoomView {
       this.objects.push(image);
       return image;
     };
+    const blockProps = new Set((room.props ?? []).filter((p) => PROPS[p.propId].layer === 'block').map((p) => `${p.tx},${p.ty}`));
+    for (const p of room.props ?? []) this.prop(p);
     for (const [ty, row] of room.rows.entries()) {
       for (const [tx, symbol] of [...row].entries()) {
         const left = tx * TILE_SIZE;
         const bottom = (ty + 1) * TILE_SIZE;
-        add(left, ty * TILE_SIZE, floor).setOrigin(0).setDepth(DEPTHS.floor);
+        add(left, ty * TILE_SIZE, floorFrame(room.floor, floor, tx, ty)).setOrigin(0).setDepth(DEPTHS.floor);
         if (symbol === TILE.floor) continue;
         if (symbol === TILE.door) {
           // The sprite is drawn for the right wall; a door on the left wall mirrors it.
@@ -36,8 +44,12 @@ export class RoomView {
           add(left, bottom, DOORWAY_SPRITE).setOrigin(0, 1).setDepth(bottom).setFlipX(tx === 0);
           continue;
         }
-        const frame = symbol === TILE.wall ? SPRITES.wall : SPRITES.ruinBlock;
-        add(left, bottom, frame).setOrigin(0, 1).setDepth(bottom);
+        if (symbol === TILE.wall) {
+          this.wall(room.rows, tx, ty, add);
+          continue;
+        }
+        // A block prop (a column, a rune stone) stands in for the ruin block's look.
+        if (!blockProps.has(`${tx},${ty}`)) add(left, bottom, SPRITES.ruinBlock).setOrigin(0, 1).setDepth(bottom);
       }
     }
     const crystal = room.crystal;
@@ -45,5 +57,34 @@ export class RoomView {
     const cx = (crystal.tx + 0.5) * TILE_SIZE;
     const cy = (crystal.ty + 1) * TILE_SIZE;
     add(cx, cy, SPRITES.leyCrystal).setOrigin(0.5, 1).setDepth(cy);
+  }
+
+  /** A prop by its layer: on its block, at the foot of its wall, flat on the floor, or standing on its tile. */
+  private prop(p: PropPlacement): void {
+    const def: PropDef = PROPS[p.propId];
+    registerAnim(this.scene, def.anim);
+    const cx = (p.tx + 0.5) * TILE_SIZE;
+    const bottom = (p.ty + 1) * TILE_SIZE;
+    const sprite = this.scene.add.sprite(cx, bottom, ATLAS_KEY, animFrames(def.anim)[0]).setOrigin(0.5, 1);
+    this.objects.push(sprite);
+    if (def.layer === 'floor') sprite.setOrigin(0.5).setPosition(cx, bottom - TILE_SIZE / 2).setDepth(FLOOR_PROP_DEPTH);
+    else if (def.layer === 'wall') sprite.setY(bottom + (def.drop ?? 0)).setDepth(bottom + PROP_LAYOUT.wallNudge);
+    else if (def.layer === 'standing') sprite.setY(bottom - PROP_LAYOUT.standingInset).setDepth(bottom - PROP_LAYOUT.standingInset);
+    else sprite.setDepth(bottom);
+    // Each prop starts its loop at a different point, so rows of them don't move in step.
+    if (def.anim.frames > 1) sprite.play({ key: def.anim.key, startFrame: (p.tx * 7 + p.ty * 3) % def.anim.frames });
+  }
+
+  /** A wall in 3/4 view: its carved face over floor, else its top seen from above with lit lips toward the floor. */
+  private wall(rows: readonly string[], tx: number, ty: number, add: (x: number, y: number, frame: string) => GameObjects.Image): void {
+    const left = tx * TILE_SIZE;
+    const top = ty * TILE_SIZE;
+    const bottom = top + TILE_SIZE;
+    const w = wallPieces(rows, tx, ty);
+    add(left, bottom, w.frame).setOrigin(0, 1).setDepth(bottom);
+    if (w.kind === 'face') return;
+    if (w.edgeLeft) add(left, top, WALL_SPRITES.edgeSide).setOrigin(0).setDepth(bottom);
+    if (w.edgeRight) add(left + TILE_SIZE, top, WALL_SPRITES.edgeSide).setOrigin(1, 0).setFlipX(true).setDepth(bottom);
+    if (w.edgeTop) add(left, top, WALL_SPRITES.edgeTop).setOrigin(0).setDepth(bottom);
   }
 }

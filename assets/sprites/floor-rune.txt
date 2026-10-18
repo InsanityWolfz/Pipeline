@@ -1,18 +1,16 @@
-# Rune-carved slate flagstone floor tile. 32x32, tiles seamlessly.
-# Light from the top left: pale top/left edges, shaded bottom/right.
-# The rune is a carved groove with a faint ley inlay.
+# 014 redraw: the ruin flagstone without its rune; the rune moved to a rare variant.
 lSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSo
 Ssssssssssssssssssssssssssssssvo
 SssssssssssssssssSSsssssssssssvo
 Ssssssssssssssssssssssssssssssvo
 Ssssssssssssssssssssssssssssssvo
-SsssssssSSssssssssssvsssvsssssvo
-SsssssssssssssssssssssvvsSssssvo
-SsssssssssssssssvvssssvscsSsssvo
-SssssssssssssssssssssvsvcSsSssvo
-SssssvvsssssssssssssssSscsSsssvo
-SsssssssvsssssssvvsssssSsSssvvvo
-SsssssssssssssssssssssssSsssssvo
+SsssssssSSssssssssssssssssssssvo
+Ssssssssssssssssssssssssssssssvo
+Ssssssssssssssssvvssssssssssssvo
+Ssssssssssssssssssssssssssssssvo
+Sssssvvsssssssssssssssssssssssvo
+Ssssssssvsssssssvvsssssssssssvvo
+Ssssssssssssssssssssssssssssssvo
 SssssssssssssssssSsssvssssssssvo
 Ssssssssssssssssssssssssssssssvo
 SssssssssssssssssssSssssssssssvo
