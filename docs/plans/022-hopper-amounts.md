@@ -23,4 +23,4 @@ Spec: docs/specs/022-hopper-amounts.md. Written for the unattended run (021–02
   - screenshot into `docs/review/022/` (with `REVIEW_SHOTS=1`): the open picker with its hint
 
 ## Risks
-- `foundry.spec.ts` expects one click to fill the hopper with both crystals and the picker to close after a click; it is updated to Ctrl+click (all) and to press E only when the picker is closed.
+- `foundry.spec.ts` expects one click to fill the hopper with both crystals and the picker to close after a click; it is updated to Ctrl+click (all) and to check the picker stays open; pressing E on the open picker just reopens the same hopper.
