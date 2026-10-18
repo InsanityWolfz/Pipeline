@@ -2,7 +2,7 @@ import type { Scene } from 'phaser';
 import { TILE_SIZE } from '../data/config';
 import { enemyDef } from '../data/enemies';
 import { INTAKE } from '../data/foundry';
-import { DUST, GLOWS, HARVEST_BURSTS, HARVEST_WORK, HIT_STOP_MS } from '../data/juice';
+import { ATTUNE_GLOW_SWELL, DUST, GLOWS, HARVEST_BURSTS, HARVEST_WORK, HIT_STOP_MS } from '../data/juice';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { FIRE_SOUNDS, SOUND_LEVELS, SOUNDS, WINDUP_SOUNDS } from '../data/sounds';
 import { isClaimed } from '../sim/claims';
@@ -12,6 +12,7 @@ import { roomById, type SimState } from '../sim/state';
 import { AmbientView, type GlowSpot } from './AmbientView';
 import { JuiceView } from './JuiceView';
 import { SoundView } from './SoundView';
+import { attuneBeat } from './attune';
 import { intakeAnchor } from './foundryLayout';
 
 // Look and feel (014), driven by what the sim did since the last draw and how
@@ -215,13 +216,19 @@ export class FeelView {
         const r = pieceRect(p);
         if (p.kind === 'conduit' && p.item) spots.push({ x: r.x, y: r.y, ...GLOWS.conduitItem });
       }
-      // The intake glows once attuned, swelling as each item goes in.
-      if (sim.link.attuned) {
-        const swell = this.intakeMs > 0 ? GLOWS.intake.pulse : 1;
+      // The intake glows once attuned (growing as its rings light), swelling as each item goes in.
+      const { pipe } = attuneBeat(sim.link.attunePulse);
+      if (sim.link.attuned && pipe > 0) {
+        const swell = pipe < 1 ? ATTUNE_GLOW_SWELL * pipe : this.intakeMs > 0 ? GLOWS.intake.pulse : 1;
         spots.push({ ...intakeAnchor(), color: GLOWS.intake.color, radius: GLOWS.intake.radius * swell });
       }
     }
-    if (sim.hasTube && sim.link.attuned && shown === sim.roomId) spots.push({ x: sim.player.x, y: sim.player.y, ...GLOWS.tube });
+    if (sim.hasTube && sim.link.attuned && shown === sim.roomId) {
+      // The same growing glow round the tube while its rings light.
+      const { gun } = attuneBeat(sim.link.attunePulse);
+      const swell = gun === null ? 1 : ATTUNE_GLOW_SWELL * gun;
+      spots.push({ x: sim.player.x, y: sim.player.y, color: GLOWS.tube.color, radius: GLOWS.tube.radius * swell });
+    }
     return spots;
   }
 }

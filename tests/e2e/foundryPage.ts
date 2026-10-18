@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { FEET_BOX } from '../../src/data/player';
+import { ATTUNE_TICKS } from '../../src/data/tube';
 import { buildBarCells } from '../../src/render/foundryLayout';
 import type { SimSummary } from '../../src/sim/summary';
 
@@ -27,14 +28,18 @@ export async function step(page: Page, frames: number, command: object = {}): Pr
   return s;
 }
 
-/** Walks from the field start to the foundry's stairs and down them (017), then waits out the fade. */
-export async function enterFoundry(page: Page): Promise<void> {
+/**
+ * Walks from the field start to the foundry's stairs and down them (017), then waits out the fade.
+ * Unless told not to, it then plays the first walk-in's attune (019) through, which holds the player still.
+ */
+export async function enterFoundry(page: Page, playAttune = true): Promise<void> {
   await page.evaluate(() => {
     window.__GAME__?.step(0);
     window.__helpers?.toFoundry();
   });
   expect((await state(page)).room).toBe('foundry');
   await page.waitForTimeout(500);
+  if (playAttune) await page.evaluate((ticks) => window.__GAME__?.step(ticks), ATTUNE_TICKS);
 }
 
 /** Walks to STAND and waits for the camera to settle on the player. */

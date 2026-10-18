@@ -119,6 +119,10 @@ The placeable tube socket is replaced by the foundry intake: a waterslide-sized 
   - The fill pulse was faint; it is now a brighter, wider ring.
 
 ## Open questions
-- **The attune isn't on screen (for Shaun).** The player enters at the east door, where the camera can't see the north wall, and the 60-tick attune is over before they reach the pipe. So the rings lighting one by one is never seen in play. Should the camera look at the pipe while attuning, or the attune last until the pipe is in view?
-- **The objective banner covers the pipe's top (for Shaun).** It sits at the top centre of the screen, over the pipe's elbow. Move the banner, or leave it?
-- **The extra wall above the foundry (for Shaun).** Showing 48 px more wall above the foundry's top row is a render change the spec didn't ask for; it lets the pipe rise visibly. Keep it, or squeeze the pipe into the top wall row?
+All answered by Shaun (2026-10-18) and built:
+- **The attune isn't on screen.** *Answer:* pause the player when they walk in, make their gun glow, then pan to the pipe and show it glowing the same way. *Built:*
+  - The first walk-in holds the player still for the whole attune (`ATTUNE` beats in `src/data/tube.ts`).
+  - **Gun beat:** the tube's rings light one by one while a glow grows round it.
+  - **Pans:** the camera pans to the pipe, its rings light and its glow grows the same way, and the camera pans back.
+- **The objective banner covers the pipe's top.** *Answer:* put it on the right side of the screen. *Built:* it is right-aligned below the minimap.
+- **The extra wall above the foundry.** *Answer:* the extra wall is fine. Kept.

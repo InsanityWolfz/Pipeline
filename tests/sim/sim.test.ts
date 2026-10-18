@@ -107,6 +107,7 @@ function scriptedSession(seed: number, ticks: number) {
 function scriptedFoundry(seed: number, ticks: number) {
   const sim = createSim(seed);
   sim.crafted = ['ley-bolt', 'ley-shard'];
+  sim.link.attuned = true;
   sim.inventory = { 'ley-crystal': 3 };
   const door = tileCentre(OVERWORLD.entrance.arrive);
   sim.player.x = door.x;

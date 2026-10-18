@@ -22,10 +22,17 @@ import { boot, watchErrors } from './helpers';
 test('the doorway leads to the foundry and back', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page);
-  await enterFoundry(page);
+  await enterFoundry(page, false);
   const s = await state(page);
   expect(s.events.roomChanges).toEqual([{ from: 'overworld', to: 'foundry' }]);
   expect({ x: s.player.x, y: s.player.y }).toEqual(centre(22, 8));
+  // The first walk in attunes the tube (019): the player is held still till it ends.
+  const held = await page.evaluate(() => {
+    const g = window.__GAME__;
+    while ((g?.getState().link.attunePulse ?? 0) > 0) g?.step(1, { moveX: 1 });
+    return g?.getState().player;
+  });
+  expect({ x: held?.x, y: held?.y }).toEqual(centre(22, 8));
   await page.evaluate(() => {
     const g = window.__GAME__;
     for (let i = 0; i < 60 && g?.getState().room !== 'overworld'; i++) g?.step(1, { moveX: 1 });

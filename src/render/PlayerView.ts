@@ -4,7 +4,6 @@ import { PLAYER_HIT_FX, WANDERER_KEY } from '../data/assets';
 import { WANDERER, WANDERER_FEEL, type WandererView } from '../data/art/wanderer';
 import { IDLE_SPEED } from '../data/config';
 import { DYING_TICKS, FEET_BOX, HIT_INVULN_TICKS } from '../data/player';
-import { ATTUNE_TICKS } from '../data/tube';
 import type { ArmorWeight } from '../data/armor';
 import { ARMOR_TINTS } from '../data/hudLayout';
 import { aimFacing } from '../sim/direction';
@@ -12,6 +11,7 @@ import { isRolling } from '../sim/movement';
 import type { Facing, PlayerState } from '../sim/player';
 import type { LinkState } from '../sim/link';
 import { isFiringHeavy, type TubeState } from '../sim/tube';
+import { attuneBeat } from './attune';
 import { colorOf } from './color';
 import { textureScale } from './vector/textures';
 import { drawWanderer, REST_POSE, type WandererPose } from './vector/wandererRig';
@@ -134,7 +134,7 @@ export class PlayerView {
       glow: (shot ? FEEL.glow.shot : FEEL.glow.rest + FEEL.glow.pulse * Math.sin(this.sprite.scene.time.now * FEEL.glow.speed)) * (1 - dying),
       hasTube,
       attuned: link.attuned,
-      attuning: link.attunePulse > 0 ? 1 - link.attunePulse / ATTUNE_TICKS : null,
+      attuning: attuneBeat(link.attunePulse).gun,
       muzzle: shot ? FEEL.muzzle.shot : FEEL.muzzle.rest,
     };
   }

@@ -40,4 +40,6 @@ export const INTAKE = {
   ],
   gaugeRings: 10,
   pulseMs: 450,
+  /** While attuning, the camera looks at this point on the pipe: px above the middle of its mouth. */
+  lookRise: 36,
 } as const;

@@ -15,6 +15,7 @@ import { arena, atPylon, command, HALL, HUSK, movePlayer, placeHusk, PLAYER_AT, 
 function atBench(n = 1, seed = SEED): SimState {
   const s = createSim(seed);
   s.roomId = FOUNDRY_ROOM;
+  s.link.attuned = true;
   const bench = fixtureDef('identification-bench');
   const at = tileCentre({ tx: bench.tx + 1, ty: bench.ty });
   movePlayer(s, at.x, at.y);

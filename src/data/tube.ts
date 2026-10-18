@@ -9,8 +9,16 @@ export const SLOT_AMMOS: readonly string[] = ['arrow', 'bomb', 'ley-bolt'];
 /** Rounds the reservoir holds (spec 007). An upgrade later. */
 export const RESERVOIR_CAP = 30;
 
-/** Ticks the tube's attuning pulse plays, about 1 s. */
-export const ATTUNE_TICKS = 60;
+/**
+ * The attune (019), ticks per beat, played the first time the player walks into
+ * the foundry, holding them still throughout: the tube's rings light one by one
+ * (`gun`), the camera pans to the intake pipe (`panTo`), the pipe's rings light
+ * the same way (`pipe`), and the camera pans back (`panBack`).
+ */
+export const ATTUNE = { gun: 60, panTo: 45, pipe: 60, panBack: 45 } as const;
+
+/** Ticks the whole attune lasts. */
+export const ATTUNE_TICKS = ATTUNE.gun + ATTUNE.panTo + ATTUNE.pipe + ATTUNE.panBack;
 
 /** Ticks the dry-fire flag stays set after an empty-tube shot. */
 export const DRY_FIRE_TICKS = 10;

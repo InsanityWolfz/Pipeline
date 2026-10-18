@@ -5,7 +5,8 @@ import { TILE_SIZE } from '../data/config';
 import { INTAKE } from '../data/foundry';
 import { FACING_ARROWS, FOUNDRY_LAYOUT, INTAKE_SPRITES } from '../data/foundryAssets';
 import { FOUNDRY_ROOM } from '../data/rooms';
-import { ATTUNE_TICKS, RESERVOIR_CAP } from '../data/tube';
+import { RESERVOIR_CAP } from '../data/tube';
+import { attuneBeat } from './attune';
 import type { SimEvents } from '../sim/events';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
@@ -51,10 +52,11 @@ export class IntakeView {
     this.shade.clear();
     if (!here) return;
     const { attuned, attunePulse, reservoir } = sim.link;
-    // Attuning: the rings light one by one over the dormant pipe, which turns cyan once they all have.
-    const lit = attuned ? Math.ceil(INTAKE_LOOK.bands.ys.length * (1 - attunePulse / ATTUNE_TICKS)) : 0;
-    showFrame(this.pipe, attuned && attunePulse === 0 ? INTAKE_SPRITES.attuned : INTAKE_SPRITES.dormant);
-    this.drawBands(lit);
+    // Attuning: once the camera reaches it, the rings light one by one over the dormant pipe, as the tube's did; it turns cyan once they all have.
+    const progress = attuned ? attuneBeat(attunePulse).pipe : 0;
+    const bands = INTAKE_LOOK.bands.ys.length;
+    showFrame(this.pipe, progress >= 1 ? INTAKE_SPRITES.attuned : INTAKE_SPRITES.dormant);
+    this.drawBands(progress >= 1 ? bands : Math.floor(progress * (bands + 1)));
     if (attuned) this.drawGauge(Math.round((INTAKE.gaugeRings * reservoir.count) / RESERVOIR_CAP));
     for (const ms of this.pulses) this.drawPulse(ms / INTAKE.pulseMs);
   }

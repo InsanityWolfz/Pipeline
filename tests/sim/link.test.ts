@@ -26,9 +26,15 @@ function atHallDoor() {
 
 /** A foundry sim, attuned, with an empty reservoir. */
 function attuned() {
+  return foundry();
+}
+
+/** A foundry sim the player has just walked into for the first time: the attune is playing. */
+function attuning() {
   const s = foundry();
+  s.link.attuned = false;
   run(s, 1);
-  expect(s.link.attuned).toBe(true);
+  expect(s.link).toMatchObject({ attuned: true, attunePulse: ATTUNE_TICKS });
   return s;
 }
 
@@ -48,7 +54,8 @@ describe('attunement', () => {
     );
     expect(s.link).toMatchObject({ attuned: true, attunePulse: ATTUNE_TICKS });
     expect(attunes).toHaveLength(1);
-    // Out and back in again: nothing more.
+    // Out and back in again, once the attune lets go: nothing more.
+    run(s, ATTUNE_TICKS);
     runUntil(s, (x) => x.roomId === HALL, 120, { moveX: 1 });
     runUntil(
       s,
@@ -62,14 +69,18 @@ describe('attunement', () => {
     expect(attunes).toHaveLength(1);
   });
 
-  it('the attuning pulse counts down and the player keeps control', () => {
-    const s = attuned();
+  it('holds the player still while the attune plays, then gives control back', () => {
+    const s = attuning();
     const x = s.player.x;
-    run(s, 10, { moveX: -1 });
+    run(s, 10, { moveX: -1, fire: true, toggleBuild: true });
     expect(s.link.attunePulse).toBe(ATTUNE_TICKS - 10);
-    expect(s.player.x).toBeLessThan(x);
-    run(s, ATTUNE_TICKS);
+    expect(s.player.x).toBe(x);
+    expect(s.building).toBe(false);
+    run(s, ATTUNE_TICKS - 10, { moveX: -1 });
     expect(s.link.attunePulse).toBe(0);
+    expect(s.player.x).toBe(x);
+    run(s, 10, { moveX: -1 });
+    expect(s.player.x).toBeLessThan(x);
   });
 
   it('survives a KO, and so does the reservoir', () => {
@@ -89,7 +100,7 @@ describe('attunement', () => {
     s.link.reservoir = { itemId: 'bomb', count: 3 };
     expect(summarize(s).link).toEqual({
       attuned: true,
-      attunePulse: ATTUNE_TICKS,
+      attunePulse: 0,
       reservoir: { item: 'bomb', count: 3, cap: RESERVOIR_CAP },
     });
   });

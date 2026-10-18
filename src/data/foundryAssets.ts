@@ -184,7 +184,9 @@ export const TUTORIAL_SPRITES = {
 
 /** Tutorial layout, px: the objective line's top, the tick's gap left of it, a prompt's lift over its target, a gate's crumble. */
 export const TUTORIAL_LAYOUT = {
-  objectiveTop: 6,
+  /** The objective line sits on the right of the screen (019), right-aligned `objectiveRight` px from the edge, below the minimap. */
+  objectiveTop: 86,
+  objectiveRight: 10,
   /** The objective line's backing panel: padding round the text, palette ids and alpha. */
   objectivePanel: { padX: 6, padY: 3, back: 'outline', alpha: 0.7 },
   /** The line fades in over this when it moves on to the next goal, ms. */

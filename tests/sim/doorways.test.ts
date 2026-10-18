@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TILE_SIZE } from '../../src/data/config';
 import { FOUNDRY_ROOM } from '../../src/data/rooms';
+import { ATTUNE_TICKS } from '../../src/data/tube';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { WORLD } from '../../src/sim/world';
 import { arrivalTile } from '../../src/sim/doorways';
@@ -44,6 +45,8 @@ describe('doorways', () => {
 
   it('walks back the other way', () => {
     const s = intoFoundry();
+    // The first walk in attunes the tube, which holds the player still till it ends.
+    run(s, ATTUNE_TICKS);
     runUntil(s, (x) => x.roomId === HALL, 120, { moveX: 1 });
     expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre(arrivalTile(HALL, 0)));
   });

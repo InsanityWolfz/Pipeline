@@ -43,8 +43,9 @@ function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
 export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   clearEvents(state.events);
   state.tick += 1;
-  // A dying player takes no input but keeps their aim.
-  const cmd = state.player.dying > 0 ? { ...NO_COMMAND, aimX: state.player.aimX, aimY: state.player.aimY } : maskCommand(state, input);
+  // A dying player, or one held still while the tube attunes (019), takes no input but keeps their aim.
+  const held = state.player.dying > 0 || state.link.attunePulse > 0;
+  const cmd = held ? { ...NO_COMMAND, aimX: state.player.aimX, aimY: state.player.aimY } : maskCommand(state, input);
   const bodies = bodiesOf(state);
   const here = bodies(state.roomId);
   stepPlayer(state.player, here.room, cmd, here.obstacles, walkScale(state) * firingWalkScale(state));

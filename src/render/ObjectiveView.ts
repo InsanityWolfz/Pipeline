@@ -10,8 +10,8 @@ import { GlyphLine } from './glyphLine';
 
 /** The HUD font's glyph height, px. */
 
-// The objective line (012): the first unfinished goal, centred at the top of the
-// screen. Finishing one flashes a ley tick beside the line before it moves on.
+// The objective line (012): the first unfinished goal, on the right of the screen
+// below the minimap (019). Finishing one flashes a ley tick beside the line before it moves on.
 export class ObjectiveView {
   private readonly scene: Scene;
   private readonly line: GlyphLine;
@@ -38,7 +38,7 @@ export class ObjectiveView {
     const finished = this.shown !== -1;
     this.shown = i;
     const text = i === null ? '' : (OBJECTIVES[i]?.text ?? '');
-    const x = Math.round((VIEW_WIDTH - text.length * HUD_DIGITS.advance) / 2);
+    const x = VIEW_WIDTH - TUTORIAL_LAYOUT.objectiveRight - text.length * HUD_DIGITS.advance;
     this.line.moveTo(x, TUTORIAL_LAYOUT.objectiveTop);
     this.line.set(text);
     this.drawPanel(x, text);

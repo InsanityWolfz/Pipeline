@@ -2,6 +2,23 @@
 
 Newest entry first.
 
+## 2026-10-18: 019 follow-up: Shaun's answers
+**Changed:** on `claude/019-intake-pipe`:
+- **The attune cutscene.**
+  - The first walk into the foundry holds the player still (sim: no input while `link.attunePulse > 0`).
+  - The beats are in `ATTUNE` (`src/data/tube.ts`):
+    - the tube's rings light with a growing glow (1 s)
+    - the camera pans to the intake pipe
+    - the pipe's rings light with the same growing glow, and it turns cyan
+    - the camera pans back
+  - The render reads the beats from `src/render/attune.ts`.
+- **The objective line** is now right-aligned on the right of the screen, below the minimap.
+- **The extra wall** above the foundry stays.
+
+**Tests:** the link test for the hold; test kits start the foundry already attuned; e2e `enterFoundry` plays the attune through.
+
+**Next:** the run continues with 020 (vector pass), stacked on 019.
+
 ## 2026-10-18: 019 Foundry intake pipe (unattended build)
 **Changed:** built 019 on `claude/019-intake-pipe`, stacked on 018, from `docs/plans/019-intake-pipe.md`.
 - **The tube socket is gone.** In its place is a fixed waterslide pipe in the centre of the foundry's north wall.

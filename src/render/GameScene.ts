@@ -275,6 +275,7 @@ export class GameScene extends Scene {
     if (!this.effects) return;
     const sim = this.sim;
     this.followRoom(this.pending.ko);
+    if (!this.fading && this.playerView) this.sceneCameras?.attuneLook(sim, this.shownRoomId, this.playerView.sprite);
     this.effects.play(this.pending, sim.player);
     if (this.pending.identifies.length > 0) this.site?.identified();
     if (this.pending.ko) this.wake?.show(this.pending.lost);

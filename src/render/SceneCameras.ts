@@ -1,5 +1,10 @@
-import type { Cameras, Scene } from 'phaser';
-import { DOOR_FADE_MS } from '../data/config';
+import type { Cameras, GameObjects, Scene } from 'phaser';
+import { CAMERA_LERP, DOOR_FADE_MS } from '../data/config';
+import { INTAKE } from '../data/foundry';
+import { FOUNDRY_ROOM } from '../data/rooms';
+import type { SimState } from '../sim/state';
+import { attuneBeat } from './attune';
+import { intakeAnchor } from './foundryLayout';
 import { UI_CAMERA, type ScreenFit } from './scale';
 
 // The scene's two cameras (016): the main one follows the world, zoomed by the
@@ -8,6 +13,8 @@ import { UI_CAMERA, type ScreenFit } from './scale';
 export class SceneCameras {
   private readonly scene: Scene;
   private readonly ui: Cameras.Scene2D.Camera;
+  /** Whether the attune has the camera off the player (019). */
+  private looking = false;
 
   constructor(scene: Scene, fit: ScreenFit) {
     this.scene = scene;
@@ -32,6 +39,27 @@ export class SceneCameras {
       main.fadeIn(DOOR_FADE_MS, 0, 0, 0);
       this.ui.fadeIn(DOOR_FADE_MS, 0, 0, 0);
     });
+  }
+
+  /**
+   * The attune's look (019): while it plays in the foundry on screen, the camera
+   * leaves the player for the intake pipe and comes back, then follows `followed` again.
+   */
+  attuneLook(sim: SimState, shown: string, followed: GameObjects.GameObject): void {
+    const main = this.scene.cameras.main;
+    const look = shown === FOUNDRY_ROOM ? attuneBeat(sim.link.attunePulse).look : 0;
+    const { player } = sim;
+    const pipe = intakeAnchor();
+    const at = { x: pipe.x, y: pipe.y - INTAKE.lookRise };
+    if (look > 0) {
+      if (!this.looking) main.stopFollow();
+      this.looking = true;
+      main.centerOn(player.x + (at.x - player.x) * look, player.y + (at.y - player.y) * look);
+    } else if (this.looking) {
+      this.looking = false;
+      main.centerOn(player.x, player.y);
+      main.startFollow(followed, true, CAMERA_LERP, CAMERA_LERP);
+    }
   }
 
   private route(): void {

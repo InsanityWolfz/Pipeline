@@ -244,6 +244,8 @@ describe('the claimed pylon, stash and waystone', () => {
     expect(s.events.stashDeposits).toEqual([{ items: { wood: 3, arrow: 5 } }]);
     s.player.vx = 2;
     s.building = true;
+    // Already attuned, so arriving plays no attune.
+    s.link.attuned = true;
     run(s, 1, { pylon: 'travel' });
     expect(s.roomId).toBe(FOUNDRY_ROOM);
     expect([s.player.vx, s.player.vy, s.building]).toEqual([0, 0, false]);

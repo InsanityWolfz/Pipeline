@@ -115,6 +115,9 @@ export const GLOWS = {
   intake: { color: 'ley-glow', radius: 40, pulse: 1.4, ms: 300 },
 } as const;
 
+/** While attuning (019), the tube's glow and then the intake's grow from nothing to this times their radius as their rings light, then settle. */
+export const ATTUNE_GLOW_SWELL = 2.2;
+
 /** The dusk tint over each room (a palette id and alpha). */
 export const ROOM_MOOD: Readonly<Record<string, { tint: string; alpha: number }>> = {
   // Daylight outside (017): a faint warm wash, no dusk.
