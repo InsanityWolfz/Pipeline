@@ -189,5 +189,4 @@ Built unattended on `claude/020-vector-pass`, stacked on 019, from `docs/plans/0
   - **The craft menu keeps the world running.** Its clicks never fire the tube, and its title card reads "Crafting".
   - **Esc is the pause menu:** once there's nothing left to close (a site menu, the hopper picker, the craft menu, build mode), Esc stops the world and shows a "Paused" card over a dimmed screen. Its rows are Sound (on/off), Volume (− and +), and Resume; Esc also resumes. These are the same mute and master volume as M, [ and ], and they're saved.
   - Menu routing moved from `GameScene` into `render/MenuRouter.ts`. The test hook reports `craftOpen`, `paused`, `pickerOpen` and `sound()`.
-- **The floor's variants (for Shaun).** About one tile in five shows a variant: cracked, worn, a faint ley rune inlay, or a brass strip. Keep that mix, or make the floor plainer?
-
+- **The floor's variants.** *Answer (Shaun, 2026-10-18):* keep the variety as it is (about one tile in five cracked, worn, rune-inlaid or brass).

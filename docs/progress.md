@@ -27,7 +27,7 @@ Newest entry first.
 - Esc opens a pause menu (Sound on/off, Volume, Resume) that stops it.
 - An e2e test that only passed by luck (E pressed out of the hopper's reach) now steps into reach first.
 
-**Next:** Shaun reviews the contact sheet and the preview, and answers the floor-variants question in the 020 spec. That ends the 016–020 run.
+**Next:** Shaun kept the floor variety and asked for 016–020 merged to main for a playtest. That ends the 016–020 run.
 
 ## 2026-10-18: 019 follow-up: Shaun's answers
 **Changed:** on `claude/019-intake-pipe`:
