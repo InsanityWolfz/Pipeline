@@ -1,4 +1,4 @@
-# HUD number font: frames 0-9, then '/' (frame 10). 3x5 each, mist on the dark slot.
+# HUD number font: frames 0-9, then '/' (frame 10) and '+' (frame 11). 3x5 each, mist on the dark slot.
 mmm
 m.m
 m.m
@@ -64,3 +64,9 @@ mmm
 .m.
 m..
 m..
+---
+...
+.m.
+mmm
+.m.
+...

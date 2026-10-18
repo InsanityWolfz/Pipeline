@@ -1,0 +1,4 @@
+# A ground item's shadow. 10x3, no outline.
+.tttttttt.
+tttttttttt
+.tttttttt.
