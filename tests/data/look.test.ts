@@ -2,7 +2,12 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { FLOOR_VARIANTS, WALL_SPRITES } from '../../src/data/roomArt';
 import { animFrames } from '../../src/data/assets';
-import { PROPS } from '../../src/data/props';
+import { ENEMIES } from '../../src/data/enemies';
+import { AMBIENT, DAMAGE_NUMBERS, GLOWS, PARTICLES, ROOM_MOOD } from '../../src/data/juice';
+import { PALETTE } from '../../src/data/palette';
+import { FIRE_SOUNDS, ROOM_AMBIENCE, SOUNDS, WINDUP_SOUNDS } from '../../src/data/sounds';
+import { SLOT_AMMOS } from '../../src/data/tube';
+import { PROPS, type PropDef } from '../../src/data/props';
 import { ROOMS, TILE } from '../../src/data/rooms';
 
 // Look and feel (014): every new frame exists, and room dressing stays out of the way.
@@ -56,5 +61,41 @@ describe('props', () => {
       const tiles = (room.props ?? []).map((p) => `${p.tx},${p.ty}`);
       expect(new Set(tiles).size, room.id).toBe(tiles.length);
     }
+  });
+});
+
+describe('feel and sound references', () => {
+  const known = new Set(PALETTE.map((c) => c.id));
+
+  it('use only palette colours', () => {
+    const ids = [
+      ...Object.values(PARTICLES).flatMap((p) => p.colors),
+      ...Object.values(GLOWS).map((g) => g.color),
+      ...Object.values(ROOM_MOOD).map((m) => m.tint),
+      DAMAGE_NUMBERS.enemy,
+      DAMAGE_NUMBERS.player,
+      DAMAGE_NUMBERS.outline,
+      ...AMBIENT.moteColors,
+      AMBIENT.fireflyColor,
+      ...Object.values(PROPS).flatMap((p) => {
+        const def: PropDef = p;
+        return def.glow ? [def.glow.color] : [];
+      }),
+    ];
+    for (const id of ids) expect(known.has(id), id).toBe(true);
+  });
+
+  it('key moods and ambience by real rooms, fire sounds by real ammo, and wind-ups by real enemy kinds', () => {
+    for (const roomId of [...Object.keys(ROOM_MOOD), ...Object.keys(ROOM_AMBIENCE)]) expect(ROOMS[roomId], roomId).toBeDefined();
+    for (const room of Object.keys(ROOMS)) expect(ROOM_AMBIENCE[room], room).toBeDefined();
+    for (const ammoId of SLOT_AMMOS) expect(FIRE_SOUNDS[ammoId], ammoId).toBeDefined();
+    const kinds = new Set(Object.values(ENEMIES).map((e) => e.kind));
+    for (const kind of kinds) expect(WINDUP_SOUNDS[kind], kind).toBeDefined();
+    for (const kind of Object.keys(WINDUP_SOUNDS)) expect(kinds.has(kind as never), kind).toBe(true);
+  });
+
+  it('only play sounds that have recipes', () => {
+    const keys = new Set<string>(Object.values(SOUNDS));
+    for (const key of [...Object.values(FIRE_SOUNDS), ...Object.values(WINDUP_SOUNDS), ...Object.values(ROOM_AMBIENCE)]) expect(keys.has(key), key).toBe(true);
   });
 });

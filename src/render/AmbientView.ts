@@ -1,7 +1,7 @@
 import { BlendModes, type GameObjects, type Scene } from 'phaser';
-import { DEPTHS } from '../data/assets';
+import { DEPTHS, FX_TEXTURES } from '../data/assets';
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
-import { AMBIENT, ROOM_MOOD, VIGNETTE_ALPHA } from '../data/juice';
+import { AMBIENT, GLOW_TEXTURE, GLOWS, ROOM_MOOD, VIGNETTE } from '../data/juice';
 import { OUTLINE_ID, hexToRgb, paletteHex } from '../data/palette';
 import { PROPS, type PropDef } from '../data/props';
 import type { Room } from '../data/rooms';
@@ -10,12 +10,9 @@ import { colorOf } from './color';
 // The room's air (014): soft ley light pooled around glowing things, drifting
 // motes (fireflies in the clearing), and a dusk tint with a vignette. Looks only.
 
-const GLOW_KEY = 'fx-glow';
-const VIGNETTE_KEY = 'fx-vignette';
-/** The glow texture's radius, px; glows scale it to their own radius. */
-const GLOW_SIZE = 32;
-/** Alpha steps the glow falls off in, so it stays crisp like the pixel art. */
-const GLOW_BANDS = 5;
+const GLOW_KEY = FX_TEXTURES.glow;
+const VIGNETTE_KEY = FX_TEXTURES.vignette;
+const GLOW_SIZE = GLOW_TEXTURE.radius;
 
 /** A light to pool on the floor: where, its palette colour and radius. */
 export interface GlowSpot {
@@ -84,7 +81,7 @@ export class AmbientView {
   private mote(firefly: boolean): Mote {
     const x = Math.random() * this.bounds.w;
     const y = Math.random() * this.bounds.h;
-    const color = firefly ? 'gold' : Math.random() < 0.5 ? 'ley-cyan' : 'ley-glow';
+    const color = firefly ? AMBIENT.fireflyColor : (AMBIENT.moteColors[Math.floor(Math.random() * AMBIENT.moteColors.length)] ?? 'white');
     const dot = this.scene.add.rectangle(x, y, 1, 1, colorOf(color)).setOrigin(0).setDepth(DEPTHS.motes);
     const speed = AMBIENT.moteSpeed[0] + Math.random() * (AMBIENT.moteSpeed[1] - AMBIENT.moteSpeed[0]);
     const angle = firefly ? Math.random() * Math.PI * 2 : -Math.PI / 2 + (Math.random() - 0.5);
@@ -96,8 +93,8 @@ export class AmbientView {
     this.time += deltaMs;
     const breathe = (Math.sin((this.time / AMBIENT.glowBreatheMs) * Math.PI * 2) + 1) / 2;
     const [lo, hi] = AMBIENT.glowAlpha;
-    for (const [i, g] of this.glows.entries()) g.setAlpha(lo + (hi - lo) * ((breathe + i * 0.37) % 1));
-    while (this.live.length < moving.length) this.live.push(this.glow({ x: 0, y: 0, color: 'ley-cyan', radius: 12 }));
+    for (const [i, g] of this.glows.entries()) g.setAlpha(lo + (hi - lo) * ((breathe + i * AMBIENT.glowStagger) % 1));
+    while (this.live.length < moving.length) this.live.push(this.glow({ x: 0, y: 0, ...GLOWS.conduitItem }));
     for (const [i, g] of this.live.entries()) {
       const spot = moving[i];
       g.setVisible(spot !== undefined);
@@ -105,15 +102,17 @@ export class AmbientView {
     }
     const dt = deltaMs / 1000;
     for (const m of this.motes) {
-      m.phase += dt * (m.firefly ? 2.2 : 0.8);
-      m.x += (m.vx + Math.cos(m.phase) * (m.firefly ? 8 : 3)) * dt;
-      m.y += (m.vy + Math.sin(m.phase * 0.7) * (m.firefly ? 6 : 2)) * dt;
+      const sway = m.firefly ? AMBIENT.fireflySway : AMBIENT.moteSway;
+      m.phase += dt * sway.rate;
+      m.x += (m.vx + Math.cos(m.phase) * sway.x) * dt;
+      m.y += (m.vy + Math.sin(m.phase * AMBIENT.swayYSkew) * sway.y) * dt;
       if (m.y < 0) m.y += this.bounds.h;
       if (m.x < 0) m.x += this.bounds.w;
       if (m.x > this.bounds.w) m.x -= this.bounds.w;
       if (m.y > this.bounds.h) m.y -= this.bounds.h;
-      const flicker = (Math.sin(m.phase * (m.firefly ? 3 : 1.3)) + 1) / 2;
-      m.dot.setPosition(Math.round(m.x), Math.round(m.y)).setAlpha(m.firefly ? flicker : 0.25 + 0.5 * flicker);
+      const flicker = (Math.sin(m.phase * sway.flicker) + 1) / 2;
+      const { minAlpha, alphaRange } = AMBIENT.moteSway;
+      m.dot.setPosition(Math.round(m.x), Math.round(m.y)).setAlpha(m.firefly ? flicker : minAlpha + alphaRange * flicker);
     }
   }
 }
@@ -129,8 +128,8 @@ function makeTextures(scene: Scene): void {
         for (let x = 0; x < size; x++) {
           const d = Math.hypot(x + 0.5 - GLOW_SIZE, y + 0.5 - GLOW_SIZE) / GLOW_SIZE;
           if (d >= 1) continue;
-          const band = Math.ceil((1 - d) * GLOW_BANDS) / GLOW_BANDS;
-          ctx.fillStyle = `rgba(255,255,255,${(band * band * 0.6).toFixed(3)})`;
+          const band = Math.ceil((1 - d) * GLOW_TEXTURE.bands) / GLOW_TEXTURE.bands;
+          ctx.fillStyle = `rgba(255,255,255,${(band * band * GLOW_TEXTURE.alpha).toFixed(3)})`;
           ctx.fillRect(x, y, 1, 1);
         }
       }
@@ -142,10 +141,10 @@ function makeTextures(scene: Scene): void {
     const ctx = tex?.getContext();
     if (tex && ctx) {
       const r = Math.hypot(VIEW_WIDTH, VIEW_HEIGHT) / 2;
-      const grad = ctx.createRadialGradient(VIEW_WIDTH / 2, VIEW_HEIGHT / 2, r * 0.45, VIEW_WIDTH / 2, VIEW_HEIGHT / 2, r);
+      const grad = ctx.createRadialGradient(VIEW_WIDTH / 2, VIEW_HEIGHT / 2, r * VIGNETTE.inner, VIEW_WIDTH / 2, VIEW_HEIGHT / 2, r);
       const [r8, g8, b8] = hexToRgb(paletteHex(OUTLINE_ID));
       grad.addColorStop(0, `rgba(${r8},${g8},${b8},0)`);
-      grad.addColorStop(1, `rgba(${r8},${g8},${b8},${VIGNETTE_ALPHA})`);
+      grad.addColorStop(1, `rgba(${r8},${g8},${b8},${VIGNETTE.alpha})`);
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
       tex.refresh();

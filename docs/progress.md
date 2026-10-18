@@ -2,6 +2,18 @@
 
 Newest entry first.
 
+## 2026-10-18: 014 Look and feel (overnight build)
+**Changed:** built 014 on `claude/014-look-and-feel` (stacked on 013).
+- **Rooms:** floor variants by tile hash, 3/4-view walls (face over floor, lit top over wall), shaped corners in every room, and props as data. Columns and rune stones stand on ruin blocks; banners, vines and braziers stand on wall faces; cracks, rubble, tufts and mushrooms lie on the floor.
+- **Light and air:** pooled ley glow on veins, crystals, cracks, rune stones, braziers, conduit items, the socket, the claimed pylon and the attuned tube. Motes everywhere, fireflies in the clearing, and a dusk tint and vignette per room.
+- **Juice:** shake by size, a per-enemy hit-stop, outlined damage numbers that stack, and pixel particles (sparks by damage type, death motes, embers, dust, chips, puffs, refill shimmer, pickups). Placed pieces drop in, and the camera leads the aim while firing.
+- **Sound:** `npm run sound` synthesizes 32 WAVs with no new dependency. Effects play off events and state changes, and room loops crossfade. M mutes and [ ] set the volume (both saved). It's muted under test.
+- **Art:** floor variants, wall tops and lips, 9 props, and the player's breathing idle, all pending review.
+
+Verify: 445 unit and 30 e2e tests pass. QA passed 6 of 9 checks with notes; the floor lattice, foundry shape, stacked numbers, weak embers and faint brazier glow are fixed. Review: the blocking items are fixed, covering white enemy numbers, sparks by damage type, keys and tuning moved into data, and data reference tests. The not-built items are listed in the spec's build notes.
+**Next:** Shaun reviews the morning report, playtests, and decides merges for #9–#16.
+**Notes:** see the 014 spec's build notes. The rest of the spec's sprite redraws (walk, enemies, machines, icons, HUD frame, title card) and menu hover sounds are not done, and are listed there.
+
 ## 2026-10-18: 013 Conduit corners (overnight build)
 **Changed:** built 013 on `claude/013-conduit-corners` (stacked on 012).
 - **Shape:** conduits have an `inFrom` side and take items only from it. A straight conduit takes from its back, a corner from one side.

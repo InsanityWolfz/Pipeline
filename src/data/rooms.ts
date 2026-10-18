@@ -277,13 +277,13 @@ export const ROOMS: Readonly<Record<string, Room>> = {
     ],
     doorways: [{ tx: 15, ty: 21, to: 'ruin-hall', toDoor: 1 }],
   },
-  // The sealed ruin the player rebuilds; empty floor to build on.
+  // The sealed ruin the player rebuilds: open floor to build on, its corners fallen in (014).
   foundry: {
     id: 'foundry',
     rows: [
       '########################',
-      '#......................#',
-      '#......................#',
+      '###......##..........###',
+      '##....................##',
       '#......................#',
       '#......................#',
       '#......................#',
@@ -294,8 +294,8 @@ export const ROOMS: Readonly<Record<string, Room>> = {
       '#......................#',
       '#......................#',
       '#......................#',
-      '#......................#',
-      '#......................#',
+      '##.....................#',
+      '###..................###',
       '########################',
     ],
     spawn: { tx: 22, ty: 8 },

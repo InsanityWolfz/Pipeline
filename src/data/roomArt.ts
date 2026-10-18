@@ -10,8 +10,8 @@ export const DEFAULT_FLOOR_THEME = 'ruin';
  * shows twice as often.
  */
 export const FLOOR_VARIANTS: Readonly<Record<string, { percent: number; tiles: readonly string[] }>> = {
-  ruin: { percent: 30, tiles: ['floor-rune-cracked', 'floor-rune-moss', 'floor-rune-inlay', 'floor-rune-sand'] },
-  shrine: { percent: 30, tiles: ['floor-shrine-cracked', 'floor-shrine-moss', 'floor-shrine-inlay', 'floor-shrine-roots'] },
+  ruin: { percent: 40, tiles: ['floor-rune-cracked', 'floor-rune-moss', 'floor-rune-inlay', 'floor-rune-sand'] },
+  shrine: { percent: 35, tiles: ['floor-shrine-cracked', 'floor-shrine-moss', 'floor-shrine-inlay', 'floor-shrine-roots'] },
   clearing: {
     percent: 22,
     tiles: ['floor-clearing-flowers', 'floor-clearing-flowers', 'floor-clearing-tufts', 'floor-clearing-tufts', 'floor-clearing-stones', 'floor-clearing-dirt'],
@@ -34,5 +34,9 @@ export const WALL_SPRITES = {
 /** One wall top in this many is the mossy one. */
 export const WALL_MOSS_ONE_IN = 7;
 
-/** Where props draw: wall props just in front of their wall; standing props this far up from their tile's bottom edge, px. */
-export const PROP_LAYOUT = { wallNudge: 0.5, standingInset: 8 } as const;
+/**
+ * Where props draw: wall props just in front of their wall; standing props this
+ * far up from their tile's bottom edge, px. Looping props start at a frame picked
+ * from their tile (× phaseX, × phaseY), so rows of them don't move in step.
+ */
+export const PROP_LAYOUT = { wallNudge: 0.5, standingInset: 8, phaseX: 7, phaseY: 3 } as const;

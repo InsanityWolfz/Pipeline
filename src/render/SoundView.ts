@@ -1,9 +1,9 @@
 import { Input, type Scene, type Sound } from 'phaser';
-import { ROOM_AMBIENCE, SOUND_MIX, SOUNDS, type SoundKey } from '../data/sounds';
+import { ROOM_AMBIENCE, SOUND_MIX, SOUNDS, VOLUME_STEP, type SoundKey } from '../data/sounds';
 import { loadSoundSettings, saveSoundSettings, type SoundSettings } from './soundSettings';
 
 // Plays the synth sounds (014): one-shot effects, and an ambient loop per room
-// that crossfades on a room change. M mutes; mute and volume are saved. The
+// that crossfades on a room change. M mutes, [ and ] set the volume; both are saved. The
 // browser holds audio back until the first input, which Phaser waits out.
 
 const URLS = import.meta.glob<string>('../../assets/build/sounds/*.wav', { query: '?url', import: 'default', eager: true });
@@ -29,7 +29,11 @@ export class SoundView {
     this.scene = scene;
     this.settings = loadSoundSettings(window.location.search, navigator.webdriver);
     this.apply();
-    scene.input.keyboard?.addKey(Input.Keyboard.KeyCodes.M).on('down', () => this.toggleMute());
+    const keys = scene.input.keyboard;
+    keys?.addKey(Input.Keyboard.KeyCodes.M).on('down', () => this.toggleMute());
+    keys?.addKey(Input.Keyboard.KeyCodes.OPEN_BRACKET).on('down', () => this.nudgeVolume(-VOLUME_STEP));
+    keys?.addKey(Input.Keyboard.KeyCodes.CLOSED_BRACKET).on('down', () => this.nudgeVolume(VOLUME_STEP));
+    scene.events.once('shutdown', () => this.ambient?.sound.destroy());
   }
 
   get muted(): boolean {
@@ -38,6 +42,13 @@ export class SoundView {
 
   toggleMute(): void {
     this.settings.muted = !this.settings.muted;
+    this.apply();
+    saveSoundSettings(this.settings);
+  }
+
+  /** [ and ] step the master volume, kept between 0 and 1 and saved. */
+  nudgeVolume(step: number): void {
+    this.settings.volume = Math.round(Math.min(1, Math.max(0, this.settings.volume + step)) * 10) / 10;
     this.apply();
     saveSoundSettings(this.settings);
   }

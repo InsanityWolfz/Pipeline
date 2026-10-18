@@ -1,9 +1,9 @@
 import type { Scene } from 'phaser';
 import { TILE_SIZE } from '../data/config';
 import { enemyDef } from '../data/enemies';
-import { DUST_EVERY_MS, GLOWS, LEAD_HOLD_MS } from '../data/juice';
+import { CAMERA_LEAD, DUST, GLOWS, HIT_STOP_MS } from '../data/juice';
 import { FOUNDRY_ROOM } from '../data/rooms';
-import { FIRE_SOUNDS, SOUNDS, WINDUP_SOUNDS } from '../data/sounds';
+import { FIRE_SOUNDS, SOUND_LEVELS, SOUNDS, WINDUP_SOUNDS } from '../data/sounds';
 import { isClaimed } from '../sim/claims';
 import type { SimEvents } from '../sim/events';
 import { pieceRect } from '../sim/pieces';
@@ -23,6 +23,7 @@ export class FeelView {
   readonly juice: JuiceView;
   private readonly ambient: AmbientView;
   private readonly dropIn: (id: number) => void;
+  private readonly freeze: (id: number, ms: number) => void;
   private roomId = '';
   /** Last frame's state, to catch changes the sim records no event for. */
   private modes = new Map<number, string>();
@@ -36,9 +37,10 @@ export class FeelView {
     SoundView.preload(scene);
   }
 
-  /** `dropIn` bounces a just-placed piece in the foundry view. */
-  constructor(scene: Scene, dropIn: (id: number) => void) {
+  /** `dropIn` bounces a just-placed piece in the foundry view; `freeze` holds a struck enemy still (hit-stop). */
+  constructor(scene: Scene, dropIn: (id: number) => void, freeze: (id: number, ms: number) => void) {
     this.dropIn = dropIn;
+    this.freeze = freeze;
     this.sound = new SoundView(scene);
     this.juice = new JuiceView(scene);
     this.ambient = new AmbientView(scene);
@@ -50,7 +52,7 @@ export class FeelView {
     if (here) this.play(sim, events);
     this.watch(sim, shown, deltaMs);
     this.sinceFireMs = sim.tube.firing ? 0 : this.sinceFireMs + deltaMs;
-    if (sim.building || this.sinceFireMs > LEAD_HOLD_MS) this.juice.leadToward(sim.player, null);
+    if (sim.building || this.sinceFireMs > CAMERA_LEAD.holdMs) this.juice.leadToward(sim.player, null);
     else this.juice.leadToward(sim.player, aim);
     if (sim.building) this.juice.resetLead();
     this.juice.update(deltaMs);
@@ -81,21 +83,21 @@ export class FeelView {
     for (const h of ev.hits) {
       if (h.target === 'enemy') {
         s.play(SOUNDS.hit);
-        s.play(SOUNDS.enemyHurt, 0.7);
-        j.burst(ev.bursts.length > 0 ? 'hitFire' : 'hitPhysical', h.x, h.y);
-        j.damageNumber(h.damage, h.x, h.y - 24, false);
-        j.hitStop('hit');
+        s.play(SOUNDS.enemyHurt, SOUND_LEVELS.under);
+        j.burst(h.damageType === 'fire' ? 'hitFire' : 'hitPhysical', h.x, h.y);
+        j.damageNumber(h.damage, h.x, h.y, false);
+        this.freeze(h.id, HIT_STOP_MS);
       } else {
         s.play(SOUNDS.playerHurt);
         j.burst('hitPlayer', h.x, h.y);
-        j.damageNumber(h.damage, h.x, h.y - 30, true);
+        j.damageNumber(h.damage, h.x, h.y, true);
         j.shake('medium');
       }
     }
     for (const d of ev.deaths) {
       s.play(SOUNDS.enemyDeath);
       j.burst('deathMotes', d.x, d.y);
-      j.hitStop('kill');
+      j.shake('small');
     }
     for (const b of ev.bursts) {
       s.play(SOUNDS.burst);
@@ -122,9 +124,9 @@ export class FeelView {
     }
     if (ev.pickUps.length > 0) s.play(SOUNDS.pickUpPiece);
     if (ev.angles.length > 0) s.play(SOUNDS.rotate);
-    if (ev.deposits.length > 0 || ev.withdraws.length > 0 || ev.crateTakes.length > 0) s.play(SOUNDS.pickUpPiece, 0.7);
+    if (ev.deposits.length > 0 || ev.withdraws.length > 0 || ev.crateTakes.length > 0) s.play(SOUNDS.pickUpPiece, SOUND_LEVELS.under);
     for (const r of ev.refills) {
-      s.play(SOUNDS.refill, 0.6);
+      s.play(SOUNDS.refill, SOUND_LEVELS.quiet);
       const piece = sim.foundry.pieces.find((p) => p.id === r.id);
       if (piece) {
         const rect = pieceRect(piece);
@@ -138,7 +140,7 @@ export class FeelView {
       s.play(SOUNDS.gateOpen);
       j.shake('medium');
     }
-    if (ev.tubeTaken || ev.identifies.length > 0 || ev.stashDeposits.length > 0) s.play(SOUNDS.claim, 0.6);
+    if (ev.tubeTaken || ev.identifies.length > 0 || ev.stashDeposits.length > 0) s.play(SOUNDS.claim, SOUND_LEVELS.quiet);
   }
 
   /** Changes with no event: wind-ups, machine crafts, rolls, dry fire and footsteps. */
@@ -153,7 +155,7 @@ export class FeelView {
       if (was !== undefined && was !== e.mode) {
         if (e.mode === 'windup') {
           const key = WINDUP_SOUNDS[kind];
-          if (key && kind !== 'slammer') this.sound.play(key, 0.8);
+          if (key) this.sound.play(key, SOUND_LEVELS.cue);
         }
         if (e.mode === 'swipe' && kind === 'slammer') {
           this.sound.play(SOUNDS.wardenSlam);
@@ -164,16 +166,19 @@ export class FeelView {
     }
     for (const id of [...this.modes.keys()]) if (!live.has(id)) this.modes.delete(id);
 
+    const machines = new Set<number>();
     for (const p of sim.foundry.pieces) {
       if (p.kind !== 'machine') continue;
+      machines.add(p.id);
       const before = this.outputs.get(p.id);
       if (before !== undefined && p.output > before && shown === FOUNDRY_ROOM) {
-        this.sound.play(SOUNDS.machineCraft, 0.6);
+        this.sound.play(SOUNDS.machineCraft, SOUND_LEVELS.quiet);
         const r = pieceRect(p);
         j.burst('craftPuff', r.x, r.y - r.h / 2);
       }
       this.outputs.set(p.id, p.output);
     }
+    for (const id of [...this.outputs.keys()]) if (!machines.has(id)) this.outputs.delete(id);
 
     const player = sim.player;
     const rolling = player.rollTick > 0;
@@ -183,9 +188,9 @@ export class FeelView {
     if (dry && !this.dryFire) this.sound.play(SOUNDS.dryFire);
     this.dryFire = dry;
 
-    const moving = Math.hypot(player.vx, player.vy) > 0.2;
+    const moving = Math.hypot(player.vx, player.vy) > DUST.minSpeed;
     this.dustMs += deltaMs;
-    const every = rolling ? DUST_EVERY_MS.roll : DUST_EVERY_MS.walk;
+    const every = rolling ? DUST.rollMs : DUST.walkMs;
     if ((moving || rolling) && this.dustMs >= every && shown === sim.roomId) {
       this.dustMs = 0;
       j.burst(rolling ? 'rollDust' : 'footDust', player.x, player.y, player.y - 1);
@@ -202,7 +207,7 @@ export class FeelView {
       for (const p of sim.foundry.pieces) {
         const r = pieceRect(p);
         if (p.kind === 'conduit' && p.item) spots.push({ x: r.x, y: r.y, ...GLOWS.conduitItem });
-        if (p.kind === 'socket') spots.push({ x: r.x, y: r.y, ...GLOWS.socket, radius: GLOWS.socket.radius * (p.pulse > 0 ? 1.4 : 1) });
+        if (p.kind === 'socket') spots.push({ x: r.x, y: r.y, ...GLOWS.socket, radius: GLOWS.socket.radius * (p.pulse > 0 ? GLOWS.socket.pulse : 1) });
       }
     }
     if (sim.hasTube && sim.link.attuned && shown === sim.roomId) spots.push({ x: sim.player.x, y: sim.player.y, ...GLOWS.tube });

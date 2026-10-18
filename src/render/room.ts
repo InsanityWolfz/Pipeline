@@ -71,8 +71,7 @@ export class RoomView {
     else if (def.layer === 'wall') sprite.setY(bottom + (def.drop ?? 0)).setDepth(bottom + PROP_LAYOUT.wallNudge);
     else if (def.layer === 'standing') sprite.setY(bottom - PROP_LAYOUT.standingInset).setDepth(bottom - PROP_LAYOUT.standingInset);
     else sprite.setDepth(bottom);
-    // Each prop starts its loop at a different point, so rows of them don't move in step.
-    if (def.anim.frames > 1) sprite.play({ key: def.anim.key, startFrame: (p.tx * 7 + p.ty * 3) % def.anim.frames });
+    if (def.anim.frames > 1) sprite.play({ key: def.anim.key, startFrame: (p.tx * PROP_LAYOUT.phaseX + p.ty * PROP_LAYOUT.phaseY) % def.anim.frames });
   }
 
   /** A wall in 3/4 view: its carved face over floor, else its top seen from above with lit lips toward the floor. */

@@ -33,6 +33,9 @@ describe('the sound synth', () => {
   });
 });
 
+/** Largest per-sample difference (of 32767) that still counts as up to date. */
+const SAMPLE_TOLERANCE = 4;
+
 describe('sound data', () => {
   it('has a recipe for every key', () => {
     for (const key of Object.values(SOUNDS)) expect(SOUND_RECIPES[key]?.layers.length, key).toBeGreaterThan(0);
@@ -42,8 +45,15 @@ describe('sound data', () => {
     const out = mkdtempSync(join(tmpdir(), 'sound-'));
     buildSounds(out);
     expect(readdirSync('assets/build/sounds').sort()).toEqual(readdirSync(out).sort());
+    // Float maths can differ in the last bit between Node versions, so samples may be off by a hair.
     for (const file of readdirSync(out)) {
-      expect(readFileSync(join(out, file)).equals(readFileSync(join('assets/build/sounds', file))), `${file} is stale: run npm run sound`).toBe(true);
+      const fresh = readFileSync(join(out, file));
+      const kept = readFileSync(join('assets/build/sounds', file));
+      expect(kept.length, `${file} is stale: run npm run sound`).toBe(fresh.length);
+      expect(kept.subarray(0, 44).equals(fresh.subarray(0, 44)), `${file} header`).toBe(true);
+      let worst = 0;
+      for (let i = 44; i < fresh.length; i += 2) worst = Math.max(worst, Math.abs(fresh.readInt16LE(i) - kept.readInt16LE(i)));
+      expect(worst, `${file} is stale: run npm run sound`).toBeLessThanOrEqual(SAMPLE_TOLERANCE);
     }
     rmSync(out, { recursive: true });
   });

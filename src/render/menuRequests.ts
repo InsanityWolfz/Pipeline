@@ -50,3 +50,9 @@ export class MenuRequests {
     this.pending = { ...NONE };
   }
 }
+
+/** Build and menu actions for one tick, merged into the command. */
+export type UiCommand = Pick<Command, 'toggleBuild' | 'place' | 'pickUp' | 'deposit' | 'withdraw' | 'setAngle' | 'pylon' | 'takeStash' | 'identify' | 'equip'>;
+
+/** No UI actions this tick. */
+export const NO_UI_COMMAND: UiCommand = { toggleBuild: false, place: null, pickUp: null, setAngle: null, ...NONE };

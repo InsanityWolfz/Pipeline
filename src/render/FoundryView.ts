@@ -118,7 +118,7 @@ export class FoundryView {
     const y = body.y;
     body.setY(y - SQUASH.dropPx).setScale(1 - SQUASH.squash, 1 + SQUASH.squash);
     this.scene.tweens.add({ targets: body, y, duration: SQUASH.ms, ease: 'Bounce.Out' });
-    this.scene.tweens.add({ targets: body, scaleX: 1, scaleY: 1, duration: SQUASH.ms * 1.5, ease: 'Back.Out' });
+    this.scene.tweens.add({ targets: body, scaleX: 1, scaleY: 1, duration: SQUASH.ms * SQUASH.settle, ease: 'Back.Out' });
   }
 
   /** The top of a drawn piece's sprite, world px. */

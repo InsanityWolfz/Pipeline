@@ -28,7 +28,7 @@ export const PROPS = {
   'ley-crack': { anim: loop('prop-ley-crack', 2, 2), layer: 'floor', glow: { color: 'ley-cyan', radius: 22 } },
   vines: { anim: still('prop-vines'), layer: 'wall', drop: -2 },
   banner: { anim: loop('prop-banner', 2, 1.5), layer: 'wall', drop: -6 },
-  brazier: { anim: loop('prop-brazier', 4, 9), layer: 'wall', drop: 6, glow: { color: 'ember-light', radius: 34 } },
+  brazier: { anim: loop('prop-brazier', 4, 9), layer: 'wall', drop: 6, glow: { color: 'ember-light', radius: 48 } },
 } as const satisfies Record<string, PropDef>;
 
 export type PropId = keyof typeof PROPS;

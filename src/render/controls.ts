@@ -8,7 +8,7 @@ import { BUILD_BAR, pieceDef } from '../data/pieces';
 import type { Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { dragTo, release, type ConduitLay, type HeldConduit } from './dragPath';
-import { MenuRequests } from './menuRequests';
+import { MenuRequests, type UiCommand } from './menuRequests';
 
 type Key = 'up' | 'down' | 'left' | 'right' | 'dodge' | 'rotate' | 'interact' | 'menu' | 'close' | 'build';
 
@@ -38,8 +38,7 @@ export interface BuildInput {
 type BuildAction = Pick<Command, 'place' | 'pickUp' | 'setAngle'>;
 
 /** The commands that come from build mode and the hopper menu rather than held keys. */
-export type UiCommand = Pick<Command, 'toggleBuild' | 'place' | 'pickUp' | 'deposit' | 'withdraw' | 'setAngle' | 'pylon' | 'takeStash' | 'identify' | 'equip'>;
-
+export { NO_UI_COMMAND, type UiCommand } from './menuRequests';
 // Turns WASD, Space, R, E, B, 1–3 and the mouse into sim commands, and C and Esc
 // into menu toggles for the scene. Presses are latched from the keys' down
 // events until consumed, so a tap shorter than a frame isn't lost, a press on a

@@ -20,7 +20,7 @@ import { stepSim } from '../sim/step';
 import { ArrowView } from './ArrowView';
 import { BombView } from './BombView';
 import { BuildView } from './BuildView';
-import { Controls, type UiCommand } from './controls';
+import { Controls, NO_UI_COMMAND, type UiCommand } from './controls';
 import { ghostShape } from './dragPath';
 import { CraftMenuView } from './CraftMenuView';
 import { EffectsView } from './EffectsView';
@@ -107,7 +107,11 @@ export class GameScene extends Scene {
     this.wake = new WakeView(this);
     this.tutorial = new TutorialUi(this);
     this.menu = new CraftMenuView(this, (recipeId) => this.craft(recipeId));
-    this.feel = new FeelView(this, (id) => this.foundryView?.dropIn(id));
+    this.feel = new FeelView(
+      this,
+      (id) => this.foundryView?.dropIn(id),
+      (id, ms) => this.enemyView?.freeze(id, ms),
+    );
     this.showRoom(this.sim.roomId);
     this.draw();
 
@@ -169,6 +173,7 @@ export class GameScene extends Scene {
 
   /** A click on the build bar picks a piece; on the hopper menu, it takes out or puts in. */
   private clickUi(controls: Controls, x: number, y: number): void {
+    this.feel?.sound.play(SOUNDS.menuClick);
     if (this.menuOpen || this.buildView?.click(x, y) || this.siteMenus?.click(controls, x, y)) return;
     const entry = this.picker?.entryAt(x, y);
     const hopper = this.picker?.hopperId;
@@ -198,20 +203,7 @@ export class GameScene extends Scene {
 
   /** Build actions made with the mouse and keys since the last tick, for the test hook to merge into its steps. */
   takeUiCommand(): UiCommand {
-    return (
-      this.controls?.takeUiCommand() ?? {
-        toggleBuild: false,
-        place: null,
-        pickUp: null,
-        deposit: null,
-        withdraw: null,
-        setAngle: null,
-        pylon: null,
-        takeStash: null,
-        identify: false,
-        equip: null,
-      }
-    );
+    return this.controls?.takeUiCommand() ?? NO_UI_COMMAND;
   }
 
   /** Steps the sim one tick and keeps its events for the next draw. The test hook steps through here too. */

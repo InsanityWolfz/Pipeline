@@ -22,6 +22,8 @@ const viewOf = (f: Facing): 'down' | 'up' | 'side' => (f === 'up' || f === 'down
 // telegraph on the ground.
 export class EnemyView {
   private readonly drawn = new Map<number, Drawn>();
+  /** Scene time each frozen enemy thaws at. */
+  private readonly frozenUntil = new Map<number, number>();
   private readonly scene: Scene;
 
   constructor(scene: Scene) {
@@ -30,11 +32,26 @@ export class EnemyView {
     registerAnim(scene, BURN_FLAME);
   }
 
+  /** Hit-stop (014): holds a struck enemy's sprite still, pose and place, for `ms`. The sim runs on. */
+  freeze(id: number, ms: number): void {
+    this.frozenUntil.set(id, this.scene.time.now + ms);
+  }
+
   update(enemies: readonly EnemyState[]): void {
     const live = new Set<number>();
+    const now = this.scene.time.now;
     for (const e of enemies) {
       live.add(e.id);
       const d = this.drawn.get(e.id) ?? this.create(e);
+      const until = this.frozenUntil.get(e.id);
+      if (until !== undefined && now < until) {
+        d.sprite.anims.pause();
+        continue;
+      }
+      if (until !== undefined) {
+        this.frozenUntil.delete(e.id);
+        d.sprite.anims.resume();
+      }
       const def = enemyDef(e.enemyId);
       const bottom = e.y + def.feetBox.h / 2;
       const anims = ENEMY_ANIMS[def.anims];
@@ -55,6 +72,7 @@ export class EnemyView {
     }
     for (const [id, d] of this.drawn) {
       if (live.has(id)) continue;
+      this.frozenUntil.delete(id);
       d.sprite.destroy();
       d.telegraph.destroy();
       d.bar.destroy();

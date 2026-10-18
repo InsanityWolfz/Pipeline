@@ -292,6 +292,9 @@ export const KO_FADE_MS = 250;
 /** A ground item's sprite bottom sits this far below its ground point, so it rests on its shadow, px. */
 export const GROUND_ITEM_LIFT = 3;
 
+/** Textures drawn at runtime (014): the soft glow and the vignette. */
+export const FX_TEXTURES = { glow: 'fx-glow', vignette: 'fx-vignette' } as const;
+
 /** Render depths. World sprites sort by the bottom of their footprint (px); these sit around that. */
 export const DEPTHS = {
   /** Flat floor tiles, under everything. */
