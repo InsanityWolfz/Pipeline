@@ -65,6 +65,19 @@ describe('the Wisp', () => {
     for (let i = 1; i < casts.length; i++) expect((casts[i] ?? 0) - (casts[i - 1] ?? 0)).toBeGreaterThanOrEqual(cast.cooldownTicks);
   });
 
+  it('leashes home once the player is off screen for its grace, healing there', () => {
+    const s = arena();
+    const e = placeWisp(s, PLAYER_AT.x + cast.keepAway, PLAYER_AT.y);
+    run(s, 2);
+    expect(e.mode).not.toBe('idle');
+    e.health = 5;
+    s.player.x = PLAYER_AT.x - 700;
+    // Its home is where it stands, so it settles back to idle the moment it gives up.
+    const ticks = runUntil(s, () => e.mode === 'idle', 600);
+    expect(ticks).toBeGreaterThanOrEqual(WISP.leashGraceTicks);
+    expect(e.health).toBe(WISP.maxHealth);
+  });
+
   it('drops one or two ley crystal', () => {
     for (const seed of [1, 2, 3, 4]) {
       const s = arena(seed);

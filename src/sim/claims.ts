@@ -220,10 +220,8 @@ export function stepPorts(state: SimState, offer: (to: Tile, from: Tile, item: s
   for (const f of state.fixtures) {
     if (fixtureDef(f.id).kind !== 'port') continue;
     if (f.item === null) {
-      if (f.timer < PORT_TICKS) {
-        f.timer += 1;
-        continue;
-      }
+      f.timer += 1;
+      if (f.timer < PORT_TICKS) continue;
       f.item = PORT_CYCLE[f.next % PORT_CYCLE.length] ?? null;
       f.next += 1;
     }

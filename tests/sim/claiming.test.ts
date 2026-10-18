@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { CLAIM_TICKS, FIXTURES, PORT_CYCLE, PORT_TICKS } from '../../src/data/claims';
 import { FOUNDRY_ROOM, ROOMS, SHRINE_ROOM } from '../../src/data/rooms';
 import { claim, fixtureDef, portFront } from '../../src/sim/claims';
+import { damagePlayer } from '../../src/sim/health';
+import { canPlace } from '../../src/sim/placement';
 import { arrivalTile } from '../../src/sim/doorways';
 import type { ConduitState } from '../../src/sim/pieces';
 import { createSim, type SimState } from '../../src/sim/state';
@@ -90,6 +92,14 @@ describe('claiming the pylon', () => {
     expect(s.claims).toEqual([]);
   });
 
+  it('is cancelled by a hit', () => {
+    const s = atPylon();
+    run(s, 1, { interact: true });
+    run(s, 10);
+    damagePlayer(s, 5, 0, 1, 0, 1);
+    expect(s.claimHold).toBeNull();
+  });
+
   it('a piece on a fixture tile is picked up into the inventory', () => {
     const s = atPylon();
     const port = fixtureDef('supply-port');
@@ -112,7 +122,58 @@ describe('claiming the pylon', () => {
   });
 });
 
+describe('fixture tiles', () => {
+  it('are never buildable once the fixture is there; the port tile is free before the claim', () => {
+    const s = createSim(SEED);
+    s.roomId = FOUNDRY_ROOM;
+    movePlayer(s, tileCentre({ tx: 12, ty: 12 }).x, tileCentre({ tx: 12, ty: 12 }).y);
+    const stash = fixtureDef('stash');
+    const port = fixtureDef('supply-port');
+    expect(canPlace(s, 'conduit', stash.tx, stash.ty, 'up')).toBe('occupied');
+    expect(canPlace(s, 'conduit', port.tx, port.ty, 'up')).toBeNull();
+    claim(s, SHRINE_ROOM);
+    expect(canPlace(s, 'conduit', port.tx, port.ty, 'up')).toBe('occupied');
+    expect(canPlace(s, 'conduit', fixtureDef('waystone').tx, fixtureDef('waystone').ty, 'up')).toBe('occupied');
+  });
+});
+
 describe('the supply port', () => {
+  it('pushes exactly every PORT_TICKS', () => {
+    const s = claimed();
+    s.roomId = FOUNDRY_ROOM;
+    movePlayer(s, tileCentre({ tx: 12, ty: 12 }).x, tileCentre({ tx: 12, ty: 12 }).y);
+    const port = s.fixtures.find((f) => f.id === 'supply-port');
+    if (!port) throw new Error('no port');
+    const front = portFront(port);
+    const c = put<ConduitState>(s, 'conduit', front.tx, front.ty, 'down');
+    const at: number[] = [];
+    for (let t = 0; t < PORT_TICKS * 3 + 5; t++) {
+      run(s, 1);
+      if (c.item) {
+        at.push(s.tick);
+        c.item = null;
+      }
+    }
+    const gaps = at.slice(1).map((t, i) => t - (at[i] ?? 0));
+    expect(gaps.slice(0, 2)).toEqual([PORT_TICKS, PORT_TICKS]);
+  });
+
+  it('a raw the next piece cannot use stalls the line, as in 006', () => {
+    const s = claimed();
+    s.roomId = FOUNDRY_ROOM;
+    movePlayer(s, tileCentre({ tx: 12, ty: 12 }).x, tileCentre({ tx: 12, ty: 12 }).y);
+    const port = s.fixtures.find((f) => f.id === 'supply-port');
+    if (!port) throw new Error('no port');
+    const front = portFront(port);
+    const c = put<ConduitState>(s, 'conduit', front.tx, front.ty, 'right');
+    // A grinder only takes ley crystal: the first raw, wood, sticks at the end of the conduit.
+    s.crafted = ['ley-shard'];
+    put(s, 'grinder', front.tx + 1, front.ty, 'right');
+    run(s, PORT_TICKS * 3);
+    expect(c.item).toBe('wood');
+    expect(port.item).toBe('stone');
+  });
+
   it('pushes the raws in turn every PORT_TICKS into what faces it, and waits when refused', () => {
     const s = claimed();
     s.roomId = FOUNDRY_ROOM;
@@ -145,8 +206,11 @@ describe('the claimed pylon, stash and waystone', () => {
     expect(s.inventory).toEqual({});
     expect(s.stash).toEqual({ wood: 3, arrow: 5 });
     expect(s.events.stashDeposits).toEqual([{ items: { wood: 3, arrow: 5 } }]);
+    s.player.vx = 2;
+    s.building = true;
     run(s, 1, { pylon: 'travel' });
     expect(s.roomId).toBe(FOUNDRY_ROOM);
+    expect([s.player.vx, s.player.vy, s.building]).toEqual([0, 0, false]);
     expect(s.events.travels).toEqual([{ from: SHRINE_ROOM, to: FOUNDRY_ROOM }]);
     const stash = fixtureDef('stash');
     const by = tileCentre({ tx: stash.tx, ty: stash.ty + 1 });
