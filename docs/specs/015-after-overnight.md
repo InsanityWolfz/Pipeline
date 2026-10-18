@@ -1,5 +1,7 @@
 # 015: Fixes after the overnight run
-status: draft
+status: approved
+
+Approved by Shaun in chat (2026-10-18: "approve the spec and then follow through to the end of 015 on your own").
 
 ## Goal
 Shaun's changes from playing 007–014. A sorter piece pulls one chosen item off a mixed line onto its own belt, so the supply port can feed specific hoppers. The tube no longer fires in the foundry or on menu clicks. The camera no longer pans while shooting. Mousing over things names them, and the build bar describes each piece.

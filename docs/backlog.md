@@ -19,6 +19,6 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 012 | Tutorial flow: the prototype's player flow end to end (the art pass moved to 014) | approved |
 | 013 | Conduit corners: a conduit placed between two neighbours joins them as an L (auto-facing rules, corner sprites); from the 006 playtest | approved |
 | 014 | Look and feel: hand-shaped rooms, detailed sprites, juice and generated sound; Shaun's request 2026-10-18 | approved |
-| 015 | Fixes after the overnight run: sorter piece, no firing in the foundry or on menu clicks, no camera pan, hover names and build-bar descriptions | draft |
+| 015 | Fixes after the overnight run: sorter piece, no firing in the foundry or on menu clicks, no camera pan, hover names and build-bar descriptions | approved |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
