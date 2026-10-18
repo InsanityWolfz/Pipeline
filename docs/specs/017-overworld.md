@@ -198,5 +198,6 @@ The game happens outside on one open map, like Realm of the Mad God. You wake ne
   - the one-tick population lag, noted above
 
 ## Open questions
-- **Spawn distance (for Shaun).** "1.5 screens" could mean 960 px from the player. Near the foundry, nearly all of ring 1 is closer than that. It's built as 480 px plus "every member out of view". Is that the intent, or should spawns be further out?
-- **Hits past the cap (for Shaun).** With 15 awake nearby, shooting a 16th enemy doesn't wake it, so the cap holds as the spec says. Should a hit always wake an enemy, even past the cap?
+None. Shaun answered both, 2026-10-18:
+- **Spawn distance:** "Packs spawning is fine as long as the player never sees a pack spawn on their screen." The build keeps 480 px plus every member out of the clamped view.
+- **Hits past the cap:** "if they hit an enemy off screen not waking it up is fine because the player didn't see it anyways." A hit doesn't wake an enemy while 15 are awake near the player.
