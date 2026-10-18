@@ -59,7 +59,9 @@ export class PlayerView {
     const facing = rolling ? p.facing : aimFacing(p.aimX - p.x, p.aimY - p.y, p.facing);
     this.sprite.setFlipX(facing === 'left');
 
-    if (rolling) {
+    if (p.dying > 0) {
+      if (this.sprite.anims.currentAnim?.key !== PLAYER_ANIMS.death.key) this.sprite.play(PLAYER_ANIMS.death.key);
+    } else if (rolling) {
       // Restart on a new roll, even one that follows straight after another.
       const fresh = p.rollTick < this.lastRollTick || this.sprite.anims.currentAnim?.key !== PLAYER_ANIMS.roll.key;
       if (fresh) this.sprite.play(PLAYER_ANIMS.roll.key);
@@ -84,7 +86,7 @@ export class PlayerView {
       const body = colorOf(ARMOR_TINTS[armor]);
       this.sprite.setTint(UNTINTED, UNTINTED, body, body).setTintMode(TintModes.MULTIPLY);
     }
-    this.tube.setVisible(shown && !rolling);
+    this.tube.setVisible(shown && !rolling && p.dying === 0);
     if (!rolling) this.placeTube(p, facing, bottom);
     this.placeAttune(facing, shown && !rolling && link.attunePulse > 0);
   }

@@ -33,6 +33,7 @@ import { PlayerView } from './PlayerView';
 import { RoomView } from './room';
 import { SiteMenus } from './SiteMenus';
 import { SiteView } from './SiteView';
+import { WakeView } from './WakeView';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -60,6 +61,7 @@ export class GameScene extends Scene {
   private menu?: CraftMenuView;
   private site?: SiteView;
   private siteMenus?: SiteMenus;
+  private wake?: WakeView;
   /** The room on screen. It lags the player's room through a door's fade. */
   private shownRoomId: string;
   private fading = false;
@@ -94,6 +96,7 @@ export class GameScene extends Scene {
     this.picker = new HopperPicker(this);
     this.site = new SiteView(this);
     this.siteMenus = new SiteMenus(this);
+    this.wake = new WakeView(this);
     this.menu = new CraftMenuView(this, (recipeId) => this.craft(recipeId));
     this.showRoom(this.sim.roomId);
     this.draw();
@@ -203,12 +206,13 @@ export class GameScene extends Scene {
   stepOnce(cmd: Command): void {
     stepSim(this.sim, cmd);
     // Hits aren't drawn from events (flashes read sim state), so they aren't kept.
-    const { deaths, pickups, bursts, shots, stashDeposits, identifies, ko } = this.sim.events;
+    const { deaths, pickups, bursts, shots, banks, identifies, lost, ko } = this.sim.events;
     this.pending.deaths.push(...deaths);
     this.pending.pickups.push(...pickups);
     this.pending.bursts.push(...bursts);
     this.pending.shots.push(...shots);
-    this.pending.stashDeposits.push(...stashDeposits);
+    this.pending.banks.push(...banks);
+    if (ko) this.pending.lost = { ...lost };
     this.pending.identifies.push(...identifies);
     this.pending.ko ||= ko;
   }
@@ -251,6 +255,7 @@ export class GameScene extends Scene {
     this.followRoom(this.pending.ko);
     this.effects.play(this.pending, sim.player);
     if (this.pending.identifies.length > 0) this.site?.identified();
+    if (this.pending.ko) this.wake?.show(this.pending.lost);
     clearEvents(this.pending);
     const shown = this.shownRoomId;
     const inFoundry = shown === FOUNDRY_ROOM;

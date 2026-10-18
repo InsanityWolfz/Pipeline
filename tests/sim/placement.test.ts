@@ -12,7 +12,8 @@ import {
 } from '../../src/sim/pieces';
 import { canPlace, pickUp, place, unlockedPieces } from '../../src/sim/placement';
 import { tileCentre } from '../../src/sim/tiles';
-import { fireAt, HALL, run } from './fight';
+import { FOUNDRY_ROOM } from '../../src/data/rooms';
+import { die, fireAt, HALL, run } from './fight';
 import { foundry, put, STAND } from './foundryKit';
 
 describe('unlocks', () => {
@@ -181,10 +182,8 @@ describe('piece bodies', () => {
     c.item = 'wood';
     const before = structuredClone(s.foundry);
     s.building = true;
-    s.player.health = 0;
-    run(s, 1);
-    expect(s.events.ko).toBe(true);
-    expect(s.roomId).toBe(HALL);
+    die(s);
+    expect(s.roomId).toBe(FOUNDRY_ROOM);
     expect(s.building).toBe(false);
     // The conduit's item kept moving; everything else is as it was.
     expect(s.foundry.pieces.map((p) => ({ ...p, progress: 0 }))).toEqual(

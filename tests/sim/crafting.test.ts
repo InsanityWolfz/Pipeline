@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RECIPES } from '../../src/data/recipes';
 import { craft } from '../../src/sim/crafting';
-import { resetWorld } from '../../src/sim/state';
-import { arena } from './fight';
+import { arena, die } from './fight';
 
 describe('crafting', () => {
   it.each(Object.values(RECIPES))('$id takes its inputs and adds its output', (recipe) => {
@@ -45,11 +44,12 @@ describe('crafting', () => {
     expect(s.crafted).toEqual(['arrowhead', 'shaft']);
   });
 
-  it('keeps the crafted set through a KO reset', () => {
+  it('keeps the crafted set through a death; the unbanked rope is lost', () => {
     const s = arena();
     s.inventory = { fiber: 1 };
+    s.banked = {};
     craft(s, 'rope');
-    resetWorld(s);
+    die(s);
     expect(s.crafted).toEqual(['rope']);
     expect(s.inventory.rope).toBeUndefined();
   });

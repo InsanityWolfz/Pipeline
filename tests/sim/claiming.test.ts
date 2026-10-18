@@ -11,7 +11,7 @@ import { createSim, type SimState } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
-import { command, movePlayer, run, runUntil, SEED } from './fight';
+import { command, die, movePlayer, run, runUntil, SEED } from './fight';
 import { put } from './foundryKit';
 
 const SHRINE = ROOMS[SHRINE_ROOM];
@@ -114,9 +114,7 @@ describe('claiming the pylon', () => {
 
   it('lasts through a KO, and the shrine stays empty', () => {
     const s = claimed();
-    s.player.health = 0;
-    stepSim(s);
-    expect(s.events.ko).toBe(true);
+    die(s);
     expect(s.claims).toEqual([SHRINE_ROOM]);
     expect(s.enemies.filter((e) => e.roomId === SHRINE_ROOM)).toEqual([]);
     expect(s.enemies.filter((e) => e.roomId === 'ruin-hall').length).toBeGreaterThan(0);

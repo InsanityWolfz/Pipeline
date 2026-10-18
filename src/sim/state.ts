@@ -74,6 +74,8 @@ export interface SimState {
   nextArmorId: number;
   /** The worn piece's id, or null. */
   equipped: number | null;
+  /** What a death keeps (011): what the player held when they last entered the foundry or deposited at a pylon. */
+  banked: Inventory;
   /** The first Husk ever killed has dropped its guaranteed armor. Kept through a KO. */
   firstHuskDropped: boolean;
   /** Build mode: only in the foundry; fire, load, ammo select and harvest are off. */
@@ -98,7 +100,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     rng: createRng(seed),
     roomId,
     player: createPlayer({ x: 0, y: 0 }),
-    inventory: {},
+    inventory: { ...start.inventory },
     tube: createTube(),
     link: createLink(),
     start,
@@ -125,6 +127,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     nextArmorId: 0,
     equipped: null,
     firstHuskDropped: false,
+    banked: { ...start.inventory },
     building: false,
     events: createEvents(),
   };
@@ -134,17 +137,16 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
 
 /**
  * Puts the world back to its start: player at the spawn room's spawn with full
- * health, the starting inventory, the tube on its starting ammo, every
+ * health, the tube on its starting ammo, every
  * room's enemies at home and nodes at full, and nothing harvesting, on the
  * ground or in flight, and build mode off. The tick, seed, RNG, id counters,
- * the crafted set, the tube's link and reservoir, claims, the stash and the
- * whole foundry carry on. Claimed rooms get no enemies back.
+ * the inventory (a death trims it first), the crafted set, the tube's link and
+ * reservoir, claims, the stash, armor and the whole foundry carry on. Claimed rooms get no enemies back.
  */
 export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   const rooms = Object.values(ROOMS);
   state.roomId = spawnRoomId;
   state.player = createPlayer(tileCentre(roomOf(state).spawn));
-  state.inventory = { ...state.start.inventory };
   state.tube = createTube();
   state.arrows = [];
   state.groundItems = [];

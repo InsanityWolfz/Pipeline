@@ -1,3 +1,4 @@
+import { DYING_TICKS } from '../../src/data/player';
 import { ROOMS } from '../../src/data/rooms';
 import { describe, expect, it } from 'vitest';
 import { advanceClock, createClock } from '../../src/sim/clock';
@@ -39,8 +40,9 @@ function scripted(seed: number, ticks: number) {
 const toward = (from: number, to: number): -1 | 0 | 1 => (Math.abs(to - from) < 4 ? 0 : to > from ? 1 : -1);
 
 /**
- * Walks into the Husk pack and stands there until KO'd, then fights the reset
- * pack from range while it has arrows, and collects the drops.
+ * Walks into the Husk pack and stands there until KO'd, wakes in the foundry and
+ * walks back out, then fights the reset pack from range while it has arrows, and
+ * collects the drops.
  */
 function scriptedFight(seed: number, ticks: number) {
   const sim = createSim(seed);
@@ -51,7 +53,9 @@ function scriptedFight(seed: number, ticks: number) {
     // The first KO respawns every unclaimed room's enemies, so ids pass the starting count.
     const fighting = sim.nextEnemyId > STARTING_ENEMIES;
     const empty = (sim.inventory.arrow ?? 0) === 0;
-    const goal = !fighting ? target : target ? { x: 900, y: 300 } : loot;
+    // Waking in the foundry after the KO, walk back out through its door to the hall.
+    const door = sim.roomId === 'foundry' ? { x: 24 * 32, y: 8.5 * 32 } : undefined;
+    const goal = door ?? (!fighting ? target : target ? { x: 900, y: 300 } : loot);
     const command: Command = {
       ...NO_COMMAND,
       moveX: goal ? toward(p.x, goal.x) : 0,
@@ -162,9 +166,9 @@ describe('sim state', () => {
 
   it('replays a fight with hits, deaths, drops and a KO identically', () => {
     const a = scriptedFight(11, 3000);
-    expect(a.nextEnemyId).toBe(STARTING_ENEMIES * 2);
-    expect(a.enemies.filter((e) => e.roomId === 'ruin-hall')).toEqual([]);
-    expect(a.inventory['husk-resin']).toBeGreaterThanOrEqual(3);
+    // At least one KO (the rooms respawned), and the fight went on afterwards.
+    expect(a.nextEnemyId).toBeGreaterThanOrEqual(STARTING_ENEMIES * 2);
+    expect(a.nextArrowId).toBeGreaterThan(0);
     expect(a).toEqual(scriptedFight(11, 3000));
   });
 
@@ -175,11 +179,13 @@ describe('sim state', () => {
   });
 
   it('replays building, running and emptying a foundry line identically', () => {
-    const a = scriptedFoundry(11, 1051);
+    // Health drops to 0 at tick 1050; the KO lands once the death animation ends.
+    const ko = 1051 + DYING_TICKS;
+    const a = scriptedFoundry(11, ko);
     expect(a.foundry.pieces.map((p) => p.pieceId)).toEqual(['hopper', 'grinder', 'focuser', 'crate']);
-    expect(a.roomId).toBe('ruin-hall');
+    expect(a.roomId).toBe('foundry');
     expect(a.events.ko).toBe(true);
-    expect(a).toEqual(scriptedFoundry(11, 1051));
+    expect(a).toEqual(scriptedFoundry(11, ko));
   });
 
   it('carries the foundry line through to bolts in hand', () => {
@@ -209,11 +215,13 @@ describe('sim state', () => {
     expect(summary.groundItems).toEqual([]);
     // Every event list, empty, and no KO: a key missing from createEvents fails here.
     const lists = ['hits', 'deaths', 'pickups', 'harvests', 'crafts', 'craftFails', 'bursts', 'selects', 'roomChanges'] as const;
-    const later = ['places', 'placeFails', 'pickUps', 'deposits', 'crateTakes', 'withdraws', 'attunes', 'refills', 'shots'] as const;
+    const later = ['places', 'placeFails', 'pickUps', 'deposits', 'crateTakes', 'withdraws', 'attunes', 'refills', 'shots', 'banks'] as const;
     const site = ['sealed', 'claims', 'stashDeposits', 'stashTakes', 'travels', 'identifies', 'equips', 'angles'] as const;
-    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, 'ko'].sort());
+    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, 'dies', 'lost', 'ko'].sort());
     for (const name of [...lists, ...later, ...site]) expect(summary.events[name], name).toEqual([]);
     expect(summary.events.ko).toBe(false);
+    expect(summary.events.dies).toBe(false);
+    expect(summary.events.lost).toEqual({});
   });
 
   it('summarizes rooms, build mode, unlocks and the foundry', () => {

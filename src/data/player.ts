@@ -32,6 +32,9 @@ export interface StartDef {
 
 export const DEFAULT_START: StartDef = { inventory: STARTING_INVENTORY, crafted: [] };
 
+/** Ticks the death animation plays before the player wakes in the foundry (011). */
+export const DYING_TICKS = 60;
+
 /** Health at the start and after a KO. Spec 004; no regen yet. */
 export const MAX_HEALTH = 100;
 

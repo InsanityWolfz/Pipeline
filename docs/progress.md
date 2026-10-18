@@ -2,6 +2,18 @@
 
 Newest entry first.
 
+## 2026-10-18: 011 Death (overnight build)
+**Changed:** built 011 on `claude/011-death` (stacked on 010).
+- **Banking:** entering the foundry banks what you carry, and so does a pylon deposit.
+- **Dying:** at 0 health a 60-tick death plays, with no input and no hits, and enemies give up. Then you wake in the foundry at full health.
+- **What you keep:** the banked counts of what you still carry. The rest is lost and listed in a centred "You wake in the foundry / Lost ..." text.
+- **What stays the same:** unclaimed rooms reset. The factory, reservoir, stash, claims and armor all stay.
+- **Effects:** a death animation and a bank swirl.
+
+Verify: 382 unit and 28 e2e tests pass.
+**Next:** QA and review, then 012.
+**Notes:** a KO no longer refills the start inventory, including `?playtest`; the start itself counts as banked. Old KO tests were updated to wake in the foundry.
+
 ## 2026-10-18: 010 Armor (overnight build)
 **Changed:** built 010 on `claude/010-armor` (stacked on 009).
 - Enemies drop unidentified armor; the first Husk ever killed always drops a piece.

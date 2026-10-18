@@ -132,6 +132,7 @@ export type PlayerAnim =
   | 'fire-up'
   | 'fire-side'
   | 'hit-down'
+  | 'death'
   | 'hit-up'
   | 'hit-side'
   | 'roll';
@@ -161,6 +162,8 @@ export const PLAYER_ANIMS: Readonly<Record<PlayerAnim, AnimDef>> = {
   'hit-up': playerAnim('hit-up', 1, 1, true),
   'hit-side': playerAnim('hit-side', 1, 1, true),
   roll: playerAnim('roll', ROLL_FRAMES, 'roll', false),
+  /** Played once over the death (011): it should finish inside DYING_TICKS. */
+  death: playerAnim('death', 4, 6, false),
 };
 
 /** Enemy animations. `side` faces right; left is drawn flipped. Death has one view. `recover` is optional: without it, a recovering enemy shows idle. */
@@ -209,6 +212,9 @@ export const FIRE_BURST: AnimDef = { key: 'fire-burst', frames: 4, frameRate: 14
 
 /** Ley light spiralling off the player as a pylon sends the haul home (009). */
 export const DEPOSIT_SWIRL: AnimDef = { key: 'deposit-swirl', frames: 4, frameRate: 10, loop: false };
+
+/** After a KO (011): how long the wake-up text holds, and where its lines sit (px from the screen's centre, line step). */
+export const WAKE_TEXT = { holdMs: 3000, fadeMs: 400, top: -24, lineStep: 9, title: 'You wake in the foundry', lostTitle: 'Lost' } as const;
 
 /** A ley burst at the tube's mouth for each projectile fired (008). */
 export const MUZZLE_FLASH: AnimDef = { key: 'muzzle-flash', frames: 2, frameRate: 20, loop: false };

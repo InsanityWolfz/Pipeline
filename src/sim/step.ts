@@ -15,7 +15,7 @@ import { offerFromOutside, stepFoundry } from './flow';
 import { stepFoundryUse } from './foundryUse';
 import { stepHarvest } from './harvest';
 import { stepLink } from './link';
-import { checkKo } from './health';
+import { checkKo, stepBanking } from './health';
 import { stepEnemies } from './enemyAi';
 import { NO_COMMAND, type Command } from './input';
 import { stepPlayer } from './movement';
@@ -45,7 +45,8 @@ function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
 export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   clearEvents(state.events);
   state.tick += 1;
-  const cmd = maskCommand(state, input);
+  // A dying player takes no input but keeps their aim.
+  const cmd = state.player.dying > 0 ? { ...NO_COMMAND, aimX: state.player.aimX, aimY: state.player.aimY } : maskCommand(state, input);
   const bodies = bodiesOf(state);
   const here = bodies(state.roomId);
   stepPlayer(state.player, here.room, cmd, here.obstacles, walkScale(state));
@@ -74,5 +75,6 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
     offerFromOutside(state.foundry, state.link.reservoir, state.events.refills, to, from, item),
   );
   stepPickups(state);
+  stepBanking(state);
   checkKo(state);
 }

@@ -50,6 +50,8 @@ export interface SimSummary {
     hitInvulnerable: boolean;
     /** KO'd this tick; the room has already reset. */
     ko: boolean;
+    /** Ticks left on the death animation; 0 when alive. */
+    dying: number;
   };
   /** Item id to count. */
   inventory: Record<string, number>;
@@ -102,6 +104,8 @@ export interface SimSummary {
   /** The worn piece's id, or null. */
   equippedArmor: number | null;
   firstHuskDropped: boolean;
+  /** What a death keeps: the inventory as last banked. */
+  banked: Record<string, number>;
   /** What happened on the last tick. */
   events: SimEvents;
 }
@@ -128,6 +132,7 @@ export function summarize(state: SimState): SimSummary {
       maxHealth: MAX_HEALTH,
       hitInvulnerable: p.hurtTicks > 0,
       ko: state.events.ko,
+      dying: p.dying,
     },
     inventory: { ...state.inventory },
     tube: {
@@ -165,6 +170,7 @@ export function summarize(state: SimState): SimSummary {
     armorPieces: state.armor.map((a) => ({ ...a, identified: true as const })),
     equippedArmor: state.equipped,
     firstHuskDropped: state.firstHuskDropped,
+    banked: { ...state.banked },
     events: structuredClone(state.events),
   };
 }
