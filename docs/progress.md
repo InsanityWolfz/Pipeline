@@ -2,6 +2,17 @@
 
 Newest entry first.
 
+## 2026-10-18: 006 Foundry building (build)
+**Changed:** built 006 on `claude/sweet-planck-6lb10l`, following `docs/plans/006-foundry-building.md`.
+- **Sim:** rooms as tags on every entity, with all rooms ticking; doors and the doorway step; foundry pieces, placement and unlocks; two-phase item flow (conduits, machines with direct hand-off, hoppers, crates, statuses); E and deposits; build mode; KO keeps the foundry.
+- **Data:** the `foundry` room and doors, `pieces.ts`, `foundry.ts`, `foundryAssets.ts`, build bar, picker and readout layouts.
+- **Render:** `RoomView` with the door fade, `FoundryView`, `BuildView` (bar and ghost), `HoverReadout`, `HopperPicker`, and build controls (B, R, click, right-click, drag, wheel, Esc).
+- **Art:** housings, conduits, hoppers, crate, doorway, status markers and logistics icons. After Shaun's first look, machines show the item they make and wood is a side-on log.
+
+283 unit tests and 21 e2e tests pass.
+**Next:** Shaun approves the foundry sprites, then `/verify` and `/review`.
+**Notes:** see the 006 entry in decisions.md. The prettier slip is logged there too: don't run formatters the repo doesn't use.
+
 ## 2026-10-18: Body follows the aim (fix)
 **Changed:** `PlayerView` now picks the body's animation and flip from the aim direction when not rolling, matching the tube, so the idle and walk poses no longer face away from the tube. `npm run check` and 18 e2e tests pass.
 **Next:** Shaun playtests the fix on the preview.
