@@ -1,5 +1,5 @@
 # 004: Enemies
-status: draft
+status: approved
 
 ## Goal
 A pack of three Husks waits in the ruin hall. They notice the player once they come on screen, shamble after them, and telegraph a swipe the player can read and dodge. Arrows damage, knock back and kill them, and each dead Husk drops husk resin (and sometimes another raw) that the player walks over to collect. The player now has health; at 0 the room resets (a placeholder until 011).

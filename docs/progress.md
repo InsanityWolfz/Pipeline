@@ -4,8 +4,8 @@ Newest entry first.
 
 ## 2026-10-18: 004 Enemies spec
 **Changed:** interviewed Shaun and wrote `docs/specs/004-enemies.md` (status: draft). Decisions: player health 100 with a placeholder KO that resets the whole room (011 replaces it); a pack of 3 Husks (40 HP, 50 px/s) with a 0.6 s wind-up and a 120° front arc locked at wind-up start, which a roll or a sidestep avoids; 20 swipe damage, 0.5 s hit invulnerability, knockback both ways, hit flash, enemy health bars; RotMG-style aggro (on screen or hit, chase while on screen, return home after 1 s off screen, re-aggro on return, heal to full at home, always damageable); drops of 1–2 husk resin plus a 50% wood/stone/fiber, walked over to collect, with a pickup popup and a HUD material column; a hit cancels loading; no regen.
-**Next:** Shaun reviews and approves the spec, then `/plan`.
-**Notes:** tuning values are starting points for playtest. The aggro model came from the open-source RotMG server behaviors (`Follow`, `StayCloseToSpawn`).
+**Next:** Shaun approved the spec and the `/plan` (copied to `docs/plans/004-enemies.md` so it survives the cloud container). Run `/build` next.
+**Notes:** tuning values are starting points for playtest. Planning choices: one 16×16 sprite per material for both ground and HUD icon; a 6-tick `swipe` state for the animation; a chasing Husk holds position inside swipe range while its cooldown runs. With the specced timings a swipe cycle is 66 ticks, so the 60-tick cooldown doesn't bind yet. The aggro model came from the open-source RotMG server behaviors (`Follow`, `StayCloseToSpawn`).
 
 ## 2026-10-17: 003 Tube firing
 **Changed:** built 003 on `claude/003-tube-firing`.
