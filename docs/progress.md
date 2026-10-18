@@ -2,6 +2,17 @@
 
 Newest entry first.
 
+## 2026-10-18: 007 Tube link spec
+**Changed:** interviewed Shaun and wrote `docs/specs/007-tube-link.md` (status: draft). Decisions:
+- The tube attunes on the first foundry entry.
+- A new 1×1 `tube-socket` piece (one allowed, unlocked by attuning) fills a single reservoir (cap 30) and refuses items when full, so the line backs up.
+- Hand-loading and R are removed. Carried ammo fires first, then the reservoir, and the hotbar glows cyan and shows the reservoir count.
+- There is one reservoir for the one supply slot, not one per ammo type. Later slots may repeat an ammo.
+- The reservoir and attunement survive a KO.
+- Playtest request: a `?playtest` URL flag starts with 99 of each ammo and raw, 20 of each part, and every machine unlocked.
+**Next:** Shaun reviews and approves the spec, then `/plan`.
+**Notes:** the numbers are starting values. Existing e2e tests that hand-load will need updating in the build.
+
 ## 2026-10-18: 006 Foundry building (build)
 **Changed:** built 006 on `claude/sweet-planck-6lb10l`, following `docs/plans/006-foundry-building.md`.
 - **Sim:** rooms as tags on every entity, with all rooms ticking; doors and the doorway step; foundry pieces, placement and unlocks; two-phase item flow (conduits, machines with direct hand-off, hoppers, crates, statuses); E and deposits; build mode; KO keeps the foundry.
