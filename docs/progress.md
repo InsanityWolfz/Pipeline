@@ -2,6 +2,26 @@
 
 Newest entry first.
 
+## 2026-10-18: 020 Vector pass (unattended build)
+**Changed:** built 020 on `claude/020-vector-pass`, stacked on 019, from `docs/plans/020-vector-pass.md`:
+- **Fonts:** two bundled OFL fonts (Cinzel, Source Sans 3) replace the glyph fonts.
+- **Vector art for everything:**
+  - items and emblems
+  - conduits and the logistics pieces
+  - fixtures and the pylon
+  - nine machines with visible mechanisms: idle, jammed and working, in three views
+  - the sandstone foundry interior with a warm forge glow
+  - a carved stone and brass HUD and menus, with row hover and press feedback
+- **Removed:** the pixel pipeline (grids, atlas, `npm run art`, the pixel palette, nearest filtering).
+- **Contact sheet:** `/sheet.html`, with screenshots in `docs/review/020/`.
+
+**Tests:**
+- Unit tests updated for vector-only assets. A new test checks the pipeline is gone, and another checks the fonts and their licences.
+- The smoke test checks the fonts load offline.
+- Boot waits for `ui().ready`.
+
+**Next:** Shaun reviews the contact sheet and the preview, and answers the two open questions in the 020 spec (the pause title card, the floor's variants). That ends the 016–020 run.
+
 ## 2026-10-18: 019 follow-up: Shaun's answers
 **Changed:** on `claude/019-intake-pipe`:
 - **The attune cutscene.**

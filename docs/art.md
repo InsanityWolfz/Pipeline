@@ -2,14 +2,14 @@
 
 Locks the look so every sprite matches. Approved by Shaun before any sprite goes in.
 
-Since 016 the game is drawn in **clean vector art**, chosen by Shaun from a three-way style test (`docs/art/style-test.html`). The player, the tube and everything in combat are vector. Rooms, foundry pieces, items and the HUD are still pixel grids until 020 replaces them, so this file covers both for now.
+Since 016 the game is drawn in **clean vector art**, chosen by Shaun from a three-way style test (`docs/art/style-test.html`). Since 020 everything is: the player and combat, the overworld, the foundry interior, its machines and pieces, every item and the HUD. There are no pixel sprites.
 
 ## Style
 - **View:** three-quarter top-down. You see the tops and fronts of things. Pure art convention, no 3D.
 - **Look:** smooth shapes with one shared ink outline, soft gradients and glows, sharp at any screen size. Bright daylight colours, like RuneScape 3 or Realm of the Mad God. The environment in the style test is the target.
 - **Light:** from the top left. Top and left edges are lit; bottom and right edges and cast shadows are darker.
 - **Scale:** 32-pixel tiles in world px. The wanderer is about 42 px tall; a Husk about 38 and the Warden about 60.
-- **Resolution:** the camera shows 640×360 world px at a whole-number zoom, but the canvas draws at the device's real resolution. Vector frames are drawn into textures at boot at that scale (up to 4 texels per world px). Pixel sprites keep nearest filtering, so they stay crisp.
+- **Resolution:** the camera shows 640×360 world px at a whole-number zoom, but the canvas draws at the device's real resolution. Vector frames are drawn into textures at boot at that scale (up to 4 texels per world px), and text renders at it too.
 - **Outline:** characters, enemies, projectile bodies and props get the `ink` outline (`OUTLINE_WIDTH`, 0.75 world px). Glows, particles and shading inside a shape don't.
 - **Accent:** ley-line cyan marks magic: the tube, the hose, the tank window, the wanderer's face glow, ley bolts and runes. Wisps are violet and fire is ember, so neither reads as ley.
 - **Theme rule:** lost magical civilization. Rune-carved stone, glowing ley lines, brass and crystal. Nothing modern.
@@ -24,10 +24,10 @@ The player is a hooded wanderer of the lost civilization:
 
 Before the tube attunes, the barrel, rings, hose and tank window are dormant grey-cyan; attuning lights the rings one by one.
 
-## Palettes
-Every colour comes from a palette, by id. The source of truth is `src/data/palette.ts`; these tables mirror it, and tests check that they match.
+## Palette
+Every colour comes from the palette, by id. The source of truth is `src/data/palette.ts`; this table mirrors it, and tests check that they match. (The pixel palette went with the pixel sprites in 020.)
 
-### Daylight (vector art)
+### Daylight
 | Id | Hex |
 | --- | --- |
 | `ink` | #1e1a2e |
@@ -103,39 +103,9 @@ Every colour comes from a palette, by id. The source of truth is `src/data/palet
 | `snow` | #ffffff |
 | `hit-red` | #ff4d4d |
 
-### Pixel (the remaining grid sprites)
-| Symbol | Id | Hex |
-| --- | --- | --- |
-| `o` | `outline` | #120e1f |
-| `v` | `shadow-violet` | #241c38 |
-| `s` | `slate-dark` | #2e3347 |
-| `S` | `slate` | #464b63 |
-| `l` | `slate-light` | #6a7088 |
-| `L` | `stone-pale` | #9aa0b4 |
-| `m` | `mist` | #c9cedb |
-| `p` | `violet` | #4a3a6b |
-| `P` | `violet-light` | #7a63a0 |
-| `t` | `teal-deep` | #14323a |
-| `T` | `teal` | #1f4d52 |
-| `g` | `moss-dark` | #24402e |
-| `G` | `moss` | #3d6b3f |
-| `h` | `moss-light` | #6f9a4f |
-| `e` | `earth` | #4a3427 |
-| `E` | `earth-light` | #7a573b |
-| `r` | `ember-dark` | #7a2e2a |
-| `R` | `ember` | #c4552e |
-| `y` | `ember-light` | #f0a14a |
-| `Y` | `gold` | #f4d27a |
-| `c` | `ley-deep` | #1a7f8c |
-| `C` | `ley-cyan` | #36e2e0 |
-| `w` | `ley-glow` | #a8fff4 |
-| `W` | `white` | #f4f7fb |
-
-`.` is transparent.
-
 ## Vector sprites
 - **Shape data** lives in `src/data/art/`: ellipses, rounded rects, paths (written as short SVG-style strings, `M`, `L`, `Q`, `C`, `Z`) and round-capped lines, with fills (flat, linear or radial gradients), strokes, the outline flag, glows and opacity. Units are world px around an anchor.
-- **Static and frame-by-frame sprites** (projectiles, effects, the tube stone) are `VectorSprite`s in `src/data/art/sprites.ts`: a key, a box, an anchor and one shape list per frame. Frame names follow the atlas: `key`, or `key/0`, `key/1` and so on.
+- **Static and frame-by-frame sprites** (projectiles, effects, the tube stone) are `VectorSprite`s in `src/data/art/sprites.ts`: a key, a box, an anchor and one shape list per frame. Frame names are `key`, or `key/0`, `key/1` and so on for animation frames.
 - **Rigs** are characters made of named parts with pivots:
   - The wanderer (`wanderer.ts`) has parts for the side, down and up views and a draw order with dynamic pieces (legs, arms, hose, tube, tank window, face glow). `src/render/vector/wandererRig.ts` poses it from sim state every frame: the stance widens, the hips crouch and lean back, each shot shoves and kicks, the cloak flaps.
   - Enemies (`husk.ts`, `wisp.ts`, `warden.ts`) are parts by role (legs, body, head, arms, glow, charge) with a pose table per animation, one pose per frame. They are baked at boot into the frames `src/data/assets.ts` names, such as `husk-walk-side/2`.
@@ -145,10 +115,18 @@ Every colour comes from a palette, by id. The source of truth is `src/data/palet
 - **Render code** never hard-codes a sprite: `src/render/vector/` draws whatever the data says. A new sprite is new data.
 - **Review:** `npm run dev`, then open `/sheet.html`. The contact sheet draws every vector sprite, pose and facing at 4×.
 
-## Pixel sprite files (until 020)
-- One file per sprite: `assets/sprites/<key>.txt`, where `<key>` is the kebab-case asset key.
-- Lines starting with `#` are comments. Every other line is one row of pixels, one palette symbol per pixel.
-- Animation frames are separated by a line containing only `---`. All frames are the same size.
-- `npm run art` builds `assets/build/sprites.png` and `sprites.json` (a Phaser atlas). A one-frame sprite is the frame `<key>`; animation frames are `<key>/0`, `<key>/1` and so on. A symbol outside the palette fails the build with the file, line and column.
-- It also writes review images to `assets/build/review/` (not committed): the palette swatch sheet and each sprite at 4×.
-- Register every key in `src/data/assets.ts`. Render code uses those keys, never string literals. A key is either a grid or vector data, never both; a test checks this.
+## The foundry, machines and pieces (020)
+- **Interior** (`interior.ts`): one warm sandstone flag per tile, so the build grid lines up with the floor, with cracked, worn, ley-inlaid and brass variants (`FLOOR_VARIANTS`); carved walls in 3/4 view (a top, and a face with a brass band and a rune course where floor lies below); the carved block, the swaying banner and the four-frame brazier. Warm forge light is the room's mood tint and the braziers' ember glows; ley light pools along conduits and sorters.
+- **Machines** (`machines.ts`, `mechanisms.ts`): a stone housing per footprint and view, a window onto the machine's own mechanism, a ley crystal that glows while it works and a brass chute on the output side. Each mechanism is a function of its window and the loop's phase. Frames: idle (still, also starved), jammed (stuck part-way with an ember glint, for blocked; render shakes it), and a 4-frame working loop, in three views. The icon of what it makes sits on the top face.
+- **Logistics** (`logistics.ts`): conduits are generated from their entry and exit edges (stone trough, cyan channel, brass collars, chevrons riding the flow); the sorter adds a gold exit and a brass filter slot. Hopper, crate, gravity stager, build arrows (cyan out, ember in, gold sort) and status markers.
+- **Fixtures** (`fixtures.ts`): bench, stash, supply port, the exit arch, waystone, the pylon (off, activating, active), door rubble and the room's ley crystal.
+- **Items** (`items.ts`): a 16×16 icon per item and ammo, plus the build and menu emblems. The 005 look-alike pairs stay apart by shape: the shaft is a thin rod and the fuse a fat coil; the ley shard is three chunks and the ley bolt one head on a trail; the casing an open shell and the bomb a sealed sphere.
+
+## HUD, menus and text (020)
+- **Tablets:** HUD pieces and menus are rune-carved stone tablets with brass corners. Fixed-size pieces are vector frames (`hud.ts`); panels that change size are drawn live in the same look (`src/render/tablet.ts`, `TABLET` in `hudLayout.ts`). The hotbar slot is ringed in cyan like the tube.
+- **Menu rows** light with a cyan rim under the cursor (with the hover sound) and flash brass when pressed. The craft menu, which pauses the game, has a title card.
+- **Fonts:** two OFL fonts bundled in `assets/fonts/` with their licences, loaded locally before the game starts: Cinzel (display: titles, names, objectives) and Source Sans 3 (body: numbers, readouts, descriptions). Styles are in `src/data/fonts.ts`; `TextLine` draws them at the screen's resolution.
+
+## Registering sprites
+- Register every key in the asset tables (`src/data/assets.ts`, `foundryAssets.ts`, `roomArt.ts`, `props.ts`). Render code uses those keys, never string literals; a test checks every vector frame is registered.
+- A frame that was never drawn logs a console error when shown, so the game tests catch it.

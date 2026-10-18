@@ -70,10 +70,10 @@ src/
 tests/
   sim/                    Vitest unit tests for src/sim
   e2e/                    Playwright game tests and screenshots
-assets/sprites/           sprite source grids (text)
-assets/build/             rendered sprite sheets
+assets/fonts/             the two bundled OFL fonts and their licences
+assets/build/sounds/      generated sound effects
 assets/maps/              Tiled maps
-scripts/build-art.ts      renders sprite grids to PNG
+scripts/build-sound.ts    generates the sound effects
 .github/workflows/
   pages.yml               builds every branch and publishes a playable preview
 .claude/
@@ -361,23 +361,21 @@ The starting contents of `docs/backlog.md`, in build order: combat first, then t
 
 ## Art pipeline
 
-**Since 016:** sprites are vector shape data in `src/data/art/`, drawn into textures at boot, and reviewed on the `/sheet.html` contact sheet. See `docs/art.md`. The pixel grid pipeline below remains for the sprites 020 hasn't replaced yet.
-
-Claude generates all the art itself: crude but consistent 32-pixel top-down sprites in one signature style. No asset packs, so anything the game needs can be made to fit.
+Since 016 sprites are vector shape data, and since 020 there are no others: the pixel grid pipeline (`assets/sprites`, `npm run art`, the atlas and the pixel palette) is gone. Claude generates all the art itself in one signature style. No asset packs, so anything the game needs can be made to fit.
 
 **Art spec first.** `docs/art.md` locks the style so every sprite matches:
 
 - Three-quarter top-down view, light from the top left
-- 32-pixel tiles; characters 32 pixels wide and 32 to 48 pixels tall
-- One locked palette of about 24 colors, with ley-line cyan as the signature accent
-- A one-pixel dark outline on characters, enemies, items and machines
-- The theme rule: lost magical civilization, rune-carved stone, glowing ley lines, nothing modern
+- 32-px tiles in world px, drawn at the device's resolution
+- One locked daylight palette, with ley-line cyan as the signature accent
+- One shared ink outline on characters, enemies, items, machines and props
+- The theme rule: lost magical civilization, rune-carved stone, glowing ley lines, brass and crystal, nothing modern
 
-**Sprites are source files.** Each sprite is a text grid in `assets/sprites/`, one character per pixel, each character mapped to a palette color. Animations are a sequence of grids. Because sprites are text, Claude can draw, diff and revise them like code, and the palette can't drift.
+**Sprites are source files.** Each sprite is shape data in `src/data/art/` (ellipses, rects, SVG-style paths, lines, gradients and glows in palette ids), or a rig of parts with poses. Because it's code, Claude can draw, diff and revise it, and the palette can't drift. Render bakes every frame into one texture at boot.
 
-**A build script renders them.** `npm run art` turns every grid into PNG sprite sheets plus atlas data for Phaser, so the game loads normal images and Aseprite can open them for touch-ups.
+**The contact sheet.** `npm run dev`, then `/sheet.html`, draws every frame at 4×, grouped by family, for review.
 
-**The `/sprite` command.** Bootstrap adds `.claude/commands/sprite.md`: "Read docs/art.md. Draw the requested sprite or animation as grids in assets/sprites, run npm run art, view the rendered PNG at 4x, and revise until it reads clearly at game size and matches the art spec. Register its key in src/data/assets.ts. Show me the result for approval."
+**The `/sprite` command.** `.claude/commands/sprite.md`: draw the sprite as vector shape data in `src/data/art`, check it on `/sheet.html` at 4×, register its key, and show Shaun.
 
 **When art happens:**
 

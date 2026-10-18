@@ -66,17 +66,17 @@ const CRAFT_ROW_HOVER = row([ring(0.5, 0.5, 183, 19, 1, 0.9, 2), rect(2, 2, 180,
 const CRAFT_ROW_PRESS = row([rect(0.5, 0.5, 183, 19, 2, { stroke: { color: 'brass', width: 1.4 } }), rect(2, 2, 180, 16, 1.4, { fill: { id: 'brass', alpha: 0.18 } })]);
 const CRAFT_ARROW: Shape[] = [path('M 0.5 1.5 L 4 1.5 L 4 0 L 6.8 2.5 L 4 5 L 4 3.5 L 0.5 3.5 Z', solid('brass'))];
 
-// The crosshair (11x11): a cyan ring with four ticks, outlined so it reads on any floor.
+// The crosshair (11x11, round its centre): a cyan ring with four ticks, outlined so it reads on any floor.
 const CROSSHAIR: Shape[] = [
-  ellipse(5.5, 5.5, 3.4, 3.4, { stroke: { color: 'ink', width: 2.2 } }),
-  ellipse(5.5, 5.5, 3.4, 3.4, { stroke: { color: 'cyan-glow', width: 1 } }),
+  ellipse(0, 0, 3.4, 3.4, { stroke: { color: 'ink', width: 2.2 } }),
+  ellipse(0, 0, 3.4, 3.4, { stroke: { color: 'cyan-glow', width: 1 } }),
   ...[
-    [5.5, 0.4, 5.5, 2.2],
-    [5.5, 8.8, 5.5, 10.6],
-    [0.4, 5.5, 2.2, 5.5],
-    [8.8, 5.5, 10.6, 5.5],
+    [0, -5.1, 0, -3.3],
+    [0, 3.3, 0, 5.1],
+    [-5.1, 0, -3.3, 0],
+    [3.3, 0, 5.1, 0],
   ].map((pts) => line(pts, 1, 'cyan-glow', true)),
-  ellipse(5.5, 5.5, 0.6, 0.6, { fill: 'snow' }),
+  ellipse(0, 0, 0.6, 0.6, { fill: 'snow' }),
 ];
 
 // A key prompt's cap (11x11): a little stone key with a brass rim; the letter is drawn over it.

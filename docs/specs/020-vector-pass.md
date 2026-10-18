@@ -136,5 +136,42 @@ When this ships, no pixel sprite is left, and the pixel pipeline is removed.
   - item icons in the stash
   - the pylon states
 
+## Build notes
+Built unattended on `claude/020-vector-pass`, stacked on 019, from `docs/plans/020-vector-pass.md`. No sim rule, layout or tuning changed (one render-only addition is the attune follow-up already on 019).
+- **Fonts.**
+  - Cinzel (display) and Source Sans 3 (body) are in `assets/fonts/` with their OFL licences, loaded with `FontFace` before the game starts. No npm dependency.
+  - `TextLine` (Phaser Text at the screen's resolution) replaced the 3×5 glyph fonts everywhere.
+  - Boot now waits for the fonts and views (`ui().ready`). The smoke test blocks the network and checks both fonts loaded.
+- **Every sprite is vector**, under the frame names the views already used where possible:
+  - items and emblems (`items.ts`)
+  - conduits, sorter, hopper, crate, stager, arrows and markers (`logistics.ts`)
+  - fixtures and the pylon (`fixtures.ts`)
+  - machines (`machines.ts`, `mechanisms.ts`)
+  - the interior (`interior.ts`)
+  - the HUD (`hud.ts`)
+- **Machines** now have their own frames (`MACHINE_SPRITES`), replacing the two shared housings:
+  - idle, which also covers starved
+  - jammed, for blocked: stuck mid-stroke with an ember glint, and the body shakes
+  - a 4-frame working loop at 8 fps
+  - each in three views
+- **The sorter's sort-side arrow** has its own gold frames instead of a fill tint, which had flattened its outline.
+- **The interior.**
+  - One flag per tile, so the build grid is the floor's own mortar lines.
+  - The pixel floor themes' moss and the mossy wall top became worn, inlaid and brass flags, and a studded wall top.
+  - Seven warm interior tones join the daylight palette.
+  - The foundry's mood is a warm forge tint, braziers glow wider, and ley light pools along conduits and sorters.
+- **HUD and menus.**
+  - Fixed pieces are vector tablets. Panels that change size draw the same tablet live: the objective, names, the build tip, readouts, pickers, the pylon, stash and bench menus, and the minimap frame.
+  - Rows light under the cursor with the hover sound (the leftover from 014) and flash brass when pressed.
+  - The KO text sits on a tablet.
+- **The pixel pipeline is gone:**
+  - grids, the atlas, `npm run art`, `scripts/build-art.ts` and `scripts/art/`, and the atlas staleness test
+  - the pixel palette: its ids in data were mapped to daylight ids, so `ley-cyan` becomes `cyan` and `ember` becomes `rust`
+  - `ATLAS_KEY`, and nearest filtering. The minimap draws crisp squares at the screen's scale instead.
+  - A frame that was never drawn now logs a console error, so the game tests catch it.
+- **The contact sheet** (`/sheet.html`) groups frames by family. Screenshots of every 020 family are in `docs/review/020/` for Shaun's review.
+
 ## Open questions
-None.
+- **The pause title card (for Shaun).** There is still no separate pause screen (014 noted the same): the craft menu is what pauses the game. So the "pause title card" is a carved title tablet over the craft menu reading "Crafting" and "Paused". Is that what you meant, or do you want a real pause screen (Esc) with its own card? That would be a new feature, out of this spec's scope.
+- **The floor's variants (for Shaun).** About one tile in five shows a variant: cracked, worn, a faint ley rune inlay, or a brass strip. Keep that mix, or make the floor plainer?
+
