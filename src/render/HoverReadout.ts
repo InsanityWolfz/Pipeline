@@ -47,7 +47,7 @@ export function pieceLines(p: PieceState): Line[] {
   return [];
 }
 
-// Over the machine, tube socket or stager under the cursor, a small panel of icon and text lines.
+// Over the machine, intake or stager under the cursor, a small panel of icon and text lines.
 export class HoverReadout {
   private readonly back: GameObjects.Graphics;
   private readonly icons: GameObjects.Image[] = [];

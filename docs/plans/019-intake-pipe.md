@@ -6,7 +6,7 @@ Spec: docs/specs/019-intake-pipe.md. Written for the unattended run (stacked on 
 The `tube-socket` piece goes. The intake is a fixed part of the foundry room, not a piece:
 - Its mouth is three wall tiles, `INTAKE.mouth` in `src/data/foundry.ts`: tiles 11–13 of the north wall (row 0), the centre of the 24-tile wall.
 - The floor tiles south of them (row 1) stay buildable. A wall tile can't hold a piece, so the intake can't be placed over, picked up, moved or rotated.
-- The brazier prop at (12,0) moves off the wall's centre, where the pipe now stands.
+- The brazier prop at (12,0) is removed: the pipe now stands there.
 
 Flow:
 - `offer()` treats a mouth tile as a target that takes items only from the tile directly south of it, and only once the tube is attuned.

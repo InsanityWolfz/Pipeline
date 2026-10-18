@@ -1,5 +1,5 @@
 import { BlendModes, type GameObjects, type Scene } from 'phaser';
-import { ATLAS_KEY } from '../data/assets';
+import { ATLAS_KEY, DEPTHS } from '../data/assets';
 import { INTAKE_LOOK } from '../data/art/intake';
 import { TILE_SIZE } from '../data/config';
 import { INTAKE } from '../data/foundry';
@@ -9,6 +9,7 @@ import { ATTUNE_TICKS, RESERVOIR_CAP } from '../data/tube';
 import type { SimEvents } from '../sim/events';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
+import { intakeAnchor } from './foundryLayout';
 import { addVector, showFrame } from './vector/textures';
 
 // The foundry intake (019): the pipe in the north wall, drawn from vector data,
@@ -17,14 +18,14 @@ import { addVector, showFrame } from './vector/textures';
 // running up into the wall as each item goes in. In build mode, an input arrow
 // under each mouth tile.
 
-const MIDDLE = INTAKE.mouth[1] ?? { tx: 12, ty: 0 };
-/** The anchor: the middle of the mouth's bottom edge, where the wall meets the floor. */
-const AT = { x: (MIDDLE.tx + 0.5) * TILE_SIZE, y: (MIDDLE.ty + 1) * TILE_SIZE } as const;
+const AT = intakeAnchor();
 /** Just in front of the wall it's built into, behind anything on the floor below. */
 const DEPTH = AT.y + FOUNDRY_LAYOUT.onTopNudge;
 
 export class IntakeView {
   private readonly pipe: GameObjects.Image;
+  /** Dark rings, drawn normally, under the light added on top (additive light can only brighten). */
+  private readonly shade: GameObjects.Graphics;
   private readonly lights: GameObjects.Graphics;
   private readonly arrows: GameObjects.Image[];
   /** Ms since each ring of light set off up the pipe. */
@@ -32,20 +33,22 @@ export class IntakeView {
 
   constructor(scene: Scene) {
     this.pipe = addVector(scene, AT.x, AT.y, INTAKE_SPRITES.dormant).setDepth(DEPTH);
-    this.lights = scene.add.graphics().setDepth(DEPTH + FOUNDRY_LAYOUT.onTopNudge).setBlendMode(BlendModes.ADD);
+    this.shade = scene.add.graphics().setDepth(DEPTH + FOUNDRY_LAYOUT.onTopNudge);
+    this.lights = scene.add.graphics().setDepth(DEPTH + 2 * FOUNDRY_LAYOUT.onTopNudge).setBlendMode(BlendModes.ADD);
     const reach = TILE_SIZE / 2 + FOUNDRY_LAYOUT.arrowOffset;
     this.arrows = INTAKE.mouth.map((m) =>
-      scene.add.image((m.tx + 0.5) * TILE_SIZE, (m.ty + 0.5) * TILE_SIZE + reach, ATLAS_KEY, FACING_ARROWS.in.up).setDepth(DEPTH + 2 * FOUNDRY_LAYOUT.onTopNudge),
+      scene.add.image((m.tx + 0.5) * TILE_SIZE, (m.ty + 0.5) * TILE_SIZE + reach, ATLAS_KEY, FACING_ARROWS.in.up).setDepth(DEPTHS.worldUi - 1),
     );
   }
 
   update(sim: SimState, events: SimEvents, shown: string, building: boolean, deltaMs: number): void {
     const here = shown === FOUNDRY_ROOM;
-    for (const o of [this.pipe, this.lights]) o.setVisible(here);
+    for (const o of [this.pipe, this.shade, this.lights]) o.setVisible(here);
     for (const a of this.arrows) a.setVisible(here && building);
     this.pulses.push(...events.refills.map(() => 0));
     this.pulses = this.pulses.map((ms) => ms + deltaMs).filter((ms) => ms < INTAKE.pulseMs);
     this.lights.clear();
+    this.shade.clear();
     if (!here) return;
     const { attuned, attunePulse, reservoir } = sim.link;
     // Attuning: the rings light one by one over the dormant pipe, which turns cyan once they all have.
@@ -60,7 +63,7 @@ export class IntakeView {
     const b = INTAKE_LOOK.bands;
     for (const [i, y] of b.ys.entries()) {
       const on = i < lit;
-      this.lights.fillStyle(colorOf(on ? b.lit : b.dark), on ? b.glow : 0.6).fillRect(AT.x - b.half, AT.y + y, b.half * 2, b.height);
+      (on ? this.lights : this.shade).fillStyle(colorOf(on ? b.lit : b.dark), on ? b.litAlpha : b.darkAlpha).fillRect(AT.x - b.half, AT.y + y, b.half * 2, b.height);
     }
   }
 
@@ -69,7 +72,7 @@ export class IntakeView {
     for (let i = 0; i < INTAKE.gaugeRings; i++) {
       const on = i < lit;
       const y = AT.y + g.bottom - i * g.step;
-      this.lights.fillStyle(colorOf(on ? g.lit : g.dark), on ? 1 : 0.5).fillRect(AT.x + g.x - g.half, y, g.half * 2, g.height);
+      (on ? this.lights : this.shade).fillStyle(colorOf(on ? g.lit : g.dark), on ? g.litAlpha : g.darkAlpha).fillRect(AT.x + g.x - g.half, y, g.half * 2, g.height);
     }
   }
 

@@ -12,7 +12,6 @@ export const RESERVOIR_CAP = 30;
 /** Ticks the tube's attuning pulse plays, about 1 s. */
 export const ATTUNE_TICKS = 60;
 
-
 /** Ticks the dry-fire flag stays set after an empty-tube shot. */
 export const DRY_FIRE_TICKS = 10;
 

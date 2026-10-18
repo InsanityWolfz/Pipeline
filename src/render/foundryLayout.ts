@@ -1,4 +1,5 @@
-import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
+import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
+import { INTAKE } from '../data/foundry';
 import { BUILD_BAR_LAYOUT, MENU_COLUMN_GAP, MENU_MAX_ROWS, PICKER_LAYOUT } from '../data/hudLayout';
 import type { AnimDef } from '../data/assets';
 import { CONDUIT_ANIMS, CONDUIT_CORNERS, LOGISTICS_ICONS, SORTER_ANIMS, type CornerKey } from '../data/foundryAssets';
@@ -182,4 +183,11 @@ export function wrapText(text: string, width: number): string[] {
   }
   if (line) lines.push(line);
   return lines;
+}
+
+/** The foundry intake's anchor (019): the middle of its mouth's bottom edge, where the north wall meets the floor, px. */
+export function intakeAnchor(): { x: number; y: number } {
+  const middle = INTAKE.mouth[1];
+  if (!middle) throw new Error('The intake needs three mouth tiles');
+  return { x: (middle.tx + 0.5) * TILE_SIZE, y: (middle.ty + 1) * TILE_SIZE };
 }

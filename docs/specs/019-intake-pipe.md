@@ -80,5 +80,30 @@ The placeable tube socket is replaced by the foundry intake: a waterslide-sized 
   - a pulse running up the pipe
   - build mode with input arrows and three spread fans
 
+## Build notes
+- **The intake is room data, not a piece.**
+  - Its mouth is the north wall's tiles 11–13 (`INTAKE.mouth` in `src/data/foundry.ts`).
+  - A mouth tile takes only from the tile directly south of it: a conduit, sorter (front or side exit), stager or machine output, never a hopper. Since the mouth sits in the wall, nothing can stand east or west of it to feed it from a side.
+  - `refills` now names the mouth tile (0–2).
+- **The socket's leftovers are gone:** the piece, its unlock, the generic piece `limit` (only the socket used it), its sprites and its readouts. The objective now asks for a line built into the intake: a piece whose front, or a sorter whose side exit, is a mouth tile.
+- **The look.**
+  - The pipe matches the carried tube: a cyan body, dark ring bands and brass collars.
+  - Dormant, it is grey-cyan. When the tube attunes, its five bands light one by one over the attune time. The player only sees the dormant pipe during that second, because the first entry into the foundry attunes the tube.
+  - A 10-ring gauge column lights with the reservoir, and a ring of light runs up the pipe per item. Lit parts are drawn additively and dark parts normally.
+- **The extra wall above the foundry (an addition, see the open question).** The camera never showed above the foundry's top wall row, leaving the pipe a 32 px sliver hidden under the objective banner. Tiled rooms now show 48 px more wall above their top row (`ROOM_TOP_MARGIN`), and the camera may scroll that far, so the pipe visibly rises up the wall and turns into it. Layout, collision and the grid are unchanged.
+- **The brazier at (12,0) is removed**, not moved: the pipe stands there, and every other wall spot is taken or too near the flare. The intake's own glow lights the centre instead.
+- **Review.** All three blocking items are fixed:
+  - dark rings are drawn with normal blending
+  - render alphas moved to data
+  - the extra wall is raised as an open question
+
+  From the suggestions, these are in:
+  - the build arrows draw over pieces
+  - the pipe's upper part answers hover too
+  - one shared anchor
+  - a sorter's side exit counts as feeding
+  - an objective test
+  - stale comments fixed
+
 ## Open questions
-None.
+- **The extra wall above the foundry (for Shaun).** Showing 48 px more wall above the foundry's top row is a render change the spec didn't ask for; it lets the pipe rise visibly. Keep it, or squeeze the pipe into the top wall row?

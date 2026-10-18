@@ -132,6 +132,9 @@ Every colour comes from a palette, by id. The source of truth is `src/data/palet
 - **Rigs** are characters made of named parts with pivots:
   - The wanderer (`wanderer.ts`) has parts for the side, down and up views and a draw order with dynamic pieces (legs, arms, hose, tube, tank window, face glow). `src/render/vector/wandererRig.ts` poses it from sim state every frame: the stance widens, the hips crouch and lean back, each shot shoves and kicks, the cloak flaps.
   - Enemies (`husk.ts`, `wisp.ts`, `warden.ts`) are parts by role (legs, body, head, arms, glow, charge) with a pose table per animation, one pose per frame. They are baked at boot into the frames `src/data/assets.ts` names, such as `husk-walk-side/2`.
+- **World pieces with state:**
+  - Gathering nodes (018, `nodes.ts`) have a look per use left, bare remains, and regrow stages, picked from the sim's timer.
+  - The foundry intake (019, `intake.ts`) is a dormant and an attuned frame of the pipe. Its ring bands, gauge column and fill pulses are drawn live over it from `INTAKE_LOOK`.
 - **Render code** never hard-codes a sprite: `src/render/vector/` draws whatever the data says. A new sprite is new data.
 - **Review:** `npm run dev`, then open `/sheet.html`. The contact sheet draws every vector sprite, pose and facing at 4×.
 

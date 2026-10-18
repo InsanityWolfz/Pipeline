@@ -12,6 +12,7 @@ import { roomById, type SimState } from '../sim/state';
 import { AmbientView, type GlowSpot } from './AmbientView';
 import { JuiceView } from './JuiceView';
 import { SoundView } from './SoundView';
+import { intakeAnchor } from './foundryLayout';
 
 // Look and feel (014), driven by what the sim did since the last draw and how
 // its state moved on: sound, shake, hit-stop, particles, numbers and light.
@@ -203,7 +204,7 @@ export class FeelView {
     }
   }
 
-  /** Lights that move or come and go: live veins, a claimed pylon, items on conduits, sockets and the tube. */
+  /** Lights that move or come and go: live veins, a claimed pylon, items on conduits, the intake and the tube. */
   private movingGlows(sim: SimState, shown: string): GlowSpot[] {
     const spots: GlowSpot[] = [];
     for (const n of sim.nodes) if (n.roomId === shown && n.nodeId === 'ley-vein' && n.uses > 0) spots.push({ x: n.x, y: n.y, ...GLOWS.vein });
@@ -215,10 +216,9 @@ export class FeelView {
         if (p.kind === 'conduit' && p.item) spots.push({ x: r.x, y: r.y, ...GLOWS.conduitItem });
       }
       // The intake glows once attuned, swelling as each item goes in.
-      const middle = INTAKE.mouth[1];
-      if (middle && sim.link.attuned) {
+      if (sim.link.attuned) {
         const swell = this.intakeMs > 0 ? GLOWS.intake.pulse : 1;
-        spots.push({ x: (middle.tx + 0.5) * TILE_SIZE, y: (middle.ty + 1) * TILE_SIZE, color: GLOWS.intake.color, radius: GLOWS.intake.radius * swell });
+        spots.push({ ...intakeAnchor(), color: GLOWS.intake.color, radius: GLOWS.intake.radius * swell });
       }
     }
     if (sim.hasTube && sim.link.attuned && shown === sim.roomId) spots.push({ x: sim.player.x, y: sim.player.y, ...GLOWS.tube });

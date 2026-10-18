@@ -10,6 +10,7 @@ import { pieceDef } from '../data/pieces';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { fixtureAt, fixtureDef } from '../sim/fixtures';
 import { pieceAt } from '../sim/pieces';
+import { intakeAnchor } from './foundryLayout';
 import { roomById, type SimState } from '../sim/state';
 
 // What's under the cursor in the world, by name (015). Pure, so tests can check
@@ -61,10 +62,10 @@ export function nameAt(sim: SimState, roomId: string, px: number, py: number): H
   if (roomId === FOUNDRY_ROOM) {
     const piece = pieceAt(sim.foundry, tx, ty);
     if (piece) return { name: pieceDef(piece.pieceId).name, ...centre(piece), rise: HOVER_NAME.tile.rise, pieceId: piece.id };
-    // The intake's mouth (019), or the pipe rising above it on the same wall tiles.
-    if (INTAKE.mouth.some((m) => m.tx === tx && m.ty === ty)) {
-      const middle = INTAKE.mouth[1] ?? { tx, ty };
-      return { name: WORLD_NAMES.intake, ...centre(middle), rise: HOVER_NAME.tile.rise, intake: true };
+    // The intake's mouth (019), or the pipe rising above it up the wall shown over the top row.
+    if (INTAKE.mouth.some((m) => m.tx === tx && ty <= m.ty)) {
+      const at = intakeAnchor();
+      return { name: WORLD_NAMES.intake, x: at.x, y: at.y, rise: HOVER_NAME.tile.rise, intake: true };
     }
     const fixture = fixtureAt(sim.fixtures, tx, ty);
     if (fixture) {

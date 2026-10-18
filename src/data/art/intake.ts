@@ -58,7 +58,7 @@ export const INTAKE_SPRITES_VECTOR: readonly VectorSprite[] = [
  * - `pulse`: a ring of light that runs up the body into the wall as each item goes in.
  */
 export const INTAKE_LOOK = {
-  bands: { ys: [-17, -29, -41, -53, -65], height: 3, half: BODY.half, dark: 'dormant-dark', lit: 'cyan-glow', glow: 0.5 },
-  gauge: { x: 0, bottom: -15, step: 5, half: 7, height: 2.4, dark: 'cyan-deep', lit: 'snow' },
+  bands: { ys: [-17, -29, -41, -53, -65], height: 3, half: BODY.half, dark: 'dormant-dark', darkAlpha: 0.85, lit: 'cyan-glow', litAlpha: 0.5 },
+  gauge: { x: 0, bottom: -15, step: 5, half: 7, height: 2.4, dark: 'cyan-deep', darkAlpha: 0.7, lit: 'snow', litAlpha: 1 },
   pulse: { from: FLARE.neck, to: BODY.top, half: BODY.half + 2, height: 3, color: 'cyan-glow' },
 } as const;

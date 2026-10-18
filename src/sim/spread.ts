@@ -1,6 +1,6 @@
 import { INTAKE, STAGER_ANGLES } from '../data/foundry';
 import { FOUNDRY_ROOM } from '../data/rooms';
-import { frontTile, sameTile, type FoundryState } from './pieces';
+import { frontTile, sameTile, sideTile, sortSide, type FoundryState } from './pieces';
 import type { SimState } from './state';
 
 // Spreads (008): every gravity stager facing the foundry intake's mouth (019) is
@@ -13,9 +13,13 @@ export function intakeStreams(foundry: FoundryState): number[] {
     .sort((a, b) => Math.abs(a) - Math.abs(b) || a - b);
 }
 
-/** A line feeds the intake: some piece that hands items on (not a hopper or crate) has a mouth tile as its front. */
+/** A line feeds the intake: some piece that hands items on (not a hopper or crate) has a mouth tile as its front, or a sorter as its side exit. */
 export function feedsIntake(foundry: FoundryState): boolean {
-  return foundry.pieces.some((p) => p.kind !== 'hopper' && p.kind !== 'crate' && INTAKE.mouth.some((m) => sameTile(frontTile(p), m)));
+  const mouth = (t: { tx: number; ty: number }) => INTAKE.mouth.some((m) => sameTile(t, m));
+  return foundry.pieces.some((p) => {
+    if (p.kind === 'hopper' || p.kind === 'crate') return false;
+    return mouth(frontTile(p)) || (p.kind === 'sorter' && mouth(sideTile(p, sortSide(p))));
+  });
 }
 
 /** Steps a stager to its next angle, wrapping around. Only in the foundry; records an angle event. */
