@@ -54,12 +54,25 @@ export class SceneCameras {
     if (look > 0) {
       if (!this.looking) main.stopFollow();
       this.looking = true;
-      main.centerOn(player.x + (at.x - player.x) * look, player.y + (at.y - player.y) * look);
+      // Between the two views as the camera can show them inside the room's bounds, so the pan runs straight.
+      const from = this.clampedCentre(player);
+      const to = this.clampedCentre(at);
+      main.centerOn(from.x + (to.x - from.x) * look, from.y + (to.y - from.y) * look);
     } else if (this.looking) {
       this.looking = false;
       main.centerOn(player.x, player.y);
       main.startFollow(followed, true, CAMERA_LERP, CAMERA_LERP);
     }
+  }
+
+  /** Where the main camera's centre lands when asked to centre on `p`, kept inside its bounds. */
+  private clampedCentre(p: { x: number; y: number }): { x: number; y: number } {
+    const main = this.scene.cameras.main;
+    const b = main.getBounds();
+    const w = main.width / main.zoom / 2;
+    const h = main.height / main.zoom / 2;
+    const clamp = (v: number, lo: number, hi: number) => (lo > hi ? (lo + hi) / 2 : Math.min(hi, Math.max(lo, v)));
+    return { x: clamp(p.x, b.x + w, b.right - w), y: clamp(p.y, b.y + h, b.bottom - h) };
   }
 
   private route(): void {

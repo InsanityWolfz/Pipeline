@@ -41,7 +41,7 @@ export class ObjectiveView {
     const x = VIEW_WIDTH - TUTORIAL_LAYOUT.objectiveRight - text.length * HUD_DIGITS.advance;
     this.line.moveTo(x, TUTORIAL_LAYOUT.objectiveTop);
     this.line.set(text);
-    this.drawPanel(x, text);
+    this.drawPanel(x - TUTORIAL_LAYOUT.tickGap - this.tick.width, text);
     if (!finished) return;
     // The new goal fades in beside the tick for the one just done.
     this.line.setAlpha(0);
@@ -58,13 +58,13 @@ export class ObjectiveView {
     return b !== null && x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h;
   }
 
-  /** A dark band behind the text, so it reads over doors, barriers and busy floors. */
+  /** A dark band behind the text and the tick's place left of it, so both read over doors, barriers and busy floors. */
   private drawPanel(x: number, text: string): void {
     const { objectivePanel: P, objectiveTop } = TUTORIAL_LAYOUT;
     this.panel.clear();
     this.band = null;
     if (!text) return;
-    const w = text.length * HUD_DIGITS.advance;
+    const w = VIEW_WIDTH - TUTORIAL_LAYOUT.objectiveRight - x;
     this.band = { x: x - P.padX, y: objectiveTop - P.padY, w: w + 2 * P.padX, h: GLYPH_HEIGHT + 2 * P.padY };
     this.panel.fillStyle(colorOf(P.back), P.alpha).fillRect(x - P.padX, objectiveTop - P.padY, w + 2 * P.padX, GLYPH_HEIGHT + 2 * P.padY);
   }

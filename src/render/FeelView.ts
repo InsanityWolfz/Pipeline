@@ -2,7 +2,7 @@ import type { Scene } from 'phaser';
 import { TILE_SIZE } from '../data/config';
 import { enemyDef } from '../data/enemies';
 import { INTAKE } from '../data/foundry';
-import { ATTUNE_GLOW_SWELL, DUST, GLOWS, HARVEST_BURSTS, HARVEST_WORK, HIT_STOP_MS } from '../data/juice';
+import { DUST, GLOWS, HARVEST_BURSTS, HARVEST_WORK, HIT_STOP_MS } from '../data/juice';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { FIRE_SOUNDS, SOUND_LEVELS, SOUNDS, WINDUP_SOUNDS } from '../data/sounds';
 import { isClaimed } from '../sim/claims';
@@ -217,17 +217,15 @@ export class FeelView {
         if (p.kind === 'conduit' && p.item) spots.push({ x: r.x, y: r.y, ...GLOWS.conduitItem });
       }
       // The intake glows once attuned (growing as its rings light), swelling as each item goes in.
-      const { pipe } = attuneBeat(sim.link.attunePulse);
-      if (sim.link.attuned && pipe > 0) {
-        const swell = pipe < 1 ? ATTUNE_GLOW_SWELL * pipe : this.intakeMs > 0 ? GLOWS.intake.pulse : 1;
+      const { pipeGlow } = attuneBeat(sim.link.attunePulse);
+      if (sim.link.attuned && pipeGlow > 0) {
+        const swell = sim.link.attunePulse > 0 ? pipeGlow : this.intakeMs > 0 ? GLOWS.intake.pulse : 1;
         spots.push({ ...intakeAnchor(), color: GLOWS.intake.color, radius: GLOWS.intake.radius * swell });
       }
     }
     if (sim.hasTube && sim.link.attuned && shown === sim.roomId) {
       // The same growing glow round the tube while its rings light.
-      const { gun } = attuneBeat(sim.link.attunePulse);
-      const swell = gun === null ? 1 : ATTUNE_GLOW_SWELL * gun;
-      spots.push({ x: sim.player.x, y: sim.player.y, color: GLOWS.tube.color, radius: GLOWS.tube.radius * swell });
+      spots.push({ x: sim.player.x, y: sim.player.y, color: GLOWS.tube.color, radius: GLOWS.tube.radius * attuneBeat(sim.link.attunePulse).gunGlow });
     }
     return spots;
   }
