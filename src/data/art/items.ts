@@ -74,8 +74,8 @@ const SHAFT: Shape[] = [
   path('M -6.6 4.4 L -5.2 5.8 L -4.4 6.8', trim('wood-dark', 0.8)),
 ];
 
+// The arrowhead: only the knapped stone head, no wood (021).
 const ARROWHEAD: Shape[] = [
-  line([-5.5, 5.5, -2, 2], 1.6, 'wood', true),
   path('M 6 -6 L -2.8 -1.2 L -0.6 0.6 L 1.2 2.8 Z', { fill: { linear: [6, -6, -1, 1], stops: [{ at: 0, color: 'rock-pale' }, { at: 1, color: 'rock-light' }] }, outline: true }),
   path('M 6 -6 L -0.6 0.6', trim('rock', 0.5)),
   path('M 2.6 -4.2 L 1.4 -2.4 M 4.2 -2.6 L 2.4 -1.4', trim('rock', 0.4)),
