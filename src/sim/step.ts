@@ -23,7 +23,7 @@ import { nodeRects, stepNodes } from './nodes';
 import { stepOrbs } from './orbs';
 import { solidRects } from './pieces';
 import { roomById, type SimState } from './state';
-import { stepTube } from './tube';
+import { firingWalkScale, stepTube } from './tube';
 import { stepObjectives } from './objectives';
 import { stepGates, stepTubeStone, tutorialRects } from './tutorial';
 
@@ -52,7 +52,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   const cmd = state.player.dying > 0 ? { ...NO_COMMAND, aimX: state.player.aimX, aimY: state.player.aimY } : maskCommand(state, input);
   const bodies = bodiesOf(state);
   const here = bodies(state.roomId);
-  stepPlayer(state.player, here.room, cmd, here.obstacles, walkScale(state));
+  stepPlayer(state.player, here.room, cmd, here.obstacles, walkScale(state) * firingWalkScale(state));
   stepDoorways(state);
   stepLink(state);
   // Enemies act after the player moves, so a swipe lands on where the player stands now.

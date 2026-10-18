@@ -5,6 +5,9 @@ import { CLEARING_ROOM, DEFAULT_ROOM, FOUNDRY_ROOM } from './rooms';
 /** Walk top speed, px per second. */
 export const WALK_SPEED = 120;
 
+/** Walk speed multiplier while the tube really fires (016): it's heavy. Stacks with heavy armor. */
+export const FIRING_WALK_MULTIPLIER = 0.7;
+
 /** Ticks to reach top speed from rest, and to come back to rest. */
 export const ACCEL_TICKS = 6;
 
