@@ -22,6 +22,7 @@ import {
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import {
   CONDUIT_ANIMS,
+  CONDUIT_CORNERS,
   CRATE_SPRITE,
   STAGER_SPRITE,
   SOCKET_SPRITES,
@@ -137,7 +138,8 @@ describe('assets', () => {
         for (const frame of animFrames(working)) expect(frames).toContain(frame);
       }
     }
-    for (const anim of [...Object.values(CONDUIT_ANIMS), STATUS_MARKERS.working]) {
+    expect(Object.keys(CONDUIT_CORNERS)).toHaveLength(8);
+    for (const anim of [...Object.values(CONDUIT_ANIMS), ...Object.values(CONDUIT_CORNERS), STATUS_MARKERS.working]) {
       for (const frame of animFrames(anim)) expect(frames).toContain(frame);
     }
     const singles = [

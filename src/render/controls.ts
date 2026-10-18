@@ -2,7 +2,7 @@ import type { Cameras, Scene } from 'phaser';
 import { Input } from 'phaser';
 import { TILE_SIZE } from '../data/config';
 import { SLOT_AMMOS } from '../data/tube';
-import { rotateCw } from '../sim/direction';
+import { facingOf, opposite, rotateCw } from '../sim/direction';
 import { NO_COMMAND, type Axis, type Command } from '../sim/input';
 import { BUILD_BAR, pieceDef } from '../data/pieces';
 import { tilesBetween, type Tile } from '../sim/pieces';
@@ -63,6 +63,8 @@ export class Controls {
   readonly menus = new MenuRequests();
   private readonly queue: BuildAction[] = [];
   private dragTile: Tile | null = null;
+  /** The conduit tile a drag is on, held back until the next tile says which way it faces (013). */
+  private held: { tile: Tile; inFrom?: Facing } | null = null;
   private build: BuildInput = {
     building: false,
     pieceId: () => BUILD_BAR[0] ?? '',
@@ -109,7 +111,7 @@ export class Controls {
     scene.input.mouse?.disableContextMenu();
     scene.input.on('pointerdown', (p: Input.Pointer) => this.pointerDown(p));
     scene.input.on('pointermove', (p: Input.Pointer) => this.pointerMove(p));
-    scene.input.on('pointerup', () => (this.dragTile = null));
+    scene.input.on('pointerup', () => this.endDrag());
     scene.input.on('wheel', (_p: Input.Pointer, _over: unknown, _dx: number, dy: number) => {
       if (dy !== 0) this.wheelPending += Math.sign(dy);
     });
@@ -118,7 +120,10 @@ export class Controls {
   /** Call once per frame before taking commands. */
   poll(build: BuildInput): void {
     this.build = build;
-    if (!build.building) this.dragTile = null;
+    if (!build.building) {
+      this.dragTile = null;
+      this.held = null;
+    }
     // The camera moves every frame, so the cursor's world point does too.
     const world = this.camera.getWorldPoint(this.pointer.x, this.pointer.y);
     this.aimX = world.x;
@@ -157,8 +162,26 @@ export class Controls {
       this.queue.push({ place: null, pickUp: null, setAngle: { id: stager } });
       return;
     }
-    this.queue.push({ place: { pieceId: this.build.pieceId(), ...tile, facing: this.facing }, pickUp: null, setAngle: null });
+    const pieceId = this.build.pieceId();
     this.dragTile = tile;
+    // A conduit waits for the drag: a click lays it on release, with the ghost's facing.
+    if (pieceDef(pieceId).kind === 'conduit') this.held = { tile };
+    else this.queue.push({ place: { pieceId, ...tile, facing: this.facing }, pickUp: null, setAngle: null });
+  }
+
+  /** Lays a held conduit facing `facing`, taking from the side the drag came in by. A drag's first tile takes no side, so it auto-joins. */
+  private layHeld(facing: Facing): void {
+    const held = this.held;
+    if (!held) return;
+    const place = { pieceId: this.build.pieceId(), ...held.tile, facing, ...(held.inFrom ? { inFrom: held.inFrom } : {}) };
+    this.queue.push({ place, pickUp: null, setAngle: null });
+    this.held = null;
+  }
+
+  /** Release: the last conduit runs straight on in the drag's last direction, or a click's ghost facing. */
+  private endDrag(): void {
+    this.dragTile = null;
+    if (this.held) this.layHeld(this.held.inFrom ? opposite(this.held.inFrom) : this.facing);
   }
 
   /** Dragging with a conduit selected lays one on every tile the cursor crosses, however fast it moves. */
@@ -168,8 +191,11 @@ export class Controls {
     if (!drag || !this.build.building || pieceDef(pieceId).kind !== 'conduit' || !p.leftButtonDown()) return;
     if (this.build.overUi(p.x, p.y)) return;
     const tile = this.tileUnder(p);
+    // Each tile faces the next one, so a drag that turns lays a corner.
     for (const t of tilesBetween(drag, tile)) {
-      this.queue.push({ place: { pieceId, ...t, facing: this.facing }, pickUp: null, setAngle: null });
+      const prev = this.held?.tile ?? drag;
+      this.layHeld(facingOf(t.tx - prev.tx, t.ty - prev.ty, this.facing));
+      this.held = { tile: t, inFrom: facingOf(prev.tx - t.tx, prev.ty - t.ty, this.facing) };
     }
     this.dragTile = tile;
   }

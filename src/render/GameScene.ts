@@ -13,7 +13,7 @@ import { usableInReach } from '../sim/foundryUse';
 import { cancelHarvest } from '../sim/harvest';
 import type { Command } from '../sim/input';
 import { pieceAt, pieceRect } from '../sim/pieces';
-import { canPlace, unlockedPieces } from '../sim/placement';
+import { canPlace, conduitInFrom, unlockedPieces } from '../sim/placement';
 import { roomById, roomSize, type SimState } from '../sim/state';
 import { stepSim } from '../sim/step';
 import { ArrowView } from './ArrowView';
@@ -279,8 +279,13 @@ export class GameScene extends Scene {
     this.picker?.update(sim.inventory, hopper?.kind === 'hopper' ? hopper : undefined);
     const controls = this.controls;
     const cursor = controls && inFoundry && controls.overWorld() ? controls.cursorTile() : null;
-    this.buildView?.update(sim.building, unlockedPieces(sim), cursor, controls?.facing ?? 'right', (...a) =>
-      canPlace(sim, ...a),
+    this.buildView?.update(
+      sim.building,
+      unlockedPieces(sim),
+      cursor,
+      controls?.facing ?? 'right',
+      (...a) => canPlace(sim, ...a),
+      (t, f) => conduitInFrom(sim, t.tx, t.ty, f),
     );
     const hovered = cursor ? pieceAt(sim.foundry, cursor.tx, cursor.ty) : undefined;
     const lines = hovered ? pieceLines(hovered, sim.link.reservoir) : [];

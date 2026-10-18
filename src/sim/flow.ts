@@ -10,6 +10,7 @@ import {
   frontSide,
   frontTile,
   pieceAt,
+  sideTile,
   sameTile,
   type FoundryState,
   type HopperState,
@@ -81,6 +82,8 @@ function offer(ctx: FlowContext, to: Tile, from: Tile, item: string): boolean {
     ctx.refills.push({ id: target.id, itemId: item });
     return true;
   }
+  // A conduit takes items only from the side it's shaped to take them from (013).
+  if (target.kind === 'conduit' && !sameTile(from, sideTile(target, target.inFrom))) return false;
   if (target.kind === 'conduit' || target.kind === 'stager') {
     if (target.item) return false;
     target.item = item;

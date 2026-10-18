@@ -2,7 +2,7 @@ import { TILE_SIZE } from '../data/config';
 import { STAGER_START_ANGLE } from '../data/foundry';
 import { isSolidPiece, pieceDef } from '../data/pieces';
 import type { Rect } from './collision';
-import { facingVector } from './direction';
+import { facingVector, opposite } from './direction';
 import type { Inventory } from './inventory';
 import type { Facing } from './player';
 
@@ -22,6 +22,8 @@ interface PieceCommon extends Tile {
 
 export interface ConduitState extends PieceCommon {
   kind: 'conduit';
+  /** The side items come in from (013): its back for a straight run, a side for a corner. */
+  inFrom: Facing;
   item: string | null;
   /** Ticks the item has spent crossing. */
   progress: number;
@@ -89,10 +91,11 @@ export function createFoundry(): FoundryState {
   return { pieces: [], nextPieceId: 0 };
 }
 
-export function createPiece(id: number, pieceId: string, tx: number, ty: number, facing: Facing): PieceState {
+/** `inFrom` shapes a conduit (013); straight (from its back) if left out. */
+export function createPiece(id: number, pieceId: string, tx: number, ty: number, facing: Facing, inFrom?: Facing): PieceState {
   const common = { id, pieceId, tx, ty, facing };
   const { kind } = pieceDef(pieceId);
-  if (kind === 'conduit') return { ...common, kind, item: null, progress: 0 };
+  if (kind === 'conduit') return { ...common, kind, inFrom: inFrom ?? opposite(facing), item: null, progress: 0 };
   if (kind === 'hopper') return { ...common, kind, item: null, count: 0, timer: 0 };
   if (kind === 'crate') return { ...common, kind, contents: {} };
   if (kind === 'socket') return { ...common, kind, pulse: 0 };
@@ -114,6 +117,12 @@ export function frontTile(p: PieceState): Tile {
 }
 
 export const sameTile = (a: Tile, b: Tile): boolean => a.tx === b.tx && a.ty === b.ty;
+
+/** The tile on one side of a 1x1 piece. */
+export function sideTile(t: Tile, side: Facing): Tile {
+  const [dx, dy] = facingVector(side);
+  return { tx: t.tx + dx, ty: t.ty + dy };
+}
 
 /** The tiles along a piece's front side: one step ahead of each tile it covers. It never takes items from these. */
 export function frontSide(p: PieceState): Tile[] {

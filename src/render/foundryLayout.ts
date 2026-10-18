@@ -1,6 +1,7 @@
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { BUILD_BAR_LAYOUT, MENU_COLUMN_GAP, MENU_MAX_ROWS, PICKER_LAYOUT } from '../data/hudLayout';
-import { LOGISTICS_ICONS } from '../data/foundryAssets';
+import type { AnimDef } from '../data/assets';
+import { CONDUIT_ANIMS, CONDUIT_CORNERS, LOGISTICS_ICONS } from '../data/foundryAssets';
 import { itemDef, ITEMS } from '../data/items';
 import { pieceDef } from '../data/pieces';
 import { recipeDef } from '../data/recipes';
@@ -111,9 +112,13 @@ export interface ArrowSpot extends Tile {
  * input arrow pointing in: machines and stagers on all but their front side, crates and tube
  * sockets on every side. Conduits show their flow instead, so they get none.
  */
-export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing: Facing }): ArrowSpot[] {
+export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing }): ArrowSpot[] {
   const { kind } = pieceDef(p.pieceId);
-  if (kind === 'conduit') return [];
+  // A conduit shows its flow; since 013 it also marks the one side it takes items from.
+  if (kind === 'conduit') {
+    const edge = p.inFrom ?? OPPOSITE[p.facing];
+    return [{ kind: 'in', tx: p.tx, ty: p.ty, edge, points: OPPOSITE[edge] }];
+  }
   const spots: ArrowSpot[] = [];
   const hasOutput = kind !== 'crate' && kind !== 'socket';
   if (hasOutput) spots.push({ kind: 'out', tx: p.tx, ty: p.ty, edge: p.facing, points: p.facing });
@@ -128,4 +133,15 @@ export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing:
     }
   }
   return spots;
+}
+
+/** A conduit's animation (013): a straight run by its facing (flipped for left), or the corner for its in and out sides. */
+export function conduitLook(facing: Facing, inFrom: Facing): { anim: AnimDef; flip: boolean } {
+  if (inFrom === OPPOSITE[facing]) {
+    const view = facing === 'up' || facing === 'down' ? facing : 'side';
+    return { anim: CONDUIT_ANIMS[view], flip: facing === 'left' };
+  }
+  const anim = CONDUIT_CORNERS[`${inFrom}-${facing}`];
+  if (!anim) throw new Error(`No conduit corner from ${inFrom} to ${facing}`);
+  return { anim, flip: false };
 }

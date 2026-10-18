@@ -5,7 +5,10 @@ import { FOUNDRY_ROOM, TILE } from '../data/rooms';
 import { fixtureAt } from './fixtures';
 import { overlapsRect } from './collision';
 import { count, type Inventory } from './inventory';
-import { createPiece, footprint, pieceAt, pieceRect, type PieceState, type PlaceFail } from './pieces';
+import { portFront } from './claims';
+import { opposite } from './direction';
+import { fixtureDef } from './fixtures';
+import { createPiece, footprint, frontTile, pieceAt, pieceRect, sameTile, sideTile, type PieceState, type PlaceFail } from './pieces';
 import type { Facing } from './player';
 import { roomById, type SimState } from './state';
 
@@ -42,15 +45,39 @@ export function canPlace(state: SimState, pieceId: string, tx: number, ty: numbe
   return null;
 }
 
+/**
+ * The side a conduit placed here takes items from (013). An explicit `inFrom` is
+ * kept if it's a side or the back; anything else makes it straight. Without one,
+ * it joins as a corner when nothing feeds its back and exactly one neighbour on
+ * its left or right faces into the tile (a piece's front, or the supply port's).
+ * Neighbours are never changed.
+ */
+export function conduitInFrom(state: SimState, tx: number, ty: number, facing: Facing, inFrom?: Facing): Facing {
+  const back = opposite(facing);
+  if (inFrom !== undefined) return inFrom === facing ? back : inFrom;
+  const here = { tx, ty };
+  const feeds = (side: Facing): boolean => {
+    const t = sideTile(here, side);
+    const piece = pieceAt(state.foundry, t.tx, t.ty);
+    if (piece) return piece.kind !== 'crate' && piece.kind !== 'socket' && sameTile(frontTile(piece), here);
+    const port = fixtureAt(state.fixtures, t.tx, t.ty);
+    return port !== undefined && fixtureDef(port.id).kind === 'port' && sameTile(portFront(port), here);
+  };
+  if (feeds(back)) return back;
+  const sides = (['up', 'right', 'down', 'left'] as const).filter((s) => s !== facing && s !== back && feeds(s));
+  return sides.length === 1 && sides[0] ? sides[0] : back;
+}
+
 /** Places a piece and returns it, or records why it can't go there and returns null. */
-export function place(state: SimState, pieceId: string, tx: number, ty: number, facing: Facing): PieceState | null {
+export function place(state: SimState, pieceId: string, tx: number, ty: number, facing: Facing, inFrom?: Facing): PieceState | null {
   const reason = canPlace(state, pieceId, tx, ty, facing);
   if (reason) {
     state.events.placeFails.push({ pieceId, tx, ty, reason });
     return null;
   }
   for (const [itemId, n] of Object.entries(pieceDef(pieceId).cost ?? {})) state.inventory[itemId] = count(state.inventory, itemId) - n;
-  const piece = createPiece(state.foundry.nextPieceId++, pieceId, tx, ty, facing);
+  const shape = pieceDef(pieceId).kind === 'conduit' ? conduitInFrom(state, tx, ty, facing, inFrom) : undefined;
+  const piece = createPiece(state.foundry.nextPieceId++, pieceId, tx, ty, facing, shape);
   state.foundry.pieces.push(piece);
   state.events.places.push({ id: piece.id, pieceId, tx, ty, facing });
   return piece;

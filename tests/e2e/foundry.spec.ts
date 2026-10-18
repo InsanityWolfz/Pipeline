@@ -233,3 +233,39 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
   expect(shot.arrows.map((a) => a.ammoId)).toEqual(['ley-bolt']);
   expect(errors).toEqual([]);
 });
+
+test('dragging an L lays a corner, and items ride round it into a crate', async ({ page }) => {
+  const errors = watchErrors(page);
+  await boot(page);
+  await enterFoundry(page);
+  await standStill(page);
+  await toggleBuild(page);
+  await step(page, 1, { place: { pieceId: 'hopper', tx: 12, ty: 8, facing: 'down' } });
+  await step(page, 1, { place: { pieceId: 'crate', tx: 15, ty: 10, facing: 'right' } });
+
+  // Down one tile, then right two: the turn tile becomes a corner from above.
+  await clickBar(page, 'conduit');
+  const a = await tileOnCanvas(page, 12, 9);
+  const b = await tileOnCanvas(page, 12, 10);
+  const c = await tileOnCanvas(page, 14, 10);
+  await page.mouse.move(a.x, a.y);
+  await page.mouse.down();
+  await page.mouse.move(b.x, b.y, { steps: 1 });
+  await page.mouse.move(c.x, c.y, { steps: 1 });
+  await page.mouse.up();
+  await page.waitForTimeout(50);
+  const laid = await step(page, 4);
+  expect([pieceAt(laid, 12, 9), pieceAt(laid, 12, 10), pieceAt(laid, 13, 10), pieceAt(laid, 14, 10)]).toMatchObject([
+    { pieceId: 'conduit', facing: 'down', inFrom: 'up' },
+    { pieceId: 'conduit', facing: 'right', inFrom: 'up' },
+    { pieceId: 'conduit', facing: 'right', inFrom: 'left' },
+    { pieceId: 'conduit', facing: 'right', inFrom: 'left' },
+  ]);
+
+  const hopper = pieceAt(laid, 12, 8);
+  if (!hopper) throw new Error('no hopper');
+  await step(page, 1, { deposit: { id: hopper.id, itemId: 'arrow' } });
+  const end = await step(page, 1500);
+  expect(pieceAt(end, 15, 10)).toMatchObject({ kind: 'crate', contents: { arrow: 30 } });
+  expect(errors).toEqual([]);
+});

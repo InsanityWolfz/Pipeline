@@ -22,7 +22,8 @@ export interface Command {
   /** Build mode was toggled this tick (an edge). Only works in the foundry. */
   toggleBuild: boolean;
   /** A piece to place this tick (an edge), or null. */
-  place: { pieceId: string; tx: number; ty: number; facing: Facing } | null;
+  /** `inFrom` shapes a conduit (013): left out, a single conduit joins a lone side feeder as a corner. */
+  place: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing } | null;
   /** A tile whose piece to pick up this tick (an edge), or null. */
   pickUp: { tx: number; ty: number } | null;
   /** Put all of a held item into an empty hopper (by piece id) this tick (an edge), or null. */

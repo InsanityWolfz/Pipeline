@@ -4,6 +4,7 @@ import { TILE_SIZE } from '../data/config';
 import { CONDUIT_TICKS, STAGER_ANGLES } from '../data/foundry';
 import {
   CONDUIT_ANIMS,
+  CONDUIT_CORNERS,
   CRATE_SPRITE,
   SOCKET_SPRITES,
   SPREAD_FAN,
@@ -24,7 +25,7 @@ import { rotate, socketStreams } from '../sim/spread';
 import { pieceRect, type FoundryState, type PieceState } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { registerAnim } from './anims';
-import { arrowSpots, pieceIcon } from './foundryLayout';
+import { arrowSpots, conduitLook, pieceIcon } from './foundryLayout';
 import { colorOf } from './color';
 import { GlyphLine } from './glyphLine';
 
@@ -39,7 +40,7 @@ export const MAX_ARROWS = 6;
  */
 export function placeArrows(
   pool: readonly GameObjects.Image[],
-  p: Pick<PieceState, 'pieceId' | 'tx' | 'ty' | 'facing'>,
+  p: Pick<PieceState, 'pieceId' | 'tx' | 'ty' | 'facing'> & { inFrom?: Facing },
   visible = true,
 ): void {
   const spots = arrowSpots(p);
@@ -81,7 +82,7 @@ export class FoundryView {
     this.scene = scene;
     this.fan = scene.add.graphics().setDepth(DEPTHS.spreadFan);
     for (const views of Object.values(MACHINE_HOUSINGS)) for (const v of Object.values(views)) registerAnim(scene, v.working);
-    for (const anim of Object.values(CONDUIT_ANIMS)) registerAnim(scene, anim);
+    for (const anim of [...Object.values(CONDUIT_ANIMS), ...Object.values(CONDUIT_CORNERS)]) registerAnim(scene, anim);
     registerAnim(scene, STATUS_MARKERS.working);
   }
 
@@ -92,7 +93,7 @@ export class FoundryView {
       live.add(p.id);
       const d = this.drawn.get(p.id) ?? this.create(p);
       this.draw(p, d);
-      placeArrows(d.arrows, p, building);
+      placeArrows(d.arrows, p.kind === 'conduit' ? { ...p, inFrom: p.inFrom } : p, building);
     }
     this.drawFan(foundry, shown && building);
     for (const [id, d] of this.drawn) {
@@ -121,8 +122,9 @@ export class FoundryView {
       arrows: arrowSpots(p).map(() => add.image(0, 0, ATLAS_KEY, FACING_ARROWS.out.down).setDepth(DEPTHS.worldUi - 1)),
     };
     if (p.kind === 'conduit') {
+      const look = conduitLook(p.facing, p.inFrom);
       d.body.setOrigin(0).setPosition(r.x - TILE_SIZE / 2, r.y - TILE_SIZE / 2).setDepth(FOUNDRY_LAYOUT.conduitDepth);
-      d.body.play(CONDUIT_ANIMS[view].key);
+      d.body.setFlipX(look.flip).play(look.anim.key);
       d.icon.setDepth(FOUNDRY_LAYOUT.itemDepth);
     } else if (p.kind === 'machine') {
       const footprint = pieceDef(p.pieceId).footprint;
@@ -185,12 +187,13 @@ export class FoundryView {
   private drawConduit(p: Extract<PieceState, { kind: 'conduit' }>, d: Drawn): void {
     d.icon.setVisible(p.item !== null);
     if (!p.item) return;
-    // Slides from the back edge to the front edge as it crosses.
-    const [fx, fy] = facingVector(p.facing);
-    const t = p.progress / CONDUIT_TICKS - 0.5;
+    // Slides in from its entry edge to the middle, then out to the front edge, so it rides a corner's bend.
+    const t = p.progress / CONDUIT_TICKS;
+    const [vx, vy] = t < 0.5 ? facingVector(p.inFrom) : facingVector(p.facing);
+    const k = t < 0.5 ? 0.5 - t : t - 0.5;
     const r = pieceRect(p);
     d.icon.setFrame(itemDef(p.item).icon);
-    d.icon.setPosition(Math.round(r.x + fx * t * TILE_SIZE), Math.round(r.y + fy * t * TILE_SIZE - FOUNDRY_LAYOUT.itemLift));
+    d.icon.setPosition(Math.round(r.x + vx * k * TILE_SIZE), Math.round(r.y + vy * k * TILE_SIZE - FOUNDRY_LAYOUT.itemLift));
   }
 
   private drawMachine(p: Extract<PieceState, { kind: 'machine' }>, d: Drawn): void {

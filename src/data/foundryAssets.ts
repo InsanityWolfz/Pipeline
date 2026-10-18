@@ -54,6 +54,17 @@ export const CONDUIT_ANIMS: Readonly<Record<PieceView, AnimDef>> = {
   side: loop('conduit-side', 2, FLOW_FPS),
 };
 
+type Side = 'up' | 'down' | 'left' | 'right';
+
+/** Conduit corners (013) by the side items come in from and the side they leave by: `${in}-${out}`. Flat on the floor like the straights. */
+export const CONDUIT_CORNERS: Readonly<Record<string, AnimDef>> = Object.fromEntries(
+  (['up', 'down', 'left', 'right'] as const satisfies readonly Side[]).flatMap((out) =>
+    (['up', 'down', 'left', 'right'] as const)
+      .filter((inn) => inn !== out && !((inn === 'up' && out === 'down') || (inn === 'down' && out === 'up') || (inn === 'left' && out === 'right') || (inn === 'right' && out === 'left')))
+      .map((inn) => [`${inn}-${out}`, loop(`conduit-corner-${inn}-${out}`, 2, FLOW_FPS)]),
+  ),
+);
+
 export const HOPPER_SPRITES: Readonly<Record<PieceView, string>> = {
   down: 'hopper-down',
   up: 'hopper-up',

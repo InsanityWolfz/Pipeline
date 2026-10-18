@@ -29,3 +29,8 @@ export function rotateCw(f: Facing): Facing {
 export function facingVector(f: Facing): [number, number] {
   return f === 'up' ? [0, -1] : f === 'down' ? [0, 1] : f === 'left' ? [-1, 0] : [1, 0];
 }
+
+/** The opposite direction. */
+export function opposite(f: Facing): Facing {
+  return f === 'up' ? 'down' : f === 'down' ? 'up' : f === 'left' ? 'right' : 'left';
+}
