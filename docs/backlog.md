@@ -8,7 +8,7 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 001 | Scaffold: sim/render split, seeded RNG, fixed timestep, `window.__GAME__` hook, Playwright smoke test, docs/art.md and the art pipeline (`npm run art`) | done |
 | 002 | Movement: walk and dodge in three-quarter view with camera follow | done |
 | 003 | Tube firing: hand-loaded ammo in an inventory, cursor aiming, projectiles in the sim | done |
-| 004 | Enemies: Husk with a telegraphed swipe, health, damage, death, raw material drops | approved |
+| 004 | Enemies: Husk with a telegraphed swipe, health, damage, death, raw material drops | done |
 | 005 | Hand crafting: gather wood, stone, fiber and ley crystal; craft the three beginner ammo types | idea |
 | 006 | Foundry building: grid placement of machines with facing, items moving between them, one working ammo line | idea |
 | 007 | Tube link: the tube attunes at the foundry; reservoir drains while firing and refills from the line | idea |

@@ -2,32 +2,44 @@
 
 Newest entry first.
 
-## 2026-10-18: 004 Enemies build
-**Changed:** built 004 on `claude/004-enemies`, following `docs/plans/004-enemies.md`.
-- **Sim:** player health with knockback, 30-tick hit invulnerability and a hit that stops loading (`health.ts`, `knockback.ts`); Husks with RotMG-style aggro, leash, wind-up, swipe and recover (`enemies.ts`, `huskAi.ts`); arrow hits, knockback and death (`combat.ts`, `arrows.ts` takes a hit test); seeded drops, scatter and walk-over pickup (`drops.ts`); the placeholder KO via `resetRoom()` in `state.ts`; per-tick `events` (hits, deaths, pickups, ko); `getState()` reports all of it.
-- **Data:** `enemies.ts` (Husk tuning and drop table), room enemy placements, player health values, four materials, render layout values in `assets.ts`.
-- **Render:** `EnemyView` (poses, white hit flash, health bar, swipe telegraph on the ground), `GroundItemView`, `EffectsView` (corpse, sparkle, "+1 [icon]" popup, KO fade), player hit pose and flicker, HUD health bar and material column. `GameScene.stepOnce()` collects events from every tick for the next draw; the test hook steps through it.
-- **Art:** Husk (idle, walk, wind-up, swipe, hit in 3 views; death), four materials, item shadow, pickup sparkle, player hit poses, HUD health frame, `+` glyph. Not yet approved by Shaun.
-- 150 unit tests and 14 e2e tests pass.
-**Verify:** `npm run check` (150 unit tests) and `npm run test:e2e` (14 tests) green. The qa agent passed every screenshot criterion with no console errors. Two of its notes need Shaun's eye: the player hit pose barely differs from idle at game size (the flicker carries the feedback), and the KO fade-out already shows the reset room, with the camera panning to spawn during the fade (the spec allows this).
-**Review:** one blocking issue: the spec says the player flashes white, and the build only flickered. Fixed: the player and tube now alternate between a white flash and normal every 4 ticks while invulnerable, never hidden. Suggestions also taken:
-- one `DEPTHS` table in `src/data/assets.ts`
-- the health-bar border and popup width moved into data
-- on a KO the camera holds while it darkens, then jumps to spawn and follows again, and corpses clear
-- an arrow hits the Husk it reached first when hurtboxes overlap
-- unread hit events are no longer queued in render
-- tests for unlimited chase, locked facing through a swipe, and first-reached hits
+## 2026-10-18: 004 Enemies
+**Changed:** specced, planned (`docs/plans/004-enemies.md`) and built 004 on `claude/004-enemies`.
+- **Sim:**
+  - Player health with knockback, hit invulnerability and a hit that stops loading (`health.ts`, `knockback.ts`).
+  - Husks with RotMG-style aggro, leash, wind-up, swipe and recover (`enemies.ts`, `huskAi.ts`).
+  - Arrow hits, knockback and death (`combat.ts`).
+  - Seeded drops and walk-over pickup (`drops.ts`).
+  - The placeholder KO (`resetRoom()` in `state.ts`).
+  - Per-tick `events`, all reported by `getState()`.
+- **Data:** Husk tuning and its drop table, room enemy placements, player health values, four materials, and a `DEPTHS` table plus render layout values in `assets.ts`.
+- **Render:**
+  - Husk poses, hit flash, health bar and the swipe telegraph on the ground.
+  - Ground items, corpses, the pickup sparkle and "+1 [icon]" popup.
+  - The KO fade.
+  - The player's white hit flash.
+  - The HUD health bar and material column.
+- **Art:** the Husk, four materials, item shadow, pickup sparkle, player hit poses, HUD health frame and the `+` glyph.
 
-Not taken: the KO flag and the reset share one tick (the tests and spec reading agree). The chase hold and `swipeTicks` are still recorded build choices for the playtest to judge. Re-verify: 153 unit tests and 14 e2e tests pass, and the qa re-check of the flash, KO fade, depths and console passed.
-**Next:** Shaun playtests the Pages preview (watch the Husk's in-range hold and the hit/KO feel), then `/wrapup`.
+Shaun approved the sprites by eye and playtested the preview: it's good. 153 unit tests and 14 e2e tests pass, and the qa screenshots passed. Review found one blocking issue: the player only flickered, but the spec says they flash white. It's fixed.
+
+**Next:** Shaun merges the 004 PR when ready, then `/spec 005` (hand crafting: gather wood, stone, fiber and ley crystal; craft the three beginner ammo types).
+
 **Notes:**
-- The Husk grids came from a scratch shape script (body, limbs and mask with auto outline and shading). It isn't committed, so revise the grids by hand.
-- Built as planned, plus: the white hit flash uses the palette's `white`; a material's one 16×16 sprite is both its ground sprite and its HUD icon.
-
-## 2026-10-18: 004 Enemies spec
-**Changed:** interviewed Shaun and wrote `docs/specs/004-enemies.md` (status: draft). Decisions: player health 100 with a placeholder KO that resets the whole room (011 replaces it); a pack of 3 Husks (40 HP, 50 px/s) with a 0.6 s wind-up and a 120° front arc locked at wind-up start, which a roll or a sidestep avoids; 20 swipe damage, 0.5 s hit invulnerability, knockback both ways, hit flash, enemy health bars; RotMG-style aggro (on screen or hit, chase while on screen, return home after 1 s off screen, re-aggro on return, heal to full at home, always damageable); drops of 1–2 husk resin plus a 50% wood/stone/fiber, walked over to collect, with a pickup popup and a HUD material column; a hit cancels loading; no regen.
-**Next:** Shaun approved the spec and the `/plan` (copied to `docs/plans/004-enemies.md` so it survives the cloud container). Run `/build` next.
-**Notes:** tuning values are starting points for playtest. Planning choices: one 16×16 sprite per material for both ground and HUD icon; a 6-tick `swipe` state for the animation; a chasing Husk holds position inside swipe range while its cooldown runs. With the specced timings a swipe cycle is 66 ticks, so the 60-tick cooldown doesn't bind yet. The aggro model came from the open-source RotMG server behaviors (`Follow`, `StayCloseToSpawn`).
+- Build choices beyond the spec, accepted in the playtest:
+  - A 6-tick `swipe` pose.
+  - A chasing Husk holds still in range while its cooldown runs.
+  - One 16×16 sprite per material serves as both its ground sprite and HUD icon.
+  - Arrows hit the Husk they reached first when hurtboxes overlap.
+  - On a KO the camera holds while the screen darkens, then jumps to spawn.
+- With the specced timings a swipe cycle is 66 ticks, so the 60-tick cooldown never binds. It matters only if recover is tuned shorter.
+- The KO flag and the room reset share one tick.
+- The Husk grids came from a scratch shape script (auto outline and shading) that isn't committed. Revise them by hand.
+- The aggro model comes from the open-source RotMG server behaviours `Follow` and `StayCloseToSpawn`.
+- The 003 depth-constant suggestion is done (`DEPTHS`).
+- Still open from the reviewer's suggestions:
+  - The KO flag could be set a tick before the reset.
+  - Hit events are recorded but nothing draws them yet.
+- No mistake happened twice this slice, so no new rule.
 
 ## 2026-10-17: 003 Tube firing
 **Changed:** built 003 on `claude/003-tube-firing`.
@@ -43,7 +55,7 @@ Shaun approved the sprites by eye and playtested the preview: it's good. 89 unit
 - Arrow damage 10 is a placeholder for 004 to tune. Arrows already carry damage and type.
 - When not firing, the tube points at the cursor while the body faces the walk direction (per spec). It passed the playtest, but revisit it if it reads oddly once enemies exist.
 - `NO_COMMAND` aims at the world origin. Code that steps the sim without an aim moves the tube's draw direction; the test hook avoids this by keeping the last aim.
-- The reviewer's unaddressed suggestion: render depth constants (`FLOOR_DEPTH`, `SHADOW_DEPTH`, `TUBE_DEPTH_NUDGE`, `HUD_DEPTH`) could move into one table in `src/data`. Pick it up when those files are next touched.
+- The reviewer's unaddressed suggestion: render depth constants (`FLOOR_DEPTH`, `SHADOW_DEPTH`, `TUBE_DEPTH_NUDGE`, `HUD_DEPTH`) could move into one table in `src/data`. Done in 004 (`DEPTHS`).
 - No mistake happened twice this slice, so no new rule.
 
 ## 2026-10-17: 002 Movement
