@@ -10,6 +10,7 @@ import { fixtureDef } from '../sim/fixtures';
 import { roomById, type SimState } from '../sim/state';
 import { registerAnim } from './anims';
 import { colorOf } from './color';
+import { addVector } from './vector/textures';
 
 // The claimable site and what claiming brings (009): the room's pylon (dormant,
 // activating, or glowing once claimed) with the claim hold's bar, the foundry's
@@ -94,8 +95,8 @@ export class SiteView {
       let d = this.orbs.get(o.id);
       if (!d) {
         d = {
-          shadow: this.scene.add.image(0, 0, ATLAS_KEY, ORB_SPRITES.shadow).setDepth(DEPTHS.groundFx),
-          orb: this.scene.add.image(0, 0, ATLAS_KEY, ORB_SPRITES.orb),
+          shadow: addVector(this.scene, 0, 0, ORB_SPRITES.shadow).setDepth(DEPTHS.groundFx),
+          orb: addVector(this.scene, 0, 0, ORB_SPRITES.orb),
         };
         this.orbs.set(o.id, d);
       }

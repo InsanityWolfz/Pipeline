@@ -1,4 +1,4 @@
-import { Scene } from 'phaser';
+import { Scene, Textures, type Cameras } from 'phaser';
 import atlasImage from '../../assets/build/sprites.png?url';
 import atlasData from '../../assets/build/sprites.json?url';
 import { ATLAS_KEY } from '../data/assets';
@@ -39,6 +39,8 @@ import { WakeView } from './WakeView';
 import { mergeEvents } from './eventLog';
 import { FeelView } from './FeelView';
 import { TutorialUi } from './TutorialUi';
+import { currentFit, type ScreenFit } from './scale';
+import { bakeVectors } from './vector/textures';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -76,6 +78,10 @@ export class GameScene extends Scene {
   private readonly pending: SimEvents = createEvents();
   /** Set by the test hook: the real-time loop stops advancing the sim (the menu still opens and crafts). */
   manualStepping = false;
+  /** The screen fit (016): cameras zoom by its scale so the same 640×360 of the world fills a full-resolution backbuffer. */
+  private fit: ScreenFit = currentFit();
+  /** Draws everything with scroll factor 0 (the HUD, menus, mood), unshaken and unfaded, in view px. */
+  private uiCamera?: Cameras.Scene2D.Camera;
 
   constructor(sim: SimState) {
     super('game');
@@ -89,6 +95,13 @@ export class GameScene extends Scene {
   }
 
   create(): void {
+    // Pixel art stays crisp at any zoom; vector frames (016) are drawn once at the screen's scale.
+    this.textures.get(ATLAS_KEY).setFilter(Textures.FilterMode.NEAREST);
+    bakeVectors(this, this.fit.scale);
+    this.uiCamera = this.cameras.add(0, 0, this.fit.width, this.fit.height, false, 'ui').setOrigin(0, 0);
+    this.applyFit(this.fit);
+    // Each frame, screen-space objects go to the UI camera and world objects to the main one.
+    this.events.on('prerender', () => this.routeCameras());
     this.roomView = new RoomView(this);
     this.foundryView = new FoundryView(this);
     this.nodeView = new NodeView(this);
@@ -122,6 +135,25 @@ export class GameScene extends Scene {
     camera.startFollow(this.playerView.sprite, true, CAMERA_LERP, CAMERA_LERP);
 
     this.controls = new Controls(this);
+  }
+
+  /** Matches both cameras to the backbuffer (016). Called on boot and whenever the window changes. */
+  applyFit(fit: ScreenFit): void {
+    this.fit = fit;
+    const ui = this.uiCamera;
+    if (!ui) return;
+    this.cameras.main.setSize(fit.width, fit.height).setZoom(fit.scale);
+    ui.setSize(fit.width, fit.height).setZoom(fit.scale);
+  }
+
+  private routeCameras(): void {
+    const main = this.cameras.main;
+    const ui = this.uiCamera;
+    if (!ui) return;
+    for (const o of this.children.list) {
+      const screen = 'scrollFactorX' in o && o.scrollFactorX === 0;
+      o.cameraFilter = screen ? main.id : ui.id;
+    }
   }
 
   override update(_time: number, delta: number): void {

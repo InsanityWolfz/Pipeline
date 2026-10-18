@@ -19,6 +19,7 @@ import { colorOf } from './color';
 import { buildBarCells, conduitLook, inRect, pieceIcon, sorterLook } from './foundryLayout';
 import { BuildTip } from './BuildTip';
 import { MAX_ARROWS, placeArrows, viewOf } from './FoundryView';
+import { toView } from './scale';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -88,7 +89,8 @@ export class BuildView {
     if (!unlocked.includes(this.selected)) this.selected = unlocked[0] ?? FIRST_PIECE;
     this.setVisible(building);
     const pointer = this.scene.input.activePointer;
-    const hovered = building ? buildBarCells(unlocked).find((c) => inRect(c, pointer.x, pointer.y)) : undefined;
+    const at = toView(pointer.x, pointer.y, this.scene.cameras.main.zoom);
+    const hovered = building ? buildBarCells(unlocked).find((c) => inRect(c, at.x, at.y)) : undefined;
     this.tip.show(hovered?.pieceId ?? null, (hovered?.x ?? 0) + (hovered?.w ?? 0) / 2, hovered?.y ?? 0, VIEW_WIDTH);
     if (!building) return;
     const cell = buildBarCells(unlocked).find((c) => c.pieceId === this.selected);

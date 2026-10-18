@@ -21,6 +21,7 @@ import { OUTLINE_ID, hexToRgb, paletteHex } from '../data/palette';
 import { DRAW_HEIGHT } from '../data/tube';
 import type { SimEvents } from '../sim/events';
 import { registerAnim } from './anims';
+import { addVectorSprite } from './vector/textures';
 
 // One-shot effects driven by sim events: corpses, pickup sparkles and popups,
 // fire bursts, muzzle flashes, the deposit swirl, and the KO fade. Nothing here feeds back into the sim.
@@ -28,11 +29,11 @@ export class EffectsView {
   private readonly scene: Scene;
   private readonly camera: Cameras.Scene2D.Camera;
   /** What the camera follows, re-followed after a KO. */
-  private readonly followed: GameObjects.Sprite;
+  private readonly followed: GameObjects.Image;
   /** Corpses still on screen; a KO clears them with the rest of the room. */
   private readonly corpses = new Set<GameObjects.Sprite>();
 
-  constructor(scene: Scene, followed: GameObjects.Sprite) {
+  constructor(scene: Scene, followed: GameObjects.Image) {
     this.scene = scene;
     this.camera = scene.cameras.main;
     this.followed = followed;
@@ -63,9 +64,7 @@ export class EffectsView {
     const death = ENEMY_ANIMS[def.anims]?.death;
     if (!death) return;
     const bottom = y + def.feetBox.h / 2;
-    const sprite = this.scene.add
-      .sprite(x, bottom, ATLAS_KEY, animFrames(death)[0])
-      .setOrigin(0.5, 1)
+    const sprite = addVectorSprite(this.scene, x, bottom, animFrames(death)[0] ?? '')
       .setDepth(bottom)
       .setFlipX(flip);
     this.corpses.add(sprite);
@@ -84,29 +83,29 @@ export class EffectsView {
 
   /** Ley light spiralling up off the player's feet as the haul is banked. */
   private swirl(player: { x: number; y: number }): void {
-    const sprite = this.scene.add.sprite(player.x, player.y, ATLAS_KEY, animFrames(DEPOSIT_SWIRL)[0]);
-    sprite.setOrigin(0.5, 1).setDepth(player.y + DRAW_HEIGHT);
+    const sprite = addVectorSprite(this.scene, player.x, player.y, animFrames(DEPOSIT_SWIRL)[0] ?? '');
+    sprite.setDepth(player.y + DRAW_HEIGHT);
     sprite.once('animationcomplete', () => sprite.destroy());
     sprite.play(DEPOSIT_SWIRL.key);
   }
 
   /** A flash at the tube's mouth, at the height shots fly, in front of the player. */
   private muzzle(x: number, y: number): void {
-    const sprite = this.scene.add.sprite(x, y - DRAW_HEIGHT, ATLAS_KEY, animFrames(MUZZLE_FLASH)[0]).setDepth(y + DRAW_HEIGHT);
+    const sprite = addVectorSprite(this.scene, x, y - DRAW_HEIGHT, animFrames(MUZZLE_FLASH)[0] ?? '').setDepth(y + DRAW_HEIGHT);
     sprite.once('animationcomplete', () => sprite.destroy());
     sprite.play(MUZZLE_FLASH.key);
   }
 
   /** The burst drawn at its real radius, in front of what stands inside it. */
   private burst(x: number, y: number, radius: number): void {
-    const sprite = this.scene.add.sprite(x, y, ATLAS_KEY, animFrames(FIRE_BURST)[0]).setDepth(y + radius);
+    const sprite = addVectorSprite(this.scene, x, y, animFrames(FIRE_BURST)[0] ?? '').setDepth(y + radius);
     sprite.setScale((radius * 2) / sprite.width);
     sprite.play(FIRE_BURST.key);
     sprite.once('animationcomplete', () => sprite.destroy());
   }
 
   private pickup(itemId: string, x: number, y: number, player: { x: number; y: number }, index: number): void {
-    const sparkle = this.scene.add.sprite(x, y, ATLAS_KEY, animFrames(PICKUP_SPARKLE)[0]).setDepth(DEPTHS.worldUi);
+    const sparkle = addVectorSprite(this.scene, x, y, animFrames(PICKUP_SPARKLE)[0] ?? '').setDepth(DEPTHS.worldUi);
     sparkle.play(PICKUP_SPARKLE.key);
     sparkle.once('animationcomplete', () => sparkle.destroy());
 

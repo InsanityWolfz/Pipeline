@@ -1,4 +1,0 @@
-# A bomb's ground shadow. 8x3, no outline.
-.tttttt.
-tttttttt
-.tttttt.

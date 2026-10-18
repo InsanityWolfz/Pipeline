@@ -7,10 +7,10 @@ import { buildArt } from '../../scripts/art/build';
 import { parseSprite } from '../../scripts/art/parse';
 import { ATLAS_KEY } from '../../src/data/assets';
 import { encodePng } from '../../scripts/art/png';
-import { PALETTE } from '../../src/data/palette';
+import { PIXEL_PALETTE } from '../../src/data/palette';
 
-const a = PALETTE[0]?.char ?? '';
-const b = PALETTE[1]?.char ?? '';
+const a = PIXEL_PALETTE[0]?.char ?? '';
+const b = PIXEL_PALETTE[1]?.char ?? '';
 
 describe('sprite grid parser', () => {
   it('reads a single-frame sprite, skipping comments', () => {
@@ -30,7 +30,7 @@ describe('sprite grid parser', () => {
   it('turns grids into RGBA pixels with transparency', () => {
     const sprite = parseSprite(`${a}.\n`, 'px.txt');
     const pixels = sprite.frames[0];
-    const hex = PALETTE[0]?.hex ?? '';
+    const hex = PIXEL_PALETTE[0]?.hex ?? '';
     expect(pixels?.[0]).toBe(parseInt(hex.slice(1, 3), 16));
     expect(pixels?.[3]).toBe(255);
     expect(pixels?.[7]).toBe(0);

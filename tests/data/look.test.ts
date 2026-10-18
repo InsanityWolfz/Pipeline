@@ -5,7 +5,7 @@ import { animFrames } from '../../src/data/assets';
 import { ENEMIES } from '../../src/data/enemies';
 import { LOGISTICS_ICONS, SORTER_ANIMS } from '../../src/data/foundryAssets';
 import { AMBIENT, DAMAGE_NUMBERS, GLOWS, PARTICLES, ROOM_MOOD } from '../../src/data/juice';
-import { PALETTE } from '../../src/data/palette';
+import { DAYLIGHT_PALETTE, PIXEL_PALETTE } from '../../src/data/palette';
 import { FIRE_SOUNDS, ROOM_AMBIENCE, SOUNDS, WINDUP_SOUNDS } from '../../src/data/sounds';
 import { SLOT_AMMOS } from '../../src/data/tube';
 import { PROPS, type PropDef } from '../../src/data/props';
@@ -66,7 +66,7 @@ describe('props', () => {
 });
 
 describe('feel and sound references', () => {
-  const known = new Set(PALETTE.map((c) => c.id));
+  const known = new Set([...PIXEL_PALETTE, ...DAYLIGHT_PALETTE].map((c) => c.id));
 
   it('use only palette colours', () => {
     const ids = [

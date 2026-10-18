@@ -50,19 +50,20 @@ export interface ParticleBurst {
   lift?: number;
 }
 
+// Daylight colours (016).
 export const PARTICLES = {
-  hitPhysical: { colors: ['white', 'mist', 'gold'], count: 14, speed: [60, 150], gravity: 220, lifeMs: [220, 380], size: 2, lift: 12 },
-  hitFire: { colors: ['ember-light', 'ember', 'gold'], count: 16, speed: [50, 140], gravity: -60, lifeMs: [260, 460], size: 2, lift: 12 },
-  hitPlayer: { colors: ['ember', 'ember-dark', 'white'], count: 12, speed: [40, 120], gravity: 180, lifeMs: [200, 360], size: 2, lift: 14 },
-  deathMotes: { colors: ['ley-cyan', 'ley-glow', 'ley-deep'], count: 26, speed: [10, 50], gravity: -70, lifeMs: [600, 1100], size: 2, lift: 10 },
-  embers: { colors: ['ember-light', 'ember', 'gold', 'ember-dark'], count: 44, speed: [30, 120], gravity: -45, lifeMs: [500, 1100], size: 3 },
-  footDust: { colors: ['stone-pale', 'slate-light'], count: 2, speed: [6, 18], gravity: -10, lifeMs: [200, 320], size: 1 },
-  rollDust: { colors: ['stone-pale', 'slate-light', 'mist'], count: 4, speed: [10, 35], gravity: -15, lifeMs: [250, 420], size: 2 },
-  harvestChips: { colors: ['earth-light', 'earth', 'stone-pale'], count: 8, speed: [40, 90], gravity: 260, lifeMs: [250, 420], size: 2, lift: 8 },
-  craftPuff: { colors: ['mist', 'stone-pale', 'slate-light'], count: 6, speed: [8, 24], gravity: -50, lifeMs: [400, 650], size: 2, lift: 14 },
-  refill: { colors: ['ley-cyan', 'ley-glow'], count: 5, speed: [10, 30], gravity: -60, lifeMs: [300, 500], size: 1, lift: 6 },
-  pickup: { colors: ['gold', 'ley-glow', 'white'], count: 8, speed: [20, 55], gravity: -40, lifeMs: [250, 450], size: 2, lift: 6 },
-  place: { colors: ['slate-light', 'stone-pale'], count: 6, speed: [20, 50], gravity: 60, lifeMs: [200, 320], size: 1 },
+  hitPhysical: { colors: ['snow', 'rock-pale', 'gold-trim'], count: 14, speed: [60, 150], gravity: 220, lifeMs: [220, 380], size: 2, lift: 12 },
+  hitFire: { colors: ['cinder-light', 'cinder', 'gold-trim'], count: 16, speed: [50, 140], gravity: -60, lifeMs: [260, 460], size: 2, lift: 12 },
+  hitPlayer: { colors: ['cinder', 'flame-dark', 'snow'], count: 12, speed: [40, 120], gravity: 180, lifeMs: [200, 360], size: 2, lift: 14 },
+  deathMotes: { colors: ['cyan', 'cyan-glow', 'cyan-deep'], count: 26, speed: [10, 50], gravity: -70, lifeMs: [600, 1100], size: 2, lift: 10 },
+  embers: { colors: ['cinder-light', 'cinder', 'gold-trim', 'flame-dark'], count: 44, speed: [30, 120], gravity: -45, lifeMs: [500, 1100], size: 3 },
+  footDust: { colors: ['dirt-light', 'dirt'], count: 2, speed: [6, 18], gravity: -10, lifeMs: [200, 320], size: 1 },
+  rollDust: { colors: ['dirt-light', 'dirt', 'rock-pale'], count: 4, speed: [10, 35], gravity: -15, lifeMs: [250, 420], size: 2 },
+  harvestChips: { colors: ['wood-light', 'wood', 'dirt-light'], count: 8, speed: [40, 90], gravity: 260, lifeMs: [250, 420], size: 2, lift: 8 },
+  craftPuff: { colors: ['rock-pale', 'dirt-light', 'dirt'], count: 6, speed: [8, 24], gravity: -50, lifeMs: [400, 650], size: 2, lift: 14 },
+  refill: { colors: ['cyan', 'cyan-glow'], count: 5, speed: [10, 30], gravity: -60, lifeMs: [300, 500], size: 1, lift: 6 },
+  pickup: { colors: ['gold-trim', 'cyan-glow', 'snow'], count: 8, speed: [20, 55], gravity: -40, lifeMs: [250, 450], size: 2, lift: 6 },
+  place: { colors: ['dirt', 'dirt-light'], count: 6, speed: [20, 50], gravity: 60, lifeMs: [200, 320], size: 1 },
 } as const satisfies Record<string, ParticleBurst>;
 
 /** Footstep dust every this many ms of walking, roll dust every this many ms of rolling; walking is moving faster than `minSpeed` px/tick. */

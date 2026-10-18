@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { hexToRgb, OUTLINE_ID, PALETTE, TRANSPARENT } from '../../src/data/palette';
+import { hexToRgb, OUTLINE_ID, PIXEL_PALETTE, TRANSPARENT } from '../../src/data/palette';
 import { AMMO } from '../../src/data/ammo';
 import {
   animFrames,
@@ -8,16 +8,13 @@ import {
   HUD_LETTERS,
   BURN_FLAME,
   ENEMY_ANIMS,
-  TUBE_ATTUNE,
   MUZZLE_FLASH,
   DEPOSIT_SWIRL,
   FIRE_BURST,
   NODE_SPRITES,
   HUD_DIGITS,
   PICKUP_SPARKLE,
-  PLAYER_ANIMS,
   SPRITES,
-  TUBE_SPRITES,
 } from '../../src/data/assets';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import {
@@ -52,6 +49,7 @@ import { CRAFT_GROUPS, RECIPES } from '../../src/data/recipes';
 import { NODES } from '../../src/data/nodes';
 import { BUILD_BAR, PIECES } from '../../src/data/pieces';
 import { STAGER_ANGLES, STAGER_START_ANGLE } from '../../src/data/foundry';
+import { vectorFrames } from '../../src/render/vector/catalog';
 
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -62,14 +60,14 @@ function luminance(hex: string): number {
 
 describe('palette', () => {
   it('has about 24 colors', () => {
-    expect(PALETTE.length).toBeGreaterThanOrEqual(20);
-    expect(PALETTE.length).toBeLessThanOrEqual(28);
+    expect(PIXEL_PALETTE.length).toBeGreaterThanOrEqual(20);
+    expect(PIXEL_PALETTE.length).toBeLessThanOrEqual(28);
   });
 
   it('has unique kebab-case ids, unique single-char symbols and valid hex', () => {
-    expect(new Set(PALETTE.map((c) => c.id)).size).toBe(PALETTE.length);
-    expect(new Set(PALETTE.map((c) => c.char)).size).toBe(PALETTE.length);
-    for (const color of PALETTE) {
+    expect(new Set(PIXEL_PALETTE.map((c) => c.id)).size).toBe(PIXEL_PALETTE.length);
+    expect(new Set(PIXEL_PALETTE.map((c) => c.char)).size).toBe(PIXEL_PALETTE.length);
+    for (const color of PIXEL_PALETTE) {
       expect(color.id).toMatch(KEBAB);
       expect(color.char).toHaveLength(1);
       expect(color.char).not.toBe(TRANSPARENT);
@@ -78,55 +76,63 @@ describe('palette', () => {
   });
 
   it('includes ley-line cyan', () => {
-    expect(PALETTE.some((c) => c.id === 'ley-cyan')).toBe(true);
+    expect(PIXEL_PALETTE.some((c) => c.id === 'ley-cyan')).toBe(true);
   });
 
   it('uses its darkest color, not pure black, as the outline', () => {
-    const darkest = [...PALETTE].sort((a, b) => luminance(a.hex) - luminance(b.hex))[0];
+    const darkest = [...PIXEL_PALETTE].sort((a, b) => luminance(a.hex) - luminance(b.hex))[0];
     expect(darkest?.id).toBe(OUTLINE_ID);
     expect(darkest?.hex).not.toBe('#000000');
   });
 
   it('is the palette docs/art.md names', () => {
     const doc = readFileSync('docs/art.md', 'utf8');
-    for (const color of PALETTE) expect(doc).toContain(color.hex);
+    for (const color of PIXEL_PALETTE) expect(doc).toContain(color.hex);
     expect(doc).toContain(`\`${OUTLINE_ID}\``);
   });
 });
+
+/** Every frame the game can show: the pixel atlas's and the vector catalog's (016). */
+function drawnFrames(): string[] {
+  const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as { frames: Record<string, unknown> };
+  return [...Object.keys(atlas.frames), ...vectorFrames().map((f) => f.name)];
+}
 
 describe('assets', () => {
   const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as {
     frames: Record<string, unknown>;
   };
+  // A frame is drawn from a pixel grid (the atlas) or from vector data (016), never both.
+  const vectors = vectorFrames().map((f) => f.name);
+  const known = [...Object.keys(atlas.frames), ...vectors];
 
-  it('has kebab-case keys that exist in the built atlas', () => {
+  it('has kebab-case keys that exist in the atlas or as vector frames', () => {
     const nodeKeys = Object.values(NODE_SPRITES).flatMap((n) => [n.full, n.depleted]);
-    for (const key of [...Object.values(SPRITES), ...Object.values(TUBE_SPRITES), ...nodeKeys]) {
+    for (const key of [...Object.values(SPRITES), ...nodeKeys]) {
       expect(key).toMatch(KEBAB);
-      expect(Object.keys(atlas.frames)).toContain(key);
+      expect(known).toContain(key);
     }
   });
 
-  it('has every player animation frame in the built atlas', () => {
-    for (const anim of Object.values(PLAYER_ANIMS)) {
-      expect(anim.key).toMatch(KEBAB);
-      for (const frame of animFrames(anim)) expect(Object.keys(atlas.frames)).toContain(frame);
-    }
+  it('draws no frame both as a pixel grid and as vector data', () => {
+    for (const name of vectors) expect(Object.keys(atlas.frames)).not.toContain(name);
+    expect(new Set(vectors).size).toBe(vectors.length);
   });
 
-  it('has every enemy animation and the pickup sparkle in the built atlas', () => {
+  it('has every enemy animation and the pickup sparkle as frames', () => {
     for (const set of Object.values(ENEMY_ANIMS)) {
       for (const anim of [...Object.values(set), PICKUP_SPARKLE]) {
+        if (!anim) continue;
         expect(anim.key).toMatch(KEBAB);
-        for (const frame of animFrames(anim)) expect(Object.keys(atlas.frames)).toContain(frame);
+        for (const frame of animFrames(anim)) expect(known).toContain(frame);
       }
     }
   });
 
-  it('has the fire burst, burn flame and tube attune pulse in the built atlas', () => {
-    for (const anim of [FIRE_BURST, BURN_FLAME, MUZZLE_FLASH, DEPOSIT_SWIRL, STAGER_SPRITE, ...Object.values(TUBE_ATTUNE)]) {
+  it('has the fire burst, burn flame, muzzle flash, deposit swirl and stager as frames', () => {
+    for (const anim of [FIRE_BURST, BURN_FLAME, MUZZLE_FLASH, DEPOSIT_SWIRL, STAGER_SPRITE]) {
       expect(anim.key).toMatch(KEBAB);
-      for (const frame of animFrames(anim)) expect(Object.keys(atlas.frames)).toContain(frame);
+      for (const frame of animFrames(anim)) expect(known).toContain(frame);
     }
   });
 
@@ -354,8 +360,7 @@ describe('spreads (008)', () => {
 
 describe('claiming (009)', () => {
   it('has every site sprite in the built atlas', () => {
-    const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as { frames: Record<string, unknown> };
-    const frames = Object.keys(atlas.frames);
+    const frames = drawnFrames();
     const anims = [PYLON_SPRITES.activating, PYLON_SPRITES.active, FIXTURE_SPRITES.port, FIXTURE_SPRITES.waystone];
     for (const anim of anims) for (const frame of animFrames(anim)) expect(frames).toContain(frame);
     const singles = [PYLON_SPRITES.off, FIXTURE_SPRITES.stash, ORB_SPRITES.orb, ORB_SPRITES.shadow, ...Object.values(SITE_ICONS), ...Object.values(FLOOR_SPRITES)];
@@ -401,8 +406,7 @@ describe('the tutorial (012)', () => {
   it('has objectives with text, and tutorial sprites in the atlas', () => {
     expect(OBJECTIVES.length).toBeGreaterThan(0);
     for (const o of OBJECTIVES) for (const ch of o.text) expect(() => digitFrame(ch)).not.toThrow();
-    const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as { frames: Record<string, unknown> };
-    const frames = Object.keys(atlas.frames);
+    const frames = drawnFrames();
     for (const v of Object.values(TUTORIAL_SPRITES)) {
       if (typeof v === 'string') expect(frames).toContain(v);
       else for (const f of animFrames(v)) expect(frames).toContain(f);

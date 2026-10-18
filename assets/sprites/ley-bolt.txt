@@ -1,6 +1,0 @@
-# Ley bolt in flight, pointing right; render rotates it. 12x5. A crystal bolt with a glow trail.
-....oooooo..
-.cooCCCCwwo.
-ccCCCCCCwwWo
-.cooccccCwo.
-....oooooo..

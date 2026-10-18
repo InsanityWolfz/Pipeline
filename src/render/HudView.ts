@@ -14,6 +14,7 @@ import { AmmoStripView } from './AmmoStripView';
 import { HUD_ARMOR_LAYOUT } from '../data/hudLayout';
 import { colorOf } from './color';
 import { GlyphLine } from './glyphLine';
+import { toView } from './scale';
 
 /** One material row: its icon and count, shown only while the player holds some. */
 interface MaterialRow {
@@ -127,6 +128,7 @@ export class HudView {
     else this.slot.clearTint();
 
     const pointer = this.scene.input.activePointer;
-    this.crosshair.setPosition(Math.round(pointer.x), Math.round(pointer.y));
+    const at = toView(pointer.x, pointer.y, this.scene.cameras.main.zoom);
+    this.crosshair.setPosition(at.x, at.y);
   }
 }

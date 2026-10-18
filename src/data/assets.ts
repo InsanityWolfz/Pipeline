@@ -3,6 +3,12 @@
 /** The sprite atlas built by `npm run art` (assets/build/sprites.png + .json). */
 export const ATLAS_KEY = 'sprites';
 
+/** Vector frames drawn at boot (016): one texture of shelf-packed canvas pages, frames named as the atlas names them. */
+export const VECTOR_KEY = 'vectors';
+
+/** The wanderer's canvas, redrawn every frame (016). */
+export const WANDERER_KEY = 'wanderer';
+
 /** Frame names in the atlas for single-frame sprites, one per sprite grid in assets/sprites. */
 export const SPRITES = {
   leyCrystal: 'ley-crystal',
@@ -56,31 +62,6 @@ export const NODE_SPRITES: Readonly<Record<string, { full: string; depleted: str
   'ley-vein': { full: 'node-ley-vein', depleted: 'node-ley-vein-depleted' },
 };
 
-/** The tube held by the player, by direction. `side` points right; left is drawn flipped. */
-export const TUBE_SPRITES = {
-  down: 'tube-down',
-  up: 'tube-up',
-  side: 'tube-side',
-} as const;
-
-/** The tube's attuning pulse (007), drawn over the tube in the same spot: 2-frame loops by direction. */
-export const TUBE_ATTUNE = {
-  down: { key: 'tube-attune-down', frames: 2, frameRate: 8, loop: true },
-  up: { key: 'tube-attune-up', frames: 2, frameRate: 8, loop: true },
-  side: { key: 'tube-attune-side', frames: 2, frameRate: 8, loop: true },
-} as const satisfies Record<keyof typeof TUBE_SPRITES, AnimDef>;
-
-/**
- * Where the tube's top-left corner sits relative to the player's feet (the bottom
- * centre of the player sprite), px, for the right-facing side; left mirrors it.
- * `behind` draws it under the player.
- */
-export const TUBE_GRIP: Readonly<Record<keyof typeof TUBE_SPRITES, { x: number; y: number; behind: boolean }>> = {
-  down: { x: -5, y: -24, behind: false },
-  up: { x: 3, y: -37, behind: true },
-  side: { x: 2, y: -22, behind: true },
-};
-
 /** The HUD number font: frames `hud-digits/0`..`/9`, then `/` as frame 10, `+` as frame 11 and `-` as frame 12. */
 export const HUD_DIGITS = { key: 'hud-digits', glyphs: '0123456789/+-', advance: 4 } as const;
 
@@ -114,64 +95,12 @@ export const HUD_SLOT_LAYOUT = {
 export interface AnimDef {
   key: string;
   frames: number;
-  /**
-   * Frames per second, or 'roll' to stretch the frames over exactly one roll.
-   * The roll rate is computed in src/render/PlayerView.ts, since this file can't
-   * import tuning (the art build loads it on its own).
-   */
-  frameRate: number | 'roll';
+  /** Frames per second. */
+  frameRate: number;
   loop: boolean;
 }
 
-/** Player animations. `side` faces right; left is drawn flipped. */
-export type PlayerAnim =
-  | 'idle-down'
-  | 'idle-up'
-  | 'idle-side'
-  | 'walk-down'
-  | 'walk-up'
-  | 'walk-side'
-  | 'fire-down'
-  | 'fire-up'
-  | 'fire-side'
-  | 'hit-down'
-  | 'death'
-  | 'hit-up'
-  | 'hit-side'
-  | 'roll';
-
-const WALK_FPS = 8;
 const WALK_FRAMES = 4;
-const ROLL_FRAMES = 4;
-
-/** The idle breathe (014): frames, and frames per second. */
-const IDLE_FRAMES = 4;
-const IDLE_FPS = 3;
-
-const playerAnim = (name: PlayerAnim, frames: number, frameRate: AnimDef['frameRate'], loop: boolean): AnimDef => ({
-  key: `player-${name}`,
-  frames,
-  frameRate,
-  loop,
-});
-
-export const PLAYER_ANIMS: Readonly<Record<PlayerAnim, AnimDef>> = {
-  'idle-down': playerAnim('idle-down', IDLE_FRAMES, IDLE_FPS, true),
-  'idle-up': playerAnim('idle-up', IDLE_FRAMES, IDLE_FPS, true),
-  'idle-side': playerAnim('idle-side', IDLE_FRAMES, IDLE_FPS, true),
-  'walk-down': playerAnim('walk-down', WALK_FRAMES, WALK_FPS, true),
-  'walk-up': playerAnim('walk-up', WALK_FRAMES, WALK_FPS, true),
-  'walk-side': playerAnim('walk-side', WALK_FRAMES, WALK_FPS, true),
-  'fire-down': playerAnim('fire-down', 1, 1, true),
-  'fire-up': playerAnim('fire-up', 1, 1, true),
-  'fire-side': playerAnim('fire-side', 1, 1, true),
-  'hit-down': playerAnim('hit-down', 1, 1, true),
-  'hit-up': playerAnim('hit-up', 1, 1, true),
-  'hit-side': playerAnim('hit-side', 1, 1, true),
-  roll: playerAnim('roll', ROLL_FRAMES, 'roll', false),
-  /** Played once over the death (011): it should finish inside DYING_TICKS. */
-  death: playerAnim('death', 4, 6, false),
-};
 
 /** Enemy animations. `side` faces right; left is drawn flipped. Death has one view. `recover` is optional: without it, a recovering enemy shows idle. */
 export type EnemyAnim = `${'idle' | 'walk' | 'windup' | 'swipe' | 'recover' | 'hit'}-${'down' | 'up' | 'side'}` | 'death';
@@ -310,8 +239,6 @@ export const DEPTHS = {
   groundFx: 0.5,
   /** Nudge that puts the tube just in front of or behind the player. */
   tubeNudge: 0.01,
-  /** Nudge that puts the attuning pulse just in front of the tube. */
-  attuneNudge: 0.005,
   /** Nudge that puts a burn flame just in front of the enemy it's on. */
   flameNudge: 0.01,
   /** Health bars, sparkles and popups over the world. */

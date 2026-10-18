@@ -1,8 +1,9 @@
 import type { GameObjects, Scene } from 'phaser';
 import { AMMO } from '../data/ammo';
-import { ATLAS_KEY, DEPTHS } from '../data/assets';
+import { DEPTHS } from '../data/assets';
 import { DRAW_HEIGHT } from '../data/tube';
 import type { ArrowState } from '../sim/arrows';
+import { addVector } from './vector/textures';
 
 interface Drawn {
   arrow: GameObjects.Image;
@@ -40,8 +41,8 @@ export class ArrowView {
     const ammo = AMMO[a.ammoId];
     if (!ammo) throw new Error(`Unknown ammo '${a.ammoId}'`);
     const d: Drawn = {
-      arrow: this.scene.add.image(0, 0, ATLAS_KEY, ammo.sprite),
-      shadow: this.scene.add.image(0, 0, ATLAS_KEY, ammo.shadow).setDepth(DEPTHS.shadow),
+      arrow: addVector(this.scene, 0, 0, ammo.sprite),
+      shadow: addVector(this.scene, 0, 0, ammo.shadow).setDepth(DEPTHS.shadow),
     };
     this.drawn.set(a.id, d);
     return d;

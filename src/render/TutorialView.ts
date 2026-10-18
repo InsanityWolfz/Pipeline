@@ -6,6 +6,7 @@ import type { GateId } from '../data/rooms';
 import { roomById, type SimState } from '../sim/state';
 import { doorOpen } from '../sim/tutorial';
 import { registerAnim } from './anims';
+import { addVector, showFrame } from './vector/textures';
 
 // The tutorial's world pieces (012): the tube on its stone (then the bare stone),
 // rubble over the foundry door and a ley barrier over the shrine door while their
@@ -19,14 +20,14 @@ export class TutorialView {
   constructor(scene: Scene) {
     this.scene = scene;
     registerAnim(scene, TUTORIAL_SPRITES.barrier);
-    this.stone = scene.add.image(0, 0, ATLAS_KEY, TUTORIAL_SPRITES.stone).setOrigin(0.5, 1).setVisible(false);
+    this.stone = addVector(scene, 0, 0, TUTORIAL_SPRITES.stone).setVisible(false);
   }
 
   update(sim: SimState, shown: string): void {
     if (shown !== this.room) this.show(sim, shown);
     const stone = roomById(shown).tubeStone;
     this.stone.setVisible(stone !== undefined);
-    if (stone) this.stone.setFrame(sim.hasTube ? TUTORIAL_SPRITES.stoneEmpty : TUTORIAL_SPRITES.stone);
+    if (stone) showFrame(this.stone, sim.hasTube ? TUTORIAL_SPRITES.stoneEmpty : TUTORIAL_SPRITES.stone);
     for (const seal of this.seals) {
       if (!doorOpen(sim, seal.gate) || seal.fading) continue;
       // The gate just opened: the seal crumbles away.

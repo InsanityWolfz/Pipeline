@@ -1,12 +1,13 @@
 import type { GameObjects, Scene } from 'phaser';
 import { TintModes } from 'phaser';
-import { animFrames, ATLAS_KEY, BURN_FLAME, BURN_FLAME_HEIGHT, DEPTHS, ENEMY_ANIMS, ENEMY_FX } from '../data/assets';
+import { animFrames, BURN_FLAME, BURN_FLAME_HEIGHT, DEPTHS, ENEMY_ANIMS, ENEMY_FX } from '../data/assets';
 import { IDLE_SPEED } from '../data/config';
 import { attackOf, enemyDef } from '../data/enemies';
 import type { EnemyState } from '../sim/enemies';
 import type { Facing } from '../sim/player';
 import { registerAnim } from './anims';
 import { colorOf } from './color';
+import { addVectorSprite } from './vector/textures';
 
 interface Drawn {
   sprite: GameObjects.Sprite;
@@ -66,7 +67,7 @@ export class EnemyView {
       if (d.sprite.anims.currentAnim?.key !== key) d.sprite.play(key);
       if (e.flash > 0) d.sprite.setTint(colorOf(ENEMY_FX.flashColor)).setTintMode(TintModes.FILL);
       else d.sprite.clearTint();
-      this.drawBar(d.bar, e, bottom - d.sprite.height);
+      this.drawBar(d.bar, e, bottom - d.sprite.displayHeight * d.sprite.originY);
       this.drawTelegraph(d.telegraph, e);
       d.flame.setVisible(e.burnTicks > 0).setPosition(e.x, bottom - BURN_FLAME_HEIGHT).setDepth(bottom + DEPTHS.flameNudge);
     }
@@ -85,10 +86,10 @@ export class EnemyView {
     const anims = ENEMY_ANIMS[enemyDef(e.enemyId).anims];
     const first = anims ? animFrames(anims['idle-down'])[0] : undefined;
     const d: Drawn = {
-      sprite: this.scene.add.sprite(0, 0, ATLAS_KEY, first).setOrigin(0.5, 1),
+      sprite: addVectorSprite(this.scene, 0, 0, first ?? ''),
       telegraph: this.scene.add.graphics().setDepth(DEPTHS.groundFx),
       bar: this.scene.add.graphics().setDepth(DEPTHS.worldUi),
-      flame: this.scene.add.sprite(0, 0, ATLAS_KEY, animFrames(BURN_FLAME)[0]).setVisible(false),
+      flame: addVectorSprite(this.scene, 0, 0, animFrames(BURN_FLAME)[0] ?? '').setVisible(false),
     };
     d.flame.play(BURN_FLAME.key);
     this.drawn.set(e.id, d);
