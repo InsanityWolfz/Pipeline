@@ -15,6 +15,10 @@ export interface Command {
   fire: boolean;
   /** Load was pressed this tick (an edge, not held). */
   load: boolean;
+  /** Interact (harvest) was pressed this tick (an edge, not held). */
+  interact: boolean;
+  /** An ammo picked for the slot this tick (an edge), or null. */
+  selectAmmo: string | null;
 }
 
 /** No input. Its aim is the world origin, so callers that care about aim must set one. */
@@ -26,4 +30,6 @@ export const NO_COMMAND: Readonly<Command> = {
   aimY: 0,
   fire: false,
   load: false,
+  interact: false,
+  selectAmmo: null,
 };

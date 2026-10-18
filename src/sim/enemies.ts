@@ -1,6 +1,6 @@
 import { enemyDef } from '../data/enemies';
 import type { Room } from '../data/rooms';
-import { moveBox } from './collision';
+import { moveBox, type Rect } from './collision';
 import { startKnock, type Knockable } from './knockback';
 import type { Facing } from './player';
 import type { SimState } from './state';
@@ -35,6 +35,10 @@ export interface EnemyState extends Knockable {
   swipeDirY: number;
   /** Ticks of hit flash left, for render. */
   flash: number;
+  /** Ticks of burn left; it deals damage on every `everyTicks`-th. */
+  burnTicks: number;
+  /** The ammo whose burn is running, for its numbers. */
+  burnAmmo: string;
 }
 
 export function createEnemy(id: number, enemyId: string, at: { x: number; y: number }): EnemyState {
@@ -57,6 +61,8 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     swipeDirX: 0,
     swipeDirY: 1,
     flash: 0,
+    burnTicks: 0,
+    burnAmmo: '',
     knockX: 0,
     knockY: 0,
     knockTicks: 0,
@@ -70,12 +76,27 @@ export function aggro(e: EnemyState): void {
   e.offScreenTicks = 0;
 }
 
+/** How a hit lands: arrows knock back and flash, bursts only flash, burns do neither. */
+export interface HitStyle {
+  knock: boolean;
+  flash: boolean;
+}
+
+const ARROW_HIT: HitStyle = { knock: true, flash: true };
+
 /** Damages an enemy, knocking it along (dirX, dirY). A hit always aggros an idle or returning enemy. */
-export function damageEnemy(state: SimState, e: EnemyState, amount: number, dirX: number, dirY: number): void {
+export function damageEnemy(
+  state: SimState,
+  e: EnemyState,
+  amount: number,
+  dirX: number,
+  dirY: number,
+  style: HitStyle = ARROW_HIT,
+): void {
   const def = enemyDef(e.enemyId);
   e.health = Math.max(0, e.health - amount);
-  e.flash = def.hitFlashTicks;
-  startKnock(e, dirX, dirY, def.hitKnockback, def.hitKnockTicks);
+  if (style.flash) e.flash = def.hitFlashTicks;
+  if (style.knock) startKnock(e, dirX, dirY, def.hitKnockback, def.hitKnockTicks);
   if (e.mode === 'idle' || e.mode === 'return') aggro(e);
   state.events.hits.push({ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: amount });
 }
@@ -90,7 +111,7 @@ export function inHurtbox(e: EnemyState, x: number, y: number): boolean {
  * Pushes overlapping enemies apart along the axis of least overlap, half each.
  * If a wall stops one, the other takes the rest. Runs in array order, so it's deterministic.
  */
-export function separate(enemies: EnemyState[], room: Room): void {
+export function separate(enemies: EnemyState[], room: Room, obstacles: readonly Rect[] = []): void {
   for (let i = 0; i < enemies.length; i++) {
     for (let j = i + 1; j < enemies.length; j++) {
       const a = enemies[i];
@@ -103,25 +124,40 @@ export function separate(enemies: EnemyState[], room: Room): void {
       const ox = (fa.w + fb.w) / 2 - Math.abs(dx);
       const oy = (fa.h + fb.h) / 2 - Math.abs(dy);
       if (ox <= 0 || oy <= 0) continue;
-      if (ox <= oy) pushApart(room, a, b, ox, dx < 0 ? -1 : 1, 0);
-      else pushApart(room, a, b, oy, 0, dy < 0 ? -1 : 1);
+      if (ox <= oy) pushApart(room, obstacles, a, b, ox, dx < 0 ? -1 : 1, 0);
+      else pushApart(room, obstacles, a, b, oy, 0, dy < 0 ? -1 : 1);
     }
   }
 }
 
-function pushApart(room: Room, a: EnemyState, b: EnemyState, amount: number, ux: number, uy: number): void {
+function pushApart(
+  room: Room,
+  obstacles: readonly Rect[],
+  a: EnemyState,
+  b: EnemyState,
+  amount: number,
+  ux: number,
+  uy: number,
+): void {
   const boxA = enemyDef(a.enemyId).feetBox;
   const boxB = enemyDef(b.enemyId).feetBox;
-  const movedA = shove(room, a, boxA, -ux * (amount / 2), -uy * (amount / 2));
-  const movedB = shove(room, b, boxB, ux * (amount - movedA), uy * (amount - movedA));
+  const movedA = shove(room, obstacles, a, boxA, -ux * (amount / 2), -uy * (amount / 2));
+  const movedB = shove(room, obstacles, b, boxB, ux * (amount - movedA), uy * (amount - movedA));
   const left = amount - movedA - movedB;
-  if (left > 0) shove(room, a, boxA, -ux * left, -uy * left);
+  if (left > 0) shove(room, obstacles, a, boxA, -ux * left, -uy * left);
 }
 
 /** Moves a body and returns how far it actually went. */
-function shove(room: Room, e: EnemyState, box: { w: number; h: number }, dx: number, dy: number): number {
+function shove(
+  room: Room,
+  obstacles: readonly Rect[],
+  e: EnemyState,
+  box: { w: number; h: number },
+  dx: number,
+  dy: number,
+): number {
   const x = e.x;
   const y = e.y;
-  moveBox(room, e, box, dx, dy);
+  moveBox(room, e, box, dx, dy, obstacles);
   return Math.hypot(e.x - x, e.y - y);
 }

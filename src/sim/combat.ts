@@ -1,3 +1,4 @@
+import { straightAmmo } from '../data/ammo';
 import { enemyDef } from '../data/enemies';
 import type { ArrowState } from './arrows';
 import { damageEnemy, inHurtbox, type EnemyState } from './enemies';
@@ -9,9 +10,18 @@ import type { SimState } from './state';
 /**
  * An arrow-hit test for stepArrows: damages the live enemy under the arrow that it
  * reached first, the one furthest back along its flight, when hurtboxes overlap.
+ * A piercing shot instead hits every enemy under it that it hasn't hit yet and flies on.
  */
 export function arrowHits(state: SimState): (arrow: ArrowState) => boolean {
   return (arrow) => {
+    if (straightAmmo(arrow.ammoId).pierce) {
+      for (const en of state.enemies) {
+        if (en.health <= 0 || arrow.hitIds.includes(en.id) || !inHurtbox(en, arrow.x, arrow.y)) continue;
+        arrow.hitIds.push(en.id);
+        damageEnemy(state, en, arrow.damage, arrow.dx, arrow.dy);
+      }
+      return false;
+    }
     let e: EnemyState | undefined;
     let first = Infinity;
     for (const en of state.enemies) {
@@ -23,6 +33,7 @@ export function arrowHits(state: SimState): (arrow: ArrowState) => boolean {
       }
     }
     if (!e) return false;
+    arrow.hitIds.push(e.id);
     damageEnemy(state, e, arrow.damage, arrow.dx, arrow.dy);
     return true;
   };

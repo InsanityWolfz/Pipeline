@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { AMMO, straightAmmo } from '../../src/data/ammo';
+import { straightAmmo } from '../../src/data/ammo';
 import { damageEnemy } from '../../src/sim/enemies';
 import { arena, fireAt, HUSK, loadFull, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
-const DAMAGE = AMMO.arrow?.damage ?? 0;
+const DAMAGE = straightAmmo('arrow').damage;
 
 describe('arrows hitting Husks', () => {
   it('removes the arrow and deals its damage', () => {
