@@ -1,0 +1,21 @@
+# Machine status, starved: a dark well behind the missing input icon (16x16 sits centred). 20x20.
+.oooooooooooooooooo.
+oTTTTTTTTTTTTTTTTTTo
+otttttttttttttttttto
+otttttttttttttttttto
+otttttttttttttttttto
+otttttttttttttttttto
+otttttttttttttttttto
+otttttttttttttttttto
+otttttttttttttttttto
+otttttttttttttttttto
+otttttttttttttttttto
+otttttttttttttttttto
+otttttttttttttttttto
+otttttttttttttttttto
+otttttttttttttttttto
+otttttttttttttttttto
+otttttttttttttttttto
+otttttttttttttttttto
+otttttttttttttttttto
+.oooooooooooooooooo.

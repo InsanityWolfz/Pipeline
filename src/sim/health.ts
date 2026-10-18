@@ -1,7 +1,7 @@
 import { HIT_INVULN_TICKS } from '../data/player';
 import { startKnock } from './knockback';
 import { isInvulnerable } from './movement';
-import { resetRoom, type SimState } from './state';
+import { resetWorld, type SimState } from './state';
 import { cancelHarvest } from './harvest';
 import { stopLoading } from './tube';
 
@@ -31,9 +31,9 @@ export function damagePlayer(
   return true;
 }
 
-/** At 0 health, resets the room and flags the KO for this tick. */
+/** At 0 health, resets the world and flags the KO for this tick. */
 export function checkKo(state: SimState): void {
   if (state.player.health > 0) return;
-  resetRoom(state);
+  resetWorld(state);
   state.events.ko = true;
 }

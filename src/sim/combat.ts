@@ -16,7 +16,8 @@ export function arrowHits(state: SimState): (arrow: ArrowState) => boolean {
   return (arrow) => {
     if (straightAmmo(arrow.ammoId).pierce) {
       for (const en of state.enemies) {
-        if (en.health <= 0 || arrow.hitIds.includes(en.id) || !inHurtbox(en, arrow.x, arrow.y)) continue;
+        if (en.roomId !== arrow.roomId || en.health <= 0 || arrow.hitIds.includes(en.id)) continue;
+        if (!inHurtbox(en, arrow.x, arrow.y)) continue;
         arrow.hitIds.push(en.id);
         damageEnemy(state, en, arrow.damage, arrow.dx, arrow.dy);
       }
@@ -25,7 +26,7 @@ export function arrowHits(state: SimState): (arrow: ArrowState) => boolean {
     let e: EnemyState | undefined;
     let first = Infinity;
     for (const en of state.enemies) {
-      if (en.health <= 0 || !inHurtbox(en, arrow.x, arrow.y)) continue;
+      if (en.roomId !== arrow.roomId || en.health <= 0 || !inHurtbox(en, arrow.x, arrow.y)) continue;
       const along = (en.x - arrow.x) * arrow.dx + (en.y - arrow.y) * arrow.dy;
       if (along < first) {
         first = along;
@@ -48,7 +49,7 @@ export function removeDead(state: SimState): void {
       continue;
     }
     state.events.deaths.push({ id: e.id, enemyId: e.enemyId, x: e.x, y: e.y, facing: e.facing });
-    spawnDrops(state, enemyDef(e.enemyId), e.x, e.y);
+    spawnDrops(state, enemyDef(e.enemyId), e.x, e.y, e.roomId);
   }
   state.enemies.length = kept;
 }

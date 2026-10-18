@@ -53,7 +53,7 @@ export function stepPlayer(p: PlayerState, room: Room, cmd: Command, obstacles: 
 
   // Knockback adds to the move, so input still steers on top of it.
   const [kx, ky] = takeKnock(p);
-  const { hitX, hitY } = moveBox(room, p, FEET_BOX, p.vx + kx, p.vy + ky, obstacles);
+  const { hitX, hitY } = moveBox(room, p, FEET_BOX, p.vx + kx, p.vy + ky, obstacles, true);
   // Velocity reports actual movement. A blocked roll still runs out its timer,
   // since its speed is set again from its direction each tick.
   if (hitX) p.vx = 0;

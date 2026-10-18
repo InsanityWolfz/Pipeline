@@ -2,6 +2,30 @@
 
 Newest entry first.
 
+## 2026-10-18: 006 Foundry building (build)
+**Changed:** built 006 on `claude/sweet-planck-6lb10l`, following `docs/plans/006-foundry-building.md`.
+- **Sim:** rooms as tags on every entity, with all rooms ticking; doors and the doorway step; foundry pieces, placement and unlocks; two-phase item flow (conduits, machines with direct hand-off, hoppers, crates, statuses); E and deposits; build mode; KO keeps the foundry.
+- **Data:** the `foundry` room and doors, `pieces.ts`, `foundry.ts`, `foundryAssets.ts`, build bar, picker and readout layouts.
+- **Render:** `RoomView` with the door fade, `FoundryView`, `BuildView` (bar and ghost), `HoverReadout`, `HopperPicker`, and build controls (B, R, click, right-click, drag, wheel, Esc).
+- **Art:** housings, conduits, hoppers, crate, doorway, status markers and logistics icons. After Shaun's first look, machines show the item they make and wood is a side-on log.
+
+Shaun approved the revised sprites in chat. Verify: the qa agent's screenshots pass every criterion; fixed the build-bar click race, readout clipping, the crate count position and the picker panel. Review: fixed all 3 blocking issues (3×1 front side refusing items, gaps in fast conduit drags, the door fade constant moved to data) and most suggestions. Verify rerun green: 287 unit tests and 21 e2e tests.
+Playtest 1: Shaun's line didn't run. The pieces faced down into empty tiles while the conduits ran up, which a sim test confirmed. Build mode now shows a facing arrow on every piece and on the ghost.
+Then: gold input arrows on every side that takes items (crates: all four, hoppers: none), crates take from every side as specced, and backlog 013 (conduit corners) added at Shaun's request. Then the hopper menu: E on a filled hopper offers to take it out or put more in (`withdraw` command). Spec lines updated as playtest changes. 295 unit tests and 21 e2e tests pass.
+Shaun confirmed the playtest and approved the arrow sprites ("looks good lets move on").
+**Next:** merge the 006 PR when Shaun says so, then `/spec 007` (tube link).
+**Notes:** see the 006 entry in decisions.md. The prettier slip is logged there too: don't run formatters the repo doesn't use.
+
+## 2026-10-18: Body follows the aim (fix)
+**Changed:** `PlayerView` now picks the body's animation and flip from the aim direction when not rolling, matching the tube, so the idle and walk poses no longer face away from the tube. `npm run check` and 18 e2e tests pass.
+**Next:** Shaun playtests the fix on the preview.
+**Notes:** sim facing is unchanged; see decisions.md.
+
+## 2026-10-18: 006 Foundry building spec
+**Changed:** interviewed Shaun and wrote `docs/specs/006-foundry-building.md` (status: draft). Decisions: a separate foundry room through a doorway (fade), conduits carry items, input hoppers (one item type each, picked from held raws) and output crates (emptied with E), all nine machines for the three chains, free placement, unlock by hand-crafting once, assembler and packer 2×2, B build mode with R rotate and click place/pick up anywhere on the foundry floor, wrong items stall conduits, the foundry ticks while the player is away and survives a KO, working/starved/blocked markers with hover buffers.
+**Next:** Shaun answered the open questions (direct machine hand-off, 3×1 combiners, raw-only hoppers, walkable conduits); then hoppers take any item and can feed a machine directly. Approved in chat; plan written and approved (`docs/plans/006-foundry-building.md`). Next is `/build`.
+**Notes:** tuning values are starting points.
+
 ## 2026-10-18: 005 Hand crafting
 **Changed:** built 005 on `claude/005-hand-crafting`, following `docs/plans/005-hand-crafting.md`.
 - **Sim:** solid nodes with regrow (`nodes.ts`, obstacle rects in `collision.ts`); E harvesting (`harvest.ts`); crafting between ticks and the crafted set (`crafting.ts`); ammo select on 1–3 (`tube.ts`); piercing ley bolts (`combat.ts`); bombs, bursts and burns (`bombs.ts`, `burn.ts`); KO resets nodes, bombs, the harvest and the selection, and keeps the crafted set.

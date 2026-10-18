@@ -99,7 +99,7 @@ function fire(state: SimState, cmd: Command): void {
     throwBomb(state, ammo.id, muzzle, player, { x: cmd.aimX, y: cmd.aimY }, [dx, dy]);
     return;
   }
-  state.arrows.push(createArrow(state.nextArrowId++, ammo.id, muzzle.x, muzzle.y, dx, dy));
+  state.arrows.push(createArrow(state.nextArrowId++, ammo.id, state.roomId, muzzle.x, muzzle.y, dx, dy));
 }
 
 function canLoad(state: SimState): boolean {

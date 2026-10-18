@@ -9,6 +9,8 @@ import { isSolid } from './collision';
 export interface ArrowState {
   id: number;
   ammoId: string;
+  /** The room it was fired in; it never leaves it. */
+  roomId: string;
   x: number;
   y: number;
   /** Unit flight direction. */
@@ -22,9 +24,17 @@ export interface ArrowState {
   hitIds: number[];
 }
 
-export function createArrow(id: number, ammoId: string, x: number, y: number, dx: number, dy: number): ArrowState {
-  const ammo = straightAmmo(ammoId);
-  return { id, ammoId, x, y, dx, dy, travelled: 0, damage: ammo.damage, damageType: ammo.damageType, hitIds: [] };
+export function createArrow(
+  id: number,
+  ammoId: string,
+  roomId: string,
+  x: number,
+  y: number,
+  dx: number,
+  dy: number,
+): ArrowState {
+  const { damage, damageType } = straightAmmo(ammoId);
+  return { id, ammoId, roomId, x, y, dx, dy, travelled: 0, damage, damageType, hitIds: [] };
 }
 
 /** Tries an arrow against targets at its current point; true if it hit one and is spent. */
@@ -36,10 +46,14 @@ export type ArrowHitTest = (arrow: ArrowState) => boolean;
  * start and end point, so a target standing against a wall still gets hit.
  * Steps are under a tile, so arrows can't tunnel through walls.
  */
-export function stepArrows(arrows: ArrowState[], room: Room, hits: ArrowHitTest = () => false): void {
+export function stepArrows(
+  arrows: ArrowState[],
+  roomFor: (roomId: string) => Room,
+  hits: ArrowHitTest = () => false,
+): void {
   let kept = 0;
   for (const arrow of arrows) {
-    if (flies(arrow, room, hits)) arrows[kept++] = arrow;
+    if (flies(arrow, roomFor(arrow.roomId), hits)) arrows[kept++] = arrow;
   }
   arrows.length = kept;
 }

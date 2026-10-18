@@ -1,6 +1,8 @@
 import { MAX_HEALTH } from '../data/player';
 import { TUBE_CAPACITY } from '../data/tube';
+import { ROOMS } from '../data/rooms';
 import type { SimEvents } from './events';
+import { unlockedPieces } from './placement';
 import { isInvulnerable, isRolling } from './movement';
 import type { Facing } from './player';
 import type { SimState } from './state';
@@ -9,17 +11,23 @@ import {
   bombSummary,
   enemySummary,
   nodeSummary,
+  pieceSummary,
   round,
   type ArrowSummary,
   type BombSummary,
   type EnemySummary,
   type NodeSummary,
+  type PieceSummary,
 } from './summaryParts';
 
 /** The compact JSON summary that window.__GAME__.getState() returns. */
 export interface SimSummary {
   tick: number;
   seed: number;
+  /** The room the player is in. */
+  room: string;
+  /** Every room id. */
+  rooms: string[];
   player: {
     /** Feet centre, px. */
     x: number;
@@ -56,13 +64,17 @@ export interface SimSummary {
   /** Arrows and ley bolts in flight; x, y is the ground point. */
   arrows: ArrowSummary[];
   enemies: EnemySummary[];
-  groundItems: { id: number; itemId: string; x: number; y: number }[];
+  groundItems: { id: number; itemId: string; room: string; x: number; y: number }[];
   nodes: NodeSummary[];
   /** The harvest in progress: the node's id and ticks into it. */
   harvest: { nodeId: number; progress: number } | null;
   bombs: BombSummary[];
   /** Item ids hand-crafted at least once. */
   crafted: string[];
+  /** Pieces the player can place, in build bar order. */
+  unlocked: string[];
+  building: boolean;
+  foundry: { pieces: PieceSummary[] };
   /** What happened on the last tick. */
   events: SimEvents;
 }
@@ -72,6 +84,8 @@ export function summarize(state: SimState): SimSummary {
   return {
     tick: state.tick,
     seed: state.seed,
+    room: state.roomId,
+    rooms: Object.keys(ROOMS),
     player: {
       x: round(p.x),
       y: round(p.y),
@@ -100,11 +114,14 @@ export function summarize(state: SimState): SimSummary {
     },
     arrows: state.arrows.map(arrowSummary),
     enemies: state.enemies.map(enemySummary),
-    groundItems: state.groundItems.map((g) => ({ id: g.id, itemId: g.itemId, x: round(g.x), y: round(g.y) })),
+    groundItems: state.groundItems.map((g) => ({ id: g.id, itemId: g.itemId, room: g.roomId, x: round(g.x), y: round(g.y) })),
     nodes: state.nodes.map(nodeSummary),
     harvest: state.harvest ? { ...state.harvest } : null,
     bombs: state.bombs.map(bombSummary),
     crafted: [...state.crafted],
+    unlocked: unlockedPieces(state),
+    building: state.building,
+    foundry: { pieces: state.foundry.pieces.map(pieceSummary) },
     events: structuredClone(state.events),
   };
 }

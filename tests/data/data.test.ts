@@ -16,6 +16,16 @@ import {
   TUBE_SPRITES,
 } from '../../src/data/assets';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
+import {
+  CONDUIT_ANIMS,
+  CRATE_SPRITE,
+  DOORWAY_SPRITE,
+  FACING_ARROWS,
+  HOPPER_SPRITES,
+  MACHINE_HOUSINGS,
+  LOGISTICS_ICONS,
+  STATUS_MARKERS,
+} from '../../src/data/foundryAssets';
 import { ENEMIES } from '../../src/data/enemies';
 import { ROOMS, TILE } from '../../src/data/rooms';
 import { ITEMS } from '../../src/data/items';
@@ -23,6 +33,7 @@ import { STARTING_INVENTORY } from '../../src/data/player';
 import { SLOT_AMMOS, STARTING_AMMO } from '../../src/data/tube';
 import { CRAFT_GROUPS, RECIPES } from '../../src/data/recipes';
 import { NODES } from '../../src/data/nodes';
+import { BUILD_BAR, PIECES } from '../../src/data/pieces';
 
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -99,6 +110,32 @@ describe('assets', () => {
       expect(anim.key).toMatch(KEBAB);
       for (const frame of animFrames(anim)) expect(Object.keys(atlas.frames)).toContain(frame);
     }
+  });
+
+  it('has every foundry sprite and animation frame in the built atlas, and an icon per logistics piece', () => {
+    const frames = Object.keys(atlas.frames);
+    for (const views of Object.values(MACHINE_HOUSINGS)) {
+      for (const { idle, working } of Object.values(views)) {
+        expect(frames).toContain(idle);
+        for (const frame of animFrames(working)) expect(frames).toContain(frame);
+      }
+    }
+    for (const anim of [...Object.values(CONDUIT_ANIMS), STATUS_MARKERS.working]) {
+      for (const frame of animFrames(anim)) expect(frames).toContain(frame);
+    }
+    const singles = [
+      ...Object.values(HOPPER_SPRITES),
+      ...Object.values(LOGISTICS_ICONS),
+      CRATE_SPRITE,
+      DOORWAY_SPRITE,
+      ...Object.values(FACING_ARROWS.in),
+      ...Object.values(FACING_ARROWS.out),
+      STATUS_MARKERS.blocked,
+      STATUS_MARKERS.starved,
+    ];
+    for (const key of singles) expect(frames).toContain(key);
+    const logistics = Object.values(PIECES).filter((d) => d.kind !== 'machine');
+    expect(Object.keys(LOGISTICS_ICONS).sort()).toEqual(logistics.map((d) => d.id).sort());
   });
 
   it('has a HUD font frame for every glyph', () => {
@@ -228,5 +265,38 @@ describe('enemies and rooms', () => {
       const offY = Math.abs(e.ty - (room?.spawn.ty ?? 0)) * 32 > VIEW_HEIGHT / 2;
       expect(offX || offY).toBe(true);
     }
+  });
+});
+
+describe('foundry pieces', () => {
+  it('have kebab-case ids matching their keys, and machines run known recipes', () => {
+    for (const [key, def] of Object.entries(PIECES)) {
+      expect(def.id).toBe(key);
+      expect(key).toMatch(KEBAB);
+      if (def.kind !== 'machine') continue;
+      expect(RECIPES[def.recipeId]).toBeDefined();
+      expect(def.craftTicks).toBeGreaterThan(0);
+    }
+  });
+
+  it('are 1x1, apart from the three-input combiners, which are 3x1', () => {
+    const wide = Object.values(PIECES)
+      .filter((d) => d.footprint === '3x1')
+      .map((d) => d.id);
+    expect(wide.sort()).toEqual(['assembler', 'packer']);
+    for (const id of wide) {
+      const def = PIECES[id];
+      if (def?.kind !== 'machine') throw new Error(`${id} is not a machine`);
+      expect(Object.keys(RECIPES[def.recipeId]?.inputs ?? {})).toHaveLength(3);
+    }
+  });
+
+  it('cover every recipe with exactly one machine', () => {
+    const run = Object.values(PIECES).flatMap((d) => (d.kind === 'machine' ? [d.recipeId] : []));
+    expect(run.sort()).toEqual(Object.keys(RECIPES).sort());
+  });
+
+  it('are each on the build bar exactly once', () => {
+    expect([...BUILD_BAR].sort()).toEqual(Object.keys(PIECES).sort());
   });
 });

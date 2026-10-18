@@ -8,6 +8,7 @@ import { tileCentre } from './tiles';
 export interface NodeState {
   id: number;
   nodeId: string;
+  roomId: string;
   /** Centre of its base, px. */
   x: number;
   y: number;
@@ -17,18 +18,19 @@ export interface NodeState {
   regrow: number;
 }
 
-export function createNode(id: number, nodeId: string, at: { x: number; y: number }): NodeState {
-  return { id, nodeId, x: at.x, y: at.y, uses: nodeDef(nodeId).uses, regrow: 0 };
+export function createNode(id: number, nodeId: string, at: { x: number; y: number }, roomId: string): NodeState {
+  return { id, nodeId, roomId, x: at.x, y: at.y, uses: nodeDef(nodeId).uses, regrow: 0 };
 }
 
-/** The room's nodes at full uses, ids in placement order. */
-export function createNodes(room: Room): NodeState[] {
-  return (room.nodes ?? []).map((p, i) => createNode(i, p.nodeId, tileCentre(p)));
+/** The rooms' nodes at full uses, ids in placement order, room by room. */
+export function createNodes(rooms: readonly Room[]): NodeState[] {
+  const placed = rooms.flatMap((room) => (room.nodes ?? []).map((p) => ({ ...p, roomId: room.id })));
+  return placed.map((p, i) => createNode(i, p.nodeId, tileCentre(p), p.roomId));
 }
 
-/** Every node's solid base, full or depleted. */
-export function nodeRects(nodes: readonly NodeState[]): Rect[] {
-  return nodes.map((n) => ({ x: n.x, y: n.y, ...nodeDef(n.nodeId).feetBox }));
+/** The solid base of every node in a room, full or depleted. */
+export function nodeRects(nodes: readonly NodeState[], roomId: string): Rect[] {
+  return nodes.filter((n) => n.roomId === roomId).map((n) => ({ x: n.x, y: n.y, ...nodeDef(n.nodeId).feetBox }));
 }
 
 /** Uses up one harvest; at 0 the node is depleted and starts regrowing. */

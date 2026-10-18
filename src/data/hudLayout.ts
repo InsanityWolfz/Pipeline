@@ -39,3 +39,51 @@ export const CRAFT_MENU_LAYOUT = {
   /** Alpha of a row the player can't afford. */
   greyAlpha: 0.35,
 } as const;
+
+/**
+ * The build bar, along the bottom of the screen above the ammo strip: one cell per
+ * unlocked piece in build bar order, its icon inside (a machine shows what it makes). Cells use the ammo strip's
+ * cell sprites. Px on screen, then from each cell's top-left.
+ */
+export const BUILD_BAR_LAYOUT = {
+  /** Distance from the screen's bottom edge to the cells' bottom. */
+  bottom: 34,
+  cellStep: 26,
+  cellWidth: 24,
+  cellHeight: 28,
+  icon: { x: 4, y: 6 },
+} as const;
+
+/** The ghost of the piece to place: palette tints for where it can and can't go, and its alpha. */
+export const GHOST = { okTint: 'ley-cyan', badTint: 'ember', alpha: 0.6 } as const;
+
+/**
+ * The hopper menu: a column of craft rows, centred on screen. A take-out row shows
+ * the hopper's icon, then the item and the hopper's count; a put-in row shows the
+ * item and how many are held. Px on screen, then per row.
+ */
+export const PICKER_LAYOUT = {
+  /** The panel behind the rows: padding round them and palette ids. */
+  pad: 4,
+  back: 'outline',
+  border: 'ley-deep',
+  rowWidth: 184,
+  rowHeight: 20,
+  rowGap: 1,
+  icon: { x: 4, y: 2 },
+  count: { x: 24, y: 8 },
+  /** How far a take-out row's item icon and count shift right, past the hopper icon. */
+  takeShift: 20,
+} as const;
+
+/** The hover readout over a machine: a dark box of icon + count lines. Px from its top-left. */
+export const READOUT_LAYOUT = {
+  pad: 3,
+  lineHeight: 17,
+  width: 44,
+  count: { x: 19, y: 6 },
+  /** Gap above the machine's sprite. */
+  gap: 4,
+  back: 'outline',
+  border: 'ley-deep',
+} as const;

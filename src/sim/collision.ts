@@ -2,7 +2,8 @@ import { TILE_SIZE } from '../data/config';
 import { TILE, type Room } from '../data/rooms';
 
 // Feet-box collision against a room's tile grid and solid things standing in it.
-// Anything that isn't floor, including outside the grid, is solid.
+// Anything that isn't floor, including outside the grid, is solid. Door tiles
+// are solid too, except to a mover that passes `doors` (only the player).
 
 export interface Box {
   w: number;
@@ -15,8 +16,9 @@ export interface Rect extends Box {
   y: number;
 }
 
-export function isSolid(room: Room, tx: number, ty: number): boolean {
-  return room.rows[ty]?.[tx] !== TILE.floor;
+export function isSolid(room: Room, tx: number, ty: number, doors = false): boolean {
+  const symbol = room.rows[ty]?.[tx];
+  return symbol !== TILE.floor && !(doors && symbol === TILE.door);
 }
 
 /** True if a box centred on (cx, cy) overlaps a rect. Touching an edge is not overlap. */
@@ -25,13 +27,13 @@ export function overlapsRect(cx: number, cy: number, box: Box, r: Rect): boolean
 }
 
 /** True if a box centred on (cx, cy) overlaps a solid tile. Touching an edge is not overlap. */
-export function boxHitsSolid(room: Room, cx: number, cy: number, box: Box): boolean {
+export function boxHitsSolid(room: Room, cx: number, cy: number, box: Box, doors = false): boolean {
   const x0 = Math.floor((cx - box.w / 2) / TILE_SIZE);
   const x1 = Math.ceil((cx + box.w / 2) / TILE_SIZE) - 1;
   const y0 = Math.floor((cy - box.h / 2) / TILE_SIZE);
   const y1 = Math.ceil((cy + box.h / 2) / TILE_SIZE) - 1;
   for (let ty = y0; ty <= y1; ty++) {
-    for (let tx = x0; tx <= x1; tx++) if (isSolid(room, tx, ty)) return true;
+    for (let tx = x0; tx <= x1; tx++) if (isSolid(room, tx, ty, doors)) return true;
   }
   return false;
 }
@@ -50,10 +52,11 @@ export function moveBox(
   dx: number,
   dy: number,
   obstacles: readonly Rect[] = [],
+  doors = false,
 ): { hitX: boolean; hitY: boolean } {
   const blocking = obstacles.filter((r) => !overlapsRect(pos.x, pos.y, box, r));
-  const hitX = moveAxis(room, pos, box, dx, 'x', blocking);
-  const hitY = moveAxis(room, pos, box, dy, 'y', blocking);
+  const hitX = moveAxis(room, pos, box, dx, 'x', blocking, doors);
+  const hitY = moveAxis(room, pos, box, dy, 'y', blocking, doors);
   return { hitX, hitY };
 }
 
@@ -64,6 +67,7 @@ function moveAxis(
   d: number,
   axis: 'x' | 'y',
   obstacles: readonly Rect[],
+  doors: boolean,
 ): boolean {
   if (d === 0) return false;
   const half = (axis === 'x' ? box.w : box.h) / 2;
@@ -71,7 +75,7 @@ function moveAxis(
   const nx = axis === 'x' ? next : pos.x;
   const ny = axis === 'y' ? next : pos.y;
   let stop: number | undefined;
-  if (boxHitsSolid(room, nx, ny, box)) {
+  if (boxHitsSolid(room, nx, ny, box, doors)) {
     // Flush to the edge of the tile that was hit.
     stop =
       d > 0

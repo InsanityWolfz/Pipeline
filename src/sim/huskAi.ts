@@ -1,9 +1,8 @@
 import { VIEW_HEIGHT, VIEW_WIDTH, TICK_RATE } from '../data/config';
 import { enemyDef, type EnemyDef } from '../data/enemies';
-import type { Room } from '../data/rooms';
-import { moveBox, type Rect } from './collision';
+import { moveBox } from './collision';
 import { aimFacing, unit } from './direction';
-import { aggro, separate, type EnemyState } from './enemies';
+import { aggro, separate, type EnemyState, type RoomBodies } from './enemies';
 import { damagePlayer } from './health';
 import { takeKnock } from './knockback';
 import type { SimState } from './state';
@@ -20,9 +19,10 @@ export function inAggroBox(e: EnemyState, player: { x: number; y: number }): boo
   return Math.abs(e.x - player.x) <= VIEW_WIDTH / 2 && Math.abs(e.y - player.y) <= VIEW_HEIGHT / 2;
 }
 
-/** Thinks, moves and faces every enemy, then pushes overlapping bodies apart. */
-export function stepEnemies(state: SimState, room: Room, obstacles: readonly Rect[] = []): void {
+/** Thinks, moves and faces every enemy in its own room, then pushes overlapping bodies apart. */
+export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBodies): void {
   for (const e of state.enemies) {
+    const { room, obstacles } = bodies(e.roomId);
     const def = enemyDef(e.enemyId);
     if (e.cooldown > 0) e.cooldown -= 1;
     if (e.flash > 0) e.flash -= 1;
@@ -33,7 +33,7 @@ export function stepEnemies(state: SimState, room: Room, obstacles: readonly Rec
     e.vy = hitY ? 0 : my;
     e.facing = swinging(e) ? aimFacing(e.swipeDirX, e.swipeDirY, e.facing) : aimFacing(e.vx, e.vy, e.facing);
   }
-  separate(state.enemies, room, obstacles);
+  separate(state.enemies, bodies);
 }
 
 function swinging(e: EnemyState): boolean {
@@ -42,7 +42,8 @@ function swinging(e: EnemyState): boolean {
 
 /** Advances the enemy's mode and returns this tick's own move, px. */
 function think(state: SimState, e: EnemyState, def: EnemyDef): [number, number] {
-  const onScreen = inAggroBox(e, state.player);
+  // A player in another room is never seen.
+  const onScreen = e.roomId === state.roomId && inAggroBox(e, state.player);
   if (e.mode === 'idle' || e.mode === 'return') {
     if (!onScreen) return e.mode === 'return' ? walkHome(e, def) : [0, 0];
     aggro(e);
@@ -119,6 +120,7 @@ function hold(e: EnemyState): [number, number] {
 
 /** Hits the player if their feet are inside the swipe arc, measured from where the enemy stands now. */
 function landSwipe(state: SimState, e: EnemyState, def: EnemyDef): void {
+  if (e.roomId !== state.roomId) return;
   const { swipe } = def;
   const dx = state.player.x - e.x;
   const dy = state.player.y - e.y;

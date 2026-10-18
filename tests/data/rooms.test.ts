@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FEET_BOX } from '../../src/data/player';
-import { DEFAULT_ROOM, ROOMS, TILE } from '../../src/data/rooms';
+import { DEFAULT_ROOM, FOUNDRY_ROOM, ROOMS, TILE } from '../../src/data/rooms';
 import { boxHitsSolid } from '../../src/sim/collision';
 import { tileCentre } from '../../src/sim/state';
 
@@ -20,13 +20,39 @@ describe('rooms', () => {
     }
   });
 
-  it('is walled on every edge', () => {
-    const rows = room?.rows ?? [];
-    const last = rows.length - 1;
-    for (const [y, row] of rows.entries()) {
-      const edges = y === 0 || y === last ? [...row] : [row[0], row[row.length - 1]];
-      for (const ch of edges) expect(ch).toBe(TILE.wall);
+  it('is walled on every edge, apart from doors', () => {
+    for (const r of Object.values(ROOMS)) {
+      const rows = r.rows;
+      const last = rows.length - 1;
+      for (const [y, row] of rows.entries()) {
+        const edges = y === 0 || y === last ? [...row] : [row[0], row[row.length - 1]];
+        for (const ch of edges) expect([TILE.wall, TILE.door]).toContain(ch);
+      }
     }
+  });
+
+  it('only has doors on the outer wall, each listed and linked to a door that links back', () => {
+    for (const r of Object.values(ROOMS)) {
+      const listed = new Set((r.doorways ?? []).map((d) => `${d.tx},${d.ty}`));
+      for (const [ty, row] of r.rows.entries()) {
+        for (const [tx, ch] of [...row].entries()) if (ch === TILE.door) expect(listed.has(`${tx},${ty}`)).toBe(true);
+      }
+      for (const [i, d] of (r.doorways ?? []).entries()) {
+        expect(r.rows[d.ty]?.[d.tx]).toBe(TILE.door);
+        const back = ROOMS[d.to]?.doorways?.[d.toDoor];
+        expect(back).toMatchObject({ to: r.id, toDoor: i });
+      }
+    }
+  });
+
+  it('has an empty walled foundry to build in', () => {
+    const f = ROOMS[FOUNDRY_ROOM];
+    if (!f) throw new Error('no foundry');
+    expect(f.rows).toHaveLength(16);
+    for (const row of f.rows) expect(row).toHaveLength(24);
+    for (const row of f.rows.slice(1, -1)) expect(row.slice(1, -1)).toBe('.'.repeat(22));
+    expect(f.enemies ?? []).toEqual([]);
+    expect(f.nodes ?? []).toEqual([]);
   });
 
   it('spawns the player on open floor', () => {

@@ -12,6 +12,8 @@ export type EnemyMode = 'idle' | 'chase' | 'windup' | 'swipe' | 'recover' | 'ret
 export interface EnemyState extends Knockable {
   id: number;
   enemyId: string;
+  /** Enemies never change rooms. */
+  roomId: string;
   /** Feet centre, px. */
   x: number;
   y: number;
@@ -41,11 +43,12 @@ export interface EnemyState extends Knockable {
   burnAmmo: string;
 }
 
-export function createEnemy(id: number, enemyId: string, at: { x: number; y: number }): EnemyState {
+export function createEnemy(id: number, enemyId: string, at: { x: number; y: number }, roomId: string): EnemyState {
   const def = enemyDef(enemyId);
   return {
     id,
     enemyId,
+    roomId,
     x: at.x,
     y: at.y,
     homeX: at.x,
@@ -107,16 +110,24 @@ export function inHurtbox(e: EnemyState, x: number, y: number): boolean {
   return Math.abs(x - e.x) <= hurtbox.w / 2 && Math.abs(y - (e.y + hurtbox.offsetY)) <= hurtbox.h / 2;
 }
 
+/** A room and the solid things standing in it, for collision. */
+export interface RoomBodies {
+  room: Room;
+  obstacles: readonly Rect[];
+}
+
 /**
- * Pushes overlapping enemies apart along the axis of least overlap, half each.
- * If a wall stops one, the other takes the rest. Runs in array order, so it's deterministic.
+ * Pushes overlapping enemies in the same room apart along the axis of least overlap,
+ * half each. If a wall stops one, the other takes the rest. Runs in array order, so
+ * it's deterministic.
  */
-export function separate(enemies: EnemyState[], room: Room, obstacles: readonly Rect[] = []): void {
+export function separate(enemies: EnemyState[], bodies: (roomId: string) => RoomBodies): void {
   for (let i = 0; i < enemies.length; i++) {
     for (let j = i + 1; j < enemies.length; j++) {
       const a = enemies[i];
       const b = enemies[j];
-      if (!a || !b) continue;
+      if (!a || !b || a.roomId !== b.roomId) continue;
+      const { room, obstacles } = bodies(a.roomId);
       const fa = enemyDef(a.enemyId).feetBox;
       const fb = enemyDef(b.enemyId).feetBox;
       const dx = b.x - a.x;

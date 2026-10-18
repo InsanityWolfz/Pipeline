@@ -5,6 +5,8 @@ export const TILE = {
   floor: '.',
   wall: '#',
   ruinBlock: 'B',
+  /** A gap in the outer wall that leads to another room. Only the player walks through it. */
+  door: 'D',
 } as const;
 
 export type TileSymbol = (typeof TILE)[keyof typeof TILE];
@@ -21,6 +23,15 @@ export interface Room {
   enemies?: readonly { enemyId: string; tx: number; ty: number }[];
   /** Gathering nodes; each stands at its tile's centre. */
   nodes?: readonly { nodeId: string; tx: number; ty: number }[];
+  /** Door tiles on the outer wall, each linked to a door in another room (by its index there). */
+  doorways?: readonly Doorway[];
+}
+
+export interface Doorway {
+  tx: number;
+  ty: number;
+  to: string;
+  toDoor: number;
 }
 
 export const ROOMS: Readonly<Record<string, Room>> = {
@@ -39,7 +50,7 @@ export const ROOMS: Readonly<Record<string, Room>> = {
       '#......................................#',
       '#...................B..................#',
       '#......................................#',
-      '#......................................#',
+      'D......................................#',
       '#......................................#',
       '#......................................#',
       '#......................................#',
@@ -78,7 +89,36 @@ export const ROOMS: Readonly<Record<string, Room>> = {
       { nodeId: 'ley-vein', tx: 17, ty: 14 },
       { nodeId: 'ley-vein', tx: 24, ty: 15 },
     ],
+    doorways: [{ tx: 0, ty: 12, to: 'foundry', toDoor: 0 }],
+  },
+  // The sealed ruin the player rebuilds; empty floor to build on.
+  foundry: {
+    id: 'foundry',
+    rows: [
+      '########################',
+      '#......................#',
+      '#......................#',
+      '#......................#',
+      '#......................#',
+      '#......................#',
+      '#......................#',
+      '#......................#',
+      '#......................D',
+      '#......................#',
+      '#......................#',
+      '#......................#',
+      '#......................#',
+      '#......................#',
+      '#......................#',
+      '########################',
+    ],
+    spawn: { tx: 22, ty: 8 },
+    doorways: [{ tx: 23, ty: 8, to: 'ruin-hall', toDoor: 0 }],
   },
 };
 
+/** Where the player starts, and where a KO sends them. */
 export const DEFAULT_ROOM = 'ruin-hall';
+
+/** The room that holds the buildable foundry grid. */
+export const FOUNDRY_ROOM = 'foundry';

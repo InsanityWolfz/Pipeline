@@ -6,7 +6,7 @@ import { rollDrops, scatterPoint, spawnDrops } from '../../src/sim/drops';
 import { createRng } from '../../src/sim/rng';
 import { roomOf } from '../../src/sim/state';
 import { openRoom } from './helpers';
-import { arena, HUSK, PLAYER_AT, run } from './fight';
+import { arena, HALL, HUSK, PLAYER_AT, run } from './fight';
 
 const EXTRAS = ['wood', 'stone', 'fiber'];
 
@@ -64,8 +64,8 @@ describe('drop scatter', () => {
 
   it('spawns one ground item per dropped item, with fresh ids', () => {
     const s = arena();
-    spawnDrops(s, HUSK, 500, 448);
-    spawnDrops(s, HUSK, 600, 448);
+    spawnDrops(s, HUSK, 500, 448, HALL);
+    spawnDrops(s, HUSK, 600, 448, HALL);
     const ids = s.groundItems.map((g) => g.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(s.groundItems.length).toBeGreaterThanOrEqual(2);
@@ -76,7 +76,7 @@ describe('pickup', () => {
   /** A wood item `gap` px east of the feet box's right edge. */
   function itemAt(gap: number) {
     const s = arena();
-    s.groundItems.push({ id: s.nextGroundItemId++, itemId: 'wood', x: PLAYER_AT.x + FEET_BOX.w / 2 + gap, y: PLAYER_AT.y });
+    s.groundItems.push({ id: s.nextGroundItemId++, itemId: 'wood', roomId: HALL, x: PLAYER_AT.x + FEET_BOX.w / 2 + gap, y: PLAYER_AT.y });
     return s;
   }
 

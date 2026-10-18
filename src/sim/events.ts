@@ -1,3 +1,4 @@
+import type { PlaceFail } from './pieces';
 import type { Facing } from './player';
 
 // What happened on the last tick, for render effects and tests. Cleared at the
@@ -47,12 +48,40 @@ export interface SimEvents {
   craftFails: { recipeId: string }[];
   bursts: BurstEvent[];
   selects: { ammoId: string }[];
+  /** The player walked through a door. */
+  roomChanges: { from: string; to: string }[];
+  places: { id: number; pieceId: string; tx: number; ty: number; facing: Facing }[];
+  placeFails: { pieceId: string; tx: number; ty: number; reason: PlaceFail }[];
+  /** A piece was picked up, and the items it held went into the inventory. */
+  pickUps: { id: number; pieceId: string; items: Record<string, number> }[];
+  deposits: { id: number; itemId: string; count: number }[];
+  /** A crate was emptied into the inventory. */
+  crateTakes: { id: number; items: Record<string, number> }[];
+  /** A hopper was emptied back into the inventory. */
+  withdraws: { id: number; itemId: string; count: number }[];
   /** The player was KO'd and the room reset this tick. */
   ko: boolean;
 }
 
 export function createEvents(): SimEvents {
-  return { hits: [], deaths: [], pickups: [], harvests: [], crafts: [], craftFails: [], bursts: [], selects: [], ko: false };
+  return {
+    hits: [],
+    deaths: [],
+    pickups: [],
+    harvests: [],
+    crafts: [],
+    craftFails: [],
+    bursts: [],
+    selects: [],
+    roomChanges: [],
+    places: [],
+    placeFails: [],
+    pickUps: [],
+    deposits: [],
+    crateTakes: [],
+    withdraws: [],
+    ko: false,
+  };
 }
 
 export function clearEvents(events: SimEvents): void {
@@ -64,5 +93,12 @@ export function clearEvents(events: SimEvents): void {
   events.craftFails.length = 0;
   events.bursts.length = 0;
   events.selects.length = 0;
+  events.roomChanges.length = 0;
+  events.places.length = 0;
+  events.placeFails.length = 0;
+  events.pickUps.length = 0;
+  events.deposits.length = 0;
+  events.crateTakes.length = 0;
+  events.withdraws.length = 0;
   events.ko = false;
 }
