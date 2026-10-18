@@ -1,11 +1,11 @@
-# Bomb in flight, drawn upright (not rotated). 10x10.
+# Bomb in flight, drawn upright (not rotated). 10x10. Dark casing, ember band, lit fuse.
 ......oo..
 .....oYo..
 ....oRo...
 ..ooRoo...
-.oSLSSso..
-oSLlSSsso.
-oSlSSSsso.
-oSSScSsso.
-.oSSssso..
+.oSlSSso..
+oSlSsssso.
+oRyRRyRRo.
+osssssvvo.
+.ossvvvo..
 ..ooooo...
