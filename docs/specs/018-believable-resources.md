@@ -107,5 +107,39 @@ A claimed pylon visibly harvests the land around it and sends the haul home alon
   - a pylon tendril and a mote on the ley line
   - the hover descriptions
 
+## Build notes
+- **Placement rules.** The rule in data is a label per node type (`placement` in `src/data/nodes.ts`); the predicates live in `tests/data/placement.test.ts`. A node must:
+  - sit inside a hand-placed feature of its kind (`OVERWORLD.features`)
+  - meet that kind's local check: grass with 4+ trees within 3 tiles, 2+ rocks within 3, shallows next to water, or within half a tile of a ley line
+- **Features.** Groves and rock fields fill only the back half of their disc (the rows up to their centre), with a grass pocket round the node, so every node can be gathered from below. Ponds put the reeds in their shallows.
+- **The shrine.** It gained a boulder (node 13), so its safe zone holds one node of each type. A shrine Husk moved from (71,12) to (69,11), off the new pond.
+- **Ley lines** move from render data into `OVERWORLD.leyLines`. They lead to the foundry stairs directly or through the shrine's pylon. The pylon's haul runs along the `shrine` line.
+- **The one sim addition** is the `supplies` event when a port produces a raw, reported in the summary. Port timing, items and nodes are untouched; the harvest is visual only.
+- **Regrow stages.** The bare remains, then 3 stages, picked from the sim's timer (`src/render/nodeStages.ts`). Uses left show as 3 looks.
+- **Names and colours.**
+  - The rubble node's display name is now "Boulder"; its id is unchanged.
+  - New palette colours: the resin ambers match the resin item's icon, and the core violets match the warden-core item's.
+- **The Warden's core.** It was first drawn as a cyan ley crystal. The reviewer caught that it didn't match the violet warden-core drop, and Shaun chose to match the drop: a violet heart-stone with a gold heart.
+- **Hover descriptions** are a first draft for Shaun to edit (`src/data/descriptions.ts`). An unclaimed pylon says it needs claiming.
+- **Test helpers.** The new groves and ponds broke straight-line walking in the e2e helpers:
+  - `walkTo` now finds a path over a passable grid from the dev-only hook (`passable()`, built from `src/sim/bodies.ts`).
+  - Fight loops in the claim, crafting and tutorial tests step round obstacles.
+  - The 017 ring-2 crowd test now walks to the busiest ring-2 spot.
+- **From review.** All three blocking items are fixed:
+  - the core matches its drop
+  - render numbers moved to data
+  - the new data references are tested
+
+  From the suggestions, these are in:
+  - tighter placement rules
+  - the dormant pylon wording
+  - description tests
+  - `roomBodies` moved out of `step.ts`
+  - the port item checked in e2e
+  - `killHusk` stops retrying failed paths
+  - regrow ticks read from data
+
+  `GameScene` is 315 lines, slightly over the ~300 guideline.
+
 ## Open questions
 None.
