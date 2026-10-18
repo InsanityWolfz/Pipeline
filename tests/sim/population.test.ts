@@ -124,26 +124,24 @@ describe('the living population', () => {
     expect(packs(s).has(gone)).toBe(false);
   });
 
-  it('a hit wakes no one past the cap', () => {
+  it('wakes everything on screen, however many, with no cap (Shaun: a player who rounds them up gets the crowd)', () => {
+    const s = populated();
+    s.populated = false;
+    for (let i = 0; i < POPULATION.screenCap + 5; i++) placeHusk(s, PLAYER_AT.x - 250 + (i % 10) * 50, PLAYER_AT.y - 100 + Math.floor(i / 10) * 100);
+    run(s, 1);
+    expect(s.enemies.filter((e) => e.mode !== 'idle')).toHaveLength(POPULATION.screenCap + 5);
+    expect(summarize(s).nearPlayer).toBe(POPULATION.screenCap + 5);
+  });
+
+  it('a hit wakes an enemy, however many are already awake', () => {
     const s = populated();
     s.populated = false;
     for (let i = 0; i < POPULATION.screenCap; i++) placeHusk(s, PLAYER_AT.x - 250 + (i % 10) * 50, PLAYER_AT.y - 100);
     run(s, 1);
-    expect(s.enemies.filter((e) => e.mode !== 'idle')).toHaveLength(POPULATION.screenCap);
-    const sixteenth = placeHusk(s, PLAYER_AT.x + 200, PLAYER_AT.y + 150);
-    damageEnemy(s, sixteenth, 1, 1, 0);
-    expect(sixteenth.mode).toBe('idle');
-  });
-
-  it('wakes no more than the cap near the player at once', () => {
-    const s = populated();
-    s.populated = false;
-    for (let i = 0; i < POPULATION.screenCap + 5; i++) placeHusk(s, PLAYER_AT.x - 250 + (i % 10) * 50, PLAYER_AT.y - 100 + Math.floor(i / 10) * 200);
-    run(s, 1);
-    const awake = s.enemies.filter((e) => e.mode !== 'idle');
-    expect(awake).toHaveLength(POPULATION.screenCap);
-    expect(enemiesNearPlayer(s)).toBe(POPULATION.screenCap + 5);
-    expect(summarize(s).nearPlayer).toBe(POPULATION.screenCap + 5);
+    // Out of view, so only the hit can wake it.
+    const far = placeHusk(s, PLAYER_AT.x + 500, PLAYER_AT.y + 300);
+    damageEnemy(s, far, 1, 1, 0);
+    expect(far.mode).not.toBe('idle');
   });
 
   it('comes back in full after a death, and claims stay', () => {

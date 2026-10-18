@@ -3,7 +3,6 @@ import { enemyDef } from '../data/enemies';
 import type { Room } from '../data/rooms';
 import { moveBox, type Rect } from './collision';
 import { startKnock, type Knockable } from './knockback';
-import { screenFull } from './population';
 import type { Facing } from './player';
 import type { SimState } from './state';
 
@@ -107,8 +106,7 @@ export function damageEnemy(
   e.health = Math.max(0, e.health - amount);
   if (style.flash) e.flash = def.hitFlashTicks;
   if (style.knock) startKnock(e, dirX, dirY, def.hitKnockback, def.hitKnockTicks);
-  // A hit wakes it, unless the screen already holds the cap of awake enemies (017).
-  if ((e.mode === 'idle' || e.mode === 'return') && !screenFull(state)) aggro(e);
+  if (e.mode === 'idle' || e.mode === 'return') aggro(e);
   state.events.hits.push({ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: amount, damageType: style.damageType });
 }
 

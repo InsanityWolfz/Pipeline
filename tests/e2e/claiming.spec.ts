@@ -7,16 +7,21 @@ import { menuRows } from '../../src/render/foundryLayout';
 import { screenPoint, state } from './foundryPage';
 import { boot, watchErrors } from './helpers';
 
-/** Presses E (the claimed pylon's menu) and clicks one of its two rows. */
-async function pylonMenu(page: Page, row: 0 | 1): Promise<void> {
-  await page.keyboard.press('e');
-  await page.waitForTimeout(100);
+/**
+ * Presses E (the claimed pylon's menu) and clicks one of its two rows, until `done` says it took: under load the
+ * menu can take a frame or two to open, so a click straight after E can land before it's there.
+ */
+async function pylonMenu(page: Page, row: 0 | 1, done: () => Promise<boolean>): Promise<void> {
   const r = menuRows(2)[row];
   if (!r) throw new Error('no row');
   const p = await screenPoint(page, r.x + r.w / 2, r.y + r.h / 2);
-  await page.mouse.click(p.x, p.y);
-  await page.waitForTimeout(50);
-  await page.evaluate(() => window.__GAME__?.step(1));
+  for (let i = 0; i < 5 && !(await done()); i++) {
+    await page.keyboard.press('e');
+    await page.waitForTimeout(150 * (i + 1));
+    await page.mouse.click(p.x, p.y);
+    await page.waitForTimeout(50);
+    await page.evaluate(() => window.__GAME__?.step(1));
+  }
 }
 
 // Claiming (009): walk up to the shrine, clear it with the playtest ammo, claim
@@ -128,9 +133,9 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
 
   // E at the claimed pylon opens its menu (017: found by the pylon's site, the player being in the overworld room):
   // send the haul home, then travel to the foundry.
-  await pylonMenu(page, 0);
+  await pylonMenu(page, 0, async () => Object.keys((await state(page)).stash).length > 0);
   const stashed = Object.values((await state(page)).stash).reduce((a, b) => a + b, 0);
-  await pylonMenu(page, 1);
+  await pylonMenu(page, 1, async () => (await state(page)).room === 'foundry');
   const home = (await state(page)).room;
 
   const after = await page.evaluate(() => {

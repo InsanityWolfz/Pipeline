@@ -69,9 +69,9 @@ function nearPlayer(state: SimState, roomId: string, x: number, y: number): bool
   return roomId === state.roomId && Math.abs(x - p.x) <= POPULATION.screen.x && Math.abs(y - p.y) <= POPULATION.screen.y;
 }
 
-/** Enemies within a screen of the player; `awake` counts only those not idle or heading home. */
-export function enemiesNearPlayer(state: SimState, awake = false): number {
-  return state.enemies.filter((e) => nearPlayer(state, e.roomId, e.x, e.y) && (!awake || (e.mode !== 'idle' && e.mode !== 'return'))).length;
+/** Enemies within a screen of the player. */
+export function enemiesNearPlayer(state: SimState): number {
+  return state.enemies.filter((e) => nearPlayer(state, e.roomId, e.x, e.y)).length;
 }
 
 /**
@@ -98,11 +98,6 @@ function inView(state: SimState, roomId: string, x: number, y: number, margin = 
 /** Enemies the camera shows (017: the spec's "on screen"). */
 export function enemiesOnScreen(state: SimState): number {
   return state.enemies.filter((e) => inView(state, e.roomId, e.x, e.y)).length;
-}
-
-/** No more than the cap may be awake near the player (017): further enemies stay asleep until some fall. */
-export function screenFull(state: SimState): boolean {
-  return enemiesNearPlayer(state, true) >= POPULATION.screenCap;
 }
 
 const walkableOpen = (tx: number, ty: number): boolean => {

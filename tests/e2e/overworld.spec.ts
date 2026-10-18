@@ -32,7 +32,7 @@ test('the minimap shows the entrance, the shrine and the player, follows the pla
   expect(errors).toEqual([]);
 });
 
-test('out in ring 2 a fight fills the screen with 10-15 enemies, and never more than 15 wake near the player', async ({ page }) => {
+test('out in ring 2 a fight fills the screen with 10 or more enemies', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page, '?playtest');
   const seen = await page.evaluate(() => {
@@ -41,15 +41,10 @@ test('out in ring 2 a fight fills the screen with 10-15 enemies, and never more 
     if (!g || !h) throw new Error('no game');
     g.step(0);
     let onScreen = 0;
-    let awake = 0;
     let ko = false;
     const rings = new Set<number | null>();
     const sample = (s: ReturnType<typeof g.step>) => {
       onScreen = Math.max(onScreen, s.onScreen);
-      // Awake within a screen (POPULATION.screen: a view either way of the player).
-      const p = s.player;
-      const near = s.enemies.filter((e) => e.room === s.room && Math.abs(e.x - p.x) <= 640 && Math.abs(e.y - p.y) <= 360);
-      awake = Math.max(awake, near.filter((e) => e.mode !== 'idle' && e.mode !== 'return').length);
       rings.add(s.area.ring);
       ko ||= s.events.ko;
     };
@@ -64,11 +59,10 @@ test('out in ring 2 a fight fills the screen with 10-15 enemies, and never more 
     h.walkTo(busiest.x, busiest.y + 160);
     sample(g.getState());
     for (let t = 0; t < 600 && !ko; t++) sample(g.step(1, { dodge: t % 30 === 0 }));
-    return { onScreen, awake, rings: [...rings], populated: g.getState().populated, ko };
+    return { onScreen, rings: [...rings], populated: g.getState().populated, ko };
   });
   expect(seen.populated).toBe(true);
   expect(seen.rings).toContain(2);
   expect(seen.onScreen).toBeGreaterThanOrEqual(10);
-  expect(seen.awake).toBeLessThanOrEqual(15);
   expect(errors).toEqual([]);
 });
