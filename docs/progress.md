@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-18: 007 Tube link (overnight build)
+**Changed:** built 007 on `claude/cool-thompson-dxlx4b` from `docs/plans/007-tube-link.md`. The tube attunes on the first foundry entry. One `tube-socket` (unlocked by attuning) fills a reservoir (cap 30) from a line. Hand-loading and R are gone, so carried ammo fires first, then the reservoir, with a cyan hotbar. `?playtest` gives a boosted start. Verify: 309 unit and 24 e2e tests pass, and the qa screenshots pass. Review: fixed the one blocking issue (data tests) and most suggestions. Draft PR InsanityWolfz/Pipeline#9.
+**Next:** 008, stacked on this branch (`claude/008-spread`).
+**Notes:** sprites are pending Shaun's 4× review. An empty socket's readout shows the socket emblem with 0/30 (my call). A full ley bolt line refills as fast as the tube fires, which is a feel question.
+
 ## 2026-10-18: 007 Tube link spec
 **Changed:** interviewed Shaun and wrote `docs/specs/007-tube-link.md` (status: draft). Decisions:
 - The tube attunes on the first foundry entry.
