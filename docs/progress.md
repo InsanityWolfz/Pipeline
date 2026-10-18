@@ -13,7 +13,23 @@ Newest entry first.
 
 **Verify:** `npm run check` (220) and `npm run test:e2e` (18) pass. The qa agent passed every visible criterion with screenshots (nodes full, depleted and regrown, the harvest bar, the menu with greyed rows, hotbar and strip per ammo, a bomb mid-arc, the burst, a burning Husk, a bolt through a Husk, parts in the HUD column) and saw no console errors. Its notes for Shaun's sprite review: fuse vs shaft, ley shard vs ley bolt, and casing vs bomb look alike, especially greyed; the menu panel reads as plain rather than rune-carved; the material column has no backing.
 
-**Next:** Shaun approves the new sprites (or asks for changes), then `/review`.
+**Review:** the reviewer found five blocking issues. One was already met: per-ammo fire intervals are tested in `tube.test.ts`. One is Shaun's call: sprite approval. The other three are fixed:
+- Ley bolt hits now assert knockback, flash and aggro on both Husks.
+- Burst aggro is tested on an idle Husk with bombs stepped alone.
+- The e2e now scripts a real two-Husk pierce (it fires only when the farther Husk is on the bolt's line) and a kill by burn tick.
+
+Also fixed, from its suggestions:
+- Tests for a bolt stopping at a wall, and for bolts and bombs passing over nodes.
+- Removed dead `boxHitsSolid` obstacles and `GlyphLine.destroy`, and stopped `craft` and drops duplicating `canCraft` and `overlapsRect`.
+- Named the icon size and flame depth nudge, and the starting slot icon now comes from `STARTING_AMMO`.
+- The number keys follow `SLOT_AMMOS` (up to 4).
+- Menu and strip layouts moved to `src/data/hudLayout.ts`, so `assets.ts` is under 300 lines.
+- `tileCentre` moved to `src/sim/tiles.ts` to break the nodes/state import cycle.
+- Switching ammo no longer writes a 0 into the inventory.
+
+Re-verify: 223 unit and 18 e2e tests pass; qa re-checked real 1–3, C/Esc, E and the harvest bar with no regressions.
+
+**Next:** Shaun approves the sprites and confirms two build choices (burn ticks don't flash; key presses latch from down events, which also changes Space and R), then playtests the preview and runs `/wrapup`.
 
 **Notes:**
 - Build choices beyond the plan:

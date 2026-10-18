@@ -44,9 +44,11 @@ export function slotItem(tube: Pick<TubeState, 'ammoId'>): string {
 export function selectAmmo(state: SimState, ammoId: string): void {
   const { tube } = state;
   if (ammoId === tube.ammoId || !SLOT_AMMOS.includes(ammoId)) return;
-  const item = slotItem(tube);
-  state.inventory[item] = count(state.inventory, item) + tube.loaded;
-  tube.loaded = 0;
+  if (tube.loaded > 0) {
+    const item = slotItem(tube);
+    state.inventory[item] = count(state.inventory, item) + tube.loaded;
+    tube.loaded = 0;
+  }
   stopLoading(state);
   tube.ammoId = ammoId;
   state.events.selects.push({ ammoId });
