@@ -66,3 +66,17 @@ Technical choices and why. Newest last.
   - The telegraph is a Graphics `slice` on the ground.
   - Enemy animations switch only when the key changes, so one-shot swipes hold their last frame.
 - **Art workflow:** the Husk grids were generated from simple shapes (auto outline and shading) by a scratch script and committed as ordinary grids. They're edited by hand from here.
+
+## 2026-10-18: 005 Hand crafting
+- **Tick order:** clear events, then the player, enemies, node regrow, the harvest, straight shots (with hits), burns, bombs (flight and bursts), dead-enemy removal, the tube (select, then fire or load), pickups and the KO check.
+  - The harvest runs before the tube, so fire, load or an ammo switch on the same tick cancels it, and starting one stops loading.
+  - Burns run before bombs, so a burst's first burn damage lands exactly `everyTicks` after it.
+- **Crafting** is a sim action, `craft(state, recipeId)` in `src/sim/crafting.ts`, called between ticks by the menu and by `__GAME__.craft()`, since the menu pauses the sim and no tick runs to carry a command. It's deterministic: a replay is the same steps and crafts in the same order. Its events land in the previous tick's list.
+- **Obstacles:** `moveBox` takes solid rects besides the tile grid, stopping flush against them the same way. Gathering nodes are the only rects so far, full or depleted. Rects a body already overlaps don't stop it, so nothing jumps out of one. Projectiles ignore them.
+- **Harvest drops** scatter around the point of the node's box nearest the player and skip spots inside any node, so a drop is always reachable. Enemy drops skip node boxes too.
+- **Ley bolts** are straight shots in `state.arrows`, like arrows, with `pierce` on their ammo. Each shot keeps `hitIds`, so a bolt hits each enemy once even when a knockback pushes the enemy along its flight. `getState().arrows` lists both, with `ammoId`.
+- **Ammo** is a discriminated union in `src/data/ammo.ts`: `straight` (arrow, ley bolt) and `lob` (bomb). Fire intervals moved from the tube into each ammo's `fireTicks`.
+- **Bombs** fly on the ground from the muzzle to the target in `ceil(distance / step)` ticks, at least 1. The arc height is `4·peak·t·(1−t)`, reported for render only. A burst flashes but doesn't knock back. A burn is `burnTicks` plus the ammo that set it, and a new burst resets it.
+- **Controls:** presses are latched from each key's `down` event instead of `JustDown`. Phaser's `Key.onUp` clears `_justDown`, so a tap that went down and up between two frames was lost. That also fixes the same loss for Space and R.
+- **Menu:** `GameScene` handles C, Esc and menu clicks even under the test hook's manual clock, so e2e tests can gather with `step()` and then craft by clicking. While the menu is open the real-time loop skips the clock entirely, so no time is banked and the game doesn't catch up on close.
+- **Render:** `GlyphLine` moved to `src/render/glyphLine.ts` for the HUD, the ammo strip and the menu. The menu's row positions come from `src/render/craftMenuLayout.ts`, which has no Phaser import, so e2e tests can click rows.

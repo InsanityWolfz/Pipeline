@@ -2,6 +2,25 @@
 
 Newest entry first.
 
+## 2026-10-18: 005 Hand crafting build
+**Changed:** built 005 on `claude/005-hand-crafting`, following `docs/plans/005-hand-crafting.md`.
+- **Sim:** solid nodes with regrow (`nodes.ts`, obstacle rects in `collision.ts`); E harvesting (`harvest.ts`); crafting between ticks and the crafted set (`crafting.ts`); ammo select on 1–3 (`tube.ts`); piercing ley bolts (`combat.ts`); bombs, bursts and burns (`bombs.ts`, `burn.ts`); KO resets nodes, bombs, the harvest and the selection, and keeps the crafted set.
+- **Data:** item kinds and 9 new items, the 9 recipes and menu groups, the 4 nodes and 11 placements in `ruin-hall`, the ammo union with ley bolt and bomb, `SLOT_AMMOS`.
+- **Render:** nodes and the harvest bar, bombs on their arc, fire bursts, burn flames, the ammo strip, the C menu (pauses, click to craft, greyed rows), E, 1–3, C and Esc controls; `__GAME__.craft()`.
+- **Art:** 9 item icons, 4 nodes (full and depleted), bomb and ley bolt with shadows, fire burst, burn flame, menu panel and rows, ammo strip cells. Drawn by hand (icons) and by a scratch shape script (nodes, burst, frames), committed as grids.
+
+220 unit tests and 18 e2e tests pass.
+
+**Next:** Shaun approves the new sprites, then `/verify` and `/review`.
+
+**Notes:**
+- Build choices beyond the plan:
+  - Key presses now latch from the keys' down events (a tap shorter than a frame was lost before, for every key).
+  - The menu works under the test hook's clock.
+  - The crosshair draws above the menu and serves as its pointer.
+  - Burn ticks deal damage without a flash; only the burst flashes.
+- The e2e bolt check asserts a hit, not a two-Husk pierce, since lining up two Husks in real play is luck. The sim tests cover piercing.
+
 ## 2026-10-18: 005 Hand crafting spec
 **Changed:** interviewed Shaun and wrote `docs/specs/005-hand-crafting.md` (status: draft). Decisions: harvest nodes (tree, rubble, reeds, ley vein) with E, 3 uses then a 30 s regrow; hand-craft the parts of each chain, then the ammo; the C menu pauses the world and crafts on click; keys 1–3 pick the one slot's ammo and switching returns loaded rounds; bombs arc to the cursor, burst and burn (no spread, no self damage); ley bolts are physical and pierce without limit; the grinder makes one part, ley shards, for both bombs and bolts; all recipes open from the start; the sim records hand-crafted items for 006; the start kit stays 30 arrows.
 **Next:** Shaun approved the spec as written (2026-10-18), proposals and tuning included. The plan is approved too and saved as `docs/plans/005-hand-crafting.md`. Next is `/build`.
