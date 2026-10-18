@@ -9,7 +9,7 @@ A doorway in the ruin hall leads to the foundry, an empty walled room. There the
 - docs/prototype.md: "Player flow" beats 4 and 6, "Content list" (beginner ammo chains; foundry placement; foundry pieces: machines for the ammo chains), "Crude animations needed" (machine idle and working loops, ammo moving between machines)
 - docs/process.md: "Prototype backlog" item 006
 - docs/specs/005-hand-crafting.md: recipes, the crafted-items set, E interaction
-- Interview decisions (Shaun, 2026-10-18): the foundry is a new room reached by a doorway; items move on placeable conduits; raw materials go in through an input hopper; ammo comes out into an output crate; all three chains get machines; placing is free; machines unlock by hand-crafting their output once; combiners (assembler, packer) are 2×2, everything else 1×1; B toggles build mode, R rotates, left-click places, right-click picks up, the world keeps running; build anywhere on the foundry floor under the cursor; each hopper holds one item type, chosen with a small picker; an item a machine can't use stalls its conduit; the doorway uses a short fade, the player still spawns in the ruin hall; the foundry ticks wherever the player is; a KO keeps the whole foundry; machines show working, starved and blocked markers, with buffers on hover. Claude proposes the tuning below for Shaun to adjust.
+- Interview decisions (Shaun, 2026-10-18): the foundry is a new room reached by a doorway; items move on placeable conduits; raw materials go in through an input hopper; ammo comes out into an output crate; all three chains get machines; placing is free; machines unlock by hand-crafting their output once; combiners (assembler, packer) are 3×1, everything else 1×1; B toggles build mode, R rotates, left-click places, right-click picks up, the world keeps running; build anywhere on the foundry floor under the cursor; each hopper holds one item type, chosen with a small picker; an item a machine can't use stalls its conduit; the doorway uses a short fade, the player still spawns in the ruin hall; the foundry ticks wherever the player is; a KO keeps the whole foundry; machines show working, starved and blocked markers, with buffers on hover. Follow-up (Shaun, 2026-10-18): machines can hand items straight to the next machine; the three-input combiners are 3×1 so each input can have its own conduit; hoppers take raw materials only; conduits are walkable and other pieces solid. Claude proposes the tuning below for Shaun to adjust.
 
 ## Acceptance criteria
 
@@ -21,7 +21,7 @@ A doorway in the ruin hall leads to the foundry, an empty walled room. There the
 - [ ] The player still spawns in `ruin-hall`. The KO reset sends the player back to the ruin hall spawn as before.
 
 **Pieces (data)**
-- [ ] Buildable pieces are data: id, footprint (1×1 or 2×2), sprites, and for machines the recipe id they run and a craft time.
+- [ ] Buildable pieces are data: id, footprint (1×1 or 3×1), sprites, and for machines the recipe id they run and a craft time.
 - [ ] Machines, each running its 005 recipe:
 
   | Machine | Recipe | Size | Craft time (ticks) |
@@ -29,11 +29,11 @@ A doorway in the ruin hall leads to the foundry, an empty walled room. There the
   | `cutter` | `shaft` | 1×1 | 60 |
   | `knapper` | `arrowhead` | 1×1 | 60 |
   | `spinner` | `rope` | 1×1 | 60 |
-  | `assembler` | `arrow` | 2×2 | 90 |
+  | `assembler` | `arrow` | 3×1 | 90 |
   | `shaper` | `casing` | 1×1 | 60 |
   | `fuse-maker` | `fuse` | 1×1 | 60 |
   | `grinder` | `ley-shard` | 1×1 | 60 |
-  | `packer` | `bomb` | 2×2 | 90 |
+  | `packer` | `bomb` | 3×1 | 90 |
   | `focuser` | `ley-bolt` | 1×1 | 60 |
 
 - [ ] Logistics pieces, all 1×1: `conduit`, `hopper`, `crate`.
@@ -42,16 +42,16 @@ A doorway in the ruin hall leads to the foundry, an empty walled room. There the
 - [ ] A machine is unlocked when its recipe's output item is in the crafted-items set (005). Conduits, hoppers and crates are always unlocked. Locked pieces can't be placed.
 
 **Placement (sim)**
-- [ ] A place command (piece id, tile, facing) puts the piece on the `foundry` grid if it's unlocked and every tile of its footprint is floor that holds no other piece and, for a solid piece, doesn't overlap the player's feet box. Otherwise nothing changes and a place-failed event is recorded. A 2×2 piece's tile is its top-left. Placing is free.
+- [ ] A place command (piece id, tile, facing) puts the piece on the `foundry` grid if it's unlocked and every tile of its footprint is floor that holds no other piece and, for a solid piece, doesn't overlap the player's feet box. Otherwise nothing changes and a place-failed event is recorded. A 3×1 piece lies three tiles wide across its facing (a row when facing up or down, a column when facing left or right), and its tile is the middle one. Placing is free.
 - [ ] Facing is one of up, down, left, right. A rotate in build mode turns the facing clockwise.
 - [ ] Machines, hoppers and crates are solid to the player (feet-box collision, sliding, as nodes in 005). Conduits can be walked over. Projectiles pass over every piece.
 - [ ] A pick-up command (tile) removes the piece covering that tile. Every item it held (buffers, conduit item, hopper or crate contents) goes into the player's inventory. A place or pick-up event is recorded.
 - [ ] Place, rotate and pick-up are sim commands, deterministic and replayable, drivable through `window.__GAME__` (route chosen in /plan). They only work while the player is in the foundry.
 
 **Item flow (sim)**
-- [ ] Each piece has a front: the side its facing points to. A 1×1 piece's front is the tile ahead of it. A 2×2 machine's front is one marked tile on its front edge (which one chosen in /plan and drawn on the sprite).
+- [ ] Each piece has a front: the side its facing points to. A 1×1 piece's front is the tile ahead of it. A 3×1 machine's front is the tile ahead of its middle tile; its back and both ends are input sides, so three conduits can feed it, one per tile on the back.
 - [ ] **Conduit:** holds at most 1 item. An item in a conduit needs 15 ticks to cross it, then moves into its front if that accepts it, and waits there otherwise. Conduits accept items from any side but their front.
-- [ ] **Machine:** accepts an item from a conduit whose front is the machine, on any side but its own front, if the item is one of its recipe's inputs and its buffer for that item holds fewer than 4. When every input is buffered, it takes them and crafts for its craft time, then holds the output (up to 4). It pushes one output item at a time into its front if that's a conduit or crate that accepts it. It doesn't start a craft while its output is full.
+- [ ] **Machine:** accepts an item from a conduit or another machine whose front is the machine, on any side but its own front, if the item is one of its recipe's inputs and its buffer for that item holds fewer than 4. When every input is buffered, it takes them and crafts for its craft time, then holds the output (up to 4). It pushes one output item at a time into its front if that's a conduit, a machine or a crate that accepts it, so a machine facing straight into the next machine needs no conduit between them. It doesn't start a craft while its output is full.
 - [ ] **Stall:** an item at the end of a conduit that its front doesn't accept (wrong item, full buffer, or nothing there) waits, and the conduits behind it back up.
 - [ ] **Hopper:** holds one item type, any count. A deposit (E within 12 px of an empty hopper's feet box, with the item picked from the player's held raw materials) moves all of that item from the inventory into it. E on a hopper that already holds a type deposits all of that type the player holds. It pushes one item every 15 ticks into its front if that's a conduit that accepts it. An empty hopper with no items forgets its type.
 - [ ] **Crate:** accepts items from a conduit or machine whose front is the crate, any item, up to 99 in total. E within 12 px of its feet box moves everything in it into the inventory and records a pickup event.
@@ -86,7 +86,7 @@ A doorway in the ruin hall leads to the foundry, an empty walled room. There the
 
 ## Data changes
 - Rooms (`src/data/rooms.ts`): a `doorways` list on `Room` (tile, target room id, target doorway); new `foundry` room; a doorway tile symbol if needed.
-- Pieces (new, e.g. `src/data/pieces.ts`): the nine machines with recipe id, footprint, craft time, front port for 2×2; `conduit`, `hopper`, `crate`; the build bar order.
+- Pieces (new, e.g. `src/data/pieces.ts`): the nine machines with recipe id, footprint, craft time, 3×1 footprint rule; `conduit`, `hopper`, `crate`; the build bar order.
 - Foundry tuning (new, e.g. `src/data/foundry.ts`): conduit crossing 15 ticks, machine buffer 4 per input, output 4, hopper push every 15 ticks, crate capacity 99, deposit reach 12 px.
 - `src/data/assets.ts`: keys and layouts for the new sprites, the build bar, markers and the picker.
 
@@ -94,7 +94,7 @@ A doorway in the ruin hall leads to the foundry, an empty walled room. There the
 - The tube link and reservoir (007): ammo only reaches the tube through the crate and the inventory.
 - Gravity stagers and spreads (008), supply lines and pylons (009).
 - Machine parts or any build cost, schematics, foundry wings, upgrades.
-- Splitters, mergers, underground conduits, sorting or filtering, machines handing items straight to each other.
+- Splitters, mergers, underground conduits, sorting or filtering. Hoppers taking parts or ammo.
 - Blueprints, copy-paste, undo, multi-select, area pick-up.
 - Building outside the foundry; enemies entering the foundry or changing rooms.
 - Recipe gating and tutorial order beyond the unlock rule (012). Uncovering or attuning the foundry (007/012).
@@ -105,18 +105,16 @@ A doorway in the ruin hall leads to the foundry, an empty walled room. There the
 - **Vitest (`tests/sim`):**
   - Rooms: walking into a doorway moves the player to the linked room one tile inside, velocity cleared, event recorded; rolling in works; both rooms tick while the player is in either; Husks stay in their room; KO returns the player to the ruin hall spawn.
   - Unlocks: a machine is locked until its output is crafted by hand; logistics pieces always unlocked.
-  - Placement: valid placement; rejects locked, off-floor, wall, overlapping and (for solid pieces) under-the-player tiles with place-failed; 2×2 footprints; rotate cycles clockwise; pick-up returns every held item; machines, hoppers and crates are solid and conduits aren't; only in the foundry.
-  - Flow: conduit crossing time and one-item capacity; conduits don't accept from their front; machine accepts only its inputs, buffers up to 4, crafts after its time, holds up to 4 output and stops when full; wrong items stall and back up the line; hopper pushes every 15 ticks, keeps one type, forgets it when empty; crate caps at 99; E on a crate empties it into the inventory.
+  - Placement: valid placement; rejects locked, off-floor, wall, overlapping and (for solid pieces) under-the-player tiles with place-failed; 3×1 footprints in all four facings; rotate cycles clockwise; pick-up returns every held item; machines, hoppers and crates are solid and conduits aren't; only in the foundry.
+  - Flow: conduit crossing time and one-item capacity; conduits don't accept from their front; machine accepts only its inputs, buffers up to 4, crafts after its time, holds up to 4 output and stops when full; a machine facing another machine hands its output over directly, and a machine facing one that can't use the item is blocked; wrong items stall and back up the line; hopper pushes every 15 ticks, keeps one type, forgets it when empty; crate caps at 99; E on a crate empties it into the inventory.
   - Status: working, starved (with missing inputs), blocked and idle.
   - Lines: a full arrow line (three hoppers, cutter, knapper, spinner, assembler, crate), a bomb line and a ley bolt line each produce their ammo from raw materials.
   - KO keeps the foundry; determinism of a build-and-run session tick for tick.
-- **Vitest (data test):** every machine's recipe exists; footprints are 1×1 or 2×2; every doorway links to a doorway in an existing room; every new sprite key is in the atlas.
+- **Vitest (data test):** every machine's recipe exists; footprints are 1×1 or 3×1; every doorway links to a doorway in an existing room; every new sprite key is in the atlas.
 - **Playwright (`tests/e2e/foundry.spec.ts`):** walk through the doorway and back; in build mode place, rotate and pick up pieces with the mouse; drag a conduit run; deposit into a hopper through the picker; build a ley bolt line, step until the crate holds bolts, empty it with E, load and fire one; firing and loading are ignored in build mode; no console errors.
-- **Screenshots (qa agent):** the doorway in each room; the foundry with a full arrow line running; a 2×2 machine in each facing; the ghost valid and invalid; the build bar; items on conduits; each status marker; the hover readout; the hopper picker; the fade mid-transition.
+- **Screenshots (qa agent):** the doorway in each room; the foundry with a full arrow line running; a 3×1 machine in each facing fed by three conduits; two machines handing off directly; the ghost valid and invalid; the build bar; items on conduits; each status marker; the hover readout; the hopper picker; the fade mid-transition.
 - **Shaun's review:** every new sprite at 4×, then the Pages preview playtest (is placing quick? can you read where a line is stuck? does the first full line feel like "it does itself"?).
 
 ## Open questions
-- Should a machine hand its output straight into an adjacent machine or hopper-to-machine without a conduit? The interview chose conduits; this spec allows only conduit and crate fronts. Shaun to confirm.
-- Conduits are walkable and other pieces solid (Claude's proposal, not asked in the interview).
-- Hoppers take raw materials only. Should they also take parts, so a line can start mid-chain?
+- Can a hopper push straight into a machine, or only into a conduit? This draft says conduit only. Shaun to confirm.
 - Every number above is a starting value for Shaun to adjust when approving.
