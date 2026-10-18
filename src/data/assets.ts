@@ -256,6 +256,54 @@ export const DEPTHS = {
   tubeNudge: 0.01,
   /** Health bars, sparkles and popups over the world. */
   worldUi: 100_000,
-  /** The HUD, above everything. */
+  /** The HUD, above the world. */
   hud: 1_000_000,
+  /** The crafting menu, above the HUD. */
+  menu: 2_000_000,
+} as const;
+
+/** A node's sprite bottom sits this far below its position (the centre of its feet box), px. */
+export const NODE_SPRITE_DROP = 5;
+
+/** The harvest progress bar over a node: size, gap above the sprite, and palette ids. */
+export const HARVEST_BAR = { w: 20, h: 3, gap: 2, border: 1, color: 'ley-cyan', back: 'outline' } as const;
+
+/** Bombs draw this far above their arc height, so they leave the hand at tube height, px. */
+export const BOMB_LIFT = 10;
+
+/** The flame over a burning enemy sits this far above its feet, px. */
+export const BURN_FLAME_HEIGHT = 30;
+
+/**
+ * The ammo strip right of the hotbar slot: one cell per ammo in key order,
+ * px from each cell's top-left. Highlight drawn over the selected cell.
+ */
+export const AMMO_STRIP_LAYOUT = {
+  gap: 4,
+  cellStep: 26,
+  key: { x: 3, y: 3 },
+  icon: { x: 6, y: 3 },
+  count: { x: 4, y: 20 },
+} as const;
+
+/**
+ * The crafting menu, centred on screen. Rows are listed group by group: a header
+ * with the ammo's icon, then one row per recipe. Px from the panel's top-left,
+ * then from each row's top-left.
+ */
+export const CRAFT_MENU_LAYOUT = {
+  width: 196,
+  height: 252,
+  /** First row's top-left inside the panel. */
+  rowsAt: { x: 6, y: 8 },
+  rowHeight: 20,
+  rowGap: 1,
+  headerHeight: 16,
+  /** Up to three inputs: icon, then "have/need" beside it. */
+  input: { x: 2, step: 34, textX: 17, textY: 8 },
+  arrow: { x: 108, y: 8 },
+  output: { x: 120, textX: 18, madeY: 4, ownedY: 11 },
+  headerIcon: { x: 2, y: 0 },
+  /** Alpha of a row the player can't afford. */
+  greyAlpha: 0.35,
 } as const;

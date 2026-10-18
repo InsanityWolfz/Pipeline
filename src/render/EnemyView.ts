@@ -1,6 +1,6 @@
 import type { GameObjects, Scene } from 'phaser';
 import { TintModes } from 'phaser';
-import { animFrames, ATLAS_KEY, DEPTHS, ENEMY_ANIMS, ENEMY_FX } from '../data/assets';
+import { animFrames, ATLAS_KEY, BURN_FLAME, BURN_FLAME_HEIGHT, DEPTHS, ENEMY_ANIMS, ENEMY_FX } from '../data/assets';
 import { IDLE_SPEED } from '../data/config';
 import { enemyDef } from '../data/enemies';
 import type { EnemyState } from '../sim/enemies';
@@ -12,12 +12,14 @@ interface Drawn {
   sprite: GameObjects.Sprite;
   telegraph: GameObjects.Graphics;
   bar: GameObjects.Graphics;
+  flame: GameObjects.Sprite;
 }
 
 const viewOf = (f: Facing): 'down' | 'up' | 'side' => (f === 'up' || f === 'down' ? f : 'side');
 
 // Draws live enemies from sim state: the animation for their mode and facing, a
-// hit flash, a health bar once damaged and the swipe telegraph on the ground.
+// hit flash, a health bar once damaged, a flame while burning and the swipe
+// telegraph on the ground.
 export class EnemyView {
   private readonly drawn = new Map<number, Drawn>();
   private readonly scene: Scene;
@@ -25,6 +27,7 @@ export class EnemyView {
   constructor(scene: Scene) {
     this.scene = scene;
     for (const set of Object.values(ENEMY_ANIMS)) for (const anim of Object.values(set)) registerAnim(scene, anim);
+    registerAnim(scene, BURN_FLAME);
   }
 
   update(enemies: readonly EnemyState[]): void {
@@ -44,12 +47,14 @@ export class EnemyView {
       else d.sprite.clearTint();
       this.drawBar(d.bar, e, bottom - d.sprite.height);
       this.drawTelegraph(d.telegraph, e);
+      d.flame.setVisible(e.burnTicks > 0).setPosition(e.x, bottom - BURN_FLAME_HEIGHT).setDepth(bottom + 0.01);
     }
     for (const [id, d] of this.drawn) {
       if (live.has(id)) continue;
       d.sprite.destroy();
       d.telegraph.destroy();
       d.bar.destroy();
+      d.flame.destroy();
       this.drawn.delete(id);
     }
   }
@@ -61,7 +66,9 @@ export class EnemyView {
       sprite: this.scene.add.sprite(0, 0, ATLAS_KEY, first).setOrigin(0.5, 1),
       telegraph: this.scene.add.graphics().setDepth(DEPTHS.groundFx),
       bar: this.scene.add.graphics().setDepth(DEPTHS.worldUi),
+      flame: this.scene.add.sprite(0, 0, ATLAS_KEY, animFrames(BURN_FLAME)[0]).setVisible(false),
     };
+    d.flame.play(BURN_FLAME.key);
     this.drawn.set(e.id, d);
     return d;
   }
