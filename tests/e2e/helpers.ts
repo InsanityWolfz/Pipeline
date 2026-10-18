@@ -9,10 +9,12 @@ export interface Helpers {
   walkTo(x: number, y: number): void;
   /** Walks to just below a node and harvests it `times` times, collecting each drop. */
   harvest(nodeIndex: number, times: number): void;
-  /** Walks onto every ground item. */
+  /** Walks onto every ground item in the player's room. */
   collect(): void;
   /** Shoots the nearest Husk until one dies, then collects its drops. */
   killHusk(): void;
+  /** Walks out of the foundry's door into the ruin hall, where the tube can fire (015). */
+  toHall(): void;
 }
 
 declare global {
@@ -50,13 +52,27 @@ function installHelpers(): void {
   };
   const collect = (): void => {
     const g = game();
-    for (let t = 0; t < 900; t++) {
+    let stuck = 0;
+    let detour = 0;
+    for (let t = 0; t < 1800; t++) {
       const s = g.getState();
-      const item = s.groundItems[0];
+      const item = s.groundItems.find((it) => it.room === s.room);
       if (!item) return;
-      g.step(1, { moveX: toward(s.player.x, item.x), moveY: toward(s.player.y, item.y) });
+      // Blocked by something solid on the straight line: sidestep along x for a while.
+      if (detour > 0) {
+        detour -= 1;
+        g.step(1, { moveX: 1 });
+        continue;
+      }
+      const after = g.step(1, { moveX: toward(s.player.x, item.x), moveY: toward(s.player.y, item.y) });
+      stuck = Math.hypot(after.player.x - s.player.x, after.player.y - s.player.y) < 0.1 ? stuck + 1 : 0;
+      if (stuck > 5) {
+        stuck = 0;
+        detour = 30;
+      }
     }
-    throw new Error('could not collect the drops');
+    const s = g.getState();
+    throw new Error(`could not collect the drops: ${JSON.stringify(s.groundItems.filter((it) => it.room === s.room))} from ${s.player.x},${s.player.y}`);
   };
   window.__helpers = {
     walkTo,
@@ -71,6 +87,13 @@ function installHelpers(): void {
         g.step(30);
         collect();
       }
+    },
+    toHall() {
+      const g = game();
+      // The foundry's door is on its right wall at row 8 (src/data/rooms.ts); stand inside it and walk out.
+      walkTo(22.5 * 32, 8.5 * 32);
+      for (let t = 0; t < 60 && g.getState().room === 'foundry'; t++) g.step(1, { moveX: 1 });
+      if (g.getState().room === 'foundry') throw new Error('could not leave the foundry');
     },
     killHusk() {
       const g = game();
@@ -94,8 +117,11 @@ function installHelpers(): void {
   };
 }
 
-/** Opens the game (at `query`, e.g. `?playtest`) with the helpers installed. */
-export async function boot(page: Page, query = ''): Promise<void> {
+/**
+ * Opens the game with the helpers installed: at `query` (e.g. `?playtest`), or by
+ * default the sandbox start in the ruin hall that most specs are written for.
+ */
+export async function boot(page: Page, query = '?start=hall'): Promise<void> {
   await page.addInitScript(installHelpers);
   await page.goto(`/${query}`);
   await page.waitForFunction(() => window.__GAME__ !== undefined);

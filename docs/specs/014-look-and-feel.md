@@ -1,5 +1,5 @@
 # 014: Look and feel
-status: approved
+status: done
 
 Approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "make a spec 14 for a pass on improving the art and sprites and room layouts so they dont feel so bland and blocky. even add a little juice or sounds ... make it feel like a real game"). He reviews it in the morning report.
 
@@ -80,3 +80,34 @@ The prototype should look and feel like a real game. The rooms get hand-shaped l
 
 ## Open questions
 - None.
+
+## Build notes
+These choices were made in the overnight build, not by the spec. They're logged for Shaun to accept or overturn in the morning report.
+
+**Done**
+- **Floors.** Every theme has 4+ variants, picked by a stable tile hash (`src/render/roomTiles.ts`). The ruin flagstone lost its rune, which showed on every tile; the rune is now a rare variant. Fixed moss pixels came off the base tiles so the grid reads less.
+- **Walls in 3/4 view.** A wall over floor shows its carved face. A wall over more wall shows a lit top, with lips toward the floor beside or above it. There are no separate inner or outer corner pieces; the lips meet at corners.
+- **Shaped rooms.** Corners and edges of all four rooms are broken up with wall chunks and bites, as row data. This made two sim tests move off tiles that became wall: a drop-scatter point, and a pillar dropped from the hall's right wall to keep a husk-by-the-wall test meaningful. A flood fill still reaches every door, node, enemy and spawn.
+- **Props add no collision.** Columns and rune stones stand on existing ruin-block tiles. Banners, vines and braziers stand at the foot of wall faces. Cracks, rubble, tufts and mushrooms are decoration.
+- **Ley light** is additive glow sprites from a runtime texture, stepped in 5 alpha bands so it stays crisp. Each room has a tint and a vignette overlay.
+- **Hit-stop** holds only the struck enemy's sprite (pose and place) for 50 ms. A kill shakes instead. The sim never waits.
+- **Hit sparks by damage type.** Hit events gained a `damageType` field (physical from arrows and bolts, fire from bursts and burns). It's event data only, with no rule change.
+- **Damage numbers** are white on enemies and ember on the player, with a dark outline so they read over the white hit flash. Hits landing together stack upward.
+- **The camera lead** only applies while firing and for 0.6 s after, so build-mode clicks land where you point.
+- **Shake.** A smaller shake never cuts off a bigger one.
+- **Sound.**
+  - 32 synth recipes are rendered by `npm run sound` with no dependency. The staleness test allows a 4/32767 sample difference, since float maths can differ between Node versions.
+  - M mutes. [ and ] step the volume by 0.1. Both are saved, behind a guarded read.
+  - It starts muted under automated tests and with `?mute`.
+  - Ambient loops play per room: wind and birds in the clearing, a low drone in the hall, a hum in the foundry, chimes in the shrine. A crossfade runs on room change.
+  - The Warden's wind-up uses the Husk growl, and its slam has its own sound. Gates, rolls and the tube pickup have sounds too.
+- **Player idle** breathes over 4 frames with a blink.
+- **Placed pieces** drop in with a squash.
+
+**Not done overnight**
+These are left for a follow-up pass, or for Shaun to drop:
+- **Sprite redraws:** the 6-frame walk, roll smear, fire recoil, new hit and death poses, enemy telegraph frames, machine working loops with spinning parts, item icons, and a rune-carved HUD frame.
+- **The pause title card.** There is no pause screen yet; the craft menu pauses.
+- **Menu feedback:** hover sound and press feedback on menu rows. The craft menu already highlights rows on hover, and clicks on world menus and the build bar now click.
+- **Squash** on pickups and hopper deposits.
+- **The HUD covers some doors.** The inventory column sits over the hall's west door, and the ammo strip over south doors when the camera is clamped (found by QA).

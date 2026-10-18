@@ -10,6 +10,8 @@ import { createEvents, type SimEvents } from './events';
 import type { ClaimHold } from './claims';
 import { startingFixtures, type FixtureState } from './fixtures';
 import type { HarvestState } from './harvest';
+import { createGates, type Gates } from './tutorial';
+import { OBJECTIVES } from '../data/objectives';
 import type { OrbState } from './orbs';
 import type { Inventory } from './inventory';
 import { createLink, type LinkState } from './link';
@@ -74,6 +76,22 @@ export interface SimState {
   nextArmorId: number;
   /** The worn piece's id, or null. */
   equipped: number | null;
+  /** The player holds the tube (012); without it nothing fires. Kept through a KO. */
+  hasTube: boolean;
+  /** The tutorial's gates (012), true once open. Kept through a KO. */
+  gates: Gates;
+  /** The reservoir has filled from a line at least once (opens the shrine gate). */
+  firstLineFull: boolean;
+  /** Raw materials ever harvested, for the gathering objective. */
+  gathered: string[];
+  /** Which objectives are done, in OBJECTIVES order. */
+  objectives: boolean[];
+  /** Ticks in a row outside the foundry with a line built into the tube socket, once every other goal is done. */
+  awayTicks: number;
+  /** Every objective done: the prototype's end. */
+  prototypeComplete: boolean;
+  /** What a death keeps (011): what the player held when they last entered the foundry or deposited at a pylon. */
+  banked: Inventory;
   /** The first Husk ever killed has dropped its guaranteed armor. Kept through a KO. */
   firstHuskDropped: boolean;
   /** Build mode: only in the foundry; fire, load, ammo select and harvest are off. */
@@ -90,17 +108,17 @@ export interface SimOptions {
 }
 
 export function createSim(seed: number, options: SimOptions = {}): SimState {
-  const roomId = options.roomId ?? DEFAULT_ROOM;
   const start = options.start ?? DEFAULT_START;
+  const roomId = options.roomId ?? start.room;
   const state: SimState = {
     tick: 0,
     seed,
     rng: createRng(seed),
     roomId,
     player: createPlayer({ x: 0, y: 0 }),
-    inventory: {},
+    inventory: { ...start.inventory },
     tube: createTube(),
-    link: createLink(),
+    link: { ...createLink(), attuned: start.attuned },
     start,
     arrows: [],
     nextArrowId: 0,
@@ -125,6 +143,14 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     nextArmorId: 0,
     equipped: null,
     firstHuskDropped: false,
+    banked: { ...start.inventory },
+    hasTube: start.hasTube,
+    gates: createGates(start.gatesOpen),
+    firstLineFull: false,
+    gathered: [],
+    objectives: OBJECTIVES.map(() => false),
+    awayTicks: 0,
+    prototypeComplete: false,
     building: false,
     events: createEvents(),
   };
@@ -134,17 +160,16 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
 
 /**
  * Puts the world back to its start: player at the spawn room's spawn with full
- * health, the starting inventory, the tube on its starting ammo, every
+ * health, the tube on its starting ammo, every
  * room's enemies at home and nodes at full, and nothing harvesting, on the
  * ground or in flight, and build mode off. The tick, seed, RNG, id counters,
- * the crafted set, the tube's link and reservoir, claims, the stash and the
- * whole foundry carry on. Claimed rooms get no enemies back.
+ * the inventory (a death trims it first), the crafted set, the tube's link and
+ * reservoir, claims, the stash, armor and the whole foundry carry on. Claimed rooms get no enemies back.
  */
 export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   const rooms = Object.values(ROOMS);
   state.roomId = spawnRoomId;
   state.player = createPlayer(tileCentre(roomOf(state).spawn));
-  state.inventory = { ...state.start.inventory };
   state.tube = createTube();
   state.arrows = [];
   state.groundItems = [];

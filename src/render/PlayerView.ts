@@ -12,7 +12,7 @@ import {
   type PlayerAnim,
 } from '../data/assets';
 import { IDLE_SPEED, TICK_RATE } from '../data/config';
-import { FEET_BOX, HIT_INVULN_TICKS, ROLL_TICKS } from '../data/player';
+import { DYING_TICKS, FEET_BOX, HIT_INVULN_TICKS, ROLL_TICKS } from '../data/player';
 import { aimFacing } from '../sim/direction';
 import { isRolling } from '../sim/movement';
 import type { Facing, PlayerState } from '../sim/player';
@@ -24,6 +24,9 @@ import { registerAnim } from './anims';
 import { colorOf } from './color';
 
 type View = 'down' | 'up' | 'side';
+
+/** The share of a death, at its end, over which the remains fade out. */
+const DEATH_FADE_SHARE = 1 / 3;
 
 /** A multiply tint that leaves a corner's colour as drawn. */
 const UNTINTED = 0xffffff;
@@ -50,7 +53,8 @@ export class PlayerView {
   }
 
   /** Draws the player; `shown` false hides them (they're in a room not yet on screen). */
-  update(p: PlayerState, tube: TubeState, link: LinkState, armor: ArmorWeight | null, shown = true): void {
+  /** `hasTube` false (012) draws the player empty-handed. */
+  update(p: PlayerState, tube: TubeState, link: LinkState, armor: ArmorWeight | null, hasTube: boolean, shown = true): void {
     this.sprite.setVisible(shown);
     const bottom = p.y + FEET_BOX.h / 2;
     this.sprite.setPosition(p.x, bottom).setDepth(bottom);
@@ -59,7 +63,11 @@ export class PlayerView {
     const facing = rolling ? p.facing : aimFacing(p.aimX - p.x, p.aimY - p.y, p.facing);
     this.sprite.setFlipX(facing === 'left');
 
-    if (rolling) {
+    // The last stretch of a death fades the remains out before waking in the foundry.
+    this.sprite.setAlpha(p.dying > 0 ? Math.min(1, p.dying / (DYING_TICKS * DEATH_FADE_SHARE)) : 1);
+    if (p.dying > 0) {
+      if (this.sprite.anims.currentAnim?.key !== PLAYER_ANIMS.death.key) this.sprite.play(PLAYER_ANIMS.death.key);
+    } else if (rolling) {
       // Restart on a new roll, even one that follows straight after another.
       const fresh = p.rollTick < this.lastRollTick || this.sprite.anims.currentAnim?.key !== PLAYER_ANIMS.roll.key;
       if (fresh) this.sprite.play(PLAYER_ANIMS.roll.key);
@@ -84,9 +92,9 @@ export class PlayerView {
       const body = colorOf(ARMOR_TINTS[armor]);
       this.sprite.setTint(UNTINTED, UNTINTED, body, body).setTintMode(TintModes.MULTIPLY);
     }
-    this.tube.setVisible(shown && !rolling);
+    this.tube.setVisible(shown && hasTube && !rolling && p.dying === 0);
     if (!rolling) this.placeTube(p, facing, bottom);
-    this.placeAttune(facing, shown && !rolling && link.attunePulse > 0);
+    this.placeAttune(facing, shown && hasTube && !rolling && link.attunePulse > 0);
   }
 
   /** The attuning pulse sits exactly over the tube, a hair in front of it. */

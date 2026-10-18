@@ -85,6 +85,9 @@ export const TUBE_GRIP: Readonly<Record<keyof typeof TUBE_SPRITES, { x: number; 
 export const HUD_DIGITS = { key: 'hud-digits', glyphs: '0123456789/+-', advance: 4 } as const;
 
 /** The HUD letter font (010): uppercase letters, space and a little punctuation, the same 3x5 size and advance as the digits. */
+/** Height of the HUD font's glyphs (digits and letters), px. */
+export const GLYPH_HEIGHT = 5;
+
 export const HUD_LETTERS = { key: 'hud-letters', glyphs: "ABCDEFGHIJKLMNOPQRSTUVWXYZ .,'!?():—" } as const;
 
 /** Atlas frame for one HUD font character: a digit (or / + -), else a letter (lowercase draws as uppercase). */
@@ -132,6 +135,7 @@ export type PlayerAnim =
   | 'fire-up'
   | 'fire-side'
   | 'hit-down'
+  | 'death'
   | 'hit-up'
   | 'hit-side'
   | 'roll';
@@ -139,6 +143,10 @@ export type PlayerAnim =
 const WALK_FPS = 8;
 const WALK_FRAMES = 4;
 const ROLL_FRAMES = 4;
+
+/** The idle breathe (014): frames, and frames per second. */
+const IDLE_FRAMES = 4;
+const IDLE_FPS = 3;
 
 const playerAnim = (name: PlayerAnim, frames: number, frameRate: AnimDef['frameRate'], loop: boolean): AnimDef => ({
   key: `player-${name}`,
@@ -148,9 +156,9 @@ const playerAnim = (name: PlayerAnim, frames: number, frameRate: AnimDef['frameR
 });
 
 export const PLAYER_ANIMS: Readonly<Record<PlayerAnim, AnimDef>> = {
-  'idle-down': playerAnim('idle-down', 1, 1, true),
-  'idle-up': playerAnim('idle-up', 1, 1, true),
-  'idle-side': playerAnim('idle-side', 1, 1, true),
+  'idle-down': playerAnim('idle-down', IDLE_FRAMES, IDLE_FPS, true),
+  'idle-up': playerAnim('idle-up', IDLE_FRAMES, IDLE_FPS, true),
+  'idle-side': playerAnim('idle-side', IDLE_FRAMES, IDLE_FPS, true),
   'walk-down': playerAnim('walk-down', WALK_FRAMES, WALK_FPS, true),
   'walk-up': playerAnim('walk-up', WALK_FRAMES, WALK_FPS, true),
   'walk-side': playerAnim('walk-side', WALK_FRAMES, WALK_FPS, true),
@@ -161,6 +169,8 @@ export const PLAYER_ANIMS: Readonly<Record<PlayerAnim, AnimDef>> = {
   'hit-up': playerAnim('hit-up', 1, 1, true),
   'hit-side': playerAnim('hit-side', 1, 1, true),
   roll: playerAnim('roll', ROLL_FRAMES, 'roll', false),
+  /** Played once over the death (011): it should finish inside DYING_TICKS. */
+  death: playerAnim('death', 4, 6, false),
 };
 
 /** Enemy animations. `side` faces right; left is drawn flipped. Death has one view. `recover` is optional: without it, a recovering enemy shows idle. */
@@ -210,6 +220,14 @@ export const FIRE_BURST: AnimDef = { key: 'fire-burst', frames: 4, frameRate: 14
 /** Ley light spiralling off the player as a pylon sends the haul home (009). */
 export const DEPOSIT_SWIRL: AnimDef = { key: 'deposit-swirl', frames: 4, frameRate: 10, loop: false };
 
+/**
+ * After a KO (011): the wake-up text shows once the KO fade has played, holds for
+ * `holdMs`, then fades over `fadeMs`. `top` is its first line's offset from the
+ * screen's centre and `lineStep` the gap between lines, px. `title` and
+ * `lostTitle` are the words shown.
+ */
+export const WAKE_TEXT = { holdMs: 3000, fadeMs: 400, top: -24, lineStep: 9, title: 'You wake in the foundry', lostTitle: 'Lost' } as const;
+
 /** A ley burst at the tube's mouth for each projectile fired (008). */
 export const MUZZLE_FLASH: AnimDef = { key: 'muzzle-flash', frames: 2, frameRate: 20, loop: false };
 
@@ -238,6 +256,8 @@ export const HUD_MATERIALS_LAYOUT = {
   rowStep: 16,
   /** Where the count starts, relative to the row's icon. */
   count: { x: 18, y: 6 },
+  /** How wide a row counts as HUD for clicks (icon and a two-digit count), px (015). */
+  rowWidth: 30,
 } as const;
 
 /** Enemy effects drawn in the world. Colours are palette ids. */
@@ -277,6 +297,9 @@ export const KO_FADE_MS = 250;
 /** A ground item's sprite bottom sits this far below its ground point, so it rests on its shadow, px. */
 export const GROUND_ITEM_LIFT = 3;
 
+/** Textures drawn at runtime (014): the soft glow and the vignette. */
+export const FX_TEXTURES = { glow: 'fx-glow', vignette: 'fx-vignette' } as const;
+
 /** Render depths. World sprites sort by the bottom of their footprint (px); these sit around that. */
 export const DEPTHS = {
   /** Flat floor tiles, under everything. */
@@ -293,8 +316,20 @@ export const DEPTHS = {
   flameNudge: 0.01,
   /** Health bars, sparkles and popups over the world. */
   worldUi: 100_000,
+  /** The mouse-over name (015), over a piece's readout. */
+  hoverName: 100_012,
+  /** The build bar's hover panel (015), over the bar. */
+  buildTip: 1_000_005,
+  /** Tutorial key prompts, over other world UI. */
+  prompt: 100_005,
   /** Build mode's spread fan over the tube socket, just under the build arrows. */
   spreadFan: 99_998,
+  /** Soft ley light pooled on the floor (014), over shadows and under anything standing. */
+  glow: 0.25,
+  /** Drifting motes and fireflies, over the world. */
+  motes: 99_000,
+  /** A room's dusk tint and vignette, over the world and under the HUD. */
+  mood: 500_000,
   /** The HUD, above the world. */
   hud: 1_000_000,
   /** The crafting menu, above the HUD. */

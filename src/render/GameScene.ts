@@ -4,6 +4,7 @@ import atlasData from '../../assets/build/sprites.json?url';
 import { ATLAS_KEY } from '../data/assets';
 import { CAMERA_LERP, DOOR_FADE_MS } from '../data/config';
 import { BUILD_BAR } from '../data/pieces';
+import { SOUNDS } from '../data/sounds';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { worn } from '../sim/armor';
 import { advanceClock, createClock } from '../sim/clock';
@@ -12,27 +13,32 @@ import { clearEvents, createEvents, type SimEvents } from '../sim/events';
 import { usableInReach } from '../sim/foundryUse';
 import { cancelHarvest } from '../sim/harvest';
 import type { Command } from '../sim/input';
-import { pieceAt, pieceRect } from '../sim/pieces';
-import { canPlace, unlockedPieces } from '../sim/placement';
+import { pieceAt } from '../sim/pieces';
+import { canPlace, conduitInFrom, unlockedPieces } from '../sim/placement';
 import { roomById, roomSize, type SimState } from '../sim/state';
 import { stepSim } from '../sim/step';
 import { ArrowView } from './ArrowView';
 import { BombView } from './BombView';
 import { BuildView } from './BuildView';
-import { Controls, type UiCommand } from './controls';
+import { Controls, NO_UI_COMMAND, type UiCommand } from './controls';
+import { ghostShape } from './dragPath';
 import { CraftMenuView } from './CraftMenuView';
 import { EffectsView } from './EffectsView';
 import { EnemyView } from './EnemyView';
 import { FoundryView } from './FoundryView';
 import { GroundItemView } from './GroundItemView';
 import { HopperPicker } from './HopperPicker';
-import { HoverReadout, machineLines, socketLines, stagerLines } from './HoverReadout';
+import { HoverView } from './HoverView';
 import { HudView } from './HudView';
 import { NodeView } from './NodeView';
 import { PlayerView } from './PlayerView';
 import { RoomView } from './room';
 import { SiteMenus } from './SiteMenus';
 import { SiteView } from './SiteView';
+import { WakeView } from './WakeView';
+import { mergeEvents } from './eventLog';
+import { FeelView } from './FeelView';
+import { TutorialUi } from './TutorialUi';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -55,11 +61,14 @@ export class GameScene extends Scene {
   private bombView?: BombView;
   private foundryView?: FoundryView;
   private buildView?: BuildView;
-  private readout?: HoverReadout;
+  private hover?: HoverView;
   private picker?: HopperPicker;
   private menu?: CraftMenuView;
   private site?: SiteView;
   private siteMenus?: SiteMenus;
+  private wake?: WakeView;
+  private tutorial?: TutorialUi;
+  private feel?: FeelView;
   /** The room on screen. It lags the player's room through a door's fade. */
   private shownRoomId: string;
   private fading = false;
@@ -76,6 +85,7 @@ export class GameScene extends Scene {
 
   preload(): void {
     this.load.atlas(ATLAS_KEY, atlasImage, atlasData);
+    FeelView.preload(this);
   }
 
   create(): void {
@@ -90,11 +100,18 @@ export class GameScene extends Scene {
     this.bombView = new BombView(this);
     this.hud = new HudView(this);
     this.buildView = new BuildView(this);
-    this.readout = new HoverReadout(this);
+    this.hover = new HoverView(this);
     this.picker = new HopperPicker(this);
     this.site = new SiteView(this);
     this.siteMenus = new SiteMenus(this);
+    this.wake = new WakeView(this);
+    this.tutorial = new TutorialUi(this);
     this.menu = new CraftMenuView(this, (recipeId) => this.craft(recipeId));
+    this.feel = new FeelView(
+      this,
+      (id) => this.foundryView?.dropIn(id),
+      (id, ms) => this.enemyView?.freeze(id, ms),
+    );
     this.showRoom(this.sim.roomId);
     this.draw();
 
@@ -113,8 +130,7 @@ export class GameScene extends Scene {
       controls.poll({
         building: this.sim.building,
         pieceId: () => this.buildView?.selected ?? FIRST_PIECE,
-        overUi: (x, y) =>
-          (this.buildView?.overUi(x, y) ?? false) || (this.picker?.overUi(x, y) ?? false) || (this.siteMenus?.overUi(x, y) ?? false),
+        overUi: (x, y) => [this.buildView, this.picker, this.siteMenus, this.hud, this.tutorial].some((v) => v?.overUi(x, y)),
         clickUi: (x, y) => this.clickUi(controls, x, y),
         stagerAt: (t) => {
           const piece = pieceAt(this.sim.foundry, t.tx, t.ty);
@@ -156,13 +172,23 @@ export class GameScene extends Scene {
 
   /** A click on the build bar picks a piece; on the hopper menu, it takes out or puts in. */
   private clickUi(controls: Controls, x: number, y: number): void {
-    if (this.menuOpen || this.buildView?.click(x, y) || this.siteMenus?.click(controls, x, y)) return;
+    if (this.menuOpen) return;
+    if (this.buildView?.click(x, y) || this.siteMenus?.click(controls, x, y)) {
+      this.feel?.sound.play(SOUNDS.menuClick);
+      return;
+    }
     const entry = this.picker?.entryAt(x, y);
     const hopper = this.picker?.hopperId;
     if (!entry || hopper === null || hopper === undefined) return;
+    this.feel?.sound.play(SOUNDS.menuClick);
     if (entry.action === 'take') controls.menus.withdraw(hopper);
     else controls.menus.deposit(hopper, entry.itemId);
     this.picker?.close();
+  }
+
+  /** The mouse-over text on show, for the test hook (015). */
+  hoverText(): { hoverName: string | null; buildTip: string | null } {
+    return { hoverName: this.hover?.shown ?? null, buildTip: this.buildView?.tip.shown ?? null };
   }
 
   get menuOpen(): boolean {
@@ -178,39 +204,20 @@ export class GameScene extends Scene {
 
   /** Crafts once, between ticks. The test hook crafts through here too. Crafting has no drawn effects. */
   craft(recipeId: string): void {
+    const before = this.sim.events.crafts.length;
     craft(this.sim, recipeId);
+    this.feel?.sound.play(this.sim.events.crafts.length > before ? SOUNDS.craft : SOUNDS.menuClick);
   }
 
   /** Build actions made with the mouse and keys since the last tick, for the test hook to merge into its steps. */
   takeUiCommand(): UiCommand {
-    return (
-      this.controls?.takeUiCommand() ?? {
-        toggleBuild: false,
-        place: null,
-        pickUp: null,
-        deposit: null,
-        withdraw: null,
-        setAngle: null,
-        pylon: null,
-        takeStash: null,
-        identify: false,
-        equip: null,
-      }
-    );
+    return this.controls?.takeUiCommand() ?? NO_UI_COMMAND;
   }
 
   /** Steps the sim one tick and keeps its events for the next draw. The test hook steps through here too. */
   stepOnce(cmd: Command): void {
     stepSim(this.sim, cmd);
-    // Hits aren't drawn from events (flashes read sim state), so they aren't kept.
-    const { deaths, pickups, bursts, shots, stashDeposits, identifies, ko } = this.sim.events;
-    this.pending.deaths.push(...deaths);
-    this.pending.pickups.push(...pickups);
-    this.pending.bursts.push(...bursts);
-    this.pending.shots.push(...shots);
-    this.pending.stashDeposits.push(...stashDeposits);
-    this.pending.identifies.push(...identifies);
-    this.pending.ko ||= ko;
+    mergeEvents(this.pending, this.sim.events);
   }
 
   /** Draws a room's tiles and fits the camera to it. */
@@ -251,41 +258,38 @@ export class GameScene extends Scene {
     this.followRoom(this.pending.ko);
     this.effects.play(this.pending, sim.player);
     if (this.pending.identifies.length > 0) this.site?.identified();
-    clearEvents(this.pending);
+    if (this.pending.ko) this.wake?.show(this.pending.lost);
     const shown = this.shownRoomId;
+    this.feel?.update(sim, this.pending, shown, this.game.loop.delta);
+    clearEvents(this.pending);
     const inFoundry = shown === FOUNDRY_ROOM;
     this.foundryView?.update(sim.foundry, inFoundry, sim.building);
     this.nodeView?.update(inRoom(sim.nodes, shown), sim.harvest);
     this.groundItemView?.update(inRoom(sim.groundItems, shown));
     this.enemyView?.update(inRoom(sim.enemies, shown));
     // Through a door's fade the player is already in the next room; hide them until it shows.
-    this.playerView?.update(sim.player, sim.tube, sim.link, worn(sim)?.weight ?? null, shown === sim.roomId);
+    this.playerView?.update(sim.player, sim.tube, sim.link, worn(sim)?.weight ?? null, sim.hasTube, shown === sim.roomId);
     this.arrowView?.update(inRoom(sim.arrows, shown));
     this.bombView?.update(inRoom(sim.bombs, shown));
     this.site?.update(sim, shown);
     this.siteMenus?.update(sim);
-    this.hud?.update(sim.tube, sim.inventory, sim.player, sim.link, worn(sim));
-    this.menu?.update(sim.inventory);
+    this.tutorial?.update(sim, shown);
+    this.hud?.update(sim.tube, sim.inventory, sim.player, sim.link, worn(sim), sim.hasTube);
+    this.menu?.update(sim.inventory, sim.link);
     const hopper = sim.foundry.pieces.find((p) => p.id === this.picker?.hopperId);
     this.picker?.update(sim.inventory, hopper?.kind === 'hopper' ? hopper : undefined);
     const controls = this.controls;
     const cursor = controls && inFoundry && controls.overWorld() ? controls.cursorTile() : null;
-    this.buildView?.update(sim.building, unlockedPieces(sim), cursor, controls?.facing ?? 'right', (...a) =>
-      canPlace(sim, ...a),
+    this.buildView?.update(
+      sim.building,
+      unlockedPieces(sim),
+      cursor,
+      controls?.facing ?? 'right',
+      controls?.mirrored ?? false,
+      (...a) => canPlace(sim, ...a),
+      (t, f) => ghostShape(controls?.heldLay() ?? null, t, f, (u, g) => conduitInFrom(sim, u.tx, u.ty, g)),
     );
-    const hovered = cursor ? pieceAt(sim.foundry, cursor.tx, cursor.ty) : undefined;
-    const lines =
-      hovered?.kind === 'machine'
-        ? machineLines(hovered)
-        : hovered?.kind === 'socket'
-          ? socketLines(sim.link.reservoir)
-          : hovered?.kind === 'stager'
-            ? stagerLines(hovered.angle)
-            : [];
-    if (hovered && lines.length > 0) {
-      const r = pieceRect(hovered);
-      const top = this.foundryView?.topOf(hovered.id) ?? r.y;
-      this.readout?.show(lines, r.x, top, this.cameras.main.worldView.y);
-    } else this.readout?.show([], 0, 0);
+    const point = controls?.overWorld() ? controls.cursorPoint() : null;
+    this.hover?.update(sim, shown, point, (id) => this.foundryView?.topOf(id), this.cameras.main.worldView.y);
   }
 }

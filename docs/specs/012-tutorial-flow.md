@@ -1,5 +1,5 @@
 # 012: Tutorial flow
-status: approved
+status: done
 
 Approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18). He reviews it in the morning report.
 
@@ -78,3 +78,20 @@ The prototype plays end to end as the new player experience in docs/prototype.md
 
 ## Open questions
 - None. Objective wording is a first draft for Shaun to edit.
+
+## Build notes
+These choices were made in the overnight build, not by the spec. They're logged for Shaun to accept or overturn in the morning report.
+- **Starts.** There are three. The real game (no flag) is the tutorial start in the clearing. `?playtest` gives the boosted inventory, the tube, attuned, with gates open. `?start=hall` is the old sandbox start (hall, 30 arrows, tube in hand, gates open), which the sim's unit tests and most e2e specs use. `?start=hall&attuned` adds attunement for tests that craft bombs and ley bolts.
+- **The spread objective needs one stager.** The prototype has one Warden, which drops one warden core, and a stager costs one, so the objective is one gravity stager facing the socket. Its text reads "Build a spread with a gravity stager".
+- **The last objective** ("Head back out") only starts its 600-tick clock once every other objective is done. Otherwise it would complete during the shrine fight.
+- **Objectives update on the next tick.** Crafts land between ticks, so a craft objective completes on the tick after the craft.
+- **Gathering** counts each raw as harvested from a node at least once.
+- **Gated doors** are solid to the player while shut: rubble on the foundry door, a ley barrier on the shrine door. Both fade out when they open.
+- **Drops** never land inside the pylon or the tube stone. Before this they could be unreachable.
+- **Layout.** The clearing is 24×18. Its door joins the ruin hall's bottom wall at (20,29), and the tube stone is at (12,11).
+- **Waking after a KO.** Until the foundry gate opens, a KO wakes the player in the clearing, not the sealed foundry, so they can't be attuned before reaching it. From then on they wake in the foundry, as 011 says. Nothing is banked before the first trip home, so a KO in the first fight loses what was gathered (the death rule).
+- **Prompts.** Each prompt shows within 64 px, dimmed, and at full strength once its key would work. The C (craft) prompt floats over the player anywhere. The B (build) prompt floats over the player only in the foundry. "Fill the tube from your line" prompts E over the nearest hopper. No objective uses the stash, so it never gets a prompt.
+- **The objective line** sits on a dark band so it reads over doors and barriers, and fades in as it moves on.
+- **Gates.** Doors carry `gate: GateId` (the spec named it `sealedBy`). Each gate's opening condition lives in `src/sim/tutorial.ts`.
+- **"Build an ammo line into the tube socket"** completes when a socket is placed, and the last objective's "line running" only checks that a socket exists. "Fill the tube" checks the actual flow.
+

@@ -22,9 +22,11 @@ import {
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import {
   CONDUIT_ANIMS,
+  CONDUIT_CORNERS,
   CRATE_SPRITE,
   STAGER_SPRITE,
   SOCKET_SPRITES,
+  TUTORIAL_SPRITES,
   PYLON_SPRITES,
   FIXTURE_SPRITES,
   ORB_SPRITES,
@@ -40,9 +42,10 @@ import {
 import { ENEMIES } from '../../src/data/enemies';
 import { FIXTURES, PORT_CYCLE } from '../../src/data/claims';
 import { ARMOR_DROP_CHANCE, ARMOR_WEIGHTS } from '../../src/data/armor';
+import { OBJECTIVES } from '../../src/data/objectives';
 import { ROOMS, TILE } from '../../src/data/rooms';
 import { ITEMS } from '../../src/data/items';
-import { STARTING_INVENTORY } from '../../src/data/player';
+import { STARTING_INVENTORY, TUTORIAL_START } from '../../src/data/player';
 import { PLAYTEST_START } from '../../src/data/playtest';
 import { SLOT_AMMOS, STARTING_AMMO } from '../../src/data/tube';
 import { CRAFT_GROUPS, RECIPES } from '../../src/data/recipes';
@@ -135,7 +138,8 @@ describe('assets', () => {
         for (const frame of animFrames(working)) expect(frames).toContain(frame);
       }
     }
-    for (const anim of [...Object.values(CONDUIT_ANIMS), STATUS_MARKERS.working]) {
+    expect(Object.keys(CONDUIT_CORNERS)).toHaveLength(8);
+    for (const anim of [...Object.values(CONDUIT_ANIMS), ...Object.values(CONDUIT_CORNERS), STATUS_MARKERS.working]) {
       for (const frame of animFrames(anim)) expect(frames).toContain(frame);
     }
     const singles = [
@@ -390,5 +394,29 @@ describe('armor (010)', () => {
     expect(FIXTURES.some((f) => f.kind === 'bench')).toBe(true);
     const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as { frames: Record<string, unknown> };
     for (const frame of animFrames(FIXTURE_SPRITES.bench)) expect(Object.keys(atlas.frames)).toContain(frame);
+  });
+});
+
+describe('the tutorial (012)', () => {
+  it('has objectives with text, and tutorial sprites in the atlas', () => {
+    expect(OBJECTIVES.length).toBeGreaterThan(0);
+    for (const o of OBJECTIVES) for (const ch of o.text) expect(() => digitFrame(ch)).not.toThrow();
+    const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as { frames: Record<string, unknown> };
+    const frames = Object.keys(atlas.frames);
+    for (const v of Object.values(TUTORIAL_SPRITES)) {
+      if (typeof v === 'string') expect(frames).toContain(v);
+      else for (const f of animFrames(v)) expect(frames).toContain(f);
+    }
+  });
+
+  it('puts the tube stone on floor and gates on real doors', () => {
+    const clearing = ROOMS.clearing;
+    const stone = clearing?.tubeStone;
+    if (!stone) throw new Error('no tube stone');
+    expect(clearing.rows[stone.ty]?.[stone.tx]).toBe(TILE.floor);
+    const gates = Object.values(ROOMS).flatMap((r) => (r.doorways ?? []).flatMap((d) => (d.gate ? [d.gate] : [])));
+    expect(gates.sort()).toEqual(['foundry', 'shrine']);
+    for (const r of Object.values(RECIPES)) if (r.requires) expect(r.requires).toBe('attuned');
+    expect(TUTORIAL_START.room).toBe('clearing');
   });
 });

@@ -1,6 +1,7 @@
 import { TILE_SIZE } from '../data/config';
 import { FIXTURES, type FixtureDef } from '../data/claims';
 import type { Rect } from './collision';
+import { facingVector } from './direction';
 import type { Tile } from './pieces';
 
 // The foundry's fixed furniture (009): the stash from the start, the supply port
@@ -44,4 +45,11 @@ export function fixtureAt(fixtures: readonly FixtureState[], tx: number, ty: num
     const d = fixtureDef(f.id);
     return d.tx === tx && d.ty === ty;
   });
+}
+
+/** Where the supply port hands its raw: the tile it faces. */
+export function portFront(f: FixtureState): Tile {
+  const d = fixtureDef(f.id);
+  const [dx, dy] = facingVector(d.facing);
+  return { tx: d.tx + dx, ty: d.ty + dy };
 }

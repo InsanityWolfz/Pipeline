@@ -11,7 +11,7 @@ function watchErrors(page: Page): string[] {
 }
 
 async function boot(page: Page): Promise<void> {
-  await page.goto('/');
+  await page.goto('/?start=hall');
   await page.waitForFunction(() => window.__GAME__ !== undefined);
   // step(0) takes the sim off the real-time loop, so nothing ticks between reads.
   await page.evaluate(() => window.__GAME__?.step(0));

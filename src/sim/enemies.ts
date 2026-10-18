@@ -1,3 +1,4 @@
+import type { DamageType } from '../data/ammo';
 import { enemyDef } from '../data/enemies';
 import type { Room } from '../data/rooms';
 import { moveBox, type Rect } from './collision';
@@ -83,9 +84,11 @@ export function aggro(e: EnemyState): void {
 export interface HitStyle {
   knock: boolean;
   flash: boolean;
+  /** Recorded on the hit event so render can colour it; it changes no rule. */
+  damageType: DamageType;
 }
 
-const ARROW_HIT: HitStyle = { knock: true, flash: true };
+const ARROW_HIT: HitStyle = { knock: true, flash: true, damageType: 'physical' };
 
 /** Damages an enemy, knocking it along (dirX, dirY). A hit always aggros an idle or returning enemy. */
 export function damageEnemy(
@@ -101,7 +104,7 @@ export function damageEnemy(
   if (style.flash) e.flash = def.hitFlashTicks;
   if (style.knock) startKnock(e, dirX, dirY, def.hitKnockback, def.hitKnockTicks);
   if (e.mode === 'idle' || e.mode === 'return') aggro(e);
-  state.events.hits.push({ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: amount });
+  state.events.hits.push({ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: amount, damageType: style.damageType });
 }
 
 /** True if a ground point is inside the enemy's hurtbox. */
