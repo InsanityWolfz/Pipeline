@@ -19,7 +19,7 @@ import { buildBarCells, conduitLook, inRect, pieceIcon, sorterLook } from './fou
 import { BuildTip } from './BuildTip';
 import { MAX_ARROWS, placeArrows, viewOf } from './FoundryView';
 import { toView } from './scale';
-import { addVector } from './vector/textures';
+import { addVector, showFrame } from './vector/textures';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -121,10 +121,10 @@ export class BuildView {
     if (def.kind === 'sorter') {
       // A sorter's ghost shows which side its item will leave by; F flips it (015).
       const look = sorterLook(facing, mirrored);
-      this.ghost.setFrame(animFrames(look.anim)[0] ?? '').setFlip(look.flipX, look.flipY);
+      showFrame(this.ghost, animFrames(look.anim)[0] ?? '').setFlip(look.flipX, look.flipY);
     } else {
       const flip = def.kind === 'conduit' ? conduitLook(facing, inFrom).flip : facing === 'left';
-      this.ghost.setFrame(bodyFrame(pieceId, facing, inFrom)).setFlip(flip, false);
+      showFrame(this.ghost, bodyFrame(pieceId, facing, inFrom)).setFlip(flip, false);
     }
     if (def.kind === 'conduit' || def.kind === 'sorter') this.ghost.setOrigin(0).setPosition(r.x - TILE_SIZE / 2, r.y - TILE_SIZE / 2);
     else this.ghost.setOrigin(0.5, 1).setPosition(r.x, bottom);

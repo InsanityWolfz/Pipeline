@@ -1,11 +1,11 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS } from '../data/assets';
+import { DEPTHS } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
 import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
 import type { GateId } from '../data/rooms';
 import { roomById, type SimState } from '../sim/state';
 import { doorOpen } from '../sim/tutorial';
-import { addVector, showFrame } from './vector/textures';
+import { addVector, addVectorSprite, showFrame } from './vector/textures';
 
 // The tutorial's world pieces (012): the tube on its stone (then the bare stone),
 // rubble over the foundry's stairs while its gate is shut, crumbling away as it
@@ -42,8 +42,7 @@ export class TutorialView {
     this.seals = (room.doorways ?? []).flatMap((d) => {
       if (!d.gate || doorOpen(sim, d.gate)) return [];
       const bottom = (d.ty + 1) * TILE_SIZE;
-      const sprite = this.scene.add.sprite(d.tx * TILE_SIZE, bottom, ATLAS_KEY).setOrigin(0, 1).setDepth(bottom + DEPTHS.tubeNudge);
-      sprite.setFrame(TUTORIAL_SPRITES.rubble);
+      const sprite = addVectorSprite(this.scene, d.tx * TILE_SIZE, bottom, TUTORIAL_SPRITES.rubble).setOrigin(0, 1).setDepth(bottom + DEPTHS.tubeNudge);
       return [{ gate: d.gate, sprite, fading: false }];
     });
     const stone = room.tubeStone;

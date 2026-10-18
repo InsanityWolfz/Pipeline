@@ -127,28 +127,17 @@ describe('vector frame registration', () => {
     const assets = await import('../../src/data/assets');
     const foundry = await import('../../src/data/foundryAssets');
     const { vectorFrames } = await import('../../src/render/vector/catalog');
-    const anims = [
-      ...Object.values(assets.ENEMY_ANIMS).flatMap((set) => Object.values(set)),
-      assets.PICKUP_SPARKLE,
-      assets.FIRE_BURST,
-      assets.DEPOSIT_SWIRL,
-      assets.MUZZLE_FLASH,
-      assets.BURN_FLAME,
-    ].flatMap((a) => (a ? assets.animFrames(a) : []));
-    const registered = new Set<string>([
-      ...Object.values(assets.SPRITES),
-      ...anims,
-      foundry.TUTORIAL_SPRITES.stone,
-      foundry.TUTORIAL_SPRITES.stoneEmpty,
-      foundry.ORB_SPRITES.orb,
-      foundry.ORB_SPRITES.shadow,
-      ...Object.values(assets.OVERWORLD_SPRITES).flat(),
-      ...Object.values(assets.NODE_SPRITES).flatMap((n) => [...n.uses, ...n.regrow]),
-      ...Object.values(foundry.INTAKE_SPRITES),
-      ...Object.values(foundry.LOGISTICS_ICONS),
-      ...Object.values(foundry.SITE_ICONS),
-      foundry.INTAKE_EMPTY_ICON,
-    ]);
+    // Every frame name the asset tables hold: strings, and the frames of every anim, however deep.
+    const registered = new Set<string>();
+    const walk = (v: unknown): void => {
+      if (typeof v === 'string') registered.add(v);
+      else if (Array.isArray(v)) v.forEach(walk);
+      else if (v && typeof v === 'object') {
+        if ('key' in v && 'frames' in v && typeof v.frames === 'number') for (const f of assets.animFrames(v as never)) registered.add(f);
+        Object.values(v).forEach(walk);
+      }
+    };
+    walk({ ...assets, ...foundry });
     for (const f of vectorFrames()) expect(registered, f.name).toContain(f.name);
   });
 });

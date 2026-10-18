@@ -383,8 +383,7 @@ describe('armor (010)', () => {
     }
     expect(ITEMS['unidentified-armor']?.kind).toBe('armor');
     expect(FIXTURES.some((f) => f.kind === 'bench')).toBe(true);
-    const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as { frames: Record<string, unknown> };
-    for (const frame of animFrames(FIXTURE_SPRITES.bench)) expect(Object.keys(atlas.frames)).toContain(frame);
+    for (const frame of animFrames(FIXTURE_SPRITES.bench)) expect(drawnFrames()).toContain(frame);
   });
 });
 

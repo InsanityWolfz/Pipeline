@@ -65,8 +65,8 @@ export const SORTER_ANIMS: Readonly<Record<PieceView, AnimDef>> = {
   side: loop('sorter-side', 2, FLOW_FPS),
 };
 
-/** The sorter's filter icon shows at this scale in its slot, and its sort-side arrow is tinted this palette colour. */
-export const SORTER_LOOK = { slotScale: 0.5, sortArrowTint: 'gold' } as const;
+/** The sorter's filter icon shows at this scale in its slot. */
+export const SORTER_LOOK = { slotScale: 0.5 } as const;
 
 /** Conduit corners (013) by the side items come in from and the side they leave by: `${in}-${out}`. Flat on the floor like the straights. */
 export const CONDUIT_CORNERS = {
@@ -111,11 +111,13 @@ export const INTAKE_EMPTY_ICON = 'emblem-intake';
 
 /**
  * Build-mode arrows on a piece's edges, also on the ghost: cyan pointing out of its
- * output side, gold pointing in on each side that takes items. `side` points right.
+ * output side, ember pointing in on each side that takes items, gold out of a
+ * sorter's sort side (020: its own frames, no longer a tint). `side` points right.
  */
-export const FACING_ARROWS: Readonly<Record<'in' | 'out', Record<PieceView, string>>> = {
+export const FACING_ARROWS: Readonly<Record<'in' | 'out' | 'sort', Record<PieceView, string>>> = {
   out: { down: 'facing-arrow-down', up: 'facing-arrow-up', side: 'facing-arrow-side' },
   in: { down: 'input-arrow-down', up: 'input-arrow-up', side: 'input-arrow-side' },
+  sort: { down: 'sort-arrow-down', up: 'sort-arrow-up', side: 'sort-arrow-side' },
 };
 
 /** A door in a side wall, drawn as is on the right wall and flipped on the left. */

@@ -1,6 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
-import { TintModes } from 'phaser';
-import { animFrames, ATLAS_KEY, DEPTHS } from '../data/assets';
+import { animFrames, DEPTHS } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
 import { CONDUIT_TICKS, INTAKE, STAGER_ANGLES } from '../data/foundry';
 import {
@@ -31,7 +30,7 @@ import { registerAnim } from './anims';
 import { arrowSpots, conduitLook, pieceIcon, sorterLook } from './foundryLayout';
 import { colorOf } from './color';
 import { TextLine } from './textLine';
-import { addVector, textureScale } from './vector/textures';
+import { addVector, addVectorSprite, textureScale } from './vector/textures';
 
 export const viewOf = (f: Facing): PieceView => (f === 'up' || f === 'down' ? f : 'side');
 
@@ -56,13 +55,20 @@ export function placeArrows(
     const [ex, ey] = facingVector(spot.edge);
     const x = (spot.tx + 0.5) * TILE_SIZE + ex * reach;
     const y = (spot.ty + 0.5) * TILE_SIZE + ey * reach;
-    // A sorter's side exit is an output arrow in gold.
-    arrow.setFrame(FACING_ARROWS[spot.kind === 'sort' ? 'out' : spot.kind][viewOf(spot.points)]).setFlipX(spot.points === 'left');
-    // Filled, not multiplied: a multiply tint would turn the cyan arrow green.
-    if (spot.kind === 'sort') arrow.setTint(colorOf(SORTER_LOOK.sortArrowTint)).setTintMode(TintModes.FILL);
-    else arrow.clearTint().setTintMode(TintModes.MULTIPLY);
+    // A sorter's side exit has its own gold output arrow.
+    arrow.setFrame(FACING_ARROWS[spot.kind][viewOf(spot.points)]).setFlipX(spot.points === 'left');
     arrow.setPosition(Math.round(x), Math.round(y));
   }
+}
+
+/** The frame a piece's body shows first, before `draw` animates or turns it. */
+function firstFrame(p: PieceState): string {
+  const view = viewOf(p.facing);
+  if (p.kind === 'conduit') return animFrames(conduitLook(p.facing, p.inFrom).anim)[0] ?? '';
+  if (p.kind === 'sorter') return animFrames(sorterLook(p.facing, p.mirrored).anim)[0] ?? '';
+  if (p.kind === 'machine') return MACHINE_HOUSINGS[pieceDef(p.pieceId).footprint][view].idle;
+  if (p.kind === 'stager') return animFrames(STAGER_SPRITE)[0] ?? '';
+  return p.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE;
 }
 
 interface Drawn {
@@ -125,27 +131,28 @@ export class FoundryView {
   private bounce(id: number, body: GameObjects.Sprite): void {
     if (!this.dropping.delete(id)) return;
     const y = body.y;
-    body.setY(y - SQUASH.dropPx).setScale(1 - SQUASH.squash, 1 + SQUASH.squash);
+    // Relative to its resting scale: a vector frame rests at 1 / texture scale.
+    const rest = body.scaleX;
+    body.setY(y - SQUASH.dropPx).setScale(rest * (1 - SQUASH.squash), rest * (1 + SQUASH.squash));
     this.scene.tweens.add({ targets: body, y, duration: SQUASH.ms, ease: 'Bounce.Out' });
-    this.scene.tweens.add({ targets: body, scaleX: 1, scaleY: 1, duration: SQUASH.ms * SQUASH.settle, ease: 'Back.Out' });
+    this.scene.tweens.add({ targets: body, scaleX: rest, scaleY: rest, duration: SQUASH.ms * SQUASH.settle, ease: 'Back.Out' });
   }
 
   /** The top of a drawn piece's sprite, world px. */
   topOf(id: number): number | undefined {
     const d = this.drawn.get(id);
-    return d ? d.body.y - d.body.height : undefined;
+    return d ? d.body.y - d.body.displayHeight : undefined;
   }
 
   private create(p: PieceState): Drawn {
-    const add = this.scene.add;
     const view = viewOf(p.facing);
     const r = pieceRect(p);
     const bottom = r.y + r.h / 2;
     const left = p.facing === 'left';
     const d: Drawn = {
-      body: add.sprite(r.x, bottom, ATLAS_KEY).setOrigin(0.5, 1).setFlipX(left).setDepth(bottom),
+      body: addVectorSprite(this.scene, r.x, bottom, firstFrame(p)).setOrigin(0.5, 1).setFlipX(left).setDepth(bottom),
       icon: addVector(this.scene, r.x, bottom, pieceIcon(p.pieceId)).setOrigin(0.5),
-      arrows: arrowSpots(p).map(() => add.image(0, 0, ATLAS_KEY, FACING_ARROWS.out.down).setDepth(DEPTHS.worldUi - 1)),
+      arrows: arrowSpots(p).map(() => addVector(this.scene, 0, 0, FACING_ARROWS.out.down).setDepth(DEPTHS.worldUi - 1)),
     };
     if (p.kind === 'conduit') {
       const look = conduitLook(p.facing, p.inFrom);
@@ -156,7 +163,7 @@ export class FoundryView {
       const footprint = pieceDef(p.pieceId).footprint;
       d.body.setFrame(MACHINE_HOUSINGS[footprint][view].idle);
       d.icon.setPosition(r.x, bottom - ICON_RISE[footprint][view]).setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge);
-      d.marker = add.sprite(r.x, 0, ATLAS_KEY).setOrigin(0.5, 1).setDepth(DEPTHS.worldUi);
+      d.marker = addVectorSprite(this.scene, r.x, 0, STATUS_MARKERS.blocked).setOrigin(0.5, 1).setDepth(DEPTHS.worldUi);
       d.markerIcon = addVector(this.scene, r.x, 0, pieceIcon(p.pieceId)).setOrigin(0.5).setDepth(DEPTHS.worldUi + 1);
     } else if (p.kind === 'sorter') {
       const look = sorterLook(p.facing, p.mirrored);
@@ -247,7 +254,7 @@ export class FoundryView {
     const marker = d.marker;
     const icon = d.markerIcon;
     if (!marker || !icon) return;
-    const top = d.body.y - d.body.height - FOUNDRY_LAYOUT.markerGap;
+    const top = d.body.y - d.body.displayHeight - FOUNDRY_LAYOUT.markerGap;
     marker.setY(top).setVisible(p.status !== 'idle');
     icon.setVisible(p.status === 'starved');
     if (p.status === 'working') marker.play(STATUS_MARKERS.working.key, true);
@@ -256,7 +263,7 @@ export class FoundryView {
     if (p.status === 'starved') {
       marker.setFrame(STATUS_MARKERS.starved);
       const missing = p.missing[0];
-      if (missing) icon.setFrame(itemDef(missing).icon).setY(top - marker.height / 2);
+      if (missing) icon.setFrame(itemDef(missing).icon).setY(top - marker.displayHeight / 2);
     }
   }
 }
