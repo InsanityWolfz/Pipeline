@@ -1,5 +1,5 @@
 # 006: Foundry building
-status: draft
+status: approved
 
 ## Goal
 A doorway in the ruin hall leads to the foundry, an empty walled room. There the player enters build mode and places machines, ley conduits, input hoppers and output crates on the tile grid, each with a facing. Raw materials the player drops into a hopper ride conduits through machines that run the same recipes as hand crafting, and finished ammo collects in a crate the player empties with E. Machines unlock by hand-crafting their output once. All three beginner chains can be built, and one full line working end to end proves it.
