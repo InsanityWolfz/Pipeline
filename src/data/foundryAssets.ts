@@ -1,0 +1,90 @@
+import type { AnimDef } from './assets';
+
+// Asset keys for the foundry (006): piece housings, emblems, conduits, hoppers,
+// crates, status markers and the doorway. Kept apart from assets.ts so that file
+// stays small; like it, this has no runtime imports.
+
+export type PieceView = 'down' | 'up' | 'side';
+
+const WORK_FPS = 4;
+const FLOW_FPS = 4;
+
+const loop = (key: string, frames: number, frameRate: number): AnimDef => ({ key, frames, frameRate, loop: true });
+
+/** Machine housings by footprint and view (`side` faces right; left is flipped): an idle frame and a working loop. */
+export const MACHINE_HOUSINGS: Readonly<Record<'1x1' | '3x1', Record<PieceView, { idle: string; working: AnimDef }>>> =
+  {
+    '1x1': {
+      down: { idle: 'machine-1x1-down', working: loop('machine-1x1-down-working', 2, WORK_FPS) },
+      up: { idle: 'machine-1x1-up', working: loop('machine-1x1-up-working', 2, WORK_FPS) },
+      side: { idle: 'machine-1x1-side', working: loop('machine-1x1-side-working', 2, WORK_FPS) },
+    },
+    '3x1': {
+      down: { idle: 'machine-3x1-down', working: loop('machine-3x1-down-working', 2, WORK_FPS) },
+      up: { idle: 'machine-3x1-up', working: loop('machine-3x1-up-working', 2, WORK_FPS) },
+      side: { idle: 'machine-3x1-side', working: loop('machine-3x1-side-working', 2, WORK_FPS) },
+    },
+  };
+
+/**
+ * Where a housing's emblem centre sits above the sprite's bottom (the footprint's
+ * bottom edge), px: the middle of its top face. The 3x1 side view has a taller top face.
+ */
+export const EMBLEM_RISE: Readonly<Record<'1x1' | '3x1', Record<PieceView, number>>> = {
+  '1x1': { down: 31, up: 31, side: 31 },
+  '3x1': { down: 31, up: 31, side: 63 },
+};
+
+/** Each piece's 16x16 emblem: drawn on a machine's top face, and its icon on the build bar. */
+export const PIECE_EMBLEMS: Readonly<Record<string, string>> = {
+  conduit: 'emblem-conduit',
+  hopper: 'emblem-hopper',
+  crate: 'emblem-crate',
+  cutter: 'emblem-cutter',
+  knapper: 'emblem-knapper',
+  spinner: 'emblem-spinner',
+  assembler: 'emblem-assembler',
+  shaper: 'emblem-shaper',
+  'fuse-maker': 'emblem-fuse-maker',
+  grinder: 'emblem-grinder',
+  packer: 'emblem-packer',
+  focuser: 'emblem-focuser',
+};
+
+/** Conduits flow toward their front; `side` flows right. They lie flat on the floor. */
+export const CONDUIT_ANIMS: Readonly<Record<PieceView, AnimDef>> = {
+  down: loop('conduit-down', 2, FLOW_FPS),
+  up: loop('conduit-up', 2, FLOW_FPS),
+  side: loop('conduit-side', 2, FLOW_FPS),
+};
+
+export const HOPPER_SPRITES: Readonly<Record<PieceView, string>> = {
+  down: 'hopper-down',
+  up: 'hopper-up',
+  side: 'hopper-side',
+};
+
+export const CRATE_SPRITE = 'crate';
+
+/** A door in a side wall, drawn as is on the right wall and flipped on the left. */
+export const DOORWAY_SPRITE = 'doorway-side';
+
+/** Machine status markers over a machine. A starved machine shows the missing item's icon on the bubble. */
+export const STATUS_MARKERS = {
+  working: loop('status-cog', 2, WORK_FPS),
+  blocked: 'status-stop',
+  starved: 'status-bubble',
+} as const;
+
+/** Foundry render layout, px. */
+export const FOUNDRY_LAYOUT = {
+  /** Gap between the top of a machine's sprite and the bottom of its status marker. */
+  markerGap: 2,
+  /** A conduit item icon sits this far above its ground point, so it reads as riding the channel. */
+  itemLift: 3,
+  /** A hopper's or crate's item icon and count sit this far above its sprite's bottom. */
+  contentsRise: 30,
+  /** Conduits lie on the floor; items riding them draw just above. */
+  conduitDepth: 0.2,
+  itemDepth: 0.3,
+} as const;

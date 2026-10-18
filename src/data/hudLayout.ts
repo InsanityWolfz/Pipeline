@@ -39,3 +39,41 @@ export const CRAFT_MENU_LAYOUT = {
   /** Alpha of a row the player can't afford. */
   greyAlpha: 0.35,
 } as const;
+
+/**
+ * The build bar, along the bottom of the screen above the hotbar: one cell per
+ * unlocked piece in build bar order, its emblem inside. Cells use the ammo strip's
+ * cell sprites. Px on screen, then from each cell's top-left.
+ */
+export const BUILD_BAR_LAYOUT = {
+  /** Distance from the screen's bottom edge to the cells' bottom. */
+  bottom: 34,
+  cellStep: 26,
+  cellWidth: 24,
+  cellHeight: 28,
+  icon: { x: 4, y: 6 },
+} as const;
+
+/** The ghost of the piece to place: palette tints for where it can and can't go, and its alpha. */
+export const GHOST = { okTint: 'ley-cyan', badTint: 'ember', alpha: 0.6 } as const;
+
+/** The hopper picker: a column of held items in craft rows, centred on screen. Px on screen, then per row. */
+export const PICKER_LAYOUT = {
+  rowWidth: 184,
+  rowHeight: 20,
+  rowGap: 1,
+  icon: { x: 4, y: 2 },
+  count: { x: 24, y: 8 },
+} as const;
+
+/** The hover readout over a machine: a dark box of icon + count lines. Px from its top-left. */
+export const READOUT_LAYOUT = {
+  pad: 3,
+  lineHeight: 17,
+  width: 44,
+  count: { x: 19, y: 6 },
+  /** Gap above the machine's sprite. */
+  gap: 4,
+  back: 'outline',
+  border: 'ley-deep',
+} as const;

@@ -16,6 +16,15 @@ import {
   TUBE_SPRITES,
 } from '../../src/data/assets';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
+import {
+  CONDUIT_ANIMS,
+  CRATE_SPRITE,
+  DOORWAY_SPRITE,
+  HOPPER_SPRITES,
+  MACHINE_HOUSINGS,
+  PIECE_EMBLEMS,
+  STATUS_MARKERS,
+} from '../../src/data/foundryAssets';
 import { ENEMIES } from '../../src/data/enemies';
 import { ROOMS, TILE } from '../../src/data/rooms';
 import { ITEMS } from '../../src/data/items';
@@ -100,6 +109,29 @@ describe('assets', () => {
       expect(anim.key).toMatch(KEBAB);
       for (const frame of animFrames(anim)) expect(Object.keys(atlas.frames)).toContain(frame);
     }
+  });
+
+  it('has every foundry sprite and animation frame in the built atlas, and an emblem per piece', () => {
+    const frames = Object.keys(atlas.frames);
+    for (const views of Object.values(MACHINE_HOUSINGS)) {
+      for (const { idle, working } of Object.values(views)) {
+        expect(frames).toContain(idle);
+        for (const frame of animFrames(working)) expect(frames).toContain(frame);
+      }
+    }
+    for (const anim of [...Object.values(CONDUIT_ANIMS), STATUS_MARKERS.working]) {
+      for (const frame of animFrames(anim)) expect(frames).toContain(frame);
+    }
+    const singles = [
+      ...Object.values(HOPPER_SPRITES),
+      ...Object.values(PIECE_EMBLEMS),
+      CRATE_SPRITE,
+      DOORWAY_SPRITE,
+      STATUS_MARKERS.blocked,
+      STATUS_MARKERS.starved,
+    ];
+    for (const key of singles) expect(frames).toContain(key);
+    expect(Object.keys(PIECE_EMBLEMS).sort()).toEqual(Object.keys(PIECES).sort());
   });
 
   it('has a HUD font frame for every glyph', () => {

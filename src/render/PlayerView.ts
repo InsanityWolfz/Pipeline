@@ -38,7 +38,9 @@ export class PlayerView {
     this.tube = scene.add.image(0, 0, ATLAS_KEY, TUBE_SPRITES.down).setOrigin(0, 0);
   }
 
-  update(p: PlayerState, tube: TubeState): void {
+  /** Draws the player; `shown` false hides them (they're in a room not yet on screen). */
+  update(p: PlayerState, tube: TubeState, shown = true): void {
+    this.sprite.setVisible(shown);
     const bottom = p.y + FEET_BOX.h / 2;
     this.sprite.setPosition(p.x, bottom).setDepth(bottom);
     const rolling = isRolling(p);
@@ -66,7 +68,7 @@ export class PlayerView {
       if (white) o.setTint(colorOf(PLAYER_HIT_FX.flashColor)).setTintMode(TintModes.FILL);
       else o.clearTint();
     }
-    this.tube.setVisible(!rolling);
+    this.tube.setVisible(shown && !rolling);
     if (!rolling) this.placeTube(p, facing, bottom);
   }
 
