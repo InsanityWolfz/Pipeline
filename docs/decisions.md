@@ -86,3 +86,14 @@ Technical choices and why. Newest last.
 
 ## 2026-10-18: Body follows the aim
 - **Player sprite:** at Shaun's request, the body faces the aim (the same 4-way snap as the tube) whenever the player isn't rolling, so walking away from the cursor walks backwards instead of pointing the tube behind the body. A roll still shows its roll direction. Render-only: the sim's `facing` keeps 003's rule (aim while firing, else movement), so a roll from standing still goes the way the player last moved.
+
+## 2026-10-18: 006 Foundry building
+- **Rooms:** the sim keeps flat lists, and every enemy, node, ground item, arrow and bomb carries a `roomId`. `state.roomId` is the player's room. Systems match by room: collision uses each thing's own room, hits and bursts only reach Husks in the same room, and pickups, harvest reach and Husk aggro and swipes need the player there. Every room ticks every step. `resetRoom` became `resetWorld`.
+- **Doors:** door tiles (`D`) are walkable only for the player (`moveBox(..., doors = true)`). Husks, arrows and bombs treat them as wall. A feet box overlapping a door tile moves the player to the floor tile inside the linked door.
+- **Flow tick:** two phases. First everything advances: conduit progress, machine crafts finishing and starting, hopper timers. Then items move in piece-id order through one `offer`, which refuses a source standing on the target's front tile. Arriving items start at progress 0, so nothing moves two hops in a tick.
+- **Crafting:** a machine only starts a craft when its whole output fits in its output cap (4), so the assembler, which makes 4 arrows, waits for an empty output. Picking up a machine mid-craft refunds the craft's inputs.
+- **Statuses:** `working` while crafting, `blocked` when its output can't fit another craft, `starved` when some inputs are buffered but not all, and `idle` when it's empty.
+- **Build input:** rotating is render-side; the ghost's facing travels on the `place` command. Mouse place and pick-up actions queue in `Controls`, one per tick. The test hook merges them into its steps (`takeUiCommand`), so e2e tests can build with real clicks. Clicks read the bar selection at click time.
+- **Art:** at Shaun's request, machines share one stone housing per footprint and view and show the icon of the item they make on the top face. That icon is also their build bar icon. Only conduits, hoppers and crates have their own bar icons. Wood was redrawn as a side-on log.
+- **Build bar** cells reuse the ammo strip's cell sprites. The hover readout is drawn with Graphics in palette colours. The picker reuses the craft row sprite.
+- **Process:** prettier isn't a project tool. Running it via `npx` reformatted every sim file, and the change was reverted before review.

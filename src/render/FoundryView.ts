@@ -107,7 +107,7 @@ export class FoundryView {
       d.icon.setVisible(first !== undefined);
       if (first) d.icon.setFrame(itemDef(first[0]).icon);
       d.count?.set(total > 0 ? String(total) : '');
-      d.count?.moveTo(Math.round(d.body.x - (d.count.width - 1) / 2), Math.round(d.icon.y + 6));
+      d.count?.moveTo(Math.round(d.body.x - (d.count.width - 1) / 2), Math.round(d.icon.y + 9));
     }
   }
 
