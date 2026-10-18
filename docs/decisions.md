@@ -46,3 +46,23 @@ Technical choices and why. Newest last.
 - **HUD font:** the numbers are the `hud-digits` sprite font (0–9 and `/`), because Phaser text blurs at 640×360 under integer zoom. The slot layout numbers live in `HUD_SLOT_LAYOUT`.
 - **Test hook:** `step()` keeps the player's last aim when a command gives none, as a still mouse would. The load press applies on the first tick only, like dodge.
 - **TypeScript:** `erasableSyntaxOnly` rules out constructor parameter properties, so classes assign their fields in the constructor.
+
+## 2026-10-18: 004 Enemies
+- **Tick order:** clear events, then the player, enemies (AI, swipe, movement, separation), arrows (with hits), dead-enemy removal and drops, the tube, pickups, and finally the KO check. Enemies act after the player moves, so a swipe lands on where the player stands now.
+- **Enemy behaviour** is a mode machine in `src/sim/huskAi.ts`: idle, chase, windup, swipe, recover, return.
+  - Each timed mode counts its first tick as 1, so the wind-up's tick 37 is the swipe.
+  - Every number comes from the enemy def, so the next melee enemy is data.
+- **Aggro box:** the view size (640×360) centred on the player's feet, never the camera, so the sim stays render-free.
+  - The off-screen count runs through a swipe, and the leash applies once the swipe recovers.
+- **Knockback** (`src/sim/knockback.ts`) is a per-tick push added on top of the body's own move. Input still steers a knocked player, and walls stop the push through `moveBox`.
+- **Separation:** overlapping enemies are pushed apart along the axis of least overlap, half each, in array order, so it's deterministic. A body stopped by a wall leaves the rest of the push to the other. The player never collides with enemies.
+- **Arrow hits:** `stepArrows` takes a hit test that runs before the wall test at both the start and end point. The hit goes to the live enemy whose hurtbox holds the point and that sits furthest back along the flight. Hurtboxes are boxes on the ground point, offset from the feet.
+- **Events:** `SimState.events` (hits, deaths, pickups, ko) is cleared every tick. `GameScene.stepOnce()` gathers them across multi-tick frames for the next draw, and the test hook steps through it.
+- **KO reset:** `resetRoom()` rebuilds the player, inventory, tube, arrows, ground items and enemies from room data. It keeps the tick, seed, RNG and every id counter, so a replay differs after a KO and render pools never reuse an id.
+- **Drops:** a drop table rolls fixed items plus one chance item through `rng.ts`. Each item scatters to a clear spot within 12 px (8 tries), falling back to the corpse point. Pickup is distance from the item to the feet box.
+- **Render:**
+  - Depths live in `DEPTHS` in `src/data/assets.ts`.
+  - Hit flashes use `setTint(white).setTintMode(TintModes.FILL)`, since Phaser 4 has no `setTintFill`, and `clearTint()` also resets the mode.
+  - The telegraph is a Graphics `slice` on the ground.
+  - Enemy animations switch only when the key changes, so one-shot swipes hold their last frame.
+- **Art workflow:** the Husk grids were generated from simple shapes (auto outline and shading) by a scratch script and committed as ordinary grids. They're edited by hand from here.

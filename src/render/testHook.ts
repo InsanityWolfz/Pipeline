@@ -1,6 +1,5 @@
 import { NO_COMMAND, type Command } from '../sim/input';
 import type { SimState } from '../sim/state';
-import { stepSim } from '../sim/step';
 import { summarize, type SimSummary } from '../sim/summary';
 import type { GameScene } from './GameScene';
 
@@ -28,7 +27,7 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
       if (!Number.isInteger(frames) || frames < 0) throw new Error(`step() needs a whole number of frames, got ${frames}`);
       scene.manualStepping = true;
       const held: Command = { ...NO_COMMAND, aimX: sim.player.aimX, aimY: sim.player.aimY, ...command };
-      for (let i = 0; i < frames; i++) stepSim(sim, i === 0 ? held : { ...held, dodge: false, load: false });
+      for (let i = 0; i < frames; i++) scene.stepOnce(i === 0 ? held : { ...held, dodge: false, load: false });
       return summarize(sim);
     },
   };

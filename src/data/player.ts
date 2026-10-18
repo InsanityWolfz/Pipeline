@@ -23,3 +23,12 @@ export const FEET_BOX = { w: 16, h: 8 } as const;
 
 /** What the player carries at the start, item id to count. */
 export const STARTING_INVENTORY: Readonly<Record<string, number>> = { arrow: 30 };
+
+/** Health at the start and after a KO. Spec 004; no regen yet. */
+export const MAX_HEALTH = 100;
+
+/** Ticks a hit leaves the player invulnerable. */
+export const HIT_INVULN_TICKS = 30;
+
+/** A ground item this close to the feet box is picked up, px. */
+export const PICKUP_RADIUS = 8;

@@ -2,6 +2,45 @@
 
 Newest entry first.
 
+## 2026-10-18: 004 Enemies
+**Changed:** specced, planned (`docs/plans/004-enemies.md`) and built 004 on `claude/004-enemies`.
+- **Sim:**
+  - Player health with knockback, hit invulnerability and a hit that stops loading (`health.ts`, `knockback.ts`).
+  - Husks with RotMG-style aggro, leash, wind-up, swipe and recover (`enemies.ts`, `huskAi.ts`).
+  - Arrow hits, knockback and death (`combat.ts`).
+  - Seeded drops and walk-over pickup (`drops.ts`).
+  - The placeholder KO (`resetRoom()` in `state.ts`).
+  - Per-tick `events`, all reported by `getState()`.
+- **Data:** Husk tuning and its drop table, room enemy placements, player health values, four materials, and a `DEPTHS` table plus render layout values in `assets.ts`.
+- **Render:**
+  - Husk poses, hit flash, health bar and the swipe telegraph on the ground.
+  - Ground items, corpses, the pickup sparkle and "+1 [icon]" popup.
+  - The KO fade.
+  - The player's white hit flash.
+  - The HUD health bar and material column.
+- **Art:** the Husk, four materials, item shadow, pickup sparkle, player hit poses, HUD health frame and the `+` glyph.
+
+Shaun approved the sprites by eye and playtested the preview: it's good. 153 unit tests and 14 e2e tests pass, and the qa screenshots passed. Review found one blocking issue: the player only flickered, but the spec says they flash white. It's fixed.
+
+**Next:** Shaun merges the 004 PR when ready, then `/spec 005` (hand crafting: gather wood, stone, fiber and ley crystal; craft the three beginner ammo types).
+
+**Notes:**
+- Build choices beyond the spec, accepted in the playtest:
+  - A 6-tick `swipe` pose.
+  - A chasing Husk holds still in range while its cooldown runs.
+  - One 16×16 sprite per material serves as both its ground sprite and HUD icon.
+  - Arrows hit the Husk they reached first when hurtboxes overlap.
+  - On a KO the camera holds while the screen darkens, then jumps to spawn.
+- With the specced timings a swipe cycle is 66 ticks, so the 60-tick cooldown never binds. It matters only if recover is tuned shorter.
+- The KO flag and the room reset share one tick.
+- The Husk grids came from a scratch shape script (auto outline and shading) that isn't committed. Revise them by hand.
+- The aggro model comes from the open-source RotMG server behaviours `Follow` and `StayCloseToSpawn`.
+- The 003 depth-constant suggestion is done (`DEPTHS`).
+- Still open from the reviewer's suggestions:
+  - The KO flag could be set a tick before the reset.
+  - Hit events are recorded but nothing draws them yet.
+- No mistake happened twice this slice, so no new rule.
+
 ## 2026-10-17: 003 Tube firing
 **Changed:** built 003 on `claude/003-tube-firing`.
 - **Sim:** inventory; the tube (tap R loads one round per 15 ticks into 6, hold left mouse fires at 4 shots/s, empty tube dry-fires, no firing or loading in a roll); arrows at 480 px/s that stop at walls or after 320 px.
@@ -16,7 +55,7 @@ Shaun approved the sprites by eye and playtested the preview: it's good. 89 unit
 - Arrow damage 10 is a placeholder for 004 to tune. Arrows already carry damage and type.
 - When not firing, the tube points at the cursor while the body faces the walk direction (per spec). It passed the playtest, but revisit it if it reads oddly once enemies exist.
 - `NO_COMMAND` aims at the world origin. Code that steps the sim without an aim moves the tube's draw direction; the test hook avoids this by keeping the last aim.
-- The reviewer's unaddressed suggestion: render depth constants (`FLOOR_DEPTH`, `SHADOW_DEPTH`, `TUBE_DEPTH_NUDGE`, `HUD_DEPTH`) could move into one table in `src/data`. Pick it up when those files are next touched.
+- The reviewer's unaddressed suggestion: render depth constants (`FLOOR_DEPTH`, `SHADOW_DEPTH`, `TUBE_DEPTH_NUDGE`, `HUD_DEPTH`) could move into one table in `src/data`. Done in 004 (`DEPTHS`).
 - No mistake happened twice this slice, so no new rule.
 
 ## 2026-10-17: 002 Movement

@@ -1,11 +1,8 @@
 import type { GameObjects, Scene } from 'phaser';
 import { AMMO } from '../data/ammo';
-import { ATLAS_KEY } from '../data/assets';
+import { ATLAS_KEY, DEPTHS } from '../data/assets';
 import { DRAW_HEIGHT } from '../data/tube';
 import type { ArrowState } from '../sim/arrows';
-
-/** Depth for ground shadows: above the floor, under everything that sorts by feet. */
-const SHADOW_DEPTH = 0;
 
 interface Drawn {
   arrow: GameObjects.Image;
@@ -44,7 +41,7 @@ export class ArrowView {
     if (!ammo) throw new Error(`Unknown ammo '${a.ammoId}'`);
     const d: Drawn = {
       arrow: this.scene.add.image(0, 0, ATLAS_KEY, ammo.sprite),
-      shadow: this.scene.add.image(0, 0, ATLAS_KEY, ammo.shadow).setDepth(SHADOW_DEPTH),
+      shadow: this.scene.add.image(0, 0, ATLAS_KEY, ammo.shadow).setDepth(DEPTHS.shadow),
     };
     this.drawn.set(a.id, d);
     return d;

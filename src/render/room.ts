@@ -1,10 +1,7 @@
 import type { Scene } from 'phaser';
-import { ATLAS_KEY, SPRITES } from '../data/assets';
+import { ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
 import { TILE, type Room } from '../data/rooms';
-
-/** Depth for flat floor tiles: under everything that sorts by feet. */
-const FLOOR_DEPTH = -1;
 
 // Draws a room's tiles. Walls and ruin blocks sort by the bottom of their
 // footprint, so their tall front faces overlap whatever stands behind them.
@@ -13,7 +10,7 @@ export function drawRoom(scene: Scene, room: Room): void {
     for (const [tx, symbol] of [...row].entries()) {
       const left = tx * TILE_SIZE;
       const bottom = (ty + 1) * TILE_SIZE;
-      scene.add.image(left, ty * TILE_SIZE, ATLAS_KEY, SPRITES.floor).setOrigin(0).setDepth(FLOOR_DEPTH);
+      scene.add.image(left, ty * TILE_SIZE, ATLAS_KEY, SPRITES.floor).setOrigin(0).setDepth(DEPTHS.floor);
       if (symbol === TILE.floor) continue;
       const frame = symbol === TILE.wall ? SPRITES.wall : SPRITES.ruinBlock;
       scene.add.image(left, bottom, ATLAS_KEY, frame).setOrigin(0, 1).setDepth(bottom);

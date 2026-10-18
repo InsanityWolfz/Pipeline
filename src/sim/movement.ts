@@ -12,9 +12,10 @@ import type { Room } from '../data/rooms';
 import { moveBox } from './collision';
 import { facingOf, facingVector, unit } from './direction';
 import type { Command } from './input';
+import { takeKnock } from './knockback';
 import type { PlayerState } from './player';
 
-// Walking and the dodge roll, one tick at a time.
+// Walking, the dodge roll and knockback, one tick at a time.
 
 const WALK_PER_TICK = WALK_SPEED / TICK_RATE;
 const ACCEL_PER_TICK = WALK_PER_TICK / ACCEL_TICKS;
@@ -31,6 +32,7 @@ export function isInvulnerable(p: PlayerState): boolean {
 }
 
 export function stepPlayer(p: PlayerState, room: Room, cmd: Command): void {
+  if (p.hurtTicks > 0) p.hurtTicks -= 1;
   if (p.rollTick >= ROLL_TICKS) endRoll(p);
 
   let rolling = isRolling(p);
@@ -49,7 +51,9 @@ export function stepPlayer(p: PlayerState, room: Room, cmd: Command): void {
     walk(p, cmd);
   }
 
-  const { hitX, hitY } = moveBox(room, p, FEET_BOX, p.vx, p.vy);
+  // Knockback adds to the move, so input still steers on top of it.
+  const [kx, ky] = takeKnock(p);
+  const { hitX, hitY } = moveBox(room, p, FEET_BOX, p.vx + kx, p.vy + ky);
   // Velocity reports actual movement. A blocked roll still runs out its timer,
   // since its speed is set again from its direction each tick.
   if (hitX) p.vx = 0;

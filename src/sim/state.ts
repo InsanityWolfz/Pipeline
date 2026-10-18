@@ -2,6 +2,9 @@ import { TILE_SIZE } from '../data/config';
 import { STARTING_INVENTORY } from '../data/player';
 import { DEFAULT_ROOM, ROOMS, type Room } from '../data/rooms';
 import type { ArrowState } from './arrows';
+import type { GroundItem } from './drops';
+import { createEnemy, type EnemyState } from './enemies';
+import { createEvents, type SimEvents } from './events';
 import type { Inventory } from './inventory';
 import { createPlayer, type PlayerState } from './player';
 import { createRng, type RngState } from './rng';
@@ -20,21 +23,51 @@ export interface SimState {
   arrows: ArrowState[];
   /** Id for the next arrow fired. */
   nextArrowId: number;
+  /** Live enemies. */
+  enemies: EnemyState[];
+  /** Id for the next enemy created. Never reused, so render can pool by id. */
+  nextEnemyId: number;
+  /** Items lying on the ground. */
+  groundItems: GroundItem[];
+  nextGroundItemId: number;
+  /** What happened on the last tick. */
+  events: SimEvents;
 }
 
 export function createSim(seed: number, roomId = DEFAULT_ROOM): SimState {
-  const player = createPlayer(tileCentre(roomOf({ roomId }).spawn));
-  return {
+  const state: SimState = {
     tick: 0,
     seed,
     rng: createRng(seed),
     roomId,
-    player,
-    inventory: { ...STARTING_INVENTORY },
+    player: createPlayer({ x: 0, y: 0 }),
+    inventory: {},
     tube: createTube(),
     arrows: [],
     nextArrowId: 0,
+    enemies: [],
+    nextEnemyId: 0,
+    groundItems: [],
+    nextGroundItemId: 0,
+    events: createEvents(),
   };
+  resetRoom(state);
+  return state;
+}
+
+/**
+ * Puts the room back to its start: player at spawn with full health, the starting
+ * inventory, an empty tube, enemies at home and nothing on the ground or in flight.
+ * The tick, seed, RNG and id counters carry on.
+ */
+export function resetRoom(state: SimState): void {
+  const room = roomOf(state);
+  state.player = createPlayer(tileCentre(room.spawn));
+  state.inventory = { ...STARTING_INVENTORY };
+  state.tube = createTube();
+  state.arrows = [];
+  state.groundItems = [];
+  state.enemies = (room.enemies ?? []).map((p) => createEnemy(state.nextEnemyId++, p.enemyId, tileCentre(p)));
 }
 
 /** The pixel centre of a tile. */

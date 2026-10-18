@@ -92,7 +92,7 @@ function advanceLoading(state: SimState): void {
 }
 
 /** Ends loading; partial progress on the next round is lost and that round stays in the inventory. */
-function stopLoading(state: SimState): void {
+export function stopLoading(state: SimState): void {
   state.tube.loading = false;
   state.tube.loadProgress = 0;
 }

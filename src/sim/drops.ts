@@ -1,0 +1,68 @@
+import { DROP_SCATTER, DROP_SCATTER_TRIES, type DropTable, type EnemyDef } from '../data/enemies';
+import { FEET_BOX, PICKUP_RADIUS } from '../data/player';
+import { TILE_SIZE } from '../data/config';
+import type { Room } from '../data/rooms';
+import { isSolid } from './collision';
+import { nextFloat, nextInt, type RngState } from './rng';
+import { roomOf, type SimState } from './state';
+
+// Items dropped on the ground, and picking them up by walking over them.
+
+export interface GroundItem {
+  id: number;
+  itemId: string;
+  x: number;
+  y: number;
+}
+
+/** The item ids a drop table rolls, one entry per item. */
+export function rollDrops(table: DropTable, rng: RngState): string[] {
+  const items: string[] = [];
+  for (const { itemId, min, max } of table.always) {
+    const n = nextInt(rng, min, max);
+    for (let i = 0; i < n; i++) items.push(itemId);
+  }
+  if (table.oneOf.length > 0 && nextFloat(rng) < table.chance) {
+    const extra = table.oneOf[nextInt(rng, 0, table.oneOf.length - 1)];
+    if (extra) items.push(extra);
+  }
+  return items;
+}
+
+/** A random clear spot within DROP_SCATTER of (x, y), or (x, y) itself if none turns up. */
+export function scatterPoint(room: Room, rng: RngState, x: number, y: number): { x: number; y: number } {
+  for (let i = 0; i < DROP_SCATTER_TRIES; i++) {
+    const angle = nextFloat(rng) * 2 * Math.PI;
+    const r = nextFloat(rng) * DROP_SCATTER;
+    const px = x + Math.cos(angle) * r;
+    const py = y + Math.sin(angle) * r;
+    if (!isSolid(room, Math.floor(px / TILE_SIZE), Math.floor(py / TILE_SIZE))) return { x: px, y: py };
+  }
+  return { x, y };
+}
+
+/** Rolls an enemy's drops and scatters them on the ground around (x, y). */
+export function spawnDrops(state: SimState, def: EnemyDef, x: number, y: number): void {
+  const room = roomOf(state);
+  for (const itemId of rollDrops(def.drops, state.rng)) {
+    const at = scatterPoint(room, state.rng, x, y);
+    state.groundItems.push({ id: state.nextGroundItemId++, itemId, ...at });
+  }
+}
+
+/** Moves ground items within PICKUP_RADIUS of the player's feet box into the inventory. */
+export function stepPickups(state: SimState): void {
+  const p = state.player;
+  let kept = 0;
+  for (const item of state.groundItems) {
+    const gapX = Math.max(0, Math.abs(item.x - p.x) - FEET_BOX.w / 2);
+    const gapY = Math.max(0, Math.abs(item.y - p.y) - FEET_BOX.h / 2);
+    if (Math.hypot(gapX, gapY) <= PICKUP_RADIUS) {
+      state.inventory[item.itemId] = (state.inventory[item.itemId] ?? 0) + 1;
+      state.events.pickups.push({ id: item.id, itemId: item.itemId, x: item.x, y: item.y });
+    } else {
+      state.groundItems[kept++] = item;
+    }
+  }
+  state.groundItems.length = kept;
+}
