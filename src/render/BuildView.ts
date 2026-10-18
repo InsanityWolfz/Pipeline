@@ -78,7 +78,7 @@ export class BuildView {
     cursor: Tile | null,
     facing: Facing,
     canPlace: (pieceId: string, tx: number, ty: number, facing: Facing) => PlaceFail | null,
-    shapeAt: (tile: Tile, facing: Facing) => Facing,
+    shapeAt: (tile: Tile, facing: Facing) => { facing: Facing; inFrom: Facing },
   ): void {
     if (unlocked.join() !== this.unlocked.join()) this.rebuild(unlocked);
     if (!unlocked.includes(this.selected)) this.selected = unlocked[0] ?? FIRST_PIECE;
@@ -91,9 +91,9 @@ export class BuildView {
 
   private drawGhost(
     cursor: Tile | null,
-    facing: Facing,
+    ghostFacing: Facing,
     canPlace: (pieceId: string, tx: number, ty: number, facing: Facing) => PlaceFail | null,
-    shapeAt: (tile: Tile, facing: Facing) => Facing,
+    shapeAt: (tile: Tile, facing: Facing) => { facing: Facing; inFrom: Facing },
   ): void {
     const show = cursor !== null;
     this.ghost.setVisible(show);
@@ -104,10 +104,11 @@ export class BuildView {
     }
     const pieceId = this.selected;
     const def = pieceDef(pieceId);
+    // A conduit's ghost shows the shape it would take: a corner where it would join a side feeder,
+    // or the held tile of a drag as it would be laid (013).
+    const { facing, inFrom } = def.kind === 'conduit' ? shapeAt(cursor, ghostFacing) : { facing: ghostFacing, inFrom: ghostFacing };
     const r = pieceRect({ pieceId, tx: cursor.tx, ty: cursor.ty, facing });
     const bottom = r.y + r.h / 2;
-    // A conduit's ghost shows the shape it would take: a corner where it would join a side feeder (013).
-    const inFrom = shapeAt(cursor, facing);
     const flip = def.kind === 'conduit' ? conduitLook(facing, inFrom).flip : facing === 'left';
     this.ghost.setFrame(bodyFrame(pieceId, facing, inFrom)).setFlipX(flip);
     if (def.kind === 'conduit') this.ghost.setOrigin(0).setPosition(r.x - TILE_SIZE / 2, r.y - TILE_SIZE / 2);

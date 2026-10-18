@@ -1,11 +1,11 @@
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { BUILD_BAR_LAYOUT, MENU_COLUMN_GAP, MENU_MAX_ROWS, PICKER_LAYOUT } from '../data/hudLayout';
 import type { AnimDef } from '../data/assets';
-import { CONDUIT_ANIMS, CONDUIT_CORNERS, LOGISTICS_ICONS } from '../data/foundryAssets';
+import { CONDUIT_ANIMS, CONDUIT_CORNERS, LOGISTICS_ICONS, type CornerKey } from '../data/foundryAssets';
 import { itemDef, ITEMS } from '../data/items';
 import { pieceDef } from '../data/pieces';
 import { recipeDef } from '../data/recipes';
-import { facingVector } from '../sim/direction';
+import { facingVector, opposite } from '../sim/direction';
 import { footprint, type Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 
@@ -96,7 +96,6 @@ export function pieceIcon(pieceId: string): string {
   return icon;
 }
 
-const OPPOSITE: Readonly<Record<Facing, Facing>> = { up: 'down', down: 'up', left: 'right', right: 'left' };
 const SIDES: readonly Facing[] = ['up', 'right', 'down', 'left'];
 
 /** A facing arrow: on tile (tx, ty), at its `edge`, pointing `points`. */
@@ -116,8 +115,8 @@ export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing:
   const { kind } = pieceDef(p.pieceId);
   // A conduit shows its flow; since 013 it also marks the one side it takes items from.
   if (kind === 'conduit') {
-    const edge = p.inFrom ?? OPPOSITE[p.facing];
-    return [{ kind: 'in', tx: p.tx, ty: p.ty, edge, points: OPPOSITE[edge] }];
+    const edge = p.inFrom ?? opposite(p.facing);
+    return [{ kind: 'in', tx: p.tx, ty: p.ty, edge, points: opposite(edge) }];
   }
   const spots: ArrowSpot[] = [];
   const hasOutput = kind !== 'crate' && kind !== 'socket';
@@ -129,7 +128,7 @@ export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing:
     for (const edge of SIDES) {
       const [dx, dy] = facingVector(edge);
       if (covered(t.tx + dx, t.ty + dy) || (hasOutput && edge === p.facing)) continue;
-      spots.push({ kind: 'in', tx: t.tx, ty: t.ty, edge, points: OPPOSITE[edge] });
+      spots.push({ kind: 'in', tx: t.tx, ty: t.ty, edge, points: opposite(edge) });
     }
   }
   return spots;
@@ -137,11 +136,13 @@ export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing:
 
 /** A conduit's animation (013): a straight run by its facing (flipped for left), or the corner for its in and out sides. */
 export function conduitLook(facing: Facing, inFrom: Facing): { anim: AnimDef; flip: boolean } {
-  if (inFrom === OPPOSITE[facing]) {
+  if (inFrom === opposite(facing)) {
     const view = facing === 'up' || facing === 'down' ? facing : 'side';
     return { anim: CONDUIT_ANIMS[view], flip: facing === 'left' };
   }
-  const anim = CONDUIT_CORNERS[`${inFrom}-${facing}`];
-  if (!anim) throw new Error(`No conduit corner from ${inFrom} to ${facing}`);
-  return { anim, flip: false };
+  const key = `${inFrom}-${facing}`;
+  if (!isCorner(key)) throw new Error(`No conduit corner from ${inFrom} to ${facing}`);
+  return { anim: CONDUIT_CORNERS[key], flip: false };
 }
+
+const isCorner = (key: string): key is CornerKey => key in CONDUIT_CORNERS;

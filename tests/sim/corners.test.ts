@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CONDUIT_TICKS } from '../../src/data/foundry';
+import { PORT_TICKS } from '../../src/data/claims';
 import { SHRINE_ROOM } from '../../src/data/rooms';
 import { claim } from '../../src/sim/claims';
 import { place } from '../../src/sim/placement';
@@ -44,6 +45,36 @@ describe('conduit intake', () => {
     expect(c.item).toBe('wood');
     run(s, CONDUIT_TICKS);
     expect([c.item, out.item]).toEqual([null, 'wood']);
+  });
+});
+
+describe('conduit intake from other pieces', () => {
+  it('a corner refuses its third side as well as its front', () => {
+    const s = foundry();
+    const c = corner(s, 5, 5, 'down', 'left');
+    const fromRight = put<ConduitState>(s, 'conduit', 6, 5, 'left');
+    fromRight.item = 'stone';
+    run(s, CONDUIT_TICKS * 2);
+    expect([fromRight.item, c.item]).toEqual(['stone', null]);
+  });
+
+  it('a hopper beside a straight conduit no longer feeds it', () => {
+    const s = foundry();
+    const c = put<ConduitState>(s, 'conduit', 5, 5, 'right');
+    const h = put<HopperState>(s, 'hopper', 5, 4, 'right');
+    h.facing = 'down';
+    h.item = 'wood';
+    h.count = 3;
+    run(s, CONDUIT_TICKS * 2);
+    expect([h.count, c.item]).toEqual([3, null]);
+  });
+
+  it('the supply port feeds a corner that joined it', () => {
+    const s = foundry();
+    claim(s, SHRINE_ROOM);
+    const c = put<ConduitState>(s, 'conduit', 2, 8, 'up');
+    run(s, PORT_TICKS + 1);
+    expect(c.item).not.toBeNull();
   });
 });
 

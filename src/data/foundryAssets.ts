@@ -54,16 +54,20 @@ export const CONDUIT_ANIMS: Readonly<Record<PieceView, AnimDef>> = {
   side: loop('conduit-side', 2, FLOW_FPS),
 };
 
-type Side = 'up' | 'down' | 'left' | 'right';
-
 /** Conduit corners (013) by the side items come in from and the side they leave by: `${in}-${out}`. Flat on the floor like the straights. */
-export const CONDUIT_CORNERS: Readonly<Record<string, AnimDef>> = Object.fromEntries(
-  (['up', 'down', 'left', 'right'] as const satisfies readonly Side[]).flatMap((out) =>
-    (['up', 'down', 'left', 'right'] as const)
-      .filter((inn) => inn !== out && !((inn === 'up' && out === 'down') || (inn === 'down' && out === 'up') || (inn === 'left' && out === 'right') || (inn === 'right' && out === 'left')))
-      .map((inn) => [`${inn}-${out}`, loop(`conduit-corner-${inn}-${out}`, 2, FLOW_FPS)]),
-  ),
-);
+export const CONDUIT_CORNERS = {
+  'up-left': loop('conduit-corner-up-left', 2, FLOW_FPS),
+  'up-right': loop('conduit-corner-up-right', 2, FLOW_FPS),
+  'down-left': loop('conduit-corner-down-left', 2, FLOW_FPS),
+  'down-right': loop('conduit-corner-down-right', 2, FLOW_FPS),
+  'left-up': loop('conduit-corner-left-up', 2, FLOW_FPS),
+  'left-down': loop('conduit-corner-left-down', 2, FLOW_FPS),
+  'right-up': loop('conduit-corner-right-up', 2, FLOW_FPS),
+  'right-down': loop('conduit-corner-right-down', 2, FLOW_FPS),
+} as const satisfies Record<string, AnimDef>;
+
+/** A corner's key: the side items come in from, then the side they leave by. */
+export type CornerKey = keyof typeof CONDUIT_CORNERS;
 
 export const HOPPER_SPRITES: Readonly<Record<PieceView, string>> = {
   down: 'hopper-down',

@@ -2,11 +2,12 @@ import type { Cameras, Scene } from 'phaser';
 import { Input } from 'phaser';
 import { TILE_SIZE } from '../data/config';
 import { SLOT_AMMOS } from '../data/tube';
-import { facingOf, opposite, rotateCw } from '../sim/direction';
+import { rotateCw } from '../sim/direction';
 import { NO_COMMAND, type Axis, type Command } from '../sim/input';
 import { BUILD_BAR, pieceDef } from '../data/pieces';
-import { tilesBetween, type Tile } from '../sim/pieces';
+import type { Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
+import { dragTo, release, type ConduitLay, type HeldConduit } from './dragPath';
 import { MenuRequests } from './menuRequests';
 
 type Key = 'up' | 'down' | 'left' | 'right' | 'dodge' | 'rotate' | 'interact' | 'menu' | 'close' | 'build';
@@ -64,7 +65,7 @@ export class Controls {
   private readonly queue: BuildAction[] = [];
   private dragTile: Tile | null = null;
   /** The conduit tile a drag is on, held back until the next tile says which way it faces (013). */
-  private held: { tile: Tile; inFrom?: Facing } | null = null;
+  private held: HeldConduit | null = null;
   private build: BuildInput = {
     building: false,
     pieceId: () => BUILD_BAR[0] ?? '',
@@ -112,6 +113,7 @@ export class Controls {
     scene.input.on('pointerdown', (p: Input.Pointer) => this.pointerDown(p));
     scene.input.on('pointermove', (p: Input.Pointer) => this.pointerMove(p));
     scene.input.on('pointerup', () => this.endDrag());
+    scene.input.on('pointerupoutside', () => this.endDrag());
     scene.input.on('wheel', (_p: Input.Pointer, _over: unknown, _dx: number, dy: number) => {
       if (dy !== 0) this.wheelPending += Math.sign(dy);
     });
@@ -163,25 +165,27 @@ export class Controls {
       return;
     }
     const pieceId = this.build.pieceId();
+    this.endDrag();
     this.dragTile = tile;
     // A conduit waits for the drag: a click lays it on release, with the ghost's facing.
     if (pieceDef(pieceId).kind === 'conduit') this.held = { tile };
     else this.queue.push({ place: { pieceId, ...tile, facing: this.facing }, pickUp: null, setAngle: null });
   }
 
-  /** Lays a held conduit facing `facing`, taking from the side the drag came in by. A drag's first tile takes no side, so it auto-joins. */
-  private layHeld(facing: Facing): void {
-    const held = this.held;
-    if (!held) return;
-    const place = { pieceId: this.build.pieceId(), ...held.tile, facing, ...(held.inFrom ? { inFrom: held.inFrom } : {}) };
-    this.queue.push({ place, pickUp: null, setAngle: null });
+  private lay(l: ConduitLay): void {
+    this.queue.push({ place: { pieceId: this.build.pieceId(), ...l }, pickUp: null, setAngle: null });
+  }
+
+  /** Release (inside the canvas or out): the held conduit is laid. */
+  private endDrag(): void {
+    this.dragTile = null;
+    if (this.held) this.lay(release(this.held, this.facing));
     this.held = null;
   }
 
-  /** Release: the last conduit runs straight on in the drag's last direction, or a click's ghost facing. */
-  private endDrag(): void {
-    this.dragTile = null;
-    if (this.held) this.layHeld(this.held.inFrom ? opposite(this.held.inFrom) : this.facing);
+  /** The conduit a drag is holding back, as it would be laid now; the ghost draws it. */
+  heldLay(): ConduitLay | null {
+    return this.held ? release(this.held, this.facing) : null;
   }
 
   /** Dragging with a conduit selected lays one on every tile the cursor crosses, however fast it moves. */
@@ -192,11 +196,9 @@ export class Controls {
     if (this.build.overUi(p.x, p.y)) return;
     const tile = this.tileUnder(p);
     // Each tile faces the next one, so a drag that turns lays a corner.
-    for (const t of tilesBetween(drag, tile)) {
-      const prev = this.held?.tile ?? drag;
-      this.layHeld(facingOf(t.tx - prev.tx, t.ty - prev.ty, this.facing));
-      this.held = { tile: t, inFrom: facingOf(prev.tx - t.tx, prev.ty - t.ty, this.facing) };
-    }
+    const step = dragTo(this.held ?? { tile: drag }, tile);
+    for (const l of step.lay) this.lay(l);
+    this.held = step.held;
     this.dragTile = tile;
   }
 

@@ -20,6 +20,7 @@ import { ArrowView } from './ArrowView';
 import { BombView } from './BombView';
 import { BuildView } from './BuildView';
 import { Controls, type UiCommand } from './controls';
+import { ghostShape } from './dragPath';
 import { CraftMenuView } from './CraftMenuView';
 import { EffectsView } from './EffectsView';
 import { EnemyView } from './EnemyView';
@@ -285,7 +286,7 @@ export class GameScene extends Scene {
       cursor,
       controls?.facing ?? 'right',
       (...a) => canPlace(sim, ...a),
-      (t, f) => conduitInFrom(sim, t.tx, t.ty, f),
+      (t, f) => ghostShape(controls?.heldLay() ?? null, t, f, (u, g) => conduitInFrom(sim, u.tx, u.ty, g)),
     );
     const hovered = cursor ? pieceAt(sim.foundry, cursor.tx, cursor.ty) : undefined;
     const lines = hovered ? pieceLines(hovered, sim.link.reservoir) : [];

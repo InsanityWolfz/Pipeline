@@ -93,7 +93,7 @@ export class FoundryView {
       live.add(p.id);
       const d = this.drawn.get(p.id) ?? this.create(p);
       this.draw(p, d);
-      placeArrows(d.arrows, p.kind === 'conduit' ? { ...p, inFrom: p.inFrom } : p, building);
+      placeArrows(d.arrows, p, building);
     }
     this.drawFan(foundry, shown && building);
     for (const [id, d] of this.drawn) {

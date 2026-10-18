@@ -2,6 +2,18 @@
 
 Newest entry first.
 
+## 2026-10-18: 013 Conduit corners (overnight build)
+**Changed:** built 013 on `claude/013-conduit-corners` (stacked on 012).
+- **Shape:** conduits have an `inFrom` side and take items only from it. A straight conduit takes from its back, a corner from one side.
+- **Auto-join:** a single conduit placed beside a lone side feeder (a piece's front, or the supply port) becomes a corner from it. Neighbours never change.
+- **Drags:** a drag that turns lays a corner at the turn. Drag logic is in pure `src/render/dragPath.ts`.
+- **Render:** 8 corner sprites (pending review), items ride the bend on an L path, a gold input arrow on each conduit's `inFrom` edge in build mode, and the ghost previews corners.
+- **Hook:** the conduit summary has `inFrom`.
+
+Verify: 424 unit and 30 e2e tests pass. QA passed L, U and zig-zag runs, item paths, arrows and the auto-join ghost. Review and QA both caught the ghost being wrong mid-drag; it's fixed (it now shows the held tile).
+**Next:** 014 Look and feel on `claude/014-look-and-feel`.
+**Notes:** see the 013 spec's build notes. The biggest call is that a drag's first tile faces the drag, not the ghost. Side feeds into straight conduits are now refused.
+
 ## 2026-10-18: 012 Tutorial flow (overnight build)
 **Changed:** built 012 on `claude/012-tutorial-flow` (stacked on 011).
 - **The clearing:** a new room where the real game starts. You wake with nothing; the dormant tube lies on a stone and E takes it.
