@@ -154,7 +154,7 @@ export class GameScene extends Scene {
         building: this.sim.building,
         pieceId: () => this.buildView?.selected ?? FIRST_PIECE,
         overUi: (x, y) => [this.pause, this.menu, this.buildView, this.picker, this.siteMenus, this.hud, this.tutorial].some((v) => v?.overUi(x, y)),
-        clickUi: (x, y) => this.router?.click(controls, x, y),
+        clickUi: (x, y, mods) => this.router?.click(controls, x, y, mods),
         stagerAt: (t) => {
           const piece = pieceAt(this.sim.foundry, t.tx, t.ty);
           return piece?.kind === 'stager' ? piece.id : null;
@@ -179,6 +179,7 @@ export class GameScene extends Scene {
       craftOpen: this.menu?.isOpen ?? false,
       paused: this.pause?.isOpen ?? false,
       pickerOpen: this.picker?.isOpen ?? false,
+      pickerHint: this.picker?.hintShown ?? null,
       hoverName: this.hover?.shown ?? null,
       hoverDescription: this.hover?.shownDescription ?? null,
       buildTip: this.buildView?.tip.shown ?? null,

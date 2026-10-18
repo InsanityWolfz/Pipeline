@@ -2,9 +2,10 @@ import { SOUNDS, VOLUME_STEP } from '../data/sounds';
 import { usableInReach } from '../sim/foundryUse';
 import type { SimState } from '../sim/state';
 import type { BuildView } from './BuildView';
-import type { Controls } from './controls';
+import type { ClickMods, Controls } from './controls';
 import type { CraftMenuView } from './CraftMenuView';
 import type { HopperPicker } from './HopperPicker';
+import { clickAmount } from './menuRequests';
 import type { PauseAction, PauseMenuView } from './PauseMenuView';
 import type { SiteMenus } from './SiteMenus';
 import type { SoundView } from './SoundView';
@@ -59,8 +60,11 @@ export class MenuRouter {
     if (open !== null && usableInReach(this.sim)?.id !== open) picker.close();
   }
 
-  /** A click: the pause menu's rows while paused; else the build bar, a site menu, or the hopper picker's rows. */
-  click(controls: Controls, x: number, y: number): void {
+  /**
+   * A click: the pause menu's rows while paused; else the build bar, a site menu, or the hopper picker's rows.
+   * A picker row moves one, Shift half, Ctrl all (022), and the picker stays open for the next click.
+   */
+  click(controls: Controls, x: number, y: number, mods: ClickMods): void {
     const { pause, site, picker, build, sound } = this.m;
     if (pause.isOpen) {
       this.pauseClick(pause.click(x, y));
@@ -75,9 +79,9 @@ export class MenuRouter {
     if (!entry || hopper === null) return;
     sound.play(SOUNDS.menuClick);
     picker.flashAt(x, y);
-    if (entry.action === 'take') controls.menus.withdraw(hopper);
-    else controls.menus.deposit(hopper, entry.itemId);
-    picker.close();
+    const amount = clickAmount(mods);
+    if (entry.action === 'take') controls.menus.withdraw(hopper, amount);
+    else controls.menus.deposit(hopper, entry.itemId, amount);
   }
 
   /** The pause menu's sound settings and resume. */

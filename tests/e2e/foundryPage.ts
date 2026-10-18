@@ -69,6 +69,13 @@ export async function screenPoint(page: Page, x: number, y: number): Promise<{ x
   return { x: box.x + x * zoom, y: box.y + y * zoom };
 }
 
+/** Ctrl+click at a page point (022: in the hopper picker, it moves the whole stack). */
+export async function ctrlClick(page: Page, x: number, y: number): Promise<void> {
+  await page.keyboard.down('Control');
+  await page.mouse.click(x, y);
+  await page.keyboard.up('Control');
+}
+
 export async function clickBar(page: Page, pieceId: string): Promise<void> {
   const cell = buildBarCells((await state(page)).unlocked).find((c) => c.pieceId === pieceId);
   if (!cell) throw new Error(`${pieceId} is not on the bar`);

@@ -19,10 +19,16 @@ export interface BuildInput {
   pieceId: () => string;
   /** True over the build bar or the hopper picker, where clicks don't reach the world. */
   overUi: (x: number, y: number) => boolean;
-  /** Handles a left click on that UI at once, so a world click in the same frame sees its result. */
-  clickUi: (x: number, y: number) => void;
+  /** Handles a left click on that UI at once, so a world click in the same frame sees its result; with the held modifiers (022). */
+  clickUi: (x: number, y: number, mods: ClickMods) => void;
   /** The id of the gravity stager on a tile, if any: a left click there turns it rather than placing. */
   stagerAt: (tile: Tile) => number | null;
+}
+
+/** The modifier keys held with a click (022: Shift and Ctrl pick how many a hopper click moves). */
+export interface ClickMods {
+  shift: boolean;
+  ctrl: boolean;
 }
 
 type BuildAction = Pick<Command, 'place' | 'pickUp' | 'setAngle'>;
@@ -154,9 +160,12 @@ export class Controls {
 
   private pointerDown(p: Input.Pointer): void {
     const v = this.view(p);
+    const mods = { shift: p.event.shiftKey, ctrl: p.event.ctrlKey };
+    // Ctrl+click is a game input (022: all of a hopper stack), never a browser shortcut.
+    if (mods.ctrl) p.event.preventDefault();
     if (this.build.overUi(v.x, v.y)) {
       this.uiPress = true;
-      if (p.leftButtonDown()) this.build.clickUi(v.x, v.y);
+      if (p.leftButtonDown()) this.build.clickUi(v.x, v.y, mods);
       return;
     }
     if (!this.build.building) return;

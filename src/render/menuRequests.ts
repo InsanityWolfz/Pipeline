@@ -1,4 +1,10 @@
-import type { Command } from '../sim/input';
+import type { Command, HopperAmount } from '../sim/input';
+
+/** How many a hopper menu click moves (022): Ctrl+click all (Ctrl wins over Shift), Shift+click half, a plain click one. */
+export function clickAmount(mods: { shift: boolean; ctrl: boolean }): HopperAmount {
+  if (mods.ctrl) return 'all';
+  return mods.shift ? 'half' : 'one';
+}
 
 /** The commands that menus send: the hopper, sorter, pylon, stash and bench menus' choices. */
 export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'setFilter' | 'pylon' | 'takeStash' | 'identify' | 'equip'>;
@@ -9,14 +15,14 @@ const NONE: MenuCommand = { deposit: null, withdraw: null, setFilter: null, pylo
 export class MenuRequests {
   private pending: MenuCommand = { ...NONE };
 
-  /** Fills a hopper (the hopper menu's choice). */
-  deposit(id: number, itemId: string): void {
-    this.pending.deposit = { id, itemId };
+  /** Puts one, half or all of a held item into a hopper (the hopper menu's choice, 022). */
+  deposit(id: number, itemId: string, amount: HopperAmount): void {
+    this.pending.deposit = { id, itemId, amount };
   }
 
-  /** Empties a hopper into the inventory (the hopper menu's choice). */
-  withdraw(id: number): void {
-    this.pending.withdraw = { id };
+  /** Takes one, half or all of a hopper's items into the inventory (the hopper menu's choice, 022). */
+  withdraw(id: number, amount: HopperAmount): void {
+    this.pending.withdraw = { id, amount };
   }
 
   /** Sets the item a sorter sends out its side, or null to pass everything (the sorter menu's choice). */

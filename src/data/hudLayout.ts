@@ -74,6 +74,8 @@ export const PICKER_LAYOUT = {
   count: { x: 24, y: 8 },
   /** How far a take-out row's item icon and count shift right, past the hopper icon. */
   takeShift: 20,
+  /** The one-line hint under the rows (022): how many a click moves, and its gap below the last row. */
+  hint: { text: 'Click 1 · Shift half · Ctrl all', gap: 4 },
 } as const;
 
 /** The hover readout over a machine: a dark box of icon + count lines. Px from its top-left. */

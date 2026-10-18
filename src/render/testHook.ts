@@ -13,7 +13,7 @@ export interface GameTestHook {
   getState(): SimSummary;
   /**
    * Steps `frames` ticks holding `command`. Its dodge, interact, ammo
-   * select, build toggle, place, pick-up, deposit, withdraw, setFilter, setAngle, pylon, takeStash, identify and equip apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
+   * select, build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), setFilter, setAngle, pylon, takeStash, identify and equip apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
    */
   step(frames: number, command?: Partial<Command>): SimSummary;
   /** Crafts a recipe once between ticks, as clicking its menu row does. */
@@ -42,6 +42,8 @@ export interface UiState {
   paused: boolean;
   /** The hopper picker is open. */
   pickerOpen: boolean;
+  /** The hopper picker's hint line while it shows (022), else null. */
+  pickerHint: string | null;
   hoverName: string | null;
   hoverDescription: string | null;
   buildTip: string | null;

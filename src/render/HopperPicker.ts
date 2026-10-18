@@ -11,14 +11,17 @@ import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
 
 // The hopper menu: opened by E next to a hopper. A filled hopper offers to take
-// everything out, and to put in more of the same; an empty one lists every held
-// item to put in. Clicking a row does it. The world keeps running.
+// some out, and to put in more of the same; an empty one lists every held item to
+// put in. Clicking a row moves one, Shift+click half, Ctrl+click all (022), with a
+// hint line under the rows saying so. It stays open for the next click, and the
+// world keeps running.
 export class HopperPicker {
   private readonly scene: Scene;
   private rows: { entry: PickerEntry; images: GameObjects.Image[]; count: TextLine }[] = [];
   private entries: PickerEntry[] = [];
   private readonly panel: GameObjects.Graphics;
   private readonly hover: RowHover;
+  private readonly hint: TextLine;
   /** The hopper's piece id while open. */
   hopperId: number | null = null;
 
@@ -26,6 +29,12 @@ export class HopperPicker {
     this.scene = scene;
     this.panel = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.menu - 1);
     this.hover = new RowHover(scene);
+    this.hint = new TextLine(scene, 0, 0, DEPTHS.menu + 1).set(PICKER_LAYOUT.hint.text).setVisible(false);
+  }
+
+  /** The hint line's text while it shows, else null (for the test hook). */
+  get hintShown(): string | null {
+    return this.isOpen && this.entries.length > 0 ? PICKER_LAYOUT.hint.text : null;
   }
 
   get isOpen(): boolean {
@@ -102,11 +111,14 @@ export class HopperPicker {
     const first = rects[0];
     const last = rects[rects.length - 1];
     this.panel.clear();
+    this.hint.setVisible(false);
     if (!first || !last) return;
+    const hintTop = last.y + last.h + L.hint.gap;
+    this.hint.moveTo(Math.round(first.x + (first.w - this.hint.width) / 2), hintTop).setVisible(true);
     const x = first.x - L.pad;
     const y = first.y - L.pad;
     const w = first.w + 2 * L.pad;
-    const h = last.y + last.h - first.y + 2 * L.pad;
+    const h = hintTop + this.hint.lineHeight - first.y + 2 * L.pad;
     drawTablet(this.panel, x, y, w, h);
   }
 }
