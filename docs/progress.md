@@ -2,6 +2,23 @@
 
 Newest entry first.
 
+## 2026-10-18: Specs 021–027 from Shaun's playtest notes
+**Changed:** turned Shaun's playtest notes into seven draft specs after a three-round interview:
+- 021: playtest fixes (2-tile pickup through obstacles, no fire shake, a menu pointer, the arrowhead without wood)
+- 022: hopper amounts
+- 023: melee
+- 024: spread from intake entrances, removing the gravity stager
+- 025: the bottom HUD
+- 026: crafting labels and build categories
+- 027: the foundry tutorial
+
+028 (leveling and the skill tree) and 029 (factory depth) are on the backlog as ideas, to plan together.
+**Next:** Shaun reviews and approves 021–027 and answers the two open questions: the per-entrance cap in 024, and which line the tutorial teaches in 027. Then build in the order 021 → 027, and start the 028/029 discussion.
+**Notes:**
+- Interview decisions are recorded in each spec's design references.
+- design.md edits for 023 (melee) and 024 (no stagers) are pre-approved by Shaun, to be made once those specs are approved.
+- My defaults, which Shaun can override: melee tuning numbers; the volley fires carried rounds first, then reservoirs, then melee; the volley cooldown is the slowest ammo's; before the tube is picked up, the HUD shows only the fist.
+
 ## 2026-10-18: 016–020 wrapped up
 **Changed:**
 - 016–020 were merged to main (one merge of PR #22, which carried the stack) and the Pages build for main went green.
