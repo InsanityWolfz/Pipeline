@@ -1,10 +1,10 @@
-import { AMMO, type DamageType } from '../data/ammo';
+import { straightAmmo, type DamageType } from '../data/ammo';
 import { TICK_RATE, TILE_SIZE } from '../data/config';
 import type { Room } from '../data/rooms';
 import { isSolid } from './collision';
 
-// Arrows in flight. Position is the ground (shadow) point, which is what
-// collides; render draws the arrow raised above it.
+// Straight shots in flight: arrows and ley bolts. Position is the ground (shadow)
+// point, which is what collides; render draws the shot raised above it.
 
 export interface ArrowState {
   id: number;
@@ -18,12 +18,13 @@ export interface ArrowState {
   travelled: number;
   damage: number;
   damageType: DamageType;
+  /** Enemies a piercing shot has already hit, so it hits each only once. */
+  hitIds: number[];
 }
 
 export function createArrow(id: number, ammoId: string, x: number, y: number, dx: number, dy: number): ArrowState {
-  const ammo = AMMO[ammoId];
-  if (!ammo) throw new Error(`Unknown ammo '${ammoId}'`);
-  return { id, ammoId, x, y, dx, dy, travelled: 0, damage: ammo.damage, damageType: ammo.damageType };
+  const ammo = straightAmmo(ammoId);
+  return { id, ammoId, x, y, dx, dy, travelled: 0, damage: ammo.damage, damageType: ammo.damageType, hitIds: [] };
 }
 
 /** Tries an arrow against targets at its current point; true if it hit one and is spent. */
@@ -45,8 +46,7 @@ export function stepArrows(arrows: ArrowState[], room: Room, hits: ArrowHitTest 
 
 function flies(arrow: ArrowState, room: Room, hits: ArrowHitTest): boolean {
   if (hits(arrow) || inSolid(room, arrow.x, arrow.y)) return false;
-  const ammo = AMMO[arrow.ammoId];
-  if (!ammo) throw new Error(`Unknown ammo '${arrow.ammoId}'`);
+  const ammo = straightAmmo(arrow.ammoId);
   const step = ammo.speed / TICK_RATE;
   arrow.x += arrow.dx * step;
   arrow.y += arrow.dy * step;

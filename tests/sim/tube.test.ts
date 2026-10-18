@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { DRY_FIRE_TICKS, FIRE_TICKS, LOAD_TICKS, TUBE_CAPACITY } from '../../src/data/tube';
+import { ammoDef } from '../../src/data/ammo';
+import { DRY_FIRE_TICKS, LOAD_TICKS, TUBE_CAPACITY } from '../../src/data/tube';
 import { STARTING_INVENTORY, ROLL_TICKS } from '../../src/data/player';
 import { NO_COMMAND, type Command } from '../../src/sim/input';
 import { isRolling } from '../../src/sim/movement';
@@ -8,6 +9,7 @@ import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
 
 const SEED = 7;
+const FIRE_TICKS = ammoDef('arrow').fireTicks;
 
 function sim(): SimState {
   return createSim(SEED);
@@ -244,5 +246,67 @@ describe('firing', () => {
     expect(s.player.facing).toBe('up');
     stepSim(s, command({ moveX: 1 }));
     expect(s.player.facing).toBe('right');
+  });
+});
+
+describe('ammo select', () => {
+  it('starts on arrows', () => {
+    expect(sim().tube.ammoId).toBe('arrow');
+  });
+
+  it('switching returns loaded rounds to the inventory and stops loading', () => {
+    const s = sim();
+    stepSim(s, command({ load: true }));
+    run(s, command(), LOAD_TICKS * 2 + 4);
+    expect(s.tube.loaded).toBe(2);
+    stepSim(s, command({ selectAmmo: 'bomb' }));
+    expect(s.tube).toMatchObject({ ammoId: 'bomb', loaded: 0, loading: false, loadProgress: 0 });
+    expect(s.inventory.arrow).toBe(30);
+    expect(s.events.selects).toEqual([{ ammoId: 'bomb' }]);
+    expect(summarize(s).tube.ammo).toBe('bomb');
+  });
+
+  it('selecting the current ammo does nothing', () => {
+    const s = sim();
+    stepSim(s, command({ load: true }));
+    run(s, command(), LOAD_TICKS + 2);
+    stepSim(s, command({ selectAmmo: 'arrow' }));
+    expect(s.tube).toMatchObject({ ammoId: 'arrow', loaded: 1, loading: true });
+    expect(s.events.selects).toEqual([]);
+  });
+
+  it('ignores ammo that is not in the slot list', () => {
+    const s = sim();
+    stepSim(s, command({ selectAmmo: 'wood' }));
+    expect(s.tube.ammoId).toBe('arrow');
+  });
+
+  it('loads the selected ammo item', () => {
+    const s = sim();
+    s.inventory['ley-bolt'] = 3;
+    stepSim(s, command({ selectAmmo: 'ley-bolt' }));
+    stepSim(s, command({ load: true }));
+    run(s, command(), LOAD_TICKS * TUBE_CAPACITY);
+    expect(s.tube.loaded).toBe(3);
+    expect(s.inventory['ley-bolt']).toBe(0);
+    expect(s.inventory.arrow).toBe(30);
+  });
+
+  it.each([
+    ['arrow', 15],
+    ['ley-bolt', 20],
+    ['bomb', 40],
+  ])('fires %s at most once per %i ticks', (ammoId, interval) => {
+    const s = sim();
+    s.inventory[ammoId] = 10;
+    stepSim(s, command({ selectAmmo: ammoId }));
+    loadFull(s);
+    const shots: number[] = [];
+    for (let t = 1; t <= interval * 2 + 1; t++) {
+      const before = s.tube.loaded;
+      stepSim(s, fireAt(s));
+      if (s.tube.loaded < before) shots.push(t);
+    }
+    expect(shots).toEqual([1, 1 + interval, 1 + interval * 2]);
   });
 });

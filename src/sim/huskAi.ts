@@ -1,7 +1,7 @@
 import { VIEW_HEIGHT, VIEW_WIDTH, TICK_RATE } from '../data/config';
 import { enemyDef, type EnemyDef } from '../data/enemies';
 import type { Room } from '../data/rooms';
-import { moveBox } from './collision';
+import { moveBox, type Rect } from './collision';
 import { aimFacing, unit } from './direction';
 import { aggro, separate, type EnemyState } from './enemies';
 import { damagePlayer } from './health';
@@ -21,19 +21,19 @@ export function inAggroBox(e: EnemyState, player: { x: number; y: number }): boo
 }
 
 /** Thinks, moves and faces every enemy, then pushes overlapping bodies apart. */
-export function stepEnemies(state: SimState, room: Room): void {
+export function stepEnemies(state: SimState, room: Room, obstacles: readonly Rect[] = []): void {
   for (const e of state.enemies) {
     const def = enemyDef(e.enemyId);
     if (e.cooldown > 0) e.cooldown -= 1;
     if (e.flash > 0) e.flash -= 1;
     const [mx, my] = think(state, e, def);
     const [kx, ky] = takeKnock(e);
-    const { hitX, hitY } = moveBox(room, e, def.feetBox, mx + kx, my + ky);
+    const { hitX, hitY } = moveBox(room, e, def.feetBox, mx + kx, my + ky, obstacles);
     e.vx = hitX ? 0 : mx;
     e.vy = hitY ? 0 : my;
     e.facing = swinging(e) ? aimFacing(e.swipeDirX, e.swipeDirY, e.facing) : aimFacing(e.vx, e.vy, e.facing);
   }
-  separate(state.enemies, room);
+  separate(state.enemies, room, obstacles);
 }
 
 function swinging(e: EnemyState): boolean {

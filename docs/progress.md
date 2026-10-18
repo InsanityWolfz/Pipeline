@@ -2,6 +2,57 @@
 
 Newest entry first.
 
+## 2026-10-18: 005 Hand crafting
+**Changed:** built 005 on `claude/005-hand-crafting`, following `docs/plans/005-hand-crafting.md`.
+- **Sim:** solid nodes with regrow (`nodes.ts`, obstacle rects in `collision.ts`); E harvesting (`harvest.ts`); crafting between ticks and the crafted set (`crafting.ts`); ammo select on 1–3 (`tube.ts`); piercing ley bolts (`combat.ts`); bombs, bursts and burns (`bombs.ts`, `burn.ts`); KO resets nodes, bombs, the harvest and the selection, and keeps the crafted set.
+- **Data:** item kinds and 9 new items, the 9 recipes and menu groups, the 4 nodes and 11 placements in `ruin-hall`, the ammo union with ley bolt and bomb, `SLOT_AMMOS`.
+- **Render:** nodes and the harvest bar, bombs on their arc, fire bursts, burn flames, the ammo strip, the C menu (pauses, click to craft, greyed rows), E, 1–3, C and Esc controls; `__GAME__.craft()`.
+- **Art:** 9 item icons, 4 nodes (full and depleted), bomb and ley bolt with shadows, fire burst, burn flame, menu panel and rows, ammo strip cells. Drawn by hand (icons) and by a scratch shape script (nodes, burst, frames), committed as grids.
+
+220 unit tests and 18 e2e tests pass.
+
+**Verify:** `npm run check` (220) and `npm run test:e2e` (18) pass. The qa agent passed every visible criterion with screenshots (nodes full, depleted and regrown, the harvest bar, the menu with greyed rows, hotbar and strip per ammo, a bomb mid-arc, the burst, a burning Husk, a bolt through a Husk, parts in the HUD column) and saw no console errors. Its notes for Shaun's sprite review: fuse vs shaft, ley shard vs ley bolt, and casing vs bomb look alike, especially greyed; the menu panel reads as plain rather than rune-carved; the material column has no backing.
+
+**Review:** the reviewer found five blocking issues. One was already met: per-ammo fire intervals are tested in `tube.test.ts`. One is Shaun's call: sprite approval. The other three are fixed:
+- Ley bolt hits now assert knockback, flash and aggro on both Husks.
+- Burst aggro is tested on an idle Husk with bombs stepped alone.
+- The e2e now scripts a real two-Husk pierce (it fires only when the farther Husk is on the bolt's line) and a kill by burn tick.
+
+Also fixed, from its suggestions:
+- Tests for a bolt stopping at a wall, and for bolts and bombs passing over nodes.
+- Removed dead `boxHitsSolid` obstacles and `GlyphLine.destroy`, and stopped `craft` and drops duplicating `canCraft` and `overlapsRect`.
+- Named the icon size and flame depth nudge, and the starting slot icon now comes from `STARTING_AMMO`.
+- The number keys follow `SLOT_AMMOS` (up to 4).
+- Menu and strip layouts moved to `src/data/hudLayout.ts`, so `assets.ts` is under 300 lines.
+- `tileCentre` moved to `src/sim/tiles.ts` to break the nodes/state import cycle.
+- Switching ammo no longer writes a 0 into the inventory.
+
+Re-verify: 223 unit and 18 e2e tests pass; qa re-checked real 1–3, C/Esc, E and the harvest bar with no regressions.
+
+**Art revision:** at Shaun's request, fuse (a wound cord bundle), ley shard (crystal chunks), ley bolt (a head on a glow trail), casing (an open shell) and bomb (a dark ball with an ember band) were redrawn so the look-alike pairs differ in shape.
+
+**Wrapup:** Shaun ran `/wrapup`, confirming the playtest. That accepts the sprites and the build choices listed in the spec's build notes. 005 is done; the PR into main is open, waiting for Shaun to say merge.
+
+**Next:** Shaun merges the 005 PR when ready, then `/spec 006` (foundry building: grid placement of machines with facing, items moving between them, one working ammo line). The crafted set in `SimState.crafted` is ready for 006's machine unlocks.
+
+**Notes:**
+- No mistake happened twice this slice, so no new rule.
+- Left from review: the real E and 1–3 keys are covered by a qa check, not an e2e test, since `step()` takes the clock from real-time input.
+- The qa notes still open: the menu panel reads as plain rather than rune-carved, the material column has no backing panel, and the harvest bar draws over the player when they stand above the node.
+
+**Notes:**
+- Build choices beyond the plan:
+  - Key presses now latch from the keys' down events (a tap shorter than a frame was lost before, for every key).
+  - The menu works under the test hook's clock.
+  - The crosshair draws above the menu and serves as its pointer.
+  - Burn ticks deal damage without a flash; only the burst flashes.
+- The e2e bolt check asserts a hit, not a two-Husk pierce, since lining up two Husks in real play is luck. The sim tests cover piercing.
+
+## 2026-10-18: 005 Hand crafting spec
+**Changed:** interviewed Shaun and wrote `docs/specs/005-hand-crafting.md` (status: draft). Decisions: harvest nodes (tree, rubble, reeds, ley vein) with E, 3 uses then a 30 s regrow; hand-craft the parts of each chain, then the ammo; the C menu pauses the world and crafts on click; keys 1–3 pick the one slot's ammo and switching returns loaded rounds; bombs arc to the cursor, burst and burn (no spread, no self damage); ley bolts are physical and pierce without limit; the grinder makes one part, ley shards, for both bombs and bolts; all recipes open from the start; the sim records hand-crafted items for 006; the start kit stays 30 arrows.
+**Next:** Shaun approved the spec as written (2026-10-18), proposals and tuning included. The plan is approved too and saved as `docs/plans/005-hand-crafting.md`. Next is `/build`.
+**Notes:** all numbers in the spec are Claude's proposals, not interview answers. The ammo strip beside the hotbar and nodes being solid while projectiles pass over them are also proposals to check at approval.
+
 ## 2026-10-18: 004 Enemies
 **Changed:** specced, planned (`docs/plans/004-enemies.md`) and built 004 on `claude/004-enemies`.
 - **Sim:**

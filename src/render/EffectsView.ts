@@ -6,6 +6,7 @@ import {
   digitFrame,
   ENEMY_ANIMS,
   ENEMY_FX,
+  FIRE_BURST,
   HUD_DIGITS,
   KO_FADE_MS,
   PICKUP_POPUP,
@@ -19,7 +20,7 @@ import type { SimEvents } from '../sim/events';
 import { registerAnim } from './anims';
 
 // One-shot effects driven by sim events: corpses, pickup sparkles and popups,
-// and the KO fade. Nothing here feeds back into the sim.
+// fire bursts, and the KO fade. Nothing here feeds back into the sim.
 export class EffectsView {
   private readonly scene: Scene;
   private readonly camera: Cameras.Scene2D.Camera;
@@ -33,6 +34,7 @@ export class EffectsView {
     this.camera = scene.cameras.main;
     this.followed = followed;
     registerAnim(scene, PICKUP_SPARKLE);
+    registerAnim(scene, FIRE_BURST);
     for (const set of Object.values(ENEMY_ANIMS)) registerAnim(scene, set.death);
   }
 
@@ -40,6 +42,7 @@ export class EffectsView {
   play(events: SimEvents, player: { x: number; y: number }): void {
     for (const d of events.deaths) this.corpse(d.enemyId, d.x, d.y, d.facing === 'left');
     events.pickups.forEach((p, i) => this.pickup(p.itemId, p.x, p.y, player, i));
+    for (const b of events.bursts) this.burst(b.x, b.y, b.radius);
     if (events.ko) this.koFade(player);
   }
 
@@ -65,6 +68,14 @@ export class EffectsView {
         onComplete: () => sprite.destroy(),
       });
     });
+  }
+
+  /** The burst drawn at its real radius, in front of what stands inside it. */
+  private burst(x: number, y: number, radius: number): void {
+    const sprite = this.scene.add.sprite(x, y, ATLAS_KEY, animFrames(FIRE_BURST)[0]).setDepth(y + radius);
+    sprite.setScale((radius * 2) / sprite.width);
+    sprite.play(FIRE_BURST.key);
+    sprite.once('animationcomplete', () => sprite.destroy());
   }
 
   private pickup(itemId: string, x: number, y: number, player: { x: number; y: number }, index: number): void {

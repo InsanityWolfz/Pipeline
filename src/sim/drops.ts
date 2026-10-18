@@ -2,8 +2,9 @@ import { DROP_SCATTER, DROP_SCATTER_TRIES, type DropTable, type EnemyDef } from 
 import { FEET_BOX, PICKUP_RADIUS } from '../data/player';
 import { TILE_SIZE } from '../data/config';
 import type { Room } from '../data/rooms';
-import { isSolid } from './collision';
+import { isSolid, overlapsRect, type Rect } from './collision';
 import { nextFloat, nextInt, type RngState } from './rng';
+import { nodeRects } from './nodes';
 import { roomOf, type SimState } from './state';
 
 // Items dropped on the ground, and picking them up by walking over them.
@@ -29,14 +30,28 @@ export function rollDrops(table: DropTable, rng: RngState): string[] {
   return items;
 }
 
-/** A random clear spot within DROP_SCATTER of (x, y), or (x, y) itself if none turns up. */
-export function scatterPoint(room: Room, rng: RngState, x: number, y: number): { x: number; y: number } {
+/** A point, as a box, for overlap tests: strictly inside a rect overlaps it. */
+const POINT = { w: 0, h: 0 } as const;
+
+/**
+ * A random clear spot within DROP_SCATTER of (x, y), outside solid tiles and
+ * `obstacles`, or (x, y) itself if none turns up.
+ */
+export function scatterPoint(
+  room: Room,
+  rng: RngState,
+  x: number,
+  y: number,
+  obstacles: readonly Rect[] = [],
+): { x: number; y: number } {
   for (let i = 0; i < DROP_SCATTER_TRIES; i++) {
     const angle = nextFloat(rng) * 2 * Math.PI;
     const r = nextFloat(rng) * DROP_SCATTER;
     const px = x + Math.cos(angle) * r;
     const py = y + Math.sin(angle) * r;
-    if (!isSolid(room, Math.floor(px / TILE_SIZE), Math.floor(py / TILE_SIZE))) return { x: px, y: py };
+    if (isSolid(room, Math.floor(px / TILE_SIZE), Math.floor(py / TILE_SIZE))) continue;
+    if (obstacles.some((r) => overlapsRect(px, py, POINT, r))) continue;
+    return { x: px, y: py };
   }
   return { x, y };
 }
@@ -44,8 +59,9 @@ export function scatterPoint(room: Room, rng: RngState, x: number, y: number): {
 /** Rolls an enemy's drops and scatters them on the ground around (x, y). */
 export function spawnDrops(state: SimState, def: EnemyDef, x: number, y: number): void {
   const room = roomOf(state);
+  const rects = nodeRects(state.nodes);
   for (const itemId of rollDrops(def.drops, state.rng)) {
-    const at = scatterPoint(room, state.rng, x, y);
+    const at = scatterPoint(room, state.rng, x, y, rects);
     state.groundItems.push({ id: state.nextGroundItemId++, itemId, ...at });
   }
 }

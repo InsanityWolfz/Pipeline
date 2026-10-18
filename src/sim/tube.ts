@@ -1,15 +1,19 @@
-import { AMMO } from '../data/ammo';
-import { DRY_FIRE_TICKS, FIRE_TICKS, LOAD_TICKS, MUZZLE_OFFSET, SLOT_AMMO, TUBE_CAPACITY } from '../data/tube';
+import { ammoDef } from '../data/ammo';
+import { DRY_FIRE_TICKS, LOAD_TICKS, MUZZLE_OFFSET, SLOT_AMMOS, STARTING_AMMO, TUBE_CAPACITY } from '../data/tube';
 import { createArrow } from './arrows';
+import { throwBomb } from './bombs';
 import { aimFacing, facingVector, unit } from './direction';
 import type { Command } from './input';
 import { count, take } from './inventory';
 import { isRolling } from './movement';
 import type { SimState } from './state';
 
-// The dormant tube: hand-loading rounds from the inventory and firing them.
+// The dormant tube: picking the slot's ammo, hand-loading rounds from the
+// inventory and firing them.
 
 export interface TubeState {
+  /** The ammo hotbar slot 1 loads and fires. */
+  ammoId: string;
   /** Rounds loaded and ready to fire. */
   loaded: number;
   loading: boolean;
@@ -24,14 +28,30 @@ export interface TubeState {
 }
 
 export function createTube(): TubeState {
-  return { loaded: 0, loading: false, loadProgress: 0, fireCooldown: 0, dryFire: 0, firing: false };
+  return { ammoId: STARTING_AMMO, loaded: 0, loading: false, loadProgress: 0, fireCooldown: 0, dryFire: 0, firing: false };
 }
 
-/** The item a slot-1 round is loaded from. */
-export function slotItem(): string {
-  const ammo = AMMO[SLOT_AMMO];
-  if (!ammo) throw new Error(`Unknown slot ammo '${SLOT_AMMO}'`);
-  return ammo.itemId;
+/** The item a round of the slot's ammo is loaded from. */
+export function slotItem(tube: Pick<TubeState, 'ammoId'>): string {
+  return ammoDef(tube.ammoId).itemId;
+}
+
+/**
+ * Switches the slot to another ammo: loaded rounds go back to the inventory as
+ * the old ammo's item and loading stops. The current ammo, or one the slot
+ * can't take, does nothing.
+ */
+export function selectAmmo(state: SimState, ammoId: string): void {
+  const { tube } = state;
+  if (ammoId === tube.ammoId || !SLOT_AMMOS.includes(ammoId)) return;
+  if (tube.loaded > 0) {
+    const item = slotItem(tube);
+    state.inventory[item] = count(state.inventory, item) + tube.loaded;
+    tube.loaded = 0;
+  }
+  stopLoading(state);
+  tube.ammoId = ammoId;
+  state.events.selects.push({ ammoId });
 }
 
 /** Runs after the player has moved this tick, so shots leave from where they stand now. */
@@ -41,6 +61,7 @@ export function stepTube(state: SimState, cmd: Command): void {
   player.aimY = cmd.aimY;
   if (tube.fireCooldown > 0) tube.fireCooldown -= 1;
   if (tube.dryFire > 0) tube.dryFire -= 1;
+  if (cmd.selectAmmo !== null) selectAmmo(state, cmd.selectAmmo);
 
   tube.firing = false;
   if (isRolling(player)) {
@@ -66,20 +87,24 @@ function fire(state: SimState, cmd: Command): void {
   const [dx, dy] = aim[0] === 0 && aim[1] === 0 ? facingVector(player.facing) : aim;
   player.facing = aimFacing(dx, dy, player.facing);
   if (tube.fireCooldown > 0) return;
-  tube.fireCooldown = FIRE_TICKS;
+  const ammo = ammoDef(tube.ammoId);
+  tube.fireCooldown = ammo.fireTicks;
   if (tube.loaded === 0) {
     tube.dryFire = DRY_FIRE_TICKS;
     return;
   }
   tube.loaded -= 1;
-  const x = player.x + dx * MUZZLE_OFFSET;
-  const y = player.y + dy * MUZZLE_OFFSET;
-  state.arrows.push(createArrow(state.nextArrowId++, SLOT_AMMO, x, y, dx, dy));
+  const muzzle = { x: player.x + dx * MUZZLE_OFFSET, y: player.y + dy * MUZZLE_OFFSET };
+  if (ammo.kind === 'lob') {
+    throwBomb(state, ammo.id, muzzle, player, { x: cmd.aimX, y: cmd.aimY }, [dx, dy]);
+    return;
+  }
+  state.arrows.push(createArrow(state.nextArrowId++, ammo.id, muzzle.x, muzzle.y, dx, dy));
 }
 
 function canLoad(state: SimState): boolean {
   const { tube } = state;
-  return !tube.loading && tube.loaded < TUBE_CAPACITY && count(state.inventory, slotItem()) > 0;
+  return !tube.loading && tube.loaded < TUBE_CAPACITY && count(state.inventory, slotItem(tube)) > 0;
 }
 
 function advanceLoading(state: SimState): void {
@@ -87,8 +112,8 @@ function advanceLoading(state: SimState): void {
   tube.loadProgress += 1;
   if (tube.loadProgress < LOAD_TICKS) return;
   tube.loadProgress = 0;
-  if (take(state.inventory, slotItem())) tube.loaded += 1;
-  if (tube.loaded >= TUBE_CAPACITY || count(state.inventory, slotItem()) === 0) tube.loading = false;
+  if (take(state.inventory, slotItem(tube))) tube.loaded += 1;
+  if (tube.loaded >= TUBE_CAPACITY || count(state.inventory, slotItem(tube)) === 0) tube.loading = false;
 }
 
 /** Ends loading; partial progress on the next round is lost and that round stays in the inventory. */

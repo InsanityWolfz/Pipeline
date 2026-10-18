@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AMMO } from '../../src/data/ammo';
+import { straightAmmo } from '../../src/data/ammo';
 import { TILE_SIZE, TICK_RATE } from '../../src/data/config';
 import { LOAD_TICKS, MUZZLE_OFFSET, TUBE_CAPACITY } from '../../src/data/tube';
 import { createArrow, stepArrows, type ArrowState } from '../../src/sim/arrows';
@@ -9,7 +9,7 @@ import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
 import { openRoom } from './helpers';
 
-const ARROW = AMMO.arrow ?? expect.unreachable('arrow ammo is missing');
+const ARROW = straightAmmo('arrow');
 const STEP = ARROW.speed / TICK_RATE;
 
 /** An arrow flying from the centre of tile (tx, ty). */

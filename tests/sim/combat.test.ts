@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { AMMO } from '../../src/data/ammo';
+import { straightAmmo } from '../../src/data/ammo';
 import { damageEnemy } from '../../src/sim/enemies';
-import { arena, fireAt, HUSK, loadFull, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, fireAt, HUSK, loadFull, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
-const DAMAGE = AMMO.arrow?.damage ?? 0;
+const DAMAGE = straightAmmo('arrow').damage;
 
 describe('arrows hitting Husks', () => {
   it('removes the arrow and deals its damage', () => {
@@ -107,5 +107,107 @@ describe('Husk death', () => {
     expect(deaths).toEqual([{ id: e.id, enemyId: 'husk', x: e.x, y: e.y, facing: e.facing }]);
     expect(s.groundItems.length).toBeGreaterThanOrEqual(1);
     expect(s.groundItems.length).toBeLessThanOrEqual(3);
+  });
+});
+
+describe('ley bolts', () => {
+  const BOLT = straightAmmo('ley-bolt');
+
+  function bolted() {
+    const s = arena();
+    s.inventory['ley-bolt'] = 6;
+    run(s, 1, { selectAmmo: 'ley-bolt' });
+    loadFull(s);
+    return s;
+  }
+
+  it('fly at 300 px/s for 320 px', () => {
+    expect(BOLT).toMatchObject({ speed: 300, range: 320, damage: 14, pierce: true, damageType: 'physical' });
+    const s = bolted();
+    run(s, 1, fireAt(PLAYER_AT.x + 1000, PLAYER_AT.y));
+    const bolt = s.arrows[0];
+    expect(bolt?.ammoId).toBe('ley-bolt');
+    run(s, 1);
+    expect(bolt?.travelled).toBeCloseTo(5);
+    const ticks = runUntil(s, () => s.arrows.length === 0, 100);
+    expect(ticks).toBe(Math.ceil(320 / 5) - 1);
+  });
+
+  it('pierce: every Husk in line is hit once', () => {
+    const s = bolted();
+    const first = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
+    const second = placeHusk(s, PLAYER_AT.x + 140, PLAYER_AT.y);
+    run(s, 1, fireAt(PLAYER_AT.x + 1000, PLAYER_AT.y));
+    const bolt = s.arrows[0];
+    // On the tick each Husk is hit: the arrow's knockback and flash, and aggro.
+    const onHit: Record<number, { knockTicks: number; flash: number; mode: string }> = {};
+    runUntil(
+      s,
+      () => {
+        for (const h of s.events.hits) {
+          const e = s.enemies.find((en) => h.target === 'enemy' && en.id === h.id);
+          if (e) onHit[e.id] = { knockTicks: e.knockTicks, flash: e.flash, mode: e.mode };
+        }
+        return s.arrows.length === 0;
+      },
+      100,
+    );
+    expect(first.health).toBe(HUSK.maxHealth - 14);
+    expect(second.health).toBe(HUSK.maxHealth - 14);
+    expect(bolt?.hitIds).toEqual([first.id, second.id]);
+    const struck = { knockTicks: HUSK.hitKnockTicks, flash: HUSK.hitFlashTicks, mode: 'chase' };
+    expect(onHit).toEqual({ [first.id]: struck, [second.id]: struck });
+  });
+
+  it('never hits the same Husk twice, even knocked back along its flight', () => {
+    const s = bolted();
+    const e = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
+    run(s, 1, fireAt(PLAYER_AT.x + 1000, PLAYER_AT.y));
+    const hits: number[] = [];
+    runUntil(
+      s,
+      () => {
+        hits.push(...s.events.hits.filter((h) => h.target === 'enemy').map((h) => h.damage));
+        return s.arrows.length === 0;
+      },
+      100,
+    );
+    expect(hits).toEqual([14]);
+    expect(e.health).toBe(HUSK.maxHealth - 14);
+  });
+
+  it('stop at a wall', () => {
+    const s = bolted();
+    // The ruin hall's left wall is tile column 0; fire at it from 3 tiles away.
+    movePlayer(s, 3.5 * 32, 14.5 * 32);
+    run(s, 1, fireAt(0, 14.5 * 32));
+    let lastX = s.player.x;
+    runUntil(
+      s,
+      () => {
+        lastX = s.arrows[0]?.x ?? lastX;
+        return s.arrows.length === 0;
+      },
+      100,
+    );
+    expect(lastX).toBeGreaterThanOrEqual(32 - 5);
+  });
+
+  it('stop at a ruin block', () => {
+    const s = bolted();
+    // The ruin hall has a block at tile (20, 10), straight above (20, 14).
+    movePlayer(s, 20.5 * 32, 14.5 * 32);
+    run(s, 1, fireAt(20.5 * 32, 0));
+    let lastY = s.player.y;
+    runUntil(
+      s,
+      () => {
+        lastY = s.arrows[0]?.y ?? lastY;
+        return s.arrows.length === 0;
+      },
+      100,
+    );
+    // Removed at the block's bottom edge, well short of its 320 px range.
+    expect(lastY).toBeGreaterThanOrEqual(11 * 32 - 5);
   });
 });

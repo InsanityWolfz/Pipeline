@@ -20,7 +20,34 @@ export const SPRITES = {
   itemFiber: 'item-fiber',
   itemShadow: 'item-shadow',
   hudHealth: 'hud-health',
+  iconBomb: 'icon-bomb',
+  iconLeyBolt: 'icon-ley-bolt',
+  itemLeyCrystal: 'item-ley-crystal',
+  itemShaft: 'item-shaft',
+  itemArrowhead: 'item-arrowhead',
+  itemRope: 'item-rope',
+  itemCasing: 'item-casing',
+  itemFuse: 'item-fuse',
+  itemLeyShard: 'item-ley-shard',
+  leyBolt: 'ley-bolt',
+  leyBoltShadow: 'ley-bolt-shadow',
+  bomb: 'bomb',
+  bombShadow: 'bomb-shadow',
+  craftPanel: 'craft-panel',
+  craftRow: 'craft-row',
+  craftRowHover: 'craft-row-hover',
+  craftArrow: 'craft-arrow',
+  hudAmmoCell: 'hud-ammo-cell',
+  hudAmmoSelect: 'hud-ammo-select',
 } as const;
+
+/** Gathering node sprites by node id: full, and depleted. */
+export const NODE_SPRITES: Readonly<Record<string, { full: string; depleted: string }>> = {
+  tree: { full: 'node-tree', depleted: 'node-tree-depleted' },
+  rubble: { full: 'node-rubble', depleted: 'node-rubble-depleted' },
+  reeds: { full: 'node-reeds', depleted: 'node-reeds-depleted' },
+  'ley-vein': { full: 'node-ley-vein', depleted: 'node-ley-vein-depleted' },
+};
 
 /** The tube held by the player, by direction. `side` points right; left is drawn flipped. */
 export const TUBE_SPRITES = {
@@ -154,6 +181,12 @@ export const ENEMY_ANIMS: Readonly<Record<string, Readonly<Record<EnemyAnim, Ani
 /** The sparkle played where an item is picked up. */
 export const PICKUP_SPARKLE: AnimDef = { key: 'pickup-sparkle', frames: 4, frameRate: 16, loop: false };
 
+/** A bomb's fire burst, drawn scaled to the burst's real radius. */
+export const FIRE_BURST: AnimDef = { key: 'fire-burst', frames: 4, frameRate: 14, loop: false };
+
+/** The flame over a burning enemy. */
+export const BURN_FLAME: AnimDef = { key: 'burn-flame', frames: 3, frameRate: 10, loop: true };
+
 /** Atlas frame names for an animation. */
 export function animFrames(anim: AnimDef): string[] {
   return anim.frames === 1 ? [anim.key] : Array.from({ length: anim.frames }, (_, i) => `${anim.key}/${i}`);
@@ -221,8 +254,22 @@ export const DEPTHS = {
   groundFx: 0.5,
   /** Nudge that puts the tube just in front of or behind the player. */
   tubeNudge: 0.01,
+  /** Nudge that puts a burn flame just in front of the enemy it's on. */
+  flameNudge: 0.01,
   /** Health bars, sparkles and popups over the world. */
   worldUi: 100_000,
-  /** The HUD, above everything. */
+  /** The HUD, above the world. */
   hud: 1_000_000,
+  /** The crafting menu, above the HUD. */
+  menu: 2_000_000,
 } as const;
+
+/** A node's sprite bottom sits this far below its position (the centre of its feet box), px. */
+export const NODE_SPRITE_DROP = 5;
+
+/** Bombs draw this far above their arc height, so they leave the hand at tube height, px. */
+export const BOMB_LIFT = 10;
+
+/** The flame over a burning enemy sits this far above its feet, px. */
+export const BURN_FLAME_HEIGHT = 30;
+

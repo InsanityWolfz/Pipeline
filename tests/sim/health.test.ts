@@ -128,6 +128,26 @@ describe('placeholder KO', () => {
     for (const e of s.enemies) expect(idsBefore).not.toContain(e.id);
   });
 
+  it('also resets nodes, bombs, the harvest and the ammo selection, but keeps the crafted set', () => {
+    const s = koSim();
+    const fresh = createSim(SEED);
+    s.nodes = fresh.nodes.map((n) => ({ ...n, uses: 0, regrow: 99 }));
+    s.inventory.bomb = 2;
+    run(s, 1, { selectAmmo: 'bomb' });
+    s.tube.loaded = 1;
+    run(s, 1, { fire: true, aimX: PLAYER_AT.x - 150, aimY: PLAYER_AT.y });
+    expect(s.bombs).toHaveLength(1);
+    s.harvest = { nodeId: 0, progress: 5 };
+    s.crafted = ['shaft'];
+    run(s, SWIPE_LANDS - 2);
+    expect(s.events.ko).toBe(true);
+    expect(s.nodes).toEqual(fresh.nodes);
+    expect(s.bombs).toEqual([]);
+    expect(s.harvest).toBeNull();
+    expect(s.tube.ammoId).toBe('arrow');
+    expect(s.crafted).toEqual(['shaft']);
+  });
+
   it('sets the KO flag for one tick only', () => {
     const s = koSim();
     run(s, SWIPE_LANDS);

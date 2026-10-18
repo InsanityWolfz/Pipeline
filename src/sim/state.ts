@@ -2,12 +2,16 @@ import { TILE_SIZE } from '../data/config';
 import { STARTING_INVENTORY } from '../data/player';
 import { DEFAULT_ROOM, ROOMS, type Room } from '../data/rooms';
 import type { ArrowState } from './arrows';
+import type { BombState } from './bombs';
 import type { GroundItem } from './drops';
 import { createEnemy, type EnemyState } from './enemies';
 import { createEvents, type SimEvents } from './events';
+import type { HarvestState } from './harvest';
 import type { Inventory } from './inventory';
+import { createNodes, type NodeState } from './nodes';
 import { createPlayer, type PlayerState } from './player';
 import { createRng, type RngState } from './rng';
+import { tileCentre } from './tiles';
 import { createTube, type TubeState } from './tube';
 
 /** The whole sim: plain serializable data. */
@@ -19,7 +23,7 @@ export interface SimState {
   player: PlayerState;
   inventory: Inventory;
   tube: TubeState;
-  /** Arrows in flight. */
+  /** Straight shots in flight: arrows and ley bolts. */
   arrows: ArrowState[];
   /** Id for the next arrow fired. */
   nextArrowId: number;
@@ -30,6 +34,15 @@ export interface SimState {
   /** Items lying on the ground. */
   groundItems: GroundItem[];
   nextGroundItemId: number;
+  /** Gathering nodes. */
+  nodes: NodeState[];
+  /** The harvest in progress, if any. */
+  harvest: HarvestState | null;
+  /** Bombs in flight. */
+  bombs: BombState[];
+  nextBombId: number;
+  /** Item ids hand-crafted at least once, sorted. Kept through a KO; 006 unlocks machines from it. */
+  crafted: string[];
   /** What happened on the last tick. */
   events: SimEvents;
 }
@@ -49,6 +62,11 @@ export function createSim(seed: number, roomId = DEFAULT_ROOM): SimState {
     nextEnemyId: 0,
     groundItems: [],
     nextGroundItemId: 0,
+    nodes: [],
+    harvest: null,
+    bombs: [],
+    nextBombId: 0,
+    crafted: [],
     events: createEvents(),
   };
   resetRoom(state);
@@ -57,8 +75,9 @@ export function createSim(seed: number, roomId = DEFAULT_ROOM): SimState {
 
 /**
  * Puts the room back to its start: player at spawn with full health, the starting
- * inventory, an empty tube, enemies at home and nothing on the ground or in flight.
- * The tick, seed, RNG and id counters carry on.
+ * inventory, an empty tube on its starting ammo, enemies at home, nodes at full,
+ * and nothing harvesting, on the ground or in flight. The tick, seed, RNG, id
+ * counters and the crafted set carry on.
  */
 export function resetRoom(state: SimState): void {
   const room = roomOf(state);
@@ -67,13 +86,13 @@ export function resetRoom(state: SimState): void {
   state.tube = createTube();
   state.arrows = [];
   state.groundItems = [];
+  state.nodes = createNodes(room);
+  state.harvest = null;
+  state.bombs = [];
   state.enemies = (room.enemies ?? []).map((p) => createEnemy(state.nextEnemyId++, p.enemyId, tileCentre(p)));
 }
 
-/** The pixel centre of a tile. */
-export function tileCentre(t: { tx: number; ty: number }): { x: number; y: number } {
-  return { x: (t.tx + 0.5) * TILE_SIZE, y: (t.ty + 0.5) * TILE_SIZE };
-}
+export { tileCentre } from './tiles';
 
 /** A room's size in pixels. */
 export function roomSize(room: Room): { width: number; height: number } {

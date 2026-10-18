@@ -1,11 +1,20 @@
-import { enemyDef } from '../data/enemies';
 import { MAX_HEALTH } from '../data/player';
-import { SLOT_AMMO, TUBE_CAPACITY } from '../data/tube';
-import type { EnemyMode } from './enemies';
+import { TUBE_CAPACITY } from '../data/tube';
 import type { SimEvents } from './events';
 import { isInvulnerable, isRolling } from './movement';
 import type { Facing } from './player';
 import type { SimState } from './state';
+import {
+  arrowSummary,
+  bombSummary,
+  enemySummary,
+  nodeSummary,
+  round,
+  type ArrowSummary,
+  type BombSummary,
+  type EnemySummary,
+  type NodeSummary,
+} from './summaryParts';
 
 /** The compact JSON summary that window.__GAME__.getState() returns. */
 export interface SimSummary {
@@ -44,30 +53,19 @@ export interface SimSummary {
     dryFire: boolean;
     firing: boolean;
   };
-  /** Arrows in flight; x, y is the ground point. */
-  arrows: { id: number; x: number; y: number; dx: number; dy: number; travelled: number }[];
-  enemies: {
-    id: number;
-    enemyId: string;
-    /** Feet centre, px. */
-    x: number;
-    y: number;
-    home: { x: number; y: number };
-    facing: Facing;
-    mode: EnemyMode;
-    modeTicks: number;
-    health: number;
-    maxHealth: number;
-    /** Locked swipe direction. */
-    swipeDir: { x: number; y: number };
-    flash: number;
-  }[];
+  /** Arrows and ley bolts in flight; x, y is the ground point. */
+  arrows: ArrowSummary[];
+  enemies: EnemySummary[];
   groundItems: { id: number; itemId: string; x: number; y: number }[];
+  nodes: NodeSummary[];
+  /** The harvest in progress: the node's id and ticks into it. */
+  harvest: { nodeId: number; progress: number } | null;
+  bombs: BombSummary[];
+  /** Item ids hand-crafted at least once. */
+  crafted: string[];
   /** What happened on the last tick. */
   events: SimEvents;
 }
-
-const round = (n: number): number => Math.round(n * 100) / 100;
 
 export function summarize(state: SimState): SimSummary {
   const { player: p, tube } = state;
@@ -91,7 +89,7 @@ export function summarize(state: SimState): SimSummary {
     },
     inventory: { ...state.inventory },
     tube: {
-      ammo: SLOT_AMMO,
+      ammo: tube.ammoId,
       loaded: tube.loaded,
       capacity: TUBE_CAPACITY,
       loading: tube.loading,
@@ -100,29 +98,13 @@ export function summarize(state: SimState): SimSummary {
       dryFire: tube.dryFire > 0,
       firing: tube.firing,
     },
-    arrows: state.arrows.map((a) => ({
-      id: a.id,
-      x: round(a.x),
-      y: round(a.y),
-      dx: round(a.dx),
-      dy: round(a.dy),
-      travelled: round(a.travelled),
-    })),
-    enemies: state.enemies.map((e) => ({
-      id: e.id,
-      enemyId: e.enemyId,
-      x: round(e.x),
-      y: round(e.y),
-      home: { x: round(e.homeX), y: round(e.homeY) },
-      facing: e.facing,
-      mode: e.mode,
-      modeTicks: e.modeTicks,
-      health: e.health,
-      maxHealth: enemyDef(e.enemyId).maxHealth,
-      swipeDir: { x: round(e.swipeDirX), y: round(e.swipeDirY) },
-      flash: e.flash,
-    })),
+    arrows: state.arrows.map(arrowSummary),
+    enemies: state.enemies.map(enemySummary),
     groundItems: state.groundItems.map((g) => ({ id: g.id, itemId: g.itemId, x: round(g.x), y: round(g.y) })),
+    nodes: state.nodes.map(nodeSummary),
+    harvest: state.harvest ? { ...state.harvest } : null,
+    bombs: state.bombs.map(bombSummary),
+    crafted: [...state.crafted],
     events: structuredClone(state.events),
   };
 }

@@ -1,0 +1,6 @@
+# Crafting menu: the "makes" mark between a recipe's inputs and its output. 7x5.
+....o..
+....mo.
+mmmmmmo
+....mo.
+....o..
