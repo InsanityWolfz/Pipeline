@@ -105,7 +105,7 @@ export class GameScene extends Scene {
     if (controls) {
       controls.poll({
         building: this.sim.building,
-        pieceId: this.buildView?.selected ?? 'conduit',
+        pieceId: () => this.buildView?.selected ?? 'conduit',
         overUi: (x, y) => (this.buildView?.overUi(x, y) ?? false) || (this.picker?.overUi(x, y) ?? false),
       });
       this.handleUi(controls);

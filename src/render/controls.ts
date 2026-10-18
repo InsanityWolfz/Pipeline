@@ -22,8 +22,8 @@ const AMMO_KEYS = NUMBER_KEYS.slice(0, SLOT_AMMOS.length);
 /** What the scene tells the controls each frame about build mode and the screen's UI. */
 export interface BuildInput {
   building: boolean;
-  /** The piece selected on the build bar. */
-  pieceId: string;
+  /** The piece selected on the build bar, read at click time (a bar click can land in the same frame). */
+  pieceId: () => string;
   /** True over the build bar or the hopper picker, where clicks don't reach the world. */
   overUi: (x: number, y: number) => boolean;
 }
@@ -54,7 +54,7 @@ export class Controls {
   private depositPending: Command['deposit'] = null;
   private readonly queue: BuildAction[] = [];
   private dragTile: Tile | null = null;
-  private build: BuildInput = { building: false, pieceId: 'conduit', overUi: () => false };
+  private build: BuildInput = { building: false, pieceId: () => 'conduit', overUi: () => false };
   private aimX = 0;
   private aimY = 0;
   /** The ghost's facing, sent with every place. */
@@ -138,14 +138,14 @@ export class Controls {
       return;
     }
     if (!p.leftButtonDown()) return;
-    this.queue.push({ place: { pieceId: this.build.pieceId, ...tile, facing: this.facing }, pickUp: null });
+    this.queue.push({ place: { pieceId: this.build.pieceId(), ...tile, facing: this.facing }, pickUp: null });
     this.dragTile = tile;
   }
 
   /** Dragging with a conduit selected lays one on every new tile the cursor enters. */
   private pointerMove(p: Input.Pointer): void {
     const drag = this.dragTile;
-    if (!drag || !this.build.building || this.build.pieceId !== 'conduit' || !p.leftButtonDown()) return;
+    if (!drag || !this.build.building || this.build.pieceId() !== 'conduit' || !p.leftButtonDown()) return;
     if (this.build.overUi(p.x, p.y)) return;
     const tile = this.tileUnder(p);
     if (tile.tx === drag.tx && tile.ty === drag.ty) return;
