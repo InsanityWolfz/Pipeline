@@ -4,8 +4,13 @@ Newest entry first.
 
 ## 2026-10-18: Body follows the aim (fix)
 **Changed:** `PlayerView` now picks the body's animation and flip from the aim direction when not rolling, matching the tube, so the idle and walk poses no longer face away from the tube. `npm run check` and 18 e2e tests pass.
-**Next:** `/spec 006` (foundry building) on the same branch.
+**Next:** Shaun playtests the fix on the preview.
 **Notes:** sim facing is unchanged; see decisions.md.
+
+## 2026-10-18: 006 Foundry building spec
+**Changed:** interviewed Shaun and wrote `docs/specs/006-foundry-building.md` (status: draft). Decisions: a separate foundry room through a doorway (fade), conduits carry items, input hoppers (one item type each, picked from held raws) and output crates (emptied with E), all nine machines for the three chains, free placement, unlock by hand-crafting once, assembler and packer 2×2, B build mode with R rotate and click place/pick up anywhere on the foundry floor, wrong items stall conduits, the foundry ticks while the player is away and survives a KO, working/starved/blocked markers with hover buffers.
+**Next:** Shaun reviews the spec's three open questions and approves it, then `/plan`.
+**Notes:** tuning values are starting points.
 
 ## 2026-10-18: 005 Hand crafting
 **Changed:** built 005 on `claude/005-hand-crafting`, following `docs/plans/005-hand-crafting.md`.
