@@ -22,6 +22,10 @@ export class HopperPicker {
   private readonly panel: GameObjects.Graphics;
   private readonly hover: RowHover;
   private readonly hint: TextLine;
+  /** The panel's rect on screen (rows and hint), or null with no rows: clicks anywhere on it stay off the world. */
+  private panelRect: { x: number; y: number; w: number; h: number } | null = null;
+  /** The counts the rows show, top to bottom (for the test hook). */
+  shownCounts: number[] = [];
   /** The hopper's piece id while open. */
   hopperId: number | null = null;
 
@@ -47,12 +51,13 @@ export class HopperPicker {
 
   close(): void {
     this.hopperId = null;
+    this.shownCounts = [];
     this.rebuild([]);
   }
 
-  /** True if a screen point is over a row. */
+  /** True if a screen point is over the panel: its rows, the gaps between them, or the hint. */
   overUi(x: number, y: number): boolean {
-    return this.isOpen && pickerRows(this.entries).some((r) => inRect(r, x, y));
+    return this.isOpen && this.panelRect !== null && inRect(this.panelRect, x, y);
   }
 
   /** The cursor is at a screen point (020): its row lights, with the hover sound on a new row. */
@@ -80,7 +85,8 @@ export class HopperPicker {
     const entries = pickerEntries(hopper, inventory);
     const key = (es: PickerEntry[]): string => es.map((e) => `${e.action}:${e.itemId}`).join();
     if (key(entries) !== key(this.entries)) this.rebuild(entries);
-    for (const r of this.rows) r.count.set(String(r.entry.action === 'take' ? hopper.count : count(inventory, r.entry.itemId)));
+    this.shownCounts = this.rows.map((r) => (r.entry.action === 'take' ? hopper.count : count(inventory, r.entry.itemId)));
+    for (const [i, r] of this.rows.entries()) r.count.set(String(this.shownCounts[i]));
   }
 
   private rebuild(entries: PickerEntry[]): void {
@@ -112,6 +118,7 @@ export class HopperPicker {
     const last = rects[rects.length - 1];
     this.panel.clear();
     this.hint.setVisible(false);
+    this.panelRect = null;
     if (!first || !last) return;
     const hintTop = last.y + last.h + L.hint.gap;
     this.hint.moveTo(Math.round(first.x + (first.w - this.hint.width) / 2), hintTop).setVisible(true);
@@ -119,6 +126,7 @@ export class HopperPicker {
     const y = first.y - L.pad;
     const w = first.w + 2 * L.pad;
     const h = hintTop + this.hint.lineHeight - first.y + 2 * L.pad;
+    this.panelRect = { x, y, w, h };
     drawTablet(this.panel, x, y, w, h);
   }
 }

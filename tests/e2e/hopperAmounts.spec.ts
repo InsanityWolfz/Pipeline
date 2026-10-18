@@ -1,5 +1,4 @@
 import { expect, test, type Page } from '@playwright/test';
-import { PICKER_LAYOUT } from '../../src/data/hudLayout';
 import { pickerEntries, pickerRows } from '../../src/render/foundryLayout';
 import { enterFoundry, pieceAt, screenPoint, standStill, state, step, toggleBuild } from './foundryPage';
 import { boot, watchErrors } from './helpers';
@@ -65,12 +64,13 @@ test('a click moves one, Shift+click half and Ctrl+click all, in and out, with t
   await page.keyboard.press('e');
   await expect.poll(async () => (await ui(page))?.pickerOpen).toBe(true);
   expect((await ui(page))?.pickerHint).toBe('Click 1 · Shift half · Ctrl all');
-  expect(PICKER_LAYOUT.hint.text).toBe('Click 1 · Shift half · Ctrl all');
 
   // In: 1, then half of 29 (15), then the other 14.
   await clickRow(page, 'put');
   await expectHopper(page, 1);
   expect((await ui(page))?.pickerOpen).toBe(true);
+  // The rows' counts follow: 1 in the hopper (its take row), 29 held (the put row).
+  await expect.poll(async () => (await ui(page))?.pickerCounts).toEqual([1, 29]);
   await clickRow(page, 'put', ['Shift']);
   await expectHopper(page, 16);
   expect((await state(page)).inventory.arrow).toBe(14);
@@ -124,13 +124,19 @@ test('Ctrl+click on the picker is kept from the browser, and the canvas has no c
 test.describe('review screenshots (022)', () => {
   test.skip(!process.env.REVIEW_SHOTS, 'set REVIEW_SHOTS=1 to capture docs/review/022');
 
-  test('the hopper picker with its hint, after a click put one in', async ({ page }) => {
-    await hopperBeside(page);
+  test('the hopper picker with its hint, after one went in', async ({ page }) => {
+    const id = await hopperBeside(page);
     await page.keyboard.press('e');
     await expect.poll(async () => (await ui(page))?.pickerOpen).toBe(true);
-    await clickRow(page, 'put');
-    await expectHopper(page, 1);
-    await page.waitForTimeout(300);
+    // Put one in through the hook rather than a click, so no press flash is fading in the picture.
+    await step(page, 1, { deposit: { id, itemId: 'arrow', amount: 'one' } });
+    await expect.poll(async () => (await ui(page))?.pickerCounts).toEqual([1, 29]);
+    const s = await state(page);
+    const row = pickerRows(pickerEntries(await hopper(page), s.inventory)).find((r) => r.action === 'put');
+    if (!row) throw new Error('no put row');
+    const p = await screenPoint(page, row.x + 40, row.y + row.h / 2);
+    await page.mouse.move(p.x, p.y);
+    await expect.poll(async () => (await ui(page))?.cursor?.kind).toBe('pointer');
     await page.screenshot({ path: `${SHOTS}/01-picker-hint.png` });
   });
 });

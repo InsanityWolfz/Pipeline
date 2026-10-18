@@ -44,6 +44,8 @@ export interface UiState {
   pickerOpen: boolean;
   /** The hopper picker's hint line while it shows (022), else null. */
   pickerHint: string | null;
+  /** The counts the hopper picker's rows show, top to bottom (022: they update live). */
+  pickerCounts: number[];
   hoverName: string | null;
   hoverDescription: string | null;
   buildTip: string | null;

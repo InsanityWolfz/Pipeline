@@ -8,6 +8,7 @@ import { BUILD_BAR, pieceDef } from '../data/pieces';
 import type { Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { dragTo, release, type ConduitLay, type HeldConduit } from './dragPath';
+import { clickMods, isLeftPress, type ClickMods } from './clickInput';
 import { AMMO_KEYS, bindKeys, type Key } from './keys';
 import { MenuRequests, type UiCommand } from './menuRequests';
 import { toView } from './scale';
@@ -23,12 +24,6 @@ export interface BuildInput {
   clickUi: (x: number, y: number, mods: ClickMods) => void;
   /** The id of the gravity stager on a tile, if any: a left click there turns it rather than placing. */
   stagerAt: (tile: Tile) => number | null;
-}
-
-/** The modifier keys held with a click (022: Shift and Ctrl pick how many a hopper click moves). */
-export interface ClickMods {
-  shift: boolean;
-  ctrl: boolean;
 }
 
 type BuildAction = Pick<Command, 'place' | 'pickUp' | 'setAngle'>;
@@ -160,12 +155,13 @@ export class Controls {
 
   private pointerDown(p: Input.Pointer): void {
     const v = this.view(p);
-    const mods = { shift: p.event.shiftKey, ctrl: p.event.ctrlKey };
+    const mods = clickMods(p.event);
     // Ctrl+click is a game input (022: all of a hopper stack), never a browser shortcut.
     if (mods.ctrl) p.event.preventDefault();
     if (this.build.overUi(v.x, v.y)) {
       this.uiPress = true;
-      if (p.leftButtonDown()) this.build.clickUi(v.x, v.y, mods);
+      // On macOS Phaser calls Ctrl+left-click a right click; the DOM event knows better.
+      if (isLeftPress(p.event, p.leftButtonDown())) this.build.clickUi(v.x, v.y, mods);
       return;
     }
     if (!this.build.building) return;

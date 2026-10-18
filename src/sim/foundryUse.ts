@@ -58,9 +58,10 @@ export function amountOf(amount: HopperAmount, n: number): number {
 export function deposit(state: SimState, id: number, itemId: string, amount: HopperAmount): void {
   const h = state.foundry.pieces.find((p) => p.id === id);
   if (h?.kind !== 'hopper' || !inReach(state, h) || (h.item !== null && h.item !== itemId)) return;
-  const n = amountOf(amount, count(state.inventory, itemId));
+  const held = count(state.inventory, itemId);
+  const n = amountOf(amount, held);
   if (n === 0) return;
-  state.inventory[itemId] = count(state.inventory, itemId) - n;
+  state.inventory[itemId] = held - n;
   h.item = itemId;
   h.count += n;
   state.events.deposits.push({ id, itemId, count: n });

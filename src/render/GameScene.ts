@@ -180,6 +180,7 @@ export class GameScene extends Scene {
       paused: this.pause?.isOpen ?? false,
       pickerOpen: this.picker?.isOpen ?? false,
       pickerHint: this.picker?.hintShown ?? null,
+      pickerCounts: [...(this.picker?.shownCounts ?? [])],
       hoverName: this.hover?.shown ?? null,
       hoverDescription: this.hover?.shownDescription ?? null,
       buildTip: this.buildView?.tip.shown ?? null,
