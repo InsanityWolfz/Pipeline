@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-18: 005 Hand crafting spec
+**Changed:** interviewed Shaun and wrote `docs/specs/005-hand-crafting.md` (status: draft). Decisions: harvest nodes (tree, rubble, reeds, ley vein) with E, 3 uses then a 30 s regrow; hand-craft the parts of each chain, then the ammo; the C menu pauses the world and crafts on click; keys 1–3 pick the one slot's ammo and switching returns loaded rounds; bombs arc to the cursor, burst and burn (no spread, no self damage); ley bolts are physical and pierce without limit; the grinder makes one part, ley shards, for both bombs and bolts; all recipes open from the start; the sim records hand-crafted items for 006; the start kit stays 30 arrows.
+**Next:** Shaun reviews the spec, adjusts the proposed tuning (recipe yields, ammo stats, node numbers), and approves it; then `/plan`.
+**Notes:** all numbers in the spec are Claude's proposals, not interview answers. The ammo strip beside the hotbar and nodes being solid while projectiles pass over them are also proposals to check at approval.
+
 ## 2026-10-18: 004 Enemies
 **Changed:** specced, planned (`docs/plans/004-enemies.md`) and built 004 on `claude/004-enemies`.
 - **Sim:**
