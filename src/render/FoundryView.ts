@@ -5,8 +5,9 @@ import { CONDUIT_TICKS } from '../data/foundry';
 import {
   CONDUIT_ANIMS,
   CRATE_SPRITE,
-  ICON_RISE,
+  FACING_ARROWS,
   FOUNDRY_LAYOUT,
+  ICON_RISE,
   HOPPER_SPRITES,
   MACHINE_HOUSINGS,
   STATUS_MARKERS,
@@ -23,10 +24,22 @@ import { GlyphLine } from './glyphLine';
 
 export const viewOf = (f: Facing): PieceView => (f === 'up' || f === 'down' ? f : 'side');
 
+/** Puts a facing arrow on a piece's front edge, pointing the way it hands items out. */
+export function placeArrow(arrow: GameObjects.Image, p: Pick<PieceState, 'pieceId' | 'tx' | 'ty' | 'facing'>): void {
+  const r = pieceRect(p);
+  const [fx, fy] = facingVector(p.facing);
+  const off = FOUNDRY_LAYOUT.arrowOffset;
+  arrow.setFrame(FACING_ARROWS[viewOf(p.facing)]).setFlipX(p.facing === 'left');
+  const lift = p.facing === 'up' && pieceDef(p.pieceId).kind !== 'conduit' ? FOUNDRY_LAYOUT.arrowUpLift : 0;
+  arrow.setPosition(Math.round(r.x + fx * (r.w / 2 + off)), Math.round(r.y + fy * (r.h / 2 + off) - lift));
+}
+
 interface Drawn {
   body: GameObjects.Sprite;
   /** Machines: what they make, on the top face. Hoppers and crates: the item they hold. Conduits: the item riding it. */
   icon: GameObjects.Image;
+  /** Shown in build mode on everything but conduits, which already show their flow. */
+  arrow?: GameObjects.Image;
   marker?: GameObjects.Sprite;
   markerIcon?: GameObjects.Image;
   count?: GlyphLine;
@@ -46,17 +59,18 @@ export class FoundryView {
     registerAnim(scene, STATUS_MARKERS.working);
   }
 
-  /** Draws the pieces, or none when the foundry isn't the room on show. */
-  update(foundry: FoundryState, shown: boolean): void {
+  /** Draws the pieces, or none when the foundry isn't the room on show. Build mode adds facing arrows. */
+  update(foundry: FoundryState, shown: boolean, building: boolean): void {
     const live = new Set<number>();
     for (const p of shown ? foundry.pieces : []) {
       live.add(p.id);
       const d = this.drawn.get(p.id) ?? this.create(p);
       this.draw(p, d);
+      d.arrow?.setVisible(building);
     }
     for (const [id, d] of this.drawn) {
       if (live.has(id)) continue;
-      for (const o of [d.body, d.icon, d.marker, d.markerIcon]) o?.destroy();
+      for (const o of [d.body, d.icon, d.arrow, d.marker, d.markerIcon]) o?.destroy();
       d.count?.set('');
       this.drawn.delete(id);
     }
@@ -78,6 +92,10 @@ export class FoundryView {
       body: add.sprite(r.x, bottom, ATLAS_KEY).setOrigin(0.5, 1).setFlipX(left).setDepth(bottom),
       icon: add.image(r.x, bottom, ATLAS_KEY, pieceIcon(p.pieceId)).setOrigin(0.5),
     };
+    if (p.kind !== 'conduit') {
+      d.arrow = add.image(0, 0, ATLAS_KEY, FACING_ARROWS.down).setDepth(DEPTHS.worldUi - 1);
+      placeArrow(d.arrow, p);
+    }
     if (p.kind === 'conduit') {
       d.body.setOrigin(0).setPosition(r.x - TILE_SIZE / 2, r.y - TILE_SIZE / 2).setDepth(FOUNDRY_LAYOUT.conduitDepth);
       d.body.play(CONDUIT_ANIMS[view].key);

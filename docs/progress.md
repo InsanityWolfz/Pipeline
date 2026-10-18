@@ -10,7 +10,8 @@ Newest entry first.
 - **Art:** housings, conduits, hoppers, crate, doorway, status markers and logistics icons. After Shaun's first look, machines show the item they make and wood is a side-on log.
 
 Shaun approved the revised sprites in chat. Verify: the qa agent's screenshots pass every criterion; fixed the build-bar click race, readout clipping, the crate count position and the picker panel. Review: fixed all 3 blocking issues (3×1 front side refusing items, gaps in fast conduit drags, the door fade constant moved to data) and most suggestions. Verify rerun green: 287 unit tests and 21 e2e tests.
-**Next:** Shaun playtests the preview, then `/wrapup`.
+Playtest 1: Shaun's line didn't run. The pieces faced down into empty tiles while the conduits ran up, which a sim test confirmed. Build mode now shows a facing arrow on every piece and on the ghost.
+**Next:** Shaun approves the facing arrow sprite and replays the preview, then `/wrapup`.
 **Notes:** see the 006 entry in decisions.md. The prettier slip is logged there too: don't run formatters the repo doesn't use.
 
 ## 2026-10-18: Body follows the aim (fix)

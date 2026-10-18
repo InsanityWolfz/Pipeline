@@ -20,6 +20,7 @@ import {
   CONDUIT_ANIMS,
   CRATE_SPRITE,
   DOORWAY_SPRITE,
+  FACING_ARROWS,
   HOPPER_SPRITES,
   MACHINE_HOUSINGS,
   LOGISTICS_ICONS,
@@ -127,6 +128,7 @@ describe('assets', () => {
       ...Object.values(LOGISTICS_ICONS),
       CRATE_SPRITE,
       DOORWAY_SPRITE,
+      ...Object.values(FACING_ARROWS),
       STATUS_MARKERS.blocked,
       STATUS_MARKERS.starved,
     ];

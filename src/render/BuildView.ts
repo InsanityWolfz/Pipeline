@@ -4,6 +4,7 @@ import { TILE_SIZE } from '../data/config';
 import {
   CONDUIT_ANIMS,
   CRATE_SPRITE,
+  FACING_ARROWS,
   ICON_RISE,
   HOPPER_SPRITES,
   MACHINE_HOUSINGS,
@@ -14,7 +15,7 @@ import { pieceRect, type PlaceFail, type Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { colorOf } from './color';
 import { buildBarCells, inRect, pieceIcon } from './foundryLayout';
-import { viewOf } from './FoundryView';
+import { placeArrow, viewOf } from './FoundryView';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -36,6 +37,7 @@ export class BuildView {
   private readonly highlight: GameObjects.Image;
   private readonly ghost: GameObjects.Image;
   private readonly ghostIcon: GameObjects.Image;
+  private readonly ghostArrow: GameObjects.Image;
   private unlocked: readonly string[] = [];
   private visible = false;
   selected = FIRST_PIECE;
@@ -49,7 +51,8 @@ export class BuildView {
       .setDepth(DEPTHS.hud + 2);
     this.ghost = scene.add.image(0, 0, ATLAS_KEY, bodyFrame(FIRST_PIECE, 'right')).setAlpha(GHOST.alpha);
     this.ghostIcon = scene.add.image(0, 0, ATLAS_KEY, pieceIcon(FIRST_PIECE)).setAlpha(GHOST.alpha);
-    for (const o of [this.ghost, this.ghostIcon]) o.setDepth(DEPTHS.worldUi - 1);
+    this.ghostArrow = scene.add.image(0, 0, ATLAS_KEY, FACING_ARROWS.down);
+    for (const o of [this.ghost, this.ghostIcon, this.ghostArrow]) o.setDepth(DEPTHS.worldUi - 1);
     this.setVisible(false);
   }
 
@@ -89,6 +92,7 @@ export class BuildView {
     const show = cursor !== null;
     this.ghost.setVisible(show);
     this.ghostIcon.setVisible(show);
+    this.ghostArrow.setVisible(show);
     if (!cursor) return;
     const pieceId = this.selected;
     const def = pieceDef(pieceId);
@@ -99,6 +103,7 @@ export class BuildView {
     else this.ghost.setOrigin(0.5, 1).setPosition(r.x, bottom);
     const tint = colorOf(canPlace(pieceId, cursor.tx, cursor.ty, facing) ? GHOST.badTint : GHOST.okTint);
     this.ghost.setTint(tint);
+    placeArrow(this.ghostArrow, { pieceId, tx: cursor.tx, ty: cursor.ty, facing });
     const machine = def.kind === 'machine';
     this.ghostIcon.setVisible(machine).setTint(tint);
     if (machine) {
@@ -135,6 +140,7 @@ export class BuildView {
     if (!visible) {
       this.ghost.setVisible(false);
       this.ghostIcon.setVisible(false);
+      this.ghostArrow.setVisible(false);
     }
     for (const c of this.cells) for (const o of c.images) o.setVisible(visible);
   }

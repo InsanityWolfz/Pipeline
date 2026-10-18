@@ -223,7 +223,7 @@ export class GameScene extends Scene {
     clearEvents(this.pending);
     const shown = this.shownRoomId;
     const inFoundry = shown === FOUNDRY_ROOM;
-    this.foundryView?.update(sim.foundry, inFoundry);
+    this.foundryView?.update(sim.foundry, inFoundry, sim.building);
     this.nodeView?.update(inRoom(sim.nodes, shown), sim.harvest);
     this.groundItemView?.update(inRoom(sim.groundItems, shown));
     this.enemyView?.update(inRoom(sim.enemies, shown));
