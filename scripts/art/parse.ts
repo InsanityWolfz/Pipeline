@@ -1,6 +1,6 @@
 // Parses a sprite grid file: optional `#` comment lines, then rows of palette
 // symbols (one per pixel, `.` transparent). Animation frames are separated by `---`.
-import { hexToRgb, PALETTE, TRANSPARENT } from '../../src/data/palette.ts';
+import { hexToRgb, PIXEL_PALETTE, TRANSPARENT } from '../../src/data/palette.ts';
 
 export interface ParsedSprite {
   width: number;
@@ -9,7 +9,7 @@ export interface ParsedSprite {
   frames: Uint8Array[];
 }
 
-const COLORS = new Map(PALETTE.map((c) => [c.char, hexToRgb(c.hex)]));
+const COLORS = new Map(PIXEL_PALETTE.map((c) => [c.char, hexToRgb(c.hex)]));
 
 interface Row {
   text: string;

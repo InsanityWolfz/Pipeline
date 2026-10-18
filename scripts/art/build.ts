@@ -3,7 +3,7 @@
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { ATLAS_KEY } from '../../src/data/assets.ts';
-import { hexToRgb, OUTLINE_ID, PALETTE, paletteHex } from '../../src/data/palette.ts';
+import { hexToRgb, OUTLINE_ID, PIXEL_PALETTE, paletteHex } from '../../src/data/palette.ts';
 import { parseSprite } from './parse.ts';
 import { encodePng } from './png.ts';
 
@@ -77,10 +77,10 @@ function pack(frames: Frame[]): { atlas: Image; placed: Map<string, { x: number;
 }
 
 function paletteSheet(): Image {
-  const rows = Math.ceil(PALETTE.length / SWATCH.columns);
+  const rows = Math.ceil(PIXEL_PALETTE.length / SWATCH.columns);
   const step = SWATCH.size + SWATCH.gap;
   const sheet = filled(SWATCH.columns * step + SWATCH.gap, rows * step + SWATCH.gap, rgb(OUTLINE_ID));
-  PALETTE.forEach((color, i) => {
+  PIXEL_PALETTE.forEach((color, i) => {
     const swatch = filled(SWATCH.size, SWATCH.size, rgb(color.id));
     blit(sheet, swatch, SWATCH.gap + (i % SWATCH.columns) * step, SWATCH.gap + Math.floor(i / SWATCH.columns) * step);
   });
