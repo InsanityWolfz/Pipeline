@@ -2,6 +2,18 @@
 
 Newest entry first.
 
+## 2026-10-18: 004 Enemies build
+**Changed:** built 004 on `claude/004-enemies`, following `docs/plans/004-enemies.md`.
+- **Sim:** player health with knockback, 30-tick hit invulnerability and a hit that stops loading (`health.ts`, `knockback.ts`); Husks with RotMG-style aggro, leash, wind-up, swipe and recover (`enemies.ts`, `huskAi.ts`); arrow hits, knockback and death (`combat.ts`, `arrows.ts` takes a hit test); seeded drops, scatter and walk-over pickup (`drops.ts`); the placeholder KO via `resetRoom()` in `state.ts`; per-tick `events` (hits, deaths, pickups, ko); `getState()` reports all of it.
+- **Data:** `enemies.ts` (Husk tuning and drop table), room enemy placements, player health values, four materials, render layout values in `assets.ts`.
+- **Render:** `EnemyView` (poses, white hit flash, health bar, swipe telegraph on the ground), `GroundItemView`, `EffectsView` (corpse, sparkle, "+1 [icon]" popup, KO fade), player hit pose and flicker, HUD health bar and material column. `GameScene.stepOnce()` collects events from every tick for the next draw; the test hook steps through it.
+- **Art:** Husk (idle, walk, wind-up, swipe, hit in 3 views; death), four materials, item shadow, pickup sparkle, player hit poses, HUD health frame, `+` glyph. Not yet approved by Shaun.
+- 150 unit tests and 14 e2e tests pass.
+**Next:** Shaun approves the sprites at 4×, then `/verify` and `/review`.
+**Notes:**
+- The Husk grids came from a scratch shape script (body, limbs and mask with auto outline and shading). It isn't committed, so revise the grids by hand.
+- Built as planned, plus: the white hit flash uses the palette's `white`; a material's one 16×16 sprite is both its ground sprite and its HUD icon.
+
 ## 2026-10-18: 004 Enemies spec
 **Changed:** interviewed Shaun and wrote `docs/specs/004-enemies.md` (status: draft). Decisions: player health 100 with a placeholder KO that resets the whole room (011 replaces it); a pack of 3 Husks (40 HP, 50 px/s) with a 0.6 s wind-up and a 120° front arc locked at wind-up start, which a roll or a sidestep avoids; 20 swipe damage, 0.5 s hit invulnerability, knockback both ways, hit flash, enemy health bars; RotMG-style aggro (on screen or hit, chase while on screen, return home after 1 s off screen, re-aggro on return, heal to full at home, always damageable); drops of 1–2 husk resin plus a 50% wood/stone/fiber, walked over to collect, with a pickup popup and a HUD material column; a hit cancels loading; no regen.
 **Next:** Shaun approved the spec and the `/plan` (copied to `docs/plans/004-enemies.md` so it survives the cloud container). Run `/build` next.
