@@ -55,18 +55,27 @@ export const SUPPLY_LOOK = {
   tendrilMs: 500,
   tendrilColor: 'cyan-glow',
   tendrilWidth: 1.5,
-  /** The tendril's sideways wave, px, and how many waves along it. */
+  /** The tendril's sideways wave, px, how many waves along it, how fast they run (ms per radian) and how many segments draw it. */
   wobble: 4,
   waves: 3,
+  waveMs: 90,
+  tendrilSteps: 16,
   /** The tendril leaves the pylon this far above its base. */
   pylonRise: 26,
+  /** The node's pulse: starts this far through the tendril's reach, ring width and radius px, this far above the node's base. */
+  pulseAt: 0.6,
   pulseMs: 500,
+  pulseWidth: 2,
   pulseRadius: 18,
+  pulseRise: 6,
   moteSpeed: 200,
   moteRadius: 2.5,
   haloRadius: 6,
   halo: 'cyan',
+  haloAlpha: 0.35,
+  /** Sinking into the stairs, a mote shrinks by this fraction as it fades. */
   sinkMs: 400,
+  sinkShrink: 0.6,
   /** A mote takes its raw's colour. */
   moteColors: { wood: 'wood-light', stone: 'rock-pale', fiber: 'leaf-light', 'ley-crystal': 'cyan-glow' } as Readonly<Record<string, string>>,
 } as const;

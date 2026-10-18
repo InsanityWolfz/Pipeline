@@ -77,7 +77,7 @@ export function nameAt(sim: SimState, roomId: string, px: number, py: number): H
   }
   const room = roomById(roomId);
   const on = (t: { tx: number; ty: number } | undefined) => t !== undefined && t.tx === tx && t.ty === ty;
-  if (on(room.pylon) && room.pylon) return { name: WORLD_NAMES.pylon, ...centre(room.pylon), rise: HOVER_NAME.tile.rise, description: DESCRIPTIONS.pylon };
+  if (on(room.pylon) && room.pylon) return { name: WORLD_NAMES.pylon, ...centre(room.pylon), rise: HOVER_NAME.tile.rise, description: sim.claims.includes(room.pylon.site) ? DESCRIPTIONS.pylon : DESCRIPTIONS.pylonDormant };
   if (on(room.tubeStone) && room.tubeStone) {
     return { name: sim.hasTube ? WORLD_NAMES.tubeStone : WORLD_NAMES.dormantTube, ...centre(room.tubeStone), rise: HOVER_NAME.tile.rise };
   }

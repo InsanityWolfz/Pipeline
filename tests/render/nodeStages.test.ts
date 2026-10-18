@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { NODE_SPRITES } from '../../src/data/assets';
-import { NODES, REGROW_STAGES } from '../../src/data/nodes';
+import { nodeDef, NODES, REGROW_STAGES } from '../../src/data/nodes';
 import { harvestTarget, nodeFrame, regrowStage } from '../../src/render/nodeStages';
 
 // 018: a node's look follows its uses and regrow timer; the pylon reaches for the nearest node of a raw.
@@ -15,7 +15,7 @@ describe('node looks', () => {
   });
 
   it('grows back through at least 3 stages after the bare remains', () => {
-    const ticks = 1800;
+    const ticks = nodeDef('tree').regrowTicks;
     expect(REGROW_STAGES).toBeGreaterThanOrEqual(3);
     expect(regrowStage(ticks, ticks)).toBe(0);
     const seen: number[] = [];

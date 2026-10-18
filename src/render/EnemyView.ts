@@ -114,12 +114,13 @@ export class EnemyView {
     const x = e.x + RESIN.blob[0] * k * (e.facing === 'left' ? -1 : 1);
     const y = bottom + RESIN.blob[1] * k;
     g.setDepth(bottom + DEPTHS.flameNudge);
-    const glint = (Math.sin(((now + e.id * 311) / RESIN.glintMs) * Math.PI * 2) + 1) / 2;
-    g.fillStyle(colorOf('snow'), glint * 0.9).fillCircle(x - 0.6 * k, y - 0.6 * k, 0.6);
-    const t = (now + e.id * 977) % RESIN.dripMs;
+    const { glint: gl, drop } = RESIN;
+    const glint = (Math.sin(((now + e.id * RESIN.phase.glint) / RESIN.glintMs) * Math.PI * 2) + 1) / 2;
+    g.fillStyle(colorOf(gl.color), glint * gl.alpha).fillCircle(x + gl.at[0] * k, y + gl.at[1] * k, gl.r);
+    const t = (now + e.id * RESIN.phase.drip) % RESIN.dripMs;
     if (t >= RESIN.fallMs) return;
     const p = t / RESIN.fallMs;
-    g.fillStyle(colorOf('resin'), 1 - p).fillEllipse(x + 0.4 * k, y + 2.6 * k + RESIN.fallPx * p * p, 1.4, 2);
+    g.fillStyle(colorOf(drop.color), 1 - p).fillEllipse(x + drop.at[0] * k, y + drop.at[1] * k + RESIN.fallPx * p * p, drop.size[0], drop.size[1]);
   }
 
   /** A halo round the Warden's chest core: a faint glow at rest, pulsing hard through the wind-up. Hidden from behind. */
@@ -131,7 +132,7 @@ export class EnemyView {
     const y = bottom + CORE.at[1] * k;
     const pulse = e.mode === 'windup' ? (Math.sin((now / CORE.pulseMs) * Math.PI * 2) + 1) / 2 : 0;
     g.setDepth(bottom + DEPTHS.flameNudge);
-    g.fillStyle(colorOf('cyan-glow'), CORE.rest + (CORE.peak - CORE.rest) * pulse).fillCircle(x, y, CORE.halo * k * (1 + 0.3 * pulse));
+    g.fillStyle(colorOf(CORE.haloColor), CORE.rest + (CORE.peak - CORE.rest) * pulse).fillCircle(x, y, CORE.halo * k * (1 + CORE.swell * pulse));
   }
 
   /** A small bar over the sprite, only once the enemy has taken damage. */

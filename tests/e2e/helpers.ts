@@ -203,17 +203,19 @@ function installHelpers(): void {
       const g = game();
       let s = g.getState();
       const before = s.enemies.filter((e) => e.room === s.room).length;
+      let pathed = true;
       for (let t = 0; t < 2400 && s.enemies.filter((e) => e.room === s.room).length === before; t++) {
         const p = s.player;
         const target = [...s.enemies.filter((e) => e.room === s.room)].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
         if (!target) break;
         const far = Math.hypot(target.x - p.x, target.y - p.y) > 200;
-        // Far off, walk most of the way by path, round whatever's in between (018).
+        // Far off, walk most of the way by path, round whatever's in between (018); once that fails, only straight.
         if (Math.hypot(target.x - p.x, target.y - p.y) > 320) {
           try {
-            walkTo(target.x, target.y + 160);
+            if (pathed) walkTo(target.x, target.y + 160);
           } catch {
-            // No way there from here; close in straight instead.
+            // No way there from here: close in straight from now on, rather than retrying a long failing walk.
+            pathed = false;
           }
           s = g.getState();
           if (Math.hypot(target.x - s.player.x, target.y - s.player.y) > 320) {

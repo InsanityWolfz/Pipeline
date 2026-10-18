@@ -13,7 +13,8 @@ import { harvestTarget } from './nodeStages';
 // produces shows here first: a ley tendril from the pylon to the nearest node of
 // that raw in its zone, the node pulsing, then a mote of the raw running along
 // the shrine's ley line to the foundry's stairs, where it sinks in. Visual only:
-// nodes are never used up, and the sim's port runs as it always has.
+// nodes are never used up, and the sim's port runs as it always has. It assumes
+// the prototype's one claimable site, the shrine, so it ignores which port it was.
 
 interface Mote {
   itemId: string;
@@ -94,15 +95,15 @@ export class SupplyView {
       g.lineStyle(L.tendrilWidth, colorOf(L.tendrilColor), fade);
       g.beginPath();
       g.moveTo(top.x, top.y);
-      const steps = 16;
+      const steps = L.tendrilSteps;
       for (let i = 1; i <= Math.round(steps * reach); i++) {
         const k = i / steps;
-        const wave = Math.sin(k * Math.PI * 2 * L.waves + m.ageMs / 90) * L.wobble * Math.sin(k * Math.PI);
+        const wave = Math.sin(k * Math.PI * 2 * L.waves + m.ageMs / L.waveMs) * L.wobble * Math.sin(k * Math.PI);
         g.lineTo(top.x + dx * k - (dy / len) * wave, top.y + dy * k + (dx / len) * wave);
       }
       g.strokePath();
-      const pulse = Math.max(0, (m.ageMs - L.tendrilMs * 0.6) / L.pulseMs);
-      if (pulse > 0 && pulse < 1) g.lineStyle(2, colorOf(L.tendrilColor), 1 - pulse).strokeCircle(m.from.x, m.from.y - 6, L.pulseRadius * pulse);
+      const pulse = Math.max(0, (m.ageMs - L.tendrilMs * L.pulseAt) / L.pulseMs);
+      if (pulse > 0 && pulse < 1) g.lineStyle(L.pulseWidth, colorOf(L.tendrilColor), 1 - pulse).strokeCircle(m.from.x, m.from.y - L.pulseRise, L.pulseRadius * pulse);
     }
     if (m.ageMs < L.tendrilMs) return;
     // The mote runs along the ley line, then sinks into the stairs.
@@ -110,7 +111,8 @@ export class SupplyView {
     const sink = d >= LENGTH ? Math.min(1, (m.ageMs - this.arriveMs()) / L.sinkMs) : 0;
     const p = along(d);
     const colour = L.moteColors[m.itemId] ?? L.tendrilColor;
-    g.fillStyle(colorOf(L.halo), 0.35 * (1 - sink)).fillCircle(p.x, p.y, L.haloRadius * (1 - sink * 0.6));
-    g.fillStyle(colorOf(colour), 1 - sink).fillCircle(p.x, p.y, L.moteRadius * (1 - sink * 0.6));
+    const shrink = 1 - sink * L.sinkShrink;
+    g.fillStyle(colorOf(L.halo), L.haloAlpha * (1 - sink)).fillCircle(p.x, p.y, L.haloRadius * shrink);
+    g.fillStyle(colorOf(colour), 1 - sink).fillCircle(p.x, p.y, L.moteRadius * shrink);
   }
 }

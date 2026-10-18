@@ -34,13 +34,19 @@ function toLine(t: TilePos, line: readonly TilePos[]): number {
 
 const LINES = Object.values(OVERWORLD.leyLines);
 
+/** The node sits in a hand-placed feature of this kind (a grove or rock field's disc, a pond's shore), not just near stray terrain. */
+const inFeature = (t: TilePos, kind: 'grove' | 'rocks' | 'pond'): boolean =>
+  OVERWORLD.features.some((f) =>
+    f.kind !== kind ? false : f.kind === 'pond' ? Math.hypot((t.tx - f.cx) / f.rx, (t.ty - f.cy) / f.ry) <= OVERWORLD.ponds.shore : Math.hypot(t.tx - f.cx, t.ty - f.cy) <= f.r,
+  );
+
 const RULES: Record<Placement, (t: TilePos) => boolean> = {
-  // On grass, in a grove.
-  grove: (t) => at(t.tx, t.ty) === TILE.floor && around(t, 3, TILE.tree) >= 4,
-  // Among boulders.
-  'rock-field': (t) => around(t, 3, TILE.rock) >= 2,
+  // In a grove: on grass in its pocket, with trees round about.
+  grove: (t) => inFeature(t, 'grove') && at(t.tx, t.ty) === TILE.floor && around(t, 3, TILE.tree) >= 4,
+  // In a rock field, among boulders.
+  'rock-field': (t) => inFeature(t, 'rocks') && around(t, 3, TILE.rock) >= 2,
   // In a pond's shallows, touching its water.
-  'pond-edge': (t) => at(t.tx, t.ty) === TILE.shallow && around(t, 1, TILE.water) >= 1,
+  'pond-edge': (t) => inFeature(t, 'pond') && at(t.tx, t.ty) === TILE.shallow && around(t, 1, TILE.water) >= 1,
   // On a ley line.
   'ley-line': (t) => LINES.some((l) => toLine(t, l) <= 0.5),
 };

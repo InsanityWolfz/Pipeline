@@ -39,8 +39,21 @@ const body = (shadeX: number): EnemyPart => ({
   ],
 });
 
-/** Where the resin oozes from the lower binding, and its slow drip and glint (drawn over the baked frames by EnemyView). Rig px; ms. */
-export const RESIN = { enemyId: 'husk', blob: [6, -10.6] as const, dripMs: 2600, fallMs: 700, fallPx: 7, glintMs: 1700 } as const;
+/**
+ * Where the resin oozes from the lower binding, and its slow drip and glint (drawn over the baked frames by EnemyView).
+ * Rig px from the bead; ms. `phase` staggers each Husk's timing by its id, so they never drip in step.
+ */
+export const RESIN = {
+  enemyId: 'husk',
+  blob: [6, -10.6] as const,
+  dripMs: 2600,
+  fallMs: 700,
+  fallPx: 7,
+  glintMs: 1700,
+  phase: { glint: 311, drip: 977 },
+  glint: { at: [-0.6, -0.6] as const, r: 0.6, color: 'snow', alpha: 0.9 },
+  drop: { at: [0.4, 2.6] as const, size: [1.4, 2] as const, color: 'resin' },
+} as const;
 
 /** A bead of amber resin at a binding, with a hanging drop. */
 function resin(x: number, y: number) {

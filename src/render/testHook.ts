@@ -4,7 +4,7 @@ import { summarize, type SimSummary } from '../sim/summary';
 import { TILE_SIZE } from '../data/config';
 import { FEET_BOX } from '../data/player';
 import { isSolid, overlapsRect } from '../sim/collision';
-import { roomBodies } from '../sim/step';
+import { roomBodies } from '../sim/bodies';
 import type { GameScene } from './GameScene';
 
 export interface GameTestHook {

@@ -79,7 +79,7 @@ export const HARVEST_BURSTS: Readonly<Record<string, keyof typeof PARTICLES>> = 
 };
 
 /** While a node is worked: a small burst this often, ms; a tree shakes this far either way, px, this many times a second. */
-export const HARVEST_WORK = { burstMs: 220, shakePx: 1.5, shakeHz: 9 } as const;
+export const HARVEST_WORK = { burstMs: 220, shakeNodeId: 'tree', shakePx: 1.5, shakeHz: 9 } as const;
 
 /** Footstep dust every this many ms of walking, roll dust every this many ms of rolling; walking is moving faster than `minSpeed` px/tick. */
 export const DUST = { walkMs: 260, rollMs: 50, minSpeed: 0.2 } as const;

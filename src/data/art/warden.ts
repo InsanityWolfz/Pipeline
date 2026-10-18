@@ -2,8 +2,8 @@ import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, flat, line, path, rect, solid } from './types';
 
 // The Pylon Warden (016, draft for Shaun's review): a mossy stone guardian with
-// boulder fists, one cyan eye slit, and (018) a glowing ley core set in its chest:
-// what it drops as the warden core. It raises both fists overhead, slams, then
+// boulder fists, one cyan eye slit, and (018) its core set in its chest, a violet
+// heart-stone with a glowing gold heart: what it drops as the warden core. It raises both fists overhead, slams, then
 // stays crouched to recover.
 
 const leg = (id: string, role: 'leg-back' | 'leg-front', x: number, fill: string): EnemyPart => ({
@@ -32,20 +32,20 @@ const torso = (front: boolean): EnemyPart => ({
   ],
 });
 
-/** The core in the chest socket (rig px; side view sits forward), and its halo's pulse while winding up (drawn over the baked frames by EnemyView). */
-export const CORE = { enemyId: 'pylon-warden', at: [0, -30] as const, side: 7, halo: 9, pulseMs: 420, rest: 0.25, peak: 0.75 } as const;
+/**
+ * The core in the chest socket (rig px; side view sits forward), and its halo's pulse while winding up (drawn over
+ * the baked frames by EnemyView): halo radius, growing by `swell` at the peak, its colour, opacity at rest and peak.
+ */
+export const CORE = { enemyId: 'pylon-warden', at: [0, -30] as const, side: 7, halo: 9, swell: 0.3, haloColor: 'core', pulseMs: 420, rest: 0.25, peak: 0.75 } as const;
 
-/** The core: a ley crystal in the socket. A glow part, so it brightens in the wind-up and fades out as the Warden falls. */
+/** The core: the violet heart-stone of the drop, its gold heart glowing. A glow part, so it brightens in the wind-up and fades as the Warden falls. */
 const core = (x: number): EnemyPart => ({
   id: 'core',
   role: 'glow',
   pivot: [x, CORE.at[1]],
   shapes: [
-    ellipse(x, CORE.at[1], 3.8, 3.8, {
-      fill: { radial: [x - 1, CORE.at[1] - 1, 4], stops: [{ at: 0, color: 'snow' }, { at: 0.4, color: 'cyan-glow' }, { at: 1, color: 'cyan' }] },
-      outline: true,
-      glow: { color: 'cyan', blur: 5 },
-    }),
+    ellipse(x, CORE.at[1], 3.8, 4.2, { fill: { radial: [x - 1, CORE.at[1] - 1.5, 4.5], stops: [{ at: 0, color: 'core' }, { at: 1, color: 'core-dark' }] }, outline: true }),
+    ellipse(x, CORE.at[1] + 0.4, 1.6, 1.6, { fill: 'gold-trim', glow: { color: 'gold-trim', blur: 5 } }),
   ],
 });
 const head: EnemyPart = { id: 'head', role: 'head', pivot: [0, -46], shapes: [rect(-6, -53, 12, 9, 3, solid('warden-light'))] };

@@ -102,9 +102,10 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
     const g = window.__GAME__;
     let s = g?.getState();
     for (let t = 0; t < 400 && s && s.events.supplies.length === 0; t++) s = g?.step(1);
-    return s?.events.supplies.map((e) => e.itemId) ?? [];
+    return { supplies: s?.events.supplies.map((e) => e.itemId) ?? [], port: s?.fixtures.find((f) => f.kind === 'port')?.item ?? null };
   });
-  expect(supplied).toEqual(['wood']);
+  // The same raw comes up at the foundry's supply port.
+  expect(supplied).toEqual({ supplies: ['wood'], port: 'wood' });
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().supply))?.inFlight.map((m) => m.itemId)).toEqual(['wood']);
   expect((await page.evaluate(() => window.__GAME__?.ui().supply))?.started).toBe(1);
 

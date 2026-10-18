@@ -40,7 +40,7 @@ export class NodeView {
       if (view.image.frame.name !== frame) showFrame(view.image, frame);
       // A tree being worked shakes.
       const shake =
-        harvest?.nodeId === n.id && n.nodeId === NODE_DAPPLE.nodeId
+        harvest?.nodeId === n.id && n.nodeId === HARVEST_WORK.shakeNodeId
           ? Math.sin((this.time / 1000) * HARVEST_WORK.shakeHz * Math.PI * 2) * HARVEST_WORK.shakePx
           : 0;
       view.image.setPosition(n.x + shake, bottom).setDepth(bottom);
@@ -58,7 +58,7 @@ export class NodeView {
     const image = addVector(this.scene, n.x, bottom, frame);
     const d = NODE_DAPPLE;
     const dapple =
-      n.nodeId === d.nodeId ? this.scene.add.ellipse(n.x, bottom - 2, d.rx * 2, d.ry * 2, colorOf(d.color), d.alpha).setDepth(DEPTHS.shadow) : undefined;
+      n.nodeId === d.nodeId ? this.scene.add.ellipse(n.x, bottom - d.rise, d.rx * 2, d.ry * 2, colorOf(d.color), d.alpha).setDepth(DEPTHS.shadow) : undefined;
     const view = dapple ? { image, dapple } : { image };
     this.sprites.set(n.id, view);
     return view;

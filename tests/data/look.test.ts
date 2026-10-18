@@ -1,11 +1,17 @@
-import { SITE_LOOK } from '../../src/data/art/ground';
+import { SITE_LOOK, SUPPLY_LOOK } from '../../src/data/art/ground';
+import { RESIN } from '../../src/data/art/husk';
+import { NODE_DAPPLE } from '../../src/data/art/nodes';
+import { CORE } from '../../src/data/art/warden';
+import { PORT_CYCLE } from '../../src/data/claims';
+import { ITEMS } from '../../src/data/items';
+import { NODES } from '../../src/data/nodes';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { FLOOR_VARIANTS, WALL_SPRITES } from '../../src/data/roomArt';
 import { animFrames } from '../../src/data/assets';
 import { ENEMIES } from '../../src/data/enemies';
 import { LOGISTICS_ICONS, SORTER_ANIMS } from '../../src/data/foundryAssets';
-import { AMBIENT, DAMAGE_NUMBERS, GLOWS, PARTICLES, ROOM_MOOD } from '../../src/data/juice';
+import { AMBIENT, DAMAGE_NUMBERS, GLOWS, HARVEST_BURSTS, HARVEST_WORK, PARTICLES, ROOM_MOOD } from '../../src/data/juice';
 import { DAYLIGHT_PALETTE, PIXEL_PALETTE } from '../../src/data/palette';
 import { FIRE_SOUNDS, ROOM_AMBIENCE, SOUNDS, WINDUP_SOUNDS } from '../../src/data/sounds';
 import { SLOT_AMMOS } from '../../src/data/tube';
@@ -85,12 +91,28 @@ describe('feel and sound references', () => {
       SITE_LOOK.dome.color,
       SITE_LOOK.safe.color,
       SITE_LOOK.safe.ringColor,
+      SUPPLY_LOOK.tendrilColor,
+      SUPPLY_LOOK.halo,
+      ...Object.values(SUPPLY_LOOK.moteColors),
+      NODE_DAPPLE.color,
+      RESIN.glint.color,
+      RESIN.drop.color,
+      CORE.haloColor,
       ...Object.values(PROPS).flatMap((p) => {
         const def: PropDef = p;
         return def.glow ? [def.glow.color] : [];
       }),
     ];
     for (const id of ids) expect(known.has(id), id).toBe(true);
+  });
+
+  it('key node reactions by real node types and enemies, and give every raw the shrine sends a mote colour (018)', () => {
+    expect(Object.keys(HARVEST_BURSTS).sort()).toEqual(Object.keys(NODES).sort());
+    for (const burst of Object.values(HARVEST_BURSTS)) expect(PARTICLES[burst]).toBeDefined();
+    for (const id of [NODE_DAPPLE.nodeId, HARVEST_WORK.shakeNodeId]) expect(NODES[id], id).toBeDefined();
+    for (const id of [RESIN.enemyId, CORE.enemyId]) expect(ENEMIES[id], id).toBeDefined();
+    for (const id of Object.keys(SUPPLY_LOOK.moteColors)) expect(ITEMS[id], id).toBeDefined();
+    for (const id of PORT_CYCLE) expect(SUPPLY_LOOK.moteColors[id], id).toBeDefined();
   });
 
   it('key moods and ambience by real rooms, fire sounds by real ammo, and wind-ups by real enemy kinds', () => {

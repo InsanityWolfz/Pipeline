@@ -118,6 +118,9 @@ export const DAYLIGHT_PALETTE: readonly VectorColor[] = [
   { id: 'resin-dark', hex: '#c4552e' },
   { id: 'resin', hex: '#f0a14a' },
   { id: 'resin-light', hex: '#f4d27a' },
+  // The Warden's core (018): the same violet heart-stone as the warden-core item's icon.
+  { id: 'core-dark', hex: '#4a3a6b' },
+  { id: 'core', hex: '#7a63a0' },
   // The Wisp
   { id: 'wisp-dark', hex: '#5b2f8f' },
   { id: 'wisp', hex: '#9b5de5' },

@@ -219,5 +219,5 @@ export const NODE_SPRITES_VECTOR: readonly VectorSprite[] = Object.entries(NODE_
   return [...looks.uses.map((s, i) => one(frames.uses[i], s)), ...looks.regrow.map((s, i) => one(frames.regrow[i], s))];
 });
 
-/** The patch of sun a grove's harvest tree stands in (018): an ellipse round its base, px. */
-export const NODE_DAPPLE = { nodeId: 'tree', rx: 26, ry: 11, color: 'sun', alpha: 0.4 } as const;
+/** The patch of sun a grove's harvest tree stands in (018): an ellipse round its base, centred `rise` px above it. */
+export const NODE_DAPPLE = { nodeId: 'tree', rx: 26, ry: 11, rise: 2, color: 'sun', alpha: 0.4 } as const;

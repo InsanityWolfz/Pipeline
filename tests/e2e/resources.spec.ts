@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { NODE_SPRITES } from '../../src/data/assets';
+import { nodeDef } from '../../src/data/nodes';
 import { LEY_VEIN } from './foundryPage';
 import { boot, watchErrors } from './helpers';
 
@@ -28,7 +29,7 @@ test('a ley vein worked to nothing shows its remains, grows back through its sta
   expect(seenUses).toEqual([vein.uses[1], vein.uses[0], vein.regrow[0]]);
   // Through the regrow timer, step by step: the bare remains, every stage in order, then the full vein.
   const seen: string[] = [];
-  for (let t = 0; t < 1800; t += 100) {
+  for (let t = 0; t < nodeDef('ley-vein').regrowTicks; t += 100) {
     await page.evaluate(() => window.__GAME__?.step(100));
     const f = (await frames(page))[LEY_VEIN] ?? '';
     if (seen[seen.length - 1] !== f) seen.push(f);

@@ -1,10 +1,8 @@
-import { FOUNDRY_ROOM } from '../data/rooms';
 import { equip, identifyAll, walkScale } from './armor';
 import { stepArrows } from './arrows';
 import { stepBombs } from './bombs';
 import { maskCommand, stepBuild } from './build';
 import { stepClaims, stepPorts } from './claims';
-import { fixtureRects, tileRect } from './fixtures';
 import { stepBurns } from './burn';
 import { arrowHits, removeDead } from './combat';
 import { stepDoorways } from './doorways';
@@ -19,23 +17,14 @@ import { checkKo } from './health';
 import { stepEnemies } from './enemyAi';
 import { NO_COMMAND, type Command } from './input';
 import { stepPlayer } from './movement';
-import { nodeRects, stepNodes } from './nodes';
+import { stepNodes } from './nodes';
 import { stepOrbs } from './orbs';
-import { solidRects } from './pieces';
 import { roomById, type SimState } from './state';
 import { firingWalkScale, stepTube } from './tube';
 import { stepObjectives } from './objectives';
-import { stepGates, stepTubeStone, tutorialRects } from './tutorial';
+import { stepGates, stepTubeStone } from './tutorial';
+import { roomBodies } from './bodies';
 import { stepPopulation } from './population';
-
-/** A room's tiles and solid things: nodes, pylons, the tutorial's seals, and solid pieces and fixtures in the foundry. */
-export function roomBodies(state: SimState, roomId: string): RoomBodies {
-  const room = roomById(roomId);
-  const pieces = roomId === FOUNDRY_ROOM ? [...solidRects(state.foundry), ...fixtureRects(state.fixtures)] : [];
-  const pylon = room.pylon ? [tileRect(room.pylon)] : [];
-  const tutorial = tutorialRects(state, roomId);
-  return { room, obstacles: [...nodeRects(state.nodes, roomId), ...pieces, ...pylon, ...tutorial] };
-}
 
 /** Each room's bodies, built once per tick on first use. */
 function bodiesOf(state: SimState): (roomId: string) => RoomBodies {

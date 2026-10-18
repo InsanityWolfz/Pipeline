@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { HUD_DIGITS, HUD_LETTERS } from '../../src/data/assets';
 import { BUILD_TIP, WORLD_NAMES } from '../../src/data/hudLayout';
 import { FIXTURES } from '../../src/data/claims';
+import { DESCRIPTIONS } from '../../src/data/descriptions';
+import { SHRINE_SITE } from '../../src/data/rooms';
+import { claim } from '../../src/sim/claims';
 import { ENEMIES } from '../../src/data/enemies';
 import { ITEMS } from '../../src/data/items';
 import { NODES } from '../../src/data/nodes';
@@ -57,6 +60,25 @@ describe('world names on mouse-over', () => {
     const field = centre(OVERWORLD.field.tx, OVERWORLD.field.ty);
     expect(nameAt(s, HALL, field.x, field.y)).toBeNull();
   });
+
+  it('says where materials come from over the pylon, a ley line and the supply port (018)', () => {
+    const s = createSim(SEED, { roomId: HALL });
+    s.enemies = [];
+    s.nodes = [];
+    const pylon = centre(OVERWORLD.shrine.pylon.tx, OVERWORLD.shrine.pylon.ty);
+    expect(nameAt(s, HALL, pylon.x, pylon.y)?.description).toBe(DESCRIPTIONS.pylonDormant);
+    claim(s, SHRINE_SITE);
+    expect(nameAt(s, HALL, pylon.x, pylon.y)?.description).toBe(DESCRIPTIONS.pylon);
+    // Halfway along the shrine's ley line, between two of its points.
+    const [a, b] = OVERWORLD.leyLines.shrine.slice(2, 4);
+    if (!a || !b) throw new Error('short ley line');
+    const seam = { x: ((a.tx + b.tx) / 2 + 0.5) * 32, y: ((a.ty + b.ty) / 2 + 0.5) * 32 };
+    expect(nameAt(s, HALL, seam.x, seam.y)).toMatchObject({ name: WORLD_NAMES.leyLine, description: DESCRIPTIONS.leyLine });
+    const port = FIXTURES.find((f) => f.kind === 'port');
+    if (!port) throw new Error('no port');
+    const at = centre(port.tx, port.ty);
+    expect(nameAt(s, 'foundry', at.x, at.y)).toMatchObject({ name: port.name, description: DESCRIPTIONS.port });
+  });
 });
 
 describe('world names in the pixel font', () => {
@@ -69,6 +91,7 @@ describe('world names in the pixel font', () => {
       ...FIXTURES.map((f) => f.name),
       ...Object.values(PIECES).map((p) => p.name),
       ...Object.values(WORLD_NAMES),
+      ...Object.values(DESCRIPTIONS),
     ];
     for (const name of names) for (const ch of name.toUpperCase()) expect(glyphs.has(ch), `${name}: '${ch}'`).toBe(true);
   });
