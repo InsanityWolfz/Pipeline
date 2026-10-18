@@ -17,8 +17,9 @@ export class GroundItemView {
   private readonly scene: Scene;
   /** Where the player stands now, followed by items sliding in. */
   private player = { x: 0, y: 0 };
-  /** Picked-up items still sliding in (for the test hook). */
+  /** Picked-up items still sliding in, and how far in the furthest one is (0 to 1) (for the test hook). */
   sliding = 0;
+  slideProgress = 0;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -52,6 +53,8 @@ export class GroundItemView {
   /** Slides an item's image into the player (who may still be moving), shrinking, then removes it. */
   private slide(image: GameObjects.Image): void {
     const from = { x: image.x, y: image.y, scale: image.scaleX };
+    // Over everything standing in the world (the tree it lay behind), just under the pickup sparkle and
+    // particles at worldUi - 1 and the "+1" popup at worldUi.
     image.setDepth(DEPTHS.worldUi - 2);
     this.sliding += 1;
     this.scene.tweens.addCounter({
@@ -61,12 +64,14 @@ export class GroundItemView {
       ease: 'Quad.In',
       onUpdate: (tween) => {
         const t = tween.getValue() ?? 1;
+        this.slideProgress = t;
         const to = { x: this.player.x, y: this.player.y + GROUND_ITEM_LIFT };
         image.setPosition(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t);
         image.setScale(from.scale * (1 + (PICKUP_SLIDE.endScale - 1) * t));
       },
       onComplete: () => {
         this.sliding -= 1;
+        if (this.sliding === 0) this.slideProgress = 0;
         image.destroy();
       },
     });

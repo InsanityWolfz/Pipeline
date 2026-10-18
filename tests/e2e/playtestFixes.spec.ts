@@ -111,7 +111,7 @@ test.describe('review screenshots (021)', () => {
       const n = g?.getState().nodes.find((node) => node.nodeId === 'tree' && node.room === 'overworld');
       if (!g || !h || !n) throw new Error('no game or tree');
       h.walkTo(n.x, n.y + 16);
-      g.drop('wood', n.x + 26, n.y - half - 12);
+      g.drop('wood', n.x + 34, n.y - half - 4);
       return { x: n.x, y: n.y };
     }, nodeDef('tree').feetBox.h / 2);
     // The log lying behind the tree, before the tick that picks it up (for the picture only).
@@ -124,8 +124,9 @@ test.describe('review screenshots (021)', () => {
     expect(s?.events.pickups.map((p) => p.itemId)).toEqual(['wood']);
     expect(s?.player.y).toBeGreaterThan(tree.y);
     await expect.poll(async () => (await ui(page))?.sliding).toBeGreaterThan(0);
-    // Partway in (the slide is slowed 25×), for the picture only.
-    await page.waitForTimeout(2200);
+    // Freeze it partway in (the slide is slowed 25× until then).
+    await expect.poll(async () => (await ui(page))?.slideProgress ?? 0).toBeGreaterThan(0.35);
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(0));
     await page.screenshot({ path: `${SHOTS}/03b-log-sliding-in.png` });
     await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
     await expect.poll(async () => (await ui(page))?.sliding).toBe(0);

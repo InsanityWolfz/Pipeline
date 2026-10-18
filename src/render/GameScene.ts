@@ -188,6 +188,7 @@ export class GameScene extends Scene {
       shakes: [...(this.feel?.juice.shakes ?? [])],
       cursor: this.cursorView?.state ?? null,
       sliding: this.groundItemView?.sliding ?? 0,
+      slideProgress: this.groundItemView?.slideProgress ?? 0,
     };
   }
 

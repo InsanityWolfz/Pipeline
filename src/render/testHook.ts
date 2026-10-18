@@ -54,6 +54,8 @@ export interface UiState {
   cursor: CursorState | null;
   /** Picked-up items still sliding into the player (021). */
   sliding: number;
+  /** How far the latest slide is in, 0 to 1. */
+  slideProgress: number;
 }
 
 declare global {

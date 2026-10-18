@@ -76,9 +76,9 @@ export class FeelView {
   private play(sim: SimState, ev: SimEvents): void {
     const j = this.juice;
     const s = this.sound;
+    // No shake on firing (021): too jarring.
     for (const shot of ev.shots) {
       const key = FIRE_SOUNDS[shot.ammoId];
-      // No shake on firing (021): too jarring.
       if (key) s.play(key);
     }
     for (const h of ev.hits) {

@@ -15,7 +15,7 @@ export type ShakeSize = keyof typeof SHAKE;
 
 const SHAKE_ORDER: readonly ShakeSize[] = ['small', 'medium', 'big'];
 
-/** How many recent shakes the log keeps. */
+/** How many recent shakes the log keeps: a cap on a debug-only log the test hook reads (021), not tuning. */
 const SHAKE_LOG_MAX = 50;
 
 export class JuiceView {
@@ -27,6 +27,8 @@ export class JuiceView {
   private shaking: { size: ShakeSize; until: number } | null = null;
   /** Recent damage numbers, so ones landing together stack instead of overlapping. */
   private recent: { x: number; y: number; at: number }[] = [];
+  /** Every shake asked for, oldest first, up to SHAKE_LOG_MAX: the test hook reports it (021). */
+  readonly shakes: ShakeSize[] = [];
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -34,9 +36,6 @@ export class JuiceView {
     this.particles = new Particles(scene);
     this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
-
-  /** Every shake asked for, oldest first, up to SHAKE_LOG_MAX: the test hook reports it (021). */
-  readonly shakes: ShakeSize[] = [];
 
   shake(size: ShakeSize): void {
     this.shakes.push(size);
