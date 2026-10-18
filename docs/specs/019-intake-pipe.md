@@ -1,5 +1,5 @@
 # 019: Foundry intake pipe
-status: approved
+status: done
 
 Approved by Shaun, 2026-10-18 ("I approve all"), for an unattended run.
 
