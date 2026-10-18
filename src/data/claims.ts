@@ -1,4 +1,5 @@
-// Claiming (009): the pylon, the supply line and the foundry's fixed furniture.
+// Claiming (009): the pylon, the supply line and the foundry's fixed furniture
+// (with 010's identification bench).
 // Starting values from spec 009; tune in playtest.
 
 /** How close the player's feet box must be to a pylon to use it, px. */
@@ -19,7 +20,7 @@ export const PORT_CYCLE: readonly string[] = ['wood', 'stone', 'fiber', 'ley-cry
 /** How close the player's feet box must be to a fixture to use it, px. */
 export const FIXTURE_REACH = 20;
 
-export type FixtureKind = 'stash' | 'port' | 'waystone';
+export type FixtureKind = 'stash' | 'port' | 'waystone' | 'bench';
 
 /** Fixed foundry furniture: never placed or picked up. `claim` names the room whose claim adds it; without one it's there from the start. */
 export interface FixtureDef {
@@ -34,6 +35,7 @@ export interface FixtureDef {
 
 export const FIXTURES: readonly FixtureDef[] = [
   { id: 'stash', kind: 'stash', name: 'Stash', tx: 22, ty: 11, facing: 'down' },
+  { id: 'identification-bench', kind: 'bench', name: 'Identification bench', tx: 1, ty: 12, facing: 'right' },
   { id: 'supply-port', kind: 'port', name: 'Supply port', tx: 1, ty: 8, facing: 'right', claim: 'shrine' },
   { id: 'waystone', kind: 'waystone', name: 'Waystone', tx: 22, ty: 4, facing: 'down', claim: 'shrine' },
 ];

@@ -6,10 +6,12 @@ import { MAX_HEALTH } from '../data/player';
 import { STARTING_AMMO } from '../data/tube';
 import type { Inventory } from '../sim/inventory';
 import { count } from '../sim/inventory';
+import type { ArmorPiece } from '../sim/armor';
 import type { LinkState } from '../sim/link';
 import type { PlayerState } from '../sim/player';
 import { slotCount, slotItem, type TubeState } from '../sim/tube';
 import { AmmoStripView } from './AmmoStripView';
+import { HUD_ARMOR_LAYOUT } from '../data/hudLayout';
 import { colorOf } from './color';
 import { GlyphLine } from './glyphLine';
 
@@ -34,6 +36,8 @@ export class HudView {
   private readonly healthFill: GameObjects.Graphics;
   private readonly materials: MaterialRow[];
   private readonly strip: AmmoStripView;
+  private readonly armorIcon: GameObjects.Image;
+  private readonly armorCount: GlyphLine;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -55,6 +59,9 @@ export class HudView {
     const hp = HUD_HEALTH_LAYOUT;
     fixed(scene.add.image(hp.x, hp.y, ATLAS_KEY, SPRITES.hudHealth).setOrigin(0));
     this.healthFill = fixed(scene.add.graphics({ x: hp.x + hp.fill.x, y: hp.y + hp.fill.y }));
+    const ar = HUD_ARMOR_LAYOUT;
+    this.armorIcon = fixed(scene.add.image(ar.x, ar.y, ATLAS_KEY, SPRITES.iconArmorLight).setOrigin(0)).setVisible(false);
+    this.armorCount = new GlyphLine(scene, ar.x + ar.count.x, ar.y + ar.count.y);
 
     // Raw materials and parts, in ITEMS order; ammo shows in the hotbar instead. Rows are placed each frame.
     this.materials = Object.values(ITEMS)
@@ -70,7 +77,10 @@ export class HudView {
     this.crosshair = fixed(scene.add.image(0, 0, ATLAS_KEY, SPRITES.crosshair)).setDepth(DEPTHS.menu + 1);
   }
 
-  update(tube: TubeState, inventory: Inventory, player: PlayerState, link: LinkState): void {
+  update(tube: TubeState, inventory: Inventory, player: PlayerState, link: LinkState, worn: ArmorPiece | undefined): void {
+    this.armorIcon.setVisible(worn !== undefined);
+    if (worn) this.armorIcon.setFrame(worn.weight === 'heavy' ? SPRITES.iconArmorHeavy : SPRITES.iconArmorLight);
+    this.armorCount.set(worn ? String(worn.armor) : '');
     const fill = HUD_HEALTH_LAYOUT.fill;
     this.healthFill.clear();
     this.healthFill.fillStyle(colorOf(HUD_HEALTH_LAYOUT.fillColor));

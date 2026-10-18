@@ -207,33 +207,9 @@ describe('sim state', () => {
     expect(summary.enemies.filter((e) => e.room === 'ruin-hall')).toHaveLength(3);
     expect(summary.enemies[0]).toMatchObject({ enemyId: 'husk', mode: 'idle', health: 40, maxHealth: 40 });
     expect(summary.groundItems).toEqual([]);
-    expect(summary.events).toEqual({
-      hits: [],
-      deaths: [],
-      pickups: [],
-      harvests: [],
-      crafts: [],
-      craftFails: [],
-      bursts: [],
-      selects: [],
-      roomChanges: [],
-      places: [],
-      placeFails: [],
-      pickUps: [],
-      deposits: [],
-      crateTakes: [],
-      withdraws: [],
-      attunes: [],
-      refills: [],
-      angles: [],
-      shots: [],
-      sealed: [],
-      claims: [],
-      stashDeposits: [],
-      stashTakes: [],
-      travels: [],
-      ko: false,
-    });
+    // Nothing has happened yet: every event list is empty and there's no KO.
+    expect(summary.events.ko).toBe(false);
+    for (const [name, list] of Object.entries(summary.events)) if (name !== 'ko') expect(list, name).toEqual([]);
   });
 
   it('summarizes rooms, build mode, unlocks and the foundry', () => {

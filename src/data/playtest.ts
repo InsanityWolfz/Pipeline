@@ -8,8 +8,9 @@ import { RECIPES } from './recipes';
 const AMMO_COUNT = 99;
 const RAW_COUNT = 99;
 const PART_COUNT = 20;
+const ARMOR_COUNT = 3;
 
-const COUNTS = { ammo: AMMO_COUNT, raw: RAW_COUNT, part: PART_COUNT } as const;
+const COUNTS = { ammo: AMMO_COUNT, raw: RAW_COUNT, part: PART_COUNT, armor: ARMOR_COUNT } as const;
 
 /** Items with their own count: warden cores are rare, enough for a few gravity stagers (008). */
 const OVERRIDES: Readonly<Record<string, number>> = { 'warden-core': 5 };

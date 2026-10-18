@@ -1,6 +1,7 @@
 import { TILE_SIZE } from '../data/config';
 import { DEFAULT_START, type StartDef } from '../data/player';
 import { DEFAULT_ROOM, ROOMS, type Room } from '../data/rooms';
+import type { ArmorPiece } from './armor';
 import type { ArrowState } from './arrows';
 import type { BombState } from './bombs';
 import type { GroundItem } from './drops';
@@ -68,6 +69,13 @@ export interface SimState {
   fixtures: FixtureState[];
   /** What pylon deposits have sent home. Kept through a KO. */
   stash: Inventory;
+  /** Identified armor (010). Kept through a KO. */
+  armor: ArmorPiece[];
+  nextArmorId: number;
+  /** The worn piece's id, or null. */
+  equipped: number | null;
+  /** The first Husk ever killed has dropped its guaranteed armor. Kept through a KO. */
+  firstHuskDropped: boolean;
   /** Build mode: only in the foundry; fire, load, ammo select and harvest are off. */
   building: boolean;
   /** What happened on the last tick. */
@@ -113,6 +121,10 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     activatePulse: 0,
     fixtures: startingFixtures(),
     stash: {},
+    armor: [],
+    nextArmorId: 0,
+    equipped: null,
+    firstHuskDropped: false,
     building: false,
     events: createEvents(),
   };

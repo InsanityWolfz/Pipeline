@@ -36,7 +36,7 @@ export interface BuildInput {
 type BuildAction = Pick<Command, 'place' | 'pickUp' | 'setAngle'>;
 
 /** The commands that come from build mode and the hopper menu rather than held keys. */
-export type UiCommand = Pick<Command, 'toggleBuild' | 'place' | 'pickUp' | 'deposit' | 'withdraw' | 'setAngle' | 'pylon' | 'takeStash'>;
+export type UiCommand = Pick<Command, 'toggleBuild' | 'place' | 'pickUp' | 'deposit' | 'withdraw' | 'setAngle' | 'pylon' | 'takeStash' | 'identify' | 'equip'>;
 
 // Turns WASD, Space, R, E, B, 1–3 and the mouse into sim commands, and C and Esc
 // into menu toggles for the scene. Presses are latched from the keys' down
@@ -62,6 +62,8 @@ export class Controls {
   private withdrawPending: Command['withdraw'] = null;
   private pylonPending: Command['pylon'] = null;
   private takeStashPending: Command['takeStash'] = null;
+  private identifyPending = false;
+  private equipPending: Command['equip'] = null;
   private readonly queue: BuildAction[] = [];
   private dragTile: Tile | null = null;
   private build: BuildInput = {
@@ -228,6 +230,16 @@ export class Controls {
     this.takeStashPending = { itemId };
   }
 
+  /** Identifies every carried piece at the bench on the next tick. */
+  requestIdentify(): void {
+    this.identifyPending = true;
+  }
+
+  /** Wears a piece (or takes armor off) at the bench on the next tick. */
+  requestEquip(id: number | null): void {
+    this.equipPending = { id };
+  }
+
   /** Drops game presses and queued build actions made while the menu is open, so none fire when it closes. */
   discardPending(): void {
     this.clearPresses();
@@ -243,6 +255,8 @@ export class Controls {
     this.withdrawPending = null;
     this.pylonPending = null;
     this.takeStashPending = null;
+    this.identifyPending = false;
+    this.equipPending = null;
   }
 
   /**
@@ -260,12 +274,16 @@ export class Controls {
       withdraw: this.withdrawPending,
       pylon: this.pylonPending,
       takeStash: this.takeStashPending,
+      identify: this.identifyPending,
+      equip: this.equipPending,
     };
     this.buildPending = false;
     this.depositPending = null;
     this.withdrawPending = null;
     this.pylonPending = null;
     this.takeStashPending = null;
+    this.identifyPending = false;
+    this.equipPending = null;
     return ui;
   }
 

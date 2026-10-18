@@ -31,7 +31,8 @@ export function isInvulnerable(p: PlayerState): boolean {
   return p.rollTick > 0 && p.rollTick <= INVULN_TICKS;
 }
 
-export function stepPlayer(p: PlayerState, room: Room, cmd: Command, obstacles: readonly Rect[] = []): void {
+/** `walkScale` slows the walk (heavy armor, 010); rolls are unchanged. */
+export function stepPlayer(p: PlayerState, room: Room, cmd: Command, obstacles: readonly Rect[] = [], walkScale = 1): void {
   if (p.hurtTicks > 0) p.hurtTicks -= 1;
   if (p.rollTick >= ROLL_TICKS) endRoll(p);
 
@@ -48,7 +49,7 @@ export function stepPlayer(p: PlayerState, room: Room, cmd: Command, obstacles: 
     p.vx = p.rollDirX * ROLL_PER_TICK;
     p.vy = p.rollDirY * ROLL_PER_TICK;
   } else {
-    walk(p, cmd);
+    walk(p, cmd, walkScale);
   }
 
   // Knockback adds to the move, so input still steers on top of it.
@@ -74,14 +75,15 @@ function endRoll(p: PlayerState): void {
   p.vy = p.rollDirY * WALK_PER_TICK;
 }
 
-function walk(p: PlayerState, cmd: Command): void {
+function walk(p: PlayerState, cmd: Command, scale: number): void {
   const [ux, uy] = unit(cmd.moveX, cmd.moveY);
-  const dx = ux * WALK_PER_TICK - p.vx;
-  const dy = uy * WALK_PER_TICK - p.vy;
+  const top = WALK_PER_TICK * scale;
+  const dx = ux * top - p.vx;
+  const dy = uy * top - p.vy;
   const gap = Math.hypot(dx, dy);
   if (gap <= ACCEL_PER_TICK + EPSILON) {
-    p.vx = ux * WALK_PER_TICK;
-    p.vy = uy * WALK_PER_TICK;
+    p.vx = ux * top;
+    p.vy = uy * top;
   } else {
     p.vx += (dx / gap) * ACCEL_PER_TICK;
     p.vy += (dy / gap) * ACCEL_PER_TICK;

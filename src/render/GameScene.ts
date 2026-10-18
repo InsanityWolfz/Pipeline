@@ -5,6 +5,7 @@ import { ATLAS_KEY } from '../data/assets';
 import { CAMERA_LERP, DOOR_FADE_MS } from '../data/config';
 import { BUILD_BAR } from '../data/pieces';
 import { FOUNDRY_ROOM } from '../data/rooms';
+import { worn } from '../sim/armor';
 import { advanceClock, createClock } from '../sim/clock';
 import { craft } from '../sim/crafting';
 import { clearEvents, createEvents, type SimEvents } from '../sim/events';
@@ -192,6 +193,8 @@ export class GameScene extends Scene {
         setAngle: null,
         pylon: null,
         takeStash: null,
+        identify: false,
+        equip: null,
       }
     );
   }
@@ -200,12 +203,13 @@ export class GameScene extends Scene {
   stepOnce(cmd: Command): void {
     stepSim(this.sim, cmd);
     // Hits aren't drawn from events (flashes read sim state), so they aren't kept.
-    const { deaths, pickups, bursts, shots, stashDeposits, ko } = this.sim.events;
+    const { deaths, pickups, bursts, shots, stashDeposits, identifies, ko } = this.sim.events;
     this.pending.deaths.push(...deaths);
     this.pending.pickups.push(...pickups);
     this.pending.bursts.push(...bursts);
     this.pending.shots.push(...shots);
     this.pending.stashDeposits.push(...stashDeposits);
+    this.pending.identifies.push(...identifies);
     this.pending.ko ||= ko;
   }
 
@@ -246,6 +250,7 @@ export class GameScene extends Scene {
     const sim = this.sim;
     this.followRoom(this.pending.ko);
     this.effects.play(this.pending, sim.player);
+    if (this.pending.identifies.length > 0) this.site?.identified();
     clearEvents(this.pending);
     const shown = this.shownRoomId;
     const inFoundry = shown === FOUNDRY_ROOM;
@@ -254,12 +259,12 @@ export class GameScene extends Scene {
     this.groundItemView?.update(inRoom(sim.groundItems, shown));
     this.enemyView?.update(inRoom(sim.enemies, shown));
     // Through a door's fade the player is already in the next room; hide them until it shows.
-    this.playerView?.update(sim.player, sim.tube, sim.link, shown === sim.roomId);
+    this.playerView?.update(sim.player, sim.tube, sim.link, worn(sim)?.weight ?? null, shown === sim.roomId);
     this.arrowView?.update(inRoom(sim.arrows, shown));
     this.bombView?.update(inRoom(sim.bombs, shown));
     this.site?.update(sim, shown);
     this.siteMenus?.update(sim);
-    this.hud?.update(sim.tube, sim.inventory, sim.player, sim.link);
+    this.hud?.update(sim.tube, sim.inventory, sim.player, sim.link, worn(sim));
     this.menu?.update(sim.inventory);
     const hopper = sim.foundry.pieces.find((p) => p.id === this.picker?.hopperId);
     this.picker?.update(sim.inventory, hopper?.kind === 'hopper' ? hopper : undefined);

@@ -90,8 +90,8 @@ export function stepClaims(state: SimState, cmd: Command): Command {
     travelToPylon(state);
     return { ...cmd, interact: false };
   }
-  // E on the stash opens render's menu, whose choice comes back as `takeStash`.
-  if (fixtureInReach(state, 'stash')) return { ...cmd, interact: false };
+  // E on the stash or the bench opens render's menu, whose choice comes back as a command.
+  if (fixtureInReach(state, 'stash') || fixtureInReach(state, 'bench')) return { ...cmd, interact: false };
   return cmd;
 }
 

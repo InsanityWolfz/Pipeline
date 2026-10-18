@@ -35,6 +35,10 @@ export interface Command {
   pylon: 'deposit' | 'travel' | null;
   /** Take a stack (or everything, for a null item) out of the stash this tick (an edge), or null. */
   takeStash: { itemId: string | null } | null;
+  /** Identify every carried piece at the bench this tick (an edge). */
+  identify: boolean;
+  /** Wear an identified piece (by id), or take armor off (null), at the bench this tick (an edge), or null for no change. */
+  equip: { id: number | null } | null;
 }
 
 /** No input. Its aim is the world origin, so callers that care about aim must set one. */
@@ -55,4 +59,6 @@ export const NO_COMMAND: Readonly<Command> = {
   setAngle: null,
   pylon: null,
   takeStash: null,
+  identify: false,
+  equip: null,
 };

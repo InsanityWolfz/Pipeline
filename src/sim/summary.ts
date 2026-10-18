@@ -96,6 +96,10 @@ export interface SimSummary {
   fixtures: { id: string; kind: string; tx: number; ty: number; item: string | null }[];
   /** What the stash holds. */
   stash: Record<string, number>;
+  /** Identified armor and the worn piece's id (010). */
+  armor: { id: number; weight: 'light' | 'heavy'; armor: number; name: string }[];
+  equipped: number | null;
+  firstHuskDropped: boolean;
   /** What happened on the last tick. */
   events: SimEvents;
 }
@@ -156,6 +160,9 @@ export function summarize(state: SimState): SimSummary {
       return { id: f.id, kind: d.kind, tx: d.tx, ty: d.ty, item: f.item };
     }),
     stash: { ...state.stash },
+    armor: state.armor.map((a) => ({ ...a })),
+    equipped: state.equipped,
+    firstHuskDropped: state.firstHuskDropped,
     events: structuredClone(state.events),
   };
 }

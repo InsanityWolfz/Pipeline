@@ -1,4 +1,5 @@
 import { HIT_INVULN_TICKS } from '../data/player';
+import { afterArmor } from './armor';
 import { startKnock } from './knockback';
 import { isInvulnerable } from './movement';
 import { resetWorld, type SimState } from './state';
@@ -22,12 +23,13 @@ export function damagePlayer(
 ): boolean {
   const p = state.player;
   if (isInvulnerable(p) || p.hurtTicks > 0) return false;
-  p.health = Math.max(0, p.health - amount);
+  const taken = afterArmor(state, amount);
+  p.health = Math.max(0, p.health - taken);
   p.hurtTicks = HIT_INVULN_TICKS;
   startKnock(p, dirX, dirY, knockback, knockTicks);
   cancelHarvest(state);
   cancelClaim(state);
-  state.events.hits.push({ target: 'player', x: p.x, y: p.y, damage: amount });
+  state.events.hits.push({ target: 'player', x: p.x, y: p.y, damage: taken });
   return true;
 }
 

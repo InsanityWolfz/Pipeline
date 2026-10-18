@@ -1,4 +1,5 @@
 import { FOUNDRY_ROOM } from '../data/rooms';
+import { equip, identifyAll, walkScale } from './armor';
 import { stepArrows } from './arrows';
 import { stepBombs } from './bombs';
 import { maskCommand, stepBuild } from './build';
@@ -47,7 +48,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   const cmd = maskCommand(state, input);
   const bodies = bodiesOf(state);
   const here = bodies(state.roomId);
-  stepPlayer(state.player, here.room, cmd, here.obstacles);
+  stepPlayer(state.player, here.room, cmd, here.obstacles, walkScale(state));
   stepDoorways(state);
   stepLink(state);
   // Enemies act after the player moves, so a swipe lands on where the player stands now.
@@ -56,6 +57,8 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   // Before the tube, so fire this tick cancels a harvest in progress.
   // Build mode keeps E for hoppers and crates, not harvesting.
   const used = stepClaims(state, cmd);
+  if (cmd.identify) identifyAll(state);
+  if (cmd.equip) equip(state, cmd.equip.id);
   stepHarvest(state, state.building ? { ...used, interact: false } : used);
   // Shots fired this tick stay at the muzzle until next tick's step.
   stepArrows(state.arrows, roomById, arrowHits(state));

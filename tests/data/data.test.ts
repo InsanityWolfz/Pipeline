@@ -38,6 +38,7 @@ import {
 } from '../../src/data/foundryAssets';
 import { ENEMIES } from '../../src/data/enemies';
 import { FIXTURES, PORT_CYCLE } from '../../src/data/claims';
+import { ARMOR_DROP_CHANCE, ARMOR_WEIGHTS } from '../../src/data/armor';
 import { ROOMS, TILE } from '../../src/data/rooms';
 import { ITEMS } from '../../src/data/items';
 import { STARTING_INVENTORY } from '../../src/data/player';
@@ -181,7 +182,7 @@ describe('items and ammo', () => {
 
 describe('item kinds, ammo slots and recipes', () => {
   it('gives every item a kind, and every ammo an ammo item', () => {
-    for (const item of Object.values(ITEMS)) expect(['raw', 'part', 'ammo']).toContain(item.kind);
+    for (const item of Object.values(ITEMS)) expect(['raw', 'part', 'ammo', 'armor']).toContain(item.kind);
     for (const ammo of Object.values(AMMO)) expect(ITEMS[ammo.itemId]?.kind).toBe('ammo');
   });
 
@@ -367,5 +368,24 @@ describe('claiming (009)', () => {
     const foundry = ROOMS.foundry;
     for (const f of FIXTURES) expect(foundry?.rows[f.ty]?.[f.tx]).toBe(TILE.floor);
     for (const id of PORT_CYCLE) expect(ITEMS[id]?.kind).toBe('raw');
+  });
+});
+
+describe('armor (010)', () => {
+  it('has sane weight ranges, drop chances for real enemies, and the bench on open floor', () => {
+    for (const w of Object.values(ARMOR_WEIGHTS)) {
+      expect(w.min).toBeLessThanOrEqual(w.max);
+      expect(w.adjectives.length).toBeGreaterThan(0);
+      expect(w.nouns.length).toBeGreaterThan(0);
+    }
+    for (const [id, chance] of Object.entries(ARMOR_DROP_CHANCE)) {
+      expect(ENEMIES[id]).toBeDefined();
+      expect(chance).toBeGreaterThanOrEqual(0);
+      expect(chance).toBeLessThanOrEqual(1);
+    }
+    expect(ITEMS['unidentified-armor']?.kind).toBe('armor');
+    expect(FIXTURES.some((f) => f.kind === 'bench')).toBe(true);
+    const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as { frames: Record<string, unknown> };
+    for (const frame of animFrames(FIXTURE_SPRITES.bench)) expect(Object.keys(atlas.frames)).toContain(frame);
   });
 });

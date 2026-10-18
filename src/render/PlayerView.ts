@@ -16,6 +16,8 @@ import { FEET_BOX, HIT_INVULN_TICKS, ROLL_TICKS } from '../data/player';
 import { aimFacing } from '../sim/direction';
 import { isRolling } from '../sim/movement';
 import type { Facing, PlayerState } from '../sim/player';
+import type { ArmorWeight } from '../data/armor';
+import { ARMOR_TINTS } from '../data/hudLayout';
 import type { LinkState } from '../sim/link';
 import type { TubeState } from '../sim/tube';
 import { registerAnim } from './anims';
@@ -45,7 +47,7 @@ export class PlayerView {
   }
 
   /** Draws the player; `shown` false hides them (they're in a room not yet on screen). */
-  update(p: PlayerState, tube: TubeState, link: LinkState, shown = true): void {
+  update(p: PlayerState, tube: TubeState, link: LinkState, armor: ArmorWeight | null, shown = true): void {
     this.sprite.setVisible(shown);
     const bottom = p.y + FEET_BOX.h / 2;
     this.sprite.setPosition(p.x, bottom).setDepth(bottom);
@@ -74,6 +76,8 @@ export class PlayerView {
       if (white) o.setTint(colorOf(PLAYER_HIT_FX.flashColor)).setTintMode(TintModes.FILL);
       else o.clearTint();
     }
+    // Worn armor shades the body by its weight (the tube stays its own colour).
+    if (!white && armor) this.sprite.setTint(colorOf(ARMOR_TINTS[armor])).setTintMode(TintModes.MULTIPLY);
     this.tube.setVisible(shown && !rolling);
     if (!rolling) this.placeTube(p, facing, bottom);
     this.placeAttune(facing, shown && !rolling && link.attunePulse > 0);

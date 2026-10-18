@@ -131,7 +131,12 @@ export const FIXTURE_SPRITES = {
   stash: 'stash',
   port: { key: 'supply-port', frames: 2, frameRate: 1, loop: false },
   waystone: { key: 'waystone', frames: 2, frameRate: 3, loop: true },
-} as const satisfies { stash: string; port: AnimDef; waystone: AnimDef };
+  /** The identification bench (010): its lens flares for `flareMs` after an identify. */
+  bench: { key: 'identification-bench', frames: 2, frameRate: 1, loop: false },
+} as const satisfies { stash: string; port: AnimDef; waystone: AnimDef; bench: AnimDef };
+
+/** How long the bench's lens flares after an identify, ms. */
+export const BENCH_FLARE_MS = 600;
 
 /** A Wisp's orb and its ground shadow; the orb flies this far above its ground point, px. */
 export const ORB_SPRITES = { orb: 'wisp-orb', shadow: 'wisp-orb-shadow', lift: 14 } as const;

@@ -2,7 +2,7 @@ import type { GameObjects, Scene } from 'phaser';
 import { animFrames, ATLAS_KEY, DEPTHS } from '../data/assets';
 import { CLAIM_TICKS } from '../data/claims';
 import { TILE_SIZE } from '../data/config';
-import { FIXTURE_SPRITES, ORB_SPRITES, PYLON_SPRITES } from '../data/foundryAssets';
+import { BENCH_FLARE_MS, FIXTURE_SPRITES, ORB_SPRITES, PYLON_SPRITES } from '../data/foundryAssets';
 import { HARVEST_BAR } from '../data/hudLayout';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { isClaimed } from '../sim/claims';
@@ -13,13 +13,15 @@ import { colorOf } from './color';
 
 // The claimable site and what claiming brings (009): the room's pylon (dormant,
 // activating, or glowing once claimed) with the claim hold's bar, the foundry's
-// fixtures, and Wisp orbs in flight.
+// fixtures (with 010's bench), and Wisp orbs in flight.
 export class SiteView {
   private readonly scene: Scene;
   private readonly pylon: GameObjects.Sprite;
   private readonly bar: GameObjects.Graphics;
   private readonly fixtures = new Map<string, GameObjects.Sprite>();
   private readonly orbs = new Map<number, { orb: GameObjects.Image; shadow: GameObjects.Image }>();
+  /** Scene time until which the bench's lens flares. */
+  private flareUntil = 0;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -28,6 +30,11 @@ export class SiteView {
     registerAnim(scene, FIXTURE_SPRITES.waystone);
     this.pylon = scene.add.sprite(0, 0, ATLAS_KEY, PYLON_SPRITES.off).setOrigin(0.5, 1).setVisible(false);
     this.bar = scene.add.graphics().setDepth(DEPTHS.worldUi);
+  }
+
+  /** Pieces were identified since the last draw: the bench flares. */
+  identified(): void {
+    this.flareUntil = this.scene.time.now + BENCH_FLARE_MS;
   }
 
   update(sim: SimState, shown: string): void {
@@ -74,6 +81,7 @@ export class SiteView {
       }
       sprite.setVisible(true);
       if (def.kind === 'port') sprite.setFrame(animFrames(FIXTURE_SPRITES.port)[f.item ? 1 : 0] ?? '');
+      if (def.kind === 'bench') sprite.setFrame(animFrames(FIXTURE_SPRITES.bench)[this.scene.time.now < this.flareUntil ? 1 : 0] ?? '');
     }
     if (!shown) for (const s of this.fixtures.values()) s.setVisible(false);
   }
