@@ -9,9 +9,10 @@ type Key = 'up' | 'down' | 'left' | 'right' | 'dodge' | 'load' | 'interact' | 'm
 const AMMO_KEYS = [Input.Keyboard.KeyCodes.ONE, Input.Keyboard.KeyCodes.TWO, Input.Keyboard.KeyCodes.THREE];
 
 // Turns WASD, Space, R, E, 1–3 and the mouse into sim commands, and C and Esc
-// into menu toggles for the scene. Presses are latched until consumed, so a
-// press on a frame that runs no ticks isn't lost and a frame that runs several
-// ticks only acts on the first.
+// into menu toggles for the scene. Presses are latched from the keys' down
+// events until consumed, so a tap shorter than a frame isn't lost, a press on a
+// frame that runs no ticks isn't lost, and a frame that runs several ticks only
+// acts on the first.
 export class Controls {
   private readonly keys: Record<Key, Input.Keyboard.Key>;
   private readonly ammoKeys: Input.Keyboard.Key[];
@@ -42,19 +43,18 @@ export class Controls {
       close: keyboard.addKey(codes.ESC),
     };
     this.ammoKeys = AMMO_KEYS.map((code) => keyboard.addKey(code));
+    this.keys.dodge.on('down', () => (this.dodgePending = true));
+    this.keys.load.on('down', () => (this.loadPending = true));
+    this.keys.interact.on('down', () => (this.interactPending = true));
+    this.keys.menu.on('down', () => (this.menuPending = true));
+    this.keys.close.on('down', () => (this.closePending = true));
+    for (const [i, key] of this.ammoKeys.entries()) key.on('down', () => (this.selectPending = SLOT_AMMOS[i] ?? null));
     this.pointer = scene.input.activePointer;
     this.camera = scene.cameras.main;
   }
 
   /** Call once per frame before taking commands. */
   poll(): void {
-    const { JustDown } = Input.Keyboard;
-    if (JustDown(this.keys.dodge)) this.dodgePending = true;
-    if (JustDown(this.keys.load)) this.loadPending = true;
-    if (JustDown(this.keys.interact)) this.interactPending = true;
-    if (JustDown(this.keys.menu)) this.menuPending = true;
-    if (JustDown(this.keys.close)) this.closePending = true;
-    for (const [i, key] of this.ammoKeys.entries()) if (JustDown(key)) this.selectPending = SLOT_AMMOS[i] ?? null;
     // The camera moves every frame, so the cursor's world point does too.
     const world = this.camera.getWorldPoint(this.pointer.x, this.pointer.y);
     this.aimX = world.x;

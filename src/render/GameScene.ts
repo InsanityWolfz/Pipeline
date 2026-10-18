@@ -38,7 +38,7 @@ export class GameScene extends Scene {
   private menu?: CraftMenuView;
   /** Events from every tick since the last draw; the sim clears its own each tick. */
   private readonly pending: SimEvents = createEvents();
-  /** Set by the test hook: the real-time loop stops advancing the sim. */
+  /** Set by the test hook: the real-time loop stops advancing the sim (the menu still opens and crafts). */
   manualStepping = false;
 
   constructor(sim: SimState) {
@@ -76,15 +76,16 @@ export class GameScene extends Scene {
   }
 
   override update(_time: number, delta: number): void {
-    if (!this.manualStepping && this.controls) {
+    if (this.controls) {
       this.controls.poll();
+      // The menu works under the test hook too; only ticking is left to the hook.
       const toggle = this.controls.takeMenuToggle();
       const close = this.controls.takeMenuClose();
       if (toggle || (close && this.menuOpen)) this.setMenuOpen(toggle ? !this.menuOpen : false);
       if (this.menuOpen) {
         // The world is paused: no ticks run, and no time is banked to catch up on later.
         this.controls.discardPending();
-      } else {
+      } else if (!this.manualStepping) {
         const ticks = advanceClock(this.clock, delta);
         for (let i = 0; i < ticks; i++) this.stepOnce(this.controls.nextCommand());
       }
