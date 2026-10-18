@@ -1,3 +1,4 @@
+import type { DamageType } from '../data/ammo';
 import type { GateId } from '../data/rooms';
 import type { ArmorPiece } from './armor';
 import type { PlaceFail } from './pieces';
@@ -8,7 +9,7 @@ import type { Facing } from './player';
 // between ticks and land in the list of the tick before.
 
 export type HitEvent =
-  | { target: 'enemy'; id: number; x: number; y: number; damage: number }
+  | { target: 'enemy'; id: number; x: number; y: number; damage: number; damageType: DamageType }
   | { target: 'player'; x: number; y: number; damage: number };
 
 export interface DeathEvent {

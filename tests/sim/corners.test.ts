@@ -11,7 +11,7 @@ import { foundry, put } from './foundryKit';
 
 /** A conduit placed with an explicit intake side. */
 function corner(s: ReturnType<typeof foundry>, tx: number, ty: number, facing: 'up' | 'down' | 'left' | 'right', inFrom: 'up' | 'down' | 'left' | 'right') {
-  const p = place(s, 'conduit', tx, ty, facing, inFrom);
+  const p = place(s, 'conduit', tx, ty, facing, { inFrom });
   if (!p) throw new Error(`can't place conduit at ${tx},${ty}`);
   return p as ConduitState;
 }

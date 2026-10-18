@@ -8,19 +8,8 @@ import { BUILD_BAR, pieceDef } from '../data/pieces';
 import type { Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { dragTo, release, type ConduitLay, type HeldConduit } from './dragPath';
-import { MenuRequests } from './menuRequests';
-
-type Key = 'up' | 'down' | 'left' | 'right' | 'dodge' | 'rotate' | 'interact' | 'menu' | 'close' | 'build';
-
-/** Number keys pick the slot's ammo in SLOT_AMMOS order: 1 for the first, and so on. */
-const NUMBER_KEYS = [
-  Input.Keyboard.KeyCodes.ONE,
-  Input.Keyboard.KeyCodes.TWO,
-  Input.Keyboard.KeyCodes.THREE,
-  Input.Keyboard.KeyCodes.FOUR,
-];
-if (SLOT_AMMOS.length > NUMBER_KEYS.length) throw new Error(`Only ${NUMBER_KEYS.length} ammo keys for ${SLOT_AMMOS.length} slot ammo`);
-const AMMO_KEYS = NUMBER_KEYS.slice(0, SLOT_AMMOS.length);
+import { AMMO_KEYS, bindKeys, type Key } from './keys';
+import { MenuRequests, type UiCommand } from './menuRequests';
 
 /** What the scene tells the controls each frame about build mode and the screen's UI. */
 export interface BuildInput {
@@ -38,8 +27,7 @@ export interface BuildInput {
 type BuildAction = Pick<Command, 'place' | 'pickUp' | 'setAngle'>;
 
 /** The commands that come from build mode and the hopper menu rather than held keys. */
-export type UiCommand = Pick<Command, 'toggleBuild' | 'place' | 'pickUp' | 'deposit' | 'withdraw' | 'setAngle' | 'pylon' | 'takeStash' | 'identify' | 'equip'>;
-
+export { NO_UI_COMMAND, type UiCommand } from './menuRequests';
 // Turns WASD, Space, R, E, B, 1–3 and the mouse into sim commands, and C and Esc
 // into menu toggles for the scene. Presses are latched from the keys' down
 // events until consumed, so a tap shorter than a frame isn't lost, a press on a
@@ -77,27 +65,22 @@ export class Controls {
   private aimY = 0;
   /** The ghost's facing, sent with every place. */
   facing: Facing = 'right';
+  /** A press that began over a menu or the HUD: fire stays off until the button comes up (015). */
+  private uiPress = false;
+  /** F flips a sorter's ghost to send its item left (015); sent with every place. */
+  mirrored = false;
 
   constructor(scene: Scene) {
     const keyboard = scene.input.keyboard;
     if (!keyboard) throw new Error('Keyboard input is unavailable');
-    const codes = Input.Keyboard.KeyCodes;
-    this.keys = {
-      up: keyboard.addKey(codes.W),
-      down: keyboard.addKey(codes.S),
-      left: keyboard.addKey(codes.A),
-      right: keyboard.addKey(codes.D),
-      dodge: keyboard.addKey(codes.SPACE),
-      rotate: keyboard.addKey(codes.R),
-      interact: keyboard.addKey(codes.E),
-      menu: keyboard.addKey(codes.C),
-      close: keyboard.addKey(codes.ESC),
-      build: keyboard.addKey(codes.B),
-    };
+    this.keys = bindKeys(keyboard);
     this.ammoKeys = AMMO_KEYS.map((code) => keyboard.addKey(code));
     this.keys.dodge.on('down', () => (this.dodgePending = true));
     this.keys.rotate.on('down', () => {
       if (this.build.building) this.facing = rotateCw(this.facing);
+    });
+    this.keys.flip.on('down', () => {
+      if (this.build.building) this.mirrored = !this.mirrored;
     });
     this.keys.interact.on('down', () => {
       this.interactPending = true;
@@ -112,8 +95,8 @@ export class Controls {
     scene.input.mouse?.disableContextMenu();
     scene.input.on('pointerdown', (p: Input.Pointer) => this.pointerDown(p));
     scene.input.on('pointermove', (p: Input.Pointer) => this.pointerMove(p));
-    scene.input.on('pointerup', () => this.endDrag());
-    scene.input.on('pointerupoutside', () => this.endDrag());
+    scene.input.on('pointerup', () => this.release());
+    scene.input.on('pointerupoutside', () => this.release());
     scene.input.on('wheel', (_p: Input.Pointer, _over: unknown, _dx: number, dy: number) => {
       if (dy !== 0) this.wheelPending += Math.sign(dy);
     });
@@ -132,6 +115,11 @@ export class Controls {
     this.aimY = world.y;
   }
 
+  /** The world point under the cursor. */
+  cursorPoint(): { x: number; y: number } {
+    return { x: this.aimX, y: this.aimY };
+  }
+
   /** The world tile under the cursor. */
   cursorTile(): Tile {
     return { tx: Math.floor(this.aimX / TILE_SIZE), ty: Math.floor(this.aimY / TILE_SIZE) };
@@ -147,8 +135,14 @@ export class Controls {
     return { tx: Math.floor(world.x / TILE_SIZE), ty: Math.floor(world.y / TILE_SIZE) };
   }
 
+  private release(): void {
+    this.uiPress = false;
+    this.endDrag();
+  }
+
   private pointerDown(p: Input.Pointer): void {
     if (this.build.overUi(p.x, p.y)) {
+      this.uiPress = true;
       if (p.leftButtonDown()) this.build.clickUi(p.x, p.y);
       return;
     }
@@ -169,7 +163,7 @@ export class Controls {
     this.dragTile = tile;
     // A conduit waits for the drag: a click lays it on release, with the ghost's facing.
     if (pieceDef(pieceId).kind === 'conduit') this.held = { tile };
-    else this.queue.push({ place: { pieceId, ...tile, facing: this.facing }, pickUp: null, setAngle: null });
+    else this.queue.push({ place: { pieceId, ...tile, facing: this.facing, ...(this.mirrored ? { mirrored: true } : {}) }, pickUp: null, setAngle: null });
   }
 
   private lay(l: ConduitLay): void {
@@ -278,7 +272,7 @@ export class Controls {
       dodge: this.dodgePending,
       aimX: this.aimX,
       aimY: this.aimY,
-      fire: this.pointer.leftButtonDown() && !this.build.building && this.overWorld(),
+      fire: this.pointer.leftButtonDown() && !this.uiPress && !this.build.building && this.overWorld(),
       interact: this.interactPending,
       selectAmmo: this.selectPending,
       ...ui,

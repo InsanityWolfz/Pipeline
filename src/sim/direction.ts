@@ -26,6 +26,11 @@ export function rotateCw(f: Facing): Facing {
   return f === 'up' ? 'right' : f === 'right' ? 'down' : f === 'down' ? 'left' : 'up';
 }
 
+/** The facing a quarter turn anticlockwise. */
+export function rotateCcw(f: Facing): Facing {
+  return f === 'up' ? 'left' : f === 'left' ? 'down' : f === 'down' ? 'right' : 'up';
+}
+
 export function facingVector(f: Facing): [number, number] {
   return f === 'up' ? [0, -1] : f === 'down' ? [0, 1] : f === 'left' ? [-1, 0] : [1, 0];
 }

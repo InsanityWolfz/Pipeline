@@ -124,26 +124,24 @@ describe('rooms tick apart', () => {
     expect(s.harvest).toBeNull();
   });
 
-  it('shots keep their room: a bolt in the foundry never hits a hall Husk at the same spot', () => {
+  it('shots keep their room: a bolt in the hall never hits a foundry Husk at the same spot', () => {
     const s = arena();
-    s.roomId = FOUNDRY_ROOM;
     movePlayer(s, 200, 200);
-    const e = placeHusk(s, 260, 200);
+    const e = placeHusk(s, 260, 200, FOUNDRY_ROOM);
     run(s, 1, fireAt(260, 200));
-    expect(s.arrows[0]?.roomId).toBe(FOUNDRY_ROOM);
+    expect(s.arrows[0]?.roomId).toBe(HALL);
     run(s, 20);
     expect(e.health).toBe(HUSK.maxHealth);
   });
 
-  it('a bomb burst in the foundry never hits a hall Husk', () => {
+  it('a bomb burst in the hall never hits a foundry Husk', () => {
     const s = arena();
-    s.roomId = FOUNDRY_ROOM;
     movePlayer(s, 200, 200);
-    const e = placeHusk(s, 260, 200);
+    const e = placeHusk(s, 260, 200, FOUNDRY_ROOM);
     s.tube.ammoId = 'bomb';
     s.inventory.bomb = 1;
     run(s, 1, fireAt(260, 200));
-    expect(s.bombs[0]?.roomId).toBe(FOUNDRY_ROOM);
+    expect(s.bombs[0]?.roomId).toBe(HALL);
     runUntil(s, (x) => x.bombs.length === 0, 60);
     expect(e.health).toBe(HUSK.maxHealth);
   });
