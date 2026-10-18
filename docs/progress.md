@@ -10,7 +10,7 @@ Newest entry first.
 - **020 Vector pass:** it ends the pixel pipeline.
 
 `docs/design.md` "Combat", Enemies, now says RotMG density, 15 to 20 in a busy fight, every attack still telegraphed. This follows Shaun's answer "RotMG density" to the question of what the rule should become. The backlog is renumbered 016–020.
-**Next:** Shaun approves 016–020 for an unattended run, then they are built in order as stacked branches, like the 007–015 overnight run.
+**Next:** Shaun approved 016–020 ("I approve all") with the enemy cap lowered to 10–15 (design.md and 017 updated). Next they are built, then they are built in order as stacked branches, like the 007–015 overnight run.
 **Notes:**
 - All tuning numbers in the specs are proposals: pack sizes, respawn delay, safe radius, walk multiplier and ring bounds.
 - 019 caps spreads at 3 streams (3-tile mouth, Shaun's pick), down from 4 sides on today's socket.

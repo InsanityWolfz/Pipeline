@@ -1,8 +1,10 @@
 # 017: Overworld and danger
-status: draft
+status: approved
+
+Approved by Shaun, 2026-10-18 ("I approve all"), for an unattended run.
 
 ## Goal
-The game happens outside on one open map, like Realm of the Mad God. You wake near its centre, the foundry is a buried ruin a short walk away, and danger rises in rings as you go out. Once your first line fills the tube, the land fills with roaming packs, enough that a fight can hold 15 to 20 enemies. Claiming the shrine makes the ground around its pylon safe.
+The game happens outside on one open map, like Realm of the Mad God. You wake near its centre, the foundry is a buried ruin a short walk away, and danger rises in rings as you go out. Once your first line fills the tube, the land fills with roaming packs, enough that a fight can hold 10 to 15 enemies. Claiming the shrine makes the ground around its pylon safe.
 
 ## Design references
 - docs/design.md:
@@ -13,7 +15,7 @@ The game happens outside on one open map, like Realm of the Mad God. You wake ne
 - The style test's environment (`docs/art/style-test.html`), approved by Shaun ("The environment looked good")
 - Shaun's notes, 2026-10-18:
   - "having the start be in the middle of a big outside map makes the most sense, the realm of the mad god. There is no buildings unless you enter a special dungeon or area that's a building"
-  - "spawn way more enemies to make it feel dangerous after the tube and pipeline are activated"
+  - "spawn way more enemies to make it feel dangerous after the tube and pipeline are activated"; then "10-15 enemies max instead of 15-20"
 - Shaun's interview answers, 2026-10-18:
   - a centre start, with danger rising in rings outward
   - about 4×4 screens
@@ -59,12 +61,12 @@ The game happens outside on one open map, like Realm of the Mad God. You wake ne
 - [ ] From the tick the first line fills the tube, each ring keeps a target number of packs alive.
   - Starting values:
     - ring 1: 4 packs of 3–4 Husks
-    - ring 2: 5 packs of 4–6 Husks and Wisps
+    - ring 2: 4 packs of 3–5 Husks and Wisps
   - Packs spawn at points chosen by the seeded RNG on open ground, at least 1.5 screens from the player and never inside a safe zone.
   - Each enemy's home is its spawn point, so the existing aggro and leash rules apply unchanged.
 - [ ] When a pack is wiped out, a replacement spawns in the same ring after a delay (starting value 20 s), out of view.
-- [ ] A busy fight in ring 2 can reach 15–20 enemies on screen. A scripted e2e scenario proves it.
-- [ ] The population numbers, pack makeup per ring, spawn distance and respawn delay are data in `src/data/population.ts`.
+- [ ] A busy fight in ring 2 can reach 10–15 enemies on screen, and never more than 15 awake within a screen of the player. A new pack never spawns while 15 enemies are within that range. A scripted e2e scenario proves it.
+- [ ] The on-screen cap of 15, the population numbers, pack makeup per ring, spawn distance and respawn delay are data in `src/data/population.ts`.
 - [ ] Death keeps today's rule: unclaimed land resets. The population and the tutorial packs respawn, and claimed land stays claimed.
 
 **Claimed land (sim, render)**
@@ -146,7 +148,7 @@ The game happens outside on one open map, like Realm of the Mad God. You wake ne
 - **Playwright:**
   - The full tutorial run is rewritten for the overworld.
   - Enter and leave the foundry through the entrance.
-  - A ring-2 scenario with 15–20 enemies on screen.
+  - A ring-2 scenario with 10–15 enemies on screen and never more than 15.
   - The minimap's markers.
   - The `?playtest` and `?start=field` starts.
 - **Screenshots (qa):**

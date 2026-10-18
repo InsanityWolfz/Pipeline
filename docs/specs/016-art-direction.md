@@ -1,5 +1,7 @@
 # 016: Art direction
-status: draft
+status: approved
+
+Approved by Shaun, 2026-10-18 ("I approve all"), for an unattended run.
 
 ## Goal
 The game moves from 32-pixel grid art to clean vector art in bright daylight colours. The first pieces are the player and everything in combat. The player is a hooded wanderer in a rust cloak, with a cyan ley glow for a face. They hold the tube like a minigun, and its hose runs round them into a brass backpack tank. Firing visibly strains them and slows their walk.

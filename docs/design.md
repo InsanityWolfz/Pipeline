@@ -41,7 +41,7 @@ Combat is deliberate and hands-on, closer to WoW than Vampire Survivors. Nothing
 - **Targeting:** most ammo fires at the cursor. Ley-guided ammo locks onto a selected target.
 - **Reservoir:** the tube holds a reservoir of each ammo that drains in bursts and refills from the foundry. Factory throughput sets the refill speed, and reservoir size is an upgrade.
 - **Ley range:** the link is strongest near claimed pylons. Deep in unclaimed land, refill slows and ammo quality drops, so pushing into new regions is dangerous until you claim a foothold.
-- **Enemies:** the field is dangerous, at Realm of the Mad God density. Packs roam unclaimed land and keep coming back, and a busy fight can hold 15 to 20 enemies. Every enemy still telegraphs attacks you read and dodge, and nothing becomes a mindless horde. (Changed from "few enemies" on 2026-10-18, Shaun, spec 017.)
+- **Enemies:** the field is dangerous, at Realm of the Mad God density. Packs roam unclaimed land and keep coming back, and a busy fight can hold 10 to 15 enemies. Every enemy still telegraphs attacks you read and dodge, and nothing becomes a mindless horde. (Changed from "few enemies" on 2026-10-18, Shaun, spec 017.)
 - **Running away is always allowed.** You keep your haul but leave without the kill.
 
 **Skill tree.** One character, one big tree branching in every direction with connecting paths. Its lanes map to ammo families: the knife lane makes knives hit harder, chain, and so on. You take whatever mix you want.

@@ -20,10 +20,12 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 013 | Conduit corners: a conduit placed between two neighbours joins them as an L (auto-facing rules, corner sprites); from the 006 playtest | done |
 | 014 | Look and feel: hand-shaped rooms, detailed sprites, juice and generated sound; Shaun's request 2026-10-18 | done |
 | 015 | Fixes after the overnight run: sorter piece, no firing in the foundry or on menu clicks, no camera pan, hover names and build-bar descriptions | done |
-| 016 | Art direction: clean vector art in daylight colours; the cloaked wanderer with the minigun tube, hose and brass tank; firing slows the walk; projectiles and the three enemies redrawn; from Shaun's playtest rant 2026-10-18 | draft |
-| 017 | Overworld and danger: one open map with a centre start, the foundry as a buried ruin entrance, danger rings, a living RotMG-density population once the first line fills, safe zones around claimed pylons, a minimap | draft |
-| 018 | Believable resources: nodes where they make sense, visible remains and regrowth, Husk resin, the Warden's core, the claimed pylon visibly harvesting and sending motes home | draft |
-| 019 | Foundry intake pipe: the placeable socket becomes a fixed 3-tile ringed cyan pipe on the north wall that matches the tube, with a reservoir gauge and fill pulses | draft |
-| 020 | Vector pass: the foundry interior, machines with visible mechanisms, pieces, fixtures, items, HUD and menus in vector with bundled fonts; the pixel pipeline is removed | draft |
+| 016 | Art direction: clean vector art in daylight colours; the cloaked wanderer with the minigun tube, hose and brass tank; firing slows the walk; projectiles and the three enemies redrawn; from Shaun's playtest rant 2026-10-18 | approved |
+| 017 | Overworld and danger: one open map with a centre start, the foundry as a buried ruin entrance, danger rings, a living RotMG-density population (10–15 at most) once the first line fills, safe zones around claimed pylons, a minimap | approved |
+| 018 | Believable resources: nodes where they make sense, visible remains and regrowth, Husk resin, the Warden's core, the claimed pylon visibly harvesting and sending motes home | approved |
+| 019 | Foundry intake pipe: the placeable socket becomes a fixed 3-tile ringed cyan pipe on the north wall that matches the tube, with a reservoir gauge and fill pulses | approved |
+| 020 | Vector pass: the foundry interior, machines with visible mechanisms, pieces, fixtures, items, HUD and menus in vector with bundled fonts; the pixel pipeline is removed | approved |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
+
+016–020 were approved by Shaun on 2026-10-18 ("I approve all") for an unattended run after the spec interviews. The enemy cap was lowered to 10–15 at approval.

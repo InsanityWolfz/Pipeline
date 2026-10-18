@@ -1,5 +1,7 @@
 # 018: Believable resources
-status: draft
+status: approved
+
+Approved by Shaun, 2026-10-18 ("I approve all"), for an unattended run.
 
 ## Goal
 Every material visibly comes from somewhere:

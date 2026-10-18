@@ -1,5 +1,7 @@
 # 019: Foundry intake pipe
-status: draft
+status: approved
+
+Approved by Shaun, 2026-10-18 ("I approve all"), for an unattended run.
 
 ## Goal
 The placeable tube socket is replaced by the foundry intake: a waterslide-sized cyan pipe with dark rings and brass bands, built into the centre of the foundry's north wall. Lines feed into its 3-tile mouth. It matches the tube you carry, so the link between them is obvious. Its rings show the reservoir filling, light runs up it with each item, and it stays dark until the tube attunes.

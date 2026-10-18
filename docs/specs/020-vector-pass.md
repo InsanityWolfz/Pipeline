@@ -1,5 +1,7 @@
 # 020: Vector pass
-status: draft
+status: approved
+
+Approved by Shaun, 2026-10-18 ("I approve all"), for an unattended run.
 
 ## Goal
 Everything still drawn as pixel grids moves to the 016 vector style:
