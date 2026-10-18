@@ -11,7 +11,7 @@ function watchErrors(page: Page): string[] {
 }
 
 async function boot(page: Page): Promise<void> {
-  await page.goto('/?start=hall');
+  await page.goto('/?start=field');
   await page.waitForFunction(() => window.__GAME__ !== undefined);
   // step(0) takes the sim off the real-time loop, so nothing ticks between reads.
   await page.evaluate(() => window.__GAME__?.step(0));
@@ -44,8 +44,9 @@ test('rolls with invulnerability, then cools down', async ({ page }) => {
 
 test('stops at the room wall', async ({ page }) => {
   await boot(page);
-  const at500 = await page.evaluate(() => window.__GAME__?.step(500, { moveX: -1 }));
-  const at600 = await page.evaluate(() => window.__GAME__?.step(100, { moveX: -1 }));
-  expect(at600?.player.x).toBe(at500?.player.x);
-  expect(at600?.player.vx).toBe(0);
+  // The overworld's west edge (017) is about 600 ticks' walk from the start.
+  const at700 = await page.evaluate(() => window.__GAME__?.step(700, { moveX: -1 }));
+  const at800 = await page.evaluate(() => window.__GAME__?.step(100, { moveX: -1 }));
+  expect(at800?.player.x).toBe(at700?.player.x);
+  expect(at800?.player.vx).toBe(0);
 });

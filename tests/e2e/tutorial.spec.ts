@@ -16,11 +16,11 @@ async function done(page: Page): Promise<number> {
   return s?.objective?.index ?? 12;
 }
 
-test('the whole prototype plays through from the clearing', async ({ page }) => {
+test('the whole prototype plays through from the start stone', async ({ page }) => {
   test.setTimeout(300_000);
   const errors = watchErrors(page);
   await boot(page, '');
-  // Page-side helpers for this run: walking between rooms and fighting a room clear.
+  // Page-side helpers for this run: leaving the foundry, the route to the shrine and fighting a group clear (017).
   await page.evaluate((tile) => {
     const g = window.__GAME__;
     const h = window.__helpers;
@@ -34,18 +34,22 @@ test('the whole prototype plays through from the clearing', async ({ page }) => 
       for (let i = 0; i < 90 && g.getState().room !== to; i++) g.step(1, { moveX: dx, moveY: dy });
       if (g.getState().room !== to) throw new Error(`could not reach ${to}`);
     };
-    /** Fights every enemy in the player's room, kiting and rolling, picking ammo it has. */
-    w.clearRoom = () => {
+    /** From the foundry's stairs, east along the dirt path and in through the shrine's gap (src/data/overworld.ts). */
+    w.toShrine = () => {
+      for (const [tx, ty] of [[41.5, 22.5], [52.5, 21.5], [60.5, 18.5], [66.5, 17.5], [66.5, 13.5]]) h.walkTo((tx ?? 0) * tile, (ty ?? 0) * tile);
+    };
+    /** Fights until a group is dead, kiting and rolling, picking ammo it has; anything else that comes close is fought first. */
+    w.clearGroup = (group: string) => {
       let s = g.getState();
-      const room = s.room;
       for (let t = 0; t < 20000; t++) {
-        const foes = s.enemies.filter((e) => e.room === room);
+        const foes = s.enemies.filter((e) => e.group === group);
         if (foes.length === 0) break;
-        if (s.room !== room) throw new Error(`left ${room} (dying ${s.player.dying})`);
+        if (s.events.ko) throw new Error(`knocked out clearing ${group}`);
         const p = s.player;
-        const near = foes.sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+        const dist = (e: { x: number; y: number }) => Math.hypot(e.x - p.x, e.y - p.y);
+        const near = s.enemies.filter((e) => dist(e) < 150).sort((a, b) => dist(a) - dist(b))[0] ?? foes.sort((a, b) => dist(a) - dist(b))[0];
         if (!near) break;
-        const d = Math.hypot(near.x - p.x, near.y - p.y);
+        const d = dist(near);
         const have = (id: string) => (s.inventory[id] ?? 0) + (s.link.reservoir.item === id ? s.link.reservoir.count : 0);
         const ammo = have('ley-bolt') > 0 ? 'ley-bolt' : have('arrow') > 0 ? 'arrow' : 'bomb';
         if (s.tube.ammo !== ammo) s = g.step(1, { selectAmmo: ammo });
@@ -64,22 +68,17 @@ test('the whole prototype plays through from the clearing', async ({ page }) => 
     };
   }, T);
 
-  // 1. Pick up the tube from its stone (clearing tile 12,11).
+  // 1. Pick up the tube from its stone (tile 40,33), just north of where the player wakes.
   await page.evaluate((tile) => {
-    window.__helpers?.walkTo(12.5 * tile, 12.5 * tile);
+    window.__helpers?.walkTo(40.5 * tile, 34.5 * tile);
     window.__GAME__?.step(1, { interact: true });
   }, T);
   expect(await done(page)).toBe(1);
 
-  // 2. Gather: the clearing's nodes are 11-17 (trees, reeds, rubble, ley vein), in an
-  // order whose straight walks stay clear of the stone and the nodes themselves.
+  // 2. Gather in the meadow (nodes 0-8, src/data/overworld.ts): the ley vein, then east and back west.
   await run(page, () => {
     const h = window.__helpers;
-    for (const i of [15, 13, 11, 17, 12]) h?.harvest(i, 3);
-    h?.walkTo(18.5 * 32, 11 * 32);
-    h?.harvest(14, 3);
-    h?.walkTo(18.5 * 32, 16.5 * 32);
-    h?.harvest(16, 3);
+    for (const i of [8, 3, 7, 5, 6, 1, 0]) h?.harvest(i, 3);
   });
   expect(await done(page)).toBe(2);
 
@@ -91,22 +90,28 @@ test('the whole prototype plays through from the clearing', async ({ page }) => 
   });
   expect(await done(page)).toBe(3);
 
-  // 4. Up into the hall, gather its ley veins, and clear the Husk pack.
+  // 4. Up the path round the mound's east side into the ruin field, and clear the Husk pack.
   await page.evaluate(() => {
-    const w = window as unknown as { through: (...a: unknown[]) => void; clearRoom: () => void };
-    // Up the clearing's east side, clear of the stone and the ley vein, to its top door.
-    window.__helpers?.walkTo(13.5 * 32, 2.5 * 32);
-    w.through(12, 0, 0, -1, 'ruin-hall');
-    window.__helpers?.harvest(9, 3);
-    window.__helpers?.harvest(10, 3);
-    w.clearRoom();
+    const w = window as unknown as { clearGroup: (group: string) => void };
+    const h = window.__helpers;
+    h?.walkTo(41.5 * 32, window.__GAME__?.getState().player.y ?? 0);
+    h?.walkTo(41.5 * 32, 22.5 * 32);
+    h?.walkTo(43.5 * 32, 22.5 * 32);
+    h?.walkTo(43.5 * 32, 17.5 * 32);
+    w.clearGroup('field');
   });
   expect(await done(page)).toBe(4);
 
-  // 5. The foundry door is open: walk in (the tube attunes).
+  // 5. The meadow vein has grown back twice by now (waited out): more crystals for the line, then
+  // down the foundry's stairs (the tube attunes).
   await page.evaluate(() => {
-    const w = window as unknown as { through: (...a: unknown[]) => void };
-    w.through(0, 12, -1, 0, 'foundry');
+    const h = window.__helpers;
+    const g = window.__GAME__;
+    for (let i = 0; i < 2; i++) {
+      g?.step(1800);
+      h?.harvest(8, 3);
+    }
+    h?.toFoundry();
   });
   expect(await done(page)).toBe(5);
 
@@ -144,18 +149,19 @@ test('the whole prototype plays through from the clearing', async ({ page }) => 
   }, T);
   expect(await done(page)).toBe(9);
 
-  // 10. Out through the hall, up into the shrine, clear it and claim the pylon.
+  // 10. Up the stairs, along the path to the shrine (its gap opened with the full line), clear it and claim the pylon.
   await page.evaluate((tile) => {
     const g = window.__GAME__;
     const h = window.__helpers;
-    const w = window as unknown as { through: (...a: unknown[]) => void; clearRoom: () => void };
+    const w = window as unknown as { through: (...a: unknown[]) => void; toShrine: () => void; clearGroup: (group: string) => void };
     if (!g || !h) throw new Error('no game');
-    w.through(23, 8, 1, 0, 'ruin-hall');
-    w.through(10, 0, 0, -1, 'shrine');
-    w.clearRoom();
-    h.walkTo(18.5 * tile, g.getState().player.y);
-    h.walkTo(18.5 * tile, 9.5 * tile);
-    h.walkTo(15.5 * tile, 9.5 * tile);
+    w.through(23, 8, 1, 0, 'overworld');
+    w.toShrine();
+    w.clearGroup('shrine');
+    // Around the pylon's east side, so it never stands in the way.
+    h.walkTo(68.5 * tile, g.getState().player.y);
+    h.walkTo(68.5 * tile, 9.5 * tile);
+    h.walkTo(66.5 * tile, 9.5 * tile);
     g.step(1, { interact: true });
     g.step(130);
   }, T);
@@ -176,11 +182,10 @@ test('the whole prototype plays through from the clearing', async ({ page }) => 
   // 12. Head back out and let the foundry run.
   const end = await page.evaluate(() => {
     const w = window as unknown as { through: (...a: unknown[]) => void };
-    w.through(23, 8, 1, 0, 'ruin-hall');
+    w.through(23, 8, 1, 0, 'overworld');
     const s = window.__GAME__?.step(620);
     return s ? { complete: s.prototypeComplete, objective: s.objective } : null;
   });
   expect(end).toEqual({ complete: true, objective: null });
   expect(errors).toEqual([]);
 });
-

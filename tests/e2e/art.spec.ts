@@ -13,7 +13,7 @@ function watchErrors(page: Page): string[] {
   return errors;
 }
 
-async function boot(page: Page, query = '?start=hall'): Promise<void> {
+async function boot(page: Page, query = '?start=field'): Promise<void> {
   await page.goto(`/${query}`);
   await page.waitForFunction(() => window.__GAME__ !== undefined);
   await page.evaluate(() => window.__GAME__?.step(0));

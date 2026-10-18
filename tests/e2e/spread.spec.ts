@@ -11,8 +11,7 @@ test('three stagers into the socket fire a three-bolt spread', async ({ page }) 
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
     g.step(0);
-    window.__helpers?.walkTo(48, 400);
-    for (let i = 0; i < 60 && g.getState().room !== 'foundry'; i++) g.step(1, { moveX: -1 });
+    window.__helpers?.toFoundry();
     const place = (pieceId: string, tx: number, ty: number, facing: string) =>
       g.step(1, { place: { pieceId, tx, ty, facing: facing as 'up' } });
     // Three rows of hopper → grinder → focuser → stager, each stager facing the socket.

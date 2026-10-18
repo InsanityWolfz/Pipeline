@@ -20,9 +20,12 @@ async function enterFoundry(page: Page): Promise<number> {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
     g.step(0);
-    window.__helpers?.walkTo(48, 400);
+    // In front of the foundry's stairs (017), round the tube's stone, then down them.
+    window.__helpers?.walkTo(41.5 * 32, g.getState().player.y);
+    window.__helpers?.walkTo(41.5 * 32, 21.5 * 32);
+    window.__helpers?.walkTo(40.5 * 32, 21.5 * 32);
     let attunes = 0;
-    for (let i = 0; i < 60 && g.getState().room !== 'foundry'; i++) attunes += g.step(1, { moveX: -1 }).events.attunes.length;
+    for (let i = 0; i < 60 && g.getState().room !== 'foundry'; i++) attunes += g.step(1, { moveY: -1 }).events.attunes.length;
     return attunes;
   });
 }

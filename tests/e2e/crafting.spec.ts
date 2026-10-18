@@ -5,11 +5,11 @@ import { boot, watchErrors } from './helpers';
 
 // Gathering, crafting and the three ammo, driven through window.__GAME__.
 
-/** Node indexes in the ruin hall: the first of each kind. */
+/** Node indexes in the overworld (017): the first of each kind near the meadow. */
 const TREE = 0;
 const RUBBLE = 3;
 const REEDS = 6;
-const LEY_VEIN = 9;
+const LEY_VEIN = 8;
 
 /** Harvests what one batch of every chain needs: wood, fiber, 2 stone, 1 ley crystal. */
 async function gatherEverything(page: Page): Promise<void> {
@@ -39,7 +39,7 @@ test('harvesting each node type gathers wood, stone, fiber and ley crystal', asy
 
 test('the full arrow, bomb and ley bolt chains craft from gathered materials', async ({ page }) => {
   const errors = watchErrors(page);
-  await boot(page, '?start=hall&attuned');
+  await boot(page, '?start=field&attuned');
   await page.evaluate(() => window.__GAME__?.step(0));
   await gatherEverything(page);
   await page.evaluate(() => window.__helpers?.killHusk());
@@ -58,17 +58,24 @@ test('the full arrow, bomb and ley bolt chains craft from gathered materials', a
 
 test('the crafting menu pauses the world and crafts on a click', async ({ page }) => {
   const errors = watchErrors(page);
-  await boot(page, '?start=hall&attuned');
+  await boot(page, '?start=field&attuned');
   // Real time first: C pauses, Esc resumes.
   await page.waitForTimeout(300);
+  const tick = async () => (await page.evaluate(() => window.__GAME__?.getState().tick)) ?? 0;
   await page.keyboard.press('c');
-  await page.waitForTimeout(100);
-  const paused = await page.evaluate(() => window.__GAME__?.getState().tick);
+  // Once the press lands (a slow frame can delay it), the clock stops and stays stopped.
+  await expect
+    .poll(async () => {
+      const a = await tick();
+      await page.waitForTimeout(150);
+      return (await tick()) - a;
+    })
+    .toBe(0);
+  const paused = await tick();
   await page.waitForTimeout(500);
-  expect(await page.evaluate(() => window.__GAME__?.getState().tick)).toBe(paused);
+  expect(await tick()).toBe(paused);
   await page.keyboard.press('Escape');
-  await page.waitForTimeout(300);
-  expect(await page.evaluate(() => window.__GAME__?.getState().tick)).toBeGreaterThan(paused ?? 0);
+  await expect.poll(tick).toBeGreaterThan(paused);
 
   // Then gather a log under the test clock and craft it from the menu.
   await page.evaluate((tree) => {
@@ -96,7 +103,7 @@ test('the crafting menu pauses the world and crafts on a click', async ({ page }
 
 test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page }) => {
   const errors = watchErrors(page);
-  await boot(page, '?start=hall&attuned');
+  await boot(page, '?start=field&attuned');
   await page.evaluate(() => window.__GAME__?.step(0));
   await gatherEverything(page);
   await page.evaluate(
@@ -106,6 +113,9 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
       // Two more ley crystals for plenty of bolts, then resin for a fuse.
       h.harvest(vein, 2);
       h.killHusk();
+      // Wake the third by walking past it (017: it sleeps apart from the others in the ruin field), rolling so their swipes miss.
+      const g = window.__GAME__;
+      for (let t = 0; t < 200 && g && g.getState().player.x > 38 * 32; t++) g.step(1, { moveX: -1, dodge: t % 40 === 0 });
     },
     [LEY_VEIN] as const,
   );
@@ -117,7 +127,7 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
     let s = g.getState();
     const nearest = () => {
       const p = s.player;
-      return [...s.enemies.filter((e) => e.room === s.room)].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+      return [...s.enemies.filter((e) => e.group === 'field')].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
     };
     const carried = () => s.inventory[s.tube.ammo] ?? 0;
 
@@ -125,9 +135,9 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
     // stands on the line through the nearer one, so one bolt can pass through both.
     s = g.step(1, { selectAmmo: 'ley-bolt' });
     let pierced = 0;
-    for (let t = 0; t < 3000 && pierced < 2 && s.enemies.filter((e) => e.room === s.room).length === 2; t++) {
+    for (let t = 0; t < 3000 && pierced < 2 && s.enemies.filter((e) => e.group === 'field').length === 2; t++) {
       const p = s.player;
-      const [near, far] = [...s.enemies.filter((e) => e.room === s.room)].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y));
+      const [near, far] = [...s.enemies.filter((e) => e.group === 'field')].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y));
       if (!near || !far) break;
       const nx = near.x - p.x;
       const ny = near.y - p.y;
@@ -154,9 +164,9 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
     const target = nearest();
     if (!target) throw new Error(`no Husk left; pierced ${pierced}, tick ${s.tick}`);
     const id = target.id;
-    const health = () => s.enemies.filter((e) => e.room === s.room).find((e) => e.id === id)?.health ?? 0;
+    const health = () => s.enemies.filter((e) => e.group === 'field').find((e) => e.id === id)?.health ?? 0;
     for (let t = 0; t < 600 && health() > 27; t++) {
-      const e = s.enemies.filter((e) => e.room === s.room).find((en) => en.id === id);
+      const e = s.enemies.filter((e) => e.group === 'field').find((en) => en.id === id);
       if (!e) break;
       // One arrow at a time, so the health steps down by 10s.
       const before = health();
@@ -169,7 +179,7 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
     let lastDamage = 0;
     let died = false;
     for (let t = 0; t < 900 && !died; t++) {
-      const e = s.enemies.filter((e) => e.room === s.room).find((en) => en.id === id);
+      const e = s.enemies.filter((e) => e.group === 'field').find((en) => en.id === id);
       if (!e) break;
       const p = s.player;
       const dist = Math.hypot(e.x - p.x, e.y - p.y);

@@ -24,13 +24,13 @@ test('the doorway leads to the foundry and back', async ({ page }) => {
   await boot(page);
   await enterFoundry(page);
   const s = await state(page);
-  expect(s.events.roomChanges).toEqual([{ from: 'ruin-hall', to: 'foundry' }]);
+  expect(s.events.roomChanges).toEqual([{ from: 'overworld', to: 'foundry' }]);
   expect({ x: s.player.x, y: s.player.y }).toEqual(centre(22, 8));
   await page.evaluate(() => {
     const g = window.__GAME__;
-    for (let i = 0; i < 60 && g?.getState().room !== 'ruin-hall'; i++) g?.step(1, { moveX: 1 });
+    for (let i = 0; i < 60 && g?.getState().room !== 'overworld'; i++) g?.step(1, { moveX: 1 });
   });
-  expect((await state(page)).room).toBe('ruin-hall');
+  expect((await state(page)).room).toBe('overworld');
   expect(errors).toEqual([]);
 });
 
@@ -81,7 +81,7 @@ test('build mode places, turns, picks up and drags pieces with the mouse', async
 
 test('a ley bolt line built by hand fills its crate, and the bolts fire', async ({ page }) => {
   const errors = watchErrors(page);
-  await boot(page, '?start=hall&attuned');
+  await boot(page, '?start=field&attuned');
   await page.evaluate((vein) => {
     window.__GAME__?.step(0);
     window.__helpers?.harvest(vein, 3);

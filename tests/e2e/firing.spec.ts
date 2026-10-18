@@ -11,7 +11,7 @@ function watchErrors(page: Page): string[] {
 }
 
 async function boot(page: Page): Promise<void> {
-  await page.goto('/?start=hall');
+  await page.goto('/?start=field');
   await page.waitForFunction(() => window.__GAME__ !== undefined);
   // step(0) takes the sim off the real-time loop, so nothing ticks between reads.
   await page.evaluate(() => window.__GAME__?.step(0));
@@ -58,10 +58,10 @@ test('fires an arrow that flies toward the aim', async ({ page }) => {
 test('arrows stop at a wall before their range', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page);
-  // Walk toward the bottom wall until it's well inside an arrow's range, then fire at it.
-  await page.evaluate(() => window.__GAME__?.step(60, { moveY: 1 }));
+  // Walk to the overworld's west edge (017), then fire into its border trees.
+  await page.evaluate(() => window.__GAME__?.step(700, { moveX: -1 }));
   await page.evaluate(() => window.__GAME__?.step(10));
-  const shot = await fire(page, 1, 0, 100);
+  const shot = await fire(page, 1, -100, 0);
   expect(shot?.arrows).toHaveLength(1);
   let ticks = 0;
   for (; ticks < 40; ticks++) {

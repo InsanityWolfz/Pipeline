@@ -13,8 +13,10 @@ export interface Helpers {
   collect(): void;
   /** Shoots the nearest Husk until one dies, then collects its drops. */
   killHusk(): void;
-  /** Walks out of the foundry's door into the ruin hall, where the tube can fire (015). */
+  /** Walks out of the foundry's door to the overworld (017), where the tube can fire (015). */
   toHall(): void;
+  /** Walks to the front of the foundry's stairs in the overworld and down them (017). */
+  toFoundry(): void;
 }
 
 declare global {
@@ -39,37 +41,70 @@ function installHelpers(): void {
     return g;
   };
   const toward = (from: number, to: number): -1 | 0 | 1 => (Math.abs(to - from) < 2 ? 0 : to > from ? 1 : -1);
+  // Straight toward the point; when something solid stops the player (017: the overworld has trees,
+  // rocks and nodes in the way), sidestep along one axis for a while, then try again.
   const walkTo = (x: number, y: number): void => {
     const g = game();
-    for (let t = 0; t < 900; t++) {
+    let stuck = 0;
+    let detour = 0;
+    let side: { moveX: -1 | 0 | 1; moveY: -1 | 0 | 1 } = { moveX: 0, moveY: 0 };
+    for (let t = 0; t < 1500; t++) {
       const p = g.getState().player;
       const moveX = toward(p.x, x);
       const moveY = toward(p.y, y);
       if (moveX === 0 && moveY === 0) return;
-      g.step(1, { moveX, moveY });
+      if (detour > 0) {
+        detour -= 1;
+        g.step(1, side);
+        continue;
+      }
+      const after = g.step(1, { moveX, moveY }).player;
+      stuck = Math.hypot(after.x - p.x, after.y - p.y) < 0.1 ? stuck + 1 : 0;
+      if (stuck > 4) {
+        stuck = 0;
+        detour = 20;
+        // Slide past along the axis that isn't blocked: the one the player is furthest from done on, turned.
+        side = Math.abs(x - p.x) > Math.abs(y - p.y) ? { moveX: 0, moveY: y >= p.y ? 1 : -1 } : { moveX: x >= p.x ? 1 : -1, moveY: 0 };
+        if (side.moveX === 0 && side.moveY === 0) side = { moveX: 1, moveY: 0 };
+      }
     }
     throw new Error(`could not reach (${x}, ${y})`);
   };
   const collect = (): void => {
     const g = game();
-    let stuck = 0;
-    let detour = 0;
+    let best = Infinity;
+    let since = 0;
+    let target = -1;
     for (let t = 0; t < 1800; t++) {
       const s = g.getState();
       const item = s.groundItems.find((it) => it.room === s.room);
       if (!item) return;
-      // Blocked by something solid on the straight line: sidestep along x for a while.
-      if (detour > 0) {
-        detour -= 1;
-        g.step(1, { moveX: 1 });
+      if (item.id !== target) {
+        target = item.id;
+        best = Infinity;
+        since = 0;
+      }
+      const d = Math.hypot(item.x - s.player.x, item.y - s.player.y);
+      if (d < best - 1) {
+        best = d;
+        since = 0;
+      } else since += 1;
+      if (since > 15) {
+        // Blocked (a drop can land against its node): walk round to a spot beside it, inside the pickup radius
+        // (feet box 16x8, radius 8), trying above, below, left and right.
+        for (const [dx, dy] of [[0, -10], [0, 10], [-14, 0], [14, 0]] as const) {
+          try {
+            walkTo(item.x + dx, item.y + dy);
+          } catch {
+            continue;
+          }
+          if (!g.getState().groundItems.some((it) => it.id === item.id)) break;
+        }
+        best = Infinity;
+        since = 0;
         continue;
       }
-      const after = g.step(1, { moveX: toward(s.player.x, item.x), moveY: toward(s.player.y, item.y) });
-      stuck = Math.hypot(after.player.x - s.player.x, after.player.y - s.player.y) < 0.1 ? stuck + 1 : 0;
-      if (stuck > 5) {
-        stuck = 0;
-        detour = 30;
-      }
+      g.step(1, { moveX: toward(s.player.x, item.x), moveY: toward(s.player.y, item.y) });
     }
     const s = g.getState();
     throw new Error(`could not collect the drops: ${JSON.stringify(s.groundItems.filter((it) => it.room === s.room))} from ${s.player.x},${s.player.y}`);
@@ -87,6 +122,21 @@ function installHelpers(): void {
         g.step(30);
         collect();
       }
+    },
+    toFoundry() {
+      const g = game();
+      // The stairs' door tile is (40, 20); its arrival tile (40, 21) is in front (src/data/overworld.ts).
+      // From the north, round the mound's east side (blocks at x 38–42, y 18–20); from the south,
+      // up the column beside the path, clear of the tube's stone at (40, 33).
+      const y = game().getState().player.y;
+      if (y < 22 * 32) {
+        walkTo(43.5 * 32, y);
+        walkTo(43.5 * 32, 22.5 * 32);
+      } else walkTo(41.5 * 32, y);
+      walkTo(41.5 * 32, 21.5 * 32);
+      walkTo(40.5 * 32, 21.5 * 32);
+      for (let t = 0; t < 60 && g.getState().room !== 'foundry'; t++) g.step(1, { moveY: -1 });
+      if (g.getState().room !== 'foundry') throw new Error('could not reach the foundry');
     },
     toHall() {
       const g = game();
@@ -121,7 +171,7 @@ function installHelpers(): void {
  * Opens the game with the helpers installed: at `query` (e.g. `?playtest`), or by
  * default the sandbox start in the ruin hall that most specs are written for.
  */
-export async function boot(page: Page, query = '?start=hall'): Promise<void> {
+export async function boot(page: Page, query = '?start=field'): Promise<void> {
   await page.addInitScript(installHelpers);
   await page.goto(`/${query}`);
   await page.waitForFunction(() => window.__GAME__ !== undefined);
