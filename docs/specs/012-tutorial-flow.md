@@ -78,3 +78,15 @@ The prototype plays end to end as the new player experience in docs/prototype.md
 
 ## Open questions
 - None. Objective wording is a first draft for Shaun to edit.
+
+## Build notes
+These choices were made in the overnight build, not by the spec. They're logged for Shaun to accept or overturn in the morning report.
+- **Starts.** There are three. The real game (no flag) is the tutorial start in the clearing. `?playtest` gives the boosted inventory, the tube, attuned, with gates open. `?start=hall` is the old sandbox start (hall, 30 arrows, tube in hand, gates open), which the sim's unit tests and most e2e specs use. `?start=hall&attuned` adds attunement for tests that craft bombs and ley bolts.
+- **The spread objective needs one stager.** The prototype has one Warden, which drops one warden core, and a stager costs one, so the objective is one gravity stager facing the socket. Its text reads "Build a spread with a gravity stager".
+- **The last objective** ("Head back out") only starts its 600-tick clock once every other objective is done. Otherwise it would complete during the shrine fight.
+- **Objectives update on the next tick.** Crafts land between ticks, so a craft objective completes on the tick after the craft.
+- **Gathering** counts each raw as harvested from a node at least once.
+- **Gated doors** are solid to the player while shut: rubble on the foundry door, a ley barrier on the shrine door. Both fade out when they open.
+- **Drops** never land inside the pylon or the tube stone. Before this they could be unreachable.
+- **Layout.** The clearing is 24×18. Its door joins the ruin hall's bottom wall at (20,29), and the tube stone is at (12,11).
+

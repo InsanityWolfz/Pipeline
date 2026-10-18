@@ -77,7 +77,11 @@ export class HudView {
     this.crosshair = fixed(scene.add.image(0, 0, ATLAS_KEY, SPRITES.crosshair)).setDepth(DEPTHS.menu + 1);
   }
 
-  update(tube: TubeState, inventory: Inventory, player: PlayerState, link: LinkState, worn: ArmorPiece | undefined): void {
+  update(tube: TubeState, inventory: Inventory, player: PlayerState, link: LinkState, worn: ArmorPiece | undefined, hasTube: boolean): void {
+    // No tube yet (012): no hotbar.
+    for (const o of [this.slot, this.icon]) o.setVisible(hasTube);
+    this.count.setVisible(hasTube);
+    this.strip.setVisible(hasTube);
     this.armorIcon.setVisible(worn !== undefined);
     if (worn) this.armorIcon.setFrame(worn.weight === 'heavy' ? SPRITES.iconArmorHeavy : SPRITES.iconArmorLight);
     this.armorCount.set(worn ? String(worn.armor) : '');
@@ -105,7 +109,7 @@ export class HudView {
     this.icon.setFrame(itemDef(item).icon);
     const shown = slotCount({ tube, inventory, link });
     this.count.set(String(shown.count));
-    this.glow.setVisible(shown.fromReservoir);
+    this.glow.setVisible(hasTube && shown.fromReservoir);
     this.strip.update(tube, inventory);
 
     if (tube.dryFire > 0) this.slot.setTint(colorOf(HUD_SLOT_LAYOUT.dryFireTint));

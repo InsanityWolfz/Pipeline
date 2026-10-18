@@ -65,6 +65,13 @@ export function stepTube(state: SimState, cmd: Command): void {
   player.aimY = cmd.aimY;
   if (tube.fireCooldown > 0) tube.fireCooldown -= 1;
   if (tube.dryFire > 0) tube.dryFire -= 1;
+  // Without the tube (012) there's nothing to switch or fire.
+  if (!state.hasTube) {
+    tube.firing = false;
+    tube.fromReservoir = false;
+    tube.shotCount = 0;
+    return;
+  }
   if (cmd.selectAmmo !== null) selectAmmo(state, cmd.selectAmmo);
 
   tube.firing = false;

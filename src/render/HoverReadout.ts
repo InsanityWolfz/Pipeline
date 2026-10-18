@@ -8,7 +8,7 @@ import { recipeDef, RECIPES } from '../data/recipes';
 import { RESERVOIR_CAP } from '../data/tube';
 import { count } from '../sim/inventory';
 import type { ReservoirState } from '../sim/link';
-import type { MachineState } from '../sim/pieces';
+import type { MachineState, PieceState } from '../sim/pieces';
 import { colorOf } from './color';
 import { GlyphLine } from './glyphLine';
 
@@ -38,6 +38,14 @@ export function stagerLines(angle: number): Line[] {
   const icon = LOGISTICS_ICONS['gravity-stager'];
   if (!icon) throw new Error('No gravity stager emblem');
   return [[icon, angle > 0 ? `+${angle}` : String(angle)]];
+}
+
+/** The readout for any piece: machines, the tube socket and stagers have one; other pieces show nothing. */
+export function pieceLines(p: PieceState, reservoir: ReservoirState): Line[] {
+  if (p.kind === 'machine') return machineLines(p);
+  if (p.kind === 'socket') return socketLines(reservoir);
+  if (p.kind === 'stager') return stagerLines(p.angle);
+  return [];
 }
 
 // Over the machine, tube socket or stager under the cursor, a small panel of icon and text lines.

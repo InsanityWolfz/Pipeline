@@ -1,5 +1,6 @@
 import { MAX_HEALTH } from '../data/player';
 import { RESERVOIR_CAP } from '../data/tube';
+import { OBJECTIVES } from '../data/objectives';
 import { ROOMS } from '../data/rooms';
 import type { SimEvents } from './events';
 import { unlockedPieces } from './placement';
@@ -7,6 +8,7 @@ import { isInvulnerable, isRolling } from './movement';
 import type { Facing } from './player';
 import type { ArmorPiece } from './armor';
 import { fixtureDef } from './fixtures';
+import { currentObjective } from './objectives';
 import { socketStreams } from './spread';
 import type { SimState } from './state';
 import {
@@ -104,6 +106,13 @@ export interface SimSummary {
   /** The worn piece's id, or null. */
   equippedArmor: number | null;
   firstHuskDropped: boolean;
+  /** The tutorial (012): the tube in hand, gates open, the first line full, the current goal, the end. */
+  hasTube: boolean;
+  gates: { foundry: boolean; shrine: boolean };
+  firstLineFull: boolean;
+  /** The first unfinished objective (index and text), or null once all are done. */
+  objective: { index: number; text: string } | null;
+  prototypeComplete: boolean;
   /** What a death keeps: the inventory as last banked. */
   banked: Record<string, number>;
   /** What happened on the last tick. */
@@ -171,6 +180,17 @@ export function summarize(state: SimState): SimSummary {
     equippedArmor: state.equipped,
     firstHuskDropped: state.firstHuskDropped,
     banked: { ...state.banked },
+    hasTube: state.hasTube,
+    gates: { ...state.gates },
+    firstLineFull: state.firstLineFull,
+    objective: objectiveSummary(state),
+    prototypeComplete: state.prototypeComplete,
     events: structuredClone(state.events),
   };
+}
+
+function objectiveSummary(state: SimState): SimSummary['objective'] {
+  const i = currentObjective(state);
+  const def = i === null ? undefined : OBJECTIVES[i];
+  return i === null || !def ? null : { index: i, text: def.text };
 }

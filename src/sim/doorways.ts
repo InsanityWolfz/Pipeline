@@ -1,6 +1,7 @@
 import { FEET_BOX } from '../data/player';
 import { TILE_SIZE } from '../data/config';
 import { arrived } from './banking';
+import { doorOpen } from './tutorial';
 import { overlapsRect } from './collision';
 import { roomById, roomOf, type SimState } from './state';
 import { tileCentre } from './tiles';
@@ -26,6 +27,8 @@ const TILE_BOX = { w: TILE_SIZE, h: TILE_SIZE } as const;
 export function stepDoorways(state: SimState): void {
   const p = state.player;
   for (const d of roomOf(state).doorways ?? []) {
+    // A door sealed by a tutorial gate (012) is solid; walking into it does nothing.
+    if (!doorOpen(state, d.gate)) continue;
     const { x, y } = tileCentre(d);
     if (!overlapsRect(p.x, p.y, FEET_BOX, { x, y, ...TILE_BOX })) continue;
     const from = state.roomId;

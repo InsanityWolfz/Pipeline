@@ -142,7 +142,20 @@ export const BENCH_FLARE_MS = 600;
 export const ORB_SPRITES = { orb: 'wisp-orb', shadow: 'wisp-orb-shadow', lift: 14 } as const;
 
 /** Floor tiles by a room's `floor` theme; rooms without one use the ruin flagstone. */
-export const FLOOR_SPRITES: Readonly<Record<string, string>> = { shrine: 'floor-shrine' };
+export const FLOOR_SPRITES: Readonly<Record<string, string>> = { shrine: 'floor-shrine', clearing: 'floor-clearing' };
 
 /** Menu icons for the claimed pylon and the stash (009). */
 export const SITE_ICONS = { stash: 'emblem-stash', travel: 'emblem-travel' } as const;
+
+/** The tutorial (012): the tube's stone, sealed doors, key prompts and the objective tick. */
+export const TUTORIAL_SPRITES = {
+  stone: 'tube-stone',
+  stoneEmpty: 'tube-stone-empty',
+  rubble: 'door-rubble',
+  barrier: { key: 'ley-barrier', frames: 2, frameRate: 4, loop: true },
+  keyCap: 'key-cap',
+  tick: 'objective-tick',
+} as const satisfies Record<string, string | AnimDef>;
+
+/** Tutorial layout, px: the objective line's top, the tick's gap left of it, a prompt's lift over its target, a gate's crumble. */
+export const TUTORIAL_LAYOUT = { objectiveTop: 6, tickGap: 4, tickMs: 1200, promptLift: 6, keyText: { x: 4, y: 3 }, gateFadeMs: 500 } as const;

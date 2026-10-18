@@ -2,6 +2,22 @@
 
 Newest entry first.
 
+## 2026-10-18: 012 Tutorial flow (overnight build)
+**Changed:** built 012 on `claude/012-tutorial-flow` (stacked on 011).
+- **The clearing:** a new room where the real game starts. You wake with nothing; the dormant tube lies on a stone and E takes it.
+- **Soft gates:**
+  - rubble on the foundry door until the hall's pack is dead
+  - bomb and ley bolt recipes hidden until the tube attunes
+  - a ley barrier on the shrine door until the first line fills the tube
+- **Objectives:** 12, shown as one line at the top centre in the new font, completing in any order, ending in `prototypeComplete`.
+- **Prompts:** floating key prompts (E, C, B).
+- **Starts:** three of them: tutorial (default), `?playtest`, and `?start=hall` (the sandbox the tests use).
+- **End-to-end test:** a full scripted run through every beat from a fresh start, `tests/e2e/tutorial.spec.ts`.
+
+Verify: 399 unit and 30 e2e tests pass.
+**Next:** QA and review, then 013 and 014.
+**Notes:** see the 012 spec's build notes. The spread objective needs one stager, because only one warden core exists.
+
 ## 2026-10-18: 011 Death (overnight build)
 **Changed:** built 011 on `claude/011-death` (stacked on 010).
 - **Banking:** entering the foundry banks what you carry, and so does a pylon deposit.

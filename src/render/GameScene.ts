@@ -26,7 +26,7 @@ import { EnemyView } from './EnemyView';
 import { FoundryView } from './FoundryView';
 import { GroundItemView } from './GroundItemView';
 import { HopperPicker } from './HopperPicker';
-import { HoverReadout, machineLines, socketLines, stagerLines } from './HoverReadout';
+import { HoverReadout, pieceLines } from './HoverReadout';
 import { HudView } from './HudView';
 import { NodeView } from './NodeView';
 import { PlayerView } from './PlayerView';
@@ -34,6 +34,9 @@ import { RoomView } from './room';
 import { SiteMenus } from './SiteMenus';
 import { SiteView } from './SiteView';
 import { WakeView } from './WakeView';
+import { ObjectiveView } from './ObjectiveView';
+import { PromptView } from './PromptView';
+import { TutorialView } from './TutorialView';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -62,6 +65,9 @@ export class GameScene extends Scene {
   private site?: SiteView;
   private siteMenus?: SiteMenus;
   private wake?: WakeView;
+  private tutorial?: TutorialView;
+  private objective?: ObjectiveView;
+  private prompt?: PromptView;
   /** The room on screen. It lags the player's room through a door's fade. */
   private shownRoomId: string;
   private fading = false;
@@ -97,6 +103,9 @@ export class GameScene extends Scene {
     this.site = new SiteView(this);
     this.siteMenus = new SiteMenus(this);
     this.wake = new WakeView(this);
+    this.tutorial = new TutorialView(this);
+    this.objective = new ObjectiveView(this);
+    this.prompt = new PromptView(this);
     this.menu = new CraftMenuView(this, (recipeId) => this.craft(recipeId));
     this.showRoom(this.sim.roomId);
     this.draw();
@@ -264,13 +273,16 @@ export class GameScene extends Scene {
     this.groundItemView?.update(inRoom(sim.groundItems, shown));
     this.enemyView?.update(inRoom(sim.enemies, shown));
     // Through a door's fade the player is already in the next room; hide them until it shows.
-    this.playerView?.update(sim.player, sim.tube, sim.link, worn(sim)?.weight ?? null, shown === sim.roomId);
+    this.playerView?.update(sim.player, sim.tube, sim.link, worn(sim)?.weight ?? null, sim.hasTube, shown === sim.roomId);
     this.arrowView?.update(inRoom(sim.arrows, shown));
     this.bombView?.update(inRoom(sim.bombs, shown));
     this.site?.update(sim, shown);
     this.siteMenus?.update(sim);
-    this.hud?.update(sim.tube, sim.inventory, sim.player, sim.link, worn(sim));
-    this.menu?.update(sim.inventory);
+    this.tutorial?.update(sim, shown);
+    this.objective?.update(sim);
+    this.prompt?.update(sim, shown);
+    this.hud?.update(sim.tube, sim.inventory, sim.player, sim.link, worn(sim), sim.hasTube);
+    this.menu?.update(sim.inventory, sim.link);
     const hopper = sim.foundry.pieces.find((p) => p.id === this.picker?.hopperId);
     this.picker?.update(sim.inventory, hopper?.kind === 'hopper' ? hopper : undefined);
     const controls = this.controls;
@@ -279,14 +291,7 @@ export class GameScene extends Scene {
       canPlace(sim, ...a),
     );
     const hovered = cursor ? pieceAt(sim.foundry, cursor.tx, cursor.ty) : undefined;
-    const lines =
-      hovered?.kind === 'machine'
-        ? machineLines(hovered)
-        : hovered?.kind === 'socket'
-          ? socketLines(sim.link.reservoir)
-          : hovered?.kind === 'stager'
-            ? stagerLines(hovered.angle)
-            : [];
+    const lines = hovered ? pieceLines(hovered, sim.link.reservoir) : [];
     if (hovered && lines.length > 0) {
       const r = pieceRect(hovered);
       const top = this.foundryView?.topOf(hovered.id) ?? r.y;

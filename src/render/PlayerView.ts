@@ -53,7 +53,8 @@ export class PlayerView {
   }
 
   /** Draws the player; `shown` false hides them (they're in a room not yet on screen). */
-  update(p: PlayerState, tube: TubeState, link: LinkState, armor: ArmorWeight | null, shown = true): void {
+  /** `hasTube` false (012) draws the player empty-handed. */
+  update(p: PlayerState, tube: TubeState, link: LinkState, armor: ArmorWeight | null, hasTube: boolean, shown = true): void {
     this.sprite.setVisible(shown);
     const bottom = p.y + FEET_BOX.h / 2;
     this.sprite.setPosition(p.x, bottom).setDepth(bottom);
@@ -91,9 +92,9 @@ export class PlayerView {
       const body = colorOf(ARMOR_TINTS[armor]);
       this.sprite.setTint(UNTINTED, UNTINTED, body, body).setTintMode(TintModes.MULTIPLY);
     }
-    this.tube.setVisible(shown && !rolling && p.dying === 0);
+    this.tube.setVisible(shown && hasTube && !rolling && p.dying === 0);
     if (!rolling) this.placeTube(p, facing, bottom);
-    this.placeAttune(facing, shown && !rolling && link.attunePulse > 0);
+    this.placeAttune(facing, shown && hasTube && !rolling && link.attunePulse > 0);
   }
 
   /** The attuning pulse sits exactly over the tube, a hair in front of it. */

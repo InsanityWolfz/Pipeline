@@ -25,6 +25,8 @@ export interface Room {
   nodes?: readonly { nodeId: string; tx: number; ty: number }[];
   /** Door tiles on the outer wall, each linked to a door in another room (by its index there). */
   doorways?: readonly Doorway[];
+  /** Where the dormant tube rests until the player takes it (012); solid. */
+  tubeStone?: { tx: number; ty: number };
   /** A ley pylon (009): solid, and claiming it claims the room. */
   pylon?: { tx: number; ty: number };
   /** The floor's look, a key into FLOOR_SPRITES in src/data/assets.ts; the ruin flagstone by default. */
@@ -36,7 +38,12 @@ export interface Doorway {
   ty: number;
   to: string;
   toDoor: number;
+  /** A tutorial gate (012) that seals this door until it opens. */
+  gate?: GateId;
 }
+
+/** The tutorial's gates (012): the foundry opens when the hall's pack is dead, the shrine when the first line fills the tube. */
+export type GateId = 'foundry' | 'shrine';
 
 export const ROOMS: Readonly<Record<string, Room>> = {
   'ruin-hall': {
@@ -71,7 +78,7 @@ export const ROOMS: Readonly<Record<string, Room>> = {
       '#......................................#',
       '#......................................#',
       '#......................................#',
-      '########################################',
+      '####################D###################',
     ],
     spawn: { tx: 20, ty: 18 },
     crystal: { tx: 20, ty: 15 },
@@ -94,9 +101,47 @@ export const ROOMS: Readonly<Record<string, Room>> = {
       { nodeId: 'ley-vein', tx: 24, ty: 15 },
     ],
     doorways: [
-      { tx: 0, ty: 12, to: 'foundry', toDoor: 0 },
-      { tx: 10, ty: 0, to: 'shrine', toDoor: 0 },
+      { tx: 0, ty: 12, to: 'foundry', toDoor: 0, gate: 'foundry' },
+      { tx: 10, ty: 0, to: 'shrine', toDoor: 0, gate: 'shrine' },
+      { tx: 20, ty: 29, to: 'clearing', toDoor: 0 },
     ],
+  },
+  // The clearing (012): where the player wakes, with the dormant tube on its stone.
+  clearing: {
+    id: 'clearing',
+    rows: [
+      '############D###########',
+      '#......................#',
+      '#......................#',
+      '#...B..............B...#',
+      '#......................#',
+      '#......................#',
+      '#......................#',
+      '#......................#',
+      '#......................#',
+      '#......................#',
+      '#......................#',
+      '#......................#',
+      '#......................#',
+      '#..BB..............BB..#',
+      '#......................#',
+      '#......................#',
+      '#......................#',
+      '########################',
+    ],
+    spawn: { tx: 12, ty: 14 },
+    tubeStone: { tx: 12, ty: 11 },
+    floor: 'clearing',
+    nodes: [
+      { nodeId: 'tree', tx: 4, ty: 6 },
+      { nodeId: 'tree', tx: 19, ty: 6 },
+      { nodeId: 'reeds', tx: 6, ty: 10 },
+      { nodeId: 'reeds', tx: 17, ty: 10 },
+      { nodeId: 'rubble', tx: 7, ty: 15 },
+      { nodeId: 'rubble', tx: 16, ty: 15 },
+      { nodeId: 'ley-vein', tx: 12, ty: 4 },
+    ],
+    doorways: [{ tx: 12, ty: 0, to: 'ruin-hall', toDoor: 2 }],
   },
   // The overgrown shrine (009): Wisps, Husks and the Pylon Warden guard its pylon.
   shrine: {
@@ -172,6 +217,9 @@ export const ROOMS: Readonly<Record<string, Room>> = {
 
 /** Where the player starts, and where a KO sends them. */
 export const DEFAULT_ROOM = 'ruin-hall';
+
+/** Where the tutorial wakes the player (012). */
+export const CLEARING_ROOM = 'clearing';
 
 /** The claimable site with its pylon (009). */
 export const SHRINE_ROOM = 'shrine';

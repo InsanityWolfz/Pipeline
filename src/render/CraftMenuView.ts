@@ -3,8 +3,10 @@ import { ammoDef } from '../data/ammo';
 import { ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
 import { CRAFT_MENU_LAYOUT } from '../data/hudLayout';
 import { itemDef } from '../data/items';
-import { recipeDef } from '../data/recipes';
+import { CRAFT_GROUPS, recipeDef } from '../data/recipes';
 import { canCraft } from '../sim/crafting';
+import { createLink, type LinkState } from '../sim/link';
+import { knownRecipe } from '../sim/tutorial';
 import { count, type Inventory } from '../sim/inventory';
 import { craftMenuLines, craftPanelAt } from './craftMenuLayout';
 import { GlyphLine } from './glyphLine';
@@ -31,6 +33,9 @@ export class CraftMenuView {
   private hovered: Row | undefined;
   private open = false;
   private inventory: Inventory = {};
+  private link: LinkState = createLink();
+  /** Each group's header icon, by ammo id: hidden while none of its recipes is known (012). */
+  private readonly headers = new Map<string, GameObjects.Image>();
 
   constructor(scene: Scene, onCraft: (recipeId: string) => void) {
     const L = CRAFT_MENU_LAYOUT;
@@ -49,7 +54,8 @@ export class CraftMenuView {
 
     for (const line of craftMenuLines()) {
       if (line.kind === 'header') {
-        add(line.x + L.headerIcon.x, line.y + L.headerIcon.y, itemDef(ammoDef(line.id).itemId).icon, DEPTHS.menu + 1);
+        const icon = add(line.x + L.headerIcon.x, line.y + L.headerIcon.y, itemDef(ammoDef(line.id).itemId).icon, DEPTHS.menu + 1);
+        this.headers.set(line.id, icon);
         continue;
       }
       const recipe = recipeDef(line.id);
@@ -76,7 +82,7 @@ export class CraftMenuView {
         outputId: recipe.output.itemId,
       };
       frame.on('pointerdown', () => {
-        if (this.open && canCraft({ inventory: this.inventory }, row.recipeId)) onCraft(row.recipeId);
+        if (this.open && canCraft({ inventory: this.inventory, link: this.link }, row.recipeId)) onCraft(row.recipeId);
       });
       frame.on('pointerover', () => (this.hovered = row));
       frame.on('pointerout', () => {
@@ -102,12 +108,18 @@ export class CraftMenuView {
     if (!open) this.hovered = undefined;
   }
 
-  /** Refreshes counts and greying while open. */
-  update(inventory: Inventory): void {
+  /** Refreshes counts and greying while open; recipes not yet known (012) stay hidden. */
+  update(inventory: Inventory, link: LinkState): void {
     this.inventory = inventory;
+    this.link = link;
     if (!this.open) return;
+    for (const group of CRAFT_GROUPS) this.headers.get(group.ammoId)?.setVisible(group.recipes.some((id) => knownRecipe({ link }, id)));
     for (const r of this.rows) {
-      const affordable = canCraft({ inventory }, r.recipeId);
+      const known = knownRecipe({ link }, r.recipeId);
+      for (const o of [r.frame, ...r.parts]) o.setVisible(known);
+      for (const t of [...r.inputs.map((i) => i.text), r.made, r.owned]) t.setVisible(known);
+      if (!known) continue;
+      const affordable = canCraft({ inventory, link }, r.recipeId);
       const alpha = affordable ? 1 : CRAFT_MENU_LAYOUT.greyAlpha;
       for (const input of r.inputs) {
         input.text.set(`${count(inventory, input.itemId)}/${input.need}`);
