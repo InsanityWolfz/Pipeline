@@ -60,11 +60,13 @@ export const HOPPER_SPRITES: Readonly<Record<PieceView, string>> = {
 
 export const CRATE_SPRITE = 'crate';
 
-/** The arrow on a piece's front edge, shown in build mode and on the ghost. `side` points right. */
-export const FACING_ARROWS: Readonly<Record<PieceView, string>> = {
-  down: 'facing-arrow-down',
-  up: 'facing-arrow-up',
-  side: 'facing-arrow-side',
+/**
+ * Build-mode arrows on a piece's edges, also on the ghost: cyan pointing out of its
+ * output side, gold pointing in on each side that takes items. `side` points right.
+ */
+export const FACING_ARROWS: Readonly<Record<'in' | 'out', Record<PieceView, string>>> = {
+  out: { down: 'facing-arrow-down', up: 'facing-arrow-up', side: 'facing-arrow-side' },
+  in: { down: 'input-arrow-down', up: 'input-arrow-up', side: 'input-arrow-side' },
 };
 
 /** A door in a side wall, drawn as is on the right wall and flipped on the left. */
@@ -90,10 +92,8 @@ export const FOUNDRY_LAYOUT = {
   countY: -3,
   /** Conduits lie on the floor; items riding them draw just above. */
   conduitDepth: 0.2,
-  /** A facing arrow's centre sits this far past the piece's front edge, px (negative: just inside it). */
+  /** An arrow's centre sits this far past its tile's edge, px (negative: just inside it). */
   arrowOffset: -5,
-  /** Facing up, the arrow rises this much more, onto the back edge of the top face that stands above the tile. */
-  arrowUpLift: 10,
   /** Depth nudge that puts an icon or count just in front of the piece it's drawn on. */
   onTopNudge: 0.01,
   itemDepth: 0.3,

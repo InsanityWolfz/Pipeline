@@ -128,7 +128,8 @@ describe('assets', () => {
       ...Object.values(LOGISTICS_ICONS),
       CRATE_SPRITE,
       DOORWAY_SPRITE,
-      ...Object.values(FACING_ARROWS),
+      ...Object.values(FACING_ARROWS.in),
+      ...Object.values(FACING_ARROWS.out),
       STATUS_MARKERS.blocked,
       STATUS_MARKERS.starved,
     ];

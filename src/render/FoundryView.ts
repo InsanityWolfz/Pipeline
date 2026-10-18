@@ -19,27 +19,43 @@ import { facingVector } from '../sim/direction';
 import { pieceRect, type FoundryState, type PieceState } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { registerAnim } from './anims';
-import { pieceIcon } from './foundryLayout';
+import { arrowSpots, pieceIcon } from './foundryLayout';
 import { GlyphLine } from './glyphLine';
 
 export const viewOf = (f: Facing): PieceView => (f === 'up' || f === 'down' ? f : 'side');
 
-/** Puts a facing arrow on a piece's front edge, pointing the way it hands items out. */
-export function placeArrow(arrow: GameObjects.Image, p: Pick<PieceState, 'pieceId' | 'tx' | 'ty' | 'facing'>): void {
-  const r = pieceRect(p);
-  const [fx, fy] = facingVector(p.facing);
-  const off = FOUNDRY_LAYOUT.arrowOffset;
-  arrow.setFrame(FACING_ARROWS[viewOf(p.facing)]).setFlipX(p.facing === 'left');
-  const lift = p.facing === 'up' && pieceDef(p.pieceId).kind !== 'conduit' ? FOUNDRY_LAYOUT.arrowUpLift : 0;
-  arrow.setPosition(Math.round(r.x + fx * (r.w / 2 + off)), Math.round(r.y + fy * (r.h / 2 + off) - lift));
+/** The most arrows any piece shows: a 3x1 machine's output, three along its back and one on each end. */
+export const MAX_ARROWS = 6;
+
+/**
+ * Lays a piece's input and output arrows (see arrowSpots) on `pool`, hiding the
+ * spares. Used for placed pieces in build mode and for the ghost.
+ */
+export function placeArrows(
+  pool: readonly GameObjects.Image[],
+  p: Pick<PieceState, 'pieceId' | 'tx' | 'ty' | 'facing'>,
+  visible = true,
+): void {
+  const spots = arrowSpots(p);
+  const reach = TILE_SIZE / 2 + FOUNDRY_LAYOUT.arrowOffset;
+  for (const [i, arrow] of pool.entries()) {
+    const spot = spots[i];
+    arrow.setVisible(visible && spot !== undefined);
+    if (!spot) continue;
+    const [ex, ey] = facingVector(spot.edge);
+    const x = (spot.tx + 0.5) * TILE_SIZE + ex * reach;
+    const y = (spot.ty + 0.5) * TILE_SIZE + ey * reach;
+    arrow.setFrame(FACING_ARROWS[spot.kind][viewOf(spot.points)]).setFlipX(spot.points === 'left');
+    arrow.setPosition(Math.round(x), Math.round(y));
+  }
 }
 
 interface Drawn {
   body: GameObjects.Sprite;
   /** Machines: what they make, on the top face. Hoppers and crates: the item they hold. Conduits: the item riding it. */
   icon: GameObjects.Image;
-  /** Shown in build mode on everything but conduits, which already show their flow. */
-  arrow?: GameObjects.Image;
+  /** Input and output arrows, shown in build mode (conduits show their flow instead). */
+  arrows: GameObjects.Image[];
   marker?: GameObjects.Sprite;
   markerIcon?: GameObjects.Image;
   count?: GlyphLine;
@@ -66,11 +82,11 @@ export class FoundryView {
       live.add(p.id);
       const d = this.drawn.get(p.id) ?? this.create(p);
       this.draw(p, d);
-      d.arrow?.setVisible(building);
+      placeArrows(d.arrows, p, building);
     }
     for (const [id, d] of this.drawn) {
       if (live.has(id)) continue;
-      for (const o of [d.body, d.icon, d.arrow, d.marker, d.markerIcon]) o?.destroy();
+      for (const o of [d.body, d.icon, ...d.arrows, d.marker, d.markerIcon]) o?.destroy();
       d.count?.set('');
       this.drawn.delete(id);
     }
@@ -91,11 +107,8 @@ export class FoundryView {
     const d: Drawn = {
       body: add.sprite(r.x, bottom, ATLAS_KEY).setOrigin(0.5, 1).setFlipX(left).setDepth(bottom),
       icon: add.image(r.x, bottom, ATLAS_KEY, pieceIcon(p.pieceId)).setOrigin(0.5),
+      arrows: arrowSpots(p).map(() => add.image(0, 0, ATLAS_KEY, FACING_ARROWS.out.down).setDepth(DEPTHS.worldUi - 1)),
     };
-    if (p.kind !== 'conduit') {
-      d.arrow = add.image(0, 0, ATLAS_KEY, FACING_ARROWS.down).setDepth(DEPTHS.worldUi - 1);
-      placeArrow(d.arrow, p);
-    }
     if (p.kind === 'conduit') {
       d.body.setOrigin(0).setPosition(r.x - TILE_SIZE / 2, r.y - TILE_SIZE / 2).setDepth(FOUNDRY_LAYOUT.conduitDepth);
       d.body.play(CONDUIT_ANIMS[view].key);
