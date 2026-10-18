@@ -1,4 +1,12 @@
-import { ARMOR_DROP_CHANCE, ARMOR_WEIGHTS, FIRST_ARMOR_ENEMY, MIN_DAMAGE, UNIDENTIFIED_ARMOR, type ArmorWeight } from '../data/armor';
+import {
+  ARMOR_DROP_CHANCE,
+  ARMOR_WEIGHTS,
+  FIRST_ARMOR_ENEMY,
+  HEAVY_CHANCE,
+  MIN_DAMAGE,
+  UNIDENTIFIED_ARMOR,
+  type ArmorWeight,
+} from '../data/armor';
 import { fixtureInReach } from './claims';
 import { count } from './inventory';
 import { nextFloat, nextInt } from './rng';
@@ -35,7 +43,7 @@ export function identifyAll(state: SimState): void {
   if (n === 0 || !fixtureInReach(state, 'bench')) return;
   state.inventory[UNIDENTIFIED_ARMOR] = 0;
   for (let i = 0; i < n; i++) {
-    const weight: ArmorWeight = nextFloat(state.rng) < 0.5 ? 'light' : 'heavy';
+    const weight: ArmorWeight = nextFloat(state.rng) < HEAVY_CHANCE ? 'heavy' : 'light';
     const w = ARMOR_WEIGHTS[weight];
     const piece: ArmorPiece = {
       id: state.nextArmorId++,
@@ -48,10 +56,11 @@ export function identifyAll(state: SimState): void {
   }
 }
 
-/** Wears a piece (or takes armor off, for null) at the bench. Equipping the worn piece takes it off. */
+/** Wears a piece (or takes armor off, for null) at the bench. Equipping the worn piece takes it off; an unknown id does nothing. */
 export function equip(state: SimState, id: number | null): void {
   if (!fixtureInReach(state, 'bench')) return;
-  const next = id === state.equipped || !state.armor.some((a) => a.id === id) ? null : id;
+  if (id !== null && !state.armor.some((a) => a.id === id)) return;
+  const next = id === state.equipped ? null : id;
   if (next === state.equipped) return;
   state.equipped = next;
   state.events.equips.push({ id: next });

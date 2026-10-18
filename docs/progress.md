@@ -2,6 +2,18 @@
 
 Newest entry first.
 
+## 2026-10-18: 010 Armor (overnight build)
+**Changed:** built 010 on `claude/010-armor` (stacked on 009).
+- Enemies drop unidentified armor; the first Husk ever killed always drops a piece.
+- The identification bench (a foundry fixture at tile 1,12) identifies carried pieces for free, as light (2-4 armor) or heavy (5-8 armor, 85% walk speed), each with a name.
+- One piece can be worn. Each hit loses its armor value, never below 1.
+- The HUD shows the worn piece, and the body is tinted by weight.
+- Added a 3×5 letter font (`hud-letters`). Menu rows now have text: "Send haul home", "Take all", "Identify all", piece names.
+
+Verify: 373 unit and 27 e2e tests pass, and QA passes all 5 items. Review: resolved its blocking items. The hook uses the spec's names. Piece names show via the new font. The 50/50 roll moved to data. The rest are logged as build notes in the spec. I also took several suggestions: an unknown equip id is a no-op, the armor types are shared, the explicit event-key test is back, and `controls.ts` was split.
+**Next:** 011 Death on `claude/011-death`.
+**Notes:** see the 010 spec's build notes, especially that unidentified armor is a counted item.
+
 ## 2026-10-18: 009 Claiming (overnight build)
 **Changed:** built 009 on `claude/009-claiming` (stacked on 008).
 - A new shrine room through the hall's top door, with 3 Wisps (kite and cast slow orbs), 2 Husks and the Pylon Warden (a slam circle, then a recover window).

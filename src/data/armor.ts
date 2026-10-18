@@ -20,10 +20,13 @@ export const ARMOR_WEIGHTS: Readonly<
     min: 5,
     max: 8,
     walkScale: 0.85,
-    adjectives: ['Heavy', 'Rune-cut', 'Slate', 'Warden', 'Ruin'],
+    adjectives: ['Granite', 'Rune-cut', 'Slate', 'Warden', 'Ruin'],
     nouns: ['Plate', 'Cuirass', 'Mail', 'Shell'],
   },
 };
+
+/** Chance (0..1) an identified piece rolls heavy; otherwise it's light. */
+export const HEAVY_CHANCE = 0.5;
 
 /** Chance (0..1) each enemy kind drops an unidentified piece. The first Husk ever killed always does. */
 export const ARMOR_DROP_CHANCE: Readonly<Record<string, number>> = { husk: 0.1, wisp: 0.15, 'pylon-warden': 1 };

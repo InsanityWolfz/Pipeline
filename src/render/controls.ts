@@ -7,6 +7,7 @@ import { NO_COMMAND, type Axis, type Command } from '../sim/input';
 import { BUILD_BAR, pieceDef } from '../data/pieces';
 import { tilesBetween, type Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
+import { MenuRequests } from './menuRequests';
 
 type Key = 'up' | 'down' | 'left' | 'right' | 'dodge' | 'rotate' | 'interact' | 'menu' | 'close' | 'build';
 
@@ -58,12 +59,8 @@ export class Controls {
   private closePending = false;
   private buildPending = false;
   private wheelPending = 0;
-  private depositPending: Command['deposit'] = null;
-  private withdrawPending: Command['withdraw'] = null;
-  private pylonPending: Command['pylon'] = null;
-  private takeStashPending: Command['takeStash'] = null;
-  private identifyPending = false;
-  private equipPending: Command['equip'] = null;
+  /** Choices clicked in the hopper, pylon, stash and bench menus. */
+  readonly menus = new MenuRequests();
   private readonly queue: BuildAction[] = [];
   private dragTile: Tile | null = null;
   private build: BuildInput = {
@@ -210,36 +207,6 @@ export class Controls {
     this.buildPending = true;
   }
 
-  /** Fills a hopper on the next tick (the hopper menu's choice). */
-  requestDeposit(id: number, itemId: string): void {
-    this.depositPending = { id, itemId };
-  }
-
-  /** Empties a hopper into the inventory on the next tick (the hopper menu's choice). */
-  requestWithdraw(id: number): void {
-    this.withdrawPending = { id };
-  }
-
-  /** Sends the claimed pylon's menu choice on the next tick. */
-  requestPylon(action: NonNullable<Command['pylon']>): void {
-    this.pylonPending = action;
-  }
-
-  /** Takes a stack (or everything, for null) out of the stash on the next tick. */
-  requestTakeStash(itemId: string | null): void {
-    this.takeStashPending = { itemId };
-  }
-
-  /** Identifies every carried piece at the bench on the next tick. */
-  requestIdentify(): void {
-    this.identifyPending = true;
-  }
-
-  /** Wears a piece (or takes armor off) at the bench on the next tick. */
-  requestEquip(id: number | null): void {
-    this.equipPending = { id };
-  }
-
   /** Drops game presses and queued build actions made while the menu is open, so none fire when it closes. */
   discardPending(): void {
     this.clearPresses();
@@ -251,12 +218,7 @@ export class Controls {
     this.interactPending = false;
     this.selectPending = null;
     this.buildPending = false;
-    this.depositPending = null;
-    this.withdrawPending = null;
-    this.pylonPending = null;
-    this.takeStashPending = null;
-    this.identifyPending = false;
-    this.equipPending = null;
+    this.menus.clear();
   }
 
   /**
@@ -270,20 +232,9 @@ export class Controls {
       place: action?.place ?? null,
       pickUp: action?.pickUp ?? null,
       setAngle: action?.setAngle ?? null,
-      deposit: this.depositPending,
-      withdraw: this.withdrawPending,
-      pylon: this.pylonPending,
-      takeStash: this.takeStashPending,
-      identify: this.identifyPending,
-      equip: this.equipPending,
+      ...this.menus.take(),
     };
     this.buildPending = false;
-    this.depositPending = null;
-    this.withdrawPending = null;
-    this.pylonPending = null;
-    this.takeStashPending = null;
-    this.identifyPending = false;
-    this.equipPending = null;
     return ui;
   }
 

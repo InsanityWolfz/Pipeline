@@ -207,9 +207,13 @@ describe('sim state', () => {
     expect(summary.enemies.filter((e) => e.room === 'ruin-hall')).toHaveLength(3);
     expect(summary.enemies[0]).toMatchObject({ enemyId: 'husk', mode: 'idle', health: 40, maxHealth: 40 });
     expect(summary.groundItems).toEqual([]);
-    // Nothing has happened yet: every event list is empty and there's no KO.
+    // Every event list, empty, and no KO: a key missing from createEvents fails here.
+    const lists = ['hits', 'deaths', 'pickups', 'harvests', 'crafts', 'craftFails', 'bursts', 'selects', 'roomChanges'] as const;
+    const later = ['places', 'placeFails', 'pickUps', 'deposits', 'crateTakes', 'withdraws', 'attunes', 'refills', 'shots'] as const;
+    const site = ['sealed', 'claims', 'stashDeposits', 'stashTakes', 'travels', 'identifies', 'equips', 'angles'] as const;
+    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, 'ko'].sort());
+    for (const name of [...lists, ...later, ...site]) expect(summary.events[name], name).toEqual([]);
     expect(summary.events.ko).toBe(false);
-    for (const [name, list] of Object.entries(summary.events)) if (name !== 'ko') expect(list, name).toEqual([]);
   });
 
   it('summarizes rooms, build mode, unlocks and the foundry', () => {

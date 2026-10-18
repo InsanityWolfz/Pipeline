@@ -54,10 +54,10 @@ export class SiteMenus {
     const p = this.pylon.valueAt(x, y);
     const s = this.stash.valueAt(x, y);
     const b = this.bench.valueAt(x, y);
-    if (p) controls.requestPylon(p);
-    else if (s) controls.requestTakeStash(s.itemId);
-    else if (b && 'identify' in b) controls.requestIdentify();
-    else if (b) controls.requestEquip(b.equip);
+    if (p) controls.menus.pylon(p);
+    else if (s) controls.menus.takeStash(s.itemId);
+    else if (b && 'identify' in b) controls.menus.identify();
+    else if (b) controls.menus.equip(b.equip);
     else return false;
     this.close();
     return true;
@@ -69,8 +69,8 @@ export class SiteMenus {
     if (this.stash.isOpen && !fixtureInReach(sim, 'stash')) this.stash.close();
     const held = Object.values(sim.inventory).reduce((a, b) => a + b, 0);
     const pylonRows: Choice<PylonChoice>[] = [
-      { icons: [SITE_ICONS.stash], text: String(held), value: 'deposit' },
-      { icons: [SITE_ICONS.travel], text: '', value: 'travel' },
+      { icons: [SITE_ICONS.stash], text: `Send haul home (${held})`, value: 'deposit' },
+      { icons: [SITE_ICONS.travel], text: 'Travel to foundry', value: 'travel' },
     ];
     this.pylon.show(pylonRows);
     const stacks = Object.keys(ITEMS).filter((id) => (sim.stash[id] ?? 0) > 0);
@@ -78,19 +78,21 @@ export class SiteMenus {
     const stashRows: Choice<StashChoice>[] =
       total > 0
         ? [
-            { icons: [SITE_ICONS.stash], text: String(total), value: { itemId: null } },
-            ...stacks.map((id) => ({ icons: [itemDef(id).icon], text: String(sim.stash[id] ?? 0), value: { itemId: id } })),
+            { icons: [SITE_ICONS.stash], text: `Take all (${total})`, value: { itemId: null } },
+            ...stacks.map((id) => ({ icons: [itemDef(id).icon], text: `${itemDef(id).name} ${sim.stash[id] ?? 0}`, value: { itemId: id } })),
           ]
         : [];
     this.stash.show(stashRows);
     if (this.bench.isOpen && !fixtureInReach(sim, 'bench')) this.bench.close();
     const unidentified = sim.inventory[UNIDENTIFIED_ARMOR] ?? 0;
     const benchRows: Choice<BenchChoice>[] = [
-      ...(unidentified > 0 ? [{ icons: [SPRITES.emblemIdentify], text: String(unidentified), value: { identify: true as const } }] : []),
-      // The worn piece shows a + after its armor value; clicking it takes it off.
+      ...(unidentified > 0
+        ? [{ icons: [SPRITES.emblemIdentify], text: `Identify all (${unidentified})`, value: { identify: true as const } }]
+        : []),
+      // Each piece: its name, weight and armor; the worn one says so, and clicking it takes it off.
       ...sim.armor.map((a) => ({
         icons: [a.weight === 'heavy' ? SPRITES.iconArmorHeavy : SPRITES.iconArmorLight],
-        text: `${a.armor}${a.id === sim.equipped ? '+' : ''}`,
+        text: `${a.name} ${a.weight} ${a.armor}${a.id === sim.equipped ? ' worn' : ''}`,
         value: { equip: a.id },
       })),
     ];

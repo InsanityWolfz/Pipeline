@@ -97,7 +97,12 @@ describe('the identification bench', () => {
     run(s, 1, { equip: { id: b.id } });
     expect(s.equipped).toBeNull();
     expect(s.events.equips).toEqual([{ id: null }]);
-    expect(summarize(s).armor).toHaveLength(2);
+    expect(summarize(s).armorPieces).toHaveLength(2);
+    run(s, 1, { equip: { id: 99 } });
+    expect(s.equipped).toBeNull();
+    run(s, 1, { equip: { id: a.id } });
+    run(s, 1, { equip: { id: 99 } });
+    expect(s.equipped).toBe(a.id);
   });
 
   it('a deposit at a claimed pylon stashes unidentified armor too', () => {

@@ -25,6 +25,9 @@ import { colorOf } from './color';
 
 type View = 'down' | 'up' | 'side';
 
+/** A multiply tint that leaves a corner's colour as drawn. */
+const UNTINTED = 0xffffff;
+
 const viewOf = (f: Facing): View => (f === 'up' || f === 'down' ? f : 'side');
 
 // Draws the player and the held tube from sim state. The sprite stands on the
@@ -76,8 +79,11 @@ export class PlayerView {
       if (white) o.setTint(colorOf(PLAYER_HIT_FX.flashColor)).setTintMode(TintModes.FILL);
       else o.clearTint();
     }
-    // Worn armor shades the body by its weight (the tube stays its own colour).
-    if (!white && armor) this.sprite.setTint(colorOf(ARMOR_TINTS[armor])).setTintMode(TintModes.MULTIPLY);
+    // Worn armor shades the body below the head by its weight (the tube stays its own colour).
+    if (!white && armor) {
+      const body = colorOf(ARMOR_TINTS[armor]);
+      this.sprite.setTint(UNTINTED, UNTINTED, body, body).setTintMode(TintModes.MULTIPLY);
+    }
     this.tube.setVisible(shown && !rolling);
     if (!rolling) this.placeTube(p, facing, bottom);
     this.placeAttune(facing, shown && !rolling && link.attunePulse > 0);

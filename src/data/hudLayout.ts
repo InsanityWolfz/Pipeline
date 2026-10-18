@@ -96,4 +96,4 @@ export const MENU_COLUMN_GAP = 8;
 export const HUD_ARMOR_LAYOUT = { x: 62, y: 2, count: { x: 18, y: 6 } } as const;
 
 /** Palette tints on the player's body for the worn armor's weight (010). */
-export const ARMOR_TINTS = { light: 'moss-light', heavy: 'stone-pale' } as const;
+export const ARMOR_TINTS = { light: 'moss-light', heavy: 'slate-light' } as const;

@@ -1,3 +1,4 @@
+import type { ArmorPiece } from './armor';
 import type { PlaceFail } from './pieces';
 import type { Facing } from './player';
 
@@ -76,7 +77,7 @@ export interface SimEvents {
   /** Fast travel by pylon or waystone (also recorded as a room change). */
   travels: { from: string; to: string }[];
   /** An unidentified piece was identified at the bench (010). */
-  identifies: { id: number; weight: 'light' | 'heavy'; armor: number; name: string }[];
+  identifies: ArmorPiece[];
   /** The worn piece changed (null: taken off). */
   equips: { id: number | null }[];
   /** A gravity stager turned to a new angle. */

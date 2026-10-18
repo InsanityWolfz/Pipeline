@@ -160,8 +160,8 @@ export class GameScene extends Scene {
     const entry = this.picker?.entryAt(x, y);
     const hopper = this.picker?.hopperId;
     if (!entry || hopper === null || hopper === undefined) return;
-    if (entry.action === 'take') controls.requestWithdraw(hopper);
-    else controls.requestDeposit(hopper, entry.itemId);
+    if (entry.action === 'take') controls.menus.withdraw(hopper);
+    else controls.menus.deposit(hopper, entry.itemId);
     this.picker?.close();
   }
 

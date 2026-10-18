@@ -21,10 +21,10 @@ test('the first Husk drops armor, the bench identifies it, and wearing it soften
     for (let i = 0; i < 60 && g.getState().room !== 'foundry'; i++) g.step(1, { moveX: -1 });
     h.walkTo(2.5 * 32, 12.5 * 32);
     s = g.step(1, { identify: true });
-    const piece = s.armor[0];
+    const piece = s.armorPieces[0];
     if (!piece) return { carried, failed: 'nothing identified' };
     s = g.step(1, { equip: { id: piece.id } });
-    const equipped = s.equipped;
+    const equipped = s.equippedArmor;
     // Back to the hall and into a Husk's reach until it lands a swipe.
     h.walkTo(22.5 * 32, 8.5 * 32);
     for (let i = 0; i < 60 && g.getState().room !== 'ruin-hall'; i++) g.step(1, { moveX: 1 });

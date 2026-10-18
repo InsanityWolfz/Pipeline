@@ -5,6 +5,7 @@ import { AMMO } from '../../src/data/ammo';
 import {
   animFrames,
   digitFrame,
+  HUD_LETTERS,
   BURN_FLAME,
   ENEMY_ANIMS,
   TUBE_ATTUNE,
@@ -157,7 +158,9 @@ describe('assets', () => {
   it('has a HUD font frame for every glyph', () => {
     expect(HUD_DIGITS.glyphs).toContain('+');
     for (const ch of HUD_DIGITS.glyphs) expect(Object.keys(atlas.frames)).toContain(digitFrame(ch));
-    expect(() => digitFrame('x')).toThrow();
+    expect(() => digitFrame('#')).toThrow();
+    for (const ch of HUD_LETTERS.glyphs) expect(Object.keys(atlas.frames)).toContain(digitFrame(ch));
+    expect(digitFrame('a')).toBe(digitFrame('A'));
   });
 });
 
