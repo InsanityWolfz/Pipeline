@@ -44,14 +44,17 @@ test('three stagers into the socket fire a three-bolt spread', async ({ page }) 
     window.__helpers?.walkTo(16 * 32, 12 * 32);
     g.step(1, { selectAmmo: 'ley-bolt' });
     for (let t = 0; t < 2000 && g.getState().link.reservoir.count < 12; t++) g.step(1);
-    // Fire off the carried bolts, then one reservoir shot.
+    // Fire off the carried bolts, then one reservoir shot, out in the hall: the tube is quiet in the foundry (015).
+    window.__helpers?.toHall();
     s = g.getState();
-    for (let t = 0; t < 99 * 20 + 40 && (s.inventory['ley-bolt'] ?? 0) > 0; t++) s = g.step(1, { fire: true, aimX: 16 * 32, aimY: 12 * 32 + 200 });
+    const aimX = s.player.x + 200;
+    const aimY = s.player.y;
+    for (let t = 0; t < 99 * 20 + 40 && (s.inventory['ley-bolt'] ?? 0) > 0; t++) s = g.step(1, { fire: true, aimX, aimY });
     let shot = 0;
     let bolts = 0;
     for (let t = 0; t < 40 && shot === 0; t++) {
       const before = new Set(s.arrows.map((a) => a.id));
-      s = g.step(1, { fire: true, aimX: 16 * 32, aimY: 12 * 32 + 200 });
+      s = g.step(1, { fire: true, aimX, aimY });
       if (s.tube.fromReservoir) {
         shot = s.tube.shotCount;
         bolts = s.arrows.filter((a) => !before.has(a.id) && a.ammoId === 'ley-bolt').length;

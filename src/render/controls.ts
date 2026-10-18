@@ -139,6 +139,11 @@ export class Controls {
     this.aimY = world.y;
   }
 
+  /** The world point under the cursor. */
+  cursorPoint(): { x: number; y: number } {
+    return { x: this.aimX, y: this.aimY };
+  }
+
   /** The world tile under the cursor. */
   cursorTile(): Tile {
     return { tx: Math.floor(this.aimX / TILE_SIZE), ty: Math.floor(this.aimY / TILE_SIZE) };

@@ -13,6 +13,8 @@ export interface Helpers {
   collect(): void;
   /** Shoots the nearest Husk until one dies, then collects its drops. */
   killHusk(): void;
+  /** Walks out of the foundry's door into the ruin hall, where the tube can fire (015). */
+  toHall(): void;
 }
 
 declare global {
@@ -85,6 +87,12 @@ function installHelpers(): void {
         g.step(30);
         collect();
       }
+    },
+    toHall() {
+      const g = game();
+      walkTo(22.5 * 32, 8.5 * 32);
+      for (let t = 0; t < 60 && g.getState().room === 'foundry'; t++) g.step(1, { moveX: 1 });
+      if (g.getState().room === 'foundry') throw new Error('could not leave the foundry');
     },
     killHusk() {
       const g = game();

@@ -13,7 +13,7 @@ import { clearEvents, createEvents, type SimEvents } from '../sim/events';
 import { usableInReach } from '../sim/foundryUse';
 import { cancelHarvest } from '../sim/harvest';
 import type { Command } from '../sim/input';
-import { pieceAt, pieceRect } from '../sim/pieces';
+import { pieceAt } from '../sim/pieces';
 import { canPlace, conduitInFrom, unlockedPieces } from '../sim/placement';
 import { roomById, roomSize, type SimState } from '../sim/state';
 import { stepSim } from '../sim/step';
@@ -28,7 +28,7 @@ import { EnemyView } from './EnemyView';
 import { FoundryView } from './FoundryView';
 import { GroundItemView } from './GroundItemView';
 import { HopperPicker } from './HopperPicker';
-import { HoverReadout, pieceLines } from './HoverReadout';
+import { HoverView } from './HoverView';
 import { HudView } from './HudView';
 import { NodeView } from './NodeView';
 import { PlayerView } from './PlayerView';
@@ -61,7 +61,7 @@ export class GameScene extends Scene {
   private bombView?: BombView;
   private foundryView?: FoundryView;
   private buildView?: BuildView;
-  private readout?: HoverReadout;
+  private hover?: HoverView;
   private picker?: HopperPicker;
   private menu?: CraftMenuView;
   private site?: SiteView;
@@ -100,7 +100,7 @@ export class GameScene extends Scene {
     this.bombView = new BombView(this);
     this.hud = new HudView(this);
     this.buildView = new BuildView(this);
-    this.readout = new HoverReadout(this);
+    this.hover = new HoverView(this);
     this.picker = new HopperPicker(this);
     this.site = new SiteView(this);
     this.siteMenus = new SiteMenus(this);
@@ -190,7 +190,12 @@ export class GameScene extends Scene {
     this.picker?.close();
   }
 
-  get menuOpen(): boolean {
+  /** The mouse-over text on show, for the test hook (015). */
+  hoverText(): { hoverName: string | null; buildTip: string | null } {
+    return { hoverName: this.hover?.shown ?? null, buildTip: this.buildView?.tip.shown ?? null };
+  }
+
+    get menuOpen(): boolean {
     return this.menu?.isOpen ?? false;
   }
 
@@ -288,12 +293,7 @@ export class GameScene extends Scene {
       (...a) => canPlace(sim, ...a),
       (t, f) => ghostShape(controls?.heldLay() ?? null, t, f, (u, g) => conduitInFrom(sim, u.tx, u.ty, g)),
     );
-    const hovered = cursor ? pieceAt(sim.foundry, cursor.tx, cursor.ty) : undefined;
-    const lines = hovered ? pieceLines(hovered, sim.link.reservoir) : [];
-    if (hovered && lines.length > 0) {
-      const r = pieceRect(hovered);
-      const top = this.foundryView?.topOf(hovered.id) ?? r.y;
-      this.readout?.show(lines, r.x, top, this.cameras.main.worldView.y);
-    } else this.readout?.show([], 0, 0);
+    const point = controls?.overWorld() ? controls.cursorPoint() : null;
+    this.hover?.update(sim, shown, point, (id) => this.foundryView?.topOf(id), this.cameras.main.worldView.y);
   }
 }

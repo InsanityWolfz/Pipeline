@@ -54,7 +54,7 @@ const logistics = (kind: LogisticsDef['kind'], name: string, description: string
 });
 
 export const PIECES: Readonly<Record<string, PieceDef>> = {
-  conduit: logistics('conduit', 'Ley conduit', 'Carries one item at a time toward its front. Drag to lay a run; it bends at turns.'),
+  conduit: logistics('conduit', 'Ley conduit', 'Carries one item at a time toward its front. Drag to lay a run. It bends at turns.'),
   sorter: logistics('sorter', 'Sorter', 'Sends one chosen item out its side, the rest out its front. E sets the item, F flips the side.'),
   hopper: logistics('hopper', 'Hopper', 'Holds one kind of item you put in with E, and feeds it out its front.'),
   crate: logistics('crate', 'Crate', 'Collects whatever reaches it from any side. E empties it.'),

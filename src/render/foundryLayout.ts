@@ -173,3 +173,18 @@ export function sorterLook(facing: Facing, mirrored: boolean): { anim: AnimDef; 
   if (facing === 'left') return { anim: SORTER_ANIMS.side, flipX: true, flipY: !mirrored };
   return { anim: SORTER_ANIMS[facing], flipX: mirrored, flipY: false };
 }
+
+/** Breaks `text` into lines of at most `width` glyphs, at spaces. */
+export function wrapText(text: string, width: number): string[] {
+  const lines: string[] = [];
+  let line = '';
+  for (const word of text.split(' ')) {
+    const next = line ? `${line} ${word}` : word;
+    if (next.length > width && line) {
+      lines.push(line);
+      line = word;
+    } else line = next;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
