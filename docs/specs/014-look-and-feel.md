@@ -1,5 +1,5 @@
 # 014: Look and feel
-status: approved
+status: done
 
 Approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "make a spec 14 for a pass on improving the art and sprites and room layouts so they dont feel so bland and blocky. even add a little juice or sounds ... make it feel like a real game"). He reviews it in the morning report.
 

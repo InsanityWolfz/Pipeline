@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-18: 007–015 merged
+**Changed:** Shaun said "Merge all". Specs 007–015 are marked done in their specs and in `docs/backlog.md`, and their technical choices are in `docs/decisions.md`. The stacked PRs #9–#17 are merged top down, each into the branch below it and #9 into main.
+**Next:** Shaun's playtest notes on main, then the next spec. Carried over from 014: the rest of the sprite redraws (walk, enemies, machines, icons, HUD frame), the pause title card, menu hover sounds, squash on pickups, and the HUD covering the hall's west door.
+**Notes:** the sorter sprite, the 014 art and the build-bar descriptions are first drafts for Shaun to revise.
+
 ## 2026-10-18: 015 Fixes after the overnight run (build)
 **Changed:** built 015 on `claude/015-after-overnight` (stacked on 014). Shaun approved the spec and asked me to carry it through on my own.
 - **Sorter:**

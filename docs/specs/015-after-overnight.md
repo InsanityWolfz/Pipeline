@@ -1,5 +1,5 @@
 # 015: Fixes after the overnight run
-status: approved
+status: done
 
 Approved by Shaun in chat (2026-10-18: "approve the spec and then follow through to the end of 015 on your own").
 
