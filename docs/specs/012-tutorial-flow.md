@@ -1,5 +1,5 @@
 # 012: Tutorial flow
-status: approved
+status: done
 
 Approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18). He reviews it in the morning report.
 

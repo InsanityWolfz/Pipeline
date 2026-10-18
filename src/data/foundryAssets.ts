@@ -45,6 +45,7 @@ export const LOGISTICS_ICONS: Readonly<Record<string, string>> = {
   crate: 'emblem-crate',
   'tube-socket': 'emblem-tube-socket',
   'gravity-stager': 'emblem-gravity-stager',
+  sorter: 'emblem-sorter',
 };
 
 /** Conduits flow toward their front; `side` flows right. They lie flat on the floor. */
@@ -53,6 +54,35 @@ export const CONDUIT_ANIMS: Readonly<Record<PieceView, AnimDef>> = {
   up: loop('conduit-up', 2, FLOW_FPS),
   side: loop('conduit-side', 2, FLOW_FPS),
 };
+
+/**
+ * Sorters (015) flow like conduits. `side` flows right and sorts down; `down`
+ * sorts left and `up` sorts right. Render turns or flips them for the other facings
+ * and for a mirrored sorter.
+ */
+export const SORTER_ANIMS: Readonly<Record<PieceView, AnimDef>> = {
+  down: loop('sorter-down', 2, FLOW_FPS),
+  up: loop('sorter-up', 2, FLOW_FPS),
+  side: loop('sorter-side', 2, FLOW_FPS),
+};
+
+/** The sorter's filter icon shows at this scale in its slot, and its sort-side arrow is tinted this palette colour. */
+export const SORTER_LOOK = { slotScale: 0.5, sortArrowTint: 'gold' } as const;
+
+/** Conduit corners (013) by the side items come in from and the side they leave by: `${in}-${out}`. Flat on the floor like the straights. */
+export const CONDUIT_CORNERS = {
+  'up-left': loop('conduit-corner-up-left', 2, FLOW_FPS),
+  'up-right': loop('conduit-corner-up-right', 2, FLOW_FPS),
+  'down-left': loop('conduit-corner-down-left', 2, FLOW_FPS),
+  'down-right': loop('conduit-corner-down-right', 2, FLOW_FPS),
+  'left-up': loop('conduit-corner-left-up', 2, FLOW_FPS),
+  'left-down': loop('conduit-corner-left-down', 2, FLOW_FPS),
+  'right-up': loop('conduit-corner-right-up', 2, FLOW_FPS),
+  'right-down': loop('conduit-corner-right-down', 2, FLOW_FPS),
+} as const satisfies Record<string, AnimDef>;
+
+/** A corner's key: the side items come in from, then the side they leave by. */
+export type CornerKey = keyof typeof CONDUIT_CORNERS;
 
 export const HOPPER_SPRITES: Readonly<Record<PieceView, string>> = {
   down: 'hopper-down',

@@ -67,8 +67,9 @@ export class HoverReadout {
   /**
    * Shows `lines` with the panel's bottom-centre at (x, bottom); no lines hides it.
    * It never rises above `minTop` (the top of the camera's view), so it stays on screen.
+   * Returns the panel's top and bottom, so a name can sit clear of it.
    */
-  show(lines: readonly Line[], x: number, bottom: number, minTop = -Infinity): void {
+  show(lines: readonly Line[], x: number, bottom: number, minTop = -Infinity): { top: number; bottom: number } {
     const L = READOUT_LAYOUT;
     this.back.clear();
     const h = lines.length * L.lineHeight + 2 * L.pad;
@@ -91,5 +92,6 @@ export class HoverReadout {
       text.moveTo(left + L.pad + L.count.x, y + L.count.y);
       text.set(line[1]);
     }
+    return { top, bottom: top + h };
   }
 }

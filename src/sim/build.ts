@@ -15,7 +15,10 @@ export function maskCommand(state: SimState, cmd: Command): Command {
 /** Toggles build mode, then places, picks up and turns stagers. All but the toggle only work in the foundry. */
 export function stepBuild(state: SimState, cmd: Command): void {
   if (cmd.toggleBuild) state.building = !state.building && state.roomId === FOUNDRY_ROOM;
-  if (cmd.place) place(state, cmd.place.pieceId, cmd.place.tx, cmd.place.ty, cmd.place.facing);
+  if (cmd.place) {
+    const { pieceId, tx, ty, facing, inFrom, mirrored } = cmd.place;
+    place(state, pieceId, tx, ty, facing, { ...(inFrom ? { inFrom } : {}), ...(mirrored ? { mirrored } : {}) });
+  }
   if (cmd.pickUp) pickUp(state, cmd.pickUp.tx, cmd.pickUp.ty);
   if (cmd.setAngle) cycleAngle(state, cmd.setAngle.id);
 }

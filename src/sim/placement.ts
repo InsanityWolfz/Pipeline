@@ -2,10 +2,11 @@ import { FEET_BOX } from '../data/player';
 import { BUILD_BAR, isSolidPiece, machineDef, pieceDef } from '../data/pieces';
 import { recipeDef } from '../data/recipes';
 import { FOUNDRY_ROOM, TILE } from '../data/rooms';
-import { fixtureAt } from './fixtures';
 import { overlapsRect } from './collision';
 import { count, type Inventory } from './inventory';
-import { createPiece, footprint, pieceAt, pieceRect, type PieceState, type PlaceFail } from './pieces';
+import { opposite } from './direction';
+import { fixtureAt, fixtureDef, portFront } from './fixtures';
+import { createPiece, footprint, frontTile, pieceAt, pieceRect, sameTile, sideTile, sortSide, type PieceShape, type PieceState, type PlaceFail } from './pieces';
 import type { Facing } from './player';
 import { roomById, type SimState } from './state';
 
@@ -42,15 +43,42 @@ export function canPlace(state: SimState, pieceId: string, tx: number, ty: numbe
   return null;
 }
 
+/**
+ * The side a conduit placed here takes items from (013). An explicit `inFrom` is
+ * kept if it's a side or the back; anything else makes it straight. Without one,
+ * it joins as a corner when nothing feeds its back and exactly one neighbour on
+ * its left or right faces into the tile (a piece's front, or the supply port's).
+ * Neighbours are never changed.
+ */
+export function conduitInFrom(state: SimState, tx: number, ty: number, facing: Facing, inFrom?: Facing): Facing {
+  const back = opposite(facing);
+  if (inFrom !== undefined) return inFrom === facing ? back : inFrom;
+  const here = { tx, ty };
+  const feeds = (side: Facing): boolean => {
+    const t = sideTile(here, side);
+    const piece = pieceAt(state.foundry, t.tx, t.ty);
+    if (piece?.kind === 'sorter') return sameTile(frontTile(piece), here) || sameTile(sideTile(piece, sortSide(piece)), here);
+    if (piece) return piece.kind !== 'crate' && piece.kind !== 'socket' && sameTile(frontTile(piece), here);
+    const port = fixtureAt(state.fixtures, t.tx, t.ty);
+    return port !== undefined && fixtureDef(port.id).kind === 'port' && sameTile(portFront(port), here);
+  };
+  if (feeds(back)) return back;
+  const sides = (['up', 'right', 'down', 'left'] as const).filter((s) => s !== facing && s !== back && feeds(s));
+  return sides.length === 1 && sides[0] ? sides[0] : back;
+}
+
 /** Places a piece and returns it, or records why it can't go there and returns null. */
-export function place(state: SimState, pieceId: string, tx: number, ty: number, facing: Facing): PieceState | null {
+export function place(state: SimState, pieceId: string, tx: number, ty: number, facing: Facing, shape: PieceShape = {}): PieceState | null {
   const reason = canPlace(state, pieceId, tx, ty, facing);
   if (reason) {
     state.events.placeFails.push({ pieceId, tx, ty, reason });
     return null;
   }
   for (const [itemId, n] of Object.entries(pieceDef(pieceId).cost ?? {})) state.inventory[itemId] = count(state.inventory, itemId) - n;
-  const piece = createPiece(state.foundry.nextPieceId++, pieceId, tx, ty, facing);
+  const kind = pieceDef(pieceId).kind;
+  const made: PieceShape =
+    kind === 'conduit' ? { inFrom: conduitInFrom(state, tx, ty, facing, shape.inFrom) } : kind === 'sorter' ? { mirrored: shape.mirrored ?? false } : {};
+  const piece = createPiece(state.foundry.nextPieceId++, pieceId, tx, ty, facing, made);
   state.foundry.pieces.push(piece);
   state.events.places.push({ id: piece.id, pieceId, tx, ty, facing });
   return piece;
@@ -63,7 +91,7 @@ export function pieceContents(p: PieceState): Inventory {
     if (n > 0) items[itemId] = count(items, itemId) + n;
   };
   for (const [itemId, n] of Object.entries(pieceDef(p.pieceId).cost ?? {})) add(itemId, n);
-  if ((p.kind === 'conduit' || p.kind === 'stager') && p.item) add(p.item, 1);
+  if ((p.kind === 'conduit' || p.kind === 'stager' || p.kind === 'sorter') && p.item) add(p.item, 1);
   if (p.kind === 'hopper' && p.item) add(p.item, p.count);
   if (p.kind === 'crate') for (const [itemId, n] of Object.entries(p.contents)) add(itemId, n);
   if (p.kind === 'machine') {

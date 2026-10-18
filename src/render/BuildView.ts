@@ -1,8 +1,7 @@
 import type { GameObjects, Scene } from 'phaser';
 import { animFrames, ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
-import { TILE_SIZE } from '../data/config';
+import { TILE_SIZE, VIEW_WIDTH } from '../data/config';
 import {
-  CONDUIT_ANIMS,
   CRATE_SPRITE,
   SOCKET_SPRITES,
   STAGER_SPRITE,
@@ -17,17 +16,18 @@ import { BUILD_BAR, pieceDef } from '../data/pieces';
 import { pieceRect, type PlaceFail, type Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { colorOf } from './color';
-import { buildBarCells, inRect, pieceIcon } from './foundryLayout';
+import { buildBarCells, conduitLook, inRect, pieceIcon, sorterLook } from './foundryLayout';
+import { BuildTip } from './BuildTip';
 import { MAX_ARROWS, placeArrows, viewOf } from './FoundryView';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
 /** The resting frame of a piece's body as placed with `facing`. */
-function bodyFrame(pieceId: string, facing: Facing): string {
+function bodyFrame(pieceId: string, facing: Facing, inFrom: Facing): string {
   const def = pieceDef(pieceId);
   const view = viewOf(facing);
   if (def.kind === 'machine') return MACHINE_HOUSINGS[def.footprint][view].idle;
-  if (def.kind === 'conduit') return animFrames(CONDUIT_ANIMS[view])[0] ?? '';
+  if (def.kind === 'conduit') return animFrames(conduitLook(facing, inFrom).anim)[0] ?? '';
   if (def.kind === 'socket') return SOCKET_SPRITES.idle;
   if (def.kind === 'stager') return animFrames(STAGER_SPRITE)[STAGER_ANGLES.indexOf(STAGER_START_ANGLE)] ?? '';
   return def.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE;
@@ -45,6 +45,7 @@ export class BuildView {
   private readonly ghostArrows: GameObjects.Image[];
   private unlocked: readonly string[] = [];
   private visible = false;
+  readonly tip: BuildTip;
   selected = FIRST_PIECE;
 
   constructor(scene: Scene) {
@@ -54,10 +55,11 @@ export class BuildView {
       .setOrigin(0)
       .setScrollFactor(0)
       .setDepth(DEPTHS.hud + 2);
-    this.ghost = scene.add.image(0, 0, ATLAS_KEY, bodyFrame(FIRST_PIECE, 'right')).setAlpha(GHOST.alpha);
+    this.ghost = scene.add.image(0, 0, ATLAS_KEY, bodyFrame(FIRST_PIECE, 'right', 'left')).setAlpha(GHOST.alpha);
     this.ghostIcon = scene.add.image(0, 0, ATLAS_KEY, pieceIcon(FIRST_PIECE)).setAlpha(GHOST.alpha);
     this.ghostArrows = Array.from({ length: MAX_ARROWS }, () => scene.add.image(0, 0, ATLAS_KEY, FACING_ARROWS.out.down));
     for (const o of [this.ghost, this.ghostIcon, ...this.ghostArrows]) o.setDepth(DEPTHS.worldUi - 1);
+    this.tip = new BuildTip(scene);
     this.setVisible(false);
   }
 
@@ -78,21 +80,28 @@ export class BuildView {
     unlocked: readonly string[],
     cursor: Tile | null,
     facing: Facing,
+    mirrored: boolean,
     canPlace: (pieceId: string, tx: number, ty: number, facing: Facing) => PlaceFail | null,
+    shapeAt: (tile: Tile, facing: Facing) => { facing: Facing; inFrom: Facing },
   ): void {
     if (unlocked.join() !== this.unlocked.join()) this.rebuild(unlocked);
     if (!unlocked.includes(this.selected)) this.selected = unlocked[0] ?? FIRST_PIECE;
     this.setVisible(building);
+    const pointer = this.scene.input.activePointer;
+    const hovered = building ? buildBarCells(unlocked).find((c) => inRect(c, pointer.x, pointer.y)) : undefined;
+    this.tip.show(hovered?.pieceId ?? null, (hovered?.x ?? 0) + (hovered?.w ?? 0) / 2, hovered?.y ?? 0, VIEW_WIDTH);
     if (!building) return;
     const cell = buildBarCells(unlocked).find((c) => c.pieceId === this.selected);
     if (cell) this.highlight.setPosition(cell.x, cell.y);
-    this.drawGhost(cursor, facing, canPlace);
+    this.drawGhost(cursor, facing, mirrored, canPlace, shapeAt);
   }
 
   private drawGhost(
     cursor: Tile | null,
-    facing: Facing,
+    ghostFacing: Facing,
+    mirrored: boolean,
     canPlace: (pieceId: string, tx: number, ty: number, facing: Facing) => PlaceFail | null,
+    shapeAt: (tile: Tile, facing: Facing) => { facing: Facing; inFrom: Facing },
   ): void {
     const show = cursor !== null;
     this.ghost.setVisible(show);
@@ -103,14 +112,24 @@ export class BuildView {
     }
     const pieceId = this.selected;
     const def = pieceDef(pieceId);
+    // A conduit's ghost shows the shape it would take: a corner where it would join a side feeder,
+    // or the held tile of a drag as it would be laid (013).
+    const { facing, inFrom } = def.kind === 'conduit' ? shapeAt(cursor, ghostFacing) : { facing: ghostFacing, inFrom: ghostFacing };
     const r = pieceRect({ pieceId, tx: cursor.tx, ty: cursor.ty, facing });
     const bottom = r.y + r.h / 2;
-    this.ghost.setFrame(bodyFrame(pieceId, facing)).setFlipX(facing === 'left');
-    if (def.kind === 'conduit') this.ghost.setOrigin(0).setPosition(r.x - TILE_SIZE / 2, r.y - TILE_SIZE / 2);
+    if (def.kind === 'sorter') {
+      // A sorter's ghost shows which side its item will leave by; F flips it (015).
+      const look = sorterLook(facing, mirrored);
+      this.ghost.setFrame(animFrames(look.anim)[0] ?? '').setFlip(look.flipX, look.flipY);
+    } else {
+      const flip = def.kind === 'conduit' ? conduitLook(facing, inFrom).flip : facing === 'left';
+      this.ghost.setFrame(bodyFrame(pieceId, facing, inFrom)).setFlip(flip, false);
+    }
+    if (def.kind === 'conduit' || def.kind === 'sorter') this.ghost.setOrigin(0).setPosition(r.x - TILE_SIZE / 2, r.y - TILE_SIZE / 2);
     else this.ghost.setOrigin(0.5, 1).setPosition(r.x, bottom);
     const tint = colorOf(canPlace(pieceId, cursor.tx, cursor.ty, facing) ? GHOST.badTint : GHOST.okTint);
     this.ghost.setTint(tint);
-    placeArrows(this.ghostArrows, { pieceId, tx: cursor.tx, ty: cursor.ty, facing });
+    placeArrows(this.ghostArrows, { pieceId, tx: cursor.tx, ty: cursor.ty, facing, mirrored, ...(def.kind === 'conduit' ? { inFrom } : {}) });
     const machine = def.kind === 'machine';
     this.ghostIcon.setVisible(machine).setTint(tint);
     if (machine) {

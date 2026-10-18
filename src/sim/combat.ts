@@ -1,11 +1,14 @@
 import { straightAmmo } from '../data/ammo';
 import { enemyDef } from '../data/enemies';
 import type { ArrowState } from './arrows';
-import { damageEnemy, inHurtbox, type EnemyState } from './enemies';
+import { damageEnemy, inHurtbox, type EnemyState, type HitStyle } from './enemies';
 import { spawnDrops } from './drops';
 import type { SimState } from './state';
 
 // Arrows against enemies, and what happens when an enemy dies.
+
+/** An arrow knocks and flashes; its hit records the ammo's damage type. */
+const arrowHit = (arrow: ArrowState): HitStyle => ({ knock: true, flash: true, damageType: straightAmmo(arrow.ammoId).damageType });
 
 /**
  * An arrow-hit test for stepArrows: damages the live enemy under the arrow that it
@@ -19,7 +22,7 @@ export function arrowHits(state: SimState): (arrow: ArrowState) => boolean {
         if (en.roomId !== arrow.roomId || en.health <= 0 || arrow.hitIds.includes(en.id)) continue;
         if (!inHurtbox(en, arrow.x, arrow.y)) continue;
         arrow.hitIds.push(en.id);
-        damageEnemy(state, en, arrow.damage, arrow.dx, arrow.dy);
+        damageEnemy(state, en, arrow.damage, arrow.dx, arrow.dy, arrowHit(arrow));
       }
       return false;
     }
@@ -35,7 +38,7 @@ export function arrowHits(state: SimState): (arrow: ArrowState) => boolean {
     }
     if (!e) return false;
     arrow.hitIds.push(e.id);
-    damageEnemy(state, e, arrow.damage, arrow.dx, arrow.dy);
+    damageEnemy(state, e, arrow.damage, arrow.dx, arrow.dy, arrowHit(arrow));
     return true;
   };
 }
