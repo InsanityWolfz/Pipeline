@@ -9,7 +9,7 @@ Newest entry first.
 
 ## 2026-10-18: 006 Foundry building spec
 **Changed:** interviewed Shaun and wrote `docs/specs/006-foundry-building.md` (status: draft). Decisions: a separate foundry room through a doorway (fade), conduits carry items, input hoppers (one item type each, picked from held raws) and output crates (emptied with E), all nine machines for the three chains, free placement, unlock by hand-crafting once, assembler and packer 2×2, B build mode with R rotate and click place/pick up anywhere on the foundry floor, wrong items stall conduits, the foundry ticks while the player is away and survives a KO, working/starved/blocked markers with hover buffers.
-**Next:** Shaun reviews the spec's three open questions and approves it, then `/plan`.
+**Next:** Shaun answered the open questions (direct machine hand-off, 3×1 combiners, raw-only hoppers, walkable conduits); one remains (hopper straight into a machine). Then approval and `/plan`.
 **Notes:** tuning values are starting points.
 
 ## 2026-10-18: 005 Hand crafting
