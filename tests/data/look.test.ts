@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { FLOOR_VARIANTS, WALL_SPRITES } from '../../src/data/roomArt';
 import { animFrames } from '../../src/data/assets';
 import { ENEMIES } from '../../src/data/enemies';
+import { LOGISTICS_ICONS, SORTER_ANIMS } from '../../src/data/foundryAssets';
 import { AMBIENT, DAMAGE_NUMBERS, GLOWS, PARTICLES, ROOM_MOOD } from '../../src/data/juice';
 import { PALETTE } from '../../src/data/palette';
 import { FIRE_SOUNDS, ROOM_AMBIENCE, SOUNDS, WINDUP_SOUNDS } from '../../src/data/sounds';
@@ -97,5 +98,12 @@ describe('feel and sound references', () => {
   it('only play sounds that have recipes', () => {
     const keys = new Set<string>(Object.values(SOUNDS));
     for (const key of [...Object.values(FIRE_SOUNDS), ...Object.values(WINDUP_SOUNDS), ...Object.values(ROOM_AMBIENCE)]) expect(keys.has(key), key).toBe(true);
+  });
+});
+
+describe('the sorter (015)', () => {
+  it('has every frame in the atlas', () => {
+    for (const anim of Object.values(SORTER_ANIMS)) for (const frame of animFrames(anim)) expect(frames).toContain(frame);
+    expect(frames).toContain(LOGISTICS_ICONS.sorter);
   });
 });

@@ -85,6 +85,9 @@ export const TUBE_GRIP: Readonly<Record<keyof typeof TUBE_SPRITES, { x: number; 
 export const HUD_DIGITS = { key: 'hud-digits', glyphs: '0123456789/+-', advance: 4 } as const;
 
 /** The HUD letter font (010): uppercase letters, space and a little punctuation, the same 3x5 size and advance as the digits. */
+/** Height of the HUD font's glyphs (digits and letters), px. */
+export const GLYPH_HEIGHT = 5;
+
 export const HUD_LETTERS = { key: 'hud-letters', glyphs: "ABCDEFGHIJKLMNOPQRSTUVWXYZ .,'!?():—" } as const;
 
 /** Atlas frame for one HUD font character: a digit (or / + -), else a letter (lowercase draws as uppercase). */
@@ -253,6 +256,8 @@ export const HUD_MATERIALS_LAYOUT = {
   rowStep: 16,
   /** Where the count starts, relative to the row's icon. */
   count: { x: 18, y: 6 },
+  /** How wide a row counts as HUD for clicks (icon and a two-digit count), px (015). */
+  rowWidth: 30,
 } as const;
 
 /** Enemy effects drawn in the world. Colours are palette ids. */
@@ -311,6 +316,10 @@ export const DEPTHS = {
   flameNudge: 0.01,
   /** Health bars, sparkles and popups over the world. */
   worldUi: 100_000,
+  /** The mouse-over name (015), over a piece's readout. */
+  hoverName: 100_012,
+  /** The build bar's hover panel (015), over the bar. */
+  buildTip: 1_000_005,
   /** Tutorial key prompts, over other world UI. */
   prompt: 100_005,
   /** Build mode's spread fan over the tube socket, just under the build arrows. */

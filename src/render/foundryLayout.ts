@@ -1,12 +1,12 @@
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { BUILD_BAR_LAYOUT, MENU_COLUMN_GAP, MENU_MAX_ROWS, PICKER_LAYOUT } from '../data/hudLayout';
 import type { AnimDef } from '../data/assets';
-import { CONDUIT_ANIMS, CONDUIT_CORNERS, LOGISTICS_ICONS, type CornerKey } from '../data/foundryAssets';
+import { CONDUIT_ANIMS, CONDUIT_CORNERS, LOGISTICS_ICONS, SORTER_ANIMS, type CornerKey } from '../data/foundryAssets';
 import { itemDef, ITEMS } from '../data/items';
 import { pieceDef } from '../data/pieces';
 import { recipeDef } from '../data/recipes';
 import { facingVector, opposite } from '../sim/direction';
-import { footprint, type Tile } from '../sim/pieces';
+import { footprint, sortSideOf, type Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 
 // Where the build bar's cells and the hopper picker's rows sit on screen. No
@@ -100,7 +100,8 @@ const SIDES: readonly Facing[] = ['up', 'right', 'down', 'left'];
 
 /** A facing arrow: on tile (tx, ty), at its `edge`, pointing `points`. */
 export interface ArrowSpot extends Tile {
-  kind: 'in' | 'out';
+  /** `sort` is a sorter's side exit (015), drawn as an output arrow in gold. */
+  kind: 'in' | 'out' | 'sort';
   edge: Facing;
   points: Facing;
 }
@@ -111,8 +112,18 @@ export interface ArrowSpot extends Tile {
  * input arrow pointing in: machines and stagers on all but their front side, crates and tube
  * sockets on every side. Conduits show their flow instead, so they get none.
  */
-export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing }): ArrowSpot[] {
+export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing; mirrored?: boolean }): ArrowSpot[] {
   const { kind } = pieceDef(p.pieceId);
+  // A sorter takes from its back and hands out of its front and, for its item, its sort side.
+  if (kind === 'sorter') {
+    const back = opposite(p.facing);
+    const side = sortSideOf(p.facing, p.mirrored ?? false);
+    return [
+      { kind: 'in', tx: p.tx, ty: p.ty, edge: back, points: p.facing },
+      { kind: 'out', tx: p.tx, ty: p.ty, edge: p.facing, points: p.facing },
+      { kind: 'sort', tx: p.tx, ty: p.ty, edge: side, points: side },
+    ];
+  }
   // A conduit shows its flow; since 013 it also marks the one side it takes items from.
   if (kind === 'conduit') {
     const edge = p.inFrom ?? opposite(p.facing);
@@ -146,3 +157,29 @@ export function conduitLook(facing: Facing, inFrom: Facing): { anim: AnimDef; fl
 }
 
 const isCorner = (key: string): key is CornerKey => key in CONDUIT_CORNERS;
+
+/**
+ * A sorter's animation and flips (015). The side sprite flows right and sorts
+ * down, so facing left turns it round; the down and up sprites flip across their
+ * flow to sort the other way.
+ */
+export function sorterLook(facing: Facing, mirrored: boolean): { anim: AnimDef; flipX: boolean; flipY: boolean } {
+  if (facing === 'right') return { anim: SORTER_ANIMS.side, flipX: false, flipY: mirrored };
+  if (facing === 'left') return { anim: SORTER_ANIMS.side, flipX: true, flipY: !mirrored };
+  return { anim: SORTER_ANIMS[facing], flipX: mirrored, flipY: false };
+}
+
+/** Breaks `text` into lines of at most `width` glyphs, at spaces. */
+export function wrapText(text: string, width: number): string[] {
+  const lines: string[] = [];
+  let line = '';
+  for (const word of text.split(' ')) {
+    const next = line ? `${line} ${word}` : word;
+    if (next.length > width && line) {
+      lines.push(line);
+      line = word;
+    } else line = next;
+  }
+  if (line) lines.push(line);
+  return lines;
+}

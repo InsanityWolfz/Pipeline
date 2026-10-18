@@ -1,10 +1,11 @@
 import type { Cameras, GameObjects, Scene } from 'phaser';
 import { ATLAS_KEY, DEPTHS, digitFrame, HUD_DIGITS } from '../data/assets';
-import { CAMERA_LEAD, DAMAGE_NUMBERS, PARTICLES, SHAKE, type ParticleBurst } from '../data/juice';
+import { DAMAGE_NUMBERS, PARTICLES, SHAKE, type ParticleBurst } from '../data/juice';
 import { colorOf } from './color';
 import { Particles } from './Particles';
 
-// Feel (014): camera shake and lead, damage numbers and particles.
+// Feel (014): camera shake, damage numbers and particles. The camera lead
+// toward the aim was taken out in 015 at Shaun's request.
 // Render-only: the sim never waits on any of it.
 
 export type ShakeSize = keyof typeof SHAKE;
@@ -16,7 +17,6 @@ export class JuiceView {
   private readonly camera: Cameras.Scene2D.Camera;
   readonly particles: Particles;
   private readonly reducedMotion: boolean;
-  private lead = { x: 0, y: 0 };
   /** The shake running now and when it ends (scene ms), so a smaller one never cuts it off. */
   private shaking: { size: ShakeSize; until: number } | null = null;
   /** Recent damage numbers, so ones landing together stack instead of overlapping. */
@@ -75,32 +75,6 @@ export class JuiceView {
       duration: (n.lifeMs * 2) / 3,
       onComplete: () => box.destroy(),
     });
-  }
-
-  /** Eases the camera toward `aim` (a world point), or back to centre with none. */
-  leadToward(player: { x: number; y: number }, aim: { x: number; y: number } | null): void {
-    let tx = 0;
-    let ty = 0;
-    if (aim) {
-      const dx = aim.x - player.x;
-      const dy = aim.y - player.y;
-      const len = Math.hypot(dx, dy);
-      if (len > 0) {
-        const reach = Math.min(1, len / (CAMERA_LEAD.px * CAMERA_LEAD.fullAt));
-        tx = (dx / len) * CAMERA_LEAD.px * reach;
-        ty = (dy / len) * CAMERA_LEAD.px * reach;
-      }
-    }
-    this.lead.x += (tx - this.lead.x) * CAMERA_LEAD.ease;
-    this.lead.y += (ty - this.lead.y) * CAMERA_LEAD.ease;
-    // A follow offset pulls the target the other way, so it's negated.
-    this.camera.setFollowOffset(-Math.round(this.lead.x), -Math.round(this.lead.y));
-  }
-
-  /** Snaps the lead back to centre (build mode, room swaps). */
-  resetLead(): void {
-    this.lead = { x: 0, y: 0 };
-    this.camera.setFollowOffset(0, 0);
   }
 
   update(deltaMs: number): void {

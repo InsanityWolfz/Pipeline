@@ -17,6 +17,11 @@ export class TutorialUi {
     this.prompt = new PromptView(scene);
   }
 
+  /** True over the objective band, so a press there never fires (015). */
+  overUi(x: number, y: number): boolean {
+    return this.objective.overUi(x, y);
+  }
+
   update(sim: SimState, shown: string): void {
     this.world.update(sim, shown);
     this.objective.update(sim);

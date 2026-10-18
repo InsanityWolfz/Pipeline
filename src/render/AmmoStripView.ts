@@ -46,7 +46,11 @@ export class AmmoStripView {
     this.highlight = fixed(scene.add.image(this.left, top, ATLAS_KEY, SPRITES.hudAmmoSelect).setOrigin(0));
     this.highlight.setDepth(DEPTHS.hud + 1);
     this.parts.push(this.highlight);
+    this.box = { x: this.left, y: top, w: (SLOT_AMMOS.length - 1) * L.cellStep + frame.width, h: frame.height };
   }
+
+  /** The strip's screen rect, so clicks on it never fire (015). */
+  readonly box: { x: number; y: number; w: number; h: number };
 
   setVisible(visible: boolean): void {
     for (const p of this.parts) p.setVisible(visible);

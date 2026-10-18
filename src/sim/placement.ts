@@ -6,7 +6,7 @@ import { overlapsRect } from './collision';
 import { count, type Inventory } from './inventory';
 import { opposite } from './direction';
 import { fixtureAt, fixtureDef, portFront } from './fixtures';
-import { createPiece, footprint, frontTile, pieceAt, pieceRect, sameTile, sideTile, type PieceState, type PlaceFail } from './pieces';
+import { createPiece, footprint, frontTile, pieceAt, pieceRect, sameTile, sideTile, sortSide, type PieceShape, type PieceState, type PlaceFail } from './pieces';
 import type { Facing } from './player';
 import { roomById, type SimState } from './state';
 
@@ -57,6 +57,7 @@ export function conduitInFrom(state: SimState, tx: number, ty: number, facing: F
   const feeds = (side: Facing): boolean => {
     const t = sideTile(here, side);
     const piece = pieceAt(state.foundry, t.tx, t.ty);
+    if (piece?.kind === 'sorter') return sameTile(frontTile(piece), here) || sameTile(sideTile(piece, sortSide(piece)), here);
     if (piece) return piece.kind !== 'crate' && piece.kind !== 'socket' && sameTile(frontTile(piece), here);
     const port = fixtureAt(state.fixtures, t.tx, t.ty);
     return port !== undefined && fixtureDef(port.id).kind === 'port' && sameTile(portFront(port), here);
@@ -67,15 +68,17 @@ export function conduitInFrom(state: SimState, tx: number, ty: number, facing: F
 }
 
 /** Places a piece and returns it, or records why it can't go there and returns null. */
-export function place(state: SimState, pieceId: string, tx: number, ty: number, facing: Facing, inFrom?: Facing): PieceState | null {
+export function place(state: SimState, pieceId: string, tx: number, ty: number, facing: Facing, shape: PieceShape = {}): PieceState | null {
   const reason = canPlace(state, pieceId, tx, ty, facing);
   if (reason) {
     state.events.placeFails.push({ pieceId, tx, ty, reason });
     return null;
   }
   for (const [itemId, n] of Object.entries(pieceDef(pieceId).cost ?? {})) state.inventory[itemId] = count(state.inventory, itemId) - n;
-  const shape = pieceDef(pieceId).kind === 'conduit' ? conduitInFrom(state, tx, ty, facing, inFrom) : undefined;
-  const piece = createPiece(state.foundry.nextPieceId++, pieceId, tx, ty, facing, shape);
+  const kind = pieceDef(pieceId).kind;
+  const made: PieceShape =
+    kind === 'conduit' ? { inFrom: conduitInFrom(state, tx, ty, facing, shape.inFrom) } : kind === 'sorter' ? { mirrored: shape.mirrored ?? false } : {};
+  const piece = createPiece(state.foundry.nextPieceId++, pieceId, tx, ty, facing, made);
   state.foundry.pieces.push(piece);
   state.events.places.push({ id: piece.id, pieceId, tx, ty, facing });
   return piece;
@@ -88,7 +91,7 @@ export function pieceContents(p: PieceState): Inventory {
     if (n > 0) items[itemId] = count(items, itemId) + n;
   };
   for (const [itemId, n] of Object.entries(pieceDef(p.pieceId).cost ?? {})) add(itemId, n);
-  if ((p.kind === 'conduit' || p.kind === 'stager') && p.item) add(p.item, 1);
+  if ((p.kind === 'conduit' || p.kind === 'stager' || p.kind === 'sorter') && p.item) add(p.item, 1);
   if (p.kind === 'hopper' && p.item) add(p.item, p.count);
   if (p.kind === 'crate') for (const [itemId, n] of Object.entries(p.contents)) add(itemId, n);
   if (p.kind === 'machine') {

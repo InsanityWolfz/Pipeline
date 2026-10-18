@@ -1,7 +1,7 @@
 import type { Scene } from 'phaser';
 import { TILE_SIZE } from '../data/config';
 import { enemyDef } from '../data/enemies';
-import { CAMERA_LEAD, DUST, GLOWS, HIT_STOP_MS } from '../data/juice';
+import { DUST, GLOWS, HIT_STOP_MS } from '../data/juice';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { FIRE_SOUNDS, SOUND_LEVELS, SOUNDS, WINDUP_SOUNDS } from '../data/sounds';
 import { isClaimed } from '../sim/claims';
@@ -31,7 +31,6 @@ export class FeelView {
   private rolling = false;
   private dryFire = false;
   private dustMs = 0;
-  private sinceFireMs = Infinity;
 
   static preload(scene: Scene): void {
     SoundView.preload(scene);
@@ -46,15 +45,11 @@ export class FeelView {
     this.ambient = new AmbientView(scene);
   }
 
-  update(sim: SimState, events: SimEvents, shown: string, deltaMs: number, aim: { x: number; y: number } | null): void {
+  update(sim: SimState, events: SimEvents, shown: string, deltaMs: number): void {
     if (shown !== this.roomId) this.enterRoom(shown);
     const here = shown === sim.roomId;
     if (here) this.play(sim, events);
     this.watch(sim, shown, deltaMs);
-    this.sinceFireMs = sim.tube.firing ? 0 : this.sinceFireMs + deltaMs;
-    if (sim.building || this.sinceFireMs > CAMERA_LEAD.holdMs) this.juice.leadToward(sim.player, null);
-    else this.juice.leadToward(sim.player, aim);
-    if (sim.building) this.juice.resetLead();
     this.juice.update(deltaMs);
     this.ambient.update(deltaMs, this.movingGlows(sim, shown));
     this.sound.endFrame();
@@ -66,7 +61,6 @@ export class FeelView {
     const fixed: GlowSpot[] = room.crystal ? [{ ...tileCentre(room.crystal.tx, room.crystal.ty), ...GLOWS.crystal }] : [];
     this.ambient.show(room, fixed);
     this.juice.particles.clear();
-    this.juice.resetLead();
     this.sound.ambience(shown);
     this.modes.clear();
   }
