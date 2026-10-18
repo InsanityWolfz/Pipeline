@@ -29,8 +29,11 @@ export class HoverReadout {
     this.show(null, 0, 0);
   }
 
-  /** Shows the readout for `m` with its bottom-centre at (x, bottom), or hides it. */
-  show(m: MachineState | null, x: number, bottom: number): void {
+  /**
+   * Shows the readout for `m` with its bottom-centre at (x, bottom), or hides it.
+   * It never rises above `minTop` (the top of the camera's view), so it stays on screen.
+   */
+  show(m: MachineState | null, x: number, bottom: number, minTop = -Infinity): void {
     const L = READOUT_LAYOUT;
     this.back.clear();
     const recipe = m ? recipeDef(machineDef(m.pieceId).recipeId) : null;
@@ -39,7 +42,7 @@ export class HoverReadout {
       : [];
     const h = lines.length * L.lineHeight + 2 * L.pad;
     const left = Math.round(x - L.width / 2);
-    const top = Math.round(bottom - L.gap - h);
+    const top = Math.round(Math.max(bottom - L.gap - h, minTop + L.pad));
     if (lines.length > 0) {
       this.back.fillStyle(colorOf(L.border)).fillRect(left - 1, top - 1, L.width + 2, h + 2);
       this.back.fillStyle(colorOf(L.back)).fillRect(left, top, L.width, h);

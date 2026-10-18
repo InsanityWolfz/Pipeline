@@ -26,6 +26,8 @@ export interface BuildInput {
   pieceId: () => string;
   /** True over the build bar or the hopper picker, where clicks don't reach the world. */
   overUi: (x: number, y: number) => boolean;
+  /** Handles a left click on that UI at once, so a world click in the same frame sees its result. */
+  clickUi: (x: number, y: number) => void;
 }
 
 type BuildAction = Pick<Command, 'place' | 'pickUp'>;
@@ -50,11 +52,15 @@ export class Controls {
   private closePending = false;
   private buildPending = false;
   private wheelPending = 0;
-  private uiClick: { x: number; y: number } | null = null;
   private depositPending: Command['deposit'] = null;
   private readonly queue: BuildAction[] = [];
   private dragTile: Tile | null = null;
-  private build: BuildInput = { building: false, pieceId: () => 'conduit', overUi: () => false };
+  private build: BuildInput = {
+    building: false,
+    pieceId: () => 'conduit',
+    overUi: () => false,
+    clickUi: () => undefined,
+  };
   private aimX = 0;
   private aimY = 0;
   /** The ghost's facing, sent with every place. */
@@ -128,7 +134,7 @@ export class Controls {
 
   private pointerDown(p: Input.Pointer): void {
     if (this.build.overUi(p.x, p.y)) {
-      if (p.leftButtonDown()) this.uiClick = { x: p.x, y: p.y };
+      if (p.leftButtonDown()) this.build.clickUi(p.x, p.y);
       return;
     }
     if (!this.build.building) return;
@@ -179,13 +185,6 @@ export class Controls {
     const n = this.wheelPending;
     this.wheelPending = 0;
     return n;
-  }
-
-  /** A left click on the screen's UI since the last call. */
-  takeUiClick(): { x: number; y: number } | null {
-    const click = this.uiClick;
-    this.uiClick = null;
-    return click;
   }
 
   /** Toggles build mode on the next tick, as B does (Esc uses this to leave it). */

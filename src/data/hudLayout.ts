@@ -59,6 +59,10 @@ export const GHOST = { okTint: 'ley-cyan', badTint: 'ember', alpha: 0.6 } as con
 
 /** The hopper picker: a column of held items in craft rows, centred on screen. Px on screen, then per row. */
 export const PICKER_LAYOUT = {
+  /** The panel behind the rows: padding round them and palette ids. */
+  pad: 4,
+  back: 'outline',
+  border: 'ley-deep',
   rowWidth: 184,
   rowHeight: 20,
   rowGap: 1,

@@ -91,7 +91,7 @@ export class FoundryView {
     } else {
       d.body.setFrame(p.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE);
       d.icon.setPosition(r.x, bottom - FOUNDRY_LAYOUT.contentsRise).setDepth(bottom + DEPTHS.tubeNudge);
-      d.count = new GlyphLine(this.scene, r.x, bottom - FOUNDRY_LAYOUT.contentsRise + 6, bottom + 2 * DEPTHS.tubeNudge, true);
+      d.count = new GlyphLine(this.scene, r.x, bottom, bottom + 2 * DEPTHS.tubeNudge, true);
     }
     this.drawn.set(p.id, d);
     return d;
@@ -107,7 +107,8 @@ export class FoundryView {
       d.icon.setVisible(first !== undefined);
       if (first) d.icon.setFrame(itemDef(first[0]).icon);
       d.count?.set(total > 0 ? String(total) : '');
-      d.count?.moveTo(Math.round(d.body.x - (d.count.width - 1) / 2), Math.round(d.icon.y + 9));
+      // Beside the icon, clear of the crate's lock.
+      d.count?.moveTo(Math.round(d.body.x + FOUNDRY_LAYOUT.countX), Math.round(d.icon.y + FOUNDRY_LAYOUT.countY));
     }
   }
 

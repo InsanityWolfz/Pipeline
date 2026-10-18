@@ -78,6 +78,9 @@ export const FOUNDRY_LAYOUT = {
   itemLift: 3,
   /** A hopper's or crate's item icon and count sit this far above its sprite's bottom. */
   contentsRise: 30,
+  /** Where the count starts, from the sprite's centre x and the icon's centre y. */
+  countX: 9,
+  countY: -3,
   /** Conduits lie on the floor; items riding them draw just above. */
   conduitDepth: 0.2,
   itemDepth: 0.3,

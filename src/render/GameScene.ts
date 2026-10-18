@@ -107,6 +107,7 @@ export class GameScene extends Scene {
         building: this.sim.building,
         pieceId: () => this.buildView?.selected ?? 'conduit',
         overUi: (x, y) => (this.buildView?.overUi(x, y) ?? false) || (this.picker?.overUi(x, y) ?? false),
+        clickUi: (x, y) => this.clickUi(controls, x, y),
       });
       this.handleUi(controls);
       if (this.menuOpen) {
@@ -130,15 +131,6 @@ export class GameScene extends Scene {
     if (this.menuOpen) return;
     const steps = controls.takeWheel();
     if (steps !== 0 && this.sim.building) this.buildView?.step(steps);
-    const click = controls.takeUiClick();
-    if (click && !this.buildView?.click(click.x, click.y)) {
-      const itemId = this.picker?.itemAt(click.x, click.y);
-      const hopper = this.picker?.hopperId;
-      if (itemId && hopper !== null && hopper !== undefined) {
-        controls.requestDeposit(hopper, itemId);
-        this.picker?.close();
-      }
-    }
     // E on an empty hopper asks which item to put in; the sim does nothing with it.
     if (controls.takeInteractPress()) {
       const target = usableInReach(this.sim);
@@ -146,6 +138,17 @@ export class GameScene extends Scene {
     }
     const open = this.picker?.hopperId;
     if (open !== null && open !== undefined && usableInReach(this.sim)?.id !== open) this.picker?.close();
+  }
+
+  /** A click on the build bar picks a piece; on the picker, it fills the hopper with that item. */
+  private clickUi(controls: Controls, x: number, y: number): void {
+    if (this.menuOpen || this.buildView?.click(x, y)) return;
+    const itemId = this.picker?.itemAt(x, y);
+    const hopper = this.picker?.hopperId;
+    if (itemId && hopper !== null && hopper !== undefined) {
+      controls.requestDeposit(hopper, itemId);
+      this.picker?.close();
+    }
   }
 
   get menuOpen(): boolean {
@@ -239,7 +242,8 @@ export class GameScene extends Scene {
     const hovered = cursor ? pieceAt(sim.foundry, cursor.tx, cursor.ty) : undefined;
     if (hovered?.kind === 'machine') {
       const r = pieceRect(hovered);
-      this.readout?.show(hovered, r.x, this.foundryView?.topOf(hovered.id) ?? r.y);
+      const top = this.foundryView?.topOf(hovered.id) ?? r.y;
+      this.readout?.show(hovered, r.x, top, this.cameras.main.worldView.y);
     } else this.readout?.show(null, 0, 0);
   }
 }
