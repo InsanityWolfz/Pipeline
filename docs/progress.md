@@ -2,6 +2,32 @@
 
 Newest entry first.
 
+## 2026-10-18: 017 Overworld and danger (unattended build)
+**Changed:** built 017 on `claude/017-overworld`, stacked on 016, from `docs/plans/017-overworld.md`.
+- **One open map.** An 80×45 overworld is generated from a fixed seed: groves, rock fields, ponds, ruin stones, a forest edge and dirt paths. Fixed landmarks sit on top:
+  - the start stone in a meadow
+  - the foundry as a buried ruin with stairs, in a ruin field
+  - the walled shrine site
+- **Danger rings:**
+  - ring 0, round the foundry, stays calm
+  - rings 1 and 2 keep packs alive once the first line fills, with respawns out of view
+  - no more than 15 enemies wake within a screen of the player
+- **Safe ground.** A claimed pylon makes a 10-tile safe zone.
+- **Minimap** in the corner.
+- **Shrine and stash.** The shrine's gap is sealed by a ley dome until the first line fills. Claims are by site.
+- **Removed:** the old clearing, hall and shrine rooms, and their floors, props and ambience.
+
+Verify: all 514 unit tests and all 36 e2e tests pass.
+- The e2e suite was rewritten for the map, plus new tests:
+  - minimap markers
+  - a ring-2 crowd: 10+ enemies on screen, never more than 15 awake
+- QA screenshots pass:
+  - **Shortfall it found:** the crowd on screen was below 10, so ring 2 was tuned to 8 packs.
+- Review found seven blocking items. All are fixed; the biggest was that the claimed pylon's menu, glow and claim bar didn't work in play.
+
+**Next:** Shaun reviews the draft PR and answers the 017 spec's two open questions: spawn distance, and whether hits wake past the cap. The run continues with 018 on a branch stacked on this one.
+**Notes:** see the 017 spec's build notes. QA thought the ruin-field flagstones look flat and the shrine dome faint; both are left for 020's visual pass or Shaun's call.
+
 ## 2026-10-18: 016 Art direction (unattended build)
 **Changed:** built 016 on `claude/016-art-direction` from `docs/plans/016-art-direction.md`.
 - **Vector art:**

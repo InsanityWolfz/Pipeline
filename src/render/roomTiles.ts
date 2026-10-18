@@ -1,4 +1,4 @@
-import { DEFAULT_FLOOR_THEME, FLOOR_VARIANTS, WALL_MOSS_ONE_IN, WALL_SPRITES } from '../data/roomArt';
+import { FLOOR_VARIANTS, WALL_MOSS_ONE_IN, WALL_SPRITES } from '../data/roomArt';
 import { TILE } from '../data/rooms';
 
 // Which tile art goes where (014). Pure, so tests can pin it down: variants come
@@ -11,12 +11,12 @@ export function tileHash(tx: number, ty: number): number {
   return (x ^ (x >>> 16)) >>> 0;
 }
 
-/** The floor frame for a tile: the base most of the time, else one of the theme's variants. */
-export function floorFrame(theme: string | undefined, base: string, tx: number, ty: number): string {
-  const variants = FLOOR_VARIANTS[theme ?? DEFAULT_FLOOR_THEME];
+/** The floor frame for a tile: the base most of the time, else one of its variants. */
+export function floorFrame(base: string, tx: number, ty: number): string {
+  const { percent, tiles } = FLOOR_VARIANTS;
   const roll = tileHash(tx, ty) % 100;
-  if (!variants || roll >= variants.percent) return base;
-  return variants.tiles[Math.floor((roll * variants.tiles.length) / variants.percent)] ?? base;
+  if (roll >= percent) return base;
+  return tiles[Math.floor((roll * tiles.length) / percent)] ?? base;
 }
 
 /** A wall tile's pieces: its face, or its top plus lips toward the floor around it. */

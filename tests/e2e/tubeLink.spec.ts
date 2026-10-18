@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { TILE_SIZE } from '../../src/data/config';
+import { OVERWORLD } from '../../src/data/overworld';
 import type { SimSummary } from '../../src/sim/summary';
 import { boot, watchErrors } from './helpers';
 
@@ -96,6 +97,10 @@ test('?playtest starts with plenty of everything and every machine unlocked', as
   const errors = watchErrors(page);
   await boot(page, '?playtest');
   const s = await step(page, 0);
+  // At the start stone, with the land already full of packs (017).
+  expect({ x: s.player.x, y: s.player.y }).toEqual(centre(OVERWORLD.wake.tx, OVERWORLD.wake.ty));
+  expect(s.populated).toBe(true);
+  expect(s.area.ring).toBe(0);
   expect(s.inventory).toMatchObject({ arrow: 99, bomb: 99, 'ley-bolt': 99, wood: 99, stone: 99, fiber: 99, 'ley-crystal': 99, 'husk-resin': 99, shaft: 20, 'ley-shard': 20 });
   expect(s.unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'tube-socket', 'gravity-stager', 'cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser']);
   expect(errors).toEqual([]);

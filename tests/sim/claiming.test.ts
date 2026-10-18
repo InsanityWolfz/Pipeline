@@ -3,7 +3,7 @@ import { CLAIM_TICKS, FIXTURES, PORT_CYCLE, PORT_TICKS } from '../../src/data/cl
 import { FOUNDRY_ROOM, SHRINE_SITE } from '../../src/data/rooms';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { WORLD } from '../../src/sim/world';
-import { claim } from '../../src/sim/claims';
+import { claim, claimedPylonInReach } from '../../src/sim/claims';
 import { fixtureDef, portFront } from '../../src/sim/fixtures';
 import { damagePlayer } from '../../src/sim/health';
 import { canPlace } from '../../src/sim/placement';
@@ -71,21 +71,30 @@ describe('claiming the pylon', () => {
   it('is sealed while enemies live', () => {
     const s = atPylon(false);
     run(s, 1, { interact: true });
-    expect(s.events.sealed).toEqual([{ roomId: SHRINE_SITE }]);
+    expect(s.events.sealed).toEqual([{ site: SHRINE_SITE }]);
     expect(s.claimHold).toBeNull();
   });
 
   it('claims after CLAIM_TICKS of standing still, adding the port and waystone', () => {
     const s = atPylon();
     run(s, 1, { interact: true });
-    expect(s.claimHold).toEqual({ roomId: SHRINE_SITE, progress: 1 });
+    expect(s.claimHold).toEqual({ site: SHRINE_SITE, progress: 1 });
     run(s, CLAIM_TICKS - 2);
     expect(s.claims).toEqual([]);
     run(s, 1);
     expect(s.claims).toEqual([SHRINE_SITE]);
-    expect(s.events.claims).toEqual([{ roomId: SHRINE_SITE }]);
+    expect(s.events.claims).toEqual([{ site: SHRINE_SITE }]);
     expect(s.fixtures.map((f) => f.id).sort()).toEqual(FIXTURES.map((f) => f.id).sort());
     expect(summarize(s).claims).toEqual([SHRINE_SITE]);
+  });
+
+  it("counts as a claimed pylon in reach by its site, though the player stands in the overworld room (017)", () => {
+    const s = atPylon();
+    expect(claimedPylonInReach(s)).toBe(false);
+    claim(s, SHRINE_SITE);
+    expect(claimedPylonInReach(s)).toBe(true);
+    movePlayer(s, s.player.x + 200, s.player.y);
+    expect(claimedPylonInReach(s)).toBe(false);
   });
 
   it.each([

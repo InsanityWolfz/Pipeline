@@ -1,16 +1,14 @@
-// How rooms are dressed (014): floor variants per theme, the 3/4-view wall
-// pieces, and how often variants show. Pure data; render picks per tile.
-
-/** The floor theme of rooms without one: the ruin flagstone. */
-export const DEFAULT_FLOOR_THEME = 'ruin';
+// How tiled rooms are dressed (014): floor variants, the 3/4-view wall pieces,
+// and how often variants show. Pure data; render picks per tile. Since 017 only
+// the foundry is tiled, on the ruin flagstone.
 
 /**
- * Variant tiles per floor theme (the base tile is FLOOR_SPRITES, or the ruin
- * flagstone), and out of 100 tiles how many show one. A variant listed twice
- * shows twice as often.
+ * Variants of the ruin flagstone, and out of 100 tiles how many show one. A
+ * variant listed twice shows twice as often.
  */
-export const FLOOR_VARIANTS: Readonly<Record<string, { percent: number; tiles: readonly string[] }>> = {
-  ruin: { percent: 40, tiles: ['floor-rune-cracked', 'floor-rune-moss', 'floor-rune-inlay', 'floor-rune-sand'] },
+export const FLOOR_VARIANTS: { percent: number; tiles: readonly string[] } = {
+  percent: 40,
+  tiles: ['floor-rune-cracked', 'floor-rune-moss', 'floor-rune-inlay', 'floor-rune-sand'],
 };
 
 /**

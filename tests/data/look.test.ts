@@ -1,3 +1,4 @@
+import { SITE_LOOK } from '../../src/data/art/ground';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { FLOOR_VARIANTS, WALL_SPRITES } from '../../src/data/roomArt';
@@ -22,11 +23,11 @@ const frames = Object.keys(atlas.frames);
 
 describe('room art', () => {
   it('has every floor variant and wall piece in the atlas', () => {
-    for (const key of [...Object.values(FLOOR_VARIANTS).flatMap((v) => v.tiles), ...Object.values(WALL_SPRITES)]) expect(frames).toContain(key);
+    for (const key of [...FLOOR_VARIANTS.tiles, ...Object.values(WALL_SPRITES)]) expect(frames).toContain(key);
   });
 
   it('has variants for every room floor theme', () => {
-    for (const room of Object.values(ROOMS)) expect(new Set(FLOOR_VARIANTS[room.floor ?? 'ruin']?.tiles).size).toBeGreaterThanOrEqual(4);
+    expect(new Set(FLOOR_VARIANTS.tiles).size).toBeGreaterThanOrEqual(4);
   });
 });
 
@@ -81,7 +82,9 @@ describe('feel and sound references', () => {
       DAMAGE_NUMBERS.player,
       DAMAGE_NUMBERS.outline,
       ...AMBIENT.moteColors,
-      AMBIENT.fireflyColor,
+      SITE_LOOK.dome.color,
+      SITE_LOOK.safe.color,
+      SITE_LOOK.safe.ringColor,
       ...Object.values(PROPS).flatMap((p) => {
         const def: PropDef = p;
         return def.glow ? [def.glow.color] : [];

@@ -264,7 +264,7 @@ export const DEPTHS = {
   spreadFan: 99_998,
   /** Soft ley light pooled on the floor (014), over shadows and under anything standing. */
   glow: 0.25,
-  /** Drifting motes and fireflies, over the world. */
+  /** Drifting motes, over the world. */
   motes: 99_000,
   /** A room's dusk tint and vignette, over the world and under the HUD. */
   mood: 500_000,

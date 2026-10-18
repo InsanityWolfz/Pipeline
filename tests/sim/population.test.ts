@@ -6,7 +6,8 @@ import { SHRINE_SITE } from '../../src/data/rooms';
 import { RESERVOIR_CAP } from '../../src/data/tube';
 import { claim } from '../../src/sim/claims';
 import type { EnemyState } from '../../src/sim/enemies';
-import { enemiesNearPlayer, inSafeZone } from '../../src/sim/population';
+import { damageEnemy } from '../../src/sim/enemies';
+import { enemiesNearPlayer, inSafeZone, resetPopulation, viewRect } from '../../src/sim/population';
 import { createSim, type SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
@@ -67,6 +68,26 @@ describe('the living population', () => {
     }
   });
 
+  it('places every member out of any safe zone and outside the clamped view, even at the map edge, over many spawns', () => {
+    const s = populated();
+    claim(s, SHRINE_SITE);
+    // Near the west edge in ring 2 the camera stops following, so the view is not centred on the player.
+    movePlayer(s, 3 * TILE_SIZE, 20 * TILE_SIZE);
+    const v = viewRect(s);
+    expect(v.x0).toBe(0);
+    const m = POPULATION.viewMargin;
+    for (let round = 0; round < 25; round++) {
+      s.enemies = s.enemies.filter((e) => !e.group.startsWith('pop-'));
+      resetPopulation(s);
+      run(s, 1);
+      for (const e of pop(s)) {
+        expect(inSafeZone(s, e.roomId, e.homeX, e.homeY)).toBe(false);
+        const seen = e.homeX >= v.x0 - m && e.homeX <= v.x1 + m && e.homeY >= v.y0 - m && e.homeY <= v.y1 + m;
+        expect(seen).toBe(false);
+      }
+    }
+  });
+
   it('brings a wiped-out pack back after the delay, out of view', () => {
     const s = populated();
     run(s, 1);
@@ -88,6 +109,30 @@ describe('the living population', () => {
     s.player.health = 1e9;
     run(s, POPULATION.respawnTicks + 30);
     expect(packs(s).has(gone)).toBe(false);
+  });
+
+  it('holds a pack back when even its largest size would take the screen past the cap', () => {
+    const s = populated();
+    run(s, 1);
+    const gone = [...packs(s)].find((g) => g.startsWith('pop-2-')) ?? '';
+    s.enemies = s.enemies.filter((e) => e.group !== gone);
+    // Fill the screen to one past where the largest ring-2 pack still fits under the cap.
+    const fill = POPULATION.screenCap - POPULATION.rings[2].size[1] + 1 - enemiesNearPlayer(s);
+    for (let i = 0; i < fill; i++) placeHusk(s, PLAYER_AT.x + 200 + (i % 5) * 20, PLAYER_AT.y + Math.floor(i / 5) * 20, OVERWORLD.id);
+    s.player.health = 1e9;
+    run(s, POPULATION.respawnTicks + 30);
+    expect(packs(s).has(gone)).toBe(false);
+  });
+
+  it('a hit wakes no one past the cap', () => {
+    const s = populated();
+    s.populated = false;
+    for (let i = 0; i < POPULATION.screenCap; i++) placeHusk(s, PLAYER_AT.x - 250 + (i % 10) * 50, PLAYER_AT.y - 100);
+    run(s, 1);
+    expect(s.enemies.filter((e) => e.mode !== 'idle')).toHaveLength(POPULATION.screenCap);
+    const sixteenth = placeHusk(s, PLAYER_AT.x + 200, PLAYER_AT.y + 150);
+    damageEnemy(s, sixteenth, 1, 1, 0);
+    expect(sixteenth.mode).toBe('idle');
   });
 
   it('wakes no more than the cap near the player at once', () => {
@@ -136,5 +181,17 @@ describe('safe zones', () => {
     e.mode = 'chase';
     run(s, 120);
     expect(Math.hypot(e.x - pylon.x, e.y - pylon.y)).toBeGreaterThan(SAFE_RADIUS * TILE_SIZE - 1);
+  });
+
+  it('a knock never carries an enemy into the zone', () => {
+    const s = populated();
+    s.populated = false;
+    claim(s, SHRINE_SITE);
+    movePlayer(s, pylon.x, pylon.y + 2 * TILE_SIZE);
+    // Just outside the edge, hit hard from outside so the knock points in.
+    const e = placeHusk(s, pylon.x, pylon.y + SAFE_RADIUS * TILE_SIZE + 4);
+    damageEnemy(s, e, 1, 0, -1);
+    run(s, 30);
+    expect(Math.hypot(e.x - pylon.x, e.y - pylon.y)).toBeGreaterThan(SAFE_RADIUS * TILE_SIZE);
   });
 });

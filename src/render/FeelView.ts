@@ -196,7 +196,7 @@ export class FeelView {
     const spots: GlowSpot[] = [];
     for (const n of sim.nodes) if (n.roomId === shown && n.nodeId === 'ley-vein' && n.uses > 0) spots.push({ x: n.x, y: n.y, ...GLOWS.vein });
     const pylon = roomById(shown).pylon;
-    if (pylon && isClaimed(sim, shown)) spots.push({ ...tileCentre(pylon.tx, pylon.ty), ...GLOWS.pylon });
+    if (pylon && isClaimed(sim, pylon.site)) spots.push({ ...tileCentre(pylon.tx, pylon.ty), ...GLOWS.pylon });
     if (shown === FOUNDRY_ROOM) {
       for (const p of sim.foundry.pieces) {
         const r = pieceRect(p);

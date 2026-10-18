@@ -21,7 +21,8 @@ function set(grid: Grid, tx: number, ty: number, symbol: string): void {
 }
 
 /** Fills a rough disc of `symbol` around a random centre outside the clearings. */
-function cluster(grid: Grid, rng: RngState, radius: readonly [number, number], density: number, symbol: string): void {
+function cluster(grid: Grid, rng: RngState, def: { radius: readonly [number, number]; density: number; rim: number }, symbol: string): void {
+  const { radius, density, rim } = def;
   const r = nextInt(rng, radius[0], radius[1]);
   const cx = nextInt(rng, 2, OVERWORLD.width - 3);
   const cy = nextInt(rng, 2, OVERWORLD.height - 3);
@@ -30,7 +31,7 @@ function cluster(grid: Grid, rng: RngState, radius: readonly [number, number], d
       const d = Math.hypot(tx - cx, ty - cy) / r;
       if (d > 1 || !open(tx, ty)) continue;
       // Thicker in the middle, thinning to the rim.
-      if (grid[ty]?.[tx] === TILE.floor && nextFloat(rng) < density * (1 - d * 0.6)) set(grid, tx, ty, symbol);
+      if (grid[ty]?.[tx] === TILE.floor && nextFloat(rng) < density * (1 - d * rim)) set(grid, tx, ty, symbol);
     }
   }
 }
@@ -38,8 +39,9 @@ function cluster(grid: Grid, rng: RngState, radius: readonly [number, number], d
 function pond(grid: Grid, rng: RngState): Pond | null {
   const rx = nextInt(rng, OVERWORLD.ponds.radius[0], OVERWORLD.ponds.radius[1]);
   const ry = Math.max(2, rx - 1);
-  const cx = nextInt(rng, rx + 4, OVERWORLD.width - rx - 5);
-  const cy = nextInt(rng, ry + 4, OVERWORLD.height - ry - 5);
+  const m = OVERWORLD.ponds.edgeMargin;
+  const cx = nextInt(rng, rx + m, OVERWORLD.width - rx - m - 1);
+  const cy = nextInt(rng, ry + m, OVERWORLD.height - ry - m - 1);
   // A pond keeps a tile of grass between itself and any clearing or path.
   for (let ty = cy - ry - 2; ty <= cy + ry + 2; ty++) {
     for (let tx = cx - rx - 2; tx <= cx + rx + 2; tx++) if (!open(tx, ty) || grid[ty]?.[tx] === TILE.path) return null;
@@ -48,7 +50,7 @@ function pond(grid: Grid, rng: RngState): Pond | null {
     for (let tx = cx - rx - 1; tx <= cx + rx + 1; tx++) {
       const d = Math.hypot((tx - cx) / rx, (ty - cy) / ry);
       if (d <= 1) set(grid, tx, ty, TILE.water);
-      else if (d <= 1.35) set(grid, tx, ty, TILE.shallow);
+      else if (d <= OVERWORLD.ponds.shore) set(grid, tx, ty, TILE.shallow);
     }
   }
   return { cx, cy, rx, ry };
@@ -70,11 +72,11 @@ function path(grid: Grid, points: readonly TilePos[]): void {
 }
 
 function edge(grid: Grid, rng: RngState): void {
-  const { depth, ragged } = OVERWORLD.edge;
+  const { depth, ragged, raggedChance } = OVERWORLD.edge;
   for (let ty = 0; ty < OVERWORLD.height; ty++) {
     for (let tx = 0; tx < OVERWORLD.width; tx++) {
       const d = Math.min(tx, ty, OVERWORLD.width - 1 - tx, OVERWORLD.height - 1 - ty);
-      if (d < depth || (d < depth + ragged && nextFloat(rng) < 0.5 / (d - depth + 1))) set(grid, tx, ty, TILE.tree);
+      if (d < depth || (d < depth + ragged && nextFloat(rng) < raggedChance / (d - depth + 1))) set(grid, tx, ty, TILE.tree);
     }
   }
 }
@@ -88,7 +90,7 @@ export function generateOverworld(seed: number = OVERWORLD.seed): Room {
   const ponds: Pond[] = [];
   for (let i = 0; i < OVERWORLD.ponds.count; i++) {
     // A few tries each, since a pond won't sit near a clearing.
-    for (let t = 0; t < 8; t++) {
+    for (let t = 0; t < OVERWORLD.ponds.tries; t++) {
       const p = pond(grid, rng);
       if (p) {
         ponds.push(p);
@@ -96,8 +98,8 @@ export function generateOverworld(seed: number = OVERWORLD.seed): Room {
       }
     }
   }
-  for (let i = 0; i < OVERWORLD.groves.count; i++) cluster(grid, rng, OVERWORLD.groves.radius, OVERWORLD.groves.density, TILE.tree);
-  for (let i = 0; i < OVERWORLD.rockFields.count; i++) cluster(grid, rng, OVERWORLD.rockFields.radius, OVERWORLD.rockFields.density, TILE.rock);
+  for (let i = 0; i < OVERWORLD.groves.count; i++) cluster(grid, rng, OVERWORLD.groves, TILE.tree);
+  for (let i = 0; i < OVERWORLD.rockFields.count; i++) cluster(grid, rng, OVERWORLD.rockFields, TILE.rock);
   for (let i = 0; i < OVERWORLD.ruinStones; i++) {
     const tx = nextInt(rng, 3, OVERWORLD.width - 4);
     const ty = nextInt(rng, 3, OVERWORLD.height - 4);

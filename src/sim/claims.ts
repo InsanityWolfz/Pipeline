@@ -1,6 +1,6 @@
 import { ACTIVATE_TICKS, CLAIM_TICKS, FIXTURE_REACH, FIXTURES, PORT_CYCLE, PORT_TICKS, PYLON_REACH, type FixtureDef } from '../data/claims';
 import { FEET_BOX } from '../data/player';
-import { FOUNDRY_ROOM } from '../data/rooms';
+import { FOUNDRY_ROOM, type Room } from '../data/rooms';
 import type { Command } from './input';
 import { count } from './inventory';
 import { isRolling } from './movement';
@@ -22,8 +22,8 @@ import { WORLD } from './world';
 
 /** The claim in progress at a pylon. */
 export interface ClaimHold {
-  /** The site being claimed (017; the name stays from when a site was a room). */
-  roomId: string;
+  /** The site being claimed (017). */
+  site: string;
   progress: number;
 }
 
@@ -37,7 +37,7 @@ function gapTo(state: SimState, t: Tile): number {
 }
 
 /** The pylon in the player's room within reach, if any. */
-export function pylonInReach(state: SimState): Tile | undefined {
+export function pylonInReach(state: SimState): NonNullable<Room['pylon']> | undefined {
   const pylon = roomOf(state).pylon;
   return pylon && gapTo(state, pylon) <= PYLON_REACH ? pylon : undefined;
 }
@@ -50,11 +50,17 @@ export function fixtureInReach(state: SimState, kind: FixtureDef['kind']): Fixtu
 
 export const isClaimed = (state: Pick<SimState, 'claims'>, site: string): boolean => state.claims.includes(site);
 
+/** A claimed pylon is in reach: E opens its deposit and travel menu. */
+export function claimedPylonInReach(state: SimState): boolean {
+  const pylon = pylonInReach(state);
+  return pylon !== undefined && isClaimed(state, pylon.site);
+}
+
 /** True while any of a site's guards (enemies in its group) lives. */
 export const occupied = (state: SimState, site: string): boolean => state.enemies.some((e) => e.group === site);
 
 /** The site of the pylon in reach, if any. */
-const siteInReach = (state: SimState): string | undefined => (pylonInReach(state) ? roomOf(state).pylon?.site : undefined);
+const siteInReach = (state: SimState): string | undefined => pylonInReach(state)?.site;
 
 /** Ends a claim in progress; its progress is lost. */
 export function cancelClaim(state: SimState): void {
@@ -90,8 +96,8 @@ export function stepClaims(state: SimState, cmd: Command): Command {
   if (!cmd.interact) return cmd;
   const site = siteInReach(state);
   if (site) {
-    if (occupied(state, site)) state.events.sealed.push({ roomId: site });
-    else if (!isClaimed(state, site) && !state.claimHold) state.claimHold = { roomId: site, progress: 1 };
+    if (occupied(state, site)) state.events.sealed.push({ site });
+    else if (!isClaimed(state, site) && !state.claimHold) state.claimHold = { site, progress: 1 };
     // E on a claimed pylon opens render's menu, whose choice comes back as `pylon`.
     return { ...cmd, interact: false };
   }
@@ -108,14 +114,14 @@ function advanceHold(state: SimState, cmd: Command): void {
   const hold = state.claimHold;
   if (!hold) return;
   const moved = cmd.moveX !== 0 || cmd.moveY !== 0 || cmd.fire || cmd.dodge || isRolling(state.player);
-  if (moved || hold.roomId !== siteInReach(state) || occupied(state, hold.roomId)) {
+  if (moved || hold.site !== siteInReach(state) || occupied(state, hold.site)) {
     cancelClaim(state);
     return;
   }
   hold.progress += 1;
   if (hold.progress < CLAIM_TICKS) return;
   state.claimHold = null;
-  claim(state, hold.roomId);
+  claim(state, hold.site);
 }
 
 /** Claims a site for good: adds the fixtures its claim brings, clearing their tiles first, and makes its ground safe (017). */
@@ -123,7 +129,7 @@ export function claim(state: SimState, site: string): void {
   if (isClaimed(state, site)) return;
   state.claims.push(site);
   state.activatePulse = ACTIVATE_TICKS;
-  state.events.claims.push({ roomId: site });
+  state.events.claims.push({ site });
   clearSafeZones(state);
   for (const def of FIXTURES.filter((f) => f.claim === site)) {
     removePieceAt(state, def.tx, def.ty);

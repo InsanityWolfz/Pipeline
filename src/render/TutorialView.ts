@@ -5,12 +5,11 @@ import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
 import type { GateId } from '../data/rooms';
 import { roomById, type SimState } from '../sim/state';
 import { doorOpen } from '../sim/tutorial';
-import { registerAnim } from './anims';
 import { addVector, showFrame } from './vector/textures';
 
 // The tutorial's world pieces (012): the tube on its stone (then the bare stone),
-// rubble over the foundry door and a ley barrier over the shrine door while their
-// gates are shut, crumbling away as each opens.
+// rubble over the foundry's stairs while its gate is shut, crumbling away as it
+// opens. The shrine site's barrier is a dome (OverworldView, 017).
 export class TutorialView {
   private readonly scene: Scene;
   private readonly stone: GameObjects.Image;
@@ -19,7 +18,6 @@ export class TutorialView {
 
   constructor(scene: Scene) {
     this.scene = scene;
-    registerAnim(scene, TUTORIAL_SPRITES.barrier);
     this.stone = addVector(scene, 0, 0, TUTORIAL_SPRITES.stone).setVisible(false);
   }
 
@@ -45,8 +43,7 @@ export class TutorialView {
       if (!d.gate || doorOpen(sim, d.gate)) return [];
       const bottom = (d.ty + 1) * TILE_SIZE;
       const sprite = this.scene.add.sprite(d.tx * TILE_SIZE, bottom, ATLAS_KEY).setOrigin(0, 1).setDepth(bottom + DEPTHS.tubeNudge);
-      if (d.gate === 'shrine') sprite.play(TUTORIAL_SPRITES.barrier.key);
-      else sprite.setFrame(TUTORIAL_SPRITES.rubble);
+      sprite.setFrame(TUTORIAL_SPRITES.rubble);
       return [{ gate: d.gate, sprite, fading: false }];
     });
     const stone = room.tubeStone;

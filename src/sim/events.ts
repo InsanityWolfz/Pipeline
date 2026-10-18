@@ -69,9 +69,9 @@ export interface SimEvents {
   /** A projectile left the tube's mouth (a spread fires several at once). */
   shots: { x: number; y: number; ammoId: string }[];
   /** E at a pylon whose room still has enemies. */
-  sealed: { roomId: string }[];
+  sealed: { site: string }[];
   /** A room was claimed. */
-  claims: { roomId: string }[];
+  claims: { site: string }[];
   /** The haul went into the stash from a claimed pylon. */
   stashDeposits: { items: Record<string, number> }[];
   /** Items came out of the stash. */

@@ -1,7 +1,7 @@
 import type { GameObjects, Scene } from 'phaser';
 import { animFrames, ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
-import { DOORWAY_SPRITE, FLOOR_SPRITES } from '../data/foundryAssets';
+import { DOORWAY_SPRITE } from '../data/foundryAssets';
 import { PROPS, type PropDef, type PropPlacement } from '../data/props';
 import { PROP_LAYOUT, WALL_SPRITES } from '../data/roomArt';
 import { TILE, type Room } from '../data/rooms';
@@ -26,7 +26,6 @@ export class RoomView {
     this.objects = [];
     // The overworld (017) is drawn by OverworldView from its terrain, not from tiles.
     if (room.terrain) return;
-    const floor = (room.floor && FLOOR_SPRITES[room.floor]) ?? SPRITES.floor;
     const add = (x: number, y: number, frame: string): GameObjects.Image => {
       const image = this.scene.add.image(x, y, ATLAS_KEY, frame);
       this.objects.push(image);
@@ -38,7 +37,7 @@ export class RoomView {
       for (const [tx, symbol] of [...row].entries()) {
         const left = tx * TILE_SIZE;
         const bottom = (ty + 1) * TILE_SIZE;
-        add(left, ty * TILE_SIZE, floorFrame(room.floor, floor, tx, ty)).setOrigin(0).setDepth(DEPTHS.floor);
+        add(left, ty * TILE_SIZE, floorFrame(SPRITES.floor, tx, ty)).setOrigin(0).setDepth(DEPTHS.floor);
         if (symbol === TILE.floor) continue;
         if (symbol === TILE.door) {
           // The sprite is drawn for the right wall; a door on the left wall mirrors it.

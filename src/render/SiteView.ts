@@ -53,14 +53,14 @@ export class SiteView {
     const bottom = (at.ty + 1) * TILE_SIZE;
     this.pylon.setPosition(x, bottom).setDepth(bottom);
     const anim = this.pylon.anims.currentAnim?.key;
-    if (!isClaimed(sim, shown)) {
+    if (!isClaimed(sim, at.site)) {
       if (anim) this.pylon.stop();
       this.pylon.setFrame(PYLON_SPRITES.off);
     } else if (sim.activatePulse > 0) {
       if (anim !== PYLON_SPRITES.activating.key) this.pylon.play(PYLON_SPRITES.activating.key);
     } else if (anim !== PYLON_SPRITES.active.key) this.pylon.play(PYLON_SPRITES.active.key);
     const hold = sim.claimHold;
-    if (!hold || hold.roomId !== shown) return;
+    if (!hold || hold.site !== at.site) return;
     const { w, h, gap, border } = HARVEST_BAR;
     const left = Math.round(x - w / 2);
     const top = Math.round(bottom - this.pylon.height - gap - h);

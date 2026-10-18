@@ -1,6 +1,6 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, OVERWORLD_SPRITES, OVERWORLD_TEXTURES } from '../../data/assets';
-import { GROUND } from '../../data/art/ground';
+import { GROUND, SITE_LOOK } from '../../data/art/ground';
 import { TILE_SIZE } from '../../data/config';
 import { OVERWORLD } from '../../data/overworld';
 import { SAFE_RADIUS } from '../../data/population';
@@ -19,10 +19,7 @@ import { drawGround } from './ground';
 
 const T = TILE_SIZE;
 
-/** The barrier dome over the shrine site: fill and rim opacity, and its fade when the gate opens, ms. */
-const DOME = { fill: 0.14, rim: 0.7, rimWidth: 2, fadeMs: 600, color: 'cyan' } as const;
-/** The safe zone's look: the green wash's strength and the ley ring's. */
-const SAFE = { wash: 0.35, ring: 0.6, ringWidth: 2, color: 'leaf-light', ringColor: 'cyan' } as const;
+const { dome: DOME, safe: SAFE } = SITE_LOOK;
 
 export class OverworldView {
   private readonly scene: Scene;
@@ -132,7 +129,7 @@ export class OverworldView {
     if (!sim.claims.includes(OVERWORLD.shrine.site)) return;
     const key = OVERWORLD_TEXTURES.safeGlow;
     if (!this.scene.textures.exists(key)) {
-      const size = 256;
+      const size = SAFE.textureSize;
       const tex = this.scene.textures.createCanvas(key, size, size);
       if (!tex) return;
       const c = tex.context;

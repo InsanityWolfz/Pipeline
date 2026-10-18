@@ -8,7 +8,7 @@ import type { Room } from '../data/rooms';
 import { colorOf } from './color';
 
 // The room's air (014): soft ley light pooled around glowing things, drifting
-// motes (fireflies in the clearing), and a dusk tint with a vignette. Looks only.
+// motes, and a dusk tint with a vignette. Looks only.
 
 const GLOW_KEY = FX_TEXTURES.glow;
 const VIGNETTE_KEY = FX_TEXTURES.vignette;
@@ -29,7 +29,6 @@ interface Mote {
   vx: number;
   vy: number;
   phase: number;
-  firefly: boolean;
 }
 
 export class AmbientView {
@@ -65,8 +64,7 @@ export class AmbientView {
     for (const spot of [...props, ...extra]) this.glows.push(this.glow(spot));
     const mood = ROOM_MOOD[room.id];
     this.tint.setFillStyle(mood ? colorOf(mood.tint) : 0, mood?.alpha ?? 0);
-    const fireflies = room.floor === 'clearing' ? AMBIENT.fireflies : 0;
-    for (let i = 0; i < AMBIENT.motes + fireflies; i++) this.motes.push(this.mote(i >= AMBIENT.motes));
+    for (let i = 0; i < AMBIENT.motes; i++) this.motes.push(this.mote());
   }
 
   private glow(spot: GlowSpot): GameObjects.Image {
@@ -78,14 +76,14 @@ export class AmbientView {
       .setDepth(DEPTHS.glow);
   }
 
-  private mote(firefly: boolean): Mote {
+  private mote(): Mote {
     const x = Math.random() * this.bounds.w;
     const y = Math.random() * this.bounds.h;
-    const color = firefly ? AMBIENT.fireflyColor : (AMBIENT.moteColors[Math.floor(Math.random() * AMBIENT.moteColors.length)] ?? 'white');
+    const color = AMBIENT.moteColors[Math.floor(Math.random() * AMBIENT.moteColors.length)] ?? 'white';
     const dot = this.scene.add.rectangle(x, y, 1, 1, colorOf(color)).setOrigin(0).setDepth(DEPTHS.motes);
     const speed = AMBIENT.moteSpeed[0] + Math.random() * (AMBIENT.moteSpeed[1] - AMBIENT.moteSpeed[0]);
-    const angle = firefly ? Math.random() * Math.PI * 2 : -Math.PI / 2 + (Math.random() - 0.5);
-    return { dot, x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, phase: Math.random() * Math.PI * 2, firefly };
+    const angle = -Math.PI / 2 + (Math.random() - 0.5);
+    return { dot, x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, phase: Math.random() * Math.PI * 2 };
   }
 
   /** Per frame: breathes the lights, drifts the motes, and redraws the moving lights. */
@@ -102,7 +100,7 @@ export class AmbientView {
     }
     const dt = deltaMs / 1000;
     for (const m of this.motes) {
-      const sway = m.firefly ? AMBIENT.fireflySway : AMBIENT.moteSway;
+      const sway = AMBIENT.moteSway;
       m.phase += dt * sway.rate;
       m.x += (m.vx + Math.cos(m.phase) * sway.x) * dt;
       m.y += (m.vy + Math.sin(m.phase * AMBIENT.swayYSkew) * sway.y) * dt;
@@ -111,8 +109,7 @@ export class AmbientView {
       if (m.x > this.bounds.w) m.x -= this.bounds.w;
       if (m.y > this.bounds.h) m.y -= this.bounds.h;
       const flicker = (Math.sin(m.phase * sway.flicker) + 1) / 2;
-      const { minAlpha, alphaRange } = AMBIENT.moteSway;
-      m.dot.setPosition(Math.round(m.x), Math.round(m.y)).setAlpha(m.firefly ? flicker : minAlpha + alphaRange * flicker);
+      m.dot.setPosition(Math.round(m.x), Math.round(m.y)).setAlpha(sway.minAlpha + sway.alphaRange * flicker);
     }
   }
 }

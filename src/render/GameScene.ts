@@ -1,8 +1,8 @@
-import { Scene, Textures, type Cameras } from 'phaser';
+import { Scene, Textures } from 'phaser';
 import atlasImage from '../../assets/build/sprites.png?url';
 import atlasData from '../../assets/build/sprites.json?url';
 import { ATLAS_KEY } from '../data/assets';
-import { CAMERA_LERP, DOOR_FADE_MS } from '../data/config';
+import { CAMERA_LERP } from '../data/config';
 import { BUILD_BAR } from '../data/pieces';
 import { SOUNDS } from '../data/sounds';
 import { FOUNDRY_ROOM } from '../data/rooms';
@@ -15,7 +15,7 @@ import { cancelHarvest } from '../sim/harvest';
 import type { Command } from '../sim/input';
 import { pieceAt } from '../sim/pieces';
 import { canPlace, conduitInFrom, unlockedPieces } from '../sim/placement';
-import { roomById, roomSize, type SimState } from '../sim/state';
+import { roomById, type SimState } from '../sim/state';
 import { stepSim } from '../sim/step';
 import { ArrowView } from './ArrowView';
 import { BombView } from './BombView';
@@ -32,18 +32,17 @@ import { HoverView } from './HoverView';
 import { HudView } from './HudView';
 import { NodeView } from './NodeView';
 import { PlayerView } from './PlayerView';
-import { RoomView } from './room';
 import { SiteMenus } from './SiteMenus';
 import { SiteView } from './SiteView';
 import { WakeView } from './WakeView';
 import { mergeEvents } from './eventLog';
 import { FeelView } from './FeelView';
 import { TutorialUi } from './TutorialUi';
-import { currentFit, UI_CAMERA, type ScreenFit } from './scale';
+import { currentFit, type ScreenFit } from './scale';
 import { bakeVectors } from './vector/textures';
-import { OverworldView } from './overworld/OverworldView';
-import { MinimapView, type MinimapMarker } from './MinimapView';
-import { OVERWORLD } from '../data/overworld';
+import type { MinimapMarker } from './MinimapView';
+import { RoomViews } from './RoomViews';
+import { SceneCameras } from './SceneCameras';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -55,7 +54,7 @@ export class GameScene extends Scene {
   private readonly sim: SimState;
   private readonly clock = createClock();
   private controls?: Controls;
-  private roomView?: RoomView;
+  private roomViews?: RoomViews;
   private playerView?: PlayerView;
   private arrowView?: ArrowView;
   private hud?: HudView;
@@ -74,8 +73,6 @@ export class GameScene extends Scene {
   private wake?: WakeView;
   private tutorial?: TutorialUi;
   private feel?: FeelView;
-  private overworld?: OverworldView;
-  private minimap?: MinimapView;
   /** The room on screen. It lags the player's room through a door's fade. */
   private shownRoomId: string;
   private fading = false;
@@ -85,8 +82,7 @@ export class GameScene extends Scene {
   manualStepping = false;
   /** The screen fit (016): cameras zoom by its scale so the same 640×360 of the world fills a full-resolution backbuffer. */
   private fit: ScreenFit = currentFit();
-  /** Draws everything with scroll factor 0 (the HUD, menus, mood), unshaken and unfaded, in view px. */
-  private uiCamera?: Cameras.Scene2D.Camera;
+  private sceneCameras?: SceneCameras;
 
   constructor(sim: SimState) {
     super('game');
@@ -103,13 +99,8 @@ export class GameScene extends Scene {
     // Pixel art stays crisp at any zoom; vector frames (016) are drawn once at the screen's scale.
     this.textures.get(ATLAS_KEY).setFilter(Textures.FilterMode.NEAREST);
     bakeVectors(this, this.fit.scale);
-    this.uiCamera = this.cameras.add(0, 0, this.fit.width, this.fit.height, false, UI_CAMERA).setOrigin(0, 0);
-    this.applyFit(this.fit);
-    // Each frame, screen-space objects go to the UI camera and world objects to the main one.
-    this.events.on('prerender', () => this.routeCameras());
-    this.roomView = new RoomView(this);
-    this.overworld = new OverworldView(this);
-    this.minimap = new MinimapView(this, roomById(OVERWORLD.id));
+    this.sceneCameras = new SceneCameras(this, this.fit);
+    this.roomViews = new RoomViews(this);
     this.foundryView = new FoundryView(this);
     this.nodeView = new NodeView(this);
     this.groundItemView = new GroundItemView(this);
@@ -147,20 +138,7 @@ export class GameScene extends Scene {
   /** Matches both cameras to the backbuffer (016). Called on boot and whenever the window changes. */
   applyFit(fit: ScreenFit): void {
     this.fit = fit;
-    const ui = this.uiCamera;
-    if (!ui) return;
-    this.cameras.main.setSize(fit.width, fit.height).setZoom(fit.scale);
-    ui.setSize(fit.width, fit.height).setZoom(fit.scale);
-  }
-
-  private routeCameras(): void {
-    const main = this.cameras.main;
-    const ui = this.uiCamera;
-    if (!ui) return;
-    for (const o of this.children.list) {
-      const screen = 'scrollFactorX' in o && o.scrollFactorX === 0;
-      o.cameraFilter = screen ? main.id : ui.id;
-    }
+    this.sceneCameras?.applyFit(fit);
   }
 
   override update(_time: number, delta: number): void {
@@ -230,7 +208,7 @@ export class GameScene extends Scene {
     return {
       hoverName: this.hover?.shown ?? null,
       buildTip: this.buildView?.tip.shown ?? null,
-      minimap: { shown: this.minimap?.shown ?? false, markers: this.minimap?.markers ?? [] },
+      minimap: this.roomViews?.map ?? { shown: false, markers: [] },
     };
   }
 
@@ -263,14 +241,10 @@ export class GameScene extends Scene {
     mergeEvents(this.pending, this.sim.events);
   }
 
-  /** Draws a room's tiles and fits the camera to it. */
+  /** Draws a room's ground and fits the camera to it. */
   private showRoom(roomId: string): void {
-    const room = roomById(roomId);
     this.shownRoomId = roomId;
-    this.roomView?.show(room);
-    this.overworld?.show(room.terrain ? room : null);
-    const { width, height } = roomSize(room);
-    this.cameras.main.setBounds(0, 0, width, height);
+    this.roomViews?.show(roomById(roomId));
   }
 
   /**
@@ -286,14 +260,9 @@ export class GameScene extends Scene {
       return;
     }
     this.fading = true;
-    // The HUD fades with the world, as it did on one camera before 016.
-    this.uiCamera?.fadeOut(DOOR_FADE_MS, 0, 0, 0);
-    camera.fadeOut(DOOR_FADE_MS, 0, 0, 0, (_cam: unknown, progress: number) => {
-      if (progress < 1) return;
+    this.sceneCameras?.fadeThrough(() => {
       this.showRoom(this.sim.roomId);
       camera.centerOn(this.sim.player.x, this.sim.player.y);
-      camera.fadeIn(DOOR_FADE_MS, 0, 0, 0);
-      this.uiCamera?.fadeIn(DOOR_FADE_MS, 0, 0, 0);
       this.fading = false;
     });
   }
@@ -320,8 +289,7 @@ export class GameScene extends Scene {
     this.bombView?.update(inRoom(sim.bombs, shown));
     this.site?.update(sim, shown);
     this.siteMenus?.update(sim);
-    this.overworld?.update(sim);
-    this.minimap?.update(sim);
+    this.roomViews?.update(sim);
     this.tutorial?.update(sim, shown);
     this.hud?.update(sim.tube, sim.inventory, sim.player, sim.link, worn(sim), sim.hasTube);
     this.menu?.update(sim.inventory, sim.link);

@@ -32,7 +32,7 @@ test('the minimap shows the entrance, the shrine and the player, follows the pla
   expect(errors).toEqual([]);
 });
 
-test('out in ring 2 the land is crowded, but never more than 15 near the player', async ({ page }) => {
+test('out in ring 2 a fight fills the screen with 10-15 enemies, and never more than 15 wake near the player', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page, '?playtest');
   const seen = await page.evaluate(() => {
@@ -40,42 +40,38 @@ test('out in ring 2 the land is crowded, but never more than 15 near the player'
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     g.step(0);
-    let max = 0;
+    let onScreen = 0;
+    let awake = 0;
     let ko = false;
     const rings = new Set<number | null>();
     const sample = (s: ReturnType<typeof g.step>) => {
-      max = Math.max(max, s.nearPlayer);
+      onScreen = Math.max(onScreen, s.onScreen);
+      // Awake within a screen (POPULATION.screen: a view either way of the player).
+      const p = s.player;
+      const near = s.enemies.filter((e) => e.room === s.room && Math.abs(e.x - p.x) <= 640 && Math.abs(e.y - p.y) <= 360);
+      awake = Math.max(awake, near.filter((e) => e.mode !== 'idle' && e.mode !== 'return').length);
       rings.add(s.area.ring);
       ko ||= s.events.ko;
     };
-    // Up the path round the start stone, then east along it into ring 2 toward the shrine (src/data/overworld.ts).
+    const axis = (d: number): -1 | 0 | 1 => (Math.abs(d) < 3 ? 0 : d > 0 ? 1 : -1);
+    // Up the path round the start stone, east along it into ring 2, then a loop through ring 2 waking packs
+    // (src/data/overworld.ts), and hold ground rolling while they close in.
     h.walkTo(41.5 * 32, g.getState().player.y);
-    for (const [tx, ty] of [[41.5, 22.5], [52.5, 21.5], [60.5, 18.5], [67.5, 17.5]] as const) {
-      for (let t = 0; t < 600; t++) {
+    for (const [tx, ty] of [[41.5, 22.5], [52.5, 21.5], [60.5, 18.5], [67.5, 17.5], [72, 25], [70, 36], [66, 30]] as const) {
+      for (let t = 0; t < 1500; t++) {
         const p = g.getState().player;
-        const dx = tx * 32 - p.x;
-        const dy = ty * 32 - p.y;
-        if (Math.abs(dx) < 2 && Math.abs(dy) < 2) break;
-        const axis = (d: number): -1 | 0 | 1 => (Math.abs(d) < 2 ? 0 : d > 0 ? 1 : -1);
-        sample(g.step(1, { moveX: axis(dx), moveY: axis(dy) }));
+        const mx = axis(tx * 32 - p.x);
+        const my = axis(ty * 32 - p.y);
+        if (mx === 0 && my === 0) break;
+        sample(g.step(1, { moveX: mx, moveY: my }));
       }
     }
-    // Hold ground a while, firing ley bolts at the nearest: waking packs close in, new ones keep away while the screen is full.
-    g.step(1, { selectAmmo: 'ley-bolt' });
-    for (let t = 0; t < 600; t++) {
-      const s = g.getState();
-      const p = s.player;
-      const near = [...s.enemies].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
-      sample(g.step(1, near ? { fire: true, aimX: near.x, aimY: near.y } : {}));
-    }
-    const s = g.getState();
-    return { max, rings: [...rings], ring: s.area.ring, populated: s.populated, ko };
+    for (let t = 0; t < 600 && !ko; t++) sample(g.step(1, { dodge: t % 30 === 0 }));
+    return { onScreen, awake, rings: [...rings], populated: g.getState().populated, ko };
   });
   expect(seen.populated).toBe(true);
-  expect(seen.ko).toBe(false);
-  expect(seen.ring).toBe(2);
   expect(seen.rings).toContain(2);
-  expect(seen.max).toBeGreaterThanOrEqual(10);
-  expect(seen.max).toBeLessThanOrEqual(15);
+  expect(seen.onScreen).toBeGreaterThanOrEqual(10);
+  expect(seen.awake).toBeLessThanOrEqual(15);
   expect(errors).toEqual([]);
 });

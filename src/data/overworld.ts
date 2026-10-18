@@ -66,14 +66,16 @@ export const OVERWORLD = {
   width: 80,
   height: 45,
   seed: 20261018,
-  /** The map edge: this many tiles of dense forest, ragged by up to `ragged` more. */
-  edge: { depth: 2, ragged: 2 },
+  /** The map edge: this many tiles of dense forest, ragged by up to `ragged` more; the first ragged tile fills at `raggedChance`, halving outward. */
+  edge: { depth: 2, ragged: 2, raggedChance: 0.5 },
   /** Danger rings by straight-line distance in tiles from the foundry entrance: ring 0 inside the first bound, ring 1 inside the second, ring 2 beyond. */
   rings: { centre: ENTRANCE, bounds: [17, 26] as const },
   /** Generated features. Radii in tiles; density is the chance a tile near the centre fills. */
-  groves: { count: 18, radius: [3, 7] as const, density: 0.75 },
-  rockFields: { count: 8, radius: [2, 4] as const, density: 0.5 },
-  ponds: { count: 4, radius: [2, 4] as const },
+  /** `rim`: how much thinner a cluster is at its rim than its middle (0 even, 1 empty). */
+  groves: { count: 18, radius: [3, 7] as const, density: 0.75, rim: 0.6 },
+  rockFields: { count: 8, radius: [2, 4] as const, density: 0.5, rim: 0.6 },
+  /** `shore`: shallows reach out to this many radii; `edgeMargin`: tiles kept between a pond and the map edge; `tries` per pond. */
+  ponds: { count: 4, radius: [2, 4] as const, shore: 1.35, edgeMargin: 4, tries: 8 },
   ruinStones: 26,
   /** Kept open: no trees, rocks, water or stones are generated here. */
   clearings: [

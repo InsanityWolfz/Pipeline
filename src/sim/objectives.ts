@@ -27,7 +27,7 @@ function holds(state: SimState, check: ObjectiveCheck): boolean {
     case 'identified':
       return state.armor.length > 0;
     case 'claimed':
-      return state.claims.includes(check.room);
+      return state.claims.includes(check.site);
     case 'streams':
       return socketStreams(state.foundry).length >= check.min;
     case 'awayRunning':

@@ -159,5 +159,44 @@ The game happens outside on one open map, like Realm of the Mad God. You wake ne
   - a ring-2 crowd
   - the minimap
 
+## Build notes
+- **Spawn distance.** "At least 1.5 screens from the player" is built as two checks:
+  - the pack's centre is at least 480 px (1.5 half-screens) from the player
+  - every member stands outside the camera's view, clamped to the map's edges, plus a 64 px margin
+
+  The literal 960 px leaves almost no ring-1 ground while the player is near the foundry, so the view check is what keeps spawns out of sight. See the open question.
+- **The awake cap is enforced in two places.** "Never more than 15 awake within a screen" holds two ways:
+  - enemies don't wake on sight while 15 nearby are already awake
+  - a hit doesn't wake a 16th either: it takes the damage and stays asleep
+- **The spawn cap counts the whole pack.** A pack spawns only if even its largest size would keep the enemies within a screen at 15 or fewer.
+- **"On screen" and "within a screen" differ.** "Within a screen" is a view's width and height either way of the player (`POPULATION.screen`). "On screen" is what the camera shows; the summary reports it as `onScreen`.
+- **Tuning.** Ring 2 went from 4 packs of 3–5 to 8 packs of 4–5. With 4, the busiest scripted ring-2 fight showed 4–11 enemies on screen; with 8 it shows 10–13. Ring 1 is unchanged.
+- **Claims are by site.** `ClaimHold.site`, `events.sealed`, `events.claims` and `summary.claimHold` carry the site id (`shrine`); the player's room is `overworld`. The objective is `{ kind: 'claimed', site }`.
+- **Safe zones.** Every pack member, not just the centre, is kept out of a safe zone. A knockback can't carry an enemy into one either.
+- **New packs appear one tick late.** They arrive the tick after the line fills, because the population steps before the gates do.
+- **Removed with the old rooms:** fireflies, floor themes, the ruin and shrine ambient loops, and the shrine door's barrier sprite. The shrine's barrier is now the dome.
+- **From QA, left as they are:**
+  - The ruin field reads as flat pale flagstones. The barrier dome is faint.
+  - The objective banner can cover enemies at the top of the view, and the minimap covers the top-right corner.
+  - On the very first frame of `?playtest`, the banner shows "Pick up the tube".
+- **Review.** All seven blocking items are fixed:
+  - **Claimed-pylon UI:** the pylon menu, glow and claim bar now work at the shrine. The e2e test opens the menu with E and a click.
+  - **Spawning:** member safe zones, spawns kept out of view, and hits no longer wake past the cap.
+  - **Cleanup:** the dead code is removed and the generator's tuning numbers are moved into data.
+  - **On screen:** the e2e test checks the on-screen count.
+
+  From the suggestions, these are in:
+  - pack size counted in the spawn cap
+  - knockback kept out of safe zones
+  - the dome and safe-zone looks moved to data
+  - `GameScene` split into `SceneCameras` and `RoomViews`
+  - an assertion on the `?playtest` start
+  - claims renamed to "site"
+
+  Two are left:
+  - the procedural ground painter's shape numbers stay in render
+  - the one-tick population lag, noted above
+
 ## Open questions
-None.
+- **Spawn distance (for Shaun).** "1.5 screens" could mean 960 px from the player. Near the foundry, nearly all of ring 1 is closer than that. It's built as 480 px plus "every member out of view". Is that the intent, or should spawns be further out?
+- **Hits past the cap (for Shaun).** With 15 awake nearby, shooting a 16th enemy doesn't wake it, so the cap holds as the spec says. Should a hit always wake an enemy, even past the cap?

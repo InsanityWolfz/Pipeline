@@ -1,4 +1,5 @@
-import { TILE_SIZE } from '../data/config';
+import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
+import { FEET_BOX } from '../data/player';
 import { OVERWORLD, ringOf } from '../data/overworld';
 import { POPULATION, SAFE_RADIUS } from '../data/population';
 import { TILE } from '../data/rooms';
@@ -73,6 +74,32 @@ export function enemiesNearPlayer(state: SimState, awake = false): number {
   return state.enemies.filter((e) => nearPlayer(state, e.roomId, e.x, e.y) && (!awake || (e.mode !== 'idle' && e.mode !== 'return'))).length;
 }
 
+/**
+ * What the camera shows, px: centred on the player's sprite (the bottom of the feet box) and clamped to the room,
+ * as GameScene's follow camera is once it settles.
+ */
+export function viewRect(state: SimState): { x0: number; y0: number; x1: number; y1: number } {
+  const room = WORLD[state.roomId];
+  const w = (room?.rows[0]?.length ?? 0) * TILE_SIZE;
+  const h = (room?.rows.length ?? 0) * TILE_SIZE;
+  const clamp = (v: number, hi: number) => Math.min(Math.max(v, 0), Math.max(hi, 0));
+  const x0 = clamp(state.player.x - VIEW_WIDTH / 2, w - VIEW_WIDTH);
+  const y0 = clamp(state.player.y + FEET_BOX.h / 2 - VIEW_HEIGHT / 2, h - VIEW_HEIGHT);
+  return { x0, y0, x1: x0 + VIEW_WIDTH, y1: y0 + VIEW_HEIGHT };
+}
+
+/** True if a point in the player's room is within the camera's view grown by `margin` px. */
+function inView(state: SimState, roomId: string, x: number, y: number, margin = 0): boolean {
+  if (roomId !== state.roomId) return false;
+  const v = viewRect(state);
+  return x >= v.x0 - margin && x <= v.x1 + margin && y >= v.y0 - margin && y <= v.y1 + margin;
+}
+
+/** Enemies the camera shows (017: the spec's "on screen"). */
+export function enemiesOnScreen(state: SimState): number {
+  return state.enemies.filter((e) => inView(state, e.roomId, e.x, e.y)).length;
+}
+
 /** No more than the cap may be awake near the player (017): further enemies stay asleep until some fall. */
 export function screenFull(state: SimState): boolean {
   return enemiesNearPlayer(state, true) >= POPULATION.screenCap;
@@ -106,17 +133,27 @@ function spawn(state: SimState, slot: PackSlot): boolean {
     const c = tileCentre({ tx, ty });
     const p = state.player;
     if (state.roomId === OVERWORLD.id && Math.hypot(c.x - p.x, c.y - p.y) < POPULATION.spawnDistance) continue;
-    if (inSafeZone(state, OVERWORLD.id, c.x, c.y)) continue;
     const size = nextInt(state.rng, def.size[0], def.size[1]);
     const spots: { tx: number; ty: number }[] = [];
-    for (let k = 0; k < size * 4 && spots.length < size; k++) {
+    // Every member stands in the pack's own ring (so ring 0 stays calm), out of any safe zone and out of view.
+    const fits = (s: { tx: number; ty: number }): boolean => {
+      const m = tileCentre(s);
+      return (
+        walkableOpen(s.tx, s.ty) &&
+        ringOf(s.tx, s.ty) === slot.ring &&
+        !inSafeZone(state, OVERWORLD.id, m.x, m.y) &&
+        !inView(state, OVERWORLD.id, m.x, m.y, POPULATION.viewMargin) &&
+        !spots.some((o) => o.tx === s.tx && o.ty === s.ty)
+      );
+    };
+    for (let k = 0; k < size * POPULATION.memberTries && spots.length < size; k++) {
       const s = { tx: tx + nextInt(state.rng, -POPULATION.spread, POPULATION.spread), ty: ty + nextInt(state.rng, -POPULATION.spread, POPULATION.spread) };
-      // Every member stands in the pack's own ring, so ring 0 stays calm.
-      if (walkableOpen(s.tx, s.ty) && ringOf(s.tx, s.ty) === slot.ring && !spots.some((o) => o.tx === s.tx && o.ty === s.ty)) spots.push(s);
+      if (fits(s)) spots.push(s);
     }
     if (spots.length < size) continue;
     for (const s of spots) {
-      const enemyId = def.enemies[nextInt(state.rng, 0, def.enemies.length - 1)] ?? 'husk';
+      const enemyId = def.enemies[nextInt(state.rng, 0, def.enemies.length - 1)];
+      if (!enemyId) throw new Error(`Ring ${slot.ring} has no enemies to spawn`);
       state.enemies.push(createEnemy(state.nextEnemyId++, enemyId, tileCentre(s), OVERWORLD.id, slot.group));
     }
     return true;
@@ -137,7 +174,8 @@ export function stepPopulation(state: SimState): void {
       slot.respawnAt = state.tick + POPULATION.respawnTicks;
     }
     if (state.tick < slot.respawnAt) continue;
-    if (enemiesNearPlayer(state) >= POPULATION.screenCap) continue;
+    // A whole pack could land within a screen: only spawn if even the largest keeps it at the cap.
+    if (enemiesNearPlayer(state) + POPULATION.rings[slot.ring].size[1] > POPULATION.screenCap) continue;
     slot.alive = spawn(state, slot);
   }
 }

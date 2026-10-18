@@ -171,9 +171,6 @@ export const BENCH_FLARE_MS = 600;
 /** A Wisp's orb and its ground shadow; the orb flies this far above its ground point, px. */
 export const ORB_SPRITES = { orb: 'wisp-orb', shadow: 'wisp-orb-shadow', lift: 14 } as const;
 
-/** Floor tiles by a room's `floor` theme; rooms without one use the ruin flagstone. */
-export const FLOOR_SPRITES: Readonly<Record<string, string>> = {};
-
 /** Menu icons for the claimed pylon and the stash (009). */
 export const SITE_ICONS = { stash: 'emblem-stash', travel: 'emblem-travel' } as const;
 
@@ -182,7 +179,6 @@ export const TUTORIAL_SPRITES = {
   stone: 'tube-stone',
   stoneEmpty: 'tube-stone-empty',
   rubble: 'door-rubble',
-  barrier: { key: 'ley-barrier', frames: 2, frameRate: 4, loop: true },
   keyCap: 'key-cap',
   tick: 'objective-tick',
 } as const satisfies Record<string, string | AnimDef>;

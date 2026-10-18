@@ -44,3 +44,11 @@ export const GROUND = {
   maxScale: 2,
   chunk: 640,
 } as const;
+
+/** The shrine site's looks (017): the barrier dome while sealed, and the safe zone once claimed. */
+export const SITE_LOOK = {
+  /** Fill and rim opacity, rim width px, and its fade when the gate opens, ms. */
+  dome: { fill: 0.14, rim: 0.7, rimWidth: 2, fadeMs: 600, color: 'cyan' },
+  /** The green wash's strength and the ley ring's, drawn once into a square texture this many px across. */
+  safe: { wash: 0.35, ring: 0.6, ringWidth: 2, color: 'leaf-light', ringColor: 'cyan', textureSize: 256 },
+} as const;

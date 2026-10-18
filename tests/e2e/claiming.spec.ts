@@ -1,5 +1,19 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+import { menuRows } from '../../src/render/foundryLayout';
+import { screenPoint, state } from './foundryPage';
 import { boot, watchErrors } from './helpers';
+
+/** Presses E (the claimed pylon's menu) and clicks one of its two rows. */
+async function pylonMenu(page: Page, row: 0 | 1): Promise<void> {
+  await page.keyboard.press('e');
+  await page.waitForTimeout(100);
+  const r = menuRows(2)[row];
+  if (!r) throw new Error('no row');
+  const p = await screenPoint(page, r.x + r.w / 2, r.y + r.h / 2);
+  await page.mouse.click(p.x, p.y);
+  await page.waitForTimeout(50);
+  await page.evaluate(() => window.__GAME__?.step(1));
+}
 
 // Claiming (009): walk up to the shrine, clear it with the playtest ammo, claim
 // its pylon, send the haul home, travel to the foundry, take from the stash, see
@@ -60,15 +74,28 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
     }
     g.step(1, { interact: true });
     s = g.step(130);
-    const claimed = s.claims.includes('shrine');
-    // Deposit, then travel home.
-    s = g.step(1, { pylon: 'deposit' });
-    const stashed = Object.values(s.stash).reduce((a, b) => a + b, 0);
-    s = g.step(1, { pylon: 'travel' });
-    const home = s.room;
+    return { arrived, cleared, claimed: s.claims.includes('shrine'), failed: '' };
+  });
+  expect(result.failed).toBe('');
+  expect(result.arrived).toBe('shrine');
+  expect(result.cleared).toBe(true);
+  expect(result.claimed).toBe(true);
+
+  // E at the claimed pylon opens its menu (017: found by the pylon's site, the player being in the overworld room):
+  // send the haul home, then travel to the foundry.
+  await pylonMenu(page, 0);
+  const stashed = Object.values((await state(page)).stash).reduce((a, b) => a + b, 0);
+  await pylonMenu(page, 1);
+  const home = (await state(page)).room;
+
+  const after = await page.evaluate(() => {
+    const g = window.__GAME__;
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    const inside = (e: { x: number; y: number }) => e.x > 58 * 32 && e.x < 75 * 32 && e.y > 3 * 32 && e.y < 16 * 32;
     // Take one stack from the stash (fixture at tile 22,11), standing beside it.
     h.walkTo(21.5 * 32, 11.5 * 32);
-    s = g.step(1, { takeStash: { itemId: 'wood' } });
+    let s = g.step(1, { takeStash: { itemId: 'wood' } });
     const wood = s.inventory.wood ?? 0;
     // A conduit in front of the supply port (1,8 facing right) gets a raw.
     g.step(1, { place: { pieceId: 'conduit', tx: 2, ty: 8, facing: 'down' } });
@@ -81,16 +108,12 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
     // The waystone (22,4) carries the player back to the pylon.
     h.walkTo(22.5 * 32, 5.5 * 32);
     s = g.step(1, { interact: true });
-    return { arrived, cleared, claimed, stashed, home, wood, raw, back: s.room === 'overworld' && inside(s.player) ? 'shrine' : s.room, failed: '' };
+    return { wood, raw, back: s.room === 'overworld' && inside(s.player) ? 'shrine' : s.room };
   });
-  expect(result.failed).toBe('');
-  expect(result.arrived).toBe('shrine');
-  expect(result.cleared).toBe(true);
-  expect(result.claimed).toBe(true);
-  expect(result.stashed).toBeGreaterThan(0);
-  expect(result.home).toBe('foundry');
-  expect(result.wood).toBeGreaterThan(0);
-  expect(result.raw).toBe('wood');
-  expect(result.back).toBe('shrine');
+  expect(stashed).toBeGreaterThan(0);
+  expect(home).toBe('foundry');
+  expect(after.wood).toBeGreaterThan(0);
+  expect(after.raw).toBe('wood');
+  expect(after.back).toBe('shrine');
   expect(errors).toEqual([]);
 });

@@ -52,8 +52,6 @@ export interface Room {
   gateTiles?: readonly { tx: number; ty: number; gate: GateId }[];
   /** Generated ground features render draws (017): ponds and paths, in tiles. */
   terrain?: Terrain;
-  /** The floor's look, a key into FLOOR_SPRITES in src/data/assets.ts; the ruin flagstone by default. */
-  floor?: string;
   /** Dressing (014): looks only, never collision (block props stand on B tiles, which are solid already). */
   props?: readonly PropPlacement[];
 }

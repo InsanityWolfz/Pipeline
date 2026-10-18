@@ -28,7 +28,6 @@ import {
   FIXTURE_SPRITES,
   ORB_SPRITES,
   SITE_ICONS,
-  FLOOR_SPRITES,
   DOORWAY_SPRITE,
   FACING_ARROWS,
   HOPPER_SPRITES,
@@ -365,14 +364,13 @@ describe('claiming (009)', () => {
     const frames = drawnFrames();
     const anims = [PYLON_SPRITES.activating, PYLON_SPRITES.active, FIXTURE_SPRITES.port, FIXTURE_SPRITES.waystone];
     for (const anim of anims) for (const frame of animFrames(anim)) expect(frames).toContain(frame);
-    const singles = [PYLON_SPRITES.off, FIXTURE_SPRITES.stash, ORB_SPRITES.orb, ORB_SPRITES.shadow, ...Object.values(SITE_ICONS), ...Object.values(FLOOR_SPRITES)];
+    const singles = [PYLON_SPRITES.off, FIXTURE_SPRITES.stash, ORB_SPRITES.orb, ORB_SPRITES.shadow, ...Object.values(SITE_ICONS)];
     for (const key of singles) expect(frames).toContain(key);
   });
 
-  it('places only known enemies, and every room theme has a floor', () => {
+  it('places only known enemies, on rooms whose pylons stand on floor', () => {
     for (const room of Object.values(WORLD)) {
       for (const e of room.enemies ?? []) expect(ENEMIES[e.enemyId]).toBeDefined();
-      if (room.floor) expect(FLOOR_SPRITES[room.floor]).toBeDefined();
       if (room.pylon) expect(room.rows[room.pylon.ty]?.[room.pylon.tx]).toBe(TILE.floor);
     }
     for (const def of Object.values(ENEMIES)) expect(ENEMY_ANIMS[def.anims]).toBeDefined();

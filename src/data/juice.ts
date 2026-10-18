@@ -72,16 +72,13 @@ export const DUST = { walkMs: 260, rollMs: 50, minSpeed: 0.2 } as const;
 /** Squash and stretch: the drop-in on placed pieces. The squash settles `settle` × `ms`. */
 export const SQUASH = { dropPx: 6, ms: 180, squash: 0.18, settle: 1.5 } as const;
 
-/** Ambient life: ley motes per room, fireflies in the clearing, and how they drift and flicker. */
+/** Ambient life: ley motes per room, and how they drift and flicker. */
 export const AMBIENT = {
   motes: 18,
   moteSpeed: [4, 10] as const,
   moteColors: ['ley-cyan', 'ley-glow'] as const,
-  fireflies: 10,
-  fireflyColor: 'gold',
-  /** Sway speed (radians/s) and size (px/s): motes, and fireflies. */
+  /** Sway speed (radians/s) and size (px/s). */
   moteSway: { rate: 0.8, x: 3, y: 2, flicker: 1.3, minAlpha: 0.25, alphaRange: 0.5 },
-  fireflySway: { rate: 2.2, x: 8, y: 6, flicker: 3 },
   glowBreatheMs: 2200,
   glowAlpha: [0.55, 0.9] as const,
   /** Motes sway up and down at this fraction of their side-to-side rate. */
