@@ -2,6 +2,7 @@ import { enemyDef } from '../../src/data/enemies';
 import { LOAD_TICKS, TUBE_CAPACITY } from '../../src/data/tube';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import { NO_COMMAND, type Command } from '../../src/sim/input';
+import { createNode, type NodeState } from '../../src/sim/nodes';
 import { createSim, type SimState } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 
@@ -16,10 +17,11 @@ export const PLAYER_AT = { x: 400, y: 448 } as const;
 /** Ticks from a wind-up starting to its swipe landing (the wind-up tick counts as 1). */
 export const SWIPE_LANDS = HUSK.swipe.windupTicks + 1;
 
-/** The ruin hall with its own Husks cleared and the player at `at`. */
+/** The ruin hall with its own Husks and nodes cleared and the player at `at`. */
 export function arena(seed = SEED, at: { x: number; y: number } = PLAYER_AT): SimState {
   const s = createSim(seed);
   s.enemies = [];
+  s.nodes = [];
   movePlayer(s, at.x, at.y);
   return s;
 }
@@ -64,4 +66,11 @@ export function runUntil(s: SimState, done: (s: SimState) => boolean, limit: num
     if (done(s)) return i;
   }
   throw new Error(`condition not met in ${limit} ticks`);
+}
+
+/** Adds a gathering node standing at (x, y). */
+export function placeNode(s: SimState, nodeId: string, x: number, y: number): NodeState {
+  const n = createNode(s.nodes.length, nodeId, { x, y });
+  s.nodes.push(n);
+  return n;
 }

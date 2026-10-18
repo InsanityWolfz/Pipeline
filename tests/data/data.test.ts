@@ -5,7 +5,10 @@ import { AMMO } from '../../src/data/ammo';
 import {
   animFrames,
   digitFrame,
+  BURN_FLAME,
   ENEMY_ANIMS,
+  FIRE_BURST,
+  NODE_SPRITES,
   HUD_DIGITS,
   PICKUP_SPARKLE,
   PLAYER_ANIMS,
@@ -17,7 +20,9 @@ import { ENEMIES } from '../../src/data/enemies';
 import { ROOMS, TILE } from '../../src/data/rooms';
 import { ITEMS } from '../../src/data/items';
 import { STARTING_INVENTORY } from '../../src/data/player';
-import { SLOT_AMMO } from '../../src/data/tube';
+import { SLOT_AMMOS, STARTING_AMMO } from '../../src/data/tube';
+import { CRAFT_GROUPS, RECIPES } from '../../src/data/recipes';
+import { NODES } from '../../src/data/nodes';
 
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -66,7 +71,8 @@ describe('assets', () => {
   };
 
   it('has kebab-case keys that exist in the built atlas', () => {
-    for (const key of [...Object.values(SPRITES), ...Object.values(TUBE_SPRITES)]) {
+    const nodeKeys = Object.values(NODE_SPRITES).flatMap((n) => [n.full, n.depleted]);
+    for (const key of [...Object.values(SPRITES), ...Object.values(TUBE_SPRITES), ...nodeKeys]) {
       expect(key).toMatch(KEBAB);
       expect(Object.keys(atlas.frames)).toContain(key);
     }
@@ -85,6 +91,13 @@ describe('assets', () => {
         expect(anim.key).toMatch(KEBAB);
         for (const frame of animFrames(anim)) expect(Object.keys(atlas.frames)).toContain(frame);
       }
+    }
+  });
+
+  it('has the fire burst and burn flame in the built atlas', () => {
+    for (const anim of [FIRE_BURST, BURN_FLAME]) {
+      expect(anim.key).toMatch(KEBAB);
+      for (const frame of animFrames(anim)) expect(Object.keys(atlas.frames)).toContain(frame);
     }
   });
 
@@ -109,8 +122,47 @@ describe('items and ammo', () => {
 
   it('reference items and ammo that exist', () => {
     for (const ammo of Object.values(AMMO)) expect(ITEMS[ammo.itemId]).toBeDefined();
-    expect(AMMO[SLOT_AMMO]).toBeDefined();
+    expect(AMMO[STARTING_AMMO]).toBeDefined();
     for (const id of Object.keys(STARTING_INVENTORY)) expect(ITEMS[id]).toBeDefined();
+  });
+});
+
+describe('item kinds, ammo slots and recipes', () => {
+  it('gives every item a kind, and every ammo an ammo item', () => {
+    for (const item of Object.values(ITEMS)) expect(['raw', 'part', 'ammo']).toContain(item.kind);
+    for (const ammo of Object.values(AMMO)) expect(ITEMS[ammo.itemId]?.kind).toBe('ammo');
+  });
+
+  it('switches between arrows, bombs and ley bolts in key order', () => {
+    expect(SLOT_AMMOS).toEqual(['arrow', 'bomb', 'ley-bolt']);
+    for (const id of SLOT_AMMOS) expect(AMMO[id]).toBeDefined();
+  });
+
+  it('has kebab-case recipes over items that exist', () => {
+    for (const [key, r] of Object.entries(RECIPES)) {
+      expect(r.id).toMatch(KEBAB);
+      expect(r.id).toBe(key);
+      expect(ITEMS[r.output.itemId]).toBeDefined();
+      expect(r.output.count).toBeGreaterThan(0);
+      for (const [id, n] of Object.entries(r.inputs)) {
+        expect(ITEMS[id]).toBeDefined();
+        expect(n).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('lists every recipe in exactly one menu group, grouped under real ammo', () => {
+    const listed = CRAFT_GROUPS.flatMap((g) => g.recipes);
+    expect([...listed].sort()).toEqual(Object.keys(RECIPES).sort());
+    for (const g of CRAFT_GROUPS) expect(AMMO[g.ammoId]).toBeDefined();
+  });
+
+  it('has kebab-case nodes that give items that exist', () => {
+    for (const [key, n] of Object.entries(NODES)) {
+      expect(n.id).toMatch(KEBAB);
+      expect(n.id).toBe(key);
+      expect(ITEMS[n.itemId]?.kind).toBe('raw');
+    }
   });
 });
 
@@ -143,6 +195,29 @@ describe('enemies and rooms', () => {
         expect(room.rows[e.ty]?.[e.tx]).toBe(TILE.floor);
       }
     }
+  });
+
+  it('place known nodes on clear floor in the spawn half, away from the Husks', () => {
+    const room = ROOMS['ruin-hall'];
+    if (!room?.nodes) throw new Error('no nodes');
+    const counts: Record<string, number> = {};
+    const tiles = new Set<string>();
+    for (const n of room.nodes) {
+      expect(NODES[n.nodeId]).toBeDefined();
+      counts[n.nodeId] = (counts[n.nodeId] ?? 0) + 1;
+      // The node's tile and the ones beside it are floor, so it's never wedged against a block.
+      for (const dx of [-1, 0, 1]) expect(room.rows[n.ty]?.[n.tx + dx]).toBe(TILE.floor);
+      expect(n.ty).toBeGreaterThanOrEqual(room.rows.length / 2 - 2);
+      expect(n.tx === room.spawn.tx && n.ty === room.spawn.ty).toBe(false);
+      expect(tiles.has(`${n.tx},${n.ty}`)).toBe(false);
+      tiles.add(`${n.tx},${n.ty}`);
+      for (const e of room.enemies ?? []) {
+        const seen =
+          Math.abs(e.tx - n.tx) * 32 <= VIEW_WIDTH / 2 && Math.abs(e.ty - n.ty) * 32 <= VIEW_HEIGHT / 2;
+        expect(seen).toBe(false);
+      }
+    }
+    expect(counts).toEqual({ tree: 3, rubble: 3, reeds: 3, 'ley-vein': 2 });
   });
 
   it('start the ruin hall Husks off screen from the spawn', () => {

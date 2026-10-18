@@ -1,16 +1,16 @@
 // Tube tuning. Starting values from spec 003; tune in playtest.
 
-/** The ammo id in hotbar slot 1, the only slot so far. */
-export const SLOT_AMMO = 'arrow';
+/** The ammo hotbar slot 1 starts with, and goes back to on a KO. */
+export const STARTING_AMMO = 'arrow';
+
+/** Ammo the slot can be switched to, in key order: keys 1, 2, 3. */
+export const SLOT_AMMOS: readonly string[] = ['arrow', 'bomb', 'ley-bolt'];
 
 /** Rounds the tube holds loaded. */
 export const TUBE_CAPACITY = 6;
 
 /** Ticks to load one round from the inventory. */
 export const LOAD_TICKS = 15;
-
-/** Minimum ticks between shots (and between dry fires). */
-export const FIRE_TICKS = 15;
 
 /** Ticks the dry-fire flag stays set after an empty-tube shot. */
 export const DRY_FIRE_TICKS = 10;

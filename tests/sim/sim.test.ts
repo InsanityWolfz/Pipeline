@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { advanceClock, createClock } from '../../src/sim/clock';
 import { NO_COMMAND, type Command } from '../../src/sim/input';
+import { craft } from '../../src/sim/crafting';
 import { createSim } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
@@ -61,6 +62,37 @@ function scriptedFight(seed: number, ticks: number) {
   return sim;
 }
 
+/**
+ * Harvests the nearest node until it runs dry, crafts between ticks, then
+ * switches through every ammo, loading and firing each at the Husk pack.
+ */
+function scriptedSession(seed: number, ticks: number) {
+  const sim = createSim(seed);
+  sim.inventory = { 'husk-resin': 2, stone: 2, 'ley-crystal': 2, wood: 1, fiber: 1 };
+  const ammo = ['arrow', 'bomb', 'ley-bolt'];
+  for (let t = 0; t < ticks; t++) {
+    if (t === 100) for (const r of ['shaft', 'arrowhead', 'rope', 'arrow', 'casing', 'fuse', 'ley-shard', 'bomb', 'ley-bolt']) craft(sim, r);
+    const p = sim.player;
+    const node = sim.nodes[9];
+    const pack = sim.enemies[0];
+    const gathering = t < 400;
+    const goal = gathering ? node : pack;
+    const command: Command = {
+      ...NO_COMMAND,
+      moveX: goal && !sim.harvest ? toward(p.x, goal.x) : 0,
+      moveY: goal && !sim.harvest ? toward(p.y, goal.y + 20) : 0,
+      interact: gathering && t % 40 === 0,
+      selectAmmo: !gathering && t % 300 === 0 ? (ammo[(t / 300) % 3] ?? null) : null,
+      load: !gathering && sim.tube.loaded === 0 && !sim.tube.loading,
+      fire: !gathering && t % 50 > 30,
+      aimX: pack?.x ?? p.x,
+      aimY: pack?.y ?? p.y,
+    };
+    stepSim(sim, command);
+  }
+  return sim;
+}
+
 function ticksFor(deltas: number[]): number {
   const clock = createClock();
   return deltas.reduce((total, delta) => total + advanceClock(clock, delta), 0);
@@ -95,6 +127,12 @@ describe('sim state', () => {
     expect(a).toEqual(scriptedFight(11, 3000));
   });
 
+  it('replays harvests, crafts, ammo switches, bombs and bolts identically', () => {
+    const a = scriptedSession(11, 2400);
+    expect(a.crafted.length).toBeGreaterThan(0);
+    expect(a).toEqual(scriptedSession(11, 2400));
+  });
+
   it('round-trips through JSON unchanged mid-fight', () => {
     const sim = scriptedFight(4, 700);
     expect(JSON.parse(JSON.stringify(sim))).toEqual(sim);
@@ -114,7 +152,28 @@ describe('sim state', () => {
     expect(summary.enemies).toHaveLength(3);
     expect(summary.enemies[0]).toMatchObject({ enemyId: 'husk', mode: 'idle', health: 40, maxHealth: 40 });
     expect(summary.groundItems).toEqual([]);
-    expect(summary.events).toEqual({ hits: [], deaths: [], pickups: [], ko: false });
+    expect(summary.events).toEqual({
+      hits: [],
+      deaths: [],
+      pickups: [],
+      harvests: [],
+      crafts: [],
+      craftFails: [],
+      bursts: [],
+      selects: [],
+      ko: false,
+    });
+  });
+
+  it('summarizes nodes, the harvest, ammo, bombs, burns and the crafted set', () => {
+    const summary = summarize(createSim(8));
+    expect(summary.nodes).toHaveLength(11);
+    expect(summary.nodes[0]).toMatchObject({ nodeId: 'tree', uses: 3, regrow: 0 });
+    expect(summary.harvest).toBeNull();
+    expect(summary.tube.ammo).toBe('arrow');
+    expect(summary.bombs).toEqual([]);
+    expect(summary.enemies[0]?.burnTicks).toBe(0);
+    expect(summary.crafted).toEqual([]);
   });
 });
 

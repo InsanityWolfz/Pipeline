@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { AMMO } from '../../src/data/ammo';
+import { AMMO, straightAmmo } from '../../src/data/ammo';
 import { damageEnemy } from '../../src/sim/enemies';
-import { arena, fireAt, HUSK, loadFull, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, fireAt, HUSK, loadFull, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
 const DAMAGE = AMMO.arrow?.damage ?? 0;
 
@@ -107,5 +107,78 @@ describe('Husk death', () => {
     expect(deaths).toEqual([{ id: e.id, enemyId: 'husk', x: e.x, y: e.y, facing: e.facing }]);
     expect(s.groundItems.length).toBeGreaterThanOrEqual(1);
     expect(s.groundItems.length).toBeLessThanOrEqual(3);
+  });
+});
+
+describe('ley bolts', () => {
+  const BOLT = straightAmmo('ley-bolt');
+
+  function bolted() {
+    const s = arena();
+    s.inventory['ley-bolt'] = 6;
+    run(s, 1, { selectAmmo: 'ley-bolt' });
+    loadFull(s);
+    return s;
+  }
+
+  it('fly at 300 px/s for 320 px', () => {
+    expect(BOLT).toMatchObject({ speed: 300, range: 320, damage: 14, pierce: true, damageType: 'physical' });
+    const s = bolted();
+    run(s, 1, fireAt(PLAYER_AT.x + 1000, PLAYER_AT.y));
+    const bolt = s.arrows[0];
+    expect(bolt?.ammoId).toBe('ley-bolt');
+    run(s, 1);
+    expect(bolt?.travelled).toBeCloseTo(5);
+    const ticks = runUntil(s, () => s.arrows.length === 0, 100);
+    expect(ticks).toBe(Math.ceil(320 / 5) - 1);
+  });
+
+  it('pierce: every Husk in line is hit once', () => {
+    const s = bolted();
+    const first = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
+    const second = placeHusk(s, PLAYER_AT.x + 140, PLAYER_AT.y);
+    run(s, 1, fireAt(PLAYER_AT.x + 1000, PLAYER_AT.y));
+    const bolt = s.arrows[0];
+    runUntil(s, () => s.arrows.length === 0, 100);
+    expect(first.health).toBe(HUSK.maxHealth - 14);
+    expect(second.health).toBe(HUSK.maxHealth - 14);
+    expect(bolt?.hitIds).toEqual([first.id, second.id]);
+    expect(first.mode).toBe('chase');
+    expect(first.knockTicks + second.knockTicks).toBeGreaterThanOrEqual(0);
+  });
+
+  it('never hits the same Husk twice, even knocked back along its flight', () => {
+    const s = bolted();
+    const e = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
+    run(s, 1, fireAt(PLAYER_AT.x + 1000, PLAYER_AT.y));
+    const hits: number[] = [];
+    runUntil(
+      s,
+      () => {
+        hits.push(...s.events.hits.filter((h) => h.target === 'enemy').map((h) => h.damage));
+        return s.arrows.length === 0;
+      },
+      100,
+    );
+    expect(hits).toEqual([14]);
+    expect(e.health).toBe(HUSK.maxHealth - 14);
+  });
+
+  it('stop at a ruin block', () => {
+    const s = bolted();
+    // The ruin hall has a block at tile (20, 10), straight above (20, 14).
+    movePlayer(s, 20.5 * 32, 14.5 * 32);
+    run(s, 1, fireAt(20.5 * 32, 0));
+    let lastY = s.player.y;
+    runUntil(
+      s,
+      () => {
+        lastY = s.arrows[0]?.y ?? lastY;
+        return s.arrows.length === 0;
+      },
+      100,
+    );
+    // Removed at the block's bottom edge, well short of its 320 px range.
+    expect(lastY).toBeGreaterThanOrEqual(11 * 32 - 5);
   });
 });
