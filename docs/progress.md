@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-18: Body follows the aim (fix)
+**Changed:** `PlayerView` now picks the body's animation and flip from the aim direction when not rolling, matching the tube, so the idle and walk poses no longer face away from the tube. `npm run check` and 18 e2e tests pass.
+**Next:** `/spec 006` (foundry building) on the same branch.
+**Notes:** sim facing is unchanged; see decisions.md.
+
 ## 2026-10-18: 005 Hand crafting
 **Changed:** built 005 on `claude/005-hand-crafting`, following `docs/plans/005-hand-crafting.md`.
 - **Sim:** solid nodes with regrow (`nodes.ts`, obstacle rects in `collision.ts`); E harvesting (`harvest.ts`); crafting between ticks and the crafted set (`crafting.ts`); ammo select on 1–3 (`tube.ts`); piercing ley bolts (`combat.ts`); bombs, bursts and burns (`bombs.ts`, `burn.ts`); KO resets nodes, bombs, the harvest and the selection, and keeps the crafted set.

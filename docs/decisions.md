@@ -83,3 +83,6 @@ Technical choices and why. Newest last.
 - **Modules added in review:** `src/sim/tiles.ts` holds `tileCentre`, so `nodes.ts` and `state.ts` don't import each other. `src/data/hudLayout.ts` holds the harvest bar, ammo strip and menu layouts, so `assets.ts` stays under 300 lines and import-free.
 - **Ammo keys** follow `SLOT_AMMOS`, up to 4 number keys; more slot ammo than keys throws at load.
 
+
+## 2026-10-18: Body follows the aim
+- **Player sprite:** at Shaun's request, the body faces the aim (the same 4-way snap as the tube) whenever the player isn't rolling, so walking away from the cursor walks backwards instead of pointing the tube behind the body. A roll still shows its roll direction. Render-only: the sim's `facing` keeps 003's rule (aim while firing, else movement), so a roll from standing still goes the way the player last moved.

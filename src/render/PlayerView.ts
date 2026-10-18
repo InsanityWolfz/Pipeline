@@ -41,9 +41,11 @@ export class PlayerView {
   update(p: PlayerState, tube: TubeState): void {
     const bottom = p.y + FEET_BOX.h / 2;
     this.sprite.setPosition(p.x, bottom).setDepth(bottom);
-    this.sprite.setFlipX(p.facing === 'left');
-
     const rolling = isRolling(p);
+    // The body faces the aim like the tube does; a roll shows its own direction.
+    const facing = rolling ? p.facing : aimFacing(p.aimX - p.x, p.aimY - p.y, p.facing);
+    this.sprite.setFlipX(facing === 'left');
+
     if (rolling) {
       // Restart on a new roll, even one that follows straight after another.
       const fresh = p.rollTick < this.lastRollTick || this.sprite.anims.currentAnim?.key !== PLAYER_ANIMS.roll.key;
@@ -52,7 +54,7 @@ export class PlayerView {
       const moving = Math.hypot(p.vx, p.vy) >= IDLE_SPEED;
       const hit = p.hurtTicks > HIT_INVULN_TICKS - PLAYER_HIT_FX.poseTicks;
       const pose = hit ? 'hit' : tube.firing ? 'fire' : moving ? 'walk' : 'idle';
-      const name: PlayerAnim = `${pose}-${viewOf(p.facing)}`;
+      const name: PlayerAnim = `${pose}-${viewOf(facing)}`;
       this.sprite.play(PLAYER_ANIMS[name].key, true);
     }
     this.lastRollTick = p.rollTick;
@@ -65,12 +67,11 @@ export class PlayerView {
       else o.clearTint();
     }
     this.tube.setVisible(!rolling);
-    if (!rolling) this.placeTube(p, bottom);
+    if (!rolling) this.placeTube(p, facing, bottom);
   }
 
   /** Holds the tube toward the aim, snapped to 4 directions. */
-  private placeTube(p: PlayerState, bottom: number): void {
-    const facing = aimFacing(p.aimX - p.x, p.aimY - p.y, p.facing);
+  private placeTube(p: PlayerState, facing: Facing, bottom: number): void {
     const view = viewOf(facing);
     const grip = TUBE_GRIP[view];
     this.tube.setFrame(TUBE_SPRITES[view]);
