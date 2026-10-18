@@ -10,7 +10,16 @@ Newest entry first.
 - **Art:** Husk (idle, walk, wind-up, swipe, hit in 3 views; death), four materials, item shadow, pickup sparkle, player hit poses, HUD health frame, `+` glyph. Not yet approved by Shaun.
 - 150 unit tests and 14 e2e tests pass.
 **Verify:** `npm run check` (150 unit tests) and `npm run test:e2e` (14 tests) green. The qa agent passed every screenshot criterion with no console errors. Two of its notes need Shaun's eye: the player hit pose barely differs from idle at game size (the flicker carries the feedback), and the KO fade-out already shows the reset room, with the camera panning to spawn during the fade (the spec allows this).
-**Next:** Shaun approved the sprites at 4×. Run `/review`.
+**Review:** one blocking issue: the spec says the player flashes white, and the build only flickered. Fixed: the player and tube now alternate between a white flash and normal every 4 ticks while invulnerable, never hidden. Suggestions also taken:
+- one `DEPTHS` table in `src/data/assets.ts`
+- the health-bar border and popup width moved into data
+- on a KO the camera holds while it darkens, then jumps to spawn and follows again, and corpses clear
+- an arrow hits the Husk it reached first when hurtboxes overlap
+- unread hit events are no longer queued in render
+- tests for unlimited chase, locked facing through a swipe, and first-reached hits
+
+Not taken: the KO flag and the reset share one tick (the tests and spec reading agree). The chase hold and `swipeTicks` are still recorded build choices for the playtest to judge. Re-verify: 153 unit tests and 14 e2e tests pass, and the qa re-check of the flash, KO fade, depths and console passed.
+**Next:** Shaun playtests the Pages preview (watch the Husk's in-range hold and the hit/KO feel), then `/wrapup`.
 **Notes:**
 - The Husk grids came from a scratch shape script (body, limbs and mask with auto outline and shading). It isn't committed, so revise the grids by hand.
 - Built as planned, plus: the white hit flash uses the palette's `white`; a material's one 16×16 sprite is both its ground sprite and its HUD icon.
