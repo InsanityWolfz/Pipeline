@@ -23,6 +23,7 @@ import { STARTING_INVENTORY } from '../../src/data/player';
 import { SLOT_AMMOS, STARTING_AMMO } from '../../src/data/tube';
 import { CRAFT_GROUPS, RECIPES } from '../../src/data/recipes';
 import { NODES } from '../../src/data/nodes';
+import { BUILD_BAR, PIECES } from '../../src/data/pieces';
 
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -228,5 +229,38 @@ describe('enemies and rooms', () => {
       const offY = Math.abs(e.ty - (room?.spawn.ty ?? 0)) * 32 > VIEW_HEIGHT / 2;
       expect(offX || offY).toBe(true);
     }
+  });
+});
+
+describe('foundry pieces', () => {
+  it('have kebab-case ids matching their keys, and machines run known recipes', () => {
+    for (const [key, def] of Object.entries(PIECES)) {
+      expect(def.id).toBe(key);
+      expect(key).toMatch(KEBAB);
+      if (def.kind !== 'machine') continue;
+      expect(RECIPES[def.recipeId]).toBeDefined();
+      expect(def.craftTicks).toBeGreaterThan(0);
+    }
+  });
+
+  it('are 1x1, apart from the three-input combiners, which are 3x1', () => {
+    const wide = Object.values(PIECES)
+      .filter((d) => d.footprint === '3x1')
+      .map((d) => d.id);
+    expect(wide.sort()).toEqual(['assembler', 'packer']);
+    for (const id of wide) {
+      const def = PIECES[id];
+      if (def?.kind !== 'machine') throw new Error(`${id} is not a machine`);
+      expect(Object.keys(RECIPES[def.recipeId]?.inputs ?? {})).toHaveLength(3);
+    }
+  });
+
+  it('cover every recipe with exactly one machine', () => {
+    const run = Object.values(PIECES).flatMap((d) => (d.kind === 'machine' ? [d.recipeId] : []));
+    expect(run.sort()).toEqual(Object.keys(RECIPES).sort());
+  });
+
+  it('are each on the build bar exactly once', () => {
+    expect([...BUILD_BAR].sort()).toEqual(Object.keys(PIECES).sort());
   });
 });

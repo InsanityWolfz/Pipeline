@@ -9,6 +9,7 @@ import { createEvents, type SimEvents } from './events';
 import type { HarvestState } from './harvest';
 import type { Inventory } from './inventory';
 import { createNodes, type NodeState } from './nodes';
+import { createFoundry, type FoundryState } from './pieces';
 import { createPlayer, type PlayerState } from './player';
 import { createRng, type RngState } from './rng';
 import { tileCentre } from './tiles';
@@ -42,8 +43,12 @@ export interface SimState {
   /** Bombs in flight. */
   bombs: BombState[];
   nextBombId: number;
-  /** Item ids hand-crafted at least once, sorted. Kept through a KO; 006 unlocks machines from it. */
+  /** Item ids hand-crafted at least once, sorted. Kept through a KO; it unlocks machines. */
   crafted: string[];
+  /** The buildable grid in the foundry room. Kept through a KO. */
+  foundry: FoundryState;
+  /** Build mode: only in the foundry; fire, load, ammo select and harvest are off. */
+  building: boolean;
   /** What happened on the last tick. */
   events: SimEvents;
 }
@@ -68,6 +73,8 @@ export function createSim(seed: number, roomId = DEFAULT_ROOM): SimState {
     bombs: [],
     nextBombId: 0,
     crafted: [],
+    foundry: createFoundry(),
+    building: false,
     events: createEvents(),
   };
   resetWorld(state, roomId);
@@ -78,8 +85,8 @@ export function createSim(seed: number, roomId = DEFAULT_ROOM): SimState {
  * Puts the world back to its start: player at the spawn room's spawn with full
  * health, the starting inventory, an empty tube on its starting ammo, every
  * room's enemies at home and nodes at full, and nothing harvesting, on the
- * ground or in flight. The tick, seed, RNG, id counters and the crafted set
- * carry on.
+ * ground or in flight, and build mode off. The tick, seed, RNG, id counters,
+ * the crafted set and the whole foundry carry on.
  */
 export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   const rooms = Object.values(ROOMS);
@@ -92,6 +99,7 @@ export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   state.nodes = createNodes(rooms);
   state.harvest = null;
   state.bombs = [];
+  state.building = false;
   state.enemies = rooms.flatMap((room) =>
     (room.enemies ?? []).map((p) => createEnemy(state.nextEnemyId++, p.enemyId, tileCentre(p), room.id)),
   );

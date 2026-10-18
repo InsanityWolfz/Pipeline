@@ -5,7 +5,7 @@ import { roomById, roomOf, type SimState } from './state';
 import { tileCentre } from './tiles';
 
 // Doors in a room's outer wall. Walking into one takes the player to the door
-// it links to, standing on the floor tile just inside it.
+// it links to, standing on the floor tile just inside it, and ends build mode.
 
 /** The floor tile inward of a room's door: the door's neighbour away from the edge it sits on. */
 export function arrivalTile(roomId: string, door: number): { tx: number; ty: number } {
@@ -34,6 +34,7 @@ export function stepDoorways(state: SimState): void {
     p.y = at.y;
     p.vx = 0;
     p.vy = 0;
+    state.building = false;
     state.events.roomChanges.push({ from, to: d.to });
     return;
   }

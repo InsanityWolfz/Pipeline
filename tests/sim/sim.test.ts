@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { advanceClock, createClock } from '../../src/sim/clock';
 import { NO_COMMAND, type Command } from '../../src/sim/input';
 import { craft } from '../../src/sim/crafting';
-import { createSim } from '../../src/sim/state';
+import { createSim, tileCentre } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
 import { MAX_TICKS_PER_FRAME, TICK_RATE } from '../../src/data/config';
@@ -93,6 +93,45 @@ function scriptedSession(seed: number, ticks: number) {
   return sim;
 }
 
+/**
+ * Walks into the foundry, builds a ley bolt line, fills its hopper, waits,
+ * empties the crate, walks back out and gets KO'd.
+ */
+function scriptedFoundry(seed: number, ticks: number) {
+  const sim = createSim(seed);
+  sim.crafted = ['ley-bolt', 'ley-shard'];
+  sim.inventory = { 'ley-crystal': 3 };
+  const door = tileCentre({ tx: 1, ty: 12 });
+  sim.player.x = door.x;
+  sim.player.y = door.y;
+  const build: [string, number][] = [
+    ['hopper', 18],
+    ['grinder', 19],
+    ['focuser', 20],
+    ['crate', 21],
+  ];
+  for (let t = 0; t < ticks; t++) {
+    const p = sim.player;
+    const goal =
+      t < 60 ? { x: -100, y: p.y } : t < 300 ? tileCentre({ tx: 18, ty: 6 }) : t < 900 ? tileCentre({ tx: 21, ty: 6 }) : { x: 2000, y: 272 };
+    const placing = t >= 60 && t < 64 ? build[t - 60] : undefined;
+    const command: Command = {
+      ...NO_COMMAND,
+      moveX: toward(p.x, goal.x),
+      moveY: toward(p.y, goal.y),
+      toggleBuild: t === 59,
+      place: placing ? { pieceId: placing[0], tx: placing[1], ty: 5, facing: 'right' } : null,
+      deposit: t === 250 ? { id: 0, itemId: 'ley-crystal' } : null,
+      interact: t === 850,
+      aimX: p.x,
+      aimY: p.y,
+    };
+    if (t === 1050) sim.player.health = 0;
+    stepSim(sim, command);
+  }
+  return sim;
+}
+
 function ticksFor(deltas: number[]): number {
   const clock = createClock();
   return deltas.reduce((total, delta) => total + advanceClock(clock, delta), 0);
@@ -133,6 +172,20 @@ describe('sim state', () => {
     expect(a).toEqual(scriptedSession(11, 2400));
   });
 
+  it('replays building, running and emptying a foundry line identically', () => {
+    const a = scriptedFoundry(11, 1051);
+    expect(a.foundry.pieces.map((p) => p.pieceId)).toEqual(['hopper', 'grinder', 'focuser', 'crate']);
+    expect(a.roomId).toBe('ruin-hall');
+    expect(a.events.ko).toBe(true);
+    expect(a).toEqual(scriptedFoundry(11, 1051));
+  });
+
+  it('carries the foundry line through to bolts in hand', () => {
+    const a = scriptedFoundry(11, 900);
+    expect(a.roomId).toBe('foundry');
+    expect(a.inventory['ley-bolt']).toBeGreaterThanOrEqual(4);
+  });
+
   it('round-trips through JSON unchanged mid-fight', () => {
     const sim = scriptedFight(4, 700);
     expect(JSON.parse(JSON.stringify(sim))).toEqual(sim);
@@ -162,8 +215,27 @@ describe('sim state', () => {
       bursts: [],
       selects: [],
       roomChanges: [],
+      places: [],
+      placeFails: [],
+      pickUps: [],
+      deposits: [],
+      crateTakes: [],
       ko: false,
     });
+  });
+
+  it('summarizes rooms, build mode, unlocks and the foundry', () => {
+    const s = createSim(8);
+    expect(summarize(s)).toMatchObject({ room: 'ruin-hall', rooms: ['ruin-hall', 'foundry'], building: false });
+    expect(summarize(s).unlocked).toEqual(['conduit', 'hopper', 'crate']);
+    expect(summarize(s).enemies.every((e) => e.room === 'ruin-hall')).toBe(true);
+    s.roomId = 'foundry';
+    s.player.x = 300;
+    s.player.y = 300;
+    stepSim(s, { ...NO_COMMAND, place: { pieceId: 'hopper', tx: 3, ty: 3, facing: 'down' } });
+    expect(summarize(s).foundry.pieces).toEqual([
+      { id: 0, pieceId: 'hopper', tx: 3, ty: 3, facing: 'down', kind: 'hopper', item: null, count: 0 },
+    ]);
   });
 
   it('summarizes nodes, the harvest, ammo, bombs, burns and the crafted set', () => {

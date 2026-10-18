@@ -21,6 +21,11 @@ export function aimFacing(x: number, y: number, current: Facing): Facing {
   return y > 0 ? 'down' : 'up';
 }
 
+/** The facing a quarter turn clockwise. */
+export function rotateCw(f: Facing): Facing {
+  return f === 'up' ? 'right' : f === 'right' ? 'down' : f === 'down' ? 'left' : 'up';
+}
+
 export function facingVector(f: Facing): [number, number] {
   return f === 'up' ? [0, -1] : f === 'down' ? [0, 1] : f === 'left' ? [-1, 0] : [1, 0];
 }

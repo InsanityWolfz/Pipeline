@@ -3,6 +3,7 @@ import type { ArrowState } from './arrows';
 import type { BombState } from './bombs';
 import type { EnemyMode, EnemyState } from './enemies';
 import type { NodeState } from './nodes';
+import type { MachineStatus, PieceState } from './pieces';
 import type { Facing } from './player';
 
 // Summary entries for the sim's lists, used by summary.ts.
@@ -13,6 +14,7 @@ export interface ArrowSummary {
   id: number;
   /** `arrow` or `ley-bolt`. */
   ammoId: string;
+  room: string;
   x: number;
   y: number;
   dx: number;
@@ -26,6 +28,7 @@ export function arrowSummary(a: ArrowState): ArrowSummary {
   return {
     id: a.id,
     ammoId: a.ammoId,
+    room: a.roomId,
     x: round(a.x),
     y: round(a.y),
     dx: round(a.dx),
@@ -38,6 +41,7 @@ export function arrowSummary(a: ArrowState): ArrowSummary {
 export interface EnemySummary {
   id: number;
   enemyId: string;
+  room: string;
   /** Feet centre, px. */
   x: number;
   y: number;
@@ -58,6 +62,7 @@ export function enemySummary(e: EnemyState): EnemySummary {
   return {
     id: e.id,
     enemyId: e.enemyId,
+    room: e.roomId,
     x: round(e.x),
     y: round(e.y),
     home: { x: round(e.homeX), y: round(e.homeY) },
@@ -75,6 +80,7 @@ export function enemySummary(e: EnemyState): EnemySummary {
 export interface NodeSummary {
   id: number;
   nodeId: string;
+  room: string;
   x: number;
   y: number;
   uses: number;
@@ -83,11 +89,12 @@ export interface NodeSummary {
 }
 
 export function nodeSummary(n: NodeState): NodeSummary {
-  return { id: n.id, nodeId: n.nodeId, x: round(n.x), y: round(n.y), uses: n.uses, regrow: n.regrow };
+  return { id: n.id, nodeId: n.nodeId, room: n.roomId, x: round(n.x), y: round(n.y), uses: n.uses, regrow: n.regrow };
 }
 
 export interface BombSummary {
   id: number;
+  room: string;
   /** Ground point, px. */
   x: number;
   y: number;
@@ -97,5 +104,37 @@ export interface BombSummary {
 }
 
 export function bombSummary(b: BombState): BombSummary {
-  return { id: b.id, x: round(b.x), y: round(b.y), target: { x: round(b.toX), y: round(b.toY) }, height: round(b.height) };
+  return {
+    id: b.id,
+    room: b.roomId,
+    x: round(b.x),
+    y: round(b.y),
+    target: { x: round(b.toX), y: round(b.toY) },
+    height: round(b.height),
+  };
+}
+
+/** A foundry piece: where it is and what it holds, by kind. */
+export type PieceSummary = { id: number; pieceId: string; tx: number; ty: number; facing: Facing } & (
+  | { kind: 'conduit'; item: string | null; progress: number }
+  | {
+      kind: 'machine';
+      buffer: Record<string, number>;
+      output: number;
+      crafting: boolean;
+      progress: number;
+      status: MachineStatus;
+      missing: string[];
+    }
+  | { kind: 'hopper'; item: string | null; count: number }
+  | { kind: 'crate'; contents: Record<string, number> }
+);
+
+export function pieceSummary(p: PieceState): PieceSummary {
+  const common = { id: p.id, pieceId: p.pieceId, tx: p.tx, ty: p.ty, facing: p.facing };
+  if (p.kind === 'conduit') return { ...common, kind: p.kind, item: p.item, progress: p.progress };
+  if (p.kind === 'hopper') return { ...common, kind: p.kind, item: p.item, count: p.count };
+  if (p.kind === 'crate') return { ...common, kind: p.kind, contents: { ...p.contents } };
+  const { buffer, output, crafting, progress, status, missing } = p;
+  return { ...common, kind: p.kind, buffer: { ...buffer }, output, crafting, progress, status, missing: [...missing] };
 }
