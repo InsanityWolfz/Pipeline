@@ -158,3 +158,54 @@ export const PICKUP_SPARKLE: AnimDef = { key: 'pickup-sparkle', frames: 4, frame
 export function animFrames(anim: AnimDef): string[] {
   return anim.frames === 1 ? [anim.key] : Array.from({ length: anim.frames }, (_, i) => `${anim.key}/${i}`);
 }
+
+/** HUD health bar (the `hud-health` frame) and the material column under it, px from the screen's top-left. */
+export const HUD_HEALTH_LAYOUT = {
+  x: 6,
+  y: 6,
+  /** The well the fill is drawn in, relative to the frame. */
+  fill: { x: 2, y: 2, w: 48, h: 4 },
+  /** Palette id of the fill. */
+  fillColor: 'ember',
+} as const;
+
+export const HUD_MATERIALS_LAYOUT = {
+  x: 6,
+  y: 18,
+  /** Vertical step between rows (one item icon tall). */
+  rowStep: 16,
+  /** Where the count starts, relative to the row's icon. */
+  count: { x: 18, y: 6 },
+} as const;
+
+/** Enemy effects drawn in the world. Colours are palette ids. */
+export const ENEMY_FX = {
+  /** Fill colour of a hit flash (the palette's white). */
+  flashColor: 'white',
+  /** The swipe telegraph: a faint arc of the full reach, filling in with the wind-up. */
+  telegraphColor: 'ember',
+  telegraphAlpha: 0.25,
+  telegraphFillAlpha: 0.55,
+  /** Health bar over a damaged enemy: size, and gap above the sprite's top. */
+  healthBar: { w: 20, h: 3, gap: 2 },
+  healthBarColor: 'ember',
+  healthBarBack: 'outline',
+  /** A corpse lingers this long after its death animation, then fades over `corpseFadeMs`. */
+  corpseLingerMs: 600,
+  corpseFadeMs: 600,
+} as const;
+
+/** Player hit feedback, in sim ticks of hit invulnerability. */
+export const PLAYER_HIT_FX = {
+  /** The hit pose shows for the first this-many ticks of a hit. */
+  poseTicks: 8,
+  /** The player flickers on and off every this-many ticks while invulnerable. */
+  flickerTicks: 4,
+} as const;
+
+/** The "+1 [icon]" popup on pickup, and the KO fade. */
+export const PICKUP_POPUP = { rise: 16, durationMs: 700, gap: 2, stack: 10, startHeight: 44 } as const;
+export const KO_FADE_MS = 250;
+
+/** A ground item's sprite bottom sits this far below its ground point, so it rests on its shadow, px. */
+export const GROUND_ITEM_LIFT = 3;

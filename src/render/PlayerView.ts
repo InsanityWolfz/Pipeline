@@ -1,11 +1,12 @@
 import type { GameObjects, Scene } from 'phaser';
-import { animFrames, ATLAS_KEY, PLAYER_ANIMS, TUBE_GRIP, TUBE_SPRITES, type PlayerAnim } from '../data/assets';
+import { animFrames, ATLAS_KEY, PLAYER_ANIMS, PLAYER_HIT_FX, TUBE_GRIP, TUBE_SPRITES, type PlayerAnim } from '../data/assets';
 import { IDLE_SPEED, TICK_RATE } from '../data/config';
-import { FEET_BOX, ROLL_TICKS } from '../data/player';
+import { FEET_BOX, HIT_INVULN_TICKS, ROLL_TICKS } from '../data/player';
 import { aimFacing } from '../sim/direction';
 import { isRolling } from '../sim/movement';
 import type { Facing, PlayerState } from '../sim/player';
 import type { TubeState } from '../sim/tube';
+import { registerAnim } from './anims';
 
 /** Depth nudge that puts the tube just in front of or behind the player. */
 const TUBE_DEPTH_NUDGE = 0.01;
@@ -23,13 +24,7 @@ export class PlayerView {
 
   constructor(scene: Scene) {
     for (const anim of Object.values(PLAYER_ANIMS)) {
-      if (scene.anims.exists(anim.key)) continue;
-      scene.anims.create({
-        key: anim.key,
-        frames: animFrames(anim).map((frame) => ({ key: ATLAS_KEY, frame })),
-        frameRate: anim.frameRate === 'roll' ? (anim.frames * TICK_RATE) / ROLL_TICKS : anim.frameRate,
-        repeat: anim.loop ? -1 : 0,
-      });
+      registerAnim(scene, anim, anim.frameRate === 'roll' ? (anim.frames * TICK_RATE) / ROLL_TICKS : undefined);
     }
     this.sprite = scene.add.sprite(0, 0, ATLAS_KEY, animFrames(PLAYER_ANIMS['idle-down'])[0]).setOrigin(0.5, 1);
     this.tube = scene.add.image(0, 0, ATLAS_KEY, TUBE_SPRITES.down).setOrigin(0, 0);
@@ -47,13 +42,17 @@ export class PlayerView {
       if (fresh) this.sprite.play(PLAYER_ANIMS.roll.key);
     } else {
       const moving = Math.hypot(p.vx, p.vy) >= IDLE_SPEED;
-      const pose = tube.firing ? 'fire' : moving ? 'walk' : 'idle';
+      const hit = p.hurtTicks > HIT_INVULN_TICKS - PLAYER_HIT_FX.poseTicks;
+      const pose = hit ? 'hit' : tube.firing ? 'fire' : moving ? 'walk' : 'idle';
       const name: PlayerAnim = `${pose}-${viewOf(p.facing)}`;
       this.sprite.play(PLAYER_ANIMS[name].key, true);
     }
     this.lastRollTick = p.rollTick;
 
-    this.tube.setVisible(!rolling);
+    // Hit invulnerability shows as a flicker.
+    const hidden = p.hurtTicks > 0 && Math.floor(p.hurtTicks / PLAYER_HIT_FX.flickerTicks) % 2 === 1;
+    this.sprite.setVisible(!hidden);
+    this.tube.setVisible(!rolling && !hidden);
     if (!rolling) this.placeTube(p, bottom);
   }
 
