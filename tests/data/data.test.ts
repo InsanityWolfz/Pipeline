@@ -9,6 +9,7 @@ import {
   ENEMY_ANIMS,
   TUBE_ATTUNE,
   MUZZLE_FLASH,
+  DEPOSIT_SWIRL,
   FIRE_BURST,
   NODE_SPRITES,
   HUD_DIGITS,
@@ -118,7 +119,7 @@ describe('assets', () => {
   });
 
   it('has the fire burst, burn flame and tube attune pulse in the built atlas', () => {
-    for (const anim of [FIRE_BURST, BURN_FLAME, MUZZLE_FLASH, STAGER_SPRITE, ...Object.values(TUBE_ATTUNE)]) {
+    for (const anim of [FIRE_BURST, BURN_FLAME, MUZZLE_FLASH, DEPOSIT_SWIRL, STAGER_SPRITE, ...Object.values(TUBE_ATTUNE)]) {
       expect(anim.key).toMatch(KEBAB);
       for (const frame of animFrames(anim)) expect(Object.keys(atlas.frames)).toContain(frame);
     }

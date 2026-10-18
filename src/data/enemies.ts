@@ -70,13 +70,15 @@ export interface CasterDef extends EnemyBase {
     keepAway: number;
     /** Closer than this, it backs away rather than casting, px. */
     backOff: number;
+    /** Within this of `keepAway` it holds still rather than drifting, px. */
+    settle: number;
     /** Orb speed, px per second. */
     orbSpeed: number;
     orbDamage: number;
     /** Orbs end after flying this far, px. */
     orbRange: number;
-    /** An orb hits a player whose feet are this close, px. */
-    orbRadius: number;
+    /** An orb's hit box, px square, tested against the player's feet box. */
+    orbSize: number;
     /** Push on the player, px, over `knockTicks`. */
     knockback: number;
     knockTicks: number;
@@ -147,14 +149,16 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
       aggroRange: 160,
       keepAway: 120,
       backOff: 90,
+      settle: 2,
       windupTicks: 48,
       swipeTicks: 8,
       recoverTicks: 12,
+      // Counted from the wind-up's start, so casts land at least 90 ticks apart.
       cooldownTicks: 90,
       orbSpeed: 60,
       orbDamage: 12,
       orbRange: 240,
-      orbRadius: 8,
+      orbSize: 8,
       knockback: 10,
       knockTicks: 4,
     },

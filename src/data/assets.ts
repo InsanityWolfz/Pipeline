@@ -154,14 +154,18 @@ export const PLAYER_ANIMS: Readonly<Record<PlayerAnim, AnimDef>> = {
   roll: playerAnim('roll', ROLL_FRAMES, 'roll', false),
 };
 
-/** Enemy animations. `side` faces right; left is drawn flipped. Death has one view. */
-export type EnemyAnim = `${'idle' | 'walk' | 'windup' | 'swipe' | 'hit'}-${'down' | 'up' | 'side'}` | 'death';
+/** Enemy animations. `side` faces right; left is drawn flipped. Death has one view. `recover` is optional: without it, a recovering enemy shows idle. */
+export type EnemyAnim = `${'idle' | 'walk' | 'windup' | 'swipe' | 'recover' | 'hit'}-${'down' | 'up' | 'side'}` | 'death';
+
+/** An enemy's animations: every pose but `recover` is required. */
+export type EnemyAnims = Readonly<Record<Exclude<EnemyAnim, `recover-${string}`>, AnimDef>> &
+  Readonly<Partial<Record<`recover-${'down' | 'up' | 'side'}`, AnimDef>>>;
 
 const ENEMY_WALK_FPS = 6;
 const SWIPE_FPS = 20;
 const DEATH_FPS = 8;
 
-function enemyAnims(prefix: string): Readonly<Record<EnemyAnim, AnimDef>> {
+function enemyAnims(prefix: string, recover = false): EnemyAnims {
   const anim = (name: EnemyAnim, frames: number, frameRate: number, loop: boolean): AnimDef => ({
     key: `${prefix}-${name}`,
     frames,
@@ -176,15 +180,16 @@ function enemyAnims(prefix: string): Readonly<Record<EnemyAnim, AnimDef>> {
     out[`windup-${v}`] = anim(`windup-${v}`, 1, 1, true);
     out[`swipe-${v}`] = anim(`swipe-${v}`, 2, SWIPE_FPS, false);
     out[`hit-${v}`] = anim(`hit-${v}`, 1, 1, true);
+    if (recover) out[`recover-${v}`] = anim(`recover-${v}`, 1, 1, true);
   }
-  return out as Record<EnemyAnim, AnimDef>;
+  return out as EnemyAnims;
 }
 
 /** Animation sets by the `anims` key in src/data/enemies.ts. */
-export const ENEMY_ANIMS: Readonly<Record<string, Readonly<Record<EnemyAnim, AnimDef>>>> = {
+export const ENEMY_ANIMS: Readonly<Record<string, EnemyAnims>> = {
   husk: enemyAnims('husk'),
   wisp: enemyAnims('wisp'),
-  warden: enemyAnims('warden'),
+  warden: enemyAnims('warden', true),
 };
 
 /** The sparkle played where an item is picked up. */
@@ -192,6 +197,9 @@ export const PICKUP_SPARKLE: AnimDef = { key: 'pickup-sparkle', frames: 4, frame
 
 /** A bomb's fire burst, drawn scaled to the burst's real radius. */
 export const FIRE_BURST: AnimDef = { key: 'fire-burst', frames: 4, frameRate: 14, loop: false };
+
+/** Ley light spiralling off the player as a pylon sends the haul home (009). */
+export const DEPOSIT_SWIRL: AnimDef = { key: 'deposit-swirl', frames: 4, frameRate: 10, loop: false };
 
 /** A ley burst at the tube's mouth for each projectile fired (008). */
 export const MUZZLE_FLASH: AnimDef = { key: 'muzzle-flash', frames: 2, frameRate: 20, loop: false };
@@ -233,8 +241,8 @@ export const ENEMY_FX = {
   telegraphFillAlpha: 0.55,
   /** The Wisp's cast telegraph: a ley ring tightening on it and a faint line along its locked aim (009). */
   castColor: 'ley-cyan',
-  castRing: { from: 22, to: 10, width: 2 },
-  castLine: 48,
+  castRing: { from: 22, to: 10, width: 2, alphaFrom: 0.4 },
+  castLine: { length: 64, width: 2, alpha: 0.5 },
   /** Health bar over a damaged enemy: size, and gap above the sprite's top. */
   healthBar: { w: 20, h: 3, gap: 2, border: 1 },
   healthBarColor: 'ember',

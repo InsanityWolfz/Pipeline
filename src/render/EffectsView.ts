@@ -8,6 +8,7 @@ import {
   ENEMY_FX,
   FIRE_BURST,
   HUD_DIGITS,
+  DEPOSIT_SWIRL,
   KO_FADE_MS,
   MUZZLE_FLASH,
   PICKUP_POPUP,
@@ -22,7 +23,7 @@ import type { SimEvents } from '../sim/events';
 import { registerAnim } from './anims';
 
 // One-shot effects driven by sim events: corpses, pickup sparkles and popups,
-// fire bursts, muzzle flashes, and the KO fade. Nothing here feeds back into the sim.
+// fire bursts, muzzle flashes, the deposit swirl, and the KO fade. Nothing here feeds back into the sim.
 export class EffectsView {
   private readonly scene: Scene;
   private readonly camera: Cameras.Scene2D.Camera;
@@ -38,6 +39,7 @@ export class EffectsView {
     registerAnim(scene, PICKUP_SPARKLE);
     registerAnim(scene, FIRE_BURST);
     registerAnim(scene, MUZZLE_FLASH);
+    registerAnim(scene, DEPOSIT_SWIRL);
     for (const set of Object.values(ENEMY_ANIMS)) registerAnim(scene, set.death);
   }
 
@@ -47,6 +49,7 @@ export class EffectsView {
     events.pickups.forEach((p, i) => this.pickup(p.itemId, p.x, p.y, player, i));
     for (const b of events.bursts) this.burst(b.x, b.y, b.radius);
     for (const s of events.shots) this.muzzle(s.x, s.y);
+    if (events.stashDeposits.length > 0) this.swirl(player);
     if (events.ko) this.koFade(player);
   }
 
@@ -72,6 +75,14 @@ export class EffectsView {
         onComplete: () => sprite.destroy(),
       });
     });
+  }
+
+  /** Ley light spiralling up off the player's feet as the haul goes home. */
+  private swirl(player: { x: number; y: number }): void {
+    const sprite = this.scene.add.sprite(player.x, player.y, ATLAS_KEY, animFrames(DEPOSIT_SWIRL)[0]);
+    sprite.setOrigin(0.5, 1).setDepth(player.y + DRAW_HEIGHT);
+    sprite.once('animationcomplete', () => sprite.destroy());
+    sprite.play(DEPOSIT_SWIRL.key);
   }
 
   /** A flash at the tube's mouth, at the height shots fly, in front of the player. */

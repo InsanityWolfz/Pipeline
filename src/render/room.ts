@@ -18,7 +18,6 @@ export class RoomView {
   show(room: Room): void {
     for (const o of this.objects) o.destroy();
     this.objects = [];
-    const width = room.rows[0]?.length ?? 0;
     const floor = (room.floor && FLOOR_SPRITES[room.floor]) ?? SPRITES.floor;
     const add = (x: number, y: number, frame: string): GameObjects.Image => {
       const image = this.scene.add.image(x, y, ATLAS_KEY, frame);
@@ -34,7 +33,7 @@ export class RoomView {
         if (symbol === TILE.door) {
           // The sprite is drawn for the right wall; a door on the left wall mirrors it.
           // A door in the top or bottom wall uses the same arch, unflipped.
-          add(left, bottom, DOORWAY_SPRITE).setOrigin(0, 1).setDepth(bottom).setFlipX(tx < width / 2 && tx === 0);
+          add(left, bottom, DOORWAY_SPRITE).setOrigin(0, 1).setDepth(bottom).setFlipX(tx === 0);
           continue;
         }
         const frame = symbol === TILE.wall ? SPRITES.wall : SPRITES.ruinBlock;

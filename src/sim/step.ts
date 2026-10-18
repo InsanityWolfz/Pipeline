@@ -2,7 +2,8 @@ import { FOUNDRY_ROOM } from '../data/rooms';
 import { stepArrows } from './arrows';
 import { stepBombs } from './bombs';
 import { maskCommand, stepBuild } from './build';
-import { fixtureRects, pylonRect, stepClaims, stepPorts } from './claims';
+import { stepClaims, stepPorts } from './claims';
+import { fixtureRects, tileRect } from './fixtures';
 import { stepBurns } from './burn';
 import { arrowHits, removeDead } from './combat';
 import { stepDoorways } from './doorways';
@@ -14,7 +15,7 @@ import { stepFoundryUse } from './foundryUse';
 import { stepHarvest } from './harvest';
 import { stepLink } from './link';
 import { checkKo } from './health';
-import { stepEnemies } from './huskAi';
+import { stepEnemies } from './enemyAi';
 import { NO_COMMAND, type Command } from './input';
 import { stepPlayer } from './movement';
 import { nodeRects, stepNodes } from './nodes';
@@ -31,7 +32,7 @@ function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
     if (!bodies) {
       const room = roomById(roomId);
       const pieces = roomId === FOUNDRY_ROOM ? [...solidRects(state.foundry), ...fixtureRects(state.fixtures)] : [];
-      const pylon = room.pylon ? [pylonRect(room.pylon)] : [];
+      const pylon = room.pylon ? [tileRect(room.pylon)] : [];
       bodies = { room, obstacles: [...nodeRects(state.nodes, roomId), ...pieces, ...pylon] };
       cache.set(roomId, bodies);
     }

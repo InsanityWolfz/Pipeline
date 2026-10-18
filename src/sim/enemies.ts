@@ -5,7 +5,7 @@ import { startKnock, type Knockable } from './knockback';
 import type { Facing } from './player';
 import type { SimState } from './state';
 
-// Enemies as plain data: creation, damage and bodies. Their behaviour is in huskAi.ts.
+// Enemies as plain data: creation, damage and bodies. Their behaviour is in enemyAi.ts.
 
 export type EnemyMode = 'idle' | 'chase' | 'windup' | 'swipe' | 'recover' | 'return';
 

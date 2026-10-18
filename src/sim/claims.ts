@@ -1,14 +1,12 @@
-import { TILE_SIZE } from '../data/config';
 import { ACTIVATE_TICKS, CLAIM_TICKS, FIXTURE_REACH, FIXTURES, PORT_CYCLE, PORT_TICKS, PYLON_REACH, type FixtureDef } from '../data/claims';
-import { itemDef } from '../data/items';
 import { FEET_BOX } from '../data/player';
 import { FOUNDRY_ROOM, ROOMS } from '../data/rooms';
-import type { Rect } from './collision';
 import type { Command } from './input';
 import { count } from './inventory';
 import { isRolling } from './movement';
 import type { Tile } from './pieces';
 import { removePieceAt } from './placement';
+import { fixtureDef, tileRect, type FixtureState } from './fixtures';
 import { roomById, roomOf, type SimState } from './state';
 import { tileCentre } from './tiles';
 
@@ -18,51 +16,10 @@ import { tileCentre } from './tiles';
 // carries the player home, and the waystone carries them back. Fixtures are the
 // foundry's fixed furniture: kept apart from the placed pieces.
 
-export interface FixtureState {
-  /** The FIXTURES id. */
-  id: string;
-  /** Supply port: the raw it's trying to push out, or null. */
-  item: string | null;
-  /** Supply port: ticks since its last push. */
-  timer: number;
-  /** Supply port: index into PORT_CYCLE of the next raw. */
-  next: number;
-}
-
 /** The claim in progress at a pylon. */
 export interface ClaimHold {
   roomId: string;
   progress: number;
-}
-
-export function fixtureDef(id: string): FixtureDef {
-  const def = FIXTURES.find((f) => f.id === id);
-  if (!def) throw new Error(`Unknown fixture '${id}'`);
-  return def;
-}
-
-/** The fixtures there from the start (those no claim adds). */
-export function startingFixtures(): FixtureState[] {
-  return FIXTURES.filter((f) => !f.claim).map((f) => ({ id: f.id, item: null, timer: 0, next: 0 }));
-}
-
-/** The box a tile covers, px. */
-const tileRect = (t: Tile): Rect => ({ x: (t.tx + 0.5) * TILE_SIZE, y: (t.ty + 0.5) * TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE });
-
-/** A pylon's box: it's solid. */
-export const pylonRect = (t: Tile): Rect => tileRect(t);
-
-/** Every fixture's box: they're all solid. */
-export function fixtureRects(fixtures: readonly FixtureState[]): Rect[] {
-  return fixtures.map((f) => tileRect(fixtureDef(f.id)));
-}
-
-/** The fixture covering a foundry tile, if any. */
-export function fixtureAt(fixtures: readonly FixtureState[], tx: number, ty: number): FixtureState | undefined {
-  return fixtures.find((f) => {
-    const d = fixtureDef(f.id);
-    return d.tx === tx && d.ty === ty;
-  });
 }
 
 /** Gap between the player's feet box and a tile's box, px; 0 when they touch. */
@@ -174,7 +131,7 @@ function usePylon(state: SimState, action: 'deposit' | 'travel'): void {
   }
   const items: Record<string, number> = {};
   for (const [itemId, n] of Object.entries(state.inventory)) {
-    if (n <= 0 || !itemDef(itemId)) continue;
+    if (n <= 0) continue;
     items[itemId] = n;
     state.stash[itemId] = count(state.stash, itemId) + n;
   }

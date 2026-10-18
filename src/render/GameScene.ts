@@ -200,11 +200,12 @@ export class GameScene extends Scene {
   stepOnce(cmd: Command): void {
     stepSim(this.sim, cmd);
     // Hits aren't drawn from events (flashes read sim state), so they aren't kept.
-    const { deaths, pickups, bursts, shots, ko } = this.sim.events;
+    const { deaths, pickups, bursts, shots, stashDeposits, ko } = this.sim.events;
     this.pending.deaths.push(...deaths);
     this.pending.pickups.push(...pickups);
     this.pending.bursts.push(...bursts);
     this.pending.shots.push(...shots);
+    this.pending.stashDeposits.push(...stashDeposits);
     this.pending.ko ||= ko;
   }
 

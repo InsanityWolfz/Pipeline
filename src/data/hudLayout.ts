@@ -87,3 +87,7 @@ export const READOUT_LAYOUT = {
   back: 'outline',
   border: 'ley-deep',
 } as const;
+
+/** Pylon and stash menus (009): rows per column before wrapping, and the gap between columns, px. */
+export const MENU_MAX_ROWS = 10;
+export const MENU_COLUMN_GAP = 8;

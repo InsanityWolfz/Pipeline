@@ -49,7 +49,7 @@ export function stepOrbs(state: SimState): void {
     if (o.travelled > cast.orbRange || isSolid(roomById(o.roomId), Math.floor(o.x / TILE_SIZE), Math.floor(o.y / TILE_SIZE))) return false;
     if (o.roomId !== state.roomId) return true;
     const p = state.player;
-    const near = Math.abs(o.x - p.x) <= FEET_BOX.w / 2 + cast.orbRadius / 2 && Math.abs(o.y - p.y) <= FEET_BOX.h / 2 + cast.orbRadius / 2;
+    const near = Math.abs(o.x - p.x) <= (FEET_BOX.w + cast.orbSize) / 2 && Math.abs(o.y - p.y) <= (FEET_BOX.h + cast.orbSize) / 2;
     if (!near) return true;
     // A roll's i-frames let the orb pass straight through.
     return !damagePlayer(state, cast.orbDamage, o.dx, o.dy, cast.knockback, cast.knockTicks);

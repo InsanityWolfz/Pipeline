@@ -2,6 +2,18 @@
 
 Newest entry first.
 
+## 2026-10-18: 009 Claiming (overnight build)
+**Changed:** built 009 on `claude/009-claiming` (stacked on 008).
+- A new shrine room through the hall's top door, with 3 Wisps (kite and cast slow orbs), 2 Husks and the Pylon Warden (a slam circle, then a recover window).
+- Enemy defs are a union by attack kind, with the AI split per kind.
+- Clear the shrine and hold E at its pylon to claim it for good.
+- A claim adds the foundry's supply port (wood, stone, fiber, ley crystal in turn, 1 every 2 s) and a waystone.
+- The claimed pylon sends the haul to a stash chest by the foundry door, or travels home.
+
+Verify: 363 unit and 26 e2e tests pass. QA found the missing deposit swirl and a knife-edge pylon reach (both fixed), and the stash menu overflowing (it now wraps into columns). Review: fixed 4 blocking issues (the swirl, the Warden recover sprite, a port off-by-one, and missing tests) and most suggestions.
+**Next:** 010 Armor on `claude/010-armor`.
+**Notes:** see the build notes in the 009 spec. Art issues left for 014: the shrine floor repeats, doors on top and bottom walls, and the shrine door hides under the hotbar.
+
 ## 2026-10-18: 008 Spread (overnight build)
 **Changed:** built 008 on `claude/008-spread` (stacked on 007) from `docs/plans/008-spread.md`. A gravity stager costs a warden core (refunded on pick-up). It passes items like a conduit and adds a stream when it faces the tube socket; E or a build-mode click turns it through -30..+30. A reservoir shot fires one projectile per stream. Build mode shows the spread fan, and every shot gets a muzzle flash. Verify: 327 unit and 25 e2e tests pass. QA found that the muzzle flash never reached render (fixed). Review: fixed 3 blocking issues (a determinism test, a stacked-shot test, a magic number) and most suggestions.
 **Next:** 009 Claiming on `claude/009-claiming`.

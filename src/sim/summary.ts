@@ -5,7 +5,7 @@ import type { SimEvents } from './events';
 import { unlockedPieces } from './placement';
 import { isInvulnerable, isRolling } from './movement';
 import type { Facing } from './player';
-import { fixtureDef } from './claims';
+import { fixtureDef } from './fixtures';
 import { socketStreams } from './spread';
 import type { SimState } from './state';
 import {

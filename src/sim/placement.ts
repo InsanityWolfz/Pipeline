@@ -2,7 +2,7 @@ import { FEET_BOX } from '../data/player';
 import { BUILD_BAR, isSolidPiece, machineDef, pieceDef } from '../data/pieces';
 import { recipeDef } from '../data/recipes';
 import { FOUNDRY_ROOM, TILE } from '../data/rooms';
-import { fixtureAt } from './claims';
+import { fixtureAt } from './fixtures';
 import { overlapsRect } from './collision';
 import { count, type Inventory } from './inventory';
 import { createPiece, footprint, pieceAt, pieceRect, type PieceState, type PlaceFail } from './pieces';

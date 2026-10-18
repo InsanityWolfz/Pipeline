@@ -53,3 +53,9 @@ Written by the overnight run; it stays inside the spec. Branch `claude/009-claim
 - `RoomView`: draws the pylon (it's in room data) and the shrine floor per room theme.
 - `StashMenu` and `PylonMenu`: reuse the hopper picker panel styling.
 - The claim hold shows a progress bar over the pylon, like the harvest bar.
+
+## As built
+- **AI files:** `huskAi.ts` became `enemyAi.ts`, the dispatcher, plus `aiCommon.ts`, `casterAi.ts` and `slammerAi.ts`.
+- **Fixtures:** they live in `src/sim/fixtures.ts`, apart from `claims.ts`, so `state.ts` has no import cycle.
+- **Travel:** doors keep their own arrival logic. `travelTo` serves the pylon and the waystone.
+- **Render:** `SiteView` (pylon, fixtures, orbs), `SiteMenus` and a generic `ChoiceMenu`, instead of separate Orb, Fixture, Stash and Pylon views.

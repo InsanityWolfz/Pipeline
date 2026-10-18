@@ -2,7 +2,7 @@
 // Starting values from spec 009; tune in playtest.
 
 /** How close the player's feet box must be to a pylon to use it, px. */
-export const PYLON_REACH = 12;
+export const PYLON_REACH = 20;
 
 /** Ticks of standing still at a cleared pylon to claim it. */
 export const CLAIM_TICKS = 120;
@@ -17,7 +17,7 @@ export const PORT_TICKS = 120;
 export const PORT_CYCLE: readonly string[] = ['wood', 'stone', 'fiber', 'ley-crystal'];
 
 /** How close the player's feet box must be to a fixture to use it, px. */
-export const FIXTURE_REACH = 12;
+export const FIXTURE_REACH = 20;
 
 export type FixtureKind = 'stash' | 'port' | 'waystone';
 

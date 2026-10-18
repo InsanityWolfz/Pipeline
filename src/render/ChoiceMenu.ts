@@ -61,12 +61,13 @@ export class ChoiceMenu<T> {
     const L = PICKER_LAYOUT;
     const rects = menuRows(list.length);
     this.panel.clear();
-    const first = rects[0];
-    const last = rects[rects.length - 1];
-    if (first && last) {
-      const h = last.y + last.h - first.y + 2 * L.pad;
-      this.panel.fillStyle(colorOf(L.border)).fillRect(first.x - L.pad - 1, first.y - L.pad - 1, first.w + 2 * L.pad + 2, h + 2);
-      this.panel.fillStyle(colorOf(L.back)).fillRect(first.x - L.pad, first.y - L.pad, first.w + 2 * L.pad, h);
+    if (rects.length > 0) {
+      const x0 = Math.min(...rects.map((r) => r.x)) - L.pad;
+      const y0 = Math.min(...rects.map((r) => r.y)) - L.pad;
+      const x1 = Math.max(...rects.map((r) => r.x + r.w)) + L.pad;
+      const y1 = Math.max(...rects.map((r) => r.y + r.h)) + L.pad;
+      this.panel.fillStyle(colorOf(L.border)).fillRect(x0 - 1, y0 - 1, x1 - x0 + 2, y1 - y0 + 2);
+      this.panel.fillStyle(colorOf(L.back)).fillRect(x0, y0, x1 - x0, y1 - y0);
     }
     const add = (x: number, y: number, frame: string, depth: number): GameObjects.Image =>
       this.scene.add.image(x, y, ATLAS_KEY, frame).setOrigin(0).setScrollFactor(0).setDepth(depth);

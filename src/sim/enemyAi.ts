@@ -9,7 +9,6 @@ import { slamThink } from './slammerAi';
 import type { SimState } from './state';
 import { engage, inAggroBox, leash, startWindup, stepAttack, toward } from './aiCommon';
 
-export { inAggroBox } from './aiCommon';
 
 // Enemy behaviour, RotMG style: aggro when on screen (or in range) or hit, chase
 // while on screen, head home after a grace period off screen, re-aggro on the

@@ -27,8 +27,9 @@ export function castThink(state: SimState, e: EnemyState, def: CasterDef): [numb
   }
   // Drift toward the preferred distance while the cooldown runs.
   const off = dist - cast.keepAway;
-  if (Math.abs(off) < 2) return [0, 0];
-  const step = toward(dx, dy, def);
-  const scale = Math.min(1, Math.abs(off) / Math.max(1e-9, Math.hypot(step[0], step[1])));
-  return off > 0 ? [step[0] * scale, step[1] * scale] : [-step[0] * scale, -step[1] * scale];
+  if (Math.abs(off) < cast.settle) return [0, 0];
+  // A whole step toward or away, but never past the preferred distance (the player is past `backOff`, so dist > 0).
+  const [sx, sy] = toward(dx, dy, def);
+  const scale = Math.min(1, Math.abs(off) / Math.hypot(sx, sy)) * Math.sign(off);
+  return [sx * scale, sy * scale];
 }

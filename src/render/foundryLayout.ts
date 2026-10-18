@@ -1,5 +1,5 @@
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
-import { BUILD_BAR_LAYOUT, PICKER_LAYOUT } from '../data/hudLayout';
+import { BUILD_BAR_LAYOUT, MENU_COLUMN_GAP, MENU_MAX_ROWS, PICKER_LAYOUT } from '../data/hudLayout';
 import { LOGISTICS_ICONS } from '../data/foundryAssets';
 import { itemDef, ITEMS } from '../data/items';
 import { pieceDef } from '../data/pieces';
@@ -60,9 +60,25 @@ export function pickerRows(entries: readonly PickerEntry[]): (ScreenRect & Picke
   return entries.map((e, i) => ({ ...e, x, y: top + i * step, w: L.rowWidth, h: L.rowHeight }));
 }
 
-/** A menu of `n` rows laid out like the hopper picker: a centred column (009's pylon and stash menus). */
+/**
+ * A menu of `n` rows styled like the hopper picker (009's pylon and stash menus):
+ * a centred column, wrapping into side-by-side columns once it would pass
+ * MENU_MAX_ROWS, so a long stash stays on screen.
+ */
 export function menuRows(n: number): ScreenRect[] {
-  return pickerRows(Array.from({ length: n }, () => ({ action: 'put' as const, itemId: '' }))).map(({ x, y, w, h }) => ({ x, y, w, h }));
+  const L = PICKER_LAYOUT;
+  const perColumn = Math.min(n, MENU_MAX_ROWS);
+  const columns = Math.max(1, Math.ceil(n / MENU_MAX_ROWS));
+  const step = L.rowHeight + L.rowGap;
+  const top = Math.round((VIEW_HEIGHT - perColumn * step) / 2);
+  const width = columns * L.rowWidth + (columns - 1) * MENU_COLUMN_GAP;
+  const left = Math.round((VIEW_WIDTH - width) / 2);
+  return Array.from({ length: n }, (_, i) => ({
+    x: left + Math.floor(i / perColumn) * (L.rowWidth + MENU_COLUMN_GAP),
+    y: top + (i % perColumn) * step,
+    w: L.rowWidth,
+    h: L.rowHeight,
+  }));
 }
 
 /** The items the player holds, in ITEMS order: what the hopper picker lists. */

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { CLAIM_TICKS, FIXTURES, PORT_CYCLE, PORT_TICKS } from '../../src/data/claims';
 import { FOUNDRY_ROOM, ROOMS, SHRINE_ROOM } from '../../src/data/rooms';
-import { claim, fixtureDef, portFront } from '../../src/sim/claims';
+import { claim, portFront } from '../../src/sim/claims';
+import { fixtureDef } from '../../src/sim/fixtures';
 import { damagePlayer } from '../../src/sim/health';
 import { canPlace } from '../../src/sim/placement';
 import { arrivalTile } from '../../src/sim/doorways';

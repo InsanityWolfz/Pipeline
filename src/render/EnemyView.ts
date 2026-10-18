@@ -26,7 +26,7 @@ export class EnemyView {
 
   constructor(scene: Scene) {
     this.scene = scene;
-    for (const set of Object.values(ENEMY_ANIMS)) for (const anim of Object.values(set)) registerAnim(scene, anim);
+    for (const set of Object.values(ENEMY_ANIMS)) for (const anim of Object.values(set)) if (anim) registerAnim(scene, anim);
     registerAnim(scene, BURN_FLAME);
   }
 
@@ -41,7 +41,11 @@ export class EnemyView {
       if (!anims) throw new Error(`Unknown enemy anims '${def.anims}'`);
       d.sprite.setPosition(e.x, bottom).setDepth(bottom).setFlipX(e.facing === 'left');
       // Switch only on a change, so a one-shot swipe holds its last frame instead of restarting.
-      const key = anims[`${poseOf(e)}-${viewOf(e.facing)}`].key;
+      const view = viewOf(e.facing);
+      const pose = poseOf(e);
+      // Enemies without a recover pose stand idle through it.
+      const anim = pose === 'recover' ? (anims[`recover-${view}`] ?? anims[`idle-${view}`]) : anims[`${pose}-${view}`];
+      const key = anim.key;
       if (d.sprite.anims.currentAnim?.key !== key) d.sprite.play(key);
       if (e.flash > 0) d.sprite.setTint(colorOf(ENEMY_FX.flashColor)).setTintMode(TintModes.FILL);
       else d.sprite.clearTint();
@@ -99,10 +103,10 @@ export class EnemyView {
       const { castRing, castLine } = ENEMY_FX;
       const color = colorOf(ENEMY_FX.castColor);
       const top = e.y + def.hurtbox.offsetY;
-      g.lineStyle(castRing.width, color, 0.4 + 0.6 * progress);
+      g.lineStyle(castRing.width, color, castRing.alphaFrom + (1 - castRing.alphaFrom) * progress);
       g.strokeCircle(e.x, top, castRing.from + (castRing.to - castRing.from) * progress);
-      g.lineStyle(1, color, ENEMY_FX.telegraphAlpha);
-      g.lineBetween(e.x, e.y, e.x + e.swipeDirX * castLine, e.y + e.swipeDirY * castLine);
+      g.lineStyle(castLine.width, color, castLine.alpha);
+      g.lineBetween(e.x, e.y, e.x + e.swipeDirX * castLine.length, e.y + e.swipeDirY * castLine.length);
       return;
     }
     if (def.kind === 'slammer') {
@@ -124,8 +128,8 @@ export class EnemyView {
   }
 }
 
-function poseOf(e: EnemyState): 'idle' | 'walk' | 'windup' | 'swipe' | 'hit' {
+function poseOf(e: EnemyState): 'idle' | 'walk' | 'windup' | 'swipe' | 'recover' | 'hit' {
   if (e.flash > 0 && e.mode !== 'windup' && e.mode !== 'swipe') return 'hit';
-  if (e.mode === 'windup' || e.mode === 'swipe') return e.mode;
+  if (e.mode === 'windup' || e.mode === 'swipe' || e.mode === 'recover') return e.mode;
   return Math.hypot(e.vx, e.vy) >= IDLE_SPEED ? 'walk' : 'idle';
 }
