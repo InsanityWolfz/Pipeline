@@ -6,7 +6,7 @@ Oct 17, 2026 · @Shaun
 
 The prototype is the new player experience, about 15 to 20 minutes long, ending when the player has their first ammo line running through the tube and heads back out.
 
-It must prove one thing: **"I did it by hand, now it does itself" feels great**, and the combat around it is fun on its own. It should feel like a game, not a gray-box demo, so it gets crude but real pixel art and animations.
+It must prove one thing: **"I did it by hand, now it does itself" feels great**, and the combat around it is fun on its own. It should feel like a game, not a gray-box demo, so it gets crude but real art and animations.
 
 ## Player flow
 
@@ -27,7 +27,7 @@ Each beat introduces exactly one new idea.
 
 **Camera: three-quarter top-down.** The view looks down at an angle, so you see the tops and fronts of things, like Realm of the Mad God, Hyper Light Drifter, or classic Zelda. It reads better than straight overhead and is purely an art convention, so it needs no 3D. Try a straight-down variant early and compare.
 
-**Art style: "HD pixel art" (also called high-res pixel art).** Clearly pixel art, but with more detail than 8- or 16-bit: characters around 32 to 48 pixels tall, 16 or 32-pixel tiles, a limited palette. References: Hyper Light Drifter, Eastward, CrossCode, Sea of Stars.
+**Art style: clean vector.** Smooth outlined shapes, soft gradients, glows and shadows, sharp at any screen size. Bright daylight colours, like RuneScape 3 or Realm of the Mad God, with ley-line cyan as the magic accent. Characters are rigs of parts that lean, kick and sway. The look was chosen from a three-way style test (spec 016, 2026-10-18); it replaced the earlier HD pixel art, whose 32-pixel limit made sprites lopsided.
 
 **Theme check:** ruins, glowing ley lines, rune-carved stone, crystal conduits. Every placeholder should already fit the lost magical civilization.
 
@@ -39,7 +39,7 @@ Each beat introduces exactly one new idea.
 - Foundry: machine idle and working loops, ammo moving between machines, pylon off and activating
 - Effects: each ammo's projectile, spreads, AoE ground markers, pickup sparkle
 
-**Sourcing:** Claude generates every sprite as a text grid in one locked palette, and a build script renders the grids to PNG sprite sheets (see the build process doc). Crude is fine; consistent is required.
+**Sourcing:** Claude defines every sprite as typed shape data in one locked palette, and the game draws the shapes into textures at boot (see docs/art.md). Crude is fine; consistent is required.
 
 ## Content list
 
@@ -85,15 +85,14 @@ In the prototype, the tube's reservoir refills fast enough that the first line f
 
 ## Tech
 
-**Decision: Phaser 4 + TypeScript + Vite.** With pixel art and a three-quarter view, this is a 2D game, and Phaser is a mature 2D engine with sprites, animations, tilemaps, collision, and cameras built in. It's still pure TypeScript, so it suits AI-assisted coding.
+**Decision: Phaser 4 + TypeScript + Vite.** With 2D sprites and a three-quarter view, this is a 2D game, and Phaser is a mature 2D engine with sprites, animations, tilemaps, collision, and cameras built in. It's still pure TypeScript, so it suits AI-assisted coding.
 
 Three.js stays an option if we later want a 2.5D look (pixel sprites in a 3D scene, like Octopath Traveler's HD-2D style). That adds lighting and depth but costs extra setup the prototype doesn't need.
 
 **Tools:**
 
 - **Tiled** for building maps, which Phaser loads directly
-- **Aseprite** for editing sprites and animations
-- A build script that renders Claude's sprite grids to PNG sheets
+- Sprites as typed shape data, drawn into textures at boot
 
 ## Out of scope
 

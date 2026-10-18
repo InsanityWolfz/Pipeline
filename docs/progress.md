@@ -2,6 +2,23 @@
 
 Newest entry first.
 
+## 2026-10-18: Playtest notes and 016 Art direction (spec)
+**Changed:** Shaun's playtest notes became backlog items 016–021. On the branch `claude/016-art-direction`:
+- **Style test:** 016 started with a style test of one scene in three styles (`docs/art/style-test.html`, https://claude.ai/artifact/J3ssrCe2V7mHMHyVuEnfxx).
+- **Shaun's choices:**
+  - clean vector style (C), and the environment as shown
+  - a rust-cloaked hooded wanderer with a cyan face glow and leather gloves
+  - a brass tank for now
+  - firing slows the walk
+  - scope: the pipeline, the player and combat
+- **Docs:** wrote `docs/specs/016-art-direction.md` (status: draft). Updated `docs/design.md` (stack, camera and art) and `docs/prototype.md` (art style, sourcing, tools) from pixel art to vector, with Shaun's explicit approval.
+
+**Next:** Shaun reviews and approves 016, then `/plan`.
+**Notes:**
+- 017 (more enemies) conflicts with design.md's "few enemies, no hordes"; its spec needs that call first.
+- `docs/art.md` is rewritten in the 016 build, not here.
+- The style-test numbers are proposals: the 0.7 walk multiplier and the lean and shove amounts.
+
 ## 2026-10-18: 007–015 merged
 **Changed:** Shaun said "Merge all". Specs 007–015 are marked done in their specs and in `docs/backlog.md`, and their technical choices are in `docs/decisions.md`. The stacked PRs #9–#17 are merged top down, each into the branch below it and #9 into main.
 **Next:** Shaun's playtest notes on main, then the next spec. Carried over from 014: the rest of the sprite redraws (walk, enemies, machines, icons, HUD frame), the pause title card, menu hover sounds, squash on pickups, and the HUD covering the hall's west door.
