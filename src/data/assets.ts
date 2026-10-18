@@ -141,6 +141,10 @@ const WALK_FPS = 8;
 const WALK_FRAMES = 4;
 const ROLL_FRAMES = 4;
 
+/** The idle breathe (014): frames, and frames per second. */
+const IDLE_FRAMES = 4;
+const IDLE_FPS = 3;
+
 const playerAnim = (name: PlayerAnim, frames: number, frameRate: AnimDef['frameRate'], loop: boolean): AnimDef => ({
   key: `player-${name}`,
   frames,
@@ -149,9 +153,9 @@ const playerAnim = (name: PlayerAnim, frames: number, frameRate: AnimDef['frameR
 });
 
 export const PLAYER_ANIMS: Readonly<Record<PlayerAnim, AnimDef>> = {
-  'idle-down': playerAnim('idle-down', 1, 1, true),
-  'idle-up': playerAnim('idle-up', 1, 1, true),
-  'idle-side': playerAnim('idle-side', 1, 1, true),
+  'idle-down': playerAnim('idle-down', IDLE_FRAMES, IDLE_FPS, true),
+  'idle-up': playerAnim('idle-up', IDLE_FRAMES, IDLE_FPS, true),
+  'idle-side': playerAnim('idle-side', IDLE_FRAMES, IDLE_FPS, true),
   'walk-down': playerAnim('walk-down', WALK_FRAMES, WALK_FPS, true),
   'walk-up': playerAnim('walk-up', WALK_FRAMES, WALK_FPS, true),
   'walk-side': playerAnim('walk-side', WALK_FRAMES, WALK_FPS, true),

@@ -61,7 +61,7 @@ export const AMBIENT = {
   moteSpeed: [4, 10] as const,
   fireflies: 10,
   glowBreatheMs: 2200,
-  glowAlpha: [0.35, 0.6] as const,
+  glowAlpha: [0.55, 0.9] as const,
 } as const;
 
 /** The dusk tint over each room (a palette id and alpha) and the vignette's edge darkness. */

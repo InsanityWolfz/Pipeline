@@ -130,7 +130,7 @@ function makeTextures(scene: Scene): void {
           const d = Math.hypot(x + 0.5 - GLOW_SIZE, y + 0.5 - GLOW_SIZE) / GLOW_SIZE;
           if (d >= 1) continue;
           const band = Math.ceil((1 - d) * GLOW_BANDS) / GLOW_BANDS;
-          ctx.fillStyle = `rgba(255,255,255,${(band * band * 0.5).toFixed(3)})`;
+          ctx.fillStyle = `rgba(255,255,255,${(band * band * 0.6).toFixed(3)})`;
           ctx.fillRect(x, y, 1, 1);
         }
       }

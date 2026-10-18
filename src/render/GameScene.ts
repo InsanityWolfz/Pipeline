@@ -107,7 +107,7 @@ export class GameScene extends Scene {
     this.wake = new WakeView(this);
     this.tutorial = new TutorialUi(this);
     this.menu = new CraftMenuView(this, (recipeId) => this.craft(recipeId));
-    this.feel = new FeelView(this);
+    this.feel = new FeelView(this, (id) => this.foundryView?.dropIn(id));
     this.showRoom(this.sim.roomId);
     this.draw();
 

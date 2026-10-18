@@ -22,6 +22,7 @@ export class FeelView {
   readonly sound: SoundView;
   readonly juice: JuiceView;
   private readonly ambient: AmbientView;
+  private readonly dropIn: (id: number) => void;
   private roomId = '';
   /** Last frame's state, to catch changes the sim records no event for. */
   private modes = new Map<number, string>();
@@ -35,7 +36,9 @@ export class FeelView {
     SoundView.preload(scene);
   }
 
-  constructor(scene: Scene) {
+  /** `dropIn` bounces a just-placed piece in the foundry view. */
+  constructor(scene: Scene, dropIn: (id: number) => void) {
+    this.dropIn = dropIn;
     this.sound = new SoundView(scene);
     this.juice = new JuiceView(scene);
     this.ambient = new AmbientView(scene);
@@ -113,6 +116,7 @@ export class FeelView {
     }
     for (const p of ev.places) {
       s.play(SOUNDS.place);
+      this.dropIn(p.id);
       const c = tileCentre(p.tx, p.ty);
       j.burst('place', c.x, c.y + TILE_SIZE / 2);
     }

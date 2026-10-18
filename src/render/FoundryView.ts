@@ -24,6 +24,7 @@ import { facingVector } from '../sim/direction';
 import { rotate, socketStreams } from '../sim/spread';
 import { pieceRect, type FoundryState, type PieceState } from '../sim/pieces';
 import type { Facing } from '../sim/player';
+import { SQUASH } from '../data/juice';
 import { registerAnim } from './anims';
 import { arrowSpots, conduitLook, pieceIcon } from './foundryLayout';
 import { colorOf } from './color';
@@ -77,6 +78,8 @@ export class FoundryView {
   private readonly drawn = new Map<number, Drawn>();
   /** Build mode's spread fan over the tube socket. */
   private readonly fan: GameObjects.Graphics;
+  /** Pieces just placed, which drop in with a bounce when next drawn (014). */
+  private readonly dropping = new Set<number>();
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -92,6 +95,7 @@ export class FoundryView {
     for (const p of shown ? foundry.pieces : []) {
       live.add(p.id);
       const d = this.drawn.get(p.id) ?? this.create(p);
+      this.bounce(p.id, d.body);
       this.draw(p, d);
       placeArrows(d.arrows, p, building);
     }
@@ -102,6 +106,19 @@ export class FoundryView {
       d.count?.set('');
       this.drawn.delete(id);
     }
+  }
+
+  /** A piece was just placed: it drops in with a little squash when it's drawn. */
+  dropIn(id: number): void {
+    this.dropping.add(id);
+  }
+
+  private bounce(id: number, body: GameObjects.Sprite): void {
+    if (!this.dropping.delete(id)) return;
+    const y = body.y;
+    body.setY(y - SQUASH.dropPx).setScale(1 - SQUASH.squash, 1 + SQUASH.squash);
+    this.scene.tweens.add({ targets: body, y, duration: SQUASH.ms, ease: 'Bounce.Out' });
+    this.scene.tweens.add({ targets: body, scaleX: 1, scaleY: 1, duration: SQUASH.ms * 1.5, ease: 'Back.Out' });
   }
 
   /** The top of a drawn piece's sprite, world px. */
