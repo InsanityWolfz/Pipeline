@@ -34,7 +34,7 @@ export interface WandererPose {
   /** Face glow opacity 0..1. */
   glow: number;
   hasTube: boolean;
-  /** Attuned to the foundry: the hose, tank and rings run cyan. */
+  /** Attuned to the foundry: once attuning finishes, the hose, tank window, barrel and rings run cyan. */
   attuned: boolean;
   /** While attuning, 0..1: the rings light up one by one. */
   attuning: number | null;
@@ -48,7 +48,7 @@ export const REST_POSE: WandererPose = {
   aim: Math.PI / 2,
   lean: 0,
   crouch: 0,
-  stance: 5,
+  stance: WANDERER.rig.restStance,
   push: 0,
   kick: 0,
   stride: 0,
@@ -108,13 +108,11 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
   c.rotate(pose.lean);
   for (const step of def.order) {
     switch (step) {
-      case '@legs':
-        break;
       case '@window':
-        if (pose.hasTube && def.window) drawPart(c, parts.get(pose.attuned ? def.window.lit : def.window.dormant), o);
+        if (pose.hasTube && def.window) drawPart(c, parts.get(lit ? def.window.lit : def.window.dormant), o);
         break;
       case '@bubble':
-        if (pose.hasTube && def.window && pose.attuned) {
+        if (pose.hasTube && def.window && lit) {
           c.save();
           c.translate(0, -(pose.flow * 0.3) % def.window.rise);
           drawShape(c, def.window.bubble, o);
@@ -130,23 +128,27 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
         }
         break;
       case '@far-arm': {
-        const end = pose.hasTube ? gun(TUBE_PARTS.frontGrip) : ([def.shoulders.far[0] - 1, def.shoulders.far[1] + 13] as const);
+        const rest = WANDERER.rig.restHand.far;
+        const end = pose.hasTube ? gun(TUBE_PARTS.frontGrip) : ([def.shoulders.far[0] + rest[0], def.shoulders.far[1] + rest[1]] as const);
         limb(c, [...def.shoulders.far, end[0], end[1]], WANDERER.limbs.sleeveFar, o);
         hand(c, end, o);
         break;
       }
-      case '@near-arm':
-        nearArm(c, def.shoulders.near, pose.hasTube ? gun(TUBE_PARTS.rearGrip) : [def.shoulders.near[0] + 1, def.shoulders.near[1] + 14], o);
+      case '@near-arm': {
+        const rest = WANDERER.rig.restHand.near;
+        nearArm(c, def.shoulders.near, pose.hasTube ? gun(TUBE_PARTS.rearGrip) : [def.shoulders.near[0] + rest[0], def.shoulders.near[1] + rest[1]], o);
         break;
+      }
       case '@hose': {
         if (!pose.hasTube) break;
         const rear = gun(TUBE_PARTS.rear);
-        const back = rotate([-10, 0], pose.aim);
+        const bend = WANDERER.rig.hoseBend;
+        const back = rotate([-bend.back, 0], pose.aim);
         const [fx, fy] = def.hose.from;
-        const pts = [fx, fy, fx + def.hose.sag[0], fy + def.hose.sag[1], rear[0] + back[0], rear[1] + back[1] + 6, rear[0], rear[1]];
-        const style = pose.attuned ? WANDERER.limbs.hose : WANDERER.limbs.hoseDormant;
+        const pts = [fx, fy, fx + def.hose.sag[0], fy + def.hose.sag[1], rear[0] + back[0], rear[1] + back[1] + bend.drop, rear[0], rear[1]];
+        const style = lit ? WANDERER.limbs.hose : WANDERER.limbs.hoseDormant;
         c.save();
-        if (pose.attuned) c.lineDashOffset = -pose.flow;
+        if (lit) c.lineDashOffset = -pose.flow;
         limb(c, pts, style, o, true);
         c.restore();
         break;
@@ -171,12 +173,19 @@ function hand(c: CanvasRenderingContext2D, at: Pt, o: DrawOpts): void {
 /** The near arm: a wide sleeve to the elbow, then a wrapped forearm and glove at `grip`. */
 function nearArm(c: CanvasRenderingContext2D, shoulder: Pt, grip: Pt, o: DrawOpts): void {
   const [sx, sy] = shoulder;
-  const ex = (sx + grip[0]) / 2 + 1;
-  const ey = (sy + grip[1]) / 2 + 1;
+  const { sleeve: v, elbow } = WANDERER.rig;
+  const ex = (sx + grip[0]) / 2 + elbow[0];
+  const ey = (sy + grip[1]) / 2 + elbow[1];
   limb(c, [ex, ey, grip[0], grip[1]], WANDERER.limbs.forearm, o);
   const sleeve: Shape = {
     kind: 'path',
-    d: [['M', sx - 2, sy - 3], ['Q', sx + 7, sy - 1, ex + 3, ey + 2], ['L', ex - 3, ey + 3], ['Q', sx - 4, sy + 6, sx - 2, sy - 3], ['Z']],
+    d: [
+      ['M', sx + v.top[0], sy + v.top[1]],
+      ['Q', sx + v.bulge[0], sy + v.bulge[1], ex + v.elbowOut[0], ey + v.elbowOut[1]],
+      ['L', ex + v.elbowIn[0], ey + v.elbowIn[1]],
+      ['Q', sx + v.back[0], sy + v.back[1], sx + v.top[0], sy + v.top[1]],
+      ['Z'],
+    ],
     fill: WANDERER.limbs.sleeveNear.color,
     outline: true,
   };
@@ -185,22 +194,23 @@ function nearArm(c: CanvasRenderingContext2D, shoulder: Pt, grip: Pt, o: DrawOpt
 }
 
 function drawLegs(c: CanvasRenderingContext2D, pose: WandererPose, feet: number, hipY: number, o: DrawOpts): void {
+  const r = WANDERER.rig;
   const swing = Math.sin(pose.stride) * pose.stepping;
-  const lift = (s: number): number => -Math.max(0, s) * 2.5 * pose.stepping;
-  const spread = pose.stance - 5 + feet;
+  const lift = (s: number): number => -Math.max(0, s) * r.lift * pose.stepping;
+  const spread = pose.stance - r.restStance + feet;
   const [backX, frontX, backLift, frontLift] =
     pose.view === 'side'
-      ? [-spread + swing * 4, spread + 1 - swing * 4, lift(-Math.sin(pose.stride)), lift(Math.sin(pose.stride))]
+      ? [-spread + swing * r.stride, spread + r.frontFoot - swing * r.stride, lift(-Math.sin(pose.stride)), lift(Math.sin(pose.stride))]
       : [-spread, spread, lift(Math.sin(pose.stride)), lift(-Math.sin(pose.stride))];
   const leg = (x: number, l: number, style: LimbStyle, boot: Shape, kneeX: number): void => {
-    limb(c, [kneeX, hipY + 12, x, -3 + l], style, o);
+    limb(c, [kneeX, hipY + r.knee.below, x, r.ankle + l], style, o);
     c.save();
     c.translate(x, l);
     drawShape(c, boot, o);
     c.restore();
   };
-  leg(backX, backLift, WANDERER.limbs.legBack, WANDERER.boot.back, -2);
-  leg(frontX, frontLift, WANDERER.limbs.legFront, WANDERER.boot.front, 2);
+  leg(backX, backLift, WANDERER.limbs.legBack, WANDERER.boot.back, -r.knee.x);
+  leg(frontX, frontLift, WANDERER.limbs.legFront, WANDERER.boot.front, r.knee.x);
 }
 
 function drawTube(c: CanvasRenderingContext2D, pivot: Pt, pose: WandererPose, lit: boolean, o: DrawOpts): void {
@@ -209,7 +219,7 @@ function drawTube(c: CanvasRenderingContext2D, pivot: Pt, pose: WandererPose, li
   c.rotate(pose.aim);
   c.translate(-pose.kick, 0);
   drawShapes(c, TUBE_PARTS.housing, o);
-  drawShapes(c, pose.attuned || pose.attuning !== null ? TUBE_PARTS.barrel.lit : TUBE_PARTS.barrel.dormant, o);
+  drawShapes(c, lit ? TUBE_PARTS.barrel.lit : TUBE_PARTS.barrel.dormant, o);
   TUBE_PARTS.rings.forEach((x, i) => {
     const n = TUBE_PARTS.rings.length;
     const ring =

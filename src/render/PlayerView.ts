@@ -1,7 +1,7 @@
 import type { GameObjects, Scene, Textures } from 'phaser';
 import { TintModes } from 'phaser';
 import { PLAYER_HIT_FX, WANDERER_KEY } from '../data/assets';
-import { WANDERER, type WandererView } from '../data/art/wanderer';
+import { WANDERER, WANDERER_FEEL, type WandererView } from '../data/art/wanderer';
 import { IDLE_SPEED } from '../data/config';
 import { DYING_TICKS, FEET_BOX, HIT_INVULN_TICKS } from '../data/player';
 import { ATTUNE_TICKS } from '../data/tube';
@@ -11,7 +11,7 @@ import { aimFacing } from '../sim/direction';
 import { isRolling } from '../sim/movement';
 import type { Facing, PlayerState } from '../sim/player';
 import type { LinkState } from '../sim/link';
-import type { TubeState } from '../sim/tube';
+import { isFiringHeavy, type TubeState } from '../sim/tube';
 import { colorOf } from './color';
 import { textureScale } from './vector/textures';
 import { drawWanderer, REST_POSE, type WandererPose } from './vector/wandererRig';
@@ -22,35 +22,7 @@ const DEATH_FADE_SHARE = 1 / 3;
 /** A multiply tint that leaves a corner's colour as drawn. */
 const UNTINTED = 0xffffff;
 
-/**
- * How the body carries the tube's weight (016): render-side feel, in style-test px
- * and radians. Firing braces (wider stance, crouch, lean back); each shot shoves.
- */
-const FEEL = {
-  firing: { lean: -0.16, crouch: 2.2, stance: 8.5, push: -2.5 },
-  shot: { kick: 3.5, lean: -0.05, push: -1 },
-  hit: { lean: 0.2, push: -2 },
-  roll: { lean: 0.55, crouch: 9, stance: 3 },
-  death: { lean: -1.2, crouch: 10 },
-  /** Ease per 60 Hz frame toward the target pose, and kick decay. */
-  ease: 0.2,
-  kickDecay: 0.7,
-  /** Stride radians per world px walked. */
-  stride: 0.32,
-  /** Cloak flap: speed (radians per ms) and swing at rest, walking and firing. */
-  flapSpeed: 0.009,
-  flap: { rest: 0.04, walk: 0.08, firing: 0.15 },
-  /** Face glow: rest, pulse depth and speed, and on a shot. */
-  glow: { rest: 0.78, pulse: 0.12, speed: 0.004, shot: 1 },
-  /** Hose and tank flow, px per ms: idle and firing. */
-  flow: { idle: 0.01, firing: 0.09 },
-  /** The roll's smear: ghost copies this far back along the roll, world px, at this opacity. */
-  smear: { steps: [10, 5], alpha: 0.22 },
-  /** The tube's aim is limited to this far either side of each view's axis. */
-  aimSpread: 0.85,
-  /** Aim from this high above the feet, world px. */
-  aimHeight: 14,
-} as const;
+const FEEL = WANDERER_FEEL;
 
 const viewOf = (f: Facing): WandererView => (f === 'up' || f === 'down' ? f : 'side');
 
@@ -95,7 +67,7 @@ export class PlayerView {
   /** Draws the player; `shown` false hides them (they're in a room not yet on screen). `hasTube` false (012) draws them empty-handed. */
   update(p: PlayerState, tube: TubeState, link: LinkState, armor: ArmorWeight | null, hasTube: boolean, shown = true): void {
     const now = this.sprite.scene.time.now;
-    const dt = this.lastTime < 0 ? 16.7 : Math.min(100, now - this.lastTime);
+    const dt = this.lastTime < 0 ? FEEL.frameMs : Math.min(FEEL.maxFrameMs, now - this.lastTime);
     this.lastTime = now;
     this.sprite.setVisible(shown);
     const bottom = p.y + FEET_BOX.h / 2;
@@ -118,7 +90,7 @@ export class PlayerView {
 
   private nextPose(p: PlayerState, tube: TubeState, link: LinkState, hasTube: boolean, dt: number): WandererPose {
     const prev = this.pose;
-    const frames = dt / 16.7;
+    const frames = dt / FEEL.frameMs;
     const k = 1 - Math.pow(1 - FEEL.ease, frames);
     const ease = (from: number, to: number): number => from + (to - from) * k;
 
@@ -128,16 +100,16 @@ export class PlayerView {
     const facing = rolling ? p.facing : aimFacing(p.aimX - p.x, p.aimY - p.y, p.facing);
     const view = viewOf(facing);
     const flip = facing === 'left';
-    const heavy = hasTube && tube.firing && !tube.dry;
+    const heavy = hasTube && isFiringHeavy(tube);
     const shot = heavy && tube.shotCount > 0;
     const hit = p.hurtTicks > HIT_INVULN_TICKS - PLAYER_HIT_FX.poseTicks;
     const dying = p.dying > 0 ? 1 - p.dying / DYING_TICKS : 0;
 
-    let target = { lean: 0, crouch: 0, stance: 5, push: 0 };
+    let target: { lean: number; crouch: number; stance: number; push: number } = { lean: 0, crouch: 0, stance: WANDERER.rig.restStance, push: 0 };
     if (heavy) target = { ...FEEL.firing };
     if (hit) target = { ...target, lean: FEEL.hit.lean, push: FEEL.hit.push };
     if (rolling) target = { ...target, lean: FEEL.roll.lean, crouch: FEEL.roll.crouch, stance: FEEL.roll.stance, push: 0 };
-    if (dying > 0) target = { lean: FEEL.death.lean * dying, crouch: FEEL.death.crouch * dying, stance: 7, push: 0 };
+    if (dying > 0) target = { lean: FEEL.death.lean * dying, crouch: FEEL.death.crouch * dying, stance: FEEL.death.stance, push: 0 };
 
     const moved = Math.hypot(p.x - this.lastX, p.y - this.lastY);
     this.lastX = p.x;
@@ -163,7 +135,7 @@ export class PlayerView {
       hasTube,
       attuned: link.attuned,
       attuning: link.attunePulse > 0 ? 1 - link.attunePulse / ATTUNE_TICKS : null,
-      muzzle: shot ? 1 : 0.6,
+      muzzle: shot ? FEEL.muzzle.shot : FEEL.muzzle.rest,
     };
   }
 

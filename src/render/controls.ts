@@ -126,12 +126,12 @@ export class Controls {
     return { tx: Math.floor(this.aimX / TILE_SIZE), ty: Math.floor(this.aimY / TILE_SIZE) };
   }
 
-  /** The cursor is over the world, not the screen's UI. */
   /** A pointer's position in view px (the HUD's 640×360 layout), whatever the backbuffer resolution (016). */
   private view(p: { x: number; y: number }): { x: number; y: number } {
     return toView(p.x, p.y, this.camera.zoom);
   }
 
+  /** The cursor is over the world, not the screen's UI. */
   overWorld(): boolean {
     const v = this.view(this.pointer);
     return !this.build.overUi(v.x, v.y);

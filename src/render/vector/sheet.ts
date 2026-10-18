@@ -1,7 +1,8 @@
 import { WANDERER, type WandererView } from '../../data/art/wanderer';
 import { drawWanderer, type WandererPose } from './wandererRig';
 import { sheetPoses } from './wandererPoses';
-import { ENEMY_RIGS, vectorFrames } from './catalog';
+import { ENEMY_RIGS } from '../../data/art/enemies';
+import { vectorFrames } from './catalog';
 
 // The contact sheet (016, dev only): every vector sprite, pose and facing at 4×.
 

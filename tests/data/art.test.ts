@@ -4,7 +4,8 @@ import { inksOf, svg, type LimbStyle, type Shape } from '../../src/data/art/type
 import { VECTOR_SPRITES } from '../../src/data/art/sprites';
 import { TUBE_PARTS, WANDERER, WANDERER_DYNAMIC } from '../../src/data/art/wanderer';
 import { DAYLIGHT_PALETTE, PIXEL_PALETTE } from '../../src/data/palette';
-import { ENEMY_RIGS, poseOfAnim } from '../../src/render/vector/catalog';
+import { ENEMY_RIGS } from '../../src/data/art/enemies';
+import { poseOfAnim } from '../../src/render/vector/catalog';
 
 // Vector art data (016): colours, rig parts and frame counts all line up.
 
@@ -114,5 +115,30 @@ describe('docs/art.md', () => {
     const { readFileSync } = await import('node:fs');
     const doc = readFileSync('docs/art.md', 'utf8');
     for (const c of DAYLIGHT_PALETTE) expect(doc).toContain(`| \`${c.id}\` | ${c.hex} |`);
+  });
+});
+
+describe('vector frame registration', () => {
+  it('names every vector frame in the asset registry, so render code reaches it by key', async () => {
+    const assets = await import('../../src/data/assets');
+    const foundry = await import('../../src/data/foundryAssets');
+    const { vectorFrames } = await import('../../src/render/vector/catalog');
+    const anims = [
+      ...Object.values(assets.ENEMY_ANIMS).flatMap((set) => Object.values(set)),
+      assets.PICKUP_SPARKLE,
+      assets.FIRE_BURST,
+      assets.DEPOSIT_SWIRL,
+      assets.MUZZLE_FLASH,
+      assets.BURN_FLAME,
+    ].flatMap((a) => (a ? assets.animFrames(a) : []));
+    const registered = new Set<string>([
+      ...Object.values(assets.SPRITES),
+      ...anims,
+      foundry.TUTORIAL_SPRITES.stone,
+      foundry.TUTORIAL_SPRITES.stoneEmpty,
+      foundry.ORB_SPRITES.orb,
+      foundry.ORB_SPRITES.shadow,
+    ]);
+    for (const f of vectorFrames()) expect(registered, f.name).toContain(f.name);
   });
 });

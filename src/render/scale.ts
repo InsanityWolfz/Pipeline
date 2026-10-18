@@ -5,6 +5,9 @@ import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 // largest whole-number CSS zoom that fits the window (the page letterboxes), but it
 // draws at the device's real resolution so vector art stays sharp.
 
+/** The camera that draws screen-space objects (the HUD, menus, mood) in view px. */
+export const UI_CAMERA = 'ui';
+
 export interface ScreenFit {
   /** CSS px per view px: a whole number, as before 016. */
   zoom: number;

@@ -237,7 +237,7 @@ export const DEPTHS = {
   shadow: 0,
   /** Ground decals like the swipe telegraph, above shadows. */
   groundFx: 0.5,
-  /** Nudge that puts the tube just in front of or behind the player. */
+  /** Nudge that puts a tutorial seal just in front of its door. */
   tubeNudge: 0.01,
   /** Nudge that puts a burn flame just in front of the enemy it's on. */
   flameNudge: 0.01,

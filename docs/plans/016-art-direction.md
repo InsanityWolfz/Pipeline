@@ -76,3 +76,15 @@ Spec: docs/specs/016-art-direction.md. This is a vertical slice through data (pa
 - Per-frame canvas upload for the player. It's one small texture, so it's fine.
 - Enemy frames are baked, so a resize after boot doesn't re-bake. They stay slightly soft on a much larger window, which is acceptable under "at boot".
 - The HUD no longer fades with door and KO fades, because it's on its own camera. This is a small visible change, noted in the build notes.
+
+## As built
+The files differ from the plan's names:
+- **Data:**
+  - `src/data/art/sprites.ts` holds the projectiles, effects and the tube stone, in place of `tube.ts`, `projectiles.ts` and `effects.ts`.
+  - The tube parts live in `wanderer.ts`.
+  - `enemies.ts` lists the enemy rigs.
+- **Render:**
+  - `src/render/vector/catalog.ts` lists every baked frame.
+  - `pack.ts` shelf-packs them, and `textures.ts` bakes and registers them, in place of `bake.ts`.
+  - `enemyRig.ts` is the single enemy drawer, in place of `enemyRigs.ts`.
+  - Posing lives in the two rig drawers, in place of `pose.ts`.

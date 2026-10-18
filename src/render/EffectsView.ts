@@ -22,6 +22,7 @@ import { DRAW_HEIGHT } from '../data/tube';
 import type { SimEvents } from '../sim/events';
 import { registerAnim } from './anims';
 import { addVectorSprite } from './vector/textures';
+import { UI_CAMERA } from './scale';
 
 // One-shot effects driven by sim events: corpses, pickup sparkles and popups,
 // fire bursts, muzzle flashes, the deposit swirl, and the KO fade. Nothing here feeds back into the sim.
@@ -141,11 +142,15 @@ export class EffectsView {
     }
     this.camera.stopFollow();
     const [r, g, b] = hexToRgb(paletteHex(OUTLINE_ID));
+    // The HUD fades with the world (016: it draws on its own camera).
+    const ui = this.scene.cameras.getCamera(UI_CAMERA);
+    ui?.fadeOut(KO_FADE_MS, r, g, b);
     this.camera.fadeOut(KO_FADE_MS, r, g, b, (_cam: Cameras.Scene2D.Camera, progress: number) => {
       if (progress < 1) return;
       this.camera.centerOn(player.x, player.y);
       this.camera.startFollow(this.followed, true, CAMERA_LERP, CAMERA_LERP);
       this.camera.fadeIn(KO_FADE_MS, r, g, b);
+      ui?.fadeIn(KO_FADE_MS, r, g, b);
     });
   }
 }

@@ -138,3 +138,36 @@ The game moves from 32-pixel grid art to clean vector art in bright daylight col
 
 ## Open questions
 None.
+
+## Build notes
+- **The firing slowdown lags by one tick.** The walk reads last tick's firing state, because movement runs before the tube in a tick. The first tick of firing walks at full speed, and the tick that releases fire still walks at 0.7×. That fits "full speed on the next tick" after release.
+- **The hose and tank window turn cyan when attuning finishes**, together with the barrel and muzzle. While the tube attunes, its rings light up one by one over a dormant tube.
+- **The HUD is on its own camera, so the screen shake doesn't move it.** It still fades with the world on door and KO fades.
+- **Vector frames are drawn once, at boot.**
+  - They are drawn at the screen scale then, capped at 4 texels per world px.
+  - Making the window bigger later, or a screen scale above 4, makes them a little soft until a reload.
+  - The canvas keeps a whole-number CSS zoom as before, so small windows letterbox at zoom 1.
+- **Speed:**
+  - WebGL multisampling is off. The textures are already smooth, and at full resolution multisampling cost a lot.
+  - Headless Chromium uses software rendering, so it runs at about 21 fps here, against 58 on main. That's fill rate at the higher resolution, which a real GPU doesn't feel.
+- **Two decisions I made:**
+  - The Wisp is violet, so it doesn't read as ley, and the Warden is mossy stone. Both are drafts for Shaun's review, as the spec says.
+  - The burn flame has no outline, since it's an effect.
+- **Left as they are, from QA:**
+  - On its first frame, a new projectile draws over the barrel.
+  - The bomb's shadow is faint on the dark floor.
+  - The gloves are hard to pick out at game size.
+  - Fire-burst embers are still square particles, recoloured to the daylight palette.
+- **Review:** I fixed all three blocking items:
+  - one firing predicate, shared by the sim and the render
+  - the rig layout and feel tuning moved into `src/data/art/wanderer.ts`
+  - a test that every vector frame is registered
+
+  From the suggestions, I also did these:
+  - lit gating for the hose and tank window
+  - the HUD fades with the world
+  - the fire burst fits its box
+  - the burn flame has no outline
+  - the enemy rig list moved into data
+  - the comment and dead-code cleanups
+  - the plan's file list

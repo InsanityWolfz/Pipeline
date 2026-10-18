@@ -40,7 +40,7 @@ const tankSide: readonly Shape[] = [
 export type WandererView = 'side' | 'down' | 'up';
 
 /** Dynamic pieces the rig draws itself, by token in a view's draw order. */
-export const WANDERER_DYNAMIC = ['@legs', '@far-arm', '@near-arm', '@hose', '@tube', '@window', '@bubble', '@glow'] as const;
+export const WANDERER_DYNAMIC = ['@far-arm', '@near-arm', '@hose', '@tube', '@window', '@bubble', '@glow'] as const;
 export type WandererDynamic = (typeof WANDERER_DYNAMIC)[number];
 
 export interface WandererViewDef {
@@ -64,7 +64,7 @@ export interface WandererViewDef {
 }
 
 const sideView: WandererViewDef = {
-  order: ['@legs', 'cloak-trail', 'tank', '@window', '@bubble', '@far-arm', 'cloak-body', 'mantle', 'hood', '@glow', '@hose', '@tube', '@near-arm'],
+  order: ['cloak-trail', 'tank', '@window', '@bubble', '@far-arm', 'cloak-body', 'mantle', 'hood', '@glow', '@hose', '@tube', '@near-arm'],
   parts: [
     part('cloak-trail', [-5, -24], [path('M -5 -24 Q -20 -6 -21 14 Q -15 17 -10 14 L -4 4 Z', solid('rust-dark'))]),
     part('tank', [-15, -15], tankSide),
@@ -100,7 +100,7 @@ const sideView: WandererViewDef = {
 };
 
 const downView: WandererViewDef = {
-  order: ['@legs', 'tank-back', 'cloak-body', 'mantle', 'hood', '@glow', '@hose', '@tube', '@far-arm', '@near-arm'],
+  order: ['tank-back', 'cloak-body', 'mantle', 'hood', '@glow', '@hose', '@tube', '@far-arm', '@near-arm'],
   parts: [
     part('tank-back', [0, -15], [rect(-12.5, -28, 25, 23, 4, solid('brass')), rect(-12.5, -30, 25, 3.4, 1, solid('brass-dark'))]),
     part('cloak-body', [0, 0], [
@@ -132,7 +132,7 @@ const downView: WandererViewDef = {
 };
 
 const upView: WandererViewDef = {
-  order: ['@legs', '@tube', '@far-arm', '@near-arm', 'cloak-body', 'mantle', '@hose', 'tank', '@window', '@bubble', 'hood'],
+  order: ['@tube', '@far-arm', '@near-arm', 'cloak-body', 'mantle', '@hose', 'tank', '@window', '@bubble', 'hood'],
   parts: [
     part('cloak-body', [0, 0], [
       path(CLOAK_FRONT, solid('rust')),
@@ -191,6 +191,28 @@ export const WANDERER = {
   box: { size: [72, 68], anchor: [36, 52] },
   /** The hip sits this far above the feet at rest. */
   hipHeight: 22,
+  /** Rig layout, style-test px: where limbs bend and rest. */
+  rig: {
+    /** Feet stand this far apart at rest; `stance` above this spreads them. */
+    restStance: 5,
+    /** The knees hang this far below the hip, this far either side of the centre. */
+    knee: { below: 12, x: 2 },
+    /** The ankle sits this far above the feet. */
+    ankle: -3,
+    /** A side-view stride swings the feet this far; a step lifts a foot this high. */
+    stride: 4,
+    lift: 2.5,
+    /** The front foot sits this much further forward in the side view. */
+    frontFoot: 1,
+    /** Empty-handed, the hands hang this far from the shoulders. */
+    restHand: { far: [-1, 13], near: [1, 14] },
+    /** The hose enters the tube's rear from this far back along it, and this far below. */
+    hoseBend: { back: 10, drop: 6 },
+    /** The wide near sleeve, as offsets: from the shoulder, a bulge, then either side of the elbow and back. */
+    sleeve: { top: [-2, -3], bulge: [7, -1], elbowOut: [3, 2], elbowIn: [-3, 3], back: [-4, 6] },
+    /** The elbow sits this far off the shoulder–grip midpoint. */
+    elbow: [1, 1],
+  },
   views: { side: sideView, down: downView, up: upView } satisfies Record<WandererView, WandererViewDef>,
   limbs: {
     legBack: { width: 6.5, color: 'leather-dark', outline: true },
@@ -204,4 +226,39 @@ export const WANDERER = {
   boot: { back: rect(-4.5, -5, 9, 5, 2.5, solid('leather-dark')), front: rect(-4, -5.2, 9.5, 5.2, 2.5, solid('leather')) },
   /** A gloved hand. */
   hand: ellipse(0, 0, 2.8, 2.8, solid('leather-dark')),
+} as const;
+
+/**
+ * How the body carries the tube's weight (016): render-side feel, in style-test px
+ * and radians. Firing braces (wider stance, crouch, lean back); each shot shoves.
+ */
+export const WANDERER_FEEL = {
+  firing: { lean: -0.16, crouch: 2.2, stance: 8.5, push: -2.5 },
+  shot: { kick: 3.5, lean: -0.05, push: -1 },
+  hit: { lean: 0.2, push: -2 },
+  roll: { lean: 0.55, crouch: 9, stance: 3 },
+  death: { lean: -1.2, crouch: 10, stance: 7 },
+  /** Ease per 60 Hz frame toward the target pose, and kick decay. */
+  ease: 0.2,
+  kickDecay: 0.7,
+  /** One 60 Hz frame, ms, and the longest frame the feel steps over at once. */
+  frameMs: 16.7,
+  maxFrameMs: 100,
+  /** Stride radians per world px walked. */
+  stride: 0.32,
+  /** Cloak flap: speed (radians per ms) and swing at rest, walking and firing. */
+  flapSpeed: 0.009,
+  flap: { rest: 0.04, walk: 0.08, firing: 0.15 },
+  /** Face glow: rest, pulse depth and speed, and on a shot. */
+  glow: { rest: 0.78, pulse: 0.12, speed: 0.004, shot: 1 },
+  /** Muzzle glow at rest and on a shot. */
+  muzzle: { rest: 0.6, shot: 1 },
+  /** Hose and tank flow, px per ms: idle and firing. */
+  flow: { idle: 0.01, firing: 0.09 },
+  /** The roll's smear: ghost copies this far back along the roll, world px, at this opacity. */
+  smear: { steps: [10, 5], alpha: 0.22 },
+  /** The tube's aim is limited to this far either side of each view's axis. */
+  aimSpread: 0.85,
+  /** Aim from this high above the feet, world px. */
+  aimHeight: 14,
 } as const;

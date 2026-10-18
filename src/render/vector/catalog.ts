@@ -1,10 +1,8 @@
 import { animFrames, ENEMY_ANIMS, type AnimDef } from '../../data/assets';
+import { ENEMY_RIGS } from '../../data/art/enemies';
 import type { EnemyPoseName, EnemyRigDef } from '../../data/art/enemyRig';
-import { HUSK_RIG } from '../../data/art/husk';
 import { OUTLINE_WIDTH } from '../../data/art/style';
 import { VECTOR_SPRITES } from '../../data/art/sprites';
-import { WARDEN_RIG } from '../../data/art/warden';
-import { WISP_RIG } from '../../data/art/wisp';
 import { drawShapes } from './draw';
 import { drawEnemy } from './enemyRig';
 
@@ -18,8 +16,6 @@ export interface VectorFrame {
   /** Draws the frame with its anchor at the canvas origin, world px. */
   draw(c: CanvasRenderingContext2D, pxPerUnit: number): void;
 }
-
-export const ENEMY_RIGS: readonly EnemyRigDef[] = [HUSK_RIG, WISP_RIG, WARDEN_RIG];
 
 /** The pose and view an enemy anim key names: `husk-walk-side` → walk, side; `husk-death` → death, down. */
 export function poseOfAnim(rig: EnemyRigDef, anim: AnimDef): { pose: EnemyPoseName; view: 'side' | 'down' | 'up' } {

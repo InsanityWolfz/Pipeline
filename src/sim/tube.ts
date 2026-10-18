@@ -64,7 +64,12 @@ export function slotCount(state: Pick<SimState, 'tube' | 'inventory' | 'link'>):
 
 /** The walk multiplier from the tube (016): slower while it really fires, by last tick's state. */
 export function firingWalkScale(state: Pick<SimState, 'tube'>): number {
-  return state.tube.firing && !state.tube.dry ? FIRING_WALK_MULTIPLIER : 1;
+  return isFiringHeavy(state.tube) ? FIRING_WALK_MULTIPLIER : 1;
+}
+
+/** The tube is really firing (016): fire held, rounds coming out, not a dry fire, the foundry or a roll. */
+export function isFiringHeavy(tube: Pick<TubeState, 'firing' | 'dry'>): boolean {
+  return tube.firing && !tube.dry;
 }
 
 /** Runs after the player has moved this tick, so shots leave from where they stand now. */

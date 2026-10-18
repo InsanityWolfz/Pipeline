@@ -2,6 +2,29 @@
 
 Newest entry first.
 
+## 2026-10-18: 016 Art direction (unattended build)
+**Changed:** built 016 on `claude/016-art-direction` from `docs/plans/016-art-direction.md`.
+- **Vector art:**
+  - Typed shape data in `src/data/art/`, drawn into textures at boot.
+  - A daylight palette, with the old palette renamed to `PIXEL_PALETTE`.
+- **The wanderer:** a rig in three facings, drawn every frame. It braces, leans and kicks while firing, and the tube has dormant, attuning and attuned states.
+- **Combat art:** the Husk, Wisp and Warden as baked rigs, plus vector projectiles and effects.
+- **Rendering:**
+  - The game draws at the device's resolution, with a world camera and a UI camera.
+  - The pixel atlas uses nearest filtering.
+- **Sim:** firing slows the walk to 0.7×.
+- **Docs:** `/sheet.html` is a contact sheet of every vector sprite. `art.md` and `/sprite` are rewritten.
+
+Verify: 491 unit and 34 e2e tests pass.
+- QA passed with screenshots. The fixes it led to:
+  - clipped death and slam frames
+  - the Wisp's charge orb when it faces up
+  - bolder hose rings
+- Review's three blocking items are fixed, and most of its suggestions are in.
+
+**Next:** Shaun reviews the draft PR and the contact sheet, and playtests the preview. The run continues with 017 on a branch stacked on this one.
+**Notes:** see the 016 spec's build notes. Headless rendering is slower at full resolution (software GL), but e2e stays green.
+
 ## 2026-10-18: Specs 017–020 (interviews)
 **Changed:** interviewed Shaun and wrote four draft specs on `claude/016-art-direction`:
 - **017 Overworld and danger:** absorbs the "more enemies" idea, at Shaun's call.

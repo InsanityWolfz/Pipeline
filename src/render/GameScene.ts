@@ -39,7 +39,7 @@ import { WakeView } from './WakeView';
 import { mergeEvents } from './eventLog';
 import { FeelView } from './FeelView';
 import { TutorialUi } from './TutorialUi';
-import { currentFit, type ScreenFit } from './scale';
+import { currentFit, UI_CAMERA, type ScreenFit } from './scale';
 import { bakeVectors } from './vector/textures';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
@@ -98,7 +98,7 @@ export class GameScene extends Scene {
     // Pixel art stays crisp at any zoom; vector frames (016) are drawn once at the screen's scale.
     this.textures.get(ATLAS_KEY).setFilter(Textures.FilterMode.NEAREST);
     bakeVectors(this, this.fit.scale);
-    this.uiCamera = this.cameras.add(0, 0, this.fit.width, this.fit.height, false, 'ui').setOrigin(0, 0);
+    this.uiCamera = this.cameras.add(0, 0, this.fit.width, this.fit.height, false, UI_CAMERA).setOrigin(0, 0);
     this.applyFit(this.fit);
     // Each frame, screen-space objects go to the UI camera and world objects to the main one.
     this.events.on('prerender', () => this.routeCameras());
@@ -274,11 +274,14 @@ export class GameScene extends Scene {
       return;
     }
     this.fading = true;
+    // The HUD fades with the world, as it did on one camera before 016.
+    this.uiCamera?.fadeOut(DOOR_FADE_MS, 0, 0, 0);
     camera.fadeOut(DOOR_FADE_MS, 0, 0, 0, (_cam: unknown, progress: number) => {
       if (progress < 1) return;
       this.showRoom(this.sim.roomId);
       camera.centerOn(this.sim.player.x, this.sim.player.y);
       camera.fadeIn(DOOR_FADE_MS, 0, 0, 0);
+      this.uiCamera?.fadeIn(DOOR_FADE_MS, 0, 0, 0);
       this.fading = false;
     });
   }
