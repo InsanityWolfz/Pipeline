@@ -57,20 +57,15 @@ export class CraftMenuView {
     };
     const panel = craftPanelAt();
     add(panel.x, panel.y, SPRITES.craftPanel);
-    // The title card: a carved tablet over the panel naming the menu, and that the world is paused while it's open.
+    // The title card: a carved tablet over the panel naming the menu.
     const T = L.title;
     const cardX = Math.round(panel.x + (L.width - T.w) / 2);
     const cardY = panel.y - T.gap - T.h;
     this.card = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.menu);
     drawTablet(this.card, cardX, cardY, T.w, T.h);
-    for (const [style, words, y] of [
-      ['title', T.text, cardY + T.titleY],
-      ['body', T.note, cardY + T.noteY],
-    ] as const) {
-      const line = new TextLine(scene, 0, y, DEPTHS.menu + 2, false, style).set(words);
-      line.moveTo(Math.round(panel.x + L.width / 2 - line.width / 2), y);
-      this.lines.push(line);
-    }
+    const title = new TextLine(scene, 0, cardY + T.titleY, DEPTHS.menu + 2, false, 'title').set(T.text);
+    title.moveTo(Math.round(panel.x + L.width / 2 - title.width / 2), cardY + T.titleY);
+    this.lines.push(title);
 
     for (const line of craftMenuLines()) {
       if (line.kind === 'header') {
@@ -116,6 +111,15 @@ export class CraftMenuView {
 
   get isOpen(): boolean {
     return this.open;
+  }
+
+  /** While open, a press on the panel or its title card is the menu's, never a shot (020: the world keeps running). */
+  overUi(x: number, y: number): boolean {
+    if (!this.open) return false;
+    const L = CRAFT_MENU_LAYOUT;
+    const panel = craftPanelAt();
+    const top = panel.y - L.title.gap - L.title.h;
+    return x >= panel.x && x < panel.x + L.width && y >= top && y < panel.y + L.height;
   }
 
   setOpen(open: boolean): void {

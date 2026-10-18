@@ -7,8 +7,6 @@ import { worn } from '../sim/armor';
 import { advanceClock, createClock } from '../sim/clock';
 import { craft } from '../sim/crafting';
 import { clearEvents, createEvents, type SimEvents } from '../sim/events';
-import { usableInReach } from '../sim/foundryUse';
-import { cancelHarvest } from '../sim/harvest';
 import type { Command } from '../sim/input';
 import { pieceAt } from '../sim/pieces';
 import { canPlace, conduitInFrom, unlockedPieces } from '../sim/placement';
@@ -41,6 +39,8 @@ import type { UiState } from './testHook';
 import { RoomViews } from './RoomViews';
 import { fontsReady } from './fonts';
 import { MENU_HOVER_EVENT } from './menuFeedback';
+import { MenuRouter } from './MenuRouter';
+import { PauseMenuView } from './PauseMenuView';
 import { SceneCameras } from './SceneCameras';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
@@ -67,6 +67,8 @@ export class GameScene extends Scene {
   private hover?: HoverView;
   private picker?: HopperPicker;
   private menu?: CraftMenuView;
+  private pause?: PauseMenuView;
+  private router?: MenuRouter;
   private site?: SiteView;
   private siteMenus?: SiteMenus;
   private wake?: WakeView;
@@ -116,6 +118,7 @@ export class GameScene extends Scene {
     this.wake = new WakeView(this);
     this.tutorial = new TutorialUi(this);
     this.menu = new CraftMenuView(this, (recipeId) => this.craft(recipeId));
+    this.pause = new PauseMenuView(this);
     this.feel = new FeelView(
       this,
       (id) => this.foundryView?.dropIn(id),
@@ -131,6 +134,8 @@ export class GameScene extends Scene {
     camera.startFollow(this.playerView.sprite, true, CAMERA_LERP, CAMERA_LERP);
 
     this.controls = new Controls(this);
+    if (this.menu && this.pause && this.siteMenus && this.picker && this.buildView && this.feel)
+      this.router = new MenuRouter(this.sim, { craft: this.menu, pause: this.pause, site: this.siteMenus, picker: this.picker, build: this.buildView, sound: this.feel.sound });
   }
 
   /** Matches both cameras to the backbuffer (016). Called on boot and whenever the window changes. */
@@ -145,16 +150,16 @@ export class GameScene extends Scene {
       controls.poll({
         building: this.sim.building,
         pieceId: () => this.buildView?.selected ?? FIRST_PIECE,
-        overUi: (x, y) => [this.buildView, this.picker, this.siteMenus, this.hud, this.tutorial].some((v) => v?.overUi(x, y)),
-        clickUi: (x, y) => this.clickUi(controls, x, y),
+        overUi: (x, y) => [this.pause, this.menu, this.buildView, this.picker, this.siteMenus, this.hud, this.tutorial].some((v) => v?.overUi(x, y)),
+        clickUi: (x, y) => this.router?.click(controls, x, y),
         stagerAt: (t) => {
           const piece = pieceAt(this.sim.foundry, t.tx, t.ty);
           return piece?.kind === 'stager' ? piece.id : null;
         },
       });
-      this.handleUi(controls);
-      if (this.menuOpen) {
-        // The world is paused: no ticks run, and no time is banked to catch up on later.
+      this.router?.handle(controls);
+      if (this.pause?.isOpen) {
+        // The world is paused (Esc): no ticks run, and no time is banked to catch up on later.
         controls.discardPending();
       } else if (!this.manualStepping) {
         const ticks = advanceClock(this.clock, delta);
@@ -164,48 +169,13 @@ export class GameScene extends Scene {
     this.draw();
   }
 
-  /** The menu, the build bar, the picker and Esc. These work under the test hook too; only ticking is left to it. */
-  private handleUi(controls: Controls): void {
-    const toggle = controls.takeMenuToggle();
-    const close = controls.takeMenuClose();
-    if (close && this.siteMenus?.isOpen) this.siteMenus.close();
-    else if (close && this.picker?.isOpen) this.picker.close();
-    else if (close && this.sim.building && !this.menuOpen) controls.requestBuildToggle();
-    else if (toggle || (close && this.menuOpen)) this.setMenuOpen(toggle ? !this.menuOpen : false);
-    if (this.menuOpen) return;
-    const steps = controls.takeWheel();
-    if (steps !== 0 && this.sim.building) this.buildView?.step(steps);
-    // E on a hopper opens its menu; the sim does nothing with it.
-    if (controls.takeInteractPress()) {
-      const target = usableInReach(this.sim);
-      if (target?.kind === 'hopper') this.picker?.open(target.id);
-      else this.siteMenus?.interact(this.sim);
-    }
-    const open = this.picker?.hopperId;
-    if (open !== null && open !== undefined && usableInReach(this.sim)?.id !== open) this.picker?.close();
-  }
-
-  /** A click on the build bar picks a piece; on the hopper menu, it takes out or puts in. */
-  private clickUi(controls: Controls, x: number, y: number): void {
-    if (this.menuOpen) return;
-    if (this.buildView?.click(x, y) || this.siteMenus?.click(controls, x, y)) {
-      this.feel?.sound.play(SOUNDS.menuClick);
-      return;
-    }
-    const entry = this.picker?.entryAt(x, y);
-    const hopper = this.picker?.hopperId;
-    if (!entry || hopper === null || hopper === undefined) return;
-    this.feel?.sound.play(SOUNDS.menuClick);
-    this.picker?.flashAt(x, y);
-    if (entry.action === 'take') controls.menus.withdraw(hopper);
-    else controls.menus.deposit(hopper, entry.itemId);
-    this.picker?.close();
-  }
-
   /** The mouse-over text on show, for the test hook (015). */
   hoverText(): UiState {
     return {
       ready: this.effects !== undefined && fontsReady(),
+      craftOpen: this.menu?.isOpen ?? false,
+      paused: this.pause?.isOpen ?? false,
+      pickerOpen: this.picker?.isOpen ?? false,
       hoverName: this.hover?.shown ?? null,
       hoverDescription: this.hover?.shownDescription ?? null,
       buildTip: this.buildView?.tip.shown ?? null,
@@ -215,15 +185,10 @@ export class GameScene extends Scene {
     };
   }
 
-  get menuOpen(): boolean {
-    return this.menu?.isOpen ?? false;
-  }
-
-  /** Opening the menu cancels a harvest in progress; while it's open the sim doesn't tick. */
-  setMenuOpen(open: boolean): void {
-    if (open === this.menuOpen) return;
-    if (open) cancelHarvest(this.sim);
-    this.menu?.setOpen(open);
+  /** The sound settings, for the test hook. */
+  soundSettings(): { muted: boolean; volume: number } {
+    const sound = this.feel?.sound;
+    return { muted: sound?.muted ?? false, volume: sound?.volume ?? 0 };
   }
 
   /** Crafts once, between ticks. The test hook crafts through here too. Crafting has no drawn effects. */
@@ -312,7 +277,8 @@ export class GameScene extends Scene {
     );
     // Menu rows light under the cursor (020).
     const pointer = controls?.viewPointer();
-    if (pointer) for (const menu of [this.siteMenus, this.picker]) menu?.pointAt(pointer.x, pointer.y);
+    if (pointer) for (const menu of [this.siteMenus, this.picker, this.pause]) menu?.pointAt(pointer.x, pointer.y);
+    if (this.feel) this.pause?.update(this.feel.sound);
     const point = controls?.overWorld() ? controls.cursorPoint() : null;
     this.hover?.update(sim, shown, point, (id) => this.foundryView?.topOf(id), this.cameras.main.worldView);
   }

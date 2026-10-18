@@ -117,20 +117,23 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
   // E on the empty hopper opens the picker; clicking ley crystal fills it.
   const below = centre(8, 7);
   await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [below.x, below.y] as const);
+  // walkTo stops a step short of the hopper's reach: one more step up closes it.
+  await step(page, 1, { moveY: -1 });
   const rows = pickerRows(pickerEntries({ item: null, count: 0 }, (await state(page)).inventory));
   const crystal = rows.find((r) => r.itemId === 'ley-crystal');
   if (!crystal) throw new Error('no ley crystal row');
   const p = await screenPoint(page, crystal.x + 40, crystal.y + crystal.h / 2);
   // Esc closes the picker: a click where its row was then does nothing.
+  const picker = () => page.evaluate(() => window.__GAME__?.ui().pickerOpen);
   await page.keyboard.press('e');
-  await page.waitForTimeout(100);
+  await expect.poll(picker).toBe(true);
   await page.keyboard.press('Escape');
-  await page.waitForTimeout(100);
+  await expect.poll(picker).toBe(false);
   await page.mouse.click(p.x, p.y);
   await page.waitForTimeout(50);
   expect(pieceAt(await step(page, 1), 8, 6)).toMatchObject({ kind: 'hopper', item: null });
   await page.keyboard.press('e');
-  await page.waitForTimeout(100);
+  await expect.poll(picker).toBe(true);
   await page.mouse.click(p.x, p.y);
   await page.waitForTimeout(50);
   const filled = await step(page, 1);

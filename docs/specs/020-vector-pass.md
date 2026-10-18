@@ -185,6 +185,9 @@ Built unattended on `claude/020-vector-pass`, stacked on 019, from `docs/plans/0
 - **The contact sheet** (`/sheet.html`) groups frames by family. Screenshots of every 020 family are in `docs/review/020/` for Shaun's review.
 
 ## Open questions
-- **The pause title card (for Shaun).** There is still no separate pause screen (014 noted the same): the craft menu is what pauses the game. So the "pause title card" is a carved title tablet over the craft menu reading "Crafting" and "Paused". Is that what you meant, or do you want a real pause screen (Esc) with its own card? That would be a new feature, out of this spec's scope.
+- **The pause title card.** *Answer (Shaun, 2026-10-18):* crafting shouldn't pause; make Esc the pause menu for now, with some sound settings. *Built:*
+  - **The craft menu keeps the world running.** Its clicks never fire the tube, and its title card reads "Crafting".
+  - **Esc is the pause menu:** once there's nothing left to close (a site menu, the hopper picker, the craft menu, build mode), Esc stops the world and shows a "Paused" card over a dimmed screen. Its rows are Sound (on/off), Volume (− and +), and Resume; Esc also resumes. These are the same mute and master volume as M, [ and ], and they're saved.
+  - Menu routing moved from `GameScene` into `render/MenuRouter.ts`. The test hook reports `craftOpen`, `paused`, `pickerOpen` and `sound()`.
 - **The floor's variants (for Shaun).** About one tile in five shows a variant: cracked, worn, a faint ley rune inlay, or a brass strip. Keep that mix, or make the floor plainer?
 

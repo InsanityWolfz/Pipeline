@@ -38,11 +38,8 @@ export const CRAFT_MENU_LAYOUT = {
   headerIcon: { x: 2, y: 0 },
   /** Alpha of a row the player can't afford. */
   greyAlpha: 0.35,
-  /**
-   * The title card over the panel (020): the craft menu is the game's pause, so its card names both.
-   * A tablet `w` x `h` px, `gap` px above the panel, the title then the note under it.
-   */
-  title: { text: 'Crafting', note: 'Paused', w: 128, h: 30, gap: 4, titleY: 4, noteY: 19 },
+  /** The title card over the panel (020): a tablet `w` x `h` px, `gap` px above the panel, the title `titleY` px down it. */
+  title: { text: 'Crafting', w: 128, h: 22, gap: 4, titleY: 4 },
 } as const;
 
 /**
@@ -182,3 +179,19 @@ export const TABLET = {
 
 /** Menu rows (020): a pressed row flashes brass for this long, ms. */
 export const MENU_FEEDBACK = { pressMs: 160 } as const;
+
+/**
+ * The pause menu (020, Esc): a dim over the world, a title card, and rows for sound on/off, the master volume
+ * (its − and + by the row's right end, px from the row's left) and resume. Rows use the menu row frames.
+ */
+export const PAUSE_MENU = {
+  title: 'Paused',
+  note: 'Esc to resume',
+  card: { w: 128, h: 30, gap: 6, titleY: 4, noteY: 19 },
+  dim: { color: 'ink', alpha: 0.5 },
+  rowGap: 4,
+  label: { x: 10, y: 6 },
+  value: { x: 150, y: 6 },
+  volume: { down: 128, up: 170, hit: 12 },
+  rows: { sound: 'Sound', volume: 'Volume', resume: 'Resume' },
+} as const;

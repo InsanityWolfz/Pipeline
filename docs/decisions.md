@@ -123,3 +123,4 @@ Supersedes the bootstrap's art decisions: the committed atlas, the art script, t
 - **Boot readiness:** `ui().ready` is true once the scene's views exist and the fonts are loaded. Every e2e boot waits for it.
 - **Floating text** (damage numbers, the "+1" popup) is plain objects tweened together, the text drawn at the resolution of its biggest pop. QA had reported them missing; that was screenshot timing, since a capture lands after their 0.7 s life. They were drawn all along.
 - **A frame that was never drawn** logs a console error from `showFrame`, so e2e catches it.
+- **No pause for crafting (Shaun):** the craft menu leaves the world running. Esc, with nothing to close, opens the pause menu, the only thing that stops the clock. It holds the sound settings, which are saved in localStorage as before.

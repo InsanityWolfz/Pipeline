@@ -1,6 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import { VIEW_WIDTH } from '../../src/data/config';
-import { craftMenuLines } from '../../src/render/craftMenuLayout';
+import { PAUSE_MENU } from '../../src/data/hudLayout';
+import { VOLUME_STEP } from '../../src/data/sounds';
+import { craftMenuLines, pauseRows } from '../../src/render/craftMenuLayout';
 import { boot, watchErrors } from './helpers';
 
 // Gathering, crafting and the three ammo, driven through window.__GAME__.
@@ -56,25 +58,27 @@ test('the full arrow, bomb and ley bolt chains craft from gathered materials', a
   expect(errors).toEqual([]);
 });
 
-test('the crafting menu pauses the world and crafts on a click', async ({ page }) => {
+test('the crafting menu keeps the world running, Esc pauses it, and the menu crafts on a click', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page, '?start=field&attuned');
-  // Real time first: C pauses, Esc resumes.
+  // Real time first: C opens the craft menu and the world keeps ticking (020).
   await page.waitForTimeout(300);
   const tick = async () => (await page.evaluate(() => window.__GAME__?.getState().tick)) ?? 0;
+  const ui = async () => page.evaluate(() => window.__GAME__?.ui());
   await page.keyboard.press('c');
-  // Once the press lands (a slow frame can delay it), the clock stops and stays stopped.
-  await expect
-    .poll(async () => {
-      const a = await tick();
-      await page.waitForTimeout(150);
-      return (await tick()) - a;
-    })
-    .toBe(0);
+  await expect.poll(async () => (await ui())?.craftOpen).toBe(true);
+  const open = await tick();
+  await expect.poll(tick).toBeGreaterThan(open);
+  // Esc closes it; a second Esc opens the pause menu, which stops the clock until Esc again.
+  await page.keyboard.press('Escape');
+  await expect.poll(async () => (await ui())?.craftOpen).toBe(false);
+  await page.keyboard.press('Escape');
+  await expect.poll(async () => (await ui())?.paused).toBe(true);
   const paused = await tick();
   await page.waitForTimeout(500);
   expect(await tick()).toBe(paused);
   await page.keyboard.press('Escape');
+  await expect.poll(async () => (await ui())?.paused).toBe(false);
   await expect.poll(tick).toBeGreaterThan(paused);
 
   // Then gather a log under the test clock and craft it from the menu.
@@ -217,5 +221,33 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
   expect(result.died).toBe(true);
   // The killing blow was a burn tick, not the burst.
   expect(result.lastDamage).toBe(3);
+  expect(errors).toEqual([]);
+});
+
+test('the pause menu toggles the sound and steps the volume, then resumes', async ({ page }) => {
+  const errors = watchErrors(page);
+  await boot(page, '?start=field');
+  await page.keyboard.press('Escape');
+  await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().paused)).toBe(true);
+  const box = await page.locator('canvas').boundingBox();
+  if (!box) throw new Error('no canvas');
+  const zoom = box.width / VIEW_WIDTH;
+  const rows = pauseRows();
+  const at = async (x: number, y: number) => {
+    await page.mouse.click(box.x + x * zoom, box.y + y * zoom);
+    await page.waitForTimeout(60);
+  };
+  const sound = () => page.evaluate(() => window.__GAME__?.sound());
+  const before = await sound();
+  const [soundRow, volumeRow, resumeRow] = rows;
+  if (!soundRow || !volumeRow || !resumeRow || !before) throw new Error('no rows');
+  await at(soundRow.x + 40, soundRow.y + 10);
+  expect((await sound())?.muted).toBe(!before.muted);
+  await at(volumeRow.x + PAUSE_MENU.volume.down, volumeRow.y + 10);
+  expect((await sound())?.volume).toBeCloseTo(Math.max(0, before.volume - VOLUME_STEP));
+  await at(volumeRow.x + PAUSE_MENU.volume.up, volumeRow.y + 10);
+  expect((await sound())?.volume).toBeCloseTo(before.volume);
+  await at(resumeRow.x + 40, resumeRow.y + 10);
+  expect(await page.evaluate(() => window.__GAME__?.ui().paused)).toBe(false);
   expect(errors).toEqual([]);
 });

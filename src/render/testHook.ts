@@ -17,6 +17,8 @@ export interface GameTestHook {
   /** Crafts a recipe once between ticks, as clicking its menu row does. */
   craft(recipeId: string): SimSummary;
   ui(): UiState;
+  /** The sound settings (020: set from the pause menu). */
+  sound(): { muted: boolean; volume: number };
   /** The player's room as rows of tiles a player can stand on ('.') or not ('#'), solid things included: for test helpers that find paths. */
   passable(): string[];
 }
@@ -29,6 +31,11 @@ export interface GameTestHook {
 export interface UiState {
   /** The scene has built its views and the fonts are loaded (020): before this, nothing is drawn. */
   ready: boolean;
+  /** The craft menu is open (it doesn't pause, 020), and the pause menu is (Esc: the world stops). */
+  craftOpen: boolean;
+  paused: boolean;
+  /** The hopper picker is open. */
+  pickerOpen: boolean;
   hoverName: string | null;
   hoverDescription: string | null;
   buildTip: string | null;
@@ -95,6 +102,7 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
       return summarize(sim);
     },
     ui: () => scene.hoverText(),
+    sound: () => scene.soundSettings(),
     passable: () => {
       const { room, obstacles } = roomBodies(sim, sim.roomId);
       return room.rows.map((row, ty) =>

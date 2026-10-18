@@ -22,7 +22,12 @@ Newest entry first.
 - QA fixes: the status markers no longer cover the piece in front, and the press flash is see-through. The "missing" damage numbers were screenshot timing, not a bug. Review fixes are in.
 - `npm run check` (unit tests) and `npm run test:e2e` (39 tests) pass.
 
-**Next:** Shaun reviews the contact sheet and the preview, and answers the two open questions in the 020 spec (the pause title card, the floor's variants). That ends the 016–020 run.
+**Follow-up (Shaun's answer):**
+- Crafting no longer pauses the world.
+- Esc opens a pause menu (Sound on/off, Volume, Resume) that stops it.
+- An e2e test that only passed by luck (E pressed out of the hopper's reach) now steps into reach first.
+
+**Next:** Shaun reviews the contact sheet and the preview, and answers the floor-variants question in the 020 spec. That ends the 016–020 run.
 
 ## 2026-10-18: 019 follow-up: Shaun's answers
 **Changed:** on `claude/019-intake-pipe`:
