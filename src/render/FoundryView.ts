@@ -5,6 +5,8 @@ import { CONDUIT_TICKS, STAGER_ANGLES } from '../data/foundry';
 import {
   CONDUIT_ANIMS,
   CONDUIT_CORNERS,
+  SORTER_ANIMS,
+  SORTER_LOOK,
   CRATE_SPRITE,
   SOCKET_SPRITES,
   SPREAD_FAN,
@@ -20,13 +22,13 @@ import {
 } from '../data/foundryAssets';
 import { itemDef } from '../data/items';
 import { pieceDef } from '../data/pieces';
-import { facingVector } from '../sim/direction';
+import { facingVector, opposite } from '../sim/direction';
 import { rotate, socketStreams } from '../sim/spread';
 import { pieceRect, type FoundryState, type PieceState } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { SQUASH } from '../data/juice';
 import { registerAnim } from './anims';
-import { arrowSpots, conduitLook, pieceIcon } from './foundryLayout';
+import { arrowSpots, conduitLook, pieceIcon, sorterLook, sorterSide } from './foundryLayout';
 import { colorOf } from './color';
 import { GlyphLine } from './glyphLine';
 
@@ -41,7 +43,7 @@ export const MAX_ARROWS = 6;
  */
 export function placeArrows(
   pool: readonly GameObjects.Image[],
-  p: Pick<PieceState, 'pieceId' | 'tx' | 'ty' | 'facing'> & { inFrom?: Facing },
+  p: Pick<PieceState, 'pieceId' | 'tx' | 'ty' | 'facing'> & { inFrom?: Facing; mirrored?: boolean },
   visible = true,
 ): void {
   const spots = arrowSpots(p);
@@ -53,7 +55,10 @@ export function placeArrows(
     const [ex, ey] = facingVector(spot.edge);
     const x = (spot.tx + 0.5) * TILE_SIZE + ex * reach;
     const y = (spot.ty + 0.5) * TILE_SIZE + ey * reach;
-    arrow.setFrame(FACING_ARROWS[spot.kind][viewOf(spot.points)]).setFlipX(spot.points === 'left');
+    // A sorter's side exit is an output arrow in gold.
+    arrow.setFrame(FACING_ARROWS[spot.kind === 'sort' ? 'out' : spot.kind][viewOf(spot.points)]).setFlipX(spot.points === 'left');
+    if (spot.kind === 'sort') arrow.setTint(colorOf(SORTER_LOOK.sortArrowTint));
+    else arrow.clearTint();
     arrow.setPosition(Math.round(x), Math.round(y));
   }
 }
@@ -67,6 +72,8 @@ interface Drawn {
   marker?: GameObjects.Sprite;
   markerIcon?: GameObjects.Image;
   count?: GlyphLine;
+  /** Sorters: the chosen item's icon in the slot. */
+  slot?: GameObjects.Image;
 }
 
 // Draws the foundry's pieces from sim state: machines showing what they make, a
@@ -85,7 +92,7 @@ export class FoundryView {
     this.scene = scene;
     this.fan = scene.add.graphics().setDepth(DEPTHS.spreadFan);
     for (const views of Object.values(MACHINE_HOUSINGS)) for (const v of Object.values(views)) registerAnim(scene, v.working);
-    for (const anim of [...Object.values(CONDUIT_ANIMS), ...Object.values(CONDUIT_CORNERS)]) registerAnim(scene, anim);
+    for (const anim of [...Object.values(CONDUIT_ANIMS), ...Object.values(CONDUIT_CORNERS), ...Object.values(SORTER_ANIMS)]) registerAnim(scene, anim);
     registerAnim(scene, STATUS_MARKERS.working);
   }
 
@@ -102,7 +109,7 @@ export class FoundryView {
     this.drawFan(foundry, shown && building);
     for (const [id, d] of this.drawn) {
       if (live.has(id)) continue;
-      for (const o of [d.body, d.icon, ...d.arrows, d.marker, d.markerIcon]) o?.destroy();
+      for (const o of [d.body, d.icon, ...d.arrows, d.marker, d.markerIcon, d.slot]) o?.destroy();
       d.count?.set('');
       this.drawn.delete(id);
     }
@@ -149,6 +156,12 @@ export class FoundryView {
       d.icon.setPosition(r.x, bottom - ICON_RISE[footprint][view]).setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge);
       d.marker = add.sprite(r.x, 0, ATLAS_KEY).setOrigin(0.5, 1).setDepth(DEPTHS.worldUi);
       d.markerIcon = add.image(r.x, 0, ATLAS_KEY).setOrigin(0.5).setDepth(DEPTHS.worldUi + 1);
+    } else if (p.kind === 'sorter') {
+      const look = sorterLook(p.facing, p.mirrored);
+      d.body.setOrigin(0.5).setPosition(r.x, r.y).setDepth(FOUNDRY_LAYOUT.conduitDepth);
+      d.body.setFlip(look.flipX, look.flipY).play(look.anim.key);
+      d.icon.setDepth(FOUNDRY_LAYOUT.itemDepth);
+      d.slot = add.image(r.x, r.y, ATLAS_KEY).setScale(SORTER_LOOK.slotScale).setDepth(FOUNDRY_LAYOUT.conduitDepth + FOUNDRY_LAYOUT.onTopNudge);
     } else if (p.kind === 'socket') {
       d.body.setFrame(SOCKET_SPRITES.idle);
       d.icon.setVisible(false);
@@ -165,6 +178,7 @@ export class FoundryView {
 
   private draw(p: PieceState, d: Drawn): void {
     if (p.kind === 'conduit') this.drawConduit(p, d);
+    else if (p.kind === 'sorter') this.drawSorter(p, d);
     else if (p.kind === 'machine') this.drawMachine(p, d);
     else if (p.kind === 'socket') d.body.setFrame(p.pulse > 0 ? SOCKET_SPRITES.refill : SOCKET_SPRITES.idle);
     else if (p.kind === 'stager') {
@@ -207,6 +221,21 @@ export class FoundryView {
     // Slides in from its entry edge to the middle, then out to the front edge, so it rides a corner's bend.
     const t = p.progress / CONDUIT_TICKS;
     const [vx, vy] = t < 0.5 ? facingVector(p.inFrom) : facingVector(p.facing);
+    const k = t < 0.5 ? 0.5 - t : t - 0.5;
+    const r = pieceRect(p);
+    d.icon.setFrame(itemDef(p.item).icon);
+    d.icon.setPosition(Math.round(r.x + vx * k * TILE_SIZE), Math.round(r.y + vy * k * TILE_SIZE - FOUNDRY_LAYOUT.itemLift));
+  }
+
+  /** The chosen item sits in the slot; a riding item slides in from the back, then out the front or the sort side. */
+  private drawSorter(p: Extract<PieceState, { kind: 'sorter' }>, d: Drawn): void {
+    d.slot?.setVisible(p.filter !== null);
+    if (p.filter) d.slot?.setFrame(itemDef(p.filter).icon);
+    d.icon.setVisible(p.item !== null);
+    if (!p.item) return;
+    const t = p.progress / CONDUIT_TICKS;
+    const out = p.item === p.filter ? sorterSide(p.facing, p.mirrored) : p.facing;
+    const [vx, vy] = t < 0.5 ? facingVector(opposite(p.facing)) : facingVector(out);
     const k = t < 0.5 ? 0.5 - t : t - 0.5;
     const r = pieceRect(p);
     d.icon.setFrame(itemDef(p.item).icon);

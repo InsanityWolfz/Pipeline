@@ -1,11 +1,11 @@
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { BUILD_BAR_LAYOUT, MENU_COLUMN_GAP, MENU_MAX_ROWS, PICKER_LAYOUT } from '../data/hudLayout';
 import type { AnimDef } from '../data/assets';
-import { CONDUIT_ANIMS, CONDUIT_CORNERS, LOGISTICS_ICONS, type CornerKey } from '../data/foundryAssets';
+import { CONDUIT_ANIMS, CONDUIT_CORNERS, LOGISTICS_ICONS, SORTER_ANIMS, type CornerKey } from '../data/foundryAssets';
 import { itemDef, ITEMS } from '../data/items';
 import { pieceDef } from '../data/pieces';
 import { recipeDef } from '../data/recipes';
-import { facingVector, opposite } from '../sim/direction';
+import { facingVector, opposite, rotateCw } from '../sim/direction';
 import { footprint, type Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 
@@ -100,7 +100,8 @@ const SIDES: readonly Facing[] = ['up', 'right', 'down', 'left'];
 
 /** A facing arrow: on tile (tx, ty), at its `edge`, pointing `points`. */
 export interface ArrowSpot extends Tile {
-  kind: 'in' | 'out';
+  /** `sort` is a sorter's side exit (015), drawn as an output arrow in gold. */
+  kind: 'in' | 'out' | 'sort';
   edge: Facing;
   points: Facing;
 }
@@ -111,8 +112,18 @@ export interface ArrowSpot extends Tile {
  * input arrow pointing in: machines and stagers on all but their front side, crates and tube
  * sockets on every side. Conduits show their flow instead, so they get none.
  */
-export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing }): ArrowSpot[] {
+export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing; mirrored?: boolean }): ArrowSpot[] {
   const { kind } = pieceDef(p.pieceId);
+  // A sorter takes from its back and hands out of its front and, for its item, its sort side.
+  if (kind === 'sorter') {
+    const back = opposite(p.facing);
+    const side = sorterSide(p.facing, p.mirrored ?? false);
+    return [
+      { kind: 'in', tx: p.tx, ty: p.ty, edge: back, points: p.facing },
+      { kind: 'out', tx: p.tx, ty: p.ty, edge: p.facing, points: p.facing },
+      { kind: 'sort', tx: p.tx, ty: p.ty, edge: side, points: side },
+    ];
+  }
   // A conduit shows its flow; since 013 it also marks the one side it takes items from.
   if (kind === 'conduit') {
     const edge = p.inFrom ?? opposite(p.facing);
@@ -146,3 +157,19 @@ export function conduitLook(facing: Facing, inFrom: Facing): { anim: AnimDef; fl
 }
 
 const isCorner = (key: string): key is CornerKey => key in CONDUIT_CORNERS;
+
+/** The side a sorter's item leaves by: right of its facing, or left when mirrored (matches the sim's sortSide). */
+export function sorterSide(facing: Facing, mirrored: boolean): Facing {
+  return mirrored ? rotateCw(rotateCw(rotateCw(facing))) : rotateCw(facing);
+}
+
+/**
+ * A sorter's animation and flips (015). The side sprite flows right and sorts
+ * down, so facing left turns it round; the down and up sprites flip across their
+ * flow to sort the other way.
+ */
+export function sorterLook(facing: Facing, mirrored: boolean): { anim: AnimDef; flipX: boolean; flipY: boolean } {
+  if (facing === 'right') return { anim: SORTER_ANIMS.side, flipX: false, flipY: mirrored };
+  if (facing === 'left') return { anim: SORTER_ANIMS.side, flipX: true, flipY: !mirrored };
+  return { anim: SORTER_ANIMS[facing], flipX: mirrored, flipY: false };
+}

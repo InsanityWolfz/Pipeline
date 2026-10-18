@@ -1,9 +1,9 @@
 import type { Command } from '../sim/input';
 
-/** The commands that menus send: the hopper, pylon, stash and bench menus' choices. */
-export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'pylon' | 'takeStash' | 'identify' | 'equip'>;
+/** The commands that menus send: the hopper, sorter, pylon, stash and bench menus' choices. */
+export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'setFilter' | 'pylon' | 'takeStash' | 'identify' | 'equip'>;
 
-const NONE: MenuCommand = { deposit: null, withdraw: null, pylon: null, takeStash: null, identify: false, equip: null };
+const NONE: MenuCommand = { deposit: null, withdraw: null, setFilter: null, pylon: null, takeStash: null, identify: false, equip: null };
 
 // Choices clicked in the world's menus, held until the next tick takes them.
 export class MenuRequests {
@@ -17,6 +17,11 @@ export class MenuRequests {
   /** Empties a hopper into the inventory (the hopper menu's choice). */
   withdraw(id: number): void {
     this.pending.withdraw = { id };
+  }
+
+  /** Sets the item a sorter sends out its side, or null to pass everything (the sorter menu's choice). */
+  setFilter(id: number, itemId: string | null): void {
+    this.pending.setFilter = { id, itemId };
   }
 
   /** The claimed pylon's choice. */
@@ -52,7 +57,10 @@ export class MenuRequests {
 }
 
 /** Build and menu actions for one tick, merged into the command. */
-export type UiCommand = Pick<Command, 'toggleBuild' | 'place' | 'pickUp' | 'deposit' | 'withdraw' | 'setAngle' | 'pylon' | 'takeStash' | 'identify' | 'equip'>;
+export type UiCommand = Pick<
+  Command,
+  'toggleBuild' | 'place' | 'pickUp' | 'deposit' | 'withdraw' | 'setFilter' | 'setAngle' | 'pylon' | 'takeStash' | 'identify' | 'equip'
+>;
 
 /** No UI actions this tick. */
 export const NO_UI_COMMAND: UiCommand = { toggleBuild: false, place: null, pickUp: null, setAngle: null, ...NONE };

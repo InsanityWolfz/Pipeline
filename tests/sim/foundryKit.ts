@@ -6,7 +6,7 @@ import type { Facing } from '../../src/sim/player';
 import type { PieceState } from '../../src/sim/pieces';
 import type { SimState } from '../../src/sim/state';
 import { tileCentre } from '../../src/sim/tiles';
-import { arena, movePlayer } from './fight';
+import { arena, HALL, movePlayer } from './fight';
 
 // Foundry scenarios: the player stands in the foundry with every machine unlocked.
 
@@ -39,4 +39,13 @@ export function put<T extends PieceState = PieceState>(
   const placed = place(s, pieceId, tx, ty, facing);
   if (!placed) throw new Error(`can't place ${pieceId} at ${tx},${ty}: ${JSON.stringify(s.events.placeFails)}`);
   return placed as T;
+}
+
+/**
+ * Steps the player out into the ruin hall where they stand, so they can fire:
+ * the tube is quiet in the foundry (015). The foundry keeps running.
+ */
+export function stepOutside(s: SimState): SimState {
+  s.roomId = HALL;
+  return s;
 }

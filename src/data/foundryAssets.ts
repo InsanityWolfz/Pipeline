@@ -45,6 +45,7 @@ export const LOGISTICS_ICONS: Readonly<Record<string, string>> = {
   crate: 'emblem-crate',
   'tube-socket': 'emblem-tube-socket',
   'gravity-stager': 'emblem-gravity-stager',
+  sorter: 'emblem-sorter',
 };
 
 /** Conduits flow toward their front; `side` flows right. They lie flat on the floor. */
@@ -53,6 +54,20 @@ export const CONDUIT_ANIMS: Readonly<Record<PieceView, AnimDef>> = {
   up: loop('conduit-up', 2, FLOW_FPS),
   side: loop('conduit-side', 2, FLOW_FPS),
 };
+
+/**
+ * Sorters (015) flow like conduits. `side` flows right and sorts down; `down`
+ * sorts left and `up` sorts right. Render turns or flips them for the other facings
+ * and for a mirrored sorter.
+ */
+export const SORTER_ANIMS: Readonly<Record<PieceView, AnimDef>> = {
+  down: loop('sorter-down', 2, FLOW_FPS),
+  up: loop('sorter-up', 2, FLOW_FPS),
+  side: loop('sorter-side', 2, FLOW_FPS),
+};
+
+/** The sorter's filter icon shows at this scale in its slot, and its sort-side arrow is tinted this palette colour. */
+export const SORTER_LOOK = { slotScale: 0.5, sortArrowTint: 'gold' } as const;
 
 /** Conduit corners (013) by the side items come in from and the side they leave by: `${in}-${out}`. Flat on the floor like the straights. */
 export const CONDUIT_CORNERS = {

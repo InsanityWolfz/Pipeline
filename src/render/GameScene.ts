@@ -131,7 +131,10 @@ export class GameScene extends Scene {
         building: this.sim.building,
         pieceId: () => this.buildView?.selected ?? FIRST_PIECE,
         overUi: (x, y) =>
-          (this.buildView?.overUi(x, y) ?? false) || (this.picker?.overUi(x, y) ?? false) || (this.siteMenus?.overUi(x, y) ?? false),
+          (this.buildView?.overUi(x, y) ?? false) ||
+          (this.picker?.overUi(x, y) ?? false) ||
+          (this.siteMenus?.overUi(x, y) ?? false) ||
+          (this.hud?.overUi(x, y) ?? false),
         clickUi: (x, y) => this.clickUi(controls, x, y),
         stagerAt: (t) => {
           const piece = pieceAt(this.sim.foundry, t.tx, t.ty);
@@ -173,11 +176,15 @@ export class GameScene extends Scene {
 
   /** A click on the build bar picks a piece; on the hopper menu, it takes out or puts in. */
   private clickUi(controls: Controls, x: number, y: number): void {
-    this.feel?.sound.play(SOUNDS.menuClick);
-    if (this.menuOpen || this.buildView?.click(x, y) || this.siteMenus?.click(controls, x, y)) return;
+    if (this.menuOpen) return;
+    if (this.buildView?.click(x, y) || this.siteMenus?.click(controls, x, y)) {
+      this.feel?.sound.play(SOUNDS.menuClick);
+      return;
+    }
     const entry = this.picker?.entryAt(x, y);
     const hopper = this.picker?.hopperId;
     if (!entry || hopper === null || hopper === undefined) return;
+    this.feel?.sound.play(SOUNDS.menuClick);
     if (entry.action === 'take') controls.menus.withdraw(hopper);
     else controls.menus.deposit(hopper, entry.itemId);
     this.picker?.close();
@@ -252,7 +259,7 @@ export class GameScene extends Scene {
     if (this.pending.identifies.length > 0) this.site?.identified();
     if (this.pending.ko) this.wake?.show(this.pending.lost);
     const shown = this.shownRoomId;
-    this.feel?.update(sim, this.pending, shown, this.game.loop.delta, this.controls?.aim() ?? null);
+    this.feel?.update(sim, this.pending, shown, this.game.loop.delta);
     clearEvents(this.pending);
     const inFoundry = shown === FOUNDRY_ROOM;
     this.foundryView?.update(sim.foundry, inFoundry, sim.building);
@@ -277,6 +284,7 @@ export class GameScene extends Scene {
       unlockedPieces(sim),
       cursor,
       controls?.facing ?? 'right',
+      controls?.mirrored ?? false,
       (...a) => canPlace(sim, ...a),
       (t, f) => ghostShape(controls?.heldLay() ?? null, t, f, (u, g) => conduitInFrom(sim, u.tx, u.ty, g)),
     );

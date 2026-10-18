@@ -22,8 +22,11 @@ export interface Command {
   /** Build mode was toggled this tick (an edge). Only works in the foundry. */
   toggleBuild: boolean;
   /** A piece to place this tick (an edge), or null. */
-  /** `inFrom` shapes a conduit (013): left out, a single conduit joins a lone side feeder as a corner. */
-  place: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing } | null;
+  /**
+   * `inFrom` shapes a conduit (013): left out, a single conduit joins a lone side
+   * feeder as a corner. `mirrored` makes a sorter send its item left (015).
+   */
+  place: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing; mirrored?: boolean } | null;
   /** A tile whose piece to pick up this tick (an edge), or null. */
   pickUp: { tx: number; ty: number } | null;
   /** Put all of a held item into an empty hopper (by piece id) this tick (an edge), or null. */
@@ -32,6 +35,8 @@ export interface Command {
   withdraw: { id: number } | null;
   /** Turn a gravity stager (by piece id) to its next angle this tick (an edge), or null. */
   setAngle: { id: number } | null;
+  /** Set the item a sorter in reach sends out its side (null: pass everything), this tick (an edge), or null (015). */
+  setFilter: { id: number; itemId: string | null } | null;
   /** The claimed pylon's menu choice this tick (an edge), or null. */
   pylon: 'deposit' | 'travel' | null;
   /** Take a stack (or everything, for a null item) out of the stash this tick (an edge), or null. */
@@ -58,6 +63,7 @@ export const NO_COMMAND: Readonly<Command> = {
   deposit: null,
   withdraw: null,
   setAngle: null,
+  setFilter: null,
   pylon: null,
   takeStash: null,
   identify: false,

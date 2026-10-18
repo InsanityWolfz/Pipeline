@@ -68,13 +68,6 @@ export const PARTICLES = {
 /** Footstep dust every this many ms of walking, roll dust every this many ms of rolling; walking is moving faster than `minSpeed` px/tick. */
 export const DUST = { walkMs: 260, rollMs: 50, minSpeed: 0.2 } as const;
 
-/**
- * The camera leads toward the aim by up to `px`, easing at `ease` per frame; the
- * lead reaches full once the aim is `fullAt` × `px` away. It leads only while
- * firing and for `holdMs` after.
- */
-export const CAMERA_LEAD = { px: 24, ease: 0.08, fullAt: 6, holdMs: 600 } as const;
-
 /** Squash and stretch: the drop-in on placed pieces. The squash settles `settle` × `ms`. */
 export const SQUASH = { dropPx: 6, ms: 180, squash: 0.18, settle: 1.5 } as const;
 

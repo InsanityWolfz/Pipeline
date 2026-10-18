@@ -3,18 +3,18 @@ import { FEET_BOX } from '../data/player';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import type { Command } from './input';
 import { count } from './inventory';
-import { pieceRect, type CrateState, type HopperState, type PieceState, type StagerState } from './pieces';
+import { pieceRect, type CrateState, type HopperState, type PieceState, type SorterState, type StagerState } from './pieces';
 import { cycleAngle } from './spread';
 import type { SimState } from './state';
 
-// Using hoppers, crates and stagers: E empties a crate into the inventory and
-// turns a gravity stager to its next angle. E on a hopper opens render's menu,
-// whose choices arrive as deposit (put all of a held item in) and withdraw (take
-// everything out) commands.
+// Using hoppers, crates, stagers and sorters: E empties a crate into the
+// inventory and turns a gravity stager to its next angle. E on a hopper or a
+// sorter opens render's menu, whose choices arrive as deposit (put all of a held
+// item in), withdraw (take everything out) and setFilter commands.
 
-type Usable = HopperState | CrateState | StagerState;
+type Usable = HopperState | CrateState | StagerState | SorterState;
 
-const usable = (p: PieceState): p is Usable => p.kind === 'hopper' || p.kind === 'crate' || p.kind === 'stager';
+const usable = (p: PieceState): p is Usable => p.kind === 'hopper' || p.kind === 'crate' || p.kind === 'stager' || p.kind === 'sorter';
 
 /** Gap between the player's feet box and a piece's box, px; 0 when they touch. */
 function gapTo(state: SimState, p: PieceState): number {
@@ -75,9 +75,20 @@ function takeCrate(state: SimState, c: CrateState): void {
   state.events.crateTakes.push({ id: c.id, items });
 }
 
-/** Withdraws, deposits, then E on the nearest crate or stager. E on a hopper does nothing here; render opens its menu. */
+/** Sets the item a sorter in reach sends out its side; null passes everything (015). */
+export function setFilter(state: SimState, id: number, itemId: string | null): void {
+  const p = state.foundry.pieces.find((q) => q.id === id);
+  if (p?.kind !== 'sorter' || !inReach(state, p)) return;
+  p.filter = itemId;
+}
+
+/**
+ * Withdraws, deposits, filters, then E on the nearest crate or stager. E on a
+ * hopper or sorter does nothing here; render opens its menu.
+ */
 export function stepFoundryUse(state: SimState, cmd: Command): void {
   if (cmd.withdraw) withdraw(state, cmd.withdraw.id);
+  if (cmd.setFilter) setFilter(state, cmd.setFilter.id, cmd.setFilter.itemId);
   if (cmd.deposit) deposit(state, cmd.deposit.id, cmd.deposit.itemId);
   if (!cmd.interact) return;
   const target = usableInReach(state);

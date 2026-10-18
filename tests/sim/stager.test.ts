@@ -6,7 +6,7 @@ import { rotate, socketStreams } from '../../src/sim/spread';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
 import { fireAt, movePlayer, run, runUntil } from './fight';
-import { foundry, put } from './foundryKit';
+import { foundry, put, stepOutside } from './foundryKit';
 
 const BOMB_TICKS = ammoDef('bomb').fireTicks;
 
@@ -138,7 +138,7 @@ describe('spread shots', () => {
     s.tube.ammoId = item;
     s.link.reservoir = { itemId: item, count: rounds };
     movePlayer(s, 400, 400);
-    return s;
+    return stepOutside(s);
   }
 
   it('fires one projectile per stream at its angle, each costing a round', () => {
@@ -229,6 +229,7 @@ describe('spread shots', () => {
     expect(socketStreams(s.foundry)).toHaveLength(3);
     runUntil(s, (x) => x.link.reservoir.count >= 9, 1500);
     movePlayer(s, 400, 400);
+    stepOutside(s);
     run(s, 1, fireAt(600, 400));
     expect(s.tube.shotCount).toBe(3);
     expect(s.arrows).toHaveLength(3);

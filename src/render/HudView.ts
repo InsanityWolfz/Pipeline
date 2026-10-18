@@ -39,6 +39,13 @@ export class HudView {
   private readonly armorIcon: GameObjects.Image;
   private readonly armorCount: GlyphLine;
 
+  /** A screen point on the hotbar slot or the ammo strip: a press there never fires (015). */
+  overUi(x: number, y: number): boolean {
+    const s = this.slot;
+    const b = this.strip.box;
+    return (x >= s.x && x < s.x + s.width && y >= s.y && y < s.y + s.height) || (x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
+  }
+
   constructor(scene: Scene) {
     this.scene = scene;
     const fixed = <T extends GameObjects.Components.ScrollFactor & GameObjects.Components.Depth>(o: T): T => {

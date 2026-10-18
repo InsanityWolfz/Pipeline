@@ -16,7 +16,7 @@ import { BUILD_BAR, pieceDef } from '../data/pieces';
 import { pieceRect, type PlaceFail, type Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { colorOf } from './color';
-import { buildBarCells, conduitLook, inRect, pieceIcon } from './foundryLayout';
+import { buildBarCells, conduitLook, inRect, pieceIcon, sorterLook } from './foundryLayout';
 import { MAX_ARROWS, placeArrows, viewOf } from './FoundryView';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
@@ -27,6 +27,7 @@ function bodyFrame(pieceId: string, facing: Facing, inFrom: Facing): string {
   const view = viewOf(facing);
   if (def.kind === 'machine') return MACHINE_HOUSINGS[def.footprint][view].idle;
   if (def.kind === 'conduit') return animFrames(conduitLook(facing, inFrom).anim)[0] ?? '';
+  if (def.kind === 'sorter') return animFrames(sorterLook(facing, false).anim)[0] ?? '';
   if (def.kind === 'socket') return SOCKET_SPRITES.idle;
   if (def.kind === 'stager') return animFrames(STAGER_SPRITE)[STAGER_ANGLES.indexOf(STAGER_START_ANGLE)] ?? '';
   return def.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE;
@@ -77,6 +78,7 @@ export class BuildView {
     unlocked: readonly string[],
     cursor: Tile | null,
     facing: Facing,
+    mirrored: boolean,
     canPlace: (pieceId: string, tx: number, ty: number, facing: Facing) => PlaceFail | null,
     shapeAt: (tile: Tile, facing: Facing) => { facing: Facing; inFrom: Facing },
   ): void {
@@ -86,12 +88,13 @@ export class BuildView {
     if (!building) return;
     const cell = buildBarCells(unlocked).find((c) => c.pieceId === this.selected);
     if (cell) this.highlight.setPosition(cell.x, cell.y);
-    this.drawGhost(cursor, facing, canPlace, shapeAt);
+    this.drawGhost(cursor, facing, mirrored, canPlace, shapeAt);
   }
 
   private drawGhost(
     cursor: Tile | null,
     ghostFacing: Facing,
+    mirrored: boolean,
     canPlace: (pieceId: string, tx: number, ty: number, facing: Facing) => PlaceFail | null,
     shapeAt: (tile: Tile, facing: Facing) => { facing: Facing; inFrom: Facing },
   ): void {
@@ -109,13 +112,19 @@ export class BuildView {
     const { facing, inFrom } = def.kind === 'conduit' ? shapeAt(cursor, ghostFacing) : { facing: ghostFacing, inFrom: ghostFacing };
     const r = pieceRect({ pieceId, tx: cursor.tx, ty: cursor.ty, facing });
     const bottom = r.y + r.h / 2;
-    const flip = def.kind === 'conduit' ? conduitLook(facing, inFrom).flip : facing === 'left';
-    this.ghost.setFrame(bodyFrame(pieceId, facing, inFrom)).setFlipX(flip);
-    if (def.kind === 'conduit') this.ghost.setOrigin(0).setPosition(r.x - TILE_SIZE / 2, r.y - TILE_SIZE / 2);
+    if (def.kind === 'sorter') {
+      // A sorter's ghost shows which side its item will leave by; F flips it (015).
+      const look = sorterLook(facing, mirrored);
+      this.ghost.setFrame(animFrames(look.anim)[0] ?? '').setFlip(look.flipX, look.flipY);
+    } else {
+      const flip = def.kind === 'conduit' ? conduitLook(facing, inFrom).flip : facing === 'left';
+      this.ghost.setFrame(bodyFrame(pieceId, facing, inFrom)).setFlip(flip, false);
+    }
+    if (def.kind === 'conduit' || def.kind === 'sorter') this.ghost.setOrigin(0).setPosition(r.x - TILE_SIZE / 2, r.y - TILE_SIZE / 2);
     else this.ghost.setOrigin(0.5, 1).setPosition(r.x, bottom);
     const tint = colorOf(canPlace(pieceId, cursor.tx, cursor.ty, facing) ? GHOST.badTint : GHOST.okTint);
     this.ghost.setTint(tint);
-    placeArrows(this.ghostArrows, { pieceId, tx: cursor.tx, ty: cursor.ty, facing, ...(def.kind === 'conduit' ? { inFrom } : {}) });
+    placeArrows(this.ghostArrows, { pieceId, tx: cursor.tx, ty: cursor.ty, facing, mirrored, ...(def.kind === 'conduit' ? { inFrom } : {}) });
     const machine = def.kind === 'machine';
     this.ghostIcon.setVisible(machine).setTint(tint);
     if (machine) {
