@@ -308,6 +308,12 @@ export const DEPTHS = {
   prompt: 100_005,
   /** Build mode's spread fan over the tube socket, just under the build arrows. */
   spreadFan: 99_998,
+  /** Soft ley light pooled on the floor (014), over shadows and under anything standing. */
+  glow: 0.25,
+  /** Drifting motes and fireflies, over the world. */
+  motes: 99_000,
+  /** A room's dusk tint and vignette, over the world and under the HUD. */
+  mood: 500_000,
   /** The HUD, above the world. */
   hud: 1_000_000,
   /** The crafting menu, above the HUD. */

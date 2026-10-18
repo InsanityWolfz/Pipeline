@@ -4,6 +4,7 @@ import atlasData from '../../assets/build/sprites.json?url';
 import { ATLAS_KEY } from '../data/assets';
 import { CAMERA_LERP, DOOR_FADE_MS } from '../data/config';
 import { BUILD_BAR } from '../data/pieces';
+import { SOUNDS } from '../data/sounds';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { worn } from '../sim/armor';
 import { advanceClock, createClock } from '../sim/clock';
@@ -35,6 +36,8 @@ import { RoomView } from './room';
 import { SiteMenus } from './SiteMenus';
 import { SiteView } from './SiteView';
 import { WakeView } from './WakeView';
+import { mergeEvents } from './eventLog';
+import { FeelView } from './FeelView';
 import { TutorialUi } from './TutorialUi';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
@@ -65,6 +68,7 @@ export class GameScene extends Scene {
   private siteMenus?: SiteMenus;
   private wake?: WakeView;
   private tutorial?: TutorialUi;
+  private feel?: FeelView;
   /** The room on screen. It lags the player's room through a door's fade. */
   private shownRoomId: string;
   private fading = false;
@@ -81,6 +85,7 @@ export class GameScene extends Scene {
 
   preload(): void {
     this.load.atlas(ATLAS_KEY, atlasImage, atlasData);
+    FeelView.preload(this);
   }
 
   create(): void {
@@ -102,6 +107,7 @@ export class GameScene extends Scene {
     this.wake = new WakeView(this);
     this.tutorial = new TutorialUi(this);
     this.menu = new CraftMenuView(this, (recipeId) => this.craft(recipeId));
+    this.feel = new FeelView(this);
     this.showRoom(this.sim.roomId);
     this.draw();
 
@@ -185,7 +191,9 @@ export class GameScene extends Scene {
 
   /** Crafts once, between ticks. The test hook crafts through here too. Crafting has no drawn effects. */
   craft(recipeId: string): void {
+    const before = this.sim.events.crafts.length;
     craft(this.sim, recipeId);
+    this.feel?.sound.play(this.sim.events.crafts.length > before ? SOUNDS.craft : SOUNDS.menuClick);
   }
 
   /** Build actions made with the mouse and keys since the last tick, for the test hook to merge into its steps. */
@@ -209,16 +217,7 @@ export class GameScene extends Scene {
   /** Steps the sim one tick and keeps its events for the next draw. The test hook steps through here too. */
   stepOnce(cmd: Command): void {
     stepSim(this.sim, cmd);
-    // Hits aren't drawn from events (flashes read sim state), so they aren't kept.
-    const { deaths, pickups, bursts, shots, banks, identifies, lost, ko } = this.sim.events;
-    this.pending.deaths.push(...deaths);
-    this.pending.pickups.push(...pickups);
-    this.pending.bursts.push(...bursts);
-    this.pending.shots.push(...shots);
-    this.pending.banks.push(...banks);
-    if (ko) this.pending.lost = { ...lost };
-    this.pending.identifies.push(...identifies);
-    this.pending.ko ||= ko;
+    mergeEvents(this.pending, this.sim.events);
   }
 
   /** Draws a room's tiles and fits the camera to it. */
@@ -260,8 +259,9 @@ export class GameScene extends Scene {
     this.effects.play(this.pending, sim.player);
     if (this.pending.identifies.length > 0) this.site?.identified();
     if (this.pending.ko) this.wake?.show(this.pending.lost);
-    clearEvents(this.pending);
     const shown = this.shownRoomId;
+    this.feel?.update(sim, this.pending, shown, this.game.loop.delta, this.controls?.aim() ?? null);
+    clearEvents(this.pending);
     const inFoundry = shown === FOUNDRY_ROOM;
     this.foundryView?.update(sim.foundry, inFoundry, sim.building);
     this.nodeView?.update(inRoom(sim.nodes, shown), sim.harvest);
