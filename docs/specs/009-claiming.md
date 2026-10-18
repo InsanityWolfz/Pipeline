@@ -1,5 +1,5 @@
 # 009: Claiming
-status: approved
+status: done
 
 Approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18). He reviews it in the morning report.
 
@@ -110,3 +110,19 @@ A new room, the overgrown shrine, lies through a second doorway in the ruin hall
 
 ## Open questions
 - None. Every number is a starting value.
+
+## Build notes
+These choices were made in the overnight build, not by the spec. They're logged for Shaun to accept or overturn in the morning report.
+- **Fixtures:** the stash, supply port and waystone are fixtures (`FIXTURES` in `src/data/claims.ts`, `state.fixtures`), not entries in `src/data/pieces.ts`. That keeps placed-piece ids and ordering unchanged.
+- **Event names:** the pylon deposit event is `stashDeposits`, because `deposits` was already the hopper event. Taking from the stash records `stashTakes`.
+- **Values the spec didn't give:**
+  - orb knockback: 10 px over 4 ticks
+  - the attack pose for both new enemies: 8 ticks
+  - the Warden's off-screen leash grace: 120 ticks
+  - Wisp cooldown: 90 ticks, counted from the wind-up's start
+  - Warden cooldown: 248 ticks, counted from the wind-up's start, which leaves 120 after the recovery
+- **Reach:** pylon and fixture reach is 20 px. At 12 px, standing on the tile below the pylon was on a knife edge.
+- **Pylon menu rows:** icons and a count, with no text. The HUD font has no letters yet; 011 adds them.
+- **The hold:** started by E like a harvest, then stand still. You don't keep E held.
+- **Long menus:** the stash menu wraps into columns after 10 rows.
+- **Left for 014:** the shrine floor repeats visibly. The door sprite on top and bottom walls is the side arch. The shrine's bottom door sits under the hotbar when the camera centres on it.

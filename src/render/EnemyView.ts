@@ -2,7 +2,7 @@ import type { GameObjects, Scene } from 'phaser';
 import { TintModes } from 'phaser';
 import { animFrames, ATLAS_KEY, BURN_FLAME, BURN_FLAME_HEIGHT, DEPTHS, ENEMY_ANIMS, ENEMY_FX } from '../data/assets';
 import { IDLE_SPEED } from '../data/config';
-import { enemyDef } from '../data/enemies';
+import { attackOf, enemyDef } from '../data/enemies';
 import type { EnemyState } from '../sim/enemies';
 import type { Facing } from '../sim/player';
 import { registerAnim } from './anims';
@@ -22,26 +22,47 @@ const viewOf = (f: Facing): 'down' | 'up' | 'side' => (f === 'up' || f === 'down
 // telegraph on the ground.
 export class EnemyView {
   private readonly drawn = new Map<number, Drawn>();
+  /** Scene time each frozen enemy thaws at. */
+  private readonly frozenUntil = new Map<number, number>();
   private readonly scene: Scene;
 
   constructor(scene: Scene) {
     this.scene = scene;
-    for (const set of Object.values(ENEMY_ANIMS)) for (const anim of Object.values(set)) registerAnim(scene, anim);
+    for (const set of Object.values(ENEMY_ANIMS)) for (const anim of Object.values(set)) if (anim) registerAnim(scene, anim);
     registerAnim(scene, BURN_FLAME);
+  }
+
+  /** Hit-stop (014): holds a struck enemy's sprite still, pose and place, for `ms`. The sim runs on. */
+  freeze(id: number, ms: number): void {
+    this.frozenUntil.set(id, this.scene.time.now + ms);
   }
 
   update(enemies: readonly EnemyState[]): void {
     const live = new Set<number>();
+    const now = this.scene.time.now;
     for (const e of enemies) {
       live.add(e.id);
       const d = this.drawn.get(e.id) ?? this.create(e);
+      const until = this.frozenUntil.get(e.id);
+      if (until !== undefined && now < until) {
+        d.sprite.anims.pause();
+        continue;
+      }
+      if (until !== undefined) {
+        this.frozenUntil.delete(e.id);
+        d.sprite.anims.resume();
+      }
       const def = enemyDef(e.enemyId);
       const bottom = e.y + def.feetBox.h / 2;
       const anims = ENEMY_ANIMS[def.anims];
       if (!anims) throw new Error(`Unknown enemy anims '${def.anims}'`);
       d.sprite.setPosition(e.x, bottom).setDepth(bottom).setFlipX(e.facing === 'left');
       // Switch only on a change, so a one-shot swipe holds its last frame instead of restarting.
-      const key = anims[`${poseOf(e)}-${viewOf(e.facing)}`].key;
+      const view = viewOf(e.facing);
+      const pose = poseOf(e);
+      // Enemies without a recover pose stand idle through it.
+      const anim = pose === 'recover' ? (anims[`recover-${view}`] ?? anims[`idle-${view}`]) : anims[`${pose}-${view}`];
+      const key = anim.key;
       if (d.sprite.anims.currentAnim?.key !== key) d.sprite.play(key);
       if (e.flash > 0) d.sprite.setTint(colorOf(ENEMY_FX.flashColor)).setTintMode(TintModes.FILL);
       else d.sprite.clearTint();
@@ -51,6 +72,7 @@ export class EnemyView {
     }
     for (const [id, d] of this.drawn) {
       if (live.has(id)) continue;
+      this.frozenUntil.delete(id);
       d.sprite.destroy();
       d.telegraph.destroy();
       d.bar.destroy();
@@ -85,15 +107,36 @@ export class EnemyView {
     g.fillStyle(colorOf(ENEMY_FX.healthBarColor)).fillRect(x, y, Math.max(1, Math.round((w * e.health) / max)), h);
   }
 
-  /** The swipe arc at its real reach and angle, filling in as the wind-up runs. */
+  /**
+   * The wind-up's telegraph, filling in as it runs: a Husk's swipe arc at its
+   * real reach and angle, a Wisp's tightening ring and aim line, and the
+   * Warden's slam circle at its real radius.
+   */
   private drawTelegraph(g: GameObjects.Graphics, e: EnemyState): void {
     g.clear();
     if (e.mode !== 'windup') return;
-    const { swipe } = enemyDef(e.enemyId);
+    const def = enemyDef(e.enemyId);
+    const progress = Math.min(1, e.modeTicks / attackOf(def).windupTicks);
+    if (def.kind === 'caster') {
+      const { castRing, castLine } = ENEMY_FX;
+      const color = colorOf(ENEMY_FX.castColor);
+      const top = e.y + def.hurtbox.offsetY;
+      g.lineStyle(castRing.width, color, castRing.alphaFrom + (1 - castRing.alphaFrom) * progress);
+      g.strokeCircle(e.x, top, castRing.from + (castRing.to - castRing.from) * progress);
+      g.lineStyle(castLine.width, color, castLine.alpha);
+      g.lineBetween(e.x, e.y, e.x + e.swipeDirX * castLine.length, e.y + e.swipeDirY * castLine.length);
+      return;
+    }
+    if (def.kind === 'slammer') {
+      const color = colorOf(ENEMY_FX.telegraphColor);
+      g.fillStyle(color, ENEMY_FX.telegraphAlpha).fillCircle(e.x, e.y, def.slam.radius);
+      g.fillStyle(color, ENEMY_FX.telegraphFillAlpha).fillCircle(e.x, e.y, def.slam.radius * progress);
+      return;
+    }
+    const { swipe } = def;
     const angle = Math.atan2(e.swipeDirY, e.swipeDirX);
     const half = (swipe.arcDegrees * Math.PI) / 360;
     const color = colorOf(ENEMY_FX.telegraphColor);
-    const progress = Math.min(1, e.modeTicks / swipe.windupTicks);
     g.fillStyle(color, ENEMY_FX.telegraphAlpha);
     g.slice(e.x, e.y, swipe.reach, angle - half, angle + half, false);
     g.fillPath();
@@ -103,8 +146,8 @@ export class EnemyView {
   }
 }
 
-function poseOf(e: EnemyState): 'idle' | 'walk' | 'windup' | 'swipe' | 'hit' {
+function poseOf(e: EnemyState): 'idle' | 'walk' | 'windup' | 'swipe' | 'recover' | 'hit' {
   if (e.flash > 0 && e.mode !== 'windup' && e.mode !== 'swipe') return 'hit';
-  if (e.mode === 'windup' || e.mode === 'swipe') return e.mode;
+  if (e.mode === 'windup' || e.mode === 'swipe' || e.mode === 'recover') return e.mode;
   return Math.hypot(e.vx, e.vy) >= IDLE_SPEED ? 'walk' : 'idle';
 }

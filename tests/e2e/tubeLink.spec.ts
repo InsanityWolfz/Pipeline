@@ -65,9 +65,13 @@ test('a line fills the reservoir, which fires once the carried rounds run out', 
   expect(filled?.link.reservoir.count).toBeGreaterThanOrEqual(10);
 
   // Fire away the 99 carried bolts, then one more shot comes from the reservoir.
-  const fired = await page.evaluate(([x, y]) => {
+  const fired = await page.evaluate(() => {
     const g = window.__GAME__;
+    // The tube only fires outside the foundry (015).
+    window.__helpers?.toHall();
     let s = g?.getState();
+    const x = (s?.player.x ?? 0) + 300;
+    const y = s?.player.y ?? 0;
     for (let t = 0; t < 99 * 20 + 40 && s && (s.inventory['ley-bolt'] ?? 0) > 0; t++) {
       s = g?.step(1, { fire: true, aimX: x, aimY: y });
     }
@@ -78,7 +82,7 @@ test('a line fills the reservoir, which fires once the carried rounds run out', 
       fromReservoir = s?.tube.fromReservoir ?? false;
     }
     return { fromReservoir, carried: s?.inventory['ley-bolt'] ?? 0, before, after: s?.link.reservoir.count ?? 0 };
-  }, [beside.x, beside.y + 300] as const);
+  });
   expect(fired.carried).toBe(0);
   expect(fired.fromReservoir).toBe(true);
   expect(fired.after).toBeLessThan(fired.before + 3);
@@ -90,6 +94,6 @@ test('?playtest starts with plenty of everything and every machine unlocked', as
   await boot(page, '?playtest');
   const s = await step(page, 0);
   expect(s.inventory).toMatchObject({ arrow: 99, bomb: 99, 'ley-bolt': 99, wood: 99, stone: 99, fiber: 99, 'ley-crystal': 99, 'husk-resin': 99, shaft: 20, 'ley-shard': 20 });
-  expect(s.unlocked).toEqual(['conduit', 'hopper', 'crate', 'cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser']);
+  expect(s.unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'tube-socket', 'gravity-stager', 'cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser']);
   expect(errors).toEqual([]);
 });

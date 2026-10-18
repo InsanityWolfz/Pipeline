@@ -1,0 +1,13 @@
+# Wisp orb: a slow ley ball to dodge. 12x12.
+............
+...pppppp...
+..pwwwwCCp..
+.pwwwCCCCCp.
+.pwwCWWCCCp.
+.pwCWWWWCcp.
+.pwCWWWWccp.
+.pCCCWWCccp.
+.pCCCCccccp.
+..pCCccccp..
+...pppppp...
+............

@@ -144,6 +144,12 @@ describe('burns', () => {
     return at;
   }
 
+  it('record their hits as fire damage, for render to colour', () => {
+    const { s, e } = burning();
+    runUntil(s, () => s.events.hits.some((h) => h.target === 'enemy' && h.id === e.id), 40);
+    expect(s.events.hits.find((h) => h.target === 'enemy' && h.id === e.id)).toMatchObject({ damageType: 'fire' });
+  });
+
   it('deal 3 every 30 ticks, 4 times, then stop', () => {
     const { s, e } = burning();
     expect(e.burnTicks).toBe(120);

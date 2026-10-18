@@ -2,8 +2,8 @@ import { SPRITES } from './assets';
 
 // Items the player can carry, by kebab-case id.
 
-/** Raw materials are gathered or dropped, parts are hand-crafted, ammo loads into the tube. */
-export type ItemKind = 'raw' | 'part' | 'ammo';
+/** Raw materials are gathered or dropped, parts are hand-crafted, ammo loads into the tube, armor waits to be identified (010). */
+export type ItemKind = 'raw' | 'part' | 'ammo' | 'armor';
 
 export interface ItemDef {
   id: string;
@@ -28,6 +28,9 @@ export const ITEMS: Readonly<Record<string, ItemDef>> = {
   casing: { id: 'casing', name: 'Casing', kind: 'part', icon: SPRITES.itemCasing },
   fuse: { id: 'fuse', name: 'Fuse', kind: 'part', icon: SPRITES.itemFuse },
   'ley-shard': { id: 'ley-shard', name: 'Ley shard', kind: 'part', icon: SPRITES.itemLeyShard },
+  'unidentified-armor': { id: 'unidentified-armor', name: 'Unidentified armor', kind: 'armor', icon: SPRITES.itemUnidentifiedArmor },
+  /** The Pylon Warden's machine part (009); a gravity stager costs one. */
+  'warden-core': { id: 'warden-core', name: 'Warden core', kind: 'part', icon: SPRITES.itemWardenCore },
 };
 
 export function itemDef(id: string): ItemDef {

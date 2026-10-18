@@ -8,19 +8,22 @@ import {
   ENEMY_FX,
   FIRE_BURST,
   HUD_DIGITS,
+  DEPOSIT_SWIRL,
   KO_FADE_MS,
+  MUZZLE_FLASH,
   PICKUP_POPUP,
   PICKUP_SPARKLE,
 } from '../data/assets';
-import { CAMERA_LERP } from '../data/config';
+import { CAMERA_LERP, DOOR_FADE_MS } from '../data/config';
 import { enemyDef } from '../data/enemies';
 import { ITEMS } from '../data/items';
 import { OUTLINE_ID, hexToRgb, paletteHex } from '../data/palette';
+import { DRAW_HEIGHT } from '../data/tube';
 import type { SimEvents } from '../sim/events';
 import { registerAnim } from './anims';
 
 // One-shot effects driven by sim events: corpses, pickup sparkles and popups,
-// fire bursts, and the KO fade. Nothing here feeds back into the sim.
+// fire bursts, muzzle flashes, the deposit swirl, and the KO fade. Nothing here feeds back into the sim.
 export class EffectsView {
   private readonly scene: Scene;
   private readonly camera: Cameras.Scene2D.Camera;
@@ -35,6 +38,8 @@ export class EffectsView {
     this.followed = followed;
     registerAnim(scene, PICKUP_SPARKLE);
     registerAnim(scene, FIRE_BURST);
+    registerAnim(scene, MUZZLE_FLASH);
+    registerAnim(scene, DEPOSIT_SWIRL);
     for (const set of Object.values(ENEMY_ANIMS)) registerAnim(scene, set.death);
   }
 
@@ -43,6 +48,13 @@ export class EffectsView {
     for (const d of events.deaths) this.corpse(d.enemyId, d.x, d.y, d.facing === 'left');
     events.pickups.forEach((p, i) => this.pickup(p.itemId, p.x, p.y, player, i));
     for (const b of events.bursts) this.burst(b.x, b.y, b.radius);
+    for (const s of events.shots) this.muzzle(s.x, s.y);
+    // Banking (entering the foundry, or a pylon deposit) swirls ley light off the
+    // player. Through a door or travel, it waits out the fade so it shows in the new room.
+    if (events.banks.length > 0) {
+      if (events.roomChanges.length > 0) this.scene.time.delayedCall(DOOR_FADE_MS * 2, () => this.swirl(player));
+      else this.swirl(player);
+    }
     if (events.ko) this.koFade(player);
   }
 
@@ -68,6 +80,21 @@ export class EffectsView {
         onComplete: () => sprite.destroy(),
       });
     });
+  }
+
+  /** Ley light spiralling up off the player's feet as the haul is banked. */
+  private swirl(player: { x: number; y: number }): void {
+    const sprite = this.scene.add.sprite(player.x, player.y, ATLAS_KEY, animFrames(DEPOSIT_SWIRL)[0]);
+    sprite.setOrigin(0.5, 1).setDepth(player.y + DRAW_HEIGHT);
+    sprite.once('animationcomplete', () => sprite.destroy());
+    sprite.play(DEPOSIT_SWIRL.key);
+  }
+
+  /** A flash at the tube's mouth, at the height shots fly, in front of the player. */
+  private muzzle(x: number, y: number): void {
+    const sprite = this.scene.add.sprite(x, y - DRAW_HEIGHT, ATLAS_KEY, animFrames(MUZZLE_FLASH)[0]).setDepth(y + DRAW_HEIGHT);
+    sprite.once('animationcomplete', () => sprite.destroy());
+    sprite.play(MUZZLE_FLASH.key);
   }
 
   /** The burst drawn at its real radius, in front of what stands inside it. */

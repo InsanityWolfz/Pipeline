@@ -39,7 +39,7 @@ test('harvesting each node type gathers wood, stone, fiber and ley crystal', asy
 
 test('the full arrow, bomb and ley bolt chains craft from gathered materials', async ({ page }) => {
   const errors = watchErrors(page);
-  await boot(page);
+  await boot(page, '?start=hall&attuned');
   await page.evaluate(() => window.__GAME__?.step(0));
   await gatherEverything(page);
   await page.evaluate(() => window.__helpers?.killHusk());
@@ -58,7 +58,7 @@ test('the full arrow, bomb and ley bolt chains craft from gathered materials', a
 
 test('the crafting menu pauses the world and crafts on a click', async ({ page }) => {
   const errors = watchErrors(page);
-  await boot(page);
+  await boot(page, '?start=hall&attuned');
   // Real time first: C pauses, Esc resumes.
   await page.waitForTimeout(300);
   await page.keyboard.press('c');
@@ -96,7 +96,7 @@ test('the crafting menu pauses the world and crafts on a click', async ({ page }
 
 test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page }) => {
   const errors = watchErrors(page);
-  await boot(page);
+  await boot(page, '?start=hall&attuned');
   await page.evaluate(() => window.__GAME__?.step(0));
   await gatherEverything(page);
   await page.evaluate(
@@ -117,7 +117,7 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
     let s = g.getState();
     const nearest = () => {
       const p = s.player;
-      return [...s.enemies].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+      return [...s.enemies.filter((e) => e.room === s.room)].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
     };
     const carried = () => s.inventory[s.tube.ammo] ?? 0;
 
@@ -125,9 +125,9 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
     // stands on the line through the nearer one, so one bolt can pass through both.
     s = g.step(1, { selectAmmo: 'ley-bolt' });
     let pierced = 0;
-    for (let t = 0; t < 3000 && pierced < 2 && s.enemies.length === 2; t++) {
+    for (let t = 0; t < 3000 && pierced < 2 && s.enemies.filter((e) => e.room === s.room).length === 2; t++) {
       const p = s.player;
-      const [near, far] = [...s.enemies].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y));
+      const [near, far] = [...s.enemies.filter((e) => e.room === s.room)].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y));
       if (!near || !far) break;
       const nx = near.x - p.x;
       const ny = near.y - p.y;
@@ -154,9 +154,9 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
     const target = nearest();
     if (!target) throw new Error(`no Husk left; pierced ${pierced}, tick ${s.tick}`);
     const id = target.id;
-    const health = () => s.enemies.find((e) => e.id === id)?.health ?? 0;
+    const health = () => s.enemies.filter((e) => e.room === s.room).find((e) => e.id === id)?.health ?? 0;
     for (let t = 0; t < 600 && health() > 27; t++) {
-      const e = s.enemies.find((en) => en.id === id);
+      const e = s.enemies.filter((e) => e.room === s.room).find((en) => en.id === id);
       if (!e) break;
       // One arrow at a time, so the health steps down by 10s.
       const before = health();
@@ -169,7 +169,7 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
     let lastDamage = 0;
     let died = false;
     for (let t = 0; t < 900 && !died; t++) {
-      const e = s.enemies.find((en) => en.id === id);
+      const e = s.enemies.filter((e) => e.room === s.room).find((en) => en.id === id);
       if (!e) break;
       const p = s.player;
       const dist = Math.hypot(e.x - p.x, e.y - p.y);

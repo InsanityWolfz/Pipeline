@@ -1,3 +1,4 @@
+import { FOUNDRY_ROOM } from '../data/rooms';
 import { ammoDef } from '../data/ammo';
 import { DRY_FIRE_TICKS, MUZZLE_OFFSET, SLOT_AMMOS, STARTING_AMMO } from '../data/tube';
 import { createArrow } from './arrows';
@@ -7,6 +8,7 @@ import type { Command } from './input';
 import { count, take } from './inventory';
 import { takeFromReservoir } from './link';
 import { isRolling } from './movement';
+import { rotate, socketStreams } from './spread';
 import type { SimState } from './state';
 
 // The tube: picking the slot's ammo and firing it. Carried rounds fire straight
@@ -23,10 +25,12 @@ export interface TubeState {
   firing: boolean;
   /** This tick's shot came from the reservoir. */
   fromReservoir: boolean;
+  /** Projectiles this tick's shot fired: more than 1 for a spread (008), 0 with no shot. */
+  shotCount: number;
 }
 
 export function createTube(): TubeState {
-  return { ammoId: STARTING_AMMO, fireCooldown: 0, dryFire: 0, firing: false, fromReservoir: false };
+  return { ammoId: STARTING_AMMO, fireCooldown: 0, dryFire: 0, firing: false, fromReservoir: false, shotCount: 0 };
 }
 
 /** The item a round of the slot's ammo is. */
@@ -62,11 +66,20 @@ export function stepTube(state: SimState, cmd: Command): void {
   player.aimY = cmd.aimY;
   if (tube.fireCooldown > 0) tube.fireCooldown -= 1;
   if (tube.dryFire > 0) tube.dryFire -= 1;
+  // Without the tube (012) there's nothing to switch or fire.
+  if (!state.hasTube) {
+    tube.firing = false;
+    tube.fromReservoir = false;
+    tube.shotCount = 0;
+    return;
+  }
   if (cmd.selectAmmo !== null) selectAmmo(state, cmd.selectAmmo);
 
   tube.firing = false;
   tube.fromReservoir = false;
-  if (isRolling(player) || !cmd.fire) return;
+  tube.shotCount = 0;
+  // The tube is quiet in the foundry (015): clicks there are for building and menus, never shots.
+  if (isRolling(player) || !cmd.fire || state.roomId === FOUNDRY_ROOM) return;
   tube.firing = true;
   fire(state, cmd);
 }
@@ -93,10 +106,26 @@ function fire(state: SimState, cmd: Command): void {
     return;
   }
   tube.fromReservoir = source === 'reservoir';
+  // A reservoir shot fires one projectile per stream, each costing a round; carried rounds never spread.
+  const streams = tube.fromReservoir ? socketStreams(state.foundry) : [];
+  const angles = streams.length > 0 ? streams : [0];
+  let fired = 0;
+  for (const angle of angles) {
+    if (fired > 0 && !takeFromReservoir(state.link, slotItem(tube))) break;
+    launch(state, ammo.id, rotate(dx, dy, angle), cmd);
+    fired += 1;
+  }
+  tube.shotCount = fired;
+}
+
+/** Sends one projectile of the ammo along `dir` from the tube's mouth. A bomb lands at the aim's distance. */
+function launch(state: SimState, ammoId: string, [dx, dy]: [number, number], cmd: Command): void {
+  const { player } = state;
   const muzzle = { x: player.x + dx * MUZZLE_OFFSET, y: player.y + dy * MUZZLE_OFFSET };
-  if (ammo.kind === 'lob') {
-    throwBomb(state, ammo.id, muzzle, player, { x: cmd.aimX, y: cmd.aimY }, [dx, dy]);
+  state.events.shots.push({ ...muzzle, ammoId });
+  if (ammoDef(ammoId).kind === 'lob') {
+    throwBomb(state, ammoId, muzzle, player, { x: cmd.aimX, y: cmd.aimY }, [dx, dy]);
     return;
   }
-  state.arrows.push(createArrow(state.nextArrowId++, ammo.id, state.roomId, muzzle.x, muzzle.y, dx, dy));
+  state.arrows.push(createArrow(state.nextArrowId++, ammoId, state.roomId, muzzle.x, muzzle.y, dx, dy));
 }

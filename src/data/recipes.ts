@@ -2,6 +2,8 @@
 
 export interface RecipeDef {
   id: string;
+  /** Unknown until this holds (012): bombs, ley bolts and their parts appear once the tube attunes. */
+  requires?: 'attuned';
   /** Item id to count taken from the inventory. */
   inputs: Readonly<Record<string, number>>;
   output: { itemId: string; count: number };
@@ -18,11 +20,11 @@ export const RECIPES: Readonly<Record<string, RecipeDef>> = {
   arrowhead: recipe('arrowhead', { stone: 1 }, 'arrowhead', 2),
   rope: recipe('rope', { fiber: 1 }, 'rope', 2),
   arrow: recipe('arrow', { shaft: 1, arrowhead: 1, rope: 1 }, 'arrow', 4),
-  casing: recipe('casing', { stone: 1 }, 'casing', 1),
-  fuse: recipe('fuse', { 'husk-resin': 1 }, 'fuse', 1),
-  'ley-shard': recipe('ley-shard', { 'ley-crystal': 1 }, 'ley-shard', 2),
-  bomb: recipe('bomb', { casing: 1, fuse: 1, 'ley-shard': 1 }, 'bomb', 2),
-  'ley-bolt': recipe('ley-bolt', { 'ley-shard': 1 }, 'ley-bolt', 2),
+  casing: { ...recipe('casing', { stone: 1 }, 'casing', 1), requires: 'attuned' },
+  fuse: { ...recipe('fuse', { 'husk-resin': 1 }, 'fuse', 1), requires: 'attuned' },
+  'ley-shard': { ...recipe('ley-shard', { 'ley-crystal': 1 }, 'ley-shard', 2), requires: 'attuned' },
+  bomb: { ...recipe('bomb', { casing: 1, fuse: 1, 'ley-shard': 1 }, 'bomb', 2), requires: 'attuned' },
+  'ley-bolt': { ...recipe('ley-bolt', { 'ley-shard': 1 }, 'ley-bolt', 2), requires: 'attuned' },
 };
 
 /** The crafting menu's groups, one per ammo, each listing its chain in order. */

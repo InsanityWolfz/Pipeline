@@ -20,7 +20,7 @@ describe('arrows hitting Husks', () => {
     const e = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     run(s, 1, fireAt(1000, PLAYER_AT.y));
     runUntil(s, () => s.events.hits.length > 0, 30);
-    expect(s.events.hits).toEqual([{ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: DAMAGE }]);
+    expect(s.events.hits).toEqual([{ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: DAMAGE, damageType: 'physical' }]);
     expect(e.flash).toBe(HUSK.hitFlashTicks);
     run(s, HUSK.hitFlashTicks);
     expect(e.flash).toBe(0);
