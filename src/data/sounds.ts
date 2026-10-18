@@ -236,10 +236,9 @@ export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
 
 /** The ambient loop for each room; rooms not listed are silent. */
 export const ROOM_AMBIENCE: Readonly<Record<string, SoundKey>> = {
-  clearing: SOUNDS.ambientClearing,
-  'ruin-hall': SOUNDS.ambientRuin,
+  // Wind and birds outside (017).
+  overworld: SOUNDS.ambientClearing,
   foundry: SOUNDS.ambientFoundry,
-  shrine: SOUNDS.ambientShrine,
 };
 
 /** Mixing: master volume to start with, how loud loops sit under effects, and the room crossfade. */

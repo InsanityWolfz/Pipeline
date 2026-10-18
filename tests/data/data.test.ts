@@ -40,7 +40,7 @@ import { ENEMIES } from '../../src/data/enemies';
 import { FIXTURES, PORT_CYCLE } from '../../src/data/claims';
 import { ARMOR_DROP_CHANCE, ARMOR_WEIGHTS } from '../../src/data/armor';
 import { OBJECTIVES } from '../../src/data/objectives';
-import { ROOMS, TILE } from '../../src/data/rooms';
+import { TILE, WALKABLE } from '../../src/data/rooms';
 import { ITEMS } from '../../src/data/items';
 import { STARTING_INVENTORY, TUTORIAL_START } from '../../src/data/player';
 import { PLAYTEST_START } from '../../src/data/playtest';
@@ -50,6 +50,8 @@ import { NODES } from '../../src/data/nodes';
 import { BUILD_BAR, PIECES } from '../../src/data/pieces';
 import { STAGER_ANGLES, STAGER_START_ANGLE } from '../../src/data/foundry';
 import { vectorFrames } from '../../src/render/vector/catalog';
+import { OVERWORLD } from '../../src/data/overworld';
+import { WORLD } from '../../src/sim/world';
 
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -254,45 +256,45 @@ describe('enemies and rooms', () => {
     }
   });
 
-  it('place known enemies on floor tiles', () => {
-    for (const room of Object.values(ROOMS)) {
+  it('place known enemies on walkable tiles', () => {
+    for (const room of Object.values(WORLD)) {
       for (const e of room.enemies ?? []) {
         expect(ENEMIES[e.enemyId]).toBeDefined();
-        expect(room.rows[e.ty]?.[e.tx]).toBe(TILE.floor);
+        expect(WALKABLE).toContain(room.rows[e.ty]?.[e.tx]);
       }
     }
   });
 
-  it('place known nodes on clear floor in the spawn half, away from the Husks', () => {
-    const room = ROOMS['ruin-hall'];
+  it('place known nodes on walkable ground, every raw near the start, none in view of the field pack (017)', () => {
+    const room = WORLD[OVERWORLD.id];
     if (!room?.nodes) throw new Error('no nodes');
-    const counts: Record<string, number> = {};
     const tiles = new Set<string>();
+    const field = OVERWORLD.packs.filter((p) => p.group === 'field');
     for (const n of room.nodes) {
       expect(NODES[n.nodeId]).toBeDefined();
-      counts[n.nodeId] = (counts[n.nodeId] ?? 0) + 1;
-      // The node's tile and the ones beside it are floor, so it's never wedged against a block.
-      for (const dx of [-1, 0, 1]) expect(room.rows[n.ty]?.[n.tx + dx]).toBe(TILE.floor);
-      expect(n.ty).toBeGreaterThanOrEqual(room.rows.length / 2 - 2);
-      expect(n.tx === room.spawn.tx && n.ty === room.spawn.ty).toBe(false);
+      expect(WALKABLE).toContain(room.rows[n.ty]?.[n.tx]);
       expect(tiles.has(`${n.tx},${n.ty}`)).toBe(false);
       tiles.add(`${n.tx},${n.ty}`);
-      for (const e of room.enemies ?? []) {
-        const seen =
-          Math.abs(e.tx - n.tx) * 32 <= VIEW_WIDTH / 2 && Math.abs(e.ty - n.ty) * 32 <= VIEW_HEIGHT / 2;
+      for (const e of field) {
+        const seen = Math.abs(e.tx - n.tx) * 32 <= VIEW_WIDTH / 2 && Math.abs(e.ty - n.ty) * 32 <= VIEW_HEIGHT / 2;
         expect(seen).toBe(false);
       }
     }
-    expect(counts).toEqual({ tree: 3, rubble: 3, reeds: 3, 'ley-vein': 2 });
+    // Every raw can be gathered in the meadow round the start, before the first fight.
+    const meadow = OVERWORLD.clearings[0];
+    const near = room.nodes.filter((n) => meadow && n.tx >= meadow.x0 && n.tx <= meadow.x1 && n.ty >= meadow.y0 && n.ty <= meadow.y1);
+    expect(new Set(near.map((n) => n.nodeId))).toEqual(new Set(['tree', 'rubble', 'reeds', 'ley-vein']));
   });
 
-  it('start the ruin hall Husks off screen from the spawn', () => {
-    const room = ROOMS['ruin-hall'];
-    expect(room?.enemies?.length).toBe(3);
-    for (const e of room?.enemies ?? []) {
-      const offX = Math.abs(e.tx - (room?.spawn.tx ?? 0)) * 32 > VIEW_WIDTH / 2;
-      const offY = Math.abs(e.ty - (room?.spawn.ty ?? 0)) * 32 > VIEW_HEIGHT / 2;
-      expect(offX || offY).toBe(true);
+  it("start the ruin field's Husks off screen from the starts", () => {
+    const field = OVERWORLD.packs.filter((p) => p.group === 'field');
+    expect(field).toHaveLength(3);
+    for (const start of [OVERWORLD.field, OVERWORLD.wake]) {
+      for (const e of field) {
+        const offX = Math.abs(e.tx - start.tx) * 32 > VIEW_WIDTH / 2;
+        const offY = Math.abs(e.ty - start.ty) * 32 > VIEW_HEIGHT / 2;
+        expect(offX || offY).toBe(true);
+      }
     }
   });
 });
@@ -368,7 +370,7 @@ describe('claiming (009)', () => {
   });
 
   it('places only known enemies, and every room theme has a floor', () => {
-    for (const room of Object.values(ROOMS)) {
+    for (const room of Object.values(WORLD)) {
       for (const e of room.enemies ?? []) expect(ENEMIES[e.enemyId]).toBeDefined();
       if (room.floor) expect(FLOOR_SPRITES[room.floor]).toBeDefined();
       if (room.pylon) expect(room.rows[room.pylon.ty]?.[room.pylon.tx]).toBe(TILE.floor);
@@ -377,7 +379,7 @@ describe('claiming (009)', () => {
   });
 
   it('puts fixtures on open foundry floor, and the port cycles real raws', () => {
-    const foundry = ROOMS.foundry;
+    const foundry = WORLD.foundry;
     for (const f of FIXTURES) expect(foundry?.rows[f.ty]?.[f.tx]).toBe(TILE.floor);
     for (const id of PORT_CYCLE) expect(ITEMS[id]?.kind).toBe('raw');
   });
@@ -413,14 +415,17 @@ describe('the tutorial (012)', () => {
     }
   });
 
-  it('puts the tube stone on floor and gates on real doors', () => {
-    const clearing = ROOMS.clearing;
-    const stone = clearing?.tubeStone;
+  it('puts the tube stone on floor, the foundry gate on its stairs and the shrine gate on its gap', () => {
+    const outside = WORLD[OVERWORLD.id];
+    const stone = outside?.tubeStone;
     if (!stone) throw new Error('no tube stone');
-    expect(clearing.rows[stone.ty]?.[stone.tx]).toBe(TILE.floor);
-    const gates = Object.values(ROOMS).flatMap((r) => (r.doorways ?? []).flatMap((d) => (d.gate ? [d.gate] : [])));
-    expect(gates.sort()).toEqual(['foundry', 'shrine']);
+    expect(outside.rows[stone.ty]?.[stone.tx]).toBe(TILE.floor);
+    const doorGates = Object.values(WORLD).flatMap((r) => (r.doorways ?? []).flatMap((d) => (d.gate ? [d.gate] : [])));
+    expect(doorGates).toEqual(['foundry']);
+    const tileGates = new Set((outside.gateTiles ?? []).map((t) => t.gate));
+    expect([...tileGates]).toEqual(['shrine']);
+    for (const t of outside.gateTiles ?? []) expect(outside.rows[t.ty]?.[t.tx]).toBe(TILE.floor);
     for (const r of Object.values(RECIPES)) if (r.requires) expect(r.requires).toBe('attuned');
-    expect(TUTORIAL_START.room).toBe('clearing');
+    expect(TUTORIAL_START.room).toBe(OVERWORLD.id);
   });
 });

@@ -1,15 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { UNIDENTIFIED_ARMOR } from '../../src/data/armor';
 import { DYING_TICKS } from '../../src/data/player';
-import { FOUNDRY_ROOM, ROOMS, SHRINE_ROOM } from '../../src/data/rooms';
+import { FOUNDRY_ROOM, SHRINE_SITE } from '../../src/data/rooms';
+import { OVERWORLD } from '../../src/data/overworld';
 import { claim } from '../../src/sim/claims';
-import { arrivalTile } from '../../src/sim/doorways';
 import type { ConduitState, HopperState } from '../../src/sim/pieces';
 import { createSim } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
-import { tileCentre } from '../../src/sim/tiles';
-import { arena, command, die, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, SEED } from './fight';
+import { arena, atEntrance, atPylon, command, die, HUSK, placeHusk, PLAYER_AT, run, runUntil, SEED } from './fight';
 import { foundry, put } from './foundryKit';
 
 describe('banking', () => {
@@ -20,19 +19,16 @@ describe('banking', () => {
   it('walking into the foundry banks everything carried', () => {
     const s = arena();
     s.inventory = { arrow: 12, wood: 4 };
-    const inside = tileCentre(arrivalTile('ruin-hall', 0));
-    movePlayer(s, inside.x, inside.y);
-    runUntil(s, (x) => x.roomId === FOUNDRY_ROOM, 60, { moveX: -1 });
+    atEntrance(s);
+    runUntil(s, (x) => x.roomId === FOUNDRY_ROOM, 60, { moveY: -1 });
     expect(s.banked).toEqual({ arrow: 12, wood: 4 });
     expect(s.events.banks).toEqual([{ arrow: 12, wood: 4 }]);
   });
 
   it('a pylon deposit banks even when there was nothing to send', () => {
     const s = createSim(SEED);
-    claim(s, SHRINE_ROOM);
-    s.roomId = SHRINE_ROOM;
-    const below = tileCentre({ tx: 15, ty: 9 });
-    movePlayer(s, below.x, below.y);
+    claim(s, SHRINE_SITE);
+    atPylon(s);
     s.inventory = {};
     stepSim(s, command({ pylon: 'deposit' }));
     expect(s.banked).toEqual({});
@@ -45,10 +41,8 @@ describe('banking', () => {
 
   it('pylon travel and the waystone into the foundry bank too', () => {
     const s = createSim(SEED);
-    claim(s, SHRINE_ROOM);
-    s.roomId = SHRINE_ROOM;
-    const below = tileCentre({ tx: 15, ty: 9 });
-    movePlayer(s, below.x, below.y);
+    claim(s, SHRINE_SITE);
+    atPylon(s);
     s.inventory = { wood: 2 };
     stepSim(s, command({ pylon: 'travel' }));
     expect(s.roomId).toBe(FOUNDRY_ROOM);
@@ -57,10 +51,8 @@ describe('banking', () => {
 
   it('a pylon deposit banks too, leaving nothing carried', () => {
     const s = createSim(SEED);
-    claim(s, SHRINE_ROOM);
-    s.roomId = SHRINE_ROOM;
-    const below = tileCentre({ tx: 15, ty: 9 });
-    movePlayer(s, below.x, below.y);
+    claim(s, SHRINE_SITE);
+    atPylon(s);
     s.inventory = { stone: 5 };
     stepSim(s, command({ pylon: 'deposit' }));
     expect(s.banked).toEqual({});
@@ -118,7 +110,7 @@ describe('dying', () => {
     s.armor = [{ id: 0, weight: 'light', armor: 3, name: 'Worn Vest' }];
     s.equipped = 0;
     s.stash = { wood: 9 };
-    claim(s, SHRINE_ROOM);
+    claim(s, SHRINE_SITE);
     s.link.reservoir = { itemId: 'arrow', count: 5 };
     const c = put<ConduitState>(s, 'conduit', 4, 4, 'up');
     c.item = 'stone';
@@ -127,19 +119,19 @@ describe('dying', () => {
     expect(s.armor).toHaveLength(1);
     expect(s.equipped).toBe(0);
     expect(s.stash).toEqual({ wood: 9 });
-    expect(s.claims).toEqual([SHRINE_ROOM]);
+    expect(s.claims).toEqual([SHRINE_SITE]);
     expect(s.link).toMatchObject({ attuned: true, reservoir: { itemId: 'arrow', count: 5 } });
     expect(s.foundry.pieces).toHaveLength(pieces);
   });
 
-  it('resets unclaimed rooms and leaves claimed ones empty', () => {
+  it('resets unclaimed ground and leaves claimed sites empty', () => {
     const s = arena();
-    s.enemies = s.enemies.filter((e) => e.roomId !== SHRINE_ROOM);
-    claim(s, SHRINE_ROOM);
+    s.enemies = s.enemies.filter((e) => e.group !== SHRINE_SITE);
+    claim(s, SHRINE_SITE);
     die(s);
-    const hall = ROOMS['ruin-hall']?.enemies?.length ?? 0;
-    expect(s.enemies.filter((e) => e.roomId === 'ruin-hall')).toHaveLength(hall);
-    expect(s.enemies.filter((e) => e.roomId === SHRINE_ROOM)).toEqual([]);
+    const field = OVERWORLD.packs.filter((p) => p.group === 'field').length;
+    expect(s.enemies.filter((e) => e.group === 'field')).toHaveLength(field);
+    expect(s.enemies.filter((e) => e.group === SHRINE_SITE)).toEqual([]);
     expect(s.enemies.every((e) => e.health === HUSK.maxHealth || e.enemyId !== 'husk')).toBe(true);
   });
 

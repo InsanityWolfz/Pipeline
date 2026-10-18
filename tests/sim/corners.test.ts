@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CONDUIT_TICKS } from '../../src/data/foundry';
 import { PORT_TICKS } from '../../src/data/claims';
-import { SHRINE_ROOM } from '../../src/data/rooms';
+import { SHRINE_SITE } from '../../src/data/rooms';
 import { claim } from '../../src/sim/claims';
 import { place } from '../../src/sim/placement';
 import type { ConduitState, CrateState, HopperState } from '../../src/sim/pieces';
@@ -71,7 +71,7 @@ describe('conduit intake from other pieces', () => {
 
   it('the supply port feeds a corner that joined it', () => {
     const s = foundry();
-    claim(s, SHRINE_ROOM);
+    claim(s, SHRINE_SITE);
     const c = put<ConduitState>(s, 'conduit', 2, 8, 'up');
     run(s, PORT_TICKS + 1);
     expect(c.item).not.toBeNull();
@@ -113,7 +113,7 @@ describe('placing a conduit without a side', () => {
 
   it('joins the supply port, which faces the tile beside it', () => {
     const s = foundry();
-    claim(s, SHRINE_ROOM);
+    claim(s, SHRINE_SITE);
     // The port is at (1,8) facing right, so it hands to (2,8).
     expect(put<ConduitState>(s, 'conduit', 2, 8, 'up').inFrom).toBe('left');
   });

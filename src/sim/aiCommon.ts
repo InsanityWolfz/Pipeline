@@ -2,6 +2,7 @@ import { TICK_RATE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { attackOf, enemyDef, type EnemyDef } from '../data/enemies';
 import { unit } from './direction';
 import { aggro, type EnemyState } from './enemies';
+import { screenFull } from './population';
 import type { SimState } from './state';
 
 // Pieces every enemy AI shares: the aggro box, walking, going home, and the
@@ -100,7 +101,8 @@ export function engage(state: SimState, e: EnemyState, sees: boolean): [number, 
     e.modeTicks = 0;
   }
   if (e.mode === 'idle' || e.mode === 'return') {
-    if (!here || !sees) return e.mode === 'return' ? walkHome(e, enemyDef(e.enemyId)) : [0, 0];
+    // No more than the cap wake near the player at once (017): the rest wait until some fall.
+    if (!here || !sees || screenFull(state)) return e.mode === 'return' ? walkHome(e, enemyDef(e.enemyId)) : [0, 0];
     aggro(e);
   }
   e.offScreenTicks = here && inAggroBox(e, state.player) ? 0 : e.offScreenTicks + 1;

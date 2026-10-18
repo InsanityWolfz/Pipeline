@@ -1,7 +1,7 @@
 import { TICK_RATE, TILE_SIZE } from '../data/config';
 import { enemyDef } from '../data/enemies';
 import { FEET_BOX } from '../data/player';
-import { isSolid } from './collision';
+import { blocksShot } from './collision';
 import type { EnemyState } from './enemies';
 import { damagePlayer } from './health';
 import { roomById, type SimState } from './state';
@@ -46,7 +46,7 @@ export function stepOrbs(state: SimState): void {
     o.x += o.dx * step;
     o.y += o.dy * step;
     o.travelled += step;
-    if (o.travelled > cast.orbRange || isSolid(roomById(o.roomId), Math.floor(o.x / TILE_SIZE), Math.floor(o.y / TILE_SIZE))) return false;
+    if (o.travelled > cast.orbRange || blocksShot(roomById(o.roomId), Math.floor(o.x / TILE_SIZE), Math.floor(o.y / TILE_SIZE))) return false;
     if (o.roomId !== state.roomId) return true;
     const p = state.player;
     const near = Math.abs(o.x - p.x) <= (FEET_BOX.w + cast.orbSize) / 2 && Math.abs(o.y - p.y) <= (FEET_BOX.h + cast.orbSize) / 2;

@@ -1,7 +1,7 @@
 import { MAX_HEALTH } from '../data/player';
 import { RESERVOIR_CAP } from '../data/tube';
 import { OBJECTIVES } from '../data/objectives';
-import { ROOMS } from '../data/rooms';
+import { WORLD } from './world';
 import type { SimEvents } from './events';
 import { unlockedPieces } from './placement';
 import { isInvulnerable, isRolling } from './movement';
@@ -24,6 +24,9 @@ import {
   type NodeSummary,
   type PieceSummary,
 } from './summaryParts';
+import { OVERWORLD, ringOf } from '../data/overworld';
+import { TILE_SIZE } from '../data/config';
+import { enemiesNearPlayer } from './population';
 
 /** The compact JSON summary that window.__GAME__.getState() returns. */
 export interface SimSummary {
@@ -31,6 +34,11 @@ export interface SimSummary {
   seed: number;
   /** The room the player is in. */
   room: string;
+  /** Where the player is (017): the room, the overworld's ring there (null elsewhere), and live enemies in the room. */
+  area: { room: string; ring: 0 | 1 | 2 | null; liveEnemies: number };
+  /** The living population is out (017), and how many enemies are within a screen of the player. */
+  populated: boolean;
+  nearPlayer: number;
   /** Every room id. */
   rooms: string[];
   player: {
@@ -126,7 +134,14 @@ export function summarize(state: SimState): SimSummary {
     tick: state.tick,
     seed: state.seed,
     room: state.roomId,
-    rooms: Object.keys(ROOMS),
+    area: {
+      room: state.roomId,
+      ring: state.roomId === OVERWORLD.id ? ringOf(Math.floor(state.player.x / TILE_SIZE), Math.floor(state.player.y / TILE_SIZE)) : null,
+      liveEnemies: state.enemies.filter((e) => e.roomId === state.roomId).length,
+    },
+    populated: state.populated,
+    nearPlayer: enemiesNearPlayer(state),
+    rooms: Object.keys(WORLD),
     player: {
       x: round(p.x),
       y: round(p.y),

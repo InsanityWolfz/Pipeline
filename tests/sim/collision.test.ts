@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { TICK_RATE, TILE_SIZE } from '../../src/data/config';
 import { FEET_BOX, ROLL_TICKS, WALK_SPEED } from '../../src/data/player';
-import { DEFAULT_ROOM, ROOMS } from '../../src/data/rooms';
+import { DEFAULT_ROOM } from '../../src/data/rooms';
+import { WORLD } from '../../src/sim/world';
 import { boxHitsSolid } from '../../src/sim/collision';
 import type { Axis } from '../../src/sim/input';
 import { isRolling, stepPlayer } from '../../src/sim/movement';
@@ -77,7 +78,7 @@ describe('collision', () => {
   });
 
   it('never overlaps a solid tile under random input in the real room', () => {
-    const room = ROOMS[DEFAULT_ROOM];
+    const room = WORLD[DEFAULT_ROOM];
     if (!room) throw new Error('no room');
     const p = playerIn(room);
     const rng = createRng(99);

@@ -42,6 +42,8 @@ export interface EnemySummary {
   id: number;
   enemyId: string;
   room: string;
+  /** Its group (017): `field`, a site id, `pop-…`, or ''. */
+  group: string;
   /** Feet centre, px. */
   x: number;
   y: number;
@@ -63,6 +65,7 @@ export function enemySummary(e: EnemyState): EnemySummary {
     id: e.id,
     enemyId: e.enemyId,
     room: e.roomId,
+    group: e.group,
     x: round(e.x),
     y: round(e.y),
     home: { x: round(e.homeX), y: round(e.homeY) },

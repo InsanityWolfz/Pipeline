@@ -1,5 +1,5 @@
 import { TILE_SIZE } from '../data/config';
-import { TILE, type Room } from '../data/rooms';
+import { SHOT_THROUGH, TILE, WALKABLE, type Room } from '../data/rooms';
 
 // Feet-box collision against a room's tile grid and solid things standing in it.
 // Anything that isn't floor, including outside the grid, is solid. Door tiles
@@ -18,7 +18,15 @@ export interface Rect extends Box {
 
 export function isSolid(room: Room, tx: number, ty: number, doors = false): boolean {
   const symbol = room.rows[ty]?.[tx];
-  return symbol !== TILE.floor && !(doors && symbol === TILE.door);
+  if (symbol !== undefined && WALKABLE.includes(symbol)) return false;
+  return !(doors && symbol === TILE.door);
+}
+
+/** True if a tile stops shots: anything solid, except water, which shots fly over (017). */
+export function blocksShot(room: Room, tx: number, ty: number): boolean {
+  const symbol = room.rows[ty]?.[tx];
+  if (symbol !== undefined && SHOT_THROUGH.includes(symbol)) return false;
+  return isSolid(room, tx, ty);
 }
 
 /** True if a box centred on (cx, cy) overlaps a rect. Touching an edge is not overlap. */

@@ -39,7 +39,7 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
     prompt: { key: 'E', over: 'node' },
   },
   { text: 'Craft arrows (C)', check: { kind: 'crafted', items: ['arrow'] }, prompt: { key: 'C', over: 'player' } },
-  { text: 'Defeat the Husks', check: { kind: 'gate', gate: 'foundry' } },
+  { text: 'Clear the ruin field of Husks', check: { kind: 'gate', gate: 'foundry' } },
   { text: 'Enter the foundry', check: { kind: 'inRoom', room: 'foundry' } },
   { text: 'Craft a bomb and a ley bolt (C)', check: { kind: 'crafted', items: ['bomb', 'ley-bolt'] }, prompt: { key: 'C', over: 'player' } },
   { text: 'Build an ammo line into the tube socket (B)', check: { kind: 'socketPlaced' }, prompt: { key: 'B', over: 'player' } },

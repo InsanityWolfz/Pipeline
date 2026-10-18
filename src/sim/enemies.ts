@@ -15,6 +15,8 @@ export interface EnemyState extends Knockable {
   enemyId: string;
   /** Enemies never change rooms. */
   roomId: string;
+  /** What it belongs to (017): `field` (the tutorial pack), a site id (its guards), `pop-…` (a population pack), or ''. */
+  group: string;
   /** Feet centre, px. */
   x: number;
   y: number;
@@ -44,12 +46,13 @@ export interface EnemyState extends Knockable {
   burnAmmo: string;
 }
 
-export function createEnemy(id: number, enemyId: string, at: { x: number; y: number }, roomId: string): EnemyState {
+export function createEnemy(id: number, enemyId: string, at: { x: number; y: number }, roomId: string, group = ''): EnemyState {
   const def = enemyDef(enemyId);
   return {
     id,
     enemyId,
     roomId,
+    group,
     x: at.x,
     y: at.y,
     homeX: at.x,

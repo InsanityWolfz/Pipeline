@@ -4,7 +4,6 @@ import { PLAYTEST_START } from '../../src/data/playtest';
 import { DEFAULT_START } from '../../src/data/player';
 import { FOUNDRY_ROOM } from '../../src/data/rooms';
 import { ATTUNE_TICKS, REFILL_PULSE_TICKS, RESERVOIR_CAP } from '../../src/data/tube';
-import { arrivalTile } from '../../src/sim/doorways';
 import { unlockedPieces } from '../../src/sim/placement';
 import type { ConduitState, HopperState, SocketState } from '../../src/sim/pieces';
 import { createSim } from '../../src/sim/state';
@@ -13,17 +12,17 @@ import { summarize } from '../../src/sim/summary';
 import { slotCount } from '../../src/sim/tube';
 import { tileCentre } from '../../src/sim/tiles';
 import { CONDUIT_TICKS } from '../../src/data/foundry';
-import { arena, command, die, runUntilKo, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, SEED } from './fight';
+import { arena, atEntrance, command, die, runUntilKo, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, SEED } from './fight';
 import { foundry, put, stepOutside } from './foundryKit';
+import { OVERWORLD_ROOM } from '../../src/data/overworld';
 
-const HALL = 'ruin-hall';
+const HALL = OVERWORLD_ROOM;
 const FIRE_TICKS = ammoDef('arrow').fireTicks;
 
-/** The ruin hall with the player just inside its foundry door. */
+/** The overworld with the player in front of the foundry's stairs (017). */
 function atHallDoor() {
   const s = arena();
-  const inside = tileCentre(arrivalTile(HALL, 0));
-  movePlayer(s, inside.x, inside.y);
+  atEntrance(s);
   return s;
 }
 
@@ -47,7 +46,7 @@ describe('attunement', () => {
         return x.roomId === FOUNDRY_ROOM;
       },
       60,
-      { moveX: -1 },
+      { moveY: -1 },
     );
     expect(s.link).toMatchObject({ attuned: true, attunePulse: ATTUNE_TICKS });
     expect(attunes).toHaveLength(1);
@@ -60,7 +59,7 @@ describe('attunement', () => {
         return x.roomId === FOUNDRY_ROOM;
       },
       120,
-      { moveX: -1 },
+      { moveY: -1 },
     );
     expect(attunes).toHaveLength(1);
   });

@@ -1,4 +1,5 @@
-import { CLEARING_ROOM, DEFAULT_ROOM, FOUNDRY_ROOM } from './rooms';
+import { OVERWORLD } from './overworld';
+import { DEFAULT_ROOM, FOUNDRY_ROOM } from './rooms';
 
 // Player movement tuning. Starting values from spec 002; tune in playtest.
 
@@ -36,34 +37,43 @@ export const STARTING_INVENTORY: Readonly<Record<string, number>> = { arrow: 30 
  */
 export interface StartDef {
   room: string;
+  /** Where in the room (017: the overworld has several starts). A KO back to this room lands here too. */
+  spawn: { tx: number; ty: number };
   inventory: Readonly<Record<string, number>>;
   crafted: readonly string[];
   hasTube: boolean;
   attuned: boolean;
   gatesOpen: boolean;
+  /** The living population (017) is out from the start, as if the first line had filled the tube. */
+  populated: boolean;
 }
 
 /**
- * The sandbox start: the ruin hall, 30 arrows, the tube in hand, gates open.
- * The sim's default, so tests start here; the game reaches it with `?start=hall`.
+ * The sandbox start: the meadow beside the ruin field (017), 30 arrows, the tube
+ * in hand, gates open. The sim's default, so tests start here; the game reaches
+ * it with `?start=field`.
  */
 export const DEFAULT_START: StartDef = {
   room: DEFAULT_ROOM,
+  spawn: OVERWORLD.field,
   inventory: STARTING_INVENTORY,
   crafted: [],
   hasTube: true,
   attuned: false,
   gatesOpen: true,
+  populated: false,
 };
 
-/** The real game's start (012): waking in the clearing with nothing, the tube still on its stone, every gate shut. */
+/** The real game's start (012): waking by the tube's stone in the overworld's meadow (017) with nothing, every gate shut. */
 export const TUTORIAL_START: StartDef = {
-  room: CLEARING_ROOM,
+  room: DEFAULT_ROOM,
+  spawn: OVERWORLD.wake,
   inventory: {},
   crafted: [],
   hasTube: false,
   attuned: false,
   gatesOpen: false,
+  populated: false,
 };
 
 /** Where a death wakes the player (011). */

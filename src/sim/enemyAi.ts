@@ -5,6 +5,7 @@ import { aimFacing } from './direction';
 import { separate, type EnemyState, type RoomBodies } from './enemies';
 import { damagePlayer } from './health';
 import { takeKnock } from './knockback';
+import { keepOut } from './population';
 import { slamThink } from './slammerAi';
 import type { SimState } from './state';
 import { engage, inAggroBox, leash, startWindup, stepAttack, toward } from './aiCommon';
@@ -26,7 +27,9 @@ export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBod
     const def = enemyDef(e.enemyId);
     if (e.cooldown > 0) e.cooldown -= 1;
     if (e.flash > 0) e.flash -= 1;
-    const [mx, my] = def.kind === 'melee' ? think(state, e, def) : def.kind === 'caster' ? castThink(state, e, def) : slamThink(state, e, def);
+    const thought = def.kind === 'melee' ? think(state, e, def) : def.kind === 'caster' ? castThink(state, e, def) : slamThink(state, e, def);
+    // Claimed ground is safe (017): a chaser stops at the zone's edge.
+    const [mx, my] = keepOut(state, e, thought[0], thought[1]);
     const [kx, ky] = takeKnock(e);
     const { hitX, hitY } = moveBox(room, e, def.feetBox, mx + kx, my + ky, obstacles);
     e.vx = hitX ? 0 : mx;

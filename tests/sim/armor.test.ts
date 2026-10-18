@@ -9,7 +9,7 @@ import { createSim, type SimState } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
-import { arena, command, HUSK, movePlayer, placeHusk, PLAYER_AT, run, SEED } from './fight';
+import { arena, atPylon, command, HALL, HUSK, movePlayer, placeHusk, PLAYER_AT, run, SEED } from './fight';
 
 /** The foundry with the player beside the identification bench, carrying `n` unidentified pieces. */
 function atBench(n = 1, seed = SEED): SimState {
@@ -51,7 +51,7 @@ describe('armor drops', () => {
 
   it('walking over a bundle carries it as unidentified armor', () => {
     const s = arena();
-    s.groundItems.push({ id: 0, itemId: UNIDENTIFIED_ARMOR, roomId: 'ruin-hall', x: PLAYER_AT.x, y: PLAYER_AT.y });
+    s.groundItems.push({ id: 0, itemId: UNIDENTIFIED_ARMOR, roomId: HALL, x: PLAYER_AT.x, y: PLAYER_AT.y });
     run(s, 1);
     expect(s.inventory[UNIDENTIFIED_ARMOR]).toBe(1);
   });
@@ -108,9 +108,7 @@ describe('the identification bench', () => {
   it('a deposit at a claimed pylon stashes unidentified armor too', () => {
     const s = createSim(SEED);
     claim(s, 'shrine');
-    s.roomId = 'shrine';
-    const below = tileCentre({ tx: 15, ty: 9 });
-    movePlayer(s, below.x, below.y);
+    atPylon(s);
     s.inventory = { [UNIDENTIFIED_ARMOR]: 2 };
     stepSim(s, command({ pylon: 'deposit' }));
     expect(s.stash[UNIDENTIFIED_ARMOR]).toBe(2);

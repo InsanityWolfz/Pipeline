@@ -105,10 +105,9 @@ export const GLOWS = {
 
 /** The dusk tint over each room (a palette id and alpha). */
 export const ROOM_MOOD: Readonly<Record<string, { tint: string; alpha: number }>> = {
-  clearing: { tint: 'violet', alpha: 0.1 },
-  'ruin-hall': { tint: 'shadow-violet', alpha: 0.14 },
+  // Daylight outside (017): a faint warm wash, no dusk.
+  overworld: { tint: 'sun', alpha: 0.04 },
   foundry: { tint: 'ember-dark', alpha: 0.08 },
-  shrine: { tint: 'teal-deep', alpha: 0.16 },
 };
 
 /** The vignette: edge darkness, and where the darkening starts (fraction of the corner distance). */

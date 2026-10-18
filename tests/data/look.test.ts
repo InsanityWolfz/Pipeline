@@ -9,7 +9,11 @@ import { DAYLIGHT_PALETTE, PIXEL_PALETTE } from '../../src/data/palette';
 import { FIRE_SOUNDS, ROOM_AMBIENCE, SOUNDS, WINDUP_SOUNDS } from '../../src/data/sounds';
 import { SLOT_AMMOS } from '../../src/data/tube';
 import { PROPS, type PropDef } from '../../src/data/props';
-import { ROOMS, TILE } from '../../src/data/rooms';
+import { TILE } from '../../src/data/rooms';
+import { WORLD } from '../../src/sim/world';
+
+/** Rooms drawn from pixel tiles (the foundry); the overworld (017) is drawn in vector from its terrain. */
+const ROOMS = Object.fromEntries(Object.entries(WORLD).filter(([, r]) => !r.terrain));
 
 // Look and feel (014): every new frame exists, and room dressing stays out of the way.
 
@@ -87,8 +91,8 @@ describe('feel and sound references', () => {
   });
 
   it('key moods and ambience by real rooms, fire sounds by real ammo, and wind-ups by real enemy kinds', () => {
-    for (const roomId of [...Object.keys(ROOM_MOOD), ...Object.keys(ROOM_AMBIENCE)]) expect(ROOMS[roomId], roomId).toBeDefined();
-    for (const room of Object.keys(ROOMS)) expect(ROOM_AMBIENCE[room], room).toBeDefined();
+    for (const roomId of [...Object.keys(ROOM_MOOD), ...Object.keys(ROOM_AMBIENCE)]) expect(WORLD[roomId], roomId).toBeDefined();
+    for (const room of Object.keys(WORLD)) expect(ROOM_AMBIENCE[room], room).toBeDefined();
     for (const ammoId of SLOT_AMMOS) expect(FIRE_SOUNDS[ammoId], ammoId).toBeDefined();
     const kinds = new Set(Object.values(ENEMIES).map((e) => e.kind));
     for (const kind of kinds) expect(WINDUP_SOUNDS[kind], kind).toBeDefined();

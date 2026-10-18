@@ -2,7 +2,8 @@ import { RESERVOIR_CAP } from '../data/tube';
 import { STONE_REACH } from '../data/objectives';
 import { FEET_BOX } from '../data/player';
 import { RESPAWN_ROOM } from '../data/player';
-import { DEFAULT_ROOM, ROOMS, type GateId } from '../data/rooms';
+import { type GateId } from '../data/rooms';
+import { WORLD } from './world';
 import { recipeDef } from '../data/recipes';
 import type { Rect } from './collision';
 import { tileRect } from './fixtures';
@@ -10,10 +11,13 @@ import type { Command } from './input';
 import { roomOf, type SimState } from './state';
 
 // The tutorial's rules (012): the tube waits on its stone until E takes it; the
-// foundry door is sealed until the hall's whole pack is dead at once, the shrine
-// door until the first line fills the tube; bomb and ley bolt recipes stay
+// foundry's stairs are sealed until the ruin field's whole pack is dead at once,
+// the shrine site's gap until the first line fills the tube; bomb and ley bolt recipes stay
 // unknown until the tube attunes. Gates and the tube stay once got, through a KO.
 
+
+/** The ruin field's pack (017): while any of it lives, rubble seals the foundry's stairs. */
+export const FIELD_GROUP = 'field';
 
 export interface Gates {
   foundry: boolean;
@@ -27,11 +31,11 @@ export const createGates = (open: boolean): Gates => ({ foundry: open, shrine: o
 /** True if a door's gate (if any) is open. */
 export const doorOpen = (state: Pick<SimState, 'gates'>, gate: GateId | undefined): boolean => !gate || state.gates[gate];
 
-/** Solid boxes in a room for the tutorial: the tube stone, and doors whose gate is shut. */
+/** Solid boxes in a room for the tutorial: the tube stone, and doors and gate tiles (017) whose gate is shut. */
 export function tutorialRects(state: Pick<SimState, 'gates'>, roomId: string): Rect[] {
-  const room = ROOMS[roomId];
+  const room = WORLD[roomId];
   if (!room) return [];
-  const sealed = (room.doorways ?? []).filter((d) => !doorOpen(state, d.gate)).map(tileRect);
+  const sealed = [...(room.doorways ?? []), ...(room.gateTiles ?? [])].filter((d) => !doorOpen(state, d.gate)).map(tileRect);
   return room.tubeStone ? [...sealed, tileRect(room.tubeStone)] : sealed;
 }
 
@@ -67,8 +71,12 @@ function open(state: SimState, gate: GateId): void {
 
 /** Opens gates whose condition now holds: the hall clear, the first line full. */
 export function stepGates(state: SimState): void {
-  if (!state.firstLineFull && state.link.reservoir.count >= RESERVOIR_CAP) state.firstLineFull = true;
-  if (!state.gates.foundry && !state.enemies.some((e) => e.roomId === DEFAULT_ROOM)) open(state, 'foundry');
+  if (!state.firstLineFull && state.link.reservoir.count >= RESERVOIR_CAP) {
+    state.firstLineFull = true;
+    // The world pushes back (017): from the first full line, the land fills with packs.
+    state.populated = true;
+  }
+  if (!state.gates.foundry && !state.enemies.some((e) => e.group === FIELD_GROUP)) open(state, 'foundry');
   if (!state.gates.shrine && state.firstLineFull) open(state, 'shrine');
 }
 

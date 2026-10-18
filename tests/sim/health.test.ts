@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { HIT_INVULN_TICKS, INVULN_TICKS, MAX_HEALTH } from '../../src/data/player';
-import { ROOMS } from '../../src/data/rooms';
+import { STATIC_ROOMS } from '../../src/data/rooms';
+import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { damagePlayer } from '../../src/sim/health';
 import { nextFloat } from '../../src/sim/rng';
 import { createSim, tileCentre } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { DYING_TICKS } from '../../src/data/player';
-import { arena, runUntilKo, HUSK, placeHusk, PLAYER_AT, run, SEED, SWIPE_LANDS } from './fight';
+import { arena, at, runUntilKo, HUSK, placeHusk, PLAYER_AT, run, SEED, SWIPE_LANDS } from './fight';
 
 const { damage, knockback, knockTicks } = HUSK.swipe;
 
@@ -73,10 +74,11 @@ describe('player health', () => {
   });
 
   it('stops the knockback at a wall', () => {
-    const s = arena(SEED, { x: 48, y: PLAYER_AT.y });
+    // Against the east face (x = 1024) of the ruin field's west wall, tile column 31 (017).
+    const s = arena(SEED, { x: 1024 + 16, y: 14.5 * 32 });
     hitFromEast(s);
     run(s, knockTicks);
-    expect(s.player.x).toBe(40);
+    expect(s.player.x).toBe(1024 + 8);
   });
 
   it('keeps firing through a hit', () => {
@@ -94,7 +96,7 @@ describe('death and the KO (011)', () => {
     placeHusk(s, PLAYER_AT.x + 20, PLAYER_AT.y);
     s.player.health = damage;
     s.inventory.arrow = 3;
-    s.groundItems.push({ id: s.nextGroundItemId++, itemId: 'wood', roomId: 'ruin-hall', x: 600, y: 448 });
+    s.groundItems.push({ id: s.nextGroundItemId++, itemId: 'wood', roomId: OVERWORLD_ROOM, ...at(600) });
     return s;
   }
 
@@ -105,17 +107,16 @@ describe('death and the KO (011)', () => {
     expect(s.player.dying).toBe(DYING_TICKS);
     runUntilKo(s);
     expect(summarize(s).player).toMatchObject({ health: 100, ko: true, dying: 0 });
-    const room = ROOMS['ruin-hall'];
-    if (!room?.enemies) throw new Error('no room enemies');
+    const field = OVERWORLD.packs.filter((p) => p.group === 'field');
     expect(s.roomId).toBe('foundry');
-    expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre(ROOMS.foundry?.spawn ?? { tx: 0, ty: 0 }));
+    expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre(STATIC_ROOMS.foundry?.spawn ?? { tx: 0, ty: 0 }));
     // Banked at the start: 30 arrows; it carried 3, so it keeps 3.
     expect(s.inventory).toEqual({ arrow: 3 });
     expect(s.arrows).toEqual([]);
     expect(s.groundItems).toEqual([]);
-    const hall = s.enemies.filter((e) => e.roomId === 'ruin-hall');
+    const hall = s.enemies.filter((e) => e.group === 'field');
     expect(hall.map((e) => ({ x: e.x, y: e.y, health: e.health, mode: e.mode }))).toEqual(
-      room.enemies.map((p) => ({ ...tileCentre(p), health: HUSK.maxHealth, mode: 'idle' })),
+      field.map((p) => ({ ...tileCentre(p), health: HUSK.maxHealth, mode: 'idle' })),
     );
     for (const e of s.enemies) expect(idsBefore).not.toContain(e.id);
   });

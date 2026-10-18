@@ -6,7 +6,8 @@ import { ENEMIES } from '../../src/data/enemies';
 import { ITEMS } from '../../src/data/items';
 import { NODES } from '../../src/data/nodes';
 import { BUILD_BAR, PIECES } from '../../src/data/pieces';
-import { ROOMS } from '../../src/data/rooms';
+import { OVERWORLD } from '../../src/data/overworld';
+import { WORLD } from '../../src/sim/world';
 import { arrowSpots, sorterLook, wrapText } from '../../src/render/foundryLayout';
 import { sortSideOf } from '../../src/sim/pieces';
 import { nameAt } from '../../src/render/hoverNames';
@@ -38,24 +39,23 @@ describe('world names on mouse-over', () => {
     expect(nameAt(s, HALL, 500, 498)?.name).toBe('Wood');
   });
 
-  it('names the pylon, the tube stone and the crystal, and nothing on bare floor', () => {
+  it('names the pylon and the tube stone, and nothing on bare ground (017: both in the overworld)', () => {
     const s = createSim(SEED, { roomId: HALL });
-    const shrine = ROOMS.shrine?.pylon;
+    const outside = WORLD[HALL];
+    const shrine = outside?.pylon;
     if (!shrine) throw new Error('no pylon');
     const p = centre(shrine.tx, shrine.ty);
-    expect(nameAt(s, 'shrine', p.x, p.y)?.name).toBe(WORLD_NAMES.pylon);
-    const stone = ROOMS.clearing?.tubeStone;
+    expect(nameAt(s, HALL, p.x, p.y)?.name).toBe(WORLD_NAMES.pylon);
+    const stone = outside.tubeStone;
     if (!stone) throw new Error('no stone');
     const t = centre(stone.tx, stone.ty);
-    expect(nameAt(s, 'clearing', t.x, t.y)?.name).toBe(WORLD_NAMES.tubeStone);
+    expect(nameAt(s, HALL, t.x, t.y)?.name).toBe(WORLD_NAMES.tubeStone);
     s.hasTube = false;
-    expect(nameAt(s, 'clearing', t.x, t.y)?.name).toBe(WORLD_NAMES.dormantTube);
-    const crystal = ROOMS[HALL]?.crystal;
-    if (!crystal) throw new Error('no crystal');
-    const c = centre(crystal.tx, crystal.ty);
-    expect(nameAt(s, HALL, c.x, c.y)?.name).toBe(WORLD_NAMES.crystal);
+    expect(nameAt(s, HALL, t.x, t.y)?.name).toBe(WORLD_NAMES.dormantTube);
     s.enemies = [];
-    expect(nameAt(s, HALL, centre(36, 13).x, centre(36, 13).y)).toBeNull();
+    s.nodes = [];
+    const field = centre(OVERWORLD.field.tx, OVERWORLD.field.ty);
+    expect(nameAt(s, HALL, field.x, field.y)).toBeNull();
   });
 });
 

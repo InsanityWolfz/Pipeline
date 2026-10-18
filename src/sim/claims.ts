@@ -1,6 +1,6 @@
 import { ACTIVATE_TICKS, CLAIM_TICKS, FIXTURE_REACH, FIXTURES, PORT_CYCLE, PORT_TICKS, PYLON_REACH, type FixtureDef } from '../data/claims';
 import { FEET_BOX } from '../data/player';
-import { FOUNDRY_ROOM, ROOMS } from '../data/rooms';
+import { FOUNDRY_ROOM } from '../data/rooms';
 import type { Command } from './input';
 import { count } from './inventory';
 import { isRolling } from './movement';
@@ -10,8 +10,11 @@ import { removePieceAt } from './placement';
 import { fixtureDef, portFront, tileRect, type FixtureState } from './fixtures';
 import { roomById, roomOf, type SimState } from './state';
 import { tileCentre } from './tiles';
+import { clearSafeZones } from './population';
+import { WORLD } from './world';
 
-// Claiming (009). Clear a room with a pylon, then stand at the pylon holding E
+// Claiming (009). Clear a site's guards (017: a site is a part of a room, its
+// pylon carries the site id), then stand at the pylon holding E
 // (started like a harvest) to claim it for good. A claim adds the foundry's
 // supply port and waystone; a claimed pylon sends the haul to the stash and
 // carries the player home, and the waystone carries them back. Fixtures are the
@@ -19,6 +22,7 @@ import { tileCentre } from './tiles';
 
 /** The claim in progress at a pylon. */
 export interface ClaimHold {
+  /** The site being claimed (017; the name stays from when a site was a room). */
   roomId: string;
   progress: number;
 }
@@ -44,10 +48,13 @@ export function fixtureInReach(state: SimState, kind: FixtureDef['kind']): Fixtu
   return state.fixtures.find((f) => fixtureDef(f.id).kind === kind && gapTo(state, fixtureDef(f.id)) <= FIXTURE_REACH);
 }
 
-export const isClaimed = (state: Pick<SimState, 'claims'>, roomId: string): boolean => state.claims.includes(roomId);
+export const isClaimed = (state: Pick<SimState, 'claims'>, site: string): boolean => state.claims.includes(site);
 
-/** True while any enemy lives in the room. */
-const occupied = (state: SimState, roomId: string): boolean => state.enemies.some((e) => e.roomId === roomId);
+/** True while any of a site's guards (enemies in its group) lives. */
+export const occupied = (state: SimState, site: string): boolean => state.enemies.some((e) => e.group === site);
+
+/** The site of the pylon in reach, if any. */
+const siteInReach = (state: SimState): string | undefined => (pylonInReach(state) ? roomOf(state).pylon?.site : undefined);
 
 /** Ends a claim in progress; its progress is lost. */
 export function cancelClaim(state: SimState): void {
@@ -81,10 +88,10 @@ export function stepClaims(state: SimState, cmd: Command): Command {
   if (cmd.pylon) usePylon(state, cmd.pylon);
   if (cmd.takeStash) takeStash(state, cmd.takeStash.itemId);
   if (!cmd.interact) return cmd;
-  const pylon = pylonInReach(state);
-  if (pylon) {
-    if (occupied(state, state.roomId)) state.events.sealed.push({ roomId: state.roomId });
-    else if (!isClaimed(state, state.roomId) && !state.claimHold) state.claimHold = { roomId: state.roomId, progress: 1 };
+  const site = siteInReach(state);
+  if (site) {
+    if (occupied(state, site)) state.events.sealed.push({ roomId: site });
+    else if (!isClaimed(state, site) && !state.claimHold) state.claimHold = { roomId: site, progress: 1 };
     // E on a claimed pylon opens render's menu, whose choice comes back as `pylon`.
     return { ...cmd, interact: false };
   }
@@ -101,7 +108,7 @@ function advanceHold(state: SimState, cmd: Command): void {
   const hold = state.claimHold;
   if (!hold) return;
   const moved = cmd.moveX !== 0 || cmd.moveY !== 0 || cmd.fire || cmd.dodge || isRolling(state.player);
-  if (moved || hold.roomId !== state.roomId || !pylonInReach(state) || occupied(state, hold.roomId)) {
+  if (moved || hold.roomId !== siteInReach(state) || occupied(state, hold.roomId)) {
     cancelClaim(state);
     return;
   }
@@ -111,13 +118,14 @@ function advanceHold(state: SimState, cmd: Command): void {
   claim(state, hold.roomId);
 }
 
-/** Claims a room for good: adds the fixtures its claim brings, clearing their tiles first. */
-export function claim(state: SimState, roomId: string): void {
-  if (isClaimed(state, roomId)) return;
-  state.claims.push(roomId);
+/** Claims a site for good: adds the fixtures its claim brings, clearing their tiles first, and makes its ground safe (017). */
+export function claim(state: SimState, site: string): void {
+  if (isClaimed(state, site)) return;
+  state.claims.push(site);
   state.activatePulse = ACTIVATE_TICKS;
-  state.events.claims.push({ roomId });
-  for (const def of FIXTURES.filter((f) => f.claim === roomId)) {
+  state.events.claims.push({ roomId: site });
+  clearSafeZones(state);
+  for (const def of FIXTURES.filter((f) => f.claim === site)) {
     removePieceAt(state, def.tx, def.ty);
     state.fixtures.push({ id: def.id, item: null, timer: 0, next: 0 });
   }
@@ -125,7 +133,8 @@ export function claim(state: SimState, roomId: string): void {
 
 /** The claimed pylon's menu: send the haul to the stash, or travel to the foundry. */
 function usePylon(state: SimState, action: 'deposit' | 'travel'): void {
-  if (!pylonInReach(state) || !isClaimed(state, state.roomId)) return;
+  const site = siteInReach(state);
+  if (!site || !isClaimed(state, site)) return;
   if (action === 'travel') {
     const door = roomById(FOUNDRY_ROOM).spawn;
     travelTo(state, FOUNDRY_ROOM, door);
@@ -159,9 +168,9 @@ function takeStash(state: SimState, itemId: string | null): void {
   if (Object.keys(items).length > 0) state.events.stashTakes.push({ items });
 }
 
-/** The waystone: to the first claimed room with a pylon, standing one tile below it. */
+/** The waystone: to the first claimed pylon, standing one tile below it. */
 function travelToPylon(state: SimState): void {
-  const room = Object.values(ROOMS).find((r) => r.pylon && isClaimed(state, r.id));
+  const room = Object.values(WORLD).find((r) => r.pylon && isClaimed(state, r.pylon.site));
   if (!room?.pylon) return;
   travelTo(state, room.id, { tx: room.pylon.tx, ty: room.pylon.ty + 1 });
 }

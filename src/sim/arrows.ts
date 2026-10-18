@@ -1,7 +1,7 @@
 import { straightAmmo, type DamageType } from '../data/ammo';
 import { TICK_RATE, TILE_SIZE } from '../data/config';
 import type { Room } from '../data/rooms';
-import { isSolid } from './collision';
+import { blocksShot } from './collision';
 
 // Straight shots in flight: arrows and ley bolts. Position is the ground (shadow)
 // point, which is what collides; render draws the shot raised above it.
@@ -70,5 +70,5 @@ function flies(arrow: ArrowState, room: Room, hits: ArrowHitTest): boolean {
 }
 
 function inSolid(room: Room, x: number, y: number): boolean {
-  return isSolid(room, Math.floor(x / TILE_SIZE), Math.floor(y / TILE_SIZE));
+  return blocksShot(room, Math.floor(x / TILE_SIZE), Math.floor(y / TILE_SIZE));
 }

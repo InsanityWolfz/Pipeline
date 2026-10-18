@@ -26,6 +26,7 @@ import { roomById, type SimState } from './state';
 import { firingWalkScale, stepTube } from './tube';
 import { stepObjectives } from './objectives';
 import { stepGates, stepTubeStone, tutorialRects } from './tutorial';
+import { stepPopulation } from './population';
 
 /** Each room's tiles and solid things (nodes, pylons, and solid pieces and fixtures in the foundry), built once per tick on first use. */
 function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
@@ -56,6 +57,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepDoorways(state);
   stepLink(state);
   // Enemies act after the player moves, so a swipe lands on where the player stands now.
+  stepPopulation(state);
   stepEnemies(state, bodies);
   stepNodes(state.nodes);
   // Before the tube, so fire this tick cancels a harvest in progress.
