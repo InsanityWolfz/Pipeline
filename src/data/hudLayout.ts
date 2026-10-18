@@ -134,7 +134,7 @@ export const WORLD_NAMES = {
 } as const;
 
 /** The build bar's hover panel (015): wrap width in glyphs, padding and line height, px, and its gap above the bar. */
-export const BUILD_TIP = { wrap: 34, maxLines: 2, pad: 4, lineHeight: 8, gap: 4, back: 'outline', alpha: 0.9, edge: 'slate-light' } as const;
+export const BUILD_TIP = { wrap: 34, maxLines: 2, pad: 4, lineHeight: 10, gap: 4, back: 'outline', alpha: 0.9, edge: 'slate-light' } as const;
 
 /**
  * The minimap (017): the overworld's terrain at `scale` view px per tile in the

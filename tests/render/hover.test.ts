@@ -1,13 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { HUD_DIGITS, HUD_LETTERS } from '../../src/data/assets';
 import { BUILD_TIP, WORLD_NAMES } from '../../src/data/hudLayout';
 import { FIXTURES } from '../../src/data/claims';
 import { DESCRIPTIONS } from '../../src/data/descriptions';
 import { SHRINE_SITE } from '../../src/data/rooms';
 import { claim } from '../../src/sim/claims';
-import { ENEMIES } from '../../src/data/enemies';
-import { ITEMS } from '../../src/data/items';
-import { NODES } from '../../src/data/nodes';
 import { BUILD_BAR, PIECES } from '../../src/data/pieces';
 import { OVERWORLD } from '../../src/data/overworld';
 import { WORLD } from '../../src/sim/world';
@@ -81,30 +77,11 @@ describe('world names on mouse-over', () => {
   });
 });
 
-describe('world names in the pixel font', () => {
-  it('only use glyphs the font has, for everything that can be hovered', () => {
-    const glyphs = new Set([...HUD_LETTERS.glyphs, ...HUD_DIGITS.glyphs]);
-    const names = [
-      ...Object.values(ENEMIES).map((e) => e.name),
-      ...Object.values(NODES).map((n) => n.name),
-      ...Object.values(ITEMS).map((i) => i.name),
-      ...FIXTURES.map((f) => f.name),
-      ...Object.values(PIECES).map((p) => p.name),
-      ...Object.values(WORLD_NAMES),
-      ...Object.values(DESCRIPTIONS),
-    ];
-    for (const name of names) for (const ch of name.toUpperCase()) expect(glyphs.has(ch), `${name}: '${ch}'`).toBe(true);
-  });
-});
-
 describe('build bar descriptions', () => {
-  const glyphs = new Set([...HUD_LETTERS.glyphs, ...HUD_DIGITS.glyphs]);
-
-  it('every buildable piece has one, written only in glyphs the pixel font has', () => {
+  it('every buildable piece has one, short enough for the tip', () => {
     for (const id of BUILD_BAR) {
       const def = PIECES[id];
       expect(def?.description.length, id).toBeGreaterThan(0);
-      for (const ch of `${def?.name ?? ''} ${def?.description ?? ''}`.toUpperCase()) expect(glyphs.has(ch), `${id}: '${ch}'`).toBe(true);
       expect(wrapText(def?.description ?? '', BUILD_TIP.wrap).length, id).toBeLessThanOrEqual(BUILD_TIP.maxLines);
     }
   });

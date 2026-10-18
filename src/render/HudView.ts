@@ -13,14 +13,14 @@ import { slotCount, slotItem, type TubeState } from '../sim/tube';
 import { AmmoStripView } from './AmmoStripView';
 import { HUD_ARMOR_LAYOUT } from '../data/hudLayout';
 import { colorOf } from './color';
-import { GlyphLine } from './glyphLine';
+import { TextLine } from './textLine';
 import { toView } from './scale';
 
 /** One material row: its icon and count, shown only while the player holds some. */
 interface MaterialRow {
   itemId: string;
   icon: GameObjects.Image;
-  count: GlyphLine;
+  count: TextLine;
 }
 
 // The hotbar: slot 1 with its selected ammo's icon and count (carried rounds,
@@ -31,7 +31,7 @@ export class HudView {
   private readonly slot: GameObjects.Image;
   private readonly icon: GameObjects.Image;
   private readonly glow: GameObjects.Image;
-  private readonly count: GlyphLine;
+  private readonly count: TextLine;
   private readonly crosshair: GameObjects.Image;
   private readonly scene: Scene;
   private readonly healthFill: GameObjects.Graphics;
@@ -39,7 +39,7 @@ export class HudView {
   private readonly materials: MaterialRow[];
   private readonly strip: AmmoStripView;
   private readonly armorIcon: GameObjects.Image;
-  private readonly armorCount: GlyphLine;
+  private readonly armorCount: TextLine;
 
   /** A screen point on any part of the HUD: a press there never fires (015). */
   overUi(x: number, y: number): boolean {
@@ -65,7 +65,7 @@ export class HudView {
     const startIcon = itemDef(slotItem({ ammoId: STARTING_AMMO })).icon;
     this.icon = fixed(scene.add.image(left + icon.x, top + icon.y, ATLAS_KEY, startIcon).setOrigin(0));
     this.glow = fixed(scene.add.image(left, top, ATLAS_KEY, SPRITES.hudSlotGlow).setOrigin(0)).setVisible(false);
-    this.count = new GlyphLine(scene, left + at.x, top + at.y);
+    this.count = new TextLine(scene, left + at.x, top + at.y, DEPTHS.hud, false, 'count');
     this.strip = new AmmoStripView(scene, left + this.slot.width, top + this.slot.height);
 
     const hp = HUD_HEALTH_LAYOUT;
@@ -73,7 +73,7 @@ export class HudView {
     this.healthFill = fixed(scene.add.graphics({ x: hp.x + hp.fill.x, y: hp.y + hp.fill.y }));
     const ar = HUD_ARMOR_LAYOUT;
     this.armorIcon = fixed(scene.add.image(ar.x, ar.y, ATLAS_KEY, SPRITES.iconArmorLight).setOrigin(0)).setVisible(false);
-    this.armorCount = new GlyphLine(scene, ar.x + ar.count.x, ar.y + ar.count.y);
+    this.armorCount = new TextLine(scene, ar.x + ar.count.x, ar.y + ar.count.y, DEPTHS.hud, false, 'count');
 
     // Raw materials and parts, in ITEMS order; ammo shows in the hotbar instead. Rows are placed each frame.
     this.materials = Object.values(ITEMS)
@@ -81,7 +81,7 @@ export class HudView {
       .map((it) => ({
         itemId: it.id,
         icon: fixed(scene.add.image(0, 0, ATLAS_KEY, it.icon).setOrigin(0)),
-        count: new GlyphLine(scene, 0, 0),
+        count: new TextLine(scene, 0, 0, DEPTHS.hud, false, 'count'),
       }));
 
     scene.input.setDefaultCursor('none');

@@ -82,24 +82,6 @@ export const NODE_SPRITES: Readonly<Record<string, { uses: readonly string[]; re
   'ley-vein': nodeFrames('ley-vein', 3, 3),
 };
 
-/** The HUD number font: frames `hud-digits/0`..`/9`, then `/` as frame 10, `+` as frame 11 and `-` as frame 12. */
-export const HUD_DIGITS = { key: 'hud-digits', glyphs: '0123456789/+-', advance: 4 } as const;
-
-/** The HUD letter font (010): uppercase letters, space and a little punctuation, the same 3x5 size and advance as the digits. */
-/** Height of the HUD font's glyphs (digits and letters), px. */
-export const GLYPH_HEIGHT = 5;
-
-export const HUD_LETTERS = { key: 'hud-letters', glyphs: "ABCDEFGHIJKLMNOPQRSTUVWXYZ .,'!?():—" } as const;
-
-/** Atlas frame for one HUD font character: a digit (or / + -), else a letter (lowercase draws as uppercase). */
-export function digitFrame(ch: string): string {
-  const digit = HUD_DIGITS.glyphs.indexOf(ch);
-  if (digit >= 0) return `${HUD_DIGITS.key}/${digit}`;
-  const letter = HUD_LETTERS.glyphs.indexOf(ch.toUpperCase());
-  if (letter < 0) throw new Error(`No HUD glyph for '${ch}'`);
-  return `${HUD_LETTERS.key}/${letter}`;
-}
-
 /** Hotbar slot layout, px from the slot's top-left. */
 export const HUD_SLOT_LAYOUT = {
   icon: { x: 4, y: 4 },

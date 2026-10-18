@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { FONT_FILES } from '../../src/data/fonts';
 import type {} from '../../src/render/testHook';
 
 test('boots, exposes the test hook and steps exactly', async ({ page }) => {
@@ -8,8 +9,13 @@ test('boots, exposes the test hook and steps exactly', async ({ page }) => {
   });
   page.on('pageerror', (err) => errors.push(err.message));
 
+  // No network beyond the dev server: the fonts (020) are bundled and load locally.
+  await page.route((url) => !['localhost', '127.0.0.1'].includes(url.hostname), (route) => route.abort());
   await page.goto('/?seed=123');
-  await page.waitForFunction(() => window.__GAME__ !== undefined);
+  await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
+  const fonts = Object.values(FONT_FILES).map((f) => f.family);
+  const loaded = await page.evaluate(() => [...document.fonts].filter((f) => f.status === 'loaded').map((f) => f.family.replace(/"/g, '')));
+  expect(loaded).toEqual(expect.arrayContaining(fonts));
 
   // step(0) takes the sim off the real-time loop, so nothing ticks between reads.
   await page.evaluate(() => window.__GAME__?.step(0));

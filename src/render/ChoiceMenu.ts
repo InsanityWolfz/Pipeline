@@ -3,7 +3,7 @@ import { ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
 import { PICKER_LAYOUT } from '../data/hudLayout';
 import { colorOf } from './color';
 import { inRect, menuRows } from './foundryLayout';
-import { GlyphLine } from './glyphLine';
+import { TextLine } from './textLine';
 
 /** One row: up to two icons, a number beside them, and what clicking it means. */
 export interface Choice<T> {
@@ -17,7 +17,7 @@ export interface Choice<T> {
 export class ChoiceMenu<T> {
   private readonly scene: Scene;
   private readonly panel: GameObjects.Graphics;
-  private rows: { images: GameObjects.Image[]; text: GlyphLine }[] = [];
+  private rows: { images: GameObjects.Image[]; text: TextLine }[] = [];
   private choices: Choice<T>[] = [];
   private key = '';
   isOpen = false;
@@ -77,7 +77,7 @@ export class ChoiceMenu<T> {
       const icons = c?.icons ?? [];
       icons.forEach((icon, k) => images.push(add(r.x + L.icon.x + k * L.takeShift, r.y + L.icon.y, icon, DEPTHS.menu + 1)));
       const shift = Math.max(0, icons.length - 1) * L.takeShift;
-      const text = new GlyphLine(this.scene, r.x + L.count.x + shift, r.y + L.count.y, DEPTHS.menu + 1);
+      const text = new TextLine(this.scene, r.x + L.count.x + shift, r.y + L.count.y, DEPTHS.menu + 1);
       text.set(c?.text ?? '');
       return { images, text };
     });

@@ -7,9 +7,9 @@ import { boot, watchErrors } from './helpers';
 // Believable resources (018): a node's remains grow back through their stages,
 // and a Husk's resin is what it drops.
 
-/** Lets a frame draw, then reads the frame each node shows. */
+/** Lets the game draw (two animation frames, so at least one full game frame, however busy the machine), then reads the frame each node shows. */
 async function frames(page: import('@playwright/test').Page): Promise<Record<number, string>> {
-  await page.waitForTimeout(80);
+  await page.evaluate(() => new Promise<void>((done) => requestAnimationFrame(() => requestAnimationFrame(() => done()))));
   return (await page.evaluate(() => window.__GAME__?.ui().nodes)) ?? {};
 }
 

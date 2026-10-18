@@ -15,7 +15,7 @@ function watchErrors(page: Page): string[] {
 
 async function boot(page: Page, query = '?start=field'): Promise<void> {
   await page.goto(`/${query}`);
-  await page.waitForFunction(() => window.__GAME__ !== undefined);
+  await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
   await page.evaluate(() => window.__GAME__?.step(0));
 }
 

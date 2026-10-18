@@ -10,7 +10,7 @@ import { count } from '../sim/inventory';
 import type { ReservoirState } from '../sim/link';
 import type { MachineState, PieceState } from '../sim/pieces';
 import { colorOf } from './color';
-import { GlyphLine } from './glyphLine';
+import { TextLine } from './textLine';
 
 /** The most lines a readout needs: the largest recipe's inputs, plus the output. */
 const MAX_LINES = Math.max(...Object.values(RECIPES).map((r) => Object.keys(r.inputs).length)) + 1;
@@ -51,14 +51,14 @@ export function pieceLines(p: PieceState): Line[] {
 export class HoverReadout {
   private readonly back: GameObjects.Graphics;
   private readonly icons: GameObjects.Image[] = [];
-  private readonly counts: GlyphLine[] = [];
+  private readonly counts: TextLine[] = [];
 
   constructor(scene: Scene) {
     const depth = DEPTHS.worldUi + 10;
     this.back = scene.add.graphics().setDepth(depth);
     for (let i = 0; i < MAX_LINES; i++) {
       this.icons.push(scene.add.image(0, 0, ATLAS_KEY).setOrigin(0).setDepth(depth + 1));
-      this.counts.push(new GlyphLine(scene, 0, 0, depth + 1, true));
+      this.counts.push(new TextLine(scene, 0, 0, depth + 1, true));
     }
     this.show([], 0, 0);
   }

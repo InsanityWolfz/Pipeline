@@ -1,7 +1,9 @@
 import type { Cameras, GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS, digitFrame, HUD_DIGITS } from '../data/assets';
+import { DEPTHS } from '../data/assets';
 import { DAMAGE_NUMBERS, PARTICLES, SHAKE, type ParticleBurst } from '../data/juice';
-import { colorOf } from './color';
+import { paletteHex } from '../data/palette';
+import { phaserStyle } from './fonts';
+import { textureScale } from './vector/textures';
 import { Particles } from './Particles';
 
 // Feel (014): camera shake, damage numbers and particles. The camera lead
@@ -55,14 +57,12 @@ export class JuiceView {
     this.recent.push({ x, y: top, at: now });
 
     const text = String(Math.round(amount));
-    const tint = colorOf(onPlayer ? n.player : n.enemy);
-    const dark = colorOf(n.outline);
-    const width = text.length * HUD_DIGITS.advance;
-    // A dark copy offset round each glyph outlines it, so it reads over a white hit flash.
-    const glyph = (ch: string, i: number, dx: number, dy: number, color: number): GameObjects.Image =>
-      this.scene.add.image(i * HUD_DIGITS.advance - width / 2 + dx, dy, ATLAS_KEY, digitFrame(ch)).setOrigin(0, 0.5).setTint(color);
-    const ring = [[-1, 0], [1, 0], [0, -1], [0, 1]] as const;
-    const glyphs: GameObjects.Image[] = [...text].flatMap((ch, i) => [...ring.map(([dx, dy]) => glyph(ch, i, dx, dy, dark)), glyph(ch, i, 0, 0, tint)]);
+    // The float face's dark outline keeps it readable over a white hit flash.
+    const glyphs: GameObjects.Text[] = [
+      this.scene.add
+        .text(0, 0, text, { ...phaserStyle('float', textureScale()), color: paletteHex(onPlayer ? n.player : n.enemy), stroke: paletteHex(n.outline) })
+        .setOrigin(0.5),
+    ];
     const jitter = (Math.random() - 0.5) * n.jitter;
     const box = this.scene.add.container(Math.round(x + jitter), Math.round(startY), glyphs).setDepth(DEPTHS.worldUi + 1);
     box.setScale(n.pop);

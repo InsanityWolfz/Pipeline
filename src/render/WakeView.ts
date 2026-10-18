@@ -1,14 +1,14 @@
 import type { Scene, Time } from 'phaser';
-import { DEPTHS, HUD_DIGITS, KO_FADE_MS, WAKE_TEXT } from '../data/assets';
+import { DEPTHS, KO_FADE_MS, WAKE_TEXT } from '../data/assets';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { itemDef } from '../data/items';
-import { GlyphLine } from './glyphLine';
+import { TextLine } from './textLine';
 
 // After a KO (011): "You wake in the foundry", then what the death cost, centred
 // on screen for a few seconds before fading. Reads only the KO's lost report.
 export class WakeView {
   private readonly scene: Scene;
-  private lines: GlyphLine[] = [];
+  private lines: TextLine[] = [];
   private timer: Time.TimerEvent | null = null;
 
   constructor(scene: Scene) {
@@ -26,9 +26,12 @@ export class WakeView {
     const text = [WAKE_TEXT.title, ...(items.length > 0 ? ['', WAKE_TEXT.lostTitle, ...items.map(([id, n]) => `${itemDef(id).name} ${n}`)] : [])];
     const cx = VIEW_WIDTH / 2;
     const top = VIEW_HEIGHT / 2 + WAKE_TEXT.top;
+    // The title in the display face, then what was lost below it.
+    let y = top;
     this.lines = text.map((t, i) => {
-      const line = new GlyphLine(this.scene, Math.round(cx - (t.length * HUD_DIGITS.advance) / 2), top + i * WAKE_TEXT.lineStep, DEPTHS.menu + 2);
-      line.set(t);
+      const line = new TextLine(this.scene, 0, y, DEPTHS.menu + 2, false, i === 0 ? 'title' : i === 2 ? 'display' : 'body');
+      line.set(t).moveTo(Math.round(cx - line.width / 2), y);
+      y += i === 0 ? line.lineHeight : WAKE_TEXT.lineStep;
       return line;
     });
     this.timer = this.scene.time.delayedCall(WAKE_TEXT.holdMs, () => this.fade());

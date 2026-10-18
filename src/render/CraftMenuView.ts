@@ -9,7 +9,7 @@ import type { LinkState } from '../sim/link';
 import { knownRecipe } from '../sim/tutorial';
 import { count, type Inventory } from '../sim/inventory';
 import { craftMenuLines, craftPanelAt } from './craftMenuLayout';
-import { GlyphLine } from './glyphLine';
+import { TextLine } from './textLine';
 
 interface Row {
   recipeId: string;
@@ -17,9 +17,9 @@ interface Row {
   /** Everything drawn on the row, greyed together when it can't be afforded. */
   parts: GameObjects.Image[];
   /** One "have/need" per input, in recipe order. */
-  inputs: { itemId: string; need: number; text: GlyphLine }[];
-  made: GlyphLine;
-  owned: GlyphLine;
+  inputs: { itemId: string; need: number; text: TextLine }[];
+  made: TextLine;
+  owned: TextLine;
   outputId: string;
 }
 
@@ -28,7 +28,7 @@ interface Row {
 // affordable row crafts it once. Reads sim state; crafting goes through `onCraft`.
 export class CraftMenuView {
   private readonly objects: (GameObjects.Image & GameObjects.Components.Visible)[] = [];
-  private readonly lines: GlyphLine[] = [];
+  private readonly lines: TextLine[] = [];
   private readonly rows: Row[] = [];
   private hovered: Row | undefined;
   private open = false;
@@ -44,8 +44,8 @@ export class CraftMenuView {
       this.objects.push(image);
       return image;
     };
-    const text = (x: number, y: number): GlyphLine => {
-      const line = new GlyphLine(scene, x, y, DEPTHS.menu + 2);
+    const text = (x: number, y: number): TextLine => {
+      const line = new TextLine(scene, x, y, DEPTHS.menu + 2, false, 'count');
       this.lines.push(line);
       return line;
     };

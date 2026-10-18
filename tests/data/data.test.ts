@@ -4,15 +4,12 @@ import { hexToRgb, OUTLINE_ID, PIXEL_PALETTE, TRANSPARENT } from '../../src/data
 import { AMMO } from '../../src/data/ammo';
 import {
   animFrames,
-  digitFrame,
-  HUD_LETTERS,
   BURN_FLAME,
   ENEMY_ANIMS,
   MUZZLE_FLASH,
   DEPOSIT_SWIRL,
   FIRE_BURST,
   NODE_SPRITES,
-  HUD_DIGITS,
   PICKUP_SPARKLE,
   SPRITES,
 } from '../../src/data/assets';
@@ -161,14 +158,6 @@ describe('assets', () => {
     for (const key of singles) expect(frames).toContain(key);
     const logistics = Object.values(PIECES).filter((d) => d.kind !== 'machine');
     expect(Object.keys(LOGISTICS_ICONS).sort()).toEqual(logistics.map((d) => d.id).sort());
-  });
-
-  it('has a HUD font frame for every glyph', () => {
-    expect(HUD_DIGITS.glyphs).toContain('+');
-    for (const ch of HUD_DIGITS.glyphs) expect(Object.keys(atlas.frames)).toContain(digitFrame(ch));
-    expect(() => digitFrame('#')).toThrow();
-    for (const ch of HUD_LETTERS.glyphs) expect(Object.keys(atlas.frames)).toContain(digitFrame(ch));
-    expect(digitFrame('a')).toBe(digitFrame('A'));
   });
 });
 
@@ -402,7 +391,7 @@ describe('armor (010)', () => {
 describe('the tutorial (012)', () => {
   it('has objectives with text, and tutorial sprites in the atlas', () => {
     expect(OBJECTIVES.length).toBeGreaterThan(0);
-    for (const o of OBJECTIVES) for (const ch of o.text) expect(() => digitFrame(ch)).not.toThrow();
+    for (const o of OBJECTIVES) expect(o.text.length).toBeGreaterThan(0);
     const frames = drawnFrames();
     for (const v of Object.values(TUTORIAL_SPRITES)) {
       if (typeof v === 'string') expect(frames).toContain(v);

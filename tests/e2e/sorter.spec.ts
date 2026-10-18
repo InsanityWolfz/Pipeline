@@ -113,7 +113,7 @@ test('hovering a Husk names it, and a press that starts on the hotbar never fire
 
   // Back on the real-time clock: a press that starts on the hotbar never fires, even dragged out into the world.
   await page.reload();
-  await page.waitForFunction(() => window.__GAME__ !== undefined);
+  await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
   await page.waitForTimeout(500);
   const slot = await screenPoint(page, VIEW_WIDTH / 2, VIEW_HEIGHT - 18);
   const world = await screenPoint(page, VIEW_WIDTH / 2 + 120, VIEW_HEIGHT / 2);

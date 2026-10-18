@@ -1,13 +1,10 @@
 import { type Cameras, type GameObjects, type Scene } from 'phaser';
 import {
   animFrames,
-  ATLAS_KEY,
   DEPTHS,
-  digitFrame,
   ENEMY_ANIMS,
   ENEMY_FX,
   FIRE_BURST,
-  HUD_DIGITS,
   DEPOSIT_SWIRL,
   KO_FADE_MS,
   MUZZLE_FLASH,
@@ -21,7 +18,8 @@ import { OUTLINE_ID, hexToRgb, paletteHex } from '../data/palette';
 import { DRAW_HEIGHT } from '../data/tube';
 import type { SimEvents } from '../sim/events';
 import { registerAnim } from './anims';
-import { addVectorSprite } from './vector/textures';
+import { phaserStyle } from './fonts';
+import { addVector, addVectorSprite, textureScale } from './vector/textures';
 import { UI_CAMERA } from './scale';
 
 // One-shot effects driven by sim events: corpses, pickup sparkles and popups,
@@ -112,14 +110,11 @@ export class EffectsView {
 
     const icon = ITEMS[itemId]?.icon;
     if (!icon) return;
-    const text = '+1';
-    const iconX = text.length * HUD_DIGITS.advance + PICKUP_POPUP.gap;
-    const glyphs = [...text].map((ch, i) =>
-      this.scene.add.image(i * HUD_DIGITS.advance, 0, ATLAS_KEY, digitFrame(ch)).setOrigin(0, 0.5),
-    );
-    const iconImage = this.scene.add.image(iconX, 0, ATLAS_KEY, icon).setOrigin(0, 0.5);
-    const parts: GameObjects.Image[] = [...glyphs, iconImage];
-    const width = iconX + iconImage.width;
+    const label = this.scene.add.text(0, 0, '+1', phaserStyle('float', textureScale())).setOrigin(0, 0.5);
+    const iconX = label.width + PICKUP_POPUP.gap;
+    const iconImage = addVector(this.scene, iconX, 0, icon).setOrigin(0, 0.5);
+    const parts: GameObjects.GameObject[] = [label, iconImage];
+    const width = iconX + iconImage.displayWidth;
     const top = Math.round(player.y - PICKUP_POPUP.startHeight - index * PICKUP_POPUP.stack);
     const popup = this.scene.add.container(Math.round(player.x - width / 2), top, parts).setDepth(DEPTHS.worldUi);
     this.scene.tweens.add({

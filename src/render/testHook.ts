@@ -27,6 +27,8 @@ export interface GameTestHook {
  * pylon's supply motes (018), how many have started and those on their way.
  */
 export interface UiState {
+  /** The scene has built its views and the fonts are loaded (020): before this, nothing is drawn. */
+  ready: boolean;
   hoverName: string | null;
   hoverDescription: string | null;
   buildTip: string | null;

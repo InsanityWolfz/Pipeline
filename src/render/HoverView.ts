@@ -1,12 +1,12 @@
 import type { GameObjects, Scene } from 'phaser';
-import { DEPTHS, GLYPH_HEIGHT } from '../data/assets';
+import { DEPTHS } from '../data/assets';
 import { VIEW_WIDTH } from '../data/config';
 import { HOVER_NAME, MINIMAP } from '../data/hudLayout';
 import { OVERWORLD } from '../data/overworld';
 import { pieceRect } from '../sim/pieces';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
-import { GlyphLine } from './glyphLine';
+import { TextLine } from './textLine';
 import { HoverReadout, intakeLines, pieceLines } from './HoverReadout';
 import { nameAt } from './hoverNames';
 
@@ -15,9 +15,9 @@ import { nameAt } from './hoverNames';
 export class HoverView {
   private readonly readout: HoverReadout;
   private readonly back: GameObjects.Graphics;
-  private readonly name: GlyphLine;
+  private readonly name: TextLine;
   /** Where materials come from, under the name (018). */
-  private readonly description: GlyphLine;
+  private readonly description: TextLine;
   /** The name and description on show, for the test hook. */
   shown: string | null = null;
   shownDescription: string | null = null;
@@ -25,8 +25,8 @@ export class HoverView {
   constructor(scene: Scene) {
     this.readout = new HoverReadout(scene);
     this.back = scene.add.graphics().setDepth(DEPTHS.hoverName);
-    this.name = new GlyphLine(scene, 0, 0, DEPTHS.hoverName + 1, true);
-    this.description = new GlyphLine(scene, 0, 0, DEPTHS.hoverName + 1, true);
+    this.name = new TextLine(scene, 0, 0, DEPTHS.hoverName + 1, true, 'display');
+    this.description = new TextLine(scene, 0, 0, DEPTHS.hoverName + 1, true);
   }
 
   /**
@@ -59,13 +59,13 @@ export class HoverView {
     this.name.setVisible(hit !== null);
     this.description.setVisible(hit?.description !== undefined);
     if (!hit) return;
-    this.name.set(hit.name.toUpperCase());
+    this.name.set(hit.name);
     const { pad, descriptionGap } = HOVER_NAME;
-    const extra = hit.description !== undefined ? descriptionGap + GLYPH_HEIGHT : 0;
-    if (hit.description !== undefined) this.description.set(hit.description.toUpperCase());
+    const extra = hit.description !== undefined ? descriptionGap + this.name.lineHeight : 0;
+    if (hit.description !== undefined) this.description.set(hit.description);
     const w = Math.max(this.name.width, hit.description !== undefined ? this.description.width : 0);
-    const h = GLYPH_HEIGHT + extra;
-    const above = top - HOVER_NAME.gap - GLYPH_HEIGHT - extra;
+    const h = this.name.lineHeight + extra;
+    const above = top - HOVER_NAME.gap - this.name.lineHeight - extra;
     // Near the top of the view there's no room above, so the name drops below instead of covering the readout.
     let y = Math.round(above >= viewTop + pad ? above : below + HOVER_NAME.gap + pad);
     // Kept inside the view's sides (018: a long description by the view's edge), and clear of the minimap outside.
@@ -75,10 +75,9 @@ export class HoverView {
     if (overlaps(cx, y)) y = Math.round(below + HOVER_NAME.gap + pad);
     if (map && overlaps(cx, y)) cx = map.x0 - pad - w / 2;
     this.name.moveTo(Math.round(cx - this.name.width / 2), y);
-    if (hit.description !== undefined) this.description.moveTo(Math.round(cx - this.description.width / 2), y + GLYPH_HEIGHT + descriptionGap);
+    if (hit.description !== undefined) this.description.moveTo(Math.round(cx - this.description.width / 2), y + this.name.lineHeight + descriptionGap);
     const left = Math.round(cx - w / 2);
-    // The last glyph's advance leaves a column of space, so the backing stops one short.
-    this.back.fillStyle(colorOf(HOVER_NAME.back), HOVER_NAME.alpha).fillRect(left - pad, y - pad, w + 2 * pad - 1, h + 2 * pad);
+    this.back.fillStyle(colorOf(HOVER_NAME.back), HOVER_NAME.alpha).fillRect(left - pad, y - pad, w + 2 * pad, h + 2 * pad);
   }
 }
 

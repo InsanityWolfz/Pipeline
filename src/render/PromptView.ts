@@ -11,7 +11,7 @@ import { nodeInReach } from '../sim/harvest';
 import { currentObjective } from '../sim/objectives';
 import { roomById, type SimState } from '../sim/state';
 import { stoneInReach } from '../sim/tutorial';
-import { GlyphLine } from './glyphLine';
+import { TextLine } from './textLine';
 
 /** A world point, px: where a prompt's target stands. */
 type Point = { x: number; y: number };
@@ -22,11 +22,11 @@ type Point = { x: number; y: number };
 // player anywhere; the build prompt only in the foundry, where building works.
 export class PromptView {
   private readonly cap: GameObjects.Image;
-  private readonly key: GlyphLine;
+  private readonly key: TextLine;
 
   constructor(scene: Scene) {
     this.cap = scene.add.image(0, 0, ATLAS_KEY, TUTORIAL_SPRITES.keyCap).setOrigin(0.5, 1).setDepth(DEPTHS.prompt);
-    this.key = new GlyphLine(scene, 0, 0, DEPTHS.prompt + 1, true);
+    this.key = new TextLine(scene, 0, 0, DEPTHS.prompt + 1, true);
   }
 
   update(sim: SimState, shown: string): void {

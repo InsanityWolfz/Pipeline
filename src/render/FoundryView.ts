@@ -30,7 +30,7 @@ import { SQUASH } from '../data/juice';
 import { registerAnim } from './anims';
 import { arrowSpots, conduitLook, pieceIcon, sorterLook } from './foundryLayout';
 import { colorOf } from './color';
-import { GlyphLine } from './glyphLine';
+import { TextLine } from './textLine';
 
 export const viewOf = (f: Facing): PieceView => (f === 'up' || f === 'down' ? f : 'side');
 
@@ -72,7 +72,7 @@ interface Drawn {
   arrows: GameObjects.Image[];
   marker?: GameObjects.Sprite;
   markerIcon?: GameObjects.Image;
-  count?: GlyphLine;
+  count?: TextLine;
   /** Sorters: the chosen item's icon in the slot. */
   slot?: GameObjects.Image;
 }
@@ -168,7 +168,7 @@ export class FoundryView {
     } else {
       d.body.setFrame(p.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE);
       d.icon.setPosition(r.x, bottom - FOUNDRY_LAYOUT.contentsRise).setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge);
-      d.count = new GlyphLine(this.scene, r.x, bottom, bottom + 2 * FOUNDRY_LAYOUT.onTopNudge, true);
+      d.count = new TextLine(this.scene, r.x, bottom, bottom + 2 * FOUNDRY_LAYOUT.onTopNudge, true, 'count');
     }
     this.drawn.set(p.id, d);
     return d;

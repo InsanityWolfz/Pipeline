@@ -243,6 +243,7 @@ function installHelpers(): void {
 export async function boot(page: Page, query = '?start=field'): Promise<void> {
   await page.addInitScript(installHelpers);
   await page.goto(`/${query}`);
-  await page.waitForFunction(() => window.__GAME__ !== undefined);
+  // The scene builds its views once the fonts (020) have loaded.
+  await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
 }
 

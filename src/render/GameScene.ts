@@ -42,6 +42,7 @@ import { currentFit, type ScreenFit } from './scale';
 import { bakeVectors } from './vector/textures';
 import type { UiState } from './testHook';
 import { RoomViews } from './RoomViews';
+import { fontsReady } from './fonts';
 import { SceneCameras } from './SceneCameras';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
@@ -206,6 +207,7 @@ export class GameScene extends Scene {
   /** The mouse-over text on show, for the test hook (015). */
   hoverText(): UiState {
     return {
+      ready: this.effects !== undefined && fontsReady(),
       hoverName: this.hover?.shown ?? null,
       hoverDescription: this.hover?.shownDescription ?? null,
       buildTip: this.buildView?.tip.shown ?? null,

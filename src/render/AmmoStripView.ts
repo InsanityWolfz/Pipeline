@@ -6,11 +6,11 @@ import { itemDef } from '../data/items';
 import { SLOT_AMMOS } from '../data/tube';
 import { count, type Inventory } from '../sim/inventory';
 import type { TubeState } from '../sim/tube';
-import { GlyphLine } from './glyphLine';
+import { TextLine } from './textLine';
 
 interface Cell {
   ammoId: string;
-  count: GlyphLine;
+  count: TextLine;
 }
 
 // The three ammo the slot can switch to, beside the hotbar: each with its key
@@ -37,9 +37,9 @@ export class AmmoStripView {
       this.parts.push(fixed(scene.add.image(x, top, ATLAS_KEY, SPRITES.hudAmmoCell).setOrigin(0)));
       const icon = itemDef(ammoDef(ammoId).itemId).icon;
       this.parts.push(fixed(scene.add.image(x + L.icon.x, top + L.icon.y, ATLAS_KEY, icon).setOrigin(0)));
-      const key = new GlyphLine(scene, x + L.key.x, top + L.key.y);
+      const key = new TextLine(scene, x + L.key.x, top + L.key.y, DEPTHS.hud, false, 'count');
       key.set(String(i + 1));
-      const cellCount = new GlyphLine(scene, x + L.count.x, top + L.count.y);
+      const cellCount = new TextLine(scene, x + L.count.x, top + L.count.y, DEPTHS.hud, false, 'count');
       this.parts.push(key, cellCount);
       return { ammoId, count: cellCount };
     });
