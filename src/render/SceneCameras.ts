@@ -45,10 +45,11 @@ export class SceneCameras {
    * The attune's look (019): while it plays in the foundry on screen, the camera
    * leaves the player for the intake pipe and comes back, then follows `followed` again.
    */
-  attuneLook(sim: SimState, shown: string, followed: GameObjects.GameObject): void {
+  attuneLook(sim: SimState, shown: string, followed: GameObjects.GameObject & { x: number; y: number }): void {
     const main = this.scene.cameras.main;
     const look = shown === FOUNDRY_ROOM ? attuneBeat(sim.link.attunePulse).look : 0;
-    const { player } = sim;
+    // The point the camera follows (the sprite's origin, at the feet), so leaving and rejoining the follow doesn't jump.
+    const player = { x: followed.x, y: followed.y };
     const pipe = intakeAnchor();
     const at = { x: pipe.x, y: pipe.y - INTAKE.lookRise };
     if (look > 0) {
