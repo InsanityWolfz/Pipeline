@@ -4,13 +4,11 @@ import { recipeDef } from '../data/recipes';
 import { FOUNDRY_ROOM, TILE } from '../data/rooms';
 import { overlapsRect } from './collision';
 import { count, type Inventory } from './inventory';
-import { createPiece, footprint, pieceAt, pieceRect, type PieceState } from './pieces';
+import { createPiece, footprint, pieceAt, pieceRect, type PieceState, type PlaceFail } from './pieces';
 import type { Facing } from './player';
 import { roomById, type SimState } from './state';
 
 // Placing pieces on the foundry grid and picking them back up. Both are free.
-
-export type PlaceFail = 'locked' | 'not-foundry' | 'blocked' | 'occupied' | 'player';
 
 /** Pieces the player can place, in build bar order: logistics always, machines once their output is hand-crafted. */
 export function unlockedPieces(state: Pick<SimState, 'crafted'>): string[] {
@@ -49,7 +47,7 @@ export function place(state: SimState, pieceId: string, tx: number, ty: number, 
 }
 
 /** Everything a piece holds, as items. A craft in progress gives back its inputs. */
-export function heldItems(p: PieceState): Inventory {
+export function pieceContents(p: PieceState): Inventory {
   const items: Inventory = {};
   const add = (itemId: string, n: number): void => {
     if (n > 0) items[itemId] = count(items, itemId) + n;
@@ -71,7 +69,7 @@ export function pickUp(state: SimState, tx: number, ty: number): void {
   if (state.roomId !== FOUNDRY_ROOM) return;
   const piece = pieceAt(state.foundry, tx, ty);
   if (!piece) return;
-  const items = heldItems(piece);
+  const items = pieceContents(piece);
   for (const [itemId, n] of Object.entries(items)) state.inventory[itemId] = count(state.inventory, itemId) + n;
   state.foundry.pieces = state.foundry.pieces.filter((p) => p !== piece);
   state.events.pickUps.push({ id: piece.id, pieceId: piece.pieceId, items });

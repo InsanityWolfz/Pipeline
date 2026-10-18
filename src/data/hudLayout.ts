@@ -41,8 +41,8 @@ export const CRAFT_MENU_LAYOUT = {
 } as const;
 
 /**
- * The build bar, along the bottom of the screen above the hotbar: one cell per
- * unlocked piece in build bar order, its emblem inside. Cells use the ammo strip's
+ * The build bar, along the bottom of the screen above the ammo strip: one cell per
+ * unlocked piece in build bar order, its icon inside (a machine shows what it makes). Cells use the ammo strip's
  * cell sprites. Px on screen, then from each cell's top-left.
  */
 export const BUILD_BAR_LAYOUT = {

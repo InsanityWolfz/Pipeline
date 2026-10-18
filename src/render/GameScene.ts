@@ -2,7 +2,8 @@ import { Scene } from 'phaser';
 import atlasImage from '../../assets/build/sprites.png?url';
 import atlasData from '../../assets/build/sprites.json?url';
 import { ATLAS_KEY } from '../data/assets';
-import { CAMERA_LERP } from '../data/config';
+import { CAMERA_LERP, DOOR_FADE_MS } from '../data/config';
+import { BUILD_BAR } from '../data/pieces';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { advanceClock, createClock } from '../sim/clock';
 import { craft } from '../sim/crafting';
@@ -30,8 +31,7 @@ import { NodeView } from './NodeView';
 import { PlayerView } from './PlayerView';
 import { RoomView } from './room';
 
-/** Half of the fade through a doorway: out, then in, ms. */
-const DOOR_FADE_MS = 150;
+const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
 const inRoom = <T extends { roomId: string }>(list: readonly T[], roomId: string): T[] =>
   list.filter((o) => o.roomId === roomId);
@@ -105,7 +105,7 @@ export class GameScene extends Scene {
     if (controls) {
       controls.poll({
         building: this.sim.building,
-        pieceId: () => this.buildView?.selected ?? 'conduit',
+        pieceId: () => this.buildView?.selected ?? FIRST_PIECE,
         overUi: (x, y) => (this.buildView?.overUi(x, y) ?? false) || (this.picker?.overUi(x, y) ?? false),
         clickUi: (x, y) => this.clickUi(controls, x, y),
       });

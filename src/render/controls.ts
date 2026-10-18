@@ -4,7 +4,8 @@ import { TILE_SIZE } from '../data/config';
 import { SLOT_AMMOS } from '../data/tube';
 import { rotateCw } from '../sim/direction';
 import { NO_COMMAND, type Axis, type Command } from '../sim/input';
-import type { Tile } from '../sim/pieces';
+import { BUILD_BAR, pieceDef } from '../data/pieces';
+import { tilesBetween, type Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 
 type Key = 'up' | 'down' | 'left' | 'right' | 'dodge' | 'load' | 'interact' | 'menu' | 'close' | 'build';
@@ -57,7 +58,7 @@ export class Controls {
   private dragTile: Tile | null = null;
   private build: BuildInput = {
     building: false,
-    pieceId: () => 'conduit',
+    pieceId: () => BUILD_BAR[0] ?? '',
     overUi: () => false,
     clickUi: () => undefined,
   };
@@ -148,14 +149,16 @@ export class Controls {
     this.dragTile = tile;
   }
 
-  /** Dragging with a conduit selected lays one on every new tile the cursor enters. */
+  /** Dragging with a conduit selected lays one on every tile the cursor crosses, however fast it moves. */
   private pointerMove(p: Input.Pointer): void {
     const drag = this.dragTile;
-    if (!drag || !this.build.building || this.build.pieceId() !== 'conduit' || !p.leftButtonDown()) return;
+    const pieceId = this.build.pieceId();
+    if (!drag || !this.build.building || pieceDef(pieceId).kind !== 'conduit' || !p.leftButtonDown()) return;
     if (this.build.overUi(p.x, p.y)) return;
     const tile = this.tileUnder(p);
-    if (tile.tx === drag.tx && tile.ty === drag.ty) return;
-    this.queue.push({ place: { pieceId: 'conduit', ...tile, facing: this.facing }, pickUp: null });
+    for (const t of tilesBetween(drag, tile)) {
+      this.queue.push({ place: { pieceId, ...t, facing: this.facing }, pickUp: null });
+    }
     this.dragTile = tile;
   }
 

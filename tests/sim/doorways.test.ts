@@ -150,6 +150,24 @@ describe('rooms tick apart', () => {
     expect(e.health).toBe(HUSK.maxHealth);
   });
 
+  it('a KO in the foundry resets the hall: Husks home, nodes full, nothing on the ground', () => {
+    const s = intoFoundry();
+    s.enemies = [];
+    placeHusk(s, 300, 300).health = 1;
+    placeNode(s, 'tree', 400, 448).uses = 0;
+    s.groundItems.push({ id: s.nextGroundItemId++, itemId: 'wood', x: 500, y: 448, roomId: HALL });
+    s.player.health = 0;
+    run(s, 1);
+    const hall = ROOMS[HALL];
+    if (!hall?.enemies || !hall.nodes) throw new Error('no hall data');
+    expect(s.enemies.map((e) => ({ x: e.x, y: e.y, health: e.health }))).toEqual(
+      hall.enemies.map((p) => ({ ...tileCentre(p), health: HUSK.maxHealth })),
+    );
+    expect(s.nodes).toHaveLength(hall.nodes.length);
+    expect(s.nodes.every((n) => n.uses > 0)).toBe(true);
+    expect(s.groundItems).toEqual([]);
+  });
+
   it('a KO in the foundry sends the player to the hall spawn', () => {
     const s = intoFoundry();
     s.player.health = 0;

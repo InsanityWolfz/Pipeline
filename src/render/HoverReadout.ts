@@ -3,14 +3,14 @@ import { ATLAS_KEY, DEPTHS } from '../data/assets';
 import { READOUT_LAYOUT } from '../data/hudLayout';
 import { itemDef } from '../data/items';
 import { machineDef } from '../data/pieces';
-import { recipeDef } from '../data/recipes';
+import { recipeDef, RECIPES } from '../data/recipes';
 import { count } from '../sim/inventory';
 import type { MachineState } from '../sim/pieces';
 import { colorOf } from './color';
 import { GlyphLine } from './glyphLine';
 
-/** Inputs plus the output. */
-const MAX_LINES = 4;
+/** The most lines a readout needs: the largest recipe's inputs, plus the output. */
+const MAX_LINES = Math.max(...Object.values(RECIPES).map((r) => Object.keys(r.inputs).length)) + 1;
 
 // Over the machine under the cursor: one line per input with how many are
 // buffered, then the output with how many are waiting to go out.

@@ -275,3 +275,34 @@ describe('lines', () => {
     runUntil(s, () => (crate.contents['ley-bolt'] ?? 0) >= 4, 600);
   });
 });
+
+describe('3x1 input sides', () => {
+  it('take items on the back and both ends, never on the front side', () => {
+    const s = foundry();
+    // Facing down: covers (9..11, 6); back is row 5, ends are (8,6) and (12,6), front side is row 7.
+    const m = put<MachineState>(s, 'assembler', 10, 6, 'down');
+    const back = put<ConduitState>(s, 'conduit', 9, 5, 'down');
+    const leftEnd = put<ConduitState>(s, 'conduit', 8, 6, 'right');
+    const rightEnd = put<ConduitState>(s, 'conduit', 12, 6, 'left');
+    const frontLeft = put<ConduitState>(s, 'conduit', 9, 7, 'up');
+    const frontMiddle = put<ConduitState>(s, 'conduit', 10, 7, 'up');
+    back.item = 'shaft';
+    leftEnd.item = 'arrowhead';
+    rightEnd.item = 'rope';
+    frontLeft.item = 'shaft';
+    frontMiddle.item = 'shaft';
+    run(s, CONDUIT_TICKS);
+    expect(m.buffer).toEqual({ shaft: 1, arrowhead: 1, rope: 1 });
+    expect([frontLeft.item, frontMiddle.item]).toEqual(['shaft', 'shaft']);
+  });
+
+  it('refuse a machine handing off into the front side', () => {
+    const s = foundry();
+    const m = put<MachineState>(s, 'assembler', 10, 6, 'down');
+    const cutter = put<MachineState>(s, 'cutter', 11, 7, 'up');
+    cutter.output = 2;
+    run(s, 2);
+    expect(m.buffer).toEqual({});
+    expect(cutter.output).toBe(2);
+  });
+});

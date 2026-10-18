@@ -123,23 +123,32 @@ test('build mode places, turns, picks up and drags pieces with the mouse', async
   await clickTile(page, 13, 10, 'right');
   expect(pieceAt(await state(page), 13, 10)).toBeUndefined();
 
-  // Drag a run of three conduits.
+  // A fast drag (one jump across four tiles) still lays a conduit on every tile it crosses.
   const from = await tileOnCanvas(page, 8, 10);
-  const to = await tileOnCanvas(page, 10, 10);
+  const to = await tileOnCanvas(page, 11, 10);
   await page.mouse.move(from.x, from.y);
   await page.mouse.down();
-  await page.mouse.move((from.x + to.x) / 2, from.y, { steps: 4 });
-  await page.mouse.move(to.x, to.y, { steps: 4 });
+  await page.mouse.move(to.x, to.y, { steps: 1 });
   await page.mouse.up();
   await page.waitForTimeout(50);
   const dragged = await step(page, 4);
-  expect([8, 9, 10].map((tx) => pieceAt(dragged, tx, 10)?.pieceId)).toEqual(['conduit', 'conduit', 'conduit']);
+  expect([8, 9, 10, 11].map((tx) => pieceAt(dragged, tx, 10)?.pieceId)).toEqual([
+    'conduit',
+    'conduit',
+    'conduit',
+    'conduit',
+  ]);
 
   // Fire and R don't shoot or load while building.
   await page.keyboard.press('r');
   const s = await step(page, 2, { fire: true, aimX: 0, aimY: 0 });
   expect(s.arrows).toEqual([]);
   expect(s.tube.loading).toBe(false);
+
+  // Esc leaves build mode.
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(50);
+  expect((await step(page, 1)).building).toBe(false);
   expect(errors).toEqual([]);
 });
 
@@ -168,16 +177,26 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
     await clickTile(page, tx, 6);
   }
   expect((await state(page)).foundry.pieces.map((p) => p.pieceId)).toEqual(line.map(([id]) => id));
+  // Out of build mode, so clicks below reach the picker or the tube, never the grid.
+  expect((await toggleBuild(page)).building).toBe(false);
 
   // E on the empty hopper opens the picker; clicking ley crystal fills it.
   const below = centre(8, 7);
   await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [below.x, below.y] as const);
-  await page.keyboard.press('e');
-  await page.waitForTimeout(100);
   const rows = pickerRows(heldItems((await state(page)).inventory));
   const crystal = rows.find((r) => r.itemId === 'ley-crystal');
   if (!crystal) throw new Error('no ley crystal row');
   const p = await screenPoint(page, crystal.x + 40, crystal.y + crystal.h / 2);
+  // Esc closes the picker: a click where its row was then does nothing.
+  await page.keyboard.press('e');
+  await page.waitForTimeout(100);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(100);
+  await page.mouse.click(p.x, p.y);
+  await page.waitForTimeout(50);
+  expect(pieceAt(await step(page, 1), 8, 6)).toMatchObject({ kind: 'hopper', item: null });
+  await page.keyboard.press('e');
+  await page.waitForTimeout(100);
   await page.mouse.click(p.x, p.y);
   await page.waitForTimeout(50);
   const filled = await step(page, 1);
@@ -193,7 +212,6 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
   const taken = await step(page, 1, { interact: true });
   expect(taken.inventory['ley-bolt']).toBeGreaterThanOrEqual(5);
 
-  await toggleBuild(page);
   await step(page, 1, { selectAmmo: 'ley-bolt' });
   await step(page, 1, { load: true });
   await step(page, LOAD_TICKS);

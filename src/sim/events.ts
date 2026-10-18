@@ -1,4 +1,4 @@
-import type { PlaceFail } from './placement';
+import type { PlaceFail } from './pieces';
 import type { Facing } from './player';
 
 // What happened on the last tick, for render effects and tests. Cleared at the

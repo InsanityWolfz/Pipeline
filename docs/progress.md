@@ -9,8 +9,8 @@ Newest entry first.
 - **Render:** `RoomView` with the door fade, `FoundryView`, `BuildView` (bar and ghost), `HoverReadout`, `HopperPicker`, and build controls (B, R, click, right-click, drag, wheel, Esc).
 - **Art:** housings, conduits, hoppers, crate, doorway, status markers and logistics icons. After Shaun's first look, machines show the item they make and wood is a side-on log.
 
-283 unit tests and 21 e2e tests pass.
-**Next:** Shaun approves the foundry sprites, then `/verify` and `/review`.
+Shaun approved the revised sprites in chat. Verify: the qa agent's screenshots pass every criterion; fixed the build-bar click race, readout clipping, the crate count position and the picker panel. Review: fixed all 3 blocking issues (3×1 front side refusing items, gaps in fast conduit drags, the door fade constant moved to data) and most suggestions. Verify rerun green: 287 unit tests and 21 e2e tests.
+**Next:** Shaun playtests the preview, then `/wrapup`.
 **Notes:** see the 006 entry in decisions.md. The prettier slip is logged there too: don't run formatters the repo doesn't use.
 
 ## 2026-10-18: Body follows the aim (fix)

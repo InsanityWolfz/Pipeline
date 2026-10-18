@@ -1,6 +1,6 @@
 import type { AnimDef } from './assets';
 
-// Asset keys for the foundry (006): piece housings, emblems, conduits, hoppers,
+// Asset keys for the foundry (006): piece housings, logistics icons, conduits, hoppers,
 // crates, status markers and the doorway. Kept apart from assets.ts so that file
 // stays small; like it, this has no runtime imports.
 
@@ -30,7 +30,7 @@ export const MACHINE_HOUSINGS: Readonly<Record<'1x1' | '3x1', Record<PieceView, 
  * Where the icon on a housing's top face is centred above the sprite's bottom (the footprint's
  * bottom edge), px: the middle of its top face. The 3x1 side view has a taller top face.
  */
-export const EMBLEM_RISE: Readonly<Record<'1x1' | '3x1', Record<PieceView, number>>> = {
+export const ICON_RISE: Readonly<Record<'1x1' | '3x1', Record<PieceView, number>>> = {
   '1x1': { down: 31, up: 31, side: 31 },
   '3x1': { down: 31, up: 31, side: 63 },
 };
@@ -83,5 +83,7 @@ export const FOUNDRY_LAYOUT = {
   countY: -3,
   /** Conduits lie on the floor; items riding them draw just above. */
   conduitDepth: 0.2,
+  /** Depth nudge that puts an icon or count just in front of the piece it's drawn on. */
+  onTopNudge: 0.01,
   itemDepth: 0.3,
 } as const;

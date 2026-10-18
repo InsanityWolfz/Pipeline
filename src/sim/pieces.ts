@@ -58,6 +58,9 @@ export interface CrateState extends PieceCommon {
 
 export type PieceState = ConduitState | MachineState | HopperState | CrateState;
 
+/** Why a piece can't be placed. */
+export type PlaceFail = 'locked' | 'not-foundry' | 'blocked' | 'occupied' | 'player';
+
 export interface FoundryState {
   /** In placement order, which is also the order they act in. */
   pieces: PieceState[];
@@ -91,6 +94,37 @@ export function frontTile(p: PieceState): Tile {
 }
 
 export const sameTile = (a: Tile, b: Tile): boolean => a.tx === b.tx && a.ty === b.ty;
+
+/** The tiles along a piece's front side: one step ahead of each tile it covers. It never takes items from these. */
+export function frontSide(p: PieceState): Tile[] {
+  const [dx, dy] = facingVector(p.facing);
+  return footprint(p.pieceId, p.tx, p.ty, p.facing).map((t) => ({ tx: t.tx + dx, ty: t.ty + dy }));
+}
+
+/**
+ * The tiles a straight line from `a` to `b` crosses, stepping one tile at a time
+ * along an edge (never cutting a corner), without `a` and ending on `b`.
+ */
+export function tilesBetween(a: Tile, b: Tile): Tile[] {
+  const nx = Math.abs(b.tx - a.tx);
+  const ny = Math.abs(b.ty - a.ty);
+  const sx = Math.sign(b.tx - a.tx);
+  const sy = Math.sign(b.ty - a.ty);
+  const tiles: Tile[] = [];
+  let { tx, ty } = a;
+  for (let ix = 0, iy = 0; ix < nx || iy < ny; ) {
+    // Step along whichever axis the line crosses into next.
+    if ((0.5 + ix) * ny < (0.5 + iy) * nx) {
+      tx += sx;
+      ix += 1;
+    } else {
+      ty += sy;
+      iy += 1;
+    }
+    tiles.push({ tx, ty });
+  }
+  return tiles;
+}
 
 /** The piece covering a tile, if any. */
 export function pieceAt(foundry: FoundryState, tx: number, ty: number): PieceState | undefined {

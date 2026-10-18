@@ -111,7 +111,7 @@ describe('assets', () => {
     }
   });
 
-  it('has every foundry sprite and animation frame in the built atlas, and an emblem per piece', () => {
+  it('has every foundry sprite and animation frame in the built atlas, and an icon per logistics piece', () => {
     const frames = Object.keys(atlas.frames);
     for (const views of Object.values(MACHINE_HOUSINGS)) {
       for (const { idle, working } of Object.values(views)) {

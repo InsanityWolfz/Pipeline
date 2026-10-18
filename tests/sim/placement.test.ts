@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { TILE_SIZE } from '../../src/data/config';
 import { FEET_BOX } from '../../src/data/player';
 import { rotateCw } from '../../src/sim/direction';
-import { footprint, frontTile, pieceAt, type ConduitState, type MachineState } from '../../src/sim/pieces';
+import {
+  footprint,
+  frontTile,
+  pieceAt,
+  tilesBetween,
+  type ConduitState,
+  type MachineState,
+} from '../../src/sim/pieces';
 import { canPlace, pickUp, place, unlockedPieces } from '../../src/sim/placement';
 import { tileCentre } from '../../src/sim/tiles';
 import { fireAt, HALL, run } from './fight';
@@ -74,6 +81,27 @@ describe('placement', () => {
     expect(pieceAt(s.foundry, 4, 5)).toBe(a);
     expect(pieceAt(s.foundry, 6, 5)).toBe(a);
     expect(pieceAt(s.foundry, 5, 6)).toBeUndefined();
+  });
+
+  it('walks the tiles a drag crosses, edge to edge', () => {
+    expect(tilesBetween({ tx: 2, ty: 2 }, { tx: 5, ty: 2 })).toEqual([
+      { tx: 3, ty: 2 },
+      { tx: 4, ty: 2 },
+      { tx: 5, ty: 2 },
+    ]);
+    expect(tilesBetween({ tx: 2, ty: 2 }, { tx: 2, ty: 0 })).toEqual([
+      { tx: 2, ty: 1 },
+      { tx: 2, ty: 0 },
+    ]);
+    const diagonal = tilesBetween({ tx: 0, ty: 0 }, { tx: 2, ty: 2 });
+    expect(diagonal).toHaveLength(4);
+    expect(diagonal.at(-1)).toEqual({ tx: 2, ty: 2 });
+    let prev = { tx: 0, ty: 0 };
+    for (const t of diagonal) {
+      expect(Math.abs(t.tx - prev.tx) + Math.abs(t.ty - prev.ty)).toBe(1);
+      prev = t;
+    }
+    expect(tilesBetween({ tx: 1, ty: 1 }, { tx: 1, ty: 1 })).toEqual([]);
   });
 
   it('rotates clockwise', () => {

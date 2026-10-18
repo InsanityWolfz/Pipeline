@@ -4,18 +4,19 @@ import { TILE_SIZE } from '../data/config';
 import {
   CONDUIT_ANIMS,
   CRATE_SPRITE,
-  EMBLEM_RISE,
+  ICON_RISE,
   HOPPER_SPRITES,
   MACHINE_HOUSINGS,
 } from '../data/foundryAssets';
 import { BUILD_BAR_LAYOUT, GHOST } from '../data/hudLayout';
-import { pieceDef } from '../data/pieces';
-import { pieceRect, type Tile } from '../sim/pieces';
-import type { PlaceFail } from '../sim/placement';
+import { BUILD_BAR, pieceDef } from '../data/pieces';
+import { pieceRect, type PlaceFail, type Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { colorOf } from './color';
 import { buildBarCells, inRect, pieceIcon } from './foundryLayout';
 import { viewOf } from './FoundryView';
+
+const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
 /** The resting frame of a piece's body as placed with `facing`. */
 function bodyFrame(pieceId: string, facing: Facing): string {
@@ -34,10 +35,10 @@ export class BuildView {
   private cells: { pieceId: string; images: GameObjects.Image[] }[] = [];
   private readonly highlight: GameObjects.Image;
   private readonly ghost: GameObjects.Image;
-  private readonly ghostEmblem: GameObjects.Image;
+  private readonly ghostIcon: GameObjects.Image;
   private unlocked: readonly string[] = [];
   private visible = false;
-  selected = 'conduit';
+  selected = FIRST_PIECE;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -46,9 +47,9 @@ export class BuildView {
       .setOrigin(0)
       .setScrollFactor(0)
       .setDepth(DEPTHS.hud + 2);
-    this.ghost = scene.add.image(0, 0, ATLAS_KEY, bodyFrame('conduit', 'right')).setAlpha(GHOST.alpha);
-    this.ghostEmblem = scene.add.image(0, 0, ATLAS_KEY, pieceIcon('conduit')).setAlpha(GHOST.alpha);
-    for (const o of [this.ghost, this.ghostEmblem]) o.setDepth(DEPTHS.worldUi - 1);
+    this.ghost = scene.add.image(0, 0, ATLAS_KEY, bodyFrame(FIRST_PIECE, 'right')).setAlpha(GHOST.alpha);
+    this.ghostIcon = scene.add.image(0, 0, ATLAS_KEY, pieceIcon(FIRST_PIECE)).setAlpha(GHOST.alpha);
+    for (const o of [this.ghost, this.ghostIcon]) o.setDepth(DEPTHS.worldUi - 1);
     this.setVisible(false);
   }
 
@@ -72,7 +73,7 @@ export class BuildView {
     canPlace: (pieceId: string, tx: number, ty: number, facing: Facing) => PlaceFail | null,
   ): void {
     if (unlocked.join() !== this.unlocked.join()) this.rebuild(unlocked);
-    if (!unlocked.includes(this.selected)) this.selected = unlocked[0] ?? 'conduit';
+    if (!unlocked.includes(this.selected)) this.selected = unlocked[0] ?? FIRST_PIECE;
     this.setVisible(building);
     if (!building) return;
     const cell = buildBarCells(unlocked).find((c) => c.pieceId === this.selected);
@@ -87,7 +88,7 @@ export class BuildView {
   ): void {
     const show = cursor !== null;
     this.ghost.setVisible(show);
-    this.ghostEmblem.setVisible(show);
+    this.ghostIcon.setVisible(show);
     if (!cursor) return;
     const pieceId = this.selected;
     const def = pieceDef(pieceId);
@@ -99,10 +100,10 @@ export class BuildView {
     const tint = colorOf(canPlace(pieceId, cursor.tx, cursor.ty, facing) ? GHOST.badTint : GHOST.okTint);
     this.ghost.setTint(tint);
     const machine = def.kind === 'machine';
-    this.ghostEmblem.setVisible(machine).setTint(tint);
+    this.ghostIcon.setVisible(machine).setTint(tint);
     if (machine) {
-      const rise = EMBLEM_RISE[def.footprint][viewOf(facing)];
-      this.ghostEmblem.setFrame(pieceIcon(pieceId)).setPosition(r.x, bottom - rise);
+      const rise = ICON_RISE[def.footprint][viewOf(facing)];
+      this.ghostIcon.setFrame(pieceIcon(pieceId)).setPosition(r.x, bottom - rise);
     }
   }
 
@@ -133,7 +134,7 @@ export class BuildView {
     this.highlight.setVisible(visible);
     if (!visible) {
       this.ghost.setVisible(false);
-      this.ghostEmblem.setVisible(false);
+      this.ghostIcon.setVisible(false);
     }
     for (const c of this.cells) for (const o of c.images) o.setVisible(visible);
   }

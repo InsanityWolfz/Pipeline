@@ -5,7 +5,7 @@ import { CONDUIT_TICKS } from '../data/foundry';
 import {
   CONDUIT_ANIMS,
   CRATE_SPRITE,
-  EMBLEM_RISE,
+  ICON_RISE,
   FOUNDRY_LAYOUT,
   HOPPER_SPRITES,
   MACHINE_HOUSINGS,
@@ -32,7 +32,7 @@ interface Drawn {
   count?: GlyphLine;
 }
 
-// Draws the foundry's pieces from sim state: machines with their emblem, a
+// Draws the foundry's pieces from sim state: machines showing what they make, a
 // working loop and a status marker; conduits flowing with the item they carry;
 // hoppers and crates with what they hold. Sorted by the bottom of their footprint.
 export class FoundryView {
@@ -85,13 +85,13 @@ export class FoundryView {
     } else if (p.kind === 'machine') {
       const footprint = pieceDef(p.pieceId).footprint;
       d.body.setFrame(MACHINE_HOUSINGS[footprint][view].idle);
-      d.icon.setPosition(r.x, bottom - EMBLEM_RISE[footprint][view]).setDepth(bottom + DEPTHS.tubeNudge);
+      d.icon.setPosition(r.x, bottom - ICON_RISE[footprint][view]).setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge);
       d.marker = add.sprite(r.x, 0, ATLAS_KEY).setOrigin(0.5, 1).setDepth(DEPTHS.worldUi);
       d.markerIcon = add.image(r.x, 0, ATLAS_KEY).setOrigin(0.5).setDepth(DEPTHS.worldUi + 1);
     } else {
       d.body.setFrame(p.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE);
-      d.icon.setPosition(r.x, bottom - FOUNDRY_LAYOUT.contentsRise).setDepth(bottom + DEPTHS.tubeNudge);
-      d.count = new GlyphLine(this.scene, r.x, bottom, bottom + 2 * DEPTHS.tubeNudge, true);
+      d.icon.setPosition(r.x, bottom - FOUNDRY_LAYOUT.contentsRise).setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge);
+      d.count = new GlyphLine(this.scene, r.x, bottom, bottom + 2 * FOUNDRY_LAYOUT.onTopNudge, true);
     }
     this.drawn.set(p.id, d);
     return d;

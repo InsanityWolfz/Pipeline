@@ -4,6 +4,7 @@ import { recipeDef, type RecipeDef } from '../data/recipes';
 import { count } from './inventory';
 import {
   footprint,
+  frontSide,
   frontTile,
   sameTile,
   type FoundryState,
@@ -52,11 +53,11 @@ function advance(p: PieceState): void {
 
 /**
  * Hands one item to the piece covering `to`, coming from the tile `from`. Pieces
- * never take items from their own front. Returns whether it was taken.
+ * never take items from their front side. Returns whether it was taken.
  */
 function offer(grid: ReadonlyMap<string, PieceState>, to: Tile, from: Tile, item: string): boolean {
   const target = grid.get(key(to));
-  if (!target || sameTile(frontTile(target), from)) return false;
+  if (!target || frontSide(target).some((t) => sameTile(t, from))) return false;
   if (target.kind === 'conduit') {
     if (target.item) return false;
     target.item = item;
