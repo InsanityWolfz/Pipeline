@@ -13,8 +13,8 @@ import { summarize } from '../../src/sim/summary';
 import { slotCount } from '../../src/sim/tube';
 import { tileCentre } from '../../src/sim/tiles';
 import { CONDUIT_TICKS } from '../../src/data/foundry';
-import { arena, command, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, SEED, SWIPE_LANDS } from './fight';
-import { foundry, put } from './foundryKit';
+import { arena, command, die, runUntilKo, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, SEED } from './fight';
+import { foundry, put, stepOutside } from './foundryKit';
 
 const HALL = 'ruin-hall';
 const FIRE_TICKS = ammoDef('arrow').fireTicks;
@@ -82,8 +82,7 @@ describe('attunement', () => {
     movePlayer(s, PLAYER_AT.x, PLAYER_AT.y);
     placeHusk(s, PLAYER_AT.x + 20, PLAYER_AT.y);
     s.player.health = HUSK.swipe.damage;
-    run(s, SWIPE_LANDS);
-    expect(s.events.ko).toBe(true);
+    runUntilKo(s);
     expect(s.link.attuned).toBe(true);
     expect(s.link.reservoir).toEqual({ itemId: 'arrow', count: 7 });
   });
@@ -181,7 +180,7 @@ describe('the tube socket', () => {
 
 describe('firing from the reservoir', () => {
   it('fires carried rounds first, then the reservoir, flagging those shots', () => {
-    const s = attuned();
+    const s = stepOutside(attuned());
     s.inventory.arrow = 1;
     s.link.reservoir = { itemId: 'arrow', count: 2 };
     const aim = fireAt(s.player.x - 100, s.player.y);
@@ -198,7 +197,7 @@ describe('firing from the reservoir', () => {
   });
 
   it('dry-fires when the reservoir holds a different ammo', () => {
-    const s = attuned();
+    const s = stepOutside(attuned());
     s.inventory.arrow = 0;
     s.link.reservoir = { itemId: 'bomb', count: 5 };
     run(s, 1, fireAt(s.player.x - 100, s.player.y));
@@ -228,6 +227,7 @@ describe('firing from the reservoir', () => {
     put(s, 'focuser', 6, 5);
     put(s, 'tube-socket', 7, 5);
     runUntil(s, (x) => x.link.reservoir.count >= 6, 900);
+    stepOutside(s);
     let fromReservoir = 0;
     run(s, 300, (x) => {
       if (x.tube.fromReservoir) fromReservoir += 1;
@@ -238,16 +238,15 @@ describe('firing from the reservoir', () => {
 });
 
 describe('the playtest start', () => {
-  it('starts with plenty of everything and every machine unlocked, and a KO restores it', () => {
+  it('starts with plenty of everything and every machine unlocked, all banked', () => {
     const s = createSim(SEED, { start: PLAYTEST_START });
     expect(s.inventory).toMatchObject({ arrow: 99, bomb: 99, 'ley-bolt': 99, wood: 99, 'husk-resin': 99, shaft: 20, fuse: 20 });
     expect(s.crafted).toEqual(PLAYTEST_START.crafted);
-    expect(unlockedPieces(s)).toEqual(['conduit', 'hopper', 'crate', 'gravity-stager', 'cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser']);
+    expect(unlockedPieces(s)).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'tube-socket', 'gravity-stager', 'cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser']);
+    // The start is banked, so a death keeps what's still carried of it (011).
     s.inventory = { wood: 1 };
-    s.player.health = 0;
-    stepSim(s);
-    expect(s.events.ko).toBe(true);
-    expect(s.inventory).toEqual(PLAYTEST_START.inventory);
+    die(s);
+    expect(s.inventory).toEqual({ wood: 1 });
   });
 
   it('leaves the normal start unchanged', () => {

@@ -26,6 +26,8 @@ export interface PlayerState extends Knockable {
   health: number;
   /** Ticks of hit invulnerability left. */
   hurtTicks: number;
+  /** Ticks left on the death animation before waking in the foundry (011); 0 when alive. */
+  dying: number;
 }
 
 export function createPlayer(at: { x: number; y: number }): PlayerState {
@@ -43,6 +45,7 @@ export function createPlayer(at: { x: number; y: number }): PlayerState {
     aimY: at.y,
     health: MAX_HEALTH,
     hurtTicks: 0,
+    dying: 0,
     knockX: 0,
     knockY: 0,
     knockTicks: 0,

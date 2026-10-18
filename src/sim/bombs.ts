@@ -81,7 +81,7 @@ export function stepBombs(state: SimState): void {
   state.bombs.length = kept;
 }
 
-const BURST_HIT = { knock: false, flash: true } as const;
+const BURST_HIT = { knock: false, flash: true, damageType: 'fire' } as const;
 
 /** Damages and ignites every live enemy whose feet are within the burst radius. Never the player. */
 function burst(state: SimState, b: BombState): void {

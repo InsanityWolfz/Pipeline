@@ -20,9 +20,14 @@ describe('facing arrows', () => {
     );
   });
 
-  it('a hopper only has an output; a crate only has inputs, on all four sides; conduits have none', () => {
+  it('a hopper only has an output; a crate only has inputs, on all four sides', () => {
     expect(dirs('hopper', 'up')).toEqual(['out:5,5:up']);
     expect(dirs('crate', 'left')).toEqual(['in:5,5:down', 'in:5,5:left', 'in:5,5:right', 'in:5,5:up']);
-    expect(dirs('conduit', 'up')).toEqual([]);
+  });
+
+  it('a conduit has one input arrow on the side it takes from: its back when straight, its side on a corner', () => {
+    expect(dirs('conduit', 'up')).toEqual(['in:5,5:up']);
+    const corner = arrowSpots({ pieceId: 'conduit', tx: 5, ty: 5, facing: 'up', inFrom: 'left' });
+    expect(corner.map((a) => `${a.kind}:${a.edge}:${a.points}`)).toEqual(['in:left:right']);
   });
 });

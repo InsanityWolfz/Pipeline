@@ -14,7 +14,7 @@ import {
   PICKUP_POPUP,
   PICKUP_SPARKLE,
 } from '../data/assets';
-import { CAMERA_LERP } from '../data/config';
+import { CAMERA_LERP, DOOR_FADE_MS } from '../data/config';
 import { enemyDef } from '../data/enemies';
 import { ITEMS } from '../data/items';
 import { OUTLINE_ID, hexToRgb, paletteHex } from '../data/palette';
@@ -49,7 +49,12 @@ export class EffectsView {
     events.pickups.forEach((p, i) => this.pickup(p.itemId, p.x, p.y, player, i));
     for (const b of events.bursts) this.burst(b.x, b.y, b.radius);
     for (const s of events.shots) this.muzzle(s.x, s.y);
-    if (events.stashDeposits.length > 0) this.swirl(player);
+    // Banking (entering the foundry, or a pylon deposit) swirls ley light off the
+    // player. Through a door or travel, it waits out the fade so it shows in the new room.
+    if (events.banks.length > 0) {
+      if (events.roomChanges.length > 0) this.scene.time.delayedCall(DOOR_FADE_MS * 2, () => this.swirl(player));
+      else this.swirl(player);
+    }
     if (events.ko) this.koFade(player);
   }
 
@@ -77,7 +82,7 @@ export class EffectsView {
     });
   }
 
-  /** Ley light spiralling up off the player's feet as the haul goes home. */
+  /** Ley light spiralling up off the player's feet as the haul is banked. */
   private swirl(player: { x: number; y: number }): void {
     const sprite = this.scene.add.sprite(player.x, player.y, ATLAS_KEY, animFrames(DEPOSIT_SWIRL)[0]);
     sprite.setOrigin(0.5, 1).setDepth(player.y + DRAW_HEIGHT);

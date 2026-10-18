@@ -45,6 +45,7 @@ export const LOGISTICS_ICONS: Readonly<Record<string, string>> = {
   crate: 'emblem-crate',
   'tube-socket': 'emblem-tube-socket',
   'gravity-stager': 'emblem-gravity-stager',
+  sorter: 'emblem-sorter',
 };
 
 /** Conduits flow toward their front; `side` flows right. They lie flat on the floor. */
@@ -53,6 +54,35 @@ export const CONDUIT_ANIMS: Readonly<Record<PieceView, AnimDef>> = {
   up: loop('conduit-up', 2, FLOW_FPS),
   side: loop('conduit-side', 2, FLOW_FPS),
 };
+
+/**
+ * Sorters (015) flow like conduits. `side` flows right and sorts down; `down`
+ * sorts left and `up` sorts right. Render turns or flips them for the other facings
+ * and for a mirrored sorter.
+ */
+export const SORTER_ANIMS: Readonly<Record<PieceView, AnimDef>> = {
+  down: loop('sorter-down', 2, FLOW_FPS),
+  up: loop('sorter-up', 2, FLOW_FPS),
+  side: loop('sorter-side', 2, FLOW_FPS),
+};
+
+/** The sorter's filter icon shows at this scale in its slot, and its sort-side arrow is tinted this palette colour. */
+export const SORTER_LOOK = { slotScale: 0.5, sortArrowTint: 'gold' } as const;
+
+/** Conduit corners (013) by the side items come in from and the side they leave by: `${in}-${out}`. Flat on the floor like the straights. */
+export const CONDUIT_CORNERS = {
+  'up-left': loop('conduit-corner-up-left', 2, FLOW_FPS),
+  'up-right': loop('conduit-corner-up-right', 2, FLOW_FPS),
+  'down-left': loop('conduit-corner-down-left', 2, FLOW_FPS),
+  'down-right': loop('conduit-corner-down-right', 2, FLOW_FPS),
+  'left-up': loop('conduit-corner-left-up', 2, FLOW_FPS),
+  'left-down': loop('conduit-corner-left-down', 2, FLOW_FPS),
+  'right-up': loop('conduit-corner-right-up', 2, FLOW_FPS),
+  'right-down': loop('conduit-corner-right-down', 2, FLOW_FPS),
+} as const satisfies Record<string, AnimDef>;
+
+/** A corner's key: the side items come in from, then the side they leave by. */
+export type CornerKey = keyof typeof CONDUIT_CORNERS;
 
 export const HOPPER_SPRITES: Readonly<Record<PieceView, string>> = {
   down: 'hopper-down',
@@ -131,13 +161,47 @@ export const FIXTURE_SPRITES = {
   stash: 'stash',
   port: { key: 'supply-port', frames: 2, frameRate: 1, loop: false },
   waystone: { key: 'waystone', frames: 2, frameRate: 3, loop: true },
-} as const satisfies { stash: string; port: AnimDef; waystone: AnimDef };
+  /** The identification bench (010): its lens flares for `flareMs` after an identify. */
+  bench: { key: 'identification-bench', frames: 2, frameRate: 1, loop: false },
+} as const satisfies { stash: string; port: AnimDef; waystone: AnimDef; bench: AnimDef };
+
+/** How long the bench's lens flares after an identify, ms. */
+export const BENCH_FLARE_MS = 600;
 
 /** A Wisp's orb and its ground shadow; the orb flies this far above its ground point, px. */
 export const ORB_SPRITES = { orb: 'wisp-orb', shadow: 'wisp-orb-shadow', lift: 14 } as const;
 
 /** Floor tiles by a room's `floor` theme; rooms without one use the ruin flagstone. */
-export const FLOOR_SPRITES: Readonly<Record<string, string>> = { shrine: 'floor-shrine' };
+export const FLOOR_SPRITES: Readonly<Record<string, string>> = { shrine: 'floor-shrine', clearing: 'floor-clearing' };
 
 /** Menu icons for the claimed pylon and the stash (009). */
 export const SITE_ICONS = { stash: 'emblem-stash', travel: 'emblem-travel' } as const;
+
+/** The tutorial (012): the tube's stone, sealed doors, key prompts and the objective tick. */
+export const TUTORIAL_SPRITES = {
+  stone: 'tube-stone',
+  stoneEmpty: 'tube-stone-empty',
+  rubble: 'door-rubble',
+  barrier: { key: 'ley-barrier', frames: 2, frameRate: 4, loop: true },
+  keyCap: 'key-cap',
+  tick: 'objective-tick',
+} as const satisfies Record<string, string | AnimDef>;
+
+/** Tutorial layout, px: the objective line's top, the tick's gap left of it, a prompt's lift over its target, a gate's crumble. */
+export const TUTORIAL_LAYOUT = {
+  objectiveTop: 6,
+  /** The objective line's backing panel: padding round the text, palette ids and alpha. */
+  objectivePanel: { padX: 6, padY: 3, back: 'outline', alpha: 0.7 },
+  /** The line fades in over this when it moves on to the next goal, ms. */
+  objectiveFadeMs: 300,
+  /** The tick sits this far above the text's top, px. */
+  tickRise: 2,
+  tickGap: 4,
+  tickMs: 1200,
+  /** A prompt floats this far above the top of its target's tile, px. */
+  promptLift: 6,
+  keyText: { x: 4, y: 3 },
+  /** A prompt not yet usable (out of reach) shows at this alpha. */
+  promptDimAlpha: 0.45,
+  gateFadeMs: 500,
+} as const;

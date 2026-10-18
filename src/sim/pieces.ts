@@ -2,7 +2,7 @@ import { TILE_SIZE } from '../data/config';
 import { STAGER_START_ANGLE } from '../data/foundry';
 import { isSolidPiece, pieceDef } from '../data/pieces';
 import type { Rect } from './collision';
-import { facingVector } from './direction';
+import { facingVector, opposite, rotateCcw, rotateCw } from './direction';
 import type { Inventory } from './inventory';
 import type { Facing } from './player';
 
@@ -22,6 +22,8 @@ interface PieceCommon extends Tile {
 
 export interface ConduitState extends PieceCommon {
   kind: 'conduit';
+  /** The side items come in from (013): its back for a straight run, a side for a corner. */
+  inFrom: Facing;
   item: string | null;
   /** Ticks the item has spent crossing. */
   progress: number;
@@ -74,7 +76,26 @@ export interface StagerState extends PieceCommon {
   angle: number;
 }
 
-export type PieceState = ConduitState | MachineState | HopperState | CrateState | SocketState | StagerState;
+/**
+ * Carries items like a conduit, taking them only from its back (015). Its
+ * `filter` item leaves by its sort side (right of its facing, or left when
+ * mirrored); everything else leaves by its front.
+ */
+export interface SorterState extends PieceCommon {
+  kind: 'sorter';
+  item: string | null;
+  progress: number;
+  filter: string | null;
+  mirrored: boolean;
+}
+
+export type PieceState = ConduitState | MachineState | HopperState | CrateState | SocketState | StagerState | SorterState;
+
+/** How a new piece is shaped: a conduit's intake side (013), a sorter's mirrored side (015). */
+export interface PieceShape {
+  inFrom?: Facing;
+  mirrored?: boolean;
+}
 
 /** Why a piece can't be placed. */
 export type PlaceFail = 'locked' | 'not-foundry' | 'blocked' | 'occupied' | 'player' | 'limit' | 'cost';
@@ -89,10 +110,12 @@ export function createFoundry(): FoundryState {
   return { pieces: [], nextPieceId: 0 };
 }
 
-export function createPiece(id: number, pieceId: string, tx: number, ty: number, facing: Facing): PieceState {
+/** A conduit is straight (from its back) unless `shape.inFrom` says otherwise (013); a sorter sorts right unless mirrored. */
+export function createPiece(id: number, pieceId: string, tx: number, ty: number, facing: Facing, shape: PieceShape = {}): PieceState {
   const common = { id, pieceId, tx, ty, facing };
   const { kind } = pieceDef(pieceId);
-  if (kind === 'conduit') return { ...common, kind, item: null, progress: 0 };
+  if (kind === 'conduit') return { ...common, kind, inFrom: shape.inFrom ?? opposite(facing), item: null, progress: 0 };
+  if (kind === 'sorter') return { ...common, kind, item: null, progress: 0, filter: null, mirrored: shape.mirrored ?? false };
   if (kind === 'hopper') return { ...common, kind, item: null, count: 0, timer: 0 };
   if (kind === 'crate') return { ...common, kind, contents: {} };
   if (kind === 'socket') return { ...common, kind, pulse: 0 };
@@ -114,6 +137,28 @@ export function frontTile(p: PieceState): Tile {
 }
 
 export const sameTile = (a: Tile, b: Tile): boolean => a.tx === b.tx && a.ty === b.ty;
+
+/** The side a sorter facing `facing` sends its filter item out of: its right, or its left when mirrored. */
+export function sortSideOf(facing: Facing, mirrored: boolean): Facing {
+  return mirrored ? rotateCcw(facing) : rotateCw(facing);
+}
+
+/** The side a sorter's filter item leaves by. */
+export const sortSide = (p: SorterState): Facing => sortSideOf(p.facing, p.mirrored);
+
+/** Where a sorter sends `item`: its sort side for the filter item, else its front. */
+export const sorterOut = (p: SorterState, item: string): Facing => (item === p.filter ? sortSide(p) : p.facing);
+
+/** The tile a sorter hands `item` to. */
+export function sorterExit(p: SorterState, item: string): Tile {
+  return sideTile(p, sorterOut(p, item));
+}
+
+/** The tile on one side of a 1x1 piece. */
+export function sideTile(t: Tile, side: Facing): Tile {
+  const [dx, dy] = facingVector(side);
+  return { tx: t.tx + dx, ty: t.ty + dy };
+}
 
 /** The tiles along a piece's front side: one step ahead of each tile it covers. It never takes items from these. */
 export function frontSide(p: PieceState): Tile[] {

@@ -14,7 +14,7 @@ function watchErrors(page: Page): string[] {
 }
 
 async function boot(page: Page): Promise<void> {
-  await page.goto('/');
+  await page.goto('/?start=hall');
   await page.waitForFunction(() => window.__GAME__ !== undefined);
   await page.evaluate(() => window.__GAME__?.step(0));
 }
@@ -143,7 +143,7 @@ test('Husks walk home and heal once the player runs away', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test('a KO resets the room', async ({ page }) => {
+test('a KO wakes the player in the foundry and resets the hall', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page);
   await approachPack(page);
@@ -155,9 +155,10 @@ test('a KO resets the room', async ({ page }) => {
       if (s.player.ko) {
         return {
           ko: true,
+          room: s.room,
           health: s.player.health,
           arrows: s.inventory.arrow,
-          enemies: s.enemies.filter((e) => e.room === s.room).map((e) => [e.mode, e.health]),
+          enemies: s.enemies.filter((e) => e.room === 'ruin-hall').map((e) => [e.mode, e.health]),
           ground: s.groundItems.length,
         };
       }
@@ -166,6 +167,7 @@ test('a KO resets the room', async ({ page }) => {
   });
   expect(result).toEqual({
     ko: true,
+    room: 'foundry',
     health: 100,
     arrows: 30,
     enemies: [

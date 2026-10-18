@@ -1,0 +1,12 @@
+# Key prompt cap: a stone key; the letter is drawn over it in the HUD font. 11x11.
+ooooooooooo
+oLLLLLLLLLo
+oSSSSSSSSSo
+oSSSSSSSSSo
+oSSSSSSSSSo
+oSSSSSSSSSo
+oSSSSSSSSSo
+oSSSSSSSSSo
+oSSSSSSSSSo
+ossssssssso
+ooooooooooo

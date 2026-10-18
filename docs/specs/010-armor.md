@@ -1,5 +1,5 @@
 # 010: Armor
-status: approved
+status: done
 
 Approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18). He reviews it in the morning report.
 
@@ -72,3 +72,13 @@ Enemies drop unidentified armor. The first Husk ever killed always drops a piece
 
 ## Open questions
 - None. Every number is a starting value.
+
+## Build notes
+These choices were made in the overnight build, not by the spec. They're logged for Shaun to accept or overturn in the morning report.
+- **Unidentified armor is a carried item.** Pieces are carried as a count of `unidentified-armor` (item kind `armor`), not as entries in a list with `identified: false`. Unidentified pieces are all alike, so a count is enough, and pickups, the pylon deposit, the stash and 011's banking all treat it like any other item. Identified pieces are a list. `getState()` names them as the spec does: `armorPieces` (each `identified: true`) and `equippedArmor`.
+- **The bench is a fixture.** It's in `FIXTURES` (`src/data/claims.ts`), like 009's stash, rather than in `src/data/pieces.ts`. It sits at foundry tile (1,12).
+- **Bench menu rows:** each piece row shows "name weight armor", and the worn one adds "worn". The identify row reads "Identify all (n)". This added a 3×5 letter font (`hud-letters`), which the pylon and stash menus now use too.
+- **Body tint:** the body is tinted below the head (moss for light, slate for heavy) rather than drawn with overlay frames per view, which the spec's "tinted or trimmed" allows. The identify flash is the bench's lens flaring.
+- **Light or heavy:** each roll is 50/50 (`HEAVY_CHANCE`).
+- **`?playtest`** carries 3 unidentified pieces.
+

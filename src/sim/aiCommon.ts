@@ -93,7 +93,12 @@ export function leash(e: EnemyState, def: EnemyDef): [number, number] | null {
  */
 export function engage(state: SimState, e: EnemyState, sees: boolean): [number, number] | null {
   // A player in another room is never seen.
-  const here = e.roomId === state.roomId;
+  // A dying player is gone as far as enemies care: chasers turn for home at once.
+  const here = e.roomId === state.roomId && state.player.dying === 0;
+  if (!here && e.mode === 'chase' && state.player.dying > 0) {
+    e.mode = 'return';
+    e.modeTicks = 0;
+  }
   if (e.mode === 'idle' || e.mode === 'return') {
     if (!here || !sees) return e.mode === 'return' ? walkHome(e, enemyDef(e.enemyId)) : [0, 0];
     aggro(e);

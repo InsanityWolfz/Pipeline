@@ -5,6 +5,7 @@ import { AMMO } from '../../src/data/ammo';
 import {
   animFrames,
   digitFrame,
+  HUD_LETTERS,
   BURN_FLAME,
   ENEMY_ANIMS,
   TUBE_ATTUNE,
@@ -21,9 +22,11 @@ import {
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import {
   CONDUIT_ANIMS,
+  CONDUIT_CORNERS,
   CRATE_SPRITE,
   STAGER_SPRITE,
   SOCKET_SPRITES,
+  TUTORIAL_SPRITES,
   PYLON_SPRITES,
   FIXTURE_SPRITES,
   ORB_SPRITES,
@@ -38,9 +41,11 @@ import {
 } from '../../src/data/foundryAssets';
 import { ENEMIES } from '../../src/data/enemies';
 import { FIXTURES, PORT_CYCLE } from '../../src/data/claims';
+import { ARMOR_DROP_CHANCE, ARMOR_WEIGHTS } from '../../src/data/armor';
+import { OBJECTIVES } from '../../src/data/objectives';
 import { ROOMS, TILE } from '../../src/data/rooms';
 import { ITEMS } from '../../src/data/items';
-import { STARTING_INVENTORY } from '../../src/data/player';
+import { STARTING_INVENTORY, TUTORIAL_START } from '../../src/data/player';
 import { PLAYTEST_START } from '../../src/data/playtest';
 import { SLOT_AMMOS, STARTING_AMMO } from '../../src/data/tube';
 import { CRAFT_GROUPS, RECIPES } from '../../src/data/recipes';
@@ -133,7 +138,8 @@ describe('assets', () => {
         for (const frame of animFrames(working)) expect(frames).toContain(frame);
       }
     }
-    for (const anim of [...Object.values(CONDUIT_ANIMS), STATUS_MARKERS.working]) {
+    expect(Object.keys(CONDUIT_CORNERS)).toHaveLength(8);
+    for (const anim of [...Object.values(CONDUIT_ANIMS), ...Object.values(CONDUIT_CORNERS), STATUS_MARKERS.working]) {
       for (const frame of animFrames(anim)) expect(frames).toContain(frame);
     }
     const singles = [
@@ -156,7 +162,9 @@ describe('assets', () => {
   it('has a HUD font frame for every glyph', () => {
     expect(HUD_DIGITS.glyphs).toContain('+');
     for (const ch of HUD_DIGITS.glyphs) expect(Object.keys(atlas.frames)).toContain(digitFrame(ch));
-    expect(() => digitFrame('x')).toThrow();
+    expect(() => digitFrame('#')).toThrow();
+    for (const ch of HUD_LETTERS.glyphs) expect(Object.keys(atlas.frames)).toContain(digitFrame(ch));
+    expect(digitFrame('a')).toBe(digitFrame('A'));
   });
 });
 
@@ -181,7 +189,7 @@ describe('items and ammo', () => {
 
 describe('item kinds, ammo slots and recipes', () => {
   it('gives every item a kind, and every ammo an ammo item', () => {
-    for (const item of Object.values(ITEMS)) expect(['raw', 'part', 'ammo']).toContain(item.kind);
+    for (const item of Object.values(ITEMS)) expect(['raw', 'part', 'ammo', 'armor']).toContain(item.kind);
     for (const ammo of Object.values(AMMO)) expect(ITEMS[ammo.itemId]?.kind).toBe('ammo');
   });
 
@@ -367,5 +375,48 @@ describe('claiming (009)', () => {
     const foundry = ROOMS.foundry;
     for (const f of FIXTURES) expect(foundry?.rows[f.ty]?.[f.tx]).toBe(TILE.floor);
     for (const id of PORT_CYCLE) expect(ITEMS[id]?.kind).toBe('raw');
+  });
+});
+
+describe('armor (010)', () => {
+  it('has sane weight ranges, drop chances for real enemies, and the bench on open floor', () => {
+    for (const w of Object.values(ARMOR_WEIGHTS)) {
+      expect(w.min).toBeLessThanOrEqual(w.max);
+      expect(w.adjectives.length).toBeGreaterThan(0);
+      expect(w.nouns.length).toBeGreaterThan(0);
+    }
+    for (const [id, chance] of Object.entries(ARMOR_DROP_CHANCE)) {
+      expect(ENEMIES[id]).toBeDefined();
+      expect(chance).toBeGreaterThanOrEqual(0);
+      expect(chance).toBeLessThanOrEqual(1);
+    }
+    expect(ITEMS['unidentified-armor']?.kind).toBe('armor');
+    expect(FIXTURES.some((f) => f.kind === 'bench')).toBe(true);
+    const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as { frames: Record<string, unknown> };
+    for (const frame of animFrames(FIXTURE_SPRITES.bench)) expect(Object.keys(atlas.frames)).toContain(frame);
+  });
+});
+
+describe('the tutorial (012)', () => {
+  it('has objectives with text, and tutorial sprites in the atlas', () => {
+    expect(OBJECTIVES.length).toBeGreaterThan(0);
+    for (const o of OBJECTIVES) for (const ch of o.text) expect(() => digitFrame(ch)).not.toThrow();
+    const atlas = JSON.parse(readFileSync('assets/build/sprites.json', 'utf8')) as { frames: Record<string, unknown> };
+    const frames = Object.keys(atlas.frames);
+    for (const v of Object.values(TUTORIAL_SPRITES)) {
+      if (typeof v === 'string') expect(frames).toContain(v);
+      else for (const f of animFrames(v)) expect(frames).toContain(f);
+    }
+  });
+
+  it('puts the tube stone on floor and gates on real doors', () => {
+    const clearing = ROOMS.clearing;
+    const stone = clearing?.tubeStone;
+    if (!stone) throw new Error('no tube stone');
+    expect(clearing.rows[stone.ty]?.[stone.tx]).toBe(TILE.floor);
+    const gates = Object.values(ROOMS).flatMap((r) => (r.doorways ?? []).flatMap((d) => (d.gate ? [d.gate] : [])));
+    expect(gates.sort()).toEqual(['foundry', 'shrine']);
+    for (const r of Object.values(RECIPES)) if (r.requires) expect(r.requires).toBe('attuned');
+    expect(TUTORIAL_START.room).toBe('clearing');
   });
 });
