@@ -47,7 +47,7 @@ export class EnemyView {
       else d.sprite.clearTint();
       this.drawBar(d.bar, e, bottom - d.sprite.height);
       this.drawTelegraph(d.telegraph, e);
-      d.flame.setVisible(e.burnTicks > 0).setPosition(e.x, bottom - BURN_FLAME_HEIGHT).setDepth(bottom + 0.01);
+      d.flame.setVisible(e.burnTicks > 0).setPosition(e.x, bottom - BURN_FLAME_HEIGHT).setDepth(bottom + DEPTHS.flameNudge);
     }
     for (const [id, d] of this.drawn) {
       if (live.has(id)) continue;

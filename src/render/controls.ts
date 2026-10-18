@@ -5,8 +5,15 @@ import { NO_COMMAND, type Axis, type Command } from '../sim/input';
 
 type Key = 'up' | 'down' | 'left' | 'right' | 'dodge' | 'load' | 'interact' | 'menu' | 'close';
 
-/** Number keys 1, 2, 3 pick the slot's ammo in SLOT_AMMOS order. */
-const AMMO_KEYS = [Input.Keyboard.KeyCodes.ONE, Input.Keyboard.KeyCodes.TWO, Input.Keyboard.KeyCodes.THREE];
+/** Number keys pick the slot's ammo in SLOT_AMMOS order: 1 for the first, and so on. */
+const NUMBER_KEYS = [
+  Input.Keyboard.KeyCodes.ONE,
+  Input.Keyboard.KeyCodes.TWO,
+  Input.Keyboard.KeyCodes.THREE,
+  Input.Keyboard.KeyCodes.FOUR,
+];
+if (SLOT_AMMOS.length > NUMBER_KEYS.length) throw new Error(`Only ${NUMBER_KEYS.length} ammo keys for ${SLOT_AMMOS.length} slot ammo`);
+const AMMO_KEYS = NUMBER_KEYS.slice(0, SLOT_AMMOS.length);
 
 // Turns WASD, Space, R, E, 1–3 and the mouse into sim commands, and C and Esc
 // into menu toggles for the scene. Presses are latched from the keys' down

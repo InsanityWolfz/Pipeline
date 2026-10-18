@@ -1,6 +1,7 @@
 import type { GameObjects, Scene } from 'phaser';
 import { ammoDef } from '../data/ammo';
-import { ATLAS_KEY, CRAFT_MENU_LAYOUT, DEPTHS, SPRITES } from '../data/assets';
+import { ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
+import { CRAFT_MENU_LAYOUT } from '../data/hudLayout';
 import { itemDef } from '../data/items';
 import { recipeDef } from '../data/recipes';
 import { canCraft } from '../sim/crafting';
@@ -53,7 +54,7 @@ export class CraftMenuView {
       }
       const recipe = recipeDef(line.id);
       const frame = add(line.x, line.y, SPRITES.craftRow, DEPTHS.menu + 1);
-      const iconY = line.y + Math.round((L.rowHeight - 16) / 2);
+      const iconY = line.y + Math.round((L.rowHeight - L.iconSize) / 2);
       const parts: GameObjects.Image[] = [];
       const inputs = Object.entries(recipe.inputs).map(([itemId, need], i) => {
         const x = line.x + L.input.x + i * L.input.step;
@@ -116,7 +117,7 @@ export class CraftMenuView {
       r.made.setAlpha(alpha);
       r.owned.setAlpha(alpha);
       for (const p of r.parts) p.setAlpha(alpha);
-      r.frame.setAlpha(affordable ? 1 : CRAFT_MENU_LAYOUT.greyAlpha);
+      r.frame.setAlpha(alpha);
       r.frame.setFrame(affordable && this.hovered === r ? SPRITES.craftRowHover : SPRITES.craftRow);
     }
   }

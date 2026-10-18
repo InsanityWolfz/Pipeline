@@ -1,5 +1,6 @@
 import type { GameObjects, Scene } from 'phaser';
-import { ATLAS_KEY, DEPTHS, HARVEST_BAR, NODE_SPRITE_DROP } from '../data/assets';
+import { ATLAS_KEY, DEPTHS, NODE_SPRITE_DROP } from '../data/assets';
+import { HARVEST_BAR } from '../data/hudLayout';
 import { nodeDef } from '../data/nodes';
 import type { HarvestState } from '../sim/harvest';
 import type { NodeState } from '../sim/nodes';

@@ -8,12 +8,11 @@ import type { SimState } from './state';
 /** Crafts one batch of a recipe. Returns false, changing nothing but the events, if an input is short. */
 export function craft(state: SimState, recipeId: string): boolean {
   const recipe = recipeDef(recipeId);
-  const inputs = Object.entries(recipe.inputs);
-  if (inputs.some(([itemId, n]) => count(state.inventory, itemId) < n)) {
+  if (!canCraft(state, recipeId)) {
     state.events.craftFails.push({ recipeId });
     return false;
   }
-  for (const [itemId, n] of inputs) state.inventory[itemId] = count(state.inventory, itemId) - n;
+  for (const [itemId, n] of Object.entries(recipe.inputs)) state.inventory[itemId] = count(state.inventory, itemId) - n;
   const { itemId, count: made } = recipe.output;
   state.inventory[itemId] = count(state.inventory, itemId) + made;
   if (!state.crafted.includes(itemId)) {

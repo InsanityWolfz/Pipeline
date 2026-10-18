@@ -11,6 +11,7 @@ import type { Inventory } from './inventory';
 import { createNodes, type NodeState } from './nodes';
 import { createPlayer, type PlayerState } from './player';
 import { createRng, type RngState } from './rng';
+import { tileCentre } from './tiles';
 import { createTube, type TubeState } from './tube';
 
 /** The whole sim: plain serializable data. */
@@ -91,10 +92,7 @@ export function resetRoom(state: SimState): void {
   state.enemies = (room.enemies ?? []).map((p) => createEnemy(state.nextEnemyId++, p.enemyId, tileCentre(p)));
 }
 
-/** The pixel centre of a tile. */
-export function tileCentre(t: { tx: number; ty: number }): { x: number; y: number } {
-  return { x: (t.tx + 0.5) * TILE_SIZE, y: (t.ty + 0.5) * TILE_SIZE };
-}
+export { tileCentre } from './tiles';
 
 /** A room's size in pixels. */
 export function roomSize(room: Room): { width: number; height: number } {

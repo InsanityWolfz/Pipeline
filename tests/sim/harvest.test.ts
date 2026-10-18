@@ -176,6 +176,26 @@ describe('nodes', () => {
     expect(e.x).toBeGreaterThanOrEqual(n.x + nodeDef('rubble').feetBox.w / 2 + HUSK.feetBox.w / 2 - 1e-9);
   });
 
+  it('let ley bolts and bombs fly over them', () => {
+    const s = arena();
+    placeNode(s, 'tree', PLAYER_AT.x + 60, PLAYER_AT.y);
+    const e = placeHusk(s, PLAYER_AT.x + 140, PLAYER_AT.y);
+    s.inventory['ley-bolt'] = 1;
+    s.inventory.bomb = 1;
+    run(s, 1, { selectAmmo: 'ley-bolt' });
+    run(s, 1, { load: true });
+    run(s, LOAD_TICKS);
+    run(s, 1, fireAt(PLAYER_AT.x + 400, PLAYER_AT.y));
+    runUntil(s, () => e.health < HUSK.maxHealth, 60);
+    // A bomb aimed at the node itself lands on it and bursts there.
+    run(s, 1, { selectAmmo: 'bomb' });
+    run(s, 1, { load: true });
+    run(s, LOAD_TICKS);
+    run(s, 1, fireAt(PLAYER_AT.x + 60, PLAYER_AT.y));
+    runUntil(s, () => s.events.bursts.length > 0, 60);
+    expect(s.events.bursts[0]?.x).toBeCloseTo(PLAYER_AT.x + 60);
+  });
+
   it('let arrows fly over them', () => {
     const s = arena();
     placeNode(s, 'tree', PLAYER_AT.x + 60, PLAYER_AT.y);

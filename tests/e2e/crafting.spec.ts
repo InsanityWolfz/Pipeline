@@ -190,57 +190,114 @@ test('the crafting menu pauses the world and crafts on a click', async ({ page }
   expect(errors).toEqual([]);
 });
 
-test('bombs burst and burn Husks, and ley bolts hit them', async ({ page }) => {
+test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page);
   await page.evaluate(() => window.__GAME__?.step(0));
   await gatherEverything(page);
-  await page.evaluate(() => window.__helpers?.killHusk());
+  await page.evaluate(
+    ([vein]) => {
+      const h = window.__helpers;
+      if (!h) throw new Error('no helpers');
+      // Two more ley crystals for plenty of bolts, then resin for a fuse.
+      h.harvest(vein, 2);
+      h.killHusk();
+    },
+    [LEY_VEIN] as const,
+  );
   const result = await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    for (const r of ['casing', 'fuse', 'ley-shard', 'bomb', 'ley-bolt']) g.craft(r);
+    for (const r of ['casing', 'fuse', 'ley-shard', 'ley-shard', 'ley-shard', 'bomb']) g.craft(r);
+    for (let i = 0; i < 5; i++) g.craft('ley-bolt');
+    let s = g.getState();
+    const nearest = () => {
+      const p = s.player;
+      return [...s.enemies].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+    };
+    const reload = () => {
+      s = g.step(1, { load: true });
+      for (let t = 0; t < 120 && s.tube.loading; t++) s = g.step(1);
+    };
 
-    /** Fires the selected ammo at the nearest Husk for up to `ticks`, reloading when empty. */
-    const fireAtPack = (ammo: string, ticks: number) => {
-      let s = g.step(1, { selectAmmo: ammo });
-      let burnt = false;
-      let bursts = 0;
-      let boltHits = 0;
-      for (let t = 0; t < ticks; t++) {
-        const p = s.player;
-        const target = [...s.enemies].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
-        if (!target) break;
-        const dist = Math.hypot(target.x - p.x, target.y - p.y);
-        const empty = s.tube.loaded === 0;
-        s = g.step(1, {
-          moveX: dist > 150 ? (target.x > p.x ? 1 : -1) : dist < 80 ? (target.x > p.x ? -1 : 1) : 0,
-          moveY: dist > 150 ? (target.y > p.y ? 1 : -1) : 0,
-          load: empty && !s.tube.loading,
-          fire: !empty && dist <= 150,
-          aimX: target.x,
-          aimY: target.y,
-        });
-        burnt ||= s.enemies.some((e) => e.burnTicks > 0);
-        bursts += s.events.bursts.length;
-        for (const a of s.arrows) if (a.ammoId === 'ley-bolt') boltHits = Math.max(boltHits, a.hitIds.length);
+    // Pierce: back away from the two chasing Husks and fire only once the farther one
+    // stands on the line through the nearer one, so one bolt can pass through both.
+    s = g.step(1, { selectAmmo: 'ley-bolt' });
+    reload();
+    let pierced = 0;
+    for (let t = 0; t < 3000 && pierced < 2 && s.enemies.length === 2; t++) {
+      const p = s.player;
+      const [near, far] = [...s.enemies].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y));
+      if (!near || !far) break;
+      const nx = near.x - p.x;
+      const ny = near.y - p.y;
+      const len = Math.hypot(nx, ny);
+      // How far the farther Husk's feet are off the bolt's line, px.
+      const off = Math.abs((far.x - p.x) * ny - (far.y - p.y) * nx) / len;
+      const lined = off < 4 && len < 220 && s.arrows.length === 0;
+      if (s.tube.loaded === 0 && !s.tube.loading) reload();
+      s = g.step(1, {
+        moveX: !lined && len < 120 ? (nx > 0 ? -1 : 1) : 0,
+        moveY: !lined && len < 120 ? (ny > 0 ? -1 : 1) : 0,
+        fire: lined && s.tube.loaded > 0,
+        aimX: near.x,
+        aimY: near.y,
+      });
+      // Follow each bolt to the end of its flight, even if it kills the nearer Husk.
+      for (let w = 0; w < 90 && s.arrows.length > 0; w++) {
+        for (const arrow of s.arrows) pierced = Math.max(pierced, arrow.hitIds.length);
+        s = g.step(1);
       }
-      return { burnt, bursts, boltHits, s };
-    };
-    // Bolts first: the bombs and their burns can finish off the pack.
-    const bolts = fireAtPack('ley-bolt', 400);
-    const bombs = fireAtPack('bomb', 400);
-    return {
-      burnt: bombs.burnt,
-      bursts: bombs.bursts,
-      boltHits: bolts.boltHits,
-      bombsLeft: bombs.s.inventory.bomb ?? 0,
-      ammo: bombs.s.tube.ammo,
-    };
+    }
+
+    // Burn kill: bring the nearest Husk to 16–27 health with arrows, then bomb it and keep away.
+    s = g.step(1, { selectAmmo: 'arrow' });
+    reload();
+    const target = nearest();
+    if (!target) throw new Error(`no Husk left; pierced ${pierced}, tick ${s.tick}`);
+    const id = target.id;
+    const health = () => s.enemies.find((e) => e.id === id)?.health ?? 0;
+    for (let t = 0; t < 600 && health() > 27; t++) {
+      const e = s.enemies.find((en) => en.id === id);
+      if (!e) break;
+      if (s.tube.loaded === 0) reload();
+      // One arrow at a time, so the health steps down by 10s.
+      const before = health();
+      s = g.step(1, { fire: true, aimX: e.x, aimY: e.y });
+      for (let w = 0; w < 30 && health() === before && s.arrows.length > 0; w++) s = g.step(1);
+    }
+    const beforeBomb = health();
+    s = g.step(1, { selectAmmo: 'bomb' });
+    reload();
+    let bursts = 0;
+    let lastDamage = 0;
+    let died = false;
+    for (let t = 0; t < 900 && !died; t++) {
+      const e = s.enemies.find((en) => en.id === id);
+      if (!e) break;
+      const p = s.player;
+      const dist = Math.hypot(e.x - p.x, e.y - p.y);
+      const throwNow = bursts === 0 && s.bombs.length === 0 && dist < 70;
+      s = g.step(1, {
+        // Close in to throw, then back off until the burn finishes it.
+        moveX: throwNow ? 0 : bursts === 0 && dist >= 70 ? (e.x > p.x ? 1 : -1) : e.x > p.x ? -1 : 1,
+        moveY: throwNow ? 0 : bursts === 0 && dist >= 70 ? (e.y > p.y ? 1 : -1) : e.y > p.y ? -1 : 1,
+        fire: throwNow,
+        aimX: e.x,
+        aimY: e.y,
+      });
+      bursts += s.events.bursts.length;
+      for (const h of s.events.hits) if (h.target === 'enemy' && h.id === id) lastDamage = h.damage;
+      died = s.events.deaths.some((d) => d.id === id);
+    }
+    return { pierced, beforeBomb, bursts, died, lastDamage, health: s.player.health };
   });
-  expect(result.bursts).toBe(2);
-  expect(result.burnt).toBe(true);
-  expect(result.boltHits).toBeGreaterThanOrEqual(1);
-  expect(result.ammo).toBe('bomb');
+  expect(result.pierced).toBe(2);
+  expect(result.beforeBomb).toBeGreaterThanOrEqual(16);
+  expect(result.beforeBomb).toBeLessThanOrEqual(27);
+  expect(result.bursts).toBe(1);
+  expect(result.died).toBe(true);
+  // The killing blow was a burn tick, not the burst.
+  expect(result.lastDamage).toBe(3);
   expect(errors).toEqual([]);
 });

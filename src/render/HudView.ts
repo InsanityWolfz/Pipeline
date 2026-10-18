@@ -3,7 +3,7 @@ import { ATLAS_KEY, DEPTHS, HUD_HEALTH_LAYOUT, HUD_MATERIALS_LAYOUT, HUD_SLOT_LA
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { itemDef, ITEMS } from '../data/items';
 import { MAX_HEALTH } from '../data/player';
-import { LOAD_TICKS, TUBE_CAPACITY } from '../data/tube';
+import { LOAD_TICKS, STARTING_AMMO, TUBE_CAPACITY } from '../data/tube';
 import type { Inventory } from '../sim/inventory';
 import { count } from '../sim/inventory';
 import type { PlayerState } from '../sim/player';
@@ -45,7 +45,8 @@ export class HudView {
     const top = VIEW_HEIGHT - this.slot.height - HUD_SLOT_LAYOUT.margin;
     this.slot.setPosition(left, top);
     const { icon, loaded, carried } = HUD_SLOT_LAYOUT;
-    this.icon = fixed(scene.add.image(left + icon.x, top + icon.y, ATLAS_KEY, SPRITES.iconArrow).setOrigin(0));
+    const startIcon = itemDef(slotItem({ ammoId: STARTING_AMMO })).icon;
+    this.icon = fixed(scene.add.image(left + icon.x, top + icon.y, ATLAS_KEY, startIcon).setOrigin(0));
     this.loaded = new GlyphLine(scene, left + loaded.x, top + loaded.y);
     this.carried = new GlyphLine(scene, left + carried.x, top + carried.y);
     this.loadBar = fixed(scene.add.graphics({ x: left, y: top }));

@@ -24,8 +24,8 @@ export function overlapsRect(cx: number, cy: number, box: Box, r: Rect): boolean
   return Math.abs(cx - r.x) < (box.w + r.w) / 2 && Math.abs(cy - r.y) < (box.h + r.h) / 2;
 }
 
-/** True if a box centred on (cx, cy) overlaps a solid tile or an obstacle. Touching an edge is not overlap. */
-export function boxHitsSolid(room: Room, cx: number, cy: number, box: Box, obstacles: readonly Rect[] = []): boolean {
+/** True if a box centred on (cx, cy) overlaps a solid tile. Touching an edge is not overlap. */
+export function boxHitsSolid(room: Room, cx: number, cy: number, box: Box): boolean {
   const x0 = Math.floor((cx - box.w / 2) / TILE_SIZE);
   const x1 = Math.ceil((cx + box.w / 2) / TILE_SIZE) - 1;
   const y0 = Math.floor((cy - box.h / 2) / TILE_SIZE);
@@ -33,7 +33,7 @@ export function boxHitsSolid(room: Room, cx: number, cy: number, box: Box, obsta
   for (let ty = y0; ty <= y1; ty++) {
     for (let tx = x0; tx <= x1; tx++) if (isSolid(room, tx, ty)) return true;
   }
-  return obstacles.some((r) => overlapsRect(cx, cy, box, r));
+  return false;
 }
 
 /**

@@ -1,7 +1,7 @@
 import { nodeDef } from '../data/nodes';
 import type { Room } from '../data/rooms';
 import type { Rect } from './collision';
-import { tileCentre } from './state';
+import { tileCentre } from './tiles';
 
 // Gathering nodes as plain data: uses left and the regrow timer. Harvesting is in harvest.ts.
 

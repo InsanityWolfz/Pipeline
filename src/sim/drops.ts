@@ -2,7 +2,7 @@ import { DROP_SCATTER, DROP_SCATTER_TRIES, type DropTable, type EnemyDef } from 
 import { FEET_BOX, PICKUP_RADIUS } from '../data/player';
 import { TILE_SIZE } from '../data/config';
 import type { Room } from '../data/rooms';
-import { isSolid, type Rect } from './collision';
+import { isSolid, overlapsRect, type Rect } from './collision';
 import { nextFloat, nextInt, type RngState } from './rng';
 import { nodeRects } from './nodes';
 import { roomOf, type SimState } from './state';
@@ -30,8 +30,8 @@ export function rollDrops(table: DropTable, rng: RngState): string[] {
   return items;
 }
 
-/** True if a point is strictly inside a rect. */
-const inRect = (px: number, py: number, r: Rect): boolean => Math.abs(px - r.x) < r.w / 2 && Math.abs(py - r.y) < r.h / 2;
+/** A point, as a box, for overlap tests: strictly inside a rect overlaps it. */
+const POINT = { w: 0, h: 0 } as const;
 
 /**
  * A random clear spot within DROP_SCATTER of (x, y), outside solid tiles and
@@ -50,7 +50,7 @@ export function scatterPoint(
     const px = x + Math.cos(angle) * r;
     const py = y + Math.sin(angle) * r;
     if (isSolid(room, Math.floor(px / TILE_SIZE), Math.floor(py / TILE_SIZE))) continue;
-    if (obstacles.some((r) => inRect(px, py, r))) continue;
+    if (obstacles.some((r) => overlapsRect(px, py, POINT, r))) continue;
     return { x: px, y: py };
   }
   return { x, y };

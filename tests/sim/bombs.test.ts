@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { lobAmmo } from '../../src/data/ammo';
 import { TICK_RATE } from '../../src/data/config';
 import { MUZZLE_OFFSET } from '../../src/data/tube';
+import { stepBombs, throwBomb } from '../../src/sim/bombs';
 import type { EnemyState } from '../../src/sim/enemies';
 import { arena, fireAt, HUSK, loadFull, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
@@ -104,6 +105,16 @@ describe('bombs', () => {
     expect(inside.flash).toBe(HUSK.hitFlashTicks);
     expect(inside.knockTicks).toBe(0);
     expect(outside.health).toBe(HUSK.maxHealth);
+  });
+
+  it('aggro an idle Husk they burst on', () => {
+    // Bombs alone, without the enemy step, so the Husk can't aggro from being on screen.
+    const s = arena();
+    const e = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
+    throwBomb(s, 'bomb', s.player, s.player, e, [1, 0]);
+    for (let t = 0; t < 60 && s.bombs.length > 0; t++) stepBombs(s);
+    expect(s.events.bursts).toHaveLength(1);
+    expect(e.mode).toBe('chase');
   });
 
   it('never hurt the player', () => {

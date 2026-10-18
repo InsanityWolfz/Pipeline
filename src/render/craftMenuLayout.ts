@@ -1,4 +1,4 @@
-import { CRAFT_MENU_LAYOUT } from '../data/assets';
+import { CRAFT_MENU_LAYOUT } from '../data/hudLayout';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { CRAFT_GROUPS } from '../data/recipes';
 

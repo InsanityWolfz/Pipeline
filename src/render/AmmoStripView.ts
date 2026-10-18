@@ -1,5 +1,6 @@
 import type { GameObjects, Scene } from 'phaser';
-import { AMMO_STRIP_LAYOUT, ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
+import { ATLAS_KEY, DEPTHS, SPRITES } from '../data/assets';
+import { AMMO_STRIP_LAYOUT } from '../data/hudLayout';
 import { ammoDef } from '../data/ammo';
 import { itemDef } from '../data/items';
 import { SLOT_AMMOS } from '../data/tube';

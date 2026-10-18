@@ -51,9 +51,4 @@ export class GlyphLine {
         .setAlpha(this.alpha),
     );
   }
-
-  destroy(): void {
-    for (const g of this.glyphs) g.destroy();
-    this.glyphs = [];
-  }
 }

@@ -139,12 +139,24 @@ describe('ley bolts', () => {
     const second = placeHusk(s, PLAYER_AT.x + 140, PLAYER_AT.y);
     run(s, 1, fireAt(PLAYER_AT.x + 1000, PLAYER_AT.y));
     const bolt = s.arrows[0];
-    runUntil(s, () => s.arrows.length === 0, 100);
+    // On the tick each Husk is hit: the arrow's knockback and flash, and aggro.
+    const onHit: Record<number, { knockTicks: number; flash: number; mode: string }> = {};
+    runUntil(
+      s,
+      () => {
+        for (const h of s.events.hits) {
+          const e = s.enemies.find((en) => h.target === 'enemy' && en.id === h.id);
+          if (e) onHit[e.id] = { knockTicks: e.knockTicks, flash: e.flash, mode: e.mode };
+        }
+        return s.arrows.length === 0;
+      },
+      100,
+    );
     expect(first.health).toBe(HUSK.maxHealth - 14);
     expect(second.health).toBe(HUSK.maxHealth - 14);
     expect(bolt?.hitIds).toEqual([first.id, second.id]);
-    expect(first.mode).toBe('chase');
-    expect(first.knockTicks + second.knockTicks).toBeGreaterThanOrEqual(0);
+    const struck = { knockTicks: HUSK.hitKnockTicks, flash: HUSK.hitFlashTicks, mode: 'chase' };
+    expect(onHit).toEqual({ [first.id]: struck, [second.id]: struck });
   });
 
   it('never hits the same Husk twice, even knocked back along its flight', () => {
@@ -162,6 +174,23 @@ describe('ley bolts', () => {
     );
     expect(hits).toEqual([14]);
     expect(e.health).toBe(HUSK.maxHealth - 14);
+  });
+
+  it('stop at a wall', () => {
+    const s = bolted();
+    // The ruin hall's left wall is tile column 0; fire at it from 3 tiles away.
+    movePlayer(s, 3.5 * 32, 14.5 * 32);
+    run(s, 1, fireAt(0, 14.5 * 32));
+    let lastX = s.player.x;
+    runUntil(
+      s,
+      () => {
+        lastX = s.arrows[0]?.x ?? lastX;
+        return s.arrows.length === 0;
+      },
+      100,
+    );
+    expect(lastX).toBeGreaterThanOrEqual(32 - 5);
   });
 
   it('stop at a ruin block', () => {
