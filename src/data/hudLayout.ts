@@ -57,7 +57,11 @@ export const BUILD_BAR_LAYOUT = {
 /** The ghost of the piece to place: palette tints for where it can and can't go, and its alpha. */
 export const GHOST = { okTint: 'ley-cyan', badTint: 'ember', alpha: 0.6 } as const;
 
-/** The hopper picker: a column of held items in craft rows, centred on screen. Px on screen, then per row. */
+/**
+ * The hopper menu: a column of craft rows, centred on screen. A take-out row shows
+ * the hopper's icon, then the item and the hopper's count; a put-in row shows the
+ * item and how many are held. Px on screen, then per row.
+ */
 export const PICKER_LAYOUT = {
   /** The panel behind the rows: padding round them and palette ids. */
   pad: 4,
@@ -68,6 +72,8 @@ export const PICKER_LAYOUT = {
   rowGap: 1,
   icon: { x: 4, y: 2 },
   count: { x: 24, y: 8 },
+  /** How far a take-out row's item icon and count shift right, past the hopper icon. */
+  takeShift: 20,
 } as const;
 
 /** The hover readout over a machine: a dark box of icon + count lines. Px from its top-left. */

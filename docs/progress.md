@@ -11,7 +11,7 @@ Newest entry first.
 
 Shaun approved the revised sprites in chat. Verify: the qa agent's screenshots pass every criterion; fixed the build-bar click race, readout clipping, the crate count position and the picker panel. Review: fixed all 3 blocking issues (3×1 front side refusing items, gaps in fast conduit drags, the door fade constant moved to data) and most suggestions. Verify rerun green: 287 unit tests and 21 e2e tests.
 Playtest 1: Shaun's line didn't run. The pieces faced down into empty tiles while the conduits ran up, which a sim test confirmed. Build mode now shows a facing arrow on every piece and on the ghost.
-Then: gold input arrows on every side that takes items (crates: all four, hoppers: none), crates take from every side as specced, and backlog 013 (conduit corners) added at Shaun's request. 291 unit tests and 21 e2e tests pass.
+Then: gold input arrows on every side that takes items (crates: all four, hoppers: none), crates take from every side as specced, and backlog 013 (conduit corners) added at Shaun's request. Then the hopper menu: E on a filled hopper offers to take it out or put more in (`withdraw` command). Spec lines updated as playtest changes. 295 unit tests and 21 e2e tests pass.
 **Next:** Shaun approves the arrow sprites and replays the preview, then `/wrapup`.
 **Notes:** see the 006 entry in decisions.md. The prettier slip is logged there too: don't run formatters the repo doesn't use.
 

@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { FEET_BOX } from '../../src/data/player';
 import { LOAD_TICKS } from '../../src/data/tube';
-import { buildBarCells, heldItems, pickerRows } from '../../src/render/foundryLayout';
+import { buildBarCells, pickerEntries, pickerRows } from '../../src/render/foundryLayout';
 import type { SimSummary } from '../../src/sim/summary';
 import { boot, watchErrors } from './helpers';
 
@@ -183,7 +183,7 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
   // E on the empty hopper opens the picker; clicking ley crystal fills it.
   const below = centre(8, 7);
   await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [below.x, below.y] as const);
-  const rows = pickerRows(heldItems((await state(page)).inventory));
+  const rows = pickerRows(pickerEntries({ item: null, count: 0 }, (await state(page)).inventory));
   const crystal = rows.find((r) => r.itemId === 'ley-crystal');
   if (!crystal) throw new Error('no ley crystal row');
   const p = await screenPoint(page, crystal.x + 40, crystal.y + crystal.h / 2);
@@ -201,6 +201,25 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
   await page.waitForTimeout(50);
   const filled = await step(page, 1);
   expect(pieceAt(filled, 8, 6)).toMatchObject({ kind: 'hopper', item: 'ley-crystal', count: 2 });
+
+  // E on the filled hopper offers to take it back out: the top row does it.
+  await page.keyboard.press('e');
+  await page.waitForTimeout(100);
+  const take = pickerRows(pickerEntries({ item: 'ley-crystal', count: 2 }, filled.inventory))[0];
+  if (take?.action !== 'take') throw new Error('no take-out row');
+  const t = await screenPoint(page, take.x + 40, take.y + take.h / 2);
+  await page.mouse.click(t.x, t.y);
+  await page.waitForTimeout(50);
+  const emptied = await step(page, 1);
+  expect(pieceAt(emptied, 8, 6)).toMatchObject({ kind: 'hopper', item: null, count: 0 });
+  expect(emptied.inventory['ley-crystal']).toBe(2);
+
+  // And back in again.
+  await page.keyboard.press('e');
+  await page.waitForTimeout(100);
+  await page.mouse.click(p.x, p.y);
+  await page.waitForTimeout(50);
+  expect(pieceAt(await step(page, 1), 8, 6)).toMatchObject({ kind: 'hopper', item: 'ley-crystal', count: 2 });
 
   const ran = await step(page, 900);
   const crate = pieceAt(ran, 12, 6);

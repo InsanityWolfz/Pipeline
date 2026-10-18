@@ -33,6 +33,9 @@ export interface BuildInput {
 
 type BuildAction = Pick<Command, 'place' | 'pickUp'>;
 
+/** The commands that come from build mode and the hopper menu rather than held keys. */
+export type UiCommand = Pick<Command, 'toggleBuild' | 'place' | 'pickUp' | 'deposit' | 'withdraw'>;
+
 // Turns WASD, Space, R, E, B, 1–3 and the mouse into sim commands, and C and Esc
 // into menu toggles for the scene. Presses are latched from the keys' down
 // events until consumed, so a tap shorter than a frame isn't lost, a press on a
@@ -54,6 +57,7 @@ export class Controls {
   private buildPending = false;
   private wheelPending = 0;
   private depositPending: Command['deposit'] = null;
+  private withdrawPending: Command['withdraw'] = null;
   private readonly queue: BuildAction[] = [];
   private dragTile: Tile | null = null;
   private build: BuildInput = {
@@ -195,9 +199,14 @@ export class Controls {
     this.buildPending = true;
   }
 
-  /** Fills a hopper on the next tick (the picker's choice). */
+  /** Fills a hopper on the next tick (the hopper menu's choice). */
   requestDeposit(id: number, itemId: string): void {
     this.depositPending = { id, itemId };
+  }
+
+  /** Empties a hopper into the inventory on the next tick (the hopper menu's choice). */
+  requestWithdraw(id: number): void {
+    this.withdrawPending = { id };
   }
 
   /** Drops game presses and queued build actions made while the menu is open, so none fire when it closes. */
@@ -213,22 +222,25 @@ export class Controls {
     this.selectPending = null;
     this.buildPending = false;
     this.depositPending = null;
+    this.withdrawPending = null;
   }
 
   /**
    * The build toggle, one queued place or pick-up, and a picker deposit, consumed.
    * The test hook merges these into its own commands, so mouse building works under it.
    */
-  takeUiCommand(): Pick<Command, 'toggleBuild' | 'place' | 'pickUp' | 'deposit'> {
+  takeUiCommand(): UiCommand {
     const action = this.queue.shift();
     const ui = {
       toggleBuild: this.buildPending,
       place: action?.place ?? null,
       pickUp: action?.pickUp ?? null,
       deposit: this.depositPending,
+      withdraw: this.withdrawPending,
     };
     this.buildPending = false;
     this.depositPending = null;
+    this.withdrawPending = null;
     return ui;
   }
 

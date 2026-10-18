@@ -6,9 +6,9 @@ import { count } from './inventory';
 import { pieceRect, type CrateState, type HopperState, type PieceState } from './pieces';
 import type { SimState } from './state';
 
-// Using hoppers and crates with E: fill a hopper from the inventory, or empty a
-// crate into it. An empty hopper needs an item picked first (render's picker),
-// which arrives as a deposit command.
+// Using hoppers and crates: E empties a crate into the inventory. E on a hopper
+// opens render's menu, whose choices arrive as deposit (put all of a held item
+// in) and withdraw (take everything out) commands.
 
 type Usable = HopperState | CrateState;
 
@@ -54,6 +54,17 @@ export function deposit(state: SimState, id: number, itemId: string): void {
   state.events.deposits.push({ id, itemId, count: n });
 }
 
+/** Moves everything in a hopper in reach back into the inventory; the hopper forgets its type. */
+export function withdraw(state: SimState, id: number): void {
+  const h = state.foundry.pieces.find((p) => p.id === id);
+  if (h?.kind !== 'hopper' || !inReach(state, h) || !h.item || h.count === 0) return;
+  state.inventory[h.item] = count(state.inventory, h.item) + h.count;
+  state.events.withdraws.push({ id, itemId: h.item, count: h.count });
+  h.item = null;
+  h.count = 0;
+  h.timer = 0;
+}
+
 function takeCrate(state: SimState, c: CrateState): void {
   const items = c.contents;
   if (Object.keys(items).length === 0) return;
@@ -62,11 +73,11 @@ function takeCrate(state: SimState, c: CrateState): void {
   state.events.crateTakes.push({ id: c.id, items });
 }
 
-/** Deposits, then E on the nearest hopper or crate. E on an empty hopper does nothing here. */
+/** Withdraws, deposits, then E on the nearest crate. E on a hopper does nothing here; render opens its menu. */
 export function stepFoundryUse(state: SimState, cmd: Command): void {
+  if (cmd.withdraw) withdraw(state, cmd.withdraw.id);
   if (cmd.deposit) deposit(state, cmd.deposit.id, cmd.deposit.itemId);
   if (!cmd.interact) return;
   const target = usableInReach(state);
   if (target?.kind === 'crate') takeCrate(state, target);
-  else if (target?.item) deposit(state, target.id, target.item);
 }

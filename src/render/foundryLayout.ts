@@ -30,13 +30,34 @@ export function buildBarCells(pieces: readonly string[]): (ScreenRect & { pieceI
   return pieces.map((pieceId, i) => ({ pieceId, x: left + i * L.cellStep, y, w: L.cellWidth, h: L.cellHeight }));
 }
 
-/** One row per item in `items`, a centred column. */
-export function pickerRows(items: readonly string[]): (ScreenRect & { itemId: string })[] {
+/** A hopper menu row: take everything in the hopper out, or put all of a held item in. */
+export interface PickerEntry {
+  action: 'take' | 'put';
+  itemId: string;
+}
+
+/**
+ * The hopper menu's rows. A filled hopper offers to take its contents out, and to
+ * put in more of the same if any is held. An empty hopper offers every held item.
+ */
+export function pickerEntries(
+  hopper: { item: string | null; count: number },
+  inventory: Readonly<Record<string, number>>,
+): PickerEntry[] {
+  if (hopper.item && hopper.count > 0) {
+    const take: PickerEntry = { action: 'take', itemId: hopper.item };
+    return (inventory[hopper.item] ?? 0) > 0 ? [take, { action: 'put', itemId: hopper.item }] : [take];
+  }
+  return heldItems(inventory).map((itemId) => ({ action: 'put', itemId }));
+}
+
+/** One row per entry, a centred column. */
+export function pickerRows(entries: readonly PickerEntry[]): (ScreenRect & PickerEntry)[] {
   const L = PICKER_LAYOUT;
   const step = L.rowHeight + L.rowGap;
-  const top = Math.round((VIEW_HEIGHT - items.length * step) / 2);
+  const top = Math.round((VIEW_HEIGHT - entries.length * step) / 2);
   const x = Math.round((VIEW_WIDTH - L.rowWidth) / 2);
-  return items.map((itemId, i) => ({ itemId, x, y: top + i * step, w: L.rowWidth, h: L.rowHeight }));
+  return entries.map((e, i) => ({ ...e, x, y: top + i * step, w: L.rowWidth, h: L.rowHeight }));
 }
 
 /** The items the player holds, in ITEMS order: what the hopper picker lists. */

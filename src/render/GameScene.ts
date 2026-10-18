@@ -18,7 +18,7 @@ import { stepSim } from '../sim/step';
 import { ArrowView } from './ArrowView';
 import { BombView } from './BombView';
 import { BuildView } from './BuildView';
-import { Controls } from './controls';
+import { Controls, type UiCommand } from './controls';
 import { CraftMenuView } from './CraftMenuView';
 import { EffectsView } from './EffectsView';
 import { EnemyView } from './EnemyView';
@@ -131,24 +131,24 @@ export class GameScene extends Scene {
     if (this.menuOpen) return;
     const steps = controls.takeWheel();
     if (steps !== 0 && this.sim.building) this.buildView?.step(steps);
-    // E on an empty hopper asks which item to put in; the sim does nothing with it.
+    // E on a hopper opens its menu; the sim does nothing with it.
     if (controls.takeInteractPress()) {
       const target = usableInReach(this.sim);
-      if (target?.kind === 'hopper' && target.item === null) this.picker?.open(target.id);
+      if (target?.kind === 'hopper') this.picker?.open(target.id);
     }
     const open = this.picker?.hopperId;
     if (open !== null && open !== undefined && usableInReach(this.sim)?.id !== open) this.picker?.close();
   }
 
-  /** A click on the build bar picks a piece; on the picker, it fills the hopper with that item. */
+  /** A click on the build bar picks a piece; on the hopper menu, it takes out or puts in. */
   private clickUi(controls: Controls, x: number, y: number): void {
     if (this.menuOpen || this.buildView?.click(x, y)) return;
-    const itemId = this.picker?.itemAt(x, y);
+    const entry = this.picker?.entryAt(x, y);
     const hopper = this.picker?.hopperId;
-    if (itemId && hopper !== null && hopper !== undefined) {
-      controls.requestDeposit(hopper, itemId);
-      this.picker?.close();
-    }
+    if (!entry || hopper === null || hopper === undefined) return;
+    if (entry.action === 'take') controls.requestWithdraw(hopper);
+    else controls.requestDeposit(hopper, entry.itemId);
+    this.picker?.close();
   }
 
   get menuOpen(): boolean {
@@ -168,8 +168,10 @@ export class GameScene extends Scene {
   }
 
   /** Build actions made with the mouse and keys since the last tick, for the test hook to merge into its steps. */
-  takeUiCommand(): Pick<Command, 'toggleBuild' | 'place' | 'pickUp' | 'deposit'> {
-    return this.controls?.takeUiCommand() ?? { toggleBuild: false, place: null, pickUp: null, deposit: null };
+  takeUiCommand(): UiCommand {
+    return (
+      this.controls?.takeUiCommand() ?? { toggleBuild: false, place: null, pickUp: null, deposit: null, withdraw: null }
+    );
   }
 
   /** Steps the sim one tick and keeps its events for the next draw. The test hook steps through here too. */
@@ -233,7 +235,8 @@ export class GameScene extends Scene {
     this.bombView?.update(inRoom(sim.bombs, shown));
     this.hud?.update(sim.tube, sim.inventory, sim.player);
     this.menu?.update(sim.inventory);
-    this.picker?.update(sim.inventory);
+    const hopper = sim.foundry.pieces.find((p) => p.id === this.picker?.hopperId);
+    this.picker?.update(sim.inventory, hopper?.kind === 'hopper' ? hopper : undefined);
     const controls = this.controls;
     const cursor = controls && inFoundry && controls.overWorld() ? controls.cursorTile() : null;
     this.buildView?.update(sim.building, unlockedPieces(sim), cursor, controls?.facing ?? 'right', (...a) =>

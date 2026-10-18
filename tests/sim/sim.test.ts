@@ -220,6 +220,7 @@ describe('sim state', () => {
       pickUps: [],
       deposits: [],
       crateTakes: [],
+      withdraws: [],
       ko: false,
     });
   });

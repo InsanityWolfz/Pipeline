@@ -29,6 +29,8 @@ export interface Command {
   pickUp: { tx: number; ty: number } | null;
   /** Put all of a held item into an empty hopper (by piece id) this tick (an edge), or null. */
   deposit: { id: number; itemId: string } | null;
+  /** Take everything out of a hopper (by piece id) this tick (an edge), or null. */
+  withdraw: { id: number } | null;
 }
 
 /** No input. Its aim is the world origin, so callers that care about aim must set one. */
@@ -46,4 +48,5 @@ export const NO_COMMAND: Readonly<Command> = {
   place: null,
   pickUp: null,
   deposit: null,
+  withdraw: null,
 };

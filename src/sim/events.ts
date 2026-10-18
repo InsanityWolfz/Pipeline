@@ -57,6 +57,8 @@ export interface SimEvents {
   deposits: { id: number; itemId: string; count: number }[];
   /** A crate was emptied into the inventory. */
   crateTakes: { id: number; items: Record<string, number> }[];
+  /** A hopper was emptied back into the inventory. */
+  withdraws: { id: number; itemId: string; count: number }[];
   /** The player was KO'd and the room reset this tick. */
   ko: boolean;
 }
@@ -77,6 +79,7 @@ export function createEvents(): SimEvents {
     pickUps: [],
     deposits: [],
     crateTakes: [],
+    withdraws: [],
     ko: false,
   };
 }
@@ -96,5 +99,6 @@ export function clearEvents(events: SimEvents): void {
   events.pickUps.length = 0;
   events.deposits.length = 0;
   events.crateTakes.length = 0;
+  events.withdraws.length = 0;
   events.ko = false;
 }
