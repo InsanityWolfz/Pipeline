@@ -61,3 +61,12 @@ When the player's health hits 0, a short death animation plays and they wake in 
 
 ## Open questions
 - None. Every number is a starting value.
+
+## Build notes
+These choices were made in the overnight build, not by the spec. They're logged for Shaun to accept or overturn in the morning report.
+- **Banked armor is a count.** Unidentified armor is a counted item since 010, so the banked snapshot is item counts only. Its "armor ids" become the `unidentified-armor` count.
+- **One death view.** The player death is one 4-frame animation (buckle, fall, dissolve into motes), not 4 frames per view. Enemy deaths are single-view too. The remains fade over the last third of the 60 ticks.
+- **Starts are banked.** A KO no longer refills the start inventory, `?playtest` included. The start counts as banked.
+- **Wake text** shows once the KO fade has played, then holds for 3 s.
+- **The bank swirl** waits out the door fade, so it plays in the foundry.
+

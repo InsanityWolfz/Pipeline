@@ -1,8 +1,7 @@
-import { DYING_TICKS, HIT_INVULN_TICKS } from '../data/player';
-import { FOUNDRY_ROOM } from '../data/rooms';
+import { DYING_TICKS, HIT_INVULN_TICKS, RESPAWN_ROOM } from '../data/player';
 import { afterArmor } from './armor';
 import { startKnock } from './knockback';
-import { isInvulnerable } from './movement';
+import { endRoll, isInvulnerable } from './movement';
 import { resetWorld, type SimState } from './state';
 import { cancelClaim } from './claims';
 import { cancelHarvest } from './harvest';
@@ -52,11 +51,10 @@ export function checkKo(state: SimState): void {
   p.dying = DYING_TICKS;
   p.vx = 0;
   p.vy = 0;
-  p.rollTick = 0;
+  endRoll(p);
   p.knockTicks = 0;
   cancelHarvest(state);
   cancelClaim(state);
-  state.events.dies = true;
 }
 
 function wake(state: SimState): void {
@@ -74,13 +72,5 @@ function wake(state: SimState): void {
   state.events.lost = lost;
 }
 
-/** Banks what the player carries: on walking into the foundry, and on a pylon deposit. */
-export function stepBanking(state: SimState): void {
-  const home = state.events.roomChanges.some((c) => c.to === FOUNDRY_ROOM);
-  if (!home && state.events.stashDeposits.length === 0) return;
-  state.banked = { ...state.inventory };
-  state.events.banks.push({ ...state.inventory });
-}
 
-/** Where the player wakes after dying. */
-const RESPAWN_ROOM = FOUNDRY_ROOM;
+

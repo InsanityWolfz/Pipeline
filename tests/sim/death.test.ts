@@ -4,7 +4,7 @@ import { DYING_TICKS } from '../../src/data/player';
 import { FOUNDRY_ROOM, ROOMS, SHRINE_ROOM } from '../../src/data/rooms';
 import { claim } from '../../src/sim/claims';
 import { arrivalTile } from '../../src/sim/doorways';
-import type { ConduitState } from '../../src/sim/pieces';
+import type { ConduitState, HopperState } from '../../src/sim/pieces';
 import { createSim } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
@@ -27,6 +27,34 @@ describe('banking', () => {
     expect(s.events.banks).toEqual([{ arrow: 12, wood: 4 }]);
   });
 
+  it('a pylon deposit banks even when there was nothing to send', () => {
+    const s = createSim(SEED);
+    claim(s, SHRINE_ROOM);
+    s.roomId = SHRINE_ROOM;
+    const below = tileCentre({ tx: 15, ty: 9 });
+    movePlayer(s, below.x, below.y);
+    s.inventory = {};
+    stepSim(s, command({ pylon: 'deposit' }));
+    expect(s.banked).toEqual({});
+    expect(s.events.banks).toEqual([{}]);
+    // Arrows picked up afterwards were never banked: a death loses them.
+    s.inventory = { arrow: 10 };
+    die(s);
+    expect(s.inventory).toEqual({});
+  });
+
+  it('pylon travel and the waystone into the foundry bank too', () => {
+    const s = createSim(SEED);
+    claim(s, SHRINE_ROOM);
+    s.roomId = SHRINE_ROOM;
+    const below = tileCentre({ tx: 15, ty: 9 });
+    movePlayer(s, below.x, below.y);
+    s.inventory = { wood: 2 };
+    stepSim(s, command({ pylon: 'travel' }));
+    expect(s.roomId).toBe(FOUNDRY_ROOM);
+    expect(s.banked).toEqual({ wood: 2 });
+  });
+
   it('a pylon deposit banks too, leaving nothing carried', () => {
     const s = createSim(SEED);
     claim(s, SHRINE_ROOM);
@@ -46,7 +74,6 @@ describe('dying', () => {
     s.player.health = 0;
     run(s, 1);
     expect(s.player.dying).toBe(DYING_TICKS);
-    expect(s.events.dies).toBe(true);
     const x = s.player.x;
     placeHusk(s, PLAYER_AT.x + 20, PLAYER_AT.y);
     run(s, 10, { moveX: 1, fire: true, aimX: x + 100, aimY: s.player.y });
@@ -68,6 +95,21 @@ describe('dying', () => {
     expect(s.inventory).toEqual({ arrow: 10, wood: 1 });
     expect(s.events.lost).toEqual({ arrow: 4, stone: 3, [UNIDENTIFIED_ARMOR]: 1 });
     expect(s.banked).toEqual({ arrow: 10, wood: 1 });
+  });
+
+  it('items withdrawn from a hopper after banking are lost', () => {
+    const s = foundry();
+    run(s, 1);
+    s.inventory = { wood: 5 };
+    s.banked = { wood: 5 };
+    const h = put<HopperState>(s, 'hopper', 20, 12, 'down');
+    h.item = 'stone';
+    h.count = 4;
+    run(s, 1, { withdraw: { id: h.id } });
+    expect(s.inventory).toEqual({ wood: 5, stone: 4 });
+    die(s);
+    expect(s.inventory).toEqual({ wood: 5 });
+    expect(s.events.lost).toEqual({ stone: 4 });
   });
 
   it('keeps identified and worn armor, the stash, claims, the reservoir and the foundry', () => {

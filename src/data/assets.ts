@@ -213,7 +213,12 @@ export const FIRE_BURST: AnimDef = { key: 'fire-burst', frames: 4, frameRate: 14
 /** Ley light spiralling off the player as a pylon sends the haul home (009). */
 export const DEPOSIT_SWIRL: AnimDef = { key: 'deposit-swirl', frames: 4, frameRate: 10, loop: false };
 
-/** After a KO (011): how long the wake-up text holds, and where its lines sit (px from the screen's centre, line step). */
+/**
+ * After a KO (011): the wake-up text shows once the KO fade has played, holds for
+ * `holdMs`, then fades over `fadeMs`. `top` is its first line's offset from the
+ * screen's centre and `lineStep` the gap between lines, px. `title` and
+ * `lostTitle` are the words shown.
+ */
 export const WAKE_TEXT = { holdMs: 3000, fadeMs: 400, top: -24, lineStep: 9, title: 'You wake in the foundry', lostTitle: 'Lost' } as const;
 
 /** A ley burst at the tube's mouth for each projectile fired (008). */

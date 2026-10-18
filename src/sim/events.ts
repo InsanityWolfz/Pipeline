@@ -82,8 +82,6 @@ export interface SimEvents {
   equips: { id: number | null }[];
   /** A gravity stager turned to a new angle. */
   angles: { id: number; angle: number }[];
-  /** Health hit 0 this tick: the death animation starts (011). */
-  dies: boolean;
   /** What the player carried was banked (on entering the foundry or depositing). */
   banks: Record<string, number>[];
   /** On a KO, what was lost: item id to count. */
@@ -120,7 +118,6 @@ export function createEvents(): SimEvents {
     stashTakes: [],
     travels: [],
     shots: [],
-    dies: false,
     banks: [],
     lost: {},
     ko: false,
@@ -154,7 +151,6 @@ export function clearEvents(events: SimEvents): void {
   events.stashTakes.length = 0;
   events.travels.length = 0;
   events.shots.length = 0;
-  events.dies = false;
   events.banks.length = 0;
   events.lost = {};
   events.ko = false;

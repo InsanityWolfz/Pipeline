@@ -1,5 +1,5 @@
-import type { Scene } from 'phaser';
-import { DEPTHS, HUD_DIGITS, WAKE_TEXT } from '../data/assets';
+import type { Scene, Time } from 'phaser';
+import { DEPTHS, HUD_DIGITS, KO_FADE_MS, WAKE_TEXT } from '../data/assets';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { itemDef } from '../data/items';
 import { GlyphLine } from './glyphLine';
@@ -9,14 +9,19 @@ import { GlyphLine } from './glyphLine';
 export class WakeView {
   private readonly scene: Scene;
   private lines: GlyphLine[] = [];
+  private timer: Time.TimerEvent | null = null;
 
   constructor(scene: Scene) {
     this.scene = scene;
   }
 
-  /** Shows the wake-up text for a KO that lost `lost` (item id to count). */
+  /** Shows the wake-up text for a KO that lost `lost` (item id to count), once the KO's fade has played. */
   show(lost: Readonly<Record<string, number>>): void {
     this.clear();
+    this.timer = this.scene.time.delayedCall(KO_FADE_MS * 2, () => this.draw(lost));
+  }
+
+  private draw(lost: Readonly<Record<string, number>>): void {
     const items = Object.entries(lost).filter(([, n]) => n > 0);
     const text = [WAKE_TEXT.title, ...(items.length > 0 ? ['', WAKE_TEXT.lostTitle, ...items.map(([id, n]) => `${itemDef(id).name} ${n}`)] : [])];
     const cx = VIEW_WIDTH / 2;
@@ -26,7 +31,7 @@ export class WakeView {
       line.set(t);
       return line;
     });
-    this.scene.time.delayedCall(WAKE_TEXT.holdMs, () => this.fade());
+    this.timer = this.scene.time.delayedCall(WAKE_TEXT.holdMs, () => this.fade());
   }
 
   private fade(): void {
@@ -45,6 +50,8 @@ export class WakeView {
   }
 
   private clear(): void {
+    this.timer?.remove();
+    this.timer = null;
     for (const l of this.lines) l.set('');
     this.lines = [];
   }

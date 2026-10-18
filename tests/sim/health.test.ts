@@ -103,7 +103,6 @@ describe('death and the KO (011)', () => {
     const idsBefore = s.enemies.map((e) => e.id);
     run(s, SWIPE_LANDS);
     expect(s.player.dying).toBe(DYING_TICKS);
-    expect(s.events.dies).toBe(true);
     runUntilKo(s);
     expect(summarize(s).player).toMatchObject({ health: 100, ko: true, dying: 0 });
     const room = ROOMS['ruin-hall'];

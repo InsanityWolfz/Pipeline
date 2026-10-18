@@ -12,7 +12,7 @@ import {
   type PlayerAnim,
 } from '../data/assets';
 import { IDLE_SPEED, TICK_RATE } from '../data/config';
-import { FEET_BOX, HIT_INVULN_TICKS, ROLL_TICKS } from '../data/player';
+import { DYING_TICKS, FEET_BOX, HIT_INVULN_TICKS, ROLL_TICKS } from '../data/player';
 import { aimFacing } from '../sim/direction';
 import { isRolling } from '../sim/movement';
 import type { Facing, PlayerState } from '../sim/player';
@@ -24,6 +24,9 @@ import { registerAnim } from './anims';
 import { colorOf } from './color';
 
 type View = 'down' | 'up' | 'side';
+
+/** The share of a death, at its end, over which the remains fade out. */
+const DEATH_FADE_SHARE = 1 / 3;
 
 /** A multiply tint that leaves a corner's colour as drawn. */
 const UNTINTED = 0xffffff;
@@ -59,6 +62,8 @@ export class PlayerView {
     const facing = rolling ? p.facing : aimFacing(p.aimX - p.x, p.aimY - p.y, p.facing);
     this.sprite.setFlipX(facing === 'left');
 
+    // The last stretch of a death fades the remains out before waking in the foundry.
+    this.sprite.setAlpha(p.dying > 0 ? Math.min(1, p.dying / (DYING_TICKS * DEATH_FADE_SHARE)) : 1);
     if (p.dying > 0) {
       if (this.sprite.anims.currentAnim?.key !== PLAYER_ANIMS.death.key) this.sprite.play(PLAYER_ANIMS.death.key);
     } else if (rolling) {

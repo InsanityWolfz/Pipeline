@@ -1,5 +1,6 @@
 import { FEET_BOX } from '../data/player';
 import { TILE_SIZE } from '../data/config';
+import { arrived } from './banking';
 import { overlapsRect } from './collision';
 import { roomById, roomOf, type SimState } from './state';
 import { tileCentre } from './tiles';
@@ -36,6 +37,7 @@ export function stepDoorways(state: SimState): void {
     p.vy = 0;
     state.building = false;
     state.events.roomChanges.push({ from, to: d.to });
+    arrived(state, d.to);
     return;
   }
 }

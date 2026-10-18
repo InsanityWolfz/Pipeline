@@ -217,10 +217,9 @@ describe('sim state', () => {
     const lists = ['hits', 'deaths', 'pickups', 'harvests', 'crafts', 'craftFails', 'bursts', 'selects', 'roomChanges'] as const;
     const later = ['places', 'placeFails', 'pickUps', 'deposits', 'crateTakes', 'withdraws', 'attunes', 'refills', 'shots', 'banks'] as const;
     const site = ['sealed', 'claims', 'stashDeposits', 'stashTakes', 'travels', 'identifies', 'equips', 'angles'] as const;
-    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, 'dies', 'lost', 'ko'].sort());
+    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, 'lost', 'ko'].sort());
     for (const name of [...lists, ...later, ...site]) expect(summary.events[name], name).toEqual([]);
     expect(summary.events.ko).toBe(false);
-    expect(summary.events.dies).toBe(false);
     expect(summary.events.lost).toEqual({});
   });
 

@@ -5,6 +5,7 @@ import type { Command } from './input';
 import { count } from './inventory';
 import { isRolling } from './movement';
 import type { Tile } from './pieces';
+import { arrived, bank } from './banking';
 import { removePieceAt } from './placement';
 import { fixtureDef, tileRect, type FixtureState } from './fixtures';
 import { roomById, roomOf, type SimState } from './state';
@@ -66,6 +67,7 @@ export function travelTo(state: SimState, roomId: string, tile: Tile): void {
   state.harvest = null;
   state.claimHold = null;
   state.events.roomChanges.push({ from, to: roomId });
+  arrived(state, roomId);
   state.events.travels.push({ from, to: roomId });
 }
 
@@ -137,6 +139,8 @@ function usePylon(state: SimState, action: 'deposit' | 'travel'): void {
   }
   state.inventory = {};
   if (Object.keys(items).length > 0) state.events.stashDeposits.push({ items });
+  // A deposit banks what's left to carry, which is nothing, even when nothing moved.
+  bank(state);
 }
 
 /** Takes one stack (or everything, for null) out of the stash, standing at it. */

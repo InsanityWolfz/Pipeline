@@ -1,3 +1,5 @@
+import { FOUNDRY_ROOM } from './rooms';
+
 // Player movement tuning. Starting values from spec 002; tune in playtest.
 
 /** Walk top speed, px per second. */
@@ -31,6 +33,9 @@ export interface StartDef {
 }
 
 export const DEFAULT_START: StartDef = { inventory: STARTING_INVENTORY, crafted: [] };
+
+/** Where a death wakes the player (011). */
+export const RESPAWN_ROOM = FOUNDRY_ROOM;
 
 /** Ticks the death animation plays before the player wakes in the foundry (011). */
 export const DYING_TICKS = 60;

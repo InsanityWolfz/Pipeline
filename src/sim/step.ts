@@ -15,7 +15,7 @@ import { offerFromOutside, stepFoundry } from './flow';
 import { stepFoundryUse } from './foundryUse';
 import { stepHarvest } from './harvest';
 import { stepLink } from './link';
-import { checkKo, stepBanking } from './health';
+import { checkKo } from './health';
 import { stepEnemies } from './enemyAi';
 import { NO_COMMAND, type Command } from './input';
 import { stepPlayer } from './movement';
@@ -75,6 +75,5 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
     offerFromOutside(state.foundry, state.link.reservoir, state.events.refills, to, from, item),
   );
   stepPickups(state);
-  stepBanking(state);
   checkKo(state);
 }

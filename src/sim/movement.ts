@@ -68,7 +68,8 @@ function startRoll(p: PlayerState, cmd: Command): void {
   p.facing = facingOf(dx, dy, p.facing);
 }
 
-function endRoll(p: PlayerState): void {
+/** Ends a roll in progress (a death cuts one short too). */
+export function endRoll(p: PlayerState): void {
   p.rollTick = 0;
   p.cooldown = ROLL_COOLDOWN_TICKS;
   p.vx = p.rollDirX * WALK_PER_TICK;
