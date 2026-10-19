@@ -14,6 +14,8 @@ export interface TipState {
   mode: 'summary' | 'breakdown';
   name: string;
   chips: ChipId[];
+  /** Each chip as drawn, view px (to click one). */
+  chipBoxes: { id: ChipId; box: Box }[];
   lines: string[];
   box: Box;
 }
@@ -165,7 +167,7 @@ export class Legibility {
   get ui(): LegibilityUi {
     const box = this.tip.box;
     const s = this.shown;
-    const tip = s && box ? { source: s.desc.source, mode: s.mode, name: s.desc.name, chips: s.desc.chips.map((c) => c.id), lines: texts(s.mode === 'summary' ? s.desc.summary : s.desc.breakdown), box } : null;
+    const tip = s && box ? { source: s.desc.source, mode: s.mode, name: s.desc.name, chips: s.desc.chips.map((c) => c.id), chipBoxes: this.tip.placedChips.map((c) => ({ id: c.id, box: c.box })), lines: texts(s.mode === 'summary' ? s.desc.summary : s.desc.breakdown), box } : null;
     return { tip, glossary: this.glossary.state };
   }
 }
