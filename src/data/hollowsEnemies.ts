@@ -1,6 +1,6 @@
 import { TICK_RATE } from './config';
 import { REGION_2_PART } from './drops';
-import type { AttackTiming, DropTable, EnemyBase, ScreenLeashed } from './enemies';
+import type { AttackTiming, DropTable, EnemyBase, ScreenLeashed, ShieldDef } from './enemies';
 
 // Stonefall Hollows' enemies (035): each asks for a different dodge. Starting values from
 // the spec's table, tuned in playtest; ticks at 60 Hz, distances px. Their rules are in
@@ -51,8 +51,28 @@ export interface BurrowerDef extends EnemyBase, ScreenLeashed {
   };
 }
 
+/** A Shardback: a squat construct behind an armored front (034's shield rule), the Bulwark's little cousin, flanked to be hurt. */
+export interface ShardbackDef extends EnemyBase, ScreenLeashed {
+  kind: 'shardback';
+  shield: ShieldDef;
+  /**
+   * It walks at the player turning its shield; with their feet within `triggerRange` and its cooldown ready it winds
+   * up (`windupTicks`, still turning), then bashes along its shield's facing: feet within `reach` and inside the
+   * `arcDegrees` arc take `damage` and `knockback` px over `knockTicks`. The pose holds `swipeTicks`; then it recovers
+   * `recoverTicks` without turning, the window to get behind it.
+   */
+  bash: AttackTiming & {
+    triggerRange: number;
+    arcDegrees: number;
+    reach: number;
+    damage: number;
+    knockback: number;
+    knockTicks: number;
+  };
+}
+
 /** Region 2's four (035), as one union for EnemyDef. */
-export type HollowsEnemyDef = ChargerDef | BurrowerDef;
+export type HollowsEnemyDef = ChargerDef | BurrowerDef | ShardbackDef;
 
 /** The base fields they share, as the old enemies' (enemies.ts). */
 const BASE = { boss: false, hitKnockTicks: 4, hitFlashTicks: 6, leashGraceTicks: 60, homeTolerance: 4 } as const;
@@ -130,4 +150,33 @@ export const BURROWER: BurrowerDef = {
   anims: 'burrower',
 };
 
-export const HOLLOWS_ENEMIES = { charger: CHARGER, burrower: BURROWER } as const;
+export const SHARDBACK: ShardbackDef = {
+  ...BASE,
+  kind: 'shardback',
+  id: 'shardback',
+  name: 'Shardback',
+  maxHealth: 70,
+  walkSpeed: 40,
+  feetBox: { w: 22, h: 10 },
+  hurtbox: { w: 28, h: 30, offsetY: -12 },
+  hitKnockback: 2,
+  /** Three times the Bulwark's turn: a half turn in 1.5 s, slow enough to run round on foot. */
+  shield: { arcDegrees: 180, turnDegPerSec: 120 },
+  bash: {
+    triggerRange: 30,
+    arcDegrees: 100,
+    reach: 40,
+    windupTicks: 40,
+    swipeTicks: 6,
+    recoverTicks: 30,
+    // Counted from the wind-up's start.
+    cooldownTicks: 90,
+    damage: 20,
+    knockback: 40,
+    knockTicks: 6,
+  },
+  drops: HOLLOWS_DROPS,
+  anims: 'shardback',
+};
+
+export const HOLLOWS_ENEMIES = { charger: CHARGER, burrower: BURROWER, shardback: SHARDBACK } as const;

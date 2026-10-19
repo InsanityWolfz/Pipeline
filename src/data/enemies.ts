@@ -299,5 +299,7 @@ export function attackOf(def: EnemyDef): AttackTiming {
       return def.charge;
     case 'burrower':
       return def.burrow;
+    case 'shardback':
+      return def.bash;
   }
 }

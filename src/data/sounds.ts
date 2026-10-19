@@ -306,4 +306,5 @@ export const WINDUP_SOUNDS: Readonly<Record<string, SoundKey>> = {
   // 035: the Charger paws and snorts; the Burrower rumbles under the ring; the Shardback's runes flare with the Husk's cue; the Sniper's laser hums.
   charger: SOUNDS.chargerWindup,
   burrower: SOUNDS.burrowRumble,
+  shardback: SOUNDS.huskWindup,
 };
