@@ -14,7 +14,7 @@ import type { Chip, Description, TipSource } from './tipTypes';
 // comes from data; it holds no rules text of its own. Pure (no Phaser), so tests read it.
 
 export type { Seen } from './describeRound';
-export { describeRound, roundNumbers } from './describeRound';
+export { describeRound } from './describeRound';
 export { describeGear, describePiece, describeStage, describeTalent } from './describeContent';
 export { describeKeyword } from './describeGlossary';
 

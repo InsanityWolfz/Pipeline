@@ -1,3 +1,5 @@
+import { ammoDef } from '../data/ammo';
+import { TICK_RATE } from '../data/config';
 import { BLASTFLETCH } from '../data/talents';
 import { COLD } from '../data/tags';
 import { createShard, isShard, type ArrowState } from './arrows';
@@ -70,8 +72,34 @@ export function keystoneHit(state: SimState, arrow: ArrowState, e: EnemyState): 
     e.refreeze = statOf(state, 'immunity', statusEmission('freeze'), COLD.refreezeTicks);
     state.events.thaws.push({ id: e.id, x: e.x, y: e.y });
   }
-  const scale = (strike?.params.damage ?? 1) * (shatterLine?.params.damage ?? 1);
+  const scale = hitScale(strike) * hitScale(shatterLine);
   return { scale, pooled: arrow.pooled, shatter: shatterLine !== null };
+}
+
+/** A pool-strike's or shatter's × on the hit (1 without one). */
+const hitScale = (line: { params: Readonly<Record<string, number>> } | null): number => line?.params.damage ?? 1;
+
+/** A conditional hit (040's "when" lines): the rule, where it comes from, its × and the hit it deals on `damage`. */
+export interface ConditionalHit {
+  rule: 'pool-strike' | 'shatter';
+  source: string;
+  scale: number;
+  damage: number;
+}
+
+/** The keystone hits a round (never a Shard) can land, as keystoneHit scales them: through a Pool (pool-strike), on a Frozen enemy (shatter). */
+export function conditionalHits(state: Statted, ammoId: string, damage: number): ConditionalHit[] {
+  const e = roundEmission(ammoId);
+  return (['pool-strike', 'shatter'] as const).flatMap((rule) => ruleLines(state, rule, e).map((r) => ({ rule, source: r.source, scale: hitScale(r.line), damage: damage * hitScale(r.line) })));
+}
+
+/** A round's fire rate with every ramp in play at its full height (Overpressure held to the top), through resolveStat; null without a ramp. */
+export function rampedFireRate(state: Statted, ammoId: string): { rate: number; ramp: number; source: string; mul: number } | null {
+  const line = ruleLines(state, 'ramp', roundEmission(ammoId))[0];
+  if (!line) return null;
+  const ramp = line.line.params.ramp ?? 0;
+  const full = resolveStat({ ...state, tube: { overpressure: ramp } }, 'fire-rate', roundEmission(ammoId), TICK_RATE / ammoDef(ammoId).fireTicks);
+  return { rate: full.final, ramp, source: line.source, mul: full.muls.find((m) => m.source === line.source)?.value ?? 1 };
 }
 
 /**

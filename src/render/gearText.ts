@@ -55,9 +55,19 @@ const named = (id: StatId): string => STATS[id].label.charAt(0).toUpperCase() + 
  * regen; move speed, roll cooldown in seconds and roll distance as a share of the bare roll (no px in a summary, Q14).
  */
 export function totalsLines(st: PlayerStats): [string, string] {
-  const sep = W.sep;
+  const parts = totalsParts(st).map((p) => `${p.label} ${p.value}`);
+  return [parts.slice(0, 3).join(W.sep), parts.slice(3).join(W.sep)];
+}
+
+/** The totals one by one, in the totals line's order, each its stat's label and its value in words (040's before → after reads these). */
+export function totalsParts(st: PlayerStats): { stat: StatId; label: string; value: string }[] {
+  const part = (stat: StatId, value: string) => ({ stat, label: named(stat), value });
   return [
-    `${named('armor')} ${st.armor}${sep}${named('max-health')} ${st.maxHealth}${sep}${named('field-regen')} ${formatStat(st.regen, 'hp-per-s')}`,
-    `${named('move-speed')} ${formatStat(st.walkScale, 'fraction')}${sep}${named('roll-cooldown')} ${formatStat(st.rollCooldown, 'seconds')}${sep}${named('roll-distance')} ${formatStat(st.rollDistance / ROLL_DISTANCE, 'fraction')}`,
+    part('armor', String(st.armor)),
+    part('max-health', String(st.maxHealth)),
+    part('field-regen', formatStat(st.regen, 'hp-per-s')),
+    part('move-speed', formatStat(st.walkScale, 'fraction')),
+    part('roll-cooldown', formatStat(st.rollCooldown, 'seconds')),
+    part('roll-distance', formatStat(st.rollDistance / ROLL_DISTANCE, 'fraction')),
   ];
 }

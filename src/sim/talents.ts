@@ -1,5 +1,5 @@
 import { FOUNDRY_ROOM } from '../data/rooms';
-import { TALENT_START, TALENTS } from '../data/talents';
+import { TALENT_POINT_COST, TALENT_START, TALENTS } from '../data/talents';
 import type { SimState } from './state';
 import { playerStats } from './stats';
 
@@ -11,7 +11,7 @@ import { playerStats } from './stats';
 /** True if the node can be taken now: a point to spend, not taken yet, and linked to a taken node. */
 export function canTake(state: Pick<SimState, 'talents' | 'talentPoints'>, id: string): boolean {
   const def = TALENTS[id];
-  if (!def || state.talentPoints <= 0 || state.talents.includes(id)) return false;
+  if (!def || state.talentPoints < TALENT_POINT_COST || state.talents.includes(id)) return false;
   return def.links.some((l) => state.talents.includes(l));
 }
 
@@ -19,7 +19,7 @@ export function canTake(state: Pick<SimState, 'talents' | 'talentPoints'>, id: s
 export function takeTalent(state: SimState, id: string): void {
   if (!canTake(state, id)) return;
   state.talents.push(id);
-  state.talentPoints -= 1;
+  state.talentPoints -= TALENT_POINT_COST;
   state.events.talents.push({ id });
 }
 
@@ -29,7 +29,7 @@ export function takeTalent(state: SimState, id: string): void {
  */
 export function respec(state: SimState): void {
   if (state.roomId !== FOUNDRY_ROOM) return;
-  const refunded = state.talents.filter((id) => id !== TALENT_START).length;
+  const refunded = state.talents.filter((id) => id !== TALENT_START).length * TALENT_POINT_COST;
   state.talents = [TALENT_START];
   state.talentPoints += refunded;
   state.player.health = Math.min(state.player.health, playerStats(state).maxHealth);

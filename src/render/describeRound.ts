@@ -5,11 +5,12 @@ import { KEYWORDS, type KeywordId } from '../data/keywords';
 import { LEGIBILITY_WORDS as W, PARAM_STATS, WHEN_LINES } from '../data/legibility';
 import { formatDamage, formatParam, formatSeconds, formatStat, LINE_SEP, renderTemplate, textSources, trimNumber } from '../data/rulesText';
 import { roundKeywords } from '../data/roundKeywords';
-import { COLD } from '../data/tags';
 import type { StatId } from '../data/statDefs';
 import { bombletEmission, roundEmission, shardEmissionOf } from '../sim/emissions';
 import type { SimState } from '../sim/state';
-import { resolveStat, ruleLines, statusEmission, type Emission, type Resolved, type Statted } from '../sim/statResolve';
+import { hitsToFreeze } from '../sim/cold';
+import { conditionalHits, rampedFireRate } from '../sim/keystones';
+import { resolveStat, statusEmission, type Emission, type Resolved, type Statted } from '../sim/statResolve';
 import { linkedTo } from './describeLinks';
 import { bonusSources, chipsOf, fill, madeBy, paramValue, statLabel, stepsText } from './statSteps';
 import { line, type Description, type TipLine } from './tipTypes';
@@ -79,7 +80,7 @@ export function describeRound(seen: Seen, ammoId: string): Description {
   const keywords = roundKeywords(ammoId);
   const damage = resolveStat(s, 'damage', e, baseDamage(a));
   const rate = resolveStat(s, 'fire-rate', e, TICK_RATE / a.fireTicks);
-  const ramps = ruleLines(s, 'ramp', e);
+  const ramp = rampedFireRate(s, ammoId);
   const kws = ruleKeywords(ammoId);
   const nums = kws.flatMap((k) => params(s, k, a));
   const num = (k: KeywordId, name: string): ParamNumber | undefined => nums.find((n) => n.keyword === k && n.name === name);
@@ -87,13 +88,14 @@ export function describeRound(seen: Seen, ammoId: string): Description {
   // The summary: damage · shots/s, then what its keywords add.
   const head = fill(a.kind === 'straight' ? W.shotLine : W.burstLine, { damage: formatDamage(damage.final), rate: formatStat(rate.final, 'per-s') });
   const extras: string[] = [];
-  if (kws.includes('freeze')) extras.push(fill(W.freezeIn, { hits: Math.ceil(Math.max(1, value('chill', 'stacks')) / COLD.chillPerHit) }));
+  if (kws.includes('freeze')) extras.push(fill(W.freezeIn, { hits: hitsToFreeze(s) }));
   if (keywords.includes('split')) extras.push(fill(W.shards, { count: Math.round(value('split', 'count')), damage: formatDamage(value('split', 'damage')) }));
   if (keywords.includes('cluster')) extras.push(fill(W.bomblets, { count: Math.round(value('cluster', 'count')), damage: formatDamage(value('cluster', 'damage')) }));
   if (a.kind === 'mine') extras.push(fill(W.arms, { time: formatSeconds(value('mine', 'arm')) }));
   // Its bonuses: every talent, relic and affix changing a number it shows (the ramp included).
   const shown = [damage, rate, ...nums.flatMap((n) => (n.resolved ? [n.resolved] : []))];
-  const bonuses = new Set([...shown.flatMap(bonusSources), ...ramps.map((r) => r.source)]).size;
+  const bonuses = new Set([...shown.flatMap(bonusSources), ...(ramp ? [ramp.source] : [])]).size;
+  const numbers = { damage: formatDamage(damage.final), perSecond: formatStat(rate.final, 'per-s') };
   const summary = [line([head, ...extras].join(LINE_SEP))];
   if (bonuses > 0) summary.push(line(fill(bonuses === 1 ? W.bonus : W.bonuses, { count: bonuses }), 'hint'));
   return {
@@ -103,6 +105,7 @@ export function describeRound(seen: Seen, ammoId: string): Description {
     summary,
     breakdown: breakdown(seen, a, damage, rate, nums),
     bonuses,
+    numbers,
   };
 }
 
@@ -112,10 +115,9 @@ function breakdown(seen: Seen, a: AmmoDef, damage: Resolved, rate: Resolved, num
   const e = roundEmission(a.id);
   const perSec = (v: number) => formatStat(v, 'per-s');
   const out: TipLine[] = [line(stepsText(statLabel('damage'), damage, formatDamage)), line(`${stepsText(statLabel('fire-rate'), rate, perSec)}${LINE_SEP}${fill(W.interval, { time: formatSeconds(TICK_RATE / rate.final, true) })}`)];
-  for (const r of ruleLines(s, 'ramp', e)) {
-    const { rate: mul = 1, ramp = 0 } = r.line.params;
-    out.push(line(fill(W.ramp, { rate: trimNumber(mul), ramp: formatSeconds(ramp, true), final: perSec(rate.final * mul) }), 'when'));
-  }
+  // Overpressure: the rate at the ramp's full height, as resolveStat gives it with the ramp held to the top.
+  const ramp = rampedFireRate(s, a.id);
+  if (ramp) out.push(line(fill(W.ramp, { rate: trimNumber(ramp.mul), ramp: formatSeconds(ramp.ramp, true), final: perSec(ramp.rate) }), 'when'));
   // Every other number a bonus changes, with its steps (a Burst's radius, Splinter's Shards, Rimecraft's Freeze).
   for (const n of nums) {
     if (!n.resolved || !n.stat || bonusSources(n.resolved).length === 0 || (n.stat === 'damage' && PARAM_STATS[n.keyword]?.[n.name]?.on === undefined)) continue;
@@ -131,12 +133,8 @@ function breakdown(seen: Seen, a: AmmoDef, damage: Resolved, rate: Resolved, num
     if (bonusSources(flight).length > 0) out.push(line(stepsText(statLabel('flight-time'), flight, (v) => formatSeconds(v, true))));
   }
   // The "when" multipliers on its damage: through a Pool (Blastfletch), on a Frozen enemy (Shatterpoint).
-  for (const rule of ['pool-strike', 'shatter'] as const) {
-    const template = WHEN_LINES[rule];
-    for (const r of template ? ruleLines(s, rule, e) : []) {
-      const mul = r.line.params.damage ?? 1;
-      out.push(line(fill(template ?? '', { mul: formatParam(mul, 'multiplier'), source: r.source, final: formatDamage(damage.final * mul) }), 'when'));
-    }
+  for (const hit of conditionalHits(s, a.id, damage.final)) {
+    out.push(line(fill(WHEN_LINES[hit.rule] ?? '', { mul: formatParam(hit.scale, 'multiplier'), source: hit.source, final: formatDamage(hit.damage) }), 'when'));
   }
   out.push(linkedTo(seen, a.id));
   for (const k of ruleKeywords(a.id)) {
@@ -144,12 +142,4 @@ function breakdown(seen: Seen, a: AmmoDef, damage: Resolved, rate: Resolved, num
     out.push(line(`${KEYWORDS[k].name}: ${text}`));
   }
   return out;
-}
-
-/** The numbers a Build tab row shows, from the same description: final damage and shots/s. */
-export function roundNumbers(seen: Seen, ammoId: string): { damage: string; perSecond: string } {
-  const s = still(seen);
-  const a = ammoDef(ammoId);
-  const e = roundEmission(ammoId);
-  return { damage: formatDamage(resolveStat(s, 'damage', e, baseDamage(a)).final), perSecond: formatStat(resolveStat(s, 'fire-rate', e, TICK_RATE / a.fireTicks).final, 'per-s') };
 }

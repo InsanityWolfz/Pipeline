@@ -1,6 +1,6 @@
 import { TICK_RATE } from './config';
 import { itemDef } from './items';
-import { keywordDef, KEYWORDS, NOUNS, type KeywordId, type ParamUnit } from './keywords';
+import { keywordDef, KEYWORDS, NOUNS, SCOPES, type KeywordId, type ParamUnit } from './keywords';
 import { isRuleLine, RULES, type ContentLine, type RuleLine, type Scope, type StatLine } from './lines';
 import { BASE_FAMILY } from './roundKeywords';
 import { stageLines, type StageDef } from './stages';
@@ -13,7 +13,12 @@ import { tagDef } from './tags';
 // whole, rates /s to 1 decimal, turn rates °/s. Px only show where a template asks (040's
 // glossary and breakdown); no content line shows them. Pure, so data tests read it.
 
-const MINUS = '−';
+/** The minus sign every change is written with, and a change's sign. */
+export const MINUS = '−';
+export const signOf = (v: number): string => (v < 0 ? MINUS : '+');
+
+/** The units written after a number with a space (a wrapped line keeps each with its number, 040). */
+export const UNITS = { seconds: 's', px: 'px', pxPerS: 'px/s', hp: 'HP', hpPerS: 'HP/s' } as const;
 const SEP = ' · ';
 
 /** A number to at most `places` decimals, without trailing zeros: 1.5, 2, 0.75. */
@@ -31,7 +36,7 @@ export const formatDamage = (v: number): string => trimNumber(v, 1);
 export function formatSeconds(ticks: number, precise = false): string {
   const s = ticks / TICK_RATE;
   const one = s.toFixed(1);
-  return `${precise && Math.abs(Number(one) - s) > 1e-9 ? s.toFixed(2) : one} s`;
+  return `${precise && Math.abs(Number(one) - s) > 1e-9 ? s.toFixed(2) : one} ${UNITS.seconds}`;
 }
 
 /** A param's value in its unit's words; `precise` times as formatSeconds says. */
@@ -40,9 +45,9 @@ export function formatParam(value: number, unit: ParamUnit, precise = false): st
     case 'ticks':
       return formatSeconds(value, precise);
     case 'px':
-      return `${trimNumber(value, 1)} px`;
+      return `${trimNumber(value, 1)} ${UNITS.px}`;
     case 'px-per-s':
-      return `${trimNumber(value, 1)} px/s`;
+      return `${trimNumber(value, 1)} ${UNITS.pxPerS}`;
     case 'deg':
       return `${trimNumber(value, 0)}°`;
     case 'deg-per-s':
@@ -56,9 +61,9 @@ export function formatParam(value: number, unit: ParamUnit, precise = false): st
     case 'count':
       return `${Math.round(value)}`;
     case 'hp':
-      return `${Math.round(value)} HP`;
+      return `${Math.round(value)} ${UNITS.hp}`;
     case 'hp-per-s':
-      return `${value.toFixed(1)} HP/s`;
+      return `${value.toFixed(1)} ${UNITS.hpPerS}`;
   }
 }
 
@@ -126,14 +131,13 @@ export function textSources(id: KeywordId): string[] {
   return (first ?? []).filter((s) => rest.every((l) => l.includes(s)));
 }
 
-/** A scope's name: a keyword's, or "All ammo" and "You" (039.1). */
+/** A scope's name: a keyword's, or a plain scope's, All ammo and You (039.1). */
 export function scopeName(scope: Scope): string {
-  if (scope === 'all-ammo') return 'All ammo';
-  if (scope === 'you') return 'You';
+  if (scope === 'all-ammo' || scope === 'you') return SCOPES[scope].name;
   return KEYWORDS[scope].name;
 }
 
-const signed = (v: number, text: string): string => `${v < 0 ? MINUS : '+'}${text}`;
+const signed = (v: number, text: string): string => `${signOf(v)}${text}`;
 
 /** A stat line's change and label, change first: "+10% damage", "−1 stack to Freeze", "×0.75 roll distance". */
 export function changeText(line: StatLine): string {

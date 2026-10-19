@@ -30,6 +30,9 @@ export interface TalentDef {
 /** The centre start's id: always taken, costs nothing. */
 export const TALENT_START = 'start';
 
+/** Talent points a node costs (037: one each; the start is free). */
+export const TALENT_POINT_COST = 1;
+
 /** Each lane's direction from the centre on the panel, degrees (0 right, −90 up): Arrows up, Ley up-right, Tube down-right, Survival down-left, Bombs up-left. */
 export const LANE_ANGLES: Readonly<Record<Exclude<TalentLane, 'centre'>, number>> = { arrows: -90, ley: -18, tube: 54, survival: 126, bombs: 198 };
 

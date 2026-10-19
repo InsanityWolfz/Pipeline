@@ -36,7 +36,7 @@ import type { RestorePanelState } from './RestorePanel';
 import type { ResearchListState } from './ResearchList';
 import type { HollowsShown } from './HollowsView';
 import type { HollowsEnemiesShown } from './hollowsEnemyArt';
-import type { LegibilityUi } from './Legibility';
+import type { Legibility, LegibilityUi } from './Legibility';
 
 export interface GameTestHook {
   getState(): SimSummary;
@@ -83,6 +83,8 @@ export interface GameTestHook {
   gainXp(amount: number): SimSummary;
   /** 039: the rendered keyword list and every content line, as the game shows them. */
   keywords(): KeywordReport;
+  /** 040: every summary the game can show (each round, talent, stage and gear piece), laid out as drawn: its rows (at most four), whether a line was cut, its size. */
+  summaryRows(): ReturnType<Legibility['summaryRows']>;
 }
 
 /**
@@ -273,6 +275,7 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
       return summarize(sim);
     },
     keywords: () => keywordReport(),
+    summaryRows: () => scene.legibility?.summaryRows(sim) ?? [],
     passable: () => {
       const { room, obstacles } = roomBodies(sim, sim.roomId);
       return room.rows.map((row, ty) =>

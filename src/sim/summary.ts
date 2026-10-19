@@ -114,6 +114,8 @@ export interface SimSummary extends HollowsSummary, LevelingSummary, MinesSummar
   bombs: BombSummary[];
   /** Item ids hand-crafted at least once. */
   crafted: string[];
+  /** 040.2: rounds ever carried, in the order first carried. */
+  carried: string[];
   /** How many of each item machines have made (027). */
   machineMade: Record<string, number>;
   /** Pieces the player can place, in build bar order. */
@@ -230,6 +232,7 @@ export function summarize(state: SimState): SimSummary {
     harvest: state.harvest ? { ...state.harvest } : null,
     bombs: state.bombs.map(bombSummary),
     crafted: [...state.crafted],
+    carried: [...state.carried],
     machineMade: { ...state.machineMade },
     unlocked: unlockedPieces(state),
     stagesUnlocked: stagesUnlocked(state),

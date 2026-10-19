@@ -4,7 +4,7 @@ import { KEYWORDS, type KeywordId } from '../data/keywords';
 import { BASE_FAMILY, roundKeywords } from '../data/roundKeywords';
 import { roundBase, roundTags, tagDef } from '../data/tags';
 import { knownRounds } from '../sim/knownRounds';
-import { describeRound, roundNumbers, type Seen } from './describe';
+import { describeRound, type Seen } from './describe';
 import { chipsOf, fill } from './statSteps';
 import type { Box } from './tipPlace';
 import type { Chip } from './tipTypes';
@@ -48,7 +48,7 @@ export function buildTabGroups(seen: Seen, icon: (round: string) => string, name
       .filter((r) => roundBase(r) === base)
       .map((round) => {
         const d = describeRound(seen, round);
-        const n = roundNumbers(seen, round);
+        const n = d.numbers ?? { damage: '', perSecond: '' };
         return {
           round,
           name: name(round),
@@ -62,6 +62,27 @@ export function buildTabGroups(seen: Seen, icon: (round: string) => string, name
       });
     return rows.length > 0 ? [{ family, label: KEYWORDS[family].name, rows }] : [];
   });
+}
+
+/** Where a row's fields sit in a column `columnW` wide, px from the column's left: the name's room, the chips' start (none in a compact column), each number's right edge. */
+export interface RowFields {
+  compact: boolean;
+  name: { x: number; w: number };
+  chipsX: number | null;
+  damageRight: number;
+  rateRight: number;
+  sourcesRight: number;
+}
+
+export function rowFields(columnW: number): RowFields {
+  const F = BUILD_TAB.fields;
+  const compact = columnW < BUILD_TAB.compact.below;
+  const sourcesRight = columnW;
+  const rateRight = sourcesRight - (compact ? BUILD_TAB.compact.sourcesW : F.sourcesW);
+  const damageRight = rateRight - F.rateW;
+  const chipsX = compact ? null : damageRight - F.damageW - F.gap - F.chipsW;
+  const nameEnd = (chipsX ?? damageRight - F.damageW) - F.gap;
+  return { compact, name: { x: BUILD_TAB.name.x, w: nameEnd - BUILD_TAB.name.x }, chipsX, damageRight, rateRight, sourcesRight };
 }
 
 export interface BuildTabLayout {

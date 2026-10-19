@@ -116,7 +116,7 @@ describe('content', () => {
     expect(texts(d?.summary ?? [])).toEqual(['Relic helm · armor 2', 'You: +12 max health · +4% move speed', 'You: after 6.0 s unhit, the next hit is blocked', '1 bonus · hold Shift']);
     const before = playerStats(s);
     const after = playerStats(wear(structuredClone(s), helm));
-    expect(texts(d?.breakdown ?? []).at(-1)).toBe(`Wearing it: armor ${before.armor} → ${after.armor} · max health ${before.maxHealth} → ${after.maxHealth} · move speed 100% → 104%`);
+    expect(texts(d?.breakdown ?? []).at(-1)).toBe(`Wearing it: Armor ${before.armor} → ${after.armor} · Max health ${before.maxHealth} → ${after.maxHealth} · Move speed 100% → 104%`);
     expect(texts(d?.breakdown ?? [])).toContain('You: after 6.0 s unhit, the next hit is blocked');
     expect(d?.chips.map((c) => c.id)).toEqual(['you']);
   });

@@ -56,6 +56,8 @@ async function expectHopper(page: Page, count: number): Promise<void> {
 }
 
 test('a click moves one, Shift+click half and Ctrl+click all, in and out, with the picker open throughout', async ({ page }) => {
+  // About 25 s alone (the walk into the foundry and a dozen clicks): room for parallel workers.
+  test.setTimeout(90_000);
   const errors = watchErrors(page);
   await hopperBeside(page);
   const arrows = (await state(page)).inventory.arrow ?? 0;
@@ -94,6 +96,7 @@ test('a click moves one, Shift+click half and Ctrl+click all, in and out, with t
 });
 
 test('Ctrl+click on the picker is kept from the browser, and the canvas has no context menu', async ({ page }) => {
+  test.setTimeout(60_000);
   const errors = watchErrors(page);
   await hopperBeside(page);
   await page.keyboard.press('e');

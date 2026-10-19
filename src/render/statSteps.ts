@@ -1,6 +1,6 @@
 import { KEYWORDS, type KeywordId, type ParamUnit } from '../data/keywords';
 import { type ChipId } from '../data/legibility';
-import { formatDamage, formatParam, formatStat, renderTemplate, scopeName, trimNumber } from '../data/rulesText';
+import { formatDamage, formatParam, formatStat, renderTemplate, scopeName, signOf, trimNumber } from '../data/rulesText';
 import { STATS, type StatId } from '../data/statDefs';
 import type { Contribution, Resolved } from '../sim/statResolve';
 import type { Chip } from './tipTypes';
@@ -9,8 +9,6 @@ import type { Chip } from './tipTypes';
 // resolveStat — "Damage 10 × (1 + 10% Fletcher's Eye + 6% Hard Bore) = 11.6" — so every
 // number shown is the one the sim uses. Px and 2-decimal times are for the breakdown and the
 // glossary only (Q14, 039.8); summaries use rulesText's own formats.
-
-const MINUS = '−';
 
 /** A stat's value in its unit, breakdown style: damage to 1 decimal, rates /s, px, speeds px/s, times to 2 decimals where 1 isn't exact. */
 export function statValue(stat: StatId, v: number): string {
@@ -31,7 +29,7 @@ export function statLabel(stat: StatId, prefix = ''): string {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-const signed = (v: number, text: string): string => `${v < 0 ? MINUS : '+'} ${text}`;
+const signed = (v: number, text: string): string => `${signOf(v)} ${text}`;
 const sum = (cs: readonly Contribution[]): string => cs.map((c) => `${signed(c.value, `${Math.round(Math.abs(c.value) * 100)}%`)} ${c.source}`).join(' ');
 
 /**
@@ -39,11 +37,11 @@ const sum = (cs: readonly Contribution[]): string => cs.map((c) => `${signed(c.v
  * final: "Damage 10 × (1 + 10% Fletcher's Eye + 6% Hard Bore) = 11.6", "Shards 5 + 2 Splinter = 7". With nothing
  * changing it, just "Damage 10". `fmt` writes a value in the stat's unit.
  */
-export function stepsText(label: string, r: Resolved, fmt: (v: number) => string, points = false): string {
+export function stepsText(label: string, r: Resolved, fmt: (v: number) => string): string {
   if (r.adds.length + r.flats.length + r.muls.length === 0) return `${label} ${fmt(r.final)}`;
   const flats = r.flats.map((c) => ` ${signed(c.value, fmt(Math.abs(c.value)))} ${c.source}`).join('');
   let text = `${fmt(r.base)}${flats}`;
-  if (r.adds.length > 0) text = points ? `${text} ${sum(r.adds)}` : `${r.flats.length > 0 ? `(${text})` : text} × (1 ${sum(r.adds)})`;
+  if (r.adds.length > 0) text = `${r.flats.length > 0 ? `(${text})` : text} × (1 ${sum(r.adds)})`;
   for (const m of r.muls) text += ` × ${trimNumber(m.value)} ${m.source}`;
   return `${label} ${text} = ${fmt(r.final)}`;
 }

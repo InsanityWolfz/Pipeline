@@ -12,6 +12,7 @@ import { BLASTFLETCH } from '../data/talents';
 import { bombletEmission, poolBurstEmission, roundEmission, shardEmissionOf } from '../sim/emissions';
 import { playerStats, type PlayerStats } from '../sim/stats';
 import { reaches, resolveStat, statusEmission, type Emission, type Resolved, type Statted } from '../sim/statResolve';
+import { totalsParts } from './gearText';
 import { fill, paramValue, statLabel, statValue } from './statSteps';
 
 // What a line changes, before → after (040), pure: every emission a stat line reaches —
@@ -121,14 +122,13 @@ export function ruleDetail(l: RuleLine): string {
   return [`${scopeName(l.scope)}: ${ruleText(l, {}, true)}`, ...hidden].join(LINE_SEP);
 }
 
-/** The player's numbers a piece of gear or You line moves, before → after, in the totals line's order (036). */
+/** The player's totals a piece of gear moves, before → after, in the totals line's words and order (036's gearText). */
 export function totalsChange(before: Statted, after: Statted): string {
-  const [b, a] = [playerStats(before), playerStats(after)];
-  const order: StatId[] = ['armor', 'max-health', 'field-regen', 'move-speed', 'roll-cooldown', 'roll-distance'];
-  const parts = order.flatMap((stat) => {
-    const read = YOU_STATS[stat];
-    if (!read || Math.abs(read(a) - read(b)) < 1e-9) return [];
-    return [beforeAfter(renderTemplate(STATS[stat].label), statValue(stat, read(b)), statValue(stat, read(a)))];
+  const b = totalsParts(playerStats(before));
+  const a = totalsParts(playerStats(after));
+  const parts = b.flatMap((p, i) => {
+    const q = a[i];
+    return q && q.value !== p.value ? [beforeAfter(p.label, p.value, q.value)] : [];
   });
   return fill(W.wearing, { changes: parts.length > 0 ? parts.join(LINE_SEP) : W.noChange });
 }

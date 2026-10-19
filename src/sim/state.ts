@@ -53,8 +53,9 @@ export interface SimState {
   research: ResearchState;
   /** How this run started; a KO restores its inventory. */
   start: StartDef;
-  /** Straight shots in flight (arrows and ley bolts), and the id for the next fired. */
+  /** Straight shots in flight: arrows and ley bolts. */
   arrows: ArrowState[];
+  /** Id for the next arrow fired. */
   nextArrowId: number;
   /** Live enemies. */
   enemies: EnemyState[];
@@ -83,7 +84,8 @@ export interface SimState {
   summoning: SummoningState | null;
   /** Item ids hand-crafted at least once, sorted. Kept through a KO; it unlocks machines. */
   crafted: string[];
-  carried: string[]; // Rounds ever carried (040.2: the Build tab's known rounds), first carried first. Kept through a KO.
+  /** Rounds ever carried (040.2: the Build tab's known rounds), in the order first carried. Kept through a KO. */
+  carried: string[];
   /** Items that reveal recipes once carried (038: ley-iron), in the order found. Kept through a KO. */
   found: string[];
   /** The buildable grid in the foundry room. Kept through a KO. */
@@ -241,11 +243,12 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
 }
 
 /**
- * Puts the world back to its start: player at the spawn room's spawn with full health, the tube on its starting ammo,
- * every room's enemies at home and nodes at full, and nothing harvesting, on the ground or in flight, and build mode
- * off. The tick, seed, RNG, id counters, the inventory (a death trims it first), the crafted and carried sets, the
- * tube's link and the intake's entrances, research (033), claims, the stash, gear and the whole foundry carry on.
- * Claimed rooms get no enemies back.
+ * Puts the world back to its start: player at the spawn room's spawn with full
+ * health, the tube on its starting ammo, every
+ * room's enemies at home and nodes at full, and nothing harvesting, on the
+ * ground or in flight, and build mode off. The tick, seed, RNG, id counters,
+ * the inventory (a death trims it first), the crafted set, the tube's link and
+ * the intake's entrances, research (033), claims, the stash, gear and the whole foundry carry on. Claimed rooms get no enemies back.
  */
 export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   const rooms = Object.values(WORLD);

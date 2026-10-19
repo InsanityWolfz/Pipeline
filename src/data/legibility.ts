@@ -20,6 +20,8 @@ export type ChipGroup = KeywordGroup | 'all-ammo' | 'you';
  */
 export const TIP = {
   summaryW: 200,
+  /** A summary's most drawn rows: its name (and chip) rows, its rules lines and the hint (040). */
+  summaryRows: 4,
   breakdownW: 280,
   maxLines: 16,
   lineHeight: 10,
@@ -77,18 +79,23 @@ export const BUILD_TAB = {
   columnGap: 8,
   iconScale: 0.75,
   name: { x: 15, y: 3 },
-  chips: { x: 104, y: 2 },
-  damageRight: 206,
-  rateRight: 240,
-  sourcesRight: 0,
+  chipsY: 2,
+  /**
+   * A row's fields from its column's right edge: "N sources" `sourcesW` wide, shots/s `rateW`, damage `damageW`, the
+   * chips `chipsW` before them, `gap` apart; the name takes what's left after the icon. A column narrower than
+   * `compact.below` (two columns) shows the sources as a count `compact.sourcesW` wide and leaves the chips to the
+   * row's breakdown.
+   */
+  fields: { sourcesW: 44, rateW: 34, damageW: 26, chipsW: 72, gap: 4 },
+  compact: { below: 200, sourcesW: 14 },
   header: { x: 0, y: 3, color: 'brass-light' },
   hover: { color: 'brass', alpha: 0.18 },
   /** The panel's left edge in the Build tab: the panel and the breakdown beside it, centred together. */
   breakdownGap: 4,
 } as const;
 
-/** The glossary entry (040): a tablet at most `w` × `h` px, centred above any panel, `pad` px in. */
-export const GLOSSARY = { w: 260, h: 170, pad: 6, rowGap: 2 } as const;
+/** The glossary entry (040): a tablet at most `w` × `h` px, centred above any panel. */
+export const GLOSSARY = { w: 260, h: 170 } as const;
 
 /** Each chip group's name, as the glossary shows it beside the name. */
 export const GROUP_NAMES: Readonly<Record<ChipGroup, string>> = {
@@ -106,8 +113,8 @@ export const GROUP_NAMES: Readonly<Record<ChipGroup, string>> = {
 /** Each talent lane's name (037's), as a talent's breakdown shows it; the ammo lanes are their family's name. */
 export const LANE_NAMES: Readonly<Record<TalentLane, string>> = { centre: 'Centre', arrows: '{{arrow}}s', bombs: '{{bomb}}s', ley: '{{ley}}', survival: 'Survival', tube: 'Tube' };
 
-/** What a talent costs (037: one point a node, the start free). */
-export const TALENT_COST = { point: 'point', points: 'points', free: 'free', each: 1 } as const;
+/** What a talent costs, in words (its points are the sim's TALENT_POINT_COST; the start is free). */
+export const TALENT_COST = { point: 'point', points: 'points', free: 'free' } as const;
 
 /**
  * The words around the generated lines. Summary: a Shot round's "11.6 dmg · 4.0/s", a Lob or Mine round's Burst; then
@@ -125,8 +132,14 @@ export const LEGIBILITY_WORDS = {
   bonuses: '{count} bonuses · hold Shift',
   reaches: 'Reaches: {rounds}',
   reachesNothing: 'Reaches: nothing you have yet',
+  /** "Reaches:" as a count, when the list would run the summary past its rows (the list is in the breakdown). */
+  reachesOne: 'Reaches: {count} round',
+  reachesCount: 'Reaches: {count} rounds',
   takes: 'Takes: {rounds}',
   takesNothing: 'Takes: none of your rounds yet',
+  /** "Takes:" as a count, when the list would run the summary past its rows (the breakdown lists every round). */
+  takesOne: 'Takes: one of your rounds',
+  takesCount: 'Takes: {count} of your rounds',
   gearHead: '{rarity} {slot} · armor {armor}',
   /** A breakdown's stat: its steps, then "= final". */
   interval: 'one every {time}',
@@ -162,18 +175,6 @@ export const LEGIBILITY_WORDS = {
 export const WHEN_LINES: Readonly<Partial<Record<'pool-strike' | 'shatter', string>>> = {
   'pool-strike': '{mul} through a {{pool}} ({source}) = {final}',
   shatter: '{mul} on a {{freeze.adj}} enemy ({source}) = {final}',
-};
-
-/** The two plain scopes' glossary entries (039.1): their rule, as a keyword's template is. */
-export const SCOPE_TEXT: Readonly<Record<'all-ammo' | 'you', string>> = {
-  'all-ammo': 'Every round you fire, and every {{shard}}, {{bomblet}} and {{burst}} it makes.',
-  you: 'Your own numbers: health, armor, regen, speed and the roll.',
-};
-
-/** The stats the two plain scopes expose, as a keyword's `stats` do (039.1). */
-export const SCOPE_STATS: Readonly<Record<'all-ammo' | 'you', readonly StatId[]>> = {
-  'all-ammo': ['damage', 'fire-rate'],
-  you: ['max-health', 'armor', 'field-regen', 'move-speed', 'firing-walk', 'roll-cooldown', 'roll-distance'],
 };
 
 /** Child emissions a breakdown names (Shard and Bomblet are 039's nouns): the Pool-burst. */

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { BUILD_TAB } from '../../src/data/legibility';
 import { TALENT_PANEL } from '../../src/data/talentAssets';
-import { buildTabGroups, buildTabLayout, type BuildTabGroup } from '../../src/render/buildTabLayout';
+import { buildTabGroups, buildTabLayout, rowFields, type BuildTabGroup } from '../../src/render/buildTabLayout';
 import { roundsByFamily } from '../../src/sim/knownRounds';
 import { createSim } from '../../src/sim/state';
 
@@ -47,5 +47,32 @@ describe('the Build tab', () => {
     const xs = new Set(L.rows.map((r) => r.box.x));
     expect(xs.size).toBe(2);
     for (const h of L.headers) expect(L.rows.some((r) => r.box.x === h.x && r.box.y === h.y + BUILD_TAB.rowH)).toBe(true);
+  });
+
+  it('draws each row’s fields inside its own column, never over each other, one column or two', () => {
+    const one = buildTabLayout(PANEL, buildTabGroups(Object.assign(createSim(1), { crafted: roundsByFamily() }), named, named));
+    const row = (i: number) => ({ round: `r${i}`, name: '', icon: '', chips: [], damage: '', perSecond: '', sources: 0, sourcesText: '' });
+    const many: BuildTabGroup[] = ['arrow', 'bomb', 'ley', 'landmine'].map((family, g) => ({ family: family as BuildTabGroup['family'], label: family, rows: Array.from({ length: 6 }, (_, i) => row(g * 10 + i)) }));
+    const two = buildTabLayout(PANEL, many);
+    expect(two.columns).toBe(2);
+    for (const L of [one, two]) {
+      const f = rowFields(L.columnW);
+      const F = BUILD_TAB.fields;
+      expect(f.compact).toBe(L.columns === 2);
+      // Left to right: name, chips (a full column), damage, shots/s, sources; each inside the column.
+      const spans = [
+        [f.name.x, f.name.x + f.name.w],
+        ...(f.chipsX !== null ? [[f.chipsX, f.chipsX + F.chipsW]] : []),
+        [f.damageRight - F.damageW, f.damageRight],
+        [f.rateRight - F.rateW, f.rateRight],
+        [f.rateRight, f.sourcesRight],
+      ];
+      expect(f.name.w).toBeGreaterThan(30);
+      for (let i = 1; i < spans.length; i++) expect(spans[i]?.[0], `field ${i}`).toBeGreaterThanOrEqual(spans[i - 1]?.[1] ?? 0);
+      expect(spans.at(-1)?.[1]).toBeLessThanOrEqual(L.columnW);
+      // Columns never overlap.
+      const xs = [...new Set(L.rows.map((r) => r.box.x))].sort((a, b) => a - b);
+      for (let i = 1; i < xs.length; i++) expect(xs[i] ?? 0).toBeGreaterThanOrEqual((xs[i - 1] ?? 0) + L.columnW);
+    }
   });
 });

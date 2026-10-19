@@ -157,7 +157,8 @@ test('clicking the Burst chip opens its glossary entry and never fires; Esc clos
 });
 
 test('without Shift, every summary source shows a summary and never a breakdown line', async ({ page }) => {
-  test.setTimeout(120_000);
+  // About 25 s alone (the walk into the foundry and eight sources): room for parallel workers.
+  test.setTimeout(180_000);
   const errors = watchErrors(page);
   await boot(page, '?playtest');
   await takeTalents(page, 'a1', 'b1', 'b2');
@@ -270,5 +271,74 @@ test('a Husk with frost hits shows Chill and its stacks on its hover name', asyn
   await hover(page, husk.x - (cam.x - VIEW_WIDTH / 2), husk.y - 10 - (cam.y - VIEW_HEIGHT / 2));
   await expect.poll(async () => (await ui(page))?.hoverName).toBe('Husk');
   expect((await ui(page))?.hoverChips).toEqual([`Chill ${husk.chill}`]);
+  expect(errors).toEqual([]);
+});
+
+test('every summary the game can show holds at most four drawn rows, with no talents or the whole tree', async ({ page }) => {
+  test.setTimeout(60_000);
+  const errors = watchErrors(page);
+  await boot(page, '?playtest');
+  await page.evaluate(() => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    g.step(1);
+    // A relic with two affixes, and a Rare piece with three.
+    g.addGear({ slot: 'helm', rarity: 'relic', weight: null, baseArmor: 2, affixes: [{ kind: 'max-health', value: 12 }, { kind: 'move-speed', value: 0.04 }], relic: 'wardstone-circlet', name: 'Wardstone Circlet' });
+    g.addGear({ slot: 'body', rarity: 'rare', weight: 'heavy', baseArmor: 12, affixes: [{ kind: 'max-health', value: 16 }, { kind: 'armor', value: 3 }, { kind: 'roll-distance', value: 0.12 }], relic: null, name: 'Granite Plate' });
+  });
+  for (const talents of [[], ['a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'k1', 'l1', 'l2', 'l3', 'k2', 't1', 't2', 't3', 'k3', 's1', 's2', 's3', 's4']]) {
+    await takeTalents(page, ...talents);
+    const all = (await page.evaluate(() => window.__GAME__?.summaryRows())) ?? [];
+    expect(new Set(all.map((r) => r.source.kind))).toEqual(new Set(['round', 'talent', 'stage', 'gear']));
+    for (const r of all) {
+      expect(r.rows, `${r.source.kind} ${r.source.id}`).toBeLessThanOrEqual(4);
+      expect(r.w, `${r.source.kind} ${r.source.id}`).toBeLessThanOrEqual(200);
+    }
+    // Rounds and talents fit whole (a long "Reaches:" reads as a count); only a full gear piece is cut.
+    expect(all.filter((r) => r.cut && (r.source.kind === 'round' || r.source.kind === 'talent'))).toEqual([]);
+  }
+  expect(errors).toEqual([]);
+});
+
+test('a click on the gear tip, over the bench’s Stages rows, is the tip’s: no stage is applied', async ({ page }) => {
+  test.setTimeout(120_000);
+  const errors = watchErrors(page);
+  await boot(page, '?playtest');
+  await page.evaluate(() => {
+    const g = window.__GAME__;
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    g.claim('shrine');
+    h.toFoundry();
+    h.walkTo(2.3 * 32, 12.5 * 32);
+    g.step(1, { identify: true });
+    g.step(10);
+  });
+  await cameraSettled(page);
+  await page.keyboard.press('e');
+  await expect.poll(async () => (await ui(page))?.tagged.benchStages?.shown).toBe(true);
+  const gearRow = (await ui(page))?.gearPanel?.rows[0];
+  if (!gearRow) throw new Error('no gear row');
+  await hover(page, gearRow.box.x + gearRow.box.w - 30, gearRow.box.y + gearRow.box.h / 2);
+  await expect.poll(async () => (await ui(page))?.tip?.source.kind).toBe('gear');
+  const tip = (await ui(page))?.tip;
+  const rows = (await ui(page))?.tagged.benchStages?.rows ?? [];
+  // A point on the tip and on an affordable Stages row under it.
+  const under = rows.find((r) => !r.dimmed && tip && r.x < tip.box.x + tip.box.w - 4 && r.x + r.w > tip.box.x + 4 && r.y < tip.box.y + tip.box.h - 4 && r.y + r.h > tip.box.y + 4);
+  if (!tip || !under) throw new Error('no Stages row under the tip');
+  const x = Math.max(under.x, tip.box.x) + 4;
+  const y = Math.max(under.y, tip.box.y) + 4;
+  const before = await state(page);
+  const at = await screenPoint(page, x, y);
+  await page.mouse.click(at.x, at.y);
+  const after = await step(page, 2);
+  expect(after.inventory).toEqual(before.inventory);
+  expect(after.events.craftFails).toEqual([]);
+  expect((await ui(page))?.tip?.source.kind).toBe('gear');
+  // The same click with no tip there applies the row, so the check above means something.
+  await hover(page, under.x + under.w / 2, under.y + under.h / 2);
+  await expect.poll(async () => (await ui(page))?.tip?.source.kind).toBe('stage');
+  await page.mouse.click(at.x, at.y);
+  await expect.poll(async () => JSON.stringify((await step(page, 1)).inventory) !== JSON.stringify(before.inventory)).toBe(true);
   expect(errors).toEqual([]);
 });

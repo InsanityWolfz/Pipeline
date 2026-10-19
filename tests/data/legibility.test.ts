@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { AMMO } from '../../src/data/ammo';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { FONT_FILES } from '../../src/data/fonts';
-import { KEYWORDS, type KeywordId } from '../../src/data/keywords';
-import { BUILD_TAB, CHILD_NAMES, CHIP, GLOSSARY, GROUP_NAMES, LANE_NAMES, LEGIBILITY_WORDS, PARAM_STATS, SCOPE_TEXT, TALENT_TABS, TIP, WHEN_LINES } from '../../src/data/legibility';
+import { KEYWORDS, SCOPES, type KeywordId } from '../../src/data/keywords';
+import { BUILD_TAB, CHILD_NAMES, CHIP, GLOSSARY, GROUP_NAMES, LANE_NAMES, LEGIBILITY_WORDS, PARAM_STATS, TALENT_TABS, TIP, WHEN_LINES } from '../../src/data/legibility';
 import { paletteHex } from '../../src/data/palette';
 import { formatDamage, formatParam, formatSeconds, REF, renderTemplate, SLOT } from '../../src/data/rulesText';
 import { BASE_FAMILY } from '../../src/data/roundKeywords';
@@ -83,7 +83,7 @@ describe('params resolve through stats', () => {
 });
 
 describe('words follow 039’s rules', () => {
-  const templates = [...Object.values(LEGIBILITY_WORDS), ...Object.values(WHEN_LINES), ...Object.values(SCOPE_TEXT), ...Object.values(CHILD_NAMES), ...Object.values(LANE_NAMES)];
+  const templates = [...Object.values(LEGIBILITY_WORDS), ...Object.values(WHEN_LINES), ...Object.values(SCOPES).flatMap((x) => ['sources' in x ? x.sources : '', x.template]), ...Object.values(CHILD_NAMES), ...Object.values(LANE_NAMES)];
 
   it('no template holds a digit, and every reference resolves', () => {
     for (const t of templates) {

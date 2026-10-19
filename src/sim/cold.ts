@@ -10,15 +10,21 @@ import { statOf, statusEmission, type Statted } from './statResolve';
 // it doesn't move or think, so a wind-up pauses, but it still takes damage and,
 // unless a boss, knockback. After the thaw it gains no stacks for COLD.refreezeTicks.
 
+/** The Chill stacks that Freeze, with the player's stats (037: Rimecraft takes one off, through resolveStat, 039); never below 1. */
+export const freezeAt = (state: Statted): number => Math.max(1, statOf(state, 'stacks-to-freeze', statusEmission('chill'), COLD.stacksToFreeze));
+
+/** Cold hits from no Chill to a Freeze (040's "Freeze in N hits"): the stacks that Freeze, COLD.chillPerHit a hit. */
+export const hitsToFreeze = (state: Statted): number => Math.ceil(freezeAt(state) / COLD.chillPerHit);
+
 /** A cold hit on a live enemy: a stack, or the freeze on the stack that reaches the cap (the player's stats', 037). Nothing while frozen or in the refreeze window. */
 export function chillEnemy(state: SimState, e: EnemyState): void {
   if (e.frozen > 0 || e.refreeze > 0) return;
   // Rimecraft (037) takes a stack off the Freeze and adds to its length (a boss's too), through resolveStat (039).
   const chill = statusEmission('chill');
-  const freezeAt = Math.max(1, statOf(state, 'stacks-to-freeze', chill, COLD.stacksToFreeze));
-  e.chill = Math.min(freezeAt, e.chill + COLD.chillPerHit);
+  const at = freezeAt(state);
+  e.chill = Math.min(at, e.chill + COLD.chillPerHit);
   e.chillTicks = statOf(state, 'duration', chill, COLD.stackTicks);
-  if (e.chill < freezeAt) return;
+  if (e.chill < at) return;
   e.chill = 0;
   e.chillTicks = 0;
   e.frozen = statOf(state, 'duration', statusEmission('freeze'), enemyDef(e.enemyId).boss ? COLD.bossFreezeTicks : COLD.freezeTicks);

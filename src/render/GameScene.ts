@@ -21,7 +21,7 @@ import { EnemyView, NO_ENEMY_UI } from './EnemyView';
 import { FoundryView } from './FoundryView';
 import { GroundItemView } from './GroundItemView';
 import { HopperPicker } from './HopperPicker';
-import { HoverView } from './HoverView';
+import { HoverView, NO_HOVER_UI } from './HoverView';
 import { HudView, NO_HUD_PANELS } from './HudView';
 import { NodeView } from './NodeView';
 import { bodyLook, PlayerView } from './PlayerView';
@@ -45,7 +45,8 @@ import { Legibility, NO_LEGIBILITY_UI } from './Legibility';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
-const inRoom = <T extends { roomId: string }>(list: readonly T[], roomId: string): T[] => list.filter((o) => o.roomId === roomId);
+const inRoom = <T extends { roomId: string }>(list: readonly T[], roomId: string): T[] =>
+  list.filter((o) => o.roomId === roomId);
 
 // Draws the sim and drives it in real time. Holds no game rules.
 export class GameScene extends Scene {
@@ -74,7 +75,8 @@ export class GameScene extends Scene {
   private tutorial?: TutorialUi;
   private feel?: FeelView;
   private cursorView?: CursorView;
-  private legibility?: Legibility; // 040: hover tips (Shift for the breakdown) and the glossary.
+  /** 040: hover tips (Shift for the breakdown) and the glossary; the test hook measures its summaries. */
+  legibility?: Legibility;
   /** The room on screen. It lags the player's room through a door's fade. */
   private shownRoomId: string;
   private fading = false;
@@ -174,8 +176,7 @@ export class GameScene extends Scene {
       ...(this.siteMenus?.ui ?? NO_SITE_UI),
       pickerHint: this.picker?.hintShown ?? null,
       pickerCounts: [...(this.picker?.shownCounts ?? [])],
-      hoverName: this.hover?.shown ?? null,
-      hoverDescription: this.hover?.shownDescription ?? null,
+      ...(this.hover?.ui ?? NO_HOVER_UI),
       buildTip: this.buildView?.tipShown ?? null,
       ...(this.roomViews?.state ?? NO_ROOM_UI),
       nodes: this.nodeView?.frames ?? {},
@@ -193,7 +194,6 @@ export class GameScene extends Scene {
       tagged: { benchStages: this.siteMenus?.stagePanel ?? null, splitFlashes: this.effects?.splitFlashes ?? 0, trails: this.arrowView?.trails ?? { count: 0, longest: 0 } },
       ...(this.enemyView?.ui ?? NO_ENEMY_UI),
       ...(this.legibility?.ui ?? NO_LEGIBILITY_UI),
-      hoverChips: this.hover?.shownChips ?? [],
     };
   }
 
@@ -227,7 +227,11 @@ export class GameScene extends Scene {
     this.roomViews?.show(roomById(roomId));
   }
 
-  /** Keeps the room on screen in step with the player's: through a door it fades out, swaps at dark and fades in; a KO swaps at once (its own fade). */
+  /**
+   * Keeps the room on screen in step with the player's. Through a door it fades
+   * out, swaps the room at dark and fades back in. A KO has its own fade, so the
+   * room swaps straight away.
+   */
   private followRoom(ko: boolean): void {
     if (this.fading || this.shownRoomId === this.sim.roomId) return;
     const camera = this.cameras.main;

@@ -23,7 +23,8 @@ export interface TalentPanelLayout {
   /** The constellation's centre: the start's position. */
   centre: { x: number; y: number };
   nodes: TalentNodeSpot[];
-  info: { x: number; y: number; w: number };
+  /** The info strip under the lowest node (037), where a node's summary docks (040): it never reaches a node. */
+  info: { x: number; y: number; w: number; h: number };
   reset: ScreenRect;
   /** The hint's top-left, bottom left beside the reset button. */
   hint: { x: number; y: number };
@@ -47,14 +48,18 @@ export function talentPanelLayout(tab: TalentTab = 'talents'): TalentPanelLayout
   const title = { x: Math.round(x + (P.w - P.title.w) / 2), y: top, w: P.title.w, h: P.title.h };
   const T = TALENT_TABS;
   const tabsX = title.x + Math.round((title.w - (T.tabs.length * T.w + (T.tabs.length - 1) * T.gap)) / 2);
+  const nodes = TALENT_LIST.map((t) => ({ id: t.id, x: centre.x + t.pos.x, y: centre.y + t.pos.y, r: nodeSize(t) / 2 }));
   return {
     tabs: T.tabs.map((t, i) => ({ id: t.id, text: t.text, box: { x: tabsX + i * (T.w + T.gap), y: top + T.y, w: T.w, h: T.h } })),
     title,
     panel: { x, y, w: P.w, h: P.h },
     header: { x: x + P.pad, y: y + P.header.y },
     centre,
-    nodes: TALENT_LIST.map((t) => ({ id: t.id, x: centre.x + t.pos.x, y: centre.y + t.pos.y, r: nodeSize(t) / 2 })),
-    info: { x: x + P.pad, y: y + P.info.y, w: P.w - 2 * P.pad },
+    nodes,
+    info: (() => {
+      const top = Math.ceil(Math.max(...nodes.map((n) => n.y + n.r))) + P.info.gap;
+      return { x: x + P.pad, y: top, w: P.w - 2 * P.pad, h: y + P.h - P.pad - top };
+    })(),
     reset: { x: x + P.w - P.pad - P.reset.w, y: y + P.h - P.pad - P.reset.h, w: P.reset.w, h: P.reset.h },
     hint: { x: x + P.pad, y: y + P.h - P.pad - P.reset.h + P.reset.textY },
   };

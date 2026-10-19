@@ -4,7 +4,11 @@ import { TIP, type ChipId } from '../data/legibility';
 import type { SimState } from '../sim/state';
 import { describe } from './describe';
 import { GlossaryView, type GlossaryState } from './GlossaryView';
-import { RuleTip } from './RuleTip';
+import { RuleTip, type TipContent } from './RuleTip';
+import { loadoutKey } from './loadoutKey';
+import { AMMO } from '../data/ammo';
+import { STAGES } from '../data/stages';
+import { TALENT_LIST } from '../data/talents';
 import { inBox, placeTip, type Box } from './tipPlace';
 import { texts, type Description, type TipHit, type TipProvider, type TipSource } from './tipTypes';
 
@@ -28,8 +32,19 @@ export interface LegibilityUi {
 
 export const NO_LEGIBILITY_UI: LegibilityUi = { tip: null, glossary: null };
 
-/** What changes a description: the talents, the worn and carried gear, and what the player knows. */
-const loadoutKey = (s: SimState): string => [s.talents.join(), Object.values(s.equipped).join(), s.gear.length, s.crafted.length, s.carried.length, Object.keys(s.machineMade).length].join('|');
+/** A description as a tablet's content: its summary (at most four rows, and `maxH` px when docked) or its breakdown (16 rows). */
+function tipContent(d: Description, summary: boolean, maxH?: number): TipContent {
+  return {
+    name: d.name,
+    ...(d.nameColor ? { nameColor: d.nameColor } : {}),
+    chips: d.chips,
+    lines: summary ? d.summary : d.breakdown,
+    maxW: summary ? TIP.summaryW : TIP.breakdownW,
+    maxRows: summary ? TIP.summaryRows : TIP.maxLines,
+    ...(maxH !== undefined ? { maxH } : {}),
+  };
+}
+
 
 // The legibility UI (040): the panels and HUD report what's under the cursor; the hover tablet
 // shows its summary beside it, or its breakdown while Shift is held (a Build tab row always
@@ -45,8 +60,11 @@ export class Legibility {
   private grace = 0;
   private shown: { desc: Description; key: string; mode: TipState['mode'] } | null = null;
   private sim: SimState | null = null;
+  private readonly scene: Scene;
+  private measurer: RuleTip | null = null;
 
   constructor(scene: Scene, providers: readonly (TipProvider | undefined)[]) {
+    this.scene = scene;
     this.tip = new RuleTip(scene, DEPTHS.menu + 10);
     this.glossary = new GlossaryView(scene);
     this.providers = providers.filter((p): p is TipProvider => p !== undefined);
@@ -70,7 +88,10 @@ export class Legibility {
     return true;
   }
 
-  /** A click: a chip opens its entry; with the glossary open, a click outside it closes it. Returns whether it was taken. */
+  /**
+   * A click: a chip opens its entry; any click on the tip's tablet is the tablet's, so nothing under it (a node, a bench
+   * row, the build bar) takes it; with the glossary open, a click outside it closes it. Returns whether it was taken.
+   */
   click(x: number, y: number): boolean {
     if (this.glossary.isOpen) {
       const chip = this.glossary.chipAt(x, y);
@@ -78,10 +99,11 @@ export class Legibility {
       else if (!this.glossary.contains(x, y)) this.glossary.close();
       return true;
     }
-    const chip = this.tip.chipAt(x, y) ?? this.providers.map((p) => p.chipAt?.(x, y) ?? null).find((c) => c !== null) ?? null;
-    if (!chip) return false;
-    this.openEntry(chip);
-    return true;
+    const box = this.tip.box;
+    const onTip = box !== null && inBox(box, x, y);
+    const chip = this.tip.chipAt(x, y) ?? (onTip ? null : (this.providers.map((p) => p.chipAt?.(x, y) ?? null).find((c) => c !== null) ?? null));
+    if (chip) this.openEntry(chip);
+    return chip !== null || onTip;
   }
 
   private openEntry(id: ChipId): void {
@@ -152,10 +174,31 @@ export class Legibility {
     this.shown.mode = mode;
     const d = this.shown.desc;
     const summary = mode === 'summary';
-    const content = { name: d.name, ...(d.nameColor ? { nameColor: d.nameColor } : {}), chips: d.chips, lines: summary ? d.summary : d.breakdown, maxW: summary ? TIP.summaryW : TIP.breakdownW, maxRows: TIP.maxLines };
+    const content = tipContent(d, summary, summary ? c.hit.maxH : undefined);
     const { w, h } = this.tip.measure(content);
     const at = placeTip(c.hit.anchor, w, h);
     this.tip.show(content, at.x, at.y);
+  }
+
+  /**
+   * Every summary the game can show, laid out as drawn (040: at most four rows): each round, talent, stage and the
+   * player's gear pieces, for the test hook. Measured on a hidden tablet.
+   */
+  summaryRows(sim: SimState): { source: TipSource; rows: number; cut: boolean; w: number; h: number }[] {
+    this.measurer ??= new RuleTip(this.scene, DEPTHS.menu);
+    const measurer = this.measurer;
+    const sources: TipSource[] = [
+      ...Object.keys(AMMO).map((id) => ({ kind: 'round' as const, id })),
+      ...TALENT_LIST.map((t) => ({ kind: 'talent' as const, id: t.id })),
+      ...Object.keys(STAGES).map((id) => ({ kind: 'stage' as const, id })),
+      ...sim.gear.map((g) => ({ kind: 'gear' as const, id: String(g.id) })),
+    ];
+    return sources.flatMap((source) => {
+      const d = describe(sim, source);
+      if (!d) return [];
+      const size = measurer.measure(tipContent(d, true));
+      return [{ source, ...measurer.drawnRows, ...size }];
+    });
   }
 
   private hideTip(): void {

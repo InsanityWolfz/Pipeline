@@ -30,6 +30,8 @@ export interface TipLine {
   text: string;
   tone?: Tone;
   parts?: readonly TipPart[];
+  /** A shorter form for a summary that would run past its rows ("Reaches: 5 rounds"; the full list is in the breakdown). */
+  short?: string;
 }
 
 /** What a tablet can describe (040), and the build bar's other pieces (015's tip, now the same tablet). */
@@ -50,6 +52,8 @@ export interface Description {
   summary: TipLine[];
   breakdown: TipLine[];
   bonuses: number;
+  /** A round's final damage and shots/s as its summary shows them (the Build tab's row reads these). */
+  numbers?: { damage: string; perSecond: string };
 }
 
 /** A plain line. */
@@ -65,6 +69,8 @@ export interface TipHit {
   at: Box;
   anchor: Anchor;
   breakdown?: true;
+  /** The tallest its summary may be, px (the talent tree's info strip, so it never covers a node). */
+  maxH?: number;
 }
 
 /** A panel or HUD part that can show tips: what's under a view point, and (the Build tab) a chip there. */

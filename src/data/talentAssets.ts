@@ -57,7 +57,8 @@ export const KEYSTONE_ICONS: Readonly<Record<KeystoneRule, string>> = {
  * its capitals.
  */
 export const TALENT_PANEL = {
-  title: { text: 'Talents', w: 128, h: 22, gap: 4, titleY: 4 },
+  /** The title card (its tablet; 040's tabs on it, TALENT_PANEL.tabs). */
+  title: { w: 128, h: 22, gap: 4 },
   /**
    * The title card's tabs (040): Talents and Build, in 036's tab style (GEAR_PANEL's tab fills), each `w` × `h` px,
    * `gap` apart, centred on the card `y` px down; the text `textY` below a tab's top.
@@ -78,7 +79,8 @@ export const TALENT_PANEL = {
   w: 300,
   h: 300,
   header: { y: 7 },
-  constellationY: 136,
+  /** 040: 8 px higher than 037's 136, so the info strip under the lowest node holds a four-row summary. */
+  constellationY: 128,
   size: { start: 22, minor: 18, keystone: 26 },
   /**
    * A taken node's halo and an available node's ring are drawn `pad` px wider than the node, their sprites being
@@ -89,9 +91,8 @@ export const TALENT_PANEL = {
   /** The lane icon on a node is drawn at this scale of its 16 px frame. */
   iconScale: { start: 1, minor: 0.7, keystone: 0.95 },
   hitPad: 2,
-  /** The info area (037): where a node's summary docks (040), above the reset button by `infoGap` px. */
-  info: { y: 248 },
-  infoGap: 2,
+  /** The info area (037): the strip from `gap` px under the lowest node to the panel's padding, where a node's summary docks (040). */
+  info: { gap: 2 },
   reset: { w: 104, h: 14, textY: 4, text: 'Reset talents (free)' },
   pad: 8,
   hint: 'Hover a node to read it; click a lit one to take it.',

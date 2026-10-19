@@ -66,6 +66,15 @@ export interface KeywordDef {
   forms?: Readonly<Record<string, string>>;
 }
 
+/**
+ * The two plain scopes (039.1): All ammo (every round fired) and You (the player). They aren't keywords, but render as
+ * plain grey chips with their own glossary entries (040): a rule like a keyword's template, and what grants them.
+ */
+export const SCOPES = {
+  'all-ammo': { name: 'All ammo', template: 'Every round you fire, and every {{shard}}, {{bomblet}} and {{burst}} it makes.' },
+  you: { name: 'You', template: 'Your own numbers: health, armor, regen, speed and the roll.', sources: 'always yours' },
+} as const;
+
 /** The two child nouns (039): reserved words like the keywords, never chips. */
 export const NOUNS = { shard: 'Shard', bomblet: 'Bomblet' } as const;
 export type NounId = keyof typeof NOUNS;

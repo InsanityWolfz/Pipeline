@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { createSim, resetWorld } from '../../src/sim/state';
+import { createSim } from '../../src/sim/state';
 import { knownRounds, roundsByFamily } from '../../src/sim/knownRounds';
-import { run } from './fight';
+import { die, run } from './fight';
 
 // The rounds the player knows (040.2): hand-crafted or hand-applied, made by a machine, or
 // carried at least once. Rounds never seen stay hidden, as recipes do before they're found.
@@ -24,10 +24,13 @@ describe('known rounds', () => {
     s.inventory['bomb+frost'] = 2;
     run(s, 1);
     expect(knownRounds(s)).toContain('bomb+frost');
+    // Spent, then a real KO (the death plays out and the player wakes in the foundry): still known.
     s.inventory['bomb+frost'] = 0;
-    resetWorld(s);
+    die(s);
     run(s, 1);
+    expect(s.inventory['bomb+frost'] ?? 0).toBe(0);
     expect(knownRounds(s)).toContain('bomb+frost');
+    expect(s.carried).toContain('bomb+frost');
   });
 
   it('knows a round hand-crafted or hand-applied, or made by a machine', () => {

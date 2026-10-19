@@ -6,6 +6,8 @@ import { TALENT_SPRITES_VECTOR } from '../../src/data/art/talents';
 import { inksOf } from '../../src/data/art/types';
 import { TALENTS } from '../../src/data/talents';
 import { onRect, talentAt, talentPanelLayout } from '../../src/render/talentLayout';
+import { placeTip } from '../../src/render/tipPlace';
+import { TIP } from '../../src/data/legibility';
 
 // The tree panel's layout (037): on screen under its title card, every node inside the
 // tablet and clear of the header and the info strip, none overlapping, each hit by a click on it.
@@ -29,6 +31,21 @@ describe('the tree panel', () => {
     for (const a of L.nodes) for (const b of L.nodes) if (a.id < b.id) expect(Math.hypot(a.x - b.x, a.y - b.y), `${a.id} ${b.id}`).toBeGreaterThan(a.r + b.r + 4);
     expect(L.reset.y).toBeGreaterThan(L.info.y + 18);
     expect(inside(L.panel, L.reset.x, L.reset.y) && inside(L.panel, L.reset.x + L.reset.w, L.reset.y + L.reset.h)).toBe(true);
+  });
+
+  it('its info strip holds a four-row summary, and a summary docked there never covers a node (040)', () => {
+    const tallest = TIP.nameRow + (TIP.summaryRows - 1) * TIP.lineHeight + 2 * TIP.pad;
+    expect(L.info.h).toBeGreaterThanOrEqual(tallest);
+    for (const hovered of L.nodes) {
+      for (const [w, h] of [[TIP.summaryW, tallest], [120, 30]] as const) {
+        const box = { x: hovered.x - hovered.r, y: hovered.y - hovered.r, w: 2 * hovered.r, h: 2 * hovered.r };
+        const at = placeTip({ box, prefer: [], dock: L.info }, w, Math.min(h, L.info.h));
+        for (const n of L.nodes) {
+          const clear = at.x >= n.x + n.r || at.x + w <= n.x - n.r || at.y >= n.y + n.r || at.y + h <= n.y - n.r;
+          expect(clear, `${hovered.id}'s tip over ${n.id}`).toBe(true);
+        }
+      }
+    }
   });
 
   it('hits each node at its centre and nothing between them', () => {

@@ -11,7 +11,7 @@ import { stageDef } from '../data/stages';
 import { itemDef } from '../data/items';
 import { ammoDef } from '../data/ammo';
 import { TALENT_PANEL } from '../data/talentAssets';
-import { LANE_COLORS, TALENT_START, talentDef } from '../data/talents';
+import { LANE_COLORS, TALENT_POINT_COST, TALENT_START, talentDef } from '../data/talents';
 import { affixLabel } from './gearText';
 import { roundsByFamily, knownRounds } from '../sim/knownRounds';
 import { resolveStat, YOU, type Statted } from '../sim/statResolve';
@@ -46,12 +46,16 @@ function lineBonuses(s: Statted, lines: readonly ContentLine[]): number {
 
 const hint = (n: number): TipLine[] => (n > 0 ? [line(fill(n === 1 ? W.bonus : W.bonuses, { count: n }), 'hint')] : []);
 
-/** "Reaches:" the known rounds the lines change; left off when every line is the player's own (scope You). */
+/**
+ * "Reaches:" the known rounds the lines change, left off when every line is the player's own (scope You). Its short
+ * form is a count, for a summary the list would run past its rows; the breakdown always has the list.
+ */
 function reachesLine(seen: Seen, lines: readonly ContentLine[]): TipLine[] {
   const ammo = lines.filter((l) => l.scope !== 'you');
   if (ammo.length === 0) return [];
   const names = [...new Set(ammo.flatMap((l) => reachedRounds(seen, l)))];
-  return [line(names.length > 0 ? fill(W.reaches, { rounds: names.join(', ') }) : W.reachesNothing)];
+  if (names.length === 0) return [line(W.reachesNothing)];
+  return [{ text: fill(W.reaches, { rounds: names.join(', ') }), short: fill(names.length === 1 ? W.reachesOne : W.reachesCount, { count: names.length }) }];
 }
 
 /** Each line in full: a stat line before → after, a rule line with precise times and its px. */
@@ -65,14 +69,15 @@ export function describeTalent(seen: Seen, id: string): Description {
   const withIt = { ...seen, talents: taken ? seen.talents : [...seen.talents, id] };
   const bonuses = lineBonuses(withIt, def.lines);
   const start = def.id === TALENT_START;
-  const cost = start ? TALENT_COST.free : `${TALENT_COST.each} ${TALENT_COST.each === 1 ? TALENT_COST.point : TALENT_COST.points}`;
+  const cost = start ? TALENT_COST.free : `${TALENT_POINT_COST} ${TALENT_POINT_COST === 1 ? TALENT_COST.point : TALENT_COST.points}`;
+  const reaches = reachesLine(seen, def.lines);
   return {
     source: { kind: 'talent', id },
     name: def.name,
     nameColor: LANE_COLORS[def.lane],
     chips: chipsOf(contentChips(def.lines)),
-    summary: [line(start ? TALENT_PANEL.startText : linesText(def.lines)), ...reachesLine(seen, def.lines), ...hint(bonuses)],
-    breakdown: [...(start ? [line(TALENT_PANEL.startText)] : detail(without, withIt, def.lines)), line(fill(W.lane, { lane: renderTemplate(LANE_NAMES[def.lane]), cost }))],
+    summary: [line(start ? TALENT_PANEL.startText : linesText(def.lines)), ...reaches, ...hint(bonuses)],
+    breakdown: [...(start ? [line(TALENT_PANEL.startText)] : detail(without, withIt, def.lines)), ...reaches.map((r) => line(r.text)), line(fill(W.lane, { lane: renderTemplate(LANE_NAMES[def.lane]), cost }))],
     bonuses,
   };
 }
@@ -117,10 +122,16 @@ export function describeStage(seen: Seen, id: string): Description {
     source: { kind: 'stage', id },
     name: st.name,
     chips: chipsOf([tag.keyword]),
-    summary: [line(stageLineText(st)), line(takes.length > 0 ? fill(W.takes, { rounds: takes.join(', ') }) : W.takesNothing), ...hint(bonuses)],
+    summary: [line(stageLineText(st)), takesLine(takes), ...hint(bonuses)],
     breakdown: [...rules.map((r) => line(`${KEYWORDS[r.k].name}: ${r.text}`)), line(fill(W.cost, { cost: stageCost(st) })), line(gives.join(LINE_SEP))],
     bonuses,
   };
+}
+
+/** "Takes:" the player's rounds a stage can tag, or their count when the list would run past the summary's rows. */
+function takesLine(takes: readonly string[]): TipLine {
+  if (takes.length === 0) return line(W.takesNothing);
+  return { text: fill(W.takes, { rounds: takes.join(', ') }), short: fill(takes.length === 1 ? W.takesOne : W.takesCount, { count: takes.length }) };
 }
 
 /** A build-bar piece that isn't a stage (015): its name and description, nothing more to break down. */

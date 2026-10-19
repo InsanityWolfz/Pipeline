@@ -14,9 +14,6 @@ export interface GlossaryState {
   box: Box;
 }
 
-/** The most rows an entry holds: its name row, then lines to the tablet's height. */
-const ROWS = Math.floor((GLOSSARY.h - 2 * TIP.pad - TIP.nameRow) / TIP.lineHeight) + 1;
-
 // A keyword's glossary entry (040): a stone tablet centred above any open panel, at most
 // 260 × 170, every word generated from 039's data (describeGlossary). Its chips open their
 // own entries in its place. Esc or a click outside closes it; the world keeps running (031).
@@ -60,9 +57,10 @@ export class GlossaryView {
   update(): void {
     const e = this.entry;
     if (!e) return;
-    const content = { name: e.name, chips: e.chips, lines: e.breakdown, maxW: GLOSSARY.w, maxRows: ROWS };
+    // Its rows fit 170 px however many rows its chips take (tipFit's textRoom).
+    const content = { name: e.name, chips: e.chips, lines: e.breakdown, maxW: GLOSSARY.w, maxRows: TIP.maxLines, maxH: GLOSSARY.h };
     const { w, h } = this.tablet.measure(content);
-    this.tablet.show(content, Math.round((VIEW_WIDTH - w) / 2), Math.round((VIEW_HEIGHT - Math.min(h, GLOSSARY.h)) / 2));
+    this.tablet.show(content, Math.round((VIEW_WIDTH - w) / 2), Math.round((VIEW_HEIGHT - h) / 2));
   }
 
   get state(): GlossaryState | null {

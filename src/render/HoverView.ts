@@ -15,6 +15,9 @@ import { ChipLabels, drawChip, flowChips } from './KeywordChip';
 import { CHIP } from '../data/legibility';
 import type { PlacedChip } from './tipTypes';
 
+/** What the hover name shows, for `ui()`: the name, its description (018) and an enemy's chips (040.4). */
+export const NO_HOVER_UI = { hoverName: null as string | null, hoverDescription: null as string | null, hoverChips: [] as string[] };
+
 // What the cursor is over in the world (015): its name, and over a machine or the
 // intake (019, 024), the readout of what it holds (006) under the name.
 export class HoverView {
@@ -26,6 +29,10 @@ export class HoverView {
   /** The name and description on show, for the test hook. */
   shown: string | null = null;
   shownDescription: string | null = null;
+  get ui(): typeof NO_HOVER_UI {
+    return { hoverName: this.shown, hoverDescription: this.shownDescription, hoverChips: this.shownChips };
+  }
+
   /** An enemy's chips under its name (040.4: traits, then live statuses), by their words. Not clickable: a click there fires. */
   shownChips: string[] = [];
   private readonly chipLabels: ChipLabels;

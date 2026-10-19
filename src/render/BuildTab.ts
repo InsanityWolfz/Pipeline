@@ -4,8 +4,11 @@ import { ammoDef } from '../data/ammo';
 import { itemDef } from '../data/items';
 import { BUILD_TAB, CHIP, type ChipId } from '../data/legibility';
 import type { SimState } from '../sim/state';
-import { buildTabGroups, buildTabLayout, type BuildTabGroup, type BuildTabLayout, type BuildTabRow } from './buildTabLayout';
+import { buildTabGroups, buildTabLayout, rowFields, type BuildTabGroup, type BuildTabLayout, type BuildTabRow, type RowFields } from './buildTabLayout';
+import { BASE_FAMILY } from '../data/roundKeywords';
+import { roundsByFamily } from '../sim/knownRounds';
 import { colorOf } from './color';
+import { loadoutKey } from './loadoutKey';
 import { ChipLabels, drawChip, flowChips } from './KeywordChip';
 import { TextLine } from './textLine';
 import { inBox, type Box } from './tipPlace';
@@ -25,8 +28,6 @@ interface RowView {
   sources: TextLine;
 }
 
-/** What changes the rows: the talents, the worn gear and what the player knows. */
-const rowsKey = (s: SimState): string => [s.talents.join(), Object.values(s.equipped).join(), s.gear.length, s.crafted.join(), s.carried.join(), Object.keys(s.machineMade).join()].join('|');
 
 const named = (round: string): string => itemDef(ammoDef(round).itemId).name;
 const iconOf = (round: string): string => itemDef(ammoDef(round).itemId).icon;
@@ -53,8 +54,8 @@ export class BuildTab {
     this.labels = new ChipLabels(scene, depth + 2);
     const text = (style: 'body' | 'display' = 'body') => new TextLine(scene, 0, 0, depth + 2, false, style).setVisible(false);
     // Room for every family's header and every round there is.
-    for (let i = 0; i < 4; i++) this.headers.push(text('display').setFill(BUILD_TAB.header.color));
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < Object.keys(BASE_FAMILY).length; i++) this.headers.push(text('display').setFill(BUILD_TAB.header.color));
+    for (let i = 0; i < roundsByFamily().length; i++) {
       const icon = addVector(scene, 0, 0, SPRITES.hudShield).setOrigin(0).setScrollFactor(0).setDepth(depth + 1).setVisible(false);
       icon.setScale(icon.scaleX * BUILD_TAB.iconScale);
       this.rows.push({ icon, name: text(), damage: text(), rate: text(), sources: text() });
@@ -88,7 +89,7 @@ export class BuildTab {
       return;
     }
     this.panel = panel;
-    const key = rowsKey(sim);
+    const key = loadoutKey(sim);
     if (key !== this.key) {
       this.key = key;
       this.groups = buildTabGroups(sim, iconOf, named);
@@ -114,27 +115,31 @@ export class BuildTab {
     });
     const byRound = new Map(this.groups.flatMap((g) => g.rows.map((r) => [r.round, r] as const)));
     this.chips = [];
+    const fields = rowFields(L.columnW);
     this.rows.forEach((v, i) => {
       const at = L.rows[i];
       const row = at ? byRound.get(at.round) : undefined;
       for (const o of [v.icon, v.name, v.damage, v.rate, v.sources]) o.setVisible(row !== undefined);
-      if (at && row) this.drawRow(v, row, at.box);
+      if (at && row) this.drawRow(v, row, at.box, fields);
     });
     for (const c of this.chips) drawChip(this.g, c.box, c.group);
     this.labels.show(this.chips);
   }
 
-  private drawRow(v: RowView, row: BuildTabRow, b: Box): void {
+  /** One row in its column: the fields where rowFields puts them for the column's width. */
+  private drawRow(v: RowView, row: BuildTabRow, b: Box, f: RowFields): void {
     const B = BUILD_TAB;
     if (this.hovered === row.round) this.g.fillStyle(colorOf(B.hover.color), B.hover.alpha).fillRect(b.x, b.y, b.w, b.h);
     v.icon.setFrame(row.icon).setPosition(b.x, b.y + 1);
-    v.name.set(row.name).moveTo(b.x + B.name.x, b.y + B.name.y);
-    const flow = flowChips(row.chips, (l) => this.labels.width(l), { x: b.x + B.chips.x, y: b.y + B.chips.y, firstX: b.x + B.chips.x, right: Infinity, rowStep: CHIP.h });
-    this.chips.push(...flow.placed);
+    fitText(v.name, row.name, f.name.w).moveTo(b.x + f.name.x, b.y + B.name.y);
+    if (f.chipsX !== null) {
+      const x = b.x + f.chipsX;
+      this.chips.push(...flowChips(row.chips, (l) => this.labels.width(l), { x, y: b.y + B.chipsY, firstX: x, right: Infinity, rowStep: CHIP.h }).placed);
+    }
     const right = (line: TextLine, text: string, edge: number) => line.set(text).moveTo(Math.round(b.x + edge - line.width), b.y + B.name.y);
-    right(v.damage, row.damage, B.damageRight);
-    right(v.rate, row.perSecond, B.rateRight);
-    right(v.sources, row.sourcesText, b.w - B.sourcesRight);
+    right(v.damage, row.damage, f.damageRight);
+    right(v.rate, row.perSecond, f.rateRight);
+    right(v.sources, f.compact ? String(row.sources) : row.sourcesText, f.sourcesRight);
   }
 
   get state(): BuildTabState {
@@ -147,4 +152,11 @@ export class BuildTab {
       }),
     };
   }
+}
+
+/** Shortens a line with an ellipsis until it fits `w` px. */
+function fitText(line: TextLine, text: string, w: number): TextLine {
+  line.set(text);
+  for (let n = text.length - 1; line.width > w && n > 1; n--) line.set(`${text.slice(0, n).trimEnd()}…`);
+  return line;
 }

@@ -1,6 +1,8 @@
 import type { GameObjects, Scene } from 'phaser';
 import { TIP } from '../data/legibility';
+import { UNITS } from '../data/rulesText';
 import { ChipLabels, drawChip, flowChips } from './KeywordChip';
+import { fitRows, textRoom } from './tipFit';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import { inBox, type Box } from './tipPlace';
@@ -14,8 +16,10 @@ export interface TipContent {
   lines: readonly TipLine[];
   /** The tablet's widest, px. */
   maxW: number;
-  /** The most rows it holds, name and chip rows included (the breakdown's 16); a cut line ends with "…". */
+  /** The most rows it holds, name and chip rows included (a summary's 4, the breakdown's 16); a cut line ends with "…". */
   maxRows: number;
+  /** The tallest it may be, px (the glossary's 170, the talent tree's info strip). */
+  maxH?: number;
 }
 
 /** A row's words: each run of one tone, where it starts. */
@@ -49,6 +53,7 @@ export class RuleTip {
   private chips: PlacedChip[] = [];
   private drawn: PlacedChip[] = [];
   private chipRows = 1;
+  private cut = false;
   private shownBox: Box | null = null;
 
   constructor(scene: Scene, depth: number) {
@@ -140,29 +145,15 @@ export class RuleTip {
     const nameW = Math.ceil(this.name.set(c.name).width);
     const flow = flowChips(c.chips, (l) => this.labels.width(l), { x: 0, y: 1, firstX: nameW + TIP.nameGap, right: inner, rowStep: TIP.nameRow });
     this.chipRows = Math.max(1, flow.rows);
-    let widest = Math.max(nameW, ...flow.placed.map((p) => p.box.x + p.box.w));
-    // Words in their tones, wrapped greedily to the inner width.
-    const rows: Run[][] = [];
-    for (const l of c.lines) {
-      const words = glue((l.parts ?? [{ text: l.text, tone: l.tone }]).flatMap((p) => p.text.split(' ').filter((w) => w !== '').map((w) => ({ w, tone: p.tone ?? l.tone ?? 'text' }))));
-      let row: { w: string; tone: Tone; x: number }[] = [];
-      let x = 0;
-      const flush = () => {
-        rows.push(runsOf(row));
-        widest = Math.max(widest, x - this.space);
-        row = [];
-        x = 0;
-      };
-      for (const word of words) {
-        const w = this.wordWidth(word.w);
-        if (x > 0 && x + w > inner) flush();
-        row.push({ ...word, x });
-        x += w + this.space;
-      }
-      if (row.length > 0) flush();
-    }
+    // Each line wrapped (and its short form), then fitted: the hint always shows, a short form before any cut (tipFit).
+    const lines = c.lines.map((l) => ({ rows: this.wrap(l, inner), ...(l.short ? { short: this.wrap({ text: l.short, ...(l.tone ? { tone: l.tone } : {}) }, inner) } : {}), keep: l.tone === 'hint' }));
+    const fit = fitRows(lines, textRoom(this.chipRows, c.maxRows, c.maxH), (row) => {
+      const last = row[row.length - 1];
+      return last ? [...row.slice(0, -1), { ...last, text: `${last.text}${TIP.more}` }] : row;
+    });
     // Each run starts where the one before it ends, as drawn (a run's width isn't quite its words' and spaces' sum).
-    for (const row of rows) {
+    let widest = Math.max(nameW, ...flow.placed.map((p) => p.box.x + p.box.w));
+    for (const row of fit.rows) {
       let x = 0;
       for (const run of row) {
         run.x = x;
@@ -170,22 +161,40 @@ export class RuleTip {
       }
       widest = Math.max(widest, x - this.space);
     }
-    // At most maxRows rows, the name's and chips' included: a cut line ends with "…".
-    const room = Math.max(0, c.maxRows - this.chipRows);
-    if (rows.length > room) {
-      rows.length = room;
-      const last = rows[room - 1];
-      const run = last?.[last.length - 1];
-      if (run) run.text = `${run.text}${TIP.more}`;
-    }
-    this.rows = rows;
+    this.rows = fit.rows;
+    this.cut = fit.cut;
     this.chips = flow.placed.map((p) => ({ ...p, box: { ...p.box, x: p.box.x + P, y: p.box.y + P } }));
-    this.size = { w: Math.min(c.maxW, Math.ceil(widest) + 2 * P), h: this.chipRows * TIP.nameRow + rows.length * TIP.lineHeight + 2 * P };
+    this.size = { w: Math.min(c.maxW, Math.ceil(widest) + 2 * P), h: this.chipRows * TIP.nameRow + fit.rows.length * TIP.lineHeight + 2 * P };
+  }
+
+  /** A line's words in their tones, wrapped greedily to `inner` px, as rows of runs. */
+  private wrap(l: TipLine, inner: number): Run[][] {
+    const words = glue((l.parts ?? [{ text: l.text, tone: l.tone }]).flatMap((p) => p.text.split(' ').filter((w) => w !== '').map((w) => ({ w, tone: p.tone ?? l.tone ?? 'text' }))));
+    const rows: Run[][] = [];
+    let row: { w: string; tone: Tone; x: number }[] = [];
+    let x = 0;
+    for (const word of words) {
+      const w = this.wordWidth(word.w);
+      if (x > 0 && x + w > inner) {
+        rows.push(runsOf(row));
+        row = [];
+        x = 0;
+      }
+      row.push({ ...word, x });
+      x += w + this.space;
+    }
+    if (row.length > 0) rows.push(runsOf(row));
+    return rows;
+  }
+
+  /** The rows drawn (name and chip rows included) and whether a line was cut, for the hook. */
+  get drawnRows(): { rows: number; cut: boolean } {
+    return { rows: this.chipRows + this.rows.length, cut: this.cut };
   }
 }
 
-/** A unit after a number ("0.21 s", "48 px") never starts a row: it's glued to its number. */
-const UNIT = /^(s|px|px\/s|HP|HP\/s)[.,;)]*$/;
+/** A unit after a number ("0.21 s", "48 px") never starts a row: it's glued to its number (rulesText's units). */
+const UNIT = new RegExp(`^(${Object.values(UNITS).map((u) => u.replace('/', '\\/')).join('|')})[.,;)]*$`);
 
 function glue(words: { w: string; tone: Tone }[]): { w: string; tone: Tone }[] {
   const out: { w: string; tone: Tone }[] = [];

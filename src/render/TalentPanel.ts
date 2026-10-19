@@ -214,8 +214,8 @@ export class TalentPanel {
     if (!id || !spot) return null;
     const L = this.layout;
     const at = { x: spot.x - spot.r, y: spot.y - spot.r, w: 2 * spot.r, h: 2 * spot.r };
-    const dock = { x: L.info.x, y: L.header.y, w: L.info.w, h: L.reset.y - TALENT_PANEL.infoGap - L.header.y };
-    return { source: { kind: 'talent', id }, at, anchor: { box: at, prefer: [], dock } };
+    // The summary docks in the info strip, never taller than it, so it never covers a node.
+    return { source: { kind: 'talent', id }, at, anchor: { box: at, prefer: [], dock: L.info }, maxH: L.info.h };
   }
 
   /** Reads the tree every frame (so the hook can report it); draws it while open. */

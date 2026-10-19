@@ -1,8 +1,12 @@
 import { itemDef } from '../data/items';
 import { ammoDef } from '../data/ammo';
 import { KEYWORD_DEBT, KEYWORDS, NOUNS, type KeywordId } from '../data/keywords';
-import { keywordPayoffs, keywordSources } from '../data/keywordGraph';
-import { GROUP_NAMES, LEGIBILITY_WORDS as W, SCOPE_STATS, SCOPE_TEXT, type ChipId } from '../data/legibility';
+import { contentLines, keywordPayoffs, keywordSources } from '../data/keywordGraph';
+import { GROUP_NAMES, LEGIBILITY_WORDS as W, type ChipId } from '../data/legibility';
+import { isRuleLine } from '../data/lines';
+import { BASE_FAMILY } from '../data/roundKeywords';
+import { roundBase } from '../data/tags';
+import { SCOPES } from '../data/keywords';
 import { RELICS } from '../data/relics';
 import { REF, renderTemplate, scopeName } from '../data/rulesText';
 import { STAGES } from '../data/stages';
@@ -49,9 +53,14 @@ const statNames = (stats: readonly StatId[]): string => (stats.length > 0 ? stat
 export function describeKeyword(seen: Seen, id: ChipId): Description | null {
   const source = { kind: 'keyword' as const, id };
   if (id === 'all-ammo' || id === 'you') {
-    const payoffs = [...new Set([...Object.values(TALENTS), ...RELICS].filter((c) => c.lines.some((l) => l.scope === id)).map((c) => c.name))];
-    if (id === 'you') payoffs.push(W.affixes);
-    const lines = [line(GROUP_NAMES[id], 'dim'), line(renderTemplate(SCOPE_TEXT[id])), section(W.payoffs, payoffs), section(W.stats, [statNames(SCOPE_STATS[id])])];
+    // What it changes and who pays it off are its content lines (talents, relics and every affix); All ammo comes with
+    // every round the player knows (by family), You is always there.
+    const own = contentLines().filter((o) => o.line.scope === id);
+    const payoffs = [...new Set(own.map((o) => contentName(o.owner)))];
+    const stats = [...new Set(own.flatMap((o) => (isRuleLine(o.line) ? [] : [o.line.stat])))];
+    const families = Object.entries(BASE_FAMILY).filter(([base]) => knownRounds(seen).some((r) => roundBase(r) === base)).map(([, k]) => KEYWORDS[k].name);
+    const sources = id === 'all-ammo' ? families : [SCOPES.you.sources];
+    const lines = [line(GROUP_NAMES[id], 'dim'), line(renderTemplate(SCOPES[id].template)), section(W.sources, sources), section(W.payoffs, payoffs), section(W.stats, [statNames(stats)])];
     return { source, name: scopeName(id), chips: [chipOf(id)], summary: lines, breakdown: lines, bonuses: 0 };
   }
   const def = KEYWORDS[id];
