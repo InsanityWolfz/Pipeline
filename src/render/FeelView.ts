@@ -1,5 +1,6 @@
 import type { Scene } from 'phaser';
 import { AMMO } from '../data/ammo';
+import { STAGES } from '../data/stages';
 import { TILE_SIZE } from '../data/config';
 import { enemyDef } from '../data/enemies';
 import { INTAKE } from '../data/foundry';
@@ -89,6 +90,8 @@ export class FeelView {
     }
     for (const t of ev.thaws) j.burst('thawShards', t.x, t.y);
     if (ev.starBursts.length > 0) s.play(SOUNDS.starBurst, SOUND_LEVELS.cue);
+    // A stage hand-applied at the bench (029) sounds like a hand craft (the crafting menu plays its own).
+    if (ev.crafts.some((c) => STAGES[c.recipeId])) s.play(SOUNDS.craft);
     // A punch (023) thuds on a hit, or whiffs; its hits otherwise land like any other.
     for (const m of ev.melees) s.play(m.hits.length > 0 ? SOUNDS.meleeHit : SOUNDS.meleeWhiff);
     for (const h of ev.hits) {

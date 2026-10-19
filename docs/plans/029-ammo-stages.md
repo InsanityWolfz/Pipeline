@@ -37,7 +37,7 @@ Small vertical commits, tests first in each:
   - `tests/sim/grotto.test.ts`: rime clusters drop rime shards; the guards are in group `grotto` and come back on a KO; every rime cluster reachable on foot from the wake tile.
   - `tests/sim/goals.test.ts`: the four goals in place, `craftedAny`.
   - Rewritten: `combat.test.ts` (pierce swap), `bombs.test.ts` (burns removed, radius 48), `sim.test.ts` (summary), `data.test.ts` (burn flame frame gone, tagged ids allowed).
-- **Playwright** `tests/e2e/ammoStages.spec.ts`: from `?playtest`, claim the shrine, walk to the bench, open it with E and click the frost rune row, see `frost-rune` unlocked; build arrow hopper → frost rune (rime-shard hopper beside it) → conduit → intake; step out and fire at a Husk until `getState()` shows it frozen. With `REVIEW_SHOTS=1`, into docs/review/029/: the three stage machines working, a frozen Husk, a homing bolt mid-curve, a star burst, the Frozen Grotto, the bench's Stages section. `crafting.spec.ts`'s pierce/burn test is rewritten: an arrow pierces two Husks and a bomb's burst kills one.
+- **Playwright** `tests/e2e/ammoStages.spec.ts`: from `?playtest`, build arrow hopper → frost rune (rime-shard hopper beside it) → conduit → intake and see frost arrows reach the entrance; step out and fire frost volleys until `getState()` shows an enemy frozen; then claim the shrine, walk to the bench, open it with E and click the frost rune row, see the rounds and `frost-rune` unlocked. The freeze lands on the shrine's Pylon Warden, not a Husk: a frost arrow deals 10 and a Husk has 40 health, so the hit that would freeze a Husk kills it (see Risks). With `REVIEW_SHOTS=1`, into docs/review/029/: the three stage machines working, a frozen Husk, a homing bolt mid-curve, a star burst, the Frozen Grotto, the bench's Stages section. `crafting.spec.ts`'s pierce/burn test is rewritten: an arrow pierces two Husks and a bomb's burst kills one.
 
 ## Not dictated by the spec
 - Round ids join tags with `+`; tagged icon frames use `-` (`icon-arrow-frost`).
@@ -49,8 +49,13 @@ Small vertical commits, tests first in each:
 - The hotbar's ammo count shows every carried round of that base, tagged included.
 - Hand-applying needs the bench in reach, as identifying does.
 - The Grotto's guards: Husks at (11, 10), (17, 11), (15, 6), the Wisp at (14, 9).
-- The bench's Stages panel sits right of the bench rows, with the stage's name in the free third input slot.
+- The bench's Stages panel sits right of the bench rows, with the stage's name in the free third input slot. The bench stays open after a stage row is clicked, so it can be applied again.
+- A cold hit that kills doesn't freeze (the enemy is gone).
+- Tagged rounds fire with their base's sound; a hand-applied stage plays the craft sound.
+- Packs keep out of the Grotto's clearing, as they do the other landmarks' (it's in `OVERWORLD.clearings`).
+- Dev hook `setEnemyHealth(id, health)`, for the frozen-Husk review screenshot only.
 
 ## Risks
+- **Husks can't be frozen by frost arrows alone** with the starting numbers: 4 stacks freeze, a frost arrow deals 10, a Husk has 40 health, so the 4th hit kills it. Only the Warden (200) outlasts four. Noted for Shaun as a tuning question; the e2e freezes the Warden, and the frozen-Husk screenshot tops the Husk up through a dev hook.
 - Many tests read the old pierce flags or fire arrows into lines of Husks; they're rewritten for the swap.
 - `GameScene.ts` is at 300 lines; the bench panel lives in its own view, owned by `SiteMenus`.
