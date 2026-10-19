@@ -34,11 +34,14 @@ Small vertical commits, tests first in each:
 - The panel reserves room for every item of each group, so it is one fixed size (a vector tablet) and rows never jump; groups never split across columns.
 - Gear's worn and spare lines report as rows with `itemId` `worn` and `spare` in `ui()`; the spare line shows only with at least one spare, the worn line only with a piece worn.
 - The HP block's `box` in `ui()` is the frame through the armor value.
-- The chunk and the low pulse run on render time (the frame's delta), like every other HUD tween; the chunk test lowers health with `setPlayerHealth` rather than a fight.
+- The HP bar's chunk, rise, pulse and glow, and the feed's hold and fade, run on tween time (the frame's delta times the tween speed), so the hook's `tweenSpeed` slows or holds them like every other effect; the chunk test lowers health with `setPlayerHealth` rather than a fight. Game time runs behind the wall clock when headless frames are slow, so waits on these use longer poll timeouts.
 - The pulse scales the frame, fill and chunk about the bar's centre and washes the fill toward white; the text and shield stay still.
 - The edge tint is its own white edge-gradient texture tinted `hit-red`, at a depth between the room mood and the HUD.
 - Popups rise linearly (their fade still eases), so stacked popups keep their gap as they rise.
 - Merged popups read "+ shaft ×2".
+- One spare reads "1 spare piece (kept)"; more read "N spare pieces (kept)".
+- The worn line reads "worn · heavy · armor 5" in the safe colour, with the weight's armor icon; the spares line uses the shield icon.
+- The e2e that needs the foundry on screen (the popups) waits until no meadow nodes are drawn, since the door's fade lags the sim's room.
 - `HUD_HEALTH_LAYOUT`, `HP_BAR`, `INVENTORY_PANEL` and `PICKUP_FEED` live in a new `src/data/hudPanels.ts` (not `hudLayout.ts`, which would pass 300 lines).
 
 ## Risks
