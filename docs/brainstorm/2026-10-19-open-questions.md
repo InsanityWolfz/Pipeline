@@ -158,3 +158,6 @@ These touch several specs. The specs already use the proposed answer, so a diffe
 - **033.5 Schematics:** a schematic drops as an unknown, with the pop. What it unlocks is revealed once it's banked.
 - **036.10 Relics:** their own tier, above Rare: a unique rule plus 2 affixes.
 - **A, 029.3 Ley ammo:** stays "Ley bolt".
+- **032.3 Cache:** refills after about 10 minutes of play (never real time).
+- **Everything else:** accept every proposed answer as its starting value (Shaun: "Accept all proposals").
+- **Approval:** specs 028–037 are approved, to be built in order. docs/design.md may be edited to match each approved spec.
