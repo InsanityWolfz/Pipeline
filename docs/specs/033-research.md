@@ -226,3 +226,8 @@ Rare schematic drops in the field reveal specific nodes. They are the game's fir
 
 ## Open questions
 None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).
+
+## Raised after the build (for Shaun at playtest)
+- **Shared schematics row (differs from the spec):** all schematics share one inventory row, so the panel still fits the screen. It reads "Schematics" when more than one known kind is held. The spec says a schematic takes its real name once banked. Shaun to choose: keep it, or give each banked schematic its own row in a bigger panel.
+- **Placement and names:** wall panels sit at (6,0), (17,0) and (19,0), and the sealed wing door is in the wall's notch at (9–10,1). The node names are placeholders: Second entrance, Third entrance, Reservoir I, Reservoir II, Machine speed, Splitter, Merger, Sealed wing. Shaun to confirm both.
+- **Art:** the restoration art waits on Shaun's approval by eye (docs/review/033).
