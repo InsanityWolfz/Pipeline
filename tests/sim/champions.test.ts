@@ -15,7 +15,20 @@ import { arena, PLAYER_AT, run, runUntil, SWIPE_LANDS } from './fight';
 // tougher, a little faster and harder-hitting, named, with richer drops.
 
 const NON_BOSS = Object.values(ENEMIES).filter((d) => !d.boss);
-const damageOf = (d: EnemyDef): number => (d.kind === 'melee' ? d.swipe.damage : d.kind === 'caster' ? d.cast.orbDamage : d.kind === 'slammer' ? d.slam.damage : d.pound.damage);
+function damageOf(d: EnemyDef): number {
+  switch (d.kind) {
+    case 'melee':
+      return d.swipe.damage;
+    case 'caster':
+      return d.cast.orbDamage;
+    case 'slammer':
+      return d.slam.damage;
+    case 'bulwark':
+      return d.pound.damage;
+    case 'charger':
+      return d.charge.damage;
+  }
+}
 const pack = (ids: readonly string[]): EnemyState[] => ids.map((id, i) => createEnemy(i, id, { x: i * 40, y: 0 }, 'overworld', 'pop-1-0'));
 
 describe('the champion tuning', () => {

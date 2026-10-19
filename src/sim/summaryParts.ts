@@ -5,6 +5,7 @@ import type { EnemyMode, EnemyState } from './enemies';
 import type { NodeState } from './nodes';
 import type { MachineStatus, PieceState } from './pieces';
 import type { Facing } from './player';
+import { kindSummary, type KindSummary } from './summaryKinds';
 
 // Summary entries for the sim's lists, used by summary.ts.
 
@@ -41,7 +42,8 @@ export function arrowSummary(a: ArrowState): ArrowSummary {
   };
 }
 
-export interface EnemySummary {
+/** 035: plus its kind's own state (a shield's angle, a Charger's lane, …), on the kinds that have it. */
+export interface EnemySummary extends KindSummary {
   id: number;
   enemyId: string;
   room: string;
@@ -85,6 +87,7 @@ export function enemySummary(e: EnemyState): EnemySummary {
     flash: e.flash,
     chill: e.chill,
     frozen: e.frozen,
+    ...kindSummary(e),
   };
 }
 

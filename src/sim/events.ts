@@ -140,6 +140,10 @@ export interface SimEvents {
   enemyBursts: { x: number; y: number; radius: number }[];
   /** The Bulwark pounded the ground round itself (034): which enemy, where, the radius, px. */
   pounds: { id: number; x: number; y: number; radius: number }[];
+  /** 035: a Charger set off down its lane (its feet, the unit direction, the lane's length, px); a Burrower erupted (its spot and ring radius); a Sniper fired its bolt (its feet and the unit direction). */
+  charges: { id: number; x: number; y: number; dx: number; dy: number; length: number }[];
+  eruptions: { id: number; x: number; y: number; radius: number }[];
+  snipes: { id: number; x: number; y: number; dx: number; dy: number }[];
   /** What the player carried was banked (on entering the foundry or depositing). */
   banks: Record<string, number>[];
   /** On a KO, what was lost: item id to count. */
@@ -199,6 +203,9 @@ export function createEvents(): SimEvents {
     lobs: [],
     enemyBursts: [],
     pounds: [],
+    charges: [],
+    eruptions: [],
+    snipes: [],
     banks: [],
     lost: {},
     ko: false,
@@ -255,6 +262,9 @@ export function clearEvents(events: SimEvents): void {
   events.lobs.length = 0;
   events.enemyBursts.length = 0;
   events.pounds.length = 0;
+  events.charges.length = 0;
+  events.eruptions.length = 0;
+  events.snipes.length = 0;
   events.banks.length = 0;
   events.lost = {};
   events.ko = false;

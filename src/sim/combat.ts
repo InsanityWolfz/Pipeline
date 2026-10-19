@@ -1,7 +1,7 @@
 import { enemyDef } from '../data/enemies';
 import { STAR } from '../data/tags';
 import { createShard, type ArrowState } from './arrows';
-import { aggro, damageEnemy, inHurtbox, type EnemyState, type HitStyle } from './enemies';
+import { aggro, damageEnemy, inHurtbox, targetable, type EnemyState, type HitStyle } from './enemies';
 import { recordBlock, shieldBlocks } from './shield';
 import { onBossDeath } from './altar';
 import { spawnDrops } from './drops';
@@ -51,7 +51,7 @@ export function arrowHits(state: SimState, spawned: ArrowState[] = []): (arrow: 
   return (arrow) => {
     if (arrow.pierce) {
       for (const en of state.enemies) {
-        if (en.roomId !== arrow.roomId || en.health <= 0 || arrow.hitIds.includes(en.id)) continue;
+        if (en.roomId !== arrow.roomId || en.health <= 0 || !targetable(en) || arrow.hitIds.includes(en.id)) continue;
         if (!inHurtbox(en, arrow.x, arrow.y)) continue;
         if (!strike(state, arrow, en, spawned)) return true;
       }
@@ -60,7 +60,7 @@ export function arrowHits(state: SimState, spawned: ArrowState[] = []): (arrow: 
     let e: EnemyState | undefined;
     let first = Infinity;
     for (const en of state.enemies) {
-      if (en.roomId !== arrow.roomId || en.health <= 0 || arrow.hitIds.includes(en.id) || !inHurtbox(en, arrow.x, arrow.y)) continue;
+      if (en.roomId !== arrow.roomId || en.health <= 0 || !targetable(en) || arrow.hitIds.includes(en.id) || !inHurtbox(en, arrow.x, arrow.y)) continue;
       const along = (en.x - arrow.x) * arrow.dx + (en.y - arrow.y) * arrow.dy;
       if (along < first) {
         first = along;

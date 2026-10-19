@@ -28,5 +28,7 @@ export const CHAMPIONS = {
   names: {
     husk: ['Mossjaw', 'Rootgrip', 'Thornback', 'Barkhide', 'Gnarlfist', 'Briarmaw'],
     wisp: ['Palewick', 'Duskmote', 'Glimmerveil', 'Hollowlight', 'Ashflicker'],
+    // 035: Stonefall Hollows' four.
+    charger: ['Cragbutt', 'Ironbrow', 'Quarryhorn', 'Slatebrute', 'Rubblehoof'],
   } as Readonly<Record<string, readonly string[]>>,
 } as const;

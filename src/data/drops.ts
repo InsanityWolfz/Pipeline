@@ -34,6 +34,9 @@ export interface RarePart {
 /** Region 1's machine part: Husks and Wisps drop it at 4%, a champion rolls it once at 12% (3×). */
 export const REGION_1_PART: RarePart = { itemId: 'ancient-gear', chance: 0.04, championChance: 0.12 };
 
+/** Region 2's machine part (033, 035): Stonefall Hollows' enemies drop it at 4%, a champion rolls it once at 12% (3×, as Region 1's). */
+export const REGION_2_PART: RarePart = { itemId: 'aqueduct-valve', chance: 0.04, championChance: 0.12 };
+
 /** The Ruined Cache's rare entries (032's empty slot): its part at 50%, and a schematic at 20%. */
 export const CACHE_RARE: readonly RarePart[] = [
   { itemId: 'ancient-gear', chance: 0.5 },

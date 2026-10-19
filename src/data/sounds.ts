@@ -1,5 +1,6 @@
 import { RESEARCH_SOUND_RECIPES } from './researchSounds.ts';
 import { HOLLOWS_SOUND_RECIPES, HOLLOWS_SOUNDS } from './hollowsSounds.ts';
+import { HOLLOWS_ENEMY_SOUND_RECIPES, HOLLOWS_ENEMY_SOUNDS } from './hollowsEnemySounds.ts';
 
 // Sound effects and ambient loops (014), as synth recipes. `npm run sound` renders
 // each one to assets/build/sounds/<key>.wav; render plays them by these keys.
@@ -71,6 +72,7 @@ export const SOUNDS = {
   schematicChime: 'schematic-chime',
   reveal: 'reveal',
   ...HOLLOWS_SOUNDS,
+  ...HOLLOWS_ENEMY_SOUNDS,
   ambientClearing: 'ambient-clearing',
   ambientFoundry: 'ambient-foundry',
 } as const;
@@ -86,6 +88,7 @@ const birds = (times: readonly number[], pitch: number): SoundLayer[] =>
 export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
   ...RESEARCH_SOUND_RECIPES,
   ...HOLLOWS_SOUND_RECIPES,
+  ...HOLLOWS_ENEMY_SOUND_RECIPES,
   'fire-arrow': {
     layers: [
       { wave: 'noise', from: 6000, to: 1500, dur: 0.12, attack: 0.002, volume: 0.35 },
@@ -300,4 +303,6 @@ export const WINDUP_SOUNDS: Readonly<Record<string, SoundKey>> = {
   slammer: SOUNDS.huskWindup,
   // 034: the Bulwark's stone grinds as it plants its shield (the pound lands with its own sound).
   bulwark: SOUNDS.bulwarkGrind,
+  // 035: the Charger paws and snorts; the Burrower rumbles under the ring; the Shardback's runes flare with the Husk's cue; the Sniper's laser hums.
+  charger: SOUNDS.chargerWindup,
 };

@@ -117,8 +117,11 @@ export interface AnimDef {
 
 const WALK_FRAMES = 4;
 
-/** Poses only some enemies have (034: the Bulwark's turn, lob, throw and shield block), besides `recover`. */
-export type ExtraPose = 'turn' | 'lob' | 'throw' | 'block';
+/**
+ * Poses only some enemies have (034: the Bulwark's turn, lob, throw and shield block; 035: the Charger's stun, the
+ * Burrower's dig, the Sniper's step out of cover), besides `recover`.
+ */
+export type ExtraPose = 'turn' | 'lob' | 'throw' | 'block' | 'stun' | 'dig' | 'step';
 
 /** Enemy animations. `side` faces right; left is drawn flipped. Death has one view. `recover` is optional: without it, a recovering enemy shows idle. */
 export type EnemyAnim = `${'idle' | 'walk' | 'windup' | 'swipe' | 'recover' | 'hit' | ExtraPose}-${'down' | 'up' | 'side'}` | 'death';
@@ -131,7 +134,11 @@ const ENEMY_WALK_FPS = 6;
 const SWIPE_FPS = 20;
 const DEATH_FPS = 8;
 
-function enemyAnims(prefix: string, recover = false, extras: readonly ExtraPose[] = []): EnemyAnims {
+/** Looping poses of more than one frame: the Bulwark's shuffle, a Charger's daze, a Burrower digging, a Sniper's sidestep. */
+const MULTI_FRAME_EXTRAS: Readonly<Partial<Record<ExtraPose, number>>> = { turn: 2, stun: 2, dig: 2, step: 2 };
+
+/** `windupFrames` > 1 makes the wind-up loop at walk pace (035: a Charger pawing the ground). */
+function enemyAnims(prefix: string, recover = false, extras: readonly ExtraPose[] = [], windupFrames = 1): EnemyAnims {
   const anim = (name: EnemyAnim, frames: number, frameRate: number, loop: boolean): AnimDef => ({
     key: `${prefix}-${name}`,
     frames,
@@ -143,11 +150,14 @@ function enemyAnims(prefix: string, recover = false, extras: readonly ExtraPose[
   for (const v of views) {
     out[`idle-${v}`] = anim(`idle-${v}`, 1, 1, true);
     out[`walk-${v}`] = anim(`walk-${v}`, WALK_FRAMES, ENEMY_WALK_FPS, true);
-    out[`windup-${v}`] = anim(`windup-${v}`, 1, 1, true);
+    out[`windup-${v}`] = anim(`windup-${v}`, windupFrames, windupFrames > 1 ? ENEMY_WALK_FPS : 1, true);
     out[`swipe-${v}`] = anim(`swipe-${v}`, 2, SWIPE_FPS, false);
     out[`hit-${v}`] = anim(`hit-${v}`, 1, 1, true);
     if (recover) out[`recover-${v}`] = anim(`recover-${v}`, 1, 1, true);
-    for (const x of extras) out[`${x}-${v}`] = x === 'turn' ? anim(`${x}-${v}`, 2, ENEMY_WALK_FPS, true) : anim(`${x}-${v}`, 1, 1, true);
+    for (const x of extras) {
+      const n = MULTI_FRAME_EXTRAS[x] ?? 1;
+      out[`${x}-${v}`] = anim(`${x}-${v}`, n, n > 1 ? ENEMY_WALK_FPS : 1, true);
+    }
   }
   return out as EnemyAnims;
 }
@@ -158,6 +168,8 @@ export const ENEMY_ANIMS: Readonly<Record<string, EnemyAnims>> = {
   wisp: enemyAnims('wisp'),
   warden: enemyAnims('warden', true),
   bulwark: enemyAnims('bulwark', true, ['turn', 'lob', 'throw', 'block']),
+  // 035: Stonefall Hollows' four.
+  charger: enemyAnims('charger', true, ['stun'], 2),
 };
 
 /** The sparkle played where an item is picked up. */

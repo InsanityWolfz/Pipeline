@@ -222,8 +222,8 @@ describe('sim state', () => {
     const lists = ['hits', 'deaths', 'pickups', 'harvests', 'crafts', 'craftFails', 'bursts', 'selects', 'roomChanges'] as const;
     const later = ['places', 'placeFails', 'pickUps', 'deposits', 'crateTakes', 'withdraws', 'attunes', 'refills', 'made', 'shots', 'entranceFires', 'melees', 'banks', 'freezes', 'thaws', 'starBursts', 'heals'] as const;
     const site = ['sealed', 'claims', 'discoveries', 'cacheOpens', 'stashDeposits', 'stashTakes', 'supplies', 'portDeliveries', 'travels', 'identifies', 'equips', 'intakeOpens', 'restores', 'schematicDrops', 'schematicReveals', 'gates', 'objectives'] as const;
-    // 034: the shield, the Bulwark and its altar.
-    const hollows = ['blocked', 'bossDefeats', 'summons', 'lobs', 'enemyBursts', 'pounds'] as const;
+    // 034: the shield, the Bulwark and its altar; 035: the Charger's charge, the Burrower's eruption, the Sniper's bolt.
+    const hollows = ['blocked', 'bossDefeats', 'summons', 'lobs', 'enemyBursts', 'pounds', 'charges', 'eruptions', 'snipes'] as const;
     expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, ...hollows, 'lost', 'ko', 'tubeTaken'].sort());
     for (const name of [...lists, ...later, ...site, ...hollows]) expect(summary.events[name], name).toEqual([]);
     expect(summary.events.ko).toBe(false);

@@ -1,6 +1,6 @@
 import { lobAmmo } from '../data/ammo';
 import { TICK_RATE, TILE_SIZE } from '../data/config';
-import { damageEnemy } from './enemies';
+import { damageEnemy, targetable } from './enemies';
 import type { SimState } from './state';
 import { shotSealed } from './tutorial';
 
@@ -90,12 +90,12 @@ export function stepBombs(state: SimState): void {
   state.bombs.length = kept;
 }
 
-/** Damages every live enemy whose feet are within the burst radius, flashing it without knockback. Never the player. */
+/** Damages every live enemy whose feet are within the burst radius, flashing it without knockback. Never the player, nor a Burrower underground (035). */
 function burst(state: SimState, b: BombState): void {
   const ammo = lobAmmo(b.ammoId);
   const style = { knock: false, flash: true, damageType: ammo.damageType } as const;
   for (const e of state.enemies) {
-    if (e.roomId !== b.roomId || e.health <= 0) continue;
+    if (e.roomId !== b.roomId || e.health <= 0 || !targetable(e)) continue;
     if (Math.hypot(e.x - b.x, e.y - b.y) > ammo.burstRadius) continue;
     damageEnemy(state, e, ammo.burstDamage, e.x - b.x, e.y - b.y, style);
   }

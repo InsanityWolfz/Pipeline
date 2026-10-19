@@ -1,5 +1,6 @@
 import { BULWARK } from './bulwark';
 import { REGION_1_PART, type RarePart } from './drops';
+import { HOLLOWS_ENEMIES, type HollowsEnemyDef } from './hollowsEnemies';
 
 // Enemies. Starting values from specs 004 and 009; tune in playtest.
 
@@ -17,7 +18,7 @@ export interface DropTable {
 }
 
 /** What every enemy has, whatever its attack. */
-interface EnemyBase {
+export interface EnemyBase {
   id: string;
   name: string;
   /** A boss (023) shrugs off the punch's knockback. */
@@ -51,7 +52,7 @@ export interface ShieldDef {
 }
 
 /** The timing every attack shares: a telegraphed wind-up, the attack pose, a recovery, and a cooldown. */
-interface AttackTiming {
+export interface AttackTiming {
   windupTicks: number;
   /** Ticks the attack pose holds; the attack lands on the first. */
   swipeTicks: number;
@@ -60,13 +61,13 @@ interface AttackTiming {
   cooldownTicks: number;
 }
 
-/** A Husk: walks up and swipes an arc in front of it. Aggros when on screen. */
 /** Enemies that chase while on screen and head home after a grace period off it (the Bulwark leashes by its arena instead, 034). */
-interface ScreenLeashed {
+export interface ScreenLeashed {
   /** Ticks off screen before a chasing enemy heads home. */
   leashGraceTicks: number;
 }
 
+/** A Husk: walks up and swipes an arc in front of it. Aggros when on screen. */
 export interface MeleeDef extends EnemyBase, ScreenLeashed {
   kind: 'melee';
   swipe: AttackTiming & {
@@ -153,7 +154,11 @@ export interface BulwarkDef extends EnemyBase {
   };
 }
 
-export type EnemyDef = MeleeDef | CasterDef | SlammerDef | BulwarkDef;
+/** Region 2's four (035) are in hollowsEnemies.ts. */
+export type EnemyDef = MeleeDef | CasterDef | SlammerDef | BulwarkDef | HollowsEnemyDef;
+
+/** Every attack's wind-up is at least this long (035): long enough to read and dodge. A data test holds every enemy to it. */
+export const MIN_TELEGRAPH_TICKS = 30;
 
 /** Shared tuning for the base fields that all three start from. */
 const BASE = { hitKnockTicks: 4, hitFlashTicks: 6, leashGraceTicks: 60, homeTolerance: 4 } as const;
@@ -257,6 +262,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
     anims: 'warden',
   },
   bulwark: BULWARK,
+  ...HOLLOWS_ENEMIES,
 };
 
 /** Dropped items land within this distance of the corpse, px. */
@@ -280,5 +286,16 @@ export function meleeDef(id: string): MeleeDef {
 
 /** The wind-up, attack, recover and cooldown timing of any enemy's attack. */
 export function attackOf(def: EnemyDef): AttackTiming {
-  return def.kind === 'melee' ? def.swipe : def.kind === 'caster' ? def.cast : def.kind === 'slammer' ? def.slam : def.pound;
+  switch (def.kind) {
+    case 'melee':
+      return def.swipe;
+    case 'caster':
+      return def.cast;
+    case 'slammer':
+      return def.slam;
+    case 'bulwark':
+      return def.pound;
+    case 'charger':
+      return def.charge;
+  }
 }

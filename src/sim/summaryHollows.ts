@@ -8,6 +8,7 @@ import { fuseProgress } from './enemyBombs';
 import type { EnemyMode } from './enemies';
 import type { SimState } from './state';
 import { round } from './summaryParts';
+import { degrees } from './summaryKinds';
 
 // Stonefall Hollows' part of `getState()` (034): its bosses, their bombs, the bosses
 // defeated and the altars.
@@ -23,9 +24,6 @@ export interface HollowsSummary {
   altars: { id: string; boss: string; state: AltarState; summonTicks: number }[];
 }
 
-
-/** The degrees of a radian angle, in [0, 360). */
-const degrees = (a: number): number => round((((a * 180) / Math.PI) % 360 + 360) % 360);
 
 export function hollowsSummary(state: SimState): HollowsSummary {
   return {

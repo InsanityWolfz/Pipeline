@@ -6,7 +6,8 @@ import { nextFloat, nextInt, type RngState } from './rng';
 // Champions (032): a rule over enemy data, so any non-boss enemy, including ones added
 // later, can be one with no new code. The sim reads an enemy's def through `defOf`,
 // which scales a champion's size, health, damage and speed; timings and reach stay its own,
-// so every attack still reads and dodges the same.
+// so every attack still reads and dodges the same. Its own movement (035: the Charger's
+// charge, the Burrower's tunnelling) speeds up with its walk.
 
 const scaled = new Map<string, EnemyDef>();
 
@@ -22,16 +23,25 @@ export function championDef(def: EnemyDef): EnemyDef {
     maxHealth: Math.round(def.maxHealth * CHAMPIONS.health),
     walkSpeed: def.walkSpeed * CHAMPIONS.speed,
   };
-  const out: EnemyDef =
-    def.kind === 'melee'
-      ? { ...def, ...base, swipe: { ...def.swipe, damage: dmg(def.swipe.damage) } }
-      : def.kind === 'caster'
-        ? { ...def, ...base, cast: { ...def.cast, orbDamage: dmg(def.cast.orbDamage) } }
-        : def.kind === 'slammer'
-          ? { ...def, ...base, slam: { ...def.slam, damage: dmg(def.slam.damage) } }
-          : { ...def, ...base, lob: { ...def.lob, damage: dmg(def.lob.damage) }, pound: { ...def.pound, damage: dmg(def.pound.damage) } };
+  const out = scaleAttack(def, base, dmg);
   scaled.set(def.id, out);
   return out;
+}
+
+/** A def with the base scaled, every attack's damage `dmg`'d and its own movement speeds (035: the charge) sped up like its walk. */
+function scaleAttack(def: EnemyDef, base: Pick<EnemyDef, 'feetBox' | 'hurtbox' | 'maxHealth' | 'walkSpeed'>, dmg: (n: number) => number): EnemyDef {
+  switch (def.kind) {
+    case 'melee':
+      return { ...def, ...base, swipe: { ...def.swipe, damage: dmg(def.swipe.damage) } };
+    case 'caster':
+      return { ...def, ...base, cast: { ...def.cast, orbDamage: dmg(def.cast.orbDamage) } };
+    case 'slammer':
+      return { ...def, ...base, slam: { ...def.slam, damage: dmg(def.slam.damage) } };
+    case 'bulwark':
+      return { ...def, ...base, lob: { ...def.lob, damage: dmg(def.lob.damage) }, pound: { ...def.pound, damage: dmg(def.pound.damage) } };
+    case 'charger':
+      return { ...def, ...base, charge: { ...def.charge, damage: dmg(def.charge.damage), speed: def.charge.speed * CHAMPIONS.speed } };
+  }
 }
 
 /** The def the sim reads for an enemy: its champion's for a champion. */

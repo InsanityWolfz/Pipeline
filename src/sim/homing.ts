@@ -1,6 +1,7 @@
 import { defOf } from './champions';
 import { HOMING } from '../data/tags';
 import type { ArrowState } from './arrows';
+import { targetable } from './enemies';
 import type { SimState } from './state';
 import { rotate } from './volley';
 
@@ -14,7 +15,7 @@ export function lockTarget(state: SimState, x: number, y: number): number | null
   let best: number | null = null;
   let nearest: number = HOMING.lockRadius;
   for (const e of state.enemies) {
-    if (e.roomId !== state.roomId || e.health <= 0) continue;
+    if (e.roomId !== state.roomId || e.health <= 0 || !targetable(e)) continue;
     const d = Math.hypot(e.x - x, e.y - y);
     if (d <= nearest) {
       nearest = d;

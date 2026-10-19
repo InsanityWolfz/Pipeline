@@ -1,5 +1,6 @@
 import type { EnemyDef, MeleeDef } from '../data/enemies';
 import { bulwarkThink } from './bulwarkAi';
+import { chargeThink } from './chargerAi';
 import { defOf } from './champions';
 import { castThink } from './casterAi';
 import { chillScale, tickCold } from './cold';
@@ -41,6 +42,7 @@ export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBod
     const { hitX, hitY } = moveBox(room, e, def.feetBox, dx, dy, obstacles);
     e.vx = hitX ? 0 : mx;
     e.vy = hitY ? 0 : my;
+    e.bumped = hitX || hitY;
     // A shielded enemy (034) faces its shield's continuous angle.
     if (def.shield) e.facing = aimFacing(Math.cos(e.angle), Math.sin(e.angle), e.facing);
     else e.facing = attacking(e) ? aimFacing(e.swipeDirX, e.swipeDirY, e.facing) : aimFacing(e.vx, e.vy, e.facing);
@@ -49,12 +51,20 @@ export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBod
   separate(state.enemies, bodies);
 }
 
-/** Each kind's AI: the Husk's here, the Wisp's, the Warden's and the Bulwark's (034) in their own files. */
+/** Each kind's AI: the Husk's here, the Wisp's, the Warden's, the Bulwark's (034) and Region 2's four (035) in their own files. */
 function thinkOf(state: SimState, e: EnemyState, def: EnemyDef): [number, number] {
-  if (def.kind === 'melee') return think(state, e, def);
-  if (def.kind === 'caster') return castThink(state, e, def);
-  if (def.kind === 'slammer') return slamThink(state, e, def);
-  return bulwarkThink(state, e, def);
+  switch (def.kind) {
+    case 'melee':
+      return think(state, e, def);
+    case 'caster':
+      return castThink(state, e, def);
+    case 'slammer':
+      return slamThink(state, e, def);
+    case 'bulwark':
+      return bulwarkThink(state, e, def);
+    case 'charger':
+      return chargeThink(state, e, def);
+  }
 }
 
 function attacking(e: EnemyState): boolean {

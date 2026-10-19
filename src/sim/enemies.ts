@@ -10,8 +10,11 @@ import type { SimState } from './state';
 
 // Enemies as plain data: creation, damage and bodies. Their behaviour is in enemyAi.ts.
 
-/** `lob` and `throw` (034): the Bulwark rearing back, then holding the throw. */
-export type EnemyMode = 'idle' | 'chase' | 'windup' | 'swipe' | 'recover' | 'return' | 'lob' | 'throw';
+/**
+ * `lob` and `throw` (034): the Bulwark rearing back, then holding the throw. 035: `stun`, a Charger dazed by a wall;
+ * `dig`, a Burrower digging in; `peek`, a Sniper stepping out of cover to a clear line.
+ */
+export type EnemyMode = 'idle' | 'chase' | 'windup' | 'swipe' | 'recover' | 'return' | 'lob' | 'throw' | 'stun' | 'dig' | 'peek';
 
 export interface EnemyState extends Knockable {
   id: number;
@@ -59,6 +62,15 @@ export interface EnemyState extends Knockable {
   lobCooldown: number;
   /** Ticks of shield flash left after a blocked hit (034), for render. */
   blockFlash: number;
+  /** A Burrower under the ground (035): nothing can hit it, and it neither blocks nor is pushed apart. */
+  underground: boolean;
+  /** Where its attack is anchored (035): a Charger's lane start, a Burrower's locked spot, px. */
+  spotX: number;
+  spotY: number;
+  /** A Charger's charge has struck the player (035): once per charge. */
+  struck: boolean;
+  /** Its last move ran into something solid (035: a charging Charger is stunned by it). */
+  bumped: boolean;
 }
 
 export function createEnemy(id: number, enemyId: string, at: { x: number; y: number }, roomId: string, group = ''): EnemyState {
@@ -91,6 +103,11 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     angle: Math.PI / 2,
     lobCooldown: def.kind === 'bulwark' ? def.lob.cooldownTicks : 0,
     blockFlash: 0,
+    underground: false,
+    spotX: at.x,
+    spotY: at.y,
+    struck: false,
+    bumped: false,
     knockX: 0,
     knockY: 0,
     knockTicks: 0,
@@ -135,6 +152,12 @@ export function damageEnemy(
   state.events.hits.push({ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: amount, damageType: style.damageType, ...(style.melee ? { melee: true as const } : {}) });
 }
 
+/** Whether shots, punches and bursts can reach it (035: not a Burrower underground). */
+export const targetable = (e: Pick<EnemyState, 'underground'>): boolean => !e.underground;
+
+/** It passes through other enemies (035): a Burrower underground, a Charger mid-charge. Separation leaves it be. */
+export const passesThrough = (e: EnemyState): boolean => e.underground || (e.mode === 'swipe' && defOf(e).kind === 'charger');
+
 /** True if a ground point is inside the enemy's hurtbox. */
 export function inHurtbox(e: EnemyState, x: number, y: number): boolean {
   const { hurtbox } = defOf(e);
@@ -157,7 +180,7 @@ export function separate(enemies: EnemyState[], bodies: (roomId: string) => Room
     for (let j = i + 1; j < enemies.length; j++) {
       const a = enemies[i];
       const b = enemies[j];
-      if (!a || !b || a.roomId !== b.roomId) continue;
+      if (!a || !b || a.roomId !== b.roomId || passesThrough(a) || passesThrough(b)) continue;
       const { room, obstacles } = bodies(a.roomId);
       const fa = defOf(a).feetBox;
       const fb = defOf(b).feetBox;

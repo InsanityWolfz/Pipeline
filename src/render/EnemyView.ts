@@ -261,6 +261,7 @@ export class EnemyView {
       drawPound(g, e);
       return;
     }
+    if (def.kind !== 'melee') return;
     const { swipe } = def;
     const angle = Math.atan2(e.swipeDirY, e.swipeDirX);
     const half = (swipe.arcDegrees * Math.PI) / 360;
