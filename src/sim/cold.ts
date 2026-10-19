@@ -31,9 +31,6 @@ export const chillSlow = (state: Statted): number => statOf(state, 'slow', statu
 /** How much of its own walk a chilled enemy keeps, 0..1, at `slow` a stack. */
 export const chillScale = (e: Pick<EnemyState, 'chill'>, slow: number = COLD.slowPerStack): number => Math.max(0, 1 - e.chill * slow);
 
-/** True if the enemy is frozen and shrugs off knockback (a boss). */
-export const frozenFast = (e: EnemyState): boolean => e.frozen > 0 && enemyDef(e.enemyId).boss;
-
 /**
  * Counts an enemy's cold down by a tick, after it has moved: the refreeze window, the freeze (a thaw starts the
  * window), and the chill (its stacks drop to 0 when it runs out).

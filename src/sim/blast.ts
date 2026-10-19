@@ -9,7 +9,7 @@ import type { SimState } from './state';
 
 /** Damages every live, targetable enemy in a room whose feet are within `radius` of (x, y), flashing it without knockback; `skip` is spared. */
 export function blastArea(state: SimState, roomId: string, x: number, y: number, radius: number, damage: number, damageType: DamageType, skip: number | null = null): void {
-  const style = { knock: false, flash: true, damageType } as const;
+  const style = { knock: 0, flash: true, damageType } as const;
   for (const e of state.enemies) {
     if (e.roomId !== roomId || e.health <= 0 || !targetable(e) || e.id === skip) continue;
     if (Math.hypot(e.x - x, e.y - y) > radius) continue;

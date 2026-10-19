@@ -9,7 +9,7 @@ import { arena, fireAt, HUSK, placeHusk, PLAYER_AT, run, runUntil } from './figh
 // Cold (029): each cold hit adds a chill stack that slows; the hit that reaches
 // COLD.stacksToFreeze freezes the enemy; after a thaw it can't gain stacks for a while.
 
-const COLD_HIT = { knock: false, flash: false, damageType: 'cold' } as const;
+const COLD_HIT = { knock: 0, flash: false, damageType: 'cold' } as const;
 
 /** One cold hit of 1 damage. */
 const chillHit = (s: SimState, e: EnemyState): void => damageEnemy(s, e, 1, 0, 0, COLD_HIT);
@@ -58,7 +58,7 @@ describe('cold', () => {
     expect(speed(e)).toBeGreaterThan(0);
   });
 
-  it('a boss freezes for 45 ticks, and takes no knockback while frozen', () => {
+  it('a boss freezes for 45 ticks, and takes no Knockback while frozen (039: a boss weighs 0 at any time)', () => {
     const s = arena();
     const w = createEnemy(s.nextEnemyId++, 'pylon-warden', { x: PLAYER_AT.x + 200, y: PLAYER_AT.y }, s.roomId);
     s.enemies.push(w);

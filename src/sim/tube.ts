@@ -166,5 +166,6 @@ function launch(state: SimState, { ammoId, dir: [dx, dy], across }: VolleyShot, 
   arrow.damage = statOf(state, 'damage', e, arrow.damage);
   arrow.range = statOf(state, 'range', e, arrow.range);
   arrow.speed = statOf(state, 'speed', e, arrow.speed);
+  arrow.knockback = statOf(state, 'knockback', e, arrow.knockback);
   state.arrows.push(arrow);
 }

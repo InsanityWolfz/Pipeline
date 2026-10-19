@@ -16,7 +16,7 @@ import { shardEmissionOf } from './emissions';
 // Arrows against enemies, and what happens when an enemy dies.
 
 /** An arrow knocks and flashes; its hit records its damage type (a cold one chills, 029). */
-const arrowHit = (arrow: ArrowState): HitStyle => ({ knock: true, flash: true, damageType: arrow.damageType });
+const arrowHit = (arrow: ArrowState): HitStyle => ({ knock: arrow.knockback, flash: true, damageType: arrow.damageType });
 
 /**
  * A Split (029): the stats' shards (SPLIT.shards, 037: Splinter's more) from the hit point, 360 / shards

@@ -199,12 +199,12 @@ describe('039 pins: knockback', () => {
 });
 
 describe('039 pins: what the spec changes (each flips in its own commit)', () => {
-  it('today the Warden is pushed 1 px by an arrow', () => {
+  it('039 changed: the Warden isn’t pushed by an arrow (a boss weighs 0; it was 1 px)', () => {
     const s = arena();
     const e = createEnemy(s.nextEnemyId++, 'pylon-warden', { x: PLAYER_AT.x + 200, y: PLAYER_AT.y }, HALL);
     s.enemies.push(e);
     damageEnemy(s, e, 1, 1, 0);
-    expect(Math.hypot(e.knockX, e.knockY) * e.knockTicks).toBeCloseTo(1, 9);
+    expect(Math.hypot(e.knockX, e.knockY) * e.knockTicks).toBe(0);
   });
 
   it('039 changed: Quick Nock’s interval is exactly 15 / 1.1 (it was rounded to 14 ticks: 1, 15, 29, 43)', () => {

@@ -127,7 +127,7 @@ export const CHARGER: ChargerDef = {
   walkSpeed: 45,
   feetBox: { w: 22, h: 10 },
   hurtbox: { w: 28, h: 26, offsetY: -10 },
-  hitKnockback: 3,
+  weight: 1 / 2,
   charge: {
     triggerRange: 200,
     ...CHARGE,
@@ -158,7 +158,7 @@ export const BURROWER: BurrowerDef = {
   // No wider than the player's feet (16 × 8): it can always rise where they stood.
   feetBox: { w: 14, h: 8 },
   hurtbox: { w: 22, h: 20, offsetY: -8 },
-  hitKnockback: 6,
+  weight: 1,
   burrow: {
     digTicks: 20,
     speed: 70,
@@ -189,7 +189,7 @@ export const SHARDBACK: ShardbackDef = {
   walkSpeed: 40,
   feetBox: { w: 22, h: 10 },
   hurtbox: { w: 28, h: 30, offsetY: -12 },
-  hitKnockback: 2,
+  weight: 1 / 3,
   /** Three times the Bulwark's turn: a half turn in 1.5 s, slow enough to run round on foot. */
   shield: { arcDegrees: 180, turnDegPerSec: 120 },
   bash: {
@@ -221,7 +221,7 @@ export const SNIPER: SniperDef = {
   walkSpeed: 50,
   feetBox: { w: 14, h: 8 },
   hurtbox: { w: 18, h: 36, offsetY: -18 },
-  hitKnockback: 6,
+  weight: 1,
   snipe: {
     aggroRange: 320,
     backOff: 96,

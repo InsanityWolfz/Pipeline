@@ -1,3 +1,4 @@
+import { BOSS_WEIGHT } from './combat';
 import type { AttackTiming, EnemyBase, ShieldDef } from './enemies';
 
 // The Bulwark (034): Stonefall Hollows' boss, a slow-turning construct behind a shield
@@ -43,7 +44,7 @@ export const BULWARK: BulwarkDef = {
   walkSpeed: 18,
   feetBox: { w: 36, h: 14 },
   hurtbox: { w: 44, h: 54, offsetY: -22 },
-  hitKnockback: 0,
+  weight: BOSS_WEIGHT,
   hitKnockTicks: 4,
   hitFlashTicks: 6,
   homeTolerance: 4,

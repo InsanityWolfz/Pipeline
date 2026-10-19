@@ -30,6 +30,8 @@ export interface ArrowState {
   range: number;
   damage: number;
   damageType: DamageType;
+  /** Its Knockback (039): px a hit pushes, times the enemy's weight; a Shard carries its round's. */
+  knockback: number;
   /** Passes through every enemy in its path (029: arrows, without limit). */
   pierce: boolean;
   /** Bursts into Shards where it hits an enemy (029). */
@@ -63,19 +65,19 @@ export function createArrow(
   dy: number,
   targetId: number | null = null,
 ): ArrowState {
-  const { damage, damageType, speed, range, pierce } = straightAmmo(ammoId);
+  const { damage, damageType, speed, range, pierce, knockback } = straightAmmo(ammoId);
   const keywords = roundKeywords(ammoId);
-  return { id, ammoId, keywords, roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, pierce, split: hasTagKeyword(ammoId, 'split'), targetId, hitIds: [], pooled: false, pooledBy: [] };
+  return { id, ammoId, keywords, roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, knockback, pierce, split: hasTagKeyword(ammoId, 'split'), targetId, hitIds: [], pooled: false, pooledBy: [] };
 }
 
 /** Whether a shot is a Shard (029, 037), not a round from the tube. */
 export const isShard = (a: Pick<ArrowState, 'ammoId'>): boolean => a.ammoId === SPLIT.projectile;
 
 /** A Shard from a round that hit `struckId` (029: a Split's; 037: Shatterpoint's): its def's numbers, never hitting the enemy that was struck, never piercing or splitting. */
-export function createShard(id: number, parent: Pick<ArrowState, 'ammoId' | 'roomId'>, x: number, y: number, dx: number, dy: number, struckId: number, def: ShardDef): ArrowState {
+export function createShard(id: number, parent: Pick<ArrowState, 'ammoId' | 'roomId' | 'knockback'>, x: number, y: number, dx: number, dy: number, struckId: number, def: ShardDef): ArrowState {
   const { speed, range, damage, damageType, fromSplit } = def;
   const keywords = shardKeywords(parent.ammoId, fromSplit);
-  return { id, ammoId: SPLIT.projectile, keywords, roomId: parent.roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, pierce: false, split: false, targetId: null, hitIds: [struckId], pooled: false, pooledBy: [] };
+  return { id, ammoId: SPLIT.projectile, keywords, roomId: parent.roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, knockback: parent.knockback, pierce: false, split: false, targetId: null, hitIds: [struckId], pooled: false, pooledBy: [] };
 }
 
 /** Tries an arrow against targets at its current point; true if it hit one and is spent. */

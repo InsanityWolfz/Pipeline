@@ -3,7 +3,8 @@ import { enemyDef } from '../data/enemies';
 import { defOf } from './champions';
 import type { Room } from '../data/rooms';
 import { moveBox, type Rect } from './collision';
-import { chillEnemy, frozenFast } from './cold';
+import { chillEnemy } from './cold';
+import { straightAmmo } from '../data/ammo';
 import { startKnock, type Knockable } from './knockback';
 import type { Facing } from './player';
 import type { SimState } from './state';
@@ -124,9 +125,9 @@ export function aggro(e: EnemyState): void {
   e.offScreenTicks = 0;
 }
 
-/** How a hit lands: arrows knock back and flash, bursts only flash. A cold hit chills (029). */
+/** How a hit lands: a round's Knockback (039: px before the enemy's weight; 0 for none) and its flash. A cold hit chills (029). */
 export interface HitStyle {
-  knock: boolean;
+  knock: number;
   flash: boolean;
   /** Recorded on the hit event so render can colour it; it changes no rule. */
   damageType: DamageType;
@@ -134,7 +135,8 @@ export interface HitStyle {
   melee?: boolean;
 }
 
-const ARROW_HIT: HitStyle = { knock: true, flash: true, damageType: 'physical' };
+/** An arrow's hit, with its Knockback. */
+const ARROW_HIT: HitStyle = { knock: straightAmmo('arrow').knockback, flash: true, damageType: 'physical' };
 
 /** Damages an enemy, knocking it along (dirX, dirY). A hit always aggros an idle or returning enemy. */
 export function damageEnemy(
@@ -148,8 +150,9 @@ export function damageEnemy(
   const def = defOf(e);
   e.health = Math.max(0, e.health - amount);
   if (style.flash) e.flash = def.hitFlashTicks;
-  // A frozen boss shrugs off knockback (029).
-  if (style.knock && !frozenFast(e)) startKnock(e, dirX, dirY, def.hitKnockback, def.hitKnockTicks);
+  // Knockback (039): the round's push times the enemy's weight (a boss weighs 0, frozen or not).
+  const push = style.knock * def.weight;
+  if (push > 0) startKnock(e, dirX, dirY, push, def.hitKnockTicks);
   if (style.damageType === 'cold' && e.health > 0) chillEnemy(state, e);
   if (e.mode === 'idle' || e.mode === 'return') aggro(e);
   state.events.hits.push({ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: amount, damageType: style.damageType, ...(style.melee ? { melee: true as const } : {}) });

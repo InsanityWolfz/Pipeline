@@ -72,11 +72,11 @@ describe('Husk knockback', () => {
     expect(e.mode).toBe('windup');
     damageEnemy(s, e, DAMAGE, 0, -1);
     run(s, HUSK.hitKnockTicks - 1);
-    expect(e.y).toBeGreaterThan(PLAYER_AT.y - HUSK.hitKnockback);
+    expect(e.y).toBeGreaterThan(PLAYER_AT.y - straightAmmo('arrow').knockback * HUSK.weight);
     run(s, 1);
-    expect(e.y).toBeCloseTo(PLAYER_AT.y - HUSK.hitKnockback, 6);
+    expect(e.y).toBeCloseTo(PLAYER_AT.y - straightAmmo('arrow').knockback * HUSK.weight, 6);
     run(s, 4);
-    expect(e.y).toBeCloseTo(PLAYER_AT.y - HUSK.hitKnockback, 6);
+    expect(e.y).toBeCloseTo(PLAYER_AT.y - straightAmmo('arrow').knockback * HUSK.weight, 6);
   });
 
   it('stops at a wall', () => {

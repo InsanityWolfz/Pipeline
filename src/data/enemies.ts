@@ -1,4 +1,5 @@
 import { BULWARK, type BulwarkDef } from './bulwark';
+import { BOSS_WEIGHT } from './combat';
 import { REGION_1_PART, type RarePart } from './drops';
 import { HOLLOWS_ENEMIES, type HollowsEnemyDef } from './hollowsEnemies';
 
@@ -30,8 +31,8 @@ export interface EnemyBase {
   feetBox: { w: number; h: number };
   /** Box arrows hit, px, centred `offsetY` from the feet (negative is up). */
   hurtbox: { w: number; h: number; offsetY: number };
-  /** Push from an arrow hit, px, spread over `hitKnockTicks`. */
-  hitKnockback: number;
+  /** Its weight against Knockback (039, Q11): a round's hit pushes it `knockback × weight` px over `hitKnockTicks`. A boss weighs BOSS_WEIGHT (0). */
+  weight: number;
   hitKnockTicks: number;
   hitFlashTicks: number;
   /** Within this distance of home, px, a returning enemy is home. */
@@ -160,7 +161,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
       knockback: 24,
       knockTicks: 6,
     },
-    hitKnockback: 6,
+    weight: 1,
     drops: {
       always: [{ itemId: 'husk-resin', min: 1, max: 2 }],
       chance: 0.5,
@@ -197,7 +198,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
       knockback: 10,
       knockTicks: 4,
     },
-    hitKnockback: 8,
+    weight: 4 / 3,
     drops: { always: [{ itemId: 'ley-crystal', min: 1, max: 2 }], chance: 0, oneOf: [], rare: [REGION_1_PART] },
     xp: 6,
     anims: 'wisp',
@@ -225,7 +226,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
       knockback: 32,
       knockTicks: 8,
     },
-    hitKnockback: 1,
+    weight: BOSS_WEIGHT,
     leashGraceTicks: 120,
     drops: {
       always: [

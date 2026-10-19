@@ -10,8 +10,8 @@ import { clearGround } from './sightLine';
 // The punch (023): with no tube, or nothing to fire, fire throws a quick, weak
 // punch toward the cursor. It resolves on the tick it starts.
 
-/** A punch flashes and records physical damage; its knockback is its own, not the enemy's arrow knock. */
-const PUNCH_HIT: HitStyle = { knock: false, flash: true, damageType: 'physical', melee: true };
+/** A punch flashes and records physical damage; its push is its own, not Knockback (039.5). */
+const PUNCH_HIT: HitStyle = { knock: 0, flash: true, damageType: 'physical', melee: true };
 
 /**
  * Punches along the unit aim (dirX, dirY) once both the melee cooldown and the
