@@ -2,6 +2,34 @@
 
 Newest entry first.
 
+## 2026-10-19: 021–027 built on one branch, awaiting Shaun's playtest
+**Changed:** built all seven approved specs on `claude/laughing-volta-uac3nf`, as separate commits. Shaun approved using one branch, since this cloud session can only push there. Each spec went through a plan (docs/plans/021–027), tests first, `npm run check`, the full `npm run test:e2e`, review screenshots (docs/review/021–027) and an independent reviewer pass. Every review finding was fixed or is listed below for Shaun. The final tree has 636 unit tests; e2e has 52 passed and 14 skipped (the REVIEW_SHOTS-only screenshot tests).
+- **021:** pickup reaches 64 px through anything, and items slide in. No shake on firing. A pointer draws above menus on `DEPTHS.cursor`. The arrowhead has no wood.
+- **022:** hopper click = 1, Shift = half, Ctrl = all, in and out. Includes a fix for macOS Ctrl+click, which Phaser treats as a right click.
+- **023:** a punch when there's no tube or nothing to fire. A `boss` flag on enemies; the Warden is a boss. Dry fire is removed.
+- **024:** the gravity stager is removed. There are 3 intake entrances with a 30-round reservoir each. The centre entrance is open at the start; a warden core opens the sides. The volley fans aimed rounds 15° apart and spaces lobbed rounds 24 px. `nextPress()` is the single source for what a press fires. docs/prototype.md is updated to match.
+- **025:** the 1/2/3 hotbar is centred along the bottom. The tube slot sits above it at 1.4× and shows the carried round, the volley or a fist.
+- **026:** item names in the crafting menu. The build bar is grouped into Logistics, Arrows, Bombs and Ley. Locked pieces stay hidden (Shaun, 2026-10-19).
+- **027:** seven foundry steps for the arrow line, with a build-bar pulse, prompts, an intake marker and a "+ part" popup.
+
+**Next:** Shaun playtests the branch preview, then /wrapup 021–027. Meanwhile: the content brainstorm with the playtester (no code), a report, then a long spec interview (Shaun's request, 2026-10-18).
+
+**Notes, for Shaun to confirm or overrule at playtest:**
+- **023:** a punch waits out the tube's fire interval after a shot.
+- **024:**
+  - The volley ignores the selected hotbar ammo; fed entrances fire whatever they hold.
+  - E at the intake reaches 40 px, and opening the sides takes priority over nearby hopper or crate menus.
+- **025:**
+  - Before the tube, the fist slot sits where the tube slot will be.
+  - The tube slot stays visible in build mode.
+  - The old reservoir glow is gone.
+- **026:**
+  - Text on rows you can't afford is drawn at 0.8 alpha so it stays readable.
+  - Missing inputs are rust-light.
+  - In build mode the tube slot rises above the group labels.
+- **027:** the scripted tutorial run found the shrine fight harder with an arrow line than with the old ley-bolt line, so it is worth feeling out in the playtest.
+- **Known limit:** the crafting menu has no scroll. One more recipe group would need one.
+
 ## 2026-10-18: Specs 021–027 from Shaun's playtest notes
 **Changed:** turned Shaun's playtest notes into seven draft specs after a three-round interview:
 - 021: playtest fixes (2-tile pickup through obstacles, no fire shake, a menu pointer, the arrowhead without wood)
