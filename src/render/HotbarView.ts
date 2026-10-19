@@ -25,6 +25,8 @@ export class HotbarView {
   /** Every image and number the row draws, for showing and hiding it whole. */
   private readonly parts: { setVisible(visible: boolean): unknown }[] = [];
   private shown = true;
+  /** The highlighted cell's index (0 for key 1). */
+  private selectedIndex = 0;
   /** The row's screen rect, so clicks on it never fire (015). */
   readonly box: ScreenBox = hotbarBox();
 
@@ -49,6 +51,10 @@ export class HotbarView {
     this.parts.push(this.highlight);
   }
 
+  get selected(): number {
+    return this.selectedIndex;
+  }
+
   get visible(): boolean {
     return this.shown;
   }
@@ -59,9 +65,11 @@ export class HotbarView {
   }
 
   update(tube: TubeState, inventory: Inventory): void {
-    for (const c of this.cells) {
+    for (const [i, c] of this.cells.entries()) {
       c.count.set(String(count(inventory, ammoDef(c.ammoId).itemId)));
-      if (c.ammoId === tube.ammoId) this.highlight.setX(c.x);
+      if (c.ammoId !== tube.ammoId) continue;
+      this.highlight.setX(c.x);
+      this.selectedIndex = i;
     }
   }
 }

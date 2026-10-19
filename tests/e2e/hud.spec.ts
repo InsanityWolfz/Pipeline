@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { SPRITES } from '../../src/data/assets';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { HUD_LAYOUT } from '../../src/data/hudLayout';
+import { SLOT_AMMOS } from '../../src/data/tube';
 import type { BottomHudState } from '../../src/render/HudView';
 import { boot, cameraSettled, watchErrors } from './helpers';
 import { feedLines, pressE, toIntake } from './intakePage';
@@ -38,6 +39,13 @@ function expectLayout(hud: BottomHudState): void {
   expectCentred(hud.tubeSlot);
   expect(hud.hotbar.y + hud.hotbar.h).toBe(VIEW_HEIGHT - HUD_LAYOUT.margin);
   expect(hud.tubeSlot.y + hud.tubeSlot.h).toBe(hud.hotbar.y - HUD_LAYOUT.gap);
+  // Each label stays labelPad px clear of its well's ring on both sides.
+  const S = HUD_LAYOUT.tubeSlot;
+  hud.tubeSlot.labelBoxes.forEach((b, i) => {
+    const unitX = hud.tubeSlot.x + i * (S.w + HUD_LAYOUT.gap);
+    expect(b.x).toBeGreaterThanOrEqual(unitX + S.wellInset + S.labelPad);
+    expect(b.x + b.w).toBeLessThanOrEqual(unitX + S.w - S.wellInset - S.labelPad);
+  });
 }
 
 /** From the field start, fires every carried arrow east, so the next press is a punch. */
@@ -76,7 +84,15 @@ test('carried arrows, then the fist once they are spent; both rows centred', asy
   const carried = await hudShowing(page, [String(arrows)]);
   expect(carried.tubeSlot.icons).toEqual([SPRITES.iconArrow]);
   expect(carried.hotbar.shown).toBe(true);
+  expect(carried.hotbar.selected).toBe(0);
   expectLayout(carried);
+
+  // Key 2 selects the bomb: the highlight moves to the second cell, and with no bombs carried the slot shows the fist.
+  await page.evaluate((ammoId) => window.__GAME__?.step(1, { selectAmmo: ammoId }), SLOT_AMMOS[1] ?? '');
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hud))?.hotbar.selected).toBe(1);
+  await hudShowing(page, [HUD_LAYOUT.tubeSlot.melee]);
+  await page.evaluate((ammoId) => window.__GAME__?.step(1, { selectAmmo: ammoId }), SLOT_AMMOS[0] ?? '');
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hud))?.hotbar.selected).toBe(0);
 
   const spent = await spendArrows(page);
   expect(spent.inventory.arrow ?? 0).toBe(0);

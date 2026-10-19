@@ -36,11 +36,6 @@ export function createTube(): TubeState {
   return { ammoId: STARTING_AMMO, fireCooldown: 0, meleeCooldown: 0, firing: false, fromReservoir: false, shotCount: 0 };
 }
 
-/** The item a round of the slot's ammo is. */
-export function slotItem(tube: Pick<TubeState, 'ammoId'>): string {
-  return ammoDef(tube.ammoId).itemId;
-}
-
 /** Switches the slot to another ammo. The current ammo, or one the slot can't take, does nothing. */
 export function selectAmmo(state: SimState, ammoId: string): void {
   const { tube } = state;

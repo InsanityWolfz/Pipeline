@@ -1,5 +1,5 @@
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
-import { HUD_LAYOUT } from '../data/hudLayout';
+import { HUD_LAYOUT, tubeSlotWidth } from '../data/hudLayout';
 import { SLOT_AMMOS } from '../data/tube';
 
 // Where the bottom HUD's pieces sit (025), pure so tests can check the centring:
@@ -13,13 +13,21 @@ export interface ScreenBox {
   h: number;
 }
 
+/** `n` cells `w` x `h`, `step` px apart, centred along the bottom with their bottoms `bottom` px above its edge (the hotbar and the build bar). */
+export function bottomRow(n: number, cell: { w: number; h: number; step: number }, bottom: number): ScreenBox[] {
+  const width = n * cell.step - (cell.step - cell.w);
+  const left = Math.round((VIEW_WIDTH - width) / 2);
+  const y = VIEW_HEIGHT - bottom - cell.h;
+  return Array.from({ length: n }, (_, i) => ({ x: left + i * cell.step, y, w: cell.w, h: cell.h }));
+}
+
 /** The hotbar's cells, one per ammo in key order, centred along the bottom. */
 export function hotbarCells(): (ScreenBox & { ammoId: string })[] {
-  const { cell, margin } = HUD_LAYOUT;
-  const width = SLOT_AMMOS.length * cell.step - (cell.step - cell.w);
-  const left = Math.round((VIEW_WIDTH - width) / 2);
-  const y = VIEW_HEIGHT - margin - cell.h;
-  return SLOT_AMMOS.map((ammoId, i) => ({ ammoId, x: left + i * cell.step, y, w: cell.w, h: cell.h }));
+  const row = bottomRow(SLOT_AMMOS.length, HUD_LAYOUT.cell, HUD_LAYOUT.margin);
+  return SLOT_AMMOS.flatMap((ammoId, i) => {
+    const box = row[i];
+    return box ? [{ ammoId, ...box }] : [];
+  });
 }
 
 /** The whole hotbar row. */
@@ -34,8 +42,7 @@ export function hotbarBox(): ScreenBox {
 /** The tube slot showing `units` units (a round each, or the fist): centred, `gap` px above the hotbar row. */
 export function tubeSlotBox(units: number): ScreenBox {
   const { tubeSlot, gap } = HUD_LAYOUT;
-  const n = Math.max(1, units);
-  const w = n * tubeSlot.w + (n - 1) * gap;
+  const w = tubeSlotWidth(units);
   const y = hotbarBox().y - gap - tubeSlot.h;
   return { x: Math.round((VIEW_WIDTH - w) / 2), y, w, h: tubeSlot.h };
 }

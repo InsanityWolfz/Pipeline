@@ -9,7 +9,7 @@ import { NODE_SPRITES_VECTOR } from '../../src/data/art/nodes';
 import { describe, expect, it } from 'vitest';
 import { ENEMY_ANIMS, SPRITES, TUBE_SLOT_FRAMES } from '../../src/data/assets';
 import { INTAKE } from '../../src/data/foundry';
-import { HUD_LAYOUT } from '../../src/data/hudLayout';
+import { HUD_LAYOUT, tubeSlotWidth } from '../../src/data/hudLayout';
 import { inksOf, svg, type LimbStyle, type Shape } from '../../src/data/art/types';
 import { VECTOR_SPRITES } from '../../src/data/art/sprites';
 import { TUBE_PARTS, WANDERER, WANDERER_DYNAMIC } from '../../src/data/art/wanderer';
@@ -161,7 +161,7 @@ describe('the bottom HUD art (025)', () => {
     const byKey = new Map(HUD_SPRITES_VECTOR.map((s) => [s.key, s]));
     TUBE_SLOT_FRAMES.forEach((key, i) => {
       const n = i + 1;
-      expect(byKey.get(key)?.size).toEqual([n * HUD_LAYOUT.tubeSlot.w + (n - 1) * HUD_LAYOUT.gap, HUD_LAYOUT.tubeSlot.h]);
+      expect(byKey.get(key)?.size).toEqual([tubeSlotWidth(n), HUD_LAYOUT.tubeSlot.h]);
     });
     expect(byKey.get(SPRITES.hudFist)?.size).toEqual([16, 16]);
   });

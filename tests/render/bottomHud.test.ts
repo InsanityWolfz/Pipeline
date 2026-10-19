@@ -40,7 +40,7 @@ describe('the bottom HUD layout', () => {
 
   it('makes the tube slot activeScale times the hotbar cell', () => {
     expect(HUD_LAYOUT.activeScale).toBe(1.4);
-    expect(HUD_LAYOUT.tubeSlot.w).toBe(Math.round(HUD_LAYOUT.cell.w * HUD_LAYOUT.activeScale));
+    expect(HUD_LAYOUT.tubeSlot.w).toBeGreaterThanOrEqual(Math.round(HUD_LAYOUT.cell.w * HUD_LAYOUT.activeScale));
     expect(HUD_LAYOUT.tubeSlot.h).toBe(Math.round(HUD_LAYOUT.cell.h * HUD_LAYOUT.activeScale));
   });
 

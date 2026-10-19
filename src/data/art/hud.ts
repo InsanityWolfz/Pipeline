@@ -1,6 +1,6 @@
 import { SPRITES, TUBE_SLOT_FRAMES } from '../assets';
 import { TUTORIAL_SPRITES } from '../foundryAssets';
-import { CRAFT_MENU_LAYOUT, HUD_LAYOUT, PICKER_LAYOUT } from '../hudLayout';
+import { CRAFT_MENU_LAYOUT, HUD_LAYOUT, PICKER_LAYOUT, tubeSlotWidth } from '../hudLayout';
 import { ellipse, line, path, rect, solid, trim, type Paint, type Shape, type VectorSprite } from './types';
 
 // The HUD and menus (020): rune-carved stone tablets with brass corners, dark
@@ -44,11 +44,13 @@ const sprite = (key: string, size: readonly [number, number], shapes: readonly S
 
 // The tube slot (025): a tablet a little bigger than a hotbar cell, with a dark well per round it shows,
 // each ringed in cyan like the tube. One frame per count of rounds, up to one per intake entrance.
-const UNIT = { w: HUD_LAYOUT.tubeSlot.w, h: HUD_LAYOUT.tubeSlot.h, step: HUD_LAYOUT.tubeSlot.w + HUD_LAYOUT.gap } as const;
-const tubeSlotWidth = (n: number): number => n * UNIT.w + (n - 1) * HUD_LAYOUT.gap;
+const UNIT = { w: HUD_LAYOUT.tubeSlot.w, h: HUD_LAYOUT.tubeSlot.h, step: HUD_LAYOUT.tubeSlot.w + HUD_LAYOUT.gap, inset: HUD_LAYOUT.tubeSlot.wellInset } as const;
 const tubeSlot = (n: number): Shape[] => [
   ...tablet(tubeSlotWidth(n), UNIT.h),
-  ...Array.from({ length: n }, (_, i) => [well(i * UNIT.step + 3, 3, UNIT.w - 6, UNIT.h - 6), ring(i * UNIT.step + 3, 3, UNIT.w - 6, UNIT.h - 6, 1.2, 0.85, 2)]).flat(),
+  ...Array.from({ length: n }, (_, i) => [
+    well(i * UNIT.step + UNIT.inset, UNIT.inset, UNIT.w - 2 * UNIT.inset, UNIT.h - 2 * UNIT.inset),
+    ring(i * UNIT.step + UNIT.inset, UNIT.inset, UNIT.w - 2 * UNIT.inset, UNIT.h - 2 * UNIT.inset, 1.2, 0.85, 2),
+  ]).flat(),
   // Brass studs between the wells, so a volley reads as one slot.
   ...Array.from({ length: n - 1 }, (_, i) => ellipse((i + 1) * UNIT.step - HUD_LAYOUT.gap / 2, UNIT.h / 2, 1.1, 1.1, solid('brass'))),
 ];

@@ -1,7 +1,7 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, SPRITES, TUBE_SLOT_FRAMES, tubeSlotFrame } from '../data/assets';
 import { ammoDef } from '../data/ammo';
-import { HUD_LAYOUT } from '../data/hudLayout';
+import { HUD_LAYOUT, ITEM_ICON_SIZE } from '../data/hudLayout';
 import { itemDef } from '../data/items';
 import type { HudActive } from '../sim/volley';
 import { tubeSlotBox, tubeSlotUnits, type ScreenBox } from './bottomHud';
@@ -17,6 +17,8 @@ interface Unit {
 export interface TubeSlotState extends ScreenBox {
   icons: string[];
   labels: string[];
+  /** Each label's left and width, view px, so a test can check it stays clear of its well's ring. */
+  labelBoxes: { x: number; w: number }[];
 }
 
 // The tube slot (025): centred above the hotbar row and `activeScale` times its size,
@@ -26,7 +28,7 @@ export interface TubeSlotState extends ScreenBox {
 export class TubeSlotView {
   private readonly frame: GameObjects.Image;
   private readonly units: Unit[];
-  private shown: TubeSlotState = { ...tubeSlotBox(1), icons: [], labels: [] };
+  private shown: TubeSlotState = { ...tubeSlotBox(1), icons: [], labels: [], labelBoxes: [] };
 
   constructor(scene: Scene) {
     const fixed = <T extends GameObjects.Components.ScrollFactor & GameObjects.Components.Depth>(o: T, depth: number = DEPTHS.hud): T => {
@@ -48,11 +50,15 @@ export class TubeSlotView {
 
   /** What it shows now, for `ui().hud`. */
   get state(): TubeSlotState {
-    return { ...this.shown, icons: [...this.shown.icons], labels: [...this.shown.labels] };
+    return { ...this.shown, icons: [...this.shown.icons], labels: [...this.shown.labels], labelBoxes: this.shown.labelBoxes.map((b) => ({ ...b })) };
   }
 
   update(active: HudActive): void {
     const S = HUD_LAYOUT.tubeSlot;
+    // A volley has one round per intake entrance, and there's a frame for each count; more would be a bug.
+    if (active.kind === 'volley' && active.rounds.length > this.units.length) {
+      console.error(`The tube slot has ${this.units.length} units, but the volley has ${active.rounds.length} rounds`);
+    }
     const shows: { icon: string; label: string }[] =
       active.kind === 'carried'
         ? [{ icon: ammoIcon(active.ammoId), label: String(active.count) }]
@@ -62,7 +68,8 @@ export class TubeSlotView {
     const box = tubeSlotBox(shows.length);
     showFrame(this.frame, tubeSlotFrame(shows.length)).setOrigin(0).setPosition(box.x, box.y);
     const at = tubeSlotUnits(shows.length);
-    const iconSize = S.iconSize * HUD_LAYOUT.activeScale;
+    const iconSize = ITEM_ICON_SIZE * HUD_LAYOUT.activeScale;
+    const labelBoxes: { x: number; w: number }[] = [];
     this.units.forEach((u, i) => {
       const show = shows[i];
       const pos = at[i];
@@ -75,9 +82,11 @@ export class TubeSlotView {
         .setScale(HUD_LAYOUT.activeScale / textureScale())
         .setPosition(pos.x + (S.w - iconSize) / 2, pos.y + S.iconY);
       u.label.set(show.label);
-      u.label.moveTo(Math.round(pos.x + (S.w - u.label.width) / 2), pos.y + S.countY);
+      const labelX = Math.round(pos.x + (S.w - u.label.width) / 2);
+      u.label.moveTo(labelX, pos.y + S.countY);
+      labelBoxes.push({ x: labelX, w: u.label.width });
     });
-    this.shown = { ...box, icons: shows.map((s) => s.icon), labels: shows.map((s) => s.label) };
+    this.shown = { ...box, icons: shows.map((s) => s.icon), labels: shows.map((s) => s.label), labelBoxes };
   }
 }
 

@@ -25,7 +25,8 @@ interface MaterialRow {
 
 /** The bottom HUD as drawn (025), for `ui().hud`: the hotbar row's rect and whether it shows, and the tube slot. */
 export interface BottomHudState {
-  hotbar: ScreenBox & { shown: boolean };
+  /** `selected` is the highlighted cell's index (0 for key 1). */
+  hotbar: ScreenBox & { shown: boolean; selected: number };
   tubeSlot: TubeSlotState;
 }
 
@@ -79,7 +80,7 @@ export class HudView {
 
   /** What the bottom HUD shows, for the test hook. */
   get bottom(): BottomHudState {
-    return { hotbar: { ...this.hotbar.box, shown: this.hotbar.visible }, tubeSlot: this.tubeSlot.state };
+    return { hotbar: { ...this.hotbar.box, shown: this.hotbar.visible, selected: this.hotbar.selected }, tubeSlot: this.tubeSlot.state };
   }
 
   /**

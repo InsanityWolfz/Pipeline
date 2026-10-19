@@ -4,8 +4,11 @@
 /** The harvest progress bar over a node: size, gap above the sprite, and palette ids. */
 export const HARVEST_BAR = { w: 20, h: 3, gap: 2, border: 1, color: 'cyan', back: 'ink' } as const;
 
+/** The item and ammo icons' size, px (16×16 vector frames, src/data/art/items.ts). */
+export const ITEM_ICON_SIZE = 16;
+
 /** Size of the hotbar cell (025), px: a tablet with a well, as the build bar's cells use too. */
-const CELL = { w: 24, h: 28, step: 26 } as const;
+const CELL = { w: 24, h: 28, step: 26, key: { x: 3, y: 3 }, icon: { x: 6, y: 3 }, count: { x: 4, y: 20 } } as const;
 /** How much bigger the tube slot's icons and text are than the hotbar's (025). */
 const ACTIVE_SCALE = 1.4;
 
@@ -21,18 +24,26 @@ export const HUD_LAYOUT = {
   margin: 6,
   gap: 4,
   activeScale: ACTIVE_SCALE,
-  cell: { ...CELL, key: { x: 3, y: 3 }, icon: { x: 6, y: 3 }, count: { x: 4, y: 20 } },
+  cell: CELL,
   tubeSlot: {
-    w: Math.round(CELL.w * ACTIVE_SCALE),
+    /** The cell's width scaled, plus 4 px so the 1.4× "Melee" label (28 px) clears the ring with `labelPad` each side. */
+    w: Math.round(CELL.w * ACTIVE_SCALE) + 4,
     h: Math.round(CELL.h * ACTIVE_SCALE),
-    /** The icon's top, and the count's or label's top (the top of its capitals). */
-    iconY: Math.round(3 * ACTIVE_SCALE),
-    countY: Math.round(20 * ACTIVE_SCALE),
-    /** Icons are this big before scaling (the item icons' size). */
-    iconSize: 16,
+    /** The icon's top, and the count's or label's top (the top of its capitals), scaled from the cell's. */
+    iconY: Math.round(CELL.icon.y * ACTIVE_SCALE),
+    countY: Math.round(CELL.count.y * ACTIVE_SCALE),
+    /** Each round's well inside the frame, px in from the unit's edges; a label keeps `labelPad` px clear of the well's ring each side. */
+    wellInset: 2,
+    labelPad: 2,
     melee: 'Melee',
   },
 } as const;
+
+/** The tube slot's width for `units` rounds (025): units side by side, `gap` px apart. */
+export function tubeSlotWidth(units: number): number {
+  const n = Math.max(1, units);
+  return n * HUD_LAYOUT.tubeSlot.w + (n - 1) * HUD_LAYOUT.gap;
+}
 
 /**
  * The crafting menu, centred on screen. Rows are listed group by group: a header
@@ -46,7 +57,7 @@ export const CRAFT_MENU_LAYOUT = {
   rowsAt: { x: 6, y: 8 },
   rowHeight: 20,
   /** Item icons are this tall; they sit centred in a row. */
-  iconSize: 16,
+  iconSize: ITEM_ICON_SIZE,
   rowGap: 1,
   headerHeight: 16,
   /** Up to three inputs: icon, then "have/need" beside it. */

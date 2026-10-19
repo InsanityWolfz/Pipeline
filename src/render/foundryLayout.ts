@@ -1,4 +1,5 @@
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
+import { bottomRow } from './bottomHud';
 import { INTAKE } from '../data/foundry';
 import { BUILD_BAR_LAYOUT, MENU_COLUMN_GAP, MENU_MAX_ROWS, PICKER_LAYOUT } from '../data/hudLayout';
 import type { AnimDef } from '../data/assets';
@@ -26,10 +27,11 @@ export const inRect = (r: ScreenRect, x: number, y: number): boolean =>
 /** One cell per piece in `pieces`, centred along the bottom of the screen. */
 export function buildBarCells(pieces: readonly string[]): (ScreenRect & { pieceId: string })[] {
   const L = BUILD_BAR_LAYOUT;
-  const width = pieces.length * L.cellStep - (L.cellStep - L.cellWidth);
-  const left = Math.round((VIEW_WIDTH - width) / 2);
-  const y = VIEW_HEIGHT - L.bottom - L.cellHeight;
-  return pieces.map((pieceId, i) => ({ pieceId, x: left + i * L.cellStep, y, w: L.cellWidth, h: L.cellHeight }));
+  const row = bottomRow(pieces.length, { w: L.cellWidth, h: L.cellHeight, step: L.cellStep }, L.bottom);
+  return pieces.flatMap((pieceId, i) => {
+    const box = row[i];
+    return box ? [{ pieceId, ...box }] : [];
+  });
 }
 
 /** A hopper menu row: take everything in the hopper out, or put all of a held item in. */
