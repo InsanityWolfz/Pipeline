@@ -77,7 +77,7 @@ const BROKEN_AQUEDUCT: LandmarkDef = {
 
 const TERRACE_PYLON: TilePos = { tx: 25, ty: 12 };
 
-/** The region's claimable site: a ruined cistern terrace above the Cut, its pylon held by a fixed pack (035; Husks and Wisps until then). */
+/** The region's claimable site: a ruined cistern terrace above the Cut, its pylon held by a fixed pack of the region's four (035). */
 const CISTERN_TERRACE: LandmarkDef = {
   id: 'cistern-terrace',
   name: 'Cistern Terrace',
@@ -86,13 +86,14 @@ const CISTERN_TERRACE: LandmarkDef = {
   area: { x0: 17, y0: 10, x1: 33, y1: 16 },
   features: [],
   nodes: [],
+  // 2 Shardbacks in front of the pylon, 2 Chargers on the flanks, a Burrower and the Sniper at the back.
   guards: [
-    { enemyId: 'husk', tx: 21, ty: 13 },
-    { enemyId: 'husk', tx: 29, ty: 13 },
-    { enemyId: 'husk', tx: 22, ty: 15 },
-    { enemyId: 'husk', tx: 28, ty: 15 },
-    { enemyId: 'wisp', tx: 20, ty: 11 },
-    { enemyId: 'wisp', tx: 30, ty: 11 },
+    { enemyId: 'shardback', tx: 23, ty: 14 },
+    { enemyId: 'shardback', tx: 27, ty: 14 },
+    { enemyId: 'charger', tx: 20, ty: 13 },
+    { enemyId: 'charger', tx: 30, ty: 13 },
+    { enemyId: 'burrower', tx: 25, ty: 15 },
+    { enemyId: 'sniper', tx: 25, ty: 11 },
   ],
   pylon: { ...TERRACE_PYLON, site: 'cistern-terrace', supplies: ['ley-iron', 'stone'] },
   // Down the road, out through the gap and along the west path to the stairs.

@@ -1,7 +1,7 @@
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { FEET_BOX } from '../data/player';
 import { OVERWORLD, ringOf } from '../data/overworld';
-import { POPULATION, type PopulatedRing } from '../data/population';
+import { POPULATION, type PackDef, type PopulatedRing } from '../data/population';
 import { HOLLOWS } from '../data/hollows';
 import { LANDMARK_LIST } from '../data/landmarks';
 import { TILE, WALKABLE } from '../data/rooms';
@@ -150,7 +150,7 @@ for (let ty = 1; ty < OVERWORLD.height - 1; ty++) {
 
 /** Tries to place a slot's pack on open ground in its ring, far enough from the player. */
 function spawn(state: SimState, slot: PackSlot): boolean {
-  const def = POPULATION.rings[slot.ring];
+  const def: PackDef = POPULATION.rings[slot.ring];
   const pool = candidates[slot.ring];
   for (let t = 0; t < POPULATION.tries; t++) {
     const pick = pool[nextInt(state.rng, 0, pool.length - 1)];
@@ -177,9 +177,13 @@ function spawn(state: SimState, slot: PackSlot): boolean {
       if (fits(s)) spots.push(s);
     }
     if (spots.length < size) continue;
+    const picked: string[] = [];
     const members = spots.map((s) => {
-      const enemyId = def.enemies[nextInt(state.rng, 0, def.enemies.length - 1)];
+      // Only ids still under their pack limit (035); with no limits the pool, and the draws, are as before.
+      const pool = def.enemies.filter((id) => picked.filter((p) => p === id).length < (def.limits?.[id] ?? Infinity));
+      const enemyId = pool[nextInt(state.rng, 0, pool.length - 1)];
       if (!enemyId) throw new Error(`Ring ${slot.ring} has no enemies to spawn`);
+      picked.push(enemyId);
       return createEnemy(state.nextEnemyId++, enemyId, tileCentre(s), OVERWORLD.id, slot.group);
     });
     // The pack may hold a champion (032).

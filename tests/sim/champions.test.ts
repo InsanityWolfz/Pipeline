@@ -38,8 +38,8 @@ function damageOf(d: EnemyDef): number {
 const pack = (ids: readonly string[]): EnemyState[] => ids.map((id, i) => createEnemy(i, id, { x: i * 40, y: 0 }, 'overworld', 'pop-1-0'));
 
 describe('the champion tuning', () => {
-  it("is Shaun's round 6: 1.5× size and HP, 1.3× damage, 1.15× speed, 2–3 drop rolls, one armor piece, 1 in 8 and 1 in 5", () => {
-    expect(CHAMPIONS).toMatchObject({ scale: 1.5, health: 1.5, damage: 1.3, speed: 1.15, dropRolls: [2, 3], armor: 1, chanceByRing: { 1: 1 / 8, 2: 1 / 5 } });
+  it("is Shaun's round 6: 1.5× size and HP, 1.3× damage, 1.15× speed, 2–3 drop rolls, one armor piece, 1 in 8 and 1 in 5 (and 035's ring 3, 1 in 4)", () => {
+    expect(CHAMPIONS).toMatchObject({ scale: 1.5, health: 1.5, damage: 1.3, speed: 1.15, dropRolls: [2, 3], armor: 1, chanceByRing: { 1: 1 / 8, 2: 1 / 5, 3: 1 / 4 } });
     expect(CHAMPIONS.glow.color).toBe('gold-trim');
   });
 
@@ -71,7 +71,7 @@ describe('championDef, applied to every non-boss enemy', () => {
 });
 
 describe('the champion roll', () => {
-  it.each([1, 2] as const)('hits about its chance over many seeds in ring %i', (ring) => {
+  it.each([1, 2, 3] as const)('hits about its chance over many seeds in ring %i', (ring) => {
     const trials = 4000;
     let hits = 0;
     for (let seed = 0; seed < trials; seed++) if (rollChampions(createRng(seed), pack(['husk', 'husk', 'wisp']), ring)) hits++;

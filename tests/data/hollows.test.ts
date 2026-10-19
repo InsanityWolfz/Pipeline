@@ -43,14 +43,16 @@ describe('the Hollows landmarks', () => {
     expect(cut.pylon).toBeUndefined();
   });
 
-  it("put the Terrace's pylon among a fixed pack of six (Husks and Wisps until 035), with a ley-iron seam and a boulder in its zone", () => {
+  it("put the Terrace's pylon among a fixed pack of six of the region's four (035), with a ley-iron seam and a boulder in its zone", () => {
     const t = byId('cistern-terrace');
     const pylon = t.pylon;
     if (!pylon) throw new Error('no pylon');
     expect(pylon.supplies).toEqual(['ley-iron', 'stone']);
     for (const raw of pylon.supplies) expect(ITEMS[raw]?.kind).toBe('raw');
+    // 035: 2 Shardbacks, 2 Chargers, 1 Burrower and 1 Sniper.
+    const count = (id: string) => t.guards.filter((g) => g.enemyId === id).length;
     expect(t.guards).toHaveLength(6);
-    for (const g of t.guards) expect(['husk', 'wisp']).toContain(g.enemyId);
+    expect([count('shardback'), count('charger'), count('burrower'), count('sniper')]).toEqual([2, 2, 1, 1]);
     const nodes = OVERWORLD.nodes.filter((n) => Math.hypot(n.tx - pylon.tx, n.ty - pylon.ty) <= SITE_SAFE_RADIUS);
     for (const raw of pylon.supplies) expect(nodes.some((n) => NODES[n.nodeId]?.itemId === raw), raw).toBe(true);
     const line = OVERWORLD.leyLines[t.id];
@@ -65,7 +67,7 @@ describe('the Hollows landmarks', () => {
       const a = HOLLOWS.arena.bounds;
       expect(l.area.x1 < a.x0 || l.area.x0 > a.x1 || l.area.y1 < a.y0 || l.area.y0 > a.y1, l.id).toBe(true);
     }
-    expect(POPULATION.rings[3]).toEqual({ packs: 6, size: [4, 5], enemies: ['husk', 'husk', 'wisp'] });
+    expect(POPULATION.rings[3]).toEqual({ packs: 6, size: [4, 5], enemies: ['shardback', 'charger', 'charger', 'burrower', 'sniper'], limits: { sniper: 1, burrower: 2 } });
   });
 });
 

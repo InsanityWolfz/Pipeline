@@ -9,6 +9,8 @@ export interface PackDef {
   size: readonly [number, number];
   /** Enemy ids a pack member is picked from, in turn by the seeded RNG. */
   enemies: readonly string[];
+  /** At most this many of an enemy id in one pack (035: so a pack can always be read); a member is picked from those still under. */
+  limits?: Readonly<Record<string, number>>;
 }
 
 /** The rings that keep a population: ring 0 stays calm; ring 3 is Stonefall Hollows (034). */
@@ -18,8 +20,8 @@ export const POPULATION = {
   rings: {
     1: { packs: 4, size: [3, 4], enemies: ['husk'] },
     2: { packs: 8, size: [4, 5], enemies: ['husk', 'husk', 'wisp'] },
-    // 035's counts; ring 2's Husks and Wisps stand in until 035's enemies ship (034.14).
-    3: { packs: 6, size: [4, 5], enemies: ['husk', 'husk', 'wisp'] },
+    // Stonefall Hollows (035): its four, at most one Sniper and two Burrowers to a pack.
+    3: { packs: 6, size: [4, 5], enemies: ['shardback', 'charger', 'charger', 'burrower', 'sniper'], limits: { sniper: 1, burrower: 2 } },
   } satisfies Record<PopulatedRing, PackDef>,
   /** A pack spawns at least this far from the player (1.5 half-screens; see the spec's open question on "1.5 screens"). */
   spawnDistance: 480,
