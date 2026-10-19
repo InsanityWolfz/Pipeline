@@ -43,10 +43,10 @@ export class MenuRouter {
 
   handle(controls: Controls): void {
     const { craft, pause, site, picker, build, inventory, wake } = this.m;
-    const toggle = controls.takeMenuToggle();
-    const close = controls.takeMenuClose();
+    const toggle = controls.takeMenuKey('menu');
+    const close = controls.takeMenuKey('close');
     // I or Tab (031): taken even while paused, so a press then never opens the panel later.
-    const bag = controls.takeInventoryToggle();
+    const bag = controls.takeMenuKey('inventory');
     if (pause.isOpen) {
       if (close) pause.setOpen(false);
       return;

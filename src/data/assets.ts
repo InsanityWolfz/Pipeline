@@ -226,9 +226,10 @@ export const PLAYER_HIT_FX = {
  * The foundry tutorial's "+ shaft" (027) when a machine first makes its part: its text before the item's name
  * (in lower case), how far above the machine's top it starts, how far it rises and how long it lasts. 031: one that
  * would overlap a live popup starts `stackGap` px above its top, and the same machine and item within `mergeMs`
- * merge into one popup with a count (`countPrefix` before it: "+ shaft ×2").
+ * merge into one popup with a count (`countPrefix` before it: "+ shaft ×2"). Each popup keeps room for a count up to
+ * `reserveCount`, so a merge never widens it onto a neighbour.
  */
-export const MADE_POPUP = { prefix: '+ ', above: 2, rise: 12, durationMs: 1200, stackGap: 2, mergeMs: 1500, countPrefix: ' ×' } as const;
+export const MADE_POPUP = { prefix: '+ ', above: 2, rise: 12, durationMs: 1200, stackGap: 2, mergeMs: 1500, countPrefix: ' ×', reserveCount: 99 } as const;
 
 /** The KO fade, each way, ms. */
 export const KO_FADE_MS = 250;

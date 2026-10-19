@@ -1,16 +1,13 @@
 import { MADE_POPUP } from '../data/assets';
 import { itemDef } from '../data/items';
+import type { ScreenBox } from './bottomHud';
 
 // The "+ part" popups over machines (027), kept apart (031), pure: one that would
 // overlap a live popup starts `stackGap` above it, and two for the same machine and
 // item within `mergeMs` become one with a count.
 
-export interface PopupBox {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
+/** A popup's box, world or view px. */
+export type PopupBox = ScreenBox;
 
 const overlaps = (a: PopupBox, b: PopupBox) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 

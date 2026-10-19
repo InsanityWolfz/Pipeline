@@ -62,6 +62,8 @@ export interface UiState {
   paused: boolean;
   /** The hopper picker is open. */
   pickerOpen: boolean;
+  /** A site menu (a claimed pylon's, the stash's, the bench's or a sorter's) is open (031: it and the inventory take turns). */
+  siteOpen: boolean;
   /** The hopper picker's hint line while it shows (022), else null. */
   pickerHint: string | null;
   /** The counts the hopper picker's rows show, top to bottom (022: they update live). */

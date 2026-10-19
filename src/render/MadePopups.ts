@@ -12,6 +12,8 @@ import { textureScale } from './vector/textures';
 /** A popup on screen: its text, the machine and item it's for, when it started (scene ms) and how many it counts. */
 interface LivePopup {
   label: GameObjects.Text;
+  /** The width it keeps clear for itself: its text with the widest count a merge could give it. */
+  room: number;
   pieceId: number;
   itemId: string;
   bornMs: number;
@@ -74,10 +76,12 @@ export class MadePopups {
       .setOrigin(0.5, 1)
       .setDepth(DEPTHS.worldUi);
     // Clear of every live popup: just above any it would cover.
-    const box = boxOf(label);
-    const top = stackedTop(box, this.live.map((p) => boxOf(p.label)), MADE_POPUP.stackGap);
+    const room = label.setText(madeText(itemId, MADE_POPUP.reserveCount)).displayWidth;
+    label.setText(madeText(itemId, 1));
+    const box = boxOf(label, room);
+    const top = stackedTop(box, this.live.map((p) => boxOf(p.label, p.room)), MADE_POPUP.stackGap);
     label.setY(label.y + top - box.y);
-    const popup: LivePopup = { label, pieceId, itemId, bornMs: now, count: 1 };
+    const popup: LivePopup = { label, room, pieceId, itemId, bornMs: now, count: 1 };
     this.live.push(popup);
     // A steady rise, so popups stacked a moment apart keep their gap; only the fade eases.
     this.scene.tweens.add({ targets: label, y: label.y - MADE_POPUP.rise, duration: MADE_POPUP.durationMs, ease: 'Linear' });
@@ -94,9 +98,8 @@ export class MadePopups {
   }
 }
 
-/** A popup's box in world px (its origin is its bottom centre). */
-function boxOf(label: GameObjects.Text): PopupBox {
-  const w = label.displayWidth;
+/** A popup's box in world px (its origin is its bottom centre), `w` wide: its text's width unless given. */
+function boxOf(label: GameObjects.Text, w: number = label.displayWidth): PopupBox {
   const h = label.displayHeight;
   return { x: label.x - w / 2, y: label.y - h, w, h };
 }

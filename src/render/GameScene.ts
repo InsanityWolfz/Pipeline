@@ -170,6 +170,7 @@ export class GameScene extends Scene {
       craftOpen: this.menu?.isOpen ?? false,
       paused: this.pause?.isOpen ?? false,
       pickerOpen: this.picker?.isOpen ?? false,
+      siteOpen: this.siteMenus?.isOpen ?? false,
       pickerHint: this.picker?.hintShown ?? null,
       pickerCounts: [...(this.picker?.shownCounts ?? [])],
       hoverName: this.hover?.shown ?? null,

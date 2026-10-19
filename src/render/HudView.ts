@@ -94,6 +94,8 @@ export class HudView {
     this.health.update(input, building ? buildBarBox(unlockedPieces(sim)) : null, dt);
     this.edges.update(this.health.shown.low, this.health.pulse);
     this.feed.update(events.pickups, dt);
+    // A KO closes the panel: the wake panel takes the screen (and the panel can't open again while it shows).
+    if (events.ko) this.inventory.setOpen(false);
     this.inventory.update(sim);
   }
 }

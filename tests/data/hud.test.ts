@@ -82,6 +82,15 @@ describe('the HP bar data (031)', () => {
     }
   });
 
+  it('the pulse never reaches the shield, and the healing glow stays inside the margin', () => {
+    // The pulse grows the frame right from its bottom-left corner.
+    expect(HUD_HEALTH_LAYOUT.frame.w * HP_BAR.pulseScale).toBeLessThan(HUD_HEALTH_LAYOUT.shield.gap);
+    const G = HP_BAR.glow;
+    expect(G.reach).toBeLessThanOrEqual(HUD_LAYOUT.margin);
+    for (const r of G.rings) expect(r.out + r.width / 2 + r.blur).toBeLessThanOrEqual(G.reach);
+    expect(G.pad).toBeGreaterThanOrEqual(G.reach);
+  });
+
   it('draws the new HUD sprites', () => {
     const keys = new Set(HUD_SPRITES_VECTOR.map((s) => s.key));
     for (const key of [SPRITES.hudHealth, SPRITES.hudHealthGlow, SPRITES.hudShield, SPRITES.hudWarn, SPRITES.inventoryPanel, SPRITES.inventoryTitle]) {

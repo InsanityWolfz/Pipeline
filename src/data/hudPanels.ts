@@ -35,18 +35,23 @@ export const HEALTH_BLOCK_WIDTH = (() => {
  * `pulseScale` bigger, its fill washed `pulseBrighten` toward white) with red screen edges (`edge`: palette id, peak
  * alpha, and where they start as a fraction of the way to the corners). A drop leaves the lost part white for
  * `chunkHoldMs`, then drains it over `chunkDrainMs`. While healing the fill closes on the new value with time constant
- * `riseMs` instead of jumping, and a cyan `glow` (palette id, blur px, sprite padding px) fades in and out over `fadeMs`.
+ * `riseMs` instead of jumping, and a cyan `glow` (palette id, sprite padding px, rings) fades in and out over `fadeMs`.
  */
 export const HP_BAR = {
   lowFraction: 0.25,
   pulseMs: 900,
-  pulseScale: 0.06,
+  /** The pulse grows the frame up and right from its bottom-left corner, so it never crosses the margin or reaches the shield. */
+  pulseScale: 0.025,
   pulseBrighten: 0.35,
-  edge: { color: 'hit-red', alpha: 0.6, inner: 0.4 },
+  /** `floor`: the edges' alpha at the pulse's low, as a fraction of `alpha`. */
+  edge: { color: 'hit-red', alpha: 0.6, inner: 0.4, floor: 0.6 },
   chunkHoldMs: 400,
   chunkDrainMs: 300,
   riseMs: 220,
-  glow: { color: 'cyan', blur: 5, pad: 12, fadeMs: 200 },
+  /** The rising fill snaps onto the new value once within this many HP. */
+  riseSnap: 0.05,
+  /** The glow's rings sit `out` px outside the frame and its blur reaches no further than `reach` px past it (inside the margin). */
+  glow: { color: 'cyan', pad: 8, fadeMs: 200, rings: [{ out: 1, width: 2, alpha: 0.5, blur: 4 }, { out: 0.5, width: 1.2, alpha: 0.95, blur: 3 }], reach: 6 },
 } as const;
 
 /** The inventory panel's groups (031), in the order they always appear, each with its header. */
@@ -79,7 +84,7 @@ export const INVENTORY_PANEL = {
   gearLines: 2,
   row: { name: { x: 19, y: 5 }, count: { x: 102, y: 5 }, mark: { x: 118, y: 5 }, warn: { y: 4, gap: 2 }, home: { y: 5 } },
   nothing: { text: 'Nothing', x: 2, y: 3 },
-  text: { safe: 'safe', atRisk: 'at risk', sep: ' · ', home: 'home', worn: 'worn' },
+  text: { safe: 'safe', atRisk: 'at risk', sep: ' · ', home: 'home', worn: 'worn', armor: 'armor' },
   footer: { text: 'At risk: lost if you die before reaching the foundry or a claimed pylon.', gap: 6, lineHeight: 9 },
   colors: { safe: 'cyan', risk: 'rust-light', dim: 'rock-pale' },
   /** Dim text ("Nothing", "home N", the footer) at this alpha. */
@@ -138,7 +143,7 @@ export function inventoryPanelSize(): { w: number; h: number } {
 /**
  * The pickup feed (031): top-left where the materials column was, clear of the minimap and objective line (top-right).
  * A line per item picked up, newest on top, `lineStep` apart: its icon and "+N Name" (capitals' top at `text`) on a
- * faint tablet `pad` px round them, `width` px at most. A line holds `holdMs` after its last repeat, then fades over
+ * faint tablet `pad` px round them sideways, `width` px at most. A line holds `holdMs` after its last repeat, then fades over
  * `fadeMs`; at most `maxLines` show.
  */
 export const PICKUP_FEED = {
@@ -149,6 +154,8 @@ export const PICKUP_FEED = {
   icon: { x: 0, y: 0 },
   text: { x: 19, y: 5 },
   pad: 2,
+  /** Each line's tablet: from `back.y` px below the line's top, `back.h` px tall (an icon's height). */
+  back: { y: -1, h: 16 },
   alpha: 0.75,
   holdMs: 2500,
   fadeMs: 400,

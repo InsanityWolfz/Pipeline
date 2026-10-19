@@ -1,8 +1,14 @@
 import { expect, test, type Page } from '@playwright/test';
+import { TILE_SIZE, VIEW_HEIGHT } from '../../src/data/config';
 import { OBJECTIVES } from '../../src/data/objectives';
+import { HUD_LAYOUT } from '../../src/data/hudLayout';
+import { HUD_HEALTH_LAYOUT } from '../../src/data/hudPanels';
 import { OVERWORLD } from '../../src/data/overworld';
 import { FOUNDRY_STEPS } from '../fixtures/foundrySteps';
+import { FIXTURES } from '../../src/data/claims';
+import { inventoryLayout } from '../../src/render/inventoryLayout';
 import { boot, watchErrors } from './helpers';
+import { screenPoint, state } from './foundryPage';
 
 // The HUD pass (031): the inventory panel's keys and what it reports, the pickup feed,
 // the "+ part" popups kept apart, and the bottom-left HP bar clear of the 025 HUD and
@@ -18,7 +24,12 @@ const rowsOf = async (page: Page, group: string) => (await ui(page))?.inventory.
 
 /** The shrine pylon's tile, from the overworld data, and the cutter step's index in the goal chain. */
 const PYLON = OVERWORLD.shrine.pylon;
+/** Open flagstones inside the shrine's safe zone, a few tiles down and right of its pylon (030's shots stand here). */
+const SAFE_SPOT = { x: (PYLON.tx + 2.5) * TILE_SIZE, y: (PYLON.ty + 3.5) * TILE_SIZE };
+/** The HP block's top at rest (bottom-left, margin px up): raised in build mode, it sits above this. */
+const RESTING_TOP = VIEW_HEIGHT - HUD_LAYOUT.margin - HUD_HEALTH_LAYOUT.frame.h;
 const CUTTER_STEP = OBJECTIVES.findIndex((o) => o.text === FOUNDRY_STEPS[2]);
+const BENCH = FIXTURES.find((f) => f.kind === 'bench');
 
 test('I and Tab toggle the inventory, Esc closes it, Tab keeps focus; it swaps with the crafting menu and stays shut while paused', async ({ page }) => {
   const errors = watchErrors(page);
@@ -205,8 +216,8 @@ test('the HP block stays clear of the hotbar row and tube slot in play, and of t
   await expect.poll(async () => (await ui(page))?.hud?.hotbar.shown).toBe(true);
   let view = await ui(page);
   if (!view?.hud) throw new Error('no HUD');
-  expect(view.health.box.x).toBe(6);
-  expect(view.health.box.y + view.health.box.h).toBe(360 - 6);
+  expect(view.health.box.x).toBe(HUD_LAYOUT.margin);
+  expect(view.health.box.y + view.health.box.h).toBe(VIEW_HEIGHT - HUD_LAYOUT.margin);
   expect(overlaps(view.health.box, view.hud.hotbar)).toBe(false);
   expect(overlaps(view.health.box, view.hud.tubeSlot)).toBe(false);
   expect(view.health.text).toBe('100 / 100');
@@ -216,7 +227,7 @@ test('the HP block stays clear of the hotbar row and tube slot in play, and of t
     window.__GAME__?.step(1, { toggleBuild: true });
   });
   await expect.poll(async () => (await ui(page))?.buildBar?.shown).toBe(true);
-  await expect.poll(async () => (await ui(page))?.health.box.y).toBeLessThan(300);
+  await expect.poll(async () => (await ui(page))?.health.box.y).toBeLessThan(RESTING_TOP);
   view = await ui(page);
   if (!view?.hud || !view.buildBar) throw new Error('no build bar');
   const bar = view.buildBar;
@@ -255,15 +266,116 @@ test('below 25% the bar is low; a drop leaves a white chunk that drains away; he
   await expect.poll(async () => (await ui(page))?.health.low).toBe(false);
 
   // In the claimed shrine's safe zone (030), the bar glows while the player heals.
-  const healing = await page.evaluate(() => {
+  const healing = await page.evaluate((zone) => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     g.claim('shrine');
-    h.walkTo(68.5 * 32, 11.5 * 32);
+    h.walkTo(zone.x, zone.y);
     return g.step(10).player.healing;
-  });
+  }, SAFE_SPOT);
   expect(healing).toBe('pylon');
   await expect.poll(async () => (await ui(page))?.health.healing).toBe(true);
+  expect(errors).toEqual([]);
+});
+
+test('a press on the open panel never fires, and the player still moves with it open', async ({ page }) => {
+  test.setTimeout(60_000);
+  const errors = watchErrors(page);
+  await boot(page);
+  // On the real-time clock (no step yet), so the mouse drives the tube as in play.
+  await page.keyboard.press('i');
+  await expect.poll(() => inventoryOpen(page)).toBe(true);
+  const { panel } = inventoryLayout();
+  const centre = await screenPoint(page, panel.x + panel.w / 2, panel.y + panel.h / 2);
+  const before = await state(page);
+  expect(before.inventory.arrow ?? 0).toBeGreaterThan(0);
+  await page.mouse.move(centre.x, centre.y);
+  await page.mouse.down();
+  // Held down while the world runs on: half a second of ticks.
+  await expect.poll(async () => (await state(page)).tick, { timeout: 15_000 }).toBeGreaterThan(before.tick + 30);
+  await page.mouse.up();
+  const held = await state(page);
+  expect(held.inventory.arrow).toBe(before.inventory.arrow);
+  expect(held.arrows).toEqual([]);
+  // The same press with the panel shut fires, so the check above means something.
+  await page.keyboard.press('i');
+  await expect.poll(() => inventoryOpen(page)).toBe(false);
+  await page.mouse.down();
+  await expect.poll(async () => (await state(page)).inventory.arrow ?? 0, { timeout: 15_000 }).toBeLessThan(before.inventory.arrow ?? 0);
+  await page.mouse.up();
+
+  // Under the hook: open, the player walks as usual (the panel doesn't pause the world).
+  await page.keyboard.press('i');
+  await expect.poll(() => inventoryOpen(page)).toBe(true);
+  const walk = await page.evaluate(() => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    const from = g.step(0).player.x;
+    return { from, to: g.step(20, { moveX: 1 }).player.x };
+  });
+  expect(walk.to).toBeGreaterThan(walk.from + 20);
+  expect(await inventoryOpen(page)).toBe(true);
+  expect(errors).toEqual([]);
+});
+
+test("a KO closes the panel, and it won't open while the wake panel shows", async ({ page }) => {
+  test.setTimeout(60_000);
+  const errors = watchErrors(page);
+  await boot(page);
+  await page.evaluate(() => window.__GAME__?.step(1));
+  await page.keyboard.press('i');
+  await expect.poll(() => inventoryOpen(page)).toBe(true);
+  const ko = await page.evaluate(() => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    g.setPlayerHealth(0);
+    let s = g.step(1);
+    for (let t = 0; t < 600 && !s.events.ko; t++) s = g.step(1);
+    return s.events.ko;
+  });
+  expect(ko).toBe(true);
+  await expect.poll(() => inventoryOpen(page)).toBe(false);
+  // The wake panel shows (the menu pointer with nothing else open): I does nothing, while C still opens its menu.
+  await expect.poll(async () => (await ui(page))?.cursor?.kind, { timeout: 15_000 }).toBe('pointer');
+  await page.keyboard.press('i');
+  await page.keyboard.press('c');
+  await expect.poll(async () => (await ui(page))?.craftOpen).toBe(true);
+  expect(await inventoryOpen(page)).toBe(false);
+  expect(errors).toEqual([]);
+});
+
+test('E on a hopper or the bench closes the panel, and opening the panel closes their menus', async ({ page }) => {
+  test.setTimeout(90_000);
+  const errors = watchErrors(page);
+  await boot(page, '?playtest');
+  await page.evaluate(() => {
+    const g = window.__GAME__;
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    h.toFoundry();
+    g.step(1, { toggleBuild: true });
+    g.step(1, { place: { pieceId: 'hopper', tx: 11, ty: 5, facing: 'up' } });
+    g.step(1, { toggleBuild: true });
+    h.walkTo(11.5 * 32, 6.25 * 32);
+  });
+  await page.keyboard.press('i');
+  await expect.poll(() => inventoryOpen(page)).toBe(true);
+  await page.keyboard.press('e');
+  await expect.poll(async () => (await ui(page))?.pickerOpen).toBe(true);
+  expect(await inventoryOpen(page)).toBe(false);
+  await page.keyboard.press('i');
+  await expect.poll(() => inventoryOpen(page)).toBe(true);
+  expect((await ui(page))?.pickerOpen).toBe(false);
+
+  // The bench's menu (a site menu), standing on its right.
+  if (!BENCH) throw new Error('no bench');
+  await page.evaluate(([tx, ty]) => window.__helpers?.walkTo((tx + 1.3) * 32, (ty + 0.5) * 32), [BENCH.tx, BENCH.ty] as const);
+  await page.keyboard.press('e');
+  await expect.poll(async () => (await ui(page))?.siteOpen).toBe(true);
+  expect(await inventoryOpen(page)).toBe(false);
+  await page.keyboard.press('Tab');
+  await expect.poll(() => inventoryOpen(page)).toBe(true);
+  expect((await ui(page))?.siteOpen).toBe(false);
   expect(errors).toEqual([]);
 });

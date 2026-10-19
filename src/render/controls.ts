@@ -208,25 +208,11 @@ export class Controls {
     this.dragTile = tile;
   }
 
-  private takeMenuKey(key: keyof Controls['menuKeys']): boolean {
+  /** C (`menu`), Esc (`close`), or I or Tab (`inventory`, 031) was pressed since the last call. */
+  takeMenuKey(key: 'menu' | 'close' | 'inventory'): boolean {
     const pressed = this.menuKeys[key];
     this.menuKeys[key] = false;
     return pressed;
-  }
-
-  /** C was pressed since the last call. */
-  takeMenuToggle(): boolean {
-    return this.takeMenuKey('menu');
-  }
-
-  /** Esc was pressed since the last call. */
-  takeMenuClose(): boolean {
-    return this.takeMenuKey('close');
-  }
-
-  /** I or Tab was pressed since the last call (031). */
-  takeInventoryToggle(): boolean {
-    return this.takeMenuKey('inventory');
   }
 
   /** E was pressed since the last call (for the scene's picker; the sim gets its own copy). */

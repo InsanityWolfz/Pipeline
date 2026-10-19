@@ -2,9 +2,8 @@ import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, SPRITES } from '../data/assets';
 import { INVENTORY_PANEL, reservedRows, sparesText } from '../data/hudPanels';
 import { itemDef } from '../data/items';
-import type { SimState } from '../sim/state';
-import { inventoryGroups, SPARE_ROW, WORN_ROW, type InventoryGroupRows, type InventoryRow } from './inventoryRows';
-import { inventoryLayout } from './inventoryLayout';
+import { inventoryGroups, SPARE_ROW, WORN_ROW, type Held, type InventoryGroupRows, type InventoryRow } from './inventoryRows';
+import { inventoryLayout, type InventoryLayout } from './inventoryLayout';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
 
@@ -33,8 +32,6 @@ export interface InventoryShown {
   groups: InventoryGroupRows[];
 }
 
-type Held = Pick<SimState, 'inventory' | 'banked' | 'stash' | 'armor' | 'equipped'>;
-
 // The inventory panel (031, I or Tab): the haul in Raw, Parts, Ammo, Gear and Cores,
 // each row marking what a death would take against what's safe, and what's home in the
 // stash. Read-only; it doesn't pause the world. A vector tablet centred under its title card.
@@ -44,10 +41,11 @@ export class InventoryPanel {
   private readonly views: GroupView[];
   /** Everything shown and hidden with the panel (rows also hide one by one). */
   private readonly frame: { setVisible(visible: boolean): unknown }[] = [];
+  private readonly layout: InventoryLayout = inventoryLayout();
 
   constructor(scene: Scene) {
     const P = INVENTORY_PANEL;
-    const L = inventoryLayout();
+    const L = this.layout;
     const image = (x: number, y: number, key: string, depth: number) => addVector(scene, x, y, key).setOrigin(0).setScrollFactor(0).setDepth(depth);
     const text = (x: number, y: number, style: 'body' | 'display' | 'title' = 'body') => new TextLine(scene, x, y, DEPTHS.menu + 2, false, style);
     this.frame.push(image(L.panel.x, L.panel.y, SPRITES.inventoryPanel, DEPTHS.menu), image(L.title.x, L.title.y, SPRITES.inventoryTitle, DEPTHS.menu));
@@ -83,7 +81,7 @@ export class InventoryPanel {
   /** While open, a press on the panel or its title card is the panel's, never a shot (015). */
   overUi(x: number, y: number): boolean {
     if (!this.open) return false;
-    const { panel, title } = inventoryLayout();
+    const { panel, title } = this.layout;
     return x >= panel.x && x < panel.x + panel.w && y >= title.y && y < panel.y + panel.h;
   }
 
@@ -122,8 +120,8 @@ export class InventoryPanel {
     if (row.itemId === WORN_ROW && worn) {
       // The worn piece: by name, weight and armor, always safe.
       v.icon.setFrame(worn.weight === 'heavy' ? SPRITES.iconArmorHeavy : SPRITES.iconArmorLight);
-      v.name.set(worn.name);
-      v.safe.set(`${T.worn}${T.sep}${worn.weight}${T.sep}armor ${worn.armor}`);
+      v.name.set(worn.name).setFill();
+      v.safe.set(`${T.worn}${T.sep}${worn.weight}${T.sep}${T.armor} ${worn.armor}`);
       show(v.icon, v.name, v.safe);
       return;
     }

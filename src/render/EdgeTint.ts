@@ -18,7 +18,8 @@ export class EdgeTint {
 
   /** `low` shows it; `pulse` (0 to 1) swells it with the bar. */
   update(low: boolean, pulse: number): void {
-    this.image.setVisible(low).setAlpha(HP_BAR.edge.alpha * (0.6 + 0.4 * pulse));
+    const { alpha, floor } = HP_BAR.edge;
+    this.image.setVisible(low).setAlpha(alpha * (floor + (1 - floor) * pulse));
   }
 }
 

@@ -33,7 +33,7 @@ export interface HealthInput {
 export class HealthBar {
   private readonly frame: GameObjects.Image;
   private readonly glow: GameObjects.Image;
-  /** The fill, the chunk and the pulse's wash, drawn about the bar's centre so the pulse scales it in place. */
+  /** The fill, the chunk and the pulse's wash, drawn from the frame's bottom-left so the pulse scales them with it. */
   private readonly fill: GameObjects.Graphics;
   private readonly text: TextLine;
   private readonly shield: GameObjects.Image;
@@ -51,7 +51,8 @@ export class HealthBar {
       return o;
     };
     this.glow = fixed(addVector(scene, 0, 0, SPRITES.hudHealthGlow).setOrigin(0.5), DEPTHS.hud - 1).setAlpha(0);
-    this.frame = fixed(addVector(scene, 0, 0, SPRITES.hudHealth).setOrigin(0.5));
+    // Anchored bottom-left: the pulse grows it up and right, never past the margin or onto the shield.
+    this.frame = fixed(addVector(scene, 0, 0, SPRITES.hudHealth).setOrigin(0, 1));
     this.baseScale = this.frame.scaleX;
     this.fill = fixed(scene.add.graphics(), DEPTHS.hud + 1);
     this.text = new TextLine(scene, 0, 0, DEPTHS.hud + 2, false, 'count');
@@ -83,15 +84,16 @@ export class HealthBar {
     const { x, y } = this.block;
     const cx = x + L.frame.w / 2;
     const cy = y + L.frame.h / 2;
+    const bottom = y + L.frame.h;
     const pulse = pulseOf(m);
     const scale = 1 + pulse * HP_BAR.pulseScale;
-    this.frame.setPosition(cx, cy).setScale(this.baseScale * scale);
+    this.frame.setPosition(x, bottom).setScale(this.baseScale * scale);
     this.glowAlpha = Math.max(0, Math.min(1, this.glowAlpha + (this.healing ? 1 : -1) * (dtMs / HP_BAR.glow.fadeMs)));
     this.glow.setPosition(cx, cy).setAlpha(this.glowAlpha).setVisible(this.glowAlpha > 0);
 
-    const g = this.fill.clear().setPosition(cx, cy).setScale(scale);
-    const left = L.fill.x - L.frame.w / 2;
-    const top = L.fill.y - L.frame.h / 2;
+    const g = this.fill.clear().setPosition(x, bottom).setScale(scale);
+    const left = L.fill.x;
+    const top = L.fill.y - L.frame.h;
     const px = (hp: number) => Math.round((L.fill.w * Math.max(0, Math.min(input.max, hp))) / input.max);
     const filled = px(m.shown);
     g.fillStyle(colorOf(m.low ? L.lowColor : L.fillColor)).fillRect(left, top, filled, L.fill.h);

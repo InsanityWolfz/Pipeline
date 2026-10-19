@@ -27,7 +27,8 @@ export interface InventoryGroupRows {
 export const WORN_ROW = 'worn';
 export const SPARE_ROW = 'spare';
 
-type Held = Pick<SimState, 'inventory' | 'banked' | 'stash' | 'armor' | 'equipped'>;
+/** What the panel reads from the sim. */
+export type Held = Pick<SimState, 'inventory' | 'banked' | 'stash' | 'armor' | 'equipped'>;
 
 export function inventoryGroups(sim: Held): InventoryGroupRows[] {
   const risks = itemRisks(sim);

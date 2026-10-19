@@ -1,5 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
-import { DEPTHS } from '../data/assets';
+import { DEPTHS, SPRITES } from '../data/assets';
 import { PICKUP_FEED } from '../data/hudPanels';
 import { itemDef } from '../data/items';
 import type { PickupEvent } from '../sim/events';
@@ -27,7 +27,7 @@ export class PickupFeed {
     const F = PICKUP_FEED;
     this.slots = Array.from({ length: F.maxLines }, () => ({
       back: scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.hud),
-      icon: addVector(scene, 0, 0, itemDef('wood').icon).setOrigin(0).setScrollFactor(0).setDepth(DEPTHS.hud + 1),
+      icon: addVector(scene, 0, 0, SPRITES.itemWood).setOrigin(0).setScrollFactor(0).setDepth(DEPTHS.hud + 1),
       text: new TextLine(scene, 0, 0, DEPTHS.hud + 2, false, 'body'),
     }));
     this.draw();
@@ -65,7 +65,7 @@ export class PickupFeed {
       slot.icon.setFrame(item.icon).setPosition(F.x + F.icon.x, y + F.icon.y).setAlpha(alpha);
       slot.text.set(`+${line.count} ${item.name}`).moveTo(F.x + F.text.x, y + F.text.y).setAlpha(alpha);
       const w = Math.min(F.width, F.text.x + slot.text.width + F.pad);
-      drawTablet(slot.back, F.x - F.pad, y - F.pad + 1, w + F.pad, F.lineStep - 2, F.alpha * alpha);
+      drawTablet(slot.back, F.x - F.pad, y + F.back.y, w + F.pad, F.back.h, F.alpha * alpha);
     });
   }
 }

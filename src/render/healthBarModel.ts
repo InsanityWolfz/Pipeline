@@ -27,7 +27,7 @@ export interface HealthBarInput {
   dying: boolean;
 }
 
-type Tuning = Pick<typeof HP_BAR, 'lowFraction' | 'pulseMs' | 'chunkHoldMs' | 'chunkDrainMs' | 'riseMs'>;
+type Tuning = Pick<typeof HP_BAR, 'lowFraction' | 'pulseMs' | 'chunkHoldMs' | 'chunkDrainMs' | 'riseMs' | 'riseSnap'>;
 
 export function createHealthBar(health: number): HealthBarModel {
   return { shown: health, top: health, last: health, holdMs: 0, drainRate: 0, pulseMs: 0, low: false };
@@ -52,7 +52,7 @@ export function stepHealthBar(m: HealthBarModel, input: HealthBarInput, dtMs: nu
   if (health <= m.shown || !input.healing) m.shown = health;
   else {
     m.shown += (health - m.shown) * Math.min(1, dtMs / tuning.riseMs);
-    if (health - m.shown < 0.05) m.shown = health;
+    if (health - m.shown < tuning.riseSnap) m.shown = health;
   }
   // Healing past the chunk clears it.
   if (m.top <= health) {

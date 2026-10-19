@@ -1,6 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
-import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
+import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { OBJECTIVES } from '../../src/data/objectives';
+import { HUD_LAYOUT } from '../../src/data/hudLayout';
+import { HUD_HEALTH_LAYOUT } from '../../src/data/hudPanels';
 import { OVERWORLD } from '../../src/data/overworld';
 import { PICKUP_RADIUS } from '../../src/data/player';
 import { FOUNDRY_STEPS } from '../fixtures/foundrySteps';
@@ -15,6 +17,10 @@ import { boot, cameraSettled } from './helpers';
 
 const SHOTS = 'docs/review/031';
 const PYLON = OVERWORLD.shrine.pylon;
+/** Open flagstones inside the shrine's safe zone, a few tiles down and right of its pylon (030's shots stand here). */
+const SAFE_SPOT = { x: (PYLON.tx + 2.5) * TILE_SIZE, y: (PYLON.ty + 3.5) * TILE_SIZE };
+/** The HP block's top at rest (bottom-left, margin px up): raised in build mode, it sits above this. */
+const RESTING_TOP = VIEW_HEIGHT - HUD_LAYOUT.margin - HUD_HEALTH_LAYOUT.frame.h;
 const CUTTER_STEP = OBJECTIVES.findIndex((o) => o.text === FOUNDRY_STEPS[2]);
 
 const ui = (page: Page) => page.evaluate(() => window.__GAME__?.ui());
@@ -103,15 +109,15 @@ test.describe('review screenshots (031)', () => {
   test("the healing glow in the shrine pylon's safe zone", async ({ page }) => {
     test.setTimeout(90_000);
     await boot(page);
-    await page.evaluate(() => {
+    await page.evaluate((zone) => {
       const g = window.__GAME__;
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
       g.claim('shrine');
       g.setPlayerHealth(40);
-      h.walkTo(68.5 * 32, 11.5 * 32);
+      h.walkTo(zone.x, zone.y);
       if (g.step(10).player.healing !== 'pylon') throw new Error('not healing in the safe zone');
-    });
+    }, SAFE_SPOT);
     await expect.poll(async () => (await ui(page))?.health.healing).toBe(true);
     await cameraSettled(page, 20_000);
     await page.screenshot({ path: `${SHOTS}/04-healing-glow.png` });
@@ -215,7 +221,7 @@ test.describe('review screenshots (031)', () => {
       g.step(1, { toggleBuild: true });
     });
     await expect.poll(async () => (await ui(page))?.buildBar?.shown).toBe(true);
-    await expect.poll(async () => (await ui(page))?.health.box.y).toBeLessThan(300);
+    await expect.poll(async () => (await ui(page))?.health.box.y).toBeLessThan(RESTING_TOP);
     await cameraSettled(page, 20_000);
     await page.screenshot({ path: `${SHOTS}/09-build-mode-every-piece.png` });
   });

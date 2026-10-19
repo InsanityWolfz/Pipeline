@@ -93,9 +93,9 @@ const HEALTH: Shape[] = [
 
 // Its healing glow (031): soft cyan rings just outside the frame, faded in while the player heals (030).
 const G = HP_BAR.glow;
-const glowRing = (out: number, width: number, alpha: number, blur: number): Shape =>
-  rect(G.pad - out, G.pad - out, HP.frame.w + 2 * out, HP.frame.h + 2 * out, 3 + out, { stroke: { color: { id: 'cyan-glow', alpha }, width }, glow: { color: G.color, blur } });
-const HEALTH_GLOW: Shape[] = [glowRing(2.5, 3, 0.5, G.blur * 1.6), glowRing(1.5, 1.6, 0.95, G.blur)];
+const HEALTH_GLOW: Shape[] = G.rings.map(({ out, width, alpha, blur }) =>
+  rect(G.pad - out, G.pad - out, HP.frame.w + 2 * out, HP.frame.h + 2 * out, 3 + out, { stroke: { color: { id: 'cyan-glow', alpha }, width }, glow: { color: G.color, blur } }),
+);
 
 // The shield (031, 14x16) beside the bar's armor value: a heater shield of steel with a brass rim and a cyan ley rune.
 const SHIELD: Shape[] = [
