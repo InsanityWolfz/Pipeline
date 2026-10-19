@@ -204,3 +204,8 @@ The screen stays clean, and the death rule becomes readable:
 
 ## Open questions
 None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).
+
+## Raised after the build (for Shaun at playtest)
+- **Panel on death:** the spec didn't say. An inventory panel left open when the player is knocked out now closes, so it can't overlap the wake panel.
+- **Panel size:** the panel keeps a row for every item each group could hold, so its size never jumps. This leaves empty space under Raw and Parts. When open, it covers the tube slot, as the crafting menu does.
+- **Look:** Shaun to judge whether the red screen-edge tint below 25% HP is strong enough, and to approve the new HUD art (docs/review/031).
