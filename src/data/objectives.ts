@@ -12,8 +12,17 @@ export type ObjectiveCheck =
   | { kind: 'crafted'; items: readonly string[] }
   | { kind: 'gate'; gate: GateId }
   | { kind: 'inRoom'; room: string }
-  /** A line feeds the foundry intake (019): a piece's front is one of its mouth tiles. */
-  | { kind: 'intakeFed' }
+  /**
+   * A line feeds the foundry intake (019): a piece's front is one of its mouth tiles. With an `item` (027), that
+   * item must also be arriving: going into an entrance this tick.
+   */
+  | { kind: 'intakeFed'; item?: string }
+  /** A piece of this id stands in the foundry (027). */
+  | { kind: 'placed'; piece: string }
+  /** Some hopper holds this item (027). */
+  | { kind: 'hopperHolds'; item: string }
+  /** Machines have made at least one of this item (027); hand-crafting never counts. */
+  | { kind: 'machineMade'; item: string }
   /** An intake entrance has filled from a line at least once. */
   | { kind: 'lineFull' }
   | { kind: 'identified' }
@@ -26,12 +35,19 @@ export type ObjectiveCheck =
   | { kind: 'awayRunning'; ticks: number };
 
 /** Which key a goal's prompt shows, and what it floats over (see PromptView). */
-export type PromptTarget = 'tubeStone' | 'node' | 'bench' | 'pylon' | 'hopper' | 'player';
+export type PromptTarget = 'tubeStone' | 'node' | 'bench' | 'pylon' | 'hopper' | 'newestHopper' | 'player';
+
+/** What an arrow marker floats over (027): the intake, where a line ends. */
+export type MarkerTarget = 'intake';
 
 export interface ObjectiveDef {
   text: string;
   check: ObjectiveCheck;
   prompt?: { key: 'E' | 'C' | 'B'; over: PromptTarget };
+  /** An arrow marker over the thing to build toward (027), shown anywhere in its room. */
+  marker?: MarkerTarget;
+  /** The piece whose build-bar cell pulses while the bar is open (027). */
+  highlight?: string;
 }
 
 export const OBJECTIVES: readonly ObjectiveDef[] = [
@@ -45,7 +61,44 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
   { text: 'Clear the ruin field of Husks', check: { kind: 'gate', gate: 'foundry' } },
   { text: 'Enter the foundry', check: { kind: 'inRoom', room: 'foundry' } },
   { text: 'Craft a bomb and a ley bolt (C)', check: { kind: 'crafted', items: ['bomb', 'ley-bolt'] }, prompt: { key: 'C', over: 'player' } },
-  { text: 'Build an ammo line into the intake (B)', check: { kind: 'intakeFed' }, prompt: { key: 'B', over: 'player' } },
+  // 027: the first line, an arrow line, a step at a time (Shaun chose arrows). Each names the piece to pulse on the build bar.
+  { text: 'Press B and place a hopper', check: { kind: 'placed', piece: 'hopper' }, prompt: { key: 'B', over: 'player' }, highlight: 'hopper' },
+  {
+    text: 'Put wood in the hopper (E)',
+    check: { kind: 'hopperHolds', item: 'wood' },
+    prompt: { key: 'E', over: 'newestHopper' },
+    highlight: 'hopper',
+  },
+  {
+    text: 'Place a cutter in front of the hopper',
+    check: { kind: 'machineMade', item: 'shaft' },
+    prompt: { key: 'B', over: 'player' },
+    highlight: 'cutter',
+  },
+  {
+    text: 'Make arrowheads: hopper of stone → knapper',
+    check: { kind: 'machineMade', item: 'arrowhead' },
+    prompt: { key: 'B', over: 'player' },
+    highlight: 'knapper',
+  },
+  {
+    text: 'Make rope: hopper of fiber → spinner',
+    check: { kind: 'machineMade', item: 'rope' },
+    prompt: { key: 'B', over: 'player' },
+    highlight: 'spinner',
+  },
+  {
+    text: 'Feed all three into an assembler',
+    check: { kind: 'machineMade', item: 'arrow' },
+    prompt: { key: 'B', over: 'player' },
+    highlight: 'assembler',
+  },
+  {
+    text: 'Run a conduit from the assembler into the intake',
+    check: { kind: 'intakeFed', item: 'arrow' },
+    marker: 'intake',
+    highlight: 'conduit',
+  },
   { text: 'Fill the tube from your line', check: { kind: 'lineFull' }, prompt: { key: 'E', over: 'hopper' } },
   { text: 'Identify your armor at the bench (E)', check: { kind: 'identified' }, prompt: { key: 'E', over: 'bench' } },
   { text: "Claim the shrine's pylon", check: { kind: 'claimed', site: 'shrine' }, prompt: { key: 'E', over: 'pylon' } },

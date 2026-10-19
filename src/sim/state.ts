@@ -88,6 +88,8 @@ export interface SimState {
   populated: boolean;
   /** The population's pack slots (017). */
   population: PopulationState;
+  /** How many of each item machines have made (027), for the foundry steps; hand crafts never count. Kept through a KO. */
+  machineMade: Record<string, number>;
   /** Raw materials ever harvested, for the gathering objective. */
   gathered: string[];
   /** Which objectives are done, in OBJECTIVES order. */
@@ -155,6 +157,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     firstLineFull: false,
     populated: start.populated,
     population: createPopulation(),
+    machineMade: {},
     gathered: [],
     objectives: OBJECTIVES.map(() => false),
     awayTicks: 0,

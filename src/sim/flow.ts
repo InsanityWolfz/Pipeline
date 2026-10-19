@@ -28,6 +28,9 @@ import {
 // The foundry intake (019) passes what each mouth tile takes straight into its
 // entrance's reservoir (024): each from the tile directly south of it, once attuned.
 
+/** Where a tick's flow records what happened: rounds into the intake, and machines' finished crafts (027). */
+type FlowEvents = Pick<SimEvents, 'refills' | 'made'>;
+
 /** What a tick's flow needs beyond the grid: the entrances the intake fills (once `attuned`), and where refills are recorded. */
 interface FlowContext {
   grid: ReadonlyMap<string, PieceState>;
@@ -49,7 +52,7 @@ function hasInputs(m: MachineState, recipe: RecipeDef): boolean {
 /** A craft only starts when its whole output will fit. */
 const outputFits = (m: MachineState, recipe: RecipeDef): boolean => m.output + recipe.output.count <= OUTPUT_CAP;
 
-function advanceMachine(m: MachineState): void {
+function advanceMachine(m: MachineState, made: SimEvents['made']): void {
   const recipe = recipeOf(m);
   if (m.crafting) {
     m.progress += 1;
@@ -57,6 +60,7 @@ function advanceMachine(m: MachineState): void {
       m.crafting = false;
       m.progress = 0;
       m.output += recipe.output.count;
+      made.push({ id: m.id, pieceId: m.pieceId, itemId: recipe.output.itemId, count: recipe.output.count });
     }
   }
   if (m.crafting || !hasInputs(m, recipe) || !outputFits(m, recipe)) return;
@@ -65,11 +69,11 @@ function advanceMachine(m: MachineState): void {
   m.progress = 0;
 }
 
-function advance(p: PieceState): void {
+function advance(p: PieceState, made: SimEvents['made']): void {
   if (p.kind === 'conduit' && p.item && p.progress < CONDUIT_TICKS) p.progress += 1;
   if (p.kind === 'sorter' && p.item && p.progress < CONDUIT_TICKS) p.progress += 1;
   if (p.kind === 'hopper' && p.count > 0 && p.timer < HOPPER_TICKS) p.timer += 1;
-  if (p.kind === 'machine') advanceMachine(p);
+  if (p.kind === 'machine') advanceMachine(p, made);
 }
 
 /**
@@ -166,13 +170,14 @@ export function offerFromOutside(foundry: FoundryState, to: Tile, from: Tile, it
 
 /**
  * Runs every piece one tick. The foundry ticks wherever the player is. Once the
- * tube is `attuned`, the intake fills its open `entrances`, and each round it takes is pushed to `refills`.
+ * tube is `attuned`, the intake fills its open `entrances`, and each round it takes is pushed to `events.refills`;
+ * each craft a machine finishes is pushed to `events.made`.
  */
-export function stepFoundry(foundry: FoundryState, entrances: EntranceState[], refills: SimEvents['refills'], attuned: boolean): void {
+export function stepFoundry(foundry: FoundryState, entrances: EntranceState[], events: FlowEvents, attuned: boolean): void {
   const grid = new Map<string, PieceState>();
   for (const p of foundry.pieces) for (const t of footprint(p.pieceId, p.tx, p.ty, p.facing)) grid.set(key(t), p);
-  const ctx: FlowContext = { grid, entrances, refills, attuned };
-  for (const p of foundry.pieces) advance(p);
+  const ctx: FlowContext = { grid, entrances, refills: events.refills, attuned };
+  for (const p of foundry.pieces) advance(p, events.made);
   for (const p of foundry.pieces) transfer(ctx, p);
   for (const p of foundry.pieces) if (p.kind === 'machine') setStatus(p);
 }

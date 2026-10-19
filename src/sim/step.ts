@@ -70,7 +70,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepTube(state, cmd);
   stepBuild(state, cmd);
   stepFoundryUse(state, cmd);
-  stepFoundry(state.foundry, state.link.entrances, state.events.refills, state.link.attuned);
+  stepFoundry(state.foundry, state.link.entrances, state.events, state.link.attuned);
   stepPorts(state, (to, from, item) => offerFromOutside(state.foundry, to, from, item));
   stepPickups(state);
   stepGates(state);

@@ -97,6 +97,8 @@ export interface SimSummary {
   bombs: BombSummary[];
   /** Item ids hand-crafted at least once. */
   crafted: string[];
+  /** How many of each item machines have made (027). */
+  machineMade: Record<string, number>;
   /** Pieces the player can place, in build bar order. */
   unlocked: string[];
   building: boolean;
@@ -189,6 +191,7 @@ export function summarize(state: SimState): SimSummary {
     harvest: state.harvest ? { ...state.harvest } : null,
     bombs: state.bombs.map(bombSummary),
     crafted: [...state.crafted],
+    machineMade: { ...state.machineMade },
     unlocked: unlockedPieces(state),
     building: state.building,
     foundry: { pieces: state.foundry.pieces.map((p) => pieceSummary(p)) },

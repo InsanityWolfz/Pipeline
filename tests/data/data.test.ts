@@ -431,6 +431,30 @@ describe('the tutorial (012)', () => {
     }
   });
 
+  it('names real pieces and items in the foundry steps (027), each highlighted machine unlocked before its step', () => {
+    /** Every item a recipe's chain makes, the output and its parts all the way down. */
+    const chain = (itemId: string): string[] => {
+      const r = Object.values(RECIPES).find((x) => x.output.itemId === itemId);
+      return r ? [itemId, ...Object.keys(r.inputs).flatMap(chain)] : [];
+    };
+    const machineOutputs = Object.values(PIECES).flatMap((p) => (p.kind === 'machine' ? [RECIPES[p.recipeId]?.output.itemId] : []));
+    for (const [i, o] of OBJECTIVES.entries()) {
+      const c = o.check;
+      if (c.kind === 'placed') expect(PIECES[c.piece], o.text).toBeDefined();
+      if (c.kind === 'hopperHolds') expect(ITEMS[c.item], o.text).toBeDefined();
+      if (c.kind === 'machineMade') expect(machineOutputs, o.text).toContain(c.item);
+      if (c.kind === 'intakeFed' && c.item) expect(Object.values(AMMO).map((a) => a.itemId), o.text).toContain(c.item);
+      if (!o.highlight) continue;
+      expect(BUILD_BAR, o.text).toContain(o.highlight);
+      const def = pieceDef(o.highlight);
+      if (def.kind !== 'machine') continue;
+      // Hidden pieces never show on the bar (026), so an earlier objective must have hand-crafted what it makes.
+      const made = RECIPES[def.recipeId]?.output.itemId ?? '';
+      const before = OBJECTIVES.slice(0, i).flatMap((p) => (p.check.kind === 'crafted' ? p.check.items.flatMap(chain) : []));
+      expect(before, o.text).toContain(made);
+    }
+  });
+
   it('puts the tube stone on floor, the foundry gate on its stairs and the shrine gate on its gap', () => {
     const outside = WORLD[OVERWORLD.id];
     const stone = outside?.tubeStone;

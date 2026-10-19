@@ -74,6 +74,8 @@ export interface SimEvents {
   attunes: Record<string, never>[];
   /** The foundry intake put a round in an entrance's reservoir (019, 024): `entrance` is an index into INTAKE.entrances. */
   refills: { entrance: number; itemId: string }[];
+  /** A machine finished a craft (027): its piece id and kind, and what it made. Hand crafts are `crafts`. */
+  made: { id: number; pieceId: string; itemId: string; count: number }[];
   /** A punch (023): where the player stood, its aim angle (radians), and the enemy ids it hit. */
   melees: MeleeEvent[];
   /** A projectile left the tube's mouth (a volley fires several at once). */
@@ -129,6 +131,7 @@ export function createEvents(): SimEvents {
     withdraws: [],
     attunes: [],
     refills: [],
+    made: [],
     intakeOpens: [],
     tubeTaken: false,
     gates: [],
@@ -167,6 +170,7 @@ export function clearEvents(events: SimEvents): void {
   events.withdraws.length = 0;
   events.attunes.length = 0;
   events.refills.length = 0;
+  events.made.length = 0;
   events.intakeOpens.length = 0;
   events.tubeTaken = false;
   events.gates.length = 0;
