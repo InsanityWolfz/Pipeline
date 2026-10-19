@@ -294,3 +294,12 @@ Depends on 028 (hoppers fed by lines, entrances at their own rate).
 
 ## Open questions
 None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).
+
+## Raised after the build (for Shaun at playtest)
+- **Husks can't be frozen at these numbers.** Freezing takes 4 chill stacks, and each frost arrow does 10 damage against a Husk's 40 HP, so the 4th hit kills it instead. Only the Pylon Warden lives long enough to freeze. The numbers are built as specified, and the e2e freezes the Warden instead of a Husk. Shaun to choose the fix: freeze after 3 stacks, less frost-arrow damage, or leave it.
+- **Choices the spec didn't make, for Shaun to confirm:**
+  - frozen enemies' attack cooldowns keep counting down
+  - hand-applying a stage needs the bench in reach
+  - the hotbar count includes tagged rounds
+  - a frost hit that kills doesn't freeze
+- **Art** for the stage machines, rime and the Grotto waits on Shaun's approval by eye (docs/review/029/).
