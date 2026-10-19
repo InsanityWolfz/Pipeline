@@ -61,3 +61,20 @@ Small vertical commits, failing tests first in each:
 - The list panel and the inventory take turns (both are big centred panels).
 - Schematics are left out of the sorter's filter list.
 - `bulwark-core` added here (034 hasn't shipped) as a Cores item with no drop yet.
+
+## Build notes
+- Restoring is a command (`restore: nodeId`), sent by the restore panel's Restore row or a second E; the sim checks it again (in the foundry, attuned, revealed, requires restored, cost carried, the node's diagram the nearest in reach, `RESEARCH_REACH` 16 px). E alone no longer does anything at the intake in the sim.
+- Under the middle mouth tile the pipe's diagram is the nearest, so Reservoir I is restored there; each cap's diagram from under its own tile (and from 024's spot beside the east end).
+- `stepFoundry` takes the current cap and machine-speed multiplier (`FlowTuning`, defaults to 30 and ×1, so older tests read the same).
+- The merger takes an item from a side whose turn it isn't only while the turn's input has nothing ready for it (`readyInto`), so with all three fed it goes back, left, right in strict turn, and an empty input costs at most a tick.
+- A schematic in a drop table is the token `any-schematic`, resolved where items are scattered (`scatterItems`), so the Ruined Cache's code is unchanged; picking one draws from the RNG only when one is eligible.
+- A pylon deposit moves the haul to the stash before banking, so banking reveals schematics in the stash as well as those carried.
+- The schematics share one row on the inventory panel (Parts would otherwise need a third column): "Unknown schematic" while every one carried is unbanked, the real name for one known kind alone, else "Schematics". The pickup feed and the KO's lost list merge unknown schematics the same way, so two unknowns never tell apart.
+- The discovery banner (032) became a shared `Banner`; schematic pickups and reveals queue on it, so the two never overlap.
+- The tutorial run's step 18 now feeds the centre and the east (the arrow line has run dry by then, and the west stays capped), replacing the arrow line's last conduit with a hopper of ley bolts.
+- `?playtest` carries one of each schematic, so its first walk into the foundry reveals all four nodes (and plays four reveal banners).
+
+## Notes for Shaun
+- Node names are placeholders: Second entrance, Third entrance, Reservoir I, Reservoir II, Machine speed, Splitter, Merger, Sealed wing.
+- Wall panels sit on the north wall's face: machine speed west of the intake at (6, 0), the splitter and merger east of it at (17, 0) and (19, 0); the sealed wing's door fills the wall's notch at (9–10, 1). The bare carved panels show even before their schematic is found.
+- The art (`/sheet.html`, "Restoration (033)") is pending your review: diagrams, panels plain and restored, the reservoir's collars, the wing door, splitter and merger, the gear, valve, Bulwark core, the schematic scrolls (unknown and known) and the light pillar.

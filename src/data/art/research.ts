@@ -74,11 +74,11 @@ const channelBrass = (lines: Shape[]): Shape[] => [
 
 /** A capped entrance's diagram: the open inlet and its collar, as faint linework over the brass cap. */
 const DIAGRAM_CAP: Shape[] = [
-  ellipse(0, 0, 11.5, 4.2, ink),
-  ellipse(0, -0.6, 7.4, 2.4, faint()),
-  path('M -10 -1 Q -10 -9 0 -9.6 Q 10 -9 10 -1', { stroke: { color: { id: 'cyan', alpha: 0.7 }, width: 0.6, dash: [1.6, 1.2] }, glow: { color: 'cyan', blur: 1.5 } }),
-  glowLine([-3, -5, 3, -5], 0.7),
-  glowLine([0, -8, 0, -2], 0.7),
+  ellipse(0, 0.4, 14, 5.4, { stroke: { color: 'cyan-glow', width: 1.1 }, glow: { color: 'cyan', blur: 3 } }),
+  ellipse(0, -0.6, 7.4, 2.4, faint(0.8)),
+  path('M -11.5 -1 Q -11.5 -11 0 -11.6 Q 11.5 -11 11.5 -1', { stroke: { color: 'cyan-glow', width: 0.9, dash: [1.8, 1.2] }, glow: { color: 'cyan', blur: 2 } }),
+  glowLine([-3.4, -5.6, 3.4, -5.6], 1),
+  glowLine([0, -9, 0, -2.2], 1),
 ];
 
 /** The reservoir's diagram round the pipe: a wider tank, its bands and its fill marks. Px from the pipe's anchor (the mouth's middle). */
@@ -165,7 +165,7 @@ const W = RESEARCH_SPRITES;
 const wall = (key: string, shapes: readonly Shape[]): VectorSprite => sprite(key, [26, 26], [13, 25], [shapes]);
 
 export const RESEARCH_SPRITES_VECTOR: readonly VectorSprite[] = [
-  sprite(W.diagramCap, [28, 16], [14, 11], [DIAGRAM_CAP]),
+  sprite(W.diagramCap, [32, 20], [16, 14], [DIAGRAM_CAP]),
   sprite(W.diagramPipe, [72, 50], [36, 67], [DIAGRAM_PIPE]),
   wall(W.panel, PANEL),
   wall(W.diagramWall.machineSpeed, [...cog(-3, -14.5, 3.6, 8, 'diagram'), ...cog(3.8, -9.6, 2.6, 6, 'diagram')]),

@@ -146,7 +146,14 @@ test('with everything unlocked, the bar shows four labelled groups and the wheel
   await boot(page, '?playtest');
   await page.evaluate(() => {
     const g = window.__GAME__;
-    if (g && g.step(0).room !== 'foundry') window.__helpers?.toFoundry();
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    if (g.step(0).room !== 'foundry') h.toFoundry();
+    // 033: the splitter and merger join the bar once restored at their wall panels (the playtest carries their schematics and gears).
+    for (const [node, tx] of [['splitter', 17], ['merger', 19]] as const) {
+      h.walkTo((tx + 0.5) * 32, 1.5 * 32);
+      g.step(1, { restore: node });
+    }
   });
   const bar = await openBuildBar(page);
   expectGroups(bar, BUILD_BAR);

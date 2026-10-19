@@ -37,7 +37,7 @@ export const RESEARCH_ICONS = {
 
 export const RESEARCH_LOOK = {
   /** A diagram's linework breathes between these alphas over `pulseMs`; a diagram whose `requires` are unmet is drawn at `dimmed` of that. */
-  diagram: { alpha: [0.35, 0.7] as const, pulseMs: 2200, dimmed: 0.35 },
+  diagram: { alpha: [0.5, 0.9] as const, pulseMs: 2200, dimmed: 0.35 },
   /** Restoring: the linework fills solid cyan over `fillMs`, then the part solidifies (the diagram fades as it shows) over `solidMs`. */
   restore: { fillMs: 450, solidMs: 550, fillColor: 'cyan-glow' },
   /** A schematic's reveal shimmer over its new diagram: a band of light sweeping across it over `ms`. */

@@ -132,7 +132,8 @@ test("the splitter's schematic, banked on the way in, reveals its panel; restore
 
   // Placed with the mouse from the Logistics group, facing up.
   await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [centre(STAND.tx, STAND.ty).x, centre(STAND.tx, STAND.ty).y] as const);
-  await cameraSettled(page);
+  // A long ease under load needs more than the default.
+  await cameraSettled(page, 15_000);
   await toggleBuild(page);
   await expect.poll(async () => (await ui(page))?.buildBar?.cells.some((c) => c.pieceId === 'splitter')).toBe(true);
   await clickBar(page, 'splitter');
