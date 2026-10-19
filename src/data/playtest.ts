@@ -36,10 +36,10 @@ const OVERRIDES: Readonly<Record<string, number>> = { 'warden-core': 5, 'bulwark
  */
 export const PLAYTEST_GEAR: readonly GearPiece[] = [
   { id: 0, slot: 'helm', rarity: 'rare', weight: null, baseArmor: 2, relic: null, name: 'Rune-cut Helm', affixes: [{ kind: 'max-health', value: 14 }, { kind: 'regen', value: 0.5 }, { kind: 'armor', value: 2 }] },
-  { id: 1, slot: 'body', rarity: 'rare', weight: 'heavy', baseArmor: 12, relic: null, name: 'Granite Plate', affixes: [{ kind: 'armor', value: 3 }, { kind: 'max-health', value: 16 }, { kind: 'roll-distance', value: 12 }] },
-  { id: 2, slot: 'boots', rarity: 'rare', weight: null, baseArmor: 1, relic: null, name: 'Supple Treads', affixes: [{ kind: 'move-speed', value: 0.05 }, { kind: 'roll-cooldown', value: 5 }, { kind: 'roll-distance', value: 10 }] },
+  { id: 1, slot: 'body', rarity: 'rare', weight: 'heavy', baseArmor: 12, relic: null, name: 'Granite Plate', affixes: [{ kind: 'armor', value: 3 }, { kind: 'max-health', value: 16 }, { kind: 'roll-distance', value: 0.12 }] },
+  { id: 2, slot: 'boots', rarity: 'rare', weight: null, baseArmor: 1, relic: null, name: 'Supple Treads', affixes: [{ kind: 'move-speed', value: 0.05 }, { kind: 'roll-cooldown', value: -0.17 }, { kind: 'roll-distance', value: 0.1 }] },
   { id: 3, slot: 'trinket', rarity: 'rare', weight: null, baseArmor: 0, relic: null, name: 'Ley-touched Charm', affixes: [{ kind: 'regen', value: 0.6 }, { kind: 'max-health', value: 10 }, { kind: 'move-speed', value: 0.04 }] },
-  { id: 4, slot: WARDSTONE.slot, rarity: 'relic', weight: WARDSTONE.weight, baseArmor: 1, relic: WARDSTONE.id, name: WARDSTONE.name, affixes: [{ kind: 'max-health', value: 10 }, { kind: 'roll-cooldown', value: 4 }] },
+  { id: 4, slot: WARDSTONE.slot, rarity: 'relic', weight: WARDSTONE.weight, baseArmor: 1, relic: WARDSTONE.id, name: WARDSTONE.name, affixes: [{ kind: 'max-health', value: 10 }, { kind: 'roll-cooldown', value: -0.13 }] },
 ];
 
 export const PLAYTEST_START: StartDef = {

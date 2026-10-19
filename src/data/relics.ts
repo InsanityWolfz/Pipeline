@@ -17,8 +17,6 @@ interface RelicBase {
   slot: GearSlot;
   /** A body relic's weight; null for the others. */
   weight: GearWeight | null;
-  /** Its rule in one line, for the bench. */
-  text: string;
   /** What it does (039), each line naming one scope: its rule, and any stat it changes. A relic may bend a keyword (Q1). */
   lines: readonly ContentLine[];
   /** Its icon (GEAR_SPRITES), and the sound its rule plays when it acts (GEAR_SOUNDS), or null for none. */
@@ -67,7 +65,6 @@ export const ROLLBREAKER: RollbreakerDef = {
   slot: 'boots',
   weight: null,
   rule: 'stun',
-  text: 'Rolling through an enemy stuns it',
   icon: GEAR_SPRITES.relicRollbreaker,
   sound: null,
   stunTicks: STUN_TICKS,
@@ -80,7 +77,6 @@ export const WARDSTONE: WardstoneDef = {
   slot: 'helm',
   weight: null,
   rule: 'ward',
-  text: 'After 6 s unhit, blocks the next hit',
   icon: GEAR_SPRITES.relicWardstone,
   sound: GEAR_SOUNDS.wardBreak,
   wardTicks: WARD_TICKS,
@@ -93,7 +89,6 @@ export const FEATHERPLATE: FeatherplateDef = {
   slot: 'body',
   weight: 'heavy',
   rule: 'feather',
-  text: 'Heavy plate without the slow; a shorter roll',
   icon: GEAR_SPRITES.relicFeatherplate,
   sound: null,
   ...FEATHER,
@@ -109,7 +104,6 @@ export const LAST_EMBER: LastEmberDef = {
   slot: 'trinket',
   weight: null,
   rule: 'ember',
-  text: 'Once a trip, a killing hit leaves you on 1 HP',
   icon: GEAR_SPRITES.relicEmber,
   sound: GEAR_SOUNDS.emberSave,
   ...EMBER,

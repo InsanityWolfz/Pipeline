@@ -1,4 +1,4 @@
-import { affixLine, MOVE_BONUS_CAP, SLOT_BASE } from '../data/gear';
+import { affixLine, MOVE_BONUS_CAP, ROLL_COOLDOWN_FLOOR, SLOT_BASE } from '../data/gear';
 import type { KeywordId } from '../data/keywords';
 import { isRuleLine, type ContentLine, type RuleId, type RuleLine, type Scope } from '../data/lines';
 import { relicDef } from '../data/relics';
@@ -81,10 +81,11 @@ export function ruleLines(state: Statted, rule: RuleId, e?: Emission): Sourced<R
 /** The first rule line in play with this rule that reaches `e` (or any, without one), or null. */
 export const ruleFor = (state: Statted, rule: RuleId, e?: Emission): RuleLine | null => ruleLines(state, rule, e)[0]?.line ?? null;
 
-/** Worn gear's caps (036): the gear's move speed adds stop at MOVE_BONUS_CAP. A cap shows as its own add. */
+/** Worn gear's caps (036, 039.9): its move speed adds stop at MOVE_BONUS_CAP, its roll cooldown adds at ROLL_COOLDOWN_FLOOR. A cap shows as its own add. */
 function gearCaps(stat: StatId, affixAdds: readonly Contribution[]): Contribution[] {
   const sum = affixAdds.reduce((n, c) => n + c.value, 0);
   if (stat === 'move-speed' && sum > MOVE_BONUS_CAP) return [{ source: 'gear cap', value: clean(MOVE_BONUS_CAP - sum) }];
+  if (stat === 'roll-cooldown' && sum < ROLL_COOLDOWN_FLOOR) return [{ source: 'gear cap', value: clean(ROLL_COOLDOWN_FLOOR - sum) }];
   return [];
 }
 

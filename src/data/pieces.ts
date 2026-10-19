@@ -1,3 +1,4 @@
+import { stageText } from './rulesText';
 import { stageBase, STAGES, type StageDef } from './stages';
 
 // Buildable foundry pieces. Starting values from spec 006; tune in playtest.
@@ -86,7 +87,8 @@ const AMMO_CATEGORY: Readonly<Record<string, PieceCategory>> = { arrow: 'arrows'
 function stageMachine(st: StageDef): MachineDef {
   const category = AMMO_CATEGORY[stageBase(st)];
   if (!category) throw new Error(`No build bar group for stage '${st.id}'`);
-  return { ...machine(st.id, st.name, category, st.id, '1x1', st.craftTicks, st.description), stage: st.id };
+  // Its build tip is its generated line and cost (039): "Cold: added to any round · 1 rimestone per 4".
+  return { ...machine(st.id, st.name, category, st.id, '1x1', st.craftTicks, stageText(st)), stage: st.id };
 }
 
 export const PIECES: Readonly<Record<string, PieceDef>> = {

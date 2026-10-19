@@ -8,7 +8,7 @@ import { tileCentre } from '../../src/sim/tiles';
 // armor as `baseArmor`, one affix), and pieces of any slot, rarity and affixes are built here.
 
 /** An affix that touches neither health, armor nor the walk: a little off the roll's cooldown. */
-export const QUIET_AFFIX: Affix = { kind: 'roll-cooldown', value: 3 };
+export const QUIET_AFFIX: Affix = { kind: 'roll-cooldown', value: -0.1 };
 
 /** A Common body piece: 010's piece as 036 builds it. */
 export function bodyPiece(id: number, weight: GearWeight, baseArmor: number, affix: Affix = QUIET_AFFIX, name = 'Test Plate'): GearPiece {

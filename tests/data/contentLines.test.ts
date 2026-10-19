@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { AFFIXES, type AffixKind } from '../../src/data/gear';
+import { AFFIXES, affixLine, type AffixKind } from '../../src/data/gear';
 import { KEYWORDS } from '../../src/data/keywords';
 import { contentLines } from '../../src/data/keywordGraph';
 import { isRuleLine, RULES } from '../../src/data/lines';
 import { RELICS } from '../../src/data/relics';
-import { linesText, REF, SLOT, stageText } from '../../src/data/rulesText';
+import { lineText, linesText, REF, SLOT, stageText } from '../../src/data/rulesText';
 import { roundKeywords } from '../../src/data/roundKeywords';
 import { STAGES } from '../../src/data/stages';
 import { STATS } from '../../src/data/statDefs';
@@ -58,6 +58,16 @@ describe('the expected text (039’s table, line for line)', () => {
 
   it('every stage, with its cost', () => {
     for (const s of Object.values(STAGES)) expect(stageText(s), s.id).toBe(EXPECTED[s.id]);
+  });
+
+  it('every affix, always scope You', () => {
+    const at = (kind: AffixKind, value: number) => lineText(affixLine({ kind, value }));
+    expect(at('max-health', 12)).toBe('You: +12 max health');
+    expect(at('armor', 2)).toBe('You: +2 armor');
+    expect(at('regen', 0.5)).toBe('You: +0.5 HP/s field regen');
+    expect(at('move-speed', 0.04)).toBe('You: +4% move speed');
+    expect(at('roll-cooldown', -0.15)).toBe('You: −15% roll cooldown');
+    expect(at('roll-distance', 0.12)).toBe('You: +12% roll distance');
   });
 });
 
@@ -125,5 +135,12 @@ describe('generated text only', () => {
     const names = [...Object.values(KEYWORDS).filter((k) => k.state === 'live').map((k) => k.name), 'Shard', 'Bomblet', 'Frozen'];
     const bare = [...Object.values(KEYWORDS).map((k) => k.template), ...Object.values(RULES).map((r) => r.template), ...Object.values(STATS).map((s) => s.label)].map((t) => t.replace(REF, '').replace(SLOT, ''));
     for (const text of bare) for (const n of names) expect(new RegExp(`\\b${n}`, 'i').test(text), `"${text}" types "${n}"`).toBe(false);
+  });
+
+  it('content carries lines, not text: no talent text, relic text, stage description or affix label', () => {
+    for (const t of TALENT_LIST) for (const f of ['text', 'effect']) expect(Object.keys(t)).not.toContain(f);
+    for (const r of RELICS) expect(Object.keys(r)).not.toContain('text');
+    for (const s of Object.values(STAGES)) expect(Object.keys(s)).not.toContain('description');
+    for (const a of Object.values(AFFIXES)) for (const f of ['label', 'sign', 'shownScale']) expect(Object.keys(a)).not.toContain(f);
   });
 });

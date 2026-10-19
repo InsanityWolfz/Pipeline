@@ -49,7 +49,7 @@ export function stepPlayer(p: PlayerState, room: Room, cmd: Command, obstacles: 
     if (cmd.dodge && p.cooldown === 0) {
       startRoll(p, cmd);
       rolling = true;
-    } else if (p.cooldown > 0) p.cooldown -= 1;
+    } else if (p.cooldown > 0) p.cooldown = Math.max(0, p.cooldown - 1);
   }
 
   if (rolling) {

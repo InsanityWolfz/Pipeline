@@ -10,8 +10,6 @@ import { tagDef, withTag } from './tags';
 export interface StageDef {
   id: string;
   name: string;
-  /** A line or two for the build bar's hover panel. */
-  description: string;
   /** The tag it adds. */
   tag: string;
   /** Rounds per craft. */
@@ -22,10 +20,9 @@ export interface StageDef {
   craftTicks: number;
 }
 
-const stage = (id: string, name: string, tag: string, material: string, materialCount: number, description: string): StageDef => ({
+const stage = (id: string, name: string, tag: string, material: string, materialCount: number): StageDef => ({
   id,
   name,
-  description,
   tag,
   batch: 4,
   material,
@@ -34,12 +31,12 @@ const stage = (id: string, name: string, tag: string, material: string, material
 });
 
 export const STAGES: Readonly<Record<string, StageDef>> = {
-  'frost-rune': stage('frost-rune', 'Frost rune', 'frost', 'rimestone', 1, 'Frosts arrows: 4 arrows and a rimestone.'),
-  'ley-guide': stage('ley-guide', 'Ley guide', 'homing', 'ley-crystal', 1, 'Makes ley bolts home: 4 bolts, 1 ley crystal.'),
+  'frost-rune': stage('frost-rune', 'Frost rune', 'frost', 'rimestone', 1),
+  'ley-guide': stage('ley-guide', 'Ley guide', 'homing', 'ley-crystal', 1),
   // Twice the guide's crystal: a Split bolt adds five projectiles (pillar 3).
-  'prism-lens': stage('prism-lens', 'Prism lens', 'split', 'ley-crystal', 2, 'Makes ley bolts burst: 4 bolts, 2 ley crystals.'),
+  'prism-lens': stage('prism-lens', 'Prism lens', 'split', 'ley-crystal', 2),
   // 038: 1 ley-iron per 4 bombs (round 2).
-  'cluster-die': stage('cluster-die', 'Cluster die', 'cluster', 'ley-iron', 1, 'Makes bombs burst into bomblets: 4 bombs, 1 ley-iron.'),
+  'cluster-die': stage('cluster-die', 'Cluster die', 'cluster', 'ley-iron', 1),
 };
 
 export function stageDef(id: string): StageDef {

@@ -9,7 +9,7 @@ import {
   RARITIES,
   RELIC_AFFIXES,
   RELIC_CHANCE,
-  ROLL_COOLDOWN_MIN,
+  ROLL_COOLDOWN_FLOOR,
   SLOT_BASE,
   SLOT_WEIGHTS,
   type GearPiece,
@@ -44,10 +44,11 @@ describe('the starting tables', () => {
     expect(range('armor')).toEqual([1, 3]);
     expect(range('regen')).toEqual([0.3, 0.8]);
     expect(range('move-speed')).toEqual([0.03, 0.06]);
-    expect(range('roll-cooldown')).toEqual([3, 6]);
-    expect(range('roll-distance')).toEqual([8, 16]);
+    // 039.9: roll cooldown −10% to −20% and roll distance +8% to +16%, whole percents.
+    expect(range('roll-cooldown')).toEqual([-0.2, -0.1]);
+    expect(range('roll-distance')).toEqual([0.08, 0.16]);
     expect(MOVE_BONUS_CAP).toBe(0.15);
-    expect(ROLL_COOLDOWN_MIN).toBe(15);
+    expect(ROLL_COOLDOWN_FLOOR).toBe(-0.5);
     expect(MIN_DAMAGE_SHARE).toBe(0.25);
   });
 
@@ -77,14 +78,14 @@ describe('the relics', () => {
       expect(GEAR_SLOTS).toContain(r.slot);
       expect(r.weight === null).toBe(r.slot !== 'body');
       expect(relicDef(r.id)).toBe(r);
-      expect(r.text.length).toBeGreaterThan(0);
+      expect(r.lines.length).toBeGreaterThan(0);
     }
     expect([ROLLBREAKER.slot, WARDSTONE.slot, FEATHERPLATE.slot, LAST_EMBER.slot]).toEqual(['boots', 'helm', 'body', 'trinket']);
     expect(FEATHERPLATE.weight).toBe('heavy');
     expect(ROLLBREAKER.stunTicks).toBe(40);
     expect(WARDSTONE.wardTicks).toBe(360);
     expect(FEATHERPLATE).toMatchObject({ walkScale: 1, rollScale: 0.75 });
-    expect(LAST_EMBER.saveInvulnTicks).toBe(60);
+    expect(LAST_EMBER).toMatchObject({ saveHealth: 1, saveInvulnTicks: 60 });
     expect(() => relicDef('nope')).toThrow();
   });
 });

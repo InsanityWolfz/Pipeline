@@ -1,4 +1,4 @@
-import { MIN_DAMAGE_SHARE, ROLL_COOLDOWN_MIN } from '../data/gear';
+import { MIN_DAMAGE_SHARE } from '../data/gear';
 import { FIRING_WALK_MULTIPLIER, HEALING, MAX_HEALTH, ROLL_COOLDOWN_TICKS, ROLL_DISTANCE, type HealingTuning } from '../data/player';
 import type { SimState } from './state';
 import { resolveStat, statOf, YOU } from './statResolve';
@@ -21,7 +21,7 @@ export interface PlayerStats {
   moveBonus: number;
   /** Walk speed multiplier: heavy armor's slow times (1 + moveBonus). Firing's (016) multiplies on top. */
   walkScale: number;
-  /** Ticks after a roll before the next, never below ROLL_COOLDOWN_MIN. */
+  /** Ticks after a roll before the next (039: fractional, its gear's share floored at ROLL_COOLDOWN_FLOOR). */
   rollCooldown: number;
   /** A roll's distance, px, over the same ROLL_TICKS. */
   rollDistance: number;
@@ -42,7 +42,7 @@ export function playerStats(state: Worn, healing: HealingTuning = HEALING): Play
     regen: statOf(state, 'field-regen', YOU, healing.fieldRegen),
     moveBonus: Math.round(move.adds.reduce((n, c) => n + c.value, 0) * 1e6) / 1e6,
     walkScale: move.final,
-    rollCooldown: Math.max(ROLL_COOLDOWN_MIN, statOf(state, 'roll-cooldown', YOU, ROLL_COOLDOWN_TICKS)),
+    rollCooldown: statOf(state, 'roll-cooldown', YOU, ROLL_COOLDOWN_TICKS),
     rollDistance: statOf(state, 'roll-distance', YOU, ROLL_DISTANCE),
     firingWalk: statOf(state, 'firing-walk', YOU, FIRING_WALK_MULTIPLIER),
   };

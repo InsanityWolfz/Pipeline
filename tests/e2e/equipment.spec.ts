@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { MIN_DAMAGE_SHARE, MOVE_BONUS_CAP, SLOT_BASE, type AffixKind } from '../../src/data/gear';
+import { MIN_DAMAGE_SHARE, MOVE_BONUS_CAP, ROLL_COOLDOWN_FLOOR, SLOT_BASE, type AffixKind } from '../../src/data/gear';
 import { PLAYTEST_GEAR } from '../../src/data/playtest';
 import { MAX_HEALTH, ROLL_COOLDOWN_TICKS, ROLL_DISTANCE } from '../../src/data/player';
 import { boot, watchErrors } from './helpers';
@@ -73,13 +73,14 @@ test('identify and wear a piece in each slot at the bench; the stats add up and 
   expect(s.stats.regen).toBeCloseTo(sum('regen'), 6);
   expect(s.stats.moveBonus).toBeCloseTo(move, 6);
   expect(s.stats.walkScale).toBeCloseTo(SLOT_BASE.body.heavy.walkScale * (1 + move), 6);
-  expect(s.stats.rollCooldown).toBe(ROLL_COOLDOWN_TICKS - sum('roll-cooldown'));
-  expect(s.stats.rollDistance).toBe(ROLL_DISTANCE + sum('roll-distance'));
+  // 039.9: roll affixes are shares of the bare roll, the cooldown's floored at −50%.
+  expect(s.stats.rollCooldown).toBeCloseTo(ROLL_COOLDOWN_TICKS * (1 + Math.max(ROLL_COOLDOWN_FLOOR, sum('roll-cooldown'))), 6);
+  expect(s.stats.rollDistance).toBeCloseTo(ROLL_DISTANCE * (1 + sum('roll-distance')), 6);
   expect(s.player.maxHealth).toBe(s.stats.maxHealth);
   // The foundry's fill (030) tops health up to the new max (equipping itself never heals: unit-tested).
   expect(s.player.health).toBeLessThan(s.stats.maxHealth);
   expect((await step(page, 120)).player.health).toBe(s.stats.maxHealth);
-  await expect.poll(async () => (await ui(page))?.gearPanel?.totals[0]).toBe(`Armor ${armor} · Max HP ${MAX_HEALTH + sum('max-health')} · Regen ${sum('regen').toFixed(1)}/s`);
+  await expect.poll(async () => (await ui(page))?.gearPanel?.totals[0]).toBe(`Armor ${armor} · Max health ${MAX_HEALTH + sum('max-health')} · Field regen ${sum('regen').toFixed(1)} HP/s`);
   await expect.poll(async () => (await ui(page))?.gearPanel?.cells.map((c) => c.worn)).toEqual([helm.id, body.id, boots.id, trinket.id]);
 
   // A Husk beside the player swings: the hit lands for the armor's reduced damage.

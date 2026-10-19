@@ -80,31 +80,31 @@ export const RARITIES: Readonly<Record<Rarity, { affixes: number; chance: number
 };
 
 /**
- * Each affix kind: rolled as a whole number of steps from `min` to `max`, its value `steps × step` in its own units
- * (max health HP, armor points, regen HP/s, move speed a fraction of walk speed, roll cooldown ticks taken off, roll
- * distance px). On the bench it reads `sign`, the value times `shownScale` to `decimals` places, `unit`, a space and
- * `label`: "+12 max HP", "+0.5 regen/s", "+4% speed", "−4 roll cooldown".
+ * Each affix kind (039): a stat line of scope You in its stat, rolled as a whole number of steps from `min` to `max`,
+ * its value `steps × step` in the line's own terms: a flat max health (HP), armor or field regen (HP/s), or a +% of
+ * move speed, roll cooldown (−10% to −20%, 039.9) or roll distance (+8% to +16%), whole percents so the text is exact.
+ * rulesText words it: "+12 max health", "+0.5 HP/s field regen", "−15% roll cooldown".
  */
-export const AFFIXES: Readonly<Record<AffixKind, { stat: StatId; op: StatOp; min: number; max: number; step: number; label: string; sign: '+' | '−'; shownScale: number; decimals: number; unit: string }>> = {
-  'max-health': { stat: 'max-health', op: 'flat', min: 8, max: 20, step: 1, label: 'max HP', sign: '+', shownScale: 1, decimals: 0, unit: '' },
-  armor: { stat: 'armor', op: 'flat', min: 1, max: 3, step: 1, label: 'armor', sign: '+', shownScale: 1, decimals: 0, unit: '' },
-  regen: { stat: 'field-regen', op: 'flat', min: 3, max: 8, step: 0.1, label: 'regen/s', sign: '+', shownScale: 1, decimals: 1, unit: '' },
-  'move-speed': { stat: 'move-speed', op: 'add', min: 3, max: 6, step: 0.01, label: 'speed', sign: '+', shownScale: 100, decimals: 0, unit: '%' },
-  'roll-cooldown': { stat: 'roll-cooldown', op: 'flat', min: 3, max: 6, step: 1, label: 'roll cooldown', sign: '−', shownScale: 1, decimals: 0, unit: '' },
-  'roll-distance': { stat: 'roll-distance', op: 'flat', min: 8, max: 16, step: 1, label: 'roll distance', sign: '+', shownScale: 1, decimals: 0, unit: '' },
+export const AFFIXES: Readonly<Record<AffixKind, { stat: StatId; op: StatOp; min: number; max: number; step: number }>> = {
+  'max-health': { stat: 'max-health', op: 'flat', min: 8, max: 20, step: 1 },
+  armor: { stat: 'armor', op: 'flat', min: 1, max: 3, step: 1 },
+  regen: { stat: 'field-regen', op: 'flat', min: 3, max: 8, step: 0.1 },
+  'move-speed': { stat: 'move-speed', op: 'add', min: 3, max: 6, step: 0.01 },
+  'roll-cooldown': { stat: 'roll-cooldown', op: 'add', min: -20, max: -10, step: 0.01 },
+  'roll-distance': { stat: 'roll-distance', op: 'add', min: 8, max: 16, step: 0.01 },
 };
 
-/** An affix as a content line (039): always scope You, a stat line in its kind's stat. */
+/** An affix as a content line (039): always scope You (affixes stay defensive), a stat line in its kind's stat. */
 export function affixLine(a: Affix): StatLine {
   const d = AFFIXES[a.kind];
-  return { scope: 'you', stat: d.stat, op: d.op, value: d.sign === '−' ? -a.value : a.value };
+  return { scope: 'you', stat: d.stat, op: d.op, value: a.value };
 }
 
 /** The most the worn gear's move speed affixes add to walk speed, a fraction (+15%). */
 export const MOVE_BONUS_CAP = 0.15;
 
-/** Roll cooldown affixes never take the cooldown below this, ticks. */
-export const ROLL_COOLDOWN_MIN = 15;
+/** The most the worn gear's roll cooldown affixes take off, summed: −50% (039.9: the same 15 ticks of 30 as before). */
+export const ROLL_COOLDOWN_FLOOR = -0.5;
 
 /** A hit always deals at least this share of its damage, rounded up, however much armor is worn. */
 export const MIN_DAMAGE_SHARE = 0.25;

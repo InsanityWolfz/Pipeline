@@ -227,7 +227,7 @@ export class GearPanel {
       v.name.set(lines.name).setFill(look.color).moveTo(tx, b.y + P.list.text.line1);
       v.detail.set(lines.detail).setFill(worn ? C.wornText : undefined).moveTo(b.x + b.w - P.list.rightPad - v.detail.width, b.y + P.list.text.line1);
       fit(v.affixes, lines.affixes, b.w - P.list.text.x - P.list.rightPad).moveTo(tx, b.y + P.list.text.line2);
-      v.rule.set(lines.rule ?? '').setVisible(lines.rule !== null).moveTo(tx, b.y + P.list.text.line3);
+      fit(v.rule, lines.rule ?? '', b.w - P.list.text.x - P.list.rightPad).setVisible(lines.rule !== null).moveTo(tx, b.y + P.list.text.line3);
       return { id: piece.id, worn, color: look.color, texts: [lines.name, lines.detail, lines.affixes, ...(lines.rule ? [lines.rule] : [])], box: b };
     });
     this.empty.setVisible(this.pieces.length === 0).set(W.empty(SLOT_NAMES[this.tab])).moveTo(L.empty.x, L.empty.y);

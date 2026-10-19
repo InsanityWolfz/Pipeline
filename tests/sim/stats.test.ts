@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MIN_DAMAGE_SHARE, MOVE_BONUS_CAP, ROLL_COOLDOWN_MIN, SLOT_BASE } from '../../src/data/gear';
+import { MIN_DAMAGE_SHARE, MOVE_BONUS_CAP, SLOT_BASE } from '../../src/data/gear';
 import { FIRING_WALK_MULTIPLIER, HEALING, INVULN_TICKS, MAX_HEALTH, ROLL_COOLDOWN_TICKS, ROLL_DISTANCE, ROLL_TICKS } from '../../src/data/player';
 import { OVERWORLD } from '../../src/data/overworld';
 import { afterArmor, playerStats, walkScale } from '../../src/sim/stats';
@@ -51,7 +51,7 @@ describe('playerStats', () => {
       arena(),
       piece(0, 'helm', { baseArmor: 2, affixes: [{ kind: 'max-health', value: 12 }, { kind: 'regen', value: 0.3 }] }),
       piece(1, 'body', { baseArmor: 6, affixes: [{ kind: 'armor', value: 2 }, { kind: 'move-speed', value: 0.04 }] }),
-      piece(2, 'boots', { baseArmor: 1, affixes: [{ kind: 'roll-cooldown', value: 4 }, { kind: 'roll-distance', value: 12 }, { kind: 'move-speed', value: 0.05 }] }),
+      piece(2, 'boots', { baseArmor: 1, affixes: [{ kind: 'roll-cooldown', value: -0.15 }, { kind: 'roll-distance', value: 0.12 }, { kind: 'move-speed', value: 0.05 }] }),
       piece(3, 'trinket', { affixes: [{ kind: 'max-health', value: 8 }, { kind: 'regen', value: 0.5 }] }),
     );
     const st = playerStats(s);
@@ -60,20 +60,21 @@ describe('playerStats', () => {
     expect(st.regen).toBeCloseTo(0.8, 9);
     expect(st.moveBonus).toBeCloseTo(0.09, 9);
     expect(st.walkScale).toBeCloseTo(1.09, 9);
-    expect(st.rollCooldown).toBe(ROLL_COOLDOWN_TICKS - 4);
-    expect(st.rollDistance).toBe(ROLL_DISTANCE + 12);
+    // 039.9: −15% of 30 ticks is 25.5; +12% of 96 px is 107.52.
+    expect(st.rollCooldown).toBeCloseTo(25.5, 9);
+    expect(st.rollDistance).toBeCloseTo(107.52, 9);
     // A spare that isn't worn counts for nothing.
     s.gear.push(piece(9, 'helm', { baseArmor: 2, affixes: [{ kind: 'armor', value: 3 }] }));
     expect(playerStats(s).armor).toBe(11);
   });
 
-  it('caps the move bonus at +15% and floors the roll cooldown at 15 ticks', () => {
+  it('caps the move bonus at +15% and floors the roll cooldown’s affixes at −50% (15 ticks)', () => {
     const fast = (id: number, slot: 'helm' | 'body' | 'boots' | 'trinket') =>
-      piece(id, slot, { affixes: [{ kind: 'move-speed', value: 0.06 }, { kind: 'roll-cooldown', value: 6 }] });
+      piece(id, slot, { affixes: [{ kind: 'move-speed', value: 0.06 }, { kind: 'roll-cooldown', value: -0.2 }] });
     const s = wear(arena(), fast(0, 'helm'), fast(1, 'body'), fast(2, 'boots'), fast(3, 'trinket'));
     expect(playerStats(s).moveBonus).toBe(MOVE_BONUS_CAP);
     expect(playerStats(s).walkScale).toBeCloseTo(1 + MOVE_BONUS_CAP, 9);
-    expect(playerStats(s).rollCooldown).toBe(ROLL_COOLDOWN_MIN);
+    expect(playerStats(s).rollCooldown).toBeCloseTo(15, 9);
   });
 });
 
@@ -206,10 +207,10 @@ describe('move speed and the roll', () => {
     expect(rolled(wear(arena(), bodyPiece(0, 'heavy', 12))).distance).toBeCloseTo(ROLL_DISTANCE, 5);
     expect(bare.cooldown).toBe(ROLL_COOLDOWN_TICKS - 1);
     const nimble = () =>
-      wear(arena(), piece(0, 'boots', { affixes: [{ kind: 'roll-distance', value: 16 }, { kind: 'roll-cooldown', value: 6 }] }), piece(1, 'body', { affixes: [{ kind: 'move-speed', value: 0.06 }] }));
+      wear(arena(), piece(0, 'boots', { affixes: [{ kind: 'roll-distance', value: 0.16 }, { kind: 'roll-cooldown', value: -0.2 }] }), piece(1, 'body', { affixes: [{ kind: 'move-speed', value: 0.06 }] }));
     const r = rolled(nimble());
-    expect(r.distance).toBeCloseTo(ROLL_DISTANCE + 16, 5);
-    expect(r.cooldown).toBe(bare.cooldown - 6);
+    expect(r.distance).toBeCloseTo(ROLL_DISTANCE * 1.16, 5);
+    expect(r.cooldown).toBeCloseTo(bare.cooldown - 6, 9);
     // The same ROLL_TICKS of roll, the first INVULN_TICKS of them invulnerable; rolls ignore move speed.
     const s = nimble();
     run(s, 1, { moveX: 1, dodge: true });

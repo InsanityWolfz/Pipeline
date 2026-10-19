@@ -3,7 +3,7 @@ import { AMMO, ammoDef } from '../../src/data/ammo';
 import { ITEMS } from '../../src/data/items';
 import { BUILD_BAR, PIECES, pieceDef } from '../../src/data/pieces';
 import { recipeDef } from '../../src/data/recipes';
-import { STAGE_RECIPES, STAGES } from '../../src/data/stages';
+import { STAGE_RECIPES, STAGES, stageLines } from '../../src/data/stages';
 import { COLD, HOMING, ROUNDS, roundBase, roundId, roundTags, SPLIT, TAGS, withTag, type TagDef } from '../../src/data/tags';
 
 // Tags and stages as data (029): a round is its base ammo plus at most one element
@@ -97,7 +97,7 @@ describe('stages', () => {
       expect(ITEMS[st.material]?.kind).toBe('raw');
       expect(TAGS[st.tag]).toBeDefined();
       expect(st.name.length).toBeGreaterThan(0);
-      expect(st.description.length).toBeGreaterThan(0);
+      expect(stageLines(st)).toHaveLength(1);
     }
   });
 
