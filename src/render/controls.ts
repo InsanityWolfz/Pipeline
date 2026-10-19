@@ -22,11 +22,9 @@ export interface BuildInput {
   overUi: (x: number, y: number) => boolean;
   /** Handles a left click on that UI at once, so a world click in the same frame sees its result; with the held modifiers (022). */
   clickUi: (x: number, y: number, mods: ClickMods) => void;
-  /** The id of the gravity stager on a tile, if any: a left click there turns it rather than placing. */
-  stagerAt: (tile: Tile) => number | null;
 }
 
-type BuildAction = Pick<Command, 'place' | 'pickUp' | 'setAngle'>;
+type BuildAction = Pick<Command, 'place' | 'pickUp'>;
 
 /** The commands that come from build mode and the hopper menu rather than held keys. */
 export { NO_UI_COMMAND, type UiCommand } from './menuRequests';
@@ -35,7 +33,7 @@ export { NO_UI_COMMAND, type UiCommand } from './menuRequests';
 // events until consumed, so a tap shorter than a frame isn't lost, a press on a
 // frame that runs no ticks isn't lost, and a frame that runs several ticks only
 // acts on the first. In build mode, R turns the ghost (it does nothing outside it),
-// clicks place and pick up pieces or turn a stager (queued, one per tick), and
+// clicks place and pick up pieces (queued, one per tick), and
 // dragging lays conduits.
 export class Controls {
   private readonly keys: Record<Key, Input.Keyboard.Key>;
@@ -61,7 +59,6 @@ export class Controls {
     pieceId: () => BUILD_BAR[0] ?? '',
     overUi: () => false,
     clickUi: () => undefined,
-    stagerAt: () => null,
   };
   private aimX = 0;
   private aimY = 0;
@@ -167,25 +164,20 @@ export class Controls {
     if (!this.build.building) return;
     const tile = this.tileUnder(p);
     if (p.rightButtonDown()) {
-      this.queue.push({ place: null, pickUp: tile, setAngle: null });
+      this.queue.push({ place: null, pickUp: tile });
       return;
     }
     if (!p.leftButtonDown()) return;
-    const stager = this.build.stagerAt(tile);
-    if (stager !== null) {
-      this.queue.push({ place: null, pickUp: null, setAngle: { id: stager } });
-      return;
-    }
     const pieceId = this.build.pieceId();
     this.endDrag();
     this.dragTile = tile;
     // A conduit waits for the drag: a click lays it on release, with the ghost's facing.
     if (pieceDef(pieceId).kind === 'conduit') this.held = { tile };
-    else this.queue.push({ place: { pieceId, ...tile, facing: this.facing, ...(this.mirrored ? { mirrored: true } : {}) }, pickUp: null, setAngle: null });
+    else this.queue.push({ place: { pieceId, ...tile, facing: this.facing, ...(this.mirrored ? { mirrored: true } : {}) }, pickUp: null });
   }
 
   private lay(l: ConduitLay): void {
-    this.queue.push({ place: { pieceId: this.build.pieceId(), ...l }, pickUp: null, setAngle: null });
+    this.queue.push({ place: { pieceId: this.build.pieceId(), ...l }, pickUp: null });
   }
 
   /** Release (inside the canvas or out): the held conduit is laid. */
@@ -272,7 +264,6 @@ export class Controls {
       toggleBuild: this.buildPending,
       place: action?.place ?? null,
       pickUp: action?.pickUp ?? null,
-      setAngle: action?.setAngle ?? null,
       ...this.menus.take(),
     };
     this.buildPending = false;

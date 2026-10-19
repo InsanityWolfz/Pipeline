@@ -18,7 +18,7 @@ import {
   CONDUIT_ANIMS,
   CONDUIT_CORNERS,
   CRATE_SPRITE,
-  STAGER_SPRITE,
+  INTAKE_SPRITES,
   TUTORIAL_SPRITES,
   PYLON_SPRITES,
   FIXTURE_SPRITES,
@@ -44,7 +44,8 @@ import { SLOT_AMMOS, STARTING_AMMO } from '../../src/data/tube';
 import { CRAFT_GROUPS, RECIPES } from '../../src/data/recipes';
 import { NODES } from '../../src/data/nodes';
 import { BUILD_BAR, PIECES } from '../../src/data/pieces';
-import { STAGER_ANGLES, STAGER_START_ANGLE } from '../../src/data/foundry';
+import { ENTRANCE_CAP, INTAKE, LOB_SPACING, OPEN_ENTRANCES_COST, SPREAD_STEP } from '../../src/data/foundry';
+import { ENTRANCE_GAUGE_COLORS } from '../../src/data/art/intake';
 import { vectorFrames } from '../../src/render/vector/catalog';
 import { OVERWORLD } from '../../src/data/overworld';
 import { WORLD } from '../../src/sim/world';
@@ -117,8 +118,8 @@ describe('assets', () => {
     }
   });
 
-  it('has the fire burst, burn flame, muzzle flash, deposit swirl and stager as frames', () => {
-    for (const anim of [FIRE_BURST, BURN_FLAME, MUZZLE_FLASH, DEPOSIT_SWIRL, STAGER_SPRITE]) {
+  it('has the fire burst, burn flame, muzzle flash and deposit swirl as frames', () => {
+    for (const anim of [FIRE_BURST, BURN_FLAME, MUZZLE_FLASH, DEPOSIT_SWIRL]) {
       expect(anim.key).toMatch(KEBAB);
       for (const frame of animFrames(anim)) expect(known).toContain(frame);
     }
@@ -326,18 +327,29 @@ describe('the tube link (007)', () => {
   });
 });
 
-describe('spreads (008)', () => {
-  it('has a gravity stager on the build bar costing a warden core', () => {
-    expect(BUILD_BAR).toContain('gravity-stager');
-    expect(PIECES['gravity-stager']).toMatchObject({ kind: 'stager', footprint: '1x1', cost: { 'warden-core': 1 } });
-    for (const def of Object.values(PIECES)) for (const id of Object.keys(def.cost ?? {})) expect(ITEMS[id]).toBeDefined();
-    expect(ITEMS['warden-core']).toMatchObject({ kind: 'part' });
+describe('spreads from the intake (024)', () => {
+  it('has no gravity stager: the spread comes from the fed entrances', () => {
+    expect(BUILD_BAR).not.toContain('gravity-stager');
+    expect(PIECES['gravity-stager']).toBeUndefined();
+    expect(Object.values(PIECES).map((d) => d.kind)).not.toContain('stager');
+    expect(drawnFrames().some((f) => f.includes('stager'))).toBe(false);
+  });
+
+  it('opens the side entrances with a real item, which the playtest start carries', () => {
+    expect(Object.keys(OPEN_ENTRANCES_COST)).toEqual(['warden-core']);
+    for (const id of Object.keys(OPEN_ENTRANCES_COST)) expect(ITEMS[id]).toMatchObject({ kind: 'part' });
     expect(PLAYTEST_START.inventory['warden-core']).toBe(5);
   });
 
-  it('has one stager frame per angle, starting at 0', () => {
-    expect(STAGER_ANGLES).toContain(STAGER_START_ANGLE);
-    expect(STAGER_SPRITE.frames).toBe(STAGER_ANGLES.length);
+  it('has three entrances on the mouth, the centre open, and starting numbers from the spec', () => {
+    expect(INTAKE.entrances).toHaveLength(3);
+    expect(INTAKE.entrances.filter((e) => e.startsOpen)).toEqual([INTAKE.entrances[1]]);
+    expect([ENTRANCE_CAP, SPREAD_STEP, LOB_SPACING]).toEqual([30, 15, 24]);
+  });
+
+  it('draws the brass entrance cap, and has a gauge colour for every ammo', () => {
+    expect(drawnFrames()).toContain(INTAKE_SPRITES.cap);
+    for (const id of Object.keys(AMMO)) expect(ENTRANCE_GAUGE_COLORS[id]).toBeDefined();
   });
 });
 

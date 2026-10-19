@@ -1,5 +1,4 @@
 import { MAX_HEALTH } from '../data/player';
-import { RESERVOIR_CAP } from '../data/tube';
 import { OBJECTIVES } from '../data/objectives';
 import { WORLD } from './world';
 import type { SimEvents } from './events';
@@ -9,8 +8,8 @@ import type { Facing } from './player';
 import type { ArmorPiece } from './armor';
 import { fixtureDef } from './fixtures';
 import { currentObjective } from './objectives';
-import { intakeStreams } from './spread';
-import { INTAKE } from '../data/foundry';
+import { volleyRounds, nextPress } from './volley';
+import { ENTRANCE_CAP, INTAKE } from '../data/foundry';
 import type { SimState } from './state';
 import {
   arrowSummary,
@@ -73,18 +72,18 @@ export interface SimSummary {
     /** Ticks before the next punch can happen (023). */
     meleeCooldown: number;
     firing: boolean;
-    /** This tick's shot came from the reservoir. */
+    /** This tick's shot was a volley from the intake's entrances (024). */
     fromReservoir: boolean;
-    /** Projectiles this tick's shot fired (a spread fires several). */
+    /** Projectiles this tick's shot fired (a volley of several rounds fires several). */
     shotCount: number;
+    /** What the next fire press does (023, 024): a carried round, a volley, or a punch. */
+    next: 'carried' | 'volley' | 'melee';
   };
   /** The tube's link to the foundry. */
   link: {
     attuned: boolean;
     /** Ticks left on the attuning pulse. */
     attunePulse: number;
-    /** The ammo item it holds, or null when empty. */
-    reservoir: { item: string | null; count: number; cap: number };
   };
   /** Arrows and ley bolts in flight; x, y is the ground point. */
   arrows: ArrowSummary[];
@@ -124,8 +123,11 @@ export interface SimSummary {
   /** The first unfinished objective (index and text), or null once all are done. */
   objective: { index: number; text: string } | null;
   prototypeComplete: boolean;
-  /** The foundry intake (019): its mouth tiles, and the stream angles of the stagers facing them (see intakeStreams). */
-  intake: { mouth: { tx: number; ty: number }[]; streams: number[] };
+  /**
+   * The foundry intake (019, 024): each entrance's mouth tile, whether it's open, the ammo it holds and how many;
+   * and the volley the reservoirs fire once no round of the selected ammo is carried, as ammo ids (one per fed entrance, west to east).
+   */
+  intake: { entrances: { tx: number; ty: number; open: boolean; ammo: string | null; count: number; cap: number }[]; volley: string[] };
   /** What a death keeps: the inventory as last banked. */
   banked: Record<string, number>;
   /** What happened on the last tick. */
@@ -171,11 +173,11 @@ export function summarize(state: SimState): SimSummary {
       firing: tube.firing,
       fromReservoir: tube.fromReservoir,
       shotCount: tube.shotCount,
+      next: nextPress(state).kind,
     },
     link: {
       attuned: state.link.attuned,
       attunePulse: state.link.attunePulse,
-      reservoir: { item: state.link.reservoir.itemId, count: state.link.reservoir.count, cap: RESERVOIR_CAP },
     },
     arrows: state.arrows.map(arrowSummary),
     enemies: state.enemies.map(enemySummary),
@@ -187,7 +189,13 @@ export function summarize(state: SimState): SimSummary {
     unlocked: unlockedPieces(state),
     building: state.building,
     foundry: { pieces: state.foundry.pieces.map((p) => pieceSummary(p)) },
-    intake: { mouth: INTAKE.mouth.map((t) => ({ tx: t.tx, ty: t.ty })), streams: intakeStreams(state.foundry) },
+    intake: {
+      entrances: INTAKE.entrances.map((t, i) => {
+        const e = state.link.entrances[i];
+        return { tx: t.tx, ty: t.ty, open: e?.open ?? false, ammo: e?.ammoId ?? null, count: e?.count ?? 0, cap: ENTRANCE_CAP };
+      }),
+      volley: volleyRounds(state).map((r) => r.ammoId),
+    },
     orbs: state.orbs.map((o) => ({ id: o.id, room: o.roomId, x: round(o.x), y: round(o.y), dx: round(o.dx), dy: round(o.dy) })),
     claims: [...state.claims],
     claimHold: state.claimHold ? { site: state.claimHold.site, progress: state.claimHold.progress } : null,

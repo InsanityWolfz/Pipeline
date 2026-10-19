@@ -66,6 +66,8 @@ export const PARTICLES = {
   harvestSparks: { colors: ['cyan-glow', 'cyan', 'snow'], count: 14, speed: [50, 130], gravity: 120, lifeMs: [250, 450], size: 2, lift: 14 },
   craftPuff: { colors: ['rock-pale', 'dirt-light', 'dirt'], count: 6, speed: [8, 24], gravity: -50, lifeMs: [400, 650], size: 2, lift: 14 },
   refill: { colors: ['cyan', 'cyan-glow'], count: 5, speed: [10, 30], gravity: -60, lifeMs: [300, 500], size: 1, lift: 6 },
+  // A side entrance's cap lifting off (024): brass flecks and ley sparks from the inlet.
+  capLift: { colors: ['brass-light', 'gold-trim', 'cyan-glow', 'snow'], count: 16, speed: [30, 90], gravity: 90, lifeMs: [350, 650], size: 2, lift: 4 },
   pickup: { colors: ['gold-trim', 'cyan-glow', 'snow'], count: 8, speed: [20, 55], gravity: -40, lifeMs: [250, 450], size: 2, lift: 6 },
   place: { colors: ['dirt', 'dirt-light'], count: 6, speed: [20, 50], gravity: 60, lifeMs: [200, 320], size: 1 },
 } as const satisfies Record<string, ParticleBurst>;

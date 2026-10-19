@@ -104,14 +104,14 @@ describe('dying', () => {
     expect(s.events.lost).toEqual({ stone: 4 });
   });
 
-  it('keeps identified and worn armor, the stash, claims, the reservoir and the foundry', () => {
+  it('keeps identified and worn armor, the stash, claims, the entrances and the foundry', () => {
     const s = foundry();
     run(s, 1);
     s.armor = [{ id: 0, weight: 'light', armor: 3, name: 'Worn Vest' }];
     s.equipped = 0;
     s.stash = { wood: 9 };
     claim(s, SHRINE_SITE);
-    s.link.reservoir = { itemId: 'arrow', count: 5 };
+    Object.assign(s.link.entrances[1] ?? {}, { ammoId: 'arrow', count: 5 });
     const c = put<ConduitState>(s, 'conduit', 4, 4, 'up');
     c.item = 'stone';
     const pieces = s.foundry.pieces.length;
@@ -120,7 +120,8 @@ describe('dying', () => {
     expect(s.equipped).toBe(0);
     expect(s.stash).toEqual({ wood: 9 });
     expect(s.claims).toEqual([SHRINE_SITE]);
-    expect(s.link).toMatchObject({ attuned: true, reservoir: { itemId: 'arrow', count: 5 } });
+    expect(s.link).toMatchObject({ attuned: true });
+    expect(s.link.entrances[1]).toEqual({ open: true, ammoId: 'arrow', count: 5 });
     expect(s.foundry.pieces).toHaveLength(pieces);
   });
 

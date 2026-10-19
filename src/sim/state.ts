@@ -34,7 +34,7 @@ export interface SimState {
   player: PlayerState;
   inventory: Inventory;
   tube: TubeState;
-  /** The tube's link to the foundry and its reservoir. Kept through a KO. */
+  /** The tube's link to the foundry and the intake's entrances (024). Kept through a KO. */
   link: LinkState;
   /** How this run started; a KO restores its inventory. */
   start: StartDef;
@@ -82,7 +82,7 @@ export interface SimState {
   hasTube: boolean;
   /** The tutorial's gates (012), true once open. Kept through a KO. */
   gates: Gates;
-  /** The reservoir has filled from a line at least once (opens the shrine gate). */
+  /** An entrance has filled from a line at least once (opens the shrine gate). */
   firstLineFull: boolean;
   /** The overworld's living population is out (017): from the first full line on, or from a populated start. Kept through a KO. */
   populated: boolean;
@@ -172,7 +172,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
  * room's enemies at home and nodes at full, and nothing harvesting, on the
  * ground or in flight, and build mode off. The tick, seed, RNG, id counters,
  * the inventory (a death trims it first), the crafted set, the tube's link and
- * reservoir, claims, the stash, armor and the whole foundry carry on. Claimed rooms get no enemies back.
+ * the intake's entrances, claims, the stash, armor and the whole foundry carry on. Claimed rooms get no enemies back.
  */
 export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   const rooms = Object.values(WORLD);

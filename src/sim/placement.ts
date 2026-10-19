@@ -32,8 +32,6 @@ export function canPlace(state: SimState, pieceId: string, tx: number, ty: numbe
   const tiles = footprint(pieceId, tx, ty, facing);
   if (tiles.some((t) => room.rows[t.ty]?.[t.tx] !== TILE.floor)) return 'blocked';
   if (tiles.some((t) => pieceAt(state.foundry, t.tx, t.ty) || fixtureAt(state.fixtures, t.tx, t.ty))) return 'occupied';
-  const { cost } = pieceDef(pieceId);
-  if (cost && Object.entries(cost).some(([itemId, n]) => count(state.inventory, itemId) < n)) return 'cost';
   const p = state.player;
   if (isSolidPiece(pieceId) && overlapsRect(p.x, p.y, FEET_BOX, pieceRect({ pieceId, tx, ty, facing }))) {
     return 'player';
@@ -72,7 +70,6 @@ export function place(state: SimState, pieceId: string, tx: number, ty: number, 
     state.events.placeFails.push({ pieceId, tx, ty, reason });
     return null;
   }
-  for (const [itemId, n] of Object.entries(pieceDef(pieceId).cost ?? {})) state.inventory[itemId] = count(state.inventory, itemId) - n;
   const kind = pieceDef(pieceId).kind;
   const made: PieceShape =
     kind === 'conduit' ? { inFrom: conduitInFrom(state, tx, ty, facing, shape.inFrom) } : kind === 'sorter' ? { mirrored: shape.mirrored ?? false } : {};
@@ -82,14 +79,13 @@ export function place(state: SimState, pieceId: string, tx: number, ty: number, 
   return piece;
 }
 
-/** Everything a piece holds, plus what it cost to place, as items. A craft in progress gives back its inputs. */
+/** Everything a piece holds, as items. A craft in progress gives back its inputs. */
 export function pieceContents(p: PieceState): Inventory {
   const items: Inventory = {};
   const add = (itemId: string, n: number): void => {
     if (n > 0) items[itemId] = count(items, itemId) + n;
   };
-  for (const [itemId, n] of Object.entries(pieceDef(p.pieceId).cost ?? {})) add(itemId, n);
-  if ((p.kind === 'conduit' || p.kind === 'stager' || p.kind === 'sorter') && p.item) add(p.item, 1);
+  if ((p.kind === 'conduit' || p.kind === 'sorter') && p.item) add(p.item, 1);
   if (p.kind === 'hopper' && p.item) add(p.item, p.count);
   if (p.kind === 'crate') for (const [itemId, n] of Object.entries(p.contents)) add(itemId, n);
   if (p.kind === 'machine') {

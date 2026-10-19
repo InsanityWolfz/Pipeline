@@ -13,7 +13,7 @@ export interface GameTestHook {
   getState(): SimSummary;
   /**
    * Steps `frames` ticks holding `command`. Its dodge, interact, ammo
-   * select, build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), setFilter, setAngle, pylon, takeStash, identify and equip apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
+   * select, build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), setFilter, pylon, takeStash, identify and equip apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
    */
   step(frames: number, command?: Partial<Command>): SimSummary;
   /** Crafts a recipe once between ticks, as clicking its menu row does. */
@@ -62,6 +62,11 @@ export interface UiState {
   slideProgress: number;
   /** Punch swooshes still drawn (023). */
   swooshes: number;
+  /** The brass caps drawn on the intake's side entrances (024: seated, or still lifting off), and its prompt text while it shows. */
+  intakeCaps: number;
+  intakePrompt: string | null;
+  /** How far the caps are through lifting off, 0 to 1, or null when none are lifting. */
+  intakeLift: number | null;
   /** The centre of the world camera's view, world px (023: screenshots wait for it to settle on the player). */
   camera: { x: number; y: number };
 }
@@ -92,7 +97,6 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
         deposit: null,
         withdraw: null,
         setFilter: null,
-        setAngle: null,
         pylon: null,
         takeStash: null,
         identify: false,
@@ -110,7 +114,6 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
           deposit: base.deposit ?? ui.deposit,
           withdraw: base.withdraw ?? ui.withdraw,
           setFilter: base.setFilter ?? ui.setFilter,
-          setAngle: base.setAngle ?? ui.setAngle,
           pylon: base.pylon ?? ui.pylon,
           takeStash: base.takeStash ?? ui.takeStash,
           identify: base.identify || ui.identify,

@@ -72,11 +72,11 @@ export interface SimEvents {
   withdraws: { id: number; itemId: string; count: number }[];
   /** The tube attuned to the foundry (once ever). */
   attunes: Record<string, never>[];
-  /** The foundry intake put a round in the reservoir (019), through mouth tile `mouth` (an index into INTAKE.mouth). */
-  refills: { mouth: number; itemId: string }[];
+  /** The foundry intake put a round in an entrance's reservoir (019, 024): `entrance` is an index into INTAKE.entrances. */
+  refills: { entrance: number; itemId: string }[];
   /** A punch (023): where the player stood, its aim angle (radians), and the enemy ids it hit. */
   melees: MeleeEvent[];
-  /** A projectile left the tube's mouth (a spread fires several at once). */
+  /** A projectile left the tube's mouth (a volley fires several at once). */
   shots: { x: number; y: number; ammoId: string }[];
   /** E at a pylon whose room still has enemies. */
   sealed: { site: string }[];
@@ -100,8 +100,8 @@ export interface SimEvents {
   gates: { gate: GateId }[];
   /** An objective completed (index into OBJECTIVES). */
   objectives: { index: number }[];
-  /** A gravity stager turned to a new angle. */
-  angles: { id: number; angle: number }[];
+  /** A warden core opened the intake's side entrances (024): the indexes into INTAKE.entrances it opened. */
+  intakeOpens: { entrances: number[] }[];
   /** What the player carried was banked (on entering the foundry or depositing). */
   banks: Record<string, number>[];
   /** On a KO, what was lost: item id to count. */
@@ -129,7 +129,7 @@ export function createEvents(): SimEvents {
     withdraws: [],
     attunes: [],
     refills: [],
-    angles: [],
+    intakeOpens: [],
     tubeTaken: false,
     gates: [],
     objectives: [],
@@ -167,7 +167,7 @@ export function clearEvents(events: SimEvents): void {
   events.withdraws.length = 0;
   events.attunes.length = 0;
   events.refills.length = 0;
-  events.angles.length = 0;
+  events.intakeOpens.length = 0;
   events.tubeTaken = false;
   events.gates.length = 0;
   events.objectives.length = 0;

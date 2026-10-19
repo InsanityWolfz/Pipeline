@@ -1,4 +1,4 @@
-import { INTAKE_EMPTY_ICON, LOGISTICS_ICONS, SITE_ICONS } from '../foundryAssets';
+import { INTAKE_CAP_ICON, INTAKE_EMPTY_ICON, LOGISTICS_ICONS, SITE_ICONS } from '../foundryAssets';
 import { SPRITES } from '../assets';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSprite } from './types';
 
@@ -218,15 +218,12 @@ const HOPPER_EMBLEM: Shape[] = [
   rect(-3, 1.8, 6, 1.4, 0.4, solid('brass')),
 ];
 
-const STAGER_EMBLEM: Shape[] = [
-  ellipse(0, 0, 6.4, 6.4, trim('brass-dark', 2.4)),
-  ellipse(0, 0, 6.4, 6.4, trim('brass', 1.4)),
-  ...[-50, -25, 0, 25, 50].map((deg) => {
-    const a = ((deg - 90) * Math.PI) / 180;
-    return line([Math.cos(a) * 4.6, Math.sin(a) * 4.6, Math.cos(a) * 5.8, Math.sin(a) * 5.8], 0.5, 'ink');
-  }),
-  { ...line([0, 1.6, 3, -4.6], 1.2, 'cyan-glow', true), glow: { color: 'cyan', blur: 2 } },
-  ellipse(0, 1.6, 1.6, 1.6, solid('brass-light')),
+// A capped intake entrance (024), small: a brass cap with a rivet ring and a ley rune.
+const INTAKE_CAP_EMBLEM: Shape[] = [
+  ellipse(0, 1, 7, 4.6, { fill: { linear: [0, -3, 0, 6], stops: [{ at: 0, color: 'brass-light' }, { at: 1, color: 'brass-dark' }] }, outline: true }),
+  ellipse(0, -0.4, 5, 2.6, { fill: { linear: [0, -3, 0, 2], stops: [{ at: 0, color: 'brass-light' }, { at: 1, color: 'brass' }] }, outline: true }),
+  ...[-4.6, 4.6].map((x) => ellipse(x, 2.4, 0.7, 0.7, solid('brass-dark'))),
+  { ...line([-1.6, -0.6, 1.6, -0.6], 0.8, 'cyan-glow', true), glow: { color: 'cyan', blur: 2 } },
 ];
 
 const IDENTIFY_EMBLEM: Shape[] = [
@@ -281,9 +278,9 @@ export const ITEM_SPRITES_VECTOR: readonly VectorSprite[] = [
   icon(LOGISTICS_ICONS.sorter ?? 'emblem-sorter', channel(true)),
   icon(LOGISTICS_ICONS.crate ?? 'emblem-crate', CRATE_EMBLEM),
   icon(LOGISTICS_ICONS.hopper ?? 'emblem-hopper', HOPPER_EMBLEM),
-  icon(LOGISTICS_ICONS['gravity-stager'] ?? 'emblem-gravity-stager', STAGER_EMBLEM),
   icon(SPRITES.emblemIdentify, IDENTIFY_EMBLEM),
   icon(SITE_ICONS.stash, CHEST),
   icon(SITE_ICONS.travel, TRAVEL_EMBLEM),
   icon(INTAKE_EMPTY_ICON, INTAKE_EMBLEM),
+  icon(INTAKE_CAP_ICON, INTAKE_CAP_EMBLEM),
 ];

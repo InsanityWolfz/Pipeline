@@ -144,7 +144,7 @@ describe('the punch', () => {
 });
 
 describe('when the tube has nothing to fire', () => {
-  it('an empty reservoir and no carried rounds punch', () => {
+  it('empty entrances and no carried rounds punch', () => {
     const s = arena();
     s.inventory = {};
     expect(hasRoundToFire(s)).toBe(false);
@@ -162,21 +162,21 @@ describe('when the tube has nothing to fire', () => {
     expect(s.events.shots).toHaveLength(1);
   });
 
-  it('a reservoir round of the selected ammo shoots; one of another ammo punches', () => {
+  it('a round in any open entrance shoots, whatever ammo is selected (024); a capped one punches', () => {
     const s = arena();
     s.inventory = {};
-    s.link.reservoir = { itemId: 'arrow', count: 1 };
+    Object.assign(s.link.entrances[1] ?? {}, { ammoId: 'bomb', count: 1 });
     expect(hasRoundToFire(s)).toBe(true);
     punchToward(s, 100, 0);
     expect([s.events.shots.length, s.events.melees.length]).toEqual([1, 0]);
 
-    const other = arena();
-    other.inventory = {};
-    other.link.reservoir = { itemId: 'bomb', count: 5 };
-    expect(hasRoundToFire(other)).toBe(false);
-    punchToward(other, 100, 0);
-    expect([other.events.shots.length, other.events.melees.length]).toEqual([0, 1]);
-    expect(other.link.reservoir.count).toBe(5);
+    const capped = arena();
+    capped.inventory = {};
+    Object.assign(capped.link.entrances[0] ?? {}, { ammoId: 'arrow', count: 5 });
+    expect(hasRoundToFire(capped)).toBe(false);
+    punchToward(capped, 100, 0);
+    expect([capped.events.shots.length, capped.events.melees.length]).toEqual([0, 1]);
+    expect(capped.link.entrances[0]?.count).toBe(5);
   });
 
   it('no tube is never a round to fire', () => {

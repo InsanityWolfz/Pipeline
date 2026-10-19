@@ -1,5 +1,6 @@
 import { OBJECTIVES, type ObjectiveCheck } from '../data/objectives';
-import { feedsIntake, intakeStreams } from './spread';
+import { feedsIntake } from './intake';
+import { volleyRounds } from './volley';
 import type { SimState } from './state';
 import { FOUNDRY_ROOM } from '../data/rooms';
 
@@ -28,8 +29,10 @@ function holds(state: SimState, check: ObjectiveCheck): boolean {
       return state.armor.length > 0;
     case 'claimed':
       return state.claims.includes(check.site);
-    case 'streams':
-      return intakeStreams(state.foundry).length >= check.min;
+    case 'sidesOpen':
+      return state.link.entrances.every((e) => e.open);
+    case 'volley':
+      return volleyRounds(state).length >= check.min;
     case 'awayRunning':
       return state.awayTicks >= check.ticks;
   }

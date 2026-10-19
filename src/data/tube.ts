@@ -6,9 +6,6 @@ export const STARTING_AMMO = 'arrow';
 /** Ammo the slot can be switched to, in key order: keys 1, 2, 3. */
 export const SLOT_AMMOS: readonly string[] = ['arrow', 'bomb', 'ley-bolt'];
 
-/** Rounds the reservoir holds (spec 007). An upgrade later. */
-export const RESERVOIR_CAP = 30;
-
 /**
  * The attune (019), ticks per beat, played the first time the player walks into
  * the foundry, holding them still throughout: the tube's rings light one by one

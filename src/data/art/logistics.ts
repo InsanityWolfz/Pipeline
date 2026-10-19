@@ -1,12 +1,10 @@
-import { CONDUIT_ANIMS, CONDUIT_CORNERS, CRATE_SPRITE, FACING_ARROWS, HOPPER_SPRITES, SORTER_ANIMS, STAGER_SPRITE, STATUS_MARKERS, type PieceView } from '../foundryAssets';
-import { STAGER_ANGLES } from '../foundry';
+import { CONDUIT_ANIMS, CONDUIT_CORNERS, CRATE_SPRITE, FACING_ARROWS, HOPPER_SPRITES, SORTER_ANIMS, STATUS_MARKERS, type PieceView } from '../foundryAssets';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSprite } from './types';
 
 // Logistics pieces (020), in the 016 vector style: ley conduits as a cyan crystal
 // channel in a stone trough with brass collars where tiles meet, chevrons riding
 // the flow over two frames; the sorter's gold side exit and filter slot; the
-// violet stone hopper; the rune-locked crate; the gravity stager's ring and
-// floating needle; build-mode arrows; machine status markers. Floor pieces are
+// violet stone hopper; the rune-locked crate; build-mode arrows; machine status markers. Floor pieces are
 // drawn in tile px from their top-left; standing pieces round their bottom centre.
 
 type Edge = 'up' | 'down' | 'left' | 'right';
@@ -168,29 +166,6 @@ const CRATE: VectorSprite = standing(CRATE_SPRITE, 36, [
   ellipse(0, -12, 1, 1, flat('ink')),
 ]);
 
-// The gravity stager: a brass ring held up on two stone posts, a ley needle floating in it, tilted to its angle.
-function stager(angle: number): Shape[] {
-  const a = ((angle - 90) * Math.PI) / 180;
-  const cx = 0;
-  const cy = -20;
-  const tip = [cx + Math.cos(a) * 8.5, cy + Math.sin(a) * 8.5];
-  const tail = [cx - Math.cos(a) * 4, cy - Math.sin(a) * 4];
-  return [
-    footShadow(13),
-    ellipse(0, -4, 12, 3.4, solid('rock')),
-    ...[-10, 10].map((x) => rect(x - 2.4, -22, 4.8, 18, 1.4, { fill: { linear: [x - 2.4, 0, x + 2.4, 0], stops: [{ at: 0, color: 'rock-light' }, { at: 1, color: 'rock' }] }, outline: true })),
-    ellipse(cx, cy, 11, 11, trim('brass-dark', 3.4)),
-    ellipse(cx, cy, 11, 11, trim('brass', 2)),
-    ...[-30, -15, 0, 15, 30].map((deg) => {
-      const r = ((deg - 90) * Math.PI) / 180;
-      return line([cx + Math.cos(r) * 9.2, cy + Math.sin(r) * 9.2, cx + Math.cos(r) * 10.8, cy + Math.sin(r) * 10.8], 0.6, 'ink');
-    }),
-    { ...line([tail[0] ?? 0, tail[1] ?? 0, tip[0] ?? 0, tip[1] ?? 0], 1.6, 'cyan-glow', true), glow: { color: 'cyan', blur: 3 } },
-    ellipse(cx, cy, 1.8, 1.8, solid('brass-light')),
-  ];
-}
-const STAGER: VectorSprite = { key: STAGER_SPRITE.key, size: [T, 36], anchor: [T / 2, 36], frames: STAGER_ANGLES.map(stager) };
-
 // Build mode's arrows (10x10): cyan for the side a piece hands out of, ember for a side that takes items, gold for a sorter's sort side.
 const ARROW_TURN: Readonly<Record<PieceView, number>> = { side: 0, down: 90, up: -90 };
 function arrow(view: PieceView, fill: string, edge: string): Shape[] {
@@ -249,4 +224,4 @@ function shift(shape: Shape, dx: number, dy: number): Shape {
   return shape;
 }
 
-export const LOGISTICS_SPRITES_VECTOR: readonly VectorSprite[] = [...CONDUITS, ...SORTERS, ...HOPPERS, CRATE, STAGER, ...ARROWS, ...MARKERS];
+export const LOGISTICS_SPRITES_VECTOR: readonly VectorSprite[] = [...CONDUITS, ...SORTERS, ...HOPPERS, CRATE, ...ARROWS, ...MARKERS];

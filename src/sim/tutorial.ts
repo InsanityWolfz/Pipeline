@@ -1,4 +1,4 @@
-import { RESERVOIR_CAP } from '../data/tube';
+import { ENTRANCE_CAP } from '../data/foundry';
 import { STONE_REACH } from '../data/objectives';
 import { FEET_BOX } from '../data/player';
 import { RESPAWN_ROOM } from '../data/player';
@@ -69,9 +69,9 @@ function open(state: SimState, gate: GateId): void {
   state.events.gates.push({ gate });
 }
 
-/** Opens gates whose condition now holds: the hall clear, the first line full. */
+/** Opens gates whose condition now holds: the hall clear, the first line full (an entrance at its cap, 024). */
 export function stepGates(state: SimState): void {
-  if (!state.firstLineFull && state.link.reservoir.count >= RESERVOIR_CAP) {
+  if (!state.firstLineFull && state.link.entrances.some((e) => e.count >= ENTRANCE_CAP)) {
     state.firstLineFull = true;
     // The world pushes back (017): from the first full line, the land fills with packs.
     state.populated = true;

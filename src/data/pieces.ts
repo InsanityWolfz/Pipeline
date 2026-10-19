@@ -9,8 +9,6 @@ interface PieceBase {
   /** A line or two for the build bar's hover panel (015), in the pixel font's glyphs. */
   description: string;
   footprint: Footprint;
-  /** Items placing it takes from the inventory; picking it up gives them back. */
-  cost?: Readonly<Record<string, number>>;
 }
 
 /** Runs a hand-crafting recipe on its own, from items handed in. */
@@ -22,12 +20,10 @@ export interface MachineDef extends PieceBase {
 
 /**
  * Moves or holds items: conduits carry them, hoppers feed a line, crates collect
- * what it makes, a gravity stager facing the foundry intake adds a stream to the
- * tube's spread (008, 019),
- * and a sorter sends one chosen item out its side (015).
+ * what it makes, and a sorter sends one chosen item out its side (015).
  */
 export interface LogisticsDef extends PieceBase {
-  kind: 'conduit' | 'hopper' | 'crate' | 'stager' | 'sorter';
+  kind: 'conduit' | 'hopper' | 'crate' | 'sorter';
 }
 
 export type PieceDef = MachineDef | LogisticsDef;
@@ -43,9 +39,9 @@ const machine = (id: string, name: string, recipeId: string, footprint: Footprin
   craftTicks,
 });
 
-const logistics = (kind: LogisticsDef['kind'], name: string, description: string, id: string = kind): LogisticsDef => ({
+const logistics = (kind: LogisticsDef['kind'], name: string, description: string): LogisticsDef => ({
   kind,
-  id,
+  id: kind,
   name,
   description,
   footprint: '1x1',
@@ -56,10 +52,6 @@ export const PIECES: Readonly<Record<string, PieceDef>> = {
   sorter: logistics('sorter', 'Sorter', 'Sends one chosen item out its side. E sets it, F flips the side.'),
   hopper: logistics('hopper', 'Hopper', 'Holds one kind of item, put in with E, and feeds it forward.'),
   crate: logistics('crate', 'Crate', 'Collects whatever reaches it from any side. E empties it.'),
-  'gravity-stager': {
-    ...logistics('stager', 'Gravity stager', 'Facing the intake, it adds a stream to the spread. E turns it.', 'gravity-stager'),
-    cost: { 'warden-core': 1 },
-  },
   cutter: machine('cutter', 'Cutter', 'shaft', '1x1', 60, 'Cuts wood into shafts.'),
   knapper: machine('knapper', 'Knapper', 'arrowhead', '1x1', 60, 'Chips stone into arrowheads.'),
   spinner: machine('spinner', 'Spinner', 'rope', '1x1', 60, 'Spins fiber into rope.'),
@@ -77,7 +69,6 @@ export const BUILD_BAR: readonly string[] = [
   'sorter',
   'hopper',
   'crate',
-  'gravity-stager',
   'cutter',
   'knapper',
   'spinner',

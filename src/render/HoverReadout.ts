@@ -1,13 +1,14 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { READOUT_LAYOUT } from '../data/hudLayout';
-import { LOGISTICS_ICONS, INTAKE_EMPTY_ICON } from '../data/foundryAssets';
+import { INTAKE_CAP_ICON, INTAKE_EMPTY_ICON } from '../data/foundryAssets';
+import { ammoDef } from '../data/ammo';
+import { ENTRANCE_CAP } from '../data/foundry';
 import { itemDef } from '../data/items';
 import { machineDef } from '../data/pieces';
 import { recipeDef, RECIPES } from '../data/recipes';
-import { RESERVOIR_CAP } from '../data/tube';
 import { count } from '../sim/inventory';
-import type { ReservoirState } from '../sim/link';
+import type { EntranceState } from '../sim/link';
 import type { MachineState, PieceState } from '../sim/pieces';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
@@ -28,27 +29,24 @@ export function machineLines(m: MachineState): Line[] {
   ];
 }
 
-/** The intake's line (019): the reservoir's ammo (or the tube emblem when empty) and count out of the cap. */
-export function intakeLines(r: ReservoirState): Line[] {
-  const icon = r.itemId ? itemDef(r.itemId).icon : INTAKE_EMPTY_ICON;
-  return [[icon, `${r.count}/${RESERVOIR_CAP}`]];
+/**
+ * The intake's lines (019, 024), one per entrance west to east: its ammo (the tube emblem when empty) and its
+ * count out of the cap, or the cap emblem and "capped" while it's shut.
+ */
+export function intakeLines(entrances: readonly EntranceState[]): Line[] {
+  return entrances.map((e): Line => {
+    if (!e.open) return [INTAKE_CAP_ICON, 'capped'];
+    const icon = e.ammoId ? itemDef(ammoDef(e.ammoId).itemId).icon : INTAKE_EMPTY_ICON;
+    return [icon, `${e.count}/${ENTRANCE_CAP}`];
+  });
 }
 
-/** A gravity stager's line: its emblem and its angle in degrees, signed. */
-export function stagerLines(angle: number): Line[] {
-  const icon = LOGISTICS_ICONS['gravity-stager'];
-  if (!icon) throw new Error('No gravity stager emblem');
-  return [[icon, angle > 0 ? `+${angle}` : String(angle)]];
-}
-
-/** The readout for any piece: machines and stagers have one; other pieces show nothing. */
+/** The readout for any piece: machines have one; other pieces show nothing. */
 export function pieceLines(p: PieceState): Line[] {
-  if (p.kind === 'machine') return machineLines(p);
-  if (p.kind === 'stager') return stagerLines(p.angle);
-  return [];
+  return p.kind === 'machine' ? machineLines(p) : [];
 }
 
-// Over the machine, intake or stager under the cursor, a small panel of icon and text lines.
+// Over the machine or intake under the cursor, a small panel of icon and text lines.
 export class HoverReadout {
   private readonly back: GameObjects.Graphics;
   private readonly icons: GameObjects.Image[] = [];

@@ -8,7 +8,6 @@ import { advanceClock, createClock } from '../sim/clock';
 import { craft } from '../sim/crafting';
 import { clearEvents, createEvents, type SimEvents } from '../sim/events';
 import type { Command } from '../sim/input';
-import { pieceAt } from '../sim/pieces';
 import { canPlace, conduitInFrom, unlockedPieces } from '../sim/placement';
 import { roomById, type SimState } from '../sim/state';
 import { stepSim } from '../sim/step';
@@ -155,10 +154,6 @@ export class GameScene extends Scene {
         pieceId: () => this.buildView?.selected ?? FIRST_PIECE,
         overUi: (x, y) => [this.pause, this.menu, this.buildView, this.picker, this.siteMenus, this.hud, this.tutorial].some((v) => v?.overUi(x, y)),
         clickUi: (x, y, mods) => this.router?.click(controls, x, y, mods),
-        stagerAt: (t) => {
-          const piece = pieceAt(this.sim.foundry, t.tx, t.ty);
-          return piece?.kind === 'stager' ? piece.id : null;
-        },
       });
       this.router?.handle(controls);
       if (this.pause?.isOpen) {
@@ -192,6 +187,9 @@ export class GameScene extends Scene {
       sliding: this.groundItemView?.sliding ?? 0,
       slideProgress: this.groundItemView?.slideProgress ?? 0,
       swooshes: this.effects?.swooshes ?? 0,
+      intakeCaps: this.roomViews?.intakeCaps ?? 0,
+      intakeLift: this.roomViews?.intakeLift ?? null,
+      intakePrompt: this.tutorial?.intakePrompt ?? null,
       camera: { x: this.cameras.main.worldView.centerX, y: this.cameras.main.worldView.centerY },
     };
   }

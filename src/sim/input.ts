@@ -39,8 +39,6 @@ export interface Command {
   deposit: { id: number; itemId: string; amount: HopperAmount } | null;
   /** Take some of what's in a hopper (by piece id) out, this tick (an edge), or null (022: how many by `amount`). */
   withdraw: { id: number; amount: HopperAmount } | null;
-  /** Turn a gravity stager (by piece id) to its next angle this tick (an edge), or null. */
-  setAngle: { id: number } | null;
   /** Set the item a sorter in reach sends out its side (null: pass everything), this tick (an edge), or null (015). */
   setFilter: { id: number; itemId: string | null } | null;
   /** The claimed pylon's menu choice this tick (an edge), or null. */
@@ -68,7 +66,6 @@ export const NO_COMMAND: Readonly<Command> = {
   pickUp: null,
   deposit: null,
   withdraw: null,
-  setAngle: null,
   setFilter: null,
   pylon: null,
   takeStash: null,

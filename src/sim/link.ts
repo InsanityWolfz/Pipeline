@@ -1,15 +1,18 @@
-import { itemDef } from '../data/items';
+import { AMMO } from '../data/ammo';
+import { ENTRANCE_CAP, INTAKE } from '../data/foundry';
 import { FOUNDRY_ROOM } from '../data/rooms';
-import { ATTUNE_TICKS, RESERVOIR_CAP } from '../data/tube';
+import { ATTUNE_TICKS } from '../data/tube';
 import type { SimState } from './state';
 
 // The tube's link to the foundry: it attunes the first time the player walks
-// into the foundry, and from then on the foundry intake (019) fills its one reservoir.
-// Both survive a KO.
+// into the foundry, and from then on each open entrance of the foundry intake
+// (019, 024) fills its own reservoir. All of it survives a KO.
 
-export interface ReservoirState {
-  /** The one ammo item it holds, or null when empty. */
-  itemId: string | null;
+/** One intake entrance (024): capped shut or open, and its reservoir of one ammo. */
+export interface EntranceState {
+  open: boolean;
+  /** The one ammo it holds, or null when empty. */
+  ammoId: string | null;
   count: number;
 }
 
@@ -17,11 +20,16 @@ export interface LinkState {
   attuned: boolean;
   /** Ticks left on the attune (019); the player is held still until it ends. */
   attunePulse: number;
-  reservoir: ReservoirState;
+  /** One per mouth tile, in INTAKE.entrances order (west, centre, east). */
+  entrances: EntranceState[];
 }
 
 export function createLink(): LinkState {
-  return { attuned: false, attunePulse: 0, reservoir: { itemId: null, count: 0 } };
+  return {
+    attuned: false,
+    attunePulse: 0,
+    entrances: INTAKE.entrances.map((e) => ({ open: e.startsOpen, ammoId: null, count: 0 })),
+  };
 }
 
 /** Runs after doorways: the first entry into the foundry attunes the tube. Counts the pulse down. */
@@ -34,26 +42,31 @@ export function stepLink(state: SimState): void {
   state.events.attunes.push({});
 }
 
-/** Whether the reservoir would take one of this item: ammo only, its own type (or empty), under the cap. */
-export function reservoirAccepts(reservoir: ReservoirState, itemId: string): boolean {
-  if (itemDef(itemId).kind !== 'ammo') return false;
-  if (reservoir.itemId !== null && reservoir.itemId !== itemId) return false;
-  return reservoir.count < RESERVOIR_CAP;
+/** The ammo a round of this item is, if it is ammo at all. */
+export function ammoOfItem(itemId: string): string | null {
+  return Object.values(AMMO).find((a) => a.itemId === itemId)?.id ?? null;
 }
 
-/** Puts one item in the reservoir if it accepts it. Returns whether it was taken. */
-export function fillReservoir(reservoir: ReservoirState, itemId: string): boolean {
-  if (!reservoirAccepts(reservoir, itemId)) return false;
-  reservoir.itemId = itemId;
-  reservoir.count += 1;
+/** Whether an entrance would take one of this item: open, ammo only, its own ammo (any while empty), under the cap. */
+export function entranceAccepts(e: EntranceState, itemId: string): boolean {
+  const ammoId = ammoOfItem(itemId);
+  if (!e.open || ammoId === null) return false;
+  if (e.ammoId !== null && e.ammoId !== ammoId) return false;
+  return e.count < ENTRANCE_CAP;
+}
+
+/** Puts one item in the entrance if it accepts it. Returns whether it was taken. */
+export function fillEntrance(e: EntranceState, itemId: string): boolean {
+  if (!entranceAccepts(e, itemId)) return false;
+  e.ammoId = ammoOfItem(itemId);
+  e.count += 1;
   return true;
 }
 
-/** Takes one round of an ammo item from the reservoir. It forgets its type at 0. */
-export function takeFromReservoir(link: LinkState, itemId: string): boolean {
-  const r = link.reservoir;
-  if (r.itemId !== itemId || r.count < 1) return false;
-  r.count -= 1;
-  if (r.count === 0) r.itemId = null;
+/** Takes one round from an entrance. It forgets its ammo at 0. */
+export function takeFromEntrance(e: EntranceState): boolean {
+  if (e.count < 1) return false;
+  e.count -= 1;
+  if (e.count === 0) e.ammoId = null;
   return true;
 }

@@ -7,15 +7,15 @@ import { throwBomb } from './bombs';
 import { aimFacing, facingVector, unit } from './direction';
 import type { Command } from './input';
 import { count, take } from './inventory';
-import { takeFromReservoir } from './link';
+import { takeFromEntrance } from './link';
 import { punch } from './melee';
 import { isRolling } from './movement';
-import { intakeStreams, rotate } from './spread';
+import { nextPress, volleyRounds, volleyShots, type VolleyShot } from './volley';
 import type { SimState } from './state';
 
 // The tube: picking the slot's ammo and firing it. Carried rounds fire straight
-// from the inventory; once they run out, the linked tube fires from its reservoir.
-// With no tube, or nothing to fire, fire punches instead (023).
+// from the inventory; once they run out, the linked tube fires a volley from the
+// intake's fed entrances (024). With no tube, or nothing to fire, fire punches instead (023).
 
 export interface TubeState {
   /** The ammo hotbar slot 1 fires. */
@@ -26,9 +26,9 @@ export interface TubeState {
   meleeCooldown: number;
   /** The tube is really firing (016): fire held this tick with a round to fire, not rolling or in the foundry. A punch isn't firing. */
   firing: boolean;
-  /** This tick's shot came from the reservoir. */
+  /** This tick's shot was a volley from the intake's entrances (024). */
   fromReservoir: boolean;
-  /** Projectiles this tick's shot fired: more than 1 for a spread (008), 0 with no shot. */
+  /** Projectiles this tick's shot fired: more than 1 for a volley of several rounds (024), 0 with no shot. */
   shotCount: number;
 }
 
@@ -50,24 +50,23 @@ export function selectAmmo(state: SimState, ammoId: string): void {
 }
 
 /**
- * What the hotbar slot shows: the carried count while any is carried, else the
- * reservoir's count if it holds the slot's ammo (fired from the foundry), else 0.
+ * What the hotbar slot shows (until 025): the carried count while any of the slot's
+ * ammo is carried, else the rounds waiting in the fed entrances (fired from the
+ * foundry as a volley), else 0.
  */
 export function slotCount(state: Pick<SimState, 'tube' | 'inventory' | 'link'>): { count: number; fromReservoir: boolean } {
-  const item = slotItem(state.tube);
-  const carried = count(state.inventory, item);
+  const carried = count(state.inventory, slotItem(state.tube));
   if (carried > 0) return { count: carried, fromReservoir: false };
-  const { reservoir } = state.link;
-  if (reservoir.itemId === item && reservoir.count > 0) return { count: reservoir.count, fromReservoir: true };
-  return { count: 0, fromReservoir: false };
+  const waiting = volleyRounds(state).reduce((n, r) => n + r.count, 0);
+  return waiting > 0 ? { count: waiting, fromReservoir: true } : { count: 0, fromReservoir: false };
 }
 
 /**
- * The next fire press has something to fire (023): the tube is in hand and a
- * round of the slot's ammo is carried or in the reservoir. Without one, fire punches.
+ * The next fire press has something to fire (023, 024): the tube is in hand and a
+ * round of the slot's ammo is carried, or an open entrance holds a round. Without one, fire punches.
  */
 export function hasRoundToFire(state: Pick<SimState, 'hasTube' | 'tube' | 'inventory' | 'link'>): boolean {
-  return state.hasTube && slotCount(state).count > 0;
+  return nextPress(state).kind !== 'melee';
 }
 
 /** The walk multiplier from the tube (016): slower while it really fires, by last tick's state. */
@@ -101,43 +100,43 @@ export function stepTube(state: SimState, cmd: Command): void {
   fire(state, cmd, dx, dy);
 }
 
-/** Takes one round of the slot's ammo: carried first, then the reservoir. Returns where it came from. */
-function takeRound(state: SimState): 'inventory' | 'reservoir' | null {
-  const item = slotItem(state.tube);
-  if (take(state.inventory, item)) return 'inventory';
-  if (takeFromReservoir(state.link, item)) return 'reservoir';
-  return null;
-}
-
-/** Fires a round along the unit aim (dx, dy) once the interval has passed. The caller has checked there's one to fire. */
+/**
+ * Fires along the unit aim (dx, dy) once the interval has passed: a carried round of
+ * the slot's ammo alone, else a volley of one round from every fed entrance (024),
+ * each costing a round from its own entrance. The caller has checked there's one to fire.
+ */
 function fire(state: SimState, cmd: Command, dx: number, dy: number): void {
   const { tube } = state;
   if (tube.fireCooldown > 0) return;
-  const ammo = ammoDef(tube.ammoId);
-  const source = takeRound(state);
-  // Unreachable (the caller checked for a round), but it narrows the type.
-  if (!source) return;
-  tube.fireCooldown = ammo.fireTicks;
-  tube.fromReservoir = source === 'reservoir';
-  // A reservoir shot fires one projectile per stream, each costing a round; carried rounds never spread.
-  const streams = tube.fromReservoir ? intakeStreams(state.foundry) : [];
-  const angles = streams.length > 0 ? streams : [0];
-  let fired = 0;
-  for (const angle of angles) {
-    if (fired > 0 && !takeFromReservoir(state.link, slotItem(tube))) break;
-    launch(state, ammo.id, rotate(dx, dy, angle), cmd);
-    fired += 1;
+  const press = nextPress(state);
+  if (press.kind === 'carried') {
+    take(state.inventory, ammoDef(press.ammoId).itemId);
+    tube.fireCooldown = ammoDef(press.ammoId).fireTicks;
+    launch(state, { ammoId: press.ammoId, dir: [dx, dy], across: 0 }, cmd);
+    tube.shotCount = 1;
+    return;
   }
-  tube.shotCount = fired;
+  // Unreachable (the caller checked for a round), but it narrows the type.
+  if (press.kind !== 'volley') return;
+  for (const r of press.rounds) {
+    const e = state.link.entrances[r.entrance];
+    if (e) takeFromEntrance(e);
+  }
+  // The volley waits out the slowest ammo it fired.
+  tube.fireCooldown = Math.max(...press.rounds.map((r) => ammoDef(r.ammoId).fireTicks));
+  tube.fromReservoir = true;
+  const shots = volleyShots(press.rounds.map((r) => r.ammoId), dx, dy);
+  for (const shot of shots) launch(state, shot, cmd);
+  tube.shotCount = shots.length;
 }
 
-/** Sends one projectile of the ammo along `dir` from the tube's mouth. A bomb lands at the aim's distance. */
-function launch(state: SimState, ammoId: string, [dx, dy]: [number, number], cmd: Command): void {
+/** Sends one projectile along its direction from the tube's mouth. A bomb lands at the aim's distance, `across` px off the line. */
+function launch(state: SimState, { ammoId, dir: [dx, dy], across }: VolleyShot, cmd: Command): void {
   const { player } = state;
   const muzzle = { x: player.x + dx * MUZZLE_OFFSET, y: player.y + dy * MUZZLE_OFFSET };
   state.events.shots.push({ ...muzzle, ammoId });
   if (ammoDef(ammoId).kind === 'lob') {
-    throwBomb(state, ammoId, muzzle, player, { x: cmd.aimX, y: cmd.aimY }, [dx, dy]);
+    throwBomb(state, ammoId, muzzle, player, { x: cmd.aimX, y: cmd.aimY }, [dx, dy], across);
     return;
   }
   state.arrows.push(createArrow(state.nextArrowId++, ammoId, state.roomId, muzzle.x, muzzle.y, dx, dy));

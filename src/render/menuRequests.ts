@@ -65,8 +65,8 @@ export class MenuRequests {
 /** Build and menu actions for one tick, merged into the command. */
 export type UiCommand = Pick<
   Command,
-  'toggleBuild' | 'place' | 'pickUp' | 'deposit' | 'withdraw' | 'setFilter' | 'setAngle' | 'pylon' | 'takeStash' | 'identify' | 'equip'
+  'toggleBuild' | 'place' | 'pickUp' | 'deposit' | 'withdraw' | 'setFilter' | 'pylon' | 'takeStash' | 'identify' | 'equip'
 >;
 
 /** No UI actions this tick. */
-export const NO_UI_COMMAND: UiCommand = { toggleBuild: false, place: null, pickUp: null, setAngle: null, ...NONE };
+export const NO_UI_COMMAND: UiCommand = { toggleBuild: false, place: null, pickUp: null, ...NONE };

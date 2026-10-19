@@ -1,10 +1,10 @@
-import { CONDUIT_TICKS, CRATE_CAP, HOPPER_TICKS, INPUT_CAP, INTAKE, OUTPUT_CAP, STAGER_TICKS } from '../data/foundry';
+import { CONDUIT_TICKS, CRATE_CAP, HOPPER_TICKS, INPUT_CAP, INTAKE, OUTPUT_CAP } from '../data/foundry';
 import { machineDef } from '../data/pieces';
 import { recipeDef, type RecipeDef } from '../data/recipes';
 import { opposite } from './direction';
 import { count } from './inventory';
 import type { SimEvents } from './events';
-import { fillReservoir, type ReservoirState } from './link';
+import { fillEntrance, type EntranceState } from './link';
 import {
   footprint,
   frontSide,
@@ -25,19 +25,19 @@ import {
 // First everything advances (items cross conduits, crafts finish and start,
 // hoppers count down), then items move in piece order. An item that arrives
 // this tick starts from zero, so nothing moves two hops in one tick.
-// The foundry intake (019) passes what its mouth takes straight into the tube's
-// reservoir: each mouth tile from the tile directly south of it, once attuned.
+// The foundry intake (019) passes what each mouth tile takes straight into its
+// entrance's reservoir (024): each from the tile directly south of it, once attuned.
 
-/** What a tick's flow needs beyond the grid: the reservoir the intake fills (once `attuned`), and where refills are recorded. */
+/** What a tick's flow needs beyond the grid: the entrances the intake fills (once `attuned`), and where refills are recorded. */
 interface FlowContext {
   grid: ReadonlyMap<string, PieceState>;
-  reservoir: ReservoirState;
+  entrances: EntranceState[];
   refills: SimEvents['refills'];
   attuned: boolean;
 }
 
-/** The intake's mouth tile at `t`, by index, if it is one. */
-const mouthAt = (t: Tile): number => INTAKE.mouth.findIndex((m) => m.tx === t.tx && m.ty === t.ty);
+/** The intake's entrance at `t`, by index, if it is one. */
+const entranceAt = (t: Tile): number => INTAKE.entrances.findIndex((m) => m.tx === t.tx && m.ty === t.ty);
 
 const recipeOf = (m: MachineState): RecipeDef => recipeDef(machineDef(m.pieceId).recipeId);
 
@@ -67,7 +67,6 @@ function advanceMachine(m: MachineState): void {
 
 function advance(p: PieceState): void {
   if (p.kind === 'conduit' && p.item && p.progress < CONDUIT_TICKS) p.progress += 1;
-  if (p.kind === 'stager' && p.item && p.progress < STAGER_TICKS) p.progress += 1;
   if (p.kind === 'sorter' && p.item && p.progress < CONDUIT_TICKS) p.progress += 1;
   if (p.kind === 'hopper' && p.count > 0 && p.timer < HOPPER_TICKS) p.timer += 1;
   if (p.kind === 'machine') advanceMachine(p);
@@ -78,12 +77,13 @@ function advance(p: PieceState): void {
  * other than crates never take items from their front side. Returns whether it was taken.
  */
 function offer(ctx: FlowContext, to: Tile, from: Tile, item: string): boolean {
-  const mouth = mouthAt(to);
-  if (mouth >= 0) {
+  const entrance = entranceAt(to);
+  if (entrance >= 0) {
     // A mouth tile takes only from the floor tile directly south of it, and nothing before the tube attunes.
-    if (!ctx.attuned || from.tx !== to.tx || from.ty !== to.ty + 1) return false;
-    if (!fillReservoir(ctx.reservoir, item)) return false;
-    ctx.refills.push({ mouth, itemId: item });
+    const e = ctx.entrances[entrance];
+    if (!e || !ctx.attuned || from.tx !== to.tx || from.ty !== to.ty + 1) return false;
+    if (!fillEntrance(e, item)) return false;
+    ctx.refills.push({ entrance, itemId: item });
     return true;
   }
   const target = ctx.grid.get(key(to));
@@ -93,7 +93,7 @@ function offer(ctx: FlowContext, to: Tile, from: Tile, item: string): boolean {
   // A conduit takes items only from the side it's shaped to take them from (013); a sorter only from its back (015).
   if (target.kind === 'conduit' && !sameTile(from, sideTile(target, target.inFrom))) return false;
   if (target.kind === 'sorter' && !sameTile(from, sideTile(target, opposite(target.facing)))) return false;
-  if (target.kind === 'conduit' || target.kind === 'stager' || target.kind === 'sorter') {
+  if (target.kind === 'conduit' || target.kind === 'sorter') {
     if (target.item) return false;
     target.item = item;
     target.progress = 0;
@@ -121,11 +121,6 @@ function transfer(ctx: FlowContext, p: PieceState): void {
       p.item = null;
       p.progress = 0;
     }
-  } else if (p.kind === 'stager') {
-    if (p.item && p.progress >= STAGER_TICKS && offer(ctx, to, p, p.item)) {
-      p.item = null;
-      p.progress = 0;
-    }
   } else if (p.kind === 'sorter') {
     // A refused item waits, so a blocked exit stalls the sorter and the line behind it.
     if (p.item && p.progress >= CONDUIT_TICKS && offer(ctx, sorterExit(p, p.item), p, p.item)) {
@@ -139,10 +134,10 @@ function transfer(ctx: FlowContext, p: PieceState): void {
   }
 }
 
-/** Hoppers feed conduits, sorters, stagers and machines, never crates or the intake. */
+/** Hoppers feed conduits, sorters and machines, never crates or the intake. */
 function offerFromHopper(ctx: FlowContext, to: Tile, h: HopperState, item: string): void {
   const kind = ctx.grid.get(key(to))?.kind;
-  if (kind !== 'conduit' && kind !== 'sorter' && kind !== 'stager' && kind !== 'machine') return;
+  if (kind !== 'conduit' && kind !== 'sorter' && kind !== 'machine') return;
   if (!offer(ctx, to, h, item)) return;
   h.count -= 1;
   h.timer = 0;
@@ -166,17 +161,17 @@ export function offerFromOutside(foundry: FoundryState, to: Tile, from: Tile, it
   const target = pieceAt(foundry, to.tx, to.ty);
   if (!target) return false;
   const grid = new Map<string, PieceState>([[key(to), target]]);
-  return offer({ grid, reservoir: { itemId: null, count: 0 }, refills: [], attuned: false }, to, from, item);
+  return offer({ grid, entrances: [], refills: [], attuned: false }, to, from, item);
 }
 
 /**
  * Runs every piece one tick. The foundry ticks wherever the player is. Once the
- * tube is `attuned`, the intake fills `reservoir`, and each round it takes is pushed to `refills`.
+ * tube is `attuned`, the intake fills its open `entrances`, and each round it takes is pushed to `refills`.
  */
-export function stepFoundry(foundry: FoundryState, reservoir: ReservoirState, refills: SimEvents['refills'], attuned: boolean): void {
+export function stepFoundry(foundry: FoundryState, entrances: EntranceState[], refills: SimEvents['refills'], attuned: boolean): void {
   const grid = new Map<string, PieceState>();
   for (const p of foundry.pieces) for (const t of footprint(p.pieceId, p.tx, p.ty, p.facing)) grid.set(key(t), p);
-  const ctx: FlowContext = { grid, reservoir, refills, attuned };
+  const ctx: FlowContext = { grid, entrances, refills, attuned };
   for (const p of foundry.pieces) advance(p);
   for (const p of foundry.pieces) transfer(ctx, p);
   for (const p of foundry.pieces) if (p.kind === 'machine') setStatus(p);

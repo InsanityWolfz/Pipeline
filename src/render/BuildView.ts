@@ -3,13 +3,11 @@ import { animFrames, DEPTHS, SPRITES } from '../data/assets';
 import { TILE_SIZE, VIEW_WIDTH } from '../data/config';
 import {
   CRATE_SPRITE,
-  STAGER_SPRITE,
   FACING_ARROWS,
   ICON_RISE,
   HOPPER_SPRITES,
   machineLook,
 } from '../data/foundryAssets';
-import { STAGER_ANGLES, STAGER_START_ANGLE } from '../data/foundry';
 import { BUILD_BAR_LAYOUT, GHOST } from '../data/hudLayout';
 import { BUILD_BAR, pieceDef } from '../data/pieces';
 import { pieceRect, type PlaceFail, type Tile } from '../sim/pieces';
@@ -29,7 +27,6 @@ function bodyFrame(pieceId: string, facing: Facing, inFrom: Facing): string {
   const view = viewOf(facing);
   if (def.kind === 'machine') return machineLook(def.id, view).idle;
   if (def.kind === 'conduit') return animFrames(conduitLook(facing, inFrom).anim)[0] ?? '';
-  if (def.kind === 'stager') return animFrames(STAGER_SPRITE)[STAGER_ANGLES.indexOf(STAGER_START_ANGLE)] ?? '';
   return def.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE;
 }
 

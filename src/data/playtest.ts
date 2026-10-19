@@ -15,7 +15,7 @@ const ARMOR_COUNT = 3;
 
 const COUNTS = { ammo: AMMO_COUNT, raw: RAW_COUNT, part: PART_COUNT, armor: ARMOR_COUNT } as const;
 
-/** Items with their own count: warden cores are rare, enough for a few gravity stagers (008). */
+/** Items with their own count: warden cores are rare; one opens the intake's side entrances (024), the rest are spares for testing. */
 const OVERRIDES: Readonly<Record<string, number>> = { 'warden-core': 5 };
 
 export const PLAYTEST_START: StartDef = {

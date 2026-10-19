@@ -125,13 +125,21 @@ export class FeelView {
       j.burst('place', c.x, c.y + TILE_SIZE / 2);
     }
     if (ev.pickUps.length > 0) s.play(SOUNDS.pickUpPiece);
-    if (ev.angles.length > 0) s.play(SOUNDS.rotate);
     if (ev.deposits.length > 0 || ev.withdraws.length > 0 || ev.crateTakes.length > 0) s.play(SOUNDS.pickUpPiece, SOUND_LEVELS.under);
     for (const r of ev.refills) {
       s.play(SOUNDS.refill, SOUND_LEVELS.quiet);
       // Sparks at the inlet the item went into.
-      const mouth = INTAKE.mouth[r.mouth];
-      if (mouth) j.burst('refill', (mouth.tx + 0.5) * TILE_SIZE, (mouth.ty + 1) * TILE_SIZE);
+      const inlet = INTAKE.entrances[r.entrance];
+      if (inlet) j.burst('refill', (inlet.tx + 0.5) * TILE_SIZE, (inlet.ty + 1) * TILE_SIZE);
+      this.intakeMs = GLOWS.intake.ms;
+    }
+    for (const open of ev.intakeOpens) {
+      // The caps lift off (024): a brass clank and a rising chime, and flecks from each inlet it opened.
+      s.play(SOUNDS.intakeOpen);
+      for (const i of open.entrances) {
+        const inlet = INTAKE.entrances[i];
+        if (inlet) j.burst('capLift', (inlet.tx + 0.5) * TILE_SIZE, (inlet.ty + 1) * TILE_SIZE);
+      }
       this.intakeMs = GLOWS.intake.ms;
     }
     if (ev.attunes.length > 0) s.play(SOUNDS.attune);

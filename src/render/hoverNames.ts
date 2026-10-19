@@ -63,7 +63,7 @@ export function nameAt(sim: SimState, roomId: string, px: number, py: number): H
     const piece = pieceAt(sim.foundry, tx, ty);
     if (piece) return { name: pieceDef(piece.pieceId).name, ...centre(piece), rise: HOVER_NAME.tile.rise, pieceId: piece.id };
     // The intake's mouth (019), or the pipe rising above it up the wall shown over the top row.
-    if (INTAKE.mouth.some((m) => m.tx === tx && ty <= m.ty)) {
+    if (INTAKE.entrances.some((m) => m.tx === tx && ty <= m.ty)) {
       const at = intakeAnchor();
       return { name: WORLD_NAMES.intake, x: at.x, y: at.y, rise: HOVER_NAME.tile.rise, intake: true };
     }

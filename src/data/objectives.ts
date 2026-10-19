@@ -14,12 +14,14 @@ export type ObjectiveCheck =
   | { kind: 'inRoom'; room: string }
   /** A line feeds the foundry intake (019): a piece's front is one of its mouth tiles. */
   | { kind: 'intakeFed' }
-  /** The reservoir has filled from a line at least once. */
+  /** An intake entrance has filled from a line at least once. */
   | { kind: 'lineFull' }
   | { kind: 'identified' }
   | { kind: 'claimed'; site: string }
-  /** At least this many gravity stagers stream into the intake. */
-  | { kind: 'streams'; min: number }
+  /** The intake's side entrances are open (024). */
+  | { kind: 'sidesOpen' }
+  /** The volley the next press would fire has at least this many rounds (024). */
+  | { kind: 'volley'; min: number }
   /** This long outside the foundry with a line built into the intake. */
   | { kind: 'awayRunning'; ticks: number };
 
@@ -47,10 +49,17 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
   { text: 'Fill the tube from your line', check: { kind: 'lineFull' }, prompt: { key: 'E', over: 'hopper' } },
   { text: 'Identify your armor at the bench (E)', check: { kind: 'identified' }, prompt: { key: 'E', over: 'bench' } },
   { text: "Claim the shrine's pylon", check: { kind: 'claimed', site: 'shrine' }, prompt: { key: 'E', over: 'pylon' } },
-  // One stager: the prototype's one Warden drops one core, and a stager costs one.
-  { text: 'Build a spread with a gravity stager', check: { kind: 'streams', min: 1 } },
+  // The prototype's one Warden drops one core, and opening the side entrances costs one.
+  { text: "Open the intake's side entrances (E with a warden core)", check: { kind: 'sidesOpen' } },
+  { text: 'Feed two entrances to fire a spread', check: { kind: 'volley', min: 2 } },
   { text: 'Head back out — the foundry keeps running', check: { kind: 'awayRunning', ticks: 600 } },
 ];
+
+/**
+ * The intake's own prompt (024), shown in the foundry while a warden core is carried and the side entrances are
+ * capped: the key on its cap and the text beside it, dimmed until the player is in reach.
+ */
+export const INTAKE_PROMPT = { key: 'E', text: 'open the side entrances' } as const;
 
 /** A prompt shows (dimmed) while what it floats over is this close to the player, px; at full strength once it can be used. */
 export const PROMPT_RANGE = 64;

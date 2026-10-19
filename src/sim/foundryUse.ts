@@ -4,19 +4,20 @@ import { ITEMS } from '../data/items';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import type { Command, HopperAmount } from './input';
 import { count } from './inventory';
-import { pieceRect, type CrateState, type HopperState, type PieceState, type SorterState, type StagerState } from './pieces';
-import { cycleAngle } from './spread';
+import { intakeOpenable, openSideEntrances } from './intake';
+import { pieceRect, type CrateState, type HopperState, type PieceState, type SorterState } from './pieces';
 import type { SimState } from './state';
 
-// Using hoppers, crates, stagers and sorters: E empties a crate into the
-// inventory and turns a gravity stager to its next angle. E on a hopper or a
+// Using hoppers, crates, sorters and the intake: E at the intake with a warden
+// core opens its side entrances (024); otherwise E empties a crate into the
+// inventory. E on a hopper or a
 // sorter opens render's menu, whose choices arrive as deposit (put some of a held
 // item in), withdraw (take some out) and setFilter commands. Deposits and
 // withdraws move one, half (rounded up) or all of the stack they draw from (022).
 
-type Usable = HopperState | CrateState | StagerState | SorterState;
+type Usable = HopperState | CrateState | SorterState;
 
-const usable = (p: PieceState): p is Usable => p.kind === 'hopper' || p.kind === 'crate' || p.kind === 'stager' || p.kind === 'sorter';
+const usable = (p: PieceState): p is Usable => p.kind === 'hopper' || p.kind === 'crate' || p.kind === 'sorter';
 
 /** Gap between the player's feet box and a piece's box, px; 0 when they touch. */
 function gapTo(state: SimState, p: PieceState): number {
@@ -30,7 +31,7 @@ function gapTo(state: SimState, p: PieceState): number {
 const inReach = (state: SimState, p: PieceState): boolean =>
   state.roomId === FOUNDRY_ROOM && gapTo(state, p) <= USE_REACH;
 
-/** The nearest hopper, crate, stager or sorter in reach, by centre distance; the first placed wins ties. */
+/** The nearest hopper, crate or sorter in reach, by centre distance; the first placed wins ties. */
 export function usableInReach(state: SimState): Usable | undefined {
   let best: Usable | undefined;
   let bestDist = Infinity;
@@ -97,7 +98,8 @@ export function setFilter(state: SimState, id: number, itemId: string | null): v
 }
 
 /**
- * Withdraws, deposits, filters, then E on the nearest crate or stager. E on a
+ * Withdraws, deposits, filters, then E: at the intake while it can be opened, that
+ * opens it and nothing else; otherwise E on the nearest crate empties it. E on a
  * hopper or sorter does nothing here; render opens its menu.
  */
 export function stepFoundryUse(state: SimState, cmd: Command): void {
@@ -105,7 +107,10 @@ export function stepFoundryUse(state: SimState, cmd: Command): void {
   if (cmd.setFilter) setFilter(state, cmd.setFilter.id, cmd.setFilter.itemId);
   if (cmd.deposit) deposit(state, cmd.deposit.id, cmd.deposit.itemId, cmd.deposit.amount);
   if (!cmd.interact) return;
+  if (intakeOpenable(state)) {
+    openSideEntrances(state);
+    return;
+  }
   const target = usableInReach(state);
   if (target?.kind === 'crate') takeCrate(state, target);
-  if (target?.kind === 'stager') cycleAngle(state, target.id);
 }

@@ -10,8 +10,8 @@ import { TextLine } from './textLine';
 import { HoverReadout, intakeLines, pieceLines } from './HoverReadout';
 import { nameAt } from './hoverNames';
 
-// What the cursor is over in the world (015): its name, and over a machine, the
-// intake (019) or a stager, the readout of what it holds (006) under the name.
+// What the cursor is over in the world (015): its name, and over a machine or the
+// intake (019, 024), the readout of what it holds (006) under the name.
 export class HoverView {
   private readonly readout: HoverReadout;
   private readonly back: GameObjects.Graphics;
@@ -42,7 +42,7 @@ export class HoverView {
     let top = hit ? hit.y - hit.rise : 0;
     /** Where the name goes when there's no room above: under the readout, or under the thing. */
     let below = hit ? hit.y : 0;
-    const lines = piece ? pieceLines(piece) : hit?.intake ? intakeLines(sim.link.reservoir) : [];
+    const lines = piece ? pieceLines(piece) : hit?.intake ? intakeLines(sim.link.entrances) : [];
     if (piece) {
       const r = pieceRect(piece);
       const spriteTop = topOf(piece.id) ?? r.y;
@@ -50,7 +50,7 @@ export class HoverView {
       top = lines.length > 0 ? panel.top : spriteTop;
       below = lines.length > 0 ? panel.bottom : hit?.y ?? 0;
     } else if (hit?.intake) {
-      // The intake (019): the reservoir's count over its mouth, kept on screen.
+      // The intake (019, 024): each entrance's count over its mouth, kept on screen.
       const panel = this.readout.show(lines, hit.x, hit.y, viewTop);
       top = panel.top;
       below = panel.bottom;

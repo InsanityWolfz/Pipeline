@@ -48,10 +48,10 @@ export const SOUNDS = {
   craft: 'craft',
   place: 'place',
   pickUpPiece: 'pick-up-piece',
-  rotate: 'rotate',
   machineCraft: 'machine-craft',
   refill: 'refill',
   attune: 'attune',
+  intakeOpen: 'intake-open',
   claim: 'claim',
   travel: 'travel',
   menuClick: 'menu-click',
@@ -166,7 +166,6 @@ export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
     ],
   },
   'pick-up-piece': { layers: [{ wave: 'triangle', from: 300, to: 600, dur: 0.1, attack: 0.002, volume: 0.25 }] },
-  rotate: { layers: [{ wave: 'square', from: 900, to: 900, dur: 0.03, attack: 0.001, volume: 0.1, lowpass: 3000 }] },
   'machine-craft': {
     layers: [
       { wave: 'noise', from: 900, to: 300, dur: 0.18, attack: 0.01, volume: 0.25 },
@@ -179,6 +178,15 @@ export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
       { wave: 'sine', from: 220, to: 440, dur: 1.4, attack: 0.6, volume: 0.3 },
       { wave: 'sine', from: 330, to: 660, dur: 1.4, attack: 0.6, volume: 0.2 },
       { wave: 'sine', from: 1320, to: 1760, delay: 0.5, dur: 1, attack: 0.3, volume: 0.1, tremolo: { rate: 12, depth: 0.5 } },
+    ],
+  },
+  // The intake's side caps lift off (024): a brass clank, then a rising two-note ley chime.
+  'intake-open': {
+    layers: [
+      { wave: 'noise', from: 2400, to: 600, dur: 0.09, attack: 0.001, volume: 0.3 },
+      { wave: 'square', from: 220, to: 160, dur: 0.12, attack: 0.001, volume: 0.12, lowpass: 1400 },
+      { wave: 'sine', from: 523, to: 784, delay: 0.1, dur: 0.5, attack: 0.04, volume: 0.22 },
+      { wave: 'sine', from: 784, to: 1175, delay: 0.25, dur: 0.55, attack: 0.04, volume: 0.16, tremolo: { rate: 14, depth: 0.4 } },
     ],
   },
   claim: {

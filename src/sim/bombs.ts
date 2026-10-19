@@ -36,11 +36,13 @@ export function throwBomb(
   feet: { x: number; y: number },
   aim: { x: number; y: number },
   dir: [number, number],
+  across = 0,
 ): void {
   const ammo = lobAmmo(ammoId);
   const reach = Math.min(Math.hypot(aim.x - feet.x, aim.y - feet.y), ammo.maxRange);
-  const toX = feet.x + dir[0] * reach;
-  const toY = feet.y + dir[1] * reach;
+  // Side by side in a volley (024): `across` px to the right of the line, clockwise on screen.
+  const toX = feet.x + dir[0] * reach - dir[1] * across;
+  const toY = feet.y + dir[1] * reach + dir[0] * across;
   const distance = Math.hypot(toX - from.x, toY - from.y);
   const flightTicks = Math.max(1, Math.ceil(distance / (ammo.speed / TICK_RATE)));
   state.bombs.push({

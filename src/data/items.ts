@@ -29,7 +29,7 @@ export const ITEMS: Readonly<Record<string, ItemDef>> = {
   fuse: { id: 'fuse', name: 'Fuse', kind: 'part', icon: SPRITES.itemFuse },
   'ley-shard': { id: 'ley-shard', name: 'Ley shard', kind: 'part', icon: SPRITES.itemLeyShard },
   'unidentified-armor': { id: 'unidentified-armor', name: 'Unidentified armor', kind: 'armor', icon: SPRITES.itemUnidentifiedArmor },
-  /** The Pylon Warden's machine part (009); a gravity stager costs one. */
+  /** The Pylon Warden's machine part (009); E at the foundry intake spends one to open its side entrances (024). */
   'warden-core': { id: 'warden-core', name: 'Warden core', kind: 'part', icon: SPRITES.itemWardenCore },
 };
 

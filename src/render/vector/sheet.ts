@@ -62,7 +62,7 @@ if (sideIdle) section('Wanderer: facing left', [wandererCell('idle', { ...sideId
 const FAMILIES: readonly [title: string, test: (name: string) => boolean][] = [
   ...MACHINE_IDS.map((id): [string, (n: string) => boolean] => [`Machine: ${id} (idle, jammed, working)`, (n) => n.startsWith(`machine-${id}-`)]),
   ['Conduits and sorters', (n) => n.startsWith('conduit-') || n.startsWith('sorter-')],
-  ['Hoppers, crates and the gravity stager', (n) => n.startsWith('hopper-') || n === 'crate' || n.startsWith('gravity-stager')],
+  ['Hoppers and crates', (n) => n.startsWith('hopper-') || n === 'crate'],
   ['Build arrows and status markers', (n) => n.includes('-arrow-') || n.startsWith('status-')],
   ['Items, ammo and emblems', (n) => n.startsWith('item-') || n.startsWith('icon-') || n.startsWith('emblem-')],
   ['Fixtures, the pylon and the foundry', (n) => /^(identification-bench|stash|supply-port|doorway-side|waystone|pylon-|door-rubble|ley-crystal|intake-|floor-|wall|prop-|ruin-)/.test(n)],

@@ -54,6 +54,16 @@ export class RoomViews {
     return { started: this.supply.started, inFlight: this.supply.inFlight };
   }
 
+  /** The brass caps still drawn on the intake (024), for the test hook. */
+  get intakeCaps(): number {
+    return this.intake.capsShown;
+  }
+
+  /** How far the intake's caps are through lifting off (0..1), or null when none are (024). */
+  get intakeLift(): number | null {
+    return this.intake.liftShown;
+  }
+
   /** The minimap's state, for the test hook. */
   get map(): { shown: boolean; markers: MinimapMarker[] } {
     return { shown: this.minimap.shown, markers: this.minimap.markers };

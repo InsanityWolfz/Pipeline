@@ -1,16 +1,13 @@
 import type { GameObjects, Scene } from 'phaser';
 import { animFrames, DEPTHS } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
-import { CONDUIT_TICKS, INTAKE, STAGER_ANGLES } from '../data/foundry';
+import { CONDUIT_TICKS } from '../data/foundry';
 import {
   CONDUIT_ANIMS,
   CONDUIT_CORNERS,
   SORTER_ANIMS,
   SORTER_LOOK,
   CRATE_SPRITE,
-  SPREAD_FAN,
-  STAGER_PULSE,
-  STAGER_SPRITE,
   FACING_ARROWS,
   FOUNDRY_LAYOUT,
   ICON_RISE,
@@ -24,13 +21,11 @@ import {
 import { itemDef } from '../data/items';
 import { pieceDef } from '../data/pieces';
 import { facingVector, opposite } from '../sim/direction';
-import { rotate } from '../sim/spread';
-import { frontTile, pieceRect, sameTile, sorterOut, type FoundryState, type PieceState } from '../sim/pieces';
+import { pieceRect, sorterOut, type FoundryState, type PieceState } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { SQUASH } from '../data/juice';
 import { registerAnim } from './anims';
 import { arrowSpots, conduitLook, pieceIcon, sorterLook } from './foundryLayout';
-import { colorOf } from './color';
 import { TextLine } from './textLine';
 import { addVector, addVectorSprite, textureScale } from './vector/textures';
 
@@ -69,7 +64,6 @@ function firstFrame(p: PieceState): string {
   if (p.kind === 'conduit') return animFrames(conduitLook(p.facing, p.inFrom).anim)[0] ?? '';
   if (p.kind === 'sorter') return animFrames(sorterLook(p.facing, p.mirrored).anim)[0] ?? '';
   if (p.kind === 'machine') return machineLook(p.pieceId, view).idle;
-  if (p.kind === 'stager') return animFrames(STAGER_SPRITE)[0] ?? '';
   return p.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE;
 }
 
@@ -93,14 +87,11 @@ interface Drawn {
 export class FoundryView {
   private readonly scene: Scene;
   private readonly drawn = new Map<number, Drawn>();
-  /** Build mode's spread fans from the stagers facing the intake. */
-  private readonly fan: GameObjects.Graphics;
   /** Pieces just placed, which drop in with a bounce when next drawn (014). */
   private readonly dropping = new Set<number>();
 
   constructor(scene: Scene) {
     this.scene = scene;
-    this.fan = scene.add.graphics().setDepth(DEPTHS.spreadFan);
     for (const views of Object.values(MACHINE_SPRITES)) for (const v of Object.values(views)) registerAnim(scene, v.working);
     for (const anim of [...Object.values(CONDUIT_ANIMS), ...Object.values(CONDUIT_CORNERS), ...Object.values(SORTER_ANIMS)]) registerAnim(scene, anim);
     registerAnim(scene, STATUS_MARKERS.working);
@@ -116,7 +107,6 @@ export class FoundryView {
       this.draw(p, d);
       placeArrows(d.arrows, p, building);
     }
-    this.drawFan(foundry, shown && building);
     for (const [id, d] of this.drawn) {
       if (live.has(id)) continue;
       for (const o of [d.body, d.icon, ...d.arrows, d.marker, d.markerIcon, d.slot]) o?.destroy();
@@ -172,8 +162,6 @@ export class FoundryView {
       d.body.setFlip(look.flipX, look.flipY).play(look.anim.key);
       d.icon.setDepth(FOUNDRY_LAYOUT.itemDepth);
       d.slot = addVector(this.scene, r.x, r.y, pieceIcon(p.pieceId)).setScale(SORTER_LOOK.slotScale / textureScale()).setDepth(FOUNDRY_LAYOUT.conduitDepth + FOUNDRY_LAYOUT.onTopNudge);
-    } else if (p.kind === 'stager') {
-      d.icon.setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge).setVisible(false);
     } else {
       d.body.setFrame(p.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE);
       d.icon.setPosition(r.x, bottom - FOUNDRY_LAYOUT.contentsRise).setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge);
@@ -187,15 +175,6 @@ export class FoundryView {
     if (p.kind === 'conduit') this.drawConduit(p, d);
     else if (p.kind === 'sorter') this.drawSorter(p, d);
     else if (p.kind === 'machine') this.drawMachine(p, d);
-    else if (p.kind === 'stager') {
-      const frame = animFrames(STAGER_SPRITE)[STAGER_ANGLES.indexOf(p.angle)];
-      if (!frame) throw new Error(`No stager frame for angle ${p.angle}`);
-      d.body.setFrame(frame);
-      // A held item makes the ring throb as it passes through.
-      const beat = Math.abs(Math.cos((Math.PI * p.progress) / STAGER_PULSE.ticksPerBeat));
-      const throb = p.item ? STAGER_PULSE.alpha + (1 - STAGER_PULSE.alpha) * beat : 1;
-      d.body.setAlpha(throb);
-    }
     else {
       const items = p.kind === 'hopper' ? (p.item ? { [p.item]: p.count } : {}) : p.contents;
       const first = Object.entries(items).find(([, n]) => n > 0);
@@ -205,19 +184,6 @@ export class FoundryView {
       d.count?.set(total > 0 ? String(total) : '');
       // Beside the icon, clear of the crate's lock.
       d.count?.moveTo(Math.round(d.body.x + FOUNDRY_LAYOUT.countX), Math.round(d.icon.y + FOUNDRY_LAYOUT.countY));
-    }
-  }
-
-  /** One faint line from each stager facing the intake's mouth (019), at its stream's angle from straight up. */
-  private drawFan(foundry: FoundryState, on: boolean): void {
-    this.fan.clear();
-    if (!on) return;
-    this.fan.lineStyle(SPREAD_FAN.width, colorOf(SPREAD_FAN.color), SPREAD_FAN.alpha);
-    for (const p of foundry.pieces) {
-      if (p.kind !== 'stager' || !INTAKE.mouth.some((m) => sameTile(frontTile(p), m))) continue;
-      const r = pieceRect(p);
-      const [dx, dy] = rotate(0, -1, p.angle);
-      this.fan.lineBetween(r.x, r.y, r.x + dx * SPREAD_FAN.length, r.y + dy * SPREAD_FAN.length);
     }
   }
 

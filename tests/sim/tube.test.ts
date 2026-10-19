@@ -39,7 +39,7 @@ describe('firing from the inventory', () => {
     const s = sim();
     expect(s.inventory.arrow).toBe(STARTING_INVENTORY.arrow);
     expect(STARTING_INVENTORY.arrow).toBe(30);
-    expect(summarize(s).tube).toEqual({ ammo: 'arrow', fireCooldown: 0, meleeCooldown: 0, firing: false, fromReservoir: false, shotCount: 0 });
+    expect(summarize(s).tube).toEqual({ ammo: 'arrow', fireCooldown: 0, meleeCooldown: 0, firing: false, fromReservoir: false, shotCount: 0, next: 'carried' });
   });
 
   it('takes each shot straight from the inventory', () => {

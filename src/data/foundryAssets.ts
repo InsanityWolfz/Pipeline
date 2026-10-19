@@ -62,7 +62,6 @@ export const LOGISTICS_ICONS: Readonly<Record<string, string>> = {
   conduit: 'emblem-conduit',
   hopper: 'emblem-hopper',
   crate: 'emblem-crate',
-  'gravity-stager': 'emblem-gravity-stager',
   sorter: 'emblem-sorter',
 };
 
@@ -110,23 +109,17 @@ export const HOPPER_SPRITES: Readonly<Record<PieceView, string>> = {
 
 export const CRATE_SPRITE = 'crate';
 
-/** The foundry intake's pipe (019), vector frames: dormant before the tube attunes, then lit. */
-export const INTAKE_SPRITES = { dormant: 'intake-dormant', attuned: 'intake-attuned' } as const;
-
-/** The gravity stager (008): one frame per angle, `gravity-stager/<i>` for STAGER_ANGLES[i]. */
-export const STAGER_SPRITE = { key: 'gravity-stager', frames: 5, frameRate: 1, loop: false } as const satisfies AnimDef;
-
 /**
- * Build mode draws a faint fan from each stager facing the intake: one line at its
- * angle from straight up, so the spread's shape reads before firing. Px and palette id.
+ * The foundry intake's pipe (019), vector frames: dormant before the tube attunes, then lit; and the brass cap
+ * (024) over a side entrance's inlet until a warden core opens it.
  */
-export const SPREAD_FAN = { length: 56, width: 1, color: 'cyan', alpha: 0.55 } as const;
+export const INTAKE_SPRITES = { dormant: 'intake-dormant', attuned: 'intake-attuned', cap: 'intake-cap' } as const;
 
-/** A stager holding an item pulses its alpha between 1 and `alpha`, one beat every `ticksPerBeat` ticks. */
-export const STAGER_PULSE = { alpha: 0.7, ticksPerBeat: 9 } as const;
-
-/** The hover readout's icon for the intake when the reservoir is empty: the tube emblem. */
+/** The hover readout's icon for an empty intake entrance: the tube emblem. */
 export const INTAKE_EMPTY_ICON = 'emblem-intake';
+
+/** The hover readout's icon for a capped intake entrance (024). */
+export const INTAKE_CAP_ICON = 'emblem-intake-cap';
 
 /**
  * Build-mode arrows on a piece's edges, also on the ghost: cyan pointing out of its
@@ -226,5 +219,7 @@ export const TUTORIAL_LAYOUT = {
   keyText: { y: 2.5 },
   /** A prompt not yet usable (out of reach) shows at this alpha. */
   promptDimAlpha: 0.45,
+  /** The intake's prompt (024): its key cap's bottom centre, px from the pipe's anchor (on the wall right of the pipe), and the text's gap after the cap. */
+  intakePrompt: { x: 66, y: -10, textGap: 4 },
   gateFadeMs: 500,
 } as const;

@@ -218,7 +218,7 @@ describe('sim state', () => {
     // Every event list, empty, and no KO: a key missing from createEvents fails here.
     const lists = ['hits', 'deaths', 'pickups', 'harvests', 'crafts', 'craftFails', 'bursts', 'selects', 'roomChanges'] as const;
     const later = ['places', 'placeFails', 'pickUps', 'deposits', 'crateTakes', 'withdraws', 'attunes', 'refills', 'shots', 'melees', 'banks'] as const;
-    const site = ['sealed', 'claims', 'stashDeposits', 'stashTakes', 'supplies', 'travels', 'identifies', 'equips', 'angles', 'gates', 'objectives'] as const;
+    const site = ['sealed', 'claims', 'stashDeposits', 'stashTakes', 'supplies', 'travels', 'identifies', 'equips', 'intakeOpens', 'gates', 'objectives'] as const;
     expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, 'lost', 'ko', 'tubeTaken'].sort());
     for (const name of [...lists, ...later, ...site]) expect(summary.events[name], name).toEqual([]);
     expect(summary.events.ko).toBe(false);
@@ -229,7 +229,7 @@ describe('sim state', () => {
   it('summarizes rooms, build mode, unlocks and the foundry', () => {
     const s = createSim(8);
     expect(summarize(s)).toMatchObject({ room: 'overworld', rooms: ['foundry', 'overworld'], building: false });
-    expect(summarize(s).unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'gravity-stager']);
+    expect(summarize(s).unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate']);
     expect(summarize(s).enemies.every((e) => e.room === 'overworld')).toBe(true);
     s.roomId = 'foundry';
     s.player.x = 300;

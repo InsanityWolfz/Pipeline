@@ -5,7 +5,7 @@ import { TUTORIAL_START } from '../../src/data/player';
 import { FOUNDRY_ROOM } from '../../src/data/rooms';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { WORLD } from '../../src/sim/world';
-import { RESERVOIR_CAP } from '../../src/data/tube';
+import { ENTRANCE_CAP, INTAKE, INTAKE_REACH } from '../../src/data/foundry';
 import { currentObjective } from '../../src/sim/objectives';
 import { createSim, type SimState } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
@@ -127,15 +127,17 @@ describe('gates', () => {
     runUntil(s, (x) => x.player.y < tileCentre(gap).y - 32, 60, { moveY: -1 });
   });
 
-  it('the shrine opens the first time the reservoir fills', () => {
+  it('the shrine opens the first time an entrance fills', () => {
     const s = tutorial();
-    s.link.reservoir = { itemId: 'arrow', count: RESERVOIR_CAP - 1 };
+    const middle = s.link.entrances[1];
+    if (!middle) throw new Error('no middle entrance');
+    Object.assign(middle, { ammoId: 'arrow', count: ENTRANCE_CAP - 1 });
     run(s, 1);
     expect(s.gates.shrine).toBe(false);
-    s.link.reservoir.count = RESERVOIR_CAP;
+    middle.count = ENTRANCE_CAP;
     run(s, 1);
     expect([s.firstLineFull, s.gates.shrine]).toEqual([true, true]);
-    s.link.reservoir.count = 0;
+    middle.count = 0;
     run(s, 1);
     expect(s.gates.shrine).toBe(true);
     die(s);
@@ -175,6 +177,30 @@ describe('objectives', () => {
     s.gathered.push('fiber');
     run(s, 1);
     expect(s.objectives[1]).toBe(true);
+  });
+
+  it('opening the side entrances, then feeding two of them, complete the spread goals', () => {
+    const s = createSim(SEED, { start: PLAYTEST_START });
+    const open = OBJECTIVES.findIndex((o) => o.check.kind === 'sidesOpen');
+    const fed = OBJECTIVES.findIndex((o) => o.check.kind === 'volley');
+    expect(OBJECTIVES[open]?.text).toBe("Open the intake's side entrances (E with a warden core)");
+    expect(OBJECTIVES[fed]?.text).toBe('Feed two entrances to fire a spread');
+    expect(fed).toBe(open + 1);
+    s.roomId = FOUNDRY_ROOM;
+    const under = INTAKE.entrances[1] ?? { tx: 12, ty: 0 };
+    s.player.x = (under.tx + 0.5) * 32;
+    s.player.y = (under.ty + 1.5) * 32;
+    expect(INTAKE_REACH).toBeGreaterThan(0);
+    run(s, 1);
+    expect([s.objectives[open], s.objectives[fed]]).toEqual([false, false]);
+    run(s, 1, { interact: true });
+    expect(s.objectives[open]).toBe(true);
+    Object.assign(s.link.entrances[1] ?? {}, { ammoId: 'ley-bolt', count: 4 });
+    run(s, 1);
+    expect(s.objectives[fed]).toBe(false);
+    Object.assign(s.link.entrances[2] ?? {}, { ammoId: 'arrow', count: 1 });
+    run(s, 1);
+    expect(s.objectives[fed]).toBe(true);
   });
 
   it('the last completes after its time away with a line running, and ends the prototype', () => {
