@@ -111,3 +111,9 @@ Oct 19, 2026 · Shaun's answers, which follow on from docs/brainstorm/2026-10-19
 - **Gear slots:** 4: helm, body, boots and trinket. The body piece carries heavy or light.
 - **Affixes:** max HP and armor, field regen, move speed and roll. Ley range and refill were not chosen.
 - **Rarity:** Common has 1 affix, Fine 2, Rare 3. Rare Relics each bend one rule. Identification at the bench rolls them.
+
+## Round 10
+- **XP sources:** kills (scaled by danger ring, more for champions), bosses, claiming pylons and finding landmarks for the first time. Never from the factory.
+- **Per level:** 1 talent point.
+- **Tree:** 15–20 nodes with 3 keystones, one small constellation from a centre start. Lanes are Arrows, Bombs, Ley, Survival and Tube. It grows with each region.
+- **Respec:** free, at the foundry.
