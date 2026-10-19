@@ -1,14 +1,17 @@
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { count, type Inventory } from './inventory';
 import type { SimState } from './state';
+import { revealBanked } from './schematics';
 
 // Banking (011): what a death keeps. Walking into the foundry, by any way in,
-// and a pylon deposit set the banked snapshot to what the player holds.
+// and a pylon deposit set the banked snapshot to what the player holds. Banking a
+// schematic reveals its node (033).
 
-/** Banks everything the player carries right now, recording it. */
+/** Banks everything the player carries right now, recording it, and reveals the nodes of carried schematics. */
 export function bank(state: SimState): void {
   state.banked = { ...state.inventory };
   state.events.banks.push({ ...state.inventory });
+  revealBanked(state);
 }
 
 /** Banks on arriving in the foundry; called by doors and travel. */

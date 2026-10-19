@@ -1,3 +1,4 @@
+import { ANY_SCHEMATIC } from '../../src/data/drops';
 import { describe, expect, it } from 'vitest';
 import { ITEMS } from '../../src/data/items';
 import { CACHE_DROPS, LANDMARKS, landmarkDef } from '../../src/data/landmarks';
@@ -57,7 +58,7 @@ describe('the Ruined Cache', () => {
     expect(summarize(s).landmarks.find((l) => l.id === CACHE.id)?.opened).toBe(false);
   });
 
-  it('opens after a 60-tick hold of E once they are dead, scattering 3–5 of the region\'s raws below it', () => {
+  it('opens after a 60-tick hold of E once they are dead, scattering 3–5 of the region\'s raws (and 033\'s rare finds) below it', () => {
     const s = atCache();
     s.inventory = {};
     run(s, 1, { interact: true });
@@ -68,7 +69,9 @@ describe('the Ruined Cache', () => {
     run(s, 1);
     const c = tileCentre(AT);
     expect(s.events.cacheOpens).toEqual([{ id: CACHE.id, x: c.x, y: c.y }]);
-    const items = [...s.groundItems.map((g) => g.itemId), ...Object.entries(s.inventory).flatMap(([id, n]) => Array<string>(n).fill(id))];
+    const all = [...s.groundItems.map((g) => g.itemId), ...Object.entries(s.inventory).flatMap(([id, n]) => Array<string>(n).fill(id))];
+    // 033's rare entries: an ancient gear at 50%, a schematic at 20%.
+    const items = all.filter((id) => id !== 'ancient-gear' && !id.startsWith('schematic-'));
     expect(items.length).toBeGreaterThanOrEqual(3);
     expect(items.length).toBeLessThanOrEqual(5);
     for (const id of items) expect(RAWS).toContain(id);
@@ -156,11 +159,11 @@ describe('the Ruined Cache', () => {
     expect(summarize(s).landmarks.find((l) => l.id === CACHE.id)?.opened).toBe(false);
   });
 
-  it('names only real items in its table (the rare entries arrive with 033)', () => {
+  it('names only real items in its table, or 033\'s schematic roll', () => {
     for (const p of CACHE_DROPS.picks ?? []) {
       for (const id of p.items) expect(ITEMS[id]?.kind, id).toBe('raw');
       expect([p.min, p.max]).toEqual([3, 5]);
     }
-    for (const r of CACHE_DROPS.rare ?? []) expect(ITEMS[r.itemId], r.itemId).toBeDefined();
+    for (const r of CACHE_DROPS.rare ?? []) expect(ITEMS[r.itemId] !== undefined || r.itemId === ANY_SCHEMATIC, r.itemId).toBe(true);
   });
 });

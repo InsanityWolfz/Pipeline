@@ -24,7 +24,8 @@ describe('drop rolls', () => {
   });
 
   it('adds one wood, stone or fiber about half the time', () => {
-    const extras = rolls.map((items) => items.filter((i) => i !== 'husk-resin'));
+    // 033's ancient gear is a rare entry of its own.
+    const extras = rolls.map((items) => items.filter((i) => i !== 'husk-resin' && i !== 'ancient-gear'));
     for (const e of extras) {
       expect(e.length).toBeLessThanOrEqual(1);
       for (const id of e) expect(EXTRAS).toContain(id);

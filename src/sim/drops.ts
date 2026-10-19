@@ -11,6 +11,9 @@ import { rollArmorDrop } from './armor';
 import { standingRects } from './fixtures';
 import { nodeRects } from './nodes';
 import { roomById, type SimState } from './state';
+import { ANY_SCHEMATIC } from '../data/drops';
+import { ITEMS } from '../data/items';
+import { pickSchematic, rollSchematic } from './schematics';
 
 // Items dropped on the ground, and picking them up by walking over them.
 
@@ -44,9 +47,9 @@ export function rollDrops(table: DropTable, rng: RngState, rare = true): string[
   return items;
 }
 
-/** A table's rare entries (032), each rolled once at its chance. */
-export function rollRare(table: DropTable, rng: RngState): string[] {
-  return (table.rare ?? []).flatMap(({ itemId, chance }) => (nextFloat(rng) < chance ? [itemId] : []));
+/** A table's rare entries (032), each rolled once at its chance, a champion's at its champion chance (033). */
+export function rollRare(table: DropTable, rng: RngState, champion = false): string[] {
+  return (table.rare ?? []).flatMap(({ itemId, chance, championChance }) => (nextFloat(rng) < (champion ? (championChance ?? chance) : chance) ? [itemId] : []));
 }
 
 /** A point, as a box, for overlap tests: strictly inside a rect overlaps it. */
@@ -77,12 +80,16 @@ export function scatterPoint(
 
 /**
  * Rolls an enemy's drops and scatters them on the ground around (x, y) in its room. A champion (032) rolls its table
- * 2–3 times and drops exactly its guaranteed armor instead of the usual chance.
+ * 2–3 times and drops exactly its guaranteed armor instead of the usual chance. Then a separate schematic roll (033).
  */
 export function spawnDrops(state: SimState, def: EnemyDef, x: number, y: number, roomId: string, champion = false): void {
   const rolls = champion ? championDropRolls(state.rng) : 1;
-  // A champion's rare entries roll once, not once per drop roll (032).
-  const items = [...Array.from({ length: rolls }, () => rollDrops(def.drops, state.rng, false)).flat(), ...rollRare(def.drops, state.rng)];
+  // A champion's rare entries roll once, at its own chance, not once per drop roll (032, 033).
+  const items = [
+    ...Array.from({ length: rolls }, () => rollDrops(def.drops, state.rng, false)).flat(),
+    ...rollRare(def.drops, state.rng, champion),
+    ...rollSchematic(state.rng, champion),
+  ];
   if (champion) {
     // Its guaranteed piece is the first Husk's too, if it's that one (one piece, not two).
     if (def.id === FIRST_ARMOR_ENEMY) state.firstHuskDropped = true;
@@ -91,13 +98,19 @@ export function spawnDrops(state: SimState, def: EnemyDef, x: number, y: number,
   scatterItems(state, items, roomId, x, y);
 }
 
-/** Scatters items on the ground round (x, y) in a room, never inside something solid the player can't walk onto. */
+/**
+ * Scatters items on the ground round (x, y) in a room, never inside something solid the player can't walk onto. Each
+ * ANY_SCHEMATIC becomes one schematic still lost there (033), or nothing when none is; each schematic that lands is recorded.
+ */
 export function scatterItems(state: SimState, items: readonly string[], roomId: string, x: number, y: number): void {
   const room = roomById(roomId);
   const rects = [...nodeRects(state.nodes, roomId), ...standingRects(room)];
-  for (const itemId of items) {
+  for (const item of items) {
+    const itemId = item === ANY_SCHEMATIC ? pickSchematic(state, roomId) : item;
+    if (itemId === null) continue;
     const at = scatterPoint(room, state.rng, x, y, rects);
     layItem(state, itemId, roomId, at.x, at.y);
+    if (ITEMS[itemId]?.kind === 'schematic') state.events.schematicDrops.push({ itemId, x: at.x, y: at.y });
   }
 }
 
