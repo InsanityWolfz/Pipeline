@@ -17,12 +17,13 @@ import { Banner } from './Banner';
 import { NO_RESEARCH_SHOWN, ResearchView } from './ResearchView';
 import { NO_SCHEMATICS_SHOWN, SchematicView } from './SchematicView';
 import { HollowsView, NO_HOLLOWS_SHOWN } from './HollowsView';
+import { NO_RELICS_SHOWN, RelicView } from './RelicView';
 
 /** What the room views report to the test hook's `ui()`. */
-export type RoomUiState = Pick<UiState, 'minimap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows'>;
+export type RoomUiState = Pick<UiState, 'minimap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows' | 'relics'>;
 
 /** The room views' part of `ui()` before the scene has built them. */
-export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [] }, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN };
+export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [] }, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN, relics: NO_RELICS_SHOWN };
 
 // The ground on screen: a tiled room (the foundry) or the overworld's terrain
 // with its landmarks (017), plus the corner minimap while outside, and the
@@ -30,7 +31,7 @@ export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [] },
 // intake built into the foundry's north wall (019), the supply ports' faces and plates (028), the Ley
 // Springs with the signs of healing (030), the landmarks' dressing and discovery banner (032), and the
 // foundry's lost parts as diagrams and the schematics' light pillars and banners (033), and Stonefall Hollows'
-// barrier, altar and the Bulwark's bombs (034).
+// barrier, altar and the Bulwark's bombs (034), and the relics' signs on the player and at the bench (036).
 export class RoomViews {
   private readonly scene: Scene;
   private readonly tiles: RoomView;
@@ -45,6 +46,7 @@ export class RoomViews {
   private readonly research: ResearchView;
   private readonly schematics: SchematicView;
   private readonly hollows: HollowsView;
+  private readonly relics: RelicView;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -60,6 +62,7 @@ export class RoomViews {
     this.research = new ResearchView(scene);
     this.schematics = new SchematicView(scene, this.banner);
     this.hollows = new HollowsView(scene);
+    this.relics = new RelicView(scene);
   }
 
   /** Draws a room's ground and fits the camera to it. */
@@ -86,6 +89,7 @@ export class RoomViews {
     this.research.update(sim, events, shown, tweenMs);
     this.schematics.update(sim, events, shown, tweenMs);
     this.hollows.update(sim, events, shown, tweenMs);
+    this.relics.update(sim, events, shown, tweenMs);
     this.banner.update(tweenMs);
   }
 
@@ -107,6 +111,7 @@ export class RoomViews {
       research: this.research.shown,
       schematics: this.schematics.shown,
       hollows: this.hollows.shown,
+      relics: this.relics.shown,
     };
   }
 }

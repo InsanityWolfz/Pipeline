@@ -15,6 +15,9 @@ import type { CraftMenuState } from './CraftMenuView';
 import type { PromptState } from './PromptView';
 import type { PortShown } from './PortView';
 import type { StagePanelState } from './StagePanel';
+import type { GearPanelState } from './GearPanel';
+import type { GearPiece } from '../data/gear';
+import type { RelicsShown } from './RelicView';
 import type { HealingShown } from './HealingView';
 import { claim } from '../sim/claims';
 import { createEnemy } from '../sim/enemies';
@@ -68,6 +71,8 @@ export interface GameTestHook {
    * in the `?start=hollows` sandbox), a champion named with the seeded RNG if `champion`.
    */
   spawnEnemy(enemyId: string, x: number, y: number, champion?: boolean): SimSummary;
+  /** Gives the player an identified piece, unworn, under the next id (036: a relic for the screenshots, without the roll). */
+  addGear(piece: Omit<GearPiece, 'id'>): SimSummary;
 }
 
 /**
@@ -166,6 +171,10 @@ export interface UiState {
   researchList: ResearchListState;
   /** 034: the Hollows' barrier, the altar's state, the summon's circle and the Bulwark's bombs, as drawn. */
   hollows: HollowsShown;
+  /** 036: the bench's gear panel while open (its cells, tabs, rows with ids and boxes, page and totals), else null. */
+  gearPanel: GearPanelState | null;
+  /** 036: the relics' effects as drawn: the Wardstone's shimmer (its alpha, 0 when hidden), ward breaks, ember flashes and bench flares live. */
+  relics: RelicsShown;
 }
 
 declare global {
@@ -269,6 +278,10 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
       const e = createEnemy(sim.nextEnemyId++, enemyId, { x, y }, sim.roomId, 'dev');
       if (champion) makeChampion(sim.rng, e);
       sim.enemies.push(e);
+      return summarize(sim);
+    },
+    addGear: (piece) => {
+      sim.gear.push({ ...structuredClone(piece), id: sim.nextGearId++ });
       return summarize(sim);
     },
     passable: () => {

@@ -39,7 +39,7 @@ const box = (line: TextLine): TextBox => ({ text: line.obj.text, ...line.at, w: 
 // The identification bench's Stages panel (029), in the crafting menu's style (026):
 // one row per stage, its inputs (held/needed, with names) → the tagged rounds it
 // gives (+4, held, name), and the stage's name in the row's free slot. Shown beside
-// the bench's own rows once the shrine is claimed; a row is dimmed while its inputs
+// the bench's gear panel (036) once the shrine is claimed; a row is dimmed while its inputs
 // aren't carried. Clicking an affordable row hand-applies the stage (through SiteMenus).
 export class StagePanel {
   private readonly scene: Scene;
@@ -47,7 +47,7 @@ export class StagePanel {
   private readonly header: TextLine;
   private readonly rows: Row[] = [];
   private readonly hover: RowHover;
-  private benchRows = -1;
+  private benchWidth = -1;
   private shown = false;
   private inventory: Inventory = {};
 
@@ -82,7 +82,7 @@ export class StagePanel {
 
   /** What it shows, for the test hook. */
   get state(): StagePanelState {
-    const layout = stagePanelLayout(Math.max(0, this.benchRows));
+    const layout = stagePanelLayout(Math.max(0, this.benchWidth));
     return {
       shown: this.shown,
       header: this.shown ? box(this.header) : null,
@@ -104,35 +104,35 @@ export class StagePanel {
   /** The stage row under a screen point, if shown and affordable. */
   stageAt(x: number, y: number): string | null {
     if (!this.shown) return null;
-    const r = stagePanelLayout(this.benchRows).rows.find((row) => inRect(row, x, y));
+    const r = stagePanelLayout(this.benchWidth).rows.find((row) => inRect(row, x, y));
     return r && this.affordable(r.stageId) ? r.stageId : null;
   }
 
   /** True if a screen point is on the panel. */
   overUi(x: number, y: number): boolean {
-    return this.shown && inRect(stagePanelLayout(this.benchRows).panel, x, y);
+    return this.shown && inRect(stagePanelLayout(this.benchWidth).panel, x, y);
   }
 
   /** The cursor is at a screen point: its row lights, if it can be used. */
   pointAt(x: number, y: number): void {
-    const i = this.shown ? stagePanelLayout(this.benchRows).rows.findIndex((r) => inRect(r, x, y)) : -1;
+    const i = this.shown ? stagePanelLayout(this.benchWidth).rows.findIndex((r) => inRect(r, x, y)) : -1;
     this.hover.set(i, i >= 0 && this.affordable(this.rows[i]?.stageId ?? ''));
   }
 
   /** Flashes the row under a screen point as it's pressed. */
   flashAt(x: number, y: number): void {
-    const r = this.shown ? stagePanelLayout(this.benchRows).rows.find((row) => inRect(row, x, y)) : undefined;
+    const r = this.shown ? stagePanelLayout(this.benchWidth).rows.find((row) => inRect(row, x, y)) : undefined;
     if (r) flashRow(this.scene, r.x, r.y, ROW_FRAMES.press);
   }
 
-  /** Shows the panel beside `benchRows` rows of the bench's (or hides it, for null), with the counts from `inventory`. */
-  show(benchRows: number | null, inventory: Inventory): void {
+  /** Shows the panel beside the bench's gear panel, `benchWidth` px wide (036), or hides it for null, with the counts from `inventory`. */
+  show(benchWidth: number | null, inventory: Inventory): void {
     this.inventory = inventory;
-    if (benchRows === null) {
+    if (benchWidth === null) {
       this.setShown(false);
       return;
     }
-    if (!this.shown || benchRows !== this.benchRows) this.place(benchRows);
+    if (!this.shown || benchWidth !== this.benchWidth) this.place(benchWidth);
     this.setShown(true);
     this.refresh();
   }
@@ -147,15 +147,15 @@ export class StagePanel {
     }
     if (!shown) {
       this.hover.set(-1);
-      this.benchRows = -1;
+      this.benchWidth = -1;
     }
   }
 
-  /** Lays the panel out beside `benchRows` bench rows, as the crafting menu lays out a row (026). */
-  private place(benchRows: number): void {
+  /** Lays the panel out beside a bench panel `benchWidth` px wide, as the crafting menu lays out a row (026). */
+  private place(benchWidth: number): void {
     const L = CRAFT_MENU_LAYOUT;
-    this.benchRows = benchRows;
-    const layout = stagePanelLayout(benchRows);
+    this.benchWidth = benchWidth;
+    const layout = stagePanelLayout(benchWidth);
     const { panel } = layout;
     this.tablet.clear();
     drawTablet(this.tablet, panel.x, panel.y, panel.w, panel.h);

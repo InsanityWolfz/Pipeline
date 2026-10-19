@@ -95,6 +95,10 @@ export class FeelView {
     }
     for (const t of ev.thaws) j.burst('thawShards', t.x, t.y);
     if (ev.starBursts.length > 0) s.play(SOUNDS.starBurst, SOUND_LEVELS.cue);
+    // The relics (036): a relic identified at the bench, the ward breaking on a block, Last Ember's save.
+    if (ev.identifies.some((piece) => piece.relic !== null)) s.play(SOUNDS.relicIdentify, SOUND_LEVELS.cue);
+    if (ev.wardBlocks.length > 0) s.play(SOUNDS.wardBreak);
+    if (ev.emberSaves.length > 0) s.play(SOUNDS.emberSave);
     // Healing starting in a safe spot (030) chimes once; nothing while it carries on, or when it only changes source.
     if (ev.heals.some((h) => h.kind === 'start') && !ev.heals.some((h) => h.kind === 'stop')) s.play(SOUNDS.healStart, SOUND_LEVELS.quiet);
     // A stage hand-applied at the bench (029) sounds like a hand craft (the crafting menu plays its own).

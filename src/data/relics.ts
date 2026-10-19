@@ -1,4 +1,6 @@
 import type { GearSlot, GearWeight } from './gear';
+import { GEAR_SPRITES } from './gearAssets';
+import { GEAR_SOUNDS } from './gearSounds';
 
 // Relics (036): their own tier above Rare, each one rule (a flag the sim reads) plus
 // RELIC_AFFIXES rolled affixes. A short list on purpose (design pillar 4). No relic
@@ -16,6 +18,9 @@ interface RelicBase {
   weight: GearWeight | null;
   /** Its rule in one line, for the bench. */
   text: string;
+  /** Its icon (GEAR_SPRITES), and the sound its rule plays when it acts (GEAR_SOUNDS), or null for none. */
+  icon: string;
+  sound: string | null;
 }
 
 export interface RollbreakerDef extends RelicBase {
@@ -53,6 +58,8 @@ export const ROLLBREAKER: RollbreakerDef = {
   weight: null,
   rule: 'stagger',
   text: 'Rolling through an enemy staggers it',
+  icon: GEAR_SPRITES.relicRollbreaker,
+  sound: null,
   staggerTicks: 40,
 };
 
@@ -63,6 +70,8 @@ export const WARDSTONE: WardstoneDef = {
   weight: null,
   rule: 'ward',
   text: 'After 6 s unhit, blocks the next hit',
+  icon: GEAR_SPRITES.relicWardstone,
+  sound: GEAR_SOUNDS.wardBreak,
   wardTicks: 360,
 };
 
@@ -73,6 +82,8 @@ export const FEATHERPLATE: FeatherplateDef = {
   weight: 'heavy',
   rule: 'feather',
   text: 'Heavy plate without the slow; a shorter roll',
+  icon: GEAR_SPRITES.relicFeatherplate,
+  sound: null,
   walkScale: 1,
   rollScale: 0.75,
 };
@@ -84,6 +95,8 @@ export const LAST_EMBER: LastEmberDef = {
   weight: null,
   rule: 'ember',
   text: 'Once a trip, a killing hit leaves you on 1 HP',
+  icon: GEAR_SPRITES.relicEmber,
+  sound: GEAR_SOUNDS.emberSave,
   saveInvulnTicks: 60,
 };
 

@@ -172,7 +172,8 @@ describe('vector frame registration', () => {
     const research = await import('../../src/data/researchAssets');
     const hollows = await import('../../src/data/hollowsAssets');
     const hollowsEnemies = await import('../../src/data/hollowsEnemyAssets');
-    walk({ ...assets, ...foundry, ...room, ...props, ...stages, ...springs, ...landmarks, ...research, ...hollows, ...hollowsEnemies });
+    const gear = await import('../../src/data/gearAssets');
+    walk({ ...assets, ...foundry, ...room, ...props, ...stages, ...springs, ...landmarks, ...research, ...hollows, ...hollowsEnemies, ...gear });
     for (const f of vectorFrames()) expect(registered, f.name).toContain(f.name);
   });
 });

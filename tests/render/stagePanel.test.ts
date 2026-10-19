@@ -1,14 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
+import { GEAR_PANEL } from '../../src/data/gearAssets';
 import { STAGES } from '../../src/data/stages';
-import { menuRows } from '../../src/render/foundryLayout';
 import { stagePanelLayout } from '../../src/render/stagePanelLayout';
+import { gearPanelLayout } from '../../src/render/gearPanelLayout';
 
-// The bench's Stages panel (029): beside the bench's own rows, on screen, never over them.
+// The bench's Stages panel (029): beside the bench's gear panel (036), on screen, never over it.
 
 describe('the Stages panel layout', () => {
   it('has a row per stage, inside its panel, and the panel on screen', () => {
-    for (const bench of [0, 1, 4, 12]) {
+    for (const bench of [0, GEAR_PANEL.w]) {
       const { panel, rows } = stagePanelLayout(bench);
       expect(rows.map((r) => r.stageId)).toEqual(Object.keys(STAGES));
       expect(panel.x).toBeGreaterThanOrEqual(0);
@@ -23,14 +24,13 @@ describe('the Stages panel layout', () => {
     }
   });
 
-  it('is centred alone, and moves the bench rows left of it so they never overlap', () => {
+  it('is centred alone, and sits right of the gear panel with the pair centred, never over it', () => {
     const alone = stagePanelLayout(0);
-    expect(alone.benchShift).toBe(0);
     expect(alone.panel.x + alone.panel.w / 2).toBeCloseTo(VIEW_WIDTH / 2, 0);
-    for (const bench of [1, 3, 12]) {
-      const { panel, benchShift } = stagePanelLayout(bench);
-      for (const r of menuRows(bench)) expect(r.x + benchShift + r.w).toBeLessThan(panel.x);
-      expect(Math.min(...menuRows(bench).map((r) => r.x + benchShift))).toBeGreaterThanOrEqual(0);
-    }
+    const { panel } = stagePanelLayout(GEAR_PANEL.w);
+    const gear = gearPanelLayout(true, [], 0).panel;
+    expect(gear.x + gear.w).toBeLessThan(panel.x);
+    expect(gear.x).toBeGreaterThanOrEqual(0);
+    expect(gear.x - 0).toBeCloseTo(VIEW_WIDTH - (panel.x + panel.w), 0);
   });
 });
