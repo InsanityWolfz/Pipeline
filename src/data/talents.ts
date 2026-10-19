@@ -6,6 +6,8 @@
 // playtest; Shaun edits it after. Ids are the spec's in lower case (kebab-case data ids).
 
 import type { DamageType } from './ammo';
+import type { ContentLine, Scope, StatLine } from './lines';
+import type { StatId } from './statDefs';
 
 export type TalentLane = 'centre' | 'arrows' | 'bombs' | 'ley' | 'survival' | 'tube';
 
@@ -48,6 +50,8 @@ export interface TalentDef {
   effect: TalentEffect;
   /** Its effect in a line, for the panel's hover text. */
   text: string;
+  /** What it does (039), each line naming one scope; rulesText renders them. */
+  lines: readonly ContentLine[];
 }
 
 /** The centre start's id: always taken, costs nothing. */
@@ -82,7 +86,65 @@ const node = (id: string, name: string, lane: TalentLane, pos: { x: number; y: n
   links,
   effect,
   text,
+  lines: LINES[id] ?? [],
 });
+
+const add = (scope: Scope, stat: StatId, value: number): StatLine => ({ scope, stat, op: 'add', value });
+const flat = (scope: Scope, stat: StatId, value: number): StatLine => ({ scope, stat, op: 'flat', value });
+
+/** The keystones' damage type (only physical and cold exist in Milestone 1). */
+const PHYSICAL: DamageType = 'physical';
+
+/**
+ * Blastfletch: a player bomb's blast leaves a Pool over its area for `poolTicks`; an arrow flying through it gains
+ * `damageScale` damage and bursts in a `burstRadius` px blast of `damageType` on the next enemy it hits, which spends the charge.
+ */
+export const BLASTFLETCH = { poolTicks: 20, damageScale: 1.5, burstRadius: 24, damageType: PHYSICAL } as const;
+
+/**
+ * Shatterpoint: a ley bolt that hits a frozen enemy ends the freeze for `damageScale` damage, and `shards` Shards
+ * burst from it for `shardScale` of the bolt's damage each, of `damageType` (physical: cold shards would chill their
+ * way to more freezes, a chain the spec never asked for), flying `range` px at `speed` px/s (as Shards do).
+ */
+export const SHATTERPOINT = { damageScale: 2, shards: 4, shardScale: 0.5, range: 64, speed: 360, projectile: 'shard', damageType: PHYSICAL } as const;
+
+/** Overpressure: holding fire ramps the fire rate up to +`maxBonus` over `rampTicks`; releasing fire resets it. */
+export const OVERPRESSURE = { rampTicks: 120, maxBonus: 0.25 } as const;
+
+/** Each node's lines (039): a stat line per stat it changes, a rule line per keystone rule. */
+const LINES: Readonly<Record<string, readonly ContentLine[]>> = {
+  a1: [add('arrow', 'damage', 0.1)],
+  a2: [add('arrow', 'fire-rate', 0.1)],
+  // Rimecraft: a Freeze one Chill sooner, and half a second longer (a boss's shorter one too).
+  a3: [flat('chill', 'stacks-to-freeze', -1), flat('freeze', 'duration', 30)],
+  b1: [add('bomb', 'damage', 0.1)],
+  b2: [add('burst', 'radius', 0.15)],
+  b3: [add('lob', 'flight-time', -0.25)],
+  l1: [add('ley', 'damage', 0.1)],
+  l2: [add('homing', 'turn-rate', 0.3)],
+  l3: [flat('split', 'shards', 2)],
+  t1: [add('all-ammo', 'fire-rate', 0.08)],
+  // 039.10: points of walk speed while firing, 70% to 80%.
+  t2: [add('you', 'firing-walk', 0.1)],
+  t3: [add('all-ammo', 'damage', 0.06)],
+  s1: [flat('you', 'max-health', 15)],
+  s2: [flat('you', 'field-regen', 0.5)],
+  s3: [flat('you', 'armor', 3)],
+  s4: [add('you', 'move-speed', 0.05)],
+  k1: [
+    { scope: 'bomb', rule: 'pool-on-burst', trigger: 'burst', creates: 'pool', params: { duration: BLASTFLETCH.poolTicks } },
+    { scope: 'arrow', rule: 'pool-strike', trigger: 'pool', creates: 'burst', params: { damage: BLASTFLETCH.damageScale, radius: BLASTFLETCH.burstRadius } },
+  ],
+  k2: [
+    {
+      scope: 'ley',
+      rule: 'shatter',
+      trigger: 'freeze',
+      params: { damage: SHATTERPOINT.damageScale, count: SHATTERPOINT.shards, share: SHATTERPOINT.shardScale, range: SHATTERPOINT.range, speed: SHATTERPOINT.speed },
+    },
+  ],
+  k3: [{ scope: 'all-ammo', rule: 'ramp', params: { rate: 1 + OVERPRESSURE.maxBonus, ramp: OVERPRESSURE.rampTicks } }],
+};
 
 export const TALENT_LIST: readonly TalentDef[] = [
   node('start', 'Attunement', 'centre', { x: 0, y: 0 }, ['a1', 'b1', 'l1', 't1', 's1'], { kind: 'none' }, 'The centre: always yours.', 'start'),
@@ -115,22 +177,3 @@ export function talentDef(id: string): TalentDef {
   if (!def) throw new Error(`Unknown talent '${id}'`);
   return def;
 }
-
-/** The keystones' damage type (only physical and cold exist in Milestone 1). */
-const PHYSICAL: DamageType = 'physical';
-
-/**
- * Blastfletch: a player bomb's blast leaves a Pool over its area for `poolTicks`; an arrow flying through it gains
- * `damageScale` damage and bursts in a `burstRadius` px blast of `damageType` on the next enemy it hits, which spends the charge.
- */
-export const BLASTFLETCH = { poolTicks: 20, damageScale: 1.5, burstRadius: 24, damageType: PHYSICAL } as const;
-
-/**
- * Shatterpoint: a ley bolt that hits a frozen enemy ends the freeze for `damageScale` damage, and `shards` Shards
- * burst from it for `shardScale` of the bolt's damage each, of `damageType` (physical: cold shards would chill their
- * way to more freezes, a chain the spec never asked for), flying `range` px at `speed` px/s (as Shards do).
- */
-export const SHATTERPOINT = { damageScale: 2, shards: 4, shardScale: 0.5, range: 64, speed: 360, projectile: 'shard', damageType: PHYSICAL } as const;
-
-/** Overpressure: holding fire ramps the fire rate up to +`maxBonus` over `rampTicks`; releasing fire resets it. */
-export const OVERPRESSURE = { rampTicks: 120, maxBonus: 0.25 } as const;

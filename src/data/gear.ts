@@ -1,3 +1,6 @@
+import type { StatLine, StatOp } from './lines';
+import type { StatId } from './statDefs';
+
 // Gear (036, replacing 010's single armor piece): four slots, a body piece light or
 // heavy, rarity by affix count, defensive and utility affixes only, and relics as their
 // own tier. Every number is a starting value from spec 036; tune in playtest.
@@ -82,14 +85,20 @@ export const RARITIES: Readonly<Record<Rarity, { affixes: number; chance: number
  * distance px). On the bench it reads `sign`, the value times `shownScale` to `decimals` places, `unit`, a space and
  * `label`: "+12 max HP", "+0.5 regen/s", "+4% speed", "−4 roll cooldown".
  */
-export const AFFIXES: Readonly<Record<AffixKind, { min: number; max: number; step: number; label: string; sign: '+' | '−'; shownScale: number; decimals: number; unit: string }>> = {
-  'max-health': { min: 8, max: 20, step: 1, label: 'max HP', sign: '+', shownScale: 1, decimals: 0, unit: '' },
-  armor: { min: 1, max: 3, step: 1, label: 'armor', sign: '+', shownScale: 1, decimals: 0, unit: '' },
-  regen: { min: 3, max: 8, step: 0.1, label: 'regen/s', sign: '+', shownScale: 1, decimals: 1, unit: '' },
-  'move-speed': { min: 3, max: 6, step: 0.01, label: 'speed', sign: '+', shownScale: 100, decimals: 0, unit: '%' },
-  'roll-cooldown': { min: 3, max: 6, step: 1, label: 'roll cooldown', sign: '−', shownScale: 1, decimals: 0, unit: '' },
-  'roll-distance': { min: 8, max: 16, step: 1, label: 'roll distance', sign: '+', shownScale: 1, decimals: 0, unit: '' },
+export const AFFIXES: Readonly<Record<AffixKind, { stat: StatId; op: StatOp; min: number; max: number; step: number; label: string; sign: '+' | '−'; shownScale: number; decimals: number; unit: string }>> = {
+  'max-health': { stat: 'max-health', op: 'flat', min: 8, max: 20, step: 1, label: 'max HP', sign: '+', shownScale: 1, decimals: 0, unit: '' },
+  armor: { stat: 'armor', op: 'flat', min: 1, max: 3, step: 1, label: 'armor', sign: '+', shownScale: 1, decimals: 0, unit: '' },
+  regen: { stat: 'field-regen', op: 'flat', min: 3, max: 8, step: 0.1, label: 'regen/s', sign: '+', shownScale: 1, decimals: 1, unit: '' },
+  'move-speed': { stat: 'move-speed', op: 'add', min: 3, max: 6, step: 0.01, label: 'speed', sign: '+', shownScale: 100, decimals: 0, unit: '%' },
+  'roll-cooldown': { stat: 'roll-cooldown', op: 'flat', min: 3, max: 6, step: 1, label: 'roll cooldown', sign: '−', shownScale: 1, decimals: 0, unit: '' },
+  'roll-distance': { stat: 'roll-distance', op: 'flat', min: 8, max: 16, step: 1, label: 'roll distance', sign: '+', shownScale: 1, decimals: 0, unit: '' },
 };
+
+/** An affix as a content line (039): always scope You, a stat line in its kind's stat. */
+export function affixLine(a: Affix): StatLine {
+  const d = AFFIXES[a.kind];
+  return { scope: 'you', stat: d.stat, op: d.op, value: d.sign === '−' ? -a.value : a.value };
+}
 
 /** The most the worn gear's move speed affixes add to walk speed, a fraction (+15%). */
 export const MOVE_BONUS_CAP = 0.15;

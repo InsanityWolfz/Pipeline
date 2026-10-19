@@ -1,4 +1,5 @@
 import type { DamageType } from './ammo';
+import type { KeywordId } from './keywords';
 
 // Tags (029): what a stage machine adds to a finished round. A round is its base
 // ammo plus at most one element tag and at most one shape tag; its id is the base
@@ -9,27 +10,25 @@ import type { DamageType } from './ammo';
 /** An element sets the round's damage type; a shape changes how it flies or hits. */
 export type TagSlot = 'element' | 'shape';
 
-/** What a tag does in the sim: each has its own numbers below. */
-export type TagBehaviour = 'cold' | 'homing' | 'split' | 'cluster';
-
 export interface TagDef {
   id: string;
   slot: TagSlot;
   /** Put before the base ammo's name: "Frost arrow". */
   prefix: string;
-  /** The base ammo it applies to. */
-  appliesTo: string;
-  behaviour: TagBehaviour;
+  /** The base ammo it applies to (039: an element any family, a shape one). */
+  appliesTo: readonly string[];
+  /** The keyword it gives the round (039): its element's damage type, or its shape. Each has its own numbers below. */
+  keyword: KeywordId;
   /** An element's damage type, which the round takes on. */
   damageType?: DamageType;
 }
 
 /**
- * Cold: each cold hit adds a chill stack (up to `stacksToFreeze`) and refreshes the chill for `stackTicks`; each
+ * Cold: each cold hit adds `chillPerHit` chill stack (up to `stacksToFreeze`) and refreshes the chill for `stackTicks`; each
  * stack slows movement by `slowPerStack`. The hit that reaches `stacksToFreeze` freezes the enemy for `freezeTicks`
  * (a boss for `bossFreezeTicks`); after the thaw it gains no stacks for `refreezeTicks`.
  */
-export const COLD = { slowPerStack: 0.15, stacksToFreeze: 4, stackTicks: 120, freezeTicks: 90, bossFreezeTicks: 45, refreezeTicks: 120 } as const;
+export const COLD = { chillPerHit: 1, slowPerStack: 0.15, stacksToFreeze: 4, stackTicks: 120, freezeTicks: 90, bossFreezeTicks: 45, refreezeTicks: 120 } as const;
 
 /** Homing: at launch it locks onto the living enemy nearest the cursor within `lockRadius` px, then turns toward it by at most `turnDegrees` a tick. */
 export const HOMING = { lockRadius: 64, turnDegrees: 4 } as const;
@@ -47,10 +46,10 @@ export const SPLIT = { shards: 5, damage: 4, range: 64, speed: 360, projectile: 
 export const CLUSTER = { delayTicks: 12, count: 4, distance: 40, damage: 8, radius: 20 } as const;
 
 export const TAGS: Readonly<Record<string, TagDef>> = {
-  frost: { id: 'frost', slot: 'element', prefix: 'Frost', appliesTo: 'arrow', behaviour: 'cold', damageType: 'cold' },
-  homing: { id: 'homing', slot: 'shape', prefix: 'Homing', appliesTo: 'ley-bolt', behaviour: 'homing' },
-  split: { id: 'split', slot: 'shape', prefix: 'Split', appliesTo: 'ley-bolt', behaviour: 'split' },
-  cluster: { id: 'cluster', slot: 'shape', prefix: 'Cluster', appliesTo: 'bomb', behaviour: 'cluster' },
+  frost: { id: 'frost', slot: 'element', prefix: 'Frost', appliesTo: ['arrow'], keyword: 'cold', damageType: 'cold' },
+  homing: { id: 'homing', slot: 'shape', prefix: 'Homing', appliesTo: ['ley-bolt'], keyword: 'homing' },
+  split: { id: 'split', slot: 'shape', prefix: 'Split', appliesTo: ['ley-bolt'], keyword: 'split' },
+  cluster: { id: 'cluster', slot: 'shape', prefix: 'Cluster', appliesTo: ['bomb'], keyword: 'cluster' },
 };
 
 const SEP = '+';
@@ -72,7 +71,7 @@ export const roundTags = (round: string): string[] => round.split(SEP).slice(1);
 function legal(base: string, tags: readonly string[], table: Readonly<Record<string, TagDef>>): boolean {
   if (new Set(tags).size !== tags.length) return false;
   const defs = tags.map((t) => table[t]);
-  if (defs.some((d) => !d || d.appliesTo !== base)) return false;
+  if (defs.some((d) => !d || !d.appliesTo.includes(base))) return false;
   return SLOT_ORDER.every((slot) => defs.filter((d) => d?.slot === slot).length <= 1);
 }
 
@@ -96,9 +95,9 @@ export function withoutTag(round: string, tag: string): string {
 
 /** Every legal tagged round, base by base: each element alone, each shape alone, then each element with each shape. */
 function legalRounds(table: Readonly<Record<string, TagDef>>): string[] {
-  const bases = [...new Set(Object.values(table).map((t) => t.appliesTo))];
+  const bases = [...new Set(Object.values(table).flatMap((t) => t.appliesTo))];
   return bases.flatMap((base) => {
-    const of = (slot: TagSlot) => Object.values(table).filter((t) => t.appliesTo === base && t.slot === slot).map((t) => t.id);
+    const of = (slot: TagSlot) => Object.values(table).filter((t) => t.appliesTo.includes(base) && t.slot === slot).map((t) => t.id);
     const elements = of('element');
     const shapes = of('shape');
     const combos = [...elements.map((e) => [e]), ...shapes.map((s) => [s]), ...elements.flatMap((e) => shapes.map((s) => [e, s]))];
@@ -123,5 +122,5 @@ export function elementOf(round: string): TagDef | undefined {
     .find((t) => t.slot === 'element');
 }
 
-/** Whether a round has a tag with this behaviour (a homing round, a split round). */
-export const hasBehaviour = (round: string, behaviour: TagBehaviour): boolean => roundTags(round).some((t) => TAGS[t]?.behaviour === behaviour);
+/** Whether a round has a tag giving this keyword (a Homing round, a Split round). */
+export const hasTagKeyword = (round: string, keyword: KeywordId): boolean => roundTags(round).some((t) => TAGS[t]?.keyword === keyword);

@@ -1,7 +1,7 @@
 import { straightAmmo, type DamageType } from '../data/ammo';
 import { TICK_RATE, TILE_SIZE } from '../data/config';
 import type { Room } from '../data/rooms';
-import { hasBehaviour, SPLIT } from '../data/tags';
+import { hasTagKeyword, SPLIT } from '../data/tags';
 import { blocksShot } from './collision';
 
 // Straight shots in flight: arrows, ley bolts and Shards (029). Position is the
@@ -62,7 +62,7 @@ export function createArrow(
   targetId: number | null = null,
 ): ArrowState {
   const { damage, damageType, speed, range, pierce } = straightAmmo(ammoId);
-  return { id, ammoId, roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, pierce, split: hasBehaviour(ammoId, 'split'), targetId, hitIds: [], pooled: false, pooledBy: [] };
+  return { id, ammoId, roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, pierce, split: hasTagKeyword(ammoId, 'split'), targetId, hitIds: [], pooled: false, pooledBy: [] };
 }
 
 /** A shard (029: a Split's by default; 037: Shatterpoint's): its def's numbers, never hitting the enemy that was struck, never piercing or splitting. */

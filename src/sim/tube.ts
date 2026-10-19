@@ -1,7 +1,7 @@
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { ammoDef } from '../data/ammo';
 import { MUZZLE_OFFSET, SLOT_AMMOS, STARTING_AMMO } from '../data/tube';
-import { hasBehaviour } from '../data/tags';
+import { hasTagKeyword } from '../data/tags';
 import { createArrow } from './arrows';
 import { lockTarget } from './homing';
 import { throwBomb } from './bombs';
@@ -148,7 +148,7 @@ function launch(state: SimState, { ammoId, dir: [dx, dy], across }: VolleyShot, 
     return;
   }
   // A homing round (029) locks on at launch: the enemy nearest the cursor, if one is close enough.
-  const target = hasBehaviour(ammoId, 'homing') ? lockTarget(state, cmd.aimX, cmd.aimY) : null;
+  const target = hasTagKeyword(ammoId, 'homing') ? lockTarget(state, cmd.aimX, cmd.aimY) : null;
   const arrow = createArrow(state.nextArrowId++, ammoId, state.roomId, muzzle.x, muzzle.y, dx, dy, target);
   // Talents' damage (037) goes onto the round as it leaves.
   arrow.damage *= ofBase(playerStats(state).ammo.damage, ammoId);

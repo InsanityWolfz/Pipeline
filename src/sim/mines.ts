@@ -1,5 +1,5 @@
 import { lobbedAmmo, type MineAmmo } from '../data/ammo';
-import { CLUSTER, hasBehaviour } from '../data/tags';
+import { CLUSTER, hasTagKeyword } from '../data/tags';
 import { blastArea } from './blast';
 import type { BombState } from './bombs';
 import type { SimState } from './state';
@@ -71,7 +71,7 @@ export function armMine(state: SimState, b: BombState, ammo: MineAmmo): void {
  * radius from playerStats (037's talents).
  */
 export function scatterBomblets(state: SimState, b: BombState): void {
-  if (!hasBehaviour(b.ammoId, 'cluster')) return;
+  if (!hasTagKeyword(b.ammoId, 'cluster')) return;
   const len = Math.hypot(b.toX - b.fromX, b.toY - b.fromY);
   const [dx, dy] = len > 0 ? [(b.toX - b.fromX) / len, (b.toY - b.fromY) / len] : [1, 0];
   const stats = playerStats(state).ammo;
@@ -100,7 +100,7 @@ export function scatterBomblets(state: SimState, b: BombState): void {
  */
 export function leaveArea(state: Pick<SimState, 'mines' | 'bombs'>): void {
   clearMines(state);
-  state.bombs = state.bombs.filter((b) => lobbedAmmo(b.ammoId).kind !== 'mine' && !hasBehaviour(b.ammoId, 'cluster'));
+  state.bombs = state.bombs.filter((b) => lobbedAmmo(b.ammoId).kind !== 'mine' && !hasTagKeyword(b.ammoId, 'cluster'));
 }
 
 /** Once a tick, before bombs fly (so a mine that lands this tick starts at fuse 0): bomblets count down and burst; armed fuses burn and burst. */

@@ -14,17 +14,17 @@ const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 describe('tags', () => {
   it("are Milestone 1's three and 038's cluster, each with a slot, prefix, base and numbers", () => {
     expect(Object.values(TAGS).map(({ id, slot, prefix, appliesTo }) => ({ id, slot, prefix, appliesTo }))).toEqual([
-      { id: 'frost', slot: 'element', prefix: 'Frost', appliesTo: 'arrow' },
-      { id: 'homing', slot: 'shape', prefix: 'Homing', appliesTo: 'ley-bolt' },
-      { id: 'split', slot: 'shape', prefix: 'Split', appliesTo: 'ley-bolt' },
-      { id: 'cluster', slot: 'shape', prefix: 'Cluster', appliesTo: 'bomb' },
+      { id: 'frost', slot: 'element', prefix: 'Frost', appliesTo: ['arrow'] },
+      { id: 'homing', slot: 'shape', prefix: 'Homing', appliesTo: ['ley-bolt'] },
+      { id: 'split', slot: 'shape', prefix: 'Split', appliesTo: ['ley-bolt'] },
+      { id: 'cluster', slot: 'shape', prefix: 'Cluster', appliesTo: ['bomb'] },
     ]);
     for (const [key, t] of Object.entries(TAGS)) {
       expect(t.id).toBe(key);
       expect(t.id).toMatch(KEBAB);
-      expect(AMMO[t.appliesTo]).toBeDefined();
+      for (const base of t.appliesTo) expect(AMMO[base]).toBeDefined();
     }
-    expect(COLD).toEqual({ slowPerStack: 0.15, stacksToFreeze: 4, stackTicks: 120, freezeTicks: 90, bossFreezeTicks: 45, refreezeTicks: 120 });
+    expect(COLD).toEqual({ chillPerHit: 1, slowPerStack: 0.15, stacksToFreeze: 4, stackTicks: 120, freezeTicks: 90, bossFreezeTicks: 45, refreezeTicks: 120 });
     expect(HOMING).toEqual({ lockRadius: 64, turnDegrees: 4 });
     expect(SPLIT).toMatchObject({ shards: 5, damage: 4, range: 64, speed: 360 });
   });
@@ -62,7 +62,7 @@ describe('tags', () => {
   it('put elements first in a round id', () => {
     const table: Record<string, TagDef> = {
       ...TAGS,
-      heavy: { id: 'heavy', slot: 'shape', prefix: 'Heavy', appliesTo: 'arrow', behaviour: 'split' },
+      heavy: { id: 'heavy', slot: 'shape', prefix: 'Heavy', appliesTo: ['arrow'], keyword: 'split' },
     };
     expect(roundId('arrow', ['heavy', 'frost'], table)).toBe('arrow+frost+heavy');
     expect(withTag('arrow+heavy', 'frost', table)).toBe('arrow+frost+heavy');
@@ -71,7 +71,7 @@ describe('tags', () => {
   it('refuse a second element or a second shape, and a tag the base does not take', () => {
     const table: Record<string, TagDef> = {
       ...TAGS,
-      fire: { id: 'fire', slot: 'element', prefix: 'Fire', appliesTo: 'arrow', behaviour: 'cold', damageType: 'fire' },
+      fire: { id: 'fire', slot: 'element', prefix: 'Fire', appliesTo: ['arrow'], keyword: 'fire', damageType: 'fire' },
     };
     expect(withTag('arrow+frost', 'fire', table)).toBeNull();
     expect(withTag('arrow+frost', 'frost')).toBeNull();

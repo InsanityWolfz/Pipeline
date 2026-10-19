@@ -14,3 +14,6 @@ export const MELEE = {
   knockback: 20,
   knockTicks: 8,
 } as const;
+
+/** A boss's weight against Knockback (039, Q11): it isn't pushed. */
+export const BOSS_WEIGHT = 0;

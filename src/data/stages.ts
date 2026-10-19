@@ -1,3 +1,4 @@
+import type { RuleLine } from './lines';
 import type { RecipeDef } from './recipes';
 import { tagDef, withTag } from './tags';
 
@@ -47,8 +48,15 @@ export function stageDef(id: string): StageDef {
   return def;
 }
 
-/** The base ammo a stage's rounds are. */
-export const stageBase = (s: StageDef): string => tagDef(s.tag).appliesTo;
+/** A stage's home family: the first base its tag takes (its build bar group and its machine's default round). */
+export function stageBase(s: StageDef): string {
+  const base = tagDef(s.tag).appliesTo[0];
+  if (!base) throw new Error(`Stage '${s.id}' takes no ammo`);
+  return base;
+}
+
+/** A stage's content line (039): its tag's keyword, added to the rounds its tag takes (rulesText words them). */
+export const stageLines = (s: StageDef): RuleLine[] => [{ scope: tagDef(s.tag).keyword, rule: 'adds', params: {} }];
 
 /** The recipe a stage runs on a round: a batch of it and its material, into the batch with the tag added. Null if the round can't take the tag. */
 export function stageRecipeFor(s: StageDef, round: string): RecipeDef | null {

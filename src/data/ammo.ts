@@ -37,6 +37,8 @@ export interface StraightAmmo extends AmmoBase {
   damage: number;
   /** Passes through every enemy in its path, hitting each once, until its range runs out or it hits a solid (029: without limit). */
   pierce: boolean;
+  /** Knockback (039): each hit pushes the enemy this many px times its weight; its Shards push as far. */
+  knockback: number;
 }
 
 /** Arcs over everything to the cursor and bursts where it lands. */
@@ -103,6 +105,7 @@ const BASE_AMMO: Readonly<Record<string, AmmoDef>> = {
     range: 320,
     damage: 10,
     pierce: true,
+    knockback: 6,
     damageType: 'physical',
     sprite: SPRITES.arrow,
     shadow: SPRITES.arrowShadow,
@@ -118,6 +121,7 @@ const BASE_AMMO: Readonly<Record<string, AmmoDef>> = {
     range: 320,
     damage: 14,
     pierce: false,
+    knockback: 6,
     damageType: 'physical',
     sprite: SPRITES.leyBolt,
     shadow: SPRITES.leyBoltShadow,
@@ -173,6 +177,13 @@ export function straightAmmo(id: string): StraightAmmo {
 export function lobbedAmmo(id: string): LobbedAmmo {
   const def = ammoDef(id);
   if (def.kind === 'straight') throw new Error(`Ammo '${id}' isn't lobbed`);
+  return def;
+}
+
+/** A landmine (038): its arm time, damage and radius. */
+export function mineAmmo(id: string): MineAmmo {
+  const def = ammoDef(id);
+  if (def.kind !== 'mine') throw new Error(`Ammo '${id}' isn't a mine`);
   return def;
 }
 

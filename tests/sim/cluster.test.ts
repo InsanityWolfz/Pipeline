@@ -42,7 +42,7 @@ function armed(talents: string[] = []): SimState {
 
 describe('the cluster tag', () => {
   it('is a bomb shape, "Cluster", with its numbers in data', () => {
-    expect(TAGS.cluster).toMatchObject({ slot: 'shape', appliesTo: 'bomb', prefix: 'Cluster', behaviour: 'cluster' });
+    expect(TAGS.cluster).toMatchObject({ slot: 'shape', appliesTo: ['bomb'], prefix: 'Cluster', keyword: 'cluster' });
     expect(CLUSTER).toEqual({ delayTicks: 12, count: 4, distance: 40, damage: 8, radius: 20 });
     expect(withTag('bomb', 'cluster')).toBe('bomb+cluster');
     expect(withTag('bomb+cluster', 'cluster')).toBeNull();
