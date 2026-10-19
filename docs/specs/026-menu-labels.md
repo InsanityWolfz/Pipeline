@@ -33,7 +33,7 @@ The crafting menu names every item, so it no longer reads like hieroglyphics. Th
   | Ley | grinder, focuser |
 
 - [ ] Groups are separated by a visible gap and a thin divider.
-- [ ] Locked pieces keep their place in their group, greyed as today.
+- [ ] Locked pieces stay hidden, as before (spec 006); only unlocked pieces show, each in its group. A group with nothing unlocked shows no label or divider. (Corrected by Shaun, 2026-10-19: "stay hidden". The draft wrongly said locked pieces were greyed today.)
 - [ ] The group a piece belongs to is data, a `category` on `PieceDef`. A test checks that every piece in `BUILD_BAR` has a category.
 - [ ] Number-key or scroll selection, if present, still steps through pieces in the new order.
 - [ ] The bar stays centred and inside the view.
