@@ -1,4 +1,4 @@
-import { MAX_HEALTH } from '../data/player';
+import { MAX_HEALTH, type HealSource } from '../data/player';
 import type { Knockable } from './knockback';
 
 // The player's state: plain data so it serializes with the sim.
@@ -28,6 +28,12 @@ export interface PlayerState extends Knockable {
   hurtTicks: number;
   /** Ticks left on the death animation before waking in the foundry (011); 0 when alive. */
   dying: number;
+  /** What raised health this tick (030), or null. */
+  healing: HealSource | null;
+  /** Healing built up toward the next whole HP, in HP·ticks (TICK_RATE of them make 1 HP). */
+  healCarry: number;
+  /** Ticks left before healing resumes after a hit (HEALING.afterHitDelay). */
+  healDelay: number;
 }
 
 export function createPlayer(at: { x: number; y: number }): PlayerState {
@@ -46,6 +52,9 @@ export function createPlayer(at: { x: number; y: number }): PlayerState {
     health: MAX_HEALTH,
     hurtTicks: 0,
     dying: 0,
+    healing: null,
+    healCarry: 0,
+    healDelay: 0,
     knockX: 0,
     knockY: 0,
     knockTicks: 0,

@@ -14,6 +14,7 @@ import { stepFoundryUse } from './foundryUse';
 import { stepHarvest } from './harvest';
 import { stepLink } from './link';
 import { checkKo } from './health';
+import { stepHealing } from './healing';
 import { stepEnemies } from './enemyAi';
 import { NO_COMMAND, type Command } from './input';
 import { stepPlayer } from './movement';
@@ -80,4 +81,6 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepGates(state);
   stepObjectives(state);
   checkKo(state);
+  // After the KO check, so a hit to 0 starts dying before anything could heal it (030).
+  stepHealing(state);
 }

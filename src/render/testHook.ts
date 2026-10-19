@@ -43,6 +43,8 @@ export interface GameTestHook {
    * keeps one topped up between hits).
    */
   setEnemyHealth(id: number, health: number): SimSummary;
+  /** Sets the player's health (030: a hurt player for the healing e2e and screenshots, without a fight). */
+  setPlayerHealth(health: number): SimSummary;
 }
 
 /**
@@ -187,6 +189,10 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
     setEnemyHealth: (id, health) => {
       const e = sim.enemies.find((en) => en.id === id);
       if (e) e.health = health;
+      return summarize(sim);
+    },
+    setPlayerHealth: (health) => {
+      sim.player.health = health;
       return summarize(sim);
     },
     passable: () => {

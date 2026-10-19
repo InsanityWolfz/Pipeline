@@ -1,4 +1,4 @@
-import { DYING_TICKS, HIT_INVULN_TICKS } from '../data/player';
+import { DYING_TICKS, HEALING, HIT_INVULN_TICKS } from '../data/player';
 import { afterArmor } from './armor';
 import { startKnock } from './knockback';
 import { endRoll, isInvulnerable } from './movement';
@@ -28,6 +28,7 @@ export function damagePlayer(
   const taken = afterArmor(state, amount);
   p.health = Math.max(0, p.health - taken);
   p.hurtTicks = HIT_INVULN_TICKS;
+  p.healDelay = HEALING.afterHitDelay;
   startKnock(p, dirX, dirY, knockback, knockTicks);
   cancelHarvest(state);
   cancelClaim(state);

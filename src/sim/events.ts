@@ -1,4 +1,5 @@
 import type { DamageType } from '../data/ammo';
+import type { HealSource } from '../data/player';
 import type { GateId } from '../data/rooms';
 import type { ArmorPiece } from './armor';
 import type { PlaceFail } from './pieces';
@@ -87,6 +88,8 @@ export interface SimEvents {
   thaws: { id: number; x: number; y: number }[];
   /** A star round burst into shards where it hit (029). */
   starBursts: { x: number; y: number }[];
+  /** Healing started or stopped (030), by source; a change of source stops one and starts the other. */
+  heals: { source: HealSource; kind: 'start' | 'stop' }[];
   /** E at a pylon whose room still has enemies. */
   sealed: { site: string }[];
   /** A room was claimed. */
@@ -159,6 +162,7 @@ export function createEvents(): SimEvents {
     freezes: [],
     thaws: [],
     starBursts: [],
+    heals: [],
     melees: [],
     banks: [],
     lost: {},
@@ -203,6 +207,7 @@ export function clearEvents(events: SimEvents): void {
   events.freezes.length = 0;
   events.thaws.length = 0;
   events.starBursts.length = 0;
+  events.heals.length = 0;
   events.melees.length = 0;
   events.banks.length = 0;
   events.lost = {};

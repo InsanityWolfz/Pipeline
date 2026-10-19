@@ -1,4 +1,4 @@
-import { MAX_HEALTH } from '../data/player';
+import { MAX_HEALTH, type HealSource } from '../data/player';
 import { WORLD } from './world';
 import type { SimEvents } from './events';
 import { unlockedPieces } from './placement';
@@ -28,6 +28,7 @@ import {
 import { OVERWORLD, ringOf } from '../data/overworld';
 import { TILE_SIZE } from '../data/config';
 import { enemiesNearPlayer, enemiesOnScreen } from './population';
+import { springAt } from './healing';
 
 /** The compact JSON summary that window.__GAME__.getState() returns. */
 export interface SimSummary {
@@ -64,7 +65,11 @@ export interface SimSummary {
     ko: boolean;
     /** Ticks left on the death animation; 0 when alive. */
     dying: number;
+    /** What raised health this tick (030), or null: 031's HP bar glows cyan while it's set. */
+    healing: HealSource | null;
   };
+  /** The Ley Springs (030): each one's centre tile, pool radius px, and whether the player's feet are in it. */
+  springs: { id: string; tx: number; ty: number; radius: number; inside: boolean }[];
   /** Item id to count. */
   inventory: Record<string, number>;
   tube: {
@@ -173,7 +178,9 @@ export function summarize(state: SimState): SimSummary {
       hitInvulnerable: p.hurtTicks > 0,
       ko: state.events.ko,
       dying: p.dying,
+      healing: p.healing,
     },
+    springs: OVERWORLD.springs.map((sp) => ({ id: sp.id, tx: sp.tx, ty: sp.ty, radius: sp.radius * TILE_SIZE, inside: springAt(state.roomId, p.x, p.y)?.id === sp.id })),
     inventory: { ...state.inventory },
     tube: {
       ammo: tube.ammoId,
