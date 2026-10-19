@@ -195,3 +195,13 @@ All values are starting values in data, tuned in playtest. Ticks are at 60 Hz. F
 
 ## Open questions
 None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).
+
+## Raised after the build (for Shaun at playtest)
+- **Two gaps the spec didn't cover, decided by Claude so nothing deadlocks:**
+  - **Burrower:** when it locks (close to the player, or after 180 ticks underground) it surfaces where its body is. It never jumps to the player or erupts through a cliff.
+  - **Sniper:** if no tile within one step can see the player, it keeps its distance in the open, as a Wisp does, and tries peeking again on its next cooldown.
+- **Tuning to watch:**
+  - a player circling close can out-turn a Shardback
+  - the Sniper's 28 damage is the region's hardest hit
+  - packs of five with a 1-in-4 champion chance may be a lot this early
+- **Art** for the four enemies is a first draft (docs/review/035). Their telegraphs use the shared rust red, while the Bulwark uses the brighter danger red; compare them side by side.
