@@ -1,6 +1,7 @@
 import type { EnemyDef, MeleeDef } from '../data/enemies';
 import { bulwarkThink } from './bulwarkAi';
 import { chargeThink } from './chargerAi';
+import { burrowThink } from './burrowerAi';
 import { defOf } from './champions';
 import { castThink } from './casterAi';
 import { chillScale, tickCold } from './cold';
@@ -64,6 +65,8 @@ function thinkOf(state: SimState, e: EnemyState, def: EnemyDef): [number, number
       return bulwarkThink(state, e, def);
     case 'charger':
       return chargeThink(state, e, def);
+    case 'burrower':
+      return burrowThink(state, e, def);
   }
 }
 

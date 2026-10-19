@@ -27,6 +27,8 @@ function damageOf(d: EnemyDef): number {
       return d.pound.damage;
     case 'charger':
       return d.charge.damage;
+    case 'burrower':
+      return d.burrow.damage;
   }
 }
 const pack = (ids: readonly string[]): EnemyState[] => ids.map((id, i) => createEnemy(i, id, { x: i * 40, y: 0 }, 'overworld', 'pop-1-0'));

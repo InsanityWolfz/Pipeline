@@ -170,6 +170,7 @@ export const ENEMY_ANIMS: Readonly<Record<string, EnemyAnims>> = {
   bulwark: enemyAnims('bulwark', true, ['turn', 'lob', 'throw', 'block']),
   // 035: Stonefall Hollows' four.
   charger: enemyAnims('charger', true, ['stun'], 2),
+  burrower: enemyAnims('burrower', true, ['dig']),
 };
 
 /** The sparkle played where an item is picked up. */

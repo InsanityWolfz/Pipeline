@@ -28,8 +28,31 @@ export interface ChargerDef extends EnemyBase, ScreenLeashed {
   };
 }
 
+/** A Burrower: tunnels toward the player as a ripple, then erupts under where they stood. */
+export interface BurrowerDef extends EnemyBase, ScreenLeashed {
+  kind: 'burrower';
+  /**
+   * Aggroed, it digs in for `digTicks` (still hittable), then tunnels at `speed` px/s, untargetable. With its ripple
+   * within `lockRange` of the player's feet, or after `maxTunnelTicks`, and its cooldown ready, it locks their feet's
+   * spot and winds up (`windupTicks`) as a ring of `radius` grows there; then erupts (the pose holds `swipeTicks`) for
+   * `damage` and `knockback` px outward over `knockTicks` on feet inside, and stays surfaced and dazed for
+   * `surfacedTicks` (its recovery, `recoverTicks`) before digging in again.
+   */
+  burrow: AttackTiming & {
+    digTicks: number;
+    speed: number;
+    lockRange: number;
+    maxTunnelTicks: number;
+    radius: number;
+    damage: number;
+    knockback: number;
+    knockTicks: number;
+    surfacedTicks: number;
+  };
+}
+
 /** Region 2's four (035), as one union for EnemyDef. */
-export type HollowsEnemyDef = ChargerDef;
+export type HollowsEnemyDef = ChargerDef | BurrowerDef;
 
 /** The base fields they share, as the old enemies' (enemies.ts). */
 const BASE = { boss: false, hitKnockTicks: 4, hitFlashTicks: 6, leashGraceTicks: 60, homeTolerance: 4 } as const;
@@ -73,4 +96,38 @@ export const CHARGER: ChargerDef = {
   anims: 'charger',
 };
 
-export const HOLLOWS_ENEMIES = { charger: CHARGER } as const;
+/** Surfaced and dazed after an eruption: the window to hit it. */
+const SURFACED_TICKS = 150;
+
+export const BURROWER: BurrowerDef = {
+  ...BASE,
+  kind: 'burrower',
+  id: 'burrower',
+  name: 'Burrower',
+  maxHealth: 35,
+  walkSpeed: 40,
+  // No wider than the player's feet (16 × 8): it can always rise where they stood.
+  feetBox: { w: 14, h: 8 },
+  hurtbox: { w: 22, h: 20, offsetY: -8 },
+  hitKnockback: 6,
+  burrow: {
+    digTicks: 20,
+    speed: 70,
+    lockRange: 12,
+    maxTunnelTicks: 180,
+    radius: 28,
+    windupTicks: 50,
+    swipeTicks: 10,
+    recoverTicks: SURFACED_TICKS,
+    surfacedTicks: SURFACED_TICKS,
+    // Counted from the wind-up's start.
+    cooldownTicks: 240,
+    damage: 22,
+    knockback: 32,
+    knockTicks: 6,
+  },
+  drops: HOLLOWS_DROPS,
+  anims: 'burrower',
+};
+
+export const HOLLOWS_ENEMIES = { charger: CHARGER, burrower: BURROWER } as const;

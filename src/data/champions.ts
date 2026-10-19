@@ -30,5 +30,6 @@ export const CHAMPIONS = {
     wisp: ['Palewick', 'Duskmote', 'Glimmerveil', 'Hollowlight', 'Ashflicker'],
     // 035: Stonefall Hollows' four.
     charger: ['Cragbutt', 'Ironbrow', 'Quarryhorn', 'Slatebrute', 'Rubblehoof'],
+    burrower: ['Gritmaw', 'Delvetooth', 'Shalebore', 'Siltgnaw', 'Quakejaw'],
   } as Readonly<Record<string, readonly string[]>>,
 } as const;

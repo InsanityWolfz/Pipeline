@@ -297,5 +297,7 @@ export function attackOf(def: EnemyDef): AttackTiming {
       return def.pound;
     case 'charger':
       return def.charge;
+    case 'burrower':
+      return def.burrow;
   }
 }
