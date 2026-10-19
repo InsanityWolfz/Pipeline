@@ -1,6 +1,7 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { TEXT_STYLES, type TextStyleKey } from '../data/fonts';
+import { paletteHex } from '../data/palette';
 import { phaserStyle } from './fonts';
 import { textureScale } from './vector/textures';
 
@@ -20,10 +21,12 @@ export class TextLine {
   private x: number;
   private y: number;
   private text = '';
+  private fill: string;
 
   constructor(scene: Scene, x: number, y: number, depth: number = DEPTHS.hud, world = false, style: TextStyleKey = 'body', scale = 1) {
     this.style = style;
     this.scale = scale;
+    this.fill = TEXT_STYLES[style].fill;
     this.x = x;
     this.y = y;
     this.obj = scene.add
@@ -51,6 +54,24 @@ export class TextLine {
   setAlpha(alpha: number): this {
     this.obj.setAlpha(alpha);
     return this;
+  }
+
+  /** Draws it in a palette colour, or back in its style's own with no argument (026: the craft menu's missing inputs). */
+  setFill(paletteId: string = TEXT_STYLES[this.style].fill): this {
+    if (paletteId === this.fill) return this;
+    this.fill = paletteId;
+    this.obj.setColor(paletteHex(paletteId));
+    return this;
+  }
+
+  /** The palette colour it's drawn in. */
+  get color(): string {
+    return this.fill;
+  }
+
+  /** Where the top of its capitals sits, view px. */
+  get at(): { x: number; y: number } {
+    return { x: this.x, y: this.y };
   }
 
   moveTo(x: number, y: number): this {

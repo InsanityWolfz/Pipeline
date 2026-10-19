@@ -85,12 +85,13 @@ export class HudView {
 
   /**
    * `active` is the sim's `hudActive`: what the next press fires. No tube yet (012): no
-   * hotbar row, and the tube slot shows the fist. Building: the build bar takes the row's place.
+   * hotbar row, and the tube slot shows the fist. Building: the build bar takes the row's place,
+   * and the tube slot rises over its group labels (026).
    */
   update(tube: TubeState, inventory: Inventory, player: PlayerState, active: HudActive, worn: ArmorPiece | undefined, hasTube: boolean, building: boolean): void {
     this.hotbar.setVisible(hasTube && !building);
     this.hotbar.update(tube, inventory);
-    this.tubeSlot.update(active);
+    this.tubeSlot.update(active, building);
     this.armorIcon.setVisible(worn !== undefined);
     if (worn) this.armorIcon.setFrame(worn.weight === 'heavy' ? SPRITES.iconArmorHeavy : SPRITES.iconArmorLight);
     this.armorCount.set(worn ? String(worn.armor) : '');

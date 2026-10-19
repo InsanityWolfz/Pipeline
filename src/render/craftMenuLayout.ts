@@ -14,11 +14,13 @@ export interface MenuLine {
   y: number;
 }
 
-/** The panel's top-left on screen: centred. */
+/** The panel's top-left on screen: the panel and its title card above it, centred together (026: the taller menu fits). */
 export function craftPanelAt(): { x: number; y: number } {
+  const L = CRAFT_MENU_LAYOUT;
+  const card = L.title.h + L.title.gap;
   return {
-    x: Math.round((VIEW_WIDTH - CRAFT_MENU_LAYOUT.width) / 2),
-    y: Math.round((VIEW_HEIGHT - CRAFT_MENU_LAYOUT.height) / 2),
+    x: Math.round((VIEW_WIDTH - L.width) / 2),
+    y: Math.round((VIEW_HEIGHT - L.height - card) / 2) + card,
   };
 }
 

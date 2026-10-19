@@ -193,6 +193,8 @@ export class GameScene extends Scene {
       intakePrompt: this.tutorial?.intakePrompt ?? null,
       camera: { x: this.cameras.main.worldView.centerX, y: this.cameras.main.worldView.centerY },
       hud: this.hud?.bottom ?? null,
+      craftMenu: this.menu?.state ?? null,
+      buildBar: this.buildView?.state ?? null,
     };
   }
 

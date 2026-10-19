@@ -27,7 +27,7 @@ test('a sorter placed and flipped with the mouse, set from its picker, sends its
 
   await clickBar(page, 'sorter');
   // Hovering the bar shows the sorter's description.
-  const cell = buildBarCells((await state(page)).unlocked).find((c) => c.pieceId === 'sorter');
+  const cell = buildBarCells().find((c) => c.pieceId === 'sorter');
   if (!cell) throw new Error('no sorter cell');
   const over = await screenPoint(page, cell.x + cell.w / 2, cell.y + cell.h / 2);
   await page.mouse.move(over.x, over.y);

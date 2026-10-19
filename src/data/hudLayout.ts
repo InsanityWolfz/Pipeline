@@ -1,6 +1,8 @@
 // Layouts for the HUD pieces and the crafting menu added in 005. Px values
 // tuned by eye; colours are palette ids.
 
+import { CRAFT_GROUPS } from './recipes';
+
 /** The harvest progress bar over a node: size, gap above the sprite, and palette ids. */
 export const HARVEST_BAR = { w: 20, h: 3, gap: 2, border: 1, color: 'cyan', back: 'ink' } as const;
 
@@ -45,37 +47,57 @@ export function tubeSlotWidth(units: number): number {
   return n * HUD_LAYOUT.tubeSlot.w + (n - 1) * HUD_LAYOUT.gap;
 }
 
+/** The crafting menu's rows (026): taller than the other menus' rows, for a name under each icon. */
+const CRAFT_ROW = { w: 184, h: 28, gap: 1 } as const;
+const CRAFT_HEADER = 16;
+const CRAFT_ROWS_AT = { x: 6, y: 6 } as const;
+/** Every header and recipe row the menu lists: one header per ammo group, a row per recipe. */
+const CRAFT_HEADERS = CRAFT_GROUPS.length;
+const CRAFT_RECIPES = CRAFT_GROUPS.reduce((n, g) => n + g.recipes.length, 0);
+
 /**
- * The crafting menu, centred on screen. Rows are listed group by group: a header
- * with the ammo's icon, then one row per recipe. Px from the panel's top-left,
- * then from each row's top-left.
+ * The crafting menu, centred on screen with its title card. Rows are listed group by
+ * group: a header with the ammo's icon and name, then one row per recipe. Each input
+ * and the output has its item's name in small text under its icon (026), centred under
+ * it, or starting at its left edge when wider. Px from the panel's top-left, then from
+ * each row's top-left.
  */
 export const CRAFT_MENU_LAYOUT = {
-  width: 196,
-  height: 252,
+  width: CRAFT_ROW.w + 2 * CRAFT_ROWS_AT.x,
+  height: CRAFT_ROWS_AT.y * 2 + CRAFT_HEADERS * CRAFT_HEADER + CRAFT_RECIPES * CRAFT_ROW.h + (CRAFT_RECIPES - 1) * CRAFT_ROW.gap,
   /** First row's top-left inside the panel. */
-  rowsAt: { x: 6, y: 8 },
-  rowHeight: 20,
-  /** Item icons are this tall; they sit centred in a row. */
+  rowsAt: CRAFT_ROWS_AT,
+  rowWidth: CRAFT_ROW.w,
+  rowHeight: CRAFT_ROW.h,
+  rowGap: CRAFT_ROW.gap,
+  /** Item icons are this tall, `iconY` px down the row; each name's capitals start `labelY` px down. */
   iconSize: ITEM_ICON_SIZE,
-  rowGap: 1,
-  headerHeight: 16,
-  /** Up to three inputs: icon, then "have/need" beside it. */
-  input: { x: 2, step: 34, textX: 17, textY: 8 },
-  arrow: { x: 108, y: 8 },
-  output: { x: 120, textX: 18, madeY: 4, ownedY: 11 },
+  iconY: 2,
+  labelY: 20,
+  headerHeight: CRAFT_HEADER,
+  /** Up to three inputs, `step` px apart (room for the longest name): icon, then "have/need" beside it. */
+  input: { x: 2, step: 40, textX: 17, textY: 7 },
+  arrow: { x: 122, y: 8 },
+  output: { x: 134, textX: 18, madeY: 3, ownedY: 11 },
+  /** The ammo's icon, and its name beside it (026). */
   headerIcon: { x: 2, y: 0 },
-  /** Alpha of a row the player can't afford. */
+  headerName: { x: 22, y: 5 },
+  /** Alpha of the icons on a row the player can't afford; its names and counts stay readable at `greyTextAlpha`. */
   greyAlpha: 0.35,
+  greyTextAlpha: 0.8,
+  /** An input the player is short of: its name and count in this colour (palette id). */
+  missing: 'rust-light',
   /** The title card over the panel (020): a tablet `w` x `h` px, `gap` px above the panel, the title `titleY` px down it. */
   title: { text: 'Crafting', w: 128, h: 22, gap: 4, titleY: 4 },
 } as const;
 
 /**
  * The build bar, along the bottom of the screen in the hotbar row's place (025: the row
- * hides while building): one cell per unlocked piece in build bar order, its icon inside
- * (a machine shows what it makes). Cells use the hotbar's cell sprites. Px on screen,
- * then from each cell's top-left.
+ * hides while building): one cell per piece in build bar order, its icon inside (a
+ * machine shows what it makes), locked pieces greyed in their place. Cells use the
+ * hotbar's cell sprites. The pieces sit in groups (026), `groupGap` px apart with a thin
+ * divider centred in each gap, and each group's label centred over it in a row `label.h`
+ * px tall, `label.gap` px above the cells. Px on screen, then from each cell's top-left.
  */
 export const BUILD_BAR_LAYOUT = {
   /** Distance from the screen's bottom edge to the cells' bottom. */
@@ -84,6 +106,12 @@ export const BUILD_BAR_LAYOUT = {
   cellWidth: CELL.w,
   cellHeight: CELL.h,
   icon: { x: 4, y: 6 },
+  groupGap: 12,
+  /** The divider: a line this colour (palette id) and alpha, from the label row's top to `inset` px above the cells' bottom. */
+  divider: { color: 'brass', alpha: 0.7, width: 1, inset: 2 },
+  label: { h: 9, gap: 2 },
+  /** Alpha of a piece not yet unlocked. */
+  lockedAlpha: 0.35,
 } as const;
 
 /** The ghost of the piece to place: palette tints for where it can and can't go, and its alpha. */

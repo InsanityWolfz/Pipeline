@@ -11,12 +11,24 @@ import { addVector } from './vector/textures';
 export const MENU_HOVER_EVENT = 'menu-hover';
 
 /** Which row of one menu is under the cursor. */
+/** A menu's row frames: plain, lit under the cursor, and the press flash. */
+export interface RowFrames {
+  plain: string;
+  hover: string;
+  press: string;
+}
+
+/** The 184x20 rows of the picker, pause and site menus. */
+export const MENU_ROW_FRAMES: RowFrames = { plain: SPRITES.craftRow, hover: SPRITES.craftRowHover, press: SPRITES.craftRowPress };
+
 export class RowHover {
   private readonly scene: Scene;
+  private readonly frames: RowFrames;
   private index = -1;
 
-  constructor(scene: Scene) {
+  constructor(scene: Scene, frames: RowFrames = MENU_ROW_FRAMES) {
     this.scene = scene;
+    this.frames = frames;
   }
 
   /** The row under the cursor is now `index` (-1 for none). Returns whether that changed. A row that can't be used lights and sounds nothing. */
@@ -34,12 +46,12 @@ export class RowHover {
 
   /** The frame row `index` shows: lit under the cursor (if it can be used), else plain. */
   frame(index: number, usable = true): string {
-    return usable && index === this.index ? SPRITES.craftRowHover : SPRITES.craftRow;
+    return usable && index === this.index ? this.frames.hover : this.frames.plain;
   }
 }
 
 /** A brass flash over the row at (x, y), screen px, fading out. */
-export function flashRow(scene: Scene, x: number, y: number): void {
-  const flash = addVector(scene, x, y, SPRITES.craftRowPress).setOrigin(0).setScrollFactor(0).setDepth(DEPTHS.menu + 3);
+export function flashRow(scene: Scene, x: number, y: number, frame: string = SPRITES.craftRowPress): void {
+  const flash = addVector(scene, x, y, frame).setOrigin(0).setScrollFactor(0).setDepth(DEPTHS.menu + 3);
   scene.tweens.add({ targets: flash, alpha: 0, duration: MENU_FEEDBACK.pressMs, onComplete: () => flash.destroy() });
 }

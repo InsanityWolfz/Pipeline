@@ -33,13 +33,15 @@ export interface TextStyle {
   readonly upper?: boolean;
 }
 
-export type TextStyleKey = 'body' | 'count' | 'display' | 'title' | 'float';
+export type TextStyleKey = 'body' | 'count' | 'label' | 'display' | 'title' | 'float';
 
 export const TEXT_STYLES: Readonly<Record<TextStyleKey, TextStyle>> = {
   /** Counts, readouts, key caps, descriptions. */
   body: { font: 'body', size: 8, weight: 600, fill: 'snow', stroke: 'ink', strokeWidth: 0, lineHeight: 9 },
   /** Small numbers on the hotbar, crates and pickers: an outline so they read over art. */
   count: { font: 'body', size: 7, weight: 700, fill: 'snow', stroke: 'ink', strokeWidth: 1.6, lineHeight: 8 },
+  /** Small item names under the crafting menu's icons (026). */
+  label: { font: 'body', size: 6, weight: 700, fill: 'snow', stroke: 'ink', strokeWidth: 1.2, lineHeight: 7 },
   /** Names and the objective line. */
   display: { font: 'display', size: 8, weight: 700, fill: 'snow', stroke: 'ink', strokeWidth: 0, lineHeight: 9 },
   /** Titles: the pause card and the wake text. */

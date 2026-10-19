@@ -13,10 +13,12 @@ import { BUILD_BAR, pieceDef } from '../data/pieces';
 import { pieceRect, type PlaceFail, type Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { colorOf } from './color';
-import { buildBarCells, conduitLook, inRect, pieceIcon, sorterLook } from './foundryLayout';
+import { buildBarLabelTop } from './bottomHud';
+import { buildBarBox, buildBarCells, buildBarDividers, buildBarGroups, conduitLook, inRect, pieceIcon, sorterLook, type ScreenRect } from './foundryLayout';
 import { BuildTip } from './BuildTip';
 import { MAX_ARROWS, placeArrows, viewOf } from './FoundryView';
 import { toView } from './scale';
+import { TextLine } from './textLine';
 import { addVector, showFrame } from './vector/textures';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
@@ -30,12 +32,25 @@ function bodyFrame(pieceId: string, facing: Facing, inFrom: Facing): string {
   return def.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE;
 }
 
-// Build mode on screen: the bar of unlocked pieces with the selected one
-// highlighted, and a ghost of it on the tile under the cursor, tinted by whether
-// it can go there. Picking a cell goes through `onPick`.
+/** The build bar as drawn (026), for `ui().buildBar`, view px. */
+export interface BuildBarState {
+  shown: boolean;
+  selected: string;
+  cells: (ScreenRect & { pieceId: string; locked: boolean })[];
+  /** Each group's label as drawn: its text box (x, y the top of its capitals) and the group it heads. */
+  groups: (ScreenRect & { category: string; label: string })[];
+  dividers: { x: number; y: number; h: number }[];
+}
+
+// Build mode on screen: the bar of every piece in its groups (026), each group
+// labelled with a thin divider between, locked pieces greyed in their place and
+// the selected one highlighted; and a ghost of it on the tile under the cursor,
+// tinted by whether it can go there.
 export class BuildView {
   private readonly scene: Scene;
-  private cells: { pieceId: string; images: GameObjects.Image[] }[] = [];
+  private readonly cells: { pieceId: string; images: GameObjects.Image[] }[];
+  private readonly labels: TextLine[];
+  private readonly dividers: GameObjects.Graphics;
   private readonly highlight: GameObjects.Image;
   private readonly ghost: GameObjects.Image;
   private readonly ghostIcon: GameObjects.Image;
@@ -56,12 +71,44 @@ export class BuildView {
     this.ghostArrows = Array.from({ length: MAX_ARROWS }, () => addVector(scene, 0, 0, FACING_ARROWS.out.down));
     for (const o of [this.ghost, this.ghostIcon, ...this.ghostArrows]) o.setDepth(DEPTHS.worldUi - 1);
     this.tip = new BuildTip(scene);
+    const L = BUILD_BAR_LAYOUT;
+    const fixed = (o: GameObjects.Image, depth: number): GameObjects.Image => o.setOrigin(0).setScrollFactor(0).setDepth(depth);
+    this.cells = buildBarCells().map((c) => ({
+      pieceId: c.pieceId,
+      images: [
+        fixed(addVector(scene, c.x, c.y, SPRITES.hudAmmoCell), DEPTHS.hud),
+        fixed(addVector(scene, c.x + L.icon.x, c.y + L.icon.y, pieceIcon(c.pieceId)), DEPTHS.hud + 1),
+      ],
+    }));
+    // Each group's label, centred over its cells.
+    this.labels = buildBarGroups().map((g) => {
+      const label = new TextLine(scene, 0, g.y, DEPTHS.hud + 1, false, 'display').set(g.label);
+      return label.moveTo(Math.round(g.x + (g.w - label.width) / 2), g.y);
+    });
+    this.dividers = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.hud);
+    const D = L.divider;
+    this.dividers.fillStyle(colorOf(D.color), D.alpha);
+    for (const d of buildBarDividers()) this.dividers.fillRect(d.x - D.width / 2, d.y, D.width, d.h);
     this.setVisible(false);
   }
 
-  /** True if a screen point is over the bar, so a click there isn't a place in the world. */
+  /** True if a screen point is over the bar or its labels, so a click there isn't a place in the world. */
   overUi(x: number, y: number): boolean {
-    return this.visible && buildBarCells(this.unlocked).some((c) => inRect(c, x, y));
+    return this.visible && inRect(buildBarBox(), x, y);
+  }
+
+  /** What the bar shows, for the test hook (026). */
+  get state(): BuildBarState {
+    return {
+      shown: this.visible,
+      selected: this.selected,
+      cells: buildBarCells().map((c) => ({ ...c, locked: !this.unlocked.includes(c.pieceId) })),
+      groups: buildBarGroups().map((g, i) => {
+        const label = this.labels[i];
+        return { category: g.category, label: g.label, ...(label?.at ?? g), w: label?.width ?? 0, h: label?.lineHeight ?? 0 };
+      }),
+      dividers: buildBarDividers(),
+    };
   }
 
   /** Moves the selection along the bar, wrapping. */
@@ -80,15 +127,16 @@ export class BuildView {
     canPlace: (pieceId: string, tx: number, ty: number, facing: Facing) => PlaceFail | null,
     shapeAt: (tile: Tile, facing: Facing) => { facing: Facing; inFrom: Facing },
   ): void {
-    if (unlocked.join() !== this.unlocked.join()) this.rebuild(unlocked);
+    if (unlocked.join() !== this.unlocked.join()) this.restyle(unlocked);
     if (!unlocked.includes(this.selected)) this.selected = unlocked[0] ?? FIRST_PIECE;
     this.setVisible(building);
     const pointer = this.scene.input.activePointer;
     const at = toView(pointer.x, pointer.y, this.scene.cameras.main.zoom);
-    const hovered = building ? buildBarCells(unlocked).find((c) => inRect(c, at.x, at.y)) : undefined;
-    this.tip.show(hovered?.pieceId ?? null, (hovered?.x ?? 0) + (hovered?.w ?? 0) / 2, hovered?.y ?? 0, VIEW_WIDTH);
+    const hovered = building ? buildBarCells().find((c) => inRect(c, at.x, at.y)) : undefined;
+    // The tip sits over the group labels, so it never hides them (026).
+    this.tip.show(hovered?.pieceId ?? null, (hovered?.x ?? 0) + (hovered?.w ?? 0) / 2, buildBarLabelTop(), VIEW_WIDTH);
     if (!building) return;
-    const cell = buildBarCells(unlocked).find((c) => c.pieceId === this.selected);
+    const cell = buildBarCells().find((c) => c.pieceId === this.selected);
     if (cell) this.highlight.setPosition(cell.x, cell.y);
     this.drawGhost(cursor, facing, mirrored, canPlace, shapeAt);
   }
@@ -135,26 +183,21 @@ export class BuildView {
     }
   }
 
-  private rebuild(unlocked: readonly string[]): void {
-    for (const c of this.cells) for (const o of c.images) o.destroy();
+  /** Greys the pieces not yet unlocked, in their places (026). */
+  private restyle(unlocked: readonly string[]): void {
     this.unlocked = [...unlocked];
-    const L = BUILD_BAR_LAYOUT;
-    this.cells = buildBarCells(unlocked).map((c) => {
-      const fixed = (o: GameObjects.Image, depth: number): GameObjects.Image =>
-        o.setOrigin(0).setScrollFactor(0).setDepth(depth).setVisible(this.visible);
-      const frame = fixed(addVector(this.scene, c.x, c.y, SPRITES.hudAmmoCell), DEPTHS.hud);
-      const icon = addVector(this.scene, c.x + L.icon.x, c.y + L.icon.y, pieceIcon(c.pieceId));
-      fixed(icon, DEPTHS.hud + 1);
-      return { pieceId: c.pieceId, images: [frame, icon] };
-    });
+    for (const c of this.cells) {
+      const alpha = unlocked.includes(c.pieceId) ? 1 : BUILD_BAR_LAYOUT.lockedAlpha;
+      for (const o of c.images) o.setAlpha(alpha);
+    }
   }
 
-  /** Clicking a cell selects its piece. Returns whether the click landed on one. */
+  /** Clicking an unlocked piece's cell selects it; a locked one stays unselectable. Returns whether the click landed on the bar. */
   click(x: number, y: number): boolean {
-    if (!this.visible) return false;
-    const cell = buildBarCells(this.unlocked).find((c) => inRect(c, x, y));
-    if (cell) this.selected = cell.pieceId;
-    return cell !== undefined;
+    if (!this.overUi(x, y)) return false;
+    const cell = buildBarCells().find((c) => inRect(c, x, y));
+    if (cell && this.unlocked.includes(cell.pieceId)) this.selected = cell.pieceId;
+    return true;
   }
 
   private setVisible(visible: boolean): void {
@@ -166,5 +209,7 @@ export class BuildView {
       for (const a of this.ghostArrows) a.setVisible(false);
     }
     for (const c of this.cells) for (const o of c.images) o.setVisible(visible);
+    for (const l of this.labels) l.setVisible(visible);
+    this.dividers.setVisible(visible);
   }
 }

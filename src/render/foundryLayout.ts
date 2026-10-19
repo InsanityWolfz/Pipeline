@@ -1,11 +1,11 @@
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
-import { bottomRow } from './bottomHud';
+import { buildBarLabelTop, groupedBottomRow } from './bottomHud';
 import { INTAKE } from '../data/foundry';
 import { BUILD_BAR_LAYOUT, MENU_COLUMN_GAP, MENU_MAX_ROWS, PICKER_LAYOUT } from '../data/hudLayout';
 import type { AnimDef } from '../data/assets';
 import { CONDUIT_ANIMS, CONDUIT_CORNERS, LOGISTICS_ICONS, SORTER_ANIMS, type CornerKey } from '../data/foundryAssets';
 import { itemDef, ITEMS } from '../data/items';
-import { pieceDef } from '../data/pieces';
+import { BUILD_BAR, PIECE_CATEGORIES, pieceDef, type PieceCategory } from '../data/pieces';
 import { recipeDef } from '../data/recipes';
 import { facingVector, opposite } from '../sim/direction';
 import { footprint, sortSideOf, type Tile } from '../sim/pieces';
@@ -24,14 +24,66 @@ export interface ScreenRect {
 export const inRect = (r: ScreenRect, x: number, y: number): boolean =>
   x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h;
 
-/** One cell per piece in `pieces`, centred along the bottom of the screen. */
-export function buildBarCells(pieces: readonly string[]): (ScreenRect & { pieceId: string })[] {
+/** The build bar's pieces by group (026), in bar order. */
+function barGroups(): { category: PieceCategory; label: string; pieces: string[] }[] {
+  return PIECE_CATEGORIES.map((c) => ({ category: c.id, label: c.label, pieces: BUILD_BAR.filter((id) => pieceDef(id).category === c.id) }));
+}
+
+function groupedCells(): (ScreenRect & { pieceId: string })[][] {
   const L = BUILD_BAR_LAYOUT;
-  const row = bottomRow(pieces.length, { w: L.cellWidth, h: L.cellHeight, step: L.cellStep }, L.bottom);
-  return pieces.flatMap((pieceId, i) => {
-    const box = row[i];
-    return box ? [{ pieceId, ...box }] : [];
+  const groups = barGroups();
+  const rows = groupedBottomRow(
+    groups.map((g) => g.pieces.length),
+    { w: L.cellWidth, h: L.cellHeight, step: L.cellStep },
+    L.groupGap,
+    L.bottom,
+  );
+  return groups.map((g, gi) =>
+    g.pieces.flatMap((pieceId, i) => {
+      const box = rows[gi]?.[i];
+      return box ? [{ pieceId, ...box }] : [];
+    }),
+  );
+}
+
+/** One cell per piece on the build bar, locked or not (026), in groups centred along the bottom of the screen. */
+export function buildBarCells(): (ScreenRect & { pieceId: string })[] {
+  return groupedCells().flat();
+}
+
+/** Each build bar group's label row (026): over its cells, `label.gap` px above them. */
+export function buildBarGroups(): (ScreenRect & { category: PieceCategory; label: string })[] {
+  const L = BUILD_BAR_LAYOUT;
+  const cells = groupedCells();
+  return barGroups().flatMap((g, i) => {
+    const mine = cells[i] ?? [];
+    const first = mine[0];
+    const last = mine[mine.length - 1];
+    if (!first || !last) return [];
+    return [{ category: g.category, label: g.label, x: first.x, y: buildBarLabelTop(), w: last.x + last.w - first.x, h: L.label.h }];
   });
+}
+
+/** The thin dividers between build bar groups (026): centred in each gap, from the label row's top to `divider.inset` px above the cells' bottom. */
+export function buildBarDividers(): { x: number; y: number; h: number }[] {
+  const L = BUILD_BAR_LAYOUT;
+  const groups = buildBarGroups();
+  const top = buildBarLabelTop();
+  const bottom = VIEW_HEIGHT - L.bottom - L.divider.inset;
+  return groups.slice(1).flatMap((right, i) => {
+    const left = groups[i];
+    return left ? [{ x: (left.x + left.w + right.x) / 2, y: top, h: bottom - top }] : [];
+  });
+}
+
+/** The whole build bar with its labels, so a click anywhere on it is the bar's, not a place in the world. */
+export function buildBarBox(): ScreenRect {
+  const groups = buildBarGroups();
+  const first = groups[0];
+  const last = groups[groups.length - 1];
+  if (!first || !last) return { x: VIEW_WIDTH / 2, y: VIEW_HEIGHT, w: 0, h: 0 };
+  const y = buildBarLabelTop();
+  return { x: first.x, y, w: last.x + last.w - first.x, h: VIEW_HEIGHT - BUILD_BAR_LAYOUT.bottom - y };
 }
 
 /** A hopper menu row: take everything in the hopper out, or put all of a held item in. */

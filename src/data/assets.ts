@@ -60,6 +60,10 @@ export const SPRITES = {
   craftRowHover: 'craft-row-hover',
   /** A menu row's look for a moment after it's pressed (020). */
   craftRowPress: 'craft-row-press',
+  /** The crafting menu's own rows (026): taller, for a name under each icon. */
+  craftRecipeRow: 'craft-recipe-row',
+  craftRecipeRowHover: 'craft-recipe-row-hover',
+  craftRecipeRowPress: 'craft-recipe-row-press',
   craftArrow: 'craft-arrow',
   hudAmmoCell: 'hud-ammo-cell',
   hudAmmoSelect: 'hud-ammo-select',

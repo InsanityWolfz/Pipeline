@@ -53,7 +53,8 @@ export class TubeSlotView {
     return { ...this.shown, icons: [...this.shown.icons], labels: [...this.shown.labels], labelBoxes: this.shown.labelBoxes.map((b) => ({ ...b })) };
   }
 
-  update(active: HudActive): void {
+  /** `building`: the build bar is up, so the slot sits above its group labels (026). */
+  update(active: HudActive, building = false): void {
     const S = HUD_LAYOUT.tubeSlot;
     // A volley has one round per intake entrance, and there's a frame for each count; more would be a bug.
     if (active.kind === 'volley' && active.rounds.length > this.units.length) {
@@ -65,9 +66,9 @@ export class TubeSlotView {
         : active.kind === 'volley'
           ? active.rounds.slice(0, this.units.length).map((r) => ({ icon: ammoIcon(r.ammoId), label: String(r.count) }))
           : [{ icon: SPRITES.hudFist, label: S.melee }];
-    const box = tubeSlotBox(shows.length);
+    const box = tubeSlotBox(shows.length, building);
     showFrame(this.frame, tubeSlotFrame(shows.length)).setOrigin(0).setPosition(box.x, box.y);
-    const at = tubeSlotUnits(shows.length);
+    const at = tubeSlotUnits(shows.length, building);
     const iconSize = ITEM_ICON_SIZE * HUD_LAYOUT.activeScale;
     const labelBoxes: { x: number; w: number }[] = [];
     this.units.forEach((u, i) => {

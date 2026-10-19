@@ -9,6 +9,8 @@ import { layItem } from '../sim/drops';
 import type { GameScene } from './GameScene';
 import type { CursorState } from './CursorView';
 import type { BottomHudState } from './HudView';
+import type { BuildBarState } from './BuildView';
+import type { CraftMenuState } from './CraftMenuView';
 
 export interface GameTestHook {
   getState(): SimSummary;
@@ -72,6 +74,10 @@ export interface UiState {
   camera: { x: number; y: number };
   /** The bottom HUD as drawn (025), view px: the hotbar row (and whether it shows) and the tube slot with each unit's icon frame and text. */
   hud: BottomHudState | null;
+  /** The crafting menu as drawn (026): each recipe row's item names and counts with their boxes, and the group headers. */
+  craftMenu: CraftMenuState | null;
+  /** The build bar as drawn (026): every cell (and whether it's locked), the group labels and the dividers. */
+  buildBar: BuildBarState | null;
 }
 
 declare global {

@@ -86,15 +86,25 @@ const HEALTH: Shape[] = [
   rect(49.6, 0, 2.4, 8, 1, solid('brass')),
 ];
 
-// The crafting menu (196x252): a big tablet with a rune course along its top; its rows are dark wells,
-// lit with a cyan rim under the cursor and a brass flash when pressed.
+// The crafting menu (020): a big tablet with a rune course along its top; its rows are dark wells,
+// lit with a cyan rim under the cursor and a brass flash when pressed. The other menus' rows
+// (picker, pause, site menus) are 184x20; the crafting menu's are taller, for the item names (026).
 const CRAFT_PANEL: Shape[] = tablet(CRAFT_MENU_LAYOUT.width, CRAFT_MENU_LAYOUT.height, { runes: true });
 const ROW = { w: PICKER_LAYOUT.rowWidth, h: PICKER_LAYOUT.rowHeight } as const;
-const row = (rim: Shape[]): Shape[] => [well(0.5, 0.5, ROW.w - 1, ROW.h - 1), ...rim];
-const CRAFT_ROW = row([]);
-const CRAFT_ROW_HOVER = row([ring(0.5, 0.5, ROW.w - 1, ROW.h - 1, 1, 0.9, 2), rect(2, 2, ROW.w - 4, ROW.h - 4, 1.4, { fill: { id: 'cyan', alpha: 0.08 } })]);
+const RECIPE_ROW = { w: CRAFT_MENU_LAYOUT.rowWidth, h: CRAFT_MENU_LAYOUT.rowHeight } as const;
+const row = (r: { w: number; h: number }, rim: Shape[]): Shape[] => [well(0.5, 0.5, r.w - 1, r.h - 1), ...rim];
+const hoverRim = (r: { w: number; h: number }): Shape[] => [
+  ring(0.5, 0.5, r.w - 1, r.h - 1, 1, 0.9, 2),
+  rect(2, 2, r.w - 4, r.h - 4, 1.4, { fill: { id: 'cyan', alpha: 0.08 } }),
+];
 // The press flash lies over a row, so it's only a rim and a faint wash: what's in the row shows through.
-const CRAFT_ROW_PRESS: Shape[] = [rect(0.5, 0.5, ROW.w - 1, ROW.h - 1, 2, { stroke: { color: 'brass', width: 1.4 } }), rect(2, 2, ROW.w - 4, ROW.h - 4, 1.4, { fill: { id: 'brass', alpha: 0.18 } })];
+const pressFlash = (r: { w: number; h: number }): Shape[] => [
+  rect(0.5, 0.5, r.w - 1, r.h - 1, 2, { stroke: { color: 'brass', width: 1.4 } }),
+  rect(2, 2, r.w - 4, r.h - 4, 1.4, { fill: { id: 'brass', alpha: 0.18 } }),
+];
+const CRAFT_ROW = row(ROW, []);
+const CRAFT_ROW_HOVER = row(ROW, hoverRim(ROW));
+const CRAFT_ROW_PRESS = pressFlash(ROW);
 const CRAFT_ARROW: Shape[] = [path('M 0.5 1.5 L 4 1.5 L 4 0 L 6.8 2.5 L 4 5 L 4 3.5 L 0.5 3.5 Z', solid('brass'))];
 
 // The crosshair (11x11, round its centre): a cyan ring with four ticks, outlined so it reads on any floor.
@@ -135,6 +145,9 @@ export const HUD_SPRITES_VECTOR: readonly VectorSprite[] = [
   sprite(SPRITES.craftRow, [ROW.w, ROW.h], CRAFT_ROW),
   sprite(SPRITES.craftRowHover, [ROW.w, ROW.h], CRAFT_ROW_HOVER),
   sprite(SPRITES.craftRowPress, [ROW.w, ROW.h], CRAFT_ROW_PRESS),
+  sprite(SPRITES.craftRecipeRow, [RECIPE_ROW.w, RECIPE_ROW.h], row(RECIPE_ROW, [])),
+  sprite(SPRITES.craftRecipeRowHover, [RECIPE_ROW.w, RECIPE_ROW.h], row(RECIPE_ROW, hoverRim(RECIPE_ROW))),
+  sprite(SPRITES.craftRecipeRowPress, [RECIPE_ROW.w, RECIPE_ROW.h], pressFlash(RECIPE_ROW)),
   sprite(SPRITES.craftArrow, [7, 5], CRAFT_ARROW),
   { key: SPRITES.crosshair, size: [11, 11], anchor: [5.5, 5.5], frames: [CROSSHAIR] },
   { key: SPRITES.pointer, size: [10, 14], anchor: [1, 1], frames: [POINTER] },

@@ -43,7 +43,7 @@ import { PLAYTEST_START } from '../../src/data/playtest';
 import { SLOT_AMMOS, STARTING_AMMO } from '../../src/data/tube';
 import { CRAFT_GROUPS, RECIPES } from '../../src/data/recipes';
 import { NODES } from '../../src/data/nodes';
-import { BUILD_BAR, PIECES } from '../../src/data/pieces';
+import { BUILD_BAR, PIECE_CATEGORIES, PIECES, pieceDef } from '../../src/data/pieces';
 import { ENTRANCE_CAP, INTAKE, LOB_SPACING, OPEN_ENTRANCES_COST, SPREAD_STEP } from '../../src/data/foundry';
 import { ENTRANCE_GAUGE_COLORS } from '../../src/data/art/intake';
 import { vectorFrames } from '../../src/render/vector/catalog';
@@ -311,6 +311,31 @@ describe('foundry pieces', () => {
 
   it('are each on the build bar exactly once', () => {
     expect([...BUILD_BAR].sort()).toEqual(Object.keys(PIECES).sort());
+  });
+});
+
+describe('build bar categories (026)', () => {
+  it('gives every build bar piece a category', () => {
+    const ids = PIECE_CATEGORIES.map((c) => c.id);
+    for (const id of BUILD_BAR) expect(ids, id).toContain(pieceDef(id).category);
+  });
+
+  it('groups the bar left to right: logistics, then each ammo chain, each with its label', () => {
+    expect(PIECE_CATEGORIES.map((c) => [c.id, c.label])).toEqual([
+      ['logistics', 'Logistics'],
+      ['arrows', 'Arrows'],
+      ['bombs', 'Bombs'],
+      ['ley', 'Ley'],
+    ]);
+    const grouped = PIECE_CATEGORIES.map((c) => BUILD_BAR.filter((id) => pieceDef(id).category === c.id));
+    expect(grouped).toEqual([
+      ['conduit', 'sorter', 'hopper', 'crate'],
+      ['cutter', 'knapper', 'spinner', 'assembler'],
+      ['shaper', 'fuse-maker', 'packer'],
+      ['grinder', 'focuser'],
+    ]);
+    // In bar order the groups never interleave.
+    expect([...BUILD_BAR]).toEqual(grouped.flat());
   });
 });
 
