@@ -32,5 +32,6 @@ export const CHAMPIONS = {
     charger: ['Cragbutt', 'Ironbrow', 'Quarryhorn', 'Slatebrute', 'Rubblehoof'],
     burrower: ['Gritmaw', 'Delvetooth', 'Shalebore', 'Siltgnaw', 'Quakejaw'],
     shardback: ['Glintwall', 'Shardhide', 'Runeplate', 'Slabguard', 'Prismback'],
+    sniper: ['Longsight', 'Coldlens', 'Farglint', 'Stillaim', 'Pinpoint'],
   } as Readonly<Record<string, readonly string[]>>,
 } as const;

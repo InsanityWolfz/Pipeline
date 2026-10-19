@@ -45,6 +45,8 @@ function scaleAttack(def: EnemyDef, base: Pick<EnemyDef, 'feetBox' | 'hurtbox' |
       return { ...def, ...base, burrow: { ...def.burrow, damage: dmg(def.burrow.damage), speed: def.burrow.speed * CHAMPIONS.speed } };
     case 'shardback':
       return { ...def, ...base, bash: { ...def.bash, damage: dmg(def.bash.damage) } };
+    case 'sniper':
+      return { ...def, ...base, snipe: { ...def.snipe, damage: dmg(def.snipe.damage) } };
   }
 }
 

@@ -301,5 +301,7 @@ export function attackOf(def: EnemyDef): AttackTiming {
       return def.burrow;
     case 'shardback':
       return def.bash;
+    case 'sniper':
+      return def.snipe;
   }
 }

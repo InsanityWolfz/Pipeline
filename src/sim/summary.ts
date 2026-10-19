@@ -118,8 +118,8 @@ export interface SimSummary extends HollowsSummary {
   stagesUnlocked: string[];
   building: boolean;
   foundry: { pieces: PieceSummary[] };
-  /** Wisp orbs in flight; x, y is the ground point. */
-  orbs: { id: number; room: string; x: number; y: number; dx: number; dy: number }[];
+  /** Enemy projectiles in flight, x, y the ground point: Wisp orbs (009) and Sniper bolts (035), by the kind that shot them. */
+  orbs: { id: number; enemyId: string; room: string; x: number; y: number; dx: number; dy: number }[];
   /** Claimed room ids. */
   claims: string[];
   /** Landmarks seen at least once (032), in the order found. */
@@ -216,7 +216,7 @@ export function summarize(state: SimState): SimSummary {
       attunePulse: state.link.attunePulse,
     },
     arrows: state.arrows.map(arrowSummary),
-    enemies: state.enemies.map(enemySummary),
+    enemies: state.enemies.map((e) => enemySummary(state, e)),
     groundItems: state.groundItems.map((g) => ({ id: g.id, itemId: g.itemId, room: g.roomId, x: round(g.x), y: round(g.y) })),
     nodes: state.nodes.map(nodeSummary),
     harvest: state.harvest ? { ...state.harvest } : null,
@@ -234,7 +234,7 @@ export function summarize(state: SimState): SimSummary {
       }),
       volley: volleyRounds(state).map((r) => r.ammoId),
     },
-    orbs: state.orbs.map((o) => ({ id: o.id, room: o.roomId, x: round(o.x), y: round(o.y), dx: round(o.dx), dy: round(o.dy) })),
+    orbs: state.orbs.map((o) => ({ id: o.id, enemyId: o.enemyId, room: o.roomId, x: round(o.x), y: round(o.y), dx: round(o.dx), dy: round(o.dy) })),
     claims: [...state.claims],
     discovered: [...state.discovered],
     landmarks: LANDMARK_LIST.map((l) => ({

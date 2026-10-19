@@ -3,6 +3,7 @@ import { bulwarkThink } from './bulwarkAi';
 import { chargeThink } from './chargerAi';
 import { burrowThink } from './burrowerAi';
 import { shardThink } from './shardbackAi';
+import { snipeThink } from './sniperAi';
 import { defOf } from './champions';
 import { castThink } from './casterAi';
 import { chillScale, tickCold } from './cold';
@@ -70,6 +71,8 @@ function thinkOf(state: SimState, e: EnemyState, def: EnemyDef): [number, number
       return burrowThink(state, e, def);
     case 'shardback':
       return shardThink(state, e, def);
+    case 'sniper':
+      return snipeThink(state, e, def);
   }
 }
 

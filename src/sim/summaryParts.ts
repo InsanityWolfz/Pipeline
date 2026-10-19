@@ -6,6 +6,7 @@ import type { NodeState } from './nodes';
 import type { MachineStatus, PieceState } from './pieces';
 import type { Facing } from './player';
 import { kindSummary, type KindSummary } from './summaryKinds';
+import type { SimState } from './state';
 
 // Summary entries for the sim's lists, used by summary.ts.
 
@@ -68,7 +69,7 @@ export interface EnemySummary extends KindSummary {
   champion: { name: string } | null;
 }
 
-export function enemySummary(e: EnemyState): EnemySummary {
+export function enemySummary(state: SimState, e: EnemyState): EnemySummary {
   return {
     id: e.id,
     enemyId: e.enemyId,
@@ -87,7 +88,7 @@ export function enemySummary(e: EnemyState): EnemySummary {
     flash: e.flash,
     chill: e.chill,
     frozen: e.frozen,
-    ...kindSummary(e),
+    ...kindSummary(state, e),
   };
 }
 

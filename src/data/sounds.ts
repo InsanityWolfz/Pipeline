@@ -307,4 +307,5 @@ export const WINDUP_SOUNDS: Readonly<Record<string, SoundKey>> = {
   charger: SOUNDS.chargerWindup,
   burrower: SOUNDS.burrowRumble,
   shardback: SOUNDS.huskWindup,
+  sniper: SOUNDS.laserHum,
 };

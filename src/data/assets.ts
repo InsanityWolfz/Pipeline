@@ -172,6 +172,7 @@ export const ENEMY_ANIMS: Readonly<Record<string, EnemyAnims>> = {
   charger: enemyAnims('charger', true, ['stun'], 2),
   burrower: enemyAnims('burrower', true, ['dig']),
   shardback: enemyAnims('shardback', true, ['turn', 'block']),
+  sniper: enemyAnims('sniper', true, ['step']),
 };
 
 /** The sparkle played where an item is picked up. */

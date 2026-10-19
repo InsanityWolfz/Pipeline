@@ -71,8 +71,39 @@ export interface ShardbackDef extends EnemyBase, ScreenLeashed {
   };
 }
 
+/** A Sniper construct: paints the player with a laser sight from behind cover before it fires. */
+export interface SniperDef extends EnemyBase, ScreenLeashed {
+  kind: 'sniper';
+  /**
+   * It aggros within `aggroRange` (or on screen). Cover is a free tile within `coverSearch` tiles of it with a tile
+   * that stops shots between it and the player; it waits in the nearest while its cooldown runs, or with none keeps
+   * `keepAway` px off in the open (holding within `settle`), as the Wisp. Ready, it steps at most `peekTiles` to a
+   * tile that sees the player and winds up: `trackTicks` with the sight following them (a blocked line cancels it),
+   * then `lockTicks` locked (`windupTicks` is both). Then one bolt along the locked line at `boltSpeed` px/s, its box
+   * `boltSize` px, for `damage` and `knockback` px over `knockTicks`, ending at a solid or past `range`; the pose holds
+   * `swipeTicks` and it goes straight back to cover (`recoverTicks` 0). Closer than `backOff`, it retreats to cover
+   * farther from the player rather than start a shot.
+   */
+  snipe: AttackTiming & {
+    aggroRange: number;
+    backOff: number;
+    keepAway: number;
+    settle: number;
+    coverSearch: number;
+    peekTiles: number;
+    trackTicks: number;
+    lockTicks: number;
+    boltSpeed: number;
+    boltSize: number;
+    damage: number;
+    range: number;
+    knockback: number;
+    knockTicks: number;
+  };
+}
+
 /** Region 2's four (035), as one union for EnemyDef. */
-export type HollowsEnemyDef = ChargerDef | BurrowerDef | ShardbackDef;
+export type HollowsEnemyDef = ChargerDef | BurrowerDef | ShardbackDef | SniperDef;
 
 /** The base fields they share, as the old enemies' (enemies.ts). */
 const BASE = { boss: false, hitKnockTicks: 4, hitFlashTicks: 6, leashGraceTicks: 60, homeTolerance: 4 } as const;
@@ -179,4 +210,40 @@ export const SHARDBACK: ShardbackDef = {
   anims: 'shardback',
 };
 
-export const HOLLOWS_ENEMIES = { charger: CHARGER, burrower: BURROWER, shardback: SHARDBACK } as const;
+const SIGHT = { trackTicks: 60, lockTicks: 24 } as const;
+
+export const SNIPER: SniperDef = {
+  ...BASE,
+  kind: 'sniper',
+  id: 'sniper',
+  name: 'Sniper construct',
+  maxHealth: 30,
+  walkSpeed: 50,
+  feetBox: { w: 14, h: 8 },
+  hurtbox: { w: 18, h: 36, offsetY: -18 },
+  hitKnockback: 6,
+  snipe: {
+    aggroRange: 320,
+    backOff: 96,
+    keepAway: 200,
+    settle: 2,
+    coverSearch: 5,
+    peekTiles: 1,
+    ...SIGHT,
+    windupTicks: SIGHT.trackTicks + SIGHT.lockTicks,
+    swipeTicks: 8,
+    recoverTicks: 0,
+    // Counted from the wind-up's start.
+    cooldownTicks: 240,
+    boltSpeed: 480,
+    boltSize: 6,
+    damage: 28,
+    range: 400,
+    knockback: 12,
+    knockTicks: 4,
+  },
+  drops: HOLLOWS_DROPS,
+  anims: 'sniper',
+};
+
+export const HOLLOWS_ENEMIES = { charger: CHARGER, burrower: BURROWER, shardback: SHARDBACK, sniper: SNIPER } as const;
