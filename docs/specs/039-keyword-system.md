@@ -262,3 +262,13 @@ Each has a proposed answer that the build follows (approve-on-draft); Shaun may 
 - **039.15 Art for the six new rounds?** Proposal: no new sprites. Each uses its base's icon and projectile with the element's badge and tint (cold: 029's pale ice), and a Cold Burst recolours the burst flash. Pending Shaun's approval by eye.
 - **039.16 Which meaning keeps "Fuse"?** Proposal: the part (Fuse, Fuse maker). The landmine's delay is its **arm time**, and Short Fuse becomes Swift Arc.
 - **039.17 Ley material names (Ley crystal, Ley-iron, Ley vein, Ley guide, Ley dust…) beside the Ley family keyword?** (Raised in review.) Proposal: keep them. They name materials, nodes and places of the world's magic, never the Ley family's rule, so they are allowed as content names the way 039.7 allows world names. The reserved-word test lists them under Ley and says so.
+
+## Raised after the build (for Shaun at playtest)
+- **Side effect of unrounded bomb flight** (listed change 3). Landing ticks are unchanged, but a bomb the Hollows barrier stops mid-flight can now drop a tick sooner and a few px away. Pinned in tests/sim/pinned039.test.ts, with the old values in a comment.
+- **Choices the spec didn't make:**
+  - Shatterpoint reaches Ley rounds only, not their Shards
+  - the inventory panel went to three columns to fit the six new frost rounds
+  - Cold Burst flashes use a screen tint
+  - the scripted tutorial player now clears nearby packs before claiming the shrine, because the Warden can no longer be pushed (a test change, not a game change)
+- **Naming for later:** if Fire becomes an element, the "fire rate" wording will clash (039 open questions).
+- **Art:** frost badges, tints and the Cold Burst flash wait on Shaun's approval by eye (docs/review/039).
