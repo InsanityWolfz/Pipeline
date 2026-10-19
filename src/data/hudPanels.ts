@@ -42,11 +42,11 @@ export const HP_BAR = {
   pulseMs: 900,
   pulseScale: 0.06,
   pulseBrighten: 0.35,
-  edge: { color: 'hit-red', alpha: 0.5, inner: 0.45 },
+  edge: { color: 'hit-red', alpha: 0.6, inner: 0.4 },
   chunkHoldMs: 400,
   chunkDrainMs: 300,
   riseMs: 220,
-  glow: { color: 'cyan', blur: 5, pad: 8, fadeMs: 200 },
+  glow: { color: 'cyan', blur: 5, pad: 12, fadeMs: 200 },
 } as const;
 
 /** The inventory panel's groups (031), in the order they always appear, each with its header. */
