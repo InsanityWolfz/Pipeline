@@ -13,10 +13,10 @@ The player earns XP by fighting and exploring: kills (more in outer rings and fr
   - "Economy and progression": "Combat: leveling | XP and talent points | The skill tree"; gold never buys talent points
   - "Death and tension": level and talents are always kept
   - "Open questions": "Skill tree shape, size, and how the lanes connect". This spec answers it.
-- Spec 029 (ammo stages): arrows pierce, ley crystals don't (today's `ley-bolt`), bombs have no burn and a 48 px blast. Frost is the only element in Milestone 1. Homing and the 5-shard star split are ley crystal variants.
+- Spec 029 (ammo stages): arrows pierce, ley bolts don't (Shaun's "ley crystals"; the ammo keeps the id and name `ley-bolt`, 029 open question), bombs have no burn and a 48 px blast. Frost (cold) is the only element in Milestone 1. Homing and the 5-shard star split are ley bolt variants.
 - Spec 028 (foundry flow): each entrance fires at its own rate.
 - Spec 030 (healing): no free field regen; field regen comes only from gear and talents.
-- Spec 032 (champions and landmarks): champions, and the landmark-discovered event.
+- Spec 032 (champions and landmarks): champions (the death event's `champion` flag), and the `discoveries` event.
 - Spec 036 (equipment): `playerStats`, which talents add to.
 - docs/brainstorm/2026-10-19-content.md, sections 3 and 4: "Each level gives one talent point… The level is just the pacing clock for the tree"; "Keystones reward mixing ammo, not more of the same, since all-one-ammo already wins"; "Cut: an active-skill bar."
 - Interview answers (Shaun, 2026-10-19):
@@ -48,8 +48,9 @@ The player earns XP by fighting and exploring: kills (more in outer rings and fr
 | Husk | 5 |
 | Wisp | 6 |
 | Pylon Warden (first kill) | 150 |
-| Region 2 enemies and the Bulwark | set in their specs |
-| Ring multiplier | ring 0 ×1, ring 1 ×1, ring 2 ×2, Region 2 ×3 |
+| Charger, Burrower, Shardback, Sniper construct (035) | 6 each |
+| The Bulwark (034, first kill) | 300 |
+| Ring multiplier | ring 0 ×1, ring 1 ×1, ring 2 ×2, ring 3 (Region 2) ×3 |
 | Champion | ×3 |
 | Claiming a pylon | 50 |
 | A landmark's first discovery | 25 |
@@ -73,9 +74,9 @@ The player earns XP by fighting and exploring: kills (more in outer rings and fr
 | B1 | Bombs | Black Powder | bomb damage +10% | start, B2 |
 | B2 | Bombs | Wide Casing | blast radius +15% (48 → 55 px) | B1, B3 |
 | B3 | Bombs | Short Fuse | bombs reach their target 25% sooner | B2, K1 |
-| L1 | Ley | Attuned Crystal | ley crystal damage +10% | start, L2 |
-| L2 | Ley | Seeker's Lens | homing crystals turn 30% sharper | L1, L3 |
-| L3 | Ley | Splinter | shatter crystals split into 7 shards, not 5 | L2, K2 |
+| L1 | Ley | Attuned Crystal | ley bolt damage +10% | start, L2 |
+| L2 | Ley | Seeker's Lens | homing ley bolts turn 30% sharper | L1, L3 |
+| L3 | Ley | Splinter | star ley bolts burst into 7 shards, not 5 | L2, K2 |
 | T1 | Tube | Oiled Breech | fire rate +8%, all ammo | start, T2 |
 | T2 | Tube | Steady Grip | the walk slow while firing eases from ×0.7 to ×0.8 | T1, T3 |
 | T3 | Tube | Hard Bore | damage +6%, all ammo | T2, K3 |
@@ -84,11 +85,11 @@ The player earns XP by fighting and exploring: kills (more in outer rings and fr
 | S3 | Survival | Braced | armor +3 | S2, S4 |
 | S4 | Survival | Fleet | move speed +5% | S3 |
 | K1 | Arrows–Bombs | Blastfletch (combo keystone) | a bomb's blast leaves its area charged for 20 ticks; an arrow flying through it gains +50% damage and bursts in a 24 px blast on its next hit | A3, B3 |
-| K2 | Arrows–Ley | Shatterpoint (combo keystone) | a ley crystal that hits a frozen enemy ends the freeze for double damage, and 4 ice shards burst from it for 50% damage each | A3, L3 |
+| K2 | Arrows–Ley | Shatterpoint (combo keystone) | a ley bolt that hits a frozen enemy ends the freeze for double damage, and 4 ice shards burst from it for 50% damage each | A3, L3 |
 | K3 | Tube | Overpressure (lane capstone) | holding fire ramps the fire rate up to +25% over 2 s; it resets when fire is released | T3 |
 
   That's 19 nodes plus the start, three of them keystones (two combos and one capstone).
-- [ ] No damage type other than physical and frost appears, and no node gives arrows more pierce.
+- [ ] No damage type other than physical and cold (frost) appears, and no node gives arrows more pierce.
 
 **Respec (sim)**
 - [ ] A `respec` command, only while the player is in the foundry, clears every talent but the start and returns all points. It's free and records a respec event.
@@ -119,7 +120,7 @@ The player earns XP by fighting and exploring: kills (more in outer rings and fr
 
 ## Data changes
 - `src/data/leveling.ts` (new): `XP_CURVE`, `LEVEL_CAP`, `RING_XP`, `CHAMPION_XP`, `CLAIM_XP`, `LANDMARK_XP`, `BOSS_REFIGHT_XP`.
-- `src/data/enemies.ts`: an `xp` value on every enemy.
+- `src/data/enemies.ts`: an `xp` value on every enemy, including 034's Bulwark and 035's four.
 - `src/data/talents.ts` (new): `TALENTS` (the table above, with panel positions), the keystone tuning (charge ticks, damage scales, burst radius, shard count, ramp ticks and cap) and the lane colours.
 - `src/data/hudLayout.ts`: the XP bar and the tree panel layout.
 - Sprites: node and keystone frames, lane icons, the level-up ring and the three keystone effects. Sounds: level up, take talent, respec.
@@ -155,4 +156,5 @@ Each has a proposed answer. All must be settled before approval.
 6. **Ring 0.** It has no packs today. Proposed: ×1, the same as ring 1.
 7. **Where points are spent.** Respec is foundry-only. Proposed: points can be spent anywhere, even mid-trip.
 8. **Does the tree panel pause the game?** Proposed: no, like the other panels, so opening it mid-fight is a risk rather than a safe pause.
-9. **Key.** Proposed: T for talents. Taken keys today: WASD, Space, E, R, F, C, B, M, Esc, [, ], 1–4, and I or Tab for the inventory (031).
+9. **Key.** Proposed: T for talents. Taken keys today: WASD, Space, E, R, F, C, B, M, Esc, [, ], 1–4, I or Tab for the inventory (031), and J for the research list (033).
+10. **Region 2 XP.** 034 and 035 leave XP to this spec. Proposed: 6 per Region 2 enemy (×3 for ring 3, so 18) and 300 for the Bulwark's first kill, twice the Warden.

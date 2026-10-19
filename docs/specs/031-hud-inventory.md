@@ -44,7 +44,7 @@ The screen stays clean, and the death rule becomes readable:
   - This spec adds one pure helper that computes these numbers. The panel and the hook both use it, and a test checks it against what `wake()` actually keeps.
 - **Depends on:**
   - **030 (healing)** must land first for the cyan glow. Build order puts healing (3) before the HUD pass (4). If 030 isn't built yet, every other criterion can still be built, and the glow criterion waits.
-  - New items from 029 (rime shard, stage machines' outputs) and 033 (schematics) each need a panel `group` when they are added. The data test enforces this.
+  - Items from 029 (the rime shard and the tagged rounds), which is built before this spec, are mapped below. Items added after it (033's machine parts and schematics, 034's ley-iron, iron plate, landmine and Bulwark core) each add their panel `group` in their own spec. The data test enforces this.
 
 ## Acceptance criteria
 
@@ -76,13 +76,13 @@ The screen stays clean, and the death rule becomes readable:
   - identified armor pieces by name, weight and armor value. The worn piece is marked "worn". Identified pieces are always shown as safe, since a death never takes them.
 - [ ] A footer line explains the rule: "At risk: lost if you die before reaching the foundry or a claimed pylon." Exact wording is up to Shaun.
 - [ ] Every item has a panel group in data. A data test fails if an item has none. Current mapping:
-  - **Raw:** wood, stone, fiber, ley crystal, husk resin
+  - **Raw:** wood, stone, fiber, ley crystal, husk resin, rime shard (029)
   - **Parts:** shaft, arrowhead, rope, casing, fuse, ley shard
-  - **Ammo:** arrow, bomb, ley bolt
+  - **Ammo:** arrow, bomb, ley bolt, and 029's tagged rounds (frost arrow, homing ley bolt, star ley bolt)
   - **Gear:** unidentified armor
   - **Cores:** warden core
-  - The warden core goes under Cores. 033 (draft) moves it to a new `core` kind; until then the panel's `group` field places it, and its `kind` stays `part`.
-  - 033's machine parts (such as `rune-cog`) go under Parts. Its schematics depend on open question 2.
+  - The warden core goes under Cores. Its `kind` stays `part`; the panel's `group` field places it (033 later also tags it `research: 'core'`).
+  - 033's machine parts (such as `ancient-gear`) and its schematics go under Parts (open question 2; 033 agrees).
 - [ ] `__GAME__.ui()` reports `inventory: { open, groups: [{ id, rows: [{ itemId, count, atRisk }] }] }`.
 
 **Materials column removed (render, data)**
@@ -176,7 +176,7 @@ The screen stays clean, and the death rule becomes readable:
 - Showing intake reservoirs or foundry contents in the panel.
 - Changes to the death rule, banking or the stash.
 - How healing works. That is spec 030; this spec only draws its state.
-- The equipment slots (helm, body, boots, trinket) and affixes from round 9, which will extend Gear later.
+- The equipment slots (helm, body, boots, trinket) and affixes from round 9, which 036 adds to Gear later.
 - A feed line for stash takes, crate takes or hand crafts.
 - Enemy overhead health bars.
 
@@ -199,7 +199,7 @@ The screen stays clean, and the death rule becomes readable:
 ## Open questions
 1. **What the panel shows from the stash.** Shaun said the panel marks "what's at risk against what's banked". In the sim, banked items are carried items you'd keep, while a pylon deposit moves items into the stash at home. **Proposal:** rows show carried items split into safe and at risk, and each row also shows a dim "home N" from the stash, so the panel tells you what you own in total.
 2. **Where schematics go.** 033 adds a `schematic` item kind, which isn't one of Shaun's five groups. **Proposal:** schematics go under Parts beside 033's machine parts, cores go under Cores, and no sixth group is added.
-3. **Gear with many identified pieces.** Pieces pile up, since 010 keeps every one, and the panel could overflow. **Proposal:** Gear lists the worn piece and the unidentified count, then one line, "N spare pieces (kept)". The full list waits for the equipment spec (round 9's slots).
+3. **Gear with many identified pieces.** Pieces pile up, since 010 keeps every one, and the panel could overflow. **Proposal:** Gear lists the worn piece and the unidentified count, then one line, "N spare pieces (kept)". The full list waits for 036 (round 9's slots).
 4. **Where the pickup feed sits.** **Proposal:** top-left, where the materials column was, clear of the objective panel and minimap. The alternative is just above the HP block, bottom-left, which is closer to the bar but crowds the corner.
 5. **HP bar size.** "Much larger" could mean about 3× (144×12 fill), which in build mode rises above the build bar when the bar is wide. A smaller bar, about 96×10, would never need to move. **Proposal:** 144×12 with the rise rule. These are starting values in data either way.
 6. **The normal fill colour.** Today the fill is `rust`, which already looks reddish, so "a red bar" below 25% would barely show. **Proposal:** normal fill `leaf`, a green, and `hit-red` below 25%.

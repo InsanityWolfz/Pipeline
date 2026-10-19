@@ -161,7 +161,7 @@ Depends on 028 (hoppers fed by lines, entrances at their own rate).
   - **Area:** about tiles (9, 5)–(19, 13), kept as a clearing.
   - **Ground:** a frosted look.
   - **Rime clusters:** three, at (12, 7), (16, 8) and (14, 11).
-  - **Path:** two tiles wide, from the west path's end at (12, 27) north to (14, 14).
+  - **Path:** two tiles wide, from the west path's end at (12, 27) north to (14, 14). That end becomes a fork: 034 continues the road west to the Region 2 barrier, and 030's west spring sits just south of it.
 - [ ] A guard pack in its own group, `grotto`, holds it: 3 Husks and 1 Wisp, placed by hand. They come back on a KO's world reset, as the shrine's guards do before its claim. It has no pylon and can't be claimed.
 - [ ] Every rime cluster is reachable on foot from the wake tile (a data test on the generated map).
 
@@ -231,11 +231,11 @@ Depends on 028 (hoppers fed by lines, entrances at their own rate).
 - Art and sound data as above.
 
 ## Out of scope
-- **Milestone 2 stages:** the lightning and fire runes, cluster bombs, landmines, the laser and the static-pool bomb.
+- **Milestone 2 stages:** the lightning and fire runes and the static-pool bomb (later specs). Cluster bombs and landmines come with 034; the laser is parked (R11).
 - **The Splayer**, the Hardener and the Refiner.
 - **A "Heavy" arrow shape.** That means no shape stage for arrows or element stage for ley bolts in Milestone 1, so no round combines both slots yet. The rule is enforced and tested regardless.
 - **The full landmark system** (032): discovery, minimap reveal, XP for finding the Grotto, Ley Grottos as claimable resource sites, a rime-shard supply port.
-- **Talent nodes** that build on cold (the skill tree spec).
+- **Talent nodes** that build on cold (037).
 - **Tagged recipes in the C crafting menu**, which has no scroll (known limit, 026).
 - **Ascension or Ruined Cache rewards** for stages.
 
@@ -291,15 +291,15 @@ Depends on 028 (hoppers fed by lines, entrances at their own rate).
   - the bench's Stages section
 
 ## Open questions
-- **Arrow pierce limit:** proposal: arrows pass through 2 enemies (3 hits). R11 rules out "arrows pierce infinitely" as a keystone, which suggests base pierce is finite. Should it be unlimited instead?
-- **Bomb damage type:** with burn gone, does the bomb stay `fire`, a type with no fire behaviour, or become `physical` until the fire rune? (Proposal: physical.)
-- **Ley bolt's name:** Shaun calls them "ley crystals", but that's already the raw's name. Proposal: keep "Ley bolt" for the ammo.
-- **Ley guide input:** not decided. Proposal: 1 ley crystal per 4 rounds.
-- **Shatter lens input:** not decided. Proposal: 2 ley crystals per 4 rounds, dearer than homing because it adds 5 projectiles (pillar 3).
-- **Stage names:** frost rune is Shaun's. Ley guide is from design.md. "Shatter lens" is a proposal.
-- **Is homing a shape?** Proposal: yes, so a ley bolt is homing or star, never both. The alternative is homing as a third slot, so the two combine.
-- **"Selected target":** design.md says ley-guided ammo locks onto a selected target. Proposal: the enemy nearest the cursor when fired, with no new targeting input.
-- **Cold numbers and bosses:** the starting values above, including half-length freezes for bosses and the refreeze window. None of these are in the design.
-- **When bench stage rows appear:** proposal: once the shrine is claimed. The alternative is when the stage's material is first carried.
-- **Carried tagged rounds:** proposal: they fire from their base slot, before plain rounds.
-- **Grotto guards and placement:** 3 Husks and a Wisp, back on a KO. The tile positions are proposals for review.
+1. **Arrow pierce limit:** proposal: arrows pass through 2 enemies (3 hits). R11 rules out "arrows pierce infinitely" as a keystone, which suggests base pierce is finite. Should it be unlimited instead?
+2. **Bomb damage type:** with burn gone, does the bomb stay `fire`, a type with no fire behaviour, or become `physical` until the fire rune? (Proposal: physical.)
+3. **Ley bolt's name:** Shaun calls them "ley crystals", but that's already the raw's name. Proposal: keep "Ley bolt" for the ammo.
+4. **Ley guide input:** not decided. Proposal: 1 ley crystal per 4 rounds.
+5. **Shatter lens input:** not decided. Proposal: 2 ley crystals per 4 rounds, dearer than homing because it adds 5 projectiles (pillar 3).
+6. **Stage names:** frost rune is Shaun's. Ley guide is from design.md. "Shatter lens" is new. Proposal: keep all three.
+7. **Is homing a shape?** Proposal: yes, so a ley bolt is homing or star, never both. The alternative is homing as a third slot, so the two combine.
+8. **"Selected target":** design.md says ley-guided ammo locks onto a selected target. Proposal: the enemy nearest the cursor when fired, with no new targeting input.
+9. **Cold numbers and bosses:** the starting values above, including half-length freezes for bosses and the refreeze window. None of these are in the design. Proposal: ship them as starting values and tune in playtest.
+10. **When bench stage rows appear:** proposal: once the shrine is claimed. The alternative is when the stage's material is first carried.
+11. **Carried tagged rounds:** proposal: they fire from their base slot, before plain rounds.
+12. **Grotto guards and placement:** proposal: 3 Husks and a Wisp, back on a KO, at the tiles above (north-west, ring 2, clear of 032's and 030's positions).

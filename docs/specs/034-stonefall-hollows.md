@@ -8,7 +8,7 @@ The west path no longer ends in nothing. It runs to a ley barrier, and beyond it
 
 In the Hollows the player:
 - finds 2–3 landmarks
-- claims a second pylon
+- claims the region's pylon
 - gathers ley-iron, the game's first metal
 - fights the Bulwark, a slow-turning shielded wall that has to be beaten from behind or from above
 
@@ -55,7 +55,7 @@ Ley-iron unlocks two things:
 **The region (data, sim)**
 - [ ] The overworld grows west by a region of about 40×45 tiles, making the map about 120×45.
   - /plan decides whether existing tile coordinates shift by +40 or the region uses its own offset. Either way, every landmark, node, pack, path and test names tiles through `OVERWORLD` data, so nothing is hard-coded.
-- [ ] The west path, which today ends at tile (12, 27), continues past 032's Quarry to the map's old west edge. There it reaches a gap in the region's eastern cliffs, where the barrier stands (032, open question 1).
+- [ ] The west path, which today ends at tile (12, 27), continues west from that end to the map's old west edge. The end becomes a fork: 029's path turns north to the Frozen Grotto, and 030's west spring sits just south of it, beside the road. At the old west edge the road reaches a gap in the region's eastern cliffs, where the barrier stands. Its exact tile is set with 032's positions (032, open question 1).
 - [ ] The terrain is generated from the fixed seed with Hollows settings, so it is the same every run:
   - grey-blue stone ground with rubble and quarry-cut terraces
   - cliff runs that block movement and straight shots (lobbed shots fly over, as they do over everything)
@@ -74,12 +74,12 @@ Ley-iron unlocks two things:
 - [ ] 2–3 hand-placed landmarks, hidden until found (032), each overriding the terrain under it. The names are placeholders (see the open questions):
   - **The Ley-iron Cut:** an open quarry face with a dense cluster of ley-iron seams and boulders. It is a resource site, as in 032.
   - **The Broken Aqueduct:** a long fallen span crossing the region, whose pillars and rubble make cover. Snipers (035) use it.
-  - A third, optional: proposed as a Ley Spring (032) on the far side from the barrier (see the open questions).
+  - A third, optional: proposed as a Ley Spring (030's rules, a landmark per 032) on the far side from the barrier (see the open questions).
 - [ ] **A claimable site, the Cistern Terrace:** a ruined terrace with a pylon, guarded by a fixed Region 2 pack (035). It is claimed by the 009/017 rules: clear it, then hold E. Claiming it gives:
   - a safe zone (017)
   - a deposit point and fast travel (009)
-  - supply: per round 5, it sends its area's resources, ley-iron and stone. Each is added to that resource's supply port (028), and the foundry gains a ley-iron port on its wall.
-- [ ] Fast travel now has two destinations: E at the waystone opens a menu of claimed sites. E at a claimed pylon still offers "Travel to foundry".
+  - supply: per round 5, it sends its area's resources, ley-iron and stone. Each is added to that resource's supply port (028), and the foundry gains a ley-iron port on the west wall beside 028's four (tile chosen in /plan, clear of the bench).
+- [ ] Fast travel: the Cistern Terrace joins the waystone's menu of claimed sites (032). E at a claimed pylon still offers "Travel to foundry".
 - [ ] The site can be claimed before or after the Bulwark falls.
 
 **Ley-iron (data, sim)**
@@ -88,7 +88,7 @@ Ley-iron unlocks two things:
 
 **The shield rule (sim, shared with 035)**
 - [ ] Enemy data gains an optional `shield: { arcDegrees, turnDegPerSec }`. A shielded enemy has a continuous facing angle and turns toward the player at no more than `turnDegPerSec`. It never snaps.
-- [ ] A straight projectile (arrow, ley crystal) or a punch (023) that hits a shielded enemy is **blocked** when the hit point's bearing from the enemy's centre is within `arcDegrees / 2` of its facing.
+- [ ] A straight projectile (arrow, ley bolt, star shard) or a punch (023) that hits a shielded enemy is **blocked** when the hit point's bearing from the enemy's centre is within `arcDegrees / 2` of its facing.
   - It deals no damage, piercing rounds stop there, and a punch does no knockback.
   - It records a `blocked` event and shows a brass spark and a clang.
   - Hits from outside the arc land normally.
@@ -158,11 +158,12 @@ Ley-iron unlocks two things:
 - [ ] Bomblets are lobbed bursts: shields don't block them.
 
 **Objectives (data)**
-- [ ] The goal chain (028) gains Region 2 steps after the shrine:
+- [ ] The Milestone 1 goal chain (028) gains these Region 2 steps, tagged `milestone: 'm1'`, after 032's "Claim a second pylon" and before the frontier line:
   1. "Breach Stonefall Hollows": the barrier is down and the player is in the region
   2. "Claim the Cistern Terrace's pylon"
   3. "Defeat the Bulwark"
   4. "Restore the intake's third entrance (E with the Bulwark core)"
+  5. "Feed all three entrances" (028's goal, moved here by 033)
   
   Each uses an existing check or a new one: `inRegion`, `claimed`, `bossDefeated` and `restored` (033).
 
@@ -215,11 +216,11 @@ Ley-iron unlocks two things:
 - `src/data/enemies.ts`:
   - an optional `shield` field on enemy defs
   - `bulwark`, a new attack kind with its lob and pound blocks
-- `src/data/items.ts`: `ley-iron` (raw), `bulwark-core` (core, if 033 hasn't added it), `iron-plate` (part), `landmine` (ammo).
+- `src/data/items.ts`: `ley-iron` (raw), `bulwark-core` (core, if 033 hasn't added it), `iron-plate` (part), `landmine` (ammo), each with its 031 panel group.
 - `src/data/nodes.ts`: `ley-iron-seam` and the `cliff-seam` placement.
 - `src/data/ammo.ts`: `landmine` (kind `mine`); the cluster block on the bomb's tag behaviour (029's tag table).
 - `src/data/recipes.ts` and `src/data/pieces.ts`: the plate press and the mine packer with their recipes, and the cluster stage machine.
-- `src/data/claims.ts`: the Cistern Terrace site, a ley-iron supply port fixture, and a waystone destination list.
+- `src/data/claims.ts`: the Cistern Terrace site and its `SITE_SUPPLY` entry, a ley-iron supply port fixture, and the Terrace in 032's waystone destination list.
 - `src/data/objectives.ts`: the Region 2 steps and the checks `inRegion` and `bossDefeated`.
 - `src/data/palette.ts` and `src/data/art`: as listed under Art.
 - Sounds: barrier collapse, shield clang, enemy bomb tick and burst, pound, summon, mine arm and burst.
@@ -231,7 +232,7 @@ Ley-iron unlocks two things:
 - The 4th and 5th entrances.
 - Region 3 and its gate.
 - Ley range falloff.
-- XP for the boss, the site or landmarks (the leveling spec).
+- XP for the boss, the site or landmarks (037).
 - Gear drops from the Bulwark.
 
 ## Test plan
@@ -270,9 +271,9 @@ Ley-iron unlocks two things:
 Each comes with a proposed answer. All of them must be resolved before approval.
 
 1. **Names.** The Ley-iron Cut, the Broken Aqueduct, the Cistern Terrace, the Sunken Forum, the plate press, the mine packer and `iron-plate` are placeholders. Proposal: keep them unless Shaun prefers others.
-2. **A third landmark?** Shaun said 2–3. Proposal: a Ley Spring (032) deep in the region, so the push to the Bulwark has a place to heal.
+2. **A third landmark?** Shaun said 2–3. Proposal: a Ley Spring (030) deep in the region, so the push to the Bulwark has a place to heal.
 3. **Shield against lobbed rounds.** design.md answers an armored front with arcing shots. Proposal: bursts always land, even on the front side, and only straight shots and punches are blocked.
-4. **Shield arc and turn speed.** Proposal: 180° and 40°/s, a 4.5 s half turn, at a walk of 120 px/s. It is tuned in playtest until "a player who gets behind it has time to hit it".
+4. **Shield arc and turn speed.** Proposal: 180° and 40°/s, a 4.5 s half turn, at a walk of 18 px/s. It is tuned in playtest until "a player who gets behind it has time to hit it".
 5. **The Bulwark's other numbers.** Proposal: the table above (health 900, lob and pound values), tuned so that triple arrows from behind take about 30–45 s.
 6. **"The first kill unlocks the gate" (round 11).** No Region 3 exists yet. Proposal:
    - The first kill records the defeat, wakes the altar and advances the goal chain.

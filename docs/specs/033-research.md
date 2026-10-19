@@ -54,7 +54,7 @@ Rare schematic drops in the field reveal specific nodes. They are the game's fir
 - [ ] A revealed node's diagram is drawn on the foundry at its anchor: faint cyan linework over the stone, gently pulsing, in the 020 vector style.
   - **Intake entrances:** the diagram sits over the brass cap.
   - **Reservoir:** the diagram sits on the intake pipe.
-  - **Machine speed, splitter and merger:** each has a wall panel. The tiles are chosen in /plan, on the walls, clear of the door, the fixtures and the intake.
+  - **Machine speed, splitter and merger:** each has a wall panel. The tiles are chosen in /plan, on the walls, clear of the door, the fixtures, 028's supply ports and the intake.
 - [ ] Within reach of a revealed diagram whose `requires` are met, E opens a small one-row panel in the 026 menu style. It shows:
   - the node's name and its one-line effect
   - its cost as icons and counts, with missing inputs in rust-light as in 026
@@ -110,23 +110,23 @@ Rare schematic drops in the field reveal specific nodes. They are the game's fir
   - 5% for a champion (032)
   - a Ruined Cache uses its own table: 20% schematic (032)
 - [ ] Which schematic drops is picked evenly from those that are not yet revealed, carried, or lying on the ground, and whose region allows it. Each schematic lists the regions it can drop in; `schematic-reservoir-2` drops only in Region 2 (034). When none is eligible, no schematic drops, so there are no duplicates.
-- [ ] **The pop.** A dropped schematic lands with the pop that 032 specifies (a ley-light pillar, a burst of sparks and its own sound), whichever spec is built first. This spec adds:
+- [ ] **The pop.** This spec owns it (032's cache and champions only roll). A dropped schematic lands with a ley-light pillar, a burst of sparks and its own sound, and:
   - the pillar lasts until the schematic is picked up
   - a minimap ping while it lies on the ground
   - a banner on pickup naming it, such as "Schematic: Splitter"
-- [ ] If 032 shipped first, its placeholder "Lost schematic" item is replaced: the cache's schematic entry rolls 033's schematics as above, and any placeholder already carried or banked becomes a random eligible schematic.
+- [ ] 032 ships first, with its cache opening for raws only. This spec fills the cache's rare entries as data (the schematic roll above and the `ancient-gear` part), with no cache code change.
 - [ ] A schematic reveals its node once it is **banked**: carried into the foundry, or sent home from a pylon (009). Its diagram then appears, with a short reveal shimmer, and its list row gets its name. A KO before banking loses it under the death rule (011), and the node stays hidden.
 - [ ] Restoring spends the schematic as part of the cost.
 
 **Machine parts (data)**
-- [ ] Item data gains a `research` tag: `core`, `machinePart` or `schematic`. The cost-validity test reads it. Item `kind`s are unchanged, as 031 keeps `warden-core` a `part`. For 031's panel groups, cores go in Cores, and machine parts and schematics in Parts.
+- [ ] Item data gains a `research` tag: `core`, `machinePart` or `schematic`. The cost-validity test reads it. Existing item `kind`s are unchanged (`schematic` is the one new kind), as 031 keeps `warden-core` a `part`. For 031's panel groups, cores go in Cores, and machine parts and schematics in Parts.
 - [ ] One machine part per region:
   - Region 1: `ancient-gear`, the "rare part" 032 proposes for caches and champions
   - Region 2 (034): `aqueduct-valve`, a brass valve from the Hollows' waterworks
   - Names and drop rates are proposals (see the open questions).
 - [ ] Region 1 drops, starting values:
   - Husks and Wisps drop an `ancient-gear` 4% of the time.
-  - A champion multiplies this by its drop multiplier (032).
+  - A champion rolls it once, at a champion rate in this spec's data (starting at 12%, 3× the normal rate), not once per drop roll (032).
   - A Ruined Cache rolls its 50% rare part (032) as an `ancient-gear`.
 
 **The 024 migration**
@@ -136,6 +136,7 @@ Rare schematic drops in the field reveal specific nodes. They are the game's fir
   - `INTAKE_PROMPT` ("open the side entrances")
 - [ ] The cap-lift animation and sound play for the one entrance restored. The `intakeOpens` event is kept for render, with a single index, alongside `restores`.
 - [ ] The tutorial objective "Open the intake's side entrances (E with a warden core)", with check `sidesOpen`, becomes "Restore a second intake entrance (E at a cap with the warden core)", with check `{ kind: 'restored', node: 'entrance-2' }`. "Feed two entrances to fire a spread" (`volley`, min 2) is unchanged. The prompt near the intake reads "E: restore an entrance" while a warden core is carried.
+- [ ] 028's Milestone 1 goal "Feed all three entrances" (`volley { min: 3 }`) can no longer be met before the Bulwark, so it moves out of its 028 position to after 034's "Restore the intake's third entrance" (until 034 lands, it sits just before the frontier line). The objective line never points at a goal the player can't yet reach.
 - [ ] After the Warden, the intake has one capped entrance and two open ones. This is the state 024's screenshot note says "can't occur"; it is now the normal state.
 - [ ] `?playtest` keeps its 5 warden cores, and gains 2 Bulwark cores, 10 ancient gears, 10 aqueduct valves and one of each schematic, so every node can be restored by hand in a playtest.
 - [ ] Every 024 test that opened both sides with one core is rewritten:
@@ -172,7 +173,7 @@ Rare schematic drops in the field reveal specific nodes. They are the game's fir
   - `INTAKE.entrances` is unchanged at 3
 - `src/data/items.ts`:
   - the `research` tag (`core | machinePart | schematic`)
-  - items `ancient-gear` (if 032 hasn't added it), `aqueduct-valve` and the four `schematic-*` items, each with a 031 panel `group`
+  - items `ancient-gear`, `aqueduct-valve` and the four `schematic-*` items, each with a 031 panel `group`
   - `warden-core` is tagged `core`
   - `bulwark-core` is added here or by 034, whichever ships first
 - `src/data/drops.ts` (new), or a field on `DropTable`: the schematic chances by source, each schematic's regions, and the part chances.
@@ -228,11 +229,11 @@ Each comes with a proposed answer. All of them must be resolved before approval.
    - They drop from that region's enemies at about 4%, and more from champions and caches.
    - For now they are spent only on restoration.
    - design.md says parts are "needed to build machines". Should placing a machine also cost parts? That would change 006, where placing is free once hand-crafted. Proposal: not now; parts gate new foundry parts through restoration.
-3. **Node costs and the reservoir and speed numbers.** Proposal: the table above. `reservoir-1` costs only Region 1 parts, so it is reachable before the Bulwark: the playtest showed ammo running dry early. Machine speed is ×0.75, one tier.
+3. **Node costs and the reservoir and speed numbers.** Proposal: the table above. `reservoir-1` costs only Region 1 parts, so it is reachable before the Bulwark: the playtest showed ammo running dry early. Machine speed is ×0.75, one tier. Note: `entrance-3` and `reservoir-2` each cost a Bulwark core, so the second one needs an altar refight (034).
 4. **Schematic rarity and duplicates.** Proposal: 1% normal, 5% champion, and the cache's 20% (032). There are no duplicates, so a schematic always reveals something new.
 5. **When a schematic reveals its node.** Proposal: once banked, so the "survive the trip back with it" tension in design.md holds. The alternative is on pickup.
 6. **The splitter's and merger's behaviour.** Shaun named them but didn't define them. Proposal: as written above.
 7. **The list panel's key.** Proposal: J (journal). R is rotate, M is mute, and I or Tab is the inventory panel (031).
 8. **The sealed wing.** design.md: "Killing a boss unlocks a new foundry wing with new machine types." Proposal: this spec only draws the wing's sealed door with its diagram and list row. The Bulwark's first kill (034) unseals it, and what the wing holds is a later spec.
 9. **Warden cores after the first.** The Warden never respawns once the shrine is claimed, so only one warden core exists in a normal game. Should the Warden get a refight altar like the Bulwark (034)? Proposal: no; altars are for region bosses only.
-10. **Does the drop-table change belong here or in the champions and landmarks spec (032)?** Proposal: here, with 032's multipliers applied on top.
+10. **Does the drop-table change belong here or in the champions and landmarks spec (032)?** Proposal: here. 032 only adds the cache's slots and says champions roll parts and schematics once, at this spec's champion rates.

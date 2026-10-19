@@ -2,6 +2,24 @@
 
 Newest entry first.
 
+## 2026-10-19: Content brainstorm, spec interview, draft specs 028–037
+**Changed:**
+- **Brainstorm.** Ran the content brainstorm with the playtest agent, with no code (docs/brainstorm/2026-10-19-content.md). It came from a full playtest of the 021–027 build and two critique rounds.
+- **Interview.** Interviewed Shaun over 11 rounds (docs/brainstorm/2026-10-19-interview.md).
+- **Drafts.** Drafted specs 028–037 from his answers and cross-checked them for consistency. All 98 open questions, each with a proposed answer, are in docs/brainstorm/2026-10-19-open-questions.md.
+- **Backlog.** The backlog rows 028–037 replace the old 028/029 ideas.
+
+**Next:**
+1. Shaun settles the open questions and approves 028–037.
+2. Shaun playtests 021–027.
+3. Build in order 028 → 037.
+
+**Notes:**
+- **Ammo roster:** nets, swords and the flamethrower are cut. The laser is parked.
+- **Firing:** one tube; one press fires the volley.
+- **Healing:** none in the field; heal at safe spots only.
+- **Spec 024 changes again:** each boss core opens one entrance (033), and the volley fires before carried rounds (028).
+- **design.md edits:** several specs list design.md edits "on approval". Each needs Shaun's explicit OK.
 ## 2026-10-19: 021–027 built on one branch, awaiting Shaun's playtest
 **Changed:** built all seven approved specs on `claude/laughing-volta-uac3nf`, as separate commits. Shaun approved using one branch, since this cloud session can only push there. Each spec went through a plan (docs/plans/021–027), tests first, `npm run check`, the full `npm run test:e2e`, review screenshots (docs/review/021–027) and an independent reviewer pass. Every review finding was fixed or is listed below for Shaun. The final tree has 636 unit tests; e2e has 52 passed and 14 skipped (the REVIEW_SHOTS-only screenshot tests).
 - **021:** pickup reaches 64 px through anything, and items slide in. No shake on firing. A pointer draws above menus on `DEPTHS.cursor`. The arrowhead has no wood.

@@ -157,6 +157,7 @@ All values are proposals, flagged for Shaun's review. Ticks are at 60 Hz. For co
   - `MIN_TELEGRAPH_TICKS`
   - the optional `shield` field (034), used by `shardback`
 - `src/data/population.ts`: ring 3 packs and the per-pack limits.
+- `src/data/champions.ts` (032): ring 3's champion chance.
 - `src/data/overworld.ts` or `src/data/hollows.ts` (034): the Cistern Terrace guard pack.
 - `src/data/assets.ts`: `ENEMY_ANIMS` keys for the four.
 - `src/data/art` and `src/data/palette.ts`: the four rigs and the telegraph markers.
@@ -166,7 +167,7 @@ All values are proposals, flagged for Shaun's review. Ticks are at 60 Hz. For co
 - The Bulwark, the region, the shield rule itself and cover terrain (034).
 - Changes to Husks, Wisps or ring 1–2 populations.
 - Elites or mini-bosses in the Hollows.
-- XP for kills (the leveling spec).
+- XP for kills (037, which sets their XP values).
 - Enemy armor values, resistances or weaknesses (design.md: there are none).
 - Status effects on the player, such as slows or stuns.
 
@@ -199,6 +200,6 @@ Each comes with a proposed answer. All of them must be resolved before approval.
    - Does the laser sight show through solids? Proposal: no. A blocked line cancels the shot.
 5. **Telegraph colour.** Proposal: the shared enemy red for all four, including the laser, so cyan always means the player's ley.
 6. **All the numbers.** Proposal: the table above, the ring 3 pack makeup, and a ring 3 champion rate of 1 in 4.
-7. **Drops.** Proposal: 1 ley-iron always, a 4% `aqueduct-valve`, and the shared schematic roll (033). Should ring 3 also roll unidentified armor, as other enemies do today?
+7. **Drops.** Proposal: 1 ley-iron always, a 4% `aqueduct-valve`, and the shared schematic roll (033). Should ring 3 also roll unidentified armor, as other enemies do today? Proposal: yes, at the Husk's 10%, so defense keeps coming from the field (pillar 6).
 8. **Region 2 only?** Proposal: Husks and Wisps don't appear in Region 2 packs, and the four new enemies don't appear in rings 1–2.
 9. **Build order with 034.** Proposal: build 035 straight after 034 on its own branch. Until then, 034's Region 2 packs use Husks and Wisps as placeholders.

@@ -84,8 +84,8 @@ Each relic is one data entry with a rule flag the sim reads. A first draft, for 
 **Effects (sim)**
 All gear effects go through one `playerStats(state)` function, which 037 (talents) adds to.
 - [ ] **Armor:** total armor is the sum of every worn piece's base armor and armor affixes. Each hit deals `max(MIN_DAMAGE, damage − armor)`, with `MIN_DAMAGE` 1 as today (see the open question on a floor).
-- [ ] **Max health:** `MAX_HEALTH` (100) plus every max-health affix. Equipping doesn't heal. If the max drops below current health, health drops to the new max. A KO wakes the player at the full current max.
-- [ ] **Field regen:** the summed regen heals the player every tick, anywhere, except while dying. It stacks with 030's safe-zone and spring healing. Health can hold fractions; the HUD shows whole numbers.
+- [ ] **Max health:** `MAX_HEALTH` (100) plus every max-health affix. Equipping doesn't heal. If the max drops below current health, health drops to the new max. A KO wakes the player at the full current max, and 030's healing fills to it.
+- [ ] **Field regen:** the summed regen is 030's `fieldRegen` stat, read through `playerStats`. It heals anywhere, except while dying. Under 030's rule the highest healing rate applies, so it doesn't add to safe-zone, spring or foundry healing (open question 8). Health stays whole, using 030's fractional build-up.
 - [ ] **Move speed:** the summed bonus multiplies walk speed, along with heavy armor (×0.85) and firing (×0.7). The total gear bonus is capped at `MOVE_BONUS_CAP` (+15%). Rolls are unaffected.
 - [ ] **Roll:** the cooldown is `ROLL_COOLDOWN_TICKS` minus the summed reduction, never below `ROLL_COOLDOWN_MIN` (15). The distance is `ROLL_DISTANCE` plus the summed bonus, over the same `ROLL_TICKS`. I-frames are unchanged.
 - [ ] Nothing in this spec adds damage, pickup radius, haul protection, ley range or refill.
@@ -136,7 +136,7 @@ All gear effects go through one `playerStats(state)` function, which 037 (talent
   - `playerStats` sums armor, max health, regen, move speed and roll from several worn pieces, with the move cap and the roll-cooldown floor.
   - The damage formula with total armor, including the minimum.
   - Max health: equipping doesn't heal, a lower max clamps health, and a KO wakes at the full max.
-  - Regen heals over a set number of ticks and stops while dying.
+  - Regen heals over a set number of ticks, stops while dying, and doesn't add to a spring's rate (030).
   - Heavy and gear speed stack with firing. Roll distance and cooldown change; i-frames don't.
   - Each relic: Rollbreaker staggers a Husk once per roll but not the Warden; Wardstone blocks one hit after 360 quiet ticks and resets; Featherplate has no slow and a shorter roll; Last Ember saves once, recharges on a bank, and a second lethal hit kills.
   - KO keeps identified and worn gear; unbanked unidentified gear is lost (011).
@@ -152,5 +152,6 @@ Each has a proposed answer. All must be settled before approval.
 5. **Rarity odds.** Proposed: flat 60/30/10 and 3% relics everywhere. Should champions, bosses or outer rings roll better? Proposed: not yet.
 6. **Affixes on any slot?** Proposed: yes, any affix on any slot. The alternative is slot flavour (move speed and roll on boots, max HP on body).
 7. **Equip anywhere?** Proposed: equipping stays at the bench, as in 010, so gear changes happen at home.
-8. **Regen and healing.** Proposed: field regen ticks everywhere, adds to 030's safe-zone and spring healing, and doesn't pause after a hit.
+8. **Regen and healing.** Proposed: field regen ticks everywhere and doesn't pause after a hit, but follows 030's "highest rate applies" rule, so it doesn't stack with safe-zone or spring healing. The alternative is to let it stack, which makes regen gear also speed up safe-spot healing.
 9. **Too many pieces.** With four slots the bench list grows fast. Proposed: no scrapping yet; revisit with the merchant.
+10. **"Rare Relics" (round 9).** Shaun wrote "Rare Relics each bend one rule". This spec reads that as a separate relic tier (its rule + 2 affixes, 3% of identifies). The literal alternative is that a relic is a Rare piece (3 affixes) that also bends a rule. Proposed: the separate tier, so a relic's rule is the draw and not just extra power on a Rare; Shaun to confirm.

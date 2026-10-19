@@ -76,7 +76,7 @@ Automation stops stalling and progression stops at the shrine no longer:
 - [ ] This spec adds these Milestone 1 goals, each achievable with this spec and what's already built:
   1. "Run a supply port into your line": check `portDelivered`, which holds once a piece has taken an item from any port. It shows a marker over the ports and pulses the conduit cell.
   2. "Put a second kind of ammo in another entrance": check `mixedVolley`, which holds when the volley holds at least two different ammo.
-  3. "Feed all three entrances": the existing `volley { min: 3 }`.
+  3. "Feed all three entrances": the existing `volley { min: 3 }`. Once 033 lands, the third entrance needs the Bulwark core, so 033 moves this goal to the end of 034's Region 2 steps.
   
   The wording is a first draft for Shaun to edit.
 - [ ] The `awayRunning` clock runs once every goal before it is done, not every goal but the last, so goals can follow it. `prototypeComplete` is set when the prototype's goals are done, as before; the Milestone 1 goals don't affect it.
@@ -122,18 +122,18 @@ Automation stops stalling and progression stops at the shrine no longer:
 - Art data: the four ports and their plates, replacing the supply port's art.
 
 ## Out of scope
-- **Changes to 024's entrance unlocks** (R1: each boss core opens one more entrance, the Warden opens the 2nd). They belong to the research spec. Until it lands, the "Open the intake's side entrances" goal stays as it is.
+- **Changes to 024's entrance unlocks** (R1: each boss core opens one more entrance, the Warden opens the 2nd). They belong to 033 (research). Until it lands, the "Open the intake's side entrances" goal stays as it is.
 - **Other spec work:**
   - more claimable sites and resource-site pylons (032, champions and landmarks), so counts above ×1 appear only in tests for now
   - ports for raws beyond the four (husk resin, ley-iron, rime shard)
-  - splitters and mergers (research)
-  - reservoir size (research)
+  - splitters and mergers (033, research)
+  - reservoir size (033, research)
   - the HUD pass (031)
 - **Future Milestone 1 goals**, each added by its own spec:
   - build a stage machine, and find the Frozen Grotto for rime shards (029)
   - heal at a Ley Spring, if Shaun wants it as a goal (030)
   - claim a second pylon (032)
-  - breach Region 2's barrier, and beat the Bulwark (the Region 2 spec)
+  - breach Region 2's barrier, claim its pylon, beat the Bulwark and restore the third entrance (034)
 
 ## Test plan
 - **Vitest:**
@@ -169,9 +169,9 @@ Automation stops stalling and progression stops at the shrine no longer:
   - the objective line on goal 1 with the port marker
 
 ## Open questions
-- **Port tiles:** four ports on the west wall at (1, 4), (1, 6), (1, 8) and (1, 10), one row apart so lines can leave between them. Is that the right wall and order? (Proposal: yes. The bench stays at (1, 12).)
-- **When ports appear:** proposal: a port appears with its first supplying pylon, keeping the early foundry uncluttered, so all four appear at the shrine claim. The alternative is all four there from the start, dark at "×0".
-- **Rate:** 15 per minute per pylon for each raw (`SUPPLY_TICKS` 240). Today the shrine sends 30 a minute in all, cycling through four raws; this gives 60 a minute in all. The playtest found lines running dry, so the proposal is to start here and tune.
-- **Hopper flow cap:** 99, the crate's cap, for items arriving by line. Hand-filling stays uncapped, as in 022. Should hand-filling also cap? (Proposal: no, not in this spec.)
-- **The frontier line:** proposal for `FRONTIER_GOAL`: "Explore beyond the shrine". It shows only once every goal built so far is done, and each later spec's goals slot in before it. Is a standing line like that right, or should it name the next milestone ("Find a way west")?
-- **Goal wording:** goals 1–3 are first drafts.
+1. **Port tiles:** four ports on the west wall at (1, 4), (1, 6), (1, 8) and (1, 10), one row apart so lines can leave between them. Is that the right wall and order? (Proposal: yes. The bench stays at (1, 12).)
+2. **When ports appear:** proposal: a port appears with its first supplying pylon, keeping the early foundry uncluttered, so all four appear at the shrine claim. The alternative is all four there from the start, dark at "×0".
+3. **Rate:** 15 per minute per pylon for each raw (`SUPPLY_TICKS` 240). Today the shrine sends 30 a minute in all, cycling through four raws; this gives 60 a minute in all. The playtest found lines running dry, so the proposal is to start here and tune.
+4. **Hopper flow cap:** 99, the crate's cap, for items arriving by line. Hand-filling stays uncapped, as in 022. Should hand-filling also cap? (Proposal: no, not in this spec.)
+5. **The frontier line:** proposal for `FRONTIER_GOAL`: "Explore beyond the shrine". It shows only once every goal built so far is done, and each later spec's goals slot in before it. Is a standing line like that right, or should it name the next milestone ("Find a way west")?
+6. **Goal wording:** goals 1–3 are first drafts. (Proposal: build with them as written; Shaun edits the text at approval.)
