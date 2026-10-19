@@ -11,6 +11,7 @@ import type { CursorState } from './CursorView';
 import type { BottomHudState } from './HudView';
 import type { BuildBarState } from './BuildView';
 import type { CraftMenuState } from './CraftMenuView';
+import type { PromptState } from './PromptView';
 
 export interface GameTestHook {
   getState(): SimSummary;
@@ -70,6 +71,12 @@ export interface UiState {
   intakePrompt: string | null;
   /** How far the caps are through lifting off, 0 to 1, or null when none are lifting. */
   intakeLift: number | null;
+  /** The tutorial's key prompt as drawn (its key, the world point it floats over, whether the key works now), or null (027). */
+  prompt: PromptState | null;
+  /** The intake's arrow marker for the conduit step (027): the world point its tip bobs over, or null. */
+  marker: { x: number; y: number } | null;
+  /** The "+ shaft" popups still on screen (027), by text. */
+  madePopups: string[];
   /** The centre of the world camera's view, world px (023: screenshots wait for it to settle on the player). */
   camera: { x: number; y: number };
   /** The bottom HUD as drawn (025), view px: the hotbar row (and whether it shows) and the tube slot with each unit's icon frame and text. */

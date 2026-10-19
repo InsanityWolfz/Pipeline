@@ -67,6 +67,8 @@ export const SPRITES = {
   craftArrow: 'craft-arrow',
   hudAmmoCell: 'hud-ammo-cell',
   hudAmmoSelect: 'hud-ammo-select',
+  /** The brass ring that pulses over a build-bar cell the current objective names (027). */
+  buildPulse: 'build-pulse',
 } as const;
 
 /**
@@ -238,6 +240,12 @@ export const PLAYER_HIT_FX = {
 
 /** The "+1 [icon]" popup on pickup, and the KO fade. */
 export const PICKUP_POPUP = { rise: 16, durationMs: 700, gap: 2, stack: 10, startHeight: 44 } as const;
+
+/**
+ * The foundry tutorial's "+ shaft" (027) when a machine first makes its part: its text before the item's name
+ * (in lower case), how far above the machine's top it starts, how far it rises and how long it lasts.
+ */
+export const MADE_POPUP = { prefix: '+ ', above: 2, rise: 12, durationMs: 1200 } as const;
 export const KO_FADE_MS = 250;
 
 /** A ground item's sprite bottom sits this far below its ground point, so it rests on its shadow, px. */

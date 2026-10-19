@@ -198,6 +198,8 @@ export const TUTORIAL_SPRITES = {
   rubble: 'door-rubble',
   keyCap: 'key-cap',
   tick: 'objective-tick',
+  /** The arrow marker over the intake for the conduit step (027). */
+  marker: 'intake-marker',
 } as const satisfies Record<string, string | AnimDef>;
 
 /** Tutorial layout, px: the objective line's top, the tick's gap left of it, a prompt's lift over its target, a gate's crumble. */
@@ -221,5 +223,7 @@ export const TUTORIAL_LAYOUT = {
   promptDimAlpha: 0.45,
   /** The intake's prompt (024): its key cap's bottom centre, px from the pipe's anchor (on the wall right of the pipe), and the text's gap after the cap. */
   intakePrompt: { x: 66, y: -10, textGap: 4 },
+  /** The intake's arrow marker (027): its tip this far above the bottom of the entrance's mouth tile, px, bobbing this far over `bobMs`. */
+  marker: { lift: 4, bob: 3, bobMs: 900 },
   gateFadeMs: 500,
 } as const;

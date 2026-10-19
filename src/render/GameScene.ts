@@ -32,7 +32,7 @@ import { SiteView } from './SiteView';
 import { WakeView } from './WakeView';
 import { mergeEvents } from './eventLog';
 import { FeelView } from './FeelView';
-import { TutorialUi } from './TutorialUi';
+import { highlightOf, TutorialUi } from './TutorialUi';
 import { currentFit, type ScreenFit } from './scale';
 import { bakeVectors } from './vector/textures';
 import type { UiState } from './testHook';
@@ -191,6 +191,9 @@ export class GameScene extends Scene {
       intakeCaps: this.roomViews?.intakeCaps ?? 0,
       intakeLift: this.roomViews?.intakeLift ?? null,
       intakePrompt: this.tutorial?.intakePrompt ?? null,
+      prompt: this.tutorial?.keyPrompt ?? null,
+      marker: this.tutorial?.marker ?? null,
+      madePopups: this.tutorial?.madePopups ?? [],
       camera: { x: this.cameras.main.worldView.centerX, y: this.cameras.main.worldView.centerY },
       hud: this.hud?.bottom ?? null,
       craftMenu: this.menu?.state ?? null,
@@ -255,6 +258,7 @@ export class GameScene extends Scene {
     this.followRoom(this.pending.ko);
     if (!this.fading && this.playerView) this.sceneCameras?.attuneLook(sim, this.shownRoomId, this.playerView.sprite);
     this.effects.play(this.pending, sim.player);
+    this.tutorial?.play(this.pending, sim, (id) => this.foundryView?.topOf(id));
     if (this.pending.identifies.length > 0) this.site?.identified();
     if (this.pending.ko) this.wake?.show(this.pending.lost);
     const shown = this.shownRoomId;
@@ -288,6 +292,7 @@ export class GameScene extends Scene {
       controls?.mirrored ?? false,
       (...a) => canPlace(sim, ...a),
       (t, f) => ghostShape(controls?.heldLay() ?? null, t, f, (u, g) => conduitInFrom(sim, u.tx, u.ty, g)),
+      highlightOf(sim),
     );
     // Menu rows light under the cursor (020).
     const pointer = controls?.viewPointer();

@@ -115,6 +115,12 @@ export const BUILD_BAR_LAYOUT = {
   label: { h: 9, gap: 2 },
 } as const;
 
+/**
+ * The pulse over a build-bar cell the current objective names (027): a ring reaching `out` px round the cell, its alpha
+ * swinging between `min` and `max` once per `periodMs`.
+ */
+export const BUILD_PULSE = { out: 3, periodMs: 1100, min: 0.2, max: 1 } as const;
+
 /** The ghost of the piece to place: palette tints for where it can and can't go, and its alpha. */
 export const GHOST = { okTint: 'cyan', badTint: 'rust', alpha: 0.6 } as const;
 

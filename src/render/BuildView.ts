@@ -8,7 +8,7 @@ import {
   HOPPER_SPRITES,
   machineLook,
 } from '../data/foundryAssets';
-import { BUILD_BAR_LAYOUT, GHOST } from '../data/hudLayout';
+import { BUILD_BAR_LAYOUT, BUILD_PULSE, GHOST } from '../data/hudLayout';
 import { BUILD_BAR, pieceDef } from '../data/pieces';
 import { pieceRect, type PlaceFail, type Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
@@ -40,12 +40,15 @@ export interface BuildBarState {
   /** Each group's label as drawn: its text box (x, y the top of its capitals) and the group it heads. */
   groups: (ScreenRect & { category: string; label: string })[];
   dividers: { x: number; y: number; h: number }[];
+  /** The piece whose cell pulses for the current objective (027), while it shows; else null. */
+  pulsing: string | null;
 }
 
 // Build mode on screen: the bar of unlocked pieces in their groups (026), each
 // group labelled with a thin divider between and the selected piece highlighted;
 // and a ghost of it on the tile under the cursor, tinted by whether it can go there.
-// Locked pieces aren't shown, nor a group with none unlocked.
+// Locked pieces aren't shown, nor a group with none unlocked. The piece the current
+// objective names (027) pulses with a brass ring while the bar is open.
 export class BuildView {
   private readonly scene: Scene;
   private cells: { pieceId: string; images: GameObjects.Image[] }[] = [];
@@ -53,6 +56,9 @@ export class BuildView {
   private labels: { category: string; label: string; line: TextLine }[] = [];
   private readonly dividers: GameObjects.Graphics;
   private readonly highlight: GameObjects.Image;
+  /** The brass ring over the cell the current objective names (027). */
+  private readonly pulse: GameObjects.Image;
+  private pulsing: string | null = null;
   private readonly ghost: GameObjects.Image;
   private readonly ghostIcon: GameObjects.Image;
   private readonly ghostArrows: GameObjects.Image[];
@@ -63,6 +69,11 @@ export class BuildView {
 
   constructor(scene: Scene) {
     this.scene = scene;
+    this.pulse = addVector(scene, 0, 0, SPRITES.buildPulse)
+      .setOrigin(0)
+      .setScrollFactor(0)
+      .setDepth(DEPTHS.hud + 2)
+      .setVisible(false);
     this.highlight = addVector(scene, 0, 0, SPRITES.hudAmmoSelect)
       .setOrigin(0)
       .setScrollFactor(0)
@@ -89,6 +100,7 @@ export class BuildView {
       cells: buildBarCells(this.unlocked),
       groups: this.labels.map(({ category, label, line }) => ({ category, label, ...line.at, w: line.width, h: line.lineHeight })),
       dividers: buildBarDividers(this.unlocked),
+      pulsing: this.pulsing,
     };
   }
 
@@ -107,6 +119,7 @@ export class BuildView {
     mirrored: boolean,
     canPlace: (pieceId: string, tx: number, ty: number, facing: Facing) => PlaceFail | null,
     shapeAt: (tile: Tile, facing: Facing) => { facing: Facing; inFrom: Facing },
+    highlight: string | null = null,
   ): void {
     if (unlocked.join() !== this.unlocked.join()) this.rebuild(unlocked);
     if (!unlocked.includes(this.selected)) this.selected = unlocked[0] ?? FIRST_PIECE;
@@ -116,10 +129,21 @@ export class BuildView {
     const hovered = building ? buildBarCells(unlocked).find((c) => inRect(c, at.x, at.y)) : undefined;
     // The tip sits over the group labels, so it never hides them (026).
     this.tip.show(hovered?.pieceId ?? null, (hovered?.x ?? 0) + (hovered?.w ?? 0) / 2, buildBarLabelTop(), VIEW_WIDTH);
+    this.showPulse(building ? buildBarCells(unlocked).find((c) => c.pieceId === highlight) : undefined);
     if (!building) return;
     const cell = buildBarCells(unlocked).find((c) => c.pieceId === this.selected);
     if (cell) this.highlight.setPosition(cell.x, cell.y);
     this.drawGhost(cursor, facing, mirrored, canPlace, shapeAt);
+  }
+
+  /** The ring over the named piece's cell, its alpha swinging gently on scene time; hidden when there's none. */
+  private showPulse(cell: (ScreenRect & { pieceId: string }) | undefined): void {
+    this.pulsing = cell?.pieceId ?? null;
+    this.pulse.setVisible(cell !== undefined);
+    if (!cell) return;
+    const P = BUILD_PULSE;
+    const wave = 0.5 - 0.5 * Math.cos((2 * Math.PI * this.scene.time.now) / P.periodMs);
+    this.pulse.setPosition(cell.x - P.out - 1, cell.y - P.out - 1).setAlpha(P.min + (P.max - P.min) * wave);
   }
 
   private drawGhost(
@@ -201,6 +225,7 @@ export class BuildView {
     this.visible = visible;
     this.highlight.setVisible(visible);
     if (!visible) {
+      this.pulse.setVisible(false);
       this.ghost.setVisible(false);
       this.ghostIcon.setVisible(false);
       for (const a of this.ghostArrows) a.setVisible(false);

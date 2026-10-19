@@ -1,6 +1,6 @@
 import { SPRITES, TUBE_SLOT_FRAMES } from '../assets';
 import { TUTORIAL_SPRITES } from '../foundryAssets';
-import { CRAFT_MENU_LAYOUT, HUD_LAYOUT, PICKER_LAYOUT, tubeSlotWidth } from '../hudLayout';
+import { BUILD_PULSE, CRAFT_MENU_LAYOUT, HUD_LAYOUT, PICKER_LAYOUT, tubeSlotWidth } from '../hudLayout';
 import { ellipse, line, path, rect, solid, trim, type Paint, type Shape, type VectorSprite } from './types';
 
 // The HUD and menus (020): rune-carved stone tablets with brass corners, dark
@@ -132,6 +132,24 @@ const KEY_CAP: Shape[] = [
   rect(0.5, 0.5, 10, 8.5, 2, { fill: vertical('carve-light', 'carve', 0.5, 9), stroke: { color: 'brass', width: 0.7 } }),
 ];
 
+// The build-bar pulse (over a 24x28 cell, reaching BUILD_PULSE.out px round it, 027): a gold ring with a warm glow and a
+// faint wash, so it reads round the cell's own brass corners and outside the cyan selection ring. The cell's top-left is at (o, o).
+const PULSE = { w: 24 + 2 * (BUILD_PULSE.out + 1), h: 28 + 2 * (BUILD_PULSE.out + 1), o: BUILD_PULSE.out + 1 } as const;
+const BUILD_PULSE_RING: Shape[] = [
+  rect(1, 1, PULSE.w - 2, PULSE.h - 2, 3.2, { stroke: { color: 'gold-trim', width: 2 }, glow: { color: 'cinder-light', blur: 4 } }),
+  rect(PULSE.o + 2, PULSE.o + 2, 20, 24, 1.8, { fill: { id: 'sun', alpha: 0.18 } }),
+];
+
+// The intake marker (16x20, round its tip at the bottom middle, 027): a gold arrow pointing down, outlined, with a warm
+// glow, so it reads over the cyan pipe.
+const MARKER: Shape[] = [
+  {
+    ...path('M -3.6 -19 L 3.6 -19 L 3.6 -9.5 L 7.6 -9.5 L 0 0 L -7.6 -9.5 L -3.6 -9.5 Z', { fill: vertical('sun', 'gold-shade', -19, 0), outline: true }),
+    glow: { color: 'cinder-light', blur: 4 },
+  },
+  line([-2, -17.4, -2, -10.2], 0.8, { id: 'snow', alpha: 0.7 }),
+];
+
 // The objective tick (9x9): a ley check mark.
 const TICK: Shape[] = [{ ...line([1.2, 4.8, 3.6, 7.4, 7.8, 1.4], 1.6, 'cyan-glow', true), glow: { color: 'cyan', blur: 3 } }];
 
@@ -153,4 +171,6 @@ export const HUD_SPRITES_VECTOR: readonly VectorSprite[] = [
   { key: SPRITES.pointer, size: [10, 14], anchor: [1, 1], frames: [POINTER] },
   sprite(TUTORIAL_SPRITES.keyCap, [11, 11], KEY_CAP),
   sprite(TUTORIAL_SPRITES.tick, [9, 9], TICK),
+  sprite(SPRITES.buildPulse, [PULSE.w, PULSE.h], BUILD_PULSE_RING),
+  { key: TUTORIAL_SPRITES.marker, size: [16, 20], anchor: [8, 20], frames: [MARKER] },
 ];
