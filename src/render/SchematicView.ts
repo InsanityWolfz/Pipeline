@@ -17,9 +17,11 @@ export interface SchematicsShown {
   pillars: { x: number; y: number }[];
   banner: { kicker: string; name: string } | null;
   bannerIdle: boolean;
+  /** The schematic lines the banner has started showing lately, oldest first, so a test can't miss a short one. */
+  bannersSeen: { kicker: string; name: string }[];
 }
 
-export const NO_SCHEMATICS_SHOWN: SchematicsShown = { pillars: [], banner: null, bannerIdle: true };
+export const NO_SCHEMATICS_SHOWN: SchematicsShown = { pillars: [], banner: null, bannerIdle: true, bannersSeen: [] };
 
 const isSchematic = (itemId: string): boolean => ITEMS[itemId]?.kind === 'schematic';
 
@@ -44,6 +46,7 @@ export class SchematicView {
       pillars: [...this.pillars.values()].filter((p) => p.visible).map((p) => ({ x: p.x, y: p.y })),
       banner: on?.kind === 'schematic' ? { kicker: on.kicker, name: on.name } : null,
       bannerIdle: this.banner.idle,
+      bannersSeen: this.banner.seen.filter((b) => b.kind === 'schematic').map((b) => ({ kicker: b.kicker, name: b.name })),
     };
   }
 

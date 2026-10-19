@@ -249,15 +249,18 @@ test('below 25% the bar is low; a drop leaves a white chunk that drains away; he
   expect((await ui(page))?.health.low).toBe(false);
   expect((await ui(page))?.health.chunk).toBe(0);
 
-  // The HUD's motion runs on tween time: slowed, the hold and drain can't slip between two polls.
+  // The HUD's motion runs on tween time: held still, the chunk's hold can't run out between two polls, however slow
+  // the frames come on a loaded machine. Then the clock runs fast (a loaded machine's frames each carry little time)
+  // and the chunk drains away.
   await page.evaluate(() => {
-    window.__GAME__?.tweenSpeed(0.1);
+    window.__GAME__?.tweenSpeed(0);
     window.__GAME__?.setPlayerHealth(60);
   });
-  await expect.poll(async () => (await ui(page))?.health.chunk).toBe(40);
+  await expect.poll(async () => (await ui(page))?.health.chunk, { timeout: 15_000 }).toBe(40);
   expect((await ui(page))?.health.text).toBe('60 / 100');
+  await page.evaluate(() => window.__GAME__?.tweenSpeed(20));
+  await expect.poll(async () => (await ui(page))?.health.chunk, { timeout: 15_000 }).toBe(0);
   await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
-  await expect.poll(async () => (await ui(page))?.health.chunk).toBe(0);
 
   await page.evaluate(() => window.__GAME__?.setPlayerHealth(20));
   await expect.poll(async () => (await ui(page))?.health.low).toBe(true);

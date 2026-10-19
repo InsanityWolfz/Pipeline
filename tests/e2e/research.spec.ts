@@ -217,6 +217,13 @@ test('a schematic in the field stands in a light pillar and pings the minimap; i
   const s = await state(page);
   expect(s.research.nodes.find((n) => n.id === 'merger')?.state).toBe('revealed');
   expect(s.research.schematics.banked).toContain('schematic-merger');
-  await expect.poll(async () => (await ui(page))?.schematics.banner?.name, { timeout: 15_000 }).toBe('Schematic: Merger');
+  // The reveal's line waits its turn behind "Unknown schematic" on the tween clock, which falls behind the wall clock
+  // on a loaded machine: run that clock fast and wait on the banner's record of the lines it has shown, so a short one
+  // can't slip between two polls.
+  await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
+  await expect
+    .poll(async () => (await ui(page))?.schematics.bannersSeen.map((b) => b.name), { timeout: 30_000 })
+    .toEqual(['Unknown schematic', 'Schematic: Merger']);
+  await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
   expect(errors).toEqual([]);
 });

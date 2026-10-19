@@ -14,6 +14,9 @@ export interface BannerEntry {
   name: string;
 }
 
+/** How many started entries the banner remembers for the test hook. */
+const SEEN_KEPT = 8;
+
 // The banner (032, shared by 033's schematics): top centre under the objective band,
 // a kicker line over a name on a tablet, fading in, holding `bannerMs`, fading out.
 // Entries queue and show in turn, so a discovery and a schematic never overlap. Its
@@ -25,6 +28,8 @@ export class Banner {
   private queue: BannerEntry[] = [];
   private on: BannerEntry | null = null;
   private ms = 0;
+  /** The last few entries that started showing, oldest first (for the test hook: a quick banner can't slip between polls). */
+  private started: BannerEntry[] = [];
 
   constructor(scene: Scene) {
     this.panel = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.hud - 1).setVisible(false);
@@ -42,6 +47,11 @@ export class Banner {
     return this.on === null && this.queue.length === 0;
   }
 
+  /** The last few entries that started showing, oldest first. */
+  get seen(): readonly BannerEntry[] {
+    return this.started;
+  }
+
   push(entry: BannerEntry): void {
     this.queue.push(entry);
   }
@@ -55,6 +65,7 @@ export class Banner {
       if (!next) return;
       this.on = next;
       this.ms = 0;
+      this.started = [...this.started, next].slice(-SEEN_KEPT);
       this.kicker.set(next.kicker);
       this.name.set(next.name);
       const w = Math.max(this.name.width, this.kicker.width) + B.pad.x * 2;
