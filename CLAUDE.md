@@ -29,7 +29,7 @@ How we work: docs/process.md. Current state: docs/progress.md.
 Every feature runs /spec -> /plan -> /build -> /verify -> /review -> /wrapup.
 One backlog item per branch. Never skip verify or review.
 Never report done while checks fail.
-End every reply with what you need from Shaun next (or say nothing is needed).
+When something needs Shaun (an approval, a decision, a playtest), end the reply with it; when nothing does, leave that out. Report only what is relevant to Shaun; keep internal progress to yourself unless he asks for a status report.
 
 ## Never
 - Invent design. If docs/design.md or the spec doesn't say, ask, or add
