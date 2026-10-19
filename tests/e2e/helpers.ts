@@ -206,7 +206,8 @@ function installHelpers(): void {
       let pathed = true;
       for (let t = 0; t < 2400 && s.enemies.filter((e) => e.room === s.room).length === before; t++) {
         const p = s.player;
-        // The ruin field's pack first while it stands (032: a landmark's guard pack may now be nearer, and is a fight).
+        // The ruin field's pack first while it stands: from the meadow's west (the reeds), the Ruined Cache's five guards
+        // (032) are nearer than it, and walking into them is a KO.
         const field = s.enemies.filter((e) => e.room === s.room && e.group === 'field');
         const pool = field.length > 0 ? field : s.enemies.filter((e) => e.room === s.room);
         const target = [...pool].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];

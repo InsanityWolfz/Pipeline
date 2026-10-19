@@ -1,4 +1,4 @@
-import { LANDMARK_SPRITES, MAP_ICONS } from '../landmarkAssets';
+import { LANDMARK_LOOK, LANDMARK_SPRITES, MAP_ICONS } from '../landmarkAssets';
 import { canopy, shadow } from './terrain';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSprite } from './types';
 
@@ -115,7 +115,8 @@ const ICON_SPRING: Shape[] = [ellipse(0, 0, 3.6, 3.6, { fill: 'cyan', outline: t
 const ICON_CACHE: Shape[] = [rect(-3.6, -2.4, 7.2, 5, 1, { fill: 'rock-light', outline: true }), rect(-3.6, -2.6, 7.2, 1.2, 0.5, flat('cyan'))];
 
 /** The champion's glow: a soft round light, white so render can tint it (gold-trim by data). */
-const GLOW: Shape[] = [ellipse(0, 0, 30, 30, { fill: { radial: [0, 0, 30], stops: [{ at: 0, color: { id: 'snow', alpha: 0.9 } }, { at: 0.55, color: { id: 'snow', alpha: 0.4 } }, { at: 1, color: { id: 'snow', alpha: 0 } }] } })];
+const G = LANDMARK_LOOK.championGlowPx;
+const GLOW: Shape[] = [ellipse(0, 0, G, G, { fill: { radial: [0, 0, G], stops: [{ at: 0, color: { id: 'snow', alpha: 0.9 } }, { at: 0.55, color: { id: 'snow', alpha: 0.4 } }, { at: 1, color: { id: 'snow', alpha: 0 } }] } })];
 
 export const LANDMARK_SPRITES_VECTOR: readonly VectorSprite[] = [
   one(LANDMARK_SPRITES.cutBlocks[0], [44, 50], [20, 44], cutBlock(26, 22, -2)),
@@ -133,5 +134,5 @@ export const LANDMARK_SPRITES_VECTOR: readonly VectorSprite[] = [
   one(MAP_ICONS.grotto, [10, 10], [5, 5], ICON_GROTTO),
   one(MAP_ICONS.spring, [10, 10], [5, 5], ICON_SPRING),
   one(MAP_ICONS.cache, [10, 8], [5, 4], ICON_CACHE),
-  one(LANDMARK_SPRITES.championGlow, [64, 64], [32, 32], GLOW),
+  one(LANDMARK_SPRITES.championGlow, [G * 2 + 4, G * 2 + 4], [G + 2, G + 2], GLOW),
 ];

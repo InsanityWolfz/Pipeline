@@ -10,6 +10,10 @@ import type { TileRect } from './tiles';
  */
 export interface SpringDef {
   readonly id: string;
+  /** Its landmark name (032), on the discovery banner. */
+  readonly name: string;
+  /** The danger ring (017) it sits in. */
+  readonly ring: 1 | 2;
   readonly tx: number;
   readonly ty: number;
   readonly radius: number;
@@ -30,12 +34,12 @@ export const SPRING_CLEARING = 3;
  * home and the Grotto, in its own clearing (to be cut if healing near home is too easy).
  */
 export const SPRINGS: readonly SpringDef[] = [
-  { id: 'west-spring', tx: 10, ty: 31, radius: SPRING_RADIUS },
-  { id: 'south-east-spring', tx: 66, ty: 38, radius: SPRING_RADIUS },
-  { id: 'north-spring', tx: 26, ty: 8, radius: SPRING_RADIUS },
+  { id: 'west-spring', name: 'West Ley Spring', ring: 2, tx: 10, ty: 31, radius: SPRING_RADIUS },
+  { id: 'south-east-spring', name: 'South-east Ley Spring', ring: 2, tx: 66, ty: 38, radius: SPRING_RADIUS },
+  { id: 'north-spring', name: 'North Ley Spring', ring: 1, tx: 26, ty: 8, radius: SPRING_RADIUS },
 ];
 
-/** A spring's clearing (030): a square of open ground round its pool, which is also its landmark area (032). */
+/** A spring's clearing (030): a square of open ground round its pool. */
 export function springClearing(s: { tx: number; ty: number }): TileRect {
   return { x0: s.tx - SPRING_CLEARING, y0: s.ty - SPRING_CLEARING, x1: s.tx + SPRING_CLEARING, y1: s.ty + SPRING_CLEARING };
 }

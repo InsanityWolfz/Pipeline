@@ -1,6 +1,9 @@
 import { TILE_SIZE } from '../data/config';
 import { DESCRIPTIONS, portHover, portPlate, sitePylonLine } from '../data/descriptions';
-import { landmarkOfSite } from '../data/landmarks';
+import { landmarkDef, landmarkOfSite } from '../data/landmarks';
+import type { PylonDef } from '../data/rooms';
+import { isOpened } from '../sim/cache';
+import { dormant, occupied } from '../sim/claims';
 import { portPerMinute, pylonsOf } from '../sim/claims';
 import { INTAKE } from '../data/foundry';
 import { enemyDef } from '../data/enemies';
@@ -34,11 +37,17 @@ export interface HoverName {
 }
 
 /** A pylon's hover line: the shrine's (018), or a landmark pylon's naming its landmark and what it sends (032). */
-function pylonLine(sim: SimState, site: string): string {
-  const claimed = sim.claims.includes(site);
-  const landmark = landmarkOfSite(site);
+function pylonLine(sim: SimState, pylon: PylonDef): string {
+  const claimed = sim.claims.includes(pylon.site);
+  const landmark = landmarkOfSite(pylon.site);
   if (!landmark?.pylon) return claimed ? DESCRIPTIONS.pylon : DESCRIPTIONS.pylonDormant;
-  return sitePylonLine(landmark.name, itemDef(landmark.pylon.supplies).name, claimed);
+  return sitePylonLine(landmark.name, itemDef(landmark.pylon.supplies).name, claimed ? 'claimed' : dormant(sim, pylon) ? 'dormant' : 'awake');
+}
+
+/** The Ruined Cache's hover line (032): sealed while a guard lives, ready, or empty until it re-arms. */
+function cacheLine(sim: SimState, id: string): string {
+  if (isOpened(sim, id)) return DESCRIPTIONS.cacheEmpty;
+  return occupied(sim, id) ? DESCRIPTIONS.cacheSealed : DESCRIPTIONS.cacheReady;
 }
 
 /** Distance from a point to a polyline of tile points, px. */
@@ -105,7 +114,9 @@ export function nameAt(sim: SimState, roomId: string, px: number, py: number): H
   const room = roomById(roomId);
   const on = (t: { tx: number; ty: number } | undefined) => t !== undefined && t.tx === tx && t.ty === ty;
   const pylon = (room.pylons ?? []).find((p) => on(p));
-  if (pylon) return { name: WORLD_NAMES.pylon, ...centre(pylon), rise: HOVER_NAME.tile.rise, description: pylonLine(sim, pylon.site) };
+  if (pylon) return { name: WORLD_NAMES.pylon, ...centre(pylon), rise: HOVER_NAME.tile.rise, description: pylonLine(sim, pylon) };
+  const cache = (room.caches ?? []).find((c) => on(c));
+  if (cache) return { name: landmarkDef(cache.id).name, ...centre(cache), rise: HOVER_NAME.tile.rise, description: cacheLine(sim, cache.id) };
   if (on(room.tubeStone) && room.tubeStone) {
     return { name: sim.hasTube ? WORLD_NAMES.tubeStone : WORLD_NAMES.dormantTube, ...centre(room.tubeStone), rise: HOVER_NAME.tile.rise };
   }

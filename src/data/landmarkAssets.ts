@@ -22,7 +22,7 @@ export const LANDMARK_SPRITES = {
   championGlow: 'champion-glow',
 } as const;
 
-/** The minimap's landmark icons, by marker (hudLayout's `MINIMAP.landmarks` sizes them). */
+/** The minimap's landmark icons, by marker (hudLayout's `MINIMAP.landmarkScale` sizes them). */
 export const MAP_ICONS = {
   site: 'map-site',
   grotto: 'map-grotto',
@@ -42,12 +42,36 @@ export const LANDMARK_LOOK = {
     rim: { color: 'rock-dark', alpha: 0.35, width: 5 },
     leyLight: { color: 'cyan', radius: 110, alpha: [0.18, 0.32] as const, breatheMs: 3800 },
     coldLight: { color: 'snow', radius: 150, alpha: [0.16, 0.28] as const, breatheMs: 5200 },
-    frost: { basin: 'water-light', alpha: 0.32 },
+    frost: { basin: 'water-light', alpha: 0.32, size: [0.9, 0.88] as const },
+    /** The basin's deeper middle: lower by `dy` of its height, `size` of its radii. */
+    inner: { dy: 0.12, size: [0.72, 0.68] as const },
+    /** No lip slab within this many tiles of a path's point, or of a node or guard. */
+    clear: { path: 1.2, things: 0.8 },
+    /** Lip slabs lie flat this far over the floor's depth. */
+    depth: 0.6,
   },
   /** The Old Grove's sun: warm patches on its grass (`every` nth open tile), drawn into the ground. */
-  grove: { sun: 'sun', alpha: 0.4, every: 3, rx: 20, ry: 9 },
+  grove: { sun: 'sun', alpha: 0.4, every: 3, rx: 20, ry: 9, jitter: 10 },
   /** The marsh: damp ground round its ponds and tufts every `tuftStep` radians round each rim, lilies on the water. */
-  marsh: { mud: 'dirt-dark', mudAlpha: 0.22, tuftStep: 1.1, tuftRim: 1.55, lilies: 2 },
+  marsh: {
+    mud: 'dirt-dark',
+    mudAlpha: 0.22,
+    /** The damp ground's radii, × the pond's. */
+    mudSize: [2.2, 2] as const,
+    tuftStart: 0.4,
+    tuftStep: 1.1,
+    tuftRim: 1.55,
+    /** No tuft within this many tiles of a node, guard or pylon. */
+    tuftClear: 0.9,
+    /** Lilies per pond, at angles `lilyFrom` + i × `lilyStep` radians, `lilyAt` of the pond's radii out, this far over the floor. */
+    lilies: 2,
+    lilyFrom: 1,
+    lilyStep: 2.6,
+    lilyAt: [0.45, 0.4] as const,
+    lilyDepth: 0.7,
+  },
+  /** The champion glow sprite's radius at 1×, px (art/landmarks.ts draws it this size). */
+  championGlowPx: 30,
   /** The reliquary's opening: it shows the `cacheOpen` frame this long after it opens, then `cacheEmpty`. */
   cacheOpenMs: 900,
   /** A champion's name over it: the name in the display font, its kind ("Husk champion") under it, px above the sprite. */

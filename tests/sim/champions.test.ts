@@ -7,6 +7,7 @@ import { championDef, rollChampions } from '../../src/sim/champions';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import { createRng } from '../../src/sim/rng';
 import { createSim } from '../../src/sim/state';
+import { spawnDrops } from '../../src/sim/drops';
 import { summarize } from '../../src/sim/summary';
 import { arena, PLAYER_AT, run, runUntil, SWIPE_LANDS } from './fight';
 
@@ -151,6 +152,24 @@ describe('a champion in play', () => {
       three ||= resin >= 5;
     }
     expect(three).toBe(true);
+  });
+
+  it("rolls its table's rare entries once, not once per drop roll", () => {
+    const def = enemyDef('husk');
+    const rare = { ...def, drops: { ...def.drops, rare: [{ itemId: 'warden-core', chance: 1 }] } };
+    for (let seed = 0; seed < 20; seed++) {
+      const s = arena(seed);
+      s.firstHuskDropped = true;
+      spawnDrops(s, rare, PLAYER_AT.x + 200, PLAYER_AT.y, 'overworld', true);
+      expect(s.groundItems.filter((g) => g.itemId === 'warden-core')).toHaveLength(1);
+    }
+  });
+
+  it('an empty pack draws nothing from the RNG', () => {
+    const rng = createRng(5);
+    const before = [...rng];
+    expect(rollChampions(rng, [], 2)).toBeNull();
+    expect(rng).toEqual(before);
   });
 
   it("a normal enemy's death carries no champion flag", () => {

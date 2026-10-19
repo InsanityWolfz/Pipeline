@@ -51,7 +51,8 @@ export function makeChampion(rng: RngState, e: EnemyState): void {
  */
 export function rollChampions(rng: RngState, members: readonly EnemyState[], ring: number): EnemyState | null {
   const chance = CHAMPIONS.chanceByRing[ring] ?? 0;
-  if (chance <= 0 || nextFloat(rng) >= chance) return null;
+  // An empty pack (a spring's, a claimed site's) or one of only bosses draws nothing.
+  if (chance <= 0 || !members.some((e) => !enemyDef(e.enemyId).boss) || nextFloat(rng) >= chance) return null;
   const able = members.filter((e) => !enemyDef(e.enemyId).boss);
   const pick = able[nextInt(rng, 0, able.length - 1)];
   if (!pick) return null;

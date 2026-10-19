@@ -12,8 +12,15 @@ import { pieceIcon } from './foundryLayout';
 import { StagePanel, type StagePanelState } from './StagePanel';
 import { stagePanelLayout } from './stagePanelLayout';
 import { stagesKnown } from '../sim/stages';
+import type { UiState } from './testHook';
 
 type PylonChoice = 'deposit' | 'travel';
+
+/** The site menus' part of `ui()`. */
+export type SiteUiState = Pick<UiState, 'siteOpen' | 'waystone'>;
+
+/** The site menus' part of `ui()` before the scene has built them. */
+export const NO_SITE_UI: SiteUiState = { siteOpen: false, waystone: null };
 /** A stash row: one item's stack, or null for everything. */
 type StashChoice = { itemId: string | null };
 /** A bench row: identify everything carried, or wear (or take off) a piece. */
@@ -161,8 +168,8 @@ export class SiteMenus {
     this.waystone.show(claimedPylons(sim).map(({ pylon }) => ({ icons: [SITE_ICONS.travel], text: `Travel to ${pylon.name}`, value: { site: pylon.site } })));
   }
 
-  /** The waystone menu's rows as drawn (032), for the test hook: each row's text and box, or null while it's shut. */
-  get waystoneRows(): { text: string; x: number; y: number; w: number; h: number }[] | null {
-    return this.waystone.isOpen ? this.waystone.rowsShown : null;
+  /** For the test hook: a site menu is open, and the waystone menu's rows as drawn (032), each row's text and box, or null while it's shut. */
+  get ui(): SiteUiState {
+    return { siteOpen: this.isOpen, waystone: this.waystone.isOpen ? this.waystone.rowsShown : null };
   }
 }

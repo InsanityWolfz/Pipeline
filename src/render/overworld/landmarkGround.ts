@@ -40,21 +40,21 @@ export function paintLandmarks(c: CanvasRenderingContext2D, each: (fn: (tx: numb
       const frozen = l.look.hollow === 'frost';
       // The basin, sinking toward its middle, and the rim's shadowed rock.
       ellipse(c, cx, cy, rx, ry, H.basin.color, H.basin.alpha);
-      ellipse(c, cx, cy + ry * 0.12, rx * 0.72, ry * 0.68, H.basin.color, H.basin.alpha);
-      if (frozen) ellipse(c, cx, cy, rx * 0.9, ry * 0.88, H.frost.basin, H.frost.alpha);
+      ellipse(c, cx, cy + ry * H.inner.dy, rx * H.inner.size[0], ry * H.inner.size[1], H.basin.color, H.basin.alpha);
+      if (frozen) ellipse(c, cx, cy, rx * H.frost.size[0], ry * H.frost.size[1], H.frost.basin, H.frost.alpha);
       ellipse(c, cx, cy, rx, ry, null, H.rim.alpha, { color: H.rim.color, width: H.rim.width });
     }
     if (l.look?.trees === 'old') {
       const G = LANDMARK_LOOK.grove;
       each((tx, ty, hash) => {
         if (tx < a.x0 || tx > a.x1 || ty < a.y0 || ty > a.y1 || symbol(tx, ty) !== TILE.floor || hash % G.every !== 0) return;
-        ellipse(c, (tx + 0.5) * T + ((hash >>> 5) % 10) - 5, (ty + 0.5) * T, G.rx, G.ry, G.sun, G.alpha);
+        ellipse(c, (tx + 0.5) * T + ((hash >>> 5) % G.jitter) - G.jitter / 2, (ty + 0.5) * T, G.rx, G.ry, G.sun, G.alpha);
       });
     }
     for (const f of l.features) {
       if (f.kind !== 'pond') continue;
       const M = LANDMARK_LOOK.marsh;
-      ellipse(c, (f.cx + 0.5) * T, (f.cy + 0.5) * T, f.rx * T * 2.2, f.ry * T * 2, M.mud, M.mudAlpha);
+      ellipse(c, (f.cx + 0.5) * T, (f.cy + 0.5) * T, f.rx * T * M.mudSize[0], f.ry * T * M.mudSize[1], M.mud, M.mudAlpha);
     }
   }
 }

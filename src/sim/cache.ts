@@ -2,17 +2,14 @@ import { PYLON_REACH } from '../data/claims';
 import { CACHE_DROPS, LANDMARK_LIST, LANDMARKS, landmarkDef } from '../data/landmarks';
 import { OVERWORLD_ROOM } from '../data/overworld';
 import type { Command } from './input';
-import { gapTo, occupied } from './claims';
-import { layItem, rollDrops, scatterPoint } from './drops';
+import { gapTo, holdBroken, occupied } from './claims';
+import { rollDrops, scatterItems } from './drops';
 import { areaInView } from './landmarks';
-import { isRolling } from './movement';
-import { nodeRects } from './nodes';
-import { roomOf, roomById, type SimState } from './state';
+import { roomOf, type SimState } from './state';
 import { tileCentre } from './tiles';
 import { createEnemy } from './enemies';
 import { rollChampions } from './champions';
 import { inSafeZone } from './population';
-import { tileRect } from './fixtures';
 
 // The Ruined Cache (032): a sealed reliquary guarded by a hand-placed pack. While any
 // guard lives E finds it sealed; after, holding E opens it (like a harvest) and its drop
@@ -57,8 +54,7 @@ export function stepCache(state: SimState, cmd: Command): Command {
 function advance(state: SimState, cmd: Command): void {
   const hold = state.cacheHold;
   if (!hold) return;
-  const moved = cmd.moveX !== 0 || cmd.moveY !== 0 || cmd.fire || cmd.dodge || isRolling(state.player);
-  if (moved || cacheInReach(state)?.id !== hold.id || occupied(state, hold.id)) {
+  if (holdBroken(state, cmd) || cacheInReach(state)?.id !== hold.id || occupied(state, hold.id)) {
     state.cacheHold = null;
     return;
   }
@@ -74,15 +70,8 @@ function open(state: SimState, id: string): void {
   const at = landmarkDef(id).cache;
   if (!cache || !at || cache.openedAt !== null) return;
   cache.openedAt = state.tick;
-  const roomId = state.roomId;
-  const room = roomById(roomId);
-  const solid = [...(room.pylons ?? []), ...(room.caches ?? [])].map(tileRect);
-  const rects = [...nodeRects(state.nodes, roomId), ...solid];
   const below = tileCentre({ tx: at.tx, ty: at.ty + 1 });
-  for (const itemId of rollDrops(CACHE_DROPS, state.rng)) {
-    const p = scatterPoint(room, state.rng, below.x, below.y, rects);
-    layItem(state, itemId, roomId, p.x, p.y);
-  }
+  scatterItems(state, rollDrops(CACHE_DROPS, state.rng), state.roomId, below.x, below.y);
   const c = tileCentre(at);
   state.events.cacheOpens.push({ id, x: c.x, y: c.y });
 }

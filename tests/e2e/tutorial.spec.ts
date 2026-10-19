@@ -121,8 +121,9 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
   expect(await done(page)).toBe(4);
 
   // 5. The meadow vein grows back three times over (waited out): crystals for ley bolts. The arrow line (027)
-  // needs four of each raw to fill an entrance, so a tree, a rubble pile and reeds once more; then down the
-  // foundry's stairs (the tube attunes).
+  // needs four of each raw to fill an entrance, and the bomb's casing takes a stone, so a tree and reeds once more
+  // and a rubble pile twice (the Husks' raws are a seeded roll, not to be counted on); then down the foundry's stairs
+  // (the tube attunes).
   const raws = await page.evaluate(() => {
     const h = window.__helpers;
     const g = window.__GAME__;
@@ -130,11 +131,12 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
       g?.step(1800);
       h?.harvest(8, 3);
     }
-    for (const node of [1, 5, 6]) h?.harvest(node, 1);
+    for (const node of [1, 6]) h?.harvest(node, 1);
+    h?.harvest(5, 2);
     h?.toFoundry();
     return g?.getState().inventory;
   });
-  for (const raw of ['wood', 'stone', 'fiber']) expect(raws?.[raw] ?? 0, JSON.stringify(raws)).toBeGreaterThanOrEqual(4);
+  for (const raw of ['wood', 'stone', 'fiber']) expect(raws?.[raw] ?? 0, JSON.stringify(raws)).toBeGreaterThanOrEqual(raw === 'stone' ? 5 : 4);
   expect(await done(page)).toBe(5);
 
   // 6. Craft a bomb and a ley bolt.

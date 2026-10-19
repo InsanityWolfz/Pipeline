@@ -146,6 +146,18 @@ describe('the waystone', () => {
     expect(s.events.travels).toEqual([{ from: FOUNDRY_ROOM, to: OVERWORLD_ROOM }]);
   });
 
+  it('carries the player to each claimed site in turn, one tile below its pylon', () => {
+    const s = createSim(SEED);
+    for (const site of [SHRINE_SITE, ...SITES.map((l) => l.id)]) claim(s, site);
+    for (const site of [SHRINE_SITE, ...SITES.map((l) => l.id)]) {
+      atWaystone(s);
+      run(s, 1, { travel: site });
+      expect(s.roomId, site).toBe(OVERWORLD_ROOM);
+      const p = pylonOf(site);
+      expect({ x: s.player.x, y: s.player.y }, site).toEqual(tileCentre({ tx: p.tx, ty: p.ty + 1 }));
+    }
+  });
+
   it('ignores a travel choice away from the waystone or to an unclaimed site', () => {
     const s = createSim(SEED);
     claim(s, SHRINE_SITE);

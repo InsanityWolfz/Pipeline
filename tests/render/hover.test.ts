@@ -112,3 +112,35 @@ describe('the sorter on screen', () => {
     expect(spots.map((s) => `${s.kind}:${s.edge}`)).toEqual(['in:left', 'out:right', 'sort:up']);
   });
 });
+
+describe('landmark hovers (032)', () => {
+  it("names a resource site's pylon by its landmark and what it sends: dormant, awake, claimed", () => {
+    const s = createSim(SEED, { roomId: HALL });
+    s.enemies = [];
+    const p = centre(21, 20);
+    expect(nameAt(s, HALL, p.x, p.y)?.description).toBe('Quarry pylon: dormant until the shrine is claimed.');
+    claim(s, SHRINE_SITE);
+    expect(nameAt(s, HALL, p.x, p.y)?.description).toBe('Quarry pylon: claim it to send stone home.');
+    claim(s, 'quarry');
+    expect(nameAt(s, HALL, p.x, p.y)?.description).toBe('Quarry pylon: sends stone home.');
+  });
+
+  it('names the Ruined Cache: sealed while a guard lives, ready, then empty once opened', () => {
+    const s = createSim(SEED, { roomId: HALL });
+    const c = centre(11, 38);
+    expect(nameAt(s, HALL, c.x, c.y)).toMatchObject({ name: 'Ruined Cache', description: DESCRIPTIONS.cacheSealed });
+    s.enemies = s.enemies.filter((e) => e.group !== 'ruined-cache');
+    expect(nameAt(s, HALL, c.x, c.y)?.description).toBe(DESCRIPTIONS.cacheReady);
+    const cache = s.caches.find((x) => x.id === 'ruined-cache');
+    if (cache) cache.openedAt = s.tick;
+    expect(nameAt(s, HALL, c.x, c.y)?.description).toBe(DESCRIPTIONS.cacheEmpty);
+  });
+
+  it("names a champion by its own name", () => {
+    const s = createSim(SEED, { roomId: HALL });
+    s.enemies = [];
+    const e = placeHusk(s, 300, 300);
+    e.champion = { name: 'Mossjaw' };
+    expect(nameAt(s, HALL, e.x, e.y - 12)?.name).toBe('Mossjaw');
+  });
+});

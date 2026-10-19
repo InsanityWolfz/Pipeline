@@ -206,6 +206,20 @@ describe('resource sites', () => {
     expect(byId('ruined-cache').guards.map((g) => g.enemyId).sort()).toEqual(['husk', 'husk', 'husk', 'husk', 'wisp']);
   });
 
+  it("put no guard, and no other landmark's area, in another site's safe zone", () => {
+    const pylons = WORLD[OVERWORLD.id]?.pylons ?? [];
+    for (const l of LANDMARK_LIST) {
+      for (const g of l.guards) {
+        for (const p of pylons) if (p.site !== l.id) expect(Math.hypot(g.tx - p.tx, g.ty - p.ty), `${l.id} guard ${tileKey(g)} in ${p.site}'s zone`).toBeGreaterThan(p.safeRadius);
+      }
+      // Nor does any other guarded landmark's area reach into a resource site's zone (a spring has no guards).
+      for (const p of l.guards.length === 0 ? [] : pylons.filter((x) => x.site !== l.id && x.site !== 'shrine')) {
+        const nearest = { tx: Math.min(Math.max(p.tx, l.area.x0), l.area.x1), ty: Math.min(Math.max(p.ty, l.area.y0), l.area.y1) };
+        expect(Math.hypot(nearest.tx - p.tx, nearest.ty - p.ty), `${l.id}'s area in ${p.site}'s zone`).toBeGreaterThan(p.safeRadius);
+      }
+    }
+  });
+
   it('each has a ley line home from its pylon to the foundry stairs', () => {
     const door = OVERWORLD.entrance.door;
     for (const l of SITES) {

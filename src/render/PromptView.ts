@@ -1,14 +1,13 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
-import { INTAKE } from '../data/foundry';
 import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
-import { PROMPT_RANGE, type MarkerTarget, type PromptTarget } from '../data/objectives';
+import { PROMPT_RANGE, type PromptTarget } from '../data/objectives';
 import { FOUNDRY_ROOM } from '../data/rooms';
-import { LANDMARK_LIST } from '../data/landmarks';
 import { OVERWORLD_ROOM } from '../data/overworld';
-import { fixtureInReach, pylonInReach } from '../sim/claims';
+import { dormant, fixtureInReach, pylonInReach } from '../sim/claims';
 import { fixtureDef } from '../sim/fixtures';
+import { markerPoint } from './markerPoint';
 import { usableInReach } from '../sim/foundryUse';
 import { nodeInReach } from '../sim/harvest';
 import { currentObjectiveDef } from '../sim/objectives';
@@ -20,33 +19,6 @@ import { addVector } from './vector/textures';
 
 /** A world point, px: where a prompt's target stands. */
 type Point = { x: number; y: number };
-
-/**
- * Where an arrow marker's tip goes: over the middle one of the intake's open entrances, just above the mouth tile's
- * bottom (027); or over the first of the supply ports standing, clear of its head (028): the plates hang between the
- * ports, so only above the first is there room without covering one. Null with none there.
- */
-function markerPoint(sim: SimState, target: MarkerTarget): Point | null {
-  const L = TUTORIAL_LAYOUT.marker;
-  if (target === 'sitePylon') {
-    // The nearest discovered resource-site pylon not yet claimed (032), its tip just over the pylon's crystal.
-    const p = sim.player;
-    const pylon = LANDMARK_LIST.flatMap((l) => (l.pylon && sim.discovered.includes(l.id) && !sim.claims.includes(l.pylon.site) ? [l.pylon] : []))
-      .map((t) => ({ x: (t.tx + 0.5) * TILE_SIZE, y: (t.ty + 1) * TILE_SIZE - L.pylonLift }))
-      .sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
-    return pylon ?? null;
-  }
-  const middle = <T>(list: readonly T[]): T | undefined => list[Math.floor((list.length - 1) / 2)];
-  if (target === 'intake') {
-    const mouth = middle(INTAKE.entrances.filter((_, i) => sim.link.entrances[i]?.open));
-    return mouth ? { x: (mouth.tx + 0.5) * TILE_SIZE, y: (mouth.ty + 1) * TILE_SIZE - L.lift } : null;
-  }
-  const port = sim.fixtures
-    .map((f) => fixtureDef(f.id))
-    .filter((d) => d.kind === 'port')
-    .sort((a, b) => a.ty - b.ty)[0];
-  return port ? { x: (port.tx + 0.5) * TILE_SIZE, y: (port.ty + 1) * TILE_SIZE - L.portLift } : null;
-}
 
 /** A key prompt as drawn, for the test hook: its key, the world point it floats over, and whether the key would work now. */
 export interface PromptState extends Point {
@@ -124,8 +96,8 @@ export class PromptView {
       case 'tubeStone':
         return room.tubeStone && !sim.hasTube ? { at: centre(room.tubeStone), usable: stoneInReach(sim) } : undefined;
       case 'pylon': {
-        // The shrine's goal: the nearest pylon (032: the room holds several).
-        const pylon = nearest((room.pylons ?? []).map((t) => ({ ...centre(t), site: t.site })));
+        // The shrine's goal: the nearest pylon that isn't dormant (032: the resource sites' wait on the shrine).
+        const pylon = nearest((room.pylons ?? []).filter((t) => !dormant(sim, t)).map((t) => ({ ...centre(t), site: t.site })));
         return pylon ? { at: pylon, usable: pylonInReach(sim)?.site === pylon.site } : undefined;
       }
       case 'bench': {

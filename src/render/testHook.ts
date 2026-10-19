@@ -19,6 +19,7 @@ import type { HealingShown } from './HealingView';
 import { claim } from '../sim/claims';
 import { createEnemy } from '../sim/enemies';
 import { makeChampion } from '../sim/champions';
+import { CHAMPIONS } from '../data/champions';
 import type { ChampionShown } from './EnemyView';
 import type { LandmarksShown } from './LandmarkView';
 
@@ -227,7 +228,7 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
     },
     spawnChampionPack: (enemyIds, champion = 0) => {
       enemyIds.forEach((enemyId, i) => {
-        const e = createEnemy(sim.nextEnemyId++, enemyId, { x: sim.player.x + (6 + i * 1.5) * TILE_SIZE, y: sim.player.y }, sim.roomId, 'dev');
+        const e = createEnemy(sim.nextEnemyId++, enemyId, { x: sim.player.x + (CHAMPIONS.devPack.ahead + i * CHAMPIONS.devPack.gap) * TILE_SIZE, y: sim.player.y }, sim.roomId, 'dev');
         if (i === champion) makeChampion(sim.rng, e);
         sim.enemies.push(e);
       });

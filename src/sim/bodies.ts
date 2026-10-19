@@ -1,6 +1,6 @@
 import { FOUNDRY_ROOM } from '../data/rooms';
 import type { RoomBodies } from './enemies';
-import { fixtureRects, tileRect } from './fixtures';
+import { fixtureRects, standingRects } from './fixtures';
 import { nodeRects } from './nodes';
 import { solidRects } from './pieces';
 import { roomById, type SimState } from './state';
@@ -12,7 +12,7 @@ import { tutorialRects } from './tutorial';
 export function roomBodies(state: SimState, roomId: string): RoomBodies {
   const room = roomById(roomId);
   const pieces = roomId === FOUNDRY_ROOM ? [...solidRects(state.foundry), ...fixtureRects(state.fixtures)] : [];
-  const pylon = [...(room.pylons ?? []), ...(room.caches ?? [])].map(tileRect);
+  const pylon = standingRects(room);
   const tutorial = tutorialRects(state, roomId);
   return { room, obstacles: [...nodeRects(state.nodes, roomId), ...pieces, ...pylon, ...tutorial] };
 }

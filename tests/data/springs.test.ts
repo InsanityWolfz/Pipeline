@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { GROTTO } from '../../src/data/grotto';
 import { OVERWORLD, ringOf, SPRING_CLEARING, SPRING_RADIUS } from '../../src/data/overworld';
 import { TILE } from '../../src/data/rooms';
-import { generateOverworld, springClearing } from '../../src/sim/overworldGen';
+import { generateOverworld } from '../../src/sim/overworldGen';
+import { springClearing } from '../../src/data/springs';
 import { reachable, tileKey } from '../fixtures/reach';
 
 // Ley Springs (030): three pools on the fixed map, each in its own clearing, on open

@@ -1,3 +1,5 @@
+import { LANDMARK_LIST } from './landmarks';
+
 // Claiming (009): the pylon, the supply ports (028) and the foundry's fixed furniture
 // (with 010's identification bench).
 // Starting values from spec 009; tune in playtest.
@@ -21,10 +23,8 @@ export const SUPPLY_TICKS = 240;
 /** The raws each claimable site's pylon sends home, by site id: a resource site (032) sends only its own. */
 export const SITE_SUPPLY: Readonly<Record<string, readonly string[]>> = {
   shrine: ['wood', 'stone', 'fiber', 'ley-crystal'],
-  quarry: ['stone'],
-  'old-grove': ['wood'],
-  'reed-marsh': ['fiber'],
-  'ley-grotto': ['ley-crystal'],
+  // Each landmark pylon's own item, from its entry (quarry: stone, old-grove: wood, reed-marsh: fiber, ley-grotto: ley crystal).
+  ...Object.fromEntries(LANDMARK_LIST.flatMap((l) => (l.pylon ? [[l.pylon.site, [l.pylon.supplies]]] : []))),
 };
 
 /** A resource site's safe radius, tiles (032): smaller than the shrine's 10, so five claims don't starve spawning. */

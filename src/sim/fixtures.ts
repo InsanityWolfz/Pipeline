@@ -51,3 +51,8 @@ export function portFront(f: Pick<FixtureState, 'id'>): Tile {
   const [dx, dy] = facingVector(d.facing);
   return { tx: d.tx + dx, ty: d.ty + dy };
 }
+
+/** The solid things standing on a room's tiles that aren't fixtures or nodes: pylons, reliquaries (032) and the tube's stone. */
+export function standingRects(room: { pylons?: readonly Tile[]; caches?: readonly Tile[]; tubeStone?: Tile }): Rect[] {
+  return [...(room.pylons ?? []), ...(room.caches ?? []), ...(room.tubeStone ? [room.tubeStone] : [])].map(tileRect);
+}

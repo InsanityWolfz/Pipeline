@@ -7,14 +7,19 @@ export const DESCRIPTIONS = {
   /** An unclaimed pylon does nothing yet. */
   pylonDormant: 'Claim it to harvest the land round it.',
   leyLine: "Carries the pylon's haul to the foundry.",
+  /** The Ruined Cache's reliquary (032): sealed while its guards live, ready once they're dead, then empty until it re-arms. */
+  cacheSealed: 'Sealed by its guards. Clear them to open it.',
+  cacheReady: 'Hold E to break the seal.',
+  cacheEmpty: 'Empty. It fills again in time.',
 } as const;
 
 /**
  * A landmark pylon's hover line (032): what it sends home, by landmark and item name, e.g. "Quarry pylon: sends stone
- * home." Before its claim, what it would send.
+ * home." Before its claim, what it would send; before the shrine's, that it's dormant.
  */
-export function sitePylonLine(landmark: string, item: string, claimed: boolean): string {
-  return `${landmark} pylon: ${claimed ? 'sends' : 'claim it to send'} ${item.toLowerCase()} home.`;
+export function sitePylonLine(landmark: string, item: string, state: 'claimed' | 'awake' | 'dormant'): string {
+  if (state === 'dormant') return `${landmark} pylon: dormant until the shrine is claimed.`;
+  return `${landmark} pylon: ${state === 'claimed' ? 'sends' : 'claim it to send'} ${item.toLowerCase()} home.`;
 }
 
 /** Between the parts of a port's plate and hover line (028). */

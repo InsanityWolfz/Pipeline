@@ -20,6 +20,8 @@ export const CHAMPIONS = {
   chanceByRing: { 1: 1 / 8, 2: 1 / 5 } as Readonly<Record<number, number>>,
   /** The soft glow round its body: palette colour, radius px at 1× (scaled with it), a slow pulse between two alphas. */
   glow: { color: 'gold-trim', radius: 22, pulseMs: 1800, alpha: [0.3, 0.55] as const },
+  /** The dev hook's champion pack (`spawnChampionPack`): its first member this many tiles right of the player, the rest `gap` tiles apart. */
+  devPack: { ahead: 6, gap: 1.5 },
   /** Its overhead health bar's colour. */
   barColor: 'gold-trim',
   /** Short epithet-style names, by enemy id: one is picked with the seeded RNG. */

@@ -26,7 +26,7 @@ import { HoverView } from './HoverView';
 import { HudView, NO_HUD_PANELS } from './HudView';
 import { NodeView } from './NodeView';
 import { PlayerView } from './PlayerView';
-import { SiteMenus } from './SiteMenus';
+import { NO_SITE_UI, SiteMenus } from './SiteMenus';
 import { SiteView } from './SiteView';
 import { WakeView } from './WakeView';
 import { mergeEvents } from './eventLog';
@@ -170,7 +170,7 @@ export class GameScene extends Scene {
       craftOpen: this.menu?.isOpen ?? false,
       paused: this.pause?.isOpen ?? false,
       pickerOpen: this.picker?.isOpen ?? false,
-      siteOpen: this.siteMenus?.isOpen ?? false,
+      ...(this.siteMenus?.ui ?? NO_SITE_UI),
       pickerHint: this.picker?.hintShown ?? null,
       pickerCounts: [...(this.picker?.shownCounts ?? [])],
       hoverName: this.hover?.shown ?? null,
@@ -190,7 +190,7 @@ export class GameScene extends Scene {
       craftMenu: this.menu?.state ?? null,
       buildBar: this.buildView?.state ?? null,
       tagged: { benchStages: this.siteMenus?.stagePanel ?? null, starFlashes: this.effects?.starFlashes ?? 0, trails: this.arrowView?.trails ?? { count: 0, longest: 0 } },
-      champions: this.enemyView?.champions ?? [], waystone: this.siteMenus?.waystoneRows ?? null,
+      champions: this.enemyView?.champions ?? [],
     };
   }
 

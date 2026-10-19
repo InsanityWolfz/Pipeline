@@ -8,7 +8,7 @@ import type { Room } from '../data/rooms';
 import { isSolid, overlapsRect, type Rect } from './collision';
 import { nextFloat, nextInt, type RngState } from './rng';
 import { rollArmorDrop } from './armor';
-import { tileRect } from './fixtures';
+import { standingRects } from './fixtures';
 import { nodeRects } from './nodes';
 import { roomById, type SimState } from './state';
 
@@ -22,8 +22,8 @@ export interface GroundItem {
   y: number;
 }
 
-/** The item ids a drop table rolls, one entry per item. */
-export function rollDrops(table: DropTable, rng: RngState): string[] {
+/** The item ids a drop table rolls, one entry per item; `rare` false leaves its rare entries for a single roll of their own (032). */
+export function rollDrops(table: DropTable, rng: RngState, rare = true): string[] {
   const items: string[] = [];
   for (const { itemId, min, max } of table.always) {
     const n = nextInt(rng, min, max);
@@ -40,8 +40,13 @@ export function rollDrops(table: DropTable, rng: RngState): string[] {
       if (pick) items.push(pick);
     }
   }
-  for (const { itemId, chance } of table.rare ?? []) if (nextFloat(rng) < chance) items.push(itemId);
+  if (rare) items.push(...rollRare(table, rng));
   return items;
+}
+
+/** A table's rare entries (032), each rolled once at its chance. */
+export function rollRare(table: DropTable, rng: RngState): string[] {
+  return (table.rare ?? []).flatMap(({ itemId, chance }) => (nextFloat(rng) < chance ? [itemId] : []));
 }
 
 /** A point, as a box, for overlap tests: strictly inside a rect overlaps it. */
@@ -75,17 +80,21 @@ export function scatterPoint(
  * 2–3 times and drops exactly its guaranteed armor instead of the usual chance.
  */
 export function spawnDrops(state: SimState, def: EnemyDef, x: number, y: number, roomId: string, champion = false): void {
-  const room = roomById(roomId);
-  // Never inside something solid the player can't walk onto: nodes, pylons, reliquaries, the tube stone.
-  const fixed = [...(room.pylons ?? []), ...(room.caches ?? []), ...(room.tubeStone ? [room.tubeStone] : [])].map(tileRect);
-  const rects = [...nodeRects(state.nodes, roomId), ...fixed];
   const rolls = champion ? championDropRolls(state.rng) : 1;
-  const items = Array.from({ length: rolls }, () => rollDrops(def.drops, state.rng)).flat();
+  // A champion's rare entries roll once, not once per drop roll (032).
+  const items = [...Array.from({ length: rolls }, () => rollDrops(def.drops, state.rng, false)).flat(), ...rollRare(def.drops, state.rng)];
   if (champion) {
     // Its guaranteed piece is the first Husk's too, if it's that one (one piece, not two).
     if (def.id === FIRST_ARMOR_ENEMY) state.firstHuskDropped = true;
     for (let i = 0; i < CHAMPIONS.armor; i++) items.push(UNIDENTIFIED_ARMOR);
   } else if (rollArmorDrop(state, def.id)) items.push(UNIDENTIFIED_ARMOR);
+  scatterItems(state, items, roomId, x, y);
+}
+
+/** Scatters items on the ground round (x, y) in a room, never inside something solid the player can't walk onto. */
+export function scatterItems(state: SimState, items: readonly string[], roomId: string, x: number, y: number): void {
+  const room = roomById(roomId);
+  const rects = [...nodeRects(state.nodes, roomId), ...standingRects(room)];
   for (const itemId of items) {
     const at = scatterPoint(room, state.rng, x, y, rects);
     layItem(state, itemId, roomId, at.x, at.y);

@@ -61,6 +61,13 @@ Small vertical commits, failing tests first in each:
 - The discovery banner holds on the tween clock (the hook's tween speed holds it for a screenshot); several discoveries queue and show in turn.
 - `ui()` gains `landmarks` (banner and its alpha, each reliquary's frame, lips, tufts, lights), `champions` (name, kind, scale, glow) and `waystone` (the menu's rows and boxes); `supply.inFlight` names each mote's site.
 
+## Review fixes
+- The Quarry's guards stand on its west side, more than half a view (10 tiles) from the ruin field's walls, so the tutorial's fight never wakes them (tested from every open tile inside the walls). The Ley Grotto's pylon sits in the hollow's upper half at (72, 22), so its zone stops short of the Reed Marsh; no guard stands in another site's zone (tested).
+- The Ruined Cache's reliquary has a hover line (sealed, ready, empty); a dormant site pylon's says it waits on the shrine. The shrine goal's E prompt floats only over a pylon that isn't dormant.
+- A champion's rare entries roll once per death; an empty pack (a spring's, a claimed site's) draws nothing from the RNG.
+- SITE_SUPPLY's site entries come from the landmark pylons; the springs carry their own name and ring.
+- e2e: the claiming bot aims at a Wisp's body (it floats; arrows at its feet passed under it), with no health top-up; the tutorial gathers a fifth stone for the bomb's casing rather than counting on a Husk's seeded drop; `killHusk` still takes the ruin field's pack first, since from the reeds the Ruined Cache's guards are nearer.
+
 ## Notes for Shaun
 - Champion names are placeholders (Husks: Mossjaw, Rootgrip, Thornback, Barkhide, Gnarlfist, Briarmaw; Wisps: Palewick, Duskmote, Glimmerveil, Hollowlight, Ashflicker).
 - "Claim a second pylon" is built with the spec's wording.

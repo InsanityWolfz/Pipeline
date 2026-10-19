@@ -29,11 +29,13 @@ const QUARRY: LandmarkDef = {
     { nodeId: 'rubble', tx: 19, ty: 20 },
     { nodeId: 'rubble', tx: 23, ty: 20 },
   ],
+  // On the Quarry's west side, more than a view's half-width (10 tiles) from the ruin field's walls, so the
+  // tutorial's fight there never wakes them.
   guards: [
-    { enemyId: 'husk', tx: 21, ty: 18 },
     { enemyId: 'husk', tx: 17, ty: 18 },
-    { enemyId: 'husk', tx: 25, ty: 18 },
-    { enemyId: 'husk', tx: 22, ty: 21 },
+    { enemyId: 'husk', tx: 18, ty: 19 },
+    { enemyId: 'husk', tx: 19, ty: 21 },
+    { enemyId: 'husk', tx: 20, ty: 21 },
   ],
   pylon: { tx: 21, ty: 20, site: 'quarry', supplies: 'stone' },
   leyLine: [{ tx: 21, ty: 20 }, { tx: 27, ty: 21 }, { tx: 34, ty: 22 }, { tx: 39, ty: 22 }, STAIRS],
@@ -91,11 +93,11 @@ const LEY_GROTTO: LandmarkDef = {
   area: { x0: 68, y0: 19, x1: 75, y1: 28 },
   features: [],
   nodes: [
-    { nodeId: 'ley-vein', tx: 70, ty: 21 },
-    { nodeId: 'ley-vein', tx: 74, ty: 21 },
-    { nodeId: 'ley-vein', tx: 70, ty: 27 },
-    { nodeId: 'ley-vein', tx: 74, ty: 27 },
-    { nodeId: 'ley-vein', tx: 69, ty: 24 },
+    { nodeId: 'ley-vein', tx: 70, ty: 20 },
+    { nodeId: 'ley-vein', tx: 74, ty: 20 },
+    { nodeId: 'ley-vein', tx: 70, ty: 24 },
+    { nodeId: 'ley-vein', tx: 74, ty: 24 },
+    { nodeId: 'ley-vein', tx: 69, ty: 22 },
   ],
   // Deep in the hollow, out of sight of the shrine's approach above it.
   guards: [
@@ -104,13 +106,14 @@ const LEY_GROTTO: LandmarkDef = {
     { enemyId: 'wisp', tx: 74, ty: 25 },
     { enemyId: 'wisp', tx: 70, ty: 25 },
   ],
-  pylon: { tx: 72, ty: 24, site: 'ley-grotto', supplies: 'ley-crystal' },
-  leyLine: [{ tx: 72, ty: 24 }, { tx: 64, ty: 23 }, { tx: 55, ty: 22 }, { tx: 46, ty: 21 }, STAIRS],
+  // In the hollow's upper half, so its 7-tile zone stops short of the Reed Marsh below.
+  pylon: { tx: 72, ty: 22, site: 'ley-grotto', supplies: 'ley-crystal' },
+  leyLine: [{ tx: 72, ty: 22 }, { tx: 64, ty: 22 }, { tx: 55, ty: 22 }, { tx: 46, ty: 21 }, STAIRS],
   veinLines: [
-    [{ tx: 69, ty: 20 }, { tx: 72, ty: 24 }],
-    [{ tx: 75, ty: 20 }, { tx: 72, ty: 24 }],
-    [{ tx: 69, ty: 28 }, { tx: 72, ty: 24 }],
-    [{ tx: 75, ty: 28 }, { tx: 72, ty: 24 }],
+    [{ tx: 69, ty: 19 }, { tx: 72, ty: 22 }],
+    [{ tx: 75, ty: 19 }, { tx: 72, ty: 22 }],
+    [{ tx: 69, ty: 25 }, { tx: 72, ty: 22 }],
+    [{ tx: 75, ty: 25 }, { tx: 72, ty: 22 }],
   ],
   marker: 'site',
   look: { hollow: 'ley' },
@@ -138,7 +141,7 @@ const REED_MARSH: LandmarkDef = {
     { enemyId: 'husk', tx: 70, ty: 33 },
     { enemyId: 'husk', tx: 75, ty: 33 },
     { enemyId: 'husk', tx: 74, ty: 38 },
-    { enemyId: 'wisp', tx: 75, ty: 30 },
+    { enemyId: 'wisp', tx: 75, ty: 37 },
   ],
   // South of the ponds, clear of their rims.
   pylon: { tx: 72, ty: 38, site: 'reed-marsh', supplies: 'fiber' },

@@ -126,10 +126,10 @@ export class LandmarkView {
       const a = (i / H.lips) * Math.PI * 2;
       const x = c.x + Math.cos(a) * rx;
       const y = c.y + Math.sin(a) * ry;
-      const onPath = OVERWORLD.paths.some((p) => nearAny(x, y, p, 1.2));
-      if (nearAny(x, y, busy, 0.8) || onPath) continue;
+      const onPath = OVERWORLD.paths.some((p) => nearAny(x, y, p, H.clear.path));
+      if (nearAny(x, y, busy, H.clear.things) || onPath) continue;
       const frame = kind === 'frost' ? LANDMARK_SPRITES.lipFrost : LANDMARK_SPRITES.lip;
-      this.decals.push(addVector(this.scene, x, y, frame).setDepth(DEPTHS.floor + 0.6).setFlipX(tileHash(i, l.area.x0) % 2 === 0));
+      this.decals.push(addVector(this.scene, x, y, frame).setDepth(DEPTHS.floor + H.depth).setFlipX(tileHash(i, l.area.x0) % 2 === 0));
       this.lipCount += 1;
     }
     const look = kind === 'frost' ? H.coldLight : H.leyLight;
@@ -142,16 +142,17 @@ export class LandmarkView {
     const M = LANDMARK_LOOK.marsh;
     const cx = (f.cx + 0.5) * T;
     const cy = (f.cy + 0.5) * T;
-    for (let a = 0.4; a < Math.PI * 2; a += M.tuftStep) {
+    for (let a = M.tuftStart; a < Math.PI * 2; a += M.tuftStep) {
       const x = cx + Math.cos(a) * f.rx * M.tuftRim * T;
       const y = cy + Math.sin(a) * f.ry * M.tuftRim * T;
-      if (nearAny(x, y, [...l.nodes, ...l.guards, ...(l.pylon ? [l.pylon] : [])], 0.9)) continue;
+      if (nearAny(x, y, [...l.nodes, ...l.guards, ...(l.pylon ? [l.pylon] : [])], M.tuftClear)) continue;
       this.decals.push(addVector(this.scene, x, y, LANDMARK_SPRITES.marshTuft).setDepth(y));
       this.tuftCount += 1;
     }
     for (let i = 0; i < M.lilies; i++) {
-      const a = 1 + i * 2.6;
-      this.decals.push(addVector(this.scene, cx + Math.cos(a) * f.rx * 0.45 * T, cy + Math.sin(a) * f.ry * 0.4 * T, LANDMARK_SPRITES.lily).setDepth(DEPTHS.floor + 0.7));
+      const a = M.lilyFrom + i * M.lilyStep;
+      const [kx, ky] = M.lilyAt;
+      this.decals.push(addVector(this.scene, cx + Math.cos(a) * f.rx * kx * T, cy + Math.sin(a) * f.ry * ky * T, LANDMARK_SPRITES.lily).setDepth(DEPTHS.floor + M.lilyDepth));
     }
   }
 

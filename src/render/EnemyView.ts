@@ -200,7 +200,7 @@ export class EnemyView {
   private drawChampion(c: ChampionArt, e: EnemyState, bottom: number, top: number, now: number): void {
     const G = CHAMPIONS.glow;
     const pulse = (Math.sin((now / G.pulseMs) * Math.PI * 2) + 1) / 2;
-    const size = (G.radius * CHAMPIONS.scale) / 30;
+    const size = (G.radius * CHAMPIONS.scale) / LANDMARK_LOOK.championGlowPx;
     c.glow.setPosition(e.x, (bottom + top) / 2).setScale(size / textureScale()).setAlpha(G.alpha[0] + (G.alpha[1] - G.alpha[0]) * pulse);
     const L = LANDMARK_LOOK.championLabel;
     const { h, gap, border } = ENEMY_FX.healthBar;

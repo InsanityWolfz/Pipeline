@@ -13,7 +13,7 @@ import type { Feature, NodePlacement, TilePos, TileRect } from './tiles';
 
 export type LandmarkKind = 'resource-site' | 'frozen-grotto' | 'ley-springs' | 'ruined-cache';
 
-/** A landmark's minimap icon (hudLayout's `MINIMAP.landmarks`). */
+/** A landmark's minimap icon (landmarkAssets' `MAP_ICONS`). */
 export type LandmarkMarker = 'site' | 'grotto' | 'spring' | 'cache';
 
 /** A guard placed by hand; its group is its landmark's id. */
@@ -94,20 +94,14 @@ const FROZEN_GROTTO: LandmarkDef = {
   look: { hollow: 'frost' },
 };
 
-const SPRING_NAMES: Readonly<Record<string, string>> = {
-  'west-spring': 'West Ley Spring',
-  'south-east-spring': 'South-east Ley Spring',
-  'north-spring': 'North Ley Spring',
-};
-
 /** A spring's landmark area (032): its pool and rim stones, this many tiles from its centre, inside 030's clearing. */
 const SPRING_AREA = 2;
 
 const SPRING_LANDMARKS: readonly LandmarkDef[] = SPRINGS.map((s) => ({
   id: s.id,
-  name: SPRING_NAMES[s.id] ?? 'Ley Spring',
+  name: s.name,
   kind: 'ley-springs',
-  ring: s.id === 'north-spring' ? 1 : 2,
+  ring: s.ring,
   area: { x0: s.tx - SPRING_AREA, y0: s.ty - SPRING_AREA, x1: s.tx + SPRING_AREA, y1: s.ty + SPRING_AREA },
   features: [],
   nodes: [],

@@ -117,8 +117,6 @@ function feature(grid: Grid, f: Feature): Pond | null {
   return f.kind === 'pond' ? { cx: f.cx, cy: f.cy, rx: f.rx, ry: f.ry } : null;
 }
 
-export { springClearing } from '../data/springs';
-
 /** True if any tile of a pond's water or shallows lies in the rect. */
 function pondReaches(p: Pond, r: TileRect): boolean {
   for (let ty = r.y0; ty <= r.y1; ty++) for (let tx = r.x0; tx <= r.x1; tx++) if (Math.hypot((tx - p.cx) / p.rx, (ty - p.cy) / p.ry) <= OVERWORLD.ponds.shore) return true;

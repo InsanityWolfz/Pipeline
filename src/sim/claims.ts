@@ -74,6 +74,9 @@ export const occupied = (state: SimState, site: string): boolean => state.enemie
 /** The site of the pylon in reach, if any. */
 const siteInReach = (state: SimState): string | undefined => pylonInReach(state)?.site;
 
+/** Anything but standing still breaks a hold at a pylon or a cache (032): moving, firing, a dodge or a roll. */
+export const holdBroken = (state: SimState, cmd: Command): boolean => cmd.moveX !== 0 || cmd.moveY !== 0 || cmd.fire || cmd.dodge || isRolling(state.player);
+
 /** Ends a claim in progress, or a cache being opened (032); its progress is lost. */
 export function cancelClaim(state: SimState): void {
   state.claimHold = null;
@@ -131,8 +134,7 @@ export function stepClaims(state: SimState, cmd: Command): Command {
 function advanceHold(state: SimState, cmd: Command): void {
   const hold = state.claimHold;
   if (!hold) return;
-  const moved = cmd.moveX !== 0 || cmd.moveY !== 0 || cmd.fire || cmd.dodge || isRolling(state.player);
-  if (moved || hold.site !== siteInReach(state) || occupied(state, hold.site)) {
+  if (holdBroken(state, cmd) || hold.site !== siteInReach(state) || occupied(state, hold.site)) {
     cancelClaim(state);
     return;
   }
@@ -151,7 +153,8 @@ export function claim(state: SimState, site: string): void {
   state.claims.push(site);
   state.activatePulse = ACTIVATE_TICKS;
   state.events.claims.push({ site });
-  // The site's guards are gone for good, and so is anything whose home the new zone takes in (017).
+  // The site's guards are gone for good (032: a claim through the test hook comes with them still standing; held E
+  // can't, since they seal it), and so is anything whose home the new zone takes in (017).
   state.enemies = state.enemies.filter((e) => e.group !== site);
   clearSafeZones(state);
   const sends = SITE_SUPPLY[site] ?? [];
