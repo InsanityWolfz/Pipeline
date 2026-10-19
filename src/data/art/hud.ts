@@ -57,16 +57,16 @@ const tubeSlot = (n: number): Shape[] => [
 // top, the thumb folded across the front, a brass cuff at the wrist, lit from the top left, on a soft shadow.
 const FIST: Shape[] = [
   ellipse(0.6, 6.4, 6, 1.4, { fill: { id: 'ink', alpha: 0.3 }, glow: { color: 'ink', blur: 1.5 } }),
-  path('M -6 -2.6 Q -6 -6 -3 -6 L 3.2 -6 Q 6.2 -6 6.2 -2.6 L 6 2.4 Q 5.6 4.4 3.4 4.4 L -3.4 4.4 Q -6 4.4 -6 2 Z', {
-    fill: { linear: [-5, -6, 5, 4], stops: [{ at: 0, color: 'rust-light' }, { at: 0.5, color: 'rust' }, { at: 1, color: 'rust-dark' }] },
-    outline: true,
-  }),
-  // The four fingers' knuckles along the top, split by creases.
-  ...[-3, 0, 3].map((x) => line([x + 0.2, -5.6, x, -1.6], 0.6, 'rust-dark')),
-  ...[-4.4, -1.4, 1.6, 4.6].map((x) => ellipse(x - 0.2, -4.6, 1, 0.6, { fill: { id: 'rust-light', alpha: 0.9 } })),
-  // The thumb across the front.
-  path('M -6 -0.4 Q -2 -1.8 2.6 -0.2 Q 3.8 0.4 3.2 1.6 Q -1.4 0.6 -6 2 Z', { fill: vertical('rust-light', 'rust', -1.8, 2), stroke: { color: 'rust-dark', width: 0.6 } }),
-  line([-5.4, -0.2, -1.6, -1], 0.5, { id: 'snow', alpha: 0.45 }),
+  // The curled fingers: four knuckles scalloped along the top.
+  path(
+    'M -6 2 L -6 -4.2 Q -6 -6.4 -4.5 -6.4 Q -3 -6.4 -3 -5 Q -3 -6.4 -1.5 -6.4 Q 0 -6.4 0 -5 Q 0 -6.4 1.5 -6.4 Q 3 -6.4 3 -5 Q 3 -6.4 4.6 -6.4 Q 6.2 -6.4 6.2 -4.2 L 6 2.4 Q 5.6 4.4 3.4 4.4 L -3.4 4.4 Q -6 4.4 -6 2 Z',
+    { fill: { linear: [-5, -6, 5, 4], stops: [{ at: 0, color: 'rust-light' }, { at: 0.5, color: 'rust' }, { at: 1, color: 'rust-dark' }] }, outline: true },
+  ),
+  ...[-3, 0, 3].map((x) => line([x, -4.8, x, -2], 0.6, 'rust-dark')),
+  ...[-4.5, -1.5, 1.5, 4.6].map((x) => ellipse(x - 0.3, -5.4, 0.8, 0.45, { fill: { id: 'snow', alpha: 0.35 } })),
+  // The thumb folded across the front of the fingers.
+  path('M -6.4 -1.6 Q -3 -2.8 1.8 -1.4 Q 3.8 -0.8 3.2 0.9 Q 2.8 1.9 1 1.7 L -5.8 2.2 Z', { fill: vertical('rust-light', 'rust', -2.8, 2.2), outline: true }),
+  line([-5.4, -1.3, -1.4, -1.9], 0.5, { id: 'snow', alpha: 0.45 }),
   // The brass cuff.
   rect(-5, 3.6, 10.6, 3, 1, { fill: vertical('brass-light', 'brass-dark', 3.6, 6.6), outline: true }),
   line([-4.2, 5.1, 4.8, 5.1], 0.5, 'brass-dark'),
