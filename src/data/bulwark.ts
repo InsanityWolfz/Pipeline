@@ -1,9 +1,38 @@
-import type { BulwarkDef } from './enemies';
+import type { AttackTiming, EnemyBase, ShieldDef } from './enemies';
 
 // The Bulwark (034): Stonefall Hollows' boss, a slow-turning construct behind a shield
 // plate that blocks straight shots and punches into its front. It lobs bombs marked by
 // two red circles and pounds the ground round itself up close. Starting values from the
 // spec, tuned in playtest so triple arrows from behind kill it in about 30–45 s.
+
+/** The Bulwark (034): a shielded wall that lobs bombs and pounds up close, guarding its arena. Its values are below. */
+export interface BulwarkDef extends EnemyBase {
+  kind: 'bulwark';
+  shield: ShieldDef;
+  /** Ticks with the player outside its arena before it walks home and heals. */
+  leashTicks: number;
+  /** It stops walking at this fraction of the pound's trigger range from the player, rather than walking into them. */
+  standOff: number;
+  lob: {
+    cooldownTicks: number;
+    windupTicks: number;
+    throwTicks: number;
+    count: number;
+    scatter: number;
+    radius: number;
+    fuseTicks: number;
+    damage: number;
+    knockback: number;
+    knockTicks: number;
+  };
+  pound: AttackTiming & {
+    triggerRange: number;
+    radius: number;
+    damage: number;
+    knockback: number;
+    knockTicks: number;
+  };
+}
 
 export const BULWARK: BulwarkDef = {
   kind: 'bulwark',

@@ -303,7 +303,7 @@ export const WINDUP_SOUNDS: Readonly<Record<string, SoundKey>> = {
   slammer: SOUNDS.huskWindup,
   // 034: the Bulwark's stone grinds as it plants its shield (the pound lands with its own sound).
   bulwark: SOUNDS.bulwarkGrind,
-  // 035: the Charger paws and snorts; the Burrower rumbles under the ring; the Shardback's runes flare with the Husk's cue; the Sniper's laser hums.
+  // 035: a snort, a rumble, the Husk's cue as runes flare, a laser's hum.
   charger: SOUNDS.chargerWindup,
   burrower: SOUNDS.burrowRumble,
   shardback: SOUNDS.huskWindup,

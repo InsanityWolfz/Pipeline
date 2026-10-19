@@ -75,10 +75,10 @@ export class HollowsEnemyFeel {
     this.forget(live);
   }
 
-  /** While `on`, kicks up dust every `dustMs` (ms counted per enemy). */
+  /** While `on`, kicks up dust every `dust.ms` (counted per enemy). */
   private trail(id: number, on: boolean, deltaMs: number, kick: () => void): void {
     const since = (this.dust.get(id) ?? 0) + deltaMs;
-    if (on && since >= HOLLOWS_ENEMY_LOOK.ripple.dustMs) {
+    if (on && since >= HOLLOWS_ENEMY_LOOK.dust.ms) {
       kick();
       this.dust.set(id, 0);
     } else this.dust.set(id, since);

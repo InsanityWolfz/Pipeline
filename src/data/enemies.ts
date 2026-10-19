@@ -1,4 +1,4 @@
-import { BULWARK } from './bulwark';
+import { BULWARK, type BulwarkDef } from './bulwark';
 import { REGION_1_PART, type RarePart } from './drops';
 import { HOLLOWS_ENEMIES, type HollowsEnemyDef } from './hollowsEnemies';
 
@@ -125,36 +125,8 @@ export interface SlammerDef extends EnemyBase, ScreenLeashed {
   };
 }
 
-/** The Bulwark (034): a shielded wall that lobs bombs and pounds up close, guarding its arena. Values in bulwark.ts. */
-export interface BulwarkDef extends EnemyBase {
-  kind: 'bulwark';
-  shield: ShieldDef;
-  /** Ticks with the player outside its arena before it walks home and heals. */
-  leashTicks: number;
-  /** It stops walking at this fraction of the pound's trigger range from the player, rather than walking into them. */
-  standOff: number;
-  lob: {
-    cooldownTicks: number;
-    windupTicks: number;
-    throwTicks: number;
-    count: number;
-    scatter: number;
-    radius: number;
-    fuseTicks: number;
-    damage: number;
-    knockback: number;
-    knockTicks: number;
-  };
-  pound: AttackTiming & {
-    triggerRange: number;
-    radius: number;
-    damage: number;
-    knockback: number;
-    knockTicks: number;
-  };
-}
-
-/** Region 2's four (035) are in hollowsEnemies.ts. */
+/** The Bulwark (034) is in bulwark.ts; Region 2's four (035) are in hollowsEnemies.ts. */
+export type { BulwarkDef };
 export type EnemyDef = MeleeDef | CasterDef | SlammerDef | BulwarkDef | HollowsEnemyDef;
 
 /** Every attack's wind-up is at least this long (035): long enough to read and dodge. A data test holds every enemy to it. */

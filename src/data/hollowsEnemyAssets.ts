@@ -11,8 +11,10 @@ export const HOLLOWS_ENEMY_LOOK = {
   lane: { alpha: 0.22, fillAlpha: 0.5, edgeWidth: 1.5, edgeAlpha: 0.75 },
   /** The Burrower's cracked ring at the locked spot: growing to its radius over the wind-up, with `cracks` lines out from the middle. */
   ring: { alpha: 0.22, fillAlpha: 0.45, width: 2, cracks: 6, crackWidth: 1.5, crackStart: 0.3, crackAlpha: 0.8 },
-  /** The ripple underground: the mound sprite, wobbling every `wobbleMs`, with dust kicked up every `dustMs` while it moves. */
-  ripple: { wobbleMs: 260, wobble: 0.08, dustMs: 90, minSpeed: 0.2 },
+  /** The ripple underground: the mound sprite heaving every `wobbleMs` while it moves faster than `minSpeed` px a tick. */
+  ripple: { wobbleMs: 260, minSpeed: 0.2 },
+  /** Dust kicked up every `ms` by a moving ripple and a Charger's hooves. */
+  dust: { ms: 90 },
   /**
    * The Shardback's bash arc, in the Husk's swipe style (004), and its crystals' flare over the wind-up: a cyan glow on
    * the shield, `ahead` px out along its facing and `rise` px up, growing to `radius` and `alpha` as the wind-up runs.
