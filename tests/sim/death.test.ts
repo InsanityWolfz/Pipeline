@@ -121,7 +121,7 @@ describe('dying', () => {
     expect(s.stash).toEqual({ wood: 9 });
     expect(s.claims).toEqual([SHRINE_SITE]);
     expect(s.link).toMatchObject({ attuned: true });
-    expect(s.link.entrances[1]).toEqual({ open: true, ammoId: 'arrow', count: 5 });
+    expect(s.link.entrances[1]).toMatchObject({ open: true, ammoId: 'arrow', count: 5 });
     expect(s.foundry.pieces).toHaveLength(pieces);
   });
 

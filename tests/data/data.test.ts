@@ -33,7 +33,8 @@ import {
   STATUS_MARKERS,
 } from '../../src/data/foundryAssets';
 import { ENEMIES } from '../../src/data/enemies';
-import { FIXTURES, PORT_CYCLE } from '../../src/data/claims';
+import { FIXTURES, SITE_SUPPLY } from '../../src/data/claims';
+import { SAFE_RADIUS } from '../../src/data/population';
 import { ARMOR_DROP_CHANCE, ARMOR_WEIGHTS } from '../../src/data/armor';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { TILE, WALKABLE } from '../../src/data/rooms';
@@ -395,10 +396,27 @@ describe('claiming (009)', () => {
     for (const def of Object.values(ENEMIES)) expect(ENEMY_ANIMS[def.anims]).toBeDefined();
   });
 
-  it('puts fixtures on open foundry floor, and the port cycles real raws', () => {
+  it('puts fixtures on open foundry floor, each port on a real raw, one port per raw', () => {
     const foundry = WORLD.foundry;
     for (const f of FIXTURES) expect(foundry?.rows[f.ty]?.[f.tx]).toBe(TILE.floor);
-    for (const id of PORT_CYCLE) expect(ITEMS[id]?.kind).toBe('raw');
+    const raws = FIXTURES.flatMap((f) => (f.kind === 'port' ? [f.raw] : []));
+    for (const id of raws) expect(id && ITEMS[id]?.kind).toBe('raw');
+    expect(new Set(raws).size).toBe(raws.length);
+    for (const f of FIXTURES) expect(f.kind === 'port' ? f.raw !== undefined && f.claim === undefined : f.raw === undefined, f.id).toBe(true);
+  });
+
+  it("gives every raw a site sends a port, and a node of that raw in the site's safe zone (028)", () => {
+    const ports = FIXTURES.flatMap((f) => (f.kind === 'port' ? [f.raw] : []));
+    for (const [site, raws] of Object.entries(SITE_SUPPLY)) {
+      const room = Object.values(WORLD).find((r) => r.pylon?.site === site);
+      if (!room?.pylon) throw new Error(`no pylon for ${site}`);
+      const { tx, ty } = room.pylon;
+      const nodes = (room.nodes ?? []).filter((n) => Math.hypot(n.tx - tx, n.ty - ty) <= SAFE_RADIUS);
+      for (const raw of raws) {
+        expect(ports, `${site}: ${raw}`).toContain(raw);
+        expect(nodes.some((n) => NODES[n.nodeId]?.itemId === raw), `${site}: a ${raw} node in its zone`).toBe(true);
+      }
+    }
   });
 });
 

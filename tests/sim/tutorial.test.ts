@@ -203,20 +203,22 @@ describe('objectives', () => {
     expect(s.objectives[fed]).toBe(true);
   });
 
-  it('the last completes after its time away with a line running, and ends the prototype', () => {
+  it("the prototype's last completes after its time away with a line running, and ends the prototype", () => {
     const s = createSim(SEED, { start: PLAYTEST_START });
-    s.objectives = OBJECTIVES.map((_, i) => i < OBJECTIVES.length - 1);
+    const away = OBJECTIVES.findIndex((o) => o.check.kind === 'awayRunning');
+    s.objectives = OBJECTIVES.map((_, i) => i < away);
     s.roomId = FOUNDRY_ROOM;
     // A conduit feeding the intake's middle mouth tile (019) is a line running.
     stepSim(s, command({ place: { pieceId: 'conduit', tx: 12, ty: 1, facing: 'up' } }));
     s.roomId = OVERWORLD_ROOM;
-    const last = OBJECTIVES[OBJECTIVES.length - 1]?.check;
+    const last = OBJECTIVES[away]?.check;
     const ticks = last?.kind === 'awayRunning' ? last.ticks : 0;
     run(s, ticks - 1);
     expect(s.prototypeComplete).toBe(false);
     run(s, 1);
     expect(s.prototypeComplete).toBe(true);
-    expect(summarize(s).objective).toBeNull();
+    // The line moves on to Milestone 1's first goal (028).
+    expect(summarize(s).objective).toEqual({ index: away + 1, text: 'Run a supply port into your line' });
   });
 
   it('replay identically', () => {

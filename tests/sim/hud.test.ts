@@ -29,8 +29,8 @@ function press(s: SimState): void {
 }
 
 describe('hudActive (025)', () => {
-  it('shows the carried round of the selected ammo with its carried count, and that is what fires', () => {
-    const s = meadow([['arrow', 5], null, ['bomb', 3]], { arrow: 12, bomb: 2 });
+  it('shows the carried round of the selected ammo with its carried count once the entrances are empty, and that is what fires', () => {
+    const s = meadow([null, null, null], { arrow: 12, bomb: 2 });
     s.tube.ammoId = 'arrow';
     expect(hudActive(s)).toEqual({ kind: 'carried', ammoId: 'arrow', count: 12 });
     press(s);
@@ -41,8 +41,8 @@ describe('hudActive (025)', () => {
     expect(hudActive(s)).toEqual({ kind: 'carried', ammoId: 'arrow', count: 11 });
   });
 
-  it('shows the whole volley, west to east, each round with its entrance count, and that is what fires', () => {
-    const s = meadow([['arrow', 12], ['arrow', 9], ['bomb', 4]], { bomb: 2 });
+  it('shows the whole volley, west to east, each round with its entrance count, and that is what fires, even with the selected ammo carried (028)', () => {
+    const s = meadow([['arrow', 12], ['arrow', 9], ['bomb', 4]], { arrow: 5, bomb: 2 });
     s.tube.ammoId = 'arrow';
     expect(hudActive(s)).toEqual({
       kind: 'volley',
@@ -58,7 +58,7 @@ describe('hudActive (025)', () => {
     expect(s.arrows).toHaveLength(2);
     expect(s.bombs).toHaveLength(1);
     expect(s.link.entrances.map((e) => e.count)).toEqual([11, 8, 3]);
-    expect(s.inventory.bomb).toBe(2);
+    expect(s.inventory).toEqual({ arrow: 5, bomb: 2 });
   });
 
   it('skips an empty entrance in the volley', () => {
@@ -85,7 +85,7 @@ describe('hudActive (025)', () => {
     expect(s.inventory.arrow).toBe(30);
   });
 
-  it('follows the fire path through carried, volley and melee in turn', () => {
+  it('follows the fire path through volley, carried and melee in turn (028)', () => {
     const s = meadow([null, ['arrow', 1], null], { arrow: 1 });
     const seen: string[] = [];
     for (let i = 0; i < 3; i++) {
@@ -94,7 +94,7 @@ describe('hudActive (025)', () => {
       seen.push(active.kind);
       press(s);
     }
-    expect(seen).toEqual(['carried', 'volley', 'melee']);
+    expect(seen).toEqual(['volley', 'carried', 'melee']);
   });
 
   it('is reported by getState() as hud.active', () => {

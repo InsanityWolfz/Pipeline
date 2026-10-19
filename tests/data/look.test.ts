@@ -2,7 +2,7 @@ import { SITE_LOOK, SUPPLY_LOOK } from '../../src/data/art/ground';
 import { RESIN } from '../../src/data/art/husk';
 import { NODE_DAPPLE } from '../../src/data/art/nodes';
 import { CORE } from '../../src/data/art/warden';
-import { PORT_CYCLE } from '../../src/data/claims';
+import { SITE_SUPPLY } from '../../src/data/claims';
 import { ITEMS } from '../../src/data/items';
 import { NODES } from '../../src/data/nodes';
 import { describe, expect, it } from 'vitest';
@@ -138,7 +138,7 @@ describe('feel and sound references', () => {
     for (const id of [NODE_DAPPLE.nodeId, HARVEST_WORK.shakeNodeId]) expect(NODES[id], id).toBeDefined();
     for (const id of [RESIN.enemyId, CORE.enemyId]) expect(ENEMIES[id], id).toBeDefined();
     for (const id of Object.keys(SUPPLY_LOOK.moteColors)) expect(ITEMS[id], id).toBeDefined();
-    for (const id of PORT_CYCLE) expect(SUPPLY_LOOK.moteColors[id], id).toBeDefined();
+    for (const id of Object.values(SITE_SUPPLY).flat()) expect(SUPPLY_LOOK.moteColors[id], id).toBeDefined();
   });
 
   it('key moods and ambience by real rooms, fire sounds by real ammo, and wind-ups by real enemy kinds', () => {

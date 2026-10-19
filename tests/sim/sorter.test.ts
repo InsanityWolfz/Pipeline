@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PORT_TICKS } from '../../src/data/claims';
+import { SUPPLY_TICKS } from '../../src/data/claims';
 import { TILE_SIZE } from '../../src/data/config';
 import { CONDUIT_TICKS, HOPPER_TICKS } from '../../src/data/foundry';
 import { BUILD_BAR } from '../../src/data/pieces';
@@ -188,33 +188,32 @@ describe('setting a sorter', () => {
   });
 });
 
-describe('splitting the supply line', () => {
-  it('sorts wood and stone off the port onto their own belts into crates', () => {
+describe('sorting off a supply port (028: one port per raw)', () => {
+  it("sends the port's raw out its side when it is the filter, and on out its front when it isn't", () => {
     const s = foundry();
     claim(s, SHRINE_SITE);
-    // The port at (1,8) hands right into (2,8). Wood drops out at (2,9), stone at (3,9), the rest runs on to (4,8).
-    const a = sorter(s, 2, 8, 'wood');
-    const b = sorter(s, 3, 8, 'stone');
-    const wood = put<CrateState>(s, 'crate', 2, 9);
-    const stone = put<CrateState>(s, 'crate', 3, 9);
-    const rest = put<CrateState>(s, 'crate', 4, 8);
-    run(s, PORT_TICKS * 8 + CONDUIT_TICKS * 4);
-    expect(Object.keys(wood.contents)).toEqual(['wood']);
-    expect(Object.keys(stone.contents)).toEqual(['stone']);
-    expect(rest.contents.wood ?? 0).toBe(0);
-    expect(rest.contents.stone ?? 0).toBe(0);
-    expect(Object.values(rest.contents).reduce((x, y) => x + y, 0)).toBeGreaterThan(0);
-    expect([a.filter, b.filter]).toEqual(['wood', 'stone']);
+    // The wood port at (1,4) hands right into (2,4), the stone port at (1,6) into (2,6).
+    // Both sorters pick wood: wood drops out at (2,5); stone runs on to (3,6).
+    const a = sorter(s, 2, 4, 'wood');
+    const b = sorter(s, 2, 6, 'wood');
+    const wood = put<CrateState>(s, 'crate', 2, 5);
+    const ahead = put<CrateState>(s, 'crate', 3, 4);
+    const stone = put<CrateState>(s, 'crate', 3, 6);
+    run(s, SUPPLY_TICKS * 3 + CONDUIT_TICKS * 2);
+    expect(wood.contents).toEqual({ wood: 3 });
+    expect(ahead.contents).toEqual({});
+    expect(stone.contents).toEqual({ stone: 3 });
+    expect([a.filter, b.filter]).toEqual(['wood', 'wood']);
   });
 
   it('is deterministic', () => {
     const build = () => {
       const s = foundry();
       claim(s, SHRINE_SITE);
-      sorter(s, 2, 8, 'wood');
-      put(s, 'crate', 2, 9);
-      put(s, 'crate', 3, 8);
-      run(s, PORT_TICKS * 5);
+      sorter(s, 2, 4, 'wood');
+      put(s, 'crate', 2, 5);
+      put(s, 'crate', 3, 4);
+      run(s, SUPPLY_TICKS * 5);
       return summarize(s).foundry;
     };
     expect(build()).toEqual(build());

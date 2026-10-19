@@ -46,7 +46,7 @@ describe('the foundry intake', () => {
       run(s, 1);
       expect(c.item).toBeNull();
       expect(s.link.entrances.map((e) => e.count)).toEqual([0, 1, 2].map((j) => (j === i ? 1 : 0)));
-      expect(s.link.entrances[i]).toEqual({ open: true, ammoId: 'arrow', count: 1 });
+      expect(s.link.entrances[i]).toEqual({ open: true, ammoId: 'arrow', count: 1, cooldown: 0 });
       expect(s.events.refills).toEqual([{ entrance: i, itemId: 'arrow' }]);
     }
   });

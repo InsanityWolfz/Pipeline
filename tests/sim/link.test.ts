@@ -97,7 +97,7 @@ describe('attunement', () => {
     s.player.health = HUSK.swipe.damage;
     runUntilKo(s);
     expect(s.link.attuned).toBe(true);
-    expect(s.link.entrances[1]).toEqual({ open: true, ammoId: 'arrow', count: 7 });
+    expect(s.link.entrances[1]).toMatchObject({ open: true, ammoId: 'arrow', count: 7 });
   });
 
   it('shows in the summary', () => {
@@ -120,7 +120,7 @@ describe('firing from the reservoir', () => {
     expect([s.link.entrances[1]?.count, s.tube.fromReservoir]).toEqual([1, true]);
     expect(summarize(s).tube.fromReservoir).toBe(true);
     run(s, FIRE_TICKS, aim);
-    expect(s.link.entrances[1]).toEqual({ open: true, ammoId: null, count: 0 });
+    expect(s.link.entrances[1]).toEqual({ open: true, ammoId: null, count: 0, cooldown: 0 });
     expect(s.arrows).toHaveLength(3);
     run(s, FIRE_TICKS, aim);
     expect(s.events.melees).toHaveLength(1);

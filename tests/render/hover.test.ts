@@ -57,7 +57,7 @@ describe('world names on mouse-over', () => {
     expect(nameAt(s, HALL, field.x, field.y)).toBeNull();
   });
 
-  it('says where materials come from over the pylon, a ley line and the supply port (018)', () => {
+  it('says where materials come from over the pylon and a ley line (018), and what each port sends (028)', () => {
     const s = createSim(SEED, { roomId: HALL });
     s.enemies = [];
     s.nodes = [];
@@ -70,10 +70,15 @@ describe('world names on mouse-over', () => {
     if (!a || !b) throw new Error('short ley line');
     const seam = { x: ((a.tx + b.tx) / 2 + 0.5) * 32, y: ((a.ty + b.ty) / 2 + 0.5) * 32 };
     expect(nameAt(s, HALL, seam.x, seam.y)).toMatchObject({ name: WORLD_NAMES.leyLine, description: DESCRIPTIONS.leyLine });
-    const port = FIXTURES.find((f) => f.kind === 'port');
+    const port = FIXTURES.find((f) => f.kind === 'port' && f.raw === 'stone');
     if (!port) throw new Error('no port');
     const at = centre(port.tx, port.ty);
-    expect(nameAt(s, 'foundry', at.x, at.y)).toMatchObject({ name: port.name, description: DESCRIPTIONS.port });
+    expect(nameAt(s, 'foundry', at.x, at.y)).toMatchObject({ name: 'Stone port', description: '×1 pylon · 15/min' });
+    // A refused raw waiting in the port says so.
+    const held = s.fixtures.find((f) => f.id === port.id);
+    if (!held) throw new Error('no stone port');
+    held.item = 'stone';
+    expect(nameAt(s, 'foundry', at.x, at.y)?.description).toBe('×1 pylon · 15/min · waiting');
   });
 });
 
