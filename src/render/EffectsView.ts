@@ -9,24 +9,21 @@ import {
   KO_FADE_MS,
   MELEE_SWOOSH,
   MUZZLE_FLASH,
-  PICKUP_POPUP,
   PICKUP_SPARKLE,
 } from '../data/assets';
 import { MELEE } from '../data/combat';
 import { CAMERA_LERP, DOOR_FADE_MS } from '../data/config';
 import { enemyDef } from '../data/enemies';
-import { ITEMS } from '../data/items';
 import { INK_ID, hexToRgb, paletteHex } from '../data/palette';
 import { STAGE_SPRITES, STAR_FLASH } from '../data/stageAssets';
 import { DRAW_HEIGHT } from '../data/tube';
 import type { SimEvents } from '../sim/events';
 import { registerAnim } from './anims';
 import { colorOf } from './color';
-import { phaserStyle } from './fonts';
-import { addVector, addVectorSprite, textureScale } from './vector/textures';
+import { addVector, addVectorSprite } from './vector/textures';
 import { UI_CAMERA } from './scale';
 
-// One-shot effects driven by sim events: corpses, pickup sparkles and popups,
+// One-shot effects driven by sim events: corpses, pickup sparkles,
 // fire bursts, muzzle flashes, the punch's swoosh, the deposit swirl, and the KO fade. Nothing here feeds back into the sim.
 export class EffectsView {
   private readonly scene: Scene;
@@ -54,7 +51,7 @@ export class EffectsView {
   /** Plays the effects for events since the last frame. `player` is where the player stands now. */
   play(events: SimEvents, player: { x: number; y: number }): void {
     for (const d of events.deaths) this.corpse(d.enemyId, d.x, d.y, d.facing === 'left');
-    events.pickups.forEach((p, i) => this.pickup(p.itemId, p.x, p.y, player, i));
+    for (const p of events.pickups) this.pickup(p.x, p.y);
     for (const b of events.bursts) this.burst(b.x, b.y, b.radius);
     for (const s of events.shots) this.muzzle(s.x, s.y);
     for (const m of events.melees) this.swoosh(m.x, m.y, m.angle);
@@ -166,30 +163,11 @@ export class EffectsView {
     sprite.once('animationcomplete', () => sprite.destroy());
   }
 
-  private pickup(itemId: string, x: number, y: number, player: { x: number; y: number }, index: number): void {
+  /** The sparkle where an item was picked up; its count shows in the HUD's pickup feed (031), its slide in GroundItemView (021). */
+  private pickup(x: number, y: number): void {
     const sparkle = addVectorSprite(this.scene, x, y, animFrames(PICKUP_SPARKLE)[0] ?? '').setDepth(DEPTHS.worldUi);
     sparkle.play(PICKUP_SPARKLE.key);
     sparkle.once('animationcomplete', () => sparkle.destroy());
-
-    const icon = ITEMS[itemId]?.icon;
-    if (!icon) return;
-    // The label and icon rise and fade together.
-    const top = Math.round(player.y - PICKUP_POPUP.startHeight - index * PICKUP_POPUP.stack);
-    const label = this.scene.add.text(0, top, '+1', phaserStyle('float', textureScale())).setOrigin(0, 0.5);
-    const iconImage = addVector(this.scene, 0, top, icon).setOrigin(0, 0.5);
-    const width = label.width + PICKUP_POPUP.gap + iconImage.displayWidth;
-    const left = Math.round(player.x - width / 2);
-    label.setX(left);
-    iconImage.setX(left + label.width + PICKUP_POPUP.gap);
-    const parts = [label, iconImage];
-    for (const p of parts) p.setDepth(DEPTHS.worldUi);
-    this.scene.tweens.add({
-      targets: parts,
-      y: top - PICKUP_POPUP.rise,
-      alpha: 0,
-      duration: PICKUP_POPUP.durationMs,
-      onComplete: () => parts.forEach((p) => p.destroy()),
-    });
   }
 
   /**

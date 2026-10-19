@@ -3,7 +3,7 @@ import { SLOT_AMMOS } from '../data/tube';
 
 // The keyboard's bindings: what each key does is in controls.ts.
 
-export type Key = 'up' | 'down' | 'left' | 'right' | 'dodge' | 'rotate' | 'flip' | 'interact' | 'menu' | 'close' | 'build';
+export type Key = 'up' | 'down' | 'left' | 'right' | 'dodge' | 'rotate' | 'flip' | 'interact' | 'menu' | 'close' | 'build' | 'inventory' | 'inventoryTab';
 
 /** Number keys pick the slot's ammo in SLOT_AMMOS order: 1 for the first, and so on. */
 const NUMBER_KEYS = [
@@ -15,7 +15,10 @@ const NUMBER_KEYS = [
 if (SLOT_AMMOS.length > NUMBER_KEYS.length) throw new Error(`Only ${NUMBER_KEYS.length} ammo keys for ${SLOT_AMMOS.length} slot ammo`);
 export const AMMO_KEYS = NUMBER_KEYS.slice(0, SLOT_AMMOS.length);
 
-/** WASD to move, Space to roll, R and F to turn and flip a piece, E, C, Esc and B. */
+/**
+ * WASD to move, Space to roll, R and F to turn and flip a piece, E, C, Esc and B, and I or Tab for the inventory (031).
+ * Every key is captured (Phaser's default), so Tab never moves the browser's focus.
+ */
 export function bindKeys(keyboard: Input.Keyboard.KeyboardPlugin): Record<Key, Input.Keyboard.Key> {
   const codes = Input.Keyboard.KeyCodes;
   return {
@@ -30,5 +33,7 @@ export function bindKeys(keyboard: Input.Keyboard.KeyboardPlugin): Record<Key, I
     menu: keyboard.addKey(codes.C),
     close: keyboard.addKey(codes.ESC),
     build: keyboard.addKey(codes.B),
+    inventory: keyboard.addKey(codes.I),
+    inventoryTab: keyboard.addKey(codes.TAB, true),
   };
 }

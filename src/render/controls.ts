@@ -28,8 +28,8 @@ type BuildAction = Pick<Command, 'place' | 'pickUp'>;
 
 /** The commands that come from build mode and the hopper menu rather than held keys. */
 export { NO_UI_COMMAND, type UiCommand } from './menuRequests';
-// Turns WASD, Space, R, E, B, 1–3 and the mouse into sim commands, and C and Esc
-// into menu toggles for the scene. Presses are latched from the keys' down
+// Turns WASD, Space, R, E, B, 1–3 and the mouse into sim commands, and C, Esc, I and
+// Tab into menu toggles for the scene. Presses are latched from the keys' down
 // events until consumed, so a tap shorter than a frame isn't lost, a press on a
 // frame that runs no ticks isn't lost, and a frame that runs several ticks only
 // acts on the first. In build mode, R turns the ghost (it does nothing outside it),
@@ -44,8 +44,8 @@ export class Controls {
   private interactPending = false;
   private interactPress = false;
   private selectPending: string | null = null;
-  private menuPending = false;
-  private closePending = false;
+  /** C, Esc and I or Tab (031), latched until the scene takes them. */
+  private readonly menuKeys = { menu: false, close: false, inventory: false };
   private buildPending = false;
   private wheelPending = 0;
   /** Choices clicked in the hopper, pylon, stash and bench menus. */
@@ -85,8 +85,9 @@ export class Controls {
       this.interactPending = true;
       this.interactPress = true;
     });
-    this.keys.menu.on('down', () => (this.menuPending = true));
-    this.keys.close.on('down', () => (this.closePending = true));
+    this.keys.menu.on('down', () => (this.menuKeys.menu = true));
+    this.keys.close.on('down', () => (this.menuKeys.close = true));
+    for (const key of [this.keys.inventory, this.keys.inventoryTab]) key.on('down', () => (this.menuKeys.inventory = true));
     this.keys.build.on('down', () => (this.buildPending = true));
     for (const [i, key] of this.ammoKeys.entries()) key.on('down', () => (this.selectPending = SLOT_AMMOS[i] ?? null));
     this.pointer = scene.input.activePointer;
@@ -207,18 +208,25 @@ export class Controls {
     this.dragTile = tile;
   }
 
+  private takeMenuKey(key: keyof Controls['menuKeys']): boolean {
+    const pressed = this.menuKeys[key];
+    this.menuKeys[key] = false;
+    return pressed;
+  }
+
   /** C was pressed since the last call. */
   takeMenuToggle(): boolean {
-    const pressed = this.menuPending;
-    this.menuPending = false;
-    return pressed;
+    return this.takeMenuKey('menu');
   }
 
   /** Esc was pressed since the last call. */
   takeMenuClose(): boolean {
-    const pressed = this.closePending;
-    this.closePending = false;
-    return pressed;
+    return this.takeMenuKey('close');
+  }
+
+  /** I or Tab was pressed since the last call (031). */
+  takeInventoryToggle(): boolean {
+    return this.takeMenuKey('inventory');
   }
 
   /** E was pressed since the last call (for the scene's picker; the sim gets its own copy). */

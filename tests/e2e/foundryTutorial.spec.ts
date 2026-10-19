@@ -129,7 +129,7 @@ test('the foundry steps walk the player through an arrow line into the intake', 
   s = await stepUntilPast(page, FIRST + 2, 300);
   expect(s.objective).toEqual({ index: FIRST + 3, text: STEPS[3] });
   expect(s.machineMade).toEqual({ shaft: 2 });
-  await expect.poll(async () => (await ui(page))?.madePopups).toEqual(['+ shaft']);
+  await expect.poll(async () => (await ui(page))?.madePopups.map((p) => p.text)).toEqual(['+ shaft']);
   if (SHOOT) await page.screenshot({ path: `${SHOTS}/02-made-popup.png` });
   await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
   await expect.poll(async () => (await ui(page))?.madePopups).toEqual([]);

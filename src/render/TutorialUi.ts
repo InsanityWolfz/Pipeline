@@ -40,7 +40,7 @@ export class TutorialUi {
 
   /**
    * For the test hook: the intake's prompt text while it shows (024), the key prompt as drawn, the intake marker's
-   * point, and the "+ shaft" popups on screen (027).
+   * point, and the "+ shaft" popups on screen (027) with their screen boxes (031).
    */
   get state(): TutorialUiState {
     return { intakePrompt: this.intake.shown, prompt: this.prompt.shown, marker: this.prompt.markerAt, madePopups: this.made.shown, objectiveTick: this.objective.tickAlpha };

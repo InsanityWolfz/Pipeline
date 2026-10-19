@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
-import { HUD_HEALTH_LAYOUT, HUD_LAYOUT } from '../../src/data/hudLayout';
+import { HUD_LAYOUT } from '../../src/data/hudLayout';
+import { HUD_HEALTH_LAYOUT } from '../../src/data/hudPanels';
 import { BUILD_BAR } from '../../src/data/pieces';
 import { buildBarLabelTop, hotbarBox, tubeSlotBox, type ScreenBox } from '../../src/render/bottomHud';
 import { buildBarBox } from '../../src/render/foundryLayout';

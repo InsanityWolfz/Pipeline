@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HP_BAR } from '../../src/data/hudLayout';
+import { HP_BAR } from '../../src/data/hudPanels';
 import { chunkOf, createHealthBar, isLow, pulseOf, stepHealthBar, type HealthBarInput } from '../../src/render/healthBarModel';
 
 // The HP bar's motion (031), pure: the fill shown, the white damage chunk that holds

@@ -33,7 +33,7 @@ export const HEALTH_BLOCK_WIDTH = (() => {
 /**
  * The HP bar's motion (031): below `lowFraction` of max health it turns red and pulses once per `pulseMs` (up to
  * `pulseScale` bigger, its fill washed `pulseBrighten` toward white) with red screen edges (`edge`: palette id, peak
- * alpha, and where they start as a fraction of the corner distance). A drop leaves the lost part white for
+ * alpha, and where they start as a fraction of the way to the corners). A drop leaves the lost part white for
  * `chunkHoldMs`, then drains it over `chunkDrainMs`. While healing the fill closes on the new value with time constant
  * `riseMs` instead of jumping, and a cyan `glow` (palette id, blur px, sprite padding px) fades in and out over `fadeMs`.
  */
@@ -42,7 +42,7 @@ export const HP_BAR = {
   pulseMs: 900,
   pulseScale: 0.06,
   pulseBrighten: 0.35,
-  edge: { color: 'hit-red', alpha: 0.35, inner: 0.55 },
+  edge: { color: 'hit-red', alpha: 0.5, inner: 0.45 },
   chunkHoldMs: 400,
   chunkDrainMs: 300,
   riseMs: 220,

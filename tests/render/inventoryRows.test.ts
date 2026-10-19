@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { inventoryGroups } from '../../src/render/inventoryRows';
 import { inventoryLayout } from '../../src/render/inventoryLayout';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
-import { INVENTORY_PANEL, reservedRows } from '../../src/data/inventoryPanel';
+import { INVENTORY_PANEL, reservedRows } from '../../src/data/hudPanels';
 
 // What the inventory panel lists (031): the groups in order, a row per carried item
 // with its at-risk count (from the banking helper) and what's home in the stash, and
@@ -49,7 +49,7 @@ describe('the inventory rows', () => {
       { itemId: 'worn', count: 1, atRisk: 0, home: 0 },
       { itemId: 'spare', count: 2, atRisk: 0, home: 0 },
     ]);
-    const bare = inventoryGroups({ ...base, armor: [armor[0] ?? armor[1]], equipped: null }).find((g) => g.id === 'gear');
+    const bare = inventoryGroups({ ...base, armor: armor.slice(0, 1), equipped: null }).find((g) => g.id === 'gear');
     expect(bare?.rows).toEqual([{ itemId: 'spare', count: 1, atRisk: 0, home: 0 }]);
   });
 });

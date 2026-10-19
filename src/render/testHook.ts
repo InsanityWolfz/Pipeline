@@ -8,7 +8,8 @@ import { roomBodies } from '../sim/bodies';
 import { layItem } from '../sim/drops';
 import type { GameScene } from './GameScene';
 import type { CursorState } from './CursorView';
-import type { BottomHudState } from './HudView';
+import type { BottomHudState, HudPanelsState } from './HudView';
+import type { MadePopupShown } from './MadePopups';
 import type { BuildBarState } from './BuildView';
 import type { CraftMenuState } from './CraftMenuView';
 import type { PromptState } from './PromptView';
@@ -94,8 +95,8 @@ export interface UiState {
   prompt: PromptState | null;
   /** The arrow marker, over the intake for the conduit step (027) or over the ports for the port goal (028): the world point its tip bobs over, or null. */
   marker: { x: number; y: number } | null;
-  /** The "+ shaft" popups still on screen (027), by text. */
-  madePopups: string[];
+  /** The "+ shaft" popups still on screen (027), by text, with each one's box in view px (031: none overlap). */
+  madePopups: MadePopupShown[];
   /** The objective line's finished-goal tick, its alpha (0 once faded): screenshots wait for it to go (028). */
   objectiveTick: number;
   /** The centre of the world camera's view, world px (023: screenshots wait for it to settle on the player). */
@@ -113,6 +114,12 @@ export interface UiState {
   tagged: { benchStages: StagePanelState | null; starFlashes: number; trails: { count: number; longest: number } };
   /** 030: the Ley Springs drawn, healing motes in the air, the pylon's thread, the foundry's shimmer, and the spring glowing under the player. */
   healing: HealingShown;
+  /** 031: the inventory panel (open, and each group's rows: carried count, at risk, home in the stash). */
+  inventory: HudPanelsState['inventory'];
+  /** 031: the pickup feed's lines, newest first. */
+  pickupFeed: HudPanelsState['pickupFeed'];
+  /** 031: the HP bar: the block's box (view px), its "72 / 100", low, the healing glow, and the white chunk in HP (0 for none). */
+  health: HudPanelsState['health'];
 }
 
 declare global {

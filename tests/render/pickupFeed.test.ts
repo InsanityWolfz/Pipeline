@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PICKUP_FEED } from '../../src/data/inventoryPanel';
+import { PICKUP_FEED } from '../../src/data/hudPanels';
 import { addPickup, ageFeed, lineAlpha, type FeedLine } from '../../src/render/pickupFeedModel';
 
 // The pickup feed (031), pure: repeats merge into one line, newest on top, at most
@@ -16,13 +16,14 @@ describe('the pickup feed', () => {
 
   it('a repeat adds to its line, restarts its timer and brings it to the top', () => {
     let lines = addPickup([], 'wood');
-    lines = ageFeed(lines, 1000);
     lines = addPickup(lines, 'stone');
+    expect(shown(lines)).toEqual([['stone', 1], ['wood', 1]]);
+    lines = ageFeed(lines, 1000);
     lines = addPickup(lines, 'wood', 2);
     expect(shown(lines)).toEqual([['wood', 3], ['stone', 1]]);
     expect(lines[0]?.ageMs).toBe(0);
     // Past stone's hold and fade, wood (restarted) still shows.
-    lines = ageFeed(lines, PICKUP_FEED.holdMs + PICKUP_FEED.fadeMs - 1);
+    lines = ageFeed(lines, PICKUP_FEED.holdMs + PICKUP_FEED.fadeMs - 1000 - 1);
     expect(shown(lines)).toEqual([['wood', 3], ['stone', 1]]);
     lines = ageFeed(lines, 1);
     expect(shown(lines)).toEqual([['wood', 3]]);

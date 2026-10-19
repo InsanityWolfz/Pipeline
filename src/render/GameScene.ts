@@ -11,7 +11,6 @@ import type { Command } from '../sim/input';
 import { canPlace, conduitInFrom, unlockedPieces } from '../sim/placement';
 import { roomById, type SimState } from '../sim/state';
 import { stepSim } from '../sim/step';
-import { hudActive } from '../sim/volley';
 import { ArrowView } from './ArrowView';
 import { BombView } from './BombView';
 import { BuildView } from './BuildView';
@@ -24,7 +23,7 @@ import { FoundryView } from './FoundryView';
 import { GroundItemView } from './GroundItemView';
 import { HopperPicker } from './HopperPicker';
 import { HoverView } from './HoverView';
-import { HudView } from './HudView';
+import { HudView, NO_HUD_PANELS } from './HudView';
 import { NodeView } from './NodeView';
 import { PlayerView } from './PlayerView';
 import { SiteMenus } from './SiteMenus';
@@ -133,8 +132,8 @@ export class GameScene extends Scene {
     camera.startFollow(this.playerView.sprite, true, CAMERA_LERP, CAMERA_LERP);
 
     this.controls = new Controls(this);
-    if (this.menu && this.pause && this.siteMenus && this.picker && this.buildView && this.feel)
-      this.router = new MenuRouter(this.sim, { craft: this.menu, pause: this.pause, site: this.siteMenus, picker: this.picker, build: this.buildView, sound: this.feel.sound });
+    if (this.menu && this.pause && this.siteMenus && this.picker && this.buildView && this.feel && this.hud && this.wake)
+      this.router = new MenuRouter(this.sim, { craft: this.menu, pause: this.pause, site: this.siteMenus, picker: this.picker, build: this.buildView, sound: this.feel.sound, inventory: this.hud.inventory, wake: this.wake });
   }
 
   /** Matches both cameras to the backbuffer (016). Called on boot and whenever the window changes. */
@@ -186,6 +185,7 @@ export class GameScene extends Scene {
       ...(this.tutorial?.state ?? NO_TUTORIAL_UI),
       camera: { x: this.cameras.main.worldView.centerX, y: this.cameras.main.worldView.centerY },
       hud: this.hud?.bottom ?? null,
+      ...(this.hud?.panels ?? NO_HUD_PANELS),
       craftMenu: this.menu?.state ?? null,
       buildBar: this.buildView?.state ?? null,
       tagged: { benchStages: this.siteMenus?.stagePanel ?? null, starFlashes: this.effects?.starFlashes ?? 0, trails: this.arrowView?.trails ?? { count: 0, longest: 0 } },
@@ -256,6 +256,7 @@ export class GameScene extends Scene {
     this.roomViews?.update(sim, this.pending, shown, this.game.loop.delta);
     this.tutorial?.update(sim, shown, this.pending, (id) => this.foundryView?.topOf(id));
     const picked = new Set(this.pending.pickups.map((p) => p.id));
+    this.hud?.update(sim, this.pending, this.game.loop.delta);
     clearEvents(this.pending);
     const inFoundry = shown === FOUNDRY_ROOM;
     this.foundryView?.update(sim.foundry, inFoundry, sim.building);
@@ -268,7 +269,6 @@ export class GameScene extends Scene {
     this.bombView?.update(inRoom(sim.bombs, shown));
     this.site?.update(sim, shown);
     this.siteMenus?.update(sim);
-    this.hud?.update(sim.tube, sim.inventory, sim.player, hudActive(sim), worn(sim), sim.hasTube, sim.building);
     this.menu?.update(sim.inventory, sim.link);
     const hopper = sim.foundry.pieces.find((p) => p.id === this.picker?.hopperId);
     this.picker?.update(sim.inventory, hopper?.kind === 'hopper' ? hopper : undefined);
@@ -288,7 +288,7 @@ export class GameScene extends Scene {
     const pointer = controls?.viewPointer();
     if (pointer) for (const menu of [this.siteMenus, this.picker, this.pause]) menu?.pointAt(pointer.x, pointer.y);
     // The arrow pointer while a menu is open or over the build bar, else the crosshair (021).
-    const inMenu = [this.menu, this.pause, this.picker, this.siteMenus].some((m) => m?.isOpen) || (this.wake?.isShown ?? false);
+    const inMenu = [this.menu, this.pause, this.picker, this.siteMenus, this.hud?.inventory].some((m) => m?.isOpen) || (this.wake?.isShown ?? false);
     this.cursorView?.update(inMenu || (pointer !== undefined && (this.buildView?.overUi(pointer.x, pointer.y) ?? false)));
     if (this.feel) this.pause?.update(this.feel.sound);
     const point = controls?.overWorld() ? controls.cursorPoint() : null;

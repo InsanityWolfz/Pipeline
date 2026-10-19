@@ -173,6 +173,8 @@ test('two "+ part" popups at once never overlap', async ({ page }) => {
     }
     h.walkTo(15.5 * 32, 6.5 * 32);
   }, CUTTER_STEP);
+  // The foundry is on screen once the door's fade is over: no meadow nodes are drawn.
+  await expect.poll(async () => Object.keys((await ui(page))?.nodes ?? { x: 1 }).length).toBe(0);
   // The popups are short: slow every tween so both can be seen together.
   await page.evaluate(() => window.__GAME__?.tweenSpeed(0.05));
   const s = await page.evaluate((cutterStep) => {
