@@ -11,19 +11,16 @@ import { feedLines, pressE, toIntake, ui } from './intakePage';
 
 const SHOTS = 'docs/review/024';
 
-/** Out in the meadow, aimed east, the selected ammo none carried: one press. Returns that tick's state and the aim. */
+/** Out in the meadow, aimed east, with ley bolts selected and carried: one press, which fires the volley first (028). Returns that tick's state and the aim. */
 function fireVolley(page: Page, settle = 0) {
   return page.evaluate((settle) => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     h.toHall();
-    g.step(1, { selectAmmo: 'ley-bolt' });
-    // Spend the carried bolts first, so the next press is the volley.
-    let s = g.getState();
+    const s = g.step(1, { selectAmmo: 'ley-bolt' });
+    if ((s.inventory['ley-bolt'] ?? 0) === 0) throw new Error('no ley bolts carried');
     const aim = { x: s.player.x + 160, y: s.player.y };
-    for (let t = 0; t < 99 * 21 && (s.inventory['ley-bolt'] ?? 0) > 0; t++) s = g.step(1, { fire: true, aimX: aim.x, aimY: aim.y });
-    for (let t = 0; t < 60 && s.tube.fireCooldown > 0; t++) s = g.step(1);
     const next = s.tube.next;
     const before = new Set(s.arrows.map((a) => a.id));
     const shot = g.step(1, { fire: true, aimX: aim.x, aimY: aim.y });

@@ -71,16 +71,15 @@ export class PortView {
     return parts;
   }
 
-  /** The plate's tablet sized to its text, centred under the port. */
+  /** The plate's tablet sized to its text, under the port, reading into the room. */
   private drawPlate(parts: PortParts, text: string, at: { tx: number; ty: number }): void {
-    const { platePad: pad, plateGap, plateAlpha } = PORT_LOOK;
+    const { platePad: pad, plateGap, plateAlpha, plateX } = PORT_LOOK;
     parts.shown = text;
     parts.text.set(text);
-    const x = (at.tx + 0.5) * TILE_SIZE;
     const top = (at.ty + 1) * TILE_SIZE + plateGap;
     const w = Math.ceil(parts.text.width) + 2 * pad.x;
     const h = parts.text.lineHeight + 2 * pad.y;
-    const left = Math.round(x - w / 2);
+    const left = at.tx * TILE_SIZE + plateX;
     const depth = top + h;
     parts.plate.clear().setDepth(depth);
     drawTablet(parts.plate, left, top, w, h, plateAlpha);

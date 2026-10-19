@@ -183,13 +183,15 @@ export const FIXTURE_SPRITES = {
 } as const satisfies { stash: string; port: AnimDef; waystone: AnimDef; bench: AnimDef };
 
 /**
- * A supply port's face and plate (028), px from the port sprite's bottom centre: its raw's icon sits on the round face
- * at `face`, drawn at `iconScale`; the plate hangs `plateGap` below the sprite, padded round its text.
+ * A supply port's face and plate (028): its raw's icon sits on the round face at `face`, px from the port sprite's
+ * bottom centre, drawn at `iconScale`; the plate hangs `plateGap` below the sprite, padded round its text, its left
+ * edge `plateX` right of the port tile's (it reads into the room, clear of the wall and the HUD's left column).
  */
 export const PORT_LOOK = {
   face: { x: -3, y: -18 },
   iconScale: 0.75,
   plateGap: 2,
+  plateX: 2,
   platePad: { x: 3, y: 1 },
   plateAlpha: 0.92,
 } as const;

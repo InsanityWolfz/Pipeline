@@ -26,7 +26,7 @@ async function pylonMenu(page: Page, row: 0 | 1, done: () => Promise<boolean>): 
 
 // Claiming (009): walk up to the shrine, clear it with the playtest ammo, claim
 // its pylon, send the haul home, travel to the foundry, take from the stash, see
-// the supply port push into a conduit, and ride the waystone back. Since 017 the
+// the fiber port push into a conduit (028: a port per raw), and ride the waystone back. Since 017 the
 // shrine is a walled site in the overworld, reached by the dirt path east.
 
 test('clear the shrine, claim the pylon, deposit, travel and use the stash and port', async ({ page }) => {
@@ -102,17 +102,19 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
   expect(result.cleared).toBe(true);
   expect(result.claimed).toBe(true);
 
-  // The pylon's harvest (018): the moment the supply port produces a raw, a mote of it sets off home along the ley line.
+  // The pylon's harvest (018): the moment the ports produce their raws (028: one port per raw, all four starting
+  // together at the claim), a mote of each sets off home along the ley line.
+  const RAWS = ['wood', 'stone', 'fiber', 'ley-crystal'];
   const supplied = await page.evaluate(() => {
     const g = window.__GAME__;
     let s = g?.getState();
     for (let t = 0; t < 400 && s && s.events.supplies.length === 0; t++) s = g?.step(1);
-    return { supplies: s?.events.supplies.map((e) => e.itemId) ?? [], port: s?.fixtures.find((f) => f.kind === 'port')?.item ?? null };
+    return { supplies: s?.events.supplies.map((e) => e.itemId) ?? [], ports: s?.ports.map((p) => [p.raw, p.waiting]) ?? [] };
   });
-  // The same raw comes up at the foundry's supply port.
-  expect(supplied).toEqual({ supplies: ['wood'], port: 'wood' });
-  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().supply))?.inFlight.map((m) => m.itemId)).toEqual(['wood']);
-  expect((await page.evaluate(() => window.__GAME__?.ui().supply))?.started).toBe(1);
+  // Each raw comes up at its own port, and waits there with nothing in front.
+  expect(supplied).toEqual({ supplies: RAWS, ports: RAWS.map((raw) => [raw, true]) });
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().supply))?.inFlight.map((m) => m.itemId)).toEqual(RAWS);
+  expect((await page.evaluate(() => window.__GAME__?.ui().supply))?.started).toBe(4);
 
   // Hovering the pylon says where the materials come from.
   const at = await state(page);
@@ -147,7 +149,7 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
     h.walkTo(21.5 * 32, 11.5 * 32);
     let s = g.step(1, { takeStash: { itemId: 'wood' } });
     const wood = s.inventory.wood ?? 0;
-    // A conduit in front of the supply port (1,8 facing right) gets a raw.
+    // A conduit in front of the fiber port (1,8 facing right) gets its raw.
     g.step(1, { place: { pieceId: 'conduit', tx: 2, ty: 8, facing: 'down' } });
     let raw: string | null = null;
     for (let t = 0; t < 300 && !raw; t++) {
@@ -163,7 +165,7 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
   expect(stashed).toBeGreaterThan(0);
   expect(home).toBe('foundry');
   expect(after.wood).toBeGreaterThan(0);
-  expect(after.raw).toBe('wood');
+  expect(after.raw).toBe('fiber');
   expect(after.back).toBe('shrine');
   expect(errors).toEqual([]);
 });

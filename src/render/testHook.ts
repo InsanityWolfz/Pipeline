@@ -35,6 +35,8 @@ export interface GameTestHook {
   passable(): string[];
   /** Claims a site outright, as holding E at its cleared pylon would (028: the e2e's "or set it claimed"). */
   claim(site: string): SimSummary;
+  /** Marks the first `count` objectives done (028: to show a later goal in a screenshot without playing the whole run). */
+  completeObjectives(count: number): SimSummary;
 }
 
 /**
@@ -161,6 +163,10 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
     },
     claim: (site) => {
       claim(sim, site);
+      return summarize(sim);
+    },
+    completeObjectives: (count) => {
+      sim.objectives = sim.objectives.map((done, i) => done || i < count);
       return summarize(sim);
     },
     passable: () => {

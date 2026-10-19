@@ -5,7 +5,7 @@ import type { SimSummary } from '../../src/sim/summary';
 import { boot, watchErrors } from './helpers';
 
 // The tube link (007): attuning in the foundry, a line into the foundry intake (019),
-// firing reservoir rounds once the carried ones run out, and the ?playtest start.
+// firing reservoir rounds ahead of the carried ones (028), and the ?playtest start.
 
 const centre = (tx: number, ty: number) => ({ x: (tx + 0.5) * TILE_SIZE, y: (ty + 0.5) * TILE_SIZE });
 
@@ -45,7 +45,7 @@ test('entering the foundry attunes the tube once', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test('a line fills the middle entrance, which fires once the carried rounds run out', async ({ page }) => {
+test('a line fills the middle entrance, which fires ahead of the carried rounds (028)', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page, '?playtest');
   await enterFoundry(page);
@@ -71,7 +71,7 @@ test('a line fills the middle entrance, which fires once the carried rounds run 
   expect(filled?.intake.entrances[1]).toMatchObject({ ammo: 'ley-bolt' });
   expect(filled?.intake.entrances[1]?.count).toBeGreaterThanOrEqual(10);
 
-  // Fire away the 99 carried bolts, then one more shot comes from the reservoir.
+  // With 99 bolts still carried, the first press out in the meadow fires from the reservoir.
   const fired = await page.evaluate(() => {
     const g = window.__GAME__;
     // The tube only fires outside the foundry (015).
@@ -79,19 +79,14 @@ test('a line fills the middle entrance, which fires once the carried rounds run 
     let s = g?.getState();
     const x = (s?.player.x ?? 0) + 300;
     const y = s?.player.y ?? 0;
-    for (let t = 0; t < 99 * 20 + 40 && s && (s.inventory['ley-bolt'] ?? 0) > 0; t++) {
-      s = g?.step(1, { fire: true, aimX: x, aimY: y });
-    }
     const before = s?.intake.entrances[1]?.count ?? 0;
-    let fromReservoir = false;
-    for (let t = 0; t < 40 && !fromReservoir; t++) {
-      s = g?.step(1, { fire: true, aimX: x, aimY: y });
-      fromReservoir = s?.tube.fromReservoir ?? false;
-    }
-    return { fromReservoir, carried: s?.inventory['ley-bolt'] ?? 0, before, after: s?.intake.entrances[1]?.count ?? 0 };
+    const next = s?.tube.next;
+    s = g?.step(1, { fire: true, aimX: x, aimY: y });
+    return { next, fromReservoir: s?.tube.fromReservoir ?? false, carried: s?.inventory['ley-bolt'] ?? 0, before, after: s?.intake.entrances[1]?.count ?? 0 };
   });
-  expect(fired.carried).toBe(0);
+  expect(fired.next).toBe('volley');
   expect(fired.fromReservoir).toBe(true);
+  expect(fired.carried).toBe(99);
   expect(fired.after).toBeLessThan(fired.before + 3);
   expect(errors).toEqual([]);
 });

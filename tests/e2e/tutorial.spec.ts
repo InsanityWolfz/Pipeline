@@ -12,7 +12,7 @@ async function run<R>(page: Page, fn: () => R): Promise<R> {
   return page.evaluate(fn);
 }
 
-/** The current objective's index after one more tick (crafts land between ticks), or the count once all are done. */
+/** The current objective's index after one more tick (crafts land between ticks), or the count once all are done (the frontier line). */
 async function done(page: Page): Promise<number> {
   const s = await page.evaluate(() => window.__GAME__?.step(1));
   return s?.objective?.index ?? OBJECTIVES.length;
@@ -293,6 +293,8 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     const s = window.__GAME__?.step(620);
     return s ? { complete: s.prototypeComplete, objective: s.objective } : null;
   });
-  expect(end).toEqual({ complete: true, objective: null });
+  // The prototype is done, and the line goes on to Milestone 1's first goal (028) rather than going blank.
+  const port = OBJECTIVES.findIndex((o) => o.check.kind === 'portDelivered');
+  expect(end).toEqual({ complete: true, objective: { index: port, text: 'Run a supply port into your line' } });
   expect(errors).toEqual([]);
 });

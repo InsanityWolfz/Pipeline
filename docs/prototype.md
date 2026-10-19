@@ -79,7 +79,7 @@ Names are placeholders.
 - **Machines** for the chosen ammo's chain
 - **Intake entrances:** each fed entrance adds a round to the volley, so feeding more than one fires a spread
 - **Identification bench**
-- **Supply line** from the claimed site at a fixed rate
+- **A supply port per raw**, fed by claimed pylons
 
 In the prototype, the tube's reservoir refills fast enough that the first line feels good right away. Tuning comes from playtesting.
 
