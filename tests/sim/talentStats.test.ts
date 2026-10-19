@@ -81,21 +81,21 @@ describe('the lanes’ damage', () => {
 });
 
 describe('fire rate', () => {
-  it('Quick Nock: a carried arrow’s interval is 15 / 1.1, rounded (14); with Oiled Breech 15 / 1.18 (13)', () => {
+  it('Quick Nock: a carried arrow’s interval is 15 / 1.1; with Oiled Breech 15 / 1.18 (039: exact, no longer rounded to 14 and 13)', () => {
     const cooldown = (s: SimState) => {
       firstShot(s, 'arrow', 'arrow');
       return s.tube.fireCooldown;
     };
     expect(cooldown(arena())).toBe(ammoDef('arrow').fireTicks);
-    expect(cooldown(taking(arena(), 'a2'))).toBe(14);
-    expect(cooldown(taking(arena(), 'a2', 't1'))).toBe(13);
-    // Oiled Breech alone reaches every ammo: a ley bolt's 20 ticks become 19, a bomb's 40 become 37.
-    expect(cooldown(taking(arena(), 't1'))).toBe(14);
+    expect(cooldown(taking(arena(), 'a2'))).toBeCloseTo(15 / 1.1, 9);
+    expect(cooldown(taking(arena(), 'a2', 't1'))).toBeCloseTo(15 / 1.18, 9);
+    // Oiled Breech alone reaches every ammo: a ley bolt's 20 ticks become 20 / 1.08, a bomb's 40 become 40 / 1.08.
+    expect(cooldown(taking(arena(), 't1'))).toBeCloseTo(15 / 1.08, 9);
     const s = taking(arena(), 't1');
     s.inventory = { bomb: 2 };
     run(s, 1, { selectAmmo: 'bomb' });
     run(s, 1, fireAt(PLAYER_AT.x + 100, PLAYER_AT.y));
-    expect(s.tube.fireCooldown).toBe(37);
+    expect(s.tube.fireCooldown).toBeCloseTo(40 / 1.08, 9);
   });
 
   it('paces each fed entrance by the same stat', () => {
@@ -106,7 +106,7 @@ describe('fire rate', () => {
     Object.assign(e, { open: true, ammoId: 'arrow', count: 10 });
     run(s, 1, fireAt(FAR.x, FAR.y));
     expect(s.events.entranceFires).toHaveLength(1);
-    expect(e.cooldown).toBe(14);
+    expect(e.cooldown).toBeCloseTo(15 / 1.1, 9);
   });
 });
 

@@ -207,8 +207,8 @@ describe('039 pins: what the spec changes (each flips in its own commit)', () =>
     expect(Math.hypot(e.knockX, e.knockY) * e.knockTicks).toBeCloseTo(1, 9);
   });
 
-  it('today Quick Nock rounds the arrow’s interval to 14 ticks', () => {
+  it('039 changed: Quick Nock’s interval is exactly 15 / 1.1 (it was rounded to 14 ticks: 1, 15, 29, 43)', () => {
     const ticks = shotTicks('arrow', 'arrow', 100, 'a2');
-    expect(ticks.slice(0, 4)).toEqual([1, 15, 29, 43]);
+    expect(ticks.slice(0, 4)).toEqual([1, 15, 29, 42]);
   });
 });

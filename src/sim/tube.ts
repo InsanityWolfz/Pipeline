@@ -25,7 +25,7 @@ import { statOf } from './statResolve';
 export interface TubeState {
   /** The ammo hotbar slot 1 fires. */
   ammoId: string;
-  /** Ticks before the next carried round can fire (a punch waits for it too). Each entrance shot raises it to at least that ammo's fireTicks (028). */
+  /** Ticks before the next carried round can fire (a punch waits for it too), fractional (039). Each entrance shot raises it to at least that ammo's interval (028). */
   fireCooldown: number;
   /** Ticks before the next punch can happen (023). */
   meleeCooldown: number;
@@ -66,14 +66,25 @@ export function firingWalkScale(state: Pick<SimState, 'tube' | 'gear' | 'equippe
 
 /**
  * Ticks between shots of a round (037, 039): TICK_RATE over its fire rate (resolveStat: every +% added, Overpressure's
- * ramp multiplied after), rounded to whole ticks, at least 1.
+ * ramp multiplied after). Never rounded (039, Q13): a cooldown is fractional, so the rate shown is the rate fired.
  */
 export function fireTicksOf(state: SimState, ammoId: string): number {
-  return Math.max(1, Math.round(fireInterval(state, ammoId)));
+  return fireInterval(state, ammoId);
 }
 
-/** Runs after the player has moved this tick, so shots leave from where they stand now. */
+/**
+ * Runs after the player has moved this tick, so shots leave from where they stand now. Cooldowns (039) count down 1 a
+ * tick while above 0; a round fires at 0 or less and adds its interval; one that didn't fire stops at 0, so nothing
+ * banks while fire isn't held.
+ */
 export function stepTube(state: SimState, cmd: Command): void {
+  stepFire(state, cmd);
+  const { tube } = state;
+  tube.fireCooldown = Math.max(0, tube.fireCooldown);
+  for (const e of state.link.entrances) e.cooldown = Math.max(0, e.cooldown);
+}
+
+function stepFire(state: SimState, cmd: Command): void {
   const { tube, player } = state;
   player.aimX = cmd.aimX;
   player.aimY = cmd.aimY;
@@ -102,7 +113,7 @@ export function stepTube(state: SimState, cmd: Command): void {
 /**
  * Fires along the unit aim (dx, dy). The volley (028): every fed entrance whose own
  * cooldown has run out fires one round from its reservoir, and waits its ammo's
- * fireTicks; rounds fired together are shaped as one volley (024). Otherwise, once
+ * interval; rounds fired together are shaped as one volley (024). Otherwise, once
  * the tube's interval has passed, a carried round of the slot's ammo fires alone.
  * The caller has checked there's one to fire.
  */
@@ -114,12 +125,12 @@ function fire(state: SimState, cmd: Command, dx: number, dy: number): void {
     // cooldown when it empties and refills with another ammo: the new ammo waits out the old shot's pace.
     const ready = press.rounds.flatMap((r) => {
       const e = state.link.entrances[r.entrance];
-      return e && e.cooldown === 0 ? [{ ...r, e }] : [];
+      return e && e.cooldown <= 0 ? [{ ...r, e }] : [];
     });
     for (const { e, ...r } of ready) {
       const ticks = fireTicksOf(state, r.ammoId);
       takeFromEntrance(e);
-      e.cooldown = ticks;
+      e.cooldown += ticks;
       // The first carried round once the entrances run dry never comes sooner than the last entrance's own pace.
       tube.fireCooldown = Math.max(tube.fireCooldown, ticks);
       state.events.entranceFires.push({ entrance: r.entrance, ammoId: r.ammoId });
@@ -133,7 +144,7 @@ function fire(state: SimState, cmd: Command, dx: number, dy: number): void {
   }
   if (press.kind !== 'carried' || tube.fireCooldown > 0) return;
   take(state.inventory, ammoDef(press.ammoId).itemId);
-  tube.fireCooldown = fireTicksOf(state, press.ammoId);
+  tube.fireCooldown += fireTicksOf(state, press.ammoId);
   launch(state, { ammoId: press.ammoId, dir: [dx, dy], across: 0 }, cmd);
   tube.shotCount = 1;
 }

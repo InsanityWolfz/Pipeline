@@ -188,7 +188,7 @@ describe('landmines', () => {
     const s = armed();
     expect(fireTicksOf(s, 'landmine')).toBe(40);
     s.talents = [TALENT_START, 't1'];
-    expect(fireTicksOf(s, 'landmine')).toBe(Math.round(40 / 1.08));
+    expect(fireTicksOf(s, 'landmine')).toBeCloseTo(40 / 1.08, 9);
   });
 
   it("vanish on a KO", () => {
