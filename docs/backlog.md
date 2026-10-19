@@ -43,6 +43,10 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 036 | Equipment: helm, body, boots and trinket; defensive affixes; Common, Fine and Rare; relics | approved |
 | 037 | Leveling and the talent tree: XP from combat and exploration, 1 point per level, a 19-node tree, free respec | approved |
 | 038 | Landmines and the cluster-bomb stage (ley-iron): split out of 034 by the accepted proposal; the spec text lives in 034 until it moves to its own file | approved |
+| 039 | Keyword system: a closed keyword list in data, one word per rule (renames), one scope per content line, generated rules text, Stun, Pool, Knockback on rounds, elements on every family, exact fire rates | approved |
+| 040 | Legibility UI: hover summary with keyword chips, Shift+hover breakdown with the damage calculation, a Build tab on the T panel, clickable glossary chips | approved |
+| 041 | Balance pass: target damage order, Bulwark, frost freeze | idea |
+| 042 | Shippable build: title screen, soft save, start-to-finish flow | idea |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
 
@@ -58,3 +62,5 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 Shaun's drive rant on 2026-10-19 (docs/brainstorm/2026-10-19-drive-rant.md) is queued to become the next spec interview once 038 is done. Its themes are a shippable build for friend playtests (title screen, soft save, start-to-finish flow), harder combat and the Bulwark, the ammo roles, simpler Factorio-like processing and a bigger foundry, boss spawners, and horizontal content after that.
 
 028–038 were built on 2026-10-19 and await Shaun's playtest (docs/review/playtest-021-038.md). They stay `approved` until /wrapup.
+
+039–042 come from Shaun's keyword spec interview on 2026-10-19 (docs/brainstorm/2026-10-19-keyword-interview.md, after the drive rant and docs/brainstorm/2026-10-19-keyword-audit.md). 039 and 040 were approved on draft by Shaun in chat ("Approve on draft"); 041 and 042 are the next interviews, in that order.
