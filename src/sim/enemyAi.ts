@@ -14,7 +14,7 @@ import { damagePlayer } from './health';
 import { takeKnock } from './knockback';
 import { keepOut } from './population';
 import { slamThink } from './slammerAi';
-import { holdStunned } from './stun';
+import { holdStunned, stunHolds } from './stun';
 import type { SimState } from './state';
 import { engage, inAggroBox, inArc, leash, startWindup, stepAttack, toward } from './aiCommon';
 
@@ -35,8 +35,8 @@ export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBod
     if (e.flash > 0) e.flash -= 1;
     if (e.blockFlash > 0) e.blockFlash -= 1;
     // A frozen enemy doesn't think (029): its wind-up pauses where it is. A chilled one walks slower.
-    // A Stunned one (039) holds, then chases again.
-    const thought: [number, number] = e.stunned > 0 ? holdStunned(e) : e.frozen > 0 ? [0, 0] : thinkOf(state, e, def);
+    // A Stunned one (039) holds, then chases again; a Charger's wall daze is its own think's (stun.ts).
+    const thought: [number, number] = stunHolds(e) ? holdStunned(e) : e.frozen > 0 ? [0, 0] : thinkOf(state, e, def);
     const slow = chillScale(e, slowPerStack);
     // Claimed ground is safe (017): a chaser stops at the zone's edge, and a knock never carries it in either.
     const [mx, my] = keepOut(state, e, thought[0] * slow, thought[1] * slow);

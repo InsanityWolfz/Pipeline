@@ -2,8 +2,8 @@ import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, SPRITES } from '../data/assets';
 import { CRAFT_MENU_LAYOUT, STAGE_PANEL } from '../data/hudLayout';
 import { itemDef } from '../data/items';
-import { lineText, stageRounds } from '../data/rulesText';
-import { stageDef, stageLines, STAGE_ROWS, type StageRow } from '../data/stages';
+import { stageLineText } from '../data/rulesText';
+import { stageDef, STAGE_ROWS, type StageRow } from '../data/stages';
 import { count, type Inventory } from '../sim/inventory';
 import { stageAffordable } from '../sim/stages';
 import type { TextBox } from './CraftMenuView';
@@ -72,7 +72,7 @@ export class StagePanel {
       const inputs = Object.entries(recipe.inputs).map(([itemId, need]) => ({ itemId, need, text: text('count'), name: text('label').set(itemDef(itemId).name) }));
       this.rows.push({
         row,
-        line: stageLines(st).map((l) => lineText(l, { rounds: stageRounds(st) })).join(' · '),
+        line: stageLineText(st),
         frame: add(SPRITES.craftRecipeRow, DEPTHS.menu + 1),
         parts: [...inputs.map((i) => add(itemDef(i.itemId).icon, DEPTHS.menu + 2)), add(SPRITES.craftArrow, DEPTHS.menu + 2), add(itemDef(recipe.output.itemId).icon, DEPTHS.menu + 2)],
         inputs,

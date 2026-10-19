@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { AMMO } from '../../src/data/ammo';
 import { DERIVED_TAGS, KEYWORD_DEBT, KEYWORD_LIST, KEYWORDS, NOUNS, type KeywordId } from '../../src/data/keywords';
 import { keywordPayoffs, keywordSources } from '../../src/data/keywordGraph';
-import { REF, SLOT, keywordSources as paramSources, keywordText, refName } from '../../src/data/rulesText';
+import { REF, SLOT, textSources as paramSources, keywordText, refName } from '../../src/data/rulesText';
 import { bombletKeywords, poolBurstKeywords, roundKeywords, shardKeywords } from '../../src/data/roundKeywords';
 import { ROUNDS } from '../../src/data/tags';
 import { keywordReport } from '../../src/data/keywordReport';

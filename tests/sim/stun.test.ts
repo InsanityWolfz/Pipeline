@@ -44,8 +44,9 @@ describe('Stun', () => {
     const c = createEnemy(s.nextEnemyId++, 'charger', { x: PLAYER_AT.x + 40, y: PLAYER_AT.y }, HALL);
     s.enemies.push(c);
     applyStun(s, c, CHARGER.charge.stunTicks, 'stun');
-    expect(c).toMatchObject({ mode: 'stun', stunned: CHARGER.charge.stunTicks });
+    expect(c).toMatchObject({ mode: 'stun', modeTicks: 1, stunned: CHARGER.charge.stunTicks, dazed: true });
+    // A roll's Stun on top holds for what the daze has left: all but its last tick, which is a thinking one (pre-039 timing).
     applyStun(s, c, ROLLBREAKER.stunTicks);
-    expect(c).toMatchObject({ mode: 'stun', stunned: CHARGER.charge.stunTicks });
+    expect(c).toMatchObject({ mode: 'stun', stunned: CHARGER.charge.stunTicks - 1, dazed: false });
   });
 });

@@ -1,7 +1,7 @@
 import { MIN_DAMAGE_SHARE } from '../data/gear';
 import { FIRING_WALK_MULTIPLIER, HEALING, MAX_HEALTH, ROLL_COOLDOWN_TICKS, ROLL_DISTANCE, type HealingTuning } from '../data/player';
 import type { SimState } from './state';
-import { resolveStat, statOf, YOU } from './statResolve';
+import { clean, resolveStat, statOf, YOU } from './statResolve';
 import { wornPieces } from './worn';
 
 // The player's stats (036, 037), read through the one stat path (039: resolveStat, scope
@@ -40,7 +40,7 @@ export function playerStats(state: Worn, healing: HealingTuning = HEALING): Play
     armor: statOf(state, 'armor', YOU, baseArmor),
     maxHealth: statOf(state, 'max-health', YOU, MAX_HEALTH),
     regen: statOf(state, 'field-regen', YOU, healing.fieldRegen),
-    moveBonus: Math.round(move.adds.reduce((n, c) => n + c.value, 0) * 1e6) / 1e6,
+    moveBonus: clean(move.adds.reduce((n, c) => n + c.value, 0)),
     walkScale: move.final,
     rollCooldown: statOf(state, 'roll-cooldown', YOU, ROLL_COOLDOWN_TICKS),
     rollDistance: statOf(state, 'roll-distance', YOU, ROLL_DISTANCE),

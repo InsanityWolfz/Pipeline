@@ -3,10 +3,10 @@ import { COLD } from '../data/tags';
 import { createShard, isShard, type ArrowState } from './arrows';
 import { blastArea } from './blast';
 import type { EnemyState } from './enemies';
-import { poolBurstEmission, shotEmission } from './emissions';
+import { poolBurstEmission, roundEmission, shardEmissionOf, shotEmission } from './emissions';
 import type { Command } from './input';
 import type { SimState } from './state';
-import { ruleFor, statOf, statusEmission, type Emission, type Statted } from './statResolve';
+import { resolveStat, ruleFor, ruleLines, statOf, statusEmission, type Emission, type Statted } from './statResolve';
 import { rotate } from './volley';
 
 // The keystones (037), each a rule line in data (039) read here: Blastfletch (a Bomb Burst
@@ -92,7 +92,9 @@ export function afterKeystoneHit(state: SimState, arrow: ArrowState, e: EnemySta
   const shatter = hit.shatter ? ruleFor(state, 'shatter', emission) : null;
   if (!shatter) return;
   const { count = 0, share = 0, range = 0, speed = 0 } = shatter.params;
-  const def = { speed, range, damage: arrow.damage * share, damageType: arrow.damageType, fromSplit: false };
+  // Its Shards' speed and range through resolveStat, as a Split's are (their damage is a share of the bolt's, already resolved).
+  const shard = shardEmissionOf(arrow.ammoId, false);
+  const def = { speed: statOf(state, 'speed', shard, speed), range: statOf(state, 'range', shard, range), damage: arrow.damage * share, damageType: arrow.damageType, fromSplit: false };
   for (let k = 0; k < count; k++) {
     const [dx, dy] = rotate(arrow.dx, arrow.dy, (k * 360) / count);
     spawned.push(createShard(state.nextArrowId++, arrow, e.x, e.y, dx, dy, e.id, def));
@@ -111,12 +113,11 @@ export function rampOverpressure(state: SimState, cmd: Command): void {
   else if (tube.firing) tube.overpressure = Math.min(line.params.ramp ?? 0, tube.overpressure + 1);
 }
 
-/** The ramp's fire-rate multiplier now (039: a × after the +% pool): 1 up to its rate over its ramp of held fire; 1 without it. */
+/** The ramp's fire-rate multiplier now (039: a × after the +% pool), as resolveStat's mul entry gives it for the carried round; 1 without it. */
 export function rampRate(state: Statted & Pick<SimState, 'tube'>): number {
-  const line = rampLine(state);
-  if (!line) return 1;
-  const { rate = 1, ramp = 1 } = line.params;
-  return 1 + ((rate - 1) * Math.min(state.tube.overpressure, ramp)) / ramp;
+  const ramp = ruleLines(state, 'ramp')[0];
+  if (!ramp) return 1;
+  return resolveStat(state, 'fire-rate', roundEmission(state.tube.ammoId), 1).muls.find((m) => m.source === ramp.source)?.value ?? 1;
 }
 
 /** How far the ramp is up, 0..1 (render's heat over the tube); 0 without it. */

@@ -5,8 +5,8 @@ import { playerStats } from './stats';
 
 // The talent tree (037): taking nodes and respec. A node can be taken with a point when it
 // isn't taken yet and links to a taken node, anywhere, even mid-trip. Respec is free but
-// only in the foundry: every node but the start comes back as points. Effects are summed
-// in talentEffects.ts for playerStats, the one place stats are computed (036).
+// only in the foundry: every node but the start comes back as points. What a node does is
+// its content lines (039), which resolveStat reads (statResolve.ts).
 
 /** True if the node can be taken now: a point to spend, not taken yet, and linked to a taken node. */
 export function canTake(state: Pick<SimState, 'talents' | 'talentPoints'>, id: string): boolean {

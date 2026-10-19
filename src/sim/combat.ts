@@ -9,9 +9,8 @@ import { afterKeystoneHit, keystoneHit, takePool } from './keystones';
 import { spawnDrops } from './drops';
 import type { SimState } from './state';
 import { rotate } from './volley';
-import { shotEmission } from './emissions';
+import { shardEmissionOf, shotEmission } from './emissions';
 import { statOf } from './statResolve';
-import { shardEmissionOf } from './emissions';
 
 // Arrows against enemies, and what happens when an enemy dies.
 
@@ -26,9 +25,14 @@ const arrowHit = (arrow: ArrowState): HitStyle => ({ knock: arrow.knockback, fla
 function sendShards(state: SimState, arrow: ArrowState, struck: EnemyState, spawned: ArrowState[]): void {
   // Split's Shards and their damage through resolveStat (039): Splinter adds Shards; Ley and All ammo damage reach each one.
   const count = statOf(state, 'shards', shotEmission(arrow), SPLIT.shards);
-  const damage = statOf(state, 'damage', shardEmissionOf(arrow.ammoId, true), SPLIT.damage);
   const shard = shardEmissionOf(arrow.ammoId, true);
-  const def = { speed: statOf(state, 'speed', shard, SPLIT.speed), range: statOf(state, 'range', shard, SPLIT.range), damage, damageType: arrow.damageType, fromSplit: true };
+  const def = {
+    speed: statOf(state, 'speed', shard, SPLIT.speed),
+    range: statOf(state, 'range', shard, SPLIT.range),
+    damage: statOf(state, 'damage', shard, SPLIT.damage),
+    damageType: arrow.damageType,
+    fromSplit: true,
+  };
   for (let k = 0; k < count; k++) {
     const [dx, dy] = rotate(arrow.dx, arrow.dy, (k * 360) / count);
     spawned.push(createShard(state.nextArrowId++, arrow, arrow.x, arrow.y, dx, dy, struck.id, def));

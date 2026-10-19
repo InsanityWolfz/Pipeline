@@ -4,6 +4,10 @@ import type { SimState } from './state';
 
 // What's worn (036): the pieces in slot order and the relic with a given rule, the one
 // place either is read, for stats (statResolve.ts) and the relics' rules (relics.ts).
+//
+// A piece is never changed in place once it exists: statResolve.ts keeps the lines in play
+// while the same pieces (by reference) and talents stay, so a change to a piece's affixes,
+// relic or name must make a new piece object, or those lines go stale.
 
 /** What's worn: the gear and the slots. */
 type Gear = Pick<SimState, 'gear' | 'equipped'>;

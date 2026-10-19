@@ -72,10 +72,11 @@ describe('Rollbreaker Greaves', () => {
     const t = wear(arena(), relic(0, ROLLBREAKER));
     const charger = createEnemy(t.nextEnemyId++, 'charger', { x: PLAYER_AT.x + 20, y: PLAYER_AT.y }, HALL);
     t.enemies.push(charger);
-    // Dazed by a wall a tick ago (039.6: the Stun status for its own stunTicks, one of them run).
-    applyStun(t, charger, CHARGER.charge.stunTicks - 1, 'stun');
+    // Dazed by a wall last tick (039.6: the Stun status for its own stunTicks, in its dazed pose).
+    applyStun(t, charger, CHARGER.charge.stunTicks, 'stun');
     run(t, 1, { moveX: 1, dodge: true });
-    expect(charger.mode).toBe('stun');
+    // The roll's Stun takes over for what the daze had left, as the stagger did before 039.
+    expect(charger).toMatchObject({ mode: 'stun', dazed: false });
     expect(charger.stunned).toBe(CHARGER.charge.stunTicks - 2);
     expect(charger.stunned).toBeGreaterThan(ROLLBREAKER.stunTicks);
     runUntil(t, () => charger.stunned === 0, CHARGER.charge.stunTicks);
@@ -140,7 +141,9 @@ describe('Featherplate', () => {
     const s = wear(arena(), relic(0, FEATHERPLATE, SLOT_BASE.body.heavy.min));
     expect(playerStats(s).armor).toBe(SLOT_BASE.body.heavy.min);
     expect(walkScale(s)).toBe(1);
-    expect(playerStats(s).rollDistance).toBeCloseTo(ROLL_DISTANCE * FEATHERPLATE.rollScale, 9);
+    const rollMul = FEATHERPLATE.lines.flatMap((l) => ('stat' in l && l.stat === 'roll-distance' ? [l.value] : []));
+    expect(rollMul).toEqual([0.75]);
+    expect(playerStats(s).rollDistance).toBeCloseTo(ROLL_DISTANCE * 0.75, 9);
     const x = s.player.x;
     run(s, 1, { moveX: 1, dodge: true });
     run(s, ROLL_TICKS - 1);

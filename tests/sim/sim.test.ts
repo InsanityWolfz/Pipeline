@@ -226,7 +226,7 @@ describe('sim state', () => {
     const hollows = ['blocked', 'bossDefeats', 'summons', 'lobs', 'enemyBursts', 'pounds', 'charges', 'eruptions', 'snipes'] as const;
     // 036: the relics' rolls through, ward blocks and ember saves.
     const relics = ['stuns', 'wardBlocks', 'emberSaves'] as const;
-    // 037: XP, levels, talents, respecs, and the keystones' charges, charged bursts and shatters.
+    // 037: XP, levels, talents, respecs, and the keystones' Pools, Pool-bursts and shatters (039's names).
     const talents = ['xp', 'levelUps', 'talents', 'respecs', 'pools', 'poolBursts', 'shatters'] as const;
     // 038: landmines arming and bursting, and a cluster bomb's bomblets.
     const mines = ['mineArms', 'mineBursts', 'bombletBursts'] as const;

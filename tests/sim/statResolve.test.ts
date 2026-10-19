@@ -8,7 +8,10 @@ import { createArrow } from '../../src/sim/arrows';
 import type { SimState } from '../../src/sim/state';
 import { activeLines, resolveStat, statOf, statusEmission, YOU } from '../../src/sim/statResolve';
 import { arena, fireAt, HUSK, placeHusk, PLAYER_AT, run, runUntil } from './fight';
-import { piece, wear } from '../fixtures/gear';
+import { piece, standAtBench, wear } from '../fixtures/gear';
+import { ROLLBREAKER, WARDSTONE } from '../../src/data/relics';
+import { equip } from '../../src/sim/gear';
+import { respec } from '../../src/sim/talents';
 
 // One stat path (039): resolveStat gives any stat of any emission, with every add, mul and
 // flat and its source, and `final = (base + Σflats) × (1 + Σadds) × Πmuls`. A scope reaches
@@ -137,5 +140,19 @@ describe('the lines in play are built once per loadout (039: a perf guard)', () 
     // Another sim with the same ids but its own pieces never reads this one's lines.
     const t = wear(taking(arena(), 'a1', 'a2'), piece(0, 'helm', { affixes: [{ kind: 'armor', value: 3 }] }));
     expect(resolveStat(t, 'armor', YOU, 0).final).toBe(3);
+  });
+
+  it('rebuilds when a piece comes off, a relic is swapped and the talents are respecced', () => {
+    const s = standAtBench(taking(arena(), 'a1', 'a2'));
+    wear(s, piece(0, 'helm', { affixes: [{ kind: 'armor', value: 2 }] }), piece(1, 'boots', { rarity: 'relic', relic: ROLLBREAKER.id, name: 'Greaves' }));
+    const rules = () => activeLines(s).map((l) => ('rule' in l.line ? `${l.source}:${l.line.rule}` : l.source));
+    expect(rules()).toEqual(["Fletcher's Eye", 'Quick Nock', 'Test helm', 'Greaves:roll-stun']);
+    equip(s, { slot: 'helm', id: null });
+    expect(rules()).toEqual(["Fletcher's Eye", 'Quick Nock', 'Greaves:roll-stun']);
+    s.gear.push(piece(2, 'boots', { rarity: 'relic', relic: WARDSTONE.id, name: 'Wardstone' }));
+    equip(s, { id: 2 });
+    expect(rules()).toEqual(["Fletcher's Eye", 'Quick Nock', 'Wardstone:ward']);
+    respec(s);
+    expect(rules()).toEqual(['Wardstone:ward']);
   });
 });

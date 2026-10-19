@@ -1,6 +1,6 @@
 import { KEYWORD_LIST, type KeywordGroup } from './keywords';
 import { contentLines, type ContentKind } from './keywordGraph';
-import { lineText, keywordSources, keywordText, stageRounds } from './rulesText';
+import { lineText, textSources, keywordText, stageRounds } from './rulesText';
 import { STAGES } from './stages';
 
 // The rendered keyword list and every content line (039: `__GAME__.keywords()`), so e2e and
@@ -21,7 +21,7 @@ export function keywordReport(): KeywordReport {
       group: k.group,
       state: k.state,
       text: k.state === 'live' ? keywordText(k.id) : '',
-      sources: Object.fromEntries(keywordSources(k.id).map((s) => [s, keywordText(k.id, s)])),
+      sources: Object.fromEntries(textSources(k.id).map((s) => [s, keywordText(k.id, s)])),
     })),
     lines: contentLines().map((o) => {
       const stage = o.kind === 'stage' ? STAGES[o.owner] : undefined;

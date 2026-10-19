@@ -96,7 +96,7 @@ export function keywordText(id: KeywordId, source?: string): string {
     const p = def.params[name];
     if (!p) throw new Error(`Keyword '${id}' has no param '${name}'`);
     if ('value' in p) return formatParam(p.value, p.unit);
-    const at = source ?? keywordSources(id)[0] ?? '';
+    const at = source ?? textSources(id)[0] ?? '';
     const v = p.perSource[at];
     if (v === undefined) throw new Error(`Keyword '${id}' has no '${name}' for '${at}'`);
     return formatParam(v, p.unit);
@@ -107,7 +107,7 @@ export function keywordText(id: KeywordId, source?: string): string {
  * The sources a keyword's text can be read for: those named by every one of its per-source params, in order (none for
  * a keyword whose params are all fixed). A Pool-burst has a Burst radius but no damage of its own (it deals its arrow's hit).
  */
-export function keywordSources(id: KeywordId): string[] {
+export function textSources(id: KeywordId): string[] {
   const lists = Object.values(KEYWORDS[id].params).flatMap((p) => ('perSource' in p ? [Object.keys(p.perSource)] : []));
   const [first, ...rest] = lists;
   return (first ?? []).filter((s) => rest.every((l) => l.includes(s)));
@@ -162,10 +162,13 @@ export function stageRounds(stage: StageDef): string {
 /** A stage's cost per batch: "1 rimestone per 4". */
 export const stageCost = (stage: StageDef): string => `${stage.materialCount} ${itemDef(stage.material).name.toLowerCase()} per ${stage.batch}`;
 
-/** A stage's build tip and bench line: "Cold: added to any round · 1 rimestone per 4". */
-export function stageText(stage: StageDef): string {
+/** A stage's lines, as its bench row's hover shows them: "Cold: added to any round". */
+export function stageLineText(stage: StageDef): string {
   const rounds = stageRounds(stage);
-  return [...stageLines(stage).map((l) => lineText(l, { rounds })), stageCost(stage)].join(SEP);
+  return stageLines(stage).map((l) => lineText(l, { rounds })).join(SEP);
 }
+
+/** A stage's build tip: its lines and its cost, "Cold: added to any round · 1 rimestone per 4". */
+export const stageText = (stage: StageDef): string => [stageLineText(stage), stageCost(stage)].join(SEP);
 
 export { SEP as LINE_SEP };

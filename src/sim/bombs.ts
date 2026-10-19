@@ -113,8 +113,8 @@ function land(state: SimState, b: BombState): void {
 
 /**
  * Damages every live enemy whose feet are within the burst radius, flashing it without knockback. Never the player,
- * nor a Burrower underground (035). With Blastfletch (037) the blast leaves its ground charged; a cluster bomb (038)
- * scatters its bomblets.
+ * nor a Burrower underground (035). With Blastfletch (037) the Burst leaves a Pool (039); a cluster bomb (038)
+ * scatters its Bomblets.
  */
 function burst(state: SimState, b: BombState): void {
   blastArea(state, b.roomId, b.x, b.y, b.radius, b.damage, lobbedAmmo(b.ammoId).damageType);

@@ -2,8 +2,8 @@ import type { DamageType } from '../data/ammo';
 import { damageEnemy, targetable } from './enemies';
 import type { SimState } from './state';
 
-// A lobbed burst's damage (029, 034, 037, 038): a bomb, a landmine, a bomblet or a charged
-// arrow's burst hits every live, targetable enemy round its point. It comes from above, so
+// A Burst's damage (029, 034, 037, 038, 039): a bomb's, a landmine's, a Bomblet's or an
+// Arrow's Pool-burst hits every live, targetable enemy round its point. It comes from above, so
 // no shield blocks it, and it never hurts the player. Its own file, so bombs, mines and the
 // keystones share it without importing each other.
 

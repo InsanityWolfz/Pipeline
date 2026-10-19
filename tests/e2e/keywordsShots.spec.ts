@@ -112,6 +112,14 @@ test.describe('review screenshots (039)', () => {
     const totals = (await ui(page))?.gearPanel?.totals ?? [];
     expect(totals[0]).toMatch(/^Armor \d+ · Max health \d+ · Field regen \d+\.\d HP\/s$/);
     expect(totals[1]).toMatch(/^Move speed \d+% · Roll cooldown \d\.\d s · Roll distance \d+%$/);
+    // The worn relic's row (the Wardstone, a helm): its rule as a generated line under its affixes.
+    const tab = (await ui(page))?.gearPanel?.tabs.find((t) => t.slot === 'helm');
+    if (!tab) throw new Error('no helm tab');
+    const at = await screenPoint(page, tab.box.x + tab.box.w / 2, tab.box.y + tab.box.h / 2);
+    await page.mouse.click(at.x, at.y);
+    await expect.poll(async () => (await ui(page))?.gearPanel?.tab).toBe('helm');
+    await expect.poll(async () => (await ui(page))?.gearPanel?.rows.find((r) => r.worn)?.texts[3] ?? '').toBe('After 6.0 s unhit, the next hit is blocked');
+    await page.mouse.move(at.x, at.y - 200);
     await page.screenshot({ path: `${SHOTS}/05-gear-rows-and-totals.png` });
   });
 

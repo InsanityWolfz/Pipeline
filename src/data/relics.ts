@@ -36,12 +36,9 @@ export interface WardstoneDef extends RelicBase {
   wardTicks: number;
 }
 
+/** Its numbers live in its lines only: the walk scale in place of heavy armor's, and the roll distance ×. */
 export interface FeatherplateDef extends RelicBase {
   rule: 'feather';
-  /** Its walk speed multiplier in place of heavy armor's. */
-  walkScale: number;
-  /** Its roll's distance, as a share of the roll's distance with every bonus. */
-  rollScale: number;
 }
 
 export interface LastEmberDef extends RelicBase {
@@ -91,7 +88,6 @@ export const FEATHERPLATE: FeatherplateDef = {
   rule: 'feather',
   icon: GEAR_SPRITES.relicFeatherplate,
   sound: null,
-  ...FEATHER,
   lines: [
     { scope: 'you', rule: 'no-heavy-slow', params: { walk: FEATHER.walkScale } },
     { scope: 'you', stat: 'roll-distance', op: 'mul', value: FEATHER.rollScale },

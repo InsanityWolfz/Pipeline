@@ -72,8 +72,10 @@ export interface EnemyState extends Knockable {
   struck: boolean;
   /** Its last move ran into something solid (035: a charging Charger is stunned by it). */
   bumped: boolean;
-  /** Ticks left stunned by a roll through it (036: Rollbreaker Greaves): it holds in recovery and doesn't think. */
+  /** Ticks left Stunned (039: Rollbreaker's roll, or a Charger's wall daze): it holds and doesn't act. */
   stunned: number;
+  /** Its Stun is a Charger's wall daze alone (039.6), which keeps the daze's own timing: see stun.ts. */
+  dazed: boolean;
 }
 
 export function createEnemy(id: number, enemyId: string, at: { x: number; y: number }, roomId: string, group = ''): EnemyState {
@@ -112,6 +114,7 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     struck: false,
     bumped: false,
     stunned: 0,
+    dazed: false,
     knockX: 0,
     knockY: 0,
     knockTicks: 0,

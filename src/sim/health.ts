@@ -1,4 +1,5 @@
 import { DYING_TICKS, HIT_INVULN_TICKS } from '../data/player';
+import { LAST_EMBER } from '../data/relics';
 import { afterArmor } from './stats';
 import { emberSaves, wardBlocks } from './relics';
 import { startKnock } from './knockback';
@@ -32,7 +33,7 @@ export function damagePlayer(
   const taken = afterArmor(state, amount);
   // Last Ember (036) turns a killing hit into 1 HP and a longer invulnerability, once a trip.
   const saved = emberSaves(state, taken);
-  p.health = saved === null ? Math.max(0, p.health - taken) : 1;
+  p.health = saved === null ? Math.max(0, p.health - taken) : LAST_EMBER.saveHealth;
   p.hurtTicks = saved ?? HIT_INVULN_TICKS;
   p.lastHitTick = state.tick;
   p.wardTicks = 0;

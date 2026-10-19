@@ -71,7 +71,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepDiscovery(state);
   stepPopulation(state);
   stepCacheRearm(state);
-  // Before enemies act, so a bomb thrown this tick starts its arm time at 0 (034).
+  // Before enemies act, so a Bulwark bomb thrown this tick starts its fuse at 0 (034; its fuseTicks keep the word).
   stepEnemyBombs(state);
   stepEnemies(state, bodies);
   stepNodes(state.nodes);

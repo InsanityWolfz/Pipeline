@@ -84,7 +84,11 @@ describe('the relics', () => {
     expect(FEATHERPLATE.weight).toBe('heavy');
     expect(ROLLBREAKER.stunTicks).toBe(40);
     expect(WARDSTONE.wardTicks).toBe(360);
-    expect(FEATHERPLATE).toMatchObject({ walkScale: 1, rollScale: 0.75 });
+    // Its numbers live in its lines only: heavy armor's slow lifted to ×1, its roll distance ×0.75.
+    expect(FEATHERPLATE.lines).toEqual([
+      { scope: 'you', rule: 'no-heavy-slow', params: { walk: 1 } },
+      { scope: 'you', stat: 'roll-distance', op: 'mul', value: 0.75 },
+    ]);
     expect(LAST_EMBER).toMatchObject({ saveHealth: 1, saveInvulnTicks: 60 });
     expect(() => relicDef('nope')).toThrow();
   });
