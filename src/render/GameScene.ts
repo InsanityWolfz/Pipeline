@@ -32,11 +32,11 @@ import { SiteView } from './SiteView';
 import { WakeView } from './WakeView';
 import { mergeEvents } from './eventLog';
 import { FeelView } from './FeelView';
-import { highlightOf, TutorialUi } from './TutorialUi';
+import { highlightOf, NO_TUTORIAL_UI, TutorialUi } from './TutorialUi';
 import { currentFit, type ScreenFit } from './scale';
 import { bakeVectors } from './vector/textures';
 import type { UiState } from './testHook';
-import { RoomViews } from './RoomViews';
+import { NO_ROOM_UI, RoomViews } from './RoomViews';
 import { fontsReady } from './fonts';
 import { MENU_HOVER_EVENT } from './menuFeedback';
 import { MenuRouter } from './MenuRouter';
@@ -180,20 +180,14 @@ export class GameScene extends Scene {
       hoverName: this.hover?.shown ?? null,
       hoverDescription: this.hover?.shownDescription ?? null,
       buildTip: this.buildView?.tip.shown ?? null,
-      minimap: this.roomViews?.map ?? { shown: false, markers: [] },
+      ...(this.roomViews?.state ?? NO_ROOM_UI),
       nodes: this.nodeView?.frames ?? {},
-      supply: this.roomViews?.motes ?? { started: 0, inFlight: [] },
       shakes: [...(this.feel?.juice.shakes ?? [])],
       cursor: this.cursorView?.state ?? null,
       sliding: this.groundItemView?.sliding ?? 0,
       slideProgress: this.groundItemView?.slideProgress ?? 0,
       swooshes: this.effects?.swooshes ?? 0,
-      intakeCaps: this.roomViews?.intakeCaps ?? 0,
-      intakeLift: this.roomViews?.intakeLift ?? null,
-      intakePrompt: this.tutorial?.intakePrompt ?? null,
-      prompt: this.tutorial?.keyPrompt ?? null,
-      marker: this.tutorial?.marker ?? null,
-      madePopups: this.tutorial?.madePopups ?? [],
+      ...(this.tutorial?.state ?? NO_TUTORIAL_UI),
       camera: { x: this.cameras.main.worldView.centerX, y: this.cameras.main.worldView.centerY },
       hud: this.hud?.bottom ?? null,
       craftMenu: this.menu?.state ?? null,
@@ -258,12 +252,12 @@ export class GameScene extends Scene {
     this.followRoom(this.pending.ko);
     if (!this.fading && this.playerView) this.sceneCameras?.attuneLook(sim, this.shownRoomId, this.playerView.sprite);
     this.effects.play(this.pending, sim.player);
-    this.tutorial?.play(this.pending, sim, this.shownRoomId, (id) => this.foundryView?.topOf(id));
     if (this.pending.identifies.length > 0) this.site?.identified();
     if (this.pending.ko) this.wake?.show(this.pending.lost);
     const shown = this.shownRoomId;
     this.feel?.update(sim, this.pending, shown, this.game.loop.delta);
     this.roomViews?.update(sim, this.pending, shown, this.game.loop.delta);
+    this.tutorial?.update(sim, shown, this.pending, (id) => this.foundryView?.topOf(id));
     const picked = new Set(this.pending.pickups.map((p) => p.id));
     clearEvents(this.pending);
     const inFoundry = shown === FOUNDRY_ROOM;
@@ -277,7 +271,6 @@ export class GameScene extends Scene {
     this.bombView?.update(inRoom(sim.bombs, shown));
     this.site?.update(sim, shown);
     this.siteMenus?.update(sim);
-    this.tutorial?.update(sim, shown);
     this.hud?.update(sim.tube, sim.inventory, sim.player, hudActive(sim), worn(sim), sim.hasTube, sim.building);
     this.menu?.update(sim.inventory, sim.link);
     const hopper = sim.foundry.pieces.find((p) => p.id === this.picker?.hopperId);

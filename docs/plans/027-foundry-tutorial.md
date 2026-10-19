@@ -16,7 +16,7 @@ Spec: docs/specs/027-foundry-tutorial.md. Written for the unattended run (021–
      | 4 | Make arrowheads: hopper of stone → knapper | machineMade arrowhead | B over player | knapper |
      | 5 | Make rope: hopper of fiber → spinner | machineMade rope | B over player | spinner |
      | 6 | Feed all three into an assembler | machineMade arrow | B over player | assembler |
-     | 7 | Run a conduit from the assembler into the intake | intakeFed arrow | marker over intake | conduit |
+     | 7 | Run a conduit from the assembler into the intake | intakeFed arrow | B over player, and marker over intake | conduit |
    - Popup and pulse tuning (`MADE_POPUP` in `assets.ts` beside `PICKUP_POPUP`; `BUILD_PULSE` in `hudLayout.ts`), the intake marker's lift and bob in `TUTORIAL_LAYOUT`, and two new vector sprites: the pulse ring over a build-bar cell (`hud.ts`) and the arrow marker (`TUTORIAL_SPRITES.marker`).
 2. **Sim.**
    - `src/sim/events.ts`: `made: { id, pieceId, itemId, count }[]`, pushed by `flow.ts` when a machine's craft finishes.
@@ -24,8 +24,8 @@ Spec: docs/specs/027-foundry-tutorial.md. Written for the unattended run (021–
    - `src/sim/objectives.ts`: `stepObjectives` adds each `made` event to the tally (as it notes harvests) and the new checks hold from state.
    - `getState()` reports `machineMade`; the objective's index and text as today.
 3. **Render.**
-   - `BuildView`: while the bar is open and the current objective has a `highlight` that is on the bar, a gold ring just round that cell pulses (alpha on a sine from scene time). `ui().buildBar.pulsing` names the piece, or null.
-   - `PromptView`: the `newestHopper` target (the hopper placed last); the `intake` marker, a bobbing arrow over the open entrance (the middle one of those open), shown anywhere in the foundry, not only within prompt range. `ui().prompt` (key, world point, alpha) and `ui().marker` (world point) report them.
+   - `BuildView`: while the bar is open and the current objective has a `highlight` that is on the bar, a gold ring just round that cell pulses (its alpha on a looping tween, `render/pulse.ts`, shared with the marker's bob, so `tweenSpeed(0)` holds it for a screenshot). `ui().buildBar.pulsing` names the piece, or null, and `pulseAlpha` its alpha. The ring's size and offset come from `BUILD_PULSE`, derived from the build bar's cell size.
+   - `PromptView`: the `newestHopper` target (the hopper placed last); the `intake` marker, a bobbing arrow over the open entrance (the middle one of those open), shown anywhere in the foundry, not only within prompt range. `ui().prompt` (key, world point, whether usable) and `ui().marker` (world point) report them. `currentObjectiveDef(sim)` (beside `currentObjective`) is what the views and the summary read.
    - `TutorialUi.play(events)`: when an objective whose check is `machineMade` completes, a small "+ shaft" (the item's name, lower case) pops above the machine that made it, from that tick's `made` event, once. `ui().madePopups` lists the ones on screen.
    - Nothing pauses; no panel.
 4. **Tests (written first).**
@@ -36,7 +36,7 @@ Spec: docs/specs/027-foundry-tutorial.md. Written for the unattended run (021–
 
 ## Not dictated by the spec
 - **"With arrows arriving"** is `intakeFed { item: 'arrow' }`: the line feeds the intake and an arrow went into an entrance this tick.
-- **Step 2 also pulses the hopper** (it names one); steps 1–6 prompt B over the player and step 2 E over the newest hopper, as the spec lists.
+- **Step 2 also pulses the hopper** (it names one). Every placing step (1 and 3–7) prompts B over the player and step 2 E over the newest hopper, as the spec lists; step 7 also has the intake marker.
 - **The intake marker shows anywhere in the foundry**, not only within the 64 px prompt range, so it points the way across the room.
 - **The popup** reads "+ shaft" (the item's name in lower case), rises and fades over 1.2 s, and shows when the step completes, i.e. the first time any machine makes that item.
 - **The full tutorial e2e now builds the arrow line** (the old run built a ley bolt line, which no longer finishes the steps). To keep its scripted fights winnable without the ley line, it gathers a little more (one more vein regrowth, a tree, rubble and reeds), hand-crafts its crystals into ley bolts, tops the line's hoppers up, wears the identified armor for the shrine, and feeds both side entrances with ley bolts for the spread.

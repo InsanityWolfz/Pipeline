@@ -1,18 +1,23 @@
 import type { Scene } from 'phaser';
-import { OBJECTIVES } from '../data/objectives';
 import type { SimEvents } from '../sim/events';
-import { currentObjective } from '../sim/objectives';
+import { currentObjectiveDef } from '../sim/objectives';
 import type { SimState } from '../sim/state';
 import { IntakePrompt } from './IntakePrompt';
 import { MadePopups } from './MadePopups';
 import { ObjectiveView } from './ObjectiveView';
-import { PromptView, type PromptState } from './PromptView';
+import { PromptView } from './PromptView';
 import { TutorialView } from './TutorialView';
+import type { UiState } from './testHook';
+
+/** What the tutorial reports to the test hook's `ui()`. */
+export type TutorialUiState = Pick<UiState, 'intakePrompt' | 'prompt' | 'marker' | 'madePopups'>;
+
+/** The tutorial's part of `ui()` before the scene has built its views. */
+export const NO_TUTORIAL_UI: TutorialUiState = { intakePrompt: null, prompt: null, marker: null, madePopups: [] };
 
 /** The piece the current objective names, whose build-bar cell pulses (027), or null. */
 export function highlightOf(sim: SimState): string | null {
-  const i = currentObjective(sim);
-  return (i === null ? undefined : OBJECTIVES[i]?.highlight) ?? null;
+  return currentObjectiveDef(sim)?.highlight ?? null;
 }
 
 // Everything the tutorial (012) draws: the tube stone and sealed doors in the
@@ -33,27 +38,12 @@ export class TutorialUi {
     this.made = new MadePopups(scene);
   }
 
-  /** The intake's prompt text while it shows (024), for the test hook. */
-  get intakePrompt(): string | null {
-    return this.intake.shown;
-  }
-
-  /** The key prompt as drawn, the intake marker's point, and the "+ shaft" popups on screen (027), for the test hook. */
-  get keyPrompt(): PromptState | null {
-    return this.prompt.shown;
-  }
-
-  get marker(): { x: number; y: number } | null {
-    return this.prompt.markerAt;
-  }
-
-  get madePopups(): string[] {
-    return this.made.shown;
-  }
-
-  /** One-shot effects from the events since the last draw: a machine step's popup (027). */
-  play(events: SimEvents, sim: SimState, shown: string, topOf: (id: number) => number | undefined): void {
-    this.made.play(events, sim.foundry, shown, topOf);
+  /**
+   * For the test hook: the intake's prompt text while it shows (024), the key prompt as drawn, the intake marker's
+   * point, and the "+ shaft" popups on screen (027).
+   */
+  get state(): TutorialUiState {
+    return { intakePrompt: this.intake.shown, prompt: this.prompt.shown, marker: this.prompt.markerAt, madePopups: this.made.shown };
   }
 
   /** True over the objective band, so a press there never fires (015). */
@@ -61,7 +51,9 @@ export class TutorialUi {
     return this.objective.overUi(x, y);
   }
 
-  update(sim: SimState, shown: string): void {
+  /** Draws the tutorial for the room on screen; `events` since the last draw pop a machine step's "+ shaft" (027) over its piece's top (`topOf`). */
+  update(sim: SimState, shown: string, events: SimEvents, topOf: (id: number) => number | undefined): void {
+    this.made.play(events, sim.foundry, shown, topOf);
     this.world.update(sim, shown);
     this.objective.update(sim);
     this.prompt.update(sim, shown);

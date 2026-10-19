@@ -18,6 +18,7 @@ import { buildBarBox, buildBarCells, buildBarDividers, buildBarGroups, conduitLo
 import { BuildTip } from './BuildTip';
 import { MAX_ARROWS, placeArrows, viewOf } from './FoundryView';
 import { toView } from './scale';
+import { Pulse } from './pulse';
 import { TextLine } from './textLine';
 import { addVector, showFrame } from './vector/textures';
 
@@ -42,6 +43,8 @@ export interface BuildBarState {
   dividers: { x: number; y: number; h: number }[];
   /** The piece whose cell pulses for the current objective (027), while it shows; else null. */
   pulsing: string | null;
+  /** The pulse's alpha now, `BUILD_PULSE.min` to `max`. */
+  pulseAlpha: number;
 }
 
 // Build mode on screen: the bar of unlocked pieces in their groups (026), each
@@ -59,6 +62,7 @@ export class BuildView {
   /** The gold ring over the cell the current objective names (027). */
   private readonly pulse: GameObjects.Image;
   private pulsing: string | null = null;
+  private readonly wave: Pulse;
   private readonly ghost: GameObjects.Image;
   private readonly ghostIcon: GameObjects.Image;
   private readonly ghostArrows: GameObjects.Image[];
@@ -74,6 +78,7 @@ export class BuildView {
       .setScrollFactor(0)
       .setDepth(DEPTHS.hud + 2)
       .setVisible(false);
+    this.wave = new Pulse(scene, BUILD_PULSE.min, BUILD_PULSE.max, BUILD_PULSE.periodMs);
     this.highlight = addVector(scene, 0, 0, SPRITES.hudAmmoSelect)
       .setOrigin(0)
       .setScrollFactor(0)
@@ -101,6 +106,7 @@ export class BuildView {
       groups: this.labels.map(({ category, label, line }) => ({ category, label, ...line.at, w: line.width, h: line.lineHeight })),
       dividers: buildBarDividers(this.unlocked),
       pulsing: this.pulsing,
+      pulseAlpha: this.wave.value,
     };
   }
 
@@ -136,14 +142,11 @@ export class BuildView {
     this.drawGhost(cursor, facing, mirrored, canPlace, shapeAt);
   }
 
-  /** The ring over the named piece's cell, its alpha swinging gently on scene time; hidden when there's none. */
+  /** The ring over the named piece's cell, its alpha swinging gently; hidden when there's none. */
   private showPulse(cell: (ScreenRect & { pieceId: string }) | undefined): void {
     this.pulsing = cell?.pieceId ?? null;
     this.pulse.setVisible(cell !== undefined);
-    if (!cell) return;
-    const P = BUILD_PULSE;
-    const wave = 0.5 - 0.5 * Math.cos((2 * Math.PI * this.scene.time.now) / P.periodMs);
-    this.pulse.setPosition(cell.x - P.out - 1, cell.y - P.out - 1).setAlpha(P.min + (P.max - P.min) * wave);
+    if (cell) this.pulse.setPosition(cell.x - BUILD_PULSE.inset, cell.y - BUILD_PULSE.inset).setAlpha(this.wave.value);
   }
 
   private drawGhost(

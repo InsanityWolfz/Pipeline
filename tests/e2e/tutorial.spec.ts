@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { boot, watchErrors } from './helpers';
 import { OBJECTIVES } from '../../src/data/objectives';
+import { AFTER_STEPS, FOUNDRY_STEPS } from '../fixtures/foundrySteps';
 
 // The prototype end to end (012): a fresh tutorial start, no ?playtest, every
 // beat played through the hook in order, checking each objective advances.
@@ -17,17 +18,7 @@ async function done(page: Page): Promise<number> {
   return s?.objective?.index ?? OBJECTIVES.length;
 }
 
-/** The foundry steps (027), then the goal after them. */
-const STEPS = [
-  'Press B and place a hopper',
-  'Put wood in the hopper (E)',
-  'Place a cutter in front of the hopper',
-  'Make arrowheads: hopper of stone → knapper',
-  'Make rope: hopper of fiber → spinner',
-  'Feed all three into an assembler',
-  'Run a conduit from the assembler into the intake',
-];
-const FILL = OBJECTIVES.findIndex((o) => o.text === 'Fill the tube from your line');
+const FILL = OBJECTIVES.findIndex((o) => o.text === AFTER_STEPS);
 
 test('the whole prototype plays through from the start stone', async ({ page }) => {
   test.setTimeout(300_000);
@@ -197,7 +188,7 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     seen.push(next(seen[seen.length - 1] ?? ''));
     return seen;
   }, T);
-  expect(texts).toEqual([...STEPS, 'Fill the tube from your line']);
+  expect(texts).toEqual([...FOUNDRY_STEPS, AFTER_STEPS]);
   expect(await done(page)).toBe(FILL);
 
   // 14. The line runs until the centre entrance is full.

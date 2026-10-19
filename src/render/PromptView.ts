@@ -3,15 +3,16 @@ import { DEPTHS } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
 import { INTAKE } from '../data/foundry';
 import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
-import { OBJECTIVES, PROMPT_RANGE, type PromptTarget } from '../data/objectives';
+import { PROMPT_RANGE, type PromptTarget } from '../data/objectives';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { fixtureInReach, pylonInReach } from '../sim/claims';
 import { fixtureDef } from '../sim/fixtures';
 import { usableInReach } from '../sim/foundryUse';
 import { nodeInReach } from '../sim/harvest';
-import { currentObjective } from '../sim/objectives';
+import { currentObjectiveDef } from '../sim/objectives';
 import { roomById, type SimState } from '../sim/state';
 import { stoneInReach } from '../sim/tutorial';
+import { Pulse } from './pulse';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
 
@@ -31,7 +32,7 @@ export interface PromptState extends Point {
 // The foundry's conduit step (027) has an arrow marker over the intake instead,
 // bobbing over its open entrance anywhere in the foundry.
 export class PromptView {
-  private readonly scene: Scene;
+  private readonly bob: Pulse;
   private readonly cap: GameObjects.Image;
   private readonly key: TextLine;
   private readonly marker: GameObjects.Image;
@@ -40,15 +41,14 @@ export class PromptView {
   markerAt: Point | null = null;
 
   constructor(scene: Scene) {
-    this.scene = scene;
+    this.bob = new Pulse(scene, 0, TUTORIAL_LAYOUT.marker.bob, TUTORIAL_LAYOUT.marker.bobMs);
     this.cap = addVector(scene, 0, 0, TUTORIAL_SPRITES.keyCap).setOrigin(0.5, 1).setDepth(DEPTHS.prompt);
     this.key = new TextLine(scene, 0, 0, DEPTHS.prompt + 1, true);
     this.marker = addVector(scene, 0, 0, TUTORIAL_SPRITES.marker).setDepth(DEPTHS.prompt).setVisible(false);
   }
 
   update(sim: SimState, shown: string): void {
-    const i = currentObjective(sim);
-    const def = i === null ? undefined : OBJECTIVES[i];
+    const def = currentObjectiveDef(sim);
     this.showMarker(def?.marker === 'intake' && shown === FOUNDRY_ROOM && sim.roomId === FOUNDRY_ROOM ? sim : undefined);
     const prompt = def?.prompt;
     const target = prompt && shown === sim.roomId ? this.target(sim, prompt.over) : undefined;
@@ -76,9 +76,7 @@ export class PromptView {
     this.markerAt = mouth ? { x: (mouth.tx + 0.5) * TILE_SIZE, y: (mouth.ty + 1) * TILE_SIZE - TUTORIAL_LAYOUT.marker.lift } : null;
     this.marker.setVisible(this.markerAt !== null);
     if (!this.markerAt) return;
-    const M = TUTORIAL_LAYOUT.marker;
-    const bob = M.bob * (0.5 - 0.5 * Math.cos((2 * Math.PI * this.scene.time.now) / M.bobMs));
-    this.marker.setPosition(this.markerAt.x, Math.round(this.markerAt.y - bob));
+    this.marker.setPosition(this.markerAt.x, Math.round(this.markerAt.y - this.bob.value));
   }
 
   /** Where a prompt floats, and whether its key would work right now; undefined when nothing fits in this room. */

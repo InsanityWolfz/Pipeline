@@ -2,8 +2,8 @@ import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { VIEW_WIDTH } from '../data/config';
 import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
-import { OBJECTIVES } from '../data/objectives';
-import { currentObjective } from '../sim/objectives';
+import type { ObjectiveDef } from '../data/objectives';
+import { currentObjectiveDef } from '../sim/objectives';
 import type { SimState } from '../sim/state';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
@@ -16,7 +16,8 @@ export class ObjectiveView {
   private readonly line: TextLine;
   private readonly tick: GameObjects.Image;
   private readonly panel: GameObjects.Graphics;
-  private shown: number | null = -1;
+  /** The goal on the line (null once all are done), or undefined before the first draw. */
+  private shown: ObjectiveDef | null | undefined = undefined;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -31,11 +32,11 @@ export class ObjectiveView {
   }
 
   update(sim: SimState): void {
-    const i = currentObjective(sim);
-    if (i === this.shown) return;
-    const finished = this.shown !== -1;
-    this.shown = i;
-    const text = i === null ? '' : (OBJECTIVES[i]?.text ?? '');
+    const def = currentObjectiveDef(sim);
+    if (def === this.shown) return;
+    const finished = this.shown !== undefined;
+    this.shown = def;
+    const text = def?.text ?? '';
     this.line.set(text);
     const x = VIEW_WIDTH - TUTORIAL_LAYOUT.objectiveRight - this.line.width;
     this.line.moveTo(x, TUTORIAL_LAYOUT.objectiveTop);

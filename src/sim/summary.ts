@@ -1,5 +1,4 @@
 import { MAX_HEALTH } from '../data/player';
-import { OBJECTIVES } from '../data/objectives';
 import { WORLD } from './world';
 import type { SimEvents } from './events';
 import { unlockedPieces } from './placement';
@@ -7,7 +6,7 @@ import { isInvulnerable, isRolling } from './movement';
 import type { Facing } from './player';
 import type { ArmorPiece } from './armor';
 import { fixtureDef } from './fixtures';
-import { currentObjective } from './objectives';
+import { currentObjective, currentObjectiveDef } from './objectives';
 import { volleyRounds, nextPress, hudActive, type HudActive } from './volley';
 import { ENTRANCE_CAP, INTAKE } from '../data/foundry';
 import type { SimState } from './state';
@@ -226,6 +225,6 @@ export function summarize(state: SimState): SimSummary {
 
 function objectiveSummary(state: SimState): SimSummary['objective'] {
   const i = currentObjective(state);
-  const def = i === null ? undefined : OBJECTIVES[i];
+  const def = currentObjectiveDef(state);
   return i === null || !def ? null : { index: i, text: def.text };
 }

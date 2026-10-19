@@ -2,26 +2,20 @@ import { expect, test, type Page } from '@playwright/test';
 import { boot, cameraSettled, watchErrors } from './helpers';
 import { centre, state, step } from './foundryPage';
 import { OBJECTIVES } from '../../src/data/objectives';
+import { BUILD_PULSE } from '../../src/data/hudLayout';
+import { AFTER_STEPS, FOUNDRY_STEPS } from '../fixtures/foundrySteps';
 
 // 027: the foundry tutorial. From the field start (attuned), the opening's goals are
 // done by hand (gather, craft the arrow and bomb chains, go down the stairs); then the
 // arrow line goes up a step at a time under the hook: hopper, wood, cutter, knapper,
 // spinner, assembler, conduit. Each step's text, prompt, pulsing build-bar cell and
-// the intake marker are checked, and the line ends on "Fill the tube from your line".
+// the intake marker are checked, and the line ends on the goal after them.
 // With REVIEW_SHOTS=1, the review screenshots go in docs/review/027.
 
 const SHOTS = 'docs/review/027';
 const SHOOT = !!process.env.REVIEW_SHOTS;
 
-const STEPS = [
-  'Press B and place a hopper',
-  'Put wood in the hopper (E)',
-  'Place a cutter in front of the hopper',
-  'Make arrowheads: hopper of stone → knapper',
-  'Make rope: hopper of fiber → spinner',
-  'Feed all three into an assembler',
-  'Run a conduit from the assembler into the intake',
-];
+const STEPS = FOUNDRY_STEPS;
 const FIRST = OBJECTIVES.findIndex((o) => o.text === STEPS[0]);
 /** Where the player stands while building: right of the line, clear of every piece. */
 const BUILD_AT = centre(15, 6);
@@ -118,7 +112,16 @@ test('the foundry steps walk the player through an arrow line into the intake', 
   expect((await ui(page))?.prompt?.key).toBe('B');
   if (SHOOT) {
     await cameraSettled(page, 20_000);
+    // Held at full strength: tweens stop the moment the pulse peaks.
+    await page.waitForFunction((max) => {
+      const g = window.__GAME__;
+      if ((g?.ui().buildBar?.pulseAlpha ?? 0) < max - 0.02) return false;
+      g?.tweenSpeed(0);
+      return true;
+    }, BUILD_PULSE.max);
+    expect((await ui(page))?.buildBar?.pulseAlpha).toBeGreaterThanOrEqual(BUILD_PULSE.max - 0.02);
     await page.screenshot({ path: `${SHOTS}/01-step3-cutter-pulsing.png` });
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
   }
   // The popup is short: slow every tween so it can be seen (and shot) before it fades.
   await page.evaluate(() => window.__GAME__?.tweenSpeed(0.05));
@@ -153,10 +156,10 @@ test('the foundry steps walk the player through an arrow line into the intake', 
   s = await stepUntilPast(page, FIRST + 5, 400);
   expect(s.objective).toEqual({ index: FIRST + 6, text: STEPS[6] });
 
-  // 7. No key prompt: an arrow marker over the intake's open entrance, and the conduit's cell pulses.
+  // 7. A placing step: B over the player, and an arrow marker over the intake's open entrance; the conduit's cell pulses.
   const mouth = centre(12, 0);
   await expect.poll(async () => (await ui(page))?.marker?.x).toBe(mouth.x);
-  expect((await ui(page))?.prompt).toBeNull();
+  expect((await ui(page))?.prompt?.key).toBe('B');
   await expect.poll(async () => (await ui(page))?.buildBar?.pulsing).toBe('conduit');
   if (SHOOT) {
     // Up beside the line, so the camera shows the intake.
@@ -167,7 +170,7 @@ test('the foundry steps walk the player through an arrow line into the intake', 
   await place(page, 'conduit', 12, 2);
   await place(page, 'conduit', 12, 1);
   s = await stepUntilPast(page, FIRST + 6, 300);
-  expect(s.objective).toEqual({ index: FIRST + 7, text: 'Fill the tube from your line' });
+  expect(s.objective).toEqual({ index: FIRST + 7, text: AFTER_STEPS });
   expect(s.intake.entrances[1]?.ammo).toBe('arrow');
   await expect.poll(async () => (await ui(page))?.marker ?? null).toBeNull();
 

@@ -5,24 +5,17 @@ import { currentObjective } from '../../src/sim/objectives';
 import type { HopperState, MachineState } from '../../src/sim/pieces';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
+import { AFTER_STEPS, FOUNDRY_STEPS } from '../fixtures/foundrySteps';
 import { foundry, put } from './foundryKit';
 import { die, run, runUntil } from './fight';
 
 // 027: the foundry's arrow line, taught a step at a time. The single "build a
 // line" objective is seven steps, each completing from sim state.
 
-const STEPS = [
-  'Press B and place a hopper',
-  'Put wood in the hopper (E)',
-  'Place a cutter in front of the hopper',
-  'Make arrowheads: hopper of stone → knapper',
-  'Make rope: hopper of fiber → spinner',
-  'Feed all three into an assembler',
-  'Run a conduit from the assembler into the intake',
-];
+const STEPS = FOUNDRY_STEPS;
 
 const FIRST = OBJECTIVES.findIndex((o) => o.text === STEPS[0]);
-const FILL = OBJECTIVES.findIndex((o) => o.text === 'Fill the tube from your line');
+const FILL = OBJECTIVES.findIndex((o) => o.text === AFTER_STEPS);
 const step = (n: number): number => FIRST + n - 1;
 
 /** The foundry with every objective before the steps done, so the line shows step 1. */
@@ -78,7 +71,7 @@ describe('the foundry steps (027)', () => {
       { key: 'B', over: 'player' },
       { key: 'B', over: 'player' },
       { key: 'B', over: 'player' },
-      null,
+      { key: 'B', over: 'player' },
     ]);
     expect(steps.map((o) => o.marker ?? null)).toEqual([null, null, null, null, null, null, 'intake']);
   });
@@ -122,7 +115,7 @@ describe('the foundry steps (027)', () => {
     put(s, 'conduit', 12, 2, 'up');
     put(s, 'conduit', 12, 1, 'up');
     runUntil(s, (x) => currentObjective(x) !== step(7), 200);
-    expect(summarize(s).objective).toEqual({ index: FILL, text: 'Fill the tube from your line' });
+    expect(summarize(s).objective).toEqual({ index: FILL, text: AFTER_STEPS });
     expect(s.link.entrances[1]).toMatchObject({ ammoId: 'arrow' });
   });
 

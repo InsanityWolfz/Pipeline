@@ -1,4 +1,4 @@
-import { OBJECTIVES, type ObjectiveCheck } from '../data/objectives';
+import { OBJECTIVES, type ObjectiveCheck, type ObjectiveDef } from '../data/objectives';
 import { feedsIntake } from './intake';
 import { volleyRounds } from './volley';
 import type { SimState } from './state';
@@ -64,4 +64,10 @@ export function stepObjectives(state: SimState): void {
 export function currentObjective(state: Pick<SimState, 'objectives'>): number | null {
   const i = state.objectives.findIndex((done) => !done);
   return i < 0 ? null : i;
+}
+
+/** The first unfinished objective's data, or null once all are done. */
+export function currentObjectiveDef(state: Pick<SimState, 'objectives'>): ObjectiveDef | null {
+  const i = currentObjective(state);
+  return i === null ? null : (OBJECTIVES[i] ?? null);
 }

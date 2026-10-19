@@ -115,11 +115,23 @@ export const BUILD_BAR_LAYOUT = {
   label: { h: 9, gap: 2 },
 } as const;
 
+/** How far the build-bar pulse's ring reaches round its cell, px; its sprite is a px wider still, so the ring's edge isn't clipped. */
+const PULSE_OUT = 3;
+const PULSE_INSET = PULSE_OUT + 1;
+
 /**
- * The pulse over a build-bar cell the current objective names (027): a ring reaching `out` px round the cell, its alpha
- * swinging between `min` and `max` once per `periodMs`.
+ * The pulse over a build-bar cell the current objective names (027): a ring reaching `out` px round the cell, drawn in
+ * a `w` x `h` sprite with the cell's top-left at (`inset`, `inset`); its alpha swings between `min` and `max` once per `periodMs`.
  */
-export const BUILD_PULSE = { out: 3, periodMs: 1100, min: 0.2, max: 1 } as const;
+export const BUILD_PULSE = {
+  out: PULSE_OUT,
+  inset: PULSE_INSET,
+  w: BUILD_BAR_LAYOUT.cellWidth + 2 * PULSE_INSET,
+  h: BUILD_BAR_LAYOUT.cellHeight + 2 * PULSE_INSET,
+  periodMs: 1100,
+  min: 0.2,
+  max: 1,
+} as const;
 
 /** The ghost of the piece to place: palette tints for where it can and can't go, and its alpha. */
 export const GHOST = { okTint: 'cyan', badTint: 'rust', alpha: 0.6 } as const;

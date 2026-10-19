@@ -4,11 +4,18 @@ import type { Room } from '../data/rooms';
 import { ROOM_TOP_MARGIN } from '../data/roomArt';
 import type { SimEvents } from '../sim/events';
 import { roomById, roomSize, type SimState } from '../sim/state';
-import { MinimapView, type MinimapMarker } from './MinimapView';
+import { MinimapView } from './MinimapView';
+import type { UiState } from './testHook';
 import { OverworldView } from './overworld/OverworldView';
 import { RoomView } from './room';
 import { IntakeView } from './IntakeView';
 import { SupplyView } from './SupplyView';
+
+/** What the room views report to the test hook's `ui()`. */
+export type RoomUiState = Pick<UiState, 'minimap' | 'supply' | 'intakeCaps' | 'intakeLift'>;
+
+/** The room views' part of `ui()` before the scene has built them. */
+export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [] }, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null };
 
 // The ground on screen: a tiled room (the foundry) or the overworld's terrain
 // with its landmarks (017), plus the corner minimap while outside, and the
@@ -49,23 +56,16 @@ export class RoomViews {
     this.intake.update(sim, events, shown, sim.building, deltaMs);
   }
 
-  /** The supply line's motes, for the test hook. */
-  get motes(): { started: number; inFlight: { itemId: string; progress: number }[] } {
-    return { started: this.supply.started, inFlight: this.supply.inFlight };
-  }
-
-  /** The brass caps still drawn on the intake (024), for the test hook. */
-  get intakeCaps(): number {
-    return this.intake.capsShown;
-  }
-
-  /** How far the intake's caps are through lifting off (0..1), or null when none are (024). */
-  get intakeLift(): number | null {
-    return this.intake.liftShown;
-  }
-
-  /** The minimap's state, for the test hook. */
-  get map(): { shown: boolean; markers: MinimapMarker[] } {
-    return { shown: this.minimap.shown, markers: this.minimap.markers };
+  /**
+   * For the test hook: the minimap and its markers, the supply line's motes (018), and the intake's caps still drawn
+   * and how far they are through lifting off (024: 0..1, or null when none are).
+   */
+  get state(): RoomUiState {
+    return {
+      minimap: { shown: this.minimap.shown, markers: this.minimap.markers },
+      supply: { started: this.supply.started, inFlight: this.supply.inFlight },
+      intakeCaps: this.intake.capsShown,
+      intakeLift: this.intake.liftShown,
+    };
   }
 }

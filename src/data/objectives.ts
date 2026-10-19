@@ -44,7 +44,7 @@ export interface ObjectiveDef {
   text: string;
   check: ObjectiveCheck;
   prompt?: { key: 'E' | 'C' | 'B'; over: PromptTarget };
-  /** An arrow marker over the thing to build toward (027), shown anywhere in its room. */
+  /** An arrow marker over the thing to build toward (027), shown anywhere in its room, beside any key prompt. */
   marker?: MarkerTarget;
   /** The piece whose build-bar cell pulses while the bar is open (027). */
   highlight?: string;
@@ -96,6 +96,7 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
   {
     text: 'Run a conduit from the assembler into the intake',
     check: { kind: 'intakeFed', item: 'arrow' },
+    prompt: { key: 'B', over: 'player' },
     marker: 'intake',
     highlight: 'conduit',
   },
