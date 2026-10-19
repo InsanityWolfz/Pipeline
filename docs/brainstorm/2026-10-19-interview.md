@@ -83,3 +83,13 @@ Oct 19, 2026 · Shaun's answers, which follow on from docs/brainstorm/2026-10-19
   - a Ruined Cache, guarded, with a chance at a schematic or rare part
 - **Discovery:** landmarks are hidden until found. A landmark appears on the minimap once seen, and finding one gives XP.
 - **Map:** fixed and hand-tuned, with one seed, the same world every game.
+
+## Round 7
+- **Research UI:** restoration at the machines. Lost schematics show as faint diagrams on the foundry itself: at the intake, on the walls, in a sealed wing. Press E and pay the cost to bring that part back. A simple list panel shows them all.
+- **Costs:** boss cores, machine parts and schematics. No gold.
+- **First nodes:**
+  - intake entrances (Warden core → 2nd, the Bulwark → 3rd later)
+  - reservoir size (30 → 45 → 60)
+  - machine speed
+  - splitter and merger
+- **Gold and merchant:** not yet.
