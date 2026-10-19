@@ -90,8 +90,6 @@ export const HUD_SLOT_LAYOUT = {
   count: { x: 25, y: 9 },
   /** Gap below the slot to the bottom of the screen. */
   margin: 6,
-  /** Palette id: the slot tint while a dry fire shows. */
-  dryFireTint: 'rust',
 } as const;
 
 /** An animation: the sprite grid `key` with `frames` frames (`key/0`..), or a single frame `key`. */
@@ -211,6 +209,18 @@ export const ENEMY_FX = {
   /** A corpse lingers this long after its death animation, then fades over `corpseFadeMs`. */
   corpseLingerMs: 600,
   corpseFadeMs: 600,
+} as const;
+
+/**
+ * The punch's swoosh (023): a pale slice on the ground at the punch's real reach
+ * and arc, with a brighter rim, fading out over `ms`. Colours are palette ids.
+ */
+export const MELEE_SWOOSH = {
+  color: 'rock-pale',
+  fillAlpha: 0.35,
+  rimWidth: 2,
+  rimAlpha: 0.9,
+  ms: 180,
 } as const;
 
 /** Player hit feedback, in sim ticks of hit invulnerability. */

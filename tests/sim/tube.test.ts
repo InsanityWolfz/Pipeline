@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ammoDef } from '../../src/data/ammo';
-import { DRY_FIRE_TICKS } from '../../src/data/tube';
+import { MELEE } from '../../src/data/combat';
 import { STARTING_INVENTORY, ROLL_TICKS } from '../../src/data/player';
 import { NO_COMMAND, type Command } from '../../src/sim/input';
 import { isRolling } from '../../src/sim/movement';
@@ -39,7 +39,7 @@ describe('firing from the inventory', () => {
     const s = sim();
     expect(s.inventory.arrow).toBe(STARTING_INVENTORY.arrow);
     expect(STARTING_INVENTORY.arrow).toBe(30);
-    expect(summarize(s).tube).toEqual({ ammo: 'arrow', fireCooldown: 0, dryFire: false, firing: false, fromReservoir: false, shotCount: 0 });
+    expect(summarize(s).tube).toEqual({ ammo: 'arrow', fireCooldown: 0, meleeCooldown: 0, firing: false, fromReservoir: false, shotCount: 0 });
   });
 
   it('takes each shot straight from the inventory', () => {
@@ -49,13 +49,14 @@ describe('firing from the inventory', () => {
     expect(s.tube.fromReservoir).toBe(false);
   });
 
-  it('dry-fires once the carried rounds run out', () => {
+  it('punches once the carried rounds run out (023)', () => {
     const s = sim();
     s.inventory.arrow = 1;
     expect(firedOn(s, fireAt(s))).toBe(true);
     run(s, command(), FIRE_TICKS);
     expect(firedOn(s, fireAt(s))).toBe(false);
-    expect(s.tube.dryFire).toBe(DRY_FIRE_TICKS);
+    expect(s.events.melees).toHaveLength(1);
+    expect(s.tube.meleeCooldown).toBe(MELEE.cooldownTicks);
   });
 });
 
@@ -83,26 +84,13 @@ describe('firing', () => {
     expect(firedOn(s, fireAt(s))).toBe(false);
   });
 
-  it('dry-fires with nothing carried', () => {
+  it('punches with nothing carried, and the melee cooldown counts down (023)', () => {
     const s = sim();
     s.inventory.arrow = 0;
     expect(firedOn(s, fireAt(s))).toBe(false);
-    expect(summarize(s).tube.dryFire).toBe(true);
-    run(s, command(), DRY_FIRE_TICKS - 1);
-    expect(summarize(s).tube.dryFire).toBe(true);
-    stepSim(s, command());
-    expect(summarize(s).tube.dryFire).toBe(false);
-  });
-
-  it('dry-fires at most once per FIRE_TICKS while held', () => {
-    const s = sim();
-    s.inventory.arrow = 0;
-    const dry: number[] = [];
-    for (let t = 1; t <= FIRE_TICKS * 2 + 1; t++) {
-      stepSim(s, fireAt(s));
-      if (s.tube.dryFire === DRY_FIRE_TICKS) dry.push(t);
-    }
-    expect(dry).toEqual([1, 1 + FIRE_TICKS, 1 + FIRE_TICKS * 2]);
+    expect(summarize(s).tube.meleeCooldown).toBe(MELEE.cooldownTicks);
+    run(s, command(), MELEE.cooldownTicks);
+    expect(summarize(s).tube.meleeCooldown).toBe(0);
   });
 
   it('never fires during a roll, then fires when it ends if still held', () => {

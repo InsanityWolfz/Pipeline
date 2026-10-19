@@ -217,7 +217,7 @@ describe('sim state', () => {
     expect(summary.groundItems).toEqual([]);
     // Every event list, empty, and no KO: a key missing from createEvents fails here.
     const lists = ['hits', 'deaths', 'pickups', 'harvests', 'crafts', 'craftFails', 'bursts', 'selects', 'roomChanges'] as const;
-    const later = ['places', 'placeFails', 'pickUps', 'deposits', 'crateTakes', 'withdraws', 'attunes', 'refills', 'shots', 'banks'] as const;
+    const later = ['places', 'placeFails', 'pickUps', 'deposits', 'crateTakes', 'withdraws', 'attunes', 'refills', 'shots', 'melees', 'banks'] as const;
     const site = ['sealed', 'claims', 'stashDeposits', 'stashTakes', 'supplies', 'travels', 'identifies', 'equips', 'angles', 'gates', 'objectives'] as const;
     expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, 'lost', 'ko', 'tubeTaken'].sort());
     for (const name of [...lists, ...later, ...site]) expect(summary.events[name], name).toEqual([]);

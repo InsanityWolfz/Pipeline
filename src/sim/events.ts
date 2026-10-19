@@ -42,6 +42,13 @@ export interface BurstEvent {
   radius: number;
 }
 
+export interface MeleeEvent {
+  x: number;
+  y: number;
+  angle: number;
+  hits: number[];
+}
+
 export interface SimEvents {
   hits: HitEvent[];
   deaths: DeathEvent[];
@@ -66,6 +73,8 @@ export interface SimEvents {
   attunes: Record<string, never>[];
   /** The foundry intake put a round in the reservoir (019), through mouth tile `mouth` (an index into INTAKE.mouth). */
   refills: { mouth: number; itemId: string }[];
+  /** A punch (023): where the player stood, its aim angle (radians), and the enemy ids it hit. */
+  melees: MeleeEvent[];
   /** A projectile left the tube's mouth (a spread fires several at once). */
   shots: { x: number; y: number; ammoId: string }[];
   /** E at a pylon whose room still has enemies. */
@@ -132,6 +141,7 @@ export function createEvents(): SimEvents {
     supplies: [],
     travels: [],
     shots: [],
+    melees: [],
     banks: [],
     lost: {},
     ko: false,
@@ -169,6 +179,7 @@ export function clearEvents(events: SimEvents): void {
   events.supplies.length = 0;
   events.travels.length = 0;
   events.shots.length = 0;
+  events.melees.length = 0;
   events.banks.length = 0;
   events.lost = {};
   events.ko = false;

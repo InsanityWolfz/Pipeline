@@ -7,7 +7,7 @@ import { ITEMS } from '../../src/data/items';
 import { NODES } from '../../src/data/nodes';
 import { describe, expect, it } from 'vitest';
 import { FLOOR_VARIANTS, WALL_SPRITES } from '../../src/data/roomArt';
-import { animFrames, ENEMY_FX, HUD_HEALTH_LAYOUT, HUD_SLOT_LAYOUT, PLAYER_HIT_FX } from '../../src/data/assets';
+import { animFrames, ENEMY_FX, HUD_HEALTH_LAYOUT, MELEE_SWOOSH, PLAYER_HIT_FX } from '../../src/data/assets';
 import { ARMOR_TINTS, GHOST, HARVEST_BAR, MINIMAP, TABLET } from '../../src/data/hudLayout';
 import { ENEMIES } from '../../src/data/enemies';
 import { LOGISTICS_ICONS, SORTER_ANIMS, SPREAD_FAN } from '../../src/data/foundryAssets';
@@ -116,7 +116,7 @@ describe('feel and sound references', () => {
       ...Object.values(MINIMAP.terrain),
       ...Object.values(MINIMAP.markers).map((m) => m.color),
       ...Object.values(ARMOR_TINTS),
-      HUD_SLOT_LAYOUT.dryFireTint,
+      MELEE_SWOOSH.color,
       HUD_HEALTH_LAYOUT.fillColor,
       ENEMY_FX.flashColor,
       ENEMY_FX.telegraphColor,

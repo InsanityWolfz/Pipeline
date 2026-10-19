@@ -70,7 +70,8 @@ export interface SimSummary {
   tube: {
     ammo: string;
     fireCooldown: number;
-    dryFire: boolean;
+    /** Ticks before the next punch can happen (023). */
+    meleeCooldown: number;
     firing: boolean;
     /** This tick's shot came from the reservoir. */
     fromReservoir: boolean;
@@ -166,7 +167,7 @@ export function summarize(state: SimState): SimSummary {
     tube: {
       ammo: tube.ammoId,
       fireCooldown: tube.fireCooldown,
-      dryFire: tube.dryFire > 0,
+      meleeCooldown: tube.meleeCooldown,
       firing: tube.firing,
       fromReservoir: tube.fromReservoir,
       shotCount: tube.shotCount,

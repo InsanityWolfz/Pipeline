@@ -40,6 +40,8 @@ export interface WandererPose {
   attuning: number | null;
   /** Muzzle glow strength 0..1. */
   muzzle: number;
+  /** A punch (023), 0..1 (1 fully out): the tube thrusts along its aim, or empty-handed the near fist drives out. */
+  jab: number;
 }
 
 export const REST_POSE: WandererPose = {
@@ -60,6 +62,7 @@ export const REST_POSE: WandererPose = {
   attuned: true,
   attuning: null,
   muzzle: 0.6,
+  jab: 0,
 };
 
 type Pt = readonly [number, number];
@@ -94,8 +97,9 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
   const o: DrawOpts = { outline: OUTLINE_WIDTH / S, blurScale: pxPerUnit * S };
   const hipY = -WANDERER.hipHeight + pose.crouch;
   // A point on the tube (gun-local) in hip-local px.
+  const kick = pose.kick - pose.jab * WANDERER.rig.jab.thrust;
   const gun = (p: Pt): [number, number] => {
-    const [x, y] = rotate([p[0] - pose.kick, p[1]], pose.aim);
+    const [x, y] = rotate([p[0] - kick, p[1]], pose.aim);
     return [x + def.gunPivot[0], y + def.gunPivot[1]];
   };
   const lit = pose.attuned && pose.attuning === null;
@@ -136,7 +140,11 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
       }
       case '@near-arm': {
         const rest = WANDERER.rig.restHand.near;
-        nearArm(c, def.shoulders.near, pose.hasTube ? gun(TUBE_PARTS.rearGrip) : [def.shoulders.near[0] + rest[0], def.shoulders.near[1] + rest[1]], o);
+        const [sx, sy] = def.shoulders.near;
+        // Empty-handed, a punch drives the fist out from the shoulder along the aim.
+        const [fx, fy] = rotate([WANDERER.rig.jab.fist, 0], pose.aim);
+        const hand: Pt = [sx + rest[0] + (fx - rest[0]) * pose.jab, sy + rest[1] + (fy - rest[1]) * pose.jab];
+        nearArm(c, def.shoulders.near, pose.hasTube ? gun(TUBE_PARTS.rearGrip) : hand, o);
         break;
       }
       case '@hose': {
@@ -154,7 +162,7 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
         break;
       }
       case '@tube':
-        if (pose.hasTube) drawTube(c, def.gunPivot, pose, lit, o);
+        if (pose.hasTube) drawTube(c, def.gunPivot, pose, kick, lit, o);
         break;
       default:
         drawPart(c, parts.get(step), o, step === def.trail ? pose.flap : 0);
@@ -213,11 +221,11 @@ function drawLegs(c: CanvasRenderingContext2D, pose: WandererPose, feet: number,
   leg(frontX, frontLift, WANDERER.limbs.legFront, WANDERER.boot.front, r.knee.x);
 }
 
-function drawTube(c: CanvasRenderingContext2D, pivot: Pt, pose: WandererPose, lit: boolean, o: DrawOpts): void {
+function drawTube(c: CanvasRenderingContext2D, pivot: Pt, pose: WandererPose, kick: number, lit: boolean, o: DrawOpts): void {
   c.save();
   c.translate(pivot[0], pivot[1]);
   c.rotate(pose.aim);
-  c.translate(-pose.kick, 0);
+  c.translate(-kick, 0);
   drawShapes(c, TUBE_PARTS.housing, o);
   drawShapes(c, lit ? TUBE_PARTS.barrel.lit : TUBE_PARTS.barrel.dormant, o);
   TUBE_PARTS.rings.forEach((x, i) => {

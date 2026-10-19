@@ -32,7 +32,8 @@ export const SOUNDS = {
   fireArrow: 'fire-arrow',
   fireBomb: 'fire-bomb',
   fireLeyBolt: 'fire-ley-bolt',
-  dryFire: 'dry-fire',
+  meleeHit: 'melee-hit',
+  meleeWhiff: 'melee-whiff',
   hit: 'hit',
   enemyHurt: 'enemy-hurt',
   enemyDeath: 'enemy-death',
@@ -88,7 +89,14 @@ export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
       { wave: 'sine', from: 2200, to: 900, dur: 0.18, attack: 0.002, volume: 0.25, tremolo: { rate: 40, depth: 0.5 } },
     ],
   },
-  'dry-fire': { layers: [{ wave: 'square', from: 220, to: 200, dur: 0.05, attack: 0.001, volume: 0.15, lowpass: 1500 }] },
+  // The punch (023): a light, low thud on a hit; a short soft rush of air on a miss.
+  'melee-hit': {
+    layers: [
+      { wave: 'sine', from: 150, to: 60, dur: 0.1, attack: 0.002, volume: 0.45 },
+      { wave: 'noise', from: 900, to: 200, dur: 0.06, attack: 0.001, volume: 0.25 },
+    ],
+  },
+  'melee-whiff': { layers: [{ wave: 'noise', from: 2400, to: 600, dur: 0.11, attack: 0.03, volume: 0.18 }] },
   hit: {
     layers: [
       { wave: 'noise', from: 3000, to: 800, dur: 0.07, attack: 0.001, volume: 0.4 },

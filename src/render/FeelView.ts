@@ -32,7 +32,6 @@ export class FeelView {
   private modes = new Map<number, string>();
   private outputs = new Map<number, number>();
   private rolling = false;
-  private dryFire = false;
   private dustMs = 0;
   private workMs = 0;
   /** Ms left on the intake's glow swelling after an item went in (019). */
@@ -81,9 +80,15 @@ export class FeelView {
       const key = FIRE_SOUNDS[shot.ammoId];
       if (key) s.play(key);
     }
+    // A punch (023) thuds on a hit, or whiffs; its hits otherwise land like any other.
+    const punched = new Set<number>();
+    for (const m of ev.melees) {
+      s.play(m.hits.length > 0 ? SOUNDS.meleeHit : SOUNDS.meleeWhiff);
+      for (const id of m.hits) punched.add(id);
+    }
     for (const h of ev.hits) {
       if (h.target === 'enemy') {
-        s.play(SOUNDS.hit);
+        if (!punched.has(h.id)) s.play(SOUNDS.hit);
         s.play(SOUNDS.enemyHurt, SOUND_LEVELS.under);
         j.burst(h.damageType === 'fire' ? 'hitFire' : 'hitPhysical', h.x, h.y);
         j.damageNumber(h.damage, h.x, h.y, false);
@@ -143,7 +148,7 @@ export class FeelView {
     if (ev.tubeTaken || ev.identifies.length > 0 || ev.stashDeposits.length > 0) s.play(SOUNDS.claim, SOUND_LEVELS.quiet);
   }
 
-  /** Changes with no event: wind-ups, machine crafts, rolls, dry fire and footsteps. */
+  /** Changes with no event: wind-ups, machine crafts, rolls and footsteps. */
   private watch(sim: SimState, shown: string, deltaMs: number): void {
     const j = this.juice;
     const live = new Set<number>();
@@ -184,9 +189,6 @@ export class FeelView {
     const rolling = player.rollTick > 0;
     if (rolling && !this.rolling) this.sound.play(SOUNDS.roll);
     this.rolling = rolling;
-    const dry = sim.tube.dryFire > 0;
-    if (dry && !this.dryFire) this.sound.play(SOUNDS.dryFire);
-    this.dryFire = dry;
 
     const moving = Math.hypot(player.vx, player.vy) > DUST.minSpeed;
     this.dustMs += deltaMs;

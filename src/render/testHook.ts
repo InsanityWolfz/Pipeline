@@ -60,6 +60,8 @@ export interface UiState {
   sliding: number;
   /** How far the latest slide is in, 0 to 1. */
   slideProgress: number;
+  /** Punch swooshes still drawn (023). */
+  swooshes: number;
 }
 
 declare global {

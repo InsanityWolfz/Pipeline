@@ -2,6 +2,7 @@ import type { GameObjects, Scene, Textures } from 'phaser';
 import { TintModes } from 'phaser';
 import { PLAYER_HIT_FX, WANDERER_KEY } from '../data/assets';
 import { WANDERER, WANDERER_FEEL, type WandererView } from '../data/art/wanderer';
+import { MELEE } from '../data/combat';
 import { IDLE_SPEED } from '../data/config';
 import { DYING_TICKS, FEET_BOX, HIT_INVULN_TICKS } from '../data/player';
 import type { ArmorWeight } from '../data/armor';
@@ -27,6 +28,13 @@ const FEEL = WANDERER_FEEL;
 const viewOf = (f: Facing): WandererView => (f === 'up' || f === 'down' ? f : 'side');
 
 const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v));
+
+/** How far out a punch (023) is, 0..1, from the sim's melee cooldown: full on its tick, easing back over `FEEL.jab.ticks`. */
+function jabOf(tube: Pick<TubeState, 'meleeCooldown'>): number {
+  if (tube.meleeCooldown <= 0) return 0;
+  const t = (MELEE.cooldownTicks - tube.meleeCooldown) / FEEL.jab.ticks;
+  return t >= 1 ? 0 : 1 - t * t;
+}
 
 /** The tube's local angle for the view: side aims within ±spread of level, down and up around straight down and up. */
 function localAim(view: WandererView, dx: number, dy: number, flip: boolean): number {
@@ -104,6 +112,7 @@ export class PlayerView {
     const shot = heavy && tube.shotCount > 0;
     const hit = p.hurtTicks > HIT_INVULN_TICKS - PLAYER_HIT_FX.poseTicks;
     const dying = p.dying > 0 ? 1 - p.dying / DYING_TICKS : 0;
+    const jab = rolling || dying > 0 ? 0 : jabOf(tube);
 
     let target: { lean: number; crouch: number; stance: number; push: number } = { lean: 0, crouch: 0, stance: WANDERER.rig.restStance, push: 0 };
     if (heavy) target = { ...FEEL.firing };
@@ -121,11 +130,11 @@ export class PlayerView {
     return {
       view,
       flip,
-      aim: hasTube ? localAim(view, dx, dy, flip) : prev.aim,
-      lean: ease(prev.lean, target.lean) + (shot ? FEEL.shot.lean : 0),
+      aim: localAim(view, dx, dy, flip),
+      lean: ease(prev.lean, target.lean) + (shot ? FEEL.shot.lean : 0) + jab * FEEL.jab.lean,
       crouch: ease(prev.crouch, target.crouch),
       stance: ease(prev.stance, target.stance),
-      push: ease(prev.push, target.push) + (shot ? FEEL.shot.push : 0),
+      push: ease(prev.push, target.push) + (shot ? FEEL.shot.push : 0) + jab * FEEL.jab.push,
       kick: shot ? FEEL.shot.kick : prev.kick * Math.pow(FEEL.kickDecay, frames),
       stride: walking ? prev.stride + moved * FEEL.stride : prev.stride,
       stepping: ease(prev.stepping, walking ? 1 : 0),
@@ -136,6 +145,7 @@ export class PlayerView {
       attuned: link.attuned,
       attuning: attuneBeat(link.attunePulse).gun,
       muzzle: shot ? FEEL.muzzle.shot : FEEL.muzzle.rest,
+      jab,
     };
   }
 

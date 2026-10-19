@@ -20,9 +20,6 @@ export const ATTUNE = { gun: 60, panTo: 45, pipe: 60, panBack: 45 } as const;
 /** Ticks the whole attune lasts. */
 export const ATTUNE_TICKS = ATTUNE.gun + ATTUNE.panTo + ATTUNE.pipe + ATTUNE.panBack;
 
-/** Ticks the dry-fire flag stays set after an empty-tube shot. */
-export const DRY_FIRE_TICKS = 10;
-
 /** Shots spawn this far from the player's feet along the aim, px. */
 export const MUZZLE_OFFSET = 12;
 

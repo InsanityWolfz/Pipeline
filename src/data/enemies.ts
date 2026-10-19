@@ -13,6 +13,8 @@ export interface DropTable {
 interface EnemyBase {
   id: string;
   name: string;
+  /** A boss (023) shrugs off the punch's knockback. */
+  boss: boolean;
   maxHealth: number;
   /** Walk speed, px per second. */
   walkSpeed: number;
@@ -112,6 +114,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
     kind: 'melee',
     id: 'husk',
     name: 'Husk',
+    boss: false,
     maxHealth: 40,
     walkSpeed: 50,
     feetBox: { w: 16, h: 8 },
@@ -141,6 +144,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
     kind: 'caster',
     id: 'wisp',
     name: 'Wisp',
+    boss: false,
     maxHealth: 20,
     walkSpeed: 40,
     feetBox: { w: 12, h: 6 },
@@ -171,6 +175,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
     kind: 'slammer',
     id: 'pylon-warden',
     name: 'Pylon Warden',
+    boss: true,
     maxHealth: 200,
     walkSpeed: 35,
     feetBox: { w: 28, h: 12 },

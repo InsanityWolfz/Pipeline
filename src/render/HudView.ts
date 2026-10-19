@@ -116,8 +116,5 @@ export class HudView {
     this.count.set(String(shown.count));
     this.glow.setVisible(hasTube && shown.fromReservoir);
     this.strip.update(tube, inventory);
-
-    if (tube.dryFire > 0) this.slot.setTint(colorOf(HUD_SLOT_LAYOUT.dryFireTint));
-    else this.slot.clearTint();
   }
 }

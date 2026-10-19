@@ -191,6 +191,7 @@ export class GameScene extends Scene {
       cursor: this.cursorView?.state ?? null,
       sliding: this.groundItemView?.sliding ?? 0,
       slideProgress: this.groundItemView?.slideProgress ?? 0,
+      swooshes: this.effects?.swooshes ?? 0,
     };
   }
 

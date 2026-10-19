@@ -121,15 +121,15 @@ describe('firing from the reservoir', () => {
     expect(s.link.reservoir).toEqual({ itemId: null, count: 0 });
     expect(s.arrows).toHaveLength(3);
     run(s, FIRE_TICKS, aim);
-    expect(s.tube.dryFire).toBeGreaterThan(0);
+    expect(s.events.melees).toHaveLength(1);
   });
 
-  it('dry-fires when the reservoir holds a different ammo', () => {
+  it('punches when the reservoir holds a different ammo (023)', () => {
     const s = stepOutside(attuned());
     s.inventory.arrow = 0;
     s.link.reservoir = { itemId: 'bomb', count: 5 };
     run(s, 1, fireAt(s.player.x - 100, s.player.y));
-    expect(s.tube.dryFire).toBeGreaterThan(0);
+    expect(s.events.melees).toHaveLength(1);
     expect(s.link.reservoir.count).toBe(5);
   });
 

@@ -7,7 +7,7 @@ import type { Command } from '../../src/sim/input';
 import type { SimState } from '../../src/sim/state';
 import { arena, fireAt, PLAYER_AT, run } from './fight';
 
-// 016: the tube is heavy. Walking while it fires is slower; dry fire, the foundry and rolls aren't.
+// 016: the tube is heavy. Walking while it fires is slower; a punch (023), the foundry and rolls aren't.
 
 const AHEAD = { x: PLAYER_AT.x + 400, y: PLAYER_AT.y };
 
@@ -28,7 +28,7 @@ describe('firing slows the walk', () => {
     expect(FIRING_WALK_MULTIPLIER).toBe(0.7);
   });
 
-  it('only while the tube really fires: not dry, not in the foundry, not rolling', () => {
+  it('only while the tube really fires: not punching, not in the foundry, not rolling', () => {
     const s = arena();
     run(s, 1, fireAt(AHEAD.x, AHEAD.y));
     expect(firingWalkScale(s)).toBe(FIRING_WALK_MULTIPLIER);
@@ -36,7 +36,7 @@ describe('firing slows the walk', () => {
     const dry = arena();
     dry.inventory = {};
     run(dry, 1, fireAt(AHEAD.x, AHEAD.y));
-    expect(dry.tube.firing).toBe(true);
+    expect(dry.events.melees).toHaveLength(1);
     expect(firingWalkScale(dry)).toBe(1);
     expect(walked(dry, 30, true)).toBeCloseTo(walked(arena(), 30, false), 0);
 

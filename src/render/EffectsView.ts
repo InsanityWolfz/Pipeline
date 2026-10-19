@@ -7,10 +7,12 @@ import {
   FIRE_BURST,
   DEPOSIT_SWIRL,
   KO_FADE_MS,
+  MELEE_SWOOSH,
   MUZZLE_FLASH,
   PICKUP_POPUP,
   PICKUP_SPARKLE,
 } from '../data/assets';
+import { MELEE } from '../data/combat';
 import { CAMERA_LERP, DOOR_FADE_MS } from '../data/config';
 import { enemyDef } from '../data/enemies';
 import { ITEMS } from '../data/items';
@@ -18,12 +20,13 @@ import { INK_ID, hexToRgb, paletteHex } from '../data/palette';
 import { DRAW_HEIGHT } from '../data/tube';
 import type { SimEvents } from '../sim/events';
 import { registerAnim } from './anims';
+import { colorOf } from './color';
 import { phaserStyle } from './fonts';
 import { addVector, addVectorSprite, textureScale } from './vector/textures';
 import { UI_CAMERA } from './scale';
 
 // One-shot effects driven by sim events: corpses, pickup sparkles and popups,
-// fire bursts, muzzle flashes, the deposit swirl, and the KO fade. Nothing here feeds back into the sim.
+// fire bursts, muzzle flashes, the punch's swoosh, the deposit swirl, and the KO fade. Nothing here feeds back into the sim.
 export class EffectsView {
   private readonly scene: Scene;
   private readonly camera: Cameras.Scene2D.Camera;
@@ -31,6 +34,8 @@ export class EffectsView {
   private readonly followed: GameObjects.Image;
   /** Corpses still on screen; a KO clears them with the rest of the room. */
   private readonly corpses = new Set<GameObjects.Sprite>();
+  /** Punch swooshes still drawn (023), for the test hook. */
+  private live = 0;
 
   constructor(scene: Scene, followed: GameObjects.Image) {
     this.scene = scene;
@@ -49,6 +54,7 @@ export class EffectsView {
     events.pickups.forEach((p, i) => this.pickup(p.itemId, p.x, p.y, player, i));
     for (const b of events.bursts) this.burst(b.x, b.y, b.radius);
     for (const s of events.shots) this.muzzle(s.x, s.y);
+    for (const m of events.melees) this.swoosh(m.x, m.y, m.angle);
     // Banking (entering the foundry, or a pylon deposit) swirls ley light off the
     // player. Through a door or travel, it waits out the fade so it shows in the new room.
     if (events.banks.length > 0) {
@@ -86,6 +92,35 @@ export class EffectsView {
     sprite.setDepth(player.y + DRAW_HEIGHT);
     sprite.once('animationcomplete', () => sprite.destroy());
     sprite.play(DEPOSIT_SWIRL.key);
+  }
+
+  /** How many punch swooshes are still on screen. */
+  get swooshes(): number {
+    return this.live;
+  }
+
+  /** The punch's area (023): a pale slice on the ground at its real reach and arc, fading out. */
+  private swoosh(x: number, y: number, angle: number): void {
+    const half = (MELEE.arcDegrees * Math.PI) / 360;
+    const color = colorOf(MELEE_SWOOSH.color);
+    const g = this.scene.add.graphics().setDepth(DEPTHS.groundFx);
+    g.fillStyle(color, MELEE_SWOOSH.fillAlpha);
+    g.slice(x, y, MELEE.reach, angle - half, angle + half, false);
+    g.fillPath();
+    g.lineStyle(MELEE_SWOOSH.rimWidth, color, MELEE_SWOOSH.rimAlpha);
+    g.beginPath();
+    g.arc(x, y, MELEE.reach, angle - half, angle + half, false);
+    g.strokePath();
+    this.live += 1;
+    this.scene.tweens.add({
+      targets: g,
+      alpha: 0,
+      duration: MELEE_SWOOSH.ms,
+      onComplete: () => {
+        this.live -= 1;
+        g.destroy();
+      },
+    });
   }
 
   /** A flash at the tube's mouth, at the height shots fly, in front of the player. */
