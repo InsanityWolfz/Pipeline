@@ -138,7 +138,7 @@ export class IntakeView {
       if (r < lit) {
         // Lit rings are drawn normally, over the bands, so the ammo's colour reads on the cyan pipe, with a soft glow added round them.
         this.gauges.fillStyle(color, g.litAlpha).fillRect(x - g.half, y, g.half * 2, g.height);
-        this.lights.fillStyle(color, g.glowAlpha).fillRect(x - g.half - 1, y - 1, g.half * 2 + 2, g.height + 2);
+        this.lights.fillStyle(color, g.glowAlpha).fillRect(x - g.half - g.glowPad, y - g.glowPad, g.half * 2 + 2 * g.glowPad, g.height + 2 * g.glowPad);
       } else {
         this.shade.fillStyle(colorOf(g.dark), g.darkAlpha).fillRect(x - g.half, y, g.half * 2, g.height);
       }

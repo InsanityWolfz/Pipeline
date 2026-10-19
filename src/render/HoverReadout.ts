@@ -4,6 +4,7 @@ import { READOUT_LAYOUT } from '../data/hudLayout';
 import { INTAKE_CAP_ICON, INTAKE_EMPTY_ICON } from '../data/foundryAssets';
 import { ammoDef } from '../data/ammo';
 import { ENTRANCE_CAP } from '../data/foundry';
+import { CAPPED_LABEL } from '../data/objectives';
 import { itemDef } from '../data/items';
 import { machineDef } from '../data/pieces';
 import { recipeDef, RECIPES } from '../data/recipes';
@@ -35,7 +36,7 @@ export function machineLines(m: MachineState): Line[] {
  */
 export function intakeLines(entrances: readonly EntranceState[]): Line[] {
   return entrances.map((e): Line => {
-    if (!e.open) return [INTAKE_CAP_ICON, 'capped'];
+    if (!e.open) return [INTAKE_CAP_ICON, CAPPED_LABEL];
     const icon = e.ammoId ? itemDef(ammoDef(e.ammoId).itemId).icon : INTAKE_EMPTY_ICON;
     return [icon, `${e.count}/${ENTRANCE_CAP}`];
   });

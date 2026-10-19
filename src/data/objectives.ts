@@ -61,6 +61,9 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
  */
 export const INTAKE_PROMPT = { key: 'E', text: 'open the side entrances' } as const;
 
+/** The intake's hover readout line for a capped entrance (024), beside the cap emblem. */
+export const CAPPED_LABEL = 'capped';
+
 /** A prompt shows (dimmed) while what it floats over is this close to the player, px; at full strength once it can be used. */
 export const PROMPT_RANGE = 64;
 
