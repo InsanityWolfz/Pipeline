@@ -29,10 +29,10 @@ export function drawSeam(g: GameObjects.Graphics, e: EnemyState, bottom: number,
   if (view === 'down') return;
   const S = HOLLOWS_LOOK.seam;
   const k = BULWARK_RIG.scale;
-  const back = view === 'side' ? -20 * (e.facing === 'left' ? -1 : 1) : BULWARK_SEAM.at[0];
+  const back = view === 'side' ? BULWARK_SEAM.side * (e.facing === 'left' ? -1 : 1) : BULWARK_SEAM.at[0];
   const pulse = (Math.sin((now / S.pulseMs) * Math.PI * 2) + 1) / 2;
   g.setDepth(bottom + DEPTHS.overlayNudge);
-  g.fillStyle(colorOf(S.color), S.alpha[0] + (S.alpha[1] - S.alpha[0]) * pulse).fillCircle(e.x + back * k, bottom + BULWARK_SEAM.at[1] * k, S.radius * (view === 'side' ? 0.7 : 1));
+  g.fillStyle(colorOf(S.color), S.alpha[0] + (S.alpha[1] - S.alpha[0]) * pulse).fillCircle(e.x + back * k, bottom + BULWARK_SEAM.at[1] * k, S.radius * (view === 'side' ? S.sideScale : 1));
 }
 
 /** The pound's telegraph: the full circle faint, a disc filling it as the wind-up runs. */

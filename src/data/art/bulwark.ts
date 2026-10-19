@@ -53,7 +53,7 @@ const eye = (x: number, w: number): EnemyPart => ({
 });
 
 /** The core seam down its back: a gold crack round the core, glowing. The target. */
-export const BULWARK_SEAM = { at: [0, -40] as const, halo: 12, haloColor: 'gold-trim', pulseMs: 900, rest: 0.25, peak: 0.6 } as const;
+export const BULWARK_SEAM = { at: [0, -40] as const, side: -20, halo: 12, haloColor: 'gold-trim', pulseMs: 900, rest: 0.25, peak: 0.6 } as const;
 const seam = (x: number, wide: boolean): EnemyPart => ({
   id: 'seam',
   role: 'glow',
@@ -95,7 +95,7 @@ export const BULWARK_RIG: EnemyRigDef = {
       arm('arm', [-6, -52], [-14, -30]),
       leg('leg-front', 'leg-front', 2, 'hollow'),
       torso(6),
-      seam(-20, false),
+      seam(BULWARK_SEAM.side, false),
       head,
       eye(5, 6),
       shield(false, 22),

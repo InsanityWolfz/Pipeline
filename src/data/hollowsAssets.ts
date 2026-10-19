@@ -27,19 +27,50 @@ export const HOLLOWS_LOOK = {
    * The ley barrier over the gap: a translucent cyan wall `height` px tall in the dome's style (017), its rim and
    * ripples shimmering every `shimmerMs`; on its gate event it flashes, shards fall and it fades over `collapseMs`.
    */
-  barrier: { color: 'cyan', glow: 'cyan-glow', fill: 0.28, rim: 0.85, rimWidth: 2, height: 56, ripples: 4, shimmerMs: 1400, collapseMs: 900, flash: 0.9 },
+  barrier: {
+    color: 'cyan',
+    glow: 'cyan-glow',
+    /** The curtain's width, as a fraction of a tile, and its fill, dipping by `shimmerDip` with the shimmer. */
+    width: 0.7,
+    fill: 0.28,
+    shimmerDip: 0.2,
+    rim: 0.85,
+    rimWidth: 2,
+    height: 56,
+    shimmerMs: 1400,
+    /** Ripples climbing it: how many, their line, alpha at the bottom fading by `fade` to the top, inset px and slant px. */
+    ripples: 4,
+    ripple: { width: 1, alpha: 0.7, fade: 0.5, inset: 2, slant: 6 },
+    collapseMs: 900,
+    /** Its collapse: a flash of `flash` fading `flashFade` times faster than the wall, shards falling up to `shardFall` px. */
+    flash: 0.9,
+    flashFade: 3,
+    shardFall: 120,
+  },
   /** The Bulwark's bomb on the ground: the outer ring, the danger-red disc growing inside it, and the bomb arcing in over `flightTicks`. */
   bomb: { color: 'danger', ringWidth: 2, ringAlpha: 0.9, fillAlpha: 0.38, flightTicks: 24, arcPeak: 48 },
   /** The pound's ground circle, in the Warden's slam style (009), danger red. */
   pound: { color: 'danger', alpha: 0.22, fillAlpha: 0.5 },
   /** The back seam's halo while its back shows (the place to hit): its colour, radius px, and a slow pulse between two alphas. */
-  seam: { color: 'gold-trim', radius: 14, pulseMs: 900, alpha: [0.25, 0.6] as const },
+  seam: { color: 'gold-trim', radius: 14, sideScale: 0.7, pulseMs: 900, alpha: [0.25, 0.6] as const },
   /** A shielded enemy shows its turning shuffle this long after its facing last changed, ms. */
   turnHoldMs: 300,
   /** A blocked hit: the shield flashes brass for `flashMs`. */
   block: { color: 'brass-light', flashMs: 120 },
   /** The summon at the start point: a red circle cracking open (`cracks` lines) as the boss rises, `radius` px. */
-  summon: { color: 'danger', radius: 40, cracks: 7, alpha: 0.85 },
+  summon: {
+    color: 'danger',
+    radius: 40,
+    cracks: 7,
+    /** The first crack's angle, radians, and the ring's and cracks' line widths. */
+    crackStart: 0.4,
+    ringWidth: 2,
+    crackWidth: 1.5,
+    alpha: 0.85,
+    /** As the boss rises: a red flare `riseMs` long, a column `flare.w` × `flare.h` radii wide and tall (× radius), `flare.lift` px up. */
+    riseMs: 700,
+    flare: { alpha: 0.5, lift: 20, w: 1.2, h: 2.4 },
+  },
   /** The altar's offering row (in the 033 restore panel's style). */
   panel: { name: "The Bulwark's altar", effect: 'Offer to summon the Bulwark again.', action: 'Summon', spent: 'The Bulwark is here' },
   /** The boss bar along the top of the screen while a boss fights: its width and height, view px, gap under the objective band, colours. */

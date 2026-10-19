@@ -85,7 +85,8 @@ export class JuiceView {
     });
   }
 
+  /** Particles run on the tween clock (034), so the test hook's tween speed can hold a short burst for a screenshot. */
   update(deltaMs: number): void {
-    this.particles.update(deltaMs);
+    this.particles.update(deltaMs * this.scene.tweens.timeScale);
   }
 }

@@ -144,6 +144,23 @@ describe('the Bulwark', () => {
     expect(s.player.health).toBe(100);
   });
 
+  it('lobs and pounds only at a player inside its arena: shot from outside, it chases but holds its bombs', () => {
+    const { s, b } = forum();
+    movePlayer(s, START.x, (HOLLOWS.arena.bounds.y0 - 2) * 32);
+    b.mode = 'chase';
+    let lobs = 0;
+    run(s, DEF.leashTicks - 10, () => {
+      lobs += s.events.lobs.length + s.events.pounds.length;
+      return {};
+    });
+    expect(lobs).toBe(0);
+    expect(b.lobCooldown).toBe(0);
+    // Back in, the overdue lob comes at once.
+    movePlayer(s, START.x, START.y + 160);
+    run(s, 1);
+    expect(b.mode).toBe('lob');
+  });
+
   it('lets the player run: 300 ticks outside the arena and it walks home and heals', () => {
     const { s, b } = forum();
     run(s, 1);
@@ -212,5 +229,45 @@ describe('the Bulwark', () => {
       return JSON.stringify({ enemies: s.enemies, bombs: s.enemyBombs, player: s.player, rng: s.rng });
     };
     expect(fight()).toBe(fight());
+  });
+});
+
+describe('the Bulwark against a player circling to its back (034 tuning)', () => {
+  /**
+   * The playtest's yardstick, reproducible: carried single arrows, no healing, the player circling about 110 px out
+   * toward its back (it turns 40°/s), firing only while behind it, running straight out when the pound winds up.
+   */
+  function circleFight(maxTicks: number): { won: boolean; ticks: number; damageTaken: number; arrows: number; ko: boolean } {
+    const { s, b } = forum(96, 1);
+    s.inventory = { arrow: 999 };
+    s.tube.ammoId = 'arrow';
+    const sign = (v: number): -1 | 0 | 1 => (Math.abs(v) < 3 ? 0 : v > 0 ? 1 : -1);
+    let damageTaken = 0;
+    for (let t = 1; t <= maxTicks; t++) {
+      const p = s.player;
+      const bearing = Math.atan2(p.y - b.y, p.x - b.x);
+      const back = b.angle + Math.PI;
+      const d = Math.atan2(Math.sin(back - bearing), Math.cos(back - bearing));
+      const along = bearing + Math.sign(d || 1) * Math.min(0.7, Math.abs(d));
+      const dist = Math.hypot(p.x - b.x, p.y - b.y);
+      const flee = b.mode === 'windup' && dist < DEF.pound.radius + 18;
+      const goal = flee ? { x: p.x + (p.x - b.x), y: p.y + (p.y - b.y) } : { x: b.x + Math.cos(along) * 110, y: b.y + Math.sin(along) * 110 };
+      const behind = Math.abs(d) < (70 * Math.PI) / 180;
+      run(s, 1, { moveX: sign(goal.x - p.x), moveY: sign(goal.y - p.y), fire: behind && dist < 250, aimX: b.x, aimY: b.y - 20 });
+      damageTaken += s.events.hits.filter((h) => h.target === 'player').reduce((n, h) => n + h.damage, 0);
+      if (s.bossDefeats.length > 0) return { won: true, ticks: t, damageTaken, arrows: 999 - (s.inventory.arrow ?? 0), ko: false };
+      if (s.player.dying > 0) return { won: false, ticks: t, damageTaken, arrows: 999 - (s.inventory.arrow ?? 0), ko: true };
+    }
+    return { won: false, ticks: maxTicks, damageTaken, arrows: 0, ko: false };
+  }
+
+  it('falls to single arrows from behind at its full 900 HP inside 30 s, and the player lives', () => {
+    const r = circleFight(1800);
+    // Recorded for the HP question in the plan's notes (seed 1): 1,515 ticks (about 25 s), 91 arrows, no damage
+    // taken. One arrow at a time, so three entrances' arrows land well under the spec's 30–45 s target.
+    expect(r).toMatchObject({ won: true, ko: false });
+    expect(r.ticks).toBeLessThan(1800);
+    expect(r.arrows).toBeGreaterThanOrEqual(DEF.maxHealth / 10);
+    expect(r.damageTaken).toBeLessThan(DEF.lob.damage * 2);
   });
 });

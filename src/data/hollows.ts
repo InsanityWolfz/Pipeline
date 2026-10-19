@@ -60,7 +60,9 @@ export const HOLLOWS = {
   /** The map edge: cliffs this deep, ragged by up to `ragged` more (like 017's forest edge). The east side is the cliff wall the barrier's gap cuts. */
   edge: { depth: 2, ragged: 2, raggedChance: 0.5 },
   /** Generated cliff runs: straight runs `length` long and `thick` deep, across or down. */
-  cliffRuns: { count: 16, length: [3, 7] as const, thick: [1, 2] as const },
+  cliffRuns: { count: 16, length: [3, 7] as const, thick: [1, 2] as const, acrossChance: 0.5 },
+  /** Generated things start at least this many tiles in from the region's edge. */
+  inset: 3,
   /** Loose rubble: single boulders scattered on open ground. */
   rubble: 45,
   /** Quarry-cut terraces: low cut-stone steps, walkable, `w` × `h` tiles. */
@@ -110,6 +112,8 @@ export const HOLLOWS = {
     { nodeId: 'ley-iron-seam', tx: 31, ty: 24 },
     { nodeId: 'ley-iron-seam', tx: 33, ty: 24 },
   ],
+  /** The site whose claim drops the barrier (round 9: the shrine, after beating the Warden). */
+  opensOn: 'shrine',
   /** `?start=hollows` (034): just inside the gap, on the road. */
   start: { tx: 36, ty: 27 } satisfies TilePos,
   /** The Bulwark's arena (034): a sunken plaza with one wide way in and no door that locks. */
@@ -135,6 +139,9 @@ export const ALTAR_REACH = 20;
 
 /** The arena whose boss is this enemy (034: the Bulwark's Sunken Forum), if any. */
 export const arenaOf = (enemyId: string): typeof HOLLOWS.arena | undefined => (HOLLOWS.arena.boss === enemyId ? HOLLOWS.arena : undefined);
+
+/** The arena whose altar this is (034), if any. */
+export const arenaOfAltar = (altarId: string): typeof HOLLOWS.arena | undefined => (HOLLOWS.arena.altar.id === altarId ? HOLLOWS.arena : undefined);
 
 /** True if a tile is in the Hollows. */
 export const inHollows = (tx: number, ty: number): boolean => {

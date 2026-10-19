@@ -52,7 +52,10 @@ test('the barrier holds until the shrine is claimed (?playtest), then drops, and
     return g.step(1).events.gates;
   });
   expect(fell).toEqual([{ gate: 'hollows' }]);
-  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hollows))?.barrier, { timeout: 10_000 }).toBe('down');
+  // The sim's gate is open at once; the wall's fade runs on render frames, so it is collapsing or already down.
+  expect((await page.evaluate(() => window.__GAME__?.getState()))?.gates.hollows).toBe(true);
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hollows))?.barrier).toMatch(/^(collapsing|down)$/);
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hollows))?.barrierAlpha).toBeLessThan(1);
   const inside = await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
@@ -113,15 +116,16 @@ test('?start=hollows: the shield blocks arrows into its front; from behind they 
     if (!g) throw new Error('no game');
     const sign = (v: number): -1 | 0 | 1 => (Math.abs(v) < 3 ? 0 : v > 0 ? 1 : -1);
     const id = g.getState().bosses[0]?.id ?? -1;
-    // Shortened (the test's subject is where arrows land, not how long the fight takes).
-    g.setEnemyHealth(id, 200);
+    // Healed once after the front's test (its bombs and pound there); none in the fight.
+    g.setPlayerHealth(100);
+    // Its full 900 HP, the player unhealed: circling well, the pound and bombs miss (tests/sim/bulwark.test.ts's yardstick).
     let backHits = 0;
-    for (let t = 0; t < 6000; t++) {
+    for (let t = 0; t < 4000; t++) {
       const s = g.getState();
       const b = s.bosses[0];
       const e = s.enemies.find((x) => x.id === id);
       if (!b || !e) return { won: true, backHits, events: s.events };
-      g.setPlayerHealth(100);
+      if (s.player.dying > 0) return { won: false, backHits, events: null };
       const p = s.player;
       const a = (b.angle * Math.PI) / 180;
       const bearing = Math.atan2(p.y - e.y, p.x - e.x);

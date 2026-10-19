@@ -1,5 +1,5 @@
 import { TICK_RATE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
-import { attackOf, type EnemyDef } from '../data/enemies';
+import { attackOf, type BulwarkDef, type EnemyDef } from '../data/enemies';
 import { defOf } from './champions';
 import { unit } from './direction';
 import { aggro, type EnemyState } from './enemies';
@@ -80,7 +80,7 @@ export function stepAttack(e: EnemyState, def: EnemyDef, land: () => void): [num
 }
 
 /** Past the off-screen grace, a chasing enemy heads home. Returns its move if so. */
-export function leash(e: EnemyState, def: EnemyDef): [number, number] | null {
+export function leash(e: EnemyState, def: Exclude<EnemyDef, BulwarkDef>): [number, number] | null {
   if (e.offScreenTicks < def.leashGraceTicks) return null;
   e.mode = 'return';
   e.modeTicks = 0;

@@ -1,4 +1,6 @@
-import { HOLLOWS } from '../data/hollows';
+import { arenaOf } from '../data/hollows';
+import { OVERWORLD_ROOM } from '../data/overworld';
+import { WORLD } from './world';
 import { defOf } from './champions';
 import { altarState, type AltarState } from './altar';
 import { engaged } from './bulwarkAi';
@@ -21,16 +23,14 @@ export interface HollowsSummary {
   altars: { id: string; boss: string; state: AltarState; summonTicks: number }[];
 }
 
-const BOSSES: readonly string[] = [HOLLOWS.arena.boss];
 
 /** The degrees of a radian angle, in [0, 360). */
 const degrees = (a: number): number => round((((a * 180) / Math.PI) % 360 + 360) % 360);
 
 export function hollowsSummary(state: SimState): HollowsSummary {
-  const a = HOLLOWS.arena.altar;
   return {
     bosses: state.enemies
-      .filter((e) => BOSSES.includes(e.enemyId))
+      .filter((e) => arenaOf(e.enemyId) !== undefined)
       .map((e) => ({
         id: e.id,
         enemyId: e.enemyId,
@@ -45,6 +45,6 @@ export function hollowsSummary(state: SimState): HollowsSummary {
       })),
     enemyBombs: state.enemyBombs.map((b) => ({ id: b.id, room: b.roomId, x: round(b.x), y: round(b.y), from: { x: round(b.fromX), y: round(b.fromY) }, radius: b.radius, fuse: b.fuse, fuseTicks: b.fuseTicks, progress: round(fuseProgress(b)) })),
     bossDefeats: [...state.bossDefeats],
-    altars: [{ id: a.id, boss: HOLLOWS.arena.boss, state: altarState(state, a.id), summonTicks: state.summoning?.altar === a.id ? state.summoning.ticks : 0 }],
+    altars: (WORLD[OVERWORLD_ROOM]?.altars ?? []).map((a) => ({ id: a.id, boss: a.boss, state: altarState(state, a.id), summonTicks: state.summoning?.altar === a.id ? state.summoning.ticks : 0 })),
   };
 }

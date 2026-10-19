@@ -1,3 +1,4 @@
+import { REGION_1_X } from '../../src/data/hollows';
 import { DYING_TICKS } from '../../src/data/player';
 import { OVERWORLD } from '../../src/data/overworld';
 import { WORLD } from '../../src/sim/world';
@@ -56,7 +57,8 @@ function scriptedFight(seed: number, ticks: number) {
     const empty = (sim.inventory.arrow ?? 0) === 0;
     // Waking in the foundry after the KO, walk back out through its door to the overworld.
     const door = sim.roomId === 'foundry' ? { x: 24 * 32, y: 8.5 * 32 } : undefined;
-    const goal = door ?? (!fighting ? target : target ? tileCentre({ tx: 40, ty: 22 }) : loot);
+    // After it, back toward the stairs (034 moved Region 1 +40).
+    const goal = door ?? (!fighting ? target : target ? tileCentre({ tx: 40 + REGION_1_X, ty: 22 }) : loot);
     const command: Command = {
       ...NO_COMMAND,
       moveX: goal ? toward(p.x, goal.x) : 0,
@@ -167,11 +169,12 @@ describe('sim state', () => {
   });
 
   it('replays a fight with hits, deaths, drops and a KO identically', () => {
-    const a = scriptedFight(11, 3000);
+    // The KO lands at tick 611; 1,200 ticks keep a good stretch of the fight after it, at under half 3,000's cost.
+    const a = scriptedFight(11, 1200);
     // At least one KO (the rooms respawned), and the fight went on afterwards.
     expect(a.nextEnemyId).toBeGreaterThanOrEqual(STARTING_ENEMIES * 2);
     expect(a.nextArrowId).toBeGreaterThan(0);
-    expect(a).toEqual(scriptedFight(11, 3000));
+    expect(a).toEqual(scriptedFight(11, 1200));
   });
 
   it('replays harvests, crafts, ammo switches, bombs and bolts identically', () => {

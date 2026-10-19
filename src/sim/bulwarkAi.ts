@@ -14,9 +14,6 @@ import type { SimState } from './state';
 // pounds the ground round itself, then recovers without turning, the window to punish it.
 // It never leaves its arena, and walks home to heal after the player has been out of it a while.
 
-/** It keeps this fraction of the pound's trigger range from the player rather than walking into them. */
-const STAND_OFF = 0.75;
-
 /** True if a feet point is inside a tile rect, px. */
 const insidePx = (r: { x0: number; y0: number; x1: number; y1: number }, x: number, y: number): boolean =>
   x >= r.x0 * TILE_SIZE && x < (r.x1 + 1) * TILE_SIZE && y >= r.y0 * TILE_SIZE && y < (r.y1 + 1) * TILE_SIZE;
@@ -99,12 +96,13 @@ export function bulwarkThink(state: SimState, e: EnemyState, def: BulwarkDef): [
     startWindup(e, def, dx, dy);
     return [0, 0];
   }
-  if (e.lobCooldown === 0 && here) {
+  // It only lobs at a player inside its arena (it can't see out of the forum), as it only pounds one.
+  if (e.lobCooldown === 0 && playerIn) {
     e.lobCooldown = def.lob.cooldownTicks;
     enter(e, 'lob');
     return [0, 0];
   }
-  if (dist <= def.pound.triggerRange * STAND_OFF) return [0, 0];
+  if (dist <= def.pound.triggerRange * def.standOff) return [0, 0];
   const [mx, my] = toward(dx, dy, def);
   return inArena(e, def, mx, my);
 }

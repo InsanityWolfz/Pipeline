@@ -2,6 +2,7 @@ import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { VIEW_WIDTH } from '../data/config';
 import { enemyDef } from '../data/enemies';
+import { arenaOf } from '../data/hollows';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
 import { engaged } from '../sim/bulwarkAi';
 import { defOf } from '../sim/champions';
@@ -28,7 +29,7 @@ export class BossBar {
   }
 
   update(sim: SimState): void {
-    const boss = sim.enemies.find((e) => e.roomId === sim.roomId && enemyDef(e.enemyId).kind === 'bulwark' && engaged(e));
+    const boss = sim.enemies.find((e) => e.roomId === sim.roomId && arenaOf(e.enemyId) !== undefined && engaged(e));
     if (!boss) {
       this.shown = null;
       this.setVisible(false);

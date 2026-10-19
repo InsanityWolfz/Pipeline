@@ -188,22 +188,39 @@ test.describe('review screenshots (034)', () => {
   test('a blocked hit: the brass spark on the shield', async ({ page }) => {
     test.setTimeout(120_000);
     await forum(page, -3);
+    // Woken, step back into the way in: it turns its shield north toward the player but, with them outside
+    // its arena, neither lobs nor pounds, so nothing else is in the shot.
+    await page.evaluate(([tx, ty]) => {
+      const g = window.__GAME__;
+      const h = window.__helpers;
+      if (!g || !h) throw new Error('no game');
+      g.step(1);
+      // In the way's gap itself (the wall's row): still outside its arena, close enough to frame them both.
+      h.walkTo((tx + 0.5) * 32, (ty + 0.4) * 32);
+      for (let t = 0; t < 300 && Math.abs((g.getState().bosses[0]?.angle ?? 0) - 270) > 5; t++) g.step(1);
+    }, [A.start.tx, A.bounds.y0] as const);
+    await cameraSettled(page, 20_000);
     const blocked = await page.evaluate(() => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
-      // Let it turn to face the player (a half turn takes 4.5 s), then shoot it in the front.
-      g.step(300);
-      g.setPlayerHealth(100);
       const b = g.getState().enemies.find((e) => e.enemyId === 'bulwark');
       if (!b) throw new Error('no Bulwark');
-      for (let t = 0; t < 120; t++) {
+      // Effects on a slowed tween clock (particles run on it), so the sparks fly out over a few frames however slow they are.
+      g.tweenSpeed(0.2);
+      for (let t = 0; t < 60; t++) {
         const s = g.step(1, { fire: true, aimX: b.x, aimY: b.y - 20, selectAmmo: t === 0 ? 'arrow' : null });
         if (s.events.blocked.length > 0) return true;
       }
       return false;
     });
     expect(blocked).toBe(true);
+    // Four frames for the sparks to fly out, then the tween clock stopped, so they hold mid-flight.
+    await page.evaluate(async () => {
+      for (let i = 0; i < 4; i++) await new Promise((r) => requestAnimationFrame(r));
+      window.__GAME__?.tweenSpeed(0);
+    });
     await page.screenshot({ path: `${SHOTS}/11-blocked-spark.png` });
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
   });
 
   test('the altar dim, then awake with its offering, then summoning', async ({ page }) => {

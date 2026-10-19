@@ -33,8 +33,6 @@ interface EnemyBase {
   hitKnockback: number;
   hitKnockTicks: number;
   hitFlashTicks: number;
-  /** Ticks off screen before a chasing enemy heads home. */
-  leashGraceTicks: number;
   /** Within this distance of home, px, a returning enemy is home. */
   homeTolerance: number;
   drops: DropTable;
@@ -63,7 +61,13 @@ interface AttackTiming {
 }
 
 /** A Husk: walks up and swipes an arc in front of it. Aggros when on screen. */
-export interface MeleeDef extends EnemyBase {
+/** Enemies that chase while on screen and head home after a grace period off it (the Bulwark leashes by its arena instead, 034). */
+interface ScreenLeashed {
+  /** Ticks off screen before a chasing enemy heads home. */
+  leashGraceTicks: number;
+}
+
+export interface MeleeDef extends EnemyBase, ScreenLeashed {
   kind: 'melee';
   swipe: AttackTiming & {
     /** Feet-to-feet distance that starts a wind-up, px. */
@@ -80,7 +84,7 @@ export interface MeleeDef extends EnemyBase {
 }
 
 /** A Wisp (009): keeps its distance, charges, then casts a slow orb at where the player stood. */
-export interface CasterDef extends EnemyBase {
+export interface CasterDef extends EnemyBase, ScreenLeashed {
   kind: 'caster';
   cast: AttackTiming & {
     /** Aggros when the player is this close, px. */
@@ -105,7 +109,7 @@ export interface CasterDef extends EnemyBase {
 }
 
 /** The Pylon Warden (009): chases, then slams the ground around itself. */
-export interface SlammerDef extends EnemyBase {
+export interface SlammerDef extends EnemyBase, ScreenLeashed {
   kind: 'slammer';
   slam: AttackTiming & {
     /** Aggros when the player is this close, px. */
@@ -126,6 +130,8 @@ export interface BulwarkDef extends EnemyBase {
   shield: ShieldDef;
   /** Ticks with the player outside its arena before it walks home and heals. */
   leashTicks: number;
+  /** It stops walking at this fraction of the pound's trigger range from the player, rather than walking into them. */
+  standOff: number;
   lob: {
     cooldownTicks: number;
     windupTicks: number;

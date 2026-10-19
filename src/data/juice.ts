@@ -79,7 +79,7 @@ export const PARTICLES = {
   place: { colors: ['dirt', 'dirt-light'], count: 6, speed: [20, 50], gravity: 60, lifeMs: [200, 320], size: 1 },
   // 034: a shot ringing off a shield (brass sparks), an enemy bomb bursting (stone and red embers), the Bulwark's pound
   // (a ring of grey-blue dust), and the Hollows' barrier breaking into cyan shards.
-  blockSpark: { colors: ['brass-light', 'brass', 'gold-trim', 'snow'], count: 14, speed: [70, 160], gravity: 200, lifeMs: [160, 320], size: 2, lift: 20 },
+  blockSpark: { colors: ['brass-light', 'brass', 'gold-trim', 'snow'], count: 22, speed: [70, 170], gravity: 200, lifeMs: [180, 340], size: 3, lift: 20 },
   enemyBurst: { colors: ['danger', 'cinder', 'hollow-light', 'hollow'], count: 26, speed: [40, 130], gravity: 120, lifeMs: [300, 650], size: 3 },
   poundDust: { colors: ['hollow-pale', 'hollow-light', 'hollow'], count: 36, speed: [60, 150], gravity: -20, lifeMs: [400, 800], size: 3 },
   barrierShards: { colors: ['cyan', 'cyan-glow', 'snow'], count: 40, speed: [20, 90], gravity: 160, lifeMs: [500, 1000], size: 2, lift: 40 },

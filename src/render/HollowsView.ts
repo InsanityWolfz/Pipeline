@@ -77,7 +77,7 @@ export class HollowsView {
     const state = here ? altarState(sim, HOLLOWS.arena.altar.id) : null;
     this.altar.setVisible(here);
     if (state) showFrame(this.altar, state === 'awake' ? HOLLOWS_SPRITES.altar.awake : state === 'summoning' ? HOLLOWS_SPRITES.altar.summoning : HOLLOWS_SPRITES.altar.dim);
-    if (sim.summoning === null && this.shownState.summonCircle) this.riseMs = L.barrier.collapseMs;
+    if (sim.summoning === null && this.shownState.summonCircle) this.riseMs = L.summon.riseMs;
     this.riseMs = Math.max(0, this.riseMs - deltaMs);
     const summoning = here && sim.summoning !== null;
     this.drawSummon(summoning ? (sim.summoning?.ticks ?? 0) / HOLLOWS.arena.summonTicks : null);
@@ -104,16 +104,17 @@ export class HollowsView {
     const shimmer = (Math.sin((this.time / B.shimmerMs) * Math.PI * 2) + 1) / 2;
     // The curtain stands up from the ground: drawn from the gap's top less its height to its bottom.
     const y0 = top - B.height;
-    const w = T * 0.7;
+    const w = T * B.width;
     g.setVisible(true).setDepth(bottom);
-    g.fillStyle(color, B.fill * alpha * (0.8 + 0.2 * shimmer)).fillRect(x - w / 2, y0, w, bottom - y0);
-    if (k > 0) g.fillStyle(colorOf(B.glow), B.flash * Math.max(0, 1 - k * 3)).fillRect(x - w / 2, y0, w, bottom - y0);
+    g.fillStyle(color, B.fill * alpha * (1 - B.shimmerDip + B.shimmerDip * shimmer)).fillRect(x - w / 2, y0, w, bottom - y0);
+    if (k > 0) g.fillStyle(colorOf(B.glow), B.flash * Math.max(0, 1 - k * B.flashFade)).fillRect(x - w / 2, y0, w, bottom - y0);
     g.lineStyle(B.rimWidth, color, B.rim * alpha).strokeRect(x - w / 2, y0, w, bottom - y0);
     // Ripples climbing the curtain; while it collapses, shards of it fall.
     for (let i = 0; i < B.ripples; i++) {
       const f = ((this.time / B.shimmerMs + i / B.ripples) % 1 + 1) % 1;
-      const y = bottom - f * (bottom - y0) + (k > 0 ? k * k * 120 * ((i % 2) + 1) : 0);
-      g.lineStyle(1, colorOf(B.glow), (0.7 - 0.5 * f) * alpha).lineBetween(x - w / 2 + 2, y, x + w / 2 - 2, y - 6);
+      const R = B.ripple;
+      const y = bottom - f * (bottom - y0) + (k > 0 ? k * k * B.shardFall * ((i % 2) + 1) : 0);
+      g.lineStyle(R.width, colorOf(B.glow), (R.alpha - R.fade * f) * alpha).lineBetween(x - w / 2 + R.inset, y, x + w / 2 - R.inset, y - R.slant);
     }
     return alpha;
   }
@@ -124,7 +125,7 @@ export class HollowsView {
     g.clear();
     const S = L.summon;
     const c = { x: (HOLLOWS.arena.start.tx + 0.5) * T, y: (HOLLOWS.arena.start.ty + 0.5) * T };
-    const rise = this.riseMs > 0 ? this.riseMs / L.barrier.collapseMs : 0;
+    const rise = this.riseMs > 0 ? this.riseMs / S.riseMs : 0;
     if (progress === null && rise === 0) {
       g.setVisible(false);
       return;
@@ -132,13 +133,16 @@ export class HollowsView {
     const k = progress ?? 1;
     const color = colorOf(S.color);
     g.setVisible(true);
-    g.lineStyle(2, color, S.alpha).strokeEllipse(c.x, c.y, S.radius * 2 * Math.min(1, k * 2), S.radius * Math.min(1, k * 2));
+    // The ring opens over the summon's first half; the cracks reach it by its end. Both lie flat (half as tall).
+    const ring = Math.min(1, k * 2);
+    g.lineStyle(S.ringWidth, color, S.alpha).strokeEllipse(c.x, c.y, S.radius * 2 * ring, S.radius * ring);
     for (let i = 0; i < S.cracks; i++) {
-      const a = (i / S.cracks) * Math.PI * 2 + 0.4;
+      const a = (i / S.cracks) * Math.PI * 2 + S.crackStart;
       const r = S.radius * k;
-      g.lineStyle(1.5, color, S.alpha).lineBetween(c.x, c.y, c.x + Math.cos(a) * r, c.y + Math.sin(a) * r * 0.5);
+      g.lineStyle(S.crackWidth, color, S.alpha).lineBetween(c.x, c.y, c.x + Math.cos(a) * r, c.y + (Math.sin(a) * r) / 2);
     }
-    if (rise > 0) g.fillStyle(color, 0.5 * rise).fillEllipse(c.x, c.y - 20, S.radius * 1.2, S.radius * 2.4 * rise);
+    const F = S.flare;
+    if (rise > 0) g.fillStyle(color, F.alpha * rise).fillEllipse(c.x, c.y - F.lift, S.radius * F.w, S.radius * F.h * rise);
   }
 
   /** Each enemy bomb: its ring and growing disc, and the bomb arcing in from the thrower, then sitting at the centre. */

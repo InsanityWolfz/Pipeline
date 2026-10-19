@@ -1,5 +1,5 @@
 import { FEET_BOX } from '../data/player';
-import { arenaOf, ALTAR_REACH, HOLLOWS } from '../data/hollows';
+import { arenaOf, arenaOfAltar, ALTAR_REACH } from '../data/hollows';
 import { OVERWORLD_ROOM } from '../data/overworld';
 import { RESEARCH_NODES } from '../data/research';
 import { tileRect } from './fixtures';
@@ -29,7 +29,7 @@ const altarsHere = (state: SimState) => roomOf(state).altars ?? [];
 
 /** The altar's state: dim before its boss's first kill, then awake, summoning while it rises, spent while it lives. */
 export function altarState(state: Pick<SimState, 'bossDefeats' | 'summoning' | 'enemies'>, altarId: string): AltarState {
-  const boss = HOLLOWS.arena.altar.id === altarId ? HOLLOWS.arena.boss : undefined;
+  const boss = arenaOfAltar(altarId)?.boss;
   if (!boss || !state.bossDefeats.includes(boss)) return 'dim';
   if (state.summoning?.altar === altarId) return 'summoning';
   return state.enemies.some((e) => e.enemyId === boss) ? 'spent' : 'awake';
@@ -47,7 +47,8 @@ export function altarInReach(state: SimState): { id: string; tx: number; ty: num
 }
 
 /** True if the player carries an altar's offering. */
-export const canOffer = (state: Pick<SimState, 'inventory'>): boolean => Object.entries(HOLLOWS.arena.offering).every(([id, n]) => count(state.inventory, id) >= n);
+export const canOffer = (state: Pick<SimState, 'inventory'>, altarId: string): boolean =>
+  Object.entries(arenaOfAltar(altarId)?.offering ?? {}).every(([id, n]) => count(state.inventory, id) >= n);
 
 /** Raises an arena's boss at its start point, at full health, in its arena's group. */
 function raise(state: SimState, boss: string): void {
@@ -63,18 +64,20 @@ function raise(state: SimState, boss: string): void {
  */
 export function stepAltars(state: SimState, cmd: Command): Command {
   const altar = altarInReach(state);
-  if (cmd.summon && altar?.id === cmd.summon && altarState(state, altar.id) === 'awake' && canOffer(state)) {
-    for (const [id, n] of Object.entries(HOLLOWS.arena.offering)) state.inventory[id] = count(state.inventory, id) - n;
+  const arena = altar && arenaOfAltar(altar.id);
+  if (cmd.summon && altar && arena && altar.id === cmd.summon && altarState(state, altar.id) === 'awake' && canOffer(state, altar.id)) {
+    for (const [id, n] of Object.entries(arena.offering)) state.inventory[id] = count(state.inventory, id) - n;
     state.summoning = { altar: altar.id, ticks: 0 };
     state.events.summons.push({ altar: altar.id, boss: altar.boss });
   }
   const summoning = state.summoning;
-  if (summoning) {
+  const rising = summoning && arenaOfAltar(summoning.altar);
+  if (summoning && rising) {
     summoning.ticks += 1;
-    if (summoning.ticks >= HOLLOWS.arena.summonTicks) {
+    if (summoning.ticks >= rising.summonTicks) {
       state.summoning = null;
-      state.summoned.push(HOLLOWS.arena.boss);
-      raise(state, HOLLOWS.arena.boss);
+      state.summoned.push(rising.boss);
+      raise(state, rising.boss);
     }
   }
   return cmd.interact && altar ? { ...cmd, interact: false } : cmd;
@@ -93,9 +96,9 @@ export function onBossDeath(state: SimState, enemyId: string): void {
 
 /** On a world reset (a KO): a rise in progress completes, so the offering is never lost. */
 export function settleSummons(state: SimState): void {
-  if (!state.summoning) return;
+  const arena = state.summoning && arenaOfAltar(state.summoning.altar);
   state.summoning = null;
-  state.summoned.push(HOLLOWS.arena.boss);
+  if (arena) state.summoned.push(arena.boss);
 }
 
 /** Whether a placed region boss comes back on a reset: always before its first kill, after it only while summoned. */

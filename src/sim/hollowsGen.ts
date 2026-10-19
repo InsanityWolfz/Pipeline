@@ -32,9 +32,9 @@ function edge(grid: Grid, rng: RngState): void {
 function cliffRuns(grid: Grid, rng: RngState, keep: readonly { x0: number; y0: number; x1: number; y1: number }[]): void {
   const { count, length, thick } = HOLLOWS.cliffRuns;
   for (let i = 0; i < count; i++) {
-    const tx0 = nextInt(rng, B.x0 + 3, B.x1 - 3);
-    const ty0 = nextInt(rng, B.y0 + 3, B.y1 - 3);
-    const across = nextFloat(rng) < 0.5;
+    const tx0 = nextInt(rng, B.x0 + HOLLOWS.inset, B.x1 - HOLLOWS.inset);
+    const ty0 = nextInt(rng, B.y0 + HOLLOWS.inset, B.y1 - HOLLOWS.inset);
+    const across = nextFloat(rng) < HOLLOWS.cliffRuns.acrossChance;
     const len = nextInt(rng, length[0], length[1]);
     const deep = nextInt(rng, thick[0], thick[1]);
     for (let a = 0; a < len; a++) {
@@ -56,15 +56,15 @@ export function generateHollows(grid: Grid, seed: number): void {
   cliffRuns(grid, rng, keep);
   const { terraces } = HOLLOWS;
   for (let i = 0; i < terraces.count; i++) {
-    const tx0 = nextInt(rng, B.x0 + 3, B.x1 - 3);
-    const ty0 = nextInt(rng, B.y0 + 3, B.y1 - 3);
+    const tx0 = nextInt(rng, B.x0 + HOLLOWS.inset, B.x1 - HOLLOWS.inset);
+    const ty0 = nextInt(rng, B.y0 + HOLLOWS.inset, B.y1 - HOLLOWS.inset);
     const w = nextInt(rng, terraces.w[0], terraces.w[1]);
     const h = nextInt(rng, terraces.h[0], terraces.h[1]);
     for (let ty = ty0; ty < ty0 + h; ty++) for (let tx = tx0; tx < tx0 + w; tx++) if (free(tx, ty, keep) && grid[ty]?.[tx] === TILE.floor) set(grid, tx, ty, TILE.terrace);
   }
   for (let i = 0; i < HOLLOWS.rubble; i++) {
-    const tx = nextInt(rng, B.x0 + 3, B.x1 - 3);
-    const ty = nextInt(rng, B.y0 + 3, B.y1 - 3);
+    const tx = nextInt(rng, B.x0 + HOLLOWS.inset, B.x1 - HOLLOWS.inset);
+    const ty = nextInt(rng, B.y0 + HOLLOWS.inset, B.y1 - HOLLOWS.inset);
     if (free(tx, ty, keep) && grid[ty]?.[tx] === TILE.floor) set(grid, tx, ty, TILE.rock);
   }
 }

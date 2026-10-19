@@ -1,4 +1,4 @@
-import { HOLLOWS } from '../data/hollows';
+import { arenaOfAltar } from '../data/hollows';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
 import { itemDef } from '../data/items';
 import { altarState, canOffer } from '../sim/altar';
@@ -17,8 +17,8 @@ export function offeringModel(sim: SimState, altarId: string): RestorePanelModel
     node: altarId,
     name: T.name,
     effect: T.effect,
-    cost: Object.entries(HOLLOWS.arena.offering).map(([itemId, need]) => ({ itemId, icon: itemDef(itemId).icon, have: count(sim.inventory, itemId), need })),
+    cost: Object.entries(arenaOfAltar(altarId)?.offering ?? {}).map(([itemId, need]) => ({ itemId, icon: itemDef(itemId).icon, have: count(sim.inventory, itemId), need })),
     action: state === 'awake' ? T.action : T.spent,
-    enabled: state === 'awake' && canOffer(sim),
+    enabled: state === 'awake' && canOffer(sim, altarId),
   };
 }

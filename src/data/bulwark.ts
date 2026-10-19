@@ -17,13 +17,13 @@ export const BULWARK: BulwarkDef = {
   hitKnockback: 0,
   hitKnockTicks: 4,
   hitFlashTicks: 6,
-  // Unused: it leashes by the arena, `leashTicks` (below).
-  leashGraceTicks: 120,
   homeTolerance: 4,
   /** A half turn takes 4.5 s: slow enough that a player who gets behind it has time to hit it. */
   shield: { arcDegrees: 180, turnDegPerSec: 40 },
   /** It walks home and heals after this long with the player outside its arena (5 s). */
   leashTicks: 300,
+  /** It walks at the player until three quarters of the pound's trigger range away. */
+  standOff: 0.75,
   /**
    * Every `cooldownTicks` while engaged (counted from its wind-up's start), it rears back for `windupTicks`, throws
    * `count` bombs (one at the player's feet, the rest within `scatter` px of it) and holds the throw `throwTicks`.

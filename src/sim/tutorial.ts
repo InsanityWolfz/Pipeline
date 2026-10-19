@@ -1,3 +1,4 @@
+import { HOLLOWS } from '../data/hollows';
 import { STONE_REACH } from '../data/objectives';
 import { FEET_BOX } from '../data/player';
 import { RESPAWN_ROOM } from '../data/player';
@@ -29,8 +30,6 @@ export interface Gates {
 /** The tutorial's gates all shut, or all open (the sandbox and playtest starts); the Hollows' barrier waits on the shrine's claim either way. */
 export const createGates = (open: boolean, hollows = false): Gates => ({ foundry: open, shrine: open, hollows });
 
-/** The site whose claim drops the Hollows' barrier (034, round 9). */
-export const HOLLOWS_KEY = 'shrine';
 
 
 /** True if a door's gate (if any) is open. */
@@ -90,7 +89,7 @@ export function stepGates(state: SimState): void {
   if (!state.gates.foundry && !state.enemies.some((e) => e.group === FIELD_GROUP)) open(state, 'foundry');
   if (!state.gates.shrine && state.firstLineFull) open(state, 'shrine');
   // Claiming the shrine's pylon drops the Hollows' barrier (034); claims are for good, so it never comes back.
-  if (!state.gates.hollows && state.claims.includes(HOLLOWS_KEY)) open(state, 'hollows');
+  if (!state.gates.hollows && state.claims.includes(HOLLOWS.opensOn)) open(state, 'hollows');
 }
 
 /** Where a death wakes the player: the start room until the foundry is open (012), then the foundry (011). */
