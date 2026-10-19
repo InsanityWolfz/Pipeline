@@ -2,6 +2,18 @@
 
 Newest entry first.
 
+## 2026-10-19: Keyword audit for the next spec interview
+**Changed:** wrote docs/brainstorm/2026-10-19-keyword-audit.md, from Shaun's drive rant (Part 2, themes 12–14). It covers today's keyword inventory, its problems, a v0 glossary (a proposal), a two-layer legibility proposal, and the open questions for the keyword spec interview.
+
+Biggest findings:
+- **Overloaded words.** "Burst" means five things and "Shard" seven.
+- **No rules text.** Ammo shows none to the player.
+- **Talents scope by ammo type, not by keyword.** For example, Wide Casing misses landmines.
+- **Pillar 6 blocks Shaun's "bomb set + cluster relic" example,** because gear can't touch offense.
+- **Shown numbers don't match the real ones.** Fire rate rounds to whole ticks.
+
+**Next:** the keyword spec interview with Shaun (before or after his playtest, his choice), then the shippable-build specs (title screen, soft save, start-to-finish flow), Bulwark difficulty and the factory changes.
+
 ## 2026-10-19: 028–038 built, awaiting Shaun's playtest
 **Changed:** built all eleven specs on `claude/laughing-volta-uac3nf` as separate commits:
 - 028 foundry flow
