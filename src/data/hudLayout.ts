@@ -172,9 +172,6 @@ export const STAGE_PANEL = { pad: 6, headerHeight: 16, gap: 12, title: 'Stages' 
 export const MENU_MAX_ROWS = 10;
 export const MENU_COLUMN_GAP = 8;
 
-/** The worn armor's icon and value, right of the health bar (010). Px on screen. */
-export const HUD_ARMOR_LAYOUT = { x: 62, y: 2, count: { x: 18, y: 6 } } as const;
-
 /** Palette tints on the player's body for the worn armor's weight (010). */
 export const ARMOR_TINTS = { light: 'leaf-light', heavy: 'rock' } as const;
 

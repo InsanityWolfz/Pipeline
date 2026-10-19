@@ -4,8 +4,9 @@ import { BOMB_SPHERE, ICON_BOMB, ITEM_SPRITES_VECTOR } from '../../src/data/art/
 import { inksOf } from '../../src/data/art/types';
 import { HUD_SPRITES_VECTOR } from '../../src/data/art/hud';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
-import { HP_BAR, HUD_HEALTH_LAYOUT, HUD_LAYOUT } from '../../src/data/hudLayout';
-import { INVENTORY_GROUPS, INVENTORY_PANEL, inventoryColumns, inventoryPanelSize, PICKUP_FEED, reservedRows } from '../../src/data/inventoryPanel';
+import { HUD_LAYOUT } from '../../src/data/hudLayout';
+import { HP_BAR, HUD_HEALTH_LAYOUT } from '../../src/data/hudPanels';
+import { INVENTORY_GROUPS, INVENTORY_PANEL, inventoryColumns, inventoryPanelSize, PICKUP_FEED, reservedRows } from '../../src/data/hudPanels';
 import { ITEMS } from '../../src/data/items';
 import { DAYLIGHT_PALETTE } from '../../src/data/palette';
 

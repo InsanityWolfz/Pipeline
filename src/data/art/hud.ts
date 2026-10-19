@@ -1,7 +1,8 @@
 import { SPRITES, TUBE_SLOT_FRAMES } from '../assets';
 import { TUTORIAL_SPRITES } from '../foundryAssets';
 import { BUILD_BAR_LAYOUT, BUILD_PULSE, CRAFT_MENU_LAYOUT, HUD_LAYOUT, PICKER_LAYOUT, tubeSlotWidth } from '../hudLayout';
-import { ellipse, line, path, rect, solid, trim, type Paint, type Shape, type VectorSprite } from './types';
+import { HP_BAR, HUD_HEALTH_LAYOUT, INVENTORY_PANEL, inventoryPanelSize } from '../hudPanels';
+import { ellipse, flat, line, path, rect, solid, trim, type Paint, type Shape, type VectorSprite } from './types';
 
 // The HUD and menus (020): rune-carved stone tablets with brass corners, dark
 // wells for icons and counts, and the tube slot ringed in cyan like the tube.
@@ -78,13 +79,40 @@ const FIST: Shape[] = [
 const AMMO_CELL: Shape[] = [...tablet(24, 28), well(3, 3, 18, 22)];
 const AMMO_SELECT: Shape[] = [ring(2, 2, 20, 24, 1.6, 1, 3)];
 
-// The health bar (52x8): stone with brass ends round the well the fill is drawn in (x 2-49, y 2-5).
+// The HP bar (031, 152x20): a carved stone frame with brass end caps and studs, a lit top bevel and a rune course
+// cut along its foot, round the dark well the fill is drawn in (HUD_HEALTH_LAYOUT.fill).
+const HP = HUD_HEALTH_LAYOUT;
 const HEALTH: Shape[] = [
-  rect(0, 0, 52, 8, 2, { fill: vertical('carve', 'carve-dark', 0, 8), outline: true }),
-  rect(2, 2, 48, 4, 1, { fill: 'ink' }),
-  rect(0, 0, 2.4, 8, 1, solid('brass')),
-  rect(49.6, 0, 2.4, 8, 1, solid('brass')),
+  rect(0, 0, HP.frame.w, HP.frame.h, 3, { fill: vertical('carve', 'carve-dark', 0, HP.frame.h), outline: true }),
+  line([4, 1.3, HP.frame.w - 4, 1.3], 0.8, { id: 'carve-light', alpha: 0.9 }),
+  well(HP.fill.x - 1, HP.fill.y - 1, HP.fill.w + 2, HP.fill.h + 2),
+  ...[0, HP.frame.w - 3].map((x) => rect(x, 0, 3, HP.frame.h, 1.4, { fill: vertical('brass-light', 'brass-dark', 0, HP.frame.h), outline: true })),
+  ...[1.5, HP.frame.w - 1.5].map((x) => ellipse(x, HP.frame.h / 2, 0.8, 0.8, solid('gold-trim'))),
+  ...Array.from({ length: Math.floor((HP.frame.w - 24) / 16) }, (_, i) => path(`M ${12 + i * 16} ${HP.frame.h - 2.4} L ${14 + i * 16} ${HP.frame.h - 1.2} L ${16 + i * 16} ${HP.frame.h - 2.4}`, trim('carve', 0.6))),
 ];
+
+// Its healing glow (031): a soft cyan ring round the frame, faded in while the player heals (030).
+const G = HP_BAR.glow;
+const HEALTH_GLOW: Shape[] = [rect(G.pad, G.pad, HP.frame.w, HP.frame.h, 3, { stroke: { color: { id: 'cyan-glow', alpha: 0.9 }, width: 1.4 }, glow: { color: G.color, blur: G.blur } })];
+
+// The shield (031, 14x16) beside the bar's armor value: a heater shield of steel with a brass rim and a cyan ley rune.
+const SHIELD: Shape[] = [
+  path('M 1 1.5 L 13 1.5 L 13 7 Q 13 12.4 7 15.2 Q 1 12.4 1 7 Z', { fill: { linear: [1, 1, 13, 15], stops: [{ at: 0, color: 'rock-pale' }, { at: 0.55, color: 'rock-light' }, { at: 1, color: 'rock' }] }, outline: true }),
+  path('M 2.4 2.8 L 11.6 2.8 L 11.6 7 Q 11.6 11.4 7 13.7 Q 2.4 11.4 2.4 7 Z', trim('brass', 1)),
+  { ...path('M 7 4.4 L 7 11 M 4.6 6.6 L 9.4 6.6', trim('cyan', 1)), glow: { color: 'cyan', blur: 2 } },
+  line([3.2, 3.6, 5.6, 3.6], 0.6, { id: 'snow', alpha: 0.6 }),
+];
+
+// The at-risk mark (031, 8x8): a rust warning triangle with an ink bar and dot.
+const WARN: Shape[] = [
+  path('M 4 0.6 L 7.6 7.2 L 0.4 7.2 Z', { fill: vertical('cinder-light', 'rust-light', 0.6, 7.2), outline: true }),
+  line([4, 2.8, 4, 4.8], 0.9, 'ink'),
+  ellipse(4, 6, 0.5, 0.5, flat('ink')),
+];
+
+// The inventory panel (031): a big tablet with a rune course, like the crafting menu's, and its title card.
+const PANEL = inventoryPanelSize();
+const PANEL_TITLE = INVENTORY_PANEL.title;
 
 // The crafting menu (020): a big tablet with a rune course along its top; its rows are dark wells,
 // lit with a cyan rim under the cursor and a brass flash when pressed. The other menus' rows
@@ -158,7 +186,12 @@ export const HUD_SPRITES_VECTOR: readonly VectorSprite[] = [
   { key: SPRITES.hudFist, size: [16, 16], anchor: [8, 8], frames: [FIST] },
   sprite(SPRITES.hudAmmoCell, [24, 28], AMMO_CELL),
   sprite(SPRITES.hudAmmoSelect, [24, 28], AMMO_SELECT),
-  sprite(SPRITES.hudHealth, [52, 8], HEALTH),
+  sprite(SPRITES.hudHealth, [HP.frame.w, HP.frame.h], HEALTH),
+  sprite(SPRITES.hudHealthGlow, [HP.frame.w + 2 * G.pad, HP.frame.h + 2 * G.pad], HEALTH_GLOW),
+  sprite(SPRITES.hudShield, [HP.shield.w, HP.shield.h], SHIELD),
+  sprite(SPRITES.hudWarn, [8, 8], WARN),
+  sprite(SPRITES.inventoryPanel, [PANEL.w, PANEL.h], tablet(PANEL.w, PANEL.h, { runes: true })),
+  sprite(SPRITES.inventoryTitle, [PANEL_TITLE.w, PANEL_TITLE.h], tablet(PANEL_TITLE.w, PANEL_TITLE.h)),
   sprite(SPRITES.craftPanel, [CRAFT_MENU_LAYOUT.width, CRAFT_MENU_LAYOUT.height], CRAFT_PANEL),
   sprite(SPRITES.craftRow, [ROW.w, ROW.h], CRAFT_ROW),
   sprite(SPRITES.craftRowHover, [ROW.w, ROW.h], CRAFT_ROW_HOVER),

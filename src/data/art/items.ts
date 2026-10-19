@@ -6,8 +6,8 @@ import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSp
 // round the centre, used on the ground, in the HUD, in menus and riding
 // conduits. The 005 look-alike pairs stay apart by shape: the shaft is a thin
 // straight rod and the fuse a fat twisted coil; the ley shard is three loose
-// chunks and the ley bolt one head on a trail; the casing an open shell and the
-// bomb a sealed sphere.
+// chunks and the ley bolt one head on a trail. The casing (031) is the bomb's plain
+// black sphere: only the bomb's wick and cinder band tell them apart.
 
 const icon = (key: string, shapes: readonly Shape[]): VectorSprite => ({ key, size: [16, 16], anchor: [8, 8], frames: [shapes] });
 
@@ -91,14 +91,6 @@ const ROPE: Shape[] = [
   ...[-4, -1.5, 1.5, 4].map((x) => line([x - 0.5, -3, x + 0.5, -2.2], 0.4, 'straw-dark')),
 ];
 
-// The casing: an open shell of pale stone, its dark hollow showing at the top and a ley rune on its side. Open and upright next to the sealed bomb.
-const CASING: Shape[] = [
-  path('M -5 -3.4 L -4.4 4.6 Q 0 6.6 4.4 4.6 L 5 -3.4 Z', { fill: { linear: [-5, 0, 5, 0], stops: [{ at: 0, color: 'rock-pale' }, { at: 0.5, color: 'rock-light' }, { at: 1, color: 'rock' }] }, outline: true }),
-  ellipse(0, -3.4, 5, 1.9, solid('rock-pale')),
-  ellipse(0, -3.2, 3.6, 1.2, flat('ink')),
-  path('M -1.4 0 L 0 1.8 L 1.4 0 L 0 3.6', { ...trim('cyan', 0.7), glow: { color: 'cyan', blur: 2 } }),
-];
-
 // The fuse: a fat coil of resin-soaked cord, twisted, its loose end lit.
 const FUSE: Shape[] = [
   path('M -5 4 Q -6.4 -1 -2 -2.4 Q 2.6 -3.6 3.2 0.4 Q 3.6 3.8 -0.4 3.6', trim('resin-dark', 3.6)),
@@ -173,10 +165,16 @@ export const ICON_ARROW: Shape[] = [
   ICON_ARROW_HEAD,
 ];
 
-export const ICON_BOMB: Shape[] = [
+/** The bomb's sphere (031): a dark radial ball, outlined, with a highlight. The casing is this alone. */
+export const BOMB_SPHERE: Shape[] = [
   ellipse(-0.6, 1.4, 5.4, 5.4, { fill: { radial: [-2, -0.6, 6], stops: [{ at: 0, color: 'rock-dark' }, { at: 1, color: 'ink' }] }, outline: true }),
-  rect(-5.8, 0.3, 10.4, 2.2, 1, { fill: 'cinder', glow: { color: 'cinder', blur: 2 } }),
   ellipse(-2.6, -1.4, 1.4, 0.9, flat('rock-light')),
+];
+
+/** The bomb: the casing's sphere with its cinder band, the wick and the spark. */
+export const ICON_BOMB: Shape[] = [
+  ...BOMB_SPHERE,
+  rect(-5.8, 0.3, 10.4, 2.2, 1, { fill: 'cinder', glow: { color: 'cinder', blur: 2 } }),
   line([2.4, -3, 4.2, -5.6], 1.1, 'wood', true),
   glowDot(4.6, -6.2, 1.3, 'cinder-light'),
 ];
@@ -265,7 +263,7 @@ export const ITEM_SPRITES_VECTOR: readonly VectorSprite[] = [
   icon(SPRITES.itemShaft, SHAFT),
   icon(SPRITES.itemArrowhead, ARROWHEAD),
   icon(SPRITES.itemRope, ROPE),
-  icon(SPRITES.itemCasing, CASING),
+  icon(SPRITES.itemCasing, BOMB_SPHERE),
   icon(SPRITES.itemFuse, FUSE),
   icon(SPRITES.itemLeyShard, LEY_SHARD),
   icon(SPRITES.itemWardenCore, WARDEN_CORE),

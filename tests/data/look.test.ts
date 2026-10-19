@@ -7,7 +7,8 @@ import { ITEMS } from '../../src/data/items';
 import { NODES } from '../../src/data/nodes';
 import { describe, expect, it } from 'vitest';
 import { FLOOR_VARIANTS, WALL_SPRITES } from '../../src/data/roomArt';
-import { animFrames, ENEMY_FX, HUD_HEALTH_LAYOUT, MELEE_SWOOSH, PLAYER_HIT_FX } from '../../src/data/assets';
+import { animFrames, ENEMY_FX, MELEE_SWOOSH, PLAYER_HIT_FX } from '../../src/data/assets';
+import { HP_BAR, HUD_HEALTH_LAYOUT, INVENTORY_PANEL } from '../../src/data/hudPanels';
 import { ARMOR_TINTS, GHOST, HARVEST_BAR, MINIMAP, TABLET } from '../../src/data/hudLayout';
 import { ENEMIES } from '../../src/data/enemies';
 import { LOGISTICS_ICONS, SORTER_ANIMS } from '../../src/data/foundryAssets';
@@ -119,6 +120,11 @@ describe('feel and sound references', () => {
       ...Object.values(ARMOR_TINTS),
       MELEE_SWOOSH.color,
       HUD_HEALTH_LAYOUT.fillColor,
+      HUD_HEALTH_LAYOUT.lowColor,
+      HUD_HEALTH_LAYOUT.chunkColor,
+      HP_BAR.edge.color,
+      HP_BAR.glow.color,
+      ...Object.values(INVENTORY_PANEL.colors),
       ENEMY_FX.flashColor,
       ENEMY_FX.telegraphColor,
       ENEMY_FX.castColor,

@@ -36,7 +36,14 @@ export const SPRITES = {
   itemStone: 'item-stone',
   itemFiber: 'item-fiber',
   itemShadow: 'item-shadow',
+  /** The HP bar's carved frame (031: bottom-left, larger), its healing glow, the shield by the armor value and the at-risk mark. */
   hudHealth: 'hud-health',
+  hudHealthGlow: 'hud-health-glow',
+  hudShield: 'hud-shield',
+  hudWarn: 'hud-warn',
+  /** The inventory panel's tablet and title card (031). */
+  inventoryPanel: 'inventory-panel',
+  inventoryTitle: 'inventory-title',
   iconBomb: 'icon-bomb',
   iconLeyBolt: 'icon-ley-bolt',
   itemLeyCrystal: 'item-ley-crystal',
@@ -172,27 +179,6 @@ export function animFrames(anim: AnimDef): string[] {
   return anim.frames === 1 ? [anim.key] : Array.from({ length: anim.frames }, (_, i) => `${anim.key}/${i}`);
 }
 
-/** HUD health bar (the `hud-health` frame) and the material column under it, px from the screen's top-left. */
-export const HUD_HEALTH_LAYOUT = {
-  x: 6,
-  y: 6,
-  /** The well the fill is drawn in, relative to the frame. */
-  fill: { x: 2, y: 2, w: 48, h: 4 },
-  /** Palette id of the fill. */
-  fillColor: 'rust',
-} as const;
-
-export const HUD_MATERIALS_LAYOUT = {
-  x: 6,
-  y: 18,
-  /** Vertical step between rows (one item icon tall). */
-  rowStep: 16,
-  /** Where the count starts, relative to the row's icon. */
-  count: { x: 18, y: 6 },
-  /** How wide a row counts as HUD for clicks (icon and a two-digit count), px (015). */
-  rowWidth: 30,
-} as const;
-
 /** Enemy effects drawn in the world. Colours are palette ids. */
 export const ENEMY_FX = {
   /** Fill colour of a hit flash (the palette's white). */
@@ -236,21 +222,22 @@ export const PLAYER_HIT_FX = {
   flashColor: 'snow',
 } as const;
 
-/** The "+1 [icon]" popup on pickup, and the KO fade. */
-export const PICKUP_POPUP = { rise: 16, durationMs: 700, gap: 2, stack: 10, startHeight: 44 } as const;
-
 /**
  * The foundry tutorial's "+ shaft" (027) when a machine first makes its part: its text before the item's name
- * (in lower case), how far above the machine's top it starts, how far it rises and how long it lasts.
+ * (in lower case), how far above the machine's top it starts, how far it rises and how long it lasts. 031: one that
+ * would overlap a live popup starts `stackGap` px above its top, and the same machine and item within `mergeMs`
+ * merge into one popup with a count (`countPrefix` before it: "+ shaft ×2").
  */
-export const MADE_POPUP = { prefix: '+ ', above: 2, rise: 12, durationMs: 1200 } as const;
+export const MADE_POPUP = { prefix: '+ ', above: 2, rise: 12, durationMs: 1200, stackGap: 2, mergeMs: 1500, countPrefix: ' ×' } as const;
+
+/** The KO fade, each way, ms. */
 export const KO_FADE_MS = 250;
 
 /** A ground item's sprite bottom sits this far below its ground point, so it rests on its shadow, px. */
 export const GROUND_ITEM_LIFT = 3;
 
-/** Textures drawn at runtime (014): the soft glow and the vignette. */
-export const FX_TEXTURES = { glow: 'fx-glow', vignette: 'fx-vignette' } as const;
+/** Textures drawn at runtime (014): the soft glow and the vignette; the low-HP edges (031), white to be tinted. */
+export const FX_TEXTURES = { glow: 'fx-glow', vignette: 'fx-vignette', lowHp: 'fx-low-hp' } as const;
 
 /** Render depths. World sprites sort by the bottom of their footprint (px); these sit around that. */
 export const DEPTHS = {
@@ -280,6 +267,8 @@ export const DEPTHS = {
   motes: 99_000,
   /** A room's dusk tint and vignette, over the world and under the HUD. */
   mood: 500_000,
+  /** The low-HP red screen edges (031), over the mood and under the HUD and menus. */
+  lowHp: 900_000,
   /** The HUD, above the world. */
   hud: 1_000_000,
   /** The crafting menu, above the HUD. */
