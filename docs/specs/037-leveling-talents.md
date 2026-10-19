@@ -161,3 +161,4 @@ None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-question
   - Fleet's move speed can go past the gear move cap
   - fire-rate bonuses round to whole ticks, so +8% is +7% on arrows, +5% on ley bolts and +8% on bombs
 - **Art:** lane colours, the tree art and the new sounds wait on Shaun's approval (docs/review/037).
+- **Blastfletch is hard to trigger with carried ammo alone.** Carried arrows and bombs share one cooldown (40 ticks after a bomb), and a short bomb flight's 20-tick charge often runs out before the next arrow can fire. It works naturally with a two-entrance volley of bombs and arrows. Shaun may want a longer charge.
