@@ -5,7 +5,7 @@ import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSp
 // The talent tree's art (037) in the 016 vector style: the panel's carved node sockets,
 // the keystones' larger rune-stones and the centre's ley rose, the glow and ring that
 // mark taken and available nodes, the lanes' and keystones' icons, the HUD's pip, the
-// level-up ring, and the keystones' effects (charged ground, the ice burst and its
+// level-up ring, and the keystones' effects (Pool, the ice burst and its
 // shards, the tube's heat). Icons are 16x16 round the centre; light from the top left.
 
 const sprite = (key: string, size: readonly [number, number], anchor: readonly [number, number], shapes: readonly Shape[]): VectorSprite => ({ key, size, anchor, frames: [shapes] });
@@ -120,7 +120,7 @@ const LEVEL_RING: Shape[] = [
   ...[[-18, -9], [20, -7], [-6, -13], [10, 11], [-22, 5]].map(([x, y]) => glowDot(x ?? 0, y ?? 0, 0.9, 'snow')),
 ];
 
-// Blastfletch's charged ground: an ember-lit circle with a crackling rim, drawn at the blast's radius.
+// Blastfletch's Pool: an ember-lit circle with a crackling rim, drawn at the blast's radius.
 const BLAST_CHARGE: Shape[] = [
   ellipse(0, 0, 24, 24, { fill: { radial: [0, 0, 24], stops: [{ at: 0, color: { id: 'cinder-light', alpha: 0.06 } }, { at: 0.75, color: { id: 'cinder', alpha: 0.16 } }, { at: 1, color: { id: 'cinder-light', alpha: 0.4 } }] } }),
   { ...ellipse(0, 0, 23, 23, { stroke: { color: 'cinder-light', width: 1, dash: [3, 2.4] } }), glow: { color: 'cinder', blur: 2 } },
@@ -144,7 +144,7 @@ const ICE_BURST: Shape[] = [
   glowDot(0, 0, 2.4, 'snow'),
 ];
 
-// An ice shard in flight: a pale sliver of rime, pointing right.
+// A Cold Shard in flight: a pale sliver of rime, pointing right.
 const ICE_SHARD: Shape[] = [
   { ...line([-6, 0, -1, 0], 1.2, { id: 'foam', alpha: 0.6 }), glow: { color: 'foam', blur: 2 } },
   path('M 3.6 0 L -0.6 -1.5 L -1.8 0 L -0.6 1.5 Z', { fill: 'snow', outline: true, glow: { color: 'water-light', blur: 2 } }),
@@ -172,8 +172,8 @@ export const TALENT_SPRITES_VECTOR: readonly VectorSprite[] = [
   icon(TALENT_SPRITES.overpressure, OVERPRESSURE_ICON),
   sprite(TALENT_SPRITES.pip, [8, 8], [4, 4], PIP),
   sprite(TALENT_SPRITES.levelRing, [60, 34], [30, 17], LEVEL_RING),
-  sprite(TALENT_SPRITES.blastCharge, [52, 52], [26, 26], BLAST_CHARGE),
+  sprite(TALENT_SPRITES.pool, [52, 52], [26, 26], BLAST_CHARGE),
   sprite(TALENT_SPRITES.iceBurst, [34, 34], [17, 17], ICE_BURST),
-  sprite(TALENT_SPRITES.iceShard, [12, 6], [7, 3], ICE_SHARD),
+  sprite(TALENT_SPRITES.coldShard, [12, 6], [7, 3], ICE_SHARD),
   sprite(TALENT_SPRITES.heatShimmer, [18, 24], [9, 20], HEAT),
 ];

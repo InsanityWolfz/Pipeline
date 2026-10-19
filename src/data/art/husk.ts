@@ -41,7 +41,7 @@ const body = (shadeX: number): EnemyPart => ({
 
 /**
  * Where the resin oozes from the lower binding, and its slow drip and glint (drawn over the baked frames by EnemyView).
- * Rig px from the bead; ms. `phase` staggers each Husk's timing by its id, so they never drip in step.
+ * Rig px from the bead; ms. `phase` stuns each Husk's timing by its id, so they never drip in step.
  */
 export const RESIN = {
   enemyId: 'husk',

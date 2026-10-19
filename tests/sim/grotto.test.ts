@@ -11,7 +11,7 @@ import { reachable, tileKey } from '../fixtures/reach';
 import { die, movePlayer, run, runUntil, SEED } from './fight';
 
 // The Frozen Grotto, minimal (029): a hand-placed clearing in the north-west, three
-// rime clusters, a path from the west path's end, and a guard pack that never stays dead.
+// rime outcrops, a path from the west path's end, and a guard pack that never stays dead.
 
 const room = generateOverworld();
 const key = tileKey;
@@ -32,19 +32,19 @@ describe('the Frozen Grotto', () => {
     }
   });
 
-  it('holds three rime clusters at the spec tiles, each placed for the Grotto', () => {
-    const rime = OVERWORLD.nodes.filter((n) => n.nodeId === 'rime-cluster');
+  it('holds three rime outcrops at the spec tiles, each placed for the Grotto', () => {
+    const rime = OVERWORLD.nodes.filter((n) => n.nodeId === 'rime-outcrop');
     expect(rime.map(({ tx, ty }) => ({ tx: tx - REGION_1_X, ty }))).toEqual([
       { tx: 12, ty: 7 },
       { tx: 16, ty: 8 },
       { tx: 14, ty: 11 },
     ]);
-    expect(nodeDef('rime-cluster')).toMatchObject({ name: 'Rime cluster', itemId: 'rime-shard', placement: 'frozen-grotto', uses: 3, yield: 1 });
+    expect(nodeDef('rime-outcrop')).toMatchObject({ name: 'Rime outcrop', itemId: 'rimestone', placement: 'frozen-grotto', uses: 3, yield: 1 });
   });
 
-  it('every rime cluster is reachable on foot from the wake tile', () => {
+  it('every rime outcrop is reachable on foot from the wake tile', () => {
     const seen = reachable(room, OVERWORLD.wake);
-    for (const n of OVERWORLD.nodes.filter((x) => x.nodeId === 'rime-cluster')) {
+    for (const n of OVERWORLD.nodes.filter((x) => x.nodeId === 'rime-outcrop')) {
       const beside = [
         { tx: n.tx, ty: n.ty + 1 },
         { tx: n.tx, ty: n.ty - 1 },
@@ -55,18 +55,18 @@ describe('the Frozen Grotto', () => {
     }
   });
 
-  it('rime clusters drop rime shards', () => {
+  it('rime outcrops drop rimestone', () => {
     const s = createSim(SEED);
     s.enemies = [];
-    const index = s.nodes.findIndex((n) => n.nodeId === 'rime-cluster');
+    const index = s.nodes.findIndex((n) => n.nodeId === 'rime-outcrop');
     const node = s.nodes[index];
-    if (!node) throw new Error('no rime cluster');
+    if (!node) throw new Error('no rime outcrop');
     // Just below the cluster, in harvest reach.
-    movePlayer(s, node.x, node.y + nodeDef('rime-cluster').feetBox.h / 2 + FEET_BOX.h / 2 + 4);
+    movePlayer(s, node.x, node.y + nodeDef('rime-outcrop').feetBox.h / 2 + FEET_BOX.h / 2 + 4);
     run(s, 1, { interact: true });
     runUntil(s, () => s.events.harvests.length > 0, 60);
-    expect(s.events.harvests[0]?.itemId).toBe('rime-shard');
-    expect(s.groundItems.some((g) => g.itemId === 'rime-shard') || (s.inventory['rime-shard'] ?? 0) > 0).toBe(true);
+    expect(s.events.harvests[0]?.itemId).toBe('rimestone');
+    expect(s.groundItems.some((g) => g.itemId === 'rimestone') || (s.inventory['rimestone'] ?? 0) > 0).toBe(true);
   });
 
   it('is held by a hand-placed guard pack in its landmark\'s group (032: frozen-grotto): 3 Husks and a Wisp, back after a KO', () => {

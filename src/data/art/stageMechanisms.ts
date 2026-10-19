@@ -76,8 +76,8 @@ const leyGuide: Mechanism = (b, t) => {
   ];
 };
 
-/** Shatter lens: a faceted lens throws five rays of ley light down onto a bolt, turning as it cuts. */
-const shatterLens: Mechanism = (b, t) => {
+/** Prism lens: a faceted lens throws five rays of ley light down onto a bolt, turning as it cuts. */
+const prismLens: Mechanism = (b, t) => {
   const [cx] = centre(b);
   const ly = b.y + 4.5;
   const glow = swell(t);
@@ -104,5 +104,5 @@ const shatterLens: Mechanism = (b, t) => {
 export const STAGE_MECHANISMS: Readonly<Record<string, Mechanism>> = {
   'frost-rune': frostRune,
   'ley-guide': leyGuide,
-  'shatter-lens': shatterLens,
+  'prism-lens': prismLens,
 };

@@ -33,12 +33,12 @@ const stage = (id: string, name: string, tag: string, material: string, material
 });
 
 export const STAGES: Readonly<Record<string, StageDef>> = {
-  'frost-rune': stage('frost-rune', 'Frost rune', 'frost', 'rime-shard', 1, 'Frosts arrows: 4 arrows and a rime shard.'),
+  'frost-rune': stage('frost-rune', 'Frost rune', 'frost', 'rimestone', 1, 'Frosts arrows: 4 arrows and a rimestone.'),
   'ley-guide': stage('ley-guide', 'Ley guide', 'homing', 'ley-crystal', 1, 'Makes ley bolts home: 4 bolts, 1 ley crystal.'),
-  // Twice the guide's crystal: a star bolt adds five projectiles (pillar 3).
-  'shatter-lens': stage('shatter-lens', 'Shatter lens', 'star', 'ley-crystal', 2, 'Makes ley bolts burst: 4 bolts, 2 ley crystals.'),
+  // Twice the guide's crystal: a Split bolt adds five projectiles (pillar 3).
+  'prism-lens': stage('prism-lens', 'Prism lens', 'split', 'ley-crystal', 2, 'Makes ley bolts burst: 4 bolts, 2 ley crystals.'),
   // 038: 1 ley-iron per 4 bombs (round 2).
-  'shard-die': stage('shard-die', 'Shard die', 'cluster', 'ley-iron', 1, 'Makes bombs burst into bomblets: 4 bombs, 1 ley-iron.'),
+  'cluster-die': stage('cluster-die', 'Cluster die', 'cluster', 'ley-iron', 1, 'Makes bombs burst into bomblets: 4 bombs, 1 ley-iron.'),
 };
 
 export function stageDef(id: string): StageDef {

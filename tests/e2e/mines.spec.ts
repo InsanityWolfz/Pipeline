@@ -4,12 +4,12 @@ import { ui } from './intakePage';
 
 // Landmines and cluster bombs (038), from `?playtest` (99 landmines carried, every
 // machine unlocked). Key 4 picks landmines; one is fired onto the open ground, arms there,
-// and a Husk set on it stays whole until the fuse runs out and the burst kills it. Then,
-// with the shrine claimed, the Shard die is hand-applied at the bench and a cluster bomb
+// and a Husk set on it stays whole until its arm time runs out and the burst kills it. Then,
+// with the shrine claimed, the Cluster die is hand-applied at the bench and a cluster bomb
 // fired at a Husk bursts, and its four bomblets burst round it. The review screenshots
 // are in minesShots.spec.ts.
 
-test('key 4 picks landmines: one arms where it lands, only its fuse sets it off, and its burst kills a Husk on it', async ({ page }) => {
+test('key 4 picks landmines: one arms where it lands, only its arm time sets it off, and its burst kills a Husk on it', async ({ page }) => {
   test.setTimeout(120_000);
   const errors = watchErrors(page);
   await boot(page, '?playtest');
@@ -31,8 +31,8 @@ test('key 4 picks landmines: one arms where it lands, only its fuse sets it off,
     for (let t = 0; t < 120 && s.mines.length === 0; t++) s = g.step(1);
     const mine = s.mines[0];
     if (!mine) throw new Error('no mine armed');
-    // A Husk on the mine with 10 ticks of fuse left: walking onto it sets nothing off.
-    s = g.step(mine.fuseTicks - mine.fuse - 10);
+    // A Husk on the mine with 10 ticks of arm time left: walking onto it sets nothing off.
+    s = g.step(mine.armTicks - mine.elapsed - 10);
     const armedLate = s.mines.length;
     s = g.spawnEnemy('husk', mine.x, mine.y);
     const husk = s.enemies[s.enemies.length - 1];
@@ -47,7 +47,7 @@ test('key 4 picks landmines: one arms where it lands, only its fuse sets it off,
     return { mine, carried, armedLate, whole, burst, alive: s.enemies.some((e) => e.id === husk.id && e.health > 0), health: s.player.health, maxHealth: s.player.maxHealth };
   });
   expect(result.carried).toBe(98);
-  expect(result.mine).toMatchObject({ fuse: expect.any(Number), fuseTicks: 300, damage: 60, radius: 24 });
+  expect(result.mine).toMatchObject({ elapsed: expect.any(Number), armTicks: 300, damage: 60, radius: 24 });
   expect(result.armedLate).toBe(1);
   expect(result.whole).toBe(40);
   expect(result.burst).toMatchObject({ x: result.mine.x, y: result.mine.y, radius: 24 });
@@ -56,7 +56,7 @@ test('key 4 picks landmines: one arms where it lands, only its fuse sets it off,
   expect(errors).toEqual([]);
 });
 
-test('the Shard die hand-applied at the bench makes cluster bombs, whose bomblets burst round the bomb', async ({ page }) => {
+test('the Cluster die hand-applied at the bench makes cluster bombs, whose bomblets burst round the bomb', async ({ page }) => {
   test.setTimeout(180_000);
   const errors = watchErrors(page);
   await boot(page, '?playtest');
@@ -67,11 +67,11 @@ test('the Shard die hand-applied at the bench makes cluster bombs, whose bomblet
     g.claim('shrine');
     h.toFoundry();
     h.walkTo(2.3 * 32, 12.5 * 32);
-    const s = g.step(1, { applyStage: 'shard-die' });
+    const s = g.step(1, { applyStage: 'cluster-die' });
     return { cluster: s.inventory['bomb+cluster'] ?? 0, unlocked: s.stagesUnlocked };
   });
   expect(made.cluster).toBe(4);
-  expect(made.unlocked).toContain('shard-die');
+  expect(made.unlocked).toContain('cluster-die');
 
   const fight = await page.evaluate(() => {
     const g = window.__GAME__;

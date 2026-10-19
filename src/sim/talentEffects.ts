@@ -15,7 +15,7 @@ export interface TalentTotals {
   blastRadius: number;
   lobTime: number;
   homingTurn: number;
-  starShards: number;
+  splitShards: number;
   firingWalk: number;
   maxHealth: number;
   regen: number;
@@ -27,7 +27,7 @@ const perAmmo = (): Record<AmmoScope, number> => ({ arrow: 0, bomb: 0, 'ley-bolt
 
 /** Sums every taken node's effect (unknown ids are skipped). */
 export function talentTotals(talents: readonly string[]): TalentTotals {
-  const t: TalentTotals = { damage: perAmmo(), fireRate: perAmmo(), freezeHits: 0, freezeTicks: 0, blastRadius: 0, lobTime: 0, homingTurn: 0, starShards: 0, firingWalk: 0, maxHealth: 0, regen: 0, armor: 0, moveSpeed: 0 };
+  const t: TalentTotals = { damage: perAmmo(), fireRate: perAmmo(), freezeHits: 0, freezeTicks: 0, blastRadius: 0, lobTime: 0, homingTurn: 0, splitShards: 0, firingWalk: 0, maxHealth: 0, regen: 0, armor: 0, moveSpeed: 0 };
   for (const id of talents) {
     const e = TALENTS[id]?.effect;
     if (!e) continue;
@@ -51,8 +51,8 @@ export function talentTotals(talents: readonly string[]): TalentTotals {
       case 'homing-turn':
         t.homingTurn += e.value;
         break;
-      case 'star-shards':
-        t.starShards += e.value;
+      case 'split-shards':
+        t.splitShards += e.value;
         break;
       case 'firing-walk':
         t.firingWalk += e.value;

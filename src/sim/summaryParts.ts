@@ -14,7 +14,7 @@ export { round };
 
 export interface ArrowSummary {
   id: number;
-  /** The round's ammo id, tags included (`arrow+frost`, 029), or `star-shard`. */
+  /** The round's ammo id, tags included (`arrow+frost`, 029), or `shard`. */
   ammoId: string;
   room: string;
   x: number;
@@ -22,12 +22,12 @@ export interface ArrowSummary {
   dx: number;
   dy: number;
   travelled: number;
-  /** Enemies already hit (a piercing arrow hits each once; a star shard starts with the one its round struck). */
+  /** Enemies already hit (a piercing arrow hits each once; a Shard starts with the one its round struck). */
   hitIds: number[];
   /** A homing round's target (029), or null. */
   targetId: number | null;
   /** It carries a charge from a bomb's blast (037: Blastfletch). */
-  charged: boolean;
+  pooled: boolean;
 }
 
 export function arrowSummary(a: ArrowState): ArrowSummary {
@@ -42,7 +42,7 @@ export function arrowSummary(a: ArrowState): ArrowSummary {
     travelled: round(a.travelled),
     hitIds: [...a.hitIds],
     targetId: a.targetId,
-    charged: a.charged,
+    pooled: a.pooled,
   };
 }
 
@@ -68,8 +68,8 @@ export interface EnemySummary extends KindSummary {
   /** Chill stacks from cold hits (029), and ticks left frozen. */
   chill: number;
   frozen: number;
-  /** Ticks left staggered by a roll through it (036: Rollbreaker Greaves). */
-  staggered: number;
+  /** Ticks left stunned by a roll through it (036: Rollbreaker Greaves). */
+  stunned: number;
   /** A champion's name (032), or null. */
   champion: { name: string } | null;
 }
@@ -93,7 +93,7 @@ export function enemySummary(state: SimState, e: EnemyState): EnemySummary {
     flash: e.flash,
     chill: e.chill,
     frozen: e.frozen,
-    staggered: e.staggered,
+    stunned: e.stunned,
     ...kindSummary(state, e),
   };
 }

@@ -44,9 +44,9 @@ export const SOUNDS = {
   menuHover: 'menu-hover',
   gateOpen: 'gate-open',
   roll: 'roll',
-  /** 029: an enemy freezing solid, and a star round bursting into shards. */
+  /** 029: an enemy freezing solid, and a Split round bursting into shards. */
   freeze: 'freeze',
-  starBurst: 'star-burst',
+  split: 'split',
   /** 030: healing starts in a safe spot. */
   healStart: 'heal-start',
   /** 033: a lost part restored, a schematic landing, a banked schematic's diagram appearing. */
@@ -226,7 +226,7 @@ export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
     ],
   },
   // Ley light shattering: a bright crack and five quick chimes spreading out.
-  'star-burst': {
+  split: {
     layers: [
       { wave: 'noise', from: 7000, to: 1500, dur: 0.1, attack: 0.001, volume: 0.3 },
       ...[0, 1, 2, 3, 4].map((i): SoundLayer => ({ wave: 'sine', from: 1500 + i * 260, to: 1100 + i * 200, delay: i * 0.025, dur: 0.16, attack: 0.003, volume: 0.1 })),

@@ -7,21 +7,21 @@ import { ofBase, playerStats } from './stats';
 import { rotate } from './volley';
 
 // Landmines and bomblets (038). A landmine flies as a bomb does (bombs.ts) but lands
-// armed: it lies where it landed, burning its fuse, and bursts `fuseTicks` later on every
+// armed: it lies where it landed, its arm time running, and bursts `armTicks` later on every
 // enemy within its radius. Only the timer sets it off. A cluster bomb's burst scatters
 // bomblets round its point, which burst together `CLUSTER.delayTicks` later. Both are
 // lobbed bursts (`blastArea`): no shield blocks them and they never hurt the player.
 // A room change (a door or travel) or a KO clears them, and mines still in flight.
 
-/** A landmine lying armed: where, its fuse burnt so far and its length, and its burst, fixed at the throw. */
+/** A landmine lying armed: where, its arm time run so far and its length, and its burst, fixed at the throw. */
 export interface MineState {
   id: number;
   ammoId: string;
   roomId: string;
   x: number;
   y: number;
-  fuse: number;
-  fuseTicks: number;
+  elapsed: number;
+  armTicks: number;
   damage: number;
   radius: number;
 }
@@ -58,10 +58,10 @@ export function clearMines(state: Pick<SimState, 'mines'>): void {
   state.mines.bomblets = [];
 }
 
-/** A landmine lands (from bombs.ts): it arms where it lies, its fuse at 0. */
+/** A landmine lands (from bombs.ts): it arms where it lies, its arm time at 0. */
 export function armMine(state: SimState, b: BombState, ammo: MineAmmo): void {
   const id = state.mines.nextId++;
-  state.mines.armed.push({ id, ammoId: b.ammoId, roomId: b.roomId, x: b.x, y: b.y, fuse: 0, fuseTicks: ammo.fuseTicks, damage: b.damage, radius: b.radius });
+  state.mines.armed.push({ id, ammoId: b.ammoId, roomId: b.roomId, x: b.x, y: b.y, elapsed: 0, armTicks: ammo.armTicks, damage: b.damage, radius: b.radius });
   state.events.mineArms.push({ id, x: b.x, y: b.y });
 }
 
@@ -113,8 +113,8 @@ export function stepMines(state: SimState): void {
     return false;
   });
   state.mines.armed = state.mines.armed.filter((m) => {
-    m.fuse += 1;
-    if (m.fuse < m.fuseTicks) return true;
+    m.elapsed += 1;
+    if (m.elapsed < m.armTicks) return true;
     blastArea(state, m.roomId, m.x, m.y, m.radius, m.damage, lobbedAmmo(m.ammoId).damageType);
     state.events.mineBursts.push({ x: m.x, y: m.y, radius: m.radius });
     return false;

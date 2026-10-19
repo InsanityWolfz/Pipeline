@@ -12,7 +12,7 @@ import { WARDSTONE } from './relics';
 // The `?playtest` start (spec 007): plenty of everything and every machine
 // unlocked, so playtests skip the gathering; since 012 it also holds the tube,
 // already attuned, with every tutorial gate open. Since 029 every stage is unlocked
-// too (its recipe counts as hand-made), and rime shards come with the other raws;
+// too (its recipe counts as hand-made), and rimestone come with the other raws;
 // tagged rounds aren't carried, so playtest fire stays plain until the bench or a stage makes them.
 // Since 036 it carries identified gear too: a Rare piece per slot and a relic.
 // Counts are tuning values.

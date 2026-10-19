@@ -46,7 +46,7 @@ describe('the talent tree', () => {
 
   it('touches no pierce, foundry or active skill (its regen’s whole healing steps are checked with 030’s rates)', () => {
     const kinds = new Set(TALENT_LIST.map((t) => t.effect.kind));
-    for (const k of kinds) expect(['none', 'damage', 'fire-rate', 'freeze', 'blast-radius', 'lob-time', 'homing-turn', 'star-shards', 'firing-walk', 'max-health', 'regen', 'armor', 'move-speed', 'keystone']).toContain(k);
+    for (const k of kinds) expect(['none', 'damage', 'fire-rate', 'freeze', 'blast-radius', 'lob-time', 'homing-turn', 'split-shards', 'firing-walk', 'max-health', 'regen', 'armor', 'move-speed', 'keystone']).toContain(k);
   });
 
   it('places the lanes: Arrows up, Ley up-right, Tube down-right, Survival down-left, Bombs up-left; keystones between their lanes', () => {
@@ -75,7 +75,7 @@ describe('the talent tree', () => {
   });
 
   it('keeps the keystones’ tuning as the spec says', () => {
-    expect(BLASTFLETCH).toEqual({ chargeTicks: 20, damageScale: 1.5, burstRadius: 24, damageType: 'physical' });
+    expect(BLASTFLETCH).toEqual({ poolTicks: 20, damageScale: 1.5, burstRadius: 24, damageType: 'physical' });
     expect(SHATTERPOINT).toMatchObject({ damageScale: 2, shards: 4, shardScale: 0.5, damageType: 'physical' });
     expect(OVERPRESSURE).toEqual({ rampTicks: 120, maxBonus: 0.25 });
   });

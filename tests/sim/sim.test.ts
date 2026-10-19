@@ -81,7 +81,7 @@ function scriptedSession(seed: number, ticks: number) {
   sim.inventory = { 'husk-resin': 2, stone: 2, 'ley-crystal': 2, wood: 1, fiber: 1 };
   const ammo = ['arrow', 'bomb', 'ley-bolt'];
   for (let t = 0; t < ticks; t++) {
-    if (t === 100) for (const r of ['shaft', 'arrowhead', 'rope', 'arrow', 'casing', 'fuse', 'ley-shard', 'bomb', 'ley-bolt']) craft(sim, r);
+    if (t === 100) for (const r of ['shaft', 'arrowhead', 'rope', 'arrow', 'casing', 'fuse', 'ley-dust', 'bomb', 'ley-bolt']) craft(sim, r);
     const p = sim.player;
     const node = sim.nodes[8];
     const pack = sim.enemies.find((e) => e.roomId === sim.roomId);
@@ -108,7 +108,7 @@ function scriptedSession(seed: number, ticks: number) {
  */
 function scriptedFoundry(seed: number, ticks: number) {
   const sim = createSim(seed);
-  sim.crafted = ['ley-bolt', 'ley-shard'];
+  sim.crafted = ['ley-bolt', 'ley-dust'];
   sim.link.attuned = true;
   sim.inventory = { 'ley-crystal': 3 };
   const door = tileCentre(OVERWORLD.entrance.arrive);
@@ -220,14 +220,14 @@ describe('sim state', () => {
     expect(summary.groundItems).toEqual([]);
     // Every event list, empty, and no KO: a key missing from createEvents fails here.
     const lists = ['hits', 'deaths', 'pickups', 'harvests', 'crafts', 'craftFails', 'bursts', 'selects', 'roomChanges'] as const;
-    const later = ['places', 'placeFails', 'pickUps', 'deposits', 'crateTakes', 'withdraws', 'attunes', 'refills', 'made', 'shots', 'entranceFires', 'melees', 'banks', 'freezes', 'thaws', 'starBursts', 'heals'] as const;
+    const later = ['places', 'placeFails', 'pickUps', 'deposits', 'crateTakes', 'withdraws', 'attunes', 'refills', 'made', 'shots', 'entranceFires', 'melees', 'banks', 'freezes', 'thaws', 'splits', 'heals'] as const;
     const site = ['sealed', 'claims', 'discoveries', 'cacheOpens', 'stashDeposits', 'stashTakes', 'supplies', 'portDeliveries', 'travels', 'identifies', 'equips', 'intakeOpens', 'restores', 'schematicDrops', 'schematicReveals', 'gates', 'objectives'] as const;
     // 034: the shield, the Bulwark and its altar; 035: the Charger's charge, the Burrower's eruption, the Sniper's bolt.
     const hollows = ['blocked', 'bossDefeats', 'summons', 'lobs', 'enemyBursts', 'pounds', 'charges', 'eruptions', 'snipes'] as const;
     // 036: the relics' rolls through, ward blocks and ember saves.
-    const relics = ['staggers', 'wardBlocks', 'emberSaves'] as const;
+    const relics = ['stuns', 'wardBlocks', 'emberSaves'] as const;
     // 037: XP, levels, talents, respecs, and the keystones' charges, charged bursts and shatters.
-    const talents = ['xp', 'levelUps', 'talents', 'respecs', 'blastCharges', 'chargedBursts', 'shatters'] as const;
+    const talents = ['xp', 'levelUps', 'talents', 'respecs', 'pools', 'poolBursts', 'shatters'] as const;
     // 038: landmines arming and bursting, and a cluster bomb's bomblets.
     const mines = ['mineArms', 'mineBursts', 'bombletBursts'] as const;
     expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, 'lost', 'ko', 'tubeTaken'].sort());

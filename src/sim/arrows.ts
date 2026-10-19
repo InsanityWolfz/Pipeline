@@ -1,16 +1,16 @@
 import { straightAmmo, type DamageType } from '../data/ammo';
 import { TICK_RATE, TILE_SIZE } from '../data/config';
 import type { Room } from '../data/rooms';
-import { hasBehaviour, STAR } from '../data/tags';
+import { hasBehaviour, SPLIT } from '../data/tags';
 import { blocksShot } from './collision';
 
-// Straight shots in flight: arrows, ley bolts and star shards (029). Position is the
+// Straight shots in flight: arrows, ley bolts and Shards (029). Position is the
 // ground (shadow) point, which is what collides; render draws the shot raised above it.
-// Each carries its own flight numbers, so a shard flies by the star's numbers, not an ammo's.
+// Each carries its own flight numbers, so a shard flies by the Split's numbers, not an ammo's.
 
 export interface ArrowState {
   id: number;
-  /** The round's ammo id, tags included (029), or the star shard's projectile id. */
+  /** The round's ammo id, tags included (029), or the Shard's projectile id. */
   ammoId: string;
   /** The room it was fired in; it never leaves it. */
   roomId: string;
@@ -28,18 +28,18 @@ export interface ArrowState {
   damageType: DamageType;
   /** Passes through every enemy in its path (029: arrows, without limit). */
   pierce: boolean;
-  /** Bursts into star shards where it hits an enemy (029). */
+  /** Bursts into Shards where it hits an enemy (029). */
   split: boolean;
   /** The enemy a homing round steers toward (029), or null to fly straight. */
   targetId: number | null;
   /** Enemies it has hit (or, for a shard, may not hit), so it hits each only once. */
   hitIds: number[];
-  /** Carries a charge from a bomb's blast (037: Blastfletch) to its next hit, and the charged areas it has drawn from. */
-  charged: boolean;
-  chargedBy: number[];
+  /** Carries a charge from a bomb's blast (037: Blastfletch) to its next hit, and the Pools it has drawn from. */
+  pooled: boolean;
+  pooledBy: number[];
 }
 
-/** A shard's flight and hit (029's star shards, 037's ice shards): what it's called, how it flies and what it deals. */
+/** A shard's flight and hit (029's Shards, 037's Shards): what it's called, how it flies and what it deals. */
 export interface ShardDef {
   projectile: string;
   speed: number;
@@ -48,7 +48,7 @@ export interface ShardDef {
   damageType: DamageType;
 }
 
-const STAR_SHARD: ShardDef = { projectile: STAR.projectile, speed: STAR.speed, range: STAR.range, damage: STAR.damage, damageType: 'physical' };
+const SPLIT_SHARD: ShardDef = { projectile: SPLIT.projectile, speed: SPLIT.speed, range: SPLIT.range, damage: SPLIT.damage, damageType: 'physical' };
 
 /** A round fired from the tube, with its ammo's numbers. `targetId` is a homing round's lock. */
 export function createArrow(
@@ -62,13 +62,13 @@ export function createArrow(
   targetId: number | null = null,
 ): ArrowState {
   const { damage, damageType, speed, range, pierce } = straightAmmo(ammoId);
-  return { id, ammoId, roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, pierce, split: hasBehaviour(ammoId, 'star'), targetId, hitIds: [], charged: false, chargedBy: [] };
+  return { id, ammoId, roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, pierce, split: hasBehaviour(ammoId, 'split'), targetId, hitIds: [], pooled: false, pooledBy: [] };
 }
 
-/** A shard (029: a star's by default; 037: Shatterpoint's ice): its def's numbers, never hitting the enemy that was struck, never piercing or splitting. */
-export function createShard(id: number, roomId: string, x: number, y: number, dx: number, dy: number, struckId: number, def: ShardDef = STAR_SHARD): ArrowState {
+/** A shard (029: a Split's by default; 037: Shatterpoint's): its def's numbers, never hitting the enemy that was struck, never piercing or splitting. */
+export function createShard(id: number, roomId: string, x: number, y: number, dx: number, dy: number, struckId: number, def: ShardDef = SPLIT_SHARD): ArrowState {
   const { projectile, speed, range, damage, damageType } = def;
-  return { id, ammoId: projectile, roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, pierce: false, split: false, targetId: null, hitIds: [struckId], charged: false, chargedBy: [] };
+  return { id, ammoId: projectile, roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, pierce: false, split: false, targetId: null, hitIds: [struckId], pooled: false, pooledBy: [] };
 }
 
 /** Tries an arrow against targets at its current point; true if it hit one and is spent. */

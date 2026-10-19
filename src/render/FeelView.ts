@@ -90,13 +90,13 @@ export class FeelView {
       const key = FIRE_SOUNDS[AMMO[shot.ammoId]?.base ?? shot.ammoId];
       if (key) s.play(key);
     }
-    // Cold and the star split (029): a freeze rings and frosts, a thaw throws off ice, a star burst chimes.
+    // Cold and the Split (029): a freeze rings and frosts, a thaw throws off ice, a Split chimes.
     for (const f of ev.freezes) {
       s.play(SOUNDS.freeze);
       j.burst('hitCold', f.x, f.y);
     }
     for (const t of ev.thaws) j.burst('thawShards', t.x, t.y);
-    if (ev.starBursts.length > 0) s.play(SOUNDS.starBurst, SOUND_LEVELS.cue);
+    if (ev.splits.length > 0) s.play(SOUNDS.split, SOUND_LEVELS.cue);
     // The relics (036): a relic identified at the bench, the ward breaking on a block, Last Ember's save.
     if (ev.identifies.some((piece) => piece.relic !== null)) s.play(SOUNDS.relicIdentify, SOUND_LEVELS.cue);
     const relicSound = (rule: 'ward' | 'ember') => wornRelic(sim, rule)?.sound;

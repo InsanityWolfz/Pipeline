@@ -3,7 +3,7 @@ import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSp
 
 // 038's art, in the 020 style: the landmine (a flat iron disc with a brass rim and a cyan
 // ley pip) in flight and lying armed, its icon, the iron plate, a cluster bomb's bomblet,
-// and the flashes of a mine's and a bomblet's burst. The fuse ring is drawn live (MineView).
+// and the flashes of a mine's and a bomblet's burst. The arm ring is drawn live (MineView).
 
 const sprite = (key: string, size: readonly [number, number], anchor: readonly [number, number], shapes: readonly Shape[]): VectorSprite => ({ key, size, anchor, frames: [shapes] });
 const icon = (key: string, shapes: readonly Shape[]): VectorSprite => sprite(key, [16, 16], [8, 8], shapes);

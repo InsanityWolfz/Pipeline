@@ -188,7 +188,7 @@ export class GameScene extends Scene {
       ...(this.hud?.panels ?? NO_HUD_PANELS),
       craftMenu: this.menu?.state ?? null,
       buildBar: this.buildView?.state ?? null,
-      tagged: { benchStages: this.siteMenus?.stagePanel ?? null, starFlashes: this.effects?.starFlashes ?? 0, trails: this.arrowView?.trails ?? { count: 0, longest: 0 } },
+      tagged: { benchStages: this.siteMenus?.stagePanel ?? null, splitFlashes: this.effects?.splitFlashes ?? 0, trails: this.arrowView?.trails ?? { count: 0, longest: 0 } },
       ...(this.enemyView?.ui ?? NO_ENEMY_UI),
     };
   }

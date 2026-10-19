@@ -2,7 +2,7 @@ import { GEAR_SLOTS, MIN_DAMAGE_SHARE, MOVE_BONUS_CAP, ROLL_COOLDOWN_MIN, SLOT_B
 import { relicDef, type RelicDef, type RelicRule } from '../data/relics';
 import { FIRING_WALK_MULTIPLIER, HEALING, MAX_HEALTH, ROLL_COOLDOWN_TICKS, ROLL_DISTANCE, type HealingTuning } from '../data/player';
 import { ammoDef, lobAmmo } from '../data/ammo';
-import { CLUSTER, COLD, HOMING, STAR } from '../data/tags';
+import { CLUSTER, COLD, HOMING, SPLIT } from '../data/tags';
 import type { AmmoScope } from '../data/talents';
 import type { SimState } from './state';
 import { talentTotals, type TalentTotals } from './talentEffects';
@@ -31,8 +31,8 @@ export interface AmmoStats {
   lobTime: number;
   /** A homing round's turn cap, degrees a tick. */
   homingTurn: number;
-  /** Shards a star round bursts into. */
-  starShards: number;
+  /** Shards a Split round bursts into. */
+  splitShards: number;
 }
 
 export interface PlayerStats {
@@ -104,7 +104,7 @@ function ammoStats(t: TalentTotals): AmmoStats {
     bombletRadius: Math.round(CLUSTER.radius * (1 + t.blastRadius)),
     lobTime: clean(1 - t.lobTime),
     homingTurn: clean(HOMING.turnDegrees * (1 + t.homingTurn)),
-    starShards: STAR.shards + t.starShards,
+    splitShards: SPLIT.shards + t.splitShards,
   };
 }
 

@@ -189,14 +189,14 @@ describe('hoppers', () => {
     const s = foundry();
     const h = put<HopperState>(s, 'hopper', 5, 5, 'up');
     standBeside(s, 5, 5);
-    h.item = 'ley-shard';
+    h.item = 'ley-dust';
     h.count = 2;
     h.timer = 7;
-    s.inventory = { 'ley-shard': 1 };
+    s.inventory = { 'ley-dust': 1 };
     run(s, 1, { withdraw: { id: h.id, amount: 'all' } });
     expect(h).toMatchObject({ item: null, count: 0, timer: 0 });
-    expect(s.inventory['ley-shard']).toBe(3);
-    expect(s.events.withdraws).toEqual([{ id: h.id, itemId: 'ley-shard', count: 2 }]);
+    expect(s.inventory['ley-dust']).toBe(3);
+    expect(s.events.withdraws).toEqual([{ id: h.id, itemId: 'ley-dust', count: 2 }]);
   });
 
   it('only withdraw in reach', () => {

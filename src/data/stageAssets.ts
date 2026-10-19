@@ -1,16 +1,16 @@
 import { ROUNDS } from './tags';
 
-// Asset keys for 029's art: the tagged rounds' icons, the rime shard, the star
-// shard projectile, the ice over a frozen enemy and the effects. Render draws by
+// Asset keys for 029's art: the tagged rounds' icons, the rimestone, the Shard
+// projectile, the ice over a frozen enemy and the effects. Render draws by
 // these keys; the shapes are in src/data/art/stages.ts.
 
 export const STAGE_SPRITES = {
-  itemRimeShard: 'item-rime-shard',
-  /** A star round's shard in flight (029), pointing right, and its shadow. */
-  starShard: 'star-shard',
-  starShardShadow: 'star-shard-shadow',
-  /** The flash where a star round bursts. */
-  starBurst: 'star-burst',
+  itemRimestone: 'item-rimestone',
+  /** A Shard in flight (029), pointing right, and its shadow. */
+  shard: 'shard',
+  shardShadow: 'shard-shadow',
+  /** The flash where a Split round bursts. */
+  splitFlash: 'split-flash',
   /** Ice round a frozen enemy, whole and then cracking in its last ticks; bigger for a boss. */
   iceCase: 'ice-case',
   iceCaseCracked: 'ice-case-cracked',
@@ -43,5 +43,5 @@ export const ROUND_LOOKS: Readonly<Record<string, { tint?: string; trail?: { col
   homing: { trail: { color: 'cyan', core: 'cyan-glow', points: 20, width: 4, alpha: 0.9 } },
 };
 
-/** The star burst's flash (029): grows from `from` to `to` scale and fades over `ms`, at shot height. */
-export const STAR_FLASH = { ms: 280, from: 1, to: 2.2 } as const;
+/** The Split's flash (029): grows from `from` to `to` scale and fades over `ms`, at shot height. */
+export const SPLIT_FLASH = { ms: 280, from: 1, to: 2.2 } as const;

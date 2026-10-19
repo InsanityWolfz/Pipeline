@@ -76,7 +76,7 @@ test('the foundry steps walk the player through an arrow line into the intake', 
     const p = g.getState().player;
     for (const id of ['wood', 'wood', 'stone', 'stone', 'stone', 'fiber', 'fiber', 'husk-resin', 'ley-crystal']) g.drop(id, p.x, p.y);
     h.collect();
-    for (const r of ['shaft', 'arrowhead', 'rope', 'arrow', 'casing', 'fuse', 'ley-shard', 'bomb', 'ley-bolt']) g.craft(r);
+    for (const r of ['shaft', 'arrowhead', 'rope', 'arrow', 'casing', 'fuse', 'ley-dust', 'bomb', 'ley-bolt']) g.craft(r);
     h.toFoundry();
   });
   let s = await step(page, 1);

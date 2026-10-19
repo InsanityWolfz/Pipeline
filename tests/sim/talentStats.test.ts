@@ -3,7 +3,7 @@ import { ammoDef, lobAmmo, straightAmmo } from '../../src/data/ammo';
 import { TICK_RATE } from '../../src/data/config';
 import { FIRING_WALK_MULTIPLIER, HEALING, MAX_HEALTH } from '../../src/data/player';
 import { OVERWORLD } from '../../src/data/overworld';
-import { CLUSTER, COLD, HOMING, STAR } from '../../src/data/tags';
+import { CLUSTER, COLD, HOMING, SPLIT } from '../../src/data/tags';
 import { MUZZLE_OFFSET } from '../../src/data/tube';
 import { TALENT_START } from '../../src/data/talents';
 import { chillEnemy } from '../../src/sim/cold';
@@ -16,7 +16,7 @@ import { arena, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } 
 
 // Each minor talent (037) reaches playerStats, the one place stats are computed (036), or
 // the 029 value it changes: damage and fire rate per ammo, freeze hits and length, blast
-// radius, lob time, homing turn, star shards, the firing walk, and the survival stats.
+// radius, lob time, homing turn, Shards, the firing walk, and the survival stats.
 
 /** A sim with these talents taken (the start included), as if their points were spent. */
 const taking = (s: SimState, ...ids: string[]): SimState => {
@@ -50,7 +50,7 @@ describe('playerStats with no talents', () => {
       bombletRadius: CLUSTER.radius,
       lobTime: 1,
       homingTurn: HOMING.turnDegrees,
-      starShards: STAR.shards,
+      splitShards: SPLIT.shards,
     });
   });
 });
@@ -143,7 +143,7 @@ describe('the ammo behaviours (029)', () => {
     expect(near.health).toBeLessThan(HUSK.maxHealth);
   });
 
-  it('Short Fuse: a bomb lands a quarter sooner', () => {
+  it('Swift Arc: a bomb lands a quarter sooner', () => {
     const flight = (s: SimState) => {
       s.inventory = { bomb: 2 };
       run(s, 1, { selectAmmo: 'bomb' });
@@ -169,14 +169,14 @@ describe('the ammo behaviours (029)', () => {
     expect(((Math.atan2(bolt.dy, bolt.dx) - before) * 180) / Math.PI).toBeCloseTo(HOMING.turnDegrees * 1.3, 6);
   });
 
-  it('Splinter: a star bolt bursts into 7 shards', () => {
+  it('Splinter: a Split bolt bursts into 7 shards', () => {
     const s = taking(arena(), 'l3');
-    s.inventory = { 'ley-bolt+star': 5 };
+    s.inventory = { 'ley-bolt+split': 5 };
     placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     run(s, 1, { selectAmmo: 'ley-bolt' });
     run(s, 1, fireAt(FAR.x, FAR.y));
-    runUntil(s, () => s.events.starBursts.length > 0, 60);
-    expect(s.arrows.filter((a) => a.ammoId === STAR.projectile)).toHaveLength(7);
+    runUntil(s, () => s.events.splits.length > 0, 60);
+    expect(s.arrows.filter((a) => a.ammoId === SPLIT.projectile)).toHaveLength(7);
   });
 
   it('Steady Grip: the walk while firing is ×0.8, not ×0.7', () => {

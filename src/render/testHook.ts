@@ -143,10 +143,10 @@ export interface UiState {
   /** The build bar as drawn (026): the unlocked pieces' cells, the shown groups' labels and the dividers. */
   buildBar: BuildBarState | null;
   /**
-   * 029: the bench's Stages panel as drawn, star burst flashes still showing, and the tagged rounds' trails in flight
+   * 029: the bench's Stages panel as drawn, Split flashes still showing, and the tagged rounds' trails in flight
    * (how many, and the most points one runs along).
    */
-  tagged: { benchStages: StagePanelState | null; starFlashes: number; trails: { count: number; longest: number } };
+  tagged: { benchStages: StagePanelState | null; splitFlashes: number; trails: { count: number; longest: number } };
   /** 030: the Ley Springs drawn, healing motes in the air, the pylon's thread, the foundry's shimmer, and the spring glowing under the player. */
   healing: HealingShown;
   /** 031: the inventory panel (open, and each group's rows: carried count, at risk, home in the stash). */
@@ -183,9 +183,9 @@ export interface UiState {
   relics: RelicsShown;
   /** 037: the tree panel (T): open, its header, each node's state and spot, the hover, the reset button while it shows, glowing links. The XP row is `health.xp`. */
   talents: HudPanelsState['talents'];
-  /** 037: the level-up line and rings, Shatterpoint's ice bursts, Blastfletch's charged ground and Overpressure's heat, as drawn. */
+  /** 037: the level-up line and rings, Shatterpoint's ice bursts, Blastfletch's Pool and Overpressure's heat, as drawn. */
   talentFx: TalentFxShown;
-  /** 038: armed mines with their fuse rings, bomblets in the air, and mine and bomblet flashes still showing. */
+  /** 038: armed mines with their arm rings, bomblets in the air, and mine and bomblet flashes still showing. */
   mines: MinesShown;
 }
 

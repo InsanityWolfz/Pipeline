@@ -1,11 +1,11 @@
 import { enemyDef } from '../data/enemies';
-import { STAR } from '../data/tags';
+import { SPLIT } from '../data/tags';
 import { createShard, type ArrowState } from './arrows';
 import { aggro, damageEnemy, inHurtbox, targetable, type EnemyState, type HitStyle } from './enemies';
 import { recordBlock, shieldBlocks } from './shield';
 import { onBossDeath } from './altar';
 import { killXp } from './leveling';
-import { afterKeystoneHit, keystoneHit, takeCharge } from './keystones';
+import { afterKeystoneHit, keystoneHit, takePool } from './keystones';
 import { spawnDrops } from './drops';
 import type { SimState } from './state';
 import { rotate } from './volley';
@@ -17,24 +17,24 @@ import { ofBase, playerStats } from './stats';
 const arrowHit = (arrow: ArrowState): HitStyle => ({ knock: true, flash: true, damageType: arrow.damageType });
 
 /**
- * A star round's burst (029): the stats' shards (STAR.shards, 037: Splinter's more) from the hit point, 360 / shards
- * degrees apart, the first along its flight, none able to hit the enemy it struck, each for STAR.damage times the ley
+ * A Split (029): the stats' shards (SPLIT.shards, 037: Splinter's more) from the hit point, 360 / shards
+ * degrees apart, the first along its flight, none able to hit the enemy it struck, each for SPLIT.damage times the ley
  * bolt's damage bonus. They join the flight after this tick's (`spawned`).
  */
 function burstStar(state: SimState, arrow: ArrowState, struck: EnemyState, spawned: ArrowState[]): void {
   const stats = playerStats(state).ammo;
-  const count = stats.starShards;
+  const count = stats.splitShards;
   for (let k = 0; k < count; k++) {
     const [dx, dy] = rotate(arrow.dx, arrow.dy, (k * 360) / count);
     const shard = createShard(state.nextArrowId++, arrow.roomId, arrow.x, arrow.y, dx, dy, struck.id);
-    shard.damage = STAR.damage * ofBase(stats.damage, arrow.ammoId);
+    shard.damage = SPLIT.damage * ofBase(stats.damage, arrow.ammoId);
     spawned.push(shard);
   }
-  state.events.starBursts.push({ x: arrow.x, y: arrow.y });
+  state.events.splits.push({ x: arrow.x, y: arrow.y });
 }
 
 /**
- * Damages an enemy with an arrow, bursting a star round; returns false if its shield's front took it instead (034):
+ * Damages an enemy with an arrow, bursting a Split round; returns false if its shield's front took it instead (034):
  * no damage and no burst, the arrow stops there even piercing, and the block is recorded (a hit still wakes it).
  */
 function strike(state: SimState, arrow: ArrowState, e: EnemyState, spawned: ArrowState[]): boolean {
@@ -44,7 +44,7 @@ function strike(state: SimState, arrow: ArrowState, e: EnemyState, spawned: Arro
     if (e.mode === 'idle' || e.mode === 'return') aggro(e);
     return false;
   }
-  // The keystones (037): a charged arrow hits harder and bursts; a ley bolt shatters a frozen enemy.
+  // The keystones (037): a pooled arrow hits harder and bursts; a ley bolt shatters a frozen enemy.
   const hit = keystoneHit(state, arrow, e);
   damageEnemy(state, e, arrow.damage * hit.scale, arrow.dx, arrow.dy, arrowHit(arrow));
   if (arrow.split) burstStar(state, arrow, e, spawned);
@@ -56,12 +56,12 @@ function strike(state: SimState, arrow: ArrowState, e: EnemyState, spawned: Arro
  * An arrow-hit test for stepArrows: damages the live enemy under the arrow that it
  * reached first, the one furthest back along its flight, when hurtboxes overlap.
  * A piercing shot instead hits every enemy under it that it hasn't hit yet and flies on.
- * Star shards a hit sets off go into `spawned`, for the caller to add after the flight.
+ * Shards a hit sets off go into `spawned`, for the caller to add after the flight.
  */
 export function arrowHits(state: SimState, spawned: ArrowState[] = []): (arrow: ArrowState) => boolean {
   return (arrow) => {
-    // Blastfletch (037): an arrow passing through charged ground takes its charge.
-    takeCharge(state, arrow);
+    // Blastfletch (037): an arrow passing through Pool takes its charge.
+    takePool(state, arrow);
     if (arrow.pierce) {
       for (const en of state.enemies) {
         if (en.roomId !== arrow.roomId || en.health <= 0 || !targetable(en) || arrow.hitIds.includes(en.id)) continue;

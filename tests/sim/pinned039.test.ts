@@ -95,12 +95,12 @@ describe('039 pins: children and statuses', () => {
   it('a split bolt’s shards: 5 (7 with Splinter), 4 × the ley bonus each', () => {
     const shards = (...talents: string[]) => {
       const s = taking(arena(), ...talents);
-      s.inventory = { 'ley-bolt+star': 5 };
+      s.inventory = { 'ley-bolt+split': 5 };
       still(s, PLAYER_AT.x + 100, PLAYER_AT.y);
       run(s, 1, { selectAmmo: 'ley-bolt' });
       run(s, 1, fireAt(FAR.x, FAR.y));
-      runUntil(s, () => s.arrows.some((a) => a.ammoId !== 'ley-bolt+star'), 60);
-      return s.arrows.filter((a) => a.ammoId !== 'ley-bolt+star');
+      runUntil(s, () => s.arrows.some((a) => a.ammoId !== 'ley-bolt+split'), 60);
+      return s.arrows.filter((a) => a.ammoId !== 'ley-bolt+split');
     };
     expect(shards()).toHaveLength(5);
     expect(shards('l3')).toHaveLength(7);
@@ -165,7 +165,7 @@ describe('039 pins: timing', () => {
     expect(out).toEqual(every(ammoDef('ley-bolt').fireTicks, 600));
   });
 
-  it('a bomb lands on the same tick with and without Short Fuse’s quarter off', () => {
+  it('a bomb lands on the same tick with and without Swift Arc’s quarter off', () => {
     const lands = (...talents: string[]) => {
       const s = taking(arena(), ...talents);
       s.inventory = { bomb: 2 };

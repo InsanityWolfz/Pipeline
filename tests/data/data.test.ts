@@ -351,8 +351,8 @@ describe('build bar categories (026)', () => {
       ['conduit', 'sorter', 'splitter', 'merger', 'hopper', 'crate'],
       // 029: each stage in its base ammo's group, after the chain that makes the ammo.
       ['cutter', 'knapper', 'spinner', 'assembler', 'frost-rune'],
-      ['shaper', 'fuse-maker', 'packer', 'shard-die'],
-      ['grinder', 'focuser', 'ley-guide', 'shatter-lens'],
+      ['shaper', 'fuse-maker', 'packer', 'cluster-die'],
+      ['grinder', 'focuser', 'ley-guide', 'prism-lens'],
       // 038: the landmine chain.
       ['plate-press', 'mine-packer'],
     ]);

@@ -6,7 +6,7 @@ import type { SimState } from '../sim/state';
 import { colorOf } from './color';
 import { addVector } from './vector/textures';
 
-/** 038's live art as drawn, for `ui().mines`: each armed mine's fuse (0..1) and whether it's in its last second, bomblets in the air, and flashes still showing. */
+/** 038's live art as drawn, for `ui().mines`: each armed mine's arm time (0..1) and whether it's in its last second, bomblets in the air, and flashes still showing. */
 export interface MinesShown {
   armed: { id: number; progress: number; late: boolean }[];
   bomblets: number;
@@ -25,7 +25,7 @@ interface Flash {
   fresh: boolean;
 }
 
-// Landmines and bomblets (038): each armed mine lying flat where it landed with its fuse
+// Landmines and bomblets (038): each armed mine lying flat where it landed with its arm
 // ring filling clockwise from the top (red in its last second, its pip blinking faster);
 // a cluster bomb's bomblets arcing out from its burst over their delay; and the flashes
 // where a mine and a bomblet burst, scaled to their radius. Time on the tween clock, so the
@@ -84,9 +84,9 @@ export class MineView {
     });
   }
 
-  /** Each armed mine in the room on screen, flat on the ground, with its fuse ring and blinking pip. */
+  /** Each armed mine in the room on screen, flat on the ground, with its arm ring and blinking pip. */
   private drawArmed(sim: SimState, here: boolean): void {
-    const F = MINE_LOOK.fuse;
+    const F = MINE_LOOK.armRing;
     const g = this.rings.clear();
     const live = new Set<number>();
     this.shownArmed = [];
@@ -94,8 +94,8 @@ export class MineView {
       live.add(m.id);
       const image = this.armed.get(m.id) ?? addVector(this.scene, m.x, m.y, MINE_SPRITES.armed).setDepth(DEPTHS.groundFx + MINE_LOOK.depth.mine);
       this.armed.set(m.id, image.setPosition(m.x, m.y));
-      const progress = Math.min(1, m.fuse / m.fuseTicks);
-      const late = m.fuseTicks - m.fuse <= F.lateTicks;
+      const progress = Math.min(1, m.elapsed / m.armTicks);
+      const late = m.armTicks - m.elapsed <= F.lateTicks;
       this.shownArmed.push({ id: m.id, progress, late });
       const color = colorOf(late ? F.lateColor : F.color);
       g.lineStyle(F.width, color, F.track).strokeCircle(m.x, m.y, F.radius);

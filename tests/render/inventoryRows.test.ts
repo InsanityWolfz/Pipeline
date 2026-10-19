@@ -36,8 +36,8 @@ describe('the inventory rows', () => {
   });
 
   it('rows follow ITEMS order within a group', () => {
-    const groups = inventoryGroups({ ...base, inventory: { 'rime-shard': 1, fiber: 1, wood: 1 } });
-    expect(groups.find((g) => g.id === 'raw')?.rows.map((r) => r.itemId)).toEqual(['wood', 'fiber', 'rime-shard']);
+    const groups = inventoryGroups({ ...base, inventory: { 'rimestone': 1, fiber: 1, wood: 1 } });
+    expect(groups.find((g) => g.id === 'raw')?.rows.map((r) => r.itemId)).toEqual(['wood', 'fiber', 'rimestone']);
   });
 
   it('Gear lists the carried unidentified gear, then the worn pieces, then the spares, identified pieces always safe', () => {

@@ -76,7 +76,7 @@ test.describe('review screenshots (031)', () => {
     await page.screenshot({ path: `${SHOTS}/01-hud-full-hp-armor-worn.png` });
 
     // ...and a last few are picked up there, unbanked: at risk (beyond the banked counts: the 3 identified pieces still count as banked).
-    await pickUp(page, [['wood', 3], ['rime-shard', 2], ['fuse', 2], ['arrow+frost', 4], ['unidentified-armor', 4], ['warden-core', 1]]);
+    await pickUp(page, [['wood', 3], ['rimestone', 2], ['fuse', 2], ['arrow+frost', 4], ['unidentified-armor', 4], ['warden-core', 1]]);
     await page.keyboard.press('i');
     await expect.poll(async () => (await ui(page))?.inventory.open).toBe(true);
     const groups = (await ui(page))?.inventory.groups ?? [];

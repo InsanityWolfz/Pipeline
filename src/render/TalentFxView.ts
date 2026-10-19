@@ -11,22 +11,22 @@ import { tubeSlotBox } from './bottomHud';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
 
-/** 037's effects as drawn, for `ui().talentFx`: the level-up line and its alpha, rings, ice bursts and charged bursts still live, charged areas shown, and the heat's alpha. */
+/** 037's effects as drawn, for `ui().talentFx`: the level-up line and its alpha, rings, ice bursts and Pool-bursts still live, Pools shown, and the heat's alpha. */
 export interface TalentFxShown {
   levelLine: string | null;
   lineAlpha: number;
   levelRings: number;
   iceBursts: number;
-  chargedBursts: number;
-  charges: number;
+  poolBursts: number;
+  pools: number;
   heat: number;
 }
 
-export const NO_TALENT_FX: TalentFxShown = { levelLine: null, lineAlpha: 0, levelRings: 0, iceBursts: 0, chargedBursts: 0, charges: 0, heat: 0 };
+export const NO_TALENT_FX: TalentFxShown = { levelLine: null, lineAlpha: 0, levelRings: 0, iceBursts: 0, poolBursts: 0, pools: 0, heat: 0 };
 
 interface Burst {
   image: GameObjects.Image;
-  kind: 'ring' | 'ice' | 'charged';
+  kind: 'ring' | 'ice' | 'pool';
   ms: number;
   look: { ms: number; from: number; to: number };
   /** Made this frame: its clock starts next frame, so a long frame (the hook's stepping) can't run it out unseen. */
@@ -35,7 +35,7 @@ interface Burst {
 
 // The level-up and the keystones' signs (037): a cyan ring flashing out round the player
 // with "Level 7 · talent point (T)" over the bottom HUD (FeelView plays the chime);
-// Blastfletch's charged ground shimmering where a blast left it; Shatterpoint's ice burst
+// Blastfletch's Pools shimmering where a blast left it; Shatterpoint's ice burst
 // on a shattered enemy; and a heat shimmer over the tube's mouth as Overpressure ramps.
 // Time on the tween clock, so the test hook can hold them for a screenshot.
 export class TalentFxView {
@@ -44,7 +44,7 @@ export class TalentFxView {
   private lineMs = 0;
   private lineFresh = false;
   private bursts: Burst[] = [];
-  private readonly charges = new Map<number, GameObjects.Image>();
+  private readonly pools = new Map<number, GameObjects.Image>();
   private readonly heat: GameObjects.Image;
   /** The heat image's own scale (its texture's bake scale), which the wobble multiplies. */
   private readonly heatScale: number;
@@ -64,8 +64,8 @@ export class TalentFxView {
       lineAlpha: this.line.obj.visible ? Math.round(this.line.obj.alpha * 100) / 100 : 0,
       levelRings: live('ring'),
       iceBursts: live('ice'),
-      chargedBursts: live('charged'),
-      charges: [...this.charges.values()].filter((c) => c.visible).length,
+      poolBursts: live('pool'),
+      pools: [...this.pools.values()].filter((c) => c.visible).length,
       heat: this.heat.visible ? Math.round(this.heat.alpha * 100) / 100 : 0,
     };
   }
@@ -92,13 +92,13 @@ export class TalentFxView {
     }
     // In front of the shattered enemy (its sprite sorts by its feet).
     if (here) for (const s of events.shatters) this.burst('ice', TALENT_SPRITES.iceBurst, s.x, s.y - KEYSTONE_LOOK.iceBurst.lift, s.y + KEYSTONE_LOOK.iceBurst.depthAbove, KEYSTONE_LOOK.iceBurst);
-    // A charged arrow's burst (Blastfletch): the charged ground's ring flashing out at the burst's radius.
-    const B = KEYSTONE_LOOK.chargedBurst;
-    const k = (r: number) => r / KEYSTONE_LOOK.charge.spriteRadius;
-    if (here) for (const c of events.chargedBursts) this.burst('charged', TALENT_SPRITES.blastCharge, c.x, c.y, c.y + B.depthAbove, { ms: B.ms, from: B.from * k(c.radius), to: B.to * k(c.radius) }, true);
+    // A Pool-burst (Blastfletch): the Pool's ring flashing out at the burst's radius.
+    const B = KEYSTONE_LOOK.poolBurst;
+    const k = (r: number) => r / KEYSTONE_LOOK.pool.spriteRadius;
+    if (here) for (const c of events.poolBursts) this.burst('pool', TALENT_SPRITES.pool, c.x, c.y, c.y + B.depthAbove, { ms: B.ms, from: B.from * k(c.radius), to: B.to * k(c.radius) }, true);
     this.stepBursts(deltaMs);
     this.stepLine(deltaMs);
-    this.drawCharges(sim, shown);
+    this.drawPools(sim, shown);
     this.drawHeat(sim, here);
   }
 
@@ -134,26 +134,26 @@ export class TalentFxView {
     });
   }
 
-  /** Each charged area in the room on screen, at its radius, breathing. */
-  private drawCharges(sim: SimState, shown: string): void {
-    const C = KEYSTONE_LOOK.charge;
+  /** Each Pool in the room on screen, at its radius, breathing. */
+  private drawPools(sim: SimState, shown: string): void {
+    const C = KEYSTONE_LOOK.pool;
     const live = new Set<number>();
     const breathe = (Math.sin((this.time / C.breatheMs) * Math.PI * 2) + 1) / 2;
-    for (const c of sim.blastCharges) {
+    for (const c of sim.pools) {
       if (c.roomId !== shown) continue;
       live.add(c.id);
-      let image = this.charges.get(c.id);
+      let image = this.pools.get(c.id);
       if (!image) {
-        image = addVector(this.scene, c.x, c.y, TALENT_SPRITES.blastCharge).setBlendMode(BlendModes.ADD).setDepth(c.y - c.radius);
+        image = addVector(this.scene, c.x, c.y, TALENT_SPRITES.pool).setBlendMode(BlendModes.ADD).setDepth(c.y - c.radius);
         image.setScale((image.scaleX * c.radius) / C.spriteRadius);
-        this.charges.set(c.id, image);
+        this.pools.set(c.id, image);
       }
       image.setAlpha(C.alpha[0] + (C.alpha[1] - C.alpha[0]) * breathe);
     }
-    for (const [id, image] of this.charges) {
+    for (const [id, image] of this.pools) {
       if (live.has(id)) continue;
       image.destroy();
-      this.charges.delete(id);
+      this.pools.delete(id);
     }
   }
 

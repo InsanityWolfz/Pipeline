@@ -8,7 +8,7 @@ import { WORLD } from './world';
 import type { GearPiece, GearSlot } from '../data/gear';
 import { NOTHING_WORN } from './gear';
 import { TALENT_START } from '../data/talents';
-import type { BlastCharge } from './keystones';
+import type { Pool } from './keystones';
 import { playerStats } from './stats';
 import type { ArrowState } from './arrows';
 import type { BombState } from './bombs';
@@ -116,9 +116,9 @@ export interface SimState {
   xp: number;
   talentPoints: number;
   talents: string[];
-  /** Bomb blasts' charged ground (037: Blastfletch), and the id for the next. */
-  blastCharges: BlastCharge[];
-  nextChargeId: number;
+  /** Bomb blasts' Pool (037: Blastfletch), and the id for the next. */
+  pools: Pool[];
+  nextPoolId: number;
   /**
    * Bosses killed at least once (037), the Warden included: only the first kill gives a boss's full XP. 034's
    * `bossDefeats` holds only region bosses with altars, and its goals and altars read it, so this is its own list.
@@ -213,8 +213,8 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     talentPoints: 0,
     talents: [TALENT_START],
     killedBosses: [],
-    blastCharges: [],
-    nextChargeId: 0,
+    pools: [],
+    nextPoolId: 0,
     firstHuskDropped: false,
     banked: { ...start.inventory },
     hasTube: start.hasTube,
@@ -260,7 +260,7 @@ export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   state.harvest = null;
   state.bombs = [];
   clearMines(state);
-  state.blastCharges = [];
+  state.pools = [];
   state.enemyBombs = [];
   settleSummons(state);
   state.orbs = [];

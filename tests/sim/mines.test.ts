@@ -16,7 +16,7 @@ import { fireTicksOf } from '../../src/sim/tube';
 import { arena, atEntrance, command, die, fireAt, HALL, HUSK, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
 // Landmines (038): lobbed to the aim like a bomb, they arm where they land and burst
-// `fuseTicks` later for large damage in a small radius. Only the timer sets them off;
+// `armTicks` later for large damage in a small radius. Only the timer sets them off;
 // they never hurt the player, shields never block them, and they vanish on a room change or a KO.
 
 const MINE = lobbedAmmo('landmine');
@@ -46,7 +46,7 @@ function lay(s: SimState, x: number, y: number): number {
 describe('landmines', () => {
   it('are a mine: lobbed like a bomb, 60 physical damage in 24 px after a 300-tick fuse, on key 4', () => {
     const bomb = lobAmmo('bomb');
-    expect(MINE).toMatchObject({ kind: 'mine', speed: bomb.speed, maxRange: bomb.maxRange, arcPeak: bomb.arcPeak, fuseTicks: 300, damage: 60, radius: 24, damageType: 'physical', fireTicks: 40 });
+    expect(MINE).toMatchObject({ kind: 'mine', speed: bomb.speed, maxRange: bomb.maxRange, arcPeak: bomb.arcPeak, armTicks: 300, damage: 60, radius: 24, damageType: 'physical', fireTicks: 40 });
     expect(SLOT_AMMOS[3]).toBe('landmine');
   });
 
@@ -59,7 +59,7 @@ describe('landmines', () => {
     run(b, 1, fireAt(PLAYER_AT.x + 100, PLAYER_AT.y));
     expect(ticks).toBe(runUntil(b, (t) => t.events.bursts.length > 0, 120));
     expect(s.mines.armed).toHaveLength(1);
-    expect(s.mines.armed[0]).toMatchObject({ x: PLAYER_AT.x + 100, y: PLAYER_AT.y, fuse: 0, fuseTicks: 300, roomId: HALL });
+    expect(s.mines.armed[0]).toMatchObject({ x: PLAYER_AT.x + 100, y: PLAYER_AT.y, elapsed: 0, armTicks: 300, roomId: HALL });
     expect(s.events.bursts).toEqual([]);
     expect(s.inventory.landmine).toBe(9);
   });
@@ -180,8 +180,8 @@ describe('landmines', () => {
     s.talents = [TALENT_START, 'a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'k1'];
     lay(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     runUntil(s, (t) => t.events.mineBursts.length > 0, 320);
-    expect(s.blastCharges).toEqual([]);
-    expect(s.nextChargeId).toBe(0);
+    expect(s.pools).toEqual([]);
+    expect(s.nextPoolId).toBe(0);
   });
 
   it("fire faster with Oiled Breech (all ammo's fire rate)", () => {

@@ -35,7 +35,7 @@ const BASE_ITEMS: Readonly<Record<string, ItemDef>> = {
   arrow: { id: 'arrow', name: 'Arrow', kind: 'ammo', group: 'ammo', icon: SPRITES.iconArrow },
   bomb: { id: 'bomb', name: 'Bomb', kind: 'ammo', group: 'ammo', icon: SPRITES.iconBomb },
   'ley-bolt': { id: 'ley-bolt', name: 'Ley bolt', kind: 'ammo', group: 'ammo', icon: SPRITES.iconLeyBolt },
-  /** 038: shot onto the ground, it bursts after its fuse. */
+  /** 038: shot onto the ground, it bursts after its arm time. */
   landmine: { id: 'landmine', name: 'Landmine', kind: 'ammo', group: 'ammo', icon: MINE_SPRITES.iconLandmine },
   'husk-resin': { id: 'husk-resin', name: 'Husk resin', kind: 'raw', group: 'raw', icon: SPRITES.itemHuskResin },
   wood: { id: 'wood', name: 'Wood', kind: 'raw', group: 'raw', icon: SPRITES.itemWood },
@@ -44,14 +44,14 @@ const BASE_ITEMS: Readonly<Record<string, ItemDef>> = {
   'ley-crystal': { id: 'ley-crystal', name: 'Ley crystal', kind: 'raw', group: 'raw', icon: SPRITES.itemLeyCrystal },
   /** The first metal (034): gathered at ley-iron seams in Stonefall Hollows' cliff faces, dropped by its enemies and the Bulwark. */
   'ley-iron': { id: 'ley-iron', name: 'Ley-iron', kind: 'raw', group: 'raw', icon: HOLLOWS_SPRITES.itemLeyIron },
-  /** The frost rune's material (029), gathered at the Frozen Grotto's rime clusters. */
-  'rime-shard': { id: 'rime-shard', name: 'Rime shard', kind: 'raw', group: 'raw', icon: STAGE_SPRITES.itemRimeShard },
+  /** The frost rune's material (029), gathered at the Frozen Grotto's rime outcrops. */
+  'rimestone': { id: 'rimestone', name: 'Rimestone', kind: 'raw', group: 'raw', icon: STAGE_SPRITES.itemRimestone },
   shaft: { id: 'shaft', name: 'Shaft', kind: 'part', group: 'parts', icon: SPRITES.itemShaft },
   arrowhead: { id: 'arrowhead', name: 'Arrowhead', kind: 'part', group: 'parts', icon: SPRITES.itemArrowhead },
   rope: { id: 'rope', name: 'Rope', kind: 'part', group: 'parts', icon: SPRITES.itemRope },
   casing: { id: 'casing', name: 'Casing', kind: 'part', group: 'parts', icon: SPRITES.itemCasing },
   fuse: { id: 'fuse', name: 'Fuse', kind: 'part', group: 'parts', icon: SPRITES.itemFuse },
-  'ley-shard': { id: 'ley-shard', name: 'Ley shard', kind: 'part', group: 'parts', icon: SPRITES.itemLeyShard },
+  'ley-dust': { id: 'ley-dust', name: 'Ley dust', kind: 'part', group: 'parts', icon: SPRITES.itemLeyDust },
   /** 038: pressed from ley-iron, a landmine's body. */
   'iron-plate': { id: 'iron-plate', name: 'Iron plate', kind: 'part', group: 'parts', icon: MINE_SPRITES.itemIronPlate },
   'unidentified-armor': { id: 'unidentified-armor', name: 'Unidentified gear', kind: 'armor', group: 'gear', icon: SPRITES.itemUnidentifiedArmor },

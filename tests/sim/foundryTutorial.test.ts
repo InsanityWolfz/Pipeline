@@ -143,7 +143,7 @@ describe('the foundry steps (027)', () => {
     const s = atSteps();
     s.objectives = OBJECTIVES.map((_, i) => i < step(7));
     // A ley bolt line into the centre entrance: it feeds the intake, but no arrows arrive.
-    hopper(s, 12, 4, 'ley-shard', 4);
+    hopper(s, 12, 4, 'ley-dust', 4);
     put(s, 'focuser', 12, 3, 'up');
     put(s, 'conduit', 12, 2, 'up');
     put(s, 'conduit', 12, 1, 'up');

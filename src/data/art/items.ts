@@ -5,7 +5,7 @@ import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSp
 // Item icons and build emblems (020), in the 016 vector style: 16x16 world px
 // round the centre, used on the ground, in the HUD, in menus and riding
 // conduits. The 005 look-alike pairs stay apart by shape: the shaft is a thin
-// straight rod and the fuse a fat twisted coil; the ley shard is three loose
+// straight rod and the fuse a fat twisted coil; the ley dust is three loose
 // chunks and the ley bolt one head on a trail. The casing (031) is the bomb's plain
 // black sphere: only the bomb's wick and cinder band tell them apart.
 
@@ -107,7 +107,7 @@ const FUSE: Shape[] = [
   glowDot(0.4, 5.2, 0.6, 'cinder'),
 ];
 
-// The ley shard: three small loose chunks of ground crystal.
+// The ley dust: three small loose chunks of ground crystal.
 const shard = (x: number, y: number, s: number, turn: number): Shape =>
   path(`M ${x} ${y - 2.2 * s} L ${x + 1.8 * s} ${y - turn} L ${x + 0.8 * s} ${y + 1.8 * s} L ${x - 1.6 * s} ${y + 1 * s} L ${x - 1.4 * s} ${y - 1 * s} Z`, {
     fill: { linear: [x - 2, y + 2, x + 2, y - 2], stops: [{ at: 0, color: 'cyan-deep' }, { at: 1, color: 'cyan-glow' }] },
@@ -265,7 +265,7 @@ export const ITEM_SPRITES_VECTOR: readonly VectorSprite[] = [
   icon(SPRITES.itemRope, ROPE),
   icon(SPRITES.itemCasing, BOMB_SPHERE),
   icon(SPRITES.itemFuse, FUSE),
-  icon(SPRITES.itemLeyShard, LEY_SHARD),
+  icon(SPRITES.itemLeyDust, LEY_SHARD),
   icon(SPRITES.itemWardenCore, WARDEN_CORE),
   icon(SPRITES.itemUnidentifiedArmor, UNIDENTIFIED_ARMOR),
   icon(SPRITES.iconArmorLight, ARMOR_LIGHT),

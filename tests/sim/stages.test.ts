@@ -25,11 +25,11 @@ const offer = (s: SimState, tx: number, ty: number, fx: number, fy: number, item
   offerFromOutside(s.foundry, { tx, ty }, { tx: fx, ty: fy }, item);
 
 describe('a stage machine', () => {
-  it('makes 4 frost arrows from 4 arrows and 1 rime shard in 60 ticks, out of its front', () => {
+  it('makes 4 frost arrows from 4 arrows and 1 rimestone in 60 ticks, out of its front', () => {
     const s = foundry();
     const m = put<MachineState>(s, 'frost-rune', 6, 5, 'right');
     const crate = put<CrateState>(s, 'crate', 7, 5, 'right');
-    m.buffer = { arrow: 4, 'rime-shard': 1 };
+    m.buffer = { arrow: 4, 'rimestone': 1 };
     run(s, 1);
     expect(m.crafting).toBe(true);
     expect(m.status).toBe('working');
@@ -45,7 +45,7 @@ describe('a stage machine', () => {
     run(s, 4);
     expect(crate.contents).toEqual({ 'arrow+frost': 4 });
     expect(s.machineMade['arrow+frost']).toBe(4);
-    expect(m.buffer).toEqual({ arrow: 0, 'rime-shard': 0 });
+    expect(m.buffer).toEqual({ arrow: 0, 'rimestone': 0 });
   });
 
   it('takes rounds and rime from any side but its front, and refuses ley bolts and frost arrows', () => {
@@ -56,7 +56,7 @@ describe('a stage machine', () => {
     expect(offer(s, 6, 5, 5, 5, 'arrow+frost')).toBe(false);
     expect(offer(s, 6, 5, 5, 5, 'wood')).toBe(false);
     expect(offer(s, 6, 5, 5, 5, 'arrow')).toBe(true);
-    expect(offer(s, 6, 5, 6, 4, 'rime-shard')).toBe(true);
+    expect(offer(s, 6, 5, 6, 4, 'rimestone')).toBe(true);
     expect(offer(s, 6, 5, 6, 6, 'arrow')).toBe(true);
   });
 
@@ -74,13 +74,13 @@ describe('a stage machine', () => {
     m.buffer = { arrow: 4 };
     run(s, 1);
     expect(m.status).toBe('starved');
-    expect(m.missing).toEqual(['rime-shard']);
+    expect(m.missing).toEqual(['rimestone']);
     // Nothing takes its output: one batch fills it, and the next arrows wait on the conduit behind.
-    m.buffer = { arrow: 4, 'rime-shard': 2 };
+    m.buffer = { arrow: 4, 'rimestone': 2 };
     const c = put<ConduitState>(s, 'conduit', 5, 5, 'right');
     run(s, FROST.craftTicks + 2);
     expect(m.output).toBe(4);
-    m.buffer = { arrow: 4, 'rime-shard': 1 };
+    m.buffer = { arrow: 4, 'rimestone': 1 };
     c.item = 'arrow';
     c.progress = CONDUIT_TICKS;
     run(s, 5);
@@ -88,11 +88,11 @@ describe('a stage machine', () => {
     expect(c.item).toBe('arrow');
   });
 
-  it('a shape stage refuses a round that already has a shape: the ley guide refuses star bolts, the lens homing ones', () => {
+  it('a shape stage refuses a round that already has a shape: the ley guide refuses Split bolts, the lens homing ones', () => {
     const s = foundry();
     put<MachineState>(s, 'ley-guide', 6, 5, 'right');
-    put<MachineState>(s, 'shatter-lens', 6, 8, 'right');
-    expect(offer(s, 6, 5, 5, 5, 'ley-bolt+star')).toBe(false);
+    put<MachineState>(s, 'prism-lens', 6, 8, 'right');
+    expect(offer(s, 6, 5, 5, 5, 'ley-bolt+split')).toBe(false);
     expect(offer(s, 6, 5, 5, 5, 'ley-bolt+homing')).toBe(false);
     expect(offer(s, 6, 5, 5, 5, 'ley-bolt')).toBe(true);
     expect(offer(s, 6, 5, 5, 5, 'ley-crystal')).toBe(true);
@@ -105,7 +105,7 @@ describe('a stage machine', () => {
     const arrows = put<HopperState>(s, 'hopper', 5, 5, 'right');
     Object.assign(arrows, { item: 'arrow', count: 8 });
     const rime = put<HopperState>(s, 'hopper', 6, 4, 'down');
-    Object.assign(rime, { item: 'rime-shard', count: 2 });
+    Object.assign(rime, { item: 'rimestone', count: 2 });
     put<MachineState>(s, 'frost-rune', 6, 5, 'right');
     put<CrateState>(s, 'crate', 7, 5, 'right');
     run(s, 300);
@@ -121,7 +121,7 @@ function atBench(): SimState {
   const bench = fixtureDef('identification-bench');
   const at = tileCentre({ tx: bench.tx + 1, ty: bench.ty });
   movePlayer(s, at.x, at.y);
-  s.inventory = { arrow: 9, 'rime-shard': 3, 'ley-bolt': 4, 'ley-crystal': 2 };
+  s.inventory = { arrow: 9, 'rimestone': 3, 'ley-bolt': 4, 'ley-crystal': 2 };
   return s;
 }
 
@@ -130,7 +130,7 @@ describe('hand-applying a stage at the bench', () => {
     const s = atBench();
     expect(stagesKnown(s)).toBe(false);
     expect(applyStage(s, 'frost-rune')).toBe(false);
-    expect(s.inventory).toMatchObject({ arrow: 9, 'rime-shard': 3 });
+    expect(s.inventory).toMatchObject({ arrow: 9, 'rimestone': 3 });
   });
 
   it('takes the inputs and gives the tagged rounds, which unlocks the stage in the build bar', () => {
@@ -139,7 +139,7 @@ describe('hand-applying a stage at the bench', () => {
     expect(stagesKnown(s)).toBe(true);
     expect(unlockedPieces(s)).not.toContain('frost-rune');
     expect(applyStage(s, 'frost-rune')).toBe(true);
-    expect(s.inventory).toMatchObject({ arrow: 5, 'rime-shard': 2, 'arrow+frost': 4 });
+    expect(s.inventory).toMatchObject({ arrow: 5, 'rimestone': 2, 'arrow+frost': 4 });
     expect(s.crafted).toContain('arrow+frost');
     expect(unlockedPieces(s)).toContain('frost-rune');
     expect(unlockedPieces(s)).not.toContain('ley-guide');
@@ -152,7 +152,7 @@ describe('hand-applying a stage at the bench', () => {
     expect(applyStage(s, 'frost-rune')).toBe(true);
     expect(applyStage(s, 'frost-rune')).toBe(true);
     expect(applyStage(s, 'frost-rune')).toBe(false);
-    expect(s.inventory).toMatchObject({ arrow: 1, 'rime-shard': 1, 'arrow+frost': 8 });
+    expect(s.inventory).toMatchObject({ arrow: 1, 'rimestone': 1, 'arrow+frost': 8 });
   });
 
   it("can't be done through the crafting menu's craft, which refuses stage ids", () => {
@@ -161,7 +161,7 @@ describe('hand-applying a stage at the bench', () => {
     expect(canCraft(s, 'frost-rune')).toBe(false);
     expect(craft(s, 'frost-rune')).toBe(false);
     expect(s.events.craftFails).toEqual([{ recipeId: 'frost-rune' }]);
-    expect(s.inventory).toMatchObject({ arrow: 9, 'rime-shard': 3 });
+    expect(s.inventory).toMatchObject({ arrow: 9, 'rimestone': 3 });
     expect(s.crafted).not.toContain('arrow+frost');
   });
 
@@ -175,8 +175,8 @@ describe('hand-applying a stage at the bench', () => {
   it('comes as a command from the bench menu', () => {
     const s = atBench();
     s.claims.push('shrine');
-    run(s, 1, { applyStage: 'shatter-lens' });
-    expect(s.inventory).toMatchObject({ 'ley-bolt': 0, 'ley-crystal': 0, 'ley-bolt+star': 4 });
-    expect(unlockedPieces(s)).toContain('shatter-lens');
+    run(s, 1, { applyStage: 'prism-lens' });
+    expect(s.inventory).toMatchObject({ 'ley-bolt': 0, 'ley-crystal': 0, 'ley-bolt+split': 4 });
+    expect(unlockedPieces(s)).toContain('prism-lens');
   });
 });

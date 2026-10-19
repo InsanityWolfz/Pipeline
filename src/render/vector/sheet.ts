@@ -61,7 +61,7 @@ if (sideIdle) section('Wanderer: facing left', [wandererCell('idle', { ...sideId
 // by frame-name prefixes rather than the asset tables, which is fine for a review sheet that ships in no build.
 const FAMILIES: readonly [title: string, test: (name: string) => boolean][] = [
   ...MACHINE_IDS.map((id): [string, (n: string) => boolean] => [`Machine: ${id} (idle, jammed, working)`, (n) => n.startsWith(`machine-${id}-`)]),
-  ['Cold and the star split', (n) => n.startsWith('ice-case') || n.startsWith('star-')],
+  ['Cold and the Split', (n) => n.startsWith('ice-case') || n.startsWith('split-') || n.startsWith('shard')],
   ['Restoration (033): diagrams, wall panels, the sealed wing, the splitter and merger, research items, the pillar', (n) => /^(research-|splitter-|merger-|schematic-|map-schematic|item-ancient|item-aqueduct|item-bulwark|item-schematic|emblem-splitter|emblem-merger)/.test(n)],
   ['Stonefall Hollows (034): cliffs, the aqueduct, rubble, ley-iron, the altar, the enemy bomb, the map icon', (n) => /^(ow-cliff|ow-aqueduct|ow-fallen|ow-rubble|item-ley-iron|node-ley-iron|altar-|enemy-bomb|map-aqueduct)/.test(n)],
   ['Landmines and cluster bombs (038): the mine in flight and armed, its icon, the iron plate, bomblets, the flashes, the cluster bomb', (n) => /^(landmine|icon-landmine|item-iron-plate|bomblet|mine-flash|icon-bomb-cluster)/.test(n)],

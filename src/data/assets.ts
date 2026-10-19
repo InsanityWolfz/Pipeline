@@ -54,7 +54,7 @@ export const SPRITES = {
   itemRope: 'item-rope',
   itemCasing: 'item-casing',
   itemFuse: 'item-fuse',
-  itemLeyShard: 'item-ley-shard',
+  itemLeyDust: 'item-ley-dust',
   itemWardenCore: 'item-warden-core',
   itemUnidentifiedArmor: 'item-unidentified-armor',
   iconArmorLight: 'icon-armor-light',
@@ -95,7 +95,7 @@ export const NODE_SPRITES: Readonly<Record<string, { uses: readonly string[]; re
   rubble: nodeFrames('rubble', 3, 3),
   reeds: nodeFrames('reeds', 3, 3),
   'ley-vein': nodeFrames('ley-vein', 3, 3),
-  'rime-cluster': nodeFrames('rime-cluster', 3, 3),
+  'rime-outcrop': nodeFrames('rime-outcrop', 3, 3),
   'ley-iron-seam': nodeFrames('ley-iron-seam', 3, 3),
 };
 

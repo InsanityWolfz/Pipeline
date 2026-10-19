@@ -3,7 +3,7 @@ import { straightAmmo } from '../../src/data/ammo';
 import { BLASTFLETCH, OVERPRESSURE, SHATTERPOINT, TALENT_START } from '../../src/data/talents';
 import { COLD } from '../../src/data/tags';
 import { createArrow } from '../../src/sim/arrows';
-import { chargeGround, overpressureBonus } from '../../src/sim/keystones';
+import { leavePool, overpressureBonus } from '../../src/sim/keystones';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { fireTicksOf } from '../../src/sim/tube';
@@ -41,58 +41,58 @@ describe('Blastfletch', () => {
     run(s, 1, { selectAmmo: 'bomb' });
     run(s, 1, fireAt(PLAYER_AT.x + 100, PLAYER_AT.y));
     runUntil(s, () => s.events.bursts.length > 0, 60);
-    expect(s.events.blastCharges).toEqual([{ id: 0, x: PLAYER_AT.x + 100, y: PLAYER_AT.y, radius: 48 }]);
-    expect(summarize(s).blastCharges).toEqual([{ id: 0, x: PLAYER_AT.x + 100, y: PLAYER_AT.y, radius: 48, ticks: BLASTFLETCH.chargeTicks }]);
-    run(s, BLASTFLETCH.chargeTicks);
-    expect(s.blastCharges).toHaveLength(1);
+    expect(s.events.pools).toEqual([{ id: 0, x: PLAYER_AT.x + 100, y: PLAYER_AT.y, radius: 48 }]);
+    expect(summarize(s).pools).toEqual([{ id: 0, x: PLAYER_AT.x + 100, y: PLAYER_AT.y, radius: 48, ticks: BLASTFLETCH.poolTicks }]);
+    run(s, BLASTFLETCH.poolTicks);
+    expect(s.pools).toHaveLength(1);
     run(s, 1);
-    expect(s.blastCharges).toEqual([]);
+    expect(s.pools).toEqual([]);
     const plain = arena();
     plain.inventory = { bomb: 2 };
     run(plain, 1, { selectAmmo: 'bomb' });
     run(plain, 1, fireAt(PLAYER_AT.x + 100, PLAYER_AT.y));
     runUntil(plain, () => plain.events.bursts.length > 0, 60);
-    expect(plain.blastCharges).toEqual([]);
+    expect(plain.pools).toEqual([]);
   });
 
-  it('an arrow through a charged area hits +50% on the next enemy and bursts 24 px there, spending the charge; it pierces on', () => {
+  it('an arrow through a Pool hits +50% on the next enemy and bursts 24 px there, spending the charge; it pierces on', () => {
     const s = taking(arena(), 'k1');
-    chargeGround(s, { roomId: s.roomId, x: PLAYER_AT.x + 40, y: PLAYER_AT.y, radius: 48 });
+    leavePool(s, { roomId: s.roomId, x: PLAYER_AT.x + 40, y: PLAYER_AT.y, radius: 48 });
     const first = still(s, PLAYER_AT.x + 160, PLAYER_AT.y);
     const beside = still(s, PLAYER_AT.x + 160, PLAYER_AT.y + 20);
     const far = still(s, PLAYER_AT.x + 220, PLAYER_AT.y);
     const a = flying(s, PLAYER_AT.x + 10);
-    runUntil(s, () => a.charged, 10);
-    runUntil(s, () => s.events.chargedBursts.length > 0, 30);
-    expect(s.events.chargedBursts).toEqual([{ x: expect.any(Number), y: PLAYER_AT.y, radius: BLASTFLETCH.burstRadius }]);
+    runUntil(s, () => a.pooled, 10);
+    runUntil(s, () => s.events.poolBursts.length > 0, 30);
+    expect(s.events.poolBursts).toEqual([{ x: expect.any(Number), y: PLAYER_AT.y, radius: BLASTFLETCH.burstRadius }]);
     expect(first.health).toBeCloseTo(HUSK.maxHealth - ARROW.damage * BLASTFLETCH.damageScale, 9);
-    // The burst hits the one beside for the charged arrow's damage.
+    // The burst hits the one beside for the pooled arrow's damage.
     expect(beside.health).toBeCloseTo(HUSK.maxHealth - ARROW.damage * BLASTFLETCH.damageScale, 9);
-    expect(a.charged).toBe(false);
-    // The arrow pierces on, at its plain damage, with nothing charged left.
+    expect(a.pooled).toBe(false);
+    // The arrow pierces on, at its plain damage, with no Pool taken left.
     runUntil(s, () => far.health < HUSK.maxHealth, 30);
     expect(far.health).toBeCloseTo(HUSK.maxHealth - ARROW.damage, 9);
   });
 
   it('charges neither an arrow outside the area, a ley bolt, nor anything without the keystone', () => {
     const s = taking(arena(), 'k1');
-    chargeGround(s, { roomId: s.roomId, x: PLAYER_AT.x + 40, y: PLAYER_AT.y + 200, radius: 48 });
+    leavePool(s, { roomId: s.roomId, x: PLAYER_AT.x + 40, y: PLAYER_AT.y + 200, radius: 48 });
     const a = flying(s, PLAYER_AT.x + 10);
     run(s, 10);
-    expect(a.charged).toBe(false);
+    expect(a.pooled).toBe(false);
     const t = taking(arena(), 'k1');
-    chargeGround(t, { roomId: t.roomId, x: PLAYER_AT.x + 40, y: PLAYER_AT.y, radius: 48 });
+    leavePool(t, { roomId: t.roomId, x: PLAYER_AT.x + 40, y: PLAYER_AT.y, radius: 48 });
     const bolt = flying(t, PLAYER_AT.x + 10, 'ley-bolt');
     run(t, 5);
-    expect(bolt.charged).toBe(false);
+    expect(bolt.pooled).toBe(false);
     const u = arena();
-    chargeGround(u, { roomId: u.roomId, x: PLAYER_AT.x + 40, y: PLAYER_AT.y, radius: 48 });
-    expect(u.blastCharges).toEqual([]);
+    leavePool(u, { roomId: u.roomId, x: PLAYER_AT.x + 40, y: PLAYER_AT.y, radius: 48 });
+    expect(u.pools).toEqual([]);
   });
 });
 
 describe('Shatterpoint', () => {
-  it('a ley bolt on a frozen enemy ends the freeze for double damage and bursts 4 physical ice shards for half', () => {
+  it('a ley bolt on a frozen enemy ends the freeze for double damage and bursts 4 physical Shards for half', () => {
     const s = taking(arena(), 'k2');
     const e = still(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     e.frozen = 60;

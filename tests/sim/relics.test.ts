@@ -23,51 +23,51 @@ function rollRight(s: SimState): void {
 }
 
 describe('Rollbreaker Greaves', () => {
-  it('rolling through a Husk mid wind-up cancels it and holds it in recovery for staggerTicks, once per roll', () => {
+  it('rolling through a Husk mid wind-up cancels it and holds it in recovery for stunTicks, once per roll', () => {
     const s = wear(arena(), relic(0, ROLLBREAKER));
     const husk = placeHusk(s, PLAYER_AT.x + 20, PLAYER_AT.y);
     run(s, 2);
     expect(husk.mode).toBe('windup');
-    let staggers = 0;
+    let stuns = 0;
     run(s, 1, { moveX: 1, dodge: true });
-    staggers += s.events.staggers.length;
+    stuns += s.events.stuns.length;
     for (let i = 0; i < ROLL_TICKS; i++) {
       run(s, 1);
-      staggers += s.events.staggers.length;
+      stuns += s.events.stuns.length;
     }
-    expect(staggers).toBe(1);
+    expect(stuns).toBe(1);
     expect(husk.mode).toBe('recover');
-    expect(husk.staggered).toBeGreaterThan(ROLLBREAKER.staggerTicks - ROLL_TICKS - 2);
-    // Its swing never lands, and it holds in recovery until the stagger runs out, then chases again.
-    const ticks = runUntil(s, () => husk.staggered === 0, ROLLBREAKER.staggerTicks);
+    expect(husk.stunned).toBeGreaterThan(ROLLBREAKER.stunTicks - ROLL_TICKS - 2);
+    // Its swing never lands, and it holds in recovery until the Stun runs out, then chases again.
+    const ticks = runUntil(s, () => husk.stunned === 0, ROLLBREAKER.stunTicks);
     expect(s.player.health).toBe(MAX_HEALTH);
     expect(husk.mode).toBe('chase');
-    expect(ticks).toBeLessThan(ROLLBREAKER.staggerTicks);
-    expect(summarize(s).enemies.find((e) => e.id === husk.id)?.staggered).toBe(0);
+    expect(ticks).toBeLessThan(ROLLBREAKER.stunTicks);
+    expect(summarize(s).enemies.find((e) => e.id === husk.id)?.stunned).toBe(0);
   });
 
-  it('a second roll through it staggers it again', () => {
+  it('a second roll through it stuns it again', () => {
     const s = wear(arena(), relic(0, ROLLBREAKER));
     const husk = placeHusk(s, PLAYER_AT.x + 20, PLAYER_AT.y);
     rollRight(s);
-    expect(husk.staggered).toBeGreaterThan(0);
-    run(s, ROLLBREAKER.staggerTicks + 30);
+    expect(husk.stunned).toBeGreaterThan(0);
+    run(s, ROLLBREAKER.stunTicks + 30);
     s.player.x = husk.x - 30;
     rollRight(s);
-    expect(husk.staggered).toBeGreaterThan(0);
+    expect(husk.stunned).toBeGreaterThan(0);
   });
 
-  it('staggers an enemy already recovering for staggerTicks, and never cuts a longer wall stun short', () => {
+  it('stuns an enemy already recovering for stunTicks, and never cuts a longer wall stun short', () => {
     const s = wear(arena(), relic(0, ROLLBREAKER));
     const husk = placeHusk(s, PLAYER_AT.x + 20, PLAYER_AT.y);
     husk.mode = 'recover';
     husk.modeTicks = 1;
     husk.cooldown = 200;
     run(s, 1, { moveX: 1, dodge: true });
-    expect(s.events.staggers).toHaveLength(1);
+    expect(s.events.stuns).toHaveLength(1);
     // The enemies' step that tick already held it one tick.
-    expect(husk).toMatchObject({ mode: 'recover', staggered: ROLLBREAKER.staggerTicks - 1 });
-    // A Charger just stunned by a wall has longer left than a stagger: it stays stunned for all of it.
+    expect(husk).toMatchObject({ mode: 'recover', stunned: ROLLBREAKER.stunTicks - 1 });
+    // A Charger just stunned by a wall has longer left than a Stun: it stays stunned for all of it.
     const t = wear(arena(), relic(0, ROLLBREAKER));
     const charger = createEnemy(t.nextEnemyId++, 'charger', { x: PLAYER_AT.x + 20, y: PLAYER_AT.y }, HALL);
     t.enemies.push(charger);
@@ -75,25 +75,25 @@ describe('Rollbreaker Greaves', () => {
     charger.modeTicks = 1;
     run(t, 1, { moveX: 1, dodge: true });
     expect(charger.mode).toBe('stun');
-    expect(charger.staggered).toBe(CHARGER.charge.stunTicks - 2);
-    expect(charger.staggered).toBeGreaterThan(ROLLBREAKER.staggerTicks);
-    runUntil(t, () => charger.staggered === 0, CHARGER.charge.stunTicks);
+    expect(charger.stunned).toBe(CHARGER.charge.stunTicks - 2);
+    expect(charger.stunned).toBeGreaterThan(ROLLBREAKER.stunTicks);
+    runUntil(t, () => charger.stunned === 0, CHARGER.charge.stunTicks);
     expect(charger.mode).toBe('chase');
   });
 
-  it('without the greaves nothing staggers; bosses ignore it', () => {
+  it('without the greaves nothing stuns; bosses ignore it', () => {
     const bare = arena();
     const husk = placeHusk(bare, PLAYER_AT.x + 20, PLAYER_AT.y);
     rollRight(bare);
-    expect(husk.staggered).toBe(0);
+    expect(husk.stunned).toBe(0);
     const s = wear(arena(), relic(0, ROLLBREAKER));
     const warden: EnemyState = createEnemy(s.nextEnemyId++, 'pylon-warden', { x: PLAYER_AT.x + 30, y: PLAYER_AT.y }, HALL);
     s.enemies.push(warden);
     rollRight(s);
-    expect(warden.staggered).toBe(0);
-    expect(s.events.staggers).toEqual([]);
-    // Only an enemy actually staggered counts as staggered this roll.
-    expect(s.player.rollStaggered).toEqual([]);
+    expect(warden.stunned).toBe(0);
+    expect(s.events.stuns).toEqual([]);
+    // Only an enemy actually stunned counts as stunned this roll.
+    expect(s.player.rollStunned).toEqual([]);
   });
 });
 

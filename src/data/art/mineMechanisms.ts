@@ -2,8 +2,8 @@ import type { Box, Mechanism } from './mechanisms';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape } from './types';
 
 // 038's mechanisms, in the 020 style: the plate press stamps a lump of ley-iron flat into a
-// plate, the mine packer seats a fuse and a shard into an iron disc and closes it, and the
-// Shard die (the cluster stage) stamps a ring of bomblet seams into a bomb's casing.
+// plate, the mine packer seats a fuse and ley dust into an iron disc and closes it, and the
+// Cluster die (the cluster stage) stamps a ring of bomblet seams into a bomb's casing.
 // Each takes the window box and its loop's phase `t` (0..1).
 
 const TAU = Math.PI * 2;
@@ -41,7 +41,7 @@ function disc(cx: number, cy: number, rx: number, open: number): Shape[] {
   ];
 }
 
-/** Mine packer: arms bring a fuse and a ley shard in from the sides into an open iron disc, and its lid closes. */
+/** Mine packer: arms bring a fuse and ley dust in from the sides into an open iron disc, and its lid closes. */
 const minePacker: Mechanism = (b, t) => {
   const [cx, cy] = centre(b);
   const wide = b.w >= b.h;
@@ -62,8 +62,8 @@ const minePacker: Mechanism = (b, t) => {
   ];
 };
 
-/** Shard die: a brass die turns and stamps a ring of four bomblet seams into a bomb's casing, which glow as they're cut. */
-const shardDie: Mechanism = (b, t) => {
+/** Cluster die: a brass die turns and stamps a ring of four bomblet seams into a bomb's casing, which glow as they're cut. */
+const clusterDie: Mechanism = (b, t) => {
   const [cx] = centre(b);
   const by = b.y + b.h - 6;
   const down = stroke(t);
@@ -87,5 +87,5 @@ const shardDie: Mechanism = (b, t) => {
 export const MINE_MECHANISMS: Readonly<Record<string, Mechanism>> = {
   'plate-press': platePress,
   'mine-packer': minePacker,
-  'shard-die': shardDie,
+  'cluster-die': clusterDie,
 };

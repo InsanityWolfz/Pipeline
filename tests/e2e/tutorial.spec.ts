@@ -145,7 +145,7 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
   // 6. Craft a bomb and a ley bolt.
   await run(page, () => {
     const g = window.__GAME__;
-    for (const r of ['ley-shard', 'casing', 'fuse', 'bomb', 'ley-bolt']) g?.craft(r);
+    for (const r of ['ley-dust', 'casing', 'fuse', 'bomb', 'ley-bolt']) g?.craft(r);
   });
   expect(await done(page)).toBe(6);
 
@@ -219,8 +219,8 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
       const hopper = g.getState().foundry.pieces.find((p) => p.kind === 'hopper' && p.tx === tx && p.ty === 5);
       if (hopper) g.step(1, { deposit: { id: hopper.id, itemId: raw, amount: 'all' } });
     }
-    for (let i = 0; i < 20 && (g.getState().inventory['ley-crystal'] ?? 0) > 0; i++) g.craft('ley-shard');
-    for (let i = 0; i < 40 && (g.getState().inventory['ley-shard'] ?? 0) > 0; i++) g.craft('ley-bolt');
+    for (let i = 0; i < 20 && (g.getState().inventory['ley-crystal'] ?? 0) > 0; i++) g.craft('ley-dust');
+    for (let i = 0; i < 40 && (g.getState().inventory['ley-dust'] ?? 0) > 0; i++) g.craft('ley-bolt');
   }, T);
 
   // 15. Identify the first Husk's armor at the bench (tile 1,12), and wear it for the fights ahead.
@@ -276,8 +276,8 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
-    for (let i = 0; i < 20 && (g.getState().inventory['ley-crystal'] ?? 0) > 0; i++) g.craft('ley-shard');
-    for (let i = 0; i < 40 && (g.getState().inventory['ley-shard'] ?? 0) > 0; i++) g.craft('ley-bolt');
+    for (let i = 0; i < 20 && (g.getState().inventory['ley-crystal'] ?? 0) > 0; i++) g.craft('ley-dust');
+    for (let i = 0; i < 40 && (g.getState().inventory['ley-dust'] ?? 0) > 0; i++) g.craft('ley-bolt');
     g.step(1, { place: { pieceId: 'conduit', tx: 13, ty: 1, facing: 'up' } });
     g.step(1, { place: { pieceId: 'hopper', tx: 13, ty: 2, facing: 'up' } });
     g.step(1, { pickUp: { tx: 12, ty: 2 } });

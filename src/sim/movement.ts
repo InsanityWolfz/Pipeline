@@ -74,7 +74,7 @@ function startRoll(p: PlayerState, cmd: Command): void {
   p.rollDirX = dx;
   p.rollDirY = dy;
   p.facing = facingOf(dx, dy, p.facing);
-  p.rollStaggered = [];
+  p.rollStunned = [];
 }
 
 /** Ends a roll in progress (a death cuts one short too), starting the cooldown (036: gear shortens it). */

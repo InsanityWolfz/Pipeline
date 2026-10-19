@@ -25,10 +25,10 @@ export const TALENT_SPRITES = {
   pip: 'talent-pip',
   /** The level-up ring flash round the player. */
   levelRing: 'level-ring',
-  /** Blastfletch's charged ground, Shatterpoint's ice burst and its ice shards in flight, Overpressure's heat on the tube. */
-  blastCharge: 'blast-charge',
+  /** Blastfletch's Pool, Shatterpoint's ice burst, a Cold Shard in flight, Overpressure's heat on the tube. */
+  pool: 'pool',
   iceBurst: 'ice-burst',
-  iceShard: 'ice-shard',
+  coldShard: 'shard-cold',
   heatShimmer: 'heat-shimmer',
 } as const;
 
@@ -107,14 +107,14 @@ export const LEVEL_UP = {
 } as const;
 
 /**
- * The keystones' effects (037): Blastfletch's charged ground shimmers (its sprite scaled to the area's radius,
+ * The keystones' effects (037): Blastfletch's Pools shimmer (its sprite scaled to the area's radius,
  * `spriteRadius` px at scale 1, breathing between `alpha` over `breatheMs`); Shatterpoint's ice burst grows from →
  * to over `ms`; Overpressure's heat shimmer over the tube's mouth shows from `minRamp` of the ramp, at up to `alpha`.
  */
 export const KEYSTONE_LOOK = {
-  charge: { spriteRadius: 24, alpha: [0.35, 0.7] as const, breatheMs: 260 },
-  /** A charged arrow's burst: the charge sprite flashing out at its radius, from → to over `ms`, `depthAbove` px in front of what it hits. */
-  chargedBurst: { ms: 320, from: 0.5, to: 1.2, depthAbove: 24 },
+  pool: { spriteRadius: 24, alpha: [0.35, 0.7] as const, breatheMs: 260 },
+  /** A Pool-burst: the Pool's sprite flashing out at its radius, from → to over `ms`, `depthAbove` px in front of what it hits. */
+  poolBurst: { ms: 320, from: 0.5, to: 1.2, depthAbove: 24 },
   iceBurst: { ms: 550, from: 1.2, to: 2.4, lift: 12, depthAbove: 24 },
   /** `ahead` px along the aim (`aheadY` of it on the ground's y, which reads foreshortened), `wobble` of its width each `wobbleMs`. */
   heat: { minRamp: 0.05, alpha: 1, scale: 1.3, lift: 16, ahead: 22, aheadY: 0.5, wobble: 0.12, wobbleMs: 180, depthAbove: 2 },

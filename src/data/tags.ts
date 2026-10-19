@@ -10,7 +10,7 @@ import type { DamageType } from './ammo';
 export type TagSlot = 'element' | 'shape';
 
 /** What a tag does in the sim: each has its own numbers below. */
-export type TagBehaviour = 'cold' | 'homing' | 'star' | 'cluster';
+export type TagBehaviour = 'cold' | 'homing' | 'split' | 'cluster';
 
 export interface TagDef {
   id: string;
@@ -35,10 +35,10 @@ export const COLD = { slowPerStack: 0.15, stacksToFreeze: 4, stackTicks: 120, fr
 export const HOMING = { lockRadius: 64, turnDegrees: 4 } as const;
 
 /**
- * The star split: a star round that hits an enemy bursts into `shards` shards, `360 / shards` degrees apart, each
+ * The Split: a Split round that hits an enemy bursts into `shards` shards, `360 / shards` degrees apart, each
  * flying `range` px at `speed` px/s for `damage` physical damage. Shards are the `projectile`, not an item.
  */
-export const STAR = { shards: 5, damage: 4, range: 64, speed: 360, projectile: 'star-shard' } as const;
+export const SPLIT = { shards: 5, damage: 4, range: 64, speed: 360, projectile: 'shard' } as const;
 
 /**
  * The cluster split (038): `delayTicks` after a cluster bomb bursts, `count` bomblets land evenly round the burst point
@@ -49,7 +49,7 @@ export const CLUSTER = { delayTicks: 12, count: 4, distance: 40, damage: 8, radi
 export const TAGS: Readonly<Record<string, TagDef>> = {
   frost: { id: 'frost', slot: 'element', prefix: 'Frost', appliesTo: 'arrow', behaviour: 'cold', damageType: 'cold' },
   homing: { id: 'homing', slot: 'shape', prefix: 'Homing', appliesTo: 'ley-bolt', behaviour: 'homing' },
-  star: { id: 'star', slot: 'shape', prefix: 'Star', appliesTo: 'ley-bolt', behaviour: 'star' },
+  split: { id: 'split', slot: 'shape', prefix: 'Split', appliesTo: 'ley-bolt', behaviour: 'split' },
   cluster: { id: 'cluster', slot: 'shape', prefix: 'Cluster', appliesTo: 'bomb', behaviour: 'cluster' },
 };
 
@@ -123,5 +123,5 @@ export function elementOf(round: string): TagDef | undefined {
     .find((t) => t.slot === 'element');
 }
 
-/** Whether a round has a tag with this behaviour (a homing round, a star round). */
+/** Whether a round has a tag with this behaviour (a homing round, a split round). */
 export const hasBehaviour = (round: string, behaviour: TagBehaviour): boolean => roundTags(round).some((t) => TAGS[t]?.behaviour === behaviour);

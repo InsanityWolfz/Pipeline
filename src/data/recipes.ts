@@ -27,12 +27,12 @@ export const RECIPES: Readonly<Record<string, RecipeDef>> = {
   arrow: recipe('arrow', { shaft: 1, arrowhead: 1, rope: 1 }, 'arrow', 4),
   casing: { ...recipe('casing', { stone: 1 }, 'casing', 1), requires: 'attuned' },
   fuse: { ...recipe('fuse', { 'husk-resin': 1 }, 'fuse', 1), requires: 'attuned' },
-  'ley-shard': { ...recipe('ley-shard', { 'ley-crystal': 1 }, 'ley-shard', 2), requires: 'attuned' },
-  bomb: { ...recipe('bomb', { casing: 1, fuse: 1, 'ley-shard': 1 }, 'bomb', 2), requires: 'attuned' },
-  'ley-bolt': { ...recipe('ley-bolt', { 'ley-shard': 1 }, 'ley-bolt', 2), requires: 'attuned' },
+  'ley-dust': { ...recipe('ley-dust', { 'ley-crystal': 1 }, 'ley-dust', 2), requires: 'attuned' },
+  bomb: { ...recipe('bomb', { casing: 1, fuse: 1, 'ley-dust': 1 }, 'bomb', 2), requires: 'attuned' },
+  'ley-bolt': { ...recipe('ley-bolt', { 'ley-dust': 1 }, 'ley-bolt', 2), requires: 'attuned' },
   // 038: the landmine chain, reusing the bomb chain's fuse and shard.
   'iron-plate': { ...recipe('iron-plate', { 'ley-iron': 1 }, 'iron-plate', 2), shownAfter: 'ley-iron' },
-  landmine: { ...recipe('landmine', { 'iron-plate': 1, fuse: 1, 'ley-shard': 1 }, 'landmine', 2), shownAfter: 'ley-iron' },
+  landmine: { ...recipe('landmine', { 'iron-plate': 1, fuse: 1, 'ley-dust': 1 }, 'landmine', 2), shownAfter: 'ley-iron' },
 };
 
 /** Items whose first carrying reveals recipes (038), each remembered in `found`. */
@@ -41,7 +41,7 @@ export const REVEALING_ITEMS: readonly string[] = [...new Set(Object.values(RECI
 /** The crafting menu's groups, one per ammo, each listing its chain in order, and its column (038.4: two side by side). */
 export const CRAFT_GROUPS: readonly { ammoId: string; recipes: readonly string[]; column: number }[] = [
   { ammoId: 'arrow', recipes: ['shaft', 'arrowhead', 'rope', 'arrow'], column: 0 },
-  { ammoId: 'bomb', recipes: ['casing', 'fuse', 'ley-shard', 'bomb'], column: 0 },
+  { ammoId: 'bomb', recipes: ['casing', 'fuse', 'ley-dust', 'bomb'], column: 0 },
   { ammoId: 'ley-bolt', recipes: ['ley-bolt'], column: 1 },
   { ammoId: 'landmine', recipes: ['iron-plate', 'landmine'], column: 1 },
 ];

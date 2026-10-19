@@ -37,7 +37,7 @@ import { stepEnemyBombs } from './enemyBombs';
 import { stepAltars } from './altar';
 import { stepLeveling } from './leveling';
 import { respec, takeTalent } from './talents';
-import { rampOverpressure, stepCharges } from './keystones';
+import { rampOverpressure, stepPools } from './keystones';
 
 /** Each room's bodies, built once per tick on first use. */
 function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
@@ -63,7 +63,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   const here = bodies(state.roomId);
   const stats = playerStats(state);
   stepPlayer(state.player, here.room, cmd, here.obstacles, { ...stats, walkScale: stats.walkScale * firingWalkScale(state) });
-  // After the player moves and before enemies act (036): the ward builds, a roll staggers what it passes through.
+  // After the player moves and before enemies act (036): the ward builds, a roll stuns what it passes through.
   stepRelics(state);
   stepDoorways(state);
   stepLink(state);
@@ -71,7 +71,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepDiscovery(state);
   stepPopulation(state);
   stepCacheRearm(state);
-  // Before enemies act, so a bomb thrown this tick starts its fuse at 0 (034).
+  // Before enemies act, so a bomb thrown this tick starts its arm time at 0 (034).
   stepEnemyBombs(state);
   stepEnemies(state, bodies);
   stepNodes(state.nodes);
@@ -86,13 +86,13 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   if (cmd.respec) respec(state);
   stepHarvest(state, state.building ? { ...used, interact: false } : used);
   // Shots fired this tick stay at the muzzle until next tick's step.
-  // Star shards (029) set off this tick join the flight after it, so they first move next tick.
+  // Shards (029) set off this tick join the flight after it, so they first move next tick.
   const shards: ArrowState[] = [];
-  // Blastfletch's charged ground (037) ages before arrows fly through it.
-  stepCharges(state);
+  // Blastfletch's Pool (037) ages before arrows fly through it.
+  stepPools(state);
   stepArrows(state.arrows, roomById, arrowHits(state, shards), steerArrows(state), (roomId, tx, ty) => shotSealed(state, roomId, tx, ty));
   state.arrows.push(...shards);
-  // Armed mines and bomblets (038) before bombs fly, so a mine that lands this tick starts its fuse at 0.
+  // Armed mines and bomblets (038) before bombs fly, so a mine that lands this tick starts its arm time at 0.
   stepMines(state);
   stepBombs(state);
   stepOrbs(state);

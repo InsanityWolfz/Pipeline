@@ -81,7 +81,7 @@ export const ENTRANCE_GAUGE_COLORS: Readonly<Record<string, string>> = {
   // 029: tagged rounds, their tag's colour.
   'arrow+frost': 'water-light',
   'ley-bolt+homing': 'cyan',
-  'ley-bolt+star': 'snow',
+  'ley-bolt+split': 'snow',
   // 038: landmines iron, cluster bombs a hotter ember.
   landmine: 'iron-light',
   'bomb+cluster': 'cinder-light',

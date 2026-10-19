@@ -4,7 +4,7 @@ import { blastArea } from './blast';
 import type { SimState } from './state';
 import { shotSealed } from './tutorial';
 import { ofBase, playerStats } from './stats';
-import { chargeGround } from './keystones';
+import { leavePool } from './keystones';
 import { armMine, scatterBomblets } from './mines';
 
 // Lobbed shots: a bomb arcs over everything to its target and bursts where it
@@ -52,7 +52,7 @@ export function throwBomb(
   const toX = feet.x + dir[0] * reach - dir[1] * across;
   const toY = feet.y + dir[1] * reach + dir[0] * across;
   const distance = Math.hypot(toX - from.x, toY - from.y);
-  // Talents (037): Short Fuse shortens a bomb's flight, Black Powder and Wide Casing grow its burst; a landmine takes
+  // Talents (037): Swift Arc shortens a bomb's flight, Black Powder and Wide Casing grow its burst; a landmine takes
   // only all-ammo damage (038.5).
   const stats = playerStats(state).ammo;
   const bomb = ammo.kind === 'lob';
@@ -118,6 +118,6 @@ function land(state: SimState, b: BombState): void {
 function burst(state: SimState, b: BombState): void {
   blastArea(state, b.roomId, b.x, b.y, b.radius, b.damage, lobbedAmmo(b.ammoId).damageType);
   state.events.bursts.push({ x: b.x, y: b.y, radius: b.radius });
-  chargeGround(state, b);
+  leavePool(state, b);
   scatterBomblets(state, b);
 }

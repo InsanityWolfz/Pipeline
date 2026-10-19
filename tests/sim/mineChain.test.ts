@@ -13,13 +13,13 @@ import { die, placeNode, run, runUntil, arena, PLAYER_AT } from './fight';
 import { foundry, put } from './foundryKit';
 
 // The landmine chain (038): ley-iron into a plate press makes 2 iron plates; an iron
-// plate, a fuse and a ley shard into a mine packer make 2 landmines. Hand-crafting each
+// plate, a fuse and ley dust into a mine packer make 2 landmines. Hand-crafting each
 // once unlocks its machine; the recipes show once ley-iron has been picked up.
 
 describe('the landmine chain', () => {
   it('has the specced recipes and items', () => {
     expect(RECIPES['iron-plate']).toMatchObject({ inputs: { 'ley-iron': 1 }, output: { itemId: 'iron-plate', count: 2 }, shownAfter: 'ley-iron' });
-    expect(RECIPES.landmine).toMatchObject({ inputs: { 'iron-plate': 1, fuse: 1, 'ley-shard': 1 }, output: { itemId: 'landmine', count: 2 }, shownAfter: 'ley-iron' });
+    expect(RECIPES.landmine).toMatchObject({ inputs: { 'iron-plate': 1, fuse: 1, 'ley-dust': 1 }, output: { itemId: 'landmine', count: 2 }, shownAfter: 'ley-iron' });
     expect(itemDef('iron-plate')).toMatchObject({ name: 'Iron plate', kind: 'part', group: 'parts' });
     expect(itemDef('landmine')).toMatchObject({ name: 'Landmine', kind: 'ammo', group: 'ammo' });
   });
@@ -29,13 +29,13 @@ describe('the landmine chain', () => {
     expect(machineDef('mine-packer')).toMatchObject({ name: 'Mine packer', recipeId: 'landmine', footprint: '3x1', craftTicks: 90, category: 'mines' });
     expect(PIECE_CATEGORIES.at(-1)).toEqual({ id: 'mines', label: 'Mines' });
     expect(BUILD_BAR.slice(-2)).toEqual(['plate-press', 'mine-packer']);
-    expect(pieceDef('shard-die').category).toBe('bombs');
+    expect(pieceDef('cluster-die').category).toBe('bombs');
   });
 
   it('hides its recipes until ley-iron is picked up, then knows them for good', () => {
     const s = arena();
     s.link.attuned = true;
-    s.inventory = { 'ley-iron': 0, fuse: 1, 'ley-shard': 1 };
+    s.inventory = { 'ley-iron': 0, fuse: 1, 'ley-dust': 1 };
     expect(knownRecipe(s, 'iron-plate')).toBe(false);
     expect(knownRecipe(s, 'landmine')).toBe(false);
     expect(knownRecipe(s, 'bomb')).toBe(true);
@@ -60,7 +60,7 @@ describe('the landmine chain', () => {
   it('unlocks the plate press and the mine packer by hand-crafting their parts once', () => {
     const s = foundry(false);
     s.found = ['ley-iron'];
-    s.inventory = { 'ley-iron': 1, fuse: 1, 'ley-shard': 1 };
+    s.inventory = { 'ley-iron': 1, fuse: 1, 'ley-dust': 1 };
     expect(unlockedPieces(s)).not.toContain('plate-press');
     expect(craft(s, 'iron-plate')).toBe(true);
     expect(unlockedPieces(s)).toContain('plate-press');
@@ -80,7 +80,7 @@ describe('the landmine chain', () => {
     put(s, 'plate-press', 8, 5);
     put(s, 'conduit', 9, 5);
     fill(9, 6, 'fuse', 4);
-    fill(9, 7, 'ley-shard', 4);
+    fill(9, 7, 'ley-dust', 4);
     run(s, 900);
     expect(s.machineMade['iron-plate']).toBeGreaterThanOrEqual(2);
     expect(crate.contents.landmine ?? 0).toBeGreaterThanOrEqual(2);

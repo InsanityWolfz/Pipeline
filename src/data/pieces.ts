@@ -102,12 +102,12 @@ export const PIECES: Readonly<Record<string, PieceDef>> = {
   assembler: machine('assembler', 'Assembler', 'arrows', 'arrow', '3x1', 90, 'Puts shafts, arrowheads and rope together into arrows.'),
   shaper: machine('shaper', 'Shaper', 'bombs', 'casing', '1x1', 60, 'Shapes stone into bomb casings.'),
   'fuse-maker': machine('fuse-maker', 'Fuse maker', 'bombs', 'fuse', '1x1', 60, 'Draws husk resin into fuses.'),
-  grinder: machine('grinder', 'Grinder', 'ley', 'ley-shard', '1x1', 60, 'Grinds ley crystal into shards.'),
-  packer: machine('packer', 'Packer', 'bombs', 'bomb', '3x1', 90, 'Packs casings, fuses and shards into bombs.'),
-  focuser: machine('focuser', 'Focuser', 'ley', 'ley-bolt', '1x1', 60, 'Focuses ley shards into ley bolts.'),
+  grinder: machine('grinder', 'Grinder', 'ley', 'ley-dust', '1x1', 60, 'Grinds ley crystal into dust.'),
+  packer: machine('packer', 'Packer', 'bombs', 'bomb', '3x1', 90, 'Packs casings, fuses and ley dust into bombs.'),
+  focuser: machine('focuser', 'Focuser', 'ley', 'ley-bolt', '1x1', 60, 'Focuses ley dust into ley bolts.'),
   // 038.1: the plate press as the cutter, the mine packer as the bomb packer (three inputs into a 3x1).
   'plate-press': machine('plate-press', 'Plate press', 'mines', 'iron-plate', '1x1', 60, 'Presses ley-iron into iron plates.'),
-  'mine-packer': machine('mine-packer', 'Mine packer', 'mines', 'landmine', '3x1', 90, 'Packs iron plates, fuses and shards into landmines.'),
+  'mine-packer': machine('mine-packer', 'Mine packer', 'mines', 'landmine', '3x1', 90, 'Packs iron plates, fuses and ley dust into landmines.'),
   ...Object.fromEntries(Object.values(STAGES).map((st) => [st.id, stageMachine(st)])),
 };
 
@@ -127,11 +127,11 @@ export const BUILD_BAR: readonly string[] = [
   'shaper',
   'fuse-maker',
   'packer',
-  'shard-die',
+  'cluster-die',
   'grinder',
   'focuser',
   'ley-guide',
-  'shatter-lens',
+  'prism-lens',
   'plate-press',
   'mine-packer',
 ];

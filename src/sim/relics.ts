@@ -6,7 +6,7 @@ import { wornRelic } from './stats';
 import { attackOf } from '../data/enemies';
 import type { SimState } from './state';
 
-// The relics' rules (036), each read from its data entry: Rollbreaker's stagger, the
+// The relics' rules (036), each read from its data entry: Rollbreaker's Stun, the
 // Wardstone's ward, Last Ember's save (Featherplate's is a stat, in stats.ts). No relic
 // deals damage or touches the factory, the haul or pickups.
 
@@ -25,44 +25,44 @@ function rolledThrough(state: SimState, e: EnemyState): boolean {
 
 /**
  * One tick of the relics, after the player moves and before enemies act (nothing while dying): the Wardstone builds
- * while worn (any other time it's 0); Rollbreaker staggers each enemy the rolling player passes through, once a roll.
+ * while worn (any other time it's 0); Rollbreaker stuns each enemy the rolling player passes through, once a roll.
  */
 export function stepRelics(state: SimState): void {
   const p = state.player;
   if (p.dying > 0) return;
   const ward = wornRelic(state, 'ward');
   p.wardTicks = ward ? Math.min(ward.wardTicks, p.wardTicks + 1) : 0;
-  const breaker = wornRelic(state, 'stagger');
+  const breaker = wornRelic(state, 'stun');
   if (!breaker || !isRolling(p)) return;
   for (const e of state.enemies) {
-    if (e.roomId !== state.roomId || p.rollStaggered.includes(e.id) || !rolledThrough(state, e)) continue;
-    if (stagger(state, e, breaker.staggerTicks)) p.rollStaggered.push(e.id);
+    if (e.roomId !== state.roomId || p.rollStunned.includes(e.id) || !rolledThrough(state, e)) continue;
+    if (stun(state, e, breaker.stunTicks)) p.rollStunned.push(e.id);
   }
 }
 
-/** Ticks left in a recovery, a Charger's wall stun, or a stagger already running: a new stagger never cuts them short. */
+/** Ticks left in a recovery, a Charger's wall stun, or a Stun already running: a new Stun never cuts them short. */
 function holdLeft(e: EnemyState): number {
   const def = defOf(e);
-  if (e.mode === 'stun' && def.kind === 'charger') return Math.max(e.staggered, def.charge.stunTicks - e.modeTicks);
-  if (e.mode === 'recover') return Math.max(e.staggered, attackOf(def).recoverTicks - e.modeTicks);
-  return e.staggered;
+  if (e.mode === 'stun' && def.kind === 'charger') return Math.max(e.stunned, def.charge.stunTicks - e.modeTicks);
+  if (e.mode === 'recover') return Math.max(e.stunned, attackOf(def).recoverTicks - e.modeTicks);
+  return e.stunned;
 }
 
 /**
  * Cancels whatever the enemy was doing and holds it in recovery for `ticks`, or longer if it was already held longer
- * (a wall stun stays a stun). Bosses and enemies underground are never staggered. Returns whether it was.
+ * (a wall stun stays a stun). Bosses and enemies underground are never stunned. Returns whether it was.
  */
-function stagger(state: SimState, e: EnemyState, ticks: number): boolean {
+function stun(state: SimState, e: EnemyState, ticks: number): boolean {
   if (defOf(e).boss || !targetable(e)) return false;
   const hold = Math.max(holdLeft(e), ticks);
   if (e.mode !== 'stun') {
     if (e.mode !== 'recover') e.modeTicks = 1;
     e.mode = 'recover';
   }
-  e.staggered = hold;
+  e.stunned = hold;
   e.vx = 0;
   e.vy = 0;
-  state.events.staggers.push({ id: e.id, x: e.x, y: e.y });
+  state.events.stuns.push({ id: e.id, x: e.x, y: e.y });
   return true;
 }
 

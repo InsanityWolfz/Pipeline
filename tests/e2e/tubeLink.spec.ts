@@ -127,11 +127,11 @@ test('?playtest starts with plenty of everything and every machine unlocked', as
   expect({ x: s.player.x, y: s.player.y }).toEqual(centre(OVERWORLD.wake.tx, OVERWORLD.wake.ty));
   expect(s.populated).toBe(true);
   expect(s.area.ring).toBe(0);
-  expect(s.inventory).toMatchObject({ arrow: 99, bomb: 99, 'ley-bolt': 99, wood: 99, stone: 99, fiber: 99, 'ley-crystal': 99, 'husk-resin': 99, shaft: 20, 'ley-shard': 20 });
-  // 029: every stage machine too, and rime shards for the frost rune; 038: the Shard die and the landmine chain.
+  expect(s.inventory).toMatchObject({ arrow: 99, bomb: 99, 'ley-bolt': 99, wood: 99, stone: 99, fiber: 99, 'ley-crystal': 99, 'husk-resin': 99, shaft: 20, 'ley-dust': 20 });
+  // 029: every stage machine too, and rimestone for the frost rune; 038: the Cluster die and the landmine chain.
   expect(s.unlocked).toEqual([
-    'conduit', 'sorter', 'hopper', 'crate', 'cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'shaper', 'fuse-maker', 'packer', 'shard-die', 'grinder', 'focuser', 'ley-guide', 'shatter-lens', 'plate-press', 'mine-packer',
+    'conduit', 'sorter', 'hopper', 'crate', 'cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'shaper', 'fuse-maker', 'packer', 'cluster-die', 'grinder', 'focuser', 'ley-guide', 'prism-lens', 'plate-press', 'mine-packer',
   ]);
-  expect(s.inventory['rime-shard']).toBe(99);
+  expect(s.inventory['rimestone']).toBe(99);
   expect(errors).toEqual([]);
 });

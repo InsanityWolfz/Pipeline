@@ -59,7 +59,7 @@ describe('carried tagged rounds', () => {
 
   it('wait for their slot: ley variants fire only with the ley bolt slot selected', () => {
     const s = arena();
-    s.inventory = { 'ley-bolt+homing': 2, 'ley-bolt+star': 2 };
+    s.inventory = { 'ley-bolt+homing': 2, 'ley-bolt+split': 2 };
     expect(nextPress(s).kind).toBe('melee');
     run(s, 1, { selectAmmo: 'ley-bolt' });
     expect(nextPress(s)).toEqual({ kind: 'carried', ammoId: 'ley-bolt+homing', count: 2 });

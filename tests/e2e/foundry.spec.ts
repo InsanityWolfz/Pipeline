@@ -93,7 +93,7 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
   await page.evaluate((vein) => {
     window.__GAME__?.step(0);
     window.__helpers?.harvest(vein, 3);
-    window.__GAME__?.craft('ley-shard');
+    window.__GAME__?.craft('ley-dust');
     window.__GAME__?.craft('ley-bolt');
   }, LEY_VEIN);
   expect((await state(page)).unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'grinder', 'focuser']);

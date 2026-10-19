@@ -205,7 +205,7 @@ export const OVERWORLD = {
     { nodeId: 'tree', tx: 100, ty: 13 },
     { nodeId: 'reeds', tx: 112, ty: 13 },
     { nodeId: 'rubble', tx: 103, ty: 5 },
-    // The landmarks' (032): the Frozen Grotto's rime clusters (029) first, then each site's cluster.
+    // The landmarks' (032): the Frozen Grotto's rime outcrops (029) first, then each site's cluster.
     ...LANDMARK_LIST.flatMap((l) => l.nodes),
     // Stonefall Hollows' seams outside its landmarks (034).
     ...HOLLOWS.nodes,

@@ -7,8 +7,8 @@ import { GEAR_SOUNDS } from './gearSounds';
 // deals damage or touches the factory, the haul or pickups. All four ship for the
 // playtest; Shaun may edit them after. Numbers are starting values.
 
-/** The rule a relic bends: Rollbreaker's stagger, Wardstone's ward, Featherplate's light heavy plate, Last Ember's save. */
-export type RelicRule = 'stagger' | 'ward' | 'feather' | 'ember';
+/** The rule a relic bends: Rollbreaker's stun, Wardstone's ward, Featherplate's light heavy plate, Last Ember's save. */
+export type RelicRule = 'stun' | 'ward' | 'feather' | 'ember';
 
 interface RelicBase {
   id: string;
@@ -24,9 +24,9 @@ interface RelicBase {
 }
 
 export interface RollbreakerDef extends RelicBase {
-  rule: 'stagger';
-  /** Ticks a staggered enemy holds in recovery, its wind-up cancelled. */
-  staggerTicks: number;
+  rule: 'stun';
+  /** Ticks a stunned enemy holds in recovery, its wind-up cancelled. */
+  stunTicks: number;
 }
 
 export interface WardstoneDef extends RelicBase {
@@ -56,11 +56,11 @@ export const ROLLBREAKER: RollbreakerDef = {
   name: 'Rollbreaker Greaves',
   slot: 'boots',
   weight: null,
-  rule: 'stagger',
-  text: 'Rolling through an enemy staggers it',
+  rule: 'stun',
+  text: 'Rolling through an enemy stuns it',
   icon: GEAR_SPRITES.relicRollbreaker,
   sound: null,
-  staggerTicks: 40,
+  stunTicks: 40,
 };
 
 export const WARDSTONE: WardstoneDef = {

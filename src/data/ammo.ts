@@ -53,7 +53,7 @@ export interface LobAmmo extends AmmoBase {
 }
 
 /**
- * A landmine (038): lobbed to the aim like a bomb, it arms where it lands and bursts `fuseTicks` later for `damage`
+ * A landmine (038): lobbed to the aim like a bomb, it arms where it lands and bursts `armTicks` later for `damage`
  * on every enemy within `radius` px. Only its timer sets it off.
  */
 export interface MineAmmo extends AmmoBase {
@@ -61,7 +61,7 @@ export interface MineAmmo extends AmmoBase {
   speed: number;
   maxRange: number;
   arcPeak: number;
-  fuseTicks: number;
+  armTicks: number;
   damage: number;
   radius: number;
   /** Its sprite lying armed on the ground. */
@@ -134,7 +134,7 @@ const BASE_AMMO: Readonly<Record<string, AmmoDef>> = {
     speed: BOMB.speed,
     maxRange: BOMB.maxRange,
     arcPeak: BOMB.arcPeak,
-    fuseTicks: 300,
+    armTicks: 300,
     damage: 60,
     radius: 24,
     damageType: 'physical',

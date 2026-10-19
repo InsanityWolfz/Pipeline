@@ -3,7 +3,7 @@ import { boot, cameraSettled } from './helpers';
 import { ui } from './intakePage';
 
 // Review screenshots for 038 (REVIEW_SHOTS=1, into docs/review/038): armed mines with their
-// fuse rings (one fresh, one in its red last second) and key 4 lit on the hotbar, a mine's
+// arm rings (one fresh, one in its red last second) and key 4 lit on the hotbar, a mine's
 // burst, a cluster bomb's bomblets in the air and bursting, the crafting menu's two columns
 // with the Landmines group, the new machines working in a line, and the art on the contact
 // sheet. Under the hook the sim holds still between steps; flashes are held by slowing tweens.
@@ -26,7 +26,7 @@ async function field(page: Page): Promise<{ x: number; y: number }> {
 test.describe('review screenshots (038)', () => {
   test.skip(!process.env.REVIEW_SHOTS, 'set REVIEW_SHOTS=1 to capture docs/review/038');
 
-  test('armed mines with their fuse rings, and key 4 on the hotbar', async ({ page }) => {
+  test('armed mines with their arm rings, and key 4 on the hotbar', async ({ page }) => {
     test.setTimeout(120_000);
     const p = await field(page);
     await page.evaluate((at) => {
@@ -100,7 +100,7 @@ test.describe('review screenshots (038)', () => {
     await page.screenshot({ path: `${SHOTS}/05-crafting-menu.png` });
   });
 
-  test('the plate press, mine packer and Shard die working in the foundry', async ({ page }) => {
+  test('the plate press, mine packer and Cluster die working in the foundry', async ({ page }) => {
     test.setTimeout(180_000);
     await boot(page, '?playtest');
     const working = await page.evaluate(() => {
@@ -119,9 +119,9 @@ test.describe('review screenshots (038)', () => {
       place('hopper', 8, 6, 'right');
       place('hopper', 8, 7, 'right');
       place('crate', 10, 6, 'right');
-      // bombs → Shard die ← ley-iron from above; crate out front.
+      // bombs → Cluster die ← ley-iron from above; crate out front.
       place('hopper', 6, 10, 'right');
-      place('shard-die', 7, 10, 'right');
+      place('cluster-die', 7, 10, 'right');
       place('hopper', 7, 9, 'down');
       let s = place('crate', 8, 10, 'right');
       const at = (tx: number, ty: number) => s.foundry.pieces.find((p) => p.tx === tx && p.ty === ty);
@@ -133,7 +133,7 @@ test.describe('review screenshots (038)', () => {
       };
       fill(6, 5, 'ley-iron', [5.5, 5.5]);
       fill(8, 6, 'fuse', [8.5, 5.5]);
-      fill(8, 7, 'ley-shard', [8.5, 8.5]);
+      fill(8, 7, 'ley-dust', [8.5, 8.5]);
       fill(6, 10, 'bomb', [5.5, 10.5]);
       fill(7, 9, 'ley-iron', [6.5, 9.5]);
       h.walkTo(12.5 * 32, 8.5 * 32);
@@ -145,7 +145,7 @@ test.describe('review screenshots (038)', () => {
       // Stop with all three mid-batch if the timing allows; the shot shows what's working now.
       return [...busy];
     });
-    expect(working.sort()).toEqual(['mine-packer', 'plate-press', 'shard-die']);
+    expect(working.sort()).toEqual(['mine-packer', 'plate-press', 'cluster-die']);
     // The schematic banners from banking on the way in, played out fast so none covers the line.
     await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
     await expect.poll(async () => (await ui(page))?.schematics.bannerIdle, { timeout: 20_000 }).toBe(true);
@@ -159,6 +159,6 @@ test.describe('review screenshots (038)', () => {
     const row = (title: string) => page.locator('h2', { hasText: title }).locator('xpath=following-sibling::div[1]');
     await expect(row('Landmines and cluster bombs (038)')).toBeVisible();
     await row('Landmines and cluster bombs (038)').screenshot({ path: `${SHOTS}/07-sheet-mines.png` });
-    for (const [i, id] of ['plate-press', 'mine-packer', 'shard-die'].entries()) await row(`Machine: ${id} `).screenshot({ path: `${SHOTS}/${String(8 + i).padStart(2, '0')}-sheet-${id}.png` });
+    for (const [i, id] of ['plate-press', 'mine-packer', 'cluster-die'].entries()) await row(`Machine: ${id} `).screenshot({ path: `${SHOTS}/${String(8 + i).padStart(2, '0')}-sheet-${id}.png` });
   });
 });

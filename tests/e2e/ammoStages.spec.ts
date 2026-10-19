@@ -4,7 +4,7 @@ import { boot, watchErrors } from './helpers';
 import { screenPoint } from './foundryPage';
 import { ui } from './intakePage';
 
-// Ammo stages (029): from ?playtest, a frost rune in an arrow line (a rime-shard
+// Ammo stages (029): from ?playtest, a frost rune in an arrow line (a rimestone
 // hopper at its side) feeds frost arrows into the intake, and a frost volley freezes
 // what it hits; at the bench, once the shrine is claimed, a click on the frost rune's
 // row hand-applies it (?playtest already has every stage unlocked; the sim tests cover the
@@ -34,7 +34,7 @@ function buildFrostLine(page: Page) {
     h.walkTo(12.5 * 32, 4.3 * 32);
     g.step(1, { deposit: { id: arrows.id, itemId: 'arrow', amount: 'half' } });
     h.walkTo(10.6 * 32, 2.5 * 32);
-    s = g.step(1, { deposit: { id: rime.id, itemId: 'rime-shard', amount: 'half' } });
+    s = g.step(1, { deposit: { id: rime.id, itemId: 'rimestone', amount: 'half' } });
     const rune = () => s.foundry.pieces.find((p) => p.pieceId === 'frost-rune');
     let working = false;
     for (let t = 0; t < 1200 && (s.intake.entrances[1]?.count ?? 0) < 8; t++) {
@@ -111,7 +111,7 @@ test('a frost rune line feeds frost arrows to the tube, and a frost volley freez
   const row = (await ui(page))?.tagged.benchStages?.rows.find((r) => r.stageId === 'frost-rune');
   if (!row) throw new Error('no frost rune row');
   expect(row.dimmed).toBe(false);
-  expect(row.texts).toEqual(expect.arrayContaining(['Frost rune', 'Arrow', 'Rime shard', 'Frost arrow', '+4']));
+  expect(row.texts).toEqual(expect.arrayContaining(['Frost rune', 'Arrow', 'Rimestone', 'Frost arrow', '+4']));
   const p = await screenPoint(page, row.x + row.w / 2, row.y + row.h / 2);
   await page.mouse.click(p.x, p.y);
   await expect

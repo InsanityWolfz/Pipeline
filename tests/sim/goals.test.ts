@@ -28,10 +28,10 @@ describe('the chain', () => {
     expect(M1.map(([o]) => o.text)).toEqual([
       'Run a supply port into your line',
       'Put a second kind of ammo in another entrance',
-      'Gather rime shards at the Frozen Grotto',
+      'Gather rimestone at the Frozen Grotto',
       'Apply a frost rune to arrows at the bench',
       'Build a frost rune into your arrow line',
-      'Try a ley stage at the bench: homing or star',
+      'Try a ley stage at the bench: homing or split',
       'Claim a second pylon',
       // 034: Region 2's steps.
       'Breach Stonefall Hollows',
@@ -44,10 +44,10 @@ describe('the chain', () => {
     expect(M1.map(([o]) => o.check)).toEqual([
       { kind: 'portDelivered' },
       { kind: 'mixedVolley' },
-      { kind: 'gathered', items: ['rime-shard'] },
+      { kind: 'gathered', items: ['rimestone'] },
       { kind: 'crafted', items: ['arrow+frost'] },
       { kind: 'machineMade', item: 'arrow+frost' },
-      { kind: 'craftedAny', items: ['ley-bolt+homing', 'ley-bolt+star'] },
+      { kind: 'craftedAny', items: ['ley-bolt+homing', 'ley-bolt+split'] },
       { kind: 'claimedCount', min: 2 },
       { kind: 'inRegion', region: 2 },
       { kind: 'claimed', site: 'cistern-terrace' },
@@ -109,7 +109,7 @@ describe('the goals', () => {
 
   it('craftedAny (029) completes once either ley variant is hand-made', () => {
     const i = OBJECTIVES.findIndex((o) => o.check.kind === 'craftedAny');
-    for (const item of ['ley-bolt+homing', 'ley-bolt+star']) {
+    for (const item of ['ley-bolt+homing', 'ley-bolt+split']) {
       const s = foundry(false);
       run(s, 1);
       expect(s.objectives[i]).toBe(false);

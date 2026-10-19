@@ -25,11 +25,11 @@ export const MINE_SPRITES = {
 /** How mines and bomblets look live (038). */
 export const MINE_LOOK = {
   /**
-   * The fuse ring round an armed mine: a faint track `radius` px out, and over it an arc filling clockwise from the top
-   * as the fuse burns, in `color`, turning `lateColor` over its last `lateTicks`; `width` px wide.
+   * The arm ring round an armed mine: a faint track `radius` px out, and over it an arc filling clockwise from the top
+   * as the arm time runs, in `color`, turning `lateColor` over its last `lateTicks`; `width` px wide.
    */
-  fuse: { radius: 9, width: 1.5, track: 0.3, alpha: 0.95, color: 'cyan-glow', lateColor: 'danger', lateTicks: TICK_RATE },
-  /** How far above DEPTHS.groundFx an armed mine and its fuse ring draw: flat on the ground, the ring over the mine. */
+  armRing: { radius: 9, width: 1.5, track: 0.3, alpha: 0.95, color: 'cyan-glow', lateColor: 'danger', lateTicks: TICK_RATE },
+  /** How far above DEPTHS.groundFx an armed mine and its arm ring draw: flat on the ground, the ring over the mine. */
   depth: { mine: 0.1, ring: 0.2 },
   /** The armed mine's pip flashes the ring's colour, `radius` px, for half of every `blinkMs`, faster in its last `lateTicks` (tween clock). */
   pip: { radius: 1.6, blinkMs: 500, lateBlinkMs: 160 },

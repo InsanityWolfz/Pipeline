@@ -55,7 +55,7 @@ describe('playerStats', () => {
         bombletRadius: 20,
         lobTime: 1,
         homingTurn: 4,
-        starShards: 5,
+        splitShards: 5,
       },
     });
   });

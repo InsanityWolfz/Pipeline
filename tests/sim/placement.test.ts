@@ -20,7 +20,7 @@ describe('unlocks', () => {
   it('locks each machine until its output has been hand-crafted; logistics are always open', () => {
     const s = foundry(false);
     expect(unlockedPieces(s)).toEqual(['conduit', 'sorter', 'hopper', 'crate']);
-    s.crafted = ['ley-shard'];
+    s.crafted = ['ley-dust'];
     expect(unlockedPieces(s)).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'grinder']);
   });
 

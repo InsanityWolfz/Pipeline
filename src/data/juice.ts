@@ -102,7 +102,7 @@ export const HARVEST_BURSTS: Readonly<Record<string, keyof typeof PARTICLES>> = 
   rubble: 'harvestChips',
   reeds: 'harvestStalks',
   'ley-vein': 'harvestSparks',
-  'rime-cluster': 'harvestRime',
+  'rime-outcrop': 'harvestRime',
   // 034: ley-iron chips like stone.
   'ley-iron-seam': 'harvestChips',
 };

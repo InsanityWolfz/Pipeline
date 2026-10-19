@@ -25,8 +25,8 @@ export type TalentEffect =
   /** A bomb's flight takes this share less time. */
   | { kind: 'lob-time'; value: number }
   | { kind: 'homing-turn'; value: number }
-  /** Star shards (029) added to the burst. */
-  | { kind: 'star-shards'; value: number }
+  /** Shards (029) added to the burst. */
+  | { kind: 'split-shards'; value: number }
   /** Added to the walk multiplier while firing (016's 0.7). */
   | { kind: 'firing-walk'; value: number }
   | { kind: 'max-health'; value: number }
@@ -91,10 +91,10 @@ export const TALENT_LIST: readonly TalentDef[] = [
   node('a3', 'Rimecraft', 'arrows', at(L.arrows, 2), ['a2', 'k1', 'k2'], { kind: 'freeze', hits: 1, ticks: 30 }, 'Frost arrows freeze after 1 fewer hit, and the freeze lasts +0.5 s'),
   node('b1', 'Black Powder', 'bombs', at(L.bombs, 0), ['start', 'b2'], { kind: 'damage', ammo: 'bomb', value: 0.1 }, 'Bomb damage +10%'),
   node('b2', 'Wide Casing', 'bombs', at(L.bombs, 1), ['b1', 'b3'], { kind: 'blast-radius', value: 0.15 }, 'Blast radius +15%'),
-  node('b3', 'Short Fuse', 'bombs', at(L.bombs, 2), ['b2', 'k1'], { kind: 'lob-time', value: 0.25 }, 'Bombs reach their target 25% sooner'),
+  node('b3', 'Swift Arc', 'bombs', at(L.bombs, 2), ['b2', 'k1'], { kind: 'lob-time', value: 0.25 }, 'Bombs reach their target 25% sooner'),
   node('l1', 'Attuned Crystal', 'ley', at(L.ley, 0), ['start', 'l2'], { kind: 'damage', ammo: 'ley-bolt', value: 0.1 }, 'Ley bolt damage +10%'),
   node('l2', "Seeker's Lens", 'ley', at(L.ley, 1), ['l1', 'l3'], { kind: 'homing-turn', value: 0.3 }, 'Homing ley bolts turn 30% sharper'),
-  node('l3', 'Splinter', 'ley', at(L.ley, 2), ['l2', 'k2'], { kind: 'star-shards', value: 2 }, 'Star ley bolts burst into 7 shards, not 5'),
+  node('l3', 'Splinter', 'ley', at(L.ley, 2), ['l2', 'k2'], { kind: 'split-shards', value: 2 }, 'Split ley bolts burst into 7 shards, not 5'),
   node('t1', 'Oiled Breech', 'tube', at(L.tube, 0), ['start', 't2'], { kind: 'fire-rate', ammo: 'all', value: 0.08 }, 'Fire rate +8%, all ammo'),
   node('t2', 'Steady Grip', 'tube', at(L.tube, 1), ['t1', 't3'], { kind: 'firing-walk', value: 0.1 }, 'The walk slow while firing eases from ×0.7 to ×0.8'),
   node('t3', 'Hard Bore', 'tube', at(L.tube, 2), ['t2', 'k3'], { kind: 'damage', ammo: 'all', value: 0.06 }, 'Damage +6%, all ammo'),
@@ -103,7 +103,7 @@ export const TALENT_LIST: readonly TalentDef[] = [
   node('s3', 'Braced', 'survival', at(L.survival, 2), ['s2', 's4'], { kind: 'armor', value: 3 }, 'Armor +3'),
   node('s4', 'Fleet', 'survival', at(L.survival, 3), ['s3'], { kind: 'move-speed', value: 0.05 }, 'Move speed +5%'),
   node('k1', 'Blastfletch', 'arrows', at(between(L.arrows, L.bombs - 360), 3), ['a3', 'b3'], { kind: 'keystone', rule: 'blastfletch' }, "A bomb's blast charges its ground: an arrow through it hits +50% and bursts on the next enemy", 'keystone'),
-  node('k2', 'Shatterpoint', 'arrows', at(between(L.arrows, L.ley), 3), ['a3', 'l3'], { kind: 'keystone', rule: 'shatterpoint' }, 'A ley bolt shatters a frozen enemy for double damage, bursting 4 ice shards', 'keystone'),
+  node('k2', 'Shatterpoint', 'arrows', at(between(L.arrows, L.ley), 3), ['a3', 'l3'], { kind: 'keystone', rule: 'shatterpoint' }, 'A ley bolt shatters a frozen enemy for double damage, bursting 4 Shards', 'keystone'),
   node('k3', 'Overpressure', 'tube', at(L.tube, 3), ['t3'], { kind: 'keystone', rule: 'overpressure' }, 'Holding fire ramps the fire rate up to +25% over 2 s', 'keystone'),
 ];
 
@@ -120,17 +120,17 @@ export function talentDef(id: string): TalentDef {
 const PHYSICAL: DamageType = 'physical';
 
 /**
- * Blastfletch: a player bomb's blast leaves its area charged for `chargeTicks`; an arrow flying through it gains
+ * Blastfletch: a player bomb's blast leaves a Pool over its area for `poolTicks`; an arrow flying through it gains
  * `damageScale` damage and bursts in a `burstRadius` px blast of `damageType` on the next enemy it hits, which spends the charge.
  */
-export const BLASTFLETCH = { chargeTicks: 20, damageScale: 1.5, burstRadius: 24, damageType: PHYSICAL } as const;
+export const BLASTFLETCH = { poolTicks: 20, damageScale: 1.5, burstRadius: 24, damageType: PHYSICAL } as const;
 
 /**
- * Shatterpoint: a ley bolt that hits a frozen enemy ends the freeze for `damageScale` damage, and `shards` ice shards
+ * Shatterpoint: a ley bolt that hits a frozen enemy ends the freeze for `damageScale` damage, and `shards` Shards
  * burst from it for `shardScale` of the bolt's damage each, of `damageType` (physical: cold shards would chill their
- * way to more freezes, a chain the spec never asked for), flying `range` px at `speed` px/s (as star shards do).
+ * way to more freezes, a chain the spec never asked for), flying `range` px at `speed` px/s (as Shards do).
  */
-export const SHATTERPOINT = { damageScale: 2, shards: 4, shardScale: 0.5, range: 64, speed: 360, projectile: 'ice-shard', damageType: PHYSICAL } as const;
+export const SHATTERPOINT = { damageScale: 2, shards: 4, shardScale: 0.5, range: 64, speed: 360, projectile: 'shard', damageType: PHYSICAL } as const;
 
 /** Overpressure: holding fire ramps the fire rate up to +`maxBonus` over `rampTicks`; releasing fire resets it. */
 export const OVERPRESSURE = { rampTicks: 120, maxBonus: 0.25 } as const;

@@ -33,8 +33,8 @@ export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBod
     if (e.flash > 0) e.flash -= 1;
     if (e.blockFlash > 0) e.blockFlash -= 1;
     // A frozen enemy doesn't think (029): its wind-up pauses where it is. A chilled one walks slower.
-    // A staggered one (036) holds in recovery, then chases again.
-    const thought: [number, number] = e.staggered > 0 ? recoverFromStagger(e) : e.frozen > 0 ? [0, 0] : thinkOf(state, e, def);
+    // A stunned one (036) holds in recovery, then chases again.
+    const thought: [number, number] = e.stunned > 0 ? holdStunned(e) : e.frozen > 0 ? [0, 0] : thinkOf(state, e, def);
     const slow = chillScale(e);
     // Claimed ground is safe (017): a chaser stops at the zone's edge, and a knock never carries it in either.
     const [mx, my] = keepOut(state, e, thought[0] * slow, thought[1] * slow);
@@ -74,10 +74,10 @@ function thinkOf(state: SimState, e: EnemyState, def: EnemyDef): [number, number
   }
 }
 
-/** A tick of a stagger (036): it holds still in recovery; when it runs out the enemy goes back to chasing. */
-function recoverFromStagger(e: EnemyState): [number, number] {
-  e.staggered -= 1;
-  if (e.staggered === 0) {
+/** A tick of a Stun (036): it holds still in recovery; when it runs out the enemy goes back to chasing. */
+function holdStunned(e: EnemyState): [number, number] {
+  e.stunned -= 1;
+  if (e.stunned === 0) {
     e.mode = 'chase';
     e.modeTicks = 0;
   } else e.modeTicks += 1;

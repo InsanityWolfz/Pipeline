@@ -29,7 +29,7 @@ describe('inventory panel groups (031)', () => {
   it('maps the items as the spec lists them', () => {
     const byGroup = (g: string) => Object.values(ITEMS).filter((it) => it.group === g).map((it) => it.id).sort();
     // 034: ley-iron, the first metal, is a raw.
-    expect(byGroup('raw')).toEqual(['fiber', 'husk-resin', 'ley-crystal', 'ley-iron', 'rime-shard', 'stone', 'wood']);
+    expect(byGroup('raw')).toEqual(['fiber', 'husk-resin', 'ley-crystal', 'ley-iron', 'rimestone', 'stone', 'wood']);
     // 033: machine parts and schematics go in Parts, cores in Cores.
     expect(byGroup('parts')).toEqual([
       'ancient-gear',
@@ -39,7 +39,7 @@ describe('inventory panel groups (031)', () => {
       'fuse',
       // 038: the landmine chain's plate.
       'iron-plate',
-      'ley-shard',
+      'ley-dust',
       'rope',
       'schematic-machine-speed',
       'schematic-merger',
@@ -47,7 +47,7 @@ describe('inventory panel groups (031)', () => {
       'schematic-splitter',
       'shaft',
     ]);
-    expect(byGroup('ammo')).toEqual(['arrow', 'arrow+frost', 'bomb', 'bomb+cluster', 'landmine', 'ley-bolt', 'ley-bolt+homing', 'ley-bolt+star']);
+    expect(byGroup('ammo')).toEqual(['arrow', 'arrow+frost', 'bomb', 'bomb+cluster', 'landmine', 'ley-bolt', 'ley-bolt+homing', 'ley-bolt+split']);
     expect(byGroup('gear')).toEqual(['unidentified-armor']);
     expect(byGroup('cores')).toEqual(['bulwark-core', 'warden-core']);
     // The warden core's kind stays a part: only the panel's group places it.

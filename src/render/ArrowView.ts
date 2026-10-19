@@ -2,7 +2,7 @@ import type { GameObjects, Scene } from 'phaser';
 import { AMMO } from '../data/ammo';
 import { DEPTHS } from '../data/assets';
 import { ROUND_LOOKS, STAGE_SPRITES, TRAIL_SHAPE } from '../data/stageAssets';
-import { STAR } from '../data/tags';
+import { SPLIT } from '../data/tags';
 import { SHATTERPOINT } from '../data/talents';
 import { TALENT_SPRITES } from '../data/talentAssets';
 import { DRAW_HEIGHT } from '../data/tube';
@@ -17,18 +17,18 @@ interface Drawn {
   trail?: { g: GameObjects.Graphics; look: NonNullable<(typeof ROUND_LOOKS)[string]['trail']>; points: [number, number][] };
 }
 
-/** The sprite and shadow for a shot: its ammo's, a star shard's (029), or an ice shard's (037). */
+/** The sprite and shadow for a shot: its ammo's, a Shard's (029), or a Cold Shard's (037). */
 function spritesOf(ammoId: string): { sprite: string; shadow: string } {
   const ammo = AMMO[ammoId];
   if (ammo) return ammo;
-  if (ammoId === STAR.projectile) return { sprite: STAGE_SPRITES.starShard, shadow: STAGE_SPRITES.starShardShadow };
-  if (ammoId === SHATTERPOINT.projectile) return { sprite: TALENT_SPRITES.iceShard, shadow: STAGE_SPRITES.starShardShadow };
+  if (ammoId === SPLIT.projectile) return { sprite: STAGE_SPRITES.shard, shadow: STAGE_SPRITES.shardShadow };
+  if (ammoId === SHATTERPOINT.projectile) return { sprite: TALENT_SPRITES.coldShard, shadow: STAGE_SPRITES.shardShadow };
   throw new Error(`Unknown ammo '${ammoId}'`);
 }
 
 // Draws arrows in flight: the arrow raised to chest height over a shadow on its
 // ground point, sorted by that point. Sprites live as long as their sim arrow.
-// A tagged round (029) takes its tag's tint and trail; a star shard is a small sliver.
+// A tagged round (029) takes its tag's tint and trail; a Shard is a small sliver.
 export class ArrowView {
   private readonly drawn = new Map<number, Drawn>();
   private readonly scene: Scene;

@@ -89,8 +89,8 @@ export interface SimEvents {
   /** A cold hit froze an enemy (029), and a frozen enemy thawed: its id and where it stood. */
   freezes: { id: number; x: number; y: number }[];
   thaws: { id: number; x: number; y: number }[];
-  /** A star round burst into shards where it hit (029). */
-  starBursts: { x: number; y: number }[];
+  /** A Split round burst into shards where it hit (029). */
+  splits: { x: number; y: number }[];
   /** Healing started or stopped (030), by source; a change of source stops one and starts the other. */
   heals: { source: HealSource; kind: 'start' | 'stop' }[];
   /** E at a pylon whose room still has enemies. */
@@ -115,8 +115,8 @@ export interface SimEvents {
   identifies: GearPiece[];
   /** What a slot wears changed (036; null: taken off). */
   equips: { slot: GearSlot; id: number | null }[];
-  /** 036: a roll through an enemy staggered it (Rollbreaker Greaves); the Wardstone blocked a hit whole; Last Ember saved the player on 1 HP. Each where it happened, px. */
-  staggers: { id: number; x: number; y: number }[];
+  /** 036: a roll through an enemy stunned it (Rollbreaker Greaves); the Wardstone blocked a hit whole; Last Ember saved the player on 1 HP. Each where it happened, px. */
+  stuns: { id: number; x: number; y: number }[];
   wardBlocks: { x: number; y: number }[];
   emberSaves: { x: number; y: number }[];
   /** The tube was taken from its stone (012). */
@@ -154,9 +154,9 @@ export interface SimEvents {
   levelUps: { level: number }[];
   talents: { id: string }[];
   respecs: { refunded: number }[];
-  /** 037's keystones: a bomb's blast left its area charged (Blastfletch: its id, centre and radius, px); a charged arrow burst on a hit; a ley bolt shattered a frozen enemy (Shatterpoint). */
-  blastCharges: { id: number; x: number; y: number; radius: number }[];
-  chargedBursts: { x: number; y: number; radius: number }[];
+  /** 037's keystones: a bomb's Burst left a Pool (Blastfletch: its id, centre and radius, px); a pooled arrow burst on a hit; a ley bolt shattered a frozen enemy (Shatterpoint). */
+  pools: { id: number; x: number; y: number; radius: number }[];
+  poolBursts: { x: number; y: number; radius: number }[];
   shatters: { id: number; x: number; y: number }[];
   /** 038: a landmine landed and armed (its id and spot); an armed mine burst; a cluster bomb's bomblet burst (spot and radius, px). */
   mineArms: { id: number; x: number; y: number }[];
@@ -199,7 +199,7 @@ export function createEvents(): SimEvents {
     objectives: [],
     identifies: [],
     equips: [],
-    staggers: [],
+    stuns: [],
     wardBlocks: [],
     emberSaves: [],
     sealed: [],
@@ -215,7 +215,7 @@ export function createEvents(): SimEvents {
     entranceFires: [],
     freezes: [],
     thaws: [],
-    starBursts: [],
+    splits: [],
     heals: [],
     melees: [],
     blocked: [],
@@ -231,8 +231,8 @@ export function createEvents(): SimEvents {
     levelUps: [],
     talents: [],
     respecs: [],
-    blastCharges: [],
-    chargedBursts: [],
+    pools: [],
+    poolBursts: [],
     shatters: [],
     mineArms: [],
     mineBursts: [],

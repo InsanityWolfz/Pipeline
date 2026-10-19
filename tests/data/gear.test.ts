@@ -81,7 +81,7 @@ describe('the relics', () => {
     }
     expect([ROLLBREAKER.slot, WARDSTONE.slot, FEATHERPLATE.slot, LAST_EMBER.slot]).toEqual(['boots', 'helm', 'body', 'trinket']);
     expect(FEATHERPLATE.weight).toBe('heavy');
-    expect(ROLLBREAKER.staggerTicks).toBe(40);
+    expect(ROLLBREAKER.stunTicks).toBe(40);
     expect(WARDSTONE.wardTicks).toBe(360);
     expect(FEATHERPLATE).toMatchObject({ walkScale: 1, rollScale: 0.75 });
     expect(LAST_EMBER.saveInvulnTicks).toBe(60);

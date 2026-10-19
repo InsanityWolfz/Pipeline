@@ -18,12 +18,12 @@ import type { SimState } from '../../src/sim/state';
 import { arena, fireAt, HALL, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 import { foundry, put } from './foundryKit';
 
-// The cluster stage (038): the Shard die tags bombs `cluster` (a shape) for 1 ley-iron per
+// The cluster stage (038): the Cluster die tags bombs `cluster` (a shape) for 1 ley-iron per
 // 4 bombs. A cluster bomb bursts as a bomb, then 4 bomblets burst 12 ticks later, 40 px
 // round the burst point, for 8 each in 20 px. Bomblets are lobbed bursts: shields never block them.
 
-const DIE = STAGES['shard-die'];
-if (!DIE) throw new Error('no Shard die');
+const DIE = STAGES['cluster-die'];
+if (!DIE) throw new Error('no Cluster die');
 
 function holdStill(e: EnemyState): EnemyState {
   e.mode = 'windup';
@@ -52,11 +52,11 @@ describe('the cluster tag', () => {
   });
 });
 
-describe('the Shard die', () => {
+describe('the Cluster die', () => {
   it('makes 4 cluster bombs from 4 bombs and 1 ley-iron in 60 ticks, spending the ley-iron', () => {
-    expect(DIE).toMatchObject({ name: 'Shard die', tag: 'cluster', batch: 4, material: 'ley-iron', materialCount: 1, craftTicks: 60 });
+    expect(DIE).toMatchObject({ name: 'Cluster die', tag: 'cluster', batch: 4, material: 'ley-iron', materialCount: 1, craftTicks: 60 });
     const s = foundry();
-    const m = put<MachineState>(s, 'shard-die', 6, 5, 'right');
+    const m = put<MachineState>(s, 'cluster-die', 6, 5, 'right');
     const crate = put<CrateState>(s, 'crate', 7, 5, 'right');
     m.buffer = { bomb: 4, 'ley-iron': 1 };
     run(s, 1);
@@ -70,7 +70,7 @@ describe('the Shard die', () => {
 
   it('refuses a cluster bomb (one shape per round) and anything but bombs and ley-iron', () => {
     const s = foundry();
-    put<MachineState>(s, 'shard-die', 6, 5, 'right');
+    put<MachineState>(s, 'cluster-die', 6, 5, 'right');
     const offer = (item: string) => offerFromOutside(s.foundry, { tx: 6, ty: 5 }, { tx: 5, ty: 5 }, item);
     expect(offer('bomb+cluster')).toBe(false);
     expect(offer('arrow')).toBe(false);
@@ -85,11 +85,11 @@ describe('the Shard die', () => {
     movePlayer(s, at.x, at.y);
     s.claims.push('shrine');
     s.inventory = { bomb: 4, 'ley-iron': 1 };
-    expect(unlockedPieces(s)).not.toContain('shard-die');
-    expect(applyStage(s, 'shard-die')).toBe(true);
+    expect(unlockedPieces(s)).not.toContain('cluster-die');
+    expect(applyStage(s, 'cluster-die')).toBe(true);
     expect(s.inventory).toMatchObject({ bomb: 0, 'ley-iron': 0, 'bomb+cluster': 4 });
-    expect(unlockedPieces(s)).toContain('shard-die');
-    expect(summarize(s).stagesUnlocked).toContain('shard-die');
+    expect(unlockedPieces(s)).toContain('cluster-die');
+    expect(summarize(s).stagesUnlocked).toContain('cluster-die');
   });
 });
 
@@ -160,7 +160,7 @@ describe('a cluster bomb', () => {
     const s = armed(['a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'k1']);
     run(s, 1, fireAt(PLAYER_AT.x + 120, PLAYER_AT.y));
     runUntil(s, (t) => t.events.bombletBursts.length > 0, 120);
-    expect(s.nextChargeId).toBe(1);
-    expect(BLASTFLETCH.chargeTicks).toBeGreaterThan(0);
+    expect(s.nextPoolId).toBe(1);
+    expect(BLASTFLETCH.poolTicks).toBeGreaterThan(0);
   });
 });

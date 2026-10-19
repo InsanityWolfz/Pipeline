@@ -17,8 +17,8 @@ export interface LevelingSummary {
   talents: string[];
   /** Overpressure's ramp: ticks of held fire counted (0 without the keystone) and the fire-rate bonus now. */
   overpressure: { ticks: number; bonus: number };
-  /** Blastfletch's charged ground: each area's id, centre, radius (px) and ticks left. */
-  blastCharges: { id: number; x: number; y: number; radius: number; ticks: number }[];
+  /** Blastfletch's Pool: each area's id, centre, radius (px) and ticks left. */
+  pools: { id: number; x: number; y: number; radius: number; ticks: number }[];
 }
 
 export function levelingSummary(state: SimState): LevelingSummary {
@@ -29,6 +29,6 @@ export function levelingSummary(state: SimState): LevelingSummary {
     talentPoints: state.talentPoints,
     talents: [...state.talents],
     overpressure: { ticks: state.tube.overpressure, bonus: round(overpressureBonus(state)) },
-    blastCharges: state.blastCharges.filter((c) => c.roomId === state.roomId).map(({ id, x, y, radius, ticks }) => ({ id, x: round(x), y: round(y), radius, ticks })),
+    pools: state.pools.filter((c) => c.roomId === state.roomId).map(({ id, x, y, radius, ticks }) => ({ id, x: round(x), y: round(y), radius, ticks })),
   };
 }

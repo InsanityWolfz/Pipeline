@@ -38,8 +38,8 @@ export interface PlayerState extends Knockable {
   wardTicks: number;
   /** Last Ember (036) has saved the player since the last bank. */
   emberSpent: boolean;
-  /** Enemies this roll has staggered (036: Rollbreaker Greaves, once each a roll). */
-  rollStaggered: number[];
+  /** Enemies this roll has stunned (036: Rollbreaker Greaves, once each a roll). */
+  rollStunned: number[];
 }
 
 export function createPlayer(at: { x: number; y: number }): PlayerState {
@@ -63,7 +63,7 @@ export function createPlayer(at: { x: number; y: number }): PlayerState {
     lastHitTick: null,
     wardTicks: 0,
     emberSpent: false,
-    rollStaggered: [],
+    rollStunned: [],
     knockX: 0,
     knockY: 0,
     knockTicks: 0,

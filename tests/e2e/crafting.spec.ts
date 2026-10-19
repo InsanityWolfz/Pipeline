@@ -49,12 +49,12 @@ test('the full arrow, bomb and ley bolt chains craft from gathered materials', a
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
     const before = g.getState().inventory.arrow ?? 0;
-    for (const r of ['shaft', 'arrowhead', 'rope', 'arrow', 'casing', 'fuse', 'ley-shard', 'bomb', 'ley-bolt']) g.craft(r);
+    for (const r of ['shaft', 'arrowhead', 'rope', 'arrow', 'casing', 'fuse', 'ley-dust', 'bomb', 'ley-bolt']) g.craft(r);
     return { before, after: g.getState() };
   });
   expect(s.after.inventory.arrow).toBe(s.before + 4);
   expect(s.after.inventory).toMatchObject({ bomb: 2, 'ley-bolt': 2, shaft: 1, arrowhead: 1, rope: 1 });
-  expect(s.after.crafted).toEqual(['arrow', 'arrowhead', 'bomb', 'casing', 'fuse', 'ley-bolt', 'ley-shard', 'rope', 'shaft']);
+  expect(s.after.crafted).toEqual(['arrow', 'arrowhead', 'bomb', 'casing', 'fuse', 'ley-bolt', 'ley-dust', 'rope', 'shaft']);
   expect(errors).toEqual([]);
 });
 
@@ -127,7 +127,7 @@ test('an arrow pierces two Husks (029), and a bomb burst kills one', async ({ pa
   const result = await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    for (const r of ['casing', 'fuse', 'ley-shard', 'ley-shard', 'ley-shard', 'bomb']) g.craft(r);
+    for (const r of ['casing', 'fuse', 'ley-dust', 'ley-dust', 'ley-dust', 'bomb']) g.craft(r);
     for (let i = 0; i < 5; i++) g.craft('ley-bolt');
     let s = g.getState();
     const nearest = () => {

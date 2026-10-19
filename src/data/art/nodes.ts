@@ -203,7 +203,7 @@ const LEY_VEIN: NodeLooks = {
 };
 
 /** Every node type's looks, by node id. */
-export const NODE_LOOKS: Readonly<Record<string, NodeLooks>> = { tree: TREE, rubble: BOULDER, reeds: REEDS, 'ley-vein': LEY_VEIN, 'rime-cluster': RIME_CLUSTER, 'ley-iron-seam': LEY_IRON_SEAM };
+export const NODE_LOOKS: Readonly<Record<string, NodeLooks>> = { tree: TREE, rubble: BOULDER, reeds: REEDS, 'ley-vein': LEY_VEIN, 'rime-outcrop': RIME_CLUSTER, 'ley-iron-seam': LEY_IRON_SEAM };
 
 /** Every node frame, as vector sprites. */
 export const NODE_SPRITES_VECTOR: readonly VectorSprite[] = Object.entries(NODE_LOOKS).flatMap(([id, looks]) => {

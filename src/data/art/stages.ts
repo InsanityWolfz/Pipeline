@@ -5,9 +5,9 @@ import type { NodeLooks } from './nodes';
 import { shadow } from './terrain';
 import { ellipse, flat, line, path, solid, trim, type Shape, type ShapeStyle, type VectorSprite } from './types';
 
-// 029's art, in the 020 style: the rime shard and the rime cluster it's chipped
-// from, each tagged round's icon (its base's icon with its tag's badge), the star
-// shard in flight and its burst, and the ice round a frozen enemy.
+// 029's art, in the 020 style: the rimestone and the rime outcrop it's chipped
+// from, each tagged round's icon (its base's icon with its tag's badge), the Shard
+// in flight and its burst, and the ice round a frozen enemy.
 
 const icon = (key: string, shapes: readonly Shape[]): VectorSprite => ({ key, size: [16, 16], anchor: [8, 8], frames: [shapes] });
 
@@ -25,7 +25,7 @@ function rime(x: number, y: number, h: number, w: number, lean: number, alpha = 
   ];
 }
 
-// The rime shard: three chips of rime ice on a crust of frost.
+// The rimestone: three chips of rime ice on a crust of frost.
 const RIME_SHARD: Shape[] = [
   ellipse(0, 5, 6, 1.6, flat({ id: 'foam', alpha: 0.7 })),
   ...rime(-3, 5.4, 7.5, 2, -1.4),
@@ -33,7 +33,7 @@ const RIME_SHARD: Shape[] = [
   ...rime(0.2, 5.6, 11, 2.6, 0.4),
 ];
 
-// Rime clusters: rime spikes rising from frosted rock in the Grotto; fewer and smaller as shards are chipped off,
+// Rime outcrops: rime spikes rising from frosted rock in the Grotto; fewer and smaller as shards are chipped off,
 // then a bare crust of frost that slowly grows spikes again.
 const crust: Shape[] = [
   shadow(14, 3, -1),
@@ -92,7 +92,7 @@ const TAG_ART: Readonly<Record<string, { badge: readonly Shape[]; head?: ShapeSt
     ],
   },
   // A five-point star.
-  star: {
+  split: {
     badge: [
       ellipse(4.2, 4.2, 3.4, 3.4, solid('cyan-deep')),
       path(starPath(4.2, 4.2, 2.6, 0.45), { fill: 'snow', glow: { color: 'cyan-glow', blur: 2 } }),
@@ -108,7 +108,7 @@ const TAG_ART: Readonly<Record<string, { badge: readonly Shape[]; head?: ShapeSt
   },
 };
 
-/** A five-point star round (x, y), points `r` out and its waist `r * inner`, one point up. */
+/** A five-point Split round (x, y), points `r` out and its waist `r * inner`, one point up. */
 function starPath(x: number, y: number, r: number, inner: number): string {
   const pts = Array.from({ length: 10 }, (_, i) => {
     const a = -Math.PI / 2 + (i * Math.PI) / 5;
@@ -134,14 +134,14 @@ function roundIcon(round: string): VectorSprite {
   return icon(ROUND_ICONS[round] ?? '', [...shapes, ...art.flatMap((a) => a.badge)]);
 }
 
-/** A star shard in flight (029), pointing right: a small cyan sliver. */
+/** A Shard in flight (029), pointing right: a small cyan sliver. */
 const SHARD: Shape[] = [
   { ...line([-6, 0, -1, 0], 1.2, { id: 'cyan', alpha: 0.5 }), glow: { color: 'cyan', blur: 2 } },
   path('M 3.4 0 L -0.6 -1.4 L -1.6 0 L -0.6 1.4 Z', { fill: 'cyan-glow', outline: true, glow: { color: 'cyan', blur: 3 } }),
 ];
 
-/** The star burst's flash: a five-point star of ley light. */
-const STAR_BURST: Shape[] = [
+/** The Split's flash: a five-point star of ley light. */
+const SPLIT_FLASH_SHAPES: Shape[] = [
   ellipse(0, 0, 9, 9, { fill: { radial: [0, 0, 9], stops: [{ at: 0, color: { id: 'snow', alpha: 0.9 } }, { at: 1, color: { id: 'cyan', alpha: 0 } }] } }),
   path(starPath(0, 0, 11, 0.32), { fill: 'cyan-glow', glow: { color: 'cyan', blur: 6 } }),
   ellipse(0, 0, 2.6, 2.6, flat('snow')),
@@ -173,11 +173,11 @@ function iceCase(w: number, h: number, cracked: boolean): Shape[] {
 const sprite = (key: string, size: readonly [number, number], anchor: readonly [number, number], shapes: readonly Shape[]): VectorSprite => ({ key, size, anchor, frames: [shapes] });
 
 export const STAGE_SPRITES_VECTOR: readonly VectorSprite[] = [
-  icon(STAGE_SPRITES.itemRimeShard, RIME_SHARD),
+  icon(STAGE_SPRITES.itemRimestone, RIME_SHARD),
   ...ROUNDS.map(roundIcon),
-  sprite(STAGE_SPRITES.starShard, [12, 6], [7, 3], SHARD),
-  sprite(STAGE_SPRITES.starShardShadow, [8, 4], [4, 2], [ellipse(0, 0, 3, 1, { fill: { id: 'ground-shade', alpha: 0.35 } })]),
-  sprite(STAGE_SPRITES.starBurst, [28, 28], [14, 14], STAR_BURST),
+  sprite(STAGE_SPRITES.shard, [12, 6], [7, 3], SHARD),
+  sprite(STAGE_SPRITES.shardShadow, [8, 4], [4, 2], [ellipse(0, 0, 3, 1, { fill: { id: 'ground-shade', alpha: 0.35 } })]),
+  sprite(STAGE_SPRITES.splitFlash, [28, 28], [14, 14], SPLIT_FLASH_SHAPES),
   sprite(STAGE_SPRITES.iceCase, [38, 50], [19, 46], iceCase(28, 40, false)),
   sprite(STAGE_SPRITES.iceCaseCracked, [38, 50], [19, 46], iceCase(28, 40, true)),
   sprite(STAGE_SPRITES.iceCaseLarge, [64, 80], [32, 74], iceCase(50, 66, false)),

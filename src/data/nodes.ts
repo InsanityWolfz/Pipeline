@@ -41,7 +41,7 @@ export const NODES: Readonly<Record<string, NodeDef>> = {
   rubble: node('rubble', 'Boulder', 'stone', 'rock-field', { w: 22, h: 10 }),
   reeds: node('reeds', 'Reeds', 'fiber', 'pond-edge', { w: 18, h: 8 }),
   'ley-vein': node('ley-vein', 'Ley vein', 'ley-crystal', 'ley-line', { w: 20, h: 10 }),
-  'rime-cluster': node('rime-cluster', 'Rime cluster', 'rime-shard', 'frozen-grotto', { w: 18, h: 10 }),
+  'rime-outcrop': node('rime-outcrop', 'Rime outcrop', 'rimestone', 'frozen-grotto', { w: 18, h: 10 }),
   'ley-iron-seam': node('ley-iron-seam', 'Ley-iron seam', 'ley-iron', 'cliff-seam', { w: 20, h: 10 }),
 };
 
