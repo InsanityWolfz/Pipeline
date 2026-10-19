@@ -87,6 +87,8 @@ export interface UiState {
   marker: { x: number; y: number } | null;
   /** The "+ shaft" popups still on screen (027), by text. */
   madePopups: string[];
+  /** The objective line's finished-goal tick, its alpha (0 once faded): screenshots wait for it to go (028). */
+  objectiveTick: number;
   /** The centre of the world camera's view, world px (023: screenshots wait for it to settle on the player). */
   camera: { x: number; y: number };
   /** The bottom HUD as drawn (025), view px: the hotbar row (and whether it shows) and the tube slot with each unit's icon frame and text. */

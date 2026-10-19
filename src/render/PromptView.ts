@@ -21,7 +21,8 @@ type Point = { x: number; y: number };
 
 /**
  * Where an arrow marker's tip goes: over the middle one of the intake's open entrances, just above the mouth tile's
- * bottom (027); or over the middle one of the supply ports standing, clear of its head (028). Null with none there.
+ * bottom (027); or over the first of the supply ports standing, clear of its head (028): the plates hang between the
+ * ports, so only above the first is there room without covering one. Null with none there.
  */
 function markerPoint(sim: SimState, target: MarkerTarget): Point | null {
   const L = TUTORIAL_LAYOUT.marker;
@@ -30,7 +31,10 @@ function markerPoint(sim: SimState, target: MarkerTarget): Point | null {
     const mouth = middle(INTAKE.entrances.filter((_, i) => sim.link.entrances[i]?.open));
     return mouth ? { x: (mouth.tx + 0.5) * TILE_SIZE, y: (mouth.ty + 1) * TILE_SIZE - L.lift } : null;
   }
-  const port = middle(sim.fixtures.map((f) => fixtureDef(f.id)).filter((d) => d.kind === 'port'));
+  const port = sim.fixtures
+    .map((f) => fixtureDef(f.id))
+    .filter((d) => d.kind === 'port')
+    .sort((a, b) => a.ty - b.ty)[0];
   return port ? { x: (port.tx + 0.5) * TILE_SIZE, y: (port.ty + 1) * TILE_SIZE - L.portLift } : null;
 }
 
@@ -46,7 +50,7 @@ export interface PromptState extends Point {
 // player anywhere; the build prompt only in the foundry, where building works.
 // The foundry's conduit step (027) has an arrow marker over the intake instead,
 // bobbing over its open entrance anywhere in the foundry; the supply port goal
-// (028) has one over the ports, bobbing over the middle one.
+// (028) has one over the ports, bobbing over the first (northmost) one.
 export class PromptView {
   private readonly bob: Pulse;
   private readonly cap: GameObjects.Image;

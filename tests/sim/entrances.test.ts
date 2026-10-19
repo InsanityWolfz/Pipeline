@@ -301,6 +301,16 @@ describe('the volley', () => {
     expect(s.link.entrances[1]?.cooldown).toBe(BOMB_TICKS - 10);
   });
 
+  it('an entrance keeps its cooldown across an ammo change: a bomb after its last arrow waits out the arrow pace', () => {
+    const s = volley([null, ['arrow', 1], null]);
+    run(s, 1, fireAt(600, 400));
+    expect(s.link.entrances[1]).toMatchObject({ ammoId: null, count: 0, cooldown: ARROW_TICKS });
+    Object.assign(s.link.entrances[1] as EntranceState, { ammoId: 'bomb', count: 2 });
+    const waited = runUntil(s, (x) => x.bombs.length > 0, ARROW_TICKS * 2, fireAt(600, 400));
+    expect(waited).toBe(ARROW_TICKS);
+    expect(s.link.entrances[1]?.cooldown).toBe(BOMB_TICKS);
+  });
+
   it('two arrow entrances that start together stay a fan', () => {
     const s = volley([['arrow', 9], null, ['arrow', 9]]);
     for (let t = 0; t < ARROW_TICKS * 4; t++) {

@@ -96,10 +96,13 @@ function fire(state: SimState, cmd: Command, dx: number, dy: number): void {
   const { tube } = state;
   const press = nextPress(state);
   if (press.kind === 'volley') {
-    const ready = press.rounds.filter((r) => state.link.entrances[r.entrance]?.cooldown === 0);
-    for (const r of ready) {
+    // Each round with its entrance, kept only where that entrance's own cooldown has run out. An entrance keeps its
+    // cooldown when it empties and refills with another ammo: the new ammo waits out the old shot's pace.
+    const ready = press.rounds.flatMap((r) => {
       const e = state.link.entrances[r.entrance];
-      if (!e) continue;
+      return e && e.cooldown === 0 ? [{ ...r, e }] : [];
+    });
+    for (const { e, ...r } of ready) {
       const ticks = ammoDef(r.ammoId).fireTicks;
       takeFromEntrance(e);
       e.cooldown = ticks;

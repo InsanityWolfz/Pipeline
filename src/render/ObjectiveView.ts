@@ -48,6 +48,11 @@ export class ObjectiveView {
     this.scene.tweens.add({ targets: this.tick, alpha: 0, delay: TUTORIAL_LAYOUT.tickMs / 2, duration: TUTORIAL_LAYOUT.tickMs / 2 });
   }
 
+  /** How strongly the finished goal's tick shows beside the line (0 once it has faded), for the test hook. */
+  get tickAlpha(): number {
+    return this.tick.alpha;
+  }
+
   /** The band's screen rect while it shows, so a press on it never fires (015). */
   private band: { x: number; y: number; w: number; h: number } | null = null;
 

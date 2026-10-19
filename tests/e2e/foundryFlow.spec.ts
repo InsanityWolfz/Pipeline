@@ -133,6 +133,8 @@ test.describe('review screenshots (028)', () => {
     const s = await page.evaluate((n) => window.__GAME__?.completeObjectives(n), PORT_GOAL);
     expect(s?.objective).toEqual({ index: PORT_GOAL, text: 'Run a supply port into your line' });
     await expect.poll(async () => (await ui(page))?.marker).not.toBeNull();
+    // The tick for the goals just finished fades first, so none sits beside the unfinished goal.
+    await expect.poll(async () => (await ui(page))?.objectiveTick, { timeout: 10_000 }).toBe(0);
     await page.screenshot({ path: `${SHOTS}/02-goal-port-marker.png` });
 
     // A conduit from the stone port (1, 6) into a hopper.

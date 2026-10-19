@@ -1,5 +1,3 @@
-import { TICK_RATE } from './config';
-
 // Claiming (009): the pylon, the supply ports (028) and the foundry's fixed furniture
 // (with 010's identification bench).
 // Starting values from spec 009; tune in playtest.
@@ -24,17 +22,6 @@ export const SUPPLY_TICKS = 240;
 export const SITE_SUPPLY: Readonly<Record<string, readonly string[]>> = {
   shrine: ['wood', 'stone', 'fiber', 'ley-crystal'],
 };
-
-/** How many claimed sites supply a raw: its port's pylon count. */
-export function portPylons(claims: readonly string[], raw: string, supply: Readonly<Record<string, readonly string[]>> = SITE_SUPPLY): number {
-  return claims.filter((site) => supply[site]?.includes(raw)).length;
-}
-
-/** Ticks between a port's pushes with `pylons` supplying it (at least 1). */
-export const portTicks = (pylons: number): number => Math.round(SUPPLY_TICKS / Math.max(1, pylons));
-
-/** Raws a port sends a minute with `pylons` supplying it. */
-export const portPerMinute = (pylons: number): number => Math.round((60 * TICK_RATE) / portTicks(pylons));
 
 /** How close the player's feet box must be to a fixture to use it, px. */
 export const FIXTURE_REACH = 20;

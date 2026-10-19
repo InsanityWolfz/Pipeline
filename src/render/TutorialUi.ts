@@ -10,10 +10,10 @@ import { TutorialView } from './TutorialView';
 import type { UiState } from './testHook';
 
 /** What the tutorial reports to the test hook's `ui()`. */
-export type TutorialUiState = Pick<UiState, 'intakePrompt' | 'prompt' | 'marker' | 'madePopups'>;
+export type TutorialUiState = Pick<UiState, 'intakePrompt' | 'prompt' | 'marker' | 'madePopups' | 'objectiveTick'>;
 
 /** The tutorial's part of `ui()` before the scene has built its views. */
-export const NO_TUTORIAL_UI: TutorialUiState = { intakePrompt: null, prompt: null, marker: null, madePopups: [] };
+export const NO_TUTORIAL_UI: TutorialUiState = { intakePrompt: null, prompt: null, marker: null, madePopups: [], objectiveTick: 0 };
 
 /** The piece the current objective names, whose build-bar cell pulses (027), or null. */
 export function highlightOf(sim: SimState): string | null {
@@ -43,7 +43,7 @@ export class TutorialUi {
    * point, and the "+ shaft" popups on screen (027).
    */
   get state(): TutorialUiState {
-    return { intakePrompt: this.intake.shown, prompt: this.prompt.shown, marker: this.prompt.markerAt, madePopups: this.made.shown };
+    return { intakePrompt: this.intake.shown, prompt: this.prompt.shown, marker: this.prompt.markerAt, madePopups: this.made.shown, objectiveTick: this.objective.tickAlpha };
   }
 
   /** True over the objective band, so a press there never fires (015). */

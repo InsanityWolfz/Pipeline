@@ -9,10 +9,15 @@ export const DESCRIPTIONS = {
   leyLine: "Carries the pylon's haul to the foundry.",
 } as const;
 
+/** Between the parts of a port's plate and hover line (028). */
+const PORT_SEPARATOR = ' · ';
+
 /** A supply port's plate (028): how many pylons feed it and its rate, e.g. "×1 pylon · 15/min". */
 export function portPlate(pylons: number, perMinute: number): string {
-  return `×${pylons} ${pylons === 1 ? 'pylon' : 'pylons'} · ${perMinute}/min`;
+  return `×${pylons} ${pylons === 1 ? 'pylon' : 'pylons'}${PORT_SEPARATOR}${perMinute}/min`;
 }
 
-/** Added to a port's hover line while a refused raw waits in it (028). */
-export const PORT_WAITING = 'waiting';
+/** A port's hover line (028): its plate, and "waiting" while a refused raw waits in it. */
+export function portHover(plate: string, waiting: boolean): string {
+  return waiting ? `${plate}${PORT_SEPARATOR}waiting` : plate;
+}

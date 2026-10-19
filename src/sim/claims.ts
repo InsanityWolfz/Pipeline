@@ -1,4 +1,5 @@
-import { ACTIVATE_TICKS, CLAIM_TICKS, FIXTURE_REACH, FIXTURES, portPylons, portTicks, PYLON_REACH, SITE_SUPPLY, type FixtureDef } from '../data/claims';
+import { ACTIVATE_TICKS, CLAIM_TICKS, FIXTURE_REACH, FIXTURES, PYLON_REACH, SITE_SUPPLY, SUPPLY_TICKS, type FixtureDef } from '../data/claims';
+import { TICK_RATE } from '../data/config';
 import { FEET_BOX } from '../data/player';
 import { FOUNDRY_ROOM, type Room } from '../data/rooms';
 import type { Command } from './input';
@@ -187,6 +188,17 @@ function travelToPylon(state: SimState): void {
   if (!room?.pylon) return;
   travelTo(state, room.id, { tx: room.pylon.tx, ty: room.pylon.ty + 1 });
 }
+
+/** How many claimed sites supply a raw (028): its port's pylon count. `supply` defaults to the game's site table. */
+export function portPylons(claims: readonly string[], raw: string, supply: Readonly<Record<string, readonly string[]>> = SITE_SUPPLY): number {
+  return claims.filter((site) => supply[site]?.includes(raw)).length;
+}
+
+/** Ticks between a port's pushes with `pylons` supplying it (at least 1): round(SUPPLY_TICKS / N). */
+export const portTicks = (pylons: number): number => Math.round(SUPPLY_TICKS / Math.max(1, pylons));
+
+/** Raws a port sends a minute with `pylons` supplying it. */
+export const portPerMinute = (pylons: number): number => Math.round((60 * TICK_RATE) / portTicks(pylons));
 
 /** A port's pylon count (028): the claimed sites that supply its raw. */
 export function pylonsOf(state: Pick<SimState, 'claims'>, f: FixtureState): number {

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { FIXTURES, portPerMinute, portPylons, portTicks, SITE_SUPPLY, SUPPLY_TICKS } from '../../src/data/claims';
+import { FIXTURES, SITE_SUPPLY, SUPPLY_TICKS } from '../../src/data/claims';
 import { SHRINE_SITE } from '../../src/data/rooms';
 import { OVERWORLD_ROOM } from '../../src/data/overworld';
-import { claim } from '../../src/sim/claims';
+import { claim, portPerMinute, portPylons, portTicks } from '../../src/sim/claims';
 import { fixtureDef, portFront } from '../../src/sim/fixtures';
 import type { ConduitState, CrateState } from '../../src/sim/pieces';
 import { createSim } from '../../src/sim/state';

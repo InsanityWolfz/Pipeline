@@ -1,11 +1,10 @@
 import type { GameObjects, Scene } from 'phaser';
-import { portPerMinute } from '../data/claims';
 import { TILE_SIZE } from '../data/config';
 import { portPlate } from '../data/descriptions';
 import { FOUNDRY_LAYOUT, PORT_LOOK } from '../data/foundryAssets';
 import { itemDef } from '../data/items';
 import { FOUNDRY_ROOM } from '../data/rooms';
-import { pylonsOf } from '../sim/claims';
+import { portPerMinute, pylonsOf } from '../sim/claims';
 import { fixtureDef } from '../sim/fixtures';
 import type { SimState } from '../sim/state';
 import { drawTablet } from './tablet';
@@ -73,7 +72,7 @@ export class PortView {
 
   /** The plate's tablet sized to its text, under the port, reading into the room. */
   private drawPlate(parts: PortParts, text: string, at: { tx: number; ty: number }): void {
-    const { platePad: pad, plateGap, plateAlpha, plateX } = PORT_LOOK;
+    const { platePad: pad, plateGap, plateAlpha, plateX, textDrop } = PORT_LOOK;
     parts.shown = text;
     parts.text.set(text);
     const top = (at.ty + 1) * TILE_SIZE + plateGap;
@@ -83,7 +82,7 @@ export class PortView {
     const depth = top + h;
     parts.plate.clear().setDepth(depth);
     drawTablet(parts.plate, left, top, w, h, plateAlpha);
-    parts.text.moveTo(left + pad.x, top + pad.y + 1);
+    parts.text.moveTo(left + pad.x, top + pad.y + textDrop);
     parts.text.obj.setDepth(depth + FOUNDRY_LAYOUT.onTopNudge);
   }
 }

@@ -1,7 +1,6 @@
 import { TILE_SIZE } from '../data/config';
-import { DESCRIPTIONS, PORT_WAITING, portPlate } from '../data/descriptions';
-import { portPerMinute } from '../data/claims';
-import { pylonsOf } from '../sim/claims';
+import { DESCRIPTIONS, portHover, portPlate } from '../data/descriptions';
+import { portPerMinute, pylonsOf } from '../sim/claims';
 import { INTAKE } from '../data/foundry';
 import { enemyDef } from '../data/enemies';
 import { HOVER_NAME, WORLD_NAMES } from '../data/hudLayout';
@@ -76,7 +75,7 @@ export function nameAt(sim: SimState, roomId: string, px: number, py: number): H
       // A supply port (028): its plate's text, and whether a refused raw is waiting in it.
       const pylons = pylonsOf(sim, fixture);
       const plate = portPlate(pylons, portPerMinute(pylons));
-      return { name: def.name, ...centre(def), rise: HOVER_NAME.tile.rise, description: fixture.item ? `${plate} · ${PORT_WAITING}` : plate };
+      return { name: def.name, ...centre(def), rise: HOVER_NAME.tile.rise, description: portHover(plate, fixture.item !== null) };
     }
   }
   for (const e of sim.enemies) {
