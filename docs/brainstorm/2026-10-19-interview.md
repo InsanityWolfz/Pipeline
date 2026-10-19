@@ -117,3 +117,12 @@ Oct 19, 2026 · Shaun's answers, which follow on from docs/brainstorm/2026-10-19
 - **Per level:** 1 talent point.
 - **Tree:** 15–20 nodes with 3 keystones, one small constellation from a centre start. Lanes are Arrows, Bombs, Ley, Survival and Tube. It grows with each region.
 - **Respec:** free, at the foundry.
+
+## Round 11
+- **Keystones:** lane capstones and combos between ammo. "Arrows pierce infinitely" cannot be one of them.
+- **Boss refights:** yes, at an altar. After the first kill, an offering at the arena summons the boss again for its drops. The first kill unlocks the gate.
+- **Laser:** parked for now. Shaun: "region 2 will just unlock metal for landmines and the ability to make the bombs into cluster bombs".
+- **Anything else:** no, that covers it.
+
+## Interview complete
+Draft specs follow from these answers, numbered 028 onward and replacing the old 028/029 idea rows.
