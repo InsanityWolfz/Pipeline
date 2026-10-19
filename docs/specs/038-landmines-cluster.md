@@ -105,3 +105,8 @@ The moved text leaves these undecided. Each has a proposed answer, and the build
 - **Layout knock-ons of the new items:** the inventory panel (031) reserves a row per item, so its rows are now 15 px, not 16, to keep it in two columns on screen; a sorter's item menu (it lists every item) grows longer columns instead of a fourth column off the screen's edge; the crafting menu is always two columns.
 - **Choices the spec didn't make:** a landmine that meets the shut ley barrier mid-flight drops and arms there (a bomb bursts there); bomblets take the talent numbers when their bomb bursts; the intake gauge shows landmines in iron and cluster bombs in a hotter ember.
 - **Art** for the landmine, the iron plate, the bomblets, the flashes, the cluster badge and the three machines waits on Shaun's approval by eye (docs/review/038).
+
+## Raised after the build (for Shaun at playtest)
+- **Proposals to confirm:** the builder proposed and built an answer for each of 038.1–038.11 (in the open questions above). Two change earlier layouts: inventory rows are 15 px instead of 16, and the crafting menu has two fixed columns.
+- **"Found" ley-iron:** ley-iron counts as found whenever it's in the inventory, so ley-iron taken from a crate fed by the Cistern Terrace port also reveals the mine recipes.
+- **Art:** the mine and cluster art wait on Shaun's approval by eye (docs/review/038).
