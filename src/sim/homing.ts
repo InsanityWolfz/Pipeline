@@ -30,7 +30,8 @@ export function steerArrows(state: SimState): (arrow: ArrowState) => void {
   const max = HOMING.turnDegrees;
   return (arrow) => {
     if (arrow.targetId === null) return;
-    const e = state.enemies.find((en) => en.id === arrow.targetId && en.roomId === arrow.roomId && en.health > 0);
+    // A target gone under the ground (035) is lost like a dead one.
+    const e = state.enemies.find((en) => en.id === arrow.targetId && en.roomId === arrow.roomId && en.health > 0 && targetable(en));
     if (!e) {
       arrow.targetId = null;
       return;

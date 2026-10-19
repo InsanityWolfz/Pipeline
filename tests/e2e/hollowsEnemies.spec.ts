@@ -81,11 +81,14 @@ test('a Shardback: its front blocks; circling inside its turn to its back, the a
     if (!g) throw new Error('no game');
     const sign = (v: number): -1 | 0 | 1 => (Math.abs(v) < 1.5 ? 0 : v > 0 ? 1 : -1);
     let backHits = 0;
-    let blocked = 0;
+    let bashHits = 0;
+    let bashes = 0;
+    // From full health, never topped up: the flanking route has to keep the player alive on its own.
+    g.setPlayerHealth(100);
     for (let t = 0; t < 3000; t++) {
       const s = g.getState();
       const e = s.enemies.find((x) => x.id === eid);
-      if (!e) return { dead: true, backHits, blocked, deaths: 1 };
+      if (!e) return { dead: true, backHits, bashHits, bashes, health: s.player.health, ko: false };
       const p = s.player;
       const a = ((e.angle ?? 0) * Math.PI) / 180;
       const bearing = Math.atan2(p.y - e.y, p.x - e.x);
@@ -95,15 +98,22 @@ test('a Shardback: its front blocks; circling inside its turn to its back, the a
       const goal = { x: e.x + Math.cos(along) * 26, y: e.y + Math.sin(along) * 26 };
       const behind = off > (110 * Math.PI) / 180;
       const next = g.step(1, { moveX: sign(goal.x - p.x), moveY: sign(goal.y - p.y), fire: behind, aimX: e.x, aimY: e.y - 12 });
-      g.setPlayerHealth(100);
+      const bashing = next.enemies.find((x) => x.id === eid)?.mode === 'swipe';
+      if (bashing && e.mode !== 'swipe') bashes += 1;
+      if (bashing) bashHits += next.events.hits.filter((h) => h.target === 'player').length;
       backHits += next.events.hits.filter((h) => h.target === 'enemy' && h.id === eid).length;
-      blocked += next.events.blocked.filter((b) => b.id === eid).length;
-      if (next.events.deaths.some((d) => d.id === eid)) return { dead: true, backHits, blocked, deaths: 1 };
+      if (next.player.dying > 0) return { dead: false, backHits, bashHits, bashes, health: 0, ko: true };
+      if (next.events.deaths.some((d) => d.id === eid)) return { dead: true, backHits, bashHits, bashes, health: next.player.health, ko: false };
     }
-    return { dead: false, backHits, blocked, deaths: 0 };
+    return { dead: false, backHits, bashHits, bashes, health: g.getState().player.health, ko: false };
   }, id);
   expect(fight.dead).toBe(true);
+  expect(fight.ko).toBe(false);
   expect(fight.backHits).toBeGreaterThanOrEqual(7);
+  // It bashes as the player circles, but always at where they were: no bash lands on the flanking route.
+  expect(fight.bashes).toBeGreaterThan(0);
+  expect(fight.bashHits).toBe(0);
+  expect(fight.health).toBe(100);
   expect(errors).toEqual([]);
 });
 

@@ -12,7 +12,8 @@ import { unit } from './direction';
 // then steps out to a tile that sees the player and paints them with its laser: tracking
 // (a line blocked by a solid cancels it, and it steps out again), then locked and blinking,
 // the cue to dodge. It fires one fast bolt down the locked line and goes back to cover.
-// Crowded, it retreats to cover farther away instead of shooting.
+// Crowded, it retreats to cover farther away instead of shooting. With no tile a step away
+// that sees the player, it keeps its distance and tries again when its cooldown comes round.
 
 /** Advances a Sniper's mode and returns this tick's own move, px. */
 export function snipeThink(state: SimState, e: EnemyState, def: SniperDef): [number, number] {
@@ -52,17 +53,25 @@ export function snipeThink(state: SimState, e: EnemyState, def: SniperDef): [num
       startWindup(e, def, dx, dy);
       return [0, 0];
     }
-    // Step out to a tile that sees them, or with none in a step, close in until one does.
-    e.mode = 'peek';
+    // Step out to a tile that sees them; with none in a step, it waits out another cooldown keeping its distance.
     const peek = peekSpot(state, e, def);
-    return peek ? walkTo(e, def, peek) : toward(dx, dy, def);
+    if (peek) {
+      e.mode = 'peek';
+      return walkTo(e, def, peek);
+    }
+    e.cooldown = snipe.cooldownTicks;
+    e.mode = 'chase';
+    return keepDistance(def, dx, dy, dist);
   }
   e.mode = 'chase';
   const cover = coverSpot(state, e, def);
-  if (cover) return walkTo(e, def, cover);
-  // No cover in reach: keep its distance in the open, as the Wisp (009).
-  const off = dist - snipe.keepAway;
-  if (Math.abs(off) < snipe.settle) return [0, 0];
+  return cover ? walkTo(e, def, cover) : keepDistance(def, dx, dy, dist);
+}
+
+/** No cover in reach: it keeps its distance in the open, as the Wisp (009), holding within `settle`. */
+function keepDistance(def: SniperDef, dx: number, dy: number, dist: number): [number, number] {
+  const off = dist - def.snipe.keepAway;
+  if (Math.abs(off) < def.snipe.settle) return [0, 0];
   const [sx, sy] = toward(dx, dy, def);
   const scale = Math.min(1, Math.abs(off) / Math.hypot(sx, sy)) * Math.sign(off);
   return [sx * scale, sy * scale];
@@ -95,10 +104,16 @@ export function snipePhase(state: SimState, e: EnemyState, def: SniperDef): Snip
   }
 }
 
-/** Its laser's ground line while it winds up, else null: to the player's feet while tracking, along the locked aim to the first solid (or its range) once locked. */
+/**
+ * Its laser's ground line while it winds up, else null: toward the player's feet while tracking, along the locked aim
+ * to its range once locked; either way it stops at the first solid (a frozen Sniper's line can't cancel itself).
+ */
 export function snipeLine(state: SimState, e: EnemyState, def: SniperDef): { x0: number; y0: number; x1: number; y1: number } | null {
   if (e.mode !== 'windup') return null;
-  if (e.modeTicks < def.snipe.trackTicks) return { x0: e.x, y0: e.y, x1: state.player.x, y1: state.player.y };
-  const reach = shotReach(roomById(e.roomId), e.x, e.y, e.swipeDirX, e.swipeDirY, def.snipe.range);
-  return { x0: e.x, y0: e.y, x1: e.x + e.swipeDirX * reach, y1: e.y + e.swipeDirY * reach };
+  const tracking = e.modeTicks < def.snipe.trackTicks;
+  const p = state.player;
+  const toPlayer = Math.hypot(p.x - e.x, p.y - e.y);
+  const [ux, uy] = tracking && toPlayer > 0 ? [(p.x - e.x) / toPlayer, (p.y - e.y) / toPlayer] : [e.swipeDirX, e.swipeDirY];
+  const reach = shotReach(roomById(e.roomId), e.x, e.y, ux, uy, tracking ? toPlayer : def.snipe.range);
+  return { x0: e.x, y0: e.y, x1: e.x + ux * reach, y1: e.y + uy * reach };
 }

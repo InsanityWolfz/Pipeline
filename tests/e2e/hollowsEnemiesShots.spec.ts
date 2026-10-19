@@ -77,12 +77,13 @@ test.describe('review screenshots (035)', () => {
   test('a mixed Region 2 pack closing in: a Shardback in front, Chargers on the flanks, a Burrower going under, a Sniper hanging back', async ({ page }) => {
     test.setTimeout(120_000);
     await sandbox(page);
+    // Kept below the objective line and the minimap in the view's top right.
     for (const [id, dx, dy] of [
-      ['shardback', 150, 0],
-      ['charger', 170, -70],
-      ['charger', 190, 70],
-      ['burrower', 200, 20],
-      ['sniper', 270, -30],
+      ['shardback', 150, 10],
+      ['charger', 170, -35],
+      ['charger', 180, 85],
+      ['burrower', 200, 40],
+      ['sniper', 260, 0],
     ] as const)
       await spawn(page, id, dx, dy);
     await page.evaluate(() => {

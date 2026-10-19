@@ -1,4 +1,4 @@
-import type { SoundRecipe } from './sounds.ts';
+import type { SoundRecipe } from './soundRecipe.ts';
 
 // 035's sounds, as synth recipes beside sounds.ts's: the Charger pawing (a stone scrape and
 // a rising snort) and slamming into a wall, the Burrower's rumble under the ground and its
@@ -15,6 +15,14 @@ export const HOLLOWS_ENEMY_SOUNDS = {
   laserHum: 'laser-hum',
   laserLock: 'laser-lock',
   sniperBolt: 'sniper-bolt',
+} as const;
+
+/** Their wind-up cues, by enemy kind (joined into WINDUP_SOUNDS): a snort, a rumble, the Husk's cue as runes flare, a laser's hum. */
+export const HOLLOWS_ENEMY_WINDUPS = {
+  charger: HOLLOWS_ENEMY_SOUNDS.chargerWindup,
+  burrower: HOLLOWS_ENEMY_SOUNDS.burrowRumble,
+  shardback: 'husk-windup',
+  sniper: HOLLOWS_ENEMY_SOUNDS.laserHum,
 } as const;
 
 export const HOLLOWS_ENEMY_SOUND_RECIPES = {

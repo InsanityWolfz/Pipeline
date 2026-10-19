@@ -6,6 +6,7 @@ import { coverSpot } from '../../src/sim/cover';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import { clearShot } from '../../src/sim/sightLine';
 import { roomById, type SimState } from '../../src/sim/state';
+import { TILE } from '../../src/data/rooms';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
 import { arena, HALL, movePlayer, PLAYER_AT, run, runUntil } from './fight';
@@ -114,7 +115,7 @@ describe('the Sniper construct', () => {
     expect(s.events.snipes).toEqual([{ id: e.id, x: e.x, y: e.y, dx: locked.x, dy: locked.y }]);
   });
 
-  it('cancels the wind-up when a solid blocks the line while tracking, and steps out again', () => {
+  it('cancels the wind-up when a solid blocks the line while tracking, and tries again later', () => {
     const s = arena();
     movePlayer(s, at(74, 30).x, at(74, 30).y);
     const e = placeSniper(s, at(74, 33).x, at(74, 33).y);
@@ -124,10 +125,13 @@ describe('the Sniper construct', () => {
     // Behind the rocks, west along row 33.
     movePlayer(s, at(67, 33).x, at(67, 33).y);
     run(s, 1);
-    expect(e.mode).toBe('peek');
-    expect(e.cooldown).toBe(0);
+    // No tile a step away sees the player there: it waits out a fresh cooldown instead of stepping out.
+    expect(e.mode).toBe('chase');
+    expect(e.cooldown).toBe(snipe.cooldownTicks);
+    expect(snipeOf(s)).toEqual({ phase: 'cover', line: null });
     run(s, 120);
     expect(s.orbs).toEqual([]);
+    expect(s.events.snipes).toEqual([]);
   });
 
   it('fires one bolt down the locked line at its speed, hitting a player who stayed for its damage', () => {
@@ -198,6 +202,50 @@ describe('the Sniper construct', () => {
     }
     expect(Math.hypot(f.x - t.player.x, f.y - t.player.y)).toBeGreaterThan(start);
     expect(t.orbs).toEqual([]);
+  });
+
+  it('behind a long cliff with no tile a step away that sees the player, never sticks stepping out', () => {
+    const s = arena();
+    const room = roomById(HALL);
+    const rows = room.rows;
+    const ptx = Math.floor(PLAYER_AT.x / 32);
+    const pty = Math.floor(PLAYER_AT.y / 32);
+    room.rows = rows.map((r, ty) => (Math.abs(ty - pty) <= 8 ? r.slice(0, ptx + 4) + TILE.cliff + r.slice(ptx + 5) : r));
+    try {
+      const e = placeSniper(s, (ptx + 8.5) * 32, PLAYER_AT.y);
+      let peeking = 0;
+      let longest = 0;
+      for (let t = 0; t < 1200; t++) {
+        run(s, 1);
+        peeking = e.mode === 'peek' ? peeking + 1 : 0;
+        longest = Math.max(longest, peeking);
+        expect(s.events.snipes).toEqual([]);
+      }
+      expect(longest).toBeLessThanOrEqual(1);
+      expect(e.x).toBeGreaterThan((ptx + 5) * 32);
+      expect(s.player.health).toBe(100);
+    } finally {
+      room.rows = rows;
+    }
+  });
+
+  it('frozen mid-wind-up it pauses, its line never through the rocks, then resumes (and a blocked line cancels it)', () => {
+    const s = arena();
+    movePlayer(s, at(74, 30).x, at(74, 30).y);
+    const e = placeSniper(s, at(74, 33).x, at(74, 33).y);
+    run(s, 11);
+    expect(e.mode).toBe('windup');
+    const ticks = e.modeTicks;
+    e.frozen = 30;
+    // Behind the rocks while it can't think: its line stops at them.
+    movePlayer(s, at(67, 33).x, at(67, 33).y);
+    run(s, 20);
+    expect(e.modeTicks).toBe(ticks);
+    expect(snipeOf(s)?.line?.x1).toBeCloseTo(72 * 32);
+    // Back in the open before the thaw: the wind-up runs on from where it paused, and fires.
+    movePlayer(s, at(74, 30).x, at(74, 30).y);
+    runUntil(s, () => e.frozen === 0, 20);
+    runUntil(s, () => s.events.snipes.length > 0, snipe.windupTicks - ticks + 3);
   });
 
   it('is deterministic', () => {

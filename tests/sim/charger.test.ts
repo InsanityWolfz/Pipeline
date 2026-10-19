@@ -6,7 +6,7 @@ import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
-import { arena, HALL, HUSK, movePlayer, PLAYER_AT, run, runUntil } from './fight';
+import { arena, HALL, HUSK, movePlayer, placeNode, PLAYER_AT, run, runUntil } from './fight';
 
 // The Charger (035): shows its lane, then rams down it. A sidestep in the wind-up dodges;
 // it strikes once per charge, stops at the lane's end, is stunned by a wall, and passes
@@ -141,6 +141,16 @@ describe('the Charger', () => {
     expect(e.mode).not.toBe('stun');
   });
 
+  it('a node in its lane only stops it (no stun: that is for solid tiles), and it recovers at its lane’s end', () => {
+    const { s, e } = meadow();
+    placeNode(s, 'rubble', PLAYER_AT.x + 40, PLAYER_AT.y);
+    run(s, 1);
+    movePlayer(s, PLAYER_AT.x, PLAYER_AT.y + 3 * 32);
+    runUntil(s, () => e.mode === 'recover' || e.mode === 'stun', 120);
+    expect(e.mode).toBe('recover');
+    expect(e.x).toBeGreaterThan(PLAYER_AT.x + 40);
+  });
+
   it('passes through other enemies without hurting them', () => {
     const { s, e } = meadow();
     const husk = createEnemy(s.nextEnemyId++, 'husk', { x: PLAYER_AT.x + 60, y: PLAYER_AT.y }, HALL);
@@ -153,6 +163,22 @@ describe('the Charger', () => {
     expect(start - e.x).toBeCloseTo(charge.distance);
     expect(husk.health).toBe(HUSK.maxHealth);
     expect(husk.x).toBe(PLAYER_AT.x + 60);
+  });
+
+  it('frozen mid-charge it stops where it is, then runs out the rest of its lane', () => {
+    const { s, e } = meadow();
+    run(s, 1);
+    const start = e.x;
+    movePlayer(s, PLAYER_AT.x, PLAYER_AT.y + 3 * 32);
+    runUntil(s, () => e.mode === 'swipe', charge.windupTicks + 1);
+    run(s, 5);
+    e.frozen = 30;
+    const x = e.x;
+    run(s, 20);
+    expect(e.x).toBe(x);
+    expect(e.mode).toBe('swipe');
+    runUntil(s, () => e.mode === 'recover', 80);
+    expect(start - e.x).toBeCloseTo(charge.distance);
   });
 
   it('is deterministic', () => {

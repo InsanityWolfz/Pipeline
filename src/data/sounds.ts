@@ -1,33 +1,12 @@
 import { RESEARCH_SOUND_RECIPES } from './researchSounds.ts';
 import { HOLLOWS_SOUND_RECIPES, HOLLOWS_SOUNDS } from './hollowsSounds.ts';
-import { HOLLOWS_ENEMY_SOUND_RECIPES, HOLLOWS_ENEMY_SOUNDS } from './hollowsEnemySounds.ts';
+import { HOLLOWS_ENEMY_SOUND_RECIPES, HOLLOWS_ENEMY_SOUNDS, HOLLOWS_ENEMY_WINDUPS } from './hollowsEnemySounds.ts';
 
 // Sound effects and ambient loops (014), as synth recipes. `npm run sound` renders
 // each one to assets/build/sounds/<key>.wav; render plays them by these keys.
 
-/** One voice of a sound: a wave whose pitch sweeps `from` → `to` Hz under an attack/decay envelope. */
-export interface SoundLayer {
-  wave: 'sine' | 'square' | 'saw' | 'triangle' | 'noise';
-  /** Start and end pitch, Hz. Noise uses `to` as its low-pass cutoff sweep instead. */
-  from: number;
-  to: number;
-  /** When it starts and how long it lasts, s. */
-  delay?: number;
-  dur: number;
-  attack?: number;
-  /** Peak level, 0–1. */
-  volume: number;
-  /** Amplitude wobble: rate Hz and depth 0–1. */
-  tremolo?: { rate: number; depth: number };
-  /** A one-pole low-pass cutoff, Hz. */
-  lowpass?: number;
-}
-
-export interface SoundRecipe {
-  layers: readonly SoundLayer[];
-  /** Ambient loops: this long, s; layers wrap round the end so it loops seamlessly. */
-  loop?: number;
-}
+export type { SoundLayer, SoundRecipe } from './soundRecipe.ts';
+import type { SoundLayer, SoundRecipe } from './soundRecipe.ts';
 
 export const SOUND_RATE = 22050;
 
@@ -303,9 +282,5 @@ export const WINDUP_SOUNDS: Readonly<Record<string, SoundKey>> = {
   slammer: SOUNDS.huskWindup,
   // 034: the Bulwark's stone grinds as it plants its shield (the pound lands with its own sound).
   bulwark: SOUNDS.bulwarkGrind,
-  // 035: a snort, a rumble, the Husk's cue as runes flare, a laser's hum.
-  charger: SOUNDS.chargerWindup,
-  burrower: SOUNDS.burrowRumble,
-  shardback: SOUNDS.huskWindup,
-  sniper: SOUNDS.laserHum,
+  ...HOLLOWS_ENEMY_WINDUPS,
 };

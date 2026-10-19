@@ -8,10 +8,11 @@ import type { EnemyState } from './enemies';
 // Charger's lane, whether a Burrower is underground and its locked spot, and the Sniper's
 // phase and line. Fields only appear on the kinds that have them.
 
-const r2 = (n: number): number => Math.round(n * 100) / 100;
+/** A number to two decimals, for the summary (shared with summaryParts.ts). */
+export const round = (n: number): number => Math.round(n * 100) / 100;
 
 /** The degrees of a radian angle, in [0, 360) (0 east, 90 south). */
-export const degrees = (a: number): number => r2((((a * 180) / Math.PI) % 360 + 360) % 360);
+export const degrees = (a: number): number => round((((a * 180) / Math.PI) % 360 + 360) % 360);
 
 export interface KindSummary {
   /** A shielded enemy's facing (034's rule; the Shardback, 035), degrees. */
@@ -32,16 +33,16 @@ export function kindSummary(state: SimState, e: EnemyState): KindSummary {
   if (def.kind === 'charger') {
     const showing = e.mode === 'windup' || e.mode === 'swipe';
     out.lane = showing
-      ? { x: r2(e.spotX), y: r2(e.spotY), dx: r2(e.swipeDirX), dy: r2(e.swipeDirY), length: def.charge.distance, width: def.charge.width, run: r2(charged(e, def)) }
+      ? { x: round(e.spotX), y: round(e.spotY), dx: round(e.swipeDirX), dy: round(e.swipeDirY), length: def.charge.distance, width: def.charge.width, run: round(charged(e, def)) }
       : null;
   }
   if (def.kind === 'burrower') {
     out.underground = e.underground;
-    out.locked = e.mode === 'windup' || e.mode === 'swipe' ? { x: r2(e.spotX), y: r2(e.spotY), radius: def.burrow.radius } : null;
+    out.locked = e.mode === 'windup' || e.mode === 'swipe' ? { x: round(e.spotX), y: round(e.spotY), radius: def.burrow.radius } : null;
   }
   if (def.kind === 'sniper') {
     const line = snipeLine(state, e, def);
-    out.snipe = { phase: snipePhase(state, e, def), line: line ? { x0: r2(line.x0), y0: r2(line.y0), x1: r2(line.x1), y1: r2(line.y1) } : null };
+    out.snipe = { phase: snipePhase(state, e, def), line: line ? { x0: round(line.x0), y0: round(line.y0), x1: round(line.x1), y1: round(line.y1) } : null };
   }
   return out;
 }

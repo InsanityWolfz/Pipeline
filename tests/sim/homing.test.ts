@@ -48,6 +48,22 @@ describe('a homing ley bolt', () => {
     expect({ dx: bolt.dx, dy: bolt.dy }).toEqual(start);
   });
 
+  it('drops a target that goes under the ground (035: a Burrower), and never locks one there', () => {
+    const s = homing();
+    const e = placeHusk(s, PLAYER_AT.x + 200, PLAYER_AT.y);
+    e.frozen = 10_000;
+    run(s, 1, fireAt(PLAYER_AT.x + 200, PLAYER_AT.y - 50));
+    const bolt = s.arrows[0];
+    if (!bolt) throw new Error('no bolt');
+    expect(bolt.targetId).toBe(e.id);
+    e.underground = true;
+    run(s, 1);
+    expect(bolt.targetId).toBeNull();
+    s.tube.fireCooldown = 0;
+    run(s, 1, fireAt(PLAYER_AT.x + 200, PLAYER_AT.y - 50));
+    expect(s.arrows[s.arrows.length - 1]?.targetId).toBeNull();
+  });
+
   it('flies on straight once its target is gone', () => {
     const s = homing();
     const e = placeHusk(s, PLAYER_AT.x + 200, PLAYER_AT.y);

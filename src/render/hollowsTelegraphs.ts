@@ -21,8 +21,8 @@ export function drawHollowsTelegraph(g: GameObjects.Graphics, e: EnemyState, def
     return true;
   }
   if (def.kind === 'shardback') {
-    const B = HOLLOWS_ENEMY_LOOK.bash;
-    if (e.mode === 'windup') drawArc(g, e.x, e.y, e.angle, def.bash.arcDegrees, def.bash.reach, Math.min(1, e.modeTicks / def.bash.windupTicks), B.alpha, B.fillAlpha);
+    // In the Husk's swipe style (004).
+    if (e.mode === 'windup') drawArc(g, e.x, e.y, e.angle, def.bash.arcDegrees, def.bash.reach, Math.min(1, e.modeTicks / def.bash.windupTicks), ENEMY_FX.telegraphAlpha, ENEMY_FX.telegraphFillAlpha);
     return true;
   }
   return false;
@@ -40,10 +40,10 @@ function drawRing(g: GameObjects.Graphics, x: number, y: number, radius: number,
   for (let i = 0; i < R.cracks; i++) {
     const a = R.crackStart + (i * Math.PI * 2) / R.cracks;
     // Each crack jags once halfway out.
-    const mid = a + (i % 2 === 0 ? 0.25 : -0.25);
+    const mid = a + (i % 2 === 0 ? R.jag : -R.jag);
     g.beginPath();
     g.moveTo(x, y);
-    g.lineTo(x + Math.cos(mid) * r * 0.5, y + Math.sin(mid) * r * 0.5);
+    g.lineTo(x + (Math.cos(mid) * r) / 2, y + (Math.sin(mid) * r) / 2);
     g.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r);
     g.strokePath();
   }

@@ -1,5 +1,5 @@
 import type { ShardbackDef } from '../data/hollowsEnemies';
-import { engage, inAggroBox, leash, startWindup, stepAttack, toward } from './aiCommon';
+import { engage, inAggroBox, inArc, leash, startWindup, stepAttack, toward } from './aiCommon';
 import type { EnemyState } from './enemies';
 import { damagePlayer } from './health';
 import { turnToward } from './shield';
@@ -10,9 +10,6 @@ import type { SimState } from './state';
 // its front are blocked. It walks at the player turning its shield (faster than the
 // Bulwark, slowly enough to run round), and up close winds up a short bash along its
 // shield, still turning; through the recovery it stops turning, the window to get behind it.
-
-/** Absorbs float error so a player exactly on the arc's edge is hit. */
-const EPSILON = 1e-9;
 
 /** Advances a Shardback's mode and returns this tick's own move, px. */
 export function shardThink(state: SimState, e: EnemyState, def: ShardbackDef): [number, number] {
@@ -45,10 +42,8 @@ function bash(state: SimState, e: EnemyState, def: ShardbackDef): void {
   const { bash: b } = def;
   const dx = state.player.x - e.x;
   const dy = state.player.y - e.y;
+  if (!inArc(dx, dy, Math.cos(e.angle), Math.sin(e.angle), b.reach, b.arcDegrees)) return;
   const dist = Math.hypot(dx, dy);
-  if (dist > b.reach) return;
-  const half = (b.arcDegrees * Math.PI) / 360;
-  if (dist > 0 && (dx * Math.cos(e.angle) + dy * Math.sin(e.angle)) / dist < Math.cos(half) - EPSILON) return;
   const [kx, ky] = dist > 0 ? [dx / dist, dy / dist] : [Math.cos(e.angle), Math.sin(e.angle)];
   damagePlayer(state, b.damage, kx, ky, b.knockback, b.knockTicks);
 }

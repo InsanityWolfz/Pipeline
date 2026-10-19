@@ -1,18 +1,18 @@
-import { TICK_RATE, TILE_SIZE } from '../data/config';
+import { TICK_RATE } from '../data/config';
 import type { BurrowerDef } from '../data/hollowsEnemies';
 import { engage, enter, hold, inAggroBox, leash, startWindup } from './aiCommon';
-import { moveBox } from './collision';
 import { unit } from './direction';
 import type { EnemyState } from './enemies';
 import { damagePlayer } from './health';
 import { inSafeZone } from './population';
-import { roomById, type SimState } from './state';
+import type { SimState } from './state';
 
 // The Burrower (035): a segmented quarry-borer. It idles above ground at home; aggroed, it
 // digs in (still hittable) and tunnels toward the player, shown only by a ripple, beyond
-// reach of every hit and walking round cliffs like anything on foot. Close to the player's
-// feet (or after tunnelling a while) it locks the spot, a red ring growing there, then
-// erupts under it and stays surfaced and dazed: the window to hit it. Then it digs in again.
+// reach of every hit and stopped by cliffs like anything on foot. Close to the player's
+// feet (or after tunnelling a while) it stops and locks the spot it is on, a red ring
+// growing there, then erupts and stays surfaced and dazed: the window to hit it. Then it
+// digs in again.
 
 /** Advances a Burrower's mode and returns this tick's own move, px. */
 export function burrowThink(state: SimState, e: EnemyState, def: BurrowerDef): [number, number] {
@@ -60,25 +60,15 @@ export function burrowThink(state: SimState, e: EnemyState, def: BurrowerDef): [
   const due = dist <= burrow.lockRange || e.modeTicks >= burrow.maxTunnelTicks;
   // Never under a player standing in a safe zone (017): it waits at the edge.
   if (due && e.cooldown === 0 && e.roomId === state.roomId && !inSafeZone(state, e.roomId, p.x, p.y)) {
-    lock(e, def, p.x, p.y);
+    // It stops and locks the spot where it is: under the player's feet when it caught them, short of them behind a wall.
+    startWindup(e, def, dx, dy);
+    e.spotX = e.x;
+    e.spotY = e.y;
     return [0, 0];
   }
   const step = Math.min(burrow.speed / TICK_RATE, dist);
   const [ux, uy] = unit(dx, dy);
   return [ux * step, uy * step];
-}
-
-/** Locks the player's feet as its spot and winds up, its ripple moving to the spot (sliding against walls, as on foot). */
-function lock(e: EnemyState, def: BurrowerDef, x: number, y: number): void {
-  startWindup(e, def, x - e.x, y - e.y);
-  e.spotX = x;
-  e.spotY = y;
-  const room = roomById(e.roomId);
-  // In steps under half a tile, so the slide never passes through a wall.
-  const steps = Math.max(1, Math.ceil(Math.hypot(x - e.x, y - e.y) / (TILE_SIZE / 2)));
-  const sx = (x - e.x) / steps;
-  const sy = (y - e.y) / steps;
-  for (let i = 0; i < steps; i++) moveBox(room, e, def.feetBox, sx, sy);
 }
 
 /** Surfaces at the spot: hits a player whose feet are within the ring, pushing them out from its middle. */

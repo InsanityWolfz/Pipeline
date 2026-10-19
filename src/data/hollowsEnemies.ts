@@ -12,7 +12,7 @@ export interface ChargerDef extends EnemyBase, ScreenLeashed {
   /**
    * With the player within `triggerRange` along a clear ground line and its cooldown ready, it plants and winds up
    * (`windupTicks`), the lane locked from its feet toward them: `distance` long, `width` wide. Then it charges down it
-   * at `speed` px/s (the pose holds at most `swipeTicks`, its run's length), striking once a player whose feet box
+   * at `speed` px/s for at most `swipeTicks` (the run's length at its own speed), striking once a player whose feet box
    * touches its body (a circle `width` across round its feet) for `damage` and `knockback` px along the lane over
    * `knockTicks`. At the lane's end it holds still `recoverTicks`; a wall first stuns it `stunTicks` instead.
    */
@@ -36,9 +36,9 @@ export interface BurrowerDef extends EnemyBase, ScreenLeashed {
    * within `lockRange` of the player's feet, or after `maxTunnelTicks`, and its cooldown ready, it locks their feet's
    * spot and winds up (`windupTicks`) as a ring of `radius` grows there; then erupts (the pose holds `swipeTicks`) for
    * `damage` and `knockback` px outward over `knockTicks` on feet inside, and stays surfaced and dazed for
-   * `surfacedTicks` (its recovery, `recoverTicks`) before digging in again.
+   * `surfacedTicks` (its recovery) before digging in again.
    */
-  burrow: AttackTiming & {
+  burrow: Omit<AttackTiming, 'recoverTicks'> & {
     digTicks: number;
     speed: number;
     lockRange: number;
@@ -147,9 +147,6 @@ export const CHARGER: ChargerDef = {
   anims: 'charger',
 };
 
-/** Surfaced and dazed after an eruption: the window to hit it. */
-const SURFACED_TICKS = 150;
-
 export const BURROWER: BurrowerDef = {
   ...BASE,
   kind: 'burrower',
@@ -169,8 +166,8 @@ export const BURROWER: BurrowerDef = {
     radius: 28,
     windupTicks: 50,
     swipeTicks: 10,
-    recoverTicks: SURFACED_TICKS,
-    surfacedTicks: SURFACED_TICKS,
+    // Surfaced and dazed after an eruption: the window to hit it.
+    surfacedTicks: 150,
     // Counted from the wind-up's start.
     cooldownTicks: 240,
     damage: 22,

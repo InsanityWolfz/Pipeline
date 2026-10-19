@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { enemyDef, MIN_TELEGRAPH_TICKS } from '../../src/data/enemies';
 import type { BurrowerDef } from '../../src/data/hollowsEnemies';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
-import type { SimState } from '../../src/sim/state';
+import { roomById, type SimState } from '../../src/sim/state';
+import { TILE } from '../../src/data/rooms';
 import { summarize } from '../../src/sim/summary';
 import { arena, fireAt, HALL, movePlayer, PLAYER_AT, run, runUntil } from './fight';
 
@@ -35,7 +36,7 @@ function untilLocked(s: SimState, e: EnemyState): void {
 describe('the Burrower', () => {
   it("has the spec's starting values in data, its wind-up past the telegraph minimum", () => {
     expect(DEF).toMatchObject({ kind: 'burrower', boss: false, maxHealth: 35, walkSpeed: 40 });
-    expect(burrow).toMatchObject({ digTicks: 20, speed: 70, lockRange: 12, maxTunnelTicks: 180, radius: 28, windupTicks: 50, surfacedTicks: 150, recoverTicks: 150, cooldownTicks: 240, damage: 22, knockback: 32 });
+    expect(burrow).toMatchObject({ digTicks: 20, speed: 70, lockRange: 12, maxTunnelTicks: 180, radius: 28, windupTicks: 50, surfacedTicks: 150, cooldownTicks: 240, damage: 22, knockback: 32 });
     expect(burrow.windupTicks).toBeGreaterThanOrEqual(MIN_TELEGRAPH_TICKS);
   });
 
@@ -92,32 +93,66 @@ describe('the Burrower', () => {
     expect([a.x, b.x]).toEqual([PLAYER_AT.x + 100, PLAYER_AT.x + 100]);
   });
 
-  it('tunnels at its speed and locks within `lockRange` of a still player, the ripple at their feet', () => {
+  it('tunnels at its speed, then stops and locks where it is once within `lockRange` of a still player', () => {
     const s = arena();
     const e = placeBurrower(s, 150);
     runUntil(s, () => e.underground, burrow.digTicks + 2);
     run(s, 30);
     expect(PLAYER_AT.x + 150 - e.x).toBeCloseTo((30 * burrow.speed) / 60, 0);
-    untilLocked(s, e);
-    expect(Math.hypot(s.player.x - (e.x - 0), 0)).toBeLessThanOrEqual(burrow.lockRange + 1e-6);
-    expect({ x: e.spotX, y: e.spotY }).toEqual({ x: s.player.x, y: s.player.y });
-    expect({ x: e.x, y: e.y }).toEqual({ x: s.player.x, y: s.player.y });
-    expect(summarize(s).enemies[0]).toMatchObject({ underground: true, locked: { x: s.player.x, y: s.player.y, radius: burrow.radius } });
+    // The ripple's distance from the feet on the tick before it locks (it decides from where the last tick left it).
+    let before = Infinity;
+    for (let t = 0; t < burrow.maxTunnelTicks && e.mode !== 'windup'; t++) {
+      before = Math.hypot(s.player.x - e.x, s.player.y - e.y);
+      run(s, 1);
+    }
+    expect(e.mode).toBe('windup');
+    expect(before).toBeLessThanOrEqual(burrow.lockRange);
+    expect(before).toBeGreaterThan(burrow.lockRange - (burrow.speed / 60) - 1e-6);
+    expect({ x: e.spotX, y: e.spotY }).toEqual({ x: e.x, y: e.y });
+    expect(summarize(s).enemies[0]).toMatchObject({ underground: true, locked: { x: expect.closeTo(e.x, 2), y: expect.closeTo(e.y, 2), radius: burrow.radius } });
+    // It holds still through the wind-up.
+    run(s, 10);
+    expect({ x: e.x, y: e.y }).toEqual({ x: e.spotX, y: e.spotY });
   });
 
-  it('locks the player’s feet after `maxTunnelTicks` even when it never catches them', () => {
+  it('after `maxTunnelTicks` without catching the player it stops and locks where it is', () => {
     const s = arena();
     const e = placeBurrower(s, 150);
     runUntil(s, () => e.underground, burrow.digTicks + 2);
     // The player keeps 100 px ahead of it.
     let ticks = 0;
+    let at = { x: e.x, y: e.y };
     while (e.mode !== 'windup' && ticks < 400) {
       movePlayer(s, e.x - 100, PLAYER_AT.y);
+      at = { x: e.x, y: e.y };
       run(s, 1);
       ticks++;
     }
     expect(ticks).toBe(burrow.maxTunnelTicks);
-    expect({ x: e.spotX, y: e.spotY }).toEqual({ x: s.player.x, y: s.player.y });
+    expect({ x: e.spotX, y: e.spotY }).toEqual(at);
+    runUntil(s, () => s.events.eruptions.length > 0, burrow.windupTicks + 1);
+    expect(s.events.eruptions[0]).toMatchObject(at);
+    expect(s.player.health).toBe(100);
+  });
+
+  it('stopped by a cliff, it erupts on its own side and never hurts the player across it', () => {
+    const s = arena();
+    const room = roomById(HALL);
+    const rows = room.rows;
+    // A cliff column 3 tiles east of the player, 17 tiles long; the Burrower 6 tiles east, beyond it.
+    const ptx = Math.floor(PLAYER_AT.x / 32);
+    const pty = Math.floor(PLAYER_AT.y / 32);
+    room.rows = rows.map((r, ty) => (Math.abs(ty - pty) <= 8 ? r.slice(0, ptx + 3) + TILE.cliff + r.slice(ptx + 4) : r));
+    try {
+      const e = placeBurrower(s, 6 * 32);
+      runUntil(s, () => e.mode === 'windup', burrow.digTicks + burrow.maxTunnelTicks + 10);
+      expect(e.x).toBeGreaterThan((ptx + 4) * 32);
+      runUntil(s, () => s.events.eruptions.length > 0, burrow.windupTicks + 1);
+      expect(s.events.eruptions[0]?.x).toBeGreaterThan((ptx + 4) * 32);
+      expect(s.player.health).toBe(100);
+    } finally {
+      room.rows = rows;
+    }
   });
 
   it('erupts after `windupTicks`: a player inside the ring is hit and knocked outward', () => {

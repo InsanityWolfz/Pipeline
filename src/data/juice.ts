@@ -89,7 +89,7 @@ export const PARTICLES = {
   chargeImpact: { colors: ['hollow-pale', 'hollow-light', 'hollow', 'brass'], count: 26, speed: [50, 140], gravity: 160, lifeMs: [250, 550], size: 3, lift: 14 },
   rippleDust: { colors: ['hollow-light', 'hollow', 'hollow-pale'], count: 3, speed: [8, 30], gravity: -6, lifeMs: [300, 550], size: 2 },
   eruption: { colors: ['hollow-dark', 'hollow', 'hollow-light', 'hollow-pale'], count: 34, speed: [60, 170], gravity: 240, lifeMs: [300, 650], size: 3, lift: 4 },
-  bashSpark: { colors: ['brass-light', 'cyan-glow', 'hollow-pale'], count: 14, speed: [40, 110], gravity: 120, lifeMs: [200, 380], size: 2, lift: 14 },
+  bashSpark: { colors: ['brass-light', 'brass', 'hollow-pale'], count: 14, speed: [40, 110], gravity: 120, lifeMs: [200, 380], size: 2, lift: 14 },
   boltFlash: { colors: ['danger', 'cinder-light', 'snow'], count: 10, speed: [30, 90], gravity: 40, lifeMs: [120, 260], size: 2, lift: 30 },
 } as const satisfies Record<string, ParticleBurst>;
 

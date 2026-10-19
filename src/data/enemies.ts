@@ -270,7 +270,8 @@ export function attackOf(def: EnemyDef): AttackTiming {
     case 'charger':
       return def.charge;
     case 'burrower':
-      return def.burrow;
+      // Its recovery is its daze on the surface.
+      return { ...def.burrow, recoverTicks: def.burrow.surfacedTicks };
     case 'shardback':
       return def.bash;
     case 'sniper':

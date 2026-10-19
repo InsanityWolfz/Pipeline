@@ -14,7 +14,7 @@ import { addVector, showFrame } from './vector/textures';
 
 // What Region 2's four (035) show beyond their sprite and ground telegraph, for EnemyView:
 // a Burrower underground as its ripple, a moving mound of cracked earth, its body hidden;
-// a Shardback's crystals flaring on its shield as it winds up its bash; a Sniper's laser
+// a Shardback's shield flaring as it winds up its bash; a Sniper's laser
 // sight from its lens (thin while tracking, bright and blinking once locked), and its bolt.
 
 export interface HollowsArt {
@@ -59,24 +59,25 @@ export function drawHollowsArt(art: HollowsArt | undefined, sprite: GameObjects.
   art.ripple.setVisible(e.underground);
   if (!e.underground) return;
   // The mound heaves while it moves, and lies still while its ring grows.
-  const moving = Math.hypot(e.vx, e.vy) > HOLLOWS_ENEMY_LOOK.ripple.minSpeed;
-  const frame = moving ? Math.floor((now + e.id * 97) / HOLLOWS_ENEMY_LOOK.ripple.wobbleMs) % 2 : 0;
+  const R = HOLLOWS_ENEMY_LOOK.ripple;
+  const moving = Math.hypot(e.vx, e.vy) > R.minSpeed;
+  const frame = moving ? Math.floor((now + e.id * R.phaseMs) / R.wobbleMs) % 2 : 0;
   const name = HOLLOWS_ENEMY_SPRITES.ripple[frame] ?? HOLLOWS_ENEMY_SPRITES.ripple[0];
   if (art.ripple.frame.name !== name) showFrame(art.ripple, name);
-  art.ripple.setPosition(Math.round(e.x), Math.round(e.y + 4)).setDepth(DEPTHS.groundFx + 0.1);
+  art.ripple.setPosition(Math.round(e.x), Math.round(e.y + R.drop)).setDepth(DEPTHS.groundFx + R.depth);
 }
 
-/** The Shardback's crystals flaring on its shield through the wind-up, flickering, brighter as the bash nears. */
+/** The Shardback's shield flaring brass through the wind-up, flickering, brighter as the bash nears. */
 function drawFlare(g: GameObjects.Graphics, e: EnemyState, windupTicks: number, now: number): void {
   g.clear();
   if (e.mode !== 'windup') return;
   const F = HOLLOWS_ENEMY_LOOK.flare;
   const k = Math.min(1, e.modeTicks / windupTicks);
-  const flicker = 0.8 + 0.2 * Math.sin((now / F.pulseMs) * Math.PI * 2);
+  const flicker = 1 - F.flicker + F.flicker * Math.sin((now / F.pulseMs) * Math.PI * 2);
   const x = e.x + Math.cos(e.angle) * F.ahead;
-  const y = e.y + Math.sin(e.angle) * F.ahead * 0.5 - F.rise;
-  g.setDepth(e.y + DEPTHS.overlayNudge + 1);
-  g.fillStyle(colorOf(F.color), F.alpha * k * flicker).fillCircle(x, y, F.radius * (0.5 + 0.5 * k));
+  const y = e.y + (Math.sin(e.angle) * F.ahead) / 2 - F.rise;
+  g.setDepth(e.y + DEPTHS.overlayNudge + F.depth);
+  g.fillStyle(colorOf(F.color), F.alpha * k * flicker).fillCircle(x, y, F.radius * (F.grow[0] + F.grow[1] * k));
 }
 
 /** The laser sits over everything standing in the world, under its UI. */
@@ -98,11 +99,11 @@ function drawLaser(g: GameObjects.Graphics, e: EnemyState, def: Extract<EnemyDef
   const y0 = e.y + enemyDef(e.enemyId).feetBox.h / 2 + lens[1] * k;
   const color = colorOf(ENEMY_FX.telegraphColor);
   const width = locked ? L.lockedWidth : L.width;
-  const alpha = locked ? (on ? L.lockedAlpha : L.alpha * 0.5) : L.alpha;
-  g.lineStyle(width + L.glow, color, L.glowAlpha * (on ? 1 : 0.5)).lineBetween(x0, y0, line.x1, line.y1);
+  const alpha = locked ? (on ? L.lockedAlpha : L.alpha * L.dim) : L.alpha;
+  g.lineStyle(width + L.glow, color, L.glowAlpha * (on ? 1 : L.dim)).lineBetween(x0, y0, line.x1, line.y1);
   g.lineStyle(width, color, alpha).lineBetween(x0, y0, line.x1, line.y1);
   if (locked && on) g.lineStyle(L.coreWidth, colorOf(L.core), 1).lineBetween(x0, y0, line.x1, line.y1);
-  g.fillStyle(color, alpha).fillCircle(line.x1, line.y1, width + 1);
+  g.fillStyle(color, alpha).fillCircle(line.x1, line.y1, width + L.dot);
   return { locked, on, x0, y0, x1: line.x1, y1: line.y1 };
 }
 
@@ -122,8 +123,8 @@ export function drawBolts(g: GameObjects.Graphics, orbs: readonly OrbState[], sh
     const y = o.y - B.lift;
     const tx = o.x - o.dx * B.length;
     const ty = y - o.dy * B.length;
-    g.lineStyle(B.width, colorOf(B.color), 0.9).lineBetween(tx, ty, o.x, y);
-    g.lineStyle(B.core, colorOf(B.coreColor), 1).lineBetween(tx + o.dx * B.length * 0.4, ty + o.dy * B.length * 0.4, o.x, y);
+    g.lineStyle(B.width, colorOf(B.color), B.alpha).lineBetween(tx, ty, o.x, y);
+    g.lineStyle(B.core, colorOf(B.coreColor), 1).lineBetween(tx + o.dx * B.length * B.coreFrom, ty + o.dy * B.length * B.coreFrom, o.x, y);
   }
 }
 

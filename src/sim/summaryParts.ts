@@ -5,12 +5,12 @@ import type { EnemyMode, EnemyState } from './enemies';
 import type { NodeState } from './nodes';
 import type { MachineStatus, PieceState } from './pieces';
 import type { Facing } from './player';
-import { kindSummary, type KindSummary } from './summaryKinds';
+import { kindSummary, round, type KindSummary } from './summaryKinds';
 import type { SimState } from './state';
 
 // Summary entries for the sim's lists, used by summary.ts.
 
-export const round = (n: number): number => Math.round(n * 100) / 100;
+export { round };
 
 export interface ArrowSummary {
   id: number;

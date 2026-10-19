@@ -15,7 +15,7 @@ import { takeKnock } from './knockback';
 import { keepOut } from './population';
 import { slamThink } from './slammerAi';
 import type { SimState } from './state';
-import { engage, inAggroBox, leash, startWindup, stepAttack, toward } from './aiCommon';
+import { engage, inAggroBox, inArc, leash, startWindup, stepAttack, toward } from './aiCommon';
 
 
 // Enemy behaviour, RotMG style: aggro when on screen (or in range) or hit, chase
@@ -23,9 +23,6 @@ import { engage, inAggroBox, leash, startWindup, stepAttack, toward } from './ai
 // way. Each tick picks the AI by the enemy's kind; the melee Husk is here, the
 // Wisp's casting in casterAi.ts and the Warden's slam in slammerAi.ts. A
 // wind-up locks the attack direction; the attack lands once, then recovers.
-
-/** Absorbs float error so a player exactly on the arc's edge is hit. */
-const EPSILON = 1e-9;
 
 /** Thinks, moves and faces every enemy in its own room, then pushes overlapping bodies apart. */
 export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBodies): void {
@@ -102,10 +99,8 @@ function landSwipe(state: SimState, e: EnemyState, def: MeleeDef): void {
   const { swipe } = def;
   const dx = state.player.x - e.x;
   const dy = state.player.y - e.y;
+  if (!inArc(dx, dy, e.swipeDirX, e.swipeDirY, swipe.reach, swipe.arcDegrees)) return;
   const dist = Math.hypot(dx, dy);
-  if (dist > swipe.reach) return;
-  const halfArc = (swipe.arcDegrees * Math.PI) / 360;
-  if (dist > 0 && (dx * e.swipeDirX + dy * e.swipeDirY) / dist < Math.cos(halfArc) - EPSILON) return;
   const [kx, ky] = dist > 0 ? [dx / dist, dy / dist] : [e.swipeDirX, e.swipeDirY];
   damagePlayer(state, swipe.damage, kx, ky, swipe.knockback, swipe.knockTicks);
 }

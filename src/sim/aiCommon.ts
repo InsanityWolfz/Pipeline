@@ -108,3 +108,14 @@ export function engage(state: SimState, e: EnemyState, sees: boolean): [number, 
   e.offScreenTicks = here && inAggroBox(e, state.player) ? 0 : e.offScreenTicks + 1;
   return null;
 }
+
+/** Absorbs float error so a player exactly on an arc's edge is hit. */
+const ARC_EPSILON = 1e-9;
+
+/** True if a point (dx, dy) from an attacker's feet is within `reach` and inside the `arcDegrees` arc along the unit (dirX, dirY): a Husk's swipe, a Shardback's bash. */
+export function inArc(dx: number, dy: number, dirX: number, dirY: number, reach: number, arcDegrees: number): boolean {
+  const dist = Math.hypot(dx, dy);
+  if (dist > reach) return false;
+  const half = (arcDegrees * Math.PI) / 360;
+  return dist === 0 || (dx * dirX + dy * dirY) / dist >= Math.cos(half) - ARC_EPSILON;
+}

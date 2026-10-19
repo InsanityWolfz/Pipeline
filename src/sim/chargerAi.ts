@@ -3,6 +3,7 @@ import type { ChargerDef } from '../data/hollowsEnemies';
 import { FEET_BOX } from '../data/player';
 import { engage, enter, hold, inAggroBox, leash, startWindup, toward } from './aiCommon';
 import type { EnemyState } from './enemies';
+import { boxHitsSolid } from './collision';
 import { damagePlayer } from './health';
 import { clearGround } from './sightLine';
 import { roomById, type SimState } from './state';
@@ -53,13 +54,14 @@ export function chargeThink(state: SimState, e: EnemyState, def: ChargerDef): [n
 function ram(state: SimState, e: EnemyState, def: ChargerDef): [number, number] {
   const { charge } = def;
   strike(state, e, def);
-  if (e.modeTicks > 1 && e.bumped) {
+  // A solid tile stops it dazed (a node or a pylon in its way only stops it, and it runs out its lane).
+  if (e.modeTicks > 1 && e.bumped && boxHitsSolid(roomById(e.roomId), e.x + e.swipeDirX, e.y + e.swipeDirY, def.feetBox)) {
     enter(e, 'stun');
     return [0, 0];
   }
   const step = charge.speed / TICK_RATE;
   const travelled = (e.modeTicks - 1) * step;
-  if (travelled >= charge.distance) {
+  if (travelled >= charge.distance || e.modeTicks > charge.swipeTicks) {
     enter(e, 'recover');
     return [0, 0];
   }

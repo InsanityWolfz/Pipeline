@@ -6,6 +6,9 @@ import type { SimState } from '../sim/state';
 import type { JuiceView } from './JuiceView';
 import type { SoundView } from './SoundView';
 
+const B = HOLLOWS_ENEMY_LOOK.bursts;
+const D = HOLLOWS_ENEMY_LOOK.dust;
+
 // Region 2's four's feel (035), for FeelView: a Charger kicking dust down its lane and
 // slamming into a wall (a crack of stone, chips and a shake); a Burrower's ripple trailing
 // dust and its eruption throwing up rock; a Shardback's bash; a Sniper's lock beep and its
@@ -24,7 +27,7 @@ export class HollowsEnemyFeel {
     for (const c of ev.charges) j.burst('chargeDust', c.x, c.y, c.y - 1);
     for (const sn of ev.snipes) {
       s.play(SOUNDS.sniperBolt);
-      j.burst('boltFlash', sn.x + sn.dx * 8, sn.y);
+      j.burst('boltFlash', sn.x + sn.dx * B.boltAhead, sn.y + sn.dy * B.boltAhead);
     }
     for (const er of ev.eruptions) {
       s.play(SOUNDS.burrowErupt);
@@ -43,7 +46,7 @@ export class HollowsEnemyFeel {
       const was = this.modes.get(e.id);
       this.modes.set(e.id, e.mode);
       if (kind === 'burrower') {
-        this.trail(e.id, e.underground && Math.hypot(e.vx, e.vy) > HOLLOWS_ENEMY_LOOK.ripple.minSpeed, deltaMs, () => j.burst('rippleDust', e.x, e.y + 2, e.y - 1));
+        this.trail(e.id, e.underground && Math.hypot(e.vx, e.vy) > HOLLOWS_ENEMY_LOOK.ripple.minSpeed, deltaMs, () => j.burst('rippleDust', e.x, e.y + D.rippleDrop, e.y - 1));
         continue;
       }
       if (kind === 'sniper') {
@@ -59,17 +62,17 @@ export class HollowsEnemyFeel {
       if (kind === 'shardback') {
         if (was !== undefined && was !== 'swipe' && e.mode === 'swipe') {
           s.play(SOUNDS.shieldBash);
-          j.burst('bashSpark', e.x + Math.cos(e.angle) * 18, e.y + Math.sin(e.angle) * 18);
+          j.burst('bashSpark', e.x + Math.cos(e.angle) * B.bashAhead, e.y + Math.sin(e.angle) * B.bashAhead);
         }
         continue;
       }
       if (kind !== 'charger') continue;
       if (was !== undefined && was !== 'stun' && e.mode === 'stun') {
         s.play(SOUNDS.chargerImpact);
-        j.burst('chargeImpact', e.x + e.swipeDirX * 12, e.y + e.swipeDirY * 12);
+        j.burst('chargeImpact', e.x + e.swipeDirX * B.impactAhead, e.y + e.swipeDirY * B.impactAhead);
         j.shake('medium');
       }
-      const kicking = e.mode === 'swipe' || (e.mode === 'windup' && e.modeTicks % 20 < 10);
+      const kicking = e.mode === 'swipe' || (e.mode === 'windup' && e.modeTicks % D.pawTicks < D.pawOn);
       this.trail(e.id, kicking, deltaMs, () => j.burst('chargeDust', e.x, e.y, e.y - 1));
     }
     this.forget(live);
@@ -78,7 +81,7 @@ export class HollowsEnemyFeel {
   /** While `on`, kicks up dust every `dust.ms` (counted per enemy). */
   private trail(id: number, on: boolean, deltaMs: number, kick: () => void): void {
     const since = (this.dust.get(id) ?? 0) + deltaMs;
-    if (on && since >= HOLLOWS_ENEMY_LOOK.dust.ms) {
+    if (on && since >= D.ms) {
       kick();
       this.dust.set(id, 0);
     } else this.dust.set(id, since);
