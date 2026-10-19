@@ -225,7 +225,7 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
   await page.evaluate((tile) => {
     const g = window.__GAME__;
     window.__helpers?.walkTo(2.5 * tile, 12.5 * tile);
-    const piece = g?.step(1, { identify: true }).armorPieces[0];
+    const piece = g?.step(1, { identify: true }).gear[0];
     if (piece) g?.step(1, { equip: { id: piece.id } });
   }, T);
   expect(await done(page)).toBe(FILL + 2);

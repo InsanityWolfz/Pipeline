@@ -5,11 +5,12 @@ import { itemRisks } from '../sim/banking';
 import { count } from '../sim/inventory';
 import { schematicKnown } from '../sim/schematics';
 import type { SimState } from '../sim/state';
+import { wornPieces } from '../sim/gear';
 
 // What the inventory panel lists (031), pure: every group in order, with a row per
 // carried item (count above 0, in ITEMS order): its count, how many a death would
 // take (the sim's banking helper) and how many are home in the stash. Gear adds the
-// worn piece and the spare identified pieces, which a death never takes.
+// worn pieces (036: up to one a slot) and the spare identified pieces, which a death never takes.
 
 export interface InventoryRow {
   /** The item, or `worn` / `spare` for Gear's identified pieces, or `schematics` for the schematics' shared row (033). */
@@ -34,7 +35,7 @@ export const SPARE_ROW = 'spare';
 export const SCHEMATIC_ROW = 'schematics';
 
 /** What the panel reads from the sim. */
-export type Held = Pick<SimState, 'inventory' | 'banked' | 'stash' | 'armor' | 'equipped' | 'research'>;
+export type Held = Pick<SimState, 'inventory' | 'banked' | 'stash' | 'gear' | 'equipped' | 'research'>;
 
 /**
  * The schematics' row name and icon (033): "Unknown schematic" while every one carried is still unknown (so several
@@ -66,9 +67,9 @@ export function inventoryGroups(sim: Held): InventoryGroupRows[] {
       });
     }
     if (id === 'gear') {
-      const worn = sim.armor.some((a) => a.id === sim.equipped);
-      const spares = sim.armor.length - (worn ? 1 : 0);
-      if (worn) rows.push({ itemId: WORN_ROW, count: 1, atRisk: 0, home: 0 });
+      const worn = wornPieces(sim).length;
+      const spares = sim.gear.length - worn;
+      if (worn > 0) rows.push({ itemId: WORN_ROW, count: worn, atRisk: 0, home: 0 });
       if (spares > 0) rows.push({ itemId: SPARE_ROW, count: spares, atRisk: 0, home: 0 });
     }
     return { id, rows };

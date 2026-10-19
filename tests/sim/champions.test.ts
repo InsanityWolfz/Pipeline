@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { UNIDENTIFIED_ARMOR } from '../../src/data/armor';
+import { UNIDENTIFIED_ARMOR } from '../../src/data/gear';
 import { CHAMPIONS } from '../../src/data/champions';
 import { ENEMIES, attackOf, enemyDef, type EnemyDef } from '../../src/data/enemies';
 import { LANDMARK_LIST } from '../../src/data/landmarks';

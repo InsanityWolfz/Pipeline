@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { ARMOR_WEIGHTS } from '../../src/data/armor';
+import { SLOT_BASE } from '../../src/data/gear';
+import { bodyPiece, wear } from '../fixtures/gear';
 import { FIRING_WALK_MULTIPLIER, ROLL_TICKS } from '../../src/data/player';
 import { FOUNDRY_ROOM } from '../../src/data/rooms';
 import { firingWalkScale } from '../../src/sim/tube';
@@ -71,12 +72,9 @@ describe('firing slows the walk', () => {
 
   it('stacks with heavy armor by multiplying', () => {
     const heavy = (): SimState => {
-      const s = arena();
-      s.armor = [{ id: 0, weight: 'heavy', armor: 6, name: 'Test Plate' }];
-      s.equipped = 0;
-      return s;
+      return wear(arena(), bodyPiece(0, 'heavy', 11));
     };
     const plain = walked(arena(), 30, false);
-    expect(walked(heavy(), 30, true)).toBeCloseTo(plain * ARMOR_WEIGHTS.heavy.walkScale * FIRING_WALK_MULTIPLIER, 0);
+    expect(walked(heavy(), 30, true)).toBeCloseTo(plain * SLOT_BASE.body.heavy.walkScale * FIRING_WALK_MULTIPLIER, 0);
   });
 });

@@ -71,6 +71,8 @@ export interface EnemyState extends Knockable {
   struck: boolean;
   /** Its last move ran into something solid (035: a charging Charger is stunned by it). */
   bumped: boolean;
+  /** Ticks left staggered by a roll through it (036: Rollbreaker Greaves): it holds in recovery and doesn't think. */
+  staggered: number;
 }
 
 export function createEnemy(id: number, enemyId: string, at: { x: number; y: number }, roomId: string, group = ''): EnemyState {
@@ -108,6 +110,7 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     spotY: at.y,
     struck: false,
     bumped: false,
+    staggered: 0,
     knockX: 0,
     knockY: 0,
     knockTicks: 0,

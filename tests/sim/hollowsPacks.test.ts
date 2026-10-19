@@ -6,7 +6,7 @@ import { HOLLOWS, inHollows } from '../../src/data/hollows';
 import { HOLLOWS_ENEMIES } from '../../src/data/hollowsEnemies';
 import { HOLLOWS_START } from '../../src/data/playtest';
 import { POPULATION } from '../../src/data/population';
-import { UNIDENTIFIED_ARMOR } from '../../src/data/armor';
+import { UNIDENTIFIED_ARMOR } from '../../src/data/gear';
 import { claim } from '../../src/sim/claims';
 import { championDef, makeChampion } from '../../src/sim/champions';
 import { spawnDrops } from '../../src/sim/drops';

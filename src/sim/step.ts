@@ -1,4 +1,6 @@
-import { equip, identifyAll, walkScale } from './armor';
+import { equip, identifyAll } from './gear';
+import { playerStats } from './stats';
+import { stepRelics } from './relics';
 import { stepArrows, type ArrowState } from './arrows';
 import { steerArrows } from './homing';
 import { stepBombs } from './bombs';
@@ -55,7 +57,10 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   const cmd = held ? { ...NO_COMMAND, aimX: state.player.aimX, aimY: state.player.aimY } : maskCommand(state, input);
   const bodies = bodiesOf(state);
   const here = bodies(state.roomId);
-  stepPlayer(state.player, here.room, cmd, here.obstacles, walkScale(state) * firingWalkScale(state));
+  const stats = playerStats(state);
+  stepPlayer(state.player, here.room, cmd, here.obstacles, { ...stats, walkScale: stats.walkScale * firingWalkScale(state) });
+  // After the player moves and before enemies act (036): the ward builds, a roll staggers what it passes through.
+  stepRelics(state);
   stepDoorways(state);
   stepLink(state);
   // Enemies act after the player moves, so a swipe lands on where the player stands now.
@@ -70,7 +75,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   // Build mode keeps E for hoppers and crates, not harvesting.
   const used = stepCache(state, stepClaims(state, stepAltars(state, stepTubeStone(state, cmd))));
   if (cmd.identify) identifyAll(state);
-  if (cmd.equip) equip(state, cmd.equip.id);
+  if (cmd.equip) equip(state, cmd.equip);
   if (cmd.applyStage) applyStage(state, cmd.applyStage);
   if (cmd.restore) restore(state, cmd.restore);
   stepHarvest(state, state.building ? { ...used, interact: false } : used);

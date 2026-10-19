@@ -62,9 +62,9 @@ test.describe('review screenshots (031)', () => {
       g.step(1, { pylon: 'travel' });
       h.walkTo(2.3 * 32, 12.5 * 32);
       const s = g.step(1, { identify: true });
-      const piece = s.armorPieces[0];
+      const piece = s.gear[0];
       if (!piece) throw new Error('nothing identified');
-      return g.step(1, { equip: { id: piece.id } }).equippedArmor;
+      return g.step(1, { equip: { id: piece.id } }).equipped[piece.slot];
     });
     expect(worn).not.toBeNull();
     await page.evaluate(() => window.__helpers?.walkTo(8.5 * 32, 10.5 * 32));

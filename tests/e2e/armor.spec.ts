@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { boot, watchErrors } from './helpers';
 
-// Armor (010): the first Husk drops a bundle; identify it at the bench, wear it,
-// and the next Husk swipe lands for less.
+// Armor (010, gear since 036): the first Husk drops a piece; identify it at the bench, wear it,
+// and the next Husk swipe lands for less (or the same, for a trinket with no armor).
 
 test('the first Husk drops armor, the bench identifies it, and wearing it softens a hit', async ({ page }) => {
   test.setTimeout(90_000);
@@ -21,10 +21,11 @@ test('the first Husk drops armor, the bench identifies it, and wearing it soften
     h.toFoundry();
     h.walkTo(2.3 * 32, 12.5 * 32);
     s = g.step(1, { identify: true });
-    const piece = s.armorPieces[0];
+    const piece = s.gear[0];
     if (!piece) return { carried, failed: `nothing identified (carried ${carried}, now ${s.inventory['unidentified-armor'] ?? 0})` };
     s = g.step(1, { equip: { id: piece.id } });
-    const equipped = s.equippedArmor;
+    const equipped = s.equipped[piece.slot];
+    const armor = s.stats.armor;
     // Back outside and into a Husk's reach until it lands a swipe.
     h.toHall();
     s = g.getState();
@@ -38,11 +39,12 @@ test('the first Husk drops armor, the bench identifies it, and wearing it soften
       s = g.step(1, { moveX: far ? toward(p.x, husk.x) : 0, moveY: far ? toward(p.y, husk.y) : 0 });
       for (const hit of s.events.hits) if (hit.target === 'player') damage = hit.damage;
     }
-    return { carried, piece: piece.armor, equipped: equipped === piece.id, damage, failed: '' };
+    return { carried, armor, equipped: equipped === piece.id, damage, failed: '' };
   });
   expect(result.failed).toBe('');
   expect(result.carried).toBe(1);
   expect(result.equipped).toBe(true);
-  expect(result.damage).toBe(20 - (result.piece ?? 0));
+  // 036: armor takes its total off, but a hit always deals at least a quarter of its damage.
+  expect(result.damage).toBe(Math.max(Math.ceil(20 * 0.25), 20 - (result.armor ?? 0)));
   expect(errors).toEqual([]);
 });

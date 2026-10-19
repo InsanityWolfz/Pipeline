@@ -69,7 +69,7 @@ describe('where you heal', () => {
     expect(HEALING).toEqual({ foundry: 50, pylon: 10, spring: 10, fieldRegen: 0, afterHitDelay: 0 });
     const s = arena();
     s.player.health = 40;
-    expect(fieldRegen()).toBe(0);
+    expect(fieldRegen(arena())).toBe(0);
     run(s, 600);
     expect(s.player.health).toBe(40);
     expect(s.player.healing).toBeNull();
@@ -184,7 +184,7 @@ describe('the highest rate wins', () => {
     const regen = tuned({ fieldRegen: 6 });
     const s = arena();
     s.player.health = 40;
-    expect(fieldRegen(regen)).toBe(6);
+    expect(fieldRegen(s, regen)).toBe(6);
     heal(s, 600, regen);
     expect(s.player.health).toBe(100);
     const t = arena();

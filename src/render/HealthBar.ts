@@ -1,7 +1,6 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, SPRITES } from '../data/assets';
 import { HP_BAR, HUD_HEALTH_LAYOUT } from '../data/hudPanels';
-import type { ArmorPiece } from '../sim/armor';
 import type { ScreenBox } from './bottomHud';
 import { colorOf } from './color';
 import { chunkOf, createHealthBar, pulseOf, stepHealthBar } from './healthBarModel';
@@ -24,11 +23,12 @@ export interface HealthInput {
   max: number;
   healing: boolean;
   dying: boolean;
-  worn: ArmorPiece | undefined;
+  /** Total armor from every worn piece (036). */
+  armor: number;
 }
 
 // The HP bar (031): bottom-left, a carved frame round a 144x12 fill reading "72 / 100",
-// the shield and the worn armor value beside it. Green, red and pulsing below a quarter;
+// the shield and the total armor beside it (036). Green, red and pulsing below a quarter;
 // a white chunk for damage just taken; a cyan glow while healing (030). Fixed to the screen.
 export class HealthBar {
   private readonly frame: GameObjects.Image;
@@ -105,8 +105,8 @@ export class HealthBar {
     this.text.moveTo(Math.round(cx - this.text.width / 2), y + L.textY);
     const S = L.shield;
     const shieldX = x + L.frame.w + S.gap;
-    const alpha = input.worn ? 1 : L.dimAlpha;
+    const alpha = input.armor > 0 ? 1 : L.dimAlpha;
     this.shield.setPosition(shieldX, y + Math.round((L.frame.h - S.h) / 2)).setAlpha(alpha);
-    this.value.set(String(input.worn?.armor ?? 0)).moveTo(shieldX + S.w + S.valueGap, y + S.valueY).setAlpha(alpha);
+    this.value.set(String(input.armor)).moveTo(shieldX + S.w + S.valueGap, y + S.valueY).setAlpha(alpha);
   }
 }

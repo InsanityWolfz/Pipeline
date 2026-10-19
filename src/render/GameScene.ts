@@ -3,7 +3,6 @@ import { CAMERA_LERP } from '../data/config';
 import { BUILD_BAR } from '../data/pieces';
 import { SOUNDS } from '../data/sounds';
 import { FOUNDRY_ROOM } from '../data/rooms';
-import { worn } from '../sim/armor';
 import { advanceClock, createClock } from '../sim/clock';
 import { craft } from '../sim/crafting';
 import { clearEvents, createEvents, type SimEvents } from '../sim/events';
@@ -25,7 +24,7 @@ import { HopperPicker } from './HopperPicker';
 import { HoverView } from './HoverView';
 import { HudView, NO_HUD_PANELS } from './HudView';
 import { NodeView } from './NodeView';
-import { PlayerView } from './PlayerView';
+import { bodyLook, PlayerView } from './PlayerView';
 import { NO_SITE_UI, SiteMenus } from './SiteMenus';
 import { SiteView } from './SiteView';
 import { WakeView } from './WakeView';
@@ -266,7 +265,7 @@ export class GameScene extends Scene {
     this.groundItemView?.update(inRoom(sim.groundItems, shown), picked, sim.player, sim);
     this.enemyView?.update(inRoom(sim.enemies, shown), sim);
     // Through a door's fade the player is already in the next room; hide them until it shows.
-    this.playerView?.update(sim.player, sim.tube, sim.link, worn(sim)?.weight ?? null, sim.hasTube, shown === sim.roomId);
+    this.playerView?.update(sim.player, sim.tube, sim.link, bodyLook(sim), sim.hasTube, shown === sim.roomId);
     this.arrowView?.update(inRoom(sim.arrows, shown));
     this.bombView?.update(inRoom(sim.bombs, shown));
     this.site?.update(sim, shown);

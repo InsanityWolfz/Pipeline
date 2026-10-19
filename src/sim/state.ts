@@ -5,7 +5,9 @@ import { createPopulation, inSafeZone, resetPopulation, type PopulationState } f
 import { LANDMARK_LIST } from '../data/landmarks';
 import { rollChampions } from './champions';
 import { WORLD } from './world';
-import type { ArmorPiece } from './armor';
+import type { GearPiece, GearSlot } from '../data/gear';
+import { NOTHING_WORN } from './gear';
+import { playerStats } from './stats';
 import type { ArrowState } from './arrows';
 import type { BombState } from './bombs';
 import type { GroundItem } from './drops';
@@ -98,11 +100,11 @@ export interface SimState {
   fixtures: FixtureState[];
   /** What pylon deposits have sent home. Kept through a KO. */
   stash: Inventory;
-  /** Identified armor (010). Kept through a KO. */
-  armor: ArmorPiece[];
-  nextArmorId: number;
-  /** The worn piece's id, or null. */
-  equipped: number | null;
+  /** Identified gear (036). Kept through a KO. */
+  gear: GearPiece[];
+  nextGearId: number;
+  /** The worn piece's id in each slot, or null (036). Kept through a KO. */
+  equipped: Record<GearSlot, number | null>;
   /** The player holds the tube (012); without it nothing fires. Kept through a KO. */
   hasTube: boolean;
   /** The tutorial's gates (012), true once open. Kept through a KO. */
@@ -181,9 +183,9 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     activatePulse: 0,
     fixtures: startingFixtures(),
     stash: {},
-    armor: [],
-    nextArmorId: 0,
-    equipped: null,
+    gear: (start.gear ?? []).map((g) => structuredClone(g)),
+    nextGearId: Math.max(0, ...(start.gear ?? []).map((g) => g.id + 1)),
+    equipped: { ...NOTHING_WORN },
     firstHuskDropped: false,
     banked: { ...start.inventory },
     hasTube: start.hasTube,
@@ -212,7 +214,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
  * room's enemies at home and nodes at full, and nothing harvesting, on the
  * ground or in flight, and build mode off. The tick, seed, RNG, id counters,
  * the inventory (a death trims it first), the crafted set, the tube's link and
- * the intake's entrances, research (033), claims, the stash, armor and the whole foundry carry on. Claimed rooms get no enemies back.
+ * the intake's entrances, research (033), claims, the stash, gear and the whole foundry carry on. Claimed rooms get no enemies back.
  */
 export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   const rooms = Object.values(WORLD);
@@ -220,6 +222,8 @@ export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   // The start's own spawn when waking in its room (017: the overworld has several), else the room's.
   const spawn = spawnRoomId === state.start.room ? state.start.spawn : roomOf(state).spawn;
   state.player = createPlayer(tileCentre(spawn));
+  // Waking at full health means the worn gear's max (036).
+  state.player.health = playerStats(state).maxHealth;
   state.tube = createTube();
   state.arrows = [];
   state.groundItems = [];

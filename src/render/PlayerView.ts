@@ -5,9 +5,11 @@ import { WANDERER, WANDERER_FEEL, type WandererView } from '../data/art/wanderer
 import { MELEE } from '../data/combat';
 import { IDLE_SPEED } from '../data/config';
 import { DYING_TICKS, FEET_BOX, HIT_INVULN_TICKS } from '../data/player';
-import type { ArmorWeight } from '../data/armor';
 import { ARMOR_TINTS } from '../data/hudLayout';
 import { aimFacing } from '../sim/direction';
+import { wornPieces } from '../sim/gear';
+import { relicDef } from '../data/relics';
+import type { SimState } from '../sim/state';
 import { isRolling } from '../sim/movement';
 import type { Facing, PlayerState } from '../sim/player';
 import type { LinkState } from '../sim/link';
@@ -26,6 +28,16 @@ const UNTINTED = 0xffffff;
 const FEEL = WANDERER_FEEL;
 
 const viewOf = (f: Facing): WandererView => (f === 'up' || f === 'down' ? f : 'side');
+
+/** How the worn body piece shades the body (010): by its weight, Featherplate (036) without heavy plate's slow look. */
+export type BodyLook = keyof typeof ARMOR_TINTS;
+
+/** The worn body piece's look, or null with no body piece worn. */
+export function bodyLook(sim: Pick<SimState, 'gear' | 'equipped'>): BodyLook | null {
+  const body = wornPieces(sim).find((p) => p.slot === 'body');
+  if (!body?.weight) return null;
+  return body.relic && relicDef(body.relic).rule === 'feather' ? 'feather' : body.weight;
+}
 
 const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v));
 
@@ -73,7 +85,7 @@ export class PlayerView {
   }
 
   /** Draws the player; `shown` false hides them (they're in a room not yet on screen). `hasTube` false (012) draws them empty-handed. */
-  update(p: PlayerState, tube: TubeState, link: LinkState, armor: ArmorWeight | null, hasTube: boolean, shown = true): void {
+  update(p: PlayerState, tube: TubeState, link: LinkState, armor: BodyLook | null, hasTube: boolean, shown = true): void {
     const now = this.sprite.scene.time.now;
     const dt = this.lastTime < 0 ? FEEL.frameMs : Math.min(FEEL.maxFrameMs, now - this.lastTime);
     this.lastTime = now;
@@ -90,7 +102,7 @@ export class PlayerView {
     const white = p.hurtTicks > 0 && Math.floor(elapsed / PLAYER_HIT_FX.flickerTicks) % 2 === 0;
     if (white) this.sprite.setTint(colorOf(PLAYER_HIT_FX.flashColor)).setTintMode(TintModes.FILL);
     else if (armor) {
-      // Worn armor shades the body below the hood by its weight.
+      // A worn body piece shades the body below the hood by its weight (Featherplate, 036, as light: no slow look).
       const body = colorOf(ARMOR_TINTS[armor]);
       this.sprite.setTint(UNTINTED, UNTINTED, body, body).setTintMode(TintModes.MULTIPLY);
     } else this.sprite.clearTint();

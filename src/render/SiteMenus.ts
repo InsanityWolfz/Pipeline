@@ -1,5 +1,5 @@
 import type { Scene } from 'phaser';
-import { UNIDENTIFIED_ARMOR } from '../data/armor';
+import { UNIDENTIFIED_ARMOR } from '../data/gear';
 import { SPRITES } from '../data/assets';
 import { SITE_ICONS } from '../data/foundryAssets';
 import { ITEMS } from '../data/items';
@@ -171,7 +171,7 @@ export class SiteMenus {
     else if (p) controls.menus.pylon(p);
     else if (s) controls.menus.takeStash(s.itemId);
     else if (b && 'identify' in b) controls.menus.identify();
-    else if (b) controls.menus.equip(b.equip);
+    else if (b) controls.menus.equip({ id: b.equip });
     else return false;
     for (const m of this.menus) m.flashAt(x, y);
     this.close();
@@ -210,9 +210,9 @@ export class SiteMenus {
         ? [{ icons: [SPRITES.emblemIdentify], text: `Identify all (${unidentified})`, value: { identify: true as const } }]
         : []),
       // Each piece: its name, weight and armor; the worn one says so, and clicking it takes it off.
-      ...sim.armor.map((a) => ({
+      ...sim.gear.map((a) => ({
         icons: [a.weight === 'heavy' ? SPRITES.iconArmorHeavy : SPRITES.iconArmorLight],
-        text: `${a.name} ${a.weight} ${a.armor}${a.id === sim.equipped ? ' worn' : ''}`,
+        text: `${a.name} ${a.weight} ${a.baseArmor}${a.id === sim.equipped[a.slot] ? ' worn' : ''}`,
         value: { equip: a.id },
       })),
     ];

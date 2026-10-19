@@ -224,8 +224,10 @@ describe('sim state', () => {
     const site = ['sealed', 'claims', 'discoveries', 'cacheOpens', 'stashDeposits', 'stashTakes', 'supplies', 'portDeliveries', 'travels', 'identifies', 'equips', 'intakeOpens', 'restores', 'schematicDrops', 'schematicReveals', 'gates', 'objectives'] as const;
     // 034: the shield, the Bulwark and its altar; 035: the Charger's charge, the Burrower's eruption, the Sniper's bolt.
     const hollows = ['blocked', 'bossDefeats', 'summons', 'lobs', 'enemyBursts', 'pounds', 'charges', 'eruptions', 'snipes'] as const;
-    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, ...hollows, 'lost', 'ko', 'tubeTaken'].sort());
-    for (const name of [...lists, ...later, ...site, ...hollows]) expect(summary.events[name], name).toEqual([]);
+    // 036: the relics' rolls through, ward blocks and ember saves.
+    const relics = ['staggers', 'wardBlocks', 'emberSaves'] as const;
+    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, ...hollows, ...relics, 'lost', 'ko', 'tubeTaken'].sort());
+    for (const name of [...lists, ...later, ...site, ...hollows, ...relics]) expect(summary.events[name], name).toEqual([]);
     expect(summary.events.ko).toBe(false);
     expect(summary.events.lost).toEqual({});
     expect(summary.events.tubeTaken).toBe(false);

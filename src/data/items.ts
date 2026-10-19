@@ -49,7 +49,7 @@ const BASE_ITEMS: Readonly<Record<string, ItemDef>> = {
   casing: { id: 'casing', name: 'Casing', kind: 'part', group: 'parts', icon: SPRITES.itemCasing },
   fuse: { id: 'fuse', name: 'Fuse', kind: 'part', group: 'parts', icon: SPRITES.itemFuse },
   'ley-shard': { id: 'ley-shard', name: 'Ley shard', kind: 'part', group: 'parts', icon: SPRITES.itemLeyShard },
-  'unidentified-armor': { id: 'unidentified-armor', name: 'Unidentified armor', kind: 'armor', group: 'gear', icon: SPRITES.itemUnidentifiedArmor },
+  'unidentified-armor': { id: 'unidentified-armor', name: 'Unidentified gear', kind: 'armor', group: 'gear', icon: SPRITES.itemUnidentifiedArmor },
   /** The Pylon Warden's core (009): it restores one intake entrance (033). Its kind stays a part; the panel lists it under Cores (031). */
   'warden-core': { id: 'warden-core', name: 'Warden core', kind: 'part', group: 'cores', icon: SPRITES.itemWardenCore, research: 'core' },
   /** The Bulwark's core (034 drops it): the third entrance and the second reservoir cost one each (033). */

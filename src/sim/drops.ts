@@ -1,13 +1,13 @@
 import { DROP_SCATTER, DROP_SCATTER_TRIES, type DropTable, type EnemyDef } from '../data/enemies';
 import { FEET_BOX, PICKUP_RADIUS } from '../data/player';
 import { TILE_SIZE } from '../data/config';
-import { FIRST_ARMOR_ENEMY, UNIDENTIFIED_ARMOR } from '../data/armor';
+import { FIRST_ARMOR_ENEMY, UNIDENTIFIED_ARMOR } from '../data/gear';
 import { CHAMPIONS } from '../data/champions';
 import { championDropRolls } from './champions';
 import type { Room } from '../data/rooms';
 import { isSolid, overlapsRect, type Rect } from './collision';
 import { nextFloat, nextInt, type RngState } from './rng';
-import { rollArmorDrop } from './armor';
+import { rollArmorDrop } from './gear';
 import { standingRects } from './fixtures';
 import { nodeRects } from './nodes';
 import { roomById, type SimState } from './state';

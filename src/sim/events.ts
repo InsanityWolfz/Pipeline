@@ -1,7 +1,7 @@
 import type { DamageType } from '../data/ammo';
 import type { HealSource } from '../data/player';
 import type { GateId } from '../data/rooms';
-import type { ArmorPiece } from './armor';
+import type { GearPiece, GearSlot } from '../data/gear';
 import type { PlaceFail } from './pieces';
 import type { Facing } from './player';
 
@@ -110,10 +110,14 @@ export interface SimEvents {
   portDeliveries: { id: string; itemId: string }[];
   /** Fast travel by pylon or waystone (also recorded as a room change). */
   travels: { from: string; to: string }[];
-  /** An unidentified piece was identified at the bench (010). */
-  identifies: ArmorPiece[];
-  /** The worn piece changed (null: taken off). */
-  equips: { id: number | null }[];
+  /** An unidentified piece was identified at the bench (010): the whole piece (036). */
+  identifies: GearPiece[];
+  /** What a slot wears changed (036; null: taken off). */
+  equips: { slot: GearSlot; id: number | null }[];
+  /** 036: a roll through an enemy staggered it (Rollbreaker Greaves); the Wardstone blocked a hit whole; Last Ember saved the player on 1 HP. Each where it happened, px. */
+  staggers: { id: number; x: number; y: number }[];
+  wardBlocks: { x: number; y: number }[];
+  emberSaves: { x: number; y: number }[];
   /** The tube was taken from its stone (012). */
   tubeTaken: boolean;
   /** A tutorial gate opened. */
@@ -181,6 +185,9 @@ export function createEvents(): SimEvents {
     objectives: [],
     identifies: [],
     equips: [],
+    staggers: [],
+    wardBlocks: [],
+    emberSaves: [],
     sealed: [],
     claims: [],
     discoveries: [],
@@ -240,6 +247,9 @@ export function clearEvents(events: SimEvents): void {
   events.objectives.length = 0;
   events.identifies.length = 0;
   events.equips.length = 0;
+  events.staggers.length = 0;
+  events.wardBlocks.length = 0;
+  events.emberSaves.length = 0;
   events.sealed.length = 0;
   events.claims.length = 0;
   events.discoveries.length = 0;

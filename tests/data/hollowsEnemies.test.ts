@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ARMOR_DROP_CHANCE } from '../../src/data/armor';
+import { ARMOR_DROP_CHANCE } from '../../src/data/gear';
 import { REGION_2_PART } from '../../src/data/drops';
 import { attackOf, ENEMIES, MIN_TELEGRAPH_TICKS } from '../../src/data/enemies';
 import { HOLLOWS_ENEMIES } from '../../src/data/hollowsEnemies';

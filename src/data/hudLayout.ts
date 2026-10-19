@@ -172,8 +172,8 @@ export const STAGE_PANEL = { pad: 6, headerHeight: 16, gap: 12, title: 'Stages' 
 export const MENU_MAX_ROWS = 10;
 export const MENU_COLUMN_GAP = 8;
 
-/** Palette tints on the player's body for the worn armor's weight (010). */
-export const ARMOR_TINTS = { light: 'leaf-light', heavy: 'rock' } as const;
+/** Palette tints on the player's body for the worn body piece's weight (010); Featherplate (036) shows no slow tint. */
+export const ARMOR_TINTS = { light: 'leaf-light', heavy: 'rock', feather: 'leaf-light' } as const;
 
 /**
  * World names on mouse-over (015). Things without a tile (enemies, nodes, ground

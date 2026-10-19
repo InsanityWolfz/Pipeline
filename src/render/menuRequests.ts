@@ -1,3 +1,4 @@
+import type { EquipRequest } from '../sim/gear';
 import type { Command, HopperAmount } from '../sim/input';
 
 /** How many a hopper menu click moves (022): Ctrl+click all (Ctrl wins over Shift), Shift+click half, a plain click one. */
@@ -50,9 +51,9 @@ export class MenuRequests {
     this.pending.identify = true;
   }
 
-  /** Wears a piece (or takes armor off) at the bench. */
-  equip(id: number | null): void {
-    this.pending.equip = { id };
+  /** Wears a piece (the worn one comes off), or takes a slot off, at the bench (036). */
+  equip(req: EquipRequest): void {
+    this.pending.equip = req;
   }
 
   /** Hand-applies a stage at the bench (029: the bench's Stages rows). */

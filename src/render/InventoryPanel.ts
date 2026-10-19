@@ -2,6 +2,7 @@ import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, SPRITES } from '../data/assets';
 import { INVENTORY_PANEL, reservedRows, sparesText } from '../data/hudPanels';
 import { itemDef } from '../data/items';
+import { playerStats } from '../sim/stats';
 import { inventoryGroups, SPARE_ROW, WORN_ROW, type Held, type InventoryGroupRows, type InventoryRow } from './inventoryRows';
 import { inventoryLayout, type InventoryLayout } from './inventoryLayout';
 import { TextLine } from './textLine';
@@ -113,15 +114,14 @@ export class InventoryPanel {
     for (const p of parts) p.setVisible(false);
     if (!row || !sim) return;
     const show = (...shown: { setVisible(visible: boolean): unknown }[]) => shown.forEach((p) => p.setVisible(true));
-    const worn = sim.armor.find((a) => a.id === sim.equipped);
     v.icon.setPosition(x, y);
     v.name.moveTo(x + R.name.x, y + R.name.y);
     v.safe.moveTo(x + R.mark.x, y + R.mark.y);
-    if (row.itemId === WORN_ROW && worn) {
-      // The worn piece: by name, weight and armor, always safe.
-      v.icon.setFrame(worn.weight === 'heavy' ? SPRITES.iconArmorHeavy : SPRITES.iconArmorLight);
-      v.name.set(worn.name).setFill();
-      v.safe.set(`${T.worn}${T.sep}${worn.weight}${T.sep}${T.armor} ${worn.armor}`);
+    if (row.itemId === WORN_ROW) {
+      // The worn pieces (036: one a slot): how many, and the total armor, always safe.
+      v.icon.setFrame(SPRITES.hudShield);
+      v.name.set(`${row.count} ${T.worn}`).setFill();
+      v.safe.set(`${T.armor} ${playerStats(sim).armor}`);
       show(v.icon, v.name, v.safe);
       return;
     }

@@ -1,11 +1,13 @@
-import { MAX_HEALTH, type HealSource } from '../data/player';
+import type { HealSource } from '../data/player';
+import type { GearPiece, GearSlot } from '../data/gear';
+import { playerStats, type PlayerStats } from './stats';
+import { wardReady } from './relics';
 import { WORLD } from './world';
 import type { SimEvents } from './events';
 import { unlockedPieces } from './placement';
 import { stagesUnlocked } from './stages';
 import { isInvulnerable, isRolling } from './movement';
 import type { Facing } from './player';
-import type { ArmorPiece } from './armor';
 import { fixtureDef } from './fixtures';
 import { portPerMinute, pylonsOf } from './claims';
 import { objectiveLine } from './objectives';
@@ -136,10 +138,14 @@ export interface SimSummary extends HollowsSummary {
   fixtures: { id: string; kind: string; tx: number; ty: number; item: string | null }[];
   /** What the stash holds. */
   stash: Record<string, number>;
-  /** Identified armor (010); unidentified pieces are carried as the `unidentified-armor` item. */
-  armorPieces: (ArmorPiece & { identified: true })[];
-  /** The worn piece's id, or null. */
-  equippedArmor: number | null;
+  /** Identified gear (036); unidentified pieces are carried as the `unidentified-armor` item. */
+  gear: GearPiece[];
+  /** The worn piece's id in each slot, or null (036). */
+  equipped: Record<GearSlot, number | null>;
+  /** What the worn gear makes of the player (036): `playerStats`. */
+  stats: PlayerStats;
+  /** The relics' states (036): the Wardstone's quiet ticks and whether it's ready, and whether Last Ember is spent this trip. */
+  relics: { wardTicks: number; wardReady: boolean; emberSpent: boolean };
   firstHuskDropped: boolean;
   /** The tutorial (012): the tube in hand, gates open, the first line full, the current goal, the end. */
   hasTube: boolean;
@@ -193,7 +199,7 @@ export function summarize(state: SimState): SimSummary {
       rollCooldown: p.cooldown,
       aim: { x: round(p.aimX), y: round(p.aimY) },
       health: p.health,
-      maxHealth: MAX_HEALTH,
+      maxHealth: playerStats(state).maxHealth,
       hitInvulnerable: p.hurtTicks > 0,
       ko: state.events.ko,
       dying: p.dying,
@@ -252,8 +258,10 @@ export function summarize(state: SimState): SimSummary {
     }),
     ports: portSummary(state),
     stash: { ...state.stash },
-    armorPieces: state.armor.map((a) => ({ ...a, identified: true as const })),
-    equippedArmor: state.equipped,
+    gear: structuredClone(state.gear),
+    equipped: { ...state.equipped },
+    stats: playerStats(state),
+    relics: { wardTicks: p.wardTicks, wardReady: wardReady(state), emberSpent: p.emberSpent },
     firstHuskDropped: state.firstHuskDropped,
     banked: { ...state.banked },
     atRisk: atRiskCounts(state),

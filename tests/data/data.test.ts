@@ -33,7 +33,7 @@ import {
 } from '../../src/data/foundryAssets';
 import { ENEMIES } from '../../src/data/enemies';
 import { FIXTURES, SITE_SUPPLY } from '../../src/data/claims';
-import { ARMOR_DROP_CHANCE, ARMOR_WEIGHTS } from '../../src/data/armor';
+import { ARMOR_DROP_CHANCE, GEAR_NAMES } from '../../src/data/gear';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { TILE, WALKABLE } from '../../src/data/rooms';
 import { ITEMS } from '../../src/data/items';
@@ -431,10 +431,9 @@ describe('claiming (009)', () => {
   });
 });
 
-describe('armor (010)', () => {
-  it('has sane weight ranges, drop chances for real enemies, and the bench on open floor', () => {
-    for (const w of Object.values(ARMOR_WEIGHTS)) {
-      expect(w.min).toBeLessThanOrEqual(w.max);
+describe('gear (010, 036)', () => {
+  it('has sane name lists, drop chances for real enemies, and the bench on open floor', () => {
+    for (const w of [GEAR_NAMES.helm, GEAR_NAMES.boots, GEAR_NAMES.trinket, ...Object.values(GEAR_NAMES.body)]) {
       expect(w.adjectives.length).toBeGreaterThan(0);
       expect(w.nouns.length).toBeGreaterThan(0);
     }
@@ -443,7 +442,7 @@ describe('armor (010)', () => {
       expect(chance).toBeGreaterThanOrEqual(0);
       expect(chance).toBeLessThanOrEqual(1);
     }
-    expect(ITEMS['unidentified-armor']?.kind).toBe('armor');
+    expect(ITEMS['unidentified-armor']).toMatchObject({ kind: 'armor', name: 'Unidentified gear' });
     expect(FIXTURES.some((f) => f.kind === 'bench')).toBe(true);
     for (const frame of animFrames(FIXTURE_SPRITES.bench)) expect(drawnFrames()).toContain(frame);
   });

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { inventoryGroups, SCHEMATIC_ROW } from '../../src/render/inventoryRows';
 import { createResearch } from '../../src/sim/research';
+import { NOTHING_WORN } from '../../src/sim/gear';
+import { bodyPiece, piece } from '../fixtures/gear';
 import { inventoryLayout } from '../../src/render/inventoryLayout';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { INVENTORY_PANEL, reservedRows } from '../../src/data/hudPanels';
@@ -9,7 +11,7 @@ import { INVENTORY_PANEL, reservedRows } from '../../src/data/hudPanels';
 // with its at-risk count (from the banking helper) and what's home in the stash, and
 // Gear's worn piece and spare pieces. And where it all goes on screen.
 
-const base = { inventory: {}, banked: {}, stash: {}, armor: [], equipped: null, research: createResearch() };
+const base = { inventory: {}, banked: {}, stash: {}, gear: [], equipped: { ...NOTHING_WORN }, research: createResearch() };
 
 describe('the inventory rows', () => {
   it('always lists the five groups in order, empty ones with no rows', () => {
@@ -38,19 +40,15 @@ describe('the inventory rows', () => {
     expect(groups.find((g) => g.id === 'raw')?.rows.map((r) => r.itemId)).toEqual(['wood', 'fiber', 'rime-shard']);
   });
 
-  it('Gear lists the carried unidentified armor, then the worn piece, then the spares, identified pieces always safe', () => {
-    const armor = [
-      { id: 1, name: 'Bark vest', weight: 'light' as const, armor: 2 },
-      { id: 2, name: 'Stone mail', weight: 'heavy' as const, armor: 5 },
-      { id: 3, name: 'Reed wrap', weight: 'light' as const, armor: 1 },
-    ];
-    const gear = inventoryGroups({ ...base, inventory: { 'unidentified-armor': 2 }, banked: { 'unidentified-armor': 1 }, armor, equipped: 2 }).find((g) => g.id === 'gear');
-    expect(gear?.rows).toEqual([
+  it('Gear lists the carried unidentified gear, then the worn pieces, then the spares, identified pieces always safe', () => {
+    const gear = [bodyPiece(1, 'light', 2), bodyPiece(2, 'heavy', 5), bodyPiece(3, 'light', 1), piece(4, 'helm', { baseArmor: 1 }), piece(5, 'boots')];
+    const rows = inventoryGroups({ ...base, inventory: { 'unidentified-armor': 2 }, banked: { 'unidentified-armor': 1 }, gear, equipped: { helm: 4, body: 2, boots: null, trinket: null } }).find((g) => g.id === 'gear');
+    expect(rows?.rows).toEqual([
       { itemId: 'unidentified-armor', count: 2, atRisk: 1, home: 0 },
-      { itemId: 'worn', count: 1, atRisk: 0, home: 0 },
-      { itemId: 'spare', count: 2, atRisk: 0, home: 0 },
+      { itemId: 'worn', count: 2, atRisk: 0, home: 0 },
+      { itemId: 'spare', count: 3, atRisk: 0, home: 0 },
     ]);
-    const bare = inventoryGroups({ ...base, armor: armor.slice(0, 1), equipped: null }).find((g) => g.id === 'gear');
+    const bare = inventoryGroups({ ...base, gear: gear.slice(0, 1) }).find((g) => g.id === 'gear');
     expect(bare?.rows).toEqual([{ itemId: 'spare', count: 1, atRisk: 0, home: 0 }]);
   });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { UNIDENTIFIED_ARMOR } from '../../src/data/armor';
+import { UNIDENTIFIED_ARMOR } from '../../src/data/gear';
+import { bodyPiece, piece, wear } from '../fixtures/gear';
 import { DYING_TICKS } from '../../src/data/player';
 import { FOUNDRY_ROOM, SHRINE_SITE } from '../../src/data/rooms';
 import { OVERWORLD } from '../../src/data/overworld';
@@ -105,11 +106,11 @@ describe('dying', () => {
     expect(s.events.lost).toEqual({ stone: 4 });
   });
 
-  it('keeps identified and worn armor, the stash, claims, the entrances and the foundry', () => {
+  it('keeps identified and worn gear, the stash, claims, the entrances and the foundry', () => {
     const s = foundry();
     run(s, 1);
-    s.armor = [{ id: 0, weight: 'light', armor: 3, name: 'Worn Vest' }];
-    s.equipped = 0;
+    wear(s, bodyPiece(0, 'light', 3), piece(1, 'helm', { baseArmor: 1 }));
+    s.gear.push(piece(2, 'boots'));
     s.stash = { wood: 9 };
     claim(s, SHRINE_SITE);
     Object.assign(s.link.entrances[1] ?? {}, { ammoId: 'arrow', count: 5 });
@@ -117,8 +118,8 @@ describe('dying', () => {
     c.item = 'stone';
     const pieces = s.foundry.pieces.length;
     die(s);
-    expect(s.armor).toHaveLength(1);
-    expect(s.equipped).toBe(0);
+    expect(s.gear).toHaveLength(3);
+    expect(s.equipped).toEqual({ helm: 1, body: 0, boots: null, trinket: null });
     expect(s.stash).toEqual({ wood: 9 });
     expect(s.claims).toEqual([SHRINE_SITE]);
     expect(s.link).toMatchObject({ attuned: true });

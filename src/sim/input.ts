@@ -1,4 +1,5 @@
 import type { Facing } from './player';
+import type { EquipRequest } from './gear';
 
 // What the player asks for on one tick. Render builds these from the keyboard
 // and mouse; the sim never reads input devices.
@@ -49,8 +50,8 @@ export interface Command {
   takeStash: { itemId: string | null } | null;
   /** Identify every carried piece at the bench this tick (an edge). */
   identify: boolean;
-  /** Wear an identified piece (by id), or take armor off (null), at the bench this tick (an edge), or null for no change. */
-  equip: { id: number | null } | null;
+  /** At the bench this tick (an edge, 036): wear a piece by id (the worn one comes off), or take a slot off with `{ slot, id: null }`; null for no change. */
+  equip: EquipRequest | null;
   /** Hand-apply a stage (by stage id) at the bench this tick (an edge, 029), or null. */
   applyStage: string | null;
   /** Restore a research node (by id) at its diagram in reach this tick (an edge, 033), or null. */

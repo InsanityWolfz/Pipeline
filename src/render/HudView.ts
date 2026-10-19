@@ -1,6 +1,5 @@
 import type { Scene } from 'phaser';
-import { MAX_HEALTH } from '../data/player';
-import { worn } from '../sim/armor';
+import { playerStats } from '../sim/stats';
 import type { SimEvents } from '../sim/events';
 import { unlockedPieces } from '../sim/placement';
 import type { SimState } from '../sim/state';
@@ -105,7 +104,8 @@ export class HudView {
     this.hotbar.update(sim.tube, sim.inventory);
     this.tubeSlot.update(hudActive(sim), building);
     const p = sim.player;
-    const input = { health: p.health, max: MAX_HEALTH, healing: p.healing !== null, dying: p.dying > 0, worn: worn(sim) };
+    const stats = playerStats(sim);
+    const input = { health: p.health, max: stats.maxHealth, healing: p.healing !== null, dying: p.dying > 0, armor: stats.armor };
     this.health.update(input, building ? buildBarBox(unlockedPieces(sim)) : null, dt);
     this.edges.update(this.health.shown.low, this.health.pulse);
     this.feed.update(events.pickups.map((p) => shownKey(sim, p.itemId)), dt);

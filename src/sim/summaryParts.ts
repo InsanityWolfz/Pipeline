@@ -65,6 +65,8 @@ export interface EnemySummary extends KindSummary {
   /** Chill stacks from cold hits (029), and ticks left frozen. */
   chill: number;
   frozen: number;
+  /** Ticks left staggered by a roll through it (036: Rollbreaker Greaves). */
+  staggered: number;
   /** A champion's name (032), or null. */
   champion: { name: string } | null;
 }
@@ -88,6 +90,7 @@ export function enemySummary(state: SimState, e: EnemyState): EnemySummary {
     flash: e.flash,
     chill: e.chill,
     frozen: e.frozen,
+    staggered: e.staggered,
     ...kindSummary(state, e),
   };
 }

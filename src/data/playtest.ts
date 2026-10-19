@@ -6,12 +6,15 @@ import { ROUNDS } from './tags';
 import { HOLLOWS } from './hollows';
 import { OVERWORLD } from './overworld';
 import { DEFAULT_ROOM } from './rooms';
+import type { GearPiece } from './gear';
+import { WARDSTONE } from './relics';
 
 // The `?playtest` start (spec 007): plenty of everything and every machine
 // unlocked, so playtests skip the gathering; since 012 it also holds the tube,
 // already attuned, with every tutorial gate open. Since 029 every stage is unlocked
 // too (its recipe counts as hand-made), and rime shards come with the other raws;
 // tagged rounds aren't carried, so playtest fire stays plain until the bench or a stage makes them.
+// Since 036 it carries identified gear too: a Rare piece per slot and a relic.
 // Counts are tuning values.
 
 const AMMO_COUNT = 99;
@@ -27,6 +30,18 @@ const COUNTS = { ammo: AMMO_COUNT, raw: RAW_COUNT, part: PART_COUNT, armor: ARMO
  */
 const OVERRIDES: Readonly<Record<string, number>> = { 'warden-core': 5, 'bulwark-core': 2, 'ancient-gear': 10, 'aqueduct-valve': 10 };
 
+/**
+ * Identified gear the playtest carries (036), none worn: a Rare piece in each slot and a relic, so the bench's panel
+ * and every effect can be tried at once. Values sit inside the spec's ranges.
+ */
+export const PLAYTEST_GEAR: readonly GearPiece[] = [
+  { id: 0, slot: 'helm', rarity: 'rare', weight: null, baseArmor: 2, relic: null, name: 'Rune-cut Helm', affixes: [{ kind: 'max-health', value: 14 }, { kind: 'regen', value: 0.5 }, { kind: 'armor', value: 2 }] },
+  { id: 1, slot: 'body', rarity: 'rare', weight: 'heavy', baseArmor: 12, relic: null, name: 'Granite Plate', affixes: [{ kind: 'armor', value: 3 }, { kind: 'max-health', value: 16 }, { kind: 'roll-distance', value: 12 }] },
+  { id: 2, slot: 'boots', rarity: 'rare', weight: null, baseArmor: 1, relic: null, name: 'Supple Treads', affixes: [{ kind: 'move-speed', value: 0.05 }, { kind: 'roll-cooldown', value: 5 }, { kind: 'roll-distance', value: 10 }] },
+  { id: 3, slot: 'trinket', rarity: 'rare', weight: null, baseArmor: 0, relic: null, name: 'Ley-touched Charm', affixes: [{ kind: 'regen', value: 0.6 }, { kind: 'max-health', value: 10 }, { kind: 'move-speed', value: 0.04 }] },
+  { id: 4, slot: WARDSTONE.slot, rarity: 'relic', weight: WARDSTONE.weight, baseArmor: 1, relic: WARDSTONE.id, name: WARDSTONE.name, affixes: [{ kind: 'max-health', value: 10 }, { kind: 'roll-cooldown', value: 4 }] },
+];
+
 export const PLAYTEST_START: StartDef = {
   room: DEFAULT_ROOM,
   // At the start stone, with the land already full of packs (017).
@@ -37,6 +52,7 @@ export const PLAYTEST_START: StartDef = {
   gatesOpen: true,
   inventory: Object.fromEntries(Object.values(ITEMS).filter((it) => !ROUNDS.includes(it.id)).map((it) => [it.id, OVERRIDES[it.id] ?? COUNTS[it.kind]])),
   crafted: [...new Set([...Object.values(RECIPES), ...Object.values(STAGE_RECIPES)].map((r) => r.output.itemId))].sort(),
+  gear: PLAYTEST_GEAR,
 };
 
 /**

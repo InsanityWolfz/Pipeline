@@ -8,6 +8,7 @@ import { createSim, type SimState } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
 import { arena, atEntrance, atPylon, command, die, run, runUntil, SEED } from './fight';
+import { bodyPiece, wear } from '../fixtures/gear';
 
 // What a death would take (031): per carried item, safe = min(held, banked) and at risk = the rest.
 // The inventory panel and getState().atRisk read the same helper, and a death keeps and loses exactly that.
@@ -111,15 +112,14 @@ describe('the at-risk helper (031)', () => {
     expect(atRiskCounts(s)).toEqual({});
   });
 
-  it('identified armor is never in the carried list, so a death never takes it', () => {
+  it('identified gear is never in the carried list, so a death never takes it', () => {
     const s = arena();
-    s.armor = [{ id: 1, name: 'Bark vest', weight: 'light', armor: 2 }];
-    s.equipped = 1;
+    wear(s, bodyPiece(1, 'light', 2));
     s.inventory = { wood: 1 };
     s.banked = {};
     expect(atRiskCounts(s)).toEqual({ wood: 1 });
     die(s);
-    expect(s.armor).toHaveLength(1);
-    expect(s.equipped).toBe(1);
+    expect(s.gear).toHaveLength(1);
+    expect(s.equipped.body).toBe(1);
   });
 });

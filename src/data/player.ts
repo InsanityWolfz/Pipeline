@@ -1,12 +1,13 @@
 import { OVERWORLD } from './overworld';
 import { DEFAULT_ROOM, FOUNDRY_ROOM } from './rooms';
+import type { GearPiece } from './gear';
 
 // Player movement tuning. Starting values from spec 002; tune in playtest.
 
 /** Walk top speed, px per second. */
 export const WALK_SPEED = 120;
 
-/** Walk speed multiplier while the tube really fires (016): it's heavy. Stacks with heavy armor. */
+/** Walk speed multiplier while the tube really fires (016): it's heavy. Stacks with heavy armor and gear speed (036). */
 export const FIRING_WALK_MULTIPLIER = 0.7;
 
 /** Ticks to reach top speed from rest, and to come back to rest. */
@@ -48,6 +49,8 @@ export interface StartDef {
   populated: boolean;
   /** Sites already claimed (034: `?start=hollows` starts with the shrine's, so the Hollows' barrier is down). */
   claims?: readonly string[];
+  /** Identified gear the player starts with, none worn (036: `?playtest` carries a Rare piece per slot and a relic). */
+  gear?: readonly GearPiece[];
 }
 
 /**
