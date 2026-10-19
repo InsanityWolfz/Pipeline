@@ -2,7 +2,7 @@ import { roundBase } from '../data/tags';
 import { BLASTFLETCH, OVERPRESSURE, SHATTERPOINT } from '../data/talents';
 import { COLD } from '../data/tags';
 import { createShard, type ArrowState } from './arrows';
-import { blastArea } from './bombs';
+import { blastArea } from './blast';
 import type { EnemyState } from './enemies';
 import type { Command } from './input';
 import type { SimState } from './state';

@@ -41,7 +41,7 @@ export class MineView {
 
   constructor(scene: Scene) {
     this.scene = scene;
-    this.rings = scene.add.graphics().setDepth(DEPTHS.groundFx + 0.2);
+    this.rings = scene.add.graphics().setDepth(DEPTHS.groundFx + MINE_LOOK.depth.ring);
   }
 
   get shown(): MinesShown {
@@ -92,7 +92,7 @@ export class MineView {
     this.shownArmed = [];
     for (const m of here ? sim.mines.armed.filter((x) => x.roomId === sim.roomId) : []) {
       live.add(m.id);
-      const image = this.armed.get(m.id) ?? addVector(this.scene, m.x, m.y, MINE_SPRITES.armed).setDepth(DEPTHS.groundFx + 0.1);
+      const image = this.armed.get(m.id) ?? addVector(this.scene, m.x, m.y, MINE_SPRITES.armed).setDepth(DEPTHS.groundFx + MINE_LOOK.depth.mine);
       this.armed.set(m.id, image.setPosition(m.x, m.y));
       const progress = Math.min(1, m.fuse / m.fuseTicks);
       const late = m.fuseTicks - m.fuse <= F.lateTicks;

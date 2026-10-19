@@ -62,17 +62,21 @@ const BOMBLET: Shape[] = [
   ellipse(1.6, -2.4, 0.8, 0.8, { fill: 'cinder-light', glow: { color: 'cinder', blur: 2 } }),
 ];
 
-/** A burst flash `r` px round: a hot core, a ring of light and `shards` iron or ember splinters flying out. */
-function flash(r: number, core: string, rim: string, shards: number, shard: string): Shape[] {
+/**
+ * A burst flash `r` px round: a hot core fading through `mid` to the rim's colour, a bright ring of the rim's colour over
+ * a dark ink ring (so it reads over grass and stone alike) and `shards` iron or ember splinters flying out.
+ */
+function flash(r: number, core: string, mid: string, rim: string, shards: number, shard: string): Shape[] {
   return [
-    ellipse(0, 0, r, r * 0.62, { fill: { radial: [0, 0, r], stops: [{ at: 0, color: { id: core, alpha: 0.95 } }, { at: 0.55, color: { id: rim, alpha: 0.6 } }, { at: 1, color: { id: rim, alpha: 0 } }] } }),
-    ellipse(0, 0, r * 0.82, r * 0.5, { stroke: { color: { id: rim, alpha: 0.8 }, width: 1.4 }, glow: { color: rim, blur: 4 } }),
+    ellipse(0, 0, r, r * 0.62, { fill: { radial: [0, 0, r], stops: [{ at: 0, color: { id: core, alpha: 1 } }, { at: 0.4, color: { id: mid, alpha: 0.85 } }, { at: 0.75, color: { id: rim, alpha: 0.55 } }, { at: 1, color: { id: rim, alpha: 0 } }] } }),
+    ellipse(0, 0, r * 0.82, r * 0.5, { stroke: { color: { id: 'ink', alpha: 0.55 }, width: 3.4 } }),
+    ellipse(0, 0, r * 0.82, r * 0.5, { stroke: { color: rim, width: 2 }, glow: { color: rim, blur: 5 } }),
     ...Array.from({ length: shards }, (_, k) => {
       const a = (k * Math.PI * 2) / shards + 0.3;
       const [c, s] = [Math.cos(a), Math.sin(a) * 0.62];
-      return line([c * r * 0.45, s * r * 0.45, c * r * 0.95, s * r * 0.95], 1.1, shard, true);
+      return line([c * r * 0.45, s * r * 0.45, c * r * 0.95, s * r * 0.95], 1.3, shard, true);
     }),
-    ellipse(0, 0, r * 0.22, r * 0.16, flat('snow')),
+    ellipse(0, 0, r * 0.3, r * 0.2, { fill: 'snow', glow: { color: core, blur: 4 } }),
   ];
 }
 
@@ -86,6 +90,6 @@ export const MINE_SPRITES_VECTOR: readonly VectorSprite[] = [
   icon(MINE_SPRITES.itemIronPlate, IRON_PLATE),
   sprite(MINE_SPRITES.bomblet, [8, 8], [4, 4], BOMBLET),
   sprite(MINE_SPRITES.bombletShadow, [8, 4], [4, 2], [ellipse(0, 0, 2.6, 1, { fill: { id: 'ground-shade', alpha: 0.35 } })]),
-  sprite(MINE_SPRITES.mineFlash, [R * 2 + 4, R * 2 + 4], [R + 2, R + 2], flash(R, 'snow', 'cyan-glow', 8, 'iron-light')),
-  sprite(MINE_SPRITES.bombletFlash, [R * 2 + 4, R * 2 + 4], [R + 2, R + 2], flash(R, 'cinder-light', 'cinder', 6, 'cinder-light')),
+  sprite(MINE_SPRITES.mineFlash, [R * 2 + 4, R * 2 + 4], [R + 2, R + 2], flash(R, 'snow', 'gold-trim', 'cyan-glow', 8, 'iron-light')),
+  sprite(MINE_SPRITES.bombletFlash, [R * 2 + 4, R * 2 + 4], [R + 2, R + 2], flash(R, 'cinder-light', 'cinder-light', 'cinder', 6, 'cinder-light')),
 ];

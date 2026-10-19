@@ -1,7 +1,9 @@
 // Asset keys and look numbers for 038's art: the landmine in flight, armed on the
 // ground and bursting, its icon and the iron plate's, and the cluster bomb's bomblets.
 // Render draws by these keys; the shapes are in src/data/art/mines.ts. Times ms, sizes
-// world px, alphas 0..1, colours palette ids. No runtime imports (ammo.ts and items.ts import it).
+// world px, alphas 0..1, colours palette ids. It imports only config (ammo.ts and items.ts import it).
+
+import { TICK_RATE } from './config';
 
 export const MINE_SPRITES = {
   /** The landmine in flight, and its shadow on the ground path. */
@@ -26,13 +28,15 @@ export const MINE_LOOK = {
    * The fuse ring round an armed mine: a faint track `radius` px out, and over it an arc filling clockwise from the top
    * as the fuse burns, in `color`, turning `lateColor` over its last `lateTicks`; `width` px wide.
    */
-  fuse: { radius: 9, width: 1.5, track: 0.3, alpha: 0.95, color: 'cyan-glow', lateColor: 'danger', lateTicks: 60 },
+  fuse: { radius: 9, width: 1.5, track: 0.3, alpha: 0.95, color: 'cyan-glow', lateColor: 'danger', lateTicks: TICK_RATE },
+  /** How far above DEPTHS.groundFx an armed mine and its fuse ring draw: flat on the ground, the ring over the mine. */
+  depth: { mine: 0.1, ring: 0.2 },
   /** The armed mine's pip flashes the ring's colour, `radius` px, for half of every `blinkMs`, faster in its last `lateTicks` (tween clock). */
   pip: { radius: 1.6, blinkMs: 500, lateBlinkMs: 160 },
   /** Bomblets arc out from the burst over their delay to this peak, px. */
   bombletArc: 14,
   /** Burst flashes: grow from `from` to `to` of the radius and fade over `ms`. */
-  mineFlash: { ms: 320, from: 0.5, to: 1.15 },
+  mineFlash: { ms: 420, from: 0.9, to: 1.6 },
   bombletFlash: { ms: 220, from: 0.4, to: 1.1 },
   /** The flash sprites' own radius, px: render scales them to the burst's. */
   flashRadius: 24,

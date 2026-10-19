@@ -1,6 +1,6 @@
-import { lobbedAmmo, type DamageType } from '../data/ammo';
+import { lobbedAmmo } from '../data/ammo';
 import { TICK_RATE, TILE_SIZE } from '../data/config';
-import { damageEnemy, targetable } from './enemies';
+import { blastArea } from './blast';
 import type { SimState } from './state';
 import { shotSealed } from './tutorial';
 import { ofBase, playerStats } from './stats';
@@ -105,7 +105,8 @@ export function stepBombs(state: SimState): void {
 
 /** Where a lobbed round comes down: a landmine arms (038), a bomb bursts. */
 function land(state: SimState, b: BombState): void {
-  if (lobbedAmmo(b.ammoId).kind === 'mine') armMine(state, b);
+  const ammo = lobbedAmmo(b.ammoId);
+  if (ammo.kind === 'mine') armMine(state, b, ammo);
   else burst(state, b);
 }
 
@@ -119,14 +120,4 @@ function burst(state: SimState, b: BombState): void {
   state.events.bursts.push({ x: b.x, y: b.y, radius: b.radius });
   chargeGround(state, b);
   scatterBomblets(state, b);
-}
-
-/** Damages every live, targetable enemy in a room whose feet are within `radius` of (x, y), flashing it without knockback; `skip` is spared. */
-export function blastArea(state: SimState, roomId: string, x: number, y: number, radius: number, damage: number, damageType: DamageType, skip: number | null = null): void {
-  const style = { knock: false, flash: true, damageType } as const;
-  for (const e of state.enemies) {
-    if (e.roomId !== roomId || e.health <= 0 || !targetable(e) || e.id === skip) continue;
-    if (Math.hypot(e.x - x, e.y - y) > radius) continue;
-    damageEnemy(state, e, damage, e.x - x, e.y - y, style);
-  }
 }

@@ -9,13 +9,14 @@ import type { LinkState } from '../sim/link';
 import { knownRecipe } from '../sim/tutorial';
 import { count, type Inventory } from '../sim/inventory';
 
-/** What decides which recipes show and which can be made: the inventory, the attunement and the revealing items found. */
-type Known = { inventory: Inventory; link: Pick<LinkState, 'attuned'>; found: readonly string[] };
 import { craftMenuLines, craftPanelAt } from './craftMenuLayout';
 import { flashRow, RowHover, type RowFrames } from './menuFeedback';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
+
+/** What decides which recipes show and which can be made: the inventory, the attunement and the revealing items found. */
+type Known = { inventory: Inventory; link: Pick<LinkState, 'attuned'>; found: readonly string[] };
 
 const RECIPE_ROW_FRAMES: RowFrames = { plain: SPRITES.craftRecipeRow, hover: SPRITES.craftRecipeRowHover, press: SPRITES.craftRecipeRowPress };
 

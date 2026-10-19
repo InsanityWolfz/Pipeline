@@ -12,7 +12,8 @@ import { volleyShots } from '../../src/sim/volley';
 import { createSim, type SimState } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { playerStats } from '../../src/sim/stats';
-import { arena, command, die, fireAt, HALL, HUSK, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { fireTicksOf } from '../../src/sim/tube';
+import { arena, atEntrance, command, die, fireAt, HALL, HUSK, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
 // Landmines (038): lobbed to the aim like a bomb, they arm where they land and burst
 // `fuseTicks` later for large damage in a small radius. Only the timer sets them off;
@@ -147,6 +148,47 @@ describe('landmines', () => {
     travelTo(t, HALL, OVERWORLD.wake);
     run(t, 1);
     expect(t.mines.armed).toEqual([]);
+  });
+
+  it('vanish when the player walks through a door', () => {
+    const s = armed();
+    lay(s, PLAYER_AT.x + 100, PLAYER_AT.y);
+    atEntrance(s);
+    runUntil(s, (t) => t.roomId === FOUNDRY_ROOM, 120, { moveY: -1 });
+    expect(s.mines.armed).toEqual([]);
+  });
+
+  it('take cluster bombs still in flight with them on a room change, so no bomblets are left behind', () => {
+    const s = arena();
+    s.inventory = { 'bomb+cluster': 2 };
+    run(s, 1, { selectAmmo: 'bomb' });
+    run(s, 1, fireAt(PLAYER_AT.x + 150, PLAYER_AT.y));
+    expect(s.bombs).toHaveLength(1);
+    travelTo(s, FOUNDRY_ROOM, { tx: 5, ty: 8 });
+    let bursts = 0;
+    for (let t = 0; t < 60; t++) {
+      run(s, 1);
+      bursts += s.events.bursts.length + s.events.bombletBursts.length;
+    }
+    expect(s.bombs).toEqual([]);
+    expect(s.mines.bomblets).toEqual([]);
+    expect(bursts).toBe(0);
+  });
+
+  it("never charge Blastfletch's ground: it reads a bomb's blast", () => {
+    const s = armed();
+    s.talents = [TALENT_START, 'a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'k1'];
+    lay(s, PLAYER_AT.x + 100, PLAYER_AT.y);
+    runUntil(s, (t) => t.events.mineBursts.length > 0, 320);
+    expect(s.blastCharges).toEqual([]);
+    expect(s.nextChargeId).toBe(0);
+  });
+
+  it("fire faster with Oiled Breech (all ammo's fire rate)", () => {
+    const s = armed();
+    expect(fireTicksOf(s, 'landmine')).toBe(40);
+    s.talents = [TALENT_START, 't1'];
+    expect(fireTicksOf(s, 'landmine')).toBe(Math.round(40 / 1.08));
   });
 
   it("vanish on a KO", () => {

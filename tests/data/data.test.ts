@@ -184,6 +184,15 @@ describe('items and ammo', () => {
 });
 
 describe('item kinds, ammo slots and recipes', () => {
+  it('reveals recipes only after real items (038: shownAfter names an item)', () => {
+    for (const r of Object.values(RECIPES)) if (r.shownAfter !== undefined) expect(ITEMS[r.shownAfter], r.id).toBeDefined();
+  });
+
+  it("lays the crafting menu's groups in columns numbered from 0 with none skipped (038.4)", () => {
+    const columns = [...new Set(CRAFT_GROUPS.map((g) => g.column))].sort((x, y) => x - y);
+    expect(columns).toEqual(columns.map((_, i) => i));
+  });
+
   it('gives every item a kind, and every ammo an ammo item', () => {
     // 033: schematics are the one new kind.
     for (const item of Object.values(ITEMS)) expect(['raw', 'part', 'ammo', 'armor', 'schematic']).toContain(item.kind);

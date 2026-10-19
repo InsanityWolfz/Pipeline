@@ -1,6 +1,7 @@
-import { lobbedAmmo } from '../data/ammo';
+import { lobbedAmmo, type MineAmmo } from '../data/ammo';
 import { CLUSTER, hasBehaviour } from '../data/tags';
-import { blastArea, type BombState } from './bombs';
+import { blastArea } from './blast';
+import type { BombState } from './bombs';
 import type { SimState } from './state';
 import { ofBase, playerStats } from './stats';
 import { rotate } from './volley';
@@ -58,9 +59,7 @@ export function clearMines(state: Pick<SimState, 'mines'>): void {
 }
 
 /** A landmine lands (from bombs.ts): it arms where it lies, its fuse at 0. */
-export function armMine(state: SimState, b: BombState): void {
-  const ammo = lobbedAmmo(b.ammoId);
-  if (ammo.kind !== 'mine') return;
+export function armMine(state: SimState, b: BombState, ammo: MineAmmo): void {
   const id = state.mines.nextId++;
   state.mines.armed.push({ id, ammoId: b.ammoId, roomId: b.roomId, x: b.x, y: b.y, fuse: 0, fuseTicks: ammo.fuseTicks, damage: b.damage, radius: b.radius });
   state.events.mineArms.push({ id, x: b.x, y: b.y });
@@ -95,10 +94,13 @@ export function scatterBomblets(state: SimState, b: BombState): void {
   }
 }
 
-/** The player changes area (038.8: through a door, or by travel): every armed mine and bomblet vanishes, and mines still in flight. */
+/**
+ * The player changes area (038.8: through a door, or by travel): every armed mine and bomblet vanishes, and so do
+ * mines and cluster bombs still in flight (their bomblets would only be left behind).
+ */
 export function leaveArea(state: Pick<SimState, 'mines' | 'bombs'>): void {
   clearMines(state);
-  state.bombs = state.bombs.filter((b) => lobbedAmmo(b.ammoId).kind !== 'mine');
+  state.bombs = state.bombs.filter((b) => lobbedAmmo(b.ammoId).kind !== 'mine' && !hasBehaviour(b.ammoId, 'cluster'));
 }
 
 /** Once a tick, before bombs fly (so a mine that lands this tick starts at fuse 0): bomblets count down and burst; armed fuses burn and burst. */

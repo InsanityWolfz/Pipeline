@@ -73,6 +73,24 @@ export type AmmoDef = StraightAmmo | LobAmmo | MineAmmo;
 /** Anything that arcs to the aim: a bomb or a landmine. */
 export type LobbedAmmo = LobAmmo | MineAmmo;
 
+/** The bomb (029: a 48 px blast, no burn). The landmine (038) flies as it does. */
+const BOMB: LobAmmo = {
+  id: 'bomb',
+  kind: 'lob',
+  itemId: 'bomb',
+  base: 'bomb',
+  tags: [],
+  fireTicks: 40,
+  speed: 200,
+  maxRange: 192,
+  arcPeak: 32,
+  burstRadius: 48,
+  burstDamage: 15,
+  damageType: 'physical',
+  sprite: SPRITES.bomb,
+  shadow: SPRITES.bombShadow,
+};
+
 const BASE_AMMO: Readonly<Record<string, AmmoDef>> = {
   arrow: {
     id: 'arrow',
@@ -104,22 +122,7 @@ const BASE_AMMO: Readonly<Record<string, AmmoDef>> = {
     sprite: SPRITES.leyBolt,
     shadow: SPRITES.leyBoltShadow,
   },
-  bomb: {
-    id: 'bomb',
-    kind: 'lob',
-    itemId: 'bomb',
-    base: 'bomb',
-    tags: [],
-    fireTicks: 40,
-    speed: 200,
-    maxRange: 192,
-    arcPeak: 32,
-    burstRadius: 48,
-    burstDamage: 15,
-    damageType: 'physical',
-    sprite: SPRITES.bomb,
-    shadow: SPRITES.bombShadow,
-  },
+  bomb: BOMB,
   // 038: large damage in a small radius on a delay; lobbed with a bomb's arc, speed and range, at a bomb's rate (038.7).
   landmine: {
     id: 'landmine',
@@ -127,10 +130,10 @@ const BASE_AMMO: Readonly<Record<string, AmmoDef>> = {
     itemId: 'landmine',
     base: 'landmine',
     tags: [],
-    fireTicks: 40,
-    speed: 200,
-    maxRange: 192,
-    arcPeak: 32,
+    fireTicks: BOMB.fireTicks,
+    speed: BOMB.speed,
+    maxRange: BOMB.maxRange,
+    arcPeak: BOMB.arcPeak,
     fuseTicks: 300,
     damage: 60,
     radius: 24,
