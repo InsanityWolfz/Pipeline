@@ -3,35 +3,17 @@ import { GROTTO } from '../../src/data/grotto';
 import { FEET_BOX } from '../../src/data/player';
 import { nodeDef } from '../../src/data/nodes';
 import { OVERWORLD, ringOf } from '../../src/data/overworld';
-import { TILE, WALKABLE } from '../../src/data/rooms';
+import { TILE } from '../../src/data/rooms';
 import { generateOverworld } from '../../src/sim/overworldGen';
 import { createSim, resetWorld } from '../../src/sim/state';
+import { reachable, tileKey } from '../fixtures/reach';
 import { die, movePlayer, run, runUntil, SEED } from './fight';
 
 // The Frozen Grotto, minimal (029): a hand-placed clearing in the north-west, three
 // rime clusters, a path from the west path's end, and a guard pack that never stays dead.
 
 const room = generateOverworld();
-const key = (t: { tx: number; ty: number }): string => `${t.tx},${t.ty}`;
-
-/** Tiles reachable on foot from a start, nodes standing in the way. */
-function reachable(from: { tx: number; ty: number }): Set<string> {
-  const nodes = new Set(OVERWORLD.nodes.map(key));
-  const seen = new Set<string>([key(from)]);
-  const queue = [from];
-  while (queue.length > 0) {
-    const t = queue.shift();
-    if (!t) break;
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
-      const n = { tx: t.tx + dx, ty: t.ty + dy };
-      const symbol = room.rows[n.ty]?.[n.tx];
-      if (seen.has(key(n)) || nodes.has(key(n)) || symbol === undefined || !WALKABLE.includes(symbol)) continue;
-      seen.add(key(n));
-      queue.push(n);
-    }
-  }
-  return seen;
-}
+const key = tileKey;
 
 describe('the Frozen Grotto', () => {
   it('sits in ring 2 in the north-west, kept as a clearing, with a path from the west path\'s end', () => {
@@ -58,7 +40,7 @@ describe('the Frozen Grotto', () => {
   });
 
   it('every rime cluster is reachable on foot from the wake tile', () => {
-    const seen = reachable(OVERWORLD.wake);
+    const seen = reachable(room, OVERWORLD.wake);
     for (const n of OVERWORLD.nodes.filter((x) => x.nodeId === 'rime-cluster')) {
       const beside = [
         { tx: n.tx, ty: n.ty + 1 },

@@ -1,4 +1,4 @@
-import { OVERWORLD, type Feature, type TilePos, type TileRect } from '../data/overworld';
+import { OVERWORLD, SPRING_CLEARING, type Feature, type TilePos, type TileRect } from '../data/overworld';
 import { TILE, type Doorway, type Pond, type Room } from '../data/rooms';
 import { createRng, nextFloat, nextInt, type RngState } from './rng';
 
@@ -113,6 +113,11 @@ function feature(grid: Grid, f: Feature): Pond | null {
   return f.kind === 'pond' ? { cx: f.cx, cy: f.cy, rx: f.rx, ry: f.ry } : null;
 }
 
+/** A Ley Spring's clearing (030): a square of open ground round its pool. */
+export function springClearing(s: { tx: number; ty: number }): TileRect {
+  return { x0: s.tx - SPRING_CLEARING, y0: s.ty - SPRING_CLEARING, x1: s.tx + SPRING_CLEARING, y1: s.ty + SPRING_CLEARING };
+}
+
 /** Builds the overworld room from `seed` (the data's by default). */
 export function generateOverworld(seed: number = OVERWORLD.seed): Room {
   const rng = createRng(seed);
@@ -140,7 +145,9 @@ export function generateOverworld(seed: number = OVERWORLD.seed): Room {
   edge(grid, rng);
 
   // Landmarks override the terrain: clearings, paths, walls, the mound and the door.
-  for (const r of OVERWORLD.clearings) for (let ty = r.y0; ty <= r.y1; ty++) for (let tx = r.x0; tx <= r.x1; tx++) set(grid, tx, ty, TILE.floor);
+  for (const r of [...OVERWORLD.clearings, ...OVERWORLD.springs.map(springClearing)]) {
+    for (let ty = r.y0; ty <= r.y1; ty++) for (let tx = r.x0; tx <= r.x1; tx++) set(grid, tx, ty, TILE.floor);
+  }
   for (const p of OVERWORLD.paths) path(grid, p);
   for (const t of [...OVERWORLD.ruinField.walls, ...OVERWORLD.entrance.mound]) set(grid, t.tx, t.ty, TILE.ruinBlock);
   for (const t of OVERWORLD.shrine.walls) set(grid, t.tx, t.ty, TILE.wall);

@@ -82,8 +82,24 @@ export const RESPAWN_ROOM = FOUNDRY_ROOM;
 /** Ticks the death animation plays before the player wakes in the foundry (011). */
 export const DYING_TICKS = 60;
 
-/** Health at the start and after a KO. Spec 004; no regen yet. */
+/** Health at the start and after a KO (004). It comes back only in safe spots (030: see HEALING). */
 export const MAX_HEALTH = 100;
+
+/** Where the player heals (030). */
+export type HealSource = 'foundry' | 'pylon' | 'spring' | 'regen';
+
+/**
+ * Healing rates, HP per second (030), all starting values. Only in safe spots: the foundry room, a claimed
+ * pylon's safe zone, a Ley Spring's pool. `fieldRegen` heals anywhere; it's 0 until gear (036) and talents
+ * (037) raise it. Rates never stack: the highest that applies heals. `afterHitDelay`: ticks healing waits after a hit.
+ */
+export const HEALING: { foundry: number; pylon: number; spring: number; fieldRegen: number; afterHitDelay: number } = {
+  foundry: 50,
+  pylon: 10,
+  spring: 10,
+  fieldRegen: 0,
+  afterHitDelay: 0,
+};
 
 /** Ticks a hit leaves the player invulnerable. */
 export const HIT_INVULN_TICKS = 30;
