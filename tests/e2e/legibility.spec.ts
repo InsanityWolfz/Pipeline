@@ -65,13 +65,13 @@ async function takeTalents(page: Page, ...ids: string[]): Promise<void> {
 /** A summary's lines hold no breakdown: no steps, no px, no Linked. */
 const summaryOnly = (lines: readonly string[]) => lines.every((l) => !/ = |\bpx\b|^Linked:|^Damage \d/.test(l));
 
-test('a talent’s bonus shows in the numbers: Fletcher’s Eye makes the arrow 11 dmg, with the bonus hint', async ({ page }) => {
+test('a talent’s bonus shows in the numbers: Fletcher’s Eye makes the arrow 15.4 dmg (041: 11 before), with the bonus hint', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page, '?playtest');
   await step(page, 1);
   const slot = arrowSlot();
   await hoverBox(page, slot);
-  await expect.poll(async () => (await ui(page))?.tip?.lines[0]).toMatch(/^10 dmg · 4\.0\/s$/);
+  await expect.poll(async () => (await ui(page))?.tip?.lines[0]).toMatch(/^14 dmg · 4\.0\/s$/);
   expect((await ui(page))?.tip?.lines).toHaveLength(1);
   await takeTalents(page, 'a1');
   expect((await state(page)).talents).toContain('a1');
@@ -79,7 +79,7 @@ test('a talent’s bonus shows in the numbers: Fletcher’s Eye makes the arrow 
   await hover(page, VIEW_WIDTH / 2, VIEW_HEIGHT / 3);
   await expect.poll(async () => (await ui(page))?.tip).toBeNull();
   await hoverBox(page, slot);
-  await expect.poll(async () => (await ui(page))?.tip?.lines).toEqual(['11 dmg · 4.0/s', '1 bonus · hold Shift']);
+  await expect.poll(async () => (await ui(page))?.tip?.lines).toEqual(['15.4 dmg · 4.0/s', '1 bonus · hold Shift']);
   expect(errors).toEqual([]);
 });
 

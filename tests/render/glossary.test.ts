@@ -34,11 +34,12 @@ describe('glossary entries', () => {
   it('Burst: its rule with "yours:" under Wide Casing, Wide Casing among its payoffs, known rounds among its sources', () => {
     const d = entry(player('b1', 'b2'), 'burst');
     const lines = texts(d.breakdown);
-    expect(lines[1]).toBe('Deals 15 (yours: 16.5) to every enemy within 48 px (yours: 55.2 px). Ignores Shield. No Knockback.');
+    // 041: the bomb's 12 (was 15, yours 16.5).
+    expect(lines[1]).toBe('Deals 12 (yours: 13.2) to every enemy within 48 px (yours: 55.2 px). Ignores Shield. No Knockback.');
     expect(lines.find((l) => l.startsWith('Payoffs:'))).toContain('Wide Casing');
     expect(lines.find((l) => l.startsWith('Sources:'))).toBe('Sources: Bomb, Cluster bomb, Landmine, Blastfletch, Mine');
     expect(d.chips.map((c) => c.id)).toEqual(['burst', 'mine', 'shield', 'knockback']);
-    expect(texts(entry(player(), 'burst').breakdown)[1]).toBe('Deals 15 to every enemy within 48 px. Ignores Shield. No Knockback.');
+    expect(texts(entry(player(), 'burst').breakdown)[1]).toBe('Deals 12 to every enemy within 48 px. Ignores Shield. No Knockback.'); // 041: was 15
   });
 
   it('a keyword with no payoff says "None yet"; times read to 2 decimals where 1 isn’t exact', () => {

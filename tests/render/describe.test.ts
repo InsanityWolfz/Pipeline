@@ -29,23 +29,24 @@ describe('a round', () => {
     const d = describeRound(player('a1', 't1', 't2', 't3'), 'arrow');
     expect(d.name).toBe('Arrow');
     expect(d.chips.map((c) => c.label)).toEqual(['Arrow', 'Shot', 'Pierce', 'Knockback', 'Physical']);
-    expect(texts(d.summary)[0]).toBe('11.6 dmg · 4.3/s');
+    // 041: the arrow's 14 (was 10 × 1.16 = 11.6).
+    expect(texts(d.summary)[0]).toBe('16.2 dmg · 4.3/s');
     expect(d.summary[1]).toEqual({ text: '3 bonuses · hold Shift', tone: 'hint' });
-    expect(texts(d.breakdown)[0]).toBe("Damage 10 × (1 + 10% Fletcher's Eye + 6% Hard Bore) = 11.6");
+    expect(texts(d.breakdown)[0]).toBe("Damage 14 × (1 + 10% Fletcher's Eye + 6% Hard Bore) = 16.2");
   });
 
   it('one bonus reads "1 bonus"; a new player sees no hint (040.7)', () => {
-    expect(texts(describeRound(player('a1'), 'arrow').summary)).toEqual(['11 dmg · 4.0/s', '1 bonus · hold Shift']);
+    expect(texts(describeRound(player('a1'), 'arrow').summary)).toEqual(['15.4 dmg · 4.0/s', '1 bonus · hold Shift']); // 041: was 11
     const fresh = describeRound(player(), 'arrow');
-    expect(texts(fresh.summary)).toEqual(['10 dmg · 4.0/s']);
+    expect(texts(fresh.summary)).toEqual(['14 dmg · 4.0/s']); // 041: was 10
     expect(fresh.bonuses).toBe(0);
   });
 
-  it('a Frost arrow with Fletcher’s Eye and Hard Bore: "11.6 dmg · 4.0/s · Freeze in 4 hits"', () => {
+  it('a Frost arrow with Fletcher’s Eye and Hard Bore: "16.2 dmg · 4.0/s · Freeze in 4 hits" (041: was 11.6)', () => {
     const s = player('a1', 't3');
-    expect(texts(describeRound(s, 'arrow+frost').summary)[0]).toBe('11.6 dmg · 4.0/s · Freeze in 4 hits');
+    expect(texts(describeRound(s, 'arrow+frost').summary)[0]).toBe('16.2 dmg · 4.0/s · Freeze in 4 hits');
     s.talents.push('a2', 'a3');
-    expect(texts(describeRound(s, 'arrow+frost').summary)[0]).toBe('11.6 dmg · 4.4/s · Freeze in 3 hits');
+    expect(texts(describeRound(s, 'arrow+frost').summary)[0]).toBe('16.2 dmg · 4.4/s · Freeze in 3 hits');
   });
 
   it('fire rate steps, the interval, and Overpressure’s held ramp as its own step', () => {
@@ -58,16 +59,16 @@ describe('a round', () => {
 
   it('Blastfletch’s “when” line on an arrow; Shatterpoint’s on a ley bolt', () => {
     const arrow = texts(describeRound(player('a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'k1', 't3'), 'arrow').breakdown);
-    expect(arrow).toContain('×1.5 through a Pool (Blastfletch) = 17.4');
+    expect(arrow).toContain('×1.5 through a Pool (Blastfletch) = 24.4'); // 041: 16.24 × 1.5 (was 17.4)
     const bolt = texts(describeRound(player('a1', 'a2', 'a3', 'l1', 'l2', 'l3', 'k2'), 'ley-bolt').breakdown);
-    expect(bolt).toContain('×2 on a Frozen enemy (Shatterpoint) = 30.8');
+    expect(bolt).toContain('×2 on a Frozen enemy (Shatterpoint) = 19.8'); // 041: 9.9 × 2 (was 30.8)
   });
 
   it('each keyword’s rule with its final numbers, px included, and Linked with taken ones lit', () => {
     const d = describeRound(player('b1', 'b2'), 'bomb+cluster');
     const lines = texts(d.breakdown);
     expect(lines).toContain('Radius 48 px × (1 + 15% Wide Casing) = 55.2 px');
-    expect(lines).toContain('Burst: Deals 16.5 to every enemy within 55.2 px. Ignores Shield. No Knockback.');
+    expect(lines).toContain('Burst: Deals 13.2 to every enemy within 55.2 px. Ignores Shield. No Knockback.'); // 041: was 16.5
     expect(lines).toContain('Cluster: 0.2 s after its Burst, 4 Bomblets land 40 px out, each a Burst of 8.8 in 23 px.');
     const linked = d.breakdown.find((l) => l.text.startsWith('Linked:'));
     expect(linked?.parts?.find((p) => p.text.startsWith('Wide Casing'))?.tone).toBe('lit');
@@ -78,10 +79,10 @@ describe('a round', () => {
   it('a Frost bomb’s summary has the Cold chip and its Freeze hits; a Cluster bomb’s its Bomblets; a landmine’s its arm time', () => {
     const frost = describeRound(player(), 'bomb+frost');
     expect(frost.chips.map((c) => c.id)).toEqual(['bomb', 'lob', 'burst', 'cold']);
-    expect(texts(frost.summary)[0]).toBe('15 Burst dmg · 1.5/s · Freeze in 4 hits');
-    expect(texts(describeRound(player(), 'bomb+cluster').summary)[0]).toBe('15 Burst dmg · 1.5/s · 4 Bomblets × 8');
+    expect(texts(frost.summary)[0]).toBe('12 Burst dmg · 1.5/s · Freeze in 4 hits'); // 041: was 15
+    expect(texts(describeRound(player(), 'bomb+cluster').summary)[0]).toBe('12 Burst dmg · 1.5/s · 4 Bomblets × 8');
     expect(texts(describeRound(player(), 'landmine').summary)[0]).toBe('60 Burst dmg · 1.5/s · arms in 5.0 s');
-    expect(texts(describeRound(player('l3'), 'ley-bolt+split').summary)[0]).toBe('14 dmg · 3.0/s · 7 Shards × 4');
+    expect(texts(describeRound(player('l3'), 'ley-bolt+split').summary)[0]).toBe('9 dmg · 3.0/s · 7 Shards × 4'); // 041: was 14
   });
 });
 
@@ -156,7 +157,7 @@ describe('summaries and breakdowns', () => {
     const rate = resolveStat(s, 'fire-rate', roundEmission('bomb+cluster'), TICK_RATE / bomb.fireTicks).final;
     const bomblet = resolveStat(s, 'damage', bombletEmission('bomb+cluster'), 8).final;
     const lines = texts(describeRound(s, 'bomb+cluster').breakdown);
-    expect(lines[0]).toBe(`Damage 15 × (1 + 10% Black Powder + 6% Hard Bore) = ${Number(damage.toFixed(1))}`);
+    expect(lines[0]).toBe(`Damage 12 × (1 + 10% Black Powder + 6% Hard Bore) = ${Number(damage.toFixed(1))}`);
     expect(lines[1]).toBe(`Fire rate ${rate.toFixed(1)}/s · one every ${(1 / rate).toFixed(2)} s`);
     expect(lines.some((l) => l.includes(`a Burst of ${Number(bomblet.toFixed(1))} in`))).toBe(true);
   });

@@ -31,7 +31,8 @@ describe('arrows', () => {
     const { x, y } = s.player;
     stepSim(s, { ...NO_COMMAND, fire: true, aimX: x, aimY: y + 200 });
     const arrow = s.arrows[0];
-    expect(arrow).toMatchObject({ ammoId: 'arrow', damage: 10, damageType: 'physical', travelled: 0 });
+    // 041: an arrow hits for 14 (was 10).
+    expect(arrow).toMatchObject({ ammoId: 'arrow', damage: 14, damageType: 'physical', travelled: 0 });
     expect(arrow?.x).toBeCloseTo(x);
     expect(arrow?.y).toBeCloseTo(y + MUZZLE_OFFSET);
     stepSim(s);

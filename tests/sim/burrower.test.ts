@@ -48,7 +48,7 @@ describe('the Burrower', () => {
     expect(e.mode).toBe('dig');
     // Arrows pierce (029): it flies on past.
     run(s, 12);
-    expect(e.health).toBe(DEF.maxHealth - 10);
+    expect(e.health).toBe(DEF.maxHealth - 14); // 041: an arrow's 14 (was 10)
     expect(e.underground).toBe(false);
     runUntil(s, () => e.underground, burrow.digTicks + 2);
     expect(e.mode).toBe('chase');
@@ -82,7 +82,7 @@ describe('the Burrower', () => {
     s.tube.fireCooldown = 0;
     run(s, 1, fireAt(e.x, e.y - 8));
     run(s, 20);
-    expect(e.health).toBe(DEF.maxHealth - 10);
+    expect(e.health).toBe(DEF.maxHealth - 14); // 041: an arrow's 14 (was 10)
   });
 
   it('is never pushed apart from enemies while underground', () => {
@@ -201,7 +201,7 @@ describe('the Burrower', () => {
     s.player.hurtTicks = 0;
     run(s, 1, fireAt(e.x, e.y - 8));
     run(s, 20);
-    expect(e.health).toBe(DEF.maxHealth - 10);
+    expect(e.health).toBe(DEF.maxHealth - 14); // 041: an arrow's 14 (was 10)
     expect(e.underground).toBe(false);
     runUntil(s, () => e.mode === 'dig', burrow.surfacedTicks);
     runUntil(s, () => e.underground, burrow.digTicks + 2);

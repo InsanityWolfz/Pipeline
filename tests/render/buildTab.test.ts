@@ -20,7 +20,8 @@ describe('the Build tab', () => {
     const groups = buildTabGroups(s, named, named);
     expect(groups.map((g) => g.label)).toEqual(['Arrow', 'Ley']);
     const frost = groups[0]?.rows[1];
-    expect(frost).toMatchObject({ round: 'arrow+frost', damage: '11', perSecond: '4.0/s', sources: 1, sourcesText: '1 source' });
+    // 041: 14 × 1.1 (was 11 from 10).
+    expect(frost).toMatchObject({ round: 'arrow+frost', damage: '15.4', perSecond: '4.0/s', sources: 1, sourcesText: '1 source' });
     expect(frost?.chips.map((c) => c.id)).toEqual(['cold']);
     expect(groups[1]?.rows[0]?.chips.map((c) => c.id)).toEqual(['homing', 'physical']);
   });

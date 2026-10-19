@@ -54,21 +54,23 @@ function shotTicks(item: string, slot: string, ticks: number, ...talents: string
 const every = (step: number, ticks: number): number[] => Array.from({ length: Math.ceil(ticks / step) }, (_, i) => 1 + i * step).filter((t) => t <= ticks);
 
 describe('039 pins: launch damage', () => {
+  // 041 moved the bases (arrow 10 → 14, ley bolt 14 → 9, bomb 15 → 12); the talents' % adds are unchanged. Each line
+  // keeps its 039 value in a comment.
   it('arrows and ley bolts with each damage talent', () => {
-    expect(launchDamage('arrow', 'arrow')).toBe(10);
-    expect(launchDamage('arrow', 'arrow', 'a1')).toBeCloseTo(11, 9);
-    expect(launchDamage('arrow', 'arrow', 'a1', 't3')).toBeCloseTo(11.6, 9);
-    expect(launchDamage('arrow+frost', 'arrow', 'a1', 't3')).toBeCloseTo(11.6, 9);
-    expect(launchDamage('arrow', 'arrow', 'l1', 'b1')).toBe(10);
-    expect(launchDamage('ley-bolt', 'ley-bolt')).toBe(14);
-    expect(launchDamage('ley-bolt', 'ley-bolt', 'l1', 't3')).toBeCloseTo(16.24, 9);
-    expect(launchDamage('ley-bolt+homing', 'ley-bolt', 'l1')).toBeCloseTo(15.4, 9);
+    expect(launchDamage('arrow', 'arrow')).toBe(14); // 039: 10
+    expect(launchDamage('arrow', 'arrow', 'a1')).toBeCloseTo(15.4, 9); // 039: 11
+    expect(launchDamage('arrow', 'arrow', 'a1', 't3')).toBeCloseTo(16.24, 9); // 039: 11.6
+    expect(launchDamage('arrow+frost', 'arrow', 'a1', 't3')).toBeCloseTo(16.24, 9); // 039: 11.6
+    expect(launchDamage('arrow', 'arrow', 'l1', 'b1')).toBe(14); // 039: 10
+    expect(launchDamage('ley-bolt', 'ley-bolt')).toBe(9); // 039: 14
+    expect(launchDamage('ley-bolt', 'ley-bolt', 'l1', 't3')).toBeCloseTo(10.44, 9); // 039: 16.24
+    expect(launchDamage('ley-bolt+homing', 'ley-bolt', 'l1')).toBeCloseTo(9.9, 9); // 039: 15.4
   });
 
   it('bombs and landmines: Black Powder reaches bombs, not landmines; Hard Bore both', () => {
-    expect(launchDamage('bomb', 'bomb')).toBe(15);
-    expect(launchDamage('bomb', 'bomb', 'b1', 't3')).toBeCloseTo(17.4, 9);
-    expect(launchDamage('bomb+cluster', 'bomb', 'b1')).toBeCloseTo(16.5, 9);
+    expect(launchDamage('bomb', 'bomb')).toBe(12); // 039: 15
+    expect(launchDamage('bomb', 'bomb', 'b1', 't3')).toBeCloseTo(13.92, 9); // 039: 17.4
+    expect(launchDamage('bomb+cluster', 'bomb', 'b1')).toBeCloseTo(13.2, 9); // 039: 16.5
     expect(launchDamage('landmine', 'landmine')).toBe(60);
     expect(launchDamage('landmine', 'landmine', 'b1')).toBe(60);
     expect(launchDamage('landmine', 'landmine', 't3')).toBeCloseTo(63.6, 9);

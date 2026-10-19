@@ -38,7 +38,7 @@ describe('bombs', () => {
       maxRange: 192,
       arcPeak: 32,
       burstRadius: 48,
-      burstDamage: 15,
+      burstDamage: 12, // 041: was 15
       damageType: 'physical',
     });
     // 029: burn is gone until the fire rune brings it back as a tag.
@@ -94,14 +94,14 @@ describe('bombs', () => {
     expect(between.health).toBe(HUSK.maxHealth);
   });
 
-  it('burst on Husks within 48 px: 15 physical damage, a flash, no knockback', () => {
+  it('burst on Husks within 48 px: 12 physical damage (041: was 15), a flash, no knockback', () => {
     const s = armed();
     const target = { x: PLAYER_AT.x + 150, y: PLAYER_AT.y };
     const inside = freeze(placeHusk(s, target.x + 48, target.y));
     const outside = freeze(placeHusk(s, target.x, target.y - 48.1));
     throwAt(s, target.x, target.y);
     runUntil(s, () => s.events.bursts.length > 0, 100);
-    expect(inside.health).toBe(HUSK.maxHealth - 15);
+    expect(inside.health).toBe(HUSK.maxHealth - 12);
     expect(inside.flash).toBe(HUSK.hitFlashTicks);
     expect(inside.knockTicks).toBe(0);
     expect(outside.health).toBe(HUSK.maxHealth);

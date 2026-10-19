@@ -15,7 +15,7 @@ import { arena, fireAt, HALL, movePlayer, PLAYER_AT, run, runUntil } from './fig
 
 const DEF = enemyDef('shardback') as ShardbackDef;
 const { bash } = DEF;
-const ARROW_DAMAGE = 10;
+const ARROW_DAMAGE = 14; // 041: was 10
 const DEG = Math.PI / 180;
 
 function placeShardback(s: SimState, dx: number, dy = 0, angle = Math.PI): EnemyState {

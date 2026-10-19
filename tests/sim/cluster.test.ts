@@ -49,7 +49,7 @@ describe('the cluster tag', () => {
     expect(withTag('bomb+cluster', 'cluster')).toBeNull();
     expect(roundName('Bomb', 'bomb+cluster')).toBe('Cluster bomb');
     expect(itemDef('bomb+cluster')).toMatchObject({ name: 'Cluster bomb', kind: 'ammo', group: 'ammo' });
-    expect(ammoDef('bomb+cluster')).toMatchObject({ kind: 'lob', base: 'bomb', tags: ['cluster'], burstDamage: 15, burstRadius: 48 });
+    expect(ammoDef('bomb+cluster')).toMatchObject({ kind: 'lob', base: 'bomb', tags: ['cluster'], burstDamage: 12, burstRadius: 48 }); // 041: burstDamage was 15
   });
 });
 
@@ -137,8 +137,8 @@ describe('a cluster bomb', () => {
     s.enemies.push(e);
     run(s, 1, fireAt(at.x, at.y));
     runUntil(s, (t) => t.events.bombletBursts.length > 0, 120);
-    // The bomb's own 15 and the east bomblet's 8, both from the front side.
-    expect(e.health).toBe(def.maxHealth - 15 - 8);
+    // The bomb's own 12 (041: was 15) and the east bomblet's 8, both from the front side.
+    expect(e.health).toBe(def.maxHealth - 12 - 8);
     expect(s.events.blocked).toEqual([]);
   });
 

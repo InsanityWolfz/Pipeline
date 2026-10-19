@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { straightAmmo } from '../../src/data/ammo';
 import { enemyDef, type BulwarkDef } from '../../src/data/enemies';
 import { HOLLOWS } from '../../src/data/hollows';
 import { HOLLOWS_START } from '../../src/data/playtest';
@@ -267,7 +268,7 @@ describe('the Bulwark against a player circling to its back (034 tuning)', () =>
     // taken. One arrow at a time, so three entrances' arrows land well under the spec's 30–45 s target.
     expect(r).toMatchObject({ won: true, ko: false });
     expect(r.ticks).toBeLessThan(1800);
-    expect(r.arrows).toBeGreaterThanOrEqual(DEF.maxHealth / 10);
+    expect(r.arrows).toBeGreaterThanOrEqual(DEF.maxHealth / straightAmmo('arrow').damage);
     expect(r.damageTaken).toBeLessThan(DEF.lob.damage * 2);
   });
 });

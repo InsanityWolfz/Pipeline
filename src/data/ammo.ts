@@ -87,7 +87,8 @@ const BOMB: LobAmmo = {
   maxRange: 192,
   arcPeak: 32,
   burstRadius: 48,
-  burstDamage: 15,
+  /** 041: 12 per hit (was 15), with the ley bolt under the arrow: landmine > arrow > ley bolt ≈ bomb. */
+  burstDamage: 12,
   damageType: 'physical',
   sprite: SPRITES.bomb,
   shadow: SPRITES.bombShadow,
@@ -103,7 +104,8 @@ const BASE_AMMO: Readonly<Record<string, AmmoDef>> = {
     fireTicks: 15,
     speed: 480,
     range: 320,
-    damage: 10,
+    /** 041: 14 per hit (was 10). */
+    damage: 14,
     pierce: true,
     knockback: 6,
     damageType: 'physical',
@@ -119,7 +121,8 @@ const BASE_AMMO: Readonly<Record<string, AmmoDef>> = {
     fireTicks: 20,
     speed: 300,
     range: 320,
-    damage: 14,
+    /** 041: 9 per hit (was 14). */
+    damage: 9,
     pierce: false,
     knockback: 6,
     damageType: 'physical',

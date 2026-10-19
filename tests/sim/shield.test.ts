@@ -9,7 +9,7 @@ import { arena, fireAt, HALL, HUSK, placeHusk, PLAYER_AT, run, runUntil } from '
 // enemy's front arc is blocked; from outside the arc it lands. Lobbed bursts always land.
 
 const BULWARK = enemyDef('bulwark') as BulwarkDef;
-const ARROW_DAMAGE = 10;
+const ARROW_DAMAGE = 14; // 041: was 10
 
 /** A Bulwark `dx` px right of the player, held still (frozen) facing `angle` radians. */
 function shielded(s: SimState, dx: number, angle: number): EnemyState {

@@ -56,14 +56,14 @@ describe('stats with no talents (resolveStat, 039)', () => {
 
 describe('the lanes’ damage', () => {
   it('Fletcher’s Eye: arrows (frost arrows too) hit 10% harder', () => {
-    expect(firstShot(taking(arena(), 'a1'), 'arrow', 'arrow').damage).toBeCloseTo(11, 9);
-    expect(firstShot(taking(arena(), 'a1'), 'arrow+frost', 'arrow').damage).toBeCloseTo(11, 9);
+    expect(firstShot(taking(arena(), 'a1'), 'arrow', 'arrow').damage).toBeCloseTo(15.4, 9); // 041: 14 × 1.1 (was 10 × 1.1 = 11)
+    expect(firstShot(taking(arena(), 'a1'), 'arrow+frost', 'arrow').damage).toBeCloseTo(15.4, 9);
     expect(firstShot(taking(arena(), 'a1'), 'ley-bolt', 'ley-bolt').damage).toBe(straightAmmo('ley-bolt').damage);
   });
 
   it('Hard Bore adds 6% to all ammo, added to a lane’s bonus', () => {
-    expect(firstShot(taking(arena(), 'a1', 't3'), 'arrow', 'arrow').damage).toBeCloseTo(11.6, 9);
-    expect(firstShot(taking(arena(), 'l1'), 'ley-bolt', 'ley-bolt').damage).toBeCloseTo(15.4, 9);
+    expect(firstShot(taking(arena(), 'a1', 't3'), 'arrow', 'arrow').damage).toBeCloseTo(16.24, 9); // 041: 14 × 1.16 (was 11.6)
+    expect(firstShot(taking(arena(), 'l1'), 'ley-bolt', 'ley-bolt').damage).toBeCloseTo(9.9, 9); // 041: 9 × 1.1 (was 15.4)
     for (const id of ['arrow', 'bomb', 'ley-bolt', 'landmine']) expect(statOf(taking(arena(), 't3'), 'damage', roundEmission(id), 1)).toBeCloseTo(1.06, 9);
   });
 
@@ -76,7 +76,7 @@ describe('the lanes’ damage', () => {
     run(s, 1, { selectAmmo: 'bomb' });
     run(s, 1, fireAt(e.x, e.y));
     runUntil(s, () => s.events.bursts.length > 0, 60);
-    expect(e.health).toBeCloseTo(HUSK.maxHealth - 16.5, 9);
+    expect(e.health).toBeCloseTo(HUSK.maxHealth - 13.2, 9); // 041: 12 × 1.1 (was 16.5)
   });
 });
 

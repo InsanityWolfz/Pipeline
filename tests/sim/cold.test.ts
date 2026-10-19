@@ -133,9 +133,9 @@ describe('cold', () => {
     run(s, 1, fireAt(PLAYER_AT.x + 1000, PLAYER_AT.y));
     expect(s.arrows[0]?.ammoId).toBe('arrow+frost');
     runUntil(s, () => s.events.hits.length > 0, 30);
-    expect(s.events.hits[0]).toMatchObject({ id: e.id, damageType: 'cold', damage: 10 });
+    expect(s.events.hits[0]).toMatchObject({ id: e.id, damageType: 'cold', damage: 14 }); // 041: was 10
     expect(e.chill).toBe(1);
     expect(summarize(s).enemies.find((x) => x.id === e.id)).toMatchObject({ chill: 1, frozen: 0 });
-    expect(e.health).toBe(HUSK.maxHealth - 10);
+    expect(e.health).toBe(HUSK.maxHealth - 14);
   });
 });

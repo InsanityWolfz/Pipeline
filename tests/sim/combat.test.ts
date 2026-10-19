@@ -12,7 +12,7 @@ describe('arrows hitting Husks', () => {
     run(s, 1, fireAt(at(1000).x, PLAYER_AT.y));
     // 029: an arrow pierces, so it flies on to the end of its range.
     runUntil(s, () => s.arrows.length === 0, 60);
-    expect(DAMAGE).toBe(10);
+    expect(DAMAGE).toBe(14); // 041: was 10
     expect(e.health).toBe(HUSK.maxHealth - DAMAGE);
   });
 
@@ -46,7 +46,7 @@ describe('arrows hitting Husks', () => {
     const near = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y + HUSK.feetBox.h);
     run(s, 1, fireAt(at(1000).x, PLAYER_AT.y));
     runUntil(s, () => s.arrows.length === 0, 90);
-    expect(near.health).toBe(HUSK.maxHealth - 14);
+    expect(near.health).toBe(HUSK.maxHealth - 9); // 041: a ley bolt's 9 (was 14)
     expect(far.health).toBe(HUSK.maxHealth);
   });
 
@@ -125,7 +125,7 @@ describe('ley bolts', () => {
   }
 
   it('fly at 300 px/s for 320 px', () => {
-    expect(BOLT).toMatchObject({ speed: 300, range: 320, damage: 14, pierce: false, damageType: 'physical' });
+    expect(BOLT).toMatchObject({ speed: 300, range: 320, damage: 9, pierce: false, damageType: 'physical' });
     const s = bolted();
     run(s, 1, fireAt(PLAYER_AT.x + 1000, PLAYER_AT.y));
     const bolt = s.arrows[0];
