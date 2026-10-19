@@ -44,20 +44,16 @@ interface FlowContext {
 /** The intake's entrance at `t`, by index, if it is one. */
 const entranceAt = (t: Tile): number => INTAKE.entrances.findIndex((m) => m.tx === t.tx && m.ty === t.ty);
 
-/** What a machine runs: its recipe, or a stage's on the round it's working on (029). */
-const recipeOf = (m: MachineState): RecipeDef => machineRecipe(m);
-
 /** True if the machine has every input of its recipe buffered. */
 function hasInputs(m: MachineState, recipe: RecipeDef): boolean {
   return Object.entries(recipe.inputs).every(([itemId, n]) => count(m.buffer, itemId) >= n);
 }
 
-/** A craft only starts when its whole output will fit, beside nothing of another kind. */
-const outputFits = (m: MachineState, recipe: RecipeDef): boolean =>
-  m.output + recipe.output.count <= OUTPUT_CAP && (m.output === 0 || m.made === recipe.output.itemId);
+/** A craft only starts when its whole output will fit. (A stage's output is always its recipe's kind: it takes a new round kind only once clear.) */
+const outputFits = (m: MachineState, recipe: RecipeDef): boolean => m.output + recipe.output.count <= OUTPUT_CAP;
 
 function advanceMachine(m: MachineState, made: SimEvents['made']): void {
-  const recipe = recipeOf(m);
+  const recipe = machineRecipe(m);
   if (m.crafting) {
     m.progress += 1;
     if (m.progress >= machineDef(m.pieceId).craftTicks) {
@@ -110,7 +106,7 @@ function offer(ctx: FlowContext, to: Tile, from: Tile, item: string): boolean {
   if (target.kind === 'machine') {
     const st = stageOf(target.pieceId);
     if (st) return offerToStage(target, st, item);
-    const need = recipeOf(target).inputs[item];
+    const need = machineRecipe(target).inputs[item];
     if (need === undefined || count(target.buffer, item) >= INPUT_CAP) return false;
     target.buffer[item] = count(target.buffer, item) + 1;
     return true;
@@ -162,7 +158,7 @@ function offerFromHopper(ctx: FlowContext, to: Tile, h: HopperState, item: strin
 }
 
 function setStatus(m: MachineState): void {
-  const recipe = recipeOf(m);
+  const recipe = machineRecipe(m);
   const missing = Object.entries(recipe.inputs)
     .filter(([itemId, n]) => count(m.buffer, itemId) < n)
     .map(([itemId]) => itemId);

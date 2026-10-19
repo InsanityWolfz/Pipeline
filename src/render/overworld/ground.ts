@@ -57,11 +57,11 @@ function frost(c: CanvasRenderingContext2D, each: (fn: (tx: number, ty: number, 
     for (let tx = a.x0 - 1; tx <= a.x1 + 1; tx++) {
       const inside = inRect(a, tx, ty);
       const hash = tileHash(tx, ty);
-      const r = inside ? f.edge + (hash % 8) : f.edge * 0.5 + (hash % 10);
-      if (!inside && hash % 3 === 0) continue;
+      const r = inside ? f.edge + (hash % (f.jitter + 1)) : f.edge * 0.5 + (hash % (f.rimJitter + 1));
+      if (!inside && hash % f.rimSkip === 0) continue;
       const [x, y] = centre({ tx, ty });
       c.moveTo(x + r, y);
-      c.ellipse(x, y, r, r * 0.8, 0, 0, Math.PI * 2);
+      c.ellipse(x, y, r, r * f.squash, 0, 0, Math.PI * 2);
     }
   }
   c.fill();
@@ -69,12 +69,14 @@ function frost(c: CanvasRenderingContext2D, each: (fn: (tx: number, ty: number, 
   each((tx, ty, hash) => {
     if (!inRect(a, tx, ty)) return;
     const [x, y] = centre({ tx, ty });
-    if (hash % f.driftEvery === 0) ellipse(c, x + ((hash >>> 5) % 16) - 8, y + ((hash >>> 9) % 12) - 6, 9 + ((hash >>> 3) % 7), 4, f.drift, f.driftAlpha);
+    const [dsx, dsy] = f.driftShift;
+    if (hash % f.driftEvery === 0) ellipse(c, x + ((hash >>> 5) % dsx) - dsx / 2, y + ((hash >>> 9) % dsy) - dsy / 2, f.driftRx + ((hash >>> 3) % (f.driftGrow + 1)), f.driftRy, f.drift, f.driftAlpha);
     if (hash % f.glintEvery === 1) {
-      const gx = x + ((hash >>> 7) % 18) - 9;
-      const gy = y + ((hash >>> 11) % 14) - 7;
-      ellipse(c, gx, gy, 6, 2.6, f.ice, 0.7);
-      ellipse(c, gx - 2, gy - 0.6, 2, 0.7, f.glint, 0.9);
+      const [isx, isy] = f.iceShift;
+      const gx = x + ((hash >>> 7) % isx) - isx / 2;
+      const gy = y + ((hash >>> 11) % isy) - isy / 2;
+      ellipse(c, gx, gy, f.iceSize[0], f.iceSize[1], f.ice, f.iceAlpha);
+      ellipse(c, gx + f.glintAt[0], gy + f.glintAt[1], f.glintSize[0], f.glintSize[1], f.glint, f.glintAlpha);
     }
   });
 }

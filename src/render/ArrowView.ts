@@ -1,7 +1,7 @@
 import type { GameObjects, Scene } from 'phaser';
 import { AMMO } from '../data/ammo';
 import { DEPTHS } from '../data/assets';
-import { ROUND_LOOKS, STAGE_SPRITES } from '../data/stageAssets';
+import { ROUND_LOOKS, STAGE_SPRITES, TRAIL_SHAPE } from '../data/stageAssets';
 import { STAR } from '../data/tags';
 import { DRAW_HEIGHT } from '../data/tube';
 import type { ArrowState } from '../sim/arrows';
@@ -66,13 +66,13 @@ export class ArrowView {
     if (trail.points.length > trail.look.points) trail.points.shift();
     const { g, look, points } = trail;
     g.clear().setDepth(depth - 0.01);
-    for (const [color, width] of [[colorOf(look.color), look.width], [colorOf(look.core), look.width / 3]] as const) {
+    for (const [color, width] of [[colorOf(look.color), look.width], [colorOf(look.core), look.width * TRAIL_SHAPE.core]] as const) {
       for (let i = 1; i < points.length; i++) {
         const a = points[i - 1];
         const b = points[i];
         if (!a || !b) continue;
         const k = i / (points.length - 1);
-        g.lineStyle(width * (0.4 + 0.6 * k), color, look.alpha * k).lineBetween(a[0], a[1], b[0], b[1]);
+        g.lineStyle(width * (TRAIL_SHAPE.tail + (1 - TRAIL_SHAPE.tail) * k), color, look.alpha * k).lineBetween(a[0], a[1], b[0], b[1]);
       }
     }
   }

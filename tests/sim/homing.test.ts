@@ -70,14 +70,37 @@ describe('a homing ley bolt', () => {
     expect(s.arrows[0]?.targetId).toBeNull();
   });
 
-  it('keeps its speed and range', () => {
+  it('keeps its speed and range while it turns', () => {
     const s = homing();
-    placeHusk(s, PLAYER_AT.x + 290, PLAYER_AT.y + 150);
-    run(s, 1, fireAt(PLAYER_AT.x + 250, PLAYER_AT.y + 150));
+    const e = placeHusk(s, PLAYER_AT.x + 150, PLAYER_AT.y + 40);
+    run(s, 1, fireAt(PLAYER_AT.x + 150, PLAYER_AT.y + 40));
     const bolt = s.arrows[0];
     if (!bolt) throw new Error('no bolt');
-    const before = { x: bolt.x, y: bolt.y };
-    run(s, 1);
-    expect(Math.hypot(bolt.x - before.x, bolt.y - before.y)).toBeCloseTo(5);
+    expect(bolt.targetId).toBe(e.id);
+    // The target jumps behind the player: the bolt turns its widest circle after it, never reaching it.
+    e.x = PLAYER_AT.x - 250;
+    e.homeX = e.x;
+    const steps: number[] = [];
+    let travelled = 0;
+    let turned = false;
+    const heading = Math.atan2(bolt.dy, bolt.dx);
+    runUntil(
+      s,
+      () => {
+        if (s.arrows.includes(bolt)) {
+          steps.push(bolt.travelled - travelled);
+          travelled = bolt.travelled;
+          turned ||= Math.abs(Math.atan2(bolt.dy, bolt.dx) - heading) > 0.5;
+        }
+        return !s.arrows.includes(bolt);
+      },
+      120,
+    );
+    expect(turned).toBe(true);
+    expect(s.events.hits).toEqual([]);
+    for (const d of steps) expect(d).toBeCloseTo(5);
+    // Last seen a step short of its 320 px range; the next step ended it.
+    expect(travelled).toBeGreaterThanOrEqual(320 - 5);
+    expect(travelled).toBeLessThan(320);
   });
 });

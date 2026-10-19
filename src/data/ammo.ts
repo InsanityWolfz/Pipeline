@@ -4,7 +4,10 @@ import { elementOf, ROUNDS, roundBase, roundTags } from './tags';
 // Ammo the tube can fire. Starting values from specs 003, 005 and 029; tune in playtest.
 // Each tagged round (029) is derived from its base and its tags (src/data/tags.ts).
 
-/** Damage types from docs/design.md that exist so far. Fire is back with the fire rune (029: bombs are physical until then). */
+/**
+ * Damage types from docs/design.md. Nothing deals fire in Milestone 1 (029: bombs are physical, with no burn), but it
+ * stays in the type because design.md's damage types include it and Milestone 2's fire rune brings it back as a tag.
+ */
 export type DamageType = 'physical' | 'fire' | 'cold';
 
 interface AmmoBase {

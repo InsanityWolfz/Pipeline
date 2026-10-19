@@ -1,12 +1,9 @@
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
-import { CRAFT_MENU_LAYOUT, MENU_COLUMN_GAP, MENU_MAX_ROWS, PICKER_LAYOUT } from '../data/hudLayout';
+import { CRAFT_MENU_LAYOUT, MENU_COLUMN_GAP, MENU_MAX_ROWS, PICKER_LAYOUT, STAGE_PANEL } from '../data/hudLayout';
 import { STAGES } from '../data/stages';
 
 // Where the bench's Stages panel (029) sits on screen, beside the bench's own rows,
 // and where its header and rows are. No Phaser, so e2e tests can find a row to click.
-
-/** The panel: the crafting menu's rows (026) on a tablet, a header over them, `gap` px right of the bench's rows. */
-export const STAGE_PANEL = { pad: 6, headerHeight: 16, gap: 12, title: 'Stages' } as const;
 
 export interface StagePanelLayout {
   /** The tablet behind it. */

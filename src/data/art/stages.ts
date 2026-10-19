@@ -1,9 +1,9 @@
 import { ROUND_ICONS, STAGE_SPRITES } from '../stageAssets';
 import { ROUNDS, roundBase, roundTags } from '../tags';
-import { ICON_ARROW, ICON_BOMB, ICON_LEY_BOLT } from './items';
+import { ICON_ARROW, ICON_ARROW_HEAD, ICON_BOMB, ICON_LEY_BOLT } from './items';
 import type { NodeLooks } from './nodes';
 import { shadow } from './terrain';
-import { ellipse, flat, line, path, solid, trim, type Shape, type VectorSprite } from './types';
+import { ellipse, flat, line, path, solid, trim, type Shape, type ShapeStyle, type VectorSprite } from './types';
 
 // 029's art, in the 020 style: the rime shard and the rime cluster it's chipped
 // from, each tagged round's icon (its base's icon with its tag's badge), the star
@@ -65,29 +65,39 @@ export const RIME_CLUSTER: NodeLooks = {
   ],
 };
 
-/** The small badge in a tagged round's icon's lower-right corner, by tag. */
-const BADGES: Readonly<Record<string, readonly Shape[]>> = {
-  // A snowflake.
-  frost: [
-    ellipse(4.2, 4.2, 3.4, 3.4, solid('water')),
-    ...[0, 60, 120].map((a) => {
-      const r = (a * Math.PI) / 180;
-      const dx = Math.cos(r) * 2.4;
-      const dy = Math.sin(r) * 2.4;
-      return line([4.2 - dx, 4.2 - dy, 4.2 + dx, 4.2 + dy], 0.7, 'snow');
-    }),
-  ],
+/**
+ * Each tag's mark on a tagged round's icon (029): a small badge in its lower-right corner, and optionally a new look
+ * for its base icon's head (a frost arrow's head is pale ice).
+ */
+const TAG_ART: Readonly<Record<string, { badge: readonly Shape[]; head?: ShapeStyle }>> = {
+  // A snowflake, and a head of ice.
+  frost: {
+    badge: [
+      ellipse(4.2, 4.2, 3.4, 3.4, solid('water')),
+      ...[0, 60, 120].map((a) => {
+        const r = (a * Math.PI) / 180;
+        const dx = Math.cos(r) * 2.4;
+        const dy = Math.sin(r) * 2.4;
+        return line([4.2 - dx, 4.2 - dy, 4.2 + dx, 4.2 + dy], 0.7, 'snow');
+      }),
+    ],
+    head: { fill: 'foam', outline: true, glow: { color: 'water-light', blur: 2 } },
+  },
   // A bending arrow.
-  homing: [
-    ellipse(4.2, 4.2, 3.4, 3.4, solid('cyan-deep')),
-    path('M 2.2 6 Q 2.2 2.4 5.4 2.4', trim('cyan-glow', 0.9)),
-    path('M 4.6 1.2 L 6.4 2.4 L 4.6 3.6 Z', flat('cyan-glow')),
-  ],
+  homing: {
+    badge: [
+      ellipse(4.2, 4.2, 3.4, 3.4, solid('cyan-deep')),
+      path('M 2.2 6 Q 2.2 2.4 5.4 2.4', trim('cyan-glow', 0.9)),
+      path('M 4.6 1.2 L 6.4 2.4 L 4.6 3.6 Z', flat('cyan-glow')),
+    ],
+  },
   // A five-point star.
-  star: [
-    ellipse(4.2, 4.2, 3.4, 3.4, solid('cyan-deep')),
-    path(starPath(4.2, 4.2, 2.6, 0.45), { fill: 'snow', glow: { color: 'cyan-glow', blur: 2 } }),
-  ],
+  star: {
+    badge: [
+      ellipse(4.2, 4.2, 3.4, 3.4, solid('cyan-deep')),
+      path(starPath(4.2, 4.2, 2.6, 0.45), { fill: 'snow', glow: { color: 'cyan-glow', blur: 2 } }),
+    ],
+  },
 };
 
 /** A five-point star round (x, y), points `r` out and its waist `r * inner`, one point up. */
@@ -100,17 +110,21 @@ function starPath(x: number, y: number, r: number, inner: number): string {
   return `M ${pts[0]} ${pts.slice(1).map((p) => `L ${p}`).join(' ')} Z`;
 }
 
-const BASE_ICONS: Readonly<Record<string, readonly Shape[]>> = { arrow: ICON_ARROW, bomb: ICON_BOMB, 'ley-bolt': ICON_LEY_BOLT };
+/** Each base ammo's icon, and the shape in it that is its head, if a tag can recolour one. */
+const BASE_ICONS: Readonly<Record<string, { shapes: readonly Shape[]; head?: Shape }>> = {
+  arrow: { shapes: ICON_ARROW, head: ICON_ARROW_HEAD },
+  bomb: { shapes: ICON_BOMB },
+  'ley-bolt': { shapes: ICON_LEY_BOLT },
+};
 
-/** A frost arrow's head is pale ice (029); other bases keep their icon as it is. */
-function baseIcon(round: string): readonly Shape[] {
-  const base = BASE_ICONS[roundBase(round)] ?? [];
-  if (!roundTags(round).includes('frost')) return base;
-  return [...base.slice(0, -1), path('M 6.4 -6.4 L 1.8 -4.2 L 4.2 -1.8 Z', { fill: 'foam', outline: true, glow: { color: 'water-light', blur: 2 } })];
+/** A tagged round's icon: its base's, its head restyled by any tag that restyles heads, then each tag's badge. */
+function roundIcon(round: string): VectorSprite {
+  const base = BASE_ICONS[roundBase(round)] ?? { shapes: [] };
+  const art = roundTags(round).flatMap((t) => (TAG_ART[t] ? [TAG_ART[t]] : []));
+  const head = art.find((a) => a.head)?.head;
+  const shapes = base.shapes.map((sh) => (head && sh === base.head ? ({ ...sh, ...head } as Shape) : sh));
+  return icon(ROUND_ICONS[round] ?? '', [...shapes, ...art.flatMap((a) => a.badge)]);
 }
-
-const roundIcon = (round: string): VectorSprite =>
-  icon(ROUND_ICONS[round] ?? '', [...baseIcon(round), ...roundTags(round).flatMap((t) => BADGES[t] ?? [])]);
 
 /** A star shard in flight (029), pointing right: a small cyan sliver. */
 const SHARD: Shape[] = [

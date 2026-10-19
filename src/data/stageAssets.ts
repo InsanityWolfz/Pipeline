@@ -32,9 +32,12 @@ export const CHILL_TINT = { color: 'water-light', perStack: 0.18 } as const;
 
 /**
  * How a tagged round looks in flight (029), by tag: an image tint (palette id) and a trail along its last `points`
- * drawn positions, `width` px in `color` with a bright `core` a third as wide, fading from `alpha` at the round to nothing. A frost arrow is pale ice with a short frost
+ * drawn positions, `width` px in `color` with a bright `core` (TRAIL_SHAPE), fading from `alpha` at the round to nothing. A frost arrow is pale ice with a short frost
  * trail; a homing bolt leaves a long bright cyan trail that shows it bending.
  */
+/** Every trail: its core is this share of its width, and it tapers from this share of its width at the tail to all of it at the round. */
+export const TRAIL_SHAPE = { core: 1 / 3, tail: 0.4 } as const;
+
 export const ROUND_LOOKS: Readonly<Record<string, { tint?: string; trail?: { color: string; core: string; points: number; width: number; alpha: number } }>> = {
   frost: { tint: 'foam', trail: { color: 'water-light', core: 'snow', points: 7, width: 3, alpha: 0.75 } },
   homing: { trail: { color: 'cyan', core: 'cyan-glow', points: 20, width: 4, alpha: 0.9 } },

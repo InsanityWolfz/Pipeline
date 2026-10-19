@@ -164,11 +164,13 @@ const ARMOR_HEAVY: Shape[] = [
 ];
 
 // Ammo icons, pointing up-right, matching their projectiles (016).
+/** The arrow icon's stone head: an element tag (029) recolours just this shape. */
+export const ICON_ARROW_HEAD: Shape = path('M 6.4 -6.4 L 1.8 -4.2 L 4.2 -1.8 Z', solid('rock-pale'));
 export const ICON_ARROW: Shape[] = [
   line([-6, 6, 3.4, -3.4], 1.4, 'wood-light', true),
   path('M -6.4 6.4 L -7 3.2 L -4.6 4.6 Z', flat('rust-light')),
   path('M -6.4 6.4 L -3.2 7 L -4.6 4.6 Z', flat('rust')),
-  path('M 6.4 -6.4 L 1.8 -4.2 L 4.2 -1.8 Z', solid('rock-pale')),
+  ICON_ARROW_HEAD,
 ];
 
 export const ICON_BOMB: Shape[] = [

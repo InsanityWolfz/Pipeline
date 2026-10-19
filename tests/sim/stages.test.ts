@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CONDUIT_TICKS } from '../../src/data/foundry';
 import { STAGES } from '../../src/data/stages';
+import { canCraft, craft } from '../../src/sim/crafting';
 import { fixtureDef } from '../../src/sim/fixtures';
 import { offerFromOutside } from '../../src/sim/flow';
 import type { ConduitState, CrateState, HopperState, MachineState } from '../../src/sim/pieces';
@@ -152,6 +153,16 @@ describe('hand-applying a stage at the bench', () => {
     expect(applyStage(s, 'frost-rune')).toBe(true);
     expect(applyStage(s, 'frost-rune')).toBe(false);
     expect(s.inventory).toMatchObject({ arrow: 1, 'rime-shard': 1, 'arrow+frost': 8 });
+  });
+
+  it("can't be done through the crafting menu's craft, which refuses stage ids", () => {
+    const s = atBench();
+    s.claims.push('shrine');
+    expect(canCraft(s, 'frost-rune')).toBe(false);
+    expect(craft(s, 'frost-rune')).toBe(false);
+    expect(s.events.craftFails).toEqual([{ recipeId: 'frost-rune' }]);
+    expect(s.inventory).toMatchObject({ arrow: 9, 'rime-shard': 3 });
+    expect(s.crafted).not.toContain('arrow+frost');
   });
 
   it('needs the bench in reach', () => {

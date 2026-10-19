@@ -37,7 +37,35 @@ export const GROUND = {
    * The Frozen Grotto's frosted ground (029): a pale wash over its clearing, soft-edged by `edge` px, with drifts of
    * snow on one tile in `driftEvery`, ice glints on one in `glintEvery`, and its grass tufts rimed white.
    */
-  frost: { wash: 'foam', washAlpha: 0.75, edge: 22, drift: 'snow', driftEvery: 3, driftAlpha: 0.8, ice: 'water-light', glint: 'snow', glintEvery: 5, tuft: 'rock-light' },
+  frost: {
+    wash: 'foam',
+    washAlpha: 0.75,
+    /** The wash is a blob per tile: `edge` px plus up to `jitter` inside the clearing; the ring of tiles round it, half that plus up to `rimJitter`, one in `rimSkip` left out. Blobs are `squash` as tall as wide. */
+    edge: 22,
+    jitter: 7,
+    rimJitter: 9,
+    rimSkip: 3,
+    squash: 0.8,
+    /** Snow drifts: up to `driftShift` px off the tile's centre, `driftRx` px wide plus up to `driftGrow`, `driftRy` px tall. */
+    drift: 'snow',
+    driftEvery: 3,
+    driftAlpha: 0.8,
+    driftShift: [16, 12],
+    driftRx: 9,
+    driftGrow: 6,
+    driftRy: 4,
+    /** Ice sheets: up to `iceShift` px off centre, `iceSize` px, `iceAlpha`, a glint `glintSize` px nudged by `glintAt`. */
+    ice: 'water-light',
+    iceShift: [18, 14],
+    iceSize: [6, 2.6],
+    iceAlpha: 0.7,
+    glint: 'snow',
+    glintEvery: 5,
+    glintSize: [2, 0.7],
+    glintAt: [-2, -0.6],
+    glintAlpha: 0.9,
+    tuft: 'rock-light',
+  },
   /** Ground chunks are drawn at up to this many texels per world px (memory), in squares of this many world px. */
   maxScale: 2,
   chunk: 640,

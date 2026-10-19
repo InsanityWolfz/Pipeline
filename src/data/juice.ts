@@ -53,7 +53,6 @@ export interface ParticleBurst {
 // Daylight colours (016).
 export const PARTICLES = {
   hitPhysical: { colors: ['snow', 'rock-pale', 'gold-trim'], count: 14, speed: [60, 150], gravity: 220, lifeMs: [220, 380], size: 2, lift: 12 },
-  hitFire: { colors: ['cinder-light', 'cinder', 'gold-trim'], count: 16, speed: [50, 140], gravity: -60, lifeMs: [260, 460], size: 2, lift: 12 },
   // A cold hit (029): frost flakes that drift down.
   hitCold: { colors: ['foam', 'snow', 'water-light'], count: 14, speed: [40, 110], gravity: 90, lifeMs: [300, 520], size: 2, lift: 12 },
   // A frozen enemy cracking free (029): chips of ice flung out and falling.

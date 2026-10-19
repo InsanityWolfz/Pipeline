@@ -61,9 +61,6 @@ export const roundBase = (round: string): string => round.split(SEP)[0] ?? round
 /** A round's tags, elements first. */
 export const roundTags = (round: string): string[] => round.split(SEP).slice(1);
 
-/** Whether a round carries a tag. */
-export const hasTag = (round: string, tag: string): boolean => roundTags(round).includes(tag);
-
 /** True if every tag applies to the base, with at most one per slot. */
 function legal(base: string, tags: readonly string[], table: Readonly<Record<string, TagDef>>): boolean {
   if (new Set(tags).size !== tags.length) return false;

@@ -118,7 +118,7 @@ export class EnemyView {
     const frame = big ? (cracked ? STAGE_SPRITES.iceCaseLargeCracked : STAGE_SPRITES.iceCaseLarge) : cracked ? STAGE_SPRITES.iceCaseCracked : STAGE_SPRITES.iceCase;
     d.ice ??= addVector(this.scene, 0, 0, frame);
     if (d.ice.frame.name !== frame) showFrame(d.ice, frame);
-    d.ice.setVisible(true).setPosition(e.x, bottom).setDepth(bottom + DEPTHS.flameNudge);
+    d.ice.setVisible(true).setPosition(e.x, bottom).setDepth(bottom + DEPTHS.overlayNudge);
   }
 
   /** A slow drop of resin falling from the binding, and a glint on the bead; out of step from Husk to Husk. Hidden from behind. */
@@ -128,7 +128,7 @@ export class EnemyView {
     const k = HUSK_RIG.scale;
     const x = e.x + RESIN.blob[0] * k * (e.facing === 'left' ? -1 : 1);
     const y = bottom + RESIN.blob[1] * k;
-    g.setDepth(bottom + DEPTHS.flameNudge);
+    g.setDepth(bottom + DEPTHS.overlayNudge);
     const { glint: gl, drop } = RESIN;
     const glint = (Math.sin(((now + e.id * RESIN.phase.glint) / RESIN.glintMs) * Math.PI * 2) + 1) / 2;
     g.fillStyle(colorOf(gl.color), glint * gl.alpha).fillCircle(x + gl.at[0] * k, y + gl.at[1] * k, gl.r);
@@ -146,7 +146,7 @@ export class EnemyView {
     const x = e.x + (view === 'side' ? CORE.side * (e.facing === 'left' ? -1 : 1) : CORE.at[0]) * k;
     const y = bottom + CORE.at[1] * k;
     const pulse = e.mode === 'windup' ? (Math.sin((now / CORE.pulseMs) * Math.PI * 2) + 1) / 2 : 0;
-    g.setDepth(bottom + DEPTHS.flameNudge);
+    g.setDepth(bottom + DEPTHS.overlayNudge);
     g.fillStyle(colorOf(CORE.haloColor), CORE.rest + (CORE.peak - CORE.rest) * pulse).fillCircle(x, y, CORE.halo * k * (1 + CORE.swell * pulse));
   }
 

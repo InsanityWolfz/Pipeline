@@ -1,14 +1,15 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, SPRITES } from '../data/assets';
-import { CRAFT_MENU_LAYOUT } from '../data/hudLayout';
+import { CRAFT_MENU_LAYOUT, STAGE_PANEL } from '../data/hudLayout';
 import { itemDef } from '../data/items';
 import { recipeDef } from '../data/recipes';
 import { STAGES } from '../data/stages';
 import { count, type Inventory } from '../sim/inventory';
+import { stageAffordable } from '../sim/stages';
 import type { TextBox } from './CraftMenuView';
 import { inRect } from './foundryLayout';
 import { flashRow, RowHover, type RowFrames } from './menuFeedback';
-import { STAGE_PANEL, stagePanelLayout } from './stagePanelLayout';
+import { stagePanelLayout } from './stagePanelLayout';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
@@ -97,7 +98,7 @@ export class StagePanel {
   }
 
   private affordable(stageId: string): boolean {
-    return Object.entries(recipeDef(stageId).inputs).every(([itemId, n]) => count(this.inventory, itemId) >= n);
+    return stageAffordable(this.inventory, stageId);
   }
 
   /** The stage row under a screen point, if shown and affordable. */

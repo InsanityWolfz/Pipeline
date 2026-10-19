@@ -98,7 +98,8 @@ export class FeelView {
       if (h.target === 'enemy') {
         if (!h.melee) s.play(SOUNDS.hit);
         s.play(SOUNDS.enemyHurt, SOUND_LEVELS.under);
-        j.burst(h.damageType === 'fire' ? 'hitFire' : h.damageType === 'cold' ? 'hitCold' : 'hitPhysical', h.x, h.y);
+        // Nothing deals fire until the fire rune (029); a fire hit gets its own burst when it comes back.
+        j.burst(h.damageType === 'cold' ? 'hitCold' : 'hitPhysical', h.x, h.y);
         j.damageNumber(h.damage, h.x, h.y, false);
         this.freeze(h.id, HIT_STOP_MS);
       } else {

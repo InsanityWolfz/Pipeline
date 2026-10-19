@@ -263,7 +263,7 @@ export const DEPTHS = {
   /** Nudge that puts a tutorial seal just in front of its door. */
   tubeNudge: 0.01,
   /** Nudge that puts an overlay (a Husk's resin, the Warden's core, the ice on a frozen enemy) just in front of the enemy it's on. */
-  flameNudge: 0.01,
+  overlayNudge: 0.01,
   /** Health bars, sparkles and popups over the world. */
   worldUi: 100_000,
   /** The mouse-over name (015), over a piece's readout. */

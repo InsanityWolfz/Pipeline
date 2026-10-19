@@ -122,11 +122,7 @@ export class GameScene extends Scene {
     this.menu = new CraftMenuView(this, (recipeId) => this.craft(recipeId));
     this.pause = new PauseMenuView(this);
     this.cursorView = new CursorView(this);
-    this.feel = new FeelView(
-      this,
-      (id) => this.foundryView?.dropIn(id),
-      (id, ms) => this.enemyView?.freeze(id, ms),
-    );
+    this.feel = new FeelView(this, (id) => this.foundryView?.dropIn(id), (id, ms) => this.enemyView?.freeze(id, ms));
     this.showRoom(this.sim.roomId);
     this.draw();
 

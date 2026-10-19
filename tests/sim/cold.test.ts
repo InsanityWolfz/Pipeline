@@ -37,7 +37,7 @@ describe('cold', () => {
     expect(speed(e)).toBeCloseTo(WALK * 0.55);
   });
 
-  it('the 4th hit freezes it for 90 ticks: it neither moves nor attacks, and still takes damage and knockback', () => {
+  it('the 4th hit freezes it for 90 ticks: it stands still, and still takes damage and knockback (the wind-up test shows it holds its attack)', () => {
     const { s, e } = chaser();
     for (let i = 0; i < 4; i++) chillHit(s, e);
     expect(e.frozen).toBe(90);
