@@ -48,6 +48,15 @@ describe('the tree panel', () => {
     }
   });
 
+  it('in the foundry the docked summary stays left of the reset button, so a click there always respecs', () => {
+    const dock = { ...L.info, w: L.reset.x - TALENT_PANEL.info.gap - L.info.x };
+    expect(dock.w).toBeGreaterThan(150);
+    for (const hovered of L.nodes) {
+      const at = placeTip({ box: { x: hovered.x, y: hovered.y, w: 1, h: 1 }, prefer: [], dock }, dock.w, dock.h);
+      expect(at.x + dock.w).toBeLessThanOrEqual(L.reset.x);
+    }
+  });
+
   it('hits each node at its centre and nothing between them', () => {
     for (const n of L.nodes) expect(talentAt(L, n.x, n.y)).toBe(n.id);
     expect(talentAt(L, L.panel.x + 2, L.panel.y + 2)).toBeNull();

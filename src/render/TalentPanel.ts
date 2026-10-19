@@ -214,8 +214,10 @@ export class TalentPanel {
     if (!id || !spot) return null;
     const L = this.layout;
     const at = { x: spot.x - spot.r, y: spot.y - spot.r, w: 2 * spot.r, h: 2 * spot.r };
-    // The summary docks in the info strip, never taller than it, so it never covers a node.
-    return { source: { kind: 'talent', id }, at, anchor: { box: at, prefer: [], dock: L.info }, maxH: L.info.h };
+    // The summary docks in the info strip, never taller than it, so it never covers a node; in the foundry it stays
+    // left of the reset button, so a click there always respecs.
+    const dock = this.inFoundry ? { ...L.info, w: L.reset.x - TALENT_PANEL.info.gap - L.info.x } : L.info;
+    return { source: { kind: 'talent', id }, at, anchor: { box: at, prefer: [], dock }, maxH: dock.h, maxW: dock.w };
   }
 
   /** Reads the tree every frame (so the hook can report it); draws it while open. */

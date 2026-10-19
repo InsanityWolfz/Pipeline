@@ -69,8 +69,9 @@ export interface TipHit {
   at: Box;
   anchor: Anchor;
   breakdown?: true;
-  /** The tallest its summary may be, px (the talent tree's info strip, so it never covers a node). */
+  /** The tallest and widest its summary may be, px (the talent tree's info strip: it never covers a node or the reset button). */
   maxH?: number;
+  maxW?: number;
 }
 
 /** A panel or HUD part that can show tips: what's under a view point, and (the Build tab) a chip there. */

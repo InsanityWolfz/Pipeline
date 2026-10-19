@@ -176,7 +176,8 @@ test('without Shift, every summary source shows a summary and never a breakdown 
     if (helm) g.step(1, { equip: { id: helm.id } });
     g.step(10);
   });
-  await cameraSettled(page);
+  // The camera eases on real time: under parallel workers it can take a while.
+  await cameraSettled(page, 20_000);
   const seen: string[] = [];
   const check = async (kind: string) => {
     await expect.poll(async () => (await ui(page))?.tip?.source.kind).toBe(kind);
@@ -265,7 +266,8 @@ test('a Husk with frost hits shows Chill and its stacks on its hover name', asyn
     return { x: e?.x ?? 0, y: e?.y ?? 0, chill: e?.chill ?? 0 };
   });
   expect(husk.chill).toBeGreaterThan(0);
-  await cameraSettled(page);
+  // The camera eases on real time: under parallel workers it can take a while.
+  await cameraSettled(page, 20_000);
   const cam = (await ui(page))?.camera;
   if (!cam) throw new Error('no camera');
   await hover(page, husk.x - (cam.x - VIEW_WIDTH / 2), husk.y - 10 - (cam.y - VIEW_HEIGHT / 2));
@@ -314,7 +316,8 @@ test('a click on the gear tip, over the bench’s Stages rows, is the tip’s: n
     g.step(1, { identify: true });
     g.step(10);
   });
-  await cameraSettled(page);
+  // The camera eases on real time: under parallel workers it can take a while.
+  await cameraSettled(page, 20_000);
   await page.keyboard.press('e');
   await expect.poll(async () => (await ui(page))?.tagged.benchStages?.shown).toBe(true);
   const gearRow = (await ui(page))?.gearPanel?.rows[0];

@@ -32,14 +32,15 @@ export interface LegibilityUi {
 
 export const NO_LEGIBILITY_UI: LegibilityUi = { tip: null, glossary: null };
 
-/** A description as a tablet's content: its summary (at most four rows, and `maxH` px when docked) or its breakdown (16 rows). */
-function tipContent(d: Description, summary: boolean, maxH?: number): TipContent {
+/** A description as a tablet's content: its summary (at most four rows, and inside `fit` when docked) or its breakdown (16 rows). */
+function tipContent(d: Description, summary: boolean, fit: { maxH?: number; maxW?: number } = {}): TipContent {
+  const { maxH, maxW } = fit;
   return {
     name: d.name,
     ...(d.nameColor ? { nameColor: d.nameColor } : {}),
     chips: d.chips,
     lines: summary ? d.summary : d.breakdown,
-    maxW: summary ? TIP.summaryW : TIP.breakdownW,
+    maxW: summary ? Math.min(TIP.summaryW, maxW ?? TIP.summaryW) : TIP.breakdownW,
     maxRows: summary ? TIP.summaryRows : TIP.maxLines,
     ...(maxH !== undefined ? { maxH } : {}),
   };
@@ -174,7 +175,7 @@ export class Legibility {
     this.shown.mode = mode;
     const d = this.shown.desc;
     const summary = mode === 'summary';
-    const content = tipContent(d, summary, summary ? c.hit.maxH : undefined);
+    const content = tipContent(d, summary, summary ? { ...(c.hit.maxH !== undefined ? { maxH: c.hit.maxH } : {}), ...(c.hit.maxW !== undefined ? { maxW: c.hit.maxW } : {}) } : {});
     const { w, h } = this.tip.measure(content);
     const at = placeTip(c.hit.anchor, w, h);
     this.tip.show(content, at.x, at.y);
