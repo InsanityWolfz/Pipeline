@@ -258,7 +258,7 @@ export class GameScene extends Scene {
     this.followRoom(this.pending.ko);
     if (!this.fading && this.playerView) this.sceneCameras?.attuneLook(sim, this.shownRoomId, this.playerView.sprite);
     this.effects.play(this.pending, sim.player);
-    this.tutorial?.play(this.pending, sim, (id) => this.foundryView?.topOf(id));
+    this.tutorial?.play(this.pending, sim, this.shownRoomId, (id) => this.foundryView?.topOf(id));
     if (this.pending.identifies.length > 0) this.site?.identified();
     if (this.pending.ko) this.wake?.show(this.pending.lost);
     const shown = this.shownRoomId;

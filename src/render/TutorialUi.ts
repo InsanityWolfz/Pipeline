@@ -52,8 +52,8 @@ export class TutorialUi {
   }
 
   /** One-shot effects from the events since the last draw: a machine step's popup (027). */
-  play(events: SimEvents, sim: SimState, topOf: (id: number) => number | undefined): void {
-    this.made.play(events, sim.foundry, topOf);
+  play(events: SimEvents, sim: SimState, shown: string, topOf: (id: number) => number | undefined): void {
+    this.made.play(events, sim.foundry, shown, topOf);
   }
 
   /** True over the objective band, so a press there never fires (015). */

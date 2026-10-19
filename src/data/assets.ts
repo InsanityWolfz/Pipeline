@@ -67,7 +67,7 @@ export const SPRITES = {
   craftArrow: 'craft-arrow',
   hudAmmoCell: 'hud-ammo-cell',
   hudAmmoSelect: 'hud-ammo-select',
-  /** The brass ring that pulses over a build-bar cell the current objective names (027). */
+  /** The gold ring that pulses over a build-bar cell the current objective names (027). */
   buildPulse: 'build-pulse',
 } as const;
 

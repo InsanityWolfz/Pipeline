@@ -48,7 +48,7 @@ export interface BuildBarState {
 // group labelled with a thin divider between and the selected piece highlighted;
 // and a ghost of it on the tile under the cursor, tinted by whether it can go there.
 // Locked pieces aren't shown, nor a group with none unlocked. The piece the current
-// objective names (027) pulses with a brass ring while the bar is open.
+// objective names (027) pulses with a gold ring while the bar is open.
 export class BuildView {
   private readonly scene: Scene;
   private cells: { pieceId: string; images: GameObjects.Image[] }[] = [];
@@ -56,7 +56,7 @@ export class BuildView {
   private labels: { category: string; label: string; line: TextLine }[] = [];
   private readonly dividers: GameObjects.Graphics;
   private readonly highlight: GameObjects.Image;
-  /** The brass ring over the cell the current objective names (027). */
+  /** The gold ring over the cell the current objective names (027). */
   private readonly pulse: GameObjects.Image;
   private pulsing: string | null = null;
   private readonly ghost: GameObjects.Image;
