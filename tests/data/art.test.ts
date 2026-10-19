@@ -15,6 +15,8 @@ import { VECTOR_SPRITES } from '../../src/data/art/sprites';
 import { TUBE_PARTS, WANDERER, WANDERER_DYNAMIC } from '../../src/data/art/wanderer';
 import { DAYLIGHT_PALETTE } from '../../src/data/palette';
 import { STAGE_SPRITES_VECTOR } from '../../src/data/art/stages';
+import { SPRING_SPRITES_VECTOR } from '../../src/data/art/spring';
+import { SPRING_LOOK, SPRING_SPRITES } from '../../src/data/springAssets';
 import { ENEMY_RIGS } from '../../src/data/art/enemies';
 import { poseOfAnim } from '../../src/render/vector/catalog';
 
@@ -58,7 +60,7 @@ describe('vector shapes', () => {
       ...VECTOR_SPRITES.flatMap((s) => s.frames.flat()),
       ...NODE_SPRITES_VECTOR.flatMap((s) => s.frames.flat()),
       ...INTAKE_SPRITES_VECTOR.flatMap((s) => s.frames.flat()),
-      ...[ITEM_SPRITES_VECTOR, LOGISTICS_SPRITES_VECTOR, FIXTURE_SPRITES_VECTOR, MACHINE_SPRITES_VECTOR, INTERIOR_SPRITES_VECTOR, HUD_SPRITES_VECTOR, STAGE_SPRITES_VECTOR].flatMap((set) =>
+      ...[ITEM_SPRITES_VECTOR, LOGISTICS_SPRITES_VECTOR, FIXTURE_SPRITES_VECTOR, MACHINE_SPRITES_VECTOR, INTERIOR_SPRITES_VECTOR, HUD_SPRITES_VECTOR, STAGE_SPRITES_VECTOR, SPRING_SPRITES_VECTOR].flatMap((set) =>
         set.flatMap((s) => s.frames.flat()),
       ),
     ];
@@ -66,6 +68,12 @@ describe('vector shapes', () => {
     const used = [...shapes.flatMap(inksOf), ...limbs.map((i) => (typeof i === 'string' ? i : i.id))];
     expect(used.length).toBeGreaterThan(100);
     for (const id of used) expect(daylight, id).toContain(id);
+  });
+
+  it('draw the Ley Spring (030) under its keys, its pool as wide as the sim\'s, and colour its look from the palette', () => {
+    expect(SPRING_SPRITES_VECTOR.map((s) => s.key).sort()).toEqual(Object.values(SPRING_SPRITES).sort());
+    const L = SPRING_LOOK;
+    for (const id of [L.light.color, L.thread.color, L.thread.glow, L.shimmer.warm, L.shimmer.cool]) expect(daylight, id).toContain(id);
   });
 
   it('parse path strings and reject bad ones', () => {
@@ -152,7 +160,8 @@ describe('vector frame registration', () => {
     const room = await import('../../src/data/roomArt');
     const props = await import('../../src/data/props');
     const stages = await import('../../src/data/stageAssets');
-    walk({ ...assets, ...foundry, ...room, ...props, ...stages });
+    const springs = await import('../../src/data/springAssets');
+    walk({ ...assets, ...foundry, ...room, ...props, ...stages, ...springs });
     for (const f of vectorFrames()) expect(registered, f.name).toContain(f.name);
   });
 });

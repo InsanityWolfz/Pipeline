@@ -61,6 +61,8 @@ export const SOUNDS = {
   /** 029: an enemy freezing solid, and a star round bursting into shards. */
   freeze: 'freeze',
   starBurst: 'star-burst',
+  /** 030: healing starts in a safe spot. */
+  healStart: 'heal-start',
   ambientClearing: 'ambient-clearing',
   ambientFoundry: 'ambient-foundry',
 } as const;
@@ -227,6 +229,15 @@ export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
     layers: [
       { wave: 'noise', from: 7000, to: 1500, dur: 0.1, attack: 0.001, volume: 0.3 },
       ...[0, 1, 2, 3, 4].map((i): SoundLayer => ({ wave: 'sine', from: 1500 + i * 260, to: 1100 + i * 200, delay: i * 0.025, dur: 0.16, attack: 0.003, volume: 0.1 })),
+    ],
+  },
+  // Healing starting (030): a soft, rising chime, a fifth over a warm hum.
+  'heal-start': {
+    layers: [
+      { wave: 'sine', from: 880, to: 880, dur: 0.7, attack: 0.02, volume: 0.1 },
+      { wave: 'sine', from: 1320, to: 1320, delay: 0.09, dur: 0.6, attack: 0.02, volume: 0.08 },
+      { wave: 'sine', from: 1760, to: 1760, delay: 0.18, dur: 0.5, attack: 0.02, volume: 0.05, tremolo: { rate: 6, depth: 0.3 } },
+      { wave: 'triangle', from: 440, to: 440, dur: 0.6, attack: 0.08, volume: 0.04, lowpass: 1200 },
     ],
   },
   'ambient-clearing': {

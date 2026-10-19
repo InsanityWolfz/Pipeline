@@ -11,17 +11,19 @@ import { RoomView } from './room';
 import { IntakeView } from './IntakeView';
 import { SupplyView } from './SupplyView';
 import { PortView } from './PortView';
+import { HealingView, NO_HEALING_SHOWN } from './HealingView';
 
 /** What the room views report to the test hook's `ui()`. */
-export type RoomUiState = Pick<UiState, 'minimap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports'>;
+export type RoomUiState = Pick<UiState, 'minimap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing'>;
 
 /** The room views' part of `ui()` before the scene has built them. */
-export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [] }, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [] };
+export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [] }, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN };
 
 // The ground on screen: a tiled room (the foundry) or the overworld's terrain
 // with its landmarks (017), plus the corner minimap while outside, and the
 // claimed pylon's harvest running home along the ley line (018), the foundry
-// intake built into the foundry's north wall (019), and the supply ports' faces and plates (028).
+// intake built into the foundry's north wall (019), the supply ports' faces and plates (028), and the Ley
+// Springs with the signs of healing (030).
 export class RoomViews {
   private readonly scene: Scene;
   private readonly tiles: RoomView;
@@ -30,6 +32,7 @@ export class RoomViews {
   private readonly supply: SupplyView;
   private readonly intake: IntakeView;
   private readonly ports: PortView;
+  private readonly healing: HealingView;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -39,6 +42,7 @@ export class RoomViews {
     this.supply = new SupplyView(scene);
     this.intake = new IntakeView(scene);
     this.ports = new PortView(scene);
+    this.healing = new HealingView(scene);
   }
 
   /** Draws a room's ground and fits the camera to it. */
@@ -58,12 +62,13 @@ export class RoomViews {
     this.supply.update(sim, events, shown, deltaMs);
     this.intake.update(sim, events, shown, sim.building, deltaMs);
     this.ports.update(sim, shown);
+    this.healing.update(sim, shown, deltaMs);
   }
 
   /**
    * For the test hook: the minimap and its markers, the supply line's motes (018), and the intake's caps still drawn
    * and how far they are through lifting off (024: 0..1, or null when none are), the entrances' fire pulses on the
-   * pipe (028), and the ports as drawn (028).
+   * pipe (028), the ports as drawn (028), and the springs and healing signs (030).
    */
   get state(): RoomUiState {
     return {
@@ -73,6 +78,7 @@ export class RoomViews {
       intakeLift: this.intake.liftShown,
       intakeFirePulses: this.intake.firePulsesShown,
       ports: this.ports.shown,
+      healing: this.healing.shown,
     };
   }
 }

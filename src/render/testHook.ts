@@ -14,6 +14,7 @@ import type { CraftMenuState } from './CraftMenuView';
 import type { PromptState } from './PromptView';
 import type { PortShown } from './PortView';
 import type { StagePanelState } from './StagePanel';
+import type { HealingShown } from './HealingView';
 import { claim } from '../sim/claims';
 
 export interface GameTestHook {
@@ -110,6 +111,8 @@ export interface UiState {
    * (how many, and the most points one runs along).
    */
   tagged: { benchStages: StagePanelState | null; starFlashes: number; trails: { count: number; longest: number } };
+  /** 030: the Ley Springs drawn, healing motes in the air, the pylon's thread, the foundry's shimmer, and the spring glowing under the player. */
+  healing: HealingShown;
 }
 
 declare global {

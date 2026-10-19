@@ -68,6 +68,7 @@ const FAMILIES: readonly [title: string, test: (name: string) => boolean][] = [
   ['Items, ammo and emblems', (n) => n.startsWith('item-') || n.startsWith('icon-') || n.startsWith('emblem-')],
   ['Fixtures, the pylon and the foundry', (n) => /^(identification-bench|stash|supply-port|doorway-side|waystone|pylon-|door-rubble|ley-crystal|intake-|floor-|wall|prop-|ruin-)/.test(n)],
   ['Gathering nodes', (n) => n.startsWith('node-')],
+  ['Ley Springs', (n) => n.startsWith('ley-spring') || n.startsWith('spring-')],
   ['Overworld', (n) => n.startsWith('ow-')],
   ['HUD and menus', (n) => n.startsWith('hud-') || n.startsWith('craft-') || n.startsWith('menu-') || n === 'key-cap' || n === 'crosshair' || n === 'pointer' || n === 'objective-tick'],
 ];
