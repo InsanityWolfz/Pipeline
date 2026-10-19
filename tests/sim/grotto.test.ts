@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GROTTO } from '../../src/data/grotto';
+import { GROTTO, GROTTO_GROUP } from '../../src/data/grotto';
 import { FEET_BOX } from '../../src/data/player';
 import { nodeDef } from '../../src/data/nodes';
 import { OVERWORLD, ringOf } from '../../src/data/overworld';
@@ -66,20 +66,21 @@ describe('the Frozen Grotto', () => {
     expect(s.groundItems.some((g) => g.itemId === 'rime-shard') || (s.inventory['rime-shard'] ?? 0) > 0).toBe(true);
   });
 
-  it('is held by a hand-placed guard pack in group grotto: 3 Husks and a Wisp, back after a KO', () => {
-    const guards = OVERWORLD.packs.filter((p) => p.group === 'grotto');
+  it('is held by a hand-placed guard pack in its landmark\'s group (032: frozen-grotto): 3 Husks and a Wisp, back after a KO', () => {
+    const guards = OVERWORLD.packs.filter((p) => p.group === GROTTO_GROUP);
     expect(guards.map((p) => p.enemyId).sort()).toEqual(['husk', 'husk', 'husk', 'wisp']);
     for (const g of guards) {
       expect(g.tx >= GROTTO.area.x0 && g.tx <= GROTTO.area.x1 && g.ty >= GROTTO.area.y0 && g.ty <= GROTTO.area.y1).toBe(true);
     }
     const s = createSim(SEED);
-    const grotto = () => s.enemies.filter((e) => e.group === 'grotto');
+    const grotto = () => s.enemies.filter((e) => e.group === GROTTO_GROUP);
     expect(grotto()).toHaveLength(4);
-    s.enemies = s.enemies.filter((e) => e.group !== 'grotto');
+    s.enemies = s.enemies.filter((e) => e.group !== GROTTO_GROUP);
     die(s);
     expect(grotto()).toHaveLength(4);
     // No pylon: it can't be claimed, and even a stray claim id wouldn't change its guards.
-    expect(OVERWORLD.shrine.site).not.toBe('grotto');
+    expect(GROTTO_GROUP).toBe('frozen-grotto');
+    expect(OVERWORLD.shrine.site).not.toBe(GROTTO_GROUP);
     resetWorld(s);
     expect(grotto()).toHaveLength(4);
   });

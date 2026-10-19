@@ -226,12 +226,11 @@ export class FeelView {
     }
   }
 
-  /** Lights that move or come and go: live veins, a claimed pylon, items on conduits, the intake and the tube. */
+  /** Lights that move or come and go: live veins, claimed pylons, items on conduits, the intake and the tube. */
   private movingGlows(sim: SimState, shown: string): GlowSpot[] {
     const spots: GlowSpot[] = [];
     for (const n of sim.nodes) if (n.roomId === shown && n.nodeId === 'ley-vein' && n.uses > 0) spots.push({ x: n.x, y: n.y, ...GLOWS.vein });
-    const pylon = roomById(shown).pylon;
-    if (pylon && isClaimed(sim, pylon.site)) spots.push({ ...tileCentre(pylon.tx, pylon.ty), ...GLOWS.pylon });
+    for (const pylon of roomById(shown).pylons ?? []) if (isClaimed(sim, pylon.site)) spots.push({ ...tileCentre(pylon.tx, pylon.ty), ...GLOWS.pylon });
     if (shown === FOUNDRY_ROOM) {
       for (const p of sim.foundry.pieces) {
         const r = pieceRect(p);

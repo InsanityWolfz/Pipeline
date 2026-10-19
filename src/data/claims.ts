@@ -18,10 +18,20 @@ export const ACTIVATE_TICKS = 60;
  */
 export const SUPPLY_TICKS = 240;
 
-/** The raws each claimable site's pylon sends home, by site id. */
+/** The raws each claimable site's pylon sends home, by site id: a resource site (032) sends only its own. */
 export const SITE_SUPPLY: Readonly<Record<string, readonly string[]>> = {
   shrine: ['wood', 'stone', 'fiber', 'ley-crystal'],
+  quarry: ['stone'],
+  'old-grove': ['wood'],
+  'reed-marsh': ['fiber'],
+  'ley-grotto': ['ley-crystal'],
 };
+
+/** A resource site's safe radius, tiles (032): smaller than the shrine's 10, so five claims don't starve spawning. */
+export const SITE_SAFE_RADIUS = 7;
+
+/** The site a resource-site pylon waits on: dormant until it's claimed (032). */
+export const SITE_WAKES = 'shrine';
 
 /** How close the player's feet box must be to a fixture to use it, px. */
 export const FIXTURE_REACH = 20;

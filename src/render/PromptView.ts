@@ -110,8 +110,11 @@ export class PromptView {
         return { at: p, usable: true };
       case 'tubeStone':
         return room.tubeStone && !sim.hasTube ? { at: centre(room.tubeStone), usable: stoneInReach(sim) } : undefined;
-      case 'pylon':
-        return room.pylon ? { at: centre(room.pylon), usable: pylonInReach(sim) !== undefined } : undefined;
+      case 'pylon': {
+        // The shrine's goal: the nearest pylon (032: the room holds several).
+        const pylon = nearest((room.pylons ?? []).map((t) => ({ ...centre(t), site: t.site })));
+        return pylon ? { at: pylon, usable: pylonInReach(sim)?.site === pylon.site } : undefined;
+      }
       case 'bench': {
         const bench = sim.fixtures.find((f) => fixtureDef(f.id).kind === 'bench');
         if (!bench || sim.roomId !== FOUNDRY_ROOM) return undefined;

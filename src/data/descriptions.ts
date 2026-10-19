@@ -9,6 +9,14 @@ export const DESCRIPTIONS = {
   leyLine: "Carries the pylon's haul to the foundry.",
 } as const;
 
+/**
+ * A landmark pylon's hover line (032): what it sends home, by landmark and item name, e.g. "Quarry pylon: sends stone
+ * home." Before its claim, what it would send.
+ */
+export function sitePylonLine(landmark: string, item: string, claimed: boolean): string {
+  return `${landmark} pylon: ${claimed ? 'sends' : 'claim it to send'} ${item.toLowerCase()} home.`;
+}
+
 /** Between the parts of a port's plate and hover line (028). */
 const PORT_SEPARATOR = ' · ';
 

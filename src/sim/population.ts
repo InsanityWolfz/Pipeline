@@ -1,7 +1,8 @@
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { FEET_BOX } from '../data/player';
 import { OVERWORLD, ringOf } from '../data/overworld';
-import { POPULATION, SAFE_RADIUS } from '../data/population';
+import { POPULATION } from '../data/population';
+import { LANDMARK_LIST } from '../data/landmarks';
 import { TILE } from '../data/rooms';
 import { createEnemy, type EnemyState } from './enemies';
 import { nextInt } from './rng';
@@ -43,13 +44,15 @@ export interface SafeZone {
   r: number;
 }
 
+/** Every claimed pylon's safe zone, each at its own radius (032: a resource site's is smaller than the shrine's). */
 export function safeZones(state: Pick<SimState, 'claims'>): SafeZone[] {
-  return Object.values(WORLD).flatMap((room) => {
-    const p = room.pylon;
-    if (!p || !state.claims.includes(p.site)) return [];
-    const c = tileCentre(p);
-    return [{ roomId: room.id, x: c.x, y: c.y, r: SAFE_RADIUS * TILE_SIZE }];
-  });
+  return Object.values(WORLD).flatMap((room) =>
+    (room.pylons ?? []).flatMap((p) => {
+      if (!state.claims.includes(p.site)) return [];
+      const c = tileCentre(p);
+      return [{ roomId: room.id, x: c.x, y: c.y, r: p.safeRadius * TILE_SIZE }];
+    }),
+  );
 }
 
 /** The claimed pylon's safe zone holding a point, or null. */
@@ -109,8 +112,8 @@ const walkableOpen = (tx: number, ty: number): boolean => {
   const room = WORLD[OVERWORLD.id];
   const symbol = room?.rows[ty]?.[tx];
   if (symbol !== TILE.floor && symbol !== TILE.path) return false;
-  // Packs keep out of the landmarks' clearings (the meadow, the ruin field, the shrine site).
-  return !OVERWORLD.clearings.some((r) => tx >= r.x0 && tx <= r.x1 && ty >= r.y0 && ty <= r.y1);
+  // Packs keep out of the clearings (the meadow, the ruin field, the shrine site) and the landmarks' areas (032).
+  return ![...OVERWORLD.clearings, ...LANDMARK_LIST.map((l) => l.area)].some((r) => tx >= r.x0 && tx <= r.x1 && ty >= r.y0 && ty <= r.y1);
 };
 
 /** Open ground each ring offers a pack's centre, found once from the generated map. */

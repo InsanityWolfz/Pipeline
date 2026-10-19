@@ -7,9 +7,9 @@ export function clickAmount(mods: { shift: boolean; ctrl: boolean }): HopperAmou
 }
 
 /** The commands that menus send: the hopper, sorter, pylon, stash and bench menus' choices. */
-export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'setFilter' | 'pylon' | 'takeStash' | 'identify' | 'equip' | 'applyStage'>;
+export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'setFilter' | 'pylon' | 'travel' | 'takeStash' | 'identify' | 'equip' | 'applyStage'>;
 
-const NONE: MenuCommand = { deposit: null, withdraw: null, setFilter: null, pylon: null, takeStash: null, identify: false, equip: null, applyStage: null };
+const NONE: MenuCommand = { deposit: null, withdraw: null, setFilter: null, pylon: null, travel: null, takeStash: null, identify: false, equip: null, applyStage: null };
 
 // Choices clicked in the world's menus, held until the next tick takes them.
 export class MenuRequests {
@@ -33,6 +33,11 @@ export class MenuRequests {
   /** The claimed pylon's choice. */
   pylon(action: NonNullable<Command['pylon']>): void {
     this.pending.pylon = action;
+  }
+
+  /** The waystone menu's choice (032): the claimed site to travel to. */
+  travel(site: string): void {
+    this.pending.travel = site;
   }
 
   /** Takes a stack (or everything, for null) out of the stash. */
@@ -70,7 +75,7 @@ export class MenuRequests {
 /** Build and menu actions for one tick, merged into the command. */
 export type UiCommand = Pick<
   Command,
-  'toggleBuild' | 'place' | 'pickUp' | 'deposit' | 'withdraw' | 'setFilter' | 'pylon' | 'takeStash' | 'identify' | 'equip' | 'applyStage'
+  'toggleBuild' | 'place' | 'pickUp' | 'deposit' | 'withdraw' | 'setFilter' | 'pylon' | 'travel' | 'takeStash' | 'identify' | 'equip' | 'applyStage'
 >;
 
 /** No UI actions this tick. */

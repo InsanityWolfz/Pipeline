@@ -1,7 +1,7 @@
 import { ACTIVATE_TICKS, CLAIM_TICKS, FIXTURE_REACH, FIXTURES, PYLON_REACH, SITE_SUPPLY, SUPPLY_TICKS, type FixtureDef } from '../data/claims';
 import { TICK_RATE } from '../data/config';
 import { FEET_BOX } from '../data/player';
-import { FOUNDRY_ROOM, type Room } from '../data/rooms';
+import { FOUNDRY_ROOM, type PylonDef } from '../data/rooms';
 import type { Command } from './input';
 import { count } from './inventory';
 import { isRolling } from './movement';
@@ -38,10 +38,20 @@ function gapTo(state: SimState, t: Tile): number {
   return Math.hypot(gapX, gapY);
 }
 
-/** The pylon in the player's room within reach, if any. */
-export function pylonInReach(state: SimState): NonNullable<Room['pylon']> | undefined {
-  const pylon = roomOf(state).pylon;
-  return pylon && gapTo(state, pylon) <= PYLON_REACH ? pylon : undefined;
+/** The nearest pylon in the player's room within reach, if any (032: a room can hold several). */
+export function pylonInReach(state: SimState): PylonDef | undefined {
+  let best: PylonDef | undefined;
+  for (const p of roomOf(state).pylons ?? []) if (gapTo(state, p) <= PYLON_REACH && (!best || gapTo(state, p) < gapTo(state, best))) best = p;
+  return best;
+}
+
+/** A pylon still waiting on the site it wakes after (032: the resource sites wait on the shrine). */
+export const dormant = (state: Pick<SimState, 'claims'>, p: PylonDef): boolean => p.wakes !== undefined && !state.claims.includes(p.wakes);
+
+/** Every claimed pylon and its room, in claim order: the waystone's destinations (032). */
+export function claimedPylons(state: Pick<SimState, 'claims'>): { roomId: string; pylon: PylonDef }[] {
+  const all = Object.values(WORLD).flatMap((room) => (room.pylons ?? []).map((pylon) => ({ roomId: room.id, pylon })));
+  return state.claims.flatMap((site) => all.filter((p) => p.pylon.site === site));
 }
 
 /** The fixture of a kind in reach, if the player is in the foundry. */
@@ -94,17 +104,22 @@ export function stepClaims(state: SimState, cmd: Command): Command {
   if (state.activatePulse > 0) state.activatePulse -= 1;
   advanceHold(state, cmd);
   if (cmd.pylon) usePylon(state, cmd.pylon);
+  if (cmd.travel !== null && fixtureInReach(state, 'waystone')) travelToPylon(state, cmd.travel);
   if (cmd.takeStash) takeStash(state, cmd.takeStash.itemId);
   if (!cmd.interact) return cmd;
-  const site = siteInReach(state);
-  if (site) {
+  const pylon = pylonInReach(state);
+  if (pylon) {
+    const { site } = pylon;
     if (occupied(state, site)) state.events.sealed.push({ site });
-    else if (!isClaimed(state, site) && !state.claimHold) state.claimHold = { site, progress: 1 };
+    // A dormant pylon (032) takes the press but starts nothing.
+    else if (!isClaimed(state, site) && !state.claimHold && !dormant(state, pylon)) state.claimHold = { site, progress: 1 };
     // E on a claimed pylon opens render's menu, whose choice comes back as `pylon`.
     return { ...cmd, interact: false };
   }
   if (fixtureInReach(state, 'waystone')) {
-    travelToPylon(state);
+    // With two or more claimed pylons, render opens the waystone's menu (032), whose choice comes back as `travel`.
+    const [only, ...more] = claimedPylons(state);
+    if (only && more.length === 0) travelToPylon(state, only.pylon.site);
     return { ...cmd, interact: false };
   }
   // E on the stash or the bench opens render's menu, whose choice comes back as a command.
@@ -135,6 +150,8 @@ export function claim(state: SimState, site: string): void {
   state.claims.push(site);
   state.activatePulse = ACTIVATE_TICKS;
   state.events.claims.push({ site });
+  // The site's guards are gone for good, and so is anything whose home the new zone takes in (017).
+  state.enemies = state.enemies.filter((e) => e.group !== site);
   clearSafeZones(state);
   const sends = SITE_SUPPLY[site] ?? [];
   const brought = FIXTURES.filter((f) => f.claim === site || (f.raw !== undefined && sends.includes(f.raw)));
@@ -182,11 +199,10 @@ function takeStash(state: SimState, itemId: string | null): void {
   if (Object.keys(items).length > 0) state.events.stashTakes.push({ items });
 }
 
-/** The waystone: to the first claimed pylon, standing one tile below it. */
-function travelToPylon(state: SimState): void {
-  const room = Object.values(WORLD).find((r) => r.pylon && isClaimed(state, r.pylon.site));
-  if (!room?.pylon) return;
-  travelTo(state, room.id, { tx: room.pylon.tx, ty: room.pylon.ty + 1 });
+/** The waystone: to a claimed pylon by its site, standing one tile below it. */
+function travelToPylon(state: SimState, site: string): void {
+  const to = claimedPylons(state).find((p) => p.pylon.site === site);
+  if (to) travelTo(state, to.roomId, { tx: to.pylon.tx, ty: to.pylon.ty + 1 });
 }
 
 /** How many claimed sites supply a raw (028): its port's pylon count. `supply` defaults to the game's site table. */

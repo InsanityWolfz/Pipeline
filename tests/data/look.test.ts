@@ -53,7 +53,7 @@ describe('props', () => {
         ...(room.nodes ?? []),
         ...(room.enemies ?? []),
         ...(room.tubeStone ? [room.tubeStone] : []),
-        ...(room.pylon ? [room.pylon] : []),
+        ...(room.pylons ?? []),
       ];
       for (const p of room.props ?? []) {
         const where = `${room.id} ${p.propId} at ${p.tx},${p.ty}`;

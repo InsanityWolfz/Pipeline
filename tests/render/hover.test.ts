@@ -41,8 +41,8 @@ describe('world names on mouse-over', () => {
   it('names the pylon and the tube stone, and nothing on bare ground (017: both in the overworld)', () => {
     const s = createSim(SEED, { roomId: HALL });
     const outside = WORLD[HALL];
-    const shrine = outside?.pylon;
-    if (!shrine) throw new Error('no pylon');
+    const shrine = outside?.pylons?.find((x) => x.site === 'shrine');
+    if (!outside || !shrine) throw new Error('no pylon');
     const p = centre(shrine.tx, shrine.ty);
     expect(nameAt(s, HALL, p.x, p.y)?.name).toBe(WORLD_NAMES.pylon);
     const stone = outside.tubeStone;

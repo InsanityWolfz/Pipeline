@@ -12,7 +12,7 @@ import { registerAnim } from './anims';
 import { colorOf } from './color';
 import { addVector, addVectorSprite } from './vector/textures';
 
-// The claimable site and what claiming brings (009): the room's pylon (dormant,
+// The claimable sites and what claiming brings (009): the room's pylons (032: several; dormant,
 // activating, or glowing once claimed) with the claim hold's bar, the foundry's
 // fixtures (with 010's bench), and Wisp orbs in flight.
 /** The frame a fixture shows first. */
@@ -24,7 +24,8 @@ function fixtureFrame(kind: string): string {
 
 export class SiteView {
   private readonly scene: Scene;
-  private readonly pylon: GameObjects.Sprite;
+  /** One sprite per pylon in the room on screen, by site (032: a room can hold several). */
+  private readonly pylons = new Map<string, GameObjects.Sprite>();
   private readonly bar: GameObjects.Graphics;
   private readonly fixtures = new Map<string, GameObjects.Sprite>();
   private readonly orbs = new Map<number, { orb: GameObjects.Image; shadow: GameObjects.Image }>();
@@ -36,7 +37,6 @@ export class SiteView {
     registerAnim(scene, PYLON_SPRITES.activating);
     registerAnim(scene, PYLON_SPRITES.active);
     registerAnim(scene, FIXTURE_SPRITES.waystone);
-    this.pylon = addVectorSprite(scene, 0, 0, PYLON_SPRITES.off).setOrigin(0.5, 1).setVisible(false);
     this.bar = scene.add.graphics().setDepth(DEPTHS.worldUi);
   }
 
@@ -52,27 +52,33 @@ export class SiteView {
   }
 
   private drawPylon(sim: SimState, shown: string): void {
-    const at = roomById(shown).pylon;
+    const here = roomById(shown).pylons ?? [];
     this.bar.clear();
-    this.pylon.setVisible(at !== undefined);
-    if (!at) return;
-    const x = (at.tx + 0.5) * TILE_SIZE;
-    const bottom = (at.ty + 1) * TILE_SIZE;
-    this.pylon.setPosition(x, bottom).setDepth(bottom);
-    const anim = this.pylon.anims.currentAnim?.key;
-    if (!isClaimed(sim, at.site)) {
-      if (anim) this.pylon.stop();
-      this.pylon.setFrame(PYLON_SPRITES.off);
-    } else if (sim.activatePulse > 0) {
-      if (anim !== PYLON_SPRITES.activating.key) this.pylon.play(PYLON_SPRITES.activating.key);
-    } else if (anim !== PYLON_SPRITES.active.key) this.pylon.play(PYLON_SPRITES.active.key);
-    const hold = sim.claimHold;
-    if (!hold || hold.site !== at.site) return;
-    const { w, h, gap, border } = HARVEST_BAR;
-    const left = Math.round(x - w / 2);
-    const top = Math.round(bottom - this.pylon.displayHeight - gap - h);
-    this.bar.fillStyle(colorOf(HARVEST_BAR.back)).fillRect(left - border, top - border, w + 2 * border, h + 2 * border);
-    this.bar.fillStyle(colorOf(HARVEST_BAR.color)).fillRect(left, top, Math.round((w * hold.progress) / CLAIM_TICKS), h);
+    for (const [site, sprite] of this.pylons) sprite.setVisible(here.some((p) => p.site === site));
+    for (const at of here) {
+      let sprite = this.pylons.get(at.site);
+      if (!sprite) {
+        sprite = addVectorSprite(this.scene, 0, 0, PYLON_SPRITES.off).setOrigin(0.5, 1);
+        this.pylons.set(at.site, sprite);
+      }
+      const x = (at.tx + 0.5) * TILE_SIZE;
+      const bottom = (at.ty + 1) * TILE_SIZE;
+      sprite.setVisible(true).setPosition(x, bottom).setDepth(bottom);
+      const anim = sprite.anims.currentAnim?.key;
+      if (!isClaimed(sim, at.site)) {
+        if (anim) sprite.stop();
+        sprite.setFrame(PYLON_SPRITES.off);
+      } else if (sim.activatePulse > 0 && sim.claims[sim.claims.length - 1] === at.site) {
+        if (anim !== PYLON_SPRITES.activating.key) sprite.play(PYLON_SPRITES.activating.key);
+      } else if (anim !== PYLON_SPRITES.active.key) sprite.play(PYLON_SPRITES.active.key);
+      const hold = sim.claimHold;
+      if (!hold || hold.site !== at.site) continue;
+      const { w, h, gap, border } = HARVEST_BAR;
+      const left = Math.round(x - w / 2);
+      const top = Math.round(bottom - sprite.displayHeight - gap - h);
+      this.bar.fillStyle(colorOf(HARVEST_BAR.back)).fillRect(left - border, top - border, w + 2 * border, h + 2 * border);
+      this.bar.fillStyle(colorOf(HARVEST_BAR.color)).fillRect(left, top, Math.round((w * hold.progress) / CLAIM_TICKS), h);
+    }
   }
 
   private drawFixtures(sim: SimState, shown: boolean): void {

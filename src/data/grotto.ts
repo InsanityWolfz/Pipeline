@@ -1,4 +1,4 @@
-import type { TilePos, TileRect } from './overworld';
+import type { TilePos, TileRect } from './tiles';
 
 // The Frozen Grotto, minimal (029): a hand-placed site in the overworld's north-west,
 // in ring 2, the guarded source of rime shards for the frost rune. A clearing with
@@ -7,7 +7,8 @@ import type { TilePos, TileRect } from './overworld';
 // come back on every world reset. 032 later folds it into the landmark system
 // without moving it (034 may shift every tile by +40 for Region 2).
 
-export const GROTTO_GROUP = 'grotto';
+/** Its guards' group: its landmark id (032). */
+export const GROTTO_GROUP = 'frozen-grotto';
 
 export const GROTTO = {
   /** The Grotto's clearing, kept open and frosted. */

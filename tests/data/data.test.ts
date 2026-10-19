@@ -33,7 +33,6 @@ import {
 } from '../../src/data/foundryAssets';
 import { ENEMIES } from '../../src/data/enemies';
 import { FIXTURES, SITE_SUPPLY } from '../../src/data/claims';
-import { SAFE_RADIUS } from '../../src/data/population';
 import { ARMOR_DROP_CHANCE, ARMOR_WEIGHTS } from '../../src/data/armor';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { TILE, WALKABLE } from '../../src/data/rooms';
@@ -398,7 +397,7 @@ describe('claiming (009)', () => {
   it('places only known enemies, on rooms whose pylons stand on floor', () => {
     for (const room of Object.values(WORLD)) {
       for (const e of room.enemies ?? []) expect(ENEMIES[e.enemyId]).toBeDefined();
-      if (room.pylon) expect(room.rows[room.pylon.ty]?.[room.pylon.tx]).toBe(TILE.floor);
+      for (const p of room.pylons ?? []) expect(room.rows[p.ty]?.[p.tx], p.site).toBe(TILE.floor);
     }
     for (const def of Object.values(ENEMIES)) expect(ENEMY_ANIMS[def.anims]).toBeDefined();
   });
@@ -415,10 +414,12 @@ describe('claiming (009)', () => {
   it("gives every raw a site sends a port, and a node of that raw in the site's safe zone (028)", () => {
     const ports = FIXTURES.flatMap((f) => (f.kind === 'port' ? [f.raw] : []));
     for (const [site, raws] of Object.entries(SITE_SUPPLY)) {
-      const room = Object.values(WORLD).find((r) => r.pylon?.site === site);
-      if (!room?.pylon) throw new Error(`no pylon for ${site}`);
-      const { tx, ty } = room.pylon;
-      const nodes = (room.nodes ?? []).filter((n) => Math.hypot(n.tx - tx, n.ty - ty) <= SAFE_RADIUS);
+      const room = Object.values(WORLD).find((r) => r.pylons?.some((p) => p.site === site));
+      const pylon = room?.pylons?.find((p) => p.site === site);
+      if (!room || !pylon) throw new Error(`no pylon for ${site}`);
+      // Each pylon's own safe radius (032: a resource site's is 7, the shrine's 10).
+      const { tx, ty, safeRadius } = pylon;
+      const nodes = (room.nodes ?? []).filter((n) => Math.hypot(n.tx - tx, n.ty - ty) <= safeRadius);
       for (const raw of raws) {
         expect(ports, `${site}: ${raw}`).toContain(raw);
         expect(nodes.some((n) => NODES[n.nodeId]?.itemId === raw), `${site}: a ${raw} node in its zone`).toBe(true);

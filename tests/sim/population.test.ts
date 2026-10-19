@@ -116,6 +116,10 @@ describe('the living population', () => {
     run(s, 1);
     const gone = [...packs(s)].find((g) => g.startsWith('pop-2-')) ?? '';
     s.enemies = s.enemies.filter((e) => e.group !== gone);
+    // Packs standing near the screen's edge can drift out of it while the test waits (032 moved where they fall), so
+    // clear them first: the count near the player is then only what the test puts there, and nothing can leave it.
+    const edge = 3 * TILE_SIZE;
+    s.enemies = s.enemies.filter((e) => Math.abs(e.x - s.player.x) > POPULATION.screen.x + edge || Math.abs(e.y - s.player.y) > POPULATION.screen.y + edge);
     // Fill the screen to one past where the largest ring-2 pack still fits under the cap.
     const fill = POPULATION.screenCap - POPULATION.rings[2].size[1] + 1 - enemiesNearPlayer(s);
     for (let i = 0; i < fill; i++) placeHusk(s, PLAYER_AT.x + 200 + (i % 5) * 20, PLAYER_AT.y + Math.floor(i / 5) * 20, OVERWORLD.id);

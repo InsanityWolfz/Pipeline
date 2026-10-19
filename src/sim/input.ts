@@ -43,6 +43,8 @@ export interface Command {
   setFilter: { id: number; itemId: string | null } | null;
   /** The claimed pylon's menu choice this tick (an edge), or null. */
   pylon: 'deposit' | 'travel' | null;
+  /** The waystone menu's choice (032): the claimed site to travel to, standing at the waystone, this tick (an edge), or null. */
+  travel: string | null;
   /** Take a stack (or everything, for a null item) out of the stash this tick (an edge), or null. */
   takeStash: { itemId: string | null } | null;
   /** Identify every carried piece at the bench this tick (an edge). */
@@ -70,6 +72,7 @@ export const NO_COMMAND: Readonly<Command> = {
   withdraw: null,
   setFilter: null,
   pylon: null,
+  travel: null,
   takeStash: null,
   identify: false,
   equip: null,

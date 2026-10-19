@@ -46,14 +46,30 @@ export interface Room {
   doorways?: readonly Doorway[];
   /** Where the dormant tube rests until the player takes it (012); solid. */
   tubeStone?: { tx: number; ty: number };
-  /** A ley pylon (009): solid; claiming it claims its site (017: a part of the room, by id). */
-  pylon?: { tx: number; ty: number; site: string };
+  /** Ley pylons (009, 032): solid; claiming one claims its site (017: a part of the room, by id). */
+  pylons?: readonly PylonDef[];
+  /** Sealed reliquaries (032), by landmark id: solid. */
+  caches?: readonly { id: string; tx: number; ty: number }[];
   /** Tiles a tutorial gate seals while shut, as the shrine site's gap in the overworld (017). */
   gateTiles?: readonly { tx: number; ty: number; gate: GateId }[];
   /** Generated ground features render draws (017): ponds and paths, in tiles. */
   terrain?: Terrain;
   /** Dressing (014): looks only, never collision (block props stand on B tiles, which are solid already). */
   props?: readonly PropPlacement[];
+}
+
+/** A ley pylon in a room (009, 017, 032). */
+export interface PylonDef {
+  tx: number;
+  ty: number;
+  /** The claim's site id: its guards are the enemies in this group. */
+  site: string;
+  /** Its landmark's name, for the waystone's menu (032). */
+  name: string;
+  /** Its safe zone's radius once claimed, tiles. */
+  safeRadius: number;
+  /** A site that must be claimed first: until then it is dormant and can't be claimed (032). */
+  wakes?: string;
 }
 
 export interface Doorway {

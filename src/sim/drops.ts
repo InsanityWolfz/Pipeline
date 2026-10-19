@@ -63,8 +63,8 @@ export function scatterPoint(
 /** Rolls an enemy's drops and scatters them on the ground around (x, y) in its room. */
 export function spawnDrops(state: SimState, def: EnemyDef, x: number, y: number, roomId: string): void {
   const room = roomById(roomId);
-  // Never inside something solid the player can't walk onto: nodes, the pylon, the tube stone.
-  const fixed = [room.pylon, room.tubeStone].flatMap((t) => (t ? [tileRect(t)] : []));
+  // Never inside something solid the player can't walk onto: nodes, pylons, reliquaries, the tube stone.
+  const fixed = [...(room.pylons ?? []), ...(room.caches ?? []), ...(room.tubeStone ? [room.tubeStone] : [])].map(tileRect);
   const rects = [...nodeRects(state.nodes, roomId), ...fixed];
   const items = rollDrops(def.drops, state.rng);
   if (rollArmorDrop(state, def.id)) items.push(UNIDENTIFIED_ARMOR);

@@ -16,8 +16,9 @@ import { put } from './foundryKit';
 
 // 017: the shrine is a site in the overworld; its pylon carries the site id.
 const SHRINE = WORLD[OVERWORLD_ROOM];
-if (!SHRINE?.pylon) throw new Error('the shrine needs a pylon');
-const PYLON = SHRINE.pylon;
+const FOUND = SHRINE?.pylons?.find((p) => p.site === SHRINE_SITE);
+if (!FOUND) throw new Error('the shrine needs a pylon');
+const PYLON = FOUND;
 
 /** The shrine, with the player standing just below its pylon; `clear` removes its enemies. */
 function atPylon(clear = true): SimState {

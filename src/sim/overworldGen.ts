@@ -1,5 +1,8 @@
-import { OVERWORLD, SPRING_CLEARING, type Feature, type TilePos, type TileRect } from '../data/overworld';
-import { TILE, type Doorway, type Pond, type Room } from '../data/rooms';
+import { SITE_SAFE_RADIUS, SITE_WAKES } from '../data/claims';
+import { LANDMARK_LIST, type LandmarkDef } from '../data/landmarks';
+import { OVERWORLD, type Feature, type TilePos, type TileRect } from '../data/overworld';
+import { TILE, type Doorway, type PylonDef, type Pond, type Room } from '../data/rooms';
+import { springClearing } from '../data/springs';
 import { createRng, nextFloat, nextInt, type RngState } from './rng';
 
 // Generates the overworld (017) from its fixed seed: grass, groves of trees, rock
@@ -114,13 +117,42 @@ function feature(grid: Grid, f: Feature): Pond | null {
   return f.kind === 'pond' ? { cx: f.cx, cy: f.cy, rx: f.rx, ry: f.ry } : null;
 }
 
-/** A Ley Spring's clearing (030): a square of open ground round its pool. */
-export function springClearing(s: { tx: number; ty: number }): TileRect {
-  return { x0: s.tx - SPRING_CLEARING, y0: s.ty - SPRING_CLEARING, x1: s.tx + SPRING_CLEARING, y1: s.ty + SPRING_CLEARING };
+export { springClearing } from '../data/springs';
+
+/** True if any tile of a pond's water or shallows lies in the rect. */
+function pondReaches(p: Pond, r: TileRect): boolean {
+  for (let ty = r.y0; ty <= r.y1; ty++) for (let tx = r.x0; tx <= r.x1; tx++) if (Math.hypot((tx - p.cx) / p.rx, (ty - p.cy) / p.ry) <= OVERWORLD.ponds.shore) return true;
+  return false;
 }
 
-/** Builds the overworld room from `seed` (the data's by default). */
-export function generateOverworld(seed: number = OVERWORLD.seed): Room {
+/**
+ * Removes every generated pond reaching into a landmark's area (032), whole: its water and shallows go back to
+ * grass. No randomness is drawn, so the rest of the map stays as the seed made it.
+ */
+function dropPonds(grid: Grid, ponds: Pond[], areas: readonly TileRect[]): Pond[] {
+  return ponds.filter((p) => {
+    if (!areas.some((r) => pondReaches(p, r))) return true;
+    for (let ty = Math.floor(p.cy - p.ry * 2); ty <= Math.ceil(p.cy + p.ry * 2); ty++) {
+      for (let tx = Math.floor(p.cx - p.rx * 2); tx <= Math.ceil(p.cx + p.rx * 2); tx++) {
+        const here = grid[ty]?.[tx];
+        if ((here === TILE.water || here === TILE.shallow) && Math.hypot((tx - p.cx) / p.rx, (ty - p.cy) / p.ry) <= OVERWORLD.ponds.shore) set(grid, tx, ty, TILE.floor);
+      }
+    }
+    return false;
+  });
+}
+
+/** Every pylon on the map (032): the shrine's, then each resource site's, dormant until the shrine is claimed. */
+export function overworldPylons(landmarks: readonly LandmarkDef[] = LANDMARK_LIST): PylonDef[] {
+  const { shrine } = OVERWORLD;
+  return [
+    { ...shrine.pylon, site: shrine.site, name: shrine.name, safeRadius: shrine.safeRadius },
+    ...landmarks.flatMap((l) => (l.pylon ? [{ tx: l.pylon.tx, ty: l.pylon.ty, site: l.pylon.site, name: l.name, safeRadius: SITE_SAFE_RADIUS, wakes: SITE_WAKES }] : [])),
+  ];
+}
+
+/** Builds the overworld room from `seed` (the data's by default), stamping `landmarks` (all of them unless a test passes fewer). */
+export function generateOverworld(seed: number = OVERWORLD.seed, landmarks: readonly LandmarkDef[] = LANDMARK_LIST): Room {
   const rng = createRng(seed);
   const grid: Grid = Array.from({ length: OVERWORLD.height }, () => Array.from({ length: OVERWORLD.width }, () => TILE.floor as string));
   // Paths first, so ponds, groves and rocks keep off them.
@@ -145,18 +177,25 @@ export function generateOverworld(seed: number = OVERWORLD.seed): Room {
   }
   edge(grid, rng);
 
-  // Landmarks override the terrain: clearings, paths, walls, the mound and the door.
-  for (const r of [...OVERWORLD.clearings, ...OVERWORLD.springs.map(springClearing)]) {
+  // Landmarks override the terrain: clearings, paths, walls, the mound and the door. The landmarks' areas (032)
+  // and the springs' clearings (030) are stamped here rather than steering the generator, so its stream is unchanged.
+  const areas = landmarks.map((l) => l.area);
+  const kept = dropPonds(grid, ponds, areas);
+  for (const r of [...OVERWORLD.clearings, ...OVERWORLD.springs.map(springClearing), ...areas]) {
     for (let ty = r.y0; ty <= r.y1; ty++) for (let tx = r.x0; tx <= r.x1; tx++) set(grid, tx, ty, TILE.floor);
   }
   for (const p of OVERWORLD.paths) path(grid, p);
-  for (const t of [...OVERWORLD.ruinField.walls, ...OVERWORLD.entrance.mound]) set(grid, t.tx, t.ty, TILE.ruinBlock);
+  for (const t of [...OVERWORLD.ruinField.walls, ...OVERWORLD.entrance.mound, ...landmarks.flatMap((l) => l.blocks ?? [])]) set(grid, t.tx, t.ty, TILE.ruinBlock);
   for (const t of OVERWORLD.shrine.walls) set(grid, t.tx, t.ty, TILE.wall);
-  for (const t of [OVERWORLD.shrine.pylon, OVERWORLD.startStone, ...OVERWORLD.nodes, ...OVERWORLD.shrine.gate]) set(grid, t.tx, t.ty, TILE.floor);
+  const pylons = overworldPylons(landmarks);
+  const caches = landmarks.flatMap((l) => (l.cache ? [{ id: l.id, ...l.cache }] : []));
+  for (const t of [...pylons, ...caches, OVERWORLD.startStone, ...OVERWORLD.nodes, ...OVERWORLD.shrine.gate]) set(grid, t.tx, t.ty, TILE.floor);
   for (const f of OVERWORLD.features) {
     const p = feature(grid, f);
-    if (p) ponds.push(p);
+    if (p) kept.push(p);
   }
+  // A feature never buries a pylon or a reliquary.
+  for (const t of [...pylons, ...caches]) set(grid, t.tx, t.ty, TILE.floor);
   const door = OVERWORLD.entrance.door;
   set(grid, door.tx, door.ty, TILE.door);
   set(grid, OVERWORLD.entrance.arrive.tx, OVERWORLD.entrance.arrive.ty, TILE.path);
@@ -170,8 +209,9 @@ export function generateOverworld(seed: number = OVERWORLD.seed): Room {
     nodes: OVERWORLD.nodes,
     doorways: [doorway],
     tubeStone: OVERWORLD.startStone,
-    pylon: { ...OVERWORLD.shrine.pylon, site: OVERWORLD.shrine.site },
+    pylons,
+    caches,
     gateTiles: OVERWORLD.shrine.gate.map((t) => ({ ...t, gate: 'shrine' as const })),
-    terrain: { ponds, paths: OVERWORLD.paths },
+    terrain: { ponds: kept, paths: OVERWORLD.paths },
   };
 }

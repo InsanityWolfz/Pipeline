@@ -4,25 +4,13 @@
 // Tile coordinates throughout. Numbers are tuning values.
 
 import { GROTTO } from './grotto';
+import { LANDMARK_LIST } from './landmarks';
+import { SAFE_RADIUS } from './population';
+import { SPRINGS } from './springs';
+import type { Feature, TilePos, TileRect } from './tiles';
 
-export type TilePos = { readonly tx: number; readonly ty: number };
-
-/**
- * A small hand-placed feature that explains a node (018), stamped over the terrain:
- * a grove or rock field round a pocket of grass the node stands in, or a pond the
- * reeds stand at the edge of. Radii in tiles; centres may sit between tiles.
- */
-export type Feature =
-  | { readonly kind: 'grove' | 'rocks'; readonly cx: number; readonly cy: number; readonly r: number }
-  | { readonly kind: 'pond'; readonly cx: number; readonly cy: number; readonly rx: number; readonly ry: number };
-
-/** A rectangle of tiles, inclusive. */
-export interface TileRect {
-  readonly x0: number;
-  readonly y0: number;
-  readonly x1: number;
-  readonly y1: number;
-}
+export type { Feature, TilePos, TileRect } from './tiles';
+export { SPRING_CLEARING, SPRING_RADIUS, type SpringDef } from './springs';
 
 export const OVERWORLD_ROOM = 'overworld';
 
@@ -57,38 +45,10 @@ const MOUND: readonly TilePos[] = [
   { tx: 42, ty: 20 },
 ];
 
-/**
- * A Ley Spring (030): a pool of ley water out in the field. Standing with your feet in
- * its pool heals you fast; it has no uses or timers, and it isn't a safe zone. The pool
- * is open ground: feet, shots and enemies cross it as grass. Its centre is a tile's
- * centre; `radius` is the pool's, in tiles.
- */
-export interface SpringDef {
-  readonly id: string;
-  readonly tx: number;
-  readonly ty: number;
-  readonly radius: number;
-}
-
-/** A spring pool's radius, tiles: room for the player and a little dodging. */
-export const SPRING_RADIUS = 1.5;
-
-/**
- * Each spring's clearing (030) reaches this many tiles from its centre: no trees, rocks or water on or round its pool.
- * Stamped over the generated terrain with the other landmarks, so the rest of the map stays as it was.
- */
-export const SPRING_CLEARING = 3;
-
-/**
- * The fixed map's springs (030). West: beside 034's road just south of the west path's fork.
- * South-east: the end of the south-east path. North: north-west of the ruin field, between
- * home and the Grotto, in its own clearing (to be cut if healing near home is too easy).
- */
-const SPRINGS: readonly SpringDef[] = [
-  { id: 'west-spring', tx: 10, ty: 31, radius: SPRING_RADIUS },
-  { id: 'south-east-spring', tx: 66, ty: 38, radius: SPRING_RADIUS },
-  { id: 'north-spring', tx: 26, ty: 8, radius: SPRING_RADIUS },
-];
+/** Each landmark pylon's ley line home (032), by landmark id, and the seams crossing at it, `<id>-<n>`. */
+const LANDMARK_LINES: Readonly<Record<string, readonly TilePos[]>> = Object.fromEntries(
+  LANDMARK_LIST.flatMap((l) => [...(l.leyLine ? [[l.id, l.leyLine] as const] : []), ...(l.veinLines ?? []).map((v, i) => [`${l.id}-${i}`, v] as const)]),
+);
 
 function shrineWalls(): TilePos[] {
   const out: TilePos[] = [];
@@ -174,6 +134,10 @@ export const OVERWORLD = {
     pylon: { tx: 66, ty: 8 },
     /** The claim id: objectives and fixtures name the shrine by it. */
     site: 'shrine',
+    /** Its name in the waystone's menu (032). */
+    name: 'Shrine',
+    /** Its safe zone's radius, tiles (017); a resource site's is smaller (032). */
+    safeRadius: SAFE_RADIUS,
   },
   /** Enemies placed by hand, each in a group: the field pack holds the foundry gate, the shrine guards hold the claim. */
   packs: [
@@ -186,8 +150,9 @@ export const OVERWORLD = {
     { group: 'shrine', enemyId: 'wisp', tx: 66, ty: 5 },
     { group: 'shrine', enemyId: 'husk', tx: 61, ty: 12 },
     { group: 'shrine', enemyId: 'husk', tx: 69, ty: 11 },
-    // The Frozen Grotto's guards (029): never claimed, so they're back after every KO.
-    ...GROTTO.pack,
+    // Every landmark's guards (032), each pack in its landmark's group: the Frozen Grotto's (029) first. The
+    // unclaimable ones are back after every KO.
+    ...LANDMARK_LIST.flatMap((l) => l.guards.map((g) => ({ group: l.id, enemyId: g.enemyId, tx: g.tx, ty: g.ty }))),
   ],
   /**
    * Ley lines (018): glowing seams in the ground where ley comes near the surface,
@@ -200,7 +165,9 @@ export const OVERWORLD = {
     shrine: [{ tx: 66, ty: 8 }, { tx: 64, ty: 12 }, { tx: 58, ty: 17 }, { tx: 50, ty: 19 }, { tx: 43, ty: 21 }, { tx: 41, ty: 21 }],
     'shrine-west': [{ tx: 60, ty: 9 }, { tx: 63, ty: 9 }, { tx: 66, ty: 8 }],
     'shrine-east': [{ tx: 72, ty: 9 }, { tx: 69, ty: 9 }, { tx: 66, ty: 8 }],
-  } satisfies Record<string, TilePos[]>,
+    // Each landmark pylon's line home (032), named by its landmark, and the seams crossing at it (`<id>-<n>`).
+    ...LANDMARK_LINES,
+  } as Readonly<Record<string, readonly TilePos[]>> & { readonly shrine: readonly TilePos[] },
   /** What explains each node that isn't a vein (018): groves and rock fields hold their node in a pocket of grass, ponds hold reeds at their edge. */
   features: [
     { kind: 'grove', cx: 27, cy: 24, r: 2.5 },
@@ -215,6 +182,8 @@ export const OVERWORLD = {
     { kind: 'grove', cx: 60, cy: 12, r: 2.5 },
     { kind: 'pond', cx: 70.5, cy: 13, rx: 1.2, ry: 1.2 },
     { kind: 'rocks', cx: 63, cy: 4, r: 2.5 },
+    // The landmarks' own (032).
+    ...LANDMARK_LIST.flatMap((l) => l.features),
   ] satisfies Feature[],
   /** Gathering nodes, each where its material comes from (018: see each node type's placement rule). Indices are stable: tests name nodes by them. */
   nodes: [
@@ -232,8 +201,8 @@ export const OVERWORLD = {
     { nodeId: 'tree', tx: 60, ty: 13 },
     { nodeId: 'reeds', tx: 72, ty: 13 },
     { nodeId: 'rubble', tx: 63, ty: 5 },
-    // The Frozen Grotto's rime clusters (029).
-    ...GROTTO.nodes,
+    // The landmarks' (032): the Frozen Grotto's rime clusters (029) first, then each site's cluster.
+    ...LANDMARK_LIST.flatMap((l) => l.nodes),
   ],
 } as const;
 

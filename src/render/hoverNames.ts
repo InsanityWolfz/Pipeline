@@ -1,5 +1,6 @@
 import { TILE_SIZE } from '../data/config';
-import { DESCRIPTIONS, portHover, portPlate } from '../data/descriptions';
+import { DESCRIPTIONS, portHover, portPlate, sitePylonLine } from '../data/descriptions';
+import { landmarkOfSite } from '../data/landmarks';
 import { portPerMinute, pylonsOf } from '../sim/claims';
 import { INTAKE } from '../data/foundry';
 import { enemyDef } from '../data/enemies';
@@ -29,6 +30,14 @@ export interface HoverName {
   description?: string;
   /** The foundry intake (019): render shows the reservoir's readout under the name. */
   intake?: boolean;
+}
+
+/** A pylon's hover line: the shrine's (018), or a landmark pylon's naming its landmark and what it sends (032). */
+function pylonLine(sim: SimState, site: string): string {
+  const claimed = sim.claims.includes(site);
+  const landmark = landmarkOfSite(site);
+  if (!landmark?.pylon) return claimed ? DESCRIPTIONS.pylon : DESCRIPTIONS.pylonDormant;
+  return sitePylonLine(landmark.name, itemDef(landmark.pylon.supplies).name, claimed);
 }
 
 /** Distance from a point to a polyline of tile points, px. */
@@ -91,7 +100,8 @@ export function nameAt(sim: SimState, roomId: string, px: number, py: number): H
   }
   const room = roomById(roomId);
   const on = (t: { tx: number; ty: number } | undefined) => t !== undefined && t.tx === tx && t.ty === ty;
-  if (on(room.pylon) && room.pylon) return { name: WORLD_NAMES.pylon, ...centre(room.pylon), rise: HOVER_NAME.tile.rise, description: sim.claims.includes(room.pylon.site) ? DESCRIPTIONS.pylon : DESCRIPTIONS.pylonDormant };
+  const pylon = (room.pylons ?? []).find((p) => on(p));
+  if (pylon) return { name: WORLD_NAMES.pylon, ...centre(pylon), rise: HOVER_NAME.tile.rise, description: pylonLine(sim, pylon.site) };
   if (on(room.tubeStone) && room.tubeStone) {
     return { name: sim.hasTube ? WORLD_NAMES.tubeStone : WORLD_NAMES.dormantTube, ...centre(room.tubeStone), rise: HOVER_NAME.tile.rise };
   }

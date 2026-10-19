@@ -95,10 +95,12 @@ describe('ground', () => {
     const pond = room.terrain?.ponds[0];
     if (!pond) throw new Error('no pond');
     const s = arena();
-    // Stand just west of the pond's shallow edge, on its centre row, and fire east across it.
-    let tx = pond.cx - pond.rx - 1;
-    while (isSolid(room, tx, pond.cy) || at({ tx, ty: pond.cy }) === TILE.shallow) tx -= 1;
-    movePlayer(s, tx * 32 + 16, pond.cy * 32 + 16);
+    // Stand just west of the pond's shallow edge, on its centre row, and fire east across it. (032: the generated
+    // ponds fall in the east landmarks and are gone, so a hand-placed one, which may centre between tiles.)
+    const ty = Math.round(pond.cy);
+    let tx = Math.floor(pond.cx - pond.rx) - 1;
+    while (tx > 0 && (isSolid(room, tx, ty) || at({ tx, ty }) === TILE.shallow)) tx -= 1;
+    movePlayer(s, tx * 32 + 16, ty * 32 + 16);
     s.nodes = [];
     run(s, 1, fireAt(s.player.x + 400, s.player.y));
     const arrow = s.arrows[0];
