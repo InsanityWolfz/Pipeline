@@ -42,3 +42,11 @@ See the spec's open questions 038.1–038.11: each proposal is built as written.
 ## Risks
 - `state.ts`, `summary.ts`, `hudLayout.ts`, `sounds.ts` and `GameScene.ts` are near 300 lines: new state goes in one `mines` block, the summary in its own file, sound recipes in their own file.
 - The crafting panel grows wider; the 026 e2e checks headers and rows by id, not position.
+
+## Build notes
+- Mines and bomblets live in one `state.mines` block (`armed`, `bomblets`, `nextId`): `state.ts` was at its limit.
+- A room change clears mines where it happens (`leaveArea`, called by `stepDoorways` and `travelTo`), not from the tick's events, so a travel made between ticks (the dev hook, a test) clears them too.
+- The inventory panel (031) reserves a row per item; `iron-plate` and the two new rounds pushed Raw and Parts past one column's height, and a third column didn't fit the view. Its rows are 15 px, not 16 (the icons' shapes are under 15 px), so the panel stays in two columns.
+- The crafting menu's groups carry their column in data (`CRAFT_GROUPS[].column`); `src/data/craftColumns.ts` sizes the panel from them.
+- Bomblets take the bomb's damage bonus and Wide Casing's radius when the bomb bursts (not at the throw, as the bomb's own numbers are); a respec can only happen in the foundry, where no bomb flies.
+- A landmine leaves the tube with the bomb's sound; the intake gauge shows landmines in iron and cluster bombs in a hotter ember.

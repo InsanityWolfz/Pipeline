@@ -126,12 +126,15 @@ export function pickerRows(entries: readonly PickerEntry[]): (ScreenRect & Picke
 /**
  * A menu of `n` rows styled like the hopper picker (009's pylon and stash menus):
  * a centred column, wrapping into side-by-side columns once it would pass
- * MENU_MAX_ROWS, so a long stash stays on screen.
+ * MENU_MAX_ROWS, so a long stash stays on screen; once the columns fill the view's width they grow longer instead.
  */
 export function menuRows(n: number): ScreenRect[] {
   const L = PICKER_LAYOUT;
-  const perColumn = Math.min(n, MENU_MAX_ROWS);
-  const columns = Math.max(1, Math.ceil(n / MENU_MAX_ROWS));
+  // No more columns than the view's width holds (038: a sorter lists every item): past that, the columns grow longer.
+  const fit = Math.max(1, Math.floor((VIEW_WIDTH - 2 * L.pad + MENU_COLUMN_GAP) / (L.rowWidth + MENU_COLUMN_GAP)));
+  const wanted = Math.max(1, Math.ceil(n / MENU_MAX_ROWS));
+  const columns = Math.min(fit, wanted);
+  const perColumn = columns < wanted ? Math.ceil(n / columns) : Math.min(n, MENU_MAX_ROWS);
   const step = L.rowHeight + L.rowGap;
   const top = Math.round((VIEW_HEIGHT - perColumn * step) / 2);
   const width = columns * L.rowWidth + (columns - 1) * MENU_COLUMN_GAP;

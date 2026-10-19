@@ -20,6 +20,7 @@ import type { GearPanelState } from './GearPanel';
 import type { GearPiece } from '../data/gear';
 import type { RelicsShown } from './RelicView';
 import type { TalentFxShown } from './TalentFxView';
+import type { MinesShown } from './MineView';
 import type { HealingShown } from './HealingView';
 import { claim } from '../sim/claims';
 import { gainXp } from '../sim/leveling';
@@ -184,6 +185,8 @@ export interface UiState {
   talents: HudPanelsState['talents'];
   /** 037: the level-up line and rings, Shatterpoint's ice bursts, Blastfletch's charged ground and Overpressure's heat, as drawn. */
   talentFx: TalentFxShown;
+  /** 038: armed mines with their fuse rings, bomblets in the air, and mine and bomblet flashes still showing. */
+  mines: MinesShown;
 }
 
 declare global {

@@ -27,8 +27,8 @@ export const MINE_LOOK = {
    * as the fuse burns, in `color`, turning `lateColor` over its last `lateTicks`; `width` px wide.
    */
   fuse: { radius: 9, width: 1.5, track: 0.3, alpha: 0.95, color: 'cyan-glow', lateColor: 'danger', lateTicks: 60 },
-  /** The armed mine's pip blinks faster in its last `lateTicks`: on for half of every `blinkMs` (render clock). */
-  pip: { blinkMs: 500, lateBlinkMs: 160 },
+  /** The armed mine's pip flashes the ring's colour, `radius` px, for half of every `blinkMs`, faster in its last `lateTicks` (tween clock). */
+  pip: { radius: 1.6, blinkMs: 500, lateBlinkMs: 160 },
   /** Bomblets arc out from the burst over their delay to this peak, px. */
   bombletArc: 14,
   /** Burst flashes: grow from `from` to `to` of the radius and fade over `ms`. */

@@ -24,10 +24,13 @@ type Box = { x: number; y: number; w: number; h: number };
 const overlaps = (a: Box, b: Box) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 const inside = (a: Box, b: Box) => a.x >= b.x && a.y >= b.y && a.x + a.w <= b.x + b.w && a.y + a.h <= b.y + b.h;
 
-/** Opens the crafting menu with C and returns it once every row and header is drawn. */
+/** A recipe shown only after an item is carried (038: the landmine chain, once ley-iron is): hidden on these starts. */
+const later = (recipeId: string): boolean => recipeDef(recipeId).shownAfter !== undefined;
+
+/** Opens the crafting menu with C and returns it once every row and header it knows is drawn. */
 async function openCraftMenu(page: Page): Promise<CraftMenuState> {
   await page.keyboard.press('c');
-  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().craftMenu))?.rows.every((r) => r.shown)).toBe(true);
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().craftMenu))?.rows.every((r) => r.shown === !later(r.recipeId))).toBe(true);
   const menu = await page.evaluate(() => window.__GAME__?.ui().craftMenu);
   if (!menu) throw new Error('no craft menu');
   return menu;
@@ -96,7 +99,9 @@ test('the crafting menu names every recipe item under its icon, and its headers 
 
   const rows = CRAFT_GROUPS.flatMap((g) => g.recipes);
   expect(menu.rows.map((r) => r.recipeId)).toEqual(rows);
-  for (const row of menu.rows) {
+  // 038: no ley-iron carried, so the landmine chain's rows are hidden.
+  expect(menu.rows.filter((r) => !r.shown).map((r) => r.recipeId)).toEqual(['iron-plate', 'landmine']);
+  for (const row of menu.rows.filter((r) => r.shown)) {
     const recipe = recipeDef(row.recipeId);
     const items = [...Object.keys(recipe.inputs), recipe.output.itemId];
     // A label for each item, its name from the data, under the icon, inside the row.
@@ -125,7 +130,7 @@ test('the crafting menu names every recipe item under its icon, and its headers 
     if (next) expect(overlaps(row, next)).toBe(false);
   }
   expect(menu.headers.map((h) => h.text)).toEqual(CRAFT_GROUPS.map((g) => itemDef(ammoDef(g.ammoId).itemId).name));
-  for (const h of menu.headers) expect(h.shown).toBe(true);
+  for (const h of menu.headers) expect(h.shown, h.text).toBe(h.ammoId !== 'landmine');
   expect(errors).toEqual([]);
 });
 
@@ -141,7 +146,7 @@ test('on a fresh start the build bar shows only the Logistics group, and the whe
   expect(errors).toEqual([]);
 });
 
-test('with everything unlocked, the bar shows four labelled groups and the wheel steps through them in bar order', async ({ page }) => {
+test('with everything unlocked, the bar shows every labelled group (038: five, with Mines) and the wheel steps through them in bar order', async ({ page }) => {
   // Restoring the splitter and merger on the way adds a walk to a busy test.
   test.setTimeout(90_000);
   const errors = watchErrors(page);

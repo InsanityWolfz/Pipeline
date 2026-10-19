@@ -83,6 +83,9 @@ export const PARTICLES = {
   enemyBurst: { colors: ['danger', 'cinder', 'hollow-light', 'hollow'], count: 26, speed: [40, 130], gravity: 120, lifeMs: [300, 650], size: 3 },
   poundDust: { colors: ['hollow-pale', 'hollow-light', 'hollow'], count: 36, speed: [60, 150], gravity: -20, lifeMs: [400, 800], size: 3 },
   barrierShards: { colors: ['cyan', 'cyan-glow', 'snow'], count: 40, speed: [20, 90], gravity: 160, lifeMs: [500, 1000], size: 2, lift: 40 },
+  // 038: a landmine bursting (iron shards and ley sparks) and a cluster bomb's bomblets popping (a few embers).
+  mineShards: { colors: ['iron-light', 'iron', 'cyan-glow', 'snow'], count: 30, speed: [60, 160], gravity: 200, lifeMs: [220, 480], size: 2, lift: 6 },
+  bombletEmbers: { colors: ['cinder-light', 'cinder', 'gold-trim'], count: 12, speed: [30, 90], gravity: -30, lifeMs: [300, 600], size: 2 },
   // 035: a Charger's hooves kicking dust down its lane and its slam into a wall; a Burrower's ripple trailing dust and
   // its eruption throwing up rock; a Shardback's bash; the flash at a Sniper's lens as it fires.
   chargeDust: { colors: ['hollow-pale', 'hollow-light'], count: 4, speed: [10, 40], gravity: -10, lifeMs: [250, 450], size: 2 },

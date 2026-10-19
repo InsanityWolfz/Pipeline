@@ -128,9 +128,9 @@ test('?playtest starts with plenty of everything and every machine unlocked', as
   expect(s.populated).toBe(true);
   expect(s.area.ring).toBe(0);
   expect(s.inventory).toMatchObject({ arrow: 99, bomb: 99, 'ley-bolt': 99, wood: 99, stone: 99, fiber: 99, 'ley-crystal': 99, 'husk-resin': 99, shaft: 20, 'ley-shard': 20 });
-  // 029: every stage machine too, and rime shards for the frost rune.
+  // 029: every stage machine too, and rime shards for the frost rune; 038: the Shard die and the landmine chain.
   expect(s.unlocked).toEqual([
-    'conduit', 'sorter', 'hopper', 'crate', 'cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'shaper', 'fuse-maker', 'packer', 'grinder', 'focuser', 'ley-guide', 'shatter-lens',
+    'conduit', 'sorter', 'hopper', 'crate', 'cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'shaper', 'fuse-maker', 'packer', 'shard-die', 'grinder', 'focuser', 'ley-guide', 'shatter-lens', 'plate-press', 'mine-packer',
   ]);
   expect(s.inventory['rime-shard']).toBe(99);
   expect(errors).toEqual([]);
