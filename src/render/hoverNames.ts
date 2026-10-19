@@ -36,6 +36,8 @@ export interface HoverName {
   description?: string;
   /** The foundry intake (019): render shows the reservoir's readout under the name. */
   intake?: boolean;
+  /** An enemy's id (040: its trait and status chips show under its name). */
+  enemy?: number;
 }
 
 /** A pylon's hover line: the shrine's (018), or a landmark pylon's naming its landmark and what it sends (032). */
@@ -104,7 +106,7 @@ export function nameAt(sim: SimState, roomId: string, px: number, py: number): H
     const k = e.champion ? CHAMPIONS.scale : 1;
     const box = { w: HOVER_NAME.enemy.w * k, h: HOVER_NAME.enemy.h * k };
     if (e.roomId === roomId && e.health > 0 && inBox(px, py, e.x, e.y, box)) {
-      return { name: e.champion?.name ?? enemyDef(e.enemyId).name, x: e.x, y: e.y, rise: HOVER_NAME.enemy.rise * k };
+      return { name: e.champion?.name ?? enemyDef(e.enemyId).name, x: e.x, y: e.y, rise: HOVER_NAME.enemy.rise * k, enemy: e.id };
     }
   }
   for (const g of sim.groundItems) {

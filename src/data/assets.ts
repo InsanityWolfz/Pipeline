@@ -233,8 +233,6 @@ export const DEPTHS = {
   worldUi: 100_000,
   /** The mouse-over name (015), over a piece's readout. */
   hoverName: 100_012,
-  /** The build bar's hover panel (015), over the bar. */
-  buildTip: 1_000_005,
   /** Tutorial key prompts, over other world UI. */
   prompt: 100_005,
   /** The claimed pylon's tendril and the motes on the ley line (018): over everything standing in the world, under world UI. */

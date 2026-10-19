@@ -137,6 +137,11 @@ export class Controls {
     return this.view(this.pointer);
   }
 
+  /** Shift is held (040: a tip shows its breakdown). */
+  shiftHeld(): boolean {
+    return this.keys.shift.isDown;
+  }
+
   /** The cursor is over the world, not the screen's UI. */
   overWorld(): boolean {
     const v = this.view(this.pointer);

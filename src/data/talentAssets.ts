@@ -74,7 +74,9 @@ export const TALENT_PANEL = {
   /** The lane icon on a node is drawn at this scale of its 16 px frame. */
   iconScale: { start: 1, minor: 0.7, keystone: 0.95 },
   hitPad: 2,
-  info: { y: 248, nameY: 0, textY: 11, lineHeight: 10 },
+  /** The info area (037): where a node's summary docks (040), above the reset button by `infoGap` px. */
+  info: { y: 248 },
+  infoGap: 2,
   reset: { w: 104, h: 14, textY: 4, text: 'Reset talents (free)' },
   pad: 8,
   hint: 'Hover a node to read it; click a lit one to take it.',

@@ -1,6 +1,6 @@
 import { REGION_1_X } from '../../src/data/hollows';
 import { describe, expect, it } from 'vitest';
-import { BUILD_TIP, WORLD_NAMES } from '../../src/data/hudLayout';
+import { WORLD_NAMES } from '../../src/data/hudLayout';
 import { FIXTURES } from '../../src/data/claims';
 import { DESCRIPTIONS } from '../../src/data/descriptions';
 import { SHRINE_SITE } from '../../src/data/rooms';
@@ -84,17 +84,13 @@ describe('world names on mouse-over', () => {
 });
 
 describe('build bar descriptions', () => {
-  it('every buildable piece has one, short enough for the tip', () => {
-    for (const id of BUILD_BAR) {
-      const def = PIECES[id];
-      expect(def?.description.length, id).toBeGreaterThan(0);
-      expect(wrapText(def?.description ?? '', BUILD_TIP.wrap).length, id).toBeLessThanOrEqual(BUILD_TIP.maxLines);
-    }
+  // 040: the tip is the legibility tablet, which wraps any length to its width (BUILD_TIP's 34-character, 2-line limit is gone).
+  it('every buildable piece has one', () => {
+    for (const id of BUILD_BAR) expect(PIECES[id]?.description.length, id).toBeGreaterThan(0);
   });
 
   it('wrap at spaces within the width', () => {
     expect(wrapText('one two three four', 9)).toEqual(['one two', 'three', 'four']);
-    for (const line of wrapText(PIECES.sorter?.description ?? '', BUILD_TIP.wrap)) expect(line.length).toBeLessThanOrEqual(BUILD_TIP.wrap);
   });
 });
 

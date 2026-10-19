@@ -7,6 +7,7 @@ import type { Controls } from './controls';
 import type { CraftMenuView } from './CraftMenuView';
 import type { HopperPicker } from './HopperPicker';
 import type { InventoryPanel } from './InventoryPanel';
+import type { Legibility } from './Legibility';
 import type { ResearchList } from './ResearchList';
 import type { TalentPanel } from './TalentPanel';
 import { clickAmount } from './menuRequests';
@@ -27,6 +28,8 @@ export interface Menus {
   research: ResearchList;
   talents: TalentPanel;
   wake: WakeView;
+  /** 040: the tips and the glossary. */
+  legibility: Legibility;
 }
 
 // Keys and clicks for the menus (split from GameScene in 020): C toggles the craft
@@ -46,9 +49,10 @@ export class MenuRouter {
   }
 
   handle(controls: Controls): void {
-    const { craft, pause, site, picker, build, inventory, research, talents, wake } = this.m;
+    const { craft, pause, site, picker, build, inventory, research, talents, wake, legibility } = this.m;
     const toggle = controls.takeMenuKey('menu');
-    const close = controls.takeMenuKey('close');
+    // Esc closes an open glossary entry first (040), before any panel.
+    const close = controls.takeMenuKey('close') && !legibility.close();
     // I or Tab (031): taken even while paused, so a press then never opens the panel later.
     const bag = controls.takeMenuKey('inventory');
     // J (033): the research list, likewise taken even while paused.
@@ -115,9 +119,14 @@ export class MenuRouter {
    * A picker row moves one, Shift half, Ctrl all (022), and the picker stays open for the next click.
    */
   click(controls: Controls, x: number, y: number, mods: ClickMods): void {
-    const { pause, site, picker, build, sound, talents } = this.m;
+    const { pause, site, picker, build, sound, talents, legibility } = this.m;
     if (pause.isOpen) {
       this.pauseClick(pause.click(x, y));
+      return;
+    }
+    // A chip opens its glossary entry; with one open, a click outside it closes it (040).
+    if (legibility.click(x, y)) {
+      sound.play(SOUNDS.menuClick);
       return;
     }
     // The tree (037): a lit node is taken, the reset respecs (their sounds play from the sim's events).

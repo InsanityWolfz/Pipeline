@@ -8,6 +8,8 @@ import { carriedOfSlot } from '../sim/volley';
 import type { TubeState } from '../sim/tube';
 import { hotbarBox, hotbarCells, type ScreenBox } from './bottomHud';
 import { TextLine } from './textLine';
+import { inBox } from './tipPlace';
+import type { TipHit } from './tipTypes';
 import { addVector } from './vector/textures';
 
 interface Cell {
@@ -63,6 +65,12 @@ export class HotbarView {
   setVisible(visible: boolean): void {
     this.shown = visible;
     for (const p of this.parts) p.setVisible(visible);
+  }
+
+  /** The slot's round under a view point (040: its summary above the row). */
+  tipAt(x: number, y: number): TipHit | null {
+    const cell = this.shown ? hotbarCells().find((c) => inBox(c, x, y)) : undefined;
+    return cell ? { source: { kind: 'round', id: cell.ammoId }, at: cell, anchor: { box: cell, prefer: ['above'] } } : null;
   }
 
   update(tube: TubeState, inventory: Inventory): void {

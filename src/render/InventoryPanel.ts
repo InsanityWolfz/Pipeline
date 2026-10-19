@@ -7,7 +7,9 @@ import type { SimState } from '../sim/state';
 import { inventoryGroups, SPARE_ROW, WORN_ROW, type Held, type InventoryGroupRows, type InventoryRow } from './inventoryRows';
 import { inventoryLayout, type InventoryLayout } from './inventoryLayout';
 import { TextLine } from './textLine';
+import type { TipHit } from './tipTypes';
 import { addVector } from './vector/textures';
+import { AMMO } from '../data/ammo';
 
 /** One row's pieces: icon, name, count, the risk mark ("N safe ·", warning, "N at risk") and "home N". */
 interface RowView {
@@ -89,6 +91,20 @@ export class InventoryPanel {
     if (!this.open) return false;
     const { panel, title } = this.layout;
     return x >= panel.x && x < panel.x + panel.w && y >= title.y && y < panel.y + panel.h;
+  }
+
+  /** An ammo row's round under a view point (040: its summary beside the row). */
+  tipAt(x: number, y: number): TipHit | null {
+    if (!this.open) return null;
+    const P = INVENTORY_PANEL;
+    for (const view of this.views) {
+      const i = Math.floor((y - view.rowsY) / P.rowHeight);
+      const row = this.groups.find((g) => g.id === view.id)?.rows[i];
+      if (!row || !AMMO[row.itemId] || x < view.x || x >= view.x + P.columnWidth || y < view.rowsY) continue;
+      const at = { x: view.x, y: view.rowsY + i * P.rowHeight, w: P.columnWidth, h: P.rowHeight };
+      return { source: { kind: 'round', id: row.itemId }, at, anchor: { box: at, prefer: ['right', 'left'] } };
+    }
+    return null;
   }
 
   setOpen(open: boolean): void {

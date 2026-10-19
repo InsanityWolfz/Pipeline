@@ -12,6 +12,7 @@ import { colorOf } from './color';
 import { drawTablet } from './tablet';
 import { onRect, talentAt, talentPanelLayout } from './talentLayout';
 import { TextLine } from './textLine';
+import type { TipHit } from './tipTypes';
 import { addVector } from './vector/textures';
 
 export type TalentNodeState = 'taken' | 'available' | 'dim';
@@ -64,12 +65,6 @@ export class TalentPanel {
   private readonly links: GameObjects.Graphics;
   private readonly nodes: NodeView[] = [];
   private readonly header: TextLine;
-  private readonly name: TextLine;
-  private readonly text: TextLine;
-  /** The effect's second line, when it doesn't fit on one. */
-  private readonly text2: TextLine;
-  /** The hovered node whose effect the two lines hold. */
-  private wrapped: string | null = null;
   private readonly hint: TextLine;
   private readonly resetBox: GameObjects.Graphics;
   private readonly resetText: TextLine;
@@ -93,9 +88,6 @@ export class TalentPanel {
     title.moveTo(Math.round(L.title.x + (L.title.w - title.width) / 2), L.title.y + P.title.titleY);
     this.links = fixed(scene.add.graphics(), depth + 1);
     this.header = text(L.header.x, L.header.y);
-    this.name = text(L.info.x, L.info.y + P.info.nameY, 'display');
-    this.text = text(L.info.x, L.info.y + P.info.textY);
-    this.text2 = text(L.info.x, L.info.y + P.info.textY + P.info.lineHeight);
     this.hint = text(L.hint.x, L.hint.y, 'label').set(P.hint).setFill(P.colors.dim);
     this.resetBox = fixed(scene.add.graphics(), depth + 1);
     drawTablet(this.resetBox, L.reset.x, L.reset.y, L.reset.w, L.reset.h);
@@ -131,7 +123,6 @@ export class TalentPanel {
     this.open = open;
     for (const o of this.frame) o.setVisible(open);
     for (const v of this.nodes) for (const o of [v.halo, v.ring, v.stone, v.icon]) o?.setVisible(open);
-    for (const o of [this.name, this.text, this.text2]) o.setVisible(open);
     if (!open) {
       this.hovered = null;
       this.resetBox.setVisible(false);
@@ -159,16 +150,18 @@ export class TalentPanel {
     return this.overUi(x, y) ? { none: true } : null;
   }
 
-  /** The hovered node's effect on one line, or broken at a word onto two when it's wider than the strip. */
-  private wrap(def: TalentDef | null): void {
-    if ((def?.id ?? null) === this.wrapped) return;
-    this.wrapped = def?.id ?? null;
-    const words = (def ? talentText(def) : '').split(' ');
-    const max = this.layout.info.w;
-    let cut = words.length;
-    while (cut > 1 && this.text.set(words.slice(0, cut).join(' ')).width > max) cut -= 1;
-    this.text.set(words.slice(0, cut).join(' '));
-    this.text2.set(words.slice(cut).join(' '));
+  /**
+   * The node under a view point (040): its summary docks in the panel's info area, the bottom strip (037), on the side
+   * away from the node, growing up.
+   */
+  tipAt(x: number, y: number): TipHit | null {
+    const id = this.open ? talentAt(this.layout, x, y) : null;
+    const spot = this.layout.nodes.find((n) => n.id === id);
+    if (!id || !spot) return null;
+    const L = this.layout;
+    const at = { x: spot.x - spot.r, y: spot.y - spot.r, w: 2 * spot.r, h: 2 * spot.r };
+    const dock = { x: L.info.x, y: L.header.y, w: L.info.w, h: L.reset.y - TALENT_PANEL.infoGap - L.header.y };
+    return { source: { kind: 'talent', id }, at, anchor: { box: at, prefer: [], dock } };
   }
 
   /** Reads the tree every frame (so the hook can report it); draws it while open. */
@@ -219,9 +212,7 @@ export class TalentPanel {
       v.stone.setAlpha(alpha);
       v.icon?.setAlpha(alpha);
     }
-    // The hovered node's name in its lane's colour (the start's in snow).
-    this.name.set(hover?.name ?? '').setFill(hover ? LANE_COLORS[hover.lane] : undefined);
-    this.wrap(hover ?? null);
+    // The hovered node's summary is the legibility tablet's (040), docked in the info area; the hint shows without one.
     this.hint.setVisible(!hover);
     this.resetBox.setVisible(this.inFoundry);
     this.resetText.setVisible(this.inFoundry);

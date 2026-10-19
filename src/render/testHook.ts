@@ -36,6 +36,7 @@ import type { RestorePanelState } from './RestorePanel';
 import type { ResearchListState } from './ResearchList';
 import type { HollowsShown } from './HollowsView';
 import type { HollowsEnemiesShown } from './hollowsEnemyArt';
+import type { LegibilityUi } from './Legibility';
 
 export interface GameTestHook {
   getState(): SimSummary;
@@ -190,6 +191,10 @@ export interface UiState {
   talentFx: TalentFxShown;
   /** 038: armed mines with their arm rings, bomblets in the air, and mine and bomblet flashes still showing. */
   mines: MinesShown;
+  /** 040: the hover tablet (its source, summary or breakdown, chips by keyword, lines and box), the glossary entry, and the enemy hover name's chips. */
+  tip: LegibilityUi['tip'];
+  glossary: LegibilityUi['glossary'];
+  hoverChips: string[];
 }
 
 declare global {

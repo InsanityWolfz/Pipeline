@@ -144,7 +144,7 @@ export class RuleTip {
     // Words in their tones, wrapped greedily to the inner width.
     const rows: Run[][] = [];
     for (const l of c.lines) {
-      const words = (l.parts ?? [{ text: l.text, tone: l.tone }]).flatMap((p) => p.text.split(' ').filter((w) => w !== '').map((w) => ({ w, tone: p.tone ?? l.tone ?? 'text' })));
+      const words = glue((l.parts ?? [{ text: l.text, tone: l.tone }]).flatMap((p) => p.text.split(' ').filter((w) => w !== '').map((w) => ({ w, tone: p.tone ?? l.tone ?? 'text' }))));
       let row: { w: string; tone: Tone; x: number }[] = [];
       let x = 0;
       const flush = () => {
@@ -161,6 +161,15 @@ export class RuleTip {
       }
       if (row.length > 0) flush();
     }
+    // Each run starts where the one before it ends, as drawn (a run's width isn't quite its words' and spaces' sum).
+    for (const row of rows) {
+      let x = 0;
+      for (const run of row) {
+        run.x = x;
+        x += this.wordWidth(run.text) + this.space;
+      }
+      widest = Math.max(widest, x - this.space);
+    }
     // At most maxRows rows, the name's and chips' included: a cut line ends with "…".
     const room = Math.max(0, c.maxRows - this.chipRows);
     if (rows.length > room) {
@@ -173,6 +182,19 @@ export class RuleTip {
     this.chips = flow.placed.map((p) => ({ ...p, box: { ...p.box, x: p.box.x + P, y: p.box.y + P } }));
     this.size = { w: Math.min(c.maxW, Math.ceil(widest) + 2 * P), h: this.chipRows * TIP.nameRow + rows.length * TIP.lineHeight + 2 * P };
   }
+}
+
+/** A unit after a number ("0.21 s", "48 px") never starts a row: it's glued to its number. */
+const UNIT = /^(s|px|px\/s|HP|HP\/s)[.,;)]*$/;
+
+function glue(words: { w: string; tone: Tone }[]): { w: string; tone: Tone }[] {
+  const out: { w: string; tone: Tone }[] = [];
+  for (const word of words) {
+    const last = out[out.length - 1];
+    if (last && UNIT.test(word.w) && last.tone === word.tone) last.w = `${last.w} ${word.w}`;
+    else out.push({ ...word });
+  }
+  return out;
 }
 
 /** A row's words joined into runs of one tone. */

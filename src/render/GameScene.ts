@@ -41,11 +41,11 @@ import { MenuRouter } from './MenuRouter';
 import { PauseMenuView } from './PauseMenuView';
 import { SceneCameras } from './SceneCameras';
 import { CursorView } from './CursorView';
+import { Legibility, NO_LEGIBILITY_UI } from './Legibility';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
-const inRoom = <T extends { roomId: string }>(list: readonly T[], roomId: string): T[] =>
-  list.filter((o) => o.roomId === roomId);
+const inRoom = <T extends { roomId: string }>(list: readonly T[], roomId: string): T[] => list.filter((o) => o.roomId === roomId);
 
 // Draws the sim and drives it in real time. Holds no game rules.
 export class GameScene extends Scene {
@@ -74,6 +74,7 @@ export class GameScene extends Scene {
   private tutorial?: TutorialUi;
   private feel?: FeelView;
   private cursorView?: CursorView;
+  private legibility?: Legibility; // 040: hover tips (Shift for the breakdown) and the glossary.
   /** The room on screen. It lags the player's room through a door's fade. */
   private shownRoomId: string;
   private fading = false;
@@ -119,6 +120,7 @@ export class GameScene extends Scene {
     this.tutorial = new TutorialUi(this);
     this.menu = new CraftMenuView(this, (recipeId) => this.craft(recipeId));
     this.pause = new PauseMenuView(this);
+    this.legibility = new Legibility(this, [this.hud, this.siteMenus, this.buildView]);
     this.cursorView = new CursorView(this);
     this.feel = new FeelView(this, (id) => this.foundryView?.dropIn(id), (id, ms) => this.enemyView?.freeze(id, ms));
     this.showRoom(this.sim.roomId);
@@ -131,8 +133,8 @@ export class GameScene extends Scene {
     camera.startFollow(this.playerView.sprite, true, CAMERA_LERP, CAMERA_LERP);
 
     this.controls = new Controls(this);
-    if (this.menu && this.pause && this.siteMenus && this.picker && this.buildView && this.feel && this.hud && this.wake)
-      this.router = new MenuRouter(this.sim, { craft: this.menu, pause: this.pause, site: this.siteMenus, picker: this.picker, build: this.buildView, sound: this.feel.sound, inventory: this.hud.inventory, research: this.hud.research, talents: this.hud.talents, wake: this.wake });
+    if (this.menu && this.pause && this.siteMenus && this.picker && this.buildView && this.feel && this.hud && this.wake && this.legibility)
+      this.router = new MenuRouter(this.sim, { craft: this.menu, pause: this.pause, site: this.siteMenus, picker: this.picker, build: this.buildView, sound: this.feel.sound, inventory: this.hud.inventory, research: this.hud.research, talents: this.hud.talents, wake: this.wake, legibility: this.legibility });
   }
 
   /** Matches both cameras to the backbuffer (016). Called on boot and whenever the window changes. */
@@ -147,7 +149,7 @@ export class GameScene extends Scene {
       controls.poll({
         building: this.sim.building,
         pieceId: () => this.buildView?.selected ?? FIRST_PIECE,
-        overUi: (x, y) => [this.pause, this.menu, this.buildView, this.picker, this.siteMenus, this.hud, this.tutorial].some((v) => v?.overUi(x, y)),
+        overUi: (x, y) => [this.pause, this.menu, this.buildView, this.picker, this.siteMenus, this.hud, this.tutorial, this.legibility].some((v) => v?.overUi(x, y)),
         clickUi: (x, y, mods) => this.router?.click(controls, x, y, mods),
       });
       this.router?.handle(controls);
@@ -174,7 +176,7 @@ export class GameScene extends Scene {
       pickerCounts: [...(this.picker?.shownCounts ?? [])],
       hoverName: this.hover?.shown ?? null,
       hoverDescription: this.hover?.shownDescription ?? null,
-      buildTip: this.buildView?.tip.shown ?? null,
+      buildTip: this.buildView?.tipShown ?? null,
       ...(this.roomViews?.state ?? NO_ROOM_UI),
       nodes: this.nodeView?.frames ?? {},
       shakes: [...(this.feel?.juice.shakes ?? [])],
@@ -190,6 +192,8 @@ export class GameScene extends Scene {
       buildBar: this.buildView?.state ?? null,
       tagged: { benchStages: this.siteMenus?.stagePanel ?? null, splitFlashes: this.effects?.splitFlashes ?? 0, trails: this.arrowView?.trails ?? { count: 0, longest: 0 } },
       ...(this.enemyView?.ui ?? NO_ENEMY_UI),
+      ...(this.legibility?.ui ?? NO_LEGIBILITY_UI),
+      hoverChips: this.hover?.shownChips ?? [],
     };
   }
 
@@ -223,11 +227,7 @@ export class GameScene extends Scene {
     this.roomViews?.show(roomById(roomId));
   }
 
-  /**
-   * Keeps the room on screen in step with the player's. Through a door it fades
-   * out, swaps the room at dark and fades back in. A KO has its own fade, so the
-   * room swaps straight away.
-   */
+  /** Keeps the room on screen in step with the player's: through a door it fades out, swaps at dark and fades in; a KO swaps at once (its own fade). */
   private followRoom(ko: boolean): void {
     if (this.fading || this.shownRoomId === this.sim.roomId) return;
     const camera = this.cameras.main;
@@ -289,10 +289,11 @@ export class GameScene extends Scene {
     const pointer = controls?.viewPointer();
     if (pointer) for (const menu of [this.siteMenus, this.picker, this.pause, this.hud]) menu?.pointAt(pointer.x, pointer.y);
     // The arrow pointer while a menu is open or over the build bar, else the crosshair (021).
-    const inMenu = [this.menu, this.pause, this.picker, this.siteMenus, this.hud?.inventory, this.hud?.talents].some((m) => m?.isOpen) || (this.wake?.isShown ?? false);
-    this.cursorView?.update(inMenu || (pointer !== undefined && (this.buildView?.overUi(pointer.x, pointer.y) ?? false)));
+    const inMenu = [this.menu, this.pause, this.picker, this.siteMenus, this.hud?.inventory, this.hud?.talents, this.legibility].some((m) => m?.isOpen) || (this.wake?.isShown ?? false);
+    this.cursorView?.update(inMenu || (pointer !== undefined && [this.buildView, this.legibility].some((v) => v?.overUi(pointer.x, pointer.y))));
     if (this.feel) this.pause?.update(this.feel.sound);
     const point = controls?.overWorld() ? controls.cursorPoint() : null;
     this.hover?.update(sim, shown, point, (id) => this.foundryView?.topOf(id), this.cameras.main.worldView);
+    this.legibility?.update(sim, this.pause?.isOpen ? null : (pointer ?? null), controls?.shiftHeld() ?? false, this.game.loop.delta);
   }
 }

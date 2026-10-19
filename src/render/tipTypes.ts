@@ -1,5 +1,5 @@
 import type { ChipGroup, ChipId } from '../data/legibility';
-import type { Box } from './tipPlace';
+import type { Anchor, Box } from './tipPlace';
 
 // What the legibility UI (040) shows, pure: chips, the lines of a summary or breakdown with
 // their tone, and a description of one thing. describe.ts builds them; RuleTip, the Build tab
@@ -57,3 +57,18 @@ export const line = (text: string, tone?: Tone): TipLine => (tone ? { text, tone
 
 /** The lines' words, for tests and the hook. */
 export const texts = (lines: readonly TipLine[]): string[] => lines.map((l) => l.text);
+
+/** What a panel reports under the cursor (040): the thing's source and box, where its tablet goes, and whether it always shows the breakdown (a Build tab row). */
+export interface TipHit {
+  source: TipSource;
+  /** The hovered thing, view px: the tablet stays while the cursor is here or on the tablet. */
+  at: Box;
+  anchor: Anchor;
+  breakdown?: true;
+}
+
+/** A panel or HUD part that can show tips: what's under a view point, and (the Build tab) a chip there. */
+export interface TipProvider {
+  tipAt(x: number, y: number): TipHit | null;
+  chipAt?(x: number, y: number): ChipId | null;
+}

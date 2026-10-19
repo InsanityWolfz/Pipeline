@@ -10,6 +10,7 @@ import { pieceIcon, pieceLines, rarityLook, slotIcon, totalsLines } from './gear
 import { MENU_HOVER_EVENT } from './menuFeedback';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
+import type { TipHit } from './tipTypes';
 import { addVector } from './vector/textures';
 
 /** What a click on the panel asks for: identify, wear (or take off) a piece, or nothing past the panel's own tab and page. */
@@ -109,6 +110,16 @@ export class GearPanel {
     for (const c of L.cells) if (inBox(c.box, x, y)) return { key: `cell:${c.slot}`, box: c.box };
     if (L.page.count > 1 && inBox(L.pager, x, y)) return { key: 'pager', box: L.pager };
     return null;
+  }
+
+  /** A piece under a view point (040): a row's, or the one worn in a slot's cell; its summary beside it. */
+  tipAt(x: number, y: number): TipHit | null {
+    if (!this.isOpen) return null;
+    const hit = this.targetAt(x, y);
+    const [kind, arg] = hit?.key.split(':') ?? [];
+    const id = kind === 'row' ? Number(arg) : kind === 'cell' ? this.shown?.cells.find((c) => c.slot === arg)?.worn : undefined;
+    if (!hit || id === undefined || id === null) return null;
+    return { source: { kind: 'gear', id: String(id) }, at: hit.box, anchor: { box: hit.box, prefer: ['right', 'left', 'below'] } };
   }
 
   /** The cursor is at a screen point: what it's over lights, with the hover sound on a new target. */

@@ -1,6 +1,6 @@
 import type { GameObjects, Scene } from 'phaser';
 import { animFrames, DEPTHS, SPRITES } from '../data/assets';
-import { TILE_SIZE, VIEW_WIDTH } from '../data/config';
+import { TILE_SIZE } from '../data/config';
 import {
   CRATE_SPRITE,
   FACING_ARROWS,
@@ -16,11 +16,11 @@ import type { Facing } from '../sim/player';
 import { colorOf } from './color';
 import { buildBarLabelTop } from './bottomHud';
 import { buildBarBox, buildBarCells, buildBarDividers, buildBarGroups, conduitLook, inRect, pieceIcon, sorterLook, type ScreenRect } from './foundryLayout';
-import { BuildTip } from './BuildTip';
 import { MAX_ARROWS, placeArrows, viewOf } from './FoundryView';
 import { toView } from './scale';
 import { Pulse } from './pulse';
 import { TextLine } from './textLine';
+import type { TipHit } from './tipTypes';
 import { addVector, showFrame } from './vector/textures';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
@@ -69,7 +69,8 @@ export class BuildView {
   private readonly ghostArrows: GameObjects.Image[];
   private unlocked: readonly string[] = [];
   private visible = false;
-  readonly tip: BuildTip;
+  /** The piece whose cell the cursor is over (015's tip, now the legibility tablet: 040), for the test hook. */
+  tipShown: string | null = null;
   selected = FIRST_PIECE;
 
   constructor(scene: Scene) {
@@ -88,7 +89,6 @@ export class BuildView {
     this.ghostIcon = addVector(scene, 0, 0, pieceIcon(FIRST_PIECE)).setAlpha(GHOST.alpha);
     this.ghostArrows = Array.from({ length: MAX_ARROWS }, () => addVector(scene, 0, 0, FACING_ARROWS.out.down));
     for (const o of [this.ghost, this.ghostIcon, ...this.ghostArrows]) o.setDepth(DEPTHS.worldUi - 1);
-    this.tip = new BuildTip(scene);
     this.dividers = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.hud);
     this.setVisible(false);
   }
@@ -109,6 +109,20 @@ export class BuildView {
       pulsing: this.pulsing,
       pulseAlpha: this.wave.value,
     };
+  }
+
+  /**
+   * The piece under a view point (015, 040): a stage's summary, or another piece's name and description, over the group
+   * labels so it never hides them (026).
+   */
+  tipAt(x: number, y: number): TipHit | null {
+    const cell = this.visible ? buildBarCells(this.unlocked).find((c) => inRect(c, x, y)) : undefined;
+    if (!cell) return null;
+    const def = pieceDef(cell.pieceId);
+    const top = buildBarLabelTop();
+    const box = { x: cell.x, y: top, w: cell.w, h: cell.y + cell.h - top };
+    const source = def.kind === 'machine' && def.stage ? { kind: 'stage' as const, id: def.stage } : { kind: 'piece' as const, id: cell.pieceId };
+    return { source, at: { x: cell.x, y: cell.y, w: cell.w, h: cell.h }, anchor: { box, prefer: ['above'] } };
   }
 
   /** Moves the selection along the bar's (unlocked) pieces, wrapping. */
@@ -134,8 +148,7 @@ export class BuildView {
     const pointer = this.scene.input.activePointer;
     const at = toView(pointer.x, pointer.y, this.scene.cameras.main.zoom);
     const hovered = building ? buildBarCells(unlocked).find((c) => inRect(c, at.x, at.y)) : undefined;
-    // The tip sits over the group labels, so it never hides them (026).
-    this.tip.show(hovered?.pieceId ?? null, (hovered?.x ?? 0) + (hovered?.w ?? 0) / 2, buildBarLabelTop(), VIEW_WIDTH);
+    this.tipShown = hovered?.pieceId ?? null;
     this.showPulse(building ? buildBarCells(unlocked).find((c) => c.pieceId === highlight) : undefined);
     if (!building) return;
     const cell = buildBarCells(unlocked).find((c) => c.pieceId === this.selected);

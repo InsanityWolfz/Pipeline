@@ -17,6 +17,7 @@ import { shownKey } from './itemShown';
 import { TubeSlotView, type TubeSlotState } from './TubeSlotView';
 import { BossBar, type BossBarShown } from './BossBar';
 import { NO_TALENT_PANEL, TalentPanel, type TalentPanelState } from './TalentPanel';
+import type { TipHit } from './tipTypes';
 
 /** The bottom HUD as drawn (025), for `ui().hud`: the hotbar row's rect and whether it shows, and the tube slot. */
 export interface BottomHudState {
@@ -86,6 +87,11 @@ export class HudView {
   /** The tree panel's hover follows the pointer (view px). */
   pointAt(x: number, y: number): void {
     this.talents.pointAt(x, y);
+  }
+
+  /** What's under a view point for a tip (040): a talent node, an inventory ammo row, the tube slot's round, a hotbar slot. */
+  tipAt(x: number, y: number): TipHit | null {
+    return this.talents.tipAt(x, y) ?? this.inventory.tipAt(x, y) ?? this.tubeSlot.tipAt(x, y) ?? this.hotbar.tipAt(x, y);
   }
 
   /** A screen point on any part of the HUD or the open inventory panel: a press there never fires (015). */

@@ -17,6 +17,7 @@ import { stageRowsKnown, stagesKnown } from '../sim/stages';
 import { altarInReach, altarState } from '../sim/altar';
 import { offeringModel } from './altarPanel';
 import type { UiState } from './testHook';
+import type { TipHit } from './tipTypes';
 
 type PylonChoice = 'deposit' | 'travel';
 
@@ -85,6 +86,11 @@ export class SiteMenus {
     this.bench.close();
     this.restore.close();
     this.offering.close();
+  }
+
+  /** A bench Stages row's stage or a gear piece under a view point (040). */
+  tipAt(x: number, y: number): TipHit | null {
+    return this.stages.tipAt(x, y) ?? this.bench.tipAt(x, y);
   }
 
   /** The cursor is at a screen point: the open menu lights the row under it (020). */

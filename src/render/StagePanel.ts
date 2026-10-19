@@ -12,6 +12,7 @@ import { flashRow, RowHover, type RowFrames } from './menuFeedback';
 import { stagePanelLayout } from './stagePanelLayout';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
+import type { TipHit } from './tipTypes';
 import { addVector } from './vector/textures';
 
 const ROW_FRAMES: RowFrames = { plain: SPRITES.craftRecipeRow, hover: SPRITES.craftRecipeRowHover, press: SPRITES.craftRecipeRowPress };
@@ -123,6 +124,18 @@ export class StagePanel {
     if (!this.shown) return null;
     const r = this.layout().rows.find((row) => inRect(row, x, y));
     return r && stageAffordable(this.inventory, r.stageId) ? r.stageId : null;
+  }
+
+  /** A row's stage under a view point (040: its summary beside the row). */
+  tipAt(x: number, y: number): TipHit | null {
+    if (!this.shown) return null;
+    const layout = this.layout();
+    const i = layout.rows.findIndex((r) => inRect(r, x, y));
+    const at = layout.rows[i];
+    const row = this.visible[i];
+    if (!at || !row) return null;
+    const box = { x: at.x, y: at.y, w: at.w, h: at.h };
+    return { source: { kind: 'stage', id: row.row.stage }, at: box, anchor: { box, prefer: ['right', 'left', 'below'] } };
   }
 
   /** True if a screen point is on the panel. */

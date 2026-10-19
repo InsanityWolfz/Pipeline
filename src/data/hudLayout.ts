@@ -214,9 +214,6 @@ export const WORLD_NAMES = {
   altar: 'Altar',
 } as const;
 
-/** The build bar's hover tablet (015): wrap width in characters, padding and line height, px, and its gap above the bar. */
-export const BUILD_TIP = { wrap: 34, maxLines: 2, pad: 4, lineHeight: 10, gap: 4 } as const;
-
 /**
  * The minimap (017): the overworld's terrain at `scale` view px per tile in the
  * top-right corner, a stone frame, and markers. Colours are palette ids; no
