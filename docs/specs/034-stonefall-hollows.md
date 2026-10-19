@@ -277,3 +277,11 @@ Landmines and the cluster stage below are their own vertical slice: they are spl
 
 ## Open questions
 None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).
+
+## Raised after the build (for Shaun at playtest)
+- **Bulwark HP probably too low.** At 900 HP, a bot circling behind it with single arrows kills it in about 25 s, so triple volleys would beat the 30–45 s target easily. 2,000–2,500 HP may be right. A sim test now records the full-HP fight so it can be retuned.
+- **Arena-only attacks (the spec didn't say).** The Bulwark lobs and pounds only while the player is inside its arena. Before the fix it could keep lobbing at a player anywhere on the map for up to 300 ticks.
+- **Stand-off distance.** It stops walking about 54 px from the player (`standOff` in data). It wasn't in the spec.
+- **Altar panel.** It also opens while the altar is spent or summoning, with Summon greyed out.
+- **Placement choices** are listed in the 034 plan. The Ley-iron Cut has no pylon of its own; the Cistern Terrace is the region's only claim.
+- **Art** waits on Shaun's approval by eye (docs/review/034).
