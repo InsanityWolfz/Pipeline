@@ -22,3 +22,9 @@ Oct 19, 2026 · Shaun's answers to the open questions in docs/brainstorm/2026-10
 - **Q8, Splitter:** keep both names. Splitter is a piece name and never shows as a keyword chip.
 - **Q10, Physical:** no rule. Physical is plain damage, and design.md's "big direct hits" line is updated.
 - **Q11, Knockback:** lives on each round, and builds can raise it. It's scaled by an enemy weight, and bosses have weight 0.
+
+## Round 4
+- **Q12, elements:** every family. An element stage can tag any ammo family; shapes (Homing, Split, Cluster) stay per family.
+- **Q13, stacking math:** all "+%" bonuses to a stat add together; relics and keystones use "×". Cooldowns become fractional, so the shown % is exactly what the player gets.
+- **Q14, units:** times in seconds (1 decimal), changes in %, and distances in px only in the full breakdown.
+- **Q15, breakdown:** hover shows a summary. Shift+hover shows the full breakdown with the damage calculation. A Build tab on the T panel lists every ammo's final numbers, and clicking a keyword chip opens its glossary entry.
