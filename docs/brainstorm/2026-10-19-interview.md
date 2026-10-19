@@ -53,3 +53,9 @@ Oct 19, 2026 · Shaun's answers, which follow on from docs/brainstorm/2026-10-19
     - the laser (ley batteries)
     - the static-pool bomb, last
 - **Variants:** made by in-line stage machines, as the playtester and Claude recommend. Each round takes at most one element stage and one shape stage.
+
+## Round 4
+- **Stage unlock:** hand-make one first, the same rule as today's machines. For example, hand-apply a frost rune to an arrow at the bench once, and the frost stage unlocks in the build bar.
+- **Frost input:** a new landmark material: a frost crystal ("rime shard") gathered at a landmark such as a frozen Ley Grotto.
+- **Goals after the shrine:** a guided goal chain for each milestone, as data. For example: build a stage, find a Grotto, claim a second pylon, breach Region 2's barrier, beat the Bulwark.
+- **Supply ports:** one fixed port per resource on the foundry walls: wood, stone, fiber and ley crystal, with more later. Each shows "×N pylons" and its rate. Every claimed pylon that supplies that resource adds to its rate.
