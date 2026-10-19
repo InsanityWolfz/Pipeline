@@ -59,7 +59,13 @@ test('out in ring 2 a fight fills the screen with 10 or more enemies', async ({ 
     const busiest = [...ring2].sort((a, b) => crowd(b) - crowd(a))[0];
     if (!busiest) throw new Error('no ring 2 packs');
     for (let t = 0; t < 30; t++) sample(g.step(1));
-    h.walkTo(busiest.x, busiest.y + 160);
+    // Half a screen from it, on ground the player can stand (035: which spot depends on where the packs fell).
+    const open = g.passable();
+    const near = [[0, 160], [0, -160], [160, 0], [-160, 0], [120, 120], [-120, 120], [120, -120], [-120, -120]]
+      .map(([dx, dy]) => ({ x: busiest.x + (dx ?? 0), y: busiest.y + (dy ?? 0) }))
+      .find((p) => open[Math.floor(p.y / 32)]?.[Math.floor(p.x / 32)] === '.');
+    if (!near) throw new Error('no open ground near the busiest pack');
+    h.walkTo(near.x, near.y);
     sample(g.getState());
     for (let t = 0; t < 600 && !ko; t++) sample(g.step(1, { dodge: t % 30 === 0 }));
     return { onScreen, rings: [...rings], populated: g.getState().populated, ko };
