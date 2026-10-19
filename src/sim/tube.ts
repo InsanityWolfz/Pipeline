@@ -6,11 +6,11 @@ import { createArrow } from './arrows';
 import { throwBomb } from './bombs';
 import { aimFacing, facingVector, unit } from './direction';
 import type { Command } from './input';
-import { count, take } from './inventory';
+import { take } from './inventory';
 import { takeFromEntrance } from './link';
 import { punch } from './melee';
 import { isRolling } from './movement';
-import { nextPress, volleyRounds, volleyShots, type VolleyShot } from './volley';
+import { nextPress, volleyShots, type VolleyShot } from './volley';
 import type { SimState } from './state';
 
 // The tube: picking the slot's ammo and firing it. Carried rounds fire straight
@@ -47,18 +47,6 @@ export function selectAmmo(state: SimState, ammoId: string): void {
   if (ammoId === tube.ammoId || !SLOT_AMMOS.includes(ammoId)) return;
   tube.ammoId = ammoId;
   state.events.selects.push({ ammoId });
-}
-
-/**
- * What the hotbar slot shows (until 025): the carried count while any of the slot's
- * ammo is carried, else the rounds waiting in the fed entrances (fired from the
- * foundry as a volley), else 0.
- */
-export function slotCount(state: Pick<SimState, 'tube' | 'inventory' | 'link'>): { count: number; fromReservoir: boolean } {
-  const carried = count(state.inventory, slotItem(state.tube));
-  if (carried > 0) return { count: carried, fromReservoir: false };
-  const waiting = volleyRounds(state).reduce((n, r) => n + r.count, 0);
-  return waiting > 0 ? { count: waiting, fromReservoir: true } : { count: 0, fromReservoir: false };
 }
 
 /**

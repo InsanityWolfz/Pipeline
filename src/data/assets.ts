@@ -28,9 +28,8 @@ export const SPRITES = {
   crosshair: 'crosshair',
   /** The arrow pointer shown instead of the crosshair over menus and the build bar (021). */
   pointer: 'pointer',
-  hudSlot: 'hud-slot',
-  /** Ley rim over the hotbar slot while it fires from the reservoir (007). */
-  hudSlotGlow: 'hud-slot-glow',
+  /** The fist the tube slot shows when the next press is a punch (025). */
+  hudFist: 'hud-fist',
   iconArrow: 'icon-arrow',
   itemHuskResin: 'item-husk-resin',
   itemWood: 'item-wood',
@@ -83,14 +82,14 @@ export const NODE_SPRITES: Readonly<Record<string, { uses: readonly string[]; re
   'ley-vein': nodeFrames('ley-vein', 3, 3),
 };
 
-/** Hotbar slot layout, px from the slot's top-left. */
-export const HUD_SLOT_LAYOUT = {
-  icon: { x: 4, y: 4 },
-  /** The count: carried rounds, or the rounds in the intake's fed entrances once none are carried (024). */
-  count: { x: 25, y: 9 },
-  /** Gap below the slot to the bottom of the screen. */
-  margin: 6,
-} as const;
+/** The tube slot's frame (025) by how many rounds it shows: one for a carried round or the fist, up to one per intake entrance for a volley. */
+export const TUBE_SLOT_FRAMES = ['hud-tube-slot-1', 'hud-tube-slot-2', 'hud-tube-slot-3'] as const;
+
+/** The tube slot frame for `units` rounds (clamped to the frames there are). */
+export function tubeSlotFrame(units: number): string {
+  const i = Math.min(Math.max(units, 1), TUBE_SLOT_FRAMES.length) - 1;
+  return TUBE_SLOT_FRAMES[i] ?? TUBE_SLOT_FRAMES[0];
+}
 
 /** An animation: the sprite grid `key` with `frames` frames (`key/0`..), or a single frame `key`. */
 export interface AnimDef {

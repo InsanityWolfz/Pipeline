@@ -8,6 +8,7 @@ import { roomBodies } from '../sim/bodies';
 import { layItem } from '../sim/drops';
 import type { GameScene } from './GameScene';
 import type { CursorState } from './CursorView';
+import type { BottomHudState } from './HudView';
 
 export interface GameTestHook {
   getState(): SimSummary;
@@ -69,6 +70,8 @@ export interface UiState {
   intakeLift: number | null;
   /** The centre of the world camera's view, world px (023: screenshots wait for it to settle on the player). */
   camera: { x: number; y: number };
+  /** The bottom HUD as drawn (025), view px: the hotbar row (and whether it shows) and the tube slot with each unit's icon frame and text. */
+  hud: BottomHudState | null;
 }
 
 declare global {

@@ -1,16 +1,16 @@
 import type { GameObjects, Scene } from 'phaser';
-import { DEPTHS, HUD_HEALTH_LAYOUT, HUD_MATERIALS_LAYOUT, HUD_SLOT_LAYOUT, SPRITES } from '../data/assets';
-import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
-import { itemDef, ITEMS } from '../data/items';
+import { DEPTHS, HUD_HEALTH_LAYOUT, HUD_MATERIALS_LAYOUT, SPRITES } from '../data/assets';
+import { ITEMS } from '../data/items';
 import { MAX_HEALTH } from '../data/player';
-import { STARTING_AMMO } from '../data/tube';
 import type { Inventory } from '../sim/inventory';
 import { count } from '../sim/inventory';
 import type { ArmorPiece } from '../sim/armor';
-import type { LinkState } from '../sim/link';
 import type { PlayerState } from '../sim/player';
-import { slotCount, slotItem, type TubeState } from '../sim/tube';
-import { AmmoStripView } from './AmmoStripView';
+import type { TubeState } from '../sim/tube';
+import type { HudActive } from '../sim/volley';
+import type { ScreenBox } from './bottomHud';
+import { HotbarView } from './HotbarView';
+import { TubeSlotView, type TubeSlotState } from './TubeSlotView';
 import { HUD_ARMOR_LAYOUT } from '../data/hudLayout';
 import { colorOf } from './color';
 import { TextLine } from './textLine';
@@ -23,20 +23,21 @@ interface MaterialRow {
   count: TextLine;
 }
 
-// The hotbar: slot 1 with its selected ammo's icon and count (carried rounds,
-// else the rounds waiting in the intake's fed entrances (024, until 025's HUD),
-// with a ley glow while it fires from the foundry), and the
-// ammo strip beside it; the health bar and the raw materials and parts held,
-// top-left. Fixed to the screen; reads sim state only.
+/** The bottom HUD as drawn (025), for `ui().hud`: the hotbar row's rect and whether it shows, and the tube slot. */
+export interface BottomHudState {
+  hotbar: ScreenBox & { shown: boolean };
+  tubeSlot: TubeSlotState;
+}
+
+// The HUD: along the bottom (025), the hotbar row centred with the tube slot above
+// it showing what the next press fires; the health bar and the raw materials and
+// parts held, top-left. Fixed to the screen; reads sim state only.
 export class HudView {
-  private readonly slot: GameObjects.Image;
-  private readonly icon: GameObjects.Image;
-  private readonly glow: GameObjects.Image;
-  private readonly count: TextLine;
   private readonly healthFill: GameObjects.Graphics;
   private readonly health: GameObjects.Image;
   private readonly materials: MaterialRow[];
-  private readonly strip: AmmoStripView;
+  private readonly hotbar: HotbarView;
+  private readonly tubeSlot: TubeSlotView;
   private readonly armorIcon: GameObjects.Image;
   private readonly armorCount: TextLine;
 
@@ -45,7 +46,8 @@ export class HudView {
     const inBox = (b: { x: number; y: number; w: number; h: number }): boolean => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h;
     const imageBox = (o: GameObjects.Image) => ({ x: o.x, y: o.y, w: o.displayWidth, h: o.displayHeight });
     const rows = this.materials.filter((m) => m.icon.visible).map((m) => ({ ...imageBox(m.icon), w: HUD_MATERIALS_LAYOUT.rowWidth }));
-    const parts = [imageBox(this.slot), this.strip.box, imageBox(this.health), ...rows];
+    const parts = [this.tubeSlot.box, imageBox(this.health), ...rows];
+    if (this.hotbar.visible) parts.push(this.hotbar.box);
     if (this.armorIcon.visible) parts.push(imageBox(this.armorIcon));
     return parts.some(inBox);
   }
@@ -55,16 +57,8 @@ export class HudView {
       o.setScrollFactor(0).setDepth(DEPTHS.hud);
       return o;
     };
-    this.slot = fixed(addVector(scene, 0, 0, SPRITES.hudSlot).setOrigin(0));
-    const left = Math.round((VIEW_WIDTH - this.slot.displayWidth) / 2);
-    const top = VIEW_HEIGHT - this.slot.displayHeight - HUD_SLOT_LAYOUT.margin;
-    this.slot.setPosition(left, top);
-    const { icon, count: at } = HUD_SLOT_LAYOUT;
-    const startIcon = itemDef(slotItem({ ammoId: STARTING_AMMO })).icon;
-    this.icon = fixed(addVector(scene, left + icon.x, top + icon.y, startIcon).setOrigin(0));
-    this.glow = fixed(addVector(scene, left, top, SPRITES.hudSlotGlow).setOrigin(0)).setVisible(false);
-    this.count = new TextLine(scene, left + at.x, top + at.y, DEPTHS.hud, false, 'count');
-    this.strip = new AmmoStripView(scene, left + this.slot.displayWidth, top + this.slot.displayHeight);
+    this.hotbar = new HotbarView(scene);
+    this.tubeSlot = new TubeSlotView(scene);
 
     const hp = HUD_HEALTH_LAYOUT;
     this.health = fixed(addVector(scene, hp.x, hp.y, SPRITES.hudHealth).setOrigin(0));
@@ -83,11 +77,19 @@ export class HudView {
       }));
   }
 
-  update(tube: TubeState, inventory: Inventory, player: PlayerState, link: LinkState, worn: ArmorPiece | undefined, hasTube: boolean): void {
-    // No tube yet (012): no hotbar.
-    for (const o of [this.slot, this.icon]) o.setVisible(hasTube);
-    this.count.setVisible(hasTube);
-    this.strip.setVisible(hasTube);
+  /** What the bottom HUD shows, for the test hook. */
+  get bottom(): BottomHudState {
+    return { hotbar: { ...this.hotbar.box, shown: this.hotbar.visible }, tubeSlot: this.tubeSlot.state };
+  }
+
+  /**
+   * `active` is the sim's `hudActive`: what the next press fires. No tube yet (012): no
+   * hotbar row, and the tube slot shows the fist. Building: the build bar takes the row's place.
+   */
+  update(tube: TubeState, inventory: Inventory, player: PlayerState, active: HudActive, worn: ArmorPiece | undefined, hasTube: boolean, building: boolean): void {
+    this.hotbar.setVisible(hasTube && !building);
+    this.hotbar.update(tube, inventory);
+    this.tubeSlot.update(active);
     this.armorIcon.setVisible(worn !== undefined);
     if (worn) this.armorIcon.setFrame(worn.weight === 'heavy' ? SPRITES.iconArmorHeavy : SPRITES.iconArmorLight);
     this.armorCount.set(worn ? String(worn.armor) : '');
@@ -110,12 +112,5 @@ export class HudView {
       r.count.set(String(n));
       row += 1;
     }
-
-    const item = slotItem(tube);
-    this.icon.setFrame(itemDef(item).icon);
-    const shown = slotCount({ tube, inventory, link });
-    this.count.set(String(shown.count));
-    this.glow.setVisible(hasTube && shown.fromReservoir);
-    this.strip.update(tube, inventory);
   }
 }

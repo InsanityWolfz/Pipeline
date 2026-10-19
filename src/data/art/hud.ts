@@ -1,10 +1,10 @@
-import { SPRITES } from '../assets';
+import { SPRITES, TUBE_SLOT_FRAMES } from '../assets';
 import { TUTORIAL_SPRITES } from '../foundryAssets';
-import { CRAFT_MENU_LAYOUT, PICKER_LAYOUT } from '../hudLayout';
+import { CRAFT_MENU_LAYOUT, HUD_LAYOUT, PICKER_LAYOUT } from '../hudLayout';
 import { ellipse, line, path, rect, solid, trim, type Paint, type Shape, type VectorSprite } from './types';
 
 // The HUD and menus (020): rune-carved stone tablets with brass corners, dark
-// wells for icons and counts, and the hotbar slot ringed in cyan like the tube.
+// wells for icons and counts, and the tube slot ringed in cyan like the tube.
 // Fixed-size pieces are drawn here at the sizes the layouts were built round;
 // panels that change size are drawn live with the same look (render/tablet.ts,
 // TABLET in hudLayout). Drawn from the top-left.
@@ -42,11 +42,37 @@ const ring = (x: number, y: number, w: number, h: number, width: number, alpha: 
 
 const sprite = (key: string, size: readonly [number, number], shapes: readonly Shape[]): VectorSprite => ({ key, size, anchor: [0, 0], frames: [shapes] });
 
-// The hotbar slot (44x24): a tablet with the loaded ammo's well, ringed in cyan; the glow over it while it fires from the reservoir.
-const HUD_SLOT: Shape[] = [...tablet(44, 24), well(3, 3, 38, 18), ring(3, 3, 38, 18, 1.1, 0.8, 1.5)];
-const HUD_SLOT_GLOW: Shape[] = [ring(2, 2, 40, 20, 2, 1, 5)];
+// The tube slot (025): a tablet a little bigger than a hotbar cell, with a dark well per round it shows,
+// each ringed in cyan like the tube. One frame per count of rounds, up to one per intake entrance.
+const UNIT = { w: HUD_LAYOUT.tubeSlot.w, h: HUD_LAYOUT.tubeSlot.h, step: HUD_LAYOUT.tubeSlot.w + HUD_LAYOUT.gap } as const;
+const tubeSlotWidth = (n: number): number => n * UNIT.w + (n - 1) * HUD_LAYOUT.gap;
+const tubeSlot = (n: number): Shape[] => [
+  ...tablet(tubeSlotWidth(n), UNIT.h),
+  ...Array.from({ length: n }, (_, i) => [well(i * UNIT.step + 3, 3, UNIT.w - 6, UNIT.h - 6), ring(i * UNIT.step + 3, 3, UNIT.w - 6, UNIT.h - 6, 1.2, 0.85, 2)]).flat(),
+  // Brass studs between the wells, so a volley reads as one slot.
+  ...Array.from({ length: n - 1 }, (_, i) => ellipse((i + 1) * UNIT.step - HUD_LAYOUT.gap / 2, UNIT.h / 2, 1.1, 1.1, solid('brass'))),
+];
 
-// An ammo strip cell (24x28): a small tablet with a well, and the cyan ring that marks the selected one.
+// The fist (16x16, round its centre like the item icons): a rust leather glove curled shut, knuckles to the
+// top, the thumb folded across the front, a brass cuff at the wrist, lit from the top left, on a soft shadow.
+const FIST: Shape[] = [
+  ellipse(0.6, 6.4, 6, 1.4, { fill: { id: 'ink', alpha: 0.3 }, glow: { color: 'ink', blur: 1.5 } }),
+  path('M -6 -2.6 Q -6 -6 -3 -6 L 3.2 -6 Q 6.2 -6 6.2 -2.6 L 6 2.4 Q 5.6 4.4 3.4 4.4 L -3.4 4.4 Q -6 4.4 -6 2 Z', {
+    fill: { linear: [-5, -6, 5, 4], stops: [{ at: 0, color: 'rust-light' }, { at: 0.5, color: 'rust' }, { at: 1, color: 'rust-dark' }] },
+    outline: true,
+  }),
+  // The four fingers' knuckles along the top, split by creases.
+  ...[-3, 0, 3].map((x) => line([x + 0.2, -5.6, x, -1.6], 0.6, 'rust-dark')),
+  ...[-4.4, -1.4, 1.6, 4.6].map((x) => ellipse(x - 0.2, -4.6, 1, 0.6, { fill: { id: 'rust-light', alpha: 0.9 } })),
+  // The thumb across the front.
+  path('M -6 -0.4 Q -2 -1.8 2.6 -0.2 Q 3.8 0.4 3.2 1.6 Q -1.4 0.6 -6 2 Z', { fill: vertical('rust-light', 'rust', -1.8, 2), stroke: { color: 'rust-dark', width: 0.6 } }),
+  line([-5.4, -0.2, -1.6, -1], 0.5, { id: 'snow', alpha: 0.45 }),
+  // The brass cuff.
+  rect(-5, 3.6, 10.6, 3, 1, { fill: vertical('brass-light', 'brass-dark', 3.6, 6.6), outline: true }),
+  line([-4.2, 5.1, 4.8, 5.1], 0.5, 'brass-dark'),
+];
+
+// A hotbar cell (24x28, also the build bar's): a small tablet with a well, and the cyan ring that marks the selected one.
 const AMMO_CELL: Shape[] = [...tablet(24, 28), well(3, 3, 18, 22)];
 const AMMO_SELECT: Shape[] = [ring(2, 2, 20, 24, 1.6, 1, 3)];
 
@@ -98,8 +124,8 @@ const KEY_CAP: Shape[] = [
 const TICK: Shape[] = [{ ...line([1.2, 4.8, 3.6, 7.4, 7.8, 1.4], 1.6, 'cyan-glow', true), glow: { color: 'cyan', blur: 3 } }];
 
 export const HUD_SPRITES_VECTOR: readonly VectorSprite[] = [
-  sprite(SPRITES.hudSlot, [44, 24], HUD_SLOT),
-  sprite(SPRITES.hudSlotGlow, [44, 24], HUD_SLOT_GLOW),
+  ...TUBE_SLOT_FRAMES.map((key, i) => sprite(key, [tubeSlotWidth(i + 1), UNIT.h], tubeSlot(i + 1))),
+  { key: SPRITES.hudFist, size: [16, 16], anchor: [8, 8], frames: [FIST] },
   sprite(SPRITES.hudAmmoCell, [24, 28], AMMO_CELL),
   sprite(SPRITES.hudAmmoSelect, [24, 28], AMMO_SELECT),
   sprite(SPRITES.hudHealth, [52, 8], HEALTH),

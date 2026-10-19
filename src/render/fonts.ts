@@ -26,16 +26,16 @@ export function fontsReady(): boolean {
   return Object.values(FONT_FILES).every((f) => loaded.includes(f.family));
 }
 
-/** The Phaser text style for a style key, drawn at `resolution` texels per view px. */
-export function phaserStyle(key: TextStyleKey, resolution: number): Types.GameObjects.Text.TextStyle {
+/** The Phaser text style for a style key, drawn at `resolution` texels per view px; `scale` draws it that much bigger (025). */
+export function phaserStyle(key: TextStyleKey, resolution: number, scale = 1): Types.GameObjects.Text.TextStyle {
   const s = TEXT_STYLES[key];
   return {
     fontFamily: `"${FONT_FILES[s.font].family}"`,
-    fontSize: `${s.size}px`,
+    fontSize: `${s.size * scale}px`,
     fontStyle: String(s.weight),
     color: paletteHex(s.fill),
     stroke: paletteHex(s.stroke),
-    strokeThickness: s.strokeWidth,
+    strokeThickness: s.strokeWidth * scale,
     resolution,
   };
 }

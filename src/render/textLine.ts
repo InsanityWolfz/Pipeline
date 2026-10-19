@@ -11,20 +11,23 @@ const CAP_DROP = 0.3;
  * A line of text in one of the bundled fonts (020). (x, y) is where the top of its
  * capitals sits, so layouts line up on the letters, not the font's box. It's fixed
  * to the screen unless `world` is set, which places it in the world like a sprite.
+ * `scale` draws the style's font that much bigger (025: the tube slot's counts).
  */
 export class TextLine {
   readonly obj: GameObjects.Text;
   private readonly style: TextStyleKey;
+  private readonly scale: number;
   private x: number;
   private y: number;
   private text = '';
 
-  constructor(scene: Scene, x: number, y: number, depth: number = DEPTHS.hud, world = false, style: TextStyleKey = 'body') {
+  constructor(scene: Scene, x: number, y: number, depth: number = DEPTHS.hud, world = false, style: TextStyleKey = 'body', scale = 1) {
     this.style = style;
+    this.scale = scale;
     this.x = x;
     this.y = y;
     this.obj = scene.add
-      .text(x, this.boxTop(y), '', phaserStyle(style, textureScale()))
+      .text(x, this.boxTop(y), '', phaserStyle(style, textureScale(), scale))
       .setOrigin(0)
       .setScrollFactor(world ? 1 : 0)
       .setDepth(depth);
@@ -37,7 +40,7 @@ export class TextLine {
 
   /** Height of a line in this style, view px. */
   get lineHeight(): number {
-    return TEXT_STYLES[this.style].lineHeight;
+    return TEXT_STYLES[this.style].lineHeight * this.scale;
   }
 
   setVisible(visible: boolean): this {
@@ -71,6 +74,6 @@ export class TextLine {
   }
 
   private boxTop(y: number): number {
-    return y - Math.round(TEXT_STYLES[this.style].size * CAP_DROP);
+    return y - Math.round(TEXT_STYLES[this.style].size * this.scale * CAP_DROP);
   }
 }

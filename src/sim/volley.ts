@@ -36,6 +36,18 @@ export function nextPress(state: Pick<SimState, 'hasTube' | 'tube' | 'inventory'
   return rounds.length > 0 ? { kind: 'volley', rounds } : { kind: 'melee' };
 }
 
+/** What the HUD's tube slot shows (025): the next press, as `nextPress` says, without the entrance indexes. */
+export type HudActive =
+  | { kind: 'carried'; ammoId: string; count: number }
+  | { kind: 'volley'; rounds: { ammoId: string; count: number }[] }
+  | { kind: 'melee' };
+
+/** The tube slot's content, straight from `nextPress`, so the HUD can't disagree with what fires. */
+export function hudActive(state: Pick<SimState, 'hasTube' | 'tube' | 'inventory' | 'link'>): HudActive {
+  const press = nextPress(state);
+  return press.kind === 'volley' ? { kind: 'volley', rounds: press.rounds.map(({ ammoId, count }) => ({ ammoId, count })) } : press;
+}
+
 /** One projectile of a volley: its ammo, its direction (unit), and for a lobbed round how far across the aim point it lands, px. */
 export interface VolleyShot {
   ammoId: string;

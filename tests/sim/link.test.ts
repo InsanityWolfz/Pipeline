@@ -10,7 +10,6 @@ import type { HopperState } from '../../src/sim/pieces';
 import { createSim } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
-import { slotCount } from '../../src/sim/tube';
 import { arena, atEntrance, command, die, runUntilKo, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, SEED } from './fight';
 import { foundry, put, stepOutside } from './foundryKit';
 import { OVERWORLD_ROOM } from '../../src/data/overworld';
@@ -135,17 +134,6 @@ describe('firing from the reservoir', () => {
     expect(s.events.melees).toHaveLength(0);
     expect(s.bombs).toHaveLength(1);
     expect(s.link.entrances[1]?.count).toBe(4);
-  });
-
-  it('the slot count switches from carried rounds to the volley, then 0', () => {
-    const s = attuned();
-    s.inventory.arrow = 2;
-    setMiddle(s, 'arrow', 9);
-    expect(slotCount(s)).toEqual({ count: 2, fromReservoir: false });
-    s.inventory.arrow = 0;
-    expect(slotCount(s)).toEqual({ count: 9, fromReservoir: true });
-    setMiddle(s, null, 0);
-    expect(slotCount(s)).toEqual({ count: 0, fromReservoir: false });
   });
 
   it('a ley bolt line into the intake refills the reservoir while the player fires from it', () => {

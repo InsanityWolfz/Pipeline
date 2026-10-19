@@ -8,7 +8,7 @@ import type { Facing } from './player';
 import type { ArmorPiece } from './armor';
 import { fixtureDef } from './fixtures';
 import { currentObjective } from './objectives';
-import { volleyRounds, nextPress } from './volley';
+import { volleyRounds, nextPress, hudActive, type HudActive } from './volley';
 import { ENTRANCE_CAP, INTAKE } from '../data/foundry';
 import type { SimState } from './state';
 import {
@@ -79,6 +79,8 @@ export interface SimSummary {
     /** What the next fire press does (023, 024): a carried round, a volley, or a punch. */
     next: 'carried' | 'volley' | 'melee';
   };
+  /** The bottom HUD (025): what the tube slot shows, which is what the next fire press does. */
+  hud: { active: HudActive };
   /** The tube's link to the foundry. */
   link: {
     attuned: boolean;
@@ -175,6 +177,7 @@ export function summarize(state: SimState): SimSummary {
       shotCount: tube.shotCount,
       next: nextPress(state).kind,
     },
+    hud: { active: hudActive(state) },
     link: {
       attuned: state.link.attuned,
       attunePulse: state.link.attunePulse,

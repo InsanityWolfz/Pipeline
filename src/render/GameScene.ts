@@ -11,6 +11,7 @@ import type { Command } from '../sim/input';
 import { canPlace, conduitInFrom, unlockedPieces } from '../sim/placement';
 import { roomById, type SimState } from '../sim/state';
 import { stepSim } from '../sim/step';
+import { hudActive } from '../sim/volley';
 import { ArrowView } from './ArrowView';
 import { BombView } from './BombView';
 import { BuildView } from './BuildView';
@@ -191,6 +192,7 @@ export class GameScene extends Scene {
       intakeLift: this.roomViews?.intakeLift ?? null,
       intakePrompt: this.tutorial?.intakePrompt ?? null,
       camera: { x: this.cameras.main.worldView.centerX, y: this.cameras.main.worldView.centerY },
+      hud: this.hud?.bottom ?? null,
     };
   }
 
@@ -270,7 +272,7 @@ export class GameScene extends Scene {
     this.site?.update(sim, shown);
     this.siteMenus?.update(sim);
     this.tutorial?.update(sim, shown);
-    this.hud?.update(sim.tube, sim.inventory, sim.player, sim.link, worn(sim), sim.hasTube);
+    this.hud?.update(sim.tube, sim.inventory, sim.player, hudActive(sim), worn(sim), sim.hasTube, sim.building);
     this.menu?.update(sim.inventory, sim.link);
     const hopper = sim.foundry.pieces.find((p) => p.id === this.picker?.hopperId);
     this.picker?.update(sim.inventory, hopper?.kind === 'hopper' ? hopper : undefined);

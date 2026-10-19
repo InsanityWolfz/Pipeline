@@ -4,16 +4,34 @@
 /** The harvest progress bar over a node: size, gap above the sprite, and palette ids. */
 export const HARVEST_BAR = { w: 20, h: 3, gap: 2, border: 1, color: 'cyan', back: 'ink' } as const;
 
+/** Size of the hotbar cell (025), px: a tablet with a well, as the build bar's cells use too. */
+const CELL = { w: 24, h: 28, step: 26 } as const;
+/** How much bigger the tube slot's icons and text are than the hotbar's (025). */
+const ACTIVE_SCALE = 1.4;
+
 /**
- * The ammo strip right of the hotbar slot: one cell per ammo in key order,
- * px from each cell's top-left. Highlight drawn over the selected cell.
+ * The bottom HUD (025): the hotbar row of three cells (keys 1, 2 and 3: key number,
+ * icon, carried count) centred `margin` px above the bottom edge, and the tube slot
+ * centred `gap` px above it. The tube slot shows what the next press fires: one unit
+ * per round (a carried round, each round of a volley, or the fist), each the cell's size
+ * times `activeScale`, its icon centred and its count or label centred under it, units
+ * `gap` px apart. Px from each cell's or unit's top-left.
  */
-export const AMMO_STRIP_LAYOUT = {
+export const HUD_LAYOUT = {
+  margin: 6,
   gap: 4,
-  cellStep: 26,
-  key: { x: 3, y: 3 },
-  icon: { x: 6, y: 3 },
-  count: { x: 4, y: 20 },
+  activeScale: ACTIVE_SCALE,
+  cell: { ...CELL, key: { x: 3, y: 3 }, icon: { x: 6, y: 3 }, count: { x: 4, y: 20 } },
+  tubeSlot: {
+    w: Math.round(CELL.w * ACTIVE_SCALE),
+    h: Math.round(CELL.h * ACTIVE_SCALE),
+    /** The icon's top, and the count's or label's top (the top of its capitals). */
+    iconY: Math.round(3 * ACTIVE_SCALE),
+    countY: Math.round(20 * ACTIVE_SCALE),
+    /** Icons are this big before scaling (the item icons' size). */
+    iconSize: 16,
+    melee: 'Melee',
+  },
 } as const;
 
 /**
@@ -43,16 +61,17 @@ export const CRAFT_MENU_LAYOUT = {
 } as const;
 
 /**
- * The build bar, along the bottom of the screen above the ammo strip: one cell per
- * unlocked piece in build bar order, its icon inside (a machine shows what it makes). Cells use the ammo strip's
- * cell sprites. Px on screen, then from each cell's top-left.
+ * The build bar, along the bottom of the screen in the hotbar row's place (025: the row
+ * hides while building): one cell per unlocked piece in build bar order, its icon inside
+ * (a machine shows what it makes). Cells use the hotbar's cell sprites. Px on screen,
+ * then from each cell's top-left.
  */
 export const BUILD_BAR_LAYOUT = {
   /** Distance from the screen's bottom edge to the cells' bottom. */
-  bottom: 34,
-  cellStep: 26,
-  cellWidth: 24,
-  cellHeight: 28,
+  bottom: HUD_LAYOUT.margin,
+  cellStep: CELL.step,
+  cellWidth: CELL.w,
+  cellHeight: CELL.h,
   icon: { x: 4, y: 6 },
 } as const;
 
