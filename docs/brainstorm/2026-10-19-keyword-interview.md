@@ -34,3 +34,13 @@ Oct 19, 2026 · Shaun's answers to the open questions in docs/brainstorm/2026-10
 - **Q17, new-keyword rule:** adopted. Before a keyword ships it needs a rule template, numbers in data, at least one source and at least two payoffs, enforced by a data test.
 - **Q18, enemy traits:** named chips only (Shield, Boss, Burrowed); nothing scales against them yet.
 - **Q19, combos:** always through a keyword. Keyword A creates a status or Pool, and keyword C consumes it. No one-off hidden rules.
+
+## Round 6
+- **Q20, retune:** in a separate balance spec. The keyword spec records the target damage order (landmine > arrow > ley bolt ≈ bomb per hit). The balance spec then fixes the numbers, the Bulwark and frost.
+- **Split:** two specs:
+  - **039:** the keyword system in data, the renames, and the rule changes (Stun, Pool, Knockback on rounds, elements on every family, exact rates).
+  - **040:** the legibility UI (hover summary, Shift+hover breakdown, the Build tab, glossary chips).
+- **Next after the keyword specs:** the balance spec, then the shippable build for friends (title screen, soft save, start-to-finish flow).
+- **Approval:** approve on draft. Claude drafts 039 and 040 from these answers, proposes answers to anything still open, and builds straight away.
+
+## Interview complete
