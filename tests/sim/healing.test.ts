@@ -1,10 +1,11 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { TILE_SIZE } from '../../src/data/config';
-import { DYING_TICKS, HEALING, MAX_HEALTH } from '../../src/data/player';
+import { DYING_TICKS, HEALING, MAX_HEALTH, type HealingTuning } from '../../src/data/player';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { FOUNDRY_ROOM, SHRINE_SITE } from '../../src/data/rooms';
 import { claim } from '../../src/sim/claims';
-import { fieldRegen, springAt, strongest } from '../../src/sim/healing';
+import { fieldRegen, springAt, stepHealing, strongest } from '../../src/sim/healing';
+import { clearEvents } from '../../src/sim/events';
 import { damagePlayer } from '../../src/sim/health';
 import { roomById, type SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
@@ -14,10 +15,18 @@ import { arena, atPylon, movePlayer, placeHusk, run } from './fight';
 // Healing only in safe spots (030): fast in a claimed pylon's safe zone and in a Ley
 // Spring's pool, a fast fill at the foundry, nothing in the open field. Rates never stack.
 
-const BASE_REGEN = HEALING.fieldRegen;
-afterEach(() => {
-  HEALING.fieldRegen = BASE_REGEN;
-});
+/** Healing tuning with some values changed, as gear (036) and talents (037) will change field regen. */
+const tuned = (change: Partial<HealingTuning>): HealingTuning => ({ ...HEALING, ...change });
+
+/** Runs `ticks` ticks of healing alone under `tuning`, the player standing still; `during` runs inside the first, before healing. */
+function heal(s: SimState, ticks: number, tuning: HealingTuning, during?: () => void): void {
+  for (let i = 0; i < ticks; i++) {
+    clearEvents(s.events);
+    s.tick += 1;
+    if (i === 0) during?.();
+    stepHealing(s, tuning);
+  }
+}
 
 const spring = (id: string) => {
   const s = OVERWORLD.springs.find((x) => x.id === id);
@@ -152,37 +161,34 @@ describe('the highest rate wins', () => {
   });
 
   it('field regen raised to 10 in a spring still heals 10 HP/s, not 20', () => {
-    HEALING.fieldRegen = 10;
     const s = inSpring('west-spring', 50);
-    run(s, 60);
+    heal(s, 60, tuned({ fieldRegen: 10 }));
     expect(s.player.health).toBe(60);
   });
 
   it('field regen raised to 10 in the claimed zone still heals 10 HP/s', () => {
-    HEALING.fieldRegen = 10;
     const s = inZone(50);
-    run(s, 60);
+    heal(s, 60, tuned({ fieldRegen: 10 }));
     expect(s.player.health).toBe(60);
   });
 
   it('field regen raised to 60 in the foundry heals 60 HP/s, not 110', () => {
-    HEALING.fieldRegen = 60;
     const s = inFoundry(10);
-    run(s, 60);
+    heal(s, 60, tuned({ fieldRegen: 60 }));
     expect(s.player.health).toBe(70);
     expect(s.player.healing).toBe('regen');
   });
 
   it('raised field regen heals in the open field and reports regen', () => {
-    HEALING.fieldRegen = 6;
+    const regen = tuned({ fieldRegen: 6 });
     const s = arena();
     s.player.health = 40;
-    expect(fieldRegen()).toBe(6);
-    run(s, 600);
+    expect(fieldRegen(regen)).toBe(6);
+    heal(s, 600, regen);
     expect(s.player.health).toBe(100);
     const t = arena();
     t.player.health = 40;
-    run(t, 10);
+    heal(t, 10, regen);
     expect(t.player.health).toBe(41);
     expect(t.player.healing).toBe('regen');
   });
@@ -215,6 +221,31 @@ describe('limits', () => {
     run(s, 3);
     expect(s.player.health).toBe(41);
     expect(s.player.healing).toBe('spring');
+  });
+
+  it('a delay after a hit pauses healing for exactly that many ticks, the hit\'s own first', () => {
+    const delay = tuned({ afterHitDelay: 30 });
+    const s = inSpring('west-spring', 60);
+    heal(s, 3, delay);
+    heal(s, 1, delay, () => expect(damagePlayer(s, 20, -1, 0, 0, 1)).toBe(true));
+    expect(s.player.health).toBe(40);
+    expect(s.player.healing).toBeNull();
+    expect(s.events.heals).toEqual([{ source: 'spring', kind: 'stop' }]);
+    heal(s, 29, delay);
+    expect(s.player.healing).toBeNull();
+    heal(s, 1, delay);
+    expect(s.player.healing).toBe('spring');
+    expect(s.events.heals).toEqual([{ source: 'spring', kind: 'start' }]);
+    heal(s, 5, delay);
+    expect(s.player.health).toBe(41);
+
+    // A delay of 1 pauses only the hit's own tick.
+    const one = tuned({ afterHitDelay: 1 });
+    const t = inSpring('west-spring', 60);
+    heal(t, 1, one, () => damagePlayer(t, 20, -1, 0, 0, 1));
+    expect(t.player.healing).toBeNull();
+    heal(t, 1, one);
+    expect(t.player.healing).toBe('spring');
   });
 });
 

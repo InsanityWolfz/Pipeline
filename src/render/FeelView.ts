@@ -90,8 +90,8 @@ export class FeelView {
     }
     for (const t of ev.thaws) j.burst('thawShards', t.x, t.y);
     if (ev.starBursts.length > 0) s.play(SOUNDS.starBurst, SOUND_LEVELS.cue);
-    // Healing starting in a safe spot (030) chimes once; nothing while it carries on.
-    if (ev.heals.some((h) => h.kind === 'start')) s.play(SOUNDS.healStart, SOUND_LEVELS.quiet);
+    // Healing starting in a safe spot (030) chimes once; nothing while it carries on, or when it only changes source.
+    if (ev.heals.some((h) => h.kind === 'start') && !ev.heals.some((h) => h.kind === 'stop')) s.play(SOUNDS.healStart, SOUND_LEVELS.quiet);
     // A stage hand-applied at the bench (029) sounds like a hand craft (the crafting menu plays its own).
     if (ev.crafts.some((c) => STAGES[c.recipeId])) s.play(SOUNDS.craft);
     // A punch (023) thuds on a hit, or whiffs; its hits otherwise land like any other.

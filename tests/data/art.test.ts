@@ -15,7 +15,9 @@ import { VECTOR_SPRITES } from '../../src/data/art/sprites';
 import { TUBE_PARTS, WANDERER, WANDERER_DYNAMIC } from '../../src/data/art/wanderer';
 import { DAYLIGHT_PALETTE } from '../../src/data/palette';
 import { STAGE_SPRITES_VECTOR } from '../../src/data/art/stages';
-import { SPRING_SPRITES_VECTOR } from '../../src/data/art/spring';
+import { SPRING_POOL_PX, SPRING_SPRITES_VECTOR } from '../../src/data/art/spring';
+import { SPRING_RADIUS } from '../../src/data/overworld';
+import { TILE_SIZE } from '../../src/data/config';
 import { SPRING_LOOK, SPRING_SPRITES } from '../../src/data/springAssets';
 import { ENEMY_RIGS } from '../../src/data/art/enemies';
 import { poseOfAnim } from '../../src/render/vector/catalog';
@@ -72,6 +74,11 @@ describe('vector shapes', () => {
 
   it('draw the Ley Spring (030) under its keys, its pool as wide as the sim\'s, and colour its look from the palette', () => {
     expect(SPRING_SPRITES_VECTOR.map((s) => s.key).sort()).toEqual(Object.values(SPRING_SPRITES).sort());
+    // The drawn pool is the sim's: 1.5 tiles, 48 px, and the sprite is wide enough for its rim stones round it.
+    expect(SPRING_POOL_PX).toBe(SPRING_RADIUS * TILE_SIZE);
+    expect(SPRING_POOL_PX).toBe(48);
+    const pool = SPRING_SPRITES_VECTOR.find((s) => s.key === SPRING_SPRITES.spring);
+    expect(Math.min(pool?.anchor[0] ?? 0, pool?.anchor[1] ?? 0)).toBeGreaterThanOrEqual(SPRING_POOL_PX + 8);
     const L = SPRING_LOOK;
     for (const id of [L.light.color, L.thread.color, L.thread.glow, L.shimmer.warm, L.shimmer.cool]) expect(daylight, id).toContain(id);
   });

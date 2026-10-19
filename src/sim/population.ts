@@ -52,8 +52,13 @@ export function safeZones(state: Pick<SimState, 'claims'>): SafeZone[] {
   });
 }
 
+/** The claimed pylon's safe zone holding a point, or null. */
+export function safeZoneAt(state: Pick<SimState, 'claims'>, roomId: string, x: number, y: number): SafeZone | null {
+  return safeZones(state).find((z) => z.roomId === roomId && Math.hypot(x - z.x, y - z.y) <= z.r) ?? null;
+}
+
 export function inSafeZone(state: Pick<SimState, 'claims'>, roomId: string, x: number, y: number): boolean {
-  return safeZones(state).some((z) => z.roomId === roomId && Math.hypot(x - z.x, y - z.y) <= z.r);
+  return safeZoneAt(state, roomId, x, y) !== null;
 }
 
 /** An enemy's move, stopped short if it would carry it into a safe zone it isn't already in. */

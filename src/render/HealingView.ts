@@ -5,7 +5,7 @@ import { OVERWORLD } from '../data/overworld';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { SPRING_LOOK, SPRING_SPRITES } from '../data/springAssets';
 import { springAt } from '../sim/healing';
-import { safeZones } from '../sim/population';
+import { safeZoneAt } from '../sim/population';
 import type { SimState } from '../sim/state';
 import { tileCentre } from '../sim/tiles';
 import { colorOf } from './color';
@@ -166,9 +166,9 @@ export class HealingView {
       const t = m.age / m.life;
       m.y -= m.speed * dt;
       m.image
-        .setPosition(m.x + Math.sin(m.phase + m.age / 180) * L.sway, m.y)
-        .setAlpha(Math.min(1, t * 6) * (1 - t * t))
-        .setScale((m.scale * (1 - t * 0.4)) / textureScale());
+        .setPosition(m.x + Math.sin(m.phase + m.age / L.swayMs) * L.sway, m.y)
+        .setAlpha(Math.min(1, t / L.fadeIn) * (1 - t * t))
+        .setScale((m.scale * (1 - t * L.shrink)) / textureScale());
       return true;
     });
   }
@@ -177,9 +177,9 @@ export class HealingView {
   private drawThread(sim: SimState, on: boolean): void {
     const L = SPRING_LOOK.thread;
     const p = sim.player;
-    const zone = on ? safeZones(sim).find((z) => z.roomId === sim.roomId && Math.hypot(p.x - z.x, p.y - z.y) <= z.r) : undefined;
-    this.thread.clear().setVisible(zone !== undefined);
-    this.threadGlow.clear().setVisible(zone !== undefined);
+    const zone = on ? safeZoneAt(sim, sim.roomId, p.x, p.y) : null;
+    this.thread.clear().setVisible(zone !== null);
+    this.threadGlow.clear().setVisible(zone !== null);
     if (!zone) return;
     const top = { x: zone.x, y: zone.y - L.pylonRise };
     const dx = p.x - top.x;
@@ -214,7 +214,7 @@ export class HealingView {
     fx.ring.setVisible(showing);
     if (!showing) return;
     const t = this.shimmerMs / L.ms;
-    const tint = blend(L.warm, L.cool, Math.min(1, t * 1.5));
+    const tint = blend(L.warm, L.cool, Math.min(1, t / L.coolAt));
     const fade = Math.sin(Math.PI * t);
     fx.light
       .setPosition(p.x, p.y - L.rise)

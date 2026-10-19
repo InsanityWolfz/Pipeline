@@ -8,11 +8,11 @@ Small vertical commits, tests first in each:
 1. **Data.** `src/data/player.ts`: `HEALING` (`foundry` 50, `pylon` 10, `spring` 10, `fieldRegen` 0 HP/s, `afterHitDelay` 0 ticks); `MAX_HEALTH`'s "no regen yet" note goes. `src/data/overworld.ts`: `SpringDef` (`id`, centre tile, pool `radius` in tiles), `SPRING_RADIUS` 1.5, `SPRING_CLEARING` 3, and `OVERWORLD.springs`: `west-spring` (10, 31), `south-east-spring` (66, 38), `north-spring` (26, 8).
 2. **Clearings.** `generateOverworld` stamps a square of open ground `SPRING_CLEARING` tiles round each spring with the other landmarks, after the terrain is generated. Not through `OVERWORLD.clearings`: those also steer the generator, and a new clearing there shifts the seeded RNG's stream and reshuffles every grove, rock field and pond on the map. Stamped as a landmark, only the three clearings change (checked by diffing the generated rows before and after).
 3. **Healing** (`src/sim/healing.ts`, new), run once a tick after `checkKo`, so a hit that drops health to 0 starts the KO before anything could heal it:
-   - `fieldRegen()`: the one function the field regen stat is read through (`HEALING.fieldRegen` now; 036/037 add gear and talents there).
+   - `fieldRegen(tuning)`: the one function the field regen stat is read through (`HEALING.fieldRegen` now; 036/037 add gear and talents there).
    - `springAt(roomId, x, y)`: the spring whose pool holds the feet point (overworld only, `hypot ≤ radius × TILE_SIZE`).
    - `healingRates(state)`: every rate that applies (foundry room; `inSafeZone` at the feet; a spring's pool; field regen anywhere); `strongest(rates)` keeps the highest above 0. Ties go to the table's order (foundry, pylon, spring, regen).
    - `stepHealing(state)`: nothing while dying, at max health, during `healDelay`, or with no rate above 0 (carry cleared). Otherwise `healCarry += rate` (HP·ticks), whole points `floor(healCarry / TICK_RATE)` go on, capped at `MAX_HEALTH`; the carry is reset when health reaches max. Integer arithmetic, so 10 HP/s is exactly 10 HP in 60 ticks.
-   - `PlayerState` gains `healing` (`'foundry' | 'pylon' | 'spring' | 'regen' | null`), `healCarry`, `healDelay`. `damagePlayer` sets `healDelay = HEALING.afterHitDelay` (0, so healing carries on).
+   - `PlayerState` gains `healing` (`'foundry' | 'pylon' | 'spring' | 'regen' | null`), `healCarry`, `lastHitTick`. `damagePlayer` records the hit's tick; healing waits `afterHitDelay` ticks from it, the hit's own tick first, so a delay of N pauses exactly N ticks (0: healing carries on).
    - `events.heals`: `{ source, kind: 'start' | 'stop' }` whenever `healing` changes (a switch of source stops one and starts the other).
 4. **Hook.** `player.healing`; `springs` (id, tile, pool radius px, `inside`); `heals` in `events`. Dev hook `setPlayerHealth(health)` for the e2e and screenshots (a damaged player without a fight).
 5. **Render** (`src/render/HealingView.ts`, new, owned by `RoomViews` so GameScene stays under its limit; the ui fields join `RoomUiState`):
@@ -51,8 +51,8 @@ Small vertical commits, tests first in each:
 - No spring sits in a pylon's zone on the fixed map, so "a spring inside a safe zone gives 10, not 20" is tested on the pure `strongest` and in play by overlapping sources with raised field regen.
 - `setPlayerHealth` dev hook.
 - The look's numbers and keys live in `src/data/springAssets.ts` (as 029's in `stageAssets.ts`), since `assets.ts` is near its size limit.
-- `fieldRegen()` takes no state yet: nothing it reads is in the state until 036/037, and lint refuses an unused parameter.
-- The chime plays at `SOUND_LEVELS.quiet`, on any start (including a change of source).
+- `fieldRegen(tuning = HEALING)` takes no state yet: nothing it reads is in the state until 036/037. `HEALING` is read-only; `healingRates` and `stepHealing` take an optional tuning so tests can raise field regen or the hit delay without changing the data.
+- The chime plays at `SOUND_LEVELS.quiet` on a real start only, not when healing just changes source (a stop in the same frame).
 - Under the test hook the sim holds still between steps, so `healing` stays set and the effects keep running while a screenshot waits; the foundry shot waits for the shimmer's brightest stretch.
 
 ## Risks

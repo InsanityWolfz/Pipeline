@@ -1,3 +1,5 @@
+import { TILE_SIZE } from '../config';
+import { SPRING_RADIUS } from '../overworld';
 import { SPRING_SPRITES } from '../springAssets';
 import { ellipse, flat, line, path, type Shape, type VectorSprite } from './types';
 
@@ -6,8 +8,10 @@ import { ellipse, flat, line, path, type Shape, type VectorSprite } from './type
 // the sim's (48 px); the stones sit just outside it. Flat on the ground: feet, enemies
 // and shots cross it. Light comes from the top left.
 
-const POOL = 46;
-const RIM = 52;
+/** The sim's pool radius, px: feet inside it heal. The water stops just short of it and the rim stones sit just outside. */
+export const SPRING_POOL_PX = SPRING_RADIUS * TILE_SIZE;
+const POOL = SPRING_POOL_PX - 2;
+const RIM = SPRING_POOL_PX + 4;
 const STONES = 16;
 
 /** One rim stone: a low block on the ring between two angles, its top lit and its front face in shade. */
@@ -61,10 +65,15 @@ const SPRING: Shape[] = [
 /** A thin ring of light on the water, 10 px across before render scales it. */
 const RIPPLE: Shape[] = [ellipse(0, 0, 10, 10, { stroke: { color: 'cyan-glow', width: 1.2 } })];
 
-/** A healing mote: a four-point ley sparkle with a white heart, glowing so it reads on water, grass and stone. */
+/**
+ * A healing mote: a four-point ley sparkle with a white heart and a thin deep-cyan edge, so it reads on the
+ * glowing pool as well as on grass and stone.
+ */
+const STAR4 = 'M 0 -4.5 L 1 -1 L 4.5 0 L 1 1 L 0 4.5 L -1 1 L -4.5 0 L -1 -1 Z';
 const MOTE: Shape[] = [
-  path('M 0 -4 L 0.9 -0.9 L 4 0 L 0.9 0.9 L 0 4 L -0.9 0.9 L -4 0 L -0.9 -0.9 Z', { fill: 'cyan-glow', glow: { color: 'cyan', blur: 3 } }),
-  ellipse(0, 0, 1, 1, flat('snow')),
+  path(STAR4, { fill: 'snow', stroke: { color: 'cyan-deep', width: 0.9 }, glow: { color: 'snow', blur: 2 } }),
+  path(STAR4, { fill: 'cyan-glow', alpha: 0.6 }),
+  ellipse(0, 0, 1.3, 1.3, flat('snow')),
 ];
 
 /** The shimmer's ring on the floor (three-quarter view, so flattened), white so render can tint it. */

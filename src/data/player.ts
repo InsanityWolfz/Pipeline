@@ -93,7 +93,15 @@ export type HealSource = 'foundry' | 'pylon' | 'spring' | 'regen';
  * pylon's safe zone, a Ley Spring's pool. `fieldRegen` heals anywhere; it's 0 until gear (036) and talents
  * (037) raise it. Rates never stack: the highest that applies heals. `afterHitDelay`: ticks healing waits after a hit.
  */
-export const HEALING: { foundry: number; pylon: number; spring: number; fieldRegen: number; afterHitDelay: number } = {
+export interface HealingTuning {
+  readonly foundry: number;
+  readonly pylon: number;
+  readonly spring: number;
+  readonly fieldRegen: number;
+  readonly afterHitDelay: number;
+}
+
+export const HEALING: HealingTuning = {
   foundry: 50,
   pylon: 10,
   spring: 10,

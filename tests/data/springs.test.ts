@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { GROTTO } from '../../src/data/grotto';
 import { OVERWORLD, ringOf, SPRING_CLEARING, SPRING_RADIUS } from '../../src/data/overworld';
 import { TILE } from '../../src/data/rooms';
-import { generateOverworld } from '../../src/sim/overworldGen';
+import { generateOverworld, springClearing } from '../../src/sim/overworldGen';
 import { reachable, tileKey } from '../fixtures/reach';
 
 // Ley Springs (030): three pools on the fixed map, each in its own clearing, on open
@@ -35,6 +35,22 @@ describe('Ley Springs', () => {
     for (const s of OVERWORLD.springs) {
       for (let ty = s.ty - SPRING_CLEARING; ty <= s.ty + SPRING_CLEARING; ty++) {
         for (let tx = s.tx - SPRING_CLEARING; tx <= s.tx + SPRING_CLEARING; tx++) expect([TILE.floor, TILE.path], `${s.id} ${tx},${ty}`).toContain(at(tx, ty));
+      }
+    }
+  });
+
+  it('no generated pond (shallows included) reaches into a spring clearing', () => {
+    const ponds = room.terrain?.ponds ?? [];
+    expect(ponds.length).toBeGreaterThan(0);
+    for (const s of OVERWORLD.springs) {
+      const c = springClearing(s);
+      // A pond's water and shallows are the tiles within `shore` of its radii (the generator's own rule).
+      for (const p of ponds) {
+        for (let ty = c.y0; ty <= c.y1; ty++) {
+          for (let tx = c.x0; tx <= c.x1; tx++) {
+            expect(Math.hypot((tx - p.cx) / p.rx, (ty - p.cy) / p.ry), `${s.id}: ${tx},${ty} in the pond at ${p.cx},${p.cy}`).toBeGreaterThan(OVERWORLD.ponds.shore);
+          }
+        }
       }
     }
   });

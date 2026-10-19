@@ -42,7 +42,8 @@ function pond(grid: Grid, rng: RngState): Pond | null {
   const m = OVERWORLD.ponds.edgeMargin;
   const cx = nextInt(rng, rx + m, OVERWORLD.width - rx - m - 1);
   const cy = nextInt(rng, ry + m, OVERWORLD.height - ry - m - 1);
-  // A pond keeps a tile of grass between itself and any clearing or path.
+  // A pond keeps a tile of grass between itself and any clearing in OVERWORLD.clearings or path. The springs'
+  // clearings (030) are stamped later and don't steer this; tests/data/springs.test.ts checks no pond reaches them.
   for (let ty = cy - ry - 2; ty <= cy + ry + 2; ty++) {
     for (let tx = cx - rx - 2; tx <= cx + rx + 2; tx++) if (!open(tx, ty) || grid[ty]?.[tx] === TILE.path) return null;
   }

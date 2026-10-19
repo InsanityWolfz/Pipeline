@@ -1,5 +1,5 @@
 import { TICK_RATE, TILE_SIZE } from '../data/config';
-import { HEALING, MAX_HEALTH, type HealSource } from '../data/player';
+import { HEALING, MAX_HEALTH, type HealingTuning, type HealSource } from '../data/player';
 import { OVERWORLD, OVERWORLD_ROOM, type SpringDef } from '../data/overworld';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { inSafeZone } from './population';
@@ -20,9 +20,12 @@ export interface HealRate {
 /** Ties between equal rates go to the first in this order. */
 const ORDER: readonly HealSource[] = ['foundry', 'pylon', 'spring', 'regen'];
 
-/** The field regen stat, HP/s: the one place it's read, so gear (036) and talents (037) can add to it (they bring the state in). */
-export function fieldRegen(): number {
-  return HEALING.fieldRegen;
+/**
+ * The field regen stat, HP/s: the one place it's read, so gear (036) and talents (037) can add to it
+ * (they bring the state in). `tuning` is the data's unless a test passes its own.
+ */
+export function fieldRegen(tuning: HealingTuning = HEALING): number {
+  return tuning.fieldRegen;
 }
 
 /** The spring whose pool holds a feet point, or null. Springs are in the overworld only. */
@@ -37,12 +40,12 @@ export function springAt(roomId: string, x: number, y: number): SpringDef | null
 }
 
 /** Every healing rate that applies where the player stands. */
-export function healingRates(state: SimState): HealRate[] {
+export function healingRates(state: SimState, tuning: HealingTuning = HEALING): HealRate[] {
   const { player: p, roomId } = state;
-  const rates: HealRate[] = [{ source: 'regen', rate: fieldRegen() }];
-  if (roomId === FOUNDRY_ROOM) rates.push({ source: 'foundry', rate: HEALING.foundry });
-  if (inSafeZone(state, roomId, p.x, p.y)) rates.push({ source: 'pylon', rate: HEALING.pylon });
-  if (springAt(roomId, p.x, p.y)) rates.push({ source: 'spring', rate: HEALING.spring });
+  const rates: HealRate[] = [{ source: 'regen', rate: fieldRegen(tuning) }];
+  if (roomId === FOUNDRY_ROOM) rates.push({ source: 'foundry', rate: tuning.foundry });
+  if (inSafeZone(state, roomId, p.x, p.y)) rates.push({ source: 'pylon', rate: tuning.pylon });
+  if (springAt(roomId, p.x, p.y)) rates.push({ source: 'spring', rate: tuning.spring });
   return rates;
 }
 
@@ -56,14 +59,15 @@ export function strongest(rates: readonly HealRate[]): HealRate | null {
 }
 
 /**
- * One tick of healing, after the KO check. Nothing heals while dying, at max health or
- * while `healDelay` runs after a hit. `healing` names the source raising health this tick
- * (whole points or the fraction toward the next), and `heals` events mark it starting and stopping.
+ * One tick of healing, after the KO check. Nothing heals while dying, at max health, or for
+ * `afterHitDelay` ticks from a hit (the hit's own tick first: a delay of N pauses exactly N ticks).
+ * `healing` names the source raising health this tick (whole points or the fraction toward the
+ * next), and `heals` events mark it starting and stopping. `tuning` is the data's unless a test passes its own.
  */
-export function stepHealing(state: SimState): void {
+export function stepHealing(state: SimState, tuning: HealingTuning = HEALING): void {
   const p = state.player;
-  if (p.healDelay > 0) p.healDelay -= 1;
-  const best = p.dying > 0 || p.health >= MAX_HEALTH || p.healDelay > 0 ? null : strongest(healingRates(state));
+  const waiting = p.lastHitTick !== null && state.tick - p.lastHitTick < tuning.afterHitDelay;
+  const best = p.dying > 0 || p.health >= MAX_HEALTH || waiting ? null : strongest(healingRates(state, tuning));
   if (best) {
     p.healCarry += best.rate;
     const gained = Math.min(Math.floor(p.healCarry / TICK_RATE), MAX_HEALTH - p.health);

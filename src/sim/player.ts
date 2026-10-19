@@ -32,8 +32,8 @@ export interface PlayerState extends Knockable {
   healing: HealSource | null;
   /** Healing built up toward the next whole HP, in HP·ticks (TICK_RATE of them make 1 HP). */
   healCarry: number;
-  /** Ticks left before healing resumes after a hit (HEALING.afterHitDelay). */
-  healDelay: number;
+  /** The tick the last hit landed on, or null: healing waits HEALING.afterHitDelay ticks from it. */
+  lastHitTick: number | null;
 }
 
 export function createPlayer(at: { x: number; y: number }): PlayerState {
@@ -54,7 +54,7 @@ export function createPlayer(at: { x: number; y: number }): PlayerState {
     dying: 0,
     healing: null,
     healCarry: 0,
-    healDelay: 0,
+    lastHitTick: null,
     knockX: 0,
     knockY: 0,
     knockTicks: 0,
