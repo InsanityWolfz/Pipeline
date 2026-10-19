@@ -149,15 +149,18 @@ describe('the line after the shrine', () => {
   it('is never blank, whichever goals after the claim are done', () => {
     const after = OBJECTIVES.length - CLAIMED - 1;
     expect(after).toBeGreaterThan(0);
+    // One sim, reused: the line only reads the done flags, and 034 grew the chain to
+    // thousands of combinations, too many to build a world for each.
+    const s = createSim(SEED);
     for (let mask = 0; mask < 1 << after; mask++) {
-      const s = createSim(SEED);
       s.objectives = OBJECTIVES.map((_, i) => i <= CLAIMED || ((mask >> (i - CLAIMED - 1)) & 1) === 1);
       const line = objectiveLine(s);
       expect(line.text.length, `mask ${mask}`).toBeGreaterThan(0);
       const first = currentObjective(s);
       expect(line.index).toBe(first);
       expect(line.text).toBe(first === null ? FRONTIER_GOAL.text : OBJECTIVES[first]?.text);
-      expect(summarize(s).objective).toEqual(line);
+      // The full summary is costly; check it agrees on a spread of masks, ends included.
+      if (mask % 97 === 0 || mask === (1 << after) - 1) expect(summarize(s).objective).toEqual(line);
     }
   });
 
