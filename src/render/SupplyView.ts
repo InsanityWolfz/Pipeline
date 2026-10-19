@@ -87,8 +87,8 @@ export class SupplyView {
   update(sim: SimState, events: SimEvents, shown: string, deltaMs: number): void {
     const pylons = (WORLD[OVERWORLD.id]?.pylons ?? []).filter((p) => sim.claims.includes(p.site));
     for (const s of events.supplies) {
-      // The claimed pylons supplying this raw, in turn.
-      const from = pylons.filter((p) => SITE_SUPPLY[p.site]?.includes(s.itemId));
+      // The claimed pylons supplying this raw, in turn, the newest claim first so its line shows working at once.
+      const from = pylons.filter((p) => SITE_SUPPLY[p.site]?.includes(s.itemId)).sort((a, b) => sim.claims.indexOf(b.site) - sim.claims.indexOf(a.site));
       const turn = this.turns.get(s.itemId) ?? 0;
       this.turns.set(s.itemId, turn + 1);
       const p = from[turn % Math.max(1, from.length)];

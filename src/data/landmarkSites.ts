@@ -123,24 +123,25 @@ const REED_MARSH: LandmarkDef = {
   ring: 2,
   area: { x0: 70, y0: 30, x1: 75, y1: 39 },
   features: [
-    { kind: 'pond', cx: 72.5, cy: 32, rx: 1.2, ry: 1.2 },
-    { kind: 'pond', cx: 72.5, cy: 36.5, rx: 1.2, ry: 1.2 },
+    { kind: 'pond', cx: 72.5, cy: 31.5, rx: 1.2, ry: 1.2 },
+    { kind: 'pond', cx: 72.5, cy: 35, rx: 1.2, ry: 1.2 },
   ],
   nodes: [
-    { nodeId: 'reeds', tx: 71, ty: 32 },
+    { nodeId: 'reeds', tx: 71, ty: 31 },
     { nodeId: 'reeds', tx: 74, ty: 32 },
-    { nodeId: 'reeds', tx: 71, ty: 36 },
-    { nodeId: 'reeds', tx: 74, ty: 37 },
-    { nodeId: 'reeds', tx: 72, ty: 38 },
+    { nodeId: 'reeds', tx: 71, ty: 35 },
+    { nodeId: 'reeds', tx: 74, ty: 35 },
+    { nodeId: 'reeds', tx: 73, ty: 36 },
   ],
   guards: [
-    { enemyId: 'husk', tx: 71, ty: 34 },
-    { enemyId: 'husk', tx: 75, ty: 35 },
-    { enemyId: 'husk', tx: 70, ty: 39 },
-    { enemyId: 'wisp', tx: 75, ty: 31 },
+    { enemyId: 'husk', tx: 70, ty: 33 },
+    { enemyId: 'husk', tx: 75, ty: 33 },
+    { enemyId: 'husk', tx: 74, ty: 38 },
+    { enemyId: 'wisp', tx: 75, ty: 30 },
   ],
-  pylon: { tx: 73, ty: 34, site: 'reed-marsh', supplies: 'fiber' },
-  leyLine: [{ tx: 73, ty: 34 }, { tx: 65, ty: 32 }, { tx: 54, ty: 28 }, { tx: 45, ty: 23 }, STAIRS],
+  // South of the ponds, clear of their rims.
+  pylon: { tx: 72, ty: 38, site: 'reed-marsh', supplies: 'fiber' },
+  leyLine: [{ tx: 72, ty: 38 }, { tx: 64, ty: 33 }, { tx: 54, ty: 28 }, { tx: 45, ty: 23 }, STAIRS],
   marker: 'site',
 };
 

@@ -22,8 +22,9 @@ import { addVector, showFrame } from './vector/textures';
 
 /** What the landmark view shows, for the test hook. */
 export interface LandmarksShown {
-  /** The landmark named by the discovery banner while it shows, else null. */
+  /** The landmark named by the discovery banner while it shows, else null, and how strongly it shows (0..1). */
   banner: string | null;
+  bannerAlpha: number;
   /** Each reliquary's frame, by landmark id: `sealed`, `open` or `empty`. */
   caches: Record<string, 'sealed' | 'open' | 'empty'>;
   /** Hollow lip slabs and marsh tufts drawn, and the hollows' lights. */
@@ -32,7 +33,7 @@ export interface LandmarksShown {
   lights: number;
 }
 
-export const NO_LANDMARKS_SHOWN: LandmarksShown = { banner: null, caches: {}, lips: 0, tufts: 0, lights: 0 };
+export const NO_LANDMARKS_SHOWN: LandmarksShown = { banner: null, bannerAlpha: 0, caches: {}, lips: 0, tufts: 0, lights: 0 };
 
 const T = TILE_SIZE;
 
@@ -68,6 +69,7 @@ export class LandmarkView {
   get shown(): LandmarksShown {
     return {
       banner: this.bannerOn,
+      bannerAlpha: this.bannerOn ? this.banner.name.obj.alpha : 0,
       caches: Object.fromEntries([...this.caches].map(([id, c]) => [id, c.frame])),
       lips: this.lipCount,
       tufts: this.tuftCount,
