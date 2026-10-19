@@ -109,18 +109,19 @@ describe('attunement', () => {
 });
 
 describe('firing from the reservoir', () => {
-  it('fires carried rounds first, then the reservoir, flagging those shots', () => {
+  it('fires the reservoir first, flagging those shots, then carried rounds (028)', () => {
     const s = stepOutside(attuned());
     s.inventory.arrow = 1;
     setMiddle(s, 'arrow', 2);
     const aim = fireAt(s.player.x - 100, s.player.y);
     run(s, 1, aim);
-    expect([s.inventory.arrow, s.link.entrances[1]?.count, s.tube.fromReservoir]).toEqual([0, 2, false]);
-    run(s, FIRE_TICKS, aim);
-    expect([s.link.entrances[1]?.count, s.tube.fromReservoir]).toEqual([1, true]);
+    expect([s.inventory.arrow, s.link.entrances[1]?.count, s.tube.fromReservoir]).toEqual([1, 1, true]);
     expect(summarize(s).tube.fromReservoir).toBe(true);
     run(s, FIRE_TICKS, aim);
-    expect(s.link.entrances[1]).toEqual({ open: true, ammoId: null, count: 0, cooldown: 0 });
+    expect(s.link.entrances[1]).toEqual({ open: true, ammoId: null, count: 0, cooldown: FIRE_TICKS });
+    expect(s.tube.fromReservoir).toBe(true);
+    run(s, FIRE_TICKS, aim);
+    expect([s.inventory.arrow, s.tube.fromReservoir]).toEqual([0, false]);
     expect(s.arrows).toHaveLength(3);
     run(s, FIRE_TICKS, aim);
     expect(s.events.melees).toHaveLength(1);

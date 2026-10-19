@@ -7,5 +7,12 @@ export const DESCRIPTIONS = {
   /** An unclaimed pylon does nothing yet. */
   pylonDormant: 'Claim it to harvest the land round it.',
   leyLine: "Carries the pylon's haul to the foundry.",
-  port: "What the shrine's pylon sends home.",
 } as const;
+
+/** A supply port's plate (028): how many pylons feed it and its rate, e.g. "×1 pylon · 15/min". */
+export function portPlate(pylons: number, perMinute: number): string {
+  return `×${pylons} ${pylons === 1 ? 'pylon' : 'pylons'} · ${perMinute}/min`;
+}
+
+/** Added to a port's hover line while a refused raw waits in it (028). */
+export const PORT_WAITING = 'waiting';

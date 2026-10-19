@@ -1,4 +1,4 @@
-import { CONDUIT_TICKS, CRATE_CAP, HOPPER_TICKS, INPUT_CAP, INTAKE, OUTPUT_CAP } from '../data/foundry';
+import { CONDUIT_TICKS, CRATE_CAP, HOPPER_FLOW_CAP, HOPPER_TICKS, INPUT_CAP, INTAKE, OUTPUT_CAP } from '../data/foundry';
 import { machineDef } from '../data/pieces';
 import { recipeDef, type RecipeDef } from '../data/recipes';
 import { opposite } from './direction';
@@ -20,7 +20,8 @@ import {
   type Tile,
 } from './pieces';
 
-// Items moving through the foundry, one tick at a time. Every piece hands items
+// Items moving through the foundry, one tick at a time. Hoppers take items from
+// lines too (028), up to HOPPER_FLOW_CAP. Every piece hands items
 // out of its front, except a sorter's chosen item, which leaves by its side.
 // First everything advances (items cross conduits, crafts finish and start,
 // hoppers count down), then items move in piece order. An item that arrives
@@ -115,7 +116,14 @@ function offer(ctx: FlowContext, to: Tile, from: Tile, item: string): boolean {
     target.contents[item] = count(target.contents, item) + 1;
     return true;
   }
-  return false;
+  // A hopper (028) takes from a line while it's empty or holds that item, up to the line cap.
+  if (target.item !== null && target.item !== item) return false;
+  if (target.count >= HOPPER_FLOW_CAP) return false;
+  // An empty hopper waits a whole push before handing the item on, so nothing moves two hops in a tick.
+  if (target.count === 0) target.timer = 0;
+  target.item = item;
+  target.count += 1;
+  return true;
 }
 
 function transfer(ctx: FlowContext, p: PieceState): void {
@@ -160,7 +168,7 @@ function setStatus(m: MachineState): void {
 
 const key = (t: Tile): string => `${t.tx},${t.ty}`;
 
-/** Hands one item to the foundry piece on `to` from outside the grid (the supply port). Returns whether it was taken. */
+/** Hands one item to the foundry piece on `to` from outside the grid (a supply port). Returns whether it was taken. */
 export function offerFromOutside(foundry: FoundryState, to: Tile, from: Tile, item: string): boolean {
   const target = pieceAt(foundry, to.tx, to.ty);
   if (!target) return false;

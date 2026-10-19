@@ -6,7 +6,9 @@ import { isInvulnerable, isRolling } from './movement';
 import type { Facing } from './player';
 import type { ArmorPiece } from './armor';
 import { fixtureDef } from './fixtures';
-import { currentObjective, currentObjectiveDef } from './objectives';
+import { pylonsOf } from './claims';
+import { portPerMinute } from '../data/claims';
+import { objectiveLine } from './objectives';
 import { volleyRounds, nextPress, hudActive, type HudActive } from './volley';
 import { ENTRANCE_CAP, INTAKE } from '../data/foundry';
 import type { SimState } from './state';
@@ -123,14 +125,16 @@ export interface SimSummary {
   hasTube: boolean;
   gates: { foundry: boolean; shrine: boolean };
   firstLineFull: boolean;
-  /** The first unfinished objective (index and text), or null once all are done. */
-  objective: { index: number; text: string } | null;
+  /** The objective line (028): the first unfinished goal's index and text, or the frontier goal with no index once all are done. */
+  objective: { index: number | null; text: string };
   prototypeComplete: boolean;
   /**
    * The foundry intake (019, 024): each entrance's mouth tile, whether it's open, the ammo it holds and how many;
    * and the volley the reservoirs fire once no round of the selected ammo is carried, as ammo ids (one per fed entrance, west to east).
    */
-  intake: { entrances: { tx: number; ty: number; open: boolean; ammo: string | null; count: number; cap: number }[]; volley: string[] };
+  intake: { entrances: { tx: number; ty: number; open: boolean; ammo: string | null; count: number; cap: number; cooldown: number }[]; volley: string[] };
+  /** The supply ports standing (028): each one's raw, tile, pylon count, raws a minute, and whether a refused raw waits in it. */
+  ports: { id: string; raw: string; tx: number; ty: number; pylons: number; perMinute: number; waiting: boolean }[];
   /** What a death keeps: the inventory as last banked. */
   banked: Record<string, number>;
   /** What happened on the last tick. */
@@ -197,7 +201,7 @@ export function summarize(state: SimState): SimSummary {
     intake: {
       entrances: INTAKE.entrances.map((t, i) => {
         const e = state.link.entrances[i];
-        return { tx: t.tx, ty: t.ty, open: e?.open ?? false, ammo: e?.ammoId ?? null, count: e?.count ?? 0, cap: ENTRANCE_CAP };
+        return { tx: t.tx, ty: t.ty, open: e?.open ?? false, ammo: e?.ammoId ?? null, count: e?.count ?? 0, cap: ENTRANCE_CAP, cooldown: e?.cooldown ?? 0 };
       }),
       volley: volleyRounds(state).map((r) => r.ammoId),
     },
@@ -209,6 +213,7 @@ export function summarize(state: SimState): SimSummary {
       const d = fixtureDef(f.id);
       return { id: f.id, kind: d.kind, tx: d.tx, ty: d.ty, item: f.item };
     }),
+    ports: portSummary(state),
     stash: { ...state.stash },
     armorPieces: state.armor.map((a) => ({ ...a, identified: true as const })),
     equippedArmor: state.equipped,
@@ -217,14 +222,17 @@ export function summarize(state: SimState): SimSummary {
     hasTube: state.hasTube,
     gates: { ...state.gates },
     firstLineFull: state.firstLineFull,
-    objective: objectiveSummary(state),
+    objective: objectiveLine(state),
     prototypeComplete: state.prototypeComplete,
     events: structuredClone(state.events),
   };
 }
 
-function objectiveSummary(state: SimState): SimSummary['objective'] {
-  const i = currentObjective(state);
-  const def = currentObjectiveDef(state);
-  return i === null || !def ? null : { index: i, text: def.text };
+function portSummary(state: SimState): SimSummary['ports'] {
+  return state.fixtures.flatMap((f) => {
+    const d = fixtureDef(f.id);
+    if (d.kind !== 'port' || d.raw === undefined) return [];
+    const pylons = pylonsOf(state, f);
+    return [{ id: f.id, raw: d.raw, tx: d.tx, ty: d.ty, pylons, perMinute: portPerMinute(pylons), waiting: f.item !== null }];
+  });
 }

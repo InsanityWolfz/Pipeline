@@ -4,9 +4,10 @@ import type { Rect } from './collision';
 import { facingVector } from './direction';
 import type { Tile } from './pieces';
 
-// The foundry's fixed furniture (009): the stash from the start, the supply port
-// and waystone once the shrine is claimed. Never placed or picked up, so kept
-// apart from the placed pieces. Claiming and using them is in claims.ts.
+// The foundry's fixed furniture (009): the stash and bench from the start, the
+// waystone once the shrine is claimed, and a supply port per raw once a claimed
+// site supplies it (028). Never placed or picked up, so kept apart from the placed
+// pieces. Claiming and using them is in claims.ts.
 
 export interface FixtureState {
   /** The FIXTURES id. */
@@ -15,8 +16,6 @@ export interface FixtureState {
   item: string | null;
   /** Supply port: ticks since its last push. */
   timer: number;
-  /** Supply port: index into PORT_CYCLE of the next raw. */
-  next: number;
 }
 
 export function fixtureDef(id: string): FixtureDef {
@@ -25,11 +24,10 @@ export function fixtureDef(id: string): FixtureDef {
   return def;
 }
 
-/** The fixtures there from the start (those no claim adds). */
+/** The fixtures there from the start (those no claim adds, and no ports). */
 export function startingFixtures(): FixtureState[] {
-  return FIXTURES.filter((f) => !f.claim).map((f) => ({ id: f.id, item: null, timer: 0, next: 0 }));
+  return FIXTURES.filter((f) => !f.claim && !f.raw).map((f) => ({ id: f.id, item: null, timer: 0 }));
 }
-
 
 /** The box a tile covers, px: a pylon's or a fixture's (both solid). */
 export const tileRect = (t: Tile): Rect => ({ x: (t.tx + 0.5) * TILE_SIZE, y: (t.ty + 0.5) * TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE });
@@ -47,8 +45,8 @@ export function fixtureAt(fixtures: readonly FixtureState[], tx: number, ty: num
   });
 }
 
-/** Where the supply port hands its raw: the tile it faces. */
-export function portFront(f: FixtureState): Tile {
+/** Where a supply port hands its raw: the tile it faces. */
+export function portFront(f: Pick<FixtureState, 'id'>): Tile {
   const d = fixtureDef(f.id);
   const [dx, dy] = facingVector(d.facing);
   return { tx: d.tx + dx, ty: d.ty + dy };

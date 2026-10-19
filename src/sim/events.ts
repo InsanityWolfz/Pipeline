@@ -80,6 +80,8 @@ export interface SimEvents {
   melees: MeleeEvent[];
   /** A projectile left the tube's mouth (a volley fires several at once). */
   shots: { x: number; y: number; ammoId: string }[];
+  /** An intake entrance fired a round of the volley (028), by index into INTAKE.entrances. */
+  entranceFires: { entrance: number; ammoId: string }[];
   /** E at a pylon whose room still has enemies. */
   sealed: { site: string }[];
   /** A room was claimed. */
@@ -90,6 +92,8 @@ export interface SimEvents {
   stashTakes: { items: Record<string, number> }[];
   /** A claimed site's supply port produced a raw (018): the render shows it harvested and sent home along the ley line. */
   supplies: { id: string; itemId: string }[];
+  /** A piece took a raw from a supply port (028). */
+  portDeliveries: { id: string; itemId: string }[];
   /** Fast travel by pylon or waystone (also recorded as a room change). */
   travels: { from: string; to: string }[];
   /** An unidentified piece was identified at the bench (010). */
@@ -143,8 +147,10 @@ export function createEvents(): SimEvents {
     stashDeposits: [],
     stashTakes: [],
     supplies: [],
+    portDeliveries: [],
     travels: [],
     shots: [],
+    entranceFires: [],
     melees: [],
     banks: [],
     lost: {},
@@ -182,8 +188,10 @@ export function clearEvents(events: SimEvents): void {
   events.stashDeposits.length = 0;
   events.stashTakes.length = 0;
   events.supplies.length = 0;
+  events.portDeliveries.length = 0;
   events.travels.length = 0;
   events.shots.length = 0;
+  events.entranceFires.length = 0;
   events.melees.length = 0;
   events.banks.length = 0;
   events.lost = {};

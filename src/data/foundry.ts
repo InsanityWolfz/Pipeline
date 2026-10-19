@@ -15,6 +15,9 @@ export const HOPPER_TICKS = 15;
 /** Most items a crate holds, all kinds together. */
 export const CRATE_CAP = 99;
 
+/** Most items a hopper takes from a line (028); hand-filling is uncapped. */
+export const HOPPER_FLOW_CAP = 99;
+
 /** How close the player's feet box must be to a hopper or crate to use it, px. */
 export const USE_REACH = 12;
 

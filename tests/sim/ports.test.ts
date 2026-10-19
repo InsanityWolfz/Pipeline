@@ -84,7 +84,7 @@ describe('supply ports', () => {
     const s = foundry();
     claim(s, SHRINE_SITE);
     const crates = RAWS.map((raw) => {
-      const front = portFront({ id: portOf(raw).id, item: null, timer: 0 });
+      const front = portFront({ id: portOf(raw).id });
       return put<CrateState>(s, 'crate', front.tx, front.ty);
     });
     s.roomId = OVERWORLD_ROOM;
@@ -120,7 +120,7 @@ describe('supply ports', () => {
   it('records each item a piece takes from a port', () => {
     const s = foundry();
     claim(s, SHRINE_SITE);
-    const front = portFront({ id: portOf('fiber').id, item: null, timer: 0 });
+    const front = portFront({ id: portOf('fiber').id });
     put(s, 'crate', front.tx, front.ty);
     run(s, SUPPLY_TICKS - 1);
     expect(s.events.portDeliveries).toEqual([]);

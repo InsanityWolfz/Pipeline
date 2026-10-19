@@ -3,11 +3,11 @@ import { LOB_SPACING, SPREAD_STEP } from '../data/foundry';
 import { count } from './inventory';
 import type { SimState } from './state';
 
-// What a fire press does (023, 024), and the shape of a volley. In order: a carried
-// round of the selected ammo fires alone; otherwise every open entrance with a
-// round fires one, together, as a volley; otherwise the press is a punch. The fire
-// path and anything that shows what the next press does (025's HUD) both read
-// `nextPress`, so they can't disagree.
+// What a fire press does (023, 024, 028), and the shape of a volley. In order: once
+// any open entrance holds a round, the volley (each fed entrance fires at its own
+// ammo's rate while fire is held); otherwise a carried round of the selected ammo
+// fires alone; otherwise the press is a punch. The fire path and anything that shows
+// what the next press does (025's HUD) both read `nextPress`, so they can't disagree.
 
 /** One round of a volley: its ammo, how many its entrance holds, and which entrance (an index into INTAKE.entrances). */
 export interface VolleyRound {
@@ -26,14 +26,15 @@ export function volleyRounds(state: Pick<SimState, 'link'>): VolleyRound[] {
   return state.link.entrances.flatMap((e, entrance) => (e.open && e.ammoId !== null && e.count > 0 ? [{ ammoId: e.ammoId, count: e.count, entrance }] : []));
 }
 
-/** What the next fire press does, in the fire path's order. Without the tube it's always a punch. */
+/** What the next fire press does, in the fire path's order: the volley, a carried round, the punch. Without the tube it's always a punch. */
 export function nextPress(state: Pick<SimState, 'hasTube' | 'tube' | 'inventory' | 'link'>): NextPress {
   if (!state.hasTube) return { kind: 'melee' };
+  // Entrances only fill once the tube is linked, so this is the linked tube's volley.
+  const rounds = volleyRounds(state);
+  if (rounds.length > 0) return { kind: 'volley', rounds };
   const ammoId = state.tube.ammoId;
   const carried = count(state.inventory, ammoDef(ammoId).itemId);
-  if (carried > 0) return { kind: 'carried', ammoId, count: carried };
-  const rounds = volleyRounds(state);
-  return rounds.length > 0 ? { kind: 'volley', rounds } : { kind: 'melee' };
+  return carried > 0 ? { kind: 'carried', ammoId, count: carried } : { kind: 'melee' };
 }
 
 /** What the HUD's tube slot shows (025): the next press, as `nextPress` says, without the entrance indexes. */

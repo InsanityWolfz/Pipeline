@@ -1,4 +1,4 @@
-import { ACTIVATE_TICKS, CLAIM_TICKS, FIXTURE_REACH, FIXTURES, PORT_CYCLE, PORT_TICKS, PYLON_REACH, type FixtureDef } from '../data/claims';
+import { ACTIVATE_TICKS, CLAIM_TICKS, FIXTURE_REACH, FIXTURES, portPylons, portTicks, PYLON_REACH, SITE_SUPPLY, type FixtureDef } from '../data/claims';
 import { FEET_BOX } from '../data/player';
 import { FOUNDRY_ROOM, type Room } from '../data/rooms';
 import type { Command } from './input';
@@ -16,7 +16,8 @@ import { WORLD } from './world';
 // Claiming (009). Clear a site's guards (017: a site is a part of a room, its
 // pylon carries the site id), then stand at the pylon holding E
 // (started like a harvest) to claim it for good. A claim adds the foundry's
-// supply port and waystone; a claimed pylon sends the haul to the stash and
+// waystone and a supply port for each raw the site sends that has none yet (028);
+// a claimed pylon sends the haul to the stash and
 // carries the player home, and the waystone carries them back. Fixtures are the
 // foundry's fixed furniture: kept apart from the placed pieces.
 
@@ -124,16 +125,22 @@ function advanceHold(state: SimState, cmd: Command): void {
   claim(state, hold.site);
 }
 
-/** Claims a site for good: adds the fixtures its claim brings, clearing their tiles first, and makes its ground safe (017). */
+/**
+ * Claims a site for good: adds the fixtures its claim brings and the port of each raw it sends that isn't there yet
+ * (028), clearing their tiles first, and makes its ground safe (017).
+ */
 export function claim(state: SimState, site: string): void {
   if (isClaimed(state, site)) return;
   state.claims.push(site);
   state.activatePulse = ACTIVATE_TICKS;
   state.events.claims.push({ site });
   clearSafeZones(state);
-  for (const def of FIXTURES.filter((f) => f.claim === site)) {
+  const sends = SITE_SUPPLY[site] ?? [];
+  const brought = FIXTURES.filter((f) => f.claim === site || (f.raw !== undefined && sends.includes(f.raw)));
+  for (const def of brought) {
+    if (state.fixtures.some((f) => f.id === def.id)) continue;
     removePieceAt(state, def.tx, def.ty);
-    state.fixtures.push({ id: def.id, item: null, timer: 0, next: 0 });
+    state.fixtures.push({ id: def.id, item: null, timer: 0 });
   }
 }
 
@@ -181,21 +188,29 @@ function travelToPylon(state: SimState): void {
   travelTo(state, room.id, { tx: room.pylon.tx, ty: room.pylon.ty + 1 });
 }
 
+/** A port's pylon count (028): the claimed sites that supply its raw. */
+export function pylonsOf(state: Pick<SimState, 'claims'>, f: FixtureState): number {
+  const raw = fixtureDef(f.id).raw;
+  return raw === undefined ? 0 : portPylons(state.claims, raw);
+}
+
 /**
- * Supply ports, once per tick: every PORT_TICKS the next raw comes up the line;
- * `offer` tries to hand it to whatever is in front, and a refused raw waits.
+ * Supply ports (028), once per tick: each one with no raw waiting counts up to its
+ * rate, round(SUPPLY_TICKS / its pylons), then brings up one of its own raw; `offer`
+ * tries to hand it to whatever is in front, and a refused raw waits.
  */
 export function stepPorts(state: SimState, offer: (to: Tile, from: Tile, item: string) => boolean): void {
   for (const f of state.fixtures) {
-    if (fixtureDef(f.id).kind !== 'port') continue;
+    const def = fixtureDef(f.id);
+    if (def.kind !== 'port' || def.raw === undefined) continue;
     if (f.item === null) {
       f.timer += 1;
-      if (f.timer < PORT_TICKS) continue;
-      f.item = PORT_CYCLE[f.next % PORT_CYCLE.length] ?? null;
-      f.next += 1;
-      if (f.item) state.events.supplies.push({ id: f.id, itemId: f.item });
+      if (f.timer < portTicks(pylonsOf(state, f))) continue;
+      f.item = def.raw;
+      state.events.supplies.push({ id: f.id, itemId: f.item });
     }
-    if (f.item && offer(portFront(f), fixtureDef(f.id), f.item)) {
+    if (offer(portFront(f), def, f.item)) {
+      state.events.portDeliveries.push({ id: f.id, itemId: f.item });
       f.item = null;
       f.timer = 0;
     }
