@@ -35,3 +35,21 @@ Oct 19, 2026 · Shaun's answers, which follow on from docs/brainstorm/2026-10-19
   | Swords (idea) | after 1st boss, needs metal | slow, large projectiles that spin and pierce. "Could be something cool for players to experiment with" | |
 
   Shaun: the landmines, flamethrower, laser, nets and swords are ideas he isn't married to. Only build them if the playtester and Claude think they make sense. Each would get different styles later.
+
+## Round 3
+- **Firing control:** no nets. Keep the original plan: one pipe with its entrances, and one press fires the volley. Shaun: "maybe later we can add more tubes in the foundry for multiple hotbars of different tubes but keep one for now."
+- **Nets:** removed.
+- **Bombs:** burn is removed, and the blast radius grows from 32 to about 48 px.
+- **Roster:** agreed. Nets are dropped and so is the flamethrower. Swords are cut, possibly coming back later as a "Heavy" arrow stage.
+  - **Milestone 1 (before the first new boss):**
+    - arrows (pierce)
+    - ley crystals (no pierce, easy aim), with homing and the 5-shard star split
+    - bombs (48 px, no burn)
+    - the frost rune for arrows
+  - **Milestone 2 (after it, with metal and oil):**
+    - lightning and fire runes
+    - cluster bombs
+    - landmines
+    - the laser (ley batteries)
+    - the static-pool bomb, last
+- **Variants:** made by in-line stage machines, as the playtester and Claude recommend. Each round takes at most one element stage and one shape stage.
