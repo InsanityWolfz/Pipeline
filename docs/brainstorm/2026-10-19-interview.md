@@ -59,3 +59,13 @@ Oct 19, 2026 · Shaun's answers, which follow on from docs/brainstorm/2026-10-19
 - **Frost input:** a new landmark material: a frost crystal ("rime shard") gathered at a landmark such as a frozen Ley Grotto.
 - **Goals after the shrine:** a guided goal chain for each milestone, as data. For example: build a stage, find a Grotto, claim a second pylon, breach Region 2's barrier, beat the Bulwark.
 - **Supply ports:** one fixed port per resource on the foundry walls: wood, stone, fiber and ley crystal, with more later. Each shows "×N pylons" and its rate. Every claimed pylon that supplies that resource adds to its rate.
+
+## Round 5
+- **Carry limit:** none. The inventory panel (I or Tab) just organises the haul into Raw, Parts, Ammo, Gear and Cores, with names. It marks what's at risk against what's banked.
+- **HP bar (bottom-left, large, "72 / 100"):** all four extras:
+  - the armor value beside it
+  - a low-HP pulse, with a red bar and tinted screen edges below 25%
+  - a cyan glow while healing
+  - a damage chunk that lingers white before draining
+- **Ley Springs:** stand in the pool to heal fast. No uses and no timers.
+- **Pylon supply:** each pylon sends the resources of its area. A Quarry pylon sends stone, a Ley Grotto pylon sends crystal.
