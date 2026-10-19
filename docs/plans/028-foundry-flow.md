@@ -20,7 +20,7 @@ Spec: docs/specs/028-foundry-flow.md. Written for the unattended run (028–038 
    - `SupplyView` already sends a mote per `supplies` event to a node of that raw; its comment is brought up to date (four ports, four motes).
    - `IntakeView`: a pulse up each entrance's own gauge column when that entrance fires (`entranceFires`), beside the fill pulse. `ui().intakeFirePulses` counts them.
    - `PromptView`: the `ports` marker over the middle present port, anywhere in the foundry. `ObjectiveView` shows `objectiveLine`'s text.
-   - Sheet group regex: `supply-port` → the new keys.
+   - The port body keeps its `supply-port` frame names, so the contact sheet groups it as before.
 8. **Docs.** docs/prototype.md "Foundry pieces": the supply line bullet becomes "a supply port per raw, fed by claimed pylons".
 
 ## Tests (written first)
