@@ -1,5 +1,7 @@
 # 031: HUD pass: inventory panel and HP bar
-status: draft
+status: approved
+
+Approved by Shaun in chat, 2026-10-19 ("Approve all 028–037"); open questions settled the same day.
 
 ## Goal
 The screen stays clean, and the death rule becomes readable:
@@ -20,7 +22,7 @@ The screen stays clean, and the death rule becomes readable:
 - docs/specs/021-playtest-fixes.md: the menu pointer and the pickup slide
 - docs/specs/025-bottom-hud.md: the bottom-centre hotbar row and tube slot. This spec must not overlap them.
 - docs/specs/027-foundry-tutorial.md: the "+ part" popup over a machine
-- docs/specs/030 (healing, draft): the healing state this spec's cyan glow reads
+- docs/specs/030-healing.md: the healing state this spec's cyan glow reads
 - docs/brainstorm/2026-10-19-content.md, "What the playtest found", Clutter:
   - "The materials list reaches 13 rows (about 60% of the screen height) with no names."
   - "The HP bar is a thin strip top-left with no number."
@@ -71,9 +73,12 @@ The screen stays clean, and the death rule becomes readable:
   - **All safe:** the count with a small "safe" mark in the ley cyan.
   - **Some or all at risk:** the at-risk part in `rust-light` with a warning mark, for example "10 safe · 3 at risk".
   - The numbers come from the helper above.
+  - Each row also shows a dim "home N" with that item's count in the stash, when above 0, so the panel shows what the player owns in total. An item with nothing carried but some in the stash gets no row.
 - [ ] **Gear** lists:
   - the carried unidentified armor, marked like any other item
-  - identified armor pieces by name, weight and armor value. The worn piece is marked "worn". Identified pieces are always shown as safe, since a death never takes them.
+  - the worn piece by name, weight and armor value, marked "worn"
+  - then one line, "N spare pieces (kept)", for the other identified pieces
+  - Identified pieces are always shown as safe, since a death never takes them. 036 replaces this group with its per-slot list.
 - [ ] A footer line explains the rule: "At risk: lost if you die before reaching the foundry or a claimed pylon." Exact wording is up to Shaun.
 - [ ] Every item has a panel group in data. A data test fails if an item has none. Current mapping:
   - **Raw:** wood, stone, fiber, ley crystal, husk resin, rime shard (029)
@@ -82,8 +87,8 @@ The screen stays clean, and the death rule becomes readable:
   - **Gear:** unidentified armor
   - **Cores:** warden core
   - The warden core goes under Cores. Its `kind` stays `part`; the panel's `group` field places it (033 later also tags it `research: 'core'`).
-  - 033's machine parts (such as `ancient-gear`) and its schematics go under Parts (open question 2; 033 agrees).
-- [ ] `__GAME__.ui()` reports `inventory: { open, groups: [{ id, rows: [{ itemId, count, atRisk }] }] }`.
+  - 033's machine parts (such as `ancient-gear`) and its schematics go under Parts. There is no sixth group. A carried schematic shows as "Unknown schematic" until it is banked (033).
+- [ ] `__GAME__.ui()` reports `inventory: { open, groups: [{ id, rows: [{ itemId, count, atRisk, home }] }] }`.
 
 **Materials column removed (render, data)**
 - [ ] The top-left column of material and part icons and counts is removed, along with `HUD_MATERIALS_LAYOUT` and its rows in `HudView.overUi`.
@@ -118,6 +123,7 @@ The screen stays clean, and the death rule becomes readable:
   - The bar, text and shield never overlap the hotbar row or the tube slot, including a volley as wide as five entrances.
   - In build mode, if the build bar's left edge would come within `HUD_LAYOUT.gap` of the HP block, the block moves up to sit above the build bar's label row.
   - An e2e test checks these boxes with every piece unlocked.
+- [ ] **Fill colour:** the normal fill is `leaf`, a green, replacing today's reddish `rust`, so the low-HP red reads clearly.
 - [ ] **Low HP:** below 25% of max health (`HP_BAR.lowFraction`, starting at 0.25):
   - The fill turns red (`hit-red`).
   - The bar pulses, scaling and brightening, once per `pulseMs` (starting at 900).
@@ -197,10 +203,4 @@ The screen stays clean, and the death rule becomes readable:
 - **Screenshots (qa):** the list under Checks.
 
 ## Open questions
-1. **What the panel shows from the stash.** Shaun said the panel marks "what's at risk against what's banked". In the sim, banked items are carried items you'd keep, while a pylon deposit moves items into the stash at home. **Proposal:** rows show carried items split into safe and at risk, and each row also shows a dim "home N" from the stash, so the panel tells you what you own in total.
-2. **Where schematics go.** 033 adds a `schematic` item kind, which isn't one of Shaun's five groups. **Proposal:** schematics go under Parts beside 033's machine parts, cores go under Cores, and no sixth group is added.
-3. **Gear with many identified pieces.** Pieces pile up, since 010 keeps every one, and the panel could overflow. **Proposal:** Gear lists the worn piece and the unidentified count, then one line, "N spare pieces (kept)". The full list waits for 036 (round 9's slots).
-4. **Where the pickup feed sits.** **Proposal:** top-left, where the materials column was, clear of the objective panel and minimap. The alternative is just above the HP block, bottom-left, which is closer to the bar but crowds the corner.
-5. **HP bar size.** "Much larger" could mean about 3× (144×12 fill), which in build mode rises above the build bar when the bar is wide. A smaller bar, about 96×10, would never need to move. **Proposal:** 144×12 with the rise rule. These are starting values in data either way.
-6. **The normal fill colour.** Today the fill is `rust`, which already looks reddish, so "a red bar" below 25% would barely show. **Proposal:** normal fill `leaf`, a green, and `hit-red` below 25%.
-7. **The armor icon.** **Proposal:** the shield icon replaces the light/heavy armor icon, and weight shows only in the inventory panel. The alternative tints the shield by weight.
+None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).

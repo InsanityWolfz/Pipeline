@@ -1,13 +1,15 @@
 # 034: Region 2: Stonefall Hollows and the Bulwark
-status: draft
+status: approved
 
-Drafted from Shaun's spec interview (docs/brainstorm/2026-10-19-interview.md), 2026-10-19. Not yet approved.
+Approved by Shaun in chat, 2026-10-19 ("Approve all 028–037"); open questions settled the same day.
+
+Drafted from Shaun's spec interview (docs/brainstorm/2026-10-19-interview.md), 2026-10-19.
 
 ## Goal
 The west path no longer ends in nothing. It runs to a ley barrier, and beyond it lies Stonefall Hollows: a collapsed quarry-city of the lost civilisation, with cliffs, broken aqueducts and veins of ley-iron. Claiming the shrine pylon drops the barrier.
 
 In the Hollows the player:
-- finds 2–3 landmarks
+- finds three landmarks
 - claims the region's pylon
 - gathers ley-iron, the game's first metal
 - fights the Bulwark, a slow-turning shielded wall that has to be beaten from behind or from above
@@ -55,7 +57,7 @@ Ley-iron unlocks two things:
 **The region (data, sim)**
 - [ ] The overworld grows west by a region of about 40×45 tiles, making the map about 120×45.
   - /plan decides whether existing tile coordinates shift by +40 or the region uses its own offset. Either way, every landmark, node, pack, path and test names tiles through `OVERWORLD` data, so nothing is hard-coded.
-- [ ] The west path, which today ends at tile (12, 27), continues west from that end to the map's old west edge. The end becomes a fork: 029's path turns north to the Frozen Grotto, and 030's west spring sits just south of it, beside the road. At the old west edge the road reaches a gap in the region's eastern cliffs, where the barrier stands. Its exact tile is set with 032's positions (032, open question 1).
+- [ ] The west path, which today ends at tile (12, 27), continues west from that end to the map's old west edge. The end becomes a fork: 029's path turns north to the Frozen Grotto, and 030's west spring sits just south of it, beside the road. At the old west edge the road reaches a gap in the region's eastern cliffs, where the barrier stands. Its exact tile is set in data alongside 032's positions.
 - [ ] The terrain is generated from the fixed seed with Hollows settings, so it is the same every run:
   - grey-blue stone ground with rubble and quarry-cut terraces
   - cliff runs that block movement and straight shots (lobbed shots fly over, as they do over everything)
@@ -71,10 +73,10 @@ Ley-iron unlocks two things:
 - [ ] A KO never brings the barrier back, since claims are permanent.
 
 **Landmarks and the site (data)**
-- [ ] 2–3 hand-placed landmarks, hidden until found (032), each overriding the terrain under it. The names are placeholders (see the open questions):
+- [ ] Three hand-placed landmarks, hidden until found (032), each overriding the terrain under it. The names below (and the Cistern Terrace, the Sunken Forum, the plate press, the mine packer and `iron-plate`) are kept as they are; Shaun may rename them later:
   - **The Ley-iron Cut:** an open quarry face with a dense cluster of ley-iron seams and boulders. It is a resource site, as in 032.
   - **The Broken Aqueduct:** a long fallen span crossing the region, whose pillars and rubble make cover. Snipers (035) use it.
-  - A third, optional: proposed as a Ley Spring (030's rules, a landmark per 032) on the far side from the barrier (see the open questions).
+  - **A Ley Spring** (030's rules, a landmark per 032) deep in the region, on the far side from the barrier, so the push to the Bulwark has a place to heal.
 - [ ] **A claimable site, the Cistern Terrace:** a ruined terrace with a pylon, guarded by a fixed Region 2 pack (035). It is claimed by the 009/017 rules: clear it, then hold E. Claiming it gives:
   - a safe zone (017)
   - a deposit point and fast travel (009)
@@ -92,11 +94,11 @@ Ley-iron unlocks two things:
   - It deals no damage, piercing rounds stop there, and a punch does no knockback.
   - It records a `blocked` event and shows a brass spark and a clang.
   - Hits from outside the arc land normally.
-- [ ] Lobbed bursts (bombs, cluster bomblets, landmines) are never blocked. They come from above, which is design.md's "armored front (arcing shots)" answer.
+- [ ] Lobbed bursts (bombs, cluster bomblets, landmines) are never blocked, even when they land on the front side. They come from above, which is design.md's "armored front (arcing shots)" answer.
 
 **The Bulwark (data, sim)**
-- [ ] `bulwark`: a boss (`boss: true`, so no punch knockback) with a new attack kind. It stands in the arena (below) and aggros when the player enters the arena. The starting values in the table below are flagged for review.
-- [ ] **Shielded front:** `shield` arc 180°, turning 40°/s, so a half turn takes 4.5 s. It walks slowly toward the player and stops turning only during the pound (below).
+- [ ] `bulwark`: a boss (`boss: true`, so no punch knockback) with a new attack kind. It stands in the arena (below) and aggros when the player enters the arena. The values below are starting values in data, tuned in playtest so that triple arrows from behind kill it in about 30–45 s.
+- [ ] **Shielded front:** `shield` arc 180°, turning 40°/s, so a half turn takes 4.5 s: slow enough that a player who gets behind it has time to hit it. It walks slowly toward the player and stops turning only during the pound (below).
 - [ ] **Bomb lob:** every `lob.cooldownTicks` while engaged, it rears back for a 30-tick wind-up, then lobs `lob.count` bombs.
   - One lands on the player's feet at the moment of the throw. The rest land at offsets within `lob.scatter` px of it, from the seeded RNG.
   - Each landing spot shows at once as a red outer ring of `lob.radius`, with a filled red circle growing from its centre over `lob.fuseTicks`.
@@ -115,12 +117,12 @@ Ley-iron unlocks two things:
   | shield | 180° arc, 40°/s turn |
   | lob | every 240 ticks; 3 bombs; 80 px scatter; ring radius 40 px; 90-tick fuse; 25 damage |
   | pound | triggers within 72 px; 60-tick wind-up; 112 px radius; 35 damage, 40 px knockback; 60-tick recovery; 300-tick cooldown |
-  | drops | 1 `bulwark-core`, 4–6 `ley-iron` |
+  | drops | 1 `bulwark-core`, 4–6 `ley-iron`, 1–2 `aqueduct-valve` |
 
-- [ ] **Running away is allowed.** If the player is outside the arena for 300 ticks, the Bulwark walks home and returns to full health.
+- [ ] **Running away is allowed.** There is no lock-in. If the player is outside the arena for 300 ticks (5 s), the Bulwark walks home and returns to full health.
   - Before its first kill, a KO resets it like unclaimed land (017).
   - Its first kill is permanent and recorded as a boss defeat. It never respawns except through the altar.
-- [ ] **The first kill** records a `bossDefeats` event and wakes the altar. The objective chain moves on to the third entrance (033). Per round 11, this kill "unlocks the gate" (see the open questions on what that opens).
+- [ ] **The first kill** records a `bossDefeats` event and wakes the altar. The objective chain moves on to the third entrance (033). Per round 11, this kill "unlocks the gate": it also unseals the foundry wing's door (033), whose contents come in a later spec. The Region 3 gate comes with Region 3.
 
 **The arena and the altar (data, sim, render)**
 - [ ] **The Sunken Forum:** a ruined plaza ringed by cliffs and broken colonnades, with one wide way in and no door that locks behind the player. It holds the Bulwark's start point and an altar stone. Packs never spawn inside it.
@@ -130,27 +132,33 @@ Ley-iron unlocks two things:
   - plays a 120-tick summon: the ground cracks in a red circle at the Bulwark's start point, then it rises
   - gives the same fight and the same drops
 - [ ] While a summoned Bulwark lives, the altar is spent. If the player leaves, the summoned Bulwark heals and waits, and the offering is not refunded.
-- [ ] Starting offering: 8 `ley-iron` (see the open questions).
+- [ ] Starting offering: 8 `ley-iron`, a region resource, so a refight costs a trip but no rare drops.
 
 **Landmines (data, sim)**
+
+Landmines and the cluster stage below are their own vertical slice: they are split into a separate backlog item, built after 034's region and boss and after 029. Their text stays here until that item is written.
+
 - [ ] New ammo `landmine`, a new kind `mine`:
   - It is lobbed to the aim like a bomb, with the same arc, speed and max range.
   - On landing it arms and stays on the ground, showing a fuse ring that fills over `fuseTicks` (starting 300, which is 5 s).
   - It then explodes: `damage` 60 in `radius` 24 px. That is large damage in a small radius (round 2), against a bomb's 15 in 48 px.
   - It ignores contact. Only the timer sets it off.
+  - Its damage type is physical.
+  - There is no cap on live mines.
+  - Carried landmines take hotbar key 4 (`SLOT_AMMOS`; `AMMO_KEYS` has room for four).
 - [ ] Several mines in a volley land side by side, `LOB_SPACING` apart (024).
 - [ ] A mine's explosion is a lobbed burst, so shields never block it.
 - [ ] Mines don't hurt the player.
 - [ ] Mines left behind vanish when the player changes area or is KO'd.
-- [ ] The chain, in round-2 style, with names and amounts proposed in the open questions:
-  - ley-iron into a **plate press** makes iron plates
-  - plates, fuses (husk resin) and ley shards go into a **mine packer**, which makes landmines
+- [ ] The chain, in round-2 style (starting amounts):
+  - ley-iron into a **plate press** makes iron plates, 2 per ley-iron
+  - 1 iron plate, 1 fuse (husk resin) and 1 ley shard go into a **mine packer**, which makes 2 landmines. It reuses the bomb chain's fuse and shard.
   - Hand-crafting each part once unlocks its machine, as today (005).
   - The recipes appear in the crafting menu once ley-iron has been picked up.
 
 **The cluster stage (data, sim)**
 - [ ] The **cluster** shape stage for bombs, built on the ammo-stage framework (029):
-  - an in-line stage machine that takes bombs in and puts bombs tagged `cluster` out
+  - an in-line stage machine, the **Shard die**, that takes bombs in and puts bombs tagged `cluster` out
   - a stage cost of 1 ley-iron per 4 bombs (round 2)
   - unlocked by hand-applying it to a bomb at the bench once (round 4)
   - A bomb takes at most one shape stage (round 3).
@@ -215,18 +223,18 @@ Ley-iron unlocks two things:
 - `src/data/population.ts`: ring 3 packs (makeup in 035). The arena is excluded.
 - `src/data/enemies.ts`:
   - an optional `shield` field on enemy defs
-  - `bulwark`, a new attack kind with its lob and pound blocks
+  - `bulwark`, a new attack kind with its lob and pound blocks, and its drops (core, ley-iron, aqueduct valves)
 - `src/data/items.ts`: `ley-iron` (raw), `bulwark-core` (core, if 033 hasn't added it), `iron-plate` (part), `landmine` (ammo), each with its 031 panel group.
 - `src/data/nodes.ts`: `ley-iron-seam` and the `cliff-seam` placement.
 - `src/data/ammo.ts`: `landmine` (kind `mine`); the cluster block on the bomb's tag behaviour (029's tag table).
-- `src/data/recipes.ts` and `src/data/pieces.ts`: the plate press and the mine packer with their recipes, and the cluster stage machine.
+- `src/data/recipes.ts` and `src/data/pieces.ts`: the plate press and the mine packer with their recipes, and the Shard die (the cluster stage machine).
 - `src/data/claims.ts`: the Cistern Terrace site and its `SITE_SUPPLY` entry, a ley-iron supply port fixture, and the Terrace in 032's waystone destination list.
 - `src/data/objectives.ts`: the Region 2 steps and the checks `inRegion` and `bossDefeated`.
 - `src/data/palette.ts` and `src/data/art`: as listed under Art.
 - Sounds: barrier collapse, shield clang, enemy bomb tick and burst, pound, summon, mine arm and burst.
 
 ## Out of scope
-- Region 2's regular enemies (035). Until 035 ships, Region 2 packs and the site's guards use ring 2's Husks and Wisps (see the open questions).
+- Region 2's regular enemies (035), built right after 034 on its own branch. Until 035 ships, Region 2 packs and the site's guards use ring 2's Husks and Wisps as placeholders.
 - The laser, oil, the flamethrower, the static-pool bomb, and the lightning and fire runes (parked or later milestones, round 11).
 - The foundry wing's contents.
 - The 4th and 5th entrances.
@@ -268,27 +276,4 @@ Ley-iron unlocks two things:
   - a cluster burst
 
 ## Open questions
-Each comes with a proposed answer. All of them must be resolved before approval.
-
-1. **Names.** The Ley-iron Cut, the Broken Aqueduct, the Cistern Terrace, the Sunken Forum, the plate press, the mine packer and `iron-plate` are placeholders. Proposal: keep them unless Shaun prefers others.
-2. **A third landmark?** Shaun said 2–3. Proposal: a Ley Spring (030) deep in the region, so the push to the Bulwark has a place to heal.
-3. **Shield against lobbed rounds.** design.md answers an armored front with arcing shots. Proposal: bursts always land, even on the front side, and only straight shots and punches are blocked.
-4. **Shield arc and turn speed.** Proposal: 180° and 40°/s, a 4.5 s half turn, at a walk of 18 px/s. It is tuned in playtest until "a player who gets behind it has time to hit it".
-5. **The Bulwark's other numbers.** Proposal: the table above (health 900, lob and pound values), tuned so that triple arrows from behind take about 30–45 s.
-6. **"The first kill unlocks the gate" (round 11).** No Region 3 exists yet. Proposal:
-   - The first kill records the defeat, wakes the altar and advances the goal chain.
-   - Per design.md "Boss gates", it also unseals the foundry wing (033's sealed door). What is inside is a later spec.
-   - The Region 3 gate comes with Region 3.
-7. **The altar's offering.** Shaun didn't name it. Proposal: 8 ley-iron, a region resource, so refights cost a trip but no rare drops.
-8. **Running from the boss.** Proposal: no lock-in. After 300 ticks out of the arena, it walks home and heals fully.
-9. **The landmine chain.** Proposal: ley-iron → plate press → iron plate (2 per ley-iron); then iron plate, fuse and ley shard → mine packer → 2 landmines. It reuses the bomb chain's fuse and shard.
-10. **Landmine rules not in round 2.** Proposal:
-    - contact doesn't set mines off; only the 5 s timer does
-    - they don't hurt the player
-    - their damage type is physical
-    - there is no cap on live mines
-11. **The cluster stage.** Proposal: 4 bomblets at 40 px, 8 damage in 20 px, after 12 ticks; 1 ley-iron per 4 bombs. A name for its machine is needed; proposal "Shard die".
-12. **The hotbar.** `SLOT_AMMOS` has keys 1–3 for carried ammo. Proposal: landmines take key 4 (`AMMO_KEYS` already has room for four).
-13. **Split the metal section?** Landmines and the cluster stage are a separate vertical slice from the region and the boss. Proposal: split them into their own backlog item at approval, with this text moved over, built after 034 and after the ammo-stage spec (029).
-14. **Region 2 packs before 035 ships.** Proposal: build 035 right after 034, and until then use ring 2's Husks and Wisps as placeholders. The alternative is to build 034 and 035 together.
-15. **The Region 2 part.** Proposal: `aqueduct-valve` (033), dropped by Region 2 enemies (035). The Bulwark also drops 1–2, added to its drop table above if approved.
+None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).

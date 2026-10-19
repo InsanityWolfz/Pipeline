@@ -1,7 +1,9 @@
 # 033: Foundry research as restoration
-status: draft
+status: approved
 
-Drafted from Shaun's spec interview (docs/brainstorm/2026-10-19-interview.md), 2026-10-19. Not yet approved.
+Approved by Shaun in chat, 2026-10-19 ("Approve all 028–037"); open questions settled the same day.
+
+Drafted from Shaun's spec interview (docs/brainstorm/2026-10-19-interview.md), 2026-10-19.
 
 ## Goal
 The foundry's lost parts show as faint diagrams on the foundry itself: on the intake's capped entrances, on its walls and on a sealed wing. The player walks up to a diagram, presses E and pays its cost in boss cores, machine parts and schematics, and that part of the foundry comes back. A simple list panel shows every node and where to find it. The first nodes are:
@@ -18,7 +20,7 @@ Rare schematic drops in the field reveal specific nodes. They are the game's fir
   - "The Foundry", "The layout is the ability": "The intake starts with one entrance open; the first boss's core opens more, and later unlocks add more." This spec changes it to one entrance per core.
   - "The Foundry", "Unlocks": "Killing a boss unlocks a new foundry wing with new machine types ... Rare schematics add new stage types."
   - "The Foundry", "What monsters drop":
-    - machine parts, "specific to each area, needed to build machines and never automated"
+    - machine parts, "specific to each area, needed to build machines and never automated". Settled 2026-10-19 (Shaun): parts pay for research and restoration only; placing a machine stays free.
     - schematics, "rarely, with a big visual pop when one lands"
     - boss cores, "needed for top-tier machines and stages"
   - "Pillars" 5 (each half has its own reward): combat earns parts, schematics and cores. "Economy and progression": gold never buys parts or schematics.
@@ -67,20 +69,21 @@ Rare schematic drops in the field reveal specific nodes. They are the game's fir
 - [ ] Restoring works only inside the foundry and only once the tube is attuned, as 024's opening does today.
 
 **The list panel (render)**
-- [ ] A key, proposed J (see open questions), opens a list of every node, grouped by anchor: Intake, Walls, Sealed wing. Each row shows:
+- [ ] J opens a list of every node, grouped by anchor: Intake, Walls, Sealed wing. Each row shows:
   - its name, or "Lost schematic" while hidden
   - its state: restored, ready (affordable now), revealed (cost not met), or hidden
   - its cost icons and counts, for revealed nodes
   - where its diagram is, such as "on the intake" or "east wall"
-- [ ] The list is read-only: restoring happens only at the diagram. It opens anywhere, and Esc or J closes it. It never takes clicks meant for the world, as with 017's minimap.
+- [ ] The list is read-only: restoring happens only at the diagram. It opens anywhere, and Esc or J closes it. It doesn't pause the game, like the other panels (031, 037). It never takes clicks meant for the world, as with 017's minimap.
 
 **First nodes (data, sim)**
 - [ ] **Intake entrances: one boss core each.** The entrance nodes form an ordered chain:
   - `entrance-2` costs 1 `warden-core`
   - `entrance-3` costs 1 `bulwark-core` (034) and requires `entrance-2`
   - Both are revealed from the start.
-  - The player picks which capped mouth tile opens by restoring at that cap. Whichever cap is restored first costs the Warden core; the last one costs the Bulwark core. See the open questions.
+  - The player picks which capped mouth tile opens by restoring at that cap; there is no fixed order. Whichever cap is restored first costs the Warden core; the last one costs the Bulwark core.
   - Restoring opens exactly one entrance, with the 024 cap-lift.
+  - The Warden has no refight altar: altars are for region bosses only (034), so a normal game has one warden core. A second Bulwark core, for whichever of `entrance-3` and `reservoir-2` comes second, means an altar refight (034).
 - [ ] **Reservoir.** `reservoir-1` raises every entrance's cap from 30 to 45. `reservoir-2` requires it and raises the cap to 60. `ENTRANCE_CAP` becomes a per-tier table in data. A restore raises the cap at once, and rounds already held are kept.
 - [ ] **Machine speed.** `machine-speed` multiplies every machine's `craftTicks` by `MACHINE_SPEED_MULT` (starting value 0.75, rounded up to whole ticks). Conduits and hoppers are unchanged.
 - [ ] **Splitter.** Restoring `splitter` adds a Splitter to the build bar's Logistics group (026). The Splitter is 1×1 and lies flat like the sorter (015):
@@ -90,7 +93,7 @@ Rare schematic drops in the field reveal specific nodes. They are the game's fir
 - [ ] **Merger.** Restoring `merger` adds a Merger to the Logistics group. The Merger is 1×1 and lies flat:
   - It takes items from its back and both sides, and sends them out its front.
   - It takes from its inputs in turn (back, left, right), so no input starves.
-- [ ] Starting costs and reveals. These are proposals flagged for Shaun's review (see the open questions):
+- [ ] Starting costs and reveals, as data. `reservoir-1` costs Region 1 parts only, so it is reachable before the Bulwark (the playtest showed ammo running dry early). Machine speed is one tier, ×0.75.
 
   | Node | Revealed by | Cost | Effect |
   | --- | --- | --- | --- |
@@ -101,7 +104,7 @@ Rare schematic drops in the field reveal specific nodes. They are the game's fir
   | `machine-speed` | its schematic | the schematic, 3 ancient gears | `craftTicks` × 0.75 |
   | `splitter` | its schematic | the schematic, 2 ancient gears | Splitter in the build bar |
   | `merger` | its schematic | the schematic, 2 ancient gears | Merger in the build bar |
-  | `sealed-wing` | start, as a sealed door | cannot be restored in this spec | see the open questions |
+  | `sealed-wing` | start, as a sealed door | cannot be restored in this spec | the Bulwark's first kill (034) unseals the door; what's inside is a later spec |
 
 **Schematics (data, sim, render)**
 - [ ] New item kind `schematic`. There is one schematic item per node whose `reveal` names one: `schematic-reservoir-2`, `schematic-machine-speed`, `schematic-splitter` and `schematic-merger`.
@@ -110,20 +113,21 @@ Rare schematic drops in the field reveal specific nodes. They are the game's fir
   - 5% for a champion (032)
   - a Ruined Cache uses its own table: 20% schematic (032)
 - [ ] Which schematic drops is picked evenly from those that are not yet revealed, carried, or lying on the ground, and whose region allows it. Each schematic lists the regions it can drop in; `schematic-reservoir-2` drops only in Region 2 (034). When none is eligible, no schematic drops, so there are no duplicates.
+- [ ] **A schematic drops as an unknown.** Until it is banked it shows as "Unknown schematic" everywhere: on the ground, in the pickup feed and in the inventory panel (031), with one shared icon. Which node it reveals isn't shown until it is banked.
 - [ ] **The pop.** This spec owns it (032's cache and champions only roll). A dropped schematic lands with a ley-light pillar, a burst of sparks and its own sound, and:
   - the pillar lasts until the schematic is picked up
   - a minimap ping while it lies on the ground
-  - a banner on pickup naming it, such as "Schematic: Splitter"
+  - a banner on pickup reading "Unknown schematic"
 - [ ] 032 ships first, with its cache opening for raws only. This spec fills the cache's rare entries as data (the schematic roll above and the `ancient-gear` part), with no cache code change.
-- [ ] A schematic reveals its node once it is **banked**: carried into the foundry, or sent home from a pylon (009). Its diagram then appears, with a short reveal shimmer, and its list row gets its name. A KO before banking loses it under the death rule (011), and the node stays hidden.
+- [ ] A schematic reveals its node once it is **banked**: carried into the foundry, or sent home from a pylon (009). Its diagram then appears, with a short reveal shimmer, its list row gets its name, the item takes its real name (such as "Schematic: Splitter"), and a banner names it. A KO before banking loses it under the death rule (011), and the node stays hidden.
 - [ ] Restoring spends the schematic as part of the cost.
 
 **Machine parts (data)**
 - [ ] Item data gains a `research` tag: `core`, `machinePart` or `schematic`. The cost-validity test reads it. Existing item `kind`s are unchanged (`schematic` is the one new kind), as 031 keeps `warden-core` a `part`. For 031's panel groups, cores go in Cores, and machine parts and schematics in Parts.
 - [ ] One machine part per region:
-  - Region 1: `ancient-gear`, the "rare part" 032 proposes for caches and champions
+  - Region 1: `ancient-gear`, also the "rare part" that 032's cache and champions roll
   - Region 2 (034): `aqueduct-valve`, a brass valve from the Hollows' waterworks
-  - Names and drop rates are proposals (see the open questions).
+  - Parts pay for research and restoration only. Placing a machine stays free once it is unlocked (006); parts never become a placement cost in this spec.
 - [ ] Region 1 drops, starting values:
   - Husks and Wisps drop an `ancient-gear` 4% of the time.
   - A champion rolls it once, at a champion rate in this spec's data (starting at 12%, 3× the normal rate), not once per drop roll (032).
@@ -149,6 +153,7 @@ Rare schematic drops in the field reveal specific nodes. They are the game's fir
 
 **Docs (on approval)**
 - [ ] docs/design.md, with Shaun's approval:
+  - "What monsters drop": machine parts pay for research and restoration, not for placing machines.
   - "The Foundry", "The layout is the ability": "the first boss's core opens more" becomes "each boss core restores one more entrance: the Warden's the 2nd, the next boss's the 3rd, later bosses' the 4th and 5th".
   - "Unlocks": schematics reveal lost parts of the foundry to restore.
   - "Economy and progression": the gold row's "reservoir size" moves to restoration, paid in cores, parts and schematics.
@@ -190,13 +195,13 @@ Rare schematic drops in the field reveal specific nodes. They are the game's fir
 - Stage machines and their nodes. These come from the ammo-stage spec (029). Its stages unlock by hand-making one, from round 4, not by research.
 - Blueprints. The brainstorm lists them as a node, but Shaun did not name them in round 7.
 - Gold, the merchant and refill-rate nodes.
-- Parts as a cost for placing machines (see the open questions).
+- Parts as a cost for placing machines: placing stays free (Shaun, 2026-10-19).
 - XP for restoring.
 
 ## Test plan
 - **Vitest:**
   - Data: every node's cost uses only core, machine-part or schematic items; every `requires` exists; there are no cycles.
-  - States: start reveals, a banked schematic reveals its node, and a KO before banking loses it with the node still hidden.
+  - States: start reveals, a carried schematic reads "Unknown schematic" and reveals nothing, a banked schematic reveals its node and takes its name, and a KO before banking loses it with the node still hidden.
   - Restore: it spends the exact cost; it refuses without the cost, with unmet `requires`, outside the foundry, or before attuning.
   - Entrances: the warden core opens exactly the chosen cap; the second cap then costs a Bulwark core; a second warden core does nothing for it.
   - Reservoir: the cap goes 30 → 45 → 60 and held rounds are kept. The volley and tutorial "line full" checks use the current cap.
@@ -220,20 +225,4 @@ Rare schematic drops in the field reveal specific nodes. They are the game's fir
   - the sealed wing door
 
 ## Open questions
-Each comes with a proposed answer. All of them must be resolved before approval.
-
-1. **Which entrance does each core open?** Proposal: the player chooses by restoring at that cap. The volley fans the same either way (024), so the choice only affects line layout. The alternative is a fixed order, west first.
-2. **Machine parts (design.md names none yet).** Proposal: one part per region:
-   - `ancient-gear` (Region 1). This is the same item as 032's proposed rare part, but it also drops from Husks and Wisps at 4%, not only from caches and champions.
-   - `aqueduct-valve` (Region 2).
-   - They drop from that region's enemies at about 4%, and more from champions and caches.
-   - For now they are spent only on restoration.
-   - design.md says parts are "needed to build machines". Should placing a machine also cost parts? That would change 006, where placing is free once hand-crafted. Proposal: not now; parts gate new foundry parts through restoration.
-3. **Node costs and the reservoir and speed numbers.** Proposal: the table above. `reservoir-1` costs only Region 1 parts, so it is reachable before the Bulwark: the playtest showed ammo running dry early. Machine speed is ×0.75, one tier. Note: `entrance-3` and `reservoir-2` each cost a Bulwark core, so the second one needs an altar refight (034).
-4. **Schematic rarity and duplicates.** Proposal: 1% normal, 5% champion, and the cache's 20% (032). There are no duplicates, so a schematic always reveals something new.
-5. **When a schematic reveals its node.** Proposal: once banked, so the "survive the trip back with it" tension in design.md holds. The alternative is on pickup.
-6. **The splitter's and merger's behaviour.** Shaun named them but didn't define them. Proposal: as written above.
-7. **The list panel's key.** Proposal: J (journal). R is rotate, M is mute, and I or Tab is the inventory panel (031).
-8. **The sealed wing.** design.md: "Killing a boss unlocks a new foundry wing with new machine types." Proposal: this spec only draws the wing's sealed door with its diagram and list row. The Bulwark's first kill (034) unseals it, and what the wing holds is a later spec.
-9. **Warden cores after the first.** The Warden never respawns once the shrine is claimed, so only one warden core exists in a normal game. Should the Warden get a refight altar like the Bulwark (034)? Proposal: no; altars are for region bosses only.
-10. **Does the drop-table change belong here or in the champions and landmarks spec (032)?** Proposal: here. 032 only adds the cache's slots and says champions roll parts and schematics once, at this spec's champion rates.
+None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).

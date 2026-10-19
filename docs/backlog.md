@@ -32,16 +32,17 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 025 | Bottom HUD: hotbar 1-2-3 centred, the tube slot centred above it and larger, showing the round, the volley or a fist | approved |
 | 026 | Menu labels: item names in the crafting menu; build bar grouped into Logistics, Arrows, Bombs and Ley | approved |
 | 027 | Foundry tutorial: step-by-step objectives for building the first arrow line into the intake | approved |
-| 028 | Foundry flow: a supply port per resource (×N pylons), hoppers fed by conduits, each entrance at its own rate, the volley before carried rounds, a goal chain after the shrine | draft |
-| 029 | Ammo roles and stages: arrows pierce, ley bolts don't, 48 px bombs with no burn; ammo tags; stage machines (frost rune, homing, star split) with a small Frozen Grotto | draft |
-| 030 | Healing: none in the field; pylon safe zones, Ley Springs and the foundry | draft |
-| 031 | HUD pass: inventory panel (at risk or banked), large bottom-left HP bar, pickup feed, black-sphere casing | draft |
-| 032 | Landmarks and champions: resource sites with pylons, a Ruined Cache, hidden until found; empowered enemies | draft |
-| 033 | Foundry research as restoration: one entrance per boss core (changes 024), reservoir size, machine speed, splitter and merger, schematics | draft |
-| 034 | Region 2, Stonefall Hollows: the Bulwark, ley-iron, landmines, cluster bombs, boss altar refights | draft |
-| 035 | Hollows enemies: Charger, Burrower, Shardback, Sniper construct | draft |
-| 036 | Equipment: helm, body, boots and trinket; defensive affixes; Common, Fine and Rare; relics | draft |
-| 037 | Leveling and the talent tree: XP from combat and exploration, 1 point per level, a 19-node tree, free respec | draft |
+| 028 | Foundry flow: a supply port per resource (×N pylons), hoppers fed by conduits, each entrance at its own rate, the volley before carried rounds, a goal chain after the shrine | approved |
+| 029 | Ammo roles and stages: arrows pierce, ley bolts don't, 48 px bombs with no burn; ammo tags; stage machines (frost rune, homing, star split) with a small Frozen Grotto | approved |
+| 030 | Healing: none in the field; pylon safe zones, Ley Springs and the foundry | approved |
+| 031 | HUD pass: inventory panel (at risk or banked), large bottom-left HP bar, pickup feed, black-sphere casing | approved |
+| 032 | Landmarks and champions: resource sites with pylons, a Ruined Cache, hidden until found; empowered enemies | approved |
+| 033 | Foundry research as restoration: one entrance per boss core (changes 024), reservoir size, machine speed, splitter and merger, schematics | approved |
+| 034 | Region 2, Stonefall Hollows: the Bulwark, ley-iron, landmines, cluster bombs, boss altar refights | approved |
+| 035 | Hollows enemies: Charger, Burrower, Shardback, Sniper construct | approved |
+| 036 | Equipment: helm, body, boots and trinket; defensive affixes; Common, Fine and Rare; relics | approved |
+| 037 | Leveling and the talent tree: XP from combat and exploration, 1 point per level, a 19-node tree, free respec | approved |
+| 038 | Landmines and the cluster-bomb stage (ley-iron): split out of 034 by the accepted proposal; the spec text lives in 034 until it moves to its own file | approved |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
 
@@ -51,3 +52,5 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 021–027 were approved by Shaun in chat on 2026-10-18 ("approve 21-27").
 
 028–037 come from the content brainstorm and Shaun's spec interview (docs/brainstorm/2026-10-19-*.md), and replace the old 028/029 idea rows. Their open questions are collected in docs/brainstorm/2026-10-19-open-questions.md.
+028–037 were approved by Shaun in chat on 2026-10-19 ("Approve all 028–037"), with every open question settled.
+038 is the landmine and cluster-bomb slice that 034 split out, which the accepted proposals cover. It is built after 037.

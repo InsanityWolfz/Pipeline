@@ -1,5 +1,7 @@
 # 029: Ammo roles and stage machines (Milestone 1)
-status: draft
+status: approved
+
+Approved by Shaun in chat, 2026-10-19 ("Approve all 028–037"); open questions settled the same day.
 
 ## Goal
 The three beginner ammo get distinct jobs:
@@ -39,7 +41,7 @@ Depends on 028 (hoppers fed by lines, entrances at their own rate).
   - R4, stage unlock: "hand-apply a frost rune to an arrow at the bench once, and the frost stage unlocks in the build bar."
   - R4, frost input: "a frost crystal ('rime shard') gathered at a landmark such as a frozen Ley Grotto."
   - R6, landmarks: "a Frozen Grotto, the guarded rime-shard source"; "Map: fixed and hand-tuned."
-  - R11, keystones: "'Arrows pierce infinitely' cannot be one of them."
+  - R11, keystones: "'Arrows pierce infinitely' cannot be one of them." Settled 2026-10-19: arrows pierce without limit as their base rule, so it is never a talent.
 
 **Decision: the Frozen Grotto.** A minimal Frozen Grotto ships in this spec, not in 032, so the frost rune can be fed the day it ships. R1's build order puts stages (2nd) three slots before landmarks (5th). Here the Grotto is just:
 - a fixed place on the map
@@ -51,12 +53,12 @@ Depends on 028 (hoppers fed by lines, entrances at their own rate).
 ## Acceptance criteria
 
 **Ammo roles (data, sim)**
-- [ ] Arrows pierce and ley bolts don't. `pierce` becomes a count: how many enemies a shot passes through before it stops.
-  - Arrows: 2, so an arrow hits up to 3 enemies.
-  - Ley bolts: 0.
-  - Each enemy is still hit once per shot. (The count is a proposal; see Open questions.)
-- [ ] The ammo id stays `ley-bolt`; the item and recipes are unchanged. (The name is an open question.)
-- [ ] Bombs lose their burn, and `burstRadius` goes from 32 to 48 px. Burn is removed from the sim and data: `burn` on lob ammo, enemy `burnTicks` and `burnAmmo`, `src/sim/burn.ts`, and the burning flame in render. The fire rune (Milestone 2) brings fire's behaviour back as a tag.
+- [ ] Arrows pierce and ley bolts don't: the two swap today's `pierce` flag.
+  - Arrows pierce without limit. An arrow passes through every enemy in its path until its range runs out or it hits a solid (or a shield's front, 034).
+  - Ley bolts don't pierce: a ley bolt stops in the first enemy it hits.
+  - Each enemy is still hit once per shot.
+- [ ] The ammo id stays `ley-bolt` and its name stays "Ley bolt" (the raw keeps "Ley crystal"). The item and recipes are unchanged. Its variants are "Homing ley bolt" and "Star ley bolt".
+- [ ] Bombs lose their burn, and `burstRadius` goes from 32 to 48 px. A bomb's damage type becomes `physical` until the fire rune. Burn is removed from the sim and data: `burn` on lob ammo, enemy `burnTicks` and `burnAmmo`, `src/sim/burn.ts`, and the burning flame in render. The fire rune (Milestone 2) brings fire's behaviour back as a tag.
 
 **Tags (data)**
 - [ ] Tags are data in `src/data/tags.ts`. Each has:
@@ -93,7 +95,7 @@ Depends on 028 (hoppers fed by lines, entrances at their own rate).
   | Ley guide | `homing` | 4 ley bolts + 1 ley crystal | 4 homing ley bolts | 60 |
   | Shatter lens | `star` | 4 ley bolts + 2 ley crystal | 4 star ley bolts | 60 |
 
-  The ley guide's and shatter lens's materials are proposals (see Open questions).
+  The shatter lens costs twice the ley guide's crystal because a star bolt adds 5 projectiles (pillar 3).
 - [ ] A stage takes a round from any side but its front when:
   - the round is of its base ammo,
   - the round has no tag in the stage's slot, and
@@ -101,11 +103,11 @@ Depends on 028 (hoppers fed by lines, entrances at their own rate).
   
   It takes its material from any side but its front. Anything else is refused, so the line backs up. Its buffers are capped like a machine's.
 - [ ] With a full batch and its material buffered, a stage crafts for `craftTicks`. It then hands the rounds out of its front with its tag added. Its status (working, starved, blocked) shows as other machines' does. Each batch counts in `events.made` and the `machineMade` tally under the tagged id.
-- [ ] A shape stage refuses a round that already has a shape: a star ley bolt can't go through a ley guide.
+- [ ] A shape stage refuses a round that already has a shape: a star ley bolt can't go through a ley guide. Homing and star are both shapes, so a ley bolt is homing or star, never both.
 
 **Hand-apply first (sim, render)**
 - [ ] The identification bench's menu gains a "Stages" section with one row per stage: "Frost rune: 4 arrows + 1 rime shard → 4 frost arrows".
-  - Rows appear once the shrine is claimed (a proposal; see Open questions).
+  - Rows appear once the shrine is claimed.
   - A row is dimmed while its inputs aren't carried, like crafting rows (026).
 - [ ] Choosing a row takes its inputs from the inventory and gives the tagged rounds. It also marks the tagged item as hand-made (`crafted`), which unlocks that stage in the build bar by the existing rule: a machine unlocks once its output has been hand-crafted.
 - [ ] Hand-applying works any number of times, like hand-crafting.
@@ -114,7 +116,7 @@ Depends on 028 (hoppers fed by lines, entrances at their own rate).
 **Tagged rounds in the tube (sim)**
 - [ ] An entrance accepts a tagged round under 024's rule: it takes any ammo while empty, then only that exact round kind until it empties. So frost arrows and plain arrows need separate entrances.
 - [ ] Rounds that fire together fan or space out by **base** ammo. A plain arrow and a frost arrow from two entrances fly at ±7.5°.
-- [ ] Carried tagged rounds fire from their base ammo's hotbar slot. With the slot selected, carried tagged rounds of that base fire before plain ones (a proposal; see Open questions).
+- [ ] Carried tagged rounds fire from their base ammo's hotbar slot. With the slot selected, carried tagged rounds of that base fire before plain ones.
 
 **Cold (sim, data)**
 - [ ] Each cold hit on an enemy adds a chill stack, up to `COLD.stacksToFreeze`, and refreshes the chill for `COLD.stackTicks`.
@@ -125,7 +127,7 @@ Depends on 028 (hoppers fed by lines, entrances at their own rate).
   - A wind-up in progress pauses and resumes when it thaws.
   - It still takes damage and, if not a boss, knockback.
 - [ ] After a freeze, the enemy can't gain stacks for `COLD.refreezeTicks`, so steady frost fire can't hold it frozen for good.
-- [ ] Starting values:
+- [ ] Starting values, tuned in playtest:
 
   | Value | Start |
   | --- | --- |
@@ -157,7 +159,7 @@ Depends on 028 (hoppers fed by lines, entrances at their own rate).
 - [ ] A new raw, `rime-shard` ("Rime shard"), and a node type, `rime-cluster` ("Rime cluster"), with:
   - a new placement, `'frozen-grotto'`
   - the usual uses, yield and regrowth (018)
-- [ ] The Frozen Grotto is a hand-placed site in the overworld's north-west, in ring 2. All positions are proposals for review:
+- [ ] The Frozen Grotto is a hand-placed site in the overworld's north-west, in ring 2, at these tiles (034 may shift every tile by +40 for Region 2):
   - **Area:** about tiles (9, 5)–(19, 13), kept as a clearing.
   - **Ground:** a frosted look.
   - **Rime clusters:** three, at (12, 7), (16, 8) and (14, 11).
@@ -172,7 +174,7 @@ Depends on 028 (hoppers fed by lines, entrances at their own rate).
   3. "Build a frost rune into your arrow line": `machineMade 'arrow+frost'`, which pulses the frost rune cell
   4. "Try a ley stage at the bench: homing or star": a new check, `craftedAny`, with the two ley variants
   
-  The wording is a first draft.
+  Built with this wording; Shaun may edit the text later, as data.
 
 **Render**
 - [ ] Vector art, in the 020 style, for:
@@ -216,8 +218,8 @@ Depends on 028 (hoppers fed by lines, entrances at their own rate).
 
 ## Data changes
 - `src/data/ammo.ts`:
-  - `pierce` becomes a number (arrow 2, ley-bolt 0)
-  - bomb `burstRadius` 48 and no `burn`
+  - `pierce` stays a boolean, swapped: arrow `true` (no limit), ley-bolt `false`
+  - bomb `burstRadius` 48, no `burn`, damage type `physical`
   - `DamageType` gains `cold`
   - tagged variants derived from tags
 - `src/data/tags.ts` (new): `frost`, `homing` and `star`, with `COLD`, `HOMING` and `STAR`.
@@ -242,7 +244,7 @@ Depends on 028 (hoppers fed by lines, entrances at their own rate).
 ## Test plan
 - **Vitest:**
   - Ammo roles:
-    - An arrow passes through 2 Husks and stops in the 3rd.
+    - An arrow passes through a line of 5 Husks, hitting each once, and stops only at its range or a solid.
     - A ley bolt stops in the first.
     - A bomb hits a Husk 40 px away and misses one 56 px away.
     - Nothing burns.
@@ -291,15 +293,4 @@ Depends on 028 (hoppers fed by lines, entrances at their own rate).
   - the bench's Stages section
 
 ## Open questions
-1. **Arrow pierce limit:** proposal: arrows pass through 2 enemies (3 hits). R11 rules out "arrows pierce infinitely" as a keystone, which suggests base pierce is finite. Should it be unlimited instead?
-2. **Bomb damage type:** with burn gone, does the bomb stay `fire`, a type with no fire behaviour, or become `physical` until the fire rune? (Proposal: physical.)
-3. **Ley bolt's name:** Shaun calls them "ley crystals", but that's already the raw's name. Proposal: keep "Ley bolt" for the ammo.
-4. **Ley guide input:** not decided. Proposal: 1 ley crystal per 4 rounds.
-5. **Shatter lens input:** not decided. Proposal: 2 ley crystals per 4 rounds, dearer than homing because it adds 5 projectiles (pillar 3).
-6. **Stage names:** frost rune is Shaun's. Ley guide is from design.md. "Shatter lens" is new. Proposal: keep all three.
-7. **Is homing a shape?** Proposal: yes, so a ley bolt is homing or star, never both. The alternative is homing as a third slot, so the two combine.
-8. **"Selected target":** design.md says ley-guided ammo locks onto a selected target. Proposal: the enemy nearest the cursor when fired, with no new targeting input.
-9. **Cold numbers and bosses:** the starting values above, including half-length freezes for bosses and the refreeze window. None of these are in the design. Proposal: ship them as starting values and tune in playtest.
-10. **When bench stage rows appear:** proposal: once the shrine is claimed. The alternative is when the stage's material is first carried.
-11. **Carried tagged rounds:** proposal: they fire from their base slot, before plain rounds.
-12. **Grotto guards and placement:** proposal: 3 Husks and a Wisp, back on a KO, at the tiles above (north-west, ring 2, clear of 032's and 030's positions).
+None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).

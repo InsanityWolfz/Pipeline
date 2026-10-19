@@ -1,7 +1,9 @@
 # 037: Leveling and the talent tree
-status: draft
+status: approved
 
-Drafted from Shaun's spec interview (2026-10-19). Not approved: the open questions below need his answers first. The XP values, the curve and the whole node list are a first draft in data for Shaun to edit.
+Approved by Shaun in chat, 2026-10-19 ("Approve all 028–037"); open questions settled the same day.
+
+Drafted from Shaun's spec interview (2026-10-19). The XP values, the curve and the node list are starting values in data: they ship as written for the first playtest, and Shaun edits them after.
 
 ## Goal
 The player earns XP by fighting and exploring: kills (more in outer rings and from champions), bosses, claiming pylons and finding landmarks for the first time. Each level gives one talent point. Points go into a small constellation of 19 talents around a centre start, in five lanes (Arrows, Bombs, Ley, Survival and Tube), with three keystones. Talents give the design's simple stats and boost how ammo behaves. Respec is free at the foundry.
@@ -13,7 +15,7 @@ The player earns XP by fighting and exploring: kills (more in outer rings and fr
   - "Economy and progression": "Combat: leveling | XP and talent points | The skill tree"; gold never buys talent points
   - "Death and tension": level and talents are always kept
   - "Open questions": "Skill tree shape, size, and how the lanes connect". This spec answers it.
-- Spec 029 (ammo stages): arrows pierce, ley bolts don't (Shaun's "ley crystals"; the ammo keeps the id and name `ley-bolt`, 029 open question), bombs have no burn and a 48 px blast. Frost (cold) is the only element in Milestone 1. Homing and the 5-shard star split are ley bolt variants.
+- Spec 029 (ammo stages): arrows pierce without limit, ley bolts don't pierce (Shaun's "ley crystals"; the ammo keeps the id `ley-bolt` and the name "Ley bolt"), bombs have no burn and a 48 px blast. Frost (cold) is the only element in Milestone 1. Homing and the 5-shard star split are ley bolt variants, both shapes, so a bolt is one or the other.
 - Spec 028 (foundry flow): each entrance fires at its own rate.
 - Spec 030 (healing): no free field regen; field regen comes only from gear and talents.
 - Spec 032 (champions and landmarks): champions (the death event's `champion` flag), and the `discoveries` event.
@@ -25,7 +27,7 @@ The player earns XP by fighting and exploring: kills (more in outer rings and fr
   - Round 10: "**Per level:** 1 talent point."
   - Round 10: "**Tree:** 15–20 nodes with 3 keystones, one small constellation from a centre start. Lanes are Arrows, Bombs, Ley, Survival and Tube. It grows with each region."
   - Round 10: "**Respec:** free, at the foundry."
-  - Round 11: "**Keystones:** lane capstones and combos between ammo. 'Arrows pierce infinitely' cannot be one of them."
+  - Round 11: "**Keystones:** lane capstones and combos between ammo. 'Arrows pierce infinitely' cannot be one of them." Settled 2026-10-19: unlimited arrow pierce is now the base rule (029), so no node touches pierce.
   - Round 11: "**Boss refights:** yes, at an altar."
 
 ## Acceptance criteria
@@ -33,7 +35,7 @@ The player earns XP by fighting and exploring: kills (more in outer rings and fr
 **XP (sim, data)**
 - [ ] The player has `level` (starting at 1), `xp` (toward the next level) and `talentPoints` (unspent).
 - [ ] A kill gives the enemy's `xp` × its ring's multiplier, and × `CHAMPION_XP` for a champion. Any kill counts, by ammo or by the punch.
-- [ ] A boss kill gives the boss's `xp`. A refight at the altar gives `BOSS_REFIGHT_XP` of it (see open questions).
+- [ ] A boss kill gives the boss's `xp`. A refight at the altar (034) gives `BOSS_REFIGHT_XP`, 50%, of it.
 - [ ] Claiming a pylon gives `CLAIM_XP`, once per pylon (claims are permanent).
 - [ ] The first discovery of each landmark (032's event) gives `LANDMARK_XP`, once per landmark.
 - [ ] Nothing else gives XP: crafting, building, identifying, banking, depositing, supply, research and gold never do. A test asserts this by running the foundry for a long stretch.
@@ -50,12 +52,13 @@ The player earns XP by fighting and exploring: kills (more in outer rings and fr
 | Pylon Warden (first kill) | 150 |
 | Charger, Burrower, Shardback, Sniper construct (035) | 6 each |
 | The Bulwark (034, first kill) | 300 |
-| Ring multiplier | ring 0 ×1, ring 1 ×1, ring 2 ×2, ring 3 (Region 2) ×3 |
+| A boss refight at the altar | 50% of the boss's XP |
+| Ring multiplier | ring 0 ×1 (no packs today), ring 1 ×1, ring 2 ×2, ring 3 (Region 2) ×3, so a Region 2 enemy gives 18 |
 | Champion | ×3 |
 | Claiming a pylon | 50 |
 | A landmark's first discovery | 25 |
 
-- [ ] `XP_CURVE` lists the XP needed for each level: 40, 70, 100, 130, 160, 200, 240, 280, 330, 380, 440, 500, 570, 650 (level 1→2 first). `LEVEL_CAP` is 15, so 14 points against 19 nodes: a full build skips about five.
+- [ ] `XP_CURVE` lists the XP needed for each level: 40, 70, 100, 130, 160, 200, 240, 280, 330, 380, 440, 500, 570, 650 (level 1→2 first). `LEVEL_CAP` is 15 for now, raised as each region adds nodes, so 14 points against 19 nodes: a full build skips about five.
 - [ ] Rough pacing check, for the playtest to confirm: the tutorial, the shrine region, four landmarks, one claim and the Warden come to about 900 XP, which is level 7. Region 2 up to the Bulwark reaches about level 12.
 
 **The tree (sim, data)**
@@ -63,7 +66,7 @@ The player earns XP by fighting and exploring: kills (more in outer rings and fr
 - [ ] A node can be taken when the player has a point, it isn't taken yet, and it links to a taken node. Taking it records a talent event.
 - [ ] Talent effects add into 036's `playerStats`. Ammo-behaviour boosts change the values 029's systems read (freeze hits, blast radius, homing turn, shard count, lob time) through the same stats.
 - [ ] No node is an active skill, a new key, or a new way to fire. No node changes the foundry: production, machine speed, reservoir size and refill stay with the factory and research.
-- [ ] First draft of the node list, for Shaun to edit:
+- [ ] The node list, kept as written for the first playtest (Shaun edits it after):
 
 | Id | Lane | Name | Effect | Links to |
 | --- | --- | --- | --- | --- |
@@ -81,24 +84,24 @@ The player earns XP by fighting and exploring: kills (more in outer rings and fr
 | T2 | Tube | Steady Grip | the walk slow while firing eases from ×0.7 to ×0.8 | T1, T3 |
 | T3 | Tube | Hard Bore | damage +6%, all ammo | T2, K3 |
 | S1 | Survival | Tough Hide | max health +15 | start, S2 |
-| S2 | Survival | Mending | health regen +0.5 HP/s (field regen) | S1, S3 |
+| S2 | Survival | Mending | health regen +0.5 HP/s (field regen; the highest healing rate wins, 030, so it never adds to safe-spot healing) | S1, S3 |
 | S3 | Survival | Braced | armor +3 | S2, S4 |
 | S4 | Survival | Fleet | move speed +5% | S3 |
-| K1 | Arrows–Bombs | Blastfletch (combo keystone) | a bomb's blast leaves its area charged for 20 ticks; an arrow flying through it gains +50% damage and bursts in a 24 px blast on its next hit | A3, B3 |
+| K1 | Arrows–Bombs | Blastfletch (combo keystone) | a bomb's blast leaves its area charged for 20 ticks; an arrow flying through it gains +50% damage and bursts in a 24 px blast on the next enemy it hits, which spends the charge (the arrow keeps piercing) | A3, B3 |
 | K2 | Arrows–Ley | Shatterpoint (combo keystone) | a ley bolt that hits a frozen enemy ends the freeze for double damage, and 4 ice shards burst from it for 50% damage each | A3, L3 |
 | K3 | Tube | Overpressure (lane capstone) | holding fire ramps the fire rate up to +25% over 2 s; it resets when fire is released | T3 |
 
-  That's 19 nodes plus the start, three of them keystones (two combos and one capstone).
-- [ ] No damage type other than physical and cold (frost) appears, and no node gives arrows more pierce.
+  That's 19 nodes plus the start, three of them keystones: two combos, since keystones should reward mixing ammo, and one capstone. Shatterpoint needs frost arrows (029) and stays as a goal to build toward.
+- [ ] No damage type other than physical and cold (frost) appears, and no node touches pierce: arrows already pierce without limit (029), and ley bolts never pierce.
 
 **Respec (sim)**
 - [ ] A `respec` command, only while the player is in the foundry, clears every talent but the start and returns all points. It's free and records a respec event.
-- [ ] Points can be spent anywhere (see open questions).
+- [ ] Points can be spent anywhere, even mid-trip. Only respec needs the foundry.
 
 **Render, art**
 - [ ] **XP bar:** a thin bar under the HP bar (031) with "Lv 7". No "+XP" popups on kills (the playtest found popups cluttered); the bar fills with a small tick instead.
 - [ ] **Level up:** a cyan ring flash on the player, a chime, and a short line "Level 7 · talent point (T)".
-- [ ] **Tree panel** on **T**, closed with T or Esc, like the other panels:
+- [ ] **Tree panel** on **T**, closed with T or Esc, like the other panels. It doesn't pause the game, so opening it mid-fight is a risk rather than a safe pause:
   - The constellation centred, with five lanes radiating from the start: Arrows up, Ley up-right, Tube down-right, Survival down-left, Bombs up-left. The combo keystones sit between their lanes, and Overpressure at the Tube lane's tip.
   - Taken nodes glow cyan, nodes that can be taken have a bright outline, and the rest are dim. Links between taken nodes glow. Keystones are larger rune-stones.
   - Hovering a node shows its name and effect. Clicking an available node takes it.
@@ -147,14 +150,4 @@ The player earns XP by fighting and exploring: kills (more in outer rings and fr
 - **Screenshots:** the tree panel with taken, available and dim nodes, the XP bar, and the level-up flash.
 
 ## Open questions
-Each has a proposed answer. All must be settled before approval.
-1. **The node list.** The 19 nodes above are a first draft. Proposed: keep them for the first playtest and edit after.
-2. **Keystone mix.** Two combos (Blastfletch, Shatterpoint) and one capstone (Overpressure). Or two capstones and one combo? Proposed: two combos, since the brainstorm says keystones should reward mixing ammo.
-3. **Shatterpoint needs frost arrows** from the frost stage (029). Is that too late for a Milestone 1 keystone? Proposed: keep it; it's a goal to build toward.
-4. **XP curve and cap.** Proposed: the curve above, cap 15 for now, raised as each region adds nodes.
-5. **Boss refights.** Proposed: a refight gives 50% of the boss's XP.
-6. **Ring 0.** It has no packs today. Proposed: ×1, the same as ring 1.
-7. **Where points are spent.** Respec is foundry-only. Proposed: points can be spent anywhere, even mid-trip.
-8. **Does the tree panel pause the game?** Proposed: no, like the other panels, so opening it mid-fight is a risk rather than a safe pause.
-9. **Key.** Proposed: T for talents. Taken keys today: WASD, Space, E, R, F, C, B, M, Esc, [, ], 1–4, I or Tab for the inventory (031), and J for the research list (033).
-10. **Region 2 XP.** 034 and 035 leave XP to this spec. Proposed: 6 per Region 2 enemy (×3 for ring 3, so 18) and 300 for the Bulwark's first kill, twice the Warden.
+None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).

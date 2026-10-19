@@ -1,7 +1,9 @@
 # 035: Region 2 enemies
-status: draft
+status: approved
 
-Drafted from Shaun's spec interview (docs/brainstorm/2026-10-19-interview.md), 2026-10-19. Not yet approved.
+Approved by Shaun in chat, 2026-10-19 ("Approve all 028–037"); open questions settled the same day.
+
+Drafted from Shaun's spec interview (docs/brainstorm/2026-10-19-interview.md), 2026-10-19. Built right after 034, on its own branch; until it ships, 034's Region 2 packs use Husks and Wisps as placeholders.
 
 ## Goal
 Stonefall Hollows (034) gets four new enemies, each asking for a different kind of dodge:
@@ -57,12 +59,12 @@ Every attack is telegraphed and readable. They roam the Hollows in packs, and ch
   - A red lane shows on the ground from its feet, `charge.distance` long and `charge.width` wide.
   - The lane's direction is locked at the wind-up's start.
 - [ ] It then charges down the lane at `charge.speed`. It hits the player once per charge if their feet box touches its body: `charge.damage` and knockback along the lane, unless i-frames are running.
-- [ ] It stops at the lane's end. If it hits a solid tile first, it is stunned for `charge.stunTicks`, which is a punish window, then recovers. It passes through other enemies without hurting them.
+- [ ] It stops at the lane's end. If it hits a solid tile first, it is stunned for `charge.stunTicks` (60, 1 s) with no damage to itself, which is a punish window, then recovers. It passes through other enemies without hurting them.
 - [ ] After the charge it holds still for `recoverTicks`.
 
 **Burrower (data, sim)**
 - [ ] It idles above ground at home. On aggro it digs in, a 20-tick dig animation during which it can still be hit.
-- [ ] Underground it moves toward the player at `burrow.speed`, using normal ground collision, shown only by a ripple: a moving mound of cracked earth with a dust trail. Underground, shots, punches and bursts can't hit it, and it doesn't block or separate.
+- [ ] Underground it moves toward the player at `burrow.speed`, using normal ground collision, shown only by a ripple: a moving mound of cracked earth with a dust trail. Underground, nothing can hit it (shots, punches and bursts, bombs included), and it doesn't block or separate. It doesn't tunnel under cliffs. It is hittable only while digging in and while surfaced.
 - [ ] When its ripple is within `burrow.lockRange` of the player's feet, or after `burrow.maxTunnelTicks`, it stops and locks the spot where the player's feet are. During the wind-up:
   - A red cracked ring of `burrow.radius` grows at the locked spot, with a rumble.
   - The ripple stays still at the spot.
@@ -73,7 +75,7 @@ Every attack is telegraphed and readable. They roam the Hollows in packs, and ch
 - [ ] It has a `shield` (034's rule) with `arcDegrees` and `turnDegPerSec`. It turns faster than the Bulwark, but slowly enough to flank on foot.
   - Straight shots and punches into its front arc are blocked.
   - Lobbed bursts and hits from outside the arc land.
-- [ ] It walks toward the player. Within `bash.triggerRange` it winds up a shield bash, which is the proposed attack (see the open questions):
+- [ ] It walks toward the player. Within `bash.triggerRange` it winds up a short frontal shield bash. It has no bombs and no pound; those stay the Bulwark's:
   - The shield's runes flare, and a red arc of `bash.arcDegrees` and `bash.reach` shows in front of it, in the Husk's swipe style (004).
   - Then it bashes: `bash.damage` and knockback.
 - [ ] It keeps turning during the wind-up and stops turning during the recovery, which is the window to get behind it.
@@ -88,7 +90,7 @@ Every attack is telegraphed and readable. They roam the Hollows in packs, and ch
 - [ ] When its cooldown is ready, it steps out to the nearest tile with a clear line to the player, at most `snipe.peekTiles` away, and winds up.
   - **Tracking:** for `snipe.trackTicks`, a thin red laser sight runs from its lens to the player and follows them.
   - **Locked:** for `snipe.lockTicks`, the line stops following, brightens and blinks. This is the dodge cue.
-  - If the line is blocked during tracking, the wind-up is cancelled and it re-peeks.
+  - The laser never shows through solids. If the line is blocked during tracking, the wind-up is cancelled and it re-peeks.
 - [ ] It then fires one bolt along the locked line:
   - `snipe.boltSpeed`, `snipe.damage`, ending at a solid or after `snipe.range`
   - It is an enemy projectile, in the same list as the Wisp's orbs, and a roll's i-frames dodge it.
@@ -96,7 +98,7 @@ Every attack is telegraphed and readable. They roam the Hollows in packs, and ch
 - [ ] When the player is closer than `snipe.backOff`, it retreats to the nearest cover tile away from them, rather than firing.
 
 **Starting values (data)**
-All values are proposals, flagged for Shaun's review. Ticks are at 60 Hz. For comparison, the Husk has 40 health, 50 px/s and a 20-damage swipe; the Warden's slam does 30.
+All values are starting values in data, tuned in playtest. Ticks are at 60 Hz. For comparison, the Husk has 40 health, 50 px/s and a 20-damage swipe; the Warden's slam does 30.
 
 | | Charger | Burrower | Shardback | Sniper construct |
 | --- | --- | --- | --- | --- |
@@ -111,15 +113,16 @@ All values are proposals, flagged for Shaun's review. Ticks are at 60 Hz. For co
 | other | | 20-tick dig | shield 180°, 120°/s turn | cover search 5 tiles, peek 1 tile |
 
 **Drops (data)**
-- [ ] Every Region 2 enemy always drops `ley-iron`: 1 from each of the four. Each also has its own chance at a raw from the region, proposed as stone. It also has a 4% chance at an `aqueduct-valve`, Region 2's part (033), and the shared schematic roll (033).
+- [ ] Every Region 2 enemy always drops `ley-iron`: 1 from each of the four. Each also has its own chance at a raw from the region, stone. It also has a 4% chance at an `aqueduct-valve`, Region 2's part (033), the shared schematic roll (033), and a 10% chance at unidentified armor (the Husk's rate), so defense keeps coming from the field (pillar 6).
 - [ ] Champions apply their drop multiplier and guaranteed armor (032).
 
 **Spawning (data, sim)**
 - [ ] Ring 3 (Region 2, 034) keeps `packs` packs alive under 017's rules: spawn distance, out of view, the respawn delay, the spawn cap of 15 within a screen, and never inside a safe zone or the arena. Starting values:
   - 6 packs of 4–5, picked from `['shardback', 'charger', 'charger', 'burrower', 'sniper']`
   - at most 1 sniper and 2 burrowers per pack, so a pack can always be read
+  - Husks and Wisps never appear in Region 2 packs, and the four new enemies never appear in rings 1–2
 - [ ] The Cistern Terrace guards (034) are a fixed pack: 2 Shardbacks, 2 Chargers, 1 Burrower and 1 Sniper.
-- [ ] Champions (032) can be any of the four. 032 sets 1 in 8 packs for ring 1 and 1 in 5 for ring 2, and leaves later regions to add their own entries. This spec proposes 1 in 4 for ring 3.
+- [ ] Champions (032) can be any of the four. 032 sets 1 in 8 packs for ring 1 and 1 in 5 for ring 2, and leaves later regions to add their own entries. Ring 3 is 1 in 4.
   - A champion Shardback keeps its shield arc and turn speed. Its 1.5× size enlarges its hurtbox and its shield together.
   - A champion's +15% speed applies to walking, tunnelling and the charge.
   - Telegraph durations are never shortened.
@@ -191,15 +194,4 @@ All values are proposals, flagged for Shaun's review. Ticks are at 60 Hz. For co
   - a mixed Region 2 pack
 
 ## Open questions
-Each comes with a proposed answer. All of them must be resolved before approval.
-
-1. **The Shardback's attack.** Shaun said only "an armored front, a mini-Bulwark". Proposal: a short frontal shield bash in the Husk's style. It gets no bombs and no pound, which stay the Bulwark's.
-2. **The Charger hitting a wall.** Proposal: a 60-tick stun as a punish window, with no damage to it. Other enemies in the lane aren't hurt.
-3. **The Burrower underground.** Proposal: nothing can hit it while underground, bursts included. It is only hittable while digging in and while surfaced, and it follows normal ground collision (it doesn't tunnel under cliffs).
-4. **Sniper cover.** Proposal: cover is worked out from the tile grid rather than hand-placed, so population packs anywhere can use it, and the aqueduct and cliffs (034) give plenty.
-   - Does the laser sight show through solids? Proposal: no. A blocked line cancels the shot.
-5. **Telegraph colour.** Proposal: the shared enemy red for all four, including the laser, so cyan always means the player's ley.
-6. **All the numbers.** Proposal: the table above, the ring 3 pack makeup, and a ring 3 champion rate of 1 in 4.
-7. **Drops.** Proposal: 1 ley-iron always, a 4% `aqueduct-valve`, and the shared schematic roll (033). Should ring 3 also roll unidentified armor, as other enemies do today? Proposal: yes, at the Husk's 10%, so defense keeps coming from the field (pillar 6).
-8. **Region 2 only?** Proposal: Husks and Wisps don't appear in Region 2 packs, and the four new enemies don't appear in rings 1–2.
-9. **Build order with 034.** Proposal: build 035 straight after 034 on its own branch. Until then, 034's Region 2 packs use Husks and Wisps as placeholders.
+None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).

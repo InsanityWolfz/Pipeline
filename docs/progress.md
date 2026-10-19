@@ -2,6 +2,27 @@
 
 Newest entry first.
 
+## 2026-10-19: 028–038 approved; open questions settled
+**Changed:**
+- **Open questions.** Shaun settled the open questions (docs/brainstorm/2026-10-19-open-questions.md, "Shaun's decisions"):
+  - unlimited arrow pierce
+  - ley bolt homing and star split can't combine
+  - parts pay for research only
+  - the highest healing rate wins
+  - lobs and mines get past shields
+  - schematics reveal once banked
+  - relics are their own tier
+  - the ammo name stays "Ley bolt"
+  - the cache refills after 10 minutes of play
+  - every other proposal accepted
+- **Specs.** All ten specs (028–037) now have their answers written in and are approved.
+- **design.md.** Edited on Shaun's approval, each change tagged with the date and spec number.
+- **Backlog.** 038 is landmines and cluster bombs, split out of 034.
+
+**Next:** build 028 → 038 on this branch, one at a time, with plan, tests, verify and review, the same as 021–027.
+
+**Notes:** the prototype.md edits several specs mention are left for each build. 021–027 still await Shaun's playtest.
+
 ## 2026-10-19: Content brainstorm, spec interview, draft specs 028–037
 **Changed:**
 - **Brainstorm.** Ran the content brainstorm with the playtest agent, with no code (docs/brainstorm/2026-10-19-content.md). It came from a full playtest of the 021–027 build and two critique rounds.

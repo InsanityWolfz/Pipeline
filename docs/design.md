@@ -39,13 +39,14 @@ Combat is deliberate and hands-on, closer to WoW than Vampire Survivors. Nothing
 - **The tube:** your only weapon. It's a relic portal that fires whatever your foundry makes.
 - **Hotbar = ammo lines:** each supply slot is one ammo line on your hotbar. You start with one slot and can unlock up to four.
 - **Targeting:** most ammo fires at the cursor. Ley-guided ammo locks onto a selected target.
-- **Reservoir:** the tube holds a reservoir of each ammo that drains in bursts and refills from the foundry. Factory throughput sets the refill speed, and reservoir size is an upgrade.
+- **Reservoir:** the tube holds a reservoir of each ammo that drains in bursts and refills from the foundry. Factory throughput sets the refill speed, and reservoir size is restored through research (Changed 2026-10-19, Shaun, spec 033). Once the tube is linked, a press fires the volley first, then carried rounds, then the punch (Added 2026-10-19, Shaun, spec 028).
 - **Ley range:** the link is strongest near claimed pylons. Deep in unclaimed land, refill slows and ammo quality drops, so pushing into new regions is dangerous until you claim a foothold.
 - **Enemies:** the field is dangerous, at Realm of the Mad God density. Packs roam unclaimed land and keep coming back, and a busy fight can hold 10 to 15 enemies. Every enemy still telegraphs attacks you read and dodge, and nothing becomes a mindless horde. (Changed from "few enemies" on 2026-10-18, Shaun, spec 017.)
 - **Empty tube:** with no tube yet, or nothing to fire, the fire button throws a quick, weak punch toward the cursor that knocks back anything but a boss, so you're never helpless. (Added 2026-10-18, Shaun, spec 023.)
 - **Running away is always allowed.** You keep your haul but leave without the kill.
+- **Healing only in safe spots:** you heal fast in a claimed pylon's safe zone and standing in a Ley Spring's pool, and fully at the foundry. Nothing heals in the open field. Sources don't stack: the highest rate applies. (Added 2026-10-19, Shaun, spec 030.)
 
-**Skill tree.** One character, one big tree branching in every direction with connecting paths. Its lanes map to ammo families: the knife lane makes knives hit harder, chain, and so on. You take whatever mix you want.
+**Skill tree.** One character, one small constellation of talents from a centre start: 15–20 nodes with 3 keystones, growing with each region. Its lanes map to ammo families plus survival and the tube: Arrows, Bombs, Ley, Survival and Tube. Keystones are lane capstones and combos between ammo. Each level gives one talent point, and respec is free at the foundry. You take whatever mix you want. (Changed from "one big tree branching in every direction" on 2026-10-19, Shaun, spec 037.)
 
 **Damage types behave differently.** There are no weaknesses or resistances. Instead each type has its own behavior, and tree nodes build on those behaviors:
 
@@ -55,11 +56,13 @@ Combat is deliberate and hands-on, closer to WoW than Vampire Survivors. Nothing
 - **Poison** stacks without a cap and ramps up slowly.
 - **Physical** deals big direct hits.
 
-**Defense comes from found armor.** You have a health pool and armor, and armor only drops in the field. Heavy armor blocks more but slows you; light armor blocks less but keeps you fast. Heavy means you can afford to get clipped, never that dodging is impossible.
+Cold comes first, through the frost rune on arrows. Bombs deal physical damage with no burn until a fire rune brings fire back. (Added 2026-10-19, Shaun, spec 029.)
 
-**Simple stats:** damage, fire rate, move speed, max health, health regen, armor.
+**Defense comes from found armor.** You have a health pool and armor, and armor only drops in the field. Heavy armor blocks more but slows you; light armor blocks less but keeps you fast. Heavy means you can afford to get clipped, never that dodging is impossible. You wear four pieces: helm, body, boots and trinket, and only the body piece is light or heavy. Each identified piece carries 1–3 defensive or utility affixes (max health, armor, field regen, move speed, roll), set by rarity: Common 1, Fine 2, Rare 3. Relics are their own tier above Rare: one rule-bending effect plus 2 affixes. Gear never adds damage. (Added 2026-10-19, Shaun, spec 036.)
 
-**Bosses are engineering puzzles.** Each boss poses a problem a factory can solve: twin cores that must be hit at once (a two-stream line at the right angle), an armored front (arcing shots), evasive movement (ley-guided ammo), swarms of adds (a wide, cheap spread). A first attempt can be pure scouting: learn the mechanics, run, retool, return. A tailored layout is a big advantage, never a hard requirement, so raw throughput is always a slower but valid answer.
+**Simple stats:** damage, fire rate, move speed, max health, health regen, armor. Health regen is field regen, which comes only from gear and talents. (Changed 2026-10-19, Shaun, spec 030.)
+
+**Bosses are engineering puzzles.** Each boss poses a problem a factory can solve: twin cores that must be hit at once (a two-stream line at the right angle), an armored front (arcing shots: the Bulwark's shield blocks straight shots and punches from the front, while lobbed bombs and mines always land; Added 2026-10-19, Shaun, spec 034), evasive movement (ley-guided ammo), swarms of adds (a wide, cheap spread). A first attempt can be pure scouting: learn the mechanics, run, retool, return. A tailored layout is a big advantage, never a hard requirement, so raw throughput is always a slower but valid answer.
 
 ## The Foundry
 
@@ -69,23 +72,25 @@ The foundry makes ammo. Each supply slot feeds one ammo line, and everything a l
 
 **Ammo is built physically.** An arrow takes three chains: wood into a cutter makes shafts, stone into a knapper makes heads, and fiber into a spinner makes binding rope. An assembler combines them into arrows. Bombs, knives and ley bolts each have their own chains.
 
-**The layout is the ability.** The foundry's intake has several entrances, each with its own reservoir, and one press fires a round from every fed entrance: arrows fed into two entrances fan out as a two-arrow spread, two bomb lines lob two bombs side by side, and two arrow lines plus a bomb line fire both together. The intake starts with one entrance open; the first boss's core opens more, and later unlocks add more. (Changed from angled gravity stagers on 2026-10-18, Shaun, spec 024.) A hardening stage adds pierce, a ley guide adds homing, and refinement stages raise quality and damage. Every extra projectile costs real materials, so balance is built in.
+**The layout is the ability.** The foundry's intake has several entrances, each with its own reservoir, and while fire is held every fed entrance fires at its own ammo's rate (Changed from "one press fires a round from every fed entrance" on 2026-10-19, Shaun, spec 028): arrows fed into two entrances fan out as a two-arrow spread, two bomb lines lob two bombs side by side, and two arrow lines plus a bomb line fire both together. The intake starts with one entrance open; each boss core restores one more: the Warden's the 2nd, the next boss's the 3rd, later bosses' the 4th and 5th. (Changed from angled gravity stagers on 2026-10-18, Shaun, spec 024; one entrance per core on 2026-10-19, Shaun, spec 033.) Arrows pierce on their own, without limit; ley bolts hit hard without piercing; bombs burst in a wider area. Stage machines add a tag at a small material cost per round, at most one element and one shape: a frost rune adds cold, a ley guide homing, a shatter lens a five-shard star split. Refinement stages raise quality and damage. (Changed from "a hardening stage adds pierce" on 2026-10-19, Shaun, spec 029.) Every extra projectile costs real materials, so balance is built in.
 
 **Scaling lives inside each line.** There are at most four lines, but each can grow into a large complex: more raw supply, parallel machines, more refinement stages. More resources mean more throughput, and better machines mean stronger ammo.
 
-**Unlocks.** Crafting something by hand once unlocks the machine that makes it. Killing a boss unlocks a new foundry wing with new machine types, plus the next region. Rare schematics add new stage types.
+**Unlocks.** Crafting something by hand once unlocks the machine that makes it. Killing a boss unlocks a new foundry wing with new machine types, plus the next region. A stage unlocks by hand-applying it once at the bench. Rare schematics reveal lost parts of the foundry to restore. (Changed from "Rare schematics add new stage types" on 2026-10-19, Shaun, specs 029 and 033.)
+
+**Restoration.** Research is restoring the foundry. Its lost parts show as faint diagrams on the foundry itself: on the intake, on the walls and on a sealed wing. Press E at one and pay its cost to bring that part back. Costs are boss cores, machine parts and schematics, never gold. A list panel shows every part and where to find it. (Added 2026-10-19, Shaun, spec 033.)
 
 **What monsters drop:**
 
 - **Raw materials** in small amounts, enough to hand-craft ammo in a pinch
-- **Machine parts** specific to each area, needed to build machines and never automated
-- **Schematics**, rarely, with a big visual pop when one lands
-- **Unidentified armor**
+- **Machine parts** specific to each area, spent on research and restoration and never automated. Placing a machine stays free. (Changed from "needed to build machines" on 2026-10-19, Shaun, spec 033.)
+- **Schematics**, rarely, with a big visual pop when one lands. One drops as an unknown and reveals what it restores once banked. (Added 2026-10-19, Shaun, spec 033.)
+- **Unidentified gear** (Changed from "armor" on 2026-10-19, Shaun, spec 036)
 - **Boss cores**, rare, needed for top-tier machines and stages
 
 **Identification.** Found armor is unidentified until you bring it home. Its stats roll at the foundry, and it can't be equipped until then.
 
-- **No ratio math.** Supply lines deliver a fixed amount per minute. Machines show where the bottleneck is.
+- **No ratio math.** Supply lines deliver a fixed amount per minute. Each raw comes in through its own port on the foundry wall, each claimed pylon sends the raws of its own area, and every pylon supplying a raw adds to its port's rate. (Changed 2026-10-19, Shaun, spec 028.) Machines show where the bottleneck is.
 - **Play time only.** Machines run while the game is open and pause when it's closed.
 - **Light upkeep.** Coming home is a harvest: identify loot, fix a bottleneck, add a stage, head out.
 - **Blueprints.** Layouts can be saved and rebuilt quickly, like a twin-core breaker for a boss. Rearranging a line is fast, so retooling for a fight never takes long.
@@ -100,15 +105,18 @@ Your base is your magical foundry, built and abandoned by a lost magical civiliz
 - **Difficulty by distance:** enemies near the foundry are weak, and biomes get deadlier the farther out you go (Realm of the Mad God style).
 - **Claiming:** clear a site, then set it up as a supply line to the foundry. Reactivating its ley pylon makes monsters stop roaming there and extends the tube's range. Claims are permanent, and nothing ever threatens them. NPCs may move in, so cleansed sites become small hubs.
 - **Pylons are deposit points:** reach any claimed pylon and your haul is sent home safe.
-- **Fast travel:** between the foundry and any claimed site.
+- **Fast travel:** between the foundry and any claimed site, picked from the waystone's menu of claimed pylons (Added 2026-10-19, Shaun, spec 032).
+- **Landmarks:** resource sites with claimable pylons, a Frozen Grotto, Ley Springs and a Ruined Cache. Each is hidden until seen, then stays on the minimap, and finding one the first time gives XP. (Added 2026-10-19, Shaun, spec 032.)
+- **Champions:** any non-boss enemy can spawn as a champion: bigger, tougher, faster, glowing and named, with richer drops and guaranteed gear. (Added 2026-10-19, Shaun, spec 032.)
 - **Regional pull:** ammo chains need materials from several regions, so growing a line means claiming new ground.
-- **Boss gates:** each boss unlocks a new foundry wing and the next region, Terraria-style, and drops the cores for top-tier machines.
+- **Boss gates:** each boss unlocks a new foundry wing and the next region, Terraria-style, and drops the cores for top-tier machines. After the first kill, an offering at the boss's altar summons it again for its drops. (Added 2026-10-19, Shaun, spec 034.)
+- **Regions:** Region 2 is Stonefall Hollows, a collapsed quarry-city west of the start, opened by claiming the shrine. Its boss is the Bulwark, and its metal is ley-iron. (Added 2026-10-19, Shaun, spec 034.)
 
 ## Death and tension
 
 When you die, you're sent back to the foundry and lose everything you picked up since your last return home or pylon deposit: raw materials, machine parts, schematics, boss cores and unidentified armor. Your factory, tube, level, talents, identified armor and blueprints are always kept.
 
-The tension lives in the stretch between your last pylon and wherever you're pushing. Grabbing a rare schematic deep in unclaimed land means surviving the trip back with it. Running away is always an option.
+The tension lives in the stretch between your last pylon and wherever you're pushing, which is also the stretch without healing (Added 2026-10-19, Shaun, spec 030). Grabbing a rare schematic deep in unclaimed land means surviving the trip back with it. Running away is always an option.
 
 ## Economy and progression
 
@@ -116,11 +124,11 @@ Two separate reward streams keep players doing both halves of the game.
 
 | Earned from | Reward | Used for |
 | --- | --- | --- |
-| Combat: leveling | XP and talent points | The skill tree |
+| Combat: leveling | XP (kills, bosses, claiming pylons, first landmark discoveries; never the factory) and talent points (Changed 2026-10-19, Shaun, spec 037) | The skill tree |
 | Combat: drops | Machine parts, schematics, boss cores | Building and growing the factory |
-| Combat: drops | Unidentified armor | Defense |
+| Combat: drops | Unidentified gear | Defense |
 | Combat: bosses | New supply slots and foundry wings | More ammo lines, new machine types |
-| Factory: selling surplus ammo and unneeded armor to the foundry merchant | Gold | Foundry upgrades, reservoir size, cosmetics |
+| Factory: selling surplus ammo and unneeded armor to the foundry merchant | Gold | Foundry upgrades, cosmetics (reservoir size moved to restoration on 2026-10-19, Shaun, spec 033) |
 
 Gold never buys talent points, parts or schematics, so factory farming can't replace fighting.
 
@@ -171,9 +179,9 @@ Example modifiers:
 
 ## Open questions
 
-- [ ] Skill tree shape, size, and how the lanes connect
+- [x] Skill tree shape, size, and how the lanes connect: a small constellation of 15–20 nodes from a centre start, in five lanes (Arrows, Bombs, Ley, Survival, Tube), with keystones at lane tips and between lanes, and free respec at the foundry (2026-10-19, Shaun, spec 037).
 - [ ] Which beginner ammo types ship, and their crafting chains
 - [ ] Reservoir sizes and refill speeds
-- [ ] Whether identification is free or costs materials
+- [x] Whether identification is free or costs materials: free (2026-10-19, Shaun, spec 036).
 - [x] Whether melee exists: yes, as a fallback. With no tube or nothing to fire, the fire button throws a weak punch that knocks back non-boss enemies (2026-10-18, Shaun, spec 023).
 - [ ] Final names for the foundry and the tube

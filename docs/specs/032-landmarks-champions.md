@@ -1,5 +1,7 @@
 # 032: Landmarks and champions
-status: draft
+status: approved
+
+Approved by Shaun in chat, 2026-10-19 ("Approve all 028–037"); open questions settled the same day.
 
 ## Goal
 The world has places worth finding and fights worth remembering. Landmarks fill the dead path ends and the empty outer ring:
@@ -27,14 +29,14 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
 - docs/specs/017-overworld.md: the fixed-seed map, rings, landmarks that override terrain, the population, safe zones and the minimap
 - docs/specs/018-believable-resources.md: node placement rules, ley lines, and the pylon harvest with motes running home
 - docs/specs/009-claiming.md and 011-death.md: claim, deposit, fast travel, and what a death resets
-- Draft specs this one builds on or feeds:
+- Specs this one builds on or feeds (028–037, approved together on 2026-10-19):
   - **028 (foundry flow fixes):**
     - one supply port per resource, each showing "×N pylons" and its rate
     - `SITE_SUPPLY`, which lists the raws each claimable site sends
     - the goal chain, which leaves "claim a second pylon" to this spec
     - the waystone, unchanged
   - **029 (ammo stages):** the rime shard, the `rime-cluster` node and a minimal Frozen Grotto in the north-west (about (9, 5)–(19, 13)), with its `grotto` guards and a path north from the west path's end
-  - **030 (healing):** three Ley Springs, at (10, 31) beside the west path's end, (66, 38) on the south-east path's end, and an optional one at (26, 8), and how they heal
+  - **030 (healing):** three Ley Springs, at (10, 31) beside the west path's end, (66, 38) on the south-east path's end, and a north one at (26, 8) that is cut if healing near home proves too easy, and how they heal
   - **033 (research):** the schematic items, their rare-drop roll (which already lists "20% from a Ruined Cache (032)" and "5% for a champion (032)"), the pop when one lands, and the Region 1 machine part `ancient-gear`
   - **034 (Stonefall Hollows):** the west path continues from (12, 27) to the Region 2 barrier
   - **037 (leveling):** XP for first discoveries and champion kills
@@ -79,7 +81,7 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
   - every node follows its 018 placement rule
   - every landmark is reachable on foot from the start (017's flood fill)
   - every item, enemy and node id an entry names exists
-- [ ] Starting positions, for review. Tile centres; rings use 017's bounds of 17 and 26 tiles from the foundry entrance.
+- [ ] Starting positions. Tile centres; rings use 017's bounds of 17 and 26 tiles from the foundry entrance. 034 may shift every tile by +40 for Region 2; positions are named only through `OVERWORLD` and landmark data, so a shift needs no code change.
 
   | Landmark | Centre | Ring | Fills |
   | --- | --- | --- | --- |
@@ -98,12 +100,12 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
   - the **Quarry**'s boulders stand in a rock field among cut stone blocks of the lost civilisation
   - the **Old Grove**'s trees stand in a sunlit grove of old trees
   - the **Reed Marsh**'s reeds stand round a cluster of ponds
-  - the **Ley Grotto**'s ley veins stand where its ley lines cross in a sunken rock hollow
+  - the **Ley Grotto**'s ley veins stand where its ley lines cross in a sunken rock hollow. It is open-air, on the map like 029's Frozen Grotto, not an interior room, so it shows on the minimap
 - [ ] Nodes use today's `NODES` entries, with the same uses, yield and regrow. The existing 14 meadow and shrine nodes stay.
-- [ ] Each resource site has a ley pylon guarded by a pack. Claiming works like the shrine's claim (009, 017):
+- [ ] Each resource site has a ley pylon guarded by one hand-placed pack of its ring's makeup (Husks, plus Wisps in ring 2), 3–5 strong, with no elite. Claiming works like the shrine's claim (009, 017):
   - clear the guards, then hold E at the pylon
-  - the claim makes a safe zone and adds a deposit point
-  - the claimed pylon is a fast-travel destination. With two or more claimed pylons, E at the waystone opens a menu of them by landmark name (open question 13). 034 adds the Cistern Terrace to the same menu.
+  - the claim makes a safe zone and adds a deposit point. Each pylon has its own safe radius in data: 7 tiles for resource sites, so five claims don't starve spawning, while the shrine stays at 10
+  - the claimed pylon is a fast-travel destination. With two or more claimed pylons, E at the waystone opens a menu of them by landmark name. 034 adds the Cistern Terrace to the same menu.
   - the claim is permanent
 - [ ] The overworld can hold several pylons, each with its own site id. If 028 hasn't already generalised `Room.pylon` to a list, this spec does.
   - `pylonInReach`, claiming, deposit, safe zones and the summary's `claims` work per pylon.
@@ -135,14 +137,14 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
 - [ ] **These rare entries depend on 033.** 033 owns the schematic items, their roll (no duplicates, region rules), their pop and the `ancient-gear` item. This spec only gives the cache an open event and a drop-table slot that 033's roll uses.
   - If 032 is built before 033, the cache opens with its raws only.
   - 033 then fills in the rare entries as data. No cache code changes.
-- [ ] An opened cache shows as open and empty until it re-arms. See open question 3.
+- [ ] An opened cache shows as open and empty until it re-arms. It re-arms after `LANDMARKS.cacheRearmTicks` of play time (starting at 10 minutes, never real time), on a tick when it is out of view: its contents return, and its guards too if they are dead. A KO never refills it, so dying on purpose after depositing the loot earns nothing.
 
 **Ley Springs (with 030)**
 - [ ] 030 defines Ley Springs and how they heal. This spec doesn't change those rules.
 - [ ] This spec makes each of 030's springs a landmark entry at 030's position, so that they are hidden until seen, shown on the minimap once found, and recorded on first discovery like every other landmark.
 
 **Discovery (sim, render)**
-- [ ] A landmark is discovered on the first tick any part of its area is inside the camera's view. The sim already computes this view as `viewRect` (017).
+- [ ] A landmark is discovered on the first tick any part of its area is inside the camera's view. The shrine and the foundry aren't landmarks and never count as discoveries: they are found through the tutorial and marked from the start. The sim already computes this view as `viewRect` (017).
 - [ ] Discovery records:
   - the landmark's id in a new `discovered` list in sim state
   - a `discoveries: { landmark }` event on that tick, once ever per landmark, for 037 to turn into XP
@@ -155,7 +157,7 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
 
 **Guards (data, sim)**
 - [ ] Each landmark guard pack is placed in data with a group equal to its landmark's id. A pylon's site can't be claimed, and the cache can't be opened, while any of its group lives (009's `occupied`).
-- [ ] Guards appear and reset by the rule in open question 4.
+- [ ] Guards are there from the start and come back on a KO's world reset, as 029's grotto guards do. Nodes can be gathered at any time. The new resource-site pylons stay dormant, with no claim, until the shrine is claimed.
 - [ ] Guards never spawn inside a claimed pylon's safe zone, and the guards of a claimed site despawn, as 017's packs do.
 
 **Champions (data, sim)**
@@ -166,10 +168,10 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
   - `speed: 1.15`
   - `dropRolls: [2, 3]`
   - `armor: 1`, the guaranteed unidentified pieces
-  - `chanceByRing`: ring 1 is 1 in 8 and ring 2 is 1 in 5. The per-ring split is a proposal (open question 8).
+  - `chanceByRing`: ring 1 is 1 in 8 and ring 2 is 1 in 5. Ring 0 has no population. Later regions add their own entries.
   - glow colour and size
-  - name lists per enemy id. These are placeholders (open question 9).
-- [ ] When a population pack (017) or a landmark guard pack spawns (open question 5), it rolls once against its ring's chance with the seeded RNG. On a hit, one member, picked by the RNG, is a champion.
+  - name lists per enemy id: short epithet-style names (for example Mossjaw, Rootgrip and Thornback for Husks). They are placeholders for Shaun to rewrite.
+- [ ] When a population pack (017) or a landmark guard pack spawns (029's grotto pack and the Ruined Cache's included), it rolls once against its ring's chance with the seeded RNG. On a hit, one member, picked by the RNG, is a champion.
   - Bosses (`boss: true`, such as the Pylon Warden) never are.
   - The tutorial's fixed packs (the ruin-field Husks and the shrine guards) never are.
 - [ ] A champion, compared with the same enemy's def:
@@ -192,10 +194,10 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
 - [ ] Its overhead health bar is drawn in the champion colour.
 
 **Goal (data)**
-- [ ] One goal is appended to the Milestone 1 chain (028), after 029's and before 034's and the frontier line: "Claim a second pylon", with a new check `claimedCount { min: 2 }`. It marks the nearest unclaimed resource-site pylon once one is discovered. The wording is a first draft.
+- [ ] One goal is appended to the Milestone 1 chain (028), after 029's and before 034's and the frontier line: "Claim a second pylon", with a new check `claimedCount { min: 2 }`. It marks the nearest unclaimed resource-site pylon once one is discovered. Built with this wording; Shaun may edit it later.
 
 **Population and safe zones (sim)**
-- [ ] With every resource site and the shrine claimed, rings 1 and 2 still reach their pack targets (017). A test claims all five and steps until the targets are met. If they can't be met, the build reports it rather than changing the targets. See open question 7.
+- [ ] With every resource site and the shrine claimed, rings 1 and 2 still reach their pack targets (017). A test claims all five and steps until the targets are met. If they can't be met, the build reports it rather than changing the targets.
 
 **Art (data/art)**
 - [ ] New vector art in the 016 style and palette, pending Shaun's review on `/sheet.html`:
@@ -209,7 +211,7 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
 - [ ] Everything fits the theme rule: the lost civilisation, its ley lines, nothing modern.
 
 **Flow unchanged**
-- [ ] The tutorial (012, 017, 027) still runs end to end with every objective in order. The shrine is still the first claim. See open question 4.
+- [ ] The tutorial (012, 017, 027) still runs end to end with every objective in order. The shrine is still the first claim, since the new pylons stay dormant until it is claimed.
 - [ ] `?playtest` and `?start=field` still start as before.
 
 **Checks**
@@ -224,7 +226,8 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
   - a champion Husk and a champion Wisp beside normal ones
 
 ## Data changes
-- `src/data/landmarks.ts` (new): landmark entries, guard packs, the cache drop table, `LANDMARKS.bannerMs`, minimap marker styles.
+- `src/data/landmarks.ts` (new): landmark entries, guard packs, the cache drop table, `LANDMARKS.bannerMs`, `LANDMARKS.cacheRearmTicks`, minimap marker styles.
+- `src/data/claims.ts` or `src/data/overworld.ts`: a safe radius per pylon (resource sites 7 tiles, the shrine 10).
 - `src/data/champions.ts` (new): the champion tuning and name lists.
 - `src/data/overworld.ts`:
   - landmark areas added to the clearings
@@ -254,7 +257,7 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
   - The landmark data tests listed above.
   - **Discovery:** fires once when an area first enters `viewRect`, never again, and survives a death.
   - **Multiple pylons:** claim each in turn; check deposit and fast travel at each (through the waystone menu), a safe zone per pylon, the 028 port's pylon count and rate rising per claim, and the "Claim a second pylon" goal completing on the second claim.
-  - **Cache:** sealed while guards live; opens with E after; seeded drops; every item the table names exists (the rare entries only once 033 is built).
+  - **Cache:** sealed while guards live; opens with E after; seeded drops; re-arms after 10 minutes of play while out of view, and never on a KO; every item the table names exists (the rare entries only once 033 is built).
   - **Champions:**
     - the roll rate over many seeds is within tolerance of each ring's chance
     - no champion among bosses or tutorial packs
@@ -270,24 +273,4 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
 - **Screenshots (qa):** the list under Checks.
 
 ## Open questions
-1. **Positions.** The table's centres fill the empty outer ground, since 029, 030 and 034 already use both dead path ends. 034 may shift every tile by +40 for Region 2. Positions are named only through `OVERWORLD` and landmark data, so a shift needs no code change. **Proposal:** the table as written, checked by the data tests above.
-2. **The Ley Grotto's form.** Is it an open-air sunken hollow on the map, or an interior you enter, like the foundry? 017 says there are no buildings "unless you enter a special dungeon". **Proposal:** an open-air hollow, as 029's Frozen Grotto is, so it shows on the minimap and needs no new room.
-3. **Does the cache re-arm?** Options:
-   - (a) once per game
-   - (b) its guards and contents return after a stretch of play time
-   - (c) it resets on a KO, as 029's grotto guards and the unclaimed shrine do
-
-   (c) invites dying on purpose after depositing the loot. **Proposal:** (b), after 10 minutes of play (data), out of view. Play time only, so it never nags.
-4. **When guards appear, and when the new pylons can be claimed.** 029's grotto guards are hand-placed, present from the start and back on a KO's reset. The tutorial makes the shrine the first claim. **Proposal:**
-   - every landmark's guards follow 029's rule
-   - the new pylons stay dormant, with no claim, until the shrine is claimed
-   - nodes can be gathered at any time
-5. **Champions among landmark guards.** **Proposal:** this spec's guard packs, and 029's grotto pack, roll for a champion like population packs. The tutorial's ruin-field pack and the shrine guards never do.
-6. **Guards for resource sites.** Shaun didn't say whether they're guarded, but claiming in the design means clearing a site first. **Proposal:** one hand-placed pack of the ring's makeup (Husks, plus Wisps in ring 2, 3–5 strong), and no elite.
-7. **Safe zones.** Five claimed pylons with 017's 10-tile safe zone cover much of ring 2 and may starve spawning. **Proposal:** a safe radius per pylon in data, starting at 7 tiles for resource sites, with the shrine kept at 10.
-8. **Champion chance per ring.** "About 1 in 8, more in the outer rings." **Proposal:** ring 1 is 1 in 8 and ring 2 is 1 in 5. Ring 0 has no population. Later regions add their own entries.
-9. **Champion names.** **Proposal:** a short epithet-style name per enemy type from a data list (for example Mossjaw, Rootgrip and Thornback for Husks), with "<Enemy> champion" beneath it. The lists are placeholders for Shaun to rewrite.
-10. **The "rare part".** No such part exists today. 033 proposes `ancient-gear` as Region 1's machine part, which Husks and Wisps also drop at 4%. **Proposal:** the cache's rare part is the ancient gear, at 50%. A rarer, cache-only part would need Shaun's call.
-11. **Champion reach.** **Proposal:** a 1.5× body doesn't scale its attack reach, so telegraphs stay true to today's ranges. The alternative scales reach with size.
-12. **Do the shrine and the foundry count as discoveries for XP (037)?** **Proposal:** no. They're found through the tutorial and marked from the start.
-13. **Choosing a fast-travel destination.** 028 leaves the waystone unchanged, so it still goes to the first claimed pylon. **Proposal:** with two or more claimed pylons, the waystone's menu lists them by landmark name.
+None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).

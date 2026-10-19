@@ -1,5 +1,7 @@
 # 030: Healing: safe spots only
-status: draft
+status: approved
+
+Approved by Shaun in chat, 2026-10-19 ("Approve all 028–037"); open questions settled the same day.
 
 ## Goal
 The player heals only in safe spots:
@@ -40,11 +42,12 @@ Nothing heals in the open field. Field regen exists as a stat that is 0 until ge
   | Spring | feet inside a Ley Spring's pool | 10 HP/s |
   | Field regen | anywhere | `fieldRegen`, 0 HP/s |
 
-  Rates don't stack. The highest one applies.
+  Rates don't stack. The highest one applies, and field regen from gear (036) and talents (037) is one of these rates, so it never adds to pylon, spring or foundry healing.
+  - The foundry is a fast fill, not an instant reset, so the heal reads on screen.
 - [ ] `fieldRegen` is a stat read through one function, so later gear affixes and talents can add to it. Its base is `HEALING.fieldRegen = 0`, so the open field heals nothing.
 - [ ] Healing never takes health above max health (`MAX_HEALTH` today; 036 adds gear to it). Nothing heals while dying (011).
 - [ ] Health stays a whole number. Fractional healing builds up in the player state and is applied a point at a time, so 10 HP/s gives exactly 10 HP over 60 ticks.
-- [ ] Healing carries on through hits. It doesn't pause after damage (`HEALING.afterHitDelay = 0`, a starting value; see Open questions).
+- [ ] Healing carries on through hits. It doesn't pause after damage (`HEALING.afterHitDelay = 0`, a starting value).
 - [ ] Waking from a KO still restores full health (011), unchanged.
 
 **The healing flag (sim, hook)**
@@ -55,15 +58,16 @@ Nothing heals in the open field. Field regen exists as a stat that is 0 until ge
 **Ley Springs (data, sim)**
 - [ ] Ley Springs are data in `src/data/overworld.ts`, each with a centre tile and a pool radius. The pool is walkable: feet inside the circle count as in the spring. Shots and enemies pass over it as over grass.
 - [ ] Springs have no uses, charges or timers. They aren't safe zones: enemies can follow the player in.
-- [ ] Three springs on the fixed map. Positions are proposals for review:
+- [ ] Three springs on the fixed map (034 may shift every tile by +40 for Region 2):
 
   | Spring | Centre tile | Ring | Why there |
   | --- | --- | --- | --- |
   | West | (10, 31) | 2 | just south of the west path's end (12, 27), which ends in nothing today. That end becomes a fork: north to 029's Frozen Grotto and west along 034's road to the Region 2 barrier, so the pool sits beside the road, not on it |
   | South-east | (66, 38) | 2 | the end of the south-east path, which also ends in nothing |
-  | North (optional) | (26, 8) | 1 | north-west of the ruin field, between home and the Grotto; it needs its own clearing |
+  | North | (26, 8) | 1 | north-west of the ruin field, between home and the Grotto; it needs its own clearing |
 
-  - Pool radius: 1.5 tiles (48 px), a starting value.
+  - The north spring is built, and cut if the playtest finds healing near home too easy.
+  - Pool radius: 1.5 tiles (48 px), a starting value, enough for the player and a little dodging room.
   - Each spring sits inside a clearing (no generated trees, rocks or water on or around its pool).
 - [ ] Every spring's pool is on open ground and reachable on foot from the wake tile (a data test on the generated map).
 
@@ -133,9 +137,4 @@ Nothing heals in the open field. Field regen exists as a stat that is 0 until ge
   - healing in the shrine's safe zone, with the thread to the pylon
 
 ## Open questions
-1. **Rates:** foundry 50 HP/s, pylon zone and springs 10 HP/s each, field regen 0. Should springs be faster or slower than pylon zones? (Proposal: the same.)
-2. **The foundry:** a fast fill to full, about 2 s from empty, or an instant reset? Proposal: the fast fill, so the heal reads on screen.
-3. **After a hit:** proposal: no pause. A short pause (for example 60 ticks after a hit) would stop tanking hits inside a spring while enemies follow you in. Wanted?
-4. **Spring positions:** west (10, 31) beside the west fork and south-east (66, 38), both in ring 2 at the two dead-end paths, plus an optional north spring at (26, 8) in ring 1. Is a ring-1 spring too generous so near home? Proposal: build all three, and drop the north one if the playtest finds healing too easy near home.
-5. **Pool radius:** proposal: 1.5 tiles (48 px), enough for the player and a little dodging room.
-6. **Minimap:** proposal: springs stay off the minimap until 032's discovery rules.
+None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).

@@ -1,5 +1,7 @@
 # 028: Foundry flow: a port per resource, fed hoppers, entrances at their own rate, and goals after the shrine
-status: draft
+status: approved
+
+Approved by Shaun in chat, 2026-10-19 ("Approve all 028–037"); open questions settled the same day.
 
 ## Goal
 Automation stops stalling and progression stops at the shrine no longer:
@@ -44,16 +46,16 @@ Automation stops stalling and progression stops at the shrine no longer:
   | Fiber port | `fiber` | (1, 8) |
   | Ley crystal port | `ley-crystal` | (1, 10) |
 
-  Tiles are a proposal (see Open questions). The identification bench stays at (1, 12).
+  The identification bench stays at (1, 12).
 - [ ] Each claimable site lists the raws its pylon sends, as data (`SITE_SUPPLY`). A site sends the raws of its own area: every raw it lists has a gathering node of that raw inside the site's safe zone (a data test checks this).
 - [ ] The shrine keeps working under the new model. It lists all four raws, which match its zone's nodes: ley veins, a tree, reeds and rubble. Claiming it supplies all four ports at ×1.
-- [ ] A port's pylon count is the number of claimed sites whose `SITE_SUPPLY` includes its raw. A port with a count of 0 isn't there; it appears, clearing its tile as fixtures do today, when its first supplying site is claimed.
-- [ ] Each port pushes one of its raw every `round(SUPPLY_TICKS / N)` ticks, where N is its pylon count. More pylons means a higher rate, with no other change. A refused raw waits in the port, as today.
+- [ ] A port's pylon count is the number of claimed sites whose `SITE_SUPPLY` includes its raw. A port with a count of 0 isn't there (no dark "×0" ports); it appears, clearing its tile as fixtures do today, when its first supplying site is claimed.
+- [ ] Each port pushes one of its raw every `round(SUPPLY_TICKS / N)` ticks, where N is its pylon count. With `SUPPLY_TICKS` 240 that is 15 a minute per pylon for each raw, so the shrine alone sends 60 a minute in all (today's single port sends 30). More pylons means a higher rate, with no other change. A refused raw waits in the port, as today.
 - [ ] The waystone is unchanged: the shrine's claim still adds it.
 
 **Hoppers fed by lines (sim, data)**
-- [ ] A hopper takes items from any side but its front: from a conduit, a sorter's exit, a machine's output or a supply port. It takes an item while it is empty or already holds that item, up to `HOPPER_FLOW_CAP`. Otherwise it refuses, and the line behind it backs up.
-- [ ] Hand-filling and emptying a hopper are unchanged (022). Hoppers still hand items only to conduits, sorters and machines (never crates or the intake).
+- [ ] A hopper takes items from any side but its front: from a conduit, a sorter's exit, a machine's output or a supply port. It takes an item while it is empty or already holds that item, up to `HOPPER_FLOW_CAP` (99, the crate's cap). Otherwise it refuses, and the line behind it backs up.
+- [ ] Hand-filling and emptying a hopper are unchanged (022). Hand-filling stays uncapped; the cap applies only to items arriving by line. Hoppers still hand items only to conduits, sorters and machines (never crates or the intake).
 
 **Each entrance at its own rate (sim, data)**
 - [ ] Each entrance gains its own `cooldown`, counting down every tick.
@@ -78,9 +80,9 @@ Automation stops stalling and progression stops at the shrine no longer:
   2. "Put a second kind of ammo in another entrance": check `mixedVolley`, which holds when the volley holds at least two different ammo.
   3. "Feed all three entrances": the existing `volley { min: 3 }`. Once 033 lands, the third entrance needs the Bulwark core, so 033 moves this goal to the end of 034's Region 2 steps.
   
-  The wording is a first draft for Shaun to edit.
+  Built with this wording (Shaun, 2026-10-19); he may edit the text later, as data.
 - [ ] The `awayRunning` clock runs once every goal before it is done, not every goal but the last, so goals can follow it. `prototypeComplete` is set when the prototype's goals are done, as before; the Milestone 1 goals don't affect it.
-- [ ] **The line never goes blank after the shrine.** Once every goal in the chain is done, it shows `FRONTIER_GOAL`, a standing line from data with no check (see Open questions). A sim test walks every combination of done goals after the shrine claim and checks the line is never empty.
+- [ ] **The line never goes blank after the shrine.** Once every goal in the chain is done, it shows `FRONTIER_GOAL`, "Explore beyond the shrine": a standing line from data with no check. It doesn't name the next milestone. Each later spec's goals slot in before it. A sim test walks every combination of done goals after the shrine claim and checks the line is never empty.
 
 **Render**
 - [ ] Each port is drawn in vector in the 020 style, with its raw's icon on its face. Under it is a small plate reading "×1 pylon · 15/min", or "×2 pylons · 30/min" and so on. Hovering it shows its name, the plate's text, and "waiting" while a refused raw is held.
@@ -169,9 +171,4 @@ Automation stops stalling and progression stops at the shrine no longer:
   - the objective line on goal 1 with the port marker
 
 ## Open questions
-1. **Port tiles:** four ports on the west wall at (1, 4), (1, 6), (1, 8) and (1, 10), one row apart so lines can leave between them. Is that the right wall and order? (Proposal: yes. The bench stays at (1, 12).)
-2. **When ports appear:** proposal: a port appears with its first supplying pylon, keeping the early foundry uncluttered, so all four appear at the shrine claim. The alternative is all four there from the start, dark at "×0".
-3. **Rate:** 15 per minute per pylon for each raw (`SUPPLY_TICKS` 240). Today the shrine sends 30 a minute in all, cycling through four raws; this gives 60 a minute in all. The playtest found lines running dry, so the proposal is to start here and tune.
-4. **Hopper flow cap:** 99, the crate's cap, for items arriving by line. Hand-filling stays uncapped, as in 022. Should hand-filling also cap? (Proposal: no, not in this spec.)
-5. **The frontier line:** proposal for `FRONTIER_GOAL`: "Explore beyond the shrine". It shows only once every goal built so far is done, and each later spec's goals slot in before it. Is a standing line like that right, or should it name the next milestone ("Find a way west")?
-6. **Goal wording:** goals 1–3 are first drafts. (Proposal: build with them as written; Shaun edits the text at approval.)
+None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).

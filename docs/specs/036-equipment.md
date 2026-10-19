@@ -1,10 +1,12 @@
 # 036: Equipment slots, affixes and relics
-status: draft
+status: approved
 
-Drafted from Shaun's spec interview (2026-10-19). Not approved: the open questions below need his answers first, and every number is a proposed starting value in data.
+Approved by Shaun in chat, 2026-10-19 ("Approve all 028–037"); open questions settled the same day.
+
+Drafted from Shaun's spec interview (2026-10-19). Every number is a starting value in data, tuned in playtest.
 
 ## Goal
-The single armor slot becomes four: helm, body, boots and trinket. The body piece is still light or heavy, and armor values are now big enough to feel. Each identified piece carries 1 to 3 defensive or utility affixes (max HP, armor, field regen, move speed, roll), set by its rarity: Common, Fine or Rare. Now and then a piece identifies as a Relic, which bends one rule. Drops stay unidentified until the bench rolls them.
+The single armor slot becomes four: helm, body, boots and trinket. The body piece is still light or heavy, and armor values are now big enough to feel. Each identified piece carries 1 to 3 defensive or utility affixes (max HP, armor, field regen, move speed, roll), set by its rarity: Common, Fine or Rare. Now and then a piece identifies as a Relic: its own tier above Rare, with a unique rule plus 2 affixes. Drops stay unidentified until the bench rolls them.
 
 ## Design references
 - docs/design.md:
@@ -37,7 +39,7 @@ The single armor slot becomes four: helm, body, boots and trinket. The body piec
   3. **Weight:** a body piece rolls light or heavy, 50/50 (`HEAVY_CHANCE`, as today).
   4. **Base armor:** from `SLOT_BASE` for its slot and weight (see the table).
   5. **Rarity:** by `RARITY_WEIGHTS`. It sets the affix count: Common 1, Fine 2, Rare 3.
-  6. **Affixes:** that many different kinds, each picked evenly from `AFFIXES`, its value rolled in the kind's range. A piece never has the same kind twice.
+  6. **Affixes:** that many different kinds, each picked evenly from `AFFIXES` (any affix can roll on any slot), its value rolled in the kind's range. A piece never has the same kind twice.
   7. **Name:** an adjective and a slot noun from word lists in data (body lists split by weight, as today).
 - [ ] Identify events carry the whole piece, so render and tests can read it.
 
@@ -69,8 +71,10 @@ For scale: a Husk swipe does 20, a Wisp orb 12, the Warden's slam 30. A light bo
 | Rare | 3 | 10% |
 | Relic | its rule + 2 | 3% of identifies, checked first |
 
+The odds are the same everywhere for now: champions, bosses and outer rings don't roll better rarities.
+
 **Relics (sim, data)**
-Each relic is one data entry with a rule flag the sim reads. A first draft, for Shaun to edit:
+Relics are their own tier above Rare, not a Rare piece with a rule added: a relic carries its unique rule plus `RELIC_AFFIXES` (2) rolled affixes. Each relic is one data entry with a rule flag the sim reads. The same relic can drop twice; a duplicate is just a spare. All four ship for the playtest, and Shaun may edit them after:
 - [ ] **Rollbreaker Greaves** (boots): rolling through an enemy staggers it. Its wind-up is cancelled and it holds in recovery for `staggerTicks` (40). Bosses ignore it. Each enemy is staggered at most once per roll.
 - [ ] **Wardstone Circlet** (helm): after `wardTicks` (360, 6 s) without taking a hit, the next hit is blocked completely. A faint shimmer on the player shows when it's ready.
 - [ ] **Featherplate** (body, heavy): heavy base armor without the walk slow. Its roll is 25% shorter instead.
@@ -79,13 +83,13 @@ Each relic is one data entry with a rule flag the sim reads. A first draft, for 
 
 **Equipping (sim)**
 - [ ] The player wears at most one piece per slot. `equipped` becomes `{ helm, body, boots, trinket }`, each a piece id or null.
-- [ ] Equipping still happens in the bench menu (010). Equipping a piece replaces whatever is worn in its slot. Equipping the worn piece takes it off. An unknown id does nothing.
+- [ ] Equipping happens only in the bench menu (010), so gear changes happen at home. Equipping a piece replaces whatever is worn in its slot. Equipping the worn piece takes it off. An unknown id does nothing.
 
 **Effects (sim)**
 All gear effects go through one `playerStats(state)` function, which 037 (talents) adds to.
-- [ ] **Armor:** total armor is the sum of every worn piece's base armor and armor affixes. Each hit deals `max(MIN_DAMAGE, damage − armor)`, with `MIN_DAMAGE` 1 as today (see the open question on a floor).
+- [ ] **Armor:** total armor is the sum of every worn piece's base armor and armor affixes. Each hit deals `max(ceil(damage × MIN_DAMAGE_SHARE), damage − armor)`, with `MIN_DAMAGE_SHARE` 0.25: a hit always deals at least 25% of its damage, so heavy armor feels big but never makes the player immune. This replaces today's flat minimum of 1.
 - [ ] **Max health:** `MAX_HEALTH` (100) plus every max-health affix. Equipping doesn't heal. If the max drops below current health, health drops to the new max. A KO wakes the player at the full current max, and 030's healing fills to it.
-- [ ] **Field regen:** the summed regen is 030's `fieldRegen` stat, read through `playerStats`. It heals anywhere, except while dying. Under 030's rule the highest healing rate applies, so it doesn't add to safe-zone, spring or foundry healing (open question 8). Health stays whole, using 030's fractional build-up.
+- [ ] **Field regen:** the summed regen is 030's `fieldRegen` stat, read through `playerStats`. It heals anywhere, except while dying. Under 030's rule the highest healing rate applies, so it doesn't add to safe-zone, spring or foundry healing. It doesn't pause after a hit. Health stays whole, using 030's fractional build-up.
 - [ ] **Move speed:** the summed bonus multiplies walk speed, along with heavy armor (×0.85) and firing (×0.7). The total gear bonus is capped at `MOVE_BONUS_CAP` (+15%). Rolls are unaffected.
 - [ ] **Roll:** the cooldown is `ROLL_COOLDOWN_TICKS` minus the summed reduction, never below `ROLL_COOLDOWN_MIN` (15). The distance is `ROLL_DISTANCE` plus the summed bonus, over the same `ROLL_TICKS`. I-frames are unchanged.
 - [ ] Nothing in this spec adds damage, pickup radius, haul protection, ley range or refill.
@@ -115,7 +119,7 @@ All gear effects go through one `playerStats(state)` function, which 037 (talent
 - [ ] `npm run check` and `npm run test:e2e` pass. Sprites and colours are pending Shaun's review.
 
 ## Data changes
-- `src/data/gear.ts` (replaces `armor.ts`): `GEAR_SLOTS`, `SLOT_WEIGHTS`, `SLOT_BASE` (armor range per slot and body weight, and the heavy `walkScale`), `HEAVY_CHANCE`, `RARITIES` (affix count, chance, palette id), `AFFIXES` (kind, range, label), `RELIC_CHANCE`, `RELIC_AFFIXES`, `MOVE_BONUS_CAP`, `ROLL_COOLDOWN_MIN`, name word lists per slot, the drop chances and `MIN_DAMAGE`.
+- `src/data/gear.ts` (replaces `armor.ts`): `GEAR_SLOTS`, `SLOT_WEIGHTS`, `SLOT_BASE` (armor range per slot and body weight, and the heavy `walkScale`), `HEAVY_CHANCE`, `RARITIES` (affix count, chance, palette id), `AFFIXES` (kind, range, label), `RELIC_CHANCE`, `RELIC_AFFIXES`, `MOVE_BONUS_CAP`, `ROLL_COOLDOWN_MIN`, name word lists per slot, the drop chances and `MIN_DAMAGE_SHARE` (replacing `MIN_DAMAGE`).
 - `src/data/relics.ts` (new): `RELICS`, each with id, name, slot, weight (body only), its rule's tuning (`staggerTicks`, `wardTicks`, roll scale, `saveInvulnTicks`) and its sprite and sound keys.
 - `src/data/items.ts`: `unidentified-armor` shown as "Unidentified gear".
 - `src/data/playtest.ts`: the identified pieces above.
@@ -124,8 +128,8 @@ All gear effects go through one `playerStats(state)` function, which 037 (talent
 ## Out of scope
 - Damage affixes, keep-haul-on-death, pickup radius, ley range and refill affixes.
 - Helm, boots and trinket drawn on the player's rig.
-- Selling, scrapping or upgrading gear (the merchant is deferred), and set bonuses.
-- Better rarity odds from champions, bosses or outer rings (see open questions).
+- Selling, scrapping or upgrading gear (the merchant is deferred; revisit scrapping with it), and set bonuses.
+- Better rarity odds from champions, bosses or outer rings.
 - Talent stats, which 037 adds to `playerStats`.
 
 ## Test plan
@@ -134,7 +138,7 @@ All gear effects go through one `playerStats(state)` function, which 037 (talent
   - A relic roll fixes its slot, weight and name, and has `RELIC_AFFIXES` affixes.
   - Equip per slot, swap within a slot, take off, and an unknown id.
   - `playerStats` sums armor, max health, regen, move speed and roll from several worn pieces, with the move cap and the roll-cooldown floor.
-  - The damage formula with total armor, including the minimum.
+  - The damage formula with total armor, including the 25% floor (a heavy body plus four armor affixes still takes 5 from a Husk's 20).
   - Max health: equipping doesn't heal, a lower max clamps health, and a KO wakes at the full max.
   - Regen heals over a set number of ticks, stops while dying, and doesn't add to a spring's rate (030).
   - Heavy and gear speed stack with firing. Roll distance and cooldown change; i-frames don't.
@@ -144,14 +148,4 @@ All gear effects go through one `playerStats(state)` function, which 037 (talent
 - **Screenshots:** the bench menu with all four slots filled and a relic row, and the HP bar's armor value.
 
 ## Open questions
-Each has a proposed answer. All must be settled before approval.
-1. **Armor floor.** Flat armor stacks fast: a heavy body plus four armor affixes (~25) takes a Husk swipe to 1. Keep `max(1, …)`, or floor each hit at a share of it, such as `max(ceil(25% of the hit), hit − armor)`? Proposed: the 25% floor, so heavy feels big but never makes you immune.
-2. **Helm, boots and trinket base armor.** Proposed: helm and boots 1–2 base armor, trinket none, so the body piece carries the light/heavy trade and the others are mostly affix carriers.
-3. **The relic list.** Rollbreaker Greaves, Wardstone Circlet, Featherplate and Last Ember are proposals. Does Featherplate undercut the heavy/light trade too much? Does Last Ember soften the trip-home tension too much? Proposed: keep all four for playtest.
-4. **What a relic carries.** Proposed: its rule plus 2 rolled affixes. Can the same relic drop twice? Proposed: yes; a duplicate is just a spare.
-5. **Rarity odds.** Proposed: flat 60/30/10 and 3% relics everywhere. Should champions, bosses or outer rings roll better? Proposed: not yet.
-6. **Affixes on any slot?** Proposed: yes, any affix on any slot. The alternative is slot flavour (move speed and roll on boots, max HP on body).
-7. **Equip anywhere?** Proposed: equipping stays at the bench, as in 010, so gear changes happen at home.
-8. **Regen and healing.** Proposed: field regen ticks everywhere and doesn't pause after a hit, but follows 030's "highest rate applies" rule, so it doesn't stack with safe-zone or spring healing. The alternative is to let it stack, which makes regen gear also speed up safe-spot healing.
-9. **Too many pieces.** With four slots the bench list grows fast. Proposed: no scrapping yet; revisit with the merchant.
-10. **"Rare Relics" (round 9).** Shaun wrote "Rare Relics each bend one rule". This spec reads that as a separate relic tier (its rule + 2 affixes, 3% of identifies). The literal alternative is that a relic is a Rare piece (3 affixes) that also bends a rule. Proposed: the separate tier, so a relic's rule is the draw and not just extra power on a Rare; Shaun to confirm.
+None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).
