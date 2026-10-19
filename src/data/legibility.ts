@@ -160,6 +160,8 @@ export const LEGIBILITY_WORDS = {
   more: '(more: None yet)',
   yours: '(yours: {value})',
   noStats: 'nothing yet',
+  /** Every gear affix, as one payoff of You. */
+  affixes: 'gear affixes',
 } as const;
 
 /**
@@ -175,6 +177,12 @@ export const WHEN_LINES: Readonly<Partial<Record<'pool-strike' | 'shatter', stri
 export const SCOPE_TEXT: Readonly<Record<'all-ammo' | 'you', string>> = {
   'all-ammo': 'Every round you fire, and every {{shard}}, {{bomblet}} and {{burst}} it makes.',
   you: 'Your own numbers: health, armor, regen, speed and the roll.',
+};
+
+/** The stats the two plain scopes expose, as a keyword's `stats` do (039.1). */
+export const SCOPE_STATS: Readonly<Record<'all-ammo' | 'you', readonly StatId[]>> = {
+  'all-ammo': ['damage', 'fire-rate'],
+  you: ['max-health', 'armor', 'field-regen', 'move-speed', 'firing-walk', 'roll-cooldown', 'roll-distance'],
 };
 
 /** Child emissions a breakdown names (Shard and Bomblet are 039's nouns): the Pool-burst. */

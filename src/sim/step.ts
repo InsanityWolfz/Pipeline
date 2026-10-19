@@ -38,6 +38,7 @@ import { stepAltars } from './altar';
 import { stepLeveling } from './leveling';
 import { respec, takeTalent } from './talents';
 import { rampOverpressure, stepPools } from './keystones';
+import { noteCarried } from './knownRounds';
 
 /** Each room's bodies, built once per tick on first use. */
 function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
@@ -106,6 +107,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepFoundry(state.foundry, state.link.entrances, state.events, state.link.attuned, { cap: entranceCap(state), speed: machineSpeed(state) });
   stepPorts(state, (to, from, item) => offerFromOutside(state.foundry, to, from, item));
   stepPickups(state);
+  noteCarried(state);
   noteFound(state);
   stepGates(state);
   stepObjectives(state);
