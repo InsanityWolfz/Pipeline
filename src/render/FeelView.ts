@@ -18,6 +18,7 @@ import { SoundView } from './SoundView';
 import { attuneBeat } from './attune';
 import { intakeAnchor } from './foundryLayout';
 import { playHollows } from './hollowsFeel';
+import { HollowsEnemyFeel } from './hollowsEnemyFeel';
 
 // Look and feel (014), driven by what the sim did since the last draw and how
 // its state moved on: sound, shake, hit-stop, particles, numbers and light.
@@ -40,6 +41,8 @@ export class FeelView {
   private workMs = 0;
   /** Ms left on the intake's glow swelling after an item went in (019). */
   private intakeMs = 0;
+  /** Region 2's four's charges, eruptions, bashes and bolts (035). */
+  private readonly hollowsEnemies = new HollowsEnemyFeel();
 
   static preload(scene: Scene): void {
     SoundView.preload(scene);
@@ -167,6 +170,7 @@ export class FeelView {
     if (ev.travels.length > 0) s.play(SOUNDS.travel);
     // 034: the Hollows' shield, bombs, pound, summon and barrier; the barrier's fall has its own sound.
     const barrier = playHollows(ev, j, s);
+    this.hollowsEnemies.events(ev, j, s);
     if (ev.gates.length > (barrier ? 1 : 0)) {
       s.play(SOUNDS.gateOpen);
       j.shake('medium');
@@ -177,6 +181,7 @@ export class FeelView {
   /** Changes with no event: wind-ups, machine crafts, rolls and footsteps. */
   private watch(sim: SimState, shown: string, deltaMs: number): void {
     const j = this.juice;
+    this.hollowsEnemies.watch(sim, shown, deltaMs, j, this.sound);
     const live = new Set<number>();
     for (const e of sim.enemies) {
       if (e.roomId !== shown) continue;

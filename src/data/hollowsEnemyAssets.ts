@@ -1,0 +1,23 @@
+// How Stonefall Hollows' four enemies (035) read on screen, beyond their rigs (src/data/art):
+// their telegraphs in the shared enemy red (ENEMY_FX.telegraphColor, as the Warden's slam
+// circle), the Burrower's ripple, the Shardback's runes, the Sniper's lens and laser and its
+// bolt. Palette ids, ms, world px, alphas 0..1.
+
+export const HOLLOWS_ENEMY_LOOK = {
+  /** The Charger's lane: faint over its whole length, a fill running down it with the wind-up, an edge line. */
+  lane: { alpha: 0.22, fillAlpha: 0.5, edgeWidth: 1.5, edgeAlpha: 0.75 },
+  /** The Burrower's cracked ring at the locked spot: growing to its radius over the wind-up, with `cracks` lines out from the middle. */
+  ring: { alpha: 0.22, fillAlpha: 0.45, width: 2, cracks: 6, crackWidth: 1.5, crackStart: 0.3, crackAlpha: 0.8 },
+  /** The ripple underground: the mound sprite, wobbling every `wobbleMs`, with dust kicked up every `dustMs` while it moves. */
+  ripple: { wobbleMs: 260, wobble: 0.08, dustMs: 90, minSpeed: 0.2 },
+  /** The Shardback's bash arc, in the Husk's swipe style (004), and its runes' flare over the wind-up. */
+  bash: { alpha: 0.25, fillAlpha: 0.55 },
+  /**
+   * The Sniper's laser from its lens: thin while tracking, brighter and wider once locked, blinking every `blinkMs`
+   * (on for half of it). Lens offsets from the feet per view (side faces right), world px.
+   */
+  laser: { width: 1, alpha: 0.55, lockedWidth: 2, lockedAlpha: 0.95, blinkMs: 120, glow: 4, glowAlpha: 0.25 },
+  lens: { side: [6, -40] as const, down: [0, -38] as const, up: [0, -40] as const },
+  /** The bolt in flight: a streak `length` px long behind it, lifted `lift` px off its ground point. */
+  bolt: { length: 14, width: 3, core: 1.2, color: 'danger', coreColor: 'snow', lift: 18 },
+} as const;

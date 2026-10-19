@@ -62,6 +62,11 @@ export interface GameTestHook {
    * tile and a half apart, member `champion` (or none, for null) a champion named with the seeded RNG.
    */
   spawnChampionPack(enemyIds: string[], champion?: number | null): SimSummary;
+  /**
+   * Puts one enemy at a world point in the player's room, homed there (035: a test pack of each of Region 2's kinds
+   * in the `?start=hollows` sandbox), a champion named with the seeded RNG if `champion`.
+   */
+  spawnEnemy(enemyId: string, x: number, y: number, champion?: boolean): SimSummary;
 }
 
 /**
@@ -255,6 +260,12 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
         if (i === champion) makeChampion(sim.rng, e);
         sim.enemies.push(e);
       });
+      return summarize(sim);
+    },
+    spawnEnemy: (enemyId, x, y, champion = false) => {
+      const e = createEnemy(sim.nextEnemyId++, enemyId, { x, y }, sim.roomId, 'dev');
+      if (champion) makeChampion(sim.rng, e);
+      sim.enemies.push(e);
       return summarize(sim);
     },
     passable: () => {

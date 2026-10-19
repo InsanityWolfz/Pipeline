@@ -4,7 +4,7 @@ import { animFrames, DEPTHS, ENEMY_ANIMS, ENEMY_FX } from '../data/assets';
 import { HUSK_RIG, RESIN } from '../data/art/husk';
 import { CORE, WARDEN_RIG } from '../data/art/warden';
 import { IDLE_SPEED } from '../data/config';
-import { attackOf, enemyDef } from '../data/enemies';
+import { enemyDef } from '../data/enemies';
 import { CHAMPIONS } from '../data/champions';
 import { LANDMARK_LOOK, LANDMARK_SPRITES } from '../data/landmarkAssets';
 import { defOf } from '../sim/champions';
@@ -17,7 +17,8 @@ import { addVector, addVectorSprite, showFrame, textureScale } from './vector/te
 import { CHILL_TINT, ICE_CRACK_TICKS, STAGE_SPRITES } from '../data/stageAssets';
 import { COLD } from '../data/tags';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
-import { bulwarkPose, drawPound, drawSeam } from './bulwarkLook';
+import { bulwarkPose, drawSeam } from './bulwarkLook';
+import { drawTelegraph } from './telegraphs';
 
 /** A champion's extras (032): its glow, and its name with its kind under it. */
 interface ChampionArt {
@@ -98,7 +99,8 @@ export class EnemyView {
       const view = viewOf(e.facing);
       if (d.angle !== undefined && Math.abs(d.angle - e.angle) > 1e-6) d.turnUntil = now + HOLLOWS_LOOK.turnHoldMs;
       d.angle = e.angle;
-      const pose = def.kind === 'bulwark' ? bulwarkPose(e, now < (d.turnUntil ?? 0)) : poseOf(e);
+      // A shielded enemy (the Bulwark, 034; the Shardback, 035) shuffles round and rocks behind its shield on a block.
+      const pose = def.shield ? bulwarkPose(e, now < (d.turnUntil ?? 0)) : poseOf(e);
       // Enemies without a recover pose stand idle through it.
       // Optional poses (`recover`, and the Bulwark's extras, 034) fall back to idle where an enemy has none.
       const anim = anims[`${pose}-${view}`] ?? anims[`idle-${view}`];
@@ -112,7 +114,7 @@ export class EnemyView {
       const top = bottom - d.sprite.displayHeight * d.sprite.originY;
       this.drawBar(d.bar, e, top);
       if (d.champion) this.drawChampion(d.champion, e, bottom, top, now);
-      this.drawTelegraph(d.telegraph, e);
+      drawTelegraph(d.telegraph, e);
       if (d.overlay && e.enemyId === RESIN.enemyId) this.drawResin(d.overlay, e, bottom, view, now);
       if (d.overlay && e.enemyId === CORE.enemyId) this.drawCore(d.overlay, e, bottom, view, now);
       if (d.overlay && def.kind === 'bulwark') drawSeam(d.overlay, e, bottom, view, now);
@@ -230,49 +232,6 @@ export class EnemyView {
     g.fillStyle(colorOf(ENEMY_FX.healthBarBack)).fillRect(x - border, y - border, w + 2 * border, h + 2 * border);
     g.fillStyle(colorOf(e.champion ? CHAMPIONS.barColor : ENEMY_FX.healthBarColor)).fillRect(x, y, Math.max(1, Math.round((w * e.health) / max)), h);
   }
-
-  /**
-   * The wind-up's telegraph, filling in as it runs: a Husk's swipe arc at its
-   * real reach and angle, a Wisp's tightening ring and aim line, and the
-   * Warden's slam circle at its real radius.
-   */
-  private drawTelegraph(g: GameObjects.Graphics, e: EnemyState): void {
-    g.clear();
-    if (e.mode !== 'windup') return;
-    const def = enemyDef(e.enemyId);
-    const progress = Math.min(1, e.modeTicks / attackOf(def).windupTicks);
-    if (def.kind === 'caster') {
-      const { castRing, castLine } = ENEMY_FX;
-      const color = colorOf(ENEMY_FX.castColor);
-      const top = e.y + def.hurtbox.offsetY;
-      g.lineStyle(castRing.width, color, castRing.alphaFrom + (1 - castRing.alphaFrom) * progress);
-      g.strokeCircle(e.x, top, castRing.from + (castRing.to - castRing.from) * progress);
-      g.lineStyle(castLine.width, color, castLine.alpha);
-      g.lineBetween(e.x, e.y, e.x + e.swipeDirX * castLine.length, e.y + e.swipeDirY * castLine.length);
-      return;
-    }
-    if (def.kind === 'slammer') {
-      const color = colorOf(ENEMY_FX.telegraphColor);
-      g.fillStyle(color, ENEMY_FX.telegraphAlpha).fillCircle(e.x, e.y, def.slam.radius);
-      g.fillStyle(color, ENEMY_FX.telegraphFillAlpha).fillCircle(e.x, e.y, def.slam.radius * progress);
-      return;
-    }
-    if (def.kind === 'bulwark') {
-      drawPound(g, e);
-      return;
-    }
-    if (def.kind !== 'melee') return;
-    const { swipe } = def;
-    const angle = Math.atan2(e.swipeDirY, e.swipeDirX);
-    const half = (swipe.arcDegrees * Math.PI) / 360;
-    const color = colorOf(ENEMY_FX.telegraphColor);
-    g.fillStyle(color, ENEMY_FX.telegraphAlpha);
-    g.slice(e.x, e.y, swipe.reach, angle - half, angle + half, false);
-    g.fillPath();
-    g.fillStyle(color, ENEMY_FX.telegraphFillAlpha);
-    g.slice(e.x, e.y, swipe.reach * progress, angle - half, angle + half, false);
-    g.fillPath();
-  }
 }
 
 /** A chilled enemy's multiply tint (029): white toward the chill colour, deeper per stack. */
@@ -283,8 +242,11 @@ function chillTint(stacks: number): number {
   return mix(16) | mix(8) | mix(0);
 }
 
-function poseOf(e: EnemyState): 'idle' | 'walk' | 'windup' | 'swipe' | 'recover' | 'hit' {
+function poseOf(e: EnemyState): 'idle' | 'walk' | 'windup' | 'swipe' | 'recover' | 'hit' | 'stun' | 'dig' | 'step' {
   if (e.flash > 0 && e.mode !== 'windup' && e.mode !== 'swipe') return 'hit';
+  // 035: a Charger dazed by a wall, a Burrower digging in, a Sniper stepping out of cover.
+  if (e.mode === 'stun' || e.mode === 'dig') return e.mode;
+  if (e.mode === 'peek') return 'step';
   if (e.mode === 'windup' || e.mode === 'swipe' || e.mode === 'recover') return e.mode;
   return Math.hypot(e.vx, e.vy) >= IDLE_SPEED ? 'walk' : 'idle';
 }

@@ -83,6 +83,14 @@ export const PARTICLES = {
   enemyBurst: { colors: ['danger', 'cinder', 'hollow-light', 'hollow'], count: 26, speed: [40, 130], gravity: 120, lifeMs: [300, 650], size: 3 },
   poundDust: { colors: ['hollow-pale', 'hollow-light', 'hollow'], count: 36, speed: [60, 150], gravity: -20, lifeMs: [400, 800], size: 3 },
   barrierShards: { colors: ['cyan', 'cyan-glow', 'snow'], count: 40, speed: [20, 90], gravity: 160, lifeMs: [500, 1000], size: 2, lift: 40 },
+  // 035: a Charger's hooves kicking dust down its lane and its slam into a wall; a Burrower's ripple trailing dust and
+  // its eruption throwing up rock; a Shardback's bash; the flash at a Sniper's lens as it fires.
+  chargeDust: { colors: ['hollow-pale', 'hollow-light'], count: 4, speed: [10, 40], gravity: -10, lifeMs: [250, 450], size: 2 },
+  chargeImpact: { colors: ['hollow-pale', 'hollow-light', 'hollow', 'brass'], count: 26, speed: [50, 140], gravity: 160, lifeMs: [250, 550], size: 3, lift: 14 },
+  rippleDust: { colors: ['hollow-light', 'hollow', 'hollow-pale'], count: 3, speed: [8, 30], gravity: -6, lifeMs: [300, 550], size: 2 },
+  eruption: { colors: ['hollow-dark', 'hollow', 'hollow-light', 'hollow-pale'], count: 34, speed: [60, 170], gravity: 240, lifeMs: [300, 650], size: 3, lift: 4 },
+  bashSpark: { colors: ['brass-light', 'cyan-glow', 'hollow-pale'], count: 14, speed: [40, 110], gravity: 120, lifeMs: [200, 380], size: 2, lift: 14 },
+  boltFlash: { colors: ['danger', 'cinder-light', 'snow'], count: 10, speed: [30, 90], gravity: 40, lifeMs: [120, 260], size: 2, lift: 30 },
 } as const satisfies Record<string, ParticleBurst>;
 
 /** The burst each node type gives off while worked and when a harvest lands (018). */
