@@ -44,7 +44,8 @@ import { CRAFT_GROUPS, RECIPES, recipeDef } from '../../src/data/recipes';
 import { STAGE_RECIPES } from '../../src/data/stages';
 import { NODES } from '../../src/data/nodes';
 import { BUILD_BAR, PIECE_CATEGORIES, PIECES, pieceDef } from '../../src/data/pieces';
-import { ENTRANCE_CAP, INTAKE, LOB_SPACING, OPEN_ENTRANCES_COST, SPREAD_STEP } from '../../src/data/foundry';
+import { ENTRANCE_CAPS, INTAKE, LOB_SPACING, SPREAD_STEP } from '../../src/data/foundry';
+import { researchNode } from '../../src/data/research';
 import { ENTRANCE_GAUGE_COLORS } from '../../src/data/art/intake';
 import { vectorFrames } from '../../src/render/vector/catalog';
 import { OVERWORLD } from '../../src/data/overworld';
@@ -184,7 +185,8 @@ describe('items and ammo', () => {
 
 describe('item kinds, ammo slots and recipes', () => {
   it('gives every item a kind, and every ammo an ammo item', () => {
-    for (const item of Object.values(ITEMS)) expect(['raw', 'part', 'ammo', 'armor']).toContain(item.kind);
+    // 033: schematics are the one new kind.
+    for (const item of Object.values(ITEMS)) expect(['raw', 'part', 'ammo', 'armor', 'schematic']).toContain(item.kind);
     for (const ammo of Object.values(AMMO)) expect(ITEMS[ammo.itemId]?.kind).toBe('ammo');
   });
 
@@ -334,7 +336,8 @@ describe('build bar categories (026)', () => {
     ]);
     const grouped = PIECE_CATEGORIES.map((c) => BUILD_BAR.filter((id) => pieceDef(id).category === c.id));
     expect(grouped).toEqual([
-      ['conduit', 'sorter', 'hopper', 'crate'],
+      // 033: the splitter and merger, hidden until restored, beside the sorter.
+      ['conduit', 'sorter', 'splitter', 'merger', 'hopper', 'crate'],
       // 029: each stage in its base ammo's group, after the chain that makes the ammo.
       ['cutter', 'knapper', 'spinner', 'assembler', 'frost-rune'],
       ['shaper', 'fuse-maker', 'packer'],
@@ -367,16 +370,16 @@ describe('spreads from the intake (024)', () => {
     expect(drawnFrames().some((f) => f.includes('stager'))).toBe(false);
   });
 
-  it('opens the side entrances with a real item, which the playtest start carries', () => {
-    expect(Object.keys(OPEN_ENTRANCES_COST)).toEqual(['warden-core']);
-    for (const id of Object.keys(OPEN_ENTRANCES_COST)) expect(ITEMS[id]).toMatchObject({ kind: 'part' });
+  it('restores the second entrance with a real item, which the playtest start carries (033: one entrance per core)', () => {
+    expect(researchNode('entrance-2').cost).toEqual({ 'warden-core': 1 });
+    expect(ITEMS['warden-core']).toMatchObject({ kind: 'part' });
     expect(PLAYTEST_START.inventory['warden-core']).toBe(5);
   });
 
   it('has three entrances on the mouth, the centre open, and starting numbers from the spec', () => {
     expect(INTAKE.entrances).toHaveLength(3);
     expect(INTAKE.entrances.filter((e) => e.startsOpen)).toEqual([INTAKE.entrances[1]]);
-    expect([ENTRANCE_CAP, SPREAD_STEP, LOB_SPACING]).toEqual([30, 15, 24]);
+    expect([ENTRANCE_CAPS[0], SPREAD_STEP, LOB_SPACING]).toEqual([30, 15, 24]);
   });
 
   it('draws the brass entrance cap, and has a gauge colour for every ammo', () => {

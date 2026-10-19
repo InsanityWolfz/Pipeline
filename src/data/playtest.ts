@@ -18,10 +18,13 @@ const RAW_COUNT = 99;
 const PART_COUNT = 20;
 const ARMOR_COUNT = 3;
 
-const COUNTS = { ammo: AMMO_COUNT, raw: RAW_COUNT, part: PART_COUNT, armor: ARMOR_COUNT } as const;
+const COUNTS = { ammo: AMMO_COUNT, raw: RAW_COUNT, part: PART_COUNT, armor: ARMOR_COUNT, schematic: 1 } as const;
 
-/** Items with their own count: warden cores are rare; one opens the intake's side entrances (024), the rest are spares for testing. */
-const OVERRIDES: Readonly<Record<string, number>> = { 'warden-core': 5 };
+/**
+ * Items with their own count (033): enough cores, parts and one of each schematic to restore every node by hand.
+ * Warden cores are rare; one restores an entrance, the rest are spares for testing.
+ */
+const OVERRIDES: Readonly<Record<string, number>> = { 'warden-core': 5, 'bulwark-core': 2, 'ancient-gear': 10, 'aqueduct-valve': 10 };
 
 export const PLAYTEST_START: StartDef = {
   room: DEFAULT_ROOM,

@@ -94,11 +94,18 @@ export const INVENTORY_PANEL = {
 /** "N spare pieces (kept)": the identified pieces not worn, which a death never takes. */
 export const sparesText = (n: number): string => `${n} spare piece${n === 1 ? '' : 's'} (kept)`;
 
-/** How many rows a group keeps room for: one per item of the group, and Gear's worn and spare lines. */
+/**
+ * How many rows a group keeps room for: one per item of the group, the schematics sharing one (033: unknown ones
+ * must not tell apart), and Gear's worn and spare lines.
+ */
 export function reservedRows(group: ItemGroup): number {
-  const items = Object.values(ITEMS).filter((it) => it.group === group).length;
-  return items + (group === 'gear' ? INVENTORY_PANEL.gearLines : 0);
+  const items = Object.values(ITEMS).filter((it) => it.group === group);
+  const schematics = items.filter((it) => it.kind === 'schematic').length;
+  return items.length - schematics + Math.min(1, schematics) + (group === 'gear' ? INVENTORY_PANEL.gearLines : 0);
 }
+
+/** The schematics' shared row (033): "Schematics" while it holds several known kinds or known and unknown together. */
+export const SCHEMATICS_LABEL = 'Schematics';
 
 /** A group's height on the panel: its header and every row it keeps room for. */
 export const groupHeight = (g: ItemGroup): number => INVENTORY_PANEL.headerHeight + reservedRows(g) * INVENTORY_PANEL.rowHeight;

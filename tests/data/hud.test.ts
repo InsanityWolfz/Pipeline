@@ -29,10 +29,24 @@ describe('inventory panel groups (031)', () => {
   it('maps the items as the spec lists them', () => {
     const byGroup = (g: string) => Object.values(ITEMS).filter((it) => it.group === g).map((it) => it.id).sort();
     expect(byGroup('raw')).toEqual(['fiber', 'husk-resin', 'ley-crystal', 'rime-shard', 'stone', 'wood']);
-    expect(byGroup('parts')).toEqual(['arrowhead', 'casing', 'fuse', 'ley-shard', 'rope', 'shaft']);
+    // 033: machine parts and schematics go in Parts, cores in Cores.
+    expect(byGroup('parts')).toEqual([
+      'ancient-gear',
+      'aqueduct-valve',
+      'arrowhead',
+      'casing',
+      'fuse',
+      'ley-shard',
+      'rope',
+      'schematic-machine-speed',
+      'schematic-merger',
+      'schematic-reservoir-2',
+      'schematic-splitter',
+      'shaft',
+    ]);
     expect(byGroup('ammo')).toEqual(['arrow', 'arrow+frost', 'bomb', 'ley-bolt', 'ley-bolt+homing', 'ley-bolt+star']);
     expect(byGroup('gear')).toEqual(['unidentified-armor']);
-    expect(byGroup('cores')).toEqual(['warden-core']);
+    expect(byGroup('cores')).toEqual(['bulwark-core', 'warden-core']);
     // The warden core's kind stays a part: only the panel's group places it.
     expect(ITEMS['warden-core']?.kind).toBe('part');
   });
@@ -40,7 +54,9 @@ describe('inventory panel groups (031)', () => {
   it('reserves a row per item of a group, and Gear two more for the worn and spare lines', () => {
     expect(reservedRows('raw')).toBe(6);
     expect(reservedRows('gear')).toBe(2 + 1);
-    expect(reservedRows('cores')).toBe(1);
+    expect(reservedRows('cores')).toBe(2);
+    // 033: the schematics share one row.
+    expect(reservedRows('parts')).toBe(6 + 2 + 1);
   });
 
   it('the panel and its title card fit the 640x360 view, in two columns as one does not fit', () => {

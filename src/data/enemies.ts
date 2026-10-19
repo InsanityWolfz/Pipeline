@@ -1,3 +1,5 @@
+import { REGION_1_PART, type RarePart } from './drops';
+
 // Enemies. Starting values from specs 004 and 009; tune in playtest.
 
 /** Items an enemy (or a Ruined Cache, 032) drops. */
@@ -9,8 +11,8 @@ export interface DropTable {
   oneOf: readonly string[];
   /** `min`..`max` items, rolled, each picked evenly from `items` (032: the cache's raws). */
   picks?: readonly { items: readonly string[]; min: number; max: number }[];
-  /** Rare entries (032), each rolled once at its chance (0..1): 033 fills the cache's with its part and schematic. */
-  rare?: readonly { itemId: string; chance: number }[];
+  /** Rare entries (032), each rolled once per death at its chance (0..1), a champion's at `championChance` (033). */
+  rare?: readonly RarePart[];
 }
 
 /** What every enemy has, whatever its attack. */
@@ -140,6 +142,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
       always: [{ itemId: 'husk-resin', min: 1, max: 2 }],
       chance: 0.5,
       oneOf: ['wood', 'stone', 'fiber'],
+      rare: [REGION_1_PART],
     },
     anims: 'husk',
   },
@@ -171,7 +174,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
       knockTicks: 4,
     },
     hitKnockback: 8,
-    drops: { always: [{ itemId: 'ley-crystal', min: 1, max: 2 }], chance: 0, oneOf: [] },
+    drops: { always: [{ itemId: 'ley-crystal', min: 1, max: 2 }], chance: 0, oneOf: [], rare: [REGION_1_PART] },
     anims: 'wisp',
   },
   'pylon-warden': {
