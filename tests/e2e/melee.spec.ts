@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { MELEE } from '../../src/data/combat';
-import { boot, watchErrors } from './helpers';
+import { boot, cameraSettled, watchErrors } from './helpers';
 
 // Melee (023): before the tube is taken, fire punches. With REVIEW_SHOTS=1, the
 // review screenshot of the swoosh mid-punch in docs/review/023.
@@ -38,19 +38,6 @@ function punchNearestHusk(page: Page, settle: number) {
     const after = g.step(settle).enemies.find((e) => e.id === before.id);
     return { before, player, punched, after };
   }, settle);
-}
-
-/** Waits until the camera, easing after the player in real time, has come to rest. */
-async function cameraSettled(page: Page): Promise<void> {
-  let last = { x: NaN, y: NaN };
-  await expect
-    .poll(async () => {
-      const cam = (await page.evaluate(() => window.__GAME__?.ui()))?.camera ?? { x: NaN, y: NaN };
-      const still = Math.hypot(cam.x - last.x, cam.y - last.y) < 0.5;
-      last = cam;
-      return still;
-    })
-    .toBe(true);
 }
 
 test('a punch before taking the tube hurts a Husk and knocks it away', async ({ page }) => {

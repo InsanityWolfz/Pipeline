@@ -10,10 +10,10 @@ async function run<R>(page: Page, fn: () => R): Promise<R> {
   return page.evaluate(fn);
 }
 
-/** The current objective's index after one more tick (crafts land between ticks), or 12 once all are done. */
+/** The current objective's index after one more tick (crafts land between ticks), or 13 once all are done. */
 async function done(page: Page): Promise<number> {
   const s = await page.evaluate(() => window.__GAME__?.step(1));
-  return s?.objective?.index ?? 12;
+  return s?.objective?.index ?? 13;
 }
 
 test('the whole prototype plays through from the start stone', async ({ page }) => {
@@ -51,7 +51,7 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
         const near = s.enemies.filter((e) => dist(e) < 150).sort((a, b) => dist(a) - dist(b))[0] ?? foes.sort((a, b) => dist(a) - dist(b))[0];
         if (!near) break;
         const d = dist(near);
-        const have = (id: string) => (s.inventory[id] ?? 0) + (s.link.reservoir.item === id ? s.link.reservoir.count : 0);
+        const have = (id: string) => (s.inventory[id] ?? 0) + s.intake.entrances.reduce((n, e) => n + (e.ammo === id ? e.count : 0), 0);
         const ammo = have('ley-bolt') > 0 ? 'ley-bolt' : have('arrow') > 0 ? 'arrow' : 'bomb';
         if (s.tube.ammo !== ammo) s = g.step(1, { selectAmmo: ammo });
         const kite = d < 80;
@@ -179,19 +179,47 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
   }, T);
   expect(await done(page)).toBe(10);
 
-  // 11. Home by the pylon, and a gravity stager (the Warden's core) facing the intake.
-  await page.evaluate(() => {
+  // 11. Home by the pylon; the Warden's core came home in hand, and E at the intake spends it to open the side entrances (024).
+  const opened = await page.evaluate((tile) => {
     const g = window.__GAME__;
-    g?.step(1, { pylon: 'travel' });
-    g?.step(1, { takeStash: { itemId: null } });
-  });
-  // The Warden's core came home in hand; place the stager under the intake's east mouth tile, facing up into it.
-  await page.evaluate(() => {
-    window.__GAME__?.step(1, { place: { pieceId: 'gravity-stager', tx: 13, ty: 1, facing: 'up' } });
-  });
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    g.step(1, { pylon: 'travel' });
+    g.step(1, { takeStash: { itemId: null } });
+    const cores = g.getState().inventory['warden-core'] ?? 0;
+    // Beside the ley line's conduit, on the floor under the intake's east end.
+    h.walkTo(14.5 * tile, 1.5 * tile);
+    const s = g.step(1, { interact: true });
+    return { cores, after: s.inventory['warden-core'] ?? 0, open: s.intake.entrances.map((e) => e.open) };
+  }, T);
+  expect(opened).toEqual({ cores: 1, after: 0, open: [true, true, true] });
   expect(await done(page)).toBe(11);
 
-  // 12. Head back out and let the foundry run.
+  // 12. A second line into the east entrance: a hopper of arrows, hand-crafted from what's left of the gathering, and a conduit up into the mouth.
+  const volley = await page.evaluate((tile) => {
+    const g = window.__GAME__;
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    g.step(1, { place: { pieceId: 'conduit', tx: 13, ty: 1, facing: 'up' } });
+    g.step(1, { place: { pieceId: 'hopper', tx: 13, ty: 2, facing: 'up' } });
+    h.walkTo(14.5 * tile, 2.5 * tile);
+    for (const r of ['shaft', 'arrowhead', 'rope', 'arrow', 'arrow']) g.craft(r);
+    let s = g.step(1);
+    const hopper = s.foundry.pieces.find((p) => p.kind === 'hopper' && p.tx === 13 && p.ty === 2);
+    const ammo = ['arrow', 'bomb', 'ley-bolt'].find((id) => (s.inventory[id] ?? 0) > 0);
+    if (!hopper || !ammo) throw new Error(`no hopper or no ammo carried: ${JSON.stringify(s.inventory)}`);
+    g.step(1, { deposit: { id: hopper.id, itemId: ammo, amount: 'all' } });
+    // The fights since drew the ley line's entrance dry: top its hopper up with the ley crystal left.
+    h.walkTo(12.5 * tile, 5.25 * tile);
+    const leyHopper = s.foundry.pieces.find((p) => p.kind === 'hopper' && p.tx === 12);
+    if (leyHopper) g.step(1, { deposit: { id: leyHopper.id, itemId: 'ley-crystal', amount: 'all' } });
+    for (let t = 0; t < 900 && s.intake.volley.length < 2; t++) s = g.step(1);
+    return s.intake.volley.length;
+  }, T);
+  expect(volley).toBeGreaterThanOrEqual(2);
+  expect(await done(page)).toBe(12);
+
+  // 13. Head back out and let the foundry run.
   const end = await page.evaluate(() => {
     const w = window as unknown as { through: (...a: unknown[]) => void };
     w.through(23, 8, 1, 0, 'overworld');

@@ -31,6 +31,8 @@ export class IntakeView {
   /** Dark rings, drawn normally, under the light added on top (additive light can only brighten). */
   private readonly shade: GameObjects.Graphics;
   private readonly lights: GameObjects.Graphics;
+  /** The entrances' lit gauge rings, drawn normally over the lit bands so each ammo's colour reads true. */
+  private readonly gauges: GameObjects.Graphics;
   private readonly arrows: GameObjects.Image[];
   /** The brass caps, one per entrance (only shown while it's capped). */
   private readonly caps: GameObjects.Image[];
@@ -44,11 +46,12 @@ export class IntakeView {
     this.pipe = addVector(scene, AT.x, AT.y, INTAKE_SPRITES.dormant).setDepth(DEPTH);
     this.shade = scene.add.graphics().setDepth(DEPTH + FOUNDRY_LAYOUT.onTopNudge);
     this.lights = scene.add.graphics().setDepth(DEPTH + 2 * FOUNDRY_LAYOUT.onTopNudge).setBlendMode(BlendModes.ADD);
+    this.gauges = scene.add.graphics().setDepth(DEPTH + 3 * FOUNDRY_LAYOUT.onTopNudge);
     const reach = TILE_SIZE / 2 + FOUNDRY_LAYOUT.arrowOffset;
     this.arrows = INTAKE.entrances.map((m) =>
       addVector(scene, (m.tx + 0.5) * TILE_SIZE, (m.ty + 0.5) * TILE_SIZE + reach, FACING_ARROWS.in.up).setDepth(DEPTHS.worldUi - 1),
     );
-    this.caps = INTAKE_INLETS.map((x) => addVector(scene, AT.x + x, AT.y + CAP_SEAT_Y, INTAKE_SPRITES.cap).setDepth(DEPTH + 3 * FOUNDRY_LAYOUT.onTopNudge));
+    this.caps = INTAKE_INLETS.map((x) => addVector(scene, AT.x + x, AT.y + CAP_SEAT_Y, INTAKE_SPRITES.cap).setDepth(DEPTH + 4 * FOUNDRY_LAYOUT.onTopNudge));
   }
 
   /** Caps still drawn on the pipe (seated or lifting), for the test hook. */
@@ -64,7 +67,7 @@ export class IntakeView {
   update(sim: SimState, events: SimEvents, shown: string, building: boolean, deltaMs: number): void {
     const here = shown === FOUNDRY_ROOM;
     const { entrances } = sim.link;
-    for (const o of [this.pipe, this.shade, this.lights]) o.setVisible(here);
+    for (const o of [this.pipe, this.shade, this.lights, this.gauges]) o.setVisible(here);
     for (const [i, a] of this.arrows.entries()) a.setVisible(here && building && (entrances[i]?.open ?? false));
     this.pulses.push(...events.refills.map(() => 0));
     this.pulses = this.pulses.map((ms) => ms + deltaMs).filter((ms) => ms < INTAKE.pulseMs);
@@ -73,6 +76,7 @@ export class IntakeView {
     this.placeCaps(entrances, here);
     this.lights.clear();
     this.shade.clear();
+    this.gauges.clear();
     if (!here) return;
     const { attuned, attunePulse } = sim.link;
     // Attuning: once the camera reaches it, the rings light one by one over the dormant pipe, as the tube's did; it turns cyan once they all have.
@@ -132,8 +136,8 @@ export class IntakeView {
     for (let r = 0; r < INTAKE.gaugeRings; r++) {
       const y = AT.y + g.bottom - r * g.step;
       if (r < lit) {
-        // Lit rings are drawn normally so the ammo's colour reads on the cyan pipe, with a soft glow added over them.
-        this.shade.fillStyle(color, g.litAlpha).fillRect(x - g.half, y, g.half * 2, g.height);
+        // Lit rings are drawn normally, over the bands, so the ammo's colour reads on the cyan pipe, with a soft glow added round them.
+        this.gauges.fillStyle(color, g.litAlpha).fillRect(x - g.half, y, g.half * 2, g.height);
         this.lights.fillStyle(color, g.glowAlpha).fillRect(x - g.half - 1, y - 1, g.half * 2 + 2, g.height + 2);
       } else {
         this.shade.fillStyle(colorOf(g.dark), g.darkAlpha).fillRect(x - g.half, y, g.half * 2, g.height);

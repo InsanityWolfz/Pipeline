@@ -39,13 +39,13 @@ test('entering the foundry attunes the tube once', async ({ page }) => {
   const s = await step(page, 1);
   expect(s.link.attuned).toBe(true);
   expect(s.link.attunePulse).toBeGreaterThan(0);
-  // The intake is the foundry's own, in the north wall: nothing to unlock or place (019).
-  expect(s.intake.mouth).toHaveLength(3);
+  // The intake is the foundry's own, in the north wall: nothing to unlock or place (019). Only its centre entrance is open (024).
+  expect(s.intake.entrances.map((e) => e.open)).toEqual([false, true, false]);
   expect(s.unlocked).not.toContain('tube-socket');
   expect(errors).toEqual([]);
 });
 
-test('a line fills the reservoir, which fires once the carried rounds run out', async ({ page }) => {
+test('a line fills the middle entrance, which fires once the carried rounds run out', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page, '?playtest');
   await enterFoundry(page);
@@ -65,11 +65,11 @@ test('a line fills the reservoir, which fires once the carried rounds run out', 
   const filled = await page.evaluate(() => {
     const g = window.__GAME__;
     let s = g?.getState();
-    for (let t = 0; t < 1200 && s && s.link.reservoir.count < 10; t++) s = g?.step(1);
+    for (let t = 0; t < 1200 && s && (s.intake.entrances[1]?.count ?? 0) < 10; t++) s = g?.step(1);
     return s;
   });
-  expect(filled?.link.reservoir).toMatchObject({ item: 'ley-bolt' });
-  expect(filled?.link.reservoir.count).toBeGreaterThanOrEqual(10);
+  expect(filled?.intake.entrances[1]).toMatchObject({ ammo: 'ley-bolt' });
+  expect(filled?.intake.entrances[1]?.count).toBeGreaterThanOrEqual(10);
 
   // Fire away the 99 carried bolts, then one more shot comes from the reservoir.
   const fired = await page.evaluate(() => {
@@ -82,13 +82,13 @@ test('a line fills the reservoir, which fires once the carried rounds run out', 
     for (let t = 0; t < 99 * 20 + 40 && s && (s.inventory['ley-bolt'] ?? 0) > 0; t++) {
       s = g?.step(1, { fire: true, aimX: x, aimY: y });
     }
-    const before = s?.link.reservoir.count ?? 0;
+    const before = s?.intake.entrances[1]?.count ?? 0;
     let fromReservoir = false;
     for (let t = 0; t < 40 && !fromReservoir; t++) {
       s = g?.step(1, { fire: true, aimX: x, aimY: y });
       fromReservoir = s?.tube.fromReservoir ?? false;
     }
-    return { fromReservoir, carried: s?.inventory['ley-bolt'] ?? 0, before, after: s?.link.reservoir.count ?? 0 };
+    return { fromReservoir, carried: s?.inventory['ley-bolt'] ?? 0, before, after: s?.intake.entrances[1]?.count ?? 0 };
   });
   expect(fired.carried).toBe(0);
   expect(fired.fromReservoir).toBe(true);
@@ -96,7 +96,7 @@ test('a line fills the reservoir, which fires once the carried rounds run out', 
   expect(errors).toEqual([]);
 });
 
-test('a full reservoir backs the line into the intake up', async ({ page }) => {
+test('a full entrance backs the line into the intake up', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page, '?playtest');
   await enterFoundry(page);
@@ -111,13 +111,14 @@ test('a full reservoir backs the line into the intake up', async ({ page }) => {
   const full = await page.evaluate(() => {
     const g = window.__GAME__;
     let s = g?.getState();
-    for (let t = 0; t < 4000 && s && s.link.reservoir.count < s.link.reservoir.cap; t++) s = g?.step(1);
+    const middle = () => s?.intake.entrances[1];
+    for (let t = 0; t < 4000 && s && (middle()?.count ?? 0) < (middle()?.cap ?? 0); t++) s = g?.step(1);
     // Well past full: nothing more goes in, and the conduit under the mouth holds its bolt.
     s = g?.step(300);
     const conduit = s?.foundry.pieces.find((p) => p.tx === 12 && p.ty === 1);
-    return { reservoir: s?.link.reservoir, held: conduit?.kind === 'conduit' ? conduit.item : null };
+    return { entrance: middle(), held: conduit?.kind === 'conduit' ? conduit.item : null };
   });
-  expect(full.reservoir).toMatchObject({ item: 'ley-bolt', count: 30, cap: 30 });
+  expect(full.entrance).toMatchObject({ ammo: 'ley-bolt', count: 30, cap: 30 });
   expect(full.held).toBe('ley-bolt');
   expect(errors).toEqual([]);
 });
@@ -131,6 +132,6 @@ test('?playtest starts with plenty of everything and every machine unlocked', as
   expect(s.populated).toBe(true);
   expect(s.area.ring).toBe(0);
   expect(s.inventory).toMatchObject({ arrow: 99, bomb: 99, 'ley-bolt': 99, wood: 99, stone: 99, fiber: 99, 'ley-crystal': 99, 'husk-resin': 99, shaft: 20, 'ley-shard': 20 });
-  expect(s.unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'gravity-stager', 'cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser']);
+  expect(s.unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser']);
   expect(errors).toEqual([]);
 });

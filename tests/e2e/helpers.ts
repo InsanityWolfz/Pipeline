@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import type {} from '../../src/render/testHook';
 
 // Page helpers shared by the e2e specs. They run inside the page, so they're
@@ -247,3 +247,15 @@ export async function boot(page: Page, query = '?start=field'): Promise<void> {
   await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
 }
 
+/** Waits until the camera, easing after the player in real time, has come to rest. */
+export async function cameraSettled(page: Page): Promise<void> {
+  let last = { x: NaN, y: NaN };
+  await expect
+    .poll(async () => {
+      const cam = (await page.evaluate(() => window.__GAME__?.ui()))?.camera ?? { x: NaN, y: NaN };
+      const still = Math.hypot(cam.x - last.x, cam.y - last.y) < 0.5;
+      last = cam;
+      return still;
+    })
+    .toBe(true);
+}
