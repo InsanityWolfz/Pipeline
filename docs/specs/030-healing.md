@@ -138,3 +138,10 @@ Nothing heals in the open field. Field regen exists as a stat that is 0 until ge
 
 ## Open questions
 None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).
+
+## Raised after the build (for Shaun at playtest)
+- **Two readings of the spec to confirm:**
+  - `healing` stays set on every tick a source is building toward the next HP, not only on the 1-in-6 ticks a whole point lands, so it doesn't flicker.
+  - A tie between equal rates reports the table order, so a spring inside a pylon zone reads "pylon".
+- **The north spring:** the spec says to cut it if healing near home is too easy. Its clearing is a square cut out of a grove, which may look tight (docs/review/030/03).
+- **Spring art and the heal motes** wait on Shaun's approval by eye (docs/review/030).
