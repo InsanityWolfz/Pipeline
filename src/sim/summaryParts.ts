@@ -80,6 +80,8 @@ export interface EnemySummary extends KindSummary {
   champion: { name: string } | null;
   /** Its danger ring (041): its home tile's; its health and damage are scaled by it. */
   ring: number;
+  /** Ticks left rising from the ground (041: the Bulwark's adds), 0 once up. */
+  rising: number;
 }
 
 export function enemySummary(state: SimState, e: EnemyState): EnemySummary {
@@ -98,6 +100,7 @@ export function enemySummary(state: SimState, e: EnemyState): EnemySummary {
     maxHealth: defOf(e).maxHealth,
     champion: e.champion ? { ...e.champion } : null,
     ring: e.ring,
+    rising: e.rising,
     swipeDir: { x: round(e.swipeDirX), y: round(e.swipeDirY) },
     flash: e.flash,
     chill: e.chill,

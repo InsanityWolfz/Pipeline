@@ -3,6 +3,7 @@ import type { BulwarkDef } from '../data/enemies';
 import { arenaOf } from '../data/hollows';
 import { enter, hold, startWindup, stepAttack, toward, walkHome } from './aiCommon';
 import { aggro, type EnemyState } from './enemies';
+import { countBehind, enrageIfDue, lobCooldownOf, resetFight, riseAddsIfDue, startStomp, stepRoar, stepStomp, stompReady, turnRateOf } from './bulwarkPhases';
 import { throwBombs } from './enemyBombs';
 import { damagePlayer } from './health';
 import { turnToward } from './shield';
@@ -13,6 +14,7 @@ import type { SimState } from './state';
 // so often it rears back and lobs bombs (still turning); up close it plants its shield and
 // pounds the ground round itself, then recovers without turning, the window to punish it.
 // It never leaves its arena, and walks home to heal after the player has been out of it a while.
+// 041 adds the rear stomp, the enrage and the adds (bulwarkPhases.ts).
 
 /** True if a feet point is inside a tile rect, px. */
 const insidePx = (r: { x0: number; y0: number; x1: number; y1: number }, x: number, y: number): boolean =>
@@ -29,6 +31,9 @@ function inArena(e: EnemyState, def: BulwarkDef, mx: number, my: number): [numbe
   const okY = e.y + my - hh >= r.y0 * TILE_SIZE && e.y + my + hh <= (r.y1 + 1) * TILE_SIZE;
   return [okX ? mx : 0, okY ? my : 0];
 }
+
+/** True once walking home has brought it home (it idles, healed). */
+const atHome = (e: Pick<EnemyState, 'mode'>): boolean => e.mode === 'idle';
 
 /** True while it fights: not idle, not walking home. */
 export const engaged = (e: Pick<EnemyState, 'mode'>): boolean => e.mode !== 'idle' && e.mode !== 'return';
@@ -52,6 +57,7 @@ export function bulwarkThink(state: SimState, e: EnemyState, def: BulwarkDef): [
   const arena = arenaOf(e.enemyId);
   const here = e.roomId === state.roomId && p.dying === 0;
   const playerIn = here && arena !== undefined && insidePx(arena.inside, p.x, p.y);
+  const rate = turnRateOf(e, def);
   // A dying player is gone: it turns for home at once (as every chaser does).
   if (engaged(e) && !here && p.dying > 0) {
     e.mode = 'return';
@@ -60,19 +66,28 @@ export function bulwarkThink(state: SimState, e: EnemyState, def: BulwarkDef): [
   if (e.mode === 'idle' || e.mode === 'return') {
     if (!playerIn) {
       if (e.mode === 'idle') return [0, 0];
-      turnToward(e, e.homeX, e.homeY);
-      return walkHome(e, def);
+      turnToward(e, e.homeX, e.homeY, rate);
+      const move = walkHome(e, def);
+      // Home and healed (041): the fight resets, its adds sink.
+      if (atHome(e)) resetFight(state, e, def);
+      return move;
     }
     aggro(e);
-    e.lobCooldown = def.lob.cooldownTicks;
+    e.lobCooldown = lobCooldownOf(e, def);
   }
   if (e.lobCooldown > 0) e.lobCooldown -= 1;
+  if (e.stompCooldown > 0) e.stompCooldown -= 1;
   e.offScreenTicks = playerIn ? 0 : e.offScreenTicks + 1;
-  // The pound: wind-up, pound and recovery, all without turning.
+  // 041: the adds rise the moment it drops below half; the counter fills while the player stays behind it.
+  riseAddsIfDue(state, e, def);
+  countBehind(state, e, def, here);
+  // The stomp and the pound: wind-up, attack and recovery, all without turning.
+  const stomping = stepStomp(state, e, def);
+  if (stomping) return stomping;
   const pounding = stepAttack(e, def, () => landPound(state, e, def));
   if (pounding) return pounding;
   if (e.mode === 'lob' || e.mode === 'throw') {
-    turnToward(e, p.x, p.y);
+    turnToward(e, p.x, p.y, rate);
     if (e.mode === 'lob') {
       if (e.modeTicks < def.lob.windupTicks) return hold(e);
       throwBombs(state, e);
@@ -83,22 +98,33 @@ export function bulwarkThink(state: SimState, e: EnemyState, def: BulwarkDef): [
     e.mode = 'chase';
     e.modeTicks = 0;
   }
+  // The roar (041): it holds its ground and keeps turning, starting no attack.
+  if (stepRoar(e, def)) {
+    turnToward(e, p.x, p.y, rate);
+    return [0, 0];
+  }
   if (e.offScreenTicks >= def.leashTicks) {
     e.mode = 'return';
     e.modeTicks = 0;
     return walkHome(e, def);
   }
-  turnToward(e, p.x, p.y);
+  // A decision point: free of any attack. Below 30% it enrages first (041.4); a wind-up already running has finished.
+  if (enrageIfDue(state, e, def)) return [0, 0];
+  turnToward(e, p.x, p.y, rate);
   const dx = p.x - e.x;
   const dy = p.y - e.y;
   const dist = Math.hypot(dx, dy);
+  if (stompReady(e, def)) {
+    startStomp(e, def);
+    return [0, 0];
+  }
   if (playerIn && dist <= def.pound.triggerRange && e.cooldown === 0) {
     startWindup(e, def, dx, dy);
     return [0, 0];
   }
   // It only lobs at a player inside its arena (it can't see out of the forum), as it only pounds one.
   if (e.lobCooldown === 0 && playerIn) {
-    e.lobCooldown = def.lob.cooldownTicks;
+    e.lobCooldown = lobCooldownOf(e, def);
     enter(e, 'lob');
     return [0, 0];
   }

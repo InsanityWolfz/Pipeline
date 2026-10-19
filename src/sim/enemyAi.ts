@@ -9,7 +9,7 @@ import { castThink } from './casterAi';
 import { chillScale, chillSlow, tickCold } from './cold';
 import { moveBox } from './collision';
 import { aimFacing } from './direction';
-import { separate, type EnemyState, type RoomBodies } from './enemies';
+import { aggro, separate, type EnemyState, type RoomBodies } from './enemies';
 import { damagePlayer } from './health';
 import { takeKnock } from './knockback';
 import { keepOut } from './population';
@@ -28,7 +28,17 @@ import { engage, inAggroBox, inArc, leash, startWindup, stepAttack, toward } fro
 /** Thinks, moves and faces every enemy in its own room, then pushes overlapping bodies apart. */
 export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBodies): void {
   const slowPerStack = chillSlow(state);
-  for (const e of state.enemies) {
+  // The enemies at the tick's start: ones that rise this tick (041: the Bulwark's adds) first act next tick.
+  const list = state.enemies;
+  for (let i = 0, n = list.length; i < n; i++) {
+    const e = list[i];
+    if (!e) continue;
+    // Rising (041): it doesn't act or move; up from the ground, it wakes.
+    if (e.rising > 0) {
+      e.rising -= 1;
+      if (e.rising === 0) aggro(e);
+      continue;
+    }
     const { room, obstacles } = bodies(e.roomId);
     const def = defOf(e);
     if (e.cooldown > 0) e.cooldown -= 1;

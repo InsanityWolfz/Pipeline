@@ -4,7 +4,9 @@ import type { AttackTiming, EnemyBase, ShieldDef } from './enemies';
 // The Bulwark (034): Stonefall Hollows' boss, a slow-turning construct behind a shield
 // plate that blocks straight shots and punches into its front. It lobs bombs marked by
 // two red circles and pounds the ground round itself up close. Starting values from the
-// spec, tuned in playtest so triple arrows from behind kill it in about 30–45 s.
+// spec, tuned in playtest so triple arrows from behind kill it in about 30–45 s. 041 made
+// it a real fight: 2,500 HP, an enrage below 30%, a rear stomp that punishes circling,
+// and adds at half health (bulwarkPhases.ts).
 
 /** The Bulwark (034): a shielded wall that lobs bombs and pounds up close, guarding its arena. Its values are below. */
 export interface BulwarkDef extends EnemyBase {
@@ -33,14 +35,37 @@ export interface BulwarkDef extends EnemyBase {
     knockback: number;
     knockTicks: number;
   };
+  /** Its enrage (041.4). */
+  enrage: { below: number; roarTicks: number; turnDegPerSec: number; lobCooldownTicks: number };
+  /** Its rear stomp (041.5). */
+  stomp: {
+    range: number;
+    behindTicks: number;
+    behindDecay: number;
+    windupTicks: number;
+    swipeTicks: number;
+    radius: number;
+    arcDegrees: number;
+    damage: number;
+    knockback: number;
+    knockTicks: number;
+    recoverTicks: number;
+    cooldownTicks: number;
+  };
+  /** Its adds (041.6): enemy ids, risen at the arena's add tiles. */
+  adds: { below: number; enemies: readonly string[]; riseTicks: number; minDistance: number };
 }
+
+/** The group the Bulwark's adds carry (041.6): not a population pack, so never counted toward packs or the spawn cap. */
+export const ADDS_GROUP = 'bulwark-adds';
 
 export const BULWARK: BulwarkDef = {
   kind: 'bulwark',
   id: 'bulwark',
   name: 'Bulwark',
   boss: true,
-  maxHealth: 900,
+  /** 041: 2,500 (was 900): about 60–90 s for a decent build, never a quick kill from behind. */
+  maxHealth: 2500,
   walkSpeed: 18,
   feetBox: { w: 36, h: 14 },
   hurtbox: { w: 44, h: 54, offsetY: -22 },
@@ -67,6 +92,26 @@ export const BULWARK: BulwarkDef = {
    * turning for `recoverTicks`: the window to punish it.
    */
   pound: { triggerRange: 72, windupTicks: 60, swipeTicks: 8, radius: 112, damage: 35, knockback: 40, knockTicks: 8, recoverTicks: 60, cooldownTicks: 300 },
+  /**
+   * Once per fight, when its health first drops below `below` of its max (041.4), it enrages at its next free moment
+   * (a wind-up already running finishes first): it roars `roarTicks`, starting no attack, then until it dies or resets
+   * its shield turns at `turnDegPerSec` and its lob cooldown is `lobCooldownTicks`. No telegraph gets shorter.
+   */
+  enrage: { below: 0.3, roarTicks: 60, turnDegPerSec: 70, lobCooldownTicks: 160 },
+  /**
+   * The rear stomp (041.5): its `behind` counter gains 1 a tick while the player's feet are outside its shield arc and
+   * within `range` px, and loses `behindDecay` a tick otherwise (never below 0). At `behindTicks` with its cooldown
+   * ready and no other attack winding up, it winds up `windupTicks` without turning, a red half-disc of `radius` px
+   * (`arcDegrees` wide) over its rear half; then stomps for `damage` and `knockback` px over `knockTicks` on feet inside
+   * it (a roll's i-frames dodge it), holds the pose `swipeTicks` and recovers `recoverTicks` without turning. The
+   * cooldown counts from the wind-up's start.
+   */
+  stomp: { range: 160, behindTicks: 180, behindDecay: 2, windupTicks: 40, swipeTicks: 8, radius: 96, arcDegrees: 180, damage: 30, knockback: 40, knockTicks: 8, recoverTicks: 40, cooldownTicks: 360 },
+  /**
+   * The first time in a fight its health drops below `below` of its max (041.6), one of each of `enemies` rises at the
+   * arena's add tiles (the other tile when one is within `minDistance` px of the player's feet) over `riseTicks`.
+   */
+  adds: { below: 0.5, enemies: ['shardback', 'charger'], riseTicks: 60, minDistance: 96 },
   drops: {
     always: [
       { itemId: 'bulwark-core', min: 1, max: 1 },

@@ -16,9 +16,10 @@ import type { SimState } from './state';
 
 /**
  * `lob` and `throw` (034): the Bulwark rearing back, then holding the throw. 035: `stun`, a Charger dazed by a wall;
- * `dig`, a Burrower digging in; `peek`, a Sniper stepping out of cover to a clear line.
+ * `dig`, a Burrower digging in; `peek`, a Sniper stepping out of cover to a clear line. 041: the Bulwark's `roar` as it
+ * enrages, and its rear stomp's `stomp-windup`, `stomp` and `stomp-recover`.
  */
-export type EnemyMode = 'idle' | 'chase' | 'windup' | 'swipe' | 'recover' | 'return' | 'lob' | 'throw' | 'stun' | 'dig' | 'peek';
+export type EnemyMode = 'idle' | 'chase' | 'windup' | 'swipe' | 'recover' | 'return' | 'lob' | 'throw' | 'stun' | 'dig' | 'peek' | 'roar' | 'stomp-windup' | 'stomp' | 'stomp-recover';
 
 export interface EnemyState extends Knockable {
   id: number;
@@ -81,6 +82,13 @@ export interface EnemyState extends Knockable {
   stunned: number;
   /** Its Stun is a Charger's wall daze alone (039.6), which keeps the daze's own timing: see stun.ts. */
   dazed: boolean;
+  /** Ticks left rising from the ground (041: the Bulwark's adds): it can't act, be hit or block until 0. */
+  rising: number;
+  /** The Bulwark's fight (041): enraged below 30%; its rear-stomp counter and cooldown; its adds risen this fight. */
+  enraged: boolean;
+  behind: number;
+  stompCooldown: number;
+  addsRisen: boolean;
 }
 
 /** A home's danger ring (041, the rule 037's XP used): `ringOf` its tile in the overworld, 0 in any other room. */
@@ -125,6 +133,11 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     bumped: false,
     stunned: 0,
     dazed: false,
+    rising: 0,
+    enraged: false,
+    behind: 0,
+    stompCooldown: 0,
+    addsRisen: false,
     knockX: 0,
     knockY: 0,
     knockTicks: 0,
@@ -171,11 +184,11 @@ export function damageEnemy(
   state.events.hits.push({ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: amount, damageType: style.damageType, ...(style.melee ? { melee: true as const } : {}) });
 }
 
-/** Whether shots, punches and bursts can reach it (035: not a Burrower underground). */
-export const targetable = (e: Pick<EnemyState, 'underground'>): boolean => !e.underground;
+/** Whether shots, punches and bursts can reach it (035: not a Burrower underground; 041: not an add still rising). */
+export const targetable = (e: Pick<EnemyState, 'underground' | 'rising'>): boolean => !e.underground && e.rising <= 0;
 
-/** It passes through other enemies (035): a Burrower underground, a Charger mid-charge. Separation leaves it be. */
-export const passesThrough = (e: EnemyState): boolean => e.underground || (e.mode === 'swipe' && defOf(e).kind === 'charger');
+/** It passes through other enemies (035): a Burrower underground, a Charger mid-charge, an add rising (041). Separation leaves it be. */
+export const passesThrough = (e: EnemyState): boolean => e.underground || e.rising > 0 || (e.mode === 'swipe' && defOf(e).kind === 'charger');
 
 /** True if a ground point is inside the enemy's hurtbox. */
 export function inHurtbox(e: EnemyState, x: number, y: number): boolean {

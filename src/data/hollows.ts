@@ -131,6 +131,11 @@ export const HOLLOWS = {
     offering: { 'ley-iron': 8 } as Readonly<Record<string, number>>,
     /** The summon: the ground cracks at the start point, then the boss rises, ticks. */
     summonTicks: 120,
+    /** Where its adds rise (041.6), in order of its `adds.enemies`: open floor either side of its start. */
+    addTiles: [
+      { tx: 8, ty: 36 },
+      { tx: 16, ty: 36 },
+    ] satisfies TilePos[],
   },
 } as const;
 

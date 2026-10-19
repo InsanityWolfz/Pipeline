@@ -14,8 +14,26 @@ import { degrees } from './summaryKinds';
 // defeated and the altars.
 
 export interface HollowsSummary {
-  /** Each living region boss: its health, facing angle in degrees (0 east, 90 south), mode, cooldowns and whether it fights. */
-  bosses: { id: number; enemyId: string; health: number; maxHealth: number; angle: number; mode: EnemyMode; modeTicks: number; lobCooldown: number; poundCooldown: number; engaged: boolean }[];
+  /**
+   * Each living region boss: its health, facing angle in degrees (0 east, 90 south), mode, cooldowns and whether it
+   * fights; 041: whether it's enraged, its rear-stomp counter and cooldown, and whether its adds have risen this fight.
+   */
+  bosses: {
+    id: number;
+    enemyId: string;
+    health: number;
+    maxHealth: number;
+    angle: number;
+    mode: EnemyMode;
+    modeTicks: number;
+    lobCooldown: number;
+    poundCooldown: number;
+    engaged: boolean;
+    enraged: boolean;
+    behind: number;
+    stompCooldown: number;
+    addsRisen: boolean;
+  }[];
   /** Enemy bombs on the ground: where, their ring's radius, the fuse burnt and its length, and how far the inner circle has grown (0..1). */
   enemyBombs: { id: number; room: string; x: number; y: number; from: { x: number; y: number }; radius: number; fuse: number; fuseTicks: number; progress: number }[];
   /** Region bosses killed at least once, in order. */
@@ -40,6 +58,10 @@ export function hollowsSummary(state: SimState): HollowsSummary {
         lobCooldown: e.lobCooldown,
         poundCooldown: e.cooldown,
         engaged: engaged(e),
+        enraged: e.enraged,
+        behind: e.behind,
+        stompCooldown: e.stompCooldown,
+        addsRisen: e.addsRisen,
       })),
     enemyBombs: state.enemyBombs.map((b) => ({ id: b.id, room: b.roomId, x: round(b.x), y: round(b.y), from: { x: round(b.fromX), y: round(b.fromY) }, radius: b.radius, fuse: b.fuse, fuseTicks: b.fuseTicks, progress: round(fuseProgress(b)) })),
     bossDefeats: [...state.bossDefeats],

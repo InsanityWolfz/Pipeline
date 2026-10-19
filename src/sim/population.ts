@@ -2,6 +2,7 @@ import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { FEET_BOX } from '../data/player';
 import { OVERWORLD, ringOf } from '../data/overworld';
 import { POPULATION, type PackDef, type PopulatedRing } from '../data/population';
+import { ADDS_GROUP } from '../data/bulwark';
 import { HOLLOWS } from '../data/hollows';
 import { LANDMARK_LIST } from '../data/landmarks';
 import { TILE, WALKABLE } from '../data/rooms';
@@ -82,6 +83,11 @@ function nearPlayer(state: SimState, roomId: string, x: number, y: number): bool
 /** Enemies within a screen of the player. */
 export function enemiesNearPlayer(state: SimState): number {
   return state.enemies.filter((e) => nearPlayer(state, e.roomId, e.x, e.y)).length;
+}
+
+/** Enemies within a screen of the player that count toward the spawn cap: all but the Bulwark's adds (041.6). */
+export function capCount(state: SimState): number {
+  return state.enemies.filter((e) => e.group !== ADDS_GROUP && nearPlayer(state, e.roomId, e.x, e.y)).length;
 }
 
 /**
@@ -210,7 +216,7 @@ export function stepPopulation(state: SimState): void {
     }
     if (state.tick < slot.respawnAt) continue;
     // A whole pack could land within a screen: only spawn if even the largest keeps it at the cap.
-    if (enemiesNearPlayer(state) + POPULATION.rings[slot.ring].size[1] > POPULATION.screenCap) continue;
+    if (capCount(state) + POPULATION.rings[slot.ring].size[1] > POPULATION.screenCap) continue;
     slot.alive = spawn(state, slot);
   }
 }

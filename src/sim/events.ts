@@ -147,6 +147,10 @@ export interface SimEvents {
   enemyBursts: { x: number; y: number; radius: number }[];
   /** The Bulwark pounded the ground round itself (034): which enemy, where, the radius, px. */
   pounds: { id: number; x: number; y: number; radius: number }[];
+  /** 041: the Bulwark enraged (its roar starts); it stomped its rear half-disc (its feet, radius and the unit direction of its back, px); its adds began to rise (each add's id, kind and spot). */
+  enrages: { id: number }[];
+  stomps: { id: number; x: number; y: number; radius: number; dirX: number; dirY: number }[];
+  addsRise: { id: number; adds: { id: number; enemyId: string; x: number; y: number }[] }[];
   /** 035: a Charger set off down its lane (its feet, the unit direction, the lane's length, px); a Burrower erupted (its spot and ring radius); a Sniper fired its bolt (its feet and the unit direction). */
   charges: { id: number; x: number; y: number; dx: number; dy: number; length: number }[];
   eruptions: { id: number; x: number; y: number; radius: number }[];
@@ -226,6 +230,9 @@ export function createEvents(): SimEvents {
     lobs: [],
     enemyBursts: [],
     pounds: [],
+    enrages: [],
+    stomps: [],
+    addsRise: [],
     charges: [],
     eruptions: [],
     snipes: [],

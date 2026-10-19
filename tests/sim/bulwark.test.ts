@@ -1,33 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { defOf } from '../../src/sim/champions';
-import { straightAmmo } from '../../src/data/ammo';
-import { enemyDef, type BulwarkDef } from '../../src/data/enemies';
 import { HOLLOWS } from '../../src/data/hollows';
-import { HOLLOWS_START } from '../../src/data/playtest';
-import { createEnemy, type EnemyState } from '../../src/sim/enemies';
-import { createSim, type SimState } from '../../src/sim/state';
+import { createEnemy } from '../../src/sim/enemies';
+import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
-import { tileCentre } from '../../src/sim/tiles';
 import { die, movePlayer, run, runUntil } from './fight';
+import { DEF, forum, START } from './forum';
 
 // The Bulwark (034): a slow-turning shielded wall in the Sunken Forum. It lobs bombs
 // marked by two red circles, pounds the ground round itself up close, leashes home when
 // the player leaves, resets on a KO before its first kill, and is gone for good after it.
 
-const DEF = enemyDef('bulwark') as BulwarkDef;
 const { lob, pound } = DEF;
-const START = tileCentre(HOLLOWS.arena.start);
-const SEED = 11;
-
-/** The hollows start with only the Bulwark left, and the player in the forum `dy` px below its start point (out of pound range). */
-function forum(dy = 160, seed = SEED): { s: SimState; b: EnemyState } {
-  const s = createSim(seed, { start: HOLLOWS_START });
-  const b = s.enemies.find((e) => e.enemyId === 'bulwark');
-  if (!b) throw new Error('no Bulwark');
-  s.enemies = [b];
-  movePlayer(s, START.x, START.y + dy);
-  return { s, b };
-}
 
 /** Keeps the player topped up and still invulnerable to nothing, so a long fight never KOs them. */
 const topUp = (s: SimState): void => {
@@ -36,7 +20,8 @@ const topUp = (s: SimState): void => {
 
 describe('the Bulwark', () => {
   it('is a boss with the spec starting values in data', () => {
-    expect(DEF).toMatchObject({ kind: 'bulwark', boss: true, maxHealth: 900, walkSpeed: 18, shield: { arcDegrees: 180, turnDegPerSec: 40 } });
+    // 041: 2,500 HP (was 900).
+    expect(DEF).toMatchObject({ kind: 'bulwark', boss: true, maxHealth: 2500, walkSpeed: 18, shield: { arcDegrees: 180, turnDegPerSec: 40 } });
     expect(lob).toMatchObject({ cooldownTicks: 240, windupTicks: 30, count: 3, scatter: 80, radius: 40, fuseTicks: 90, damage: 25 });
     expect(pound).toMatchObject({ triggerRange: 72, windupTicks: 60, radius: 112, damage: 35, knockback: 40, recoverTicks: 60, cooldownTicks: 300 });
     expect(DEF.drops.always).toEqual([
@@ -55,7 +40,7 @@ describe('the Bulwark', () => {
     movePlayer(s, START.x, START.y + 160);
     run(s, 1);
     expect(b.mode).toBe('chase');
-    expect(summarize(s).bosses).toEqual([expect.objectContaining({ id: b.id, enemyId: 'bulwark', health: 900, mode: 'chase', engaged: true })]);
+    expect(summarize(s).bosses).toEqual([expect.objectContaining({ id: b.id, enemyId: 'bulwark', health: DEF.maxHealth, mode: 'chase', engaged: true })]);
   });
 
   it('lobs `count` bombs after its wind-up: one at the feet at the throw, the rest within `scatter` of it', () => {
@@ -234,42 +219,5 @@ describe('the Bulwark', () => {
   });
 });
 
-describe('the Bulwark against a player circling to its back (034 tuning)', () => {
-  /**
-   * The playtest's yardstick, reproducible: carried single arrows, no healing, the player circling about 110 px out
-   * toward its back (it turns 40°/s), firing only while behind it, running straight out when the pound winds up.
-   */
-  function circleFight(maxTicks: number): { won: boolean; ticks: number; damageTaken: number; arrows: number; ko: boolean } {
-    const { s, b } = forum(96, 1);
-    s.inventory = { arrow: 999 };
-    s.tube.ammoId = 'arrow';
-    const sign = (v: number): -1 | 0 | 1 => (Math.abs(v) < 3 ? 0 : v > 0 ? 1 : -1);
-    let damageTaken = 0;
-    for (let t = 1; t <= maxTicks; t++) {
-      const p = s.player;
-      const bearing = Math.atan2(p.y - b.y, p.x - b.x);
-      const back = b.angle + Math.PI;
-      const d = Math.atan2(Math.sin(back - bearing), Math.cos(back - bearing));
-      const along = bearing + Math.sign(d || 1) * Math.min(0.7, Math.abs(d));
-      const dist = Math.hypot(p.x - b.x, p.y - b.y);
-      const flee = b.mode === 'windup' && dist < DEF.pound.radius + 18;
-      const goal = flee ? { x: p.x + (p.x - b.x), y: p.y + (p.y - b.y) } : { x: b.x + Math.cos(along) * 110, y: b.y + Math.sin(along) * 110 };
-      const behind = Math.abs(d) < (70 * Math.PI) / 180;
-      run(s, 1, { moveX: sign(goal.x - p.x), moveY: sign(goal.y - p.y), fire: behind && dist < 250, aimX: b.x, aimY: b.y - 20 });
-      damageTaken += s.events.hits.filter((h) => h.target === 'player').reduce((n, h) => n + h.damage, 0);
-      if (s.bossDefeats.length > 0) return { won: true, ticks: t, damageTaken, arrows: 999 - (s.inventory.arrow ?? 0), ko: false };
-      if (s.player.dying > 0) return { won: false, ticks: t, damageTaken, arrows: 999 - (s.inventory.arrow ?? 0), ko: true };
-    }
-    return { won: false, ticks: maxTicks, damageTaken, arrows: 0, ko: false };
-  }
-
-  it('falls to single arrows from behind at its full 900 HP inside 30 s, and the player lives', () => {
-    const r = circleFight(1800);
-    // Recorded for the HP question in the plan's notes (seed 1): 1,515 ticks (about 25 s), 91 arrows, no damage
-    // taken. One arrow at a time, so three entrances' arrows land well under the spec's 30–45 s target.
-    expect(r).toMatchObject({ won: true, ko: false });
-    expect(r.ticks).toBeLessThan(1800);
-    expect(r.arrows).toBeGreaterThanOrEqual(DEF.maxHealth / straightAmmo('arrow').damage);
-    expect(r.damageTaken).toBeLessThan(DEF.lob.damage * 2);
-  });
-});
+// 034's yardstick (900 HP falling to single arrows from behind in about 25 s, no damage taken) is replaced by 041's
+// scripted targets in bulwarkFight.test.ts.

@@ -15,10 +15,10 @@ describe('the telegraph minimum', () => {
     expect(MIN_TELEGRAPH_TICKS).toBe(30);
   });
 
-  it('holds every enemy, old and new: each wind-up (and the Bulwark’s lob) at least MIN_TELEGRAPH_TICKS', () => {
+  it('holds every enemy, old and new: each wind-up (and every one of the Bulwark’s: lob, pound and stomp, 041) at least MIN_TELEGRAPH_TICKS', () => {
     for (const def of Object.values(ENEMIES)) {
       expect(attackOf(def).windupTicks, def.id).toBeGreaterThanOrEqual(MIN_TELEGRAPH_TICKS);
-      if (def.kind === 'bulwark') expect(def.lob.windupTicks, def.id).toBeGreaterThanOrEqual(MIN_TELEGRAPH_TICKS);
+      if (def.kind === 'bulwark') for (const w of [def.lob.windupTicks, def.pound.windupTicks, def.stomp.windupTicks]) expect(w, def.id).toBeGreaterThanOrEqual(MIN_TELEGRAPH_TICKS);
     }
   });
 });

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { AMMO, ammoDef, lobAmmo, mineAmmo, straightAmmo } from '../../src/data/ammo';
-import { enemyDef } from '../../src/data/enemies';
+import { BULWARK } from '../../src/data/bulwark';
+import { enemyDef, MIN_TELEGRAPH_TICKS } from '../../src/data/enemies';
+import { HOLLOWS } from '../../src/data/hollows';
+import { OVERWORLD_ROOM } from '../../src/data/overworld';
+import { TILE, WALKABLE } from '../../src/data/rooms';
 import { AFFIXES, MIN_DAMAGE_SHARE, MOVE_BONUS_CAP, ROLL_COOLDOWN_FLOOR, SLOT_BASE } from '../../src/data/gear';
 import { HEALING, HIT_INVULN_TICKS, INVULN_TICKS, MAX_HEALTH, ROLL_COOLDOWN_TICKS, ROLL_DISTANCE, ROLL_TICKS } from '../../src/data/player';
 import { RELICS } from '../../src/data/relics';
@@ -9,6 +13,7 @@ import { roundBase } from '../../src/data/tags';
 import { CLUSTER, COLD, SPLIT } from '../../src/data/tags';
 import { SHATTERPOINT, TALENTS } from '../../src/data/talents';
 import { defOf } from '../../src/sim/champions';
+import { WORLD } from '../../src/sim/world';
 
 // 041's balance pass as data: per-hit damage in the target order (landmine > arrow >
 // ley bolt ≈ bomb) at unchanged fire rates, children and Frost untouched, and the
@@ -128,5 +133,37 @@ describe('ring scaling (041)', () => {
 
   it('bosses keep their own numbers in any ring, and are never champions', () => {
     for (const id of ['pylon-warden', 'bulwark']) for (const ring of [0, 1, 2, 3] as const) expect(defOf({ enemyId: id, ring, champion: null }), id).toBe(enemyDef(id));
+  });
+});
+
+describe('the Bulwark (041)', () => {
+  const B = BULWARK;
+
+  it('has 2,500 HP; its lob and pound are as before', () => {
+    expect(B.maxHealth).toBe(2500); // was 900
+    expect(B.lob).toMatchObject({ cooldownTicks: 240, windupTicks: 30, count: 3, damage: 25 });
+    expect(B.pound).toMatchObject({ windupTicks: 60, damage: 35, cooldownTicks: 300 });
+  });
+
+  it('enrages below 30%, punishes circling with a rear stomp, and calls a Shardback and a Charger at 50%', () => {
+    expect(B.enrage).toEqual({ below: 0.3, roarTicks: 60, turnDegPerSec: 70, lobCooldownTicks: 160 });
+    expect(B.stomp).toEqual({ range: 160, behindTicks: 180, behindDecay: 2, windupTicks: 40, swipeTicks: 8, radius: 96, arcDegrees: 180, damage: 30, knockback: 40, knockTicks: 8, recoverTicks: 40, cooldownTicks: 360 });
+    expect(B.adds).toEqual({ below: 0.5, enemies: ['shardback', 'charger'], riseTicks: 60, minDistance: 96 });
+    for (const id of B.adds.enemies) expect(enemyDef(id).boss, id).toBe(false);
+  });
+
+  it('every one of its attacks (lob, pound, stomp) winds up at least MIN_TELEGRAPH_TICKS', () => {
+    for (const windup of [B.lob.windupTicks, B.pound.windupTicks, B.stomp.windupTicks]) expect(windup).toBeGreaterThanOrEqual(MIN_TELEGRAPH_TICKS);
+  });
+
+  it('its add tiles are open floor inside the arena, one either side of its start, one per add', () => {
+    const A = HOLLOWS.arena;
+    const rows = WORLD[OVERWORLD_ROOM]?.rows ?? [];
+    expect(A.addTiles).toHaveLength(B.adds.enemies.length);
+    for (const t of A.addTiles) {
+      expect(t.tx >= A.inside.x0 && t.tx <= A.inside.x1 && t.ty >= A.inside.y0 && t.ty <= A.inside.y1, `${t.tx},${t.ty}`).toBe(true);
+      expect(WALKABLE.includes(rows[t.ty]?.[t.tx] ?? TILE.wall), `${t.tx},${t.ty}`).toBe(true);
+    }
+    expect(A.addTiles.map((t) => Math.sign(t.tx - A.start.tx)).sort()).toEqual([-1, 1]);
   });
 });

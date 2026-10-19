@@ -34,11 +34,11 @@ export function shieldBlocks(e: EnemyState, x: number, y: number, fromX = 0, fro
   return Math.abs(angleDiff(e.angle, Math.atan2(by, bx))) <= (shield.arcDegrees / 2) * RAD + 1e-9;
 }
 
-/** Turns a shielded enemy toward a world point by at most one tick's `turnDegPerSec`. */
-export function turnToward(e: EnemyState, x: number, y: number): void {
+/** Turns a shielded enemy toward a world point by at most one tick's `turnDegPerSec` (or `degPerSec`: 041's enraged Bulwark). */
+export function turnToward(e: EnemyState, x: number, y: number, degPerSec?: number): void {
   const shield = defOf(e).shield;
   if (!shield || (x === e.x && y === e.y)) return;
-  const step = (shield.turnDegPerSec * RAD) / TICK_RATE;
+  const step = ((degPerSec ?? shield.turnDegPerSec) * RAD) / TICK_RATE;
   const d = angleDiff(e.angle, Math.atan2(y - e.y, x - e.x));
   e.angle += Math.max(-step, Math.min(step, d));
 }
