@@ -51,3 +51,18 @@ Small vertical commits, failing tests first in each:
 - Supply motes alternate between the claimed pylons supplying a raw (render only; the sim's port timing is 028's).
 - The banner sits top centre below the objective band; the minimap icons are small vector sprites.
 - Dev hook `spawnChampionPack(enemyIds, champion)` puts the pack in a row 6 tiles right of the player, member `champion` a champion.
+
+## Build notes
+- The Reed Marsh's pylon moved to (72, 38), south of its two ponds: between them its sprite stood in the lower pond's rim. Ponds at (72.5, 31.5) and (72.5, 35).
+- The springs' landmark areas are their pool and rim stones (5×5 tiles round each centre), not 030's 7×7 clearings: the north clearing touches the ruin field and the south-east one reaches the forest edge, which the area tests forbid. Seeing any part of the pool discovers it.
+- Both generated ponds on the fixed map sat where the spec puts the Ley Grotto and the Reed Marsh, so the map now has only hand-placed ponds (the meadow's, the shrine's and the marsh's). The rest of the map is tile-for-tile what the seed made (tested).
+- A supply mote leaves from the newest claimed pylon first, then the others in turn: claiming the Quarry shows its line working at its next stone.
+- The cache's drops land below it, where the player stands to open it, so the pickup (2 tiles, 021) takes them the same tick; the screenshot slows the slide to show them.
+- The discovery banner holds on the tween clock (the hook's tween speed holds it for a screenshot); several discoveries queue and show in turn.
+- `ui()` gains `landmarks` (banner and its alpha, each reliquary's frame, lips, tufts, lights), `champions` (name, kind, scale, glow) and `waystone` (the menu's rows and boxes); `supply.inFlight` names each mote's site.
+
+## Notes for Shaun
+- Champion names are placeholders (Husks: Mossjaw, Rootgrip, Thornback, Barkhide, Gnarlfist, Briarmaw; Wisps: Palewick, Duskmote, Glimmerveil, Hollowlight, Ashflicker).
+- "Claim a second pylon" is built with the spec's wording.
+- Guards wake as soon as they're on screen (017), so every landmark is a fight on arrival; the Ruined Cache's five are the hardest pack outside the shrine.
+- The art (`/sheet.html`, "Landmarks (032)") is pending your review: cut blocks, old trees, reeds and lilies, hollow lips (plain and frosted), the reliquary's three states, the minimap icons and the champion glow.

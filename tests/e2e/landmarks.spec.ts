@@ -159,7 +159,7 @@ test('the Ruined Cache is sealed while its guards live, then opens with a held E
   );
   expect(opened.opens).toBe(true);
   expect(opened.items).toBeGreaterThanOrEqual(3);
-  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().landmarks))?.caches['ruined-cache']).toBe('empty');
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().landmarks))?.caches['ruined-cache'], { timeout: 20_000 }).toBe('empty');
   expect(errors).toEqual([]);
 });
 

@@ -61,6 +61,9 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
       const far = d > 170;
       const windup = near.mode === 'windup' && d < 80;
       if ((s.inventory[s.tube.ammo] ?? 0) === 0) g.step(1, { selectAmmo: s.tube.ammo === 'ley-bolt' ? 'arrow' : 'bomb' });
+      // This test is about claiming, not the fight: since 032 a pack can hold a champion and the seeded rolls vary
+      // the fight, so the player is kept on their feet through it.
+      if (s.player.health < 40) g.setPlayerHealth(100);
       s = g.step(1, {
         moveX: kite ? away(p.x, near.x) : far ? away(near.x, p.x) : 0,
         moveY: kite ? away(p.y, near.y) : far ? away(near.y, p.y) : 0,

@@ -11,7 +11,7 @@ export interface Helpers {
   harvest(nodeIndex: number, times: number): void;
   /** Walks onto every ground item in the player's room. */
   collect(): void;
-  /** Shoots the nearest Husk until one dies, then collects its drops. */
+  /** Shoots the nearest Husk (of the ruin field's pack while it stands) until one dies, then collects its drops. */
   killHusk(): void;
   /** Walks out of the foundry's door to the overworld (017), where the tube can fire (015). */
   toHall(): void;
@@ -206,7 +206,10 @@ function installHelpers(): void {
       let pathed = true;
       for (let t = 0; t < 2400 && s.enemies.filter((e) => e.room === s.room).length === before; t++) {
         const p = s.player;
-        const target = [...s.enemies.filter((e) => e.room === s.room)].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+        // The ruin field's pack first while it stands (032: a landmark's guard pack may now be nearer, and is a fight).
+        const field = s.enemies.filter((e) => e.room === s.room && e.group === 'field');
+        const pool = field.length > 0 ? field : s.enemies.filter((e) => e.room === s.room);
+        const target = [...pool].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
         if (!target) break;
         const far = Math.hypot(target.x - p.x, target.y - p.y) > 200;
         // Far off, walk most of the way by path, round whatever's in between (018); once that fails, only straight.

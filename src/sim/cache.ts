@@ -11,6 +11,7 @@ import { roomOf, roomById, type SimState } from './state';
 import { tileCentre } from './tiles';
 import { createEnemy } from './enemies';
 import { rollChampions } from './champions';
+import { inSafeZone } from './population';
 import { tileRect } from './fixtures';
 
 // The Ruined Cache (032): a sealed reliquary guarded by a hand-placed pack. While any
@@ -99,7 +100,8 @@ export function stepCacheRearm(state: SimState): void {
     const back = def.guards.flatMap((g) => {
       const home = tileCentre(g);
       const alive = state.enemies.some((e) => e.group === def.id && e.homeX === home.x && e.homeY === home.y);
-      return alive ? [] : [createEnemy(state.nextEnemyId++, g.enemyId, home, OVERWORLD_ROOM, def.id)];
+      // Never inside a claimed pylon's safe zone, as at a world reset.
+      return alive || inSafeZone(state, OVERWORLD_ROOM, home.x, home.y) ? [] : [createEnemy(state.nextEnemyId++, g.enemyId, home, OVERWORLD_ROOM, def.id)];
     });
     // The guards coming back are a pack spawning: they may hold a champion.
     rollChampions(state.rng, back, def.ring);

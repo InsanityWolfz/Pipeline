@@ -97,10 +97,11 @@ const LEY_GROTTO: LandmarkDef = {
     { nodeId: 'ley-vein', tx: 74, ty: 27 },
     { nodeId: 'ley-vein', tx: 69, ty: 24 },
   ],
+  // Deep in the hollow, out of sight of the shrine's approach above it.
   guards: [
-    { enemyId: 'husk', tx: 71, ty: 22 },
-    { enemyId: 'husk', tx: 73, ty: 26 },
-    { enemyId: 'wisp', tx: 74, ty: 23 },
+    { enemyId: 'husk', tx: 72, ty: 26 },
+    { enemyId: 'husk', tx: 73, ty: 27 },
+    { enemyId: 'wisp', tx: 74, ty: 25 },
     { enemyId: 'wisp', tx: 70, ty: 25 },
   ],
   pylon: { tx: 72, ty: 24, site: 'ley-grotto', supplies: 'ley-crystal' },

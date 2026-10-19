@@ -7,6 +7,10 @@ import { NODES } from '../../src/data/nodes';
 import { OVERWORLD, ringOf, type TileRect } from '../../src/data/overworld';
 import { TILE } from '../../src/data/rooms';
 import { generateOverworld } from '../../src/sim/overworldGen';
+import { DISCOVERY_BANNER, LANDMARK_SPRITES, MAP_ICONS } from '../../src/data/landmarkAssets';
+import { TUTORIAL_LAYOUT } from '../../src/data/foundryAssets';
+import { TEXT_STYLES } from '../../src/data/fonts';
+import { vectorFrames } from '../../src/render/vector/catalog';
 import { WORLD } from '../../src/sim/world';
 import { reachable, tileKey } from '../fixtures/reach';
 
@@ -68,6 +72,17 @@ describe('landmark entries', () => {
 
   it('tune the banner, the cache re-arm (10 minutes of play) and the cache hold', () => {
     expect(LANDMARKS).toEqual({ bannerMs: 2000, cacheRearmTicks: 36_000, cacheOpenTicks: 60 });
+  });
+
+  it('put the discovery banner below the objective band, so it never covers it', () => {
+    const { objectiveTop, objectivePanel } = TUTORIAL_LAYOUT;
+    expect(DISCOVERY_BANNER.top).toBeGreaterThan(objectiveTop + TEXT_STYLES.display.lineHeight + objectivePanel.padY);
+  });
+
+  it('give every marker an icon, and every look a sprite on the contact sheet', () => {
+    const frames = new Set(vectorFrames().map((f) => f.name));
+    for (const l of LANDMARK_LIST) expect(frames.has(MAP_ICONS[l.marker]), l.id).toBe(true);
+    for (const key of Object.values(LANDMARK_SPRITES).flat()) expect(frames.has(key), key).toBe(true);
   });
 });
 
