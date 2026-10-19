@@ -9,7 +9,7 @@ import { damagePlayer } from '../../src/sim/health';
 import { roomById, type SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
-import { arena, atPylon, movePlayer, run } from './fight';
+import { arena, atPylon, movePlayer, placeHusk, run } from './fight';
 
 // Healing only in safe spots (030): fast in a claimed pylon's safe zone and in a Ley
 // Spring's pool, a fast fill at the foundry, nothing in the open field. Rates never stack.
@@ -106,6 +106,20 @@ describe('where you heal', () => {
     expect(springAt(OVERWORLD_ROOM, c.x + r - 1, c.y)?.id).toBe('west-spring');
     expect(springAt(OVERWORLD_ROOM, c.x + r + 1, c.y)).toBeNull();
     expect(springAt(FOUNDRY_ROOM, c.x, c.y)).toBeNull();
+  });
+
+  it('a spring is no safe zone: a Husk follows the player into the pool and hits them there', () => {
+    const sp = spring('west-spring');
+    const s = inSpring(sp.id, 80);
+    const c = tileCentre(sp);
+    const husk = placeHusk(s, c.x + 4 * TILE_SIZE, c.y);
+    let hit = false;
+    for (let i = 0; i < 300 && !hit; i++) {
+      run(s, 1);
+      hit = s.events.hits.some((h) => h.target === 'player');
+    }
+    expect(hit).toBe(true);
+    expect(springAt(OVERWORLD_ROOM, husk.x, husk.y)?.id).toBe(sp.id);
   });
 
   it('the foundry fills 10 to 100 in 108 ticks, not at once', () => {
