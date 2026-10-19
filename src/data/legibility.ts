@@ -117,7 +117,7 @@ export const LANE_NAMES: Readonly<Record<TalentLane, string>> = { centre: 'Centr
 export const TALENT_COST = { point: 'point', points: 'points', free: 'free' } as const;
 
 /**
- * The words around the generated lines. Summary: a Shot round's "11.6 dmg · 4.0/s", a Lob or Mine round's Burst; then
+ * The words around the generated lines. Summary: a Shot round's "16.2 dmg · 4.0/s", a Lob or Mine round's Burst; then
  * Cold's Freeze hits, Split's Shards, Cluster's Bomblets, a Mine's arm time; the bonus hint (040.7). Breakdown: a
  * stat's steps, the interval, the ramp and the "when" lines, Linked. Glossary: its sections.
  */

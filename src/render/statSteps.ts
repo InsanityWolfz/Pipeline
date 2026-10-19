@@ -6,7 +6,7 @@ import type { Contribution, Resolved } from '../sim/statResolve';
 import type { Chip } from './tipTypes';
 
 // The breakdown's numbers (040), pure: a stat's value in its unit, and a stat's steps from
-// resolveStat — "Damage 10 × (1 + 10% Fletcher's Eye + 6% Hard Bore) = 11.6" — so every
+// resolveStat — "Damage 14 × (1 + 10% Fletcher's Eye + 6% Hard Bore) = 16.2" — so every
 // number shown is the one the sim uses. Px and 2-decimal times are for the breakdown and the
 // glossary only (Q14, 039.8); summaries use rulesText's own formats.
 
@@ -34,7 +34,7 @@ const sum = (cs: readonly Contribution[]): string => cs.map((c) => `${signed(c.v
 
 /**
  * A stat's steps, one line: the base, each flat (in the stat's unit), every +% summed in one pool, every ×, then the
- * final: "Damage 10 × (1 + 10% Fletcher's Eye + 6% Hard Bore) = 11.6", "Shards 5 + 2 Splinter = 7". With nothing
+ * final: "Damage 14 × (1 + 10% Fletcher's Eye + 6% Hard Bore) = 16.2", "Shards 5 + 2 Splinter = 7". With nothing
  * changing it, just "Damage 10". `fmt` writes a value in the stat's unit.
  */
 export function stepsText(label: string, r: Resolved, fmt: (v: number) => string): string {

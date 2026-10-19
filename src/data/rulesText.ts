@@ -26,7 +26,7 @@ export function trimNumber(v: number, places = 2): string {
   return String(Number(v.toFixed(places)));
 }
 
-/** Damage to 1 decimal without a trailing ".0" (040): 11.6, 15. */
+/** Damage to 1 decimal without a trailing ".0" (040): 16.2, 12. */
 export const formatDamage = (v: number): string => trimNumber(v, 1);
 
 /**
