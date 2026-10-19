@@ -1,7 +1,7 @@
 // Layouts for the HUD pieces and the crafting menu added in 005. Px values
 // tuned by eye; colours are palette ids.
 
-import { CRAFT_GROUPS } from './recipes';
+import { craftColumnHeight, CRAFT_COLUMNS } from './craftColumns';
 
 /** The harvest progress bar over a node: size, gap above the sprite, and palette ids. */
 export const HARVEST_BAR = { w: 20, h: 3, gap: 2, border: 1, color: 'cyan', back: 'ink' } as const;
@@ -54,9 +54,10 @@ const MENU_ROW_WIDTH = 184;
 const CRAFT_ROW = { w: MENU_ROW_WIDTH, h: 28, gap: 1 } as const;
 const CRAFT_HEADER = 16;
 const CRAFT_ROWS_AT = { x: 6, y: 6 } as const;
-/** Every header and recipe row the menu lists: one header per ammo group, a row per recipe. */
-const CRAFT_HEADERS = CRAFT_GROUPS.length;
-const CRAFT_RECIPES = CRAFT_GROUPS.reduce((n, g) => n + g.recipes.length, 0);
+/** The crafting menu's columns (038.4, CRAFT_COLUMNS), `CRAFT_COLUMN_GAP` px apart. */
+const CRAFT_SIZES = { headerHeight: CRAFT_HEADER, rowHeight: CRAFT_ROW.h, rowGap: CRAFT_ROW.gap } as const;
+const CRAFT_COLUMN_GAP = 8;
+const craftTallest = Math.max(...CRAFT_COLUMNS.map((ids) => craftColumnHeight(ids, CRAFT_SIZES)));
 
 /**
  * The crafting menu, centred on screen with its title card. Rows are listed group by
@@ -66,8 +67,9 @@ const CRAFT_RECIPES = CRAFT_GROUPS.reduce((n, g) => n + g.recipes.length, 0);
  * each row's top-left.
  */
 export const CRAFT_MENU_LAYOUT = {
-  width: CRAFT_ROW.w + 2 * CRAFT_ROWS_AT.x,
-  height: CRAFT_ROWS_AT.y * 2 + CRAFT_HEADERS * CRAFT_HEADER + CRAFT_RECIPES * CRAFT_ROW.h + (CRAFT_RECIPES - 1) * CRAFT_ROW.gap,
+  width: CRAFT_COLUMNS.length * CRAFT_ROW.w + (CRAFT_COLUMNS.length - 1) * CRAFT_COLUMN_GAP + 2 * CRAFT_ROWS_AT.x,
+  height: CRAFT_ROWS_AT.y * 2 + craftTallest,
+  columnGap: CRAFT_COLUMN_GAP,
   /** First row's top-left inside the panel. */
   rowsAt: CRAFT_ROWS_AT,
   rowWidth: CRAFT_ROW.w,

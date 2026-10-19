@@ -1,4 +1,5 @@
 import { CRAFT_MENU_LAYOUT, PAUSE_MENU, PICKER_LAYOUT } from '../data/hudLayout';
+import { CRAFT_COLUMNS } from '../data/craftColumns';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { CRAFT_GROUPS } from '../data/recipes';
 
@@ -24,19 +25,21 @@ export function craftPanelAt(): { x: number; y: number } {
   };
 }
 
-/** Every header and recipe row in order, group by group. */
+/** Every header and recipe row in order, group by group, column by column (038.4). */
 export function craftMenuLines(): MenuLine[] {
   const L = CRAFT_MENU_LAYOUT;
   const panel = craftPanelAt();
-  const x = panel.x + L.rowsAt.x;
-  let y = panel.y + L.rowsAt.y;
   const lines: MenuLine[] = [];
-  for (const group of CRAFT_GROUPS) {
-    lines.push({ kind: 'header', id: group.ammoId, x, y });
-    y += L.headerHeight;
-    for (const recipeId of group.recipes) {
-      lines.push({ kind: 'recipe', id: recipeId, x, y });
-      y += L.rowHeight + L.rowGap;
+  for (const [c, ids] of CRAFT_COLUMNS.entries()) {
+    const x = panel.x + L.rowsAt.x + c * (L.rowWidth + L.columnGap);
+    let y = panel.y + L.rowsAt.y;
+    for (const group of CRAFT_GROUPS.filter((g) => ids.includes(g.ammoId))) {
+      lines.push({ kind: 'header', id: group.ammoId, x, y });
+      y += L.headerHeight;
+      for (const recipeId of group.recipes) {
+        lines.push({ kind: 'recipe', id: recipeId, x, y });
+        y += L.rowHeight + L.rowGap;
+      }
     }
   }
   return lines;

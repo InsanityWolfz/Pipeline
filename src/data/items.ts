@@ -1,5 +1,6 @@
 import { SPRITES } from './assets';
 import { HOLLOWS_SPRITES } from './hollowsAssets';
+import { MINE_SPRITES } from './mineAssets';
 import { RESEARCH_ICONS } from './researchAssets';
 import { ROUND_ICONS, STAGE_SPRITES } from './stageAssets';
 import { ROUNDS, roundBase, roundName } from './tags';
@@ -34,6 +35,8 @@ const BASE_ITEMS: Readonly<Record<string, ItemDef>> = {
   arrow: { id: 'arrow', name: 'Arrow', kind: 'ammo', group: 'ammo', icon: SPRITES.iconArrow },
   bomb: { id: 'bomb', name: 'Bomb', kind: 'ammo', group: 'ammo', icon: SPRITES.iconBomb },
   'ley-bolt': { id: 'ley-bolt', name: 'Ley bolt', kind: 'ammo', group: 'ammo', icon: SPRITES.iconLeyBolt },
+  /** 038: shot onto the ground, it bursts after its fuse. */
+  landmine: { id: 'landmine', name: 'Landmine', kind: 'ammo', group: 'ammo', icon: MINE_SPRITES.iconLandmine },
   'husk-resin': { id: 'husk-resin', name: 'Husk resin', kind: 'raw', group: 'raw', icon: SPRITES.itemHuskResin },
   wood: { id: 'wood', name: 'Wood', kind: 'raw', group: 'raw', icon: SPRITES.itemWood },
   stone: { id: 'stone', name: 'Stone', kind: 'raw', group: 'raw', icon: SPRITES.itemStone },
@@ -49,6 +52,8 @@ const BASE_ITEMS: Readonly<Record<string, ItemDef>> = {
   casing: { id: 'casing', name: 'Casing', kind: 'part', group: 'parts', icon: SPRITES.itemCasing },
   fuse: { id: 'fuse', name: 'Fuse', kind: 'part', group: 'parts', icon: SPRITES.itemFuse },
   'ley-shard': { id: 'ley-shard', name: 'Ley shard', kind: 'part', group: 'parts', icon: SPRITES.itemLeyShard },
+  /** 038: pressed from ley-iron, a landmine's body. */
+  'iron-plate': { id: 'iron-plate', name: 'Iron plate', kind: 'part', group: 'parts', icon: MINE_SPRITES.itemIronPlate },
   'unidentified-armor': { id: 'unidentified-armor', name: 'Unidentified gear', kind: 'armor', group: 'gear', icon: SPRITES.itemUnidentifiedArmor },
   /** The Pylon Warden's core (009): it restores one intake entrance (033). Its kind stays a part; the panel lists it under Cores (031). */
   'warden-core': { id: 'warden-core', name: 'Warden core', kind: 'part', group: 'cores', icon: SPRITES.itemWardenCore, research: 'core' },

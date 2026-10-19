@@ -8,6 +8,9 @@ import { canCraft } from '../sim/crafting';
 import type { LinkState } from '../sim/link';
 import { knownRecipe } from '../sim/tutorial';
 import { count, type Inventory } from '../sim/inventory';
+
+/** What decides which recipes show and which can be made: the inventory, the attunement and the revealing items found. */
+type Known = { inventory: Inventory; link: Pick<LinkState, 'attuned'>; found: readonly string[] };
 import { craftMenuLines, craftPanelAt } from './craftMenuLayout';
 import { flashRow, RowHover, type RowFrames } from './menuFeedback';
 import { drawTablet } from './tablet';
@@ -68,8 +71,8 @@ export class CraftMenuView {
   private readonly rows: Row[] = [];
   private readonly hover: RowHover;
   private open = false;
-  private inventory: Inventory = {};
-  private link: Pick<LinkState, 'attuned'> = { attuned: false };
+  /** What the menu reads (038: `found` shows the landmine chain once ley-iron is carried). */
+  private known: Known = { inventory: {}, link: { attuned: false }, found: [] };
   /** Each group's header icon and name, by ammo id: hidden while none of its recipes is known (012). */
   private readonly headers = new Map<string, { icon: GameObjects.Image; name: TextLine }>();
   /** The title card's tablet. */
@@ -137,12 +140,12 @@ export class CraftMenuView {
         outputName: name(recipe.output.itemId, outX, line.y),
       };
       frame.on('pointerdown', () => {
-        if (!this.open || !canCraft({ inventory: this.inventory, link: this.link }, row.recipeId)) return;
+        if (!this.open || !canCraft(this.known, row.recipeId)) return;
         flashRow(scene, frame.x, frame.y, RECIPE_ROW_FRAMES.press);
         onCraft(row.recipeId);
       });
       const index = this.rows.length;
-      frame.on('pointerover', () => this.hover.set(index, canCraft({ inventory: this.inventory, link: this.link }, row.recipeId)));
+      frame.on('pointerover', () => this.hover.set(index, canCraft(this.known, row.recipeId)));
       frame.on('pointerout', () => this.hover.leave(index));
       this.rows.push(row);
     }
@@ -199,27 +202,27 @@ export class CraftMenuView {
     }
     if (!open) this.hover.set(-1);
     // Hide unknown recipes straight away, not a frame later.
-    else this.update(this.inventory, this.link);
+    else this.update(this.known);
   }
 
   /** Refreshes counts, greying and missing inputs while open; recipes not yet known (012) stay hidden. */
-  update(inventory: Inventory, link: Pick<LinkState, 'attuned'>): void {
-    this.inventory = inventory;
-    this.link = link;
+  update(sim: Known): void {
+    this.known = sim;
+    const { inventory } = sim;
     if (!this.open) return;
     const L = CRAFT_MENU_LAYOUT;
     for (const group of CRAFT_GROUPS) {
       const header = this.headers.get(group.ammoId);
-      const known = group.recipes.some((id) => knownRecipe({ link }, id));
+      const known = group.recipes.some((id) => knownRecipe(sim, id));
       header?.icon.setVisible(known);
       header?.name.setVisible(known);
     }
     for (const [i, r] of this.rows.entries()) {
-      const known = knownRecipe({ link }, r.recipeId);
+      const known = knownRecipe(sim, r.recipeId);
       for (const o of [r.frame, ...r.parts]) o.setVisible(known);
       for (const t of [...r.inputs.flatMap((i) => [i.text, i.name]), r.made, r.owned, r.outputName]) t.setVisible(known);
       if (!known) continue;
-      const affordable = canCraft({ inventory, link }, r.recipeId);
+      const affordable = canCraft(sim, r.recipeId);
       const alpha = affordable ? 1 : L.greyAlpha;
       const textAlpha = affordable ? 1 : L.greyTextAlpha;
       for (const input of r.inputs) {

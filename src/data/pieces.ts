@@ -6,7 +6,7 @@ import { stageBase, STAGES, type StageDef } from './stages';
 export type Footprint = '1x1' | '3x1';
 
 /** The build bar's groups (026): logistics, then one per ammo chain. */
-export type PieceCategory = 'logistics' | 'arrows' | 'bombs' | 'ley';
+export type PieceCategory = 'logistics' | 'arrows' | 'bombs' | 'ley' | 'mines';
 
 /** The build bar's groups in order, left to right, each with the label shown over it (026). */
 export const PIECE_CATEGORIES: readonly { id: PieceCategory; label: string }[] = [
@@ -14,6 +14,7 @@ export const PIECE_CATEGORIES: readonly { id: PieceCategory; label: string }[] =
   { id: 'arrows', label: 'Arrows' },
   { id: 'bombs', label: 'Bombs' },
   { id: 'ley', label: 'Ley' },
+  { id: 'mines', label: 'Mines' },
 ];
 
 interface PieceBase {
@@ -104,6 +105,9 @@ export const PIECES: Readonly<Record<string, PieceDef>> = {
   grinder: machine('grinder', 'Grinder', 'ley', 'ley-shard', '1x1', 60, 'Grinds ley crystal into shards.'),
   packer: machine('packer', 'Packer', 'bombs', 'bomb', '3x1', 90, 'Packs casings, fuses and shards into bombs.'),
   focuser: machine('focuser', 'Focuser', 'ley', 'ley-bolt', '1x1', 60, 'Focuses ley shards into ley bolts.'),
+  // 038.1: the plate press as the cutter, the mine packer as the bomb packer (three inputs into a 3x1).
+  'plate-press': machine('plate-press', 'Plate press', 'mines', 'iron-plate', '1x1', 60, 'Presses ley-iron into iron plates.'),
+  'mine-packer': machine('mine-packer', 'Mine packer', 'mines', 'landmine', '3x1', 90, 'Packs iron plates, fuses and shards into landmines.'),
   ...Object.fromEntries(Object.values(STAGES).map((st) => [st.id, stageMachine(st)])),
 };
 
@@ -123,10 +127,13 @@ export const BUILD_BAR: readonly string[] = [
   'shaper',
   'fuse-maker',
   'packer',
+  'shard-die',
   'grinder',
   'focuser',
   'ley-guide',
   'shatter-lens',
+  'plate-press',
+  'mine-packer',
 ];
 
 export function pieceDef(id: string): PieceDef {

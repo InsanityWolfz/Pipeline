@@ -190,8 +190,8 @@ describe('item kinds, ammo slots and recipes', () => {
     for (const ammo of Object.values(AMMO)) expect(ITEMS[ammo.itemId]?.kind).toBe('ammo');
   });
 
-  it('switches between arrows, bombs and ley bolts in key order', () => {
-    expect(SLOT_AMMOS).toEqual(['arrow', 'bomb', 'ley-bolt']);
+  it('switches between arrows, bombs, ley bolts and landmines (038) in key order', () => {
+    expect(SLOT_AMMOS).toEqual(['arrow', 'bomb', 'ley-bolt', 'landmine']);
     for (const id of SLOT_AMMOS) expect(AMMO[id]).toBeDefined();
   });
 
@@ -303,7 +303,8 @@ describe('foundry pieces', () => {
     const wide = Object.values(PIECES)
       .filter((d) => d.footprint === '3x1')
       .map((d) => d.id);
-    expect(wide.sort()).toEqual(['assembler', 'packer']);
+    // 038: the mine packer joins a plate, a fuse and a shard.
+    expect(wide.sort()).toEqual(['assembler', 'mine-packer', 'packer']);
     for (const id of wide) {
       const def = PIECES[id];
       if (def?.kind !== 'machine') throw new Error(`${id} is not a machine`);
@@ -333,6 +334,7 @@ describe('build bar categories (026)', () => {
       ['arrows', 'Arrows'],
       ['bombs', 'Bombs'],
       ['ley', 'Ley'],
+      ['mines', 'Mines'],
     ]);
     const grouped = PIECE_CATEGORIES.map((c) => BUILD_BAR.filter((id) => pieceDef(id).category === c.id));
     expect(grouped).toEqual([
@@ -340,8 +342,10 @@ describe('build bar categories (026)', () => {
       ['conduit', 'sorter', 'splitter', 'merger', 'hopper', 'crate'],
       // 029: each stage in its base ammo's group, after the chain that makes the ammo.
       ['cutter', 'knapper', 'spinner', 'assembler', 'frost-rune'],
-      ['shaper', 'fuse-maker', 'packer'],
+      ['shaper', 'fuse-maker', 'packer', 'shard-die'],
       ['grinder', 'focuser', 'ley-guide', 'shatter-lens'],
+      // 038: the landmine chain.
+      ['plate-press', 'mine-packer'],
     ]);
     // In bar order the groups never interleave.
     expect([...BUILD_BAR]).toEqual(grouped.flat());

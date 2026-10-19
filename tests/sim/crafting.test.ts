@@ -7,6 +7,8 @@ describe('crafting', () => {
   it.each(Object.values(RECIPES))('$id takes its inputs and adds its output', (recipe) => {
     const s = arena();
     s.link.attuned = true;
+    // 038: the landmine chain shows once ley-iron has been carried.
+    s.found = ['ley-iron'];
     s.inventory = { ...recipe.inputs };
     expect(craft(s, recipe.id)).toBe(true);
     for (const id of Object.keys(recipe.inputs)) if (id !== recipe.output.itemId) expect(s.inventory[id]).toBe(0);

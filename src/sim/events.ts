@@ -158,6 +158,10 @@ export interface SimEvents {
   blastCharges: { id: number; x: number; y: number; radius: number }[];
   chargedBursts: { x: number; y: number; radius: number }[];
   shatters: { id: number; x: number; y: number }[];
+  /** 038: a landmine landed and armed (its id and spot); an armed mine burst; a cluster bomb's bomblet burst (spot and radius, px). */
+  mineArms: { id: number; x: number; y: number }[];
+  mineBursts: BurstEvent[];
+  bombletBursts: BurstEvent[];
   /** What the player carried was banked (on entering the foundry or depositing). */
   banks: Record<string, number>[];
   /** On a KO, what was lost: item id to count. */
@@ -230,6 +234,9 @@ export function createEvents(): SimEvents {
     blastCharges: [],
     chargedBursts: [],
     shatters: [],
+    mineArms: [],
+    mineBursts: [],
+    bombletBursts: [],
     banks: [],
     lost: {},
     ko: false,

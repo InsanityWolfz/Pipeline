@@ -45,12 +45,14 @@ describe('playerStats', () => {
       firingWalk: FIRING_WALK_MULTIPLIER,
       // 029's numbers, untouched with no talents.
       ammo: {
-        damage: { arrow: 1, bomb: 1, 'ley-bolt': 1 },
-        fireRate: { arrow: 0, bomb: 0, 'ley-bolt': 0 },
+        // 038: landmines, which only all-ammo talents reach.
+        damage: { arrow: 1, bomb: 1, 'ley-bolt': 1, landmine: 1 },
+        fireRate: { arrow: 0, bomb: 0, 'ley-bolt': 0, landmine: 0 },
         freezeHits: 4,
         freezeTicks: 90,
         bossFreezeTicks: 45,
         blastRadius: 48,
+        bombletRadius: 20,
         lobTime: 1,
         homingTurn: 4,
         starShards: 5,

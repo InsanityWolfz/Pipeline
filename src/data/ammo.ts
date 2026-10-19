@@ -1,4 +1,5 @@
 import { SPRITES } from './assets';
+import { MINE_SPRITES } from './mineAssets';
 import { elementOf, ROUNDS, roundBase, roundTags } from './tags';
 
 // Ammo the tube can fire. Starting values from specs 003, 005 and 029; tune in playtest.
@@ -51,7 +52,26 @@ export interface LobAmmo extends AmmoBase {
   burstDamage: number;
 }
 
-export type AmmoDef = StraightAmmo | LobAmmo;
+/**
+ * A landmine (038): lobbed to the aim like a bomb, it arms where it lands and bursts `fuseTicks` later for `damage`
+ * on every enemy within `radius` px. Only its timer sets it off.
+ */
+export interface MineAmmo extends AmmoBase {
+  kind: 'mine';
+  speed: number;
+  maxRange: number;
+  arcPeak: number;
+  fuseTicks: number;
+  damage: number;
+  radius: number;
+  /** Its sprite lying armed on the ground. */
+  armed: string;
+}
+
+export type AmmoDef = StraightAmmo | LobAmmo | MineAmmo;
+
+/** Anything that arcs to the aim: a bomb or a landmine. */
+export type LobbedAmmo = LobAmmo | MineAmmo;
 
 const BASE_AMMO: Readonly<Record<string, AmmoDef>> = {
   arrow: {
@@ -100,6 +120,25 @@ const BASE_AMMO: Readonly<Record<string, AmmoDef>> = {
     sprite: SPRITES.bomb,
     shadow: SPRITES.bombShadow,
   },
+  // 038: large damage in a small radius on a delay; lobbed with a bomb's arc, speed and range, at a bomb's rate (038.7).
+  landmine: {
+    id: 'landmine',
+    kind: 'mine',
+    itemId: 'landmine',
+    base: 'landmine',
+    tags: [],
+    fireTicks: 40,
+    speed: 200,
+    maxRange: 192,
+    arcPeak: 32,
+    fuseTicks: 300,
+    damage: 60,
+    radius: 24,
+    damageType: 'physical',
+    sprite: MINE_SPRITES.landmine,
+    shadow: MINE_SPRITES.landmineShadow,
+    armed: MINE_SPRITES.armed,
+  },
 };
 
 /** A tagged round: its base's numbers, its own id and tags, and its element's damage type. */
@@ -109,7 +148,7 @@ function tagged(round: string): AmmoDef {
   return { ...base, id: round, itemId: round, tags: roundTags(round), damageType: elementOf(round)?.damageType ?? base.damageType };
 }
 
-/** Every ammo: the three bases, then every legal tagged round (029). */
+/** Every ammo: the four bases, then every legal tagged round (029). */
 export const AMMO: Readonly<Record<string, AmmoDef>> = {
   ...BASE_AMMO,
   ...Object.fromEntries(ROUNDS.map((r) => [r, tagged(r)])),
@@ -124,6 +163,13 @@ export function ammoDef(id: string): AmmoDef {
 export function straightAmmo(id: string): StraightAmmo {
   const def = ammoDef(id);
   if (def.kind !== 'straight') throw new Error(`Ammo '${id}' doesn't fly straight`);
+  return def;
+}
+
+/** A bomb or a landmine: anything that arcs to the aim (038). */
+export function lobbedAmmo(id: string): LobbedAmmo {
+  const def = ammoDef(id);
+  if (def.kind === 'straight') throw new Error(`Ammo '${id}' isn't lobbed`);
   return def;
 }
 

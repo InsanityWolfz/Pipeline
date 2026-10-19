@@ -35,7 +35,7 @@ export function craft(state: SimState, recipeId: string): boolean {
 }
 
 /** True if the recipe is a hand-crafting recipe (never a stage's), known (012), and the inventory holds every input. */
-export function canCraft(state: Pick<SimState, 'inventory'> & { link: Pick<SimState['link'], 'attuned'> }, recipeId: string): boolean {
+export function canCraft(state: Pick<SimState, 'inventory'> & { link: Pick<SimState['link'], 'attuned'>; found: readonly string[] }, recipeId: string): boolean {
   // An unknown id throws; a stage's recipe is known but never a hand craft.
   const recipe = recipeDef(recipeId);
   if (!RECIPES[recipeId] || !knownRecipe(state, recipeId)) return false;

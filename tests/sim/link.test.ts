@@ -164,9 +164,9 @@ describe('the playtest start', () => {
     const s = createSim(SEED, { start: PLAYTEST_START });
     expect(s.inventory).toMatchObject({ arrow: 99, bomb: 99, 'ley-bolt': 99, wood: 99, 'husk-resin': 99, shaft: 20, fuse: 20 });
     expect(s.crafted).toEqual(PLAYTEST_START.crafted);
-    // 029: every stage too, with rime shards to feed the frost rune and no tagged rounds carried.
+    // 029: every stage too, with rime shards to feed the frost rune and no tagged rounds carried; 038: the Shard die and the landmine chain.
     expect(unlockedPieces(s)).toEqual([
-      'conduit', 'sorter', 'hopper', 'crate', 'cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'shaper', 'fuse-maker', 'packer', 'grinder', 'focuser', 'ley-guide', 'shatter-lens',
+      'conduit', 'sorter', 'hopper', 'crate', 'cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'shaper', 'fuse-maker', 'packer', 'shard-die', 'grinder', 'focuser', 'ley-guide', 'shatter-lens', 'plate-press', 'mine-packer',
     ]);
     expect(s.inventory['rime-shard']).toBe(99);
     expect(s.inventory['arrow+frost']).toBeUndefined();

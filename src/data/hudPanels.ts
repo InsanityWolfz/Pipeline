@@ -91,7 +91,8 @@ export const INVENTORY_PANEL = {
   columnGap: 14,
   headerHeight: 12,
   headerY: 2,
-  rowHeight: 16,
+  /** 038: 15, not 16, so Raw and Parts still share a column with the landmine chain's plate (the icons' shapes are under 15 px). */
+  rowHeight: 15,
   groupGap: 6,
   gearLines: 2,
   row: { name: { x: 19, y: 5 }, count: { x: 102, y: 5 }, mark: { x: 118, y: 5 }, warn: { y: 4, gap: 2 }, home: { y: 5 } },

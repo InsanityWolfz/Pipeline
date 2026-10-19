@@ -138,12 +138,12 @@ function fire(state: SimState, cmd: Command, dx: number, dy: number): void {
   tube.shotCount = 1;
 }
 
-/** Sends one projectile along its direction from the tube's mouth. A bomb lands at the aim's distance, `across` px off the line. */
+/** Sends one projectile along its direction from the tube's mouth. A bomb or landmine lands at the aim's distance, `across` px off the line. */
 function launch(state: SimState, { ammoId, dir: [dx, dy], across }: VolleyShot, cmd: Command): void {
   const { player } = state;
   const muzzle = { x: player.x + dx * MUZZLE_OFFSET, y: player.y + dy * MUZZLE_OFFSET };
   state.events.shots.push({ ...muzzle, ammoId });
-  if (ammoDef(ammoId).kind === 'lob') {
+  if (ammoDef(ammoId).kind !== 'straight') {
     throwBomb(state, ammoId, muzzle, player, { x: cmd.aimX, y: cmd.aimY }, [dx, dy], across);
     return;
   }

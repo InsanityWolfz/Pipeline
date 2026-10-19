@@ -77,7 +77,7 @@ export interface VolleyShot {
  * by base ammo (029: a plain and a frost arrow fan together) in order of first appearance.
  * One round of a base flies straight at the aim; several aimed rounds fan evenly about it,
  * SPREAD_STEP degrees apart; several lobbed rounds keep the aim's line and land side by
- * side, LOB_SPACING px apart across it.
+ * side, LOB_SPACING px apart across it (a bomb or a landmine, 038).
  */
 export function volleyShots(ammoIds: readonly string[], dx: number, dy: number): VolleyShot[] {
   const groups = new Map<string, string[]>();
@@ -88,7 +88,7 @@ export function volleyShots(ammoIds: readonly string[], dx: number, dy: number):
   return [...groups.values()].flatMap((ids) =>
     ids.map((ammoId, i): VolleyShot => {
       const offset = i - (ids.length - 1) / 2;
-      if (ammoDef(ammoId).kind === 'lob') return { ammoId, dir: [dx, dy], across: offset * LOB_SPACING };
+      if (ammoDef(ammoId).kind !== 'straight') return { ammoId, dir: [dx, dy], across: offset * LOB_SPACING };
       return { ammoId, dir: rotate(dx, dy, offset * SPREAD_STEP), across: 0 };
     }),
   );

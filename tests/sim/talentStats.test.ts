@@ -3,7 +3,7 @@ import { ammoDef, lobAmmo, straightAmmo } from '../../src/data/ammo';
 import { TICK_RATE } from '../../src/data/config';
 import { FIRING_WALK_MULTIPLIER, HEALING, MAX_HEALTH } from '../../src/data/player';
 import { OVERWORLD } from '../../src/data/overworld';
-import { COLD, HOMING, STAR } from '../../src/data/tags';
+import { CLUSTER, COLD, HOMING, STAR } from '../../src/data/tags';
 import { MUZZLE_OFFSET } from '../../src/data/tube';
 import { TALENT_START } from '../../src/data/talents';
 import { chillEnemy } from '../../src/sim/cold';
@@ -41,12 +41,13 @@ describe('playerStats with no talents', () => {
     const st = playerStats(arena());
     expect(st.firingWalk).toBe(FIRING_WALK_MULTIPLIER);
     expect(st.ammo).toEqual({
-      damage: { arrow: 1, bomb: 1, 'ley-bolt': 1 },
-      fireRate: { arrow: 0, bomb: 0, 'ley-bolt': 0 },
+      damage: { arrow: 1, bomb: 1, 'ley-bolt': 1, landmine: 1 },
+      fireRate: { arrow: 0, bomb: 0, 'ley-bolt': 0, landmine: 0 },
       freezeHits: COLD.stacksToFreeze,
       freezeTicks: COLD.freezeTicks,
       bossFreezeTicks: COLD.bossFreezeTicks,
       blastRadius: lobAmmo('bomb').burstRadius,
+      bombletRadius: CLUSTER.radius,
       lobTime: 1,
       homingTurn: HOMING.turnDegrees,
       starShards: STAR.shards,
@@ -64,7 +65,7 @@ describe('the lanes’ damage', () => {
   it('Hard Bore adds 6% to all ammo, added to a lane’s bonus', () => {
     expect(firstShot(taking(arena(), 'a1', 't3'), 'arrow', 'arrow').damage).toBeCloseTo(11.6, 9);
     expect(firstShot(taking(arena(), 'l1'), 'ley-bolt', 'ley-bolt').damage).toBeCloseTo(15.4, 9);
-    expect(playerStats(taking(arena(), 't3')).ammo.damage).toEqual({ arrow: 1.06, bomb: 1.06, 'ley-bolt': 1.06 });
+    expect(playerStats(taking(arena(), 't3')).ammo.damage).toEqual({ arrow: 1.06, bomb: 1.06, 'ley-bolt': 1.06, landmine: 1.06 });
   });
 
   it('Black Powder: a bomb bursts for 10% more', () => {

@@ -3,6 +3,7 @@ import { HOLLOWS_SOUND_RECIPES, HOLLOWS_SOUNDS } from './hollowsSounds.ts';
 import { HOLLOWS_ENEMY_SOUND_RECIPES, HOLLOWS_ENEMY_SOUNDS, HOLLOWS_ENEMY_WINDUPS } from './hollowsEnemySounds.ts';
 import { GEAR_SOUND_RECIPES, GEAR_SOUNDS } from './gearSounds.ts';
 import { TALENT_SOUND_RECIPES, TALENT_SOUNDS } from './talentSounds.ts';
+import { MINE_SOUND_RECIPES, MINE_SOUNDS } from './mineSounds.ts';
 
 // Sound effects and ambient loops (014), as synth recipes. `npm run sound` renders
 // each one to assets/build/sounds/<key>.wav; render plays them by these keys.
@@ -56,6 +57,7 @@ export const SOUNDS = {
   ...HOLLOWS_ENEMY_SOUNDS,
   ...GEAR_SOUNDS,
   ...TALENT_SOUNDS,
+  ...MINE_SOUNDS,
   ambientClearing: 'ambient-clearing',
   ambientFoundry: 'ambient-foundry',
 } as const;
@@ -74,6 +76,7 @@ export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
   ...HOLLOWS_ENEMY_SOUND_RECIPES,
   ...GEAR_SOUND_RECIPES,
   ...TALENT_SOUND_RECIPES,
+  ...MINE_SOUND_RECIPES,
   'fire-arrow': {
     layers: [
       { wave: 'noise', from: 6000, to: 1500, dur: 0.12, attack: 0.002, volume: 0.35 },
@@ -279,6 +282,8 @@ export const FIRE_SOUNDS: Readonly<Record<string, SoundKey>> = {
   arrow: SOUNDS.fireArrow,
   bomb: SOUNDS.fireBomb,
   'ley-bolt': SOUNDS.fireLeyBolt,
+  // 038.10: a landmine leaves the tube as a bomb does.
+  landmine: SOUNDS.fireBomb,
 };
 
 /** The wind-up cue by enemy kind. The Warden growls like a Husk; its slam lands with its own sound. */

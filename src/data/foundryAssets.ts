@@ -12,7 +12,7 @@ const FLOW_FPS = 4;
 const loop = (key: string, frames: number, frameRate: number): AnimDef => ({ key, frames, frameRate, loop: true });
 
 /** Every machine (020), in build bar order. Listed here because this file has no runtime imports (pieces.ts would be one); a test checks it matches the machine pieces. */
-export const MACHINE_IDS = ['cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser', 'ley-guide', 'shatter-lens'] as const;
+export const MACHINE_IDS = ['cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'shaper', 'fuse-maker', 'grinder', 'packer', 'shard-die', 'focuser', 'ley-guide', 'shatter-lens', 'plate-press', 'mine-packer'] as const;
 
 /** A machine's look in one view: still (idle or starved), jammed (blocked), and its working loop. */
 export interface MachineLook {

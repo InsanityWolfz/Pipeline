@@ -3,8 +3,8 @@
 /** The ammo hotbar slot 1 starts with, and goes back to on a KO. */
 export const STARTING_AMMO = 'arrow';
 
-/** Ammo the slot can be switched to, in key order: keys 1, 2, 3. */
-export const SLOT_AMMOS: readonly string[] = ['arrow', 'bomb', 'ley-bolt'];
+/** Ammo the slot can be switched to, in key order: keys 1, 2, 3 and 4 (038: landmines). */
+export const SLOT_AMMOS: readonly string[] = ['arrow', 'bomb', 'ley-bolt', 'landmine'];
 
 /**
  * The attune (019), ticks per beat, played the first time the player walks into

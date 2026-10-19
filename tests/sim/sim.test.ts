@@ -228,8 +228,10 @@ describe('sim state', () => {
     const relics = ['staggers', 'wardBlocks', 'emberSaves'] as const;
     // 037: XP, levels, talents, respecs, and the keystones' charges, charged bursts and shatters.
     const talents = ['xp', 'levelUps', 'talents', 'respecs', 'blastCharges', 'chargedBursts', 'shatters'] as const;
-    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, ...hollows, ...relics, ...talents, 'lost', 'ko', 'tubeTaken'].sort());
-    for (const name of [...lists, ...later, ...site, ...hollows, ...relics, ...talents]) expect(summary.events[name], name).toEqual([]);
+    // 038: landmines arming and bursting, and a cluster bomb's bomblets.
+    const mines = ['mineArms', 'mineBursts', 'bombletBursts'] as const;
+    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, 'lost', 'ko', 'tubeTaken'].sort());
+    for (const name of [...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines]) expect(summary.events[name], name).toEqual([]);
     expect(summary.events.ko).toBe(false);
     expect(summary.events.lost).toEqual({});
     expect(summary.events.tubeTaken).toBe(false);

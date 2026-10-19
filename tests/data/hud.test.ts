@@ -37,6 +37,8 @@ describe('inventory panel groups (031)', () => {
       'arrowhead',
       'casing',
       'fuse',
+      // 038: the landmine chain's plate.
+      'iron-plate',
       'ley-shard',
       'rope',
       'schematic-machine-speed',
@@ -45,7 +47,7 @@ describe('inventory panel groups (031)', () => {
       'schematic-splitter',
       'shaft',
     ]);
-    expect(byGroup('ammo')).toEqual(['arrow', 'arrow+frost', 'bomb', 'ley-bolt', 'ley-bolt+homing', 'ley-bolt+star']);
+    expect(byGroup('ammo')).toEqual(['arrow', 'arrow+frost', 'bomb', 'bomb+cluster', 'landmine', 'ley-bolt', 'ley-bolt+homing', 'ley-bolt+star']);
     expect(byGroup('gear')).toEqual(['unidentified-armor']);
     expect(byGroup('cores')).toEqual(['bulwark-core', 'warden-core']);
     // The warden core's kind stays a part: only the panel's group places it.
@@ -57,7 +59,7 @@ describe('inventory panel groups (031)', () => {
     expect(reservedRows('gear')).toBe(2 + 1);
     expect(reservedRows('cores')).toBe(2);
     // 033: the schematics share one row.
-    expect(reservedRows('parts')).toBe(6 + 2 + 1);
+    expect(reservedRows('parts')).toBe(7 + 2 + 1);
   });
 
   it('the panel and its title card fit the 640x360 view, in two columns as one does not fit', () => {

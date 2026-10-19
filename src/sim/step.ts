@@ -4,6 +4,7 @@ import { stepRelics } from './relics';
 import { stepArrows, type ArrowState } from './arrows';
 import { steerArrows } from './homing';
 import { stepBombs } from './bombs';
+import { stepMines } from './mines';
 import { maskCommand, stepBuild } from './build';
 import { stepClaims, stepPorts } from './claims';
 import { stepCache, stepCacheRearm } from './cache';
@@ -27,7 +28,7 @@ import { stepOrbs } from './orbs';
 import { roomById, type SimState } from './state';
 import { firingWalkScale, stepTube } from './tube';
 import { stepObjectives } from './objectives';
-import { shotSealed, stepGates, stepTubeStone } from './tutorial';
+import { noteFound, shotSealed, stepGates, stepTubeStone } from './tutorial';
 import { roomBodies } from './bodies';
 import { stepPopulation } from './population';
 import { applyStage } from './stages';
@@ -91,6 +92,8 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepCharges(state);
   stepArrows(state.arrows, roomById, arrowHits(state, shards), steerArrows(state), (roomId, tx, ty) => shotSealed(state, roomId, tx, ty));
   state.arrows.push(...shards);
+  // Armed mines and bomblets (038) before bombs fly, so a mine that lands this tick starts its fuse at 0.
+  stepMines(state);
   stepBombs(state);
   stepOrbs(state);
   removeDead(state);
@@ -103,6 +106,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepFoundry(state.foundry, state.link.entrances, state.events, state.link.attuned, { cap: entranceCap(state), speed: machineSpeed(state) });
   stepPorts(state, (to, from, item) => offerFromOutside(state.foundry, to, from, item));
   stepPickups(state);
+  noteFound(state);
   stepGates(state);
   stepObjectives(state);
   checkKo(state);

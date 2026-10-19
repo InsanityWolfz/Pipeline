@@ -1,3 +1,4 @@
+import { leaveArea } from './mines';
 import { ACTIVATE_TICKS, CLAIM_TICKS, FIXTURE_REACH, FIXTURES, PYLON_REACH, SITE_SUPPLY, SUPPLY_TICKS, type FixtureDef } from '../data/claims';
 import { TICK_RATE } from '../data/config';
 import { FEET_BOX } from '../data/player';
@@ -96,6 +97,7 @@ export function travelTo(state: SimState, roomId: string, tile: Tile): void {
   state.harvest = null;
   state.claimHold = null;
   state.events.roomChanges.push({ from, to: roomId });
+  leaveArea(state);
   arrived(state, roomId);
   state.events.travels.push({ from, to: roomId });
 }

@@ -98,6 +98,14 @@ const TAG_ART: Readonly<Record<string, { badge: readonly Shape[]; head?: ShapeSt
       path(starPath(4.2, 4.2, 2.6, 0.45), { fill: 'snow', glow: { color: 'cyan-glow', blur: 2 } }),
     ],
   },
+  // Four small bomblets round a centre (038).
+  cluster: {
+    badge: [
+      ellipse(4.2, 4.2, 3.4, 3.4, solid('cinder')),
+      ellipse(4.2, 4.2, 0.9, 0.9, flat('cinder-light')),
+      ...[0, 1, 2, 3].map((k) => ellipse(4.2 + Math.cos((k * Math.PI) / 2) * 2.2, 4.2 + Math.sin((k * Math.PI) / 2) * 2.2, 0.8, 0.8, flat('ink'))),
+    ],
+  },
 };
 
 /** A five-point star round (x, y), points `r` out and its waist `r * inner`, one point up. */

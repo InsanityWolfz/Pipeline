@@ -1,6 +1,6 @@
 import { TILE_SIZE } from '../data/config';
-import { DEFAULT_START, type StartDef } from '../data/player';
 import { DEFAULT_ROOM, type Room } from '../data/rooms';
+import { DEFAULT_START, type StartDef } from '../data/player';
 import { createPopulation, inSafeZone, resetPopulation, type PopulationState } from './population';
 import { LANDMARK_LIST } from '../data/landmarks';
 import { rollChampions } from './champions';
@@ -15,13 +15,13 @@ import type { BombState } from './bombs';
 import type { GroundItem } from './drops';
 import { createEnemy, type EnemyState } from './enemies';
 import { createEvents, type SimEvents } from './events';
-import type { ClaimHold } from './claims';
 import { createCaches, type CacheHold, type CacheState } from './cache';
 import { startingFixtures, type FixtureState } from './fixtures';
 import type { HarvestState } from './harvest';
-import { createGates, type Gates } from './tutorial';
+import { createGates, foundIn, type Gates } from './tutorial';
 import { HOLLOWS } from '../data/hollows';
-import { claim } from './claims';
+import { claim, type ClaimHold } from './claims';
+import { clearMines, createMines, type MinesState } from './mines';
 import { OBJECTIVES } from '../data/objectives';
 import type { OrbState } from './orbs';
 import type { Inventory } from './inventory';
@@ -70,6 +70,8 @@ export interface SimState {
   /** Bombs in flight. */
   bombs: BombState[];
   nextBombId: number;
+  /** Armed landmines and bomblets on their way (038). */
+  mines: MinesState;
   /** The Bulwark's bombs on the ground, fuses burning (034). */
   enemyBombs: EnemyBombState[];
   nextEnemyBombId: number;
@@ -81,6 +83,8 @@ export interface SimState {
   summoning: SummoningState | null;
   /** Item ids hand-crafted at least once, sorted. Kept through a KO; it unlocks machines. */
   crafted: string[];
+  /** Items that reveal recipes once carried (038: ley-iron), in the order found. Kept through a KO. */
+  found: string[];
   /** The buildable grid in the foundry room. Kept through a KO. */
   foundry: FoundryState;
   /** Wisp orbs in flight (009). */
@@ -182,12 +186,14 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     harvest: null,
     bombs: [],
     nextBombId: 0,
+    mines: createMines(),
     enemyBombs: [],
     nextEnemyBombId: 0,
     bossDefeats: [],
     summoned: [],
     summoning: null,
     crafted: [...start.crafted],
+    found: foundIn(start.inventory),
     foundry: createFoundry(),
     orbs: [],
     nextOrbId: 0,
@@ -253,6 +259,7 @@ export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   state.nodes = createNodes(rooms);
   state.harvest = null;
   state.bombs = [];
+  clearMines(state);
   state.blastCharges = [];
   state.enemyBombs = [];
   settleSummons(state);

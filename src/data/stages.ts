@@ -37,6 +37,8 @@ export const STAGES: Readonly<Record<string, StageDef>> = {
   'ley-guide': stage('ley-guide', 'Ley guide', 'homing', 'ley-crystal', 1, 'Makes ley bolts home: 4 bolts, 1 ley crystal.'),
   // Twice the guide's crystal: a star bolt adds five projectiles (pillar 3).
   'shatter-lens': stage('shatter-lens', 'Shatter lens', 'star', 'ley-crystal', 2, 'Makes ley bolts burst: 4 bolts, 2 ley crystals.'),
+  // 038: 1 ley-iron per 4 bombs (round 2).
+  'shard-die': stage('shard-die', 'Shard die', 'cluster', 'ley-iron', 1, 'Makes bombs burst into bomblets: 4 bombs, 1 ley-iron.'),
 };
 
 export function stageDef(id: string): StageDef {

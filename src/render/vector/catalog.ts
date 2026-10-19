@@ -20,6 +20,7 @@ import { HOLLOWS_SPRITES_VECTOR } from '../../data/art/hollows';
 import { BURROWER_SPRITES_VECTOR } from '../../data/art/burrower';
 import { GEAR_SPRITES_VECTOR } from '../../data/art/gear';
 import { TALENT_SPRITES_VECTOR } from '../../data/art/talents';
+import { MINE_SPRITES_VECTOR } from '../../data/art/mines';
 import { drawShapes } from './draw';
 import { drawEnemy } from './enemyRig';
 
@@ -62,7 +63,7 @@ function enemyFrames(rig: EnemyRigDef): VectorFrame[] {
 }
 
 export function vectorFrames(): VectorFrame[] {
-  const sprites = [...VECTOR_SPRITES, ...TERRAIN_SPRITES, ...NODE_SPRITES_VECTOR, ...INTAKE_SPRITES_VECTOR, ...ITEM_SPRITES_VECTOR, ...LOGISTICS_SPRITES_VECTOR, ...FIXTURE_SPRITES_VECTOR, ...MACHINE_SPRITES_VECTOR, ...INTERIOR_SPRITES_VECTOR, ...HUD_SPRITES_VECTOR, ...STAGE_SPRITES_VECTOR, ...SPRING_SPRITES_VECTOR, ...LANDMARK_SPRITES_VECTOR, ...RESEARCH_SPRITES_VECTOR, ...HOLLOWS_SPRITES_VECTOR, ...BURROWER_SPRITES_VECTOR, ...GEAR_SPRITES_VECTOR, ...TALENT_SPRITES_VECTOR].flatMap((s) =>
+  const sprites = [...VECTOR_SPRITES, ...TERRAIN_SPRITES, ...NODE_SPRITES_VECTOR, ...INTAKE_SPRITES_VECTOR, ...ITEM_SPRITES_VECTOR, ...LOGISTICS_SPRITES_VECTOR, ...FIXTURE_SPRITES_VECTOR, ...MACHINE_SPRITES_VECTOR, ...INTERIOR_SPRITES_VECTOR, ...HUD_SPRITES_VECTOR, ...STAGE_SPRITES_VECTOR, ...SPRING_SPRITES_VECTOR, ...LANDMARK_SPRITES_VECTOR, ...RESEARCH_SPRITES_VECTOR, ...HOLLOWS_SPRITES_VECTOR, ...BURROWER_SPRITES_VECTOR, ...GEAR_SPRITES_VECTOR, ...TALENT_SPRITES_VECTOR, ...MINE_SPRITES_VECTOR].flatMap((s) =>
     s.frames.map((shapes, i) => ({
       name: s.frames.length === 1 ? s.key : `${s.key}/${i}`,
       size: s.size,

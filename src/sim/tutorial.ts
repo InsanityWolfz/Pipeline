@@ -4,7 +4,8 @@ import { FEET_BOX } from '../data/player';
 import { RESPAWN_ROOM } from '../data/player';
 import { SHOT_GATES, type GateId } from '../data/rooms';
 import { WORLD } from './world';
-import { recipeDef } from '../data/recipes';
+import { recipeDef, REVEALING_ITEMS } from '../data/recipes';
+import { count, type Inventory } from './inventory';
 import type { Rect } from './collision';
 import { tileRect } from './fixtures';
 import type { Command } from './input';
@@ -48,9 +49,18 @@ export function shotSealed(state: Pick<SimState, 'gates'>, roomId: string, tx: n
   return (WORLD[roomId]?.gateTiles ?? []).some((g) => g.tx === tx && g.ty === ty && SHOT_GATES.includes(g.gate) && !state.gates[g.gate]);
 }
 
-/** Recipes the player knows: those needing attunement only once the tube is attuned. */
-export function knownRecipe(state: { link: Pick<SimState['link'], 'attuned'> }, recipeId: string): boolean {
-  return recipeDef(recipeId).requires !== 'attuned' || state.link.attuned;
+/** Recipes the player knows: those needing attunement only once the tube is attuned, and those shown after an item (038) once it's been carried. */
+export function knownRecipe(state: { link: Pick<SimState['link'], 'attuned'>; found: readonly string[] }, recipeId: string): boolean {
+  const def = recipeDef(recipeId);
+  return (def.requires !== 'attuned' || state.link.attuned) && (def.shownAfter === undefined || state.found.includes(def.shownAfter));
+}
+
+/** The revealing items (038) an inventory holds, in REVEALING_ITEMS order. */
+export const foundIn = (inventory: Inventory): string[] => REVEALING_ITEMS.filter((id) => count(inventory, id) > 0);
+
+/** Once a tick: a revealing item carried for the first time (picked up, harvested or taken out) is remembered for good. */
+export function noteFound(state: Pick<SimState, 'inventory' | 'found'>): void {
+  for (const id of foundIn(state.inventory)) if (!state.found.includes(id)) state.found.push(id);
 }
 
 

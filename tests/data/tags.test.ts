@@ -12,11 +12,12 @@ import { COLD, HOMING, ROUNDS, roundBase, roundId, roundTags, STAR, TAGS, withTa
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 describe('tags', () => {
-  it("are Milestone 1's three, each with a slot, prefix, base and numbers", () => {
+  it("are Milestone 1's three and 038's cluster, each with a slot, prefix, base and numbers", () => {
     expect(Object.values(TAGS).map(({ id, slot, prefix, appliesTo }) => ({ id, slot, prefix, appliesTo }))).toEqual([
       { id: 'frost', slot: 'element', prefix: 'Frost', appliesTo: 'arrow' },
       { id: 'homing', slot: 'shape', prefix: 'Homing', appliesTo: 'ley-bolt' },
       { id: 'star', slot: 'shape', prefix: 'Star', appliesTo: 'ley-bolt' },
+      { id: 'cluster', slot: 'shape', prefix: 'Cluster', appliesTo: 'bomb' },
     ]);
     for (const [key, t] of Object.entries(TAGS)) {
       expect(t.id).toBe(key);
@@ -29,7 +30,7 @@ describe('tags', () => {
   });
 
   it('derive every legal round, each in AMMO and ITEMS', () => {
-    expect([...ROUNDS]).toEqual(['arrow+frost', 'ley-bolt+homing', 'ley-bolt+star']);
+    expect([...ROUNDS]).toEqual(['arrow+frost', 'ley-bolt+homing', 'ley-bolt+star', 'bomb+cluster']);
     for (const id of ROUNDS) {
       const ammo = ammoDef(id);
       expect(ammo.itemId).toBe(id);
@@ -84,11 +85,12 @@ describe('tags', () => {
 });
 
 describe('stages', () => {
-  it("are Milestone 1's three, with the spec's starting values", () => {
+  it("are Milestone 1's three and 038's Shard die, with the specs' starting values", () => {
     expect(Object.values(STAGES).map(({ id, tag, batch, material, materialCount, craftTicks }) => ({ id, tag, batch, material, materialCount, craftTicks }))).toEqual([
       { id: 'frost-rune', tag: 'frost', batch: 4, material: 'rime-shard', materialCount: 1, craftTicks: 60 },
       { id: 'ley-guide', tag: 'homing', batch: 4, material: 'ley-crystal', materialCount: 1, craftTicks: 60 },
       { id: 'shatter-lens', tag: 'star', batch: 4, material: 'ley-crystal', materialCount: 2, craftTicks: 60 },
+      { id: 'shard-die', tag: 'cluster', batch: 4, material: 'ley-iron', materialCount: 1, craftTicks: 60 },
     ]);
     for (const [key, st] of Object.entries(STAGES)) {
       expect(st.id).toBe(key);
@@ -113,7 +115,8 @@ describe('stages', () => {
     for (const id of Object.keys(STAGES)) expect(BUILD_BAR).toContain(id);
     expect(BUILD_BAR.indexOf('frost-rune')).toBeGreaterThan(BUILD_BAR.indexOf('assembler'));
     expect(BUILD_BAR.indexOf('frost-rune')).toBeLessThan(BUILD_BAR.indexOf('shaper'));
-    expect(BUILD_BAR.slice(-2)).toEqual(['ley-guide', 'shatter-lens']);
+    expect(BUILD_BAR.slice(-4, -2)).toEqual(['ley-guide', 'shatter-lens']);
+    expect(pieceDef('shard-die')).toMatchObject({ kind: 'machine', name: 'Shard die', category: 'bombs', footprint: '1x1' });
     expect(Object.keys(PIECES)).toContain('shatter-lens');
   });
 });

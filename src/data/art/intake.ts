@@ -82,6 +82,9 @@ export const ENTRANCE_GAUGE_COLORS: Readonly<Record<string, string>> = {
   'arrow+frost': 'water-light',
   'ley-bolt+homing': 'cyan',
   'ley-bolt+star': 'snow',
+  // 038: landmines iron, cluster bombs a hotter ember.
+  landmine: 'iron-light',
+  'bomb+cluster': 'cinder-light',
 };
 
 /**

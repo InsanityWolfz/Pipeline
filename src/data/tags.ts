@@ -10,7 +10,7 @@ import type { DamageType } from './ammo';
 export type TagSlot = 'element' | 'shape';
 
 /** What a tag does in the sim: each has its own numbers below. */
-export type TagBehaviour = 'cold' | 'homing' | 'star';
+export type TagBehaviour = 'cold' | 'homing' | 'star' | 'cluster';
 
 export interface TagDef {
   id: string;
@@ -40,10 +40,17 @@ export const HOMING = { lockRadius: 64, turnDegrees: 4 } as const;
  */
 export const STAR = { shards: 5, damage: 4, range: 64, speed: 360, projectile: 'star-shard' } as const;
 
+/**
+ * The cluster split (038): `delayTicks` after a cluster bomb bursts, `count` bomblets land evenly round the burst point
+ * at `distance` px, the first along its flight, each bursting for `damage` in `radius` px.
+ */
+export const CLUSTER = { delayTicks: 12, count: 4, distance: 40, damage: 8, radius: 20 } as const;
+
 export const TAGS: Readonly<Record<string, TagDef>> = {
   frost: { id: 'frost', slot: 'element', prefix: 'Frost', appliesTo: 'arrow', behaviour: 'cold', damageType: 'cold' },
   homing: { id: 'homing', slot: 'shape', prefix: 'Homing', appliesTo: 'ley-bolt', behaviour: 'homing' },
   star: { id: 'star', slot: 'shape', prefix: 'Star', appliesTo: 'ley-bolt', behaviour: 'star' },
+  cluster: { id: 'cluster', slot: 'shape', prefix: 'Cluster', appliesTo: 'bomb', behaviour: 'cluster' },
 };
 
 const SEP = '+';

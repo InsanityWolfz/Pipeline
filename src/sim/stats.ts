@@ -2,7 +2,7 @@ import { GEAR_SLOTS, MIN_DAMAGE_SHARE, MOVE_BONUS_CAP, ROLL_COOLDOWN_MIN, SLOT_B
 import { relicDef, type RelicDef, type RelicRule } from '../data/relics';
 import { FIRING_WALK_MULTIPLIER, HEALING, MAX_HEALTH, ROLL_COOLDOWN_TICKS, ROLL_DISTANCE, type HealingTuning } from '../data/player';
 import { ammoDef, lobAmmo } from '../data/ammo';
-import { COLD, HOMING, STAR } from '../data/tags';
+import { CLUSTER, COLD, HOMING, STAR } from '../data/tags';
 import type { AmmoScope } from '../data/talents';
 import type { SimState } from './state';
 import { talentTotals, type TalentTotals } from './talentEffects';
@@ -11,8 +11,8 @@ import { talentTotals, type TalentTotals } from './talentEffects';
 // Armor, max health, field regen (030's rate), walk speed and the roll; the walk while
 // firing (016); and the numbers 029's ammo systems read.
 
-/** A base ammo (its tagged rounds share its numbers). */
-export type BaseAmmo = Exclude<AmmoScope, 'all'>;
+/** A base ammo (its tagged rounds share its numbers): a talent lane's, or the landmine (038), which only all-ammo talents reach. */
+export type BaseAmmo = Exclude<AmmoScope, 'all'> | 'landmine';
 
 /** What the ammo systems read (029), after talents (037). */
 export interface AmmoStats {
@@ -24,8 +24,9 @@ export interface AmmoStats {
   freezeHits: number;
   freezeTicks: number;
   bossFreezeTicks: number;
-  /** A bomb's blast radius, px (whole). */
+  /** A bomb's blast radius, px (whole); a cluster bomb's bomblets' (038), grown by the same share. */
   blastRadius: number;
+  bombletRadius: number;
   /** A bomb's flight time multiplier. */
   lobTime: number;
   /** A homing round's turn cap, degrees a tick. */
@@ -91,6 +92,7 @@ function ammoStats(t: TalentTotals): AmmoStats {
     arrow: clean(base + bonus.arrow + bonus.all),
     bomb: clean(base + bonus.bomb + bonus.all),
     'ley-bolt': clean(base + bonus['ley-bolt'] + bonus.all),
+    landmine: clean(base + bonus.all),
   });
   return {
     damage: per(t.damage, 1),
@@ -99,6 +101,7 @@ function ammoStats(t: TalentTotals): AmmoStats {
     freezeTicks: COLD.freezeTicks + t.freezeTicks,
     bossFreezeTicks: COLD.bossFreezeTicks + t.freezeTicks,
     blastRadius: Math.round(lobAmmo('bomb').burstRadius * (1 + t.blastRadius)),
+    bombletRadius: Math.round(CLUSTER.radius * (1 + t.blastRadius)),
     lobTime: clean(1 - t.lobTime),
     homingTurn: clean(HOMING.turnDegrees * (1 + t.homingTurn)),
     starShards: STAR.shards + t.starShards,
@@ -133,7 +136,7 @@ export function playerStats(state: Worn, healing: HealingTuning = HEALING): Play
 /** A per-base-ammo stat for a round (a tagged round reads its base's). */
 export function ofBase<T>(rec: Readonly<Record<BaseAmmo, T>>, ammoId: string): T {
   const base = ammoDef(ammoId).base;
-  if (base !== 'arrow' && base !== 'bomb' && base !== 'ley-bolt') throw new Error(`No ammo stats for '${base}'`);
+  if (base !== 'arrow' && base !== 'bomb' && base !== 'ley-bolt' && base !== 'landmine') throw new Error(`No ammo stats for '${base}'`);
   return rec[base];
 }
 
