@@ -31,7 +31,8 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
   - **028 (foundry flow fixes):** one supply port per resource, each showing "×N pylons" and its rate, plus the goal chain ("claim a second pylon")
   - **029 (ammo stages):** the rime shard, as the frost rune's input
   - **030 (healing):** Ley Springs and how they heal
-  - **033 (research):** schematics and what they restore
+  - **033 (research):** the schematic items, their rare-drop roll (which already lists "25% from a Ruined Cache (032)" and "5% for a champion (032)"), the pop when one lands, and the Region 1 machine part `rune-cog`
+  - **034 (Stonefall Hollows):** the west path continues from (12, 27) to the Region 2 barrier
   - **037 (leveling):** XP for first discoveries and champion kills
 - docs/brainstorm/2026-10-19-content.md:
   - Playtest finding: "14 nodes are scattered across the meadow, so gathering is a walk. The west and south-east paths end in nothing. The outer ring is forest with packs and no landmarks."
@@ -78,7 +79,7 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
 
   | Landmark | Centre | Ring | Fills |
   | --- | --- | --- | --- |
-  | Quarry (stone) | (11, 27) | 2 | the end of the west path |
+  | Quarry (stone) | (12, 23) | 2 | beside the end of the west path, which 034 carries on to its barrier |
   | Reed Marsh (fiber) | (65, 38) | 2 | the end of the south-east path |
   | Old Grove (wood) | (22, 6) | 1 | the empty north-west |
   | Ley Grotto (ley crystal) | (72, 27) | 2 | the empty east, below the shrine |
@@ -119,10 +120,11 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
   - Drops are picked up as normal and are at risk until banked.
 - [ ] The cache's drop table is data in the same `DropTable` shape enemies use, extended with weighted rare entries. Starting values:
   - always 3–5 raw materials, from the region's raws
-  - a 50% chance of a rare part
-  - a 20% chance of a schematic
-- [ ] **Schematics depend on 033.** The schematic entry names 033's schematic items. If 032 is built before 033, the entry points at one placeholder item, "Lost schematic", grouped under Parts (031), which 033 later replaces or consumes.
-- [ ] A schematic landing gets the design's "big visual pop": a ley-light pillar where it lands, a burst of sparks and its own sound. A rare part gets a smaller version of the same pop.
+  - a rare-part entry: 033's Region 1 machine part, `rune-cog`, at a starting 50%
+  - a schematic entry, rolled by 033's schematic roll at 033's cache chance (starting at 25%)
+- [ ] **These rare entries depend on 033.** 033 owns the schematic items, their roll (no duplicates, region rules), their pop and the `rune-cog` item. This spec only gives the cache an open event and a drop-table slot that 033's roll uses.
+  - If 032 is built before 033, the cache opens with its raws only.
+  - 033 then fills in the rare entries as data. No cache code changes.
 - [ ] An opened cache shows as open and empty until it re-arms. See open question 4.
 
 **Ley Springs (with 030)**
@@ -169,6 +171,7 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
 - [ ] When a champion dies:
   - its drop table is rolled 2 or 3 times (seeded)
   - exactly one unidentified armor piece drops, guaranteed, instead of the usual armor chance
+  - 033's schematic and machine-part rolls apply at their champion rates (033's data), not once per drop roll
   - the death event carries `champion: true` for 037's XP
 - [ ] Champions are a rule over enemy data. Any non-boss enemy added later, such as Region 2's Charger, Burrower, Shardback and Sniper, can be a champion with no new code. A test applies the rule to every non-boss entry in `ENEMIES`.
 - [ ] `getState()` reports each enemy's `champion: { name } | null`.
@@ -204,7 +207,7 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
   - the discovery banner
   - a claimed Quarry pylon with a mote running home
   - the stone port showing "×2 pylons"
-  - the cache sealed and opened with a schematic pop
+  - the cache sealed, and opened with its drops on the ground
   - a champion Husk and a champion Wisp beside normal ones
 
 ## Data changes
@@ -217,7 +220,6 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
   - pylons as a list, if 028 hasn't made them one
 - `src/data/nodes.ts`: the `frozen-grotto` placement and the rime node, if 029 hasn't added them.
 - `src/data/claims.ts` and 028's port data: which item each resource-site pylon supplies.
-- `src/data/items.ts`: "Lost schematic" as a placeholder, only if 033 isn't built first.
 - `src/data/hudLayout.ts`: minimap landmark markers and the discovery banner.
 - `src/data/descriptions.ts`: hover lines for the new pylons, the cache and the rime node.
 - `src/data/art/`: the landmark, cache, rime and champion art.
@@ -238,7 +240,7 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
   - The landmark data tests listed above.
   - **Discovery:** fires once when an area first enters `viewRect`, never again, and survives a death.
   - **Multiple pylons:** claim each in turn; check deposit and fast travel at each, a safe zone per pylon, and the 028 port's pylon count and rate rising per claim.
-  - **Cache:** sealed while guards live; opens with E after; seeded drops; the schematic entry resolves to an existing item.
+  - **Cache:** sealed while guards live; opens with E after; seeded drops; every item the table names exists (the rare entries only once 033 is built).
   - **Champions:**
     - the roll rate over many seeds is within tolerance of each ring's chance
     - no champion among bosses or tutorial packs
@@ -254,7 +256,7 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
 - **Screenshots (qa):** the list under Checks.
 
 ## Open questions
-1. **Positions.** The table's centres are a proposal: the Quarry at the west path's end, the Reed Marsh at the south-east path's end, and the rest in the empty outer ground. Region 2 will open "to the west"; the brainstorm puts it "at the end of the west path". **Proposal:** the west path carries on past the Quarry to the map's west edge, where the Region 2 spec places its barrier.
+1. **Positions.** The table's centres are a proposal: the Quarry beside the west path's end, the Reed Marsh at the south-east path's end, and the rest in the empty outer ground. 034 carries the west path on from (12, 27) to its barrier, and may shift every tile by +40. **Proposal:** the Quarry sits just north of the path so it never blocks the way to the barrier. Positions are named through `OVERWORLD` and landmark data only, so a shift needs no code change.
 2. **Grotto form.** Are the Ley Grotto and the Frozen Grotto open-air sunken hollows on the map, or interiors you enter, like the foundry? 017 says there are no buildings "unless you enter a special dungeon". **Proposal:** open-air hollows, so they show on the minimap and need no new room.
 3. **The Frozen Grotto's pylon.** Shaun listed it as a guarded source, with no pylon. **Proposal:** no pylon. Rime is gathered by hand, so carrying it home is the risk.
 4. **Does the cache re-arm?** Options:
@@ -272,7 +274,7 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
 7. **Guards for resource sites.** Shaun didn't say whether they're guarded. Claiming in the design means clearing a site first. **Proposal:** one pack of the ring's makeup (Husks and Wisps, 3–5), with the usual champion roll, and no elite.
 8. **Champion chance per ring.** "About 1 in 8, more in the outer rings." **Proposal:** ring 1 is 1 in 8 and ring 2 is 1 in 5. Ring 0 has no population. Later regions add their own entries.
 9. **Champion names.** **Proposal:** a short epithet-style name per enemy type from a data list (for example Mossjaw, Rootgrip and Thornback for Husks), with "<Enemy> champion" beneath it. The lists are placeholders for Shaun to rewrite.
-10. **The "rare part".** No rare part exists yet; the warden core is the only machine part. **Proposal:** a new part, "Ancient gear" (Parts group), dropped only by caches and champions' extra rolls, for 033 to use as a research cost. The alternative is a warden core until Region 2 adds parts.
+10. **The "rare part".** No such part exists today. 033 proposes `rune-cog` as Region 1's machine part. **Proposal:** the cache's rare part is the rune cog, at 50%. A rarer, cache-only part would need Shaun's call.
 11. **Champion reach.** **Proposal:** a 1.5× body doesn't scale its attack reach, so telegraphs stay true to today's ranges. The alternative scales reach with size.
 12. **Do the shrine and the foundry count as discoveries for XP (037)?** **Proposal:** no. They're found through the tutorial and marked from the start.
 13. **Choosing a fast-travel destination.** With several claimed pylons, the waystone needs a choice. If 028 doesn't add one, **proposal:** the waystone's menu lists claimed pylons by landmark name.

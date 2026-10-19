@@ -119,7 +119,7 @@ All values are proposals, flagged for Shaun's review. Ticks are at 60 Hz. For co
   - 6 packs of 4–5, picked from `['shardback', 'charger', 'charger', 'burrower', 'sniper']`
   - at most 1 sniper and 2 burrowers per pack, so a pack can always be read
 - [ ] The Cistern Terrace guards (034) are a fixed pack: 2 Shardbacks, 2 Chargers, 1 Burrower and 1 Sniper.
-- [ ] Champions (032) can be any of the four, at 032's outer-ring rate.
+- [ ] Champions (032) can be any of the four. 032 sets 1 in 8 packs for ring 1 and 1 in 5 for ring 2, and leaves later regions to add their own entries. This spec proposes 1 in 4 for ring 3.
   - A champion Shardback keeps its shield arc and turn speed. Its 1.5× size enlarges its hurtbox and its shield together.
   - A champion's +15% speed applies to walking, tunnelling and the charge.
   - Telegraph durations are never shortened.
@@ -198,7 +198,7 @@ Each comes with a proposed answer. All of them must be resolved before approval.
 4. **Sniper cover.** Proposal: cover is worked out from the tile grid rather than hand-placed, so population packs anywhere can use it, and the aqueduct and cliffs (034) give plenty.
    - Does the laser sight show through solids? Proposal: no. A blocked line cancels the shot.
 5. **Telegraph colour.** Proposal: the shared enemy red for all four, including the laser, so cyan always means the player's ley.
-6. **All the numbers.** Proposal: the table above, and the ring 3 pack makeup.
+6. **All the numbers.** Proposal: the table above, the ring 3 pack makeup, and a ring 3 champion rate of 1 in 4.
 7. **Drops.** Proposal: 1 ley-iron always, a 4% `aqueduct-valve`, and the shared schematic roll (033). Should ring 3 also roll unidentified armor, as other enemies do today?
 8. **Region 2 only?** Proposal: Husks and Wisps don't appear in Region 2 packs, and the four new enemies don't appear in rings 1–2.
 9. **Build order with 034.** Proposal: build 035 straight after 034 on its own branch. Until then, 034's Region 2 packs use Husks and Wisps as placeholders.

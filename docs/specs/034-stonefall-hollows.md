@@ -55,7 +55,7 @@ Ley-iron unlocks two things:
 **The region (data, sim)**
 - [ ] The overworld grows west by a region of about 40×45 tiles, making the map about 120×45.
   - /plan decides whether existing tile coordinates shift by +40 or the region uses its own offset. Either way, every landmark, node, pack, path and test names tiles through `OVERWORLD` data, so nothing is hard-coded.
-- [ ] The west path, which today ends at tile (12, 27), continues to a gap in the region's eastern cliffs, where the barrier stands.
+- [ ] The west path, which today ends at tile (12, 27), continues past 032's Quarry to the map's old west edge. There it reaches a gap in the region's eastern cliffs, where the barrier stands (032, open question 1).
 - [ ] The terrain is generated from the fixed seed with Hollows settings, so it is the same every run:
   - grey-blue stone ground with rubble and quarry-cut terraces
   - cliff runs that block movement and straight shots (lobbed shots fly over, as they do over everything)

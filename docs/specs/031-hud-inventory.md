@@ -81,7 +81,8 @@ The screen stays clean, and the death rule becomes readable:
   - **Ammo:** arrow, bomb, ley bolt
   - **Gear:** unidentified armor
   - **Cores:** warden core
-  - The warden core moves from Parts to Cores in the panel only. Its `kind` stays `part`, so nothing else changes.
+  - The warden core goes under Cores. 033 (draft) moves it to a new `core` kind; until then the panel's `group` field places it, and its `kind` stays `part`.
+  - 033's machine parts (such as `rune-cog`) go under Parts. Its schematics depend on open question 2.
 - [ ] `__GAME__.ui()` reports `inventory: { open, groups: [{ id, rows: [{ itemId, count, atRisk }] }] }`.
 
 **Materials column removed (render, data)**
@@ -197,7 +198,7 @@ The screen stays clean, and the death rule becomes readable:
 
 ## Open questions
 1. **What the panel shows from the stash.** Shaun said the panel marks "what's at risk against what's banked". In the sim, banked items are carried items you'd keep, while a pylon deposit moves items into the stash at home. **Proposal:** rows show carried items split into safe and at risk, and each row also shows a dim "home N" from the stash, so the panel tells you what you own in total.
-2. **Where schematics and future rare parts go.** They aren't in Shaun's five groups. **Proposal:** schematics (033) and area machine parts go under Parts, boss and elite cores under Cores, and no sixth group is added.
+2. **Where schematics go.** 033 adds a `schematic` item kind, which isn't one of Shaun's five groups. **Proposal:** schematics go under Parts beside 033's machine parts, cores go under Cores, and no sixth group is added.
 3. **Gear with many identified pieces.** Pieces pile up, since 010 keeps every one, and the panel could overflow. **Proposal:** Gear lists the worn piece and the unidentified count, then one line, "N spare pieces (kept)". The full list waits for the equipment spec (round 9's slots).
 4. **Where the pickup feed sits.** **Proposal:** top-left, where the materials column was, clear of the objective panel and minimap. The alternative is just above the HP block, bottom-left, which is closer to the bar but crowds the corner.
 5. **HP bar size.** "Much larger" could mean about 3× (144×12 fill), which in build mode rises above the build bar when the bar is wide. A smaller bar, about 96×10, would never need to move. **Proposal:** 144×12 with the rise rule. These are starting values in data either way.
