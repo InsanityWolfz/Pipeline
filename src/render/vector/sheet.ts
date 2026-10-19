@@ -61,6 +61,7 @@ if (sideIdle) section('Wanderer: facing left', [wandererCell('idle', { ...sideId
 // by frame-name prefixes rather than the asset tables, which is fine for a review sheet that ships in no build.
 const FAMILIES: readonly [title: string, test: (name: string) => boolean][] = [
   ...MACHINE_IDS.map((id): [string, (n: string) => boolean] => [`Machine: ${id} (idle, jammed, working)`, (n) => n.startsWith(`machine-${id}-`)]),
+  ['Cold and the star split', (n) => n.startsWith('ice-case') || n.startsWith('star-')],
   ['Conduits and sorters', (n) => n.startsWith('conduit-') || n.startsWith('sorter-')],
   ['Hoppers and crates', (n) => n.startsWith('hopper-') || n === 'crate'],
   ['Build arrows and status markers', (n) => n.includes('-arrow-') || n.startsWith('status-')],

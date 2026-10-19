@@ -33,6 +33,11 @@ export const GROUND = {
   tuftEvery: 4,
   flowers: ['snow', 'gold-trim', 'wisp-light'],
   flowerEvery: 11,
+  /**
+   * The Frozen Grotto's frosted ground (029): a pale wash over its clearing, soft-edged by `edge` px, with drifts of
+   * snow on one tile in `driftEvery`, ice glints on one in `glintEvery`, and its grass tufts rimed white.
+   */
+  frost: { wash: 'foam', washAlpha: 0.75, edge: 22, drift: 'snow', driftEvery: 3, driftAlpha: 0.8, ice: 'water-light', glint: 'snow', glintEvery: 5, tuft: 'rock-light' },
   /** Ground chunks are drawn at up to this many texels per world px (memory), in squares of this many world px. */
   maxScale: 2,
   chunk: 640,

@@ -1,5 +1,6 @@
 import { TILE_SIZE } from '../../data/config';
 import { GROUND } from '../../data/art/ground';
+import { GROTTO } from '../../data/grotto';
 import { OVERWORLD } from '../../data/overworld';
 import { TILE, type Room } from '../../data/rooms';
 import { inkCss } from '../vector/draw';
@@ -38,6 +39,45 @@ function polyline(c: CanvasRenderingContext2D, pts: readonly (readonly [number, 
 }
 
 const inRect = (r: { x0: number; y0: number; x1: number; y1: number }, tx: number, ty: number): boolean => tx >= r.x0 && tx <= r.x1 && ty >= r.y0 && ty <= r.y1;
+
+/**
+ * The Frozen Grotto's frosted ground (029): a pale wash over its clearing with soft rounded edges, drifts of snow,
+ * and little sheets of ice that catch the light.
+ */
+function frost(c: CanvasRenderingContext2D, each: (fn: (tx: number, ty: number, hash: number) => void) => void): void {
+  const f = GROUND.frost;
+  const a = GROTTO.area;
+  // One path of overlapping blobs, a blob per tile (smaller a tile outside the clearing), filled once: an even wash
+  // with a ragged, rounded edge.
+  c.save();
+  c.globalAlpha = f.washAlpha;
+  c.fillStyle = inkCss(f.wash);
+  c.beginPath();
+  for (let ty = a.y0 - 1; ty <= a.y1 + 1; ty++) {
+    for (let tx = a.x0 - 1; tx <= a.x1 + 1; tx++) {
+      const inside = inRect(a, tx, ty);
+      const hash = tileHash(tx, ty);
+      const r = inside ? f.edge + (hash % 8) : f.edge * 0.5 + (hash % 10);
+      if (!inside && hash % 3 === 0) continue;
+      const [x, y] = centre({ tx, ty });
+      c.moveTo(x + r, y);
+      c.ellipse(x, y, r, r * 0.8, 0, 0, Math.PI * 2);
+    }
+  }
+  c.fill();
+  c.restore();
+  each((tx, ty, hash) => {
+    if (!inRect(a, tx, ty)) return;
+    const [x, y] = centre({ tx, ty });
+    if (hash % f.driftEvery === 0) ellipse(c, x + ((hash >>> 5) % 16) - 8, y + ((hash >>> 9) % 12) - 6, 9 + ((hash >>> 3) % 7), 4, f.drift, f.driftAlpha);
+    if (hash % f.glintEvery === 1) {
+      const gx = x + ((hash >>> 7) % 18) - 9;
+      const gy = y + ((hash >>> 11) % 14) - 7;
+      ellipse(c, gx, gy, 6, 2.6, f.ice, 0.7);
+      ellipse(c, gx - 2, gy - 0.6, 2, 0.7, f.glint, 0.9);
+    }
+  });
+}
 
 /** Draws the ground under the world rectangle (x0, y0, w, h), with tiles a margin around it so blobs cross chunk edges seamlessly. */
 export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, y0: number, w: number, h: number, pxPerUnit: number): void {
@@ -94,6 +134,7 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
     const [x, y] = centre({ tx, ty });
     ellipse(c, x + ((hash >>> 5) % 20) - 10, y + ((hash >>> 9) % 14) - 7, 2.2, 1.4, GROUND.pathFleck);
   });
+  frost(c, each);
   // Ponds: a sandy rim, the shallows, deep water, and the light on it.
   for (const p of room.terrain?.ponds ?? []) {
     const [x, y] = centre({ tx: p.cx, ty: p.cy });
@@ -129,14 +170,15 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
     polyline(c, pts, 1.1, GROUND.ley, 0.75);
   }
   c.restore();
-  // Tufts and flowers on open grass.
+  // Tufts and flowers on open grass; in the Frozen Grotto, rimed tufts and no flowers (029).
   each((tx, ty, hash) => {
     if (symbol(tx, ty) !== TILE.floor) return;
+    const frozen = inRect(GROTTO.area, tx, ty);
     const [x, y] = centre({ tx, ty });
     const ox = ((hash >>> 6) % 20) - 10;
     const oy = ((hash >>> 10) % 16) - 8;
     if (hash % GROUND.tuftEvery === 0) {
-      c.strokeStyle = inkCss(GROUND.tuft);
+      c.strokeStyle = inkCss(frozen ? GROUND.frost.tuft : GROUND.tuft);
       c.lineWidth = 1.2;
       c.beginPath();
       c.moveTo(x + ox - 2, y + oy);
@@ -146,7 +188,7 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
       c.moveTo(x + ox + 2, y + oy);
       c.lineTo(x + ox + 3, y + oy - 4);
       c.stroke();
-    } else if (hash % GROUND.flowerEvery === 1) {
+    } else if (!frozen && hash % GROUND.flowerEvery === 1) {
       ellipse(c, x + ox, y + oy, 1.6, 1.6, GROUND.flowers[(hash >>> 14) % GROUND.flowers.length] ?? GROUND.tuft);
     }
   });

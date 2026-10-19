@@ -49,9 +49,9 @@ Names are placeholders.
 
 | Ammo | Chain | Behavior |
 | --- | --- | --- |
-| Arrows | Wood into a cutter (shafts), stone into a knapper (heads), fiber into a spinner (rope), then an assembler | Fast and straight, physical damage |
-| Bombs | Stone into a shaper (casings), husk resin into a fuse maker, ley crystal into a grinder (charge), then a packer | Arcs to the cursor, fire burst on landing |
-| Ley bolts | Ley crystal into a grinder (shards), then a focuser | Slower, pierces through enemies |
+| Arrows | Wood into a cutter (shafts), stone into a knapper (heads), fiber into a spinner (rope), then an assembler | Fast and straight, physical damage, pierces |
+| Bombs | Stone into a shaper (casings), husk resin into a fuse maker, ley crystal into a grinder (charge), then a packer | Arcs to the cursor, a small explosion on landing |
+| Ley bolts | Ley crystal into a grinder (shards), then a focuser | Slower, hits hard, does not pierce |
 
 **Enemies:**
 

@@ -58,6 +58,9 @@ export const SOUNDS = {
   menuHover: 'menu-hover',
   gateOpen: 'gate-open',
   roll: 'roll',
+  /** 029: an enemy freezing solid, and a star round bursting into shards. */
+  freeze: 'freeze',
+  starBurst: 'star-burst',
   ambientClearing: 'ambient-clearing',
   ambientFoundry: 'ambient-foundry',
 } as const;
@@ -211,6 +214,21 @@ export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
     ],
   },
   roll: { layers: [{ wave: 'noise', from: 600, to: 2200, dur: 0.18, attack: 0.05, volume: 0.2 }] },
+  // Ice closing over an enemy: a glassy crackle and a high, cold ring.
+  freeze: {
+    layers: [
+      { wave: 'noise', from: 9000, to: 3000, dur: 0.22, attack: 0.002, volume: 0.3 },
+      { wave: 'triangle', from: 2400, to: 1800, dur: 0.35, attack: 0.005, volume: 0.22, tremolo: { rate: 30, depth: 0.5 } },
+      { wave: 'sine', from: 3600, to: 3300, delay: 0.05, dur: 0.45, attack: 0.01, volume: 0.12 },
+    ],
+  },
+  // Ley light shattering: a bright crack and five quick chimes spreading out.
+  'star-burst': {
+    layers: [
+      { wave: 'noise', from: 7000, to: 1500, dur: 0.1, attack: 0.001, volume: 0.3 },
+      ...[0, 1, 2, 3, 4].map((i): SoundLayer => ({ wave: 'sine', from: 1500 + i * 260, to: 1100 + i * 200, delay: i * 0.025, dur: 0.16, attack: 0.003, volume: 0.1 })),
+    ],
+  },
   'ambient-clearing': {
     loop: 8,
     layers: [

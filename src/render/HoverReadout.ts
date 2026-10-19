@@ -6,11 +6,11 @@ import { ammoDef } from '../data/ammo';
 import { ENTRANCE_CAP } from '../data/foundry';
 import { CAPPED_LABEL } from '../data/objectives';
 import { itemDef } from '../data/items';
-import { machineDef } from '../data/pieces';
-import { recipeDef, RECIPES } from '../data/recipes';
+import { RECIPES } from '../data/recipes';
 import { count } from '../sim/inventory';
 import type { EntranceState } from '../sim/link';
 import type { MachineState, PieceState } from '../sim/pieces';
+import { machineRecipe } from '../sim/stages';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
@@ -23,10 +23,11 @@ type Line = [frame: string, text: string];
 
 /** A machine's lines: each input with how many are buffered, then the output waiting to go out. */
 export function machineLines(m: MachineState): Line[] {
-  const recipe = recipeDef(machineDef(m.pieceId).recipeId);
+  // A stage's recipe follows the round it's working on (029).
+  const recipe = machineRecipe(m);
   return [
     ...Object.keys(recipe.inputs).map((id): Line => [itemDef(id).icon, String(count(m.buffer, id))]),
-    [itemDef(recipe.output.itemId).icon, String(m.output)],
+    [itemDef(m.made).icon, String(m.output)],
   ];
 }
 

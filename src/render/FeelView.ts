@@ -1,4 +1,5 @@
 import type { Scene } from 'phaser';
+import { AMMO } from '../data/ammo';
 import { TILE_SIZE } from '../data/config';
 import { enemyDef } from '../data/enemies';
 import { INTAKE } from '../data/foundry';
@@ -76,10 +77,18 @@ export class FeelView {
     const j = this.juice;
     const s = this.sound;
     // No shake on firing (021): too jarring.
+    // A tagged round (029) fires with its base's sound.
     for (const shot of ev.shots) {
-      const key = FIRE_SOUNDS[shot.ammoId];
+      const key = FIRE_SOUNDS[AMMO[shot.ammoId]?.base ?? shot.ammoId];
       if (key) s.play(key);
     }
+    // Cold and the star split (029): a freeze rings and frosts, a thaw throws off ice, a star burst chimes.
+    for (const f of ev.freezes) {
+      s.play(SOUNDS.freeze);
+      j.burst('hitCold', f.x, f.y);
+    }
+    for (const t of ev.thaws) j.burst('thawShards', t.x, t.y);
+    if (ev.starBursts.length > 0) s.play(SOUNDS.starBurst, SOUND_LEVELS.cue);
     // A punch (023) thuds on a hit, or whiffs; its hits otherwise land like any other.
     for (const m of ev.melees) s.play(m.hits.length > 0 ? SOUNDS.meleeHit : SOUNDS.meleeWhiff);
     for (const h of ev.hits) {

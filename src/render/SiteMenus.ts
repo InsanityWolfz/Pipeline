@@ -9,6 +9,9 @@ import type { SimState } from '../sim/state';
 import { ChoiceMenu, type Choice } from './ChoiceMenu';
 import type { Controls } from './controls';
 import { pieceIcon } from './foundryLayout';
+import { StagePanel, type StagePanelState } from './StagePanel';
+import { stagePanelLayout } from './stagePanelLayout';
+import { stagesKnown } from '../sim/stages';
 
 type PylonChoice = 'deposit' | 'travel';
 /** A stash row: one item's stack, or null for everything. */
@@ -27,6 +30,8 @@ export class SiteMenus {
   private readonly stash: ChoiceMenu<StashChoice>;
   private readonly bench: ChoiceMenu<BenchChoice>;
   private readonly sorter: ChoiceMenu<SorterChoice>;
+  /** The bench's Stages panel (029), beside its rows once the shrine is claimed. */
+  private readonly stages: StagePanel;
   /** The sorter whose menu is open. */
   private sorterId: number | null = null;
 
@@ -35,6 +40,12 @@ export class SiteMenus {
     this.stash = new ChoiceMenu(scene);
     this.bench = new ChoiceMenu(scene);
     this.sorter = new ChoiceMenu(scene);
+    this.stages = new StagePanel(scene);
+  }
+
+  /** The bench's Stages panel as drawn (029). */
+  get stagePanel(): StagePanelState {
+    return this.stages.state;
   }
 
   private get menus(): readonly ChoiceMenu<unknown>[] {
@@ -46,7 +57,7 @@ export class SiteMenus {
   }
 
   overUi(x: number, y: number): boolean {
-    return this.menus.some((m) => m.overUi(x, y));
+    return this.menus.some((m) => m.overUi(x, y)) || this.stages.overUi(x, y);
   }
 
   close(): void {
@@ -56,6 +67,7 @@ export class SiteMenus {
   /** The cursor is at a screen point: the open menu lights the row under it (020). */
   pointAt(x: number, y: number): void {
     for (const m of this.menus) m.pointAt(x, y);
+    this.stages.pointAt(x, y);
   }
 
   /** E was pressed: opens the menu of a sorter, a claimed pylon, the stash or the bench in reach. */
@@ -75,6 +87,13 @@ export class SiteMenus {
     const s = this.stash.valueAt(x, y);
     const b = this.bench.valueAt(x, y);
     const f = this.sorter.valueAt(x, y);
+    const stage = this.stages.stageAt(x, y);
+    if (stage) {
+      controls.menus.applyStage(stage);
+      // The bench stays open, so a stage can be applied again (029: any number of times).
+      this.stages.flashAt(x, y);
+      return true;
+    }
     if (f && this.sorterId !== null) controls.menus.setFilter(this.sorterId, f.itemId);
     else if (p) controls.menus.pylon(p);
     else if (s) controls.menus.takeStash(s.itemId);
@@ -119,7 +138,10 @@ export class SiteMenus {
         value: { equip: a.id },
       })),
     ];
-    this.bench.show(benchRows);
+    // Once the shrine is claimed, the Stages panel (029) sits beside the bench's rows, which move left to make room.
+    const staged = this.bench.isOpen && stagesKnown(sim);
+    this.bench.show(benchRows, staged && benchRows.length > 0 ? stagePanelLayout(benchRows.length).benchShift : 0);
+    this.stages.show(staged ? benchRows.length : null, sim.inventory);
     if (this.sorter.isOpen && usableInReach(sim)?.id !== this.sorterId) this.sorter.close();
     const sorterRows: Choice<SorterChoice>[] = [
       { icons: [pieceIcon('sorter')], text: 'Clear', value: { itemId: null } },

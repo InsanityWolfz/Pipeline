@@ -29,3 +29,16 @@ export const ICE_CRACK_TICKS = 20;
 
 /** A chilled enemy's tint: toward this palette colour, `perStack` deeper with each chill stack. */
 export const CHILL_TINT = { color: 'water-light', perStack: 0.18 } as const;
+
+/**
+ * How a tagged round looks in flight (029), by tag: an image tint (palette id) and a trail along its last `points`
+ * drawn positions, `width` px in `color` with a bright `core` a third as wide, fading from `alpha` at the round to nothing. A frost arrow is pale ice with a short frost
+ * trail; a homing bolt leaves a long bright cyan trail that shows it bending.
+ */
+export const ROUND_LOOKS: Readonly<Record<string, { tint?: string; trail?: { color: string; core: string; points: number; width: number; alpha: number } }>> = {
+  frost: { tint: 'foam', trail: { color: 'water-light', core: 'snow', points: 7, width: 3, alpha: 0.75 } },
+  homing: { trail: { color: 'cyan', core: 'cyan-glow', points: 20, width: 4, alpha: 0.9 } },
+};
+
+/** The star burst's flash (029): grows from `from` to `to` scale and fades over `ms`, at shot height. */
+export const STAR_FLASH = { ms: 280, from: 1, to: 2.2 } as const;

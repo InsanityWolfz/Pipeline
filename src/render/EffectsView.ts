@@ -17,6 +17,7 @@ import { CAMERA_LERP, DOOR_FADE_MS } from '../data/config';
 import { enemyDef } from '../data/enemies';
 import { ITEMS } from '../data/items';
 import { INK_ID, hexToRgb, paletteHex } from '../data/palette';
+import { STAGE_SPRITES, STAR_FLASH } from '../data/stageAssets';
 import { DRAW_HEIGHT } from '../data/tube';
 import type { SimEvents } from '../sim/events';
 import { registerAnim } from './anims';
@@ -36,6 +37,8 @@ export class EffectsView {
   private readonly corpses = new Set<GameObjects.Sprite>();
   /** Punch swooshes still drawn (023), for the test hook. */
   private live = 0;
+  /** Star burst flashes still drawn (029). */
+  private flashes = 0;
 
   constructor(scene: Scene, followed: GameObjects.Image) {
     this.scene = scene;
@@ -55,6 +58,7 @@ export class EffectsView {
     for (const b of events.bursts) this.burst(b.x, b.y, b.radius);
     for (const s of events.shots) this.muzzle(s.x, s.y);
     for (const m of events.melees) this.swoosh(m.x, m.y, m.angle);
+    for (const b of events.starBursts) this.starFlash(b.x, b.y);
     // Banking (entering the foundry, or a pylon deposit) swirls ley light off the
     // player. Through a door or travel, it waits out the fade so it shows in the new room.
     if (events.banks.length > 0) {
@@ -128,6 +132,30 @@ export class EffectsView {
     const sprite = addVectorSprite(this.scene, x, y - DRAW_HEIGHT, animFrames(MUZZLE_FLASH)[0] ?? '').setDepth(y + DRAW_HEIGHT);
     sprite.once('animationcomplete', () => sprite.destroy());
     sprite.play(MUZZLE_FLASH.key);
+  }
+
+  /** Star bursts still flashing (029), for the test hook. */
+  get starFlashes(): number {
+    return this.flashes;
+  }
+
+  /** A star round's burst (029): a star of ley light at shot height that swells and fades. */
+  private starFlash(x: number, y: number): void {
+    const f = STAR_FLASH;
+    const flash = addVector(this.scene, x, y - DRAW_HEIGHT, STAGE_SPRITES.starBurst).setDepth(y + DRAW_HEIGHT);
+    const base = flash.scale;
+    flash.setScale(base * f.from);
+    this.flashes += 1;
+    this.scene.tweens.add({
+      targets: flash,
+      scale: base * f.to,
+      alpha: 0,
+      duration: f.ms,
+      onComplete: () => {
+        this.flashes -= 1;
+        flash.destroy();
+      },
+    });
   }
 
   /** The burst drawn at its real radius, in front of what stands inside it. */

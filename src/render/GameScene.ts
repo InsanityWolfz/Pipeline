@@ -192,6 +192,7 @@ export class GameScene extends Scene {
       hud: this.hud?.bottom ?? null,
       craftMenu: this.menu?.state ?? null,
       buildBar: this.buildView?.state ?? null,
+      tagged: { benchStages: this.siteMenus?.stagePanel ?? null, starFlashes: this.effects?.starFlashes ?? 0, trails: this.arrowView?.trails ?? { count: 0, longest: 0 } },
     };
   }
 

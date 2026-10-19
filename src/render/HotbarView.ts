@@ -3,7 +3,8 @@ import { DEPTHS, SPRITES } from '../data/assets';
 import { HUD_LAYOUT } from '../data/hudLayout';
 import { ammoDef } from '../data/ammo';
 import { itemDef } from '../data/items';
-import { count, type Inventory } from '../sim/inventory';
+import type { Inventory } from '../sim/inventory';
+import { carriedOfSlot } from '../sim/volley';
 import type { TubeState } from '../sim/tube';
 import { hotbarBox, hotbarCells, type ScreenBox } from './bottomHud';
 import { TextLine } from './textLine';
@@ -66,7 +67,8 @@ export class HotbarView {
 
   update(tube: TubeState, inventory: Inventory): void {
     for (const [i, c] of this.cells.entries()) {
-      c.count.set(String(count(inventory, ammoDef(c.ammoId).itemId)));
+      // Every carried round of the slot's ammo, tagged ones included (029: they fire from this slot first).
+      c.count.set(String(carriedOfSlot({ inventory }, c.ammoId)));
       if (c.ammoId !== tube.ammoId) continue;
       this.highlight.setX(c.x);
       this.selectedIndex = i;

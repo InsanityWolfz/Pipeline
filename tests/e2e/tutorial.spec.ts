@@ -56,7 +56,8 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
         if (!near) break;
         const d = dist(near);
         const have = (id: string) => (s.inventory[id] ?? 0) + s.intake.entrances.reduce((n, e) => n + (e.ammo === id ? e.count : 0), 0);
-        const ammo = have('ley-bolt') > 0 ? 'ley-bolt' : have('arrow') > 0 ? 'arrow' : 'bomb';
+        // Piercing ammo first (029: arrows pierce now, ley bolts don't).
+        const ammo = have('arrow') > 0 ? 'arrow' : have('ley-bolt') > 0 ? 'ley-bolt' : 'bomb';
         if (s.tube.ammo !== ammo) s = g.step(1, { selectAmmo: ammo });
         const kite = d < 80;
         const close = d > 150;
@@ -65,8 +66,9 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
           moveY: kite ? toward(near.y, p.y) : close ? toward(p.y, near.y) : 0,
           dodge: near.mode === 'windup' && d < 90 && t % 20 === 0,
           fire: true,
+          // At the body, not the feet: a Wisp's hurtbox floats above its feet, where a shot's ground point passes under it.
           aimX: near.x,
-          aimY: near.y,
+          aimY: near.y - 8,
         });
         // Closing in but stuck on something (018: groves, ponds and rocks): go round it.
         stuck = close && Math.hypot(s.player.x - p.x, s.player.y - p.y) < 0.1 ? stuck + 1 : 0;

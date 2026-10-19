@@ -13,6 +13,7 @@ import type { BuildBarState } from './BuildView';
 import type { CraftMenuState } from './CraftMenuView';
 import type { PromptState } from './PromptView';
 import type { PortShown } from './PortView';
+import type { StagePanelState } from './StagePanel';
 import { claim } from '../sim/claims';
 
 export interface GameTestHook {
@@ -37,6 +38,11 @@ export interface GameTestHook {
   claim(site: string): SimSummary;
   /** Marks the first `count` objectives done (028: to show a later goal in a screenshot without playing the whole run). */
   completeObjectives(count: number): SimSummary;
+  /**
+   * Sets a live enemy's health (029: a Husk dies to the frost hit that would freeze it, so the frozen-Husk screenshot
+   * keeps one topped up between hits).
+   */
+  setEnemyHealth(id: number, health: number): SimSummary;
 }
 
 /**
@@ -97,6 +103,11 @@ export interface UiState {
   craftMenu: CraftMenuState | null;
   /** The build bar as drawn (026): the unlocked pieces' cells, the shown groups' labels and the dividers. */
   buildBar: BuildBarState | null;
+  /**
+   * 029: the bench's Stages panel as drawn, star burst flashes still showing, and the tagged rounds' trails in flight
+   * (how many, and the most points one runs along).
+   */
+  tagged: { benchStages: StagePanelState | null; starFlashes: number; trails: { count: number; longest: number } };
 }
 
 declare global {
@@ -171,6 +182,11 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
     },
     completeObjectives: (count) => {
       sim.objectives = sim.objectives.map((done, i) => done || i < count);
+      return summarize(sim);
+    },
+    setEnemyHealth: (id, health) => {
+      const e = sim.enemies.find((en) => en.id === id);
+      if (e) e.health = health;
       return summarize(sim);
     },
     passable: () => {

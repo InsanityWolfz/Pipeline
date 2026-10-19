@@ -9,12 +9,16 @@ import type { EnemyState } from '../sim/enemies';
 import type { Facing } from '../sim/player';
 import { registerAnim } from './anims';
 import { colorOf } from './color';
-import { addVectorSprite } from './vector/textures';
+import { addVector, addVectorSprite, showFrame } from './vector/textures';
+import { CHILL_TINT, ICE_CRACK_TICKS, STAGE_SPRITES } from '../data/stageAssets';
+import { COLD } from '../data/tags';
 
 interface Drawn {
   sprite: GameObjects.Sprite;
   telegraph: GameObjects.Graphics;
   bar: GameObjects.Graphics;
+  /** The ice round it while frozen (029), made on its first freeze. */
+  ice?: GameObjects.Image;
   /** A Husk's resin drip and glint, or the Warden's core halo (018). */
   overlay?: GameObjects.Graphics;
 }
@@ -68,7 +72,9 @@ export class EnemyView {
       const key = anim.key;
       if (d.sprite.anims.currentAnim?.key !== key) d.sprite.play(key);
       if (e.flash > 0) d.sprite.setTint(colorOf(ENEMY_FX.flashColor)).setTintMode(TintModes.FILL);
+      else if (e.chill > 0 || e.frozen > 0) d.sprite.setTint(chillTint(e.frozen > 0 ? COLD.stacksToFreeze : e.chill)).setTintMode(TintModes.MULTIPLY);
       else d.sprite.clearTint();
+      this.drawIce(d, e, bottom);
       this.drawBar(d.bar, e, bottom - d.sprite.displayHeight * d.sprite.originY);
       this.drawTelegraph(d.telegraph, e);
       if (d.overlay && e.enemyId === RESIN.enemyId) this.drawResin(d.overlay, e, bottom, view, now);
@@ -81,6 +87,7 @@ export class EnemyView {
       d.telegraph.destroy();
       d.bar.destroy();
       d.overlay?.destroy();
+      d.ice?.destroy();
       this.drawn.delete(id);
     }
   }
@@ -98,6 +105,20 @@ export class EnemyView {
     if (e.enemyId === CORE.enemyId) d.overlay = this.scene.add.graphics().setBlendMode(BlendModes.ADD);
     this.drawn.set(e.id, d);
     return d;
+  }
+
+  /** Frozen (029): encased in ice, the casing cracking over its last ticks; hidden otherwise. */
+  private drawIce(d: Drawn, e: EnemyState, bottom: number): void {
+    if (e.frozen <= 0) {
+      d.ice?.setVisible(false);
+      return;
+    }
+    const big = enemyDef(e.enemyId).boss;
+    const cracked = e.frozen <= ICE_CRACK_TICKS;
+    const frame = big ? (cracked ? STAGE_SPRITES.iceCaseLargeCracked : STAGE_SPRITES.iceCaseLarge) : cracked ? STAGE_SPRITES.iceCaseCracked : STAGE_SPRITES.iceCase;
+    d.ice ??= addVector(this.scene, 0, 0, frame);
+    if (d.ice.frame.name !== frame) showFrame(d.ice, frame);
+    d.ice.setVisible(true).setPosition(e.x, bottom).setDepth(bottom + DEPTHS.flameNudge);
   }
 
   /** A slow drop of resin falling from the binding, and a glint on the bead; out of step from Husk to Husk. Hidden from behind. */
@@ -178,6 +199,14 @@ export class EnemyView {
     g.slice(e.x, e.y, swipe.reach * progress, angle - half, angle + half, false);
     g.fillPath();
   }
+}
+
+/** A chilled enemy's multiply tint (029): white toward the chill colour, deeper per stack. */
+function chillTint(stacks: number): number {
+  const k = Math.min(1, stacks * CHILL_TINT.perStack);
+  const to = colorOf(CHILL_TINT.color);
+  const mix = (shift: number): number => Math.round(255 + (((to >> shift) & 0xff) - 255) * k) << shift;
+  return mix(16) | mix(8) | mix(0);
 }
 
 function poseOf(e: EnemyState): 'idle' | 'walk' | 'windup' | 'swipe' | 'recover' | 'hit' {

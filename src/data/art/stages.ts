@@ -128,10 +128,10 @@ const STAR_BURST: Shape[] = [
 /** Ice round a frozen enemy, `w` x `h` px over its feet: clear blocks with pale facets, cracked before it breaks. */
 function iceCase(w: number, h: number, cracked: boolean): Shape[] {
   const x = w / 2;
-  const facet = (pts: string, alpha: number): Shape => path(pts, { fill: { id: 'foam', alpha }, stroke: { color: { id: 'snow', alpha: 0.8 }, width: 0.8 } });
+  const facet = (pts: string, alpha: number): Shape => path(pts, { fill: { id: 'foam', alpha }, stroke: { color: { id: 'snow', alpha: 0.7 }, width: 0.8 } });
   return [
     path(`M ${-x} -1 L ${-x - 2} ${-h * 0.55} L ${-x * 0.5} ${-h} L ${x * 0.6} ${-h - 2} L ${x + 2} ${-h * 0.5} L ${x} -1 Z`, {
-      fill: { linear: [0, -h, 0, 0], stops: [{ at: 0, color: { id: 'snow', alpha: 0.55 } }, { at: 1, color: { id: 'water-light', alpha: 0.45 } }] },
+      fill: { linear: [0, -h, 0, 0], stops: [{ at: 0, color: { id: 'snow', alpha: 0.4 } }, { at: 1, color: { id: 'water-light', alpha: 0.3 } }] },
       outline: true,
       glow: { color: 'foam', blur: 3 },
     }),
