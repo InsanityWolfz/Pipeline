@@ -54,3 +54,5 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 028–037 come from the content brainstorm and Shaun's spec interview (docs/brainstorm/2026-10-19-*.md), and replace the old 028/029 idea rows. Their open questions are collected in docs/brainstorm/2026-10-19-open-questions.md.
 028–037 were approved by Shaun in chat on 2026-10-19 ("Approve all 028–037"), with every open question settled.
 038 is the landmine and cluster-bomb slice that 034 split out, which the accepted proposals cover. It is built after 037.
+
+Shaun's drive rant on 2026-10-19 (docs/brainstorm/2026-10-19-drive-rant.md) is queued to become the next spec interview once 038 is done. Its themes are a shippable build for friend playtests (title screen, soft save, start-to-finish flow), harder combat and the Bulwark, the ammo roles, simpler Factorio-like processing and a bigger foundry, boss spawners, and horizontal content after that.
