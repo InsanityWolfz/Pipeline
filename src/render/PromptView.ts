@@ -3,7 +3,7 @@ import { DEPTHS } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
 import { INTAKE } from '../data/foundry';
 import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
-import { PROMPT_RANGE, type PromptTarget } from '../data/objectives';
+import { PROMPT_RANGE, type MarkerTarget, type PromptTarget } from '../data/objectives';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { fixtureInReach, pylonInReach } from '../sim/claims';
 import { fixtureDef } from '../sim/fixtures';
@@ -19,6 +19,21 @@ import { addVector } from './vector/textures';
 /** A world point, px: where a prompt's target stands. */
 type Point = { x: number; y: number };
 
+/**
+ * Where an arrow marker's tip goes: over the middle one of the intake's open entrances, just above the mouth tile's
+ * bottom (027); or over the middle one of the supply ports standing, clear of its head (028). Null with none there.
+ */
+function markerPoint(sim: SimState, target: MarkerTarget): Point | null {
+  const L = TUTORIAL_LAYOUT.marker;
+  const middle = <T>(list: readonly T[]): T | undefined => list[Math.floor((list.length - 1) / 2)];
+  if (target === 'intake') {
+    const mouth = middle(INTAKE.entrances.filter((_, i) => sim.link.entrances[i]?.open));
+    return mouth ? { x: (mouth.tx + 0.5) * TILE_SIZE, y: (mouth.ty + 1) * TILE_SIZE - L.lift } : null;
+  }
+  const port = middle(sim.fixtures.map((f) => fixtureDef(f.id)).filter((d) => d.kind === 'port'));
+  return port ? { x: (port.tx + 0.5) * TILE_SIZE, y: (port.ty + 1) * TILE_SIZE - L.portLift } : null;
+}
+
 /** A key prompt as drawn, for the test hook: its key, the world point it floats over, and whether the key would work now. */
 export interface PromptState extends Point {
   key: string;
@@ -30,7 +45,8 @@ export interface PromptState extends Point {
 // full strength once pressing the key would work. Craft prompts float over the
 // player anywhere; the build prompt only in the foundry, where building works.
 // The foundry's conduit step (027) has an arrow marker over the intake instead,
-// bobbing over its open entrance anywhere in the foundry.
+// bobbing over its open entrance anywhere in the foundry; the supply port goal
+// (028) has one over the ports, bobbing over the middle one.
 export class PromptView {
   private readonly bob: Pulse;
   private readonly cap: GameObjects.Image;
@@ -49,7 +65,8 @@ export class PromptView {
 
   update(sim: SimState, shown: string): void {
     const def = currentObjectiveDef(sim);
-    this.showMarker(def?.marker === 'intake' && shown === FOUNDRY_ROOM && sim.roomId === FOUNDRY_ROOM ? sim : undefined);
+    const inFoundry = shown === FOUNDRY_ROOM && sim.roomId === FOUNDRY_ROOM;
+    this.showMarker(inFoundry && def?.marker ? markerPoint(sim, def.marker) : null);
     const prompt = def?.prompt;
     const target = prompt && shown === sim.roomId ? this.target(sim, prompt.over) : undefined;
     const near = target !== undefined && Math.hypot(target.at.x - sim.player.x, target.at.y - sim.player.y) <= PROMPT_RANGE;
@@ -69,11 +86,9 @@ export class PromptView {
     this.key.moveTo(Math.round(x - this.key.width / 2), bottom - this.cap.displayHeight + TUTORIAL_LAYOUT.keyText.y);
   }
 
-  /** The arrow over the middle one of the intake's open entrances, its tip just above the mouth tile's bottom, bobbing. */
-  private showMarker(sim: SimState | undefined): void {
-    const open = sim ? INTAKE.entrances.filter((_, i) => sim.link.entrances[i]?.open) : [];
-    const mouth = open[Math.floor((open.length - 1) / 2)];
-    this.markerAt = mouth ? { x: (mouth.tx + 0.5) * TILE_SIZE, y: (mouth.ty + 1) * TILE_SIZE - TUTORIAL_LAYOUT.marker.lift } : null;
+  /** The arrow with its tip at `at`, bobbing; hidden for null. */
+  private showMarker(at: Point | null): void {
+    this.markerAt = at;
     this.marker.setVisible(this.markerAt !== null);
     if (!this.markerAt) return;
     this.marker.setPosition(this.markerAt.x, Math.round(this.markerAt.y - this.bob.value));

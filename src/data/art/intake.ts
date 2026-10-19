@@ -92,5 +92,7 @@ export const INTAKE_LOOK = {
   bands: { ys: [-17, -29, -41, -53, -65], height: 3, half: BODY.half, dark: 'dormant-dark', darkAlpha: 0.85, lit: 'cyan-glow', litAlpha: 0.5 },
   gauge: { xs: [-11, 0, 11], bottom: -15, step: 5, half: 3.6, height: 2.4, dark: 'cyan-deep', darkAlpha: 0.7, litAlpha: 1, glowAlpha: 0.25, glowPad: 1 },
   pulse: { from: FLARE.neck, to: BODY.top, half: BODY.half + 3, height: 5, color: 'snow' },
+  /** An entrance's fire pulse (028): a ring of light up its own gauge column as it fires a round, in its ammo's colour, over `ms`. */
+  firePulse: { pad: 2, height: 4, ms: 300 },
   capLift: { rise: 26, ms: 650, ring: 'cyan-glow', ringRadius: 16, ringWidth: 2, ringFrom: 0.4 },
 } as const;

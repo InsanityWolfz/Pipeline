@@ -12,6 +12,8 @@ import type { BottomHudState } from './HudView';
 import type { BuildBarState } from './BuildView';
 import type { CraftMenuState } from './CraftMenuView';
 import type { PromptState } from './PromptView';
+import type { PortShown } from './PortView';
+import { claim } from '../sim/claims';
 
 export interface GameTestHook {
   getState(): SimSummary;
@@ -31,6 +33,8 @@ export interface GameTestHook {
   tweenSpeed(scale: number): void;
   /** The player's room as rows of tiles a player can stand on ('.') or not ('#'), solid things included: for test helpers that find paths. */
   passable(): string[];
+  /** Claims a site outright, as holding E at its cleared pylon would (028: the e2e's "or set it claimed"). */
+  claim(site: string): SimSummary;
 }
 
 /**
@@ -71,9 +75,13 @@ export interface UiState {
   intakePrompt: string | null;
   /** How far the caps are through lifting off, 0 to 1, or null when none are lifting. */
   intakeLift: number | null;
+  /** The entrances whose fire pulse is running up the pipe (028), by index, one per pulse. */
+  intakeFirePulses: number[];
+  /** The supply ports as drawn (028): each one's raw, the icon on its face and its plate's text. */
+  ports: PortShown[];
   /** The tutorial's key prompt as drawn (its key, the world point it floats over, whether the key works now), or null (027). */
   prompt: PromptState | null;
-  /** The intake's arrow marker for the conduit step (027): the world point its tip bobs over, or null. */
+  /** The arrow marker, over the intake for the conduit step (027) or over the ports for the port goal (028): the world point its tip bobs over, or null. */
   marker: { x: number; y: number } | null;
   /** The "+ shaft" popups still on screen (027), by text. */
   madePopups: string[];
@@ -150,6 +158,10 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
     },
     tweenSpeed: (scale) => {
       scene.tweens.timeScale = scale;
+    },
+    claim: (site) => {
+      claim(sim, site);
+      return summarize(sim);
     },
     passable: () => {
       const { room, obstacles } = roomBodies(sim, sim.roomId);

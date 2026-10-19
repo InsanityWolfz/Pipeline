@@ -9,12 +9,12 @@ import type { SimState } from '../sim/state';
 import { colorOf } from './color';
 import { harvestTarget } from './nodeStages';
 
-// The claimed pylon's harvest, made visible (018). Each raw the supply port
-// produces shows here first: a ley tendril from the pylon to the nearest node of
-// that raw in its zone, the node pulsing, then a mote of the raw running along
-// the shrine's ley line to the foundry's stairs, where it sinks in. Visual only:
-// nodes are never used up, and the sim's port runs as it always has. It assumes
-// the prototype's one claimable site, the shrine, so it ignores which port it was.
+// The claimed pylon's harvest, made visible (018). Each raw a supply port
+// produces (028: one port per raw) shows here first as its own mote: a ley tendril
+// from the pylon to the nearest node of that raw in its zone, the node pulsing,
+// then a mote of the raw running along the shrine's ley line to the foundry's
+// stairs, where it sinks in. Visual only: nodes are never used up. It assumes the
+// prototype's one claimable site, the shrine, as the pylon each mote leaves.
 
 interface Mote {
   itemId: string;

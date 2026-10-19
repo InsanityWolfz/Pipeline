@@ -40,15 +40,21 @@ const STASH: Shape[] = [
   ellipse(0, -15, 1, 1, flat('ink')),
 ];
 
-// The supply port: a stone mouth set in the wall, facing right, fed by a ley line; frame 1 glows as it pushes a raw out.
+// A supply port (028): a stone housing set against the west wall, a round brass-rimmed face where its raw's icon
+// sits (render puts the icon on it), a ley seam feeding it from the wall, and a spout facing into the room. Frame 1
+// glows, seam and mouth, while a raw waits to go out. One body serves every port.
 const port = (lit: boolean): Shape[] => [
   shadow(14),
-  rect(-14, -32, 22, 30, 2, { fill: vertical('rock-light', 'rock', -32, -2), outline: true }),
-  rect(-14, -32, 22, 6, 2, solid('rock-pale')),
-  glowLine([-10, -26, -10, -16, -2, -16], lit ? 2.4 : 1.6, lit ? 'cyan-glow' : 'cyan', lit ? 5 : 2),
-  path('M 4 -24 L 14 -21 L 14 -7 L 4 -4 Z', { fill: vertical('rock', 'rock-dark', -24, -4), outline: true }),
-  ellipse(13, -14, 3, 6, { fill: lit ? 'cyan' : 'ink', outline: true, ...(lit ? { glow: { color: 'cyan', blur: 6 } } : {}) }),
-  rect(3, -25, 2.6, 22, 0.6, solid('brass')),
+  rect(-15, -34, 24, 32, 2, { fill: vertical('rock-light', 'rock', -34, -2), outline: true }),
+  rect(-15, -34, 24, 5, 2, solid('rock-pale')),
+  rune(-11.5, -7.5, 1.1, 'rock-dark'),
+  glowLine([-15, -29, -12.5, -29, -12.5, -24], lit ? 2.2 : 1.4, lit ? 'cyan-glow' : 'cyan', lit ? 5 : 2),
+  ellipse(-3, -18, 9, 9, { fill: vertical('brass', 'brass-dark', -27, -9), outline: true }),
+  ellipse(-3, -18, 7, 7, { fill: { radial: [-4, -19.5, 8], stops: [{ at: 0, color: 'rock-dark' }, { at: 1, color: 'ink' }] }, ...(lit ? { glow: { color: 'cyan', blur: 3 } } : {}) }),
+  path('M -9 -21 Q -8 -25 -4 -25.6', trim({ id: 'snow', alpha: 0.5 }, 0.7)),
+  path('M 9 -24 L 15 -21 L 15 -8 L 9 -5 Z', { fill: vertical('rock', 'rock-dark', -24, -5), outline: true }),
+  ellipse(14, -14.5, 2.4, 5, { fill: lit ? 'cyan' : 'ink', outline: true, ...(lit ? { glow: { color: 'cyan', blur: 6 } } : {}) }),
+  rect(8, -25, 2.4, 21, 0.6, solid('brass')),
 ];
 
 // The foundry's exit, in its right-hand wall (flipped for the left): a carved arch over stone steps rising into the dark.

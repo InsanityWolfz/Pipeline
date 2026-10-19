@@ -17,9 +17,10 @@ import { addVector, showFrame } from './vector/textures';
 // data, with its live lights over it: its ring bands lighting one by one as the
 // tube attunes, one gauge column per entrance lit in proportion to its count in
 // its ammo's colour, and a ring of light running up into the wall as each item
-// goes in. A brass cap sits over each capped side entrance until a warden core
-// opens it, when it lifts off with a ring of light. In build mode, an input arrow
-// under each open entrance.
+// goes in, and a ring up an entrance's own gauge column each time it fires (028),
+// so a mixed volley shows firing out of step. A brass cap sits over each capped
+// side entrance until a warden core opens it, when it lifts off with a ring of
+// light. In build mode, an input arrow under each open entrance.
 
 const AT = intakeAnchor();
 /** Just in front of the wall it's built into, behind anything on the floor below. */
@@ -38,6 +39,8 @@ export class IntakeView {
   private readonly caps: GameObjects.Image[];
   /** Ms since each ring of light set off up the pipe. */
   private pulses: number[] = [];
+  /** Each entrance's fire pulses (028): which entrance, the ammo it fired, and ms since. */
+  private fires: { entrance: number; ammoId: string; ms: number }[] = [];
   /** Caps lifting off: which entrance, and how far through (0..1), driven by a tween so a stopped tween holds it. */
   private lifts: { entrance: number; t: number; done: boolean }[] = [];
 
@@ -59,6 +62,11 @@ export class IntakeView {
     return this.caps.filter((c) => c.visible).length;
   }
 
+  /** The entrances whose fire pulse is running, one per pulse, for the test hook. */
+  get firePulsesShown(): number[] {
+    return this.fires.map((f) => f.entrance);
+  }
+
   /** How far the caps lifting off are (0..1), or null when none are, for the test hook. */
   get liftShown(): number | null {
     return this.lifts.length > 0 ? Math.max(...this.lifts.map((l) => l.t)) : null;
@@ -71,6 +79,8 @@ export class IntakeView {
     for (const [i, a] of this.arrows.entries()) a.setVisible(here && building && (entrances[i]?.open ?? false));
     this.pulses.push(...events.refills.map(() => 0));
     this.pulses = this.pulses.map((ms) => ms + deltaMs).filter((ms) => ms < INTAKE.pulseMs);
+    this.fires.push(...events.entranceFires.map((f) => ({ ...f, ms: 0 })));
+    this.fires = this.fires.map((f) => ({ ...f, ms: f.ms + deltaMs })).filter((f) => f.ms < INTAKE_LOOK.firePulse.ms);
     for (const open of events.intakeOpens) for (const entrance of open.entrances) this.liftCap(entrance);
     this.lifts = this.lifts.filter((l) => !l.done);
     this.placeCaps(entrances, here);
@@ -86,6 +96,7 @@ export class IntakeView {
     this.drawBands(progress >= 1 ? bands : Math.floor(progress * (bands + 1)));
     if (attuned) for (const [i, e] of entrances.entries()) this.drawGauge(i, e);
     for (const ms of this.pulses) this.drawPulse(ms / INTAKE.pulseMs);
+    for (const f of this.fires) this.drawFirePulse(f.entrance, f.ammoId, f.ms / INTAKE_LOOK.firePulse.ms);
     for (const l of this.lifts) this.drawLiftRing(l.entrance, l.t);
   }
 
@@ -150,6 +161,16 @@ export class IntakeView {
     const p = INTAKE_LOOK.pulse;
     const y = AT.y + p.from + (p.to - p.from) * t;
     this.lights.fillStyle(colorOf(p.color), 1 - t).fillRect(AT.x - p.half, y, p.half * 2, p.height);
+  }
+
+  /** Entrance `i`'s fire pulse `t` (0..1) of the way up its gauge column, in its ammo's colour, fading as it goes. */
+  private drawFirePulse(i: number, ammoId: string, t: number): void {
+    const g = INTAKE_LOOK.gauge;
+    const p = INTAKE_LOOK.pulse;
+    const f = INTAKE_LOOK.firePulse;
+    const x = AT.x + (g.xs[i] ?? 0);
+    const y = AT.y + p.from + (p.to - p.from) * t;
+    this.lights.fillStyle(colorOf(ENTRANCE_GAUGE_COLORS[ammoId] ?? p.color), 1 - t).fillRect(x - g.half - f.pad, y, (g.half + f.pad) * 2, f.height);
   }
 
   /** The ring of light round an inlet as its cap lifts off, `t` (0..1) of the way through: it grows and fades. */

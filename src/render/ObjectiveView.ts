@@ -2,22 +2,22 @@ import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { VIEW_WIDTH } from '../data/config';
 import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
-import type { ObjectiveDef } from '../data/objectives';
-import { currentObjectiveDef } from '../sim/objectives';
+import { objectiveLine } from '../sim/objectives';
 import type { SimState } from '../sim/state';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
 
 // The objective line (012): the first unfinished goal, on the right of the screen
-// below the minimap (019). Finishing one flashes a ley tick beside the line before it moves on.
+// below the minimap (019), or the frontier goal once all are done (028), so it is
+// never blank. Finishing one flashes a ley tick beside the line before it moves on.
 export class ObjectiveView {
   private readonly scene: Scene;
   private readonly line: TextLine;
   private readonly tick: GameObjects.Image;
   private readonly panel: GameObjects.Graphics;
-  /** The goal on the line (null once all are done), or undefined before the first draw. */
-  private shown: ObjectiveDef | null | undefined = undefined;
+  /** The line's text, or undefined before the first draw. */
+  private shown: string | undefined = undefined;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -32,11 +32,10 @@ export class ObjectiveView {
   }
 
   update(sim: SimState): void {
-    const def = currentObjectiveDef(sim);
-    if (def === this.shown) return;
+    const { text } = objectiveLine(sim);
+    if (text === this.shown) return;
     const finished = this.shown !== undefined;
-    this.shown = def;
-    const text = def?.text ?? '';
+    this.shown = text;
     this.line.set(text);
     const x = VIEW_WIDTH - TUTORIAL_LAYOUT.objectiveRight - this.line.width;
     this.line.moveTo(x, TUTORIAL_LAYOUT.objectiveTop);
