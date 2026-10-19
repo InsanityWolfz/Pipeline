@@ -88,6 +88,8 @@ test('build mode places, turns, picks up and drags pieces with the mouse', async
 });
 
 test('a ley bolt line built by hand fills its crate, and the bolts fire', async ({ page }) => {
+  // About 24 s on an idle machine, before 039 and after: the default 30 s left no room under a parallel run's load.
+  test.setTimeout(60_000);
   const errors = watchErrors(page);
   await boot(page, '?start=field&attuned');
   await page.evaluate((vein) => {

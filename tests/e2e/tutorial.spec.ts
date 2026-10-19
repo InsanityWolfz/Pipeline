@@ -245,6 +245,15 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     h.walkTo((68.5 + h.ox) * tile, g.getState().player.y);
     h.walkTo((68.5 + h.ox) * tile, 9.5 * tile);
     h.walkTo((66.5 + h.ox) * tile, 9.5 * tile);
+    // A roaming pack that wandered up meanwhile is fought off first, so the claim's hold isn't broken (039: with the
+    // Warden no longer pushed by arrows, the shrine fight's timing moved and a population pack can arrive here).
+    for (let i = 0; i < 3; i++) {
+      const s = g.getState();
+      const near = s.enemies.find((e) => e.room === s.room && Math.hypot(e.x - s.player.x, e.y - s.player.y) < 200);
+      if (!near) break;
+      w.clearGroup(near.group);
+      h.walkTo((66.5 + h.ox) * tile, 9.5 * tile);
+    }
     g.step(1, { interact: true });
     g.step(130);
   }, T);

@@ -68,7 +68,7 @@ test('level up from kills, take a node in the tree with a click, and respec it f
   const at = await screenPoint(page, tough.x, tough.y);
   await page.mouse.move(at.x, at.y);
   await expect.poll(async () => (await ui(page))?.talents.hover?.name).toBe('Tough Hide');
-  expect((await ui(page))?.talents.hover?.text).toBe('Max health +15');
+  expect((await ui(page))?.talents.hover?.text).toBe('You: +15 max health');
   await page.mouse.click(at.x, at.y);
   s = await step(page, 1);
   expect(s.talents).toEqual(['start', 's1']);
