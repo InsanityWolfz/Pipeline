@@ -68,3 +68,15 @@ Small vertical commits, tests first in each. Everything the spec doesn't list as
 - e2e bots that fire bombs or use stage rows by id; each is updated by id, not by position.
 
 ## Build notes
+- Commits in order: pins; renames; keywords data; resolveStat; exact fire rates; generated text and roll affixes in %; Stun; Pool; Knockback; elements on every family (with the bench rows and render); hook, e2e and review shots; design.md.
+- The inventory panel (031) went to three columns of 196 px: the six new rounds made Ammo 14 rows, too tall to share a column, and two columns no longer fit 640 × 360. Its tablet is baked as two halves of one drawing (a 620 px frame is wider than a 2048-texel page at 4×). Row count and mark moved right so "Frost Homing ley bolt" fits.
+- A tagged round's name keeps 029's rule (prefixes in tag order, the base name in lower case): "Frost Homing ley bolt", "Frost Cluster bomb".
+- Two tag badges on one icon: the element's sits in the lower-left corner beside the shape's.
+- A Cold Burst's flash is the same art screened toward frost (Phaser 4 `TintModes.SCREEN`); a multiply tint turned the fire flash brown. A Frost bomb, ley bolt or landmine takes 029's frost tint.
+- Burst events (`bursts`, `mineBursts`, `bombletBursts`, `poolBursts`) carry their damage type, for render's tint.
+- `applyStage` takes a bench row id (`frost-rune-bomb`); a stage id still names its home row, so older callers keep working. A stage machine unlocks once any of its rows has been hand-applied.
+- The talent panel's centre start has no content lines; its hover line ("The centre: always yours.") moved to the panel's data as UI text.
+- Gear rows show a You line without its scope ("+12 max health"); the relic rule line is fitted to the row. The totals line shows roll cooldown in seconds and roll distance as a share of the bare roll (no px in a summary, Q14).
+- "fire" stays the verb in "fire rate" and "held fire" while Fire is a reserved keyword; the reserved-word scan allows only that. Flag for Shaun when Fire ships.
+- Spec gaps followed as today (the spec lists no change): Shatterpoint triggers from a Ley round, not from Ley Shards, though the Ley family scope would reach them; Blastfletch's Pool goes only to an Arrow round.
+- The Charger's wall daze is the Stun status: its mode reads `stun` for exactly its 60 ticks as before, and it moves again one tick later than before (a Stun ends holding that tick, as Rollbreaker's always did).
