@@ -13,8 +13,12 @@ export const HOLLOWS_ENEMY_LOOK = {
   ring: { alpha: 0.22, fillAlpha: 0.45, width: 2, cracks: 6, crackWidth: 1.5, crackStart: 0.3, crackAlpha: 0.8 },
   /** The ripple underground: the mound sprite, wobbling every `wobbleMs`, with dust kicked up every `dustMs` while it moves. */
   ripple: { wobbleMs: 260, wobble: 0.08, dustMs: 90, minSpeed: 0.2 },
-  /** The Shardback's bash arc, in the Husk's swipe style (004), and its runes' flare over the wind-up. */
+  /**
+   * The Shardback's bash arc, in the Husk's swipe style (004), and its crystals' flare over the wind-up: a cyan glow on
+   * the shield, `ahead` px out along its facing and `rise` px up, growing to `radius` and `alpha` as the wind-up runs.
+   */
   bash: { alpha: 0.25, fillAlpha: 0.55 },
+  flare: { color: 'cyan-glow', ahead: 12, rise: 20, radius: 16, alpha: 0.7, pulseMs: 140 },
   /**
    * The Sniper's laser from its lens: thin while tracking, brighter and wider once locked, blinking every `blinkMs`
    * (on for half of it). Lens offsets from the feet per view (side faces right), world px.

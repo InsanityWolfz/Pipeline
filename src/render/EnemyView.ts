@@ -118,7 +118,7 @@ export class EnemyView {
       this.drawBar(d.bar, e, top);
       if (d.champion) this.drawChampion(d.champion, e, bottom, top, now);
       drawTelegraph(d.telegraph, e);
-      drawHollowsArt(d.hollows, d.sprite, e, now);
+      drawHollowsArt(d.hollows, d.sprite, e, def, now);
       if (d.overlay && e.enemyId === RESIN.enemyId) this.drawResin(d.overlay, e, bottom, view, now);
       if (d.overlay && e.enemyId === CORE.enemyId) this.drawCore(d.overlay, e, bottom, view, now);
       if (d.overlay && def.kind === 'bulwark') drawSeam(d.overlay, e, bottom, view, now);

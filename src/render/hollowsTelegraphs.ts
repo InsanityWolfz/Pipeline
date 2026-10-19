@@ -4,10 +4,12 @@ import type { EnemyDef } from '../data/enemies';
 import { HOLLOWS_ENEMY_LOOK } from '../data/hollowsEnemyAssets';
 import type { EnemyState } from '../sim/enemies';
 import { colorOf } from './color';
+import { drawArc } from './telegraphs';
 
 // Region 2's four's telegraphs (035), all in the shared enemy red: the Charger's lane from
 // its feet, filling down it as it paws; the Burrower's cracked ring growing at its locked
-// spot. Returns whether the enemy was one of theirs.
+// spot; the Shardback's bash arc along its shield, turning with it. Returns whether the
+// enemy was one of theirs.
 
 export function drawHollowsTelegraph(g: GameObjects.Graphics, e: EnemyState, def: EnemyDef): boolean {
   if (def.kind === 'charger') {
@@ -16,6 +18,11 @@ export function drawHollowsTelegraph(g: GameObjects.Graphics, e: EnemyState, def
   }
   if (def.kind === 'burrower') {
     if (e.mode === 'windup') drawRing(g, e.spotX, e.spotY, def.burrow.radius, Math.min(1, e.modeTicks / def.burrow.windupTicks));
+    return true;
+  }
+  if (def.kind === 'shardback') {
+    const B = HOLLOWS_ENEMY_LOOK.bash;
+    if (e.mode === 'windup') drawArc(g, e.x, e.y, e.angle, def.bash.arcDegrees, def.bash.reach, Math.min(1, e.modeTicks / def.bash.windupTicks), B.alpha, B.fillAlpha);
     return true;
   }
   return false;

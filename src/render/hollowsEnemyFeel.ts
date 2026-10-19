@@ -8,8 +8,8 @@ import type { SoundView } from './SoundView';
 
 // Region 2's four's feel (035), for FeelView: a Charger kicking dust down its lane and
 // slamming into a wall (a crack of stone, chips and a shake); a Burrower's ripple trailing
-// dust and its eruption throwing up rock. Their wind-up cues are WINDUP_SOUNDS'; this plays
-// what happens after.
+// dust and its eruption throwing up rock; a Shardback's bash. Their wind-up cues are
+// WINDUP_SOUNDS'; this plays what happens after.
 
 export class HollowsEnemyFeel {
   /** Each enemy's mode last frame, and ms since it last kicked up dust. */
@@ -37,6 +37,13 @@ export class HollowsEnemyFeel {
       this.modes.set(e.id, e.mode);
       if (kind === 'burrower') {
         this.trail(e.id, e.underground && Math.hypot(e.vx, e.vy) > HOLLOWS_ENEMY_LOOK.ripple.minSpeed, deltaMs, () => j.burst('rippleDust', e.x, e.y + 2, e.y - 1));
+        continue;
+      }
+      if (kind === 'shardback') {
+        if (was !== undefined && was !== 'swipe' && e.mode === 'swipe') {
+          s.play(SOUNDS.shieldBash);
+          j.burst('bashSpark', e.x + Math.cos(e.angle) * 18, e.y + Math.sin(e.angle) * 18);
+        }
         continue;
       }
       if (kind !== 'charger') continue;

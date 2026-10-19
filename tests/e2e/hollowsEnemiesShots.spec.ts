@@ -112,10 +112,31 @@ test.describe('review screenshots (035)', () => {
     await page.screenshot({ path: `${SHOTS}/05-burrower-ring.png` });
   });
 
+  test('the Shardback idle, then its bash arc mid-wind-up with its crystals flaring', async ({ page }) => {
+    test.setTimeout(120_000);
+    await sandbox(page);
+    const id = await spawn(page, 'shardback', 90, 0);
+    await frames(page);
+    await page.screenshot({ path: `${SHOTS}/06-shardback-idle.png` });
+    // It walks in and turns to face the player, then winds up.
+    await stepUntil(page, id, 'windup', 28);
+    await frames(page);
+    await page.screenshot({ path: `${SHOTS}/07-shardback-bash-arc.png` });
+  });
+
+  test('a champion Shardback: bigger, its shield and hurtbox with it, its glow and name', async ({ page }) => {
+    test.setTimeout(120_000);
+    await sandbox(page);
+    await spawn(page, 'shardback', 110, 0, true);
+    await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().champions.length)).toBe(1);
+    await frames(page);
+    await page.screenshot({ path: `${SHOTS}/08-shardback-champion.png` });
+  });
+
   test('the rigs on the contact sheet, at 4x', async ({ page }) => {
     await page.goto('/sheet.html');
     const row = (title: string) => page.locator('h2', { hasText: title }).locator('xpath=following-sibling::div[1]');
-    for (const id of ['charger', 'burrower']) {
+    for (const id of ['charger', 'burrower', 'shardback']) {
       await expect(row(id)).toBeVisible();
       await row(id).screenshot({ path: `${SHOTS}/sheet-${id}.png` });
     }
