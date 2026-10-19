@@ -1,7 +1,5 @@
-import { TILE_SIZE } from '../data/config';
 import { BOSS_REFIGHT_XP, CHAMPION_XP, CLAIM_XP, LANDMARK_XP, LEVEL_CAP, RING_XP, XP_CURVE, type XpSource } from '../data/leveling';
 import { enemyDef } from '../data/enemies';
-import { OVERWORLD_ROOM, ringOf } from '../data/overworld';
 import type { EnemyState } from './enemies';
 import type { SimState } from './state';
 
@@ -32,11 +30,6 @@ export function gainXp(s: Leveling, amount: number, source: XpSource): void {
   if (s.level >= LEVEL_CAP) s.xp = 0;
 }
 
-/** The danger ring an enemy belongs to: its home tile's in the overworld, ring 0 in any other room. */
-function homeRing(e: Pick<EnemyState, 'roomId' | 'homeX' | 'homeY'>): number {
-  return e.roomId === OVERWORLD_ROOM ? ringOf(Math.floor(e.homeX / TILE_SIZE), Math.floor(e.homeY / TILE_SIZE)) : 0;
-}
-
 /**
  * Gives an enemy's death its XP, whatever killed it (before 034's boss record drops a summoned boss): a boss its own XP
  * on its first kill and BOSS_REFIGHT_XP of it when summoned again at its altar (034), and none for any other later kill
@@ -52,7 +45,7 @@ export function killXp(state: SimState, e: EnemyState): void {
     gainXp(state, xp, 'boss');
     return;
   }
-  gainXp(state, def.xp * (RING_XP[homeRing(e)] ?? 1) * (e.champion ? CHAMPION_XP : 1), 'kill');
+  gainXp(state, def.xp * (RING_XP[e.ring] ?? 1) * (e.champion ? CHAMPION_XP : 1), 'kill');
 }
 
 /** After the tick's claims and discoveries: each claim (once per pylon, 009) and each first discovery (032) gives its XP. */

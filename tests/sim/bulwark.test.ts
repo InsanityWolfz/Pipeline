@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { defOf } from '../../src/sim/champions';
 import { straightAmmo } from '../../src/data/ammo';
 import { enemyDef, type BulwarkDef } from '../../src/data/enemies';
 import { HOLLOWS } from '../../src/data/hollows';
@@ -111,7 +112,7 @@ describe('the Bulwark', () => {
     run(s, 2);
     expect(s.events.enemyBursts).toHaveLength(1);
     expect(s.player.health).toBe(100);
-    expect(husk.health).toBe(enemyDef('husk').maxHealth);
+    expect(husk.health).toBe(defOf(husk).maxHealth); // its own full health (041: ring 3 here)
   });
 
   it('pounds up close: plants its shield, winds up, damages inside the radius, and holds its facing through the recovery', () => {

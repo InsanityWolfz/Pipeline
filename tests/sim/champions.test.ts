@@ -3,7 +3,7 @@ import { UNIDENTIFIED_ARMOR } from '../../src/data/gear';
 import { CHAMPIONS } from '../../src/data/champions';
 import { ENEMIES, attackOf, enemyDef, type EnemyDef } from '../../src/data/enemies';
 import { LANDMARK_LIST } from '../../src/data/landmarks';
-import { championDef, rollChampions } from '../../src/sim/champions';
+import { championDef, defOf, rollChampions } from '../../src/sim/champions';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import { createRng } from '../../src/sim/rng';
 import { createSim } from '../../src/sim/state';
@@ -86,7 +86,8 @@ describe('the champion roll', () => {
       expect(champs).toHaveLength(hit ? 1 : 0);
       for (const e of champs) {
         expect(CHAMPIONS.names[e.enemyId]).toContain(e.champion?.name);
-        expect(e.health).toBe(championDef(enemyDef(e.enemyId)).maxHealth);
+        // Its champion's full health in its ring (041: these stand in ring 3).
+        expect(e.health).toBe(defOf(e).maxHealth);
       }
     }
   });

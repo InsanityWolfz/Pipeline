@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { AMMO, ammoDef, lobAmmo, mineAmmo, straightAmmo } from '../../src/data/ammo';
+import { enemyDef } from '../../src/data/enemies';
 import { AFFIXES, MIN_DAMAGE_SHARE, MOVE_BONUS_CAP, ROLL_COOLDOWN_FLOOR, SLOT_BASE } from '../../src/data/gear';
 import { HEALING, HIT_INVULN_TICKS, INVULN_TICKS, MAX_HEALTH, ROLL_COOLDOWN_TICKS, ROLL_DISTANCE, ROLL_TICKS } from '../../src/data/player';
 import { RELICS } from '../../src/data/relics';
+import { RING_SCALE } from '../../src/data/ringScale';
 import { roundBase } from '../../src/data/tags';
 import { CLUSTER, COLD, SPLIT } from '../../src/data/tags';
 import { SHATTERPOINT, TALENTS } from '../../src/data/talents';
+import { defOf } from '../../src/sim/champions';
 
 // 041's balance pass as data: per-hit damage in the target order (landmine > arrow >
 // ley bolt ≈ bomb) at unchanged fire rates, children and Frost untouched, and the
@@ -92,5 +95,38 @@ describe('survival is unchanged (041)', () => {
       ],
       ['last-ember', [{ scope: 'you', rule: 'last-stand', params: { health: 1, invuln: 60 } }]],
     ]);
+  });
+});
+
+describe('ring scaling (041)', () => {
+  /** Max health and the one attack's damage, through the def function, for a ring and champion. */
+  const row = (enemyId: string, ring: 0 | 1 | 2 | 3, champion = false): [number, number] => {
+    const d = defOf({ enemyId, ring, champion: champion ? { name: 'x' } : null });
+    const hit = d.kind === 'melee' ? d.swipe.damage : d.kind === 'caster' ? d.cast.orbDamage : d.kind === 'charger' ? d.charge.damage : d.kind === 'burrower' ? d.burrow.damage : d.kind === 'shardback' ? d.bash.damage : d.kind === 'sniper' ? d.snipe.damage : NaN;
+    return [d.maxHealth, hit];
+  };
+
+  it('RING_SCALE: ×1, ×1, ×1.6, ×2.5 on health and damage, separate fields', () => {
+    expect(RING_SCALE).toEqual({ 0: { health: 1, damage: 1 }, 1: { health: 1, damage: 1 }, 2: { health: 1.6, damage: 1.6 }, 3: { health: 2.5, damage: 2.5 } });
+  });
+
+  it('gives the spec’s table, champion column included', () => {
+    const table: [string, 0 | 1 | 2 | 3, [number, number], [number, number]][] = [
+      ['husk', 1, [40, 20], [60, 26]],
+      ['husk', 2, [64, 32], [96, 42]],
+      ['wisp', 2, [32, 19], [48, 25]],
+      ['charger', 3, [125, 63], [188, 81]],
+      ['burrower', 3, [88, 55], [131, 72]],
+      ['shardback', 3, [175, 50], [263, 65]],
+      ['sniper', 3, [75, 70], [113, 91]],
+    ];
+    for (const [id, ring, plain, champ] of table) {
+      expect(row(id, ring), `${id} ring ${ring}`).toEqual(plain);
+      expect(row(id, ring, true), `${id} ring ${ring} champion`).toEqual(champ);
+    }
+  });
+
+  it('bosses keep their own numbers in any ring, and are never champions', () => {
+    for (const id of ['pylon-warden', 'bulwark']) for (const ring of [0, 1, 2, 3] as const) expect(defOf({ enemyId: id, ring, champion: null }), id).toBe(enemyDef(id));
   });
 });

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { defOf } from '../../src/sim/champions';
 import { MELEE } from '../../src/data/combat';
 import { ENEMIES, enemyDef } from '../../src/data/enemies';
 import { TILE_SIZE } from '../../src/data/config';
@@ -84,7 +85,7 @@ describe('the punch', () => {
     const { hurtbox } = enemyDef('husk');
     expect(husk.y + hurtbox.offsetY - hurtbox.h / 2 - s.player.y).toBeLessThan(MELEE.reach);
     punchToward(s, 0, 100);
-    expect(husk.health).toBe(enemyDef('husk').maxHealth);
+    expect(husk.health).toBe(defOf(husk).maxHealth); // its own full health (041: scaled by its ring)
     expect(s.events.melees[0]?.hits).toEqual([]);
   });
 

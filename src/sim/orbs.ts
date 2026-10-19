@@ -44,13 +44,14 @@ export interface OrbState {
   dx: number;
   dy: number;
   travelled: number;
-  /** A champion's orb hits harder (032): its damage, or the caster kind's when unset. */
+  /** A ring-scaled (041) or champion's (032) orb hits harder: its damage, or the caster kind's when unset. */
   damage?: number;
 }
 
 /** Casts an orb (or fires a bolt, 035) from the shooter's feet along its locked aim. */
 export function castOrb(state: SimState, e: EnemyState): void {
-  const def = defOf(e);
+  const damage = shotOf(defOf(e))?.damage ?? 0;
+  const base = shotOf(enemyDef(e.enemyId))?.damage ?? 0;
   state.orbs.push({
     id: state.nextOrbId++,
     enemyId: e.enemyId,
@@ -60,7 +61,7 @@ export function castOrb(state: SimState, e: EnemyState): void {
     dx: e.swipeDirX,
     dy: e.swipeDirY,
     travelled: 0,
-    ...(e.champion ? { damage: shotOf(def)?.damage ?? 0 } : {}),
+    ...(damage !== base ? { damage } : {}),
   });
 }
 

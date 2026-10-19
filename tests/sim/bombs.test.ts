@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { defOf } from '../../src/sim/champions';
 import { lobAmmo } from '../../src/data/ammo';
 import { TICK_RATE } from '../../src/data/config';
 import { MUZZLE_OFFSET } from '../../src/data/tube';
@@ -91,7 +92,8 @@ describe('bombs', () => {
     throwAt(s, at.x, at.y - 120);
     runUntil(s, () => s.events.bursts.length > 0, 100);
     expect(s.events.bursts[0]?.y).toBeCloseTo(at.y - 120);
-    expect(between.health).toBe(HUSK.maxHealth);
+    // Its own full health (041: the tile is in the Hollows, ring 3).
+    expect(between.health).toBe(defOf(between).maxHealth);
   });
 
   it('burst on Husks within 48 px: 12 physical damage (041: was 15), a flash, no knockback', () => {

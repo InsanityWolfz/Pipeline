@@ -1,4 +1,7 @@
 import type { DamageType } from '../data/ammo';
+import { TILE_SIZE } from '../data/config';
+import { OVERWORLD_ROOM, ringOf } from '../data/overworld';
+import type { Ring } from '../data/ringScale';
 import { enemyDef } from '../data/enemies';
 import { defOf } from './champions';
 import type { Room } from '../data/rooms';
@@ -57,6 +60,8 @@ export interface EnemyState extends Knockable {
   refreeze: number;
   /** A champion (032), by name, or null: the sim reads its scaled def (`defOf`). */
   champion: { name: string } | null;
+  /** Its danger ring (041): its home tile's, set when it's created and kept as it walks. Its def is scaled by it. */
+  ring: Ring;
   /** Its continuous facing, radians (034): a shielded enemy's shield points this way and turns, never snapping. */
   angle: number;
   /** Ticks before its next bomb lob (034: the Bulwark's). */
@@ -78,8 +83,12 @@ export interface EnemyState extends Knockable {
   dazed: boolean;
 }
 
+/** A home's danger ring (041, the rule 037's XP used): `ringOf` its tile in the overworld, 0 in any other room. */
+export const ringAt = (roomId: string, x: number, y: number): Ring => (roomId === OVERWORLD_ROOM ? ringOf(Math.floor(x / TILE_SIZE), Math.floor(y / TILE_SIZE)) : 0);
+
 export function createEnemy(id: number, enemyId: string, at: { x: number; y: number }, roomId: string, group = ''): EnemyState {
   const def = enemyDef(enemyId);
+  const ring = ringAt(roomId, at.x, at.y);
   return {
     id,
     enemyId,
@@ -96,7 +105,7 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     modeTicks: 0,
     offScreenTicks: 0,
     cooldown: 0,
-    health: def.maxHealth,
+    health: defOf({ enemyId, champion: null, ring }).maxHealth,
     swipeDirX: 0,
     swipeDirY: 1,
     flash: 0,
@@ -105,6 +114,7 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     frozen: 0,
     refreeze: 0,
     champion: null,
+    ring,
     angle: Math.PI / 2,
     lobCooldown: def.kind === 'bulwark' ? def.lob.cooldownTicks : 0,
     blockFlash: 0,

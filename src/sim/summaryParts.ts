@@ -78,6 +78,8 @@ export interface EnemySummary extends KindSummary {
   weight: number;
   /** A champion's name (032), or null. */
   champion: { name: string } | null;
+  /** Its danger ring (041): its home tile's; its health and damage are scaled by it. */
+  ring: number;
 }
 
 export function enemySummary(state: SimState, e: EnemyState): EnemySummary {
@@ -95,6 +97,7 @@ export function enemySummary(state: SimState, e: EnemyState): EnemySummary {
     health: e.health,
     maxHealth: defOf(e).maxHealth,
     champion: e.champion ? { ...e.champion } : null,
+    ring: e.ring,
     swipeDir: { x: round(e.swipeDirX), y: round(e.swipeDirY) },
     flash: e.flash,
     chill: e.chill,

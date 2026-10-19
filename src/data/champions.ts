@@ -1,7 +1,8 @@
 // Champions (032): any non-boss enemy can spawn as a champion, a rule over its data:
 // bigger, tougher, a little faster and harder-hitting, glowing and named, with richer
 // drops. Starting values from Shaun's round 6; tune in playtest. Names are placeholders
-// for Shaun to rewrite.
+// for Shaun to rewrite. Its health and damage multiply on top of its ring's (041:
+// ringScale.ts), rounded once, so a ring 1 champion is exactly as before.
 
 export const CHAMPIONS = {
   /** Its sprite, feet box and hurtbox, ×. */
