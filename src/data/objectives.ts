@@ -42,7 +42,11 @@ export type ObjectiveCheck =
   /** The volley holds at least two different ammo (028). */
   | { kind: 'mixedVolley' }
   /** At least this many pylons claimed (032). */
-  | { kind: 'claimedCount'; min: number };
+  | { kind: 'claimedCount'; min: number }
+  /** The player stands in this region (034: Region 2, Stonefall Hollows, reached once its barrier is down). */
+  | { kind: 'inRegion'; region: number }
+  /** A region boss has been killed at least once (034). */
+  | { kind: 'bossDefeated'; boss: string };
 
 /** Which key a goal's prompt shows, and what it floats over (see PromptView). */
 export type PromptTarget = 'tubeStone' | 'node' | 'bench' | 'pylon' | 'hopper' | 'newestHopper' | 'player';
@@ -141,8 +145,12 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
   { text: 'Try a ley stage at the bench: homing or star', milestone: 'm1', check: { kind: 'craftedAny', items: ['ley-bolt+homing', 'ley-bolt+star'] } },
   // 032: a resource site's pylon, marked once one is discovered.
   { text: 'Claim a second pylon', milestone: 'm1', check: { kind: 'claimedCount', min: 2 }, marker: 'sitePylon' },
-  // 033: the third entrance needs the Bulwark's core, so feeding all three waits here, just before the frontier line
-  // (034 puts it after "Restore the intake's third entrance").
+  // 034: Region 2, behind the barrier the shrine's claim drops: in, its pylon, its boss, and the entrance its core restores.
+  { text: 'Breach Stonefall Hollows', milestone: 'm1', check: { kind: 'inRegion', region: 2 } },
+  { text: "Claim the Cistern Terrace's pylon", milestone: 'm1', check: { kind: 'claimed', site: 'cistern-terrace' } },
+  { text: 'Defeat the Bulwark', milestone: 'm1', check: { kind: 'bossDefeated', boss: 'bulwark' } },
+  { text: "Restore the intake's third entrance (E with the Bulwark core)", milestone: 'm1', check: { kind: 'restored', node: 'entrance-3' } },
+  // 033: the third entrance needs the Bulwark's core, so feeding all three comes after restoring it, just before the frontier line.
   { text: 'Feed all three entrances', milestone: 'm1', check: { kind: 'volley', min: 3 } },
 ];
 

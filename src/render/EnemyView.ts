@@ -247,6 +247,7 @@ export class EnemyView {
       g.fillStyle(color, ENEMY_FX.telegraphFillAlpha).fillCircle(e.x, e.y, def.slam.radius * progress);
       return;
     }
+    if (def.kind === 'bulwark') return;
     const { swipe } = def;
     const angle = Math.atan2(e.swipeDirY, e.swipeDirX);
     const half = (swipe.arcDegrees * Math.PI) / 360;

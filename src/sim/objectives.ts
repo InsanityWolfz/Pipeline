@@ -4,6 +4,7 @@ import { volleyRounds } from './volley';
 import type { SimState } from './state';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { isRestored } from './research';
+import { regionOf } from './regions';
 
 // The objectives (012, 028): one ordered chain. Each one completes the first tick
 // its check holds and stays done, so they can finish in any order. The objective
@@ -51,6 +52,10 @@ function holds(state: SimState, check: ObjectiveCheck): boolean {
       return new Set(volleyRounds(state).map((r) => r.ammoId)).size >= 2;
     case 'claimedCount':
       return state.claims.length >= check.min;
+    case 'inRegion':
+      return regionOf(state.roomId, state.player) === check.region;
+    case 'bossDefeated':
+      return state.bossDefeats.includes(check.boss);
   }
 }
 

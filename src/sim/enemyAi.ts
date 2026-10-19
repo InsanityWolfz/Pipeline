@@ -1,4 +1,5 @@
-import type { MeleeDef } from '../data/enemies';
+import type { EnemyDef, MeleeDef } from '../data/enemies';
+import { bulwarkThink } from './bulwarkAi';
 import { defOf } from './champions';
 import { castThink } from './casterAi';
 import { chillScale, tickCold } from './cold';
@@ -30,7 +31,7 @@ export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBod
     if (e.cooldown > 0) e.cooldown -= 1;
     if (e.flash > 0) e.flash -= 1;
     // A frozen enemy doesn't think (029): its wind-up pauses where it is. A chilled one walks slower.
-    const thought: [number, number] = e.frozen > 0 ? [0, 0] : def.kind === 'melee' ? think(state, e, def) : def.kind === 'caster' ? castThink(state, e, def) : slamThink(state, e, def);
+    const thought: [number, number] = e.frozen > 0 ? [0, 0] : thinkOf(state, e, def);
     const slow = chillScale(e);
     // Claimed ground is safe (017): a chaser stops at the zone's edge, and a knock never carries it in either.
     const [mx, my] = keepOut(state, e, thought[0] * slow, thought[1] * slow);
@@ -39,10 +40,20 @@ export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBod
     const { hitX, hitY } = moveBox(room, e, def.feetBox, dx, dy, obstacles);
     e.vx = hitX ? 0 : mx;
     e.vy = hitY ? 0 : my;
-    e.facing = attacking(e) ? aimFacing(e.swipeDirX, e.swipeDirY, e.facing) : aimFacing(e.vx, e.vy, e.facing);
+    // A shielded enemy (034) faces its shield's continuous angle.
+    if (def.shield) e.facing = aimFacing(Math.cos(e.angle), Math.sin(e.angle), e.facing);
+    else e.facing = attacking(e) ? aimFacing(e.swipeDirX, e.swipeDirY, e.facing) : aimFacing(e.vx, e.vy, e.facing);
     tickCold(state, e);
   }
   separate(state.enemies, bodies);
+}
+
+/** Each kind's AI: the Husk's here, the Wisp's, the Warden's and the Bulwark's (034) in their own files. */
+function thinkOf(state: SimState, e: EnemyState, def: EnemyDef): [number, number] {
+  if (def.kind === 'melee') return think(state, e, def);
+  if (def.kind === 'caster') return castThink(state, e, def);
+  if (def.kind === 'slammer') return slamThink(state, e, def);
+  return bulwarkThink(state, e, def);
 }
 
 function attacking(e: EnemyState): boolean {

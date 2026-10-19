@@ -1,3 +1,4 @@
+import { BULWARK } from './bulwark';
 import { REGION_1_PART, type RarePart } from './drops';
 
 // Enemies. Starting values from specs 004 and 009; tune in playtest.
@@ -39,6 +40,16 @@ interface EnemyBase {
   drops: DropTable;
   /** Key into ENEMY_ANIMS in src/data/assets.ts. */
   anims: string;
+  /**
+   * A shield (034, shared with 035): straight shots and punches whose hit point lies within `arcDegrees / 2` of its
+   * facing are blocked. It turns toward the player at no more than `turnDegPerSec`.
+   */
+  shield?: ShieldDef;
+}
+
+export interface ShieldDef {
+  arcDegrees: number;
+  turnDegPerSec: number;
 }
 
 /** The timing every attack shares: a telegraphed wind-up, the attack pose, a recovery, and a cooldown. */
@@ -109,7 +120,34 @@ export interface SlammerDef extends EnemyBase {
   };
 }
 
-export type EnemyDef = MeleeDef | CasterDef | SlammerDef;
+/** The Bulwark (034): a shielded wall that lobs bombs and pounds up close, guarding its arena. Values in bulwark.ts. */
+export interface BulwarkDef extends EnemyBase {
+  kind: 'bulwark';
+  shield: ShieldDef;
+  /** Ticks with the player outside its arena before it walks home and heals. */
+  leashTicks: number;
+  lob: {
+    cooldownTicks: number;
+    windupTicks: number;
+    throwTicks: number;
+    count: number;
+    scatter: number;
+    radius: number;
+    fuseTicks: number;
+    damage: number;
+    knockback: number;
+    knockTicks: number;
+  };
+  pound: AttackTiming & {
+    triggerRange: number;
+    radius: number;
+    damage: number;
+    knockback: number;
+    knockTicks: number;
+  };
+}
+
+export type EnemyDef = MeleeDef | CasterDef | SlammerDef | BulwarkDef;
 
 /** Shared tuning for the base fields that all three start from. */
 const BASE = { hitKnockTicks: 4, hitFlashTicks: 6, leashGraceTicks: 60, homeTolerance: 4 } as const;
@@ -212,6 +250,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
     },
     anims: 'warden',
   },
+  bulwark: BULWARK,
 };
 
 /** Dropped items land within this distance of the corpse, px. */
@@ -234,6 +273,6 @@ export function meleeDef(id: string): MeleeDef {
 }
 
 /** The wind-up, attack, recover and cooldown timing of any enemy's attack. */
-export function attackOf(def: EnemyDef): MeleeDef['swipe'] | CasterDef['cast'] | SlammerDef['slam'] {
-  return def.kind === 'melee' ? def.swipe : def.kind === 'caster' ? def.cast : def.slam;
+export function attackOf(def: EnemyDef): AttackTiming {
+  return def.kind === 'melee' ? def.swipe : def.kind === 'caster' ? def.cast : def.kind === 'slammer' ? def.slam : def.pound;
 }

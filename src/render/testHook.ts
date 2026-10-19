@@ -186,6 +186,7 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
         equip: null,
         applyStage: null,
         restore: null,
+        summon: null,
       };
       for (let i = 0; i < frames; i++) {
         // Building with the mouse and keys works under the hook: the scene's queued actions join each tick.

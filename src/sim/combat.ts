@@ -1,7 +1,9 @@
 import { enemyDef } from '../data/enemies';
 import { STAR } from '../data/tags';
 import { createShard, type ArrowState } from './arrows';
-import { damageEnemy, inHurtbox, type EnemyState, type HitStyle } from './enemies';
+import { aggro, damageEnemy, inHurtbox, type EnemyState, type HitStyle } from './enemies';
+import { recordBlock, shieldBlocks } from './shield';
+import { onBossDeath } from './altar';
 import { spawnDrops } from './drops';
 import type { SimState } from './state';
 import { rotate } from './volley';
@@ -23,11 +25,20 @@ function burstStar(state: SimState, arrow: ArrowState, struck: EnemyState, spawn
   state.events.starBursts.push({ x: arrow.x, y: arrow.y });
 }
 
-/** Damages an enemy with an arrow, bursting a star round. */
-function strike(state: SimState, arrow: ArrowState, e: EnemyState, spawned: ArrowState[]): void {
+/**
+ * Damages an enemy with an arrow, bursting a star round; returns false if its shield's front took it instead (034):
+ * no damage and no burst, the arrow stops there even piercing, and the block is recorded (a hit still wakes it).
+ */
+function strike(state: SimState, arrow: ArrowState, e: EnemyState, spawned: ArrowState[]): boolean {
   arrow.hitIds.push(e.id);
+  if (shieldBlocks(e, arrow.x, arrow.y, -arrow.dx, -arrow.dy)) {
+    recordBlock(state, e, arrow.x, arrow.y);
+    if (e.mode === 'idle' || e.mode === 'return') aggro(e);
+    return false;
+  }
   damageEnemy(state, e, arrow.damage, arrow.dx, arrow.dy, arrowHit(arrow));
   if (arrow.split) burstStar(state, arrow, e, spawned);
+  return true;
 }
 
 /**
@@ -42,7 +53,7 @@ export function arrowHits(state: SimState, spawned: ArrowState[] = []): (arrow: 
       for (const en of state.enemies) {
         if (en.roomId !== arrow.roomId || en.health <= 0 || arrow.hitIds.includes(en.id)) continue;
         if (!inHurtbox(en, arrow.x, arrow.y)) continue;
-        strike(state, arrow, en, spawned);
+        if (!strike(state, arrow, en, spawned)) return true;
       }
       return false;
     }
@@ -72,6 +83,7 @@ export function removeDead(state: SimState): void {
     }
     state.events.deaths.push({ id: e.id, enemyId: e.enemyId, x: e.x, y: e.y, facing: e.facing, ...(e.champion ? { champion: true as const } : {}) });
     spawnDrops(state, enemyDef(e.enemyId), e.x, e.y, e.roomId, e.champion !== null);
+    onBossDeath(state, e.enemyId);
   }
   state.enemies.length = kept;
 }

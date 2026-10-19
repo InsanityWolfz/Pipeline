@@ -3,7 +3,7 @@ import { FRONTIER_GOAL, OBJECTIVES } from '../../src/data/objectives';
 import { SUPPLY_TICKS } from '../../src/data/claims';
 import { OVERWORLD_ROOM } from '../../src/data/overworld';
 import { FOUNDRY_ROOM, SHRINE_SITE } from '../../src/data/rooms';
-import { PLAYTEST_START } from '../../src/data/playtest';
+import { HOLLOWS_START, PLAYTEST_START } from '../../src/data/playtest';
 import { claim } from '../../src/sim/claims';
 import { currentObjective, objectiveLine } from '../../src/sim/objectives';
 import { createSim } from '../../src/sim/state';
@@ -33,6 +33,11 @@ describe('the chain', () => {
       'Build a frost rune into your arrow line',
       'Try a ley stage at the bench: homing or star',
       'Claim a second pylon',
+      // 034: Region 2's steps.
+      'Breach Stonefall Hollows',
+      "Claim the Cistern Terrace's pylon",
+      'Defeat the Bulwark',
+      "Restore the intake's third entrance (E with the Bulwark core)",
       // 033: the third entrance needs the Bulwark's core, so this waits just before the frontier line.
       'Feed all three entrances',
     ]);
@@ -44,6 +49,10 @@ describe('the chain', () => {
       { kind: 'machineMade', item: 'arrow+frost' },
       { kind: 'craftedAny', items: ['ley-bolt+homing', 'ley-bolt+star'] },
       { kind: 'claimedCount', min: 2 },
+      { kind: 'inRegion', region: 2 },
+      { kind: 'claimed', site: 'cistern-terrace' },
+      { kind: 'bossDefeated', boss: 'bulwark' },
+      { kind: 'restored', node: 'entrance-3' },
       { kind: 'volley', min: 3 },
     ]);
     // 029: building the frost rune pulses its build-bar cell.
@@ -156,5 +165,20 @@ describe('the line after the shrine', () => {
     const s = createSim(SEED);
     s.objectives = OBJECTIVES.map(() => true);
     expect(summarize(s).objective).toEqual({ index: null, text: 'Explore beyond the shrine' });
+  });
+});
+
+describe("Region 2's goals (034)", () => {
+  const at = (text: string): number => OBJECTIVES.findIndex((o) => o.text === text);
+
+  it('breach the Hollows once the player stands in Region 2, and defeat the Bulwark on its first kill', () => {
+    const s = createSim(SEED, { start: HOLLOWS_START });
+    run(s, 1);
+    expect(s.objectives[at('Breach Stonefall Hollows')]).toBe(true);
+    expect(s.objectives[at('Defeat the Bulwark')]).toBe(false);
+    const b = s.enemies.find((e) => e.enemyId === 'bulwark');
+    if (b) b.health = 0;
+    run(s, 1);
+    expect(s.objectives[at('Defeat the Bulwark')]).toBe(true);
   });
 });

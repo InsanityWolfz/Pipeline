@@ -28,6 +28,8 @@ import { createRng, type RngState } from './rng';
 import { tileCentre } from './tiles';
 import { createTube, type TubeState } from './tube';
 import { createResearch, type ResearchState } from './research';
+import type { EnemyBombState } from './enemyBombs';
+import { bossReturns, settleSummons, type SummoningState } from './altar';
 
 /** The whole sim: plain serializable data. */
 export interface SimState {
@@ -63,6 +65,15 @@ export interface SimState {
   /** Bombs in flight. */
   bombs: BombState[];
   nextBombId: number;
+  /** The Bulwark's bombs on the ground, fuses burning (034). */
+  enemyBombs: EnemyBombState[];
+  nextEnemyBombId: number;
+  /** Region bosses killed at least once (034), in order. Kept through a KO: they never respawn but by their altar. */
+  bossDefeats: string[];
+  /** Region bosses summoned at their altar and still living (034). Kept through a KO, so the offering is never lost. */
+  summoned: string[];
+  /** A summon rising at an altar (034), or null. */
+  summoning: SummoningState | null;
   /** Item ids hand-crafted at least once, sorted. Kept through a KO; it unlocks machines. */
   crafted: string[];
   /** The buildable grid in the foundry room. Kept through a KO. */
@@ -152,6 +163,11 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     harvest: null,
     bombs: [],
     nextBombId: 0,
+    enemyBombs: [],
+    nextEnemyBombId: 0,
+    bossDefeats: [],
+    summoned: [],
+    summoning: null,
     crafted: [...start.crafted],
     foundry: createFoundry(),
     orbs: [],
@@ -209,6 +225,8 @@ export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   state.nodes = createNodes(rooms);
   state.harvest = null;
   state.bombs = [];
+  state.enemyBombs = [];
+  settleSummons(state);
   state.orbs = [];
   state.claimHold = null;
   state.cacheHold = null;
@@ -217,7 +235,7 @@ export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   // inside a claimed pylon's safe zone (032).
   state.enemies = rooms.flatMap((room) =>
     (room.enemies ?? [])
-      .filter((p) => (!p.group || !state.claims.includes(p.group)) && !inSafeZone(state, room.id, tileCentre(p).x, tileCentre(p).y))
+      .filter((p) => (!p.group || !state.claims.includes(p.group)) && !inSafeZone(state, room.id, tileCentre(p).x, tileCentre(p).y) && bossReturns(state, p.enemyId))
       .map((p) => createEnemy(state.nextEnemyId++, p.enemyId, tileCentre(p), room.id, p.group)),
   );
   // Each landmark's guard pack may hold a champion (032); the tutorial's packs never do.

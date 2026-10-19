@@ -6,6 +6,7 @@ import { isSolid } from './collision';
 import { damageEnemy, type HitStyle } from './enemies';
 import { startKnock } from './knockback';
 import { sectorHitsBox } from './sector';
+import { recordBlock, shieldBlocks } from './shield';
 import { roomById, type SimState } from './state';
 
 // The punch (023): with no tube, or nothing to fire, fire throws a quick, weak
@@ -47,6 +48,11 @@ export function punch(state: SimState, dirX: number, dirY: number): void {
     const { hurtbox } = def;
     if (!sectorHitsBox(arc, { x: e.x, y: e.y + hurtbox.offsetY, w: hurtbox.w, h: hurtbox.h })) continue;
     if (!clearLine(room, player.x, player.y, e.x, e.y)) continue;
+    // Into a shield's front (034): no damage, no knockback, a block between them.
+    if (shieldBlocks(e, player.x, player.y)) {
+      recordBlock(state, e, (e.x + player.x) / 2, (e.y + player.y) / 2);
+      continue;
+    }
     hits.push(e.id);
     damageEnemy(state, e, MELEE.damage, dirX, dirY, PUNCH_HIT);
     if (def.boss) continue;

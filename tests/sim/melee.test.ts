@@ -218,11 +218,11 @@ describe('the arc against a box', () => {
 });
 
 describe('boss flags', () => {
-  it('every enemy has one, and only the Pylon Warden is a boss', () => {
+  it('every enemy has one, and only the Pylon Warden and the Bulwark (034) are bosses', () => {
     const bosses = Object.values(ENEMIES)
       .filter((e) => e.boss)
       .map((e) => e.id);
-    expect(bosses).toEqual(['pylon-warden']);
+    expect(bosses).toEqual(['pylon-warden', 'bulwark']);
     for (const e of Object.values(ENEMIES)) expect(typeof e.boss).toBe('boolean');
   });
 });

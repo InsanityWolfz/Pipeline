@@ -27,7 +27,9 @@ export function championDef(def: EnemyDef): EnemyDef {
       ? { ...def, ...base, swipe: { ...def.swipe, damage: dmg(def.swipe.damage) } }
       : def.kind === 'caster'
         ? { ...def, ...base, cast: { ...def.cast, orbDamage: dmg(def.cast.orbDamage) } }
-        : { ...def, ...base, slam: { ...def.slam, damage: dmg(def.slam.damage) } };
+        : def.kind === 'slammer'
+          ? { ...def, ...base, slam: { ...def.slam, damage: dmg(def.slam.damage) } }
+          : { ...def, ...base, lob: { ...def.lob, damage: dmg(def.lob.damage) }, pound: { ...def.pound, damage: dmg(def.pound.damage) } };
   scaled.set(def.id, out);
   return out;
 }

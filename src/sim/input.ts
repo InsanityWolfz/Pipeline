@@ -55,6 +55,8 @@ export interface Command {
   applyStage: string | null;
   /** Restore a research node (by id) at its diagram in reach this tick (an edge, 033), or null. */
   restore: string | null;
+  /** Pay the offering at an altar (by id) in reach, summoning its boss again (an edge, 034), or null. */
+  summon: string | null;
 }
 
 /** No input. Its aim is the world origin, so callers that care about aim must set one. */
@@ -80,4 +82,5 @@ export const NO_COMMAND: Readonly<Command> = {
   equip: null,
   applyStage: null,
   restore: null,
+  summon: null,
 };

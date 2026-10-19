@@ -174,8 +174,8 @@ describe('the waystone', () => {
 
 describe('the goal chain', () => {
   it('appends "Claim a second pylon" after 029\'s goals, done on the second claim', () => {
-    // 033 moved "Feed all three entrances" after it, just before the frontier line.
-    expect(SECOND).toBe(OBJECTIVES.length - 2);
+    // 033 moved "Feed all three entrances" after it, just before the frontier line, and 034's four Region 2 steps come between.
+    expect(SECOND).toBe(OBJECTIVES.length - 6);
     expect(OBJECTIVES[SECOND]).toMatchObject({ text: 'Claim a second pylon', milestone: 'm1', check: { kind: 'claimedCount', min: 2 }, marker: 'sitePylon' });
     expect(OBJECTIVES[SECOND - 1]?.check).toEqual({ kind: 'craftedAny', items: ['ley-bolt+homing', 'ley-bolt+star'] });
     const s = createSim(SEED);

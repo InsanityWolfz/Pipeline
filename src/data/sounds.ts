@@ -1,4 +1,5 @@
 import { RESEARCH_SOUND_RECIPES } from './researchSounds.ts';
+import { HOLLOWS_SOUND_RECIPES } from './hollowsSounds.ts';
 
 // Sound effects and ambient loops (014), as synth recipes. `npm run sound` renders
 // each one to assets/build/sounds/<key>.wav; render plays them by these keys.
@@ -69,6 +70,14 @@ export const SOUNDS = {
   restore: 'restore',
   schematicChime: 'schematic-chime',
   reveal: 'reveal',
+  /** 034: the Hollows' barrier falling, a shot ringing off a shield, the Bulwark's bombs ticking and bursting, its pound, its lob, the summon. */
+  barrierCollapse: 'barrier-collapse',
+  shieldClang: 'shield-clang',
+  enemyBombTick: 'enemy-bomb-tick',
+  enemyBombBurst: 'enemy-bomb-burst',
+  bulwarkPound: 'bulwark-pound',
+  bulwarkGrind: 'bulwark-grind',
+  summon: 'summon',
   ambientClearing: 'ambient-clearing',
   ambientFoundry: 'ambient-foundry',
 } as const;
@@ -83,6 +92,7 @@ const birds = (times: readonly number[], pitch: number): SoundLayer[] =>
 
 export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
   ...RESEARCH_SOUND_RECIPES,
+  ...HOLLOWS_SOUND_RECIPES,
   'fire-arrow': {
     layers: [
       { wave: 'noise', from: 6000, to: 1500, dur: 0.12, attack: 0.002, volume: 0.35 },
@@ -295,4 +305,6 @@ export const WINDUP_SOUNDS: Readonly<Record<string, SoundKey>> = {
   melee: SOUNDS.huskWindup,
   caster: SOUNDS.wispCharge,
   slammer: SOUNDS.huskWindup,
+  // 034: the Bulwark's stone grinds as it plants its shield (the pound lands with its own sound).
+  bulwark: SOUNDS.bulwarkGrind,
 };

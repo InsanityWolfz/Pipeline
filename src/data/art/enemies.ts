@@ -2,6 +2,7 @@ import type { EnemyRigDef } from './enemyRig';
 import { HUSK_RIG } from './husk';
 import { WARDEN_RIG } from './warden';
 import { WISP_RIG } from './wisp';
+import { BULWARK_RIG } from './bulwark';
 
 /** Every enemy rig (016), one per `anims` key in src/data/enemies.ts. A new enemy is a new entry. */
-export const ENEMY_RIGS: readonly EnemyRigDef[] = [HUSK_RIG, WISP_RIG, WARDEN_RIG];
+export const ENEMY_RIGS: readonly EnemyRigDef[] = [HUSK_RIG, WISP_RIG, WARDEN_RIG, BULWARK_RIG];

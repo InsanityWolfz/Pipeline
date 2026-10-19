@@ -128,6 +128,18 @@ export interface SimEvents {
   schematicDrops: { itemId: string; x: number; y: number }[];
   /** A banked schematic revealed its node (033): the item and the node. */
   schematicReveals: { itemId: string; node: string }[];
+  /** A straight shot or a punch hit a shield's front (034): the enemy and the hit point; render sparks brass and clangs. */
+  blocked: { id: number; x: number; y: number }[];
+  /** A region boss fell for the first time (034): it wakes its altar and is gone for good. */
+  bossDefeats: { boss: string }[];
+  /** An offering at an altar (034) summons its boss again: it rises after the summon. */
+  summons: { altar: string; boss: string }[];
+  /** The Bulwark lobbed its bombs (034): which enemy, how many. */
+  lobs: { id: number; count: number }[];
+  /** An enemy bomb burst where its circles met (034): its point and ring radius, px. */
+  enemyBursts: { x: number; y: number; radius: number }[];
+  /** The Bulwark pounded the ground round itself (034): which enemy, where, the radius, px. */
+  pounds: { id: number; x: number; y: number; radius: number }[];
   /** What the player carried was banked (on entering the foundry or depositing). */
   banks: Record<string, number>[];
   /** On a KO, what was lost: item id to count. */
@@ -181,6 +193,12 @@ export function createEvents(): SimEvents {
     starBursts: [],
     heals: [],
     melees: [],
+    blocked: [],
+    bossDefeats: [],
+    summons: [],
+    lobs: [],
+    enemyBursts: [],
+    pounds: [],
     banks: [],
     lost: {},
     ko: false,
@@ -231,6 +249,12 @@ export function clearEvents(events: SimEvents): void {
   events.starBursts.length = 0;
   events.heals.length = 0;
   events.melees.length = 0;
+  events.blocked.length = 0;
+  events.bossDefeats.length = 0;
+  events.summons.length = 0;
+  events.lobs.length = 0;
+  events.enemyBursts.length = 0;
+  events.pounds.length = 0;
   events.banks.length = 0;
   events.lost = {};
   events.ko = false;

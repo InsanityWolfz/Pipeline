@@ -10,7 +10,8 @@ import type { SimState } from './state';
 
 // Enemies as plain data: creation, damage and bodies. Their behaviour is in enemyAi.ts.
 
-export type EnemyMode = 'idle' | 'chase' | 'windup' | 'swipe' | 'recover' | 'return';
+/** `lob` and `throw` (034): the Bulwark rearing back, then holding the throw. */
+export type EnemyMode = 'idle' | 'chase' | 'windup' | 'swipe' | 'recover' | 'return' | 'lob' | 'throw';
 
 export interface EnemyState extends Knockable {
   id: number;
@@ -52,6 +53,10 @@ export interface EnemyState extends Knockable {
   refreeze: number;
   /** A champion (032), by name, or null: the sim reads its scaled def (`defOf`). */
   champion: { name: string } | null;
+  /** Its continuous facing, radians (034): a shielded enemy's shield points this way and turns, never snapping. */
+  angle: number;
+  /** Ticks before its next bomb lob (034: the Bulwark's). */
+  lobCooldown: number;
 }
 
 export function createEnemy(id: number, enemyId: string, at: { x: number; y: number }, roomId: string, group = ''): EnemyState {
@@ -81,6 +86,8 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     frozen: 0,
     refreeze: 0,
     champion: null,
+    angle: Math.PI / 2,
+    lobCooldown: def.kind === 'bulwark' ? def.lob.cooldownTicks : 0,
     knockX: 0,
     knockY: 0,
     knockTicks: 0,

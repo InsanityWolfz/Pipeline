@@ -133,6 +133,9 @@ export const HOLLOWS = {
 /** How close the player's feet box must be to the altar to use it, px. */
 export const ALTAR_REACH = 20;
 
+/** The arena whose boss is this enemy (034: the Bulwark's Sunken Forum), if any. */
+export const arenaOf = (enemyId: string): typeof HOLLOWS.arena | undefined => (HOLLOWS.arena.boss === enemyId ? HOLLOWS.arena : undefined);
+
 /** True if a tile is in the Hollows. */
 export const inHollows = (tx: number, ty: number): boolean => {
   const b = HOLLOWS.bounds;
