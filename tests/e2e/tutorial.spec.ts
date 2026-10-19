@@ -59,8 +59,10 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
         // Piercing ammo first (029: arrows pierce now, ley bolts don't).
         const ammo = have('arrow') > 0 ? 'arrow' : have('ley-bolt') > 0 ? 'ley-bolt' : 'bomb';
         if (s.tube.ammo !== ammo) s = g.step(1, { selectAmmo: ammo });
-        const kite = d < 80;
-        const close = d > 150;
+        // Out of every ammo, the fire button punches (023): close right in rather than keeping range.
+        const dry = have('arrow') + have('ley-bolt') + have('bomb') === 0;
+        const kite = !dry && d < 80;
+        const close = dry ? d > 18 : d > 150;
         s = g.step(1, {
           moveX: kite ? toward(near.x, p.x) : close ? toward(p.x, near.x) : 0,
           moveY: kite ? toward(near.y, p.y) : close ? toward(p.y, near.y) : 0,

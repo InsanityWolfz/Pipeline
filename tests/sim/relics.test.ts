@@ -56,6 +56,16 @@ describe('Rollbreaker Greaves', () => {
     expect(husk.staggered).toBeGreaterThan(0);
   });
 
+  it('leaves an enemy already recovering be, so its punish window is never cut short', () => {
+    const s = wear(arena(), relic(0, ROLLBREAKER));
+    const husk = placeHusk(s, PLAYER_AT.x + 20, PLAYER_AT.y);
+    husk.mode = 'recover';
+    husk.modeTicks = 1;
+    husk.cooldown = 200;
+    rollRight(s);
+    expect(husk.staggered).toBe(0);
+  });
+
   it('without the greaves nothing staggers; bosses ignore it', () => {
     const bare = arena();
     const husk = placeHusk(bare, PLAYER_AT.x + 20, PLAYER_AT.y);

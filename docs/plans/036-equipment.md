@@ -53,6 +53,14 @@ Small vertical commits, tests first in each:
 - Common's "stone" is `rock-light`, Fine `cyan`, Rare `gold-trim`, Relic `wisp-light` (the nearest palette violet that reads on the tablet). Pending Shaun's review.
 - The inventory panel's worn line reads "N worn · armor T".
 - Body word lists stay 010's; helm, boots and trinket lists are new placeholders.
+- Rollbreaker leaves an enemy that's already recovering (or a Charger stunned by a wall) be, so a stagger never cuts a punish window short.
+- The gear panel sits at a fixed top (48 px), clear of the bottom HUD's tube slot; its list holds 4 plain rows a page.
+- Last Ember's save still reports the hit's damage (the number shown), though the player keeps 1 HP.
+- `addGear` dev hook (a relic for the screenshots without the roll).
+
+## Build notes
+- The side task went first, in its own commit: the HP chunk e2e holds the tween clock at 0 while it checks the chunk, then runs it at 20× for the drain; the schematic banner keeps a short record of the lines it started (`ui().schematics.bannersSeen`), so the research e2e runs the tween clock fast and waits on that record. Both passed 12 at once on 4 cores, where the chunk test had failed 5 of 6.
+- The relic flare's screenshot needs a frame between a long in-page loop and the slowed tween clock: the first frame after the loop carries the whole loop's time.
 
 ## Risks
 - Every e2e that reads `armorPieces` / `equippedArmor` breaks: rewritten.

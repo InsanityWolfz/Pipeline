@@ -51,8 +51,12 @@ export function stepRelics(state: SimState): void {
   }
 }
 
+/** Already open to a punish (a recovery, a Charger's wall stun): a stagger would only cut that short, so it's left be. */
+const reeling = (e: EnemyState): boolean => e.staggered > 0 || e.mode === 'recover' || e.mode === 'stun';
+
 /** Cancels whatever the enemy was doing and holds it in recovery for `ticks`. */
 function stagger(state: SimState, e: EnemyState, ticks: number): void {
+  if (reeling(e)) return;
   e.staggered = ticks;
   e.mode = 'recover';
   e.modeTicks = 1;
