@@ -69,3 +69,17 @@ Oct 19, 2026 · Shaun's answers, which follow on from docs/brainstorm/2026-10-19
   - a damage chunk that lingers white before draining
 - **Ley Springs:** stand in the pool to heal fast. No uses and no timers.
 - **Pylon supply:** each pylon sends the resources of its area. A Quarry pylon sends stone, a Ley Grotto pylon sends crystal.
+
+## Round 6
+- **Champions:**
+  - about 1.5× size, +50% HP, +30% damage, +15% speed
+  - 2–3× drops and guaranteed armor
+  - a glow and a name
+  - about 1 in 8 packs has one, more often in the outer rings
+- **First landmarks:** all four:
+  - resource sites (Quarry, Old Grove, Reed Marsh, Ley Grotto), each with a claimable pylon sending its resource home
+  - a Frozen Grotto, the guarded rime-shard source
+  - Ley Springs
+  - a Ruined Cache, guarded, with a chance at a schematic or rare part
+- **Discovery:** landmarks are hidden until found. A landmark appears on the minimap once seen, and finding one gives XP.
+- **Map:** fixed and hand-tuned, with one seed, the same world every game.
