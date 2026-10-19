@@ -1,5 +1,6 @@
 import type { DamageType } from '../data/ammo';
 import { enemyDef } from '../data/enemies';
+import { defOf } from './champions';
 import type { Room } from '../data/rooms';
 import { moveBox, type Rect } from './collision';
 import { chillEnemy, frozenFast } from './cold';
@@ -49,6 +50,8 @@ export interface EnemyState extends Knockable {
   frozen: number;
   /** Ticks after a thaw in which cold hits add no stacks. */
   refreeze: number;
+  /** A champion (032), by name, or null: the sim reads its scaled def (`defOf`). */
+  champion: { name: string } | null;
 }
 
 export function createEnemy(id: number, enemyId: string, at: { x: number; y: number }, roomId: string, group = ''): EnemyState {
@@ -77,6 +80,7 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     chillTicks: 0,
     frozen: 0,
     refreeze: 0,
+    champion: null,
     knockX: 0,
     knockY: 0,
     knockTicks: 0,
@@ -111,7 +115,7 @@ export function damageEnemy(
   dirY: number,
   style: HitStyle = ARROW_HIT,
 ): void {
-  const def = enemyDef(e.enemyId);
+  const def = defOf(e);
   e.health = Math.max(0, e.health - amount);
   if (style.flash) e.flash = def.hitFlashTicks;
   // A frozen boss shrugs off knockback (029).
@@ -123,7 +127,7 @@ export function damageEnemy(
 
 /** True if a ground point is inside the enemy's hurtbox. */
 export function inHurtbox(e: EnemyState, x: number, y: number): boolean {
-  const { hurtbox } = enemyDef(e.enemyId);
+  const { hurtbox } = defOf(e);
   return Math.abs(x - e.x) <= hurtbox.w / 2 && Math.abs(y - (e.y + hurtbox.offsetY)) <= hurtbox.h / 2;
 }
 
@@ -145,8 +149,8 @@ export function separate(enemies: EnemyState[], bodies: (roomId: string) => Room
       const b = enemies[j];
       if (!a || !b || a.roomId !== b.roomId) continue;
       const { room, obstacles } = bodies(a.roomId);
-      const fa = enemyDef(a.enemyId).feetBox;
-      const fb = enemyDef(b.enemyId).feetBox;
+      const fa = defOf(a).feetBox;
+      const fb = defOf(b).feetBox;
       const dx = b.x - a.x;
       const dy = b.y - a.y;
       const ox = (fa.w + fb.w) / 2 - Math.abs(dx);
@@ -167,8 +171,8 @@ function pushApart(
   ux: number,
   uy: number,
 ): void {
-  const boxA = enemyDef(a.enemyId).feetBox;
-  const boxB = enemyDef(b.enemyId).feetBox;
+  const boxA = defOf(a).feetBox;
+  const boxB = defOf(b).feetBox;
   const movedA = shove(room, obstacles, a, boxA, -ux * (amount / 2), -uy * (amount / 2));
   const movedB = shove(room, obstacles, b, boxB, ux * (amount - movedA), uy * (amount - movedA));
   const left = amount - movedA - movedB;

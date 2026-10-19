@@ -1,5 +1,6 @@
 import { TICK_RATE, TILE_SIZE } from '../data/config';
 import { enemyDef } from '../data/enemies';
+import { defOf } from './champions';
 import { FEET_BOX } from '../data/player';
 import { blocksShot } from './collision';
 import type { EnemyState } from './enemies';
@@ -20,10 +21,13 @@ export interface OrbState {
   dx: number;
   dy: number;
   travelled: number;
+  /** A champion's orb hits harder (032): its damage, or the caster kind's when unset. */
+  damage?: number;
 }
 
 /** Casts an orb from the caster's feet along its locked aim. */
 export function castOrb(state: SimState, e: EnemyState): void {
+  const def = defOf(e);
   state.orbs.push({
     id: state.nextOrbId++,
     enemyId: e.enemyId,
@@ -33,6 +37,7 @@ export function castOrb(state: SimState, e: EnemyState): void {
     dx: e.swipeDirX,
     dy: e.swipeDirY,
     travelled: 0,
+    ...(e.champion && def.kind === 'caster' ? { damage: def.cast.orbDamage } : {}),
   });
 }
 
@@ -52,6 +57,6 @@ export function stepOrbs(state: SimState): void {
     const near = Math.abs(o.x - p.x) <= (FEET_BOX.w + cast.orbSize) / 2 && Math.abs(o.y - p.y) <= (FEET_BOX.h + cast.orbSize) / 2;
     if (!near) return true;
     // A roll's i-frames let the orb pass straight through.
-    return !damagePlayer(state, cast.orbDamage, o.dx, o.dy, cast.knockback, cast.knockTicks);
+    return !damagePlayer(state, o.damage ?? cast.orbDamage, o.dx, o.dy, cast.knockback, cast.knockTicks);
   });
 }

@@ -1,4 +1,4 @@
-import { enemyDef } from '../data/enemies';
+import { defOf } from './champions';
 import type { ArrowState } from './arrows';
 import type { BombState } from './bombs';
 import type { EnemyMode, EnemyState } from './enemies';
@@ -62,6 +62,8 @@ export interface EnemySummary {
   /** Chill stacks from cold hits (029), and ticks left frozen. */
   chill: number;
   frozen: number;
+  /** A champion's name (032), or null. */
+  champion: { name: string } | null;
 }
 
 export function enemySummary(e: EnemyState): EnemySummary {
@@ -77,7 +79,8 @@ export function enemySummary(e: EnemyState): EnemySummary {
     mode: e.mode,
     modeTicks: e.modeTicks,
     health: e.health,
-    maxHealth: enemyDef(e.enemyId).maxHealth,
+    maxHealth: defOf(e).maxHealth,
+    champion: e.champion ? { ...e.champion } : null,
     swipeDir: { x: round(e.swipeDirX), y: round(e.swipeDirY) },
     flash: e.flash,
     chill: e.chill,

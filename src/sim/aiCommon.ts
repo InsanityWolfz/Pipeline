@@ -1,5 +1,6 @@
 import { TICK_RATE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
-import { attackOf, enemyDef, type EnemyDef } from '../data/enemies';
+import { attackOf, type EnemyDef } from '../data/enemies';
+import { defOf } from './champions';
 import { unit } from './direction';
 import { aggro, type EnemyState } from './enemies';
 import type { SimState } from './state';
@@ -101,7 +102,7 @@ export function engage(state: SimState, e: EnemyState, sees: boolean): [number, 
   }
   if (e.mode === 'idle' || e.mode === 'return') {
     // Anything on screen wakes, however many (Shaun, 017: a player who rounds up a crowd gets the crowd).
-    if (!here || !sees) return e.mode === 'return' ? walkHome(e, enemyDef(e.enemyId)) : [0, 0];
+    if (!here || !sees) return e.mode === 'return' ? walkHome(e, defOf(e)) : [0, 0];
     aggro(e);
   }
   e.offScreenTicks = here && inAggroBox(e, state.player) ? 0 : e.offScreenTicks + 1;

@@ -1,4 +1,4 @@
-import { enemyDef } from '../data/enemies';
+import { defOf } from './champions';
 import { HOMING } from '../data/tags';
 import type { ArrowState } from './arrows';
 import type { SimState } from './state';
@@ -34,7 +34,7 @@ export function steerArrows(state: SimState): (arrow: ArrowState) => void {
       arrow.targetId = null;
       return;
     }
-    const want = Math.atan2(e.y + enemyDef(e.enemyId).hurtbox.offsetY - arrow.y, e.x - arrow.x);
+    const want = Math.atan2(e.y + defOf(e).hurtbox.offsetY - arrow.y, e.x - arrow.x);
     const have = Math.atan2(arrow.dy, arrow.dx);
     // The signed turn to the target, -180..180 degrees, clamped to the cap.
     const diff = ((((want - have) * 180) / Math.PI + 540) % 360) - 180;

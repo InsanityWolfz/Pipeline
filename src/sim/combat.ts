@@ -70,8 +70,8 @@ export function removeDead(state: SimState): void {
       state.enemies[kept++] = e;
       continue;
     }
-    state.events.deaths.push({ id: e.id, enemyId: e.enemyId, x: e.x, y: e.y, facing: e.facing });
-    spawnDrops(state, enemyDef(e.enemyId), e.x, e.y, e.roomId);
+    state.events.deaths.push({ id: e.id, enemyId: e.enemyId, x: e.x, y: e.y, facing: e.facing, ...(e.champion ? { champion: true as const } : {}) });
+    spawnDrops(state, enemyDef(e.enemyId), e.x, e.y, e.roomId, e.champion !== null);
   }
   state.enemies.length = kept;
 }

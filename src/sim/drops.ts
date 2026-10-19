@@ -1,7 +1,9 @@
 import { DROP_SCATTER, DROP_SCATTER_TRIES, type DropTable, type EnemyDef } from '../data/enemies';
 import { FEET_BOX, PICKUP_RADIUS } from '../data/player';
 import { TILE_SIZE } from '../data/config';
-import { UNIDENTIFIED_ARMOR } from '../data/armor';
+import { FIRST_ARMOR_ENEMY, UNIDENTIFIED_ARMOR } from '../data/armor';
+import { CHAMPIONS } from '../data/champions';
+import { championDropRolls } from './champions';
 import type { Room } from '../data/rooms';
 import { isSolid, overlapsRect, type Rect } from './collision';
 import { nextFloat, nextInt, type RngState } from './rng';
@@ -68,14 +70,22 @@ export function scatterPoint(
   return { x, y };
 }
 
-/** Rolls an enemy's drops and scatters them on the ground around (x, y) in its room. */
-export function spawnDrops(state: SimState, def: EnemyDef, x: number, y: number, roomId: string): void {
+/**
+ * Rolls an enemy's drops and scatters them on the ground around (x, y) in its room. A champion (032) rolls its table
+ * 2–3 times and drops exactly its guaranteed armor instead of the usual chance.
+ */
+export function spawnDrops(state: SimState, def: EnemyDef, x: number, y: number, roomId: string, champion = false): void {
   const room = roomById(roomId);
   // Never inside something solid the player can't walk onto: nodes, pylons, reliquaries, the tube stone.
   const fixed = [...(room.pylons ?? []), ...(room.caches ?? []), ...(room.tubeStone ? [room.tubeStone] : [])].map(tileRect);
   const rects = [...nodeRects(state.nodes, roomId), ...fixed];
-  const items = rollDrops(def.drops, state.rng);
-  if (rollArmorDrop(state, def.id)) items.push(UNIDENTIFIED_ARMOR);
+  const rolls = champion ? championDropRolls(state.rng) : 1;
+  const items = Array.from({ length: rolls }, () => rollDrops(def.drops, state.rng)).flat();
+  if (champion) {
+    // Its guaranteed piece is the first Husk's too, if it's that one (one piece, not two).
+    if (def.id === FIRST_ARMOR_ENEMY) state.firstHuskDropped = true;
+    for (let i = 0; i < CHAMPIONS.armor; i++) items.push(UNIDENTIFIED_ARMOR);
+  } else if (rollArmorDrop(state, def.id)) items.push(UNIDENTIFIED_ARMOR);
   for (const itemId of items) {
     const at = scatterPoint(room, state.rng, x, y, rects);
     layItem(state, itemId, roomId, at.x, at.y);

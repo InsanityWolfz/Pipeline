@@ -6,6 +6,7 @@ import { LANDMARK_LIST } from '../data/landmarks';
 import { TILE } from '../data/rooms';
 import { createEnemy, type EnemyState } from './enemies';
 import { nextInt } from './rng';
+import { rollChampions } from './champions';
 import type { SimState } from './state';
 import { tileCentre } from './tiles';
 import { WORLD } from './world';
@@ -154,11 +155,14 @@ function spawn(state: SimState, slot: PackSlot): boolean {
       if (fits(s)) spots.push(s);
     }
     if (spots.length < size) continue;
-    for (const s of spots) {
+    const members = spots.map((s) => {
       const enemyId = def.enemies[nextInt(state.rng, 0, def.enemies.length - 1)];
       if (!enemyId) throw new Error(`Ring ${slot.ring} has no enemies to spawn`);
-      state.enemies.push(createEnemy(state.nextEnemyId++, enemyId, tileCentre(s), OVERWORLD.id, slot.group));
-    }
+      return createEnemy(state.nextEnemyId++, enemyId, tileCentre(s), OVERWORLD.id, slot.group);
+    });
+    // The pack may hold a champion (032).
+    rollChampions(state.rng, members, slot.ring);
+    state.enemies.push(...members);
     return true;
   }
   return false;

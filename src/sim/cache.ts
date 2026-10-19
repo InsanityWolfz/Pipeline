@@ -10,6 +10,7 @@ import { nodeRects } from './nodes';
 import { roomOf, roomById, type SimState } from './state';
 import { tileCentre } from './tiles';
 import { createEnemy } from './enemies';
+import { rollChampions } from './champions';
 import { tileRect } from './fixtures';
 
 // The Ruined Cache (032): a sealed reliquary guarded by a hand-placed pack. While any
@@ -95,10 +96,13 @@ export function stepCacheRearm(state: SimState): void {
     const def = landmarkDef(cache.id);
     if (areaInView(state, def.area)) continue;
     cache.openedAt = null;
-    for (const g of def.guards) {
+    const back = def.guards.flatMap((g) => {
       const home = tileCentre(g);
       const alive = state.enemies.some((e) => e.group === def.id && e.homeX === home.x && e.homeY === home.y);
-      if (!alive) state.enemies.push(createEnemy(state.nextEnemyId++, g.enemyId, home, OVERWORLD_ROOM, def.id));
-    }
+      return alive ? [] : [createEnemy(state.nextEnemyId++, g.enemyId, home, OVERWORLD_ROOM, def.id)];
+    });
+    // The guards coming back are a pack spawning: they may hold a champion.
+    rollChampions(state.rng, back, def.ring);
+    state.enemies.push(...back);
   }
 }

@@ -1,7 +1,9 @@
 import { TILE_SIZE } from '../data/config';
 import { DEFAULT_START, type StartDef } from '../data/player';
 import { DEFAULT_ROOM, type Room } from '../data/rooms';
-import { createPopulation, resetPopulation, type PopulationState } from './population';
+import { createPopulation, inSafeZone, resetPopulation, type PopulationState } from './population';
+import { LANDMARK_LIST } from '../data/landmarks';
+import { rollChampions } from './champions';
 import { WORLD } from './world';
 import type { ArmorPiece } from './armor';
 import type { ArrowState } from './arrows';
@@ -203,12 +205,15 @@ export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   state.claimHold = null;
   state.cacheHold = null;
   state.building = false;
-  // A claimed site's guards are gone for good (017: a site is a group of the room's enemies).
+  // A claimed site's guards are gone for good (017: a site is a group of the room's enemies), and no guard comes back
+  // inside a claimed pylon's safe zone (032).
   state.enemies = rooms.flatMap((room) =>
     (room.enemies ?? [])
-      .filter((p) => !p.group || !state.claims.includes(p.group))
+      .filter((p) => (!p.group || !state.claims.includes(p.group)) && !inSafeZone(state, room.id, tileCentre(p).x, tileCentre(p).y))
       .map((p) => createEnemy(state.nextEnemyId++, p.enemyId, tileCentre(p), room.id, p.group)),
   );
+  // Each landmark's guard pack may hold a champion (032); the tutorial's packs never do.
+  for (const l of LANDMARK_LIST) rollChampions(state.rng, state.enemies.filter((e) => e.group === l.id), l.ring);
   resetPopulation(state);
 }
 

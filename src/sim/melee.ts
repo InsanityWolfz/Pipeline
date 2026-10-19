@@ -1,6 +1,6 @@
 import { MELEE } from '../data/combat';
 import { TILE_SIZE } from '../data/config';
-import { enemyDef } from '../data/enemies';
+import { defOf } from './champions';
 import type { Room } from '../data/rooms';
 import { isSolid } from './collision';
 import { damageEnemy, type HitStyle } from './enemies';
@@ -43,7 +43,7 @@ export function punch(state: SimState, dirX: number, dirY: number): void {
   const hits: number[] = [];
   for (const e of state.enemies) {
     if (e.roomId !== state.roomId || e.health <= 0) continue;
-    const def = enemyDef(e.enemyId);
+    const def = defOf(e);
     const { hurtbox } = def;
     if (!sectorHitsBox(arc, { x: e.x, y: e.y + hurtbox.offsetY, w: hurtbox.w, h: hurtbox.h })) continue;
     if (!clearLine(room, player.x, player.y, e.x, e.y)) continue;

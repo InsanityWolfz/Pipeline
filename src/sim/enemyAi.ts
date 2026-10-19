@@ -1,4 +1,5 @@
-import { enemyDef, type MeleeDef } from '../data/enemies';
+import type { MeleeDef } from '../data/enemies';
+import { defOf } from './champions';
 import { castThink } from './casterAi';
 import { chillScale, tickCold } from './cold';
 import { moveBox } from './collision';
@@ -25,7 +26,7 @@ const EPSILON = 1e-9;
 export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBodies): void {
   for (const e of state.enemies) {
     const { room, obstacles } = bodies(e.roomId);
-    const def = enemyDef(e.enemyId);
+    const def = defOf(e);
     if (e.cooldown > 0) e.cooldown -= 1;
     if (e.flash > 0) e.flash -= 1;
     // A frozen enemy doesn't think (029): its wind-up pauses where it is. A chilled one walks slower.

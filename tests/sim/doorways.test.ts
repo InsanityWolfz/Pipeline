@@ -6,6 +6,7 @@ import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { WORLD } from '../../src/sim/world';
 import { arrivalTile } from '../../src/sim/doorways';
 import { enemyDef } from '../../src/data/enemies';
+import { championDef } from '../../src/sim/champions';
 import { tileCentre } from '../../src/sim/state';
 import { arena, at, atEntrance, die, fireAt, HUSK, movePlayer, placeHusk, placeNode, run, runUntil, SWIPE_LANDS } from './fight';
 
@@ -163,8 +164,12 @@ describe('rooms tick apart', () => {
     die(s);
     const hall = WORLD[HALL];
     if (!hall?.enemies || !hall.nodes) throw new Error('no overworld data');
+    // Each at home at full health (a champion's own, 032).
     expect(s.enemies.filter((e) => e.roomId === HALL).map((e) => ({ x: e.x, y: e.y, health: e.health }))).toEqual(
-      hall.enemies.map((p) => ({ ...tileCentre(p), health: enemyDef(p.enemyId).maxHealth })),
+      hall.enemies.map((p) => {
+        const e = s.enemies.find((x) => x.homeX === tileCentre(p).x && x.homeY === tileCentre(p).y);
+        return { ...tileCentre(p), health: e?.champion ? championDef(enemyDef(p.enemyId)).maxHealth : enemyDef(p.enemyId).maxHealth };
+      }),
     );
     const hallNodes = s.nodes.filter((n) => n.roomId === HALL);
     expect(hallNodes).toHaveLength(hall.nodes.length);

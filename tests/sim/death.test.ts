@@ -6,6 +6,7 @@ import { OVERWORLD } from '../../src/data/overworld';
 import { claim } from '../../src/sim/claims';
 import type { ConduitState, HopperState } from '../../src/sim/pieces';
 import { createSim } from '../../src/sim/state';
+import { defOf } from '../../src/sim/champions';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
 import { arena, atEntrance, atPylon, command, die, HUSK, placeHusk, PLAYER_AT, run, runUntil, SEED } from './fight';
@@ -133,7 +134,9 @@ describe('dying', () => {
     const field = OVERWORLD.packs.filter((p) => p.group === 'field').length;
     expect(s.enemies.filter((e) => e.group === 'field')).toHaveLength(field);
     expect(s.enemies.filter((e) => e.group === SHRINE_SITE)).toEqual([]);
-    expect(s.enemies.every((e) => e.health === HUSK.maxHealth || e.enemyId !== 'husk')).toBe(true);
+    // Full health: a champion's own (032), else the Husk's.
+    expect(s.enemies.every((e) => e.health === defOf(e).maxHealth)).toBe(true);
+    expect(s.enemies.some((e) => e.enemyId === 'husk' && !e.champion && e.health === HUSK.maxHealth)).toBe(true);
   });
 
   it('enemies lose a dying player', () => {
