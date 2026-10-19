@@ -4,7 +4,7 @@ import { PLAYTEST_START } from '../../src/data/playtest';
 import { DEFAULT_START } from '../../src/data/player';
 import { FOUNDRY_ROOM } from '../../src/data/rooms';
 import { ATTUNE_TICKS } from '../../src/data/tube';
-import { ENTRANCE_CAP } from '../../src/data/foundry';
+import { ENTRANCE_CAPS } from '../../src/data/foundry';
 import { unlockedPieces } from '../../src/sim/placement';
 import type { HopperState } from '../../src/sim/pieces';
 import { createSim } from '../../src/sim/state';
@@ -104,7 +104,7 @@ describe('attunement', () => {
     const s = attuned();
     setMiddle(s, 'bomb', 3);
     expect(summarize(s).link).toEqual({ attuned: true, attunePulse: 0 });
-    expect(summarize(s).intake.entrances[1]).toMatchObject({ open: true, ammo: 'bomb', count: 3, cap: ENTRANCE_CAP });
+    expect(summarize(s).intake.entrances[1]).toMatchObject({ open: true, ammo: 'bomb', count: 3, cap: ENTRANCE_CAPS[0] });
   });
 });
 

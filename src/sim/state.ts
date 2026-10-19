@@ -26,6 +26,7 @@ import { createPlayer, type PlayerState } from './player';
 import { createRng, type RngState } from './rng';
 import { tileCentre } from './tiles';
 import { createTube, type TubeState } from './tube';
+import { createResearch, type ResearchState } from './research';
 
 /** The whole sim: plain serializable data. */
 export interface SimState {
@@ -39,6 +40,8 @@ export interface SimState {
   tube: TubeState;
   /** The tube's link to the foundry and the intake's entrances (024). Kept through a KO. */
   link: LinkState;
+  /** Each research node's state (033): hidden, revealed or restored. Kept through a KO. */
+  research: ResearchState;
   /** How this run started; a KO restores its inventory. */
   start: StartDef;
   /** Straight shots in flight: arrows and ley bolts. */
@@ -136,6 +139,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     inventory: { ...start.inventory },
     tube: createTube(),
     link: { ...createLink(), attuned: start.attuned },
+    research: createResearch(),
     start,
     arrows: [],
     nextArrowId: 0,
@@ -187,7 +191,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
  * room's enemies at home and nodes at full, and nothing harvesting, on the
  * ground or in flight, and build mode off. The tick, seed, RNG, id counters,
  * the inventory (a death trims it first), the crafted set, the tube's link and
- * the intake's entrances, claims, the stash, armor and the whole foundry carry on. Claimed rooms get no enemies back.
+ * the intake's entrances, research (033), claims, the stash, armor and the whole foundry carry on. Claimed rooms get no enemies back.
  */
 export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   const rooms = Object.values(WORLD);

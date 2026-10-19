@@ -10,7 +10,9 @@ import { fixtureDef } from './fixtures';
 import { portPerMinute, pylonsOf } from './claims';
 import { objectiveLine } from './objectives';
 import { volleyRounds, nextPress, hudActive, type HudActive } from './volley';
-import { ENTRANCE_CAP, INTAKE } from '../data/foundry';
+import { INTAKE } from '../data/foundry';
+import { entranceCap } from './research';
+import { researchSummary, type ResearchSummary } from './researchSummary';
 import type { SimState } from './state';
 import {
   arrowSummary,
@@ -155,6 +157,8 @@ export interface SimSummary {
   banked: Record<string, number>;
   /** Carried items a death would take (031): only those with at least one at risk. */
   atRisk: Record<string, number>;
+  /** Research (033): each node's state and whether it's ready, the entrance cap and machine speed now, and the schematics carried and banked. */
+  research: ResearchSummary;
   /** What happened on the last tick. */
   events: SimEvents;
 }
@@ -222,7 +226,7 @@ export function summarize(state: SimState): SimSummary {
     intake: {
       entrances: INTAKE.entrances.map((t, i) => {
         const e = state.link.entrances[i];
-        return { tx: t.tx, ty: t.ty, open: e?.open ?? false, ammo: e?.ammoId ?? null, count: e?.count ?? 0, cap: ENTRANCE_CAP, cooldown: e?.cooldown ?? 0 };
+        return { tx: t.tx, ty: t.ty, open: e?.open ?? false, ammo: e?.ammoId ?? null, count: e?.count ?? 0, cap: entranceCap(state), cooldown: e?.cooldown ?? 0 };
       }),
       volley: volleyRounds(state).map((r) => r.ammoId),
     },
@@ -254,6 +258,7 @@ export function summarize(state: SimState): SimSummary {
     firstLineFull: state.firstLineFull,
     objective: objectiveLine(state),
     prototypeComplete: state.prototypeComplete,
+    research: researchSummary(state),
     events: structuredClone(state.events),
   };
 }

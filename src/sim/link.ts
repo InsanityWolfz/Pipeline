@@ -1,5 +1,5 @@
 import { AMMO } from '../data/ammo';
-import { ENTRANCE_CAP, INTAKE } from '../data/foundry';
+import { ENTRANCE_CAPS, INTAKE } from '../data/foundry';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { ATTUNE_TICKS } from '../data/tube';
 import type { SimState } from './state';
@@ -49,17 +49,20 @@ export function ammoOfItem(itemId: string): string | null {
   return Object.values(AMMO).find((a) => a.itemId === itemId)?.id ?? null;
 }
 
-/** Whether an entrance would take one of this item: open, ammo only, its own ammo (any while empty), under the cap. */
-export function entranceAccepts(e: EntranceState, itemId: string): boolean {
+/** The first reservoir tier's cap (30), before any reservoir node is restored (033). */
+const BASE_CAP = ENTRANCE_CAPS[0] ?? 0;
+
+/** Whether an entrance would take one of this item: open, ammo only, its own ammo (any while empty), under the current `cap` (033). */
+export function entranceAccepts(e: EntranceState, itemId: string, cap = BASE_CAP): boolean {
   const ammoId = ammoOfItem(itemId);
   if (!e.open || ammoId === null) return false;
   if (e.ammoId !== null && e.ammoId !== ammoId) return false;
-  return e.count < ENTRANCE_CAP;
+  return e.count < cap;
 }
 
-/** Puts one item in the entrance if it accepts it. Returns whether it was taken. */
-export function fillEntrance(e: EntranceState, itemId: string): boolean {
-  if (!entranceAccepts(e, itemId)) return false;
+/** Puts one item in the entrance if it accepts it under `cap`. Returns whether it was taken. */
+export function fillEntrance(e: EntranceState, itemId: string, cap = BASE_CAP): boolean {
+  if (!entranceAccepts(e, itemId, cap)) return false;
   e.ammoId = ammoOfItem(itemId);
   e.count += 1;
   return true;

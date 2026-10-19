@@ -1,0 +1,137 @@
+import { describe, expect, it } from 'vitest';
+import { RESEARCH_NODES } from '../../src/data/research';
+import { createResearch, diagramInReach, diagrams, restoreFail } from '../../src/sim/research';
+import { nodeReady } from '../../src/sim/researchSummary';
+import type { SimState } from '../../src/sim/state';
+import { summarize } from '../../src/sim/summary';
+import { tileCentre } from '../../src/sim/tiles';
+import { die, movePlayer, run } from './fight';
+import { foundry, stepOutside } from './foundryKit';
+
+// Research nodes' states and the restore rule (033): start reveals, the restore spends
+// exactly its cost, and every refusal; restored nodes survive a KO.
+
+/** Feet on the floor tile below a wall tile. */
+function below(s: SimState, tx: number, ty: number): void {
+  const at = tileCentre({ tx, ty: ty + 1 });
+  movePlayer(s, at.x, at.y);
+}
+
+describe('node states', () => {
+  it('start revealed or hidden by their reveal, and getState reports each', () => {
+    expect(createResearch()).toEqual({
+      'entrance-2': 'revealed',
+      'entrance-3': 'revealed',
+      'reservoir-1': 'revealed',
+      'reservoir-2': 'hidden',
+      'machine-speed': 'hidden',
+      splitter: 'hidden',
+      merger: 'hidden',
+      'sealed-wing': 'revealed',
+    });
+    const s = foundry();
+    s.inventory['warden-core'] = 1;
+    const r = summarize(s).research;
+    expect(r.nodes.map((n) => n.id)).toEqual(RESEARCH_NODES.map((n) => n.id));
+    expect(r.nodes.find((n) => n.id === 'entrance-2')).toEqual({ id: 'entrance-2', state: 'revealed', ready: true });
+    expect(r.nodes.find((n) => n.id === 'entrance-3')).toEqual({ id: 'entrance-3', state: 'revealed', ready: false });
+    expect(r.nodes.find((n) => n.id === 'sealed-wing')?.ready).toBe(false);
+    expect([r.entranceCap, r.machineSpeed]).toEqual([30, 1]);
+  });
+
+  it('draws the diagrams of revealed nodes: both caps, the pipe, the sealed wing; walls once revealed', () => {
+    const s = foundry();
+    expect(diagrams(s).map((d) => [d.node, d.entrance])).toEqual([
+      ['entrance-2', 0],
+      ['entrance-2', 2],
+      ['reservoir-1', null],
+      ['sealed-wing', null],
+    ]);
+    s.research['machine-speed'] = 'revealed';
+    expect(diagrams(s).map((d) => d.node)).toContain('machine-speed');
+    s.research['machine-speed'] = 'restored';
+    expect(diagrams(s).map((d) => d.node)).not.toContain('machine-speed');
+  });
+});
+
+describe('restoring', () => {
+  it('at a wall panel spends exactly the cost and restores for good', () => {
+    const s = foundry();
+    s.research['machine-speed'] = 'revealed';
+    Object.assign(s.inventory, { 'schematic-machine-speed': 1, 'ancient-gear': 5, 'warden-core': 1 });
+    below(s, 6, 0);
+    expect(diagramInReach(s)?.node).toBe('machine-speed');
+    expect(nodeReady(s, 'machine-speed')).toBe(true);
+    run(s, 1, { restore: 'machine-speed' });
+    expect(s.inventory).toMatchObject({ 'schematic-machine-speed': 0, 'ancient-gear': 2, 'warden-core': 1 });
+    expect(s.research['machine-speed']).toBe('restored');
+    expect(s.events.restores).toEqual([{ node: 'machine-speed' }]);
+    expect(s.events.intakeOpens).toEqual([]);
+    expect(restoreFail(s, 'machine-speed')).toBe('restored');
+    run(s, 1, { restore: 'machine-speed' });
+    expect(s.inventory['ancient-gear']).toBe(2);
+  });
+
+  it('refuses without the cost, hidden, sealed, out of reach, outside the foundry or before attuning, spending nothing', () => {
+    const s = foundry();
+    s.research.splitter = 'revealed';
+    below(s, 17, 0);
+    expect(restoreFail(s, 'splitter')).toBe('cost');
+    s.inventory['schematic-splitter'] = 1;
+    expect(restoreFail(s, 'splitter')).toBe('cost');
+    s.inventory['ancient-gear'] = 2;
+    expect(restoreFail(s, 'splitter')).toBeNull();
+    expect(restoreFail(s, 'merger')).toBe('hidden');
+    below(s, 9, 1);
+    expect(diagramInReach(s)?.node).toBe('sealed-wing');
+    expect(restoreFail(s, 'sealed-wing')).toBe('sealed');
+    expect(restoreFail(s, 'splitter')).toBe('reach');
+    run(s, 1, { restore: 'splitter' });
+    expect(s.inventory).toMatchObject({ 'schematic-splitter': 1, 'ancient-gear': 2 });
+    below(s, 17, 0);
+    s.link.attuned = false;
+    expect(restoreFail(s, 'splitter')).toBe('not-attuned');
+    s.link.attuned = true;
+    stepOutside(s);
+    expect(restoreFail(s, 'splitter')).toBe('not-foundry');
+    run(s, 1, { restore: 'splitter' });
+    expect(s.research.splitter).toBe('revealed');
+  });
+
+  it('the nearest diagram in reach is the one E uses: a cap from beside it, the pipe from under the middle', () => {
+    const s = foundry();
+    below(s, 11, 0);
+    expect(diagramInReach(s)).toMatchObject({ node: 'entrance-2', entrance: 0 });
+    below(s, 12, 0);
+    expect(diagramInReach(s)?.node).toBe('reservoir-1');
+    below(s, 13, 0);
+    expect(diagramInReach(s)).toMatchObject({ node: 'entrance-2', entrance: 2 });
+    below(s, 3, 10);
+    expect(diagramInReach(s)).toBeUndefined();
+  });
+
+  it('restored nodes survive a KO, like claims', () => {
+    const s = foundry();
+    s.research.splitter = 'restored';
+    s.research['reservoir-1'] = 'restored';
+    stepOutside(s);
+    die(s);
+    expect([s.research.splitter, s.research['reservoir-1'], s.research['entrance-2']]).toEqual(['restored', 'restored', 'revealed']);
+  });
+
+  it('is deterministic: the same inputs restore the same way', () => {
+    const play = () => {
+      const s = foundry();
+      Object.assign(s.inventory, { 'warden-core': 1, 'ancient-gear': 4 });
+      below(s, 13, 0);
+      run(s, 1, { restore: 'entrance-2' });
+      below(s, 12, 0);
+      run(s, 1, { restore: 'reservoir-1' });
+      run(s, 20);
+      return summarize(s);
+    };
+    const a = play();
+    expect(a.research.nodes.filter((n) => n.state === 'restored').map((n) => n.id)).toEqual(['entrance-2', 'reservoir-1']);
+    expect(play()).toEqual(a);
+  });
+});

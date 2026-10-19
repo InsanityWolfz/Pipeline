@@ -120,8 +120,14 @@ export interface SimEvents {
   gates: { gate: GateId }[];
   /** An objective completed (index into OBJECTIVES). */
   objectives: { index: number }[];
-  /** A warden core opened the intake's side entrances (024): the indexes into INTAKE.entrances it opened. */
-  intakeOpens: { entrances: number[] }[];
+  /** An intake entrance was restored (033), so its cap lifts (024): its index into INTAKE.entrances. */
+  intakeOpens: { entrance: number }[];
+  /** A research node was restored at its diagram (033). */
+  restores: { node: string }[];
+  /** A schematic landed on the ground (033): which one, and where, px. Render shows it only as unknown. */
+  schematicDrops: { itemId: string; x: number; y: number }[];
+  /** A banked schematic revealed its node (033): the item and the node. */
+  schematicReveals: { itemId: string; node: string }[];
   /** What the player carried was banked (on entering the foundry or depositing). */
   banks: Record<string, number>[];
   /** On a KO, what was lost: item id to count. */
@@ -151,6 +157,9 @@ export function createEvents(): SimEvents {
     refills: [],
     made: [],
     intakeOpens: [],
+    restores: [],
+    schematicDrops: [],
+    schematicReveals: [],
     tubeTaken: false,
     gates: [],
     objectives: [],
@@ -198,6 +207,9 @@ export function clearEvents(events: SimEvents): void {
   events.refills.length = 0;
   events.made.length = 0;
   events.intakeOpens.length = 0;
+  events.restores.length = 0;
+  events.schematicDrops.length = 0;
+  events.schematicReveals.length = 0;
   events.tubeTaken = false;
   events.gates.length = 0;
   events.objectives.length = 0;

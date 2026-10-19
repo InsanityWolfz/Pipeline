@@ -28,25 +28,28 @@ describe('the chain', () => {
     expect(M1.map(([o]) => o.text)).toEqual([
       'Run a supply port into your line',
       'Put a second kind of ammo in another entrance',
-      'Feed all three entrances',
       'Gather rime shards at the Frozen Grotto',
       'Apply a frost rune to arrows at the bench',
       'Build a frost rune into your arrow line',
       'Try a ley stage at the bench: homing or star',
       'Claim a second pylon',
+      // 033: the third entrance needs the Bulwark's core, so this waits just before the frontier line.
+      'Feed all three entrances',
     ]);
     expect(M1.map(([o]) => o.check)).toEqual([
       { kind: 'portDelivered' },
       { kind: 'mixedVolley' },
-      { kind: 'volley', min: 3 },
       { kind: 'gathered', items: ['rime-shard'] },
       { kind: 'crafted', items: ['arrow+frost'] },
       { kind: 'machineMade', item: 'arrow+frost' },
       { kind: 'craftedAny', items: ['ley-bolt+homing', 'ley-bolt+star'] },
       { kind: 'claimedCount', min: 2 },
+      { kind: 'volley', min: 3 },
     ]);
     // 029: building the frost rune pulses its build-bar cell.
-    expect(M1[5]?.[0].highlight).toBe('frost-rune');
+    expect(M1[4]?.[0].highlight).toBe('frost-rune');
+    // The last goal before the frontier line, so the line never points at it before the other goals are done.
+    expect(OBJECTIVES.at(-1)?.check).toEqual({ kind: 'volley', min: 3 });
   });
 
   it('the port goal points at the ports and pulses the conduit cell', () => {
@@ -88,7 +91,7 @@ describe('the goals', () => {
 
   it('feeding all three entrances completes the volley goal for three', () => {
     const s = foundry();
-    const i = M1[2]?.[1] ?? -1;
+    const i = OBJECTIVES.findIndex((o) => o.check.kind === 'volley' && o.check.min === 3);
     for (const e of s.link.entrances) e.open = true;
     for (const [k, e] of s.link.entrances.entries()) Object.assign(e, { ammoId: 'arrow', count: 1 + k });
     run(s, 1);

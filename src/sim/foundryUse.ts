@@ -4,13 +4,11 @@ import { ITEMS } from '../data/items';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import type { Command, HopperAmount } from './input';
 import { count } from './inventory';
-import { intakeOpenable, openSideEntrances } from './intake';
 import { pieceRect, type CrateState, type HopperState, type PieceState, type SorterState } from './pieces';
 import type { SimState } from './state';
 
-// Using hoppers, crates, sorters and the intake: E at the intake with a warden
-// core opens its side entrances (024); otherwise E empties a crate into the
-// inventory. E on a hopper or a
+// Using hoppers, crates and sorters: E empties a crate into the inventory (the
+// intake's caps are restored at their diagrams, 033). E on a hopper or a
 // sorter opens render's menu, whose choices arrive as deposit (put some of a held
 // item in), withdraw (take some out) and setFilter commands. Deposits and
 // withdraws move one, half (rounded up) or all of the stack they draw from (022).
@@ -98,8 +96,7 @@ export function setFilter(state: SimState, id: number, itemId: string | null): v
 }
 
 /**
- * Withdraws, deposits, filters, then E: at the intake while it can be opened, that
- * opens it and nothing else; otherwise E on the nearest crate empties it. E on a
+ * Withdraws, deposits, filters, then E: on the nearest crate it empties it. E on a
  * hopper or sorter does nothing here; render opens its menu.
  */
 export function stepFoundryUse(state: SimState, cmd: Command): void {
@@ -107,10 +104,6 @@ export function stepFoundryUse(state: SimState, cmd: Command): void {
   if (cmd.setFilter) setFilter(state, cmd.setFilter.id, cmd.setFilter.itemId);
   if (cmd.deposit) deposit(state, cmd.deposit.id, cmd.deposit.itemId, cmd.deposit.amount);
   if (!cmd.interact) return;
-  if (intakeOpenable(state)) {
-    openSideEntrances(state);
-    return;
-  }
   const target = usableInReach(state);
   if (target?.kind === 'crate') takeCrate(state, target);
 }

@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ammoDef } from '../../src/data/ammo';
-import { CONDUIT_TICKS, ENTRANCE_CAP, INTAKE, LOB_SPACING, OPEN_ENTRANCES_COST, SPREAD_STEP } from '../../src/data/foundry';
+import { CONDUIT_TICKS, ENTRANCE_CAPS, INTAKE, LOB_SPACING, SPREAD_STEP } from '../../src/data/foundry';
 import { MELEE } from '../../src/data/combat';
-import { intakeInReach, intakeOpenable } from '../../src/sim/intake';
 import type { EntranceState } from '../../src/sim/link';
 import type { ConduitState, HopperState } from '../../src/sim/pieces';
 import { summarize } from '../../src/sim/summary';
@@ -10,11 +9,12 @@ import { tileCentre } from '../../src/sim/tiles';
 import { hasRoundToFire } from '../../src/sim/tube';
 import { hudActive, nextPress, rotate } from '../../src/sim/volley';
 import type { SimState } from '../../src/sim/state';
-import { fireAt, HALL, movePlayer, placeHusk, run, runUntil, runUntilKo } from './fight';
+import { fireAt, HALL, movePlayer, run, runUntil } from './fight';
 import { foundry, put, stepOutside } from './foundryKit';
 
 // The intake's three entrances (024): each mouth tile is an entrance with its own
-// reservoir. Only the centre starts open; a warden core opens the sides. While fire
+// reservoir. Only the centre starts open; each side is restored at its cap (033,
+// tests/sim/researchEntrances.test.ts). While fire
 // is held, each fed entrance fires at its own ammo's rate (028); rounds that fire on
 // the same tick are shaped together as a volley.
 
@@ -73,7 +73,7 @@ describe('the entrances', () => {
       { open: false, ammoId: null, count: 0, cooldown: 0 },
     ]);
     expect(INTAKE.entrances.map((e) => e.startsOpen)).toEqual([false, true, false]);
-    expect(ENTRANCE_CAP).toBe(30);
+    expect(ENTRANCE_CAPS[0]).toBe(30);
   });
 
   it('an empty entrance takes any ammo, then only that ammo until it empties', () => {
@@ -101,11 +101,11 @@ describe('the entrances', () => {
 
   it('a full entrance refuses, and so does anything that is not ammo, so the line backs up', () => {
     const full = foundry();
-    Object.assign(full.link.entrances[1] as EntranceState, { ammoId: 'arrow', count: ENTRANCE_CAP });
+    Object.assign(full.link.entrances[1] as EntranceState, { ammoId: 'arrow', count: ENTRANCE_CAPS[0] });
     const c = feed(full, 1, 'arrow');
     run(full, 5);
     expect(c.item).toBe('arrow');
-    expect(full.link.entrances[1]?.count).toBe(ENTRANCE_CAP);
+    expect(full.link.entrances[1]?.count).toBe(ENTRANCE_CAPS[0]);
     for (const item of ['wood', 'shaft', 'warden-core']) {
       const s = foundry();
       const d = feed(s, 1, item);
@@ -134,61 +134,7 @@ describe('the entrances', () => {
   });
 });
 
-describe('opening the side entrances', () => {
-  it('E at the intake with a warden core spends it and opens both sides for good', () => {
-    const s = foundry();
-    s.inventory['warden-core'] = 2;
-    atIntake(s);
-    expect(intakeInReach(s)).toBe(true);
-    expect(intakeOpenable(s)).toBe(true);
-    run(s, 1, { interact: true });
-    expect(s.link.entrances.map((e) => e.open)).toEqual([true, true, true]);
-    expect(s.inventory['warden-core']).toBe(2 - (OPEN_ENTRANCES_COST['warden-core'] ?? 0));
-    expect(s.events.intakeOpens).toEqual([{ entrances: [0, 2] }]);
-    expect(intakeOpenable(s)).toBe(false);
-    // Again: nothing more to open, nothing spent.
-    run(s, 1, { interact: true });
-    expect(s.inventory['warden-core']).toBe(1);
-    expect(s.events.intakeOpens).toEqual([]);
-  });
-
-  it('does nothing without a core, out of reach, or before the tube attunes', () => {
-    const none = foundry();
-    none.inventory['warden-core'] = 0;
-    atIntake(none);
-    run(none, 1, { interact: true });
-    expect(none.link.entrances.map((e) => e.open)).toEqual([false, true, false]);
-
-    const far = foundry();
-    far.inventory['warden-core'] = 1;
-    expect(intakeInReach(far)).toBe(false);
-    run(far, 1, { interact: true });
-    expect(far.link.entrances.map((e) => e.open)).toEqual([false, true, false]);
-    expect(far.inventory['warden-core']).toBe(1);
-
-    const dormant = foundry();
-    dormant.link.attuned = false;
-    dormant.link.attunePulse = 0;
-    dormant.inventory['warden-core'] = 1;
-    atIntake(dormant);
-    expect(intakeOpenable(dormant)).toBe(false);
-  });
-
-  it('stays open, with what the entrances hold, through a KO', () => {
-    const s = foundry();
-    s.inventory['warden-core'] = 1;
-    atIntake(s);
-    run(s, 1, { interact: true });
-    Object.assign(s.link.entrances[0] as EntranceState, { ammoId: 'bomb', count: 4 });
-    stepOutside(s);
-    s.player.health = 1;
-    const at = { x: s.player.x, y: s.player.y };
-    placeHusk(s, at.x + 20, at.y);
-    runUntilKo(s, 400);
-    expect(s.link.entrances.map((e) => e.open)).toEqual([true, true, true]);
-    expect(s.link.entrances[0]).toMatchObject({ open: true, ammoId: 'bomb', count: 4 });
-  });
-
+describe('the intake in getState', () => {
   it('getState reports each entrance, its cooldown, and the volley', () => {
     const s = volley([['arrow', 3], null, ['bomb', 2]]);
     (s.link.entrances[2] as EntranceState).cooldown = 7;
@@ -199,7 +145,7 @@ describe('opening the side entrances', () => {
         open: true,
         ammo: ['arrow', null, 'bomb'][i] ?? null,
         count: [3, 0, 2][i] ?? 0,
-        cap: ENTRANCE_CAP,
+        cap: ENTRANCE_CAPS[0],
         cooldown: [0, 0, 7][i] ?? 0,
       })),
       volley: ['arrow', 'bomb'],

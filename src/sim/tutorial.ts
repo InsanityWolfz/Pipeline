@@ -1,4 +1,3 @@
-import { ENTRANCE_CAP } from '../data/foundry';
 import { STONE_REACH } from '../data/objectives';
 import { FEET_BOX } from '../data/player';
 import { RESPAWN_ROOM } from '../data/player';
@@ -9,6 +8,7 @@ import type { Rect } from './collision';
 import { tileRect } from './fixtures';
 import type { Command } from './input';
 import { roomOf, type SimState } from './state';
+import { entranceCap } from './research';
 
 // The tutorial's rules (012): the tube waits on its stone until E takes it; the
 // foundry's stairs are sealed until the ruin field's whole pack is dead at once,
@@ -69,9 +69,10 @@ function open(state: SimState, gate: GateId): void {
   state.events.gates.push({ gate });
 }
 
-/** Opens gates whose condition now holds: the hall clear, the first line full (an entrance at its cap, 024). */
+/** Opens gates whose condition now holds: the hall clear, the first line full (an entrance at its current cap, 024, 033). */
 export function stepGates(state: SimState): void {
-  if (!state.firstLineFull && state.link.entrances.some((e) => e.count >= ENTRANCE_CAP)) {
+  const cap = entranceCap(state);
+  if (!state.firstLineFull && state.link.entrances.some((e) => e.count >= cap)) {
     state.firstLineFull = true;
     // The world pushes back (017): from the first full line, the land fills with packs.
     state.populated = true;

@@ -31,8 +31,8 @@ export type ObjectiveCheck =
   | { kind: 'lineFull' }
   | { kind: 'identified' }
   | { kind: 'claimed'; site: string }
-  /** The intake's side entrances are open (024). */
-  | { kind: 'sidesOpen' }
+  /** A research node is restored (033). */
+  | { kind: 'restored'; node: string }
   /** The volley the next press would fire has at least this many rounds (024). */
   | { kind: 'volley'; min: number }
   /** This long outside the foundry with a line built into the intake, once every goal before it is done. */
@@ -127,14 +127,13 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
   { text: 'Fill the tube from your line', milestone: 'prototype', check: { kind: 'lineFull' }, prompt: { key: 'E', over: 'hopper' } },
   { text: 'Identify your armor at the bench (E)', milestone: 'prototype', check: { kind: 'identified' }, prompt: { key: 'E', over: 'bench' } },
   { text: "Claim the shrine's pylon", milestone: 'prototype', check: { kind: 'claimed', site: 'shrine' }, prompt: { key: 'E', over: 'pylon' } },
-  // The prototype's one Warden drops one core, and opening the side entrances costs one.
-  { text: "Open the intake's side entrances (E with a warden core)", milestone: 'prototype', check: { kind: 'sidesOpen' } },
+  // The prototype's one Warden drops one core, and restoring a second entrance costs one (033: one entrance per core).
+  { text: 'Restore a second intake entrance (E at a cap with the warden core)', milestone: 'prototype', check: { kind: 'restored', node: 'entrance-2' } },
   { text: 'Feed two entrances to fire a spread', milestone: 'prototype', check: { kind: 'volley', min: 2 } },
   { text: 'Head back out — the foundry keeps running', milestone: 'prototype', check: { kind: 'awayRunning', ticks: 600 } },
-  // 028: Milestone 1's goals, after the shrine. Later specs append theirs (and 033 moves the third to after 034's Region 2 steps).
+  // 028: Milestone 1's goals, after the shrine. Later specs append theirs.
   { text: 'Run a supply port into your line', milestone: 'm1', check: { kind: 'portDelivered' }, marker: 'ports', highlight: 'conduit' },
   { text: 'Put a second kind of ammo in another entrance', milestone: 'm1', check: { kind: 'mixedVolley' } },
-  { text: 'Feed all three entrances', milestone: 'm1', check: { kind: 'volley', min: 3 } },
   // 029: the first stage, frost on arrows, from the Grotto's rime to a frost rune in the line; then a ley stage by hand.
   { text: 'Gather rime shards at the Frozen Grotto', milestone: 'm1', check: { kind: 'gathered', items: ['rime-shard'] } },
   { text: 'Apply a frost rune to arrows at the bench', milestone: 'm1', check: { kind: 'crafted', items: ['arrow+frost'] } },
@@ -142,16 +141,19 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
   { text: 'Try a ley stage at the bench: homing or star', milestone: 'm1', check: { kind: 'craftedAny', items: ['ley-bolt+homing', 'ley-bolt+star'] } },
   // 032: a resource site's pylon, marked once one is discovered.
   { text: 'Claim a second pylon', milestone: 'm1', check: { kind: 'claimedCount', min: 2 }, marker: 'sitePylon' },
+  // 033: the third entrance needs the Bulwark's core, so feeding all three waits here, just before the frontier line
+  // (034 puts it after "Restore the intake's third entrance").
+  { text: 'Feed all three entrances', milestone: 'm1', check: { kind: 'volley', min: 3 } },
 ];
 
 /** The standing line once every goal is done (028): no check, and it never names the next milestone. */
 export const FRONTIER_GOAL = { text: 'Explore beyond the shrine' } as const;
 
 /**
- * The intake's own prompt (024), shown in the foundry while a warden core is carried and the side entrances are
- * capped: the key on its cap and the text beside it, dimmed until the player is in reach.
+ * The intake's own prompt (024, 033), shown in the foundry while the next entrance node's cost is carried (a warden
+ * core, for the second): the key on its cap and the text beside it, dimmed until the player is in reach.
  */
-export const INTAKE_PROMPT = { key: 'E', text: 'open the side entrances' } as const;
+export const RESTORE_ENTRANCE_PROMPT = { key: 'E', text: 'restore an entrance' } as const;
 
 /** The intake's hover readout line for a capped entrance (024), beside the cap emblem. */
 export const CAPPED_LABEL = 'capped';

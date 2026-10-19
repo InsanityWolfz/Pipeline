@@ -3,6 +3,7 @@ import { feedsIntake } from './intake';
 import { volleyRounds } from './volley';
 import type { SimState } from './state';
 import { FOUNDRY_ROOM } from '../data/rooms';
+import { isRestored } from './research';
 
 // The objectives (012, 028): one ordered chain. Each one completes the first tick
 // its check holds and stays done, so they can finish in any order. The objective
@@ -38,8 +39,8 @@ function holds(state: SimState, check: ObjectiveCheck): boolean {
       return state.armor.length > 0;
     case 'claimed':
       return state.claims.includes(check.site);
-    case 'sidesOpen':
-      return state.link.entrances.every((e) => e.open);
+    case 'restored':
+      return isRestored(state, check.node);
     case 'volley':
       return volleyRounds(state).length >= check.min;
     case 'awayRunning':

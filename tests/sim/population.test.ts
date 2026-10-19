@@ -3,7 +3,7 @@ import { TILE_SIZE } from '../../src/data/config';
 import { OVERWORLD, ringOf } from '../../src/data/overworld';
 import { POPULATION, SAFE_RADIUS } from '../../src/data/population';
 import { SHRINE_SITE } from '../../src/data/rooms';
-import { ENTRANCE_CAP } from '../../src/data/foundry';
+import { ENTRANCE_CAPS } from '../../src/data/foundry';
 import { claim } from '../../src/sim/claims';
 import type { EnemyState } from '../../src/sim/enemies';
 import { damageEnemy } from '../../src/sim/enemies';
@@ -32,7 +32,7 @@ describe('the living population', () => {
     run(s, 120);
     expect(pop(s)).toEqual([]);
     expect(summarize(s).populated).toBe(false);
-    Object.assign(s.link.entrances[1] ?? {}, { ammoId: 'arrow', count: ENTRANCE_CAP });
+    Object.assign(s.link.entrances[1] ?? {}, { ammoId: 'arrow', count: ENTRANCE_CAPS[0] });
     run(s, 1);
     expect(s.populated).toBe(true);
     run(s, 1);

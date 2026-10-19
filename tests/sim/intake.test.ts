@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CONDUIT_TICKS, ENTRANCE_CAP, INTAKE } from '../../src/data/foundry';
+import { CONDUIT_TICKS, ENTRANCE_CAPS, INTAKE } from '../../src/data/foundry';
 import { BUILD_BAR, PIECES } from '../../src/data/pieces';
 import { canPlace, unlockedPieces } from '../../src/sim/placement';
 import { frontTile, sideTile, sortSide, type ConduitState, type HopperState, type SorterState } from '../../src/sim/pieces';
@@ -65,10 +65,10 @@ describe('the foundry intake', () => {
       expect(notAmmo.c.item).toBe(item);
     }
     const full = feeding('arrow');
-    Object.assign(full.s.link.entrances[1] ?? {}, { ammoId: 'arrow', count: ENTRANCE_CAP });
+    Object.assign(full.s.link.entrances[1] ?? {}, { ammoId: 'arrow', count: ENTRANCE_CAPS[0] });
     run(full.s, 5);
     expect(full.c.item).toBe('arrow');
-    expect(full.s.link.entrances[1]?.count).toBe(ENTRANCE_CAP);
+    expect(full.s.link.entrances[1]?.count).toBe(ENTRANCE_CAPS[0]);
     const other = feeding('ley-bolt');
     Object.assign(other.s.link.entrances[1] ?? {}, { ammoId: 'arrow', count: 3 });
     run(other.s, 1);

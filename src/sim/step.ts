@@ -29,6 +29,7 @@ import { stepGates, stepTubeStone } from './tutorial';
 import { roomBodies } from './bodies';
 import { stepPopulation } from './population';
 import { applyStage } from './stages';
+import { entranceCap, machineSpeed, restore } from './research';
 
 /** Each room's bodies, built once per tick on first use. */
 function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
@@ -67,6 +68,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   if (cmd.identify) identifyAll(state);
   if (cmd.equip) equip(state, cmd.equip.id);
   if (cmd.applyStage) applyStage(state, cmd.applyStage);
+  if (cmd.restore) restore(state, cmd.restore);
   stepHarvest(state, state.building ? { ...used, interact: false } : used);
   // Shots fired this tick stay at the muzzle until next tick's step.
   // Star shards (029) set off this tick join the flight after it, so they first move next tick.
@@ -79,7 +81,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepTube(state, cmd);
   stepBuild(state, cmd);
   stepFoundryUse(state, cmd);
-  stepFoundry(state.foundry, state.link.entrances, state.events, state.link.attuned);
+  stepFoundry(state.foundry, state.link.entrances, state.events, state.link.attuned, { cap: entranceCap(state), speed: machineSpeed(state) });
   stepPorts(state, (to, from, item) => offerFromOutside(state.foundry, to, from, item));
   stepPickups(state);
   stepGates(state);

@@ -5,7 +5,7 @@ import { TUTORIAL_START } from '../../src/data/player';
 import { FOUNDRY_ROOM } from '../../src/data/rooms';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { WORLD } from '../../src/sim/world';
-import { ENTRANCE_CAP, INTAKE, INTAKE_REACH } from '../../src/data/foundry';
+import { ENTRANCE_CAPS, INTAKE, INTAKE_REACH } from '../../src/data/foundry';
 import { currentObjective } from '../../src/sim/objectives';
 import { createSim, type SimState } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
@@ -131,10 +131,10 @@ describe('gates', () => {
     const s = tutorial();
     const middle = s.link.entrances[1];
     if (!middle) throw new Error('no middle entrance');
-    Object.assign(middle, { ammoId: 'arrow', count: ENTRANCE_CAP - 1 });
+    Object.assign(middle, { ammoId: 'arrow', count: (ENTRANCE_CAPS[0] ?? 30) - 1 });
     run(s, 1);
     expect(s.gates.shrine).toBe(false);
-    middle.count = ENTRANCE_CAP;
+    middle.count = ENTRANCE_CAPS[0] ?? 30;
     run(s, 1);
     expect([s.firstLineFull, s.gates.shrine]).toEqual([true, true]);
     middle.count = 0;
@@ -179,26 +179,31 @@ describe('objectives', () => {
     expect(s.objectives[1]).toBe(true);
   });
 
-  it('opening the side entrances, then feeding two of them, complete the spread goals', () => {
+  it('restoring a second entrance, then feeding two, complete the spread goals (033: one entrance per core)', () => {
     const s = createSim(SEED, { start: PLAYTEST_START });
-    const open = OBJECTIVES.findIndex((o) => o.check.kind === 'sidesOpen');
+    const open = OBJECTIVES.findIndex((o) => o.check.kind === 'restored' && o.check.node === 'entrance-2');
     const fed = OBJECTIVES.findIndex((o) => o.check.kind === 'volley');
-    expect(OBJECTIVES[open]?.text).toBe("Open the intake's side entrances (E with a warden core)");
+    expect(OBJECTIVES[open]?.text).toBe('Restore a second intake entrance (E at a cap with the warden core)');
     expect(OBJECTIVES[fed]?.text).toBe('Feed two entrances to fire a spread');
     expect(fed).toBe(open + 1);
     s.roomId = FOUNDRY_ROOM;
-    const under = INTAKE.entrances[1] ?? { tx: 12, ty: 0 };
+    // Under the west cap.
+    const under = INTAKE.entrances[0] ?? { tx: 11, ty: 0 };
     s.player.x = (under.tx + 0.5) * 32;
     s.player.y = (under.ty + 1.5) * 32;
     expect(INTAKE_REACH).toBeGreaterThan(0);
     run(s, 1);
     expect([s.objectives[open], s.objectives[fed]]).toEqual([false, false]);
+    // E alone does nothing in the sim now: render opens the restore panel, whose Restore sends `restore`.
     run(s, 1, { interact: true });
+    expect(s.objectives[open]).toBe(false);
+    run(s, 1, { restore: 'entrance-2' });
     expect(s.objectives[open]).toBe(true);
+    expect(s.link.entrances.map((e) => e.open)).toEqual([true, true, false]);
     Object.assign(s.link.entrances[1] ?? {}, { ammoId: 'ley-bolt', count: 4 });
     run(s, 1);
     expect(s.objectives[fed]).toBe(false);
-    Object.assign(s.link.entrances[2] ?? {}, { ammoId: 'arrow', count: 1 });
+    Object.assign(s.link.entrances[0] ?? {}, { ammoId: 'arrow', count: 1 });
     run(s, 1);
     expect(s.objectives[fed]).toBe(true);
   });
