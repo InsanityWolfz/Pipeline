@@ -26,3 +26,12 @@ Oct 19, 2026 · Shaun, in chat.
 - **When it saves:** on entering the foundry only.
 - **Slots:** one save. New game asks before overwriting it.
 - **Storage:** browser storage, plus Export and Import of a save file in Settings.
+
+## 042 shippable build, round 2
+- **Continue:** restores everything as of the last foundry entry: factory, research, claims, gear, level and talents, stash, landmarks found, boss kills and goals. You wake in the foundry, and anything carried since then is lost, as on a death.
+- **Settings:** master, music and effects volume; shake and flash toggles; key bindings; save export and import.
+- **Screen shake:** Shaun: "the screen shake or pan when you shoot is appalling so it needs removed". Decision: shake only for big moments (taking a hit, a KO, boss slams and pounds, gates opening). No shake from firing, kills, or the player's own Bursts and mines. The camera locks tightly to the player, with no easing pan, and the Settings toggle turns all shake off. (Shaun had been playing the `main` preview, which doesn't have 021+.)
+- **Ending:** beating the Bulwark ends the demo. A short "end of the playtest build" card shows what's coming next, a thanks and a feedback prompt, and then free play continues.
+- **Feedback:** the F key opens a note at any time. Notes are saved with a game-state snapshot and included in the save export.
+- **Hosting:** after Shaun's playtest of this branch, merge it to main and share the Pages root link with friends.
+- **Approval:** 041 and 042 are approved on draft, to be built after 040.
