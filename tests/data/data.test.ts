@@ -4,7 +4,6 @@ import { DAYLIGHT_PALETTE, hexToRgb, INK_ID } from '../../src/data/palette';
 import { AMMO } from '../../src/data/ammo';
 import {
   animFrames,
-  BURN_FLAME,
   ENEMY_ANIMS,
   MUZZLE_FLASH,
   DEPOSIT_SWIRL,
@@ -119,8 +118,9 @@ describe('assets', () => {
     }
   });
 
-  it('has the fire burst, burn flame, muzzle flash and deposit swirl as frames', () => {
-    for (const anim of [FIRE_BURST, BURN_FLAME, MUZZLE_FLASH, DEPOSIT_SWIRL]) {
+  it('has the fire burst, muzzle flash and deposit swirl as frames, and no burn flame (029)', () => {
+    expect(known.some((f) => f.startsWith('burn-flame'))).toBe(false);
+    for (const anim of [FIRE_BURST, MUZZLE_FLASH, DEPOSIT_SWIRL]) {
       expect(anim.key).toMatch(KEBAB);
       for (const frame of animFrames(anim)) expect(known).toContain(frame);
     }

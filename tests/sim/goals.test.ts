@@ -29,8 +29,22 @@ describe('the chain', () => {
       'Run a supply port into your line',
       'Put a second kind of ammo in another entrance',
       'Feed all three entrances',
+      'Gather rime shards at the Frozen Grotto',
+      'Apply a frost rune to arrows at the bench',
+      'Build a frost rune into your arrow line',
+      'Try a ley stage at the bench: homing or star',
     ]);
-    expect(M1.map(([o]) => o.check)).toEqual([{ kind: 'portDelivered' }, { kind: 'mixedVolley' }, { kind: 'volley', min: 3 }]);
+    expect(M1.map(([o]) => o.check)).toEqual([
+      { kind: 'portDelivered' },
+      { kind: 'mixedVolley' },
+      { kind: 'volley', min: 3 },
+      { kind: 'gathered', items: ['rime-shard'] },
+      { kind: 'crafted', items: ['arrow+frost'] },
+      { kind: 'machineMade', item: 'arrow+frost' },
+      { kind: 'craftedAny', items: ['ley-bolt+homing', 'ley-bolt+star'] },
+    ]);
+    // 029: building the frost rune pulses its build-bar cell.
+    expect(M1[5]?.[0].highlight).toBe('frost-rune');
   });
 
   it('the port goal points at the ports and pulses the conduit cell', () => {
@@ -77,6 +91,18 @@ describe('the goals', () => {
     for (const [k, e] of s.link.entrances.entries()) Object.assign(e, { ammoId: 'arrow', count: 1 + k });
     run(s, 1);
     expect(s.objectives[i]).toBe(true);
+  });
+
+  it('craftedAny (029) completes once either ley variant is hand-made', () => {
+    const i = OBJECTIVES.findIndex((o) => o.check.kind === 'craftedAny');
+    for (const item of ['ley-bolt+homing', 'ley-bolt+star']) {
+      const s = foundry();
+      run(s, 1);
+      expect(s.objectives[i]).toBe(false);
+      s.crafted.push(item);
+      run(s, 1);
+      expect(s.objectives[i]).toBe(true);
+    }
   });
 
   it("the away clock runs only once every goal before it is done, whatever comes after", () => {

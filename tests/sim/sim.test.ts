@@ -240,14 +240,15 @@ describe('sim state', () => {
     ]);
   });
 
-  it('summarizes nodes, the harvest, ammo, bombs, burns and the crafted set', () => {
+  it('summarizes nodes, the harvest, ammo, bombs, enemies\' chill and the crafted set', () => {
     const summary = summarize(createSim(8));
     expect(summary.nodes.filter((n) => n.room === 'overworld')).toHaveLength(OVERWORLD.nodes.length);
     expect(summary.nodes[0]).toMatchObject({ nodeId: 'tree', uses: 3, regrow: 0 });
     expect(summary.harvest).toBeNull();
     expect(summary.tube.ammo).toBe('arrow');
     expect(summary.bombs).toEqual([]);
-    expect(summary.enemies[0]?.burnTicks).toBe(0);
+    expect(summary.enemies[0]).toMatchObject({ chill: 0, frozen: 0 });
+    expect(summary.enemies[0]).not.toHaveProperty('burnTicks');
     expect(summary.crafted).toEqual([]);
   });
 });

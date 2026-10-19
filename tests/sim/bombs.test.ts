@@ -37,11 +37,12 @@ describe('bombs', () => {
       speed: 200,
       maxRange: 192,
       arcPeak: 32,
-      burstRadius: 32,
+      burstRadius: 48,
       burstDamage: 15,
-      burn: { damage: 3, everyTicks: 30, times: 4 },
-      damageType: 'fire',
+      damageType: 'physical',
     });
+    // 029: burn is gone until the fire rune brings it back as a tag.
+    expect('burn' in BOMB).toBe(false);
   });
 
   it('land on the cursor after ceil(distance / step) ticks', () => {
@@ -51,7 +52,7 @@ describe('bombs', () => {
     expect(b.flightTicks).toBe(Math.ceil((100 - MUZZLE_OFFSET) / STEP));
     const ticks = runUntil(s, () => s.events.bursts.length > 0, 100);
     expect(ticks).toBe(b.flightTicks);
-    expect(s.events.bursts).toEqual([{ x: PLAYER_AT.x + 100, y: PLAYER_AT.y, radius: 32 }]);
+    expect(s.events.bursts).toEqual([{ x: PLAYER_AT.x + 100, y: PLAYER_AT.y, radius: 48 }]);
     expect(s.bombs).toHaveLength(0);
   });
 
@@ -93,17 +94,18 @@ describe('bombs', () => {
     expect(between.health).toBe(HUSK.maxHealth);
   });
 
-  it('burst on Husks within 32 px: 15 fire damage, a flash, no knockback', () => {
+  it('burst on Husks within 48 px: 15 physical damage, a flash, no knockback', () => {
     const s = armed();
     const target = { x: PLAYER_AT.x + 150, y: PLAYER_AT.y };
-    const inside = freeze(placeHusk(s, target.x + 32, target.y));
-    const outside = freeze(placeHusk(s, target.x, target.y - 32.1));
+    const inside = freeze(placeHusk(s, target.x + 48, target.y));
+    const outside = freeze(placeHusk(s, target.x, target.y - 48.1));
     throwAt(s, target.x, target.y);
     runUntil(s, () => s.events.bursts.length > 0, 100);
     expect(inside.health).toBe(HUSK.maxHealth - 15);
     expect(inside.flash).toBe(HUSK.hitFlashTicks);
     expect(inside.knockTicks).toBe(0);
     expect(outside.health).toBe(HUSK.maxHealth);
+    expect(s.events.hits.find((h) => h.target === 'enemy' && h.id === inside.id)).toMatchObject({ damageType: 'physical' });
   });
 
   it('aggro an idle Husk they burst on', () => {
@@ -121,57 +123,6 @@ describe('bombs', () => {
     throwAt(s, PLAYER_AT.x + MUZZLE_OFFSET, PLAYER_AT.y);
     runUntil(s, () => s.events.bursts.length > 0, 10);
     expect(s.player.health).toBe(100);
-  });
-});
-
-describe('burns', () => {
-  /** A Husk standing where a bomb just burst. */
-  function burning() {
-    const s = armed();
-    const e = freeze(placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y + 100));
-    throwAt(s, e.x, e.y);
-    runUntil(s, () => s.events.bursts.length > 0, 100);
-    return { s, e };
-  }
-
-  /** Damage dealt to `id` on each of the next `ticks` ticks, by tick. */
-  function damageByTick(s: ReturnType<typeof armed>, id: number, ticks: number): number[] {
-    const at: number[] = [];
-    for (let t = 1; t <= ticks; t++) {
-      run(s, 1);
-      if (s.events.hits.some((h) => h.target === 'enemy' && h.id === id)) at.push(t);
-    }
-    return at;
-  }
-
-  it('record their hits as fire damage, for render to colour', () => {
-    const { s, e } = burning();
-    runUntil(s, () => s.events.hits.some((h) => h.target === 'enemy' && h.id === e.id), 40);
-    expect(s.events.hits.find((h) => h.target === 'enemy' && h.id === e.id)).toMatchObject({ damageType: 'fire' });
-  });
-
-  it('deal 3 every 30 ticks, 4 times, then stop', () => {
-    const { s, e } = burning();
-    expect(e.burnTicks).toBe(120);
-    expect(damageByTick(s, e.id, 200)).toEqual([30, 60, 90, 120]);
-    expect(e.health).toBe(HUSK.maxHealth - 15 - 12);
-    expect(e.burnTicks).toBe(0);
-  });
-
-  it('restart on a second burst instead of stacking', () => {
-    const { s, e } = burning();
-    run(s, 45);
-    throwAt(s, e.x, e.y);
-    runUntil(s, () => s.events.bursts.length > 0, 100);
-    expect(e.burnTicks).toBe(120);
-  });
-
-  it('can kill, and the Husk drops loot', () => {
-    const { s, e } = burning();
-    e.health = 3;
-    runUntil(s, () => s.events.deaths.length > 0, 31);
-    expect(s.events.deaths[0]?.id).toBe(e.id);
-    expect(s.groundItems.length).toBeGreaterThan(0);
   });
 });
 
