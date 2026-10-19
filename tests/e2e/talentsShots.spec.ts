@@ -94,24 +94,49 @@ test.describe('review screenshots (037)', () => {
     await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
   });
 
-  test('Blastfletch’s charged ground, with an arrow flying through it', async ({ page }) => {
+  test('Blastfletch’s charged ground with a charged arrow crossing it, then its burst on a Husk', async ({ page }) => {
     test.setTimeout(120_000);
-    await start(page, toLevel(5), ['b1', 'b2', 'b3', 'k1']);
-    await page.evaluate(() => {
+    // Reached through the Arrows lane, so the bomb keeps its full flight: it lands after the tube's 40-tick bomb
+    // interval runs out, and the arrows loosed then meet its charged ground.
+    await start(page, toLevel(5), ['a1', 'a2', 'a3', 'k1']);
+    const crossing = await page.evaluate(() => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
       const p = g.step(1, { selectAmmo: 'bomb' }).player;
-      g.spawnEnemy('husk', p.x + 150, p.y + 30);
-      g.step(1, { fire: true, aimX: p.x + 90, aimY: p.y });
-      for (let t = 0; t < 60 && g.getState().blastCharges.length === 0; t++) g.step(1);
+      g.step(1, { fire: true, aimX: p.x + 192, aimY: p.y });
       g.step(1, { selectAmmo: 'arrow' });
-      g.step(4, { fire: true, aimX: p.x + 200, aimY: p.y });
+      // Arrows held at the blast's spot: the sim is held the tick one is charged and still well inside the ground.
+      for (let t = 0; t < 120; t++) {
+        const s = g.step(1, { fire: true, aimX: p.x + 300, aimY: p.y });
+        const c = s.blastCharges[0];
+        const a = s.arrows.find((r) => r.charged);
+        if (c && a && Math.hypot(a.x - c.x, a.y - c.y) < c.radius - 12) return true;
+      }
+      return false;
     });
+    expect(crossing).toBe(true);
     await expect.poll(async () => (await ui(page))?.talentFx.charges).toBeGreaterThan(0);
-    // The sim is held, so the charge stays; let the bomb's own fire burst play out first so the shimmer shows.
+    // The sim is held, so the charge and the arrow stay; let the bomb's own fire burst play out first so the shimmer shows.
     await page.waitForTimeout(800);
     expect((await ui(page))?.talentFx.charges).toBeGreaterThan(0);
     await page.screenshot({ path: `${SHOTS}/04-blastfletch-charge.png` });
+    // On: the charged arrow bursts on a Husk in its path, held mid-flash on the tween clock.
+    const burst = await page.evaluate(() => {
+      const g = window.__GAME__;
+      if (!g) throw new Error('no game');
+      const a = g.getState().arrows.find((r) => r.charged);
+      if (!a) return false;
+      g.spawnEnemy('husk', a.x + 50, a.y);
+      g.tweenSpeed(0.25);
+      for (let t = 0; t < 30; t++) if (g.step(1).events.chargedBursts.length > 0) return true;
+      return false;
+    });
+    expect(burst).toBe(true);
+    await expect.poll(async () => (await ui(page))?.talentFx.chargedBursts).toBeGreaterThan(0);
+    await page.waitForTimeout(250);
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(0));
+    await page.screenshot({ path: `${SHOTS}/04b-blastfletch-burst.png` });
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
   });
 
   test('Shatterpoint’s ice burst on a frozen Husk', async ({ page }) => {

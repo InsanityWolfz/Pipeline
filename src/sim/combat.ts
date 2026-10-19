@@ -96,9 +96,9 @@ export function removeDead(state: SimState): void {
     }
     state.events.deaths.push({ id: e.id, enemyId: e.enemyId, x: e.x, y: e.y, facing: e.facing, ...(e.champion ? { champion: true as const } : {}) });
     spawnDrops(state, enemyDef(e.enemyId), e.x, e.y, e.roomId, e.champion !== null);
-    onBossDeath(state, e.enemyId);
-    // Any kill gives XP (037): by ammo, burst or punch.
+    // Any kill gives XP (037): by ammo, burst or punch. Before the boss's own record, which drops a summoned boss.
     killXp(state, e);
+    onBossDeath(state, e.enemyId);
   }
   state.enemies.length = kept;
 }

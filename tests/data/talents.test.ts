@@ -75,8 +75,8 @@ describe('the talent tree', () => {
   });
 
   it('keeps the keystones’ tuning as the spec says', () => {
-    expect(BLASTFLETCH).toEqual({ chargeTicks: 20, damageScale: 1.5, burstRadius: 24 });
-    expect(SHATTERPOINT).toMatchObject({ damageScale: 2, shards: 4, shardScale: 0.5 });
+    expect(BLASTFLETCH).toEqual({ chargeTicks: 20, damageScale: 1.5, burstRadius: 24, damageType: 'physical' });
+    expect(SHATTERPOINT).toMatchObject({ damageScale: 2, shards: 4, shardScale: 0.5, damageType: 'physical' });
     expect(OVERPRESSURE).toEqual({ rampTicks: 120, maxBonus: 0.25 });
   });
 });

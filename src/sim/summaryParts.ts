@@ -26,6 +26,8 @@ export interface ArrowSummary {
   hitIds: number[];
   /** A homing round's target (029), or null. */
   targetId: number | null;
+  /** It carries a charge from a bomb's blast (037: Blastfletch). */
+  charged: boolean;
 }
 
 export function arrowSummary(a: ArrowState): ArrowSummary {
@@ -40,6 +42,7 @@ export function arrowSummary(a: ArrowState): ArrowSummary {
     travelled: round(a.travelled),
     hitIds: [...a.hitIds],
     targetId: a.targetId,
+    charged: a.charged,
   };
 }
 

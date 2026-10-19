@@ -6,7 +6,7 @@ import type { EnemyState } from './enemies';
 import type { SimState } from './state';
 
 // Leveling (037): XP from kills (more in outer rings and from champions), bosses (half
-// on any kill after the first, 034's altar refights), claims and first discoveries.
+// on a refight at their altar, 034), claims and first discoveries.
 // Nothing in the factory gives XP. Each level is one talent point. Level, XP, points and
 // talents are kept through a KO (resetWorld never touches them).
 
@@ -38,15 +38,18 @@ function homeRing(e: Pick<EnemyState, 'roomId' | 'homeX' | 'homeY'>): number {
 }
 
 /**
- * Gives an enemy's death its XP, whatever killed it: a boss its own XP on its first kill and BOSS_REFIGHT_XP of it
- * after; anything else its XP times its ring's multiplier, and CHAMPION_XP times that for a champion.
+ * Gives an enemy's death its XP, whatever killed it (before 034's boss record drops a summoned boss): a boss its own XP
+ * on its first kill and BOSS_REFIGHT_XP of it when summoned again at its altar (034), and none for any other later kill
+ * (the Warden again after a KO before its pylon is claimed); anything else its XP times its ring's multiplier, and
+ * CHAMPION_XP times that for a champion.
  */
 export function killXp(state: SimState, e: EnemyState): void {
   const def = enemyDef(e.enemyId);
   if (def.boss) {
     const first = !state.killedBosses.includes(def.id);
     if (first) state.killedBosses.push(def.id);
-    gainXp(state, first ? def.xp : def.xp * BOSS_REFIGHT_XP, 'boss');
+    const xp = first ? def.xp : state.summoned.includes(def.id) ? def.xp * BOSS_REFIGHT_XP : 0;
+    gainXp(state, xp, 'boss');
     return;
   }
   gainXp(state, def.xp * (RING_XP[homeRing(e)] ?? 1) * (e.champion ? CHAMPION_XP : 1), 'kill');

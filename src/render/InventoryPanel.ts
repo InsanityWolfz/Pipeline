@@ -3,6 +3,7 @@ import { DEPTHS, SPRITES } from '../data/assets';
 import { INVENTORY_PANEL, reservedRows, sparesText } from '../data/hudPanels';
 import { itemDef } from '../data/items';
 import { playerStats } from '../sim/stats';
+import type { SimState } from '../sim/state';
 import { inventoryGroups, SPARE_ROW, WORN_ROW, type Held, type InventoryGroupRows, type InventoryRow } from './inventoryRows';
 import { inventoryLayout, type InventoryLayout } from './inventoryLayout';
 import { TextLine } from './textLine';
@@ -93,12 +94,13 @@ export class InventoryPanel {
   }
 
   /** Reads the haul every frame (so the hook can report it); draws it while open. */
-  update(sim: Held): void {
+  /** 037's talents count toward the worn line's armor, through playerStats. */
+  update(sim: Held & Pick<SimState, 'talents'>): void {
     this.groups = inventoryGroups(sim);
     this.draw(sim);
   }
 
-  private draw(sim: Held | null): void {
+  private draw(sim: (Held & Pick<SimState, 'talents'>) | null): void {
     for (const view of this.views) {
       const rows = this.open && sim ? (this.groups.find((g) => g.id === view.id)?.rows ?? []) : [];
       view.nothing.setVisible(this.open && rows.length === 0);
@@ -106,7 +108,7 @@ export class InventoryPanel {
     }
   }
 
-  private drawRow(v: RowView, row: InventoryRow | undefined, x: number, y: number, sim: Held | null): void {
+  private drawRow(v: RowView, row: InventoryRow | undefined, x: number, y: number, sim: (Held & Pick<SimState, 'talents'>) | null): void {
     const P = INVENTORY_PANEL;
     const R = P.row;
     const T = P.text;

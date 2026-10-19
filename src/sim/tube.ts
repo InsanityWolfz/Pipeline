@@ -59,7 +59,7 @@ export function hasRoundToFire(state: Pick<SimState, 'hasTube' | 'tube' | 'inven
 }
 
 /** The walk multiplier from the tube (016): slower while it really fires, by last tick's state (037: Steady Grip eases it). */
-export function firingWalkScale(state: Pick<SimState, 'tube' | 'gear' | 'equipped'> & Partial<Pick<SimState, 'talents'>>): number {
+export function firingWalkScale(state: Pick<SimState, 'tube' | 'gear' | 'equipped' | 'talents'>): number {
   return state.tube.firing ? playerStats(state).firingWalk : 1;
 }
 

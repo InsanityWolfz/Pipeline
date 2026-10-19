@@ -1,5 +1,5 @@
 import { FOUNDRY_ROOM } from '../data/rooms';
-import { TALENT_START, TALENTS, talentDef } from '../data/talents';
+import { TALENT_START, TALENTS } from '../data/talents';
 import type { SimState } from './state';
 import { playerStats } from './stats';
 
@@ -18,7 +18,7 @@ export function canTake(state: Pick<SimState, 'talents' | 'talentPoints'>, id: s
 /** Takes a node if it can be taken: a point spent, the node recorded, and a talent event. Taking never heals. */
 export function takeTalent(state: SimState, id: string): void {
   if (!canTake(state, id)) return;
-  state.talents.push(talentDef(id).id);
+  state.talents.push(id);
   state.talentPoints -= 1;
   state.events.talents.push({ id });
 }

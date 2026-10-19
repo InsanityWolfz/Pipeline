@@ -63,6 +63,12 @@ export const TALENT_PANEL = {
   header: { y: 7 },
   constellationY: 136,
   size: { start: 22, minor: 18, keystone: 26 },
+  /**
+   * A taken node's halo and an available node's ring are drawn `pad` px wider than the node, their sprites being
+   * `sprite` px across at scale 1.
+   */
+  halo: { pad: 10, sprite: 30 },
+  ring: { pad: 4, sprite: 24 },
   /** The lane icon on a node is drawn at this scale of its 16 px frame. */
   iconScale: { start: 1, minor: 0.7, keystone: 0.95 },
   hitPad: 2,
@@ -71,7 +77,8 @@ export const TALENT_PANEL = {
   pad: 8,
   hint: 'Hover a node to read it; click a lit one to take it.',
   /** Text and link colours (palette ids) and alphas for each node state. */
-  colors: { taken: 'cyan', available: 'snow', dim: 'rock-pale', points: 'gold-trim', link: 'rock-pale', linkTaken: 'cyan', linkOpen: 'snow' },
+  /** Text and links: taken links glow cyan; the others take their outer node's lane colour (LANE_COLORS), as does the hovered name. */
+  colors: { taken: 'cyan', available: 'snow', dim: 'rock-pale', points: 'gold-trim', linkTaken: 'cyan' },
   alpha: { taken: 1, available: 1, dim: 0.38, link: 0.3, linkOpen: 0.55, linkTaken: 1, glow: 0.35 },
   linkWidth: { dim: 1, open: 1, taken: 1.6, glow: 4 },
 } as const;
@@ -106,6 +113,9 @@ export const LEVEL_UP = {
  */
 export const KEYSTONE_LOOK = {
   charge: { spriteRadius: 24, alpha: [0.35, 0.7] as const, breatheMs: 260 },
+  /** A charged arrow's burst: the charge sprite flashing out at its radius, from → to over `ms`, `depthAbove` px in front of what it hits. */
+  chargedBurst: { ms: 320, from: 0.5, to: 1.2, depthAbove: 24 },
   iceBurst: { ms: 550, from: 1.2, to: 2.4, lift: 12, depthAbove: 24 },
-  heat: { minRamp: 0.05, alpha: 1, scale: 1.3, lift: 16, ahead: 22, wobbleMs: 180 },
+  /** `ahead` px along the aim (`aheadY` of it on the ground's y, which reads foreshortened), `wobble` of its width each `wobbleMs`. */
+  heat: { minRamp: 0.05, alpha: 1, scale: 1.3, lift: 16, ahead: 22, aheadY: 0.5, wobble: 0.12, wobbleMs: 180, depthAbove: 2 },
 } as const;

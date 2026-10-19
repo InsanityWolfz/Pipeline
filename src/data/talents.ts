@@ -5,6 +5,8 @@
 // src/sim/keystones.ts. The node list is spec 037's, kept as written for the first
 // playtest; Shaun edits it after. Ids are the spec's in lower case (kebab-case data ids).
 
+import type { DamageType } from './ammo';
+
 export type TalentLane = 'centre' | 'arrows' | 'bombs' | 'ley' | 'survival' | 'tube';
 
 /** The ammo a damage or fire-rate effect reaches: a base ammo (its tagged rounds too), or all of them. */
@@ -114,20 +116,21 @@ export function talentDef(id: string): TalentDef {
   return def;
 }
 
-/** The combo keystones' lanes (the panel shows them between both): Blastfletch Arrows–Bombs, Shatterpoint Arrows–Ley. */
-export const KEYSTONE_LANES: Readonly<Record<KeystoneRule, readonly TalentLane[]>> = { blastfletch: ['arrows', 'bombs'], shatterpoint: ['arrows', 'ley'], overpressure: ['tube'] };
+/** The keystones' damage type (only physical and cold exist in Milestone 1). */
+const PHYSICAL: DamageType = 'physical';
 
 /**
  * Blastfletch: a player bomb's blast leaves its area charged for `chargeTicks`; an arrow flying through it gains
- * `damageScale` damage and bursts in a `burstRadius` px blast on the next enemy it hits, which spends the charge.
+ * `damageScale` damage and bursts in a `burstRadius` px blast of `damageType` on the next enemy it hits, which spends the charge.
  */
-export const BLASTFLETCH = { chargeTicks: 20, damageScale: 1.5, burstRadius: 24 } as const;
+export const BLASTFLETCH = { chargeTicks: 20, damageScale: 1.5, burstRadius: 24, damageType: PHYSICAL } as const;
 
 /**
  * Shatterpoint: a ley bolt that hits a frozen enemy ends the freeze for `damageScale` damage, and `shards` ice shards
- * burst from it for `shardScale` of the bolt's damage each, flying `range` px at `speed` px/s (as star shards do).
+ * burst from it for `shardScale` of the bolt's damage each, of `damageType` (physical: cold shards would chill their
+ * way to more freezes, a chain the spec never asked for), flying `range` px at `speed` px/s (as star shards do).
  */
-export const SHATTERPOINT = { damageScale: 2, shards: 4, shardScale: 0.5, range: 64, speed: 360, projectile: 'ice-shard' } as const;
+export const SHATTERPOINT = { damageScale: 2, shards: 4, shardScale: 0.5, range: 64, speed: 360, projectile: 'ice-shard', damageType: PHYSICAL } as const;
 
 /** Overpressure: holding fire ramps the fire rate up to +`maxBonus` over `rampTicks`; releasing fire resets it. */
 export const OVERPRESSURE = { rampTicks: 120, maxBonus: 0.25 } as const;

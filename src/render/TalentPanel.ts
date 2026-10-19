@@ -2,7 +2,7 @@ import { BlendModes, type GameObjects, type Scene } from 'phaser';
 import { DEPTHS, SPRITES } from '../data/assets';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { KEYSTONE_ICONS, LANE_ICONS, TALENT_PANEL, TALENT_SPRITES, talentHeader } from '../data/talentAssets';
-import { TALENT_LIST, TALENTS, type TalentDef } from '../data/talents';
+import { LANE_COLORS, TALENT_LIST, TALENTS, type TalentDef } from '../data/talents';
 import { xpToNext } from '../sim/leveling';
 import type { SimState } from '../sim/state';
 import { canTake } from '../sim/talents';
@@ -104,9 +104,9 @@ export class TalentPanel {
       const look = looksOf(def);
       const size = spot.r * 2;
       const halo = fixed(addVector(scene, spot.x, spot.y, TALENT_SPRITES.halo).setBlendMode(BlendModes.ADD), depth + 1);
-      halo.setScale((halo.scaleX * (size + 10)) / 30);
+      halo.setScale((halo.scaleX * (size + P.halo.pad)) / P.halo.sprite);
       const ring = fixed(addVector(scene, spot.x, spot.y, TALENT_SPRITES.ring), depth + 2);
-      ring.setScale((ring.scaleX * (size + 4)) / 24);
+      ring.setScale((ring.scaleX * (size + P.ring.pad)) / P.ring.sprite);
       const stone = fixed(addVector(scene, spot.x, spot.y, look.stone), depth + 2);
       const icon = look.icon ? fixed(addVector(scene, spot.x, spot.y, look.icon), depth + 3) : null;
       icon?.setScale(icon.scaleX * look.scale);
@@ -191,7 +191,9 @@ export class TalentPanel {
         if (taken) glowing += 1;
         if (!this.open) continue;
         if (taken) g.lineStyle(P.linkWidth.glow, colorOf(P.colors.linkTaken), P.alpha.glow).lineBetween(a.x, a.y, b.x, b.y);
-        const [width, color, alpha] = taken ? [P.linkWidth.taken, P.colors.linkTaken, P.alpha.linkTaken] : open ? [P.linkWidth.open, P.colors.linkOpen, P.alpha.linkOpen] : [P.linkWidth.dim, P.colors.link, P.alpha.link];
+        // Untaken links in their lane's colour: the start's take the lane they lead into, a keystone's the lane they come from.
+        const lane = LANE_COLORS[(t.kind === 'start' ? TALENTS[l] : t)?.lane ?? 'centre'];
+        const [width, color, alpha] = taken ? [P.linkWidth.taken, P.colors.linkTaken, P.alpha.linkTaken] : open ? [P.linkWidth.open, lane, P.alpha.linkOpen] : [P.linkWidth.dim, lane, P.alpha.link];
         g.lineStyle(width, colorOf(color), alpha).lineBetween(a.x, a.y, b.x, b.y);
       }
     }
@@ -213,7 +215,8 @@ export class TalentPanel {
       v.stone.setAlpha(alpha);
       v.icon?.setAlpha(alpha);
     }
-    this.name.set(hover?.name ?? '').setFill(hover ? P.colors[stateOf(hover.id)] : undefined);
+    // The hovered node's name in its lane's colour (the start's in snow).
+    this.name.set(hover?.name ?? '').setFill(hover ? LANE_COLORS[hover.lane] : undefined);
     this.wrap(hover ?? null);
     this.hint.setVisible(!hover);
     this.resetBox.setVisible(this.inFoundry);

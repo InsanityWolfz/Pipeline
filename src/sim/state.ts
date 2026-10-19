@@ -115,7 +115,11 @@ export interface SimState {
   /** Bomb blasts' charged ground (037: Blastfletch), and the id for the next. */
   blastCharges: BlastCharge[];
   nextChargeId: number;
-  /** Bosses killed at least once (037): a later kill gives the refight's share of their XP. Kept through a KO. */
+  /**
+   * Bosses killed at least once (037), the Warden included: only the first kill gives a boss's full XP. 034's
+   * `bossDefeats` holds only region bosses with altars, and its goals and altars read it, so this is its own list.
+   * Kept through a KO.
+   */
   killedBosses: string[];
   /** The player holds the tube (012); without it nothing fires. Kept through a KO. */
   hasTube: boolean;

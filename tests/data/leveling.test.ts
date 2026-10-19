@@ -27,7 +27,7 @@ describe('leveling data', () => {
     expect((ENEMIES.charger?.xp ?? 0) * (RING_XP[3] ?? 0)).toBe(18);
   });
 
-  it('paces about 900 XP (the tutorial, the shrine region, four landmarks, a claim and the Warden) to level 7', () => {
+  it('takes a player from level 1 to level 7 with 900 XP (the spec’s pacing figure for the shrine region)', () => {
     const s = { level: 1, xp: 0, talentPoints: 0, events: createEvents() };
     gainXp(s, 900, 'kill');
     expect(s.level).toBe(7);

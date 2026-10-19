@@ -11,21 +11,22 @@ import { tubeSlotBox } from './bottomHud';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
 
-/** 037's effects as drawn, for `ui().talentFx`: the level-up line and its alpha, rings and ice bursts still live, charged areas shown, and the heat's alpha. */
+/** 037's effects as drawn, for `ui().talentFx`: the level-up line and its alpha, rings, ice bursts and charged bursts still live, charged areas shown, and the heat's alpha. */
 export interface TalentFxShown {
   levelLine: string | null;
   lineAlpha: number;
   levelRings: number;
   iceBursts: number;
+  chargedBursts: number;
   charges: number;
   heat: number;
 }
 
-export const NO_TALENT_FX: TalentFxShown = { levelLine: null, lineAlpha: 0, levelRings: 0, iceBursts: 0, charges: 0, heat: 0 };
+export const NO_TALENT_FX: TalentFxShown = { levelLine: null, lineAlpha: 0, levelRings: 0, iceBursts: 0, chargedBursts: 0, charges: 0, heat: 0 };
 
 interface Burst {
   image: GameObjects.Image;
-  kind: 'ring' | 'ice';
+  kind: 'ring' | 'ice' | 'charged';
   ms: number;
   look: { ms: number; from: number; to: number };
   /** Made this frame: its clock starts next frame, so a long frame (the hook's stepping) can't run it out unseen. */
@@ -63,14 +64,16 @@ export class TalentFxView {
       lineAlpha: this.line.obj.visible ? Math.round(this.line.obj.alpha * 100) / 100 : 0,
       levelRings: live('ring'),
       iceBursts: live('ice'),
+      chargedBursts: live('charged'),
       charges: [...this.charges.values()].filter((c) => c.visible).length,
       heat: this.heat.visible ? Math.round(this.heat.alpha * 100) / 100 : 0,
     };
   }
 
-  private burst(kind: Burst['kind'], frame: string, x: number, y: number, depth: number, look: Burst['look']): void {
-    // Drawn plain, not added: the ring keeps its cyan over bright grass, the ice its pale blue over a white hit flash.
+  private burst(kind: Burst['kind'], frame: string, x: number, y: number, depth: number, look: Burst['look'], add = false): void {
+    // Drawn plain unless `add`: the ring keeps its cyan over bright grass, the ice its pale blue over a white hit flash.
     const image = addVector(this.scene, x, y, frame).setDepth(depth);
+    if (add) image.setBlendMode(BlendModes.ADD);
     const base = image.scaleX;
     image.setData('base', base).setScale(base * look.from);
     this.bursts.push({ image, kind, ms: 0, look, fresh: true });
@@ -89,6 +92,10 @@ export class TalentFxView {
     }
     // In front of the shattered enemy (its sprite sorts by its feet).
     if (here) for (const s of events.shatters) this.burst('ice', TALENT_SPRITES.iceBurst, s.x, s.y - KEYSTONE_LOOK.iceBurst.lift, s.y + KEYSTONE_LOOK.iceBurst.depthAbove, KEYSTONE_LOOK.iceBurst);
+    // A charged arrow's burst (Blastfletch): the charged ground's ring flashing out at the burst's radius.
+    const B = KEYSTONE_LOOK.chargedBurst;
+    const k = (r: number) => r / KEYSTONE_LOOK.charge.spriteRadius;
+    if (here) for (const c of events.chargedBursts) this.burst('charged', TALENT_SPRITES.blastCharge, c.x, c.y, c.y + B.depthAbove, { ms: B.ms, from: B.from * k(c.radius), to: B.to * k(c.radius) }, true);
     this.stepBursts(deltaMs);
     this.stepLine(deltaMs);
     this.drawCharges(sim, shown);
@@ -161,10 +168,10 @@ export class TalentFxView {
     const dx = p.aimX - p.x;
     const dy = p.aimY - p.y;
     const len = Math.hypot(dx, dy) || 1;
-    const wobble = 1 + 0.12 * Math.sin((this.time / H.wobbleMs) * Math.PI * 2);
+    const wobble = 1 + H.wobble * Math.sin((this.time / H.wobbleMs) * Math.PI * 2);
     this.heat
-      .setPosition(p.x + (dx / len) * H.ahead, p.y - H.lift + (dy / len) * H.ahead * 0.5)
-      .setDepth(p.y + 2)
+      .setPosition(p.x + (dx / len) * H.ahead, p.y - H.lift + (dy / len) * H.ahead * H.aheadY)
+      .setDepth(p.y + H.depthAbove)
       .setAlpha(H.alpha * Math.min(1, ramp))
       .setScale(this.heatScale * wobble, this.heatScale);
   }

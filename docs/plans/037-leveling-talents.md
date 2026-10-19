@@ -39,17 +39,19 @@ Small vertical commits, tests first in each:
 
 ## Not dictated by the spec
 - A kill's ring is its home tile's ring in the overworld (where it was placed or spawned), ring 0 in any other room. Bosses take no ring or champion multiplier.
-- Any boss kill after its first gives `BOSS_REFIGHT_XP` of its XP: the Bulwark's altar refights, and the Warden if it is killed again after a KO before its pylon is claimed.
+- A boss's later kill gives `BOSS_REFIGHT_XP` of its XP only when it was summoned at its altar (034); any other later kill (the Warden again after a KO before its pylon is claimed) gives none (review). `killedBosses` stays its own list: 034's `bossDefeats` holds only altar bosses and its goals read it.
 - Claims and discoveries give XP from this tick's events, so a start's claims (`?start=hollows`) and the dev hook's `claim()` give none.
 - At the cap `xp` stays 0 and `xpToNext` reads 0; the bar shows full.
 - Fire rate bonuses add up (+8%, +10%, Overpressure's ramp) and divide the ammo's `fireTicks`, rounded to whole ticks (at least 1). Damage bonuses add up (+10% and +6% is ×1.16) and stay fractional; the numbers shown round.
 - Rimecraft's +0.5 s applies to a boss's shorter freeze too.
 - Lane bonuses reach the shots of their rounds: arrow bonuses reach frost arrows; ley bonuses reach star shards and Shatterpoint's shards.
 - Blastfletch: only the player's bombs charge ground; an arrow takes a given area's charge once; the burst hits every other enemy within 24 px for the charged arrow's damage, like a bomb's (no knockback, it lands through shields); a blocked arrow spends nothing.
-- Shatterpoint's ice shards fly like star shards (64 px at 360 px/s), never hit the shattered enemy, and deal cold damage (they're ice). The shattering hit thaws the enemy as a normal thaw (the refreeze window starts).
+- Shatterpoint's ice shards fly like star shards (64 px at 360 px/s), never hit the shattered enemy, and deal physical damage (review: cold shards would chill their way into a freeze chain the spec never asked for; the cold alternative is flagged for Shaun). The shattering hit thaws the enemy as a normal thaw (the refreeze window starts). The shards' and the charged burst's damage types are data (`SHATTERPOINT`, `BLASTFLETCH`).
 - Overpressure counts while fire is held and the tube is really firing; a roll or an empty tube holds the ramp where it is; releasing fire resets it; a KO resets it.
 - Respec with nothing taken is still allowed and recorded. Losing Tough Hide clamps health to the new max; taking it doesn't heal.
 - The level-up line sits centred over the bottom HUD for 2.6 s (2.2 s, then a 0.4 s fade) in the title face, in cyan; the XP bar's "tick" is a 0.3 s brightening of the bar's end.
+- Untaken links take their lane's colour (`LANE_COLORS`), as does the hovered node's name; taken links glow cyan.
+- A charged arrow's burst flashes the charged ground's ring at its 24 px radius.
 - The tree panel's lanes carry their ammo's icons (Arrows, Bombs, Ley) and new ones for Survival (a heart) and the Tube (the relic tube); keystones have their own icons. Lane colours: Arrows rust-light, Bombs cinder, Ley cyan, Survival leaf-light, Tube brass-light. Pending Shaun's review.
 - Opening the tree closes the crafting menu, the hopper picker and any site menu, as the inventory does, and takes turns with the inventory and the research list; a KO closes it.
 - The XP row sits under the HP frame: the bar under the fill, "Lv 7" and the pip under the shield.

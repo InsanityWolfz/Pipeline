@@ -72,12 +72,12 @@ export function keystoneHit(state: SimState, arrow: ArrowState, e: EnemyState): 
 
 /**
  * After the hit lands: a charged arrow bursts BLASTFLETCH.burstRadius px round its point for its charged damage (every
- * enemy but the struck one, like a bomb's blast) and its charge is spent; a shatter sends SHATTERPOINT.shards cold ice
+ * enemy but the struck one, like a bomb's blast) and its charge is spent; a shatter sends SHATTERPOINT.shards ice
  * shards from the struck enemy, the first along the bolt's flight, each for shardScale of the bolt's damage.
  */
 export function afterKeystoneHit(state: SimState, arrow: ArrowState, e: EnemyState, hit: KeystoneHit, spawned: ArrowState[]): void {
   if (hit.charged) {
-    blastArea(state, arrow.roomId, arrow.x, arrow.y, BLASTFLETCH.burstRadius, arrow.damage * hit.scale, 'physical', e.id);
+    blastArea(state, arrow.roomId, arrow.x, arrow.y, BLASTFLETCH.burstRadius, arrow.damage * hit.scale, BLASTFLETCH.damageType, e.id);
     state.events.chargedBursts.push({ x: arrow.x, y: arrow.y, radius: BLASTFLETCH.burstRadius });
     arrow.charged = false;
   }
@@ -85,7 +85,7 @@ export function afterKeystoneHit(state: SimState, arrow: ArrowState, e: EnemySta
   const S = SHATTERPOINT;
   for (let k = 0; k < S.shards; k++) {
     const [dx, dy] = rotate(arrow.dx, arrow.dy, (k * 360) / S.shards);
-    spawned.push(createShard(state.nextArrowId++, arrow.roomId, e.x, e.y, dx, dy, e.id, { projectile: S.projectile, speed: S.speed, range: S.range, damage: arrow.damage * S.shardScale, damageType: 'cold' }));
+    spawned.push(createShard(state.nextArrowId++, arrow.roomId, e.x, e.y, dx, dy, e.id, { projectile: S.projectile, speed: S.speed, range: S.range, damage: arrow.damage * S.shardScale, damageType: S.damageType }));
   }
   state.events.shatters.push({ id: e.id, x: e.x, y: e.y });
 }

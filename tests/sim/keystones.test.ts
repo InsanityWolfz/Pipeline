@@ -92,7 +92,7 @@ describe('Blastfletch', () => {
 });
 
 describe('Shatterpoint', () => {
-  it('a ley bolt on a frozen enemy ends the freeze for double damage and bursts 4 cold ice shards for half', () => {
+  it('a ley bolt on a frozen enemy ends the freeze for double damage and bursts 4 physical ice shards for half', () => {
     const s = taking(arena(), 'k2');
     const e = still(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     e.frozen = 60;
@@ -106,7 +106,7 @@ describe('Shatterpoint', () => {
     expect(e.health).toBeCloseTo(HUSK.maxHealth - BOLT.damage * SHATTERPOINT.damageScale, 9);
     const shards = s.arrows.filter((a) => a.ammoId === SHATTERPOINT.projectile);
     expect(shards).toHaveLength(SHATTERPOINT.shards);
-    for (const sh of shards) expect(sh).toMatchObject({ damage: BOLT.damage * SHATTERPOINT.shardScale, damageType: 'cold', range: SHATTERPOINT.range, speed: SHATTERPOINT.speed, hitIds: [e.id], pierce: false });
+    for (const sh of shards) expect(sh).toMatchObject({ damage: BOLT.damage * SHATTERPOINT.shardScale, damageType: 'physical', range: SHATTERPOINT.range, speed: SHATTERPOINT.speed, hitIds: [e.id], pierce: false });
     expect(s.arrows).not.toContain(bolt);
   });
 

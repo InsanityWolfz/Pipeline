@@ -55,11 +55,14 @@ export interface PlayerStats {
   ammo: AmmoStats;
 }
 
-/** What stats are made of: the worn gear (036) and, where the state has them, the taken talents (037). */
-type Worn = Pick<SimState, 'gear' | 'equipped'> & Partial<Pick<SimState, 'talents'>>;
+/** What stats are made of: the worn gear (036) and the taken talents (037). */
+type Worn = Pick<SimState, 'gear' | 'equipped' | 'talents'>;
+
+/** What's worn: the gear and the slots (036). */
+type Gear = Pick<SimState, 'gear' | 'equipped'>;
 
 /** The pieces being worn, in slot order: the one place what's worn is read. */
-export function wornPieces(state: Worn): GearPiece[] {
+export function wornPieces(state: Gear): GearPiece[] {
   return GEAR_SLOTS.flatMap((slot) => {
     const piece = state.gear.find((g) => g.id === state.equipped[slot]);
     return piece ? [piece] : [];
@@ -67,7 +70,7 @@ export function wornPieces(state: Worn): GearPiece[] {
 }
 
 /** The worn relic with this rule, or null. */
-export function wornRelic<R extends RelicRule>(state: Worn, rule: R): Extract<RelicDef, { rule: R }> | null {
+export function wornRelic<R extends RelicRule>(state: Gear, rule: R): Extract<RelicDef, { rule: R }> | null {
   for (const piece of wornPieces(state)) {
     if (!piece.relic) continue;
     const def = relicDef(piece.relic);
@@ -108,7 +111,7 @@ function ammoStats(t: TalentTotals): AmmoStats {
  */
 export function playerStats(state: Worn, healing: HealingTuning = HEALING): PlayerStats {
   const pieces = wornPieces(state);
-  const t = talentTotals(state.talents ?? []);
+  const t = talentTotals(state.talents);
   const body = pieces.find((p) => p.slot === 'body');
   const featherplate = wornRelic(state, 'feather');
   const heavyScale = body?.weight ? SLOT_BASE.body[body.weight].walkScale : 1;

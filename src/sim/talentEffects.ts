@@ -78,8 +78,8 @@ export function talentTotals(talents: readonly string[]): TalentTotals {
 }
 
 /** Whether a keystone with this rule is taken. */
-export const hasKeystone = (state: Partial<Talented>, rule: KeystoneRule): boolean =>
-  (state.talents ?? []).some((id) => {
+export const hasKeystone = (state: Talented, rule: KeystoneRule): boolean =>
+  state.talents.some((id) => {
     const e = TALENTS[id]?.effect;
     return e?.kind === 'keystone' && e.rule === rule;
   });

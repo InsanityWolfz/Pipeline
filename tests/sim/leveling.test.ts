@@ -5,15 +5,15 @@ import { enemyDef } from '../../src/data/enemies';
 import { HOLLOWS, REGION_1_X } from '../../src/data/hollows';
 import { HOLLOWS_START } from '../../src/data/playtest';
 import { OVERWORLD, OVERWORLD_ROOM, ringOf } from '../../src/data/overworld';
-import { SHRINE_SITE, WALKABLE } from '../../src/data/rooms';
+import { FOUNDRY_ROOM, SHRINE_SITE, WALKABLE } from '../../src/data/rooms';
 import { makeChampion } from '../../src/sim/champions';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import { gainXp, xpToNext } from '../../src/sim/leveling';
 import { createSim, roomById, type SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
-import { arena, die, fireAt, movePlayer, run, SEED } from './fight';
-import { foundry, put } from './foundryKit';
+import { arena, atEntrance, die, fireAt, movePlayer, run, SEED } from './fight';
+import { foundry } from './foundryKit';
 import { standAtBench } from '../fixtures/gear';
 import { claim } from '../../src/sim/claims';
 import { craft } from '../../src/sim/crafting';
@@ -88,11 +88,11 @@ describe('kill XP', () => {
     expect(s.xp).toBe(5 * (RING_XP[ring] ?? 0));
   });
 
-  it('gives the Warden its 150 on the first kill and half on a later one, with no ring multiplier', () => {
+  it('gives the Warden its 150 on the first kill, with no ring multiplier, and nothing for a later one (no altar refight)', () => {
     const s = arena();
     const ring2 = tileCentre(tileInRing(2));
     expect(killAt(s, 'pylon-warden', ring2)).toBe(enemyDef('pylon-warden').xp);
-    expect(killAt(s, 'pylon-warden', ring2)).toBe(enemyDef('pylon-warden').xp * BOSS_REFIGHT_XP);
+    expect(killAt(s, 'pylon-warden', ring2)).toBe(0);
     expect(s.killedBosses).toEqual(['pylon-warden']);
   });
 
@@ -111,6 +111,10 @@ describe('kill XP', () => {
     if (!again) throw new Error('no refight');
     expect(killThis(s, again)).toBe(300 * BOSS_REFIGHT_XP);
     expect(s.events.xp).toEqual([{ amount: 150, source: 'boss' }]);
+    // A Bulwark that wasn't summoned at the altar (here placed by hand) gives nothing.
+    const stray = createEnemy(s.nextEnemyId++, 'bulwark', { x: again.x, y: again.y }, OVERWORLD_ROOM);
+    s.enemies.push(stray);
+    expect(killThis(s, stray)).toBe(0);
   });
 });
 
@@ -144,21 +148,39 @@ describe('claims and discoveries', () => {
 });
 
 describe('the factory', () => {
-  it('never gives XP: a long run of crafting, building, a line, supply, identifying, depositing and research', () => {
+  it('never gives XP: a long run of banking on the way in, building, a line, supply, crafting, identifying, depositing and research', () => {
     const s = foundry();
     claim(s, SHRINE_SITE);
     Object.assign(s.inventory, { wood: 40, stone: 40, fiber: 40, 'unidentified-armor': 3, 'schematic-machine-speed': 1, 'ancient-gear': 5, 'warden-core': 1 });
-    const hopper = put<HopperState>(s, 'hopper', 12, 2, 'up');
-    put(s, 'conduit', 12, 1, 'up');
-    hopper.item = 'arrow';
-    hopper.count = 99;
-    const fed = put<HopperState>(s, 'hopper', 16, 6, 'right');
     const seen: number[] = [];
     let supplied = 0;
+    let banked = 0;
     const watch = () => {
       seen.push(s.events.xp.length, s.events.levelUps.length);
       supplied += s.events.supplies.length;
+      banked += s.events.banks.length;
     };
+    // Down the stairs from the overworld: entering the foundry banks what's carried.
+    atEntrance(s);
+    for (let t = 0; t < 60 && s.roomId !== FOUNDRY_ROOM; t++) {
+      run(s, 1, { moveY: -1 });
+      watch();
+    }
+    expect(s.roomId).toBe(FOUNDRY_ROOM);
+    expect(banked).toBeGreaterThan(0);
+    // The line built with the place command: a hopper of arrows and a conduit up into the intake, and a hopper to fill.
+    const placeAt = (pieceId: string, tx: number, ty: number, facing: 'up' | 'right') => {
+      run(s, 1, { place: { pieceId, tx, ty, facing } });
+      watch();
+      const p = s.foundry.pieces.find((q) => q.tx === tx && q.ty === ty);
+      if (!p) throw new Error(`no ${pieceId} at ${tx},${ty}`);
+      return p;
+    };
+    const hopper = placeAt('hopper', 12, 2, 'up') as HopperState;
+    placeAt('conduit', 12, 1, 'up');
+    hopper.item = 'arrow';
+    hopper.count = 99;
+    const fed = placeAt('hopper', 16, 6, 'right') as HopperState;
     for (const recipe of ['arrow', 'arrow', 'bomb']) craft(s, recipe);
     standAtBench(s);
     run(s, 1, { identify: true });

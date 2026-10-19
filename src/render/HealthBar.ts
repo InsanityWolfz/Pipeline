@@ -150,7 +150,7 @@ export class HealthBar {
     const text = levelText(xp.level);
     this.level.set(text).moveTo(textX, y + X.textY);
     const pip = xp.points > 0;
-    this.pip.setVisible(pip).setPosition(textX + this.level.width + X.pipGap + 3, y + X.pipY);
+    this.pip.setVisible(pip).setPosition(textX + this.level.width + X.pipGap + X.pipHalf, y + X.pipY);
     this.xpShown = { text, fill: Math.round(fill * 1000) / 1000, pip, tick: Math.round(tick * 100) / 100, bar: { x: x + B.x, y: y + B.y, w: B.w, h: B.h } };
   }
 }
