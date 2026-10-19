@@ -95,7 +95,7 @@ The intake starts with one entrance open. The Pylon Warden's core opens the othe
   - Carried rounds fire before the volley, and melee happens when everything is empty.
 - **Playwright:** with playtest cores, open the entrances, feed arrows into two of them, fire, and see two projectiles at ±7.5°.
 - **Screenshots:**
-  - the intake with one capped and two open entrances
+  - the intake with the centre entrance open and both sides capped, then again once the core has opened them (both sides open together, so "one capped and two open" can't occur; corrected 2026-10-19)
   - a two-arrow-and-bomb volley in flight
 
 ## Open questions

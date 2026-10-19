@@ -20,7 +20,7 @@ Each beat introduces exactly one new idea.
 6. **Commit the first supply slot.** They pick a favorite and build its line. Crafting each part by hand unlocked the machines. Now the tube fires straight from the factory.
 7. **Identify armor.** The armor from the first fight is identified at the foundry and equipped.
 8. **Clear and claim.** A nearby site is guarded by a tougher pack and an elite. Clearing it and reactivating the pylon claims it as a supply line, adds a deposit point, and unlocks fast travel.
-9. **Build a spread.** Back home, materials are flowing. The elite's machine part lets them build a gravity stager and turn their ammo into a spread.
+9. **Build a spread.** Back home, materials are flowing. The elite's core opens the intake's two side entrances, and feeding a second entrance turns their ammo into a spread. (Changed from the gravity stager on 2026-10-18, spec 024.)
 10. **Head back out.** The line keeps running while they explore. A death here sends them home and drops their haul, which tests the death rule. Coming back to a running factory ends the prototype.
 
 ## Camera and art
@@ -68,16 +68,16 @@ Names are placeholders.
 **Materials and drops:**
 
 - **Raw:** wood, stone, fiber, ley crystal, husk resin
-- **Machine part:** warden core, needed to build the gravity stager
+- **Machine part:** warden core, which opens the intake's side entrances
 - **Armor:** one unidentified piece from the first fight
 
-**Foundry placement:** the player walks around the foundry and places machines on a grid in the same top-down world, Factorio-style. There's no separate factory screen. Machine position and facing matter, since a stager's angle sets the spread.
+**Foundry placement:** the player walks around the foundry and places machines on a grid in the same top-down world, Factorio-style. There's no separate factory screen. Machine position and facing matter, since which intake entrances a line feeds sets the spread.
 
 **Foundry pieces:**
 
 - **Crafting menu** for hand-crafting, instant in the prototype
 - **Machines** for the chosen ammo's chain
-- **Gravity stager** that splits a line into a spread
+- **Intake entrances:** each fed entrance adds a round to the volley, so feeding more than one fires a spread
 - **Identification bench**
 - **Supply line** from the claimed site at a fixed rate
 
