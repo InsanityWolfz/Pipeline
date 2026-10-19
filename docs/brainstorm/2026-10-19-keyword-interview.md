@@ -28,3 +28,9 @@ Oct 19, 2026 · Shaun's answers to the open questions in docs/brainstorm/2026-10
 - **Q13, stacking math:** all "+%" bonuses to a stat add together; relics and keystones use "×". Cooldowns become fractional, so the shown % is exactly what the player gets.
 - **Q14, units:** times in seconds (1 decimal), changes in %, and distances in px only in the full breakdown.
 - **Q15, breakdown:** hover shows a summary. Shift+hover shows the full breakdown with the damage calculation. A Build tab on the T panel lists every ammo's final numbers, and clicking a keyword chip opens its glossary entry.
+
+## Round 5
+- **Q16, statuses:** Chill and Freeze are two separate statuses. The short immunity after a freeze is described inside Freeze's text, with no Thaw keyword.
+- **Q17, new-keyword rule:** adopted. Before a keyword ships it needs a rule template, numbers in data, at least one source and at least two payoffs, enforced by a data test.
+- **Q18, enemy traits:** named chips only (Shield, Boss, Burrowed); nothing scales against them yet.
+- **Q19, combos:** always through a keyword. Keyword A creates a status or Pool, and keyword C consumes it. No one-off hidden rules.
