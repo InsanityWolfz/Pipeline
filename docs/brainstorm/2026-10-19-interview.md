@@ -93,3 +93,15 @@ Oct 19, 2026 · Shaun's answers, which follow on from docs/brainstorm/2026-10-19
   - machine speed
   - splitter and merger
 - **Gold and merchant:** not yet.
+
+## Round 8
+- **Region 2:** Stonefall Hollows, a collapsed quarry-city of the lost civilisation. It has cliffs, broken aqueducts and veins of ley-iron (the metal), in grey-blue stone with rust and cyan. It's about half the current map (roughly 40×45 tiles to the west), with 2–3 landmarks, a claimable site and the boss arena.
+- **The Bulwark:** a slow-turning wall. Its shielded front blocks shots, and its back takes damage. Shaun's additions:
+  - **Telegraphed bombs:** now and then it lobs bombs, each marked by a red circle with a second red circle growing from the middle. When the two circles meet, the bomb does damage if you're standing in it. You have to position to hit it and dodge the bombs at the same time.
+  - **Turning speed:** the shield turns slowly enough that a player who gets behind it has time to hit it.
+  - **Close range:** if you get too close, it does a large circle attack around itself.
+- **New enemies:** all four:
+  - **Charger:** telegraphs, then rams in a line.
+  - **Burrower:** tunnels underground, shown by a ripple, and pops up under you after a wind-up.
+  - **Shardback:** an armored front, a mini-Bulwark.
+  - **Sniper construct:** a long-range shot with a laser-sight telegraph; it hides behind cover.
