@@ -1,5 +1,7 @@
 import { expect, type Page } from '@playwright/test';
 import type {} from '../../src/render/testHook';
+import { REGION_1_X } from '../../src/data/hollows';
+import { OVERWORLD } from '../../src/data/overworld';
 
 // Page helpers shared by the e2e specs. They run inside the page, so they're
 // installed there before the game boots.
@@ -17,6 +19,14 @@ export interface Helpers {
   toHall(): void;
   /** Walks to the front of the foundry's stairs in the overworld and down them (017). */
   toFoundry(): void;
+  /** Region 1's first column (034: the old map moved +40 when the Hollows grew west), for tiles specs name by hand. */
+  ox: number;
+}
+
+/** What the in-page helpers need from the map's data (they can't import it). */
+interface MapData {
+  ox: number;
+  door: { tx: number; ty: number };
 }
 
 declare global {
@@ -34,7 +44,7 @@ export function watchErrors(page: Page): string[] {
   return errors;
 }
 
-function installHelpers(): void {
+function installHelpers(map: MapData): void {
   const game = () => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
@@ -177,18 +187,20 @@ function installHelpers(): void {
         collect();
       }
     },
+    ox: map.ox,
     toFoundry() {
       const g = game();
-      // The stairs' door tile is (40, 20); its arrival tile (40, 21) is in front (src/data/overworld.ts).
-      // From the north, round the mound's east side (blocks at x 38–42, y 18–20); from the south,
-      // up the column beside the path, clear of the tube's stone at (40, 33).
+      // The stairs' door tile; its arrival tile is the one in front (src/data/overworld.ts).
+      // From the north, round the mound's east side (blocks 2 tiles either side, 2 rows up); from the south,
+      // up the column beside the path, clear of the tube's stone.
+      const { tx, ty } = map.door;
       const y = game().getState().player.y;
-      if (y < 22 * 32) {
-        walkTo(43.5 * 32, y);
-        walkTo(43.5 * 32, 22.5 * 32);
-      } else walkTo(41.5 * 32, y);
-      walkTo(41.5 * 32, 21.5 * 32);
-      walkTo(40.5 * 32, 21.5 * 32);
+      if (y < (ty + 2) * 32) {
+        walkTo((tx + 3.5) * 32, y);
+        walkTo((tx + 3.5) * 32, (ty + 2.5) * 32);
+      } else walkTo((tx + 1.5) * 32, y);
+      walkTo((tx + 1.5) * 32, (ty + 1.5) * 32);
+      walkTo((tx + 0.5) * 32, (ty + 1.5) * 32);
       for (let t = 0; t < 60 && g.getState().room !== 'foundry'; t++) g.step(1, { moveY: -1 });
       if (g.getState().room !== 'foundry') throw new Error('could not reach the foundry');
     },
@@ -245,7 +257,7 @@ function installHelpers(): void {
  * default the sandbox start in the ruin hall that most specs are written for.
  */
 export async function boot(page: Page, query = '?start=field'): Promise<void> {
-  await page.addInitScript(installHelpers);
+  await page.addInitScript(installHelpers, { ox: REGION_1_X, door: OVERWORLD.entrance.door });
   await page.goto(`/${query}`);
   // The scene builds its views once the fonts (020) have loaded.
   await page.waitForFunction(() => window.__GAME__?.ui().ready === true);

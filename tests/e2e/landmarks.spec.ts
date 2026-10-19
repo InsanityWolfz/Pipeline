@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { REGION_1_X } from '../../src/data/hollows';
 import { CLAIM_TICKS, FIXTURES } from '../../src/data/claims';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { OVERWORLD } from '../../src/data/overworld';
@@ -14,8 +15,8 @@ import { boot, watchErrors } from './helpers';
 // spawned by the dev hook.
 
 const T = 32;
-const QUARRY_PYLON = { tx: 21, ty: 20 };
-const CACHE = { tx: 11, ty: 38 };
+const QUARRY_PYLON = { tx: 21 + REGION_1_X, ty: 20 };
+const CACHE = { tx: 11 + REGION_1_X, ty: 38 };
 
 /** Kills every guard of a landmark through the dev hook, then steps once so they're gone. */
 async function clearGuards(page: Page, group: string): Promise<void> {
@@ -54,7 +55,7 @@ test('walking toward the Quarry discovers it: its minimap icon appears and the b
     if (!g || !h) throw new Error('no game');
     // West along the meadow's north edge until the Quarry's south side comes into view.
     let s = g.getState();
-    for (let x = 36; x >= 24 && !s.discovered.includes('quarry'); x -= 2) {
+    for (let x = 36 + h.ox; x >= 24 + h.ox && !s.discovered.includes('quarry'); x -= 2) {
       h.walkTo((x + 0.5) * 32, 25.5 * 32);
       s = g.getState();
     }
@@ -136,7 +137,7 @@ test('the Ruined Cache is sealed while its guards live, then opens with a held E
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     // Down the west road past the spring, keeping clear of the guards' sight until the cache is reached.
-    h.walkTo(12.5 * 32, 30.5 * 32);
+    h.walkTo((12.5 + h.ox) * 32, 30.5 * 32);
     const guards = g.getState().enemies.filter((e) => e.group === 'ruined-cache');
     // Up to the reliquary with its guards alive (they wake and come; the seal is tried at once).
     h.walkTo((tx + 0.5) * 32, (ty + 1.5) * 32);

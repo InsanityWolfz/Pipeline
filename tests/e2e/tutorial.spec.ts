@@ -40,7 +40,7 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     };
     /** From the foundry's stairs, east along the dirt path and in through the shrine's gap (src/data/overworld.ts). */
     w.toShrine = () => {
-      for (const [tx, ty] of [[41.5, 22.5], [52.5, 21.5], [60.5, 18.5], [66.5, 17.5], [66.5, 13.5]]) h.walkTo((tx ?? 0) * tile, (ty ?? 0) * tile);
+      for (const [tx, ty] of [[41.5, 22.5], [52.5, 21.5], [60.5, 18.5], [66.5, 17.5], [66.5, 13.5]]) h.walkTo(((tx ?? 0) + h.ox) * tile, (ty ?? 0) * tile);
     };
     /** Fights until a group is dead, kiting and rolling, picking ammo it has; anything else that comes close is fought first. */
     w.clearGroup = (group: string) => {
@@ -86,9 +86,9 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     };
   }, T);
 
-  // 1. Pick up the tube from its stone (tile 40,33), just north of where the player wakes.
+  // 1. Pick up the tube from its stone (tile 40,33; +40 since 034), just north of where the player wakes.
   await page.evaluate((tile) => {
-    window.__helpers?.walkTo(40.5 * tile, 34.5 * tile);
+    window.__helpers?.walkTo((40.5 + (window.__helpers?.ox ?? 0)) * tile, 34.5 * tile);
     window.__GAME__?.step(1, { interact: true });
   }, T);
   expect(await done(page)).toBe(1);
@@ -112,10 +112,11 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
   await page.evaluate(() => {
     const w = window as unknown as { clearGroup: (group: string) => void };
     const h = window.__helpers;
-    h?.walkTo(41.5 * 32, window.__GAME__?.getState().player.y ?? 0);
-    h?.walkTo(41.5 * 32, 22.5 * 32);
-    h?.walkTo(43.5 * 32, 22.5 * 32);
-    h?.walkTo(43.5 * 32, 17.5 * 32);
+    const X = h?.ox ?? 0;
+    h?.walkTo((41.5 + X) * 32, window.__GAME__?.getState().player.y ?? 0);
+    h?.walkTo((41.5 + X) * 32, 22.5 * 32);
+    h?.walkTo((43.5 + X) * 32, 22.5 * 32);
+    h?.walkTo((43.5 + X) * 32, 17.5 * 32);
     w.clearGroup('field');
   });
   expect(await done(page)).toBe(4);
@@ -239,9 +240,9 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     w.toShrine();
     w.clearGroup('shrine');
     // Around the pylon's east side, so it never stands in the way.
-    h.walkTo(68.5 * tile, g.getState().player.y);
-    h.walkTo(68.5 * tile, 9.5 * tile);
-    h.walkTo(66.5 * tile, 9.5 * tile);
+    h.walkTo((68.5 + h.ox) * tile, g.getState().player.y);
+    h.walkTo((68.5 + h.ox) * tile, 9.5 * tile);
+    h.walkTo((66.5 + h.ox) * tile, 9.5 * tile);
     g.step(1, { interact: true });
     g.step(130);
   }, T);

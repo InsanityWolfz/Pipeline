@@ -40,10 +40,11 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
     if (!g || !h) throw new Error('no game');
     g.step(0);
     // Round the start stone, north up the path, then east along it to the shrine's gap (src/data/overworld.ts).
-    h.walkTo(41.5 * 32, g.getState().player.y);
-    for (const [tx, ty] of [[41.5, 22.5], [52.5, 21.5], [60.5, 18.5], [66.5, 17.5], [66.5, 13.5]]) h.walkTo((tx ?? 0) * 32, (ty ?? 0) * 32);
+    const X = h.ox;
+    h.walkTo((41.5 + X) * 32, g.getState().player.y);
+    for (const [tx, ty] of [[41.5, 22.5], [52.5, 21.5], [60.5, 18.5], [66.5, 17.5], [66.5, 13.5]]) h.walkTo(((tx ?? 0) + X) * 32, (ty ?? 0) * 32);
     let s = g.getState();
-    const inside = (e: { x: number; y: number }) => e.x > 58 * 32 && e.x < 75 * 32 && e.y > 3 * 32 && e.y < 16 * 32;
+    const inside = (e: { x: number; y: number }) => e.x > (58 + X) * 32 && e.x < (75 + X) * 32 && e.y > 3 * 32 && e.y < 16 * 32;
     const arrived = inside(s.player) ? 'shrine' : `${s.player.x},${s.player.y}`;
     const guards = () => s.enemies.filter((e) => e.group === 'shrine');
     // Fight with piercing ley bolts: back off from anything close, fire at the nearest (any wanderer that
@@ -88,9 +89,9 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
     // Claim: stand below the pylon, E, stand still.
     try {
       // Around the pylon's east side, so it never stands in the way.
-      h.walkTo(68.5 * 32, g.getState().player.y);
-      h.walkTo(68.5 * 32, 9.5 * 32);
-      h.walkTo(66.5 * 32, 9.5 * 32);
+      h.walkTo((68.5 + X) * 32, g.getState().player.y);
+      h.walkTo((68.5 + X) * 32, 9.5 * 32);
+      h.walkTo((66.5 + X) * 32, 9.5 * 32);
     } catch {
       const q = g.getState();
       return { arrived, failed: `stuck at ${q.player.x},${q.player.y} room ${q.room} cleared ${cleared} enemies ${JSON.stringify(guards().map((e) => [e.enemyId, e.x, e.y]))}` };
@@ -146,7 +147,7 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
-    const inside = (e: { x: number; y: number }) => e.x > 58 * 32 && e.x < 75 * 32 && e.y > 3 * 32 && e.y < 16 * 32;
+    const inside = (e: { x: number; y: number }) => e.x > (58 + h.ox) * 32 && e.x < (75 + h.ox) * 32 && e.y > 3 * 32 && e.y < 16 * 32;
     // Take one stack from the stash (fixture at tile 22,11), standing beside it.
     h.walkTo(21.5 * 32, 11.5 * 32);
     let s = g.step(1, { takeStash: { itemId: 'wood' } });

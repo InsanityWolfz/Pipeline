@@ -81,7 +81,7 @@ test.describe('review screenshots (029)', () => {
       g.step(1, { applyStage: 'shatter-lens' });
       h.toHall();
       // South of the ruin field's Husks (017), which stand a few tiles north, on screen.
-      h.walkTo(44.5 * 32, 19.5 * 32);
+      h.walkTo((44.5 + h.ox) * 32, 19.5 * 32);
       g.step(1, { selectAmmo: 'ley-bolt' });
     });
     // The nearest Husk; the cursor beside it, inside the lock radius, so the bolt sets off wide and bends in.
@@ -152,7 +152,7 @@ test.describe('review screenshots (029)', () => {
       h.walkTo(2.3 * 32, 12.5 * 32);
       g.step(1, { applyStage: 'frost-rune' });
       h.toHall();
-      h.walkTo(44.5 * 32, 19.5 * 32);
+      h.walkTo((44.5 + h.ox) * 32, 19.5 * 32);
       let s = g.step(0);
       for (let t = 0; t < 1500 && !s.enemies.some((e) => e.frozen > 30); t++) {
         const husk = s.enemies.filter((e) => e.room === s.room && e.enemyId === 'husk').sort((a, b) => Math.hypot(a.x - s.player.x, a.y - s.player.y) - Math.hypot(b.x - s.player.x, b.y - s.player.y))[0];
@@ -172,7 +172,7 @@ test.describe('review screenshots (029)', () => {
         if (!h) throw new Error('no helpers');
         h.walkTo((mouth.tx + 0.5) * 32, (mouth.ty + 1.5) * 32);
         // Into the clearing, between the clusters, so the camera holds all of it.
-        h.walkTo(15.5 * 32, 10.5 * 32);
+        h.walkTo((15.5 + h.ox) * 32, 10.5 * 32);
       },
       [GROTTO.path[1] ?? { tx: 14, ty: 14 }] as const,
     );

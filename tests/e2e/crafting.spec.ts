@@ -119,7 +119,8 @@ test('an arrow pierces two Husks (029), and a bomb burst kills one', async ({ pa
       h.killHusk();
       // Wake the third by walking past it (017: it sleeps apart from the others in the ruin field), rolling so their swipes miss.
       const g = window.__GAME__;
-      for (let t = 0; t < 200 && g && g.getState().player.x > 38 * 32; t++) g.step(1, { moveX: -1, dodge: t % 40 === 0 });
+      const X = window.__helpers?.ox ?? 0;
+      for (let t = 0; t < 200 && g && g.getState().player.x > (38 + X) * 32; t++) g.step(1, { moveX: -1, dodge: t % 40 === 0 });
     },
     [LEY_VEIN] as const,
   );
@@ -153,7 +154,7 @@ test('an arrow pierces two Husks (029), and a bomb burst kills one', async ({ pa
       // mound snags chasers, and groves line the meadow); step back in when they drift off, so they never go home.
       const back = !lined && len < 120;
       const closeIn = !lined && len > 200;
-      const cx = 45.5 * 32 - p.x;
+      const cx = (45.5 + (window.__helpers?.ox ?? 0)) * 32 - p.x;
       const cy = 15.5 * 32 - p.y;
       const open = cx * nx + cy * ny < 0 && Math.hypot(cx, cy) > 48;
       const sign = (v: number): -1 | 0 | 1 => (Math.abs(v) < 2 ? 0 : v > 0 ? 1 : -1);
