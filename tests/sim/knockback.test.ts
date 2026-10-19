@@ -5,6 +5,7 @@ import { enemyDef } from '../../src/data/enemies';
 import { createArrow } from '../../src/sim/arrows';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import type { SimState } from '../../src/sim/state';
+import { summarize } from '../../src/sim/summary';
 import { arena, HALL, PLAYER_AT, run, runUntil } from './fight';
 
 // Knockback on rounds (039, Q11): each arrow and ley-bolt round carries a push (6 px), its
@@ -75,5 +76,18 @@ describe('Knockback on rounds (039)', () => {
     run(b, 1, { fire: true, aimX: PLAYER_AT.x + 90, aimY: PLAYER_AT.y });
     runUntil(b, () => b.events.bursts.length > 0, 60);
     expect(near.knockTicks).toBe(0);
+  });
+});
+
+describe('getState (039)', () => {
+  it('reports each enemy’s weight and stunned, and each shot’s keywords', () => {
+    const s = arena();
+    s.enemies.push(createEnemy(s.nextEnemyId++, 'wisp', { x: PLAYER_AT.x + 200, y: PLAYER_AT.y }, HALL));
+    s.inventory = { arrow: 3 };
+    run(s, 1, { selectAmmo: 'arrow' });
+    run(s, 1, { fire: true, aimX: PLAYER_AT.x + 1000, aimY: PLAYER_AT.y });
+    const sum = summarize(s);
+    expect(sum.enemies[0]).toMatchObject({ weight: 4 / 3, stunned: 0, chill: 0, frozen: 0 });
+    expect(sum.arrows[0]?.keywords).toEqual(['arrow', 'shot', 'pierce', 'knockback', 'physical']);
   });
 });

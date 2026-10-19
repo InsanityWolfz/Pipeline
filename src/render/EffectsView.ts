@@ -21,7 +21,7 @@ import { DRAW_HEIGHT } from '../data/tube';
 import type { SimEvents } from '../sim/events';
 import { registerAnim } from './anims';
 import { colorOf } from './color';
-import { burstTint } from './roundLook';
+import { burstTint, tintBurst } from './roundLook';
 import { addVector, addVectorSprite } from './vector/textures';
 import { UI_CAMERA } from './scale';
 
@@ -164,7 +164,7 @@ export class EffectsView {
   private burst(x: number, y: number, radius: number, tint: number | null): void {
     const sprite = addVectorSprite(this.scene, x, y, animFrames(FIRE_BURST)[0] ?? '').setDepth(y + radius);
     // 039.15: a Cold Burst's flash in frost colours.
-    if (tint !== null) sprite.setTint(tint);
+    tintBurst(sprite, tint);
     sprite.setScale((radius * 2) / sprite.width);
     sprite.play(FIRE_BURST.key);
     sprite.once('animationcomplete', () => sprite.destroy());

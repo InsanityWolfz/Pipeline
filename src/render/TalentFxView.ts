@@ -6,7 +6,7 @@ import { VIEW_WIDTH } from '../data/config';
 import type { SimEvents } from '../sim/events';
 import type { SimState } from '../sim/state';
 import { rampShare } from '../sim/keystones';
-import { burstTint } from './roundLook';
+import { burstTint, tintBurst } from './roundLook';
 import { tubeSlotBox } from './bottomHud';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
@@ -75,7 +75,7 @@ export class TalentFxView {
     const image = addVector(this.scene, x, y, frame).setDepth(depth);
     if (add) image.setBlendMode(BlendModes.ADD);
     // 039.15: a Cold Pool-burst flashes frost.
-    if (tint !== null) image.setTint(tint);
+    tintBurst(image, tint);
     const base = image.scaleX;
     image.setData('base', base).setScale(base * look.from);
     this.bursts.push({ image, kind, ms: 0, look, fresh: true });

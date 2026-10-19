@@ -5,6 +5,7 @@ import { keywordPayoffs, keywordSources } from '../../src/data/keywordGraph';
 import { REF, SLOT, keywordSources as paramSources, keywordText, refName } from '../../src/data/rulesText';
 import { bombletKeywords, poolBurstKeywords, roundKeywords, shardKeywords } from '../../src/data/roundKeywords';
 import { ROUNDS } from '../../src/data/tags';
+import { keywordReport } from '../../src/data/keywordReport';
 import { STATS } from '../../src/data/statDefs';
 
 // The keyword list (039): closed, in data, each with a group, a state, a digit-free
@@ -135,5 +136,15 @@ describe('the new-keyword rule (039, Q17)', () => {
 
   it('every live keyword has at least one source', () => {
     for (const k of ruled) expect(sources.get(k.id)?.length ?? 0, k.name).toBeGreaterThan(0);
+  });
+});
+
+describe('the keyword report (039: __GAME__.keywords())', () => {
+  it('renders every keyword and every content line', () => {
+    const r = keywordReport();
+    expect(r.keywords.map((k) => k.id)).toEqual(KEYWORD_LIST.map((k) => k.id));
+    expect(r.keywords.find((k) => k.id === 'burst')?.sources.landmine).toBe('Deals 60 to every enemy within 24 px. Ignores Shield. No Knockback.');
+    expect(r.lines).toContainEqual({ owner: 'b2', kind: 'talent', text: 'Burst: +15% radius' });
+    expect(r.lines).toContainEqual({ owner: 'frost-rune', kind: 'stage', text: 'Cold: added to any round' });
   });
 });

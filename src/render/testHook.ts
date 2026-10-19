@@ -27,6 +27,7 @@ import { gainXp } from '../sim/leveling';
 import { createEnemy } from '../sim/enemies';
 import { makeChampion } from '../sim/champions';
 import { CHAMPIONS } from '../data/champions';
+import { keywordReport, type KeywordReport } from '../data/keywordReport';
 import type { ChampionShown } from './EnemyView';
 import type { LandmarksShown } from './LandmarkView';
 import type { ResearchShown } from './ResearchView';
@@ -79,6 +80,8 @@ export interface GameTestHook {
   addGear(piece: Omit<GearPiece, 'id'>): SimSummary;
   /** Gives the player XP as a kill would, levels and points included (037: a later level for the screenshots, without the fights). */
   gainXp(amount: number): SimSummary;
+  /** 039: the rendered keyword list and every content line, as the game shows them. */
+  keywords(): KeywordReport;
 }
 
 /**
@@ -261,6 +264,7 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
       gainXp(sim, amount, 'kill');
       return summarize(sim);
     },
+    keywords: () => keywordReport(),
     passable: () => {
       const { room, obstacles } = roomBodies(sim, sim.roomId);
       return room.rows.map((row, ty) =>

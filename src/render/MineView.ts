@@ -4,7 +4,7 @@ import { MINE_LOOK, MINE_SPRITES } from '../data/mineAssets';
 import type { BurstEvent, SimEvents } from '../sim/events';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
-import { burstTint, roundTint } from './roundLook';
+import { burstTint, roundTint, tintBurst } from './roundLook';
 import { addVector } from './vector/textures';
 
 /** 038's live art as drawn, for `ui().mines`: each armed mine's arm time (0..1) and whether it's in its last second, bomblets in the air, and flashes still showing. */
@@ -67,8 +67,7 @@ export class MineView {
     const k = radius / MINE_LOOK.flashRadius;
     const image = addVector(this.scene, x, y, frame).setDepth(y + radius);
     // 039.15: a Cold Burst flashes frost.
-    const tint = burstTint(damageType);
-    if (tint !== null) image.setTint(tint);
+    tintBurst(image, burstTint(damageType));
     image.setData('base', image.scaleX).setScale(image.scaleX * look.from * k);
     this.flashes.push({ image, kind, ms: 0, look: { ms: look.ms, from: look.from * k, to: look.to * k }, fresh: true });
   }

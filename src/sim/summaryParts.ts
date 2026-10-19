@@ -1,3 +1,4 @@
+import { roundKeywords } from '../data/roundKeywords';
 import { defOf } from './champions';
 import type { ArrowState } from './arrows';
 import type { BombState } from './bombs';
@@ -26,7 +27,9 @@ export interface ArrowSummary {
   hitIds: number[];
   /** A homing round's target (029), or null. */
   targetId: number | null;
-  /** It carries a charge from a bomb's blast (037: Blastfletch). */
+  /** Its keywords (039): a round's, or a Shard's from its round. */
+  keywords: string[];
+  /** It carries a Pool it passed through (037: Blastfletch) to its next hit. */
   pooled: boolean;
 }
 
@@ -42,6 +45,7 @@ export function arrowSummary(a: ArrowState): ArrowSummary {
     travelled: round(a.travelled),
     hitIds: [...a.hitIds],
     targetId: a.targetId,
+    keywords: [...a.keywords],
     pooled: a.pooled,
   };
 }
@@ -68,8 +72,10 @@ export interface EnemySummary extends KindSummary {
   /** Chill stacks from cold hits (029), and ticks left frozen. */
   chill: number;
   frozen: number;
-  /** Ticks left stunned by a roll through it (036: Rollbreaker Greaves). */
+  /** Ticks left Stunned (039: by Rollbreaker or a Charger's wall). */
   stunned: number;
+  /** Its weight against Knockback (039: a boss 0). */
+  weight: number;
   /** A champion's name (032), or null. */
   champion: { name: string } | null;
 }
@@ -94,6 +100,7 @@ export function enemySummary(state: SimState, e: EnemyState): EnemySummary {
     chill: e.chill,
     frozen: e.frozen,
     stunned: e.stunned,
+    weight: defOf(e).weight,
     ...kindSummary(state, e),
   };
 }
@@ -122,6 +129,8 @@ export interface BombSummary {
   target: { x: number; y: number };
   /** Height above the ground point, px. */
   height: number;
+  /** The round's keywords (039). */
+  keywords: string[];
 }
 
 export function bombSummary(b: BombState): BombSummary {
@@ -132,6 +141,7 @@ export function bombSummary(b: BombState): BombSummary {
     y: round(b.y),
     target: { x: round(b.toX), y: round(b.toY) },
     height: round(b.height),
+    keywords: roundKeywords(b.ammoId),
   };
 }
 

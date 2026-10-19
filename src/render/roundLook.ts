@@ -1,3 +1,4 @@
+import { TintModes, type GameObjects } from 'phaser';
 import type { DamageType } from '../data/ammo';
 import { BURST_TINTS, ROUND_LOOKS } from '../data/stageAssets';
 import { roundTags } from '../data/tags';
@@ -18,4 +19,10 @@ export function roundTint(ammoId: string): number | null {
 export function burstTint(damageType: DamageType): number | null {
   const tint = BURST_TINTS[damageType];
   return tint ? colorOf(tint) : null;
+}
+
+/** Recolours a Burst's flash for its element: screened toward its tint, so a fire-lit flash turns pale frost, not dark. */
+export function tintBurst<T extends GameObjects.Image | GameObjects.Sprite>(obj: T, tint: number | null): T {
+  if (tint !== null) obj.setTint(tint).setTintMode(TintModes.SCREEN);
+  return obj;
 }
