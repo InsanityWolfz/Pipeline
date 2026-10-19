@@ -1,5 +1,5 @@
 import { TICK_RATE, TILE_SIZE } from '../data/config';
-import { HEALING, type HealingTuning, type HealSource } from '../data/player';
+import { HEAL_RATE_STEP, HEALING, type HealingTuning, type HealSource } from '../data/player';
 import { OVERWORLD, OVERWORLD_ROOM, type SpringDef } from '../data/overworld';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { inSafeZone } from './population';
@@ -11,7 +11,7 @@ import { playerStats } from './stats';
 // Spring's pool, a fast fill in the foundry, and field regen anywhere (0 until gear,
 // 036, and talents raise it). Rates never stack: the highest that applies heals. Health
 // stays whole, up to the stats' max (036); the fraction builds up in the player's state
-// a tick at a time, in tenths of an HP·tick so gear's 0.3 HP/s adds up exactly.
+// a tick at a time, in HEAL_RATE_STEP parts of an HP·tick so gear's 0.3 HP/s adds up exactly.
 
 export interface HealRate {
   source: HealSource;
@@ -22,8 +22,8 @@ export interface HealRate {
 /** Ties between equal rates go to the first in this order. */
 const ORDER: readonly HealSource[] = ['foundry', 'pylon', 'spring', 'regen'];
 
-/** Healing builds up in these parts of an HP·tick, so rates in tenths of an HP/s add up exactly. */
-const CARRY_PARTS = 10;
+/** Healing builds up in these parts of an HP·tick (one per HEAL_RATE_STEP), so rates in whole steps add up exactly. */
+const CARRY_PARTS = Math.round(1 / HEAL_RATE_STEP);
 
 /**
  * The field regen stat, HP/s: the one place it's read, through `playerStats` (036: gear's regen affixes; 037's

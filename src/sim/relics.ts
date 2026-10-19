@@ -1,25 +1,14 @@
 import { FEET_BOX } from '../data/player';
-import { relicDef, type RelicDef, type RelicRule } from '../data/relics';
-import { GEAR_SLOTS } from '../data/gear';
 import { defOf } from './champions';
 import { targetable, type EnemyState } from './enemies';
 import { isRolling } from './movement';
+import { wornRelic } from './stats';
+import { attackOf } from '../data/enemies';
 import type { SimState } from './state';
 
 // The relics' rules (036), each read from its data entry: Rollbreaker's stagger, the
 // Wardstone's ward, Last Ember's save (Featherplate's is a stat, in stats.ts). No relic
 // deals damage or touches the factory, the haul or pickups.
-
-/** The worn relic with this rule, or null. */
-export function wornRelic<R extends RelicRule>(state: Pick<SimState, 'gear' | 'equipped'>, rule: R): Extract<RelicDef, { rule: R }> | null {
-  for (const slot of GEAR_SLOTS) {
-    const piece = state.gear.find((g) => g.id === state.equipped[slot]);
-    if (!piece?.relic) continue;
-    const def = relicDef(piece.relic);
-    if (def.rule === rule) return def as Extract<RelicDef, { rule: R }>;
-  }
-  return null;
-}
 
 /** The Wardstone is worn and has built up: the next hit is blocked. */
 export function wardReady(state: SimState): boolean {
@@ -35,34 +24,46 @@ function rolledThrough(state: SimState, e: EnemyState): boolean {
 }
 
 /**
- * One tick of the relics, after the player moves and before enemies act: the Wardstone builds while worn (any other
- * time it's 0); Rollbreaker staggers each enemy the rolling player passes through, once a roll, bosses never.
+ * One tick of the relics, after the player moves and before enemies act (nothing while dying): the Wardstone builds
+ * while worn (any other time it's 0); Rollbreaker staggers each enemy the rolling player passes through, once a roll.
  */
 export function stepRelics(state: SimState): void {
   const p = state.player;
+  if (p.dying > 0) return;
   const ward = wornRelic(state, 'ward');
   p.wardTicks = ward ? Math.min(ward.wardTicks, p.wardTicks + 1) : 0;
   const breaker = wornRelic(state, 'stagger');
-  if (!breaker || !isRolling(p) || p.dying > 0) return;
+  if (!breaker || !isRolling(p)) return;
   for (const e of state.enemies) {
-    if (e.roomId !== state.roomId || defOf(e).boss || !targetable(e) || p.rollStaggered.includes(e.id) || !rolledThrough(state, e)) continue;
-    p.rollStaggered.push(e.id);
-    stagger(state, e, breaker.staggerTicks);
+    if (e.roomId !== state.roomId || p.rollStaggered.includes(e.id) || !rolledThrough(state, e)) continue;
+    if (stagger(state, e, breaker.staggerTicks)) p.rollStaggered.push(e.id);
   }
 }
 
-/** Already open to a punish (a recovery, a Charger's wall stun): a stagger would only cut that short, so it's left be. */
-const reeling = (e: EnemyState): boolean => e.staggered > 0 || e.mode === 'recover' || e.mode === 'stun';
+/** Ticks left in a recovery, a Charger's wall stun, or a stagger already running: a new stagger never cuts them short. */
+function holdLeft(e: EnemyState): number {
+  const def = defOf(e);
+  if (e.mode === 'stun' && def.kind === 'charger') return Math.max(e.staggered, def.charge.stunTicks - e.modeTicks);
+  if (e.mode === 'recover') return Math.max(e.staggered, attackOf(def).recoverTicks - e.modeTicks);
+  return e.staggered;
+}
 
-/** Cancels whatever the enemy was doing and holds it in recovery for `ticks`. */
-function stagger(state: SimState, e: EnemyState, ticks: number): void {
-  if (reeling(e)) return;
-  e.staggered = ticks;
-  e.mode = 'recover';
-  e.modeTicks = 1;
+/**
+ * Cancels whatever the enemy was doing and holds it in recovery for `ticks`, or longer if it was already held longer
+ * (a wall stun stays a stun). Bosses and enemies underground are never staggered. Returns whether it was.
+ */
+function stagger(state: SimState, e: EnemyState, ticks: number): boolean {
+  if (defOf(e).boss || !targetable(e)) return false;
+  const hold = Math.max(holdLeft(e), ticks);
+  if (e.mode !== 'stun') {
+    if (e.mode !== 'recover') e.modeTicks = 1;
+    e.mode = 'recover';
+  }
+  e.staggered = hold;
   e.vx = 0;
   e.vy = 0;
   state.events.staggers.push({ id: e.id, x: e.x, y: e.y });
+  return true;
 }
 
 /** What the relics make of a hit before armor: `blocked` (the ward took it whole), or the hit goes on. */

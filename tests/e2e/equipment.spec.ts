@@ -121,7 +121,7 @@ test('tabs and cells pick a slot, a click on the worn row takes it off, and { sl
   await clickBox(page, row.box);
   expect((await step(page, 1)).equipped.trinket).toBe(trinket.id);
   await expect.poll(async () => (await ui(page))?.gearPanel?.rows[0]?.worn).toBe(true);
-  expect((await ui(page))?.gearPanel?.rows[0]?.texts[1]).toMatch(/^worn · armor /);
+  expect((await ui(page))?.gearPanel?.rows[0]?.texts[1]).toMatch(/^Rare · worn · armor /);
   await clickBox(page, row.box);
   expect((await step(page, 1)).equipped.trinket).toBeNull();
   // A cell opens its slot's tab; the helm's tab lists the Rare helm and the Wardstone with its rule.

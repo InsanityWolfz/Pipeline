@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { CHARGER } from '../../src/data/hollowsEnemies';
 import { FEATHERPLATE, LAST_EMBER, ROLLBREAKER, WARDSTONE } from '../../src/data/relics';
 import { MAX_HEALTH, ROLL_DISTANCE, ROLL_TICKS } from '../../src/data/player';
 import { SLOT_BASE } from '../../src/data/gear';
@@ -56,14 +57,28 @@ describe('Rollbreaker Greaves', () => {
     expect(husk.staggered).toBeGreaterThan(0);
   });
 
-  it('leaves an enemy already recovering be, so its punish window is never cut short', () => {
+  it('staggers an enemy already recovering for staggerTicks, and never cuts a longer wall stun short', () => {
     const s = wear(arena(), relic(0, ROLLBREAKER));
     const husk = placeHusk(s, PLAYER_AT.x + 20, PLAYER_AT.y);
     husk.mode = 'recover';
     husk.modeTicks = 1;
     husk.cooldown = 200;
-    rollRight(s);
-    expect(husk.staggered).toBe(0);
+    run(s, 1, { moveX: 1, dodge: true });
+    expect(s.events.staggers).toHaveLength(1);
+    // The enemies' step that tick already held it one tick.
+    expect(husk).toMatchObject({ mode: 'recover', staggered: ROLLBREAKER.staggerTicks - 1 });
+    // A Charger just stunned by a wall has longer left than a stagger: it stays stunned for all of it.
+    const t = wear(arena(), relic(0, ROLLBREAKER));
+    const charger = createEnemy(t.nextEnemyId++, 'charger', { x: PLAYER_AT.x + 20, y: PLAYER_AT.y }, HALL);
+    t.enemies.push(charger);
+    charger.mode = 'stun';
+    charger.modeTicks = 1;
+    run(t, 1, { moveX: 1, dodge: true });
+    expect(charger.mode).toBe('stun');
+    expect(charger.staggered).toBe(CHARGER.charge.stunTicks - 2);
+    expect(charger.staggered).toBeGreaterThan(ROLLBREAKER.staggerTicks);
+    runUntil(t, () => charger.staggered === 0, CHARGER.charge.stunTicks);
+    expect(charger.mode).toBe('chase');
   });
 
   it('without the greaves nothing staggers; bosses ignore it', () => {
@@ -77,6 +92,8 @@ describe('Rollbreaker Greaves', () => {
     rollRight(s);
     expect(warden.staggered).toBe(0);
     expect(s.events.staggers).toEqual([]);
+    // Only an enemy actually staggered counts as staggered this roll.
+    expect(s.player.rollStaggered).toEqual([]);
   });
 });
 

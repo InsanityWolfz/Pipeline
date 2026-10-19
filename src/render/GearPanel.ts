@@ -185,12 +185,12 @@ export class GearPanel {
       const worn = sim.gear.find((p) => p.id === sim.equipped[slot]) ?? null;
       this.fill(box, slot === this.tab ? C.tabOn : C.well);
       if (this.hover === `cell:${slot}`) this.fill(box, C.hover);
-      const cx = box.x + P.cells.icon.x + 10;
-      const cy = box.y + P.cells.icon.y + 10;
+      const cx = box.x + P.cells.icon.x;
+      const cy = box.y + P.cells.icon.y;
       const name = worn ? worn.name : W.emptyCell;
       if (v) {
-        v.frame.setPosition(cx, cy).setFrame(rarityLook(worn ?? { rarity: 'common' }).frame).setAlpha(worn ? 1 : 0.5);
-        v.icon.setPosition(cx, cy).setFrame(worn ? pieceIcon(worn) : slotIcon(slot)).setAlpha(worn ? 1 : 0.35);
+        v.frame.setPosition(cx, cy).setFrame(rarityLook(worn ?? { rarity: 'common' }).frame).setAlpha(worn ? 1 : P.emptyAlpha.frame);
+        v.icon.setPosition(cx, cy).setFrame(worn ? pieceIcon(worn) : slotIcon(slot)).setAlpha(worn ? 1 : P.emptyAlpha.icon);
         v.slot.moveTo(box.x + P.cells.slot.x, box.y + P.cells.slot.y);
         v.armor.set(worn ? `${W.armor} ${worn.baseArmor}` : '').moveTo(box.x + P.cells.armor.x, box.y + P.cells.armor.y);
         fit(v.name, name, box.w - P.cells.name.x - 2).moveTo(box.x + P.cells.name.x, box.y + P.cells.name.y).setFill(worn ? rarityLook(worn).color : C.dim);
@@ -218,9 +218,9 @@ export class GearPanel {
       const lines = pieceLines(piece, worn);
       this.fill(b, C.well);
       if (this.hover === `row:${piece.id}`) this.fill(b, C.hover);
-      if (worn) this.g.fillStyle(colorOf(C.worn.color), C.worn.alpha).fillRect(b.x, b.y, 2, b.h);
-      const ix = b.x + P.list.icon.x + 11;
-      const iy = b.y + P.list.icon.y + 10;
+      if (worn) this.g.fillStyle(colorOf(C.worn.color), C.worn.alpha).fillRect(b.x, b.y, P.list.wornEdge, b.h);
+      const ix = b.x + P.list.icon.x;
+      const iy = b.y + P.list.icon.y;
       v.frame.setPosition(ix, iy).setFrame(look.frame);
       v.icon.setPosition(ix, iy).setFrame(pieceIcon(piece));
       const tx = b.x + P.list.text.x;
@@ -231,11 +231,11 @@ export class GearPanel {
       return { id: piece.id, worn, color: look.color, texts: [lines.name, lines.detail, lines.affixes, ...(lines.rule ? [lines.rule] : [])], box: b };
     });
     this.empty.setVisible(this.pieces.length === 0).set(W.empty(SLOT_NAMES[this.tab])).moveTo(L.empty.x, L.empty.y);
-    this.pager.setVisible(L.page.count > 1).set(`Page ${L.page.index + 1}/${L.page.count} ›`);
-    this.pager.moveTo(L.pager.x + L.pager.w - this.pager.width - P.list.rightPad, L.pager.y + P.pager.textY).setFill(this.hover === 'pager' ? 'brass-light' : undefined);
+    this.pager.setVisible(L.page.count > 1).set(W.page(L.page.index, L.page.count));
+    this.pager.moveTo(L.pager.x + L.pager.w - this.pager.width - P.list.rightPad, L.pager.y + P.pager.textY).setFill(this.hover === 'pager' ? C.pagerHover : undefined);
     const totals = totalsLines(playerStats(sim));
     totals.forEach((t, i) => this.totals[i]?.set(t).moveTo(L.totals[i]?.x ?? 0, L.totals[i]?.y ?? 0));
-    if (this.flash) this.fill(this.flash.box, { color: 'brass-light', alpha: 0.35 * (this.flash.ms / P.flashMs) });
+    if (this.flash) this.fill(this.flash.box, { color: C.flash.color, alpha: C.flash.alpha * (this.flash.ms / P.flashMs) });
     this.shown = { open: true, tab: this.tab, identify, cells, tabs, rows: rows.flatMap((r) => (r ? [r] : [])), page: L.page, totals };
   }
 

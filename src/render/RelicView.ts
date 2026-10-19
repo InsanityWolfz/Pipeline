@@ -70,18 +70,18 @@ export class RelicView {
     this.shimmer
       .setVisible(ready)
       .setPosition(Math.round(p.x), Math.round(p.y - S.lift))
-      .setDepth(feet - 1)
+      .setDepth(feet - S.depthBelow)
       .setAlpha(S.alpha[0] + (S.alpha[1] - S.alpha[0]) * breathe);
     if (here) {
-      for (const w of events.wardBlocks) this.burst('ward', GEAR_SPRITES.wardShimmer, w.x, w.y - S.lift, feet + 1, RELIC_LOOK.wardBreak);
+      for (const w of events.wardBlocks) this.burst('ward', GEAR_SPRITES.wardShimmer, w.x, w.y - S.lift, feet + RELIC_LOOK.wardBreak.depthAbove, RELIC_LOOK.wardBreak);
       const E = RELIC_LOOK.ember;
-      for (const e of events.emberSaves) this.burst('ember', GEAR_SPRITES.emberFlash, e.x, e.y - E.lift, feet + 2, E);
+      for (const e of events.emberSaves) this.burst('ember', GEAR_SPRITES.emberFlash, e.x, e.y - E.lift, feet + E.depthAbove, E);
     }
     if (shown === FOUNDRY_ROOM && events.identifies.some((piece) => piece.relic !== null)) {
       const bench = fixtureDef('identification-bench');
       const x = (bench.tx + 0.5) * TILE_SIZE;
       const y = bench.ty * TILE_SIZE;
-      this.burst('flare', GEAR_SPRITES.relicFlare, x, y, (bench.ty + 1) * TILE_SIZE + 2, RELIC_LOOK.flare, RELIC_LOOK.flare.rise);
+      this.burst('flare', GEAR_SPRITES.relicFlare, x, y, (bench.ty + 1) * TILE_SIZE + RELIC_LOOK.flare.depthAbove, RELIC_LOOK.flare, RELIC_LOOK.flare.rise);
     }
     for (const b of this.bursts) {
       b.ms += deltaMs;

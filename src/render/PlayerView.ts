@@ -7,8 +7,7 @@ import { IDLE_SPEED } from '../data/config';
 import { DYING_TICKS, FEET_BOX, HIT_INVULN_TICKS } from '../data/player';
 import { ARMOR_TINTS } from '../data/hudLayout';
 import { aimFacing } from '../sim/direction';
-import { wornPieces } from '../sim/gear';
-import { relicDef } from '../data/relics';
+import { wornPieces, wornRelic } from '../sim/stats';
 import type { SimState } from '../sim/state';
 import { isRolling } from '../sim/movement';
 import type { Facing, PlayerState } from '../sim/player';
@@ -36,7 +35,7 @@ export type BodyLook = keyof typeof ARMOR_TINTS;
 export function bodyLook(sim: Pick<SimState, 'gear' | 'equipped'>): BodyLook | null {
   const body = wornPieces(sim).find((p) => p.slot === 'body');
   if (!body?.weight) return null;
-  return body.relic && relicDef(body.relic).rule === 'feather' ? 'feather' : body.weight;
+  return wornRelic(sim, 'feather') ? 'feather' : body.weight;
 }
 
 const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v));

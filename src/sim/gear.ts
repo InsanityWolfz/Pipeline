@@ -3,7 +3,6 @@ import {
   ARMOR_DROP_CHANCE,
   FIRST_ARMOR_ENEMY,
   GEAR_NAMES,
-  GEAR_SLOTS,
   HEAVY_CHANCE,
   RARITIES,
   RELIC_AFFIXES,
@@ -146,12 +145,4 @@ export function equip(state: SimState, req: EquipRequest): void {
   state.equipped = { ...state.equipped, [slot]: next };
   state.events.equips.push({ slot, id: next });
   state.player.health = Math.min(state.player.health, playerStats(state).maxHealth);
-}
-
-/** The pieces being worn, in slot order. */
-export function wornPieces(state: Pick<SimState, 'gear' | 'equipped'>): GearPiece[] {
-  return GEAR_SLOTS.flatMap((slot) => {
-    const piece = state.gear.find((g) => g.id === state.equipped[slot]);
-    return piece ? [piece] : [];
-  });
 }

@@ -1,4 +1,4 @@
-import { RARITIES, type Affix, type GearPiece } from '../data/gear';
+import { AFFIXES, RARITIES, type Affix, type GearPiece } from '../data/gear';
 import { GEAR_PANEL, GEAR_SPRITES, RARITY_FRAMES } from '../data/gearAssets';
 import { relicDef } from '../data/relics';
 import { SPRITES } from '../data/assets';
@@ -11,25 +11,13 @@ const W = GEAR_PANEL.words;
 
 /** One affix as the bench shows it: "+12 max HP", "+0.5 regen/s", "+4% speed", "+2 armor", "−4 roll cooldown", "+12 roll distance". */
 export function affixLabel(a: Affix): string {
-  switch (a.kind) {
-    case 'max-health':
-      return `+${a.value} max HP`;
-    case 'armor':
-      return `+${a.value} armor`;
-    case 'regen':
-      return `+${a.value.toFixed(1)} regen/s`;
-    case 'move-speed':
-      return `+${Math.round(a.value * 100)}% speed`;
-    case 'roll-cooldown':
-      return `−${a.value} roll cooldown`;
-    case 'roll-distance':
-      return `+${a.value} roll distance`;
-  }
+  const d = AFFIXES[a.kind];
+  return `${d.sign}${(a.value * d.shownScale).toFixed(d.decimals)}${d.unit} ${d.label}`;
 }
 
-/** A piece's lines on its row: its name; "worn · heavy · armor 12" beside it; its affixes; a relic's rule (or null). */
+/** A piece's lines on its row: its name; "Rare · worn · heavy · armor 12" beside it (the rarity in words as well as colour); its affixes; a relic's rule (or null). */
 export function pieceLines(p: GearPiece, worn: boolean): { name: string; detail: string; affixes: string; rule: string | null } {
-  const detail = [worn ? W.worn : null, p.weight, `${W.armor} ${p.baseArmor}`].filter((t): t is string => t !== null).join(W.sep);
+  const detail = [RARITIES[p.rarity].name, worn ? W.worn : null, p.weight, `${W.armor} ${p.baseArmor}`].filter((t): t is string => t !== null).join(W.sep);
   return { name: p.name, detail, affixes: p.affixes.map(affixLabel).join(W.sep), rule: p.relic ? relicDef(p.relic).text : null };
 }
 

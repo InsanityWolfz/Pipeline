@@ -1,5 +1,5 @@
-import { MIN_DAMAGE_SHARE, MOVE_BONUS_CAP, ROLL_COOLDOWN_MIN, SLOT_BASE, type AffixKind, type GearPiece, type GearSlot } from '../data/gear';
-import { relicDef } from '../data/relics';
+import { GEAR_SLOTS, MIN_DAMAGE_SHARE, MOVE_BONUS_CAP, ROLL_COOLDOWN_MIN, SLOT_BASE, type AffixKind, type GearPiece } from '../data/gear';
+import { relicDef, type RelicDef, type RelicRule } from '../data/relics';
 import { HEALING, MAX_HEALTH, ROLL_COOLDOWN_TICKS, ROLL_DISTANCE, type HealingTuning } from '../data/player';
 import type { SimState } from './state';
 
@@ -25,10 +25,22 @@ export interface PlayerStats {
 
 type Worn = Pick<SimState, 'gear' | 'equipped'>;
 
-const SLOTS: readonly GearSlot[] = ['helm', 'body', 'boots', 'trinket'];
+/** The pieces being worn, in slot order: the one place what's worn is read. */
+export function wornPieces(state: Worn): GearPiece[] {
+  return GEAR_SLOTS.flatMap((slot) => {
+    const piece = state.gear.find((g) => g.id === state.equipped[slot]);
+    return piece ? [piece] : [];
+  });
+}
 
-function worn(state: Worn): GearPiece[] {
-  return SLOTS.flatMap((slot) => state.gear.filter((g) => g.id === state.equipped[slot]));
+/** The worn relic with this rule, or null. */
+export function wornRelic<R extends RelicRule>(state: Worn, rule: R): Extract<RelicDef, { rule: R }> | null {
+  for (const piece of wornPieces(state)) {
+    if (!piece.relic) continue;
+    const def = relicDef(piece.relic);
+    if (def.rule === rule) return def as Extract<RelicDef, { rule: R }>;
+  }
+  return null;
 }
 
 const sum = (pieces: readonly GearPiece[], kind: AffixKind): number =>
@@ -39,10 +51,9 @@ const clean = (v: number): number => Math.round(v * 1e6) / 1e6;
 
 /** Every stat from what's worn. `healing` is 030's tuning unless a test passes its own (its field regen is the base). */
 export function playerStats(state: Worn, healing: HealingTuning = HEALING): PlayerStats {
-  const pieces = worn(state);
+  const pieces = wornPieces(state);
   const body = pieces.find((p) => p.slot === 'body');
-  const feather = body?.relic ? relicDef(body.relic) : null;
-  const featherplate = feather?.rule === 'feather' ? feather : null;
+  const featherplate = wornRelic(state, 'feather');
   const heavyScale = body?.weight ? SLOT_BASE.body[body.weight].walkScale : 1;
   const moveBonus = Math.min(MOVE_BONUS_CAP, clean(sum(pieces, 'move-speed')));
   const rollDistance = ROLL_DISTANCE + sum(pieces, 'roll-distance');

@@ -9,6 +9,7 @@ import { DUST, GLOWS, HARVEST_BURSTS, HARVEST_WORK, HIT_STOP_MS } from '../data/
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { FIRE_SOUNDS, SOUND_LEVELS, SOUNDS, WINDUP_SOUNDS } from '../data/sounds';
 import { isClaimed } from '../sim/claims';
+import { wornRelic } from '../sim/stats';
 import type { SimEvents } from '../sim/events';
 import { pieceRect } from '../sim/pieces';
 import { roomById, type SimState } from '../sim/state';
@@ -97,8 +98,11 @@ export class FeelView {
     if (ev.starBursts.length > 0) s.play(SOUNDS.starBurst, SOUND_LEVELS.cue);
     // The relics (036): a relic identified at the bench, the ward breaking on a block, Last Ember's save.
     if (ev.identifies.some((piece) => piece.relic !== null)) s.play(SOUNDS.relicIdentify, SOUND_LEVELS.cue);
-    if (ev.wardBlocks.length > 0) s.play(SOUNDS.wardBreak);
-    if (ev.emberSaves.length > 0) s.play(SOUNDS.emberSave);
+    const relicSound = (rule: 'ward' | 'ember') => wornRelic(sim, rule)?.sound;
+    const ward = relicSound('ward');
+    const ember = relicSound('ember');
+    if (ev.wardBlocks.length > 0 && ward) s.play(ward);
+    if (ev.emberSaves.length > 0 && ember) s.play(ember);
     // Healing starting in a safe spot (030) chimes once; nothing while it carries on, or when it only changes source.
     if (ev.heals.some((h) => h.kind === 'start') && !ev.heals.some((h) => h.kind === 'stop')) s.play(SOUNDS.healStart, SOUND_LEVELS.quiet);
     // A stage hand-applied at the bench (029) sounds like a hand craft (the crafting menu plays its own).

@@ -114,6 +114,13 @@ export const HEALING: HealingTuning = {
   afterHitDelay: 0,
 };
 
+/**
+ * Healing rates come in whole steps of this many HP/s (036: gear's regen affixes in tenths). Healing builds up in
+ * these steps, so every rate must be a whole number of them (a test checks HEALING and the regen affixes; 037's
+ * talents join that test).
+ */
+export const HEAL_RATE_STEP = 0.1;
+
 /** Ticks a hit leaves the player invulnerable. */
 export const HIT_INVULN_TICKS = 30;
 

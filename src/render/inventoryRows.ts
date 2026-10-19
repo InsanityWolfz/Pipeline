@@ -5,7 +5,7 @@ import { itemRisks } from '../sim/banking';
 import { count } from '../sim/inventory';
 import { schematicKnown } from '../sim/schematics';
 import type { SimState } from '../sim/state';
-import { wornPieces } from '../sim/gear';
+import { wornPieces } from '../sim/stats';
 
 // What the inventory panel lists (031), pure: every group in order, with a row per
 // carried item (count above 0, in ITEMS order): its count, how many a death would

@@ -54,14 +54,23 @@ export const GEAR_PANEL = {
   /** The Identify button, right of the title. */
   identify: { w: 96, h: 14, y: 4, textY: 4, text: (n: number): string => `Identify all (${n})` },
   /** Four cells in a row, each the worn piece's frame and icon, the slot's name, its armor and the worn piece's name. */
-  cells: { y: 22, h: 36, gap: 4, icon: { x: 3, y: 3 }, slot: { x: 27, y: 5 }, armor: { x: 27, y: 14 }, name: { x: 4, y: 27 } },
+  cells: { y: 22, h: 36, gap: 4, icon: { x: 13, y: 13 }, slot: { x: 27, y: 5 }, armor: { x: 27, y: 14 }, name: { x: 4, y: 27 } },
   tabs: { y: 62, h: 13, gap: 4, textY: 3 },
-  /** The open tab's rows: a frame and icon, the name over the affixes, a relic's rule under them. */
-  list: { y: 79, h: 96, gap: 2, rowH: 22, relicH: 30, icon: { x: 2, y: 1 }, text: { x: 26, line1: 4, line2: 13, line3: 22 }, rightPad: 4 },
+  /** The open tab's rows: a frame and icon (centred at `icon`), the name over the affixes, a relic's rule under them; a worn row's edge `wornEdge` px wide. */
+  list: { y: 79, h: 96, gap: 2, rowH: 22, relicH: 30, icon: { x: 13, y: 11 }, text: { x: 26, line1: 4, line2: 13, line3: 22 }, rightPad: 4, wornEdge: 2 },
   pager: { y: 177, h: 10, textY: 2 },
   totals: { y: 191, step: 9 },
   /** The words it shows. */
-  words: { empty: (slot: string): string => `No ${slot.toLowerCase()} pieces`, emptyCell: 'empty', worn: 'worn', armor: 'armor', sep: ' · ' },
+  words: {
+    empty: (slot: string): string => `No ${slot.toLowerCase()} pieces`,
+    emptyCell: 'empty',
+    worn: 'worn',
+    armor: 'armor',
+    sep: ' · ',
+    page: (index: number, count: number): string => `Page ${index + 1}/${count} ›`,
+  },
+  /** An empty cell's frame and slot icon are drawn this faint. */
+  emptyAlpha: { frame: 0.5, icon: 0.35 },
   /** Fills and lines (palette ids and alphas): the tablet's wells, the selected tab, a hovered row, the worn row's edge. */
   colors: {
     well: { color: 'ink', alpha: 0.35 },
@@ -74,19 +83,22 @@ export const GEAR_PANEL = {
     dim: 'rock-light',
     wornText: 'cyan',
     rule: 'wisp-light',
+    pagerHover: 'brass-light',
+    /** A press flashes this colour, fading from `alpha` over `flashMs`. */
+    flash: { color: 'brass-light', alpha: 0.35 },
   },
   /** A pressed row or button flashes this long. */
   flashMs: 160,
 } as const;
 
-/** The relics' effects on the player and at the bench. */
+/** The relics' effects on the player and at the bench. Depths are px above (or below) the player's feet, or the bench's base. */
 export const RELIC_LOOK = {
   /** The Wardstone's shimmer while ready: at the player's feet, `lift` px up, breathing between two alphas once per `breatheMs`. */
-  shimmer: { lift: 6, alpha: [0.55, 0.95] as const, breatheMs: 1400 },
+  shimmer: { lift: 6, alpha: [0.55, 0.95] as const, breatheMs: 1400, depthBelow: 1 },
   /** The ward breaking on a block: the shimmer swells from `from` to `to` times and fades over `ms`. */
-  wardBreak: { ms: 420, from: 1, to: 2.2 },
+  wardBreak: { ms: 420, from: 1, to: 2.2, depthAbove: 1 },
   /** Last Ember's flash on a save: from `from` to `to` times, fading over `ms`, `lift` px over the feet. */
-  ember: { ms: 650, from: 0.8, to: 2.6, lift: 18 },
+  ember: { ms: 650, from: 0.8, to: 2.6, lift: 18, depthAbove: 2 },
   /** A relic identified: a violet flare rising `rise` px over the bench, from `from` to `to` times, over `ms`. */
-  flare: { ms: 1100, from: 0.6, to: 1.6, rise: 18 },
+  flare: { ms: 1100, from: 0.6, to: 1.6, rise: 18, depthAbove: 2 },
 } as const;

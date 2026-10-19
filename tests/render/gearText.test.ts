@@ -22,9 +22,9 @@ describe('the gear panel’s words', () => {
 
   it('a row reads its name, the worn mark, a body piece’s weight and its armor, its affixes, and a relic’s rule', () => {
     const plate = { ...bodyPiece(0, 'heavy', 12, { kind: 'max-health', value: 12 }, 'Granite Plate'), affixes: [{ kind: 'max-health' as const, value: 12 }, { kind: 'regen' as const, value: 0.5 }] };
-    expect(pieceLines(plate, true)).toEqual({ name: 'Granite Plate', detail: 'worn · heavy · armor 12', affixes: '+12 max HP · +0.5 regen/s', rule: null });
+    expect(pieceLines(plate, true)).toEqual({ name: 'Granite Plate', detail: 'Common · worn · heavy · armor 12', affixes: '+12 max HP · +0.5 regen/s', rule: null });
     const helm = piece(1, 'helm', { baseArmor: 1, rarity: 'relic', relic: WARDSTONE.id, name: WARDSTONE.name, affixes: [{ kind: 'armor', value: 3 }] });
-    expect(pieceLines(helm, false)).toEqual({ name: WARDSTONE.name, detail: 'armor 1', affixes: '+3 armor', rule: WARDSTONE.text });
+    expect(pieceLines(helm, false)).toEqual({ name: WARDSTONE.name, detail: 'Relic · armor 1', affixes: '+3 armor', rule: WARDSTONE.text });
   });
 
   it('icons: a relic’s own, the body’s by weight, the others by slot; frames and colours by rarity', () => {

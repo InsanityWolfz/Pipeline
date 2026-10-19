@@ -53,13 +53,17 @@ Small vertical commits, tests first in each:
 - Common's "stone" is `rock-light`, Fine `cyan`, Rare `gold-trim`, Relic `wisp-light` (the nearest palette violet that reads on the tablet). Pending Shaun's review.
 - The inventory panel's worn line reads "N worn · armor T".
 - Body word lists stay 010's; helm, boots and trinket lists are new placeholders.
-- Rollbreaker leaves an enemy that's already recovering (or a Charger stunned by a wall) be, so a stagger never cuts a punish window short.
+- Rollbreaker staggers any enemy rolled through (not a boss or an underground Burrower), recovering or stunned ones included: the hold is the longer of `staggerTicks` and what's left of its current recovery, stun or stagger, so a Charger's wall stun stays a stun for all of it. Only an enemy actually staggered counts against the once-a-roll rule. A stagger wakes an idle or returning enemy: when it ends, the enemy chases.
 - The gear panel sits at a fixed top (48 px), clear of the bottom HUD's tube slot; its list holds 4 plain rows a page.
-- Last Ember's save still reports the hit's damage (the number shown), though the player keeps 1 HP.
+- Last Ember's save still reports the hit's full damage (the number shown), though the player keeps 1 HP.
+- A row's detail line names its rarity in words as well as colour ("Rare · worn · heavy · armor 12").
+- Healing builds up in `HEAL_RATE_STEP` (0.1 HP/s) parts; a test checks every healing rate and regen affix is a whole number of steps, so 037's talents can't silently round.
+- The relics' sounds play from their data entries (FeelView reads the worn relic's `sound`).
 - `addGear` dev hook (a relic for the screenshots without the roll).
 
 ## Build notes
 - The side task went first, in its own commit: the HP chunk e2e holds the tween clock at 0 while it checks the chunk, then runs it at 20× for the drain; the schematic banner keeps a short record of the lines it started (`ui().schematics.bannersSeen`), so the research e2e runs the tween clock fast and waits on that record. Both passed 12 at once on 4 cores, where the chunk test had failed 5 of 6.
+- The tutorial e2e's fights now close in to punch when out of every ammo: identify draws more from the seeded RNG than 010 did (slot, rarity, affixes), so everything after it in that run rolls differently, and one seed's first piece left the bot dry against a Wisp it only kited.
 - The relic flare's screenshot needs a frame between a long in-page loop and the slowed tween clock: the first frame after the loop carries the whole loop's time.
 
 ## Risks

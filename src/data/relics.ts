@@ -20,7 +20,7 @@ interface RelicBase {
   text: string;
   /** Its icon (GEAR_SPRITES), and the sound its rule plays when it acts (GEAR_SOUNDS), or null for none. */
   icon: string;
-  sound: string | null;
+  sound: (typeof GEAR_SOUNDS)[keyof typeof GEAR_SOUNDS] | null;
 }
 
 export interface RollbreakerDef extends RelicBase {

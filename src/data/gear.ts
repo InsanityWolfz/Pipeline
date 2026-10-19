@@ -79,15 +79,16 @@ export const RARITIES: Readonly<Record<Rarity, { affixes: number; chance: number
 /**
  * Each affix kind: rolled as a whole number of steps from `min` to `max`, its value `steps × step` in its own units
  * (max health HP, armor points, regen HP/s, move speed a fraction of walk speed, roll cooldown ticks taken off, roll
- * distance px). `label` is the text after the value on the bench.
+ * distance px). On the bench it reads `sign`, the value times `shownScale` to `decimals` places, `unit`, a space and
+ * `label`: "+12 max HP", "+0.5 regen/s", "+4% speed", "−4 roll cooldown".
  */
-export const AFFIXES: Readonly<Record<AffixKind, { min: number; max: number; step: number; label: string }>> = {
-  'max-health': { min: 8, max: 20, step: 1, label: 'max HP' },
-  armor: { min: 1, max: 3, step: 1, label: 'armor' },
-  regen: { min: 3, max: 8, step: 0.1, label: 'regen/s' },
-  'move-speed': { min: 3, max: 6, step: 0.01, label: 'speed' },
-  'roll-cooldown': { min: 3, max: 6, step: 1, label: 'roll cooldown' },
-  'roll-distance': { min: 8, max: 16, step: 1, label: 'roll distance' },
+export const AFFIXES: Readonly<Record<AffixKind, { min: number; max: number; step: number; label: string; sign: '+' | '−'; shownScale: number; decimals: number; unit: string }>> = {
+  'max-health': { min: 8, max: 20, step: 1, label: 'max HP', sign: '+', shownScale: 1, decimals: 0, unit: '' },
+  armor: { min: 1, max: 3, step: 1, label: 'armor', sign: '+', shownScale: 1, decimals: 0, unit: '' },
+  regen: { min: 3, max: 8, step: 0.1, label: 'regen/s', sign: '+', shownScale: 1, decimals: 1, unit: '' },
+  'move-speed': { min: 3, max: 6, step: 0.01, label: 'speed', sign: '+', shownScale: 100, decimals: 0, unit: '%' },
+  'roll-cooldown': { min: 3, max: 6, step: 1, label: 'roll cooldown', sign: '−', shownScale: 1, decimals: 0, unit: '' },
+  'roll-distance': { min: 8, max: 16, step: 1, label: 'roll distance', sign: '+', shownScale: 1, decimals: 0, unit: '' },
 };
 
 /** The most the worn gear's move speed affixes add to walk speed, a fraction (+15%). */
