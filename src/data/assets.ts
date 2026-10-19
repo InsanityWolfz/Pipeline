@@ -86,7 +86,7 @@ export const NODE_SPRITES: Readonly<Record<string, { uses: readonly string[]; re
 /** Hotbar slot layout, px from the slot's top-left. */
 export const HUD_SLOT_LAYOUT = {
   icon: { x: 4, y: 4 },
-  /** The count: carried rounds, or the reservoir's once none are carried. */
+  /** The count: carried rounds, or the rounds in the intake's fed entrances once none are carried (024). */
   count: { x: 25, y: 9 },
   /** Gap below the slot to the bottom of the screen. */
   margin: 6,

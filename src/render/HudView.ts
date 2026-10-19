@@ -24,7 +24,8 @@ interface MaterialRow {
 }
 
 // The hotbar: slot 1 with its selected ammo's icon and count (carried rounds,
-// else the reservoir's, with a ley glow while it fires from the foundry), and the
+// else the rounds waiting in the intake's fed entrances (024, until 025's HUD),
+// with a ley glow while it fires from the foundry), and the
 // ammo strip beside it; the health bar and the raw materials and parts held,
 // top-left. Fixed to the screen; reads sim state only.
 export class HudView {
