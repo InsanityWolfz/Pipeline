@@ -115,6 +115,8 @@ describe('cold', () => {
     expect(e.chill).toBe(2);
     run(s, 1);
     expect(e.chill).toBe(0);
+    // The chill drops at the end of that tick, so the next tick's walk is full speed.
+    run(s, 1);
     expect(speed(e)).toBeCloseTo(WALK);
   });
 

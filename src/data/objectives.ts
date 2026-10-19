@@ -12,6 +12,8 @@ export type ObjectiveCheck =
   | { kind: 'gathered'; items: readonly string[] }
   /** Each of these items hand-crafted at least once. */
   | { kind: 'crafted'; items: readonly string[] }
+  /** Any one of these items hand-crafted at least once (029). */
+  | { kind: 'craftedAny'; items: readonly string[] }
   | { kind: 'gate'; gate: GateId }
   | { kind: 'inRoom'; room: string }
   /**
@@ -128,6 +130,11 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
   { text: 'Run a supply port into your line', milestone: 'm1', check: { kind: 'portDelivered' }, marker: 'ports', highlight: 'conduit' },
   { text: 'Put a second kind of ammo in another entrance', milestone: 'm1', check: { kind: 'mixedVolley' } },
   { text: 'Feed all three entrances', milestone: 'm1', check: { kind: 'volley', min: 3 } },
+  // 029: the first stage, frost on arrows, from the Grotto's rime to a frost rune in the line; then a ley stage by hand.
+  { text: 'Gather rime shards at the Frozen Grotto', milestone: 'm1', check: { kind: 'gathered', items: ['rime-shard'] } },
+  { text: 'Apply a frost rune to arrows at the bench', milestone: 'm1', check: { kind: 'crafted', items: ['arrow+frost'] } },
+  { text: 'Build a frost rune into your arrow line', milestone: 'm1', check: { kind: 'machineMade', item: 'arrow+frost' }, highlight: 'frost-rune' },
+  { text: 'Try a ley stage at the bench: homing or star', milestone: 'm1', check: { kind: 'craftedAny', items: ['ley-bolt+homing', 'ley-bolt+star'] } },
 ];
 
 /** The standing line once every goal is done (028): no check, and it never names the next milestone. */

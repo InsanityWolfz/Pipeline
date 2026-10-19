@@ -1,14 +1,20 @@
 import { SPRITES } from './assets';
+import { elementOf, ROUNDS, roundBase, roundTags } from './tags';
 
-// Ammo the tube can fire. Starting values from specs 003 and 005; tune in playtest.
+// Ammo the tube can fire. Starting values from specs 003, 005 and 029; tune in playtest.
+// Each tagged round (029) is derived from its base and its tags (src/data/tags.ts).
 
-/** Damage types from docs/design.md that exist so far. */
-export type DamageType = 'physical' | 'fire';
+/** Damage types from docs/design.md that exist so far. Fire is back with the fire rune (029: bombs are physical until then). */
+export type DamageType = 'physical' | 'fire' | 'cold';
 
 interface AmmoBase {
   id: string;
   /** The inventory item a loaded round is made from. */
   itemId: string;
+  /** The base ammo it's a round of (029): itself for a plain round. Volleys fan by it, and it fires from its slot. */
+  base: string;
+  /** Its tags, elements first (029); none for a plain round. */
+  tags: readonly string[];
   /** Minimum ticks between shots with this ammo. */
   fireTicks: number;
   damageType: DamageType;
@@ -25,7 +31,7 @@ export interface StraightAmmo extends AmmoBase {
   /** Distance flown before it vanishes, px. */
   range: number;
   damage: number;
-  /** Passes through enemies, hitting each once, instead of stopping at the first. */
+  /** Passes through every enemy in its path, hitting each once, until its range runs out or it hits a solid (029: without limit). */
   pierce: boolean;
 }
 
@@ -40,22 +46,22 @@ export interface LobAmmo extends AmmoBase {
   arcPeak: number;
   burstRadius: number;
   burstDamage: number;
-  /** Damage over time on enemies caught in the burst. */
-  burn: { damage: number; everyTicks: number; times: number };
 }
 
 export type AmmoDef = StraightAmmo | LobAmmo;
 
-export const AMMO: Readonly<Record<string, AmmoDef>> = {
+const BASE_AMMO: Readonly<Record<string, AmmoDef>> = {
   arrow: {
     id: 'arrow',
     kind: 'straight',
     itemId: 'arrow',
+    base: 'arrow',
+    tags: [],
     fireTicks: 15,
     speed: 480,
     range: 320,
     damage: 10,
-    pierce: false,
+    pierce: true,
     damageType: 'physical',
     sprite: SPRITES.arrow,
     shadow: SPRITES.arrowShadow,
@@ -64,11 +70,13 @@ export const AMMO: Readonly<Record<string, AmmoDef>> = {
     id: 'ley-bolt',
     kind: 'straight',
     itemId: 'ley-bolt',
+    base: 'ley-bolt',
+    tags: [],
     fireTicks: 20,
     speed: 300,
     range: 320,
     damage: 14,
-    pierce: true,
+    pierce: false,
     damageType: 'physical',
     sprite: SPRITES.leyBolt,
     shadow: SPRITES.leyBoltShadow,
@@ -77,17 +85,31 @@ export const AMMO: Readonly<Record<string, AmmoDef>> = {
     id: 'bomb',
     kind: 'lob',
     itemId: 'bomb',
+    base: 'bomb',
+    tags: [],
     fireTicks: 40,
     speed: 200,
     maxRange: 192,
     arcPeak: 32,
-    burstRadius: 32,
+    burstRadius: 48,
     burstDamage: 15,
-    burn: { damage: 3, everyTicks: 30, times: 4 },
-    damageType: 'fire',
+    damageType: 'physical',
     sprite: SPRITES.bomb,
     shadow: SPRITES.bombShadow,
   },
+};
+
+/** A tagged round: its base's numbers, its own id and tags, and its element's damage type. */
+function tagged(round: string): AmmoDef {
+  const base = BASE_AMMO[roundBase(round)];
+  if (!base) throw new Error(`No base ammo for '${round}'`);
+  return { ...base, id: round, itemId: round, tags: roundTags(round), damageType: elementOf(round)?.damageType ?? base.damageType };
+}
+
+/** Every ammo: the three bases, then every legal tagged round (029). */
+export const AMMO: Readonly<Record<string, AmmoDef>> = {
+  ...BASE_AMMO,
+  ...Object.fromEntries(ROUNDS.map((r) => [r, tagged(r)])),
 };
 
 export function ammoDef(id: string): AmmoDef {

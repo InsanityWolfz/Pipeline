@@ -19,7 +19,7 @@ export interface GameTestHook {
   getState(): SimSummary;
   /**
    * Steps `frames` ticks holding `command`. Its dodge, interact, ammo
-   * select, build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), setFilter, pylon, takeStash, identify and equip apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
+   * select, build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), setFilter, pylon, takeStash, identify, equip and applyStage apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
    */
   step(frames: number, command?: Partial<Command>): SimSummary;
   /** Crafts a recipe once between ticks, as clicking its menu row does. */
@@ -129,6 +129,7 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
         takeStash: null,
         identify: false,
         equip: null,
+        applyStage: null,
       };
       for (let i = 0; i < frames; i++) {
         // Building with the mouse and keys works under the hook: the scene's queued actions join each tick.
@@ -146,6 +147,7 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
           takeStash: base.takeStash ?? ui.takeStash,
           identify: base.identify || ui.identify,
           equip: base.equip ?? ui.equip,
+          applyStage: base.applyStage ?? ui.applyStage,
         });
       }
       return summarize(sim);

@@ -12,7 +12,7 @@ export const round = (n: number): number => Math.round(n * 100) / 100;
 
 export interface ArrowSummary {
   id: number;
-  /** `arrow` or `ley-bolt`. */
+  /** The round's ammo id, tags included (`arrow+frost`, 029), or `star-shard`. */
   ammoId: string;
   room: string;
   x: number;
@@ -20,8 +20,10 @@ export interface ArrowSummary {
   dx: number;
   dy: number;
   travelled: number;
-  /** Enemies already hit (a piercing bolt hits each once). */
+  /** Enemies already hit (a piercing arrow hits each once; a star shard starts with the one its round struck). */
   hitIds: number[];
+  /** A homing round's target (029), or null. */
+  targetId: number | null;
 }
 
 export function arrowSummary(a: ArrowState): ArrowSummary {
@@ -35,6 +37,7 @@ export function arrowSummary(a: ArrowState): ArrowSummary {
     dy: round(a.dy),
     travelled: round(a.travelled),
     hitIds: [...a.hitIds],
+    targetId: a.targetId,
   };
 }
 
@@ -56,8 +59,9 @@ export interface EnemySummary {
   /** Locked swipe direction. */
   swipeDir: { x: number; y: number };
   flash: number;
-  /** Ticks of burn left. */
-  burnTicks: number;
+  /** Chill stacks from cold hits (029), and ticks left frozen. */
+  chill: number;
+  frozen: number;
 }
 
 export function enemySummary(e: EnemyState): EnemySummary {
@@ -76,7 +80,8 @@ export function enemySummary(e: EnemyState): EnemySummary {
     maxHealth: enemyDef(e.enemyId).maxHealth,
     swipeDir: { x: round(e.swipeDirX), y: round(e.swipeDirY) },
     flash: e.flash,
-    burnTicks: e.burnTicks,
+    chill: e.chill,
+    frozen: e.frozen,
   };
 }
 
@@ -124,6 +129,8 @@ export type PieceSummary = { id: number; pieceId: string; tx: number; ty: number
       kind: 'machine';
       buffer: Record<string, number>;
       output: number;
+      /** What its output holds (029: a stage's tagged round). */
+      made: string;
       crafting: boolean;
       progress: number;
       status: MachineStatus;
@@ -140,6 +147,6 @@ export function pieceSummary(p: PieceState): PieceSummary {
   if (p.kind === 'hopper') return { ...common, kind: p.kind, item: p.item, count: p.count };
   if (p.kind === 'crate') return { ...common, kind: p.kind, contents: { ...p.contents } };
   if (p.kind === 'sorter') return { ...common, kind: p.kind, item: p.item, progress: p.progress, filter: p.filter, mirrored: p.mirrored };
-  const { buffer, output, crafting, progress, status, missing } = p;
-  return { ...common, kind: p.kind, buffer: { ...buffer }, output, crafting, progress, status, missing: [...missing] };
+  const { buffer, output, made, crafting, progress, status, missing } = p;
+  return { ...common, kind: p.kind, buffer: { ...buffer }, output, made, crafting, progress, status, missing: [...missing] };
 }

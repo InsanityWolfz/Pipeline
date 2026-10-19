@@ -1,3 +1,4 @@
+import { STAGE_MECHANISMS } from './stageMechanisms';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape } from './types';
 
 // Machine mechanisms (020): what each machine visibly does, drawn in its housing's
@@ -215,6 +216,7 @@ export const MECHANISMS: Readonly<Record<string, Mechanism>> = {
   grinder,
   packer,
   focuser,
+  ...STAGE_MECHANISMS,
 };
 
 /** Where a jammed machine is stuck in its loop, and the ember glint that says so. */

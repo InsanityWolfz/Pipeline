@@ -1,5 +1,6 @@
 import { TILE_SIZE } from '../data/config';
-import { isSolidPiece, pieceDef } from '../data/pieces';
+import { isSolidPiece, machineDef, pieceDef } from '../data/pieces';
+import { recipeDef } from '../data/recipes';
 import type { Rect } from './collision';
 import { facingVector, opposite, rotateCcw, rotateCw } from './direction';
 import type { Inventory } from './inventory';
@@ -36,6 +37,8 @@ export interface MachineState extends PieceCommon {
   buffer: Inventory;
   /** Finished items waiting to go out the front. */
   output: number;
+  /** The item its output holds: its recipe's, or for a stage (029) the tagged round of the kind it's working on. */
+  made: string;
   crafting: boolean;
   /** Ticks into the craft in progress. */
   progress: number;
@@ -100,7 +103,7 @@ export function createPiece(id: number, pieceId: string, tx: number, ty: number,
   if (kind === 'sorter') return { ...common, kind, item: null, progress: 0, filter: null, mirrored: shape.mirrored ?? false };
   if (kind === 'hopper') return { ...common, kind, item: null, count: 0, timer: 0 };
   if (kind === 'crate') return { ...common, kind, contents: {} };
-  return { ...common, kind, buffer: {}, output: 0, crafting: false, progress: 0, status: 'idle', missing: [] };
+  return { ...common, kind, buffer: {}, output: 0, made: recipeDef(machineDef(pieceId).recipeId).output.itemId, crafting: false, progress: 0, status: 'idle', missing: [] };
 }
 
 /** The tiles a piece covers. A 3x1 piece lies across its facing with (tx, ty) in the middle. */

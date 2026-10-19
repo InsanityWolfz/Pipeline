@@ -1,6 +1,6 @@
 import type { GameObjects, Scene } from 'phaser';
 import { BlendModes, TintModes } from 'phaser';
-import { animFrames, BURN_FLAME, BURN_FLAME_HEIGHT, DEPTHS, ENEMY_ANIMS, ENEMY_FX } from '../data/assets';
+import { animFrames, DEPTHS, ENEMY_ANIMS, ENEMY_FX } from '../data/assets';
 import { HUSK_RIG, RESIN } from '../data/art/husk';
 import { CORE, WARDEN_RIG } from '../data/art/warden';
 import { IDLE_SPEED } from '../data/config';
@@ -15,7 +15,6 @@ interface Drawn {
   sprite: GameObjects.Sprite;
   telegraph: GameObjects.Graphics;
   bar: GameObjects.Graphics;
-  flame: GameObjects.Sprite;
   /** A Husk's resin drip and glint, or the Warden's core halo (018). */
   overlay?: GameObjects.Graphics;
 }
@@ -23,7 +22,7 @@ interface Drawn {
 const viewOf = (f: Facing): 'down' | 'up' | 'side' => (f === 'up' || f === 'down' ? f : 'side');
 
 // Draws live enemies from sim state: the animation for their mode and facing, a
-// hit flash, a health bar once damaged, a flame while burning and the swipe
+// hit flash, a health bar once damaged, the cold on it (029) and the swipe
 // telegraph on the ground.
 export class EnemyView {
   private readonly drawn = new Map<number, Drawn>();
@@ -34,7 +33,6 @@ export class EnemyView {
   constructor(scene: Scene) {
     this.scene = scene;
     for (const set of Object.values(ENEMY_ANIMS)) for (const anim of Object.values(set)) if (anim) registerAnim(scene, anim);
-    registerAnim(scene, BURN_FLAME);
   }
 
   /** Hit-stop (014): holds a struck enemy's sprite still, pose and place, for `ms`. The sim runs on. */
@@ -73,7 +71,6 @@ export class EnemyView {
       else d.sprite.clearTint();
       this.drawBar(d.bar, e, bottom - d.sprite.displayHeight * d.sprite.originY);
       this.drawTelegraph(d.telegraph, e);
-      d.flame.setVisible(e.burnTicks > 0).setPosition(e.x, bottom - BURN_FLAME_HEIGHT).setDepth(bottom + DEPTHS.flameNudge);
       if (d.overlay && e.enemyId === RESIN.enemyId) this.drawResin(d.overlay, e, bottom, view, now);
       if (d.overlay && e.enemyId === CORE.enemyId) this.drawCore(d.overlay, e, bottom, view, now);
     }
@@ -83,7 +80,6 @@ export class EnemyView {
       d.sprite.destroy();
       d.telegraph.destroy();
       d.bar.destroy();
-      d.flame.destroy();
       d.overlay?.destroy();
       this.drawn.delete(id);
     }
@@ -96,9 +92,7 @@ export class EnemyView {
       sprite: addVectorSprite(this.scene, 0, 0, first ?? ''),
       telegraph: this.scene.add.graphics().setDepth(DEPTHS.groundFx),
       bar: this.scene.add.graphics().setDepth(DEPTHS.worldUi),
-      flame: addVectorSprite(this.scene, 0, 0, animFrames(BURN_FLAME)[0] ?? '').setVisible(false),
     };
-    d.flame.play(BURN_FLAME.key);
     if (e.enemyId === RESIN.enemyId) d.overlay = this.scene.add.graphics();
     // The core's halo is light, added over the stone.
     if (e.enemyId === CORE.enemyId) d.overlay = this.scene.add.graphics().setBlendMode(BlendModes.ADD);

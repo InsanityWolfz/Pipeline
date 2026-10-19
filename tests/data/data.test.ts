@@ -41,7 +41,8 @@ import { ITEMS } from '../../src/data/items';
 import { STARTING_INVENTORY, TUTORIAL_START } from '../../src/data/player';
 import { PLAYTEST_START } from '../../src/data/playtest';
 import { SLOT_AMMOS, STARTING_AMMO } from '../../src/data/tube';
-import { CRAFT_GROUPS, RECIPES } from '../../src/data/recipes';
+import { CRAFT_GROUPS, RECIPES, recipeDef } from '../../src/data/recipes';
+import { STAGE_RECIPES } from '../../src/data/stages';
 import { NODES } from '../../src/data/nodes';
 import { BUILD_BAR, PIECE_CATEGORIES, PIECES, pieceDef } from '../../src/data/pieces';
 import { ENTRANCE_CAP, INTAKE, LOB_SPACING, OPEN_ENTRANCES_COST, SPREAD_STEP } from '../../src/data/foundry';
@@ -51,6 +52,8 @@ import { OVERWORLD } from '../../src/data/overworld';
 import { WORLD } from '../../src/sim/world';
 
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+/** A round id (029): a kebab-case base, then its tags, each joined by '+'. */
+const ROUND = /^[a-z0-9]+(-[a-z0-9]+)*(\+[a-z0-9]+(-[a-z0-9]+)*)*$/;
 
 function luminance(hex: string): number {
   const [r, g, b] = hexToRgb(hex);
@@ -159,14 +162,16 @@ describe('assets', () => {
   });
 });
 
+const ammoIds = new Set(Object.keys(AMMO));
+
 describe('items and ammo', () => {
   it('have kebab-case ids that match their keys', () => {
     for (const [key, item] of Object.entries(ITEMS)) {
-      expect(item.id).toMatch(KEBAB);
+      expect(item.id).toMatch(ammoIds.has(key) ? ROUND : KEBAB);
       expect(item.id).toBe(key);
     }
     for (const [key, ammo] of Object.entries(AMMO)) {
-      expect(ammo.id).toMatch(KEBAB);
+      expect(ammo.id).toMatch(ROUND);
       expect(ammo.id).toBe(key);
     }
   });
@@ -288,7 +293,7 @@ describe('foundry pieces', () => {
       expect(def.id).toBe(key);
       expect(key).toMatch(KEBAB);
       if (def.kind !== 'machine') continue;
-      expect(RECIPES[def.recipeId]).toBeDefined();
+      expect(RECIPES[def.recipeId] ?? STAGE_RECIPES[def.recipeId]).toBeDefined();
       expect(def.craftTicks).toBeGreaterThan(0);
     }
   });
@@ -307,7 +312,7 @@ describe('foundry pieces', () => {
 
   it('cover every recipe with exactly one machine', () => {
     const run = Object.values(PIECES).flatMap((d) => (d.kind === 'machine' ? [d.recipeId] : []));
-    expect(run.sort()).toEqual(Object.keys(RECIPES).sort());
+    expect(run.sort()).toEqual([...Object.keys(RECIPES), ...Object.keys(STAGE_RECIPES)].sort());
   });
 
   it('are each on the build bar exactly once', () => {
@@ -331,9 +336,10 @@ describe('build bar categories (026)', () => {
     const grouped = PIECE_CATEGORIES.map((c) => BUILD_BAR.filter((id) => pieceDef(id).category === c.id));
     expect(grouped).toEqual([
       ['conduit', 'sorter', 'hopper', 'crate'],
-      ['cutter', 'knapper', 'spinner', 'assembler'],
+      // 029: each stage in its base ammo's group, after the chain that makes the ammo.
+      ['cutter', 'knapper', 'spinner', 'assembler', 'frost-rune'],
       ['shaper', 'fuse-maker', 'packer'],
-      ['grinder', 'focuser'],
+      ['grinder', 'focuser', 'ley-guide', 'shatter-lens'],
     ]);
     // In bar order the groups never interleave.
     expect([...BUILD_BAR]).toEqual(grouped.flat());
@@ -348,7 +354,8 @@ describe('the tube link (007)', () => {
 
   it('gives the playtest start only real items, and every recipe output as crafted', () => {
     for (const id of Object.keys(PLAYTEST_START.inventory)) expect(ITEMS[id]).toBeDefined();
-    const outputs = new Set(Object.values(RECIPES).map((r) => r.output.itemId));
+    // 029: stage recipes count too, so every stage is unlocked.
+    const outputs = new Set([...Object.values(RECIPES), ...Object.values(STAGE_RECIPES)].map((r) => r.output.itemId));
     expect(new Set(PLAYTEST_START.crafted)).toEqual(outputs);
   });
 });
@@ -451,11 +458,12 @@ describe('the tutorial (012)', () => {
 
   it('names real pieces and items in the foundry steps (027), each highlighted machine unlocked before its step', () => {
     /** Every item a recipe's chain makes, the output and its parts all the way down. */
+    const all = [...Object.values(RECIPES), ...Object.values(STAGE_RECIPES)];
     const chain = (itemId: string): string[] => {
-      const r = Object.values(RECIPES).find((x) => x.output.itemId === itemId);
+      const r = all.find((x) => x.output.itemId === itemId);
       return r ? [itemId, ...Object.keys(r.inputs).flatMap(chain)] : [];
     };
-    const machineOutputs = Object.values(PIECES).flatMap((p) => (p.kind === 'machine' ? [RECIPES[p.recipeId]?.output.itemId] : []));
+    const machineOutputs = Object.values(PIECES).flatMap((p) => (p.kind === 'machine' ? [recipeDef(p.recipeId).output.itemId] : []));
     for (const [i, o] of OBJECTIVES.entries()) {
       const c = o.check;
       if (c.kind === 'placed') expect(PIECES[c.piece], o.text).toBeDefined();
@@ -467,7 +475,7 @@ describe('the tutorial (012)', () => {
       const def = pieceDef(o.highlight);
       if (def.kind !== 'machine') continue;
       // Hidden pieces never show on the bar (026), so an earlier objective must have hand-crafted what it makes.
-      const made = RECIPES[def.recipeId]?.output.itemId ?? '';
+      const made = recipeDef(def.recipeId).output.itemId;
       const before = OBJECTIVES.slice(0, i).flatMap((p) => (p.check.kind === 'crafted' ? p.check.items.flatMap(chain) : []));
       expect(before, o.text).toContain(made);
     }

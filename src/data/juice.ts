@@ -54,6 +54,12 @@ export interface ParticleBurst {
 export const PARTICLES = {
   hitPhysical: { colors: ['snow', 'rock-pale', 'gold-trim'], count: 14, speed: [60, 150], gravity: 220, lifeMs: [220, 380], size: 2, lift: 12 },
   hitFire: { colors: ['cinder-light', 'cinder', 'gold-trim'], count: 16, speed: [50, 140], gravity: -60, lifeMs: [260, 460], size: 2, lift: 12 },
+  // A cold hit (029): frost flakes that drift down.
+  hitCold: { colors: ['foam', 'snow', 'water-light'], count: 14, speed: [40, 110], gravity: 90, lifeMs: [300, 520], size: 2, lift: 12 },
+  // A frozen enemy cracking free (029): chips of ice flung out and falling.
+  thawShards: { colors: ['foam', 'snow', 'water-light', 'rock-pale'], count: 18, speed: [50, 130], gravity: 240, lifeMs: [300, 520], size: 3, lift: 16 },
+  // Rime flaking off a cluster as it's worked (029).
+  harvestRime: { colors: ['foam', 'snow', 'water-light'], count: 12, speed: [30, 90], gravity: 160, lifeMs: [350, 600], size: 2, lift: 14 },
   hitPlayer: { colors: ['cinder', 'flame-dark', 'snow'], count: 12, speed: [40, 120], gravity: 180, lifeMs: [200, 360], size: 2, lift: 14 },
   deathMotes: { colors: ['cyan', 'cyan-glow', 'cyan-deep'], count: 26, speed: [10, 50], gravity: -70, lifeMs: [600, 1100], size: 2, lift: 10 },
   embers: { colors: ['cinder-light', 'cinder', 'gold-trim', 'flame-dark'], count: 44, speed: [30, 120], gravity: -45, lifeMs: [500, 1100], size: 3 },
@@ -78,6 +84,7 @@ export const HARVEST_BURSTS: Readonly<Record<string, keyof typeof PARTICLES>> = 
   rubble: 'harvestChips',
   reeds: 'harvestStalks',
   'ley-vein': 'harvestSparks',
+  'rime-cluster': 'harvestRime',
 };
 
 /** While a node is worked: a small burst this often, ms; a tree shakes this far either way, px, this many times a second. */

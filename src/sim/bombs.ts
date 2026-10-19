@@ -4,7 +4,7 @@ import { damageEnemy } from './enemies';
 import type { SimState } from './state';
 
 // Lobbed shots: a bomb arcs over everything to its target and bursts where it
-// lands, setting what it catches on fire. Position is the ground point.
+// lands. Position is the ground point. (029: no burn until the fire rune.)
 
 export interface BombState {
   id: number;
@@ -83,18 +83,14 @@ export function stepBombs(state: SimState): void {
   state.bombs.length = kept;
 }
 
-const BURST_HIT = { knock: false, flash: true, damageType: 'fire' } as const;
-
-/** Damages and ignites every live enemy whose feet are within the burst radius. Never the player. */
+/** Damages every live enemy whose feet are within the burst radius, flashing it without knockback. Never the player. */
 function burst(state: SimState, b: BombState): void {
   const ammo = lobAmmo(b.ammoId);
+  const style = { knock: false, flash: true, damageType: ammo.damageType } as const;
   for (const e of state.enemies) {
     if (e.roomId !== b.roomId || e.health <= 0) continue;
     if (Math.hypot(e.x - b.x, e.y - b.y) > ammo.burstRadius) continue;
-    damageEnemy(state, e, ammo.burstDamage, e.x - b.x, e.y - b.y, BURST_HIT);
-    // A new burst restarts the burn; burns never stack.
-    e.burnTicks = ammo.burn.everyTicks * ammo.burn.times;
-    e.burnAmmo = b.ammoId;
+    damageEnemy(state, e, ammo.burstDamage, e.x - b.x, e.y - b.y, style);
   }
   state.events.bursts.push({ x: b.x, y: b.y, radius: ammo.burstRadius });
 }

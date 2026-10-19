@@ -49,6 +49,8 @@ export interface Command {
   identify: boolean;
   /** Wear an identified piece (by id), or take armor off (null), at the bench this tick (an edge), or null for no change. */
   equip: { id: number | null } | null;
+  /** Hand-apply a stage (by stage id) at the bench this tick (an edge, 029), or null. */
+  applyStage: string | null;
 }
 
 /** No input. Its aim is the world origin, so callers that care about aim must set one. */
@@ -71,4 +73,5 @@ export const NO_COMMAND: Readonly<Command> = {
   takeStash: null,
   identify: false,
   equip: null,
+  applyStage: null,
 };

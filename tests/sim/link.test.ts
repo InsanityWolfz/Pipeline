@@ -164,7 +164,12 @@ describe('the playtest start', () => {
     const s = createSim(SEED, { start: PLAYTEST_START });
     expect(s.inventory).toMatchObject({ arrow: 99, bomb: 99, 'ley-bolt': 99, wood: 99, 'husk-resin': 99, shaft: 20, fuse: 20 });
     expect(s.crafted).toEqual(PLAYTEST_START.crafted);
-    expect(unlockedPieces(s)).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'packer', 'grinder', 'focuser']);
+    // 029: every stage too, with rime shards to feed the frost rune and no tagged rounds carried.
+    expect(unlockedPieces(s)).toEqual([
+      'conduit', 'sorter', 'hopper', 'crate', 'cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'shaper', 'fuse-maker', 'packer', 'grinder', 'focuser', 'ley-guide', 'shatter-lens',
+    ]);
+    expect(s.inventory['rime-shard']).toBe(99);
+    expect(s.inventory['arrow+frost']).toBeUndefined();
     // The start is banked, so a death keeps what's still carried of it (011).
     s.inventory = { wood: 1 };
     die(s);

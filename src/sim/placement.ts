@@ -1,5 +1,5 @@
 import { FEET_BOX } from '../data/player';
-import { BUILD_BAR, isSolidPiece, machineDef, pieceDef } from '../data/pieces';
+import { BUILD_BAR, isSolidPiece, pieceDef } from '../data/pieces';
 import { recipeDef } from '../data/recipes';
 import { FOUNDRY_ROOM, TILE } from '../data/rooms';
 import { overlapsRect } from './collision';
@@ -9,6 +9,7 @@ import { fixtureAt, fixtureDef, portFront } from './fixtures';
 import { createPiece, footprint, frontTile, pieceAt, pieceRect, sameTile, sideTile, sortSide, type PieceShape, type PieceState, type PlaceFail } from './pieces';
 import type { Facing } from './player';
 import { roomById, type SimState } from './state';
+import { machineRecipe } from './stages';
 
 // Placing pieces on the foundry grid and picking them back up. Both are free.
 
@@ -89,10 +90,10 @@ export function pieceContents(p: PieceState): Inventory {
   if (p.kind === 'hopper' && p.item) add(p.item, p.count);
   if (p.kind === 'crate') for (const [itemId, n] of Object.entries(p.contents)) add(itemId, n);
   if (p.kind === 'machine') {
-    const recipe = recipeDef(machineDef(p.pieceId).recipeId);
+    const recipe = machineRecipe(p);
     for (const [itemId, n] of Object.entries(p.buffer)) add(itemId, n);
     if (p.crafting) for (const [itemId, n] of Object.entries(recipe.inputs)) add(itemId, n);
-    add(recipe.output.itemId, p.output);
+    add(p.made, p.output);
   }
   return items;
 }

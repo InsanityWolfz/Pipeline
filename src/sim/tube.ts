@@ -2,7 +2,9 @@ import { FOUNDRY_ROOM } from '../data/rooms';
 import { FIRING_WALK_MULTIPLIER } from '../data/player';
 import { ammoDef } from '../data/ammo';
 import { MUZZLE_OFFSET, SLOT_AMMOS, STARTING_AMMO } from '../data/tube';
+import { hasBehaviour } from '../data/tags';
 import { createArrow } from './arrows';
+import { lockTarget } from './homing';
 import { throwBomb } from './bombs';
 import { aimFacing, facingVector, unit } from './direction';
 import type { Command } from './input';
@@ -133,5 +135,7 @@ function launch(state: SimState, { ammoId, dir: [dx, dy], across }: VolleyShot, 
     throwBomb(state, ammoId, muzzle, player, { x: cmd.aimX, y: cmd.aimY }, [dx, dy], across);
     return;
   }
-  state.arrows.push(createArrow(state.nextArrowId++, ammoId, state.roomId, muzzle.x, muzzle.y, dx, dy));
+  // A homing round (029) locks on at launch: the enemy nearest the cursor, if one is close enough.
+  const target = hasBehaviour(ammoId, 'homing') ? lockTarget(state, cmd.aimX, cmd.aimY) : null;
+  state.arrows.push(createArrow(state.nextArrowId++, ammoId, state.roomId, muzzle.x, muzzle.y, dx, dy, target));
 }

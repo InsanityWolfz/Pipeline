@@ -2,9 +2,9 @@
 
 /**
  * Where a node type may stand (018), so every material visibly comes from somewhere:
- * in a grove, in a rock field, at a pond's shallow edge, or on a ley line.
+ * in a grove, in a rock field, at a pond's shallow edge, on a ley line, or in the Frozen Grotto (029).
  */
-export type Placement = 'grove' | 'rock-field' | 'pond-edge' | 'ley-line';
+export type Placement = 'grove' | 'rock-field' | 'pond-edge' | 'ley-line' | 'frozen-grotto';
 
 export interface NodeDef {
   id: string;
@@ -40,6 +40,7 @@ export const NODES: Readonly<Record<string, NodeDef>> = {
   rubble: node('rubble', 'Boulder', 'stone', 'rock-field', { w: 22, h: 10 }),
   reeds: node('reeds', 'Reeds', 'fiber', 'pond-edge', { w: 18, h: 8 }),
   'ley-vein': node('ley-vein', 'Ley vein', 'ley-crystal', 'ley-line', { w: 20, h: 10 }),
+  'rime-cluster': node('rime-cluster', 'Rime cluster', 'rime-shard', 'frozen-grotto', { w: 18, h: 10 }),
 };
 
 /** A depleted node's remains grow back through this many visible stages before the full node returns (018). */

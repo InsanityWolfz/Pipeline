@@ -10,7 +10,8 @@ describe('arrows hitting Husks', () => {
     const s = arena();
     const e = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     run(s, 1, fireAt(at(1000).x, PLAYER_AT.y));
-    runUntil(s, () => s.arrows.length === 0, 30);
+    // 029: an arrow pierces, so it flies on to the end of its range.
+    runUntil(s, () => s.arrows.length === 0, 60);
     expect(DAMAGE).toBe(10);
     expect(e.health).toBe(HUSK.maxHealth - DAMAGE);
   });
@@ -31,7 +32,7 @@ describe('arrows hitting Husks', () => {
     const first = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     const second = placeHusk(s, PLAYER_AT.x + 130, PLAYER_AT.y);
     run(s, 1, fireAt(at(1000).x, PLAYER_AT.y));
-    runUntil(s, () => s.arrows.length === 0, 30);
+    runUntil(s, () => s.arrows.length === 0, 60);
     expect(first.health).toBe(HUSK.maxHealth - DAMAGE);
     expect(second.health).toBe(HUSK.maxHealth - DAMAGE);
   });

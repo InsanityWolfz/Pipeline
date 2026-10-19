@@ -82,6 +82,11 @@ export interface SimEvents {
   shots: { x: number; y: number; ammoId: string }[];
   /** An intake entrance fired a round of the volley (028), by index into INTAKE.entrances. */
   entranceFires: { entrance: number; ammoId: string }[];
+  /** A cold hit froze an enemy (029), and a frozen enemy thawed: its id and where it stood. */
+  freezes: { id: number; x: number; y: number }[];
+  thaws: { id: number; x: number; y: number }[];
+  /** A star round burst into shards where it hit (029). */
+  starBursts: { x: number; y: number }[];
   /** E at a pylon whose room still has enemies. */
   sealed: { site: string }[];
   /** A room was claimed. */
@@ -151,6 +156,9 @@ export function createEvents(): SimEvents {
     travels: [],
     shots: [],
     entranceFires: [],
+    freezes: [],
+    thaws: [],
+    starBursts: [],
     melees: [],
     banks: [],
     lost: {},
@@ -192,6 +200,9 @@ export function clearEvents(events: SimEvents): void {
   events.travels.length = 0;
   events.shots.length = 0;
   events.entranceFires.length = 0;
+  events.freezes.length = 0;
+  events.thaws.length = 0;
+  events.starBursts.length = 0;
   events.melees.length = 0;
   events.banks.length = 0;
   events.lost = {};

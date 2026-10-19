@@ -96,7 +96,7 @@ describe('the goals', () => {
   it('craftedAny (029) completes once either ley variant is hand-made', () => {
     const i = OBJECTIVES.findIndex((o) => o.check.kind === 'craftedAny');
     for (const item of ['ley-bolt+homing', 'ley-bolt+star']) {
-      const s = foundry();
+      const s = foundry(false);
       run(s, 1);
       expect(s.objectives[i]).toBe(false);
       s.crafted.push(item);

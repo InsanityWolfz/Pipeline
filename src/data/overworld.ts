@@ -3,6 +3,8 @@
 // gets the same map; the landmarks below are placed by hand and override it.
 // Tile coordinates throughout. Numbers are tuning values.
 
+import { GROTTO } from './grotto';
+
 export type TilePos = { readonly tx: number; readonly ty: number };
 
 /**
@@ -94,6 +96,8 @@ export const OVERWORLD = {
     { x0: 29, y0: 10, x1: 51, y1: 22 },
     // The shrine site and its approach.
     { x0: SHRINE.x0 - 2, y0: SHRINE.y0 - 1, x1: SHRINE.x1 + 1, y1: SHRINE.y1 + 3 },
+    // The Frozen Grotto (029).
+    GROTTO.area,
   ] satisfies TileRect[],
   /** Dirt paths joining the landmarks: tile polylines, two tiles wide. */
   paths: [
@@ -117,6 +121,8 @@ export const OVERWORLD = {
       { tx: 50, ty: 40 },
       { tx: 64, ty: 38 },
     ],
+    // North from the west path's end to the Frozen Grotto (029).
+    GROTTO.path,
   ] satisfies TilePos[][],
   /** Where the dormant tube rests (012), and where the real game wakes the player. */
   startStone: { tx: 40, ty: 33 },
@@ -145,6 +151,8 @@ export const OVERWORLD = {
     { group: 'shrine', enemyId: 'wisp', tx: 66, ty: 5 },
     { group: 'shrine', enemyId: 'husk', tx: 61, ty: 12 },
     { group: 'shrine', enemyId: 'husk', tx: 69, ty: 11 },
+    // The Frozen Grotto's guards (029): never claimed, so they're back after every KO.
+    ...GROTTO.pack,
   ],
   /**
    * Ley lines (018): glowing seams in the ground where ley comes near the surface,
@@ -189,6 +197,8 @@ export const OVERWORLD = {
     { nodeId: 'tree', tx: 60, ty: 13 },
     { nodeId: 'reeds', tx: 72, ty: 13 },
     { nodeId: 'rubble', tx: 63, ty: 5 },
+    // The Frozen Grotto's rime clusters (029).
+    ...GROTTO.nodes,
   ],
 } as const;
 

@@ -1,4 +1,4 @@
-import { ammoDef } from '../data/ammo';
+import { AMMO, ammoDef } from '../data/ammo';
 import { LOB_SPACING, SPREAD_STEP } from '../data/foundry';
 import { count } from './inventory';
 import type { SimState } from './state';
@@ -26,15 +26,31 @@ export function volleyRounds(state: Pick<SimState, 'link'>): VolleyRound[] {
   return state.link.entrances.flatMap((e, entrance) => (e.open && e.ammoId !== null && e.count > 0 ? [{ ammoId: e.ammoId, count: e.count, entrance }] : []));
 }
 
-/** What the next fire press does, in the fire path's order: the volley, a carried round, the punch. Without the tube it's always a punch. */
+/** A slot's rounds in firing order (029): its tagged rounds first, in AMMO's order, then the plain round. */
+export function slotRounds(slotAmmo: string): string[] {
+  const tagged = Object.values(AMMO).filter((a) => a.base === slotAmmo && a.id !== slotAmmo).map((a) => a.id);
+  return [...tagged, slotAmmo];
+}
+
+/** Every carried round of a slot's base ammo, tagged included (029). */
+export function carriedOfSlot(state: Pick<SimState, 'inventory'>, slotAmmo: string): number {
+  return slotRounds(slotAmmo).reduce((n, id) => n + count(state.inventory, ammoDef(id).itemId), 0);
+}
+
+/**
+ * What the next fire press does, in the fire path's order: the volley, a carried round, the punch. Without the tube
+ * it's always a punch. A carried round is of the slot's base ammo, tagged rounds before plain ones (029).
+ */
 export function nextPress(state: Pick<SimState, 'hasTube' | 'tube' | 'inventory' | 'link'>): NextPress {
   if (!state.hasTube) return { kind: 'melee' };
   // Entrances only fill once the tube is linked, so this is the linked tube's volley.
   const rounds = volleyRounds(state);
   if (rounds.length > 0) return { kind: 'volley', rounds };
-  const ammoId = state.tube.ammoId;
-  const carried = count(state.inventory, ammoDef(ammoId).itemId);
-  return carried > 0 ? { kind: 'carried', ammoId, count: carried } : { kind: 'melee' };
+  for (const ammoId of slotRounds(state.tube.ammoId)) {
+    const carried = count(state.inventory, ammoDef(ammoId).itemId);
+    if (carried > 0) return { kind: 'carried', ammoId, count: carried };
+  }
+  return { kind: 'melee' };
 }
 
 /** What the HUD's tube slot shows (025): the next press, as `nextPress` says, without the entrance indexes. */
@@ -58,16 +74,20 @@ export interface VolleyShot {
 
 /**
  * The projectiles a volley of these ammo ids fires along the unit aim (dx, dy), grouped
- * by ammo in order of first appearance. One round of an ammo flies straight at the aim;
- * several aimed rounds fan evenly about it, SPREAD_STEP degrees apart; several lobbed
- * rounds keep the aim's line and land side by side, LOB_SPACING px apart across it.
+ * by base ammo (029: a plain and a frost arrow fan together) in order of first appearance.
+ * One round of a base flies straight at the aim; several aimed rounds fan evenly about it,
+ * SPREAD_STEP degrees apart; several lobbed rounds keep the aim's line and land side by
+ * side, LOB_SPACING px apart across it.
  */
 export function volleyShots(ammoIds: readonly string[], dx: number, dy: number): VolleyShot[] {
-  const groups = new Map<string, number>();
-  for (const id of ammoIds) groups.set(id, (groups.get(id) ?? 0) + 1);
-  return [...groups].flatMap(([ammoId, n]) =>
-    Array.from({ length: n }, (_, i): VolleyShot => {
-      const offset = i - (n - 1) / 2;
+  const groups = new Map<string, string[]>();
+  for (const id of ammoIds) {
+    const base = ammoDef(id).base;
+    groups.set(base, [...(groups.get(base) ?? []), id]);
+  }
+  return [...groups.values()].flatMap((ids) =>
+    ids.map((ammoId, i): VolleyShot => {
+      const offset = i - (ids.length - 1) / 2;
       if (ammoDef(ammoId).kind === 'lob') return { ammoId, dir: [dx, dy], across: offset * LOB_SPACING };
       return { ammoId, dir: rotate(dx, dy, offset * SPREAD_STEP), across: 0 };
     }),

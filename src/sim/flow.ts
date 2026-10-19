@@ -1,10 +1,11 @@
 import { CONDUIT_TICKS, CRATE_CAP, HOPPER_FLOW_CAP, HOPPER_TICKS, INPUT_CAP, INTAKE, OUTPUT_CAP } from '../data/foundry';
 import { machineDef } from '../data/pieces';
-import { recipeDef, type RecipeDef } from '../data/recipes';
+import type { RecipeDef } from '../data/recipes';
 import { opposite } from './direction';
 import { count } from './inventory';
 import type { SimEvents } from './events';
 import { fillEntrance, type EntranceState } from './link';
+import { machineRecipe, offerToStage, stageOf } from './stages';
 import {
   footprint,
   frontSide,
@@ -43,15 +44,17 @@ interface FlowContext {
 /** The intake's entrance at `t`, by index, if it is one. */
 const entranceAt = (t: Tile): number => INTAKE.entrances.findIndex((m) => m.tx === t.tx && m.ty === t.ty);
 
-const recipeOf = (m: MachineState): RecipeDef => recipeDef(machineDef(m.pieceId).recipeId);
+/** What a machine runs: its recipe, or a stage's on the round it's working on (029). */
+const recipeOf = (m: MachineState): RecipeDef => machineRecipe(m);
 
 /** True if the machine has every input of its recipe buffered. */
 function hasInputs(m: MachineState, recipe: RecipeDef): boolean {
   return Object.entries(recipe.inputs).every(([itemId, n]) => count(m.buffer, itemId) >= n);
 }
 
-/** A craft only starts when its whole output will fit. */
-const outputFits = (m: MachineState, recipe: RecipeDef): boolean => m.output + recipe.output.count <= OUTPUT_CAP;
+/** A craft only starts when its whole output will fit, beside nothing of another kind. */
+const outputFits = (m: MachineState, recipe: RecipeDef): boolean =>
+  m.output + recipe.output.count <= OUTPUT_CAP && (m.output === 0 || m.made === recipe.output.itemId);
 
 function advanceMachine(m: MachineState, made: SimEvents['made']): void {
   const recipe = recipeOf(m);
@@ -105,6 +108,8 @@ function offer(ctx: FlowContext, to: Tile, from: Tile, item: string): boolean {
     return true;
   }
   if (target.kind === 'machine') {
+    const st = stageOf(target.pieceId);
+    if (st) return offerToStage(target, st, item);
     const need = recipeOf(target).inputs[item];
     if (need === undefined || count(target.buffer, item) >= INPUT_CAP) return false;
     target.buffer[item] = count(target.buffer, item) + 1;
@@ -142,7 +147,7 @@ function transfer(ctx: FlowContext, p: PieceState): void {
   } else if (p.kind === 'hopper') {
     if (p.item && p.timer >= HOPPER_TICKS) offerFromHopper(ctx, to, p, p.item);
   } else if (p.kind === 'machine') {
-    if (p.output > 0 && offer(ctx, to, p, recipeOf(p).output.itemId)) p.output -= 1;
+    if (p.output > 0 && offer(ctx, to, p, p.made)) p.output -= 1;
   }
 }
 

@@ -164,14 +164,14 @@ const ARMOR_HEAVY: Shape[] = [
 ];
 
 // Ammo icons, pointing up-right, matching their projectiles (016).
-const ICON_ARROW: Shape[] = [
+export const ICON_ARROW: Shape[] = [
   line([-6, 6, 3.4, -3.4], 1.4, 'wood-light', true),
   path('M -6.4 6.4 L -7 3.2 L -4.6 4.6 Z', flat('rust-light')),
   path('M -6.4 6.4 L -3.2 7 L -4.6 4.6 Z', flat('rust')),
   path('M 6.4 -6.4 L 1.8 -4.2 L 4.2 -1.8 Z', solid('rock-pale')),
 ];
 
-const ICON_BOMB: Shape[] = [
+export const ICON_BOMB: Shape[] = [
   ellipse(-0.6, 1.4, 5.4, 5.4, { fill: { radial: [-2, -0.6, 6], stops: [{ at: 0, color: 'rock-dark' }, { at: 1, color: 'ink' }] }, outline: true }),
   rect(-5.8, 0.3, 10.4, 2.2, 1, { fill: 'cinder', glow: { color: 'cinder', blur: 2 } }),
   ellipse(-2.6, -1.4, 1.4, 0.9, flat('rock-light')),
@@ -179,7 +179,7 @@ const ICON_BOMB: Shape[] = [
   glowDot(4.6, -6.2, 1.3, 'cinder-light'),
 ];
 
-const ICON_LEY_BOLT: Shape[] = [
+export const ICON_LEY_BOLT: Shape[] = [
   { ...line([-6.4, 6.4, 0.6, -0.6], 2.4, { id: 'cyan', alpha: 0.5 }), glow: { color: 'cyan', blur: 3 } },
   path('M 6.6 -6.6 L 0.4 -3.6 L -0.6 0.6 L 3.6 -0.4 Z', { fill: 'cyan-glow', outline: true, glow: { color: 'cyan', blur: 4 } }),
 ];

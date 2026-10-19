@@ -34,8 +34,8 @@ describe('arrows pierce (029)', () => {
     const travelled = flyOut(s);
     for (const e of husks) expect(e.health).toBe(HUSK.maxHealth - ARROW.damage);
     expect(arrow?.hitIds).toEqual(husks.map((e) => e.id));
-    // It ran its whole range: the last step takes it to 320 px.
-    expect(travelled).toBeGreaterThan(ARROW.range - ARROW.speed / 60);
+    // It ran its whole range: it was last seen a step short of 320 px, and the next step ended it.
+    expect(travelled).toBeGreaterThanOrEqual(ARROW.range - ARROW.speed / 60);
   });
 
   it('stop at a solid', () => {
@@ -101,17 +101,15 @@ describe('bombs (029)', () => {
 
   it('nothing burns: a burst deals its damage once and no more', () => {
     const s = arena();
-    // A Husk far off to the side, out of the player's view, so it never comes over.
+    // A Husk far off to the side, out of the player's view, so nothing else ever hits it.
     const e = placeHusk(s, PLAYER_AT.x + 400, PLAYER_AT.y);
     throwBomb(s, 'bomb', { x: e.x - 60, y: e.y }, { x: e.x - 60, y: e.y }, e, [1, 0]);
     const damage: number[] = [];
-    run(s, 300);
-    for (let t = 0; t < 300; t++) {
+    for (let t = 0; t < 600; t++) {
       run(s, 1);
-      damage.push(...s.events.hits.filter((h) => h.target === 'enemy').map((h) => h.damage));
+      damage.push(...s.events.hits.filter((h) => h.target === 'enemy' && h.id === e.id).map((h) => h.damage));
     }
-    expect(e.health).toBe(HUSK.maxHealth - BOMB.burstDamage);
-    expect(damage).toEqual([]);
+    expect(damage).toEqual([BOMB.burstDamage]);
     expect(Object.keys(e)).not.toContain('burnTicks');
   });
 });

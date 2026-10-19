@@ -1,4 +1,7 @@
-// Hand-crafting recipes. Starting values from spec 005; tune in playtest.
+import { STAGE_RECIPES } from './stages';
+
+// Hand-crafting recipes. Starting values from spec 005; tune in playtest. A stage's
+// recipe (029: hand-applied at the bench, run by its machine) is found here too.
 
 export interface RecipeDef {
   id: string;
@@ -34,8 +37,9 @@ export const CRAFT_GROUPS: readonly { ammoId: string; recipes: readonly string[]
   { ammoId: 'ley-bolt', recipes: ['ley-bolt'] },
 ];
 
+/** A hand-crafting recipe, or a stage's (029). */
 export function recipeDef(id: string): RecipeDef {
-  const def = RECIPES[id];
+  const def = RECIPES[id] ?? STAGE_RECIPES[id];
   if (!def) throw new Error(`Unknown recipe '${id}'`);
   return def;
 }

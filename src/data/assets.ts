@@ -86,6 +86,7 @@ export const NODE_SPRITES: Readonly<Record<string, { uses: readonly string[]; re
   rubble: nodeFrames('rubble', 3, 3),
   reeds: nodeFrames('reeds', 3, 3),
   'ley-vein': nodeFrames('ley-vein', 3, 3),
+  'rime-cluster': nodeFrames('rime-cluster', 3, 3),
 };
 
 /** The tube slot's frame (025) by how many rounds it shows: one for a carried round or the fist, up to one per intake entrance for a volley. */
@@ -165,9 +166,6 @@ export const WAKE_TEXT = { holdMs: 3000, fadeMs: 400, top: -24, lineStep: 10, pa
 
 /** A ley burst at the tube's mouth for each projectile fired (008). */
 export const MUZZLE_FLASH: AnimDef = { key: 'muzzle-flash', frames: 2, frameRate: 20, loop: false };
-
-/** The flame over a burning enemy. */
-export const BURN_FLAME: AnimDef = { key: 'burn-flame', frames: 3, frameRate: 10, loop: true };
 
 /** Frame names for an animation. */
 export function animFrames(anim: AnimDef): string[] {
@@ -264,7 +262,7 @@ export const DEPTHS = {
   groundFx: 0.5,
   /** Nudge that puts a tutorial seal just in front of its door. */
   tubeNudge: 0.01,
-  /** Nudge that puts a burn flame just in front of the enemy it's on. */
+  /** Nudge that puts an overlay (a Husk's resin, the Warden's core, the ice on a frozen enemy) just in front of the enemy it's on. */
   flameNudge: 0.01,
   /** Health bars, sparkles and popups over the world. */
   worldUi: 100_000,
@@ -293,6 +291,4 @@ export const DEPTHS = {
 /** Bombs draw this far above their arc height, so they leave the hand at tube height, px. */
 export const BOMB_LIFT = 10;
 
-/** The flame over a burning enemy sits this far above its feet, px. */
-export const BURN_FLAME_HEIGHT = 30;
 

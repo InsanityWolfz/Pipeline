@@ -1,9 +1,9 @@
 import { equip, identifyAll, walkScale } from './armor';
-import { stepArrows } from './arrows';
+import { stepArrows, type ArrowState } from './arrows';
+import { steerArrows } from './homing';
 import { stepBombs } from './bombs';
 import { maskCommand, stepBuild } from './build';
 import { stepClaims, stepPorts } from './claims';
-import { stepBurns } from './burn';
 import { arrowHits, removeDead } from './combat';
 import { stepDoorways } from './doorways';
 import { stepPickups } from './drops';
@@ -25,6 +25,7 @@ import { stepObjectives } from './objectives';
 import { stepGates, stepTubeStone } from './tutorial';
 import { roomBodies } from './bodies';
 import { stepPopulation } from './population';
+import { applyStage } from './stages';
 
 /** Each room's bodies, built once per tick on first use. */
 function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
@@ -60,10 +61,13 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   const used = stepClaims(state, stepTubeStone(state, cmd));
   if (cmd.identify) identifyAll(state);
   if (cmd.equip) equip(state, cmd.equip.id);
+  if (cmd.applyStage) applyStage(state, cmd.applyStage);
   stepHarvest(state, state.building ? { ...used, interact: false } : used);
   // Shots fired this tick stay at the muzzle until next tick's step.
-  stepArrows(state.arrows, roomById, arrowHits(state));
-  stepBurns(state);
+  // Star shards (029) set off this tick join the flight after it, so they first move next tick.
+  const shards: ArrowState[] = [];
+  stepArrows(state.arrows, roomById, arrowHits(state, shards), steerArrows(state));
+  state.arrows.push(...shards);
   stepBombs(state);
   stepOrbs(state);
   removeDead(state);

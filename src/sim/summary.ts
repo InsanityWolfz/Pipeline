@@ -2,6 +2,7 @@ import { MAX_HEALTH } from '../data/player';
 import { WORLD } from './world';
 import type { SimEvents } from './events';
 import { unlockedPieces } from './placement';
+import { stagesUnlocked } from './stages';
 import { isInvulnerable, isRolling } from './movement';
 import type { Facing } from './player';
 import type { ArmorPiece } from './armor';
@@ -101,6 +102,8 @@ export interface SimSummary {
   machineMade: Record<string, number>;
   /** Pieces the player can place, in build bar order. */
   unlocked: string[];
+  /** Stage machines unlocked by hand-applying them at the bench (029), in stage order. */
+  stagesUnlocked: string[];
   building: boolean;
   foundry: { pieces: PieceSummary[] };
   /** Wisp orbs in flight; x, y is the ground point. */
@@ -195,6 +198,7 @@ export function summarize(state: SimState): SimSummary {
     crafted: [...state.crafted],
     machineMade: { ...state.machineMade },
     unlocked: unlockedPieces(state),
+    stagesUnlocked: stagesUnlocked(state),
     building: state.building,
     foundry: { pieces: state.foundry.pieces.map((p) => pieceSummary(p)) },
     intake: {

@@ -78,6 +78,10 @@ export const ENTRANCE_GAUGE_COLORS: Readonly<Record<string, string>> = {
   arrow: 'straw-light',
   bomb: 'cinder',
   'ley-bolt': 'cyan-glow',
+  // 029: tagged rounds, their tag's colour.
+  'arrow+frost': 'water-light',
+  'ley-bolt+homing': 'cyan',
+  'ley-bolt+star': 'snow',
 };
 
 /**

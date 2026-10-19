@@ -14,6 +14,7 @@ import { inksOf, svg, type LimbStyle, type Shape } from '../../src/data/art/type
 import { VECTOR_SPRITES } from '../../src/data/art/sprites';
 import { TUBE_PARTS, WANDERER, WANDERER_DYNAMIC } from '../../src/data/art/wanderer';
 import { DAYLIGHT_PALETTE } from '../../src/data/palette';
+import { STAGE_SPRITES_VECTOR } from '../../src/data/art/stages';
 import { ENEMY_RIGS } from '../../src/data/art/enemies';
 import { poseOfAnim } from '../../src/render/vector/catalog';
 
@@ -57,7 +58,7 @@ describe('vector shapes', () => {
       ...VECTOR_SPRITES.flatMap((s) => s.frames.flat()),
       ...NODE_SPRITES_VECTOR.flatMap((s) => s.frames.flat()),
       ...INTAKE_SPRITES_VECTOR.flatMap((s) => s.frames.flat()),
-      ...[ITEM_SPRITES_VECTOR, LOGISTICS_SPRITES_VECTOR, FIXTURE_SPRITES_VECTOR, MACHINE_SPRITES_VECTOR, INTERIOR_SPRITES_VECTOR, HUD_SPRITES_VECTOR].flatMap((set) =>
+      ...[ITEM_SPRITES_VECTOR, LOGISTICS_SPRITES_VECTOR, FIXTURE_SPRITES_VECTOR, MACHINE_SPRITES_VECTOR, INTERIOR_SPRITES_VECTOR, HUD_SPRITES_VECTOR, STAGE_SPRITES_VECTOR].flatMap((set) =>
         set.flatMap((s) => s.frames.flat()),
       ),
     ];
@@ -150,7 +151,8 @@ describe('vector frame registration', () => {
     };
     const room = await import('../../src/data/roomArt');
     const props = await import('../../src/data/props');
-    walk({ ...assets, ...foundry, ...room, ...props });
+    const stages = await import('../../src/data/stageAssets');
+    walk({ ...assets, ...foundry, ...room, ...props, ...stages });
     for (const f of vectorFrames()) expect(registered, f.name).toContain(f.name);
   });
 });

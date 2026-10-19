@@ -1,3 +1,5 @@
+import { stageBase, STAGES, type StageDef } from './stages';
+
 // Buildable foundry pieces. Starting values from spec 006; tune in playtest.
 
 /** Tiles a piece covers: one, or three in a row across its facing (its tile is the middle one). */
@@ -24,11 +26,15 @@ interface PieceBase {
   footprint: Footprint;
 }
 
-/** Runs a hand-crafting recipe on its own, from items handed in. */
+/**
+ * Runs a hand-crafting recipe on its own, from items handed in. A stage machine (029) runs its stage's recipe
+ * (`recipeId` is the stage id, and `stage` says so): it adds its tag to finished rounds.
+ */
 export interface MachineDef extends PieceBase {
   kind: 'machine';
   recipeId: string;
   craftTicks: number;
+  stage?: string;
 }
 
 /**
@@ -70,6 +76,16 @@ const logistics = (kind: LogisticsDef['kind'], name: string, description: string
   footprint: '1x1',
 });
 
+/** Each base ammo's build bar group, for its stages (029). */
+const AMMO_CATEGORY: Readonly<Record<string, PieceCategory>> = { arrow: 'arrows', bomb: 'bombs', 'ley-bolt': 'ley' };
+
+/** A stage as a machine (029): 1×1, in its base ammo's group, running its own recipe. */
+function stageMachine(st: StageDef): MachineDef {
+  const category = AMMO_CATEGORY[stageBase(st)];
+  if (!category) throw new Error(`No build bar group for stage '${st.id}'`);
+  return { ...machine(st.id, st.name, category, st.id, '1x1', st.craftTicks, st.description), stage: st.id };
+}
+
 export const PIECES: Readonly<Record<string, PieceDef>> = {
   conduit: logistics('conduit', 'Ley conduit', 'Carries items toward its front. Drag to lay a run that bends.'),
   sorter: logistics('sorter', 'Sorter', 'Sends one chosen item out its side. E sets it, F flips the side.'),
@@ -84,6 +100,7 @@ export const PIECES: Readonly<Record<string, PieceDef>> = {
   grinder: machine('grinder', 'Grinder', 'ley', 'ley-shard', '1x1', 60, 'Grinds ley crystal into shards.'),
   packer: machine('packer', 'Packer', 'bombs', 'bomb', '3x1', 90, 'Packs casings, fuses and shards into bombs.'),
   focuser: machine('focuser', 'Focuser', 'ley', 'ley-bolt', '1x1', 60, 'Focuses ley shards into ley bolts.'),
+  ...Object.fromEntries(Object.values(STAGES).map((st) => [st.id, stageMachine(st)])),
 };
 
 /** The build bar's order, group by group (026): logistics, then each ammo chain's machines. */
@@ -96,11 +113,14 @@ export const BUILD_BAR: readonly string[] = [
   'knapper',
   'spinner',
   'assembler',
+  'frost-rune',
   'shaper',
   'fuse-maker',
   'packer',
   'grinder',
   'focuser',
+  'ley-guide',
+  'shatter-lens',
 ];
 
 export function pieceDef(id: string): PieceDef {

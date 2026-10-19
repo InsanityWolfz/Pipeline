@@ -2,6 +2,7 @@ import type { DamageType } from '../data/ammo';
 import { enemyDef } from '../data/enemies';
 import type { Room } from '../data/rooms';
 import { moveBox, type Rect } from './collision';
+import { chillEnemy, frozenFast } from './cold';
 import { startKnock, type Knockable } from './knockback';
 import type { Facing } from './player';
 import type { SimState } from './state';
@@ -40,10 +41,14 @@ export interface EnemyState extends Knockable {
   swipeDirY: number;
   /** Ticks of hit flash left, for render. */
   flash: number;
-  /** Ticks of burn left; it deals damage on every `everyTicks`-th. */
-  burnTicks: number;
-  /** The ammo whose burn is running, for its numbers. */
-  burnAmmo: string;
+  /** Chill stacks from cold hits (029); each slows it. */
+  chill: number;
+  /** Ticks before the chill runs out and the stacks drop to 0. */
+  chillTicks: number;
+  /** Ticks left frozen: it doesn't move or think. */
+  frozen: number;
+  /** Ticks after a thaw in which cold hits add no stacks. */
+  refreeze: number;
 }
 
 export function createEnemy(id: number, enemyId: string, at: { x: number; y: number }, roomId: string, group = ''): EnemyState {
@@ -68,8 +73,10 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     swipeDirX: 0,
     swipeDirY: 1,
     flash: 0,
-    burnTicks: 0,
-    burnAmmo: '',
+    chill: 0,
+    chillTicks: 0,
+    frozen: 0,
+    refreeze: 0,
     knockX: 0,
     knockY: 0,
     knockTicks: 0,
@@ -83,7 +90,7 @@ export function aggro(e: EnemyState): void {
   e.offScreenTicks = 0;
 }
 
-/** How a hit lands: arrows knock back and flash, bursts only flash, burns do neither. */
+/** How a hit lands: arrows knock back and flash, bursts only flash. A cold hit chills (029). */
 export interface HitStyle {
   knock: boolean;
   flash: boolean;
@@ -107,7 +114,9 @@ export function damageEnemy(
   const def = enemyDef(e.enemyId);
   e.health = Math.max(0, e.health - amount);
   if (style.flash) e.flash = def.hitFlashTicks;
-  if (style.knock) startKnock(e, dirX, dirY, def.hitKnockback, def.hitKnockTicks);
+  // A frozen boss shrugs off knockback (029).
+  if (style.knock && !frozenFast(e)) startKnock(e, dirX, dirY, def.hitKnockback, def.hitKnockTicks);
+  if (style.damageType === 'cold' && e.health > 0) chillEnemy(state, e);
   if (e.mode === 'idle' || e.mode === 'return') aggro(e);
   state.events.hits.push({ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: amount, damageType: style.damageType, ...(style.melee ? { melee: true as const } : {}) });
 }
