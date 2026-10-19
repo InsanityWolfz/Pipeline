@@ -5,7 +5,8 @@ import { endRoll, isInvulnerable } from './movement';
 import { resetWorld, type SimState } from './state';
 import { cancelClaim } from './claims';
 import { cancelHarvest } from './harvest';
-import { count, type Inventory } from './inventory';
+import type { Inventory } from './inventory';
+import { itemRisks } from './banking';
 import { wakeRoom } from './tutorial';
 
 // Player damage, banking and death. Specs 004 and 011.
@@ -62,10 +63,10 @@ export function checkKo(state: SimState): void {
 function wake(state: SimState): void {
   const lost: Inventory = {};
   const kept: Inventory = {};
-  for (const [itemId, held] of Object.entries(state.inventory)) {
-    const keep = Math.min(held, count(state.banked, itemId));
-    if (keep > 0) kept[itemId] = keep;
-    if (held > keep) lost[itemId] = held - keep;
+  // The at-risk helper (031) is the rule: the safe part is kept, the at-risk part lost.
+  for (const [itemId, r] of Object.entries(itemRisks(state))) {
+    if (r.safe > 0) kept[itemId] = r.safe;
+    if (r.atRisk > 0) lost[itemId] = r.atRisk;
   }
   state.inventory = kept;
   resetWorld(state, wakeRoom(state));

@@ -29,6 +29,7 @@ import { OVERWORLD, ringOf } from '../data/overworld';
 import { TILE_SIZE } from '../data/config';
 import { enemiesNearPlayer, enemiesOnScreen } from './population';
 import { springAt } from './healing';
+import { atRiskCounts } from './banking';
 
 /** The compact JSON summary that window.__GAME__.getState() returns. */
 export interface SimSummary {
@@ -144,6 +145,8 @@ export interface SimSummary {
   ports: { id: string; raw: string; tx: number; ty: number; pylons: number; perMinute: number; waiting: boolean }[];
   /** What a death keeps: the inventory as last banked. */
   banked: Record<string, number>;
+  /** Carried items a death would take (031): only those with at least one at risk. */
+  atRisk: Record<string, number>;
   /** What happened on the last tick. */
   events: SimEvents;
 }
@@ -229,6 +232,7 @@ export function summarize(state: SimState): SimSummary {
     equippedArmor: state.equipped,
     firstHuskDropped: state.firstHuskDropped,
     banked: { ...state.banked },
+    atRisk: atRiskCounts(state),
     hasTube: state.hasTube,
     gates: { ...state.gates },
     firstLineFull: state.firstLineFull,
