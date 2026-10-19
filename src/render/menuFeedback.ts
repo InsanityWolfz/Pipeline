@@ -10,7 +10,6 @@ import { addVector } from './vector/textures';
 /** Emitted on the scene when the cursor reaches a new menu row; the scene plays the hover sound. */
 export const MENU_HOVER_EVENT = 'menu-hover';
 
-/** Which row of one menu is under the cursor. */
 /** A menu's row frames: plain, lit under the cursor, and the press flash. */
 export interface RowFrames {
   plain: string;
@@ -21,6 +20,7 @@ export interface RowFrames {
 /** The 184x20 rows of the picker, pause and site menus. */
 export const MENU_ROW_FRAMES: RowFrames = { plain: SPRITES.craftRow, hover: SPRITES.craftRowHover, press: SPRITES.craftRowPress };
 
+/** Which row of one menu is under the cursor. */
 export class RowHover {
   private readonly scene: Scene;
   private readonly frames: RowFrames;
@@ -51,7 +51,7 @@ export class RowHover {
 }
 
 /** A brass flash over the row at (x, y), screen px, fading out. */
-export function flashRow(scene: Scene, x: number, y: number, frame: string = SPRITES.craftRowPress): void {
+export function flashRow(scene: Scene, x: number, y: number, frame: string = MENU_ROW_FRAMES.press): void {
   const flash = addVector(scene, x, y, frame).setOrigin(0).setScrollFactor(0).setDepth(DEPTHS.menu + 3);
   scene.tweens.add({ targets: flash, alpha: 0, duration: MENU_FEEDBACK.pressMs, onComplete: () => flash.destroy() });
 }

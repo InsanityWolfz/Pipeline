@@ -50,8 +50,8 @@ export interface CraftMenuState {
     h: number;
     /** Every item name on the row, inputs first then the output, and whether it shows as missing. */
     labels: (TextBox & { itemId: string; missing: boolean })[];
-    /** The counts beside the icons: each input's have/need, then the output's made and owned. */
-    counts: TextBox[];
+    /** The counts beside the icons: each input's have/need (missing when short), then the output's made and owned. */
+    counts: (TextBox & { missing: boolean })[];
   }[];
   headers: (TextBox & { ammoId: string; shown: boolean })[];
 }
@@ -169,7 +169,11 @@ export class CraftMenuView {
           ...r.inputs.map((i) => ({ ...box(i.name), itemId: i.itemId, missing: i.name.color === L.missing })),
           { ...box(r.outputName), itemId: r.outputId, missing: false },
         ],
-        counts: [...r.inputs.map((i) => box(i.text)), box(r.made), box(r.owned)],
+        counts: [
+          ...r.inputs.map((i) => ({ ...box(i.text), missing: i.text.color === L.missing })),
+          { ...box(r.made), missing: false },
+          { ...box(r.owned), missing: false },
+        ],
       })),
       headers: [...this.headers.entries()].map(([ammoId, h]) => ({ ...box(h.name), ammoId, shown: this.open && h.icon.visible })),
     };

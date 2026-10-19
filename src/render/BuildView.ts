@@ -49,7 +49,8 @@ export interface BuildBarState {
 export class BuildView {
   private readonly scene: Scene;
   private readonly cells: { pieceId: string; images: GameObjects.Image[] }[];
-  private readonly labels: TextLine[];
+  /** Each group's label with the group it heads. */
+  private readonly labels: { category: string; label: string; line: TextLine }[];
   private readonly dividers: GameObjects.Graphics;
   private readonly highlight: GameObjects.Image;
   private readonly ghost: GameObjects.Image;
@@ -82,8 +83,8 @@ export class BuildView {
     }));
     // Each group's label, centred over its cells.
     this.labels = buildBarGroups().map((g) => {
-      const label = new TextLine(scene, 0, g.y, DEPTHS.hud + 1, false, 'display').set(g.label);
-      return label.moveTo(Math.round(g.x + (g.w - label.width) / 2), g.y);
+      const line = new TextLine(scene, 0, g.y, DEPTHS.hud + 1, false, 'display').set(g.label);
+      return { category: g.category, label: g.label, line: line.moveTo(Math.round(g.x + (g.w - line.width) / 2), g.y) };
     });
     this.dividers = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.hud);
     const D = L.divider;
@@ -103,10 +104,7 @@ export class BuildView {
       shown: this.visible,
       selected: this.selected,
       cells: buildBarCells().map((c) => ({ ...c, locked: !this.unlocked.includes(c.pieceId) })),
-      groups: buildBarGroups().map((g, i) => {
-        const label = this.labels[i];
-        return { category: g.category, label: g.label, ...(label?.at ?? g), w: label?.width ?? 0, h: label?.lineHeight ?? 0 };
-      }),
+      groups: this.labels.map(({ category, label, line }) => ({ category, label, ...line.at, w: line.width, h: line.lineHeight })),
       dividers: buildBarDividers(),
     };
   }
@@ -209,7 +207,7 @@ export class BuildView {
       for (const a of this.ghostArrows) a.setVisible(false);
     }
     for (const c of this.cells) for (const o of c.images) o.setVisible(visible);
-    for (const l of this.labels) l.setVisible(visible);
+    for (const l of this.labels) l.line.setVisible(visible);
     this.dividers.setVisible(visible);
   }
 }

@@ -111,6 +111,9 @@ test('the crafting menu names every recipe item under its icon, and its headers 
       const have = l.itemId === 'wood' ? wood : 0;
       expect(l.missing, `${row.recipeId} ${l.itemId}`).toBe(have < need);
     }
+    // ...and so does its have/need count; the output's made and owned counts never do.
+    const inputs = Object.keys(recipe.inputs);
+    expect(row.counts.map((c) => c.missing), row.recipeId).toEqual([...row.labels.slice(0, inputs.length).map((l) => l.missing), false, false]);
   }
   // No row overlaps the next.
   for (const [i, row] of menu.rows.entries()) {
@@ -164,7 +167,14 @@ test.describe('review screenshots (026)', () => {
       window.__helpers?.harvest(tree, 1);
     }, TREE);
     await cameraSettled(page);
-    await openCraftMenu(page);
+    const menu = await openCraftMenu(page);
+    // The pointer parked on the panel, over the first header's empty right-hand side (it lights no row).
+    const header = menu.headers[0];
+    const canvas = await page.locator('canvas').boundingBox();
+    if (!header || !canvas) throw new Error('no header');
+    const zoom = canvas.width / VIEW_WIDTH;
+    await page.mouse.move(canvas.x + (header.x + 120) * zoom, canvas.y + (header.y + 2) * zoom);
+    await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().cursor))?.kind).toBe('pointer');
     await page.screenshot({ path: `${SHOTS}/01-crafting-menu.png` });
     await page.keyboard.press('Escape');
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().craftOpen))).toBe(false);

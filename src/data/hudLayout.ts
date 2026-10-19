@@ -47,8 +47,11 @@ export function tubeSlotWidth(units: number): number {
   return n * HUD_LAYOUT.tubeSlot.w + (n - 1) * HUD_LAYOUT.gap;
 }
 
-/** The crafting menu's rows (026): taller than the other menus' rows, for a name under each icon. */
-const CRAFT_ROW = { w: 184, h: 28, gap: 1 } as const;
+/** Every menu's rows are this wide (the picker, pause and site menus, and the crafting menu), so the menus match. */
+const MENU_ROW_WIDTH = 184;
+
+/** The crafting menu's rows (026): as wide as the other menus' rows, taller, for a name under each icon. */
+const CRAFT_ROW = { w: MENU_ROW_WIDTH, h: 28, gap: 1 } as const;
 const CRAFT_HEADER = 16;
 const CRAFT_ROWS_AT = { x: 6, y: 6 } as const;
 /** Every header and recipe row the menu lists: one header per ammo group, a row per recipe. */
@@ -125,7 +128,7 @@ export const GHOST = { okTint: 'cyan', badTint: 'rust', alpha: 0.6 } as const;
 export const PICKER_LAYOUT = {
   /** The tablet behind the rows (020): padding round them. */
   pad: 4,
-  rowWidth: 184,
+  rowWidth: MENU_ROW_WIDTH,
   rowHeight: 20,
   rowGap: 1,
   icon: { x: 4, y: 2 },

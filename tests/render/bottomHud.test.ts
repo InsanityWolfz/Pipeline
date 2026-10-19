@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { INTAKE } from '../../src/data/foundry';
+import { TEXT_STYLES } from '../../src/data/fonts';
 import { BUILD_BAR, PIECE_CATEGORIES, pieceDef } from '../../src/data/pieces';
 import { BUILD_BAR_LAYOUT, CRAFT_MENU_LAYOUT, HUD_LAYOUT } from '../../src/data/hudLayout';
 import { SLOT_AMMOS } from '../../src/data/tube';
@@ -128,7 +129,7 @@ describe('the crafting menu with labels (026)', () => {
     const panel = craftPanelAt();
     // A name sits under its icon, inside the row.
     expect(L.labelY).toBeGreaterThanOrEqual(L.iconY + L.iconSize);
-    expect(L.labelY + 6).toBeLessThanOrEqual(L.rowHeight);
+    expect(L.labelY + TEXT_STYLES.label.lineHeight).toBeLessThanOrEqual(L.rowHeight);
     const lines = craftMenuLines();
     for (const [i, line] of lines.entries()) {
       const h = line.kind === 'header' ? L.headerHeight : L.rowHeight;
