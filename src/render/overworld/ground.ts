@@ -5,6 +5,7 @@ import { OVERWORLD } from '../../data/overworld';
 import { TILE, type Room } from '../../data/rooms';
 import { inkCss } from '../vector/draw';
 import { tileHash } from '../roomTiles';
+import { paintLandmarks } from './landmarkGround';
 
 // The overworld's ground (017), drawn once into chunk textures: grass with lighter
 // and darker patches, sun dapple under the groves, worn paving in the ruins, dirt
@@ -137,6 +138,7 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
     ellipse(c, x + ((hash >>> 5) % 20) - 10, y + ((hash >>> 9) % 14) - 7, 2.2, 1.4, GROUND.pathFleck);
   });
   frost(c, each);
+  paintLandmarks(c, each, symbol);
   // Ponds: a sandy rim, the shallows, deep water, and the light on it.
   for (const p of room.terrain?.ponds ?? []) {
     const [x, y] = centre({ tx: p.cx, ty: p.cy });

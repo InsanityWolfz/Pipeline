@@ -51,6 +51,8 @@ export interface LandmarkDef {
   /** The sealed reliquary's tile (the Ruined Cache): solid. */
   readonly cache?: TilePos;
   readonly marker: LandmarkMarker;
+  /** How render dresses it (landmarkAssets): old trees on its tree tiles, cut stones for its blocks, a sunken hollow. */
+  readonly look?: { readonly trees?: 'old'; readonly blocks?: 'cut'; readonly hollow?: 'ley' | 'frost' };
 }
 
 /** The landmark tuning (032). Ticks at 60 Hz. */
@@ -89,6 +91,7 @@ const FROZEN_GROTTO: LandmarkDef = {
   nodes: GROTTO.nodes,
   guards: GROTTO.pack,
   marker: 'grotto',
+  look: { hollow: 'frost' },
 };
 
 const SPRING_NAMES: Readonly<Record<string, string>> = {

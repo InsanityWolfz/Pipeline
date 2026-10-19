@@ -46,6 +46,12 @@ export class ChoiceMenu<T> {
     return this.isOpen && this.rects(this.choices.length).some((r) => inRect(r, x, y));
   }
 
+  /** Each shown row's text and its box on screen, view px (032: for the test hook). */
+  get rowsShown(): { text: string; x: number; y: number; w: number; h: number }[] {
+    const rects = this.rects(this.choices.length);
+    return this.choices.map((c, i) => ({ text: c.text, x: rects[i]?.x ?? 0, y: rects[i]?.y ?? 0, w: rects[i]?.w ?? 0, h: rects[i]?.h ?? 0 }));
+  }
+
   /** The value of the row under a screen point, if open. */
   valueAt(x: number, y: number): T | undefined {
     if (!this.isOpen) return undefined;

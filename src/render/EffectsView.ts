@@ -14,6 +14,7 @@ import {
 import { MELEE } from '../data/combat';
 import { CAMERA_LERP, DOOR_FADE_MS } from '../data/config';
 import { enemyDef } from '../data/enemies';
+import { CHAMPIONS } from '../data/champions';
 import { INK_ID, hexToRgb, paletteHex } from '../data/palette';
 import { STAGE_SPRITES, STAR_FLASH } from '../data/stageAssets';
 import { DRAW_HEIGHT } from '../data/tube';
@@ -50,7 +51,7 @@ export class EffectsView {
 
   /** Plays the effects for events since the last frame. `player` is where the player stands now. */
   play(events: SimEvents, player: { x: number; y: number }): void {
-    for (const d of events.deaths) this.corpse(d.enemyId, d.x, d.y, d.facing === 'left');
+    for (const d of events.deaths) this.corpse(d.enemyId, d.x, d.y, d.facing === 'left', d.champion === true);
     for (const p of events.pickups) this.pickup(p.x, p.y);
     for (const b of events.bursts) this.burst(b.x, b.y, b.radius);
     for (const s of events.shots) this.muzzle(s.x, s.y);
@@ -65,14 +66,17 @@ export class EffectsView {
     if (events.ko) this.koFade(player);
   }
 
-  private corpse(enemyId: string, x: number, y: number, flip: boolean): void {
+  private corpse(enemyId: string, x: number, y: number, flip: boolean, champion: boolean): void {
     const def = enemyDef(enemyId);
     const death = ENEMY_ANIMS[def.anims]?.death;
     if (!death) return;
-    const bottom = y + def.feetBox.h / 2;
+    // A champion's falls at its own size (032).
+    const k = champion ? CHAMPIONS.scale : 1;
+    const bottom = y + (def.feetBox.h * k) / 2;
     const sprite = addVectorSprite(this.scene, x, bottom, animFrames(death)[0] ?? '')
       .setDepth(bottom)
       .setFlipX(flip);
+    sprite.setScale(sprite.scaleX * k);
     this.corpses.add(sprite);
     sprite.once('destroy', () => this.corpses.delete(sprite));
     sprite.play(death.key);

@@ -69,6 +69,7 @@ const FAMILIES: readonly [title: string, test: (name: string) => boolean][] = [
   ['Fixtures, the pylon and the foundry', (n) => /^(identification-bench|stash|supply-port|doorway-side|waystone|pylon-|door-rubble|ley-crystal|intake-|floor-|wall|prop-|ruin-)/.test(n)],
   ['Gathering nodes', (n) => n.startsWith('node-')],
   ['Ley Springs', (n) => n.startsWith('ley-spring') || n.startsWith('spring-')],
+  ['Landmarks (032): cut blocks, old trees, the marsh, hollow lips, the reliquary, map icons, the champion glow', (n) => /^(ow-cut-block|ow-old-tree|ow-marsh|ow-lily|ow-hollow|cache-|map-|champion-)/.test(n)],
   ['Overworld', (n) => n.startsWith('ow-')],
   ['HUD and menus', (n) => n.startsWith('hud-') || n.startsWith('craft-') || n.startsWith('menu-') || n === 'key-cap' || n === 'crosshair' || n === 'pointer' || n === 'objective-tick'],
 ];

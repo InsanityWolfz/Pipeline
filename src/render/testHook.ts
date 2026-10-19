@@ -17,6 +17,10 @@ import type { PortShown } from './PortView';
 import type { StagePanelState } from './StagePanel';
 import type { HealingShown } from './HealingView';
 import { claim } from '../sim/claims';
+import { createEnemy } from '../sim/enemies';
+import { makeChampion } from '../sim/champions';
+import type { ChampionShown } from './EnemyView';
+import type { LandmarksShown } from './LandmarkView';
 
 export interface GameTestHook {
   getState(): SimSummary;
@@ -47,6 +51,11 @@ export interface GameTestHook {
   setEnemyHealth(id: number, health: number): SimSummary;
   /** Sets the player's health (030: a hurt player for the healing e2e and screenshots, without a fight). */
   setPlayerHealth(health: number): SimSummary;
+  /**
+   * Spawns a pack near the player (032: to fight a champion): `enemyIds` in a row 6 tiles right of the player, a
+   * tile and a half apart, member `champion` (or none, for null) a champion named with the seeded RNG.
+   */
+  spawnChampionPack(enemyIds: string[], champion?: number | null): SimSummary;
 }
 
 /**
@@ -73,7 +82,8 @@ export interface UiState {
   buildTip: string | null;
   minimap: { shown: boolean; markers: { kind: string; x: number; y: number }[] };
   nodes: Record<number, string>;
-  supply: { started: number; inFlight: { itemId: string; progress: number }[] };
+  /** 032: each mote's site, the claimed pylon it left from. */
+  supply: { started: number; inFlight: { itemId: string; progress: number; site: string }[] };
   /** The camera shakes asked for since boot, oldest first (the last 50) (021). */
   shakes: string[];
   /** Which cursor shows (021: the menu pointer or the crosshair), its depth, and the highest depth of anything else. */
@@ -122,6 +132,12 @@ export interface UiState {
   pickupFeed: HudPanelsState['pickupFeed'];
   /** 031: the HP bar: the block's box (view px), its "72 / 100", low, the healing glow, and the white chunk in HP (0 for none). */
   health: HudPanelsState['health'];
+  /** 032: the discovery banner's name while it shows, each reliquary's frame, and the landmark art drawn. */
+  landmarks: LandmarksShown;
+  /** 032: champions drawn, each with its name and kind lines, its scale and its glow's alpha. */
+  champions: ChampionShown[];
+  /** 032: the waystone's menu while open (two or more claimed pylons): each row's text and box, view px; else null. */
+  waystone: { text: string; x: number; y: number; w: number; h: number }[] | null;
 }
 
 declare global {
@@ -207,6 +223,14 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
     },
     setPlayerHealth: (health) => {
       sim.player.health = health;
+      return summarize(sim);
+    },
+    spawnChampionPack: (enemyIds, champion = 0) => {
+      enemyIds.forEach((enemyId, i) => {
+        const e = createEnemy(sim.nextEnemyId++, enemyId, { x: sim.player.x + (6 + i * 1.5) * TILE_SIZE, y: sim.player.y }, sim.roomId, 'dev');
+        if (i === champion) makeChampion(sim.rng, e);
+        sim.enemies.push(e);
+      });
       return summarize(sim);
     },
     passable: () => {

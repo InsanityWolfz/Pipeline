@@ -242,8 +242,9 @@ export const TUTORIAL_LAYOUT = {
   /**
    * The arrow marker (027): over the intake, its tip this far above the bottom of the entrance's mouth tile, px, bobbing
    * this far over `bobMs`; over the supply ports (028), its tip `portLift` above the first port's tile bottom, just clear of
-   * its head (nothing hangs above the first port, while each port's plate hangs over the head of the one below).
+   * its head (nothing hangs above the first port, while each port's plate hangs over the head of the one below); over a
+   * resource site's pylon (032), its tip `pylonLift` above the pylon's tile bottom, just over its crystal.
    */
-  marker: { lift: 4, bob: 3, bobMs: 900, portLift: 38 },
+  marker: { lift: 4, bob: 3, bobMs: 900, portLift: 38, pylonLift: 82 },
   gateFadeMs: 500,
 } as const;

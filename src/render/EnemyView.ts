@@ -5,16 +5,39 @@ import { HUSK_RIG, RESIN } from '../data/art/husk';
 import { CORE, WARDEN_RIG } from '../data/art/warden';
 import { IDLE_SPEED } from '../data/config';
 import { attackOf, enemyDef } from '../data/enemies';
+import { CHAMPIONS } from '../data/champions';
+import { LANDMARK_LOOK, LANDMARK_SPRITES } from '../data/landmarkAssets';
+import { defOf } from '../sim/champions';
+import { TextLine } from './textLine';
 import type { EnemyState } from '../sim/enemies';
 import type { Facing } from '../sim/player';
 import { registerAnim } from './anims';
 import { colorOf } from './color';
-import { addVector, addVectorSprite, showFrame } from './vector/textures';
+import { addVector, addVectorSprite, showFrame, textureScale } from './vector/textures';
 import { CHILL_TINT, ICE_CRACK_TICKS, STAGE_SPRITES } from '../data/stageAssets';
 import { COLD } from '../data/tags';
 
+/** A champion's extras (032): its glow, and its name with its kind under it. */
+interface ChampionArt {
+  glow: GameObjects.Image;
+  name: TextLine;
+  kind: TextLine;
+}
+
+/** A champion as drawn, for the test hook: its id, the name and kind lines, its scale and glow's alpha. */
+export interface ChampionShown {
+  id: number;
+  name: string;
+  kind: string;
+  scale: number;
+  glow: number;
+}
+
 interface Drawn {
   sprite: GameObjects.Sprite;
+  /** The sprite's scale at 1× (the bake's), before a champion's. */
+  baseScale: number;
+  champion?: ChampionArt;
   telegraph: GameObjects.Graphics;
   bar: GameObjects.Graphics;
   /** The ice round it while frozen (029), made on its first freeze. */
@@ -59,10 +82,12 @@ export class EnemyView {
         this.frozenUntil.delete(e.id);
         d.sprite.anims.resume();
       }
-      const def = enemyDef(e.enemyId);
+      const def = defOf(e);
       const bottom = e.y + def.feetBox.h / 2;
       const anims = ENEMY_ANIMS[def.anims];
       if (!anims) throw new Error(`Unknown enemy anims '${def.anims}'`);
+      // A champion (032) is drawn 1.5× its kind.
+      d.sprite.setScale(d.baseScale * (e.champion ? CHAMPIONS.scale : 1));
       d.sprite.setPosition(e.x, bottom).setDepth(bottom).setFlipX(e.facing === 'left');
       // Switch only on a change, so a one-shot swipe holds its last frame instead of restarting.
       const view = viewOf(e.facing);
@@ -75,7 +100,9 @@ export class EnemyView {
       else if (e.chill > 0 || e.frozen > 0) d.sprite.setTint(chillTint(e.frozen > 0 ? COLD.stacksToFreeze : e.chill)).setTintMode(TintModes.MULTIPLY);
       else d.sprite.clearTint();
       this.drawIce(d, e, bottom);
-      this.drawBar(d.bar, e, bottom - d.sprite.displayHeight * d.sprite.originY);
+      const top = bottom - d.sprite.displayHeight * d.sprite.originY;
+      this.drawBar(d.bar, e, top);
+      if (d.champion) this.drawChampion(d.champion, e, bottom, top, now);
       this.drawTelegraph(d.telegraph, e);
       if (d.overlay && e.enemyId === RESIN.enemyId) this.drawResin(d.overlay, e, bottom, view, now);
       if (d.overlay && e.enemyId === CORE.enemyId) this.drawCore(d.overlay, e, bottom, view, now);
@@ -88,6 +115,9 @@ export class EnemyView {
       d.bar.destroy();
       d.overlay?.destroy();
       d.ice?.destroy();
+      d.champion?.glow.destroy();
+      d.champion?.name.destroy();
+      d.champion?.kind.destroy();
       this.drawn.delete(id);
     }
   }
@@ -95,11 +125,20 @@ export class EnemyView {
   private create(e: EnemyState): Drawn {
     const anims = ENEMY_ANIMS[enemyDef(e.enemyId).anims];
     const first = anims ? animFrames(anims['idle-down'])[0] : undefined;
+    const sprite = addVectorSprite(this.scene, 0, 0, first ?? '');
     const d: Drawn = {
-      sprite: addVectorSprite(this.scene, 0, 0, first ?? ''),
+      sprite,
+      baseScale: sprite.scaleX,
       telegraph: this.scene.add.graphics().setDepth(DEPTHS.groundFx),
       bar: this.scene.add.graphics().setDepth(DEPTHS.worldUi),
     };
+    if (e.champion) {
+      // The glow sits under the ground decals (telegraphs) and the body, so both stay readable (032).
+      const glow = addVector(this.scene, 0, 0, LANDMARK_SPRITES.championGlow).setTint(colorOf(CHAMPIONS.glow.color)).setBlendMode(BlendModes.ADD).setDepth(DEPTHS.glow);
+      const name = new TextLine(this.scene, 0, 0, DEPTHS.worldUi, true, 'float').setFill(CHAMPIONS.barColor).set(e.champion.name);
+      const kind = new TextLine(this.scene, 0, 0, DEPTHS.worldUi, true, 'label').set(`${enemyDef(e.enemyId).name}${LANDMARK_LOOK.championLabel.kindSuffix}`);
+      d.champion = { glow, name, kind };
+    }
     if (e.enemyId === RESIN.enemyId) d.overlay = this.scene.add.graphics();
     // The core's halo is light, added over the stone.
     if (e.enemyId === CORE.enemyId) d.overlay = this.scene.add.graphics().setBlendMode(BlendModes.ADD);
@@ -150,16 +189,36 @@ export class EnemyView {
     g.fillStyle(colorOf(CORE.haloColor), CORE.rest + (CORE.peak - CORE.rest) * pulse).fillCircle(x, y, CORE.halo * k * (1 + CORE.swell * pulse));
   }
 
-  /** A small bar over the sprite, only once the enemy has taken damage. */
+  /** The champions on show (032), for the test hook. */
+  get champions(): ChampionShown[] {
+    return [...this.drawn.entries()].flatMap(([id, d]) =>
+      d.champion ? [{ id, name: d.champion.name.obj.text, kind: d.champion.kind.obj.text, scale: d.sprite.scaleX / d.baseScale, glow: d.champion.glow.alpha }] : [],
+    );
+  }
+
+  /** A champion's soft glow round its body, pulsing slowly, and its name with its kind under it, over the health bar. */
+  private drawChampion(c: ChampionArt, e: EnemyState, bottom: number, top: number, now: number): void {
+    const G = CHAMPIONS.glow;
+    const pulse = (Math.sin((now / G.pulseMs) * Math.PI * 2) + 1) / 2;
+    const size = (G.radius * CHAMPIONS.scale) / 30;
+    c.glow.setPosition(e.x, (bottom + top) / 2).setScale(size / textureScale()).setAlpha(G.alpha[0] + (G.alpha[1] - G.alpha[0]) * pulse);
+    const L = LANDMARK_LOOK.championLabel;
+    const { h, gap, border } = ENEMY_FX.healthBar;
+    const kindY = Math.round(top - gap - h - border - L.rise - c.kind.lineHeight);
+    c.kind.moveTo(Math.round(e.x - c.kind.width / 2), kindY);
+    c.name.moveTo(Math.round(e.x - c.name.width / 2), kindY - L.gap - c.name.lineHeight);
+  }
+
+  /** A small bar over the sprite, only once the enemy has taken damage; a champion's is in its colour (032). */
   private drawBar(g: GameObjects.Graphics, e: EnemyState, top: number): void {
     g.clear();
-    const max = enemyDef(e.enemyId).maxHealth;
+    const max = defOf(e).maxHealth;
     if (e.health >= max) return;
     const { w, h, gap, border } = ENEMY_FX.healthBar;
     const x = Math.round(e.x - w / 2);
     const y = Math.round(top - gap - h);
     g.fillStyle(colorOf(ENEMY_FX.healthBarBack)).fillRect(x - border, y - border, w + 2 * border, h + 2 * border);
-    g.fillStyle(colorOf(ENEMY_FX.healthBarColor)).fillRect(x, y, Math.max(1, Math.round((w * e.health) / max)), h);
+    g.fillStyle(colorOf(e.champion ? CHAMPIONS.barColor : ENEMY_FX.healthBarColor)).fillRect(x, y, Math.max(1, Math.round((w * e.health) / max)), h);
   }
 
   /**

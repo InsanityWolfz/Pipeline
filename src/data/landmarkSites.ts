@@ -45,6 +45,7 @@ const QUARRY: LandmarkDef = {
     { tx: 17, ty: 20 },
   ],
   marker: 'site',
+  look: { blocks: 'cut' },
 };
 
 /** Wood (ring 2): a sunlit grove of old trees on the west edge, between the Grotto's path and the forest. */
@@ -78,6 +79,7 @@ const OLD_GROVE: LandmarkDef = {
   pylon: { tx: 8, ty: 22, site: 'old-grove', supplies: 'wood' },
   leyLine: [{ tx: 8, ty: 22 }, { tx: 15, ty: 24 }, { tx: 23, ty: 24 }, { tx: 32, ty: 23 }, { tx: 38, ty: 22 }, STAIRS],
   marker: 'site',
+  look: { trees: 'old' },
 };
 
 /** Ley crystal (ring 2): veins where its ley lines cross in a sunken rock hollow, open to the sky. */
@@ -110,6 +112,7 @@ const LEY_GROTTO: LandmarkDef = {
     [{ tx: 75, ty: 28 }, { tx: 72, ty: 24 }],
   ],
   marker: 'site',
+  look: { hollow: 'ley' },
 };
 
 /** Fiber (ring 2): reeds round a cluster of ponds, past the south-east spring. */

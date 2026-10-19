@@ -5,6 +5,8 @@ import { INTAKE } from '../data/foundry';
 import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
 import { PROMPT_RANGE, type MarkerTarget, type PromptTarget } from '../data/objectives';
 import { FOUNDRY_ROOM } from '../data/rooms';
+import { LANDMARK_LIST } from '../data/landmarks';
+import { OVERWORLD_ROOM } from '../data/overworld';
 import { fixtureInReach, pylonInReach } from '../sim/claims';
 import { fixtureDef } from '../sim/fixtures';
 import { usableInReach } from '../sim/foundryUse';
@@ -26,6 +28,14 @@ type Point = { x: number; y: number };
  */
 function markerPoint(sim: SimState, target: MarkerTarget): Point | null {
   const L = TUTORIAL_LAYOUT.marker;
+  if (target === 'sitePylon') {
+    // The nearest discovered resource-site pylon not yet claimed (032), its tip just over the pylon's crystal.
+    const p = sim.player;
+    const pylon = LANDMARK_LIST.flatMap((l) => (l.pylon && sim.discovered.includes(l.id) && !sim.claims.includes(l.pylon.site) ? [l.pylon] : []))
+      .map((t) => ({ x: (t.tx + 0.5) * TILE_SIZE, y: (t.ty + 1) * TILE_SIZE - L.pylonLift }))
+      .sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+    return pylon ?? null;
+  }
   const middle = <T>(list: readonly T[]): T | undefined => list[Math.floor((list.length - 1) / 2)];
   if (target === 'intake') {
     const mouth = middle(INTAKE.entrances.filter((_, i) => sim.link.entrances[i]?.open));
@@ -70,7 +80,10 @@ export class PromptView {
   update(sim: SimState, shown: string): void {
     const def = currentObjectiveDef(sim);
     const inFoundry = shown === FOUNDRY_ROOM && sim.roomId === FOUNDRY_ROOM;
-    this.showMarker(inFoundry && def?.marker ? markerPoint(sim, def.marker) : null);
+    // The intake's and ports' markers show in the foundry; a site pylon's out in the overworld (032).
+    const outside = shown === OVERWORLD_ROOM && sim.roomId === OVERWORLD_ROOM;
+    const here = def?.marker === 'sitePylon' ? outside : inFoundry;
+    this.showMarker(here && def?.marker ? markerPoint(sim, def.marker) : null);
     const prompt = def?.prompt;
     const target = prompt && shown === sim.roomId ? this.target(sim, prompt.over) : undefined;
     const near = target !== undefined && Math.hypot(target.at.x - sim.player.x, target.at.y - sim.player.y) <= PROMPT_RANGE;

@@ -3,7 +3,7 @@ import { UNIDENTIFIED_ARMOR } from '../data/armor';
 import { SPRITES } from '../data/assets';
 import { SITE_ICONS } from '../data/foundryAssets';
 import { itemDef, ITEMS } from '../data/items';
-import { claimedPylonInReach, fixtureInReach } from '../sim/claims';
+import { claimedPylonInReach, claimedPylons, fixtureInReach } from '../sim/claims';
 import { usableInReach } from '../sim/foundryUse';
 import type { SimState } from '../sim/state';
 import { ChoiceMenu, type Choice } from './ChoiceMenu';
@@ -20,8 +20,11 @@ type StashChoice = { itemId: string | null };
 type BenchChoice = { identify: true } | { equip: number };
 /** A sorter row: the item it sends out its side, or null to pass everything (015). */
 type SorterChoice = { itemId: string | null };
+/** A waystone row (032): the claimed site to travel to. */
+type WaystoneChoice = { site: string };
 
-// The claimed pylon's menu (send the haul home, travel to the foundry) and the
+// The claimed pylon's menu (send the haul home, travel to the foundry), the waystone's
+// (travel to any claimed pylon, by landmark name, 032) and the
 // stash's (take all, or one stack), opened by E beside them (009), and the
 // identification bench's (identify all, wear or take off a piece) (010), and a
 // sorter's (pick the item it sends out its side) (015).
@@ -30,6 +33,7 @@ export class SiteMenus {
   private readonly stash: ChoiceMenu<StashChoice>;
   private readonly bench: ChoiceMenu<BenchChoice>;
   private readonly sorter: ChoiceMenu<SorterChoice>;
+  private readonly waystone: ChoiceMenu<WaystoneChoice>;
   /** The bench's Stages panel (029), beside its rows once the shrine is claimed. */
   private readonly stages: StagePanel;
   /** The sorter whose menu is open. */
@@ -40,6 +44,7 @@ export class SiteMenus {
     this.stash = new ChoiceMenu(scene);
     this.bench = new ChoiceMenu(scene);
     this.sorter = new ChoiceMenu(scene);
+    this.waystone = new ChoiceMenu(scene);
     this.stages = new StagePanel(scene);
   }
 
@@ -49,7 +54,7 @@ export class SiteMenus {
   }
 
   private get menus(): readonly ChoiceMenu<unknown>[] {
-    return [this.pylon, this.stash, this.bench, this.sorter];
+    return [this.pylon, this.stash, this.bench, this.sorter, this.waystone];
   }
 
   get isOpen(): boolean {
@@ -77,6 +82,8 @@ export class SiteMenus {
       this.sorterId = piece.id;
       this.sorter.open();
     } else if (claimedPylonInReach(sim)) this.pylon.open();
+    // With two or more claimed pylons, the waystone offers them by landmark name (032); with one, the sim travels.
+    else if (fixtureInReach(sim, 'waystone') && claimedPylons(sim).length >= 2) this.waystone.open();
     else if (fixtureInReach(sim, 'stash')) this.stash.open();
     else if (fixtureInReach(sim, 'bench')) this.bench.open();
   }
@@ -87,6 +94,7 @@ export class SiteMenus {
     const s = this.stash.valueAt(x, y);
     const b = this.bench.valueAt(x, y);
     const f = this.sorter.valueAt(x, y);
+    const w = this.waystone.valueAt(x, y);
     const stage = this.stages.stageAt(x, y);
     if (stage) {
       controls.menus.applyStage(stage);
@@ -95,6 +103,7 @@ export class SiteMenus {
       return true;
     }
     if (f && this.sorterId !== null) controls.menus.setFilter(this.sorterId, f.itemId);
+    else if (w) controls.menus.travel(w.site);
     else if (p) controls.menus.pylon(p);
     else if (s) controls.menus.takeStash(s.itemId);
     else if (b && 'identify' in b) controls.menus.identify();
@@ -148,5 +157,12 @@ export class SiteMenus {
       ...Object.keys(ITEMS).map((id) => ({ icons: [itemDef(id).icon], text: itemDef(id).name, value: { itemId: id } })),
     ];
     this.sorter.show(sorterRows);
+    if (this.waystone.isOpen && !fixtureInReach(sim, 'waystone')) this.waystone.close();
+    this.waystone.show(claimedPylons(sim).map(({ pylon }) => ({ icons: [SITE_ICONS.travel], text: `Travel to ${pylon.name}`, value: { site: pylon.site } })));
+  }
+
+  /** The waystone menu's rows as drawn (032), for the test hook: each row's text and box, or null while it's shut. */
+  get waystoneRows(): { text: string; x: number; y: number; w: number; h: number }[] | null {
+    return this.waystone.isOpen ? this.waystone.rowsShown : null;
   }
 }

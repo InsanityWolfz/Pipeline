@@ -190,6 +190,7 @@ export class GameScene extends Scene {
       craftMenu: this.menu?.state ?? null,
       buildBar: this.buildView?.state ?? null,
       tagged: { benchStages: this.siteMenus?.stagePanel ?? null, starFlashes: this.effects?.starFlashes ?? 0, trails: this.arrowView?.trails ?? { count: 0, longest: 0 } },
+      champions: this.enemyView?.champions ?? [], waystone: this.siteMenus?.waystoneRows ?? null,
     };
   }
 

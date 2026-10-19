@@ -239,6 +239,8 @@ export const MINIMAP = {
     shrine: { color: 'wisp-light', r: 2 },
     claimed: { color: 'cyan', r: 3 },
   },
+  /** Discovered landmarks' icons (032), by marker: shown at this scale of their sprite (landmarkAssets' MAP_ICONS). */
+  landmarkScale: 0.8,
 } as const;
 
 /**

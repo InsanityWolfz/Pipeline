@@ -4,6 +4,7 @@ import { landmarkOfSite } from '../data/landmarks';
 import { portPerMinute, pylonsOf } from '../sim/claims';
 import { INTAKE } from '../data/foundry';
 import { enemyDef } from '../data/enemies';
+import { CHAMPIONS } from '../data/champions';
 import { HOVER_NAME, WORLD_NAMES } from '../data/hudLayout';
 import { itemDef } from '../data/items';
 import { nodeDef } from '../data/nodes';
@@ -88,8 +89,11 @@ export function nameAt(sim: SimState, roomId: string, px: number, py: number): H
     }
   }
   for (const e of sim.enemies) {
-    if (e.roomId === roomId && e.health > 0 && inBox(px, py, e.x, e.y, HOVER_NAME.enemy)) {
-      return { name: enemyDef(e.enemyId).name, x: e.x, y: e.y, rise: HOVER_NAME.enemy.rise };
+    // A champion (032) is bigger, and goes by its own name.
+    const k = e.champion ? CHAMPIONS.scale : 1;
+    const box = { w: HOVER_NAME.enemy.w * k, h: HOVER_NAME.enemy.h * k };
+    if (e.roomId === roomId && e.health > 0 && inBox(px, py, e.x, e.y, box)) {
+      return { name: e.champion?.name ?? enemyDef(e.enemyId).name, x: e.x, y: e.y, rise: HOVER_NAME.enemy.rise * k };
     }
   }
   for (const g of sim.groundItems) {
