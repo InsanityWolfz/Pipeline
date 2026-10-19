@@ -1,10 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 import { SPREAD_STEP } from '../../src/data/foundry';
 import { boot, cameraSettled, watchErrors } from './helpers';
-import { feedLines, pressE, toIntake, ui } from './intakePage';
+import { feedLines, restoreEntrance, toIntake, ui } from './intakePage';
 
-// Spreads from the intake (024): the side entrances open with a warden core (E at
-// the intake), arrow lines into two entrances, and each press out in the meadow
+// Spreads from the intake (024): a warden core restores one side entrance (033: E at
+// its cap), arrow lines into two entrances, and each press out in the meadow
 // fires a two-arrow spread at ±SPREAD_STEP/2. With REVIEW_SHOTS=1, the review
 // screenshots in docs/review/024: the intake capped and opened, and a
 // two-arrow-and-bomb volley in flight.
@@ -30,25 +30,26 @@ function fireVolley(page: Page, settle = 0) {
   }, settle);
 }
 
-test('a warden core opens the side entrances; two fed arrow entrances fire a two-arrow spread', async ({ page }) => {
+test('a warden core restores one entrance (033); two fed arrow entrances fire a two-arrow spread', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page, '?playtest');
   const before = await toIntake(page);
   expect(before.intake.entrances.map((e) => e.open)).toEqual([false, true, false]);
   // With a warden core carried, the prompt shows beside the pipe, and both side entrances wear their caps.
-  await expect.poll(async () => (await ui(page))?.intakePrompt).toBe('E: open the side entrances');
+  await expect.poll(async () => (await ui(page))?.intakePrompt).toBe('E: restore an entrance');
   expect((await ui(page))?.intakeCaps).toBe(2);
-  const after = await pressE(page);
-  expect(after.intake.entrances.map((e) => e.open)).toEqual([true, true, true]);
+  const after = await restoreEntrance(page, 11);
+  // One core, one entrance: the west cap lifts, the east stays.
+  expect(after.intake.entrances.map((e) => e.open)).toEqual([true, true, false]);
   expect(after.inventory['warden-core']).toBe((before.inventory['warden-core'] ?? 0) - 1);
-  expect(after.events.intakeOpens).toEqual([{ entrances: [0, 2] }]);
-  // The caps lift off and are gone; the prompt goes with them.
-  await expect.poll(async () => (await ui(page))?.intakeCaps).toBe(0);
-  expect((await ui(page))?.intakePrompt).toBeNull();
+  expect(after.events.intakeOpens).toEqual([{ entrance: 0 }]);
+  await expect.poll(async () => (await ui(page))?.intakeCaps).toBe(1);
+  // The east cap now wants a Bulwark core, which ?playtest carries too, so the prompt stays.
+  expect((await ui(page))?.intakePrompt).toBe('E: restore an entrance');
 
   const fed = await feedLines(page, [
     { tx: 11, itemId: 'arrow', amount: 'half' },
-    { tx: 13, itemId: 'arrow', amount: 'all' },
+    { tx: 12, itemId: 'arrow', amount: 'all' },
   ], 3);
   expect(fed.intake.volley).toEqual(['arrow', 'arrow']);
   expect(fed.inventory.arrow ?? 0).toBe(0);
@@ -81,18 +82,21 @@ test.describe('review screenshots (024)', () => {
       g.step(1, { aimX: 12.5 * 32, aimY: 0 });
     });
     await cameraSettled(page);
-    await expect.poll(async () => (await ui(page))?.intakePrompt).toBe('E: open the side entrances');
+    await expect.poll(async () => (await ui(page))?.intakePrompt).toBe('E: restore an entrance');
     await page.screenshot({ path: `${SHOTS}/01-intake-capped.png` });
 
-    // Mid-lift: slowed, then stopped a third of the way, so the caps hang over their inlets in the ring of light.
+    // Mid-lift: slowed, then stopped a third of the way, so the cap hangs over its inlet in the ring of light (033: one per core).
     await toIntake(page);
     await cameraSettled(page);
     await page.evaluate(() => window.__GAME__?.tweenSpeed(0.2));
-    await pressE(page);
+    await restoreEntrance(page, 13);
     await expect.poll(async () => (await ui(page))?.intakeLift ?? 0).toBeGreaterThan(0.3);
     await page.evaluate(() => window.__GAME__?.tweenSpeed(0));
     await page.screenshot({ path: `${SHOTS}/02-caps-lifting.png` });
     await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
+    await expect.poll(async () => (await ui(page))?.intakeCaps).toBe(1);
+    // The other cap takes a Bulwark core (?playtest carries two).
+    await restoreEntrance(page, 11);
     await expect.poll(async () => (await ui(page))?.intakeCaps).toBe(0);
 
     // Opened and fed: arrows west and east, bombs in the centre, each gauge in its ammo's colour.

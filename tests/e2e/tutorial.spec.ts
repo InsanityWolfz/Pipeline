@@ -247,7 +247,8 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
   }, T);
   expect(await done(page)).toBe(FILL + 3);
 
-  // 17. Home by the pylon; the Warden's core came home in hand, and E at the intake spends it to open the side entrances (024).
+  // 17. Home by the pylon; the Warden's core came home in hand, and at the east cap the restore panel's Restore spends
+  // it on one more entrance (033: one per core).
   const opened = await page.evaluate((tile) => {
     const g = window.__GAME__;
     const h = window.__helpers;
@@ -257,25 +258,26 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     const cores = g.getState().inventory['warden-core'] ?? 0;
     // Beside the arrow line's conduit, on the floor under the intake's east end.
     h.walkTo(14.5 * tile, 1.5 * tile);
-    const s = g.step(1, { interact: true });
+    const s = g.step(1, { restore: 'entrance-2' });
     return { cores, after: s.inventory['warden-core'] ?? 0, open: s.intake.entrances.map((e) => e.open) };
   }, T);
-  expect(opened).toEqual({ cores: 1, after: 0, open: [true, true, true] });
+  expect(opened).toEqual({ cores: 1, after: 0, open: [false, true, true] });
   expect(await done(page)).toBe(FILL + 4);
 
-  // 18. Lines into the side entrances: a hopper of ley bolts, hand-crafted from the crystals left, and a conduit up
-  // into each side mouth, so two entrances feed whatever the arrow line has left in the centre.
+  // 18. Two entrances fed (033: the warden core opened one more, so the centre and the east): the arrow line has run
+  // dry, so its last conduit gives way to a hopper of ley bolts, hand-crafted from the crystals left, into the centre,
+  // and a hopper and a conduit up into the east mouth take the rest.
   const volley = await page.evaluate((tile) => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     for (let i = 0; i < 20 && (g.getState().inventory['ley-crystal'] ?? 0) > 0; i++) g.craft('ley-shard');
     for (let i = 0; i < 40 && (g.getState().inventory['ley-shard'] ?? 0) > 0; i++) g.craft('ley-bolt');
-    for (const tx of [13, 11]) {
-      g.step(1, { place: { pieceId: 'conduit', tx, ty: 1, facing: 'up' } });
-      g.step(1, { place: { pieceId: 'hopper', tx, ty: 2, facing: 'up' } });
-    }
-    for (const [tx, amount] of [[13, 'half'], [11, 'all']] as const) {
+    g.step(1, { place: { pieceId: 'conduit', tx: 13, ty: 1, facing: 'up' } });
+    g.step(1, { place: { pieceId: 'hopper', tx: 13, ty: 2, facing: 'up' } });
+    g.step(1, { pickUp: { tx: 12, ty: 2 } });
+    g.step(1, { place: { pieceId: 'hopper', tx: 12, ty: 2, facing: 'up' } });
+    for (const [tx, amount] of [[13, 'half'], [12, 'all']] as const) {
       h.walkTo((tx + (tx > 12 ? 1.5 : -0.5)) * tile, 2.5 * tile);
       const s = g.step(1);
       const hopper = s.foundry.pieces.find((p) => p.kind === 'hopper' && p.tx === tx && p.ty === 2);

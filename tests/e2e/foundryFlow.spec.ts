@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { ITEMS } from '../../src/data/items';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { boot, cameraSettled, watchErrors } from './helpers';
-import { feedLines, pressE, toIntake, ui } from './intakePage';
+import { feedLines, restoreEntrance, toIntake, ui } from './intakePage';
 
 // Foundry flow (028): the shrine claim brings a supply port per raw onto the
 // foundry's west wall, each at ×1 and 15 a minute; a conduit from the wood port
@@ -79,7 +79,9 @@ test('arrows and bombs in two entrances, held 120 frames, fire 8 arrows and 3 bo
   const errors = watchErrors(page);
   await boot(page, '?playtest');
   await toIntake(page);
-  const opened = await pressE(page);
+  // 033: one core per entrance: the warden core restores the west, a Bulwark core the east.
+  await restoreEntrance(page, 11);
+  const opened = await restoreEntrance(page, 13);
   expect(opened.intake.entrances.map((e) => e.open)).toEqual([true, true, true]);
   await feedLines(page, [
     { tx: 11, itemId: 'arrow', amount: 'all' },

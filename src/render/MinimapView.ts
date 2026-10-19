@@ -1,3 +1,4 @@
+import { ITEMS } from '../data/items';
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, OVERWORLD_TEXTURES } from '../data/assets';
 import { TILE_SIZE, VIEW_WIDTH } from '../data/config';
@@ -88,6 +89,8 @@ export class MinimapView {
       { kind: 'entrance', ...tile(OVERWORLD.entrance.door) },
       { kind: claimed ? 'claimed' : 'shrine', ...tile(OVERWORLD.shrine.pylon) },
       ...landmarks,
+      // 033: a ping over each schematic lying on the ground out here.
+      ...sim.groundItems.filter((g) => g.roomId === OVERWORLD.id && ITEMS[g.itemId]?.kind === 'schematic').map((g): MinimapMarker => ({ kind: 'schematic', ...at(g.x, g.y) })),
       { kind: 'player', ...at(sim.player.x, sim.player.y) },
     ];
     this.drawIcons(landmarks);
@@ -97,6 +100,10 @@ export class MinimapView {
       const style = MINIMAP.markers[m.kind as keyof typeof MINIMAP.markers];
       this.marks.fillStyle(colorOf('ink'), 1).fillCircle(m.x, m.y, style.r + 1);
       this.marks.fillStyle(colorOf(style.color), 1).fillCircle(m.x, m.y, style.r);
+      if (m.kind !== 'schematic') continue;
+      const P = MINIMAP.ping;
+      const t = (this.scene.time.now % P.ms) / P.ms;
+      this.marks.lineStyle(P.width, colorOf(P.color), 1 - t).strokeCircle(m.x, m.y, style.r + P.reach * t);
     }
   }
 

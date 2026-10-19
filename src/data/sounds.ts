@@ -1,3 +1,5 @@
+import { RESEARCH_SOUND_RECIPES } from './researchSounds.ts';
+
 // Sound effects and ambient loops (014), as synth recipes. `npm run sound` renders
 // each one to assets/build/sounds/<key>.wav; render plays them by these keys.
 
@@ -63,6 +65,10 @@ export const SOUNDS = {
   starBurst: 'star-burst',
   /** 030: healing starts in a safe spot. */
   healStart: 'heal-start',
+  /** 033: a lost part restored, a schematic landing, a banked schematic's diagram appearing. */
+  restore: 'restore',
+  schematicChime: 'schematic-chime',
+  reveal: 'reveal',
   ambientClearing: 'ambient-clearing',
   ambientFoundry: 'ambient-foundry',
 } as const;
@@ -76,6 +82,7 @@ const birds = (times: readonly number[], pitch: number): SoundLayer[] =>
   ]);
 
 export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
+  ...RESEARCH_SOUND_RECIPES,
   'fire-arrow': {
     layers: [
       { wave: 'noise', from: 6000, to: 1500, dur: 0.12, attack: 0.002, volume: 0.35 },

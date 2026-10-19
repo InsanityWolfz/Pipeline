@@ -5,7 +5,7 @@ import { HUD_LAYOUT } from '../../src/data/hudLayout';
 import { SLOT_AMMOS } from '../../src/data/tube';
 import type { BottomHudState } from '../../src/render/HudView';
 import { boot, cameraSettled, watchErrors } from './helpers';
-import { feedLines, pressE, toIntake } from './intakePage';
+import { feedLines, restoreEntrance, toIntake } from './intakePage';
 
 // The bottom HUD (025): the hotbar row centred along the bottom, and the tube slot
 // centred above it showing what the next press fires (hud.active): a carried round,
@@ -60,10 +60,10 @@ function spendArrows(page: Page) {
   });
 }
 
-/** From ?playtest: opens the intake's sides and feeds every carried arrow west and every bomb into the centre, then walks out to the meadow. */
+/** From ?playtest: restores the west entrance (033) and feeds every carried arrow west and every bomb into the centre, then walks out to the meadow. */
 async function mixedVolley(page: Page) {
   await toIntake(page);
-  await pressE(page);
+  await restoreEntrance(page, 11);
   const fed = await feedLines(page, [
     { tx: 11, itemId: 'arrow', amount: 'all' },
     { tx: 12, itemId: 'bomb', amount: 'all' },

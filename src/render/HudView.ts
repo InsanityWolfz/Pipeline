@@ -11,6 +11,7 @@ import { buildBarBox } from './foundryLayout';
 import { HealthBar, type HealthShown } from './HealthBar';
 import { HotbarView } from './HotbarView';
 import { InventoryPanel, type InventoryShown } from './InventoryPanel';
+import { ResearchList, type ResearchListState } from './ResearchList';
 import { PickupFeed } from './PickupFeed';
 import { shownKey } from './itemShown';
 import { TubeSlotView, type TubeSlotState } from './TubeSlotView';
@@ -25,6 +26,8 @@ export interface BottomHudState {
 /** The 031 HUD pieces' part of `ui()`: the inventory panel, the pickup feed and the HP bar. */
 export interface HudPanelsState {
   inventory: InventoryShown;
+  /** 033: the research list (J). */
+  researchList: ResearchListState;
   pickupFeed: { itemId: string; count: number }[];
   health: HealthShown;
 }
@@ -32,6 +35,7 @@ export interface HudPanelsState {
 /** The 031 part of `ui()` before the scene has built its views. */
 export const NO_HUD_PANELS: HudPanelsState = {
   inventory: { open: false, groups: [] },
+  researchList: { open: false, groups: [] },
   pickupFeed: [],
   health: { box: { x: 0, y: 0, w: 0, h: 0 }, text: '', low: false, healing: false, chunk: 0 },
 };
@@ -51,6 +55,8 @@ export class HudView {
   private readonly edges: EdgeTint;
   private readonly feed: PickupFeed;
   readonly inventory: InventoryPanel;
+  /** The research list (033, J). */
+  readonly research: ResearchList;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -59,6 +65,7 @@ export class HudView {
     this.tubeSlot = new TubeSlotView(scene);
     this.health = new HealthBar(scene);
     this.feed = new PickupFeed(scene);
+    this.research = new ResearchList(scene);
     this.inventory = new InventoryPanel(scene);
   }
 
@@ -76,7 +83,7 @@ export class HudView {
 
   /** The inventory panel, pickup feed and HP bar as drawn (031), for the test hook. */
   get panels(): HudPanelsState {
-    return { inventory: this.inventory.shown, pickupFeed: this.feed.shown, health: this.health.shown };
+    return { inventory: this.inventory.shown, researchList: this.research.shown, pickupFeed: this.feed.shown, health: this.health.shown };
   }
 
   /**
@@ -96,7 +103,11 @@ export class HudView {
     this.edges.update(this.health.shown.low, this.health.pulse);
     this.feed.update(events.pickups.map((p) => shownKey(sim, p.itemId)), dt);
     // A KO closes the panel: the wake panel takes the screen (and the panel can't open again while it shows).
-    if (events.ko) this.inventory.setOpen(false);
+    if (events.ko) {
+      this.inventory.setOpen(false);
+      this.research.setOpen(false);
+    }
     this.inventory.update(sim);
+    this.research.update(sim);
   }
 }

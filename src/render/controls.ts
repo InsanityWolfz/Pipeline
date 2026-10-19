@@ -44,8 +44,8 @@ export class Controls {
   private interactPending = false;
   private interactPress = false;
   private selectPending: string | null = null;
-  /** C, Esc and I or Tab (031), latched until the scene takes them. */
-  private readonly menuKeys = { menu: false, close: false, inventory: false };
+  /** C, Esc, I or Tab (031) and J (033), latched until the scene takes them. */
+  private readonly menuKeys = { menu: false, close: false, inventory: false, research: false };
   private buildPending = false;
   private wheelPending = 0;
   /** Choices clicked in the hopper, pylon, stash and bench menus. */
@@ -88,6 +88,7 @@ export class Controls {
     this.keys.menu.on('down', () => (this.menuKeys.menu = true));
     this.keys.close.on('down', () => (this.menuKeys.close = true));
     for (const key of [this.keys.inventory, this.keys.inventoryTab]) key.on('down', () => (this.menuKeys.inventory = true));
+    this.keys.research.on('down', () => (this.menuKeys.research = true));
     this.keys.build.on('down', () => (this.buildPending = true));
     for (const [i, key] of this.ammoKeys.entries()) key.on('down', () => (this.selectPending = SLOT_AMMOS[i] ?? null));
     this.pointer = scene.input.activePointer;
@@ -208,8 +209,8 @@ export class Controls {
     this.dragTile = tile;
   }
 
-  /** C (`menu`), Esc (`close`), or I or Tab (`inventory`, 031) was pressed since the last call. */
-  takeMenuKey(key: 'menu' | 'close' | 'inventory'): boolean {
+  /** C (`menu`), Esc (`close`), I or Tab (`inventory`, 031), or J (`research`, 033) was pressed since the last call. */
+  takeMenuKey(key: 'menu' | 'close' | 'inventory' | 'research'): boolean {
     const pressed = this.menuKeys[key];
     this.menuKeys[key] = false;
     return pressed;

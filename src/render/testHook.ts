@@ -22,12 +22,16 @@ import { makeChampion } from '../sim/champions';
 import { CHAMPIONS } from '../data/champions';
 import type { ChampionShown } from './EnemyView';
 import type { LandmarksShown } from './LandmarkView';
+import type { ResearchShown } from './ResearchView';
+import type { SchematicsShown } from './SchematicView';
+import type { RestorePanelState } from './RestorePanel';
+import type { ResearchListState } from './ResearchList';
 
 export interface GameTestHook {
   getState(): SimSummary;
   /**
    * Steps `frames` ticks holding `command`. Its dodge, interact, ammo
-   * select, build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), setFilter, pylon, travel, takeStash, identify, equip and applyStage apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
+   * select, build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), setFilter, pylon, travel, takeStash, identify, equip, applyStage and restore (033) apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
    */
   step(frames: number, command?: Partial<Command>): SimSummary;
   /** Crafts a recipe once between ticks, as clicking its menu row does. */
@@ -139,6 +143,14 @@ export interface UiState {
   champions: ChampionShown[];
   /** 032: the waystone's menu while open (two or more claimed pylons): each row's text and box, view px; else null. */
   waystone: { text: string; x: number; y: number; w: number; h: number }[] | null;
+  /** 033: the diagrams drawn on the foundry, restored parts, running effects and the wing door. */
+  research: ResearchShown;
+  /** 033: the schematics' light pillars and the banner's schematic line. */
+  schematics: SchematicsShown;
+  /** 033: the restore panel while open (E at a diagram), else null. */
+  restorePanel: RestorePanelState | null;
+  /** 033: the research list (J). */
+  researchList: ResearchListState;
 }
 
 declare global {
@@ -173,6 +185,7 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
         identify: false,
         equip: null,
         applyStage: null,
+        restore: null,
       };
       for (let i = 0; i < frames; i++) {
         // Building with the mouse and keys works under the hook: the scene's queued actions join each tick.
@@ -192,6 +205,7 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
           identify: base.identify || ui.identify,
           equip: base.equip ?? ui.equip,
           applyStage: base.applyStage ?? ui.applyStage,
+          restore: base.restore ?? ui.restore,
         });
       }
       return summarize(sim);

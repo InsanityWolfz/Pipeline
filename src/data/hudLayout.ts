@@ -238,7 +238,10 @@ export const MINIMAP = {
     entrance: { color: 'gold-trim', r: 2 },
     shrine: { color: 'wisp-light', r: 2 },
     claimed: { color: 'cyan', r: 3 },
+    /** 033: a schematic lying on the ground, pinged by a ring growing out from it over `ping.ms`. */
+    schematic: { color: 'cyan-glow', r: 2 },
   },
+  ping: { ms: 1100, reach: 6, color: 'cyan-glow', width: 1 },
   /** Discovered landmarks' icons (032), by marker: shown at this scale of their sprite (landmarkAssets' MAP_ICONS). */
   landmarkScale: 0.8,
 } as const;

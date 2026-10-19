@@ -6,7 +6,7 @@ import { ellipse, flat, line, path, rect, solid, trim, type Ink, type Shape, typ
 // lost part's diagram (over a cap, round the intake pipe, in a wall panel), the
 // carved wall panel and its restored brass parts, the reservoir's brass collars, the
 // sealed wing's door, the research items' icons, the splitter's and merger's build
-// bar emblems, the schematic's ley-light pillar and its minimap ping. Wall pieces sit
+// bar emblems, the schematic's ley-light pillar and its light. Wall pieces sit
 // on a north-wall tile's face, world px round the tile's bottom centre.
 
 const sprite = (key: string, size: readonly [number, number], anchor: readonly [number, number], frames: readonly (readonly Shape[])[]): VectorSprite => ({ key, size, anchor, frames });
@@ -161,8 +161,6 @@ const PILLAR: Shape[] = [
   ellipse(0, 0, 9, 3, { fill: { id: 'snow', alpha: 0.5 } }),
 ];
 
-const PING: Shape[] = [path('M 0 -4 L 4 0 L 0 4 L -4 0 Z', { fill: 'cyan-glow', outline: true, glow: { color: 'cyan', blur: 3 } })];
-
 const W = RESEARCH_SPRITES;
 const wall = (key: string, shapes: readonly Shape[]): VectorSprite => sprite(key, [26, 26], [13, 25], [shapes]);
 
@@ -180,7 +178,6 @@ export const RESEARCH_SPRITES_VECTOR: readonly VectorSprite[] = [
   sprite(W.restoredPipe[1], [52, 50], [26, 67], [collars([-58, -47, -37, -27])]),
   sprite(W.wingDoor, [60, 46], [30, 44], [WING_DOOR]),
   sprite(W.pillar, [20, 124], [10, 120], [PILLAR]),
-  sprite(W.mapPing, [10, 10], [5, 5], [PING]),
   icon(RESEARCH_ICONS.ancientGear, ANCIENT_GEAR),
   icon(RESEARCH_ICONS.aqueductValve, AQUEDUCT_VALVE),
   icon(RESEARCH_ICONS.bulwarkCore, BULWARK_CORE),

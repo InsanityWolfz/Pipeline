@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import type {} from '../../src/render/testHook';
 
 // Driving the foundry intake from a spec (024, shared since 025): walking to it,
-// opening its side entrances, and feeding entrances from hopper lines.
+// restoring its capped entrances (033: one boss core each), and feeding entrances from hopper lines.
 
 /** Into the foundry from ?playtest (unless already there), to the floor under the intake's east end. */
 export function toIntake(page: Page) {
@@ -16,13 +16,21 @@ export function toIntake(page: Page) {
   });
 }
 
-/** E at the intake. Returns the tick's state. */
-export function pressE(page: Page) {
-  return page.evaluate(() => {
+/**
+ * Restores the capped entrance at mouth tile `tx` (033), from ?playtest's cores: into the foundry (unless already
+ * there), under that cap, and the next entrance node's Restore, as the restore panel sends it. Returns the tick's state.
+ */
+export function restoreEntrance(page: Page, tx: number) {
+  return page.evaluate((tx) => {
     const g = window.__GAME__;
-    if (!g) throw new Error('no game');
-    return g.step(1, { interact: true });
-  });
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    if (g.step(0).room !== 'foundry') h.toFoundry();
+    h.walkTo((tx + 0.5) * 32, 1.5 * 32);
+    const node = g.step(0).research.nodes.find((n) => n.id.startsWith('entrance-') && n.state === 'revealed');
+    if (!node) throw new Error('no entrance left to restore');
+    return g.step(1, { restore: node.id });
+  }, tx);
 }
 
 /** The test hook's view of what's drawn, once the next frame has drawn it. */

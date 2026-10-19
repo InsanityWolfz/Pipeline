@@ -7,6 +7,7 @@ import type { Controls } from './controls';
 import type { CraftMenuView } from './CraftMenuView';
 import type { HopperPicker } from './HopperPicker';
 import type { InventoryPanel } from './InventoryPanel';
+import type { ResearchList } from './ResearchList';
 import { clickAmount } from './menuRequests';
 import type { PauseAction, PauseMenuView } from './PauseMenuView';
 import type { SiteMenus } from './SiteMenus';
@@ -22,6 +23,7 @@ export interface Menus {
   build: BuildView;
   sound: SoundView;
   inventory: InventoryPanel;
+  research: ResearchList;
   wake: WakeView;
 }
 
@@ -41,16 +43,19 @@ export class MenuRouter {
   }
 
   handle(controls: Controls): void {
-    const { craft, pause, site, picker, build, inventory, wake } = this.m;
+    const { craft, pause, site, picker, build, inventory, research, wake } = this.m;
     const toggle = controls.takeMenuKey('menu');
     const close = controls.takeMenuKey('close');
     // I or Tab (031): taken even while paused, so a press then never opens the panel later.
     const bag = controls.takeMenuKey('inventory');
+    // J (033): the research list, likewise taken even while paused.
+    const list = controls.takeMenuKey('research');
     if (pause.isOpen) {
       if (close) pause.setOpen(false);
       return;
     }
     if (close && inventory.isOpen) inventory.setOpen(false);
+    else if (close && research.isOpen) research.setOpen(false);
     else if (close && site.isOpen) site.close();
     else if (close && picker.isOpen) picker.close();
     else if (close && craft.isOpen) craft.setOpen(false);
@@ -59,15 +64,27 @@ export class MenuRouter {
     else if (toggle) craft.setOpen(!craft.isOpen);
     // The panel and the other menus take turns: opening it closes them (not while the wake panel shows), and theirs closes it.
     if (bag && !wake.isShown && !pause.isOpen) this.openInventory(!inventory.isOpen);
-    if (toggle && craft.isOpen) inventory.setOpen(false);
+    // The list opens anywhere and never pauses; it and the inventory take turns (both are big centred panels).
+    if (list && !wake.isShown && !pause.isOpen) {
+      research.setOpen(!research.isOpen);
+      if (research.isOpen) inventory.setOpen(false);
+    }
+    if (bag && inventory.isOpen) research.setOpen(false);
+    if (toggle && craft.isOpen) {
+      inventory.setOpen(false);
+      research.setOpen(false);
+    }
     const steps = controls.takeWheel();
     if (steps !== 0 && this.sim.building) build.step(steps);
-    // E on a hopper opens its menu; the sim does nothing with it.
-    if (controls.takeInteractPress()) {
+    // E on a hopper opens its menu; the sim does nothing with it. With the restore panel open, E again restores (033).
+    if (controls.takeInteractPress() && !site.pressAgain(controls)) {
       const target = usableInReach(this.sim);
       if (target?.kind === 'hopper') picker.open(target.id);
       else site.interact(this.sim);
-      if (picker.isOpen || site.isOpen) inventory.setOpen(false);
+      if (picker.isOpen || site.isOpen) {
+        inventory.setOpen(false);
+        research.setOpen(false);
+      }
     }
     const open = picker.hopperId;
     if (open !== null && usableInReach(this.sim)?.id !== open) picker.close();

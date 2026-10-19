@@ -13,18 +13,22 @@ import { SupplyView } from './SupplyView';
 import { PortView } from './PortView';
 import { HealingView, NO_HEALING_SHOWN } from './HealingView';
 import { LandmarkView, NO_LANDMARKS_SHOWN } from './LandmarkView';
+import { Banner } from './Banner';
+import { NO_RESEARCH_SHOWN, ResearchView } from './ResearchView';
+import { NO_SCHEMATICS_SHOWN, SchematicView } from './SchematicView';
 
 /** What the room views report to the test hook's `ui()`. */
-export type RoomUiState = Pick<UiState, 'minimap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks'>;
+export type RoomUiState = Pick<UiState, 'minimap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics'>;
 
 /** The room views' part of `ui()` before the scene has built them. */
-export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [] }, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN };
+export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [] }, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN };
 
 // The ground on screen: a tiled room (the foundry) or the overworld's terrain
 // with its landmarks (017), plus the corner minimap while outside, and the
 // claimed pylon's harvest running home along the ley line (018), the foundry
 // intake built into the foundry's north wall (019), the supply ports' faces and plates (028), the Ley
-// Springs with the signs of healing (030), and the landmarks' dressing and discovery banner (032).
+// Springs with the signs of healing (030), the landmarks' dressing and discovery banner (032), and the
+// foundry's lost parts as diagrams and the schematics' light pillars and banners (033).
 export class RoomViews {
   private readonly scene: Scene;
   private readonly tiles: RoomView;
@@ -35,6 +39,9 @@ export class RoomViews {
   private readonly ports: PortView;
   private readonly healing: HealingView;
   private readonly landmarks: LandmarkView;
+  private readonly banner: Banner;
+  private readonly research: ResearchView;
+  private readonly schematics: SchematicView;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -45,7 +52,10 @@ export class RoomViews {
     this.intake = new IntakeView(scene);
     this.ports = new PortView(scene);
     this.healing = new HealingView(scene);
-    this.landmarks = new LandmarkView(scene);
+    this.banner = new Banner(scene);
+    this.landmarks = new LandmarkView(scene, this.banner);
+    this.research = new ResearchView(scene);
+    this.schematics = new SchematicView(scene, this.banner);
   }
 
   /** Draws a room's ground and fits the camera to it. */
@@ -67,7 +77,11 @@ export class RoomViews {
     this.ports.update(sim, shown);
     this.healing.update(sim, shown, deltaMs);
     // On the tween clock, so the test hook's tween speed holds the banner for a screenshot.
-    this.landmarks.update(sim, events, shown, deltaMs * this.scene.tweens.timeScale);
+    const tweenMs = deltaMs * this.scene.tweens.timeScale;
+    this.landmarks.update(sim, events, shown, tweenMs);
+    this.research.update(sim, events, shown, tweenMs);
+    this.schematics.update(sim, events, shown, tweenMs);
+    this.banner.update(tweenMs);
   }
 
   /**
@@ -85,6 +99,8 @@ export class RoomViews {
       ports: this.ports.shown,
       healing: this.healing.shown,
       landmarks: this.landmarks.shown,
+      research: this.research.shown,
+      schematics: this.schematics.shown,
     };
   }
 }

@@ -24,8 +24,6 @@ export const RESEARCH_SPRITES = {
   merger: { side: 'merger-side', up: 'merger-up', down: 'merger-down' },
   /** The schematic's ley-light pillar while it lies on the ground, drawn white for render to tint. */
   pillar: 'schematic-pillar',
-  /** The minimap's ping over a schematic on the ground. */
-  mapPing: 'map-schematic',
 } as const;
 
 /** The research items' icons. A schematic shows the unknown icon until its node is revealed (banked), then the known one. */
@@ -56,3 +54,45 @@ export const RESEARCH_LOOK = {
 
 /** The banner's kicker lines for a schematic (pickup: still unknown; reveal: named). */
 export const SCHEMATIC_BANNER = { found: 'Schematic found', revealed: 'Schematic revealed' } as const;
+
+/**
+ * The restore panel (033, E at a diagram), in the crafting menu's style (026): a tablet centred on screen, `pad` px in,
+ * the node's name (display font) and its one-line effect, then its cost row (the craft menu's recipe row: up to three
+ * cost items, each its icon and "have/need" beside it, missing ones in rust-light) and the Restore row (the picker's
+ * row) under it, `gap` px apart. Px from the tablet's top-left (text at the top of its capitals).
+ */
+export const RESTORE_PANEL = {
+  pad: 6,
+  name: { y: 0 },
+  effect: { y: 13 },
+  costY: 26,
+  costRow: { h: 28 },
+  input: { x: 4, step: 44, textX: 18, textY: 10, iconY: 6 },
+  gap: 3,
+  restore: { h: 20, iconX: 4, iconY: 2, textX: 24, textY: 8 },
+  text: { restore: 'Restore', sealed: 'Sealed', first: (name: string): string => `Restore ${name} first` },
+} as const;
+
+/**
+ * The research list (033, J): a tablet centred on screen under a title card, `width` wide, `pad` px in. Groups (Intake,
+ * Walls, Sealed wing) each a header `headerHeight` tall, then a row `rowHeight` tall per node: its name (or "Lost
+ * schematic"), its state, its cost icons with counts (revealed nodes only, `costStep` apart) and where its diagram is.
+ * Columns are px from the row's left. A footer says where restoring happens.
+ */
+export const RESEARCH_LIST = {
+  title: { text: 'Restoration', w: 128, h: 22, gap: 4, titleY: 4 },
+  width: 452,
+  pad: 8,
+  headerHeight: 12,
+  headerY: 2,
+  rowHeight: 18,
+  groupGap: 6,
+  col: { name: 2, state: 112, cost: 168, where: 330 },
+  textY: 6,
+  costStep: 40,
+  costTextX: 17,
+  states: { restored: 'restored', ready: 'ready', revealed: 'revealed', hidden: 'hidden' },
+  colors: { restored: 'cyan', ready: 'gold-trim', revealed: 'rock-pale', hidden: 'rock-pale', missing: 'rust-light', dim: 'rock-pale' },
+  dimAlpha: 0.7,
+  footer: { text: 'Restore a part at its diagram in the foundry: walk up and press E.', gap: 6, lineHeight: 9 },
+} as const;

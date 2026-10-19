@@ -1,8 +1,8 @@
 import { BlendModes, type GameObjects, type Scene } from 'phaser';
 import { DEPTHS, FX_TEXTURES } from '../data/assets';
-import { TILE_SIZE, VIEW_WIDTH } from '../data/config';
+import { TILE_SIZE } from '../data/config';
 import { GLOW_TEXTURE } from '../data/juice';
-import { LANDMARK_LIST, LANDMARKS, landmarkDef, type LandmarkDef } from '../data/landmarks';
+import { LANDMARK_LIST, landmarkDef, type LandmarkDef } from '../data/landmarks';
 import { DISCOVERY_BANNER, LANDMARK_LOOK, LANDMARK_SPRITES } from '../data/landmarkAssets';
 import { OVERWORLD } from '../data/overworld';
 import { isOpened } from '../sim/cache';
@@ -10,8 +10,7 @@ import type { SimEvents } from '../sim/events';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
 import { tileHash } from './roomTiles';
-import { drawTablet } from './tablet';
-import { TextLine } from './textLine';
+import type { Banner } from './Banner';
 import { addVector, showFrame } from './vector/textures';
 
 // The landmarks' own dressing (032): the grotto hollows' lip slabs and their light (ley
@@ -48,28 +47,24 @@ export class LandmarkView {
   private readonly lights: { image: GameObjects.Image; look: HollowLight }[] = [];
   private readonly caches = new Map<string, { sprite: GameObjects.Image; frame: 'sealed' | 'open' | 'empty' }>();
   private readonly openedAt = new Map<string, number>();
-  private readonly banner: { panel: GameObjects.Graphics; kicker: TextLine; name: TextLine };
-  private queue: string[] = [];
-  private bannerOn: string | null = null;
-  private bannerMs = 0;
+  /** The banner it shares with 033's schematics (RoomViews'). */
+  private readonly banner: Banner;
   private time = 0;
   private lipCount = 0;
   private tuftCount = 0;
   private built = false;
 
-  constructor(scene: Scene) {
+  constructor(scene: Scene, banner: Banner) {
     this.scene = scene;
-    this.banner = {
-      panel: scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.hud - 1).setVisible(false),
-      kicker: new TextLine(scene, 0, 0, DEPTHS.hud, false, 'label').set(DISCOVERY_BANNER.kicker).setVisible(false),
-      name: new TextLine(scene, 0, 0, DEPTHS.hud, false, 'title').setVisible(false),
-    };
+    this.banner = banner;
   }
 
   get shown(): LandmarksShown {
+    const on = this.banner.current;
+    const discovery = on?.kind === 'discovery' ? on : null;
     return {
-      banner: this.bannerOn,
-      bannerAlpha: this.bannerOn ? this.banner.name.obj.alpha : 0,
+      banner: discovery?.id ?? null,
+      bannerAlpha: discovery?.alpha ?? 0,
       caches: Object.fromEntries([...this.caches].map(([id, c]) => [id, c.frame])),
       lips: this.lipCount,
       tufts: this.tuftCount,
@@ -97,8 +92,7 @@ export class LandmarkView {
       }
       c.sprite.setVisible(outside);
     }
-    this.queue.push(...events.discoveries.map((d) => d.landmark));
-    this.drawBanner(deltaMs);
+    for (const d of events.discoveries) this.banner.push({ kind: 'discovery', id: d.landmark, kicker: DISCOVERY_BANNER.kicker, name: landmarkDef(d.landmark).name });
   }
 
   private build(): void {
@@ -154,32 +148,5 @@ export class LandmarkView {
       const [kx, ky] = M.lilyAt;
       this.decals.push(addVector(this.scene, cx + Math.cos(a) * f.rx * kx * T, cy + Math.sin(a) * f.ry * ky * T, LANDMARK_SPRITES.lily).setDepth(DEPTHS.floor + M.lilyDepth));
     }
-  }
-
-  /** The banner: each discovery's name in turn, top centre, fading in, holding `bannerMs`, fading out. */
-  private drawBanner(deltaMs: number): void {
-    const B = DISCOVERY_BANNER;
-    const { panel, kicker, name } = this.banner;
-    if (!this.bannerOn) {
-      const next = this.queue.shift();
-      if (!next) return;
-      this.bannerOn = next;
-      this.bannerMs = 0;
-      name.set(landmarkDef(next).name);
-      const w = Math.max(name.width, kicker.width) + B.pad.x * 2;
-      const h = kicker.lineHeight + B.kickerGap + name.lineHeight + B.pad.y * 2;
-      const x = Math.round(VIEW_WIDTH / 2 - w / 2);
-      panel.clear();
-      drawTablet(panel, x, B.top, w, h, B.alpha);
-      kicker.moveTo(Math.round(VIEW_WIDTH / 2 - kicker.width / 2), B.top + B.pad.y);
-      name.moveTo(Math.round(VIEW_WIDTH / 2 - name.width / 2), B.top + B.pad.y + kicker.lineHeight + B.kickerGap);
-    }
-    this.bannerMs += deltaMs;
-    const total = B.fadeInMs + LANDMARKS.bannerMs + B.fadeOutMs;
-    const alpha = this.bannerMs < B.fadeInMs ? this.bannerMs / B.fadeInMs : this.bannerMs < B.fadeInMs + LANDMARKS.bannerMs ? 1 : Math.max(0, (total - this.bannerMs) / B.fadeOutMs);
-    for (const o of [panel, kicker, name]) o.setVisible(true).setAlpha(alpha);
-    if (this.bannerMs < total) return;
-    this.bannerOn = null;
-    for (const o of [panel, kicker, name]) o.setVisible(false);
   }
 }

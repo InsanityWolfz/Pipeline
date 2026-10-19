@@ -133,7 +133,7 @@ export class GameScene extends Scene {
 
     this.controls = new Controls(this);
     if (this.menu && this.pause && this.siteMenus && this.picker && this.buildView && this.feel && this.hud && this.wake)
-      this.router = new MenuRouter(this.sim, { craft: this.menu, pause: this.pause, site: this.siteMenus, picker: this.picker, build: this.buildView, sound: this.feel.sound, inventory: this.hud.inventory, wake: this.wake });
+      this.router = new MenuRouter(this.sim, { craft: this.menu, pause: this.pause, site: this.siteMenus, picker: this.picker, build: this.buildView, sound: this.feel.sound, inventory: this.hud.inventory, research: this.hud.research, wake: this.wake });
   }
 
   /** Matches both cameras to the backbuffer (016). Called on boot and whenever the window changes. */

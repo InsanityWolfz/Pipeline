@@ -157,6 +157,11 @@ export class FeelView {
       this.intakeMs = GLOWS.intake.ms;
     }
     if (ev.attunes.length > 0) s.play(SOUNDS.attune);
+    // 033: restoring, a schematic landing with its sparks, and a banked schematic's diagram appearing.
+    if (ev.restores.length > 0) s.play(SOUNDS.restore);
+    for (const d of ev.schematicDrops) j.burst('schematic', d.x, d.y);
+    if (ev.schematicDrops.length > 0) s.play(SOUNDS.schematicChime);
+    if (ev.schematicReveals.length > 0) s.play(SOUNDS.reveal);
     if (ev.claims.length > 0) s.play(SOUNDS.claim);
     if (ev.travels.length > 0) s.play(SOUNDS.travel);
     if (ev.gates.length > 0) {
