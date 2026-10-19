@@ -16,9 +16,7 @@ In the Hollows the player:
 
 The Bulwark's core restores the intake's third entrance (033). After the first kill, an altar in the arena lets the player summon it again for its drops.
 
-Ley-iron unlocks two things:
-- landmines, which are shot onto the ground and explode after about 5 seconds
-- the cluster stage, which makes a bomb burst into smaller explosions
+Ley-iron unlocks landmines and the cluster stage: moved to docs/specs/038-landmines-cluster.md.
 
 ## Design references
 - docs/design.md:
@@ -34,13 +32,11 @@ Ley-iron unlocks two things:
 - docs/specs/009-claiming.md and docs/specs/017-overworld.md: the map, rings, barriers, packs, claims, safe zones, deposit and fast travel.
 - docs/specs/033-research.md: `entrance-3` costs the Bulwark core; `aqueduct-valve` is Region 2's machine part.
 - docs/specs/035-hollows-enemies.md: Region 2's enemies. Their shield rule is defined here and shared.
-- The ammo-stage spec (029): stage machines, tags, at most one element stage and one shape stage per round, and "hand-make one first" unlocks.
+- Landmines and the cluster stage (029's stage framework): moved to docs/specs/038-landmines-cluster.md.
 - The champions and landmarks spec (032): landmark discovery and resource sites.
 - docs/brainstorm/2026-10-19-content.md, section 6: "Region 2: Stonefall Hollows", ley-iron, the Bulwark "must be slow or slow to turn, or lobs need to lead the target, because bombs miss moving targets".
 - Interview answers (Shaun, 2026-10-19):
-  - Round 2, landmines: "good single-target damage on a delay. You shoot them onto the ground and they explode after about 5 s, with large damage in a small radius." They need metal and come after the 1st boss.
-  - Round 2: a stage costs a small material input as ammo passes through (e.g. 1 stone per 4 arrows).
-  - Round 3, milestone 2 includes cluster bombs ("smaller explosions around it after it bursts") and landmines. Each round takes at most one element stage and one shape stage.
+  - Rounds 2 and 3 on landmines, stage costs and cluster bombs: moved to docs/specs/038-landmines-cluster.md.
   - Round 4: a guided goal chain, as data: "... claim a second pylon, breach Region 2's barrier, beat the Bulwark".
   - Round 5: "each pylon sends the resources of its area".
   - Round 8, the region: "Stonefall Hollows, a collapsed quarry-city of the lost civilisation. It has cliffs, broken aqueducts and veins of ley-iron (the metal), in grey-blue stone with rust and cyan. It's about half the current map (roughly 40×45 tiles to the west), with 2–3 landmarks, a claimable site and the boss arena."
@@ -134,36 +130,7 @@ Ley-iron unlocks two things:
 - [ ] While a summoned Bulwark lives, the altar is spent. If the player leaves, the summoned Bulwark heals and waits, and the offering is not refunded.
 - [ ] Starting offering: 8 `ley-iron`, a region resource, so a refight costs a trip but no rare drops.
 
-**Landmines (data, sim)**
-
-Landmines and the cluster stage below are their own vertical slice: they are split into a separate backlog item, built after 034's region and boss and after 029. Their text stays here until that item is written.
-
-- [ ] New ammo `landmine`, a new kind `mine`:
-  - It is lobbed to the aim like a bomb, with the same arc, speed and max range.
-  - On landing it arms and stays on the ground, showing a fuse ring that fills over `fuseTicks` (starting 300, which is 5 s).
-  - It then explodes: `damage` 60 in `radius` 24 px. That is large damage in a small radius (round 2), against a bomb's 15 in 48 px.
-  - It ignores contact. Only the timer sets it off.
-  - Its damage type is physical.
-  - There is no cap on live mines.
-  - Carried landmines take hotbar key 4 (`SLOT_AMMOS`; `AMMO_KEYS` has room for four).
-- [ ] Several mines in a volley land side by side, `LOB_SPACING` apart (024).
-- [ ] A mine's explosion is a lobbed burst, so shields never block it.
-- [ ] Mines don't hurt the player.
-- [ ] Mines left behind vanish when the player changes area or is KO'd.
-- [ ] The chain, in round-2 style (starting amounts):
-  - ley-iron into a **plate press** makes iron plates, 2 per ley-iron
-  - 1 iron plate, 1 fuse (husk resin) and 1 ley shard go into a **mine packer**, which makes 2 landmines. It reuses the bomb chain's fuse and shard.
-  - Hand-crafting each part once unlocks its machine, as today (005).
-  - The recipes appear in the crafting menu once ley-iron has been picked up.
-
-**The cluster stage (data, sim)**
-- [ ] The **cluster** shape stage for bombs, built on the ammo-stage framework (029):
-  - an in-line stage machine, the **Shard die**, that takes bombs in and puts bombs tagged `cluster` out
-  - a stage cost of 1 ley-iron per 4 bombs (round 2)
-  - unlocked by hand-applying it to a bomb at the bench once (round 4)
-  - A bomb takes at most one shape stage (round 3).
-- [ ] A cluster bomb bursts as a normal bomb. Then, `cluster.delayTicks` later (starting 12), `cluster.count` bomblets (starting 4) land evenly around the burst point at `cluster.distance` (starting 40 px). Each bursts for `cluster.damage` (starting 8) in `cluster.radius` (starting 20 px).
-- [ ] Bomblets are lobbed bursts: shields don't block them.
+**Landmines and the cluster stage:** moved to docs/specs/038-landmines-cluster.md (backlog item 038).
 
 **Objectives (data)**
 - [ ] The Milestone 1 goal chain (028) gains these Region 2 steps, tagged `milestone: 'm1'`, after 032's "Claim a second pylon" and before the frontier line:
@@ -189,9 +156,7 @@ Landmines and the cluster stage below are their own vertical slice: they are spl
   - the barrier wall and its collapse
   - the Sunken Forum and the Cistern Terrace with its pylon
   - the ley-iron node and item icon, the `bulwark-core` icon (distinct from the Warden core's violet)
-  - the landmine, armed with its fuse ring, and its explosion
-  - the bomblets
-  - the new machines
+  - (the landmine, the bomblets and the new machines: moved to 038)
 - [ ] A boss health bar with the Bulwark's name shows along the top of the screen while it is engaged.
 
 **Docs (on approval)**
@@ -206,9 +171,8 @@ Landmines and the cluster stage below are their own vertical slice: they are spl
   - the `hollows` gate
   - the Bulwark's health, facing angle, mode and cooldowns
   - enemy bombs, with position and fuse progress
-  - armed mines, with their fuse
   - boss defeats and the altar's state
-  - the events `blocked`, `bossDefeats`, `summons` and `mineBursts`
+  - the events `blocked`, `bossDefeats` and `summons` (armed mines and `mineBursts`: moved to 038)
 - [ ] A sandbox start, `?start=hollows`, puts the player at the barrier with the gate open, for tests and playtests.
 
 **Checks**
@@ -224,14 +188,13 @@ Landmines and the cluster stage below are their own vertical slice: they are spl
 - `src/data/enemies.ts`:
   - an optional `shield` field on enemy defs
   - `bulwark`, a new attack kind with its lob and pound blocks, and its drops (core, ley-iron, aqueduct valves)
-- `src/data/items.ts`: `ley-iron` (raw), `bulwark-core` (core, if 033 hasn't added it), `iron-plate` (part), `landmine` (ammo), each with its 031 panel group.
+- `src/data/items.ts`: `ley-iron` (raw), `bulwark-core` (core, if 033 hasn't added it), each with its 031 panel group (`iron-plate` and `landmine`: moved to 038).
 - `src/data/nodes.ts`: `ley-iron-seam` and the `cliff-seam` placement.
-- `src/data/ammo.ts`: `landmine` (kind `mine`); the cluster block on the bomb's tag behaviour (029's tag table).
-- `src/data/recipes.ts` and `src/data/pieces.ts`: the plate press and the mine packer with their recipes, and the Shard die (the cluster stage machine).
+- `src/data/ammo.ts`, `src/data/recipes.ts` and `src/data/pieces.ts` (the landmine, the cluster tag, the plate press, the mine packer and the Shard die): moved to 038.
 - `src/data/claims.ts`: the Cistern Terrace site and its `SITE_SUPPLY` entry, a ley-iron supply port fixture, and the Terrace in 032's waystone destination list.
 - `src/data/objectives.ts`: the Region 2 steps and the checks `inRegion` and `bossDefeated`.
 - `src/data/palette.ts` and `src/data/art`: as listed under Art.
-- Sounds: barrier collapse, shield clang, enemy bomb tick and burst, pound, summon, mine arm and burst.
+- Sounds: barrier collapse, shield clang, enemy bomb tick and burst, pound, summon (mine arm and burst: moved to 038).
 
 ## Out of scope
 - Region 2's regular enemies (035), built right after 034 on its own branch. Until 035 ships, Region 2 packs and the site's guards use ring 2's Husks and Wisps as placeholders.
@@ -259,21 +222,19 @@ Landmines and the cluster stage below are their own vertical slice: they are spl
   - Bulwark pound: it triggers in range, damages inside the radius, and holds its facing through the recovery.
   - The leash and full heal; a KO resets it before the first kill; the first kill is permanent.
   - The altar: dim before the first kill; the offering is spent; the summon after 120 ticks; drops; spent while one lives.
-  - Landmines: they land at the aim, arm, and burst at 300 ticks for 60 within 24 px; contact doesn't set them off; a volley lands them side by side; they clear on an area change.
-  - Cluster: tagged bombs throw 4 bomblets at 40 px after 12 ticks, and the stage cost is spent.
+  - Landmines and cluster bombs: moved to 038.
   - Determinism.
 - **Playwright:**
   - Claim the shrine (`?playtest`), walk west and see the barrier drop.
   - With `?start=hollows`: claim the Cistern Terrace; fight the Bulwark from behind with arrows and win; see the core drop; summon it again at the altar.
-  - Fire a landmine and a cluster bomb.
+  - Firing a landmine and a cluster bomb: moved to 038.
 - **Screenshots:**
   - the barrier, then breached
   - the Ley-iron Cut, the aqueduct and the Cistern Terrace
   - the Bulwark: facing the player, mid-turn, mid-lob with the circles, and the pound circle
   - a blocked hit spark
   - the altar, dim and awake
-  - an armed mine
-  - a cluster burst
+  - an armed mine and a cluster burst: moved to 038.
 
 ## Open questions
 None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).
