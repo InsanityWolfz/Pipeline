@@ -10,6 +10,7 @@ import { afterSplit, mergerTakes, splitterOrder } from './splitMerge';
 import {
   footprint,
   frontSide,
+  mergerInputs,
   frontTile,
   pieceAt,
   sideTile,
@@ -113,7 +114,7 @@ function offer(ctx: FlowContext, to: Tile, from: Tile, item: string): boolean {
     if (input < 0) return false;
     target.item = item;
     target.progress = 0;
-    target.turn = (input + 1) % 3;
+    target.turn = (input + 1) % mergerInputs(target.facing).length;
     return true;
   }
   if (target.kind === 'conduit' || target.kind === 'sorter' || target.kind === 'splitter') {

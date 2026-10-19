@@ -65,6 +65,15 @@ describe('the research list', () => {
     expect(row('sealed-wing')).toMatchObject({ state: 'revealed', where: 'the sealed door' });
   });
 
+  it('a node whose cost is carried but whose requires are not restored says what it needs', () => {
+    const sim = { ...fresh(), inventory: { 'bulwark-core': 1 } };
+    const row = (id: string) => researchRows(sim).flatMap((g) => g.rows).find((r) => r.id === id);
+    expect(row('entrance-3')).toMatchObject({ state: 'revealed', needs: 'Second entrance' });
+    expect(row('reservoir-1')).toMatchObject({ state: 'revealed', needs: null });
+    sim.research['entrance-2'] = 'restored';
+    expect(row('entrance-3')).toMatchObject({ state: 'ready', needs: null });
+  });
+
   it('fits the view under its title card, every row inside the panel', () => {
     const L = researchListLayout();
     expect(L.title.y).toBeGreaterThanOrEqual(0);

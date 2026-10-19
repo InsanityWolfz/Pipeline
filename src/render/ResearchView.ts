@@ -6,7 +6,7 @@ import { RESEARCH_NODES, researchNode, type ResearchNode } from '../data/researc
 import { RESEARCH_LOOK, RESEARCH_SPRITES } from '../data/researchAssets';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import type { SimEvents } from '../sim/events';
-import { diagrams, isRestored, type Diagram } from '../sim/research';
+import { diagrams, isRestored, reservoirTier, type Diagram } from '../sim/research';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
 import { intakeAnchor } from './foundryLayout';
@@ -27,10 +27,10 @@ export interface ResearchShown {
 export const NO_RESEARCH_SHOWN: ResearchShown = { diagrams: [], restored: [], effects: 0, wingDoor: false };
 
 const AT = intakeAnchor();
-/** Over the intake's caps (IntakeView draws them at its depth + 4 nudges). */
-const INTAKE_DEPTH = AT.y + 6 * FOUNDRY_LAYOUT.onTopNudge;
-/** A wall piece sits on its wall's face: a little over the wall, like a wall prop (014). */
-const WALL_NUDGE = 0.6;
+const DEPTH = RESEARCH_LOOK.depth;
+const INTAKE_DEPTH = AT.y + DEPTH.intakeNudges * FOUNDRY_LAYOUT.onTopNudge;
+/** The sealed wing's node: the one anchored on its door. */
+const WING = RESEARCH_NODES.find((n) => n.anchor.kind === 'wing');
 
 type WallEffect = 'machineSpeed' | 'splitter' | 'merger';
 const wallKey = (node: ResearchNode): WallEffect => (node.effect.kind === 'machineSpeed' ? 'machineSpeed' : node.effect.kind === 'unlockPiece' && node.effect.piece === 'merger' ? 'merger' : 'splitter');
@@ -41,8 +41,8 @@ function placeOf(d: Pick<Diagram, 'node' | 'entrance'>): { x: number; y: number;
   const a = node.anchor;
   if (a.kind === 'entrance') return { x: AT.x + (INTAKE_INLETS[d.entrance ?? 0] ?? 0), y: AT.y + CAP_SEAT_Y, frame: RESEARCH_SPRITES.diagramCap, depth: INTAKE_DEPTH };
   if (a.kind === 'pipe') return { x: AT.x, y: AT.y, frame: RESEARCH_SPRITES.diagramPipe, depth: INTAKE_DEPTH };
-  if (a.kind === 'wing') return { x: (a.tx + a.w / 2) * TILE_SIZE, y: (a.ty + 1) * TILE_SIZE, frame: RESEARCH_SPRITES.wingDoor, depth: (a.ty + 1) * TILE_SIZE + WALL_NUDGE };
-  return { x: (a.tx + 0.5) * TILE_SIZE, y: (a.ty + 1) * TILE_SIZE, frame: RESEARCH_SPRITES.diagramWall[wallKey(node)], depth: (a.ty + 1) * TILE_SIZE + WALL_NUDGE + 0.1 };
+  if (a.kind === 'wing') return { x: (a.tx + a.w / 2) * TILE_SIZE, y: (a.ty + 1) * TILE_SIZE, frame: RESEARCH_SPRITES.wingDoor, depth: (a.ty + 1) * TILE_SIZE + DEPTH.wall };
+  return { x: (a.tx + 0.5) * TILE_SIZE, y: (a.ty + 1) * TILE_SIZE, frame: RESEARCH_SPRITES.diagramWall[wallKey(node)], depth: (a.ty + 1) * TILE_SIZE + DEPTH.wall + DEPTH.wallDiagram };
 }
 
 const keyOf = (d: Pick<Diagram, 'node' | 'entrance'>): string => `${d.node}:${d.entrance ?? ''}`;
@@ -62,6 +62,8 @@ export class ResearchView {
   private effects: GameObjects.Image[] = [];
   private shownDiagrams: ResearchShown['diagrams'] = [];
   private restoredShown: string[] = [];
+  /** Nodes a banked schematic revealed whose shimmer waits for the foundry to be on show (banking on the way in fires during the door's fade). */
+  private reveals: string[] = [];
   private time = 0;
 
   constructor(scene: Scene) {
@@ -69,11 +71,10 @@ export class ResearchView {
     for (const n of RESEARCH_NODES) {
       if (n.anchor.kind !== 'wall') continue;
       const at = placeOf({ node: n.id, entrance: null });
-      this.panels.set(n.id, addVector(scene, at.x, at.y, RESEARCH_SPRITES.panel).setDepth(at.depth - 0.05).setVisible(false));
+      this.panels.set(n.id, addVector(scene, at.x, at.y, RESEARCH_SPRITES.panel).setDepth(at.depth - DEPTH.panelUnder).setVisible(false));
     }
     this.collar = addVector(scene, AT.x, AT.y, RESEARCH_SPRITES.restoredPipe[0]).setDepth(INTAKE_DEPTH - FOUNDRY_LAYOUT.onTopNudge).setVisible(false);
-    const wing = RESEARCH_NODES.find((n) => n.anchor.kind === 'wing');
-    const at = wing ? placeOf({ node: wing.id, entrance: null }) : null;
+    const at = WING ? placeOf({ node: WING.id, entrance: null }) : null;
     this.wing = at ? addVector(scene, at.x, at.y, at.frame).setDepth(at.depth).setVisible(false) : null;
   }
 
@@ -111,10 +112,10 @@ export class ResearchView {
       showFrame(panel, isRestored(sim, id) ? RESEARCH_SPRITES.restoredWall[wallKey(node)] : RESEARCH_SPRITES.panel);
       panel.setVisible(here);
     }
-    const tier = Math.max(0, ...RESEARCH_NODES.map((n) => (n.effect.kind === 'reservoir' && isRestored(sim, n.id) ? n.effect.tier : 0)));
+    const tier = reservoirTier(sim);
     if (tier > 0) showFrame(this.collar, RESEARCH_SPRITES.restoredPipe[Math.min(tier, RESEARCH_SPRITES.restoredPipe.length) - 1] ?? RESEARCH_SPRITES.restoredPipe[0]);
     this.collar.setVisible(here && tier > 0);
-    this.wing?.setVisible(here && !isRestored(sim, 'sealed-wing'));
+    this.wing?.setVisible(here && WING !== undefined && !isRestored(sim, WING.id));
     this.restoredShown = here ? RESEARCH_NODES.filter((n) => (n.anchor.kind === 'wall' || n.anchor.kind === 'pipe') && isRestored(sim, n.id)).map((n) => n.id) : [];
     // Restores: the entrance a restore opened comes with its cap-lift event, in the same order.
     const opened = events.intakeOpens.map((o) => o.entrance);
@@ -122,10 +123,14 @@ export class ResearchView {
       const node = researchNode(r.node);
       this.restoreEffect({ node: r.node, entrance: node.anchor.kind === 'entrance' ? (opened.shift() ?? null) : null });
     }
-    for (const rev of events.schematicReveals) {
-      const d = list.find((x) => x.node === rev.node);
+    // A reveal shimmers once the foundry is on show; a node with no diagram drawn (one waiting on its requires' anchor) has none.
+    this.reveals.push(...events.schematicReveals.map((r) => r.node));
+    if (!here) return;
+    for (const node of this.reveals) {
+      const d = list.find((x) => x.node === node);
       if (d) this.shimmer(d);
     }
+    this.reveals = [];
   }
 
   /** The linework fills solid cyan, then the part solidifies: the copy fades as a restored wall panel fades in. */
@@ -137,7 +142,7 @@ export class ResearchView {
     panel?.setAlpha(0);
     this.scene.tweens.chain({
       tweens: [
-        { targets: fx, alpha: 1, scale: fx.scale * 1.08, duration: R.fillMs, ease: 'Sine.easeOut' },
+        { targets: fx, alpha: 1, scale: fx.scale * R.pop, duration: R.fillMs, ease: 'Sine.easeOut' },
         { targets: fx, alpha: 0, duration: R.solidMs, ease: 'Sine.easeIn', onStart: () => panel && this.scene.tweens.add({ targets: panel, alpha: 1, duration: R.solidMs }) },
       ],
       onComplete: () => this.drop(fx),
@@ -152,7 +157,7 @@ export class ResearchView {
   }
 
   private effect(at: { x: number; y: number; frame: string; depth: number }, color: string): GameObjects.Image {
-    const fx = addVector(this.scene, at.x, at.y, at.frame).setDepth(at.depth + 0.01).setTint(colorOf(color)).setBlendMode(BlendModes.ADD).setAlpha(0.3);
+    const fx = addVector(this.scene, at.x, at.y, at.frame).setDepth(at.depth + DEPTH.effect).setTint(colorOf(color)).setBlendMode(BlendModes.ADD).setAlpha(RESEARCH_LOOK.restore.fromAlpha);
     this.effects.push(fx);
     return fx;
   }

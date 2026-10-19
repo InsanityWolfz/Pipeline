@@ -33,10 +33,20 @@ export const isRestored = (state: Research, id: string): boolean => nodeState(st
 export const requiresMet = (state: Research, node: ResearchNode): boolean => node.requires.every((r) => isRestored(state, r));
 export const affordable = (inventory: Inventory, node: ResearchNode): boolean => Object.entries(node.cost).every(([itemId, n]) => count(inventory, itemId) >= n);
 
+/** The highest restored reservoir tier, or 0 before any. */
+export function reservoirTier(state: Research): number {
+  return Math.max(0, ...RESEARCH_NODES.map((n) => (n.effect.kind === 'reservoir' && isRestored(state, n.id) ? n.effect.tier : 0)));
+}
+
 /** Every entrance's cap now: the highest restored reservoir tier's, else the first (30). */
 export function entranceCap(state: Research): number {
-  const tier = Math.max(0, ...RESEARCH_NODES.map((n) => (n.effect.kind === 'reservoir' && isRestored(state, n.id) ? n.effect.tier : 0)));
-  return ENTRANCE_CAPS[tier] ?? ENTRANCE_CAPS[0] ?? 0;
+  return ENTRANCE_CAPS[reservoirTier(state)] ?? ENTRANCE_CAPS[0] ?? 0;
+}
+
+/** A node is ready to restore at its diagram: revealed, its requires restored and its cost carried (never the sealed wing). */
+export function nodeReady(state: Pick<SimState, 'research' | 'inventory'>, id: string): boolean {
+  const node = researchNode(id);
+  return nodeState(state, id) === 'revealed' && node.effect.kind !== 'wing' && requiresMet(state, node) && affordable(state.inventory, node);
 }
 
 /** The multiplier on every machine's craft time: MACHINE_SPEED_MULT once a machine-speed node is restored, else 1. */

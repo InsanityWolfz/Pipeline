@@ -142,6 +142,8 @@ test('on a fresh start the build bar shows only the Logistics group, and the whe
 });
 
 test('with everything unlocked, the bar shows four labelled groups and the wheel steps through them in bar order', async ({ page }) => {
+  // Restoring the splitter and merger on the way adds a walk to a busy test.
+  test.setTimeout(90_000);
   const errors = watchErrors(page);
   await boot(page, '?playtest');
   await page.evaluate(() => {

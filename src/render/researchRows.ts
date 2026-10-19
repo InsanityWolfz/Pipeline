@@ -2,8 +2,7 @@ import { itemDef } from '../data/items';
 import { LOST_SCHEMATIC, RESEARCH_GROUPS, RESEARCH_NODES, researchNode, whereOf, type ResearchNode } from '../data/research';
 import { RESTORE_PANEL } from '../data/researchAssets';
 import { count } from '../sim/inventory';
-import { affordable, nodeState, requiresMet } from '../sim/research';
-import { nodeReady } from '../sim/researchSummary';
+import { affordable, nodeReady, nodeState, requiresMet } from '../sim/research';
 import type { SimState } from '../sim/state';
 
 // What the restore panel and the research list show (033), pure: a node's cost as
@@ -45,11 +44,15 @@ export function restorePanelModel(sim: Research, nodeId: string): RestorePanelMo
 
 export type ListState = 'restored' | 'ready' | 'revealed' | 'hidden';
 
-/** A list row: the node, its name (or "Lost schematic" while hidden), its state, its cost (revealed nodes only) and where its diagram is. */
+/**
+ * A list row: the node, its name (or "Lost schematic" while hidden), its state, its cost (revealed nodes only) and
+ * where its diagram is; `needs` names the node restored first while the cost is carried but its requires aren't met.
+ */
 export interface ResearchListRow {
   id: string;
   name: string;
   state: ListState;
+  needs: string | null;
   cost: CostShown[];
   where: string;
 }
@@ -68,7 +71,9 @@ export function researchRows(sim: Research): { id: string; label: string; rows: 
     rows: RESEARCH_NODES.filter((n) => g.anchors.includes(n.anchor.kind)).map((n) => {
       const state = listState(sim, n.id);
       const shown = state === 'ready' || state === 'revealed';
-      return { id: n.id, name: state === 'hidden' ? LOST_SCHEMATIC : n.name, state, cost: shown ? costOf(sim, n) : [], where: whereOf(n.anchor) };
+      const first = n.requires.find((r) => nodeState(sim, r) !== 'restored');
+      const needs = state === 'revealed' && first && affordable(sim.inventory, n) ? researchNode(first).name : null;
+      return { id: n.id, name: state === 'hidden' ? LOST_SCHEMATIC : n.name, state, needs, cost: shown ? costOf(sim, n) : [], where: whereOf(n.anchor) };
     }),
   }));
 }

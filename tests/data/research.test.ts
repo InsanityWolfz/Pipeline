@@ -98,6 +98,12 @@ describe('research nodes', () => {
     expect(row('merger')).toEqual(['schematic-merger', { 'schematic-merger': 1, 'ancient-gear': 2 }, [], { kind: 'unlockPiece', piece: 'merger' }]);
     expect(row('sealed-wing')).toEqual(['start', {}, [], { kind: 'wing' }]);
     expect(MACHINE_SPEED_MULT).toBe(0.75);
+    // The one-line effects read their numbers from the data.
+    expect([researchNode('reservoir-1').description, researchNode('reservoir-2').description, researchNode('machine-speed').description]).toEqual([
+      'Each entrance holds 45 rounds.',
+      'Each entrance holds 60 rounds.',
+      'Every machine crafts in 75% of the time.',
+    ]);
   });
 
   it('reservoir tiers index the cap table, which runs 30, 45, 60; unlocked pieces are logistics on the build bar', () => {

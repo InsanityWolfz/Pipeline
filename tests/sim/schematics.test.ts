@@ -68,9 +68,7 @@ describe('the schematic roll', () => {
     expect(ground.events.schematicDrops.map((d) => d.itemId).sort()).toEqual(REGION_1);
   });
 
-  it("an enemy's death rolls it separately: with the chance forced, a Husk drops one schematic", () => {
-    const s = arena();
-    s.firstHuskDropped = true;
+  it("an enemy's death rolls it separately: over 400 seeded Husk deaths, a few (about 1%) drop a schematic", () => {
     const def = enemyDef('husk');
     let dropped = 0;
     for (let seed = 0; seed < 400; seed++) {
@@ -81,7 +79,6 @@ describe('the schematic roll', () => {
     }
     expect(dropped).toBeGreaterThan(0);
     expect(dropped).toBeLessThan(15);
-    expect(s.groundItems).toEqual([]);
   });
 });
 

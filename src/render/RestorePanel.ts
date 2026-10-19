@@ -1,6 +1,7 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, SPRITES } from '../data/assets';
 import { CRAFT_MENU_LAYOUT } from '../data/hudLayout';
+import { MAX_COST_ITEMS } from '../data/research';
 import { RESEARCH_ICONS, RESTORE_PANEL } from '../data/researchAssets';
 import type { SimState } from '../sim/state';
 import { inRect, type ScreenRect } from './foundryLayout';
@@ -23,8 +24,6 @@ export interface RestorePanelState {
   restore: ScreenRect;
 }
 
-/** Most cost items a node has (Reservoir II: its schematic, valves and a core). */
-const MAX_COST = 3;
 
 // The restore panel (033): E within reach of a diagram opens it, in the crafting
 // menu's style (026): the node's name and its one-line effect, its cost as icons with
@@ -58,8 +57,8 @@ export class RestorePanel {
     this.name = new TextLine(scene, L.name.x, L.name.y, DEPTHS.menu + 2, false, 'display');
     this.effect = new TextLine(scene, L.effect.x, L.effect.y, DEPTHS.menu + 2, false, 'body');
     this.costRow = image(L.cost.x, L.cost.y, SPRITES.craftRecipeRow, DEPTHS.menu);
-    this.icons = Array.from({ length: MAX_COST }, (_, k) => image(L.cost.x + P.input.x + k * P.input.step, L.cost.y + P.input.iconY, SPRITES.itemWood, DEPTHS.menu + 1));
-    this.counts = Array.from({ length: MAX_COST }, (_, k) => new TextLine(scene, L.cost.x + P.input.x + k * P.input.step + P.input.textX, L.cost.y + P.input.textY, DEPTHS.menu + 2, false, 'count'));
+    this.icons = Array.from({ length: MAX_COST_ITEMS }, (_, k) => image(L.cost.x + P.input.x + k * P.input.step, L.cost.y + P.input.iconY, SPRITES.itemWood, DEPTHS.menu + 1));
+    this.counts = Array.from({ length: MAX_COST_ITEMS }, (_, k) => new TextLine(scene, L.cost.x + P.input.x + k * P.input.step + P.input.textX, L.cost.y + P.input.textY, DEPTHS.menu + 2, false, 'count'));
     this.row = image(L.restore.x, L.restore.y, SPRITES.craftRow, DEPTHS.menu);
     this.rowIcon = image(L.restore.x + P.restore.iconX, L.restore.y + P.restore.iconY, RESEARCH_ICONS.schematic, DEPTHS.menu + 1);
     this.rowText = new TextLine(scene, L.restore.x + P.restore.textX, L.restore.y + P.restore.textY, DEPTHS.menu + 2);

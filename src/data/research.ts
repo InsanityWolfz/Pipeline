@@ -3,6 +3,11 @@
 // boss cores, machine parts and schematics, and that part comes back for good.
 // Starting values from spec 033; tune in playtest. Rules are in src/sim/research.ts.
 
+import { ENTRANCE_CAPS } from './foundry';
+
+/** Every machine's `craftTicks` is multiplied by this once `machine-speed` is restored, rounded up to whole ticks. */
+export const MACHINE_SPEED_MULT = 0.75;
+
 /**
  * Where a node's diagram shows: over a capped intake entrance (whichever the player restores at), on the intake
  * pipe, on a wall panel at a foundry wall tile, or on the sealed wing's door.
@@ -68,7 +73,7 @@ export const RESEARCH_NODES: readonly ResearchNode[] = [
   {
     id: 'reservoir-1',
     name: 'Reservoir I',
-    description: 'Each entrance holds 45 rounds.',
+    description: `Each entrance holds ${ENTRANCE_CAPS[1]} rounds.`,
     anchor: { kind: 'pipe' },
     cost: { 'ancient-gear': 4 },
     requires: [],
@@ -78,7 +83,7 @@ export const RESEARCH_NODES: readonly ResearchNode[] = [
   {
     id: 'reservoir-2',
     name: 'Reservoir II',
-    description: 'Each entrance holds 60 rounds.',
+    description: `Each entrance holds ${ENTRANCE_CAPS[2]} rounds.`,
     anchor: { kind: 'pipe' },
     cost: { 'schematic-reservoir-2': 1, 'aqueduct-valve': 4, 'bulwark-core': 1 },
     requires: ['reservoir-1'],
@@ -88,7 +93,7 @@ export const RESEARCH_NODES: readonly ResearchNode[] = [
   {
     id: 'machine-speed',
     name: 'Machine speed',
-    description: 'Every machine crafts in three quarters of the time.',
+    description: `Every machine crafts in ${MACHINE_SPEED_MULT * 100}% of the time.`,
     anchor: { kind: 'wall', tx: 6, ty: WALL_Y, where: 'north wall, west' },
     cost: { 'schematic-machine-speed': 1, 'ancient-gear': 3 },
     requires: [],
@@ -127,9 +132,6 @@ export const RESEARCH_NODES: readonly ResearchNode[] = [
   },
 ];
 
-/** Every machine's `craftTicks` is multiplied by this once `machine-speed` is restored, rounded up to whole ticks. */
-export const MACHINE_SPEED_MULT = 0.75;
-
 /** How close the player's feet box must be to a diagram's tile for E to use it, px (the nearest in reach wins). */
 export const RESEARCH_REACH = 16;
 
@@ -159,6 +161,9 @@ export function researchNode(id: string): ResearchNode {
 
 /** The node a schematic item reveals, if any. */
 export const nodeOfSchematic = (itemId: string): ResearchNode | undefined => RESEARCH_NODES.find((n) => n.reveal === itemId);
+
+/** The most cost items any node has (Reservoir II's three): the restore panel and the list keep room for this many. */
+export const MAX_COST_ITEMS = Math.max(...RESEARCH_NODES.map((n) => Object.keys(n.cost).length));
 
 /** The pieces restoring unlocks (033): hidden from the build bar until their node is restored. */
 export const RESEARCH_PIECES: readonly string[] = RESEARCH_NODES.flatMap((n) => (n.effect.kind === 'unlockPiece' ? [n.effect.piece] : []));

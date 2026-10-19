@@ -37,6 +37,11 @@ export class Banner {
     return this.on ? { ...this.on, alpha: this.name.obj.alpha } : null;
   }
 
+  /** Nothing showing and nothing queued (between entries one is briefly null while the next waits for the next frame). */
+  get idle(): boolean {
+    return this.on === null && this.queue.length === 0;
+  }
+
   push(entry: BannerEntry): void {
     this.queue.push(entry);
   }

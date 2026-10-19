@@ -3,6 +3,7 @@ import { SPREAD_STEP } from '../../src/data/foundry';
 import { boot, cameraSettled, watchErrors } from './helpers';
 import { centre, clickBar, clickTile, screenPoint, state, step, STAND, toggleBuild } from './foundryPage';
 import { feedLines, ui } from './intakePage';
+import { researchListLayout } from '../../src/render/researchLayout';
 
 // Research as restoration (033): diagrams on the foundry restored at E with cores,
 // parts and schematics. With ?playtest: the west cap's panel opens on E and E again
@@ -113,10 +114,14 @@ test("the splitter's schematic, banked on the way in, reveals its panel; restore
   const before = await state(page);
   expect(before.research.nodes.find((n) => n.id === 'splitter')?.state).toBe('hidden');
   expect(before.unlocked).not.toContain('splitter');
-  // Walking into the foundry banks the haul, and the splitter's schematic reveals its node.
+  // Walking into the foundry banks the haul, and the splitter's schematic reveals its node; once the foundry is on
+  // show (after the door's fade) the new diagrams shimmer in. Tweens slowed so the shimmer is still running when polled.
+  await page.evaluate(() => window.__GAME__?.tweenSpeed(0.1));
+  await page.evaluate(() => window.__helpers?.toFoundry());
+  expect((await state(page)).research.nodes.find((n) => n.id === 'splitter')?.state).toBe('revealed');
+  await expect.poll(async () => (await ui(page))?.research.effects ?? 0).toBeGreaterThan(0);
+  await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
   await foundryAt(page, 17.5 * 32, 1.5 * 32);
-  let s = await state(page);
-  expect(s.research.nodes.find((n) => n.id === 'splitter')?.state).toBe('revealed');
   await expect.poll(async () => (await ui(page))?.research.diagrams.some((d) => d.node === 'splitter')).toBe(true);
   await openPanel(page, 'splitter');
   expect((await ui(page))?.restorePanel?.cost).toEqual([
@@ -125,7 +130,7 @@ test("the splitter's schematic, banked on the way in, reveals its panel; restore
   ]);
   await page.keyboard.press('e');
   await restored(page, 'splitter');
-  s = await state(page);
+  const s = await state(page);
   expect(s.inventory).toMatchObject({ 'schematic-splitter': 0, 'ancient-gear': 8 });
   expect(s.unlocked).toContain('splitter');
   await expect.poll(async () => (await ui(page))?.research.restored).toContain('splitter');
@@ -164,6 +169,25 @@ test('J opens the research list anywhere; Esc closes it, and J again; it never p
   await expect.poll(async () => (await ui(page))?.researchList.open).toBe(true);
   await page.keyboard.press('j');
   await expect.poll(async () => (await ui(page))?.researchList.open).toBe(false);
+  expect(errors).toEqual([]);
+});
+
+test('the open list never takes clicks meant for the world: a press on it still fires', async ({ page }) => {
+  test.setTimeout(60_000);
+  const errors = watchErrors(page);
+  await boot(page);
+  // On the real-time clock (no step yet), so the mouse drives the tube as in play.
+  await page.keyboard.press('j');
+  await expect.poll(async () => (await ui(page))?.researchList.open).toBe(true);
+  const { panel } = researchListLayout();
+  const centre = await screenPoint(page, panel.x + panel.w / 2, panel.y + panel.h / 2);
+  const before = await state(page);
+  expect(before.inventory.arrow ?? 0).toBeGreaterThan(0);
+  await page.mouse.move(centre.x, centre.y);
+  await page.mouse.down();
+  await expect.poll(async () => (await state(page)).inventory.arrow ?? 0, { timeout: 15_000 }).toBeLessThan(before.inventory.arrow ?? 0);
+  await page.mouse.up();
+  expect((await ui(page))?.researchList.open).toBe(true);
   expect(errors).toEqual([]);
 });
 

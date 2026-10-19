@@ -9,13 +9,17 @@ import { colorOf } from './color';
 import { shownItem, shownKey } from './itemShown';
 import { addVector } from './vector/textures';
 
-/** What the schematic view shows, for the test hook: the light pillars standing, and the banner's schematic line while it shows. */
+/**
+ * What the schematic view shows, for the test hook: the light pillars standing, the banner's schematic line while it
+ * shows, and whether the shared banner has nothing showing or queued.
+ */
 export interface SchematicsShown {
   pillars: { x: number; y: number }[];
   banner: { kicker: string; name: string } | null;
+  bannerIdle: boolean;
 }
 
-export const NO_SCHEMATICS_SHOWN: SchematicsShown = { pillars: [], banner: null };
+export const NO_SCHEMATICS_SHOWN: SchematicsShown = { pillars: [], banner: null, bannerIdle: true };
 
 const isSchematic = (itemId: string): boolean => ITEMS[itemId]?.kind === 'schematic';
 
@@ -39,6 +43,7 @@ export class SchematicView {
     return {
       pillars: [...this.pillars.values()].filter((p) => p.visible).map((p) => ({ x: p.x, y: p.y })),
       banner: on?.kind === 'schematic' ? { kicker: on.kicker, name: on.name } : null,
+      bannerIdle: this.banner.idle,
     };
   }
 

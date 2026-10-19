@@ -28,7 +28,7 @@ async function standAt(page: Page, tx: number, ty: number): Promise<void> {
 /** Plays out the schematic reveal banners banking queued (fast, on the tween clock), so none covers the shot. */
 async function bannersGone(page: Page): Promise<void> {
   await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
-  await expect.poll(async () => (await ui(page))?.schematics.banner ?? null, { timeout: 20_000 }).toBeNull();
+  await expect.poll(async () => (await ui(page))?.schematics.bannerIdle, { timeout: 20_000 }).toBe(true);
   await expect.poll(async () => (await ui(page))?.research.effects).toBe(0);
   await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
 }

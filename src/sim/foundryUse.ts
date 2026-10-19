@@ -4,6 +4,7 @@ import { ITEMS } from '../data/items';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import type { Command, HopperAmount } from './input';
 import { count } from './inventory';
+import { diagramInReach } from './research';
 import { pieceRect, type CrateState, type HopperState, type PieceState, type SorterState } from './pieces';
 import type { SimState } from './state';
 
@@ -97,13 +98,14 @@ export function setFilter(state: SimState, id: number, itemId: string | null): v
 
 /**
  * Withdraws, deposits, filters, then E: on the nearest crate it empties it. E on a
- * hopper or sorter does nothing here; render opens its menu.
+ * hopper or sorter does nothing here; render opens its menu. With a diagram in reach
+ * (033) E is the restore panel's (render opens it), so it empties no crate.
  */
 export function stepFoundryUse(state: SimState, cmd: Command): void {
   if (cmd.withdraw) withdraw(state, cmd.withdraw.id, cmd.withdraw.amount);
   if (cmd.setFilter) setFilter(state, cmd.setFilter.id, cmd.setFilter.itemId);
   if (cmd.deposit) deposit(state, cmd.deposit.id, cmd.deposit.itemId, cmd.deposit.amount);
-  if (!cmd.interact) return;
+  if (!cmd.interact || diagramInReach(state)) return;
   const target = usableInReach(state);
   if (target?.kind === 'crate') takeCrate(state, target);
 }

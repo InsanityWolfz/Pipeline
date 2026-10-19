@@ -1,5 +1,6 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, SPRITES } from '../data/assets';
+import { MAX_COST_ITEMS } from '../data/research';
 import { RESEARCH_LIST } from '../data/researchAssets';
 import type { SimState } from '../sim/state';
 import { researchListLayout } from './researchLayout';
@@ -14,6 +15,9 @@ export interface ResearchListState {
   groups: { id: string; label: string; rows: { id: string; name: string; state: string; cost: string[]; where: string }[] }[];
 }
 
+/** A row's state line: its state, or what it needs restored first while its cost is carried. */
+const stateText = (r: ResearchListRow): string => (r.needs ? RESEARCH_LIST.needs(r.needs) : RESEARCH_LIST.states[r.state]);
+
 interface RowView {
   name: TextLine;
   state: TextLine;
@@ -22,7 +26,6 @@ interface RowView {
   where: TextLine;
 }
 
-const MAX_COST = 3;
 
 // The research list (033, J): every node of the foundry by group (Intake, Walls,
 // Sealed wing), each row its name ("Lost schematic" while hidden), its state, its
@@ -57,8 +60,8 @@ export class ResearchList {
         this.rows.set(r.id, {
           name: text(x + L.col.name, y),
           state: text(x + L.col.state, y),
-          icons: Array.from({ length: MAX_COST }, (_, i) => addVector(scene, x + L.col.cost + i * L.costStep, y - L.textY + 1, SPRITES.itemWood).setOrigin(0).setScrollFactor(0).setDepth(DEPTHS.menu + 1)),
-          counts: Array.from({ length: MAX_COST }, (_, i) => text(x + L.col.cost + i * L.costStep + L.costTextX, y, 'count')),
+          icons: Array.from({ length: MAX_COST_ITEMS }, (_, i) => addVector(scene, x + L.col.cost + i * L.costStep, y - L.textY + 1, SPRITES.itemWood).setOrigin(0).setScrollFactor(0).setDepth(DEPTHS.menu + 1)),
+          counts: Array.from({ length: MAX_COST_ITEMS }, (_, i) => text(x + L.col.cost + i * L.costStep + L.costTextX, y, 'count')),
           where: text(x + L.col.where, y).setFill(L.colors.dim).setAlpha(L.dimAlpha),
         });
       });
@@ -76,7 +79,7 @@ export class ResearchList {
       groups: this.groups.map((g) => ({
         id: g.id,
         label: g.label,
-        rows: g.rows.map((r) => ({ id: r.id, name: r.name, state: RESEARCH_LIST.states[r.state], cost: r.cost.map((c) => `${c.have}/${c.need}`), where: r.where })),
+        rows: g.rows.map((r) => ({ id: r.id, name: r.name, state: stateText(r), cost: r.cost.map((c) => `${c.have}/${c.need}`), where: r.where })),
       })),
     };
   }
@@ -105,7 +108,7 @@ export class ResearchList {
     const L = RESEARCH_LIST;
     const hidden = r.state === 'hidden';
     v.name.set(r.name).setFill(hidden ? L.colors.dim : undefined).setAlpha(hidden ? L.dimAlpha : 1).setVisible(true);
-    v.state.set(L.states[r.state]).setFill(L.colors[r.state]).setVisible(true);
+    v.state.set(stateText(r)).setFill(L.colors[r.state]).setVisible(true);
     v.where.set(r.where).setVisible(true);
     v.icons.forEach((icon, i) => {
       const c = r.cost[i];

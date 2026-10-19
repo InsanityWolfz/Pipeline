@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { CONDUIT_TICKS, ENTRANCE_CAPS, INTAKE } from '../../src/data/foundry';
+import { CONDUIT_TICKS, ENTRANCE_CAPS, HOPPER_TICKS, INTAKE } from '../../src/data/foundry';
 import { machineDef } from '../../src/data/pieces';
 import { MACHINE_SPEED_MULT } from '../../src/data/research';
-import type { ConduitState, MachineState } from '../../src/sim/pieces';
+import type { ConduitState, CrateState, HopperState, MachineState } from '../../src/sim/pieces';
 import { craftTicksAt, diagramInReach, diagrams, entranceCap, machineSpeed, restoreFail } from '../../src/sim/research';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
@@ -155,6 +155,28 @@ describe('the reservoir', () => {
 });
 
 describe('machine speed', () => {
+  it('rounds a craft time up to whole ticks: the assembler 90 → 68; conduits and hoppers keep their pace', () => {
+    expect(machineDef('assembler').craftTicks).toBe(90);
+    expect(craftTicksAt('assembler', MACHINE_SPEED_MULT)).toBe(68);
+    const pace = (restoredSpeed: boolean) => {
+      const s = foundry();
+      if (restoredSpeed) s.research['machine-speed'] = 'restored';
+      const h = put<HopperState>(s, 'hopper', 3, 8, 'right');
+      Object.assign(h, { item: 'wood', count: 2 });
+      put(s, 'conduit', 4, 8, 'right');
+      const crate = put<CrateState>(s, 'crate', 5, 8);
+      let first = -1;
+      for (let t = 1; t <= 200 && first < 0; t++) {
+        run(s, 1);
+        if ((crate.contents.wood ?? 0) > 0) first = t;
+      }
+      return first;
+    };
+    // The same ticks from hopper to crate with machine speed restored as without: it scales machines only.
+    expect(pace(true)).toBe(pace(false));
+    expect(pace(false)).toBeGreaterThanOrEqual(HOPPER_TICKS + CONDUIT_TICKS);
+  });
+
   it("scales every machine's craft time by 0.75, rounded up; conduits and hoppers are unchanged", () => {
     expect(MACHINE_SPEED_MULT).toBe(0.75);
     expect(craftTicksAt('cutter', 1)).toBe(60);

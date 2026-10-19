@@ -20,8 +20,9 @@ export const SCHEMATIC_REGIONS: Readonly<Record<string, readonly number[]>> = {
   'schematic-merger': [1, 2],
 };
 
-/** Which region a room is in (034 adds Region 2's). */
+/** Which region a room is in (034 adds Region 2's); a room not listed is in DEFAULT_REGION. */
 export const ROOM_REGIONS: Readonly<Record<string, number>> = { overworld: 1, foundry: 1 };
+export const DEFAULT_REGION = 1;
 
 /** A rare entry rolled once per death (032), at `championChance` for a champion. */
 export interface RarePart {

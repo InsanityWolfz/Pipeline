@@ -38,8 +38,17 @@ export const RESEARCH_ICONS = {
 export const RESEARCH_LOOK = {
   /** A diagram's linework breathes between these alphas over `pulseMs`; a diagram whose `requires` are unmet is drawn at `dimmed` of that. */
   diagram: { alpha: [0.5, 0.9] as const, pulseMs: 2200, dimmed: 0.35 },
-  /** Restoring: the linework fills solid cyan over `fillMs`, then the part solidifies (the diagram fades as it shows) over `solidMs`. */
-  restore: { fillMs: 450, solidMs: 550, fillColor: 'cyan-glow' },
+  /**
+   * Restoring: the linework fills solid cyan over `fillMs` (from `fromAlpha`, swelling to `pop` × its size), then the
+   * part solidifies (the diagram fades as it shows) over `solidMs`.
+   */
+  restore: { fillMs: 450, solidMs: 550, fillColor: 'cyan-glow', fromAlpha: 0.3, pop: 1.08 },
+  /**
+   * Depths: diagrams on the intake sit `intakeNudges` foundry nudges over its anchor (over IntakeView's caps, at 4);
+   * wall pieces `wall` over their wall's face (like a wall prop, 014), the bare panel `panelUnder` below its diagram
+   * at `wallDiagram` more; an effect `effect` over what it copies.
+   */
+  depth: { intakeNudges: 6, wall: 0.6, wallDiagram: 0.1, panelUnder: 0.05, effect: 0.01 },
   /** A schematic's reveal shimmer over its new diagram: a band of light sweeping across it over `ms`. */
   reveal: { ms: 900, color: 'cyan-glow', alpha: 0.8 },
   /** The light pillar: its height and width over the item, its tint and alpha breathing over `breatheMs`. */
@@ -81,17 +90,19 @@ export const RESTORE_PANEL = {
  */
 export const RESEARCH_LIST = {
   title: { text: 'Restoration', w: 128, h: 22, gap: 4, titleY: 4 },
-  width: 452,
+  width: 480,
   pad: 8,
   headerHeight: 12,
   headerY: 2,
   rowHeight: 18,
   groupGap: 6,
-  col: { name: 2, state: 112, cost: 168, where: 330 },
+  col: { name: 2, state: 112, cost: 214, where: 360 },
   textY: 6,
   costStep: 40,
   costTextX: 17,
   states: { restored: 'restored', ready: 'ready', revealed: 'revealed', hidden: 'hidden' },
+  /** A revealed node whose cost is carried but whose requires aren't restored. */
+  needs: (name: string): string => `needs ${name}`,
   colors: { restored: 'cyan', ready: 'gold-trim', revealed: 'rock-pale', hidden: 'rock-pale', missing: 'rust-light', dim: 'rock-pale' },
   dimAlpha: 0.7,
   footer: { text: 'Restore a part at its diagram in the foundry: walk up and press E.', gap: 6, lineHeight: 9 },

@@ -1,4 +1,4 @@
-import { ANY_SCHEMATIC, ROOM_REGIONS, SCHEMATIC_CHANCE, SCHEMATIC_REGIONS } from '../data/drops';
+import { ANY_SCHEMATIC, DEFAULT_REGION, ROOM_REGIONS, SCHEMATIC_CHANCE, SCHEMATIC_REGIONS } from '../data/drops';
 import { ITEMS } from '../data/items';
 import { nodeOfSchematic } from '../data/research';
 import { count } from './inventory';
@@ -24,7 +24,7 @@ export function schematicKnown(state: Pick<SimState, 'research'>, itemId: string
 
 /** The schematics that could drop in a room now: not revealed, carried, on the ground or in the stash, and allowed in its region. */
 export function eligibleSchematics(state: Pick<SimState, 'research' | 'inventory' | 'groundItems' | 'stash'>, roomId: string): string[] {
-  const region = ROOM_REGIONS[roomId] ?? 1;
+  const region = ROOM_REGIONS[roomId] ?? DEFAULT_REGION;
   return SCHEMATICS.filter(
     (id) =>
       !schematicKnown(state, id) &&

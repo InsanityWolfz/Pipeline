@@ -1,7 +1,7 @@
 import { ITEMS } from '../data/items';
-import { RESEARCH_NODES, researchNode } from '../data/research';
+import { RESEARCH_NODES } from '../data/research';
 import { count } from './inventory';
-import { affordable, entranceCap, machineSpeed, nodeState, requiresMet, type NodeState } from './research';
+import { entranceCap, machineSpeed, nodeReady, nodeState, type NodeState } from './research';
 import type { SimState } from './state';
 
 /** Research in `getState()` (033). */
@@ -12,14 +12,8 @@ export interface ResearchSummary {
   entranceCap: number;
   /** The multiplier on every machine's craft time now. */
   machineSpeed: number;
-  /** Schematic items carried now, and those banked (in the banked snapshot or the stash), by id. */
+  /** Schematic items carried now, and those banked: carried and in the banked snapshot, or at home in the stash (one a restore spent is neither). */
   schematics: { carried: string[]; banked: string[] };
-}
-
-/** A node is ready to restore at its diagram: revealed, its requires restored and its cost carried (not the sealed wing). */
-export function nodeReady(state: Pick<SimState, 'research' | 'inventory'>, id: string): boolean {
-  const node = researchNode(id);
-  return nodeState(state, id) === 'revealed' && node.effect.kind !== 'wing' && requiresMet(state, node) && affordable(state.inventory, node);
 }
 
 export function researchSummary(state: SimState): ResearchSummary {
@@ -30,7 +24,7 @@ export function researchSummary(state: SimState): ResearchSummary {
     machineSpeed: machineSpeed(state),
     schematics: {
       carried: schematics.filter((id) => count(state.inventory, id) > 0),
-      banked: schematics.filter((id) => count(state.banked, id) > 0 || count(state.stash, id) > 0),
+      banked: schematics.filter((id) => Math.min(count(state.inventory, id), count(state.banked, id)) > 0 || count(state.stash, id) > 0),
     },
   };
 }

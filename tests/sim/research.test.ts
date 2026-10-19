@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { RESEARCH_NODES } from '../../src/data/research';
-import { createResearch, diagramInReach, diagrams, restoreFail } from '../../src/sim/research';
-import { nodeReady } from '../../src/sim/researchSummary';
+import { createResearch, diagramInReach, diagrams, nodeReady, restoreFail } from '../../src/sim/research';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
 import { die, movePlayer, run } from './fight';
-import { foundry, stepOutside } from './foundryKit';
+import { foundry, put, stepOutside } from './foundryKit';
+import type { CrateState } from '../../src/sim/pieces';
 
 // Research nodes' states and the restore rule (033): start reveals, the restore spends
 // exactly its cost, and every refusal; restored nodes survive a KO.
@@ -117,6 +117,34 @@ describe('restoring', () => {
     stepOutside(s);
     die(s);
     expect([s.research.splitter, s.research['reservoir-1'], s.research['entrance-2']]).toEqual(['restored', 'restored', 'revealed']);
+  });
+
+  it('with a crate and a diagram both in reach, one E does only one thing: the diagram is the panel\'s, the crate keeps its contents', () => {
+    const s = foundry();
+    below(s, 11, 0);
+    const crate = put<CrateState>(s, 'crate', 12, 1);
+    crate.contents = { wood: 3 };
+    expect(diagramInReach(s)?.node).toBe('entrance-2');
+    run(s, 1, { interact: true });
+    expect([crate.contents, s.inventory.wood ?? 0, s.events.crateTakes]).toEqual([{ wood: 3 }, 0, []]);
+    // Away from the diagram, E empties the crate as before.
+    const t = foundry();
+    below(t, 6, 6);
+    const other = put<CrateState>(t, 'crate', 7, 7);
+    other.contents = { wood: 2 };
+    run(t, 1, { interact: true });
+    expect(t.inventory.wood).toBe(2);
+  });
+
+  it('a schematic a restore spent is no longer reported banked', () => {
+    const s = foundry();
+    s.research.splitter = 'revealed';
+    Object.assign(s.inventory, { 'schematic-splitter': 1, 'ancient-gear': 2 });
+    s.banked = { ...s.inventory };
+    expect(summarize(s).research.schematics.banked).toEqual(['schematic-splitter']);
+    below(s, 17, 0);
+    run(s, 1, { restore: 'splitter' });
+    expect(summarize(s).research.schematics).toEqual({ carried: [], banked: [] });
   });
 
   it('is deterministic: the same inputs restore the same way', () => {

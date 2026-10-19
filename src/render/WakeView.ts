@@ -27,8 +27,10 @@ export class WakeView {
     return this.lines.length > 0;
   }
 
-  /** Shows the wake-up text for a KO that lost `lost` (item id to count), once the KO's fade has played. */
-  /** Shows what a KO lost, by how each item shows (033: unknown schematics as one "Unknown schematic" line). */
+  /**
+   * Shows the wake-up text for a KO that lost `lost` (item id to count), once the KO's fade has played, each item as it
+   * shows (033: unknown schematics as one "Unknown schematic" line).
+   */
   show(lost: Readonly<Record<string, number>>, sim: Pick<SimState, 'research'>): void {
     this.clear();
     const shown: Record<string, number> = {};
