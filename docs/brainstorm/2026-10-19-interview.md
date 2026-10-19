@@ -105,3 +105,9 @@ Oct 19, 2026 · Shaun's answers, which follow on from docs/brainstorm/2026-10-19
   - **Burrower:** tunnels underground, shown by a ripple, and pops up under you after a wind-up.
   - **Shardback:** an armored front, a mini-Bulwark.
   - **Sniper construct:** a long-range shot with a laser-sight telegraph; it hides behind cover.
+
+## Round 9
+- **Region 2 barrier:** claiming the shrine pylon (after beating the Warden) drops it. The Warden core goes to the intake.
+- **Gear slots:** 4: helm, body, boots and trinket. The body piece carries heavy or light.
+- **Affixes:** max HP and armor, field regen, move speed and roll. Ley range and refill were not chosen.
+- **Rarity:** Common has 1 affix, Fine 2, Rare 3. Rare Relics each bend one rule. Identification at the bench rolls them.
