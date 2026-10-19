@@ -149,3 +149,11 @@ All gear effects go through one `playerStats(state)` function, which 037 (talent
 
 ## Open questions
 None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).
+
+## Raised after the build (for Shaun at playtest)
+- **Colours and art:** rarity colours are Common rock-light, Fine cyan, Rare gold-trim and Relic wisp-light. The gear sprites wait on Shaun's approval by eye (docs/review/036). With the Stages panel open beside it, the gear panel covers the bench and the player.
+- **Small choices the spec didn't make:**
+  - a Wardstone block cancels the whole hit
+  - Last Ember keeps the hit's knockback, and its damage number shows the full hit
+  - a Rollbreaker stagger wakes an idle enemy into a chase
+  - new placeholder names for helms, boots and trinkets
