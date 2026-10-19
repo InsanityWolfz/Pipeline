@@ -285,3 +285,4 @@ None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-question
 - **Altar panel.** It also opens while the altar is spent or summoning, with Summon greyed out.
 - **Placement choices** are listed in the 034 plan. The Ley-iron Cut has no pylon of its own; the Cistern Terrace is the region's only claim.
 - **Art** waits on Shaun's approval by eye (docs/review/034).
+- **After review, measured:** a bot circling to the Bulwark's back with single carried arrows beats the full 900 HP in 1,515 ticks (about 25 s) and takes no damage at all (tests/sim/bulwark.test.ts). So the fight may need more HP, a faster turn, or more pressure on a player who circles. Shaun to tune at playtest.
