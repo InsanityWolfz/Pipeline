@@ -11,3 +11,12 @@ Oct 19, 2026 · Shaun, in chat.
   - adds during the fight (a couple of Shardbacks or Chargers at 50% HP)
 - **Frost:** leave it. Freezing is for tougher enemies and bosses, and Husks can die before they freeze.
 - **Ring scaling:** each danger ring multiplies enemy HP and damage (for example ring 1 ×1, ring 2 ×1.4, ring 3 ×2), on top of the tougher enemy types.
+
+## 041 balance, round 2
+- **Ring multipliers:** steeper, ×1 / ×1.6 / ×2.5 for rings 1, 2 and 3. They apply to enemy HP and damage; bosses keep their own numbers.
+- **Targets the scripted tests check:**
+  - a Bulwark fight takes 60–90 s with a decent build and real damage taken; a naive bot can lose
+  - a ring-matched pack clears in 8–15 s with a fitting volley
+  - each ammo family wins its own scenario: arrows vs a line, bombs vs a cluster, ley bolts vs movers behind walls, mines vs a stationary target
+- **Survival:** no change. Gear, talents and springs already scale it.
+- **Anything else:** no. 041 is complete.
