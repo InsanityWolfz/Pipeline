@@ -40,7 +40,7 @@ const EXPECTED: Readonly<Record<string, string>> = {
   'wardstone-circlet': 'You: after 6.0 s unhit, the next hit is blocked',
   featherplate: 'You: no move speed slow from heavy armor · You: ×0.75 roll distance',
   'last-ember': 'You: once a trip, a killing hit leaves you on 1 HP, invulnerable for 1.0 s',
-  'frost-rune': 'Cold: added to Arrow rounds · 1 rimestone per 4',
+  'frost-rune': 'Cold: added to any round · 1 rimestone per 4',
   'ley-guide': 'Homing: added to Ley rounds · 1 ley crystal per 4',
   'prism-lens': 'Split: added to Ley rounds · 2 ley crystal per 4',
   'cluster-die': 'Cluster: added to Bomb rounds · 1 ley-iron per 4',

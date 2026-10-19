@@ -6,6 +6,7 @@ import { VIEW_WIDTH } from '../data/config';
 import type { SimEvents } from '../sim/events';
 import type { SimState } from '../sim/state';
 import { rampShare } from '../sim/keystones';
+import { burstTint } from './roundLook';
 import { tubeSlotBox } from './bottomHud';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
@@ -69,10 +70,12 @@ export class TalentFxView {
     };
   }
 
-  private burst(kind: Burst['kind'], frame: string, x: number, y: number, depth: number, look: Burst['look'], add = false): void {
+  private burst(kind: Burst['kind'], frame: string, x: number, y: number, depth: number, look: Burst['look'], add = false, tint: number | null = null): void {
     // Drawn plain unless `add`: the ring keeps its cyan over bright grass, the ice its pale blue over a white hit flash.
     const image = addVector(this.scene, x, y, frame).setDepth(depth);
     if (add) image.setBlendMode(BlendModes.ADD);
+    // 039.15: a Cold Pool-burst flashes frost.
+    if (tint !== null) image.setTint(tint);
     const base = image.scaleX;
     image.setData('base', base).setScale(base * look.from);
     this.bursts.push({ image, kind, ms: 0, look, fresh: true });
@@ -94,7 +97,7 @@ export class TalentFxView {
     // A Pool-burst (Blastfletch): the Pool's ring flashing out at the burst's radius.
     const B = KEYSTONE_LOOK.poolBurst;
     const k = (r: number) => r / KEYSTONE_LOOK.pool.spriteRadius;
-    if (here) for (const c of events.poolBursts) this.burst('pool', TALENT_SPRITES.pool, c.x, c.y, c.y + B.depthAbove, { ms: B.ms, from: B.from * k(c.radius), to: B.to * k(c.radius) }, true);
+    if (here) for (const c of events.poolBursts) this.burst('pool', TALENT_SPRITES.pool, c.x, c.y, c.y + B.depthAbove, { ms: B.ms, from: B.from * k(c.radius), to: B.to * k(c.radius) }, true, burstTint(c.damageType));
     this.stepBursts(deltaMs);
     this.stepLine(deltaMs);
     this.drawPools(sim, shown);

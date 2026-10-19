@@ -21,6 +21,7 @@ import { DRAW_HEIGHT } from '../data/tube';
 import type { SimEvents } from '../sim/events';
 import { registerAnim } from './anims';
 import { colorOf } from './color';
+import { burstTint } from './roundLook';
 import { addVector, addVectorSprite } from './vector/textures';
 import { UI_CAMERA } from './scale';
 
@@ -53,7 +54,7 @@ export class EffectsView {
   play(events: SimEvents, player: { x: number; y: number }): void {
     for (const d of events.deaths) this.corpse(d.enemyId, d.x, d.y, d.facing === 'left', d.champion === true);
     for (const p of events.pickups) this.pickup(p.x, p.y);
-    for (const b of events.bursts) this.burst(b.x, b.y, b.radius);
+    for (const b of events.bursts) this.burst(b.x, b.y, b.radius, burstTint(b.damageType));
     for (const s of events.shots) this.muzzle(s.x, s.y);
     for (const m of events.melees) this.swoosh(m.x, m.y, m.angle);
     for (const b of events.splits) this.splitFlash(b.x, b.y);
@@ -159,9 +160,11 @@ export class EffectsView {
     });
   }
 
-  /** The burst drawn at its real radius, in front of what stands inside it. */
-  private burst(x: number, y: number, radius: number): void {
+  /** The burst drawn at its real radius, in front of what stands inside it, tinted for its element. */
+  private burst(x: number, y: number, radius: number, tint: number | null): void {
     const sprite = addVectorSprite(this.scene, x, y, animFrames(FIRE_BURST)[0] ?? '').setDepth(y + radius);
+    // 039.15: a Cold Burst's flash in frost colours.
+    if (tint !== null) sprite.setTint(tint);
     sprite.setScale((radius * 2) / sprite.width);
     sprite.play(FIRE_BURST.key);
     sprite.once('animationcomplete', () => sprite.destroy());

@@ -1,17 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { GEAR_PANEL } from '../../src/data/gearAssets';
-import { STAGES } from '../../src/data/stages';
+import { STAGE_ROWS } from '../../src/data/stages';
 import { stagePanelLayout } from '../../src/render/stagePanelLayout';
 import { gearPanelLayout } from '../../src/render/gearPanelLayout';
 
 // The bench's Stages panel (029): beside the bench's gear panel (036), on screen, never over it.
 
 describe('the Stages panel layout', () => {
-  it('has a row per stage, inside its panel, and the panel on screen', () => {
+  it('has a row per stage and family (039.12), inside its panel with the line under them, and the panel on screen', () => {
     for (const bench of [0, GEAR_PANEL.w]) {
-      const { panel, rows } = stagePanelLayout(bench);
-      expect(rows.map((r) => r.stageId)).toEqual(Object.keys(STAGES));
+      const { panel, rows, line } = stagePanelLayout(bench);
+      expect(rows.map((r) => r.stageId)).toEqual(STAGE_ROWS.map((r) => r.id));
+      expect(line.y).toBeGreaterThan(Math.max(...rows.map((r) => r.y + r.h)));
+      expect(line.y).toBeLessThan(panel.y + panel.h);
       expect(panel.x).toBeGreaterThanOrEqual(0);
       expect(panel.x + panel.w).toBeLessThanOrEqual(VIEW_WIDTH);
       expect(panel.y).toBeGreaterThanOrEqual(0);

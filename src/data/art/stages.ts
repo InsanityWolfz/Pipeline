@@ -1,6 +1,7 @@
 import { ROUND_ICONS, STAGE_SPRITES } from '../stageAssets';
 import { ROUNDS, roundBase, roundTags } from '../tags';
 import { ICON_ARROW, ICON_ARROW_HEAD, ICON_BOMB, ICON_LEY_BOLT } from './items';
+import { ICON_LANDMINE } from './mines';
 import type { NodeLooks } from './nodes';
 import { shadow } from './terrain';
 import { ellipse, flat, line, path, solid, trim, type Shape, type ShapeStyle, type VectorSprite } from './types';
@@ -65,22 +66,29 @@ export const RIME_CLUSTER: NodeLooks = {
   ],
 };
 
+/** The frost badge: a snowflake on a water disc, centred at (x, 4.2). */
+function snowflake(x: number): Shape[] {
+  return [
+    ellipse(x, 4.2, 3.4, 3.4, solid('water')),
+    ...[0, 60, 120].map((a) => {
+      const r = (a * Math.PI) / 180;
+      const dx = Math.cos(r) * 2.4;
+      const dy = Math.sin(r) * 2.4;
+      return line([x - dx, 4.2 - dy, x + dx, 4.2 + dy], 0.7, 'snow');
+    }),
+  ];
+}
+
 /**
  * Each tag's mark on a tagged round's icon (029): a small badge in its lower-right corner, and optionally a new look
  * for its base icon's head (a frost arrow's head is pale ice).
  */
-const TAG_ART: Readonly<Record<string, { badge: readonly Shape[]; head?: ShapeStyle }>> = {
+const TAG_ART: Readonly<Record<string, { badge: readonly Shape[]; pairedBadge?: readonly Shape[]; head?: ShapeStyle }>> = {
   // A snowflake, and a head of ice.
   frost: {
-    badge: [
-      ellipse(4.2, 4.2, 3.4, 3.4, solid('water')),
-      ...[0, 60, 120].map((a) => {
-        const r = (a * Math.PI) / 180;
-        const dx = Math.cos(r) * 2.4;
-        const dy = Math.sin(r) * 2.4;
-        return line([4.2 - dx, 4.2 - dy, 4.2 + dx, 4.2 + dy], 0.7, 'snow');
-      }),
-    ],
+    badge: snowflake(4.2),
+    // 039: beside a shape's badge, the element's sits in the lower-left corner.
+    pairedBadge: snowflake(-4.2),
     head: { fill: 'foam', outline: true, glow: { color: 'water-light', blur: 2 } },
   },
   // A bending arrow.
@@ -123,6 +131,7 @@ const BASE_ICONS: Readonly<Record<string, { shapes: readonly Shape[]; head?: Sha
   arrow: { shapes: ICON_ARROW, head: ICON_ARROW_HEAD },
   bomb: { shapes: ICON_BOMB },
   'ley-bolt': { shapes: ICON_LEY_BOLT },
+  landmine: { shapes: ICON_LANDMINE },
 };
 
 /** A tagged round's icon: its base's, its head restyled by any tag that restyles heads, then each tag's badge. */
@@ -131,7 +140,8 @@ function roundIcon(round: string): VectorSprite {
   const art = roundTags(round).flatMap((t) => (TAG_ART[t] ? [TAG_ART[t]] : []));
   const head = art.find((a) => a.head)?.head;
   const shapes = base.shapes.map((sh) => (head && sh === base.head ? ({ ...sh, ...head } as Shape) : sh));
-  return icon(ROUND_ICONS[round] ?? '', [...shapes, ...art.flatMap((a) => a.badge)]);
+  const badges = art.flatMap((a) => (art.length > 1 && a.pairedBadge ? a.pairedBadge : a.badge));
+  return icon(ROUND_ICONS[round] ?? '', [...shapes, ...badges]);
 }
 
 /** A Shard in flight (029), pointing right: a small cyan sliver. */

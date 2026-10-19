@@ -9,21 +9,22 @@ import { fixtureAt, fixtureDef, portFront } from './fixtures';
 import { createPiece, footprint, frontTile, pieceAt, pieceRect, sameTile, sideTile, sortSide, splitSide, type PieceShape, type PieceState, type PlaceFail } from './pieces';
 import type { Facing } from './player';
 import { roomById, type SimState } from './state';
-import { machineRecipe } from './stages';
+import { machineRecipe, stagesUnlocked } from './stages';
 import { lockedByResearch } from './research';
 
 // Placing pieces on the foundry grid and picking them back up. Both are free.
 
 /**
  * Pieces the player can place, in build bar order: logistics always (033: the splitter and merger once restored),
- * machines once their output is hand-crafted.
+ * machines once their output is hand-crafted (a stage once any of its rounds is).
  */
 export function unlockedPieces(state: Pick<SimState, 'crafted' | 'research'>): string[] {
   const locked = lockedByResearch(state);
   return BUILD_BAR.filter((id) => {
     if (locked.includes(id)) return false;
     const def = pieceDef(id);
-    if (def.kind === 'machine') return state.crafted.includes(recipeDef(def.recipeId).output.itemId);
+    // A stage once any of its rounds has been hand-made (039: hand-applied once to any family).
+    if (def.kind === 'machine') return def.stage ? stagesUnlocked(state).includes(def.stage) : state.crafted.includes(recipeDef(def.recipeId).output.itemId);
     return true;
   });
 }

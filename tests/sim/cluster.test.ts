@@ -100,7 +100,7 @@ describe('a cluster bomb', () => {
     const at = { x: PLAYER_AT.x + 120, y: PLAYER_AT.y };
     run(s, 1, fireAt(at.x, at.y));
     runUntil(s, (t) => t.events.bursts.length > 0, 100);
-    expect(s.events.bursts).toEqual([{ x: at.x, y: at.y, radius: 48 }]);
+    expect(s.events.bursts).toEqual([{ x: at.x, y: at.y, radius: 48, damageType: 'physical' }]);
     expect(s.mines.bomblets).toHaveLength(4);
     run(s, 11);
     expect(s.events.bombletBursts).toEqual([]);

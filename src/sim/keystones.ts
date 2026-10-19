@@ -1,4 +1,4 @@
-import { BLASTFLETCH, SHATTERPOINT } from '../data/talents';
+import { BLASTFLETCH } from '../data/talents';
 import { COLD } from '../data/tags';
 import { createShard, isShard, type ArrowState } from './arrows';
 import { blastArea } from './blast';
@@ -84,14 +84,15 @@ export function afterKeystoneHit(state: SimState, arrow: ArrowState, e: EnemySta
   const strike = hit.pooled ? ruleFor(state, 'pool-strike', emission) : null;
   if (strike) {
     const radius = statOf(state, 'radius', poolBurstEmission(arrow.ammoId), strike.params.radius ?? BLASTFLETCH.burstRadius);
-    blastArea(state, arrow.roomId, arrow.x, arrow.y, radius, arrow.damage * hit.scale, BLASTFLETCH.damageType, e.id);
-    state.events.poolBursts.push({ x: arrow.x, y: arrow.y, radius });
+    // 039.3: a Pool-burst is its arrow's damage type.
+    blastArea(state, arrow.roomId, arrow.x, arrow.y, radius, arrow.damage * hit.scale, arrow.damageType, e.id);
+    state.events.poolBursts.push({ x: arrow.x, y: arrow.y, radius, damageType: arrow.damageType });
     arrow.pooled = false;
   }
   const shatter = hit.shatter ? ruleFor(state, 'shatter', emission) : null;
   if (!shatter) return;
   const { count = 0, share = 0, range = 0, speed = 0 } = shatter.params;
-  const def = { speed, range, damage: arrow.damage * share, damageType: SHATTERPOINT.damageType, fromSplit: false };
+  const def = { speed, range, damage: arrow.damage * share, damageType: arrow.damageType, fromSplit: false };
   for (let k = 0; k < count; k++) {
     const [dx, dy] = rotate(arrow.dx, arrow.dy, (k * 360) / count);
     spawned.push(createShard(state.nextArrowId++, arrow, e.x, e.y, dx, dy, e.id, def));

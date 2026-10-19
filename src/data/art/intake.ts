@@ -85,6 +85,13 @@ export const ENTRANCE_GAUGE_COLORS: Readonly<Record<string, string>> = {
   // 038: landmines iron, cluster bombs a hotter ember.
   landmine: 'iron-light',
   'bomb+cluster': 'cinder-light',
+  // 039: Frost rounds of every family glow frost, as the frost arrow does.
+  'bomb+frost': 'water-light',
+  'bomb+frost+cluster': 'water-light',
+  'ley-bolt+frost': 'water-light',
+  'ley-bolt+frost+homing': 'water-light',
+  'ley-bolt+frost+split': 'water-light',
+  'landmine+frost': 'water-light',
 };
 
 /**

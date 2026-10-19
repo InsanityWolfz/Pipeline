@@ -1,6 +1,6 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, SPRITES } from '../data/assets';
-import { INVENTORY_PANEL, reservedRows, sparesText } from '../data/hudPanels';
+import { INVENTORY_PANEL, inventoryPanelLeft, reservedRows, sparesText } from '../data/hudPanels';
 import { itemDef } from '../data/items';
 import { playerStats } from '../sim/stats';
 import type { SimState } from '../sim/state';
@@ -50,7 +50,11 @@ export class InventoryPanel {
     const L = this.layout;
     const image = (x: number, y: number, key: string, depth: number) => addVector(scene, x, y, key).setOrigin(0).setScrollFactor(0).setDepth(depth);
     const text = (x: number, y: number, style: 'body' | 'display' | 'title' = 'body') => new TextLine(scene, x, y, DEPTHS.menu + 2, false, style);
-    this.frame.push(image(L.panel.x, L.panel.y, SPRITES.inventoryPanel, DEPTHS.menu), image(L.title.x, L.title.y, SPRITES.inventoryTitle, DEPTHS.menu));
+    this.frame.push(
+      image(L.panel.x, L.panel.y, SPRITES.inventoryPanel, DEPTHS.menu),
+      image(L.panel.x + inventoryPanelLeft(), L.panel.y, SPRITES.inventoryPanelRight, DEPTHS.menu),
+      image(L.title.x, L.title.y, SPRITES.inventoryTitle, DEPTHS.menu),
+    );
     const title = text(0, L.title.y + P.title.titleY, 'title').set(P.title.text);
     title.moveTo(Math.round(L.title.x + (P.title.w - title.width) / 2), L.title.y + P.title.titleY);
     const footer = text(L.footer.x, L.footer.y).set(P.footer.text).setFill(P.colors.dim).setAlpha(P.dimAlpha);

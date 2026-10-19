@@ -108,7 +108,7 @@ test('a frost rune line feeds frost arrows to the tube, and a frost volley freez
   await page.keyboard.press('e');
   await expect.poll(async () => (await ui(page))?.tagged.benchStages?.shown).toBe(true);
   const before = await page.evaluate(() => window.__GAME__?.getState().inventory['arrow+frost'] ?? 0);
-  const row = (await ui(page))?.tagged.benchStages?.rows.find((r) => r.stageId === 'frost-rune');
+  const row = (await ui(page))?.tagged.benchStages?.rows.find((r) => r.stageId === 'frost-rune-arrow');
   if (!row) throw new Error('no frost rune row');
   expect(row.dimmed).toBe(false);
   expect(row.texts).toEqual(expect.arrayContaining(['Frost rune', 'Arrow', 'Rimestone', 'Frost arrow', '+4']));

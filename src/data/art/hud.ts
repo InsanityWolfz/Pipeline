@@ -1,7 +1,7 @@
 import { SPRITES, TUBE_SLOT_FRAMES } from '../assets';
 import { TUTORIAL_SPRITES } from '../foundryAssets';
 import { BUILD_BAR_LAYOUT, BUILD_PULSE, CRAFT_MENU_LAYOUT, HUD_LAYOUT, PICKER_LAYOUT, tubeSlotWidth } from '../hudLayout';
-import { HP_BAR, HUD_HEALTH_LAYOUT, INVENTORY_PANEL, inventoryPanelSize } from '../hudPanels';
+import { HP_BAR, HUD_HEALTH_LAYOUT, INVENTORY_PANEL, inventoryPanelLeft, inventoryPanelSize } from '../hudPanels';
 import { ellipse, flat, line, path, rect, solid, trim, type Paint, type Shape, type VectorSprite } from './types';
 
 // The HUD and menus (020): rune-carved stone tablets with brass corners, dark
@@ -115,6 +115,7 @@ const WARN: Shape[] = [
 // The inventory panel (031): a big tablet with a rune course, like the crafting menu's, and its title card.
 const PANEL = inventoryPanelSize();
 const PANEL_TITLE = INVENTORY_PANEL.title;
+const INVENTORY_PANEL_LEFT = inventoryPanelLeft();
 
 // The crafting menu (020): a big tablet with a rune course along its top; its rows are dark wells,
 // lit with a cyan rim under the cursor and a brass flash when pressed. The other menus' rows
@@ -192,7 +193,9 @@ export const HUD_SPRITES_VECTOR: readonly VectorSprite[] = [
   sprite(SPRITES.hudHealthGlow, [HP.frame.w + 2 * G.pad, HP.frame.h + 2 * G.pad], HEALTH_GLOW),
   sprite(SPRITES.hudShield, [HP.shield.w, HP.shield.h], SHIELD),
   sprite(SPRITES.hudWarn, [8, 8], WARN),
-  sprite(SPRITES.inventoryPanel, [PANEL.w, PANEL.h], tablet(PANEL.w, PANEL.h, { runes: true })),
+  sprite(SPRITES.inventoryPanel, [INVENTORY_PANEL_LEFT, PANEL.h], tablet(PANEL.w, PANEL.h, { runes: true })),
+  // The right half: the same tablet, shifted so its right part lands in the frame.
+  { key: SPRITES.inventoryPanelRight, size: [PANEL.w - INVENTORY_PANEL_LEFT, PANEL.h], anchor: [-INVENTORY_PANEL_LEFT, 0], frames: [tablet(PANEL.w, PANEL.h, { runes: true })] },
   sprite(SPRITES.inventoryTitle, [PANEL_TITLE.w, PANEL_TITLE.h], tablet(PANEL_TITLE.w, PANEL_TITLE.h)),
   sprite(SPRITES.craftPanel, [CRAFT_MENU_LAYOUT.width, CRAFT_MENU_LAYOUT.height], CRAFT_PANEL),
   sprite(SPRITES.craftRow, [ROW.w, ROW.h], CRAFT_ROW),

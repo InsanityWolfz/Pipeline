@@ -83,7 +83,7 @@ describe('the inventory layout', () => {
     expect(L.footer.y).toBeLessThan(L.panel.y + L.panel.h);
   });
 
-  it('gives every group a header and room for all its rows, in two columns that do not overlap', () => {
+  it('gives every group a header and room for all its rows, in three columns that do not overlap (039)', () => {
     const L = inventoryLayout();
     expect(L.groups.map((g) => g.id)).toEqual(['raw', 'parts', 'ammo', 'gear', 'cores']);
     for (const g of L.groups) {
@@ -93,6 +93,6 @@ describe('the inventory layout', () => {
       expect(g.x + INVENTORY_PANEL.columnWidth).toBeLessThanOrEqual(L.panel.x + L.panel.w);
     }
     const xs = new Set(L.groups.map((g) => g.x));
-    expect(xs.size).toBe(2);
+    expect(xs.size).toBe(3);
   });
 });

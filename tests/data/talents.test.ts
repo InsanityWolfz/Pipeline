@@ -79,8 +79,9 @@ describe('the talent tree', () => {
   });
 
   it('keeps the keystones’ tuning as the spec says', () => {
-    expect(BLASTFLETCH).toEqual({ poolTicks: 20, damageScale: 1.5, burstRadius: 24, damageType: 'physical' });
-    expect(SHATTERPOINT).toMatchObject({ damageScale: 2, shards: 4, shardScale: 0.5, damageType: 'physical' });
+    // 039.3: a Pool-burst and Shatterpoint's Shards take their round's damage type.
+    expect(BLASTFLETCH).toEqual({ poolTicks: 20, damageScale: 1.5, burstRadius: 24 });
+    expect(SHATTERPOINT).toEqual({ damageScale: 2, shards: 4, shardScale: 0.5, range: 64, speed: 360 });
     expect(OVERPRESSURE).toEqual({ rampTicks: 120, rate: 1.25 });
   });
 });

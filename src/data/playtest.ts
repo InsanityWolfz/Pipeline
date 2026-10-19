@@ -1,7 +1,7 @@
 import { ITEMS } from './items';
 import type { StartDef } from './player';
 import { RECIPES } from './recipes';
-import { STAGE_RECIPES } from './stages';
+import { STAGE_ROWS } from './stages';
 import { ROUNDS } from './tags';
 import { HOLLOWS } from './hollows';
 import { OVERWORLD } from './overworld';
@@ -51,7 +51,7 @@ export const PLAYTEST_START: StartDef = {
   attuned: true,
   gatesOpen: true,
   inventory: Object.fromEntries(Object.values(ITEMS).filter((it) => !ROUNDS.includes(it.id)).map((it) => [it.id, OVERRIDES[it.id] ?? COUNTS[it.kind]])),
-  crafted: [...new Set([...Object.values(RECIPES), ...Object.values(STAGE_RECIPES)].map((r) => r.output.itemId))].sort(),
+  crafted: [...new Set([...Object.values(RECIPES), ...STAGE_ROWS.map((r) => r.recipe)].map((r) => r.output.itemId))].sort(),
   gear: PLAYTEST_GEAR,
 };
 

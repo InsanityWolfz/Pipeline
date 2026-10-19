@@ -14,7 +14,7 @@ const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 describe('tags', () => {
   it("are Milestone 1's three and 038's cluster, each with a slot, prefix, base and numbers", () => {
     expect(Object.values(TAGS).map(({ id, slot, prefix, appliesTo }) => ({ id, slot, prefix, appliesTo }))).toEqual([
-      { id: 'frost', slot: 'element', prefix: 'Frost', appliesTo: ['arrow'] },
+      { id: 'frost', slot: 'element', prefix: 'Frost', appliesTo: ['arrow', 'bomb', 'ley-bolt', 'landmine'] },
       { id: 'homing', slot: 'shape', prefix: 'Homing', appliesTo: ['ley-bolt'] },
       { id: 'split', slot: 'shape', prefix: 'Split', appliesTo: ['ley-bolt'] },
       { id: 'cluster', slot: 'shape', prefix: 'Cluster', appliesTo: ['bomb'] },
@@ -30,7 +30,8 @@ describe('tags', () => {
   });
 
   it('derive every legal round, each in AMMO and ITEMS', () => {
-    expect([...ROUNDS]).toEqual(['arrow+frost', 'ley-bolt+homing', 'ley-bolt+split', 'bomb+cluster']);
+    // 039: the frost tag on every family; shapes per family.
+    expect([...ROUNDS]).toEqual(['arrow+frost', 'bomb+frost', 'bomb+cluster', 'bomb+frost+cluster', 'ley-bolt+frost', 'ley-bolt+homing', 'ley-bolt+split', 'ley-bolt+frost+homing', 'ley-bolt+frost+split', 'landmine+frost']);
     for (const id of ROUNDS) {
       const ammo = ammoDef(id);
       expect(ammo.itemId).toBe(id);
@@ -77,7 +78,8 @@ describe('tags', () => {
     expect(withTag('arrow+frost', 'frost')).toBeNull();
     expect(withTag('ley-bolt+homing', 'split')).toBeNull();
     expect(withTag('ley-bolt+split', 'homing')).toBeNull();
-    expect(withTag('ley-bolt', 'frost')).toBeNull();
+    expect(withTag('ley-bolt', 'frost')).toBe('ley-bolt+frost');
+    expect(withTag('landmine', 'homing')).toBeNull();
     expect(withTag('bomb', 'split')).toBeNull();
     expect(withTag('arrow', 'frost')).toBe('arrow+frost');
     expect(() => roundId('ley-bolt', ['homing', 'split'])).toThrow();

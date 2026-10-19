@@ -41,10 +41,12 @@ export interface HarvestEvent {
   y: number;
 }
 
+/** A Burst where it went off (029, 038, 039): its point, radius (px) and damage type (a Cold Burst flashes frost). */
 export interface BurstEvent {
   x: number;
   y: number;
   radius: number;
+  damageType: DamageType;
 }
 
 export interface MeleeEvent {
@@ -156,7 +158,7 @@ export interface SimEvents {
   respecs: { refunded: number }[];
   /** 037's keystones: a bomb's Burst left a Pool (Blastfletch: its id, centre and radius, px); a pooled arrow burst on a hit; a ley bolt shattered a frozen enemy (Shatterpoint). */
   pools: { id: number; x: number; y: number; radius: number }[];
-  poolBursts: { x: number; y: number; radius: number }[];
+  poolBursts: BurstEvent[];
   shatters: { id: number; x: number; y: number }[];
   /** 038: a landmine landed and armed (its id and spot); an armed mine burst; a cluster bomb's bomblet burst (spot and radius, px). */
   mineArms: { id: number; x: number; y: number }[];

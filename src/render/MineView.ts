@@ -1,9 +1,10 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { MINE_LOOK, MINE_SPRITES } from '../data/mineAssets';
-import type { SimEvents } from '../sim/events';
+import type { BurstEvent, SimEvents } from '../sim/events';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
+import { burstTint, roundTint } from './roundLook';
 import { addVector } from './vector/textures';
 
 /** 038's live art as drawn, for `ui().mines`: each armed mine's arm time (0..1) and whether it's in its last second, bomblets in the air, and flashes still showing. */
@@ -54,17 +55,20 @@ export class MineView {
     this.time += deltaMs;
     const here = shown === sim.roomId;
     if (here) {
-      for (const m of events.mineBursts) this.flash('mine', MINE_SPRITES.mineFlash, m.x, m.y, m.radius, MINE_LOOK.mineFlash);
-      for (const b of events.bombletBursts) this.flash('bomblet', MINE_SPRITES.bombletFlash, b.x, b.y, b.radius, MINE_LOOK.bombletFlash);
+      for (const m of events.mineBursts) this.flash('mine', MINE_SPRITES.mineFlash, m, MINE_LOOK.mineFlash);
+      for (const b of events.bombletBursts) this.flash('bomblet', MINE_SPRITES.bombletFlash, b, MINE_LOOK.bombletFlash);
     }
     this.stepFlashes(deltaMs);
     this.drawArmed(sim, here);
     this.drawBomblets(sim, here);
   }
 
-  private flash(kind: Flash['kind'], frame: string, x: number, y: number, radius: number, look: { ms: number; from: number; to: number }): void {
+  private flash(kind: Flash['kind'], frame: string, { x, y, radius, damageType }: BurstEvent, look: { ms: number; from: number; to: number }): void {
     const k = radius / MINE_LOOK.flashRadius;
     const image = addVector(this.scene, x, y, frame).setDepth(y + radius);
+    // 039.15: a Cold Burst flashes frost.
+    const tint = burstTint(damageType);
+    if (tint !== null) image.setTint(tint);
     image.setData('base', image.scaleX).setScale(image.scaleX * look.from * k);
     this.flashes.push({ image, kind, ms: 0, look: { ms: look.ms, from: look.from * k, to: look.to * k }, fresh: true });
   }
@@ -84,6 +88,13 @@ export class MineView {
     });
   }
 
+  /** An armed mine's image, in its round's tint (039.15: a Frost landmine is pale ice). */
+  private armedImage(x: number, y: number, ammoId: string): GameObjects.Image {
+    const image = addVector(this.scene, x, y, MINE_SPRITES.armed).setDepth(DEPTHS.groundFx + MINE_LOOK.depth.mine);
+    const tint = roundTint(ammoId);
+    return tint === null ? image : image.setTint(tint);
+  }
+
   /** Each armed mine in the room on screen, flat on the ground, with its arm ring and blinking pip. */
   private drawArmed(sim: SimState, here: boolean): void {
     const F = MINE_LOOK.armRing;
@@ -92,7 +103,7 @@ export class MineView {
     this.shownArmed = [];
     for (const m of here ? sim.mines.armed.filter((x) => x.roomId === sim.roomId) : []) {
       live.add(m.id);
-      const image = this.armed.get(m.id) ?? addVector(this.scene, m.x, m.y, MINE_SPRITES.armed).setDepth(DEPTHS.groundFx + MINE_LOOK.depth.mine);
+      const image = this.armed.get(m.id) ?? this.armedImage(m.x, m.y, m.ammoId);
       this.armed.set(m.id, image.setPosition(m.x, m.y));
       const progress = Math.min(1, m.elapsed / m.armTicks);
       const late = m.armTicks - m.elapsed <= F.lateTicks;

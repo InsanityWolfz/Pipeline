@@ -1,3 +1,4 @@
+import type { DamageType } from './ammo';
 import { ROUNDS } from './tags';
 
 // Asset keys for 029's art: the tagged rounds' icons, the rimestone, the Shard
@@ -45,3 +46,6 @@ export const ROUND_LOOKS: Readonly<Record<string, { tint?: string; trail?: { col
 
 /** The Split's flash (029): grows from `from` to `to` scale and fades over `ms`, at shot height. */
 export const SPLIT_FLASH = { ms: 280, from: 1, to: 2.2 } as const;
+
+/** 039.15: a Burst of an element flashes in its colours, its flash tinted toward this palette colour (a Cold Burst frost); a Physical one is drawn as it is. */
+export const BURST_TINTS: Readonly<Partial<Record<DamageType, string>>> = { cold: 'water-light' };

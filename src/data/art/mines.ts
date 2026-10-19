@@ -82,11 +82,14 @@ function flash(r: number, core: string, mid: string, rim: string, shards: number
 
 const R = 24;
 
+/** The landmine's icon shapes (039: a Frost landmine's icon is this with the frost badge). */
+export const ICON_LANDMINE: Shape[] = mine(7, true);
+
 export const MINE_SPRITES_VECTOR: readonly VectorSprite[] = [
   sprite(MINE_SPRITES.landmine, [16, 12], [8, 6], mine(6, true)),
   sprite(MINE_SPRITES.landmineShadow, [14, 6], [7, 3], [ellipse(0, 0, 5.5, 1.8, { fill: { id: 'ground-shade', alpha: 0.35 } })]),
   sprite(MINE_SPRITES.armed, [20, 14], [10, 7], [ellipse(0, 2.2, 8, 3, { fill: { id: 'ground-shade', alpha: 0.4 } }), ...mine(7.5, true)]),
-  icon(MINE_SPRITES.iconLandmine, mine(7, true)),
+  icon(MINE_SPRITES.iconLandmine, ICON_LANDMINE),
   icon(MINE_SPRITES.itemIronPlate, IRON_PLATE),
   sprite(MINE_SPRITES.bomblet, [8, 8], [4, 4], BOMBLET),
   sprite(MINE_SPRITES.bombletShadow, [8, 4], [4, 2], [ellipse(0, 0, 2.6, 1, { fill: { id: 'ground-shade', alpha: 0.35 } })]),

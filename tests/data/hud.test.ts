@@ -47,7 +47,8 @@ describe('inventory panel groups (031)', () => {
       'schematic-splitter',
       'shaft',
     ]);
-    expect(byGroup('ammo')).toEqual(['arrow', 'arrow+frost', 'bomb', 'bomb+cluster', 'landmine', 'ley-bolt', 'ley-bolt+homing', 'ley-bolt+split']);
+    // 039: the six Frost rounds of every family.
+    expect(byGroup('ammo')).toEqual(['arrow', 'arrow+frost', 'bomb', 'bomb+cluster', 'bomb+frost', 'bomb+frost+cluster', 'landmine', 'landmine+frost', 'ley-bolt', 'ley-bolt+frost', 'ley-bolt+frost+homing', 'ley-bolt+frost+split', 'ley-bolt+homing', 'ley-bolt+split']);
     expect(byGroup('gear')).toEqual(['unidentified-armor']);
     expect(byGroup('cores')).toEqual(['bulwark-core', 'warden-core']);
     // The warden core's kind stays a part: only the panel's group places it.
@@ -62,13 +63,13 @@ describe('inventory panel groups (031)', () => {
     expect(reservedRows('parts')).toBe(7 + 2 + 1);
   });
 
-  it('the panel and its title card fit the 640x360 view, in two columns as one does not fit', () => {
+  it('the panel and its title card fit the 640x360 view, in three columns as two do not (039: six more rounds)', () => {
     const { w, h } = inventoryPanelSize();
     const T = INVENTORY_PANEL.title;
     expect(w).toBeLessThanOrEqual(VIEW_WIDTH - 2 * HUD_LAYOUT.margin);
     expect(h + T.gap + T.h).toBeLessThanOrEqual(VIEW_HEIGHT - 2 * HUD_LAYOUT.margin);
     const columns = inventoryColumns();
-    expect(columns).toHaveLength(2);
+    expect(columns).toHaveLength(3);
     // Groups stay whole and in order across the columns.
     expect(columns.flat()).toEqual(INVENTORY_GROUPS.map((g) => g.id));
   });
@@ -115,9 +116,11 @@ describe('the HP bar data (031)', () => {
     for (const key of [SPRITES.hudHealth, SPRITES.hudHealthGlow, SPRITES.hudShield, SPRITES.hudWarn, SPRITES.inventoryPanel, SPRITES.inventoryTitle]) {
       expect(keys.has(key), key).toBe(true);
     }
-    const panel = HUD_SPRITES_VECTOR.find((s) => s.key === SPRITES.inventoryPanel);
+    // 039: the tablet in two halves that together make the panel.
+    const left = HUD_SPRITES_VECTOR.find((s) => s.key === SPRITES.inventoryPanel);
+    const right = HUD_SPRITES_VECTOR.find((s) => s.key === SPRITES.inventoryPanelRight);
     const { w, h } = inventoryPanelSize();
-    expect(panel?.size).toEqual([w, h]);
+    expect([(left?.size[0] ?? 0) + (right?.size[0] ?? 0), left?.size[1], right?.size[1]]).toEqual([w, h, h]);
   });
 });
 

@@ -41,7 +41,7 @@ import { STARTING_INVENTORY, TUTORIAL_START } from '../../src/data/player';
 import { PLAYTEST_START } from '../../src/data/playtest';
 import { SLOT_AMMOS, STARTING_AMMO } from '../../src/data/tube';
 import { CRAFT_GROUPS, RECIPES, recipeDef } from '../../src/data/recipes';
-import { STAGE_RECIPES } from '../../src/data/stages';
+import { STAGE_RECIPES, STAGE_ROWS } from '../../src/data/stages';
 import { NODES } from '../../src/data/nodes';
 import { BUILD_BAR, PIECE_CATEGORIES, PIECES, pieceDef } from '../../src/data/pieces';
 import { ENTRANCE_CAPS, INTAKE, LOB_SPACING, SPREAD_STEP } from '../../src/data/foundry';
@@ -369,8 +369,8 @@ describe('the tube link (007)', () => {
 
   it('gives the playtest start only real items, and every recipe output as crafted', () => {
     for (const id of Object.keys(PLAYTEST_START.inventory)) expect(ITEMS[id]).toBeDefined();
-    // 029: stage recipes count too, so every stage is unlocked.
-    const outputs = new Set([...Object.values(RECIPES), ...Object.values(STAGE_RECIPES)].map((r) => r.output.itemId));
+    // 029: stage recipes count too, so every stage is unlocked (039: every bench row's).
+    const outputs = new Set([...Object.values(RECIPES), ...STAGE_ROWS.map((r) => r.recipe)].map((r) => r.output.itemId));
     expect(new Set(PLAYTEST_START.crafted)).toEqual(outputs);
   });
 });

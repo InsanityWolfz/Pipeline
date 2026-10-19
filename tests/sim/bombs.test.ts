@@ -52,7 +52,7 @@ describe('bombs', () => {
     expect(b.flightTicks).toBeCloseTo((100 - MUZZLE_OFFSET) / STEP, 9);
     const ticks = runUntil(s, () => s.events.bursts.length > 0, 100);
     expect(ticks).toBe(Math.ceil((100 - MUZZLE_OFFSET) / STEP));
-    expect(s.events.bursts).toEqual([{ x: PLAYER_AT.x + 100, y: PLAYER_AT.y, radius: 48 }]);
+    expect(s.events.bursts).toEqual([{ x: PLAYER_AT.x + 100, y: PLAYER_AT.y, radius: 48, damageType: 'physical' }]);
     expect(s.bombs).toHaveLength(0);
   });
 

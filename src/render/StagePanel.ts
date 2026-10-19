@@ -2,8 +2,8 @@ import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, SPRITES } from '../data/assets';
 import { CRAFT_MENU_LAYOUT, STAGE_PANEL } from '../data/hudLayout';
 import { itemDef } from '../data/items';
-import { recipeDef } from '../data/recipes';
-import { STAGES } from '../data/stages';
+import { lineText, stageRounds } from '../data/rulesText';
+import { stageDef, stageLines, STAGE_ROWS, type StageRow } from '../data/stages';
 import { count, type Inventory } from '../sim/inventory';
 import { stageAffordable } from '../sim/stages';
 import type { TextBox } from './CraftMenuView';
@@ -17,7 +17,9 @@ import { addVector } from './vector/textures';
 const ROW_FRAMES: RowFrames = { plain: SPRITES.craftRecipeRow, hover: SPRITES.craftRecipeRowHover, press: SPRITES.craftRecipeRowPress };
 
 interface Row {
-  stageId: string;
+  row: StageRow;
+  /** Its stage's generated line (039): "Cold: added to any round". */
+  line: string;
   frame: GameObjects.Image;
   parts: GameObjects.Image[];
   inputs: { itemId: string; need: number; text: TextLine; name: TextLine }[];
@@ -27,27 +29,32 @@ interface Row {
   outputName: TextLine;
 }
 
-/** The Stages panel as drawn (029), for `ui().benchStages`: each row's stage, box, whether it's dimmed, and its words. */
+/** The Stages panel as drawn (029), for `ui().benchStages`: each row's id, box, whether it's dimmed, its words and its stage's generated line; the line showing under the rows. */
 export interface StagePanelState {
   shown: boolean;
   header: TextBox | null;
-  rows: { stageId: string; x: number; y: number; w: number; h: number; dimmed: boolean; texts: string[] }[];
+  rows: { stageId: string; x: number; y: number; w: number; h: number; dimmed: boolean; texts: string[]; line: string }[];
+  line: string;
 }
 
 const box = (line: TextLine): TextBox => ({ text: line.obj.text, ...line.at, w: line.width, h: line.lineHeight });
 
 // The identification bench's Stages panel (029), in the crafting menu's style (026):
-// one row per stage, its inputs (held/needed, with names) → the tagged rounds it
-// gives (+4, held, name), and the stage's name in the row's free slot. Shown beside
-// the bench's gear panel (036) once the shrine is claimed; a row is dimmed while its inputs
-// aren't carried. Clicking an affordable row hand-applies the stage (through SiteMenus).
+// one row per stage and family (039.12), its inputs (held/needed, with names) → the tagged
+// rounds it gives (+4, held, name), and the stage's name in the row's free slot; under the
+// rows, the hovered row's stage line, generated (039). Shown beside the bench's gear panel
+// (036) once the shrine is claimed, a family's row once its ammo can be made; a row is
+// dimmed while its inputs aren't carried. Clicking an affordable row hand-applies it.
 export class StagePanel {
   private readonly scene: Scene;
   private readonly tablet: GameObjects.Graphics;
   private readonly header: TextLine;
+  private readonly hoverLine: TextLine;
   private readonly rows: Row[] = [];
   private readonly hover: RowHover;
   private benchWidth = -1;
+  private known: string[] = [];
+  private hovered = -1;
   private shown = false;
   private inventory: Inventory = {};
 
@@ -56,13 +63,16 @@ export class StagePanel {
     this.hover = new RowHover(scene, ROW_FRAMES);
     this.tablet = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.menu - 1);
     this.header = new TextLine(scene, 0, 0, DEPTHS.menu + 2, false, 'display').set(STAGE_PANEL.title);
+    this.hoverLine = new TextLine(scene, 0, 0, DEPTHS.menu + 2, false, 'body');
     const add = (frame: string, depth: number): GameObjects.Image => addVector(scene, 0, 0, frame).setOrigin(0).setScrollFactor(0).setDepth(depth);
     const text = (style: 'count' | 'label'): TextLine => new TextLine(scene, 0, 0, DEPTHS.menu + 2, false, style);
-    for (const st of Object.values(STAGES)) {
-      const recipe = recipeDef(st.id);
+    for (const row of STAGE_ROWS) {
+      const { recipe } = row;
+      const st = stageDef(row.stage);
       const inputs = Object.entries(recipe.inputs).map(([itemId, need]) => ({ itemId, need, text: text('count'), name: text('label').set(itemDef(itemId).name) }));
       this.rows.push({
-        stageId: st.id,
+        row,
+        line: stageLines(st).map((l) => lineText(l, { rounds: stageRounds(st) })).join(' · '),
         frame: add(SPRITES.craftRecipeRow, DEPTHS.menu + 1),
         parts: [...inputs.map((i) => add(itemDef(i.itemId).icon, DEPTHS.menu + 2)), add(SPRITES.craftArrow, DEPTHS.menu + 2), add(itemDef(recipe.output.itemId).icon, DEPTHS.menu + 2)],
         inputs,
@@ -80,59 +90,73 @@ export class StagePanel {
     return this.shown;
   }
 
+  /** The rows on show, in layout order. */
+  private get visible(): Row[] {
+    return this.rows.filter((r) => this.known.includes(r.row.id));
+  }
+
+  private layout() {
+    return stagePanelLayout(Math.max(0, this.benchWidth), this.visible.map((r) => r.row.id));
+  }
+
   /** What it shows, for the test hook. */
   get state(): StagePanelState {
-    const layout = stagePanelLayout(Math.max(0, this.benchWidth));
+    const layout = this.layout();
     return {
       shown: this.shown,
       header: this.shown ? box(this.header) : null,
       rows: this.shown
-        ? this.rows.map((r, i) => ({
+        ? this.visible.map((r, i) => ({
             ...(layout.rows[i] ?? { x: 0, y: 0, w: 0, h: 0 }),
-            stageId: r.stageId,
-            dimmed: !this.affordable(r.stageId),
+            stageId: r.row.id,
+            dimmed: !stageAffordable(this.inventory, r.row.id),
             texts: [...r.inputs.flatMap((i) => [i.text.obj.text, i.name.obj.text]), r.stageName.obj.text, r.made.obj.text, r.owned.obj.text, r.outputName.obj.text],
+            line: r.line,
           }))
         : [],
+      line: this.shown ? this.hoverLine.obj.text : '',
     };
   }
 
-  private affordable(stageId: string): boolean {
-    return stageAffordable(this.inventory, stageId);
-  }
-
-  /** The stage row under a screen point, if shown and affordable. */
+  /** The row under a screen point, if shown and affordable: its id, the bench command's. */
   stageAt(x: number, y: number): string | null {
     if (!this.shown) return null;
-    const r = stagePanelLayout(this.benchWidth).rows.find((row) => inRect(row, x, y));
-    return r && this.affordable(r.stageId) ? r.stageId : null;
+    const r = this.layout().rows.find((row) => inRect(row, x, y));
+    return r && stageAffordable(this.inventory, r.stageId) ? r.stageId : null;
   }
 
   /** True if a screen point is on the panel. */
   overUi(x: number, y: number): boolean {
-    return this.shown && inRect(stagePanelLayout(this.benchWidth).panel, x, y);
+    return this.shown && inRect(this.layout().panel, x, y);
   }
 
-  /** The cursor is at a screen point: its row lights, if it can be used. */
+  /** The cursor is at a screen point: its row lights, if it can be used, and its stage's line shows under the rows. */
   pointAt(x: number, y: number): void {
-    const i = this.shown ? stagePanelLayout(this.benchWidth).rows.findIndex((r) => inRect(r, x, y)) : -1;
-    this.hover.set(i, i >= 0 && this.affordable(this.rows[i]?.stageId ?? ''));
+    const i = this.shown ? this.layout().rows.findIndex((r) => inRect(r, x, y)) : -1;
+    this.hovered = i;
+    this.hover.set(i, i >= 0 && stageAffordable(this.inventory, this.visible[i]?.row.id ?? ''));
+    this.hoverLine.set(this.visible[i]?.line ?? '');
   }
 
   /** Flashes the row under a screen point as it's pressed. */
   flashAt(x: number, y: number): void {
-    const r = this.shown ? stagePanelLayout(this.benchWidth).rows.find((row) => inRect(row, x, y)) : undefined;
+    const r = this.shown ? this.layout().rows.find((row) => inRect(row, x, y)) : undefined;
     if (r) flashRow(this.scene, r.x, r.y, ROW_FRAMES.press);
   }
 
-  /** Shows the panel beside the bench's gear panel, `benchWidth` px wide (036), or hides it for null, with the counts from `inventory`. */
-  show(benchWidth: number | null, inventory: Inventory): void {
+  /**
+   * Shows the panel beside the bench's gear panel, `benchWidth` px wide (036), or hides it for null, with the counts from
+   * `inventory` and the rows `known` (039.12: the row ids the player can see).
+   */
+  show(benchWidth: number | null, inventory: Inventory, known: readonly string[] = STAGE_ROWS.map((r) => r.id)): void {
     this.inventory = inventory;
     if (benchWidth === null) {
       this.setShown(false);
       return;
     }
-    if (!this.shown || benchWidth !== this.benchWidth) this.place(benchWidth);
+    const changed = known.length !== this.known.length || known.some((id, i) => this.known[i] !== id);
+    this.known = [...known];
+    if (!this.shown || benchWidth !== this.benchWidth || changed) this.place(benchWidth);
     this.setShown(true);
     this.refresh();
   }
@@ -141,12 +165,16 @@ export class StagePanel {
     this.shown = shown;
     this.tablet.setVisible(shown);
     this.header.setVisible(shown);
+    this.hoverLine.setVisible(shown);
     for (const r of this.rows) {
-      for (const o of [r.frame, ...r.parts]) o.setVisible(shown);
-      for (const t of [...r.inputs.flatMap((i) => [i.text, i.name]), r.stageName, r.made, r.owned, r.outputName]) t.setVisible(shown);
+      const on = shown && this.known.includes(r.row.id);
+      for (const o of [r.frame, ...r.parts]) o.setVisible(on);
+      for (const t of [...r.inputs.flatMap((i) => [i.text, i.name]), r.stageName, r.made, r.owned, r.outputName]) t.setVisible(on);
     }
     if (!shown) {
       this.hover.set(-1);
+      this.hovered = -1;
+      this.hoverLine.set('');
       this.benchWidth = -1;
     }
   }
@@ -155,16 +183,17 @@ export class StagePanel {
   private place(benchWidth: number): void {
     const L = CRAFT_MENU_LAYOUT;
     this.benchWidth = benchWidth;
-    const layout = stagePanelLayout(benchWidth);
+    const layout = this.layout();
     const { panel } = layout;
     this.tablet.clear();
     drawTablet(this.tablet, panel.x, panel.y, panel.w, panel.h);
     this.header.moveTo(layout.header.x + L.headerIcon.x, layout.header.y + L.headerName.y);
+    this.hoverLine.moveTo(layout.line.x, layout.line.y);
     // An item's name under its icon at x: centred under it, or from its left edge when wider.
     const under = (line: TextLine, iconX: number, rowY: number): void => {
       line.moveTo(iconX + Math.max(0, Math.round((L.iconSize - line.width) / 2)), rowY + L.labelY);
     };
-    for (const [i, r] of this.rows.entries()) {
+    for (const [i, r] of this.visible.entries()) {
       const at = layout.rows[i];
       if (!at) continue;
       r.frame.setPosition(at.x, at.y);
@@ -189,8 +218,8 @@ export class StagePanel {
   /** Counts, dimming and the missing colour, from the inventory. */
   private refresh(): void {
     const L = CRAFT_MENU_LAYOUT;
-    for (const [i, r] of this.rows.entries()) {
-      const ok = this.affordable(r.stageId);
+    for (const [i, r] of this.visible.entries()) {
+      const ok = stageAffordable(this.inventory, r.row.id);
       const textAlpha = ok ? 1 : L.greyTextAlpha;
       for (const input of r.inputs) {
         const have = count(this.inventory, input.itemId);
@@ -198,11 +227,12 @@ export class StagePanel {
         const fill = have < input.need ? L.missing : undefined;
         for (const t of [input.text, input.name]) t.setFill(fill).setAlpha(textAlpha);
       }
-      r.owned.set(String(count(this.inventory, recipeDef(r.stageId).output.itemId)));
+      r.owned.set(String(count(this.inventory, r.row.recipe.output.itemId)));
       for (const t of [r.stageName, r.made, r.owned, r.outputName]) t.setAlpha(textAlpha);
       for (const p of r.parts) p.setAlpha(ok ? 1 : L.greyAlpha);
       r.frame.setAlpha(ok ? 1 : L.greyAlpha);
       r.frame.setFrame(this.hover.frame(i, ok));
     }
+    if (this.hovered < 0) this.hoverLine.set('');
   }
 }

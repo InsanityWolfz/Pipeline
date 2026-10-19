@@ -5,7 +5,6 @@
 // keystone rules are in src/sim/keystones.ts. The node list is spec 037's, kept as written for the first
 // playtest; Shaun edits it after. Ids are the spec's in lower case (kebab-case data ids).
 
-import type { DamageType } from './ammo';
 import type { ContentLine, Scope, StatLine } from './lines';
 import type { StatId } from './statDefs';
 
@@ -65,21 +64,19 @@ const node = (id: string, name: string, lane: TalentLane, pos: { x: number; y: n
 const add = (scope: Scope, stat: StatId, value: number): StatLine => ({ scope, stat, op: 'add', value });
 const flat = (scope: Scope, stat: StatId, value: number): StatLine => ({ scope, stat, op: 'flat', value });
 
-/** The keystones' damage type (only physical and cold exist in Milestone 1). */
-const PHYSICAL: DamageType = 'physical';
+/**
+ * Blastfletch: a Bomb Burst leaves a Pool over its area for `poolTicks`; an Arrow flying through it gains
+ * `damageScale` damage and Bursts `burstRadius` px round its next hit, which spends the Pool. The Pool-burst is of the
+ * arrow's damage type (039.3: children inherit it; a Frost arrow's is Cold).
+ */
+export const BLASTFLETCH = { poolTicks: 20, damageScale: 1.5, burstRadius: 24 } as const;
 
 /**
- * Blastfletch: a player bomb's blast leaves a Pool over its area for `poolTicks`; an arrow flying through it gains
- * `damageScale` damage and bursts in a `burstRadius` px blast of `damageType` on the next enemy it hits, which spends the charge.
+ * Shatterpoint: a Ley round that hits a Frozen enemy ends the Freeze for `damageScale` damage, and `shards` Shards
+ * fly from it for `shardScale` of the bolt's damage each, of the bolt's damage type (039.3: a Frost ley bolt's are
+ * Cold), `range` px at `speed` px/s (as a Split's do).
  */
-export const BLASTFLETCH = { poolTicks: 20, damageScale: 1.5, burstRadius: 24, damageType: PHYSICAL } as const;
-
-/**
- * Shatterpoint: a ley bolt that hits a frozen enemy ends the freeze for `damageScale` damage, and `shards` Shards
- * burst from it for `shardScale` of the bolt's damage each, of `damageType` (physical: cold shards would chill their
- * way to more freezes, a chain the spec never asked for), flying `range` px at `speed` px/s (as Shards do).
- */
-export const SHATTERPOINT = { damageScale: 2, shards: 4, shardScale: 0.5, range: 64, speed: 360, projectile: 'shard', damageType: PHYSICAL } as const;
+export const SHATTERPOINT = { damageScale: 2, shards: 4, shardScale: 0.5, range: 64, speed: 360 } as const;
 
 /** Overpressure: holding fire ramps the fire rate up to ×`rate` over `rampTicks` (039, Q13: a keystone multiplies); releasing fire resets it. */
 export const OVERPRESSURE = { rampTicks: 120, rate: 1.25 } as const;

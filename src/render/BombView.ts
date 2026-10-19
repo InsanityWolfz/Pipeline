@@ -2,6 +2,7 @@ import type { GameObjects, Scene } from 'phaser';
 import { ammoDef } from '../data/ammo';
 import { BOMB_LIFT, DEPTHS } from '../data/assets';
 import type { BombState } from '../sim/bombs';
+import { roundTint } from './roundLook';
 import { addVector } from './vector/textures';
 
 interface Drawn {
@@ -41,6 +42,9 @@ export class BombView {
       bomb: addVector(this.scene, 0, 0, ammo.sprite),
       shadow: addVector(this.scene, 0, 0, ammo.shadow).setDepth(DEPTHS.shadow),
     };
+    // 039.15: a Frost bomb or landmine in flight is the base's sprite in its tag's tint.
+    const tint = roundTint(b.ammoId);
+    if (tint !== null) d.bomb.setTint(tint);
     this.drawn.set(b.id, d);
     return d;
   }

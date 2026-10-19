@@ -79,14 +79,18 @@ describe('round keywords (derived from data)', () => {
   it('arrow, bomb+frost+cluster and landmine+frost derive as the spec lists', () => {
     const names = (ids: readonly KeywordId[]) => ids.map((id) => KEYWORDS[id].name);
     expect(names(roundKeywords('arrow'))).toEqual(['Arrow', 'Shot', 'Pierce', 'Knockback', 'Physical']);
+    expect(names(roundKeywords('bomb+frost+cluster'))).toEqual(['Bomb', 'Lob', 'Burst', 'Cluster', 'Cold']);
+    expect(names(roundKeywords('landmine+frost'))).toEqual(['Landmine', 'Mine', 'Burst', 'Cold']);
     expect(names(roundKeywords('bomb+cluster'))).toEqual(['Bomb', 'Lob', 'Burst', 'Cluster', 'Physical']);
     expect(names(roundKeywords('arrow+frost'))).toEqual(['Arrow', 'Shot', 'Pierce', 'Knockback', 'Cold']);
     expect(names(roundKeywords('landmine'))).toEqual(['Landmine', 'Mine', 'Burst', 'Physical']);
     expect(names(roundKeywords('ley-bolt+homing'))).toEqual(['Ley', 'Shot', 'Knockback', 'Homing', 'Physical']);
   });
 
-  it('the tagged rounds exist and nothing else', () => {
-    expect([...ROUNDS].sort()).toEqual(['arrow+frost', 'bomb+cluster', 'ley-bolt+homing', 'ley-bolt+split'].sort());
+  it('the ten tagged rounds exist and nothing else', () => {
+    expect([...ROUNDS].sort()).toEqual(
+      ['arrow+frost', 'bomb+frost', 'bomb+cluster', 'bomb+frost+cluster', 'ley-bolt+frost', 'ley-bolt+homing', 'ley-bolt+split', 'ley-bolt+frost+homing', 'ley-bolt+frost+split', 'landmine+frost'].sort(),
+    );
   });
 
   it('no round carries a reserved keyword', () => {
@@ -94,9 +98,10 @@ describe('round keywords (derived from data)', () => {
   });
 
   it('children carry their parent’s family and damage type, Shards its Knockback', () => {
+    expect(shardKeywords('ley-bolt+frost+split', true)).toEqual(['ley', 'shot', 'knockback', 'split', 'cold']);
     expect(shardKeywords('ley-bolt+split', true)).toEqual(['ley', 'shot', 'knockback', 'split', 'physical']);
     expect(shardKeywords('ley-bolt', false)).toEqual(['ley', 'shot', 'knockback', 'physical']);
-    expect(bombletKeywords('bomb+cluster')).toEqual(['bomb', 'burst', 'cluster', 'physical']);
+    expect(bombletKeywords('bomb+frost+cluster')).toEqual(['bomb', 'burst', 'cluster', 'cold']);
     expect(poolBurstKeywords('arrow+frost')).toEqual(['arrow', 'burst', 'cold']);
   });
 

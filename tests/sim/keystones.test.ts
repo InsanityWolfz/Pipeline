@@ -67,7 +67,7 @@ describe('Blastfletch', () => {
     const a = flying(s, PLAYER_AT.x + 10);
     runUntil(s, () => a.pooled, 10);
     runUntil(s, () => s.events.poolBursts.length > 0, 30);
-    expect(s.events.poolBursts).toEqual([{ x: expect.any(Number), y: PLAYER_AT.y, radius: BLASTFLETCH.burstRadius }]);
+    expect(s.events.poolBursts).toEqual([{ x: expect.any(Number), y: PLAYER_AT.y, radius: BLASTFLETCH.burstRadius, damageType: 'physical' }]);
     expect(first.health).toBeCloseTo(HUSK.maxHealth - ARROW.damage * BLASTFLETCH.damageScale, 9);
     // The burst hits the one beside for the pooled arrow's damage.
     expect(beside.health).toBeCloseTo(HUSK.maxHealth - ARROW.damage * BLASTFLETCH.damageScale, 9);
@@ -107,7 +107,7 @@ describe('Shatterpoint', () => {
     expect(s.events.thaws).toEqual([{ id: e.id, x: e.x, y: e.y }]);
     const BOLT = straightAmmo('ley-bolt');
     expect(e.health).toBeCloseTo(HUSK.maxHealth - BOLT.damage * SHATTERPOINT.damageScale, 9);
-    const shards = s.arrows.filter((a) => a.ammoId === SHATTERPOINT.projectile);
+    const shards = s.arrows.filter((a) => a.ammoId === 'shard');
     expect(shards).toHaveLength(SHATTERPOINT.shards);
     for (const sh of shards) expect(sh).toMatchObject({ damage: BOLT.damage * SHATTERPOINT.shardScale, damageType: 'physical', range: SHATTERPOINT.range, speed: SHATTERPOINT.speed, hitIds: [e.id], pierce: false });
     expect(s.arrows).not.toContain(bolt);

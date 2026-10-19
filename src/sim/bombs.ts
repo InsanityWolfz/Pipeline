@@ -118,7 +118,7 @@ function land(state: SimState, b: BombState): void {
  */
 function burst(state: SimState, b: BombState): void {
   blastArea(state, b.roomId, b.x, b.y, b.radius, b.damage, lobbedAmmo(b.ammoId).damageType);
-  state.events.bursts.push({ x: b.x, y: b.y, radius: b.radius });
+  state.events.bursts.push({ x: b.x, y: b.y, radius: b.radius, damageType: lobbedAmmo(b.ammoId).damageType });
   leavePool(state, b, roundEmission(b.ammoId));
   scatterBomblets(state, b);
 }

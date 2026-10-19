@@ -77,7 +77,7 @@ describe('landmines', () => {
     expect(s.events.mineBursts).toEqual([]);
     expect(near.health).toBe(BULWARK_HP);
     run(s, 1);
-    expect(s.events.mineBursts).toEqual([{ x: at.x, y: at.y, radius: 24 }]);
+    expect(s.events.mineBursts).toEqual([{ x: at.x, y: at.y, radius: 24, damageType: 'physical' }]);
     expect(near.health).toBe(BULWARK_HP - 60);
     expect(far.health).toBe(HUSK.maxHealth);
     expect(s.mines.armed).toHaveLength(0);

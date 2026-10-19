@@ -114,7 +114,7 @@ export function stepMines(state: SimState): void {
     b.ticks -= 1;
     if (b.ticks > 0) return true;
     blastArea(state, b.roomId, b.x, b.y, b.radius, b.damage, lobbedAmmo(b.ammoId).damageType);
-    state.events.bombletBursts.push({ x: b.x, y: b.y, radius: b.radius });
+    state.events.bombletBursts.push({ x: b.x, y: b.y, radius: b.radius, damageType: lobbedAmmo(b.ammoId).damageType });
     // 039.4: a Bomblet is a Bomb Burst, so Blastfletch's Pool reaches it.
     leavePool(state, b, bombletEmission(b.ammoId));
     return false;
@@ -123,7 +123,7 @@ export function stepMines(state: SimState): void {
     m.elapsed += 1;
     if (m.elapsed < m.armTicks) return true;
     blastArea(state, m.roomId, m.x, m.y, m.radius, m.damage, lobbedAmmo(m.ammoId).damageType);
-    state.events.mineBursts.push({ x: m.x, y: m.y, radius: m.radius });
+    state.events.mineBursts.push({ x: m.x, y: m.y, radius: m.radius, damageType: lobbedAmmo(m.ammoId).damageType });
     // A landmine's Burst is Landmine family: a Bomb-scoped Pool line doesn't reach it.
     leavePool(state, m, roundEmission(m.ammoId));
     return false;

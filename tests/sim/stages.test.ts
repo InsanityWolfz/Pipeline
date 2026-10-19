@@ -48,11 +48,13 @@ describe('a stage machine', () => {
     expect(m.buffer).toEqual({ arrow: 0, 'rimestone': 0 });
   });
 
-  it('takes rounds and rime from any side but its front, and refuses ley bolts and frost arrows', () => {
+  it('takes rounds and rime from any side but its front, and refuses frost arrows (039: any family, a ley bolt too)', () => {
     const s = foundry();
     put<MachineState>(s, 'frost-rune', 6, 5, 'right');
+    const t = foundry();
+    put<MachineState>(t, 'frost-rune', 6, 5, 'right');
+    expect(offer(t, 6, 5, 5, 5, 'ley-bolt')).toBe(true);
     expect(offer(s, 6, 5, 7, 5, 'arrow')).toBe(false);
-    expect(offer(s, 6, 5, 5, 5, 'ley-bolt')).toBe(false);
     expect(offer(s, 6, 5, 5, 5, 'arrow+frost')).toBe(false);
     expect(offer(s, 6, 5, 5, 5, 'wood')).toBe(false);
     expect(offer(s, 6, 5, 5, 5, 'arrow')).toBe(true);

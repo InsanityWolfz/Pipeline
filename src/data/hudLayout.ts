@@ -168,7 +168,8 @@ export const READOUT_LAYOUT = {
 } as const;
 
 /** The bench's Stages panel (029): the crafting menu's rows (026) on a tablet, a header over them, `gap` px right of the bench's rows. */
-export const STAGE_PANEL = { pad: 6, headerHeight: 16, gap: 12, title: 'Stages' } as const;
+/** The bench's Stages panel (029); 039: a line under the rows (`lineGap` below them, `lineHeight` tall) shows the hovered row's generated text. */
+export const STAGE_PANEL = { pad: 6, headerHeight: 16, gap: 12, title: 'Stages', lineGap: 4, lineHeight: 9 } as const;
 
 /** Pylon and stash menus (009): rows per column before wrapping, and the gap between columns, px. */
 export const MENU_MAX_ROWS = 10;

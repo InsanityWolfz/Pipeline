@@ -70,3 +70,28 @@ function plainRecipe(s: StageDef): RecipeDef {
 
 /** Each stage's recipe on its plain base, by stage id: the bench's hand-apply rows, and what a stage machine runs by default. */
 export const STAGE_RECIPES: Readonly<Record<string, RecipeDef>> = Object.fromEntries(Object.values(STAGES).map((s) => [s.id, plainRecipe(s)]));
+
+/** A bench row (039.12): one stage on one family its tag takes, its recipe on that family's plain round. */
+export interface StageRow {
+  /** `<stage>-<base>`: the bench command's id, and its recipe's. */
+  id: string;
+  stage: string;
+  base: string;
+  recipe: RecipeDef;
+}
+
+/** The bench's Stages rows, in stage order and each stage's families in its tag's order: Frost rune × Arrow, Bomb, Ley bolt, Landmine, then one row each for the shapes. */
+export const STAGE_ROWS: readonly StageRow[] = Object.values(STAGES).flatMap((s) =>
+  tagDef(s.tag).appliesTo.map((base) => {
+    const r = stageRecipeFor(s, base);
+    if (!r) throw new Error(`Stage '${s.id}' can't tag '${base}'`);
+    const id = `${s.id}-${base}`;
+    return { id, stage: s.id, base, recipe: { ...r, id } };
+  }),
+);
+
+/** A bench row by its id, or a stage's id for its home row (the build bar's family). */
+export function stageRow(id: string): StageRow | undefined {
+  const s = STAGES[id];
+  return STAGE_ROWS.find((r) => r.id === id || (s !== undefined && r.stage === id && r.base === stageBase(s)));
+}

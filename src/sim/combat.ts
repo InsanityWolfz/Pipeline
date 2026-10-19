@@ -28,7 +28,7 @@ function sendShards(state: SimState, arrow: ArrowState, struck: EnemyState, spaw
   const count = statOf(state, 'shards', shotEmission(arrow), SPLIT.shards);
   const damage = statOf(state, 'damage', shardEmissionOf(arrow.ammoId, true), SPLIT.damage);
   const shard = shardEmissionOf(arrow.ammoId, true);
-  const def = { speed: statOf(state, 'speed', shard, SPLIT.speed), range: statOf(state, 'range', shard, SPLIT.range), damage, damageType: 'physical' as const, fromSplit: true };
+  const def = { speed: statOf(state, 'speed', shard, SPLIT.speed), range: statOf(state, 'range', shard, SPLIT.range), damage, damageType: arrow.damageType, fromSplit: true };
   for (let k = 0; k < count; k++) {
     const [dx, dy] = rotate(arrow.dx, arrow.dy, (k * 360) / count);
     spawned.push(createShard(state.nextArrowId++, arrow, arrow.x, arrow.y, dx, dy, struck.id, def));

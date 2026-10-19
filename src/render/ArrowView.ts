@@ -3,7 +3,6 @@ import { AMMO } from '../data/ammo';
 import { DEPTHS } from '../data/assets';
 import { ROUND_LOOKS, STAGE_SPRITES, TRAIL_SHAPE } from '../data/stageAssets';
 import { SPLIT } from '../data/tags';
-import { SHATTERPOINT } from '../data/talents';
 import { TALENT_SPRITES } from '../data/talentAssets';
 import { DRAW_HEIGHT } from '../data/tube';
 import type { ArrowState } from '../sim/arrows';
@@ -17,13 +16,12 @@ interface Drawn {
   trail?: { g: GameObjects.Graphics; look: NonNullable<(typeof ROUND_LOOKS)[string]['trail']>; points: [number, number][] };
 }
 
-/** The sprite and shadow for a shot: its ammo's, a Shard's (029), or a Cold Shard's (037). */
-function spritesOf(ammoId: string): { sprite: string; shadow: string } {
-  const ammo = AMMO[ammoId];
+/** The sprite and shadow for a shot: its ammo's, or a Shard's (029), drawn as ice when it's Cold (039.3, 037's ice art). */
+function spritesOf(a: Pick<ArrowState, 'ammoId' | 'damageType'>): { sprite: string; shadow: string } {
+  const ammo = AMMO[a.ammoId];
   if (ammo) return ammo;
-  if (ammoId === SPLIT.projectile) return { sprite: STAGE_SPRITES.shard, shadow: STAGE_SPRITES.shardShadow };
-  if (ammoId === SHATTERPOINT.projectile) return { sprite: TALENT_SPRITES.coldShard, shadow: STAGE_SPRITES.shardShadow };
-  throw new Error(`Unknown ammo '${ammoId}'`);
+  if (a.ammoId === SPLIT.projectile) return { sprite: a.damageType === 'cold' ? TALENT_SPRITES.coldShard : STAGE_SPRITES.shard, shadow: STAGE_SPRITES.shardShadow };
+  throw new Error(`Unknown ammo '${a.ammoId}'`);
 }
 
 // Draws arrows in flight: the arrow raised to chest height over a shadow on its
@@ -81,7 +79,7 @@ export class ArrowView {
   }
 
   private create(a: ArrowState): Drawn {
-    const { sprite, shadow } = spritesOf(a.ammoId);
+    const { sprite, shadow } = spritesOf(a);
     const d: Drawn = {
       arrow: addVector(this.scene, 0, 0, sprite),
       shadow: addVector(this.scene, 0, 0, shadow).setDepth(DEPTHS.shadow),

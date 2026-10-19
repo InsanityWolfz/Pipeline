@@ -46,7 +46,8 @@ export const SPLIT = { shards: 5, damage: 4, range: 64, speed: 360, projectile: 
 export const CLUSTER = { delayTicks: 12, count: 4, distance: 40, damage: 8, radius: 20 } as const;
 
 export const TAGS: Readonly<Record<string, TagDef>> = {
-  frost: { id: 'frost', slot: 'element', prefix: 'Frost', appliesTo: ['arrow'], keyword: 'cold', damageType: 'cold' },
+  // 039 (Q12): an element tags any family; a shape stays with one.
+  frost: { id: 'frost', slot: 'element', prefix: 'Frost', appliesTo: ['arrow', 'bomb', 'ley-bolt', 'landmine'], keyword: 'cold', damageType: 'cold' },
   homing: { id: 'homing', slot: 'shape', prefix: 'Homing', appliesTo: ['ley-bolt'], keyword: 'homing' },
   split: { id: 'split', slot: 'shape', prefix: 'Split', appliesTo: ['ley-bolt'], keyword: 'split' },
   cluster: { id: 'cluster', slot: 'shape', prefix: 'Cluster', appliesTo: ['bomb'], keyword: 'cluster' },

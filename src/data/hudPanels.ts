@@ -87,15 +87,16 @@ export const INVENTORY_GROUPS: readonly { id: ItemGroup; label: string }[] = [
 export const INVENTORY_PANEL = {
   title: { text: 'Inventory', w: 128, h: 22, gap: 4, titleY: 4 },
   pad: 8,
-  columnWidth: 236,
-  columnGap: 14,
+  /** 039: three columns, as the six new Frost rounds make Ammo too tall to share one; a row's name has room for "Frost Homing ley bolt". */
+  columnWidth: 196,
+  columnGap: 8,
   headerHeight: 12,
   headerY: 2,
   /** 038: 15, not 16, so Raw and Parts still share a column with the landmine chain's plate (the icons' shapes are under 15 px). */
   rowHeight: 15,
   groupGap: 6,
   gearLines: 2,
-  row: { name: { x: 19, y: 5 }, count: { x: 102, y: 5 }, mark: { x: 118, y: 5 }, warn: { y: 4, gap: 2 }, home: { y: 5 } },
+  row: { name: { x: 19, y: 5 }, count: { x: 108, y: 5 }, mark: { x: 122, y: 5 }, warn: { y: 4, gap: 2 }, home: { y: 5 } },
   nothing: { text: 'Nothing', x: 2, y: 3 },
   text: { safe: 'safe', atRisk: 'at risk', sep: ' · ', home: 'home', worn: 'worn', armor: 'armor' },
   footer: { text: 'At risk: lost if you die before reaching the foundry or a claimed pylon.', gap: 6, lineHeight: 9 },
@@ -181,3 +182,6 @@ export const PICKUP_FEED = {
   fadeMs: 400,
   maxLines: 5,
 } as const;
+
+/** 039: the panel's tablet is baked in two halves (each under a texture page at the largest scale); the left one's width. */
+export const inventoryPanelLeft = (): number => Math.round(inventoryPanelSize().w / 2);
