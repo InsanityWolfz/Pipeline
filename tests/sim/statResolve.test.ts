@@ -6,7 +6,7 @@ import { bombletEmission, fireRate, poolBurstEmission, roundEmission } from '../
 import { leavePool } from '../../src/sim/keystones';
 import { createArrow } from '../../src/sim/arrows';
 import type { SimState } from '../../src/sim/state';
-import { resolveStat, statOf, statusEmission, YOU } from '../../src/sim/statResolve';
+import { activeLines, resolveStat, statOf, statusEmission, YOU } from '../../src/sim/statResolve';
 import { arena, fireAt, HUSK, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 import { piece, wear } from '../fixtures/gear';
 
@@ -120,5 +120,22 @@ describe('scope reach (039: a scope reaches every emission that carries it)', ()
     s.arrows.push(a);
     runUntil(s, () => s.events.poolBursts.length > 0, 40);
     expect(s.events.poolBursts[0]?.radius).toBeCloseTo(27.6, 9);
+  });
+});
+
+describe('the lines in play are built once per loadout (039: a perf guard)', () => {
+  it('reuses them while the talents and worn pieces stay, and rebuilds when either changes', () => {
+    const s = taking(arena(), 'a1');
+    const first = activeLines(s);
+    expect(activeLines(s)).toBe(first);
+    s.talents.push('a2');
+    const more = activeLines(s);
+    expect(more).not.toBe(first);
+    expect(more.map((l) => l.source)).toEqual(["Fletcher's Eye", 'Quick Nock']);
+    wear(s, piece(0, 'helm', { affixes: [{ kind: 'armor', value: 2 }] }));
+    expect(activeLines(s).map((l) => l.source)).toEqual(["Fletcher's Eye", 'Quick Nock', 'Test helm']);
+    // Another sim with the same ids but its own pieces never reads this one's lines.
+    const t = wear(taking(arena(), 'a1', 'a2'), piece(0, 'helm', { affixes: [{ kind: 'armor', value: 3 }] }));
+    expect(resolveStat(t, 'armor', YOU, 0).final).toBe(3);
   });
 });

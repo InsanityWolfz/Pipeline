@@ -1,4 +1,4 @@
-import { affixLine, MOVE_BONUS_CAP, ROLL_COOLDOWN_FLOOR, SLOT_BASE } from '../data/gear';
+import { affixLine, MOVE_BONUS_CAP, ROLL_COOLDOWN_FLOOR, SLOT_BASE, type GearPiece } from '../data/gear';
 import type { KeywordId } from '../data/keywords';
 import { isRuleLine, type ContentLine, type RuleId, type RuleLine, type Scope } from '../data/lines';
 import { relicDef } from '../data/relics';
@@ -55,14 +55,25 @@ interface Sourced<L extends ContentLine = ContentLine> {
   affix?: true;
 }
 
-/** Every line in play: the taken talents', the worn relics' and every worn affix (always scope You). */
+/** The last loadout's lines: its talents (by id) and its worn pieces (by reference: an identified piece never changes). */
+let lastLoadout: { talents: string; pieces: readonly GearPiece[]; lines: Sourced[] } | null = null;
+
+/**
+ * Every line in play: the taken talents', the worn relics' and every worn affix (always scope You). Kept for the last
+ * loadout, so the many reads in a tick don't rebuild it: the same talents and the same worn pieces give the same lines.
+ */
 export function activeLines(state: Statted): Sourced[] {
+  const talents = state.talents.join(',');
+  const pieces = wornPieces(state);
+  const last = lastLoadout;
+  if (last && last.talents === talents && last.pieces.length === pieces.length && last.pieces.every((p, i) => p === pieces[i])) return last.lines;
   const out: Sourced[] = [];
   for (const id of state.talents) for (const line of TALENTS[id]?.lines ?? []) out.push({ source: TALENTS[id]?.name ?? id, line });
-  for (const p of wornPieces(state)) {
+  for (const p of pieces) {
     if (p.relic) for (const line of relicDef(p.relic).lines) out.push({ source: p.name, line });
     for (const a of p.affixes) out.push({ source: p.name, line: affixLine(a), affix: true });
   }
+  lastLoadout = { talents, pieces, lines: out };
   return out;
 }
 

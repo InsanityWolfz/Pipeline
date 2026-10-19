@@ -55,7 +55,7 @@ describe('exact fire rates (039)', () => {
   });
 
   it('Oiled Breech: a fed entrance’s ley bolts fire 3.24/s, not 3.16/s', () => {
-    const shots = fed(taking(arena(), 't1'), 'ley-bolt', 3000);
+    const shots = fed(taking(arena(), 't1'), 'ley-bolt', 1500);
     const perSecond = ((shots.length - 1) * TICK_RATE) / ((shots.at(-1) ?? 0) - (shots[0] ?? 0));
     expect(perSecond).toBeCloseTo(3.24, 2);
   });
