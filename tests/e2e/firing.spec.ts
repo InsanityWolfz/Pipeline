@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import type {} from '../../src/render/testHook';
+import { MELEE } from '../../src/data/combat';
 
 function watchErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -72,13 +73,16 @@ test('arrows stop at a wall before their range', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test('the tube dry-fires once the carried arrows run out', async ({ page }) => {
+test('the tube punches once the carried arrows run out (023)', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page);
   const emptied = await fire(page, 15 * 29 + 1, 0, 100);
   expect(emptied?.inventory.arrow).toBe(0);
-  const dry = await fire(page, 15, 0, 100);
-  expect(dry?.tube).toMatchObject({ dryFire: true });
-  expect(dry?.inventory.arrow).toBe(0);
+  // The punch waits out the last shot's interval, then lands on the 15th tick.
+  const punched = await fire(page, 15, 0, 100);
+  expect(punched?.events.melees).toHaveLength(1);
+  expect(punched?.events.shots).toHaveLength(0);
+  expect(punched?.tube).toMatchObject({ meleeCooldown: MELEE.cooldownTicks, firing: false });
+  expect(punched?.inventory.arrow).toBe(0);
   expect(errors).toEqual([]);
 });

@@ -212,12 +212,13 @@ export const ENEMY_FX = {
 } as const;
 
 /**
- * The punch's swoosh (023): a pale slice on the ground at the punch's real reach
- * and arc, with a brighter rim, fading out over `ms`. Colours are palette ids.
+ * The punch's swoosh (023): a pale slice from the feet at the punch's real reach
+ * and arc, with a brighter rim, drawn over the player and anything in reach, fading
+ * out over `ms`. Colours are palette ids.
  */
 export const MELEE_SWOOSH = {
   color: 'rock-pale',
-  fillAlpha: 0.35,
+  fillAlpha: 0.3,
   rimWidth: 2,
   rimAlpha: 0.9,
   ms: 180,

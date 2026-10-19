@@ -99,11 +99,11 @@ export class EffectsView {
     return this.live;
   }
 
-  /** The punch's area (023): a pale slice on the ground at its real reach and arc, fading out. */
+  /** The punch's area (023): a pale slice from the feet at its real reach and arc, over the player and what it hits, fading out. */
   private swoosh(x: number, y: number, angle: number): void {
     const half = (MELEE.arcDegrees * Math.PI) / 360;
     const color = colorOf(MELEE_SWOOSH.color);
-    const g = this.scene.add.graphics().setDepth(DEPTHS.groundFx);
+    const g = this.scene.add.graphics().setDepth(y + MELEE.reach);
     g.fillStyle(color, MELEE_SWOOSH.fillAlpha);
     g.slice(x, y, MELEE.reach, angle - half, angle + half, false);
     g.fillPath();
