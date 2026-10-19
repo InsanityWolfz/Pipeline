@@ -175,7 +175,7 @@ describe('landmines', () => {
     expect(bursts).toBe(0);
   });
 
-  it("never charge Blastfletch's ground: it reads a bomb's blast", () => {
+  it('never leave a Pool: Blastfletch’s line is scoped Bomb, a landmine is Landmine (039)', () => {
     const s = armed();
     s.talents = [TALENT_START, 'a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'k1'];
     lay(s, PLAYER_AT.x + 100, PLAYER_AT.y);

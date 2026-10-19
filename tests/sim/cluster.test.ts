@@ -157,11 +157,15 @@ describe('a cluster bomb', () => {
     expect(e.health).toBeCloseTo(HUSK.maxHealth - 8 * 1.1);
   });
 
-  it("charges Blastfletch's ground once, from its own burst", () => {
+  it('with Blastfletch, the bomb’s Burst and each Bomblet’s leave a Pool (039.4: Bomblets are Bomb family; 038.6 said no)', () => {
     const s = armed(['a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'k1']);
     run(s, 1, fireAt(PLAYER_AT.x + 120, PLAYER_AT.y));
+    runUntil(s, (t) => t.events.bursts.length > 0, 120);
+    expect(s.events.pools).toHaveLength(1);
     runUntil(s, (t) => t.events.bombletBursts.length > 0, 120);
-    expect(s.nextPoolId).toBe(1);
-    expect(BLASTFLETCH.poolTicks).toBeGreaterThan(0);
+    expect(s.events.pools).toHaveLength(CLUSTER.count);
+    expect(s.events.pools.map((p) => p.radius)).toEqual(s.events.bombletBursts.map((b) => b.radius));
+    expect(s.nextPoolId).toBe(1 + CLUSTER.count);
+    expect(s.pools.at(-1)?.ticks).toBe(BLASTFLETCH.poolTicks);
   });
 });
