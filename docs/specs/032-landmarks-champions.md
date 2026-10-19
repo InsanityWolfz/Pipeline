@@ -274,3 +274,8 @@ Landmarks are hidden until you see them. Then they stay on the minimap, and the 
 
 ## Open questions
 None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).
+
+## Raised after the build (for Shaun at playtest)
+- **The map has no generated ponds now.** The seed's two generated ponds sat where the Ley Grotto and Reed Marsh go, so they were removed whole. Only hand-placed ponds remain.
+- **Landmark guards wake as soon as they're on screen,** so every landmark is a fight on arrival. The cache's five guards are the toughest pack outside the shrine. Review found the Quarry guards could join the tutorial's first fight; they are being moved out of its range.
+- **Champion names and the "Claim a second pylon" wording** are first drafts for Shaun to edit. The landmark art waits on his approval by eye (docs/review/032).
