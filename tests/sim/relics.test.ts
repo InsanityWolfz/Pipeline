@@ -7,6 +7,7 @@ import { bank } from '../../src/sim/banking';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import { playerStats, walkScale } from '../../src/sim/stats';
 import { summarize } from '../../src/sim/summary';
+import { applyStun } from '../../src/sim/stun';
 import type { SimState } from '../../src/sim/state';
 import { arena, HALL, HUSK, placeHusk, PLAYER_AT, run, runUntil, runUntilKo, SWIPE_LANDS } from './fight';
 import { piece, wear } from '../fixtures/gear';
@@ -71,8 +72,8 @@ describe('Rollbreaker Greaves', () => {
     const t = wear(arena(), relic(0, ROLLBREAKER));
     const charger = createEnemy(t.nextEnemyId++, 'charger', { x: PLAYER_AT.x + 20, y: PLAYER_AT.y }, HALL);
     t.enemies.push(charger);
-    charger.mode = 'stun';
-    charger.modeTicks = 1;
+    // Dazed by a wall a tick ago (039.6: the Stun status for its own stunTicks, one of them run).
+    applyStun(t, charger, CHARGER.charge.stunTicks - 1, 'stun');
     run(t, 1, { moveX: 1, dodge: true });
     expect(charger.mode).toBe('stun');
     expect(charger.stunned).toBe(CHARGER.charge.stunTicks - 2);

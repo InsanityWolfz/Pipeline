@@ -7,6 +7,7 @@ import { boxHitsSolid } from './collision';
 import { damagePlayer } from './health';
 import { clearGround } from './sightLine';
 import { roomById, type SimState } from './state';
+import { applyStun } from './stun';
 
 // The Charger (035): a horned stone ram-construct. Aggroed, it walks at the player; with
 // them in range along a clear ground line and its cooldown ready, it plants and paws the
@@ -27,7 +28,7 @@ export function chargeThink(state: SimState, e: EnemyState, def: ChargerDef): [n
     state.events.charges.push({ id: e.id, x: e.x, y: e.y, dx: e.swipeDirX, dy: e.swipeDirY, length: charge.distance });
   }
   if (e.mode === 'swipe') return ram(state, e, def);
-  const rest = e.mode === 'stun' ? charge.stunTicks : e.mode === 'recover' ? charge.recoverTicks : null;
+  const rest = e.mode === 'recover' ? charge.recoverTicks : null;
   if (rest !== null) {
     if (e.modeTicks < rest) return hold(e);
     e.mode = 'chase';
@@ -56,7 +57,9 @@ function ram(state: SimState, e: EnemyState, def: ChargerDef): [number, number] 
   strike(state, e, def);
   // A solid tile stops it dazed (a node or a pylon in its way only stops it, and it runs out its lane).
   if (e.modeTicks > 1 && e.bumped && boxHitsSolid(roomById(e.roomId), e.x + e.swipeDirX, e.y + e.swipeDirY, def.feetBox)) {
+    // 039.6: the wall's daze is the Stun status, for its own stunTicks, in the dazed pose.
     enter(e, 'stun');
+    applyStun(state, e, charge.stunTicks, 'stun');
     return [0, 0];
   }
   const step = charge.speed / TICK_RATE;

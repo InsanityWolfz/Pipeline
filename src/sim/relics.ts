@@ -1,10 +1,10 @@
 import { FEET_BOX } from '../data/player';
 import { defOf } from './champions';
-import { targetable, type EnemyState } from './enemies';
+import type { EnemyState } from './enemies';
 import { isRolling } from './movement';
 import { wornRelic } from './stats';
 import { statOf, statusEmission } from './statResolve';
-import { attackOf } from '../data/enemies';
+import { applyStun } from './stun';
 import type { SimState } from './state';
 
 // The relics' rules (036), each read from its data entry: Rollbreaker's Stun, the
@@ -37,34 +37,8 @@ export function stepRelics(state: SimState): void {
   if (!breaker || !isRolling(p)) return;
   for (const e of state.enemies) {
     if (e.roomId !== state.roomId || p.rollStunned.includes(e.id) || !rolledThrough(state, e)) continue;
-    if (stun(state, e, statOf(state, 'duration', statusEmission('stun'), breaker.stunTicks))) p.rollStunned.push(e.id);
+    if (applyStun(state, e, statOf(state, 'duration', statusEmission('stun'), breaker.stunTicks))) p.rollStunned.push(e.id);
   }
-}
-
-/** Ticks left in a recovery, a Charger's wall stun, or a Stun already running: a new Stun never cuts them short. */
-function holdLeft(e: EnemyState): number {
-  const def = defOf(e);
-  if (e.mode === 'stun' && def.kind === 'charger') return Math.max(e.stunned, def.charge.stunTicks - e.modeTicks);
-  if (e.mode === 'recover') return Math.max(e.stunned, attackOf(def).recoverTicks - e.modeTicks);
-  return e.stunned;
-}
-
-/**
- * Cancels whatever the enemy was doing and holds it in recovery for `ticks`, or longer if it was already held longer
- * (a wall stun stays a stun). Bosses and enemies underground are never stunned. Returns whether it was.
- */
-function stun(state: SimState, e: EnemyState, ticks: number): boolean {
-  if (defOf(e).boss || !targetable(e)) return false;
-  const hold = Math.max(holdLeft(e), ticks);
-  if (e.mode !== 'stun') {
-    if (e.mode !== 'recover') e.modeTicks = 1;
-    e.mode = 'recover';
-  }
-  e.stunned = hold;
-  e.vx = 0;
-  e.vy = 0;
-  state.events.stuns.push({ id: e.id, x: e.x, y: e.y });
-  return true;
 }
 
 /** What the relics make of a hit before armor: `blocked` (the ward took it whole), or the hit goes on. */

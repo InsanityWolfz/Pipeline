@@ -124,7 +124,7 @@ describe('the Charger', () => {
     expect(s.player.health).toBe(100);
   });
 
-  it('a wall before the lane ends stuns it `stunTicks`, with no damage to it', () => {
+  it('a wall before the lane ends Stuns it `stunTicks` (039.6: the Stun status), with no damage to it', () => {
     const s = arena();
     const e = placeCharger(s, ROCKS.charger.x, ROCKS.charger.y);
     movePlayer(s, ROCKS.before.x, ROCKS.before.y);
@@ -133,6 +133,9 @@ describe('the Charger', () => {
     // The player steps off the lane; it runs on into the rocks.
     movePlayer(s, ROCKS.before.x + 3 * 32, ROCKS.before.y);
     runUntil(s, () => e.mode === 'stun', charge.windupTicks + 60);
+    // 039.6: the daze is the Stun status, for the Charger's own stunTicks.
+    expect(e.stunned).toBe(charge.stunTicks);
+    expect(s.events.stuns).toEqual([{ id: e.id, x: e.x, y: e.y }]);
     expect(e.y - ROCKS.charger.y).toBeLessThan(charge.distance);
     expect(e.health).toBe(DEF.maxHealth);
     run(s, charge.stunTicks - 1);
