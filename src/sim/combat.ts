@@ -5,9 +5,11 @@ import { aggro, damageEnemy, inHurtbox, targetable, type EnemyState, type HitSty
 import { recordBlock, shieldBlocks } from './shield';
 import { onBossDeath } from './altar';
 import { killXp } from './leveling';
+import { afterKeystoneHit, keystoneHit, takeCharge } from './keystones';
 import { spawnDrops } from './drops';
 import type { SimState } from './state';
 import { rotate } from './volley';
+import { ofBase, playerStats } from './stats';
 
 // Arrows against enemies, and what happens when an enemy dies.
 
@@ -15,13 +17,18 @@ import { rotate } from './volley';
 const arrowHit = (arrow: ArrowState): HitStyle => ({ knock: true, flash: true, damageType: arrow.damageType });
 
 /**
- * A star round's burst (029): STAR.shards shards from the hit point, 360 / shards degrees apart, the first along
- * its flight, none able to hit the enemy it struck. They join the flight after this tick's (`spawned`).
+ * A star round's burst (029): the stats' shards (STAR.shards, 037: Splinter's more) from the hit point, 360 / shards
+ * degrees apart, the first along its flight, none able to hit the enemy it struck, each for STAR.damage times the ley
+ * bolt's damage bonus. They join the flight after this tick's (`spawned`).
  */
 function burstStar(state: SimState, arrow: ArrowState, struck: EnemyState, spawned: ArrowState[]): void {
-  for (let k = 0; k < STAR.shards; k++) {
-    const [dx, dy] = rotate(arrow.dx, arrow.dy, (k * 360) / STAR.shards);
-    spawned.push(createShard(state.nextArrowId++, arrow.roomId, arrow.x, arrow.y, dx, dy, struck.id));
+  const stats = playerStats(state).ammo;
+  const count = stats.starShards;
+  for (let k = 0; k < count; k++) {
+    const [dx, dy] = rotate(arrow.dx, arrow.dy, (k * 360) / count);
+    const shard = createShard(state.nextArrowId++, arrow.roomId, arrow.x, arrow.y, dx, dy, struck.id);
+    shard.damage = STAR.damage * ofBase(stats.damage, arrow.ammoId);
+    spawned.push(shard);
   }
   state.events.starBursts.push({ x: arrow.x, y: arrow.y });
 }
@@ -37,8 +44,11 @@ function strike(state: SimState, arrow: ArrowState, e: EnemyState, spawned: Arro
     if (e.mode === 'idle' || e.mode === 'return') aggro(e);
     return false;
   }
-  damageEnemy(state, e, arrow.damage, arrow.dx, arrow.dy, arrowHit(arrow));
+  // The keystones (037): a charged arrow hits harder and bursts; a ley bolt shatters a frozen enemy.
+  const hit = keystoneHit(state, arrow, e);
+  damageEnemy(state, e, arrow.damage * hit.scale, arrow.dx, arrow.dy, arrowHit(arrow));
   if (arrow.split) burstStar(state, arrow, e, spawned);
+  afterKeystoneHit(state, arrow, e, hit, spawned);
   return true;
 }
 
@@ -50,6 +60,8 @@ function strike(state: SimState, arrow: ArrowState, e: EnemyState, spawned: Arro
  */
 export function arrowHits(state: SimState, spawned: ArrowState[] = []): (arrow: ArrowState) => boolean {
   return (arrow) => {
+    // Blastfletch (037): an arrow passing through charged ground takes its charge.
+    takeCharge(state, arrow);
     if (arrow.pierce) {
       for (const en of state.enemies) {
         if (en.roomId !== arrow.roomId || en.health <= 0 || !targetable(en) || arrow.hitIds.includes(en.id)) continue;

@@ -1,5 +1,4 @@
 import { FOUNDRY_ROOM } from '../data/rooms';
-import { FIRING_WALK_MULTIPLIER } from '../data/player';
 import { ammoDef } from '../data/ammo';
 import { MUZZLE_OFFSET, SLOT_AMMOS, STARTING_AMMO } from '../data/tube';
 import { hasBehaviour } from '../data/tags';
@@ -14,6 +13,8 @@ import { punch } from './melee';
 import { isRolling } from './movement';
 import { nextPress, volleyShots, type VolleyShot } from './volley';
 import type { SimState } from './state';
+import { ofBase, playerStats } from './stats';
+import { overpressureBonus } from './keystones';
 
 // The tube: picking the slot's ammo and firing it. Once linked, the tube fires the
 // intake's fed entrances first (024), each at its own ammo's rate while fire is held
@@ -33,10 +34,12 @@ export interface TubeState {
   fromReservoir: boolean;
   /** Projectiles this tick's shot fired: more than 1 for a volley of several rounds (024), 0 with no shot. */
   shotCount: number;
+  /** Ticks fire has been held while firing (037: Overpressure's ramp), up to its ramp; releasing fire resets it. */
+  overpressure: number;
 }
 
 export function createTube(): TubeState {
-  return { ammoId: STARTING_AMMO, fireCooldown: 0, meleeCooldown: 0, firing: false, fromReservoir: false, shotCount: 0 };
+  return { ammoId: STARTING_AMMO, fireCooldown: 0, meleeCooldown: 0, firing: false, fromReservoir: false, shotCount: 0, overpressure: 0 };
 }
 
 /** Switches the slot to another ammo. The current ammo, or one the slot can't take, does nothing. */
@@ -55,9 +58,18 @@ export function hasRoundToFire(state: Pick<SimState, 'hasTube' | 'tube' | 'inven
   return nextPress(state).kind !== 'melee';
 }
 
-/** The walk multiplier from the tube (016): slower while it really fires, by last tick's state. */
-export function firingWalkScale(state: Pick<SimState, 'tube'>): number {
-  return state.tube.firing ? FIRING_WALK_MULTIPLIER : 1;
+/** The walk multiplier from the tube (016): slower while it really fires, by last tick's state (037: Steady Grip eases it). */
+export function firingWalkScale(state: Pick<SimState, 'tube' | 'gear' | 'equipped'> & Partial<Pick<SimState, 'talents'>>): number {
+  return state.tube.firing ? playerStats(state).firingWalk : 1;
+}
+
+/**
+ * Ticks between shots of a round (037): its ammo's fireTicks divided by 1 plus the fire-rate bonuses (its lane's, all
+ * ammo's and Overpressure's ramp, added), rounded to whole ticks, at least 1.
+ */
+export function fireTicksOf(state: SimState, ammoId: string): number {
+  const bonus = ofBase(playerStats(state).ammo.fireRate, ammoId) + overpressureBonus(state);
+  return Math.max(1, Math.round(ammoDef(ammoId).fireTicks / (1 + bonus)));
 }
 
 /** Runs after the player has moved this tick, so shots leave from where they stand now. */
@@ -105,7 +117,7 @@ function fire(state: SimState, cmd: Command, dx: number, dy: number): void {
       return e && e.cooldown === 0 ? [{ ...r, e }] : [];
     });
     for (const { e, ...r } of ready) {
-      const ticks = ammoDef(r.ammoId).fireTicks;
+      const ticks = fireTicksOf(state, r.ammoId);
       takeFromEntrance(e);
       e.cooldown = ticks;
       // The first carried round once the entrances run dry never comes sooner than the last entrance's own pace.
@@ -121,7 +133,7 @@ function fire(state: SimState, cmd: Command, dx: number, dy: number): void {
   }
   if (press.kind !== 'carried' || tube.fireCooldown > 0) return;
   take(state.inventory, ammoDef(press.ammoId).itemId);
-  tube.fireCooldown = ammoDef(press.ammoId).fireTicks;
+  tube.fireCooldown = fireTicksOf(state, press.ammoId);
   launch(state, { ammoId: press.ammoId, dir: [dx, dy], across: 0 }, cmd);
   tube.shotCount = 1;
 }
@@ -137,5 +149,8 @@ function launch(state: SimState, { ammoId, dir: [dx, dy], across }: VolleyShot, 
   }
   // A homing round (029) locks on at launch: the enemy nearest the cursor, if one is close enough.
   const target = hasBehaviour(ammoId, 'homing') ? lockTarget(state, cmd.aimX, cmd.aimY) : null;
-  state.arrows.push(createArrow(state.nextArrowId++, ammoId, state.roomId, muzzle.x, muzzle.y, dx, dy, target));
+  const arrow = createArrow(state.nextArrowId++, ammoId, state.roomId, muzzle.x, muzzle.y, dx, dy, target);
+  // Talents' damage (037) goes onto the round as it leaves.
+  arrow.damage *= ofBase(playerStats(state).ammo.damage, ammoId);
+  state.arrows.push(arrow);
 }

@@ -4,6 +4,7 @@ import type { ArrowState } from './arrows';
 import { targetable } from './enemies';
 import type { SimState } from './state';
 import { rotate } from './volley';
+import { playerStats } from './stats';
 
 // Homing (029): a homing round locks at launch onto the living enemy in the
 // player's room nearest the cursor, within HOMING.lockRadius of it, and each tick
@@ -27,7 +28,8 @@ export function lockTarget(state: SimState, x: number, y: number): number | null
 
 /** Steers each homing arrow toward its target's hurtbox, by at most the turn cap; drops a lost target for good. */
 export function steerArrows(state: SimState): (arrow: ArrowState) => void {
-  const max = HOMING.turnDegrees;
+  // Seeker's Lens (037) sharpens the turn, through the player's stats.
+  const max = playerStats(state).ammo.homingTurn;
   return (arrow) => {
     if (arrow.targetId === null) return;
     // A target gone under the ground (035) is lost like a dead one.

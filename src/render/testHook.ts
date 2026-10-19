@@ -1,4 +1,5 @@
-import { NO_COMMAND, type Command } from '../sim/input';
+import { heldPart, NO_COMMAND, type Command } from '../sim/input';
+import { withUi } from './menuRequests';
 import type { SimState } from '../sim/state';
 import { summarize, type SimSummary } from '../sim/summary';
 import { TILE_SIZE } from '../data/config';
@@ -36,7 +37,7 @@ export interface GameTestHook {
   getState(): SimSummary;
   /**
    * Steps `frames` ticks holding `command`. Its dodge, interact, ammo
-   * select, build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), setFilter, pylon, travel, takeStash, identify, equip, applyStage and restore (033) apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
+   * select, build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), setFilter, pylon, travel, takeStash, identify, equip, applyStage, restore (033), summon, takeTalent and respec (037) apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
    */
   step(frames: number, command?: Partial<Command>): SimSummary;
   /** Crafts a recipe once between ticks, as clicking its menu row does. */
@@ -192,48 +193,9 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
       if (!Number.isInteger(frames) || frames < 0) throw new Error(`step() needs a whole number of frames, got ${frames}`);
       scene.manualStepping = true;
       const held: Command = { ...NO_COMMAND, aimX: sim.player.aimX, aimY: sim.player.aimY, ...command };
-      const after: Command = {
-        ...held,
-        dodge: false,
-        interact: false,
-        selectAmmo: null,
-        toggleBuild: false,
-        place: null,
-        pickUp: null,
-        deposit: null,
-        withdraw: null,
-        setFilter: null,
-        pylon: null,
-        travel: null,
-        takeStash: null,
-        identify: false,
-        equip: null,
-        applyStage: null,
-        restore: null,
-        summon: null,
-      };
-      for (let i = 0; i < frames; i++) {
-        // Building with the mouse and keys works under the hook: the scene's queued actions join each tick.
-        const base = i === 0 ? held : after;
-        const ui = scene.takeUiCommand();
-        scene.stepOnce({
-          ...base,
-          toggleBuild: base.toggleBuild || ui.toggleBuild,
-          place: base.place ?? ui.place,
-          pickUp: base.pickUp ?? ui.pickUp,
-          deposit: base.deposit ?? ui.deposit,
-          withdraw: base.withdraw ?? ui.withdraw,
-          setFilter: base.setFilter ?? ui.setFilter,
-          pylon: base.pylon ?? ui.pylon,
-          travel: base.travel ?? ui.travel,
-          takeStash: base.takeStash ?? ui.takeStash,
-          identify: base.identify || ui.identify,
-          equip: base.equip ?? ui.equip,
-          applyStage: base.applyStage ?? ui.applyStage,
-          restore: base.restore ?? ui.restore,
-          summon: base.summon ?? ui.summon,
-        });
-      }
+      const after = heldPart(held);
+      // Building with the mouse and keys works under the hook: the scene's queued actions join each tick.
+      for (let i = 0; i < frames; i++) scene.stepOnce(withUi(i === 0 ? held : after, scene.takeUiCommand()));
       return summarize(sim);
     },
     craft: (recipeId) => {

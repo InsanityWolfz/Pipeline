@@ -33,7 +33,7 @@ function rolled(s: SimState): { distance: number; cooldown: number } {
 }
 
 describe('playerStats', () => {
-  it('with nothing worn is the bare numbers', () => {
+  it('with nothing worn is the bare numbers (037: the firing walk and the ammo numbers too; talentStats.test.ts checks those)', () => {
     expect(playerStats(arena())).toEqual({
       armor: 0,
       maxHealth: MAX_HEALTH,
@@ -42,6 +42,8 @@ describe('playerStats', () => {
       walkScale: 1,
       rollCooldown: ROLL_COOLDOWN_TICKS,
       rollDistance: ROLL_DISTANCE,
+      firingWalk: FIRING_WALK_MULTIPLIER,
+      ammo: playerStats({ gear: [], equipped: arena().equipped }).ammo,
     });
   });
 

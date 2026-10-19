@@ -1,6 +1,7 @@
 import { REGION_1_X } from '../../src/data/hollows';
 import { describe, expect, it } from 'vitest';
 import { TILE_SIZE } from '../../src/data/config';
+import { TALENT_LIST } from '../../src/data/talents';
 import { DYING_TICKS, HEAL_RATE_STEP, HEALING, MAX_HEALTH, type HealingTuning } from '../../src/data/player';
 import { AFFIXES } from '../../src/data/gear';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
@@ -318,9 +319,12 @@ describe('rates healing can represent (036)', () => {
   /** True if a rate is a whole number of HEAL_RATE_STEP. */
   const whole = (rate: number): boolean => Math.abs(rate / HEAL_RATE_STEP - Math.round(rate / HEAL_RATE_STEP)) < 1e-9;
 
-  it('every healing rate and every regen affix value is a whole number of steps, so nothing rounds away', () => {
+  it('every healing rate, every regen affix value and every talent’s regen (037) is a whole number of steps, so nothing rounds away', () => {
     for (const [source, rate] of Object.entries(HEALING)) if (source !== 'afterHitDelay') expect(whole(rate), source).toBe(true);
     const regen = AFFIXES.regen;
     for (let n = regen.min; n <= regen.max; n++) expect(whole(n * regen.step), `${n} steps of regen`).toBe(true);
+    const talents = TALENT_LIST.flatMap((t) => (t.effect.kind === 'regen' ? [t.effect.value] : []));
+    expect(talents.length).toBeGreaterThan(0);
+    for (const rate of talents) expect(whole(rate), `talent regen ${rate}`).toBe(true);
   });
 });

@@ -2,6 +2,7 @@ import { enemyDef } from '../data/enemies';
 import { COLD } from '../data/tags';
 import type { EnemyState } from './enemies';
 import type { SimState } from './state';
+import { playerStats } from './stats';
 
 // Cold (029): each cold hit adds a chill stack, up to COLD.stacksToFreeze, and
 // refreshes the chill for COLD.stackTicks; each stack slows the enemy's own
@@ -9,15 +10,17 @@ import type { SimState } from './state';
 // it doesn't move or think, so a wind-up pauses, but it still takes damage and,
 // unless a boss, knockback. After the thaw it gains no stacks for COLD.refreezeTicks.
 
-/** A cold hit on a live enemy: a stack, or the freeze on the stack that reaches the cap. Nothing while frozen or in the refreeze window. */
+/** A cold hit on a live enemy: a stack, or the freeze on the stack that reaches the cap (the player's stats', 037). Nothing while frozen or in the refreeze window. */
 export function chillEnemy(state: SimState, e: EnemyState): void {
   if (e.frozen > 0 || e.refreeze > 0) return;
-  e.chill = Math.min(COLD.stacksToFreeze, e.chill + 1);
+  // Rimecraft (037) takes a hit off the freeze and adds to its length, through the player's stats.
+  const cold = playerStats(state).ammo;
+  e.chill = Math.min(cold.freezeHits, e.chill + 1);
   e.chillTicks = COLD.stackTicks;
-  if (e.chill < COLD.stacksToFreeze) return;
+  if (e.chill < cold.freezeHits) return;
   e.chill = 0;
   e.chillTicks = 0;
-  e.frozen = enemyDef(e.enemyId).boss ? COLD.bossFreezeTicks : COLD.freezeTicks;
+  e.frozen = enemyDef(e.enemyId).boss ? cold.bossFreezeTicks : cold.freezeTicks;
   state.events.freezes.push({ id: e.id, x: e.x, y: e.y });
 }
 

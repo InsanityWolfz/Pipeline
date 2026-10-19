@@ -8,9 +8,9 @@ export function clickAmount(mods: { shift: boolean; ctrl: boolean }): HopperAmou
 }
 
 /** The commands that menus send: the hopper, sorter, pylon, stash and bench menus' choices. */
-export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'setFilter' | 'pylon' | 'travel' | 'takeStash' | 'identify' | 'equip' | 'applyStage' | 'restore' | 'summon'>;
+export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'setFilter' | 'pylon' | 'travel' | 'takeStash' | 'identify' | 'equip' | 'applyStage' | 'restore' | 'summon' | 'takeTalent' | 'respec'>;
 
-const NONE: MenuCommand = { deposit: null, withdraw: null, setFilter: null, pylon: null, travel: null, takeStash: null, identify: false, equip: null, applyStage: null, restore: null, summon: null };
+const NONE: MenuCommand = { deposit: null, withdraw: null, setFilter: null, pylon: null, travel: null, takeStash: null, identify: false, equip: null, applyStage: null, restore: null, summon: null, takeTalent: null, respec: false };
 
 // Choices clicked in the world's menus, held until the next tick takes them.
 export class MenuRequests {
@@ -71,6 +71,16 @@ export class MenuRequests {
     this.pending.summon = altarId;
   }
 
+  /** Takes a talent (037: a click on an available node in the tree panel). */
+  takeTalent(id: string): void {
+    this.pending.takeTalent = id;
+  }
+
+  /** Respecs every talent (037: the tree panel's reset, in the foundry). */
+  respec(): void {
+    this.pending.respec = true;
+  }
+
   /** The held choices, consumed. */
   take(): MenuCommand {
     const out = this.pending;
@@ -84,10 +94,17 @@ export class MenuRequests {
 }
 
 /** Build and menu actions for one tick, merged into the command. */
-export type UiCommand = Pick<
-  Command,
-  'toggleBuild' | 'place' | 'pickUp' | 'deposit' | 'withdraw' | 'setFilter' | 'pylon' | 'travel' | 'takeStash' | 'identify' | 'equip' | 'applyStage' | 'restore' | 'summon'
->;
+export type UiCommand = Pick<Command, 'toggleBuild' | 'place' | 'pickUp'> & MenuCommand;
 
 /** No UI actions this tick. */
 export const NO_UI_COMMAND: UiCommand = { toggleBuild: false, place: null, pickUp: null, ...NONE };
+
+/** A command with the UI's actions merged in: each one the command doesn't set itself comes from the UI (the test hook's steps). */
+export function withUi(cmd: Command, ui: UiCommand): Command {
+  const out: Command = { ...cmd };
+  for (const key of Object.keys(NO_UI_COMMAND) as (keyof UiCommand)[]) {
+    const mine = cmd[key];
+    if (mine === null || mine === false) Object.assign(out, { [key]: ui[key] });
+  }
+  return out;
+}

@@ -58,6 +58,10 @@ export interface Command {
   restore: string | null;
   /** Pay the offering at an altar (by id) in reach, summoning its boss again (an edge, 034), or null. */
   summon: string | null;
+  /** Take a talent (by id) this tick (an edge, 037): anywhere, with a point to spend; or null. */
+  takeTalent: string | null;
+  /** Respec every talent this tick (an edge, 037): only in the foundry, free. */
+  respec: boolean;
 }
 
 /** No input. Its aim is the world origin, so callers that care about aim must set one. */
@@ -84,4 +88,9 @@ export const NO_COMMAND: Readonly<Command> = {
   applyStage: null,
   restore: null,
   summon: null,
+  takeTalent: null,
+  respec: false,
 };
+
+/** A command's held part (stick, aim and fire) with every one-tick edge cleared: what a held command is after its first tick. */
+export const heldPart = (cmd: Command): Command => ({ ...NO_COMMAND, moveX: cmd.moveX, moveY: cmd.moveY, aimX: cmd.aimX, aimY: cmd.aimY, fire: cmd.fire });

@@ -34,7 +34,21 @@ export interface ArrowState {
   targetId: number | null;
   /** Enemies it has hit (or, for a shard, may not hit), so it hits each only once. */
   hitIds: number[];
+  /** Carries a charge from a bomb's blast (037: Blastfletch) to its next hit, and the charged areas it has drawn from. */
+  charged: boolean;
+  chargedBy: number[];
 }
+
+/** A shard's flight and hit (029's star shards, 037's ice shards): what it's called, how it flies and what it deals. */
+export interface ShardDef {
+  projectile: string;
+  speed: number;
+  range: number;
+  damage: number;
+  damageType: DamageType;
+}
+
+const STAR_SHARD: ShardDef = { projectile: STAR.projectile, speed: STAR.speed, range: STAR.range, damage: STAR.damage, damageType: 'physical' };
 
 /** A round fired from the tube, with its ammo's numbers. `targetId` is a homing round's lock. */
 export function createArrow(
@@ -48,13 +62,13 @@ export function createArrow(
   targetId: number | null = null,
 ): ArrowState {
   const { damage, damageType, speed, range, pierce } = straightAmmo(ammoId);
-  return { id, ammoId, roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, pierce, split: hasBehaviour(ammoId, 'star'), targetId, hitIds: [] };
+  return { id, ammoId, roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, pierce, split: hasBehaviour(ammoId, 'star'), targetId, hitIds: [], charged: false, chargedBy: [] };
 }
 
-/** A star shard (029): the star's numbers, never hitting the enemy that was struck, never piercing or splitting. */
-export function createShard(id: number, roomId: string, x: number, y: number, dx: number, dy: number, struckId: number): ArrowState {
-  const { speed, range, damage } = STAR;
-  return { id, ammoId: STAR.projectile, roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType: 'physical', pierce: false, split: false, targetId: null, hitIds: [struckId] };
+/** A shard (029: a star's by default; 037: Shatterpoint's ice): its def's numbers, never hitting the enemy that was struck, never piercing or splitting. */
+export function createShard(id: number, roomId: string, x: number, y: number, dx: number, dy: number, struckId: number, def: ShardDef = STAR_SHARD): ArrowState {
+  const { projectile, speed, range, damage, damageType } = def;
+  return { id, ammoId: projectile, roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, pierce: false, split: false, targetId: null, hitIds: [struckId], charged: false, chargedBy: [] };
 }
 
 /** Tries an arrow against targets at its current point; true if it hit one and is spent. */

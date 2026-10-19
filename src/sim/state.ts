@@ -8,6 +8,7 @@ import { WORLD } from './world';
 import type { GearPiece, GearSlot } from '../data/gear';
 import { NOTHING_WORN } from './gear';
 import { TALENT_START } from '../data/talents';
+import type { BlastCharge } from './keystones';
 import { playerStats } from './stats';
 import type { ArrowState } from './arrows';
 import type { BombState } from './bombs';
@@ -111,6 +112,9 @@ export interface SimState {
   xp: number;
   talentPoints: number;
   talents: string[];
+  /** Bomb blasts' charged ground (037: Blastfletch), and the id for the next. */
+  blastCharges: BlastCharge[];
+  nextChargeId: number;
   /** Bosses killed at least once (037): a later kill gives the refight's share of their XP. Kept through a KO. */
   killedBosses: string[];
   /** The player holds the tube (012); without it nothing fires. Kept through a KO. */
@@ -199,6 +203,8 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     talentPoints: 0,
     talents: [TALENT_START],
     killedBosses: [],
+    blastCharges: [],
+    nextChargeId: 0,
     firstHuskDropped: false,
     banked: { ...start.inventory },
     hasTube: start.hasTube,
@@ -243,6 +249,7 @@ export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   state.nodes = createNodes(rooms);
   state.harvest = null;
   state.bombs = [];
+  state.blastCharges = [];
   state.enemyBombs = [];
   settleSummons(state);
   state.orbs = [];

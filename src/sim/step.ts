@@ -35,6 +35,8 @@ import { entranceCap, machineSpeed, restore } from './research';
 import { stepEnemyBombs } from './enemyBombs';
 import { stepAltars } from './altar';
 import { stepLeveling } from './leveling';
+import { respec, takeTalent } from './talents';
+import { rampOverpressure, stepCharges } from './keystones';
 
 /** Each room's bodies, built once per tick on first use. */
 function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
@@ -79,10 +81,14 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   if (cmd.equip) equip(state, cmd.equip);
   if (cmd.applyStage) applyStage(state, cmd.applyStage);
   if (cmd.restore) restore(state, cmd.restore);
+  if (cmd.takeTalent) takeTalent(state, cmd.takeTalent);
+  if (cmd.respec) respec(state);
   stepHarvest(state, state.building ? { ...used, interact: false } : used);
   // Shots fired this tick stay at the muzzle until next tick's step.
   // Star shards (029) set off this tick join the flight after it, so they first move next tick.
   const shards: ArrowState[] = [];
+  // Blastfletch's charged ground (037) ages before arrows fly through it.
+  stepCharges(state);
   stepArrows(state.arrows, roomById, arrowHits(state, shards), steerArrows(state), (roomId, tx, ty) => shotSealed(state, roomId, tx, ty));
   state.arrows.push(...shards);
   stepBombs(state);
@@ -91,6 +97,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   // After the tick's claims, discoveries and kills (037).
   stepLeveling(state);
   stepTube(state, cmd);
+  rampOverpressure(state, cmd);
   stepBuild(state, cmd);
   stepFoundryUse(state, cmd);
   stepFoundry(state.foundry, state.link.entrances, state.events, state.link.attuned, { cap: entranceCap(state), speed: machineSpeed(state) });
