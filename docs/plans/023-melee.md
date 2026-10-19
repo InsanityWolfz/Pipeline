@@ -10,7 +10,7 @@ Spec: docs/specs/023-melee.md. Written for the unattended run (021–027 as sepa
 5. **Render.**
    - Sounds: `melee-hit` (a light, low thud) and `melee-whiff` (a short soft noise sweep) in `src/data/sounds.ts`; `dry-fire` removed; `npm run sound` regenerates the wavs and the stale `dry-fire.wav` is deleted. `FeelView` plays `melee-hit` for a punch that hit (instead of the arrow hit sound for those hits; the hurt sound, burst, number and hit-stop stay as for any hit) and `melee-whiff` for a miss. The dry-fire sound and the HUD slot's dry-fire tint go.
    - Jab: `WandererPose` gains `jab` (0..1). `PlayerView` reads it from the sim: full on the punch's tick, easing back over `WANDERER_FEEL.jab.ticks` of the melee cooldown, so a still frame under the hook shows it. With the tube, the tube thrusts forward along the aim (a negative kick: the tube-butt jab) and the body leans in; without it, the near hand drives out from the shoulder along the aim as a fist. The aim angle is kept up to date without the tube too.
-   - Swoosh: `EffectsView` draws a pale slice on each melee event at the punch's real reach, arc and angle, on the ground under the player (depth `groundFx`), with a brighter rim, fading out by tween over `MELEE_SWOOSH.ms` (`src/data/assets.ts`). `ui().swooshes` counts the swooshes still drawn.
+   - Swoosh: `EffectsView` draws a pale slice from the feet on each melee event at the punch's real reach, arc and angle, with a brighter rim, sorted in front of the player and anything in reach (so it reads when aiming up), fading out by tween over `MELEE_SWOOSH.ms` (`src/data/assets.ts`). `ui().swooshes` counts the swooshes still drawn.
 
 ## Tests (written first)
 - **Vitest** (`tests/sim/melee.test.ts`):
@@ -23,7 +23,7 @@ Spec: docs/specs/023-melee.md. Written for the unattended run (021–027 as sepa
   - the sector test on its own: edge overlap, apex inside the box, a box straddling the arc's side
 - **Vitest** (data): every enemy has a `boss` flag and only the Warden is a boss.
 - Existing tests that checked dry fire now check the punch instead (`tube`, `link`, `placement`, `firingWalk`).
-- **Playwright** (`tests/e2e/melee.spec.ts`): from the real start (no tube), walk up to the field's nearest Husk and punch it; poll until a melee event lists it, then check its health dropped and its distance from the player grew. With `REVIEW_SHOTS=1`, a screenshot into `docs/review/023/` of the swoosh mid-punch (tweens stopped with `tweenSpeed(0)`, taken once `ui().swooshes > 0`). `firing.spec.ts`'s dry-fire test becomes "the tube punches once the carried arrows run out".
+- **Playwright** (`tests/e2e/melee.spec.ts`): from the real start (no tube), walk into view of the field's Husks and wait for the nearest to close within a punch; punch it, then check the melee event lists it, its health dropped by `MELEE.damage`, and over the knockback it moved away from where the player stood. With `REVIEW_SHOTS=1`, screenshots into `docs/review/023/` of the swoosh mid-punch, with a fist and with the empty tube (tweens stopped with `tweenSpeed(0)`, taken once `ui().swooshes > 0`). `firing.spec.ts`'s dry-fire test becomes "the tube punches once the carried arrows run out".
 
 ## Risks
 - A punch on the tick after the last shot would feel like a double tap, so a punch also waits out the tube's fire cooldown.
