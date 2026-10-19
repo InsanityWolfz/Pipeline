@@ -2,6 +2,7 @@ import type { KeywordGroup, KeywordId } from './keywords';
 import type { Scope } from './lines';
 import type { StatId } from './statDefs';
 import type { TalentLane } from './talents';
+import { TALENT_PANEL } from './talentAssets';
 
 // The legibility UI (040): the hover tablet's sizes and colours, the keyword chips, the T
 // panel's Build tab and the glossary, and every word they add around 039's generated text.
@@ -58,21 +59,8 @@ export const CHIP = {
   } satisfies Record<ChipGroup, string>,
 } as const;
 
-/**
- * The T panel's tabs (040): Talents and Build on its title card, in 036's tab style (GEAR_PANEL's tab fills), each
- * `w` × `h` px, `gap` apart, centred on the card `y` px down; the text `textY` below a tab's top.
- */
-export const TALENT_TABS = {
-  tabs: [
-    { id: 'talents', text: 'Talents' },
-    { id: 'build', text: 'Build' },
-  ],
-  w: 58,
-  h: 16,
-  gap: 4,
-  y: 3,
-  textY: 5,
-} as const;
+/** The T panel's tabs (040): `TALENT_PANEL.tabs` (src/data/talentAssets.ts), named here beside the other 040 sizes. */
+export const TALENT_TABS = TALENT_PANEL.tabs;
 
 export type TalentTab = (typeof TALENT_TABS.tabs)[number]['id'];
 

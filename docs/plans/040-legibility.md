@@ -45,3 +45,15 @@ Small vertical commits, tests first in each.
 - Glossary Sources list only rounds the player knows (as the Build tab hides unseen rounds), and every stage, relic, keystone and keyword source.
 - The talent summary docks in the panel's bottom strip (037's info area), on the side away from the hovered node, growing up.
 - While the glossary is open the whole screen is its: a click outside closes it and never fires.
+
+## Build notes
+- Commits in order: plan; shared tablet and chips (data, formatter, placement, KeywordChip, RuleTip); the describe module and known rounds; hover summaries and Shift (the Legibility view, the providers, BuildTip and the talent info strip replaced, enemy chips); the Build tab and the glossary; e2e; review shots.
+- The describe module is split by kind to stay under 300 lines: `describe.ts` (the dispatcher and enemy chips), `describeRound.ts`, `describeContent.ts` (talents, gear, stages, build-bar pieces), `describeGlossary.ts`, `describeChanges.ts` (before → after), `describeLinks.ts` (Reaches and Linked), `keywordRule.ts` (a keyword's rule with numbers and "yours:"), `statSteps.ts` (a stat's steps and chips). None imports Phaser.
+- `TALENT_PANEL` gains `tabs` (legibility.ts names it `TALENT_TABS`); `TALENT_PANEL.info` keeps the info area's top and gains `infoGap`; its title text no longer draws (the tabs take the card).
+- In the Build tab the panel moves left (x 28) so a 280 px breakdown sits beside it inside the view; the breakdown follows the hovered row's height.
+- The bonus hint counts a content piece's own change (a taken or hovered talent's line, a worn piece's affixes), so a stat talent's summary always ends "1 bonus · hold Shift"; a rule-only talent (a keystone) shows none.
+- The glossary's Payoffs reads "Blastfletch (more: None yet)" for a debt keyword with payoffs, "None yet" for one without; a trait has no payoffs and reads "None yet".
+- Before → after writes the unit once ("48 → 55.2 px"); a % stays on both sides ("100% → 104%").
+- A breakdown longer than 16 rows (a Frost Split ley bolt with most of the tree taken) ends its last row with "…"; Linked sits before the keyword rules so it's never the part cut.
+- Shift is bound without capture, so the page still sees it on clicks (022's Shift+click in hoppers).
+- The rounds a player knows are a new sim list, `carried` (ammo ever in the inventory), with `crafted` and `machineMade` (src/sim/knownRounds.ts).

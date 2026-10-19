@@ -58,6 +58,21 @@ export const KEYSTONE_ICONS: Readonly<Record<KeystoneRule, string>> = {
  */
 export const TALENT_PANEL = {
   title: { text: 'Talents', w: 128, h: 22, gap: 4, titleY: 4 },
+  /**
+   * The title card's tabs (040): Talents and Build, in 036's tab style (GEAR_PANEL's tab fills), each `w` × `h` px,
+   * `gap` apart, centred on the card `y` px down; the text `textY` below a tab's top.
+   */
+  tabs: {
+    tabs: [
+      { id: 'talents', text: 'Talents' },
+      { id: 'build', text: 'Build' },
+    ],
+    w: 58,
+    h: 16,
+    gap: 4,
+    y: 3,
+    textY: 5,
+  },
   /** The centre start's hover line: it has no content lines (039), so the panel says what it is. */
   startText: 'The centre: always yours.',
   w: 300,
