@@ -12,7 +12,7 @@ import { roomById, type SimState } from './state';
 // punch toward the cursor. It resolves on the tick it starts.
 
 /** A punch flashes and records physical damage; its knockback is its own, not the enemy's arrow knock. */
-const PUNCH_HIT: HitStyle = { knock: false, flash: true, damageType: 'physical' };
+const PUNCH_HIT: HitStyle = { knock: false, flash: true, damageType: 'physical', melee: true };
 
 /** The wall test walks the line this far at a time, px: well under a tile, so no wall is stepped over. */
 const LINE_STEP = TILE_SIZE / 8;

@@ -11,7 +11,7 @@ import { aimFacing } from '../sim/direction';
 import { isRolling } from '../sim/movement';
 import type { Facing, PlayerState } from '../sim/player';
 import type { LinkState } from '../sim/link';
-import { isFiringHeavy, type TubeState } from '../sim/tube';
+import type { TubeState } from '../sim/tube';
 import { attuneBeat } from './attune';
 import { colorOf } from './color';
 import { textureScale } from './vector/textures';
@@ -108,7 +108,7 @@ export class PlayerView {
     const facing = rolling ? p.facing : aimFacing(p.aimX - p.x, p.aimY - p.y, p.facing);
     const view = viewOf(facing);
     const flip = facing === 'left';
-    const heavy = hasTube && isFiringHeavy(tube);
+    const heavy = hasTube && tube.firing;
     const shot = heavy && tube.shotCount > 0;
     const hit = p.hurtTicks > HIT_INVULN_TICKS - PLAYER_HIT_FX.poseTicks;
     const dying = p.dying > 0 ? 1 - p.dying / DYING_TICKS : 0;

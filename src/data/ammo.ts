@@ -9,7 +9,7 @@ interface AmmoBase {
   id: string;
   /** The inventory item a loaded round is made from. */
   itemId: string;
-  /** Minimum ticks between shots (and between dry fires) with this ammo. */
+  /** Minimum ticks between shots with this ammo. */
   fireTicks: number;
   damageType: DamageType;
   /** Atlas frames for the projectile (pointing right) and its ground shadow. */

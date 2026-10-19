@@ -24,7 +24,7 @@ export interface TubeState {
   fireCooldown: number;
   /** Ticks before the next punch can happen (023). */
   meleeCooldown: number;
-  /** Fire was held this tick with a round to fire, and the player could fire (not rolling): a punch isn't firing. */
+  /** The tube is really firing (016): fire held this tick with a round to fire, not rolling or in the foundry. A punch isn't firing. */
   firing: boolean;
   /** This tick's shot came from the reservoir. */
   fromReservoir: boolean;
@@ -72,12 +72,7 @@ export function hasRoundToFire(state: Pick<SimState, 'hasTube' | 'tube' | 'inven
 
 /** The walk multiplier from the tube (016): slower while it really fires, by last tick's state. */
 export function firingWalkScale(state: Pick<SimState, 'tube'>): number {
-  return isFiringHeavy(state.tube) ? FIRING_WALK_MULTIPLIER : 1;
-}
-
-/** The tube is really firing (016): fire held with a round to fire; not a punch, the foundry or a roll. */
-export function isFiringHeavy(tube: Pick<TubeState, 'firing'>): boolean {
-  return tube.firing;
+  return state.tube.firing ? FIRING_WALK_MULTIPLIER : 1;
 }
 
 /** Runs after the player has moved this tick, so shots leave from where they stand now. */
@@ -120,6 +115,7 @@ function fire(state: SimState, cmd: Command, dx: number, dy: number): void {
   if (tube.fireCooldown > 0) return;
   const ammo = ammoDef(tube.ammoId);
   const source = takeRound(state);
+  // Unreachable (the caller checked for a round), but it narrows the type.
   if (!source) return;
   tube.fireCooldown = ammo.fireTicks;
   tube.fromReservoir = source === 'reservoir';

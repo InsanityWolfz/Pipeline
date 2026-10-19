@@ -40,6 +40,19 @@ function punchNearestHusk(page: Page, settle: number) {
   }, settle);
 }
 
+/** Waits until the camera, easing after the player in real time, has come to rest. */
+async function cameraSettled(page: Page): Promise<void> {
+  let last = { x: NaN, y: NaN };
+  await expect
+    .poll(async () => {
+      const cam = (await page.evaluate(() => window.__GAME__?.ui()))?.camera ?? { x: NaN, y: NaN };
+      const still = Math.hypot(cam.x - last.x, cam.y - last.y) < 0.5;
+      last = cam;
+      return still;
+    })
+    .toBe(true);
+}
+
 test('a punch before taking the tube hurts a Husk and knocks it away', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page, '');
@@ -67,8 +80,7 @@ test.describe('review screenshots (023)', () => {
     // Held on the punch's own tick: the jab is full and the swoosh holds (tweens stopped).
     const { punched } = await punchNearestHusk(page, 0);
     expect(punched.events.melees[0]?.hits.length).toBeGreaterThan(0);
-    // The camera eases after the player in real time (for the picture only).
-    await page.waitForTimeout(1500);
+    await cameraSettled(page);
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui()))?.swooshes ?? 0).toBeGreaterThan(0);
     await page.screenshot({ path: `${SHOTS}/01-swoosh-fist.png` });
   });
@@ -84,8 +96,7 @@ test.describe('review screenshots (023)', () => {
       g.step(15 * 29 + 1, { fire: true, aimX: p.x + 100, aimY: p.y - 20 });
       g.step(15, { fire: true, aimX: p.x + 100, aimY: p.y - 20 });
     });
-    // The camera eases after the player in real time (for the picture only).
-    await page.waitForTimeout(1500);
+    await cameraSettled(page);
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui()))?.swooshes ?? 0).toBeGreaterThan(0);
     await page.screenshot({ path: `${SHOTS}/02-swoosh-tube.png` });
   });

@@ -89,6 +89,8 @@ export interface HitStyle {
   flash: boolean;
   /** Recorded on the hit event so render can colour it; it changes no rule. */
   damageType: DamageType;
+  /** A punch (023): its hit event is marked so render plays the punch's thud for it. */
+  melee?: boolean;
 }
 
 const ARROW_HIT: HitStyle = { knock: true, flash: true, damageType: 'physical' };
@@ -107,7 +109,7 @@ export function damageEnemy(
   if (style.flash) e.flash = def.hitFlashTicks;
   if (style.knock) startKnock(e, dirX, dirY, def.hitKnockback, def.hitKnockTicks);
   if (e.mode === 'idle' || e.mode === 'return') aggro(e);
-  state.events.hits.push({ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: amount, damageType: style.damageType });
+  state.events.hits.push({ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: amount, damageType: style.damageType, ...(style.melee ? { melee: true as const } : {}) });
 }
 
 /** True if a ground point is inside the enemy's hurtbox. */

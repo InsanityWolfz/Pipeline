@@ -192,6 +192,7 @@ export class GameScene extends Scene {
       sliding: this.groundItemView?.sliding ?? 0,
       slideProgress: this.groundItemView?.slideProgress ?? 0,
       swooshes: this.effects?.swooshes ?? 0,
+      camera: { x: this.cameras.main.worldView.centerX, y: this.cameras.main.worldView.centerY },
     };
   }
 

@@ -43,7 +43,7 @@ describe('the punch', () => {
     expect(ahead.health).toBe(enemyDef('husk').maxHealth - MELEE.damage);
     expect(behind.health).toBe(enemyDef('husk').maxHealth);
     expect(s.events.melees).toEqual([{ x: s.player.x, y: s.player.y, angle: 0, hits: [ahead.id] }]);
-    expect(s.events.hits).toEqual([expect.objectContaining({ target: 'enemy', id: ahead.id, damage: MELEE.damage, damageType: 'physical' })]);
+    expect(s.events.hits).toEqual([expect.objectContaining({ target: 'enemy', id: ahead.id, damage: MELEE.damage, damageType: 'physical', melee: true })]);
     expect(ahead.flash).toBeGreaterThan(0);
     expect(s.arrows).toHaveLength(0);
   });

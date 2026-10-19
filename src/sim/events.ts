@@ -9,7 +9,8 @@ import type { Facing } from './player';
 // between ticks and land in the list of the tick before.
 
 export type HitEvent =
-  | { target: 'enemy'; id: number; x: number; y: number; damage: number; damageType: DamageType }
+  /** `melee` marks a punch's hit (023). */
+  | { target: 'enemy'; id: number; x: number; y: number; damage: number; damageType: DamageType; melee?: true }
   | { target: 'player'; x: number; y: number; damage: number };
 
 export interface DeathEvent {

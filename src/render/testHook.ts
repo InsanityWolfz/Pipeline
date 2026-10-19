@@ -62,6 +62,8 @@ export interface UiState {
   slideProgress: number;
   /** Punch swooshes still drawn (023). */
   swooshes: number;
+  /** The centre of the world camera's view, world px (023: screenshots wait for it to settle on the player). */
+  camera: { x: number; y: number };
 }
 
 declare global {

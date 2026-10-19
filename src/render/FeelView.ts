@@ -81,14 +81,10 @@ export class FeelView {
       if (key) s.play(key);
     }
     // A punch (023) thuds on a hit, or whiffs; its hits otherwise land like any other.
-    const punched = new Set<number>();
-    for (const m of ev.melees) {
-      s.play(m.hits.length > 0 ? SOUNDS.meleeHit : SOUNDS.meleeWhiff);
-      for (const id of m.hits) punched.add(id);
-    }
+    for (const m of ev.melees) s.play(m.hits.length > 0 ? SOUNDS.meleeHit : SOUNDS.meleeWhiff);
     for (const h of ev.hits) {
       if (h.target === 'enemy') {
-        if (!punched.has(h.id)) s.play(SOUNDS.hit);
+        if (!h.melee) s.play(SOUNDS.hit);
         s.play(SOUNDS.enemyHurt, SOUND_LEVELS.under);
         j.burst(h.damageType === 'fire' ? 'hitFire' : 'hitPhysical', h.x, h.y);
         j.damageNumber(h.damage, h.x, h.y, false);
