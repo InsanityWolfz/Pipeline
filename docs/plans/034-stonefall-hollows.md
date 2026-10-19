@@ -61,7 +61,24 @@ Small vertical commits, failing tests first in each:
 - The ley-iron port at (1, 3).
 
 ## Build notes
-(filled in as the build goes)
+- **The shift is verified byte for byte:** Region 1's 80 columns are the pre-034 map moved +40, but for the road west and the approach either side of the gap (`tests/sim/hollows.test.ts` fingerprints them against the old generator's output). Region 1's generation runs its same draws at an offset, skipping (without drawing) tiles west of its columns, which were off the old grid. The Hollows draw from `seed ^ HOLLOWS.salt` after it.
+- New things in Region 1 (the road west, the gap's approach) are stamped after generation, as 030 and 032 did, and the new enemies (the Terrace's guards, the Bulwark) and nodes come last in their lists, so every old enemy and node id is unchanged.
+- e2e names Region 1's tiles through `OVERWORLD` data or its offset (`h.ox`, passed to the in-page helpers from data); the opt-in shots specs too.
+- The barrier's tiles are `gateTiles` like the shrine's (solid to feet while shut); `SHOT_GATES` makes the `hollows` gate stop arrows, orbs and bombs as well (a bomb whose ground point reaches a sealed tile bursts there). Every start begins with it shut, the open-gated ones included, unless its `claims` hold the shrine (`?start=hollows`), when it starts down with no gate event.
+- `ringOf` returns 3 anywhere in the Hollows; `regionOf(room, point)` decides the schematic region where a drop lands (`schematic-reservoir-2` can now drop there).
+- Ring 3's packs only spawn once the barrier is down, and only on ground the gap reaches (a generated cliff can wall off a pocket); with the barrier shut nothing in rings 1–2 changes, so seeded tests stay put.
+- The shield's bearing is taken from the hurtbox's middle, not the feet: a shot from the front that clips the body's side would otherwise read as "behind" (found by the e2e fight).
+- Enemy bombs burn their fuse before enemies act, so a bomb thrown this tick starts at 0 and bursts exactly `fuseTicks` later.
+- The altar swallows E in the sim (a dim altar does nothing); render opens the offering in the 033 restore panel (generalized to take its model), and E again or the Summon row sends `summon`.
+- `bossDefeats`, `summoned` and `summoning` are kept through a KO; `resetWorld` brings a placed region boss back only before its first kill or while summoned, and completes a rise in progress, so a KO never eats the offering.
+- The first kill marks 033's `sealed-wing` node restored, so its door is no longer drawn (its contents are a later spec).
+- With carried single arrows the e2e/sim bot circling to its back kills a full 900 HP Bulwark in about 1,500 ticks (25 s); triple arrows would be well under the spec's 30–45 s target (see notes).
 
 ## Notes for Shaun
-(filled in at the end)
+- **Scope:** landmines, the plate press, the mine packer, `iron-plate`, the Shard die and the cluster stage are 038, as agreed; nothing of them is built.
+- **Tuning to look at in playtest:** a bot circling behind it with single carried arrows kills it in ~25 s, so with triple arrows (three entrances) it will fall well inside 30 s. 900 HP is the spec's start; something like 2,000–2,500 HP may hit the 30–45 s target.
+- **Placeholders until 035:** the Cistern Terrace's six guards and ring 3's packs are Husks and Wisps, which don't drop ley-iron; ring 3 has no champion chance yet.
+- **Positions** (all data): the gap at x 38–39, rows 26–29; the Cut along a quarry face at y 4 with five seams; the Terrace's pylon at (25, 12) above it, sending its ley-iron and stone; the aqueduct along y 20; the Hollows spring at (7, 26); the Sunken Forum inside (3–21, 30–42), its way in on the north, the Bulwark's start (12, 36), the altar by the west wall (5, 36); the ley-iron port at (1, 3) above the wood port.
+- **The Ley-iron Cut has no pylon of its own:** the Terrace overlooks it and is the region's one claimable site.
+- **Choices not in the spec:** the bomb's knockback (24 px); a summoned Bulwark survives a KO (so the offering is never lost); a blocked star bolt doesn't burst; the boss bar only shows while it fights; the altar's words ("The Bulwark's altar", "Offer to summon the Bulwark again.") are placeholders.
+- **Art for review** (`/sheet.html`, "Stonefall Hollows (034)" and "bulwark", and docs/review/034): cliffs, pillars, arches, fallen spans, rubble, the seam and ley-iron, the altar's three states, the enemy bomb, the Bulwark's rig.

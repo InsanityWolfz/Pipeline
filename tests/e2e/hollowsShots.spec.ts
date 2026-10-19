@@ -109,7 +109,7 @@ test.describe('review screenshots (034)', () => {
   test('the Cistern Terrace with its pylon and guards', async ({ page }) => {
     test.setTimeout(120_000);
     await boot(page, '?start=hollows');
-    await walk(page, [[25, 27], [25, 20]]);
+    await walk(page, [[25, 27], [25, 17]]);
     await bannersGone(page);
     await cameraSettled(page, 20_000);
     await page.screenshot({ path: `${SHOTS}/06-cistern-terrace.png` });
@@ -191,8 +191,8 @@ test.describe('review screenshots (034)', () => {
     const blocked = await page.evaluate(() => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
-      // Let it turn to face the player, then shoot it in the front.
-      g.step(150);
+      // Let it turn to face the player (a half turn takes 4.5 s), then shoot it in the front.
+      g.step(300);
       g.setPlayerHealth(100);
       const b = g.getState().enemies.find((e) => e.enemyId === 'bulwark');
       if (!b) throw new Error('no Bulwark');

@@ -162,7 +162,8 @@ test.describe('review screenshots (029)', () => {
       }
       if (!s.enemies.some((e) => e.frozen > 0)) throw new Error('no Husk froze');
     });
-    await cameraSettled(page);
+    // The camera eases in from the foundry's door over a few seconds; under load that can pass 5 s.
+    await cameraSettled(page, 20_000);
     await page.screenshot({ path: `${SHOTS}/05-frozen-husk.png` });
 
     // The Grotto: up the new path from the west path's end, into its frosted clearing.
