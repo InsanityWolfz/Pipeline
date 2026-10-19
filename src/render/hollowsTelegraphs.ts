@@ -6,14 +6,40 @@ import type { EnemyState } from '../sim/enemies';
 import { colorOf } from './color';
 
 // Region 2's four's telegraphs (035), all in the shared enemy red: the Charger's lane from
-// its feet, filling down it as it paws. Returns whether the enemy was one of theirs.
+// its feet, filling down it as it paws; the Burrower's cracked ring growing at its locked
+// spot. Returns whether the enemy was one of theirs.
 
 export function drawHollowsTelegraph(g: GameObjects.Graphics, e: EnemyState, def: EnemyDef): boolean {
   if (def.kind === 'charger') {
     if (e.mode === 'windup') drawLane(g, e, def.charge.distance, def.charge.width, Math.min(1, e.modeTicks / def.charge.windupTicks));
     return true;
   }
+  if (def.kind === 'burrower') {
+    if (e.mode === 'windup') drawRing(g, e.spotX, e.spotY, def.burrow.radius, Math.min(1, e.modeTicks / def.burrow.windupTicks));
+    return true;
+  }
   return false;
+}
+
+/** The ring: the full circle faint, a disc and a cracked rim growing to it, cracks running out from the middle. */
+function drawRing(g: GameObjects.Graphics, x: number, y: number, radius: number, progress: number): void {
+  const R = HOLLOWS_ENEMY_LOOK.ring;
+  const color = colorOf(ENEMY_FX.telegraphColor);
+  const r = radius * progress;
+  g.fillStyle(color, R.alpha).fillCircle(x, y, radius);
+  g.fillStyle(color, R.fillAlpha).fillCircle(x, y, r);
+  g.lineStyle(R.width, color, R.crackAlpha).strokeCircle(x, y, r);
+  g.lineStyle(R.crackWidth, color, R.crackAlpha);
+  for (let i = 0; i < R.cracks; i++) {
+    const a = R.crackStart + (i * Math.PI * 2) / R.cracks;
+    // Each crack jags once halfway out.
+    const mid = a + (i % 2 === 0 ? 0.25 : -0.25);
+    g.beginPath();
+    g.moveTo(x, y);
+    g.lineTo(x + Math.cos(mid) * r * 0.5, y + Math.sin(mid) * r * 0.5);
+    g.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r);
+    g.strokePath();
+  }
 }
 
 /** The lane: a band `width` wide from its start `length` along its locked direction, faint, its fill running out to `progress`, edged. */

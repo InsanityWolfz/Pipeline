@@ -3,6 +3,9 @@
 // circle), the Burrower's ripple, the Shardback's runes, the Sniper's lens and laser and its
 // bolt. Palette ids, ms, world px, alphas 0..1.
 
+/** Sprite frames (shapes in src/data/art): the Burrower's ripple, two frames it alternates as it moves. */
+export const HOLLOWS_ENEMY_SPRITES = { ripple: ['burrower-ripple/0', 'burrower-ripple/1'] } as const;
+
 export const HOLLOWS_ENEMY_LOOK = {
   /** The Charger's lane: faint over its whole length, a fill running down it with the wind-up, an edge line. */
   lane: { alpha: 0.22, fillAlpha: 0.5, edgeWidth: 1.5, edgeAlpha: 0.75 },

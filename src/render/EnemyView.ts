@@ -19,6 +19,7 @@ import { COLD } from '../data/tags';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
 import { bulwarkPose, drawSeam } from './bulwarkLook';
 import { drawTelegraph } from './telegraphs';
+import { destroyHollowsArt, drawHollowsArt, makeHollowsArt, type HollowsArt } from './hollowsEnemyArt';
 
 /** A champion's extras (032): its glow, and its name with its kind under it. */
 interface ChampionArt {
@@ -50,6 +51,8 @@ interface Drawn {
   /** A shielded enemy's facing angle last frame (034), and until when (scene ms) a change shows it shuffling round. */
   angle?: number;
   turnUntil?: number;
+  /** Region 2's extras (035): a Burrower's ripple. */
+  hollows?: HollowsArt | undefined;
 }
 
 const viewOf = (f: Facing): 'down' | 'up' | 'side' => (f === 'up' || f === 'down' ? f : 'side');
@@ -115,6 +118,7 @@ export class EnemyView {
       this.drawBar(d.bar, e, top);
       if (d.champion) this.drawChampion(d.champion, e, bottom, top, now);
       drawTelegraph(d.telegraph, e);
+      drawHollowsArt(d.hollows, d.sprite, e, now);
       if (d.overlay && e.enemyId === RESIN.enemyId) this.drawResin(d.overlay, e, bottom, view, now);
       if (d.overlay && e.enemyId === CORE.enemyId) this.drawCore(d.overlay, e, bottom, view, now);
       if (d.overlay && def.kind === 'bulwark') drawSeam(d.overlay, e, bottom, view, now);
@@ -127,6 +131,7 @@ export class EnemyView {
       d.bar.destroy();
       d.overlay?.destroy();
       d.ice?.destroy();
+      destroyHollowsArt(d.hollows);
       d.champion?.glow.destroy();
       d.champion?.name.destroy();
       d.champion?.kind.destroy();
@@ -143,6 +148,7 @@ export class EnemyView {
       baseScale: sprite.scaleX,
       telegraph: this.scene.add.graphics().setDepth(DEPTHS.groundFx),
       bar: this.scene.add.graphics().setDepth(DEPTHS.worldUi),
+      hollows: makeHollowsArt(this.scene, enemyDef(e.enemyId)),
     };
     if (e.champion) {
       // The glow sits under the ground decals (telegraphs) and the body, so both stay readable (032).

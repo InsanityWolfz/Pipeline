@@ -95,10 +95,27 @@ test.describe('review screenshots (035)', () => {
     await page.screenshot({ path: `${SHOTS}/02-charger-lane.png` });
   });
 
+  test('the Burrower idle, its ripple tunnelling, then its ring growing over the still ripple', async ({ page }) => {
+    test.setTimeout(120_000);
+    await sandbox(page);
+    const id = await spawn(page, 'burrower', 120, 40);
+    await frames(page);
+    await page.screenshot({ path: `${SHOTS}/03-burrower-idle.png` });
+    await stepUntil(page, id, 'chase', 25);
+    await frames(page, 8);
+    await page.screenshot({ path: `${SHOTS}/04-burrower-ripple.png` });
+    await stepUntil(page, id, 'windup', 1);
+    // A step aside, still inside the ring, so the ripple under it shows.
+    await page.evaluate(() => window.__GAME__?.step(8, { moveX: -1 }));
+    await stepUntil(page, id, 'windup', 34);
+    await frames(page);
+    await page.screenshot({ path: `${SHOTS}/05-burrower-ring.png` });
+  });
+
   test('the rigs on the contact sheet, at 4x', async ({ page }) => {
     await page.goto('/sheet.html');
     const row = (title: string) => page.locator('h2', { hasText: title }).locator('xpath=following-sibling::div[1]');
-    for (const id of ['charger']) {
+    for (const id of ['charger', 'burrower']) {
       await expect(row(id)).toBeVisible();
       await row(id).screenshot({ path: `${SHOTS}/sheet-${id}.png` });
     }
