@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { HUD_LAYOUT } from '../../src/data/hudLayout';
-import { HUD_HEALTH_LAYOUT } from '../../src/data/hudPanels';
+import { HEALTH_BLOCK_HEIGHT } from '../../src/data/hudPanels';
 import { OVERWORLD } from '../../src/data/overworld';
 import { PICKUP_RADIUS } from '../../src/data/player';
 import { FOUNDRY_STEPS } from '../fixtures/foundrySteps';
@@ -20,7 +20,8 @@ const PYLON = OVERWORLD.shrine.pylon;
 /** Open flagstones inside the shrine's safe zone, a few tiles down and right of its pylon (030's shots stand here). */
 const SAFE_SPOT = { x: (PYLON.tx + 2.5) * TILE_SIZE, y: (PYLON.ty + 3.5) * TILE_SIZE };
 /** The HP block's top at rest (bottom-left, margin px up): raised in build mode, it sits above this. */
-const RESTING_TOP = VIEW_HEIGHT - HUD_LAYOUT.margin - HUD_HEALTH_LAYOUT.frame.h;
+// The block's resting top: the frame and 037's XP row under it, margin px off the bottom.
+const RESTING_TOP = VIEW_HEIGHT - HUD_LAYOUT.margin - HEALTH_BLOCK_HEIGHT;
 const CUTTER_STEP = OBJECTIVES.findIndex((o) => o.text === FOUNDRY_STEPS[2]);
 
 const ui = (page: Page) => page.evaluate(() => window.__GAME__?.ui());

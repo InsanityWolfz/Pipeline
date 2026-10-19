@@ -22,6 +22,12 @@ export const HUD_HEALTH_LAYOUT = {
   shield: { gap: 4, w: 14, h: 16, valueGap: 2, valueW: 12, valueY: 6 },
   /** Nothing worn: the shield and its "0" at this alpha. */
   dimAlpha: 0.4,
+  /**
+   * The XP row (037), `gap` px under the frame and `h` tall: a thin `bar` under the fill (its `back` well, the XP in
+   * `fill`, a `tick` of `tickColor` at its end on a gain), and "Lv 7" under the shield (capitals' top `textY` down the
+   * row), with the unspent-points pip `pipGap` px after it. Px from the row's top-left.
+   */
+  xp: { gap: 2, h: 6, bar: { x: 4, y: 1, w: 144, h: 3 }, back: 'ink', backAlpha: 0.7, fill: 'cyan', tickColor: 'snow', textY: 0, pipGap: 2, pipY: 3 },
 } as const;
 
 /** The whole HP block's width: the frame, then the shield and its value. */
@@ -29,6 +35,12 @@ export const HEALTH_BLOCK_WIDTH = (() => {
   const L = HUD_HEALTH_LAYOUT;
   return L.frame.w + L.shield.gap + L.shield.w + L.shield.valueGap + L.shield.valueW;
 })();
+
+/** The whole HP block's height: the frame, then the XP row under it (037). */
+export const HEALTH_BLOCK_HEIGHT = HUD_HEALTH_LAYOUT.frame.h + HUD_HEALTH_LAYOUT.xp.gap + HUD_HEALTH_LAYOUT.xp.h;
+
+/** The XP row's "Lv 7". */
+export const levelText = (level: number): string => `Lv ${level}`;
 
 /**
  * The HP bar's motion (031): below `lowFraction` of max health it turns red and pulses once per `pulseMs` (up to

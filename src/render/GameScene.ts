@@ -132,7 +132,7 @@ export class GameScene extends Scene {
 
     this.controls = new Controls(this);
     if (this.menu && this.pause && this.siteMenus && this.picker && this.buildView && this.feel && this.hud && this.wake)
-      this.router = new MenuRouter(this.sim, { craft: this.menu, pause: this.pause, site: this.siteMenus, picker: this.picker, build: this.buildView, sound: this.feel.sound, inventory: this.hud.inventory, research: this.hud.research, wake: this.wake });
+      this.router = new MenuRouter(this.sim, { craft: this.menu, pause: this.pause, site: this.siteMenus, picker: this.picker, build: this.buildView, sound: this.feel.sound, inventory: this.hud.inventory, research: this.hud.research, talents: this.hud.talents, wake: this.wake });
   }
 
   /** Matches both cameras to the backbuffer (016). Called on boot and whenever the window changes. */
@@ -287,9 +287,9 @@ export class GameScene extends Scene {
     );
     // Menu rows light under the cursor (020).
     const pointer = controls?.viewPointer();
-    if (pointer) for (const menu of [this.siteMenus, this.picker, this.pause]) menu?.pointAt(pointer.x, pointer.y);
+    if (pointer) for (const menu of [this.siteMenus, this.picker, this.pause, this.hud]) menu?.pointAt(pointer.x, pointer.y);
     // The arrow pointer while a menu is open or over the build bar, else the crosshair (021).
-    const inMenu = [this.menu, this.pause, this.picker, this.siteMenus, this.hud?.inventory].some((m) => m?.isOpen) || (this.wake?.isShown ?? false);
+    const inMenu = [this.menu, this.pause, this.picker, this.siteMenus, this.hud?.inventory, this.hud?.talents].some((m) => m?.isOpen) || (this.wake?.isShown ?? false);
     this.cursorView?.update(inMenu || (pointer !== undefined && (this.buildView?.overUi(pointer.x, pointer.y) ?? false)));
     if (this.feel) this.pause?.update(this.feel.sound);
     const point = controls?.overWorld() ? controls.cursorPoint() : null;

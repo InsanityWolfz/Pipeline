@@ -1,5 +1,6 @@
 import type { Scene } from 'phaser';
 import { playerStats } from '../sim/stats';
+import { xpToNext } from '../sim/leveling';
 import type { SimEvents } from '../sim/events';
 import { unlockedPieces } from '../sim/placement';
 import type { SimState } from '../sim/state';
@@ -15,6 +16,7 @@ import { PickupFeed } from './PickupFeed';
 import { shownKey } from './itemShown';
 import { TubeSlotView, type TubeSlotState } from './TubeSlotView';
 import { BossBar, type BossBarShown } from './BossBar';
+import { NO_TALENT_PANEL, TalentPanel, type TalentPanelState } from './TalentPanel';
 
 /** The bottom HUD as drawn (025), for `ui().hud`: the hotbar row's rect and whether it shows, and the tube slot. */
 export interface BottomHudState {
@@ -32,6 +34,8 @@ export interface HudPanelsState {
   health: HealthShown;
   /** 034: the boss bar along the top while a region boss fights. */
   bossBar: BossBarShown;
+  /** 037: the tree panel (T). */
+  talents: TalentPanelState;
 }
 
 /** The 031 part of `ui()` before the scene has built its views. */
@@ -39,8 +43,9 @@ export const NO_HUD_PANELS: HudPanelsState = {
   inventory: { open: false, groups: [] },
   researchList: { open: false, groups: [] },
   pickupFeed: [],
-  health: { box: { x: 0, y: 0, w: 0, h: 0 }, text: '', low: false, healing: false, chunk: 0 },
+  health: { box: { x: 0, y: 0, w: 0, h: 0 }, text: '', low: false, healing: false, chunk: 0, xp: { text: '', fill: 0, pip: false, tick: 0, bar: { x: 0, y: 0, w: 0, h: 0 } } },
   bossBar: null,
+  talents: NO_TALENT_PANEL,
 };
 
 const inBox = (b: ScreenBox, x: number, y: number): boolean => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h;
@@ -62,6 +67,8 @@ export class HudView {
   readonly research: ResearchList;
   /** A region boss's bar along the top (034). */
   private readonly boss: BossBar;
+  /** The tree panel (037, T). */
+  readonly talents: TalentPanel;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -73,13 +80,19 @@ export class HudView {
     this.research = new ResearchList(scene);
     this.inventory = new InventoryPanel(scene);
     this.boss = new BossBar(scene);
+    this.talents = new TalentPanel(scene);
+  }
+
+  /** The tree panel's hover follows the pointer (view px). */
+  pointAt(x: number, y: number): void {
+    this.talents.pointAt(x, y);
   }
 
   /** A screen point on any part of the HUD or the open inventory panel: a press there never fires (015). */
   overUi(x: number, y: number): boolean {
     const parts = [this.tubeSlot.box, this.health.box, ...this.feed.boxes];
     if (this.hotbar.visible) parts.push(this.hotbar.box);
-    return parts.some((b) => inBox(b, x, y)) || this.inventory.overUi(x, y);
+    return parts.some((b) => inBox(b, x, y)) || this.inventory.overUi(x, y) || this.talents.overUi(x, y);
   }
 
   /** What the bottom HUD shows, for the test hook. */
@@ -89,7 +102,7 @@ export class HudView {
 
   /** The inventory panel, pickup feed and HP bar as drawn (031), for the test hook. */
   get panels(): HudPanelsState {
-    return { inventory: this.inventory.shown, researchList: this.research.shown, pickupFeed: this.feed.shown, health: this.health.shown, bossBar: this.boss.shown };
+    return { inventory: this.inventory.shown, researchList: this.research.shown, pickupFeed: this.feed.shown, health: this.health.shown, bossBar: this.boss.shown, talents: this.talents.shown };
   }
 
   /**
@@ -105,7 +118,9 @@ export class HudView {
     this.tubeSlot.update(hudActive(sim), building);
     const p = sim.player;
     const stats = playerStats(sim);
-    const input = { health: p.health, max: stats.maxHealth, healing: p.healing !== null, dying: p.dying > 0, armor: stats.armor };
+    const toNext = xpToNext(sim);
+    const xp = { level: sim.level, fill: toNext > 0 ? sim.xp / toNext : 1, points: sim.talentPoints, gained: events.xp.length > 0 };
+    const input = { health: p.health, max: stats.maxHealth, healing: p.healing !== null, dying: p.dying > 0, armor: stats.armor, xp };
     this.health.update(input, building ? buildBarBox(unlockedPieces(sim)) : null, dt);
     this.edges.update(this.health.shown.low, this.health.pulse);
     this.feed.update(events.pickups.map((p) => shownKey(sim, p.itemId)), dt);
@@ -113,9 +128,11 @@ export class HudView {
     if (events.ko) {
       this.inventory.setOpen(false);
       this.research.setOpen(false);
+      this.talents.setOpen(false);
     }
     this.inventory.update(sim);
     this.research.update(sim);
+    this.talents.update(sim);
     this.boss.update(sim);
   }
 }

@@ -8,6 +8,7 @@ import type { CraftMenuView } from './CraftMenuView';
 import type { HopperPicker } from './HopperPicker';
 import type { InventoryPanel } from './InventoryPanel';
 import type { ResearchList } from './ResearchList';
+import type { TalentPanel } from './TalentPanel';
 import { clickAmount } from './menuRequests';
 import type { PauseAction, PauseMenuView } from './PauseMenuView';
 import type { SiteMenus } from './SiteMenus';
@@ -24,13 +25,15 @@ export interface Menus {
   sound: SoundView;
   inventory: InventoryPanel;
   research: ResearchList;
+  talents: TalentPanel;
   wake: WakeView;
 }
 
 // Keys and clicks for the menus (split from GameScene in 020): C toggles the craft
 // menu, which no longer pauses, and I or Tab the inventory panel (031); Esc closes
 // what's open (the inventory, a site menu, the hopper picker, the craft menu, build
-// mode), else opens or closes the pause menu, which stops the world; the wheel steps
+// mode), else opens or closes the pause menu, which stops the world; T the talent tree
+// (037), which takes turns with the inventory and the research list; the wheel steps
 // the build bar; E opens a hopper's picker or a site menu. These work under the test
 // hook too; only ticking is left to it.
 export class MenuRouter {
@@ -43,18 +46,21 @@ export class MenuRouter {
   }
 
   handle(controls: Controls): void {
-    const { craft, pause, site, picker, build, inventory, research, wake } = this.m;
+    const { craft, pause, site, picker, build, inventory, research, talents, wake } = this.m;
     const toggle = controls.takeMenuKey('menu');
     const close = controls.takeMenuKey('close');
     // I or Tab (031): taken even while paused, so a press then never opens the panel later.
     const bag = controls.takeMenuKey('inventory');
     // J (033): the research list, likewise taken even while paused.
     const list = controls.takeMenuKey('research');
+    // T (037): the talent tree, likewise.
+    const tree = controls.takeMenuKey('talents');
     if (pause.isOpen) {
       if (close) pause.setOpen(false);
       return;
     }
-    if (close && inventory.isOpen) inventory.setOpen(false);
+    if (close && talents.isOpen) talents.setOpen(false);
+    else if (close && inventory.isOpen) inventory.setOpen(false);
     else if (close && research.isOpen) research.setOpen(false);
     else if (close && site.isOpen) site.close();
     else if (close && picker.isOpen) picker.close();
@@ -69,10 +75,23 @@ export class MenuRouter {
       research.setOpen(!research.isOpen);
       if (research.isOpen) inventory.setOpen(false);
     }
+    // The tree opens anywhere and never pauses (opening it mid-fight is a risk); it closes the other big panels and menus.
+    if (tree && !wake.isShown && !pause.isOpen) {
+      talents.setOpen(!talents.isOpen);
+      if (talents.isOpen) {
+        craft.setOpen(false);
+        picker.close();
+        site.close();
+        inventory.setOpen(false);
+        research.setOpen(false);
+      }
+    }
     if (bag && inventory.isOpen) research.setOpen(false);
+    if ((bag && inventory.isOpen) || (list && research.isOpen)) talents.setOpen(false);
     if (toggle && craft.isOpen) {
       inventory.setOpen(false);
       research.setOpen(false);
+      talents.setOpen(false);
     }
     const steps = controls.takeWheel();
     if (steps !== 0 && this.sim.building) build.step(steps);
@@ -84,6 +103,7 @@ export class MenuRouter {
       if (picker.isOpen || site.isOpen) {
         inventory.setOpen(false);
         research.setOpen(false);
+        talents.setOpen(false);
       }
     }
     const open = picker.hopperId;
@@ -95,9 +115,16 @@ export class MenuRouter {
    * A picker row moves one, Shift half, Ctrl all (022), and the picker stays open for the next click.
    */
   click(controls: Controls, x: number, y: number, mods: ClickMods): void {
-    const { pause, site, picker, build, sound } = this.m;
+    const { pause, site, picker, build, sound, talents } = this.m;
     if (pause.isOpen) {
       this.pauseClick(pause.click(x, y));
+      return;
+    }
+    // The tree (037): a lit node is taken, the reset respecs (their sounds play from the sim's events).
+    const tree = talents.click(x, y);
+    if (tree) {
+      if ('take' in tree) controls.menus.takeTalent(tree.take);
+      else if ('respec' in tree) controls.menus.respec();
       return;
     }
     if (build.click(x, y) || site.click(controls, x, y)) {
@@ -114,13 +141,14 @@ export class MenuRouter {
     else controls.menus.deposit(hopper, entry.itemId, amount);
   }
 
-  /** Opens or closes the inventory panel; opening it closes the crafting menu, the hopper picker and any site menu (031). */
+  /** Opens or closes the inventory panel; opening it closes the crafting menu, the hopper picker, any site menu (031) and the tree (037). */
   private openInventory(open: boolean): void {
-    const { craft, picker, site, inventory } = this.m;
+    const { craft, picker, site, inventory, talents } = this.m;
     if (open) {
       craft.setOpen(false);
       picker.close();
       site.close();
+      talents.setOpen(false);
     }
     inventory.setOpen(open);
   }

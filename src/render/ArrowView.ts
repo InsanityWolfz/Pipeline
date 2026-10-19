@@ -3,6 +3,8 @@ import { AMMO } from '../data/ammo';
 import { DEPTHS } from '../data/assets';
 import { ROUND_LOOKS, STAGE_SPRITES, TRAIL_SHAPE } from '../data/stageAssets';
 import { STAR } from '../data/tags';
+import { SHATTERPOINT } from '../data/talents';
+import { TALENT_SPRITES } from '../data/talentAssets';
 import { DRAW_HEIGHT } from '../data/tube';
 import type { ArrowState } from '../sim/arrows';
 import { colorOf } from './color';
@@ -15,11 +17,12 @@ interface Drawn {
   trail?: { g: GameObjects.Graphics; look: NonNullable<(typeof ROUND_LOOKS)[string]['trail']>; points: [number, number][] };
 }
 
-/** The sprite and shadow for a shot: its ammo's, or a star shard's (029). */
+/** The sprite and shadow for a shot: its ammo's, a star shard's (029), or an ice shard's (037). */
 function spritesOf(ammoId: string): { sprite: string; shadow: string } {
   const ammo = AMMO[ammoId];
   if (ammo) return ammo;
   if (ammoId === STAR.projectile) return { sprite: STAGE_SPRITES.starShard, shadow: STAGE_SPRITES.starShardShadow };
+  if (ammoId === SHATTERPOINT.projectile) return { sprite: TALENT_SPRITES.iceShard, shadow: STAGE_SPRITES.starShardShadow };
   throw new Error(`Unknown ammo '${ammoId}'`);
 }
 

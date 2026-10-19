@@ -3,7 +3,7 @@ import { SLOT_AMMOS } from '../data/tube';
 
 // The keyboard's bindings: what each key does is in controls.ts.
 
-export type Key = 'up' | 'down' | 'left' | 'right' | 'dodge' | 'rotate' | 'flip' | 'interact' | 'menu' | 'close' | 'build' | 'inventory' | 'inventoryTab' | 'research';
+export type Key = 'up' | 'down' | 'left' | 'right' | 'dodge' | 'rotate' | 'flip' | 'interact' | 'menu' | 'close' | 'build' | 'inventory' | 'inventoryTab' | 'research' | 'talents';
 
 /** Number keys pick the slot's ammo in SLOT_AMMOS order: 1 for the first, and so on. */
 const NUMBER_KEYS = [
@@ -17,7 +17,7 @@ export const AMMO_KEYS = NUMBER_KEYS.slice(0, SLOT_AMMOS.length);
 
 /**
  * WASD to move, Space to roll, R and F to turn and flip a piece, E, C, Esc and B, I or Tab for the inventory (031), and
- * J for the research list (033).
+ * J for the research list (033), T for the talent tree (037).
  * Every key is captured (Phaser's default), so Tab never moves the browser's focus.
  */
 export function bindKeys(keyboard: Input.Keyboard.KeyboardPlugin): Record<Key, Input.Keyboard.Key> {
@@ -37,5 +37,6 @@ export function bindKeys(keyboard: Input.Keyboard.KeyboardPlugin): Record<Key, I
     inventory: keyboard.addKey(codes.I),
     inventoryTab: keyboard.addKey(codes.TAB, true),
     research: keyboard.addKey(codes.J),
+    talents: keyboard.addKey(codes.T),
   };
 }
