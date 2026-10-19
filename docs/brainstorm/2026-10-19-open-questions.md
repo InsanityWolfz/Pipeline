@@ -154,3 +154,7 @@ These touch several specs. The specs already use the proposed answer, so a diffe
 - **029.7 Ley stages:** homing and star split are both shapes, so a bolt is one or the other, never both.
 - **033.2 Parts:** pay for research and restoration only. Placing machines stays free.
 - **D, 030.1 and 036.8 Healing:** the highest rate wins; sources don't stack.
+- **H, 034.3 Shields:** lobbed rounds and mines always land. Straight shots and punches into the front are blocked.
+- **033.5 Schematics:** a schematic drops as an unknown, with the pop. What it unlocks is revealed once it's banked.
+- **036.10 Relics:** their own tier, above Rare: a unique rule plus 2 affixes.
+- **A, 029.3 Ley ammo:** stays "Ley bolt".
