@@ -11,7 +11,8 @@ import { fixtureDef } from '../../src/sim/fixtures';
 import type { CrateState, MachineState } from '../../src/sim/pieces';
 import { unlockedPieces } from '../../src/sim/placement';
 import { applyStage } from '../../src/sim/stages';
-import { playerStats } from '../../src/sim/stats';
+import { bombletEmission } from '../../src/sim/emissions';
+import { statOf } from '../../src/sim/statResolve';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
 import type { SimState } from '../../src/sim/state';
@@ -141,13 +142,13 @@ describe('a cluster bomb', () => {
     expect(s.events.blocked).toEqual([]);
   });
 
-  it("take the bomb lane's damage and Wide Casing's radius, through playerStats", () => {
+  it("take the Bomb family's damage and Wide Casing's Burst radius, through resolveStat", () => {
     const s = armed(['b1', 'b2']);
-    expect(playerStats(s).ammo.bombletRadius).toBe(Math.round(CLUSTER.radius * 1.15));
+    expect(statOf(s, 'radius', bombletEmission('bomb+cluster'), CLUSTER.radius)).toBeCloseTo(CLUSTER.radius * 1.15, 9);
     const at = { x: PLAYER_AT.x + 120, y: PLAYER_AT.y };
     run(s, 1, fireAt(at.x, at.y));
     runUntil(s, (t) => t.events.bombletBursts.length > 0, 120);
-    expect(s.events.bombletBursts[0]?.radius).toBe(23);
+    expect(s.events.bombletBursts[0]?.radius).toBeCloseTo(23, 9);
     expect(s.mines.bomblets).toEqual([]);
     const t = armed(['b1']);
     const e = holdStill(placeHusk(t, at.x + 58, at.y));

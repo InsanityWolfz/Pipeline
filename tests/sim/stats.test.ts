@@ -33,7 +33,7 @@ function rolled(s: SimState): { distance: number; cooldown: number } {
 }
 
 describe('playerStats', () => {
-  it('with nothing worn is the bare numbers (037: the firing walk and 029’s ammo numbers too)', () => {
+  it('with nothing worn is the bare numbers (037: the firing walk too; 039: the ammo’s own numbers come from resolveStat)', () => {
     expect(playerStats(arena())).toEqual({
       armor: 0,
       maxHealth: MAX_HEALTH,
@@ -43,20 +43,6 @@ describe('playerStats', () => {
       rollCooldown: ROLL_COOLDOWN_TICKS,
       rollDistance: ROLL_DISTANCE,
       firingWalk: FIRING_WALK_MULTIPLIER,
-      // 029's numbers, untouched with no talents.
-      ammo: {
-        // 038: landmines, which only all-ammo talents reach.
-        damage: { arrow: 1, bomb: 1, 'ley-bolt': 1, landmine: 1 },
-        fireRate: { arrow: 0, bomb: 0, 'ley-bolt': 0, landmine: 0 },
-        freezeHits: 4,
-        freezeTicks: 90,
-        bossFreezeTicks: 45,
-        blastRadius: 48,
-        bombletRadius: 20,
-        lobTime: 1,
-        homingTurn: 4,
-        splitShards: 5,
-      },
     });
   });
 

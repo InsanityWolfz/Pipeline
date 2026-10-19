@@ -1,6 +1,8 @@
 import { straightAmmo, type DamageType } from '../data/ammo';
 import { TICK_RATE, TILE_SIZE } from '../data/config';
+import type { KeywordId } from '../data/keywords';
 import type { Room } from '../data/rooms';
+import { roundKeywords, shardKeywords } from '../data/roundKeywords';
 import { hasTagKeyword, SPLIT } from '../data/tags';
 import { blocksShot } from './collision';
 
@@ -12,6 +14,8 @@ export interface ArrowState {
   id: number;
   /** The round's ammo id, tags included (029), or the Shard's projectile id. */
   ammoId: string;
+  /** Its keywords (039): a round's, derived from its data, or a Shard's from its parent's. Content reaches it by these. */
+  keywords: KeywordId[];
   /** The room it was fired in; it never leaves it. */
   roomId: string;
   x: number;
@@ -39,16 +43,14 @@ export interface ArrowState {
   pooledBy: number[];
 }
 
-/** A shard's flight and hit (029's Shards, 037's Shards): what it's called, how it flies and what it deals. */
+/** A Shard's flight and hit (029's Split, 037's Shatterpoint): how it flies, what it deals, and whether a Split made it. */
 export interface ShardDef {
-  projectile: string;
   speed: number;
   range: number;
   damage: number;
   damageType: DamageType;
+  fromSplit: boolean;
 }
-
-const SPLIT_SHARD: ShardDef = { projectile: SPLIT.projectile, speed: SPLIT.speed, range: SPLIT.range, damage: SPLIT.damage, damageType: 'physical' };
 
 /** A round fired from the tube, with its ammo's numbers. `targetId` is a homing round's lock. */
 export function createArrow(
@@ -62,13 +64,18 @@ export function createArrow(
   targetId: number | null = null,
 ): ArrowState {
   const { damage, damageType, speed, range, pierce } = straightAmmo(ammoId);
-  return { id, ammoId, roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, pierce, split: hasTagKeyword(ammoId, 'split'), targetId, hitIds: [], pooled: false, pooledBy: [] };
+  const keywords = roundKeywords(ammoId);
+  return { id, ammoId, keywords, roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, pierce, split: hasTagKeyword(ammoId, 'split'), targetId, hitIds: [], pooled: false, pooledBy: [] };
 }
 
-/** A shard (029: a Split's by default; 037: Shatterpoint's): its def's numbers, never hitting the enemy that was struck, never piercing or splitting. */
-export function createShard(id: number, roomId: string, x: number, y: number, dx: number, dy: number, struckId: number, def: ShardDef = SPLIT_SHARD): ArrowState {
-  const { projectile, speed, range, damage, damageType } = def;
-  return { id, ammoId: projectile, roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, pierce: false, split: false, targetId: null, hitIds: [struckId], pooled: false, pooledBy: [] };
+/** Whether a shot is a Shard (029, 037), not a round from the tube. */
+export const isShard = (a: Pick<ArrowState, 'ammoId'>): boolean => a.ammoId === SPLIT.projectile;
+
+/** A Shard from a round that hit `struckId` (029: a Split's; 037: Shatterpoint's): its def's numbers, never hitting the enemy that was struck, never piercing or splitting. */
+export function createShard(id: number, parent: Pick<ArrowState, 'ammoId' | 'roomId'>, x: number, y: number, dx: number, dy: number, struckId: number, def: ShardDef): ArrowState {
+  const { speed, range, damage, damageType, fromSplit } = def;
+  const keywords = shardKeywords(parent.ammoId, fromSplit);
+  return { id, ammoId: SPLIT.projectile, keywords, roomId: parent.roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, pierce: false, split: false, targetId: null, hitIds: [struckId], pooled: false, pooledBy: [] };
 }
 
 /** Tries an arrow against targets at its current point; true if it hit one and is spent. */

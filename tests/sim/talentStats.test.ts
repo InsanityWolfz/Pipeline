@@ -9,6 +9,8 @@ import { TALENT_START } from '../../src/data/talents';
 import { chillEnemy } from '../../src/sim/cold';
 import type { ArrowState } from '../../src/sim/arrows';
 import { playerStats } from '../../src/sim/stats';
+import { roundEmission } from '../../src/sim/emissions';
+import { statOf, statusEmission } from '../../src/sim/statResolve';
 import type { SimState } from '../../src/sim/state';
 import { tileCentre } from '../../src/sim/tiles';
 import { firingWalkScale } from '../../src/sim/tube';
@@ -36,22 +38,19 @@ function firstShot(s: SimState, item: string, slot: string): ArrowState {
   return a;
 }
 
-describe('playerStats with no talents', () => {
-  it('is 029’s numbers', () => {
-    const st = playerStats(arena());
-    expect(st.firingWalk).toBe(FIRING_WALK_MULTIPLIER);
-    expect(st.ammo).toEqual({
-      damage: { arrow: 1, bomb: 1, 'ley-bolt': 1, landmine: 1 },
-      fireRate: { arrow: 0, bomb: 0, 'ley-bolt': 0, landmine: 0 },
-      freezeHits: COLD.stacksToFreeze,
-      freezeTicks: COLD.freezeTicks,
-      bossFreezeTicks: COLD.bossFreezeTicks,
-      blastRadius: lobAmmo('bomb').burstRadius,
-      bombletRadius: CLUSTER.radius,
-      lobTime: 1,
-      homingTurn: HOMING.turnDegrees,
-      splitShards: SPLIT.shards,
-    });
+describe('stats with no talents (resolveStat, 039)', () => {
+  it('is 029’s numbers: every final is its base', () => {
+    const s = arena();
+    expect(playerStats(s).firingWalk).toBe(FIRING_WALK_MULTIPLIER);
+    for (const id of ['arrow', 'bomb', 'ley-bolt', 'landmine']) expect(statOf(s, 'damage', roundEmission(id), 10)).toBe(10);
+    expect(statOf(s, 'fire-rate', roundEmission('arrow'), 4)).toBe(4);
+    expect(statOf(s, 'stacks-to-freeze', statusEmission('chill'), COLD.stacksToFreeze)).toBe(COLD.stacksToFreeze);
+    expect(statOf(s, 'duration', statusEmission('freeze'), COLD.freezeTicks)).toBe(COLD.freezeTicks);
+    expect(statOf(s, 'radius', roundEmission('bomb'), lobAmmo('bomb').burstRadius)).toBe(lobAmmo('bomb').burstRadius);
+    expect(statOf(s, 'radius', roundEmission('landmine'), CLUSTER.radius)).toBe(CLUSTER.radius);
+    expect(statOf(s, 'flight-time', roundEmission('bomb'), 30)).toBe(30);
+    expect(statOf(s, 'turn-rate', roundEmission('ley-bolt+homing'), HOMING.turnDegrees)).toBe(HOMING.turnDegrees);
+    expect(statOf(s, 'shards', roundEmission('ley-bolt+split'), SPLIT.shards)).toBe(SPLIT.shards);
   });
 });
 
@@ -65,7 +64,7 @@ describe('the lanes’ damage', () => {
   it('Hard Bore adds 6% to all ammo, added to a lane’s bonus', () => {
     expect(firstShot(taking(arena(), 'a1', 't3'), 'arrow', 'arrow').damage).toBeCloseTo(11.6, 9);
     expect(firstShot(taking(arena(), 'l1'), 'ley-bolt', 'ley-bolt').damage).toBeCloseTo(15.4, 9);
-    expect(playerStats(taking(arena(), 't3')).ammo.damage).toEqual({ arrow: 1.06, bomb: 1.06, 'ley-bolt': 1.06, landmine: 1.06 });
+    for (const id of ['arrow', 'bomb', 'ley-bolt', 'landmine']) expect(statOf(taking(arena(), 't3'), 'damage', roundEmission(id), 1)).toBeCloseTo(1.06, 9);
   });
 
   it('Black Powder: a bomb bursts for 10% more', () => {
@@ -114,8 +113,12 @@ describe('fire rate', () => {
 describe('the ammo behaviours (029)', () => {
   it('Rimecraft: frost freezes after 3 hits, not 4, for 0.5 s longer (a boss’s shorter freeze too)', () => {
     const s = taking(arena(), 'a3');
-    const st = playerStats(s).ammo;
-    expect([st.freezeHits, st.freezeTicks, st.bossFreezeTicks]).toEqual([COLD.stacksToFreeze - 1, COLD.freezeTicks + 30, COLD.bossFreezeTicks + 30]);
+    const freeze = statusEmission('freeze');
+    expect([statOf(s, 'stacks-to-freeze', statusEmission('chill'), COLD.stacksToFreeze), statOf(s, 'duration', freeze, COLD.freezeTicks), statOf(s, 'duration', freeze, COLD.bossFreezeTicks)]).toEqual([
+      COLD.stacksToFreeze - 1,
+      COLD.freezeTicks + 30,
+      COLD.bossFreezeTicks + 30,
+    ]);
     const e = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     chillEnemy(s, e);
     chillEnemy(s, e);
@@ -129,9 +132,9 @@ describe('the ammo behaviours (029)', () => {
     expect(h.frozen).toBe(0);
   });
 
-  it('Wide Casing: the blast reaches 55 px, not 48', () => {
+  it('Wide Casing: the Burst reaches 55.2 px, not 48 (039: never rounded; it was 55)', () => {
     const s = taking(arena(), 'b2');
-    expect(playerStats(s).ammo.blastRadius).toBe(55);
+    expect(statOf(s, 'radius', roundEmission('bomb'), lobAmmo('bomb').burstRadius)).toBeCloseTo(55.2, 9);
     s.inventory = { bomb: 2 };
     const near = placeHusk(s, PLAYER_AT.x + 100 + 52, PLAYER_AT.y);
     near.mode = 'windup';
@@ -139,11 +142,11 @@ describe('the ammo behaviours (029)', () => {
     run(s, 1, { selectAmmo: 'bomb' });
     run(s, 1, fireAt(PLAYER_AT.x + 100, PLAYER_AT.y));
     runUntil(s, () => s.events.bursts.length > 0, 60);
-    expect(s.events.bursts[0]?.radius).toBe(55);
+    expect(s.events.bursts[0]?.radius).toBeCloseTo(55.2, 9);
     expect(near.health).toBeLessThan(HUSK.maxHealth);
   });
 
-  it('Swift Arc: a bomb lands a quarter sooner', () => {
+  it('Swift Arc: a bomb’s flight takes a quarter less time (039: never rounded; it lands on the first tick past it)', () => {
     const flight = (s: SimState) => {
       s.inventory = { bomb: 2 };
       run(s, 1, { selectAmmo: 'bomb' });
@@ -151,13 +154,13 @@ describe('the ammo behaviours (029)', () => {
       return s.bombs[0]?.flightTicks ?? 0;
     };
     const distance = 150 - MUZZLE_OFFSET;
-    expect(flight(arena())).toBe(Math.ceil(distance / (lobAmmo('bomb').speed / TICK_RATE)));
-    expect(flight(taking(arena(), 'b3'))).toBe(Math.ceil((distance / (lobAmmo('bomb').speed / TICK_RATE)) * 0.75));
+    expect(flight(arena())).toBeCloseTo(distance / (lobAmmo('bomb').speed / TICK_RATE), 9);
+    expect(flight(taking(arena(), 'b3'))).toBeCloseTo((distance / (lobAmmo('bomb').speed / TICK_RATE)) * 0.75, 9);
   });
 
   it('Seeker’s Lens: a homing bolt turns 30% sharper a tick', () => {
     const s = taking(arena(), 'l2');
-    expect(playerStats(s).ammo.homingTurn).toBeCloseTo(HOMING.turnDegrees * 1.3, 9);
+    expect(statOf(s, 'turn-rate', roundEmission('ley-bolt+homing'), HOMING.turnDegrees)).toBeCloseTo(HOMING.turnDegrees * 1.3, 9);
     s.inventory = { 'ley-bolt+homing': 5 };
     placeHusk(s, PLAYER_AT.x + 150, PLAYER_AT.y);
     run(s, 1, { selectAmmo: 'ley-bolt' });

@@ -45,8 +45,12 @@ describe('the talent tree', () => {
   });
 
   it('touches no pierce, foundry or active skill (its regen’s whole healing steps are checked with 030’s rates)', () => {
-    const kinds = new Set(TALENT_LIST.map((t) => t.effect.kind));
-    for (const k of kinds) expect(['none', 'damage', 'fire-rate', 'freeze', 'blast-radius', 'lob-time', 'homing-turn', 'split-shards', 'firing-walk', 'max-health', 'regen', 'armor', 'move-speed', 'keystone']).toContain(k);
+    const lines = TALENT_LIST.flatMap((t) => t.lines);
+    for (const l of lines) expect(l.scope, JSON.stringify(l)).not.toBe('pierce');
+    const stats = new Set(lines.flatMap((l) => ('stat' in l ? [l.stat] : [])));
+    for (const st of stats) expect(['damage', 'fire-rate', 'stacks-to-freeze', 'duration', 'radius', 'flight-time', 'turn-rate', 'shards', 'firing-walk', 'max-health', 'field-regen', 'armor', 'move-speed']).toContain(st);
+    // Keystones are rule lines, one rule each but Blastfletch's two; only keystones carry rules.
+    for (const t of TALENT_LIST) expect(t.lines.some((l) => 'rule' in l), t.id).toBe(t.kind === 'keystone');
   });
 
   it('places the lanes: Arrows up, Ley up-right, Tube down-right, Survival down-left, Bombs up-left; keystones between their lanes', () => {
@@ -77,6 +81,6 @@ describe('the talent tree', () => {
   it('keeps the keystones’ tuning as the spec says', () => {
     expect(BLASTFLETCH).toEqual({ poolTicks: 20, damageScale: 1.5, burstRadius: 24, damageType: 'physical' });
     expect(SHATTERPOINT).toMatchObject({ damageScale: 2, shards: 4, shardScale: 0.5, damageType: 'physical' });
-    expect(OVERPRESSURE).toEqual({ rampTicks: 120, maxBonus: 0.25 });
+    expect(OVERPRESSURE).toEqual({ rampTicks: 120, rate: 1.25 });
   });
 });

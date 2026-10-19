@@ -13,8 +13,9 @@ import { punch } from './melee';
 import { isRolling } from './movement';
 import { nextPress, volleyShots, type VolleyShot } from './volley';
 import type { SimState } from './state';
-import { ofBase, playerStats } from './stats';
-import { overpressureBonus } from './keystones';
+import { playerStats } from './stats';
+import { fireInterval, roundEmission } from './emissions';
+import { statOf } from './statResolve';
 
 // The tube: picking the slot's ammo and firing it. Once linked, the tube fires the
 // intake's fed entrances first (024), each at its own ammo's rate while fire is held
@@ -64,12 +65,11 @@ export function firingWalkScale(state: Pick<SimState, 'tube' | 'gear' | 'equippe
 }
 
 /**
- * Ticks between shots of a round (037): its ammo's fireTicks divided by 1 plus the fire-rate bonuses (its lane's, all
- * ammo's and Overpressure's ramp, added), rounded to whole ticks, at least 1.
+ * Ticks between shots of a round (037, 039): TICK_RATE over its fire rate (resolveStat: every +% added, Overpressure's
+ * ramp multiplied after), rounded to whole ticks, at least 1.
  */
 export function fireTicksOf(state: SimState, ammoId: string): number {
-  const bonus = ofBase(playerStats(state).ammo.fireRate, ammoId) + overpressureBonus(state);
-  return Math.max(1, Math.round(ammoDef(ammoId).fireTicks / (1 + bonus)));
+  return Math.max(1, Math.round(fireInterval(state, ammoId)));
 }
 
 /** Runs after the player has moved this tick, so shots leave from where they stand now. */
@@ -148,9 +148,12 @@ function launch(state: SimState, { ammoId, dir: [dx, dy], across }: VolleyShot, 
     return;
   }
   // A homing round (029) locks on at launch: the enemy nearest the cursor, if one is close enough.
-  const target = hasTagKeyword(ammoId, 'homing') ? lockTarget(state, cmd.aimX, cmd.aimY) : null;
+  const target = hasTagKeyword(ammoId, 'homing') ? lockTarget(state, ammoId, cmd.aimX, cmd.aimY) : null;
   const arrow = createArrow(state.nextArrowId++, ammoId, state.roomId, muzzle.x, muzzle.y, dx, dy, target);
-  // Talents' damage (037) goes onto the round as it leaves.
-  arrow.damage *= ofBase(playerStats(state).ammo.damage, ammoId);
+  // Its stats (037, 039) go onto the round as it leaves.
+  const e = roundEmission(ammoId);
+  arrow.damage = statOf(state, 'damage', e, arrow.damage);
+  arrow.range = statOf(state, 'range', e, arrow.range);
+  arrow.speed = statOf(state, 'speed', e, arrow.speed);
   state.arrows.push(arrow);
 }

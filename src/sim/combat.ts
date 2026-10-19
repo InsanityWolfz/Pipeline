@@ -9,7 +9,9 @@ import { afterKeystoneHit, keystoneHit, takePool } from './keystones';
 import { spawnDrops } from './drops';
 import type { SimState } from './state';
 import { rotate } from './volley';
-import { ofBase, playerStats } from './stats';
+import { shotEmission } from './emissions';
+import { statOf } from './statResolve';
+import { shardEmissionOf } from './emissions';
 
 // Arrows against enemies, and what happens when an enemy dies.
 
@@ -21,14 +23,15 @@ const arrowHit = (arrow: ArrowState): HitStyle => ({ knock: true, flash: true, d
  * degrees apart, the first along its flight, none able to hit the enemy it struck, each for SPLIT.damage times the ley
  * bolt's damage bonus. They join the flight after this tick's (`spawned`).
  */
-function burstStar(state: SimState, arrow: ArrowState, struck: EnemyState, spawned: ArrowState[]): void {
-  const stats = playerStats(state).ammo;
-  const count = stats.splitShards;
+function sendShards(state: SimState, arrow: ArrowState, struck: EnemyState, spawned: ArrowState[]): void {
+  // Split's Shards and their damage through resolveStat (039): Splinter adds Shards; Ley and All ammo damage reach each one.
+  const count = statOf(state, 'shards', shotEmission(arrow), SPLIT.shards);
+  const damage = statOf(state, 'damage', shardEmissionOf(arrow.ammoId, true), SPLIT.damage);
+  const shard = shardEmissionOf(arrow.ammoId, true);
+  const def = { speed: statOf(state, 'speed', shard, SPLIT.speed), range: statOf(state, 'range', shard, SPLIT.range), damage, damageType: 'physical' as const, fromSplit: true };
   for (let k = 0; k < count; k++) {
     const [dx, dy] = rotate(arrow.dx, arrow.dy, (k * 360) / count);
-    const shard = createShard(state.nextArrowId++, arrow.roomId, arrow.x, arrow.y, dx, dy, struck.id);
-    shard.damage = SPLIT.damage * ofBase(stats.damage, arrow.ammoId);
-    spawned.push(shard);
+    spawned.push(createShard(state.nextArrowId++, arrow, arrow.x, arrow.y, dx, dy, struck.id, def));
   }
   state.events.splits.push({ x: arrow.x, y: arrow.y });
 }
@@ -47,7 +50,7 @@ function strike(state: SimState, arrow: ArrowState, e: EnemyState, spawned: Arro
   // The keystones (037): a pooled arrow hits harder and bursts; a ley bolt shatters a frozen enemy.
   const hit = keystoneHit(state, arrow, e);
   damageEnemy(state, e, arrow.damage * hit.scale, arrow.dx, arrow.dy, arrowHit(arrow));
-  if (arrow.split) burstStar(state, arrow, e, spawned);
+  if (arrow.split) sendShards(state, arrow, e, spawned);
   afterKeystoneHit(state, arrow, e, hit, spawned);
   return true;
 }

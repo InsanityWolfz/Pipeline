@@ -2,11 +2,10 @@ import { BlendModes, type GameObjects, type Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { FEET_BOX } from '../data/player';
 import { KEYSTONE_LOOK, LEVEL_UP, TALENT_SPRITES, levelUpLine } from '../data/talentAssets';
-import { OVERPRESSURE } from '../data/talents';
 import { VIEW_WIDTH } from '../data/config';
 import type { SimEvents } from '../sim/events';
 import type { SimState } from '../sim/state';
-import { hasKeystone } from '../sim/talentEffects';
+import { rampShare } from '../sim/keystones';
 import { tubeSlotBox } from './bottomHud';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
@@ -160,8 +159,8 @@ export class TalentFxView {
   /** Overpressure's heat over the tube's mouth, as strong as the ramp. */
   private drawHeat(sim: SimState, here: boolean): void {
     const H = KEYSTONE_LOOK.heat;
-    const ramp = sim.tube.overpressure / OVERPRESSURE.rampTicks;
-    const on = here && sim.player.dying === 0 && hasKeystone(sim, 'overpressure') && ramp >= H.minRamp;
+    const ramp = rampShare(sim);
+    const on = here && sim.player.dying === 0 && ramp > 0 && ramp >= H.minRamp;
     this.heat.setVisible(on);
     if (!on) return;
     const p = sim.player;

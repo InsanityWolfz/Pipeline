@@ -3,7 +3,8 @@ import { straightAmmo } from '../../src/data/ammo';
 import { BLASTFLETCH, OVERPRESSURE, SHATTERPOINT, TALENT_START } from '../../src/data/talents';
 import { COLD } from '../../src/data/tags';
 import { createArrow } from '../../src/sim/arrows';
-import { leavePool, overpressureBonus } from '../../src/sim/keystones';
+import { leavePool, rampRate } from '../../src/sim/keystones';
+import { roundEmission } from '../../src/sim/emissions';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { fireTicksOf } from '../../src/sim/tube';
@@ -26,6 +27,8 @@ function still(s: SimState, x: number, y: number) {
 }
 
 const ARROW = straightAmmo('arrow');
+/** A bomb's Burst: Blastfletch's Pool reaches it. */
+const BOMB = roundEmission('bomb');
 
 /** An arrow already flying right from `x` on the player's row. */
 function flying(s: SimState, x: number, ammoId = 'arrow') {
@@ -57,7 +60,7 @@ describe('Blastfletch', () => {
 
   it('an arrow through a Pool hits +50% on the next enemy and bursts 24 px there, spending the charge; it pierces on', () => {
     const s = taking(arena(), 'k1');
-    leavePool(s, { roomId: s.roomId, x: PLAYER_AT.x + 40, y: PLAYER_AT.y, radius: 48 });
+    leavePool(s, { roomId: s.roomId, x: PLAYER_AT.x + 40, y: PLAYER_AT.y, radius: 48 }, BOMB);
     const first = still(s, PLAYER_AT.x + 160, PLAYER_AT.y);
     const beside = still(s, PLAYER_AT.x + 160, PLAYER_AT.y + 20);
     const far = still(s, PLAYER_AT.x + 220, PLAYER_AT.y);
@@ -76,17 +79,17 @@ describe('Blastfletch', () => {
 
   it('charges neither an arrow outside the area, a ley bolt, nor anything without the keystone', () => {
     const s = taking(arena(), 'k1');
-    leavePool(s, { roomId: s.roomId, x: PLAYER_AT.x + 40, y: PLAYER_AT.y + 200, radius: 48 });
+    leavePool(s, { roomId: s.roomId, x: PLAYER_AT.x + 40, y: PLAYER_AT.y + 200, radius: 48 }, BOMB);
     const a = flying(s, PLAYER_AT.x + 10);
     run(s, 10);
     expect(a.pooled).toBe(false);
     const t = taking(arena(), 'k1');
-    leavePool(t, { roomId: t.roomId, x: PLAYER_AT.x + 40, y: PLAYER_AT.y, radius: 48 });
+    leavePool(t, { roomId: t.roomId, x: PLAYER_AT.x + 40, y: PLAYER_AT.y, radius: 48 }, BOMB);
     const bolt = flying(t, PLAYER_AT.x + 10, 'ley-bolt');
     run(t, 5);
     expect(bolt.pooled).toBe(false);
     const u = arena();
-    leavePool(u, { roomId: u.roomId, x: PLAYER_AT.x + 40, y: PLAYER_AT.y, radius: 48 });
+    leavePool(u, { roomId: u.roomId, x: PLAYER_AT.x + 40, y: PLAYER_AT.y, radius: 48 }, BOMB);
     expect(u.pools).toEqual([]);
   });
 });
@@ -133,19 +136,19 @@ describe('Shatterpoint', () => {
 });
 
 describe('Overpressure', () => {
-  it('ramps the fire rate up to +25% over 120 ticks of held fire, and resets when fire is released', () => {
+  it('ramps the fire rate up to ×1.25 over 120 ticks of held fire, and resets when fire is released', () => {
     const s = taking(arena(), 'k3');
     s.inventory = { arrow: 999 };
     const aim = fireAt(PLAYER_AT.x + 1000, PLAYER_AT.y);
     expect(fireTicksOf(s, 'arrow')).toBe(15);
     run(s, 60, aim);
     expect(s.tube.overpressure).toBe(60);
-    expect(overpressureBonus(s)).toBeCloseTo(OVERPRESSURE.maxBonus / 2, 9);
+    expect(rampRate(s)).toBeCloseTo(1 + (OVERPRESSURE.rate - 1) / 2, 9);
     run(s, 100, aim);
     expect(s.tube.overpressure).toBe(OVERPRESSURE.rampTicks);
-    expect(overpressureBonus(s)).toBeCloseTo(OVERPRESSURE.maxBonus, 9);
+    expect(rampRate(s)).toBeCloseTo(OVERPRESSURE.rate, 9);
     expect(fireTicksOf(s, 'arrow')).toBe(12);
-    expect(summarize(s).overpressure).toEqual({ ticks: OVERPRESSURE.rampTicks, bonus: OVERPRESSURE.maxBonus });
+    expect(summarize(s).overpressure).toEqual({ ticks: OVERPRESSURE.rampTicks, rate: OVERPRESSURE.rate });
     run(s, 1);
     expect(s.tube.overpressure).toBe(0);
     expect(fireTicksOf(s, 'arrow')).toBe(15);

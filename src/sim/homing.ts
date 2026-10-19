@@ -4,17 +4,18 @@ import type { ArrowState } from './arrows';
 import { targetable } from './enemies';
 import type { SimState } from './state';
 import { rotate } from './volley';
-import { playerStats } from './stats';
+import { roundEmission, shotEmission } from './emissions';
+import { statOf } from './statResolve';
 
 // Homing (029): a homing round locks at launch onto the living enemy in the
 // player's room nearest the cursor, within HOMING.lockRadius of it, and each tick
 // turns toward it by at most HOMING.turnDegrees, keeping its speed and range. With
 // no target, or once its target is dead or gone, it flies straight.
 
-/** The enemy a homing round fired at the cursor (x, y) locks onto, or null. */
-export function lockTarget(state: SimState, x: number, y: number): number | null {
+/** The enemy a homing round fired at the cursor (x, y) locks onto, or null: the nearest within its lock radius (039: resolveStat). */
+export function lockTarget(state: SimState, ammoId: string, x: number, y: number): number | null {
   let best: number | null = null;
-  let nearest: number = HOMING.lockRadius;
+  let nearest = statOf(state, 'lock-radius', roundEmission(ammoId), HOMING.lockRadius);
   for (const e of state.enemies) {
     if (e.roomId !== state.roomId || e.health <= 0 || !targetable(e)) continue;
     const d = Math.hypot(e.x - x, e.y - y);
@@ -26,10 +27,8 @@ export function lockTarget(state: SimState, x: number, y: number): number | null
   return best;
 }
 
-/** Steers each homing arrow toward its target's hurtbox, by at most the turn cap; drops a lost target for good. */
+/** Steers each homing arrow toward its target's hurtbox, by at most its turn rate; drops a lost target for good. */
 export function steerArrows(state: SimState): (arrow: ArrowState) => void {
-  // Seeker's Lens (037) sharpens the turn, through the player's stats.
-  const max = playerStats(state).ammo.homingTurn;
   return (arrow) => {
     if (arrow.targetId === null) return;
     // A target gone under the ground (035) is lost like a dead one.
@@ -42,6 +41,8 @@ export function steerArrows(state: SimState): (arrow: ArrowState) => void {
     const have = Math.atan2(arrow.dy, arrow.dx);
     // The signed turn to the target, -180..180 degrees, clamped to the cap.
     const diff = ((((want - have) * 180) / Math.PI + 540) % 360) - 180;
+    // Seeker's Lens (037) sharpens the turn: Homing's turn rate through resolveStat (039).
+    const max = statOf(state, 'turn-rate', shotEmission(arrow), HOMING.turnDegrees);
     const turn = Math.max(-max, Math.min(max, diff));
     const [dx, dy] = rotate(arrow.dx, arrow.dy, turn);
     const len = Math.hypot(dx, dy);

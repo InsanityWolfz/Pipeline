@@ -323,7 +323,7 @@ describe('rates healing can represent (036)', () => {
     for (const [source, rate] of Object.entries(HEALING)) if (source !== 'afterHitDelay') expect(whole(rate), source).toBe(true);
     const regen = AFFIXES.regen;
     for (let n = regen.min; n <= regen.max; n++) expect(whole(n * regen.step), `${n} steps of regen`).toBe(true);
-    const talents = TALENT_LIST.flatMap((t) => (t.effect.kind === 'regen' ? [t.effect.value] : []));
+    const talents = TALENT_LIST.flatMap((t) => t.lines.flatMap((l) => ('stat' in l && l.stat === 'field-regen' ? [l.value] : [])));
     expect(talents.length).toBeGreaterThan(0);
     for (const rate of talents) expect(whole(rate), `talent regen ${rate}`).toBe(true);
   });

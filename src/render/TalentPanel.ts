@@ -3,6 +3,7 @@ import { DEPTHS, SPRITES } from '../data/assets';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { KEYSTONE_ICONS, LANE_ICONS, TALENT_PANEL, TALENT_SPRITES, talentHeader } from '../data/talentAssets';
 import { LANE_COLORS, TALENT_LIST, TALENTS, type TalentDef } from '../data/talents';
+import { linesText } from '../data/rulesText';
 import { xpToNext } from '../sim/leveling';
 import type { SimState } from '../sim/state';
 import { canTake } from '../sim/talents';
@@ -39,11 +40,14 @@ interface NodeView {
   icon: GameObjects.Image | null;
 }
 
+/** A node's hover text (039): its content lines, generated; the start's own line. */
+const talentText = (def: TalentDef): string => (def.kind === 'start' ? TALENT_PANEL.startText : linesText(def.lines));
+
 /** A node's stone sprite and its icon (none on the start). */
 function looksOf(def: TalentDef): { stone: string; icon: string | null; scale: number } {
   const P = TALENT_PANEL;
   if (def.kind === 'start') return { stone: TALENT_SPRITES.start, icon: null, scale: P.iconScale.start };
-  if (def.effect.kind === 'keystone') return { stone: TALENT_SPRITES.keystone, icon: KEYSTONE_ICONS[def.effect.rule], scale: P.iconScale.keystone };
+  if (def.keystone) return { stone: TALENT_SPRITES.keystone, icon: KEYSTONE_ICONS[def.keystone], scale: P.iconScale.keystone };
   return { stone: TALENT_SPRITES.node, icon: LANE_ICONS[def.lane], scale: P.iconScale.minor };
 }
 
@@ -159,7 +163,7 @@ export class TalentPanel {
   private wrap(def: TalentDef | null): void {
     if ((def?.id ?? null) === this.wrapped) return;
     this.wrapped = def?.id ?? null;
-    const words = (def?.text ?? '').split(' ');
+    const words = (def ? talentText(def) : '').split(' ');
     const max = this.layout.info.w;
     let cut = words.length;
     while (cut > 1 && this.text.set(words.slice(0, cut).join(' ')).width > max) cut -= 1;
@@ -201,7 +205,7 @@ export class TalentPanel {
       open: this.open,
       header,
       nodes: L.nodes.map((n) => ({ id: n.id, state: states.get(n.id) ?? 'dim', x: n.x, y: n.y, r: n.r })),
-      hover: hover ? { id: hover.id, name: hover.name, text: hover.text } : null,
+      hover: hover ? { id: hover.id, name: hover.name, text: talentText(hover) } : null,
       reset: this.open && this.inFoundry ? { ...L.reset } : null,
       glowingLinks: glowing,
     };

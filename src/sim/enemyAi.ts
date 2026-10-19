@@ -6,7 +6,7 @@ import { shardThink } from './shardbackAi';
 import { snipeThink } from './sniperAi';
 import { defOf } from './champions';
 import { castThink } from './casterAi';
-import { chillScale, tickCold } from './cold';
+import { chillScale, chillSlow, tickCold } from './cold';
 import { moveBox } from './collision';
 import { aimFacing } from './direction';
 import { separate, type EnemyState, type RoomBodies } from './enemies';
@@ -26,6 +26,7 @@ import { engage, inAggroBox, inArc, leash, startWindup, stepAttack, toward } fro
 
 /** Thinks, moves and faces every enemy in its own room, then pushes overlapping bodies apart. */
 export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBodies): void {
+  const slowPerStack = chillSlow(state);
   for (const e of state.enemies) {
     const { room, obstacles } = bodies(e.roomId);
     const def = defOf(e);
@@ -35,7 +36,7 @@ export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBod
     // A frozen enemy doesn't think (029): its wind-up pauses where it is. A chilled one walks slower.
     // A stunned one (036) holds in recovery, then chases again.
     const thought: [number, number] = e.stunned > 0 ? holdStunned(e) : e.frozen > 0 ? [0, 0] : thinkOf(state, e, def);
-    const slow = chillScale(e);
+    const slow = chillScale(e, slowPerStack);
     // Claimed ground is safe (017): a chaser stops at the zone's edge, and a knock never carries it in either.
     const [mx, my] = keepOut(state, e, thought[0] * slow, thought[1] * slow);
     const [kx, ky] = takeKnock(e);

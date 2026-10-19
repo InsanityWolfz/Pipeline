@@ -3,7 +3,8 @@ import { TICK_RATE, TILE_SIZE } from '../data/config';
 import { blastArea } from './blast';
 import type { SimState } from './state';
 import { shotSealed } from './tutorial';
-import { ofBase, playerStats } from './stats';
+import { roundEmission } from './emissions';
+import { statOf } from './statResolve';
 import { leavePool } from './keystones';
 import { armMine, scatterBomblets } from './mines';
 
@@ -22,7 +23,7 @@ export interface BombState {
   toY: number;
   x: number;
   y: number;
-  /** Ticks flown; it lands when this reaches `flightTicks`. */
+  /** Ticks flown; it lands on the first tick this reaches `flightTicks` (039: a flight time isn't rounded, so it may be fractional). */
   tick: number;
   flightTicks: number;
   /** Height above the ground point, px (render only). */
@@ -47,16 +48,16 @@ export function throwBomb(
   across = 0,
 ): void {
   const ammo = lobbedAmmo(ammoId);
-  const reach = Math.min(Math.hypot(aim.x - feet.x, aim.y - feet.y), ammo.maxRange);
+  const e = roundEmission(ammoId);
+  const reach = Math.min(Math.hypot(aim.x - feet.x, aim.y - feet.y), statOf(state, 'range', e, ammo.maxRange));
   // Side by side in a volley (024): `across` px to the right of the line, clockwise on screen.
   const toX = feet.x + dir[0] * reach - dir[1] * across;
   const toY = feet.y + dir[1] * reach + dir[0] * across;
   const distance = Math.hypot(toX - from.x, toY - from.y);
-  // Talents (037): Swift Arc shortens a bomb's flight, Black Powder and Wide Casing grow its burst; a landmine takes
-  // only all-ammo damage (038.5).
-  const stats = playerStats(state).ammo;
+  // Its stats through resolveStat (039), by scope: Swift Arc (Lob) shortens a bomb's flight, not a landmine's (Mine);
+  // Black Powder (Bomb) grows a bomb's damage, not a landmine's; Wide Casing (Burst) grows both bursts. Never rounded.
   const bomb = ammo.kind === 'lob';
-  const flightTicks = Math.max(1, Math.ceil((distance / (ammo.speed / TICK_RATE)) * (bomb ? stats.lobTime : 1)));
+  const flightTicks = Math.max(1, statOf(state, 'flight-time', e, distance / (ammo.speed / TICK_RATE)));
   state.bombs.push({
     id: state.nextBombId++,
     ammoId,
@@ -70,8 +71,8 @@ export function throwBomb(
     tick: 0,
     flightTicks,
     height: 0,
-    damage: (bomb ? ammo.burstDamage : ammo.damage) * ofBase(stats.damage, ammoId),
-    radius: bomb ? stats.blastRadius : ammo.radius,
+    damage: statOf(state, 'damage', e, bomb ? ammo.burstDamage : ammo.damage),
+    radius: statOf(state, 'radius', e, bomb ? ammo.burstRadius : ammo.radius),
   });
 }
 
@@ -118,6 +119,6 @@ function land(state: SimState, b: BombState): void {
 function burst(state: SimState, b: BombState): void {
   blastArea(state, b.roomId, b.x, b.y, b.radius, b.damage, lobbedAmmo(b.ammoId).damageType);
   state.events.bursts.push({ x: b.x, y: b.y, radius: b.radius });
-  leavePool(state, b);
+  leavePool(state, b, roundEmission(b.ammoId));
   scatterBomblets(state, b);
 }

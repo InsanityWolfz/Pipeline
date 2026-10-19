@@ -45,13 +45,13 @@ describe('bombs', () => {
     expect('burn' in BOMB).toBe(false);
   });
 
-  it('land on the cursor after ceil(distance / step) ticks', () => {
+  it('land on the cursor on the first tick past distance / step (039: the flight time itself isn’t rounded)', () => {
     const s = armed();
     const b = throwAt(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     expect(b).toMatchObject({ toX: PLAYER_AT.x + 100, toY: PLAYER_AT.y });
-    expect(b.flightTicks).toBe(Math.ceil((100 - MUZZLE_OFFSET) / STEP));
+    expect(b.flightTicks).toBeCloseTo((100 - MUZZLE_OFFSET) / STEP, 9);
     const ticks = runUntil(s, () => s.events.bursts.length > 0, 100);
-    expect(ticks).toBe(b.flightTicks);
+    expect(ticks).toBe(Math.ceil((100 - MUZZLE_OFFSET) / STEP));
     expect(s.events.bursts).toEqual([{ x: PLAYER_AT.x + 100, y: PLAYER_AT.y, radius: 48 }]);
     expect(s.bombs).toHaveLength(0);
   });

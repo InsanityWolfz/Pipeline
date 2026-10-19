@@ -3,7 +3,8 @@ import { CLUSTER, hasTagKeyword } from '../data/tags';
 import { blastArea } from './blast';
 import type { BombState } from './bombs';
 import type { SimState } from './state';
-import { ofBase, playerStats } from './stats';
+import { bombletEmission, roundEmission } from './emissions';
+import { statOf } from './statResolve';
 import { rotate } from './volley';
 
 // Landmines and bomblets (038). A landmine flies as a bomb does (bombs.ts) but lands
@@ -61,23 +62,26 @@ export function clearMines(state: Pick<SimState, 'mines'>): void {
 /** A landmine lands (from bombs.ts): it arms where it lies, its arm time at 0. */
 export function armMine(state: SimState, b: BombState, ammo: MineAmmo): void {
   const id = state.mines.nextId++;
-  state.mines.armed.push({ id, ammoId: b.ammoId, roomId: b.roomId, x: b.x, y: b.y, elapsed: 0, armTicks: ammo.armTicks, damage: b.damage, radius: b.radius });
+  const armTicks = statOf(state, 'arm-time', roundEmission(b.ammoId), ammo.armTicks);
+  state.mines.armed.push({ id, ammoId: b.ammoId, roomId: b.roomId, x: b.x, y: b.y, elapsed: 0, armTicks, damage: b.damage, radius: b.radius });
   state.events.mineArms.push({ id, x: b.x, y: b.y });
 }
 
 /**
  * A cluster bomb's burst (from bombs.ts): CLUSTER.count bomblets round its point at CLUSTER.distance, the first along the
- * bomb's flight and the rest evenly round, clockwise on screen. Each takes the bomb's damage bonus and the bomblets'
- * radius from playerStats (037's talents).
+ * bomb's flight and the rest evenly round, clockwise on screen. Each Bomblet's numbers come through resolveStat (039):
+ * Bomb and All ammo damage, Burst radius, Cluster's count.
  */
 export function scatterBomblets(state: SimState, b: BombState): void {
   if (!hasTagKeyword(b.ammoId, 'cluster')) return;
   const len = Math.hypot(b.toX - b.fromX, b.toY - b.fromY);
   const [dx, dy] = len > 0 ? [(b.toX - b.fromX) / len, (b.toY - b.fromY) / len] : [1, 0];
-  const stats = playerStats(state).ammo;
-  const damage = CLUSTER.damage * ofBase(stats.damage, b.ammoId);
-  for (let k = 0; k < CLUSTER.count; k++) {
-    const [ux, uy] = rotate(dx, dy, (k * 360) / CLUSTER.count);
+  const e = bombletEmission(b.ammoId);
+  const damage = statOf(state, 'damage', e, CLUSTER.damage);
+  const radius = statOf(state, 'radius', e, CLUSTER.radius);
+  const count = statOf(state, 'bomblets', roundEmission(b.ammoId), CLUSTER.count);
+  for (let k = 0; k < count; k++) {
+    const [ux, uy] = rotate(dx, dy, (k * 360) / count);
     state.mines.bomblets.push({
       id: state.mines.nextId++,
       ammoId: b.ammoId,
@@ -89,7 +93,7 @@ export function scatterBomblets(state: SimState, b: BombState): void {
       ticks: CLUSTER.delayTicks,
       delay: CLUSTER.delayTicks,
       damage,
-      radius: stats.bombletRadius,
+      radius,
     });
   }
 }
@@ -103,7 +107,7 @@ export function leaveArea(state: Pick<SimState, 'mines' | 'bombs'>): void {
   state.bombs = state.bombs.filter((b) => lobbedAmmo(b.ammoId).kind !== 'mine' && !hasTagKeyword(b.ammoId, 'cluster'));
 }
 
-/** Once a tick, before bombs fly (so a mine that lands this tick starts at fuse 0): bomblets count down and burst; armed fuses burn and burst. */
+/** Once a tick, before bombs fly (so a mine that lands this tick starts at 0): bomblets count down and burst; armed mines run out their arm time and burst. */
 export function stepMines(state: SimState): void {
   state.mines.bomblets = state.mines.bomblets.filter((b) => {
     b.ticks -= 1;

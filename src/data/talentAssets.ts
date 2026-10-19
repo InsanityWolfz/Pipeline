@@ -58,6 +58,8 @@ export const KEYSTONE_ICONS: Readonly<Record<KeystoneRule, string>> = {
  */
 export const TALENT_PANEL = {
   title: { text: 'Talents', w: 128, h: 22, gap: 4, titleY: 4 },
+  /** The centre start's hover line: it has no content lines (039), so the panel says what it is. */
+  startText: 'The centre: always yours.',
   w: 300,
   h: 300,
   header: { y: 7 },

@@ -3,6 +3,7 @@ import { defOf } from './champions';
 import { targetable, type EnemyState } from './enemies';
 import { isRolling } from './movement';
 import { wornRelic } from './stats';
+import { statOf, statusEmission } from './statResolve';
 import { attackOf } from '../data/enemies';
 import type { SimState } from './state';
 
@@ -36,7 +37,7 @@ export function stepRelics(state: SimState): void {
   if (!breaker || !isRolling(p)) return;
   for (const e of state.enemies) {
     if (e.roomId !== state.roomId || p.rollStunned.includes(e.id) || !rolledThrough(state, e)) continue;
-    if (stun(state, e, breaker.stunTicks)) p.rollStunned.push(e.id);
+    if (stun(state, e, statOf(state, 'duration', statusEmission('stun'), breaker.stunTicks))) p.rollStunned.push(e.id);
   }
 }
 
