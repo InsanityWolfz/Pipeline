@@ -1,4 +1,5 @@
-import { ANY_SCHEMATIC, DEFAULT_REGION, ROOM_REGIONS, SCHEMATIC_CHANCE, SCHEMATIC_REGIONS } from '../data/drops';
+import { ANY_SCHEMATIC, SCHEMATIC_CHANCE, SCHEMATIC_REGIONS } from '../data/drops';
+import { regionOf } from './regions';
 import { ITEMS } from '../data/items';
 import { nodeOfSchematic } from '../data/research';
 import { count } from './inventory';
@@ -23,8 +24,9 @@ export function schematicKnown(state: Pick<SimState, 'research'>, itemId: string
 }
 
 /** The schematics that could drop in a room now: not revealed, carried, on the ground or in the stash, and allowed in its region. */
-export function eligibleSchematics(state: Pick<SimState, 'research' | 'inventory' | 'groundItems' | 'stash'>, roomId: string): string[] {
-  const region = ROOM_REGIONS[roomId] ?? DEFAULT_REGION;
+export function eligibleSchematics(state: Pick<SimState, 'research' | 'inventory' | 'groundItems' | 'stash'>, roomId: string, at?: { x: number; y: number }): string[] {
+  // 034: in the overworld, the region is where it lands (Stonefall Hollows is Region 2).
+  const region = regionOf(roomId, at);
   return SCHEMATICS.filter(
     (id) =>
       !schematicKnown(state, id) &&
@@ -40,9 +42,9 @@ export function rollSchematic(rng: RngState, champion: boolean): string[] {
   return nextFloat(rng) < (champion ? SCHEMATIC_CHANCE.champion : SCHEMATIC_CHANCE.enemy) ? [ANY_SCHEMATIC] : [];
 }
 
-/** One schematic to drop in a room, picked evenly from those eligible, or null when none is. */
-export function pickSchematic(state: SimState, roomId: string): string | null {
-  const eligible = eligibleSchematics(state, roomId);
+/** One schematic to drop at a point in a room, picked evenly from those eligible, or null when none is. */
+export function pickSchematic(state: SimState, roomId: string, at?: { x: number; y: number }): string | null {
+  const eligible = eligibleSchematics(state, roomId, at);
   if (eligible.length === 0) return null;
   return eligible[nextInt(state.rng, 0, eligible.length - 1)] ?? null;
 }

@@ -28,7 +28,8 @@ describe('inventory panel groups (031)', () => {
 
   it('maps the items as the spec lists them', () => {
     const byGroup = (g: string) => Object.values(ITEMS).filter((it) => it.group === g).map((it) => it.id).sort();
-    expect(byGroup('raw')).toEqual(['fiber', 'husk-resin', 'ley-crystal', 'rime-shard', 'stone', 'wood']);
+    // 034: ley-iron, the first metal, is a raw.
+    expect(byGroup('raw')).toEqual(['fiber', 'husk-resin', 'ley-crystal', 'ley-iron', 'rime-shard', 'stone', 'wood']);
     // 033: machine parts and schematics go in Parts, cores in Cores.
     expect(byGroup('parts')).toEqual([
       'ancient-gear',
@@ -52,7 +53,7 @@ describe('inventory panel groups (031)', () => {
   });
 
   it('reserves a row per item of a group, and Gear two more for the worn and spare lines', () => {
-    expect(reservedRows('raw')).toBe(6);
+    expect(reservedRows('raw')).toBe(7);
     expect(reservedRows('gear')).toBe(2 + 1);
     expect(reservedRows('cores')).toBe(2);
     // 033: the schematics share one row.

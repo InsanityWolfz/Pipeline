@@ -106,7 +106,7 @@ export function scatterItems(state: SimState, items: readonly string[], roomId: 
   const room = roomById(roomId);
   const rects = [...nodeRects(state.nodes, roomId), ...standingRects(room)];
   for (const item of items) {
-    const itemId = item === ANY_SCHEMATIC ? pickSchematic(state, roomId) : item;
+    const itemId = item === ANY_SCHEMATIC ? pickSchematic(state, roomId, { x, y }) : item;
     if (itemId === null) continue;
     const at = scatterPoint(room, state.rng, x, y, rects);
     layItem(state, itemId, roomId, at.x, at.y);

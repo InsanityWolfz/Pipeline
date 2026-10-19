@@ -7,7 +7,7 @@ import { nextFloat } from '../../src/sim/rng';
 import { createSim, resetWorld, tileCentre } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { DYING_TICKS } from '../../src/data/player';
-import { arena, at, runUntilKo, HUSK, placeHusk, PLAYER_AT, run, SEED, SWIPE_LANDS } from './fight';
+import { arena, at, FIELD_WALL, runUntilKo, HUSK, placeHusk, PLAYER_AT, run, SEED, SWIPE_LANDS } from './fight';
 
 const { damage, knockback, knockTicks } = HUSK.swipe;
 
@@ -74,11 +74,12 @@ describe('player health', () => {
   });
 
   it('stops the knockback at a wall', () => {
-    // Against the east face (x = 1024) of the ruin field's west wall, tile column 31 (017).
-    const s = arena(SEED, { x: 1024 + 16, y: 14.5 * 32 });
+    // Against the east face of the ruin field's west wall (017).
+    const face = (FIELD_WALL.west + 1) * 32;
+    const s = arena(SEED, { x: face + 16, y: 14.5 * 32 });
     hitFromEast(s);
     run(s, knockTicks);
-    expect(s.player.x).toBe(1024 + 8);
+    expect(s.player.x).toBe(face + 8);
   });
 
   it('keeps firing through a hit', () => {

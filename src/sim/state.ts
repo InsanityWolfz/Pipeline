@@ -15,7 +15,8 @@ import type { ClaimHold } from './claims';
 import { createCaches, type CacheHold, type CacheState } from './cache';
 import { startingFixtures, type FixtureState } from './fixtures';
 import type { HarvestState } from './harvest';
-import { createGates, type Gates } from './tutorial';
+import { createGates, HOLLOWS_KEY, type Gates } from './tutorial';
+import { claim } from './claims';
 import { OBJECTIVES } from '../data/objectives';
 import type { OrbState } from './orbs';
 import type { Inventory } from './inventory';
@@ -182,6 +183,9 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     events: createEvents(),
   };
   resetWorld(state, roomId);
+  // A start's claims (034) are made before the first tick, as if long done: the barrier they drop is already down.
+  for (const site of start.claims ?? []) claim(state, site);
+  state.gates.hollows ||= state.claims.includes(HOLLOWS_KEY);
   return state;
 }
 

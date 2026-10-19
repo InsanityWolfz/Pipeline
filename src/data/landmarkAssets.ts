@@ -28,6 +28,7 @@ export const MAP_ICONS = {
   grotto: 'map-grotto',
   spring: 'map-spring',
   cache: 'map-cache',
+  aqueduct: 'map-aqueduct',
 } as const;
 
 export const LANDMARK_LOOK = {

@@ -14,7 +14,7 @@ export const GROUND = {
   pavingGapEvery: 3,
   pavingAlpha: 0.28,
   /** The ruin field's old paving round the stairs. */
-  fieldPaving: { x0: 33, y0: 13, x1: 47, y1: 22 },
+  fieldPaving: { x0: 73, y0: 13, x1: 87, y1: 22 },
   path: 'dirt',
   pathEdge: 'dirt-dark',
   pathFleck: 'dirt-light',
@@ -112,5 +112,5 @@ export const SUPPLY_LOOK = {
   /** No frame moves a mote on further than this many ms, so a hitch never skips its run. */
   maxStepMs: 50,
   /** A mote takes its raw's colour. */
-  moteColors: { wood: 'wood-light', stone: 'rock-pale', fiber: 'leaf-light', 'ley-crystal': 'cyan-glow' } as Readonly<Record<string, string>>,
+  moteColors: { wood: 'wood-light', stone: 'rock-pale', fiber: 'leaf-light', 'ley-crystal': 'cyan-glow', 'ley-iron': 'iron-light' } as Readonly<Record<string, string>>,
 } as const;

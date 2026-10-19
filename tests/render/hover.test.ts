@@ -1,3 +1,4 @@
+import { REGION_1_X } from '../../src/data/hollows';
 import { describe, expect, it } from 'vitest';
 import { BUILD_TIP, WORLD_NAMES } from '../../src/data/hudLayout';
 import { FIXTURES } from '../../src/data/claims';
@@ -117,7 +118,8 @@ describe('landmark hovers (032)', () => {
   it("names a resource site's pylon by its landmark and what it sends: dormant, awake, claimed", () => {
     const s = createSim(SEED, { roomId: HALL });
     s.enemies = [];
-    const p = centre(21, 20);
+    // 032's tiles moved +40 (034).
+    const p = centre(21 + REGION_1_X, 20);
     expect(nameAt(s, HALL, p.x, p.y)?.description).toBe('Quarry pylon: dormant until the shrine is claimed.');
     claim(s, SHRINE_SITE);
     expect(nameAt(s, HALL, p.x, p.y)?.description).toBe('Quarry pylon: claim it to send stone home.');
@@ -127,7 +129,7 @@ describe('landmark hovers (032)', () => {
 
   it('names the Ruined Cache: sealed while a guard lives, ready, then empty once opened', () => {
     const s = createSim(SEED, { roomId: HALL });
-    const c = centre(11, 38);
+    const c = centre(11 + REGION_1_X, 38);
     expect(nameAt(s, HALL, c.x, c.y)).toMatchObject({ name: 'Ruined Cache', description: DESCRIPTIONS.cacheSealed });
     s.enemies = s.enemies.filter((e) => e.group !== 'ruined-cache');
     expect(nameAt(s, HALL, c.x, c.y)?.description).toBe(DESCRIPTIONS.cacheReady);

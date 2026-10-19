@@ -13,7 +13,7 @@ export interface SpringDef {
   /** Its landmark name (032), on the discovery banner. */
   readonly name: string;
   /** The danger ring (017) it sits in. */
-  readonly ring: 1 | 2;
+  readonly ring: 1 | 2 | 3;
   readonly tx: number;
   readonly ty: number;
   readonly radius: number;
@@ -34,9 +34,11 @@ export const SPRING_CLEARING = 3;
  * home and the Grotto, in its own clearing (to be cut if healing near home is too easy).
  */
 export const SPRINGS: readonly SpringDef[] = [
-  { id: 'west-spring', name: 'West Ley Spring', ring: 2, tx: 10, ty: 31, radius: SPRING_RADIUS },
-  { id: 'south-east-spring', name: 'South-east Ley Spring', ring: 2, tx: 66, ty: 38, radius: SPRING_RADIUS },
-  { id: 'north-spring', name: 'North Ley Spring', ring: 1, tx: 26, ty: 8, radius: SPRING_RADIUS },
+  { id: 'west-spring', name: 'West Ley Spring', ring: 2, tx: 50, ty: 31, radius: SPRING_RADIUS },
+  { id: 'south-east-spring', name: 'South-east Ley Spring', ring: 2, tx: 106, ty: 38, radius: SPRING_RADIUS },
+  { id: 'north-spring', name: 'North Ley Spring', ring: 1, tx: 66, ty: 8, radius: SPRING_RADIUS },
+  // Stonefall Hollows' (034): deep in the region, on the far side from the barrier, beside the way to the Bulwark.
+  { id: 'hollows-spring', name: 'Hollows Ley Spring', ring: 3, tx: 7, ty: 26, radius: SPRING_RADIUS },
 ];
 
 /** A spring's clearing (030): a square of open ground round its pool. */

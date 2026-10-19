@@ -23,8 +23,9 @@ export const SUPPLY_TICKS = 240;
 /** The raws each claimable site's pylon sends home, by site id: a resource site (032) sends only its own. */
 export const SITE_SUPPLY: Readonly<Record<string, readonly string[]>> = {
   shrine: ['wood', 'stone', 'fiber', 'ley-crystal'],
-  // Each landmark pylon's own item, from its entry (quarry: stone, old-grove: wood, reed-marsh: fiber, ley-grotto: ley crystal).
-  ...Object.fromEntries(LANDMARK_LIST.flatMap((l) => (l.pylon ? [[l.pylon.site, [l.pylon.supplies]]] : []))),
+  // Each landmark pylon's own raws, from its entry (quarry: stone, old-grove: wood, reed-marsh: fiber, ley-grotto: ley crystal;
+  // 034's cistern-terrace: its area's ley-iron and stone).
+  ...Object.fromEntries(LANDMARK_LIST.flatMap((l) => (l.pylon ? [[l.pylon.site, l.pylon.supplies]] : []))),
 };
 
 /** A resource site's safe radius, tiles (032): smaller than the shrine's 10, so five claims don't starve spawning. */
@@ -61,5 +62,7 @@ export const FIXTURES: readonly FixtureDef[] = [
   { id: 'stone-port', kind: 'port', name: 'Stone port', tx: 1, ty: 6, facing: 'right', raw: 'stone' },
   { id: 'fiber-port', kind: 'port', name: 'Fiber port', tx: 1, ty: 8, facing: 'right', raw: 'fiber' },
   { id: 'ley-crystal-port', kind: 'port', name: 'Ley crystal port', tx: 1, ty: 10, facing: 'right', raw: 'ley-crystal' },
+  // 034: above the wood port, clear of the bench.
+  { id: 'ley-iron-port', kind: 'port', name: 'Ley-iron port', tx: 1, ty: 3, facing: 'right', raw: 'ley-iron' },
   { id: 'waystone', kind: 'waystone', name: 'Waystone', tx: 22, ty: 4, facing: 'down', claim: 'shrine' },
 ];

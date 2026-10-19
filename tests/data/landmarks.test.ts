@@ -13,6 +13,7 @@ import { TEXT_STYLES } from '../../src/data/fonts';
 import { vectorFrames } from '../../src/render/vector/catalog';
 import { WORLD } from '../../src/sim/world';
 import { reachable, tileKey } from '../fixtures/reach';
+import { REGION_1_X } from '../../src/data/hollows';
 
 // Landmarks as data (032): typed entries stamped onto the fixed map, clear of each
 // other and of the tutorial's ground, each in its declared ring and reachable on foot.
@@ -26,7 +27,8 @@ const byId = (id: string): LandmarkDef => {
   if (!l) throw new Error(`no landmark ${id}`);
   return l;
 };
-const SITES = LANDMARK_LIST.filter((l) => l.kind === 'resource-site');
+/** Region 1's resource sites (032), each with its own pylon; Stonefall Hollows' (034) are tested in tests/data/hollows.test.ts. */
+const SITES = LANDMARK_LIST.filter((l) => l.kind === 'resource-site' && l.ring !== 3);
 
 describe('landmark entries', () => {
   it('are typed with kebab-case ids, names and a known kind and marker', () => {
@@ -35,13 +37,29 @@ describe('landmark entries', () => {
     for (const l of LANDMARK_LIST) {
       expect(l.id).toMatch(/^[a-z]+(-[a-z]+)*$/);
       expect(l.name.length).toBeGreaterThan(0);
-      expect(['resource-site', 'frozen-grotto', 'ley-springs', 'ruined-cache']).toContain(l.kind);
-      expect(['site', 'grotto', 'spring', 'cache']).toContain(l.marker);
+      expect(['resource-site', 'frozen-grotto', 'ley-springs', 'ruined-cache', 'ruin']).toContain(l.kind);
+      expect(['site', 'grotto', 'spring', 'cache', 'aqueduct']).toContain(l.marker);
     }
-    expect(ids).toEqual(['frozen-grotto', 'quarry', 'old-grove', 'ley-grotto', 'reed-marsh', 'ruined-cache', 'west-spring', 'south-east-spring', 'north-spring']);
+    // 034's (the Hollows' spring among the springs, then its three) after 032's.
+    expect(ids).toEqual([
+      'frozen-grotto',
+      'quarry',
+      'old-grove',
+      'ley-grotto',
+      'reed-marsh',
+      'ruined-cache',
+      'west-spring',
+      'south-east-spring',
+      'north-spring',
+      'hollows-spring',
+      'ley-iron-cut',
+      'broken-aqueduct',
+      'cistern-terrace',
+    ]);
   });
 
   it('start at the spec positions, the Grotto and the springs where 029 and 030 put them', () => {
+    // 034 moved Region 1 +40 tiles: each spec position plus REGION_1_X.
     const centres: [string, number, number, 1 | 2][] = [
       ['old-grove', 8, 19, 2],
       ['quarry', 21, 18, 1],
@@ -51,10 +69,10 @@ describe('landmark entries', () => {
       ['frozen-grotto', 14, 9, 2],
     ];
     for (const [id, tx, ty, ring] of centres) {
-      expect(inside(byId(id).area, { tx, ty }), id).toBe(true);
+      expect(inside(byId(id).area, { tx: tx + REGION_1_X, ty }), id).toBe(true);
       expect(byId(id).ring, id).toBe(ring);
     }
-    expect(byId('frozen-grotto').area).toEqual({ x0: 9, y0: 5, x1: 19, y1: 13 });
+    expect(byId('frozen-grotto').area).toEqual({ x0: 9 + REGION_1_X, y0: 5, x1: 19 + REGION_1_X, y1: 13 });
     for (const s of OVERWORLD.springs) {
       const l = byId(s.id);
       expect(l.kind).toBe('ley-springs');
@@ -66,7 +84,7 @@ describe('landmark entries', () => {
     for (const l of LANDMARK_LIST) {
       for (const n of l.nodes) expect(NODES[n.nodeId], `${l.id} ${n.nodeId}`).toBeDefined();
       for (const g of l.guards) expect(ENEMIES[g.enemyId], `${l.id} ${g.enemyId}`).toBeDefined();
-      if (l.pylon) expect(ITEMS[l.pylon.supplies]?.kind, l.id).toBe('raw');
+      for (const raw of l.pylon?.supplies ?? []) expect(ITEMS[raw]?.kind, l.id).toBe('raw');
     }
   });
 
@@ -122,15 +140,17 @@ describe('landmark areas', () => {
     }
   });
 
-  it('hold no generated tree, rock, water or stone: only their own features, blocks and pylons', () => {
+  it('hold no generated tree, rock, water or stone: only their own features, blocks, stamped tiles (034) and pylons', () => {
     const disc = (tx: number, ty: number) =>
       OVERWORLD.features.some((f) => (f.kind === 'pond' ? Math.hypot((tx - f.cx) / f.rx, (ty - f.cy) / f.ry) <= OVERWORLD.ponds.shore : Math.hypot(tx - f.cx, ty - f.cy) <= f.r));
     for (const l of LANDMARK_LIST) {
       const blocks = new Set((l.blocks ?? []).map(tileKey));
+      const stamps = new Map((l.stamps ?? []).map((t) => [tileKey(t), t.symbol]));
       for (let ty = l.area.y0; ty <= l.area.y1; ty++) {
         for (let tx = l.area.x0; tx <= l.area.x1; tx++) {
           const s = at(tx, ty);
           if (blocks.has(tileKey({ tx, ty }))) expect(s).toBe(TILE.ruinBlock);
+          else if (stamps.has(tileKey({ tx, ty }))) expect(s, `${l.id} ${tx},${ty}`).toBe(stamps.get(tileKey({ tx, ty })));
           else if (!disc(tx, ty)) expect([TILE.floor, TILE.path], `${l.id} ${tx},${ty}`).toContain(s);
         }
       }
@@ -174,14 +194,14 @@ describe('landmark areas', () => {
 describe('resource sites', () => {
   it('are the Quarry, Old Grove, Ley Grotto and Reed Marsh, each a cluster of 5 of its node with a pylon supplying its raw', () => {
     expect(SITES.map((l) => [l.id, l.pylon?.supplies])).toEqual([
-      ['quarry', 'stone'],
-      ['old-grove', 'wood'],
-      ['ley-grotto', 'ley-crystal'],
-      ['reed-marsh', 'fiber'],
+      ['quarry', ['stone']],
+      ['old-grove', ['wood']],
+      ['ley-grotto', ['ley-crystal']],
+      ['reed-marsh', ['fiber']],
     ]);
     for (const l of SITES) {
       expect(l.nodes, l.id).toHaveLength(5);
-      for (const n of l.nodes) expect(NODES[n.nodeId]?.itemId, l.id).toBe(l.pylon?.supplies);
+      for (const n of l.nodes) expect(l.pylon?.supplies, l.id).toContain(NODES[n.nodeId]?.itemId);
       expect(l.pylon?.site).toBe(l.id);
     }
   });
@@ -191,13 +211,14 @@ describe('resource sites', () => {
     for (const l of SITES) {
       const pylon = l.pylon;
       if (!pylon) throw new Error(`${l.id} has no pylon`);
-      expect(SITE_SUPPLY[l.id]).toEqual([pylon.supplies]);
+      expect(SITE_SUPPLY[l.id]).toEqual(pylon.supplies);
       expect(l.nodes.some((n) => Math.hypot(n.tx - pylon.tx, n.ty - pylon.ty) <= SITE_SAFE_RADIUS)).toBe(true);
     }
   });
 
   it('are guarded by one pack of 3–5 of the ring\'s makeup (Husks, plus Wisps in ring 2), with no boss', () => {
     for (const l of [...SITES, byId('ruined-cache')]) {
+      expect(l.ring, l.id).not.toBe(3);
       expect(l.guards.length, l.id).toBeGreaterThanOrEqual(3);
       expect(l.guards.length, l.id).toBeLessThanOrEqual(5);
       const allowed = l.ring === 1 ? ['husk'] : ['husk', 'wisp'];
@@ -239,7 +260,9 @@ describe('resource sites', () => {
       ['old-grove', 7, 'shrine'],
       ['ley-grotto', 7, 'shrine'],
       ['reed-marsh', 7, 'shrine'],
+      // 034: the Hollows' one claimable site, behind the barrier the shrine's claim drops.
+      ['cistern-terrace', 7, 'shrine'],
     ]);
-    expect(WORLD[OVERWORLD.id]?.caches).toEqual([{ id: 'ruined-cache', tx: 11, ty: 38 }]);
+    expect(WORLD[OVERWORLD.id]?.caches).toEqual([{ id: 'ruined-cache', tx: 11 + REGION_1_X, ty: 38 }]);
   });
 });

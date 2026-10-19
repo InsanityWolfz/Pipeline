@@ -84,6 +84,12 @@ export function die(s: SimState): void {
   runUntilKo(s, DYING_TICKS + 3);
 }
 
+/** The ruin field's walls' columns (017), from data: its west wall and its east wall (34 tiles apart since 034 moved them +40). */
+export const FIELD_WALL = {
+  west: Math.min(...OVERWORLD.ruinField.walls.map((t) => t.tx)),
+  east: Math.max(...OVERWORLD.ruinField.walls.map((t) => t.tx)),
+} as const;
+
 /** The ruin hall's arena centre, where pre-017 tests measured from. */
 const HALL_AT = { x: 400, y: 448 } as const;
 

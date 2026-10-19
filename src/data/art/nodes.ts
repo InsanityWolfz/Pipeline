@@ -1,6 +1,7 @@
 import { NODE_SPRITES } from '../assets';
 import { NODES, REGROW_STAGES } from '../nodes';
 import { RIME_CLUSTER } from './stages';
+import { LEY_IRON_SEAM } from './hollows';
 import { boulder, canopy, shadow, trunk } from './terrain';
 import { ellipse, flat, line, path, solid, type Shape, type VectorSprite } from './types';
 
@@ -202,7 +203,7 @@ const LEY_VEIN: NodeLooks = {
 };
 
 /** Every node type's looks, by node id. */
-export const NODE_LOOKS: Readonly<Record<string, NodeLooks>> = { tree: TREE, rubble: BOULDER, reeds: REEDS, 'ley-vein': LEY_VEIN, 'rime-cluster': RIME_CLUSTER };
+export const NODE_LOOKS: Readonly<Record<string, NodeLooks>> = { tree: TREE, rubble: BOULDER, reeds: REEDS, 'ley-vein': LEY_VEIN, 'rime-cluster': RIME_CLUSTER, 'ley-iron-seam': LEY_IRON_SEAM };
 
 /** Every node frame, as vector sprites. */
 export const NODE_SPRITES_VECTOR: readonly VectorSprite[] = Object.entries(NODE_LOOKS).flatMap(([id, looks]) => {

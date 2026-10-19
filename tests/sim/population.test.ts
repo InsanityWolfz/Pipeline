@@ -156,7 +156,8 @@ describe('the living population', () => {
     die(s);
     expect(s.claims).toEqual([SHRINE_SITE]);
     run(s, 1);
-    expect(packs(s).size).toBe(TARGET);
+    // The shrine's claim dropped the Hollows' barrier (034), so ring 3 fills too.
+    expect(packs(s).size).toBe(TARGET + POPULATION.rings[3].packs);
   });
 });
 

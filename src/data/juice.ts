@@ -86,6 +86,8 @@ export const HARVEST_BURSTS: Readonly<Record<string, keyof typeof PARTICLES>> = 
   reeds: 'harvestStalks',
   'ley-vein': 'harvestSparks',
   'rime-cluster': 'harvestRime',
+  // 034: ley-iron chips like stone.
+  'ley-iron-seam': 'harvestChips',
 };
 
 /** While a node is worked: a small burst this often, ms; a tree shakes this far either way, px, this many times a second. */

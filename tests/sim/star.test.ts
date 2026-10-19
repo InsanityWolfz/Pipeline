@@ -3,7 +3,7 @@ import { straightAmmo } from '../../src/data/ammo';
 import { STAR } from '../../src/data/tags';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
-import { arena, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, FIELD_WALL, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
 // The star split (029): a star round that hits an enemy bursts at the hit point into
 // STAR.shards shards, 360 / shards degrees apart, the first along its flight.
@@ -63,8 +63,8 @@ describe('a star ley bolt', () => {
 
   it("doesn't split when it hits a wall or runs out of range", () => {
     const s = starred();
-    // The ruin field's west wall is tile column 31 (017); fire at it from 3 tiles away.
-    movePlayer(s, 34.5 * 32, 14.5 * 32);
+    // The ruin field's west wall (017); fire at it from 3 tiles away.
+    movePlayer(s, (FIELD_WALL.west + 3.5) * 32, 14.5 * 32);
     run(s, 1, fireAt(0, 14.5 * 32));
     let bursts = 0;
     runUntil(

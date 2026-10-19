@@ -6,6 +6,7 @@ import { blocksShot } from './collision';
 import type { EnemyState } from './enemies';
 import { damagePlayer } from './health';
 import { roomById, type SimState } from './state';
+import { shotSealed } from './tutorial';
 
 // Wisp orbs (009): slow enemy projectiles. They fly straight from the caster
 // along its locked aim, end at a wall or their range, and hit the player once.
@@ -51,7 +52,9 @@ export function stepOrbs(state: SimState): void {
     o.x += o.dx * step;
     o.y += o.dy * step;
     o.travelled += step;
-    if (o.travelled > cast.orbRange || blocksShot(roomById(o.roomId), Math.floor(o.x / TILE_SIZE), Math.floor(o.y / TILE_SIZE))) return false;
+    const tx = Math.floor(o.x / TILE_SIZE);
+    const ty = Math.floor(o.y / TILE_SIZE);
+    if (o.travelled > cast.orbRange || blocksShot(roomById(o.roomId), tx, ty) || shotSealed(state, o.roomId, tx, ty)) return false;
     if (o.roomId !== state.roomId) return true;
     const p = state.player;
     const near = Math.abs(o.x - p.x) <= (FEET_BOX.w + cast.orbSize) / 2 && Math.abs(o.y - p.y) <= (FEET_BOX.h + cast.orbSize) / 2;

@@ -1,3 +1,4 @@
+import { REGION_1_X } from '../../src/data/hollows';
 import { describe, expect, it } from 'vitest';
 import { GROTTO, GROTTO_GROUP } from '../../src/data/grotto';
 import { FEET_BOX } from '../../src/data/player';
@@ -17,12 +18,14 @@ const key = tileKey;
 
 describe('the Frozen Grotto', () => {
   it('sits in ring 2 in the north-west, kept as a clearing, with a path from the west path\'s end', () => {
-    expect(GROTTO.area).toEqual({ x0: 9, y0: 5, x1: 19, y1: 13 });
-    expect(ringOf(14, 9)).toBe(2);
+    // 029's tiles, moved +40 with the rest of Region 1 (034).
+    const X = REGION_1_X;
+    expect(GROTTO.area).toEqual({ x0: 9 + X, y0: 5, x1: 19 + X, y1: 13 });
+    expect(ringOf(14 + X, 9)).toBe(2);
     expect(OVERWORLD.clearings).toContainEqual(GROTTO.area);
     expect(OVERWORLD.paths).toContainEqual([
-      { tx: 12, ty: 27 },
-      { tx: 14, ty: 14 },
+      { tx: 12 + X, ty: 27 },
+      { tx: 14 + X, ty: 14 },
     ]);
     for (let ty = GROTTO.area.y0; ty <= GROTTO.area.y1; ty++) {
       for (let tx = GROTTO.area.x0; tx <= GROTTO.area.x1; tx++) expect([TILE.tree, TILE.rock, TILE.water]).not.toContain(room.rows[ty]?.[tx]);
@@ -31,7 +34,7 @@ describe('the Frozen Grotto', () => {
 
   it('holds three rime clusters at the spec tiles, each placed for the Grotto', () => {
     const rime = OVERWORLD.nodes.filter((n) => n.nodeId === 'rime-cluster');
-    expect(rime.map(({ tx, ty }) => ({ tx, ty }))).toEqual([
+    expect(rime.map(({ tx, ty }) => ({ tx: tx - REGION_1_X, ty }))).toEqual([
       { tx: 12, ty: 7 },
       { tx: 16, ty: 8 },
       { tx: 14, ty: 11 },

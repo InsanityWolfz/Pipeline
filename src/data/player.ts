@@ -46,6 +46,8 @@ export interface StartDef {
   gatesOpen: boolean;
   /** The living population (017) is out from the start, as if the first line had filled the tube. */
   populated: boolean;
+  /** Sites already claimed (034: `?start=hollows` starts with the shrine's, so the Hollows' barrier is down). */
+  claims?: readonly string[];
 }
 
 /**

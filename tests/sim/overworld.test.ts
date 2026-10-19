@@ -125,7 +125,7 @@ describe('rings', () => {
 
   it('are in the summary, with the live enemy count', () => {
     const s = arena();
-    expect(summarize(s).area).toEqual({ room: OVERWORLD.id, ring: 0, liveEnemies: 0 });
+    expect(summarize(s).area).toEqual({ room: OVERWORLD.id, ring: 0, region: 1, liveEnemies: 0 });
     const pylon = OVERWORLD.shrine.pylon;
     movePlayer(s, pylon.tx * 32 + 16, (pylon.ty + 1) * 32 + 16);
     expect(summarize(s).area.ring).toBe(2);

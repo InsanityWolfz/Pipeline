@@ -18,7 +18,8 @@ import { arena, die, movePlayer, run, SEED } from './fight';
 // claimed, sealed while its guards live, claimed like the shrine's; every claimed pylon is
 // a deposit point, a safe zone at its own radius and a waystone destination.
 
-const SITES = LANDMARK_LIST.filter((l) => l.kind === 'resource-site');
+// Every resource site with its own pylon: 032's four and the Cistern Terrace (034; the Ley-iron Cut has none).
+const SITES = LANDMARK_LIST.filter((l) => l.kind === 'resource-site' && l.pylon !== undefined);
 const pylonOf = (site: string): TilePos => {
   if (site === SHRINE_SITE) return OVERWORLD.shrine.pylon;
   const p = LANDMARK_LIST.find((l) => l.pylon?.site === site)?.pylon;

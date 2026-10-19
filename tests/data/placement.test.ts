@@ -52,6 +52,8 @@ const RULES: Record<Placement, (t: TilePos) => boolean> = {
   'ley-line': (t) => LINES.some((l) => toLine(t, l) <= 0.5),
   // In the Frozen Grotto's frosted clearing (029).
   'frozen-grotto': (t) => t.tx >= GROTTO.area.x0 && t.tx <= GROTTO.area.x1 && t.ty >= GROTTO.area.y0 && t.ty <= GROTTO.area.y1 && at(t.tx, t.ty) === TILE.floor,
+  // At the foot of a cliff or quarry face (034): open ground with the cliff right behind it, to the north.
+  'cliff-seam': (t) => at(t.tx, t.ty) === TILE.floor && at(t.tx, t.ty - 1) === TILE.cliff,
 };
 
 describe('where nodes stand', () => {
@@ -75,11 +77,11 @@ describe('where nodes stand', () => {
     }
   });
 
-  it("the shrine's safe zone holds one node of each type but the Grotto's rime (029: rime is gathered at the Grotto)", () => {
+  it("the shrine's safe zone holds one node of each type but the Grotto's rime and the Hollows' ley-iron (029, 034: gathered in their own places)", () => {
     const pylon = OVERWORLD.shrine.pylon;
     const inZone = OVERWORLD.nodes.filter((n) => Math.hypot(n.tx - pylon.tx, n.ty - pylon.ty) <= SAFE_RADIUS);
     for (const def of Object.values(NODES)) {
-      if (def.placement !== 'frozen-grotto') expect(inZone.some((n) => n.nodeId === def.id), def.id).toBe(true);
+      if (def.placement !== 'frozen-grotto' && def.placement !== 'cliff-seam') expect(inZone.some((n) => n.nodeId === def.id), def.id).toBe(true);
     }
   });
 });

@@ -75,7 +75,7 @@ describe('claiming the pylon', () => {
     expect(s.claimHold).toBeNull();
   });
 
-  it('claims after CLAIM_TICKS of standing still, adding the four ports and the waystone', () => {
+  it("claims after CLAIM_TICKS of standing still, adding the four ports and the waystone (not 034's ley-iron port: the shrine sends none)", () => {
     const s = atPylon();
     run(s, 1, { interact: true });
     expect(s.claimHold).toEqual({ site: SHRINE_SITE, progress: 1 });
@@ -84,7 +84,7 @@ describe('claiming the pylon', () => {
     run(s, 1);
     expect(s.claims).toEqual([SHRINE_SITE]);
     expect(s.events.claims).toEqual([{ site: SHRINE_SITE }]);
-    expect(s.fixtures.map((f) => f.id).sort()).toEqual(FIXTURES.map((f) => f.id).sort());
+    expect(s.fixtures.map((f) => f.id).sort()).toEqual(FIXTURES.filter((f) => f.raw !== 'ley-iron').map((f) => f.id).sort());
     expect(summarize(s).claims).toEqual([SHRINE_SITE]);
   });
 

@@ -25,7 +25,7 @@ import { stepOrbs } from './orbs';
 import { roomById, type SimState } from './state';
 import { firingWalkScale, stepTube } from './tube';
 import { stepObjectives } from './objectives';
-import { stepGates, stepTubeStone } from './tutorial';
+import { shotSealed, stepGates, stepTubeStone } from './tutorial';
 import { roomBodies } from './bodies';
 import { stepPopulation } from './population';
 import { applyStage } from './stages';
@@ -73,7 +73,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   // Shots fired this tick stay at the muzzle until next tick's step.
   // Star shards (029) set off this tick join the flight after it, so they first move next tick.
   const shards: ArrowState[] = [];
-  stepArrows(state.arrows, roomById, arrowHits(state, shards), steerArrows(state));
+  stepArrows(state.arrows, roomById, arrowHits(state, shards), steerArrows(state), (roomId, tx, ty) => shotSealed(state, roomId, tx, ty));
   state.arrows.push(...shards);
   stepBombs(state);
   stepOrbs(state);

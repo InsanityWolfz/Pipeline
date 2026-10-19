@@ -1,6 +1,8 @@
 import { CACHE_RARE } from './drops';
 import type { DropTable } from './enemies';
 import { GROTTO, GROTTO_GROUP } from './grotto';
+import type { TileStamp } from './hollows';
+import { HOLLOWS_SITES } from './hollowsSites';
 import { SITES } from './landmarkSites';
 import { SPRINGS } from './springs';
 import type { Feature, NodePlacement, TilePos, TileRect } from './tiles';
@@ -10,12 +12,13 @@ import type { Feature, NodePlacement, TilePos, TileRect } from './tiles';
 // minimap; the first sighting is recorded (037 turns it into XP). The four resource
 // sites and the Ruined Cache are in landmarkSites.ts; the Frozen Grotto is 029's and the
 // springs are 030's, folded in here without moving. Tile coordinates throughout; 034 may
-// shift every tile by +40 for Region 2, so positions live only in data.
+// shift every tile by +40 for Region 2, and did, so positions live only in data.
 
-export type LandmarkKind = 'resource-site' | 'frozen-grotto' | 'ley-springs' | 'ruined-cache';
+/** `ruin`: a landmark that is only a place (034's Broken Aqueduct). */
+export type LandmarkKind = 'resource-site' | 'frozen-grotto' | 'ley-springs' | 'ruined-cache' | 'ruin';
 
 /** A landmark's minimap icon (landmarkAssets' `MAP_ICONS`). */
-export type LandmarkMarker = 'site' | 'grotto' | 'spring' | 'cache';
+export type LandmarkMarker = 'site' | 'grotto' | 'spring' | 'cache' | 'aqueduct';
 
 /** A guard placed by hand; its group is its landmark's id. */
 export interface GuardPlacement {
@@ -24,18 +27,18 @@ export interface GuardPlacement {
   readonly ty: number;
 }
 
-/** A resource site's ley pylon: its tile, the claim's site id, and the item it sends home. */
+/** A resource site's ley pylon: its tile, the claim's site id, and the raws it sends home (034: the Cistern Terrace sends two). */
 export interface LandmarkPylon extends TilePos {
   readonly site: string;
-  readonly supplies: string;
+  readonly supplies: readonly string[];
 }
 
 export interface LandmarkDef {
   readonly id: string;
   readonly name: string;
   readonly kind: LandmarkKind;
-  /** The danger ring (017) it sits in. */
-  readonly ring: 1 | 2;
+  /** The danger ring (017) it sits in: 3 in Stonefall Hollows (034). */
+  readonly ring: 1 | 2 | 3;
   /** Kept clear of generated trees, rocks, water and stones; its own features are stamped over it. Seeing any of it discovers it. */
   readonly area: TileRect;
   readonly features: readonly Feature[];
@@ -51,9 +54,11 @@ export interface LandmarkDef {
   readonly blocks?: readonly TilePos[];
   /** The sealed reliquary's tile (the Ruined Cache): solid. */
   readonly cache?: TilePos;
+  /** Its own tiles stamped over the ground (034: the Cut's quarry face, the aqueduct's pillars, arches and fallen spans). */
+  readonly stamps?: readonly TileStamp[];
   readonly marker: LandmarkMarker;
   /** How render dresses it (landmarkAssets): old trees on its tree tiles, cut stones for its blocks, a sunken hollow. */
-  readonly look?: { readonly trees?: 'old'; readonly blocks?: 'cut'; readonly hollow?: 'ley' | 'frost' };
+  readonly look?: { readonly trees?: 'old'; readonly blocks?: 'cut'; readonly hollow?: 'ley' | 'frost'; readonly quarry?: true; readonly paving?: 'terrace' };
 }
 
 /** The landmark tuning (032). Ticks at 60 Hz. */
@@ -106,8 +111,8 @@ const SPRING_LANDMARKS: readonly LandmarkDef[] = SPRINGS.map((s) => ({
   marker: 'spring',
 }));
 
-/** Every landmark, the Frozen Grotto first (its guards keep 029's place in the pack list). */
-export const LANDMARK_LIST: readonly LandmarkDef[] = [FROZEN_GROTTO, ...SITES, ...SPRING_LANDMARKS];
+/** Every landmark, the Frozen Grotto first (its guards keep 029's place in the pack list), Stonefall Hollows' (034) last. */
+export const LANDMARK_LIST: readonly LandmarkDef[] = [FROZEN_GROTTO, ...SITES, ...SPRING_LANDMARKS, ...HOLLOWS_SITES];
 
 export function landmarkDef(id: string): LandmarkDef {
   const def = LANDMARK_LIST.find((l) => l.id === id);

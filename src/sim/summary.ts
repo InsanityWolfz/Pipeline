@@ -34,6 +34,7 @@ import { springAt } from './healing';
 import { atRiskCounts } from './banking';
 import { LANDMARK_LIST } from '../data/landmarks';
 import { isOpened } from './cache';
+import { regionOf } from './regions';
 
 /** The compact JSON summary that window.__GAME__.getState() returns. */
 export interface SimSummary {
@@ -41,8 +42,8 @@ export interface SimSummary {
   seed: number;
   /** The room the player is in. */
   room: string;
-  /** Where the player is (017): the room, the overworld's ring there (null elsewhere), and live enemies in the room. */
-  area: { room: string; ring: 0 | 1 | 2 | null; liveEnemies: number };
+  /** Where the player is (017): the room, the overworld's ring there (null elsewhere: 3 in Stonefall Hollows, 034), its region (034), and live enemies in the room. */
+  area: { room: string; ring: 0 | 1 | 2 | 3 | null; region: number; liveEnemies: number };
   /** The living population is out (017), how many enemies are within a screen of the player, and how many the camera shows. */
   populated: boolean;
   nearPlayer: number;
@@ -141,7 +142,8 @@ export interface SimSummary {
   firstHuskDropped: boolean;
   /** The tutorial (012): the tube in hand, gates open, the first line full, the current goal, the end. */
   hasTube: boolean;
-  gates: { foundry: boolean; shrine: boolean };
+  /** The gates (012), and Stonefall Hollows' barrier (034). */
+  gates: { foundry: boolean; shrine: boolean; hollows: boolean };
   firstLineFull: boolean;
   /** The objective line (028): the first unfinished goal's index and text, or the frontier goal with no index once all are done. */
   objective: { index: number | null; text: string };
@@ -172,6 +174,7 @@ export function summarize(state: SimState): SimSummary {
     area: {
       room: state.roomId,
       ring: state.roomId === OVERWORLD.id ? ringOf(Math.floor(state.player.x / TILE_SIZE), Math.floor(state.player.y / TILE_SIZE)) : null,
+      region: regionOf(state.roomId, state.player),
       liveEnemies: state.enemies.filter((e) => e.roomId === state.roomId).length,
     },
     populated: state.populated,

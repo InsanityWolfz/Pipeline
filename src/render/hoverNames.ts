@@ -42,7 +42,7 @@ function pylonLine(sim: SimState, pylon: PylonDef): string {
   const claimed = sim.claims.includes(pylon.site);
   const landmark = landmarkOfSite(pylon.site);
   if (!landmark?.pylon) return claimed ? DESCRIPTIONS.pylon : DESCRIPTIONS.pylonDormant;
-  return sitePylonLine(landmark.name, itemDef(landmark.pylon.supplies).name, claimed ? 'claimed' : dormant(sim, pylon) ? 'dormant' : 'awake');
+  return sitePylonLine(landmark.name, landmark.pylon.supplies.map((id) => itemDef(id).name).join(' and '), claimed ? 'claimed' : dormant(sim, pylon) ? 'dormant' : 'awake');
 }
 
 /** The Ruined Cache's hover line (032): sealed while a guard lives, ready, or empty until it re-arms. */

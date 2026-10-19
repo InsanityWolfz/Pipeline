@@ -170,7 +170,8 @@ describe('vector frame registration', () => {
     const springs = await import('../../src/data/springAssets');
     const landmarks = await import('../../src/data/landmarkAssets');
     const research = await import('../../src/data/researchAssets');
-    walk({ ...assets, ...foundry, ...room, ...props, ...stages, ...springs, ...landmarks, ...research });
+    const hollows = await import('../../src/data/hollowsAssets');
+    walk({ ...assets, ...foundry, ...room, ...props, ...stages, ...springs, ...landmarks, ...research, ...hollows });
     for (const f of vectorFrames()) expect(registered, f.name).toContain(f.name);
   });
 });

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { straightAmmo } from '../../src/data/ammo';
 import { damageEnemy } from '../../src/sim/enemies';
-import { arena, at, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, at, FIELD_WALL, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
 const DAMAGE = straightAmmo('arrow').damage;
 
@@ -51,13 +51,14 @@ describe('arrows hitting Husks', () => {
   });
 
   it('hits a Husk standing against a wall', () => {
-    // The ruin field's east wall is tile column 49 (017); the Husk stands 40 px left of it.
+    // The ruin field's east wall (017); the Husk stands 40 px left of it.
     const y = 14.5 * 32;
-    const s = arena(undefined, { x: 49 * 32 - 280, y });
-    const e = placeHusk(s, 49 * 32 - 40, y);
+    const wall = FIELD_WALL.east * 32;
+    const s = arena(undefined, { x: wall - 280, y });
+    const e = placeHusk(s, wall - 40, y);
     e.mode = 'recover';
     e.modeTicks = 1;
-    run(s, 1, fireAt(49 * 32 + 60, y));
+    run(s, 1, fireAt(wall + 60, y));
     runUntil(s, () => s.arrows.length === 0, 40);
     expect(e.health).toBe(HUSK.maxHealth - DAMAGE);
   });
@@ -79,14 +80,15 @@ describe('Husk knockback', () => {
   });
 
   it('stops at a wall', () => {
-    // The ruin field's west wall is tile column 31 (017): its east face is x = 1024.
+    // The ruin field's west wall (017): its east face.
+    const face = (FIELD_WALL.west + 1) * 32;
     const y = 14.5 * 32;
-    const s = arena(undefined, { x: 1024 + 28, y });
-    const e = placeHusk(s, 1024 + 8, y);
+    const s = arena(undefined, { x: face + 28, y });
+    const e = placeHusk(s, face + 8, y);
     run(s, 1);
     damageEnemy(s, e, DAMAGE, -1, 0);
     run(s, HUSK.hitKnockTicks);
-    expect(e.x).toBe(1024 + 8);
+    expect(e.x).toBe(face + 8);
   });
 });
 
@@ -179,8 +181,8 @@ describe('ley bolts', () => {
 
   it('stop at a wall', () => {
     const s = bolted();
-    // The ruin field's west wall is tile column 31 (017); fire at it from 3 tiles away.
-    movePlayer(s, 34.5 * 32, 14.5 * 32);
+    // The ruin field's west wall (017); fire at it from 3 tiles away.
+    movePlayer(s, (FIELD_WALL.west + 3.5) * 32, 14.5 * 32);
     run(s, 1, fireAt(0, 14.5 * 32));
     let lastX = s.player.x;
     runUntil(
@@ -191,7 +193,7 @@ describe('ley bolts', () => {
       },
       100,
     );
-    expect(lastX).toBeGreaterThanOrEqual(32 * 32 - 5);
+    expect(lastX).toBeGreaterThanOrEqual((FIELD_WALL.west + 1) * 32 - 5);
   });
 
   it('stop at a ruin block', () => {

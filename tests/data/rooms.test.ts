@@ -25,7 +25,7 @@ describe('rooms', () => {
     expect(OVERWORLD.height * 32).toBeGreaterThanOrEqual(360 * 4);
   });
 
-  it('walls the foundry on every edge apart from its door; the overworld ends in forest, never a bare wall', () => {
+  it('walls the foundry on every edge apart from its door; the overworld ends in forest, or cliffs in the Hollows (034), never a bare wall', () => {
     const f = WORLD[FOUNDRY_ROOM];
     if (!f) throw new Error('no foundry');
     const last = f.rows.length - 1;
@@ -36,7 +36,7 @@ describe('rooms', () => {
     const rows = room?.rows ?? [];
     for (const [y, row] of rows.entries()) {
       const edges = y === 0 || y === rows.length - 1 ? [...row] : [row[0], row[row.length - 1]];
-      for (const ch of edges) expect([TILE.tree, TILE.water]).toContain(ch);
+      for (const ch of edges) expect([TILE.tree, TILE.water, TILE.cliff]).toContain(ch);
     }
   });
 

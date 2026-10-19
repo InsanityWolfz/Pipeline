@@ -63,6 +63,9 @@ export type ArrowHitTest = (arrow: ArrowState) => boolean;
 /** Turns an arrow before it moves (029: a homing round toward its target). */
 export type ArrowSteer = (arrow: ArrowState) => void;
 
+/** True if a tile of a room stops shots though its symbol doesn't (034: a shut ley barrier). */
+export type ShotSeal = (roomId: string, tx: number, ty: number) => boolean;
+
 /**
  * Moves every arrow one tick and removes those that hit a target, a wall or a
  * ruin block, or run out of range. Targets are tried before walls at both the
@@ -74,23 +77,26 @@ export function stepArrows(
   roomFor: (roomId: string) => Room,
   hits: ArrowHitTest = () => false,
   steer: ArrowSteer = () => {},
+  sealed: ShotSeal = () => false,
 ): void {
   let kept = 0;
   for (const arrow of arrows) {
-    if (flies(arrow, roomFor(arrow.roomId), hits, steer)) arrows[kept++] = arrow;
+    const room = roomFor(arrow.roomId);
+    const stops = (x: number, y: number): boolean => inSolid(room, x, y) || sealed(arrow.roomId, Math.floor(x / TILE_SIZE), Math.floor(y / TILE_SIZE));
+    if (flies(arrow, stops, hits, steer)) arrows[kept++] = arrow;
   }
   arrows.length = kept;
 }
 
-function flies(arrow: ArrowState, room: Room, hits: ArrowHitTest, steer: ArrowSteer): boolean {
-  if (hits(arrow) || inSolid(room, arrow.x, arrow.y)) return false;
+function flies(arrow: ArrowState, stops: (x: number, y: number) => boolean, hits: ArrowHitTest, steer: ArrowSteer): boolean {
+  if (hits(arrow) || stops(arrow.x, arrow.y)) return false;
   steer(arrow);
   const step = arrow.speed / TICK_RATE;
   arrow.x += arrow.dx * step;
   arrow.y += arrow.dy * step;
   arrow.travelled += step;
   if (hits(arrow)) return false;
-  return arrow.travelled < arrow.range && !inSolid(room, arrow.x, arrow.y);
+  return arrow.travelled < arrow.range && !stops(arrow.x, arrow.y);
 }
 
 function inSolid(room: Room, x: number, y: number): boolean {

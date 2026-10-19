@@ -20,7 +20,7 @@ export const SCHEMATIC_REGIONS: Readonly<Record<string, readonly number[]>> = {
   'schematic-merger': [1, 2],
 };
 
-/** Which region a room is in (034 adds Region 2's); a room not listed is in DEFAULT_REGION. */
+/** Which region a room is in; a room not listed is in DEFAULT_REGION. The overworld's west columns are Region 2 (034: src/sim/regions.ts). */
 export const ROOM_REGIONS: Readonly<Record<string, number>> = { overworld: 1, foundry: 1 };
 export const DEFAULT_REGION = 1;
 

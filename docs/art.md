@@ -100,6 +100,16 @@ Every colour comes from the palette, by id. The source of truth is `src/data/pal
 | `carve-dark` | #4f3b2f |
 | `carve` | #6f5442 |
 | `carve-light` | #93745a |
+| `hollow-dark` | #3b475c |
+| `hollow` | #5f6f88 |
+| `hollow-light` | #8c9cb4 |
+| `hollow-pale` | #bccadb |
+| `iron-dark` | #2f343f |
+| `iron` | #566070 |
+| `iron-light` | #8a95a6 |
+| `iron-rust` | #9a4b2b |
+| `vein` | #5ef2ff |
+| `danger` | #e8322f |
 | `snow` | #ffffff |
 | `hit-red` | #ff4d4d |
 

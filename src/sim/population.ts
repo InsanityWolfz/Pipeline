@@ -1,9 +1,10 @@
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { FEET_BOX } from '../data/player';
 import { OVERWORLD, ringOf } from '../data/overworld';
-import { POPULATION } from '../data/population';
+import { POPULATION, type PopulatedRing } from '../data/population';
+import { HOLLOWS } from '../data/hollows';
 import { LANDMARK_LIST } from '../data/landmarks';
-import { TILE } from '../data/rooms';
+import { TILE, WALKABLE } from '../data/rooms';
 import { createEnemy, type EnemyState } from './enemies';
 import { nextInt } from './rng';
 import { rollChampions } from './champions';
@@ -19,7 +20,7 @@ import { WORLD } from './world';
 export interface PackSlot {
   /** The group its members carry: `pop-<ring>-<n>`. */
   group: string;
-  ring: 1 | 2;
+  ring: PopulatedRing;
   /** The tick it may spawn again; it waits while its pack lives. */
   respawnAt: number;
   alive: boolean;
@@ -31,7 +32,7 @@ export interface PopulationState {
 
 export function createPopulation(): PopulationState {
   const slots: PackSlot[] = [];
-  for (const ring of [1, 2] as const) {
+  for (const ring of [1, 2, 3] as const) {
     for (let i = 0; i < POPULATION.rings[ring].packs; i++) slots.push({ group: `pop-${ring}-${i}`, ring, respawnAt: 0, alive: false });
   }
   return { slots };
@@ -109,16 +110,37 @@ export function enemiesOnScreen(state: SimState): number {
   return state.enemies.filter((e) => inView(state, e.roomId, e.x, e.y)).length;
 }
 
+/** Where packs never stand: the clearings (the meadow, the ruin field, the shrine site), the landmarks' areas (032) and the Sunken Forum (034). */
+const KEEP_OUT = [...OVERWORLD.clearings, ...LANDMARK_LIST.map((l) => l.area), HOLLOWS.arena.bounds];
+
+/** Hollows ground a pack can walk to from the gap (034): the generated cliffs can wall off a pocket, and nothing spawns in one. */
+const fromGap = ((): Set<number> => {
+  const rows = WORLD[OVERWORLD.id]?.rows ?? [];
+  const key = (tx: number, ty: number) => ty * OVERWORLD.width + tx;
+  const seen = new Set<number>([key(HOLLOWS.start.tx, HOLLOWS.start.ty)]);
+  const queue: [number, number][] = [[HOLLOWS.start.tx, HOLLOWS.start.ty]];
+  for (let i = 0; i < queue.length; i++) {
+    const [tx, ty] = queue[i] ?? [0, 0];
+    for (const [nx, ny] of [[tx + 1, ty], [tx - 1, ty], [tx, ty + 1], [tx, ty - 1]] as const) {
+      const symbol = rows[ny]?.[nx];
+      if (symbol === undefined || !WALKABLE.includes(symbol) || ringOf(nx, ny) !== HOLLOWS.ring || seen.has(key(nx, ny))) continue;
+      seen.add(key(nx, ny));
+      queue.push([nx, ny]);
+    }
+  }
+  return seen;
+})();
+
 const walkableOpen = (tx: number, ty: number): boolean => {
   const room = WORLD[OVERWORLD.id];
   const symbol = room?.rows[ty]?.[tx];
   if (symbol !== TILE.floor && symbol !== TILE.path) return false;
-  // Packs keep out of the clearings (the meadow, the ruin field, the shrine site) and the landmarks' areas (032).
-  return ![...OVERWORLD.clearings, ...LANDMARK_LIST.map((l) => l.area)].some((r) => tx >= r.x0 && tx <= r.x1 && ty >= r.y0 && ty <= r.y1);
+  if (ringOf(tx, ty) === HOLLOWS.ring && !fromGap.has(ty * OVERWORLD.width + tx)) return false;
+  return !KEEP_OUT.some((r) => tx >= r.x0 && tx <= r.x1 && ty >= r.y0 && ty <= r.y1);
 };
 
 /** Open ground each ring offers a pack's centre, found once from the generated map. */
-const candidates: Record<1 | 2, { tx: number; ty: number }[]> = { 1: [], 2: [] };
+const candidates: Record<PopulatedRing, { tx: number; ty: number }[]> = { 1: [], 2: [], 3: [] };
 for (let ty = 1; ty < OVERWORLD.height - 1; ty++) {
   for (let tx = 1; tx < OVERWORLD.width - 1; tx++) {
     const ring = ringOf(tx, ty);
@@ -172,6 +194,8 @@ function spawn(state: SimState, slot: PackSlot): boolean {
 export function stepPopulation(state: SimState): void {
   if (!state.populated) return;
   for (const slot of state.population.slots) {
+    // The Hollows (034) fill once their barrier is down; before that nobody can reach them.
+    if (slot.ring === HOLLOWS.ring && !state.gates.hollows) continue;
     if (state.enemies.some((e) => e.group === slot.group)) {
       slot.alive = true;
       continue;

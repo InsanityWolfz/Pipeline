@@ -3,6 +3,7 @@ import type { StartDef } from './player';
 import { RECIPES } from './recipes';
 import { STAGE_RECIPES } from './stages';
 import { ROUNDS } from './tags';
+import { HOLLOWS } from './hollows';
 import { OVERWORLD } from './overworld';
 import { DEFAULT_ROOM } from './rooms';
 
@@ -37,3 +38,9 @@ export const PLAYTEST_START: StartDef = {
   inventory: Object.fromEntries(Object.values(ITEMS).filter((it) => !ROUNDS.includes(it.id)).map((it) => [it.id, OVERRIDES[it.id] ?? COUNTS[it.kind]])),
   crafted: [...new Set([...Object.values(RECIPES), ...Object.values(STAGE_RECIPES)].map((r) => r.output.itemId))].sort(),
 };
+
+/**
+ * `?start=hollows` (034): the playtest kit, standing just inside Stonefall Hollows' gap with the shrine claimed (so the
+ * barrier is down and the Cistern Terrace's pylon awake), and the land not yet populated, so tests start calm.
+ */
+export const HOLLOWS_START: StartDef = { ...PLAYTEST_START, spawn: HOLLOWS.start, populated: false, claims: ['shrine'] };

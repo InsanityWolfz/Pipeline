@@ -1,3 +1,4 @@
+import { REGION_1_X } from '../../src/data/hollows';
 import { describe, expect, it } from 'vitest';
 import { LANDMARK_LIST } from '../../src/data/landmarks';
 import { OVERWORLD_ROOM } from '../../src/data/overworld';
@@ -13,7 +14,7 @@ import { die, movePlayer, run, SEED } from './fight';
 // camera's view (`viewRect`), recorded once ever, and never lost.
 
 /** A spot in the meadow's west whose view takes in the Quarry's south edge and nothing else. */
-const NEAR_QUARRY = tileCentre({ tx: 24, ty: 25 });
+const NEAR_QUARRY = tileCentre({ tx: 24 + REGION_1_X, ty: 25 });
 
 describe('discovery', () => {
   it('finds nothing from the wake tile, and the shrine and foundry are never landmarks', () => {
@@ -38,7 +39,8 @@ describe('discovery', () => {
     run(s, 1);
     expect(s.events.discoveries).toEqual([]);
     // Away and back: no second sighting.
-    movePlayer(s, tileCentre({ tx: 40, ty: 30 }).x, tileCentre({ tx: 40, ty: 30 }).y);
+    const away = tileCentre({ tx: 40 + REGION_1_X, ty: 30 });
+    movePlayer(s, away.x, away.y);
     run(s, 1);
     movePlayer(s, NEAR_QUARRY.x, NEAR_QUARRY.y);
     let again = 0;

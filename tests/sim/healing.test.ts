@@ -1,3 +1,4 @@
+import { REGION_1_X } from '../../src/data/hollows';
 import { describe, expect, it } from 'vitest';
 import { TILE_SIZE } from '../../src/data/config';
 import { DYING_TICKS, HEALING, MAX_HEALTH, type HealingTuning } from '../../src/data/player';
@@ -300,10 +301,12 @@ describe('the hook', () => {
     const s = inSpring('north-spring', 80);
     run(s, 1);
     const sum = summarize(s);
+    // 030's tiles moved +40 (034), and the Hollows' spring.
     expect(sum.springs).toEqual([
-      { id: 'west-spring', tx: 10, ty: 31, radius: 48, inside: false },
-      { id: 'south-east-spring', tx: 66, ty: 38, radius: 48, inside: false },
-      { id: 'north-spring', tx: 26, ty: 8, radius: 48, inside: true },
+      { id: 'west-spring', tx: 10 + REGION_1_X, ty: 31, radius: 48, inside: false },
+      { id: 'south-east-spring', tx: 66 + REGION_1_X, ty: 38, radius: 48, inside: false },
+      { id: 'north-spring', tx: 26 + REGION_1_X, ty: 8, radius: 48, inside: true },
+      { id: 'hollows-spring', tx: 7, ty: 26, radius: 48, inside: false },
     ]);
     expect(sum.player.healing).toBe('spring');
     expect(sum.events.heals).toEqual([{ source: 'spring', kind: 'start' }]);

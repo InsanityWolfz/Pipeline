@@ -493,7 +493,8 @@ describe('the tutorial (012)', () => {
     const doorGates = Object.values(WORLD).flatMap((r) => (r.doorways ?? []).flatMap((d) => (d.gate ? [d.gate] : [])));
     expect(doorGates).toEqual(['foundry']);
     const tileGates = new Set((outside.gateTiles ?? []).map((t) => t.gate));
-    expect([...tileGates]).toEqual(['shrine']);
+    // 034: Stonefall Hollows' barrier seals its gap the same way.
+    expect([...tileGates]).toEqual(['shrine', 'hollows']);
     for (const t of outside.gateTiles ?? []) expect(outside.rows[t.ty]?.[t.tx]).toBe(TILE.floor);
     for (const r of Object.values(RECIPES)) if (r.requires) expect(r.requires).toBe('attuned');
     expect(TUTORIAL_START.room).toBe(OVERWORLD.id);

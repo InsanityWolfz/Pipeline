@@ -12,22 +12,22 @@ export const GROTTO_GROUP = 'frozen-grotto';
 
 export const GROTTO = {
   /** The Grotto's clearing, kept open and frosted. */
-  area: { x0: 9, y0: 5, x1: 19, y1: 13 } satisfies TileRect,
+  area: { x0: 49, y0: 5, x1: 59, y1: 13 } satisfies TileRect,
   /** Two tiles wide, from the west path's end north to the Grotto's mouth: that end becomes a fork. */
   path: [
-    { tx: 12, ty: 27 },
-    { tx: 14, ty: 14 },
+    { tx: 52, ty: 27 },
+    { tx: 54, ty: 14 },
   ] satisfies TilePos[],
   nodes: [
-    { nodeId: 'rime-cluster', tx: 12, ty: 7 },
-    { nodeId: 'rime-cluster', tx: 16, ty: 8 },
-    { nodeId: 'rime-cluster', tx: 14, ty: 11 },
+    { nodeId: 'rime-cluster', tx: 52, ty: 7 },
+    { nodeId: 'rime-cluster', tx: 56, ty: 8 },
+    { nodeId: 'rime-cluster', tx: 54, ty: 11 },
   ],
   /** The guard pack, placed by hand round the clusters: three Husks and a Wisp. */
   pack: [
-    { group: GROTTO_GROUP, enemyId: 'husk', tx: 11, ty: 10 },
-    { group: GROTTO_GROUP, enemyId: 'husk', tx: 17, ty: 11 },
-    { group: GROTTO_GROUP, enemyId: 'husk', tx: 15, ty: 6 },
-    { group: GROTTO_GROUP, enemyId: 'wisp', tx: 14, ty: 9 },
+    { group: GROTTO_GROUP, enemyId: 'husk', tx: 51, ty: 10 },
+    { group: GROTTO_GROUP, enemyId: 'husk', tx: 57, ty: 11 },
+    { group: GROTTO_GROUP, enemyId: 'husk', tx: 55, ty: 6 },
+    { group: GROTTO_GROUP, enemyId: 'wisp', tx: 54, ty: 9 },
   ],
 } as const;

@@ -1,7 +1,8 @@
 import { lobAmmo } from '../data/ammo';
-import { TICK_RATE } from '../data/config';
+import { TICK_RATE, TILE_SIZE } from '../data/config';
 import { damageEnemy } from './enemies';
 import type { SimState } from './state';
+import { shotSealed } from './tutorial';
 
 // Lobbed shots: a bomb arcs over everything to its target and bursts where it
 // lands. Position is the ground point. (029: no burn until the fire rune.)
@@ -78,6 +79,12 @@ export function stepBombs(state: SimState): void {
     b.x = b.fromX + (b.toX - b.fromX) * t;
     b.y = b.fromY + (b.toY - b.fromY) * t;
     b.height = 4 * ammo.arcPeak * t * (1 - t);
+    // A shut ley barrier (034) stops even a lob: the bomb drops and bursts against it.
+    if (shotSealed(state, b.roomId, Math.floor(b.x / TILE_SIZE), Math.floor(b.y / TILE_SIZE))) {
+      b.height = 0;
+      burst(state, b);
+      continue;
+    }
     state.bombs[kept++] = b;
   }
   state.bombs.length = kept;

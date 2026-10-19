@@ -1,4 +1,5 @@
 import { SPRITES } from './assets';
+import { HOLLOWS_SPRITES } from './hollowsAssets';
 import { RESEARCH_ICONS } from './researchAssets';
 import { ROUND_ICONS, STAGE_SPRITES } from './stageAssets';
 import { ROUNDS, roundBase, roundName } from './tags';
@@ -38,6 +39,8 @@ const BASE_ITEMS: Readonly<Record<string, ItemDef>> = {
   stone: { id: 'stone', name: 'Stone', kind: 'raw', group: 'raw', icon: SPRITES.itemStone },
   fiber: { id: 'fiber', name: 'Fiber', kind: 'raw', group: 'raw', icon: SPRITES.itemFiber },
   'ley-crystal': { id: 'ley-crystal', name: 'Ley crystal', kind: 'raw', group: 'raw', icon: SPRITES.itemLeyCrystal },
+  /** The first metal (034): gathered at ley-iron seams in Stonefall Hollows' cliff faces, dropped by its enemies and the Bulwark. */
+  'ley-iron': { id: 'ley-iron', name: 'Ley-iron', kind: 'raw', group: 'raw', icon: HOLLOWS_SPRITES.itemLeyIron },
   /** The frost rune's material (029), gathered at the Frozen Grotto's rime clusters. */
   'rime-shard': { id: 'rime-shard', name: 'Rime shard', kind: 'raw', group: 'raw', icon: STAGE_SPRITES.itemRimeShard },
   shaft: { id: 'shaft', name: 'Shaft', kind: 'part', group: 'parts', icon: SPRITES.itemShaft },

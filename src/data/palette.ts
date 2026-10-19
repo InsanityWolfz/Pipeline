@@ -94,6 +94,17 @@ export const DAYLIGHT_PALETTE: readonly VectorColor[] = [
   { id: 'carve-dark', hex: '#4f3b2f' },
   { id: 'carve', hex: '#6f5442' },
   { id: 'carve-light', hex: '#93745a' },
+  // Stonefall Hollows (034): grey-blue quarry stone, ley-iron, its rust and cyan veins, the Bulwark's danger red
+  { id: 'hollow-dark', hex: '#3b475c' },
+  { id: 'hollow', hex: '#5f6f88' },
+  { id: 'hollow-light', hex: '#8c9cb4' },
+  { id: 'hollow-pale', hex: '#bccadb' },
+  { id: 'iron-dark', hex: '#2f343f' },
+  { id: 'iron', hex: '#566070' },
+  { id: 'iron-light', hex: '#8a95a6' },
+  { id: 'iron-rust', hex: '#9a4b2b' },
+  { id: 'vein', hex: '#5ef2ff' },
+  { id: 'danger', hex: '#e8322f' },
   // Highlights
   { id: 'snow', hex: '#ffffff' },
   { id: 'hit-red', hex: '#ff4d4d' },
