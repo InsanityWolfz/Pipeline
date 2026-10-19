@@ -151,3 +151,13 @@ The player earns XP by fighting and exploring: kills (more in outer rings and fr
 
 ## Open questions
 None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).
+
+## Raised after the build (for Shaun at playtest)
+- **Shatterpoint's ice shards are physical.** The spec says only "4 ice shards for 50% damage". Making them cold would chill, and with Rimecraft freeze, nearby enemies, which the next ley bolt shatters again: a self-feeding chain. Cold is a one-line data change if Shaun wants it.
+- **Boss refight XP** (50%) comes only from an altar summon. Killing the Warden again after a KO gives no boss XP.
+- **Choices the spec didn't make:**
+  - the Blastfletch charged burst hits for the charged arrow's damage
+  - Rimecraft's +0.5 s also lengthens a boss's freeze
+  - Fleet's move speed can go past the gear move cap
+  - fire-rate bonuses round to whole ticks, so +8% is +7% on arrows, +5% on ley bolts and +8% on bombs
+- **Art:** lane colours, the tree art and the new sounds wait on Shaun's approval (docs/review/037).
