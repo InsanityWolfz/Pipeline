@@ -35,14 +35,14 @@ test.describe('review screenshots (038)', () => {
       g.step(1, { selectAmmo: 'landmine' });
       // The first is thrown 200 ticks before the second, so it shows in its red last second as the second fills.
       g.step(1, { fire: true, aimX: at.x + 90, aimY: at.y - 30 });
-      g.step(220);
+      g.step(200);
       g.step(1, { fire: true, aimX: at.x - 90, aimY: at.y + 20 });
-      g.step(110);
+      g.step(75);
     }, p);
     await expect.poll(async () => (await ui(page))?.mines.armed.length).toBe(2);
     const armed = (await ui(page))?.mines.armed ?? [];
     expect(armed.some((m) => m.late)).toBe(true);
-    expect(armed.some((m) => !m.late && m.progress > 0.2)).toBe(true);
+    expect(armed.some((m) => !m.late && m.progress > 0.1)).toBe(true);
     await page.screenshot({ path: `${SHOTS}/01-armed-mines.png` });
   });
 
@@ -146,6 +146,10 @@ test.describe('review screenshots (038)', () => {
       return [...busy];
     });
     expect(working.sort()).toEqual(['mine-packer', 'plate-press', 'shard-die']);
+    // The schematic banners from banking on the way in, played out fast so none covers the line.
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
+    await expect.poll(async () => (await ui(page))?.schematics.bannerIdle, { timeout: 20_000 }).toBe(true);
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
     await cameraSettled(page, 20_000);
     await page.screenshot({ path: `${SHOTS}/06-machines.png` });
   });
@@ -155,6 +159,6 @@ test.describe('review screenshots (038)', () => {
     const row = (title: string) => page.locator('h2', { hasText: title }).locator('xpath=following-sibling::div[1]');
     await expect(row('Landmines and cluster bombs (038)')).toBeVisible();
     await row('Landmines and cluster bombs (038)').screenshot({ path: `${SHOTS}/07-sheet-mines.png` });
-    for (const [i, id] of ['plate-press', 'mine-packer', 'shard-die'].entries()) await row(`Machine: ${id} `).screenshot({ path: `${SHOTS}/0${8 + i}-sheet-${id}.png` });
+    for (const [i, id] of ['plate-press', 'mine-packer', 'shard-die'].entries()) await row(`Machine: ${id} `).screenshot({ path: `${SHOTS}/${String(8 + i).padStart(2, '0')}-sheet-${id}.png` });
   });
 });
