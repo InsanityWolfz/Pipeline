@@ -203,7 +203,7 @@ describe('the factory', () => {
     expect(supplied).toBeGreaterThan(0);
     expect(seen.every((n) => n === 0)).toBe(true);
     expect([s.level, s.xp, s.talentPoints]).toEqual([1, 0, 0]);
-  });
+  }, 20_000); // A long scenario (3600 ticks on the full map): about 3 s on a quiet machine, before and after 039, so 5 s is too tight under load.
 });
 
 describe('levels', () => {
