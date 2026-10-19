@@ -16,8 +16,10 @@ import { PickupFeed } from './PickupFeed';
 import { shownKey } from './itemShown';
 import { TubeSlotView, type TubeSlotState } from './TubeSlotView';
 import { BossBar, type BossBarShown } from './BossBar';
-import { NO_TALENT_PANEL, TalentPanel, type TalentPanelState } from './TalentPanel';
+import { NO_TALENT_PANEL, TalentPanel, type TalentPanelState, type TalentTabState } from './TalentPanel';
 import type { TipHit } from './tipTypes';
+import type { BuildTabState } from './BuildTab';
+import type { ChipId } from '../data/legibility';
 
 /** The bottom HUD as drawn (025), for `ui().hud`: the hotbar row's rect and whether it shows, and the tube slot. */
 export interface BottomHudState {
@@ -37,6 +39,9 @@ export interface HudPanelsState {
   bossBar: BossBarShown;
   /** 037: the tree panel (T). */
   talents: TalentPanelState;
+  /** 040: the T panel's tab, and the Build tab's rows while it shows. */
+  talentPanel: TalentTabState;
+  buildTab: BuildTabState;
 }
 
 /** The 031 part of `ui()` before the scene has built its views. */
@@ -47,6 +52,8 @@ export const NO_HUD_PANELS: HudPanelsState = {
   health: { box: { x: 0, y: 0, w: 0, h: 0 }, text: '', low: false, healing: false, chunk: 0, xp: { text: '', fill: 0, pip: false, tick: 0, bar: { x: 0, y: 0, w: 0, h: 0 } } },
   bossBar: null,
   talents: NO_TALENT_PANEL,
+  talentPanel: { open: false, tab: 'talents', tabs: [], panel: { x: 0, y: 0, w: 0, h: 0 } },
+  buildTab: { rows: [] },
 };
 
 const inBox = (b: ScreenBox, x: number, y: number): boolean => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h;
@@ -94,6 +101,11 @@ export class HudView {
     return this.talents.tipAt(x, y) ?? this.inventory.tipAt(x, y) ?? this.tubeSlot.tipAt(x, y) ?? this.hotbar.tipAt(x, y);
   }
 
+  /** A Build tab row's chip under a view point (040). */
+  chipAt(x: number, y: number): ChipId | null {
+    return this.talents.chipAt(x, y);
+  }
+
   /** A screen point on any part of the HUD or the open inventory panel: a press there never fires (015). */
   overUi(x: number, y: number): boolean {
     const parts = [this.tubeSlot.box, this.health.box, ...this.feed.boxes];
@@ -108,7 +120,7 @@ export class HudView {
 
   /** The inventory panel, pickup feed and HP bar as drawn (031), for the test hook. */
   get panels(): HudPanelsState {
-    return { inventory: this.inventory.shown, researchList: this.research.shown, pickupFeed: this.feed.shown, health: this.health.shown, bossBar: this.boss.shown, talents: this.talents.shown };
+    return { inventory: this.inventory.shown, researchList: this.research.shown, pickupFeed: this.feed.shown, health: this.health.shown, bossBar: this.boss.shown, talents: this.talents.shown, talentPanel: this.talents.tabState, buildTab: this.talents.buildRows };
   }
 
   /**

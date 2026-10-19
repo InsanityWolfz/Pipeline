@@ -193,6 +193,9 @@ export interface UiState {
   mines: MinesShown;
   /** 040: the hover tablet (its source, summary or breakdown, chips by keyword, lines and box), the glossary entry, and the enemy hover name's chips. */
   tip: LegibilityUi['tip'];
+  /** 040: the T panel's tab (Talents or Build), and the Build tab's rows (each round's chips, final damage, shots/s and sources). */
+  talentPanel: HudPanelsState['talentPanel'];
+  buildTab: HudPanelsState['buildTab'];
   glossary: LegibilityUi['glossary'];
   hoverChips: string[];
 }

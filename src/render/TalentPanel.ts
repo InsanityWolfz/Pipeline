@@ -1,5 +1,5 @@
 import { BlendModes, type GameObjects, type Scene } from 'phaser';
-import { DEPTHS, SPRITES } from '../data/assets';
+import { DEPTHS } from '../data/assets';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { KEYSTONE_ICONS, LANE_ICONS, TALENT_PANEL, TALENT_SPRITES, talentHeader } from '../data/talentAssets';
 import { LANE_COLORS, TALENT_LIST, TALENTS, type TalentDef } from '../data/talents';
@@ -13,6 +13,9 @@ import { drawTablet } from './tablet';
 import { onRect, talentAt, talentPanelLayout } from './talentLayout';
 import { TextLine } from './textLine';
 import type { TipHit } from './tipTypes';
+import type { ChipId, TalentTab } from '../data/legibility';
+import { BuildTab, type BuildTabState } from './BuildTab';
+import { TalentTabs } from './TalentTabs';
 import { addVector } from './vector/textures';
 
 export type TalentNodeState = 'taken' | 'available' | 'dim';
@@ -29,6 +32,15 @@ export interface TalentPanelState {
 }
 
 export const NO_TALENT_PANEL: TalentPanelState = { open: false, header: '', nodes: [], hover: null, reset: null, glowingLinks: 0 };
+
+/** 040: which tab the panel shows, for `ui().talentPanel`. */
+export interface TalentTabState {
+  open: boolean;
+  tab: TalentTab;
+  /** The tabs on the title card, view px, and the panel's box (it moves left in the Build tab). */
+  tabs: { id: TalentTab; box: ScreenBox }[];
+  panel: ScreenBox;
+}
 
 /** What a click on the panel asks for. */
 export type TalentClick = { take: string } | { respec: true } | { none: true };
@@ -57,11 +69,17 @@ function looksOf(def: TalentDef): { stone: string; icon: string | null; scale: n
 // rest are dim; links between taken nodes glow; keystones are larger rune-stones. The
 // header shows the level, XP and unspent points; hovering a node shows its name and
 // effect; clicking a lit node takes it; "Reset talents (free)" shows only in the
-// foundry. It never pauses the game. Esc or T closes it.
+// foundry. It never pauses the game. Esc or T closes it. 040: its title card's tabs switch
+// between the tree and the Build tab, which it remembers while the game runs; a hovered
+// node's summary is the legibility tablet, docked in the info area.
 export class TalentPanel {
   private open = false;
-  private readonly layout = talentPanelLayout();
-  private readonly frame: { setVisible(visible: boolean): unknown }[] = [];
+  /** Each tab's layout: the Build tab moves the panel left so a breakdown fits beside it (040). */
+  private readonly layouts = { talents: talentPanelLayout('talents'), build: talentPanelLayout('build') };
+  private tab: TalentTab = 'talents';
+  private readonly tablet: GameObjects.Graphics;
+  private readonly tabs: TalentTabs;
+  private readonly buildTab: BuildTab;
   private readonly links: GameObjects.Graphics;
   private readonly nodes: NodeView[] = [];
   private readonly header: TextLine;
@@ -74,18 +92,16 @@ export class TalentPanel {
 
   constructor(scene: Scene) {
     const P = TALENT_PANEL;
-    const L = this.layout;
+    const L = this.layouts.talents;
     const depth = DEPTHS.menu;
     const text = (x: number, y: number, style: 'body' | 'display' | 'title' | 'label' = 'body') => new TextLine(scene, x, y, depth + 3, false, style);
     const fixed = <T extends GameObjects.Components.ScrollFactor & GameObjects.Components.Depth>(o: T, d: number): T => {
       o.setScrollFactor(0).setDepth(d);
       return o;
     };
-    const tablet = fixed(scene.add.graphics(), depth);
-    drawTablet(tablet, L.panel.x, L.panel.y, L.panel.w, L.panel.h);
-    const card = fixed(addVector(scene, L.title.x, L.title.y, SPRITES.inventoryTitle).setOrigin(0), depth);
-    const title = text(0, L.title.y + P.title.titleY, 'title').set(P.title.text);
-    title.moveTo(Math.round(L.title.x + (L.title.w - title.width) / 2), L.title.y + P.title.titleY);
+    this.tablet = fixed(scene.add.graphics(), depth);
+    this.tabs = new TalentTabs(scene, depth);
+    this.buildTab = new BuildTab(scene, depth + 1);
     this.links = fixed(scene.add.graphics(), depth + 1);
     this.header = text(L.header.x, L.header.y);
     this.hint = text(L.hint.x, L.hint.y, 'label').set(P.hint).setFill(P.colors.dim);
@@ -93,7 +109,6 @@ export class TalentPanel {
     drawTablet(this.resetBox, L.reset.x, L.reset.y, L.reset.w, L.reset.h);
     this.resetText = text(0, L.reset.y + P.reset.textY, 'label').set(P.reset.text);
     this.resetText.moveTo(Math.round(L.reset.x + (L.reset.w - this.resetText.width) / 2), L.reset.y + P.reset.textY);
-    this.frame.push(tablet, card, title, this.links, this.header, this.hint);
     for (const spot of L.nodes) {
       const def = TALENTS[spot.id];
       if (!def) continue;
@@ -119,20 +134,50 @@ export class TalentPanel {
     return this.state;
   }
 
+  /** The open tab's layout. */
+  private get layout() {
+    return this.layouts[this.tab];
+  }
+
+  /** Which tab shows (040). */
+  get tabState(): TalentTabState {
+    return { open: this.open, tab: this.tab, tabs: this.layout.tabs.map((t) => ({ id: t.id, box: { ...t.box } })), panel: { ...this.layout.panel } };
+  }
+
+  /** The Build tab's rows while it shows (040). */
+  get buildRows(): BuildTabState {
+    return this.buildTab.state;
+  }
+
   setOpen(open: boolean): void {
     this.open = open;
-    for (const o of this.frame) o.setVisible(open);
-    for (const v of this.nodes) for (const o of [v.halo, v.ring, v.stone, v.icon]) o?.setVisible(open);
-    if (!open) {
-      this.hovered = null;
+    this.showParts();
+    if (!open) this.hovered = null;
+  }
+
+  /** Shows what the open tab draws: the frame always, the tree's parts in the Talents tab (the Build tab draws its own). */
+  private showParts(): void {
+    const tree = this.open && this.tab === 'talents';
+    for (const o of [this.tablet, this.header]) o.setVisible(this.open);
+    this.tabs.setVisible(this.open);
+    for (const o of [this.links, this.hint]) o.setVisible(tree);
+    for (const v of this.nodes) for (const o of [v.halo, v.ring, v.stone, v.icon]) o?.setVisible(tree);
+    if (!tree) {
       this.resetBox.setVisible(false);
       this.resetText.setVisible(false);
     }
   }
 
-  /** The node under the pointer, for the hover text (view px). */
+  /** The node under the pointer, for the hover text (view px); a tab or a Build tab row lights. */
   pointAt(x: number, y: number): void {
-    this.hovered = this.open ? talentAt(this.layout, x, y) : null;
+    this.hovered = this.open && this.tab === 'talents' ? talentAt(this.layout, x, y) : null;
+    if (this.open) this.tabs.pointAt(this.layout, x, y);
+    this.buildTab.pointAt(x, y);
+  }
+
+  /** A Build tab row's chip under a view point (040: it opens its glossary entry). */
+  chipAt(x: number, y: number): ChipId | null {
+    return this.open && this.tab === 'build' ? this.buildTab.chipAt(x, y) : null;
   }
 
   /** A view point on the open panel: a press there never fires (015). */
@@ -143,6 +188,14 @@ export class TalentPanel {
   /** A click: an available node asks to take it; the reset button (in the foundry) asks for a respec. */
   click(x: number, y: number): TalentClick | null {
     if (!this.open) return null;
+    const tab = this.tabs.tabAt(this.layout, x, y);
+    if (tab) {
+      this.tab = tab;
+      this.hovered = null;
+      this.showParts();
+      return { none: true };
+    }
+    if (this.tab === 'build') return this.overUi(x, y) ? { none: true } : null;
     if (this.inFoundry && onRect(this.layout.reset, x, y)) return { respec: true };
     const id = talentAt(this.layout, x, y);
     const node = this.state.nodes.find((n) => n.id === id);
@@ -155,6 +208,7 @@ export class TalentPanel {
    * away from the node, growing up.
    */
   tipAt(x: number, y: number): TipHit | null {
+    if (this.open && this.tab === 'build') return this.buildTab.tipAt(x, y);
     const id = this.open ? talentAt(this.layout, x, y) : null;
     const spot = this.layout.nodes.find((n) => n.id === id);
     if (!id || !spot) return null;
@@ -186,7 +240,7 @@ export class TalentPanel {
         const taken = sa === 'taken' && sb === 'taken';
         const open = !taken && (sa === 'taken' || sb === 'taken');
         if (taken) glowing += 1;
-        if (!this.open) continue;
+        if (!this.open || this.tab !== 'talents') continue;
         if (taken) g.lineStyle(P.linkWidth.glow, colorOf(P.colors.linkTaken), P.alpha.glow).lineBetween(a.x, a.y, b.x, b.y);
         // Untaken links in their lane's colour: the start's take the lane they lead into, a keystone's the lane they come from.
         const lane = LANE_COLORS[(t.kind === 'start' ? TALENTS[l] : t)?.lane ?? 'centre'];
@@ -202,8 +256,13 @@ export class TalentPanel {
       reset: this.open && this.inFoundry ? { ...L.reset } : null,
       glowingLinks: glowing,
     };
+    this.buildTab.update(sim, this.open && this.tab === 'build' ? L.panel : null);
     if (!this.open) return;
-    this.header.set(header);
+    this.tablet.clear();
+    drawTablet(this.tablet, L.panel.x, L.panel.y, L.panel.w, L.panel.h);
+    this.tabs.draw(L, this.tab);
+    this.header.set(header).moveTo(L.header.x, L.header.y);
+    if (this.tab !== 'talents') return;
     for (const v of this.nodes) {
       const s = states.get(v.def.id) ?? 'dim';
       v.halo.setVisible(s === 'taken');

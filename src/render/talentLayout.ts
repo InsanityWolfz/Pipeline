@@ -1,4 +1,5 @@
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
+import { BUILD_TAB, TALENT_TABS, TIP, type TalentTab } from '../data/legibility';
 import { TALENT_PANEL } from '../data/talentAssets';
 import { TALENT_LIST, type TalentDef } from '../data/talents';
 import type { ScreenRect } from './foundryLayout';
@@ -26,20 +27,29 @@ export interface TalentPanelLayout {
   reset: ScreenRect;
   /** The hint's top-left, bottom left beside the reset button. */
   hint: { x: number; y: number };
+  /** The tabs on the title card (040): Talents and Build. */
+  tabs: { id: TalentTab; text: string; box: ScreenRect }[];
 }
 
 /** A node's drawn diameter by its kind. */
 export const nodeSize = (t: Pick<TalentDef, 'kind'>): number => TALENT_PANEL.size[t.kind];
 
-/** The panel centred on screen under its title card, the constellation centred across it. */
-export function talentPanelLayout(): TalentPanelLayout {
+/**
+ * The panel under its title card, the constellation centred across it: centred on screen, or in the Build tab (040)
+ * moved left so a round's breakdown fits beside it, the two centred together.
+ */
+export function talentPanelLayout(tab: TalentTab = 'talents'): TalentPanelLayout {
   const P = TALENT_PANEL;
   const top = Math.round((VIEW_HEIGHT - (P.title.h + P.title.gap + P.h)) / 2);
-  const x = Math.round((VIEW_WIDTH - P.w) / 2);
+  const x = Math.round((VIEW_WIDTH - (tab === 'build' ? P.w + BUILD_TAB.breakdownGap + TIP.breakdownW : P.w)) / 2);
   const y = top + P.title.h + P.title.gap;
   const centre = { x: x + P.w / 2, y: y + P.constellationY };
+  const title = { x: Math.round(x + (P.w - P.title.w) / 2), y: top, w: P.title.w, h: P.title.h };
+  const T = TALENT_TABS;
+  const tabsX = title.x + Math.round((title.w - (T.tabs.length * T.w + (T.tabs.length - 1) * T.gap)) / 2);
   return {
-    title: { x: Math.round((VIEW_WIDTH - P.title.w) / 2), y: top, w: P.title.w, h: P.title.h },
+    tabs: T.tabs.map((t, i) => ({ id: t.id, text: t.text, box: { x: tabsX + i * (T.w + T.gap), y: top + T.y, w: T.w, h: T.h } })),
+    title,
     panel: { x, y, w: P.w, h: P.h },
     header: { x: x + P.pad, y: y + P.header.y },
     centre,
