@@ -131,7 +131,7 @@ export class InventoryPanel {
       show(v.icon, v.name);
       return;
     }
-    const item = itemDef(row.itemId);
+    const item = row.label ?? itemDef(row.itemId);
     v.icon.setFrame(item.icon);
     v.name.set(item.name).setFill();
     v.count.set(String(row.count)).moveTo(x + R.count.x, y + R.count.y);

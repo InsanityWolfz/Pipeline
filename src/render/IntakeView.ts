@@ -2,7 +2,8 @@ import { BlendModes, type GameObjects, type Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { CAP_SEAT_Y, ENTRANCE_GAUGE_COLORS, INTAKE_INLETS, INTAKE_LOOK } from '../data/art/intake';
 import { TILE_SIZE } from '../data/config';
-import { ENTRANCE_CAP, INTAKE } from '../data/foundry';
+import { INTAKE } from '../data/foundry';
+import { entranceCap } from '../sim/research';
 import { FACING_ARROWS, FOUNDRY_LAYOUT, INTAKE_SPRITES } from '../data/foundryAssets';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { attuneBeat } from './attune';
@@ -19,7 +20,7 @@ import { addVector, showFrame } from './vector/textures';
 // its ammo's colour, and a ring of light running up into the wall as each item
 // goes in, and a ring up an entrance's own gauge column each time it fires (028),
 // so a mixed volley shows firing out of step. A brass cap sits over each capped
-// side entrance until a warden core opens it, when it lifts off with a ring of
+// side entrance until it's restored (033), when it lifts off with a ring of
 // light. In build mode, an input arrow under each open entrance.
 
 const AT = intakeAnchor();
@@ -81,7 +82,7 @@ export class IntakeView {
     this.pulses = this.pulses.map((ms) => ms + deltaMs).filter((ms) => ms < INTAKE.pulseMs);
     this.fires.push(...events.entranceFires.map((f) => ({ ...f, ms: 0 })));
     this.fires = this.fires.map((f) => ({ ...f, ms: f.ms + deltaMs })).filter((f) => f.ms < INTAKE_LOOK.firePulse.ms);
-    for (const open of events.intakeOpens) for (const entrance of open.entrances) this.liftCap(entrance);
+    for (const open of events.intakeOpens) this.liftCap(open.entrance);
     this.lifts = this.lifts.filter((l) => !l.done);
     this.placeCaps(entrances, here);
     this.lights.clear();
@@ -94,7 +95,8 @@ export class IntakeView {
     const bands = INTAKE_LOOK.bands.ys.length;
     showFrame(this.pipe, progress >= 1 ? INTAKE_SPRITES.attuned : INTAKE_SPRITES.dormant);
     this.drawBands(progress >= 1 ? bands : Math.floor(progress * (bands + 1)));
-    if (attuned) for (const [i, e] of entrances.entries()) this.drawGauge(i, e);
+    const cap = entranceCap(sim);
+    if (attuned) for (const [i, e] of entrances.entries()) this.drawGauge(i, e, cap);
     for (const ms of this.pulses) this.drawPulse(ms / INTAKE.pulseMs);
     for (const f of this.fires) this.drawFirePulse(f.entrance, f.ammoId, f.ms / INTAKE_LOOK.firePulse.ms);
     for (const l of this.lifts) this.drawLiftRing(l.entrance, l.t);
@@ -139,10 +141,10 @@ export class IntakeView {
   }
 
   /** Entrance `i`'s gauge column: rings lit from the bottom in proportion to its count, in its ammo's colour. A capped entrance's stays dark. */
-  private drawGauge(i: number, e: EntranceState): void {
+  private drawGauge(i: number, e: EntranceState, cap: number): void {
     const g = INTAKE_LOOK.gauge;
     const x = AT.x + (g.xs[i] ?? 0);
-    const lit = Math.round((INTAKE.gaugeRings * e.count) / ENTRANCE_CAP);
+    const lit = Math.round((INTAKE.gaugeRings * e.count) / cap);
     const color = colorOf(ENTRANCE_GAUGE_COLORS[e.ammoId ?? ''] ?? g.dark);
     for (let r = 0; r < INTAKE.gaugeRings; r++) {
       const y = AT.y + g.bottom - r * g.step;

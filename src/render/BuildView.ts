@@ -9,7 +9,8 @@ import {
   machineLook,
 } from '../data/foundryAssets';
 import { BUILD_BAR_LAYOUT, BUILD_PULSE, GHOST } from '../data/hudLayout';
-import { BUILD_BAR, pieceDef } from '../data/pieces';
+import { BUILD_BAR, isFlatKind, pieceDef } from '../data/pieces';
+import { mergerLook, splitterLook } from './flatPieces';
 import { pieceRect, type PlaceFail, type Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { colorOf } from './color';
@@ -174,11 +175,15 @@ export class BuildView {
       // A sorter's ghost shows which side its item will leave by; F flips it (015).
       const look = sorterLook(facing, mirrored);
       showFrame(this.ghost, animFrames(look.anim)[0] ?? '').setFlip(look.flipX, look.flipY);
+    } else if (def.kind === 'splitter' || def.kind === 'merger') {
+      // 033: the splitter's ghost shows its side too, which F flips.
+      const look = def.kind === 'splitter' ? splitterLook(facing, mirrored) : mergerLook(facing);
+      showFrame(this.ghost, look.frame).setFlip(look.flipX, look.flipY);
     } else {
       const flip = def.kind === 'conduit' ? conduitLook(facing, inFrom).flip : facing === 'left';
       showFrame(this.ghost, bodyFrame(pieceId, facing, inFrom)).setFlip(flip, false);
     }
-    if (def.kind === 'conduit' || def.kind === 'sorter') this.ghost.setOrigin(0).setPosition(r.x - TILE_SIZE / 2, r.y - TILE_SIZE / 2);
+    if (isFlatKind(def.kind)) this.ghost.setOrigin(0).setPosition(r.x - TILE_SIZE / 2, r.y - TILE_SIZE / 2);
     else this.ghost.setOrigin(0.5, 1).setPosition(r.x, bottom);
     const tint = colorOf(canPlace(pieceId, cursor.tx, cursor.ty, facing) ? GHOST.badTint : GHOST.okTint);
     this.ghost.setTint(tint);

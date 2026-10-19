@@ -2,7 +2,7 @@ import type { Scene } from 'phaser';
 import { UNIDENTIFIED_ARMOR } from '../data/armor';
 import { SPRITES } from '../data/assets';
 import { SITE_ICONS } from '../data/foundryAssets';
-import { itemDef, ITEMS } from '../data/items';
+import { ITEMS } from '../data/items';
 import { claimedPylonInReach, claimedPylons, fixtureInReach } from '../sim/claims';
 import { usableInReach } from '../sim/foundryUse';
 import type { SimState } from '../sim/state';
@@ -10,6 +10,7 @@ import { ChoiceMenu, type Choice } from './ChoiceMenu';
 import type { Controls } from './controls';
 import { pieceIcon } from './foundryLayout';
 import { StagePanel, type StagePanelState } from './StagePanel';
+import { shownItem } from './itemShown';
 import { stagePanelLayout } from './stagePanelLayout';
 import { stagesKnown } from '../sim/stages';
 import type { UiState } from './testHook';
@@ -137,7 +138,7 @@ export class SiteMenus {
       total > 0
         ? [
             { icons: [SITE_ICONS.stash], text: `Take all (${total})`, value: { itemId: null } },
-            ...stacks.map((id) => ({ icons: [itemDef(id).icon], text: `${itemDef(id).name} ${sim.stash[id] ?? 0}`, value: { itemId: id } })),
+            ...stacks.map((id) => ({ icons: [shownItem(sim, id).icon], text: `${shownItem(sim, id).name} ${sim.stash[id] ?? 0}`, value: { itemId: id } })),
           ]
         : [];
     this.stash.show(stashRows);
@@ -161,7 +162,10 @@ export class SiteMenus {
     if (this.sorter.isOpen && usableInReach(sim)?.id !== this.sorterId) this.sorter.close();
     const sorterRows: Choice<SorterChoice>[] = [
       { icons: [pieceIcon('sorter')], text: 'Clear', value: { itemId: null } },
-      ...Object.keys(ITEMS).map((id) => ({ icons: [itemDef(id).icon], text: itemDef(id).name, value: { itemId: id } })),
+      // Schematics are left out (033): their names would give away which node an unknown one reveals.
+      ...Object.values(ITEMS)
+        .filter((it) => it.kind !== 'schematic')
+        .map((it) => ({ icons: [it.icon], text: it.name, value: { itemId: it.id } })),
     ];
     this.sorter.show(sorterRows);
     if (this.waystone.isOpen && !fixtureInReach(sim, 'waystone')) this.waystone.close();

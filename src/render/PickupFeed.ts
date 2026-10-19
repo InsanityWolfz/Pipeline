@@ -1,8 +1,7 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, SPRITES } from '../data/assets';
 import { PICKUP_FEED } from '../data/hudPanels';
-import { itemDef } from '../data/items';
-import type { PickupEvent } from '../sim/events';
+import { keyLook } from './itemShown';
 import type { ScreenBox } from './bottomHud';
 import { addPickup, ageFeed, lineAlpha, type FeedLine } from './pickupFeedModel';
 import { drawTablet } from './tablet';
@@ -44,10 +43,10 @@ export class PickupFeed {
     return this.lines.map((_, i) => ({ x: F.x, y: F.y + i * F.lineStep, w: F.width, h: F.lineStep }));
   }
 
-  /** `pickups` since the last frame join the feed; the lines age `dtMs`. */
-  update(pickups: readonly PickupEvent[], dtMs: number): void {
+  /** Pickups since the last frame join the feed, by the key each shows under (033: unknown schematics share one); the lines age `dtMs`. */
+  update(pickups: readonly string[], dtMs: number): void {
     this.lines = ageFeed(this.lines, dtMs);
-    for (const p of pickups) this.lines = addPickup(this.lines, p.itemId);
+    for (const key of pickups) this.lines = addPickup(this.lines, key);
     this.draw();
   }
 
@@ -59,7 +58,7 @@ export class PickupFeed {
       slot.icon.setVisible(line !== undefined);
       slot.text.setVisible(line !== undefined);
       if (!line) return;
-      const item = itemDef(line.itemId);
+      const item = keyLook(line.itemId);
       const y = F.y + i * F.lineStep;
       const alpha = lineAlpha(line);
       slot.icon.setFrame(item.icon).setPosition(F.x + F.icon.x, y + F.icon.y).setAlpha(alpha);

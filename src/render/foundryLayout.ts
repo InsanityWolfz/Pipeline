@@ -186,6 +186,15 @@ export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing:
       { kind: 'sort', tx: p.tx, ty: p.ty, edge: side, points: side },
     ];
   }
+  // A splitter (033) takes from its back and hands out of its front and its side in turn.
+  if (kind === 'splitter') {
+    const side = sortSideOf(p.facing, p.mirrored ?? false);
+    return [
+      { kind: 'in', tx: p.tx, ty: p.ty, edge: opposite(p.facing), points: p.facing },
+      { kind: 'out', tx: p.tx, ty: p.ty, edge: p.facing, points: p.facing },
+      { kind: 'out', tx: p.tx, ty: p.ty, edge: side, points: side },
+    ];
+  }
   // A conduit shows its flow; since 013 it also marks the one side it takes items from.
   if (kind === 'conduit') {
     const edge = p.inFrom ?? opposite(p.facing);

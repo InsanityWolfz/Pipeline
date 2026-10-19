@@ -1,6 +1,8 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, GROUND_ITEM_LIFT, SPRITES } from '../data/assets';
 import { ITEMS } from '../data/items';
+import type { SimState } from '../sim/state';
+import { shownItem } from './itemShown';
 import { PICKUP_SLIDE } from '../data/juice';
 import type { GroundItem } from '../sim/drops';
 import { addVector } from './vector/textures';
@@ -25,8 +27,8 @@ export class GroundItemView {
     this.scene = scene;
   }
 
-  /** `picked` holds the ids of items picked up since the last draw; `player` is where the player stands. */
-  update(items: readonly GroundItem[], picked: ReadonlySet<number>, player: { x: number; y: number }): void {
+  /** `picked` holds the ids of items picked up since the last draw; `player` is where the player stands. A schematic shows as unknown until banked (033). */
+  update(items: readonly GroundItem[], picked: ReadonlySet<number>, player: { x: number; y: number }, sim: Pick<SimState, 'research'>): void {
     this.player = { x: player.x, y: player.y };
     const live = new Set<number>();
     for (const g of items) {
@@ -38,7 +40,7 @@ export class GroundItemView {
       const y = Math.round(g.y);
       this.drawn.set(g.id, {
         shadow: addVector(this.scene, x, y, SPRITES.itemShadow).setDepth(DEPTHS.shadow),
-        item: addVector(this.scene, x, y + GROUND_ITEM_LIFT, def.icon).setOrigin(0.5, 1).setDepth(y),
+        item: addVector(this.scene, x, y + GROUND_ITEM_LIFT, shownItem(sim, def.id).icon).setOrigin(0.5, 1).setDepth(y),
       });
     }
     for (const [id, d] of this.drawn) {

@@ -3,7 +3,6 @@ import { DEPTHS } from '../data/assets';
 import { READOUT_LAYOUT } from '../data/hudLayout';
 import { INTAKE_CAP_ICON, INTAKE_EMPTY_ICON } from '../data/foundryAssets';
 import { ammoDef } from '../data/ammo';
-import { ENTRANCE_CAP } from '../data/foundry';
 import { CAPPED_LABEL } from '../data/objectives';
 import { itemDef } from '../data/items';
 import { RECIPES } from '../data/recipes';
@@ -35,11 +34,11 @@ export function machineLines(m: MachineState): Line[] {
  * The intake's lines (019, 024), one per entrance west to east: its ammo (the tube emblem when empty) and its
  * count out of the cap, or the cap emblem and "capped" while it's shut.
  */
-export function intakeLines(entrances: readonly EntranceState[]): Line[] {
+export function intakeLines(entrances: readonly EntranceState[], cap: number): Line[] {
   return entrances.map((e): Line => {
     if (!e.open) return [INTAKE_CAP_ICON, CAPPED_LABEL];
     const icon = e.ammoId ? itemDef(ammoDef(e.ammoId).itemId).icon : INTAKE_EMPTY_ICON;
-    return [icon, `${e.count}/${ENTRANCE_CAP}`];
+    return [icon, `${e.count}/${cap}`];
   });
 }
 

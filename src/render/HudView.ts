@@ -12,6 +12,7 @@ import { HealthBar, type HealthShown } from './HealthBar';
 import { HotbarView } from './HotbarView';
 import { InventoryPanel, type InventoryShown } from './InventoryPanel';
 import { PickupFeed } from './PickupFeed';
+import { shownKey } from './itemShown';
 import { TubeSlotView, type TubeSlotState } from './TubeSlotView';
 
 /** The bottom HUD as drawn (025), for `ui().hud`: the hotbar row's rect and whether it shows, and the tube slot. */
@@ -93,7 +94,7 @@ export class HudView {
     const input = { health: p.health, max: MAX_HEALTH, healing: p.healing !== null, dying: p.dying > 0, worn: worn(sim) };
     this.health.update(input, building ? buildBarBox(unlockedPieces(sim)) : null, dt);
     this.edges.update(this.health.shown.low, this.health.pulse);
-    this.feed.update(events.pickups, dt);
+    this.feed.update(events.pickups.map((p) => shownKey(sim, p.itemId)), dt);
     // A KO closes the panel: the wake panel takes the screen (and the panel can't open again while it shows).
     if (events.ko) this.inventory.setOpen(false);
     this.inventory.update(sim);

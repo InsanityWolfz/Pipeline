@@ -28,6 +28,7 @@ import { registerAnim } from './anims';
 import { arrowSpots, conduitLook, pieceIcon, sorterLook } from './foundryLayout';
 import { TextLine } from './textLine';
 import { addVector, addVectorSprite, textureScale } from './vector/textures';
+import { mergerLook, riderAt, splitterLook } from './flatPieces';
 
 export const viewOf = (f: Facing): PieceView => (f === 'up' || f === 'down' ? f : 'side');
 
@@ -64,6 +65,8 @@ function firstFrame(p: PieceState): string {
   if (p.kind === 'conduit') return animFrames(conduitLook(p.facing, p.inFrom).anim)[0] ?? '';
   if (p.kind === 'sorter') return animFrames(sorterLook(p.facing, p.mirrored).anim)[0] ?? '';
   if (p.kind === 'machine') return machineLook(p.pieceId, view).idle;
+  if (p.kind === 'splitter') return splitterLook(p.facing, p.mirrored).frame;
+  if (p.kind === 'merger') return mergerLook(p.facing).frame;
   return p.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE;
 }
 
@@ -162,6 +165,11 @@ export class FoundryView {
       d.body.setFlip(look.flipX, look.flipY).play(look.anim.key);
       d.icon.setDepth(FOUNDRY_LAYOUT.itemDepth);
       d.slot = addVector(this.scene, r.x, r.y, pieceIcon(p.pieceId)).setScale(SORTER_LOOK.slotScale / textureScale()).setDepth(FOUNDRY_LAYOUT.conduitDepth + FOUNDRY_LAYOUT.onTopNudge);
+    } else if (p.kind === 'splitter' || p.kind === 'merger') {
+      // 033: flat like the sorter, still (no flow animation), the riding item drawn as on a conduit.
+      const look = p.kind === 'splitter' ? splitterLook(p.facing, p.mirrored) : mergerLook(p.facing);
+      d.body.setOrigin(0.5).setPosition(r.x, r.y).setDepth(FOUNDRY_LAYOUT.conduitDepth).setFlip(look.flipX, look.flipY);
+      d.icon.setDepth(FOUNDRY_LAYOUT.itemDepth);
     } else {
       d.body.setFrame(p.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE);
       d.icon.setPosition(r.x, bottom - FOUNDRY_LAYOUT.contentsRise).setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge);
@@ -175,7 +183,12 @@ export class FoundryView {
     if (p.kind === 'conduit') this.drawConduit(p, d);
     else if (p.kind === 'sorter') this.drawSorter(p, d);
     else if (p.kind === 'machine') this.drawMachine(p, d);
-    else {
+    else if (p.kind === 'splitter' || p.kind === 'merger') {
+      d.icon.setVisible(p.item !== null);
+      if (!p.item) return;
+      const at = riderAt(p);
+      d.icon.setFrame(itemDef(p.item).icon).setPosition(at.x, at.y - FOUNDRY_LAYOUT.itemLift);
+    } else {
       const items = p.kind === 'hopper' ? (p.item ? { [p.item]: p.count } : {}) : p.contents;
       const first = Object.entries(items).find(([, n]) => n > 0);
       const total = Object.values(items).reduce((a, b) => a + b, 0);

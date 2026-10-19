@@ -1,3 +1,4 @@
+import { shownItem } from './itemShown';
 import { TILE_SIZE } from '../data/config';
 import { DESCRIPTIONS, portHover, portPlate, sitePylonLine } from '../data/descriptions';
 import { landmarkDef, landmarkOfSite } from '../data/landmarks';
@@ -106,7 +107,7 @@ export function nameAt(sim: SimState, roomId: string, px: number, py: number): H
     }
   }
   for (const g of sim.groundItems) {
-    if (g.roomId === roomId && inBox(px, py, g.x, g.y, HOVER_NAME.item)) return { name: itemDef(g.itemId).name, x: g.x, y: g.y, rise: HOVER_NAME.item.rise };
+    if (g.roomId === roomId && inBox(px, py, g.x, g.y, HOVER_NAME.item)) return { name: shownItem(sim, g.itemId).name, x: g.x, y: g.y, rise: HOVER_NAME.item.rise };
   }
   for (const n of sim.nodes) {
     if (n.roomId === roomId && inBox(px, py, n.x, n.y, HOVER_NAME.node)) return { name: nodeDef(n.nodeId).name, x: n.x, y: n.y, rise: HOVER_NAME.node.rise };

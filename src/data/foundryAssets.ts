@@ -63,6 +63,8 @@ export const LOGISTICS_ICONS: Readonly<Record<string, string>> = {
   hopper: 'emblem-hopper',
   crate: 'emblem-crate',
   sorter: 'emblem-sorter',
+  splitter: 'emblem-splitter',
+  merger: 'emblem-merger',
 };
 
 /** Conduits flow toward their front; `side` flows right. They lie flat on the floor. */

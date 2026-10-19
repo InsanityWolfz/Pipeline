@@ -252,7 +252,7 @@ export class GameScene extends Scene {
     if (!this.fading && this.playerView) this.sceneCameras?.attuneLook(sim, this.shownRoomId, this.playerView.sprite);
     this.effects.play(this.pending, sim.player);
     if (this.pending.identifies.length > 0) this.site?.identified();
-    if (this.pending.ko) this.wake?.show(this.pending.lost);
+    if (this.pending.ko) this.wake?.show(this.pending.lost, sim);
     const shown = this.shownRoomId;
     this.feel?.update(sim, this.pending, shown, this.game.loop.delta);
     this.roomViews?.update(sim, this.pending, shown, this.game.loop.delta);
@@ -263,7 +263,7 @@ export class GameScene extends Scene {
     const inFoundry = shown === FOUNDRY_ROOM;
     this.foundryView?.update(sim.foundry, inFoundry, sim.building);
     this.nodeView?.update(inRoom(sim.nodes, shown), sim.harvest, this.game.loop.delta);
-    this.groundItemView?.update(inRoom(sim.groundItems, shown), picked, sim.player);
+    this.groundItemView?.update(inRoom(sim.groundItems, shown), picked, sim.player, sim);
     this.enemyView?.update(inRoom(sim.enemies, shown));
     // Through a door's fade the player is already in the next room; hide them until it shows.
     this.playerView?.update(sim.player, sim.tube, sim.link, worn(sim)?.weight ?? null, sim.hasTube, shown === sim.roomId);

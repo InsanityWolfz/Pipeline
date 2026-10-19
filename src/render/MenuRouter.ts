@@ -1,6 +1,5 @@
 import { SOUNDS, VOLUME_STEP } from '../data/sounds';
 import { usableInReach } from '../sim/foundryUse';
-import { intakeOpenable } from '../sim/intake';
 import type { SimState } from '../sim/state';
 import type { BuildView } from './BuildView';
 import type { ClickMods } from './clickInput';
@@ -63,8 +62,8 @@ export class MenuRouter {
     if (toggle && craft.isOpen) inventory.setOpen(false);
     const steps = controls.takeWheel();
     if (steps !== 0 && this.sim.building) build.step(steps);
-    // E on a hopper opens its menu; the sim does nothing with it. At the intake with a warden core, E opens it (024) and no menu.
-    if (controls.takeInteractPress() && !intakeOpenable(this.sim)) {
+    // E on a hopper opens its menu; the sim does nothing with it.
+    if (controls.takeInteractPress()) {
       const target = usableInReach(this.sim);
       if (target?.kind === 'hopper') picker.open(target.id);
       else site.interact(this.sim);

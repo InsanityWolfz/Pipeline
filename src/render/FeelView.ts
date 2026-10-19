@@ -1,3 +1,4 @@
+import { isFlatKind } from '../data/pieces';
 import type { Scene } from 'phaser';
 import { AMMO } from '../data/ammo';
 import { STAGES } from '../data/stages';
@@ -149,12 +150,10 @@ export class FeelView {
       this.intakeMs = GLOWS.intake.ms;
     }
     for (const open of ev.intakeOpens) {
-      // The caps lift off (024): a brass clank and a rising chime, and flecks from each inlet it opened.
+      // The cap lifts off (024, one entrance per restore since 033): a brass clank and a rising chime, and flecks from its inlet.
       s.play(SOUNDS.intakeOpen);
-      for (const i of open.entrances) {
-        const inlet = INTAKE.entrances[i];
-        if (inlet) j.burst('capLift', (inlet.tx + 0.5) * TILE_SIZE, (inlet.ty + 1) * TILE_SIZE);
-      }
+      const inlet = INTAKE.entrances[open.entrance];
+      if (inlet) j.burst('capLift', (inlet.tx + 0.5) * TILE_SIZE, (inlet.ty + 1) * TILE_SIZE);
       this.intakeMs = GLOWS.intake.ms;
     }
     if (ev.attunes.length > 0) s.play(SOUNDS.attune);
@@ -234,7 +233,7 @@ export class FeelView {
     if (shown === FOUNDRY_ROOM) {
       for (const p of sim.foundry.pieces) {
         const r = pieceRect(p);
-        if (p.kind === 'conduit' || p.kind === 'sorter') spots.push({ x: r.x, y: r.y, ...GLOWS.conduit });
+        if (isFlatKind(p.kind)) spots.push({ x: r.x, y: r.y, ...GLOWS.conduit });
         if (p.kind === 'conduit' && p.item) spots.push({ x: r.x, y: r.y, ...GLOWS.conduitItem });
       }
       // The intake glows once attuned (growing as its rings light), swelling as each item goes in.

@@ -8,6 +8,7 @@ import type { SimState } from '../sim/state';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import { HoverReadout, intakeLines, pieceLines } from './HoverReadout';
+import { entranceCap } from '../sim/research';
 import { nameAt } from './hoverNames';
 
 // What the cursor is over in the world (015): its name, and over a machine or the
@@ -42,7 +43,7 @@ export class HoverView {
     let top = hit ? hit.y - hit.rise : 0;
     /** Where the name goes when there's no room above: under the readout, or under the thing. */
     let below = hit ? hit.y : 0;
-    const lines = piece ? pieceLines(piece) : hit?.intake ? intakeLines(sim.link.entrances) : [];
+    const lines = piece ? pieceLines(piece) : hit?.intake ? intakeLines(sim.link.entrances, entranceCap(sim)) : [];
     if (piece) {
       const r = pieceRect(piece);
       const spriteTop = topOf(piece.id) ?? r.y;

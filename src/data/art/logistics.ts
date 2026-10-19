@@ -1,4 +1,5 @@
 import { CONDUIT_ANIMS, CONDUIT_CORNERS, CRATE_SPRITE, FACING_ARROWS, HOPPER_SPRITES, SORTER_ANIMS, STATUS_MARKERS, type PieceView } from '../foundryAssets';
+import { RESEARCH_SPRITES } from '../researchAssets';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSprite } from './types';
 
 // Logistics pieces (020), in the 016 vector style: ley conduits as a cyan crystal
@@ -131,6 +132,38 @@ function sorter(view: PieceView, frame: number): Shape[] {
 }
 const SORTERS: VectorSprite[] = Object.entries(SORTER_ANIMS).map(([view, anim]) => floorPiece(anim.key, twoFrames((f) => sorter(view as PieceView, f))));
 
+// The splitter and merger (033), lying flat like the sorter: cyan channels meeting at a brass hub.
+// A splitter runs in from its back and out its front and its side (the sorter's sort side);
+// a merger runs in from its back and both sides and out its front.
+const SIDES: Readonly<Record<PieceView, readonly [Edge, Edge]>> = { side: ['up', 'down'], up: ['left', 'right'], down: ['left', 'right'] };
+/** Channels in from each of `ins` and out to each of `outs`, meeting at a brass hub, a chevron riding each. */
+function hub(ins: readonly Edge[], outs: readonly Edge[]): Shape[] {
+  const arms: Pt[][] = [...ins.map((e) => [EDGE[e], MID]), ...outs.map((e) => [MID, EDGE[e]])];
+  return [
+    ...arms.flatMap((pts) => trough(pts, 'rock', 'rock-light')),
+    ...arms.flatMap((pts) => channel(pts)),
+    ...[...ins, ...outs].map((e) => collar(e)),
+    ...arms.map((pts) => {
+      const { at, dir } = along(pts, 0.6);
+      return chevron(at, dir, 'cyan-glow');
+    }),
+    ellipse(MID[0], MID[1], 5.2, 5.2, solid('brass')),
+    ellipse(MID[0], MID[1], 2.4, 2.4, { fill: 'cyan', glow: { color: 'cyan', blur: 2 } }),
+  ];
+}
+function splitter(view: PieceView): Shape[] {
+  const [from, to] = STRAIGHT[view];
+  return hub([from], [to, SORT_SIDE[view]]);
+}
+function merger(view: PieceView): Shape[] {
+  const [from, to] = STRAIGHT[view];
+  return hub([from, ...SIDES[view]], [to]);
+}
+const SPLIT_MERGE: VectorSprite[] = (['side', 'up', 'down'] as const).flatMap((view) => [
+  floorPiece(RESEARCH_SPRITES.splitter[view], [splitter(view)]),
+  floorPiece(RESEARCH_SPRITES.merger[view], [merger(view)]),
+]);
+
 // Hoppers: a violet stone funnel on a stone footing, its brass spout toward the side it feeds.
 const standing = (key: string, h: number, shapes: readonly Shape[]): VectorSprite => ({ key, size: [T, h], anchor: [T / 2, h], frames: [shapes] });
 const footShadow = (rx: number): Shape => ellipse(0, -2, rx, 3.2, { fill: { id: 'ground-shade', alpha: 0.4 } });
@@ -224,4 +257,4 @@ function shift(shape: Shape, dx: number, dy: number): Shape {
   return shape;
 }
 
-export const LOGISTICS_SPRITES_VECTOR: readonly VectorSprite[] = [...CONDUITS, ...SORTERS, ...HOPPERS, CRATE, ...ARROWS, ...MARKERS];
+export const LOGISTICS_SPRITES_VECTOR: readonly VectorSprite[] = [...CONDUITS, ...SORTERS, ...SPLIT_MERGE, ...HOPPERS, CRATE, ...ARROWS, ...MARKERS];

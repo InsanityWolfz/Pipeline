@@ -62,6 +62,7 @@ if (sideIdle) section('Wanderer: facing left', [wandererCell('idle', { ...sideId
 const FAMILIES: readonly [title: string, test: (name: string) => boolean][] = [
   ...MACHINE_IDS.map((id): [string, (n: string) => boolean] => [`Machine: ${id} (idle, jammed, working)`, (n) => n.startsWith(`machine-${id}-`)]),
   ['Cold and the star split', (n) => n.startsWith('ice-case') || n.startsWith('star-')],
+  ['Restoration (033): diagrams, wall panels, the sealed wing, the splitter and merger, research items, the pillar', (n) => /^(research-|splitter-|merger-|schematic-|map-schematic|item-ancient|item-aqueduct|item-bulwark|item-schematic|emblem-splitter|emblem-merger)/.test(n)],
   ['Conduits and sorters', (n) => n.startsWith('conduit-') || n.startsWith('sorter-')],
   ['Hoppers and crates', (n) => n.startsWith('hopper-') || n === 'crate'],
   ['Build arrows and status markers', (n) => n.includes('-arrow-') || n.startsWith('status-')],
