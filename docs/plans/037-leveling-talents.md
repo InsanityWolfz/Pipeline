@@ -49,7 +49,20 @@ Small vertical commits, tests first in each:
 - Shatterpoint's ice shards fly like star shards (64 px at 360 px/s), never hit the shattered enemy, and deal cold damage (they're ice). The shattering hit thaws the enemy as a normal thaw (the refreeze window starts).
 - Overpressure counts while fire is held and the tube is really firing; a roll or an empty tube holds the ramp where it is; releasing fire resets it; a KO resets it.
 - Respec with nothing taken is still allowed and recorded. Losing Tough Hide clamps health to the new max; taking it doesn't heal.
-- The level-up line sits centred over the bottom HUD for 2.5 s; the XP bar's "tick" is a short brightening of the bar's end.
+- The level-up line sits centred over the bottom HUD for 2.6 s (2.2 s, then a 0.4 s fade) in the title face, in cyan; the XP bar's "tick" is a 0.3 s brightening of the bar's end.
+- The tree panel's lanes carry their ammo's icons (Arrows, Bombs, Ley) and new ones for Survival (a heart) and the Tube (the relic tube); keystones have their own icons. Lane colours: Arrows rust-light, Bombs cinder, Ley cyan, Survival leaf-light, Tube brass-light. Pending Shaun's review.
+- Opening the tree closes the crafting menu, the hopper picker and any site menu, as the inventory does, and takes turns with the inventory and the research list; a KO closes it.
+- The XP row sits under the HP frame: the bar under the fill, "Lv 7" and the pip under the shield.
+- Talent ids are the spec's in lower case (`a1`, `k3`): data ids are kebab-case (.claude/rules/data.md).
+
+## Build notes
+- The XP row and the tree panel's layout went into `src/data/hudPanels.ts` (beside the HP bar's) and `src/data/talentAssets.ts`, not `hudLayout.ts`, which is at its 300-line limit. The HP block grows by the XP row (`HEALTH_BLOCK_HEIGHT`); its bottom stays at the margin, so the frame sits 8 px higher. The 031 e2e's resting top reads the new height.
+- `testHook.ts` was at its limit: its held ticks now come from `heldPart` (input.ts) and the UI's actions merge through `withUi` (menuRequests.ts), so new edge commands need no hook change.
+- `clearEvents` empties every list generically (events.ts would have passed 300 lines).
+- Damage bonuses land on the round at launch (`arrow.damage`), the bomb's damage, radius and flight at the throw, so a respec never changes a shot in flight.
+- The level ring and the ice burst start their clock on the first frame they're drawn: the first frame after a long hook loop carries the whole loop's time and ran them out unseen (036 saw the same with the relic flare). Both are drawn plain, not added, so the ring stays cyan on bright grass and the ice reads over a white hit flash.
+- A `gainXp` dev hook gives a later level for the screenshots; XP given that way lands between ticks, so its level-up events are cleared before render sees them (the level-up shot levels up from a kill instead).
+- Hover text wraps onto a second line at a word when it's wider than the panel (the keystones' effects).
 
 ## Risks
 - `GameScene.ts` and `testHook.ts` are at their limits: the panel and XP bar sit behind `HudView`, the effects behind `FeelView`, and the hook's per-tick edge reset becomes one list in `input.ts`.
