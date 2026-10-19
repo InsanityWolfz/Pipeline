@@ -45,8 +45,8 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 038 | Landmines and the cluster-bomb stage (ley-iron): split out of 034 by the accepted proposal; the spec text lives in 034 until it moves to its own file | approved |
 | 039 | Keyword system: a closed keyword list in data, one word per rule (renames), one scope per content line, generated rules text, Stun, Pool, Knockback on rounds, elements on every family, exact fire rates | approved |
 | 040 | Legibility UI: hover summary with keyword chips, Shift+hover breakdown with the damage calculation, a Build tab on the T panel, clickable glossary chips | approved |
-| 041 | Balance pass: target damage order, Bulwark, frost freeze | idea |
-| 042 | Shippable build: title screen, soft save, start-to-finish flow | idea |
+| 041 | Balance pass: per-hit damage arrow 14, ley bolt 9, bomb 12 (landmine 60); ring ×1/×1.6/×2.5 on enemy HP and damage; the Bulwark at 2,500 HP with an enrage, a rear stomp and adds; scripted sim targets | approved |
+| 042 | Shippable playtest build: painted title screen, game-flow state machine, one save slot saved on entering the foundry (Continue, export and import, versioned), Settings (volumes, shake, flashes, key bindings), big-moment-only shake and a locked camera, end-of-demo card, F feedback notes | approved |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
 
@@ -63,4 +63,5 @@ Shaun's drive rant on 2026-10-19 (docs/brainstorm/2026-10-19-drive-rant.md) is q
 
 028–038 were built on 2026-10-19 and await Shaun's playtest (docs/review/playtest-021-038.md). They stay `approved` until /wrapup.
 
-039–042 come from Shaun's keyword spec interview on 2026-10-19 (docs/brainstorm/2026-10-19-keyword-interview.md, after the drive rant and docs/brainstorm/2026-10-19-keyword-audit.md). 039 and 040 were approved on draft by Shaun in chat ("Approve on draft"); 041 and 042 are the next interviews, in that order.
+039–042 come from Shaun's keyword spec interview on 2026-10-19 (docs/brainstorm/2026-10-19-keyword-interview.md, after the drive rant and docs/brainstorm/2026-10-19-keyword-audit.md). 039 and 040 were approved on draft by Shaun in chat ("Approve on draft").
+041 and 042 come from Shaun's spec interview on 2026-10-19 (docs/brainstorm/2026-10-19-balance-ship-interview.md) and were approved on draft by Shaun in chat ("Approve on draft"), to be built after 040, in that order.
