@@ -1,11 +1,12 @@
-import { CONDUIT_TICKS, CRATE_CAP, HOPPER_FLOW_CAP, HOPPER_TICKS, INPUT_CAP, INTAKE, OUTPUT_CAP } from '../data/foundry';
-import { machineDef } from '../data/pieces';
+import { CONDUIT_TICKS, CRATE_CAP, ENTRANCE_CAPS, HOPPER_FLOW_CAP, HOPPER_TICKS, INPUT_CAP, INTAKE, OUTPUT_CAP } from '../data/foundry';
 import type { RecipeDef } from '../data/recipes';
 import { opposite } from './direction';
 import { count } from './inventory';
 import type { SimEvents } from './events';
 import { fillEntrance, type EntranceState } from './link';
 import { machineRecipe, offerToStage, stageOf } from './stages';
+import { craftTicksAt } from './research';
+import { afterSplit, mergerTakes, splitterOrder } from './splitMerge';
 import {
   footprint,
   frontSide,
@@ -33,12 +34,22 @@ import {
 /** Where a tick's flow records what happened: rounds into the intake, and machines' finished crafts (027). */
 type FlowEvents = Pick<SimEvents, 'refills' | 'made'>;
 
-/** What a tick's flow needs beyond the grid: the entrances the intake fills (once `attuned`), and where refills are recorded. */
+/** What restoring has changed (033): every entrance's cap, and the multiplier on every machine's craft time. */
+export interface FlowTuning {
+  cap: number;
+  speed: number;
+}
+
+/** Before anything is restored. */
+export const BASE_TUNING: FlowTuning = { cap: ENTRANCE_CAPS[0] ?? 0, speed: 1 };
+
+/** What a tick's flow needs beyond the grid: the entrances the intake fills (once `attuned`) up to `cap`, and where refills are recorded. */
 interface FlowContext {
   grid: ReadonlyMap<string, PieceState>;
   entrances: EntranceState[];
   refills: SimEvents['refills'];
   attuned: boolean;
+  cap: number;
 }
 
 /** The intake's entrance at `t`, by index, if it is one. */
@@ -52,11 +63,11 @@ function hasInputs(m: MachineState, recipe: RecipeDef): boolean {
 /** A craft only starts when its whole output will fit. (A stage's output is always its recipe's kind: it takes a new round kind only once clear.) */
 const outputFits = (m: MachineState, recipe: RecipeDef): boolean => m.output + recipe.output.count <= OUTPUT_CAP;
 
-function advanceMachine(m: MachineState, made: SimEvents['made']): void {
+function advanceMachine(m: MachineState, made: SimEvents['made'], speed: number): void {
   const recipe = machineRecipe(m);
   if (m.crafting) {
     m.progress += 1;
-    if (m.progress >= machineDef(m.pieceId).craftTicks) {
+    if (m.progress >= craftTicksAt(m.pieceId, speed)) {
       m.crafting = false;
       m.progress = 0;
       m.output += recipe.output.count;
@@ -69,11 +80,11 @@ function advanceMachine(m: MachineState, made: SimEvents['made']): void {
   m.progress = 0;
 }
 
-function advance(p: PieceState, made: SimEvents['made']): void {
-  if (p.kind === 'conduit' && p.item && p.progress < CONDUIT_TICKS) p.progress += 1;
-  if (p.kind === 'sorter' && p.item && p.progress < CONDUIT_TICKS) p.progress += 1;
+function advance(p: PieceState, made: SimEvents['made'], speed: number): void {
+  // Conduits, sorters, splitters and mergers carry one item across a tile.
+  if ((p.kind === 'conduit' || p.kind === 'sorter' || p.kind === 'splitter' || p.kind === 'merger') && p.item && p.progress < CONDUIT_TICKS) p.progress += 1;
   if (p.kind === 'hopper' && p.count > 0 && p.timer < HOPPER_TICKS) p.timer += 1;
-  if (p.kind === 'machine') advanceMachine(p, made);
+  if (p.kind === 'machine') advanceMachine(p, made, speed);
 }
 
 /**
@@ -86,7 +97,7 @@ function offer(ctx: FlowContext, to: Tile, from: Tile, item: string): boolean {
     // A mouth tile takes only from the floor tile directly south of it, and nothing before the tube attunes.
     const e = ctx.entrances[entrance];
     if (!e || !ctx.attuned || from.tx !== to.tx || from.ty !== to.ty + 1) return false;
-    if (!fillEntrance(e, item)) return false;
+    if (!fillEntrance(e, item, ctx.cap)) return false;
     ctx.refills.push({ entrance, itemId: item });
     return true;
   }
@@ -96,8 +107,16 @@ function offer(ctx: FlowContext, to: Tile, from: Tile, item: string): boolean {
   if (target.kind !== 'crate' && frontSide(target).some((t) => sameTile(t, from))) return false;
   // A conduit takes items only from the side it's shaped to take them from (013); a sorter only from its back (015).
   if (target.kind === 'conduit' && !sameTile(from, sideTile(target, target.inFrom))) return false;
-  if (target.kind === 'sorter' && !sameTile(from, sideTile(target, opposite(target.facing)))) return false;
-  if (target.kind === 'conduit' || target.kind === 'sorter') {
+  if ((target.kind === 'sorter' || target.kind === 'splitter') && !sameTile(from, sideTile(target, opposite(target.facing)))) return false;
+  if (target.kind === 'merger') {
+    const input = mergerTakes(target, from, (t) => ctx.grid.get(key(t)));
+    if (input < 0) return false;
+    target.item = item;
+    target.progress = 0;
+    target.turn = (input + 1) % 3;
+    return true;
+  }
+  if (target.kind === 'conduit' || target.kind === 'sorter' || target.kind === 'splitter') {
     if (target.item) return false;
     target.item = item;
     target.progress = 0;
@@ -140,6 +159,20 @@ function transfer(ctx: FlowContext, p: PieceState): void {
       p.item = null;
       p.progress = 0;
     }
+  } else if (p.kind === 'splitter') {
+    // Out the output whose turn it is, else the other; with both refusing it waits holding the item.
+    if (!p.item || p.progress < CONDUIT_TICKS) return;
+    const item = p.item;
+    const used = splitterOrder(p).find((out) => offer(ctx, sideTile(p, out), p, item));
+    if (used === undefined) return;
+    p.item = null;
+    p.progress = 0;
+    afterSplit(p, used);
+  } else if (p.kind === 'merger') {
+    if (p.item && p.progress >= CONDUIT_TICKS && offer(ctx, to, p, p.item)) {
+      p.item = null;
+      p.progress = 0;
+    }
   } else if (p.kind === 'hopper') {
     if (p.item && p.timer >= HOPPER_TICKS) offerFromHopper(ctx, to, p, p.item);
   } else if (p.kind === 'machine') {
@@ -147,10 +180,10 @@ function transfer(ctx: FlowContext, p: PieceState): void {
   }
 }
 
-/** Hoppers feed conduits, sorters and machines, never crates or the intake. */
+/** Hoppers feed conduits, sorters, splitters, mergers and machines, never crates, hoppers or the intake. */
 function offerFromHopper(ctx: FlowContext, to: Tile, h: HopperState, item: string): void {
   const kind = ctx.grid.get(key(to))?.kind;
-  if (kind !== 'conduit' && kind !== 'sorter' && kind !== 'machine') return;
+  if (kind === undefined || kind === 'crate' || kind === 'hopper') return;
   if (!offer(ctx, to, h, item)) return;
   h.count -= 1;
   h.timer = 0;
@@ -174,19 +207,19 @@ export function offerFromOutside(foundry: FoundryState, to: Tile, from: Tile, it
   const target = pieceAt(foundry, to.tx, to.ty);
   if (!target) return false;
   const grid = new Map<string, PieceState>([[key(to), target]]);
-  return offer({ grid, entrances: [], refills: [], attuned: false }, to, from, item);
+  return offer({ grid, entrances: [], refills: [], attuned: false, cap: BASE_TUNING.cap }, to, from, item);
 }
 
 /**
  * Runs every piece one tick. The foundry ticks wherever the player is. Once the
- * tube is `attuned`, the intake fills its open `entrances`, and each round it takes is pushed to `events.refills`;
- * each craft a machine finishes is pushed to `events.made`.
+ * tube is `attuned`, the intake fills its open `entrances` up to the tuning's cap, and each round it takes is pushed
+ * to `events.refills`; each craft a machine finishes (in its craft time × the tuning's speed, 033) is pushed to `events.made`.
  */
-export function stepFoundry(foundry: FoundryState, entrances: EntranceState[], events: FlowEvents, attuned: boolean): void {
+export function stepFoundry(foundry: FoundryState, entrances: EntranceState[], events: FlowEvents, attuned: boolean, tuning: FlowTuning = BASE_TUNING): void {
   const grid = new Map<string, PieceState>();
   for (const p of foundry.pieces) for (const t of footprint(p.pieceId, p.tx, p.ty, p.facing)) grid.set(key(t), p);
-  const ctx: FlowContext = { grid, entrances, refills: events.refills, attuned };
-  for (const p of foundry.pieces) advance(p, events.made);
+  const ctx: FlowContext = { grid, entrances, refills: events.refills, attuned, cap: tuning.cap };
+  for (const p of foundry.pieces) advance(p, events.made, tuning.speed);
   for (const p of foundry.pieces) transfer(ctx, p);
   for (const p of foundry.pieces) if (p.kind === 'machine') setStatus(p);
 }

@@ -74,7 +74,30 @@ export interface SorterState extends PieceCommon {
   mirrored: boolean;
 }
 
-export type PieceState = ConduitState | MachineState | HopperState | CrateState | SorterState;
+/**
+ * A splitter (033) carries one item at a time like a conduit, taking it only from its back, and sends items out its
+ * front and its side (right of its facing, or left when mirrored) in turn: `next` is the output it tries first.
+ */
+export interface SplitterState extends PieceCommon {
+  kind: 'splitter';
+  item: string | null;
+  progress: number;
+  mirrored: boolean;
+  next: 'front' | 'side';
+}
+
+/**
+ * A merger (033) carries one item at a time out its front, taking from its back, left and right in turn: `turn`
+ * indexes `mergerInputs` (back, left, right), the input it takes from next.
+ */
+export interface MergerState extends PieceCommon {
+  kind: 'merger';
+  item: string | null;
+  progress: number;
+  turn: number;
+}
+
+export type PieceState = ConduitState | MachineState | HopperState | CrateState | SorterState | SplitterState | MergerState;
 
 /** How a new piece is shaped: a conduit's intake side (013), a sorter's mirrored side (015). */
 export interface PieceShape {
@@ -101,6 +124,8 @@ export function createPiece(id: number, pieceId: string, tx: number, ty: number,
   const { kind } = pieceDef(pieceId);
   if (kind === 'conduit') return { ...common, kind, inFrom: shape.inFrom ?? opposite(facing), item: null, progress: 0 };
   if (kind === 'sorter') return { ...common, kind, item: null, progress: 0, filter: null, mirrored: shape.mirrored ?? false };
+  if (kind === 'splitter') return { ...common, kind, item: null, progress: 0, mirrored: shape.mirrored ?? false, next: 'front' };
+  if (kind === 'merger') return { ...common, kind, item: null, progress: 0, turn: 0 };
   if (kind === 'hopper') return { ...common, kind, item: null, count: 0, timer: 0 };
   if (kind === 'crate') return { ...common, kind, contents: {} };
   return { ...common, kind, buffer: {}, output: 0, made: recipeDef(machineDef(pieceId).recipeId).output.itemId, crafting: false, progress: 0, status: 'idle', missing: [] };
@@ -128,6 +153,12 @@ export function sortSideOf(facing: Facing, mirrored: boolean): Facing {
 
 /** The side a sorter's filter item leaves by. */
 export const sortSide = (p: SorterState): Facing => sortSideOf(p.facing, p.mirrored);
+
+/** A splitter's side output (033): its right, or its left when mirrored, as a sorter's. */
+export const splitSide = (p: Pick<SplitterState, 'facing' | 'mirrored'>): Facing => sortSideOf(p.facing, p.mirrored);
+
+/** A merger's inputs in the order it takes from them (033): its back, its left, its right. */
+export const mergerInputs = (facing: Facing): Facing[] => [opposite(facing), rotateCcw(facing), rotateCw(facing)];
 
 /** Where a sorter sends `item`: its sort side for the filter item, else its front. */
 export const sorterOut = (p: SorterState, item: string): Facing => (item === p.filter ? sortSide(p) : p.facing);

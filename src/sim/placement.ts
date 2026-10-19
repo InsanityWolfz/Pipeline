@@ -6,19 +6,22 @@ import { overlapsRect } from './collision';
 import { count, type Inventory } from './inventory';
 import { opposite } from './direction';
 import { fixtureAt, fixtureDef, portFront } from './fixtures';
-import { createPiece, footprint, frontTile, pieceAt, pieceRect, sameTile, sideTile, sortSide, type PieceShape, type PieceState, type PlaceFail } from './pieces';
+import { createPiece, footprint, frontTile, pieceAt, pieceRect, sameTile, sideTile, sortSide, splitSide, type PieceShape, type PieceState, type PlaceFail } from './pieces';
 import type { Facing } from './player';
 import { roomById, type SimState } from './state';
 import { machineRecipe } from './stages';
+import { lockedByResearch } from './research';
 
 // Placing pieces on the foundry grid and picking them back up. Both are free.
 
 /**
- * Pieces the player can place, in build bar order: logistics always, machines
- * once their output is hand-crafted.
+ * Pieces the player can place, in build bar order: logistics always (033: the splitter and merger once restored),
+ * machines once their output is hand-crafted.
  */
-export function unlockedPieces(state: Pick<SimState, 'crafted'>): string[] {
+export function unlockedPieces(state: Pick<SimState, 'crafted' | 'research'>): string[] {
+  const locked = lockedByResearch(state);
   return BUILD_BAR.filter((id) => {
+    if (locked.includes(id)) return false;
     const def = pieceDef(id);
     if (def.kind === 'machine') return state.crafted.includes(recipeDef(def.recipeId).output.itemId);
     return true;
@@ -55,6 +58,7 @@ export function conduitInFrom(state: SimState, tx: number, ty: number, facing: F
     const t = sideTile(here, side);
     const piece = pieceAt(state.foundry, t.tx, t.ty);
     if (piece?.kind === 'sorter') return sameTile(frontTile(piece), here) || sameTile(sideTile(piece, sortSide(piece)), here);
+    if (piece?.kind === 'splitter') return sameTile(frontTile(piece), here) || sameTile(sideTile(piece, splitSide(piece)), here);
     if (piece) return piece.kind !== 'crate' && sameTile(frontTile(piece), here);
     const port = fixtureAt(state.fixtures, t.tx, t.ty);
     return port !== undefined && fixtureDef(port.id).kind === 'port' && sameTile(portFront(port), here);
@@ -73,7 +77,7 @@ export function place(state: SimState, pieceId: string, tx: number, ty: number, 
   }
   const kind = pieceDef(pieceId).kind;
   const made: PieceShape =
-    kind === 'conduit' ? { inFrom: conduitInFrom(state, tx, ty, facing, shape.inFrom) } : kind === 'sorter' ? { mirrored: shape.mirrored ?? false } : {};
+    kind === 'conduit' ? { inFrom: conduitInFrom(state, tx, ty, facing, shape.inFrom) } : kind === 'sorter' || kind === 'splitter' ? { mirrored: shape.mirrored ?? false } : {};
   const piece = createPiece(state.foundry.nextPieceId++, pieceId, tx, ty, facing, made);
   state.foundry.pieces.push(piece);
   state.events.places.push({ id: piece.id, pieceId, tx, ty, facing });
@@ -86,7 +90,7 @@ export function pieceContents(p: PieceState): Inventory {
   const add = (itemId: string, n: number): void => {
     if (n > 0) items[itemId] = count(items, itemId) + n;
   };
-  if ((p.kind === 'conduit' || p.kind === 'sorter') && p.item) add(p.item, 1);
+  if ((p.kind === 'conduit' || p.kind === 'sorter' || p.kind === 'splitter' || p.kind === 'merger') && p.item) add(p.item, 1);
   if (p.kind === 'hopper' && p.item) add(p.item, p.count);
   if (p.kind === 'crate') for (const [itemId, n] of Object.entries(p.contents)) add(itemId, n);
   if (p.kind === 'machine') {
