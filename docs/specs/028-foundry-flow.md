@@ -172,3 +172,7 @@ Automation stops stalling and progression stops at the shrine no longer:
 
 ## Open questions
 None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-questions.md).
+
+## Raised after the build (for Shaun at playtest)
+- **The entrance fire pulse can't be seen.** The pulse is drawn on the intake pipe in the foundry, but the tube never fires in the foundry, so in play it's almost never visible. It's built as specified. Shaun to decide where it should show instead (for example, as a flash on the matching icon in the HUD's tube slot). Until he does, the pulse has no visibility test.
+- **Port art** waits on Shaun's approval by eye (docs/review/028/).
