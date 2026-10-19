@@ -12,11 +12,13 @@ import { enterFoundry } from './foundryPage';
 
 // Labels in the crafting menu and categories in the build bar (026): every recipe item
 // named under its icon, missing inputs flagged, headers naming their ammo; the build bar
-// in four labelled groups with dividers, locked pieces greyed in place, the wheel stepping
-// in the new order. With REVIEW_SHOTS=1, the review screenshots in docs/review/026.
+// in labelled groups with dividers, showing only unlocked pieces (a group with none
+// unlocked is left out), the wheel stepping in the new order. With REVIEW_SHOTS=1, the review screenshots in docs/review/026.
 
 const SHOTS = 'docs/review/026';
 const TREE = 0;
+/** The camera eases a long way after a harvest or the foundry stairs; under load that takes a while. */
+const SETTLE_MS = 20_000;
 
 type Box = { x: number; y: number; w: number; h: number };
 const overlaps = (a: Box, b: Box) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
@@ -52,10 +54,12 @@ async function wheel(page: Page, expected: string): Promise<void> {
   await expect.poll(() => selected(page)).toBe(expected);
 }
 
-function expectGroups(bar: BuildBarState): void {
-  expect(bar.cells.map((c) => c.pieceId)).toEqual([...BUILD_BAR]);
-  expect(bar.groups.map((g) => g.label)).toEqual(PIECE_CATEGORIES.map((c) => c.label));
-  expect(bar.dividers).toHaveLength(3);
+/** The bar shows exactly `shown` in bar order, and a label (with a divider between) for each group it has a piece of. */
+function expectGroups(bar: BuildBarState, shown: readonly string[]): void {
+  expect(bar.cells.map((c) => c.pieceId)).toEqual([...shown]);
+  const labels = PIECE_CATEGORIES.filter((c) => shown.some((id) => pieceDef(id).category === c.id)).map((c) => c.label);
+  expect(bar.groups.map((g) => g.label)).toEqual(labels);
+  expect(bar.dividers).toHaveLength(labels.length - 1);
   // Centred within 1 px and inside the view.
   const first = bar.cells[0];
   const last = bar.cells[bar.cells.length - 1];
@@ -125,20 +129,19 @@ test('the crafting menu names every recipe item under its icon, and its headers 
   expect(errors).toEqual([]);
 });
 
-test('the build bar shows four labelled groups, locked machines greyed in place, and the wheel skips them', async ({ page }) => {
+test('on a fresh start the build bar shows only the Logistics group, and the wheel cycles it', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page);
   await enterFoundry(page);
   const bar = await openBuildBar(page);
-  expectGroups(bar);
-  // Before any hand-crafting only logistics is unlocked; the machines keep their places, greyed.
-  for (const c of bar.cells) expect(c.locked, c.pieceId).toBe(!['conduit', 'sorter', 'hopper', 'crate'].includes(c.pieceId));
+  // Before any hand-crafting only logistics is unlocked: locked machines, and their groups' labels, are hidden.
+  expectGroups(bar, ['conduit', 'sorter', 'hopper', 'crate']);
   expect(bar.selected).toBe('conduit');
   for (const id of ['sorter', 'hopper', 'crate', 'conduit']) await wheel(page, id);
   expect(errors).toEqual([]);
 });
 
-test('with everything unlocked, the wheel steps through the groups in bar order', async ({ page }) => {
+test('with everything unlocked, the bar shows four labelled groups and the wheel steps through them in bar order', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page, '?playtest');
   await page.evaluate(() => {
@@ -146,8 +149,7 @@ test('with everything unlocked, the wheel steps through the groups in bar order'
     if (g && g.step(0).room !== 'foundry') window.__helpers?.toFoundry();
   });
   const bar = await openBuildBar(page);
-  expectGroups(bar);
-  for (const c of bar.cells) expect(c.locked, c.pieceId).toBe(false);
+  expectGroups(bar, BUILD_BAR);
   for (const id of [...BUILD_BAR.slice(1), BUILD_BAR[0] ?? '']) await wheel(page, id);
   // The tube slot sits above the group labels while building.
   const hud = await page.evaluate(() => window.__GAME__?.ui().hud);
@@ -166,7 +168,7 @@ test.describe('review screenshots (026)', () => {
       window.__GAME__?.step(0);
       window.__helpers?.harvest(tree, 1);
     }, TREE);
-    await cameraSettled(page);
+    await cameraSettled(page, SETTLE_MS);
     const menu = await openCraftMenu(page);
     // The pointer parked on the panel, over the first header's empty right-hand side (it lights no row).
     const header = menu.headers[0];
@@ -180,7 +182,7 @@ test.describe('review screenshots (026)', () => {
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().craftOpen))).toBe(false);
     await enterFoundry(page);
     await openBuildBar(page);
-    await cameraSettled(page);
+    await cameraSettled(page, SETTLE_MS);
     await page.mouse.move(0, 0);
     await page.screenshot({ path: `${SHOTS}/02-build-bar-locked.png` });
   });
@@ -193,7 +195,7 @@ test.describe('review screenshots (026)', () => {
       if (g && g.step(0).room !== 'foundry') window.__helpers?.toFoundry();
     });
     const bar = await openBuildBar(page);
-    await cameraSettled(page);
+    await cameraSettled(page, SETTLE_MS);
     await page.mouse.move(0, 0);
     await page.screenshot({ path: `${SHOTS}/03-build-bar.png` });
     const cell = bar.cells.find((c) => c.pieceId === 'assembler');

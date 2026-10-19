@@ -48,7 +48,7 @@ describe('the bottom HUD layout', () => {
 
   it('puts the build bar in the hotbar row, where it replaces it in build mode', () => {
     const row = hotbarBox();
-    for (const c of buildBarCells()) {
+    for (const c of buildBarCells(BUILD_BAR)) {
       expect(c.y).toBe(row.y);
       expect(c.h).toBe(row.h);
       expect(inView(c)).toBe(true);
@@ -59,18 +59,36 @@ describe('the bottom HUD layout', () => {
 const overlaps = (a: ScreenBox, b: ScreenBox) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 
 describe('the build bar in groups (026)', () => {
-  it('lays out every piece, locked or not, in bar order, centred and inside the view', () => {
-    const cells = buildBarCells();
-    expect(cells.map((c) => c.pieceId)).toEqual([...BUILD_BAR]);
-    const bar = buildBarBox();
-    expect(Math.abs(centre(bar) - VIEW_WIDTH / 2)).toBeLessThanOrEqual(1);
-    expect(inView(bar)).toBe(true);
-    for (const c of cells) expect(inView(c)).toBe(true);
+  /** The logistics pieces only (a fresh start), logistics plus the first arrow machine, and everything. */
+  const SHOWN: readonly (readonly string[])[] = [
+    BUILD_BAR.filter((id) => pieceDef(id).category === 'logistics'),
+    BUILD_BAR.filter((id) => pieceDef(id).category === 'logistics' || id === 'cutter'),
+    BUILD_BAR,
+  ];
+
+  it('lays out only the shown (unlocked) pieces, in bar order, centred and inside the view', () => {
+    for (const shown of SHOWN) {
+      const cells = buildBarCells(shown);
+      expect(cells.map((c) => c.pieceId)).toEqual([...shown]);
+      const bar = buildBarBox(shown);
+      expect(Math.abs(centre(bar) - VIEW_WIDTH / 2)).toBeLessThanOrEqual(1);
+      expect(inView(bar)).toBe(true);
+      for (const c of cells) expect(inView(c)).toBe(true);
+    }
+  });
+
+  it('leaves out a group with nothing unlocked: no label, no divider', () => {
+    const [logistics, withCutter] = SHOWN;
+    if (!logistics || !withCutter) throw new Error('no subsets');
+    expect(buildBarGroups(logistics).map((g) => g.label)).toEqual(['Logistics']);
+    expect(buildBarDividers(logistics)).toEqual([]);
+    expect(buildBarGroups(withCutter).map((g) => g.label)).toEqual(['Logistics', 'Arrows']);
+    expect(buildBarDividers(withCutter)).toHaveLength(1);
   });
 
   it('puts groupGap px between groups, a divider centred in each gap, and a label row over each group', () => {
-    const cells = buildBarCells();
-    const groups = buildBarGroups();
+    const cells = buildBarCells(BUILD_BAR);
+    const groups = buildBarGroups(BUILD_BAR);
     expect(groups.map((g) => g.label)).toEqual(PIECE_CATEGORIES.map((c) => c.label));
     const L = BUILD_BAR_LAYOUT;
     for (const [i, g] of groups.entries()) {
@@ -88,7 +106,7 @@ describe('the build bar in groups (026)', () => {
       const next = groups[i + 1];
       if (next) expect(next.x - (last.x + last.w)).toBe(L.groupGap);
     }
-    const dividers = buildBarDividers();
+    const dividers = buildBarDividers(BUILD_BAR);
     expect(dividers).toHaveLength(groups.length - 1);
     dividers.forEach((d, i) => {
       const left = groups[i];
@@ -101,14 +119,14 @@ describe('the build bar in groups (026)', () => {
   });
 
   it('lifts the tube slot above the label row while building, clear of every label and cell', () => {
-    const top = Math.min(...buildBarGroups().map((g) => g.y));
+    const top = Math.min(...buildBarGroups(BUILD_BAR).map((g) => g.y));
     for (let n = 1; n <= INTAKE.entrances.length; n++) {
       const slot = tubeSlotBox(n, true);
       expect(slot.y + slot.h).toBe(top - HUD_LAYOUT.gap);
       expect(Math.abs(centre(slot) - VIEW_WIDTH / 2)).toBeLessThanOrEqual(1);
       expect(inView(slot)).toBe(true);
-      for (const g of buildBarGroups()) expect(overlaps(slot, g)).toBe(false);
-      for (const c of buildBarCells()) expect(overlaps(slot, c)).toBe(false);
+      for (const g of buildBarGroups(BUILD_BAR)) expect(overlaps(slot, g)).toBe(false);
+      for (const c of buildBarCells(BUILD_BAR)) expect(overlaps(slot, c)).toBe(false);
     }
   });
 });

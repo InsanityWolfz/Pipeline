@@ -247,8 +247,8 @@ export async function boot(page: Page, query = '?start=field'): Promise<void> {
   await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
 }
 
-/** Waits until the camera, easing after the player in real time, has come to rest. */
-export async function cameraSettled(page: Page): Promise<void> {
+/** Waits until the camera, easing after the player in real time, has come to rest (`timeout` ms: a long ease under load needs more). */
+export async function cameraSettled(page: Page, timeout = 5000): Promise<void> {
   let last = { x: NaN, y: NaN };
   await expect
     .poll(async () => {
@@ -256,6 +256,6 @@ export async function cameraSettled(page: Page): Promise<void> {
       const still = Math.hypot(cam.x - last.x, cam.y - last.y) < 0.5;
       last = cam;
       return still;
-    })
+    }, { timeout })
     .toBe(true);
 }

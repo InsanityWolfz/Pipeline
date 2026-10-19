@@ -77,7 +77,7 @@ export async function ctrlClick(page: Page, x: number, y: number): Promise<void>
 }
 
 export async function clickBar(page: Page, pieceId: string): Promise<void> {
-  const cell = buildBarCells().find((c) => c.pieceId === pieceId);
+  const cell = buildBarCells((await state(page)).unlocked).find((c) => c.pieceId === pieceId);
   if (!cell) throw new Error(`${pieceId} is not on the bar`);
   const p = await screenPoint(page, cell.x + cell.w / 2, cell.y + cell.h / 2);
   await page.mouse.click(p.x, p.y);

@@ -24,14 +24,18 @@ export interface ScreenRect {
 export const inRect = (r: ScreenRect, x: number, y: number): boolean =>
   x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h;
 
-/** The build bar's pieces by group (026), in bar order. */
-function barGroups(): { category: PieceCategory; label: string; pieces: string[] }[] {
-  return PIECE_CATEGORIES.map((c) => ({ category: c.id, label: c.label, pieces: BUILD_BAR.filter((id) => pieceDef(id).category === c.id) }));
+/** The pieces the bar shows (the unlocked ones), by group in bar order (026); a group with none shown is left out. */
+function barGroups(shown: readonly string[]): { category: PieceCategory; label: string; pieces: string[] }[] {
+  return PIECE_CATEGORIES.map((c) => ({
+    category: c.id,
+    label: c.label,
+    pieces: BUILD_BAR.filter((id) => shown.includes(id) && pieceDef(id).category === c.id),
+  })).filter((g) => g.pieces.length > 0);
 }
 
-function groupedCells(): (ScreenRect & { pieceId: string })[][] {
+function groupedCells(shown: readonly string[]): (ScreenRect & { pieceId: string })[][] {
   const L = BUILD_BAR_LAYOUT;
-  const groups = barGroups();
+  const groups = barGroups(shown);
   const rows = groupedBottomRow(
     groups.map((g) => g.pieces.length),
     { w: L.cellWidth, h: L.cellHeight, step: L.cellStep },
@@ -46,16 +50,19 @@ function groupedCells(): (ScreenRect & { pieceId: string })[][] {
   );
 }
 
-/** One cell per piece on the build bar, locked or not (026), in groups centred along the bottom of the screen. */
-export function buildBarCells(): (ScreenRect & { pieceId: string })[] {
-  return groupedCells().flat();
+/**
+ * One cell per piece in `shown` (the unlocked pieces: locked ones are hidden), in bar
+ * order and in their groups (026), centred along the bottom of the screen.
+ */
+export function buildBarCells(shown: readonly string[]): (ScreenRect & { pieceId: string })[] {
+  return groupedCells(shown).flat();
 }
 
-/** Each build bar group's label row (026): over its cells, `label.gap` px above them. */
-export function buildBarGroups(): (ScreenRect & { category: PieceCategory; label: string })[] {
+/** Each shown group's label row (026): over its cells, `label.gap` px above them. */
+export function buildBarGroups(shown: readonly string[]): (ScreenRect & { category: PieceCategory; label: string })[] {
   const L = BUILD_BAR_LAYOUT;
-  const cells = groupedCells();
-  return barGroups().flatMap((g, i) => {
+  const cells = groupedCells(shown);
+  return barGroups(shown).flatMap((g, i) => {
     const mine = cells[i] ?? [];
     const first = mine[0];
     const last = mine[mine.length - 1];
@@ -65,9 +72,9 @@ export function buildBarGroups(): (ScreenRect & { category: PieceCategory; label
 }
 
 /** The thin dividers between build bar groups (026): centred in each gap, from the label row's top to `divider.inset` px above the cells' bottom. */
-export function buildBarDividers(): { x: number; y: number; h: number }[] {
+export function buildBarDividers(shown: readonly string[]): { x: number; y: number; h: number }[] {
   const L = BUILD_BAR_LAYOUT;
-  const groups = buildBarGroups();
+  const groups = buildBarGroups(shown);
   const top = buildBarLabelTop();
   const bottom = VIEW_HEIGHT - L.bottom - L.divider.inset;
   return groups.slice(1).flatMap((right, i) => {
@@ -77,8 +84,8 @@ export function buildBarDividers(): { x: number; y: number; h: number }[] {
 }
 
 /** The whole build bar with its labels, so a click anywhere on it is the bar's, not a place in the world. */
-export function buildBarBox(): ScreenRect {
-  const groups = buildBarGroups();
+export function buildBarBox(shown: readonly string[]): ScreenRect {
+  const groups = buildBarGroups(shown);
   const first = groups[0];
   const last = groups[groups.length - 1];
   if (!first || !last) return { x: VIEW_WIDTH / 2, y: VIEW_HEIGHT, w: 0, h: 0 };

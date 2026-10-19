@@ -76,7 +76,7 @@ export interface UiState {
   hud: BottomHudState | null;
   /** The crafting menu as drawn (026): each recipe row's item names and counts with their boxes, and the group headers. */
   craftMenu: CraftMenuState | null;
-  /** The build bar as drawn (026): every cell (and whether it's locked), the group labels and the dividers. */
+  /** The build bar as drawn (026): the unlocked pieces' cells, the shown groups' labels and the dividers. */
   buildBar: BuildBarState | null;
 }
 

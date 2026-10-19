@@ -96,10 +96,10 @@ export const CRAFT_MENU_LAYOUT = {
 
 /**
  * The build bar, along the bottom of the screen in the hotbar row's place (025: the row
- * hides while building): one cell per piece in build bar order, its icon inside (a
- * machine shows what it makes), locked pieces greyed in their place. Cells use the
- * hotbar's cell sprites. The pieces sit in groups (026), `groupGap` px apart with a thin
- * divider centred in each gap, and each group's label centred over it in a row `label.h`
+ * hides while building): one cell per unlocked piece in build bar order, its icon inside
+ * (a machine shows what it makes). Cells use the hotbar's cell sprites. The pieces sit
+ * in groups (026), `groupGap` px apart with a thin divider centred in each gap (a group
+ * with no unlocked piece isn't shown), and each group's label centred over it in a row `label.h`
  * px tall, `label.gap` px above the cells. Px on screen, then from each cell's top-left.
  */
 export const BUILD_BAR_LAYOUT = {
@@ -113,8 +113,6 @@ export const BUILD_BAR_LAYOUT = {
   /** The divider: a line this colour (palette id) and alpha, from the label row's top to `inset` px above the cells' bottom. */
   divider: { color: 'brass', alpha: 0.7, width: 1, inset: 2 },
   label: { h: 9, gap: 2 },
-  /** Alpha of a piece not yet unlocked. */
-  lockedAlpha: 0.35,
 } as const;
 
 /** The ghost of the piece to place: palette tints for where it can and can't go, and its alpha. */

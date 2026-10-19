@@ -36,21 +36,21 @@ function bodyFrame(pieceId: string, facing: Facing, inFrom: Facing): string {
 export interface BuildBarState {
   shown: boolean;
   selected: string;
-  cells: (ScreenRect & { pieceId: string; locked: boolean })[];
+  cells: (ScreenRect & { pieceId: string })[];
   /** Each group's label as drawn: its text box (x, y the top of its capitals) and the group it heads. */
   groups: (ScreenRect & { category: string; label: string })[];
   dividers: { x: number; y: number; h: number }[];
 }
 
-// Build mode on screen: the bar of every piece in its groups (026), each group
-// labelled with a thin divider between, locked pieces greyed in their place and
-// the selected one highlighted; and a ghost of it on the tile under the cursor,
-// tinted by whether it can go there.
+// Build mode on screen: the bar of unlocked pieces in their groups (026), each
+// group labelled with a thin divider between and the selected piece highlighted;
+// and a ghost of it on the tile under the cursor, tinted by whether it can go there.
+// Locked pieces aren't shown, nor a group with none unlocked.
 export class BuildView {
   private readonly scene: Scene;
-  private readonly cells: { pieceId: string; images: GameObjects.Image[] }[];
-  /** Each group's label with the group it heads. */
-  private readonly labels: { category: string; label: string; line: TextLine }[];
+  private cells: { pieceId: string; images: GameObjects.Image[] }[] = [];
+  /** Each shown group's label with the group it heads. */
+  private labels: { category: string; label: string; line: TextLine }[] = [];
   private readonly dividers: GameObjects.Graphics;
   private readonly highlight: GameObjects.Image;
   private readonly ghost: GameObjects.Image;
@@ -72,30 +72,13 @@ export class BuildView {
     this.ghostArrows = Array.from({ length: MAX_ARROWS }, () => addVector(scene, 0, 0, FACING_ARROWS.out.down));
     for (const o of [this.ghost, this.ghostIcon, ...this.ghostArrows]) o.setDepth(DEPTHS.worldUi - 1);
     this.tip = new BuildTip(scene);
-    const L = BUILD_BAR_LAYOUT;
-    const fixed = (o: GameObjects.Image, depth: number): GameObjects.Image => o.setOrigin(0).setScrollFactor(0).setDepth(depth);
-    this.cells = buildBarCells().map((c) => ({
-      pieceId: c.pieceId,
-      images: [
-        fixed(addVector(scene, c.x, c.y, SPRITES.hudAmmoCell), DEPTHS.hud),
-        fixed(addVector(scene, c.x + L.icon.x, c.y + L.icon.y, pieceIcon(c.pieceId)), DEPTHS.hud + 1),
-      ],
-    }));
-    // Each group's label, centred over its cells.
-    this.labels = buildBarGroups().map((g) => {
-      const line = new TextLine(scene, 0, g.y, DEPTHS.hud + 1, false, 'display').set(g.label);
-      return { category: g.category, label: g.label, line: line.moveTo(Math.round(g.x + (g.w - line.width) / 2), g.y) };
-    });
     this.dividers = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.hud);
-    const D = L.divider;
-    this.dividers.fillStyle(colorOf(D.color), D.alpha);
-    for (const d of buildBarDividers()) this.dividers.fillRect(d.x - D.width / 2, d.y, D.width, d.h);
     this.setVisible(false);
   }
 
   /** True if a screen point is over the bar or its labels, so a click there isn't a place in the world. */
   overUi(x: number, y: number): boolean {
-    return this.visible && inRect(buildBarBox(), x, y);
+    return this.visible && inRect(buildBarBox(this.unlocked), x, y);
   }
 
   /** What the bar shows, for the test hook (026). */
@@ -103,13 +86,13 @@ export class BuildView {
     return {
       shown: this.visible,
       selected: this.selected,
-      cells: buildBarCells().map((c) => ({ ...c, locked: !this.unlocked.includes(c.pieceId) })),
+      cells: buildBarCells(this.unlocked),
       groups: this.labels.map(({ category, label, line }) => ({ category, label, ...line.at, w: line.width, h: line.lineHeight })),
-      dividers: buildBarDividers(),
+      dividers: buildBarDividers(this.unlocked),
     };
   }
 
-  /** Moves the selection along the bar, wrapping. */
+  /** Moves the selection along the bar's (unlocked) pieces, wrapping. */
   step(delta: number): void {
     const i = this.unlocked.indexOf(this.selected);
     const n = this.unlocked.length;
@@ -125,16 +108,16 @@ export class BuildView {
     canPlace: (pieceId: string, tx: number, ty: number, facing: Facing) => PlaceFail | null,
     shapeAt: (tile: Tile, facing: Facing) => { facing: Facing; inFrom: Facing },
   ): void {
-    if (unlocked.join() !== this.unlocked.join()) this.restyle(unlocked);
+    if (unlocked.join() !== this.unlocked.join()) this.rebuild(unlocked);
     if (!unlocked.includes(this.selected)) this.selected = unlocked[0] ?? FIRST_PIECE;
     this.setVisible(building);
     const pointer = this.scene.input.activePointer;
     const at = toView(pointer.x, pointer.y, this.scene.cameras.main.zoom);
-    const hovered = building ? buildBarCells().find((c) => inRect(c, at.x, at.y)) : undefined;
+    const hovered = building ? buildBarCells(unlocked).find((c) => inRect(c, at.x, at.y)) : undefined;
     // The tip sits over the group labels, so it never hides them (026).
     this.tip.show(hovered?.pieceId ?? null, (hovered?.x ?? 0) + (hovered?.w ?? 0) / 2, buildBarLabelTop(), VIEW_WIDTH);
     if (!building) return;
-    const cell = buildBarCells().find((c) => c.pieceId === this.selected);
+    const cell = buildBarCells(unlocked).find((c) => c.pieceId === this.selected);
     if (cell) this.highlight.setPosition(cell.x, cell.y);
     this.drawGhost(cursor, facing, mirrored, canPlace, shapeAt);
   }
@@ -181,20 +164,36 @@ export class BuildView {
     }
   }
 
-  /** Greys the pieces not yet unlocked, in their places (026). */
-  private restyle(unlocked: readonly string[]): void {
+  /** Redraws the bar for the unlocked pieces: their cells, each shown group's label, and the dividers between (026). */
+  private rebuild(unlocked: readonly string[]): void {
+    for (const c of this.cells) for (const o of c.images) o.destroy();
+    for (const l of this.labels) l.line.destroy();
     this.unlocked = [...unlocked];
-    for (const c of this.cells) {
-      const alpha = unlocked.includes(c.pieceId) ? 1 : BUILD_BAR_LAYOUT.lockedAlpha;
-      for (const o of c.images) o.setAlpha(alpha);
-    }
+    const L = BUILD_BAR_LAYOUT;
+    const fixed = (o: GameObjects.Image, depth: number): GameObjects.Image =>
+      o.setOrigin(0).setScrollFactor(0).setDepth(depth).setVisible(this.visible);
+    this.cells = buildBarCells(unlocked).map((c) => ({
+      pieceId: c.pieceId,
+      images: [
+        fixed(addVector(this.scene, c.x, c.y, SPRITES.hudAmmoCell), DEPTHS.hud),
+        fixed(addVector(this.scene, c.x + L.icon.x, c.y + L.icon.y, pieceIcon(c.pieceId)), DEPTHS.hud + 1),
+      ],
+    }));
+    // Each group's label, centred over its cells.
+    this.labels = buildBarGroups(unlocked).map((g) => {
+      const line = new TextLine(this.scene, 0, g.y, DEPTHS.hud + 1, false, 'display').set(g.label).setVisible(this.visible);
+      return { category: g.category, label: g.label, line: line.moveTo(Math.round(g.x + (g.w - line.width) / 2), g.y) };
+    });
+    const D = L.divider;
+    this.dividers.clear().fillStyle(colorOf(D.color), D.alpha);
+    for (const d of buildBarDividers(unlocked)) this.dividers.fillRect(d.x - D.width / 2, d.y, D.width, d.h);
   }
 
-  /** Clicking an unlocked piece's cell selects it; a locked one stays unselectable. Returns whether the click landed on the bar. */
+  /** Clicking a cell selects its piece. Returns whether the click landed on the bar (its labels and gaps too). */
   click(x: number, y: number): boolean {
     if (!this.overUi(x, y)) return false;
-    const cell = buildBarCells().find((c) => inRect(c, x, y));
-    if (cell && this.unlocked.includes(cell.pieceId)) this.selected = cell.pieceId;
+    const cell = buildBarCells(this.unlocked).find((c) => inRect(c, x, y));
+    if (cell) this.selected = cell.pieceId;
     return true;
   }
 
