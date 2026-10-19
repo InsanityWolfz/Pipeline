@@ -75,5 +75,6 @@ export const BULWARK: BulwarkDef = {
     chance: 0,
     oneOf: [],
   },
+  xp: 300,
   anims: 'bulwark',
 };

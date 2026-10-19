@@ -34,6 +34,7 @@ import { applyStage } from './stages';
 import { entranceCap, machineSpeed, restore } from './research';
 import { stepEnemyBombs } from './enemyBombs';
 import { stepAltars } from './altar';
+import { stepLeveling } from './leveling';
 
 /** Each room's bodies, built once per tick on first use. */
 function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
@@ -87,6 +88,8 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepBombs(state);
   stepOrbs(state);
   removeDead(state);
+  // After the tick's claims, discoveries and kills (037).
+  stepLeveling(state);
   stepTube(state, cmd);
   stepBuild(state, cmd);
   stepFoundryUse(state, cmd);

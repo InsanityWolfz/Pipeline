@@ -38,9 +38,10 @@ import { LANDMARK_LIST } from '../data/landmarks';
 import { isOpened } from './cache';
 import { regionOf } from './regions';
 import { hollowsSummary, type HollowsSummary } from './summaryHollows';
+import { levelingSummary, type LevelingSummary } from './summaryLeveling';
 
 /** The compact JSON summary that window.__GAME__.getState() returns. Stonefall Hollows' part (034) is in summaryHollows.ts. */
-export interface SimSummary extends HollowsSummary {
+export interface SimSummary extends HollowsSummary, LevelingSummary {
   tick: number;
   seed: number;
   /** The room the player is in. */
@@ -272,6 +273,7 @@ export function summarize(state: SimState): SimSummary {
     prototypeComplete: state.prototypeComplete,
     research: researchSummary(state),
     ...hollowsSummary(state),
+    ...levelingSummary(state),
     events: structuredClone(state.events),
   };
 }

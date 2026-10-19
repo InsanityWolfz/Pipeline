@@ -7,6 +7,7 @@ import { rollChampions } from './champions';
 import { WORLD } from './world';
 import type { GearPiece, GearSlot } from '../data/gear';
 import { NOTHING_WORN } from './gear';
+import { TALENT_START } from '../data/talents';
 import { playerStats } from './stats';
 import type { ArrowState } from './arrows';
 import type { BombState } from './bombs';
@@ -105,6 +106,13 @@ export interface SimState {
   nextGearId: number;
   /** The worn piece's id in each slot, or null (036). Kept through a KO. */
   equipped: Record<GearSlot, number | null>;
+  /** 037: the level (from 1), XP toward the next, unspent talent points and the taken talents (the centre start always). Kept through a KO. */
+  level: number;
+  xp: number;
+  talentPoints: number;
+  talents: string[];
+  /** Bosses killed at least once (037): a later kill gives the refight's share of their XP. Kept through a KO. */
+  killedBosses: string[];
   /** The player holds the tube (012); without it nothing fires. Kept through a KO. */
   hasTube: boolean;
   /** The tutorial's gates (012), true once open. Kept through a KO. */
@@ -186,6 +194,11 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     gear: (start.gear ?? []).map((g) => structuredClone(g)),
     nextGearId: Math.max(0, ...(start.gear ?? []).map((g) => g.id + 1)),
     equipped: { ...NOTHING_WORN },
+    level: 1,
+    xp: 0,
+    talentPoints: 0,
+    talents: [TALENT_START],
+    killedBosses: [],
     firstHuskDropped: false,
     banked: { ...start.inventory },
     hasTube: start.hasTube,

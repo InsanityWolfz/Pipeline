@@ -4,6 +4,7 @@ import type { GateId } from '../data/rooms';
 import type { GearPiece, GearSlot } from '../data/gear';
 import type { PlaceFail } from './pieces';
 import type { Facing } from './player';
+import type { XpSource } from '../data/leveling';
 
 // What happened on the last tick, for render effects and tests. Cleared at the
 // start of every tick, so render collects them after each step. Crafts happen
@@ -148,6 +149,15 @@ export interface SimEvents {
   charges: { id: number; x: number; y: number; dx: number; dy: number; length: number }[];
   eruptions: { id: number; x: number; y: number; radius: number }[];
   snipes: { id: number; x: number; y: number; dx: number; dy: number }[];
+  /** 037: XP gained (none counts at the level cap), a level reached, a talent taken, a respec at the foundry (the points it returned). */
+  xp: { amount: number; source: XpSource }[];
+  levelUps: { level: number }[];
+  talents: { id: string }[];
+  respecs: { refunded: number }[];
+  /** 037's keystones: a bomb's blast left its area charged (Blastfletch: its id, centre and radius, px); a charged arrow burst on a hit; a ley bolt shattered a frozen enemy (Shatterpoint). */
+  blastCharges: { id: number; x: number; y: number; radius: number }[];
+  chargedBursts: { x: number; y: number; radius: number }[];
+  shatters: { id: number; x: number; y: number }[];
   /** What the player carried was banked (on entering the foundry or depositing). */
   banks: Record<string, number>[];
   /** On a KO, what was lost: item id to count. */
@@ -213,6 +223,13 @@ export function createEvents(): SimEvents {
     charges: [],
     eruptions: [],
     snipes: [],
+    xp: [],
+    levelUps: [],
+    talents: [],
+    respecs: [],
+    blastCharges: [],
+    chargedBursts: [],
+    shatters: [],
     banks: [],
     lost: {},
     ko: false,
@@ -220,62 +237,9 @@ export function createEvents(): SimEvents {
 }
 
 export function clearEvents(events: SimEvents): void {
-  events.hits.length = 0;
-  events.deaths.length = 0;
-  events.pickups.length = 0;
-  events.harvests.length = 0;
-  events.crafts.length = 0;
-  events.craftFails.length = 0;
-  events.bursts.length = 0;
-  events.selects.length = 0;
-  events.roomChanges.length = 0;
-  events.places.length = 0;
-  events.placeFails.length = 0;
-  events.pickUps.length = 0;
-  events.deposits.length = 0;
-  events.crateTakes.length = 0;
-  events.withdraws.length = 0;
-  events.attunes.length = 0;
-  events.refills.length = 0;
-  events.made.length = 0;
-  events.intakeOpens.length = 0;
-  events.restores.length = 0;
-  events.schematicDrops.length = 0;
-  events.schematicReveals.length = 0;
+  // Every list empties; the two flags and the lost list reset.
+  for (const value of Object.values(events)) if (Array.isArray(value)) value.length = 0;
   events.tubeTaken = false;
-  events.gates.length = 0;
-  events.objectives.length = 0;
-  events.identifies.length = 0;
-  events.equips.length = 0;
-  events.staggers.length = 0;
-  events.wardBlocks.length = 0;
-  events.emberSaves.length = 0;
-  events.sealed.length = 0;
-  events.claims.length = 0;
-  events.discoveries.length = 0;
-  events.cacheOpens.length = 0;
-  events.stashDeposits.length = 0;
-  events.stashTakes.length = 0;
-  events.supplies.length = 0;
-  events.portDeliveries.length = 0;
-  events.travels.length = 0;
-  events.shots.length = 0;
-  events.entranceFires.length = 0;
-  events.freezes.length = 0;
-  events.thaws.length = 0;
-  events.starBursts.length = 0;
-  events.heals.length = 0;
-  events.melees.length = 0;
-  events.blocked.length = 0;
-  events.bossDefeats.length = 0;
-  events.summons.length = 0;
-  events.lobs.length = 0;
-  events.enemyBursts.length = 0;
-  events.pounds.length = 0;
-  events.charges.length = 0;
-  events.eruptions.length = 0;
-  events.snipes.length = 0;
-  events.banks.length = 0;
   events.lost = {};
   events.ko = false;
 }

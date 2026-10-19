@@ -37,6 +37,8 @@ export interface EnemyBase {
   /** Within this distance of home, px, a returning enemy is home. */
   homeTolerance: number;
   drops: DropTable;
+  /** XP for a kill (037): times its ring's and a champion's multiplier, or a boss's on its first kill. */
+  xp: number;
   /** Key into ENEMY_ANIMS in src/data/assets.ts. */
   anims: string;
   /**
@@ -165,6 +167,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
       oneOf: ['wood', 'stone', 'fiber'],
       rare: [REGION_1_PART],
     },
+    xp: 5,
     anims: 'husk',
   },
   wisp: {
@@ -196,6 +199,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
     },
     hitKnockback: 8,
     drops: { always: [{ itemId: 'ley-crystal', min: 1, max: 2 }], chance: 0, oneOf: [], rare: [REGION_1_PART] },
+    xp: 6,
     anims: 'wisp',
   },
   'pylon-warden': {
@@ -231,6 +235,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
       chance: 0,
       oneOf: [],
     },
+    xp: 150,
     anims: 'warden',
   },
   bulwark: BULWARK,

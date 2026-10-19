@@ -4,6 +4,7 @@ import { createShard, type ArrowState } from './arrows';
 import { aggro, damageEnemy, inHurtbox, targetable, type EnemyState, type HitStyle } from './enemies';
 import { recordBlock, shieldBlocks } from './shield';
 import { onBossDeath } from './altar';
+import { killXp } from './leveling';
 import { spawnDrops } from './drops';
 import type { SimState } from './state';
 import { rotate } from './volley';
@@ -73,7 +74,7 @@ export function arrowHits(state: SimState, spawned: ArrowState[] = []): (arrow: 
   };
 }
 
-/** Removes dead enemies, recording their deaths and dropping their loot. */
+/** Removes dead enemies, recording their deaths, dropping their loot and giving their XP (037). */
 export function removeDead(state: SimState): void {
   let kept = 0;
   for (const e of state.enemies) {
@@ -84,6 +85,8 @@ export function removeDead(state: SimState): void {
     state.events.deaths.push({ id: e.id, enemyId: e.enemyId, x: e.x, y: e.y, facing: e.facing, ...(e.champion ? { champion: true as const } : {}) });
     spawnDrops(state, enemyDef(e.enemyId), e.x, e.y, e.roomId, e.champion !== null);
     onBossDeath(state, e.enemyId);
+    // Any kill gives XP (037): by ammo, burst or punch.
+    killXp(state, e);
   }
   state.enemies.length = kept;
 }

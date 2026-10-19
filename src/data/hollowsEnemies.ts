@@ -144,6 +144,7 @@ export const CHARGER: ChargerDef = {
     stunTicks: 60,
   },
   drops: HOLLOWS_DROPS,
+  xp: 6,
   anims: 'charger',
 };
 
@@ -175,6 +176,7 @@ export const BURROWER: BurrowerDef = {
     knockTicks: 6,
   },
   drops: HOLLOWS_DROPS,
+  xp: 6,
   anims: 'burrower',
 };
 
@@ -204,6 +206,7 @@ export const SHARDBACK: ShardbackDef = {
     knockTicks: 6,
   },
   drops: HOLLOWS_DROPS,
+  xp: 6,
   anims: 'shardback',
 };
 
@@ -240,6 +243,7 @@ export const SNIPER: SniperDef = {
     knockTicks: 4,
   },
   drops: HOLLOWS_DROPS,
+  xp: 6,
   anims: 'sniper',
 };
 
