@@ -10,6 +10,7 @@ import { LANDMARK_LOOK, LANDMARK_SPRITES } from '../data/landmarkAssets';
 import { defOf } from '../sim/champions';
 import { TextLine } from './textLine';
 import type { EnemyState } from '../sim/enemies';
+import type { SimState } from '../sim/state';
 import type { Facing } from '../sim/player';
 import { registerAnim } from './anims';
 import { colorOf } from './color';
@@ -19,7 +20,7 @@ import { COLD } from '../data/tags';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
 import { bulwarkPose, drawSeam } from './bulwarkLook';
 import { drawTelegraph } from './telegraphs';
-import { destroyHollowsArt, drawHollowsArt, makeHollowsArt, type HollowsArt } from './hollowsEnemyArt';
+import { destroyHollowsArt, drawHollowsArt, makeHollowsArt, shownOf, type HollowsArt, type HollowsEnemiesShown } from './hollowsEnemyArt';
 
 /** A champion's extras (032): its glow, and its name with its kind under it. */
 interface ChampionArt {
@@ -55,6 +56,9 @@ interface Drawn {
   hollows?: HollowsArt | undefined;
 }
 
+/** `ui()`'s enemy part before the scene has built its views. */
+export const NO_ENEMY_UI: { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown } = { champions: [], hollowsEnemies: { ripples: 0, flares: 0, lasers: [] } };
+
 const viewOf = (f: Facing): 'down' | 'up' | 'side' => (f === 'up' || f === 'down' ? f : 'side');
 
 // Draws live enemies from sim state: the animation for their mode and facing, a
@@ -64,6 +68,8 @@ export class EnemyView {
   private readonly drawn = new Map<number, Drawn>();
   /** Scene time each frozen enemy thaws at. */
   private readonly frozenUntil = new Map<number, number>();
+  /** Each enemy as last drawn, for `ui`. */
+  private readonly last = new Map<number, EnemyState>();
   private readonly scene: Scene;
 
   constructor(scene: Scene) {
@@ -76,11 +82,14 @@ export class EnemyView {
     this.frozenUntil.set(id, this.scene.time.now + ms);
   }
 
-  update(enemies: readonly EnemyState[]): void {
+  /** `sim` for what an enemy's extras read beyond itself (035: a Sniper's laser runs to the player). */
+  update(enemies: readonly EnemyState[], sim: SimState): void {
     const live = new Set<number>();
     const now = this.scene.time.now;
+    this.last.clear();
     for (const e of enemies) {
       live.add(e.id);
+      this.last.set(e.id, e);
       const d = this.drawn.get(e.id) ?? this.create(e);
       const until = this.frozenUntil.get(e.id);
       if (until !== undefined && now < until) {
@@ -118,7 +127,7 @@ export class EnemyView {
       this.drawBar(d.bar, e, top);
       if (d.champion) this.drawChampion(d.champion, e, bottom, top, now);
       drawTelegraph(d.telegraph, e);
-      drawHollowsArt(d.hollows, d.sprite, e, def, now);
+      drawHollowsArt(d.hollows, d.sprite, e, def, sim, now);
       if (d.overlay && e.enemyId === RESIN.enemyId) this.drawResin(d.overlay, e, bottom, view, now);
       if (d.overlay && e.enemyId === CORE.enemyId) this.drawCore(d.overlay, e, bottom, view, now);
       if (d.overlay && def.kind === 'bulwark') drawSeam(d.overlay, e, bottom, view, now);
@@ -205,6 +214,13 @@ export class EnemyView {
     const pulse = e.mode === 'windup' ? (Math.sin((now / CORE.pulseMs) * Math.PI * 2) + 1) / 2 : 0;
     g.setDepth(bottom + DEPTHS.overlayNudge);
     g.fillStyle(colorOf(CORE.haloColor), CORE.rest + (CORE.peak - CORE.rest) * pulse).fillCircle(x, y, CORE.halo * k * (1 + CORE.swell * pulse));
+  }
+
+  /** What the test hook's `ui()` reads here: the champions (032) and Region 2's four's extras (035). */
+  get ui(): { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown } {
+    const hollowsEnemies: HollowsEnemiesShown = { ripples: 0, flares: 0, lasers: [] };
+    for (const [id, d] of this.drawn) if (this.last.has(id)) shownOf(id, this.last.get(id) as EnemyState, d.hollows, hollowsEnemies);
+    return { champions: this.champions, hollowsEnemies };
   }
 
   /** The champions on show (032), for the test hook. */

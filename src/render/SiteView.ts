@@ -11,10 +11,12 @@ import { roomById, type SimState } from '../sim/state';
 import { registerAnim } from './anims';
 import { colorOf } from './color';
 import { addVector, addVectorSprite } from './vector/textures';
+import { drawBolts } from './hollowsEnemyArt';
+import { enemyDef } from '../data/enemies';
 
 // The claimable sites and what claiming brings (009): the room's pylons (032: several; dormant,
 // activating, or glowing once claimed) with the claim hold's bar, the foundry's
-// fixtures (with 010's bench), and Wisp orbs in flight.
+// fixtures (with 010's bench), and Wisp orbs and (035) Sniper bolts in flight.
 /** The frame a fixture shows first. */
 function fixtureFrame(kind: string): string {
   if (kind === 'stash') return FIXTURE_SPRITES.stash;
@@ -27,6 +29,8 @@ export class SiteView {
   /** One sprite per pylon in the room on screen, by site (032: a room can hold several). */
   private readonly pylons = new Map<string, GameObjects.Sprite>();
   private readonly bar: GameObjects.Graphics;
+  /** Sniper bolts in flight (035), redrawn each frame. */
+  private readonly bolts: GameObjects.Graphics;
   private readonly fixtures = new Map<string, GameObjects.Sprite>();
   private readonly orbs = new Map<number, { orb: GameObjects.Image; shadow: GameObjects.Image }>();
   /** Scene time until which the bench's lens flares. */
@@ -38,6 +42,7 @@ export class SiteView {
     registerAnim(scene, PYLON_SPRITES.active);
     registerAnim(scene, FIXTURE_SPRITES.waystone);
     this.bar = scene.add.graphics().setDepth(DEPTHS.worldUi);
+    this.bolts = scene.add.graphics().setDepth(DEPTHS.motes - 1);
   }
 
   /** Pieces were identified since the last draw: the bench flares. */
@@ -49,6 +54,7 @@ export class SiteView {
     this.drawPylon(sim, shown);
     this.drawFixtures(sim, shown === FOUNDRY_ROOM);
     this.drawOrbs(sim, shown);
+    drawBolts(this.bolts, sim.orbs, shown);
   }
 
   private drawPylon(sim: SimState, shown: string): void {
@@ -102,7 +108,7 @@ export class SiteView {
   private drawOrbs(sim: SimState, shown: string): void {
     const live = new Set<number>();
     for (const o of sim.orbs) {
-      if (o.roomId !== shown) continue;
+      if (o.roomId !== shown || enemyDef(o.enemyId).kind !== 'caster') continue;
       live.add(o.id);
       let d = this.orbs.get(o.id);
       if (!d) {

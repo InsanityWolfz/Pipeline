@@ -133,10 +133,24 @@ test.describe('review screenshots (035)', () => {
     await page.screenshot({ path: `${SHOTS}/08-shardback-champion.png` });
   });
 
+  test('the Sniper construct idle, its laser tracking, then locked and blinking on', async ({ page }) => {
+    test.setTimeout(120_000);
+    await sandbox(page);
+    const id = await spawn(page, 'sniper', 200, -40);
+    await frames(page);
+    await page.screenshot({ path: `${SHOTS}/09-sniper-idle.png` });
+    await stepUntil(page, id, 'windup', 30);
+    await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().hollowsEnemies.lasers[0]?.locked)).toBe(false);
+    await page.screenshot({ path: `${SHOTS}/10-sniper-tracking.png` });
+    await stepUntil(page, id, 'windup', 62);
+    await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().hollowsEnemies.lasers[0])).toMatchObject({ locked: true, on: true });
+    await page.screenshot({ path: `${SHOTS}/11-sniper-locked.png` });
+  });
+
   test('the rigs on the contact sheet, at 4x', async ({ page }) => {
     await page.goto('/sheet.html');
     const row = (title: string) => page.locator('h2', { hasText: title }).locator('xpath=following-sibling::div[1]');
-    for (const id of ['charger', 'burrower', 'shardback']) {
+    for (const id of ['charger', 'burrower', 'shardback', 'sniper']) {
       await expect(row(id)).toBeVisible();
       await row(id).screenshot({ path: `${SHOTS}/sheet-${id}.png` });
     }

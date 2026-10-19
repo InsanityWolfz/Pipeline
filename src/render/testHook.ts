@@ -27,6 +27,7 @@ import type { SchematicsShown } from './SchematicView';
 import type { RestorePanelState } from './RestorePanel';
 import type { ResearchListState } from './ResearchList';
 import type { HollowsShown } from './HollowsView';
+import type { HollowsEnemiesShown } from './hollowsEnemyArt';
 
 export interface GameTestHook {
   getState(): SimSummary;
@@ -149,6 +150,8 @@ export interface UiState {
   landmarks: LandmarksShown;
   /** 032: champions drawn, each with its name and kind lines, its scale and its glow's alpha. */
   champions: ChampionShown[];
+  /** 035: Burrower ripples on show, Shardback flares lit, and each Sniper's laser as drawn (locked, its blink on, its ends). */
+  hollowsEnemies: HollowsEnemiesShown;
   /** 032: the waystone's menu while open (two or more claimed pylons): each row's text and box, view px; else null. */
   waystone: { text: string; x: number; y: number; w: number; h: number }[] | null;
   /** 033: the diagrams drawn on the foundry, restored parts, running effects and the wing door. */

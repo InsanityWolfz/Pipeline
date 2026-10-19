@@ -8,17 +8,24 @@ import type { SoundView } from './SoundView';
 
 // Region 2's four's feel (035), for FeelView: a Charger kicking dust down its lane and
 // slamming into a wall (a crack of stone, chips and a shake); a Burrower's ripple trailing
-// dust and its eruption throwing up rock; a Shardback's bash. Their wind-up cues are
+// dust and its eruption throwing up rock; a Shardback's bash; a Sniper's lock beep and its
+// bolt's crack with a flash at its lens. Their wind-up cues are
 // WINDUP_SOUNDS'; this plays what happens after.
 
 export class HollowsEnemyFeel {
   /** Each enemy's mode last frame, and ms since it last kicked up dust. */
   private readonly modes = new Map<number, string>();
   private readonly dust = new Map<number, number>();
+  /** Snipers whose sight is locked, so the lock beeps once. */
+  private readonly locked = new Set<number>();
 
   /** What the sim's events say happened: a Charger setting off throws up dust; a Burrower erupting, rock and a jolt. */
   events(ev: SimEvents, j: JuiceView, s: SoundView): void {
     for (const c of ev.charges) j.burst('chargeDust', c.x, c.y, c.y - 1);
+    for (const sn of ev.snipes) {
+      s.play(SOUNDS.sniperBolt);
+      j.burst('boltFlash', sn.x + sn.dx * 8, sn.y);
+    }
     for (const er of ev.eruptions) {
       s.play(SOUNDS.burrowErupt);
       j.burst('eruption', er.x, er.y);
@@ -37,6 +44,16 @@ export class HollowsEnemyFeel {
       this.modes.set(e.id, e.mode);
       if (kind === 'burrower') {
         this.trail(e.id, e.underground && Math.hypot(e.vx, e.vy) > HOLLOWS_ENEMY_LOOK.ripple.minSpeed, deltaMs, () => j.burst('rippleDust', e.x, e.y + 2, e.y - 1));
+        continue;
+      }
+      if (kind === 'sniper') {
+        const def = enemyDef(e.enemyId);
+        const lockAt = def.kind === 'sniper' ? def.snipe.trackTicks : 0;
+        // The sight locks: two quick beeps, the cue to dodge.
+        const locked = e.mode === 'windup' && e.modeTicks >= lockAt;
+        if (locked && !this.locked.has(e.id)) s.play(SOUNDS.laserLock);
+        if (locked) this.locked.add(e.id);
+        else this.locked.delete(e.id);
         continue;
       }
       if (kind === 'shardback') {
@@ -72,6 +89,7 @@ export class HollowsEnemyFeel {
       if (live.has(id)) continue;
       this.modes.delete(id);
       this.dust.delete(id);
+      this.locked.delete(id);
     }
   }
 }

@@ -18,7 +18,7 @@ import { Controls, NO_UI_COMMAND, type UiCommand } from './controls';
 import { ghostShape } from './dragPath';
 import { CraftMenuView } from './CraftMenuView';
 import { EffectsView } from './EffectsView';
-import { EnemyView } from './EnemyView';
+import { EnemyView, NO_ENEMY_UI } from './EnemyView';
 import { FoundryView } from './FoundryView';
 import { GroundItemView } from './GroundItemView';
 import { HopperPicker } from './HopperPicker';
@@ -190,7 +190,7 @@ export class GameScene extends Scene {
       craftMenu: this.menu?.state ?? null,
       buildBar: this.buildView?.state ?? null,
       tagged: { benchStages: this.siteMenus?.stagePanel ?? null, starFlashes: this.effects?.starFlashes ?? 0, trails: this.arrowView?.trails ?? { count: 0, longest: 0 } },
-      champions: this.enemyView?.champions ?? [],
+      ...(this.enemyView?.ui ?? NO_ENEMY_UI),
     };
   }
 
@@ -264,7 +264,7 @@ export class GameScene extends Scene {
     this.foundryView?.update(sim.foundry, inFoundry, sim.building);
     this.nodeView?.update(inRoom(sim.nodes, shown), sim.harvest, this.game.loop.delta);
     this.groundItemView?.update(inRoom(sim.groundItems, shown), picked, sim.player, sim);
-    this.enemyView?.update(inRoom(sim.enemies, shown));
+    this.enemyView?.update(inRoom(sim.enemies, shown), sim);
     // Through a door's fade the player is already in the next room; hide them until it shows.
     this.playerView?.update(sim.player, sim.tube, sim.link, worn(sim)?.weight ?? null, sim.hasTube, shown === sim.roomId);
     this.arrowView?.update(inRoom(sim.arrows, shown));

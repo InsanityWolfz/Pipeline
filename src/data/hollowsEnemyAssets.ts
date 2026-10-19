@@ -20,10 +20,11 @@ export const HOLLOWS_ENEMY_LOOK = {
   bash: { alpha: 0.25, fillAlpha: 0.55 },
   flare: { color: 'cyan-glow', ahead: 12, rise: 20, radius: 16, alpha: 0.7, pulseMs: 140 },
   /**
-   * The Sniper's laser from its lens: thin while tracking, brighter and wider once locked, blinking every `blinkMs`
-   * (on for half of it). Lens offsets from the feet per view (side faces right), world px.
+   * The Sniper's laser from its lens: thin while tracking, brighter and wider once locked, blinking on and off every
+   * `blinkTicks` sim ticks (so it holds still when the sim does), a hot `core` down its middle when on. Lens offsets from the feet per view (side faces
+   * right), world px.
    */
-  laser: { width: 1, alpha: 0.55, lockedWidth: 2, lockedAlpha: 0.95, blinkMs: 120, glow: 4, glowAlpha: 0.25 },
+  laser: { width: 1, alpha: 0.55, lockedWidth: 2.5, lockedAlpha: 0.95, blinkTicks: 4, glow: 4, glowAlpha: 0.25, core: 'rust-light', coreWidth: 1 },
   lens: { side: [6, -40] as const, down: [0, -38] as const, up: [0, -40] as const },
   /** The bolt in flight: a streak `length` px long behind it, lifted `lift` px off its ground point. */
   bolt: { length: 14, width: 3, core: 1.2, color: 'danger', coreColor: 'snow', lift: 18 },
