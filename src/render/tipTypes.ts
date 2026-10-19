@@ -1,0 +1,59 @@
+import type { ChipGroup, ChipId } from '../data/legibility';
+import type { Box } from './tipPlace';
+
+// What the legibility UI (040) shows, pure: chips, the lines of a summary or breakdown with
+// their tone, and a description of one thing. describe.ts builds them; RuleTip, the Build tab
+// and the glossary draw them.
+
+/** A chip: the keyword (or scope) it opens, its words, its group's colour. */
+export interface Chip {
+  id: ChipId;
+  label: string;
+  group: ChipGroup;
+}
+
+/** A chip laid out: where it sits, view px (world px for the enemy hover). */
+export interface PlacedChip extends Chip {
+  box: Box;
+}
+
+/** How a line or part reads: plain, dim, lit (a taken talent in Linked), a "when" line, or the bonus hint. */
+export type Tone = 'text' | 'dim' | 'lit' | 'when' | 'hint';
+
+export interface TipPart {
+  text: string;
+  tone?: Tone;
+}
+
+/** A line of a tablet: its whole text (as the hook reports it), its tone, or parts in their own tones. */
+export interface TipLine {
+  text: string;
+  tone?: Tone;
+  parts?: readonly TipPart[];
+}
+
+/** What a tablet can describe (040), and the build bar's other pieces (015's tip, now the same tablet). */
+export type TipKind = 'round' | 'stage' | 'talent' | 'gear' | 'piece' | 'keyword';
+
+export interface TipSource {
+  kind: TipKind;
+  id: string;
+}
+
+/** One thing described (040): its name and chips; its summary (hover) and breakdown (Shift) lines; how many bonuses change what it shows. */
+export interface Description {
+  source: TipSource;
+  name: string;
+  /** The name's palette colour (a gear piece's rarity), or the display face's own. */
+  nameColor?: string;
+  chips: Chip[];
+  summary: TipLine[];
+  breakdown: TipLine[];
+  bonuses: number;
+}
+
+/** A plain line. */
+export const line = (text: string, tone?: Tone): TipLine => (tone ? { text, tone } : { text });
+
+/** The lines' words, for tests and the hook. */
+export const texts = (lines: readonly TipLine[]): string[] => lines.map((l) => l.text);

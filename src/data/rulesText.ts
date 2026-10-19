@@ -21,11 +21,24 @@ export function trimNumber(v: number, places = 2): string {
   return String(Number(v.toFixed(places)));
 }
 
-/** A param's value in its unit's words. */
-export function formatParam(value: number, unit: ParamUnit): string {
+/** Damage to 1 decimal without a trailing ".0" (040): 11.6, 15. */
+export const formatDamage = (v: number): string => trimNumber(v, 1);
+
+/**
+ * Ticks in seconds: to 1 decimal ("0.7 s"), or with `precise` (040's breakdown and glossary, 039.8) to 2 where 1
+ * isn't exact ("0.67 s", "1.5 s").
+ */
+export function formatSeconds(ticks: number, precise = false): string {
+  const s = ticks / TICK_RATE;
+  const one = s.toFixed(1);
+  return `${precise && Math.abs(Number(one) - s) > 1e-9 ? s.toFixed(2) : one} s`;
+}
+
+/** A param's value in its unit's words; `precise` times as formatSeconds says. */
+export function formatParam(value: number, unit: ParamUnit, precise = false): string {
   switch (unit) {
     case 'ticks':
-      return `${(value / TICK_RATE).toFixed(1)} s`;
+      return formatSeconds(value, precise);
     case 'px':
       return `${trimNumber(value, 1)} px`;
     case 'px-per-s':
@@ -49,13 +62,13 @@ export function formatParam(value: number, unit: ParamUnit): string {
   }
 }
 
-/** A stat's value in its unit's words (a flat change, a total). */
-export function formatStat(value: number, unit: StatUnit): string {
+/** A stat's value in its unit's words (a flat change, a total); `precise` times as formatSeconds says. */
+export function formatStat(value: number, unit: StatUnit, precise = false): string {
   switch (unit) {
     case 'count':
       return `${Math.round(value)}`;
     case 'seconds':
-      return formatParam(value, 'ticks');
+      return formatParam(value, 'ticks', precise);
     case 'hp-per-s':
       return formatParam(value, 'hp-per-s');
     case 'px':
@@ -131,8 +144,8 @@ export function changeText(line: StatLine): string {
   return `${signed(line.value, formatStat(Math.abs(line.value), def.unit))} ${label}`;
 }
 
-/** A rule line's text after its scope, its params in their units; `extra` fills slots that aren't numbers (a stage's `{rounds}`). */
-export function ruleText(line: RuleLine, extra: Readonly<Record<string, string>> = {}): string {
+/** A rule line's text after its scope, its params in their units; `extra` fills slots that aren't numbers (a stage's `{rounds}`); `precise` times to 2 decimals where 1 isn't exact (040). */
+export function ruleText(line: RuleLine, extra: Readonly<Record<string, string>> = {}, precise = false): string {
   const rule = RULES[line.rule];
   return renderTemplate(rule.template, (name) => {
     const text = extra[name];
@@ -140,7 +153,7 @@ export function ruleText(line: RuleLine, extra: Readonly<Record<string, string>>
     const unit = rule.params[name];
     const v = line.params[name];
     if (unit === undefined || v === undefined) throw new Error(`Rule '${line.rule}' has no param '${name}'`);
-    return formatParam(v, unit);
+    return formatParam(v, unit, precise);
   });
 }
 

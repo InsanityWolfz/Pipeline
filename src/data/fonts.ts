@@ -33,7 +33,7 @@ export interface TextStyle {
   readonly upper?: boolean;
 }
 
-export type TextStyleKey = 'body' | 'count' | 'label' | 'display' | 'title' | 'float';
+export type TextStyleKey = 'body' | 'count' | 'label' | 'display' | 'title' | 'float' | 'chip';
 
 export const TEXT_STYLES: Readonly<Record<TextStyleKey, TextStyle>> = {
   /** Counts, readouts, key caps, descriptions. */
@@ -48,4 +48,6 @@ export const TEXT_STYLES: Readonly<Record<TextStyleKey, TextStyle>> = {
   title: { font: 'display', size: 14, weight: 700, fill: 'snow', stroke: 'ink', strokeWidth: 2.4, lineHeight: 16 },
   /** Damage numbers and pickup popups, floating in the world. */
   float: { font: 'body', size: 8, weight: 800, fill: 'snow', stroke: 'ink', strokeWidth: 2, lineHeight: 9 },
+  /** A keyword chip's name (040), on its group's colour. */
+  chip: { font: 'body', size: 7, weight: 700, fill: 'snow', stroke: 'ink', strokeWidth: 1.2, lineHeight: 8 },
 };

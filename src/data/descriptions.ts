@@ -1,6 +1,7 @@
 // One-line descriptions on mouse-over (018) for the things that explain where
-// materials come from. Wording is a first draft for Shaun to edit; the HUD font
-// has letters, digits and . , ' ! ? ( ) : — only.
+// materials come from. Wording is a first draft for Shaun to edit. The bundled faces
+// (020) draw full Latin text with digits and + − % × · ° / (the body face → too; 040's
+// data test checks the glyphs), so any of them may be used here.
 
 export const DESCRIPTIONS = {
   pylon: 'Harvests the land round it, sends it home.',
