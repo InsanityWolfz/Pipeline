@@ -1,12 +1,16 @@
 // Enemies. Starting values from specs 004 and 009; tune in playtest.
 
-/** Items an enemy drops on death. */
+/** Items an enemy (or a Ruined Cache, 032) drops. */
 export interface DropTable {
   /** Always dropped: `min`..`max` of the item, rolled. */
   always: readonly { itemId: string; min: number; max: number }[];
   /** Chance (0..1) of one extra item, picked evenly from `oneOf`. */
   chance: number;
   oneOf: readonly string[];
+  /** `min`..`max` items, rolled, each picked evenly from `items` (032: the cache's raws). */
+  picks?: readonly { items: readonly string[]; min: number; max: number }[];
+  /** Rare entries (032), each rolled once at its chance (0..1): 033 fills the cache's with its part and schematic. */
+  rare?: readonly { itemId: string; chance: number }[];
 }
 
 /** What every enemy has, whatever its attack. */

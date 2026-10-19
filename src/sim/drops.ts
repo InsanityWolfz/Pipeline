@@ -31,6 +31,14 @@ export function rollDrops(table: DropTable, rng: RngState): string[] {
     const extra = table.oneOf[nextInt(rng, 0, table.oneOf.length - 1)];
     if (extra) items.push(extra);
   }
+  for (const { items: from, min, max } of table.picks ?? []) {
+    const n = nextInt(rng, min, max);
+    for (let i = 0; i < n; i++) {
+      const pick = from[nextInt(rng, 0, from.length - 1)];
+      if (pick) items.push(pick);
+    }
+  }
+  for (const { itemId, chance } of table.rare ?? []) if (nextFloat(rng) < chance) items.push(itemId);
   return items;
 }
 

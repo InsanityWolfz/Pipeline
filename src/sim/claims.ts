@@ -30,7 +30,7 @@ export interface ClaimHold {
 }
 
 /** Gap between the player's feet box and a tile's box, px; 0 when they touch. */
-function gapTo(state: SimState, t: Tile): number {
+export function gapTo(state: SimState, t: Tile): number {
   const r = tileRect(t);
   const p = state.player;
   const gapX = Math.max(0, Math.abs(r.x - p.x) - (FEET_BOX.w + r.w) / 2);
@@ -74,9 +74,10 @@ export const occupied = (state: SimState, site: string): boolean => state.enemie
 /** The site of the pylon in reach, if any. */
 const siteInReach = (state: SimState): string | undefined => pylonInReach(state)?.site;
 
-/** Ends a claim in progress; its progress is lost. */
+/** Ends a claim in progress, or a cache being opened (032); its progress is lost. */
 export function cancelClaim(state: SimState): void {
   state.claimHold = null;
+  state.cacheHold = null;
 }
 
 /** Moves the player to a tile's centre in a room, standing still, out of build mode. */

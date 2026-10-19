@@ -10,6 +10,7 @@ import type { GroundItem } from './drops';
 import { createEnemy, type EnemyState } from './enemies';
 import { createEvents, type SimEvents } from './events';
 import type { ClaimHold } from './claims';
+import { createCaches, type CacheHold, type CacheState } from './cache';
 import { startingFixtures, type FixtureState } from './fixtures';
 import type { HarvestState } from './harvest';
 import { createGates, type Gates } from './tutorial';
@@ -67,6 +68,12 @@ export interface SimState {
   claims: string[];
   /** The claim in progress, if any. */
   claimHold: ClaimHold | null;
+  /** Landmark ids seen at least once (032), in the order found. Kept through a KO. */
+  discovered: string[];
+  /** Each Ruined Cache (032): the tick it was opened, or null while it's full. Kept through a KO (no refill). */
+  caches: CacheState[];
+  /** Opening a cache in progress (032), if any. */
+  cacheHold: CacheHold | null;
   /** Ticks left on a pylon's activation (cosmetic). */
   activatePulse: number;
   /** The foundry's fixed furniture (stash, and what claims add). Kept through a KO. */
@@ -144,6 +151,9 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     nextOrbId: 0,
     claims: [],
     claimHold: null,
+    discovered: [],
+    caches: createCaches(),
+    cacheHold: null,
     activatePulse: 0,
     fixtures: startingFixtures(),
     stash: {},
@@ -191,6 +201,7 @@ export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   state.bombs = [];
   state.orbs = [];
   state.claimHold = null;
+  state.cacheHold = null;
   state.building = false;
   // A claimed site's guards are gone for good (017: a site is a group of the room's enemies).
   state.enemies = rooms.flatMap((room) =>

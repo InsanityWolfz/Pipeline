@@ -4,6 +4,8 @@ import { steerArrows } from './homing';
 import { stepBombs } from './bombs';
 import { maskCommand, stepBuild } from './build';
 import { stepClaims, stepPorts } from './claims';
+import { stepCache, stepCacheRearm } from './cache';
+import { stepDiscovery } from './landmarks';
 import { arrowHits, removeDead } from './combat';
 import { stepDoorways } from './doorways';
 import { stepPickups } from './drops';
@@ -54,12 +56,14 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepDoorways(state);
   stepLink(state);
   // Enemies act after the player moves, so a swipe lands on where the player stands now.
+  stepDiscovery(state);
   stepPopulation(state);
+  stepCacheRearm(state);
   stepEnemies(state, bodies);
   stepNodes(state.nodes);
   // Before the tube, so fire this tick cancels a harvest in progress.
   // Build mode keeps E for hoppers and crates, not harvesting.
-  const used = stepClaims(state, stepTubeStone(state, cmd));
+  const used = stepCache(state, stepClaims(state, stepTubeStone(state, cmd)));
   if (cmd.identify) identifyAll(state);
   if (cmd.equip) equip(state, cmd.equip.id);
   if (cmd.applyStage) applyStage(state, cmd.applyStage);

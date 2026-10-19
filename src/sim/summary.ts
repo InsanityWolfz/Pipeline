@@ -30,6 +30,8 @@ import { TILE_SIZE } from '../data/config';
 import { enemiesNearPlayer, enemiesOnScreen } from './population';
 import { springAt } from './healing';
 import { atRiskCounts } from './banking';
+import { LANDMARK_LIST } from '../data/landmarks';
+import { isOpened } from './cache';
 
 /** The compact JSON summary that window.__GAME__.getState() returns. */
 export interface SimSummary {
@@ -116,6 +118,12 @@ export interface SimSummary {
   orbs: { id: number; room: string; x: number; y: number; dx: number; dy: number }[];
   /** Claimed room ids. */
   claims: string[];
+  /** Landmarks seen at least once (032), in the order found. */
+  discovered: string[];
+  /** Every landmark (032): found yet, its pylon claimed, its cache opened (false where it has none). */
+  landmarks: { id: string; discovered: boolean; claimed: boolean; opened: boolean }[];
+  /** A cache being opened (032): its landmark and ticks into the hold. */
+  cacheHold: { id: string; progress: number } | null;
   /** The claim hold in progress: its room and ticks into it. */
   claimHold: { site: string; progress: number } | null;
   /** Ticks left on a pylon's activation. */
@@ -220,6 +228,14 @@ export function summarize(state: SimState): SimSummary {
     },
     orbs: state.orbs.map((o) => ({ id: o.id, room: o.roomId, x: round(o.x), y: round(o.y), dx: round(o.dx), dy: round(o.dy) })),
     claims: [...state.claims],
+    discovered: [...state.discovered],
+    landmarks: LANDMARK_LIST.map((l) => ({
+      id: l.id,
+      discovered: state.discovered.includes(l.id),
+      claimed: l.pylon !== undefined && state.claims.includes(l.pylon.site),
+      opened: isOpened(state, l.id),
+    })),
+    cacheHold: state.cacheHold ? { ...state.cacheHold } : null,
     claimHold: state.claimHold ? { site: state.claimHold.site, progress: state.claimHold.progress } : null,
     activatePulse: state.activatePulse,
     fixtures: state.fixtures.map((f) => {

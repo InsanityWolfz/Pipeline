@@ -20,6 +20,8 @@ export interface DeathEvent {
   x: number;
   y: number;
   facing: Facing;
+  /** A champion died (032): 037 gives it more XP. */
+  champion?: true;
 }
 
 export interface PickupEvent {
@@ -94,6 +96,10 @@ export interface SimEvents {
   sealed: { site: string }[];
   /** A room was claimed. */
   claims: { site: string }[];
+  /** A landmark was seen for the first time (032), once ever: 037 turns it into XP. */
+  discoveries: { landmark: string }[];
+  /** A Ruined Cache was opened (032): its landmark id and the reliquary's centre, px. */
+  cacheOpens: { id: string; x: number; y: number }[];
   /** The haul went into the stash from a claimed pylon. */
   stashDeposits: { items: Record<string, number> }[];
   /** Items came out of the stash. */
@@ -152,6 +158,8 @@ export function createEvents(): SimEvents {
     equips: [],
     sealed: [],
     claims: [],
+    discoveries: [],
+    cacheOpens: [],
     stashDeposits: [],
     stashTakes: [],
     supplies: [],
@@ -197,6 +205,8 @@ export function clearEvents(events: SimEvents): void {
   events.equips.length = 0;
   events.sealed.length = 0;
   events.claims.length = 0;
+  events.discoveries.length = 0;
+  events.cacheOpens.length = 0;
   events.stashDeposits.length = 0;
   events.stashTakes.length = 0;
   events.supplies.length = 0;

@@ -33,6 +33,7 @@ describe('the chain', () => {
       'Apply a frost rune to arrows at the bench',
       'Build a frost rune into your arrow line',
       'Try a ley stage at the bench: homing or star',
+      'Claim a second pylon',
     ]);
     expect(M1.map(([o]) => o.check)).toEqual([
       { kind: 'portDelivered' },
@@ -42,6 +43,7 @@ describe('the chain', () => {
       { kind: 'crafted', items: ['arrow+frost'] },
       { kind: 'machineMade', item: 'arrow+frost' },
       { kind: 'craftedAny', items: ['ley-bolt+homing', 'ley-bolt+star'] },
+      { kind: 'claimedCount', min: 2 },
     ]);
     // 029: building the frost rune pulses its build-bar cell.
     expect(M1[5]?.[0].highlight).toBe('frost-rune');

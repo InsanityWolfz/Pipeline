@@ -1,3 +1,4 @@
+import type { DropTable } from './enemies';
 import { GROTTO, GROTTO_GROUP } from './grotto';
 import { SITES } from './landmarkSites';
 import { SPRINGS } from './springs';
@@ -61,6 +62,22 @@ export const LANDMARKS = {
   /** Holding E at a cleared cache opens it after this many ticks (like a harvest). */
   cacheOpenTicks: 60,
 } as const;
+
+/** Region 1's raws: what a Ruined Cache here always holds some of. */
+const REGION_RAWS = ['wood', 'stone', 'fiber', 'ley-crystal'] as const;
+
+/**
+ * A Ruined Cache's drop table (032): always 3–5 of the region's raws, picked evenly. Its rare entries, 033's
+ * `ancient-gear` at 50% and the schematic roll at 20%, belong to 033, which adds them here as data: until then
+ * it opens with raws only.
+ */
+export const CACHE_DROPS: DropTable = {
+  always: [],
+  chance: 0,
+  oneOf: [],
+  picks: [{ items: REGION_RAWS, min: 3, max: 5 }],
+  rare: [],
+};
 
 const FROZEN_GROTTO: LandmarkDef = {
   id: GROTTO_GROUP,

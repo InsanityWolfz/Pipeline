@@ -48,6 +48,8 @@ function holds(state: SimState, check: ObjectiveCheck): boolean {
       return state.events.portDeliveries.length > 0;
     case 'mixedVolley':
       return new Set(volleyRounds(state).map((r) => r.ammoId)).size >= 2;
+    case 'claimedCount':
+      return state.claims.length >= check.min;
   }
 }
 

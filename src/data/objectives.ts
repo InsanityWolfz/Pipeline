@@ -40,13 +40,18 @@ export type ObjectiveCheck =
   /** A piece has taken an item from a supply port (028). */
   | { kind: 'portDelivered' }
   /** The volley holds at least two different ammo (028). */
-  | { kind: 'mixedVolley' };
+  | { kind: 'mixedVolley' }
+  /** At least this many pylons claimed (032). */
+  | { kind: 'claimedCount'; min: number };
 
 /** Which key a goal's prompt shows, and what it floats over (see PromptView). */
 export type PromptTarget = 'tubeStone' | 'node' | 'bench' | 'pylon' | 'hopper' | 'newestHopper' | 'player';
 
-/** What an arrow marker floats over: the intake, where a line ends (027), or the supply ports (028). */
-export type MarkerTarget = 'intake' | 'ports';
+/**
+ * What an arrow marker floats over: the intake, where a line ends (027), the supply ports (028), or the nearest
+ * discovered resource-site pylon not yet claimed (032).
+ */
+export type MarkerTarget = 'intake' | 'ports' | 'sitePylon';
 
 /** Which milestone a goal belongs to (028): the prototype's, or Milestone 1's. */
 export type Milestone = 'prototype' | 'm1';
@@ -135,6 +140,8 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
   { text: 'Apply a frost rune to arrows at the bench', milestone: 'm1', check: { kind: 'crafted', items: ['arrow+frost'] } },
   { text: 'Build a frost rune into your arrow line', milestone: 'm1', check: { kind: 'machineMade', item: 'arrow+frost' }, highlight: 'frost-rune' },
   { text: 'Try a ley stage at the bench: homing or star', milestone: 'm1', check: { kind: 'craftedAny', items: ['ley-bolt+homing', 'ley-bolt+star'] } },
+  // 032: a resource site's pylon, marked once one is discovered.
+  { text: 'Claim a second pylon', milestone: 'm1', check: { kind: 'claimedCount', min: 2 }, marker: 'sitePylon' },
 ];
 
 /** The standing line once every goal is done (028): no check, and it never names the next milestone. */
