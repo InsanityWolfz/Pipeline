@@ -6,6 +6,8 @@ import { TILE, type Room } from '../../data/rooms';
 import { inkCss } from '../vector/draw';
 import { tileHash } from '../roomTiles';
 import { paintLandmarks } from './landmarkGround';
+import { paintHollows } from './hollowsGround';
+import { inHollows } from '../../data/hollows';
 
 // The overworld's ground (017), drawn once into chunk textures: grass with lighter
 // and darker patches, sun dapple under the groves, worn paving in the ruins, dirt
@@ -105,6 +107,8 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
       ellipse(c, x + ((hash >>> 4) % 24) - 12, y, r, r * 0.55, (hash >>> 12) % 2 ? GROUND.patchDark : GROUND.patchLight, 0.6);
     }
   });
+  // Stonefall Hollows' quarry stone over its columns (034), under the road.
+  paintHollows(c, each, symbol);
   // Sun dapple where the groves meet open grass.
   each((tx, ty, hash) => {
     if (symbol(tx, ty) !== TILE.floor || hash % GROUND.dappleEvery !== 0) return;
@@ -176,7 +180,7 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
   c.restore();
   // Tufts and flowers on open grass; in the Frozen Grotto, rimed tufts and no flowers (029).
   each((tx, ty, hash) => {
-    if (symbol(tx, ty) !== TILE.floor) return;
+    if (symbol(tx, ty) !== TILE.floor || inHollows(tx, ty)) return;
     const frozen = inRect(GROTTO.area, tx, ty);
     const [x, y] = centre({ tx, ty });
     const ox = ((hash >>> 6) % 20) - 10;

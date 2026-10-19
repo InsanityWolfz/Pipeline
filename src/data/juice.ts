@@ -77,6 +77,12 @@ export const PARTICLES = {
   capLift: { colors: ['brass-light', 'gold-trim', 'cyan-glow', 'snow'], count: 16, speed: [30, 90], gravity: 90, lifeMs: [350, 650], size: 2, lift: 4 },
   pickup: { colors: ['gold-trim', 'cyan-glow', 'snow'], count: 8, speed: [20, 55], gravity: -40, lifeMs: [250, 450], size: 2, lift: 6 },
   place: { colors: ['dirt', 'dirt-light'], count: 6, speed: [20, 50], gravity: 60, lifeMs: [200, 320], size: 1 },
+  // 034: a shot ringing off a shield (brass sparks), an enemy bomb bursting (stone and red embers), the Bulwark's pound
+  // (a ring of grey-blue dust), and the Hollows' barrier breaking into cyan shards.
+  blockSpark: { colors: ['brass-light', 'brass', 'gold-trim', 'snow'], count: 14, speed: [70, 160], gravity: 200, lifeMs: [160, 320], size: 2, lift: 20 },
+  enemyBurst: { colors: ['danger', 'cinder', 'hollow-light', 'hollow'], count: 26, speed: [40, 130], gravity: 120, lifeMs: [300, 650], size: 3 },
+  poundDust: { colors: ['hollow-pale', 'hollow-light', 'hollow'], count: 36, speed: [60, 150], gravity: -20, lifeMs: [400, 800], size: 3 },
+  barrierShards: { colors: ['cyan', 'cyan-glow', 'snow'], count: 40, speed: [20, 90], gravity: 160, lifeMs: [500, 1000], size: 2, lift: 40 },
 } as const satisfies Record<string, ParticleBurst>;
 
 /** The burst each node type gives off while worked and when a harvest lands (018). */

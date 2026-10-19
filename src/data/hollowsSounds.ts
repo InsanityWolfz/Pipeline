@@ -5,6 +5,17 @@ import type { SoundRecipe } from './sounds.ts';
 // bombs' fuse ticking and bursting, its pound shaking the ground, the stone grinding as it
 // rears back to lob, and the summon at its altar (a low rising drone, then the crack).
 
+/** 034's sound keys (joined into SOUNDS): the barrier falling, a shot ringing off a shield, the Bulwark's bombs ticking and bursting, its pound, its lob, the summon. */
+export const HOLLOWS_SOUNDS = {
+  barrierCollapse: 'barrier-collapse',
+  shieldClang: 'shield-clang',
+  enemyBombTick: 'enemy-bomb-tick',
+  enemyBombBurst: 'enemy-bomb-burst',
+  bulwarkPound: 'bulwark-pound',
+  bulwarkGrind: 'bulwark-grind',
+  summon: 'summon',
+} as const;
+
 export const HOLLOWS_SOUND_RECIPES = {
   'barrier-collapse': {
     layers: [

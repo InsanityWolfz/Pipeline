@@ -1,5 +1,5 @@
 import { RESEARCH_SOUND_RECIPES } from './researchSounds.ts';
-import { HOLLOWS_SOUND_RECIPES } from './hollowsSounds.ts';
+import { HOLLOWS_SOUND_RECIPES, HOLLOWS_SOUNDS } from './hollowsSounds.ts';
 
 // Sound effects and ambient loops (014), as synth recipes. `npm run sound` renders
 // each one to assets/build/sounds/<key>.wav; render plays them by these keys.
@@ -70,14 +70,7 @@ export const SOUNDS = {
   restore: 'restore',
   schematicChime: 'schematic-chime',
   reveal: 'reveal',
-  /** 034: the Hollows' barrier falling, a shot ringing off a shield, the Bulwark's bombs ticking and bursting, its pound, its lob, the summon. */
-  barrierCollapse: 'barrier-collapse',
-  shieldClang: 'shield-clang',
-  enemyBombTick: 'enemy-bomb-tick',
-  enemyBombBurst: 'enemy-bomb-burst',
-  bulwarkPound: 'bulwark-pound',
-  bulwarkGrind: 'bulwark-grind',
-  summon: 'summon',
+  ...HOLLOWS_SOUNDS,
   ambientClearing: 'ambient-clearing',
   ambientFoundry: 'ambient-foundry',
 } as const;

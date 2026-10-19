@@ -4,6 +4,7 @@ import { DEPTHS, OVERWORLD_TEXTURES } from '../data/assets';
 import { TILE_SIZE, VIEW_WIDTH } from '../data/config';
 import { MINIMAP } from '../data/hudLayout';
 import { OVERWORLD } from '../data/overworld';
+import { inHollows } from '../data/hollows';
 import { LANDMARK_LIST, type LandmarkMarker } from '../data/landmarks';
 import { MAP_ICONS } from '../data/landmarkAssets';
 import type { Room } from '../data/rooms';
@@ -51,7 +52,7 @@ export class MinimapView {
     if (tex) {
       for (const [ty, row] of room.rows.entries()) {
         for (const [tx, symbol] of [...row].entries()) {
-          tex.context.fillStyle = inkCss(MINIMAP.terrain[symbol] ?? 'grass-bright');
+          tex.context.fillStyle = inkCss((inHollows(tx, ty) ? MINIMAP.hollowsTerrain[symbol] : undefined) ?? MINIMAP.terrain[symbol] ?? 'grass-bright');
           tex.context.fillRect(tx * k, ty * k, k, k);
         }
       }

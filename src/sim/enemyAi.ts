@@ -30,6 +30,7 @@ export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBod
     const def = defOf(e);
     if (e.cooldown > 0) e.cooldown -= 1;
     if (e.flash > 0) e.flash -= 1;
+    if (e.blockFlash > 0) e.blockFlash -= 1;
     // A frozen enemy doesn't think (029): its wind-up pauses where it is. A chilled one walks slower.
     const thought: [number, number] = e.frozen > 0 ? [0, 0] : thinkOf(state, e, def);
     const slow = chillScale(e);

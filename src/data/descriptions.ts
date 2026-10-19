@@ -11,6 +11,10 @@ export const DESCRIPTIONS = {
   cacheSealed: 'Sealed by its guards. Clear them to open it.',
   cacheReady: 'Hold E to break the seal.',
   cacheEmpty: 'Empty. It fills again in time.',
+  /** The forum's altar (034): dim before the Bulwark's first kill, then an offering summons it again. */
+  altarDim: 'Cold stone. Something here must fall first.',
+  altarAwake: 'Offer 8 ley-iron (E) to call the Bulwark back.',
+  altarSpent: 'The Bulwark walks. The altar waits.',
 } as const;
 
 /**

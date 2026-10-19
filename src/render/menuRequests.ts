@@ -7,9 +7,9 @@ export function clickAmount(mods: { shift: boolean; ctrl: boolean }): HopperAmou
 }
 
 /** The commands that menus send: the hopper, sorter, pylon, stash and bench menus' choices. */
-export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'setFilter' | 'pylon' | 'travel' | 'takeStash' | 'identify' | 'equip' | 'applyStage' | 'restore'>;
+export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'setFilter' | 'pylon' | 'travel' | 'takeStash' | 'identify' | 'equip' | 'applyStage' | 'restore' | 'summon'>;
 
-const NONE: MenuCommand = { deposit: null, withdraw: null, setFilter: null, pylon: null, travel: null, takeStash: null, identify: false, equip: null, applyStage: null, restore: null };
+const NONE: MenuCommand = { deposit: null, withdraw: null, setFilter: null, pylon: null, travel: null, takeStash: null, identify: false, equip: null, applyStage: null, restore: null, summon: null };
 
 // Choices clicked in the world's menus, held until the next tick takes them.
 export class MenuRequests {
@@ -65,6 +65,11 @@ export class MenuRequests {
     this.pending.restore = nodeId;
   }
 
+  /** Pays an altar's offering, summoning its boss again (034: the offering row, or E again). */
+  summon(altarId: string): void {
+    this.pending.summon = altarId;
+  }
+
   /** The held choices, consumed. */
   take(): MenuCommand {
     const out = this.pending;
@@ -80,7 +85,7 @@ export class MenuRequests {
 /** Build and menu actions for one tick, merged into the command. */
 export type UiCommand = Pick<
   Command,
-  'toggleBuild' | 'place' | 'pickUp' | 'deposit' | 'withdraw' | 'setFilter' | 'pylon' | 'travel' | 'takeStash' | 'identify' | 'equip' | 'applyStage' | 'restore'
+  'toggleBuild' | 'place' | 'pickUp' | 'deposit' | 'withdraw' | 'setFilter' | 'pylon' | 'travel' | 'takeStash' | 'identify' | 'equip' | 'applyStage' | 'restore' | 'summon'
 >;
 
 /** No UI actions this tick. */

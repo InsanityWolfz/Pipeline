@@ -20,3 +20,52 @@ export const HOLLOWS_SPRITES = {
   /** The Bulwark's lobbed bomb: a riveted stone shell with a red fuse-glow. */
   enemyBomb: 'enemy-bomb',
 } as const;
+
+/** How the Hollows' live effects look (034): palette ids, ms, world px (view px for the boss bar), alphas 0..1. */
+export const HOLLOWS_LOOK = {
+  /**
+   * The ley barrier over the gap: a translucent cyan wall `height` px tall in the dome's style (017), its rim and
+   * ripples shimmering every `shimmerMs`; on its gate event it flashes, shards fall and it fades over `collapseMs`.
+   */
+  barrier: { color: 'cyan', glow: 'cyan-glow', fill: 0.28, rim: 0.85, rimWidth: 2, height: 56, ripples: 4, shimmerMs: 1400, collapseMs: 900, flash: 0.9 },
+  /** The Bulwark's bomb on the ground: the outer ring, the danger-red disc growing inside it, and the bomb arcing in over `flightTicks`. */
+  bomb: { color: 'danger', ringWidth: 2, ringAlpha: 0.9, fillAlpha: 0.38, flightTicks: 24, arcPeak: 48 },
+  /** The pound's ground circle, in the Warden's slam style (009), danger red. */
+  pound: { color: 'danger', alpha: 0.22, fillAlpha: 0.5 },
+  /** The back seam's halo while its back shows (the place to hit): its colour, radius px, and a slow pulse between two alphas. */
+  seam: { color: 'gold-trim', radius: 14, pulseMs: 900, alpha: [0.25, 0.6] as const },
+  /** A shielded enemy shows its turning shuffle this long after its facing last changed, ms. */
+  turnHoldMs: 300,
+  /** A blocked hit: the shield flashes brass for `flashMs`. */
+  block: { color: 'brass-light', flashMs: 120 },
+  /** The summon at the start point: a red circle cracking open (`cracks` lines) as the boss rises, `radius` px. */
+  summon: { color: 'danger', radius: 40, cracks: 7, alpha: 0.85 },
+  /** The altar's offering row (in the 033 restore panel's style). */
+  panel: { name: "The Bulwark's altar", effect: 'Offer to summon the Bulwark again.', action: 'Summon', spent: 'The Bulwark is here' },
+  /** The boss bar along the top of the screen while a boss fights: its width and height, view px, gap under the objective band, colours. */
+  bossBar: { w: 240, h: 8, top: 20, border: 1, fill: 'danger', back: 'ink', frame: 'brass', nameGap: 2 },
+} as const;
+
+/**
+ * The Hollows' ground (034), painted into the overworld's ground chunks: grey-blue quarry stone over the region's
+ * columns with lighter and darker slabs, rust stains, fine cracks and cyan veins glinting in one tile of `veinEvery`;
+ * quarry-cut terraces as raised cut slabs with a dark step at their front; the Cistern Terrace's and the Sunken Forum's
+ * flagstones. Palette ids and alphas; sizes world px.
+ */
+export const HOLLOWS_GROUND = {
+  base: 'hollow-light',
+  slabLight: 'hollow-pale',
+  slabDark: 'hollow',
+  slabEvery: 3,
+  slabAlpha: 0.45,
+  rust: 'iron-rust',
+  rustEvery: 13,
+  rustAlpha: 0.22,
+  crack: 'hollow-dark',
+  crackEvery: 5,
+  vein: 'vein',
+  veinDeep: 'cyan-deep',
+  veinEvery: 17,
+  terrace: { top: 'hollow-pale', step: 'hollow-dark', alpha: 0.75 },
+  flags: { color: 'hollow-pale', edge: 'hollow', alpha: 0.5, gapEvery: 4 },
+} as const;

@@ -207,6 +207,8 @@ export const WORLD_NAMES = {
   crystal: 'Ley crystal',
   leyLine: 'Ley line',
   intake: 'Foundry intake',
+  /** 034: the Sunken Forum's altar stone. */
+  altar: 'Altar',
 } as const;
 
 /** The build bar's hover tablet (015): wrap width in characters, padding and line height, px, and its gap above the bar. */
@@ -232,7 +234,15 @@ export const MINIMAP = {
     B: 'rock-light',
     '#': 'rock-dark',
     D: 'gold-trim',
+    // Stonefall Hollows (034).
+    C: 'hollow-dark',
+    P: 'hollow-pale',
+    F: 'hollow',
+    A: 'hollow-light',
+    '=': 'hollow-pale',
   } as Readonly<Record<string, string>>,
+  /** The Hollows' own colours (034), by symbol, over `terrain`: its open ground is stone, not grass. */
+  hollowsTerrain: { '.': 'hollow-light', R: 'hollow' } as Readonly<Record<string, string>>,
   markers: {
     player: { color: 'snow', r: 2 },
     entrance: { color: 'gold-trim', r: 2 },

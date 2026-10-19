@@ -1,3 +1,4 @@
+import { altarState } from '../sim/altar';
 import { shownItem } from './itemShown';
 import { TILE_SIZE } from '../data/config';
 import { DESCRIPTIONS, portHover, portPlate, sitePylonLine } from '../data/descriptions';
@@ -116,6 +117,12 @@ export function nameAt(sim: SimState, roomId: string, px: number, py: number): H
   const on = (t: { tx: number; ty: number } | undefined) => t !== undefined && t.tx === tx && t.ty === ty;
   const pylon = (room.pylons ?? []).find((p) => on(p));
   if (pylon) return { name: WORLD_NAMES.pylon, ...centre(pylon), rise: HOVER_NAME.tile.rise, description: pylonLine(sim, pylon) };
+  // The forum's altar (034): what an offering does now.
+  const altar = (room.altars ?? []).find((a) => on(a));
+  if (altar) {
+    const state = altarState(sim, altar.id);
+    return { name: WORLD_NAMES.altar, ...centre(altar), rise: HOVER_NAME.tile.rise, description: state === 'dim' ? DESCRIPTIONS.altarDim : state === 'awake' ? DESCRIPTIONS.altarAwake : DESCRIPTIONS.altarSpent };
+  }
   const cache = (room.caches ?? []).find((c) => on(c));
   if (cache) return { name: landmarkDef(cache.id).name, ...centre(cache), rise: HOVER_NAME.tile.rise, description: cacheLine(sim, cache.id) };
   if (on(room.tubeStone) && room.tubeStone) {

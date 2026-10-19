@@ -12,6 +12,19 @@ import { tileHash } from '../roomTiles';
 import { inkCss } from '../vector/draw';
 import { addVector, textureScale } from '../vector/textures';
 import { drawGround } from './ground';
+import { inHollows } from '../../data/hollows';
+import { HOLLOWS_SPRITES } from '../../data/hollowsAssets';
+
+/** A Hollows tile's standing sprite (034): a cliff (its plateau where another stands in front), a pillar, an arch, a fallen span, rubble. */
+function hollowsFrame(symbol: string, tx: number, ty: number, hash: number, room: Room | null): string | undefined {
+  const S = HOLLOWS_SPRITES;
+  if (symbol === TILE.cliff) return room?.rows[ty + 1]?.[tx] === TILE.cliff ? S.cliffTop : S.cliffs[hash % S.cliffs.length];
+  if (symbol === TILE.pillar) return S.pillar;
+  if (symbol === TILE.arch) return S.arch;
+  if (symbol === TILE.fallen) return S.fallen[hash % S.fallen.length];
+  if (symbol === TILE.rock) return S.rubble[hash % S.rubble.length];
+  return undefined;
+}
 
 // Draws the overworld (017): its ground baked once into chunk textures, then
 // every tree, rock, ruin and the foundry's mound as vector sprites sorted by
@@ -100,7 +113,10 @@ export class OverworldView {
     const landmark = LANDMARK_LIST.find((l) => tx >= l.area.x0 && tx <= l.area.x1 && ty >= l.area.y0 && ty <= l.area.y1);
     let frame: string | undefined;
     let jitter = 0;
-    if (symbol === TILE.tree && landmark?.look?.trees === 'old') frame = LANDMARK_SPRITES.oldTrees[hash % LANDMARK_SPRITES.oldTrees.length];
+    // Stonefall Hollows' own (034): cliffs, the aqueduct, rubble.
+    const hollows = inHollows(tx, ty) ? hollowsFrame(symbol, tx, ty, hash, this.room) : undefined;
+    if (hollows) frame = hollows;
+    else if (symbol === TILE.tree && landmark?.look?.trees === 'old') frame = LANDMARK_SPRITES.oldTrees[hash % LANDMARK_SPRITES.oldTrees.length];
     else if (symbol === TILE.tree) {
       frame = OVERWORLD_SPRITES.trees[hash % OVERWORLD_SPRITES.trees.length];
       jitter = ((hash >>> 8) % 9) - 4;

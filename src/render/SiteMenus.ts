@@ -15,15 +15,17 @@ import { diagramInReach } from '../sim/research';
 import { shownItem } from './itemShown';
 import { stagePanelLayout } from './stagePanelLayout';
 import { stagesKnown } from '../sim/stages';
+import { altarInReach, altarState } from '../sim/altar';
+import { offeringModel } from './altarPanel';
 import type { UiState } from './testHook';
 
 type PylonChoice = 'deposit' | 'travel';
 
 /** The site menus' part of `ui()`. */
-export type SiteUiState = Pick<UiState, 'siteOpen' | 'waystone' | 'restorePanel'>;
+export type SiteUiState = Pick<UiState, 'siteOpen' | 'waystone' | 'restorePanel' | 'altarPanel'>;
 
 /** The site menus' part of `ui()` before the scene has built them. */
-export const NO_SITE_UI: SiteUiState = { siteOpen: false, waystone: null, restorePanel: null };
+export const NO_SITE_UI: SiteUiState = { siteOpen: false, waystone: null, restorePanel: null, altarPanel: null };
 /** A stash row: one item's stack, or null for everything. */
 type StashChoice = { itemId: string | null };
 /** A bench row: identify everything carried, or wear (or take off) a piece. */
@@ -48,6 +50,8 @@ export class SiteMenus {
   private readonly stages: StagePanel;
   /** The restore panel (033), opened by E at a diagram in the foundry. */
   private readonly restore: RestorePanel;
+  /** The altar's offering (034), in the restore panel's style, opened by E at an awake altar. */
+  private readonly offering: RestorePanel;
   /** The sorter whose menu is open. */
   private sorterId: number | null = null;
 
@@ -59,6 +63,7 @@ export class SiteMenus {
     this.waystone = new ChoiceMenu(scene);
     this.stages = new StagePanel(scene);
     this.restore = new RestorePanel(scene);
+    this.offering = new RestorePanel(scene, offeringModel);
   }
 
   /** The bench's Stages panel as drawn (029). */
@@ -71,16 +76,17 @@ export class SiteMenus {
   }
 
   get isOpen(): boolean {
-    return this.menus.some((m) => m.isOpen) || this.restore.isOpen;
+    return this.menus.some((m) => m.isOpen) || this.restore.isOpen || this.offering.isOpen;
   }
 
   overUi(x: number, y: number): boolean {
-    return this.menus.some((m) => m.overUi(x, y)) || this.stages.overUi(x, y) || this.restore.overUi(x, y);
+    return this.menus.some((m) => m.overUi(x, y)) || this.stages.overUi(x, y) || this.restore.overUi(x, y) || this.offering.overUi(x, y);
   }
 
   close(): void {
     for (const m of this.menus) m.close();
     this.restore.close();
+    this.offering.close();
   }
 
   /** The cursor is at a screen point: the open menu lights the row under it (020). */
@@ -88,6 +94,7 @@ export class SiteMenus {
     for (const m of this.menus) m.pointAt(x, y);
     this.stages.pointAt(x, y);
     this.restore.pointAt(x, y);
+    this.offering.pointAt(x, y);
   }
 
   /**
@@ -95,6 +102,15 @@ export class SiteMenus {
    * closes; without the cost it stays open and nothing is sent. Returns whether the panel took the press.
    */
   pressAgain(controls: Controls): boolean {
+    // The altar's offering (034) works the same: E again summons.
+    if (this.offering.isOpen) {
+      const altar = this.offering.confirm;
+      if (!altar) return true;
+      controls.menus.summon(altar);
+      this.offering.flash();
+      this.offering.close();
+      return true;
+    }
     if (!this.restore.isOpen) return false;
     const node = this.restore.confirm;
     if (!node) return true;
@@ -108,10 +124,13 @@ export class SiteMenus {
   interact(sim: SimState): void {
     const piece = usableInReach(sim);
     const diagram = diagramInReach(sim);
+    const altar = altarInReach(sim);
     if (piece?.kind === 'sorter') {
       this.sorterId = piece.id;
       this.sorter.open();
     } else if (diagram) this.restore.open(diagram.node);
+    // An altar's offering (034): only once its boss has fallen (a dim altar does nothing).
+    else if (altar && altarState(sim, altar.id) !== 'dim') this.offering.open(altar.id);
     else if (claimedPylonInReach(sim)) this.pylon.open();
     // With two or more claimed pylons, the waystone offers them by landmark name (032); with one, the sim travels.
     else if (fixtureInReach(sim, 'waystone') && claimedPylons(sim).length >= 2) this.waystone.open();
@@ -128,6 +147,13 @@ export class SiteMenus {
     const w = this.waystone.valueAt(x, y);
     const stage = this.stages.stageAt(x, y);
     const restore = this.restore.restoreAt(x, y);
+    const summon = this.offering.restoreAt(x, y);
+    if (summon) {
+      controls.menus.summon(summon);
+      this.offering.flash();
+      this.offering.close();
+      return true;
+    }
     if (restore) {
       controls.menus.restore(restore);
       this.restore.flash();
@@ -157,6 +183,8 @@ export class SiteMenus {
     // The restore panel closes once its diagram is out of reach or gone (restored).
     if (this.restore.isOpen && diagramInReach(sim)?.node !== this.restore.nodeId) this.restore.close();
     this.restore.update(sim);
+    if (this.offering.isOpen && altarInReach(sim)?.id !== this.offering.nodeId) this.offering.close();
+    this.offering.update(sim);
     if (this.pylon.isOpen && !claimedPylonInReach(sim)) this.pylon.close();
     if (this.stash.isOpen && !fixtureInReach(sim, 'stash')) this.stash.close();
     const held = Object.values(sim.inventory).reduce((a, b) => a + b, 0);
@@ -207,6 +235,6 @@ export class SiteMenus {
 
   /** For the test hook: a site menu is open, and the waystone menu's rows as drawn (032), each row's text and box, or null while it's shut. */
   get ui(): SiteUiState {
-    return { siteOpen: this.isOpen, waystone: this.waystone.isOpen ? this.waystone.rowsShown : null, restorePanel: this.restore.state };
+    return { siteOpen: this.isOpen, waystone: this.waystone.isOpen ? this.waystone.rowsShown : null, restorePanel: this.restore.state, altarPanel: this.offering.state };
   }
 }

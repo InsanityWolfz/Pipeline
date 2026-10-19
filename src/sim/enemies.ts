@@ -57,6 +57,8 @@ export interface EnemyState extends Knockable {
   angle: number;
   /** Ticks before its next bomb lob (034: the Bulwark's). */
   lobCooldown: number;
+  /** Ticks of shield flash left after a blocked hit (034), for render. */
+  blockFlash: number;
 }
 
 export function createEnemy(id: number, enemyId: string, at: { x: number; y: number }, roomId: string, group = ''): EnemyState {
@@ -88,6 +90,7 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     champion: null,
     angle: Math.PI / 2,
     lobCooldown: def.kind === 'bulwark' ? def.lob.cooldownTicks : 0,
+    blockFlash: 0,
     knockX: 0,
     knockY: 0,
     knockTicks: 0,

@@ -18,12 +18,18 @@ export function angleDiff(a: number, b: number): number {
   return d;
 }
 
-/** True if a hit at (x, y) lands on the enemy's shield: within half its arc of its facing. Never for an enemy without one. */
+/**
+ * True if a hit at (x, y) lands on the enemy's shield: its bearing from the enemy's centre (its hurtbox's middle, so a
+ * shot clipping the body's side from the front still meets the shield) within half its arc of its facing. Never for an
+ * enemy without one.
+ */
 export function shieldBlocks(e: EnemyState, x: number, y: number, fromX = 0, fromY = 0): boolean {
-  const shield = defOf(e).shield;
+  const def = defOf(e);
+  const shield = def.shield;
   if (!shield) return false;
+  const cy = e.y + def.hurtbox.offsetY;
   // A hit right on its centre has no bearing: the side it came from decides.
-  const [bx, by] = x === e.x && y === e.y ? [fromX, fromY] : [x - e.x, y - e.y];
+  const [bx, by] = x === e.x && y === cy ? [fromX, fromY] : [x - e.x, y - cy];
   if (bx === 0 && by === 0) return false;
   return Math.abs(angleDiff(e.angle, Math.atan2(by, bx))) <= (shield.arcDegrees / 2) * RAD + 1e-9;
 }
@@ -40,4 +46,5 @@ export function turnToward(e: EnemyState, x: number, y: number): void {
 /** Records a blocked hit (034): render shows a brass spark and a clang there. */
 export function recordBlock(state: SimState, e: EnemyState, x: number, y: number): void {
   state.events.blocked.push({ id: e.id, x, y });
+  e.blockFlash = defOf(e).hitFlashTicks;
 }

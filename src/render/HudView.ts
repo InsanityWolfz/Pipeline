@@ -15,6 +15,7 @@ import { ResearchList, type ResearchListState } from './ResearchList';
 import { PickupFeed } from './PickupFeed';
 import { shownKey } from './itemShown';
 import { TubeSlotView, type TubeSlotState } from './TubeSlotView';
+import { BossBar, type BossBarShown } from './BossBar';
 
 /** The bottom HUD as drawn (025), for `ui().hud`: the hotbar row's rect and whether it shows, and the tube slot. */
 export interface BottomHudState {
@@ -30,6 +31,8 @@ export interface HudPanelsState {
   researchList: ResearchListState;
   pickupFeed: { itemId: string; count: number }[];
   health: HealthShown;
+  /** 034: the boss bar along the top while a region boss fights. */
+  bossBar: BossBarShown;
 }
 
 /** The 031 part of `ui()` before the scene has built its views. */
@@ -38,6 +41,7 @@ export const NO_HUD_PANELS: HudPanelsState = {
   researchList: { open: false, groups: [] },
   pickupFeed: [],
   health: { box: { x: 0, y: 0, w: 0, h: 0 }, text: '', low: false, healing: false, chunk: 0 },
+  bossBar: null,
 };
 
 const inBox = (b: ScreenBox, x: number, y: number): boolean => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h;
@@ -57,6 +61,8 @@ export class HudView {
   readonly inventory: InventoryPanel;
   /** The research list (033, J). */
   readonly research: ResearchList;
+  /** A region boss's bar along the top (034). */
+  private readonly boss: BossBar;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -67,6 +73,7 @@ export class HudView {
     this.feed = new PickupFeed(scene);
     this.research = new ResearchList(scene);
     this.inventory = new InventoryPanel(scene);
+    this.boss = new BossBar(scene);
   }
 
   /** A screen point on any part of the HUD or the open inventory panel: a press there never fires (015). */
@@ -83,7 +90,7 @@ export class HudView {
 
   /** The inventory panel, pickup feed and HP bar as drawn (031), for the test hook. */
   get panels(): HudPanelsState {
-    return { inventory: this.inventory.shown, researchList: this.research.shown, pickupFeed: this.feed.shown, health: this.health.shown };
+    return { inventory: this.inventory.shown, researchList: this.research.shown, pickupFeed: this.feed.shown, health: this.health.shown, bossBar: this.boss.shown };
   }
 
   /**
@@ -109,5 +116,6 @@ export class HudView {
     }
     this.inventory.update(sim);
     this.research.update(sim);
+    this.boss.update(sim);
   }
 }

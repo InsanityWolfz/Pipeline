@@ -8,6 +8,9 @@ import { inRect, type ScreenRect } from './foundryLayout';
 import { flashRow, RowHover } from './menuFeedback';
 import { restorePanelLayout } from './researchLayout';
 import { restorePanelModel, type RestorePanelModel } from './researchRows';
+
+/** What a panel shows for its key, read from the sim each frame (033's restore panel; 034's altar offering reuses it). */
+export type PanelModelOf = (sim: SimState, key: string) => RestorePanelModel;
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
@@ -43,11 +46,13 @@ export class RestorePanel {
   private readonly rowText: TextLine;
   private readonly hover: RowHover;
   private model: RestorePanelModel | null = null;
-  /** The node whose panel is open, or null. */
+  private readonly modelOf: PanelModelOf;
+  /** The node whose panel is open (or 034's altar), or null. */
   nodeId: string | null = null;
 
-  constructor(scene: Scene) {
+  constructor(scene: Scene, modelOf: PanelModelOf = restorePanelModel) {
     this.scene = scene;
+    this.modelOf = modelOf;
     const L = restorePanelLayout();
     const P = RESTORE_PANEL;
     const image = (x: number, y: number, frame: string, depth: number) => addVector(scene, x, y, frame).setOrigin(0).setScrollFactor(0).setDepth(depth);
@@ -119,9 +124,9 @@ export class RestorePanel {
   }
 
   /** Rebuilds the words and counts from the sim while open. */
-  update(sim: Pick<SimState, 'research' | 'inventory'>): void {
+  update(sim: SimState): void {
     if (!this.nodeId) return;
-    const m = restorePanelModel(sim, this.nodeId);
+    const m = this.modelOf(sim, this.nodeId);
     this.model = m;
     const L = CRAFT_MENU_LAYOUT;
     this.setShown(true);

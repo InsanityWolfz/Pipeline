@@ -26,6 +26,7 @@ import type { ResearchShown } from './ResearchView';
 import type { SchematicsShown } from './SchematicView';
 import type { RestorePanelState } from './RestorePanel';
 import type { ResearchListState } from './ResearchList';
+import type { HollowsShown } from './HollowsView';
 
 export interface GameTestHook {
   getState(): SimSummary;
@@ -137,6 +138,8 @@ export interface UiState {
   pickupFeed: HudPanelsState['pickupFeed'];
   /** 031: the HP bar: the block's box (view px), its "72 / 100", low, the healing glow, and the white chunk in HP (0 for none). */
   health: HudPanelsState['health'];
+  /** 034: the boss bar along the top while a region boss fights: its name and health, or null. */
+  bossBar: HudPanelsState['bossBar'];
   /** 032: the discovery banner's name while it shows, each reliquary's frame, and the landmark art drawn. */
   landmarks: LandmarksShown;
   /** 032: champions drawn, each with its name and kind lines, its scale and its glow's alpha. */
@@ -149,8 +152,12 @@ export interface UiState {
   schematics: SchematicsShown;
   /** 033: the restore panel while open (E at a diagram), else null. */
   restorePanel: RestorePanelState | null;
+  /** 034: the altar's offering while open (E at an awake altar), in the restore panel's shape (its `node` the altar), else null. */
+  altarPanel: RestorePanelState | null;
   /** 033: the research list (J). */
   researchList: ResearchListState;
+  /** 034: the Hollows' barrier, the altar's state, the summon's circle and the Bulwark's bombs, as drawn. */
+  hollows: HollowsShown;
 }
 
 declare global {
@@ -207,6 +214,7 @@ export function installTestHook(sim: SimState, scene: GameScene): void {
           equip: base.equip ?? ui.equip,
           applyStage: base.applyStage ?? ui.applyStage,
           restore: base.restore ?? ui.restore,
+          summon: base.summon ?? ui.summon,
         });
       }
       return summarize(sim);

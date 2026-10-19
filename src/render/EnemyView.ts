@@ -16,6 +16,8 @@ import { colorOf } from './color';
 import { addVector, addVectorSprite, showFrame, textureScale } from './vector/textures';
 import { CHILL_TINT, ICE_CRACK_TICKS, STAGE_SPRITES } from '../data/stageAssets';
 import { COLD } from '../data/tags';
+import { HOLLOWS_LOOK } from '../data/hollowsAssets';
+import { bulwarkPose, drawPound, drawSeam } from './bulwarkLook';
 
 /** A champion's extras (032): its glow, and its name with its kind under it. */
 interface ChampionArt {
@@ -42,8 +44,11 @@ interface Drawn {
   bar: GameObjects.Graphics;
   /** The ice round it while frozen (029), made on its first freeze. */
   ice?: GameObjects.Image;
-  /** A Husk's resin drip and glint, or the Warden's core halo (018). */
+  /** A Husk's resin drip and glint, or the Warden's core halo (018), or the Bulwark's seam halo (034). */
   overlay?: GameObjects.Graphics;
+  /** A shielded enemy's facing angle last frame (034), and until when (scene ms) a change shows it shuffling round. */
+  angle?: number;
+  turnUntil?: number;
 }
 
 const viewOf = (f: Facing): 'down' | 'up' | 'side' => (f === 'up' || f === 'down' ? f : 'side');
@@ -91,12 +96,16 @@ export class EnemyView {
       d.sprite.setPosition(e.x, bottom).setDepth(bottom).setFlipX(e.facing === 'left');
       // Switch only on a change, so a one-shot swipe holds its last frame instead of restarting.
       const view = viewOf(e.facing);
-      const pose = poseOf(e);
+      if (d.angle !== undefined && Math.abs(d.angle - e.angle) > 1e-6) d.turnUntil = now + HOLLOWS_LOOK.turnHoldMs;
+      d.angle = e.angle;
+      const pose = def.kind === 'bulwark' ? bulwarkPose(e, now < (d.turnUntil ?? 0)) : poseOf(e);
       // Enemies without a recover pose stand idle through it.
-      const anim = pose === 'recover' ? (anims[`recover-${view}`] ?? anims[`idle-${view}`]) : anims[`${pose}-${view}`];
+      // Optional poses (`recover`, and the Bulwark's extras, 034) fall back to idle where an enemy has none.
+      const anim = anims[`${pose}-${view}`] ?? anims[`idle-${view}`];
       const key = anim.key;
       if (d.sprite.anims.currentAnim?.key !== key) d.sprite.play(key);
       if (e.flash > 0) d.sprite.setTint(colorOf(ENEMY_FX.flashColor)).setTintMode(TintModes.FILL);
+      else if (e.blockFlash > 0) d.sprite.setTint(colorOf(HOLLOWS_LOOK.block.color)).setTintMode(TintModes.MULTIPLY);
       else if (e.chill > 0 || e.frozen > 0) d.sprite.setTint(chillTint(e.frozen > 0 ? COLD.stacksToFreeze : e.chill)).setTintMode(TintModes.MULTIPLY);
       else d.sprite.clearTint();
       this.drawIce(d, e, bottom);
@@ -106,6 +115,7 @@ export class EnemyView {
       this.drawTelegraph(d.telegraph, e);
       if (d.overlay && e.enemyId === RESIN.enemyId) this.drawResin(d.overlay, e, bottom, view, now);
       if (d.overlay && e.enemyId === CORE.enemyId) this.drawCore(d.overlay, e, bottom, view, now);
+      if (d.overlay && def.kind === 'bulwark') drawSeam(d.overlay, e, bottom, view, now);
     }
     for (const [id, d] of this.drawn) {
       if (live.has(id)) continue;
@@ -140,8 +150,8 @@ export class EnemyView {
       d.champion = { glow, name, kind };
     }
     if (e.enemyId === RESIN.enemyId) d.overlay = this.scene.add.graphics();
-    // The core's halo is light, added over the stone.
-    if (e.enemyId === CORE.enemyId) d.overlay = this.scene.add.graphics().setBlendMode(BlendModes.ADD);
+    // The core's halo is light, added over the stone; so is the Bulwark's seam (034).
+    if (e.enemyId === CORE.enemyId || enemyDef(e.enemyId).kind === 'bulwark') d.overlay = this.scene.add.graphics().setBlendMode(BlendModes.ADD);
     this.drawn.set(e.id, d);
     return d;
   }
@@ -247,7 +257,10 @@ export class EnemyView {
       g.fillStyle(color, ENEMY_FX.telegraphFillAlpha).fillCircle(e.x, e.y, def.slam.radius * progress);
       return;
     }
-    if (def.kind === 'bulwark') return;
+    if (def.kind === 'bulwark') {
+      drawPound(g, e);
+      return;
+    }
     const { swipe } = def;
     const angle = Math.atan2(e.swipeDirY, e.swipeDirX);
     const half = (swipe.arcDegrees * Math.PI) / 360;

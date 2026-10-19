@@ -63,6 +63,7 @@ const FAMILIES: readonly [title: string, test: (name: string) => boolean][] = [
   ...MACHINE_IDS.map((id): [string, (n: string) => boolean] => [`Machine: ${id} (idle, jammed, working)`, (n) => n.startsWith(`machine-${id}-`)]),
   ['Cold and the star split', (n) => n.startsWith('ice-case') || n.startsWith('star-')],
   ['Restoration (033): diagrams, wall panels, the sealed wing, the splitter and merger, research items, the pillar', (n) => /^(research-|splitter-|merger-|schematic-|map-schematic|item-ancient|item-aqueduct|item-bulwark|item-schematic|emblem-splitter|emblem-merger)/.test(n)],
+  ['Stonefall Hollows (034): cliffs, the aqueduct, rubble, ley-iron, the altar, the enemy bomb, the map icon', (n) => /^(ow-cliff|ow-aqueduct|ow-fallen|ow-rubble|item-ley-iron|node-ley-iron|altar-|enemy-bomb|map-aqueduct)/.test(n)],
   ['Conduits and sorters', (n) => n.startsWith('conduit-') || n.startsWith('sorter-')],
   ['Hoppers and crates', (n) => n.startsWith('hopper-') || n === 'crate'],
   ['Build arrows and status markers', (n) => n.includes('-arrow-') || n.startsWith('status-')],

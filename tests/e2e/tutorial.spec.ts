@@ -247,6 +247,8 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     g.step(130);
   }, T);
   expect(await done(page)).toBe(FILL + 3);
+  // 034: the shrine's claim dropped Stonefall Hollows' barrier.
+  expect((await page.evaluate(() => window.__GAME__?.getState()))?.gates.hollows).toBe(true);
 
   // 17. Home by the pylon; the Warden's core came home in hand, and at the east cap the restore panel's Restore spends
   // it on one more entrance (033: one per core).

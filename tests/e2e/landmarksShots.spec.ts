@@ -33,7 +33,8 @@ async function walk(page: Page, points: readonly (readonly [number, number])[]):
   await page.evaluate((pts) => {
     const h = window.__helpers;
     if (!h) throw new Error('no helpers');
-    for (const [tx, ty] of pts) h.walkTo((tx + 0.5) * 32, (ty + 0.5) * 32);
+    // 032's tiles, moved +40 with Region 1 (034).
+    for (const [tx, ty] of pts) h.walkTo((tx + h.ox + 0.5) * 32, (ty + 0.5) * 32);
   }, points);
 }
 
