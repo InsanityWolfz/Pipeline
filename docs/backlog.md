@@ -56,3 +56,5 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 038 is the landmine and cluster-bomb slice that 034 split out, which the accepted proposals cover. It is built after 037.
 
 Shaun's drive rant on 2026-10-19 (docs/brainstorm/2026-10-19-drive-rant.md) is queued to become the next spec interview once 038 is done. Its themes are a shippable build for friend playtests (title screen, soft save, start-to-finish flow), harder combat and the Bulwark, the ammo roles, simpler Factorio-like processing and a bigger foundry, boss spawners, and horizontal content after that.
+
+028–038 were built on 2026-10-19 and await Shaun's playtest (docs/review/playtest-021-038.md). They stay `approved` until /wrapup.

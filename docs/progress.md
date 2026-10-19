@@ -2,6 +2,34 @@
 
 Newest entry first.
 
+## 2026-10-19: 028–038 built, awaiting Shaun's playtest
+**Changed:** built all eleven specs on `claude/laughing-volta-uac3nf` as separate commits:
+- 028 foundry flow
+- 029 ammo stages
+- 030 healing
+- 031 HUD and inventory
+- 032 landmarks and champions
+- 033 research
+- 034 Stonefall Hollows and the Bulwark
+- 035 Hollows enemies
+- 036 equipment
+- 037 leveling and talents
+- 038 landmines and cluster bombs (its spec was moved out of 034 word for word)
+
+Each had a plan (docs/plans/), tests written first, `npm run check`, two full `npm run test:e2e` runs, review screenshots (docs/review/NNN/), and a reviewer pass with every finding fixed. The final tree has 1,223 unit tests; e2e has 89 passed and the rest skipped (REVIEW_SHOTS only).
+
+**Next:**
+1. Shaun playtests 021–038 using docs/review/playtest-021-038.md, then /wrapup.
+2. Turn Shaun's drive rant (docs/brainstorm/2026-10-19-drive-rant.md) into the next spec interview. Proposed first: the keyword system audit.
+
+**Notes:**
+- The biggest tuning flags are listed in the checklist:
+  - the Bulwark is too easy (25 s and no damage taken against a circling bot)
+  - frost can't freeze Husks
+  - the entrance fire pulse can't be seen
+- The "Raised after the build" section in each spec lists the choices made where a spec was silent.
+- e2e tests that waited on render tween timing were made independent of machine load in 036.
+
 ## 2026-10-19: 028–038 approved; open questions settled
 **Changed:**
 - **Open questions.** Shaun settled the open questions (docs/brainstorm/2026-10-19-open-questions.md, "Shaun's decisions"):
