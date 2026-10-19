@@ -148,3 +148,9 @@ These touch several specs. The specs already use the proposed answer, so a diffe
 - 037.8 Does the tree panel pause the game? Proposal: no.
 - 037.9 Key for the tree? Proposal: T.
 - 037.10 Region 2 XP? Proposal: 6 per enemy (×3 in ring 3) and 300 for the Bulwark.
+
+## Shaun's decisions (2026-10-19)
+- **029.1 Arrow pierce:** unlimited. Arrows pass through everything until their range runs out. This replaces the "through 2" proposal, and the specs need updating.
+- **029.7 Ley stages:** homing and star split are both shapes, so a bolt is one or the other, never both.
+- **033.2 Parts:** pay for research and restoration only. Placing machines stays free.
+- **D, 030.1 and 036.8 Healing:** the highest rate wins; sources don't stack.
