@@ -181,7 +181,7 @@ describe('sim state', () => {
     const a = scriptedSession(11, 2400);
     expect(a.crafted.length).toBeGreaterThan(0);
     expect(a).toEqual(scriptedSession(11, 2400));
-  });
+  }, 20_000); // Two 2,400-tick replays: about 2 s on a quiet machine (before and after 039); 5 s is too tight when e2e runs alongside.
 
   it('replays building, running and emptying a foundry line identically', () => {
     // Health drops to 0 at tick 1050; the KO lands once the death animation ends.
