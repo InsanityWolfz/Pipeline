@@ -1,6 +1,8 @@
 # 044: Sandbox
-status: draft
+status: approved
 
+
+Approved on draft by Shaun in chat, 2026-10-20 ("Approve 044 on draft"): the build follows the proposals in the open questions.
 From Shaun in chat, 2026-10-20: playtesting the later parts of the game means replaying the whole progression, and the `?start=` links only help a little. He wants "a testing area … a sandbox that we spawn in, and we have just a ton of every single item and resource. And then there's an intake in the sandbox so we can simulate every type of ammo spread or combination and then test them. And then we just have random areas where the enemies are." Interview answers the same day are quoted below.
 
 ## Goal
