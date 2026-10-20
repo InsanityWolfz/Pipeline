@@ -1,3 +1,4 @@
+import { SAVE_VERSION } from '../../src/data/save';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { NOTES, STORAGE_KEYS } from '../../src/data/save';
 import { TUTORIAL_START } from '../../src/data/player';
@@ -22,7 +23,7 @@ describe('export file (042)', () => {
   it('holds the save envelope and every note, and no settings', () => {
     const file = makeExport(envText(), [note('a')], 'dev', NOW);
     expect(file).toMatchObject({ format: 'pipeline-export', version: 1, exportedAt: NOW.toISOString(), build: 'dev', feedback: [note('a')] });
-    expect(file.save).toMatchObject({ format: 'pipeline-save', version: 1 });
+    expect(file.save).toMatchObject({ format: 'pipeline-save', version: SAVE_VERSION });
     expect(Object.keys(file)).not.toContain('settings');
     expect(makeExport(null, [], 'dev', NOW).save).toBeNull();
   });

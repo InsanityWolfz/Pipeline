@@ -30,11 +30,11 @@ export interface GroundItem {
   roomId: string;
   x: number;
   y: number;
-  /** The magnet pull's speed so far, px per tick (045); absent or 0 at rest. */
+  /** The magnet pull's speed so far, px per tick (045); absent at rest. */
   speed?: number;
-  /** Ticks before the pull may take it (045: a cache's item bursting out); absent or 0 for none. */
+  /** Ticks before the pull may take it (045: a cache's item bursting out); absent for none. */
   wait?: number;
-  /** Set on a cache's items (045): where it burst from, for the render's flight. */
+  /** Set on a cache's items while they wait (045): where it burst from, for the render's flight. */
   burst?: GroundBurst;
 }
 
@@ -68,6 +68,11 @@ export function rollRare(table: DropTable, rng: RngState, champion = false): str
 /** A point, as a box, for overlap tests: strictly inside a rect overlaps it. */
 const POINT = { w: 0, h: 0 } as const;
 
+/** True if a drop may lie at (x, y): not in a solid tile, nor inside any of `obstacles`. */
+export function isClearPoint(room: Room, x: number, y: number, obstacles: readonly Rect[] = []): boolean {
+  return !isSolid(room, Math.floor(x / TILE_SIZE), Math.floor(y / TILE_SIZE)) && !obstacles.some((r) => overlapsRect(x, y, POINT, r));
+}
+
 /**
  * A random clear spot within DROP_SCATTER of (x, y), outside solid tiles and
  * `obstacles`, or (x, y) itself if none turns up.
@@ -84,9 +89,7 @@ export function scatterPoint(
     const r = nextFloat(rng) * DROP_SCATTER;
     const px = x + Math.cos(angle) * r;
     const py = y + Math.sin(angle) * r;
-    if (isSolid(room, Math.floor(px / TILE_SIZE), Math.floor(py / TILE_SIZE))) continue;
-    if (obstacles.some((r) => overlapsRect(px, py, POINT, r))) continue;
-    return { x: px, y: py };
+    if (isClearPoint(room, px, py, obstacles)) return { x: px, y: py };
   }
   return { x, y };
 }
@@ -151,9 +154,16 @@ export function stepPickups(state: SimState): void {
   const p = state.player;
   let kept = 0;
   for (const item of state.groundItems) {
-    if (item.wait) item.wait -= 1;
+    if (item.wait) {
+      item.wait -= 1;
+      // Its burst over, it's an ordinary drop again (nothing left to save).
+      if (item.wait === 0) {
+        delete item.wait;
+        delete item.burst;
+      }
+    }
     if (item.roomId !== state.roomId || item.wait || gapToFeet(p, item.x, item.y) > MAGNET.radius) {
-      if (item.speed) item.speed = 0;
+      delete item.speed;
       state.groundItems[kept++] = item;
       continue;
     }

@@ -144,7 +144,7 @@ describe('pickup (021; 045: a 96 px magnet pull)', () => {
     const x = s.groundItems[0]?.x;
     run(s, 10);
     expect(s.groundItems[0]?.x).toBe(x);
-    expect(s.groundItems[0]?.speed).toBe(0);
+    expect(s.groundItems[0]?.speed).toBeUndefined();
   });
 
   it('pulls through a solid tile (021)', () => {

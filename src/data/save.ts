@@ -3,7 +3,7 @@
 // (src/sim/save.ts, SAVE_MIGRATIONS). Fields only added need neither: they're filled from a fresh sim.
 
 /** The save format's version. Starts at 1. */
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 /** The envelope's and the export file's format tags. */
 export const SAVE_FORMAT = 'pipeline-save';

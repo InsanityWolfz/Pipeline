@@ -134,15 +134,23 @@ describe('the Ruined Cache', () => {
     run(s, B.flightTicks + B.holdTicks - 2);
     expect(s.groundItems.filter((g) => g.burst).slice(0, 1).map((g) => ({ x: g.x, y: g.y }))).toEqual(where.slice(0, 1));
     expect(s.events.pickups).toEqual([]);
+    // A tick on, the first's wait is over: an ordinary drop again, nothing of its burst left to save.
+    run(s, 1);
+    const first = s.groundItems.find((g) => g.id === items[0]?.id);
+    expect(first).toBeDefined();
+    expect(first).not.toHaveProperty('burst');
+    expect(first).not.toHaveProperty('wait');
     // Then every one comes to the player and is picked up (the feed lists them from the pickups).
     const gave = items.map((g) => g.itemId).sort();
+    const ids = new Set(items.map((g) => g.id));
+    // The first was pulled from the tick it was free; count from there.
     let picked: string[] = [];
-    for (let t = 0; t < 200 && s.groundItems.some((g) => g.burst); t++) {
+    for (let t = 0; t < 200 && s.groundItems.some((g) => ids.has(g.id)); t++) {
       run(s, 1);
-      picked = [...picked, ...s.events.pickups.map((p) => p.itemId)];
+      picked = [...picked, ...s.events.pickups.filter((p) => ids.has(p.id)).map((p) => p.itemId)];
     }
     expect(picked.sort()).toEqual(gave);
-    expect(s.groundItems.filter((g) => g.burst)).toEqual([]);
+    expect(s.groundItems.filter((g) => ids.has(g.id))).toEqual([]);
   });
 
   it('other drops never burst or wait', () => {

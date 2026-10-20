@@ -37,5 +37,10 @@ export function lateGame(): SimState {
   s.roomId = outside;
   atEntrance(s);
   runUntil(s, (x) => x.roomId === FOUNDRY_ROOM, 120, { moveY: -1 });
+  // 045: a ground item mid-pull and a cache's item still bursting out, as a save could hold them.
+  s.groundItems.push(
+    { id: s.nextGroundItemId++, itemId: 'wood', roomId: s.roomId, x: s.player.x + 40, y: s.player.y, speed: 2 },
+    { id: s.nextGroundItemId++, itemId: 'stone', roomId: s.roomId, x: s.player.x + 60, y: s.player.y, wait: 30, burst: { x: s.player.x, y: s.player.y - 40, delay: 6 } },
+  );
   return s;
 }

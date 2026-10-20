@@ -3,14 +3,12 @@ import { CACHE_BURST, CACHE_DROPS, LANDMARK_LIST, LANDMARKS, landmarkDef } from 
 import { OVERWORLD_ROOM } from '../data/overworld';
 import type { Command } from './input';
 import { gapTo, holdBroken, occupied } from './claims';
-import { rollDrops, scatterItems } from './drops';
+import { isClearPoint, rollDrops, scatterItems } from './drops';
 import { areaInView } from './landmarks';
 import { roomOf, type SimState } from './state';
 import { tileCentre } from './tiles';
-import { isSolid, overlapsRect } from './collision';
 import { standingRects } from './fixtures';
 import { nodeRects } from './nodes';
-import { TILE_SIZE } from '../data/config';
 import { createEnemy } from './enemies';
 import { rollChampions } from './champions';
 import { inSafeZone } from './population';
@@ -92,8 +90,7 @@ function open(state: SimState, id: string): void {
     const a = (Math.PI * (i + 0.5)) / items.length;
     const x = below.x + Math.cos(a) * B.fanRadius;
     const y = below.y + Math.sin(a) * B.fanRadius;
-    const clear = !isSolid(room, Math.floor(x / TILE_SIZE), Math.floor(y / TILE_SIZE)) && !blocked.some((r) => overlapsRect(x, y, { w: 0, h: 0 }, r));
-    if (clear) {
+    if (isClearPoint(room, x, y, blocked)) {
       g.x = x;
       g.y = y;
     }

@@ -24,7 +24,7 @@ describe('save envelope (042)', () => {
   });
 
   it('runs migrations in order up to the current version (a synthetic v1 → v2)', () => {
-    const v1 = good();
+    const v1 = { ...good(), version: 1 };
     const migrations = {
       1: (env: SaveEnvelope): SaveEnvelope => {
         const state = env.state as Record<string, unknown>;
@@ -38,6 +38,18 @@ describe('save envelope (042)', () => {
       expect(read.envelope.version).toBe(2);
       expect(read.envelope.meta.endCardSeen).toBe(true);
       expect(read.state.level).toBe(7);
+    }
+  });
+
+  it('045: a version 1 save (ground items without the pull fields) reads as it is', () => {
+    const s = sim();
+    s.groundItems.push({ id: 1, itemId: 'wood', roomId: s.roomId, x: 10, y: 10 });
+    const v1 = { ...makeEnvelope(snapshot(s), META), version: 1 };
+    const read = readSave(text(v1));
+    expect(read.status).toBe('ok');
+    if (read.status === 'ok') {
+      expect(read.envelope.version).toBe(SAVE_VERSION);
+      expect(read.state.groundItems).toEqual([{ id: 1, itemId: 'wood', roomId: s.roomId, x: 10, y: 10 }]);
     }
   });
 
