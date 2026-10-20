@@ -112,8 +112,8 @@ test('?start=hollows: the shield blocks arrows into its front; from behind they 
   expect(front.health).toBe(BULWARK.maxHealth);
 
   // From behind: keep circling to its back (it turns 40°/s), firing only while there, out of the pound, and stepping
-  // out of its rear arc before its stomp is due (041). A few seconds of it: the arrows land.
-  const back = await page.evaluate((stompDue) => {
+  // out of its rear arc to its flank once its stomp's wind-up shows (041). A few seconds of it: the arrows land.
+  const back = await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
     const sign = (v: number): -1 | 0 | 1 => (Math.abs(v) < 3 ? 0 : v > 0 ? 1 : -1);
@@ -121,7 +121,6 @@ test('?start=hollows: the shield blocks arrows into its front; from behind they 
     // Healed once after the front's test (its bombs and pound there), as before 041; none from here on.
     g.setPlayerHealth(100);
     let backHits = 0;
-    let out = false;
     for (let t = 0; t < 1200 && backHits < 10; t++) {
       const s = g.getState();
       const b = s.bosses[0];
@@ -132,9 +131,9 @@ test('?start=hollows: the shield blocks arrows into its front; from behind they 
       const bearing = Math.atan2(p.y - e.y, p.x - e.x);
       const off = Math.abs(((bearing - a + 3 * Math.PI) % (2 * Math.PI)) - Math.PI);
       const dist = Math.hypot(p.x - e.x, p.y - e.y);
-      if (b.behind >= stompDue) out = true;
-      if (b.behind === 0) out = false;
-      // Round it toward its back, a little at a time, about 110 px out; or out to its flank while the stomp's counter drains.
+      // The stomp's half-disc seen (a quarter second after it shows): out to its flank until it has landed.
+      const out = b.mode === 'stomp-windup' && b.modeTicks >= 15;
+      // Round it toward its back, a little at a time, about 110 px out; or out to its flank while the stomp winds up.
       const rear = a + Math.PI;
       const d = Math.atan2(Math.sin(rear - bearing), Math.cos(rear - bearing));
       const along = out ? a + Math.sign(Math.atan2(Math.sin(bearing - a), Math.cos(bearing - a)) || 1) * (Math.PI / 4) : bearing + Math.sign(d || 1) * Math.min(0.7, Math.abs(d));
@@ -146,7 +145,7 @@ test('?start=hollows: the shield blocks arrows into its front; from behind they 
       backHits += next.events.hits.filter((h) => h.target === 'enemy' && h.id === id).length;
     }
     return { backHits, health: g.getState().bosses[0]?.health ?? 0, ko: g.getState().player.dying > 0 };
-  }, BULWARK.stomp.behindTicks - 50);
+  });
   expect(back.backHits).toBeGreaterThanOrEqual(10);
   expect(back.health).toBeLessThan(BULWARK.maxHealth);
   expect(back.ko).toBe(false);

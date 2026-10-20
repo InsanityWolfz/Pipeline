@@ -122,6 +122,21 @@ describe('the Bulwark', () => {
     }
   });
 
+  it('pounds a rolling player inside the circle all the same (041.12: its shockwave ignores i-frames)', () => {
+    const { s, b } = forum(60);
+    run(s, 1);
+    expect(b.mode).toBe('windup');
+    movePlayer(s, START.x + 30, START.y + 40);
+    run(s, pound.windupTicks - 3);
+    // A roll straight along the Bulwark's side: its i-frames run as the pound lands, its feet still in the circle.
+    run(s, 1, { dodge: true, moveX: 1 });
+    run(s, 2);
+    expect(b.mode).toBe('swipe');
+    expect(s.player.rollTick).toBeGreaterThan(0);
+    expect(Math.hypot(s.player.x - b.x, s.player.y - b.y)).toBeLessThanOrEqual(pound.radius);
+    expect(s.player.health).toBe(100 - pound.damage);
+  });
+
   it('misses a player outside the pound circle', () => {
     const { s, b } = forum(60);
     run(s, 1);

@@ -10,11 +10,6 @@ import { nextFloat, nextInt, type RngState } from './rng';
 // size, health, damage and speed; timings and reach stay its own, so every attack still
 // reads and dodges the same.
 
-/** A def as its ring 1 champion (032's numbers, unchanged by 041): 1.5× feet box and hurtbox, more health, harder hits, a little faster. */
-export function championDef(def: EnemyDef): EnemyDef {
-  return scaledDef(def, 1, true);
-}
-
 /** The def the sim reads for an enemy (041.3): scaled for its ring, then as its champion; a boss's own. */
 export function defOf(e: Pick<EnemyState, 'enemyId' | 'champion' | 'ring'>): EnemyDef {
   return scaledDef(enemyDef(e.enemyId), e.ring, e.champion !== null);

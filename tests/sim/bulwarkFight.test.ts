@@ -6,7 +6,7 @@ import { playerStats } from '../../src/sim/stats';
 import { ROLLER, steer, takenThisTick, walkTo } from './bots';
 import { decentBuild, feed, lines } from './builds';
 import { run } from './fight';
-import { DEF, forum } from './forum';
+import { forum } from './forum';
 
 // 041's Bulwark targets (041.7), seeds 1–5: a decent build wins in 60–90 s without a KO,
 // and a naive bot that walks into its front is KO'd first. The build: two entrances fed by
@@ -49,23 +49,23 @@ function fight(seed: number, limit: number, bot: (s: SimState, b: EnemyState) =>
   return { won: false, ko: false, ticks: limit, taken, share: taken / max, behind };
 }
 
-/** The decent bot's distances: it circles 100 px out, steps out of the rear arc to 45° off its facing, and leaves 50 ticks before the stomp is due. */
-const DECENT = { radius: 100, sideDeg: 45, margin: 50 } as const;
+/** The decent bot's distances: it circles 100 px out and steps out of the rear arc to 45° off its facing. */
+const DECENT = { radius: 100, sideDeg: 45 } as const;
 
 /**
  * 041.7's decent bot: it keeps behind the Bulwark when it can (circling to its back, 100 px out), rolls out of
- * telegraphed circles (its bombs' rings and the pound's circle) as they land, steps out of the rear arc to its flank
- * before the stomp is due and back once the counter has drained, and holds fire on it throughout. It reads nothing
- * else: not the adds' lanes and arcs, nor the stomp's half-disc.
+ * telegraphed circles (its bombs' rings and the pound's circle) as they land, walking or rolling out in time of those
+ * a roll won't save from (041.12, their second ring), steps out of the rear arc to its flank once it sees the stomp's
+ * wind-up (its half-disc, read after the same reaction time, and rolled through if it can't get clear) and back once
+ * it has landed, and holds fire on it throughout. It reads only what's on screen: never the stomp's counter, nor the
+ * adds' lanes and arcs.
  */
 function decentBot(): (s: SimState, b: EnemyState) => Parameters<typeof run>[2] {
-  let out = false;
   return (s, b) => {
     const p = s.player;
     const bearing = Math.atan2(p.y - b.y, p.x - b.x);
     const fromBack = angleDiff(bearing, b.angle + Math.PI);
-    if (b.behind >= DEF.stomp.behindTicks - DECENT.margin) out = true;
-    if (b.behind === 0) out = false;
+    const out = b.mode === 'stomp-windup' && b.modeTicks >= ROLLER.react;
     const at = out ? b.angle + Math.sign(angleDiff(b.angle, bearing) || 1) * ((DECENT.sideDeg * Math.PI) / 180) : bearing + Math.sign(fromBack || 1) * Math.min(0.7, Math.abs(fromBack));
     const goal = { x: b.x + Math.cos(at) * DECENT.radius, y: b.y + Math.sin(at) * DECENT.radius };
     return { ...steer(s, goal, { ...ROLLER, circlesOnly: true }).cmd, fire: true, aimX: b.x, aimY: b.y - 20 };
@@ -80,22 +80,28 @@ let decentRuns: Fight[] | null = null;
 const decent = (): Fight[] => (decentRuns ??= SEEDS.map((seed) => fight(seed, TARGET.max + 600, decentBot())));
 
 describe('the Bulwark with a decent build (041.7)', () => {
-  // Five fights of up to 6,000 ticks, all bot and sim, no idle time: about 7 s on a quiet machine, so it gets its own budget.
-  it('wins in 60–90 s on every seed, without a KO', () => {
+  // Five fights of up to 6,000 ticks, all bot and sim, no idle time: about 3 s on a quiet machine, so it gets its own budget.
+  it('wins on every seed without a KO', () => {
     const runs = decent();
     console.log('041 Bulwark, decent build (ticks, damage taken, share of max health, ticks behind):', runs.map((r) => `${r.ticks} ${r.taken} ${r.share} ${r.behind}`).join(' | '));
-    // Measured: 4,060 / 4,606 / 4,604 / 4,687 / 4,185 ticks (67.7, 76.8, 76.7, 78.1, 69.8 s).
-    for (const [i, r] of runs.entries()) {
-      expect(r, `seed ${SEEDS[i]}`).toMatchObject({ won: true, ko: false });
-      expect(r.ticks, `seed ${SEEDS[i]}`).toBeGreaterThanOrEqual(TARGET.min);
-      expect(r.ticks, `seed ${SEEDS[i]}`).toBeLessThanOrEqual(TARGET.max);
+    for (const [i, r] of runs.entries()) expect(r, `seed ${SEEDS[i]}`).toMatchObject({ won: true, ko: false });
+  }, 60_000);
+
+  // Not met since the bot reads only what's on screen (review, after 041.12): it steps out of the stomp's half-disc
+  // once it shows and is back behind the Bulwark straight after, so the stomp no longer keeps it off its back. Measured:
+  // 2,508 / 2,508 / 2,506 / 2,273 / 2,178 ticks (41.8, 41.8, 41.8, 37.9, 36.3 s). The levers 041.7 names are spent (the
+  // stomp's counter and cooldown only change how often it must step out, and made it KO'd or no slower; HP is at its
+  // 3,000 ceiling). Raised as 041.16; this test fails loudly once every seed lands in the band.
+  it.fails('wins in 60–90 s on every seed (041.7: not met, 041.16)', () => {
+    for (const r of decent()) {
+      expect(r.ticks).toBeGreaterThanOrEqual(TARGET.min);
+      expect(r.ticks).toBeLessThanOrEqual(TARGET.max);
     }
   }, 60_000);
 
-  // 041.7's damage target is not met: the decent bot rolls out of every one of the Bulwark's own telegraphs, and only
-  // the adds it ignores land (a Charger's charge is 53 after armor). Measured shares 0.35 / 0 / 0.93 / 0 / 0.46. Open
-  // question 041.12 asks Shaun how the fight should hurt; this test fails loudly once every seed takes 40%.
-  it.fails('takes at least 40% of its max health on every seed (041.7: not met, open question 041.12)', () => {
+  // Still not met after 041.12's answer (the pound and the enraged lobs ignore a roll's i-frames): the bot sees their
+  // second ring and walks or rolls out in time, so only an add lands now and then. Measured shares 0 / 0 / 0 / 0 / 0.93.
+  it.fails('takes at least 40% of its max health on every seed (041.7: not met, 041.12 and 041.16)', () => {
     for (const r of decent()) expect(r.share).toBeGreaterThanOrEqual(0.4);
   }, 60_000);
 });

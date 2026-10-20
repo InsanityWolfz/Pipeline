@@ -127,4 +127,32 @@ describe('the enrage', () => {
     expect(b.enraged).toBe(false);
     expect(summarize(s).bosses[0]).toMatchObject({ enraged: false, behind: 0, stompCooldown: 0, health: DEF.maxHealth });
   });
+
+  it('lobs bombs a roll doesn’t save from (041.12); before the enrage a roll through the burst still does', () => {
+    const rolled = (enraged: boolean): { health: number; rollProof: boolean } => {
+      const { s, b } = awake();
+      if (enraged) {
+        b.enraged = true;
+        b.health = BELOW;
+      }
+      b.lobCooldown = 0;
+      run(s, 1, hold(b, 0, 150));
+      runUntil(s, () => s.enemyBombs.length > 0, DEF.lob.windupTicks + 5);
+      const bomb = s.enemyBombs[0];
+      if (!bomb) throw new Error('no bomb');
+      s.enemyBombs = [bomb];
+      b.lobCooldown = 100_000;
+      movePlayer(s, bomb.x, bomb.y);
+      run(s, bomb.fuseTicks - bomb.fuse - 3, (x) => {
+        movePlayer(x, bomb.x, bomb.y);
+        return {};
+      });
+      run(s, 1, { dodge: true, moveX: 1 });
+      run(s, 2);
+      expect(s.enemyBombs).toEqual([]);
+      return { health: s.player.health, rollProof: bomb.rollProof };
+    };
+    expect(rolled(false)).toEqual({ health: 100, rollProof: false });
+    expect(rolled(true)).toEqual({ health: 100 - DEF.lob.damage, rollProof: true });
+  });
 });

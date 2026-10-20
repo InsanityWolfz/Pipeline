@@ -10,6 +10,7 @@ import type { SimEvents } from '../sim/events';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
 import { addVector, showFrame } from './vector/textures';
+import { drawCrackedCircle } from './crackedCircle';
 
 /** Stonefall Hollows' live things as drawn (034), for `ui().hollows`. */
 export interface HollowsShown {
@@ -133,14 +134,7 @@ export class HollowsView {
     const k = progress ?? 1;
     const color = colorOf(S.color);
     g.setVisible(true);
-    // The ring opens over the summon's first half; the cracks reach it by its end. Both lie flat (half as tall).
-    const ring = Math.min(1, k * 2);
-    g.lineStyle(S.ringWidth, color, S.alpha).strokeEllipse(c.x, c.y, S.radius * 2 * ring, S.radius * ring);
-    for (let i = 0; i < S.cracks; i++) {
-      const a = (i / S.cracks) * Math.PI * 2 + S.crackStart;
-      const r = S.radius * k;
-      g.lineStyle(S.crackWidth, color, S.alpha).lineBetween(c.x, c.y, c.x + Math.cos(a) * r, c.y + (Math.sin(a) * r) / 2);
-    }
+    drawCrackedCircle(g, c.x, c.y, S.radius, k);
     const F = S.flare;
     if (rise > 0) g.fillStyle(color, F.alpha * rise).fillEllipse(c.x, c.y - F.lift, S.radius * F.w, S.radius * F.h * rise);
   }
@@ -159,6 +153,8 @@ export class HollowsView {
       const color = colorOf(B.color);
       g.lineStyle(B.ringWidth, color, B.ringAlpha).strokeCircle(b.x, b.y, b.radius);
       g.fillStyle(color, B.fillAlpha).fillCircle(b.x, b.y, Math.max(1, b.radius * progress));
+      // 041.12: an enraged Bulwark's bomb, which a roll won't save from, wears a second ring.
+      if (b.rollProof) g.lineStyle(L.rollProof.width, colorOf(L.rollProof.color), L.rollProof.alpha).strokeCircle(b.x, b.y, b.radius + L.rollProof.gap);
       const t = Math.min(1, b.fuse / B.flightTicks);
       const x = b.fromX + (b.x - b.fromX) * t;
       const y = b.fromY + (b.y - b.fromY) * t - 4 * B.arcPeak * t * (1 - t);

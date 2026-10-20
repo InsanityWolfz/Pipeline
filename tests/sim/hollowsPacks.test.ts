@@ -1,14 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { TILE_SIZE } from '../../src/data/config';
 import { CHAMPIONS } from '../../src/data/champions';
-import { attackOf, enemyDef } from '../../src/data/enemies';
+import { attackOf, enemyDef, type EnemyDef } from '../../src/data/enemies';
 import { HOLLOWS, inHollows } from '../../src/data/hollows';
 import { HOLLOWS_ENEMIES } from '../../src/data/hollowsEnemies';
 import { HOLLOWS_START } from '../../src/data/playtest';
 import { POPULATION } from '../../src/data/population';
 import { UNIDENTIFIED_ARMOR } from '../../src/data/gear';
 import { claim } from '../../src/sim/claims';
-import { championDef, makeChampion } from '../../src/sim/champions';
+import { makeChampion } from '../../src/sim/champions';
+import { scaledDef } from '../../src/sim/ringScale';
 import { spawnDrops } from '../../src/sim/drops';
 import { createEnemy } from '../../src/sim/enemies';
 import { createRng } from '../../src/sim/rng';
@@ -16,6 +17,9 @@ import { inSafeZone, stepPopulation } from '../../src/sim/population';
 import { createSim, type SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { arena, HALL, PLAYER_AT, run } from './fight';
+
+/** A def as its ring 1 champion: 032's numbers, unchanged by 041's ring scaling. */
+const champion1 = (def: EnemyDef): EnemyDef => scaledDef(def, 1, true);
 
 // Region 2's packs (035): ring 3 holds only the four, with at most one Sniper and two
 // Burrowers to a pack, never in the arena or a safe zone; rings 1–2 never hold them;
@@ -99,16 +103,16 @@ describe("the four's champions", () => {
   it('walk, tunnel and charge 15% faster and hit 30% harder, with every telegraph, range and shield unchanged', () => {
     for (const id of FOUR) {
       const def = enemyDef(id);
-      const champ = championDef(def);
+      const champ = champion1(def);
       expect(champ.walkSpeed).toBeCloseTo(def.walkSpeed * CHAMPIONS.speed);
       expect(attackOf(champ)).toMatchObject({ windupTicks: attackOf(def).windupTicks, recoverTicks: attackOf(def).recoverTicks, cooldownTicks: attackOf(def).cooldownTicks });
       expect(champ.hurtbox.w).toBeCloseTo(def.hurtbox.w * CHAMPIONS.scale);
       expect(champ.shield).toEqual(def.shield);
     }
-    const charger = championDef(enemyDef('charger'));
-    const burrower = championDef(enemyDef('burrower'));
-    const sniper = championDef(enemyDef('sniper'));
-    const shardback = championDef(enemyDef('shardback'));
+    const charger = champion1(enemyDef('charger'));
+    const burrower = champion1(enemyDef('burrower'));
+    const sniper = champion1(enemyDef('sniper'));
+    const shardback = champion1(enemyDef('shardback'));
     if (charger.kind !== 'charger' || burrower.kind !== 'burrower' || sniper.kind !== 'sniper' || shardback.kind !== 'shardback') throw new Error('kinds');
     expect(charger.charge).toMatchObject({ speed: 360 * CHAMPIONS.speed, distance: 220, width: 24, damage: Math.round(25 * CHAMPIONS.damage) });
     expect(burrower.burrow).toMatchObject({ speed: 70 * CHAMPIONS.speed, radius: 28, lockRange: 12, damage: Math.round(22 * CHAMPIONS.damage) });

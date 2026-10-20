@@ -43,7 +43,7 @@ export class BossBar {
     g.clear();
     g.fillStyle(colorOf(B.frame)).fillRect(x - B.border * 2, B.top - B.border * 2, B.w + B.border * 4, B.h + B.border * 4);
     g.fillStyle(colorOf(B.back)).fillRect(x - B.border, B.top - B.border, B.w + B.border * 2, B.h + B.border * 2);
-    g.fillStyle(colorOf(boss.enraged ? B.enragedFill : B.fill)).fillRect(x, B.top, Math.max(0, Math.round((B.w * boss.health) / max)), B.h);
+    g.fillStyle(colorOf(B.fill)).fillRect(x, B.top, Math.max(0, Math.round((B.w * boss.health) / max)), B.h);
     this.name.set(def.name);
     this.name.moveTo(Math.round((VIEW_WIDTH - this.name.width) / 2), B.top - B.nameGap - B.border * 2 - this.name.lineHeight);
     this.setVisible(true);

@@ -1,4 +1,4 @@
-import { enemyDef } from '../data/enemies';
+import { defOf } from './champions';
 import { damagePlayer } from './health';
 import type { EnemyState } from './enemies';
 import { nextFloat } from './rng';
@@ -7,7 +7,8 @@ import type { SimState } from './state';
 // The Bulwark's bombs (034). Each landing spot shows at once: a red ring of its radius,
 // with a filled circle growing from its centre over the fuse. When the circle meets the
 // ring the bomb bursts, hurting a player whose feet are inside unless a roll's i-frames
-// (or a hit's) are running. They never hurt enemies.
+// (or a hit's) are running; an enraged Bulwark's (041.12) a roll doesn't save from. They
+// never hurt enemies.
 
 export interface EnemyBombState {
   id: number;
@@ -23,11 +24,14 @@ export interface EnemyBombState {
   /** Ticks since it was thrown; it bursts at `fuseTicks`. */
   fuse: number;
   fuseTicks: number;
+  /** Its burst's damage, from the thrower's def as the sim reads it (defOf), and whether a roll's i-frames don't save from it (041.12: an enraged Bulwark's). */
+  damage: number;
+  rollProof: boolean;
 }
 
 /** Throws a lob's bombs from an enemy: one at the player's feet now, the rest within `scatter` of it (seeded). */
 export function throwBombs(state: SimState, e: EnemyState): void {
-  const def = enemyDef(e.enemyId);
+  const def = defOf(e);
   if (def.kind !== 'bulwark') return;
   const { lob } = def;
   const p = state.player;
@@ -46,6 +50,8 @@ export function throwBombs(state: SimState, e: EnemyState): void {
       radius: lob.radius,
       fuse: 0,
       fuseTicks: lob.fuseTicks,
+      damage: lob.damage,
+      rollProof: e.enraged && def.enrage.rollProofLobs,
     });
   }
   state.events.lobs.push({ id: e.id, count: lob.count });
@@ -57,14 +63,14 @@ export function stepEnemyBombs(state: SimState): void {
     b.fuse += 1;
     if (b.fuse < b.fuseTicks) return true;
     state.events.enemyBursts.push({ x: b.x, y: b.y, radius: b.radius });
-    const def = enemyDef(b.enemyId);
+    const def = defOf({ enemyId: b.enemyId, champion: null, ring: 0 });
     const p = state.player;
     const dx = p.x - b.x;
     const dy = p.y - b.y;
     const dist = Math.hypot(dx, dy);
     if (def.kind === 'bulwark' && b.roomId === state.roomId && dist <= b.radius) {
       const [kx, ky] = dist > 0 ? [dx / dist, dy / dist] : [0, 1];
-      damagePlayer(state, def.lob.damage, kx, ky, def.lob.knockback, def.lob.knockTicks);
+      damagePlayer(state, b.damage, kx, ky, def.lob.knockback, def.lob.knockTicks, b.rollProof);
     }
     return false;
   });

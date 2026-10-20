@@ -105,6 +105,24 @@ describe('the adds', () => {
     expect(addsOf(s)).toHaveLength(2);
   });
 
+  it('sunk by a reset, don’t act on that tick: an add’s bash landing then never hits', () => {
+    const { s, b } = risen();
+    run(s, adds.riseTicks);
+    const shard = addsOf(s).find((e) => e.enemyId === 'shardback');
+    if (!shard) throw new Error('no Shardback');
+    s.enemies = [b, shard];
+    // The player out of the arena, the Bulwark a step from home and walking there: it resets this tick.
+    movePlayer(s, START.x, (HOLLOWS.arena.bounds.y0 - 3) * 32);
+    Object.assign(b, { mode: 'return', modeTicks: 0, x: b.homeX, y: b.homeY + 1 });
+    // The Shardback beside the player, its bash's wind-up done: it would land this tick.
+    Object.assign(shard, { x: s.player.x, y: s.player.y - 20, mode: 'windup', modeTicks: 1000, angle: Math.PI / 2 });
+    run(s, 1);
+    expect(b.mode).toBe('idle');
+    expect(addsOf(s)).toEqual([]);
+    expect(s.player.health).toBe(100);
+    expect(s.events.hits.filter((h) => h.target === 'player')).toEqual([]);
+  });
+
   it('are gone after a KO before its first kill, the Bulwark back with its adds to come', () => {
     const { s } = risen();
     die(s);

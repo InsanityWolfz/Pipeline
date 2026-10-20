@@ -21,6 +21,10 @@ type Shape = (
 ) & {
   /** Ticks before it lands. */
   left: number;
+  /** A roll's i-frames don't save from it (041.12: its second ring shows it): the player has to be out by then. */
+  rollProof?: boolean;
+  /** The Bulwark's rear stomp (041.5). */
+  stomp?: boolean;
 };
 
 /** A shape and the ticks it has shown. */
@@ -31,6 +35,9 @@ const PAD = 12;
 
 /** How far a roll carries before its i-frames run out, px (a margin under the bare roll's 96 over 18 ticks). */
 const ROLL_REACH = 60;
+
+/** Ticks before a roll-proof zone lands that a roll out of it starts: a whole roll's 18. */
+const ROLL_OUT_TICKS = 18;
 
 /** True if a point is inside a zone grown by `pad` px. */
 export function inZone(z: Zone, x: number, y: number, pad = PAD): boolean {
@@ -75,8 +82,8 @@ function zoneOf(e: EnemyState, def: EnemyDef, left: (windup: number) => number):
     case 'slammer':
       return e.mode === 'windup' ? { kind: 'circle', x: e.x, y: e.y, r: def.slam.radius, left: left(def.slam.windupTicks) } : null;
     case 'bulwark':
-      if (e.mode === 'windup') return { kind: 'circle', x: e.x, y: e.y, r: def.pound.radius, left: left(def.pound.windupTicks) };
-      return e.mode === 'stomp-windup' ? { kind: 'arc', x: e.x, y: e.y, r: def.stomp.radius, dirX: e.swipeDirX, dirY: e.swipeDirY, deg: def.stomp.arcDegrees, left: left(def.stomp.windupTicks) } : null;
+      if (e.mode === 'windup') return { kind: 'circle', x: e.x, y: e.y, r: def.pound.radius, left: left(def.pound.windupTicks), rollProof: def.pound.rollProof };
+      return e.mode === 'stomp-windup' ? { kind: 'arc', x: e.x, y: e.y, r: def.stomp.radius, dirX: e.swipeDirX, dirY: e.swipeDirY, deg: def.stomp.arcDegrees, left: left(def.stomp.windupTicks), stomp: true } : null;
     case 'caster':
       return null;
   }
@@ -90,7 +97,7 @@ export function dangerZones(s: SimState): Zone[] {
     const z = enemyZone(e, defOf(e));
     if (z) out.push(z);
   }
-  for (const b of s.enemyBombs) if (b.roomId === s.roomId) out.push({ kind: 'circle', x: b.x, y: b.y, r: b.radius, left: b.fuseTicks - b.fuse, age: b.fuse });
+  for (const b of s.enemyBombs) if (b.roomId === s.roomId) out.push({ kind: 'circle', x: b.x, y: b.y, r: b.radius, left: b.fuseTicks - b.fuse, age: b.fuse, rollProof: b.rollProof });
   for (const o of s.orbs) {
     if (o.roomId !== s.roomId) continue;
     const def = defOf({ enemyId: o.enemyId, champion: null, ring: 0 });
@@ -132,7 +139,7 @@ export interface Reading {
   firing: boolean;
   /** It walks round what it has read (a careful player), or keeps to its goal and only rolls out of what is about to land. */
   walksRound: boolean;
-  /** It reads only telegraphed circles (the Bulwark's bombs and pound, a Burrower's ring), not arcs, lanes or orbs. */
+  /** It reads only telegraphed circles (the Bulwark's bombs and pound, a Burrower's ring) and the Bulwark's stomp, not other arcs, lanes or orbs. */
   circlesOnly?: boolean;
 }
 
@@ -148,14 +155,15 @@ export const ROLLER: Reading = { react: 15, horizon: 45, firing: true, walksRoun
  */
 export function steer(s: SimState, goal: { x: number; y: number }, read: Reading = CAREFUL): Steer {
   const p = s.player;
-  const zones = dangerZones(s).filter((z) => z.left <= read.horizon && z.age >= read.react && (!read.circlesOnly || z.kind === 'circle'));
+  const zones = dangerZones(s).filter((z) => z.left <= read.horizon && z.age >= read.react && (!read.circlesOnly || z.kind === 'circle' || z.stomp === true));
   const threat = zones.filter((z) => inZone(z, p.x, p.y));
   const danger = threat.length > 0;
   let best: { move: readonly [number, number]; score: number } = { move: [0, 0], score: Infinity };
   for (const move of MOVES) {
     const len = Math.hypot(move[0], move[1]) || 1;
     let score = 0;
-    for (const z of read.walksRound ? zones : []) {
+    // A careful player walks round all it has read; any player walks out of what a roll won't save from.
+    for (const z of read.walksRound ? zones : zones.filter((x) => x.rollProof)) {
       const ticks = Math.max(1, Math.min(z.left, 30));
       const step = walkPx(ticks, read.firing);
       const x = p.x + (move[0] / len) * step;
@@ -169,7 +177,9 @@ export function steer(s: SimState, goal: { x: number; y: number }, read: Reading
   }
   const cmd: Partial<Command> = { moveX: best.move[0] as -1 | 0 | 1, moveY: best.move[1] as -1 | 0 | 1 };
   // About to land on the player and no walking out of it: roll (its i-frames cover the hit).
-  const soon = threat.some((z) => z.left <= 3);
+  // A roll through a zone lands inside its i-frames; one a roll won't save from has to carry the player out, so it
+  // starts while the roll can still cover the distance.
+  const soon = threat.some((z) => z.left <= (z.rollProof ? ROLL_OUT_TICKS : 3));
   if (soon && p.rollTick === 0 && p.cooldown === 0) {
     const out = rollOut(p, threat, zones);
     Object.assign(cmd, { dodge: true, moveX: out[0], moveY: out[1] });

@@ -34,9 +34,11 @@ export interface BulwarkDef extends EnemyBase {
     damage: number;
     knockback: number;
     knockTicks: number;
+    /** 041.12: its shockwave ignores a roll's i-frames; only leaving the circle saves the player. */
+    rollProof: boolean;
   };
   /** Its enrage (041.4). */
-  enrage: { below: number; roarTicks: number; turnDegPerSec: number; lobCooldownTicks: number };
+  enrage: { below: number; roarTicks: number; turnDegPerSec: number; lobCooldownTicks: number; rollProofLobs: boolean };
   /** Its rear stomp (041.5). */
   stomp: {
     range: number;
@@ -94,14 +96,15 @@ export const BULWARK: BulwarkDef = {
    * shield for `windupTicks`, pounds everything within `radius` (the pose holds `swipeTicks`), then recovers without
    * turning for `recoverTicks`: the window to punish it.
    */
-  pound: { triggerRange: 72, windupTicks: 60, swipeTicks: 8, radius: 112, damage: 35, knockback: 40, knockTicks: 8, recoverTicks: 60, cooldownTicks: 300 },
+  pound: { triggerRange: 72, windupTicks: 60, swipeTicks: 8, radius: 112, damage: 35, knockback: 40, knockTicks: 8, recoverTicks: 60, cooldownTicks: 300, rollProof: true },
   /**
    * Once per fight, when its health first drops below `below` of its max (041.4), it enrages at its next free moment
    * (a wind-up already running finishes first): it roars `roarTicks`, starting no attack, then until it dies or resets
-   * its shield turns at `turnDegPerSec` and its lob cooldown is `lobCooldownTicks`. No telegraph gets shorter.
+   * its shield turns at `turnDegPerSec` and its lob cooldown is `lobCooldownTicks`; with `rollProofLobs` (041.12) the
+   * bombs it lobs then ignore a roll's i-frames. No telegraph gets shorter.
    */
   // 041.7 tuning: 110°/s (the spec's 70 still let a decent build win in under 60 s).
-  enrage: { below: 0.3, roarTicks: 60, turnDegPerSec: 110, lobCooldownTicks: 160 },
+  enrage: { below: 0.3, roarTicks: 60, turnDegPerSec: 110, lobCooldownTicks: 160, rollProofLobs: true },
   /**
    * The rear stomp (041.5): its `behind` counter gains 1 a tick while the player's feet are outside its shield arc and
    * within `range` px, and loses `behindDecay` a tick otherwise (never below 0). At `behindTicks` with its cooldown

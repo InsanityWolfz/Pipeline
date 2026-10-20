@@ -15,7 +15,8 @@ import { wakeRoom } from './tutorial';
 
 /**
  * Hits the player for `amount` (less their armor, 036), pushing them `knockback` px along (dirX, dirY)
- * over `knockTicks`. Does nothing during roll i-frames or hit invulnerability.
+ * over `knockTicks`. Does nothing during roll i-frames (unless `rollProof`, 041.12: the Bulwark's pound and enraged
+ * lobs, which a roll doesn't save from) or hit invulnerability.
  * Returns whether the hit landed (a Wardstone block counts: the attack is spent on it).
  */
 export function damagePlayer(
@@ -25,9 +26,10 @@ export function damagePlayer(
   dirY: number,
   knockback: number,
   knockTicks: number,
+  rollProof = false,
 ): boolean {
   const p = state.player;
-  if (isInvulnerable(p) || p.hurtTicks > 0 || p.dying > 0) return false;
+  if ((!rollProof && isInvulnerable(p)) || p.hurtTicks > 0 || p.dying > 0) return false;
   // A ready Wardstone (036) takes the hit whole: nothing lands, and the shot or swing is spent.
   if (wardBlocks(state)) return true;
   const taken = afterArmor(state, amount);

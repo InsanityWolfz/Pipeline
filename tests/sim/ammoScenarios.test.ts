@@ -3,9 +3,10 @@ import { clearTicks, FAMILIES, MEADOW, ringed, type Family, type Scenario } from
 
 // 041.9: each ammo family wins its own scenario, from one entrance with no talents, on
 // seeds 1–5: the shortest time from its first round to the last death, by at least 10% over
-// the next. A family that can't finish in 60 s scores 60 s. These scenarios use no RNG, so
-// each seed plays out alike. Two of the four aren't met at Shaun's per-hit numbers: their
-// tests are it.fails, for open question 041.14 (the spec: stop and report, don't retune).
+// the next. A family that can't finish in 60 s scores 60 s and never wins. These scenarios
+// use no RNG, so each seed plays out alike. Two of the four aren't met at Shaun's per-hit
+// numbers; by his answer to 041.14 they're recorded measurements, not targets, until more
+// mechanics are folded in.
 
 const SEEDS = [1, 2, 3, 4, 5] as const;
 const CAP = 60 * 60;
@@ -54,6 +55,8 @@ const SCENARIOS: Record<'line' | 'cluster' | 'walls' | 'still', Scenario> = {
  */
 function wins(seed: number, scenario: Scenario, family: Family): { ticks: number; beaten: string | null } {
   const ticks = clearTicks(seed, scenario, family, CAP);
+  // A family that never finishes (60 s) can't win, however the others do.
+  if (ticks >= CAP) return { ticks, beaten: 'never finished' };
   const cut = Math.ceil(ticks * MARGIN);
   for (const other of Object.keys(FAMILIES) as Family[]) {
     if (other === family) continue;
@@ -81,16 +84,14 @@ describe('each ammo family wins its own scenario (041.9)', () => {
     winsEverySeed('still', 'mine');
   });
 
-  // Not met (041.14): the cluster walks in and lines up, so a piercing arrow hits several at once. Measured, every seed:
-  // arrows 221 ticks, bombs 332, ley bolts and landmines 60 s.
-  it.fails('bombs win against a cluster (041.9: not met, open question 041.14)', () => {
-    winsEverySeed('cluster', 'bomb');
-  });
-
-  // Not met (041.14): the Wisps settle behind the wall to cast and hold still, so bombs land on them, and a Homing
-  // bolt can't lock a target behind a wall this close (its 64 px lock radius) and flies into it. Measured, every seed:
-  // bombs 124 ticks, landmines 576, arrows and ley bolts 60 s. The Homing bolt's 60 s run is the cost here.
-  it.fails('Homing ley bolts win against Wisps behind a wall (041.9: not met, open question 041.14)', () => {
-    winsEverySeed('walls', 'ley');
+  // 041.14 (Shaun): balanced later, as more mechanics fold in; for now each family's time is recorded, seed 1's (the
+  // scenarios draw no random numbers). Measured: the cluster, arrows 221 ticks, bombs 332, ley bolts and landmines
+  // 60 s; behind the wall, bombs 124, landmines 576, arrows and ley bolts 60 s.
+  it('records bombs against a cluster and Homing ley bolts against Wisps behind a wall (041.14: measurements, not targets)', () => {
+    for (const name of ['cluster', 'walls'] as const) {
+      const times = (Object.keys(FAMILIES) as Family[]).map((f) => `${f} ${clearTicks(1, SCENARIOS[name], f, CAP)}`);
+      console.log(`041 ${name} (ticks, 3600 = 60 s):`, times.join(' | '));
+      expect(times).toHaveLength(4);
+    }
   }, 30_000);
 });

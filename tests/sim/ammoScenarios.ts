@@ -1,12 +1,13 @@
 import { lobbedAmmo, straightAmmo } from '../../src/data/ammo';
 import type { Ring } from '../../src/data/ringScale';
-import { TILE } from '../../src/data/rooms';
+import { TILE, type Room } from '../../src/data/rooms';
 import { HOMING } from '../../src/data/tags';
 import { defOf } from '../../src/sim/champions';
 import { aggro, createEnemy, type EnemyState } from '../../src/sim/enemies';
 import { clearShot } from '../../src/sim/sightLine';
 import { roomById, type SimState } from '../../src/sim/state';
 import { tileCentre } from '../../src/sim/tiles';
+import { WORLD } from '../../src/sim/world';
 import { feed, lines } from './builds';
 import { arena, HALL, PLAYER_AT, run } from './fight';
 
@@ -28,15 +29,19 @@ export interface Scenario {
   walls?: readonly { tx: number; ty: number }[];
 }
 
-/** Runs `fn` with wall tiles stood in the overworld's rows, put back after. */
+/**
+ * Runs `fn` with the overworld swapped for a copy of it with wall tiles stood in its rows, the original put back after.
+ * The shared room data is never written: only the world's entry points at the copy meanwhile.
+ */
 export function withWalls<T>(walls: readonly { tx: number; ty: number }[], fn: () => T): T {
-  const room = roomById(HALL) as { rows: readonly string[] };
-  const before = room.rows;
-  room.rows = before.map((row, ty) => [...row].map((c, tx) => (walls.some((w) => w.tx === tx && w.ty === ty) ? TILE.wall : c)).join(''));
+  if (walls.length === 0) return fn();
+  const world = WORLD as Record<string, Room>;
+  const before = roomById(HALL);
+  world[HALL] = { ...before, rows: before.rows.map((row, ty) => [...row].map((c, tx) => (walls.some((w) => w.tx === tx && w.ty === ty) ? TILE.wall : c)).join('')) };
   try {
     return fn();
   } finally {
-    room.rows = before;
+    world[HALL] = before;
   }
 }
 

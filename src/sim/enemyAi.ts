@@ -32,7 +32,8 @@ export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBod
   const list = state.enemies;
   for (let i = 0, n = list.length; i < n; i++) {
     const e = list[i];
-    if (!e) continue;
+    // Gone this tick (041: adds sunk by their Bulwark's reset earlier in the loop): it doesn't act.
+    if (!e || (state.enemies !== list && !state.enemies.includes(e))) continue;
     // Rising (041): it doesn't act or move; up from the ground, it wakes.
     if (e.rising > 0) {
       e.rising -= 1;

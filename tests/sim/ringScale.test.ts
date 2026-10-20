@@ -10,7 +10,7 @@ import { castOrb } from '../../src/sim/orbs';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
-import { arena, movePlayer, run } from './fight';
+import { arena, movePlayer, PLAYER_AT, run } from './fight';
 
 // Ring scaling (041): an enemy's ring is its home tile's, set when it's created; its
 // def scales max health and every attack's damage by the ring, then by a champion's,
@@ -142,5 +142,27 @@ describe('scaled enemies in a fight', () => {
     const s = arena();
     expect(place(s, 'bulwark', RING_3).health).toBe(enemyDef('bulwark').maxHealth);
     expect(place(s, 'pylon-warden', RING_3).health).toBe(enemyDef('pylon-warden').maxHealth);
+  });
+});
+
+describe('frost on a ring 1 Husk (041: Frost unchanged)', () => {
+  it('dies to its third Frost arrow, before a Freeze', () => {
+    const s = arena();
+    s.inventory = { 'arrow+frost': 10 };
+    const e = createEnemy(s.nextEnemyId++, 'husk', { x: PLAYER_AT.x + 120, y: PLAYER_AT.y }, OVERWORLD_ROOM);
+    e.ring = 1;
+    // Held where it stands, its wind-up never landing, so only the arrows matter.
+    Object.assign(e, { mode: 'windup', modeTicks: -10_000 });
+    s.enemies.push(e);
+    let hits = 0;
+    let froze = 0;
+    for (let t = 0; t < 300 && s.enemies.includes(e); t++) {
+      run(s, 1, { fire: true, aimX: e.x, aimY: e.y - 10 });
+      hits += s.events.hits.filter((h) => h.target === 'enemy' && h.id === e.id).length;
+      froze += s.events.freezes.length;
+    }
+    expect(s.enemies.includes(e)).toBe(false);
+    expect(hits).toBe(3);
+    expect(froze).toBe(0);
   });
 });

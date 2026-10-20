@@ -7,6 +7,7 @@ import { enemyDef } from '../data/enemies';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
 import type { EnemyState } from '../sim/enemies';
 import { colorOf } from './color';
+import { drawCrackedCircle } from './crackedCircle';
 
 // How the Bulwark reads on screen (034), for EnemyView: its pose (the extras it has:
 // shuffling round, rearing back to lob, the throw, rocking behind its shield on a block),
@@ -77,7 +78,8 @@ function drawSteam(g: GameObjects.Graphics, e: EnemyState, bottom: number, now: 
   for (let i = 0; i < S.puffs; i++) {
     const t = ((now / S.riseMs + i / S.puffs) % 1 + 1) % 1;
     const side = i % 2 === 0 ? -1 : 1;
-    g.fillStyle(colorOf(S.color), S.alpha * (1 - t)).fillCircle(e.x + side * S.spread * (0.5 + t * 0.5), bottom + S.top - S.rise * t, S.radius * (1 + t));
+    const out = S.spreadFrom + (1 - S.spreadFrom) * t;
+    g.fillStyle(colorOf(S.color), S.alpha * (1 - t)).fillCircle(e.x + side * S.spread * out, bottom + S.top - S.rise * t, S.radius * (1 + (S.swell - 1) * t));
   }
 }
 
@@ -100,17 +102,7 @@ export function drawStomp(g: GameObjects.Graphics, e: EnemyState): void {
 
 /** An add rising (041): the summon's cracked red circle at its feet, smaller, its ring and cracks opening as it rises. */
 export function drawRise(g: GameObjects.Graphics, e: EnemyState): void {
-  if (e.rising <= 0) return;
-  const S = HOLLOWS_LOOK.summon;
-  const r = S.radius * HOLLOWS_LOOK.addRise.scale;
-  const k = 1 - e.rising / BULWARK.adds.riseTicks;
-  const color = colorOf(S.color);
-  const ring = Math.min(1, k * 2);
-  g.lineStyle(S.ringWidth, color, S.alpha).strokeEllipse(e.x, e.y, r * 2 * ring, r * ring);
-  for (let i = 0; i < S.cracks; i++) {
-    const a = (i / S.cracks) * Math.PI * 2 + S.crackStart;
-    g.lineStyle(S.crackWidth, color, S.alpha).lineBetween(e.x, e.y, e.x + Math.cos(a) * r * k, e.y + (Math.sin(a) * r * k) / 2);
-  }
+  if (e.rising > 0) drawCrackedCircle(g, e.x, e.y, HOLLOWS_LOOK.summon.radius * HOLLOWS_LOOK.addRise.scale, riseShown(e));
 }
 
 /** How far up from the ground a rising add shows (041): 0 just begun, 1 up. */
@@ -125,4 +117,9 @@ export function drawPound(g: GameObjects.Graphics, e: EnemyState): void {
   const color = colorOf(P.color);
   g.fillStyle(color, P.alpha).fillCircle(e.x, e.y, def.pound.radius);
   g.fillStyle(color, P.fillAlpha).fillCircle(e.x, e.y, def.pound.radius * progress);
+  // 041.12: a roll won't save from it, so it wears a second ring.
+  if (def.pound.rollProof) {
+    const R = HOLLOWS_LOOK.rollProof;
+    g.lineStyle(R.width, colorOf(R.color), R.alpha).strokeCircle(e.x, e.y, def.pound.radius + R.gap);
+  }
 }

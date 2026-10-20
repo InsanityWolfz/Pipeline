@@ -3,13 +3,17 @@ import { UNIDENTIFIED_ARMOR } from '../../src/data/gear';
 import { CHAMPIONS } from '../../src/data/champions';
 import { ENEMIES, attackOf, enemyDef, type EnemyDef } from '../../src/data/enemies';
 import { LANDMARK_LIST } from '../../src/data/landmarks';
-import { championDef, defOf, rollChampions } from '../../src/sim/champions';
+import { defOf, rollChampions } from '../../src/sim/champions';
+import { scaledDef } from '../../src/sim/ringScale';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import { createRng } from '../../src/sim/rng';
 import { createSim } from '../../src/sim/state';
 import { spawnDrops } from '../../src/sim/drops';
 import { summarize } from '../../src/sim/summary';
 import { arena, PLAYER_AT, run, runUntil, SWIPE_LANDS } from './fight';
+
+/** A def as its ring 1 champion: 032's numbers, unchanged by 041's ring scaling. */
+const champion1 = (def: EnemyDef): EnemyDef => scaledDef(def, 1, true);
 
 // Champions (032): a rule over enemy data. Any non-boss enemy can spawn as one, bigger,
 // tougher, a little faster and harder-hitting, named, with richer drops.
@@ -53,9 +57,9 @@ describe('the champion tuning', () => {
   });
 });
 
-describe('championDef, applied to every non-boss enemy', () => {
+describe('the champion def (a ring 1 champion), applied to every non-boss enemy', () => {
   it.each(NON_BOSS.map((d) => [d.id, d] as const))('%s: scaled size, health, damage and speed; timings and reach unchanged', (_id, def) => {
-    const c = championDef(def);
+    const c = champion1(def);
     expect(c.feetBox).toEqual({ w: def.feetBox.w * 1.5, h: def.feetBox.h * 1.5 });
     expect(c.hurtbox).toEqual({ w: def.hurtbox.w * 1.5, h: def.hurtbox.h * 1.5, offsetY: def.hurtbox.offsetY * 1.5 });
     expect(c.maxHealth).toBe(Math.round(def.maxHealth * 1.5));
@@ -132,7 +136,7 @@ describe('a champion in play', () => {
     const s = arena();
     const e = createEnemy(s.nextEnemyId++, 'husk', { x: PLAYER_AT.x + 20, y: PLAYER_AT.y }, 'overworld', 'pop-1-0');
     e.champion = { name: 'Mossjaw' };
-    e.health = championDef(enemyDef('husk')).maxHealth;
+    e.health = champion1(enemyDef('husk')).maxHealth;
     s.enemies.push(e);
     return { s, e };
   }

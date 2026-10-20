@@ -18,7 +18,8 @@ import { run } from './fight';
 
 // A pack fight for 041's targets (test code): a pack placed as the population places one
 // (each member on open ground within 2 tiles of its centre, picked with the sim's RNG, all
-// in the pack's ring), and a bot that kites it: it reads every telegraph and walks round
+// in the pack's ring) but without its champion roll, since 041.8 names plain members; and a
+// bot that kites it: it reads every telegraph and walks round
 // it (rolling through one it can't), keeps its distance from the nearest member, and holds
 // fire on the nearest one it can hurt from where it stands.
 

@@ -48,7 +48,7 @@ function landPound(state: SimState, e: EnemyState, def: BulwarkDef): void {
   const dist = Math.hypot(dx, dy);
   if (dist > pound.radius) return;
   const [kx, ky] = dist > 0 ? [dx / dist, dy / dist] : [e.swipeDirX, e.swipeDirY];
-  damagePlayer(state, pound.damage, kx, ky, pound.knockback, pound.knockTicks);
+  damagePlayer(state, pound.damage, kx, ky, pound.knockback, pound.knockTicks, pound.rollProof);
 }
 
 /** Advances the Bulwark's mode and returns this tick's own move, px. */

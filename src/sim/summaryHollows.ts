@@ -35,7 +35,7 @@ export interface HollowsSummary {
     addsRisen: boolean;
   }[];
   /** Enemy bombs on the ground: where, their ring's radius, the fuse burnt and its length, and how far the inner circle has grown (0..1). */
-  enemyBombs: { id: number; room: string; x: number; y: number; from: { x: number; y: number }; radius: number; fuse: number; fuseTicks: number; progress: number }[];
+  enemyBombs: { id: number; room: string; x: number; y: number; from: { x: number; y: number }; radius: number; fuse: number; fuseTicks: number; progress: number; rollProof: boolean }[];
   /** Region bosses killed at least once, in order. */
   bossDefeats: string[];
   /** Each altar: its boss, its state, and the ticks a summon has run (0 when none is). */
@@ -63,7 +63,7 @@ export function hollowsSummary(state: SimState): HollowsSummary {
         stompCooldown: e.stompCooldown,
         addsRisen: e.addsRisen,
       })),
-    enemyBombs: state.enemyBombs.map((b) => ({ id: b.id, room: b.roomId, x: round(b.x), y: round(b.y), from: { x: round(b.fromX), y: round(b.fromY) }, radius: b.radius, fuse: b.fuse, fuseTicks: b.fuseTicks, progress: round(fuseProgress(b)) })),
+    enemyBombs: state.enemyBombs.map((b) => ({ id: b.id, room: b.roomId, x: round(b.x), y: round(b.y), from: { x: round(b.fromX), y: round(b.fromY) }, radius: b.radius, fuse: b.fuse, fuseTicks: b.fuseTicks, progress: round(fuseProgress(b)), rollProof: b.rollProof })),
     bossDefeats: [...state.bossDefeats],
     altars: (WORLD[OVERWORLD_ROOM]?.altars ?? []).map((a) => ({ id: a.id, boss: a.boss, state: altarState(state, a.id), summonTicks: state.summoning?.altar === a.id ? state.summoning.ticks : 0 })),
   };

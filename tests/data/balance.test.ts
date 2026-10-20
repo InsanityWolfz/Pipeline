@@ -147,7 +147,9 @@ describe('the Bulwark (041)', () => {
 
   it('enrages below 30%, punishes circling with a rear stomp, and calls a Shardback and a Charger at 50%', () => {
     // 041.7 tuning: the enrage turns 110°/s (spec 70) and the stomp comes after 120 ticks behind (spec 180).
-    expect(B.enrage).toEqual({ below: 0.3, roarTicks: 60, turnDegPerSec: 110, lobCooldownTicks: 160 });
+    expect(B.enrage).toEqual({ below: 0.3, roarTicks: 60, turnDegPerSec: 110, lobCooldownTicks: 160, rollProofLobs: true });
+    // 041.12 (Shaun): the pound's shockwave and the enraged lobs ignore a roll's i-frames.
+    expect(B.pound.rollProof).toBe(true);
     expect(B.stomp).toEqual({ range: 160, behindTicks: 120, behindDecay: 2, windupTicks: 40, swipeTicks: 8, radius: 96, arcDegrees: 180, damage: 30, knockback: 40, knockTicks: 8, recoverTicks: 40, cooldownTicks: 360 });
     expect(B.adds).toEqual({ below: 0.5, enemies: ['shardback', 'charger'], riseTicks: 60, minDistance: 96 });
     for (const id of B.adds.enemies) expect(enemyDef(id).boss, id).toBe(false);
