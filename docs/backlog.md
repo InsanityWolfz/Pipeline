@@ -49,6 +49,11 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 042 | Shippable playtest build: painted title screen, game-flow state machine, one save slot saved on entering the foundry (Continue, export and import, versioned), Settings (volumes, shake, flashes, key bindings), big-moment-only shake and a locked camera, end-of-demo card, F feedback notes | done |
 | 043 | Arena lock and slower Shardbacks: the Sunken Forum seals when the Bulwark engages (E at the seal leaves and resets the fight); Shardback shields turn at 70°/s; moved out of 041 (041.18, 041.19) | done |
 | 044 | Sandbox: `?sandbox` boots a test room with every item, round, stage and gear piece, max level, a loadout panel for the intake's volley, a spawn panel, enemy pens and both boss arenas, and god mode; from Shaun's request 2026-10-20 | done |
+| 045 | Readability fixes: red HP bar, E prompts on ley crystals and the sealed door (043.5), a 96 px magnet pickup, build controls on screen, Wisps wake on screen, cache loot bursts out | approved |
+| 046 | Foundry onboarding: a working example arrow line on the first visit, the tutorial's second line after the Warden, double Region 1 outputs, the Splitter from the start | approved |
+| 047 | Inventory and hotbars: an intake bar (left click) and a carried bar (1–5, right click), a Factorio-style grid inventory and hopper screens, crafting tabs per ammo type with tagged rounds in them | approved |
+| 048 | Volley shape: two entrances fire at two angles, three as a centre and two sides, all together (note 5) | idea |
+| 049 | Resin pylon: a supply for Husk resin so bombs can be automated (note 16) | idea |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
 
@@ -72,8 +77,10 @@ Shaun's drive rant on 2026-10-19 (docs/brainstorm/2026-10-19-drive-rant.md) is q
 
 043 holds 041.18 and 041.19, moved out on 2026-10-20 under the process reset Shaun approved in chat ("approve the reset"), so 041 could close. Built in InsanityWolfz/Pipeline#28 and merged on Shaun's word ("approve everything", 2026-10-20).
 
+045–047 come from the playtest-notes interview on 2026-10-20 (docs/brainstorm/2026-10-20-playtest-interview.md); 048 and 049 are the next batch.
+
 ## Approved, not built yet
-- 043.5: an "E" prompt over the Bulwark's sealed door, and the barrier's hum and collapse sounds for the seal (Shaun, 2026-10-20). For the legibility work.
+- 043.5 (now part of 045): an "E" prompt over the Bulwark's sealed door, and the barrier's hum and collapse sounds for the seal (Shaun, 2026-10-20). For the legibility work.
 
 ## Bugs
 Fixes to built behaviour that need no design. Each goes on its own branch and PR.

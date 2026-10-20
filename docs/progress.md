@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-20: Playtest-notes interview; 045–047 drafted
+**Changed:** ran the spec interview on docs/brainstorm/2026-10-20-playtest-notes.md (answers in docs/brainstorm/2026-10-20-playtest-interview.md) and drafted the first batch: 045 readability fixes (with 043.5), 046 foundry onboarding, 047 inventory and hotbars. 048 (volley shape) and 049 (resin pylon) are ideas for the next batch.
+
+**Next:** Shaun approves 045–047; build them in order, one branch and PR each.
+
 ## 2026-10-20: 044 sandbox merged
 **Changed:** Shaun playtested the sandbox and merged it (InsanityWolfz/Pipeline#31). `?sandbox` boots a test room on any preview link: every item, round, stage, gear piece and relic; level cap and talents; a panel (`` ` ``) for the entrances' loadout, spawns at any ring or as champions, boss resets and god mode; six pens and both boss arenas. It never touches the real save, and a loaded save drops any sandbox state. 044.7–044.15 stand as built.
 
