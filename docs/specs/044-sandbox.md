@@ -1,5 +1,5 @@
 # 044: Sandbox
-status: approved
+status: done
 
 Approved on draft by Shaun in chat, 2026-10-20 ("Approve 044 on draft"): the build follows the proposals in the open questions.
 
@@ -89,3 +89,6 @@ The build (branch `claude/044-sandbox`) follows the open questions' proposals. T
 - **044.13 The panel's key in Settings.** The key list shows "Sandbox panel" only in the sandbox. A settings file that already binds the backquote to something else, or a rebind onto it outside the sandbox, leaves the panel unbound (rebind it in Settings in the sandbox). The key is only bound in the sandbox, so the shipped game never captures it. The save rows (Export save, Import save) are hidden in the sandbox. Proposal: keep it.
 - **044.14 The room.** The foundry's tiled floor and walls, with the forum in the Hollows' stone, the overworld's daylight and outdoor sounds. The pens are walled bays open to the south, far enough apart that standing at one doesn't wake the next; their enemies chase and walk home as anywhere. The default loadout is three plain arrows. Only the entrances are bottomless; the 99 carried rounds aren't. Proposal: keep it.
 - **044.15 Saves.** The sandbox's own state exists only in a sandbox run, which is never saved, so a real save's shape is unchanged and `SAVE_VERSION` stays 1 (the save-shape fingerprint test passes as it is).
+
+## Shaun's answers (2026-10-20)
+- Shaun playtested the preview and said "Merge 31". He changed none of 044.7–044.15, so they stand as built.

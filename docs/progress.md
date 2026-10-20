@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-20: 044 sandbox merged
+**Changed:** Shaun playtested the sandbox and merged it (InsanityWolfz/Pipeline#31). `?sandbox` boots a test room on any preview link: every item, round, stage, gear piece and relic; level cap and talents; a panel (`` ` ``) for the entrances' loadout, spawns at any ring or as champions, boss resets and god mode; six pens and both boss arenas. It never touches the real save, and a loaded save drops any sandbox state. 044.7–044.15 stand as built.
+
+**Next:** the legibility and readability work from docs/brainstorm/2026-10-20-playtest-notes.md, starting with a spec interview (about three specs per approval batch), plus 043.5 from the backlog. Test changes in the sandbox; judge them with newcomers on the real start.
+
 ## 2026-10-20: 044 sandbox built
 **Changed:** spec 044 built on `claude/044-sandbox` (draft PR). `?sandbox` boots straight into a test room of its own, in dev and production builds, and never touches the save slot, its backup or Settings' save rows. The kit (99 of every item, every recipe, stage and piece, all research, the level cap with every point, every gear piece at each rarity and every relic) is derived from the content lists in src/data/sandbox.ts. The Sandbox panel (backquote) sets each entrance's round (bottomless), god mode, spawns any enemy at ring 1–3 as champions or not, clears, and resets the Warden and the Bulwark in their arenas; six pens refill 5 s after they're cleared. The open questions' proposals are built; nine smaller choices are under "Raised after the build" in the spec.
 
