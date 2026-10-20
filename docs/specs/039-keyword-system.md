@@ -1,5 +1,5 @@
 # 039: Keyword system
-status: approved
+status: done
 
 Approved on draft by Shaun in chat, 2026-10-19 ("Approve on draft"); built from docs/brainstorm/2026-10-19-keyword-interview.md.
 

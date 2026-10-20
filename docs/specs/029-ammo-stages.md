@@ -1,5 +1,5 @@
 # 029: Ammo roles and stage machines (Milestone 1)
-status: approved
+status: done
 
 Approved by Shaun in chat, 2026-10-19 ("Approve all 028–037"); open questions settled the same day.
 
