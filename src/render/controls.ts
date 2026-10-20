@@ -61,6 +61,8 @@ export class Controls {
   facing: Facing = 'right';
   /** A press that began over a menu or the HUD: fire stays off until the button comes up (015). */
   private uiPress = false;
+  /** That press was a left one (047: only a left press's release reaches the UI). */
+  private leftUiPress = false;
   /** Flip (G since 042, F before) turns a sorter's ghost to send its item left (015); sent with every place. */
   mirrored = false;
 
@@ -81,8 +83,8 @@ export class Controls {
     scene.input.mouse?.disableContextMenu();
     scene.input.on('pointerdown', (p: Input.Pointer) => this.pointerDown(p));
     scene.input.on('pointermove', (p: Input.Pointer) => this.pointerMove(p));
-    scene.input.on('pointerup', () => this.release());
-    scene.input.on('pointerupoutside', () => this.release());
+    scene.input.on('pointerup', (p: Input.Pointer) => this.release(p));
+    scene.input.on('pointerupoutside', (p: Input.Pointer) => this.release(p));
     scene.input.on('wheel', (_p: Input.Pointer, _over: unknown, _dx: number, dy: number) => {
       if (dy !== 0) this.wheelPending += Math.sign(dy);
     });
@@ -160,8 +162,14 @@ export class Controls {
     return { tx: Math.floor(world.x / TILE_SIZE), ty: Math.floor(world.y / TILE_SIZE) };
   }
 
-  private release(): void {
+  private release(p?: Input.Pointer): void {
+    // 047: a press that began on the UI ends there too: the grid's click, or a stack dropped on the carried bar.
+    if (this.uiPress && p && this.leftUiPress) {
+      const v = this.view(p);
+      this.build.releaseUi?.(v.x, v.y);
+    }
     this.uiPress = false;
+    this.leftUiPress = false;
     this.endDrag();
   }
 
@@ -173,7 +181,10 @@ export class Controls {
     if (this.build.overUi(v.x, v.y)) {
       this.uiPress = true;
       // On macOS Phaser calls Ctrl+left-click a right click; the DOM event knows better.
-      if (isLeftPress(p.event, p.leftButtonDown())) this.build.clickUi(v.x, v.y, mods);
+      if (isLeftPress(p.event, p.leftButtonDown())) {
+        this.leftUiPress = true;
+        this.build.clickUi(v.x, v.y, mods);
+      }
       return;
     }
     if (!this.build.building) return;

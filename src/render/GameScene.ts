@@ -20,7 +20,6 @@ import { EffectsView } from './EffectsView';
 import { EnemyView } from './EnemyView';
 import { FoundryView } from './FoundryView';
 import { GroundItemView } from './GroundItemView';
-import { HopperPicker } from './HopperPicker';
 import { HoverView } from './HoverView';
 import { HudView } from './HudView';
 import { NodeView } from './NodeView';
@@ -70,7 +69,6 @@ export class GameScene extends Scene {
   private foundryView?: FoundryView;
   buildView?: BuildView;
   hover?: HoverView;
-  picker?: HopperPicker;
   menu?: CraftMenuView;
   pause?: PauseMenuView;
   private router?: MenuRouter;
@@ -125,7 +123,6 @@ export class GameScene extends Scene {
     this.hud = new HudView(this);
     this.buildView = new BuildView(this);
     this.hover = new HoverView(this);
-    this.picker = new HopperPicker(this);
     this.site = new SiteView(this);
     this.siteMenus = new SiteMenus(this);
     this.wake = new WakeView(this);
@@ -146,8 +143,8 @@ export class GameScene extends Scene {
     camera.startFollow(this.playerView.sprite, true, CAMERA_LERP, CAMERA_LERP);
 
     this.controls = new Controls(this, this.sim.sandbox !== undefined);
-    if (this.menu && this.pause && this.siteMenus && this.picker && this.buildView && this.feel && this.hud && this.wake && this.legibility && this.sandboxPanel)
-      this.router = new MenuRouter(this.sim, { craft: this.menu, pause: this.pause, site: this.siteMenus, picker: this.picker, build: this.buildView, sound: this.feel.sound, inventory: this.hud.inventory, research: this.hud.research, talents: this.hud.talents, wake: this.wake, legibility: this.legibility, host: this.host, sandbox: this.sandboxPanel });
+    if (this.menu && this.pause && this.siteMenus && this.buildView && this.feel && this.hud && this.wake && this.legibility && this.sandboxPanel)
+      this.router = new MenuRouter(this.sim, { craft: this.menu, pause: this.pause, site: this.siteMenus, carriedSlotAt: (x, y) => this.hud?.carriedSlotAt(x, y) ?? null, build: this.buildView, sound: this.feel.sound, inventory: this.hud.inventory, research: this.hud.research, talents: this.hud.talents, wake: this.wake, legibility: this.legibility, host: this.host, sandbox: this.sandboxPanel });
   }
 
   /** Matches both cameras to the backbuffer (016). Called on boot and whenever the window changes. */
@@ -163,8 +160,9 @@ export class GameScene extends Scene {
         building: this.sim.building,
         pieceId: () => this.buildView?.selected ?? FIRST_PIECE,
         // Under a flow screen (042) the whole screen is that screen's: nothing reaches the world or the menus.
-        overUi: (x, y) => this.host.covered || [this.pause, this.menu, this.buildView, this.picker, this.siteMenus, this.hud, this.tutorial, this.legibility, this.sandboxPanel].some((v) => v?.overUi(x, y)),
+        overUi: (x, y) => this.host.covered || [this.pause, this.menu, this.buildView, this.siteMenus, this.hud, this.tutorial, this.legibility, this.sandboxPanel].some((v) => v?.overUi(x, y)),
         clickUi: (x, y, mods) => void (this.host.covered || this.router?.click(controls, x, y, mods)),
+        releaseUi: (x, y) => void (this.host.covered || this.router?.release(controls, x, y)),
       });
       this.pause?.setOpen(this.host.paused);
       if (this.host.covered) controls.drain();
@@ -260,8 +258,6 @@ export class GameScene extends Scene {
     this.siteMenus?.update(sim);
     this.menu?.update(sim);
     this.sandboxPanel?.update(sim);
-    const hopper = sim.foundry.pieces.find((p) => p.id === this.picker?.hopperId);
-    this.picker?.update(sim.inventory, hopper?.kind === 'hopper' ? hopper : undefined);
     const controls = this.controls;
     const cursor = controls && inFoundry && controls.overWorld() ? controls.cursorTile() : null;
     this.buildView?.update(
@@ -276,9 +272,9 @@ export class GameScene extends Scene {
     );
     // Menu rows light under the cursor (020).
     const pointer = controls?.viewPointer();
-    if (pointer) for (const menu of [this.siteMenus, this.picker, this.pause, this.hud, this.sandboxPanel]) menu?.pointAt(pointer.x, pointer.y);
+    if (pointer) for (const menu of [this.siteMenus, this.pause, this.hud, this.sandboxPanel]) menu?.pointAt(pointer.x, pointer.y);
     // The arrow pointer while a menu is open or over the build bar, else the crosshair (021).
-    const inMenu = [this.menu, this.pause, this.picker, this.siteMenus, this.hud?.inventory, this.hud?.talents, this.legibility, this.sandboxPanel].some((m) => m?.isOpen) || (this.wake?.isShown ?? false);
+    const inMenu = [this.menu, this.pause, this.siteMenus, this.hud?.inventory, this.hud?.talents, this.legibility, this.sandboxPanel].some((m) => m?.isOpen) || (this.wake?.isShown ?? false);
     this.cursorView?.update(inMenu || (pointer !== undefined && [this.buildView, this.legibility].some((v) => v?.overUi(pointer.x, pointer.y))));
     const point = controls?.overWorld() ? controls.cursorPoint() : null;
     this.hover?.update(sim, shown, point, (id) => this.foundryView?.topOf(id), this.cameras.main.worldView);

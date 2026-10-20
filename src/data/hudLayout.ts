@@ -140,9 +140,9 @@ export const BUILD_PULSE = {
 export const GHOST = { okTint: 'cyan', badTint: 'rust', alpha: 0.6 } as const;
 
 /**
- * The hopper menu: a column of craft rows, centred on screen. A take-out row shows
- * the hopper's icon, then the item and the hopper's count; a put-in row shows the
- * item and how many are held. Px on screen, then per row.
+ * The menus' rows (the pylon, stash, sorter and waystone menus; 047 replaced the hopper menu with the grid's hopper
+ * screen): a column of rows, centred on screen. A row shows its icons (`takeShift` apart) and its text. Px on screen,
+ * then per row.
  */
 export const PICKER_LAYOUT = {
   /** The tablet behind the rows (020): padding round them. */
@@ -154,8 +154,6 @@ export const PICKER_LAYOUT = {
   count: { x: 24, y: 8 },
   /** How far a take-out row's item icon and count shift right, past the hopper icon. */
   takeShift: 20,
-  /** The one-line hint under the rows (022): how many a click moves, and its gap below the last row. */
-  hint: { text: 'Click 1 · Shift half · Ctrl all', gap: 4 },
 } as const;
 
 /** The hover readout over a machine: a dark box of icon + count lines. Px from its top-left. */

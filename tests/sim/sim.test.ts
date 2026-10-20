@@ -104,7 +104,7 @@ function scriptedSession(seed: number, ticks: number) {
 
 /**
  * Walks into the foundry, builds a ley bolt line, fills its hopper, waits,
- * empties the crate, walks back out and gets KO'd.
+ * takes the crate's bolts (047: its screen), walks back out and gets KO'd.
  */
 function scriptedFoundry(seed: number, ticks: number) {
   const sim = createSim(seed);
@@ -132,7 +132,8 @@ function scriptedFoundry(seed: number, ticks: number) {
       toggleBuild: t === 59,
       place: placing ? { pieceId: placing[0], tx: placing[1], ty: 5, facing: 'right' } : null,
       deposit: t === 250 ? { id: 0, itemId: 'ley-crystal', amount: 'all' } : null,
-      interact: t === 850,
+      // 047: the crate's screen, Ctrl+click on its bolts (E opens the screen in render; the sim takes the click).
+      withdraw: t === 850 ? { id: 3, amount: 'all', itemId: 'ley-bolt' } : null,
       aimX: p.x,
       aimY: p.y,
     };
@@ -220,7 +221,7 @@ describe('sim state', () => {
     expect(summary.groundItems).toEqual([]);
     // Every event list, empty, and no KO: a key missing from createEvents fails here.
     const lists = ['hits', 'deaths', 'pickups', 'harvests', 'crafts', 'craftFails', 'bursts', 'selects', 'roomChanges'] as const;
-    const later = ['places', 'placeFails', 'pickUps', 'deposits', 'crateTakes', 'withdraws', 'attunes', 'refills', 'made', 'shots', 'entranceFires', 'melees', 'banks', 'freezes', 'thaws', 'splits', 'heals'] as const;
+    const later = ['places', 'placeFails', 'pickUps', 'deposits', 'withdraws', 'attunes', 'refills', 'made', 'shots', 'entranceFires', 'melees', 'banks', 'freezes', 'thaws', 'splits', 'heals'] as const;
     const site = ['sealed', 'claims', 'discoveries', 'cacheOpens', 'stashDeposits', 'stashTakes', 'supplies', 'portDeliveries', 'travels', 'identifies', 'equips', 'intakeOpens', 'restores', 'schematicDrops', 'schematicReveals', 'gates', 'objectives'] as const;
     // 034: the shield, the Bulwark and its altar; 035: the Charger's charge, the Burrower's eruption, the Sniper's bolt.
     const hollows = ['blocked', 'bossDefeats', 'summons', 'lobs', 'enemyBursts', 'pounds', 'charges', 'eruptions', 'snipes'] as const;

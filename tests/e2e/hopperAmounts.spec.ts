@@ -1,11 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
-import { pickerEntries, pickerRows } from '../../src/render/foundryLayout';
-import { enterFoundry, pieceAt, screenPoint, standStill, state, step, toggleBuild } from './foundryPage';
+import { enterFoundry, pieceAt, standStill, state, step, toggleBuild } from './foundryPage';
+import { slotPoint } from './gridPage';
 import { boot, watchErrors } from './helpers';
 
-// 022: in the hopper picker a click moves one, Shift+click half (rounded up) and
-// Ctrl+click the whole stack, in and out; the picker stays open with live counts
-// and a hint line. With REVIEW_SHOTS=1 it captures docs/review/022.
+// 022, 047: in a hopper's screen (its own row over the grid inventory) a click moves one,
+// Shift+click half (rounded up) and Ctrl+click the whole stack, in and out; the screen stays
+// open with live counts, and never prints those controls (Shaun). With REVIEW_SHOTS=1 it
+// captures docs/review/022.
 
 const SHOTS = 'docs/review/022';
 const HOPPER = { tx: 12, ty: 8 } as const;
@@ -34,12 +35,9 @@ async function hopper(page: Page): Promise<{ item: string | null; count: number 
   return { item: h.item, count: h.count };
 }
 
-/** Clicks the picker's row for an action on arrows, as the menu lays it out now, holding the modifiers. */
+/** Clicks the arrows' stack, in the grid (put) or the hopper's own row (take), as the screen lays it out now, holding the modifiers. */
 async function clickRow(page: Page, action: 'take' | 'put', mods: Modifier[] = []): Promise<void> {
-  const s = await state(page);
-  const row = pickerRows(pickerEntries(await hopper(page), s.inventory)).find((r) => r.action === action && r.itemId === 'arrow');
-  if (!row) throw new Error(`no ${action} row`);
-  const p = await screenPoint(page, row.x + 40, row.y + row.h / 2);
+  const p = await slotPoint(page, 'arrow', action === 'take' ? 'container' : 'grid');
   for (const m of mods) await page.keyboard.down(m);
   await page.mouse.click(p.x, p.y);
   for (const m of mods) await page.keyboard.up(m);
@@ -55,7 +53,7 @@ async function expectHopper(page: Page, count: number): Promise<void> {
     .toBe(count);
 }
 
-test('a click moves one, Shift+click half and Ctrl+click all, in and out, with the picker open throughout', async ({ page }) => {
+test('a click moves one, Shift+click half and Ctrl+click the stack, in and out, with the hopper\'s screen open throughout', async ({ page }) => {
   // About 25 s alone (the walk into the foundry and a dozen clicks): room for parallel workers.
   test.setTimeout(90_000);
   const errors = watchErrors(page);
@@ -65,14 +63,18 @@ test('a click moves one, Shift+click half and Ctrl+click all, in and out, with t
 
   await page.keyboard.press('e');
   await expect.poll(async () => (await ui(page))?.pickerOpen).toBe(true);
-  expect((await ui(page))?.pickerHint).toBe('Click 1 · Shift half · Ctrl all');
+  // No controls printed (Shaun: "don't show those controls on the menu it looks bad").
+  expect((await ui(page))?.pickerHint).toBeNull();
+  // Only what's in the hopper: nothing yet, though arrows are carried.
+  expect((await ui(page))?.pickerCounts).toEqual([]);
 
   // In: 1, then half of 29 (15), then the other 14.
   await clickRow(page, 'put');
   await expectHopper(page, 1);
   expect((await ui(page))?.pickerOpen).toBe(true);
-  // The rows' counts follow: 1 in the hopper (its take row), 29 held (the put row).
-  await expect.poll(async () => (await ui(page))?.pickerCounts).toEqual([1, 29]);
+  // The hopper's row follows: its one stack of 1; the grid's arrows show 29.
+  await expect.poll(async () => (await ui(page))?.pickerCounts).toEqual([1]);
+  await expect.poll(async () => (await ui(page))?.inventory.slots.find((sl) => sl.itemId === 'arrow')?.count).toBe(29);
   await clickRow(page, 'put', ['Shift']);
   await expectHopper(page, 16);
   expect((await state(page)).inventory.arrow).toBe(14);
@@ -95,7 +97,7 @@ test('a click moves one, Shift+click half and Ctrl+click all, in and out, with t
   expect(errors).toEqual([]);
 });
 
-test('Ctrl+click on the picker is kept from the browser, and the canvas has no context menu', async ({ page }) => {
+test('Ctrl+click on the hopper\'s screen is kept from the browser, and the canvas has no context menu', async ({ page }) => {
   test.setTimeout(60_000);
   const errors = watchErrors(page);
   await hopperBeside(page);
@@ -127,17 +129,14 @@ test('Ctrl+click on the picker is kept from the browser, and the canvas has no c
 test.describe('review screenshots (022)', () => {
   test.skip(!process.env.REVIEW_SHOTS, 'set REVIEW_SHOTS=1 to capture docs/review/022');
 
-  test('the hopper picker with its hint, after one went in', async ({ page }) => {
+  test('the hopper\'s screen (047), after one went in', async ({ page }) => {
     const id = await hopperBeside(page);
     await page.keyboard.press('e');
     await expect.poll(async () => (await ui(page))?.pickerOpen).toBe(true);
     // Put one in through the hook rather than a click, so no press flash is fading in the picture.
     await step(page, 1, { deposit: { id, itemId: 'arrow', amount: 'one' } });
-    await expect.poll(async () => (await ui(page))?.pickerCounts).toEqual([1, 29]);
-    const s = await state(page);
-    const row = pickerRows(pickerEntries(await hopper(page), s.inventory)).find((r) => r.action === 'put');
-    if (!row) throw new Error('no put row');
-    const p = await screenPoint(page, row.x + 40, row.y + row.h / 2);
+    await expect.poll(async () => (await ui(page))?.pickerCounts).toEqual([1]);
+    const p = await slotPoint(page, 'arrow');
     await page.mouse.move(p.x, p.y);
     await expect.poll(async () => (await ui(page))?.cursor?.kind).toBe('pointer');
     await page.screenshot({ path: `${SHOTS}/01-picker-hint.png` });

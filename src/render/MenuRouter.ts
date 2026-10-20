@@ -5,7 +5,6 @@ import type { BuildView } from './BuildView';
 import type { ClickMods } from './clickInput';
 import type { Controls } from './controls';
 import type { CraftMenuView } from './CraftMenuView';
-import type { HopperPicker } from './HopperPicker';
 import type { InventoryPanel } from './InventoryPanel';
 import type { Legibility } from './Legibility';
 import type { ResearchList } from './ResearchList';
@@ -23,7 +22,8 @@ export interface Menus {
   craft: CraftMenuView;
   pause: PauseMenuView;
   site: SiteMenus;
-  picker: HopperPicker;
+  /** 047: the carried bar's slot under a point (a dragged stack lands there). */
+  carriedSlotAt: (x: number, y: number) => number | null;
   build: BuildView;
   sound: SoundView;
   inventory: InventoryPanel;
@@ -39,12 +39,12 @@ export interface Menus {
 }
 
 // Keys and clicks for the menus (split from GameScene in 020): C toggles the craft
-// menu, which no longer pauses, and I or Tab the inventory panel (031); Esc closes
-// what's open (the inventory, a site menu, the hopper picker, the craft menu, build
-// mode), else opens or closes the pause menu, which stops the world; T the talent tree
-// (037), which takes turns with the inventory and the research list; the wheel steps
-// the build bar; E opens a hopper's picker or a site menu. These work under the test
-// hook too; only ticking is left to it.
+// menu, which no longer pauses, and I or Tab the grid inventory (031, 047); Esc closes
+// what's open (the inventory or a hopper's or crate's screen, a site menu, the craft
+// menu, build mode), else opens or closes the pause menu, which stops the world; T the
+// talent tree (037), which takes turns with the inventory and the research list; the
+// wheel steps the build bar, or scrolls the open grid; E opens a hopper's or crate's
+// screen (047) or a site menu. These work under the test hook too; only ticking is left to it.
 export class MenuRouter {
   private readonly sim: SimState;
   private readonly m: Menus;
@@ -55,7 +55,7 @@ export class MenuRouter {
   }
 
   handle(controls: Controls): void {
-    const { craft, site, picker, build, inventory, research, talents, wake, legibility, sandbox } = this.m;
+    const { craft, site, build, inventory, research, talents, wake, legibility, sandbox } = this.m;
     const toggle = controls.takeMenuKey('menu');
     // Esc closes an open glossary entry first (040), before any panel.
     const close = controls.takeMenuKey('close') && !legibility.close();
@@ -76,7 +76,6 @@ export class MenuRouter {
     else if (close && inventory.isOpen) inventory.setOpen(false);
     else if (close && research.isOpen) research.setOpen(false);
     else if (close && site.isOpen) site.close();
-    else if (close && picker.isOpen) picker.close();
     else if (close && craft.isOpen) craft.setOpen(false);
     else if (close && this.sim.building) controls.requestBuildToggle();
     else if (close) this.m.host.pause();
@@ -93,7 +92,6 @@ export class MenuRouter {
       talents.setOpen(!talents.isOpen);
       if (talents.isOpen) {
         craft.setOpen(false);
-        picker.close();
         site.close();
         inventory.setOpen(false);
         research.setOpen(false);
@@ -114,27 +112,32 @@ export class MenuRouter {
     if ((bag && inventory.isOpen) || (list && research.isOpen) || (tree && talents.isOpen) || (toggle && craft.isOpen)) sandbox.setOpen(false);
     const steps = controls.takeWheel();
     if (steps !== 0 && this.sim.building) build.step(steps);
-    // E on a hopper opens its menu; the sim does nothing with it. With the restore panel open, E again restores (033).
+    else if (steps !== 0) inventory.scroll(steps);
+    // E on a hopper or crate opens its screen (047); the sim does nothing with it. With the restore panel open, E again restores (033).
     if (controls.takeInteractPress() && !site.pressAgain(controls)) {
       const target = usableInReach(this.sim);
-      if (target?.kind === 'hopper') picker.open(target.id);
-      else site.interact(this.sim);
-      if (picker.isOpen || site.isOpen) {
-        inventory.setOpen(false);
+      if (target?.kind === 'hopper' || target?.kind === 'crate') {
+        craft.setOpen(false);
+        site.close();
+        inventory.openContainer(target.kind, target.id);
+      } else site.interact(this.sim);
+      if (inventory.container !== null || site.isOpen) {
         research.setOpen(false);
         talents.setOpen(false);
       }
+      if (site.isOpen) inventory.setOpen(false);
     }
-    const open = picker.hopperId;
-    if (open !== null && usableInReach(this.sim)?.id !== open) picker.close();
+    // Walking out of reach closes a hopper's or crate's screen.
+    const open = inventory.container;
+    if (open !== null && usableInReach(this.sim)?.id !== open) inventory.close();
   }
 
   /**
-   * A click: the pause menu's rows while paused; else the build bar, a site menu, or the hopper picker's rows.
-   * A picker row moves one, Shift half, Ctrl all (022), and the picker stays open for the next click.
+   * A press: the pause menu's rows while paused; else the build bar, a site menu, or the grid inventory (047: Sort at
+   * once; a slot waits for the release, `release`).
    */
   click(controls: Controls, x: number, y: number, mods: ClickMods): void {
-    const { pause, site, picker, build, sound, talents, legibility, sandbox, craft } = this.m;
+    const { pause, site, build, sound, talents, legibility, sandbox, craft, inventory } = this.m;
     if (pause.isOpen) {
       this.pauseClick(pause.click(x, y));
       return;
@@ -163,22 +166,30 @@ export class MenuRouter {
       sound.play(SOUNDS.menuClick);
       return;
     }
-    const entry = picker.entryAt(x, y);
-    const hopper = picker.hopperId;
-    if (!entry || hopper === null) return;
-    sound.play(SOUNDS.menuClick);
-    picker.flashAt(x, y);
-    const amount = clickAmount(mods);
-    if (entry.action === 'take') controls.menus.withdraw(hopper, amount);
-    else controls.menus.deposit(hopper, entry.itemId, amount);
+    if (inventory.pressAt(x, y, clickAmount(mods)) === 'sort') {
+      sound.play(SOUNDS.menuClick);
+      controls.menus.sortInventory();
+    }
   }
 
-  /** Opens or closes the inventory panel; opening it closes the crafting menu, the hopper picker, any site menu (031) and the tree (037). */
+  /**
+   * A release after a press on the UI (047): on the grid slot it went down on, with a hopper or crate open, the stack
+   * moves one, Shift half, Ctrl the whole stack, either way; over a carried bar slot, a usable kind goes on it.
+   */
+  release(controls: Controls, x: number, y: number): void {
+    const action = this.m.inventory.releaseAt(x, y, this.m.carriedSlotAt(x, y));
+    if (!action) return;
+    this.m.sound.play(SOUNDS.menuClick);
+    if (action.kind === 'assign') controls.menus.assignSlot(action.slot, action.itemId);
+    else if (action.kind === 'deposit') controls.menus.deposit(action.id, action.itemId, action.amount, action.stack);
+    else controls.menus.withdraw(action.id, action.amount, action.itemId, action.stack);
+  }
+
+  /** Opens or closes the inventory panel; opening it closes the crafting menu, any site menu (031) and the tree (037). */
   private openInventory(open: boolean): void {
-    const { craft, picker, site, inventory, talents } = this.m;
+    const { craft, site, inventory, talents } = this.m;
     if (open) {
       craft.setOpen(false);
-      picker.close();
       site.close();
       talents.setOpen(false);
     }

@@ -2,9 +2,8 @@
 // feed. Px tuned by eye; colours are palette ids. Beside hudLayout.ts, which holds
 // the 025 bottom row these must stay clear of.
 
-import { VIEW_HEIGHT } from './config';
 import { HUD_LAYOUT } from './hudLayout';
-import { ITEMS, type ItemGroup } from './items';
+import { type ItemGroup } from './items';
 
 /**
  * The HP bar (031): bottom-left, `HUD_LAYOUT.margin` px in from the left and bottom edges (raised over the build bar's
@@ -77,89 +76,61 @@ export const INVENTORY_GROUPS: readonly { id: ItemGroup; label: string }[] = [
 ];
 
 /**
- * The inventory panel (031, I or Tab): a tablet centred on screen under a title card, its groups in columns
- * `columnWidth` wide and `columnGap` apart, `pad` px in. Each group is a header `headerHeight` tall, then a row
- * `rowHeight` tall per carried item: its icon, name, carried count, the risk mark (all safe: "safe"; some at risk:
- * "N safe ·", the warning mark, "N at risk") and "home N" ending at the column's right edge. Px from each row's
- * top-left (text at the top of its capitals). Each group keeps room for every item it could list, so the panel is one
- * size and never jumps; Gear keeps `gearLines` more for the worn piece and the spares. A footer under the columns
- * explains the rule.
+ * The grid inventory (047, note 12; I or Tab, and under a hopper's or crate's screen): a tablet under a title card,
+ * `cols` x `rows` slots shown (047.2: 8×5), the grid scrolling by whole rows past that with a thin bar at its right.
+ * Each slot is the HUD's cell (`cell` x, `rowStep` y apart) holding one stack: its icon, its count, and while any of it
+ * is at risk (031) the warning mark beside the count and the count in the risk colour. A Sort button above the grid's
+ * right end; footer lines under it explain the marking and count the identified gear (a death never takes it).
+ * A hopper's or crate's screen puts its own slots on top (`container`: a header, then one row), the grid underneath.
+ * The menu never prints the click controls (Shaun: "don't show those controls on the menu it looks bad").
+ * Px from each part's top-left; text at the top of its capitals.
  */
-export const INVENTORY_PANEL = {
+export const INVENTORY_GRID = {
   title: { text: 'Inventory', w: 128, h: 22, gap: 4, titleY: 4 },
-  pad: 8,
-  /** 039: three columns, as the six new Frost rounds make Ammo too tall to share one; a row's name has room for "Frost Homing ley bolt". */
-  columnWidth: 196,
-  columnGap: 8,
-  headerHeight: 12,
-  headerY: 2,
-  /** 038: 15, not 16, so Raw and Parts still share a column with the landmine chain's plate (the icons' shapes are under 15 px). */
-  rowHeight: 15,
-  groupGap: 6,
-  gearLines: 2,
-  row: { name: { x: 19, y: 5 }, count: { x: 108, y: 5 }, mark: { x: 122, y: 5 }, warn: { y: 4, gap: 2 }, home: { y: 5 } },
-  nothing: { text: 'Nothing', x: 2, y: 3 },
-  text: { safe: 'safe', atRisk: 'at risk', sep: ' · ', home: 'home', worn: 'worn', armor: 'armor' },
-  footer: { text: 'At risk: lost if you die before reaching the foundry or a claimed pylon.', gap: 6, lineHeight: 9 },
+  cols: 8,
+  rows: 5,
+  cell: { w: 24, h: 28, stepX: 26, stepY: 30, icon: { x: 4, y: 3 }, count: { x: 2, y: 20 }, warn: { x: 16, y: 19 } },
+  pad: 6,
+  /** The row above the grid holding the Sort button at its right: `h` tall, `gap` above the grid. */
+  toolbar: { h: 13, gap: 2 },
+  sort: { text: 'Sort', w: 30, h: 13, textY: 3 },
+  /** The scroll bar: `w` wide, `gap` px right of the grid; its thumb in `thumb`, the track in `track` (palette ids). */
+  scroll: { w: 3, gap: 4, track: 'ink', thumb: 'brass', trackAlpha: 0.5 },
+  /** A hopper's or crate's own slots: a header `headerH` tall (its name), one row of `cols` cells, `gap` above the grid's toolbar. */
+  container: { headerH: 10, nameY: 1, cols: 8, gap: 4 },
+  footer: {
+    gap: 3,
+    lineHeight: 9,
+    /** The at-risk rule, in two lines so it fits the panel. */
+    text: ['Marked: lost if you die before reaching', 'the foundry or a claimed pylon.'],
+  },
+  /** Gap kept between the panel and the intake bar over the bottom HUD, px. */
+  aboveHud: 4,
   colors: { safe: 'cyan', risk: 'rust-light', dim: 'rock-pale' },
-  /** Dim text ("Nothing", "home N", the footer) at this alpha. */
+  /** Dim text (the footer) at this alpha. */
   dimAlpha: 0.7,
+  text: { worn: 'worn', armor: 'armor', sep: ' · ' },
 } as const;
 
 /** "N spare pieces (kept)": the identified pieces not worn, which a death never takes. */
 export const sparesText = (n: number): string => `${n} spare piece${n === 1 ? '' : 's'} (kept)`;
 
-/**
- * How many rows a group keeps room for: one per item of the group, the schematics sharing one (033: unknown ones
- * must not tell apart), and Gear's worn and spare lines.
- */
-export function reservedRows(group: ItemGroup): number {
-  const items = Object.values(ITEMS).filter((it) => it.group === group);
-  const schematics = items.filter((it) => it.kind === 'schematic').length;
-  return items.length - schematics + Math.min(1, schematics) + (group === 'gear' ? INVENTORY_PANEL.gearLines : 0);
-}
-
-/** The schematics' shared row (033): "Schematics" while it holds several known kinds or known and unknown together. */
+/** The schematics' shared slot (033): "Schematics" while it holds several known kinds or known and unknown together. */
 export const SCHEMATICS_LABEL = 'Schematics';
 
-/** A group's height on the panel: its header and every row it keeps room for. */
-export const groupHeight = (g: ItemGroup): number => INVENTORY_PANEL.headerHeight + reservedRows(g) * INVENTORY_PANEL.rowHeight;
-const columnHeight = (groups: readonly ItemGroup[]): number =>
-  groups.reduce((h, g) => h + groupHeight(g), 0) + Math.max(0, groups.length - 1) * INVENTORY_PANEL.groupGap;
-
-/** The tallest a column can be: the view less the margins, the title card, the panel's padding and the footer. */
-const MAX_COLUMN =
-  VIEW_HEIGHT - 2 * HUD_LAYOUT.margin - INVENTORY_PANEL.title.h - INVENTORY_PANEL.title.gap - 2 * INVENTORY_PANEL.pad - INVENTORY_PANEL.footer.gap - INVENTORY_PANEL.footer.lineHeight;
-
-/** Every way to cut `groups`, in order, into `k` columns, each whole. */
-function splits(groups: readonly ItemGroup[], k: number): ItemGroup[][][] {
-  if (k === 1) return groups.length > 0 ? [[[...groups]]] : [];
-  const out: ItemGroup[][][] = [];
-  for (let i = 1; i < groups.length; i++) for (const rest of splits(groups.slice(i), k - 1)) out.push([[...groups.slice(0, i)], ...rest]);
-  return out;
+/** The grid's size, px: its columns and rows of cells. */
+export function gridSize(): { w: number; h: number } {
+  const G = INVENTORY_GRID;
+  return { w: (G.cols - 1) * G.cell.stepX + G.cell.w, h: (G.rows - 1) * G.cell.stepY + G.cell.h };
 }
 
-/**
- * The groups by column: one column if it fits, else the fewest columns that do, groups whole and in order, cut where
- * the tallest column is shortest.
- */
-export function inventoryColumns(): ItemGroup[][] {
-  const groups = INVENTORY_GROUPS.map((g) => g.id);
-  for (let k = 1; k <= groups.length; k++) {
-    const best = splits(groups, k).sort((a, b) => Math.max(...a.map(columnHeight)) - Math.max(...b.map(columnHeight)))[0];
-    if (best && Math.max(...best.map(columnHeight)) <= MAX_COLUMN) return best;
-  }
-  return groups.map((g) => [g]);
-}
-
-/** The height of the tallest column, px. */
-export const inventoryColumnsHeight = (): number => Math.max(...inventoryColumns().map(columnHeight));
-
-/** The panel's size (its tablet sprite is drawn at this size). */
-export function inventoryPanelSize(): { w: number; h: number } {
-  const P = INVENTORY_PANEL;
-  const n = inventoryColumns().length;
-  return { w: 2 * P.pad + n * P.columnWidth + (n - 1) * P.columnGap, h: 2 * P.pad + inventoryColumnsHeight() + P.footer.gap + P.footer.lineHeight };
+/** The panel's size (047), with a container's slots on top or not. */
+export function inventoryPanelSize(container = false): { w: number; h: number } {
+  const G = INVENTORY_GRID;
+  const grid = gridSize();
+  const top = container ? G.container.headerH + G.cell.h + G.container.gap : 0;
+  const footer = G.footer.gap + 2 * G.footer.lineHeight + G.footer.lineHeight;
+  return { w: 2 * G.pad + grid.w + G.scroll.gap + G.scroll.w, h: 2 * G.pad + top + G.toolbar.h + G.toolbar.gap + grid.h + footer };
 }
 
 /**
@@ -183,6 +154,3 @@ export const PICKUP_FEED = {
   fadeMs: 400,
   maxLines: 5,
 } as const;
-
-/** 039: the panel's tablet is baked in two halves (each under a texture page at the largest scale); the left one's width. */
-export const inventoryPanelLeft = (): number => Math.round(inventoryPanelSize().w / 2);

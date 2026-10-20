@@ -1,7 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { hotbarCells } from '../../src/render/bottomHud';
-import { inventoryLayout } from '../../src/render/inventoryLayout';
 import { boot, cameraSettled, watchErrors } from './helpers';
 import { screenPoint, state, step } from './foundryPage';
 
@@ -214,9 +213,11 @@ test('without Shift, every summary source shows a summary and never a breakdown 
   // The inventory's first ammo row.
   await page.keyboard.press('i');
   await expect.poll(async () => (await ui(page))?.inventory.open).toBe(true);
-  const ammo = inventoryLayout().groups.find((g) => g.id === 'ammo');
-  if (!ammo) throw new Error('no ammo group');
-  await hover(page, ammo.x + 30, ammo.rowsY + 7);
+  // 047: the grid's first round's slot.
+  await expect.poll(async () => (await ui(page))?.inventory.slots.some((sl) => sl.itemId === 'arrow')).toBe(true);
+  const ammo = (await ui(page))?.inventory.slots.find((sl) => sl.itemId === 'arrow');
+  if (!ammo) throw new Error('no arrow slot');
+  await hover(page, ammo.x + ammo.w / 2, ammo.y + ammo.h / 2);
   await check('round');
   await page.keyboard.press('i');
   // A talent node.

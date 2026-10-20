@@ -37,6 +37,7 @@ import type { EnemyBombState } from './enemyBombs';
 import { bossReturns, settleSummons, type SummoningState } from './altar';
 import { noteCarried } from './knownRounds';
 import { createHotbar, type HotbarState } from './hotbar';
+import { noteBag } from './bag';
 import type { SandboxState } from './sandbox';
 
 /** The whole sim: plain serializable data. */
@@ -48,6 +49,8 @@ export interface SimState {
   roomId: string;
   player: PlayerState;
   inventory: Inventory;
+  /** 047: the grid inventory's order of kinds (src/sim/bag.ts): the stacks are the inventory's counts in this order. */
+  bag: string[];
   /** 047: the carried bar (keys 1–5), its slots' kinds and the selected one. Kept through a KO (047.3). */
   hotbar: HotbarState;
   tube: TubeState;
@@ -185,6 +188,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     roomId,
     player: createPlayer({ x: 0, y: 0 }),
     inventory: { ...start.inventory },
+    bag: [],
     hotbar: createHotbar(),
     tube: createTube(),
     link: { ...createLink(), attuned: start.attuned },
@@ -249,6 +253,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
   };
   resetWorld(state, roomId);
   noteCarried(state);
+  noteBag(state);
   // A start's claims (034) are made before the first tick, as if long done: the barrier they drop is already down.
   for (const site of start.claims ?? []) claim(state, site);
   state.gates.hollows ||= state.claims.includes(HOLLOWS.opensOn);

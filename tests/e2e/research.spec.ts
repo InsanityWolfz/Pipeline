@@ -185,9 +185,10 @@ test('the open list never takes clicks meant for the world: a press on it still 
   const before = await state(page);
   expect(before.inventory.arrow ?? 0).toBeGreaterThan(0);
   await page.mouse.move(centre.x, centre.y);
-  await page.mouse.down();
+  // 047: carried arrows go out on right click.
+  await page.mouse.down({ button: 'right' });
   await expect.poll(async () => (await state(page)).inventory.arrow ?? 0, { timeout: 15_000 }).toBeLessThan(before.inventory.arrow ?? 0);
-  await page.mouse.up();
+  await page.mouse.up({ button: 'right' });
   expect((await ui(page))?.researchList.open).toBe(true);
   expect(errors).toEqual([]);
 });

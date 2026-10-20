@@ -41,10 +41,18 @@ export interface Command {
   place: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing; mirrored?: boolean } | null;
   /** A tile whose piece to pick up this tick (an edge), or null. */
   pickUp: { tx: number; ty: number } | null;
-  /** Put some of a held item into a hopper (by piece id) that's empty or holds it, this tick (an edge), or null (022: how many by `amount`). */
-  deposit: { id: number; itemId: string; amount: HopperAmount } | null;
-  /** Take some of what's in a hopper (by piece id) out, this tick (an edge), or null (022: how many by `amount`). */
-  withdraw: { id: number; amount: HopperAmount } | null;
+  /**
+   * Put some of a held item into a hopper (by piece id) that's empty or holds it, or into a crate (047), this tick (an
+   * edge), or null. How many by `amount` (022) of the clicked stack's `stack` items (047; left out, all held).
+   */
+  deposit: { id: number; itemId: string; amount: HopperAmount; stack?: number } | null;
+  /**
+   * Take some of what's in a hopper or crate (by piece id) out, this tick (an edge), or null: a crate's `itemId` kind
+   * (047). How many by `amount` (022) of the clicked stack's `stack` items (047; left out, all it holds of the kind).
+   */
+  withdraw: { id: number; amount: HopperAmount; itemId?: string; stack?: number } | null;
+  /** The grid inventory's Sort button this tick (an edge, 047). */
+  sortInventory: boolean;
   /** Set the item a sorter in reach sends out its side (null: pass everything), this tick (an edge), or null (015). */
   setFilter: { id: number; itemId: string | null } | null;
   /** The claimed pylon's menu choice this tick (an edge), or null. */
@@ -86,6 +94,7 @@ export const NO_COMMAND: Readonly<Command> = {
   pickUp: null,
   deposit: null,
   withdraw: null,
+  sortInventory: false,
   setFilter: null,
   pylon: null,
   travel: null,

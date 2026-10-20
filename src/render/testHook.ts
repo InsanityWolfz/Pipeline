@@ -91,13 +91,13 @@ export interface UiState {
   /** The craft menu is open (it doesn't pause, 020), and the pause menu is (Esc: the world stops). */
   craftOpen: boolean;
   paused: boolean;
-  /** The hopper picker is open. */
+  /** A hopper's or crate's screen is open (047; it replaced 022's hopper picker). */
   pickerOpen: boolean;
   /** A site menu (a claimed pylon's, the stash's, the bench's or a sorter's) is open (031: it and the inventory take turns). */
   siteOpen: boolean;
-  /** The hopper picker's hint line while it shows (022), else null. */
+  /** 022's hint line; always null since 047 (Shaun: "don't show those controls on the menu it looks bad"). */
   pickerHint: string | null;
-  /** The counts the hopper picker's rows show, top to bottom (022: they update live). */
+  /** The counts the open hopper's or crate's own slots show, in order (047; they update live). */
   pickerCounts: number[];
   hoverName: string | null;
   hoverDescription: string | null;

@@ -1,98 +1,79 @@
 import { describe, expect, it } from 'vitest';
-import { inventoryGroups, SCHEMATIC_ROW } from '../../src/render/inventoryRows';
+import { containerSlots, gearLine, inventorySlots } from '../../src/render/inventoryRows';
 import { createResearch } from '../../src/sim/research';
 import { NOTHING_WORN } from '../../src/sim/gear';
+import { TALENT_START } from '../../src/data/talents';
 import { bodyPiece, piece } from '../fixtures/gear';
-import { inventoryLayout } from '../../src/render/inventoryLayout';
-import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
-import { INVENTORY_PANEL, reservedRows } from '../../src/data/hudPanels';
+import { cellAt, inventoryLayout } from '../../src/render/inventoryLayout';
+import { hotbarBox, tubeSlotBox } from '../../src/render/bottomHud';
+import { VIEW_WIDTH } from '../../src/data/config';
+import { INVENTORY_GRID } from '../../src/data/hudPanels';
 
-// What the inventory panel lists (031): the groups in order, a row per carried item
-// with its at-risk count (from the banking helper) and what's home in the stash, and
-// Gear's worn piece and spare pieces. And where it all goes on screen.
+// What the grid inventory shows (047): a slot per stack in the bag's order, each marked with what a death would take
+// (031), the schematics in one slot (033); a hopper's or crate's own stacks; and where it all goes on screen.
 
-const base = { inventory: {}, banked: {}, stash: {}, gear: [], equipped: { ...NOTHING_WORN }, research: createResearch() };
+const base = { inventory: {}, bag: [], banked: {}, gear: [], equipped: { ...NOTHING_WORN }, research: createResearch(), talents: [TALENT_START] };
 
-describe('the inventory rows', () => {
-  it('always lists the five groups in order, empty ones with no rows', () => {
-    const groups = inventoryGroups(base);
-    expect(groups.map((g) => g.id)).toEqual(['raw', 'parts', 'ammo', 'gear', 'cores']);
-    expect(groups.every((g) => g.rows.length === 0)).toBe(true);
-  });
+type Box = { x: number; y: number; w: number; h: number };
+const overlaps = (a: Box, b: Box) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+const inside = (a: Box, b: Box) => a.x >= b.x && a.y >= b.y && a.x + a.w <= b.x + b.w && a.y + a.h <= b.y + b.h;
 
-  it('a row per carried item above 0, with the at-risk part and the stash count', () => {
-    const groups = inventoryGroups({
-      ...base,
-      inventory: { wood: 13, stone: 0, arrow: 4, 'warden-core': 1, shaft: 2 },
-      banked: { wood: 10, arrow: 4 },
-      stash: { wood: 5, fiber: 9 },
-    });
-    const raw = groups.find((g) => g.id === 'raw');
-    // Fiber is only at home: no row. Stone is held at 0: no row.
-    expect(raw?.rows).toEqual([{ itemId: 'wood', count: 13, atRisk: 3, home: 5 }]);
-    expect(groups.find((g) => g.id === 'ammo')?.rows).toEqual([{ itemId: 'arrow', count: 4, atRisk: 0, home: 0 }]);
-    expect(groups.find((g) => g.id === 'parts')?.rows).toEqual([{ itemId: 'shaft', count: 2, atRisk: 2, home: 0 }]);
-    expect(groups.find((g) => g.id === 'cores')?.rows).toEqual([{ itemId: 'warden-core', count: 1, atRisk: 1, home: 0 }]);
-  });
-
-  it('rows follow ITEMS order within a group', () => {
-    const groups = inventoryGroups({ ...base, inventory: { 'rimestone': 1, fiber: 1, wood: 1 } });
-    expect(groups.find((g) => g.id === 'raw')?.rows.map((r) => r.itemId)).toEqual(['wood', 'fiber', 'rimestone']);
-  });
-
-  it('Gear lists the carried unidentified gear, then the worn pieces, then the spares, identified pieces always safe', () => {
-    const gear = [bodyPiece(1, 'light', 2), bodyPiece(2, 'heavy', 5), bodyPiece(3, 'light', 1), piece(4, 'helm', { baseArmor: 1 }), piece(5, 'boots')];
-    const rows = inventoryGroups({ ...base, inventory: { 'unidentified-armor': 2 }, banked: { 'unidentified-armor': 1 }, gear, equipped: { helm: 4, body: 2, boots: null, trinket: null } }).find((g) => g.id === 'gear');
-    expect(rows?.rows).toEqual([
-      { itemId: 'unidentified-armor', count: 2, atRisk: 1, home: 0 },
-      { itemId: 'worn', count: 2, atRisk: 0, home: 0 },
-      { itemId: 'spare', count: 3, atRisk: 0, home: 0 },
-    ]);
-    const bare = inventoryGroups({ ...base, gear: gear.slice(0, 1) }).find((g) => g.id === 'gear');
-    expect(bare?.rows).toEqual([{ itemId: 'spare', count: 1, atRisk: 0, home: 0 }]);
-  });
-});
-
-describe('schematics on the panel (033)', () => {
-  const parts = (sim: Parameters<typeof inventoryGroups>[0]) => inventoryGroups(sim).find((g) => g.id === 'parts')?.rows ?? [];
-
-  it('share one Parts row: "Unknown schematic" while every one carried is unbanked, so they never tell apart', () => {
-    const rows = parts({ ...base, inventory: { 'schematic-machine-speed': 1, 'schematic-merger': 1, 'ancient-gear': 2 } });
-    expect(rows).toEqual([
-      { itemId: 'ancient-gear', count: 2, atRisk: 2, home: 0 },
-      { itemId: SCHEMATIC_ROW, count: 2, atRisk: 2, home: 0, label: { name: 'Unknown schematic', icon: 'item-schematic-unknown' } },
+describe('the grid slots', () => {
+  it('a slot per stack, in the bag\'s order, the at-risk part on the last stacks', () => {
+    const slots = inventorySlots({ ...base, inventory: { wood: 63, arrow: 4 }, bag: ['arrow', 'wood'], banked: { wood: 60, arrow: 4 } });
+    expect(slots.map((s) => [s.itemId, s.count, s.atRisk, s.name])).toEqual([
+      ['arrow', 4, 0, 'Arrow'],
+      ['wood', 50, 0, 'Wood'],
+      ['wood', 13, 3, 'Wood'],
     ]);
   });
 
-  it('take the real name once banked (its node revealed)', () => {
+  it('folds the schematics into one slot that never moves: "Unknown schematic" while every one is unbanked (033)', () => {
+    const slots = inventorySlots({ ...base, inventory: { 'schematic-machine-speed': 1, 'schematic-merger': 1, 'ancient-gear': 2 } });
+    expect(slots.map((s) => [s.name, s.count, s.movable])).toEqual([
+      ['Ancient gear', 2, true],
+      ['Unknown schematic', 2, false],
+    ]);
     const research = { ...createResearch(), 'machine-speed': 'revealed' as const };
-    const rows = parts({ ...base, research, inventory: { 'schematic-machine-speed': 1 }, banked: { 'schematic-machine-speed': 1 } });
-    expect(rows).toEqual([{ itemId: SCHEMATIC_ROW, count: 1, atRisk: 0, home: 0, label: { name: 'Schematic: Machine speed', icon: 'item-schematic' } }]);
-    const mixed = parts({ ...base, research, inventory: { 'schematic-machine-speed': 1, 'schematic-merger': 1 } });
-    expect(mixed[0]?.label?.name).toBe('Schematics');
+    expect(inventorySlots({ ...base, research, inventory: { 'schematic-machine-speed': 1 } })[0]?.name).toBe('Schematic: Machine speed');
+  });
+
+  it('a hopper\'s or crate\'s screen shows only its own stacks', () => {
+    expect(containerSlots({ wood: 70 }).map((s) => [s.itemId, s.count])).toEqual([['wood', 50], ['wood', 20]]);
+    expect(containerSlots({})).toEqual([]);
+  });
+
+  it('the gear line counts the worn pieces with their armor and the spares (031, 036), which a death never takes', () => {
+    const gear = [bodyPiece(1, 'light', 2), bodyPiece(2, 'heavy', 5), piece(4, 'helm', { baseArmor: 1 })];
+    expect(gearLine({ ...base, gear, equipped: { helm: 4, body: 2, boots: null, trinket: null } })).toMatch(/^2 worn · armor \d+ · 1 spare piece \(kept\)$/);
+    expect(gearLine(base)).toBe('');
   });
 });
 
-describe('the inventory layout', () => {
-  it('centres the panel with its title card above, inside the view', () => {
-    const L = inventoryLayout();
-    expect(Math.abs(L.panel.x + L.panel.w / 2 - VIEW_WIDTH / 2)).toBeLessThanOrEqual(1);
-    expect(L.title.y + L.title.h + INVENTORY_PANEL.title.gap).toBe(L.panel.y);
-    expect(L.title.y).toBeGreaterThanOrEqual(0);
-    expect(L.panel.y + L.panel.h).toBeLessThanOrEqual(VIEW_HEIGHT);
-    expect(L.footer.y).toBeLessThan(L.panel.y + L.panel.h);
-  });
+describe('the grid layout', () => {
+  for (const container of [false, true]) {
+    it(`centres the panel under its title card, above the bottom HUD (${container ? 'a hopper\'s screen' : 'the plain inventory'})`, () => {
+      const L = inventoryLayout(container);
+      expect(Math.abs(L.panel.x + L.panel.w / 2 - VIEW_WIDTH / 2)).toBeLessThanOrEqual(1);
+      expect(L.title.y + L.title.h + INVENTORY_GRID.title.gap).toBe(L.panel.y);
+      expect(L.title.y).toBeGreaterThanOrEqual(0);
+      expect(L.panel.y + L.panel.h).toBeLessThan(tubeSlotBox(3).y);
+      // The carried bar stays in view, to drop stacks on.
+      expect(overlaps(L.panel, hotbarBox())).toBe(false);
+      expect(L.cells).toHaveLength(40);
+      const parts = [L.sort, L.scroll, ...L.cells, ...(L.container?.cells ?? [])];
+      for (const p of parts) expect(inside(p, L.panel), JSON.stringify(p)).toBe(true);
+      for (let i = 0; i < parts.length; i++) for (let j = i + 1; j < parts.length; j++) expect(overlaps(parts[i] as Box, parts[j] as Box)).toBe(false);
+      for (const f of L.footer) expect(f.y + INVENTORY_GRID.footer.lineHeight).toBeLessThanOrEqual(L.panel.y + L.panel.h);
+      expect(L.container === null).toBe(!container);
+    });
+  }
 
-  it('gives every group a header and room for all its rows, in three columns that do not overlap (039)', () => {
-    const L = inventoryLayout();
-    expect(L.groups.map((g) => g.id)).toEqual(['raw', 'parts', 'ammo', 'gear', 'cores']);
-    for (const g of L.groups) {
-      expect(g.rowsY).toBeGreaterThan(g.y);
-      const bottom = g.rowsY + reservedRows(g.id) * INVENTORY_PANEL.rowHeight;
-      expect(bottom).toBeLessThanOrEqual(L.footer.y);
-      expect(g.x + INVENTORY_PANEL.columnWidth).toBeLessThanOrEqual(L.panel.x + L.panel.w);
-    }
-    const xs = new Set(L.groups.map((g) => g.x));
-    expect(xs.size).toBe(3);
+  it('finds the cell under a point', () => {
+    const { cells } = inventoryLayout();
+    const c = cells[9];
+    if (!c) throw new Error('no cell');
+    expect(cellAt(cells, c.x + 2, c.y + 2)).toBe(9);
+    expect(cellAt(cells, 0, 0)).toBe(-1);
   });
 });

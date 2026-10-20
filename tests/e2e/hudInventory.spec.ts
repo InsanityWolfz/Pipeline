@@ -18,7 +18,8 @@ const overlaps = (a: Box, b: Box) => a.x < b.x + b.w && b.x < a.x + a.w && a.y <
 
 const ui = (page: Page) => page.evaluate(() => window.__GAME__?.ui());
 const inventoryOpen = async (page: Page) => (await ui(page))?.inventory.open;
-const rowsOf = async (page: Page, group: string) => (await ui(page))?.inventory.groups.find((g) => g.id === group)?.rows;
+/** The grid's slots of a kind (047), each its count and at-risk part. */
+const slotsOf = async (page: Page, itemId: string) => (await ui(page))?.inventory.slots.filter((sl) => sl.itemId === itemId).map((sl) => ({ count: sl.count, atRisk: sl.atRisk }));
 
 /** The shrine pylon's tile, from the overworld data. */
 const PYLON = OVERWORLD.shrine.pylon;
@@ -108,9 +109,12 @@ test('3 wood picked up after entering the foundry are 3 at risk, in the panel an
   expect(s.atRisk.arrow).toBeUndefined();
 
   await page.keyboard.press('i');
-  await expect.poll(() => rowsOf(page, 'raw')).toEqual([{ itemId: 'wood', count: 3, atRisk: 3, home: 0 }]);
-  expect(await rowsOf(page, 'ammo')).toEqual([{ itemId: 'arrow', count: s.inventory.arrow, atRisk: 0, home: 0 }]);
-  expect((await ui(page))?.inventory.groups.map((g) => g.id)).toEqual(['raw', 'parts', 'ammo', 'gear', 'cores']);
+  await expect.poll(() => slotsOf(page, 'wood')).toEqual([{ count: 3, atRisk: 3 }]);
+  expect(await slotsOf(page, 'arrow')).toEqual([{ count: s.inventory.arrow, atRisk: 0 }]);
+  // The wood's slot marks its at-risk count, its count and mark apart (045.11: the 031 panel drew them over each other).
+  const wood = (await ui(page))?.inventory.slots.find((sl) => sl.itemId === 'wood');
+  if (!wood?.warnBox) throw new Error('no at-risk mark on the wood');
+  expect(overlaps(wood.countBox, wood.warnBox)).toBe(false);
   // One feed line for the three.
   await expect.poll(async () => (await ui(page))?.pickupFeed).toEqual([{ itemId: 'wood', count: 3 }]);
   expect(errors).toEqual([]);
@@ -139,8 +143,8 @@ test('a deposit at the claimed shrine pylon leaves nothing carried and nothing a
 
   await page.keyboard.press('i');
   await expect.poll(async () => (await ui(page))?.inventory.open).toBe(true);
-  // What went home isn't carried: no rows at all.
-  await expect.poll(async () => (await ui(page))?.inventory.groups.flatMap((g) => g.rows)).toEqual([]);
+  // What went home isn't carried: no slots at all.
+  await expect.poll(async () => (await ui(page))?.inventory.slots).toEqual([]);
   expect(errors).toEqual([]);
 });
 
@@ -291,10 +295,11 @@ test('a press on the open panel never fires, and the player still moves with it 
   const before = await state(page);
   expect(before.inventory.arrow ?? 0).toBeGreaterThan(0);
   await page.mouse.move(centre.x, centre.y);
-  await page.mouse.down();
+  // 047: right click uses carried arrows in the world; on the panel it never does.
+  await page.mouse.down({ button: 'right' });
   // Held down while the world runs on: half a second of ticks.
   await expect.poll(async () => (await state(page)).tick, { timeout: 15_000 }).toBeGreaterThan(before.tick + 30);
-  await page.mouse.up();
+  await page.mouse.up({ button: 'right' });
   const held = await state(page);
   expect(held.inventory.arrow).toBe(before.inventory.arrow);
   expect(held.arrows).toEqual([]);

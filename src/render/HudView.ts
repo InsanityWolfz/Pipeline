@@ -46,7 +46,7 @@ export interface HudPanelsState {
 
 /** The 031 part of `ui()` before the scene has built its views. */
 export const NO_HUD_PANELS: HudPanelsState = {
-  inventory: { open: false, groups: [] },
+  inventory: { open: false, mode: null, containerId: null, scroll: 0, rows: 0, slots: [], container: [], sort: { x: 0, y: 0, w: 0, h: 0 }, footer: [], panel: { x: 0, y: 0, w: 0, h: 0 } },
   researchList: { open: false, groups: [] },
   pickupFeed: [],
   health: { box: { x: 0, y: 0, w: 0, h: 0 }, text: '', low: false, healing: false, chunk: 0, xp: { text: '', fill: 0, pip: false, tick: 0, bar: { x: 0, y: 0, w: 0, h: 0 } } },
@@ -153,7 +153,9 @@ export class HudView {
       this.research.setOpen(false);
       this.talents.setOpen(false);
     }
-    this.inventory.update(sim);
+    // 047: a hopper's or crate's screen shows its own slots over the grid.
+    const box = sim.foundry.pieces.find((p) => p.id === this.inventory.container);
+    this.inventory.update(sim, box?.kind === 'hopper' || box?.kind === 'crate' ? box : undefined);
     this.research.update(sim);
     this.talents.update(sim);
     this.boss.update(sim);

@@ -72,8 +72,6 @@ export interface SimEvents {
   /** A piece was picked up, and the items it held went into the inventory. */
   pickUps: { id: number; pieceId: string; items: Record<string, number> }[];
   deposits: { id: number; itemId: string; count: number }[];
-  /** A crate was emptied into the inventory. */
-  crateTakes: { id: number; items: Record<string, number> }[];
   /** A hopper was emptied back into the inventory. */
   withdraws: { id: number; itemId: string; count: number }[];
   /** The tube attuned to the foundry (once ever). */
@@ -202,7 +200,6 @@ export function createEvents(): SimEvents {
     placeFails: [],
     pickUps: [],
     deposits: [],
-    crateTakes: [],
     withdraws: [],
     attunes: [],
     refills: [],

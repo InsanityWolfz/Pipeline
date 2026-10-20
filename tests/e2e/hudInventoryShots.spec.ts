@@ -76,12 +76,11 @@ test.describe('review screenshots (031)', () => {
     await pickUp(page, [['wood', 3], ['rimestone', 2], ['fuse', 2], ['arrow+frost', 4], ['unidentified-armor', 4], ['warden-core', 1]]);
     await page.keyboard.press('i');
     await expect.poll(async () => (await ui(page))?.inventory.open).toBe(true);
-    const groups = (await ui(page))?.inventory.groups ?? [];
-    for (const g of groups) {
-      expect(g.rows.some((r) => r.atRisk < r.count), `${g.id} has a safe row`).toBe(true);
-      expect(g.rows.some((r) => r.atRisk > 0), `${g.id} has an at-risk row`).toBe(true);
-    }
-    expect(groups.find((g) => g.id === 'raw')?.rows.find((r) => r.itemId === 'wood')).toEqual({ itemId: 'wood', count: 13, atRisk: 3, home: 5 });
+    // 047: the grid replaced the panel; its slots mark the at-risk part (031 carried over).
+    const slots = (await ui(page))?.inventory.slots ?? [];
+    expect(slots.some((sl) => sl.atRisk === 0)).toBe(true);
+    expect(slots.some((sl) => sl.atRisk > 0)).toBe(true);
+    expect(slots.filter((sl) => sl.itemId === 'wood').map((sl) => [sl.count, sl.atRisk])).toEqual([[13, 3]]);
     await page.screenshot({ path: `${SHOTS}/05-inventory-panel.png` });
   });
 

@@ -1,45 +1,33 @@
-import { INVENTORY_GROUPS, SCHEMATICS_LABEL } from '../data/hudPanels';
-import { ITEMS, UNKNOWN_SCHEMATIC, type ItemGroup } from '../data/items';
+import { INVENTORY_GRID, SCHEMATICS_LABEL, sparesText } from '../data/hudPanels';
+import { ITEMS, UNKNOWN_SCHEMATIC, itemDef } from '../data/items';
 import { RESEARCH_ICONS } from '../data/researchAssets';
-import { itemRisks } from '../sim/banking';
-import { count } from '../sim/inventory';
+import { containerStacks, gridSlots } from '../sim/bag';
+import type { Inventory } from '../sim/inventory';
 import { schematicKnown } from '../sim/schematics';
 import type { SimState } from '../sim/state';
-import { wornPieces } from '../sim/stats';
+import { playerStats, wornPieces } from '../sim/stats';
 
-// What the inventory panel lists (031), pure: every group in order, with a row per
-// carried item (count above 0, in ITEMS order): its count, how many a death would
-// take (the sim's banking helper) and how many are home in the stash. Gear adds the
-// worn pieces (036: up to one a slot) and the spare identified pieces, which a death never takes.
+// What the grid inventory shows (047), pure: each slot's kind, count, icon and name, and how many of it a death would
+// take (031, from the sim's bag). Schematics share one slot (033: unknown ones must never tell apart), as they shared
+// the 031 panel's row; a click on it moves nothing. The footer counts the identified gear.
 
-export interface InventoryRow {
-  /** The item, or `worn` / `spare` for Gear's identified pieces, or `schematics` for the schematics' shared row (033). */
+/** One shown slot: a stack, `itemId` its kind (the schematics' shared slot names the first), `stack` its count. */
+export interface ShownSlot {
   itemId: string;
   count: number;
   atRisk: number;
-  /** How many of it the stash holds. */
-  home: number;
-  /** The schematics' row: the name and icon it shows. */
-  label?: { name: string; icon: string };
+  name: string;
+  icon: string;
+  /** False for the schematics' shared slot: clicks and drags on it do nothing. */
+  movable: boolean;
 }
 
-export interface InventoryGroupRows {
-  id: ItemGroup;
-  rows: InventoryRow[];
-}
-
-/** Gear's line for the worn piece, and for the other identified pieces. */
-export const WORN_ROW = 'worn';
-export const SPARE_ROW = 'spare';
-/** Parts' one row for every schematic carried (033). */
-export const SCHEMATIC_ROW = 'schematics';
-
-/** What the panel reads from the sim. */
-export type Held = Pick<SimState, 'inventory' | 'banked' | 'stash' | 'gear' | 'equipped' | 'research'>;
+/** What the grid reads from the sim. */
+export type Held = Pick<SimState, 'inventory' | 'bag' | 'banked' | 'gear' | 'equipped' | 'research' | 'talents'>;
 
 /**
- * The schematics' row name and icon (033): "Unknown schematic" while every one carried is still unknown (so several
- * unknowns never tell apart), the real name for one known kind alone, else "Schematics".
+ * The schematics' label (033): "Unknown schematic" while every one carried is still unknown (so several unknowns never
+ * tell apart), the real name for one known kind alone, else "Schematics".
  */
 export function schematicLabel(sim: Pick<SimState, 'research'>, ids: readonly string[]): { name: string; icon: string } {
   const known = ids.filter((id) => schematicKnown(sim, id));
@@ -48,30 +36,42 @@ export function schematicLabel(sim: Pick<SimState, 'research'>, ids: readonly st
   return only ? { name: only.name, icon: only.icon } : { name: SCHEMATICS_LABEL, icon: RESEARCH_ICONS.schematic };
 }
 
-export function inventoryGroups(sim: Held): InventoryGroupRows[] {
-  const risks = itemRisks(sim);
-  return INVENTORY_GROUPS.map(({ id }) => {
-    const carried = Object.values(ITEMS).filter((it) => it.group === id && risks[it.id] !== undefined);
-    const rows: InventoryRow[] = carried
-      .filter((it) => it.kind !== 'schematic')
-      .map((it) => ({ itemId: it.id, count: risks[it.id]?.held ?? 0, atRisk: risks[it.id]?.atRisk ?? 0, home: count(sim.stash, it.id) }));
-    const schematics = carried.filter((it) => it.kind === 'schematic').map((it) => it.id);
-    if (schematics.length > 0) {
-      const sum = (f: (itemId: string) => number) => schematics.reduce((n, s) => n + f(s), 0);
-      rows.push({
-        itemId: SCHEMATIC_ROW,
-        count: sum((s) => risks[s]?.held ?? 0),
-        atRisk: sum((s) => risks[s]?.atRisk ?? 0),
-        home: sum((s) => count(sim.stash, s)),
-        label: schematicLabel(sim, schematics),
-      });
+const isSchematic = (id: string): boolean => ITEMS[id]?.kind === 'schematic';
+
+/** The grid's slots in order: every stack (047), the schematics folded into one slot where the first of them stood. */
+export function inventorySlots(sim: Held): ShownSlot[] {
+  const slots = gridSlots(sim);
+  const schematics = [...new Set(slots.filter((s) => isSchematic(s.itemId)).map((s) => s.itemId))];
+  const out: ShownSlot[] = [];
+  let folded = false;
+  for (const s of slots) {
+    if (!isSchematic(s.itemId)) {
+      const def = itemDef(s.itemId);
+      out.push({ itemId: s.itemId, count: s.count, atRisk: s.atRisk, name: def.name, icon: def.icon, movable: true });
+      continue;
     }
-    if (id === 'gear') {
-      const worn = wornPieces(sim).length;
-      const spares = sim.gear.length - worn;
-      if (worn > 0) rows.push({ itemId: WORN_ROW, count: worn, atRisk: 0, home: 0 });
-      if (spares > 0) rows.push({ itemId: SPARE_ROW, count: spares, atRisk: 0, home: 0 });
-    }
-    return { id, rows };
+    if (folded) continue;
+    folded = true;
+    const all = slots.filter((x) => isSchematic(x.itemId));
+    const label = schematicLabel(sim, schematics);
+    out.push({ itemId: s.itemId, count: all.reduce((n, x) => n + x.count, 0), atRisk: all.reduce((n, x) => n + x.atRisk, 0), ...label, movable: false });
+  }
+  return out;
+}
+
+/** A hopper's or crate's own slots (047): its stacks, never anything the player carries. */
+export function containerSlots(contents: Inventory): ShownSlot[] {
+  return containerStacks(contents).map((s) => {
+    const def = itemDef(s.itemId);
+    return { itemId: s.itemId, count: s.count, atRisk: 0, name: def.name, icon: def.icon, movable: true };
   });
+}
+
+/** The footer's gear line (031, 036): the worn pieces and their armor, and the spare identified pieces, which a death never takes; empty with none. */
+export function gearLine(sim: Held): string {
+  const T = INVENTORY_GRID.text;
+  const worn = wornPieces(sim).length;
+  const spares = sim.gear.length - worn;
+  const parts = [...(worn > 0 ? [`${worn} ${T.worn}${T.sep}${T.armor} ${playerStats(sim).armor}`] : []), ...(spares > 0 ? [sparesText(spares)] : [])];
+  return parts.join(T.sep);
 }

@@ -125,13 +125,15 @@ describe('restoring', () => {
     crate.contents = { wood: 3 };
     expect(diagramInReach(s)?.node).toBe('entrance-2');
     run(s, 1, { interact: true });
-    expect([crate.contents, s.inventory.wood ?? 0, s.events.crateTakes]).toEqual([{ wood: 3 }, 0, []]);
-    // Away from the diagram, E empties the crate as before.
+    expect([crate.contents, s.inventory.wood ?? 0, s.events.withdraws]).toEqual([{ wood: 3 }, 0, []]);
+    // 047: E never empties a crate (it opens its screen in render); its stacks come out by the screen's clicks.
     const t = foundry();
     below(t, 6, 6);
     const other = put<CrateState>(t, 'crate', 7, 7);
     other.contents = { wood: 2 };
     run(t, 1, { interact: true });
+    expect(t.inventory.wood ?? 0).toBe(0);
+    run(t, 1, { withdraw: { id: other.id, amount: 'all', itemId: 'wood' } });
     expect(t.inventory.wood).toBe(2);
   });
 

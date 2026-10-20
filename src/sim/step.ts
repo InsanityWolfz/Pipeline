@@ -39,6 +39,7 @@ import { stepLeveling } from './leveling';
 import { respec, takeTalent } from './talents';
 import { rampOverpressure, stepPools } from './keystones';
 import { noteCarried } from './knownRounds';
+import { noteBag, sortBag } from './bag';
 import { stepSandbox } from './sandbox';
 
 /** Each room's bodies, built once per tick on first use. */
@@ -58,11 +59,15 @@ function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
 export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   clearEvents(state.events);
   state.tick += 1;
-  // 047: rounds that arrived between ticks (crafted from the menu) take their carried bar slot before anything fires.
+  // 047: rounds that arrived between ticks (crafted from the menu) take their carried bar slot before anything fires,
+  // and new kinds their place in the grid.
   noteCarried(state);
+  noteBag(state);
   // A dying player, or one held still while the tube attunes (019), takes no input but keeps their aim.
   const held = state.player.dying > 0 || state.link.attunePulse > 0;
   const cmd = held ? { ...NO_COMMAND, aimX: state.player.aimX, aimY: state.player.aimY } : maskCommand(state, input);
+  // 047: the grid's Sort button.
+  if (cmd.sortInventory) sortBag(state);
   const bodies = bodiesOf(state);
   const here = bodies(state.roomId);
   const stats = playerStats(state);
@@ -116,6 +121,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepPorts(state, (to, from, item) => offerFromOutside(state.foundry, to, from, item));
   stepPickups(state);
   noteCarried(state);
+  noteBag(state);
   noteFound(state);
   stepGates(state);
   stepObjectives(state);
