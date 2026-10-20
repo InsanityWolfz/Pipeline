@@ -1,5 +1,5 @@
 import { ammoDef } from '../../src/data/ammo';
-import { TILE_SIZE } from '../../src/data/config';
+import { TICK_RATE, TILE_SIZE } from '../../src/data/config';
 import { SPREAD_STEP } from '../../src/data/foundry';
 import { OVERWORLD, OVERWORLD_ROOM, ringOf } from '../../src/data/overworld';
 import { TILE } from '../../src/data/rooms';
@@ -146,7 +146,7 @@ export const PACKS = {
 } as const;
 
 /** The longest a pack fight runs, ticks: 60 s. */
-export const PACK_LIMIT = 60 * 60;
+export const PACK_LIMIT = 60 * TICK_RATE;
 
 /** One ring's pack fight on a seed: no talents, nothing worn, only the volley's lines (041.8's arithmetic). */
 export function packClear(ring: keyof typeof PACKS, seed: number): PackFight {

@@ -1,3 +1,4 @@
+import { TICK_RATE } from '../../src/data/config';
 import type { EnemyState } from '../../src/sim/enemies';
 import { angleDiff } from '../../src/sim/shield';
 import type { SimState } from '../../src/sim/state';
@@ -13,7 +14,7 @@ import { forum } from './forum';
 // Steady Grip and Hard Bore, four Common pieces at mid-roll (builds.ts), and two bots.
 
 /** 041.7's fight length target, ticks: 60–90 s. */
-export const TARGET = { min: 60 * 60, max: 90 * 60 } as const;
+export const TARGET = { min: 60 * TICK_RATE, max: 90 * TICK_RATE } as const;
 /** 041.7's damage target: at least this share of max health taken. */
 export const MIN_SHARE = 0.4;
 
@@ -45,12 +46,15 @@ export function fight(seed: number, limit: number, bot: Bot): Fight {
     if (Math.abs(angleDiff(b.angle, Math.atan2(s.player.y - b.y, s.player.x - b.x))) > Math.PI / 2) behind += 1;
     run(s, 1, bot(s, b));
     taken += takenThisTick(s);
-    const end = (won: boolean, ko: boolean): Fight => ({ won, ko, ticks: t, taken, share: Math.round((taken / max) * 100) / 100, behind });
+    const end = (won: boolean, ko: boolean): Fight => ({ won, ko, ticks: t, taken, share: shareOf(taken, max), behind });
     if (s.bossDefeats.length > 0) return end(true, false);
     if (s.player.dying > 0) return end(false, true);
   }
-  return { won: false, ko: false, ticks: limit, taken, share: taken / max, behind };
+  return { won: false, ko: false, ticks: limit, taken, share: shareOf(taken, max), behind };
 }
+
+/** Damage taken as a share of max health, to two places. */
+const shareOf = (taken: number, max: number): number => Math.round((taken / max) * 100) / 100;
 
 /** Whether a fight meets all three of 041.7's targets: won without a KO, in 60–90 s, taking at least 40% of max health. */
 export const meets = (r: Fight): boolean => r.won && !r.ko && r.ticks >= TARGET.min && r.ticks <= TARGET.max && r.share >= MIN_SHARE;

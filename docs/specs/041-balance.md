@@ -222,4 +222,4 @@ Shaun's answer to 041.16 left these to the build; each has a proposal that is bu
 ## Closed (2026-10-20)
 041 is closed for the build as it stands, under the process reset Shaun approved: the targets that are met are tests, the rest are recorded measurements above. Playtest notes 17–18 (041.18 the arena lock, 041.19 slower Shardbacks) moved to their own spec, docs/specs/043-arena-lock-shardback-turn.md. The status stays `approved` until Shaun's /wrapup.
 
-The scripted targets (041.7's Bulwark fights, 041.8's pack clears, 041.9's ammo scenarios) now run under `npm run measure` (tests/measure), report only; `npm run check` keeps one-seed determinism checks of each harness and the naive bot's KO.
+The scripted targets (041.7's Bulwark fights, 041.8's pack clears, 041.9's ammo scenarios) now run under `npm run measure` (tests/measure), report only; `npm run check` keeps only one-seed determinism checks of each harness.

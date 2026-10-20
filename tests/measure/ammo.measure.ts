@@ -1,6 +1,6 @@
 import { describe, it } from 'vitest';
 import { CAP, clearTicks, FAMILIES, SCENARIOS, wins, type Family } from '../sim/ammoScenarios';
-import { report, table } from './report';
+import { report, SEEDS, table } from './report';
 
 // 041.9's ammo scenarios (docs/specs/041-balance.md): each family wins its own scenario,
 // from one entrance with no talents, on seeds 1–5: the shortest time from its first round
@@ -8,8 +8,6 @@ import { report, table } from './report';
 // scores 60 s and never wins. The scenarios draw no random numbers, so each seed plays out
 // alike. By Shaun's answer to 041.14, bombs on the cluster and Homing ley bolts on the
 // walled Wisps are recorded measurements, not targets, until more mechanics fold in.
-
-const SEEDS = [1, 2, 3, 4, 5] as const;
 
 describe('each ammo family wins its own scenario (041.9)', () => {
   it.for([

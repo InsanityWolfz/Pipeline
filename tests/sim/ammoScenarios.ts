@@ -1,4 +1,5 @@
 import { lobbedAmmo, straightAmmo } from '../../src/data/ammo';
+import { TICK_RATE } from '../../src/data/config';
 import type { Ring } from '../../src/data/ringScale';
 import { TILE, type Room } from '../../src/data/rooms';
 import { HOMING } from '../../src/data/tags';
@@ -126,7 +127,7 @@ export const MEADOW = PLAYER_AT;
 export const tile = (tx: number, ty: number): { x: number; y: number } => tileCentre({ tx, ty });
 
 /** The longest a scenario runs, ticks: a family that can't finish in 60 s scores 60 s and never wins. */
-export const CAP = 60 * 60;
+export const CAP = 60 * TICK_RATE;
 /** The winner's margin over the next: at least 10%. */
 const MARGIN = 1.1;
 

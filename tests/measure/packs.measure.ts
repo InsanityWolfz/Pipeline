@@ -1,6 +1,6 @@
 import { describe, it } from 'vitest';
 import { PACKS, packClear, type PackFight } from '../sim/packBot';
-import { report, seconds, table } from './report';
+import { report, seconds, SEEDS, table, ticks } from './report';
 
 // 041.8's ring-matched packs (docs/specs/041-balance.md): a pack cleared with a fitting
 // volley, timed from the first round fired at it to its last death, on seeds 1–5. Ring 3
@@ -8,15 +8,13 @@ import { report, seconds, table } from './report';
 // Damage taken is printed (041.11). Each pack stands on open ground in its ring
 // (tests/sim/packBot.ts), the player 6 to 7 tiles off.
 
-const SEEDS = [1, 2, 3, 4, 5] as const;
-
 /** Each ring's band, seconds. */
 const BAND: Record<keyof typeof PACKS, { min: number; max: number }> = { 1: { min: 0, max: 15 }, 2: { min: 0, max: 15 }, 3: { min: 8, max: 18 } };
 
 describe('ring-matched packs (041.8)', () => {
   it.for([1, 2, 3] as const)('ring %i over seeds 1–5', (ring, { task }) => {
     const band = BAND[ring];
-    const inBand = (f: PackFight): boolean => f.cleared && !f.ko && f.ticks >= band.min * 60 && f.ticks <= band.max * 60;
+    const inBand = (f: PackFight): boolean => f.cleared && !f.ko && f.ticks >= ticks(band.min) && f.ticks <= ticks(band.max);
     const runs = SEEDS.map((seed) => packClear(ring, seed));
     const met = runs.filter(inBand).length;
     const times = runs.map((f) => seconds(f.ticks));

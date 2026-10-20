@@ -113,7 +113,7 @@ From 021 to 041, 21 specs were stacked on one branch with no pull requests. `mai
 3. **At most one "raised after the build" round per spec.** If Shaun's answers lead to more building that misses again, record the numbers and put the follow-up in a new spec.
 4. **Balance targets are measurements.** Scripted-bot targets over many seeds (fight lengths, clear times, damage taken) are printed by `npm run measure` (tests/measure, its own Vitest config; a missed target never fails it) and recorded in the spec and PR. They are not tests in `npm run check`, and the build doesn't loop on tuning to make chaotic seeds pass. Balance is judged at playtest.
 5. **Small approval batches.** About three specs approved at a time, so the proposals Shaun approves on draft are ones he has read.
-6. **Verify once.** While building, run only the e2e files the change touches. Run the full `npm run test:e2e` once per spec, at /verify (about 7 minutes; `npm run check` is about 45 seconds).
+6. **Verify once.** While building, run only the e2e files the change touches. Run the full `npm run test:e2e` once per spec, at /verify (about 7 minutes; `npm run check` takes under a minute).
 7. **Commit after each item.** A container restart loses anything uncommitted.
 8. **One state log.** The current state lives in docs/progress.md (latest entry first), the spec statuses in docs/backlog.md, and the work in PRs. There's no separate handoff file.
 

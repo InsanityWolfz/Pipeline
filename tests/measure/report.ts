@@ -1,3 +1,5 @@
+import { TICK_RATE } from '../../src/data/config';
+
 // Balance measurements (process rule 4): scripted-bot targets over many seeds are printed
 // by `npm run measure`, never asserted. Each measurement logs its per-seed table and records
 // a summary row on its test's meta; tests/measure/reporter.ts prints those rows at the end.
@@ -37,4 +39,10 @@ export function report(task: { meta: { measure?: Measured } }, measured: Measure
 export const verdict = (met: boolean | null): string => (met === null ? 'recorded' : met ? 'met' : 'MISSED');
 
 /** Ticks as seconds, one decimal. */
-export const seconds = (ticks: number): number => Math.round((ticks / 60) * 10) / 10;
+export const seconds = (ticks: number): number => Math.round((ticks / TICK_RATE) * 10) / 10;
+
+/** Seconds as ticks. */
+export const ticks = (s: number): number => s * TICK_RATE;
+
+/** The seeds a five-seed measurement runs. */
+export const SEEDS = [1, 2, 3, 4, 5] as const;
