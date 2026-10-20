@@ -212,15 +212,15 @@ describe('the loadout (044)', () => {
 describe('the spawn panel and the pens (044)', () => {
   it('spawns a ring 3 champion pack a short distance in front of the player', () => {
     const s = createSandboxSim(3);
-    const aim = { aimX: s.player.x, aimY: s.player.y + 300 };
-    run(s, 1, { ...aim, sandbox: { kind: 'spawn', enemyId: 'charger', ring: 3, champion: true, count: 5 } });
+    s.player.facing = 'down';
+    run(s, 1, { aimX: s.player.x + 300, aimY: s.player.y, sandbox: { kind: 'spawn', enemyId: 'charger', ring: 3, champion: true, count: 5 } });
     const pack = ofGroup(s, SPAWN_GROUP);
     expect(pack.length).toBe(5);
     for (const e of pack) {
       expect(e.ring).toBe(3);
       expect(e.champion).not.toBeNull();
       expect(e.health).toBe(defOf(e).maxHealth);
-      // In front (below, along the aim), about `distance` tiles out.
+      // In front (below, the way the player faces, wherever the cursor is), about `distance` tiles out.
       expect(e.y - s.player.y).toBeGreaterThan((SANDBOX.place.distance - 1) * T);
       expect(Math.abs(e.y - s.player.y)).toBeLessThan((SANDBOX.place.distance + 1) * T);
     }
@@ -244,9 +244,10 @@ describe('the spawn panel and the pens (044)', () => {
 
   it('puts a spawn that would stand in a wall back toward the player', () => {
     const s = createSandboxSim(3);
-    const near = tileCentre({ tx: SANDBOX.spawn.tx, ty: 1 });
+    const near = tileCentre({ tx: (SANDBOX_PENS[2]?.bounds.x1 ?? 0) + 2, ty: 1 });
     movePlayer(s, near.x, near.y + 2 * T);
-    run(s, 1, { aimX: near.x, aimY: 0, sandbox: { kind: 'spawn', enemyId: 'husk', ring: 1, champion: false, count: 3 } });
+    s.player.facing = 'up';
+    run(s, 1, { sandbox: { kind: 'spawn', enemyId: 'husk', ring: 1, champion: false, count: 3 } });
     const room = roomById(SANDBOX_ROOM);
     for (const e of ofGroup(s, SPAWN_GROUP)) expect(WALKABLE).toContain(room.rows[Math.floor(e.y / T)]?.[Math.floor(e.x / T)]);
   });

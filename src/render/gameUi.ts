@@ -41,5 +41,6 @@ export function gameUi(g: GameScene): GameUiState {
     tagged: { benchStages: g.siteMenus?.stagePanel ?? null, splitFlashes: g.effects?.splitFlashes ?? 0, trails: g.arrowView?.trails ?? { count: 0, longest: 0 } },
     ...(g.enemyView?.ui ?? NO_ENEMY_UI),
     ...(g.legibility?.ui ?? NO_LEGIBILITY_UI),
+    sandbox: g.sim.sandbox ? (g.sandboxPanel?.state ?? { open: false, rows: [] }) : null,
   };
 }

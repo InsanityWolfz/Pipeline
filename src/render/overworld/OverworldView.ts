@@ -13,18 +13,7 @@ import { inkCss } from '../vector/draw';
 import { addVector, textureScale } from '../vector/textures';
 import { drawGround } from './ground';
 import { inHollows } from '../../data/hollows';
-import { HOLLOWS_SPRITES } from '../../data/hollowsAssets';
-
-/** A Hollows tile's standing sprite (034): a cliff (its plateau where another stands in front), a pillar, an arch, a fallen span, rubble. */
-function hollowsFrame(symbol: string, tx: number, ty: number, hash: number, room: Room | null): string | undefined {
-  const S = HOLLOWS_SPRITES;
-  if (symbol === TILE.cliff) return room?.rows[ty + 1]?.[tx] === TILE.cliff ? S.cliffTop : S.cliffs[hash % S.cliffs.length];
-  if (symbol === TILE.pillar) return S.pillar;
-  if (symbol === TILE.arch) return S.arch;
-  if (symbol === TILE.fallen) return S.fallen[hash % S.fallen.length];
-  if (symbol === TILE.rock) return S.rubble[hash % S.rubble.length];
-  return undefined;
-}
+import { hollowsFrame } from '../hollowsTiles';
 
 // Draws the overworld (017): its ground baked once into chunk textures, then
 // every tree, rock, ruin and the foundry's mound as vector sprites sorted by

@@ -39,7 +39,7 @@ export class Controls {
   private interactPress = false;
   private selectPending: string | null = null;
   /** C, Esc, I or Tab (031), J (033) and T (037), latched until the scene takes them. */
-  private readonly menuKeys = { menu: false, close: false, inventory: false, research: false, talents: false };
+  private readonly menuKeys = { menu: false, close: false, inventory: false, research: false, talents: false, sandbox: false };
   private buildPending = false;
   private wheelPending = 0;
   /** Choices clicked in the hopper, pylon, stash and bench menus. */
@@ -90,7 +90,7 @@ export class Controls {
     if (key === this.bound) return;
     this.bound = key;
     this.keyboard.removeAllKeys(true);
-    const { keys, ammo } = bindKeys(this.keyboard, bindings);
+    const { keys, ammo, sandbox } = bindKeys(this.keyboard, bindings);
     this.keys = keys;
     this.ammoKeys = ammo;
     listenKeys(keys, ammo, {
@@ -102,7 +102,7 @@ export class Controls {
       menu: (key) => (this.menuKeys[key] = true),
       build: () => (this.buildPending = true),
       ammo: (i) => (this.selectPending = SLOT_AMMOS[i] ?? null),
-    });
+    }, sandbox);
   }
 
   /** Call once per frame before taking commands. */

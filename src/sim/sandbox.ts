@@ -9,7 +9,7 @@ import { SANDBOX, SANDBOX_ARENAS, SANDBOX_PENS, SANDBOX_START } from '../data/sa
 import { resetBoss } from './arenaLock';
 import { defOf } from './champions';
 import { boxHitsSolid } from './collision';
-import { facingVector, unit } from './direction';
+import { facingVector } from './direction';
 import type { Command } from './input';
 import { entranceCap } from './research';
 import { spawnEnemy } from './spawn';
@@ -80,12 +80,12 @@ function fillPen(state: SimState, i: number): void {
 export function stepSandbox(state: SimState, cmd: Command): void {
   const sb = state.sandbox;
   if (!sb) return;
-  if (cmd.sandbox) apply(state, sb, cmd, cmd.sandbox);
+  if (cmd.sandbox) apply(state, sb, cmd.sandbox);
   stepPens(state, sb);
   refill(state, sb);
 }
 
-function apply(state: SimState, sb: SandboxState, cmd: Command, c: SandboxCommand): void {
+function apply(state: SimState, sb: SandboxState, c: SandboxCommand): void {
   switch (c.kind) {
     case 'god':
       sb.god = c.on;
@@ -94,7 +94,7 @@ function apply(state: SimState, sb: SandboxState, cmd: Command, c: SandboxComman
       if (c.entrance >= 0 && c.entrance < sb.loadout.length && (c.round === null || AMMO[c.round])) sb.loadout[c.entrance] = c.round;
       return;
     case 'spawn':
-      spawnAhead(state, cmd, c);
+      spawnAhead(state, c);
       return;
     case 'clear':
       state.enemies = state.enemies.filter((e) => e.group !== SPAWN_GROUP);
@@ -104,15 +104,17 @@ function apply(state: SimState, sb: SandboxState, cmd: Command, c: SandboxComman
   }
 }
 
-/** 1–10 of an enemy at a ring of 1–3, as champions (never a boss), in a row across the aim a short way in front of the player. */
-function spawnAhead(state: SimState, cmd: Command, c: Extract<SandboxCommand, { kind: 'spawn' }>): void {
+/**
+ * 1–10 of an enemy at a ring of 1–3, as champions (never a boss), in a row a short way in front of the player: the way
+ * they face (the cursor is on the panel as Spawn is clicked, so it can't say where in front is).
+ */
+function spawnAhead(state: SimState, c: Extract<SandboxCommand, { kind: 'spawn' }>): void {
   const def = ENEMIES[c.enemyId];
   if (!def || !SANDBOX.rings.includes(c.ring)) return;
   const n = Math.max(1, Math.min(SANDBOX.maxCount, Math.round(c.count)));
   const champion = c.champion && !def.boss;
   const p = state.player;
-  const aim = unit(cmd.aimX - p.x, cmd.aimY - p.y);
-  const [dx, dy] = aim[0] === 0 && aim[1] === 0 ? facingVector(p.facing) : aim;
+  const [dx, dy] = facingVector(p.facing);
   const room = roomById(state.roomId);
   const box = defOf({ enemyId: c.enemyId, champion: champion ? { name: '' } : null, ring: c.ring }).feetBox;
   const { distance, spacing } = SANDBOX.place;

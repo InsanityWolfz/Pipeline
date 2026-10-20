@@ -90,7 +90,7 @@ export const SANDBOX = {
   /** 044.2: a cleared pen's enemy comes back this many ticks after the pen empties (5 s). */
   penRefillTicks: 5 * TICK_RATE,
   /** The spawn panel: spawned enemies stand `distance` tiles in front of the player, `spacing` tiles apart across the aim. */
-  place: { distance: 5, spacing: 1.5 },
+  place: { distance: 5, spacing: 2 },
   /** The spawn panel's choices and where it starts: ring 1–3, champion or not, 1–10 at a time. */
   rings: [1, 2, 3] as readonly Ring[],
   maxCount: 10,
@@ -153,3 +153,41 @@ export const SANDBOX_START: StartDef = {
   gear: SANDBOX_GEAR,
   sandbox: true,
 };
+
+/**
+ * The Sandbox panel (044), view px: two tablets of 020-style rows under their titles, the loadout's at the screen's
+ * left edge and the spawn panel's at its right, `margin` in, so the player in the middle stays in view. Rows step with −
+ * and + at their right end, so a round's name has the row's width.
+ */
+export const SANDBOX_PANEL = {
+  y: 40,
+  margin: 8,
+  pad: 8,
+  titleH: 20,
+  titleY: 4,
+  rows: {
+    gap: 4,
+    subH: 11,
+    label: { x: 10, y: 6 },
+    sub: { x: 10, y: 2 },
+    value: { right: 176, y: 6 },
+    stepper: { down: 152, up: 174, hit: 10 },
+    greyAlpha: 0.45,
+  },
+} as const;
+
+/** The panel's words. */
+export const SANDBOX_TEXT = {
+  loadout: 'Loadout',
+  spawn: 'Spawn',
+  empty: 'Empty',
+  god: 'God mode',
+  reset: (name: string): string => `Reset ${name}`,
+  ring: (ring: number): string => `Ring ${ring}`,
+  champion: 'Champion',
+  count: (n: number): string => `Count ${n}`,
+  spawnRow: 'Spawn',
+  clear: 'Clear spawned',
+  on: 'On',
+  off: 'Off',
+} as const;

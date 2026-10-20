@@ -25,6 +25,7 @@ import type { ResearchListState } from './ResearchList';
 import type { HollowsShown } from './HollowsView';
 import type { HollowsEnemiesShown } from './hollowsEnemyArt';
 import type { Legibility, LegibilityUi } from './Legibility';
+import type { SandboxPanelState } from './SandboxPanel';
 
 export interface GameTestHook {
   /** The live game's summary; null on the title (042). */
@@ -193,6 +194,8 @@ export interface UiState {
   hoverChips: string[];
   /** 042: the flow screens as drawn (the title's rows, a card's lines and buttons, Settings, the note). */
   flow: FlowUi;
+  /** 044: the Sandbox panel as drawn (open, and its rows with their boxes), or null outside the sandbox. */
+  sandbox: SandboxPanelState | null;
 }
 
 /** ui() without the flow's part: what a GameScene reports. */
