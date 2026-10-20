@@ -97,6 +97,8 @@ export class GameScene extends Scene {
     this.sim = sim;
     this.host = host;
     this.shownRoomId = sim.roomId;
+    // Events made before the first tick (042: Continue's wake in the foundry) play on the first draw.
+    mergeEvents(this.pending, sim.events);
   }
 
   preload(): void {

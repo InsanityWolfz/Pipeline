@@ -1,11 +1,13 @@
 import { expect, type Page } from '@playwright/test';
 import type {} from '../../src/render/testHook';
 import { VIEW_WIDTH } from '../../src/data/config';
+import { installPageHelpers } from './helpers';
 
 // Page helpers for 042's flow screens: boot the shipped game (the title), click a flow row by its id, wait on state.
 
 /** Boots the plain URL (the shipped game: the title), with the in-page `__helpers`. */
 export async function bootTitle(page: Page, query = ''): Promise<void> {
+  await installPageHelpers(page);
   await page.goto(`/${query}`);
   await page.waitForFunction(() => window.__GAME__?.ui().ready === true && window.__GAME__?.flow().state === 'title');
 }
@@ -41,4 +43,26 @@ export async function clickRow(page: Page, id: string, at: 'row' | 'down' | 'up'
 /** Waits for the flow to reach a state. */
 export async function flowIs(page: Page, state: string): Promise<void> {
   await expect.poll(() => page.evaluate(() => window.__GAME__?.flow().state)).toBe(state);
+}
+
+/** Reloads the page and waits for the title again (storage is kept). */
+export async function reloadTitle(page: Page): Promise<void> {
+  await page.reload();
+  await page.waitForFunction(() => window.__GAME__?.ui().ready === true && window.__GAME__?.flow().state === 'title');
+}
+
+/** New game from the title, then into the foundry: the field's pack killed by the hook so its gate opens, then down the stairs. Returns the state there. */
+export async function newGameToFoundry(page: Page): Promise<void> {
+  await clickRow(page, 'newGame');
+  await flowIs(page, 'play');
+  await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
+  await page.evaluate(() => {
+    const g = window.__GAME__;
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    g.step(0);
+    for (const e of g.getState().enemies) if (e.group === 'field') g.setEnemyHealth(e.id, 0);
+    g.step(3);
+    h.toFoundry();
+  });
 }

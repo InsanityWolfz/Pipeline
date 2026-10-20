@@ -22,3 +22,6 @@ export const FLOW_DIM = { color: 'ink', alpha: 0.55 } as const;
 
 /** A tablet's padding round its rows and the title card above them. */
 export const FLOW_TABLET = { pad: 10, titleH: 22, titleY: 6, noteH: 11 } as const;
+
+/** A short notice (042: "Couldn't save…") in 031's pickup-feed style: a faint tablet with a line of text, below the feed's lines, holding then fading. */
+export const NOTICE = { x: 8, y: 104, pad: 3, h: 14, textY: 4, alpha: 0.85, holdMs: 4000, fadeMs: 400 } as const;

@@ -256,8 +256,13 @@ function installHelpers(map: MapData): void {
  * Opens the game with the helpers installed: at `query` (e.g. `?playtest`), or by
  * default the sandbox start in the ruin hall that most specs are written for.
  */
-export async function boot(page: Page, query = '?start=field'): Promise<void> {
+/** Installs the in-page helpers (`window.__helpers`) before the page's game boots (042: for specs that boot the title). */
+export async function installPageHelpers(page: Page): Promise<void> {
   await page.addInitScript(installHelpers, { ox: REGION_1_X, door: OVERWORLD.entrance.door });
+}
+
+export async function boot(page: Page, query = '?start=field'): Promise<void> {
+  await installPageHelpers(page);
   await page.goto(`/${query}`);
   // The scene builds its views once the fonts (020) have loaded.
   await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
