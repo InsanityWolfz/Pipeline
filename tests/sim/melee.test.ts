@@ -154,8 +154,9 @@ describe('when the intake has nothing to fire (047: left click is the volley or 
     expect(s.events.shots).toHaveLength(0);
   });
 
-  it('a carried round never shoots on left click: it punches (047)', () => {
+  it('once attuned, a carried round never shoots on left click: it punches (047; before attuning it fires, 047.9)', () => {
     const s = arena();
+    s.link.attuned = true;
     s.inventory = { arrow: 1 };
     expect(hasRoundToFire(s)).toBe(false);
     punchToward(s, 100, 0);

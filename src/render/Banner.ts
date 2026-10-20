@@ -6,9 +6,9 @@ import { LANDMARKS } from '../data/landmarks';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 
-/** One banner: what it's about (`kind`, `id`, for the test hook), a small kicker line and the name under it. */
+/** One banner: what it's about (`kind`, `id`, for the test hook), a small kicker line and the name under it. A hint (047.9) has no kicker: its one line is the name. */
 export interface BannerEntry {
-  kind: 'discovery' | 'schematic';
+  kind: 'discovery' | 'schematic' | 'hint';
   id: string;
   kicker: string;
   name: string;
@@ -68,19 +68,36 @@ export class Banner {
       this.started = [...this.started, next].slice(-SEEN_KEPT);
       this.kicker.set(next.kicker);
       this.name.set(next.name);
-      const w = Math.max(this.name.width, this.kicker.width) + B.pad.x * 2;
-      const h = this.kicker.lineHeight + B.kickerGap + this.name.lineHeight + B.pad.y * 2;
+      const kickerH = next.kicker ? this.kicker.lineHeight + B.kickerGap : 0;
+      const w = Math.max(this.name.width, next.kicker ? this.kicker.width : 0) + B.pad.x * 2;
+      const h = kickerH + this.name.lineHeight + B.pad.y * 2;
       this.panel.clear();
       drawTablet(this.panel, Math.round(VIEW_WIDTH / 2 - w / 2), B.top, w, h, B.alpha);
       this.kicker.moveTo(Math.round(VIEW_WIDTH / 2 - this.kicker.width / 2), B.top + B.pad.y);
-      this.name.moveTo(Math.round(VIEW_WIDTH / 2 - this.name.width / 2), B.top + B.pad.y + this.kicker.lineHeight + B.kickerGap);
+      this.name.moveTo(Math.round(VIEW_WIDTH / 2 - this.name.width / 2), B.top + B.pad.y + kickerH);
     }
     this.ms += deltaMs;
     const total = B.fadeInMs + LANDMARKS.bannerMs + B.fadeOutMs;
     const alpha = this.ms < B.fadeInMs ? this.ms / B.fadeInMs : this.ms < B.fadeInMs + LANDMARKS.bannerMs ? 1 : Math.max(0, (total - this.ms) / B.fadeOutMs);
-    for (const o of parts) o.setVisible(true).setAlpha(alpha);
+    for (const o of parts) o.setVisible(o !== this.kicker || this.on.kicker !== '').setAlpha(alpha);
     if (this.ms < total) return;
     this.on = null;
     for (const o of parts) o.setVisible(false);
   }
+}
+
+/** The one-time hints (047.9) for the test hook: the line showing now and how strongly, and every hint started lately. */
+export interface HintShown {
+  text: string | null;
+  alpha: number;
+  seen: string[];
+}
+
+export const NO_HINT_SHOWN: HintShown = { text: null, alpha: 0, seen: [] };
+
+/** What the banner shows of the hints (047.9), for `ui().hint`. */
+export function hintShown(banner: Banner): HintShown {
+  const on = banner.current;
+  const hint = on?.kind === 'hint' ? on : null;
+  return { text: hint?.name ?? null, alpha: hint?.alpha ?? 0, seen: banner.seen.filter((b) => b.kind === 'hint').map((b) => b.name) };
 }

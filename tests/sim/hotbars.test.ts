@@ -3,6 +3,7 @@ import { CARRIED_SLOTS } from '../../src/data/tube';
 import { assignSlot, createHotbar, selectedItem } from '../../src/sim/hotbar';
 import { noteCarried } from '../../src/sim/knownRounds';
 import { stepSim } from '../../src/sim/step';
+import { hudActive, nextPress } from '../../src/sim/volley';
 import { arena, command, placeHusk, PLAYER_AT, run, useAt, volleyAt } from './fight';
 
 // 047 (note 11): two hotbars. Left click fires the intake's volley, or punches with the intake dry; the carried bar
@@ -88,8 +89,9 @@ describe('the carried bar', () => {
 });
 
 describe('left and right click never cross', () => {
-  it('left click with the intake dry punches, even with arrows carried, and never fires them', () => {
+  it('once attuned, left click with the intake dry punches, even with arrows carried, and never fires them', () => {
     const s = arena();
+    s.link.attuned = true;
     s.inventory = { arrow: 10 };
     run(s, 1, volleyAt(AIM.x, AIM.y));
     expect(s.events.melees).toHaveLength(1);
@@ -146,5 +148,82 @@ describe('left and right click never cross', () => {
     placeHusk(s, AIM.x, AIM.y);
     for (let t = 0; t < 31; t++) stepSim(s, command(useAt(AIM.x, AIM.y)));
     expect(s.inventory.arrow).toBe(7);
+  });
+});
+
+describe('before the tube is attuned, left click fires carried (047.9)', () => {
+  it('left click fires the selected carried arrow, as right click does, and never punches', () => {
+    const s = arena();
+    s.inventory = { arrow: 10 };
+    run(s, 1);
+    expect(s.link.attuned).toBe(false);
+    expect(nextPress(s)).toEqual({ kind: 'carried', ammoId: 'arrow', count: 10 });
+    expect(hudActive(s)).toEqual({ kind: 'carried', ammoId: 'arrow', count: 10 });
+    run(s, 1, volleyAt(AIM.x, AIM.y));
+    expect(s.arrows.map((a) => a.ammoId)).toEqual(['arrow']);
+    expect(s.inventory.arrow).toBe(9);
+    expect(s.tube.fromReservoir).toBe(false);
+    expect(s.events.melees).toEqual([]);
+  });
+
+  it('a left click held keeps firing at the round’s rate, and holding both buttons fires no faster', () => {
+    const left = arena();
+    left.inventory = { arrow: 10 };
+    placeHusk(left, AIM.x, AIM.y);
+    for (let t = 0; t < 31; t++) stepSim(left, command(volleyAt(AIM.x, AIM.y)));
+    expect(left.inventory.arrow).toBe(7);
+    const both = arena();
+    both.inventory = { arrow: 10 };
+    placeHusk(both, AIM.x, AIM.y);
+    for (let t = 0; t < 31; t++) stepSim(both, command({ ...volleyAt(AIM.x, AIM.y), use: true }));
+    expect(both.inventory.arrow).toBe(7);
+  });
+
+  it('throws a selected bomb on left click', () => {
+    const s = arena();
+    s.inventory = { bomb: 2 };
+    run(s, 1);
+    s.hotbar.selected = s.hotbar.slots.indexOf('bomb');
+    run(s, 1, volleyAt(AIM.x, AIM.y));
+    expect(s.bombs.map((b) => b.ammoId)).toEqual(['bomb']);
+  });
+
+  it('punches when the selected slot is empty or nothing is carried', () => {
+    const s = arena();
+    s.inventory = { arrow: 0 };
+    expect(nextPress(s)).toEqual({ kind: 'melee' });
+    run(s, 1, volleyAt(AIM.x, AIM.y));
+    expect(s.events.melees).toHaveLength(1);
+    expect(s.arrows).toEqual([]);
+  });
+
+  it('punches without the tube, arrows carried or not', () => {
+    const s = arena();
+    s.hasTube = false;
+    s.inventory = { arrow: 10 };
+    expect(nextPress(s)).toEqual({ kind: 'melee' });
+    run(s, 1, volleyAt(AIM.x, AIM.y));
+    expect(s.events.melees).toHaveLength(1);
+    expect(s.inventory.arrow).toBe(10);
+  });
+
+  it('once attuned, left click is the volley (or the punch) and right click the carried arrow', () => {
+    const s = arena();
+    s.inventory = { arrow: 10 };
+    run(s, 1);
+    s.link.attuned = true;
+    expect(nextPress(s)).toEqual({ kind: 'melee' });
+    expect(hudActive(s)).toEqual({ kind: 'melee' });
+    run(s, 1, volleyAt(AIM.x, AIM.y));
+    expect(s.events.melees).toHaveLength(1);
+    expect(s.inventory.arrow).toBe(10);
+    run(s, 40);
+    run(s, 1, useAt(AIM.x, AIM.y));
+    expect(s.inventory.arrow).toBe(9);
+    const linked = linkedArena(5);
+    linked.inventory = { arrow: 10 };
+    run(linked, 1, volleyAt(AIM.x, AIM.y));
+    expect(linked.tube.fromReservoir).toBe(true);
+    expect(linked.inventory.arrow).toBe(10);
   });
 });

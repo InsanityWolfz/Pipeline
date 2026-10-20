@@ -40,11 +40,11 @@ function firedOn(s: SimState, c: Command): boolean {
 }
 
 describe('firing from the inventory', () => {
-  it('starts with the starting arrows, ready to fire', () => {
+  it('starts with the starting arrows, ready to fire (on left click too, before attuning: 047.9)', () => {
     const s = sim();
     expect(s.inventory.arrow).toBe(STARTING_INVENTORY.arrow);
     expect(STARTING_INVENTORY.arrow).toBe(30);
-    expect(summarize(s).tube).toEqual({ fireCooldown: 0, meleeCooldown: 0, firing: false, fromReservoir: false, shotCount: 0, next: 'melee' });
+    expect(summarize(s).tube).toEqual({ fireCooldown: 0, meleeCooldown: 0, firing: false, fromReservoir: false, shotCount: 0, next: 'carried' });
     expect(summarize(s).hotbar).toEqual({ slots: ['arrow', null, null, null, null], selected: 0 });
   });
 

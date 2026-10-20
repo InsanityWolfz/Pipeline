@@ -2,6 +2,7 @@ import { AMMO } from '../data/ammo';
 import { ENTRANCE_CAPS, INTAKE } from '../data/foundry';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { ATTUNE_TICKS } from '../data/tube';
+import { CARRIED_HINT } from '../data/hints';
 import type { SimState } from './state';
 import { placeExampleLine } from './exampleLine';
 
@@ -35,10 +36,17 @@ export function createLink(): LinkState {
   };
 }
 
-/** Runs after doorways: the first entry into the foundry attunes the tube (and lays the example line, 046). Counts the pulse down. */
+/**
+ * Runs after doorways: the first entry into the foundry attunes the tube (and lays the example line, 046). Counts the
+ * pulse down; as it ends, left click becomes the volley, so the carried items' hint shows (047.9). The attune happens
+ * once ever and its pulse is saved, so the hint shows once per save.
+ */
 export function stepLink(state: SimState): void {
   const { link } = state;
-  if (link.attunePulse > 0) link.attunePulse -= 1;
+  if (link.attunePulse > 0) {
+    link.attunePulse -= 1;
+    if (link.attunePulse === 0) state.events.hints.push({ id: CARRIED_HINT.id });
+  }
   if (link.attuned || state.roomId !== FOUNDRY_ROOM) return;
   link.attuned = true;
   link.attunePulse = ATTUNE_TICKS;

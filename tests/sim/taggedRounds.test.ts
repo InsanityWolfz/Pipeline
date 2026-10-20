@@ -46,6 +46,8 @@ describe('tagged rounds and the entrances', () => {
 describe('carried tagged rounds (047: each kind its own carried bar slot)', () => {
   it('take their own slot on the carried bar, and fire only from it, never from the plain round’s', () => {
     const s = arena();
+    // Attuned, so left click is the volley or the punch (047.9: before attuning it fires the carried round).
+    s.link.attuned = true;
     s.inventory = { arrow: 3, 'arrow+frost': 2 };
     run(s, 1);
     const frost = s.hotbar.slots.indexOf('arrow+frost');

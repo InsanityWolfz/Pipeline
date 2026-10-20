@@ -11,7 +11,7 @@ import type { Facing } from './player';
 import { portSummary } from './summaryPorts';
 import { fixtureDef } from './fixtures';
 import { objectiveLine } from './objectives';
-import { volleyRounds, nextPress, hudActive, type HudActive } from './volley';
+import { volleyRounds, nextPress, hudActive, type HudActive, type NextPress } from './volley';
 import { INTAKE } from '../data/foundry';
 import { entranceCap } from './research';
 import { researchSummary, type ResearchSummary } from './researchSummary';
@@ -97,8 +97,8 @@ export interface SimSummary extends HollowsSummary, LevelingSummary, MinesSummar
     fromReservoir: boolean;
     /** Projectiles this tick's shot fired (a volley of several rounds fires several). */
     shotCount: number;
-    /** What the next fire press (left click) does (023, 024, 047): a volley, or a punch. */
-    next: 'volley' | 'melee';
+    /** What the next fire press (left click) does (023, 024, 047): a volley, a carried round before attuning (047.9), or a punch. */
+    next: NextPress['kind'];
   };
   /** The bottom HUD (025): what the tube slot shows, which is what the next fire press does. */
   hud: { active: HudActive };

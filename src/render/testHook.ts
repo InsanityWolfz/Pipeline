@@ -21,6 +21,7 @@ import type { ChampionShown } from './EnemyView';
 import type { LandmarksShown } from './LandmarkView';
 import type { ResearchShown } from './ResearchView';
 import type { SchematicsShown } from './SchematicView';
+import type { HintShown } from './Banner';
 import type { RestorePanelState } from './RestorePanel';
 import type { ResearchListState } from './ResearchList';
 import type { HollowsShown } from './HollowsView';
@@ -172,6 +173,8 @@ export interface UiState {
   research: ResearchShown;
   /** 033: the schematics' light pillars and the banner's schematic line. */
   schematics: SchematicsShown;
+  /** 047.9: the one-time hint on the banner ("Right click: carried items") while it shows, and the hints started lately. */
+  hint: HintShown;
   /** 033: the restore panel while open (E at a diagram), else null. */
   restorePanel: RestorePanelState | null;
   /** 034: the altar's offering while open (E at an awake altar), in the restore panel's shape (its `node` the altar), else null. */

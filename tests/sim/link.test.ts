@@ -7,9 +7,11 @@ import { ATTUNE_TICKS } from '../../src/data/tube';
 import { ENTRANCE_CAPS } from '../../src/data/foundry';
 import { unlockedPieces } from '../../src/sim/placement';
 import type { HopperState } from '../../src/sim/pieces';
-import { createSim } from '../../src/sim/state';
+import { createSim, type SimState } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
+import { restore, snapshot } from '../../src/sim/save';
+import { CARRIED_HINT } from '../../src/data/hints';
 import { arena, atEntrance, command, die, fireAt, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, runUntilKo, SEED, volleyAt } from './fight';
 import { foundry, put, stepOutside } from './foundryKit';
 import { OVERWORLD_ROOM } from '../../src/data/overworld';
@@ -41,6 +43,16 @@ function attuning() {
   run(s, 1);
   expect(s.link).toMatchObject({ attuned: true, attunePulse: ATTUNE_TICKS });
   return s;
+}
+
+/** Every hint event over the next `ticks` ticks. */
+function hintsOver(s: SimState, ticks: number): { id: string }[] {
+  const out: { id: string }[] = [];
+  for (let i = 0; i < ticks; i++) {
+    run(s, 1);
+    out.push(...s.events.hints);
+  }
+  return out;
 }
 
 describe('attunement', () => {
@@ -86,6 +98,25 @@ describe('attunement', () => {
     expect(s.player.x).toBe(x);
     run(s, 10, { moveX: -1 });
     expect(s.player.x).toBeLessThan(x);
+  });
+
+  it('shows the right click hint once, as the attune ends, and never again after a reload (047.9)', () => {
+    const s = attuning();
+    expect(hintsOver(s, ATTUNE_TICKS - 1)).toEqual([]);
+    expect(hintsOver(s, 1)).toEqual([{ id: CARRIED_HINT.id }]);
+    expect(s.link.attunePulse).toBe(0);
+    expect(hintsOver(s, 300)).toEqual([]);
+    expect(hintsOver(restore(snapshot(s)), 300)).toEqual([]);
+  });
+
+  it('a save taken while the attune plays shows the hint once, when it ends', () => {
+    const s = attuning();
+    run(s, 10);
+    expect(hintsOver(restore(snapshot(s)), ATTUNE_TICKS + 100)).toEqual([{ id: CARRIED_HINT.id }]);
+  });
+
+  it('never shows on a start that is already attuned', () => {
+    expect(hintsOver(attuned(), 300)).toEqual([]);
   });
 
   it('survives a KO, and so do the entrances', () => {

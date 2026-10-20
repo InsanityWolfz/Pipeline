@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "shape": [
     "state.activatePulse: number",
     "state.arrows: array",
@@ -132,6 +132,7 @@
     "state.events.gates: array",
     "state.events.harvests: array",
     "state.events.heals: array",
+    "state.events.hints: array",
     "state.events.hits: array",
     "state.events.identifies: array",
     "state.events.intakeOpens: array",

@@ -76,6 +76,8 @@ export interface SimEvents {
   withdraws: { id: number; itemId: string; count: number }[];
   /** The tube attuned to the foundry (once ever). */
   attunes: Record<string, never>[];
+  /** A one-time hint to show (047.9: src/data/hints.ts), by id: the carried items' as the attune ends. Once per save. */
+  hints: { id: string }[];
   /** The foundry intake put a round in an entrance's reservoir (019, 024): `entrance` is an index into INTAKE.entrances. */
   refills: { entrance: number; itemId: string }[];
   /** A machine finished a craft (027): its piece id and kind, and what it made. Hand crafts are `crafts`. */
@@ -202,6 +204,7 @@ export function createEvents(): SimEvents {
     deposits: [],
     withdraws: [],
     attunes: [],
+    hints: [],
     refills: [],
     made: [],
     firstMade: [],

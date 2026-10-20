@@ -21,7 +21,8 @@ import { statOf } from './statResolve';
 // The tube (047, note 11): left click (fire) fires the intake's fed entrances (024), each
 // at its own ammo's rate while held (028); with the intake dry, or no tube, it punches (023).
 // Right click (use) uses the carried bar's selected item (src/sim/hotbar.ts): a carried round
-// fired straight from the inventory, or a bomb or landmine thrown. Neither does the other's job.
+// fired straight from the inventory, or a bomb or landmine thrown. Before the tube attunes
+// there's no intake, so left click uses the carried item too (047.9); `nextPress` says which.
 
 export interface TubeState {
   /** Ticks before the next carried round can fire (a punch waits for it too), fractional (039). Each entrance shot raises it to at least that ammo's interval (028). */
@@ -42,8 +43,8 @@ export function createTube(): TubeState {
   return { fireCooldown: 0, meleeCooldown: 0, firing: false, fromReservoir: false, shotCount: 0, overpressure: 0 };
 }
 
-/** The next fire press has a volley to fire (023, 024): the tube is in hand and an open entrance holds a round. Without one, fire punches. */
-export function hasRoundToFire(state: Pick<SimState, 'hasTube' | 'link'>): boolean {
+/** The next fire press has a round to fire (023, 024; 047.9): the volley, or a carried round before attuning. Without one, fire punches. */
+export function hasRoundToFire(state: Pick<SimState, 'hasTube' | 'link' | 'hotbar' | 'inventory'>): boolean {
   return nextPress(state).kind !== 'melee';
 }
 
@@ -91,13 +92,13 @@ function stepFire(state: SimState, cmd: Command): void {
   const aim = unit(cmd.aimX - player.x, cmd.aimY - player.y);
   const [dx, dy] = aim[0] === 0 && aim[1] === 0 ? facingVector(player.facing) : aim;
   player.facing = aimFacing(dx, dy, player.facing);
-  if (cmd.fire) {
-    if (hasRoundToFire(state)) {
-      tube.firing = true;
-      fireVolley(state, cmd, dx, dy);
-    } else punch(state, dx, dy);
-  }
-  if (cmd.use && state.hasTube) useCarried(state, cmd, dx, dy);
+  const press = cmd.fire ? nextPress(state).kind : null;
+  if (press === 'volley') {
+    tube.firing = true;
+    fireVolley(state, cmd, dx, dy);
+  } else if (press === 'melee') punch(state, dx, dy);
+  // 047.9: before attuning, left click uses the carried item as right click does; both held use it once.
+  if (press === 'carried' || (cmd.use && state.hasTube)) useCarried(state, cmd, dx, dy);
 }
 
 /**
