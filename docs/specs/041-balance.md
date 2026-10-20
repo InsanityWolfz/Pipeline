@@ -182,3 +182,9 @@ The build follows 041.1–041.11. These came up building the scripted targets; e
   - Homing ley bolts vs Wisps behind a wall: bombs 124, landmines 576, arrows and ley bolts never finish. The Wisps settle behind the wall to cast and hold still, so bombs land on them; a Homing bolt locks only an enemy within 64 px of the cursor, so with the wall between it flies into the wall. Not met.
   - What should change: the scenarios (a bigger or tighter cluster, Wisps that strafe, a wall further off), the rounds (Homing's lock radius or turn, bomb radius), or the targets? Built: the two misses are `it.fails` in tests/sim/ammoScenarios.test.ts. The wall is a 3-tile segment the test stands in the meadow 48 px from the player; the Wisps start 200 px off.
 - **041.15 The boss bar is already danger red.** 034 made its fill `danger`, so "the boss bar's fill turns danger red" when enraged changes nothing you can see. Built: an `enragedFill` field in the bar's data, `danger` for now, and `ui().bossBar.enraged`. What should the enraged bar look like?
+
+## Shaun's answers to 041.12–041.15 (2026-10-20)
+- **041.12, Bulwark damage:** some attacks can't be rolled. The pound's shockwave and the enraged lobs ignore roll i-frames; the player has to leave the circle instead of rolling through it. The "takes real damage" test should then pass.
+- **041.13, pack times:** accept. Widen ring 3's band to 8–18 s. Rings 1–2 clearing in 2–4 s is fine, so record them and don't assert a floor.
+- **041.14, ammo scenarios:** fine for now; balance them later when more mechanics are folded in. Bombs-vs-cluster and homing-vs-walled-Wisps stay as recorded measurements, not targets.
+- **041.15, enrage bar:** leave the bar. The red seams, steam and roar already show the enrage.
