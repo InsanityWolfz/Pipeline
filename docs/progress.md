@@ -2,6 +2,13 @@
 
 Newest entry first.
 
+## 2026-10-20: Everything merged; 044 sandbox drafted
+**Changed:** on Shaun's word ("merge and approve everything") InsanityWolfz/Pipeline#25–#30 are merged into `main`. His approvals are recorded in the specs: 029 option A, 043.1–043.5, 042.15–042.28, and the 042 docs edits (the docs/design.md line, CLAUDE.md, .claude/rules/sim.md). The review-shot rule is in .claude/rules/tests.md. 042 and 043 are done. 043.5 (the seal's E prompt and sounds) is approved but not built; it's in the backlog. Two 042 e2e tests timed out in a fresh container whose browser draws about 14 fps; they got explicit time budgets.
+
+Drafted spec 044 (sandbox) from Shaun's request and interview, on `claude/044-sandbox`.
+
+**Next:** Shaun approves 044, then build it. After that comes legibility and readability work from the playtest notes (docs/brainstorm/2026-10-20-playtest-notes.md), and only later horizontal content.
+
 ## 2026-10-20: Wrapup 021–041
 **Changed:** Shaun playtested the catch-up preview and said "Merge 24"; InsanityWolfz/Pipeline#24 is merged into `main`. Specs 021–041 are `done` in their files and in docs/backlog.md. Their technical choices are recorded in docs/decisions.md. InsanityWolfz/Pipeline#25 now targets `main`.
 
