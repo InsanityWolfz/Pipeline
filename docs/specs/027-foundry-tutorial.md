@@ -1,5 +1,5 @@
 # 027: Foundry tutorial: building your first line, step by step
-status: approved
+status: done
 
 Approved by Shaun in chat, 2026-10-18 ("approve 21-27").
 

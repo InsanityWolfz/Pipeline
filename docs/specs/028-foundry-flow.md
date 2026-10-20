@@ -1,5 +1,5 @@
 # 028: Foundry flow: a port per resource, fed hoppers, entrances at their own rate, and goals after the shrine
-status: approved
+status: done
 
 Approved by Shaun in chat, 2026-10-19 ("Approve all 028–037"); open questions settled the same day.
 

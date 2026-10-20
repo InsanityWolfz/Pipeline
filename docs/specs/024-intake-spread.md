@@ -1,5 +1,5 @@
 # 024: Spread from the intake: each fed entrance is a stream
-status: approved
+status: done
 
 Approved by Shaun in chat, 2026-10-18 ("approve 21-27").
 

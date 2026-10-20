@@ -1,5 +1,5 @@
 # 038: Landmines and the cluster stage
-status: approved
+status: done
 
 Approved by Shaun in chat, 2026-10-19 ("Approve all 028–037"); split out of 034 by the accepted proposal; text moved verbatim.
 

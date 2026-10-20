@@ -1,5 +1,5 @@
 # 026: Labels in the crafting menu and categories in the build bar
-status: approved
+status: done
 
 Approved by Shaun in chat, 2026-10-18 ("approve 21-27").
 
