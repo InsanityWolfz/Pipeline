@@ -8,6 +8,7 @@ import { PICKUP_SLIDE } from '../data/juice';
 import type { GroundItem } from '../sim/drops';
 import { TextLine } from './textLine';
 import { burstPhase } from './cacheBurst';
+import { stackedTop, type PopupBox } from './popupStack';
 import { addVector } from './vector/textures';
 
 interface Drawn {
@@ -40,6 +41,8 @@ export class GroundItemView {
   slideProgress = 0;
   /** 045: every item as drawn, for the test hook. */
   shown: GroundItemShown[] = [];
+  /** The burst names placed this frame, so the next stacks clear of them. */
+  private names: PopupBox[] = [];
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -50,6 +53,7 @@ export class GroundItemView {
     this.player = { x: player.x, y: player.y };
     const live = new Set<number>();
     const shown: GroundItemShown[] = [];
+    this.names = [];
     for (const g of items) {
       live.add(g.id);
       let d = this.drawn.get(g.id);
@@ -94,12 +98,17 @@ export class GroundItemView {
     const ry = Math.round(y);
     const visible = burst?.phase !== 'chest';
     d.shadow.setPosition(rx, ry).setVisible(visible);
-    // In flight it rides over what stands round the chest.
-    d.item.setPosition(rx, Math.round(ry + GROUND_ITEM_LIFT - lift)).setDepth(burst?.phase === 'flight' ? DEPTHS.worldUi - 4 : ry).setVisible(visible);
+    // Bursting, it rides over what stands round the chest, the player too.
+    d.item.setPosition(rx, Math.round(ry + GROUND_ITEM_LIFT - lift)).setDepth(burst ? DEPTHS.worldUi - 4 : ry).setVisible(visible);
     const named = d.name !== null && burst !== null && visible;
     if (d.name) {
       d.name.setVisible(named);
-      if (named) d.name.moveTo(Math.round(rx - d.name.width / 2), Math.round(ry - lift - B.nameRise - d.name.lineHeight));
+      if (named) {
+        const box = { x: Math.round(rx - d.name.width / 2), y: Math.round(ry - lift - B.nameRise - d.name.lineHeight), w: d.name.width, h: d.name.lineHeight };
+        box.y = stackedTop(box, this.names, B.nameGap);
+        this.names.push(box);
+        d.name.moveTo(box.x, box.y);
+      }
     }
     return { id: g.id, itemId: g.itemId, x: rx, y: ry, visible, name: named && d.name ? d.name.obj.text : null };
   }

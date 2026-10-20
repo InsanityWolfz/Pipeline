@@ -7,6 +7,10 @@ import { rollDrops, scatterItems } from './drops';
 import { areaInView } from './landmarks';
 import { roomOf, type SimState } from './state';
 import { tileCentre } from './tiles';
+import { isSolid, overlapsRect } from './collision';
+import { standingRects } from './fixtures';
+import { nodeRects } from './nodes';
+import { TILE_SIZE } from '../data/config';
 import { createEnemy } from './enemies';
 import { rollChampions } from './champions';
 import { inSafeZone } from './population';
@@ -78,9 +82,21 @@ function open(state: SimState, id: string): void {
   scatterItems(state, rollDrops(CACHE_DROPS, state.rng), state.roomId, below.x, below.y);
   const c = tileCentre(at);
   const B = CACHE_BURST;
-  state.groundItems.slice(first).forEach((g, i) => {
+  const room = roomOf(state);
+  const blocked = [...nodeRects(state.nodes, state.roomId), ...standingRects(room)];
+  const items = state.groundItems.slice(first);
+  items.forEach((g, i) => {
     g.burst = { x: c.x, y: c.y, delay: i * B.staggerTicks };
     g.wait = i * B.staggerTicks + B.flightTicks + B.holdTicks;
+    // Each on its own spot of the fan, so every icon shows apart.
+    const a = (Math.PI * (i + 0.5)) / items.length;
+    const x = below.x + Math.cos(a) * B.fanRadius;
+    const y = below.y + Math.sin(a) * B.fanRadius;
+    const clear = !isSolid(room, Math.floor(x / TILE_SIZE), Math.floor(y / TILE_SIZE)) && !blocked.some((r) => overlapsRect(x, y, { w: 0, h: 0 }, r));
+    if (clear) {
+      g.x = x;
+      g.y = y;
+    }
   });
   state.events.cacheOpens.push({ id, x: c.x, y: c.y });
 }

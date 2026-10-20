@@ -127,6 +127,8 @@ describe('the Ruined Cache', () => {
       // Its wait covers its turn, its flight and the hold with its name showing (counted down once already this tick).
       expect(g.wait).toBe(i * B.staggerTicks + B.flightTicks + B.holdTicks - 1);
     });
+    // Each lands on its own spot, apart from the others (the fan round the tile below the chest).
+    for (const a of items) for (const b of items) if (a !== b) expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThan(16);
     // Nothing is pulled while the burst runs.
     const where = items.map((g) => ({ x: g.x, y: g.y }));
     run(s, B.flightTicks + B.holdTicks - 2);
