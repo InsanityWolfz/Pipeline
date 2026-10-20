@@ -24,7 +24,7 @@ Spec: docs/specs/046-foundry-onboarding.md (approved on draft: 046.1–046.3's p
 - **Sim** `SimState.lineRanDry` (kept through a KO): set the first tick, once attuned, the foundry holds nothing left to run (every hopper empty, no machine holding or crafting anything, nothing on a carrier). `refilled` holds once the line has run dry and hoppers hold each item. `currentObjective`/`objectiveLine` skip waiting goals.
 - **Render** `src/render/MadePopups.ts`: the "+ shaft" popups were tied to the removed steps; they now pop the first time machines ever make each item (`events.firstMade`), so the example line's first run shows the same popups (raised: 046.4). `newestHopper` prompt target goes (unused).
 - **Save**: the objectives list is by index, so the migration maps the old list onto the new one by text; the refill goal counts as done where 027's "Put wood in the hopper" was.
-- **Tests first** `tests/sim/foundryTutorial.test.ts` (rewritten): the goal's place in the chain; hidden while the line runs; shows when it runs dry; completes when the three are refilled; completes early if refilled early. `tests/sim/save.test.ts`: a v2 save migrates (objectives remapped, splitter gone, no example line).
+- **Tests first** `tests/sim/foundryTutorial.test.ts` (rewritten): the goal's place in the chain; hidden while the line runs; shows when it runs dry; completes when the three are refilled by hand after that (refills before it runs dry don't count). `tests/sim/save.test.ts`: a v2 save migrates (objectives remapped, splitter gone, no example line).
 
 ### 5. The second line after the Warden (027, 046.3)
 - **Data** `src/data/objectives.ts`: after "Restore a second intake entrance", "Build a second arrow line into the new entrance", `check: { kind: 'entrancesHold', ammo: 'arrow', min: 2 }`, B over the player, the intake marker, the assembler's cell pulsing. The Warden core still restores the second entrance (046.3).
@@ -32,5 +32,5 @@ Spec: docs/specs/046-foundry-onboarding.md (approved on draft: 046.1–046.3's p
 
 ## Verify
 - `npm run check`; the touched e2e files while building (foundryTutorial, tutorial, research, menuLabels, hudInventory, foundry); the full `npx playwright test` once at the end.
-- Review shots `tests/e2e/onboardingShots.spec.ts` (REVIEW_SHOTS=1, docs/review/046/): the example line running on first entry, the refill objective. The older foundry and tutorial shot specs are rerun and their images restored unless the change is intended.
+- Review shots in `tests/e2e/foundryTutorial.spec.ts` (REVIEW_SHOTS=1, docs/review/046/), as 027's were: the example line running on first entry, the refill objective. The older foundry and tutorial shot specs are rerun and their images restored unless the change is intended.
 - `npm run measure` once; recorded in the spec.

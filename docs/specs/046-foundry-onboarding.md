@@ -15,19 +15,19 @@ The first foundry visit shows a working arrow line instead of an empty floor, so
 
 ## Acceptance criteria
 **The example line (note 10)**
-- [ ] On the first foundry entry, a complete arrow line already stands, built from ordinary pieces: its three hoppers stocked with wood, stone and fiber, its machines and conduits running into the first intake entrance. When the tube attunes (019), the line starts and arrows go up the tube.
-- [ ] The line runs until its stock is used up. Then an objective shows how to refill the hoppers with wood, stone and fiber.
-- [ ] Its pieces are ordinary: the player can pick them up, move them and rebuild the line, with the usual refunds.
-- [ ] The layout and the starting stock are data.
+- [x] On the first foundry entry, a complete arrow line already stands, built from ordinary pieces: its three hoppers stocked with wood, stone and fiber, its machines and conduits running into the first intake entrance. When the tube attunes (019), the line starts and arrows go up the tube.
+- [x] The line runs until its stock is used up. Then an objective shows how to refill the hoppers with wood, stone and fiber.
+- [x] Its pieces are ordinary: the player can pick them up, move them and rebuild the line, with the usual refunds.
+- [x] The layout and the starting stock are data.
 
 **The tutorial (027, note 10)**
-- [ ] The foundry tutorial's steps change: instead of building the first line, the player refills the example line. After the first boss (the Warden, whose core opens the second entrance), the tutorial has them build a second arrow line into the second entrance.
+- [x] The foundry tutorial's steps change: instead of building the first line, the player refills the example line. After the first boss (the Warden, whose core opens the second entrance), the tutorial has them build a second arrow line into the second entrance.
 
 **Early ammo (note 1)**
-- [ ] Region 1 recipes (shafts, arrowheads, rope, casings and the rest) make twice as many per craft, by hand and in machines. Their costs and the node yields don't change, and later regions' recipes don't change.
+- [x] Region 1 recipes (shafts, arrowheads, rope, casings and the rest) make twice as many per craft, by hand and in machines. Their costs and the node yields don't change, and later regions' recipes don't change.
 
 **Splitter (note 4)**
-- [ ] The Splitter is in the build bar from the first foundry visit. Its research entry and schematic are removed (033), and anything that referred to them is updated.
+- [x] The Splitter is in the build bar from the first foundry visit. Its research entry and schematic are removed (033), and anything that referred to them is updated.
 
 ## Data changes
 - `src/data/foundry.ts` (or a new file): the example line's layout and stock.
@@ -48,3 +48,21 @@ The first foundry visit shows a working arrow line instead of an empty floor, so
 - **046.1 Does a save made before 046 get the example line?** Proposal: no, only new games. Saves already have a foundry; adding pieces to it could block what the player built.
 - **046.2 How much stock?** Proposal: enough for about 60 arrows (about a minute of fire), so it runs dry during the first outing and the refill lesson lands soon after.
 - **046.3 The Warden core and the second entrance.** Proposal: unchanged from 033: the Warden's core restores the second entrance; the tutorial's new step follows it.
+
+## Raised after the build
+Built on `claude/046-foundry-onboarding` (plan: docs/plans/046-foundry-onboarding.md). 046.1–046.3 are built as proposed: only new games get the example line (the start carries the flag; a save keeps its own start), 2 of each raw (64 arrows with the doubled outputs), and the Warden core still restores the second entrance. Each choice below took the most conservative option and stands unless Shaun says otherwise.
+
+- **046.4 The "+ shaft" popups.** They were tied to 027's build steps, which are gone. Built: they pop the first time machines ever make each item, so the example line's first run shows +shaft, +arrowhead, +rope and +arrow over its machines as the old steps did. Proposal: keep. The alternative is dropping them.
+- **046.5 Saves with the Splitter's node or schematic.** Save version 3 drops `research.splitter` and every `schematic-splitter` (carried, banked, at home, on the ground). A restored Splitter's 2 ancient gears are not refunded. Proposal: no refund, since the Splitter is free now.
+- **046.6 Machine output cap.** `OUTPUT_CAP` 4 → 8 so a machine still holds one craft of the doubled arrow (8). Region 1 machines hold the same number of crafts as before. Stage machines now hold two batches of 4 instead of one. Proposal: keep.
+- **046.7 Stages and the compounding.** Stage machines tag rounds rather than make them, so their batch of 4 is unchanged. Doubling every step compounds: one wood, stone and fiber now make 32 arrows by machine (8 before), and by hand 8 arrows per craft. Proposal: as built. Judge it at playtest.
+- **046.8 When the refill goal shows and what counts.** The line passes over the goal until the foundry has nothing left to run (no hopper stock, nothing in a machine or on a carrier) once attuned. After that, each of wood, stone and fiber put in a hopper by hand counts. Supply ports and early refills don't count. Starts without the example line (`?start=field`, `?playtest`) count an empty foundry as dry, so the goal shows there in its place in the chain. So does an old save caught partway through 027's steps (the migration counts it done where "Put wood in the hopper" was). Proposal: keep.
+- **046.9 Unlocks for the example line's machines.** 006's rule is unchanged: a machine is placeable once its part has been hand-crafted. A player who reaches the foundry without hand-crafting (say) a shaft can pick the cutter up but can't place it again until they do. Proposal: leave as is. The alternative is unlocking the example line's machines when it's laid.
+- **046.10 The second-line goal's check.** "Build a second arrow line into the new entrance" completes once two entrances hold arrows. A Splitter off the example line meets it too (the e2e playthrough does this). Proposal: keep.
+- **046.11 Other starts.** `?playtest`, `?start=field`, `?start=hollows` and the sandbox get no example line. Proposal: keep (they're test starts).
+
+### Results
+- `npm run check`: passes (1590 unit tests).
+- `npx playwright test` (full run, once): 127 passed, 113 skipped (review shots), 0 failed.
+- Review shots (docs/review/046): `01-example-line-running.png` (first entry, the parts' popups, arrows up the tube) and `02-refill-objective.png` (the goal with E over a hopper). These older shots changed because of 046 and were recommitted: 026/01–04 and 045/04 (the Splitter in Logistics, doubled counts), 029/02 (the refill line behind the bench), 031/07 and 031/09, and 033/01–07, 09 and 10 (the Splitter's wall panel and list row gone). The rest of the drift (029, 031, 040 and 045 shots in this container) also shows on the base branch, so it was restored and not recommitted.
+- `npm run measure`: unchanged from 045. Ammo line and still 5/5 met. Ring 1 2.2–2.9 s, ring 2 2.8–4.2 s and ring 3 10.2–17.6 s, all met. The Bulwark's decent build is still 13/20 with 3 KOs (MISSED, as in 043.2/045), and the naive bot is KO'd 5/5. The bots start with fixed ammo, so the doubled outputs don't reach them.
