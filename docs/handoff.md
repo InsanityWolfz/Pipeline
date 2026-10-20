@@ -6,7 +6,7 @@ Updated 2026-10-20 by the session that built 021–041. Read this first, then th
 - **Branch:** all work is on `claude/laughing-volta-uac3nf`, which Shaun approved for building many specs as separate commits. It has not been merged to `main`.
 - **Preview:** https://insanitywolfz.github.io/Pipeline/branch/claude/laughing-volta-uac3nf/ (add `?playtest` for a full kit, `?start=hollows` to start at the Bulwark's region). The `main` preview is old.
 - **Built, reviewed and fixed:** 021–040. They wait for Shaun's /wrapup; their spec status stays `approved` until then.
-- **041 (balance), last round:** check `git log` and the end of docs/specs/041-balance.md for whether this has landed.
+- **041 (balance), last round:** still to do when this session ended. Only the spec entries for 041.18 and 041.19 are committed (3c88cc1); everything after commit 5a5ca26 below has to be built. The previous session's work-in-progress was lost in a container restart. Use the review of 5a5ca26, summarised in the spec, as the fix list. Check `git log` and the end of docs/specs/041-balance.md for whether this has landed.
   - **041.16:** Bulwark tuning against a 60–90 s target, measured as a pass rate over seeds 1–20 in tests/sim/bulwarkFight.test.ts.
   - **041.17:** the back wave is roll-proof and paused during the roar; adds every 25 s, capped at 4 alive.
   - **041.18:** the arena locks when the fight starts; E on the sealed door leaves and resets the fight. This stops players healing at a pylon or spring mid-fight.
