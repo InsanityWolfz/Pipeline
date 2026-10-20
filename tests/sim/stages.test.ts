@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CONDUIT_TICKS } from '../../src/data/foundry';
 import { STAGES } from '../../src/data/stages';
-import { canCraft, craft } from '../../src/sim/crafting';
+import { canCraft, craft, craftHeld, craftKnown } from '../../src/sim/crafting';
 import { fixtureDef } from '../../src/sim/fixtures';
 import { offerFromOutside } from '../../src/sim/flow';
 import type { ConduitState, CrateState, HopperState, MachineState } from '../../src/sim/pieces';
@@ -215,5 +215,20 @@ describe('what a tagged round\'s recipe counts as held (029 option A)', () => {
     expect(taggedAffordable(s, 'frost-rune-arrow')).toBe(false);
     expect(craft(s, 'frost-rune-arrow')).toBe(false);
     expect(s.link.entrances[0]).toMatchObject({ count: 2 });
+  });
+});
+
+describe('the crafting menu\'s rules for a row (047)', () => {
+  it('knows a tagged row once the shrine is claimed, and counts its inputs carried plus in the entrances', () => {
+    const s = atBench();
+    expect(craftKnown(s, 'frost-rune-arrow')).toBe(false);
+    expect(craftKnown(s, 'shaft')).toBe(true);
+    s.claims.push('shrine');
+    expect(craftKnown(s, 'frost-rune-arrow')).toBe(true);
+    const [e] = s.link.entrances;
+    if (!e) throw new Error('no entrance');
+    Object.assign(e, { open: true, ammoId: 'arrow', count: 5 });
+    expect(craftHeld(s, 'frost-rune-arrow', 'arrow')).toBe(14);
+    expect(craftHeld(s, 'arrow', 'arrow')).toBe(9);
   });
 });

@@ -1,7 +1,8 @@
 import { RECIPES, recipeDef } from '../data/recipes';
 import { stageRow } from '../data/stages';
 import type { SimState } from './state';
-import { craftTagged, taggedAffordable, taggedKnown, type TaggedStores } from './stages';
+import { craftTagged, taggedAffordable, taggedHeld, taggedKnown, type TaggedStores } from './stages';
+import { count } from './inventory';
 import { knownRecipe } from './tutorial';
 import { hasInputs, make } from './make';
 
@@ -32,3 +33,13 @@ export function canCraft(state: CraftStores, recipeId: string): boolean {
   if (!row) throw new Error(`Unknown recipe '${recipeId}'`);
   return taggedKnown(state, row) && taggedAffordable(state, row.id);
 }
+
+/** Whether a crafting menu row's recipe is known: a plain recipe as 012 and 038 say, a tagged round's once the shrine is claimed and its family known (029). */
+export function craftKnown(state: CraftStores, recipeId: string): boolean {
+  if (RECIPES[recipeId]) return knownRecipe(state, recipeId);
+  const row = stageRow(recipeId);
+  return row !== undefined && taggedKnown(state, row);
+}
+
+/** How many of an item a crafting row counts as held: carried, plus the intake's entrances for a tagged round's row (029 option A). */
+export const craftHeld = (state: CraftStores, recipeId: string, itemId: string): number => (RECIPES[recipeId] ? count(state.inventory, itemId) : taggedHeld(state, itemId));

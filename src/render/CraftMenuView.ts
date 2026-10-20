@@ -4,12 +4,7 @@ import { DEPTHS, SPRITES } from '../data/assets';
 import { CRAFT_TABS, craftRecipeDef } from '../data/craftTabs';
 import { CRAFT_MENU_LAYOUT } from '../data/hudLayout';
 import { itemDef } from '../data/items';
-import { RECIPES } from '../data/recipes';
-import { stageRow } from '../data/stages';
-import { canCraft, type CraftStores } from '../sim/crafting';
-import { count } from '../sim/inventory';
-import { taggedHeld, taggedKnown } from '../sim/stages';
-import { knownRecipe } from '../sim/tutorial';
+import { canCraft, craftHeld, craftKnown, type CraftStores } from '../sim/crafting';
 import { colorOf } from './color';
 import { craftPanelAt, craftTabBoxes, craftTabRows } from './craftMenuLayout';
 import { flashRow, RowHover, type RowFrames } from './menuFeedback';
@@ -72,16 +67,6 @@ export interface CraftMenuState {
 }
 
 const box = (line: TextLine): TextBox => ({ text: line.obj.text, ...line.at, w: line.width, h: line.lineHeight });
-
-/** Whether a row's recipe is known: a plain recipe as 012 and 038 say, a tagged round's once the shrine is claimed and its family known (029). */
-function rowKnown(sim: CraftStores, recipeId: string): boolean {
-  if (RECIPES[recipeId]) return knownRecipe(sim, recipeId);
-  const row = stageRow(recipeId);
-  return row !== undefined && taggedKnown(sim, row);
-}
-
-/** How many of an item a row counts as held: carried, plus the intake's entrances for a tagged round's rows (029 option A). */
-const heldFor = (sim: CraftStores, recipeId: string, itemId: string): number => (RECIPES[recipeId] ? count(sim.inventory, itemId) : taggedHeld(sim, itemId));
 
 // The crafting menu (026; 047): a tab per ammo family down the left (Arrows, Bombs, Ley, Landmines), the open tab's
 // recipes to the right, its whole chain (parts included) then its tagged rounds. Each row shows its inputs
@@ -254,7 +239,7 @@ export class CraftMenuView {
       return;
     }
     const L = CRAFT_MENU_LAYOUT;
-    const tabKnown = CRAFT_TABS.map((t) => rowKnown(sim, t.ammoId));
+    const tabKnown = CRAFT_TABS.map((t) => craftKnown(sim, t.ammoId));
     // The open tab is always one the player can see: the first known, if the open one isn't.
     if (!tabKnown[this.tab]) this.tab = Math.max(0, tabKnown.indexOf(true));
     this.tabBacks.clear();
@@ -268,7 +253,7 @@ export class CraftMenuView {
       if (i === this.tab) this.tabBacks.fillStyle(colorOf(L.tabOpen), 1).fillRect(t.x + t.w - L.tabStripe.w, t.y + L.tabStripe.inset, L.tabStripe.w, t.h - 2 * L.tabStripe.inset);
     }
     for (const [i, r] of this.rows.entries()) {
-      const shown = r.tab === this.tab && rowKnown(sim, r.recipeId);
+      const shown = r.tab === this.tab && craftKnown(sim, r.recipeId);
       for (const o of [r.frame, ...r.parts]) o.setVisible(shown);
       for (const t of [...r.inputs.flatMap((i) => [i.text, i.name]), r.made, r.owned, r.outputName]) t.setVisible(shown);
       if (shown) r.frame.setInteractive();
@@ -278,13 +263,13 @@ export class CraftMenuView {
       const alpha = affordable ? 1 : L.greyAlpha;
       const textAlpha = affordable ? 1 : L.greyTextAlpha;
       for (const input of r.inputs) {
-        const have = heldFor(sim, r.recipeId, input.itemId);
+        const have = craftHeld(sim, r.recipeId, input.itemId);
         input.text.set(`${have}/${input.need}`);
         // Short of an input: its name and count in the missing colour (026).
         const fill = have < input.need ? L.missing : undefined;
         for (const t of [input.text, input.name]) t.setFill(fill).setAlpha(textAlpha);
       }
-      r.owned.set(String(heldFor(sim, r.recipeId, r.outputId)));
+      r.owned.set(String(craftHeld(sim, r.recipeId, r.outputId)));
       for (const t of [r.made, r.owned, r.outputName]) t.setAlpha(textAlpha);
       for (const p of r.parts) p.setAlpha(alpha);
       r.frame.setAlpha(alpha);

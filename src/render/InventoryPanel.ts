@@ -3,6 +3,7 @@ import { AMMO } from '../data/ammo';
 import { DEPTHS, SPRITES } from '../data/assets';
 import { FOOTER_LINES, INVENTORY_GRID } from '../data/hudPanels';
 import { pieceDef } from '../data/pieces';
+import { usableItem } from '../sim/hotbar';
 import type { HopperAmount } from '../sim/input';
 import type { CrateState, HopperState } from '../sim/pieces';
 import type { ScreenBox } from './bottomHud';
@@ -185,7 +186,7 @@ export class InventoryPanel {
     if (press.from === 'grid') {
       const s = this.slots[press.index];
       if (!s) return null;
-      if (carriedSlot !== null) return AMMO[s.itemId] ? { kind: 'assign', slot: carriedSlot, itemId: s.itemId } : null;
+      if (carriedSlot !== null) return usableItem(s.itemId) ? { kind: 'assign', slot: carriedSlot, itemId: s.itemId } : null;
       const g = cellAt(this.layout.cells, x, y);
       if (g < 0 || this.scrollRow * INVENTORY_GRID.cols + g !== press.index || this.containerId === null) return null;
       return { kind: 'deposit', id: this.containerId, itemId: s.itemId, amount: press.amount, stack: s.count };
