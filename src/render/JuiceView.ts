@@ -1,6 +1,6 @@
 import type { Cameras, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
-import { DAMAGE_NUMBERS, PARTICLES, SHAKE, type ParticleBurst } from '../data/juice';
+import { DAMAGE_NUMBERS, PARTICLES, SHAKE, SHAKE_ON, type ParticleBurst } from '../data/juice';
 import { paletteHex } from '../data/palette';
 import { TEXT_STYLES } from '../data/fonts';
 import { phaserStyle } from './fonts';
@@ -40,7 +40,7 @@ export class JuiceView {
   shake(size: ShakeSize): void {
     this.shakes.push(size);
     if (this.shakes.length > SHAKE_LOG_MAX) this.shakes.shift();
-    if (this.reducedMotion) return;
+    if (this.reducedMotion || !SHAKE_ON) return;
     const now = this.scene.time.now;
     const running = this.shaking && now < this.shaking.until ? this.shaking.size : null;
     if (running && SHAKE_ORDER.indexOf(size) < SHAKE_ORDER.indexOf(running)) return;

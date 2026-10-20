@@ -1,6 +1,9 @@
 // Feel tuning (014): screen shake, hit-stop, particles, damage numbers, the
 // camera's lead, ambient light and motes. Render-only; nothing here touches the sim.
 
+/** Whether the camera ever shakes. Off (Shaun, 2026-10-20: "turn off the screen shake entirely"); the shake requests are still logged for tests. */
+export const SHAKE_ON = false;
+
 /** Camera shake by size: duration ms and intensity (fraction of the view). A smaller shake never cuts off a bigger one. */
 export const SHAKE = {
   small: { ms: 60, intensity: 0.0025 },
