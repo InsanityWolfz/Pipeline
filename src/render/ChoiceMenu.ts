@@ -22,8 +22,6 @@ export class ChoiceMenu<T> {
   private rows: { images: GameObjects.Image[]; text: TextLine }[] = [];
   private choices: Choice<T>[] = [];
   private key = '';
-  /** How far the rows sit left or right of the screen's centre, px (029: the bench moves over for its Stages panel). */
-  private shift = 0;
   private readonly hover: RowHover;
   isOpen = false;
 
@@ -72,18 +70,17 @@ export class ChoiceMenu<T> {
     if (r) flashRow(this.scene, r.x, r.y);
   }
 
-  /** The rows' rects on screen: centred, then moved by the shift. */
+  /** The rows' rects on screen, centred. */
   private rects(n: number): ReturnType<typeof menuRows> {
-    return menuRows(n).map((r) => ({ ...r, x: r.x + this.shift }));
+    return menuRows(n);
   }
 
-  /** Shows these rows (while open), `shift` px off centre, rebuilding only on a change. */
-  show(choices: readonly Choice<T>[], shift = 0): void {
+  /** Shows these rows (while open), rebuilding only on a change. */
+  show(choices: readonly Choice<T>[]): void {
     const list = this.isOpen ? [...choices] : [];
-    const key = `${shift}#${list.map((c) => `${c.icons.join('+')}:${c.text}`).join('|')}`;
+    const key = list.map((c) => `${c.icons.join('+')}:${c.text}`).join('|');
     if (key === this.key) return;
     this.key = key;
-    this.shift = shift;
     for (const r of this.rows) {
       for (const o of r.images) o.destroy();
       r.text.destroy();

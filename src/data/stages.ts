@@ -4,8 +4,8 @@ import { tagDef, withTag } from './tags';
 
 // Stage machines (029): each takes finished rounds of its tag's base ammo plus a
 // little material, and hands them out of its front with its tag added. A stage is
-// a 1×1 machine in its base ammo's build bar group, unlocked by hand-applying it
-// once at the bench. Starting values from spec 029; tune in playtest.
+// a 1×1 machine in its base ammo's build bar group, unlocked by crafting one of its
+// tagged rounds by hand (047: in the crafting menu). Starting values from spec 029; tune in playtest.
 
 export interface StageDef {
   id: string;
@@ -68,19 +68,19 @@ function plainRecipe(s: StageDef): RecipeDef {
   return r;
 }
 
-/** Each stage's recipe on its plain base, by stage id: the bench's hand-apply rows, and what a stage machine runs by default. */
+/** Each stage's recipe on its plain base, by stage id: what a stage machine runs by default. */
 export const STAGE_RECIPES: Readonly<Record<string, RecipeDef>> = Object.fromEntries(Object.values(STAGES).map((s) => [s.id, plainRecipe(s)]));
 
-/** A bench row (039.12): one stage on one family its tag takes, its recipe on that family's plain round. */
+/** A tagged round's crafting row (039.12; 047: in the crafting menu's family tab): one stage on one family its tag takes, its recipe on that family's plain round. */
 export interface StageRow {
-  /** `<stage>-<base>`: the bench command's id, and its recipe's. */
+  /** `<stage>-<base>`: the crafting menu row's id, and its recipe's. */
   id: string;
   stage: string;
   base: string;
   recipe: RecipeDef;
 }
 
-/** The bench's Stages rows, in stage order and each stage's families in its tag's order: Frost rune × Arrow, Bomb, Ley bolt, Landmine, then one row each for the shapes. */
+/** The tagged rounds' crafting rows (047), in stage order and each stage's families in its tag's order: Frost rune × Arrow, Bomb, Ley bolt, Landmine, then one row each for the shapes. */
 export const STAGE_ROWS: readonly StageRow[] = Object.values(STAGES).flatMap((s) =>
   tagDef(s.tag).appliesTo.map((base) => {
     const r = stageRecipeFor(s, base);
@@ -90,7 +90,7 @@ export const STAGE_ROWS: readonly StageRow[] = Object.values(STAGES).flatMap((s)
   }),
 );
 
-/** A bench row by its id, or a stage's id for its home row (the build bar's family). */
+/** A tagged round's crafting row by its id, or a stage's id for its home row (the build bar's family). */
 export function stageRow(id: string): StageRow | undefined {
   const s = STAGES[id];
   return STAGE_ROWS.find((r) => r.id === id || (s !== undefined && r.stage === id && r.base === stageBase(s)));

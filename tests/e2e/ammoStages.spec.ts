@@ -51,7 +51,7 @@ function buildFrostLine(page: Page) {
   });
 }
 
-test('a frost rune line feeds frost arrows to the tube, and a frost volley freezes what it hits; the bench hand-applies the rune', async ({ page }) => {
+test('a frost rune line feeds frost arrows to the tube, and a frost volley freezes what it hits; frost arrows are crafted from the Arrows tab (047)', async ({ page }) => {
   test.setTimeout(180_000);
   const errors = watchErrors(page);
   await boot(page, '?playtest');

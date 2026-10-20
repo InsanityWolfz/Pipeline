@@ -63,8 +63,6 @@ test('a click moves one, Shift+click half and Ctrl+click the stack, in and out, 
 
   await page.keyboard.press('e');
   await expect.poll(async () => (await ui(page))?.pickerOpen).toBe(true);
-  // No controls printed (Shaun: "don't show those controls on the menu it looks bad").
-  expect((await ui(page))?.pickerHint).toBeNull();
   // Only what's in the hopper: nothing yet, though arrows are carried.
   expect((await ui(page))?.pickerCounts).toEqual([]);
 
@@ -139,6 +137,6 @@ test.describe('review screenshots (022)', () => {
     const p = await slotPoint(page, 'arrow');
     await page.mouse.move(p.x, p.y);
     await expect.poll(async () => (await ui(page))?.cursor?.kind).toBe('pointer');
-    await page.screenshot({ path: `${SHOTS}/01-picker-hint.png` });
+    await page.screenshot({ path: `${SHOTS}/01-hopper-screen.png` });
   });
 });

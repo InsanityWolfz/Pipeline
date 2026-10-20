@@ -7,7 +7,7 @@ import { LAST_EMBER } from '../../src/data/relics';
 import { boot, cameraSettled } from './helpers';
 
 // Review screenshots for 036 (REVIEW_SHOTS=1, into docs/review/036): the bench's gear
-// panel with all four slots filled and a relic row (alone, and beside the Stages panel),
+// panel with all four slots filled and a relic row (047 removed the Stages panel beside it),
 // the HP bar's armor value, the Wardstone's shimmer, Last Ember's flash, a relic's flare
 // over the bench, and the new sprites on the contact sheet. Short effects are held on
 // the tween clock for their shot.
@@ -41,7 +41,7 @@ async function wear(page: Page, ids: number[]): Promise<void> {
 test.describe('review screenshots (036)', () => {
   test.skip(!process.env.REVIEW_SHOTS, 'set REVIEW_SHOTS=1 to capture docs/review/036');
 
-  test('the bench with all four slots filled and a relic row, alone and beside the Stages panel; the HP bar’s armor', async ({ page }) => {
+  test('the bench with all four slots filled and a relic row; the HP bar’s armor', async ({ page }) => {
     test.setTimeout(120_000);
     await atBench(page);
     // The Wardstone in the helm slot, the Rare body, boots and trinket; three more identified.

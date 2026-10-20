@@ -34,8 +34,8 @@ export interface GameTestHook {
   /** 042: the flow's state, the save slot's status, saves written this session, and stored notes. */
   flow(): FlowReport;
   /**
-   * Steps `frames` ticks holding `command`. Its dodge, interact, ammo
-   * select, build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), setFilter, pylon, travel, takeStash, identify, equip, restore (033), summon, takeTalent and respec (037) apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
+   * Steps `frames` ticks holding `command`. Its dodge, interact, carried slot
+   * select and assign (047), build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), sortInventory (047), setFilter, pylon, travel, takeStash, identify, equip, restore (033), summon, takeTalent and respec (037) apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
    */
   step(frames: number, command?: Partial<Command>): SimSummary;
   /** Crafts a recipe once between ticks, as clicking its menu row does. */
@@ -95,8 +95,6 @@ export interface UiState {
   pickerOpen: boolean;
   /** A site menu (a claimed pylon's, the stash's, the bench's or a sorter's) is open (031: it and the inventory take turns). */
   siteOpen: boolean;
-  /** 022's hint line; always null since 047 (Shaun: "don't show those controls on the menu it looks bad"). */
-  pickerHint: string | null;
   /** The counts the open hopper's or crate's own slots show, in order (047; they update live). */
   pickerCounts: number[];
   hoverName: string | null;
@@ -148,8 +146,8 @@ export interface UiState {
   /** The build bar as drawn (026): the unlocked pieces' cells, the shown groups' labels and the dividers. */
   buildBar: BuildBarState | null;
   /**
-   * 029: the bench's Stages panel as drawn, Split flashes still showing, and the tagged rounds' trails in flight
-   * (how many, and the most points one runs along).
+   * 029: Split flashes still showing, and the tagged rounds' trails in flight (how many, and the most points one runs
+   * along). 047 removed the bench's Stages panel from here.
    */
   tagged: { splitFlashes: number; trails: { count: number; longest: number } };
   /** 030: the Ley Springs drawn, healing motes in the air, the pylon's thread, the foundry's shimmer, and the spring glowing under the player. */

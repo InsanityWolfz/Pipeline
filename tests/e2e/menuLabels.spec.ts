@@ -12,7 +12,7 @@ import { enterFoundry } from './foundryPage';
 import { openCraftTab } from './craftPage';
 
 // Labels in the crafting menu and categories in the build bar (026): every recipe item
-// named under its icon, missing inputs flagged, headers naming their ammo; the build bar
+// named under its icon, missing inputs flagged, a tab per ammo family (047); the build bar
 // in labelled groups with dividers, showing only unlocked pieces (a group with none
 // unlocked is left out), the wheel stepping in the new order. With REVIEW_SHOTS=1, the review screenshots in docs/review/026.
 
@@ -86,7 +86,7 @@ function expectGroups(bar: BuildBarState, shown: readonly string[]): void {
   }
 }
 
-test('the crafting menu names every recipe item under its icon, and its headers name their ammo', async ({ page }) => {
+test('the crafting menu names every recipe item under its icon, on a tab per ammo family (047)', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page, '?start=field&attuned');
   // One wood: the shaft row has its input, every other input is short.

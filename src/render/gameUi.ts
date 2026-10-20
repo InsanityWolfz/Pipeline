@@ -20,7 +20,6 @@ export function gameUi(g: GameScene): GameUiState {
     paused: g.pause?.isOpen ?? false,
     pickerOpen: (g.hud?.inventory.container ?? null) !== null,
     ...(g.siteMenus?.ui ?? NO_SITE_UI),
-    pickerHint: null,
     pickerCounts: (g.hud?.panels.inventory.container ?? []).map((s) => s.count),
     ...(g.hover?.ui ?? NO_HOVER_UI),
     buildTip: g.buildView?.tipShown ?? null,

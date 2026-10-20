@@ -2,8 +2,7 @@ import { VIEW_WIDTH } from '../data/config';
 import { GEAR_SLOTS, type GearSlot } from '../data/gear';
 import { GEAR_PANEL } from '../data/gearAssets';
 
-// Where the bench's gear panel (036) and its parts sit on screen: centred, or left of
-// 029's Stages panel once the shrine is claimed. The open tab's rows are paged by
+// Where the bench's gear panel (036) and its parts sit on screen: centred. The open tab's rows are paged by
 // height (a relic's row is taller). No Phaser, so tests can find what to click.
 
 export interface Box {

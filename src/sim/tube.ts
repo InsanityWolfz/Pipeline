@@ -137,10 +137,9 @@ function useCarried(state: SimState, cmd: Command, dx: number, dy: number): void
   if (itemId === null) return;
   tube.firing = true;
   if (tube.fireCooldown > 0) return;
-  const ammoId = itemId;
-  take(state.inventory, ammoDef(ammoId).itemId);
-  tube.fireCooldown += fireTicksOf(state, ammoId);
-  launch(state, { ammoId, dir: [dx, dy], across: 0 }, cmd);
+  take(state.inventory, ammoDef(itemId).itemId);
+  tube.fireCooldown += fireTicksOf(state, itemId);
+  launch(state, { ammoId: itemId, dir: [dx, dy], across: 0 }, cmd);
   tube.shotCount += 1;
 }
 
