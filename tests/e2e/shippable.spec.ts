@@ -32,6 +32,9 @@ test("Quit shows the farewell card, and Back returns to the title", async ({ pag
 });
 
 test('the camera locks to the player: walking, rolling and firing for 120 frames', async ({ page }) => {
+  // 240 real animation frames: about 4 s at 60 fps, but about 17 s on a machine whose browser draws 14 fps
+  // (measured 2026-10-20 in a fresh cloud container). The default 30 s left no room for the boot.
+  test.setTimeout(90_000);
   await boot(page, '?start=field&attuned');
   const off = await page.evaluate(async () => {
     const g = window.__GAME__;

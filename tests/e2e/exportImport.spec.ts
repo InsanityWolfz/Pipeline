@@ -7,6 +7,9 @@ import { bootTitle, clickRow, flowIs, newGameToFoundry, reloadTitle } from './fl
 // asks, replaces the slot (the old one to the backup key) and merges the notes; Export damaged save gives the raw text.
 
 test('export a save, import it into a fresh browser, and Continue matches', async ({ page, browser }) => {
+  // Two browsers, a new game into the foundry, an export and an import: 26.8 s on a normal machine, so the default
+  // 30 s budget failed on a slower one (a fresh cloud container drawing 14 fps, 2026-10-20).
+  test.setTimeout(90_000);
   await bootTitle(page);
   await newGameToFoundry(page);
   const saved = await page.evaluate(() => window.__GAME__?.getState());
