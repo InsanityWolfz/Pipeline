@@ -9,14 +9,13 @@ import { summarize } from '../../src/sim/summary';
 import { run } from './fight';
 import { foundry, put } from './foundryKit';
 
-// The splitter and the merger (033): logistics pieces restored, never crafted. A
-// splitter deals items out its front and side in turn, falling back and waiting; a
+// The splitter and the merger (033): logistics pieces, never crafted; the splitter is
+// on the bar from the start (046), the merger restored. A splitter deals items out its front and side in turn, falling back and waiting; a
 // merger takes from its back, left and right in turn, out its front.
 
-/** A foundry with both pieces restored. */
+/** A foundry with the merger restored (046: the splitter needs no restoring). */
 function restored(): SimState {
   const s = foundry();
-  s.research.splitter = 'restored';
   s.research.merger = 'restored';
   return s;
 }
@@ -38,14 +37,15 @@ function hopper(s: SimState, tx: number, ty: number, facing: 'up' | 'down' | 'le
 }
 
 describe('unlocking', () => {
-  it('both are hidden from the build bar until restored, then sit after the sorter, flat underfoot', () => {
+  it('the splitter is on the bar from the start (046), the merger hidden until restored; both sit after the sorter, flat underfoot', () => {
     const s = foundry();
-    expect(unlockedPieces(s)).not.toContain('splitter');
-    expect(unlockedPieces(s)).not.toContain('merger');
-    expect(canPlace(s, 'splitter', 5, 5, 'right')).toBe('locked');
-    s.research.splitter = 'restored';
     expect(unlockedPieces(s)).toContain('splitter');
+    expect(canPlace(s, 'splitter', 5, 5, 'right')).toBeNull();
     expect(unlockedPieces(s)).not.toContain('merger');
+    expect(canPlace(s, 'merger', 5, 5, 'right')).toBe('locked');
+    expect(s.research).not.toHaveProperty('splitter');
+    s.research.merger = 'restored';
+    expect(unlockedPieces(s)).toContain('merger');
     expect(BUILD_BAR.slice(BUILD_BAR.indexOf('sorter'), BUILD_BAR.indexOf('sorter') + 3)).toEqual(['sorter', 'splitter', 'merger']);
     expect([isSolidPiece('splitter'), isSolidPiece('merger')]).toEqual([false, false]);
     expect(summarize(s).unlocked).toContain('splitter');

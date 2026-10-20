@@ -3,6 +3,7 @@ import type { StartDef } from '../data/player';
 import { createEvents } from './events';
 import { createSim, resetWorld, type SimState } from './state';
 import { wakeRoom } from './tutorial';
+import { migrateV2 } from './migrateV3';
 import { stepSim } from './step';
 
 // Saving (042.3): the save is the whole sim state as plain JSON, with the tick's events emptied. Pure: no storage,
@@ -33,6 +34,8 @@ export const SAVE_MIGRATIONS: Readonly<Record<number, Migration>> = {
   // 045: ground items may carry the magnet pull's speed and a cache item's wait and burst, all optional (absent means
   // none), so a version 1 save reads as it is.
   1: (env) => ({ ...env, version: 2 }),
+  // 046: the Splitter left research (src/sim/migrateV3.ts).
+  2: migrateV2,
 };
 
 export type SaveStatus = 'ok' | 'corrupt' | 'newer' | 'too-old';

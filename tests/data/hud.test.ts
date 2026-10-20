@@ -44,7 +44,6 @@ describe('inventory panel groups (031)', () => {
       'schematic-machine-speed',
       'schematic-merger',
       'schematic-reservoir-2',
-      'schematic-splitter',
       'shaft',
     ]);
     // 039: the six Frost rounds of every family.

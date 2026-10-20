@@ -19,9 +19,9 @@ import { foundry, put, STAND } from './foundryKit';
 describe('unlocks', () => {
   it('locks each machine until its output has been hand-crafted; logistics are always open', () => {
     const s = foundry(false);
-    expect(unlockedPieces(s)).toEqual(['conduit', 'sorter', 'hopper', 'crate']);
+    expect(unlockedPieces(s)).toEqual(['conduit', 'sorter', 'splitter', 'hopper', 'crate']);
     s.crafted = ['ley-dust'];
-    expect(unlockedPieces(s)).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'grinder']);
+    expect(unlockedPieces(s)).toEqual(['conduit', 'sorter', 'splitter', 'hopper', 'crate', 'grinder']);
   });
 
   it('refuses a locked piece', () => {

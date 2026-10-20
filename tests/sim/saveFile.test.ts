@@ -54,7 +54,7 @@ describe('save envelope (042)', () => {
   });
 
   it('a save with no migration path is too old, and kept as unreadable', () => {
-    expect(readSave(text(good()), { version: 3, migrations: { 1: (e: SaveEnvelope) => ({ ...e, version: 2 }) } }).status).toBe('too-old');
+    expect(readSave(text({ ...good(), version: 1 }), { version: 3, migrations: { 1: (e: SaveEnvelope) => ({ ...e, version: 2 }) } }).status).toBe('too-old');
   });
 
   it('fills a field missing from an older save from a fresh sim', () => {

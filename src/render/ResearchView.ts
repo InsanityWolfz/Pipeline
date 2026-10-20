@@ -32,8 +32,9 @@ const INTAKE_DEPTH = AT.y + DEPTH.intakeNudges * FOUNDRY_LAYOUT.onTopNudge;
 /** The sealed wing's node: the one anchored on its door. */
 const WING = RESEARCH_NODES.find((n) => n.anchor.kind === 'wing');
 
-type WallEffect = 'machineSpeed' | 'splitter' | 'merger';
-const wallKey = (node: ResearchNode): WallEffect => (node.effect.kind === 'machineSpeed' ? 'machineSpeed' : node.effect.kind === 'unlockPiece' && node.effect.piece === 'merger' ? 'merger' : 'splitter');
+/** A wall panel shows machine speed or the merger (046: the splitter is no longer restored). */
+type WallEffect = 'machineSpeed' | 'merger';
+const wallKey = (node: ResearchNode): WallEffect => (node.effect.kind === 'machineSpeed' ? 'machineSpeed' : 'merger');
 
 /** Where a diagram is drawn, world px, its frame and depth. */
 function placeOf(d: Pick<Diagram, 'node' | 'entrance'>): { x: number; y: number; frame: string; depth: number } {

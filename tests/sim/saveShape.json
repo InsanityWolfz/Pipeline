@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "shape": [
     "state.activatePulse: number",
     "state.arrows: array",
@@ -202,6 +202,7 @@
     "state.foundry.pieces[].made: string",
     "state.foundry.pieces[].mirrored: boolean",
     "state.foundry.pieces[].missing: array",
+    "state.foundry.pieces[].next: string",
     "state.foundry.pieces[].output: number",
     "state.foundry.pieces[].pieceId: string",
     "state.foundry.pieces[].progress: number",

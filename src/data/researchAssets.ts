@@ -9,12 +9,12 @@ export const RESEARCH_SPRITES = {
   diagramCap: 'research-diagram-cap',
   /** A diagram on the intake pipe: a bigger reservoir's tank and bands drawn round the pipe. */
   diagramPipe: 'research-diagram-pipe',
-  /** A wall panel's diagram, by the effect it shows: machine speed (a cog train), the splitter, the merger. */
-  diagramWall: { machineSpeed: 'research-diagram-speed', splitter: 'research-diagram-splitter', merger: 'research-diagram-merger' },
+  /** A wall panel's diagram, by the effect it shows: machine speed (a cog train), the merger (046: the splitter has none). */
+  diagramWall: { machineSpeed: 'research-diagram-speed', merger: 'research-diagram-merger' },
   /** A bare wall panel: the carved stone frame every wall diagram sits in. */
   panel: 'research-panel',
   /** A restored wall panel: brass and stone, its part solid, by the same effects. */
-  restoredWall: { machineSpeed: 'research-restored-speed', splitter: 'research-restored-splitter', merger: 'research-restored-merger' },
+  restoredWall: { machineSpeed: 'research-restored-speed', merger: 'research-restored-merger' },
   /** The reservoir's restored collars: brass bands round the pipe, by restored tier (1, 2). */
   restoredPipe: ['research-restored-pipe-1', 'research-restored-pipe-2'],
   /** The sealed wing's door, two tiles wide in the north wall's notch. */

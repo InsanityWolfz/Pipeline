@@ -27,7 +27,9 @@ describe('research nodes', () => {
       expect(n.name.length).toBeGreaterThan(0);
       expect(n.description).not.toContain('\n');
     }
-    expect(researchNode('splitter').name).toBe('Splitter');
+    expect(researchNode('merger').name).toBe('Merger');
+    // 046: the Splitter is on the build bar from the start, so it has no node.
+    expect(RESEARCH_NODES.map((n) => n.id)).not.toContain('splitter');
     expect(() => researchNode('nope')).toThrow();
   });
 
@@ -44,7 +46,7 @@ describe('research nodes', () => {
     const tagged = (tag: string) => Object.values(ITEMS).filter((it) => it.research === tag).map((it) => it.id).sort();
     expect(tagged('core')).toEqual(['bulwark-core', 'warden-core']);
     expect(tagged('machinePart')).toEqual(['ancient-gear', 'aqueduct-valve']);
-    expect(tagged('schematic')).toEqual(['schematic-machine-speed', 'schematic-merger', 'schematic-reservoir-2', 'schematic-splitter']);
+    expect(tagged('schematic')).toEqual(['schematic-machine-speed', 'schematic-merger', 'schematic-reservoir-2']);
     // Kinds unchanged (031 keeps cores a part); the schematics are the one new kind. Panel groups: cores in Cores, the rest in Parts.
     expect(ITEMS['warden-core']).toMatchObject({ kind: 'part', group: 'cores' });
     expect(ITEMS['bulwark-core']).toMatchObject({ kind: 'part', group: 'cores' });
@@ -75,7 +77,7 @@ describe('research nodes', () => {
       // Restoring spends the schematic as part of the cost.
       expect(n.cost[n.reveal]).toBe(1);
     }
-    expect(SCHEMATICS.map((s) => nodeOfSchematic(s.id)?.id).sort()).toEqual(['machine-speed', 'merger', 'reservoir-2', 'splitter']);
+    expect(SCHEMATICS.map((s) => nodeOfSchematic(s.id)?.id).sort()).toEqual(['machine-speed', 'merger', 'reservoir-2']);
     for (const s of SCHEMATICS) expect(s.name).toBe(`Schematic: ${nodeOfSchematic(s.id)?.name}`);
   });
 
@@ -94,7 +96,6 @@ describe('research nodes', () => {
       { kind: 'reservoir', tier: 2 },
     ]);
     expect(row('machine-speed')).toEqual(['schematic-machine-speed', { 'schematic-machine-speed': 1, 'ancient-gear': 3 }, [], { kind: 'machineSpeed' }]);
-    expect(row('splitter')).toEqual(['schematic-splitter', { 'schematic-splitter': 1, 'ancient-gear': 2 }, [], { kind: 'unlockPiece', piece: 'splitter' }]);
     expect(row('merger')).toEqual(['schematic-merger', { 'schematic-merger': 1, 'ancient-gear': 2 }, [], { kind: 'unlockPiece', piece: 'merger' }]);
     expect(row('sealed-wing')).toEqual(['start', {}, [], { kind: 'wing' }]);
     expect(MACHINE_SPEED_MULT).toBe(0.75);
@@ -109,7 +110,7 @@ describe('research nodes', () => {
   it('reservoir tiers index the cap table, which runs 30, 45, 60; unlocked pieces are logistics on the build bar', () => {
     expect(ENTRANCE_CAPS).toEqual([30, 45, 60]);
     for (const n of RESEARCH_NODES) if (n.effect.kind === 'reservoir') expect(ENTRANCE_CAPS[n.effect.tier]).toBeDefined();
-    expect(RESEARCH_PIECES).toEqual(['splitter', 'merger']);
+    expect(RESEARCH_PIECES).toEqual(['merger']);
     for (const id of RESEARCH_PIECES) {
       expect(BUILD_BAR).toContain(id);
       expect(PIECES[id]?.category).toBe('logistics');
@@ -125,7 +126,7 @@ describe('research nodes', () => {
     const tiles = RESEARCH_NODES.flatMap((n) =>
       n.anchor.kind === 'wall' ? [n.anchor] : n.anchor.kind === 'wing' ? Array.from({ length: n.anchor.w }, (_, i) => ({ tx: (n.anchor as { tx: number }).tx + i, ty: (n.anchor as { ty: number }).ty })) : [],
     );
-    expect(tiles.length).toBe(5);
+    expect(tiles.length).toBe(4);
     for (const t of tiles) {
       expect(at(t.tx, t.ty), `${t.tx},${t.ty}`).toBe(TILE.wall);
       expect(at(t.tx, t.ty + 1), `below ${t.tx},${t.ty}`).toBe(TILE.floor);

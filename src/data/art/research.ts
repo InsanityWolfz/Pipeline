@@ -35,14 +35,6 @@ const chev = (x: number, y: number, dx: number, dy: number, color: Ink = 'cyan-g
 /** The panel's middle, px above the wall tile's bottom. */
 const PY = -13;
 
-/** The splitter's emblem in a panel: in from the left, out right and down. */
-const splitterLines = (color: Ink, w: number): Shape[] => [
-  glowLine([-8, PY, 0, PY, 8, PY], w, color),
-  glowLine([0, PY, 0, PY + 7], w, color),
-  chev(5, PY, 1, 0, color),
-  chev(0, PY + 5, 0, 1, color),
-];
-
 /** The merger's emblem in a panel: in from the left, top and bottom, out right. */
 const mergerLines = (color: Ink, w: number): Shape[] => [
   glowLine([-8, PY, 8, PY], w, color),
@@ -61,7 +53,7 @@ const PANEL: Shape[] = [
   ...[-9.6, 9.6].flatMap((x) => [ellipse(x, -22, 0.8, 0.8, flat('brass')), ellipse(x, -4, 0.8, 0.8, flat('brass'))]),
 ];
 
-/** The restored parts in brass: the cog train, the splitter's and merger's channels, on their panel. */
+/** The restored parts in brass: the cog train and the merger's channels, on their panel. */
 const brassBack = rect(-8.6, -20.6, 17.2, 15.2, 1, { fill: { id: 'ink', alpha: 0.25 } });
 const RESTORED_SPEED: Shape[] = [...PANEL, brassBack, ...cog(-3, -14.5, 3.6, 8, 'brass'), ...cog(3.8, -9.6, 2.6, 6, 'brass')];
 /** A restored channel emblem: brass troughs under the cyan lines. */
@@ -169,10 +161,8 @@ export const RESEARCH_SPRITES_VECTOR: readonly VectorSprite[] = [
   sprite(W.diagramPipe, [72, 50], [36, 67], [DIAGRAM_PIPE]),
   wall(W.panel, PANEL),
   wall(W.diagramWall.machineSpeed, [...cog(-3, -14.5, 3.6, 8, 'diagram'), ...cog(3.8, -9.6, 2.6, 6, 'diagram')]),
-  wall(W.diagramWall.splitter, splitterLines('cyan-glow', 0.8)),
   wall(W.diagramWall.merger, mergerLines('cyan-glow', 0.8)),
   wall(W.restoredWall.machineSpeed, RESTORED_SPEED),
-  wall(W.restoredWall.splitter, channelBrass(splitterLines('cyan', 1.2))),
   wall(W.restoredWall.merger, channelBrass(mergerLines('cyan', 1.2))),
   sprite(W.restoredPipe[0], [52, 50], [26, 67], [collars([-58, -27])]),
   sprite(W.restoredPipe[1], [52, 50], [26, 67], [collars([-58, -47, -37, -27])]),

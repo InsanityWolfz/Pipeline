@@ -39,7 +39,7 @@ const WORDS: Readonly<Record<string, RegExp>> = {
 /** Names allowed to hold each word, beside a round named for its own keywords. */
 const ALLOWED: Readonly<Record<string, readonly string[]>> = {
   // 039.7's world names.
-  Split: ['Splitter', 'Schematic: Splitter'],
+  Split: ['Splitter'],
   Shard: ['Shardback', ...(CHAMPIONS.names.shardback ?? [])],
   Freeze: ['Frozen Grotto'],
   // The ley itself: the world's magic, its materials, nodes and places, never the Ley family's rule. Allowed as
