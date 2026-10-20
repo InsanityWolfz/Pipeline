@@ -1,5 +1,7 @@
 # 049: Resin pylon (Husk Hive)
-status: draft
+status: approved
+
+Approved by Shaun in chat, 2026-10-20 ("Start 48/49"), taken as approval on draft: the build follows the proposals in the open questions.
 
 From Shaun's playtest note 16 (docs/brainstorm/2026-10-20-playtest-notes.md): "There should be a resin pylon somewhere so bombs become solved." Husk resin is only a drop today, so a bomb line can't be fed from supply. Interview answers: docs/brainstorm/2026-10-20-playtest-interview.md, "Next batch: 049".
 

@@ -1,5 +1,7 @@
 # 048: Volley shape
-status: draft
+status: approved
+
+Approved by Shaun in chat, 2026-10-20 ("Start 48/49"), taken as approval on draft: the build follows the proposals in the open questions.
 
 From Shaun's playtest note 5 (docs/brainstorm/2026-10-20-playtest-notes.md): "When the tube has multiple ammo in it 2 should shoot at two different angles and three should shoot in like a middle and two on each side not just two or three things in succession." Interview answers: docs/brainstorm/2026-10-20-playtest-interview.md, "Next batch: 048".
 
