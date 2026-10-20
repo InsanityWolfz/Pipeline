@@ -1,5 +1,5 @@
 import { PYLON_REACH } from '../data/claims';
-import { CACHE_DROPS, LANDMARK_LIST, LANDMARKS, landmarkDef } from '../data/landmarks';
+import { CACHE_BURST, CACHE_DROPS, LANDMARK_LIST, LANDMARKS, landmarkDef } from '../data/landmarks';
 import { OVERWORLD_ROOM } from '../data/overworld';
 import type { Command } from './input';
 import { gapTo, holdBroken, occupied } from './claims';
@@ -64,15 +64,24 @@ function advance(state: SimState, cmd: Command): void {
   open(state, hold.id);
 }
 
-/** Opens a cache: rolls its table and scatters the drops on the ground below it. */
+/**
+ * Opens a cache: rolls its table and scatters the drops on the ground below it. Each bursts out of the chest in turn
+ * (045): it waits out its turn, its flight and a hold before the magnet pull may take it.
+ */
 function open(state: SimState, id: string): void {
   const cache = state.caches.find((c) => c.id === id);
   const at = landmarkDef(id).cache;
   if (!cache || !at || cache.openedAt !== null) return;
   cache.openedAt = state.tick;
   const below = tileCentre({ tx: at.tx, ty: at.ty + 1 });
+  const first = state.groundItems.length;
   scatterItems(state, rollDrops(CACHE_DROPS, state.rng), state.roomId, below.x, below.y);
   const c = tileCentre(at);
+  const B = CACHE_BURST;
+  state.groundItems.slice(first).forEach((g, i) => {
+    g.burst = { x: c.x, y: c.y, delay: i * B.staggerTicks };
+    g.wait = i * B.staggerTicks + B.flightTicks + B.holdTicks;
+  });
   state.events.cacheOpens.push({ id, x: c.x, y: c.y });
 }
 

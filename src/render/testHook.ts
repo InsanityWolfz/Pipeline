@@ -1,3 +1,4 @@
+import type { GroundItemShown } from './GroundItemView';
 import type { SimSummary } from '../sim/summary';
 import type { Command } from '../sim/input';
 import type { FlowReport, FlowUi } from './flow/flowTypes';
@@ -111,6 +112,8 @@ export interface UiState {
   cursor: CursorState | null;
   /** Picked-up items still sliding into the player (021). */
   sliding: number;
+  /** 045: the ground items in the shown room as drawn: where, whether shown yet (a cache's wait in the chest), and the name over a bursting one. */
+  groundItems: GroundItemShown[];
   /** How far the latest slide is in, 0 to 1. */
   slideProgress: number;
   /** Punch swooshes still drawn (023). */

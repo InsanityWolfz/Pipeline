@@ -29,6 +29,7 @@ export function gameUi(g: GameScene): GameUiState {
     shakes: [...(g.feel?.juice.shakes ?? [])],
     cursor: g.cursorView?.state ?? null,
     sliding: g.groundItemView?.sliding ?? 0,
+    groundItems: g.groundItemView?.shown ?? [],
     slideProgress: g.groundItemView?.slideProgress ?? 0,
     swooshes: g.effects?.swooshes ?? 0,
     ...(g.tutorial?.state ?? NO_TUTORIAL_UI),
