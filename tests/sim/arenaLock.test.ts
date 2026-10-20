@@ -99,6 +99,53 @@ describe('the seal', () => {
     expect(husk.y).toBeLessThanOrEqual(SEAL_ROW * T);
   });
 
+  it('lets shots through both ways (043.3: it stops feet only)', () => {
+    const { s } = awake();
+    movePlayer(s, DOOR_X, INSIDE_DOOR_Y + 4);
+    const husk = createEnemy(s.nextEnemyId++, 'husk', { x: DOOR_X, y: (SEAL_ROW - 2) * T }, OVERWORLD_ROOM);
+    husk.frozen = 10_000;
+    s.enemies.push(husk);
+    const max = husk.health;
+    for (let t = 0; t < 40 && husk.health === max; t++) {
+      s.player.health = 100;
+      run(s, 1, { fire: true, aimX: husk.x, aimY: husk.y - 12 });
+    }
+    expect(sealedNow(s)).toBe(true);
+    expect(husk.health).toBeLessThan(max);
+  });
+
+  it("drops when the player is KO'd inside (the Bulwark turns for home)", () => {
+    const { s } = awake();
+    s.player.health = 0;
+    run(s, 2);
+    expect(s.player.dying).toBeGreaterThan(0);
+    expect(sealedNow(s)).toBe(false);
+  });
+
+  it('seals for a summoned Bulwark too, and E resets it the same way', () => {
+    const { s, b } = forum(160);
+    b.health = 0;
+    run(s, 1);
+    expect(s.bossDefeats).toEqual(['bulwark']);
+    s.groundItems = [];
+    s.inventory = { ...s.inventory, 'ley-iron': 8 };
+    const by = tileCentre({ tx: A.altar.tx + 1, ty: A.altar.ty });
+    movePlayer(s, by.x, by.y);
+    run(s, 1, { summon: A.altar.id });
+    run(s, A.summonTicks + 1);
+    const summoned = s.enemies.find((e) => e.enemyId === 'bulwark');
+    expect(summoned).toBeDefined();
+    expect(sealedNow(s)).toBe(true);
+    if (!summoned) return;
+    summoned.health = 1000;
+    movePlayer(s, DOOR_X, INSIDE_DOOR_Y);
+    run(s, 1, { interact: true });
+    expect(s.events.arenaLeaves).toEqual([{ arena: A.id }]);
+    expect(summoned).toMatchObject({ x: START.x, y: START.y, health: DEF.maxHealth, mode: 'idle' });
+    expect(s.enemies).toContain(summoned);
+    expect(sealedNow(s)).toBe(false);
+  });
+
   it('drops when the Bulwark heads home on a leash, and when it dies', () => {
     const { s, b } = awake();
     movePlayer(s, DOOR_X, (SEAL_ROW - 3) * T);
@@ -124,10 +171,12 @@ describe('E at the sealed door', () => {
     expect(s.enemyBombs.length).toBeGreaterThan(0);
     expect(s.enemies.some((e) => e.group === ADDS_GROUP)).toBe(true);
     movePlayer(s, DOOR_X, INSIDE_DOOR_Y);
+    // A back wave building as the player leaves is gone with the rest.
+    b.waveTicks = 5;
     run(s, 1, { interact: true });
     const out = tileCentre(A.seal.leaveTo);
     expect({ x: s.player.x, y: s.player.y }).toEqual(out);
-    expect(b).toMatchObject({ x: START.x, y: START.y, health: DEF.maxHealth, mode: 'idle', enraged: false, addsRisen: false, behind: 0 });
+    expect(b).toMatchObject({ x: START.x, y: START.y, health: DEF.maxHealth, mode: 'idle', enraged: false, addsRisen: false, behind: 0, waveTicks: 0 });
     expect(s.enemies.some((e) => e.group === ADDS_GROUP)).toBe(false);
     expect(s.enemyBombs.filter((x) => x.enemyId === 'bulwark')).toEqual([]);
     expect(sealedNow(s)).toBe(false);
