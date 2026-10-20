@@ -19,6 +19,7 @@ import { buildBarBox, buildBarCells, buildBarDividers, buildBarGroups, conduitLo
 import { MAX_ARROWS, placeArrows, viewOf } from './FoundryView';
 import { toView } from './scale';
 import { Pulse } from './pulse';
+import { BuildStripView, type BuildStripState } from './BuildStripView';
 import { TextLine } from './textLine';
 import type { TipHit } from './tipTypes';
 import { addVector, showFrame } from './vector/textures';
@@ -46,6 +47,8 @@ export interface BuildBarState {
   pulsing: string | null;
   /** The pulse's alpha now, `BUILD_PULSE.min` to `max`. */
   pulseAlpha: number;
+  /** 045: the build controls strip over the bar. */
+  strip: BuildStripState;
 }
 
 // Build mode on screen: the bar of unlocked pieces in their groups (026), each
@@ -67,6 +70,7 @@ export class BuildView {
   private readonly ghost: GameObjects.Image;
   private readonly ghostIcon: GameObjects.Image;
   private readonly ghostArrows: GameObjects.Image[];
+  private readonly strip: BuildStripView;
   private unlocked: readonly string[] = [];
   private visible = false;
   /** The piece whose cell the cursor is over (015's tip, now the legibility tablet: 040), for the test hook. */
@@ -90,12 +94,13 @@ export class BuildView {
     this.ghostArrows = Array.from({ length: MAX_ARROWS }, () => addVector(scene, 0, 0, FACING_ARROWS.out.down));
     for (const o of [this.ghost, this.ghostIcon, ...this.ghostArrows]) o.setDepth(DEPTHS.worldUi - 1);
     this.dividers = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.hud);
+    this.strip = new BuildStripView(scene);
     this.setVisible(false);
   }
 
-  /** True if a screen point is over the bar or its labels, so a click there isn't a place in the world. */
+  /** True if a screen point is over the bar, its labels or the controls strip (045), so a click there isn't a place in the world. */
   overUi(x: number, y: number): boolean {
-    return this.visible && inRect(buildBarBox(this.unlocked), x, y);
+    return this.visible && (inRect(buildBarBox(this.unlocked), x, y) || inRect(this.strip.state.box, x, y));
   }
 
   /** What the bar shows, for the test hook (026). */
@@ -108,6 +113,7 @@ export class BuildView {
       dividers: buildBarDividers(this.unlocked),
       pulsing: this.pulsing,
       pulseAlpha: this.wave.value,
+      strip: this.strip.state,
     };
   }
 
@@ -145,6 +151,7 @@ export class BuildView {
     if (unlocked.join() !== this.unlocked.join()) this.rebuild(unlocked);
     if (!unlocked.includes(this.selected)) this.selected = unlocked[0] ?? FIRST_PIECE;
     this.setVisible(building);
+    this.strip.update(building);
     const pointer = this.scene.input.activePointer;
     const at = toView(pointer.x, pointer.y, this.scene.cameras.main.zoom);
     const hovered = building ? buildBarCells(unlocked).find((c) => inRect(c, at.x, at.y)) : undefined;

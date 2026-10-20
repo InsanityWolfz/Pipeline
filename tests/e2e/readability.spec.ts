@@ -3,6 +3,9 @@ import { REGION_1_X } from '../../src/data/hollows';
 import { CACHE_BURST, LANDMARKS } from '../../src/data/landmarks';
 import { boot, watchErrors } from './helpers';
 import { intoForum } from './hollowsSandbox';
+import { enterFoundry } from './foundryPage';
+import { DEFAULT_BINDINGS, SETTINGS_VERSION } from '../../src/data/settings';
+import { STORAGE_KEYS } from '../../src/data/save';
 
 // The readability fixes (045): a Ruined Cache's loot bursts out as named icons, then flies
 // to the player; an E prompt shows over a ley crystal vein and over the Bulwark's sealed door
@@ -112,5 +115,43 @@ test("the Bulwark's sealed door shows the E prompt in reach, and the seal hums u
   await expect.poll(async () => (await ui(page))?.interactPrompt?.kind ?? null).not.toBe('arena-seal');
   await expect.poll(async () => (await ui(page))?.hollows.sealHum).toBe(false);
   await expect.poll(async () => (await ui(page))?.hollows.sealDrops).toBe(1);
+  expect(errors).toEqual([]);
+});
+
+test('the build strip shows only in build mode, with the bound keys, clear of the HP block and under the tube slot', async ({ page }) => {
+  test.setTimeout(150_000);
+  const errors = watchErrors(page);
+  // 042: the player rebound rotate to Q and build to V.
+  await page.addInitScript(
+    ([key, v, bindings]) => localStorage.setItem(key, JSON.stringify({ version: v, master: 0.7, music: 1, effects: 1, muted: true, flashes: true, bindings })),
+    [STORAGE_KEYS.settings, SETTINGS_VERSION, { ...DEFAULT_BINDINGS, rotate: 'Q', build: 'V' }] as const,
+  );
+  await boot(page, '?start=field');
+  await enterFoundry(page);
+  expect((await ui(page))?.buildBar?.strip.shown).toBe(false);
+  await page.keyboard.press('v');
+  await page.evaluate(() => window.__GAME__?.step(1));
+  await expect.poll(async () => (await ui(page))?.buildBar?.strip.shown).toBe(true);
+  const u = await ui(page);
+  expect(u?.buildBar?.strip.entries).toEqual([
+    { key: 'Click', does: 'place' },
+    { key: 'Q', does: 'rotate' },
+    { key: 'G', does: 'flip' },
+    { key: 'Right-click', does: 'pick up' },
+    { key: 'Drag', does: 'line' },
+    { key: 'V', does: 'exit' },
+  ]);
+  const strip = u?.buildBar?.strip.box;
+  const hp = u?.health.box;
+  const slot = u?.hud?.tubeSlot;
+  if (!strip || !hp || !slot) throw new Error('nothing drawn');
+  // Just above the bar's labels, clear of the HP block, under the tube slot.
+  const labelsTop = Math.min(...(u?.buildBar?.groups.map((g) => g.y) ?? [0]));
+  expect(strip.y + strip.h).toBeLessThanOrEqual(labelsTop);
+  expect(hp.x + hp.w <= strip.x || hp.y + hp.h <= strip.y || strip.y + strip.h <= hp.y).toBe(true);
+  expect(slot.y + slot.h).toBeLessThanOrEqual(strip.y);
+  await page.keyboard.press('v');
+  await page.evaluate(() => window.__GAME__?.step(1));
+  await expect.poll(async () => (await ui(page))?.buildBar?.strip.shown).toBe(false);
   expect(errors).toEqual([]);
 });

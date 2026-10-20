@@ -3,7 +3,7 @@ import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { INTAKE } from '../../src/data/foundry';
 import { TEXT_STYLES } from '../../src/data/fonts';
 import { BUILD_BAR, PIECE_CATEGORIES, pieceDef } from '../../src/data/pieces';
-import { BUILD_BAR_LAYOUT, CRAFT_MENU_LAYOUT, HUD_LAYOUT } from '../../src/data/hudLayout';
+import { BUILD_BAR_LAYOUT, BUILD_STRIP, CRAFT_MENU_LAYOUT, HUD_LAYOUT } from '../../src/data/hudLayout';
 import { SLOT_AMMOS } from '../../src/data/tube';
 import { hotbarBox, hotbarCells, tubeSlotBox, tubeSlotUnits, type ScreenBox } from '../../src/render/bottomHud';
 import { craftMenuLines, craftPanelAt } from '../../src/render/craftMenuLayout';
@@ -119,11 +119,11 @@ describe('the build bar in groups (026)', () => {
     });
   });
 
-  it('lifts the tube slot above the label row while building, clear of every label and cell', () => {
+  it('lifts the tube slot above the label row while building (045: and the controls strip over it), clear of every label and cell', () => {
     const top = Math.min(...buildBarGroups(BUILD_BAR).map((g) => g.y));
     for (let n = 1; n <= INTAKE.entrances.length; n++) {
       const slot = tubeSlotBox(n, true);
-      expect(slot.y + slot.h).toBe(top - HUD_LAYOUT.gap);
+      expect(slot.y + slot.h).toBe(top - BUILD_STRIP.gap - BUILD_STRIP.h - HUD_LAYOUT.gap);
       expect(Math.abs(centre(slot) - VIEW_WIDTH / 2)).toBeLessThanOrEqual(1);
       expect(inView(slot)).toBe(true);
       for (const g of buildBarGroups(BUILD_BAR)) expect(overlaps(slot, g)).toBe(false);
