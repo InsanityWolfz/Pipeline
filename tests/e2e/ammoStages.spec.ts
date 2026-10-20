@@ -14,6 +14,21 @@ import { feedLines, toIntake, ui } from './intakePage';
 // on the hit that kills it: the freeze is shown on the shrine's Pylon Warden, the one
 // M1 enemy that outlasts four arrows (noted for Shaun). A Husk shows its chill stacks.
 
+/** Where the player stands to use the identification bench, world px (in reach of it). */
+const BENCH_SPOT = { x: 2.3 * 32, y: 12.5 * 32 };
+
+/** Claims the shrine (029: the Stages rows show from then on) and stands at the bench in the foundry. */
+function claimShrineAtBench(page: Page) {
+  return page.evaluate((at) => {
+    const g = window.__GAME__;
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    g.claim('shrine');
+    if (g.step(0).room !== 'foundry') h.toFoundry();
+    h.walkTo(at.x, at.y);
+  }, BENCH_SPOT);
+}
+
 /** Arrow hopper (12, 3) → frost rune (12, 2) → conduit (12, 1) → the centre entrance; rime hopper (11, 2) at the rune's side. */
 function buildFrostLine(page: Page) {
   return page.evaluate(() => {
@@ -97,14 +112,7 @@ test('a frost rune line feeds frost arrows to the tube, and a frost volley freez
   expect(fight.chilled).toBeGreaterThan(0);
 
   // Claim the shrine, and at the bench the Stages section shows: a click on the frost rune row hand-applies it.
-  await page.evaluate(() => {
-    const g = window.__GAME__;
-    const h = window.__helpers;
-    if (!g || !h) throw new Error('no game');
-    g.claim('shrine');
-    h.toFoundry();
-    h.walkTo(2.3 * 32, 12.5 * 32);
-  });
+  await claimShrineAtBench(page);
   await page.keyboard.press('e');
   await expect.poll(async () => (await ui(page))?.tagged.benchStages?.shown).toBe(true);
   const before = await page.evaluate(() => window.__GAME__?.getState().inventory['arrow+frost'] ?? 0);
@@ -130,27 +138,13 @@ test("the Stages panel's arrow count includes the arrows in an intake entrance",
   // Every carried arrow goes into a hopper line, which fills the centre entrance to its cap and stops.
   const fed = await feedLines(page, [{ tx: 12, itemId: 'arrow', amount: 'all' }], 30);
   expect(fed.intake.entrances[1]).toMatchObject({ ammo: 'arrow', count: 30 });
-  await page.evaluate(() => {
-    const g = window.__GAME__;
-    const h = window.__helpers;
-    if (!g || !h) throw new Error('no game');
-    g.claim('shrine');
-    h.walkTo(2.3 * 32, 12.5 * 32);
-  });
+  await claimShrineAtBench(page);
   await page.keyboard.press('e');
   await expect.poll(async () => (await ui(page))?.tagged.benchStages?.shown).toBe(true);
-  const shown = () =>
-    page.evaluate(() => {
-      const g = window.__GAME__;
-      if (!g) throw new Error('no game');
-      const s = g.getState();
-      const held = (s.inventory['arrow'] ?? 0) + s.intake.entrances.reduce((n, e) => n + (e.ammo === 'arrow' ? e.count : 0), 0);
-      const row = g.ui().tagged.benchStages?.rows.find((r) => r.stageId === 'frost-rune-arrow');
-      return { want: `${held}/4`, text: row?.texts[0], dimmed: row?.dimmed, carried: s.inventory['arrow'] ?? 0 };
-    });
-  await expect.poll(async () => ((v) => v.text === v.want)(await shown())).toBe(true);
-  const v = await shown();
-  expect(v.text).not.toBe(`${v.carried}/4`);
-  expect(v.dimmed).toBe(false);
+  const row = async () => (await ui(page))?.tagged.benchStages?.rows.find((r) => r.stageId === 'frost-rune-arrow');
+  // No arrows carried, 30 in the centre entrance: the old count read "0/4".
+  expect(await page.evaluate(() => window.__GAME__?.getState().inventory['arrow'] ?? 0)).toBe(0);
+  await expect.poll(async () => (await row())?.texts[0]).toBe('30/4');
+  expect((await row())?.dimmed).toBe(false);
   expect(errors).toEqual([]);
 });

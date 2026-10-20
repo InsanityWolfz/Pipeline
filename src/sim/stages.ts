@@ -75,7 +75,7 @@ export function applyStage(state: SimState, rowId: string): boolean {
   return true;
 }
 
-/** What a bench row may draw on: the stores held counts read. */
+/** The parts of the sim a bench row's held count reads: the inventory (carried rounds) and the intake's entrances (their reservoirs). */
 export type StageStores = Pick<SimState, 'inventory'> & { link: Pick<SimState['link'], 'entrances'> };
 
 /**
@@ -92,7 +92,8 @@ export function stageHeld(state: StageStores, itemId: string): number {
 function pullFromEntrances(state: SimState, itemId: string, n: number): void {
   const ammoId = ammoOfItem(itemId);
   if (ammoId === null) return;
-  let left = n;
+  // Clamped: an input already carried in full has a shortfall of 0 or less, and takes nothing.
+  let left = Math.max(0, n);
   for (const e of state.link.entrances) {
     while (left > 0 && e.ammoId === ammoId && takeFromEntrance(e)) {
       state.inventory[itemId] = count(state.inventory, itemId) + 1;

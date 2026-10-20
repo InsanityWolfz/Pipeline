@@ -44,7 +44,8 @@ const box = (line: TextLine): TextBox => ({ text: line.obj.text, ...line.at, w: 
 // rounds it gives (+4, held, name), and the stage's name in the row's free slot; under the
 // rows, the hovered row's stage line, generated (039). Shown beside the bench's gear panel
 // (036) once the shrine is claimed, a family's row once its ammo can be made; a row is
-// dimmed while its inputs aren't held (carried or in the intake's entrances). Clicking an affordable row hand-applies it.
+// dimmed while its inputs aren't held (carried or in the intake's entrances). Clicking an
+// affordable row hand-applies it.
 export class StagePanel {
   private readonly scene: Scene;
   private readonly tablet: GameObjects.Graphics;

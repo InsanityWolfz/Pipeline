@@ -6,7 +6,7 @@ Newest entry first.
 **Changed:**
 - Branch `claude/fix-stages-count`, stacked on `claude/measure-script` (PR #26). Cause: the bench's Stages panel (029) counted and dimmed from `sim.inventory` alone, so arrows in an intake entrance never counted. Now the sim's `stageHeld` counts carried rounds plus the entrances' reservoirs; `stageAffordable` and `applyStage` use it (carried first, then the entrances in intake order), and the panel only reads.
 - Tests: four sim tests in tests/sim/stages.test.ts (written failing first), and an e2e in tests/e2e/ammoStages.spec.ts that feeds every carried arrow into the centre entrance and checks the frost rune row reads "30/4", undimmed (it fails on the old code). `npm run check` passes; the panel's e2e files (ammoStages, keywords, legibility, and the shots files) pass.
-- Open question for Shaun in docs/specs/029-ammo-stages.md, "Raised after the build": the spec said "carried", so counting the entrances is built from his report; confirm, and whether other stores count.
+- Held for Shaun: review found counting and spending entrance rounds goes against 029's acceptance criteria ("carried", "from the inventory"), so it's a design choice. The PR stays a draft. docs/specs/029-ammo-stages.md, "Raised after the build", sets out option A (as built, recommended) against option B (carried only, labelled, plain against tagged arrows). The likely cause of what Shaun saw: he was carrying frost arrows.
 
 **Next:**
 1. Shaun reviews the draft PR and answers the 029 question.
