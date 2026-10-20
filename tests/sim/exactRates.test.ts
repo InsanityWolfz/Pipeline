@@ -3,7 +3,7 @@ import { ammoDef } from '../../src/data/ammo';
 import { TICK_RATE } from '../../src/data/config';
 import { TALENT_START } from '../../src/data/talents';
 import type { SimState } from '../../src/sim/state';
-import { arena, fireAt, PLAYER_AT, run } from './fight';
+import { arena, fireAt, hold, PLAYER_AT, run, volleyAt } from './fight';
 
 // Exact fire rates (039, Q13): each entrance's and the carried round's cooldown is
 // fractional. It counts down 1 a tick, a round fires when it reaches 0 or less, and the
@@ -21,7 +21,7 @@ const FAR = { x: PLAYER_AT.x + 1000, y: PLAYER_AT.y };
 /** Ticks (from 1) a carried `item` leaves the tube over `ticks` of held fire. */
 function carried(s: SimState, item: string, slot: string, ticks: number): number[] {
   s.inventory = { [item]: 9999 };
-  run(s, 1, { selectAmmo: slot });
+  hold(s, slot);
   const out: number[] = [];
   for (let t = 1; t <= ticks; t++) {
     run(s, 1, fireAt(FAR.x, FAR.y));
@@ -38,7 +38,7 @@ function fed(s: SimState, ammoId: string, ticks: number): number[] {
   Object.assign(e, { open: true, ammoId, count: 9999 });
   const out: number[] = [];
   for (let t = 1; t <= ticks; t++) {
-    run(s, 1, fireAt(FAR.x, FAR.y));
+    run(s, 1, volleyAt(FAR.x, FAR.y));
     if (s.events.entranceFires.length > 0) out.push(t);
   }
   return out;
@@ -69,7 +69,7 @@ describe('exact fire rates (039)', () => {
   it('a cooldown that didn’t fire never banks below 0: released fire, then a press, paces from the press', () => {
     const s = taking(arena(), 'a2');
     s.inventory = { arrow: 99 };
-    run(s, 1, { selectAmmo: 'arrow' });
+    hold(s, 'arrow');
     run(s, 1, fireAt(FAR.x, FAR.y));
     run(s, 200);
     expect(s.tube.fireCooldown).toBe(0);

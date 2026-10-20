@@ -1,27 +1,31 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, SPRITES } from '../data/assets';
+import { AMMO } from '../data/ammo';
 import { HUD_LAYOUT } from '../data/hudLayout';
-import { ammoDef } from '../data/ammo';
 import { itemDef } from '../data/items';
-import type { Inventory } from '../sim/inventory';
-import { carriedOfSlot } from '../sim/volley';
-import type { TubeState } from '../sim/tube';
+import { count, type Inventory } from '../sim/inventory';
+import type { HotbarState } from '../sim/hotbar';
 import { hotbarBox, hotbarCells, type ScreenBox } from './bottomHud';
 import { TextLine } from './textLine';
 import { inBox } from './tipPlace';
 import type { TipHit } from './tipTypes';
-import { addVector } from './vector/textures';
+import { addVector, showFrame } from './vector/textures';
 
 interface Cell {
-  ammoId: string;
   x: number;
+  icon: GameObjects.Image;
   count: TextLine;
 }
 
-// The hotbar row (025): the three ammo the tube switches between (keys 1, 2 and 3),
-// centred along the bottom, each with its key number, icon and carried count, the
-// selected one highlighted. Hidden before the tube and while building (the build bar
-// takes its place).
+/** The carried bar as drawn (047), for `ui().hud`: each slot's kind and count, and whether it shows as empty. */
+export interface CarriedBarShown {
+  slots: { itemId: string | null; count: number; empty: boolean }[];
+}
+
+// The carried bar (047, note 11): five slots along the bottom (keys 1–5), each with its key
+// number, its kind's icon and how many are carried, the selected one highlighted; right
+// click uses the selected item. A slot whose items ran out keeps its kind but shows empty
+// (047.3). Hidden before the tube and while building (the build bar takes its place).
 export class HotbarView {
   private readonly cells: Cell[];
   private readonly highlight: GameObjects.Image;
@@ -30,6 +34,8 @@ export class HotbarView {
   private shown = true;
   /** The highlighted cell's index (0 for key 1). */
   private selectedIndex = 0;
+  private slots: (string | null)[] = [];
+  private drawn: CarriedBarShown = { slots: [] };
   /** The row's screen rect, so clicks on it never fire (015). */
   readonly box: ScreenBox = hotbarBox();
 
@@ -39,15 +45,14 @@ export class HotbarView {
       o.setScrollFactor(0).setDepth(DEPTHS.hud);
       return o;
     };
-    this.cells = hotbarCells().map(({ ammoId, x, y }, i) => {
+    this.cells = hotbarCells().map(({ x, y }, i) => {
       this.parts.push(fixed(addVector(scene, x, y, SPRITES.hudAmmoCell).setOrigin(0)));
-      const icon = itemDef(ammoDef(ammoId).itemId).icon;
-      this.parts.push(fixed(addVector(scene, x + L.icon.x, y + L.icon.y, icon).setOrigin(0)));
+      const icon = fixed(addVector(scene, x + L.icon.x, y + L.icon.y, SPRITES.iconArrow).setOrigin(0));
       const key = new TextLine(scene, x + L.key.x, y + L.key.y, DEPTHS.hud, false, 'count');
       key.set(String(i + 1));
       const cellCount = new TextLine(scene, x + L.count.x, y + L.count.y, DEPTHS.hud, false, 'count');
-      this.parts.push(key, cellCount);
-      return { ammoId, x, count: cellCount };
+      this.parts.push(key);
+      return { x, icon, count: cellCount };
     });
     this.highlight = fixed(addVector(scene, this.box.x, this.box.y, SPRITES.hudAmmoSelect).setOrigin(0));
     this.highlight.setDepth(DEPTHS.hud + 1);
@@ -62,24 +67,48 @@ export class HotbarView {
     return this.shown;
   }
 
+  /** What each slot shows, for the test hook. */
+  get state(): CarriedBarShown {
+    return { slots: this.drawn.slots.map((s) => ({ ...s })) };
+  }
+
   setVisible(visible: boolean): void {
     this.shown = visible;
     for (const p of this.parts) p.setVisible(visible);
+    this.draw();
   }
 
-  /** The slot's round under a view point (040: its summary above the row). */
+  /** The slot under a view point (047: a stack dropped there goes on it), or null. */
+  slotAt(x: number, y: number): number | null {
+    return this.shown ? (hotbarCells().find((c) => inBox(c, x, y))?.slot ?? null) : null;
+  }
+
+  /** The slot's round under a view point (040: its summary above the row); an empty slot has none. */
   tipAt(x: number, y: number): TipHit | null {
     const cell = this.shown ? hotbarCells().find((c) => inBox(c, x, y)) : undefined;
-    return cell ? { source: { kind: 'round', id: cell.ammoId }, at: cell, anchor: { box: cell, prefer: ['above'] } } : null;
+    const itemId = cell ? this.slots[cell.slot] : null;
+    return cell && itemId && AMMO[itemId] ? { source: { kind: 'round', id: itemId }, at: cell, anchor: { box: cell, prefer: ['above'] } } : null;
   }
 
-  update(tube: TubeState, inventory: Inventory): void {
+  update(hotbar: HotbarState, inventory: Inventory): void {
+    this.slots = [...hotbar.slots];
+    this.drawn = { slots: hotbar.slots.map((itemId) => ({ itemId, count: itemId ? count(inventory, itemId) : 0, empty: itemId === null || count(inventory, itemId) === 0 })) };
+    const cell = this.cells[hotbar.selected];
+    if (cell) this.highlight.setX(cell.x);
+    this.selectedIndex = hotbar.selected;
+    this.draw();
+  }
+
+  private draw(): void {
     for (const [i, c] of this.cells.entries()) {
-      // Every carried round of the slot's ammo, tagged ones included (029: they fire from this slot first).
-      c.count.set(String(carriedOfSlot({ inventory }, c.ammoId)));
-      if (c.ammoId !== tube.ammoId) continue;
-      this.highlight.setX(c.x);
-      this.selectedIndex = i;
+      const slot = this.drawn.slots[i];
+      // An empty slot (no kind, or none carried, 047.3) shows nothing but its key.
+      const show = this.shown && slot !== undefined && !slot.empty && slot.itemId !== null;
+      c.icon.setVisible(show);
+      c.count.setVisible(show);
+      if (!show || !slot?.itemId) continue;
+      showFrame(c.icon, itemDef(slot.itemId).icon).setOrigin(0);
+      c.count.set(String(slot.count));
     }
   }
 }

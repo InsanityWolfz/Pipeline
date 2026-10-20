@@ -67,7 +67,7 @@ test.describe('review screenshots (029)', () => {
       h.toHall();
       // South of the ruin field's Husks (017), which stand a few tiles north, on screen.
       h.walkTo((44.5 + h.ox) * 32, 19.5 * 32);
-      g.step(1, { selectAmmo: 'ley-bolt' });
+      h.hold('ley-bolt+homing');
     });
     // The nearest Husk; the cursor beside it, inside the lock radius, so the bolt sets off wide and bends in.
     const shot = await page.evaluate(() => {
@@ -82,7 +82,7 @@ test.describe('review screenshots (029)', () => {
       const dx = husk.x - s.player.x;
       const dy = husk.y - s.player.y;
       const len = Math.hypot(dx, dy);
-      return g.step(1, { fire: true, aimX: husk.x - (dy / len) * 60, aimY: husk.y + (dx / len) * 60 });
+      return g.step(1, { use: true, aimX: husk.x - (dy / len) * 60, aimY: husk.y + (dx / len) * 60 });
     });
     expect(shot.arrows.some((a) => a.ammoId === 'ley-bolt+homing' && a.targetId !== null)).toBe(true);
     // A tick per drawn frame, so the trail gathers its points.
@@ -93,13 +93,14 @@ test.describe('review screenshots (029)', () => {
     }
     await page.screenshot({ path: `${SHOTS}/03-homing-mid-curve.png` });
 
-    // Spend the homing bolts, then a Split bolt at the nearest Husk; the flash slowed so the capture catches it.
+    // The Split bolts' slot (047: each round its own carried bar slot), then a Split bolt at the nearest Husk; the
+    // flash slowed so the capture catches it.
     await page.evaluate(() => {
       const g = window.__GAME__;
-      if (!g) throw new Error('no game');
-      let s = g.step(30);
-      const homing = s.inventory['ley-bolt+homing'] ?? 0;
-      for (let i = 0; i < homing; i++) s = g.step(25, { fire: true, aimX: s.player.x - 300, aimY: s.player.y - 200 });
+      const h = window.__helpers;
+      if (!g || !h) throw new Error('no game');
+      g.step(30);
+      h.hold('ley-bolt+split');
       g.step(60);
       g.tweenSpeed(0.02);
     });
@@ -113,7 +114,7 @@ test.describe('review screenshots (029)', () => {
         // Only at a Husk well off, so the burst stands clear of the player; backing off while one is close.
         const d = Math.hypot(husk.x - s.player.x, husk.y - s.player.y);
         const back = d < 120 ? { moveY: (husk.y > s.player.y ? -1 : 1) as -1 | 1 } : {};
-        s = g.step(1, { ...back, fire: s.arrows.length === 0 && d >= 120 && d < 220, aimX: husk.x, aimY: husk.y - 8 });
+        s = g.step(1, { ...back, use: s.arrows.length === 0 && d >= 120 && d < 220, aimX: husk.x, aimY: husk.y - 8 });
       }
       return s.events.splits.length;
     });
@@ -136,12 +137,13 @@ test.describe('review screenshots (029)', () => {
       g.craft('frost-rune-arrow');
       h.toHall();
       h.walkTo((44.5 + h.ox) * 32, 19.5 * 32);
+      h.hold('arrow+frost');
       let s = g.step(0);
       for (let t = 0; t < 1500 && !s.enemies.some((e) => e.frozen > 30); t++) {
         const husk = s.enemies.filter((e) => e.room === s.room && e.enemyId === 'husk').sort((a, b) => Math.hypot(a.x - s.player.x, a.y - s.player.y) - Math.hypot(b.x - s.player.x, b.y - s.player.y))[0];
         if (!husk) break;
         g.setEnemyHealth(husk.id, 40);
-        s = g.step(1, { fire: Math.hypot(husk.x - s.player.x, husk.y - s.player.y) < 200, aimX: husk.x, aimY: husk.y - 8 });
+        s = g.step(1, { use: Math.hypot(husk.x - s.player.x, husk.y - s.player.y) < 200, aimX: husk.x, aimY: husk.y - 8 });
       }
       if (!s.enemies.some((e) => e.frozen > 0)) throw new Error('no Husk froze');
     });

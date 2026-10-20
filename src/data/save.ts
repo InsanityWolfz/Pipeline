@@ -2,8 +2,12 @@
 // the feedback note limits. A change to SimState's shape bumps SAVE_VERSION; a rename or reshape adds a migration
 // (src/sim/save.ts, SAVE_MIGRATIONS). Fields only added need neither: they're filled from a fresh sim.
 
-/** The save format's version. Starts at 1. */
-export const SAVE_VERSION = 3;
+/**
+ * The save format's version. Starts at 1. 047 made it 4 with no migration (Shaun, 2026-10-20: "do not account for
+ * corrupting old saves or preserving their playability. If a feature breaks a save then the person just starts
+ * over."): an older save reads as too old, Continue is unavailable, and a New game starts fresh.
+ */
+export const SAVE_VERSION = 4;
 
 /** The envelope's and the export file's format tags. */
 export const SAVE_FORMAT = 'pipeline-save';

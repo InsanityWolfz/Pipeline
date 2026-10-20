@@ -12,7 +12,7 @@ import { ui } from './intakePage';
 
 const SHOTS = 'docs/review/039';
 
-/** ?playtest at the bench with the shrine claimed, every Frost row hand-applied once (bombs and ley bolts carried). */
+/** ?playtest at the bench with the shrine claimed, every Frost round crafted once (047: in C; bombs and ley bolts carried). */
 async function atBench(page: Page): Promise<void> {
   await boot(page, '?playtest');
   await page.evaluate(() => {
@@ -39,7 +39,7 @@ async function toMeadow(page: Page, slot: string): Promise<void> {
     h.toHall();
     // South of the ruin field (017), on open ground.
     h.walkTo((44.5 + h.ox) * 32, 19.5 * 32);
-    g.step(1, { selectAmmo: s });
+    window.__helpers?.hold(s);
     g.spawnChampionPack(['husk', 'husk', 'husk'], null);
     g.step(20);
   }, slot);
@@ -54,12 +54,12 @@ test.describe('review screenshots (039)', () => {
   test('a Frost bomb and a Frost ley bolt in flight, and a Cold Burst', async ({ page }) => {
     test.setTimeout(120_000);
     await atBench(page);
-    await toMeadow(page, 'bomb');
+    await toMeadow(page, 'bomb+frost');
     const flying = await page.evaluate(() => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
       const p = g.step(0).player;
-      g.step(1, { fire: true, aimX: p.x + 150, aimY: p.y - 20 });
+      g.step(1, { use: true, aimX: p.x + 150, aimY: p.y - 20 });
       return g.step(14).bombs.map((b) => b.keywords);
     });
     expect(flying[0]).toEqual(['bomb', 'lob', 'burst', 'cold']);
@@ -80,16 +80,17 @@ test.describe('review screenshots (039)', () => {
     const bolt = await page.evaluate(() => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
-      g.step(60, { selectAmmo: 'ley-bolt' });
+      window.__helpers?.hold('ley-bolt+frost');
+      g.step(60);
       const p = g.step(0).player;
-      g.step(1, { fire: true, aimX: p.x + 200, aimY: p.y + 60 });
+      g.step(1, { use: true, aimX: p.x + 200, aimY: p.y + 60 });
       return g.step(5).arrows.map((a) => a.ammoId);
     });
     expect(bolt).toContain('ley-bolt+frost');
     await page.screenshot({ path: `${SHOTS}/03-frost-ley-bolt-in-flight.png` });
   });
 
-  test('the bench’s Stages rows with a hovered row’s generated line, and a gear row with the new labels', async ({ page }) => {
+  test('a gear row with the new labels', async ({ page }) => {
     test.setTimeout(120_000);
     await atBench(page);
     await page.evaluate(() => {

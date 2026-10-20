@@ -1,12 +1,13 @@
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { BUILD_BAR_LAYOUT, HUD_LAYOUT, tubeSlotWidth } from '../data/hudLayout';
 import { BUILD_STRIP } from '../data/buildStrip';
-import { SLOT_AMMOS } from '../data/tube';
+import { CARRIED_SLOTS } from '../data/tube';
 
-// Where the bottom HUD's pieces sit (025), pure so tests can check the centring:
-// the hotbar row centred `margin` px above the bottom edge, and the tube slot
-// centred `gap` px above the row, one unit per round it shows. While building the
-// build bar takes the row's place, with its group labels above it (026).
+// Where the bottom HUD's pieces sit (025, 047), pure so tests can check the centring:
+// the carried bar (keys 1–5) centred `margin` px above the bottom edge, and the intake's
+// bar (the tube slot: the volley, or the fist) centred `gap` px above it, one unit per
+// round it shows. While building the build bar takes the carried bar's place, with its
+// group labels above it (026).
 
 export interface ScreenBox {
   x: number;
@@ -46,16 +47,12 @@ export function buildBarLabelTop(): number {
   return VIEW_HEIGHT - L.bottom - L.cellHeight - L.label.gap - L.label.h;
 }
 
-/** The hotbar's cells, one per ammo in key order, centred along the bottom. */
-export function hotbarCells(): (ScreenBox & { ammoId: string })[] {
-  const row = bottomRow(SLOT_AMMOS.length, HUD_LAYOUT.cell, HUD_LAYOUT.margin);
-  return SLOT_AMMOS.flatMap((ammoId, i) => {
-    const box = row[i];
-    return box ? [{ ammoId, ...box }] : [];
-  });
+/** The carried bar's cells (047), one per slot in key order (1–5), centred along the bottom. */
+export function hotbarCells(): (ScreenBox & { slot: number })[] {
+  return bottomRow(CARRIED_SLOTS, HUD_LAYOUT.cell, HUD_LAYOUT.margin).map((box, slot) => ({ slot, ...box }));
 }
 
-/** The whole hotbar row. */
+/** The whole carried bar. */
 export function hotbarBox(): ScreenBox {
   const cells = hotbarCells();
   const first = cells[0];

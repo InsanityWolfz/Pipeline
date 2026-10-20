@@ -20,7 +20,7 @@ async function hover(page: Page, x: number, y: number): Promise<void> {
 
 /** The arrow's hotbar slot, view px. */
 function arrowSlot(): { x: number; y: number; w: number; h: number } {
-  const cell = hotbarCells().find((c) => c.ammoId === 'arrow');
+  const cell = hotbarCells().find((c) => c.slot === 0) /* 047: the arrows' carried slot, first carried */;
   if (!cell) throw new Error('no arrow slot');
   return cell;
 }
@@ -128,7 +128,7 @@ test('clicking the Burst chip opens its glossary entry and never fires; Esc clos
   const errors = watchErrors(page);
   await boot(page, '?playtest');
   // On the real-time clock (no step), so a press drives the tube as in play.
-  const bombSlot = hotbarCells().find((c) => c.ammoId === 'bomb');
+  const bombSlot = hotbarCells().find((c) => c.slot === 1) /* 047: the bombs' carried slot */;
   if (!bombSlot) throw new Error('no bomb slot');
   await hoverBox(page, bombSlot);
   await expect.poll(async () => (await ui(page))?.tip?.chips).toContain('burst');
@@ -248,7 +248,8 @@ test('a Husk with frost hits shows Chill and its stacks on its hover name', asyn
     if (!g) throw new Error('no game');
     let s = g.step(1);
     g.drop('arrow+frost', s.player.x, s.player.y);
-    g.step(5, { selectAmmo: 'arrow' });
+    g.step(5);
+      window.__helpers?.hold('arrow+frost');
     s = g.spawnEnemy('husk', s.player.x + 90, s.player.y);
     const id = s.enemies.at(-1)?.id ?? -1;
     g.setEnemyHealth(id, 1000);
@@ -256,7 +257,7 @@ test('a Husk with frost hits shows Chill and its stacks on its hover name', asyn
     for (let t = 0; t < 60 && (g.getState().enemies.find((e) => e.id === id)?.chill ?? 0) < 2; t++) {
       const e = g.getState().enemies.find((en) => en.id === id);
       if (!e) break;
-      g.step(1, { fire: true, aimX: e.x, aimY: e.y - 4 });
+      g.step(1, { use: true, aimX: e.x, aimY: e.y - 4 });
     }
     const e = g.step(1).enemies.find((en) => en.id === id);
     return { x: e?.x ?? 0, y: e?.y ?? 0, chill: e?.chill ?? 0 };

@@ -32,11 +32,11 @@ test.describe('review screenshots (038)', () => {
     await page.evaluate((at) => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
-      g.step(1, { selectAmmo: 'landmine' });
+      window.__helpers?.hold('landmine');
       // The first is thrown 200 ticks before the second, so it shows in its red last second as the second fills.
-      g.step(1, { fire: true, aimX: at.x + 90, aimY: at.y - 30 });
+      g.step(1, { use: true, aimX: at.x + 90, aimY: at.y - 30 });
       g.step(200);
-      g.step(1, { fire: true, aimX: at.x - 90, aimY: at.y + 20 });
+      g.step(1, { use: true, aimX: at.x - 90, aimY: at.y + 20 });
       g.step(75);
     }, p);
     await expect.poll(async () => (await ui(page))?.mines.armed.length).toBe(2);
@@ -52,8 +52,8 @@ test.describe('review screenshots (038)', () => {
     await page.evaluate((at) => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
-      g.step(1, { selectAmmo: 'landmine' });
-      g.step(1, { fire: true, aimX: at.x + 80, aimY: at.y });
+      window.__helpers?.hold('landmine');
+      g.step(1, { use: true, aimX: at.x + 80, aimY: at.y });
       g.tweenSpeed(0.03);
       let s = g.step(1);
       for (let t = 0; t < 400 && s.events.mineBursts.length === 0; t++) s = g.step(1);
@@ -69,12 +69,12 @@ test.describe('review screenshots (038)', () => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
       // The playtest carries no tagged rounds: a cluster bomb laid at the player's feet is picked up.
-      g.step(1, { selectAmmo: 'bomb' });
       g.drop('bomb+cluster', at.x, at.y);
       let s = g.step(1);
       for (let t = 0; t < 60 && !s.inventory['bomb+cluster']; t++) s = g.step(1);
+      window.__helpers?.hold('bomb+cluster');
       g.tweenSpeed(0.03);
-      s = g.step(1, { fire: true, aimX: at.x + 110, aimY: at.y });
+      s = g.step(1, { use: true, aimX: at.x + 110, aimY: at.y });
       for (let t = 0; t < 120 && s.events.bursts.length === 0; t++) s = g.step(1);
       g.step(6);
     }, p);

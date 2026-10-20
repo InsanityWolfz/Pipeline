@@ -2,11 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { summarize } from '../../src/sim/summary';
 import { hudActive, nextPress } from '../../src/sim/volley';
 import type { SimState } from '../../src/sim/state';
-import { fireAt, movePlayer, run } from './fight';
+import { hold, movePlayer, run, volleyAt } from './fight';
 import { foundry, stepOutside } from './foundryKit';
 
-// The bottom HUD's tube slot (025): `hudActive` says what the next fire press does,
-// from the same helper the fire path uses (`nextPress`), so the two never disagree.
+// The bottom HUD's intake bar (025, 047): `hudActive` says what the next fire press (left
+// click) does, from the same helper the fire path uses (`nextPress`), so the two never
+// disagree: the volley, or the punch. Carried rounds are the carried bar's (right click).
 
 /** Out in the meadow with every entrance open and holding `rounds`, carrying `inventory`. */
 function meadow(rounds: ([string, number] | null)[], inventory: Record<string, number>): SimState {
@@ -25,25 +26,23 @@ function meadow(rounds: ([string, number] | null)[], inventory: Record<string, n
 /** One fire press toward the right, with the cooldowns run out first. */
 function press(s: SimState): void {
   run(s, Math.max(s.tube.fireCooldown, s.tube.meleeCooldown));
-  run(s, 1, fireAt(600, 400));
+  run(s, 1, volleyAt(600, 400));
 }
 
 describe('hudActive (025)', () => {
-  it('shows the carried round of the selected ammo with its carried count once the entrances are empty, and that is what fires', () => {
+  it('never shows a carried round: with the entrances empty it shows melee, and the press punches (047)', () => {
     const s = meadow([null, null, null], { arrow: 12, bomb: 2 });
-    s.tube.ammoId = 'arrow';
-    expect(hudActive(s)).toEqual({ kind: 'carried', ammoId: 'arrow', count: 12 });
+    hold(s, 'arrow');
+    expect(hudActive(s)).toEqual({ kind: 'melee' });
     press(s);
-    expect(s.tube.shotCount).toBe(1);
-    expect(s.tube.fromReservoir).toBe(false);
-    expect(s.arrows).toHaveLength(1);
-    expect(s.inventory.arrow).toBe(11);
-    expect(hudActive(s)).toEqual({ kind: 'carried', ammoId: 'arrow', count: 11 });
+    expect(s.events.melees).toHaveLength(1);
+    expect(s.arrows).toHaveLength(0);
+    expect(s.inventory.arrow).toBe(12);
   });
 
   it('shows the whole volley, west to east, each round with its entrance count, and that is what fires, even with the selected ammo carried (028)', () => {
     const s = meadow([['arrow', 12], ['arrow', 9], ['bomb', 4]], { arrow: 5, bomb: 2 });
-    s.tube.ammoId = 'arrow';
+    hold(s, 'arrow');
     expect(hudActive(s)).toEqual({
       kind: 'volley',
       rounds: [
@@ -68,7 +67,7 @@ describe('hudActive (025)', () => {
 
   it('shows melee when nothing can fire, and the press punches', () => {
     const s = meadow([null, null, null], { bomb: 3 });
-    s.tube.ammoId = 'arrow';
+    hold(s, 'arrow');
     expect(hudActive(s)).toEqual({ kind: 'melee' });
     press(s);
     expect(s.events.melees).toHaveLength(1);
@@ -85,16 +84,16 @@ describe('hudActive (025)', () => {
     expect(s.inventory.arrow).toBe(30);
   });
 
-  it('follows the fire path through volley, carried and melee in turn (028)', () => {
+  it('follows the fire path through volley and melee in turn (028, 047)', () => {
     const s = meadow([null, ['arrow', 1], null], { arrow: 1 });
     const seen: string[] = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       const active = hudActive(s);
       expect(active.kind).toBe(nextPress(s).kind);
       seen.push(active.kind);
       press(s);
     }
-    expect(seen).toEqual(['volley', 'carried', 'melee']);
+    expect(seen).toEqual(['volley', 'melee']);
   });
 
   it('is reported by getState() as hud.active', () => {

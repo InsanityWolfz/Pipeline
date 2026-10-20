@@ -5,7 +5,7 @@ import { chillEnemy } from '../../src/sim/cold';
 import { createEnemy, damageEnemy, type EnemyState } from '../../src/sim/enemies';
 import type { SimState } from '../../src/sim/state';
 import { tileCentre } from '../../src/sim/tiles';
-import { arena, fireAt, HALL, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, fireAt, HALL, hold, placeHusk, PLAYER_AT, run, runUntil, volleyAt } from './fight';
 
 // 039 pins today's numbers before the keyword refactor (spec 039: "the numbers stay as
 // they are"). Everything here must hold after it; the spec's listed changes are pinned in
@@ -22,7 +22,7 @@ const FAR = { x: PLAYER_AT.x + 1000, y: PLAYER_AT.y };
 function launchDamage(item: string, slot: string, ...talents: string[]): number {
   const s = taking(arena(), ...talents);
   s.inventory = { [item]: 5 };
-  run(s, 1, { selectAmmo: slot });
+  hold(s, slot);
   run(s, 1, fireAt(FAR.x, FAR.y));
   const shot = s.arrows[0] ?? s.bombs[0];
   if (!shot) throw new Error('no shot');
@@ -41,7 +41,7 @@ function still(s: SimState, x: number, y: number): EnemyState {
 function shotTicks(item: string, slot: string, ticks: number, ...talents: string[]): number[] {
   const s = taking(arena(), ...talents);
   s.inventory = { [item]: 999 };
-  run(s, 1, { selectAmmo: slot });
+  hold(s, slot);
   const out: number[] = [];
   for (let t = 1; t <= ticks; t++) {
     run(s, 1, fireAt(FAR.x, FAR.y));
@@ -86,7 +86,7 @@ describe('039 pins: children and statuses', () => {
     ] as const) {
       const s = taking(arena(), ...talents);
       s.inventory = { 'bomb+cluster': 2 };
-      run(s, 1, { selectAmmo: 'bomb' });
+      hold(s, 'bomb');
       run(s, 1, fireAt(PLAYER_AT.x + 100, PLAYER_AT.y));
       runUntil(s, () => s.mines.bomblets.length > 0, 80);
       const b = s.mines.bomblets[0];
@@ -100,7 +100,7 @@ describe('039 pins: children and statuses', () => {
       const s = taking(arena(), ...talents);
       s.inventory = { 'ley-bolt+split': 5 };
       still(s, PLAYER_AT.x + 100, PLAYER_AT.y);
-      run(s, 1, { selectAmmo: 'ley-bolt' });
+      hold(s, 'ley-bolt');
       run(s, 1, fireAt(FAR.x, FAR.y));
       runUntil(s, () => s.arrows.some((a) => a.ammoId !== 'ley-bolt+split'), 60);
       return s.arrows.filter((a) => a.ammoId !== 'ley-bolt+split');
@@ -133,7 +133,7 @@ describe('039 pins: children and statuses', () => {
       const s = taking(arena(), ...talents);
       s.inventory = { 'ley-bolt+homing': 5 };
       still(s, PLAYER_AT.x + 150, PLAYER_AT.y);
-      run(s, 1, { selectAmmo: 'ley-bolt' });
+      hold(s, 'ley-bolt');
       run(s, 1, fireAt(PLAYER_AT.x + 150, PLAYER_AT.y - 50));
       const bolt = s.arrows[0];
       if (!bolt) throw new Error('no bolt');
@@ -162,7 +162,7 @@ describe('039 pins: timing', () => {
     Object.assign(e, { open: true, ammoId: 'ley-bolt', count: 999 });
     const out: number[] = [];
     for (let t = 1; t <= 600; t++) {
-      run(s, 1, fireAt(FAR.x, FAR.y));
+      run(s, 1, volleyAt(FAR.x, FAR.y));
       if (s.events.entranceFires.length > 0) out.push(t);
     }
     expect(out).toEqual(every(ammoDef('ley-bolt').fireTicks, 600));
@@ -172,7 +172,7 @@ describe('039 pins: timing', () => {
     const lands = (...talents: string[]) => {
       const s = taking(arena(), ...talents);
       s.inventory = { bomb: 2 };
-      run(s, 1, { selectAmmo: 'bomb' });
+      hold(s, 'bomb');
       run(s, 1, fireAt(PLAYER_AT.x + 150, PLAYER_AT.y));
       return runUntil(s, () => s.events.bursts.length > 0, 120);
     };
@@ -221,7 +221,7 @@ describe('039 pins: what the spec changes (each flips in its own commit)', () =>
       const outside = tileCentre({ tx: 41, ty: 27 });
       const b = arena(undefined, outside);
       b.inventory = { bomb: 1 };
-      b.tube.ammoId = 'bomb';
+      hold(b, 'bomb');
       run(b, 1, fireAt(outside.x + dx, outside.y + dy));
       return [runUntil(b, () => b.events.bursts.length > 0, 120), b.events.bursts[0]?.x, b.events.bursts[0]?.y];
     };

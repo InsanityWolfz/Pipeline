@@ -5,7 +5,7 @@ import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import { roomById, type SimState } from '../../src/sim/state';
 import { TILE } from '../../src/data/rooms';
 import { summarize } from '../../src/sim/summary';
-import { arena, fireAt, HALL, movePlayer, PLAYER_AT, run, runUntil } from './fight';
+import { arena, fireAt, HALL, hold, movePlayer, PLAYER_AT, run, runUntil, volleyAt } from './fight';
 
 // The Burrower (035): digs in on aggro, tunnels as an untargetable ripple, locks the
 // player's feet, a ring grows there, then it erupts and stays surfaced and dazed.
@@ -65,11 +65,11 @@ describe('the Burrower', () => {
     s.inventory = {};
     s.tube.fireCooldown = 0;
     movePlayer(s, e.x - 20, e.y);
-    run(s, 1, fireAt(e.x, e.y));
+    run(s, 1, volleyAt(e.x, e.y));
     expect(s.events.melees[0]?.hits).toEqual([]);
     // A bomb bursting on it.
     s.inventory = { bomb: 1 };
-    s.tube.ammoId = 'bomb';
+    hold(s, 'bomb');
     s.tube.meleeCooldown = 0;
     movePlayer(s, e.x - 100, e.y);
     run(s, 1, fireAt(e.x, e.y));
@@ -78,7 +78,7 @@ describe('the Burrower', () => {
     // Surfaced, the same arrow lands.
     e.underground = false;
     s.inventory = { arrow: 5 };
-    s.tube.ammoId = 'arrow';
+    hold(s, 'arrow');
     s.tube.fireCooldown = 0;
     run(s, 1, fireAt(e.x, e.y - 8));
     run(s, 20);

@@ -58,6 +58,8 @@ function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
 export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   clearEvents(state.events);
   state.tick += 1;
+  // 047: rounds that arrived between ticks (crafted from the menu) take their carried bar slot before anything fires.
+  noteCarried(state);
   // A dying player, or one held still while the tube attunes (019), takes no input but keeps their aim.
   const held = state.player.dying > 0 || state.link.attunePulse > 0;
   const cmd = held ? { ...NO_COMMAND, aimX: state.player.aimX, aimY: state.player.aimY } : maskCommand(state, input);

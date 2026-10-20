@@ -19,6 +19,11 @@ export interface Helpers {
   toHall(): void;
   /** Walks to the front of the foundry's stairs in the overworld and down them (017). */
   toFoundry(): void;
+  /**
+   * 047: puts an item kind on the carried bar (its own slot if it has one, else slot 1) and selects it, through the
+   * sim's commands as a drag and a key press would; right click (`use`) then uses it.
+   */
+  hold(itemId: string): void;
   /** Region 1's first column (034: the old map moved +40 when the Hollows grew west), for tiles specs name by hand. */
   ox: number;
 }
@@ -49,6 +54,13 @@ function installHelpers(map: MapData): void {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
     return g;
+  };
+  // 047: an item kind on the carried bar and selected, as a drag and a key press would.
+  const hold = (itemId: string): void => {
+    const g = game();
+    const at = g.getState().hotbar.slots.indexOf(itemId);
+    const slot = at >= 0 ? at : 0;
+    g.step(1, { assignSlot: { slot, itemId }, selectSlot: slot });
   };
   const toward = (from: number, to: number): -1 | 0 | 1 => (Math.abs(to - from) < 2 ? 0 : to > from ? 1 : -1);
   // Straight toward the point; when something solid stops the player, sidestep along one axis for a
@@ -211,8 +223,10 @@ function installHelpers(map: MapData): void {
       for (let t = 0; t < 60 && g.getState().room === 'foundry'; t++) g.step(1, { moveX: 1 });
       if (g.getState().room === 'foundry') throw new Error('could not leave the foundry');
     },
+    hold,
     killHusk() {
       const g = game();
+      if ((g.getState().inventory.arrow ?? 0) > 0) hold('arrow');
       let s = g.getState();
       const before = s.enemies.filter((e) => e.room === s.room).length;
       let pathed = true;
@@ -239,10 +253,12 @@ function installHelpers(map: MapData): void {
           }
           continue;
         }
+        // 047: the volley on left click, carried arrows on right click (the arrow slot is selected first).
         s = g.step(1, {
           moveX: far ? toward(p.x, target.x) : 0,
           moveY: far ? toward(p.y, target.y) : 0,
           fire: !far,
+          use: !far,
           aimX: target.x,
           aimY: target.y,
         });

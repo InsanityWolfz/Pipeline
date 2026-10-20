@@ -34,7 +34,7 @@ test.describe('review screenshots (040)', () => {
 
   test('a round’s summary and its breakdown, from the hotbar', async ({ page }) => {
     await withTalents(page, 'a1', 'a2', 't1', 't2', 't3', 'k3', 'b1', 'b2', 'b3', 'k1');
-    const cell = hotbarCells().find((c) => c.ammoId === 'arrow');
+    const cell = hotbarCells().find((c) => c.slot === 0) /* 047: the arrows' carried slot, first carried */;
     if (!cell) throw new Error('no arrow slot');
     await hover(page, cell.x + cell.w / 2, cell.y + cell.h / 2);
     await expect.poll(async () => (await ui(page))?.tip?.mode).toBe('summary');
@@ -115,14 +115,15 @@ test.describe('review screenshots (040)', () => {
       if (!g) throw new Error('no game');
       let s = g.step(1);
       for (let i = 0; i < 3; i++) g.drop('arrow+frost', s.player.x, s.player.y);
-      g.step(5, { selectAmmo: 'arrow' });
+      g.step(5);
+      window.__helpers?.hold('arrow+frost');
       s = g.spawnEnemy('husk', s.player.x + 90, s.player.y, true);
       const id = s.enemies.at(-1)?.id ?? -1;
       g.setEnemyHealth(id, 1000);
       for (let t = 0; t < 60 && (g.getState().enemies.find((e) => e.id === id)?.chill ?? 0) < 2; t++) {
         const e = g.getState().enemies.find((en) => en.id === id);
         if (!e) break;
-        g.step(1, { fire: true, aimX: e.x, aimY: e.y - 4 });
+        g.step(1, { use: true, aimX: e.x, aimY: e.y - 4 });
       }
       // A few ticks on, so the last hit's flash is over (its Chill lasts 2 s).
       const e = g.step(20).enemies.find((en) => en.id === id);

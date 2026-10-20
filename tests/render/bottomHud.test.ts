@@ -5,7 +5,7 @@ import { TEXT_STYLES } from '../../src/data/fonts';
 import { BUILD_BAR, PIECE_CATEGORIES, pieceDef } from '../../src/data/pieces';
 import { BUILD_BAR_LAYOUT, CRAFT_MENU_LAYOUT, HUD_LAYOUT } from '../../src/data/hudLayout';
 import { BUILD_STRIP } from '../../src/data/buildStrip';
-import { SLOT_AMMOS } from '../../src/data/tube';
+import { CARRIED_SLOTS } from '../../src/data/tube';
 import { hotbarBox, hotbarCells, tubeSlotBox, tubeSlotUnits, type ScreenBox } from '../../src/render/bottomHud';
 import { craftPanelAt, craftTabBoxes, craftTabRows } from '../../src/render/craftMenuLayout';
 import { CRAFT_TABS } from '../../src/data/craftTabs';
@@ -18,10 +18,10 @@ const centre = (b: ScreenBox) => b.x + b.w / 2;
 const inView = (b: ScreenBox) => b.x >= 0 && b.y >= 0 && b.x + b.w <= VIEW_WIDTH && b.y + b.h <= VIEW_HEIGHT;
 
 describe('the bottom HUD layout', () => {
-  it('centres the four hotbar cells (038: key 4 for landmines), in key order, margin px above the bottom', () => {
+  it('centres the carried bar\'s five cells (047: keys 1–5), in key order, margin px above the bottom', () => {
     const cells = hotbarCells();
-    expect(cells.map((c) => c.ammoId)).toEqual([...SLOT_AMMOS]);
-    expect(cells).toHaveLength(4);
+    expect(cells.map((c) => c.slot)).toEqual([0, 1, 2, 3, 4]);
+    expect(cells).toHaveLength(CARRIED_SLOTS);
     const row = hotbarBox();
     expect(Math.abs(centre(row) - VIEW_WIDTH / 2)).toBeLessThanOrEqual(1);
     expect(row.y + row.h).toBe(VIEW_HEIGHT - HUD_LAYOUT.margin);

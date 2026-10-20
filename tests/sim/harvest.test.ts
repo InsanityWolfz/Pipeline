@@ -3,7 +3,7 @@ import { FEET_BOX } from '../../src/data/player';
 import { HARVEST_REACH, nodeDef } from '../../src/data/nodes';
 import { cancelHarvest } from '../../src/sim/harvest';
 import { nodeRects } from '../../src/sim/nodes';
-import { arena, fireAt, HUSK, placeHusk, placeNode, PLAYER_AT, run, runUntil, SWIPE_LANDS } from './fight';
+import { arena, fireAt, hold, HUSK, placeHusk, placeNode, PLAYER_AT, run, runUntil, SWIPE_LANDS } from './fight';
 
 const TREE = nodeDef('tree');
 /** Gap that puts the tree's box `gap` px right of the player's feet box. */
@@ -80,7 +80,7 @@ describe('harvesting', () => {
     ['moving', { moveX: 1 as const }],
     ['rolling', { dodge: true }],
     ['firing', fireAt(PLAYER_AT.x - 100, PLAYER_AT.y)],
-    ['switching ammo', { selectAmmo: 'bomb' }],
+    ['switching the carried slot', { selectSlot: 3 }],
   ])('is cancelled by %s, losing progress and using nothing', (_name, c) => {
     const { s, n } = harvesting(10);
     run(s, 1, c);
@@ -90,9 +90,9 @@ describe('harvesting', () => {
     expect(s.groundItems).toHaveLength(0);
   });
 
-  it('is not cancelled by selecting the ammo already selected', () => {
+  it('is not cancelled by selecting the slot already selected', () => {
     const { s } = harvesting(10);
-    run(s, 1, { selectAmmo: 'arrow' });
+    run(s, 1, { selectSlot: s.hotbar.selected });
     expect(s.harvest?.progress).toBe(11);
   });
 
@@ -165,11 +165,11 @@ describe('nodes', () => {
     const e = placeHusk(s, PLAYER_AT.x + 140, PLAYER_AT.y);
     s.inventory['ley-bolt'] = 1;
     s.inventory.bomb = 1;
-    run(s, 1, { selectAmmo: 'ley-bolt' });
+    hold(s, 'ley-bolt');
     run(s, 1, fireAt(PLAYER_AT.x + 400, PLAYER_AT.y));
     runUntil(s, () => e.health < HUSK.maxHealth, 60);
     // A bomb aimed at the node itself lands on it and bursts there.
-    run(s, 1, { selectAmmo: 'bomb' });
+    hold(s, 'bomb');
     run(s, 1, fireAt(PLAYER_AT.x + 60, PLAYER_AT.y));
     runUntil(s, () => s.events.bursts.length > 0, 60);
     expect(s.events.bursts[0]?.x).toBeCloseTo(PLAYER_AT.x + 60);

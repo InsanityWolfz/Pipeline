@@ -41,7 +41,7 @@ async function shootHusk(page: Page, dx = 150): Promise<void> {
     for (let t = 0; t < 600; t++) {
       const e = g.getState().enemies.find((en) => en.id === id);
       if (!e) return;
-      g.step(1, { fire: true, aimX: e.x, aimY: e.y - 4 });
+      g.step(1, { fire: true, use: true, aimX: e.x, aimY: e.y - 4 });
     }
   }, dx);
 }
@@ -102,12 +102,13 @@ test.describe('review screenshots (037)', () => {
     const crossing = await page.evaluate(() => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
-      const p = g.step(1, { selectAmmo: 'bomb' }).player;
-      g.step(1, { fire: true, aimX: p.x + 192, aimY: p.y });
-      g.step(1, { selectAmmo: 'arrow' });
+      window.__helpers?.hold('bomb');
+      const p = g.step(0).player;
+      g.step(1, { use: true, aimX: p.x + 192, aimY: p.y });
+      window.__helpers?.hold('arrow');
       // Arrows held at the blast's spot: the sim is held the tick one takes the Pool and still well inside the ground.
       for (let t = 0; t < 120; t++) {
-        const s = g.step(1, { fire: true, aimX: p.x + 300, aimY: p.y });
+        const s = g.step(1, { use: true, aimX: p.x + 300, aimY: p.y });
         const c = s.pools[0];
         const a = s.arrows.find((r) => r.pooled);
         if (c && a && Math.hypot(a.x - c.x, a.y - c.y) < c.radius - 12) return true;
@@ -157,14 +158,14 @@ test.describe('review screenshots (037)', () => {
         if (!e) return false;
         g.setEnemyHealth(e.id, 40);
         if (e.frozen > 0) break;
-        g.step(1, { fire: true, aimX: e.x, aimY: e.y - 4 });
+        g.step(1, { use: true, aimX: e.x, aimY: e.y - 4 });
       }
       g.tweenSpeed(0.5);
-      g.step(1, { selectAmmo: 'ley-bolt' });
+      window.__helpers?.hold('ley-bolt');
       for (let t = 0; t < 120; t++) {
         const e = g.getState().enemies.find((en) => en.id === id);
         if (!e) return false;
-        if (g.step(1, { fire: true, aimX: e.x, aimY: e.y - 4 }).events.shatters.length > 0) return true;
+        if (g.step(1, { use: true, aimX: e.x, aimY: e.y - 4 }).events.shatters.length > 0) return true;
       }
       return false;
     });
@@ -184,7 +185,7 @@ test.describe('review screenshots (037)', () => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
       const p = g.getState().player;
-      return g.step(120, { fire: true, aimX: p.x + 200, aimY: p.y - 20 }).overpressure;
+      return g.step(120, { use: true, aimX: p.x + 200, aimY: p.y - 20 }).overpressure;
     });
     expect(ramp.ticks).toBe(120);
     await expect.poll(async () => (await ui(page))?.talentFx.heat).toBeGreaterThan(0);

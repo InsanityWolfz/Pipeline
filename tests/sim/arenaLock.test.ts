@@ -108,7 +108,7 @@ describe('the seal', () => {
     const max = husk.health;
     for (let t = 0; t < 40 && husk.health === max; t++) {
       s.player.health = 100;
-      run(s, 1, { fire: true, aimX: husk.x, aimY: husk.y - 12 });
+      run(s, 1, { use: true, aimX: husk.x, aimY: husk.y - 12 });
     }
     expect(sealedNow(s)).toBe(true);
     expect(husk.health).toBeLessThan(max);
@@ -201,7 +201,7 @@ describe('E at the sealed door', () => {
   it('is deterministic: a fight with a leave, run twice, ends the same', () => {
     const go = (): string => {
       const { s } = awake(96);
-      run(s, 300, (st) => ({ moveX: st.tick % 90 < 45 ? 1 : -1, fire: true, aimX: START.x, aimY: START.y - 20 }));
+      run(s, 300, (st) => ({ moveX: st.tick % 90 < 45 ? 1 : -1, use: true, aimX: START.x, aimY: START.y - 20 }));
       movePlayer(s, DOOR_X, INSIDE_DOOR_Y);
       run(s, 1, { interact: true });
       run(s, 120);

@@ -60,7 +60,8 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
         const have = (id: string) => (s.inventory[id] ?? 0) + s.intake.entrances.reduce((n, e) => n + (e.ammo === id ? e.count : 0), 0);
         // Piercing ammo first (029: arrows pierce now, ley bolts don't).
         const ammo = have('arrow') > 0 ? 'arrow' : have('ley-bolt') > 0 ? 'ley-bolt' : 'bomb';
-        if (s.tube.ammo !== ammo) s = g.step(1, { selectAmmo: ammo });
+        if ((s.hotbar.slots[s.hotbar.selected] ?? '') !== ammo) window.__helpers?.hold(ammo);
+    s = g.step(0);
         // Out of every ammo, the fire button punches (023): close right in rather than keeping range.
         const dry = have('arrow') + have('ley-bolt') + have('bomb') === 0;
         const kite = !dry && d < 80;
@@ -70,6 +71,7 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
           moveY: kite ? toward(near.y, p.y) : close ? toward(p.y, near.y) : 0,
           dodge: near.mode === 'windup' && d < 90 && t % 20 === 0,
           fire: true,
+          use: true,
           // At the body, not the feet: a Wisp's hurtbox floats above its feet, where a shot's ground point passes under it.
           aimX: near.x,
           aimY: near.y - 8,

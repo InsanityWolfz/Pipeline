@@ -2,15 +2,14 @@ import { expect, test, type Page } from '@playwright/test';
 import { SPRITES } from '../../src/data/assets';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { HUD_LAYOUT } from '../../src/data/hudLayout';
-import { SLOT_AMMOS } from '../../src/data/tube';
 import type { BottomHudState } from '../../src/render/HudView';
 import { boot, cameraSettled, watchErrors } from './helpers';
 import { feedLines, restoreEntrance, toIntake } from './intakePage';
 
-// The bottom HUD (025): the hotbar row centred along the bottom, and the tube slot
-// centred above it showing what the next press fires (hud.active): a carried round,
-// the whole volley, or the fist. With REVIEW_SHOTS=1, the review screenshots in
-// docs/review/025.
+// The bottom HUD (025, 047): the carried bar centred along the bottom (keys 1–5, right
+// click), and the intake's bar (the tube slot) centred above it showing what the next
+// left click fires (hud.active): the whole volley, or the fist. With REVIEW_SHOTS=1, the
+// review screenshots in docs/review/025.
 
 const SHOTS = 'docs/review/025';
 
@@ -55,7 +54,7 @@ function spendArrows(page: Page) {
     if (!g) throw new Error('no game');
     let s = g.step(0);
     const aim = { aimX: s.player.x + 100, aimY: s.player.y - 20 };
-    for (let t = 0; t < 2000 && (s.inventory.arrow ?? 0) > 0; t++) s = g.step(1, { fire: true, ...aim });
+    for (let t = 0; t < 2000 && (s.inventory.arrow ?? 0) > 0; t++) s = g.step(1, { use: true, ...aim });
     return g.step(1, aim);
   });
 }
@@ -74,31 +73,32 @@ async function mixedVolley(page: Page) {
   }) };
 }
 
-test('carried arrows, then the fist once they are spent; both rows centred', async ({ page }) => {
+test('the carried bar holds the arrows and the intake bar the fist; spent, the arrows\' slot shows empty; both rows centred (047)', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page, '?start=field');
   const s = await page.evaluate(() => window.__GAME__?.step(1));
   const arrows = s?.inventory.arrow ?? 0;
   expect(arrows).toBeGreaterThan(0);
-  expect(s?.hud.active).toEqual({ kind: 'carried', ammoId: 'arrow', count: arrows });
-  const carried = await hudShowing(page, [String(arrows)]);
-  expect(carried.tubeSlot.icons).toEqual([SPRITES.iconArrow]);
+  // Left click with the intake dry is a punch: the intake bar shows the fist, never the carried arrows.
+  expect(s?.hud.active).toEqual({ kind: 'melee' });
+  const carried = await hudShowing(page, [HUD_LAYOUT.tubeSlot.melee]);
+  expect(carried.tubeSlot.icons).toEqual([SPRITES.hudFist]);
   expect(carried.hotbar.shown).toBe(true);
   expect(carried.hotbar.selected).toBe(0);
+  expect(carried.hotbar.slots[0]).toEqual({ itemId: 'arrow', count: arrows, empty: false });
   expectLayout(carried);
 
-  // Key 2 selects the bomb: the highlight moves to the second cell, and with no bombs carried the slot shows the fist.
-  await page.evaluate((ammoId) => window.__GAME__?.step(1, { selectAmmo: ammoId }), SLOT_AMMOS[1] ?? '');
+  // Key 2 selects the second slot: the highlight moves to the second cell.
+  await page.evaluate(() => window.__GAME__?.step(1, { selectSlot: 1 }));
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hud))?.hotbar.selected).toBe(1);
-  await hudShowing(page, [HUD_LAYOUT.tubeSlot.melee]);
-  await page.evaluate((ammoId) => window.__GAME__?.step(1, { selectAmmo: ammoId }), SLOT_AMMOS[0] ?? '');
+  await page.evaluate(() => window.__GAME__?.step(1, { selectSlot: 0 }));
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hud))?.hotbar.selected).toBe(0);
 
   const spent = await spendArrows(page);
   expect(spent.inventory.arrow ?? 0).toBe(0);
-  expect(spent.hud.active).toEqual({ kind: 'melee' });
+  expect(spent.hotbar.slots[0]).toBe('arrow');
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hud))?.hotbar.slots[0]).toEqual({ itemId: 'arrow', count: 0, empty: true });
   const fist = await hudShowing(page, [HUD_LAYOUT.tubeSlot.melee]);
-  expect(fist.tubeSlot.icons).toEqual([SPRITES.hudFist]);
   expect(fist.hotbar.shown).toBe(true);
   expectLayout(fist);
   expect(errors).toEqual([]);
@@ -124,7 +124,6 @@ test('an arrow and a bomb entrance show as the whole volley, each with its count
   const { fed, out } = await mixedVolley(page);
   expect(fed.inventory.arrow ?? 0).toBe(0);
   if (!out) throw new Error('no state');
-  expect(out.tube.ammo).toBe('arrow');
   const [west, centre] = out.intake.entrances;
   const counts = [west?.count ?? 0, centre?.count ?? 0];
   expect(out.hud.active).toEqual({
@@ -162,9 +161,10 @@ test.describe('review screenshots (025)', () => {
 
   test('carried arrows, then the fist', async ({ page }) => {
     await boot(page, '?start=field');
-    const s = await page.evaluate(() => window.__GAME__?.step(1));
+    await page.evaluate(() => window.__GAME__?.step(1));
     await cameraSettled(page);
-    await hudShowing(page, [String(s?.inventory.arrow ?? 0)]);
+    // 047: the arrows are on the carried bar; the intake bar shows the fist (left click punches with the intake dry).
+    await hudShowing(page, [HUD_LAYOUT.tubeSlot.melee]);
     await page.screenshot({ path: `${SHOTS}/01-carried-arrows.png` });
     await spendArrows(page);
     await cameraSettled(page);

@@ -11,7 +11,7 @@ import { sectorHitsBox } from '../../src/sim/sector';
 import { roomById, type SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { hasRoundToFire } from '../../src/sim/tube';
-import { arena, fireAt, HALL, movePlayer, PLAYER_AT, placeHusk, run } from './fight';
+import { arena, HALL, movePlayer, PLAYER_AT, placeHusk, run, useAt, volleyAt } from './fight';
 
 // 023: with no tube, or nothing to fire, the fire button punches.
 
@@ -26,7 +26,7 @@ function bare(): SimState {
 
 /** One tick of fire held toward a point `dx, dy` px from the player. */
 function punchToward(s: SimState, dx: number, dy: number): void {
-  run(s, 1, fireAt(s.player.x + dx, s.player.y + dy));
+  run(s, 1, volleyAt(s.player.x + dx, s.player.y + dy));
 }
 
 function placeWarden(s: SimState, x: number, y: number): EnemyState {
@@ -123,7 +123,7 @@ describe('the punch', () => {
   it('never punches in the foundry', () => {
     const s = bare();
     s.roomId = FOUNDRY_ROOM;
-    run(s, 30, fireAt(s.player.x + 100, s.player.y));
+    run(s, 30, volleyAt(s.player.x + 100, s.player.y));
     expect(s.tube.meleeCooldown).toBe(0);
   });
 
@@ -131,7 +131,7 @@ describe('the punch', () => {
     const s = bare();
     const at: number[] = [];
     for (let t = 1; t <= ROLL_TICKS + 2; t++) {
-      run(s, 1, { ...fireAt(s.player.x + 100, s.player.y), moveX: 1, dodge: t === 1 });
+      run(s, 1, { ...volleyAt(s.player.x + 100, s.player.y), moveX: 1, dodge: t === 1 });
       if (s.events.melees.length > 0) at.push(t);
     }
     expect(at).toEqual([ROLL_TICKS + 1]);
@@ -139,12 +139,12 @@ describe('the punch', () => {
 
   it('never slows the walk', () => {
     const s = bare();
-    run(s, 1, fireAt(s.player.x + 100, s.player.y));
+    run(s, 1, volleyAt(s.player.x + 100, s.player.y));
     expect(s.tube.firing).toBe(false);
   });
 });
 
-describe('when the tube has nothing to fire', () => {
+describe('when the intake has nothing to fire (047: left click is the volley or the punch)', () => {
   it('empty entrances and no carried rounds punch', () => {
     const s = arena();
     s.inventory = {};
@@ -154,13 +154,14 @@ describe('when the tube has nothing to fire', () => {
     expect(s.events.shots).toHaveLength(0);
   });
 
-  it('a carried round shoots instead', () => {
+  it('a carried round never shoots on left click: it punches (047)', () => {
     const s = arena();
     s.inventory = { arrow: 1 };
-    expect(hasRoundToFire(s)).toBe(true);
+    expect(hasRoundToFire(s)).toBe(false);
     punchToward(s, 100, 0);
-    expect(s.events.melees).toHaveLength(0);
-    expect(s.events.shots).toHaveLength(1);
+    expect(s.events.melees).toHaveLength(1);
+    expect(s.events.shots).toHaveLength(0);
+    expect(s.inventory.arrow).toBe(1);
   });
 
   it('a round in any open entrance shoots, whatever ammo is selected (024); a capped one punches', () => {
@@ -185,11 +186,13 @@ describe('when the tube has nothing to fire', () => {
     expect(hasRoundToFire(s)).toBe(false);
   });
 
-  it('the punch after the last shot waits out the tube interval', () => {
+  it('the punch after a carried shot (right click) waits out the tube interval', () => {
     const s = arena();
     s.inventory = { arrow: 1 };
+    run(s, 1, useAt(s.player.x + 100, s.player.y));
+    expect(s.events.shots).toHaveLength(1);
     const punches: number[] = [];
-    for (let t = 1; t <= 40; t++) {
+    for (let t = 2; t <= 40; t++) {
       punchToward(s, 100, 0);
       if (s.events.melees.length > 0) punches.push(t);
     }

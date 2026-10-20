@@ -8,7 +8,7 @@ import { roundEmission } from '../../src/sim/emissions';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { fireTicksOf } from '../../src/sim/tube';
-import { arena, fireAt, HUSK, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, fireAt, hold, HUSK, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
 // The keystones (037): Blastfletch charges an arrow through a bomb's blast, Shatterpoint
 // shatters a frozen enemy with a ley bolt, Overpressure ramps the fire rate while fire is held.
@@ -41,7 +41,7 @@ describe('Blastfletch', () => {
   it('a bomb’s blast charges its ground for 20 ticks, with an event; nothing without the keystone', () => {
     const s = taking(arena(), 'k1');
     s.inventory = { bomb: 2 };
-    run(s, 1, { selectAmmo: 'bomb' });
+    hold(s, 'bomb');
     run(s, 1, fireAt(PLAYER_AT.x + 100, PLAYER_AT.y));
     runUntil(s, () => s.events.bursts.length > 0, 60);
     expect(s.events.pools).toEqual([{ id: 0, x: PLAYER_AT.x + 100, y: PLAYER_AT.y, radius: 48 }]);
@@ -52,7 +52,7 @@ describe('Blastfletch', () => {
     expect(s.pools).toEqual([]);
     const plain = arena();
     plain.inventory = { bomb: 2 };
-    run(plain, 1, { selectAmmo: 'bomb' });
+    hold(plain, 'bomb');
     run(plain, 1, fireAt(PLAYER_AT.x + 100, PLAYER_AT.y));
     runUntil(plain, () => plain.events.bursts.length > 0, 60);
     expect(plain.pools).toEqual([]);

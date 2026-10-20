@@ -175,12 +175,12 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
   expect(taken.inventory['ley-bolt']).toBeGreaterThanOrEqual(5);
 
   // The tube is quiet in the foundry (015): firing there does nothing, out in the hall it fires.
-  await step(page, 1, { selectAmmo: 'ley-bolt' });
-  const quiet = await step(page, 1, { fire: true, aimX: beside.x, aimY: beside.y + 200 });
+  await page.evaluate((id) => window.__helpers?.hold(id), 'ley-bolt');
+  const quiet = await step(page, 1, { fire: true, use: true, aimX: beside.x, aimY: beside.y + 200 });
   expect(quiet.arrows).toEqual([]);
   await page.evaluate(() => window.__helpers?.toHall());
   const out = await state(page);
-  const shot = await step(page, 1, { fire: true, aimX: out.player.x + 200, aimY: out.player.y });
+  const shot = await step(page, 1, { use: true, aimX: out.player.x + 200, aimY: out.player.y });
   expect(shot.arrows.map((a) => a.ammoId)).toEqual(['ley-bolt']);
   expect(errors).toEqual([]);
 });

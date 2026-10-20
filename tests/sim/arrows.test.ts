@@ -29,7 +29,7 @@ describe('arrows', () => {
   it('spawn at the muzzle and fly at the ammo speed with its damage', () => {
     const s = createSim(3);
     const { x, y } = s.player;
-    stepSim(s, { ...NO_COMMAND, fire: true, aimX: x, aimY: y + 200 });
+    stepSim(s, { ...NO_COMMAND, use: true, aimX: x, aimY: y + 200 });
     const arrow = s.arrows[0];
     // 041: an arrow hits for 14 (was 10).
     expect(arrow).toMatchObject({ ammoId: 'arrow', damage: 14, damageType: 'physical', travelled: 0 });

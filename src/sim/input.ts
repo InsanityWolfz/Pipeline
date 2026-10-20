@@ -21,12 +21,16 @@ export interface Command {
   /** Where the cursor points, world px. */
   aimX: number;
   aimY: number;
-  /** Fire is held. */
+  /** Fire (left click) is held: the intake's volley, or the punch with the intake dry (047). */
   fire: boolean;
+  /** Use (right click, 047) is held: the carried bar's selected item, thrown or fired. */
+  use: boolean;
   /** Interact (harvest) was pressed this tick (an edge, not held). */
   interact: boolean;
-  /** An ammo picked for the slot this tick (an edge), or null. */
-  selectAmmo: string | null;
+  /** A carried bar slot picked this tick (keys 1–5, an edge, 047), or null. */
+  selectSlot: number | null;
+  /** A stack dragged onto a carried bar slot this tick (an edge, 047): its kind goes on the slot; or null. */
+  assignSlot: { slot: number; itemId: string } | null;
   /** Build mode was toggled this tick (an edge). Only works in the foundry. */
   toggleBuild: boolean;
   /** A piece to place this tick (an edge), or null. */
@@ -73,8 +77,10 @@ export const NO_COMMAND: Readonly<Command> = {
   aimX: 0,
   aimY: 0,
   fire: false,
+  use: false,
   interact: false,
-  selectAmmo: null,
+  selectSlot: null,
+  assignSlot: null,
   toggleBuild: false,
   place: null,
   pickUp: null,
@@ -93,5 +99,5 @@ export const NO_COMMAND: Readonly<Command> = {
   sandbox: null,
 };
 
-/** A command's held part (stick, aim and fire) with every one-tick edge cleared: what a held command is after its first tick. */
-export const heldPart = (cmd: Command): Command => ({ ...NO_COMMAND, moveX: cmd.moveX, moveY: cmd.moveY, aimX: cmd.aimX, aimY: cmd.aimY, fire: cmd.fire });
+/** A command's held part (stick, aim, fire and use) with every one-tick edge cleared: what a held command is after its first tick. */
+export const heldPart = (cmd: Command): Command => ({ ...NO_COMMAND, moveX: cmd.moveX, moveY: cmd.moveY, aimX: cmd.aimX, aimY: cmd.aimY, fire: cmd.fire, use: cmd.use });

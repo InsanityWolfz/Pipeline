@@ -10,7 +10,7 @@ import type { HopperState } from '../../src/sim/pieces';
 import { createSim } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
-import { arena, atEntrance, command, die, runUntilKo, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, SEED } from './fight';
+import { arena, atEntrance, command, die, fireAt, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, runUntilKo, SEED, volleyAt } from './fight';
 import { foundry, put, stepOutside } from './foundryKit';
 import { OVERWORLD_ROOM } from '../../src/data/overworld';
 
@@ -109,29 +109,34 @@ describe('attunement', () => {
 });
 
 describe('firing from the reservoir', () => {
-  it('fires the reservoir first, flagging those shots, then carried rounds (028)', () => {
+  it('fires the reservoir on left click, flagging those shots, then punches; the carried arrow waits for right click (028, 047)', () => {
     const s = stepOutside(attuned());
     s.inventory.arrow = 1;
     setMiddle(s, 'arrow', 2);
-    const aim = fireAt(s.player.x - 100, s.player.y);
+    const aim = volleyAt(s.player.x - 100, s.player.y);
     run(s, 1, aim);
     expect([s.inventory.arrow, s.link.entrances[1]?.count, s.tube.fromReservoir]).toEqual([1, 1, true]);
     expect(summarize(s).tube.fromReservoir).toBe(true);
     run(s, FIRE_TICKS, aim);
     expect(s.link.entrances[1]).toEqual({ open: true, ammoId: null, count: 0, cooldown: FIRE_TICKS });
     expect(s.tube.fromReservoir).toBe(true);
-    run(s, FIRE_TICKS, aim);
+    let punches = 0;
+    run(s, FIRE_TICKS, (x) => {
+      punches += x.events.melees.length;
+      return aim;
+    });
+    expect(punches).toBeGreaterThan(0);
+    expect([s.inventory.arrow, s.arrows.length]).toEqual([1, 2]);
+    hold(s, 'arrow');
+    run(s, FIRE_TICKS, fireAt(s.player.x - 100, s.player.y));
     expect([s.inventory.arrow, s.tube.fromReservoir]).toEqual([0, false]);
-    expect(s.arrows).toHaveLength(3);
-    run(s, FIRE_TICKS, aim);
-    expect(s.events.melees).toHaveLength(1);
   });
 
   it('fires the volley when an entrance holds a different ammo to the one selected (024)', () => {
     const s = stepOutside(attuned());
     s.inventory.arrow = 0;
     setMiddle(s, 'bomb', 5);
-    run(s, 1, fireAt(s.player.x - 100, s.player.y));
+    run(s, 1, volleyAt(s.player.x - 100, s.player.y));
     expect(s.events.melees).toHaveLength(0);
     expect(s.bombs).toHaveLength(1);
     expect(s.link.entrances[1]?.count).toBe(4);
@@ -140,7 +145,7 @@ describe('firing from the reservoir', () => {
   it('a ley bolt line into the intake refills the reservoir while the player fires from it', () => {
     const s = attuned();
     s.inventory = {};
-    s.tube.ammoId = 'ley-bolt';
+    hold(s, 'ley-bolt');
     // Up the middle into the intake's middle mouth tile (019).
     const h = put<HopperState>(s, 'hopper', 12, 4, 'up');
     h.item = 'ley-crystal';
@@ -153,7 +158,7 @@ describe('firing from the reservoir', () => {
     let fromReservoir = 0;
     run(s, 300, (x) => {
       if (x.tube.fromReservoir) fromReservoir += 1;
-      return fireAt(x.player.x - 100, x.player.y);
+      return volleyAt(x.player.x - 100, x.player.y);
     });
     expect(fromReservoir).toBeGreaterThan(6);
   });

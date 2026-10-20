@@ -8,7 +8,7 @@ import type { SimState } from './state';
 
 /** The command the rest of the tick sees: build mode drops fire, ammo select and harvest. */
 export function maskCommand(state: SimState, cmd: Command): Command {
-  return state.building ? { ...cmd, fire: false, selectAmmo: null } : cmd;
+  return state.building ? { ...cmd, fire: false, use: false, selectSlot: null } : cmd;
 }
 
 /** Toggles build mode, then places and picks up. All but the toggle only work in the foundry. */

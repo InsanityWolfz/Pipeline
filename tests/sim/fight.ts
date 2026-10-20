@@ -1,3 +1,4 @@
+import { AMMO } from '../../src/data/ammo';
 import { DYING_TICKS } from '../../src/data/player';
 import { meleeDef } from '../../src/data/enemies';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
@@ -54,8 +55,31 @@ export function run(s: SimState, ticks: number, c: Partial<Command> | ((s: SimSt
   }
 }
 
-/** Fire held at a world point. */
-export const fireAt = (x: number, y: number): Partial<Command> => ({ fire: true, aimX: x, aimY: y });
+/** Use (right click, 047: the carried bar's selected item, fired or thrown) held at a world point. */
+export const useAt = (x: number, y: number): Partial<Command> => ({ use: true, aimX: x, aimY: y });
+
+/** Carried rounds fired at a world point: right click on the selected item since 047 (fire, left click, is the volley or the punch). */
+export const fireAt = useAt;
+
+/** Left click held at a world point (047: the intake's volley, or the punch with the intake dry). */
+export const volleyAt = (x: number, y: number): Partial<Command> => ({ fire: true, aimX: x, aimY: y });
+
+/**
+ * Puts an item on the carried bar (its own slot if it has one, else the first) and selects it, as a drag and a key
+ * would (047). Given a family's plain round with none carried, it takes the first of that family's tagged rounds
+ * carried instead (the old ammo slot's order, 029), so a test carrying only Frost bombs can still say 'bomb'.
+ */
+export function hold(s: SimState, round: string): void {
+  const family = Object.values(AMMO).filter((a) => a.base === round && a.id !== round).map((a) => a.id);
+  const itemId = (s.inventory[round] ?? 0) > 0 ? round : (family.find((id) => (s.inventory[id] ?? 0) > 0) ?? round);
+  const at = s.hotbar.slots.indexOf(itemId);
+  if (at >= 0) {
+    s.hotbar.selected = at;
+    return;
+  }
+  s.hotbar.slots[0] = itemId;
+  s.hotbar.selected = 0;
+}
 
 /** Runs until `done` holds, failing after `limit` ticks. Returns the ticks taken. */
 export function runUntil(s: SimState, done: (s: SimState) => boolean, limit: number, c: Partial<Command> = {}): number {

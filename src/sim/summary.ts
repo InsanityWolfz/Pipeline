@@ -84,8 +84,9 @@ export interface SimSummary extends HollowsSummary, LevelingSummary, MinesSummar
   springs: { id: string; tx: number; ty: number; radius: number; inside: boolean }[];
   /** Item id to count. */
   inventory: Record<string, number>;
+  /** 047: the carried bar (keys 1–5): each slot's item kind or null, and the selected slot. */
+  hotbar: { slots: (string | null)[]; selected: number };
   tube: {
-    ammo: string;
     fireCooldown: number;
     /** Ticks before the next punch can happen (023). */
     meleeCooldown: number;
@@ -94,8 +95,8 @@ export interface SimSummary extends HollowsSummary, LevelingSummary, MinesSummar
     fromReservoir: boolean;
     /** Projectiles this tick's shot fired (a volley of several rounds fires several). */
     shotCount: number;
-    /** What the next fire press does (023, 024): a carried round, a volley, or a punch. */
-    next: 'carried' | 'volley' | 'melee';
+    /** What the next fire press (left click) does (023, 024, 047): a volley, or a punch. */
+    next: 'volley' | 'melee';
   };
   /** The bottom HUD (025): what the tube slot shows, which is what the next fire press does. */
   hud: { active: HudActive };
@@ -215,8 +216,8 @@ export function summarize(state: SimState): SimSummary {
     },
     springs: OVERWORLD.springs.map((sp) => ({ id: sp.id, tx: sp.tx, ty: sp.ty, radius: sp.radius * TILE_SIZE, inside: springAt(state.roomId, p.x, p.y)?.id === sp.id })),
     inventory: { ...state.inventory },
+    hotbar: { slots: [...state.hotbar.slots], selected: state.hotbar.selected },
     tube: {
-      ammo: tube.ammoId,
       fireCooldown: tube.fireCooldown,
       meleeCooldown: tube.meleeCooldown,
       firing: tube.firing,

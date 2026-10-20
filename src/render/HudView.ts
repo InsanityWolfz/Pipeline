@@ -9,7 +9,7 @@ import type { ScreenBox } from './bottomHud';
 import { EdgeTint } from './EdgeTint';
 import { buildBarBox } from './foundryLayout';
 import { HealthBar, type HealthShown } from './HealthBar';
-import { HotbarView } from './HotbarView';
+import { HotbarView, type CarriedBarShown } from './HotbarView';
 import { InventoryPanel, type InventoryShown } from './InventoryPanel';
 import { ResearchList, type ResearchListState } from './ResearchList';
 import { PickupFeed } from './PickupFeed';
@@ -21,10 +21,10 @@ import type { TipHit } from './tipTypes';
 import type { BuildTabState } from './BuildTab';
 import type { ChipId } from '../data/legibility';
 
-/** The bottom HUD as drawn (025), for `ui().hud`: the hotbar row's rect and whether it shows, and the tube slot. */
+/** The bottom HUD as drawn (025, 047), for `ui().hud`: the carried bar's rect, whether it shows and its slots, and the intake's bar (the tube slot). */
 export interface BottomHudState {
   /** `selected` is the highlighted cell's index (0 for key 1). */
-  hotbar: ScreenBox & { shown: boolean; selected: number };
+  hotbar: ScreenBox & { shown: boolean; selected: number } & CarriedBarShown;
   tubeSlot: TubeSlotState;
 }
 
@@ -96,6 +96,11 @@ export class HudView {
     this.talents.pointAt(x, y);
   }
 
+  /** The carried bar's slot under a view point (047: a dragged stack lands there), or null. */
+  carriedSlotAt(x: number, y: number): number | null {
+    return this.hotbar.slotAt(x, y);
+  }
+
   /** What's under a view point for a tip (040): a talent node, an inventory ammo row, the tube slot's round, a hotbar slot. */
   tipAt(x: number, y: number): TipHit | null {
     return this.talents.tipAt(x, y) ?? this.inventory.tipAt(x, y) ?? this.tubeSlot.tipAt(x, y) ?? this.hotbar.tipAt(x, y);
@@ -115,7 +120,7 @@ export class HudView {
 
   /** What the bottom HUD shows, for the test hook. */
   get bottom(): BottomHudState {
-    return { hotbar: { ...this.hotbar.box, shown: this.hotbar.visible, selected: this.hotbar.selected }, tubeSlot: this.tubeSlot.state };
+    return { hotbar: { ...this.hotbar.box, shown: this.hotbar.visible, selected: this.hotbar.selected, ...this.hotbar.state }, tubeSlot: this.tubeSlot.state };
   }
 
   /** The inventory panel, pickup feed and HP bar as drawn (031), for the test hook. */
@@ -132,7 +137,7 @@ export class HudView {
     const dt = deltaMs * this.scene.tweens.timeScale;
     const building = sim.building;
     this.hotbar.setVisible(sim.hasTube && !building);
-    this.hotbar.update(sim.tube, sim.inventory);
+    this.hotbar.update(sim.hotbar, sim.inventory);
     this.tubeSlot.update(hudActive(sim), building);
     const p = sim.player;
     const stats = playerStats(sim);

@@ -7,7 +7,7 @@ import { blocksShot, isSolid } from '../../src/sim/collision';
 import { generateOverworld } from '../../src/sim/overworldGen';
 import { summarize } from '../../src/sim/summary';
 import { reachable, tileKey } from '../fixtures/reach';
-import { arena, fireAt, movePlayer, run, runUntil } from './fight';
+import { arena, fireAt, hold, movePlayer, run, runUntil } from './fight';
 import { tileCentre } from '../../src/sim/tiles';
 
 // Stonefall Hollows (034): the map grows west by a 40×45 region generated from the
@@ -129,7 +129,7 @@ describe('cliffs against shots', () => {
     const s2 = arena(undefined, tileCentre({ tx: 6, ty: 23 }));
     s2.gates.hollows = true;
     s2.inventory = { bomb: 1 };
-    s2.tube.ammoId = 'bomb';
+    hold(s2, 'bomb');
     run(s2, 1, fireAt(tileCentre({ tx: 6, ty: 17 }).x, tileCentre({ tx: 6, ty: 17 }).y));
     runUntil(s2, () => s2.events.bursts.length > 0, 120);
     expect(s2.events.bursts[0]?.y).toBeLessThan(19 * 32);

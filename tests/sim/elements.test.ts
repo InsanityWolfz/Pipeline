@@ -17,7 +17,7 @@ import type { MachineState } from '../../src/sim/pieces';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
-import { arena, fireAt, placeHusk, PLAYER_AT, movePlayer, run, runUntil } from './fight';
+import { arena, fireAt, hold, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 import { foundry, put } from './foundryKit';
 
 // Elements on every family (039, Q12): the frost tag takes any round without an element,
@@ -65,7 +65,7 @@ describe('Cold on every family', () => {
     s.inventory = { 'bomb+frost': 2 };
     const a = still(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     const b = still(s, PLAYER_AT.x + 100, PLAYER_AT.y + 20);
-    run(s, 1, { selectAmmo: 'bomb' });
+    hold(s, 'bomb');
     run(s, 1, fireAt(PLAYER_AT.x + 100, PLAYER_AT.y + 10));
     runUntil(s, () => s.events.bursts.length > 0, 60);
     expect([a.chill, b.chill]).toEqual([1, 1]);
@@ -76,7 +76,7 @@ describe('Cold on every family', () => {
     const s = arena();
     s.inventory = { 'bomb+frost+cluster': 2 };
     const near = still(s, PLAYER_AT.x + 140, PLAYER_AT.y);
-    run(s, 1, { selectAmmo: 'bomb' });
+    hold(s, 'bomb');
     run(s, 1, fireAt(PLAYER_AT.x + 100, PLAYER_AT.y));
     runUntil(s, () => s.events.bombletBursts.length > 0, 120);
     expect(s.events.bombletBursts.every((b) => b.damageType === 'cold')).toBe(true);
@@ -84,7 +84,7 @@ describe('Cold on every family', () => {
     const m = arena();
     m.inventory = { 'landmine+frost': 2 };
     const on = still(m, PLAYER_AT.x + 100, PLAYER_AT.y);
-    run(m, 1, { selectAmmo: 'landmine' });
+    hold(m, 'landmine');
     run(m, 1, fireAt(PLAYER_AT.x + 100, PLAYER_AT.y));
     runUntil(m, () => m.events.mineBursts.length > 0, 400);
     expect(m.events.mineBursts[0]?.damageType).toBe('cold');
@@ -96,7 +96,7 @@ describe('Cold on every family', () => {
       const s = arena();
       s.inventory = { [round]: 2 };
       still(s, PLAYER_AT.x + 100, PLAYER_AT.y);
-      run(s, 1, { selectAmmo: 'ley-bolt' });
+      hold(s, 'ley-bolt');
       run(s, 1, fireAt(PLAYER_AT.x + 1000, PLAYER_AT.y));
       runUntil(s, () => s.arrows.some((a) => a.ammoId === 'shard'), 60);
       return s.arrows.filter((a) => a.ammoId === 'shard');
@@ -108,7 +108,7 @@ describe('Cold on every family', () => {
     s.inventory = { 'ley-bolt+frost+split': 2 };
     still(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     const beyond = still(s, PLAYER_AT.x + 140, PLAYER_AT.y);
-    run(s, 1, { selectAmmo: 'ley-bolt' });
+    hold(s, 'ley-bolt');
     run(s, 1, fireAt(PLAYER_AT.x + 1000, PLAYER_AT.y));
     runUntil(s, () => beyond.chill > 0, 60);
   });
@@ -142,9 +142,9 @@ describe('Cold on every family', () => {
       const s = arena();
       s.inventory = { 'bomb+frost+cluster': 20, 'ley-bolt+frost+split': 20 };
       for (let i = 0; i < 6; i++) still(s, PLAYER_AT.x + 80 + i * 20, PLAYER_AT.y + (i % 2) * 16);
-      run(s, 1, { selectAmmo: 'bomb' });
+      hold(s, 'bomb');
       run(s, 200, fireAt(PLAYER_AT.x + 120, PLAYER_AT.y));
-      run(s, 1, { selectAmmo: 'ley-bolt' });
+      hold(s, 'ley-bolt');
       run(s, 200, fireAt(PLAYER_AT.x + 1000, PLAYER_AT.y));
       return JSON.stringify(summarize(s).enemies);
     };

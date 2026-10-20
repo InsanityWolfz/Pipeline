@@ -30,6 +30,7 @@ function scripted(seed: number, ticks: number) {
       moveY: t % 70 < 20 ? 1 : 0,
       dodge: t % 150 === 75,
       fire: t % 120 > 100,
+      use: t % 120 > 100,
       aimX: sim.player.x + Math.cos(t / 10) * 100,
       aimY: sim.player.y + Math.sin(t / 10) * 100,
     };
@@ -63,7 +64,7 @@ function scriptedFight(seed: number, ticks: number) {
       ...NO_COMMAND,
       moveX: goal ? toward(p.x, goal.x) : 0,
       moveY: goal ? toward(p.y, goal.y) : 0,
-      fire: fighting && !empty && target !== undefined,
+      use: fighting && !empty && target !== undefined,
       aimX: target?.x ?? p.x,
       aimY: target?.y ?? p.y,
     };
@@ -79,7 +80,6 @@ function scriptedFight(seed: number, ticks: number) {
 function scriptedSession(seed: number, ticks: number) {
   const sim = createSim(seed);
   sim.inventory = { 'husk-resin': 2, stone: 2, 'ley-crystal': 2, wood: 1, fiber: 1 };
-  const ammo = ['arrow', 'bomb', 'ley-bolt'];
   for (let t = 0; t < ticks; t++) {
     if (t === 100) for (const r of ['shaft', 'arrowhead', 'rope', 'arrow', 'casing', 'fuse', 'ley-dust', 'bomb', 'ley-bolt']) craft(sim, r);
     const p = sim.player;
@@ -92,8 +92,8 @@ function scriptedSession(seed: number, ticks: number) {
       moveX: goal && !sim.harvest ? toward(p.x, goal.x) : 0,
       moveY: goal && !sim.harvest ? toward(p.y, goal.y + 20) : 0,
       interact: gathering && t % 40 === 0,
-      selectAmmo: !gathering && t % 300 === 0 ? (ammo[(t / 300) % 3] ?? null) : null,
-      fire: !gathering && t % 50 > 30,
+      selectSlot: !gathering && t % 300 === 0 ? (t / 300) % 3 : null,
+      use: !gathering && t % 50 > 30,
       aimX: pack?.x ?? p.x,
       aimY: pack?.y ?? p.y,
     };
@@ -264,7 +264,8 @@ describe('sim state', () => {
     expect(summary.nodes.filter((n) => n.room === 'overworld')).toHaveLength(OVERWORLD.nodes.length);
     expect(summary.nodes[0]).toMatchObject({ nodeId: 'tree', uses: 3, regrow: 0 });
     expect(summary.harvest).toBeNull();
-    expect(summary.tube.ammo).toBe('arrow');
+    expect(summary.hotbar).toEqual({ slots: createSim(8).hotbar.slots, selected: 0 });
+    expect(summary.hotbar.slots).toHaveLength(5);
     expect(summary.bombs).toEqual([]);
     expect(summary.enemies[0]).toMatchObject({ chill: 0, frozen: 0 });
     expect(summary.enemies[0]).not.toHaveProperty('burnTicks');

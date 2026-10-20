@@ -4,7 +4,7 @@ import { fillEntrance } from '../../src/sim/link';
 import { summarize } from '../../src/sim/summary';
 import { hudActive, nextPress, volleyShots } from '../../src/sim/volley';
 import type { SimState } from '../../src/sim/state';
-import { arena, fireAt, movePlayer, run } from './fight';
+import { arena, fireAt, hold, movePlayer, run, volleyAt } from './fight';
 import { foundry, stepOutside } from './foundryKit';
 
 // Tagged rounds in the tube (029): entrances hold one exact round kind, rounds that
@@ -31,7 +31,7 @@ describe('tagged rounds and the entrances', () => {
     s.inventory = {};
     stepOutside(s);
     movePlayer(s, 400, 400);
-    run(s, 1, fireAt(1000, 400));
+    run(s, 1, volleyAt(1000, 400));
     expect(angles(s)).toEqual([-SPREAD_STEP / 2, SPREAD_STEP / 2]);
     expect(s.arrows.map((a) => a.ammoId).sort()).toEqual(['arrow', 'arrow+frost']);
   });
@@ -43,25 +43,27 @@ describe('tagged rounds and the entrances', () => {
   });
 });
 
-describe('carried tagged rounds', () => {
-  it('fire from their base ammo slot, before plain ones', () => {
+describe('carried tagged rounds (047: each kind its own carried bar slot)', () => {
+  it('take their own slot on the carried bar, and fire only from it, never from the plain round’s', () => {
     const s = arena();
     s.inventory = { arrow: 3, 'arrow+frost': 2 };
-    expect(nextPress(s)).toEqual({ kind: 'carried', ammoId: 'arrow+frost', count: 2 });
-    expect(hudActive(s)).toEqual({ kind: 'carried', ammoId: 'arrow+frost', count: 2 });
+    run(s, 1);
+    const frost = s.hotbar.slots.indexOf('arrow+frost');
+    expect(frost).toBeGreaterThanOrEqual(0);
+    expect(nextPress(s).kind).toBe('melee');
+    expect(hudActive(s).kind).toBe('melee');
     const fired: string[] = [];
+    hold(s, 'arrow');
     for (let t = 0; t < 120; t++) {
       run(s, 1, fireAt(s.player.x + 300, s.player.y));
       fired.push(...s.events.shots.map((x) => x.ammoId));
     }
-    expect(fired).toEqual(['arrow+frost', 'arrow+frost', 'arrow', 'arrow', 'arrow']);
-  });
-
-  it('wait for their slot: ley variants fire only with the ley bolt slot selected', () => {
-    const s = arena();
-    s.inventory = { 'ley-bolt+homing': 2, 'ley-bolt+split': 2 };
-    expect(nextPress(s).kind).toBe('melee');
-    run(s, 1, { selectAmmo: 'ley-bolt' });
-    expect(nextPress(s)).toEqual({ kind: 'carried', ammoId: 'ley-bolt+homing', count: 2 });
+    expect(fired).toEqual(['arrow', 'arrow', 'arrow']);
+    run(s, 1, { selectSlot: frost });
+    for (let t = 0; t < 60; t++) {
+      run(s, 1, fireAt(s.player.x + 300, s.player.y));
+      fired.push(...s.events.shots.map((x) => x.ammoId));
+    }
+    expect(fired.slice(3)).toEqual(['arrow+frost', 'arrow+frost']);
   });
 });

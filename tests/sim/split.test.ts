@@ -3,7 +3,7 @@ import { straightAmmo } from '../../src/data/ammo';
 import { SPLIT } from '../../src/data/tags';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
-import { arena, FIELD_WALL, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, FIELD_WALL, fireAt, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
 // The Split (029): a Split round that hits an enemy bursts at the hit point into
 // SPLIT.shards shards, 360 / shards degrees apart, the first along its flight.
@@ -13,7 +13,7 @@ const BOLT = straightAmmo('ley-bolt');
 function starred(): SimState {
   const s = arena();
   s.inventory = { 'ley-bolt+split': 10 };
-  run(s, 1, { selectAmmo: 'ley-bolt' });
+  hold(s, 'ley-bolt');
   return s;
 }
 

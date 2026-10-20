@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "shape": [
     "state.activatePulse: number",
     "state.arrows: array",
@@ -248,6 +248,11 @@
     "state.groundItems[]: object",
     "state.harvest: null",
     "state.hasTube: boolean",
+    "state.hotbar.selected: number",
+    "state.hotbar.slots: array",
+    "state.hotbar.slots[]: null",
+    "state.hotbar.slots[]: string",
+    "state.hotbar: object",
     "state.inventory: object",
     "state.inventory{}: number",
     "state.killedBosses: array",
@@ -367,7 +372,6 @@
     "state.talents: array",
     "state.talents[]: string",
     "state.tick: number",
-    "state.tube.ammoId: string",
     "state.tube.fireCooldown: number",
     "state.tube.firing: boolean",
     "state.tube.fromReservoir: boolean",

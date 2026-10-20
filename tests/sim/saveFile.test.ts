@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { SAVE_FORMAT, SAVE_VERSION } from '../../src/data/save';
 import { TUTORIAL_START } from '../../src/data/player';
 import { createSim } from '../../src/sim/state';
-import { makeEnvelope, readSave, snapshot, type SaveEnvelope } from '../../src/sim/save';
+import { makeEnvelope, readSave, SAVE_MIGRATIONS, snapshot, type SaveEnvelope } from '../../src/sim/save';
 
 // 042: the save envelope, its versions and migrations, and bad saves: every bad case gives its status, never throws.
 
@@ -45,12 +45,20 @@ describe('save envelope (042)', () => {
     const s = sim();
     s.groundItems.push({ id: 1, itemId: 'wood', roomId: s.roomId, x: 10, y: 10 });
     const v1 = { ...makeEnvelope(snapshot(s), META), version: 1 };
-    const read = readSave(text(v1));
+    // Read as the game did before 047 (version 3): 047's version 4 has no migration (Shaun's rule).
+    const read = readSave(text(v1), { version: 3, migrations: SAVE_MIGRATIONS });
     expect(read.status).toBe('ok');
     if (read.status === 'ok') {
-      expect(read.envelope.version).toBe(SAVE_VERSION);
+      expect(read.envelope.version).toBe(3);
       expect(read.state.groundItems).toEqual([{ id: 1, itemId: 'wood', roomId: s.roomId, x: 10, y: 10 }]);
     }
+  });
+
+  it('047: a version 3 save (before the carried bar and the grid) reads as too old: no migration, by Shaun\'s rule', () => {
+    const v3 = { ...makeEnvelope(snapshot(sim()), META), version: 3 };
+    const read = readSave(text(v3));
+    expect(read.status).toBe('too-old');
+    expect(SAVE_VERSION).toBe(4);
   });
 
   it('a save with no migration path is too old, and kept as unreadable', () => {

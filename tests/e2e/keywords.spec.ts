@@ -38,7 +38,7 @@ test('Frost bombs crafted from the Bombs tab chill a pack', async ({ page }) => 
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     h.toHall();
-    g.step(1, { selectAmmo: 'bomb' });
+    window.__helpers?.hold('bomb+frost');
     let s = g.spawnChampionPack(['husk', 'husk', 'husk'], null);
     const pack = () => s.enemies.filter((e) => e.room === s.room && e.enemyId === 'husk').sort((a, b) => Math.hypot(a.x - s.player.x, a.y - s.player.y) - Math.hypot(b.x - s.player.x, b.y - s.player.y)).slice(0, 3);
     let thrown = 0;
@@ -49,7 +49,7 @@ test('Frost bombs crafted from the Bombs tab chill a pack', async ({ page }) => 
       const d = Math.hypot(cx - s.player.x, cy - s.player.y);
       const fire = d < 170 && s.bombs.length === 0 && (s.inventory['bomb+frost'] ?? 0) > 0;
       if (fire) thrown += 1;
-      s = g.step(1, { fire, aimX: cx, aimY: cy });
+      s = g.step(1, { use: fire, aimX: cx, aimY: cy });
     }
     return { chilled: pack().filter((e) => e.chill > 0).length, thrown, cold: s.events.bursts.every((b) => b.damageType === 'cold') };
   });

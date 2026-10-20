@@ -36,6 +36,7 @@ import { createResearch, type ResearchState } from './research';
 import type { EnemyBombState } from './enemyBombs';
 import { bossReturns, settleSummons, type SummoningState } from './altar';
 import { noteCarried } from './knownRounds';
+import { createHotbar, type HotbarState } from './hotbar';
 import type { SandboxState } from './sandbox';
 
 /** The whole sim: plain serializable data. */
@@ -47,6 +48,8 @@ export interface SimState {
   roomId: string;
   player: PlayerState;
   inventory: Inventory;
+  /** 047: the carried bar (keys 1–5), its slots' kinds and the selected one. Kept through a KO (047.3). */
+  hotbar: HotbarState;
   tube: TubeState;
   /** The tube's link to the foundry and the intake's entrances (024). Kept through a KO. */
   link: LinkState;
@@ -182,6 +185,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     roomId,
     player: createPlayer({ x: 0, y: 0 }),
     inventory: { ...start.inventory },
+    hotbar: createHotbar(),
     tube: createTube(),
     link: { ...createLink(), attuned: start.attuned },
     research: createResearch(),

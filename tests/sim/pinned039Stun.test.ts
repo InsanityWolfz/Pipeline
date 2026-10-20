@@ -5,7 +5,7 @@ import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import type { SimState } from '../../src/sim/state';
 import { tileCentre } from '../../src/sim/tiles';
 import { piece, wear } from '../fixtures/gear';
-import { arena, fireAt, HALL, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, fireAt, HALL, hold, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
 // 039 pins, beside pinned039.test.ts: the Stun's two sources and the landmine's timing,
 // taken from the code before the keyword refactor (fd75ac9) and held after it.
@@ -89,7 +89,7 @@ describe('039 pins: Stun (the wall daze and Rollbreaker keep their own timing, 0
       const s = arena();
       s.talents = [TALENT_START, ...talent];
       s.inventory = { landmine: 2 };
-      run(s, 1, { selectAmmo: 'landmine' });
+      hold(s, 'landmine');
       run(s, 1, fireAt(PLAYER_AT.x + 137, PLAYER_AT.y + 41));
       expect(runUntil(s, () => s.events.mineArms.length > 0, 200)).toBe(40);
       expect(runUntil(s, () => s.events.mineBursts.length > 0, 600)).toBe(300);

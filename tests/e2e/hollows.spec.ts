@@ -103,7 +103,7 @@ test('?start=hollows: the shield blocks arrows into its front; from behind they 
     if (!b) throw new Error('no Bulwark');
     let blocked = 0;
     for (let t = 0; t < 60; t++) {
-      const s = g.step(1, { fire: true, aimX: b.x, aimY: b.y - 20 });
+      const s = g.step(1, { use: true, aimX: b.x, aimY: b.y - 20 });
       blocked += s.events.blocked.length;
     }
     for (let t = 0; t < 30; t++) blocked += g.step(1).events.blocked.length;
@@ -142,7 +142,7 @@ test('?start=hollows: the shield blocks arrows into its front; from behind they 
       // Its pound coming: straight away from it.
       if (b.mode === 'windup' && dist < 130) goal = { x: p.x + (p.x - e.x), y: p.y + (p.y - e.y) };
       const behind = off > (110 * Math.PI) / 180;
-      const next = g.step(1, { moveX: sign(goal.x - p.x), moveY: sign(goal.y - p.y), fire: behind && dist < 250, aimX: e.x, aimY: e.y - 20 });
+      const next = g.step(1, { moveX: sign(goal.x - p.x), moveY: sign(goal.y - p.y), use: behind && dist < 250, aimX: e.x, aimY: e.y - 20 });
       backHits += next.events.hits.filter((h) => h.target === 'enemy' && h.id === id).length;
     }
     return { backHits, health: g.getState().bosses[0]?.health ?? 0, ko: g.getState().player.dying > 0 };
@@ -159,7 +159,7 @@ test('?start=hollows: the shield blocks arrows into its front; from behind they 
     if (!g) throw new Error('no game');
     const id = g.getState().bosses[0]?.id ?? -1;
     g.setEnemyHealth(id, 20);
-    g.step(1, { selectAmmo: 'bomb' });
+    window.__helpers?.hold('bomb');
     for (const e of g.getState().enemies) if (e.group === 'bulwark-adds') g.setEnemyHealth(e.id, 0);
     for (let t = 0; t < 1200; t++) {
       const s = g.getState();
@@ -170,7 +170,7 @@ test('?start=hollows: the shield blocks arrows into its front; from behind they 
       const dist = Math.hypot(p.x - e.x, p.y - e.y);
       // Lobbed from just inside a bomb's reach; back off if it comes close.
       const away = dist < 120 ? { moveX: Math.sign(p.x - e.x) as -1 | 0 | 1, moveY: Math.sign(p.y - e.y) as -1 | 0 | 1 } : {};
-      const next = g.step(1, { ...away, fire: dist < 180, aimX: e.x, aimY: e.y });
+      const next = g.step(1, { ...away, use: dist < 180, aimX: e.x, aimY: e.y });
       if (next.events.bossDefeats.length > 0) return { won: true, events: next.events };
     }
     return { won: false, events: null };

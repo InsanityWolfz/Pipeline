@@ -4,7 +4,7 @@ import { COLD } from '../../src/data/tags';
 import { createEnemy, damageEnemy, type EnemyState } from '../../src/sim/enemies';
 import { summarize } from '../../src/sim/summary';
 import type { SimState } from '../../src/sim/state';
-import { arena, fireAt, HUSK, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, fireAt, hold, HUSK, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
 // Cold (029): each cold hit adds a chill stack that slows; the hit that reaches
 // COLD.stacksToFreeze freezes the enemy; after a thaw it can't gain stacks for a while.
@@ -129,6 +129,7 @@ describe('cold', () => {
   it('frost arrows chill what they hit, and the summary shows chill and frozen', () => {
     const s = arena();
     s.inventory = { 'arrow+frost': 10 };
+    hold(s, 'arrow+frost');
     const e = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     run(s, 1, fireAt(PLAYER_AT.x + 1000, PLAYER_AT.y));
     expect(s.arrows[0]?.ammoId).toBe('arrow+frost');

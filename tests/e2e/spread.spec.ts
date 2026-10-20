@@ -18,7 +18,8 @@ function fireVolley(page: Page, settle = 0) {
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     h.toHall();
-    const s = g.step(1, { selectAmmo: 'ley-bolt' });
+    window.__helpers?.hold('ley-bolt');
+    const s = g.step(0);
     if ((s.inventory['ley-bolt'] ?? 0) === 0) throw new Error('no ley bolts carried');
     const aim = { x: s.player.x + 160, y: s.player.y };
     const next = s.tube.next;

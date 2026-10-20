@@ -16,7 +16,7 @@ import { statOf } from '../../src/sim/statResolve';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
 import type { SimState } from '../../src/sim/state';
-import { arena, fireAt, HALL, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, fireAt, HALL, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 import { foundry, put } from './foundryKit';
 
 // The cluster stage (038): the Cluster die tags bombs `cluster` (a shape) for 1 ley-iron per
@@ -37,7 +37,7 @@ function armed(talents: string[] = []): SimState {
   const s = arena();
   s.inventory = { 'bomb+cluster': 4 };
   s.talents = [TALENT_START, ...talents];
-  run(s, 1, { selectAmmo: 'bomb' });
+  hold(s, 'bomb');
   return s;
 }
 

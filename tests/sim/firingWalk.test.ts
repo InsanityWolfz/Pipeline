@@ -6,7 +6,7 @@ import { FOUNDRY_ROOM } from '../../src/data/rooms';
 import { firingWalkScale } from '../../src/sim/tube';
 import type { Command } from '../../src/sim/input';
 import type { SimState } from '../../src/sim/state';
-import { arena, fireAt, PLAYER_AT, run } from './fight';
+import { arena, fireAt, PLAYER_AT, run, volleyAt } from './fight';
 
 // 016: the tube is heavy. Walking while it fires is slower; a punch (023), the foundry and rolls aren't.
 
@@ -36,7 +36,7 @@ describe('firing slows the walk', () => {
 
     const dry = arena();
     dry.inventory = {};
-    run(dry, 1, fireAt(AHEAD.x, AHEAD.y));
+    run(dry, 1, volleyAt(AHEAD.x, AHEAD.y));
     expect(dry.events.melees).toHaveLength(1);
     expect(firingWalkScale(dry)).toBe(1);
     expect(walked(dry, 30, true)).toBeCloseTo(walked(arena(), 30, false), 0);

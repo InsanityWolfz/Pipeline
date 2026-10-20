@@ -23,7 +23,7 @@ test('boots with vector textures, no console errors, and a backbuffer at the dev
   const errors = watchErrors(page);
   await page.setViewportSize({ width: 1280, height: 720 });
   await boot(page);
-  await page.evaluate(() => window.__GAME__?.step(30, { fire: true, moveX: 1 }));
+  await page.evaluate(() => window.__GAME__?.step(30, { use: true, moveX: 1 }));
   const canvas = await page.evaluate(() => {
     const c = document.querySelector('canvas');
     return c ? { width: c.width, css: c.getBoundingClientRect().width } : null;
@@ -41,7 +41,7 @@ test('walking while firing covers less ground than walking', async ({ page }) =>
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
       const before = g.getState().player;
-      const after = g.step(40, { moveX: 1, fire, aimX: before.x + 300, aimY: before.y }).player;
+      const after = g.step(40, { moveX: 1, use: fire, aimX: before.x + 300, aimY: before.y }).player;
       g.step(40, { moveX: -1 });
       return after.x - before.x;
     }, fire);

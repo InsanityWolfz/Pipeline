@@ -1,7 +1,6 @@
 import type { Cameras, Scene } from 'phaser';
 import { Input } from 'phaser';
 import { TILE_SIZE } from '../data/config';
-import { SLOT_AMMOS } from '../data/tube';
 import { rotateCw } from '../sim/direction';
 import { NO_COMMAND, type Axis, type Command } from '../sim/input';
 import { BUILD_BAR, pieceDef } from '../data/pieces';
@@ -19,7 +18,7 @@ type BuildAction = Pick<Command, 'place' | 'pickUp'>;
 
 /** The commands that come from build mode and the hopper menu rather than held keys. */
 export { NO_UI_COMMAND, type UiCommand } from './menuRequests';
-// Turns WASD, Space, R, E, B, 1–3 and the mouse into sim commands, and C, Esc, I and
+// Turns WASD, Space, R, E, B, 1–5 and the mouse (left click fires, right click uses, 047) into sim commands, and C, Esc, I and
 // Tab into menu toggles for the scene. Presses are latched from the keys' down
 // events until consumed, so a tap shorter than a frame isn't lost, a press on a
 // frame that runs no ticks isn't lost, and a frame that runs several ticks only
@@ -29,6 +28,8 @@ export { NO_UI_COMMAND, type UiCommand } from './menuRequests';
 export class Controls {
   private keys!: Record<Key, Input.Keyboard.Key>;
   private ammoKeys: Input.Keyboard.Key[] = [];
+  /** 047: `use` bound to a key, or null while it's right click (the default). */
+  private useKey: Input.Keyboard.Key | null = null;
   private readonly keyboard: Input.Keyboard.KeyboardPlugin;
   /** The bindings the keys were made from (042: rebound from Settings). */
   private bound = '';
@@ -37,7 +38,7 @@ export class Controls {
   private dodgePending = false;
   private interactPending = false;
   private interactPress = false;
-  private selectPending: string | null = null;
+  private selectPending: number | null = null;
   /** C, Esc, I or Tab (031), J (033) and T (037), latched until the scene takes them. */
   private readonly menuKeys = { menu: false, close: false, inventory: false, research: false, talents: false, sandbox: false };
   private buildPending = false;
@@ -94,9 +95,10 @@ export class Controls {
     if (key === this.bound) return;
     this.bound = key;
     this.keyboard.removeAllKeys(true);
-    const { keys, ammo, sandbox } = bindKeys(this.keyboard, bindings, this.sandbox);
+    const { keys, ammo, use, sandbox } = bindKeys(this.keyboard, bindings, this.sandbox);
     this.keys = keys;
     this.ammoKeys = ammo;
+    this.useKey = use;
     listenKeys(keys, ammo, {
       dodge: () => (this.dodgePending = true),
       // R and G only turn and flip the ghost in build mode.
@@ -105,7 +107,7 @@ export class Controls {
       interact: () => (this.interactPending = this.interactPress = true),
       menu: (key) => (this.menuKeys[key] = true),
       build: () => (this.buildPending = true),
-      ammo: (i) => (this.selectPending = SLOT_AMMOS[i] ?? null),
+      ammo: (i) => (this.selectPending = i),
     }, sandbox);
   }
 
@@ -297,8 +299,10 @@ export class Controls {
       aimX: this.aimX,
       aimY: this.aimY,
       fire: this.pointer.leftButtonDown() && !this.uiPress && !this.build.building && this.overWorld(),
+      // 047: right click (or the key `use` is bound to) uses the carried bar's selected item.
+      use: (this.useKey ? this.useKey.isDown : this.pointer.rightButtonDown() && !this.uiPress && this.overWorld()) && !this.build.building,
       interact: this.interactPending,
-      selectAmmo: this.selectPending,
+      selectSlot: this.selectPending,
       ...ui,
     };
     this.clearPresses();

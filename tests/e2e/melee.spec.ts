@@ -80,7 +80,7 @@ test.describe('review screenshots (023)', () => {
       g.tweenSpeed(0);
       const p = g.step(0).player;
       // Spend the 30 carried arrows, then punch toward the open meadow to the east.
-      g.step(15 * 29 + 1, { fire: true, aimX: p.x + 100, aimY: p.y - 20 });
+      g.step(15 * 29 + 1, { use: true, aimX: p.x + 100, aimY: p.y - 20 });
       g.step(15, { fire: true, aimX: p.x + 100, aimY: p.y - 20 });
     });
     await cameraSettled(page);

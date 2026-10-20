@@ -61,10 +61,12 @@ function fill(def: unknown, value: unknown, path: string): unknown {
   if (def === null || def === undefined) return value;
   if (Array.isArray(def)) {
     if (!Array.isArray(value)) throw new Error(`${path} should be a list`);
-    // A light check on the items (042.21): each the same kind as the fresh list's first, objects not filled.
-    const kind = def.length > 0 ? kindOf(def[0]) : null;
+    // A light check on the items (042.21): each the same kind as the fresh list's first non-null one (a null is an
+    // empty slot, 047's carried bar), objects not filled.
+    const first: unknown = def.find((d: unknown) => d !== null);
+    const kind = first === undefined ? null : kindOf(first);
     value.forEach((v: unknown, i) => {
-      if (kind !== null && kindOf(v) !== kind) throw new Error(`${path}[${i}] should be a ${kind}`);
+      if (kind !== null && v !== null && kindOf(v) !== kind) throw new Error(`${path}[${i}] should be a ${kind}`);
     });
     return value;
   }

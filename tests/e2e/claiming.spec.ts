@@ -49,7 +49,7 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
     const guards = () => s.enemies.filter((e) => e.group === 'shrine');
     // Fight with piercing ley bolts: back off from anything close, fire at the nearest (any wanderer that
     // follows in first, else the nearest guard).
-    g.step(1, { selectAmmo: 'ley-bolt' });
+    window.__helpers?.hold('ley-bolt');
     let stuck = 0;
     for (let t = 0; t < 12000 && guards().length > 0; t++) {
       const p = s.player;
@@ -62,12 +62,12 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
       const kite = d < 90;
       const far = d > 170;
       const windup = near.mode === 'windup' && d < 80;
-      if ((s.inventory[s.tube.ammo] ?? 0) === 0) g.step(1, { selectAmmo: s.tube.ammo === 'ley-bolt' ? 'arrow' : 'bomb' });
+      if ((s.inventory[(s.hotbar.slots[s.hotbar.selected] ?? '')] ?? 0) === 0) window.__helpers?.hold((s.hotbar.slots[s.hotbar.selected] ?? '') === 'ley-bolt' ? 'arrow' : 'bomb');
       s = g.step(1, {
         moveX: kite ? away(p.x, near.x) : far ? away(near.x, p.x) : 0,
         moveY: kite ? away(p.y, near.y) : far ? away(near.y, p.y) : 0,
         dodge: windup && t % 30 === 0,
-        fire: true,
+        use: true,
         aimX: near.x,
         // At the body: a Wisp floats, its hurtbox well above its feet (an arrow at its feet passes under it).
         aimY: near.y + (near.enemyId === 'wisp' ? wispLift : 0),

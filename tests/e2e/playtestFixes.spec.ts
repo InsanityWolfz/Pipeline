@@ -55,14 +55,14 @@ test('firing shakes nothing, whatever the ammo; a bomb burst still shakes', asyn
     let shots = 0;
     // Arrows, then ley bolts, east into open ground.
     for (const ammo of ['arrow', 'ley-bolt'] as const) {
-      g.step(1, { selectAmmo: ammo });
-      for (let t = 0; t < 40; t++) shots += g.step(1, { fire: true, aimX: p.x + 200, aimY: p.y }).events.shots.length;
+      window.__helpers?.hold(ammo);
+      for (let t = 0; t < 40; t++) shots += g.step(1, { use: true, aimX: p.x + 200, aimY: p.y }).events.shots.length;
     }
     // Then one bomb, lobbed a few tiles away; wait for its burst.
-    g.step(1, { selectAmmo: 'bomb' });
+    window.__helpers?.hold('bomb');
     let thrown = 0;
     for (let t = 0; t < 120 && thrown === 0; t++) {
-      s = g.step(1, { fire: true, aimX: p.x + 90, aimY: p.y });
+      s = g.step(1, { use: true, aimX: p.x + 90, aimY: p.y });
       thrown = s.events.shots.length;
     }
     shots += thrown;

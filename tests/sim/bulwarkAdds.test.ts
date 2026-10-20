@@ -8,7 +8,7 @@ import { capCount } from '../../src/sim/population';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
-import { die, fireAt, movePlayer, run, runUntil } from './fight';
+import { die, fireAt, hold, movePlayer, run, runUntil } from './fight';
 import { DEF, forum, START } from './forum';
 
 // The Bulwark's adds (041.6): the first time in a fight its health drops below half, a
@@ -66,7 +66,7 @@ describe('the adds', () => {
     expect(targetable(shard)).toBe(false);
     const at = { x: shard.x, y: shard.y };
     s.inventory = { arrow: 50 };
-    s.tube.ammoId = 'arrow';
+    hold(s, 'arrow');
     movePlayer(s, shard.x + 80, shard.y);
     for (let t = 1; t < adds.riseTicks; t++) {
       run(s, 1, fireAt(shard.x, shard.y - 10));

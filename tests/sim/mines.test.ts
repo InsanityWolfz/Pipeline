@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { ammoDef, lobAmmo, lobbedAmmo } from '../../src/data/ammo';
 import { enemyDef, type BulwarkDef } from '../../src/data/enemies';
 import { LOB_SPACING } from '../../src/data/foundry';
-import { SLOT_AMMOS } from '../../src/data/tube';
 import { TALENT_START } from '../../src/data/talents';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import { travelTo } from '../../src/sim/claims';
@@ -13,7 +12,7 @@ import { createSim, type SimState } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { playerStats } from '../../src/sim/stats';
 import { fireTicksOf } from '../../src/sim/tube';
-import { arena, atEntrance, command, die, fireAt, HALL, HUSK, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, atEntrance, command, die, fireAt, HALL, hold, HUSK, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
 // Landmines (038): lobbed to the aim like a bomb, they arm where they land and burst
 // `armTicks` later for large damage in a small radius. Only the timer sets them off;
@@ -26,12 +25,12 @@ const BULWARK_HP = (enemyDef('bulwark') as BulwarkDef).maxHealth;
 function armed(): SimState {
   const s = arena();
   s.inventory.landmine = 10;
-  run(s, 1, { selectAmmo: 'landmine' });
+  hold(s, 'landmine');
   return s;
 }
 
 /** Holds an enemy in place: a wind-up that won't land for a long time. */
-function hold(e: EnemyState): EnemyState {
+function holdStill(e: EnemyState): EnemyState {
   e.mode = 'windup';
   e.modeTicks = -10_000;
   return e;
@@ -44,10 +43,9 @@ function lay(s: SimState, x: number, y: number): number {
 }
 
 describe('landmines', () => {
-  it('are a mine: lobbed like a bomb, 60 physical damage in 24 px after a 300-tick fuse, on key 4', () => {
+  it('are a mine: lobbed like a bomb, 60 physical damage in 24 px after a 300-tick fuse', () => {
     const bomb = lobAmmo('bomb');
     expect(MINE).toMatchObject({ kind: 'mine', speed: bomb.speed, maxRange: bomb.maxRange, arcPeak: bomb.arcPeak, armTicks: 300, damage: 60, radius: 24, damageType: 'physical', fireTicks: 40 });
-    expect(SLOT_AMMOS[3]).toBe('landmine');
   });
 
   it('land at the aim in a bomb\'s flight time and arm there with their fuse at 0', () => {
@@ -55,7 +53,7 @@ describe('landmines', () => {
     const ticks = lay(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     const b = arena();
     b.inventory.bomb = 1;
-    run(b, 1, { selectAmmo: 'bomb' });
+    hold(b, 'bomb');
     run(b, 1, fireAt(PLAYER_AT.x + 100, PLAYER_AT.y));
     expect(ticks).toBe(runUntil(b, (t) => t.events.bursts.length > 0, 120));
     expect(s.mines.armed).toHaveLength(1);
@@ -71,7 +69,7 @@ describe('landmines', () => {
     const near = s.enemies[0];
     if (!near) throw new Error('no enemy');
     near.frozen = 10_000;
-    const far = hold(placeHusk(s, at.x, at.y + 28));
+    const far = holdStill(placeHusk(s, at.x, at.y + 28));
     lay(s, at.x, at.y);
     run(s, 299);
     expect(s.events.mineBursts).toEqual([]);
@@ -87,7 +85,7 @@ describe('landmines', () => {
     const s = armed();
     const at = { x: PLAYER_AT.x + 120, y: PLAYER_AT.y };
     lay(s, at.x, at.y);
-    const e = hold(placeHusk(s, at.x, at.y));
+    const e = holdStill(placeHusk(s, at.x, at.y));
     run(s, 200);
     expect(s.mines.armed).toHaveLength(1);
     expect(e.health).toBe(HUSK.maxHealth);
@@ -161,7 +159,7 @@ describe('landmines', () => {
   it('take cluster bombs still in flight with them on a room change, so no bomblets are left behind', () => {
     const s = arena();
     s.inventory = { 'bomb+cluster': 2 };
-    run(s, 1, { selectAmmo: 'bomb' });
+    hold(s, 'bomb');
     run(s, 1, fireAt(PLAYER_AT.x + 150, PLAYER_AT.y));
     expect(s.bombs).toHaveLength(1);
     travelTo(s, FOUNDRY_ROOM, { tx: 5, ty: 8 });
@@ -217,7 +215,8 @@ describe('landmines', () => {
       const s = createSim(3);
       s.inventory.landmine = 4;
       s.hasTube = true;
-      for (let t = 0; t < 600; t++) stepSim(s, command({ ...fireAt(s.player.x + 80, s.player.y + 20), fire: t % 50 === 0, selectAmmo: t === 0 ? 'landmine' : null }));
+      hold(s, 'landmine');
+      for (let t = 0; t < 600; t++) stepSim(s, command({ ...fireAt(s.player.x + 80, s.player.y + 20), use: t % 50 === 0 }));
       return JSON.stringify({ mines: s.mines, enemies: s.enemies.map((e) => e.health) });
     };
     expect(play()).toBe(play());

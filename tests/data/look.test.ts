@@ -16,7 +16,7 @@ import { ENTRANCE_GAUGE_COLORS, INTAKE_LOOK } from '../../src/data/art/intake';
 import { AMBIENT, DAMAGE_NUMBERS, GLOWS, HARVEST_BURSTS, HARVEST_WORK, PARTICLES, ROOM_MOOD } from '../../src/data/juice';
 import { DAYLIGHT_PALETTE } from '../../src/data/palette';
 import { FIRE_SOUNDS, ROOM_AMBIENCE, SOUNDS, WINDUP_SOUNDS } from '../../src/data/sounds';
-import { SLOT_AMMOS } from '../../src/data/tube';
+import { BASE_FAMILY } from '../../src/data/roundKeywords';
 import { PROPS, type PropDef } from '../../src/data/props';
 import { TILE } from '../../src/data/rooms';
 import { WORLD } from '../../src/sim/world';
@@ -150,7 +150,7 @@ describe('feel and sound references', () => {
   it('key moods and ambience by real rooms, fire sounds by real ammo, and wind-ups by real enemy kinds', () => {
     for (const roomId of [...Object.keys(ROOM_MOOD), ...Object.keys(ROOM_AMBIENCE)]) expect(WORLD[roomId], roomId).toBeDefined();
     for (const room of Object.keys(WORLD)) expect(ROOM_AMBIENCE[room], room).toBeDefined();
-    for (const ammoId of SLOT_AMMOS) expect(FIRE_SOUNDS[ammoId], ammoId).toBeDefined();
+    for (const ammoId of Object.keys(BASE_FAMILY)) expect(FIRE_SOUNDS[ammoId], ammoId).toBeDefined();
     const kinds = new Set(Object.values(ENEMIES).map((e) => e.kind));
     for (const kind of kinds) expect(WINDUP_SOUNDS[kind], kind).toBeDefined();
     for (const kind of Object.keys(WINDUP_SOUNDS)) expect(kinds.has(kind as never), kind).toBe(true);

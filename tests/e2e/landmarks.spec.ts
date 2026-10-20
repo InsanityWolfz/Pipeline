@@ -186,15 +186,15 @@ test('a champion spawned by the dev hook is bigger, named and glowing, and dies 
   const fought = await page.evaluate((id) => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    g.step(1, { selectAmmo: 'ley-bolt' });
+    window.__helpers?.hold('ley-bolt');
     let s = g.getState();
     let death: { champion?: true } | undefined;
     for (let t = 0; t < 3000 && !death; t++) {
       const e = s.enemies.find((x) => x.id === id);
       const p = s.player;
-      if ((s.inventory[s.tube.ammo] ?? 0) === 0) g.step(1, { selectAmmo: s.tube.ammo === 'ley-bolt' ? 'arrow' : 'ley-bolt' });
+      if ((s.inventory[(s.hotbar.slots[s.hotbar.selected] ?? '')] ?? 0) === 0) window.__helpers?.hold((s.hotbar.slots[s.hotbar.selected] ?? '') === 'ley-bolt' ? 'arrow' : 'ley-bolt');
       const close = e ? Math.hypot(e.x - p.x, e.y - p.y) < 100 : false;
-      s = g.step(1, { fire: true, aimX: e?.x ?? p.x + 100, aimY: e?.y ?? p.y, moveX: close ? -1 : 0, dodge: e?.mode === 'windup' && t % 20 === 0 });
+      s = g.step(1, { use: true, aimX: e?.x ?? p.x + 100, aimY: e?.y ?? p.y, moveX: close ? -1 : 0, dodge: e?.mode === 'windup' && t % 20 === 0 });
       death = s.events.deaths.find((d) => d.id === id);
       if (s.events.ko) return { ko: true, death: null, armor: 0 };
     }

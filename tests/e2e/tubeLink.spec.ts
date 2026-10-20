@@ -62,7 +62,7 @@ test('a line fills the middle entrance, which fires ahead of the carried rounds 
   const hopperId = placed.foundry.pieces.find((p) => p.pieceId === 'hopper')?.id;
   if (hopperId === undefined) throw new Error('no hopper');
   await step(page, 1, { deposit: { id: hopperId, itemId: 'ley-crystal', amount: 'all' } });
-  await step(page, 1, { selectAmmo: 'ley-bolt' });
+  await page.evaluate((id) => window.__helpers?.hold(id), 'ley-bolt');
   const filled = await page.evaluate(() => {
     const g = window.__GAME__;
     let s = g?.getState();

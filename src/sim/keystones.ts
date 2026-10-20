@@ -133,19 +133,19 @@ export function afterKeystoneHit(state: SimState, arrow: ArrowState, e: EnemySta
 /** The ramp rule in play (Overpressure), or null. */
 const rampLine = (state: Statted) => ruleFor(state, 'ramp');
 
-/** Overpressure's ramp, after the tube this tick: held fire while really firing counts up to its ramp; released fire resets it. */
+/** Overpressure's ramp, after the tube this tick: fire or use (047) held while really firing counts up to its ramp; releasing both resets it. */
 export function rampOverpressure(state: SimState, cmd: Command): void {
   const tube = state.tube;
   const line = rampLine(state);
-  if (!cmd.fire || !line) tube.overpressure = 0;
+  if ((!cmd.fire && !cmd.use) || !line) tube.overpressure = 0;
   else if (tube.firing) tube.overpressure = Math.min(line.params.ramp ?? 0, tube.overpressure + 1);
 }
 
-/** The ramp's fire-rate multiplier now (039: a × after the +% pool), as resolveStat's mul entry gives it for the carried round; 1 without it. */
+/** The ramp's fire-rate multiplier now (039: a × after the +% pool), as resolveStat's mul entry gives it for an arrow (047: the ramp is the same for every round); 1 without it. */
 export function rampRate(state: Statted & Pick<SimState, 'tube'>): number {
   const ramp = ruleLines(state, 'ramp')[0];
   if (!ramp) return 1;
-  return resolveStat(state, 'fire-rate', roundEmission(state.tube.ammoId), 1).muls.find((m) => m.source === ramp.source)?.value ?? 1;
+  return resolveStat(state, 'fire-rate', roundEmission('arrow'), 1).muls.find((m) => m.source === ramp.source)?.value ?? 1;
 }
 
 /** How far the ramp is up, 0..1 (render's heat over the tube); 0 without it. */

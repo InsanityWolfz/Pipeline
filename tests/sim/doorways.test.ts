@@ -7,7 +7,7 @@ import { WORLD } from '../../src/sim/world';
 import { arrivalTile } from '../../src/sim/doorways';
 import { defOf } from '../../src/sim/champions';
 import { tileCentre } from '../../src/sim/state';
-import { arena, at, atEntrance, die, fireAt, HUSK, movePlayer, placeHusk, placeNode, run, runUntil, SWIPE_LANDS } from './fight';
+import { arena, at, atEntrance, die, fireAt, hold, HUSK, movePlayer, placeHusk, placeNode, run, runUntil, SWIPE_LANDS } from './fight';
 
 // 017: the foundry's stairs sit in the overworld; the name HALL stays for the outside.
 const HALL = OVERWORLD_ROOM;
@@ -146,7 +146,7 @@ describe('rooms tick apart', () => {
     const s = arena();
     movePlayer(s, at(200).x, at(200).y);
     const e = placeHusk(s, at(260).x, at(260).y, FOUNDRY_ROOM);
-    s.tube.ammoId = 'bomb';
+    hold(s, 'bomb');
     s.inventory.bomb = 1;
     run(s, 1, fireAt(at(260).x, at(260).y));
     expect(s.bombs[0]?.roomId).toBe(HALL);

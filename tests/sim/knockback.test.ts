@@ -6,7 +6,7 @@ import { createArrow } from '../../src/sim/arrows';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
-import { arena, HALL, PLAYER_AT, run, runUntil } from './fight';
+import { arena, HALL, hold, PLAYER_AT, run, runUntil } from './fight';
 
 // Knockback on rounds (039, Q11): each arrow and ley-bolt round carries a push (6 px), its
 // Shards carry it too, Bursts push nothing. A hit pushes `knockback × weight` px over the
@@ -63,8 +63,8 @@ describe('Knockback on rounds (039)', () => {
     const target = createEnemy(s.nextEnemyId++, 'husk', { x: PLAYER_AT.x + 100, y: PLAYER_AT.y }, HALL);
     target.frozen = 10_000;
     s.enemies.push(target);
-    run(s, 1, { selectAmmo: 'ley-bolt' });
-    run(s, 1, { fire: true, aimX: PLAYER_AT.x + 1000, aimY: PLAYER_AT.y });
+    hold(s, 'ley-bolt');
+    run(s, 1, { use: true, aimX: PLAYER_AT.x + 1000, aimY: PLAYER_AT.y });
     runUntil(s, () => s.arrows.some((a) => a.ammoId === 'shard'), 60);
     for (const sh of s.arrows.filter((a) => a.ammoId === 'shard')) expect(sh.knockback).toBe(6);
     const b = arena();
@@ -72,8 +72,8 @@ describe('Knockback on rounds (039)', () => {
     const near = createEnemy(b.nextEnemyId++, 'husk', { x: PLAYER_AT.x + 100, y: PLAYER_AT.y }, HALL);
     near.frozen = 10_000;
     b.enemies.push(near);
-    run(b, 1, { selectAmmo: 'bomb' });
-    run(b, 1, { fire: true, aimX: PLAYER_AT.x + 90, aimY: PLAYER_AT.y });
+    hold(b, 'bomb');
+    run(b, 1, { use: true, aimX: PLAYER_AT.x + 90, aimY: PLAYER_AT.y });
     runUntil(b, () => b.events.bursts.length > 0, 60);
     expect(near.knockTicks).toBe(0);
   });
@@ -84,8 +84,8 @@ describe('getState (039)', () => {
     const s = arena();
     s.enemies.push(createEnemy(s.nextEnemyId++, 'wisp', { x: PLAYER_AT.x + 200, y: PLAYER_AT.y }, HALL));
     s.inventory = { arrow: 3 };
-    run(s, 1, { selectAmmo: 'arrow' });
-    run(s, 1, { fire: true, aimX: PLAYER_AT.x + 1000, aimY: PLAYER_AT.y });
+    hold(s, 'arrow');
+    run(s, 1, { use: true, aimX: PLAYER_AT.x + 1000, aimY: PLAYER_AT.y });
     const sum = summarize(s);
     expect(sum.enemies[0]).toMatchObject({ weight: 4 / 3, stunned: 0, chill: 0, frozen: 0 });
     expect(sum.arrows[0]?.keywords).toEqual(['arrow', 'shot', 'pierce', 'knockback', 'physical']);

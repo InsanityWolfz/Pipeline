@@ -64,7 +64,7 @@ export interface SimEvents {
   crafts: { recipeId: string }[];
   craftFails: { recipeId: string }[];
   bursts: BurstEvent[];
-  selects: { ammoId: string }[];
+  selects: { slot: number }[];
   /** The player walked through a door. */
   roomChanges: { from: string; to: string }[];
   places: { id: number; pieceId: string; tx: number; ty: number; facing: Facing }[];

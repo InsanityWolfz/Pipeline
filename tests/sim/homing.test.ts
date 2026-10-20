@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { HOMING } from '../../src/data/tags';
 import type { ArrowState } from '../../src/sim/arrows';
 import type { SimState } from '../../src/sim/state';
-import { arena, fireAt, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, fireAt, hold, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
 // Homing (029): a homing round locks at launch onto the living enemy nearest the
 // cursor within HOMING.lockRadius, then turns toward it by at most HOMING.turnDegrees a tick.
@@ -10,7 +10,7 @@ import { arena, fireAt, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 function homing(): SimState {
   const s = arena();
   s.inventory = { 'ley-bolt+homing': 10 };
-  run(s, 1, { selectAmmo: 'ley-bolt' });
+  hold(s, 'ley-bolt');
   return s;
 }
 

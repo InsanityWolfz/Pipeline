@@ -7,7 +7,7 @@ import { leavePool } from '../../src/sim/keystones';
 import { createArrow } from '../../src/sim/arrows';
 import type { SimState } from '../../src/sim/state';
 import { activeLines, resolveStat, statOf, statusEmission, YOU } from '../../src/sim/statResolve';
-import { arena, fireAt, HUSK, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, fireAt, hold, HUSK, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 import { piece, standAtBench, wear } from '../fixtures/gear';
 import { ROLLBREAKER, WARDSTONE } from '../../src/data/relics';
 import { equip } from '../../src/sim/gear';
@@ -107,7 +107,7 @@ describe('scope reach (039: a scope reaches every emission that carries it)', ()
     s.inventory = { landmine: 2 };
     const near = placeHusk(s, PLAYER_AT.x + 100 + 26, PLAYER_AT.y);
     near.frozen = 10_000;
-    run(s, 1, { selectAmmo: 'landmine' });
+    hold(s, 'landmine');
     run(s, 1, fireAt(PLAYER_AT.x + 100, PLAYER_AT.y));
     runUntil(s, () => s.events.mineBursts.length > 0, 400);
     expect(s.events.mineBursts[0]?.radius).toBeCloseTo(27.6, 9);

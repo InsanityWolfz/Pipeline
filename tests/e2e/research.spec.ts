@@ -67,7 +67,8 @@ test('the west cap restores with the warden core (E, then E again), two entrance
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     h.toHall();
-    const at = g.step(1, { selectAmmo: 'ley-bolt' });
+    window.__helpers?.hold('ley-bolt');
+    const at = g.step(0);
     const before = new Set(at.arrows.map((a) => a.id));
     const out = g.step(1, { fire: true, aimX: at.player.x + 160, aimY: at.player.y });
     return { count: out.tube.shotCount, from: out.tube.fromReservoir, fresh: out.arrows.filter((a) => !before.has(a.id)).map((a) => Math.round((Math.atan2(a.dy, a.dx) * 1800) / Math.PI) / 10).sort((a, b) => a - b) };
