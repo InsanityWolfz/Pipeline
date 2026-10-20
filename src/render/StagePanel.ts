@@ -4,8 +4,7 @@ import { CRAFT_MENU_LAYOUT, STAGE_PANEL } from '../data/hudLayout';
 import { itemDef } from '../data/items';
 import { stageLineText } from '../data/rulesText';
 import { stageDef, STAGE_ROWS, type StageRow } from '../data/stages';
-import { count, type Inventory } from '../sim/inventory';
-import { stageAffordable } from '../sim/stages';
+import { stageAffordable, stageHeld, type StageStores } from '../sim/stages';
 import type { TextBox } from './CraftMenuView';
 import { inRect } from './foundryLayout';
 import { flashRow, RowHover, type RowFrames } from './menuFeedback';
@@ -45,7 +44,7 @@ const box = (line: TextLine): TextBox => ({ text: line.obj.text, ...line.at, w: 
 // rounds it gives (+4, held, name), and the stage's name in the row's free slot; under the
 // rows, the hovered row's stage line, generated (039). Shown beside the bench's gear panel
 // (036) once the shrine is claimed, a family's row once its ammo can be made; a row is
-// dimmed while its inputs aren't carried. Clicking an affordable row hand-applies it.
+// dimmed while its inputs aren't held (carried or in the intake's entrances). Clicking an affordable row hand-applies it.
 export class StagePanel {
   private readonly scene: Scene;
   private readonly tablet: GameObjects.Graphics;
@@ -57,7 +56,7 @@ export class StagePanel {
   private known: string[] = [];
   private hovered = -1;
   private shown = false;
-  private inventory: Inventory = {};
+  private stores: StageStores = { inventory: {}, link: { entrances: [] } };
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -110,7 +109,7 @@ export class StagePanel {
         ? this.visible.map((r, i) => ({
             ...(layout.rows[i] ?? { x: 0, y: 0, w: 0, h: 0 }),
             stageId: r.row.id,
-            dimmed: !stageAffordable(this.inventory, r.row.id),
+            dimmed: !stageAffordable(this.stores, r.row.id),
             texts: [...r.inputs.flatMap((i) => [i.text.obj.text, i.name.obj.text]), r.stageName.obj.text, r.made.obj.text, r.owned.obj.text, r.outputName.obj.text],
             line: r.line,
           }))
@@ -123,7 +122,7 @@ export class StagePanel {
   stageAt(x: number, y: number): string | null {
     if (!this.shown) return null;
     const r = this.layout().rows.find((row) => inRect(row, x, y));
-    return r && stageAffordable(this.inventory, r.stageId) ? r.stageId : null;
+    return r && stageAffordable(this.stores, r.stageId) ? r.stageId : null;
   }
 
   /** A row's stage under a view point (040: its summary beside the row). */
@@ -147,7 +146,7 @@ export class StagePanel {
   pointAt(x: number, y: number): void {
     const i = this.shown ? this.layout().rows.findIndex((r) => inRect(r, x, y)) : -1;
     this.hovered = i;
-    this.hover.set(i, i >= 0 && stageAffordable(this.inventory, this.visible[i]?.row.id ?? ''));
+    this.hover.set(i, i >= 0 && stageAffordable(this.stores, this.visible[i]?.row.id ?? ''));
     this.hoverLine.set(this.visible[i]?.line ?? '');
   }
 
@@ -158,11 +157,11 @@ export class StagePanel {
   }
 
   /**
-   * Shows the panel beside the bench's gear panel, `benchWidth` px wide (036), or hides it for null, with the counts from
-   * `inventory` and the rows `known` (039.12: the row ids the player can see).
+   * Shows the panel beside the bench's gear panel, `benchWidth` px wide (036), or hides it for null, with the counts the sim
+   * reads as held from `stores` (stageHeld: carried and in the intake's entrances) and the rows `known` (039.12: the row ids the player can see).
    */
-  show(benchWidth: number | null, inventory: Inventory, known: readonly string[] = STAGE_ROWS.map((r) => r.id)): void {
-    this.inventory = inventory;
+  show(benchWidth: number | null, stores: StageStores, known: readonly string[] = STAGE_ROWS.map((r) => r.id)): void {
+    this.stores = stores;
     if (benchWidth === null) {
       this.setShown(false);
       return;
@@ -228,19 +227,19 @@ export class StagePanel {
     }
   }
 
-  /** Counts, dimming and the missing colour, from the inventory. */
+  /** Counts, dimming and the missing colour, from what the sim reads as held. */
   private refresh(): void {
     const L = CRAFT_MENU_LAYOUT;
     for (const [i, r] of this.visible.entries()) {
-      const ok = stageAffordable(this.inventory, r.row.id);
+      const ok = stageAffordable(this.stores, r.row.id);
       const textAlpha = ok ? 1 : L.greyTextAlpha;
       for (const input of r.inputs) {
-        const have = count(this.inventory, input.itemId);
+        const have = stageHeld(this.stores, input.itemId);
         input.text.set(`${have}/${input.need}`);
         const fill = have < input.need ? L.missing : undefined;
         for (const t of [input.text, input.name]) t.setFill(fill).setAlpha(textAlpha);
       }
-      r.owned.set(String(count(this.inventory, r.row.recipe.output.itemId)));
+      r.owned.set(String(stageHeld(this.stores, r.row.recipe.output.itemId)));
       for (const t of [r.stageName, r.made, r.owned, r.outputName]) t.setAlpha(textAlpha);
       for (const p of r.parts) p.setAlpha(ok ? 1 : L.greyAlpha);
       r.frame.setAlpha(ok ? 1 : L.greyAlpha);

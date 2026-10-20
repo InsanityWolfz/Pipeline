@@ -5,8 +5,9 @@ import { stageDef, stageRecipeFor, stageRow, STAGE_ROWS, STAGES, type StageDef, 
 import { withoutTag, withTag } from '../data/tags';
 import { INPUT_CAP } from '../data/foundry';
 import { fixtureInReach, isClaimed } from './claims';
-import { hasInputs, make } from './crafting';
-import { count, type Inventory } from './inventory';
+import { make } from './crafting';
+import { count } from './inventory';
+import { ammoOfItem, takeFromEntrance } from './link';
 import type { MachineState } from './pieces';
 import type { SimState } from './state';
 import { knownRecipe } from './tutorial';
@@ -57,20 +58,47 @@ export function offerToStage(m: MachineState, st: StageDef, item: string): boole
 export const stagesKnown = (state: Pick<SimState, 'claims'>): boolean => isClaimed(state, SHRINE_SITE);
 
 /**
- * Hand-applies a stage at the bench (029): with the shrine claimed, the bench in reach and the inputs carried, takes them
- * and gives the tagged rounds, so the tagged item counts as hand-made and the stage unlocks. Any number of times.
+ * Hand-applies a stage at the bench (029): with the shrine claimed, the bench in reach and the inputs held (stageHeld), takes them
+ * (carried first, then from the intake's entrances) and gives the tagged rounds, so the tagged item counts as hand-made and the stage unlocks. Any number of times.
  * The crafting menu's `craft` refuses stage ids, so this is the only way to apply one by hand. `rowId` names a bench
  * row (039.12: `frost-rune-bomb`), or a stage for its home row; a row the player can't see yet refuses.
  */
 export function applyStage(state: SimState, rowId: string): boolean {
   const row = stageRow(rowId);
   const known = row !== undefined && stageRowsKnown(state).includes(row);
-  if (!row || !known || !stagesKnown(state) || !fixtureInReach(state, 'bench') || !hasInputs(state.inventory, row.recipe)) {
+  if (!row || !known || !stagesKnown(state) || !fixtureInReach(state, 'bench') || !stageAffordable(state, row.id)) {
     state.events.craftFails.push({ recipeId: rowId });
     return false;
   }
+  for (const [itemId, need] of Object.entries(row.recipe.inputs)) pullFromEntrances(state, itemId, need - count(state.inventory, itemId));
   make(state, row.recipe);
   return true;
+}
+
+/** What a bench row may draw on: the stores held counts read. */
+export type StageStores = Pick<SimState, 'inventory'> & { link: Pick<SimState['link'], 'entrances'> };
+
+/**
+ * How many of an item count as held for a bench row (029, raised after the build): carried, plus the rounds in the
+ * intake's entrances. The Stages panel's counts and dimming read this.
+ */
+export function stageHeld(state: StageStores, itemId: string): number {
+  const ammoId = ammoOfItem(itemId);
+  const inEntrances = ammoId === null ? 0 : state.link.entrances.reduce((n, e) => n + (e.ammoId === ammoId ? e.count : 0), 0);
+  return count(state.inventory, itemId) + inEntrances;
+}
+
+/** Moves up to `n` of an item from the intake's entrances, in intake order, into the inventory (carried rounds are spent first). */
+function pullFromEntrances(state: SimState, itemId: string, n: number): void {
+  const ammoId = ammoOfItem(itemId);
+  if (ammoId === null) return;
+  let left = n;
+  for (const e of state.link.entrances) {
+    while (left > 0 && e.ammoId === ammoId && takeFromEntrance(e)) {
+      state.inventory[itemId] = count(state.inventory, itemId) + 1;
+      left -= 1;
+    }
+  }
 }
 
 /** The bench rows the player can see (039.12): a family's row once its own ammo can be made (landmines after ley-iron is found, 038.3). */
@@ -78,10 +106,10 @@ export function stageRowsKnown(state: Pick<SimState, 'found'> & { link: Pick<Sim
   return STAGE_ROWS.filter((r) => knownRecipe(state, r.base));
 }
 
-/** Whether the inventory holds a bench row's inputs (029: the row is dimmed otherwise). */
-export function stageAffordable(inventory: Inventory, rowId: string): boolean {
+/** Whether a bench row's inputs are held, carried or in the intake's entrances (029: the row is dimmed otherwise). */
+export function stageAffordable(state: StageStores, rowId: string): boolean {
   const row = stageRow(rowId);
-  return row !== undefined && hasInputs(inventory, row.recipe);
+  return row !== undefined && Object.entries(row.recipe.inputs).every(([itemId, n]) => stageHeld(state, itemId) >= n);
 }
 
 /** Stage ids the player can build (any of their tagged rounds has been hand-made: 039, hand-applied once to any round), in stage order. */
