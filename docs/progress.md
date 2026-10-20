@@ -11,11 +11,11 @@ Newest entry first.
 - The camera locks to the player (`CAMERA_LERP` 1). No shake at all (Shaun's change).
 - The end card shows 180 ticks after the Bulwark's first kill, once per save; Keep playing resumes free play.
 - F writes a feedback note (a textarea over the canvas; typing never reaches the game) with a game-state snapshot; notes go in every export.
-- Open questions 042.15–042.27 are in the spec under "Raised after the build" (Esc on flow screens, fixed keys, note details, unworded messages, what Flashes off removes, list items in old saves, and more).
+- Open questions 042.15–042.28 are in the spec under "Raised after the build" (Esc on flow screens, fixed keys, note details, unworded messages, what Flashes off removes, list items in old saves, and more).
 - Checks: `npm run check` passes (1,506 unit tests). The full e2e ran once: 117 passed, 1 failed, 106 skipped (review shots). The failure was hollows.spec.ts: the Bulwark kill now shows the end card, which covered its altar step; the test now closes the card (Keep playing) and passes (3 of 3 in that file). Review shots: docs/review/042 (10 shots).
 
 **Next:**
-1. Shaun playtests the preview (https://insanitywolfz.github.io/Pipeline/branch/claude/042-shippable-build/), looks at docs/review/042, and answers 042.15–042.27.
+1. Shaun playtests the preview (https://insanitywolfz.github.io/Pipeline/branch/claude/042-shippable-build/), looks at docs/review/042, and answers 042.15–042.28.
 2. On approval: the design.md "Death and tension" line, CLAUDE.md's `flow()` note and the `.claude/rules/sim.md` save-version rule (042's Docs criteria). Then /wrapup merges to `main` only when Shaun says so.
 
 ## 2026-10-20: 043 built (arena lock, slower Shardbacks)
