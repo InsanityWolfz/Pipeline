@@ -41,3 +41,6 @@ Oct 20, 2026 · Shaun in chat, while 041 was being built. Raw notes plus Claude'
 17. **Exploit: healing during the Bulwark fight.** Players fought him where a pylon's safe zone (or a spring) heals them. Shaun's fix: when the fight starts, the arena locks. Pressing E on the locking door leaves, but the fight's progress resets (the Bulwark heals).
 18. **Shardbacks turn too fast** (120°/s today). They need a window, even just enough for one projectile to land.
 19. **A casual friend struggled with the Pylon Warden.** This pulls against note 3 ("first boss needs a buff"), so the interview needs to settle it. One option is to keep the Warden's damage but make its telegraphs easier to read.
+
+**Decided (Shaun, 2026-10-20):** leave the Pylon Warden as it is. "I think he was fine as is before the buffs. we have plenty of runway to make hard content this is just the real first boss." This drops note 3, and note 19 needs no change. (041 didn't change the Warden itself; only the player's ammo damage moved.)
+**Folded into 041 now:** note 17 (the arena locks when the fight starts; E on the door leaves and resets the fight) and note 18 (slower Shardback turn).
