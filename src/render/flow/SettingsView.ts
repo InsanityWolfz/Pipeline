@@ -2,7 +2,7 @@ import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../../data/assets';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../data/config';
 import { BINDINGS_PANEL, FLOW_DIM, FLOW_ROWS, MENU_ROW_W, SETTINGS_PANEL } from '../../data/flowLayout';
-import { ACTION_LABELS, BIND_ACTIONS, SETTINGS_TEXT, type Settings } from '../../data/settings';
+import { ACTION_LABELS, BIND_ACTIONS, SANDBOX_ONLY, SETTINGS_TEXT, type Settings } from '../../data/settings';
 import { colorOf } from '../color';
 import { keyLabel } from '../keyHint';
 import { drawTablet } from '../tablet';
@@ -18,6 +18,8 @@ export interface SettingsModel {
   settings: Readonly<Settings>;
   damaged: boolean;
   notes: number;
+  /** Export and Import save (and Export damaged save): hidden in the sandbox (044), which never touches the save. */
+  saveRows: boolean;
 }
 
 const pct = (v: number): string => `${Math.round(v * 100)}%`;
@@ -65,9 +67,7 @@ export class SettingsView {
       { id: 'mute', label: T.mute, value: onOff(s.muted) },
       { id: 'flashes', label: T.flashes, value: onOff(s.flashes) },
       { id: 'keys', label: T.keys },
-      { id: 'export', label: T.export, sub: SETTINGS_TEXT.notes(m.notes) },
-      { id: 'import', label: T.import },
-      ...(m.damaged ? [{ id: 'damaged', label: T.damaged }] : []),
+      ...(m.saveRows ? [{ id: 'export', label: T.export, sub: SETTINGS_TEXT.notes(m.notes) }, { id: 'import', label: T.import }, ...(m.damaged ? [{ id: 'damaged', label: T.damaged }] : [])] : []),
       { id: 'back', label: T.back },
     ];
     const P = SETTINGS_PANEL;
@@ -81,11 +81,11 @@ export class SettingsView {
   }
 
   /** Opens (or redraws) the key list. */
-  showKeys(s: Readonly<Settings>, waiting: string | null): void {
+  showKeys(s: Readonly<Settings>, waiting: string | null, sandbox = false): void {
     this.mode = 'keys';
     this.waiting = waiting;
     const rows: MenuRowSpec[] = [
-      ...BIND_ACTIONS.map((a) => ({ id: a, label: ACTION_LABELS[a], value: a === waiting ? SETTINGS_TEXT.waiting : keyLabel(s.bindings[a]) })),
+      ...BIND_ACTIONS.filter((a) => sandbox || !SANDBOX_ONLY.includes(a)).map((a) => ({ id: a, label: ACTION_LABELS[a], value: a === waiting ? SETTINGS_TEXT.waiting : keyLabel(s.bindings[a]) })),
       { id: 'reset', label: SETTINGS_TEXT.reset },
       { id: 'keysBack', label: SETTINGS_TEXT.rows.back },
     ];

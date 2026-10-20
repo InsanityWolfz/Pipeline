@@ -1,5 +1,6 @@
 import type { Facing } from './player';
 import type { EquipRequest } from './gear';
+import type { SandboxCommand } from './sandbox';
 
 // What the player asks for on one tick. Render builds these from the keyboard
 // and mouse; the sim never reads input devices.
@@ -60,8 +61,10 @@ export interface Command {
   summon: string | null;
   /** Take a talent (by id) this tick (an edge, 037): anywhere, with a point to spend; or null. */
   takeTalent: string | null;
-  /** Respec every talent this tick (an edge, 037): only in the foundry, free. */
+  /** Respec every talent this tick (an edge, 037): only in the foundry (or the sandbox, 044), free. */
   respec: boolean;
+  /** The sandbox panel's request this tick (an edge, 044), or null; nothing outside the sandbox. */
+  sandbox: SandboxCommand | null;
 }
 
 /** No input. Its aim is the world origin, so callers that care about aim must set one. */
@@ -90,6 +93,7 @@ export const NO_COMMAND: Readonly<Command> = {
   summon: null,
   takeTalent: null,
   respec: false,
+  sandbox: null,
 };
 
 /** A command's held part (stick, aim and fire) with every one-tick edge cleared: what a held command is after its first tick. */

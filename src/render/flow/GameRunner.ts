@@ -56,6 +56,8 @@ export class GameRunner {
    * aren't first kills). Returns whether it's due now; the caller shows it and calls `endCardShown`.
    */
   endCardDue(sim: SimState): boolean {
+    // 044.5: the sandbox never shows it.
+    if (sim.sandbox) return false;
     if (!this.endCardSeen && this.endCardAt === null && sim.events.bossDefeats.some((d) => d.boss === END_CARD.boss)) this.endCardAt = sim.tick + END_CARD.delayTicks;
     return this.endCardAt !== null && sim.tick >= this.endCardAt;
   }

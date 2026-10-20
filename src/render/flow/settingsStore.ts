@@ -1,4 +1,4 @@
-import { BIND_ACTIONS, DEFAULT_SETTINGS, FIXED_KEYS, SETTINGS_VERSION, VOLUME_STEP, type BindAction, type Settings } from '../../data/settings';
+import { BIND_ACTIONS, DEFAULT_SETTINGS, FIXED_KEYS, SANDBOX_ONLY, SETTINGS_VERSION, VOLUME_STEP, type BindAction, type Settings } from '../../data/settings';
 import { STORAGE_KEYS } from '../../data/save';
 import { SOUND_SETTINGS_KEY } from '../../data/sounds';
 import { readKey, writeKey } from './storage';
@@ -32,13 +32,20 @@ export function parseSettings(raw: string | null): Settings | null {
   const d = data as Record<string, unknown>;
   const D = DEFAULT_SETTINGS;
   const bindings = { ...D.bindings };
+  const stored = new Set<BindAction>();
   if (typeof d.bindings === 'object' && d.bindings !== null) {
     const b = d.bindings as Record<string, unknown>;
     for (const a of BIND_ACTIONS) {
       const key = b[a];
-      if (typeof key === 'string' && key !== '' && !FIXED_KEYS.includes(key)) bindings[a] = key;
+      if (typeof key === 'string' && key !== '' && !FIXED_KEYS.includes(key)) {
+        bindings[a] = key;
+        stored.add(a);
+      }
     }
   }
+  // An action newer than the stored file (044: the sandbox panel's) whose default key the player has since bound to
+  // something else is left with no key, rather than the clash resetting every binding.
+  for (const a of SANDBOX_ONLY) if (!stored.has(a) && BIND_ACTIONS.some((o) => o !== a && stored.has(o) && bindings[o] === bindings[a])) bindings[a] = '';
   // Two actions on one key (a hand-edited file) fall back to the defaults.
   const keys = Object.values(bindings);
   const clean = new Set(keys).size === keys.length;

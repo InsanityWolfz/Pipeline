@@ -29,8 +29,11 @@ export interface FlowUi {
   notice: string | null;
 }
 
-/** Whether a URL is a dev or test start that skips the title and never touches the save slot (042.1). */
+/** Whether a URL is a dev or test start that skips the title and never touches the save slot (042.1), the sandbox's (044) among them. */
 export function skipsTitle(search: string): boolean {
   const params = new URLSearchParams(search);
-  return params.has('start') || params.has('playtest');
+  return params.has('start') || params.has('playtest') || params.has('sandbox');
 }
+
+/** Whether a URL starts the sandbox (044): Settings hides its save rows and shows the panel's key. */
+export const isSandboxUrl = (search: string): boolean => new URLSearchParams(search).has('sandbox');

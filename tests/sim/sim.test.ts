@@ -245,7 +245,7 @@ describe('sim state', () => {
 
   it('summarizes rooms, build mode, unlocks and the foundry', () => {
     const s = createSim(8);
-    expect(summarize(s)).toMatchObject({ room: 'overworld', rooms: ['foundry', 'overworld'], building: false });
+    expect(summarize(s)).toMatchObject({ room: 'overworld', rooms: ['foundry', 'overworld', 'sandbox'], building: false });
     expect(summarize(s).unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate']);
     expect(summarize(s).enemies.every((e) => e.room === 'overworld')).toBe(true);
     s.roomId = 'foundry';

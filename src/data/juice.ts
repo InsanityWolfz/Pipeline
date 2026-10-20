@@ -162,6 +162,8 @@ export const ROOM_MOOD: Readonly<Record<string, { tint: string; alpha: number }>
   overworld: { tint: 'sun', alpha: 0.04 },
   // A warm forge glow over the sandstone (020).
   foundry: { tint: 'flame-dark', alpha: 0.1 },
+  // 044: the sandbox's room in the same daylight.
+  sandbox: { tint: 'sun', alpha: 0.04 },
 };
 
 /** The vignette: edge darkness, and where the darkening starts (fraction of the corner distance). */

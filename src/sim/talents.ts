@@ -1,4 +1,4 @@
-import { FOUNDRY_ROOM } from '../data/rooms';
+import { FOUNDRY_ROOM, SANDBOX_ROOM } from '../data/rooms';
 import { TALENT_POINT_COST, TALENT_START, TALENTS } from '../data/talents';
 import type { SimState } from './state';
 import { playerStats } from './stats';
@@ -23,12 +23,15 @@ export function takeTalent(state: SimState, id: string): void {
   state.events.talents.push({ id });
 }
 
+/** Where respec works: the foundry, and the sandbox's room (044: the sandbox can't reach the foundry). */
+export const respecHere = (state: Pick<SimState, 'roomId' | 'sandbox'>): boolean => state.roomId === FOUNDRY_ROOM || (state.sandbox !== undefined && state.roomId === SANDBOX_ROOM);
+
 /**
- * In the foundry only: clears every talent but the start and returns their points, free, with a respec event. Health
+ * In the foundry only (or the sandbox, 044): clears every talent but the start and returns their points, free, with a respec event. Health
  * above the new max (Tough Hide taken back) comes down to it.
  */
 export function respec(state: SimState): void {
-  if (state.roomId !== FOUNDRY_ROOM) return;
+  if (!respecHere(state)) return;
   const refunded = state.talents.filter((id) => id !== TALENT_START).length * TALENT_POINT_COST;
   state.talents = [TALENT_START];
   state.talentPoints += refunded;
