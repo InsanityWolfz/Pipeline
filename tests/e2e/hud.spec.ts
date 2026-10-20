@@ -162,10 +162,11 @@ test.describe('review screenshots (025)', () => {
 
   test('carried arrows, then the fist', async ({ page }) => {
     await boot(page, '?start=field');
-    await page.evaluate(() => window.__GAME__?.step(1));
+    const s = await page.evaluate(() => window.__GAME__?.step(1));
     await cameraSettled(page);
-    // 047: the arrows are on the carried bar; the intake bar shows the fist (left click punches with the intake dry).
-    await hudShowing(page, [HUD_LAYOUT.tubeSlot.melee]);
+    // 047: the arrows are on the carried bar; before the tube attunes left click fires them too, so the intake bar
+    // shows them (047.9). Spent, it shows the fist.
+    await hudShowing(page, [String(s?.inventory.arrow ?? 0)]);
     await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/01-carried-arrows.png` });
     await spendArrows(page);

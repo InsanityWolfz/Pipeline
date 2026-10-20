@@ -117,6 +117,9 @@ test.describe('review screenshots (031)', () => {
     }, SAFE_SPOT);
     await expect.poll(async () => (await ui(page))?.health.healing).toBe(true);
     await cameraSettled(page, 20_000);
+    // The Ley Grotto's discovery banner from the walk, played out over the player first.
+    await quietScreen(page);
+    await expect.poll(async () => (await ui(page))?.health.healing).toBe(true);
     await page.screenshot({ path: `${SHOTS}/04-healing-glow.png` });
   });
 

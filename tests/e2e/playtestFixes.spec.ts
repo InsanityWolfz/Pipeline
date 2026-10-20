@@ -3,7 +3,7 @@ import { VIEW_WIDTH } from '../../src/data/config';
 import { DEPTHS } from '../../src/data/assets';
 import { nodeDef } from '../../src/data/nodes';
 import { craftTabRows } from '../../src/render/craftMenuLayout';
-import { boot, watchErrors } from './helpers';
+import { boot, quietScreen, watchErrors } from './helpers';
 
 // Playtest fixes (021): the menu pointer over the crafting menu, no shake on firing,
 // and (with REVIEW_SHOTS=1) the review screenshots in docs/review/021.
@@ -114,7 +114,9 @@ test.describe('review screenshots (021)', () => {
       g.drop('wood', n.x + 34, n.y - half - 4);
       return { x: n.x, y: n.y };
     }, nodeDef('tree').feetBox.h / 2);
-    // The log lying behind the tree, before the tick that picks it up (for the picture only).
+    // The log lying behind the tree, before the tick that picks it up (for the picture only), once the Quarry's
+    // discovery banner from the walk has played out.
+    await quietScreen(page);
     await page.waitForTimeout(1500);
     await page.screenshot({ path: `${SHOTS}/03a-log-behind-tree.png` });
     // 045: the magnet pulls it in through the tree over a few ticks, then it's picked up.
