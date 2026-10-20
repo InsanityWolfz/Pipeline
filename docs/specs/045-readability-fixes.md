@@ -1,5 +1,5 @@
 # 045: Readability fixes
-status: approved
+status: done
 
 Approved on draft by Shaun in chat, 2026-10-20 ("Approve 45-47 on draft"): the build follows the proposals in the open questions.
 
@@ -80,3 +80,6 @@ Built on `claude/045-readability` (plan: docs/plans/045-readability-fixes.md). E
 | Ammo, cluster / walls | recorded | | arrow 221 ticks / bomb 124 ticks |
 
 Not tuned (balance is judged at playtest).
+
+## Shaun's answers (2026-10-20)
+- Shaun playtested the preview, OK'd 045.3–045.9 as built and said "Merge 33".

@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-20: 045 merged
+**Changed:** Shaun playtested 045 (readability fixes), OK'd its build decisions and merged it (InsanityWolfz/Pipeline#33). SAVE_VERSION is 2.
+
+**Next:** 046 (foundry onboarding, being built), then 047.
+
 ## 2026-10-20: 046 foundry onboarding built (draft PR)
 **Changed:** built 046 on `claude/046-foundry-onboarding`, stacked on 045. The Splitter is on the build bar from the start, and its research node and schematic are gone. Each Region 1 raw makes twice the rounds: only the final craft doubles (046.7, Shaun: "2× per resource"), and `OUTPUT_CAP` is 8. A new game's first foundry entry lays the example arrow line from data (4 of each raw, 64 arrows), which starts with the attune. Once it runs dry, "Refill the hoppers with wood, stone and fiber (E)" shows in place of 027's seven build steps. After the Warden's entrance, "Build a second arrow line into the new entrance" shows. The "+ part" popups now show the first time machines ever make each item. Save version 3 drops the Splitter's node and schematic and maps the objectives by text; old saves get no example line. `npm run check` and the full Playwright run pass. Review shots are in docs/review/046. `npm run measure` is unchanged from 045. Spec status stays approved.
 
