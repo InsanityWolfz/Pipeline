@@ -56,7 +56,7 @@ test('key 4 picks landmines: one arms where it lands, only its arm time sets it 
   expect(errors).toEqual([]);
 });
 
-test('cluster bombs crafted (047: in C) unlock the Cluster die, and their bomblets, whose bomblets burst round the bomb', async ({ page }) => {
+test('cluster bombs crafted (047: in C) unlock the Cluster die, and their bomblets burst round the bomb', async ({ page }) => {
   test.setTimeout(180_000);
   const errors = watchErrors(page);
   await boot(page, '?playtest');
