@@ -98,7 +98,7 @@ export class OverworldView {
     const x = (tx + 0.5) * T;
     const bottom = (ty + 1) * T;
     const mound = OVERWORLD.entrance.mound.some((t) => t.tx === tx && t.ty === ty);
-    // A landmark's own look (032): the Old Grove's old trees, the Quarry's cut blocks.
+    // A landmark's own look (032): the Old Grove's old trees, the Quarry's cut blocks, the Husk Hive's nest stones (049).
     const landmark = LANDMARK_LIST.find((l) => tx >= l.area.x0 && tx <= l.area.x1 && ty >= l.area.y0 && ty <= l.area.y1);
     let frame: string | undefined;
     let jitter = 0;
@@ -113,6 +113,7 @@ export class OverworldView {
     else if (symbol === TILE.wall) frame = OVERWORLD_SPRITES.ruinWall;
     else if (symbol === TILE.door) frame = OVERWORLD_SPRITES.entrance;
     else if (symbol === TILE.ruinBlock && landmark?.look?.blocks === 'cut') frame = LANDMARK_SPRITES.cutBlocks[hash % LANDMARK_SPRITES.cutBlocks.length];
+    else if (symbol === TILE.ruinBlock && landmark?.look?.blocks === 'hive') frame = LANDMARK_SPRITES.hiveStones[hash % LANDMARK_SPRITES.hiveStones.length];
     else if (symbol === TILE.ruinBlock && !mound) frame = hash % 3 === 0 ? OVERWORLD_SPRITES.column : OVERWORLD_SPRITES.ruinStone;
     if (!frame) return;
     const image = addVector(this.scene, x + jitter, bottom, frame).setDepth(bottom);

@@ -25,6 +25,8 @@ export interface GuardPlacement {
   readonly enemyId: string;
   readonly tx: number;
   readonly ty: number;
+  /** 049: this guard is always its pack's champion (the Husk Hive's), named with the seeded RNG; such a pack draws no random one. */
+  readonly champion?: true;
 }
 
 /** A resource site's ley pylon: its tile, the claim's site id, and the raws it sends home (034: the Cistern Terrace sends two). */
@@ -57,8 +59,8 @@ export interface LandmarkDef {
   /** Its own tiles stamped over the ground (034: the Cut's quarry face, the aqueduct's pillars, arches and fallen spans). */
   readonly stamps?: readonly TileStamp[];
   readonly marker: LandmarkMarker;
-  /** How render dresses it (landmarkAssets): old trees on its tree tiles, cut stones for its blocks, a sunken hollow. */
-  readonly look?: { readonly trees?: 'old'; readonly blocks?: 'cut'; readonly hollow?: 'ley' | 'frost'; readonly quarry?: true; readonly paving?: 'terrace' };
+  /** How render dresses it (landmarkAssets): old trees on its tree tiles, cut stones (or 049's amber-crusted nest stones) for its blocks, a sunken hollow. */
+  readonly look?: { readonly trees?: 'old'; readonly blocks?: 'cut' | 'hive'; readonly hollow?: 'ley' | 'frost'; readonly quarry?: true; readonly paving?: 'terrace' };
 }
 
 /** The landmark tuning (032). Ticks at 60 Hz. */

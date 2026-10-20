@@ -5,6 +5,8 @@ import { NODES, nodeDef, type Placement } from '../../src/data/nodes';
 import { SAFE_RADIUS } from '../../src/data/population';
 import { TILE } from '../../src/data/rooms';
 import { WORLD } from '../../src/sim/world';
+import { landmarkDef } from '../../src/data/landmarks';
+import type { TileRect } from '../../src/data/tiles';
 
 // Believable resources (018): every node stands where its material comes from.
 
@@ -35,6 +37,9 @@ function toLine(t: TilePos, line: readonly TilePos[]): number {
 
 const LINES = Object.values(OVERWORLD.leyLines);
 
+const HIVE = landmarkDef('husk-hive');
+const inside = (r: TileRect, t: TilePos): boolean => t.tx >= r.x0 && t.tx <= r.x1 && t.ty >= r.y0 && t.ty <= r.y1;
+
 /** The node sits in a hand-placed feature of this kind (a grove or rock field's disc, a pond's shore), not just near stray terrain. */
 const inFeature = (t: TilePos, kind: 'grove' | 'rocks' | 'pond'): boolean =>
   OVERWORLD.features.some((f) =>
@@ -54,6 +59,8 @@ const RULES: Record<Placement, (t: TilePos) => boolean> = {
   'frozen-grotto': (t) => t.tx >= GROTTO.area.x0 && t.tx <= GROTTO.area.x1 && t.ty >= GROTTO.area.y0 && t.ty <= GROTTO.area.y1 && at(t.tx, t.ty) === TILE.floor,
   // At the foot of a cliff or quarry face (034): open ground with the cliff right behind it, to the north.
   'cliff-seam': (t) => at(t.tx, t.ty) === TILE.floor && at(t.tx, t.ty - 1) === TILE.cliff,
+  // In the Husk Hive's nest (049), on its open floor.
+  hive: (t) => inside(HIVE.area, t) && at(t.tx, t.ty) === TILE.floor,
 };
 
 describe('where nodes stand', () => {
@@ -77,11 +84,11 @@ describe('where nodes stand', () => {
     }
   });
 
-  it("the shrine's safe zone holds one node of each type but the Grotto's rime and the Hollows' ley-iron (029, 034: gathered in their own places)", () => {
+  it("the shrine's safe zone holds one node of each type but the Grotto's rime, the Hollows' ley-iron and the Hive's resin (029, 034, 049: gathered in their own places)", () => {
     const pylon = OVERWORLD.shrine.pylon;
     const inZone = OVERWORLD.nodes.filter((n) => Math.hypot(n.tx - pylon.tx, n.ty - pylon.ty) <= SAFE_RADIUS);
     for (const def of Object.values(NODES)) {
-      if (def.placement !== 'frozen-grotto' && def.placement !== 'cliff-seam') expect(inZone.some((n) => n.nodeId === def.id), def.id).toBe(true);
+      if (def.placement !== 'frozen-grotto' && def.placement !== 'cliff-seam' && def.placement !== 'hive') expect(inZone.some((n) => n.nodeId === def.id), def.id).toBe(true);
     }
   });
 });

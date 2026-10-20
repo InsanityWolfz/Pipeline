@@ -154,7 +154,7 @@ export const OVERWORLD = {
     { group: 'shrine', enemyId: 'husk', tx: 109, ty: 11 },
     // Every landmark's guards (032), each pack in its landmark's group: the Frozen Grotto's (029) first. The
     // unclaimable ones are back after every KO.
-    ...LANDMARK_LIST.flatMap((l) => l.guards.map((g) => ({ group: l.id, enemyId: g.enemyId, tx: g.tx, ty: g.ty }))),
+    ...LANDMARK_LIST.flatMap((l) => l.guards.map((g) => ({ group: l.id, enemyId: g.enemyId, tx: g.tx, ty: g.ty, ...(g.champion ? { champion: true as const } : {}) }))),
     // The Bulwark at its start in the Sunken Forum (034), in the arena's group: back after a KO until its first kill.
     { group: HOLLOWS.arena.id, enemyId: HOLLOWS.arena.boss, tx: HOLLOWS.arena.start.tx, ty: HOLLOWS.arena.start.ty },
   ],

@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "shape": [
     "state.activatePulse: number",
     "state.arrows: array",
@@ -54,7 +54,9 @@
     "state.enemies[].behind: number",
     "state.enemies[].blockFlash: number",
     "state.enemies[].bumped: boolean",
+    "state.enemies[].champion.name: string",
     "state.enemies[].champion: null",
+    "state.enemies[].champion: object",
     "state.enemies[].chill: number",
     "state.enemies[].chillTicks: number",
     "state.enemies[].cooldown: number",

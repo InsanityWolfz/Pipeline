@@ -3,9 +3,9 @@
 /**
  * Where a node type may stand (018), so every material visibly comes from somewhere:
  * in a grove, in a rock field, at a pond's shallow edge, on a ley line, in the Frozen Grotto (029), or at the foot of
- * a cliff or quarry face (034: the tile north of it is cliff).
+ * a cliff or quarry face (034: the tile north of it is cliff), or in the Husk Hive (049).
  */
-export type Placement = 'grove' | 'rock-field' | 'pond-edge' | 'ley-line' | 'frozen-grotto' | 'cliff-seam';
+export type Placement = 'grove' | 'rock-field' | 'pond-edge' | 'ley-line' | 'frozen-grotto' | 'cliff-seam' | 'hive';
 
 export interface NodeDef {
   id: string;
@@ -43,6 +43,8 @@ export const NODES: Readonly<Record<string, NodeDef>> = {
   'ley-vein': node('ley-vein', 'Ley vein', 'ley-crystal', 'ley-line', { w: 20, h: 10 }),
   'rime-outcrop': node('rime-outcrop', 'Rime outcrop', 'rimestone', 'frozen-grotto', { w: 18, h: 10 }),
   'ley-iron-seam': node('ley-iron-seam', 'Ley-iron seam', 'ley-iron', 'cliff-seam', { w: 20, h: 10 }),
+  // 049.3: a Region 1 stone node's numbers, giving Husk resin.
+  'resin-seep': node('resin-seep', 'Resin seep', 'husk-resin', 'hive', { w: 18, h: 8 }),
 };
 
 /** A depleted node's remains grow back through this many visible stages before the full node returns (018). */

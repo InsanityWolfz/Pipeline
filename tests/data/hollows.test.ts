@@ -72,9 +72,10 @@ describe('the Hollows landmarks', () => {
 });
 
 describe('the Region 2 goals (034)', () => {
-  it("follow 032's \"Claim a second pylon\", end with 028's \"Feed all three entrances\", all in Milestone 1", () => {
+  it("follow 032's \"Claim a second pylon\" (and 049's Husk Hive goal), end with 028's \"Feed all three entrances\", all in Milestone 1", () => {
     const i = OBJECTIVES.findIndex((o) => o.text === 'Claim a second pylon');
     expect(OBJECTIVES.slice(i + 1).map((o) => [o.text, o.check, o.milestone])).toEqual([
+      ['Find the Husk Hive and claim its pylon', { kind: 'claimed', site: 'husk-hive' }, 'm1'],
       ['Breach Stonefall Hollows', { kind: 'inRegion', region: 2 }, 'm1'],
       ["Claim the Cistern Terrace's pylon", { kind: 'claimed', site: 'cistern-terrace' }, 'm1'],
       ['Defeat the Bulwark', { kind: 'bossDefeated', boss: 'bulwark' }, 'm1'],

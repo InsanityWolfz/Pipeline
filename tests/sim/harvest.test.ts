@@ -50,9 +50,9 @@ describe('harvesting', () => {
     expect(s.harvest).toBeNull();
     expect(n.uses).toBe(TREE.uses - 1);
     expect(s.events.harvests).toEqual([{ id: n.id, nodeId: 'tree', itemId: 'wood', x: n.x, y: n.y }]);
-    // The player stands within pickup reach (021), so the drop goes straight into the pack.
-    expect(s.events.pickups.map((p) => p.itemId)).toEqual(['wood']);
-    const g = s.events.pickups[0];
+    // Where it landed: on the ground, or already in the pack if it fell within contact (it scatters with the seeded RNG).
+    const g = s.groundItems[0] ?? s.events.pickups[0];
+    expect(g?.itemId).toBe('wood');
     for (const r of nodeRects(s.nodes, 'ruin-hall')) {
       const inside = Math.abs((g?.x ?? 0) - r.x) < r.w / 2 && Math.abs((g?.y ?? 0) - r.y) < r.h / 2;
       expect(inside).toBe(false);
@@ -61,6 +61,8 @@ describe('harvesting', () => {
 
   it('picks up the drop without the player moving (021)', () => {
     const { s } = harvesting(TREE.harvestTicks);
+    // The player stands within pickup reach, so the magnet pull (045) brings it in within a few ticks.
+    runUntil(s, () => s.inventory.wood === 1, 30);
     expect(s.inventory.wood).toBe(1);
     expect(s.groundItems).toEqual([]);
     expect({ x: s.player.x, y: s.player.y }).toEqual(PLAYER_AT);

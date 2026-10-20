@@ -33,6 +33,8 @@ describe('the chain', () => {
       'Build a frost rune into your arrow line',
       'Craft homing or split ley bolts (C)',
       'Claim a second pylon',
+      // 049.2: the Husk Hive's resin pylon, after the Warden.
+      'Find the Husk Hive and claim its pylon',
       // 034: Region 2's steps.
       'Breach Stonefall Hollows',
       "Claim the Cistern Terrace's pylon",
@@ -49,6 +51,7 @@ describe('the chain', () => {
       { kind: 'machineMade', item: 'arrow+frost' },
       { kind: 'craftedAny', items: ['ley-bolt+homing', 'ley-bolt+split'] },
       { kind: 'claimedCount', min: 2 },
+      { kind: 'claimed', site: 'husk-hive' },
       { kind: 'inRegion', region: 2 },
       { kind: 'claimed', site: 'cistern-terrace' },
       { kind: 'bossDefeated', boss: 'bulwark' },

@@ -7,7 +7,7 @@ import { inkCss } from '../vector/draw';
 // The landmarks' ground (032), painted into the overworld's ground chunks after 029's
 // frost: a sunken basin over each grotto hollow (darker, with a rocky rim; pale and icy
 // over the Frozen Grotto), warm sun on the Old Grove's grass, and damp ground round the
-// marsh's ponds. Pure canvas in world px, like ground.ts.
+// marsh's ponds, and amber crust over the Husk Hive's floor (049). Pure canvas in world px, like ground.ts.
 
 const T = TILE_SIZE;
 
@@ -49,6 +49,15 @@ export function paintLandmarks(c: CanvasRenderingContext2D, each: (fn: (tx: numb
       each((tx, ty, hash) => {
         if (tx < a.x0 || tx > a.x1 || ty < a.y0 || ty > a.y1 || symbol(tx, ty) !== TILE.floor || hash % G.every !== 0) return;
         ellipse(c, (tx + 0.5) * T + ((hash >>> 5) % G.jitter) - G.jitter / 2, (ty + 0.5) * T, G.rx, G.ry, G.sun, G.alpha);
+      });
+    }
+    if (l.look?.blocks === 'hive') {
+      // 049: amber crust on the nest's floor, and a stain round each stone.
+      const V = LANDMARK_LOOK.hive;
+      each((tx, ty, hash) => {
+        if (tx < a.x0 || tx > a.x1 || ty < a.y0 || ty > a.y1 || hash % V.every !== 0) return;
+        if (symbol(tx, ty) === TILE.ruinBlock) ellipse(c, (tx + 0.5) * T, (ty + 1) * T, V.stain.rx, V.stain.ry, V.stain.color, V.stain.alpha);
+        else if (symbol(tx, ty) === TILE.floor) ellipse(c, (tx + 0.5) * T + ((hash >>> 5) % V.jitter) - V.jitter / 2, (ty + 0.5) * T, V.rx, V.ry, V.crust, V.alpha);
       });
     }
     for (const f of l.features) {

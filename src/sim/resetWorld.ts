@@ -1,7 +1,7 @@
 import { DEFAULT_ROOM } from '../data/rooms';
 import { LANDMARK_LIST } from '../data/landmarks';
 import { bossReturns, settleSummons } from './altar';
-import { rollChampions } from './champions';
+import { makeChampion, rollChampions } from './champions';
 import { createEnemy } from './enemies';
 import { clearMines } from './mines';
 import { createNodes } from './nodes';
@@ -51,9 +51,18 @@ export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   state.enemies = rooms.flatMap((room) =>
     (room.enemies ?? [])
       .filter((p) => (!p.group || !state.claims.includes(p.group)) && !inSafeZone(state, room.id, tileCentre(p).x, tileCentre(p).y) && bossReturns(state, p.enemyId))
-      .map((p) => createEnemy(state.nextEnemyId++, p.enemyId, tileCentre(p), room.id, p.group)),
+      .map((p) => {
+        const e = createEnemy(state.nextEnemyId++, p.enemyId, tileCentre(p), room.id, p.group);
+        // 049: a guard placed as its pack's champion (the Husk Hive's) is always one.
+        if (p.champion) makeChampion(state.rng, e);
+        return e;
+      }),
   );
-  // Each landmark's guard pack may hold a champion (032); the tutorial's packs never do.
-  for (const l of LANDMARK_LIST) rollChampions(state.rng, state.enemies.filter((e) => e.group === l.id), l.ring);
+  // Each landmark's guard pack may hold a champion (032); the tutorial's packs never do, and one that already holds its
+  // placed champion (049) draws none.
+  for (const l of LANDMARK_LIST) {
+    const pack = state.enemies.filter((e) => e.group === l.id);
+    if (!pack.some((e) => e.champion !== null)) rollChampions(state.rng, pack, l.ring);
+  }
   resetPopulation(state);
 }
