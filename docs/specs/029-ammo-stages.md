@@ -108,8 +108,8 @@ Depends on 028 (hoppers fed by lines, entrances at their own rate).
 **Hand-apply first (sim, render)**
 - [ ] The identification bench's menu gains a "Stages" section with one row per stage: "Frost rune: 4 arrows + 1 rime shard → 4 frost arrows".
   - Rows appear once the shrine is claimed.
-  - A row is dimmed while its inputs aren't carried, like crafting rows (026).
-- [ ] Choosing a row takes its inputs from the inventory and gives the tagged rounds. It also marks the tagged item as hand-made (`crafted`), which unlocks that stage in the build bar by the existing rule: a machine unlocks once its output has been hand-crafted.
+  - A row is dimmed while its inputs aren't held, like crafting rows (026). Held means carried plus the rounds of that ammo in the intake's entrances (Shaun, 2026-10-20, option A below).
+- [ ] Choosing a row takes its inputs, carried rounds first and then the intake's entrances west to east (option A below), and gives the tagged rounds. It also marks the tagged item as hand-made (`crafted`), which unlocks that stage in the build bar by the existing rule: a machine unlocks once its output has been hand-crafted.
 - [ ] Hand-applying works any number of times, like hand-crafting.
 - [ ] `?playtest` starts with every stage unlocked and 99 rime shards, as it does for other items.
 
@@ -303,3 +303,12 @@ None. Settled by Shaun, 2026-10-19 (see docs/brainstorm/2026-10-19-open-question
   - the hotbar count includes tagged rounds
   - a frost hit that kills doesn't freeze
 - **Art** for the stage machines, rime and the Grotto waits on Shaun's approval by eye (docs/review/029/).
+- **Which stores the Stages panel counts (Shaun's bug, 2026-10-20; fix built on `claude/fix-stages-count`, PR #27). Answered: Shaun approved option A, as built ("approve everything", 2026-10-20); the criteria above now say so.** Shaun saw "0/4 arrows" with arrows in an intake entrance and in the inventory. The acceptance criteria above say a row is dimmed while its inputs aren't *carried*, and that applying takes them *from the inventory*. So the panel counted the inventory only, and it already counted carried plain arrows. **Likely cause of "0/4":** Shaun carried frost (tagged) arrows. They show in the arrow hotbar slot and in the inventory panel, but the frost rune row takes plain arrows, and the entrance's arrows didn't count. Changing what counts is a design choice, so it's Shaun's. Choose one:
+  - **Option A, as built (recommended): count carried + entrances.**
+    - (a) A row's held count is carried rounds plus the rounds of that ammo in the intake's entrances (`stageHeld`, src/sim/stages.ts). Its counts and dimming read this.
+    - (b) Applying a stage spends carried rounds first, then takes the rest from the entrances, west to east. So it can drain rounds the tube would otherwise fire. The bench and the intake are both in the foundry, so this reads as taking from the factory you're standing in.
+    - (c) The output's owned count (the number under the tagged round) also includes rounds in the entrances, e.g. frost arrows already loaded. Alternative: owned stays carried only.
+    - (d) Closed (capped) entrances: they can't hold rounds today. An entrance only takes rounds while open, and once restored it never closes. So it makes no difference that they count. If a later spec lets an entrance close while holding rounds, proposal: they keep counting.
+    - Why recommended: it matches what Shaun expected, and the code is ready.
+  - **Option B: carried only (the spec as written).** Revert the count and spending to the inventory. Make the panel say so: label the counts "carried", and name the input "Plain arrow" (or show "0/4 plain" next to the tagged count), so frost arrows in the bag don't read as usable.
+  - Either way, hoppers, crates and the stash don't count. Proposal: settle that in the spec that moves stages into the crafting menu (playtest notes 6 and 15), which also decides where applying draws from.

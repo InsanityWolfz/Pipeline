@@ -9,6 +9,16 @@ Newest entry first.
 
 **Notes:** a proposed rule for Shaun (wrapup: "a mistake that happened twice"). Twice overnight a new spec broke an older spec's review-shot test that the build never ran: 042's end card and 043's seal, both in Bulwark shots. Proposed rule for .claude/rules/tests.md: "When a change touches an area that older review-shot specs (`*Shots.spec.ts`) cover, run those specs with REVIEW_SHOTS=1 at /verify." Not added until Shaun approves.
 
+## 2026-10-20: Bug fix, the Stages panel's "0/4 arrows"
+**Changed:**
+- Branch `claude/fix-stages-count`, stacked on `claude/measure-script` (PR #26). Cause: the bench's Stages panel (029) counted and dimmed from `sim.inventory` alone, so arrows in an intake entrance never counted. Now the sim's `stageHeld` counts carried rounds plus the entrances' reservoirs; `stageAffordable` and `applyStage` use it (carried first, then the entrances in intake order), and the panel only reads.
+- Tests: four sim tests in tests/sim/stages.test.ts (written failing first), and an e2e in tests/e2e/ammoStages.spec.ts that feeds every carried arrow into the centre entrance and checks the frost rune row reads "30/4", undimmed (it fails on the old code). `npm run check` passes; the panel's e2e files (ammoStages, keywords, legibility, and the shots files) pass.
+- Held for Shaun: review found counting and spending entrance rounds goes against 029's acceptance criteria ("carried", "from the inventory"), so it's a design choice. The PR stays a draft. docs/specs/029-ammo-stages.md, "Raised after the build", sets out option A (as built, recommended) against option B (carried only, labelled, plain against tagged arrows). The likely cause of what Shaun saw: he was carrying frost arrows.
+
+**Next:**
+1. Shaun reviews the draft PR and answers the 029 question.
+2. Then 043, 042, each on its own branch.
+
 ## 2026-10-20: `npm run measure` (balance targets out of check)
 **Changed:**
 - Branch `claude/measure-script`, stacked on `claude/session-start-hook` (PR #25). Process rule 4 built: 041's scripted-bot targets (the decent-build Bulwark fight over seeds 1–20, the naive bot, the ring 1–3 pack clears, the four ammo scenarios) run under `npm run measure` (tests/measure, `vitest.measure.config.ts`). It prints per-seed tables and a summary table; a missed target never fails it, a crash does.

@@ -216,7 +216,7 @@ export class SiteMenus {
     // Once the shrine is claimed, the Stages panel (029) sits beside the gear panel, the two centred together.
     const staged = this.bench.isOpen && stagesKnown(sim);
     this.bench.update(sim, staged);
-    this.stages.show(staged ? GEAR_PANEL.w : null, sim.inventory, stageRowsKnown(sim).map((r) => r.id));
+    this.stages.show(staged ? GEAR_PANEL.w : null, sim, stageRowsKnown(sim).map((r) => r.id));
     if (this.sorter.isOpen && usableInReach(sim)?.id !== this.sorterId) this.sorter.close();
     const sorterRows: Choice<SorterChoice>[] = [
       { icons: [pieceIcon('sorter')], text: 'Clear', value: { itemId: null } },
