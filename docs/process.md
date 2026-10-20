@@ -140,6 +140,8 @@ Shaun follows the work from his phone, so sessions keep him informed without him
 - Ask design questions with AskUserQuestion, recommended option first; save his answers in docs/brainstorm/.
 - A balance or design fork found mid-build (like 046.7's compounding) goes to him as one question with a recommendation, while the builder carries on with the rest.
 
+**Saves.** Don't preserve old saves (Shaun, 2026-10-20). A change that breaks the save format bumps `SAVE_VERSION` with no migration; an older save reads as too old and the player starts over.
+
 **While a builder works.** Never edit files a builder is changing. If the stop hook reports the builder's in-progress failures, wait with one bounded loop (`timeout 570 bash -c 'until npm run check ...; do sleep 30; done'`) rather than replying to each report.
 
 ## Agents, commands and hooks
