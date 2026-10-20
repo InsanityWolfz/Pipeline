@@ -44,6 +44,9 @@ function forumWalls(): TileStamp[] {
   return [...out, ...FORUM_COLUMNS.map((t) => ({ ...t, symbol: TILE.pillar }))];
 }
 
+/** How close the player's feet box must be to the altar to use it, px. */
+export const ALTAR_REACH = 20;
+
 /** The gap in the eastern cliffs: rows open through the two-tile wall. */
 const GAP = { y0: 26, y1: 29 } as const;
 const EAST_WALL = [38, 39] as const;
@@ -132,7 +135,8 @@ export const HOLLOWS = {
     seal: {
       tiles: Array.from({ length: FORUM_WAY.x1 - FORUM_WAY.x0 + 1 }, (_, i) => ({ tx: FORUM_WAY.x0 + i, ty: FORUM_BOUNDS.y0 })) satisfies TilePos[],
       leaveTo: { tx: 12, ty: FORUM_BOUNDS.y0 - 1 } satisfies TilePos,
-      reach: 20,
+      /** The altar's reach (same E distance as the arena's other interactable). */
+      reach: ALTAR_REACH,
     },
     /** Where the boss stands and rises; and the altar stone by the west wall. */
     start: { tx: 12, ty: 36 } satisfies TilePos,
@@ -153,9 +157,6 @@ export const HOLLOWS = {
     ] satisfies TilePos[],
   },
 } as const;
-
-/** How close the player's feet box must be to the altar to use it, px. */
-export const ALTAR_REACH = 20;
 
 /** The arena whose boss is this enemy (034: the Bulwark's Sunken Forum), if any. */
 export const arenaOf = (enemyId: string): typeof HOLLOWS.arena | undefined => (HOLLOWS.arena.boss === enemyId ? HOLLOWS.arena : undefined);

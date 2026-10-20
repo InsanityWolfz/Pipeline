@@ -1,4 +1,4 @@
-import { enemyDef, type BulwarkDef } from '../data/enemies';
+import { enemyDef } from '../data/enemies';
 import { HOLLOWS } from '../data/hollows';
 import { OVERWORLD_ROOM } from '../data/overworld';
 import { FEET_BOX } from '../data/player';
@@ -20,10 +20,10 @@ import { insideTiles, tileCentre } from './tiles';
 // at full health, its adds and bombs gone), so the seal drops. The seal is derived from
 // the boss's state, never stored: it stands exactly while the boss is engaged.
 
-type Arena = typeof HOLLOWS.arena;
+export type Arena = typeof HOLLOWS.arena;
 
 /** Every arena with a seal. */
-const ARENAS: readonly Arena[] = [HOLLOWS.arena];
+export const ARENAS: readonly Arena[] = [HOLLOWS.arena];
 
 /** The arena's boss, alive in the overworld, if any. */
 const bossOf = (state: Pick<SimState, 'enemies'>, arena: Arena): EnemyState | undefined =>
@@ -41,7 +41,11 @@ export function sealRects(state: Pick<SimState, 'enemies'>, roomId: string): Rec
   return ARENAS.filter((a) => arenaSealed(state, a)).flatMap((a) => a.seal.tiles.map(tileRect));
 }
 
-/** Moves a body already overlapping a seal tile off it, to its own side (into the arena if its feet are in it), so it can't walk on through. */
+/**
+ * Moves a body already overlapping a seal tile off it, to its own side (into the arena if its feet are in it), so it
+ * can't walk on through. It moves straight north or south and assumes the tiles either side of the seal are open floor
+ * (the forum's first floor row and the road outside its way in, both cleared in data), so it never lands in a wall.
+ */
 function pushOff(arena: Arena, body: { x: number; y: number }, box: Box): void {
   for (const r of arena.seal.tiles.map(tileRect)) {
     if (!overlapsRect(body.x, body.y, box, r)) continue;
@@ -63,15 +67,16 @@ export function stepSeal(state: SimState): void {
 }
 
 /** The sealed arena whose seal is within reach of the player's feet box, if any. */
-export function sealInReach(state: SimState): Arena | undefined {
+function sealInReach(state: SimState): Arena | undefined {
   if (state.roomId !== OVERWORLD_ROOM) return undefined;
   return ARENAS.find((a) => arenaSealed(state, a) && a.seal.tiles.some((t) => gapTo(state, t) <= a.seal.reach));
 }
 
 /** The boss back at its start as it was placed (full health, idle, nothing on it), its adds and bombs gone: a leash reset, at once. */
 function resetBoss(state: SimState, boss: EnemyState): void {
-  const def = enemyDef(boss.enemyId) as BulwarkDef;
-  resetFight(state, boss, def);
+  // resetFight sinks its adds (it filters them out only while `addsRisen` is set), so it runs before the fresh copy clears that flag.
+  const def = enemyDef(boss.enemyId);
+  if (def.kind === 'bulwark') resetFight(state, boss, def);
   Object.assign(boss, createEnemy(boss.id, boss.enemyId, { x: boss.homeX, y: boss.homeY }, boss.roomId, boss.group));
   state.enemyBombs = state.enemyBombs.filter((b) => b.enemyId !== boss.enemyId || b.roomId !== boss.roomId);
 }
