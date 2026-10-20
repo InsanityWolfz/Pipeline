@@ -29,3 +29,15 @@ Oct 20, 2026 · Shaun in chat, while 041 was being built. Raw notes plus Claude'
 14. **Better visuals for what comes out of a cache.**
 15. **Bug:** with arrows in an intake entrance and in the inventory, the Stages panel showed "0/4 arrows". Also, stages should move into the crafting menu instead of the gear bench (repeats note 6).
 16. **A resin pylon somewhere,** so bombs can be automated. Husk resin is only a drop today, so the bomb line can't be fed from supply.
+
+## Friends' playtest (same day)
+
+> good moments that the players liked. seeing their items go up the tube for the first time, getting overwhelmed by enemies in the stone quarry was exciting / found a bug where players would drag the bulwark to a pylon so they had continuous healing for the fight. maybe when the fight starts it locks you in the room and then you can press e on the door it locks you in to leave but then you lose your progress / shield guys in the hollow need to not turn instantly and leave some room to get hit even if its just time for one projectile. / also my friend was struggling to kill the warden but he is a casual gamer
+
+**What players liked:**
+- watching their items go up the tube for the first time
+- getting overwhelmed by enemies in the Quarry
+
+17. **Exploit: healing during the Bulwark fight.** Players fought him where a pylon's safe zone (or a spring) heals them. Shaun's fix: when the fight starts, the arena locks. Pressing E on the locking door leaves, but the fight's progress resets (the Bulwark heals).
+18. **Shardbacks turn too fast** (120°/s today). They need a window, even just enough for one projectile to land.
+19. **A casual friend struggled with the Pylon Warden.** This pulls against note 3 ("first boss needs a buff"), so the interview needs to settle it. One option is to keep the Warden's damage but make its telegraphs easier to read.
