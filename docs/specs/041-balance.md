@@ -1,5 +1,5 @@
 # 041: Balance pass
-status: approved
+status: done
 
 Approved on draft by Shaun in chat, 2026-10-19 ("Approve on draft"); from docs/brainstorm/2026-10-19-balance-ship-interview.md.
 

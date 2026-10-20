@@ -1,5 +1,5 @@
 # 036: Equipment slots, affixes and relics
-status: approved
+status: done
 
 Approved by Shaun in chat, 2026-10-19 ("Approve all 028–037"); open questions settled the same day.
 
