@@ -25,27 +25,27 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 018 | Believable resources: nodes where they make sense, visible remains and regrowth, Husk resin, the Warden's core, the claimed pylon visibly harvesting and sending motes home | done |
 | 019 | Foundry intake pipe: the placeable socket becomes a fixed 3-tile ringed cyan pipe on the north wall that matches the tube, with a reservoir gauge and fill pulses | done |
 | 020 | Vector pass: the foundry interior, machines with visible mechanisms, pieces, fixtures, items, HUD and menus in vector with bundled fonts; the pixel pipeline is removed | done |
-| 021 | Playtest fixes: 2-tile pickup reach through obstacles, no screen shake on firing, a menu pointer above buttons, the arrowhead without wood; Shaun's playtest rant 2026-10-18 | approved |
-| 022 | Hopper amounts: click one, Shift+click half, Ctrl+click all, both in and out | approved |
-| 023 | Melee: with no tube or nothing to fire, a quick punch toward the cursor (small damage, knockback except bosses); closes the melee open question | approved |
-| 024 | Spread from the intake: the gravity stager is removed; each fed entrance has its own reservoir and adds a round to the volley (arrows fan, bombs land side by side, mixes fire together); the warden core opens entrances 2 and 3 | approved |
-| 025 | Bottom HUD: hotbar 1-2-3 centred, the tube slot centred above it and larger, showing the round, the volley or a fist | approved |
-| 026 | Menu labels: item names in the crafting menu; build bar grouped into Logistics, Arrows, Bombs and Ley | approved |
-| 027 | Foundry tutorial: step-by-step objectives for building the first arrow line into the intake | approved |
-| 028 | Foundry flow: a supply port per resource (×N pylons), hoppers fed by conduits, each entrance at its own rate, the volley before carried rounds, a goal chain after the shrine | approved |
-| 029 | Ammo roles and stages: arrows pierce, ley bolts don't, 48 px bombs with no burn; ammo tags; stage machines (frost rune, homing, star split) with a small Frozen Grotto | approved |
-| 030 | Healing: none in the field; pylon safe zones, Ley Springs and the foundry | approved |
-| 031 | HUD pass: inventory panel (at risk or banked), large bottom-left HP bar, pickup feed, black-sphere casing | approved |
-| 032 | Landmarks and champions: resource sites with pylons, a Ruined Cache, hidden until found; empowered enemies | approved |
-| 033 | Foundry research as restoration: one entrance per boss core (changes 024), reservoir size, machine speed, splitter and merger, schematics | approved |
-| 034 | Region 2, Stonefall Hollows: the Bulwark, ley-iron, landmines, cluster bombs, boss altar refights | approved |
-| 035 | Hollows enemies: Charger, Burrower, Shardback, Sniper construct | approved |
-| 036 | Equipment: helm, body, boots and trinket; defensive affixes; Common, Fine and Rare; relics | approved |
-| 037 | Leveling and the talent tree: XP from combat and exploration, 1 point per level, a 19-node tree, free respec | approved |
-| 038 | Landmines and the cluster-bomb stage (ley-iron): split out of 034 by the accepted proposal; the spec text lives in 034 until it moves to its own file | approved |
-| 039 | Keyword system: a closed keyword list in data, one word per rule (renames), one scope per content line, generated rules text, Stun, Pool, Knockback on rounds, elements on every family, exact fire rates | approved |
-| 040 | Legibility UI: hover summary with keyword chips, Shift+hover breakdown with the damage calculation, a Build tab on the T panel, clickable glossary chips | approved |
-| 041 | Balance pass: per-hit damage arrow 14, ley bolt 9, bomb 12 (landmine 60); ring ×1/×1.6/×2.5 on enemy HP and damage; the Bulwark at 2,500 HP with an enrage, a rear stomp and adds; scripted sim targets | approved |
+| 021 | Playtest fixes: 2-tile pickup reach through obstacles, no screen shake on firing, a menu pointer above buttons, the arrowhead without wood; Shaun's playtest rant 2026-10-18 | done |
+| 022 | Hopper amounts: click one, Shift+click half, Ctrl+click all, both in and out | done |
+| 023 | Melee: with no tube or nothing to fire, a quick punch toward the cursor (small damage, knockback except bosses); closes the melee open question | done |
+| 024 | Spread from the intake: the gravity stager is removed; each fed entrance has its own reservoir and adds a round to the volley (arrows fan, bombs land side by side, mixes fire together); the warden core opens entrances 2 and 3 | done |
+| 025 | Bottom HUD: hotbar 1-2-3 centred, the tube slot centred above it and larger, showing the round, the volley or a fist | done |
+| 026 | Menu labels: item names in the crafting menu; build bar grouped into Logistics, Arrows, Bombs and Ley | done |
+| 027 | Foundry tutorial: step-by-step objectives for building the first arrow line into the intake | done |
+| 028 | Foundry flow: a supply port per resource (×N pylons), hoppers fed by conduits, each entrance at its own rate, the volley before carried rounds, a goal chain after the shrine | done |
+| 029 | Ammo roles and stages: arrows pierce, ley bolts don't, 48 px bombs with no burn; ammo tags; stage machines (frost rune, homing, star split) with a small Frozen Grotto | done |
+| 030 | Healing: none in the field; pylon safe zones, Ley Springs and the foundry | done |
+| 031 | HUD pass: inventory panel (at risk or banked), large bottom-left HP bar, pickup feed, black-sphere casing | done |
+| 032 | Landmarks and champions: resource sites with pylons, a Ruined Cache, hidden until found; empowered enemies | done |
+| 033 | Foundry research as restoration: one entrance per boss core (changes 024), reservoir size, machine speed, splitter and merger, schematics | done |
+| 034 | Region 2, Stonefall Hollows: the Bulwark, ley-iron, landmines, cluster bombs, boss altar refights | done |
+| 035 | Hollows enemies: Charger, Burrower, Shardback, Sniper construct | done |
+| 036 | Equipment: helm, body, boots and trinket; defensive affixes; Common, Fine and Rare; relics | done |
+| 037 | Leveling and the talent tree: XP from combat and exploration, 1 point per level, a 19-node tree, free respec | done |
+| 038 | Landmines and the cluster-bomb stage (ley-iron): split out of 034 by the accepted proposal; the spec text lives in 034 until it moves to its own file | done |
+| 039 | Keyword system: a closed keyword list in data, one word per rule (renames), one scope per content line, generated rules text, Stun, Pool, Knockback on rounds, elements on every family, exact fire rates | done |
+| 040 | Legibility UI: hover summary with keyword chips, Shift+hover breakdown with the damage calculation, a Build tab on the T panel, clickable glossary chips | done |
+| 041 | Balance pass: per-hit damage arrow 14, ley bolt 9, bomb 12 (landmine 60); ring ×1/×1.6/×2.5 on enemy HP and damage; the Bulwark at 2,500 HP with an enrage, a rear stomp and adds; scripted sim targets | done |
 | 042 | Shippable playtest build: painted title screen, game-flow state machine, one save slot saved on entering the foundry (Continue, export and import, versioned), Settings (volumes, shake, flashes, key bindings), big-moment-only shake and a locked camera, end-of-demo card, F feedback notes | approved |
 | 043 | Arena lock and slower Shardbacks: the Sunken Forum seals when the Bulwark engages (E at the seal leaves and resets the fight); Shardback shields turn at 70°/s; moved out of 041 (041.18, 041.19) | approved |
 
@@ -62,10 +62,12 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 
 Shaun's drive rant on 2026-10-19 (docs/brainstorm/2026-10-19-drive-rant.md) is queued to become the next spec interview once 038 is done. Its themes are a shippable build for friend playtests (title screen, soft save, start-to-finish flow), harder combat and the Bulwark, the ammo roles, simpler Factorio-like processing and a bigger foundry, boss spawners, and horizontal content after that.
 
-028–038 were built on 2026-10-19 and await Shaun's playtest (docs/review/playtest-021-038.md). They stay `approved` until /wrapup.
+028–038 were built on 2026-10-19 (docs/review/playtest-021-038.md).
 
 039–042 come from Shaun's keyword spec interview on 2026-10-19 (docs/brainstorm/2026-10-19-keyword-interview.md, after the drive rant and docs/brainstorm/2026-10-19-keyword-audit.md). 039 and 040 were approved on draft by Shaun in chat ("Approve on draft").
 041 and 042 come from Shaun's spec interview on 2026-10-19 (docs/brainstorm/2026-10-19-balance-ship-interview.md) and were approved on draft by Shaun in chat ("Approve on draft"), to be built after 040, in that order.
+
+021–041 were merged to main on 2026-10-20 in the catch-up PR InsanityWolfz/Pipeline#24 after Shaun's playtest ("Merge 24") and wrapped up as done.
 
 043 holds 041.18 and 041.19, moved out on 2026-10-20 under the process reset Shaun approved in chat ("approve the reset"), so 041 could close. It goes on its own branch after the 021–041 catch-up PR.
 

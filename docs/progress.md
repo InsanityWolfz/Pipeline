@@ -2,6 +2,13 @@
 
 Newest entry first.
 
+## 2026-10-20: Wrapup 021–041
+**Changed:** Shaun playtested the catch-up preview and said "Merge 24"; InsanityWolfz/Pipeline#24 is merged into `main`. Specs 021–041 are `done` in their files and in docs/backlog.md. Their technical choices are recorded in docs/decisions.md. InsanityWolfz/Pipeline#25 now targets `main`.
+
+**Next:** retarget and merge the stacked PRs one at a time as Shaun says: #25 (session-start hook), #26 (`npm run measure`), #28 (043), #29 (042). #27 (Stages count) waits for Shaun's pick on 029's question. Then the playtest-notes interview.
+
+**Notes:** a proposed rule for Shaun (wrapup: "a mistake that happened twice"). Twice overnight a new spec broke an older spec's review-shot test that the build never ran: 042's end card and 043's seal, both in Bulwark shots. Proposed rule for .claude/rules/tests.md: "When a change touches an area that older review-shot specs (`*Shots.spec.ts`) cover, run those specs with REVIEW_SHOTS=1 at /verify." Not added until Shaun approves.
+
 ## 2026-10-20: `npm run measure` (balance targets out of check)
 **Changed:**
 - Branch `claude/measure-script`, stacked on `claude/session-start-hook` (PR #25). Process rule 4 built: 041's scripted-bot targets (the decent-build Bulwark fight over seeds 1–20, the naive bot, the ring 1–3 pack clears, the four ammo scenarios) run under `npm run measure` (tests/measure, `vitest.measure.config.ts`). It prints per-seed tables and a summary table; a missed target never fails it, a crash does.
