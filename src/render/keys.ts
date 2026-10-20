@@ -31,6 +31,7 @@ export function nameOf(code: number): string | null {
 export function bindKeys(
   keyboard: Input.Keyboard.KeyboardPlugin,
   bindings: Readonly<Record<BindAction, string>>,
+  sandbox = false,
 ): { keys: Record<Key, Input.Keyboard.Key>; ammo: Input.Keyboard.Key[]; sandbox: Input.Keyboard.Key | null } {
   const codes = Input.Keyboard.KeyCodes;
   const add = (action: BindAction): Input.Keyboard.Key => keyboard.addKey(codeOf(bindings[action]) ?? codeOf(DEFAULT_BINDINGS[action]) ?? 0);
@@ -52,9 +53,9 @@ export function bindKeys(
     talents: add('talents'),
     shift: keyboard.addKey(codes.SHIFT, false),
   };
-  // 044: the sandbox panel's key; unbound ('') it has none.
-  const sandbox = codeOf(bindings.sandbox);
-  return { keys, ammo: AMMO_ACTIONS.slice(0, SLOT_AMMOS.length).map(add), sandbox: sandbox === null ? null : keyboard.addKey(sandbox) };
+  // 044: the sandbox panel's key, only in the sandbox (the shipped game never captures it); unbound ('') it has none.
+  const panel = sandbox ? codeOf(bindings.sandbox) : null;
+  return { keys, ammo: AMMO_ACTIONS.slice(0, SLOT_AMMOS.length).map(add), sandbox: panel === null ? null : keyboard.addKey(panel) };
 }
 
 /** What each key's press does (042: wired here so Controls can rebind them in one call). */

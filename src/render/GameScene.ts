@@ -145,7 +145,7 @@ export class GameScene extends Scene {
     camera.centerOn(this.sim.player.x, this.sim.player.y);
     camera.startFollow(this.playerView.sprite, true, CAMERA_LERP, CAMERA_LERP);
 
-    this.controls = new Controls(this);
+    this.controls = new Controls(this, this.sim.sandbox !== undefined);
     if (this.menu && this.pause && this.siteMenus && this.picker && this.buildView && this.feel && this.hud && this.wake && this.legibility && this.sandboxPanel)
       this.router = new MenuRouter(this.sim, { craft: this.menu, pause: this.pause, site: this.siteMenus, picker: this.picker, build: this.buildView, sound: this.feel.sound, inventory: this.hud.inventory, research: this.hud.research, talents: this.hud.talents, wake: this.wake, legibility: this.legibility, host: this.host, sandbox: this.sandboxPanel });
   }

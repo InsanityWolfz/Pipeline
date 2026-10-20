@@ -108,13 +108,15 @@ export function resetSettingsCache(): void {
 
 /**
  * Binds `action` to `key`. A key another action holds swaps with it, so no key ever does two things; a fixed key
- * (Esc, Tab, M, [ and ]) is refused. Returns the new bindings, or null when refused.
+ * (Esc, Tab, M, [ and ]) is refused. Returns the new bindings, or null when refused. Outside the sandbox (`sandbox`
+ * false) its hidden panel action (044) never swaps onto a key the player didn't see it take: holding the key, it's
+ * left with none (the sandbox's key list shows it, to bind again).
  */
-export function rebind(bindings: Readonly<Record<BindAction, string>>, action: BindAction, key: string): Record<BindAction, string> | null {
+export function rebind(bindings: Readonly<Record<BindAction, string>>, action: BindAction, key: string, sandbox = false): Record<BindAction, string> | null {
   if (FIXED_KEYS.includes(key)) return null;
   const next = { ...bindings };
   const holder = BIND_ACTIONS.find((a) => a !== action && next[a] === key);
-  if (holder) next[holder] = next[action];
+  if (holder) next[holder] = !sandbox && SANDBOX_ONLY.includes(holder) ? '' : next[action];
   next[action] = key;
   return next;
 }

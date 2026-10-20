@@ -90,7 +90,7 @@ export class SettingsScreen {
     const waiting = this.view.waiting;
     if (this.view.showingKeys && waiting && isAction(waiting)) {
       const name = nameOf(code);
-      const next = !isEsc && name ? rebind(settings().bindings, waiting, name) : null;
+      const next = !isEsc && name ? rebind(settings().bindings, waiting, name, this.act.sandbox) : null;
       if (next) updateSettings({ bindings: next });
       this.view.showKeys(settings(), null, this.act.sandbox);
       return true;

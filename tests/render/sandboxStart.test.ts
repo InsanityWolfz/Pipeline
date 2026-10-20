@@ -5,7 +5,7 @@ import { DEFAULT_BINDINGS, SANDBOX_ONLY } from '../../src/data/settings';
 import { TUTORIAL_START } from '../../src/data/player';
 import { isSandboxUrl, skipsTitle } from '../../src/render/flow/flowTypes';
 import { SaveStore } from '../../src/render/flow/saveStore';
-import { parseSettings } from '../../src/render/flow/settingsStore';
+import { parseSettings, rebind } from '../../src/render/flow/settingsStore';
 import { parseStart, simForUrl } from '../../src/render/playtest';
 import { damagePlayer } from '../../src/sim/health';
 import { makeEnvelope, snapshot } from '../../src/sim/save';
@@ -83,5 +83,13 @@ describe('the ?sandbox start (044)', () => {
     expect(old?.bindings.dodge).toBe('BACKTICK');
     expect(old?.bindings.sandbox).toBe('');
     expect(old?.bindings.interact).toBe('E');
+  });
+
+  it('never swaps the hidden panel action onto another key outside the sandbox', () => {
+    const outside = rebind(DEFAULT_BINDINGS, 'dodge', 'BACKTICK');
+    expect(outside?.dodge).toBe('BACKTICK');
+    expect(outside?.sandbox).toBe('');
+    const inside = rebind(DEFAULT_BINDINGS, 'dodge', 'BACKTICK', true);
+    expect(inside?.sandbox).toBe(DEFAULT_BINDINGS.dodge);
   });
 });

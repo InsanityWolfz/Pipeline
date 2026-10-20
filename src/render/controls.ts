@@ -63,7 +63,11 @@ export class Controls {
   /** Flip (G since 042, F before) turns a sorter's ghost to send its item left (015); sent with every place. */
   mirrored = false;
 
-  constructor(scene: Scene) {
+  /** 044: in the sandbox only, the panel's key is bound (the shipped game never captures it). */
+  private readonly sandbox: boolean;
+
+  constructor(scene: Scene, sandbox = false) {
+    this.sandbox = sandbox;
     const keyboard = scene.input.keyboard;
     if (!keyboard) throw new Error('Keyboard input is unavailable');
     this.keyboard = keyboard;
@@ -90,7 +94,7 @@ export class Controls {
     if (key === this.bound) return;
     this.bound = key;
     this.keyboard.removeAllKeys(true);
-    const { keys, ammo, sandbox } = bindKeys(this.keyboard, bindings);
+    const { keys, ammo, sandbox } = bindKeys(this.keyboard, bindings, this.sandbox);
     this.keys = keys;
     this.ammoKeys = ammo;
     listenKeys(keys, ammo, {
