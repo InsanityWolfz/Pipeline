@@ -50,6 +50,8 @@ test('?start=hollows: the forum seals as the Bulwark wakes; E at the seal leaves
   const after = await page.evaluate(() => window.__GAME__?.step(1));
   expect(after?.player.y).toBeLessThan(SEAL_ROW * T);
   expect(after?.bosses[0]).toMatchObject({ health: BULWARK.maxHealth, mode: 'idle', engaged: false, addsRisen: false });
-  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hollows))?.seal).toBe('down');
+  // The seal fades as the barrier collapses (900 ms on the tween clock, slower in frames under a loaded machine).
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hollows))?.seal).not.toBe('shut');
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hollows))?.seal, { timeout: 20_000 }).toBe('down');
   expect(errors).toEqual([]);
 });

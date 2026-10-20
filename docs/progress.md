@@ -8,6 +8,7 @@ Newest entry first.
 - The Sunken Forum's way in seals with a ley barrier (the Hollows barrier's look) while the Bulwark fights; no feet pass it. E at the seal puts the player just outside and resets the fight at once (full health at its start, adds and bombs gone), and the seal drops. `getState().arenas` and the `arenaLeaves` event report it. A test holds that no spring or pylon safe zone reaches the arena.
 - The Shardback's shield turns at 70°/s (043.1). A strafing test lands an unblocked hit every pass (none at 120°/s).
 - `npm run measure`: packs all met (ring 3 10.2–17.6 s). The Bulwark target now misses, 13/20 and 3 KOs (was 17/20, 1 KO); the lock alone leaves it at 17/20, so the slower Shardback adds moved it. Recorded as 043.2, not tuned.
+- Checks: `npm run check` passes (1,442 unit tests). The full e2e ran once: 102 passed, 1 failed, 104 skipped (review shots). The failure was the new arenaLock.spec.ts waiting only 5 s for the seal's 900 ms fade under load; it now waits for the fade to start, then up to 20 s for it to end, and passed 3 of 3 reruns.
 
 **Next:**
 1. Shaun answers 043.2–043.5 (spec, "Raised after the build") and playtests the preview with `?start=hollows`.
