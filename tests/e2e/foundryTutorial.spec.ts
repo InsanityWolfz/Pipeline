@@ -102,7 +102,11 @@ test('a new game finds the example line in the foundry, sees arrows go up the tu
   });
   await expect.poll(async () => (await ui(page))?.prompt).toEqual({ key: 'E', x: centre(12, 5).x, y: centre(12, 5).y, usable: true });
   if (SHOOT) {
+    // Once the door's fade is over: the foundry drawn (no meadow nodes), then about a second of its fade-in (a capture
+    // timing, not proof: the polls are).
+    await expect.poll(async () => Object.keys((await ui(page))?.nodes ?? { x: 1 }).length).toBe(0);
     await cameraSettled(page, 20_000);
+    await page.waitForTimeout(1000);
     await page.screenshot({ path: `${SHOTS}/02-refill-objective.png` });
   }
 
