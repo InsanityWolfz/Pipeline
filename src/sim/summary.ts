@@ -168,9 +168,10 @@ export interface SimSummary extends HollowsSummary, LevelingSummary, MinesSummar
   prototypeComplete: boolean;
   /**
    * The foundry intake (019, 024): each entrance's mouth tile, whether it's open, the ammo it holds and how many;
-   * and the volley the reservoirs fire once no round of the selected ammo is carried, as ammo ids (one per fed entrance, west to east).
+   * and the volley the reservoirs fire once no round of the selected ammo is carried, as ammo ids (one per fed entrance, west to east),
+   * with each one's lane beside it, degrees off the aim (048).
    */
-  intake: { entrances: { tx: number; ty: number; open: boolean; ammo: string | null; count: number; cap: number; cooldown: number }[]; volley: string[] };
+  intake: { entrances: { tx: number; ty: number; open: boolean; ammo: string | null; count: number; cap: number; cooldown: number }[]; volley: string[]; lanes: number[] };
   /** The supply ports standing (028): each one's raw, tile, pylon count, raws a minute, and whether a refused raw waits in it. */
   ports: { id: string; raw: string; tx: number; ty: number; pylons: number; perMinute: number; waiting: boolean }[];
   /** What a death keeps: the inventory as last banked. */
@@ -252,6 +253,7 @@ export function summarize(state: SimState): SimSummary {
         return { tx: t.tx, ty: t.ty, open: e?.open ?? false, ammo: e?.ammoId ?? null, count: e?.count ?? 0, cap: entranceCap(state), cooldown: e?.cooldown ?? 0 };
       }),
       volley: volleyRounds(state).map((r) => r.ammoId),
+      lanes: volleyRounds(state).map((r) => r.lane),
     },
     orbs: state.orbs.map((o) => ({ id: o.id, enemyId: o.enemyId, room: o.roomId, x: round(o.x), y: round(o.y), dx: round(o.dx), dy: round(o.dy) })),
     claims: [...state.claims],

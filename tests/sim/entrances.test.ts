@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ammoDef } from '../../src/data/ammo';
-import { CONDUIT_TICKS, ENTRANCE_CAPS, INTAKE, LOB_SPACING, SPREAD_STEP } from '../../src/data/foundry';
+import { CONDUIT_TICKS, ENTRANCE_CAPS, INTAKE, SPREAD_STEP } from '../../src/data/foundry';
 import { MELEE } from '../../src/data/combat';
 import type { EntranceState } from '../../src/sim/link';
 import type { ConduitState, HopperState } from '../../src/sim/pieces';
@@ -15,8 +15,8 @@ import { foundry, put, stepOutside } from './foundryKit';
 // The intake's three entrances (024): each mouth tile is an entrance with its own
 // reservoir. Only the centre starts open; each side is restored at its cap (033,
 // tests/sim/researchEntrances.test.ts). While fire
-// is held, each fed entrance fires at its own ammo's rate (028); rounds that fire on
-// the same tick are shaped together as a volley.
+// is held, each fed entrance fires at its own ammo's rate (028), down its own lane of the
+// fan (048, tests/sim/volleyLanes.test.ts).
 
 const [WEST, MIDDLE, EAST] = INTAKE.entrances;
 if (!WEST || !MIDDLE || !EAST) throw new Error('the intake needs three entrances');
@@ -149,6 +149,7 @@ describe('the intake in getState', () => {
         cooldown: [0, 0, 7][i] ?? 0,
       })),
       volley: ['arrow', 'bomb'],
+      lanes: [-SPREAD_STEP / 2, SPREAD_STEP / 2],
     });
     expect(summarize(foundry()).intake.entrances.map((e) => e.open)).toEqual([false, true, false]);
   });
@@ -182,23 +183,21 @@ describe('the volley', () => {
     expect(s.link.entrances[0]?.count).toBe(3);
   });
 
-  it('two bomb entrances land side by side, LOB_SPACING apart across the aim point', () => {
-    expect(LOB_SPACING).toBe(24);
+  it('two bomb entrances land on the arc at the aim distance, a lane either side of the aim point (048, was side by side)', () => {
     const s = volley([['bomb', 3], ['bomb', 3], null]);
     run(s, 1, volleyAt(550, 400));
     expect(s.bombs).toHaveLength(2);
+    const r = (SPREAD_STEP / 2) * (Math.PI / 180);
     const landings = s.bombs.map((b) => [Math.round(b.toX * 100) / 100, Math.round(b.toY * 100) / 100]).sort((a, b) => (a[1] ?? 0) - (b[1] ?? 0));
-    expect(landings).toEqual([
-      [550, 388],
-      [550, 412],
-    ]);
+    const at = (sign: number) => [Math.round((400 + 150 * Math.cos(r)) * 100) / 100, Math.round((400 + sign * 150 * Math.sin(r)) * 100) / 100];
+    expect(landings).toEqual([at(-1), at(1)]);
     runUntil(s, (x) => x.events.bursts.length === 2, BOMB_TICKS * 3);
   });
 
-  it('two arrows and a bomb fire two angled arrows and one straight bomb', () => {
+  it('two arrows west and east and a bomb in the centre fire one fan: the arrows ±15°, the bomb on the aim point (048, was ±7.5°)', () => {
     const s = volley([['arrow', 3], ['bomb', 3], ['arrow', 3]]);
     run(s, 1, volleyAt(550, 400));
-    expect(arrowAngles(s)).toEqual([-7.5, 7.5]);
+    expect(arrowAngles(s)).toEqual([-15, 15]);
     expect(s.bombs).toHaveLength(1);
     expect(s.bombs[0]).toMatchObject({ toX: 550, toY: 400 });
     expect(s.tube.shotCount).toBe(3);
@@ -308,8 +307,8 @@ describe('the volley', () => {
     expect(nextPress(s)).toEqual({
       kind: 'volley',
       rounds: [
-        { ammoId: 'arrow', count: 1, entrance: 0 },
-        { ammoId: 'bomb', count: 1, entrance: 2 },
+        { ammoId: 'arrow', count: 1, entrance: 0, lane: -SPREAD_STEP / 2 },
+        { ammoId: 'bomb', count: 1, entrance: 2, lane: SPREAD_STEP / 2 },
       ],
     });
     expect(hudActive(s).kind).toBe('volley');

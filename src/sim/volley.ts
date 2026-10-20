@@ -1,5 +1,5 @@
 import { ammoDef } from '../data/ammo';
-import { LOB_SPACING, SPREAD_STEP } from '../data/foundry';
+import { INTAKE, SPREAD_STEP } from '../data/foundry';
 import { readyItem } from './hotbar';
 import { count } from './inventory';
 import type { SimState } from './state';
@@ -12,11 +12,15 @@ import type { SimState } from './state';
 // click uses the carried bar (src/sim/hotbar.ts). The fire path and anything that shows what
 // the next press does (025's HUD) both read `nextPress`, so they can't disagree.
 
-/** One round of a volley: its ammo, how many its entrance holds, and which entrance (an index into INTAKE.entrances). */
+/**
+ * One round of a volley: its ammo, how many its entrance holds, which entrance (an index into INTAKE.entrances), and
+ * its lane: the degrees off the aim it fires at (048).
+ */
 export interface VolleyRound {
   ammoId: string;
   count: number;
   entrance: number;
+  lane: number;
 }
 
 /** A carried round fired or thrown from the inventory (047.9: left click before the tube attunes): its ammo and how many are carried. */
@@ -31,10 +35,28 @@ export type NextPress = { kind: 'volley'; rounds: VolleyRound[] } | CarriedPress
 /** What a press needs to know: the tube, the intake, and the carried bar with what's carried. */
 type PressState = Pick<SimState, 'hasTube' | 'link' | 'hotbar' | 'inventory'>;
 
-/** One round from every open entrance that holds any, west to east. */
-export function volleyRounds(state: Pick<SimState, 'link'>): VolleyRound[] {
-  return state.link.entrances.flatMap((e, entrance) => (e.open && e.ammoId !== null && e.count > 0 ? [{ ammoId: e.ammoId, count: e.count, entrance }] : []));
+/**
+ * The lanes of a volley from `fed` entrances, degrees off the aim, west to east (048.1): fanned symmetrically about the
+ * cursor, SPREAD_STEP apart. One fires at the cursor, two 7.5° either side, three left, centre and right.
+ */
+export function laneAngles(fed: number): number[] {
+  return Array.from({ length: fed }, (_, i) => (i - (fed - 1) / 2) * SPREAD_STEP);
 }
+
+/**
+ * One round from every open entrance that holds any (the fed entrances), in lane order west to east, each with its
+ * lane (048): the fed entrances share the fan, whatever their ammo and whether or not they're ready to fire this tick.
+ */
+export function volleyRounds(state: Pick<SimState, 'link'>): VolleyRound[] {
+  const fed = state.link.entrances
+    .flatMap((e, entrance) => (e.open && e.ammoId !== null && e.count > 0 ? [{ ammoId: e.ammoId, count: e.count, entrance }] : []))
+    .sort((a, b) => laneOf(a.entrance) - laneOf(b.entrance));
+  const lanes = laneAngles(fed.length);
+  return fed.map((r, i) => ({ ...r, lane: lanes[i] ?? 0 }));
+}
+
+/** An entrance's place in the fan, from data (048). */
+const laneOf = (entrance: number): number => INTAKE.entrances[entrance]?.lane ?? entrance;
 
 /**
  * What the next fire press does: the volley; before the tube attunes, the carried bar's selected item if any is carried
@@ -50,42 +72,28 @@ export function nextPress(state: PressState): NextPress {
   return { kind: 'melee' };
 }
 
-/** What the HUD's intake bar shows (025, 047): the next press, as `nextPress` says, without the entrance indexes. */
-export type HudActive = { kind: 'volley'; rounds: { ammoId: string; count: number }[] } | CarriedPress | { kind: 'melee' };
+/** What the HUD's intake bar shows (025, 047): the next press, as `nextPress` says, without the entrance indexes; a volley's rounds in lane order with their lanes (048). */
+export type HudActive = { kind: 'volley'; rounds: { ammoId: string; count: number; lane: number }[] } | CarriedPress | { kind: 'melee' };
 
 /** The intake bar's content, straight from `nextPress`, so the HUD can't disagree with what fires. Before attuning that's the selected carried round (047.9). */
 export function hudActive(state: PressState): HudActive {
   const press = nextPress(state);
-  return press.kind === 'volley' ? { kind: 'volley', rounds: press.rounds.map(({ ammoId, count }) => ({ ammoId, count })) } : press;
+  return press.kind === 'volley' ? { kind: 'volley', rounds: press.rounds.map(({ ammoId, count, lane }) => ({ ammoId, count, lane })) } : press;
 }
 
-/** One projectile of a volley: its ammo, its direction (unit), and for a lobbed round how far across the aim point it lands, px. */
+/** One projectile: its ammo and its direction (unit). A bomb or landmine lands at the cursor's distance along it. */
 export interface VolleyShot {
   ammoId: string;
   dir: [number, number];
-  across: number;
 }
 
 /**
- * The projectiles a volley of these ammo ids fires along the unit aim (dx, dy), grouped
- * by base ammo (029: a plain and a frost arrow fan together) in order of first appearance.
- * One round of a base flies straight at the aim; several aimed rounds fan evenly about it,
- * SPREAD_STEP degrees apart; several lobbed rounds keep the aim's line and land side by
- * side, LOB_SPACING px apart across it (a bomb or a landmine, 038).
+ * The projectiles these rounds fire along the unit aim (dx, dy) (048): each down its own lane, the aim turned by the
+ * lane's degrees, whatever its ammo. A lobbed round (bomb, landmine) keeps the cursor's distance, so lobbed rounds
+ * fired together land on an arc around the aim point.
  */
-export function volleyShots(ammoIds: readonly string[], dx: number, dy: number): VolleyShot[] {
-  const groups = new Map<string, string[]>();
-  for (const id of ammoIds) {
-    const base = ammoDef(id).base;
-    groups.set(base, [...(groups.get(base) ?? []), id]);
-  }
-  return [...groups.values()].flatMap((ids) =>
-    ids.map((ammoId, i): VolleyShot => {
-      const offset = i - (ids.length - 1) / 2;
-      if (ammoDef(ammoId).kind !== 'straight') return { ammoId, dir: [dx, dy], across: offset * LOB_SPACING };
-      return { ammoId, dir: rotate(dx, dy, offset * SPREAD_STEP), across: 0 };
-    }),
-  );
+export function volleyShots(rounds: readonly Pick<VolleyRound, 'ammoId' | 'lane'>[], dx: number, dy: number): VolleyShot[] {
+  return rounds.map(({ ammoId, lane }) => ({ ammoId, dir: lane === 0 ? [dx, dy] : rotate(dx, dy, lane) }));
 }
 
 /** A direction turned by `degrees` (clockwise on screen, where y points down). */

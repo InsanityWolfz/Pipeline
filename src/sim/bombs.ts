@@ -34,9 +34,10 @@ export interface BombState {
 }
 
 /**
- * Throws a bomb from the muzzle `from` toward `aim` along the unit direction `dir`.
- * It lands on the aim point, or at the ammo's max range from the player's `feet`
- * if the aim is farther.
+ * Throws a bomb from the muzzle `from` along the unit direction `dir`, landing as far
+ * from the player's `feet` as `aim` is, or at the ammo's max range if the aim is
+ * farther. Along the aim that's the aim point; down a volley's side lane (048) it's on
+ * the arc through it.
  */
 export function throwBomb(
   state: SimState,
@@ -45,14 +46,12 @@ export function throwBomb(
   feet: { x: number; y: number },
   aim: { x: number; y: number },
   dir: [number, number],
-  across = 0,
 ): void {
   const ammo = lobbedAmmo(ammoId);
   const e = roundEmission(ammoId);
   const reach = Math.min(Math.hypot(aim.x - feet.x, aim.y - feet.y), statOf(state, 'range', e, ammo.maxRange));
-  // Side by side in a volley (024): `across` px to the right of the line, clockwise on screen.
-  const toX = feet.x + dir[0] * reach - dir[1] * across;
-  const toY = feet.y + dir[1] * reach + dir[0] * across;
+  const toX = feet.x + dir[0] * reach;
+  const toY = feet.y + dir[1] * reach;
   const distance = Math.hypot(toX - from.x, toY - from.y);
   // Its stats through resolveStat (039), by scope: Swift Arc (Lob) shortens a bomb's flight, not a landmine's (Mine);
   // Black Powder (Bomb) grows a bomb's damage, not a landmine's; Wide Casing (Burst) grows both bursts. Never rounded.
