@@ -89,8 +89,10 @@ test('a stack dragged from the grid onto a carried slot goes there; Sort orders 
   expect((await state(page)).hotbar.slots.filter((s) => s === 'ley-bolt')).toHaveLength(1);
   // A raw dropped on the bar goes nowhere.
   const wood = await slotPoint(page, 'wood');
+  const released = (await state(page)).tick;
   await drag(page, wood, to);
-  await page.waitForTimeout(100);
+  // A few ticks past the release, so a command it sent would have reached the sim.
+  await expect.poll(async () => (await state(page)).tick, { timeout: 15_000 }).toBeGreaterThan(released + 5);
   expect((await state(page)).hotbar.slots).not.toContain('wood');
 
   // Sort: Raw first (031's groups), then item order (husk resin is the first raw).
