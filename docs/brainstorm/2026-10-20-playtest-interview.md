@@ -37,3 +37,9 @@ Already settled before the interview: note 3 dropped (the Warden stays), notes 1
 - **Angle:** 15° between shots, today's `SPREAD_STEP` (rec).
 - **Timing:** "Together, each keeps its rate": each entrance fires on its own beat, and when beats line up they fire together. (Recommended was "together at the slowest rate".)
 - **Bombs:** land on an arc at the cursor's distance, each rotated to its lane's angle (rec).
+
+## Next batch: 049 resin pylon (note 16)
+- **Site:** a new Husk Hive landmark: a Husk nest of amber-crusted stone, guarded by a Husk pack with a champion; its pylon supplies resin (rec).
+- **Nodes:** resin seeps at the site, harvested with E like other nodes (rec).
+- **Rate:** the same as other pylons (028) (rec).
+- **Timing:** ring 2, reached after the Warden (rec).
