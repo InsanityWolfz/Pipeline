@@ -52,3 +52,27 @@ The session never invents design. It asks Shaun, or records an open question wit
 - Only tell him what needs him: approvals, decisions, playtests. Keep internal progress quiet unless he asks for a status report (CLAUDE.md).
 - He likes AskUserQuestion interviews with a recommended option first.
 - He may send voice-to-text "rants". Save them verbatim in docs/brainstorm/ and process them later.
+
+## 041 fix list (the review of 5a5ca26, never built)
+Blocking:
+1. The back wave must not start or land during the enrage roar (041.4: the roar attacks nothing). Pause the wave and its countdown while `mode === 'roar'`, with a test that doesn't hold the wave off.
+2. Add 041.17 to the spec, with proposals to implement:
+   - the back wave is roll-proof
+   - its shape and numbers
+   - adds every 25 s, not about 20 s
+   - no wave during the roar
+   - at most 4 adds alive; a new pair rises only when fewer than 4 are
+3. Remove dead bot code: the `circlesOnly` field and filter and the `boss` flag in tests/sim/bots.ts.
+
+Suggestions:
+4. bulwarkWave.test.ts: use an exact length, not `toBeLessThanOrEqual(6)`.
+5. Fight test as a pass rate over seeds 1–20 (≥15 meet all three targets, ≤2 KOs), with per-seed numbers logged. Don't run a broad grid search: try a few targeted values, record the best measured rate in the spec, and report.
+6. Review shot 06: hold the stomp off so the wave shows alone. Make the wave read differently from the stomp (ripple rings vs a filled half-disc). Reframe shot 07 so both adds show.
+7. enemyBombs.ts: use `windupsOf(e, def).fuse`. `poundTiming`: pass the wind-up length instead of building a def every tick.
+8. The adds determinism test: run about 1,600 ticks and assert at least 1 wave and 4 adds.
+9. balance.spec.ts: getState checks for a wave and for a second rise of adds.
+10. Stale text in bulwarkWave.test.ts:12, the hollowsEnemies.test.ts title and the bulwarkLook.ts comment.
+11. The two adds of a pair must not rise on the same tile.
+12. The spray placement number in hollowsFeel.ts goes to data.
+
+Then build 041.18 (the arena lock) and 041.19 (the slower Shardback turn) as the spec describes. Commit after each item. Run the full e2e once at the end. Then a reviewer pass.
