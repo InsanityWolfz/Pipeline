@@ -71,4 +71,4 @@ Shaun's drive rant on 2026-10-19 (docs/brainstorm/2026-10-19-drive-rant.md) is q
 
 ## Bugs
 Fixes to built behaviour that need no design. Each goes on its own branch and PR.
-- The Stages panel showed "0/4 arrows" while the player had arrows in an intake entrance and in the inventory (Shaun, 2026-10-20).
+- The Stages panel showed "0/4 arrows" while the player had arrows in an intake entrance and in the inventory (Shaun, 2026-10-20). Fixed on `claude/fix-stages-count` (draft PR): the panel counts carried rounds plus the intake entrances; open question in 029.
