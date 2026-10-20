@@ -8,8 +8,8 @@ import { unlockedPieces } from './placement';
 import { stagesUnlocked } from './stages';
 import { isInvulnerable, isRolling } from './movement';
 import type { Facing } from './player';
+import { portSummary } from './summaryPorts';
 import { fixtureDef } from './fixtures';
-import { portPerMinute, pylonsOf } from './claims';
 import { objectiveLine } from './objectives';
 import { volleyRounds, nextPress, hudActive, type HudActive } from './volley';
 import { INTAKE } from '../data/foundry';
@@ -292,13 +292,4 @@ export function summarize(state: SimState): SimSummary {
     ...sandboxSummary(state),
     events: structuredClone(state.events),
   };
-}
-
-function portSummary(state: SimState): SimSummary['ports'] {
-  return state.fixtures.flatMap((f) => {
-    const d = fixtureDef(f.id);
-    if (d.kind !== 'port' || d.raw === undefined) return [];
-    const pylons = pylonsOf(state, f);
-    return [{ id: f.id, raw: d.raw, tx: d.tx, ty: d.ty, pylons, perMinute: portPerMinute(pylons), waiting: f.item !== null }];
-  });
 }
