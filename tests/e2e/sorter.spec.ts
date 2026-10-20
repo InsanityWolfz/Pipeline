@@ -121,18 +121,19 @@ test('hovering a Husk names it, and a press that starts on the hotbar never fire
   const world = await screenPoint(page, VIEW_WIDTH / 2 + 120, VIEW_HEIGHT / 2);
   const start = await state(page);
   const before = start.inventory.arrow;
+  // 047: carried arrows go out on right click.
   await page.mouse.move(slot.x, slot.y);
-  await page.mouse.down();
+  await page.mouse.down({ button: 'right' });
   await page.mouse.move(world.x, world.y, { steps: 4 });
   // Held, dragged into the world, while the world runs on: half a second of ticks (waits on the sim, not the clock).
   await expect.poll(async () => (await state(page)).tick, { timeout: 15_000 }).toBeGreaterThan(start.tick + 30);
-  await page.mouse.up();
+  await page.mouse.up({ button: 'right' });
   const after = await state(page);
   expect(after.inventory.arrow).toBe(before);
   expect(after.arrows).toEqual([]);
   // A press that starts in the world does fire, so the check above means something: held until a round leaves.
-  await page.mouse.down();
+  await page.mouse.down({ button: 'right' });
   await expect.poll(async () => (await state(page)).inventory.arrow ?? 0, { timeout: 15_000 }).toBeLessThan(before ?? 0);
-  await page.mouse.up();
+  await page.mouse.up({ button: 'right' });
   expect(errors).toEqual([]);
 });
