@@ -51,8 +51,9 @@ test('the full arrow, bomb and ley bolt chains craft from gathered materials', a
     for (const r of ['shaft', 'arrowhead', 'rope', 'arrow', 'casing', 'fuse', 'ley-dust', 'bomb', 'ley-bolt']) g.craft(r);
     return { before, after: g.getState() };
   });
-  expect(s.after.inventory.arrow).toBe(s.before + 4);
-  expect(s.after.inventory).toMatchObject({ bomb: 2, 'ley-bolt': 2, shaft: 1, arrowhead: 1, rope: 1 });
+  // 046: Region 1's outputs doubled.
+  expect(s.after.inventory.arrow).toBe(s.before + 8);
+  expect(s.after.inventory).toMatchObject({ bomb: 4, 'ley-bolt': 4, shaft: 3, arrowhead: 3, rope: 3 });
   expect(s.after.crafted).toEqual(['arrow', 'arrowhead', 'bomb', 'casing', 'fuse', 'ley-bolt', 'ley-dust', 'rope', 'shaft']);
   expect(errors).toEqual([]);
 });
@@ -95,12 +96,12 @@ test('the crafting menu keeps the world running, Esc pauses it, and the menu cra
   await page.mouse.up();
   await page.waitForTimeout(100);
   const s = await page.evaluate(() => window.__GAME__?.getState());
-  expect(s?.inventory).toMatchObject({ wood: 0, shaft: 2 });
+  expect(s?.inventory).toMatchObject({ wood: 0, shaft: 4 });
   // A second click with no wood left does nothing.
   await page.mouse.down();
   await page.mouse.up();
   await page.waitForTimeout(100);
-  expect((await page.evaluate(() => window.__GAME__?.getState()))?.inventory.shaft).toBe(2);
+  expect((await page.evaluate(() => window.__GAME__?.getState()))?.inventory.shaft).toBe(4);
   expect(errors).toEqual([]);
 });
 
