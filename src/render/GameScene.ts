@@ -172,7 +172,8 @@ export class GameScene extends Scene {
         controls.discardPending();
       } else if (!this.manualStepping) {
         const ticks = advanceClock(this.clock, delta);
-        for (let i = 0; i < ticks; i++) this.stepOnce(controls.nextCommand());
+        // A tick can stop the world (042: the end card): the rest of this frame's ticks wait for play.
+        for (let i = 0; i < ticks && this.host.stepping; i++) this.stepOnce(controls.nextCommand());
       }
     }
     this.draw();

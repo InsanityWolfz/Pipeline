@@ -4,15 +4,13 @@ import { inksOf } from '../../src/data/art/types';
 import { MENU_ROW_W, FLOW_ROWS } from '../../src/data/flowLayout';
 import { DAYLIGHT_PALETTE } from '../../src/data/palette';
 import { CARD, CONFIRMS, CONTINUE_LINE, FAREWELL, TITLE_ROWS, TITLE_SCREEN } from '../../src/data/titleScreen';
-import { TEXT_STYLES } from '../../src/data/fonts';
+import { widthOf } from './textFit';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 
 // 042: the title screen's data: colours from the palette, the rows in order, and every text fits where it's drawn.
 
 const daylight = new Set(DAYLIGHT_PALETTE.map((c) => c.id));
 
-/** A generous width estimate for a line in a style: no glyph of either bundled font is wider than 0.62 of its size. */
-export const widthOf = (text: string, style: keyof typeof TEXT_STYLES, scale = 1): number => text.length * TEXT_STYLES[style].size * scale * 0.62;
 
 describe('title screen data', () => {
   it('colours the painted scene and its live parts from the daylight palette', () => {

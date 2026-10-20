@@ -1,11 +1,9 @@
 import { Scene } from 'phaser';
-import { CONFIRMS, FAREWELL, type ConfirmKind } from '../../data/titleScreen';
 import { TUTORIAL_START } from '../../data/player';
 import { SAVE_TEXT } from '../../data/save';
 import { SOUNDS } from '../../data/sounds';
 import { FOUNDRY_ROOM } from '../../data/rooms';
 import { createSim } from '../../sim/state';
-import { wakeInFoundry } from '../../sim/save';
 import { fontsReady } from '../fonts';
 import type { GameScene } from '../GameScene';
 import { codeOf } from '../keys';
@@ -16,6 +14,7 @@ import { parseSeed } from '../seed';
 import { SoundView } from '../SoundView';
 import { bakeVectors } from '../vector/textures';
 import { CardView } from './CardView';
+import { EndCardView } from './EndCardView';
 import { continueShown } from './continueLine';
 import { loadNotes } from './feedbackStore';
 import { FlowMachine, type FlowEvent } from './flowMachine';
@@ -23,7 +22,8 @@ import { skipsTitle, type FlowReport, type FlowUi } from './flowTypes';
 import { GameRunner } from './GameRunner';
 import type { GameHost } from './host';
 import { NoticeView } from './NoticeView';
-import { applyImport, exportDamaged, exportSave, pickImport } from './saveFiles';
+import { exportDamaged, exportSave } from './saveFiles';
+import { FlowActions } from './flowActions';
 import { SaveStore, type SlotRead } from './saveStore';
 import { SettingsScreen } from './SettingsScreen';
 import { settings } from './settingsStore';
@@ -46,6 +46,8 @@ export class FlowScene extends Scene {
   private card?: CardView;
   private notice?: NoticeView;
   private settingsScreen?: SettingsScreen;
+  private endCard?: EndCardView;
+  private actions?: FlowActions;
   /** Input taken this frame, acted on next frame: the game scene below sees this frame's keys and clicks while still covered, so none reach it. */
   private queued: { frame: number; run: () => void }[] = [];
   private built = false;
@@ -70,10 +72,11 @@ export class FlowScene extends Scene {
       },
       pause: () => void this.send('pause'),
       resume: () => void this.send('resume'),
-      pauseAction: (action) => this.pauseAction(action),
+      pauseAction: (action) => this.actions?.pauseAction(action),
       afterTick: (sim) => {
         // The slot now holds a save; the title reads it in full when it's next shown.
-        if (this.runner?.afterTick(sim)) this.slot = { ...this.slot, status: 'ok' };
+        if (this.runner?.save(sim)) this.slot = { ...this.slot, status: 'ok' };
+        if (this.runner?.endCardDue(sim)) this.showEndCard();
       },
     };
   }
@@ -90,6 +93,7 @@ export class FlowScene extends Scene {
     this.title = new TitleView(this, this.fit.scale);
     this.card = new CardView(this);
     this.notice = new NoticeView(this);
+    this.endCard = new EndCardView(this);
     this.runner = new GameRunner(this.game, this.saves, () => this.scene.bringToTop(), (m) => this.notice?.show(m));
     this.settingsScreen = new SettingsScreen(this, {
       back: () => {
@@ -97,11 +101,27 @@ export class FlowScene extends Scene {
         this.send('back');
       },
       exportSave: () => exportSave(),
-      importSave: () => void this.importSave(),
+      importSave: () => void this.actions?.importSave(),
       exportDamaged: () => exportDamaged(),
       damaged: () => this.slot.status === 'corrupt' || this.slot.status === 'too-old',
       notes: () => loadNotes().length,
       click: () => this.sounds?.play(SOUNDS.menuClick),
+    });
+    const card = this.card;
+    const runner = this.runner;
+    this.actions = new FlowActions({
+      send: (e) => this.send(e),
+      card,
+      saves: this.saves,
+      slot: () => this.slot,
+      readSlot: () => this.readSlot(),
+      startNew: () => runner.start(createSim(parseSeed(this.search), { start: TUTORIAL_START }), this.host, false, this.fit),
+      startSaved: (state, seen) => runner.start(state, this.host, seen, this.fit),
+      endGame: () => runner.end(),
+      liveRoom: () => this.live?.sim.roomId ?? null,
+      openSettings: () => this.openSettings(),
+      refreshSettings: () => this.settingsScreen?.refresh(),
+      notice: (m) => this.notice?.show(m),
     });
     this.input.on('pointermove', (p: { x: number; y: number }) => this.pointAt(p));
     this.input.on('pointerdown', (p: { x: number; y: number }) => this.later(() => this.click(p)));
@@ -170,6 +190,7 @@ export class FlowScene extends Scene {
     // The title's ambience is the foundry's loop (042); in a game, the game plays its rooms' loops.
     this.sounds?.ambience(onTitle ? FOUNDRY_ROOM : '');
     if (s !== 'farewell' && s !== 'confirm' && this.card?.isOpen) this.card.hide();
+    if (s !== 'endCard' && s !== 'feedback' && this.endCard?.isOpen) this.endCard.hide();
     // Settings stays under a confirm or the note opened over it, and closes when the flow leaves it.
     if (s !== 'settings' && s !== 'confirm' && s !== 'feedback' && this.settingsScreen?.isOpen) this.settingsScreen.close();
   }
@@ -183,6 +204,7 @@ export class FlowScene extends Scene {
     const s = this.machine.state;
     if (this.card?.isOpen) this.card.pointAt(v.x, v.y);
     else if (s === 'settings') this.settingsScreen?.pointAt(v.x, v.y);
+    else if (s === 'endCard') this.endCard?.pointAt(v.x, v.y);
     else if (s === 'title') this.title?.pointAt(v.x, v.y);
   }
 
@@ -194,14 +216,15 @@ export class FlowScene extends Scene {
       return;
     }
     if (s === 'settings') return this.settingsScreen?.click(v.x, v.y);
+    if (s === 'endCard' && this.endCard?.click(v.x, v.y)) return this.sounds?.play(SOUNDS.menuClick);
     if (s !== 'title') return;
     const row = this.title?.click(v.x, v.y);
     if (!row) return;
     this.sounds?.play(SOUNDS.menuClick);
-    if (row === 'newGame') this.newGame();
-    else if (row === 'continue') this.continueGame();
+    if (row === 'newGame') this.actions?.newGame();
+    else if (row === 'continue') this.actions?.continueGame();
     else if (row === 'settings') this.openSettings();
-    else this.quit();
+    else this.actions?.quit();
   }
 
   /** A key on a flow screen: Settings takes it first (a binding, Esc), then Esc cancels a confirm; the feedback key opens the note. */
@@ -217,72 +240,18 @@ export class FlowScene extends Scene {
     return;
   }
 
+  /** The end of the demo (042): once per save, the world paused under it until Keep playing. */
+  private showEndCard(): void {
+    if (!this.send('endCard')) return;
+    this.runner?.endCardShown();
+    this.endCard?.show(
+      () => this.openFeedback(),
+      () => void this.send('keepPlaying'),
+    );
+  }
+
   private openSettings(): void {
     if (this.send('settings')) this.settingsScreen?.open();
-  }
-
-  /** Shows a confirm card over the current screen: yes runs `onYes`, no runs `onNo` (or cancels). */
-  private ask(kind: ConfirmKind, onYes: () => void, onNo: () => void = () => void this.send('cancel')): void {
-    if (!this.send('confirm')) return;
-    const c = CONFIRMS[kind];
-    this.card?.show([{ text: c.text, style: 'display' }], [
-      { id: 'yes', label: c.yes, run: onYes },
-      { id: 'no', label: c.no, run: onNo },
-    ]);
-  }
-
-  /** New game: at once with no save; with one, after a confirm that moves it to the backup key (042.6). */
-  private newGame(): void {
-    const start = (): void => {
-      if (this.send('start')) this.runner?.start(createSim(parseSeed(this.search), { start: TUTORIAL_START }), this.host, false, this.fit);
-    };
-    if (this.slot.status === 'none') return start();
-    this.ask('newGame', () => {
-      this.saves.clearToBackup();
-      this.readSlot();
-      start();
-    });
-  }
-
-  /** Continue: the save restored, waking in the foundry as a KO's wake does. */
-  private continueGame(): void {
-    this.readSlot();
-    const { state, envelope } = this.slot;
-    if (this.slot.status !== 'ok' || !state || !envelope || !this.send('start')) return;
-    wakeInFoundry(state);
-    this.runner?.start(state, this.host, envelope.meta.endCardSeen, this.fit);
-  }
-
-  /** Quit (042.13): try to close the tab, which works only where the browser allows it, then say goodbye. */
-  private quit(): void {
-    window.close();
-    if (!this.send('quit')) return;
-    this.card?.show([{ text: FAREWELL.text, style: 'display' }], [{ id: 'farewellBack', label: FAREWELL.back, run: () => void this.send('back') }]);
-  }
-
-  /** The pause menu's Settings and Quit to title (042). */
-  private pauseAction(action: 'settings' | 'quit'): void {
-    if (action === 'settings') return this.openSettings();
-    const inFoundry = this.live?.sim.roomId === FOUNDRY_ROOM;
-    this.ask(inFoundry ? 'quitInFoundry' : 'quitOutside', () => {
-      if (!this.send('toTitle')) return;
-      this.runner?.end();
-      this.readSlot();
-    });
-  }
-
-  /** Import save: the picker, then a confirm; a bad file says why and changes nothing (042). */
-  private async importSave(): Promise<void> {
-    const picked = await pickImport();
-    if (!picked) return;
-    if ('bad' in picked) return this.notice?.show(picked.bad);
-    this.ask('importSave', () => {
-      applyImport(this.saves, picked.good);
-      this.send('accept');
-      this.readSlot();
-      this.settingsScreen?.refresh();
-      this.notice?.show(SAVE_TEXT.imported);
-    });
   }
 
   /** The flow for the test hook. */
@@ -299,7 +268,7 @@ export class FlowScene extends Scene {
       card: this.card?.ui ?? null,
       settings: s?.rows.length ? { rows: s.rows } : null,
       bindings: s?.keyRows.length ? { rows: s.keyRows, waiting: s.waiting } : null,
-      endCard: null,
+      endCard: this.endCard?.ui ?? null,
       note: null,
       notice: this.notice?.current ?? null,
     };
