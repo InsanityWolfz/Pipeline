@@ -8,14 +8,17 @@ import { RING_SCALE, type Ring } from '../data/ringScale';
 // up with its walk; timings, reach, knockback, weight, drops and XP are its own. A boss is
 // never scaled. Memoised by id, ring and champion, so the same def comes back each time.
 
-const memo = new Map<string, EnemyDef>();
+/** Scaled defs by base def, at `ring * 2 + champion`. */
+const memo = new Map<EnemyDef, EnemyDef[]>();
 
 /** A def scaled for its ring and, if `champion`, as its champion. A boss, or ring ×1 without a champion, is the def itself. */
 export function scaledDef(def: EnemyDef, ring: Ring, champion: boolean): EnemyDef {
   const r = RING_SCALE[ring];
   if (def.boss || (!champion && r.health === 1 && r.damage === 1)) return def;
-  const key = `${def.id}|${ring}|${champion ? 1 : 0}`;
-  const hit = memo.get(key);
+  const slot = ring * 2 + (champion ? 1 : 0);
+  let row = memo.get(def);
+  if (!row) memo.set(def, (row = []));
+  const hit = row[slot];
   if (hit) return hit;
   const health = r.health * (champion ? CHAMPIONS.health : 1);
   const damage = r.damage * (champion ? CHAMPIONS.damage : 1);
@@ -28,7 +31,7 @@ export function scaledDef(def: EnemyDef, ring: Ring, champion: boolean): EnemyDe
     walkSpeed: def.walkSpeed * speed,
   };
   const out = scaleAttack(def, base, (n) => Math.round(n * damage), speed);
-  memo.set(key, out);
+  row[slot] = out;
   return out;
 }
 

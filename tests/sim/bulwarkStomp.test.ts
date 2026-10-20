@@ -7,8 +7,9 @@ import { movePlayer, run, runUntil } from './fight';
 import { DEF, forum, offFacing } from './forum';
 
 // The Bulwark's rear stomp (041.5): a player who stays behind it too long, within reach,
-// is stomped. Its counter fills 1 a tick behind it and drains 2 a tick otherwise; at 3 s it
-// winds up 40 ticks without turning, a red half-disc over its back, then stomps.
+// is stomped. Its counter fills 1 a tick behind it and drains 2 a tick otherwise; full (2 s
+// since 041.7's tuning; the spec's 3 s) it winds up 40 ticks without turning, a red
+// half-disc over its back, then stomps.
 
 const { stomp } = DEF;
 
@@ -31,7 +32,7 @@ function awake(): { s: SimState; b: EnemyState } {
 }
 
 describe('the rear stomp', () => {
-  it('starts its 40-tick wind-up after 180 ticks behind it within 160 px, with the counter and cooldown in getState()', () => {
+  it('starts its 40-tick wind-up after `behindTicks` behind it within 160 px, with the counter and cooldown in getState()', () => {
     const { s, b } = awake();
     let ticks = 0;
     for (; ticks < 400 && b.mode !== 'stomp-windup'; ticks++) run(s, 1, stayBehind(b));
@@ -131,15 +132,16 @@ describe('the behind counter', () => {
     expect(b.behind).toBe(0);
   });
 
-  it('never fills to the stomp for a player who steps out before 3 s', () => {
+  it('never fills to the stomp for a player who steps out before it’s due', () => {
     const { s, b } = awake();
     let windups = 0;
+    const inside = stomp.behindTicks - 10;
     for (let cycle = 0; cycle < 6; cycle++) {
-      run(s, 150, (x) => {
+      run(s, inside, (x) => {
         windups += b.mode === 'stomp-windup' ? 1 : 0;
         return stayBehind(b)(x);
       });
-      run(s, 75, (x) => {
+      run(s, Math.ceil(inside / stomp.behindDecay), (x) => {
         const p = offFacing(b, 0, 120);
         movePlayer(x, p.x, p.y);
         return {};

@@ -5,7 +5,7 @@ import type { AttackTiming, EnemyBase, ShieldDef } from './enemies';
 // plate that blocks straight shots and punches into its front. It lobs bombs marked by
 // two red circles and pounds the ground round itself up close. Starting values from the
 // spec, tuned in playtest so triple arrows from behind kill it in about 30–45 s. 041 made
-// it a real fight: 2,500 HP, an enrage below 30%, a rear stomp that punishes circling,
+// it a real fight: 3,000 HP, an enrage below 30%, a rear stomp that punishes circling,
 // and adds at half health (bulwarkPhases.ts).
 
 /** The Bulwark (034): a shielded wall that lobs bombs and pounds up close, guarding its arena. Its values are below. */
@@ -64,8 +64,11 @@ export const BULWARK: BulwarkDef = {
   id: 'bulwark',
   name: 'Bulwark',
   boss: true,
-  /** 041: 2,500 (was 900): about 60–90 s for a decent build, never a quick kill from behind. */
-  maxHealth: 2500,
+  /**
+   * 041: 3,000 (was 900): the spec's "about 2,500" raised to its 3,000 ceiling, with the stomp's 2 s and the enrage's
+   * 110°/s, so a decent build's fight lasts 60–90 s (041.7, tests/sim/bulwarkFight.test.ts).
+   */
+  maxHealth: 3000,
   walkSpeed: 18,
   feetBox: { w: 36, h: 14 },
   hurtbox: { w: 44, h: 54, offsetY: -22 },
@@ -97,7 +100,8 @@ export const BULWARK: BulwarkDef = {
    * (a wind-up already running finishes first): it roars `roarTicks`, starting no attack, then until it dies or resets
    * its shield turns at `turnDegPerSec` and its lob cooldown is `lobCooldownTicks`. No telegraph gets shorter.
    */
-  enrage: { below: 0.3, roarTicks: 60, turnDegPerSec: 70, lobCooldownTicks: 160 },
+  // 041.7 tuning: 110°/s (the spec's 70 still let a decent build win in under 60 s).
+  enrage: { below: 0.3, roarTicks: 60, turnDegPerSec: 110, lobCooldownTicks: 160 },
   /**
    * The rear stomp (041.5): its `behind` counter gains 1 a tick while the player's feet are outside its shield arc and
    * within `range` px, and loses `behindDecay` a tick otherwise (never below 0). At `behindTicks` with its cooldown
@@ -106,7 +110,8 @@ export const BULWARK: BulwarkDef = {
    * it (a roll's i-frames dodge it), holds the pose `swipeTicks` and recovers `recoverTicks` without turning. The
    * cooldown counts from the wind-up's start.
    */
-  stomp: { range: 160, behindTicks: 180, behindDecay: 2, windupTicks: 40, swipeTicks: 8, radius: 96, arcDegrees: 180, damage: 30, knockback: 40, knockTicks: 8, recoverTicks: 40, cooldownTicks: 360 },
+  // 041.7 tuning: 120 ticks behind (2 s; the spec's 3 s let a decent build win in under 60 s).
+  stomp: { range: 160, behindTicks: 120, behindDecay: 2, windupTicks: 40, swipeTicks: 8, radius: 96, arcDegrees: 180, damage: 30, knockback: 40, knockTicks: 8, recoverTicks: 40, cooldownTicks: 360 },
   /**
    * The first time in a fight its health drops below `below` of its max (041.6), one of each of `enemies` rises at the
    * arena's add tiles (the other tile when one is within `minDistance` px of the player's feet) over `riseTicks`.

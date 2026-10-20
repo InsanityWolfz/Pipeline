@@ -9,8 +9,9 @@ import { movePlayer, run, runUntil } from './fight';
 import { DEF, forum, offFacing, START } from './forum';
 
 // The Bulwark's enrage (041.4): the first time its health drops below 30% in a fight, it
-// roars for 60 ticks starting no attack, then turns at 70°/s and lobs every 160 ticks
-// until it dies or resets. A wind-up already running finishes first.
+// roars for 60 ticks starting no attack, then turns faster (110°/s since 041.7's tuning;
+// the spec's 70) and lobs every 160 ticks until it dies or resets. A wind-up already
+// running finishes first.
 
 const { enrage } = DEF;
 const BELOW = Math.floor(DEF.maxHealth * enrage.below) - 1;
@@ -84,7 +85,7 @@ describe('the enrage', () => {
     expect(seen).toEqual(['windup', 'swipe', 'recover', 'roar']);
   });
 
-  it('then turns at 70°/s (from 40°/s)', () => {
+  it('then turns at the enrage’s rate (from 40°/s)', () => {
     const turn = (enraged: boolean): number => {
       const { s, b } = awake();
       if (enraged) {

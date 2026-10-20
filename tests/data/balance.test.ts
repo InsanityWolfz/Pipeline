@@ -139,15 +139,16 @@ describe('ring scaling (041)', () => {
 describe('the Bulwark (041)', () => {
   const B = BULWARK;
 
-  it('has 2,500 HP; its lob and pound are as before', () => {
-    expect(B.maxHealth).toBe(2500); // was 900
+  it('has 3,000 HP (041.7: the spec’s 2,500 raised to its ceiling); its lob and pound are as before', () => {
+    expect(B.maxHealth).toBe(3000); // was 900
     expect(B.lob).toMatchObject({ cooldownTicks: 240, windupTicks: 30, count: 3, damage: 25 });
     expect(B.pound).toMatchObject({ windupTicks: 60, damage: 35, cooldownTicks: 300 });
   });
 
   it('enrages below 30%, punishes circling with a rear stomp, and calls a Shardback and a Charger at 50%', () => {
-    expect(B.enrage).toEqual({ below: 0.3, roarTicks: 60, turnDegPerSec: 70, lobCooldownTicks: 160 });
-    expect(B.stomp).toEqual({ range: 160, behindTicks: 180, behindDecay: 2, windupTicks: 40, swipeTicks: 8, radius: 96, arcDegrees: 180, damage: 30, knockback: 40, knockTicks: 8, recoverTicks: 40, cooldownTicks: 360 });
+    // 041.7 tuning: the enrage turns 110°/s (spec 70) and the stomp comes after 120 ticks behind (spec 180).
+    expect(B.enrage).toEqual({ below: 0.3, roarTicks: 60, turnDegPerSec: 110, lobCooldownTicks: 160 });
+    expect(B.stomp).toEqual({ range: 160, behindTicks: 120, behindDecay: 2, windupTicks: 40, swipeTicks: 8, radius: 96, arcDegrees: 180, damage: 30, knockback: 40, knockTicks: 8, recoverTicks: 40, cooldownTicks: 360 });
     expect(B.adds).toEqual({ below: 0.5, enemies: ['shardback', 'charger'], riseTicks: 60, minDistance: 96 });
     for (const id of B.adds.enemies) expect(enemyDef(id).boss, id).toBe(false);
   });
