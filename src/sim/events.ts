@@ -151,6 +151,9 @@ export interface SimEvents {
   enrages: { id: number }[];
   stomps: { id: number; x: number; y: number; radius: number; dirX: number; dirY: number }[];
   addsRise: { id: number; adds: { id: number; enemyId: string; x: number; y: number }[] }[];
+  /** 041.16: the Bulwark's back wave began to build, and broke (its feet, radius and the unit direction off its back, px). */
+  waveStarts: { id: number }[];
+  backWaves: { id: number; x: number; y: number; radius: number; dirX: number; dirY: number }[];
   /** 035: a Charger set off down its lane (its feet, the unit direction, the lane's length, px); a Burrower erupted (its spot and ring radius); a Sniper fired its bolt (its feet and the unit direction). */
   charges: { id: number; x: number; y: number; dx: number; dy: number; length: number }[];
   eruptions: { id: number; x: number; y: number; radius: number }[];
@@ -233,6 +236,8 @@ export function createEvents(): SimEvents {
     enrages: [],
     stomps: [],
     addsRise: [],
+    waveStarts: [],
+    backWaves: [],
     charges: [],
     eruptions: [],
     snipes: [],

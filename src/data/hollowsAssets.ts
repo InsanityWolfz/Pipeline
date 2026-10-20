@@ -75,6 +75,11 @@ export const HOLLOWS_LOOK = {
   panel: { name: "The Bulwark's altar", effect: 'Offer to summon the Bulwark again.', action: 'Summon', spent: 'The Bulwark is here' },
   /** The boss bar along the top of the screen while a boss fights: its width and height, view px, gap under the objective band, colours (041.15: unchanged by the enrage). */
   bossBar: { w: 240, h: 8, top: 20, border: 1, fill: 'danger', back: 'ink', frame: 'brass', nameGap: 2 },
+  /**
+   * The back wave's build-up (041.16, draft for Shaun's eye): `rings` arcs over its rear arc in danger red, rippling
+   * outward from its feet and closing in on the arc's edge as the wind-up runs, over a faint fill of the whole arc.
+   */
+  wave: { color: 'danger', alpha: 0.14, rings: 3, ringWidth: 2, ringAlpha: 0.75 },
   /** A circle a roll won't save from (041.12: the pound, an enraged Bulwark's bombs): a second ring `gap` px outside its edge. */
   rollProof: { color: 'danger', width: 2, alpha: 0.9, gap: 4 },
   /** The rear stomp's wind-up (041): a half-disc over its back in the pound circle's style, danger red. */

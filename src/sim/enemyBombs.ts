@@ -49,7 +49,7 @@ export function throwBombs(state: SimState, e: EnemyState): void {
       fromY: e.y,
       radius: lob.radius,
       fuse: 0,
-      fuseTicks: lob.fuseTicks,
+      fuseTicks: e.enraged ? def.enrage.windups.fuse : lob.fuseTicks,
       damage: lob.damage,
       rollProof: e.enraged && def.enrage.rollProofLobs,
     });

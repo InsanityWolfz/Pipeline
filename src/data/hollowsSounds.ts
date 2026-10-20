@@ -17,6 +17,7 @@ export const HOLLOWS_SOUNDS = {
   bulwarkRoar: 'bulwark-roar',
   bulwarkStomp: 'bulwark-stomp',
   addsRise: 'adds-rise',
+  bulwarkWave: 'bulwark-wave',
 } as const;
 
 export const HOLLOWS_SOUND_RECIPES = {
@@ -81,6 +82,13 @@ export const HOLLOWS_SOUND_RECIPES = {
       { wave: 'sine', from: 112, to: 48, dur: 0.4, attack: 0.002, volume: 0.6 },
       { wave: 'noise', from: 1440, to: 190, dur: 0.33, attack: 0.002, volume: 0.4 },
       { wave: 'square', from: 96, to: 64, dur: 0.2, attack: 0.002, volume: 0.12, lowpass: 640 },
+    ],
+  },
+  // 041.16: the back wave breaking, a hissing rush of steam and a low thump.
+  'bulwark-wave': {
+    layers: [
+      { wave: 'noise', from: 3000, to: 600, dur: 0.5, attack: 0.01, volume: 0.3 },
+      { wave: 'sine', from: 90, to: 45, dur: 0.35, attack: 0.002, volume: 0.4 },
     ],
   },
   'adds-rise': {

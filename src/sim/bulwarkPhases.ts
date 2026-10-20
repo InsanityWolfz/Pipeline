@@ -16,6 +16,15 @@ import { tileCentre } from './tiles';
 /** Its shield's turn rate now, °/s: the enrage's while enraged. */
 export const turnRateOf = (e: EnemyState, def: BulwarkDef): number => (e.enraged ? def.enrage.turnDegPerSec : def.shield.turnDegPerSec);
 
+/** Each attack's telegraph now, ticks (041.16: the enrage's shorter ones while enraged): wind-ups and its bombs' fuse. */
+export function windupsOf(e: Pick<EnemyState, 'enraged'>, def: BulwarkDef): BulwarkDef['enrage']['windups'] {
+  if (e.enraged) return def.enrage.windups;
+  return { pound: def.pound.windupTicks, lob: def.lob.windupTicks, stomp: def.stomp.windupTicks, wave: def.wave.windupTicks, fuse: def.lob.fuseTicks };
+}
+
+/** Its def with the pound's wind-up as it is now (041.16), for the shared wind-up step. */
+export const poundTiming = (e: EnemyState, def: BulwarkDef): BulwarkDef => (e.enraged ? { ...def, pound: { ...def.pound, windupTicks: def.enrage.windups.pound } } : def);
+
 /** Its lob cooldown now, ticks: the enrage's while enraged. */
 export const lobCooldownOf = (e: EnemyState, def: BulwarkDef): number => (e.enraged ? def.enrage.lobCooldownTicks : def.lob.cooldownTicks);
 
@@ -62,7 +71,7 @@ function landStomp(state: SimState, e: EnemyState, def: BulwarkDef): void {
 export function stepStomp(state: SimState, e: EnemyState, def: BulwarkDef): [number, number] | null {
   const { stomp } = def;
   if (e.mode === 'stomp-windup') {
-    if (e.modeTicks < stomp.windupTicks) return hold(e);
+    if (e.modeTicks < windupsOf(e, def).stomp) return hold(e);
     enter(e, 'stomp');
     landStomp(state, e, def);
     return [0, 0];
@@ -102,13 +111,21 @@ export function stepRoar(e: EnemyState, def: BulwarkDef): boolean {
 }
 
 /**
- * Once a fight, below the adds' share: each add rises at its tile, or at the first other tile at least `minDistance`
+ * Below the adds' share, and every `everyTicks` after (041.16): each add rises at its tile, or at the first other tile at least `minDistance`
  * from the player's feet if its own is closer (its own if none is). They're normal enemies of their ring once up.
  */
 export function riseAddsIfDue(state: SimState, e: EnemyState, def: BulwarkDef): void {
   const arena = arenaOf(e.enemyId);
-  if (!arena || e.addsRisen || e.health >= def.maxHealth * def.adds.below) return;
-  e.addsRisen = true;
+  if (!arena) return;
+  if (!e.addsRisen) {
+    if (e.health >= def.maxHealth * def.adds.below) return;
+    e.addsRisen = true;
+  } else {
+    // 041.16: they keep coming, a pair every `everyTicks` it fights.
+    e.addsCooldown -= 1;
+    if (e.addsCooldown > 0) return;
+  }
+  e.addsCooldown = def.adds.everyTicks;
   const spots = arena.addTiles.map(tileCentre);
   const far = (at: { x: number; y: number }) => Math.hypot(at.x - state.player.x, at.y - state.player.y) >= def.adds.minDistance;
   const risen = def.adds.enemies.flatMap((enemyId, i) => {
@@ -128,7 +145,48 @@ export function resetFight(state: SimState, e: EnemyState, def: BulwarkDef): voi
   e.enraged = false;
   e.behind = 0;
   e.stompCooldown = 0;
+  e.addsCooldown = 0;
+  e.waveTicks = 0;
+  e.waveCooldown = def.wave.everyTicks;
   e.lobCooldown = def.lob.cooldownTicks;
   if (e.addsRisen) state.enemies = state.enemies.filter((x) => x.group !== ADDS_GROUP || x.roomId !== e.roomId);
   e.addsRisen = false;
+}
+
+/**
+ * Its back wave (041.16), beside whatever else it does: every `everyTicks` it fights, a wave builds off its back (locked
+ * as it starts) for its wind-up, then breaks on feet inside its rear arc.
+ */
+export function stepWave(state: SimState, e: EnemyState, def: BulwarkDef): void {
+  const { wave } = def;
+  // The countdown runs through a wave's wind-up too: one starts every `everyTicks`.
+  if (e.waveCooldown > 0) e.waveCooldown -= 1;
+  if (e.waveTicks > 0) {
+    if (e.waveTicks < windupsOf(e, def).wave) {
+      e.waveTicks += 1;
+      return;
+    }
+    e.waveTicks = 0;
+    landWave(state, e, def);
+    return;
+  }
+  if (e.waveCooldown > 0) return;
+  e.waveCooldown = wave.everyTicks;
+  e.waveTicks = 1;
+  e.waveDirX = -Math.cos(e.angle);
+  e.waveDirY = -Math.sin(e.angle);
+  state.events.waveStarts.push({ id: e.id });
+}
+
+/** The wave breaks: damage and knockback away from it on feet inside the rear arc. */
+function landWave(state: SimState, e: EnemyState, def: BulwarkDef): void {
+  const { wave } = def;
+  state.events.backWaves.push({ id: e.id, x: e.x, y: e.y, radius: wave.radius, dirX: e.waveDirX, dirY: e.waveDirY });
+  if (e.roomId !== state.roomId) return;
+  const dx = state.player.x - e.x;
+  const dy = state.player.y - e.y;
+  if (!inArc(dx, dy, e.waveDirX, e.waveDirY, wave.radius, wave.arcDegrees)) return;
+  const dist = Math.hypot(dx, dy);
+  const [kx, ky] = dist > 0 ? [dx / dist, dy / dist] : [e.waveDirX, e.waveDirY];
+  damagePlayer(state, wave.damage, kx, ky, wave.knockback, wave.knockTicks, wave.rollProof);
 }

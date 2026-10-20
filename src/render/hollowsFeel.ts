@@ -40,6 +40,10 @@ export function playHollows(ev: SimEvents, j: JuiceView, s: SoundView): boolean 
     j.shake('small');
   }
   if (ev.addsRise.length > 0) s.play(SOUNDS.addsRise);
+  for (const w of ev.backWaves) {
+    s.play(SOUNDS.bulwarkWave);
+    j.burst('waveSpray', w.x + (w.dirX * w.radius) / 2, w.y + (w.dirY * w.radius) / 2);
+  }
   const fell = ev.gates.some((g) => g.gate === 'hollows');
   if (fell) {
     s.play(SOUNDS.barrierCollapse);

@@ -202,3 +202,9 @@ The build follows 041.1–041.11. These came up building the scripted targets; e
 4. **Adds keep coming:** a new pair about every 20 s after the first, never champions, still outside the spawn cap.
 
 The targets stand: 60–90 s, real damage taken by the decent bot reacting only to visible cues, and the naive bot loses. Tune within these four levers.
+
+### Built after Shaun's answer to 041.16 (2026-10-20)
+- **Back wave:** every 210 ticks it fights (3.5 s), a wave builds off its back for 36 ticks (30 enraged), a 150 px rear arc 140° wide, locked as it starts, then breaks for 20 damage and 30 px of knockback. It runs beside its other attacks. Its own look (ripples running out over the arc), sound (a steam rush) and spray. The build makes it roll-proof like 041.12's pound, so standing behind costs a step out or a hit; its second ring shows that. (Not dictated: the wave's shape, numbers and roll-proofing.)
+- **Enraged telegraphs:** pound 36 (from 60), lob 30 (as before), stomp 30 (from 40), back wave 30 (from 36), bomb fuse 45 (from 90); none under MIN_TELEGRAPH_TICKS (30).
+- **Adds keep coming:** a pair every 1,500 ticks (25 s) it fights after the first; 20 s KO'd the decent build more often. Never champions, outside the spawn cap, cleared on a reset.
+- **HP 3,600** (ceiling about 5,000): with the levers above, the decent build (reading every on-screen telegraph a quarter second after it shows) wins in 71.5, 84.3, 70.0, 73.9 and 66.9 s on seeds 1–5, taking 0.61, 0.83, 0.79, 0.88 and 0.86 of its max health, never KO'd; the naive bot is KO'd at 15 s on every seed. Both 041.7 targets are normal tests again. On seeds 6–20 (not asserted) 12 of 15 also meet all three: two take under 40%, two are KO'd. The fight is chaotic, so a seed's numbers move with any change.

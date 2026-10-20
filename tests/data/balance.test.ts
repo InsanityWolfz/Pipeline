@@ -139,24 +139,29 @@ describe('ring scaling (041)', () => {
 describe('the Bulwark (041)', () => {
   const B = BULWARK;
 
-  it('has 3,000 HP (041.7: the spec’s 2,500 raised to its ceiling); its lob and pound are as before', () => {
-    expect(B.maxHealth).toBe(3000); // was 900
+  it('has 3,600 HP (041.16: under its raised ceiling of about 5,000); its lob and pound are as before', () => {
+    expect(B.maxHealth).toBe(3600); // was 900
     expect(B.lob).toMatchObject({ cooldownTicks: 240, windupTicks: 30, count: 3, damage: 25 });
     expect(B.pound).toMatchObject({ windupTicks: 60, damage: 35, cooldownTicks: 300 });
   });
 
   it('enrages below 30%, punishes circling with a rear stomp, and calls a Shardback and a Charger at 50%', () => {
     // 041.7 tuning: the enrage turns 110°/s (spec 70) and the stomp comes after 120 ticks behind (spec 180).
-    expect(B.enrage).toEqual({ below: 0.3, roarTicks: 60, turnDegPerSec: 110, lobCooldownTicks: 160, rollProofLobs: true });
+    expect(B.enrage).toMatchObject({ below: 0.3, roarTicks: 60, turnDegPerSec: 110, lobCooldownTicks: 160, rollProofLobs: true });
     // 041.12 (Shaun): the pound's shockwave and the enraged lobs ignore a roll's i-frames.
     expect(B.pound.rollProof).toBe(true);
     expect(B.stomp).toEqual({ range: 160, behindTicks: 120, behindDecay: 2, windupTicks: 40, swipeTicks: 8, radius: 96, arcDegrees: 180, damage: 30, knockback: 40, knockTicks: 8, recoverTicks: 40, cooldownTicks: 360 });
-    expect(B.adds).toEqual({ below: 0.5, enemies: ['shardback', 'charger'], riseTicks: 60, minDistance: 96 });
+    // 041.16 (Shaun): a new pair about every 20 s after the first (25 s, tuned).
+    expect(B.adds).toEqual({ below: 0.5, enemies: ['shardback', 'charger'], riseTicks: 60, minDistance: 96, everyTicks: 1500 });
     for (const id of B.adds.enemies) expect(enemyDef(id).boss, id).toBe(false);
   });
 
-  it('every one of its attacks (lob, pound, stomp) winds up at least MIN_TELEGRAPH_TICKS', () => {
-    for (const windup of [B.lob.windupTicks, B.pound.windupTicks, B.stomp.windupTicks]) expect(windup).toBeGreaterThanOrEqual(MIN_TELEGRAPH_TICKS);
+  it('every one of its attacks (lob, pound, stomp, back wave) winds up at least MIN_TELEGRAPH_TICKS, enraged too (041.16)', () => {
+    for (const windup of [B.lob.windupTicks, B.pound.windupTicks, B.stomp.windupTicks, B.wave.windupTicks]) expect(windup).toBeGreaterThanOrEqual(MIN_TELEGRAPH_TICKS);
+    for (const [k, windup] of Object.entries(B.enrage.windups)) expect(windup, k).toBeGreaterThanOrEqual(MIN_TELEGRAPH_TICKS);
+    // Enraged, each is shorter or as short (never longer).
+    const w = B.enrage.windups;
+    expect([w.pound <= B.pound.windupTicks, w.lob <= B.lob.windupTicks, w.stomp <= B.stomp.windupTicks, w.wave <= B.wave.windupTicks, w.fuse <= B.lob.fuseTicks]).toEqual([true, true, true, true, true]);
   });
 
   it('its add tiles are open floor inside the arena, one either side of its start, one per add', () => {

@@ -33,6 +33,10 @@ export interface HollowsSummary {
     behind: number;
     stompCooldown: number;
     addsRisen: boolean;
+    /** 041.16: ticks to its next adds (once the first have risen), its back wave's countdown and wind-up (0: none). */
+    addsCooldown: number;
+    waveCooldown: number;
+    waveTicks: number;
   }[];
   /** Enemy bombs on the ground: where, their ring's radius, the fuse burnt and its length, and how far the inner circle has grown (0..1). */
   enemyBombs: { id: number; room: string; x: number; y: number; from: { x: number; y: number }; radius: number; fuse: number; fuseTicks: number; progress: number; rollProof: boolean }[];
@@ -62,6 +66,9 @@ export function hollowsSummary(state: SimState): HollowsSummary {
         behind: e.behind,
         stompCooldown: e.stompCooldown,
         addsRisen: e.addsRisen,
+        addsCooldown: e.addsCooldown,
+        waveCooldown: e.waveCooldown,
+        waveTicks: e.waveTicks,
       })),
     enemyBombs: state.enemyBombs.map((b) => ({ id: b.id, room: b.roomId, x: round(b.x), y: round(b.y), from: { x: round(b.fromX), y: round(b.fromY) }, radius: b.radius, fuse: b.fuse, fuseTicks: b.fuseTicks, progress: round(fuseProgress(b)), rollProof: b.rollProof })),
     bossDefeats: [...state.bossDefeats],

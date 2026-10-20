@@ -22,12 +22,15 @@ const stayBehind =
     return {};
   };
 
-/** The forum, the Bulwark awake, its lobs held off and its adds spent (041.6), the player in front of it. */
+/** The forum, the Bulwark awake, its lobs, adds and back wave held off, the player in front of it. */
 function awake(): { s: SimState; b: EnemyState } {
   const f = forum(160);
   run(f.s, 1);
   f.b.lobCooldown = 100_000;
   f.b.addsRisen = true;
+  f.b.addsCooldown = 100_000;
+  // Its back wave (041.16) held off too: these tests are the stomp's.
+  f.b.waveCooldown = 100_000;
   return f;
 }
 

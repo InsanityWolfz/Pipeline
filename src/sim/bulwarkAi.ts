@@ -3,7 +3,7 @@ import type { BulwarkDef } from '../data/enemies';
 import { arenaOf } from '../data/hollows';
 import { enter, hold, startWindup, stepAttack, toward, walkHome } from './aiCommon';
 import { aggro, type EnemyState } from './enemies';
-import { countBehind, enrageIfDue, lobCooldownOf, resetFight, riseAddsIfDue, startStomp, stepRoar, stepStomp, stompReady, turnRateOf } from './bulwarkPhases';
+import { countBehind, enrageIfDue, lobCooldownOf, poundTiming, resetFight, riseAddsIfDue, startStomp, stepRoar, stepStomp, stepWave, stompReady, turnRateOf, windupsOf } from './bulwarkPhases';
 import { throwBombs } from './enemyBombs';
 import { damagePlayer } from './health';
 import { turnToward } from './shield';
@@ -64,6 +64,8 @@ export function bulwarkThink(state: SimState, e: EnemyState, def: BulwarkDef): [
     e.modeTicks = 0;
   }
   if (e.mode === 'idle' || e.mode === 'return') {
+    // Walking home, a back wave building fades out.
+    e.waveTicks = 0;
     if (!playerIn) {
       if (e.mode === 'idle') return [0, 0];
       turnToward(e, e.homeX, e.homeY, rate);
@@ -81,15 +83,16 @@ export function bulwarkThink(state: SimState, e: EnemyState, def: BulwarkDef): [
   // 041: the adds rise the moment it drops below half; the counter fills while the player stays behind it.
   riseAddsIfDue(state, e, def);
   countBehind(state, e, def, here);
+  stepWave(state, e, def);
   // The stomp and the pound: wind-up, attack and recovery, all without turning.
   const stomping = stepStomp(state, e, def);
   if (stomping) return stomping;
-  const pounding = stepAttack(e, def, () => landPound(state, e, def));
+  const pounding = stepAttack(e, poundTiming(e, def), () => landPound(state, e, def));
   if (pounding) return pounding;
   if (e.mode === 'lob' || e.mode === 'throw') {
     turnToward(e, p.x, p.y, rate);
     if (e.mode === 'lob') {
-      if (e.modeTicks < def.lob.windupTicks) return hold(e);
+      if (e.modeTicks < windupsOf(e, def).lob) return hold(e);
       throwBombs(state, e);
       enter(e, 'throw');
       return [0, 0];

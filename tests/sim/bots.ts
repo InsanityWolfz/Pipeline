@@ -1,6 +1,7 @@
 import { TICK_RATE } from '../../src/data/config';
 import type { EnemyDef } from '../../src/data/enemies';
 import { WALK_SPEED } from '../../src/data/player';
+import { windupsOf } from '../../src/sim/bulwarkPhases';
 import { defOf } from '../../src/sim/champions';
 import type { EnemyState } from '../../src/sim/enemies';
 import type { Command } from '../../src/sim/input';
@@ -23,8 +24,8 @@ type Shape = (
   left: number;
   /** A roll's i-frames don't save from it (041.12: its second ring shows it): the player has to be out by then. */
   rollProof?: boolean;
-  /** The Bulwark's rear stomp (041.5). */
-  stomp?: boolean;
+  /** The Bulwark's own arcs: its rear stomp (041.5) and its back wave (041.16). */
+  boss?: boolean;
 };
 
 /** A shape and the ticks it has shown. */
@@ -81,9 +82,11 @@ function zoneOf(e: EnemyState, def: EnemyDef, left: (windup: number) => number):
         : null;
     case 'slammer':
       return e.mode === 'windup' ? { kind: 'circle', x: e.x, y: e.y, r: def.slam.radius, left: left(def.slam.windupTicks) } : null;
-    case 'bulwark':
-      if (e.mode === 'windup') return { kind: 'circle', x: e.x, y: e.y, r: def.pound.radius, left: left(def.pound.windupTicks), rollProof: def.pound.rollProof };
-      return e.mode === 'stomp-windup' ? { kind: 'arc', x: e.x, y: e.y, r: def.stomp.radius, dirX: e.swipeDirX, dirY: e.swipeDirY, deg: def.stomp.arcDegrees, left: left(def.stomp.windupTicks), stomp: true } : null;
+    case 'bulwark': {
+      const w = windupsOf(e, def);
+      if (e.mode === 'windup') return { kind: 'circle', x: e.x, y: e.y, r: def.pound.radius, left: left(w.pound), rollProof: def.pound.rollProof };
+      return e.mode === 'stomp-windup' ? { kind: 'arc', x: e.x, y: e.y, r: def.stomp.radius, dirX: e.swipeDirX, dirY: e.swipeDirY, deg: def.stomp.arcDegrees, left: left(w.stomp), boss: true } : null;
+    }
     case 'caster':
       return null;
   }
@@ -96,6 +99,12 @@ export function dangerZones(s: SimState): Zone[] {
     if (e.roomId !== s.roomId || e.frozen > 0 || e.stunned > 0) continue;
     const z = enemyZone(e, defOf(e));
     if (z) out.push(z);
+  }
+  // The Bulwark's back wave (041.16), building beside whatever else it does.
+  for (const e of s.enemies) {
+    const def = defOf(e);
+    if (def.kind !== 'bulwark' || e.waveTicks <= 0 || e.roomId !== s.roomId) continue;
+    out.push({ kind: 'arc', x: e.x, y: e.y, r: def.wave.radius, dirX: e.waveDirX, dirY: e.waveDirY, deg: def.wave.arcDegrees, left: windupsOf(e, def).wave - e.waveTicks, age: e.waveTicks, boss: true, rollProof: def.wave.rollProof });
   }
   for (const b of s.enemyBombs) if (b.roomId === s.roomId) out.push({ kind: 'circle', x: b.x, y: b.y, r: b.radius, left: b.fuseTicks - b.fuse, age: b.fuse, rollProof: b.rollProof });
   for (const o of s.orbs) {
@@ -139,7 +148,7 @@ export interface Reading {
   firing: boolean;
   /** It walks round what it has read (a careful player), or keeps to its goal and only rolls out of what is about to land. */
   walksRound: boolean;
-  /** It reads only telegraphed circles (the Bulwark's bombs and pound, a Burrower's ring) and the Bulwark's stomp, not other arcs, lanes or orbs. */
+  /** It reads only telegraphed circles (the Bulwark's bombs and pound, a Burrower's ring) and the Bulwark's own arcs (its stomp and back wave), not other arcs, lanes or orbs. */
   circlesOnly?: boolean;
 }
 
@@ -155,7 +164,7 @@ export const ROLLER: Reading = { react: 15, horizon: 45, firing: true, walksRoun
  */
 export function steer(s: SimState, goal: { x: number; y: number }, read: Reading = CAREFUL): Steer {
   const p = s.player;
-  const zones = dangerZones(s).filter((z) => z.left <= read.horizon && z.age >= read.react && (!read.circlesOnly || z.kind === 'circle' || z.stomp === true));
+  const zones = dangerZones(s).filter((z) => z.left <= read.horizon && z.age >= read.react && (!read.circlesOnly || z.kind === 'circle' || z.boss === true));
   const threat = zones.filter((z) => inZone(z, p.x, p.y));
   const danger = threat.length > 0;
   let best: { move: readonly [number, number]; score: number } = { move: [0, 0], score: Infinity };

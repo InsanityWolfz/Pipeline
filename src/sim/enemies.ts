@@ -89,6 +89,12 @@ export interface EnemyState extends Knockable {
   behind: number;
   stompCooldown: number;
   addsRisen: boolean;
+  /** 041.16: ticks before its next pair of adds (counted once the first have risen); its back wave's countdown, the ticks its wind-up has run (0: none), and the unit direction it's locked to. */
+  addsCooldown: number;
+  waveCooldown: number;
+  waveTicks: number;
+  waveDirX: number;
+  waveDirY: number;
 }
 
 /** A home's danger ring (041, the rule 037's XP used): `ringOf` its tile in the overworld, 0 in any other room. */
@@ -138,6 +144,11 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     behind: 0,
     stompCooldown: 0,
     addsRisen: false,
+    addsCooldown: 0,
+    waveCooldown: def.kind === 'bulwark' ? def.wave.everyTicks : 0,
+    waveTicks: 0,
+    waveDirX: 0,
+    waveDirY: 0,
     knockX: 0,
     knockY: 0,
     knockTicks: 0,

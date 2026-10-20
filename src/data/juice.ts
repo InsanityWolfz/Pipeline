@@ -86,6 +86,8 @@ export const PARTICLES = {
   enemyBurst: { colors: ['danger', 'cinder', 'hollow-light', 'hollow'], count: 26, speed: [40, 130], gravity: 120, lifeMs: [300, 650], size: 3 },
   poundDust: { colors: ['hollow-pale', 'hollow-light', 'hollow'], count: 36, speed: [60, 150], gravity: -20, lifeMs: [400, 800], size: 3 },
   // 041: the Bulwark's rear stomp, a smaller pound's dust.
+  // 041.16: the back wave breaking off its back, a spray of steam and grit.
+  waveSpray: { colors: ['snow', 'hollow-pale', 'hollow-light'], count: 20, speed: [50, 130], gravity: -10, lifeMs: [250, 500], size: 2 },
   stompDust: { colors: ['hollow-pale', 'hollow-light', 'hollow'], count: 18, speed: [40, 110], gravity: -20, lifeMs: [300, 600], size: 2 },
   barrierShards: { colors: ['cyan', 'cyan-glow', 'snow'], count: 40, speed: [20, 90], gravity: 160, lifeMs: [500, 1000], size: 2, lift: 40 },
   // 038: a landmine bursting (iron shards and ley sparks) and a cluster bomb's bomblets popping (a few embers).

@@ -6,7 +6,7 @@ import { boot, cameraSettled } from './helpers';
 
 // Review screenshots for 041 (REVIEW_SHOTS=1, into docs/review/041): the enraged Bulwark
 // (red seam and runes, steam), the stomp's rear half-disc, its adds rising through their
-// cracked circles, and the boss bar while it's enraged. Under the hook the sim holds still
+// cracked circles, the boss bar while it's enraged; 041.16's back wave and second pair of adds. Under the hook the sim holds still
 // between steps, so each shot holds its moment.
 
 const SHOTS = 'docs/review/041';
@@ -171,4 +171,48 @@ test.describe('review screenshots (041)', () => {
     await cameraSettled(page, 20_000);
     await page.screenshot({ path: `${SHOTS}/03-stomp-half-disc.png` });
   });
+
+  test('the back wave building off its back (041.16)', async ({ page }) => {
+    test.setTimeout(120_000);
+    await forum(page, -3);
+    const ok = await page.evaluate((windup) => {
+      const g = window.__GAME__;
+      if (!g) throw new Error('no game');
+      for (let t = 0; t < 600; t++) {
+        const s = g.step(1);
+        g.setPlayerHealth(100);
+        if ((s.bosses[0]?.waveTicks ?? 0) >= windup * 0.6) return true;
+      }
+      return false;
+    }, BULWARK.wave.windupTicks);
+    expect(ok).toBe(true);
+    await cameraSettled(page, 20_000);
+    await page.screenshot({ path: `${SHOTS}/06-back-wave.png` });
+  });
+
+  test('its adds keep coming: the second pair rising beside the first (041.16)', async ({ page }) => {
+    test.setTimeout(120_000);
+    const id = await forum(page, 3);
+    const ok = await page.evaluate(
+      ([bid, hp, every, rise]) => {
+        const g = window.__GAME__;
+        if (!g) throw new Error('no game');
+        g.setEnemyHealth(bid, hp);
+        for (let t = 0; t < every + rise; t++) {
+          const s = g.step(1);
+          g.setPlayerHealth(100);
+          if (s.events.addsRise.length > 0 && t > 1) {
+            g.step(Math.floor(rise / 2));
+            return true;
+          }
+        }
+        return false;
+      },
+      [id, Math.floor(BULWARK.maxHealth * BULWARK.adds.below) - 1, BULWARK.adds.everyTicks, BULWARK.adds.riseTicks] as const,
+    );
+    expect(ok).toBe(true);
+    await cameraSettled(page, 20_000);
+    await page.screenshot({ path: `${SHOTS}/07-adds-second-pair.png` });
+  });
 });
+

@@ -3,6 +3,7 @@ import { DEPTHS } from '../data/assets';
 import { IDLE_SPEED } from '../data/config';
 import { BULWARK_RIG, BULWARK_RUNES, BULWARK_SEAM } from '../data/art/bulwark';
 import { BULWARK } from '../data/bulwark';
+import { windupsOf } from '../sim/bulwarkPhases';
 import { enemyDef } from '../data/enemies';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
 import type { EnemyState } from '../sim/enemies';
@@ -88,7 +89,7 @@ export function drawStomp(g: GameObjects.Graphics, e: EnemyState): void {
   const def = enemyDef(e.enemyId);
   if (def.kind !== 'bulwark' || e.mode !== 'stomp-windup') return;
   const P = HOLLOWS_LOOK.stomp;
-  const progress = Math.min(1, e.modeTicks / def.stomp.windupTicks);
+  const progress = Math.min(1, e.modeTicks / windupsOf(e, def).stomp);
   const angle = Math.atan2(e.swipeDirY, e.swipeDirX);
   const half = (def.stomp.arcDegrees * Math.PI) / 360;
   const color = colorOf(P.color);
@@ -98,6 +99,36 @@ export function drawStomp(g: GameObjects.Graphics, e: EnemyState): void {
   g.fillStyle(color, P.fillAlpha);
   g.slice(e.x, e.y, def.stomp.radius * progress, angle - half, angle + half, false);
   g.fillPath();
+}
+
+/** Its back wave building (041.16): ripples running out over its rear arc to the arc's edge as the wind-up runs. */
+export function drawWave(g: GameObjects.Graphics, e: EnemyState): void {
+  const def = enemyDef(e.enemyId);
+  if (def.kind !== 'bulwark' || e.waveTicks <= 0) return;
+  const W = HOLLOWS_LOOK.wave;
+  const progress = Math.min(1, e.waveTicks / windupsOf(e, def).wave);
+  const angle = Math.atan2(e.waveDirY, e.waveDirX);
+  const half = (def.wave.arcDegrees * Math.PI) / 360;
+  const color = colorOf(W.color);
+  g.fillStyle(color, W.alpha);
+  g.slice(e.x, e.y, def.wave.radius, angle - half, angle + half, false);
+  g.fillPath();
+  for (let i = 0; i < W.rings; i++) {
+    // Each ripple starts further out, and all reach the edge together as the wave breaks.
+    const r = def.wave.radius * Math.min(1, progress * (1 + i / W.rings));
+    g.lineStyle(W.ringWidth, color, W.ringAlpha * (1 - i / (W.rings + 1)));
+    g.beginPath();
+    g.arc(e.x, e.y, r, angle - half, angle + half, false);
+    g.strokePath();
+  }
+  // A roll won't save from it either: the second ring (041.12's cue) along its edge.
+  if (def.wave.rollProof) {
+    const R = HOLLOWS_LOOK.rollProof;
+    g.lineStyle(R.width, colorOf(R.color), R.alpha);
+    g.beginPath();
+    g.arc(e.x, e.y, def.wave.radius + R.gap, angle - half, angle + half, false);
+    g.strokePath();
+  }
 }
 
 /** An add rising (041): the summon's cracked red circle at its feet, smaller, its ring and cracks opening as it rises. */
@@ -113,7 +144,7 @@ export function drawPound(g: GameObjects.Graphics, e: EnemyState): void {
   const def = enemyDef(e.enemyId);
   if (def.kind !== 'bulwark' || e.mode !== 'windup') return;
   const P = HOLLOWS_LOOK.pound;
-  const progress = Math.min(1, e.modeTicks / def.pound.windupTicks);
+  const progress = Math.min(1, e.modeTicks / windupsOf(e, def).pound);
   const color = colorOf(P.color);
   g.fillStyle(color, P.alpha).fillCircle(e.x, e.y, def.pound.radius);
   g.fillStyle(color, P.fillAlpha).fillCircle(e.x, e.y, def.pound.radius * progress);

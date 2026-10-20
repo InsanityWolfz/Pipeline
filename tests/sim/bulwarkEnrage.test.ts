@@ -25,11 +25,13 @@ const hold =
     return {};
   };
 
-/** The forum with the Bulwark awake, its adds (041.6) already spent so they keep out of these tests. */
+/** The forum with the Bulwark awake, its adds (041.6) and back wave (041.16) held off so they keep out of these tests. */
 function awake(): { s: SimState; b: EnemyState } {
   const f = forum(160);
   run(f.s, 1);
   f.b.addsRisen = true;
+  f.b.addsCooldown = 100_000;
+  f.b.waveCooldown = 100_000;
   return f;
 }
 
