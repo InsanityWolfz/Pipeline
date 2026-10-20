@@ -51,3 +51,15 @@ Built on `claude/048-volley-shape` (plan: docs/plans/048-volley-shape.md). 048.1
 - **048.4 docs/design.md.** "The Foundry" still says "two bomb lines lob two bombs side by side". Proposal, on Shaun's OK: "every fed entrance fires down its own lane of one fan, whatever its ammo; bombs land on an arc at the cursor's distance (048)".
 - **048.5 Which entrances count as fed.** An entrance is fed while it's open and holds a round, whether or not it's ready to fire this tick, so an entrance firing on its own beat always uses the same lane. When one runs dry the others re-fan (three fed at ±15° become two at ±7.5°) until it refills. Proposal: keep (it's 048.1's rule applied as written).
 - **048.6 Landmines.** Lobbed like bombs, they take lanes too and land on the arc. 024's `LOB_SPACING` (side by side) is removed, since nothing uses it. Proposal: keep.
+- **048.7 Measurements (recorded, not tuned).** `npm run measure` after the build, against 047:
+
+  | Measurement | Target | 047 | 048 |
+  | --- | --- | --- | --- |
+  | Ammo, line / still | arrow / mine fastest on every seed | 5/5, 5/5 (met) | 5/5, 5/5 (met) |
+  | Ring 1 pack, seeds 1–5 | ≤ 15 s, no KO | 2.2–2.9 s (met) | 2.2–2.9 s (met) |
+  | Ring 2 pack, seeds 1–5 | ≤ 15 s, no KO | 2.8–4.2 s (met) | 2.8–4.2 s (met) |
+  | Ring 3 pack, seeds 1–5 | 8–18 s, no KO | 10.2–17.6 s (met) | 3/5 in band, 10.3–21.8 s (missed) |
+  | Bulwark, decent build, seeds 1–20 | ≥ 15/20 meet all three; ≤ 2 KOs | 13/20, 3 KOs (missed, 043.2) | 10/20, 6 KOs (missed) |
+  | Bulwark, naive bot | KO'd every seed | 5/5 (met) | 5/5 (met) |
+
+  The decent Bulwark build feeds an arrow line and a bomb line. Before 048 both flew at the cursor; now they take the two lanes 7.5° either side of it, and 041.7's bot still aims at the Bulwark's middle, so at its 100 px circle each round lands about 13 px off. The pack bot turns its aim so a straight round's lane is on the target (as it did for 024's two-arrow fan), so its bombs land off to the side. Question for Shaun at playtest: is a mixed volley that can't put every round on one target the trade he wants (proposal: yes, it's the spread he asked for; the bots stay as they are), or should the Bulwark bot learn to aim like the pack bot? Either way balance is judged at playtest.
