@@ -23,7 +23,7 @@ const FILL = OBJECTIVES.findIndex((o) => o.text === AFTER_STEPS);
 test('the whole prototype plays through from the start stone', async ({ page }) => {
   test.setTimeout(300_000);
   const errors = watchErrors(page);
-  await boot(page, '');
+  await boot(page, '?start=tutorial');
   // Page-side helpers for this run: leaving the foundry, the route to the shrine and fighting a group clear (017).
   await page.evaluate((tile) => {
     const g = window.__GAME__;

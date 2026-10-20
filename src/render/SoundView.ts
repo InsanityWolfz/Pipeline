@@ -1,19 +1,21 @@
-import { Input, type Scene, type Sound } from 'phaser';
-import { ROOM_AMBIENCE, SOUND_MIX, SOUNDS, VOLUME_STEP, type SoundKey } from '../data/sounds';
-import { loadSoundSettings, saveSoundSettings, type SoundSettings } from './soundSettings';
+import { Input, type Scene } from 'phaser';
+import { ROOM_AMBIENCE, SOUND_MIX, SOUNDS, type SoundKey } from '../data/sounds';
+import { onSettings, settings, stepVolume, updateSettings } from './flow/settingsStore';
 
 // Plays the synth sounds (014): one-shot effects, and an ambient loop per room
-// that crossfades on a room change. M mutes, [ and ] set the volume; both are saved. The
-// browser holds audio back until the first input, which Phaser waits out.
+// that crossfades on a room change. The browser holds audio back until the first input, which Phaser waits out.
+// 042: the levels come from the shared settings: master × music for the room loops, master × effects for one-shots;
+// M mutes and [ and ] step the master volume (in the flow scene, so they work everywhere).
 
 const URLS = import.meta.glob<string>('../../assets/build/sounds/*.wav', { query: '?url', import: 'default', eager: true });
 
 const urlOf = (key: SoundKey): string | undefined => URLS[`../../assets/build/sounds/${key}.wav`];
 
+type Loop = ReturnType<Scene['sound']['add']>;
+
 export class SoundView {
   private readonly scene: Scene;
-  private readonly settings: SoundSettings;
-  private ambient: { roomId: string; sound: Sound.BaseSound } | null = null;
+  private ambient: { roomId: string; sound: Loop } | null = null;
   /** Keys played this frame, so a burst of hits sounds once. */
   private readonly played = new Set<SoundKey>();
 
@@ -21,52 +23,51 @@ export class SoundView {
   static preload(scene: Scene): void {
     for (const key of Object.values(SOUNDS)) {
       const url = urlOf(key);
-      if (url) scene.load.audio(key, url);
+      if (url && !scene.cache.audio.exists(key)) scene.load.audio(key, url);
     }
   }
 
-  constructor(scene: Scene) {
+  /**
+   * `keys`: M, [ and ] work in this scene (the flow scene's, 042), except while `keysHeld()` says another screen is
+   * taking keys (a key list row waiting for its key).
+   */
+  constructor(scene: Scene, keys = false, keysHeld: () => boolean = () => false) {
     this.scene = scene;
-    this.settings = loadSoundSettings(window.location.search, navigator.webdriver);
     this.apply();
-    const keys = scene.input.keyboard;
-    keys?.addKey(Input.Keyboard.KeyCodes.M).on('down', () => this.toggleMute());
-    keys?.addKey(Input.Keyboard.KeyCodes.OPEN_BRACKET).on('down', () => this.nudgeVolume(-VOLUME_STEP));
-    keys?.addKey(Input.Keyboard.KeyCodes.CLOSED_BRACKET).on('down', () => this.nudgeVolume(VOLUME_STEP));
-    scene.events.once('shutdown', () => this.ambient?.sound.destroy());
+    if (keys) this.bindKeys(keysHeld);
+    const off = onSettings(() => this.apply());
+    scene.events.once('shutdown', () => {
+      off();
+      this.ambient?.sound.destroy();
+    });
   }
 
-  get volume(): number {
-    return this.settings.volume;
-  }
-
-  get muted(): boolean {
-    return this.settings.muted;
-  }
-
-  toggleMute(): void {
-    this.settings.muted = !this.settings.muted;
-    this.apply();
-    saveSoundSettings(this.settings);
-  }
-
-  /** [ and ] step the master volume, kept between 0 and 1 and saved. */
-  nudgeVolume(step: number): void {
-    this.settings.volume = Math.round(Math.min(1, Math.max(0, this.settings.volume + step)) * 10) / 10;
-    this.apply();
-    saveSoundSettings(this.settings);
+  private bindKeys(held: () => boolean): void {
+    const keys = this.scene.input.keyboard;
+    const unlessHeld = (f: () => void) => () => void (held() || f());
+    keys?.addKey(Input.Keyboard.KeyCodes.M).on('down', unlessHeld(() => updateSettings({ muted: !settings().muted })));
+    // [ and ] step the master volume, saved.
+    keys?.addKey(Input.Keyboard.KeyCodes.OPEN_BRACKET).on('down', unlessHeld(() => updateSettings({ master: stepVolume(settings().master, -1) })));
+    keys?.addKey(Input.Keyboard.KeyCodes.CLOSED_BRACKET).on('down', unlessHeld(() => updateSettings({ master: stepVolume(settings().master, 1) })));
   }
 
   private apply(): void {
-    this.scene.sound.mute = this.settings.muted;
-    this.scene.sound.volume = this.settings.volume;
+    const s = settings();
+    this.scene.sound.mute = s.muted;
+    this.scene.sound.volume = s.master;
+    this.ambient?.sound.setVolume(this.loopLevel());
   }
 
-  /** Plays an effect once this frame; `volume` scales it (0–1). */
+  /** How loud a room loop sits: under the effects, scaled by the music channel. */
+  private loopLevel(): number {
+    return SOUND_MIX.ambient * settings().music;
+  }
+
+  /** Plays an effect once this frame; `volume` scales it (0–1), then the effects channel. */
   play(key: SoundKey, volume = 1): void {
     if (this.played.has(key) || !this.scene.cache.audio.exists(key)) return;
     this.played.add(key);
-    this.scene.sound.play(key, { volume });
+    this.scene.sound.play(key, { volume: volume * settings().effects });
   }
 
   /** Call once per frame after playing: lets the next frame's sounds through. */
@@ -76,7 +77,7 @@ export class SoundView {
 
   /** Crossfades to the shown room's loop; rooms without one fade to silence. */
   ambience(roomId: string): void {
-    if (this.ambient?.roomId === roomId) return;
+    if (this.ambient?.roomId === roomId || (!this.ambient && !ROOM_AMBIENCE[roomId])) return;
     const old = this.ambient;
     if (old) {
       this.scene.tweens.add({
@@ -91,7 +92,7 @@ export class SoundView {
     if (!key || !this.scene.cache.audio.exists(key)) return;
     const sound = this.scene.sound.add(key, { loop: true, volume: 0 });
     sound.play();
-    this.scene.tweens.add({ targets: sound, volume: SOUND_MIX.ambient, duration: SOUND_MIX.crossfadeMs });
+    this.scene.tweens.add({ targets: sound, volume: this.loopLevel(), duration: SOUND_MIX.crossfadeMs });
     this.ambient = { roomId, sound };
   }
 }

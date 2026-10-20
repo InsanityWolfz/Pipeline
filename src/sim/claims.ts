@@ -98,7 +98,7 @@ export function travelTo(state: SimState, roomId: string, tile: Tile): void {
   state.claimHold = null;
   state.events.roomChanges.push({ from, to: roomId });
   leaveArea(state);
-  arrived(state, roomId);
+  arrived(state, roomId, 'travel');
   state.events.travels.push({ from, to: roomId });
 }
 

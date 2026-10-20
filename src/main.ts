@@ -1,12 +1,9 @@
 import { AUTO, Game, Scale } from 'phaser';
 import { INK_ID, paletteHex } from './data/palette';
 import { loadFonts } from './render/fonts';
-import { GameScene } from './render/GameScene';
+import { FlowScene } from './render/flow/FlowScene';
 import { currentFit, keepScreenFit } from './render/scale';
-import { parseStart } from './render/playtest';
-import { parseSeed } from './render/seed';
-import { installTestHook } from './render/testHook';
-import { createSim } from './sim/state';
+import { installTestHook } from './render/installHook';
 
 // The bundled fonts (020) load before the game starts, so no text draws with a fallback.
 void loadFonts()
@@ -14,8 +11,8 @@ void loadFonts()
   .then(start);
 
 function start(): void {
-  const sim = createSim(parseSeed(window.location.search), { start: parseStart(window.location.search) });
-  const scene = new GameScene(sim);
+  // 042: the flow scene runs the whole session: the title, then a game scene per New game or Continue.
+  const flow = new FlowScene(window.location.search);
 
   const fit = currentFit();
   const game = new Game({
@@ -30,10 +27,10 @@ function start(): void {
     roundPixels: true,
     backgroundColor: paletteHex(INK_ID),
     scale: { mode: Scale.NONE, autoCenter: Scale.CENTER_BOTH, zoom: fit.zoom / fit.scale },
-    scene: [scene],
+    scene: [flow],
   });
-  // After boot, so the scale manager exists; the scene picks up the first fit when it creates its cameras.
-  game.events.once('ready', () => keepScreenFit(game, (f) => scene.applyFit(f)));
+  // After boot, so the scale manager exists; the scenes pick up the first fit when they create their cameras.
+  game.events.once('ready', () => keepScreenFit(game, (f) => flow.applyFit(f)));
 
-  if (import.meta.env.DEV) installTestHook(sim, scene);
+  if (import.meta.env.DEV) installTestHook(flow);
 }

@@ -106,7 +106,7 @@ test('carried arrows, then the fist once they are spent; both rows centred', asy
 
 test('before the tube, the hotbar row is hidden and the tube slot shows only the fist', async ({ page }) => {
   const errors = watchErrors(page);
-  await boot(page, '');
+  await boot(page, '?start=tutorial');
   const s = await page.evaluate(() => window.__GAME__?.step(1));
   expect(s?.hasTube).toBe(false);
   expect(s?.hud.active).toEqual({ kind: 'melee' });
@@ -182,7 +182,7 @@ test.describe('review screenshots (025)', () => {
   });
 
   test('before the tube', async ({ page }) => {
-    await boot(page, '');
+    await boot(page, '?start=tutorial');
     await page.evaluate(() => window.__GAME__?.step(1));
     await cameraSettled(page);
     await hudShowing(page, [HUD_LAYOUT.tubeSlot.melee]);

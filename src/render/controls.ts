@@ -8,22 +8,13 @@ import { BUILD_BAR, pieceDef } from '../data/pieces';
 import type { Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { dragTo, release, type ConduitLay, type HeldConduit } from './dragPath';
-import { clickMods, isLeftPress, type ClickMods } from './clickInput';
-import { AMMO_KEYS, bindKeys, type Key } from './keys';
+import { clickMods, isLeftPress, type BuildInput } from './clickInput';
+import { bindKeys, listenKeys, type Key } from './keys';
+import { onSettings, settings } from './flow/settingsStore';
 import { MenuRequests, type UiCommand } from './menuRequests';
 import { toView } from './scale';
 
-/** What the scene tells the controls each frame about build mode and the screen's UI. */
-export interface BuildInput {
-  building: boolean;
-  /** The piece selected on the build bar, read at click time (a bar click can land in the same frame). */
-  pieceId: () => string;
-  /** True over the build bar or the hopper picker, where clicks don't reach the world. */
-  overUi: (x: number, y: number) => boolean;
-  /** Handles a left click on that UI at once, so a world click in the same frame sees its result; with the held modifiers (022). */
-  clickUi: (x: number, y: number, mods: ClickMods) => void;
-}
-
+export type { BuildInput } from './clickInput';
 type BuildAction = Pick<Command, 'place' | 'pickUp'>;
 
 /** The commands that come from build mode and the hopper menu rather than held keys. */
@@ -36,8 +27,11 @@ export { NO_UI_COMMAND, type UiCommand } from './menuRequests';
 // clicks place and pick up pieces (queued, one per tick), and
 // dragging lays conduits.
 export class Controls {
-  private readonly keys: Record<Key, Input.Keyboard.Key>;
-  private readonly ammoKeys: Input.Keyboard.Key[];
+  private keys!: Record<Key, Input.Keyboard.Key>;
+  private ammoKeys: Input.Keyboard.Key[] = [];
+  private readonly keyboard: Input.Keyboard.KeyboardPlugin;
+  /** The bindings the keys were made from (042: rebound from Settings). */
+  private bound = '';
   private readonly pointer: Input.Pointer;
   private readonly camera: Cameras.Scene2D.Camera;
   private dodgePending = false;
@@ -66,32 +60,17 @@ export class Controls {
   facing: Facing = 'right';
   /** A press that began over a menu or the HUD: fire stays off until the button comes up (015). */
   private uiPress = false;
-  /** F flips a sorter's ghost to send its item left (015); sent with every place. */
+  /** Flip (G since 042, F before) turns a sorter's ghost to send its item left (015); sent with every place. */
   mirrored = false;
 
   constructor(scene: Scene) {
     const keyboard = scene.input.keyboard;
     if (!keyboard) throw new Error('Keyboard input is unavailable');
-    this.keys = bindKeys(keyboard);
-    this.ammoKeys = AMMO_KEYS.map((code) => keyboard.addKey(code));
-    this.keys.dodge.on('down', () => (this.dodgePending = true));
-    this.keys.rotate.on('down', () => {
-      if (this.build.building) this.facing = rotateCw(this.facing);
-    });
-    this.keys.flip.on('down', () => {
-      if (this.build.building) this.mirrored = !this.mirrored;
-    });
-    this.keys.interact.on('down', () => {
-      this.interactPending = true;
-      this.interactPress = true;
-    });
-    this.keys.menu.on('down', () => (this.menuKeys.menu = true));
-    this.keys.close.on('down', () => (this.menuKeys.close = true));
-    for (const key of [this.keys.inventory, this.keys.inventoryTab]) key.on('down', () => (this.menuKeys.inventory = true));
-    this.keys.research.on('down', () => (this.menuKeys.research = true));
-    this.keys.talents.on('down', () => (this.menuKeys.talents = true));
-    this.keys.build.on('down', () => (this.buildPending = true));
-    for (const [i, key] of this.ammoKeys.entries()) key.on('down', () => (this.selectPending = SLOT_AMMOS[i] ?? null));
+    this.keyboard = keyboard;
+    this.bindAll();
+    // 042: a rebind in Settings takes effect at once.
+    const off = onSettings(() => this.bindAll());
+    scene.events.once('shutdown', off);
     this.pointer = scene.input.activePointer;
     this.camera = scene.cameras.main;
     scene.input.mouse?.disableContextMenu();
@@ -101,6 +80,28 @@ export class Controls {
     scene.input.on('pointerupoutside', () => this.release());
     scene.input.on('wheel', (_p: Input.Pointer, _over: unknown, _dx: number, dy: number) => {
       if (dy !== 0) this.wheelPending += Math.sign(dy);
+    });
+  }
+
+  /** Makes the keys from the settings' bindings (again, after a rebind), with their listeners. */
+  private bindAll(): void {
+    const bindings = settings().bindings;
+    const key = JSON.stringify(bindings);
+    if (key === this.bound) return;
+    this.bound = key;
+    this.keyboard.removeAllKeys(true);
+    const { keys, ammo } = bindKeys(this.keyboard, bindings);
+    this.keys = keys;
+    this.ammoKeys = ammo;
+    listenKeys(keys, ammo, {
+      dodge: () => (this.dodgePending = true),
+      // R and G only turn and flip the ghost in build mode.
+      rotate: () => void (this.build.building && (this.facing = rotateCw(this.facing))),
+      flip: () => void (this.build.building && (this.mirrored = !this.mirrored)),
+      interact: () => (this.interactPending = this.interactPress = true),
+      menu: (key) => (this.menuKeys[key] = true),
+      build: () => (this.buildPending = true),
+      ammo: (i) => (this.selectPending = SLOT_AMMOS[i] ?? null),
     });
   }
 
@@ -245,6 +246,14 @@ export class Controls {
   discardPending(): void {
     this.clearPresses();
     this.queue.length = 0;
+  }
+
+  /** Drops everything latched, menu keys and the wheel too (042: a flow screen is over the game). */
+  drain(): void {
+    this.discardPending();
+    for (const k of Object.keys(this.menuKeys) as (keyof Controls['menuKeys'])[]) this.menuKeys[k] = false;
+    this.interactPress = false;
+    this.wheelPending = 0;
   }
 
   private clearPresses(): void {

@@ -4,6 +4,7 @@ import { TEXT_STYLES, type TextStyleKey } from '../data/fonts';
 import { paletteHex } from '../data/palette';
 import { phaserStyle } from './fonts';
 import { textureScale } from './vector/textures';
+import { withKeys } from './keyHint';
 
 /** How far the top of a capital sits below the top of the text box, as a fraction of the font size. */
 const CAP_DROP = 0.3;
@@ -82,8 +83,10 @@ export class TextLine {
     return this;
   }
 
+  /** Sets the words; a key hint in them shows the bound key (042: "Craft arrows (C)" with C rebound). */
   set(text: string): this {
-    const shown = TEXT_STYLES[this.style].upper ? text.toUpperCase() : text;
+    const keyed = withKeys(text);
+    const shown = TEXT_STYLES[this.style].upper ? keyed.toUpperCase() : keyed;
     if (shown === this.text) return this;
     this.text = shown;
     this.obj.setText(shown);

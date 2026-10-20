@@ -22,5 +22,5 @@ export const IDLE_SPEED = 0.1;
 /** Each half of the fade through a doorway, out then in, ms (about 0.3 s in all). */
 export const DOOR_FADE_MS = 150;
 
-/** Camera follow easing per frame (0..1, lower is smoother). */
-export const CAMERA_LERP = 0.12;
+/** Camera follow easing per frame (0..1, lower is smoother). 1 since 042: locked to the player, no easing pan. */
+export const CAMERA_LERP = 1;

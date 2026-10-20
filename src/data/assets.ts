@@ -8,6 +8,9 @@ export const VECTOR_KEY = 'vectors';
 /** The wanderer's canvas, redrawn every frame (016). */
 export const WANDERER_KEY = 'wanderer';
 
+/** The title screen's painted scene (042), drawn once at the screen's scale. */
+export const TITLE_SCENE_KEY = 'title-scene';
+
 /** The overworld (017): standing sprites drawn from src/data/art/terrain.ts, its ground chunk textures, and the minimap. */
 export const OVERWORLD_SPRITES = {
   trees: ['ow-tree-0', 'ow-tree-1', 'ow-tree-2'],
@@ -160,6 +163,8 @@ export function animFrames(anim: AnimDef): string[] {
 export const ENEMY_FX = {
   /** Fill colour of a hit flash (the palette's white). */
   flashColor: 'snow',
+  /** 042.10: with Flashes off, a hit flash is this short multiply tint instead of white. */
+  dimFlashColor: 'rock-light',
   /** The swipe telegraph: a faint arc of the full reach, filling in with the wind-up. */
   telegraphColor: 'rust',
   telegraphAlpha: 0.25,
@@ -249,6 +254,18 @@ export const DEPTHS = {
   hud: 1_000_000,
   /** The crafting menu, above the HUD. */
   menu: 2_000_000,
+  /** 042's title screen, under the menu rows: its painted scene, the pipe's glow, the motes, the logo's glow, the logo. */
+  titleScene: 1_999_990,
+  titlePipe: 1_999_991,
+  titleMotes: 1_999_992,
+  titleGlow: 1_999_993,
+  titleLogo: 1_999_994,
+  /** 042's flow screens over the game, bottom to top: the end card, Settings, a confirm or farewell card, the note, a notice. */
+  flowEndCard: 2_000_006,
+  flowSettings: 2_000_010,
+  flowCard: 2_000_020,
+  flowNote: 2_000_030,
+  flowNotice: 2_000_040,
   /** The crosshair and the menu pointer (021), above every menu and HUD layer. Nothing draws over them. */
   cursor: 3_000_000,
 } as const;

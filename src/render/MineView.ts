@@ -1,4 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
+import { settings } from './flow/settingsStore';
 import { DEPTHS } from '../data/assets';
 import { MINE_LOOK, MINE_SPRITES } from '../data/mineAssets';
 import type { BurstEvent, SimEvents } from '../sim/events';
@@ -54,7 +55,8 @@ export class MineView {
   update(sim: SimState, events: SimEvents, shown: string, deltaMs: number): void {
     this.time += deltaMs;
     const here = shown === sim.roomId;
-    if (here) {
+    // 042.10: with Flashes off, no mine or bomblet flash.
+    if (here && settings().flashes) {
       for (const m of events.mineBursts) this.flash('mine', MINE_SPRITES.mineFlash, m, MINE_LOOK.mineFlash);
       for (const b of events.bombletBursts) this.flash('bomblet', MINE_SPRITES.bombletFlash, b, MINE_LOOK.bombletFlash);
     }

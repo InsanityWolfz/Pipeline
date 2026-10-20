@@ -56,4 +56,4 @@ export function pauseRows(): { x: number; y: number; w: number; h: number }[] {
 }
 
 /** The pause menu's rows, top to bottom. */
-export const PAUSE_ROWS = ['sound', 'volume', 'resume'] as const;
+export const PAUSE_ROWS = ['resume', 'settings', 'quit'] as const;

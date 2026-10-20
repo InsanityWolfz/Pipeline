@@ -7,7 +7,7 @@ Newest entry first.
 
 **Next:** retarget and merge the stacked PRs one at a time as Shaun says: #25 (session-start hook), #26 (`npm run measure`), #28 (043), #29 (042). #27 (Stages count) waits for Shaun's pick on 029's question. Then the playtest-notes interview.
 
-**Notes:** a proposed rule for Shaun (wrapup: "a mistake that happened twice"). Twice overnight a new spec broke an older spec's review-shot test that the build never ran: 042's end card and 043's seal, both in Bulwark shots. Proposed rule for .claude/rules/tests.md: "When a change touches an area that older review-shot specs (`*Shots.spec.ts`) cover, run those specs with REVIEW_SHOTS=1 at /verify." Not added until Shaun approves.
+**Notes:** a proposed rule for Shaun (wrapup: "a mistake that happened twice"). Twice overnight a new spec broke an older spec's review-shot test that the build never ran: 042's end card and 043's seal, both in Bulwark shots. Proposed rule for .claude/rules/tests.md: "When a change touches an area that older review-shot specs (`*Shots.spec.ts`) cover, run those specs with REVIEW_SHOTS=1 at /verify." Shaun approved it on 2026-10-20 ("approve everything"); it's in .claude/rules/tests.md.
 
 ## 2026-10-20: Bug fix, the Stages panel's "0/4 arrows"
 **Changed:**
@@ -18,6 +18,37 @@ Newest entry first.
 **Next:**
 1. Shaun reviews the draft PR and answers the 029 question.
 2. Then 043, 042, each on its own branch.
+
+## 2026-10-20 (overnight): the first run under the reset, for Shaun's morning
+**Changed:** each item on its own branch and draft PR, stacked, each built by one agent, reviewed by a separate `reviewer` agent, and fixed. Nothing merged.
+- InsanityWolfz/Pipeline#24 catch-up 021–041 into `main` (not a draft; waiting for Shaun's playtest and his merge).
+- InsanityWolfz/Pipeline#25 SessionStart hook (installs npm dependencies in cloud sessions).
+- InsanityWolfz/Pipeline#26 `npm run measure`: balance targets out of `check`.
+- InsanityWolfz/Pipeline#27 Stages count fix, **held**: counting entrance rounds goes against 029's criteria, so it waits for Shaun's pick (029, "Raised after the build").
+- InsanityWolfz/Pipeline#28 043 arena lock and slower Shardbacks. Also fixed: the 034 blocked-spark review shot, which the seal broke.
+- InsanityWolfz/Pipeline#29 042 shippable build, with 043 merged in. `npm run check` passes, and the full e2e run on this head passes 118 of 118 (9 min).
+
+**Next:** Shaun plays the #24 preview and says merge. Then the 021–041 wrapup, then retarget #25 → #26 → #28 → #29 to `main` one at a time. Answer 029's question (#27), 043.2–043.5 and 042.15–042.28. Then the playtest-notes interview.
+
+**Notes:**
+- 043 moved the Bulwark target from 17/20 to 13/20 seeds (3 KOs). The cause is the slower Shardback, because Shardbacks are also its adds; the lock itself changed almost nothing. Recorded, not tuned (rules 3–4); question 043.2.
+- 042 raised 14 questions, more than the reset aims for. Most are wording and small behaviour calls, each with a conservative default already built.
+
+## 2026-10-20: 042 built (shippable playtest build)
+**Changed:**
+- Branch `claude/042-shippable-build`, stacked on `claude/043-arena-lock` (PR #28); draft PR open. Spec status stays `approved`. Plan: docs/plans/042-shippable-build.md.
+- The plain URL boots to a painted vector title (the wanderer on a ridge, the ruin and its breathing pipe glow, slow ley motes, the logo with a cyan glow) with New game, Continue, Settings and Quit. A game-flow state machine in `src/render/flow/` owns the screens; the world steps only in play. `?start=…`/`?playtest` skip the title and never touch the save; `?start=tutorial` is the real start without it.
+- One save slot, written on every foundry entry (door, fast travel, KO wake): the whole sim state as plain JSON in a versioned envelope (`src/sim/save.ts`, pure). Continue restores it and wakes in the foundry. New game over a save confirms and keeps a backup. Corrupt, newer and too-old saves never crash the game or get overwritten.
+- Settings (title or pause): volumes (master × music/effects), Mute, Flashes, key bindings (swap on a used key; hints show the bound key; feedback F, flip G), Export save (save + notes), Import save, Export damaged save. The pause menu is Resume, Settings, Quit to title (with a confirm).
+- The camera locks to the player (`CAMERA_LERP` 1). No shake at all (Shaun's change).
+- The end card shows 180 ticks after the Bulwark's first kill, once per save; Keep playing resumes free play.
+- F writes a feedback note (a textarea over the canvas; typing never reaches the game) with a game-state snapshot; notes go in every export.
+- Open questions 042.15–042.28 are in the spec under "Raised after the build" (Esc on flow screens, fixed keys, note details, unworded messages, what Flashes off removes, list items in old saves, and more).
+- Checks: `npm run check` passes (1,506 unit tests). The full e2e ran once: 117 passed, 1 failed, 106 skipped (review shots). The failure was hollows.spec.ts: the Bulwark kill now shows the end card, which covered its altar step; the test now closes the card (Keep playing) and passes (3 of 3 in that file). Review shots: docs/review/042 (10 shots).
+
+**Next:**
+1. Shaun playtests the preview (https://insanitywolfz.github.io/Pipeline/branch/claude/042-shippable-build/), looks at docs/review/042, and answers 042.15–042.28.
+2. On approval: the design.md "Death and tension" line, CLAUDE.md's `flow()` note and the `.claude/rules/sim.md` save-version rule (042's Docs criteria). Then /wrapup merges to `main` only when Shaun says so.
 
 ## 2026-10-20: 043 built (arena lock, slower Shardbacks)
 **Changed:**

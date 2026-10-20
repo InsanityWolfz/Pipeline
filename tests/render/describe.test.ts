@@ -133,7 +133,7 @@ describe('content', () => {
   });
 
   it('a build-bar piece that isn’t a stage shows its description', () => {
-    expect(texts(describePiece('sorter').summary)).toEqual(['Sends one chosen item out its side. E sets it, F flips the side.']);
+    expect(texts(describePiece('sorter').summary)).toEqual(['Sends one chosen item out its side. E sets it, G flips the side.']);
   });
 });
 

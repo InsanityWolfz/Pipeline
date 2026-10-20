@@ -17,31 +17,32 @@ import { Controls, NO_UI_COMMAND, type UiCommand } from './controls';
 import { ghostShape } from './dragPath';
 import { CraftMenuView } from './CraftMenuView';
 import { EffectsView } from './EffectsView';
-import { EnemyView, NO_ENEMY_UI } from './EnemyView';
+import { EnemyView } from './EnemyView';
 import { FoundryView } from './FoundryView';
 import { GroundItemView } from './GroundItemView';
 import { HopperPicker } from './HopperPicker';
-import { HoverView, NO_HOVER_UI } from './HoverView';
-import { HudView, NO_HUD_PANELS } from './HudView';
+import { HoverView } from './HoverView';
+import { HudView } from './HudView';
 import { NodeView } from './NodeView';
 import { bodyLook, PlayerView } from './PlayerView';
-import { NO_SITE_UI, SiteMenus } from './SiteMenus';
+import { SiteMenus } from './SiteMenus';
 import { SiteView } from './SiteView';
 import { WakeView } from './WakeView';
 import { mergeEvents } from './eventLog';
 import { FeelView } from './FeelView';
-import { highlightOf, NO_TUTORIAL_UI, TutorialUi } from './TutorialUi';
+import { highlightOf, TutorialUi } from './TutorialUi';
 import { currentFit, type ScreenFit } from './scale';
 import { bakeVectors } from './vector/textures';
-import type { UiState } from './testHook';
-import { NO_ROOM_UI, RoomViews } from './RoomViews';
-import { fontsReady } from './fonts';
+import type { GameUiState } from './testHook';
+import { gameUi } from './gameUi';
+import { RoomViews } from './RoomViews';
 import { MENU_HOVER_EVENT } from './menuFeedback';
 import { MenuRouter } from './MenuRouter';
 import { PauseMenuView } from './PauseMenuView';
 import { SceneCameras } from './SceneCameras';
 import { CursorView } from './CursorView';
-import { Legibility, NO_LEGIBILITY_UI } from './Legibility';
+import { Legibility } from './Legibility';
+import { IDLE_HOST, type GameHost } from './flow/host';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -50,31 +51,34 @@ const inRoom = <T extends { roomId: string }>(list: readonly T[], roomId: string
 
 // Draws the sim and drives it in real time. Holds no game rules.
 export class GameScene extends Scene {
-  private readonly sim: SimState;
+  /** The sim this scene draws and drives (042: the test hook follows the live scene's). */
+  readonly sim: SimState;
+  /** The flow (042): whether to step, and what to tell it. */
+  private readonly host: GameHost;
   private readonly clock = createClock();
   private controls?: Controls;
-  private roomViews?: RoomViews;
-  private playerView?: PlayerView;
-  private arrowView?: ArrowView;
-  private hud?: HudView;
-  private enemyView?: EnemyView;
-  private groundItemView?: GroundItemView;
-  private effects?: EffectsView;
-  private nodeView?: NodeView;
+  roomViews?: RoomViews;
+  playerView?: PlayerView;
+  arrowView?: ArrowView;
+  hud?: HudView;
+  enemyView?: EnemyView;
+  groundItemView?: GroundItemView;
+  effects?: EffectsView;
+  nodeView?: NodeView;
   private bombView?: BombView;
   private foundryView?: FoundryView;
-  private buildView?: BuildView;
-  private hover?: HoverView;
-  private picker?: HopperPicker;
-  private menu?: CraftMenuView;
-  private pause?: PauseMenuView;
+  buildView?: BuildView;
+  hover?: HoverView;
+  picker?: HopperPicker;
+  menu?: CraftMenuView;
+  pause?: PauseMenuView;
   private router?: MenuRouter;
   private site?: SiteView;
-  private siteMenus?: SiteMenus;
+  siteMenus?: SiteMenus;
   private wake?: WakeView;
-  private tutorial?: TutorialUi;
-  private feel?: FeelView;
-  private cursorView?: CursorView;
+  tutorial?: TutorialUi;
+  feel?: FeelView;
+  cursorView?: CursorView;
   /** 040: hover tips (Shift for the breakdown) and the glossary; the test hook measures its summaries. */
   legibility?: Legibility;
   /** The room on screen. It lags the player's room through a door's fade. */
@@ -88,10 +92,13 @@ export class GameScene extends Scene {
   private fit: ScreenFit = currentFit();
   private sceneCameras?: SceneCameras;
 
-  constructor(sim: SimState) {
+  constructor(sim: SimState, host: GameHost = IDLE_HOST) {
     super('game');
     this.sim = sim;
+    this.host = host;
     this.shownRoomId = sim.roomId;
+    // Events made before the first tick (042: Continue's wake in the foundry) play on the first draw.
+    mergeEvents(this.pending, sim.events);
   }
 
   preload(): void {
@@ -136,7 +143,7 @@ export class GameScene extends Scene {
 
     this.controls = new Controls(this);
     if (this.menu && this.pause && this.siteMenus && this.picker && this.buildView && this.feel && this.hud && this.wake && this.legibility)
-      this.router = new MenuRouter(this.sim, { craft: this.menu, pause: this.pause, site: this.siteMenus, picker: this.picker, build: this.buildView, sound: this.feel.sound, inventory: this.hud.inventory, research: this.hud.research, talents: this.hud.talents, wake: this.wake, legibility: this.legibility });
+      this.router = new MenuRouter(this.sim, { craft: this.menu, pause: this.pause, site: this.siteMenus, picker: this.picker, build: this.buildView, sound: this.feel.sound, inventory: this.hud.inventory, research: this.hud.research, talents: this.hud.talents, wake: this.wake, legibility: this.legibility, host: this.host });
   }
 
   /** Matches both cameras to the backbuffer (016). Called on boot and whenever the window changes. */
@@ -151,56 +158,28 @@ export class GameScene extends Scene {
       controls.poll({
         building: this.sim.building,
         pieceId: () => this.buildView?.selected ?? FIRST_PIECE,
-        overUi: (x, y) => [this.pause, this.menu, this.buildView, this.picker, this.siteMenus, this.hud, this.tutorial, this.legibility].some((v) => v?.overUi(x, y)),
-        clickUi: (x, y, mods) => this.router?.click(controls, x, y, mods),
+        // Under a flow screen (042) the whole screen is that screen's: nothing reaches the world or the menus.
+        overUi: (x, y) => this.host.covered || [this.pause, this.menu, this.buildView, this.picker, this.siteMenus, this.hud, this.tutorial, this.legibility].some((v) => v?.overUi(x, y)),
+        clickUi: (x, y, mods) => void (this.host.covered || this.router?.click(controls, x, y, mods)),
       });
-      this.router?.handle(controls);
-      if (this.pause?.isOpen) {
-        // The world is paused (Esc): no ticks run, and no time is banked to catch up on later.
+      this.pause?.setOpen(this.host.paused);
+      if (this.host.covered) controls.drain();
+      else this.router?.handle(controls);
+      if (!this.host.stepping) {
+        // The world is paused (Esc, or a flow screen, 042): no ticks run, and no time is banked to catch up on later.
         controls.discardPending();
       } else if (!this.manualStepping) {
         const ticks = advanceClock(this.clock, delta);
-        for (let i = 0; i < ticks; i++) this.stepOnce(controls.nextCommand());
+        // A tick can stop the world (042: the end card): the rest of this frame's ticks wait for play.
+        for (let i = 0; i < ticks && this.host.stepping; i++) this.stepOnce(controls.nextCommand());
       }
     }
     this.draw();
   }
 
-  /** The mouse-over text on show, for the test hook (015). */
-  hoverText(): UiState {
-    return {
-      ready: this.effects !== undefined && fontsReady(),
-      craftOpen: this.menu?.isOpen ?? false,
-      paused: this.pause?.isOpen ?? false,
-      pickerOpen: this.picker?.isOpen ?? false,
-      ...(this.siteMenus?.ui ?? NO_SITE_UI),
-      pickerHint: this.picker?.hintShown ?? null,
-      pickerCounts: [...(this.picker?.shownCounts ?? [])],
-      ...(this.hover?.ui ?? NO_HOVER_UI),
-      buildTip: this.buildView?.tipShown ?? null,
-      ...(this.roomViews?.state ?? NO_ROOM_UI),
-      nodes: this.nodeView?.frames ?? {},
-      shakes: [...(this.feel?.juice.shakes ?? [])],
-      cursor: this.cursorView?.state ?? null,
-      sliding: this.groundItemView?.sliding ?? 0,
-      slideProgress: this.groundItemView?.slideProgress ?? 0,
-      swooshes: this.effects?.swooshes ?? 0,
-      ...(this.tutorial?.state ?? NO_TUTORIAL_UI),
-      camera: { x: this.cameras.main.worldView.centerX, y: this.cameras.main.worldView.centerY },
-      hud: this.hud?.bottom ?? null,
-      ...(this.hud?.panels ?? NO_HUD_PANELS),
-      craftMenu: this.menu?.state ?? null,
-      buildBar: this.buildView?.state ?? null,
-      tagged: { benchStages: this.siteMenus?.stagePanel ?? null, splitFlashes: this.effects?.splitFlashes ?? 0, trails: this.arrowView?.trails ?? { count: 0, longest: 0 } },
-      ...(this.enemyView?.ui ?? NO_ENEMY_UI),
-      ...(this.legibility?.ui ?? NO_LEGIBILITY_UI),
-    };
-  }
-
-  /** The sound settings, for the test hook. */
-  soundSettings(): { muted: boolean; volume: number } {
-    const sound = this.feel?.sound;
-    return { muted: sound?.muted ?? false, volume: sound?.volume ?? 0 };
+  /** What the render shows, for the test hook (015; gameUi.ts). */
+  hoverText(): GameUiState {
+    return gameUi(this);
   }
 
   /** Crafts once, between ticks. The test hook crafts through here too. Crafting has no drawn effects. */
@@ -219,6 +198,7 @@ export class GameScene extends Scene {
   stepOnce(cmd: Command): void {
     stepSim(this.sim, cmd);
     mergeEvents(this.pending, this.sim.events);
+    this.host.afterTick(this.sim);
   }
 
   /** Draws a room's ground and fits the camera to it. */
@@ -251,11 +231,11 @@ export class GameScene extends Scene {
     // Before create() runs there are no views to hand events to; keep them for later.
     if (!this.effects) return;
     const sim = this.sim;
-    this.followRoom(this.pending.ko);
+    this.followRoom(this.pending.woke);
     if (!this.fading && this.playerView) this.sceneCameras?.attuneLook(sim, this.shownRoomId, this.playerView.sprite);
     this.effects.play(this.pending, sim.player);
     if (this.pending.identifies.length > 0) this.site?.identified();
-    if (this.pending.ko) this.wake?.show(this.pending.lost, sim);
+    if (this.pending.woke) this.wake?.show(this.pending.lost, sim);
     const shown = this.shownRoomId;
     this.feel?.update(sim, this.pending, shown, this.game.loop.delta);
     this.roomViews?.update(sim, this.pending, shown, this.game.loop.delta);
@@ -295,7 +275,6 @@ export class GameScene extends Scene {
     // The arrow pointer while a menu is open or over the build bar, else the crosshair (021).
     const inMenu = [this.menu, this.pause, this.picker, this.siteMenus, this.hud?.inventory, this.hud?.talents, this.legibility].some((m) => m?.isOpen) || (this.wake?.isShown ?? false);
     this.cursorView?.update(inMenu || (pointer !== undefined && [this.buildView, this.legibility].some((v) => v?.overUi(pointer.x, pointer.y))));
-    if (this.feel) this.pause?.update(this.feel.sound);
     const point = controls?.overWorld() ? controls.cursorPoint() : null;
     this.hover?.update(sim, shown, point, (id) => this.foundryView?.topOf(id), this.cameras.main.worldView);
     this.legibility?.update(sim, this.pause?.isOpen ? null : (pointer ?? null), controls?.shiftHeld() ?? false, this.game.loop.delta);

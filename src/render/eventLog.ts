@@ -10,4 +10,5 @@ export function mergeEvents(into: SimEvents, from: SimEvents): void {
   into.tubeTaken ||= from.tubeTaken;
   if (from.ko) into.lost = { ...from.lost };
   into.ko ||= from.ko;
+  into.woke ||= from.woke;
 }

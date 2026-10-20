@@ -5,7 +5,7 @@ import { DEFAULT_START, TUTORIAL_START, type StartDef } from '../data/player';
  * The start a URL asks for: `?playtest` the boosted playtest start (007), `?start=field`
  * the sandbox start in the meadow beside the ruin field (017; what the e2e tests use;
  * `&attuned` attunes it), `?start=hollows` the kit inside Stonefall Hollows' gap (034), and otherwise the real game:
- * waking by the tube's stone (012).
+ * waking by the tube's stone (012). `?start=tutorial` is that real start without the title (042), for tests.
  */
 export function parseStart(search: string): StartDef {
   const params = new URLSearchParams(search);

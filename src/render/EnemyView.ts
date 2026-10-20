@@ -1,4 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
+import { settings } from './flow/settingsStore';
 import { BlendModes, TintModes } from 'phaser';
 import { animFrames, DEPTHS, ENEMY_ANIMS, ENEMY_FX } from '../data/assets';
 import { HUSK_RIG, RESIN } from '../data/art/husk';
@@ -120,7 +121,9 @@ export class EnemyView {
       const anim = anims[`${pose}-${view}`] ?? anims[`idle-${view}`];
       const key = anim.key;
       if (d.sprite.anims.currentAnim?.key !== key) d.sprite.play(key);
-      if (e.flash > 0) d.sprite.setTint(colorOf(ENEMY_FX.flashColor)).setTintMode(TintModes.FILL);
+      // 042.10: with Flashes off the white hit flash becomes a short, dim tint.
+      if (e.flash > 0 && settings().flashes) d.sprite.setTint(colorOf(ENEMY_FX.flashColor)).setTintMode(TintModes.FILL);
+      else if (e.flash > 0) d.sprite.setTint(colorOf(ENEMY_FX.dimFlashColor)).setTintMode(TintModes.MULTIPLY);
       else if (e.blockFlash > 0) d.sprite.setTint(colorOf(HOLLOWS_LOOK.block.color)).setTintMode(TintModes.MULTIPLY);
       else if (e.chill > 0 || e.frozen > 0) d.sprite.setTint(chillTint(e.frozen > 0 ? COLD.stacksToFreeze : e.chill)).setTintMode(TintModes.MULTIPLY);
       else d.sprite.clearTint();

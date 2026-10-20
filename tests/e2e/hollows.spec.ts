@@ -3,6 +3,7 @@ import { CLAIM_TICKS } from '../../src/data/claims';
 import { BULWARK } from '../../src/data/bulwark';
 import { HOLLOWS } from '../../src/data/hollows';
 import { boot, watchErrors } from './helpers';
+import { clickRow, flowIs } from './flowPage';
 
 // Stonefall Hollows (034): the barrier drops when the shrine is claimed; in the Hollows,
 // claim the Cistern Terrace, hit the Bulwark from behind with arrows (its shield blocks
@@ -192,6 +193,12 @@ test('?start=hollows: the shield blocks arrows into its front; from behind they 
   expect(loot.carried).toBeGreaterThanOrEqual(1);
   expect(loot.defeats).toEqual(['bulwark']);
 
+  // 042: the first kill's end card shows 180 ticks on; Keep playing closes it.
+  await page.evaluate(() => window.__GAME__?.step(200));
+  if ((await page.evaluate(() => window.__GAME__?.flow().state)) === 'endCard') {
+    await clickRow(page, 'keepPlaying');
+    await flowIs(page, 'play');
+  }
   // The altar wakes: E opens its offering, E again pays it, and the Bulwark rises after the summon.
   await walk(page, [[A.altar.tx + 1, A.altar.ty]]);
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hollows))?.altar).toBe('awake');

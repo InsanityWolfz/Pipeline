@@ -268,13 +268,10 @@ export const ROOM_AMBIENCE: Readonly<Record<string, SoundKey>> = {
 /** Mixing: master volume to start with, how loud loops sit under effects, and the room crossfade. */
 export const SOUND_MIX = { volume: 0.7, ambient: 0.45, crossfadeMs: 1200 } as const;
 
-/** Volume keys ([ and ]) step the master volume by this much. */
-export const VOLUME_STEP = 0.1;
-
 /** Effects that sit under the main ones, by how loud they play (0–1). */
 export const SOUND_LEVELS = { under: 0.7, quiet: 0.6, cue: 0.8 } as const;
 
-/** Where the mute and volume settings are saved in localStorage. */
+/** Where the mute and volume were saved before 042; read once into the settings (src/data/settings.ts). */
 export const SOUND_SETTINGS_KEY = 'pipeline.sound';
 
 /** Effects the tube fires with, by ammo id. */

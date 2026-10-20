@@ -23,7 +23,8 @@ How we work: docs/process.md. Current state: docs/progress.md.
   src/sim/rng.ts, no Math.random or wall-clock time
 - src/render: Phaser scenes and views only, no game rules
 - src/data: content as typed data; new content = new data, not new code
-- Dev builds expose window.__GAME__ with getState() and step(frames, command?)
+- Dev builds expose window.__GAME__ with getState(), step(frames, command?)
+  and flow() (the game-flow screen, 042)
 - One system per file, ~300 lines max, no `any`
 
 ## Workflow

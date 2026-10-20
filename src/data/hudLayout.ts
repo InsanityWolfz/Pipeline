@@ -275,8 +275,8 @@ export const TABLET = {
 export const MENU_FEEDBACK = { pressMs: 160 } as const;
 
 /**
- * The pause menu (020, Esc): a dim over the world, a title card, and rows for sound on/off, the master volume
- * (its − and + by the row's right end, px from the row's left) and resume. Rows use the menu row frames.
+ * The pause menu (020, Esc): a dim over the world, a title card, and rows (042): Resume, Settings (the sound rows
+ * moved there) and Quit to title. Rows use the menu row frames.
  */
 export const PAUSE_MENU = {
   title: 'Paused',
@@ -285,7 +285,5 @@ export const PAUSE_MENU = {
   dim: { color: 'ink', alpha: 0.5 },
   rowGap: 4,
   label: { x: 10, y: 6 },
-  value: { x: 150, y: 6 },
-  volume: { down: 128, up: 170, hit: 12 },
-  rows: { sound: 'Sound', volume: 'Volume', resume: 'Resume' },
+  rows: { resume: 'Resume', settings: 'Settings', quit: 'Quit to title' },
 } as const;

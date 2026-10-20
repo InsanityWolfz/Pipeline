@@ -15,6 +15,7 @@ import { roomById, type SimState } from '../sim/state';
 import { stoneInReach } from '../sim/tutorial';
 import { Pulse } from './pulse';
 import { TextLine } from './textLine';
+import { boundLetter } from './keyHint';
 import { addVector } from './vector/textures';
 
 /** A world point, px: where a prompt's target stands. */
@@ -63,13 +64,13 @@ export class PromptView {
     const on = near && buildHere;
     this.cap.setVisible(on);
     this.key.setVisible(on);
-    this.shown = on && prompt && target ? { key: prompt.key, x: target.at.x, y: target.at.y, usable: target.usable } : null;
+    this.shown = on && prompt && target ? { key: boundLetter(prompt.key), x: target.at.x, y: target.at.y, usable: target.usable } : null;
     if (!on || !prompt || !target) return;
     const alpha = target.usable ? 1 : TUTORIAL_LAYOUT.promptDimAlpha;
     const x = Math.round(target.at.x);
     const bottom = Math.round(target.at.y - TILE_SIZE - TUTORIAL_LAYOUT.promptLift);
     this.cap.setPosition(x, bottom).setAlpha(alpha);
-    this.key.set(prompt.key);
+    this.key.set(boundLetter(prompt.key));
     this.key.setAlpha(alpha);
     // The letter centred on the cap's face.
     this.key.moveTo(Math.round(x - this.key.width / 2), bottom - this.cap.displayHeight + TUTORIAL_LAYOUT.keyText.y);
