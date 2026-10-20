@@ -12,7 +12,7 @@ import { atLeyVein, openCache } from './readabilityPage';
 const SHOTS = 'docs/review/045';
 const ui = (page: Page) => page.evaluate(() => window.__GAME__?.ui());
 
-/** Banners played out fast on the tween clock, so none covers the shot. */
+/** Banners (a landmark's or a schematic's) played out fast on the tween clock, so none covers the shot. */
 async function noBanners(page: Page): Promise<void> {
   await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
   await expect
@@ -20,7 +20,8 @@ async function noBanners(page: Page): Promise<void> {
       () =>
         page.evaluate(async () => {
           for (let i = 0; i < 8; i++) {
-            if (window.__GAME__?.ui().landmarks.banner !== null) return false;
+            const u = window.__GAME__?.ui();
+            if (u?.landmarks.banner !== null || u.schematics.banner !== null) return false;
             await new Promise((r) => requestAnimationFrame(r));
           }
           return true;
@@ -67,6 +68,7 @@ test.describe('review screenshots (045)', () => {
     await page.keyboard.press('b');
     await page.evaluate(() => window.__GAME__?.step(1));
     await expect.poll(async () => (await ui(page))?.buildBar?.strip.shown).toBe(true);
+    await noBanners(page);
     await cameraSettled(page, 20_000);
     await page.screenshot({ path: `${SHOTS}/04-build-strip.png` });
   });
