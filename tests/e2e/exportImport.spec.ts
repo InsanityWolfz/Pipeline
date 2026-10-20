@@ -11,15 +11,21 @@ test('export a save, import it into a fresh browser, and Continue matches', asyn
   await newGameToFoundry(page);
   const saved = await page.evaluate(() => window.__GAME__?.getState());
   await reloadTitle(page);
+  // A note to send with it.
+  await page.keyboard.press('f');
+  await flowIs(page, 'feedback');
+  await page.keyboard.type('a note for Shaun');
+  await page.keyboard.press('Control+Enter');
+  await flowIs(page, 'title');
   await clickRow(page, 'settings');
   await flowIs(page, 'settings');
   const [download] = await Promise.all([page.waitForEvent('download'), clickRow(page, 'export')]);
   expect(download.suggestedFilename()).toMatch(/^pipeline-save-\d{4}-\d\d-\d\d\.json$/);
   const path = await download.path();
-  const file = JSON.parse(readFileSync(path, 'utf8')) as { format: string; save: { format: string }; feedback: unknown[] };
+  const file = JSON.parse(readFileSync(path, 'utf8')) as { format: string; save: { format: string }; feedback: { text: string }[] };
   expect(file.format).toBe('pipeline-export');
   expect(file.save.format).toBe('pipeline-save');
-  expect(Array.isArray(file.feedback)).toBe(true);
+  expect(file.feedback.map((n) => n.text)).toEqual(['a note for Shaun']);
 
   const fresh = await browser.newContext();
   const other = await fresh.newPage();
@@ -33,6 +39,8 @@ test('export a save, import it into a fresh browser, and Continue matches', asyn
   expect(await other.evaluate(() => window.__GAME__?.ui().flow.card?.lines)).toEqual(['Replace your saved game with this one?']);
   await clickRow(other, 'yes');
   await flowIs(other, 'settings');
+  // Its notes merged in.
+  expect(await other.evaluate(() => window.__GAME__?.flow().notes)).toBe(1);
   await clickRow(other, 'back');
   await flowIs(other, 'title');
   const line = await other.evaluate(() => window.__GAME__?.ui().flow.title?.rows.find((r) => r.id === 'continue'));

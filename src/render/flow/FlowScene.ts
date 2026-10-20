@@ -1,6 +1,6 @@
 import { Scene } from 'phaser';
 import { TUTORIAL_START } from '../../data/player';
-import { SAVE_TEXT } from '../../data/save';
+import { NOTE_TEXT, SAVE_TEXT } from '../../data/save';
 import { SOUNDS } from '../../data/sounds';
 import { FOUNDRY_ROOM } from '../../data/rooms';
 import { createSim } from '../../sim/state';
@@ -15,9 +15,12 @@ import { SoundView } from '../SoundView';
 import { bakeVectors } from '../vector/textures';
 import { CardView } from './CardView';
 import { EndCardView } from './EndCardView';
+import { NoteView } from './NoteView';
+import { addNote, noteId } from './feedbackStore';
+import { summarize } from '../../sim/summary';
 import { continueShown } from './continueLine';
 import { loadNotes } from './feedbackStore';
-import { FlowMachine, type FlowEvent } from './flowMachine';
+import { FlowMachine, type FlowEvent, type FlowState } from './flowMachine';
 import { skipsTitle, type FlowReport, type FlowUi } from './flowTypes';
 import { GameRunner } from './GameRunner';
 import type { GameHost } from './host';
@@ -27,7 +30,7 @@ import { FlowActions } from './flowActions';
 import { SaveStore, type SlotRead } from './saveStore';
 import { SettingsScreen } from './SettingsScreen';
 import { settings } from './settingsStore';
-import { storageBlocked } from './storage';
+import { buildId, storageBlocked } from './storage';
 import { TitleView } from './TitleView';
 
 // The flow scene (042): runs for the whole session, drawn over the game. It owns the flow machine and every screen
@@ -48,6 +51,7 @@ export class FlowScene extends Scene {
   private settingsScreen?: SettingsScreen;
   private endCard?: EndCardView;
   private actions?: FlowActions;
+  private note?: NoteView;
   /** Input taken this frame, acted on next frame: the game scene below sees this frame's keys and clicks while still covered, so none reach it. */
   private queued: { frame: number; run: () => void }[] = [];
   private built = false;
@@ -94,6 +98,7 @@ export class FlowScene extends Scene {
     this.card = new CardView(this);
     this.notice = new NoticeView(this);
     this.endCard = new EndCardView(this);
+    this.note = new NoteView(this);
     this.runner = new GameRunner(this.game, this.saves, () => this.scene.bringToTop(), (m) => this.notice?.show(m));
     this.settingsScreen = new SettingsScreen(this, {
       back: () => {
@@ -157,6 +162,7 @@ export class FlowScene extends Scene {
     for (const q of due) q.run();
     this.title?.update(delta);
     this.notice?.update(delta);
+    this.note?.place();
     this.sync();
     this.sounds?.endFrame();
   }
@@ -191,6 +197,7 @@ export class FlowScene extends Scene {
     this.sounds?.ambience(onTitle ? FOUNDRY_ROOM : '');
     if (s !== 'farewell' && s !== 'confirm' && this.card?.isOpen) this.card.hide();
     if (s !== 'endCard' && s !== 'feedback' && this.endCard?.isOpen) this.endCard.hide();
+    if (s !== 'feedback' && this.note?.isOpen) this.note.hide();
     // Settings stays under a confirm or the note opened over it, and closes when the flow leaves it.
     if (s !== 'settings' && s !== 'confirm' && s !== 'feedback' && this.settingsScreen?.isOpen) this.settingsScreen.close();
   }
@@ -202,7 +209,8 @@ export class FlowScene extends Scene {
   private pointAt(p: { x: number; y: number }): void {
     const v = this.view(p);
     const s = this.machine.state;
-    if (this.card?.isOpen) this.card.pointAt(v.x, v.y);
+    if (this.note?.isOpen) this.note.pointAt(v.x, v.y);
+    else if (this.card?.isOpen) this.card.pointAt(v.x, v.y);
     else if (s === 'settings') this.settingsScreen?.pointAt(v.x, v.y);
     else if (s === 'endCard') this.endCard?.pointAt(v.x, v.y);
     else if (s === 'title') this.title?.pointAt(v.x, v.y);
@@ -211,6 +219,10 @@ export class FlowScene extends Scene {
   private click(p: { x: number; y: number }): void {
     const v = this.view(p);
     const s = this.machine.state;
+    if (s === 'feedback') {
+      if (this.note?.click(v.x, v.y)) this.sounds?.play(SOUNDS.menuClick);
+      return;
+    }
     if (this.card?.isOpen) {
       if (this.card.click(v.x, v.y)) this.sounds?.play(SOUNDS.menuClick);
       return;
@@ -235,9 +247,26 @@ export class FlowScene extends Scene {
     else if (e.keyCode === codeOf(settings().bindings.feedback)) this.openFeedback();
   }
 
-  /** The note (042): built in its own slice. */
+  /** The note (042): at any time but on a confirm; its snapshot is the game as it is now (null on the title). */
   private openFeedback(): void {
-    return;
+    const opener = this.machine.state;
+    const live = this.live;
+    const snapshot = live ? summarize(live.sim) : null;
+    if (!this.send('feedback')) return;
+    this.note?.show(
+      (text) => this.saveNote(text, opener, snapshot),
+      () => void this.send('back'),
+    );
+  }
+
+  private saveNote(text: string, state: FlowState, snapshot: ReturnType<typeof summarize> | null): void {
+    // An empty note isn't kept; the box stays open.
+    if (text.trim() === '') return;
+    const now = new Date();
+    const r = addNote({ id: noteId(now), writtenAt: now.toISOString(), build: buildId(), state, text, snapshot });
+    this.send('back');
+    this.notice?.show(!r.stored ? NOTE_TEXT.failed : r.nearLimit ? NOTE_TEXT.nearLimit(r.count) : NOTE_TEXT.saved);
+    this.settingsScreen?.refresh();
   }
 
   /** The end of the demo (042): once per save, the world paused under it until Keep playing. */
@@ -269,7 +298,7 @@ export class FlowScene extends Scene {
       settings: s?.rows.length ? { rows: s.rows } : null,
       bindings: s?.keyRows.length ? { rows: s.keyRows, waiting: s.waiting } : null,
       endCard: this.endCard?.ui ?? null,
-      note: null,
+      note: this.note?.isOpen ? this.note.ui : null,
       notice: this.notice?.current ?? null,
     };
   }

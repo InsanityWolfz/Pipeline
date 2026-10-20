@@ -29,6 +29,17 @@ export const SAVE_BUDGET_BYTES = 1_000_000;
 /** Feedback notes: the longest note, how many are kept (the oldest dropped), and when to warn the limit is near. */
 export const NOTES = { maxChars: 2000, maxNotes: 50, warnAt: 45 } as const;
 
+/** The note's words (042). */
+export const NOTE_TEXT = {
+  title: 'Feedback note',
+  count: (n: number): string => `${n} / ${NOTES.maxChars}`,
+  save: 'Save note',
+  cancel: 'Cancel',
+  saved: 'Note saved. It goes with your save when you export it (Settings → Export save).',
+  nearLimit: (n: number): string => `${n} notes stored: past ${NOTES.maxNotes}, the oldest are dropped. Export your save to send them.`,
+  failed: "Couldn't store the note: this browser is blocking storage.",
+} as const;
+
 /** What the player is told about saves. */
 export const SAVE_TEXT = {
   failed: "Couldn't save. Export your save from Settings.",
