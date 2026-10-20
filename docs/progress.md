@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-20: 048 and 049 drafted
+**Changed:** ran the spec interview for the next batch (answers in docs/brainstorm/2026-10-20-playtest-interview.md) and drafted 048 (volley shape) and 049 (resin pylon, the Husk Hive).
+
+**Next:** Shaun approves 048–049; build them one branch and PR each.
+
 ## 2026-10-20: 047 merged; the 045–047 batch is done
 **Changed:** Shaun playtested 047 (inventory and hotbars) and merged it (InsanityWolfz/Pipeline#36). SAVE_VERSION is 5; old saves read as too old (Shaun's rule).
 
