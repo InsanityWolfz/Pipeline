@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { GROTTO } from '../../src/data/grotto';
-import { boot, cameraSettled } from './helpers';
+import { boot, cameraSettled, quietScreen } from './helpers';
 import { ui } from './intakePage';
 
 // Review screenshots for 029 (REVIEW_SHOTS=1, into docs/review/029): the three stage
@@ -50,6 +50,7 @@ test.describe('review screenshots (029)', () => {
       if (working() < 3) throw new Error('the stages never all worked at once');
     });
     await cameraSettled(page);
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/01-stages-working.png` });
   });
 
@@ -71,6 +72,8 @@ test.describe('review screenshots (029)', () => {
       h.walkTo((44.5 + h.ox) * 32, 19.5 * 32);
       h.hold('ley-bolt+homing');
     });
+    // The schematic banners from banking in the foundry and the door's fade, played out before the shot.
+    await quietScreen(page);
     // The nearest Husk; the cursor beside it, inside the lock radius, so the bolt sets off wide and bends in.
     const shot = await page.evaluate(() => {
       const g = window.__GAME__;
@@ -153,6 +156,7 @@ test.describe('review screenshots (029)', () => {
     });
     // The camera eases in from the foundry's door over a few seconds; under load that can pass 5 s.
     await cameraSettled(page, 20_000);
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/05-frozen-husk.png` });
 
     // The Grotto: up the new path from the west path's end, into its frosted clearing.
@@ -167,6 +171,7 @@ test.describe('review screenshots (029)', () => {
       [GROTTO.path[1] ?? { tx: 14, ty: 14 }] as const,
     );
     await cameraSettled(page, 20_000);
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/06-frozen-grotto.png` });
   });
 

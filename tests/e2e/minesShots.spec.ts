@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { openCraftTab } from './craftPage';
-import { boot, cameraSettled } from './helpers';
+import { boot, cameraSettled, quietScreen } from './helpers';
 import { ui } from './intakePage';
 
 // Review screenshots for 038 (REVIEW_SHOTS=1, into docs/review/038): armed mines with their
@@ -11,16 +11,20 @@ import { ui } from './intakePage';
 
 const SHOTS = 'docs/review/038';
 
-/** `?playtest` on open ground, every enemy gone, the camera still. */
+/**
+ * `?playtest` on open ground, every enemy gone but the Bulwark (its first kill would bring up the end card, 042),
+ * the camera still and nothing passing over the screen.
+ */
 async function field(page: Page): Promise<{ x: number; y: number }> {
   await boot(page, '?playtest');
   const p = await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    for (const e of g.getState().enemies) g.setEnemyHealth(e.id, 0);
+    for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark') g.setEnemyHealth(e.id, 0);
     return g.step(1).player;
   });
   await cameraSettled(page, 20_000);
+  await quietScreen(page);
   return { x: p.x, y: p.y };
 }
 

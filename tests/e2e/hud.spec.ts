@@ -3,7 +3,7 @@ import { SPRITES } from '../../src/data/assets';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { HUD_LAYOUT } from '../../src/data/hudLayout';
 import type { BottomHudState } from '../../src/render/HudView';
-import { boot, cameraSettled, watchErrors } from './helpers';
+import { boot, cameraSettled, quietScreen, watchErrors } from './helpers';
 import { feedLines, restoreEntrance, toIntake } from './intakePage';
 
 // The bottom HUD (025, 047): the carried bar centred along the bottom (keys 1–5, right
@@ -165,10 +165,12 @@ test.describe('review screenshots (025)', () => {
     await cameraSettled(page);
     // 047: the arrows are on the carried bar; the intake bar shows the fist (left click punches with the intake dry).
     await hudShowing(page, [HUD_LAYOUT.tubeSlot.melee]);
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/01-carried-arrows.png` });
     await spendArrows(page);
     await cameraSettled(page);
     await hudShowing(page, [HUD_LAYOUT.tubeSlot.melee]);
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/03-fist.png` });
   });
 
@@ -178,6 +180,7 @@ test.describe('review screenshots (025)', () => {
     const { out } = await mixedVolley(page);
     await cameraSettled(page);
     await hudShowing(page, (out?.intake.entrances.slice(0, 2) ?? []).map((e) => String(e.count)));
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/02-mixed-volley.png` });
   });
 
@@ -186,6 +189,7 @@ test.describe('review screenshots (025)', () => {
     await page.evaluate(() => window.__GAME__?.step(1));
     await cameraSettled(page);
     await hudShowing(page, [HUD_LAYOUT.tubeSlot.melee]);
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/04-before-tube.png` });
   });
 
