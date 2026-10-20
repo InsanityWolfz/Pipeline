@@ -21,6 +21,16 @@ export function isLeftPress(event: { button?: number; ctrlKey: boolean }, leftDo
   return leftDown;
 }
 
+/**
+ * Which mouse buttons are held (047: left fires the volley, right uses the carried item), from the pointer's latest
+ * DOM event. On macOS Phaser reports Ctrl+left-click as a right click, so with Ctrl held the DOM event's button bits
+ * decide, as in `isLeftPress`; otherwise (and for a touch, with no bits) Phaser's own state does.
+ */
+export function heldButtons(event: { buttons?: number; ctrlKey: boolean } | undefined, leftDown: boolean, rightDown: boolean): { left: boolean; right: boolean } {
+  if (event?.ctrlKey && typeof event.buttons === 'number') return { left: (event.buttons & 1) !== 0, right: (event.buttons & 2) !== 0 };
+  return { left: leftDown, right: rightDown };
+}
+
 /** What the scene tells the controls each frame about build mode and the screen's UI. */
 export interface BuildInput {
   building: boolean;

@@ -7,7 +7,7 @@ import { BUILD_BAR, pieceDef } from '../data/pieces';
 import type { Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { dragTo, release, type ConduitLay, type HeldConduit } from './dragPath';
-import { clickMods, isLeftPress, type BuildInput } from './clickInput';
+import { clickMods, heldButtons, isLeftPress, type BuildInput } from './clickInput';
 import { bindKeys, listenKeys, type Key } from './keys';
 import { onSettings, settings } from './flow/settingsStore';
 import { MenuRequests, type UiCommand } from './menuRequests';
@@ -302,6 +302,8 @@ export class Controls {
     const axis = (neg: Input.Keyboard.Key, pos: Input.Keyboard.Key): Axis =>
       ((pos.isDown ? 1 : 0) - (neg.isDown ? 1 : 0)) as Axis;
     const ui = this.takeUiCommand();
+    // 047: a Mac's Ctrl+left-click is a left click (the volley), never the carried item.
+    const held = heldButtons(this.pointer.event as MouseEvent | undefined, this.pointer.leftButtonDown(), this.pointer.rightButtonDown());
     const command: Command = {
       ...NO_COMMAND,
       moveX: axis(this.keys.left, this.keys.right),
@@ -309,9 +311,9 @@ export class Controls {
       dodge: this.dodgePending,
       aimX: this.aimX,
       aimY: this.aimY,
-      fire: this.pointer.leftButtonDown() && !this.uiPress && !this.build.building && this.overWorld(),
+      fire: held.left && !this.uiPress && !this.build.building && this.overWorld(),
       // 047: right click (or the key `use` is bound to) uses the carried bar's selected item.
-      use: (this.useKey ? this.useKey.isDown : this.pointer.rightButtonDown() && !this.uiPress && this.overWorld()) && !this.build.building,
+      use: (this.useKey ? this.useKey.isDown : held.right && !this.uiPress && this.overWorld()) && !this.build.building,
       interact: this.interactPending,
       selectSlot: this.selectPending,
       ...ui,
