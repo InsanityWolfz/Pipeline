@@ -2,6 +2,21 @@
 
 Newest entry first.
 
+## 2026-10-20 (overnight): the first run under the reset, for Shaun's morning
+**Changed:** each item on its own branch and draft PR, stacked, each built by one agent, reviewed by a separate `reviewer` agent, and fixed. Nothing merged.
+- InsanityWolfz/Pipeline#24 catch-up 021–041 into `main` (not a draft; waiting for Shaun's playtest and his merge).
+- InsanityWolfz/Pipeline#25 SessionStart hook (installs npm dependencies in cloud sessions).
+- InsanityWolfz/Pipeline#26 `npm run measure`: balance targets out of `check`.
+- InsanityWolfz/Pipeline#27 Stages count fix, **held**: counting entrance rounds goes against 029's criteria, so it waits for Shaun's pick (029, "Raised after the build").
+- InsanityWolfz/Pipeline#28 043 arena lock and slower Shardbacks. Also fixed: the 034 blocked-spark review shot, which the seal broke.
+- InsanityWolfz/Pipeline#29 042 shippable build, with 043 merged in. `npm run check` passes, and the full e2e run on this head passes 118 of 118 (9 min).
+
+**Next:** Shaun plays the #24 preview and says merge. Then the 021–041 wrapup, then retarget #25 → #26 → #28 → #29 to `main` one at a time. Answer 029's question (#27), 043.2–043.5 and 042.15–042.28. Then the playtest-notes interview.
+
+**Notes:**
+- 043 moved the Bulwark target from 17/20 to 13/20 seeds (3 KOs). The cause is the slower Shardback, because Shardbacks are also its adds; the lock itself changed almost nothing. Recorded, not tuned (rules 3–4); question 043.2.
+- 042 raised 14 questions, more than the reset aims for. Most are wording and small behaviour calls, each with a conservative default already built.
+
 ## 2026-10-20: 042 built (shippable playtest build)
 **Changed:**
 - Branch `claude/042-shippable-build`, stacked on `claude/043-arena-lock` (PR #28); draft PR open. Spec status stays `approved`. Plan: docs/plans/042-shippable-build.md.
