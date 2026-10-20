@@ -33,7 +33,7 @@ import { FeelView } from './FeelView';
 import { highlightOf, NO_TUTORIAL_UI, TutorialUi } from './TutorialUi';
 import { currentFit, type ScreenFit } from './scale';
 import { bakeVectors } from './vector/textures';
-import type { GameUiState, UiState } from './testHook';
+import type { GameUiState } from './testHook';
 import { NO_ROOM_UI, RoomViews } from './RoomViews';
 import { fontsReady } from './fonts';
 import { MENU_HOVER_EVENT } from './menuFeedback';
@@ -160,9 +160,7 @@ export class GameScene extends Scene {
         pieceId: () => this.buildView?.selected ?? FIRST_PIECE,
         // Under a flow screen (042) the whole screen is that screen's: nothing reaches the world or the menus.
         overUi: (x, y) => this.host.covered || [this.pause, this.menu, this.buildView, this.picker, this.siteMenus, this.hud, this.tutorial, this.legibility].some((v) => v?.overUi(x, y)),
-        clickUi: (x, y, mods) => {
-          if (!this.host.covered) this.router?.click(controls, x, y, mods);
-        },
+        clickUi: (x, y, mods) => void (this.host.covered || this.router?.click(controls, x, y, mods)),
       });
       this.pause?.setOpen(this.host.paused);
       if (this.host.covered) controls.drain();
@@ -199,8 +197,8 @@ export class GameScene extends Scene {
       slideProgress: this.groundItemView?.slideProgress ?? 0,
       swooshes: this.effects?.swooshes ?? 0,
       ...(this.tutorial?.state ?? NO_TUTORIAL_UI),
-      // 042: the camera locks to the player; its centre and the player's sprite point, before any shake.
-      camera: this.cameraUi(),
+      // 042: the camera locks to the player: its centre, and the player's sprite point.
+      camera: { x: this.cameras?.main?.worldView.centerX ?? 0, y: this.cameras?.main?.worldView.centerY ?? 0, player: { x: this.playerView?.sprite.x ?? 0, y: this.playerView?.sprite.y ?? 0 } },
       hud: this.hud?.bottom ?? null,
       ...(this.hud?.panels ?? NO_HUD_PANELS),
       craftMenu: this.menu?.state ?? null,
@@ -209,18 +207,6 @@ export class GameScene extends Scene {
       ...(this.enemyView?.ui ?? NO_ENEMY_UI),
       ...(this.legibility?.ui ?? NO_LEGIBILITY_UI),
     };
-  }
-
-  private cameraUi(): UiState['camera'] {
-    const view = this.cameras?.main?.worldView;
-    const player = this.playerView?.sprite;
-    return { x: view?.centerX ?? 0, y: view?.centerY ?? 0, player: { x: player?.x ?? 0, y: player?.y ?? 0 } };
-  }
-
-  /** The sound settings, for the test hook. */
-  soundSettings(): { muted: boolean; volume: number } {
-    const sound = this.feel?.sound;
-    return { muted: sound?.muted ?? false, volume: sound?.volume ?? 0 };
   }
 
   /** Crafts once, between ticks. The test hook crafts through here too. Crafting has no drawn effects. */

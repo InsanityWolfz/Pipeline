@@ -1,6 +1,6 @@
 import { Scene } from 'phaser';
 import { TUTORIAL_START } from '../../data/player';
-import { NOTE_TEXT, SAVE_TEXT } from '../../data/save';
+import { SAVE_TEXT } from '../../data/save';
 import { SOUNDS } from '../../data/sounds';
 import { FOUNDRY_ROOM } from '../../data/rooms';
 import { createSim } from '../../sim/state';
@@ -16,11 +16,9 @@ import { bakeVectors } from '../vector/textures';
 import { CardView } from './CardView';
 import { EndCardView } from './EndCardView';
 import { NoteView } from './NoteView';
-import { addNote, noteId } from './feedbackStore';
-import { summarize } from '../../sim/summary';
 import { continueShown } from './continueLine';
 import { loadNotes } from './feedbackStore';
-import { FlowMachine, type FlowEvent, type FlowState } from './flowMachine';
+import { FlowMachine, type FlowEvent } from './flowMachine';
 import { skipsTitle, type FlowReport, type FlowUi } from './flowTypes';
 import { GameRunner } from './GameRunner';
 import type { GameHost } from './host';
@@ -30,7 +28,7 @@ import { FlowActions } from './flowActions';
 import { SaveStore, type SlotRead } from './saveStore';
 import { SettingsScreen } from './SettingsScreen';
 import { settings } from './settingsStore';
-import { buildId, storageBlocked } from './storage';
+import { storageBlocked } from './storage';
 import { TitleView } from './TitleView';
 
 // The flow scene (042): runs for the whole session, drawn over the game. It owns the flow machine and every screen
@@ -114,9 +112,13 @@ export class FlowScene extends Scene {
     });
     const card = this.card;
     const runner = this.runner;
+    const note = this.note;
     this.actions = new FlowActions({
       send: (e) => this.send(e),
+      state: () => this.machine.state,
+      liveSim: () => this.live?.sim ?? null,
       card,
+      note,
       saves: this.saves,
       slot: () => this.slot,
       readSlot: () => this.readSlot(),
@@ -244,29 +246,7 @@ export class FlowScene extends Scene {
     const isEsc = e.keyCode === codeOf('ESC');
     if (this.machine.state === 'settings' && this.settingsScreen?.keyDown(e.keyCode, isEsc)) return;
     if (isEsc && this.machine.state === 'confirm') this.card?.press('no');
-    else if (e.keyCode === codeOf(settings().bindings.feedback)) this.openFeedback();
-  }
-
-  /** The note (042): at any time but on a confirm; its snapshot is the game as it is now (null on the title). */
-  private openFeedback(): void {
-    const opener = this.machine.state;
-    const live = this.live;
-    const snapshot = live ? summarize(live.sim) : null;
-    if (!this.send('feedback')) return;
-    this.note?.show(
-      (text) => this.saveNote(text, opener, snapshot),
-      () => void this.send('back'),
-    );
-  }
-
-  private saveNote(text: string, state: FlowState, snapshot: ReturnType<typeof summarize> | null): void {
-    // An empty note isn't kept; the box stays open.
-    if (text.trim() === '') return;
-    const now = new Date();
-    const r = addNote({ id: noteId(now), writtenAt: now.toISOString(), build: buildId(), state, text, snapshot });
-    this.send('back');
-    this.notice?.show(!r.stored ? NOTE_TEXT.failed : r.nearLimit ? NOTE_TEXT.nearLimit(r.count) : NOTE_TEXT.saved);
-    this.settingsScreen?.refresh();
+    else if (e.keyCode === codeOf(settings().bindings.feedback)) this.actions?.openFeedback();
   }
 
   /** The end of the demo (042): once per save, the world paused under it until Keep playing. */
@@ -274,7 +254,7 @@ export class FlowScene extends Scene {
     if (!this.send('endCard')) return;
     this.runner?.endCardShown();
     this.endCard?.show(
-      () => this.openFeedback(),
+      () => this.actions?.openFeedback(),
       () => void this.send('keepPlaying'),
     );
   }

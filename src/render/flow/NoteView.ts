@@ -96,8 +96,9 @@ export class NoteView {
     this.onSave = onSave;
     this.onCancel = onCancel;
     this.box.value = '';
+    // Sized and placed before it shows, so it never draws at the browser's default size first.
+    this.place(true);
     this.setOpen(true);
-    this.place();
     this.showCount();
     this.box.focus();
   }
@@ -126,8 +127,8 @@ export class NoteView {
   }
 
   /** Keeps the text box over its spot on the canvas, wherever the canvas is and however it's zoomed. */
-  place(): void {
-    if (!this.open) return;
+  place(force = false): void {
+    if (!this.open && !force) return;
     const canvas = this.scene.game.canvas.getBoundingClientRect();
     const k = canvas.width / VIEW_WIDTH;
     const P = NOTE_PANEL;

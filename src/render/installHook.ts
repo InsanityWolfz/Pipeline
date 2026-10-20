@@ -17,6 +17,7 @@ import type { GearPiece } from '../data/gear';
 import { GameScene } from './GameScene';
 import type { FlowScene } from './flow/FlowScene';
 import type { GameUiState } from './testHook';
+import { settings } from './flow/settingsStore';
 
 // Dev builds only: lets tests and agents read state and step the sim frame by frame.
 // The first step() takes the sim off the real-time loop so tests own the clock.
@@ -62,7 +63,7 @@ export function installTestHook(flow: FlowScene): void {
       const game = scene ? scene.hoverText() : { ...titleUi(), ready: flow.ready };
       return { ...game, flow: flow.ui };
     },
-    sound: () => live().soundSettings(),
+    sound: () => ({ muted: settings().muted, volume: settings().master }),
     drop: act((sim, _scene, itemId: string, x: number, y: number) => void layItem(sim, itemId, sim.roomId, x, y)),
     tweenSpeed: (scale) => {
       live().tweens.timeScale = scale;

@@ -1,10 +1,14 @@
 import { CONFIRMS, FAREWELL, type ConfirmKind } from '../../data/titleScreen';
-import { SAVE_TEXT } from '../../data/save';
+import { NOTE_TEXT, SAVE_TEXT } from '../../data/save';
+import { summarize, type SimSummary } from '../../sim/summary';
+import { addNote, noteId } from './feedbackStore';
+import type { NoteView } from './NoteView';
+import { buildId } from './storage';
 import { FOUNDRY_ROOM } from '../../data/rooms';
 import { wakeInFoundry } from '../../sim/save';
 import type { SimState } from '../../sim/state';
 import type { CardView } from './CardView';
-import type { FlowEvent } from './flowMachine';
+import type { FlowEvent, FlowState } from './flowMachine';
 import { applyImport, pickImport } from './saveFiles';
 import type { SaveStore, SlotRead } from './saveStore';
 
@@ -13,7 +17,11 @@ import type { SaveStore, SlotRead } from './saveStore';
 
 export interface FlowContext {
   send(event: FlowEvent): boolean;
+  state(): FlowState;
+  /** The running game's sim, or null on the title. */
+  liveSim(): SimState | null;
   readonly card: CardView;
+  readonly note: NoteView;
   readonly saves: SaveStore;
   slot(): SlotRead;
   readSlot(): void;
@@ -82,6 +90,28 @@ export class FlowActions {
       this.c.endGame();
       this.c.readSlot();
     });
+  }
+
+  /** The note: at any time but on a confirm; its snapshot is the game as it is now (null on the title). */
+  openFeedback(): void {
+    const opener = this.c.state();
+    const sim = this.c.liveSim();
+    const snapshot = sim ? summarize(sim) : null;
+    if (!this.c.send('feedback')) return;
+    this.c.note.show(
+      (text) => this.saveNote(text, opener, snapshot),
+      () => void this.c.send('back'),
+    );
+  }
+
+  private saveNote(text: string, state: FlowState, snapshot: SimSummary | null): void {
+    // An empty note isn't kept; the box stays open.
+    if (text.trim() === '') return;
+    const now = new Date();
+    const r = addNote({ id: noteId(now), writtenAt: now.toISOString(), build: buildId(), state, text, snapshot });
+    this.c.send('back');
+    this.c.notice(!r.stored ? NOTE_TEXT.failed : r.nearLimit ? NOTE_TEXT.nearLimit(r.count) : NOTE_TEXT.saved);
+    this.c.refreshSettings();
   }
 
   /** Import save: the picker, then a confirm; a bad file says why and changes nothing. */
