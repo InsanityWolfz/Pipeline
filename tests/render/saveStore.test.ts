@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { STORAGE_KEYS } from '../../src/data/save';
 import { TUTORIAL_START } from '../../src/data/player';
 import { createSim } from '../../src/sim/state';
-import { SaveStore, peekStatus } from '../../src/render/flow/saveStore';
+import { SaveStore } from '../../src/render/flow/saveStore';
+import { makeEnvelope, snapshot } from '../../src/sim/save';
 import { continueShown, saveLine, savedWhen } from '../../src/render/flow/continueLine';
 import { installStorage } from './memoryStorage';
 
@@ -43,7 +44,6 @@ describe('save store (042)', () => {
       expect(saves.write(createSim(1), false, NOW)).toBe('skipped');
       expect(store.get(STORAGE_KEYS.save)).toBe(held);
     }
-    expect(peekStatus(JSON.stringify({ format: 'pipeline-save', version: 999 }))).toBe('newer');
     expect(saves.read().status).toBe('corrupt');
     expect(saves.read().raw).toBe('garbage {');
   });
@@ -55,6 +55,31 @@ describe('save store (042)', () => {
     saves.clearToBackup();
     expect(store.has(STORAGE_KEYS.save)).toBe(false);
     expect(store.get(STORAGE_KEYS.backup)).toBe(old);
+  });
+
+  it('never overwrites a too-old save or one whose body is unreadable', () => {
+    const saves = new SaveStore(true);
+    const env = makeEnvelope(snapshot(createSim(1, { start: TUTORIAL_START })), { build: 'x', savedAt: NOW.toISOString(), endCardSeen: false });
+    for (const held of [JSON.stringify({ ...env, state: { seed: 'x' } }), JSON.stringify({ ...env, version: 0 })]) {
+      store.set(STORAGE_KEYS.save, held);
+      expect(saves.write(createSim(1), false, NOW)).toBe('skipped');
+      expect(store.get(STORAGE_KEYS.save)).toBe(held);
+    }
+  });
+
+  it('with storage full, New game and an import keep the old save and say they failed', () => {
+    const saves = new SaveStore(true);
+    saves.write(createSim(1, { start: TUTORIAL_START }), false, NOW);
+    const old = store.get(STORAGE_KEYS.save) ?? '';
+    // The same data, but now every write is refused.
+    const full = installStorage(false, true);
+    full.set(STORAGE_KEYS.save, old);
+    expect(saves.clearToBackup()).toBe(false);
+    expect(full.get(STORAGE_KEYS.save)).toBe(old);
+    const env = makeEnvelope(snapshot(createSim(2, { start: TUTORIAL_START })), { build: 'x', savedAt: NOW.toISOString(), endCardSeen: false });
+    expect(saves.replace(env)).toBe(false);
+    expect(full.get(STORAGE_KEYS.save)).toBe(old);
+    expect(full.has(STORAGE_KEYS.backup)).toBe(false);
   });
 
   it('a failed write says so and throws nothing', () => {

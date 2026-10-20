@@ -60,7 +60,11 @@ export class FlowActions {
     };
     if (this.c.slot().status === 'none') return start();
     this.ask('newGame', () => {
-      this.c.saves.clearToBackup();
+      // A save that can't be backed up (storage full) is kept, and the new game doesn't start (042.6).
+      if (!this.c.saves.clearToBackup()) {
+        this.c.send('cancel');
+        return this.c.notice(SAVE_TEXT.backupFailed);
+      }
       this.c.readSlot();
       start();
     });
@@ -120,11 +124,11 @@ export class FlowActions {
     if (!picked) return;
     if ('bad' in picked) return this.c.notice(picked.bad);
     this.ask('importSave', () => {
-      applyImport(this.c.saves, picked.good);
+      const ok = applyImport(this.c.saves, picked.good);
       this.c.send('accept');
       this.c.readSlot();
       this.c.refreshSettings();
-      this.c.notice(SAVE_TEXT.imported);
+      this.c.notice(ok ? SAVE_TEXT.imported : SAVE_TEXT.failed);
     });
   }
 }

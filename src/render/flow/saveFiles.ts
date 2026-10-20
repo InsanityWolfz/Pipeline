@@ -26,8 +26,9 @@ export async function pickImport(): Promise<{ good: Extract<ImportRead, { ok: tr
   return { bad: SAVE_TEXT.importBad[read.reason] };
 }
 
-/** Takes a checked import: the slot replaced (the old save to the backup key) and its notes merged in. */
+/** Takes a checked import: the slot replaced (the old save to the backup key), then its notes merged in. False, changing nothing, when storage refuses. */
 export function applyImport(saves: SaveStore, good: Extract<ImportRead, { ok: true }>): boolean {
+  if (!saves.replace(good.envelope)) return false;
   storeNotes(mergeNotes(loadNotes(), good.notes));
-  return saves.replace(good.envelope);
+  return true;
 }

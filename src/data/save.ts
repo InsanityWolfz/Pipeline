@@ -43,6 +43,7 @@ export const NOTE_TEXT = {
 /** What the player is told about saves. */
 export const SAVE_TEXT = {
   failed: "Couldn't save. Export your save from Settings.",
+  backupFailed: "Couldn't keep a backup of your save, so it wasn't replaced. Export it from Settings first.",
   blocked: "Settings and saves won't be kept: this browser is blocking storage.",
   importBad: { format: 'Not a Pipeline save.', newer: 'That save is from a newer version of the game.', corrupt: "That save couldn't be read." },
   imported: 'Save imported. Continue from the title to play it.',

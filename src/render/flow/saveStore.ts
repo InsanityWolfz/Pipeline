@@ -1,4 +1,4 @@
-import { SAVE_FORMAT, SAVE_VERSION, STORAGE_KEYS } from '../../data/save';
+import { STORAGE_KEYS } from '../../data/save';
 import { makeEnvelope, readSave, snapshot, type SaveEnvelope, type SaveStatus } from '../../sim/save';
 import type { SimState } from '../../sim/state';
 import { buildId, readKey, removeKey, writeKey } from './storage';
@@ -20,20 +20,6 @@ export interface SlotRead {
 }
 
 const NONE: SlotRead = { status: 'none', envelope: null, state: null, raw: null };
-
-/** The slot's status from its text without restoring it: enough to know whether this build may write over it. */
-export function peekStatus(raw: string | null): SlotStatus {
-  if (raw === null) return 'none';
-  try {
-    const data: unknown = JSON.parse(raw);
-    if (typeof data !== 'object' || data === null || !('format' in data) || data.format !== SAVE_FORMAT || !('version' in data)) return 'corrupt';
-    const v = data.version;
-    if (typeof v !== 'number') return 'corrupt';
-    return v > SAVE_VERSION ? 'newer' : 'ok';
-  } catch {
-    return 'corrupt';
-  }
-}
 
 export class SaveStore {
   /** False under a dev or test URL (042.1): nothing is read or written. */
@@ -60,26 +46,38 @@ export class SaveStore {
    */
   write(sim: SimState, endCardSeen: boolean, now: Date): 'saved' | 'skipped' | 'failed' {
     if (!this.enabled) return 'skipped';
-    const held = peekStatus(readKey(STORAGE_KEYS.save));
-    if (held !== 'none' && held !== 'ok') return 'skipped';
+    // The slot read as Continue reads it: a save this build can't load is never written over.
+    const raw = readKey(STORAGE_KEYS.save);
+    if (raw !== null && readSave(raw).status !== 'ok') return 'skipped';
     const env = makeEnvelope(snapshot(sim), { build: buildId(), savedAt: now.toISOString(), endCardSeen });
     if (!writeKey(STORAGE_KEYS.save, JSON.stringify(env))) return 'failed';
     this.saves += 1;
     return 'saved';
   }
 
-  /** New game (042.6): the old save goes to the backup key and the slot empties. */
-  clearToBackup(): void {
-    if (!this.enabled) return;
+  /** Copies the slot to the backup key; false when there's a save and it couldn't be copied (storage full). */
+  private backUp(): boolean {
     const raw = readKey(STORAGE_KEYS.save);
-    if (raw !== null) writeKey(STORAGE_KEYS.backup, raw);
-    removeKey(STORAGE_KEYS.save);
+    return raw === null || writeKey(STORAGE_KEYS.backup, raw);
   }
 
-  /** An import (042.6): the old save goes to the backup key, the imported envelope takes the slot. */
+  /**
+   * New game (042.6): the old save goes to the backup key, then the slot empties. If the backup can't be written,
+   * nothing changes and it returns false: the save is never lost.
+   */
+  clearToBackup(): boolean {
+    if (!this.enabled) return true;
+    if (!this.backUp()) return false;
+    removeKey(STORAGE_KEYS.save);
+    return true;
+  }
+
+  /**
+   * An import (042.6): the old save goes to the backup key, then the imported envelope is written over the slot.
+   * False, with the slot as it was, when either write fails.
+   */
   replace(env: SaveEnvelope): boolean {
     if (!this.enabled) return false;
-    this.clearToBackup();
-    return writeKey(STORAGE_KEYS.save, JSON.stringify(env));
+    return this.backUp() && writeKey(STORAGE_KEYS.save, JSON.stringify(env));
   }
 }
