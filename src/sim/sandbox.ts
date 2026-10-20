@@ -12,6 +12,8 @@ import { boxHitsSolid } from './collision';
 import { facingVector } from './direction';
 import type { Command } from './input';
 import { entranceCap } from './research';
+import { gainXp, xpToNext } from './leveling';
+import { createEvents } from './events';
 import { spawnEnemy } from './spawn';
 import { createSim, resetWorld, roomById, type SimState } from './state';
 import { playerStats } from './stats';
@@ -51,9 +53,9 @@ export const ARENA_GROUP = (boss: string): string => `sandbox-arena-${boss}`;
 /** A sim in the sandbox: its start, then the rest of the kit and its own enemies. */
 export function createSandboxSim(seed: number): SimState {
   const state = createSim(seed, { start: SANDBOX_START });
-  state.level = LEVEL_CAP;
-  state.xp = 0;
-  state.talentPoints = LEVEL_CAP - 1;
+  // To the level cap through the leveling rule (037), a point a level; the level-ups aren't shown at boot.
+  while (state.level < LEVEL_CAP) gainXp(state, xpToNext(state), 'kill');
+  state.events = createEvents();
   for (const n of RESEARCH_NODES) state.research[n.id] = 'restored';
   // Its full entrances never count as the first full line, which would send the overworld's packs out (017).
   state.firstLineFull = true;
@@ -127,9 +129,9 @@ function spawnAhead(state: SimState, c: Extract<SandboxCommand, { kind: 'spawn' 
 
 /** The point on the line from `from` to `to` nearest `to` where the box stands clear of the room's solid tiles (else `from`). */
 function clear(room: ReturnType<typeof roomById>, from: { x: number; y: number }, to: { x: number; y: number }, box: { w: number; h: number }): { x: number; y: number } {
-  const STEPS = 20;
-  for (let k = STEPS; k > 0; k--) {
-    const t = k / STEPS;
+  const steps = SANDBOX.place.backSteps;
+  for (let k = steps; k > 0; k--) {
+    const t = k / steps;
     const at = { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t };
     if (!boxHitsSolid(room, at.x, at.y, box)) return at;
   }

@@ -33,8 +33,23 @@ export interface PenDef {
   home: TilePos;
 }
 
-/** 044.3: Region 1's enemies at ring 1, Stonefall Hollows' at its ring (3): the rings they meet in the real game. */
-const penRing = (enemyId: string): Ring => (enemyId in HOLLOWS_ENEMIES ? HOLLOWS.ring : 1);
+/** Each non-boss enemy's region (033, 034): Region 1's two, then Stonefall Hollows' four. A new enemy needs an entry (a data test checks). */
+export const ENEMY_REGIONS: Readonly<Record<string, number>> = {
+  husk: 1,
+  wisp: 1,
+  ...Object.fromEntries(Object.keys(HOLLOWS_ENEMIES).map((id) => [id, HOLLOWS.region])),
+};
+
+/** 044.3: each region's pens at the ring its enemies meet the player in the real game: Region 1 at 1, the Hollows at theirs (3). */
+export const REGION_RINGS: Readonly<Record<number, Ring>> = { 1: 1, [HOLLOWS.region]: HOLLOWS.ring };
+
+/** A pen's ring, by its enemy's region. Throws for an enemy with no region, or a region with no ring, so neither lands at a ring silently. */
+function penRing(enemyId: string): Ring {
+  const region = ENEMY_REGIONS[enemyId];
+  const ring = region === undefined ? undefined : REGION_RINGS[region];
+  if (ring === undefined) throw new Error(`No sandbox pen ring for '${enemyId}': add its region to ENEMY_REGIONS and REGION_RINGS`);
+  return ring;
+}
 
 /** One pen per non-boss enemy (044), in ENEMIES order, so a new enemy gets one. */
 export const SANDBOX_PENS: readonly PenDef[] = Object.values(ENEMIES)
@@ -51,7 +66,7 @@ export const SANDBOX_PENS: readonly PenDef[] = Object.values(ENEMIES)
     };
   });
 
-/** A boss's arena in the sandbox: its boss, where it waits (its start), its walls and the way in. */
+/** A boss's arena in the sandbox: its boss and where it waits (its start); the walls are in WARDEN_ARENA and HOLLOWS.arena. */
 export interface SandboxArena {
   boss: string;
   start: TilePos;
@@ -89,8 +104,11 @@ export const SANDBOX = {
   bench: { tx: Math.floor(WIDTH / 2) - 4, ty: 17 } satisfies TilePos,
   /** 044.2: a cleared pen's enemy comes back this many ticks after the pen empties (5 s). */
   penRefillTicks: 5 * TICK_RATE,
-  /** The spawn panel: spawned enemies stand `distance` tiles in front of the player, `spacing` tiles apart across the aim. */
-  place: { distance: 5, spacing: 2 },
+  /**
+   * The spawn panel: spawned enemies stand `distance` tiles in front of the player, `spacing` tiles apart across the
+   * way they face; one that would stand in a wall is tried at `backSteps` even steps back toward the player.
+   */
+  place: { distance: 5, spacing: 2, backSteps: 20 },
   /** The spawn panel's choices and where it starts: ring 1–3, champion or not, 1–10 at a time. */
   rings: [1, 2, 3] as readonly Ring[],
   maxCount: 10,
@@ -129,7 +147,7 @@ function midPiece(slot: GearSlot, weight: GearWeight | null, rarity: Rarity, i: 
  * relic, from GEAR_SLOTS, RARITIES and RELICS.
  */
 export const SANDBOX_GEAR: readonly GearPiece[] = [
-  ...GEAR_SLOTS.flatMap((slot) => (slot === 'body' ? (['light', 'heavy'] as const) : [null]).flatMap((weight) => ROLLED.map((rarity, i) => midPiece(slot, weight, rarity, i)))),
+  ...GEAR_SLOTS.flatMap((slot) => (slot === 'body' ? (Object.keys(SLOT_BASE.body) as GearWeight[]) : [null]).flatMap((weight) => ROLLED.map((rarity, i) => midPiece(slot, weight, rarity, i)))),
   ...RELICS.map((r): Omit<GearPiece, 'id'> => {
     const base = baseRange(r.slot, r.weight);
     return { slot: r.slot, rarity: 'relic', weight: r.weight, baseArmor: mid(base.min, base.max), affixes: midAffixes(RARITIES.relic.affixes), relic: r.id, name: r.name };
@@ -186,7 +204,6 @@ export const SANDBOX_TEXT = {
   ring: (ring: number): string => `Ring ${ring}`,
   champion: 'Champion',
   count: (n: number): string => `Count ${n}`,
-  spawnRow: 'Spawn',
   clear: 'Clear spawned',
   on: 'On',
   off: 'Off',

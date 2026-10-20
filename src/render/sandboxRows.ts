@@ -42,7 +42,7 @@ export function sandboxColumns(sb: Pick<SandboxState, 'loadout' | 'god'>, pick: 
     { id: 'ring', label: SANDBOX_TEXT.ring(pick.ring), value: '', stepper: true },
     { id: 'champion', label: SANDBOX_TEXT.champion, value: onOff(pick.champion) },
     { id: 'count', label: SANDBOX_TEXT.count(pick.count), value: '', stepper: true },
-    { id: 'spawn', label: SANDBOX_TEXT.spawnRow },
+    { id: 'spawn', label: SANDBOX_TEXT.spawn },
     { id: 'clear', label: SANDBOX_TEXT.clear },
   ];
   return [loadout, spawn];
