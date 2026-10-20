@@ -190,8 +190,11 @@ export const SHARDBACK: ShardbackDef = {
   feetBox: { w: 22, h: 10 },
   hurtbox: { w: 28, h: 30, offsetY: -12 },
   weight: 1 / 3,
-  /** Three times the Bulwark's turn: a half turn in 1.5 s, slow enough to run round on foot. */
-  shield: { arcDegrees: 180, turnDegPerSec: 120 },
+  /**
+   * A half turn in about 2.6 s (043.1, approve-on-draft; 035 had 120°/s): slow enough that a player strafing round it
+   * out of its bash's reach lands a shot every pass (tests/sim/shardback.test.ts).
+   */
+  shield: { arcDegrees: 180, turnDegPerSec: 70 },
   bash: {
     triggerRange: 30,
     arcDegrees: 100,

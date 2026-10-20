@@ -96,7 +96,7 @@ test('a Shardback: its front blocks; circling inside its turn to its back, the a
       const a = ((e.angle ?? 0) * Math.PI) / 180;
       const bearing = Math.atan2(p.y - e.y, p.x - e.x);
       const off = Math.abs(Math.atan2(Math.sin(bearing - a), Math.cos(bearing - a)));
-      // Round it close in, where the player's walk out-turns its shield (120°/s), firing only from its back.
+      // Round it close in, where the player's walk out-turns its shield (70°/s since 043), firing only from its back.
       const along = bearing + 0.7;
       const goal = { x: e.x + Math.cos(along) * 26, y: e.y + Math.sin(along) * 26 };
       const behind = off > (110 * Math.PI) / 180;
