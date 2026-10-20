@@ -197,7 +197,7 @@ describe('first-made popups (046)', () => {
     s.inventory = { wood: 1 };
     expect(craft(s, 'shaft')).toBe(true);
     run(s, 1);
-    expect(s.inventory.shaft).toBe(4);
+    expect(s.inventory.shaft).toBe(2);
     expect(s.crafted).toContain('shaft');
     expect(s.machineMade).toEqual({});
     expect(s.events.firstMade).toEqual([]);
@@ -209,9 +209,9 @@ describe('first-made popups (046)', () => {
     Object.assign(h, { item: 'wood', count: 1 });
     const cutter = put(s, 'cutter', 11, 4, 'up');
     runUntil(s, (x) => x.events.made.length > 0, 200);
-    expect(s.events.made).toEqual([{ id: cutter.id, pieceId: 'cutter', itemId: 'shaft', count: 4 }]);
+    expect(s.events.made).toEqual([{ id: cutter.id, pieceId: 'cutter', itemId: 'shaft', count: 2 }]);
     expect(s.events.firstMade).toEqual([{ id: cutter.id, itemId: 'shaft' }]);
-    expect(summarize(s).machineMade).toEqual({ shaft: 4 });
+    expect(summarize(s).machineMade).toEqual({ shaft: 2 });
   });
 
   it('keeps the machine-made tally through a KO', () => {
@@ -221,6 +221,6 @@ describe('first-made popups (046)', () => {
     put(s, 'cutter', 11, 4, 'up');
     runUntil(s, (x) => (x.machineMade.shaft ?? 0) > 0, 200);
     die(s);
-    expect(s.machineMade).toEqual({ shaft: 4 });
+    expect(s.machineMade).toEqual({ shaft: 2 });
   });
 });

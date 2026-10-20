@@ -4,8 +4,8 @@
 // ordinary: the player can pick them up, move them and rebuild it. Laid out like
 // 027's taught line: three hoppers on row 5, the part machines in front of them,
 // the assembler across row 3, and two conduits up into the mouth tile (12, 0).
-// Starting stock from 046.2: about 60 arrows (2 of each raw make 64 with 046's
-// doubled outputs), so it runs dry during the first outing. Rules: src/sim/exampleLine.ts.
+// Starting stock from 046.2: about 60 arrows (4 of each raw make 64 with 046's
+// doubled arrow craft), so it runs dry during the first outing. Rules: src/sim/exampleLine.ts.
 
 export interface ExamplePiece {
   pieceId: string;
@@ -17,7 +17,7 @@ export interface ExamplePiece {
 }
 
 /** Raws per hopper (046.2). */
-const STOCK = 2;
+const STOCK = 4;
 
 export const EXAMPLE_LINE: readonly ExamplePiece[] = [
   { pieceId: 'hopper', tx: 11, ty: 5, facing: 'up', stock: { itemId: 'wood', count: STOCK } },

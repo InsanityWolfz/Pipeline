@@ -194,7 +194,7 @@ test('two "+ part" popups at once never overlap', async ({ page }) => {
     for (let t = 0; t < 600 && !(s.machineMade.shaft && s.machineMade.arrowhead); t++) s = g.step(1);
     return s;
   });
-  expect([s.machineMade.shaft, s.machineMade.arrowhead]).toEqual([4, 4]);
+  expect([s.machineMade.shaft, s.machineMade.arrowhead]).toEqual([2, 2]);
   await expect.poll(async () => (await ui(page))?.madePopups.map((p) => p.text).sort()).toEqual(['+ arrowhead', '+ shaft']);
   const [a, b] = (await ui(page))?.madePopups ?? [];
   if (!a || !b) throw new Error('no popups');

@@ -44,9 +44,9 @@ test('a new game finds the example line in the foundry, sees arrows go up the tu
   expect(s.room).toBe('foundry');
   expect(s.foundry.pieces.map((p) => [p.pieceId, p.tx, p.ty])).toEqual(EXAMPLE_LINE.map((p) => [p.pieceId, p.tx, p.ty]));
   expect(s.foundry.pieces.flatMap((p) => (p.kind === 'hopper' ? [[p.item, p.count]] : []))).toEqual([
-    ['wood', 2],
-    ['stone', 2],
-    ['fiber', 2],
+    ['wood', 4],
+    ['stone', 4],
+    ['fiber', 4],
   ]);
   // The parts pop over their machines as each is first made (slowed, so they can be seen), once the door's fade is
   // over and the foundry is on screen (no meadow nodes drawn).

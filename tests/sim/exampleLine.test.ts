@@ -50,9 +50,9 @@ describe('the example line (046)', () => {
     expect(shape(s)).toEqual(EXAMPLE_LINE.map((p) => ({ pieceId: p.pieceId, tx: p.tx, ty: p.ty, facing: p.facing })));
     const stock = s.foundry.pieces.filter((p): p is HopperState => p.kind === 'hopper').map((h) => [h.item, h.count]);
     expect(stock).toEqual([
-      ['wood', 2],
-      ['stone', 2],
-      ['fiber', 2],
+      ['wood', 4],
+      ['stone', 4],
+      ['fiber', 4],
     ]);
     // Ordinary pieces: getState reports them like any other.
     expect(summarize(s).foundry.pieces.map((p) => p.pieceId)).toEqual(EXAMPLE_LINE.map((p) => p.pieceId));
@@ -97,8 +97,8 @@ describe('the example line (046)', () => {
     const s = entered();
     const wood = s.inventory.wood ?? 0;
     removePieceAt(s, 11, 5);
-    expect(s.inventory.wood).toBe(wood + 2);
-    expect(s.events.pickUps).toMatchObject([{ pieceId: 'hopper', items: { wood: 2 } }]);
+    expect(s.inventory.wood).toBe(wood + 4);
+    expect(s.events.pickUps).toMatchObject([{ pieceId: 'hopper', items: { wood: 4 } }]);
     s.crafted = [...s.crafted, 'shaft'];
     removePieceAt(s, 11, 4);
     expect(place(s, 'cutter', 6, 6, 'up')).toMatchObject({ pieceId: 'cutter', tx: 6, ty: 6 });

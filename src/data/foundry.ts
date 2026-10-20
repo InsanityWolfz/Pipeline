@@ -6,7 +6,7 @@ export const CONDUIT_TICKS = 15;
 /** Most of each input a machine buffers. */
 export const INPUT_CAP = 4;
 
-/** Most finished items a machine holds; it won't start a craft whose output wouldn't fit. 046: 8, one doubled arrow craft. */
+/** Most finished items a machine holds; it won't start a craft whose output wouldn't fit. 046: 8, one doubled arrow craft (the largest). */
 export const OUTPUT_CAP = 8;
 
 /** Ticks between a hopper's pushes. */
