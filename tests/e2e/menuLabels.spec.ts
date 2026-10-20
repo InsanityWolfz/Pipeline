@@ -7,7 +7,7 @@ import { BUILD_BAR, PIECE_CATEGORIES, pieceDef } from '../../src/data/pieces';
 import { CRAFT_GROUPS, recipeDef } from '../../src/data/recipes';
 import type { BuildBarState } from '../../src/render/BuildView';
 import type { CraftMenuState } from '../../src/render/CraftMenuView';
-import { boot, cameraSettled, watchErrors } from './helpers';
+import { boot, cameraSettled, watchErrors, quietScreen } from './helpers';
 import { enterFoundry } from './foundryPage';
 
 // Labels in the crafting menu and categories in the build bar (026): every recipe item
@@ -140,14 +140,14 @@ test('on a fresh start the build bar shows only the Logistics group, and the whe
   await enterFoundry(page);
   const bar = await openBuildBar(page);
   // Before any hand-crafting only logistics is unlocked: locked machines, and their groups' labels, are hidden.
-  expectGroups(bar, ['conduit', 'sorter', 'hopper', 'crate']);
+  expectGroups(bar, ['conduit', 'sorter', 'splitter', 'hopper', 'crate']);
   expect(bar.selected).toBe('conduit');
-  for (const id of ['sorter', 'hopper', 'crate', 'conduit']) await wheel(page, id);
+  for (const id of ['sorter', 'splitter', 'hopper', 'crate', 'conduit']) await wheel(page, id);
   expect(errors).toEqual([]);
 });
 
 test('with everything unlocked, the bar shows every labelled group (038: five, with Mines) and the wheel steps through them in bar order', async ({ page }) => {
-  // Restoring the splitter and merger on the way adds a walk to a busy test.
+  // Restoring the merger on the way adds a walk to a busy test.
   test.setTimeout(90_000);
   const errors = watchErrors(page);
   await boot(page, '?playtest');
@@ -156,8 +156,8 @@ test('with everything unlocked, the bar shows every labelled group (038: five, w
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     if (g.step(0).room !== 'foundry') h.toFoundry();
-    // 033: the splitter and merger join the bar once restored at their wall panels (the playtest carries their schematics and gears).
-    for (const [node, tx] of [['splitter', 17], ['merger', 19]] as const) {
+    // 033: the merger joins the bar once restored at its wall panel (the playtest carries its schematic and gears); 046: the splitter is there from the start.
+    for (const [node, tx] of [['merger', 19]] as const) {
       h.walkTo((tx + 0.5) * 32, 1.5 * 32);
       g.step(1, { restore: node });
     }
@@ -191,6 +191,7 @@ test.describe('review screenshots (026)', () => {
     const zoom = canvas.width / VIEW_WIDTH;
     await page.mouse.move(canvas.x + (header.x + 120) * zoom, canvas.y + (header.y + 2) * zoom);
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().cursor))?.kind).toBe('pointer');
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/01-crafting-menu.png` });
     await page.keyboard.press('Escape');
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().craftOpen))).toBe(false);
@@ -198,6 +199,7 @@ test.describe('review screenshots (026)', () => {
     await openBuildBar(page);
     await cameraSettled(page, SETTLE_MS);
     await page.mouse.move(0, 0);
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/02-build-bar-locked.png` });
   });
 
@@ -211,6 +213,7 @@ test.describe('review screenshots (026)', () => {
     const bar = await openBuildBar(page);
     await cameraSettled(page, SETTLE_MS);
     await page.mouse.move(0, 0);
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/03-build-bar.png` });
     const cell = bar.cells.find((c) => c.pieceId === 'assembler');
     const box = await page.locator('canvas').boundingBox();
@@ -218,6 +221,7 @@ test.describe('review screenshots (026)', () => {
     const zoom = box.width / VIEW_WIDTH;
     await page.mouse.move(box.x + (cell.x + cell.w / 2) * zoom, box.y + (cell.y + cell.h / 2) * zoom);
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().buildTip))).toBe('assembler');
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/04-build-bar-tip.png` });
   });
 });

@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { boot, watchErrors } from './helpers';
 import { OBJECTIVES } from '../../src/data/objectives';
-import { AFTER_STEPS, FOUNDRY_STEPS } from '../fixtures/foundrySteps';
+import { AFTER_REFILL, REFILL_GOAL, SECOND_LINE_GOAL } from '../fixtures/foundrySteps';
 
 // The prototype end to end (012): a fresh tutorial start, no ?playtest, every
 // beat played through the hook in order, checking each objective advances.
@@ -18,7 +18,9 @@ async function done(page: Page): Promise<number> {
   return s?.objective?.index ?? OBJECTIVES.length;
 }
 
-const FILL = OBJECTIVES.findIndex((o) => o.text === AFTER_STEPS);
+const REFILL = OBJECTIVES.findIndex((o) => o.text === REFILL_GOAL);
+const FILL = OBJECTIVES.findIndex((o) => o.text === AFTER_REFILL);
+const SECOND = OBJECTIVES.findIndex((o) => o.text === SECOND_LINE_GOAL);
 
 test('the whole prototype plays through from the start stone', async ({ page }) => {
   test.setTimeout(300_000);
@@ -123,10 +125,10 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
   });
   expect(await done(page)).toBe(4);
 
-  // 5. The meadow vein grows back three times over (waited out): crystals for ley bolts. The arrow line (027)
-  // needs four of each raw to fill an entrance, and the bomb's casing takes a stone, so a tree and reeds once more
-  // and a rubble pile twice (the Husks' raws are a seeded roll, not to be counted on); then down the foundry's stairs
-  // (the tube attunes).
+  // 5. The meadow vein grows back three times over (waited out): crystals for ley bolts. Raws to refill the example
+  // line later (046), and the bomb's casing takes a stone, so a tree and reeds once more and a rubble pile twice (the
+  // Husks' raws are a seeded roll, not to be counted on); then down the foundry's stairs (the tube attunes, and the
+  // example line stands there, running).
   const raws = await page.evaluate(() => {
     const h = window.__helpers;
     const g = window.__GAME__;
@@ -141,61 +143,15 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
   });
   for (const raw of ['wood', 'stone', 'fiber']) expect(raws?.[raw] ?? 0, JSON.stringify(raws)).toBeGreaterThanOrEqual(raw === 'stone' ? 5 : 4);
   expect(await done(page)).toBe(5);
+  const line = await page.evaluate(() => window.__GAME__?.getState().foundry.pieces.length);
+  expect(line).toBe(9);
 
   // 6. Craft a bomb and a ley bolt.
   await run(page, () => {
     const g = window.__GAME__;
     for (const r of ['ley-dust', 'casing', 'fuse', 'bomb', 'ley-bolt']) g?.craft(r);
   });
-  expect(await done(page)).toBe(6);
-
-  // 7-13. The foundry steps (027), one at a time: an arrow line up into the intake's middle mouth tile (019),
-  // hoppers on row 5, the part machines on row 4, the assembler across row 3, and conduits up into the mouth.
-  const texts = await page.evaluate((tile) => {
-    const g = window.__GAME__;
-    const h = window.__helpers;
-    if (!g || !h) throw new Error('no game');
-    const stand = () => h.walkTo(15.5 * tile, 6.5 * tile);
-    const text = () => g.step(1).objective?.text ?? '';
-    const put = (pieceId: string, tx: number, ty: number) => g.step(1, { place: { pieceId, tx, ty, facing: 'up' } });
-    /** Just below the hopper, in reach, every one of `itemId` carried goes in. */
-    const fill = (tx: number, ty: number, itemId: string) => {
-      h.walkTo((tx + 0.5) * tile, (ty + 1.25) * tile);
-      const hopper = g.getState().foundry.pieces.find((p) => p.kind === 'hopper' && p.tx === tx && p.ty === ty);
-      if (!hopper) throw new Error(`no hopper at ${tx},${ty}`);
-      g.step(1, { deposit: { id: hopper.id, itemId, amount: 'all' } });
-      stand();
-    };
-    /** Steps until the line moves on (a machine's craft takes a while). */
-    const next = (from: string) => {
-      let now = text();
-      for (let t = 0; t < 600 && now === from; t++) now = text();
-      return now;
-    };
-    stand();
-    const seen = [text()];
-    put('hopper', 11, 5);
-    seen.push(text());
-    fill(11, 5, 'wood');
-    seen.push(text());
-    put('cutter', 11, 4);
-    seen.push(next(seen[seen.length - 1] ?? ''));
-    put('hopper', 12, 5);
-    fill(12, 5, 'stone');
-    put('knapper', 12, 4);
-    seen.push(next(seen[seen.length - 1] ?? ''));
-    put('hopper', 13, 5);
-    fill(13, 5, 'fiber');
-    put('spinner', 13, 4);
-    seen.push(next(seen[seen.length - 1] ?? ''));
-    put('assembler', 12, 3);
-    seen.push(next(seen[seen.length - 1] ?? ''));
-    put('conduit', 12, 2);
-    put('conduit', 12, 1);
-    seen.push(next(seen[seen.length - 1] ?? ''));
-    return seen;
-  }, T);
-  expect(texts).toEqual([...FOUNDRY_STEPS, AFTER_STEPS]);
+  // The refill goal waits while the example line runs (046): the line shows filling the tube.
   expect(await done(page)).toBe(FILL);
 
   // 14. The line runs until the centre entrance is full.
@@ -208,20 +164,13 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
   expect(filled.full, JSON.stringify(filled)).toBe(true);
   expect(await done(page)).toBe(FILL + 1);
 
-  // The raws left over go into the line's hoppers, so it keeps the entrance topped up through the fights ahead,
-  // and the meadow vein's crystals are hand-crafted into ley bolts.
-  await page.evaluate((tile) => {
+  // The meadow vein's crystals are hand-crafted into ley bolts; the raws are kept for the refill.
+  await page.evaluate(() => {
     const g = window.__GAME__;
-    const h = window.__helpers;
-    if (!g || !h) return;
-    for (const [tx, raw] of [[11, 'wood'], [12, 'stone'], [13, 'fiber']] as const) {
-      h.walkTo((tx + 0.5) * tile, 6.25 * tile);
-      const hopper = g.getState().foundry.pieces.find((p) => p.kind === 'hopper' && p.tx === tx && p.ty === 5);
-      if (hopper) g.step(1, { deposit: { id: hopper.id, itemId: raw, amount: 'all' } });
-    }
+    if (!g) return;
     for (let i = 0; i < 20 && (g.getState().inventory['ley-crystal'] ?? 0) > 0; i++) g.craft('ley-dust');
     for (let i = 0; i < 40 && (g.getState().inventory['ley-dust'] ?? 0) > 0; i++) g.craft('ley-bolt');
-  }, T);
+  });
 
   // 15. Identify the first Husk's armor at the bench (tile 1,12), and wear it for the fights ahead.
   await page.evaluate((tile) => {
@@ -257,7 +206,12 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     g.step(1, { interact: true });
     g.step(130);
   }, T);
-  expect(await done(page)).toBe(FILL + 3);
+  // The shrine's pylon is claimed; the example line ran dry through the fights (046), so its refill goal, earlier in
+  // the chain, now shows ahead of the next.
+  const claimed = await page.evaluate(() => window.__GAME__?.step(1));
+  expect(claimed?.lineRanDry).toBe(true);
+  expect(claimed?.objective).toEqual({ index: REFILL, text: REFILL_GOAL });
+  expect(claimed?.claims).toContain('shrine');
   // 034: the shrine's claim dropped Stonefall Hollows' barrier.
   expect((await page.evaluate(() => window.__GAME__?.getState()))?.gates.hollows).toBe(true);
 
@@ -276,35 +230,38 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     return { cores, after: s.inventory['warden-core'] ?? 0, open: s.intake.entrances.map((e) => e.open) };
   }, T);
   expect(opened).toEqual({ cores: 1, after: 0, open: [false, true, true] });
-  expect(await done(page)).toBe(FILL + 4);
 
-  // 18. Two entrances fed (033: the warden core opened one more, so the centre and the east): the arrow line has run
-  // dry, so its last conduit gives way to a hopper of ley bolts, hand-crafted from the crystals left, into the centre,
-  // and a hopper and a conduit up into the east mouth take the rest.
+  // The refill goal still shows; the raws kept from the meadow go back into the example line's hoppers by hand.
+  expect(await done(page)).toBe(REFILL);
+  await page.evaluate((tile) => {
+    const g = window.__GAME__;
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    for (const [tx, raw] of [[11, 'wood'], [12, 'stone'], [13, 'fiber']] as const) {
+      h.walkTo((tx + 0.5) * tile, 6.25 * tile);
+      const hopper = g.getState().foundry.pieces.find((p) => p.kind === 'hopper' && p.tx === tx && p.ty === 5);
+      if (!hopper) throw new Error(`no hopper at ${tx},5`);
+      g.step(1, { deposit: { id: hopper.id, itemId: raw, amount: 'all' } });
+    }
+  }, T);
+  // 18. After the Warden (046.3): a second arrow line into the new entrance. The line's first conduit gives way to a
+  // splitter (on the bar from the start), whose side runs a conduit up into the east mouth.
+  expect(await done(page)).toBe(SECOND);
   const volley = await page.evaluate((tile) => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
-    for (let i = 0; i < 20 && (g.getState().inventory['ley-crystal'] ?? 0) > 0; i++) g.craft('ley-dust');
-    for (let i = 0; i < 40 && (g.getState().inventory['ley-dust'] ?? 0) > 0; i++) g.craft('ley-bolt');
-    g.step(1, { place: { pieceId: 'conduit', tx: 13, ty: 1, facing: 'up' } });
-    g.step(1, { place: { pieceId: 'hopper', tx: 13, ty: 2, facing: 'up' } });
+    h.walkTo(15.5 * tile, 3.5 * tile);
     g.step(1, { pickUp: { tx: 12, ty: 2 } });
-    g.step(1, { place: { pieceId: 'hopper', tx: 12, ty: 2, facing: 'up' } });
-    for (const [tx, amount] of [[13, 'half'], [12, 'all']] as const) {
-      h.walkTo((tx + (tx > 12 ? 1.5 : -0.5)) * tile, 2.5 * tile);
-      const s = g.step(1);
-      const hopper = s.foundry.pieces.find((p) => p.kind === 'hopper' && p.tx === tx && p.ty === 2);
-      const ammo = ['ley-bolt', 'arrow', 'bomb'].find((id) => (s.inventory[id] ?? 0) > 0);
-      if (!hopper || !ammo) throw new Error(`no hopper or no ammo carried: ${JSON.stringify(s.inventory)}`);
-      g.step(1, { deposit: { id: hopper.id, itemId: ammo, amount } });
-    }
+    g.step(1, { place: { pieceId: 'splitter', tx: 12, ty: 2, facing: 'up' } });
+    g.step(1, { place: { pieceId: 'conduit', tx: 13, ty: 2, facing: 'up' } });
+    g.step(1, { place: { pieceId: 'conduit', tx: 13, ty: 1, facing: 'up' } });
     let s = g.step(1);
-    for (let t = 0; t < 900 && s.intake.volley.length < 2; t++) s = g.step(1);
-    return s.intake.volley.length;
+    for (let t = 0; t < 2400 && s.intake.volley.length < 2; t++) s = g.step(1);
+    return { volley: s.intake.volley.length, ammo: s.intake.entrances.map((e) => e.ammo) };
   }, T);
-  expect(volley, JSON.stringify(volley)).toBeGreaterThanOrEqual(2);
-  expect(await done(page)).toBe(FILL + 5);
+  expect(volley, JSON.stringify(volley)).toEqual({ volley: 2, ammo: [null, 'arrow', 'arrow'] });
+  expect(await done(page)).toBe(SECOND + 2);
 
   // 19. Head back out and let the foundry run.
   const end = await page.evaluate(() => {

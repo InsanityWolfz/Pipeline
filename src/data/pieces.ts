@@ -43,7 +43,7 @@ export interface MachineDef extends PieceBase {
  * Moves or holds items: conduits carry them, hoppers feed a line, crates collect
  * what it makes, a sorter sends one chosen item out its side (015), a splitter
  * deals items out its front and side in turn, and a merger joins three inputs into
- * one (033: both restored, never crafted).
+ * one (033; never crafted: the splitter is there from the start, 046, the merger restored).
  */
 export interface LogisticsDef extends PieceBase {
   kind: 'conduit' | 'hopper' | 'crate' | 'sorter' | 'splitter' | 'merger';

@@ -51,8 +51,9 @@ test('the full arrow, bomb and ley bolt chains craft from gathered materials', a
     for (const r of ['shaft', 'arrowhead', 'rope', 'arrow', 'casing', 'fuse', 'ley-dust', 'bomb', 'ley-bolt']) g.craft(r);
     return { before, after: g.getState() };
   });
-  expect(s.after.inventory.arrow).toBe(s.before + 4);
-  expect(s.after.inventory).toMatchObject({ bomb: 2, 'ley-bolt': 2, shaft: 1, arrowhead: 1, rope: 1 });
+  // 046: the final craft of each Region 1 chain doubled (046.7).
+  expect(s.after.inventory.arrow).toBe(s.before + 8);
+  expect(s.after.inventory).toMatchObject({ bomb: 4, 'ley-bolt': 4, shaft: 1, arrowhead: 1, rope: 1 });
   expect(s.after.crafted).toEqual(['arrow', 'arrowhead', 'bomb', 'casing', 'fuse', 'ley-bolt', 'ley-dust', 'rope', 'shaft']);
   expect(errors).toEqual([]);
 });

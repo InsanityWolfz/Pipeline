@@ -35,7 +35,8 @@ export function gameUi(g: GameScene): GameUiState {
     swooshes: g.effects?.swooshes ?? 0,
     ...(g.tutorial?.state ?? NO_TUTORIAL_UI),
     // 042: the camera locks to the player: its centre, and the player's sprite point.
-    camera: { x: main?.centerX ?? 0, y: main?.centerY ?? 0, player: { x: g.playerView?.sprite.x ?? 0, y: g.playerView?.sprite.y ?? 0 } },
+    // 046: `fading` while a door's fade runs, so screenshots can wait it out on state.
+    camera: { x: main?.centerX ?? 0, y: main?.centerY ?? 0, player: { x: g.playerView?.sprite.x ?? 0, y: g.playerView?.sprite.y ?? 0 }, fading: g.cameras?.main?.fadeEffect.isRunning ?? false },
     hud: g.hud?.bottom ?? null,
     ...(g.hud?.panels ?? NO_HUD_PANELS),
     craftMenu: g.menu?.state ?? null,

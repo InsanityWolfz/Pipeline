@@ -1,15 +1,11 @@
-// The foundry tutorial's steps (027) as the spec words them, and the goal after them,
-// shared by the sim test and both e2e runs so the wording is checked in one place.
+// The foundry tutorial's goals (046: 027's build steps gave way to the example line) as the spec words them,
+// shared by the sim test and the e2e runs so the wording is checked in one place.
 
-export const FOUNDRY_STEPS = [
-  'Press B and place a hopper',
-  'Put wood in the hopper (E)',
-  'Place a cutter in front of the hopper',
-  'Make arrowheads: hopper of stone → knapper',
-  'Make rope: hopper of fiber → spinner',
-  'Feed all three into an assembler',
-  'Run a conduit from the assembler into the intake',
-] as const;
+/** Shown once the example line has run dry: refill its hoppers by hand. */
+export const REFILL_GOAL = 'Refill the hoppers with wood, stone and fiber (E)';
 
-/** The goal the line moves on to once the seven steps are done. */
-export const AFTER_STEPS = 'Fill the tube from your line';
+/** The goal after it in the chain, done by the example line on its own. */
+export const AFTER_REFILL = 'Fill the tube from your line';
+
+/** After the Warden's core restores the second entrance (046.3): a second line of the player's own. */
+export const SECOND_LINE_GOAL = 'Build a second arrow line into the new entrance';

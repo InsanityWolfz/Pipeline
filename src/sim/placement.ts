@@ -15,7 +15,7 @@ import { lockedByResearch } from './research';
 // Placing pieces on the foundry grid and picking them back up. Both are free.
 
 /**
- * Pieces the player can place, in build bar order: logistics always (033: the splitter and merger once restored),
+ * Pieces the player can place, in build bar order: logistics always (033: the merger once restored; 046: the splitter from the start),
  * machines once their output is hand-crafted (a stage once any of its rounds is).
  */
 export function unlockedPieces(state: Pick<SimState, 'crafted' | 'research'>): string[] {

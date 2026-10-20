@@ -9,7 +9,7 @@ import { researchListLayout } from '../../src/render/researchLayout';
 // parts and schematics. With ?playtest: the west cap's panel opens on E and E again
 // restores it with the warden core, and two entrances fire a two-round spread; the
 // east cap's Restore, clicked, takes a Bulwark core; the pipe's Reservoir I lets an
-// entrance fill to 45; the splitter, revealed by banking its schematic, is restored at
+// entrance fill to 45; the merger, revealed by banking its schematic, is restored at
 // its wall panel and placed; J opens the research list, which Esc and J close. And a
 // schematic lying in the field stands in its light pillar, pings the minimap, and is
 // "Unknown schematic" until banked.
@@ -107,43 +107,43 @@ test('Reservoir I at the pipe raises the cap to 45, and a line fills an entrance
   expect(errors).toEqual([]);
 });
 
-test("the splitter's schematic, banked on the way in, reveals its panel; restored there, it joins the build bar and is placed", async ({ page }) => {
+test("the merger's schematic, banked on the way in, reveals its panel; restored there, it joins the build bar and is placed", async ({ page }) => {
   test.setTimeout(90_000);
   const errors = watchErrors(page);
   await boot(page, '?playtest');
   const before = await state(page);
-  expect(before.research.nodes.find((n) => n.id === 'splitter')?.state).toBe('hidden');
-  expect(before.unlocked).not.toContain('splitter');
-  // Walking into the foundry banks the haul, and the splitter's schematic reveals its node; once the foundry is on
+  expect(before.research.nodes.find((n) => n.id === 'merger')?.state).toBe('hidden');
+  expect(before.unlocked).not.toContain('merger');
+  // Walking into the foundry banks the haul, and the merger's schematic reveals its node; once the foundry is on
   // show (after the door's fade) the new diagrams shimmer in. Tweens slowed so the shimmer is still running when polled.
   await page.evaluate(() => window.__GAME__?.tweenSpeed(0.1));
   await page.evaluate(() => window.__helpers?.toFoundry());
-  expect((await state(page)).research.nodes.find((n) => n.id === 'splitter')?.state).toBe('revealed');
+  expect((await state(page)).research.nodes.find((n) => n.id === 'merger')?.state).toBe('revealed');
   await expect.poll(async () => (await ui(page))?.research.effects ?? 0).toBeGreaterThan(0);
   await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
-  await foundryAt(page, 17.5 * 32, 1.5 * 32);
-  await expect.poll(async () => (await ui(page))?.research.diagrams.some((d) => d.node === 'splitter')).toBe(true);
-  await openPanel(page, 'splitter');
+  await foundryAt(page, 19.5 * 32, 1.5 * 32);
+  await expect.poll(async () => (await ui(page))?.research.diagrams.some((d) => d.node === 'merger')).toBe(true);
+  await openPanel(page, 'merger');
   expect((await ui(page))?.restorePanel?.cost).toEqual([
-    { itemId: 'schematic-splitter', text: '1/1', missing: false },
+    { itemId: 'schematic-merger', text: '1/1', missing: false },
     { itemId: 'ancient-gear', text: '10/2', missing: false },
   ]);
   await page.keyboard.press('e');
-  await restored(page, 'splitter');
+  await restored(page, 'merger');
   const s = await state(page);
-  expect(s.inventory).toMatchObject({ 'schematic-splitter': 0, 'ancient-gear': 8 });
-  expect(s.unlocked).toContain('splitter');
-  await expect.poll(async () => (await ui(page))?.research.restored).toContain('splitter');
+  expect(s.inventory).toMatchObject({ 'schematic-merger': 0, 'ancient-gear': 8 });
+  expect(s.unlocked).toContain('merger');
+  await expect.poll(async () => (await ui(page))?.research.restored).toContain('merger');
 
   // Placed with the mouse from the Logistics group, facing up.
   await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [centre(STAND.tx, STAND.ty).x, centre(STAND.tx, STAND.ty).y] as const);
   // A long ease under load needs more than the default.
   await cameraSettled(page, 15_000);
   await toggleBuild(page);
-  await expect.poll(async () => (await ui(page))?.buildBar?.cells.some((c) => c.pieceId === 'splitter')).toBe(true);
-  await clickBar(page, 'splitter');
+  await expect.poll(async () => (await ui(page))?.buildBar?.cells.some((c) => c.pieceId === 'merger')).toBe(true);
+  await clickBar(page, 'merger');
   await clickTile(page, STAND.tx + 2, STAND.ty);
-  await expect.poll(async () => (await step(page, 1)).foundry.pieces.find((p) => p.pieceId === 'splitter')).toMatchObject({ kind: 'splitter', tx: STAND.tx + 2, ty: STAND.ty });
+  await expect.poll(async () => (await step(page, 1)).foundry.pieces.find((p) => p.pieceId === 'merger')).toMatchObject({ kind: 'merger', tx: STAND.tx + 2, ty: STAND.ty });
   expect(errors).toEqual([]);
 });
 
@@ -157,7 +157,7 @@ test('J opens the research list anywhere; Esc closes it, and J again; it never p
   const rows = list?.groups.flatMap((g) => g.rows) ?? [];
   expect(rows.find((r) => r.id === 'entrance-2')).toMatchObject({ name: 'Second entrance', state: 'ready', cost: ['5/1'], where: 'on an intake cap' });
   // Not banked yet: the schematics' nodes are lost.
-  expect(rows.find((r) => r.id === 'splitter')).toMatchObject({ name: 'Lost schematic', state: 'hidden', cost: [] });
+  expect(rows.find((r) => r.id === 'merger')).toMatchObject({ name: 'Lost schematic', state: 'hidden', cost: [] });
   expect((await ui(page))?.paused).toBe(false);
   // The world keeps running in real time with it open (nothing has taken the clock off the real-time loop yet).
   const tick = (await state(page)).tick;

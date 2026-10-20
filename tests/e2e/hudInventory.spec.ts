@@ -1,10 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import { TILE_SIZE, VIEW_HEIGHT } from '../../src/data/config';
-import { OBJECTIVES } from '../../src/data/objectives';
 import { HUD_LAYOUT } from '../../src/data/hudLayout';
 import { HEALTH_BLOCK_HEIGHT } from '../../src/data/hudPanels';
 import { OVERWORLD } from '../../src/data/overworld';
-import { FOUNDRY_STEPS } from '../fixtures/foundrySteps';
 import { FIXTURES } from '../../src/data/claims';
 import { inventoryLayout } from '../../src/render/inventoryLayout';
 import { boot, watchErrors } from './helpers';
@@ -22,14 +20,13 @@ const ui = (page: Page) => page.evaluate(() => window.__GAME__?.ui());
 const inventoryOpen = async (page: Page) => (await ui(page))?.inventory.open;
 const rowsOf = async (page: Page, group: string) => (await ui(page))?.inventory.groups.find((g) => g.id === group)?.rows;
 
-/** The shrine pylon's tile, from the overworld data, and the cutter step's index in the goal chain. */
+/** The shrine pylon's tile, from the overworld data. */
 const PYLON = OVERWORLD.shrine.pylon;
 /** Open flagstones inside the shrine's safe zone, a few tiles down and right of its pylon (030's shots stand here). */
 const SAFE_SPOT = { x: (PYLON.tx + 2.5) * TILE_SIZE, y: (PYLON.ty + 3.5) * TILE_SIZE };
 /** The HP block's top at rest (bottom-left, margin px up): raised in build mode, it sits above this. */
 // The block's resting top: the frame and 037's XP row under it, margin px off the bottom.
 const RESTING_TOP = VIEW_HEIGHT - HUD_LAYOUT.margin - HEALTH_BLOCK_HEIGHT;
-const CUTTER_STEP = OBJECTIVES.findIndex((o) => o.text === FOUNDRY_STEPS[2]);
 const BENCH = FIXTURES.find((f) => f.kind === 'bench');
 
 test('I and Tab toggle the inventory, Esc closes it, Tab keeps focus; it swaps with the crafting menu and stays shut while paused', async ({ page }) => {
@@ -168,11 +165,10 @@ test('two "+ part" popups at once never overlap', async ({ page }) => {
   test.setTimeout(120_000);
   const errors = watchErrors(page);
   await boot(page, '?playtest');
-  await page.evaluate((cutterStep) => {
+  await page.evaluate(() => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
-    g.completeObjectives(cutterStep);
     h.toFoundry();
     g.step(1, { toggleBuild: true });
     g.step(1, { place: { pieceId: 'hopper', tx: 11, ty: 5, facing: 'up' } });
@@ -184,21 +180,21 @@ test('two "+ part" popups at once never overlap', async ({ page }) => {
       g.step(1, { deposit: { id: hopper.id, itemId: item, amount: 'all' } });
     }
     h.walkTo(15.5 * 32, 6.5 * 32);
-  }, CUTTER_STEP);
+  });
   // The foundry is on screen once the door's fade is over: no meadow nodes are drawn.
   await expect.poll(async () => Object.keys((await ui(page))?.nodes ?? { x: 1 }).length).toBe(0);
   // The popups are short: slow every tween so both can be seen together.
   await page.evaluate(() => window.__GAME__?.tweenSpeed(0.05));
-  const s = await page.evaluate((cutterStep) => {
+  const s = await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
     // Both machines go down and run in one batch, so both steps finish before the next draw.
     g.step(1, { place: { pieceId: 'cutter', tx: 11, ty: 4, facing: 'up' } });
     let s = g.step(1, { place: { pieceId: 'knapper', tx: 12, ty: 4, facing: 'up' } });
-    for (let t = 0; t < 600 && (s.objective.index ?? 0) <= cutterStep + 1; t++) s = g.step(1);
+    for (let t = 0; t < 600 && !(s.machineMade.shaft && s.machineMade.arrowhead); t++) s = g.step(1);
     return s;
-  }, CUTTER_STEP);
-  expect(s.objective.index).toBe(CUTTER_STEP + 2);
+  });
+  expect([s.machineMade.shaft, s.machineMade.arrowhead]).toEqual([2, 2]);
   await expect.poll(async () => (await ui(page))?.madePopups.map((p) => p.text).sort()).toEqual(['+ arrowhead', '+ shaft']);
   const [a, b] = (await ui(page))?.madePopups ?? [];
   if (!a || !b) throw new Error('no popups');

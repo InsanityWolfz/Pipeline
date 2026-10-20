@@ -1,5 +1,5 @@
-import { TILE_SIZE } from '../data/config';
-import { DEFAULT_ROOM, type Room } from '../data/rooms';
+import { DEFAULT_ROOM } from '../data/rooms';
+import { roomOf } from './roomLookup';
 import { DEFAULT_START, type StartDef } from '../data/player';
 import { createPopulation, inSafeZone, resetPopulation, type PopulationState } from './population';
 import { LANDMARK_LIST } from '../data/landmarks';
@@ -141,6 +141,10 @@ export interface SimState {
   population: PopulationState;
   /** How many of each item machines have made (027), for the foundry steps; hand crafts never count. Kept through a KO. */
   machineMade: Record<string, number>;
+  /** 046: the foundry's lines ran dry once since the tube attuned (the example line's stock used up). Kept through a KO. */
+  lineRanDry: boolean;
+  /** 046: items put in a hopper by hand since the lines ran dry, for the refill goal. Kept through a KO. */
+  refilled: string[];
   /** Raw materials ever harvested, for the gathering objective. */
   gathered: string[];
   /** Which objectives are done, in OBJECTIVES order. */
@@ -230,6 +234,8 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     populated: start.populated,
     population: createPopulation(),
     machineMade: {},
+    lineRanDry: false,
+    refilled: [],
     gathered: [],
     objectives: OBJECTIVES.map(() => false),
     awayTicks: 0,
@@ -289,19 +295,5 @@ export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
 
 export { tileCentre } from './tiles';
 
-/** A room's size in pixels. */
-export function roomSize(room: Room): { width: number; height: number } {
-  return { width: (room.rows[0]?.length ?? 0) * TILE_SIZE, height: room.rows.length * TILE_SIZE };
-}
-
-/** Room data by id. Throws on an unknown id. */
-export function roomById(roomId: string): Room {
-  const room = WORLD[roomId];
-  if (!room) throw new Error(`Unknown room '${roomId}'`);
-  return room;
-}
-
-/** The room data the player is in. */
-export function roomOf(state: Pick<SimState, 'roomId'>): Room {
-  return roomById(state.roomId);
-}
+// Room lookups live in src/sim/roomLookup.ts; re-exported here, where most systems import them from.
+export { roomById, roomOf, roomSize } from './roomLookup';

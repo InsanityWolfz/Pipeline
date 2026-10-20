@@ -57,7 +57,7 @@ describe('schematics on the panel (033)', () => {
   const parts = (sim: Parameters<typeof inventoryGroups>[0]) => inventoryGroups(sim).find((g) => g.id === 'parts')?.rows ?? [];
 
   it('share one Parts row: "Unknown schematic" while every one carried is unbanked, so they never tell apart', () => {
-    const rows = parts({ ...base, inventory: { 'schematic-splitter': 1, 'schematic-merger': 1, 'ancient-gear': 2 } });
+    const rows = parts({ ...base, inventory: { 'schematic-machine-speed': 1, 'schematic-merger': 1, 'ancient-gear': 2 } });
     expect(rows).toEqual([
       { itemId: 'ancient-gear', count: 2, atRisk: 2, home: 0 },
       { itemId: SCHEMATIC_ROW, count: 2, atRisk: 2, home: 0, label: { name: 'Unknown schematic', icon: 'item-schematic-unknown' } },
@@ -65,10 +65,10 @@ describe('schematics on the panel (033)', () => {
   });
 
   it('take the real name once banked (its node revealed)', () => {
-    const research = { ...createResearch(), splitter: 'revealed' as const };
-    const rows = parts({ ...base, research, inventory: { 'schematic-splitter': 1 }, banked: { 'schematic-splitter': 1 } });
-    expect(rows).toEqual([{ itemId: SCHEMATIC_ROW, count: 1, atRisk: 0, home: 0, label: { name: 'Schematic: Splitter', icon: 'item-schematic' } }]);
-    const mixed = parts({ ...base, research, inventory: { 'schematic-splitter': 1, 'schematic-merger': 1 } });
+    const research = { ...createResearch(), 'machine-speed': 'revealed' as const };
+    const rows = parts({ ...base, research, inventory: { 'schematic-machine-speed': 1 }, banked: { 'schematic-machine-speed': 1 } });
+    expect(rows).toEqual([{ itemId: SCHEMATIC_ROW, count: 1, atRisk: 0, home: 0, label: { name: 'Schematic: Machine speed', icon: 'item-schematic' } }]);
+    const mixed = parts({ ...base, research, inventory: { 'schematic-machine-speed': 1, 'schematic-merger': 1 } });
     expect(mixed[0]?.label?.name).toBe('Schematics');
   });
 });

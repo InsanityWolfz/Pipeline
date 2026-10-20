@@ -101,16 +101,6 @@ export const RESEARCH_NODES: readonly ResearchNode[] = [
     effect: { kind: 'machineSpeed' },
   },
   {
-    id: 'splitter',
-    name: 'Splitter',
-    description: 'Adds the Splitter to the build bar.',
-    anchor: { kind: 'wall', tx: 17, ty: WALL_Y, where: 'north wall, east' },
-    cost: { 'schematic-splitter': 1, 'ancient-gear': 2 },
-    requires: [],
-    reveal: 'schematic-splitter',
-    effect: { kind: 'unlockPiece', piece: 'splitter' },
-  },
-  {
     id: 'merger',
     name: 'Merger',
     description: 'Adds the Merger to the build bar.',

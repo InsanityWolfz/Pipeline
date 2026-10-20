@@ -53,6 +53,8 @@ export interface StartDef {
   gear?: readonly GearPiece[];
   /** 044: the sandbox (`?sandbox`): its room, kit and tools; src/sim/sandbox.ts sets the rest up. Never in a save. */
   sandbox?: boolean;
+  /** 046: the example line (src/data/exampleLine.ts) stands in the foundry from the first entry. The real game's start only. */
+  exampleLine?: boolean;
 }
 
 /**
@@ -71,7 +73,7 @@ export const DEFAULT_START: StartDef = {
   populated: false,
 };
 
-/** The real game's start (012): waking by the tube's stone in the overworld's meadow (017) with nothing, every gate shut. */
+/** The real game's start (012): waking by the tube's stone in the overworld's meadow (017) with nothing, every gate shut; the example line waits in the foundry (046). */
 export const TUTORIAL_START: StartDef = {
   room: DEFAULT_ROOM,
   spawn: OVERWORLD.wake,
@@ -81,6 +83,7 @@ export const TUTORIAL_START: StartDef = {
   attuned: false,
   gatesOpen: false,
   populated: false,
+  exampleLine: true,
 };
 
 /** Where a death wakes the player (011). */

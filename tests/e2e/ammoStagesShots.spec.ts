@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { GROTTO } from '../../src/data/grotto';
-import { boot, cameraSettled } from './helpers';
+import { boot, cameraSettled, quietScreen } from './helpers';
 import { ui } from './intakePage';
 
 // Review screenshots for 029 (REVIEW_SHOTS=1, into docs/review/029): the three stage
@@ -69,6 +69,7 @@ test.describe('review screenshots (029)', () => {
     await page.keyboard.press('e');
     await expect.poll(async () => (await ui(page))?.tagged.benchStages?.shown).toBe(true);
     await cameraSettled(page);
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/02-bench-stages.png` });
     await page.keyboard.press('Escape');
 

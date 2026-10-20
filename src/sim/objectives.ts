@@ -1,5 +1,8 @@
 import { FRONTIER_GOAL, OBJECTIVES, type ObjectiveCheck, type ObjectiveDef } from '../data/objectives';
 import { feedsIntake } from './intake';
+import { machineRecipe } from './stages';
+import { count } from './inventory';
+import type { FoundryState } from './pieces';
 import { volleyRounds } from './volley';
 import type { SimState } from './state';
 import { FOUNDRY_ROOM } from '../data/rooms';
@@ -10,6 +13,19 @@ import { regionOf } from './regions';
 // its check holds and stays done, so they can finish in any order. The objective
 // line shows the first unfinished one, or the frontier goal once all are done;
 // finishing the prototype's goals marks the prototype complete.
+
+/**
+ * The lines have run dry (046): no hopper holds anything, and no machine is crafting or holds a whole craft's inputs.
+ * Parts left over in a buffer, finished items waiting to go out and items on carriers don't count, so leftovers stuck
+ * in a line (one wood more than the stones and fibers it needs) never keep it from counting as dry.
+ */
+export function foundryDry(foundry: FoundryState): boolean {
+  return foundry.pieces.every((p) => {
+    if (p.kind === 'hopper') return p.count === 0;
+    if (p.kind !== 'machine') return true;
+    return !p.crafting && !Object.entries(machineRecipe(p).inputs).every(([id, n]) => count(p.buffer, id) >= n);
+  });
+}
 
 /** Whether a check holds right now. `awayRunning` counts ticks in state.awayTicks; `machineMade` reads the tally in state.machineMade. */
 function holds(state: SimState, check: ObjectiveCheck): boolean {
@@ -26,12 +42,13 @@ function holds(state: SimState, check: ObjectiveCheck): boolean {
       return state.gates[check.gate];
     case 'inRoom':
       return state.roomId === check.room;
-    case 'intakeFed':
-      return feedsIntake(state.foundry) && (check.item === undefined || state.events.refills.some((r) => r.itemId === check.item));
-    case 'placed':
-      return state.foundry.pieces.some((p) => p.pieceId === check.piece);
-    case 'hopperHolds':
-      return state.foundry.pieces.some((p) => p.kind === 'hopper' && p.item === check.item && p.count > 0);
+    case 'lineDry':
+      return state.lineRanDry;
+    case 'refilled':
+      // With no hopper left to refill (a save from before 046 has no example line), it counts as done.
+      return state.lineRanDry && (!state.foundry.pieces.some((p) => p.kind === 'hopper') || check.items.every((id) => state.refilled.includes(id)));
+    case 'entrancesHold':
+      return state.link.entrances.filter((e) => e.ammoId === check.ammo && e.count > 0).length >= check.min;
     case 'machineMade':
       return (state.machineMade[check.item] ?? 0) > 0;
     case 'lineFull':
@@ -65,7 +82,13 @@ const AWAY = OBJECTIVES.findIndex((o) => o.check.kind === 'awayRunning');
 /** Notes harvests and what machines made, counts time away with a line running, and completes whatever now holds. */
 export function stepObjectives(state: SimState): void {
   for (const h of state.events.harvests) if (!state.gathered.includes(h.itemId)) state.gathered.push(h.itemId);
-  for (const m of state.events.made) state.machineMade[m.itemId] = (state.machineMade[m.itemId] ?? 0) + m.count;
+  for (const m of state.events.made) {
+    if ((state.machineMade[m.itemId] ?? 0) === 0) state.events.firstMade.push({ id: m.id, itemId: m.itemId });
+    state.machineMade[m.itemId] = (state.machineMade[m.itemId] ?? 0) + m.count;
+  }
+  // 046: the lines' first running dry, then what the player puts back in hoppers by hand.
+  if (!state.lineRanDry && state.link.attuned && foundryDry(state.foundry)) state.lineRanDry = true;
+  else if (state.lineRanDry) for (const d of state.events.deposits) if (!state.refilled.includes(d.itemId)) state.refilled.push(d.itemId);
   // Heading out comes once everything before it is done, so its clock only runs then.
   const rest = AWAY >= 0 && state.objectives.slice(0, AWAY).every(Boolean);
   const running = feedsIntake(state.foundry);
@@ -78,20 +101,26 @@ export function stepObjectives(state: SimState): void {
   if (!state.prototypeComplete && OBJECTIVES.every((o, i) => o.milestone !== 'prototype' || state.objectives[i])) state.prototypeComplete = true;
 }
 
-/** The first unfinished objective's index, or null once all are done. */
-export function currentObjective(state: Pick<SimState, 'objectives'>): number | null {
-  const i = state.objectives.findIndex((done) => !done);
+/** A goal the line passes over for now (046): unfinished, and what it waits for hasn't held yet. */
+const waiting = (state: SimState, i: number): boolean => {
+  const after = OBJECTIVES[i]?.waitsFor;
+  return after !== undefined && !holds(state, after);
+};
+
+/** The first unfinished objective's index that isn't waiting (046), or null once none is left to show. */
+export function currentObjective(state: SimState): number | null {
+  const i = state.objectives.findIndex((done, j) => !done && !waiting(state, j));
   return i < 0 ? null : i;
 }
 
 /** The first unfinished objective's data, or null once all are done. */
-export function currentObjectiveDef(state: Pick<SimState, 'objectives'>): ObjectiveDef | null {
+export function currentObjectiveDef(state: SimState): ObjectiveDef | null {
   const i = currentObjective(state);
   return i === null ? null : (OBJECTIVES[i] ?? null);
 }
 
 /** What the objective line shows (028): the first unfinished goal and its index, or the frontier goal (index null) once all are done. It is never blank. */
-export function objectiveLine(state: Pick<SimState, 'objectives'>): { index: number | null; text: string } {
+export function objectiveLine(state: SimState): { index: number | null; text: string } {
   const i = currentObjective(state);
   const def = i === null ? undefined : OBJECTIVES[i];
   return i !== null && def ? { index: i, text: def.text } : { index: null, text: FRONTIER_GOAL.text };

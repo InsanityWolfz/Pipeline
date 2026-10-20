@@ -59,7 +59,7 @@ test.describe('review screenshots (033)', () => {
   test('a wall panel diagram before, while and after restoring; the restore panel with a missing input', async ({ page }) => {
     test.setTimeout(120_000);
     await boot(page, '?playtest');
-    // Banked on the way in: the machine-speed, splitter and merger schematics reveal their panels.
+    // Banked on the way in: the machine-speed and merger schematics reveal their panels.
     await standAt(page, 7, 3);
     await expect.poll(async () => (await ui(page))?.research.diagrams.some((d) => d.node === 'machine-speed')).toBe(true);
     await page.screenshot({ path: `${SHOTS}/03-wall-panel-diagram.png` });
@@ -77,11 +77,21 @@ test.describe('review screenshots (033)', () => {
     await expect.poll(async () => (await ui(page))?.research.restored).toContain('machine-speed');
     await page.screenshot({ path: `${SHOTS}/05-wall-panel-restored.png` });
 
-    // Gears spent on Reservoir I (4), machine speed (3) and the splitter (2) leave one: the merger's panel shows 1/2 in rust-light.
+    // Gears spent on Reservoir I (4) and machine speed (3) leave three; two go into a hopper (046: the splitter's
+    // panel, which spent them before, is gone), so the merger's panel shows 1/2 in rust-light.
     await standAt(page, 12, 1);
     await restore(page, 'reservoir-1');
-    await standAt(page, 17, 1);
-    await restore(page, 'splitter');
+    await standAt(page, 17, 2);
+    await page.evaluate(() => {
+      const g = window.__GAME__;
+      if (!g) throw new Error('no game');
+      g.step(1, { toggleBuild: true });
+      const s = g.step(1, { place: { pieceId: 'hopper', tx: 17, ty: 3, facing: 'down' } });
+      const hopper = s.foundry.pieces.find((p) => p.kind === 'hopper' && p.tx === 17 && p.ty === 3);
+      if (!hopper) throw new Error('no hopper');
+      g.step(1, { toggleBuild: true });
+      for (let i = 0; i < 2; i++) g.step(1, { deposit: { id: hopper.id, itemId: 'ancient-gear', amount: 'one' } });
+    });
     await standAt(page, 19, 1);
     await page.keyboard.press('e');
     await expect.poll(async () => (await ui(page))?.restorePanel?.node).toBe('merger');
@@ -109,7 +119,7 @@ test.describe('review screenshots (033)', () => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
       const s = g.step(1);
-      g.drop('schematic-splitter', s.player.x + 96, s.player.y - 10);
+      g.drop('schematic-merger', s.player.x + 96, s.player.y - 10);
       g.step(1, { aimX: s.player.x + 96, aimY: s.player.y - 10 });
     });
     await cameraSettled(page);

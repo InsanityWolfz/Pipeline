@@ -129,10 +129,10 @@ describe('machines', () => {
     const s = foundry();
     const cutter = put<MachineState>(s, 'cutter', 4, 6, 'right');
     put(s, 'grinder', 5, 6, 'right');
-    cutter.output = 3;
+    cutter.output = 7;
     cutter.buffer = { wood: 1 };
     run(s, 5);
-    expect(cutter).toMatchObject({ output: 3, crafting: false, status: 'blocked' });
+    expect(cutter).toMatchObject({ output: 7, crafting: false, status: 'blocked' });
   });
 });
 

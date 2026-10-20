@@ -50,7 +50,7 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 043 | Arena lock and slower Shardbacks: the Sunken Forum seals when the Bulwark engages (E at the seal leaves and resets the fight); Shardback shields turn at 70°/s; moved out of 041 (041.18, 041.19) | done |
 | 044 | Sandbox: `?sandbox` boots a test room with every item, round, stage and gear piece, max level, a loadout panel for the intake's volley, a spawn panel, enemy pens and both boss arenas, and god mode; from Shaun's request 2026-10-20 | done |
 | 045 | Readability fixes: red HP bar, E prompts on ley crystals and the sealed door (043.5), a 96 px magnet pickup, build controls on screen, Wisps wake on screen, cache loot bursts out | done |
-| 046 | Foundry onboarding: a working example arrow line on the first visit, the tutorial's second line after the Warden, double Region 1 outputs, the Splitter from the start | approved |
+| 046 | Foundry onboarding: a working example arrow line on the first visit, the tutorial's second line after the Warden, double Region 1 outputs, the Splitter from the start | done |
 | 047 | Inventory and hotbars: an intake bar (left click) and a carried bar (1–5, right click), a Factorio-style grid inventory and hopper screens, crafting tabs per ammo type with tagged rounds in them | approved |
 | 048 | Volley shape: two entrances fire at two angles, three as a centre and two sides, all together (note 5) | idea |
 | 049 | Resin pylon: a supply for Husk resin so bombs can be automated (note 16) | idea |

@@ -482,10 +482,9 @@ describe('the tutorial (012)', () => {
     const machineOutputs = Object.values(PIECES).flatMap((p) => (p.kind === 'machine' ? [recipeDef(p.recipeId).output.itemId] : []));
     for (const [i, o] of OBJECTIVES.entries()) {
       const c = o.check;
-      if (c.kind === 'placed') expect(PIECES[c.piece], o.text).toBeDefined();
-      if (c.kind === 'hopperHolds') expect(ITEMS[c.item], o.text).toBeDefined();
+      if (c.kind === 'refilled') for (const id of c.items) expect(ITEMS[id], o.text).toBeDefined();
       if (c.kind === 'machineMade') expect(machineOutputs, o.text).toContain(c.item);
-      if (c.kind === 'intakeFed' && c.item) expect(Object.values(AMMO).map((a) => a.itemId), o.text).toContain(c.item);
+      if (c.kind === 'entrancesHold') expect(AMMO[c.ammo], o.text).toBeDefined();
       if (!o.highlight) continue;
       expect(BUILD_BAR, o.text).toContain(o.highlight);
       const def = pieceDef(o.highlight);

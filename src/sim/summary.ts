@@ -156,6 +156,9 @@ export interface SimSummary extends HollowsSummary, LevelingSummary, MinesSummar
   hasTube: boolean;
   /** The gates (012), and Stonefall Hollows' barrier (034). */
   gates: { foundry: boolean; shrine: boolean; hollows: boolean };
+  /** 046: the foundry's lines ran dry once (the refill goal shows), and what's been refilled by hand since. */
+  lineRanDry: boolean;
+  refilled: string[];
   firstLineFull: boolean;
   /** The objective line (028): the first unfinished goal's index and text, or the frontier goal with no index once all are done. */
   objective: { index: number | null; text: string };
@@ -274,6 +277,8 @@ export function summarize(state: SimState): SimSummary {
     hasTube: state.hasTube,
     gates: { ...state.gates },
     firstLineFull: state.firstLineFull,
+    lineRanDry: state.lineRanDry,
+    refilled: [...state.refilled],
     objective: objectiveLine(state),
     prototypeComplete: state.prototypeComplete,
     research: researchSummary(state),

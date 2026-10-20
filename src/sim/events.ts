@@ -82,6 +82,8 @@ export interface SimEvents {
   refills: { entrance: number; itemId: string }[];
   /** A machine finished a craft (027): its piece id and kind, and what it made. Hand crafts are `crafts`. */
   made: { id: number; pieceId: string; itemId: string; count: number }[];
+  /** 046: the first time machines ever made each item, by the machine that made it (the "+ shaft" popups). */
+  firstMade: { id: number; itemId: string }[];
   /** A punch (023): where the player stood, its aim angle (radians), and the enemy ids it hit. */
   melees: MeleeEvent[];
   /** A projectile left the tube's mouth (a volley fires several at once). */
@@ -205,6 +207,7 @@ export function createEvents(): SimEvents {
     attunes: [],
     refills: [],
     made: [],
+    firstMade: [],
     intakeOpens: [],
     restores: [],
     schematicDrops: [],
