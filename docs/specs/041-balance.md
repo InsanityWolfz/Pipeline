@@ -193,3 +193,12 @@ The build follows 041.1–041.11. These came up building the scripted targets; e
 - **041.12 built:** the pound's shockwave (`pound.rollProof`) and the bombs an enraged Bulwark lobs (`enrage.rollProofLobs`) ignore a roll's i-frames; each such circle wears a second danger-red ring a few px outside its edge as the cue. A roll through a normal bomb still saves.
 - **041.13, 041.14, 041.15 built as answered:** ring 3's band is 8–18 s (rings 1–2 recorded, damage taken printed); the cluster and walled-Wisps scenarios are logged measurements; the boss bar is unchanged by the enrage (`ui().bossBar.enraged` stays).
 - **041.16 The decent build's fight is still short and safe (not met).** In review, the decent bot was changed to react to the stomp's visible wind-up (its half-disc) instead of the hidden counter: it steps out of the half-disc as it shows and is back behind the Bulwark straight after, so the stomp no longer keeps it off its back. It also walks or rolls out of the roll-proof circles in time (their windups are 60 and 90 ticks). Measured on seeds 1–5: 41.8, 41.8, 41.8, 37.9 and 36.3 s, damage taken 0, 0, 0, 0 and 0.93 of max health (an add's hits), never KO'd. The levers 041.7 names are spent: HP is at its 3,000 ceiling, and a shorter stomp counter or cooldown (60–30 ticks, 240–120 cooldown tried) left the fight under 60 s on most seeds and KO'd the bot on others when stomps overlapped other attacks. Both 041.7 targets (60–90 s, 40% damage) are recorded as `it.fails` in tests/sim/bulwarkFight.test.ts. What should change: a stomp the player can't simply step out of and back from, more HP, or the targets?
+
+## Shaun's answer to 041.16 (2026-10-20)
+"go ahead and do all of those suggestions". That means all four changes (the fifth option, leaving him as he is, is the alternative to these):
+1. **HP ceiling raised** to about 5,000, aiming for a 60–70 s fight.
+2. **Pressure on his back:** a short wave or bolt off his back every few seconds, so standing behind him always costs something. Telegraphed for at least MIN_TELEGRAPH_TICKS.
+3. **Enraged attacks speed up:** shorter telegraphs while enraged, never under MIN_TELEGRAPH_TICKS (half a second).
+4. **Adds keep coming:** a new pair about every 20 s after the first, never champions, still outside the spawn cap.
+
+The targets stand: 60–90 s, real damage taken by the decent bot reacting only to visible cues, and the naive bot loses. Tune within these four levers.
