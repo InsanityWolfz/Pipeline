@@ -263,6 +263,8 @@ export const ROOM_AMBIENCE: Readonly<Record<string, SoundKey>> = {
   // Wind and birds outside (017).
   overworld: SOUNDS.ambientClearing,
   foundry: SOUNDS.ambientFoundry,
+  // 044: the sandbox's room, open to the sky, as outside.
+  sandbox: SOUNDS.ambientClearing,
 };
 
 /** Mixing: master volume to start with, how loud loops sit under effects, and the room crossfade. */

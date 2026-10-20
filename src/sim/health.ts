@@ -11,6 +11,7 @@ import type { Inventory } from './inventory';
 import { itemRisks } from './banking';
 import { wakeRoom } from './tutorial';
 import { FOUNDRY_ROOM } from '../data/rooms';
+import { wakeSandbox } from './sandbox';
 
 // Player damage, banking and death. Specs 004 and 011.
 
@@ -34,9 +35,11 @@ export function damagePlayer(
   // A ready Wardstone (036) takes the hit whole: nothing lands, and the shot or swing is spent.
   if (wardBlocks(state)) return true;
   const taken = afterArmor(state, amount);
+  // 044: god mode lands the hit (its knockback, flash and number) but takes no health, so Last Ember never fires.
+  const god = state.sandbox?.god === true;
   // Last Ember (036) turns a killing hit into 1 HP and a longer invulnerability, once a trip.
-  const saved = emberSaves(state, taken);
-  p.health = saved === null ? Math.max(0, p.health - taken) : LAST_EMBER.saveHealth;
+  const saved = god ? null : emberSaves(state, taken);
+  if (!god) p.health = saved === null ? Math.max(0, p.health - taken) : LAST_EMBER.saveHealth;
   p.hurtTicks = saved ?? HIT_INVULN_TICKS;
   p.lastHitTick = state.tick;
   p.wardTicks = 0;
@@ -71,6 +74,11 @@ export function checkKo(state: SimState): void {
 }
 
 function wake(state: SimState): void {
+  // 044.6: in the sandbox nothing is at risk.
+  if (state.sandbox) {
+    wakeSandbox(state);
+    return;
+  }
   const lost: Inventory = {};
   const kept: Inventory = {};
   // The at-risk helper (031) is the rule: the safe part is kept, the at-risk part lost.

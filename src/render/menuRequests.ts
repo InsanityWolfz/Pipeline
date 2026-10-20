@@ -1,5 +1,6 @@
 import type { EquipRequest } from '../sim/gear';
 import type { Command, HopperAmount } from '../sim/input';
+import type { SandboxCommand } from '../sim/sandbox';
 
 /** How many a hopper menu click moves (022): Ctrl+click all (Ctrl wins over Shift), Shift+click half, a plain click one. */
 export function clickAmount(mods: { shift: boolean; ctrl: boolean }): HopperAmount {
@@ -8,9 +9,9 @@ export function clickAmount(mods: { shift: boolean; ctrl: boolean }): HopperAmou
 }
 
 /** The commands that menus send: the hopper, sorter, pylon, stash and bench menus' choices. */
-export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'setFilter' | 'pylon' | 'travel' | 'takeStash' | 'identify' | 'equip' | 'applyStage' | 'restore' | 'summon' | 'takeTalent' | 'respec'>;
+export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'setFilter' | 'pylon' | 'travel' | 'takeStash' | 'identify' | 'equip' | 'applyStage' | 'restore' | 'summon' | 'takeTalent' | 'respec' | 'sandbox'>;
 
-const NONE: MenuCommand = { deposit: null, withdraw: null, setFilter: null, pylon: null, travel: null, takeStash: null, identify: false, equip: null, applyStage: null, restore: null, summon: null, takeTalent: null, respec: false };
+const NONE: MenuCommand = { deposit: null, withdraw: null, setFilter: null, pylon: null, travel: null, takeStash: null, identify: false, equip: null, applyStage: null, restore: null, summon: null, takeTalent: null, respec: false, sandbox: null };
 
 // Choices clicked in the world's menus, held until the next tick takes them.
 export class MenuRequests {
@@ -79,6 +80,11 @@ export class MenuRequests {
   /** Respecs every talent (037: the tree panel's reset, in the foundry). */
   respec(): void {
     this.pending.respec = true;
+  }
+
+  /** The Sandbox panel's request (044). */
+  sandbox(c: SandboxCommand): void {
+    this.pending.sandbox = c;
   }
 
   /** The held choices, consumed. */

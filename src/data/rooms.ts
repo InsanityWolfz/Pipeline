@@ -159,5 +159,8 @@ export const DEFAULT_ROOM = 'overworld';
 /** The claimable site with its pylon (009), a part of the overworld since 017. */
 export const SHRINE_SITE = 'shrine';
 
+/** 044: the sandbox's test room, reached only by `?sandbox` (laid out in src/data/sandbox.ts, built in src/sim/sandboxRoom.ts). */
+export const SANDBOX_ROOM = 'sandbox';
+
 /** The room that holds the buildable foundry grid. */
 export const FOUNDRY_ROOM = 'foundry';

@@ -1,3 +1,4 @@
+import { SANDBOX } from './sandbox';
 import { SOUND_MIX } from './sounds';
 
 // Settings (042): per device, in browser storage under one versioned key (pipeline.settings), never in the save or
@@ -7,7 +8,7 @@ import { SOUND_MIX } from './sounds';
 export const SETTINGS_VERSION = 1;
 
 /** The actions the key list rebinds, in display order. Esc, Tab and the mouse buttons are fixed. */
-export const BIND_ACTIONS = ['up', 'down', 'left', 'right', 'dodge', 'interact', 'menu', 'build', 'inventory', 'research', 'talents', 'rotate', 'flip', 'ammo1', 'ammo2', 'ammo3', 'ammo4', 'feedback'] as const;
+export const BIND_ACTIONS = ['up', 'down', 'left', 'right', 'dodge', 'interact', 'menu', 'build', 'inventory', 'research', 'talents', 'rotate', 'flip', 'ammo1', 'ammo2', 'ammo3', 'ammo4', 'feedback', 'sandbox'] as const;
 export type BindAction = (typeof BIND_ACTIONS)[number];
 
 export const ACTION_LABELS: Readonly<Record<BindAction, string>> = {
@@ -29,7 +30,11 @@ export const ACTION_LABELS: Readonly<Record<BindAction, string>> = {
   ammo3: 'Ammo slot 3',
   ammo4: 'Ammo slot 4',
   feedback: 'Feedback note',
+  sandbox: 'Sandbox panel',
 };
+
+/** Actions the key list shows only in the sandbox (044): the shipped game has no way into it. */
+export const SANDBOX_ONLY: readonly BindAction[] = ['sandbox'];
 
 /** Today's keys (042.4: feedback takes F, flip moves to G). */
 export const DEFAULT_BINDINGS: Readonly<Record<BindAction, string>> = {
@@ -51,6 +56,8 @@ export const DEFAULT_BINDINGS: Readonly<Record<BindAction, string>> = {
   ammo3: 'THREE',
   ammo4: 'FOUR',
   feedback: 'F',
+  // 044.1: the sandbox panel's key.
+  sandbox: SANDBOX.panelKey,
 };
 
 /**

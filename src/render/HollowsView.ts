@@ -6,7 +6,7 @@ import { HOLLOWS } from '../data/hollows';
 import { HOLLOWS_LOOK, HOLLOWS_SPRITES } from '../data/hollowsAssets';
 import { OVERWORLD_ROOM } from '../data/overworld';
 import { altarState, type AltarState } from '../sim/altar';
-import { arenaSealed } from '../sim/arenaLock';
+import { ARENA_ROOMS, arenaSealed } from '../sim/arenaLock';
 import type { SimEvents } from '../sim/events';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
@@ -89,7 +89,9 @@ export class HollowsView {
       if (this.collapseMs >= L.barrier.collapseMs) this.barrierState = 'down';
     }
     const alpha = this.drawBarrier(here);
-    const sealAlpha = this.drawSeal(here, arenaSealed(sim, HOLLOWS.arena), deltaMs);
+    // 044: the forum's seal and the Bulwark's bombs show wherever the forum stands (the sandbox's room too).
+    const arenaHere = ARENA_ROOMS.includes(shown);
+    const sealAlpha = this.drawSeal(arenaHere, arenaSealed(sim, HOLLOWS.arena, arenaHere ? shown : OVERWORLD_ROOM), deltaMs);
     const state = here ? altarState(sim, HOLLOWS.arena.altar.id) : null;
     this.altar.setVisible(here);
     if (state) showFrame(this.altar, state === 'awake' ? HOLLOWS_SPRITES.altar.awake : state === 'summoning' ? HOLLOWS_SPRITES.altar.summoning : HOLLOWS_SPRITES.altar.dim);
@@ -97,7 +99,7 @@ export class HollowsView {
     this.riseMs = Math.max(0, this.riseMs - deltaMs);
     const summoning = here && sim.summoning !== null;
     this.drawSummon(summoning ? (sim.summoning?.ticks ?? 0) / HOLLOWS.arena.summonTicks : null);
-    const bombs = this.drawBombs(sim, here);
+    const bombs = this.drawBombs(sim, arenaHere);
     this.shownState = { barrier: this.barrierState, barrierAlpha: alpha, seal: this.sealState, sealAlpha, altar: state, summonCircle: summoning, enemyBombs: bombs };
   }
 

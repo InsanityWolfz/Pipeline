@@ -16,6 +16,7 @@ import type { SiteMenus } from './SiteMenus';
 import type { SoundView } from './SoundView';
 import type { WakeView } from './WakeView';
 import type { GameHost } from './flow/host';
+import type { SandboxPanel } from './SandboxPanel';
 
 /** The menus the router works, built by the scene. */
 export interface Menus {
@@ -33,6 +34,8 @@ export interface Menus {
   legibility: Legibility;
   /** 042: the flow, which owns whether the pause menu is up. */
   host: GameHost;
+  /** 044: the Sandbox panel (in the sandbox only). */
+  sandbox: SandboxPanel;
 }
 
 // Keys and clicks for the menus (split from GameScene in 020): C toggles the craft
@@ -52,7 +55,7 @@ export class MenuRouter {
   }
 
   handle(controls: Controls): void {
-    const { craft, site, picker, build, inventory, research, talents, wake, legibility } = this.m;
+    const { craft, site, picker, build, inventory, research, talents, wake, legibility, sandbox } = this.m;
     const toggle = controls.takeMenuKey('menu');
     // Esc closes an open glossary entry first (040), before any panel.
     const close = controls.takeMenuKey('close') && !legibility.close();
@@ -62,11 +65,14 @@ export class MenuRouter {
     const list = controls.takeMenuKey('research');
     // T (037): the talent tree, likewise.
     const tree = controls.takeMenuKey('talents');
+    // 044: the Sandbox panel's key, only in the sandbox; likewise.
+    const panel = controls.takeMenuKey('sandbox') && this.sim.sandbox !== undefined;
     if (this.m.host.paused) {
       if (close) this.m.host.resume();
       return;
     }
-    if (close && talents.isOpen) talents.setOpen(false);
+    if (close && sandbox.isOpen) sandbox.setOpen(false);
+    else if (close && talents.isOpen) talents.setOpen(false);
     else if (close && inventory.isOpen) inventory.setOpen(false);
     else if (close && research.isOpen) research.setOpen(false);
     else if (close && site.isOpen) site.close();
@@ -100,6 +106,12 @@ export class MenuRouter {
       research.setOpen(false);
       talents.setOpen(false);
     }
+    // The Sandbox panel never pauses; it and the big panels take turns.
+    if (panel && !wake.isShown) {
+      sandbox.setOpen(!sandbox.isOpen);
+      if (sandbox.isOpen) for (const p of [inventory, research, talents, craft]) p.setOpen(false);
+    }
+    if ((bag && inventory.isOpen) || (list && research.isOpen) || (tree && talents.isOpen) || (toggle && craft.isOpen)) sandbox.setOpen(false);
     const steps = controls.takeWheel();
     if (steps !== 0 && this.sim.building) build.step(steps);
     // E on a hopper opens its menu; the sim does nothing with it. With the restore panel open, E again restores (033).
@@ -122,9 +134,16 @@ export class MenuRouter {
    * A picker row moves one, Shift half, Ctrl all (022), and the picker stays open for the next click.
    */
   click(controls: Controls, x: number, y: number, mods: ClickMods): void {
-    const { pause, site, picker, build, sound, talents, legibility } = this.m;
+    const { pause, site, picker, build, sound, talents, legibility, sandbox } = this.m;
     if (pause.isOpen) {
       this.pauseClick(pause.click(x, y));
+      return;
+    }
+    // 044: the Sandbox panel's rows; its spawn choices change the panel, the rest go to the sim.
+    const panel = sandbox.click(this.sim, x, y);
+    if (panel) {
+      if (panel.hit) sound.play(SOUNDS.menuClick);
+      if (panel.command) controls.menus.sandbox(panel.command);
       return;
     }
     // A chip opens its glossary entry; with one open, a click outside it closes it (040).

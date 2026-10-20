@@ -36,6 +36,7 @@ import { createResearch, type ResearchState } from './research';
 import type { EnemyBombState } from './enemyBombs';
 import { bossReturns, settleSummons, type SummoningState } from './altar';
 import { noteCarried } from './knownRounds';
+import type { SandboxState } from './sandbox';
 
 /** The whole sim: plain serializable data. */
 export interface SimState {
@@ -156,6 +157,8 @@ export interface SimState {
   building: boolean;
   /** What happened on the last tick. */
   events: SimEvents;
+  /** 044: the sandbox's own state (`?sandbox` only; src/sim/sandbox.ts). Absent in every real game, so never in a save. */
+  sandbox?: SandboxState;
 }
 
 export interface SimOptions {

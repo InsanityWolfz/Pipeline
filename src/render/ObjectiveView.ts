@@ -32,7 +32,8 @@ export class ObjectiveView {
   }
 
   update(sim: SimState): void {
-    const { text } = objectiveLine(sim);
+    // 044.5: the sandbox has no objective line.
+    const text = sim.sandbox ? '' : objectiveLine(sim).text;
     if (text === this.shown) return;
     const finished = this.shown !== undefined;
     this.shown = text;

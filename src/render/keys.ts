@@ -28,7 +28,11 @@ export function nameOf(code: number): string | null {
  * breakdown (040). Every key is captured (Phaser's default), so Tab never moves the browser's focus; Shift isn't, so
  * Shift+click (022) keeps working as the page sees it.
  */
-export function bindKeys(keyboard: Input.Keyboard.KeyboardPlugin, bindings: Readonly<Record<BindAction, string>>): { keys: Record<Key, Input.Keyboard.Key>; ammo: Input.Keyboard.Key[] } {
+export function bindKeys(
+  keyboard: Input.Keyboard.KeyboardPlugin,
+  bindings: Readonly<Record<BindAction, string>>,
+  sandbox = false,
+): { keys: Record<Key, Input.Keyboard.Key>; ammo: Input.Keyboard.Key[]; sandbox: Input.Keyboard.Key | null } {
   const codes = Input.Keyboard.KeyCodes;
   const add = (action: BindAction): Input.Keyboard.Key => keyboard.addKey(codeOf(bindings[action]) ?? codeOf(DEFAULT_BINDINGS[action]) ?? 0);
   const keys: Record<Key, Input.Keyboard.Key> = {
@@ -49,7 +53,9 @@ export function bindKeys(keyboard: Input.Keyboard.KeyboardPlugin, bindings: Read
     talents: add('talents'),
     shift: keyboard.addKey(codes.SHIFT, false),
   };
-  return { keys, ammo: AMMO_ACTIONS.slice(0, SLOT_AMMOS.length).map(add) };
+  // 044: the sandbox panel's key, only in the sandbox (the shipped game never captures it); unbound ('') it has none.
+  const panel = sandbox ? codeOf(bindings.sandbox) : null;
+  return { keys, ammo: AMMO_ACTIONS.slice(0, SLOT_AMMOS.length).map(add), sandbox: panel === null ? null : keyboard.addKey(panel) };
 }
 
 /** What each key's press does (042: wired here so Controls can rebind them in one call). */
@@ -58,14 +64,15 @@ export interface KeyHandlers {
   rotate(): void;
   flip(): void;
   interact(): void;
-  /** C, Esc, I or Tab, J and T: the menu keys the scene takes. */
-  menu(key: 'menu' | 'close' | 'inventory' | 'research' | 'talents'): void;
+  /** C, Esc, I or Tab, J and T, and the sandbox panel's key (044): the menu keys the scene takes. */
+  menu(key: 'menu' | 'close' | 'inventory' | 'research' | 'talents' | 'sandbox'): void;
   build(): void;
   ammo(slot: number): void;
 }
 
 /** Wires each key's down event to its handler. */
-export function listenKeys(keys: Record<Key, Input.Keyboard.Key>, ammo: readonly Input.Keyboard.Key[], h: KeyHandlers): void {
+export function listenKeys(keys: Record<Key, Input.Keyboard.Key>, ammo: readonly Input.Keyboard.Key[], h: KeyHandlers, sandbox: Input.Keyboard.Key | null = null): void {
+  sandbox?.on('down', () => h.menu('sandbox'));
   keys.dodge.on('down', () => h.dodge());
   keys.rotate.on('down', () => h.rotate());
   keys.flip.on('down', () => h.flip());

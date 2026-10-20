@@ -8,7 +8,7 @@ import { fontsReady } from '../fonts';
 import type { GameScene } from '../GameScene';
 import { codeOf } from '../keys';
 import { MENU_HOVER_EVENT } from '../menuFeedback';
-import { parseStart } from '../playtest';
+import { simForUrl } from '../playtest';
 import { currentFit, toView, type ScreenFit } from '../scale';
 import { parseSeed } from '../seed';
 import { SoundView } from '../SoundView';
@@ -19,7 +19,7 @@ import { NoteView } from './NoteView';
 import { continueShown } from './continueLine';
 import { loadNotes } from './feedbackStore';
 import { FlowMachine, type FlowEvent } from './flowMachine';
-import { skipsTitle, type FlowReport, type FlowUi } from './flowTypes';
+import { isSandboxUrl, skipsTitle, type FlowReport, type FlowUi } from './flowTypes';
 import { GameRunner } from './GameRunner';
 import type { GameHost } from './host';
 import { NoticeView } from './NoticeView';
@@ -109,6 +109,7 @@ export class FlowScene extends Scene {
       exportDamaged: () => exportDamaged(),
       damaged: () => this.slot.status === 'corrupt' || this.slot.status === 'too-old',
       notes: () => loadNotes().length,
+      sandbox: isSandboxUrl(this.search),
       click: () => this.sounds?.play(SOUNDS.menuClick),
     });
     const card = this.card;
@@ -136,7 +137,7 @@ export class FlowScene extends Scene {
     this.input.keyboard?.on('keydown', (e: KeyboardEvent) => this.later(() => this.keyDown(e)));
     this.built = true;
     if (this.saves.enabled && storageBlocked()) this.notice.show(SAVE_TEXT.blocked);
-    if (this.machine.state === 'play') this.runner.start(createSim(parseSeed(this.search), { start: parseStart(this.search) }), this.host, false, this.fit);
+    if (this.machine.state === 'play') this.runner.start(simForUrl(this.search, parseSeed(this.search)), this.host, false, this.fit);
     else this.readSlot();
     this.sync();
   }

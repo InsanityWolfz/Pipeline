@@ -51,6 +51,8 @@ export interface StartDef {
   claims?: readonly string[];
   /** Identified gear the player starts with, none worn (036: `?playtest` carries a Rare piece per slot and a relic). */
   gear?: readonly GearPiece[];
+  /** 044: the sandbox (`?sandbox`): its room, kit and tools; src/sim/sandbox.ts sets the rest up. Never in a save. */
+  sandbox?: boolean;
 }
 
 /**

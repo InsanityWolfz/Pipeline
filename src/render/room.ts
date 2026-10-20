@@ -6,7 +6,8 @@ import { PROPS, type PropDef, type PropPlacement } from '../data/props';
 import { PROP_LAYOUT, ROOM_TOP_MARGIN, WALL_SPRITES } from '../data/roomArt';
 import { TILE, type Room } from '../data/rooms';
 import { registerAnim } from './anims';
-import { floorFrame, wallPieces } from './roomTiles';
+import { floorFrame, tileHash, wallPieces } from './roomTiles';
+import { hollowsFrame } from './hollowsTiles';
 import { addVectorSprite, addVector } from './vector/textures';
 
 const FLOOR_PROP_DEPTH = (DEPTHS.floor + DEPTHS.shadow) / 2;
@@ -53,6 +54,12 @@ export class RoomView {
         }
         if (symbol === TILE.wall) {
           this.wall(room.rows, tx, ty, add);
+          continue;
+        }
+        // 044: the Hollows' cliffs, columns and fallen drums (the sandbox's Sunken Forum) in their own look.
+        const hollows = hollowsFrame(symbol, tx, ty, tileHash(tx, ty), room);
+        if (hollows) {
+          this.objects.push(addVector(this.scene, left + TILE_SIZE / 2, bottom, hollows).setDepth(bottom));
           continue;
         }
         // A block prop (a column, a rune stone) stands in for the ruin block's look.

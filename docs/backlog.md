@@ -48,6 +48,7 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 041 | Balance pass: per-hit damage arrow 14, ley bolt 9, bomb 12 (landmine 60); ring ×1/×1.6/×2.5 on enemy HP and damage; the Bulwark at 2,500 HP with an enrage, a rear stomp and adds; scripted sim targets | done |
 | 042 | Shippable playtest build: painted title screen, game-flow state machine, one save slot saved on entering the foundry (Continue, export and import, versioned), Settings (volumes, shake, flashes, key bindings), big-moment-only shake and a locked camera, end-of-demo card, F feedback notes | done |
 | 043 | Arena lock and slower Shardbacks: the Sunken Forum seals when the Bulwark engages (E at the seal leaves and resets the fight); Shardback shields turn at 70°/s; moved out of 041 (041.18, 041.19) | done |
+| 044 | Sandbox: `?sandbox` boots a test room with every item, round, stage and gear piece, max level, a loadout panel for the intake's volley, a spawn panel, enemy pens and both boss arenas, and god mode; from Shaun's request 2026-10-20 | done |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
 

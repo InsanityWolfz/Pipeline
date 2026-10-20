@@ -2,7 +2,8 @@ import { leaveArea } from './mines';
 import { ACTIVATE_TICKS, CLAIM_TICKS, FIXTURE_REACH, FIXTURES, PYLON_REACH, SITE_SUPPLY, SUPPLY_TICKS, type FixtureDef } from '../data/claims';
 import { TICK_RATE } from '../data/config';
 import { FEET_BOX } from '../data/player';
-import { FOUNDRY_ROOM, type PylonDef } from '../data/rooms';
+import { FOUNDRY_ROOM, SANDBOX_ROOM, type PylonDef } from '../data/rooms';
+import { SANDBOX } from '../data/sandbox';
 import type { Command } from './input';
 import { count } from './inventory';
 import { isRolling } from './movement';
@@ -55,8 +56,11 @@ export function claimedPylons(state: Pick<SimState, 'claims'>): { roomId: string
   return state.claims.flatMap((site) => all.filter((p) => p.pylon.site === site));
 }
 
-/** The fixture of a kind in reach, if the player is in the foundry. */
+/** The fixture of a kind in reach, if the player is in the foundry (044: or the bench's twin in the sandbox's room). */
 export function fixtureInReach(state: SimState, kind: FixtureDef['kind']): FixtureState | undefined {
+  if (state.sandbox && state.roomId === SANDBOX_ROOM) {
+    return kind === 'bench' && gapTo(state, SANDBOX.bench) <= FIXTURE_REACH ? state.fixtures.find((f) => fixtureDef(f.id).kind === 'bench') : undefined;
+  }
   if (state.roomId !== FOUNDRY_ROOM) return undefined;
   return state.fixtures.find((f) => fixtureDef(f.id).kind === kind && gapTo(state, fixtureDef(f.id)) <= FIXTURE_REACH);
 }

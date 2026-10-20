@@ -42,6 +42,9 @@ export const PLAYTEST_GEAR: readonly GearPiece[] = [
   { id: 4, slot: WARDSTONE.slot, rarity: 'relic', weight: WARDSTONE.weight, baseArmor: 1, relic: WARDSTONE.id, name: WARDSTONE.name, affixes: [{ kind: 'max-health', value: 10 }, { kind: 'roll-cooldown', value: -0.13 }] },
 ];
 
+/** Every item a recipe or a bench stage row makes, sorted: counted as hand-made, so every machine and stage is unlocked (029). */
+export const ALL_CRAFTED: readonly string[] = [...new Set([...Object.values(RECIPES), ...STAGE_ROWS.map((r) => r.recipe)].map((r) => r.output.itemId))].sort();
+
 export const PLAYTEST_START: StartDef = {
   room: DEFAULT_ROOM,
   // At the start stone, with the land already full of packs (017).
@@ -51,7 +54,7 @@ export const PLAYTEST_START: StartDef = {
   attuned: true,
   gatesOpen: true,
   inventory: Object.fromEntries(Object.values(ITEMS).filter((it) => !ROUNDS.includes(it.id)).map((it) => [it.id, OVERRIDES[it.id] ?? COUNTS[it.kind]])),
-  crafted: [...new Set([...Object.values(RECIPES), ...STAGE_ROWS.map((r) => r.recipe)].map((r) => r.output.itemId))].sort(),
+  crafted: ALL_CRAFTED,
   gear: PLAYTEST_GEAR,
 };
 

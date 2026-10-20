@@ -1,6 +1,6 @@
 import { BlendModes, type GameObjects, type Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
-import { FOUNDRY_ROOM } from '../data/rooms';
+import { respecHere } from '../sim/talents';
 import { KEYSTONE_ICONS, LANE_ICONS, TALENT_PANEL, TALENT_SPRITES, talentHeader } from '../data/talentAssets';
 import { LANE_COLORS, TALENT_LIST, TALENTS, type TalentDef } from '../data/talents';
 import { linesText } from '../data/rulesText';
@@ -224,7 +224,7 @@ export class TalentPanel {
   update(sim: SimState): void {
     const P = TALENT_PANEL;
     const L = this.layout;
-    this.inFoundry = sim.roomId === FOUNDRY_ROOM;
+    this.inFoundry = respecHere(sim);
     const stateOf = (id: string): TalentNodeState => (sim.talents.includes(id) ? 'taken' : canTake(sim, id) ? 'available' : 'dim');
     const states = new Map(TALENT_LIST.map((t) => [t.id, stateOf(t.id)]));
     const header = talentHeader(sim.level, sim.xp, xpToNext(sim), sim.talentPoints);

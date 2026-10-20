@@ -40,6 +40,7 @@ import { stepLeveling } from './leveling';
 import { respec, takeTalent } from './talents';
 import { rampOverpressure, stepPools } from './keystones';
 import { noteCarried } from './knownRounds';
+import { stepSandbox } from './sandbox';
 
 /** Each room's bodies, built once per tick on first use. */
 function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
@@ -88,6 +89,8 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   if (cmd.restore) restore(state, cmd.restore);
   if (cmd.takeTalent) takeTalent(state, cmd.takeTalent);
   if (cmd.respec) respec(state);
+  // 044: the sandbox's panel, pens and bottomless entrances, before anything fires.
+  stepSandbox(state, cmd);
   stepHarvest(state, state.building ? { ...used, interact: false } : used);
   // Shots fired this tick stay at the muzzle until next tick's step.
   // Shards (029) set off this tick join the flight after it, so they first move next tick.

@@ -9,8 +9,7 @@ import { roomBodies } from '../sim/bodies';
 import { layItem } from '../sim/drops';
 import { claim } from '../sim/claims';
 import { gainXp } from '../sim/leveling';
-import { createEnemy } from '../sim/enemies';
-import { makeChampion } from '../sim/champions';
+import { spawnEnemy } from '../sim/spawn';
 import { CHAMPIONS } from '../data/champions';
 import { keywordReport } from '../data/keywordReport';
 import type { GearPiece } from '../data/gear';
@@ -81,15 +80,11 @@ export function installTestHook(flow: FlowScene): void {
     }),
     spawnChampionPack: act((sim, _scene, enemyIds: string[], champion: number | null = 0) => {
       enemyIds.forEach((enemyId, i) => {
-        const e = createEnemy(sim.nextEnemyId++, enemyId, { x: sim.player.x + (CHAMPIONS.devPack.ahead + i * CHAMPIONS.devPack.gap) * TILE_SIZE, y: sim.player.y }, sim.roomId, 'dev');
-        if (i === champion) makeChampion(sim.rng, e);
-        sim.enemies.push(e);
+        spawnEnemy(sim, enemyId, { x: sim.player.x + (CHAMPIONS.devPack.ahead + i * CHAMPIONS.devPack.gap) * TILE_SIZE, y: sim.player.y }, sim.roomId, { group: 'dev', champion: i === champion });
       });
     }),
     spawnEnemy: act((sim, _scene, enemyId: string, x: number, y: number, champion = false) => {
-      const e = createEnemy(sim.nextEnemyId++, enemyId, { x, y }, sim.roomId, 'dev');
-      if (champion) makeChampion(sim.rng, e);
-      sim.enemies.push(e);
+      spawnEnemy(sim, enemyId, { x, y }, sim.roomId, { group: 'dev', champion });
     }),
     addGear: act((sim, _scene, piece: Omit<GearPiece, 'id'>) => {
       sim.gear.push({ ...structuredClone(piece), id: sim.nextGearId++ });
