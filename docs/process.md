@@ -126,7 +126,7 @@ Shaun follows the work from his phone, so sessions keep him informed without him
 - `specs/<NNN>`: `order` (the number), `num` ("047"), `name`, `step` (0 Spec, 1 Build, 2 Review, 3 Fixes, 4 Playtest, 5 Merged), `state` (`working`, `you`, `queued` or `done`), `eta` (a clock time in Eastern time, e.g. "ready to play about 6:30 pm ET"), `note` (one or two plain sentences), `pr` and `preview` (full https links).
 - Update it at every step change: build started, built, review findings, fixes done, ready to play, merged. Move an ETA when it slips. Add a row when a spec is drafted. Mark a merged spec `done` and drop its `eta`.
 
-**Notifications.** When something needs Shaun (a playtest, a decision, a merge), set `needsYou` and send one `PushNotification`: one line that leads with what to do, e.g. "046 is ready to play: New game, walk into the foundry. Say \"merge 34\" when happy." Clear `needsYou` once he's done it. Don't notify for routine progress.
+**Notifications.** When something needs Shaun (a playtest, a decision, a merge), set `needsYou` and send one `PushNotification`: one line that leads with what to do, e.g. "046 is ready to play: New game, walk into the foundry. Say 'merge 34' when happy." Clear `needsYou` once he's done it. Don't notify for routine progress.
 
 **Each spec, end to end.**
 1. A `general-purpose` builder agent builds it on its own branch (stacked on the previous spec's branch when that one isn't merged yet), opens a draft PR, and keeps `npm run check` green at every commit.
