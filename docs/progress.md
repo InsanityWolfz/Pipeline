@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-20: 046 merged
+**Changed:** Shaun playtested 046 (foundry onboarding) and merged it (InsanityWolfz/Pipeline#34). SAVE_VERSION is 3. Early ammo is 2× per resource.
+
+**Next:** 047 (inventory and hotbars, being built).
+
 ## 2026-10-20: 045 merged
 **Changed:** Shaun playtested 045 (readability fixes), OK'd its build decisions and merged it (InsanityWolfz/Pipeline#33). SAVE_VERSION is 2.
 
