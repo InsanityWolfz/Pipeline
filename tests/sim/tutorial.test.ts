@@ -161,7 +161,9 @@ describe('objectives', () => {
     run(s, 1, { interact: true });
     expect(s.objectives[0]).toBe(true);
     expect(currentObjective(s)).toBe(1);
-    // Done out of order: entering the foundry ticks objective 4, the line still shows 1.
+    // Done out of order: entering the foundry ticks objective 4, the line still shows 1. (046: until 027's build
+    // steps give way to the refill goal, the example line would tick the first two of them; this check leaves it out.)
+    s.start = { ...s.start, exampleLine: false };
     s.roomId = FOUNDRY_ROOM;
     run(s, 1);
     expect(s.objectives[4]).toBe(true);

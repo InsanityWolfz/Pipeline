@@ -95,7 +95,7 @@ describe('the foundry steps (027)', () => {
     put(s, 'cutter', 11, 4, 'up');
     runUntil(s, (x) => currentObjective(x) !== step(3), 200);
     expect(currentObjective(s)).toBe(step(4));
-    expect(s.machineMade).toEqual({ shaft: 2 });
+    expect(s.machineMade).toEqual({ shaft: 4 });
 
     hopper(s, 12, 5, 'stone', 4);
     put(s, 'knapper', 12, 4, 'up');
@@ -110,7 +110,7 @@ describe('the foundry steps (027)', () => {
     put(s, 'assembler', 12, 3, 'up');
     runUntil(s, (x) => currentObjective(x) !== step(6), 300);
     expect(currentObjective(s)).toBe(step(7));
-    expect(s.machineMade.arrow).toBe(4);
+    expect(s.machineMade.arrow).toBe(8);
 
     put(s, 'conduit', 12, 2, 'up');
     put(s, 'conduit', 12, 1, 'up');
@@ -124,8 +124,8 @@ describe('the foundry steps (027)', () => {
     hopper(s, 11, 5, 'wood', 1);
     const cutter = put<MachineState>(s, 'cutter', 11, 4, 'up');
     runUntil(s, (x) => x.events.made.length > 0, 200);
-    expect(s.events.made).toEqual([{ id: cutter.id, pieceId: 'cutter', itemId: 'shaft', count: 2 }]);
-    expect(summarize(s).machineMade).toEqual({ shaft: 2 });
+    expect(s.events.made).toEqual([{ id: cutter.id, pieceId: 'cutter', itemId: 'shaft', count: 4 }]);
+    expect(summarize(s).machineMade).toEqual({ shaft: 4 });
   });
 
   it('hand-crafting a part never counts as machine-made', () => {
@@ -191,7 +191,7 @@ describe('the foundry steps (027)', () => {
     put(s, 'cutter', 11, 4, 'up');
     runUntil(s, (x) => (x.machineMade.shaft ?? 0) > 0, 200);
     die(s);
-    expect(s.machineMade).toEqual({ shaft: 2 });
+    expect(s.machineMade).toEqual({ shaft: 4 });
   });
 
   it('replay identically', () => {
