@@ -331,6 +331,7 @@
     "state.start.claims[]: string",
     "state.start.crafted: array",
     "state.start.crafted[]: string",
+    "state.start.exampleLine: boolean",
     "state.start.gatesOpen: boolean",
     "state.start.gear: array",
     "state.start.gear[].affixes: array",
