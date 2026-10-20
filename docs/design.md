@@ -104,7 +104,7 @@ Your base is your magical foundry, built and abandoned by a lost magical civiliz
 **Theme rule:** every enemy, machine, system and piece of art must fit the lost civilization and its ley lines. Nothing modern or out of place.
 
 - **Fantasy machines:** cutters, knappers, spinners, ley guides, runeforges. Mana flows through crystal conduits, and ley conduits carry materials home.
-- **Difficulty by distance:** enemies near the foundry are weak, and biomes get deadlier the farther out you go (Realm of the Mad God style).
+- **Difficulty by distance:** enemies near the foundry are weak, and biomes get deadlier the farther out you go (Realm of the Mad God style). Each danger ring multiplies enemy health and damage (×1, ×1.6, ×2.5 for rings 1 to 3) on top of its tougher enemy types; bosses keep their own numbers. (Added 2026-10-19, Shaun, spec 041.)
 - **Claiming:** clear a site, then set it up as a supply line to the foundry. Reactivating its ley pylon makes monsters stop roaming there and extends the tube's range. Claims are permanent, and nothing ever threatens them. NPCs may move in, so cleansed sites become small hubs.
 - **Pylons are deposit points:** reach any claimed pylon and your haul is sent home safe.
 - **Fast travel:** between the foundry and any claimed site, picked from the waystone's menu of claimed pylons (Added 2026-10-19, Shaun, spec 032).
