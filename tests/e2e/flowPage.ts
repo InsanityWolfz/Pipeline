@@ -51,18 +51,24 @@ export async function reloadTitle(page: Page): Promise<void> {
   await page.waitForFunction(() => window.__GAME__?.ui().ready === true && window.__GAME__?.flow().state === 'title');
 }
 
-/** New game from the title, then into the foundry: the field's pack killed by the hook so its gate opens, then down the stairs. Returns the state there. */
-export async function newGameToFoundry(page: Page): Promise<void> {
+/** New game from the title, then into the foundry: the field's pack killed by the hook so its gate opens, then down the stairs. With `progress`, a claim, levels and a gear piece first. */
+export async function newGameToFoundry(page: Page, progress = false): Promise<void> {
   await clickRow(page, 'newGame');
   await flowIs(page, 'play');
   await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
-  await page.evaluate(() => {
+  await page.evaluate((prog) => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     g.step(0);
     for (const e of g.getState().enemies) if (e.group === 'field') g.setEnemyHealth(e.id, 0);
+    // `progress`: something a restore must bring back (a claim, levels, gear) before the save.
+    if (prog) {
+      g.claim('shrine');
+      g.gainXp(2000);
+      g.addGear({ slot: 'helm', rarity: 'rare', weight: null, baseArmor: 2, relic: null, name: 'Test Helm', affixes: [{ kind: 'armor', value: 2 }] });
+    }
     g.step(3);
     h.toFoundry();
-  });
+  }, progress);
 }

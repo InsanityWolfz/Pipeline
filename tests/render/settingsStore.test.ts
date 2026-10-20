@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { BIND_ACTIONS, DEFAULT_BINDINGS, DEFAULT_SETTINGS, FIXED_KEYS } from '../../src/data/settings';
 import { STORAGE_KEYS } from '../../src/data/save';
 import { SOUND_SETTINGS_KEY } from '../../src/data/sounds';
-import { loadSettings, parseSettings, rebind } from '../../src/render/flow/settingsStore';
+import { loadSettings, parseSettings, rebind, stepVolume } from '../../src/render/flow/settingsStore';
 import { installStorage } from './memoryStorage';
 
 // 042: settings in one versioned key, the old sound key read once, guarded storage, and rebinding by swapping.
@@ -48,6 +48,16 @@ describe('settings store (042)', () => {
     expect(parseSettings(JSON.stringify({ bindings: { dodge: 'W' } }))?.bindings).toEqual(DEFAULT_BINDINGS);
     installStorage(true);
     expect(loadSettings('', false)).toEqual(DEFAULT_SETTINGS);
+  });
+});
+
+describe('volume steps (042)', () => {
+  it('steps 10% at a time, kept in 0..100%', () => {
+    expect(stepVolume(0.7, 1)).toBe(0.8);
+    expect(stepVolume(0.3, -1)).toBe(0.2);
+    expect(stepVolume(1, 1)).toBe(1);
+    expect(stepVolume(0, -1)).toBe(0);
+    expect(stepVolume(0.1, -1)).toBe(0);
   });
 });
 

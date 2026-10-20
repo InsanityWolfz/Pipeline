@@ -55,7 +55,7 @@ describe('flow machine', () => {
     const confirm = run(['confirm']);
     expect(confirm.send('feedback')).toBe(false);
     expect(confirm.state).toBe('confirm');
-    expect(run(['feedback']).can('feedback')).toBe(false);
+    expect(run(['feedback']).send('feedback')).toBe(false);
   });
 
   it('Settings opened over the note keeps its own opener', () => {
@@ -69,8 +69,8 @@ describe('flow machine', () => {
     expect(m.state).toBe('title');
     expect(m.under).toBeNull();
     // The title's own confirm (New game over a save) can't quit to the title, and the pause's can't start a game.
-    expect(run(['confirm']).can('toTitle')).toBe(false);
-    expect(run(['start', 'pause', 'confirm']).can('start')).toBe(false);
+    expect(run(['confirm']).send('toTitle')).toBe(false);
+    expect(run(['start', 'pause', 'confirm']).send('start')).toBe(false);
   });
 
   it('New game over a save: a confirm on the title, then start or cancel', () => {

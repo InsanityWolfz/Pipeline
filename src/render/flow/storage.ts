@@ -1,5 +1,5 @@
 // Browser storage for the flow (042): every read and write guarded (private windows, blocked site data, a full
-// disk), as soundSettings.ts does. With storage blocked the game plays on with defaults; `blocked()` says so once.
+// disk). With storage blocked the game plays on with defaults; `storageBlocked()` tells the flow scene, which says so once.
 
 let failed = false;
 

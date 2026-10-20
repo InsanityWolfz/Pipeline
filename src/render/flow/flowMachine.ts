@@ -54,10 +54,6 @@ export class FlowMachine {
     return this.state === 'play';
   }
 
-  can(event: FlowEvent): boolean {
-    return this.move(event) !== null;
-  }
-
   /** Applies an event; returns whether it changed the state. An event the state doesn't take changes nothing. */
   send(event: FlowEvent): boolean {
     const move = this.move(event);

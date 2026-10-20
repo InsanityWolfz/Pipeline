@@ -90,7 +90,8 @@ export class FlowScene extends Scene {
   create(): void {
     bakeVectors(this, this.fit.scale);
     this.applyFit(this.fit);
-    this.sounds = new SoundView(this, true);
+    // M, [ and ] wait while a key list row waits for its key, so pressing one there doesn't also mute (042).
+    this.sounds = new SoundView(this, true, () => this.machine.state === 'settings' && (this.settingsScreen?.waiting ?? null) !== null);
     this.events.on(MENU_HOVER_EVENT, () => this.sounds?.play(SOUNDS.menuHover));
     this.title = new TitleView(this, this.fit.scale);
     this.card = new CardView(this);

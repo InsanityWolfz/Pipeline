@@ -1,7 +1,7 @@
 import type { Scene } from 'phaser';
-import { BIND_ACTIONS, DEFAULT_BINDINGS, VOLUME_STEP, type BindAction } from '../../data/settings';
+import { BIND_ACTIONS, DEFAULT_BINDINGS, type BindAction } from '../../data/settings';
 import { nameOf } from '../keys';
-import { rebind, settings, updateSettings } from './settingsStore';
+import { rebind, settings, stepVolume, updateSettings } from './settingsStore';
 import { SettingsView } from './SettingsView';
 import type { MenuRowShown } from './MenuColumn';
 
@@ -65,8 +65,7 @@ export class SettingsScreen {
     if (this.view.showingKeys) return this.keysClick(id);
     const s = settings();
     if (isVolume(id)) {
-      const step = hit.part === 'up' ? VOLUME_STEP : -VOLUME_STEP;
-      updateSettings({ [id]: Math.round(Math.min(1, Math.max(0, s[id] + step)) * 10) / 10 });
+      updateSettings({ [id]: stepVolume(s[id], hit.part === 'up' ? 1 : -1) });
     } else if (id === 'mute') updateSettings({ muted: !s.muted });
     else if (id === 'flashes') updateSettings({ flashes: !s.flashes });
     else if (id === 'keys') return this.view.showKeys(s, null);

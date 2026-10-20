@@ -84,6 +84,9 @@ describe('save envelope (042)', () => {
       text({ ...env, state: { ...state, claims: { shrine: true } } }),
       text({ ...env, state: { ...state, player: 'here' } }),
       text({ ...env, meta: null }),
+      // List items the wrong kind, and a piece the first tick would trip on (the dry run of Continue catches it).
+      text({ ...env, state: { ...state, enemies: ['husk'] } }),
+      text({ ...env, state: { ...state, foundry: { nextPieceId: 1, pieces: [{ id: 0, pieceId: 'no-such-piece', kind: 'machine', tx: 3, ty: 3, facing: 'right' }] } } }),
     ];
     for (const t of bad) {
       let status = '';

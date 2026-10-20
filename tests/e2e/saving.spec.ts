@@ -11,20 +11,24 @@ const continueRow = (page: import('@playwright/test').Page) => page.evaluate(() 
 test('entering the foundry saves; reload, Continue wakes there with the same factory and claims', async ({ page }) => {
   const errors = watchErrors(page);
   await bootTitle(page);
-  await newGameToFoundry(page);
+  await newGameToFoundry(page, true);
   await expect.poll(() => page.evaluate(() => window.__GAME__?.flow().saves)).toBe(1);
   const before = await page.evaluate(() => window.__GAME__?.getState());
   expect(before?.room).toBe('foundry');
   await reloadTitle(page);
   const row = await continueRow(page);
   expect(row?.usable).toBe(true);
-  expect(row?.sub).toMatch(/^Level 1 · 0 pylons · saved \d+ [A-Z][a-z]{2}, \d\d:\d\d$/);
+  expect(row?.sub).toMatch(/^Level \d+ · 1 pylon · saved \d+ [A-Z][a-z]{2}, \d\d:\d\d$/);
   await clickRow(page, 'continue');
   await flowIs(page, 'play');
   await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
   const after = await page.evaluate(() => window.__GAME__?.step(0));
   expect(after?.room).toBe('foundry');
+  expect(before?.claims).toEqual(['shrine']);
   expect(after?.claims).toEqual(before?.claims);
+  expect(before?.level).toBeGreaterThan(1);
+  expect(after?.level).toBe(before?.level);
+  expect(after?.gear).toEqual(before?.gear);
   expect(after?.foundry).toEqual(before?.foundry);
   expect(after?.inventory).toEqual(before?.inventory);
   expect(errors).toEqual([]);

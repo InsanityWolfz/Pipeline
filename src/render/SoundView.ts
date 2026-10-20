@@ -1,7 +1,6 @@
 import { Input, type Scene } from 'phaser';
 import { ROOM_AMBIENCE, SOUND_MIX, SOUNDS, type SoundKey } from '../data/sounds';
-import { VOLUME_STEP } from '../data/settings';
-import { onSettings, settings, updateSettings } from './flow/settingsStore';
+import { onSettings, settings, stepVolume, updateSettings } from './flow/settingsStore';
 
 // Plays the synth sounds (014): one-shot effects, and an ambient loop per room
 // that crossfades on a room change. The browser holds audio back until the first input, which Phaser waits out.
@@ -28,11 +27,14 @@ export class SoundView {
     }
   }
 
-  /** `keys`: M, [ and ] work in this scene (the flow scene's, 042). */
-  constructor(scene: Scene, keys = false) {
+  /**
+   * `keys`: M, [ and ] work in this scene (the flow scene's, 042), except while `keysHeld()` says another screen is
+   * taking keys (a key list row waiting for its key).
+   */
+  constructor(scene: Scene, keys = false, keysHeld: () => boolean = () => false) {
     this.scene = scene;
     this.apply();
-    if (keys) this.bindKeys();
+    if (keys) this.bindKeys(keysHeld);
     const off = onSettings(() => this.apply());
     scene.events.once('shutdown', () => {
       off();
@@ -40,28 +42,13 @@ export class SoundView {
     });
   }
 
-  private bindKeys(): void {
+  private bindKeys(held: () => boolean): void {
     const keys = this.scene.input.keyboard;
-    keys?.addKey(Input.Keyboard.KeyCodes.M).on('down', () => this.toggleMute());
-    keys?.addKey(Input.Keyboard.KeyCodes.OPEN_BRACKET).on('down', () => this.nudgeVolume(-VOLUME_STEP));
-    keys?.addKey(Input.Keyboard.KeyCodes.CLOSED_BRACKET).on('down', () => this.nudgeVolume(VOLUME_STEP));
-  }
-
-  get volume(): number {
-    return settings().master;
-  }
-
-  get muted(): boolean {
-    return settings().muted;
-  }
-
-  toggleMute(): void {
-    updateSettings({ muted: !settings().muted });
-  }
-
-  /** [ and ] step the master volume, kept between 0 and 1 and saved. */
-  nudgeVolume(step: number): void {
-    updateSettings({ master: Math.round(Math.min(1, Math.max(0, settings().master + step)) * 10) / 10 });
+    const unlessHeld = (f: () => void) => () => void (held() || f());
+    keys?.addKey(Input.Keyboard.KeyCodes.M).on('down', unlessHeld(() => updateSettings({ muted: !settings().muted })));
+    // [ and ] step the master volume, saved.
+    keys?.addKey(Input.Keyboard.KeyCodes.OPEN_BRACKET).on('down', unlessHeld(() => updateSettings({ master: stepVolume(settings().master, -1) })));
+    keys?.addKey(Input.Keyboard.KeyCodes.CLOSED_BRACKET).on('down', unlessHeld(() => updateSettings({ master: stepVolume(settings().master, 1) })));
   }
 
   private apply(): void {

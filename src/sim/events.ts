@@ -267,7 +267,7 @@ export function createEvents(): SimEvents {
 }
 
 export function clearEvents(events: SimEvents): void {
-  // Every list empties; the two flags and the lost list reset.
+  // Every list empties; the three flags and the lost list reset.
   for (const value of Object.values(events)) if (Array.isArray(value)) value.length = 0;
   events.tubeTaken = false;
   events.lost = {};

@@ -117,7 +117,10 @@ export class NoteView {
     // Typing never reaches the game's keys while the note is open.
     const keyboard = this.scene.input.keyboard?.manager;
     if (keyboard) keyboard.enabled = !open;
-    if (!open) this.box.blur();
+    if (open) return;
+    this.box.blur();
+    // A key held as the note opened missed its key-up: every scene's keys start fresh.
+    for (const s of this.scene.game.scene.getScenes(true)) s.input.keyboard?.resetKeys();
   }
 
   private showCount(): void {

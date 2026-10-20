@@ -1,4 +1,4 @@
-import { BIND_ACTIONS, DEFAULT_SETTINGS, FIXED_KEYS, SETTINGS_VERSION, type BindAction, type Settings } from '../../data/settings';
+import { BIND_ACTIONS, DEFAULT_SETTINGS, FIXED_KEYS, SETTINGS_VERSION, VOLUME_STEP, type BindAction, type Settings } from '../../data/settings';
 import { STORAGE_KEYS } from '../../data/save';
 import { SOUND_SETTINGS_KEY } from '../../data/sounds';
 import { readKey, writeKey } from './storage';
@@ -12,7 +12,12 @@ type Listener = (s: Readonly<Settings>) => void;
 let current: Settings | null = null;
 const listeners = new Set<Listener>();
 
-const clampVolume = (v: unknown, fallback: number): number => (typeof v === 'number' && v >= 0 && v <= 1 ? Math.round(v * 10) / 10 : fallback);
+/** A volume kept in 0..1 and on the 10% steps. */
+export const roundVolume = (v: number): number => Math.round(Math.min(1, Math.max(0, v)) / VOLUME_STEP) * VOLUME_STEP;
+/** A volume one step up (+1) or down (-1). */
+export const stepVolume = (v: number, dir: 1 | -1): number => Math.round(roundVolume(v + dir * VOLUME_STEP) * 10) / 10;
+
+const clampVolume = (v: unknown, fallback: number): number => (typeof v === 'number' && v >= 0 && v <= 1 ? Math.round(roundVolume(v) * 10) / 10 : fallback);
 
 /** Stored settings checked field by field (a bad field takes its default), or null with none stored. */
 export function parseSettings(raw: string | null): Settings | null {

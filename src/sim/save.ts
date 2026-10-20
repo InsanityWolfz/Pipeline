@@ -3,6 +3,7 @@ import type { StartDef } from '../data/player';
 import { createEvents } from './events';
 import { createSim, resetWorld, type SimState } from './state';
 import { wakeRoom } from './tutorial';
+import { stepSim } from './step';
 
 // Saving (042.3): the save is the whole sim state as plain JSON, with the tick's events emptied. Pure: no storage,
 // no clock; render stores the text and stamps the time. Loading fills anything an older save lacks from a fresh
@@ -52,6 +53,11 @@ function fill(def: unknown, value: unknown, path: string): unknown {
   if (def === null || def === undefined) return value;
   if (Array.isArray(def)) {
     if (!Array.isArray(value)) throw new Error(`${path} should be a list`);
+    // A light check on the items (042.21): each the same kind as the fresh list's first, objects not filled.
+    const kind = def.length > 0 ? kindOf(def[0]) : null;
+    value.forEach((v: unknown, i) => {
+      if (kind !== null && kindOf(v) !== kind) throw new Error(`${path}[${i}] should be a ${kind}`);
+    });
     return value;
   }
   if (isRecord(def)) {
@@ -63,6 +69,9 @@ function fill(def: unknown, value: unknown, path: string): unknown {
   if (typeof value !== typeof def) throw new Error(`${path} should be a ${typeof def}`);
   return value;
 }
+
+/** A value's kind for the list check: object, list, null or its typeof. */
+const kindOf = (v: unknown): string => (v === null ? 'null' : Array.isArray(v) ? 'list' : typeof v);
 
 /** A SimState from saved data, filled from a fresh sim of its seed and start. Throws if it can't be. */
 export function restore(data: unknown): SimState {
@@ -122,6 +131,11 @@ export function readEnvelope(data: unknown, opts: SaveReadOptions = DEFAULT_READ
       env = checkEnvelope(step(env));
     }
     const state = restore(env.state);
+    // A dry run of Continue on a copy (the wake and one tick), so a save that would break the first frame reads as
+    // corrupt here, with its damaged-save path, instead of crashing the game.
+    const probe = structuredClone(state);
+    wakeInFoundry(probe);
+    stepSim(probe);
     return { status: 'ok', envelope: { ...env, state }, state };
   } catch (e) {
     return { status: 'corrupt', reason: e instanceof Error ? e.message : 'unreadable' };
