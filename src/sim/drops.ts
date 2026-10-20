@@ -1,6 +1,6 @@
 import { DROP_SCATTER, DROP_SCATTER_TRIES, type DropTable, type EnemyDef } from '../data/enemies';
-import { FEET_BOX, PICKUP_RADIUS } from '../data/player';
-import { TILE_SIZE } from '../data/config';
+import { FEET_BOX, MAGNET } from '../data/player';
+import { TICK_RATE, TILE_SIZE } from '../data/config';
 import { FIRST_ARMOR_ENEMY, UNIDENTIFIED_ARMOR } from '../data/gear';
 import { CHAMPIONS } from '../data/champions';
 import { championDropRolls } from './champions';
@@ -15,7 +15,14 @@ import { ANY_SCHEMATIC } from '../data/drops';
 import { ITEMS } from '../data/items';
 import { pickSchematic, rollSchematic } from './schematics';
 
-// Items dropped on the ground, and picking them up by walking over them.
+// Items dropped on the ground, and picking them up: within reach they're pulled in and picked up on contact (045).
+
+/** A cache's item bursting out (045): the chest's point it flies from, and the ticks it waits in the chest first. */
+export interface GroundBurst {
+  x: number;
+  y: number;
+  delay: number;
+}
 
 export interface GroundItem {
   id: number;
@@ -23,6 +30,12 @@ export interface GroundItem {
   roomId: string;
   x: number;
   y: number;
+  /** The magnet pull's speed so far, px per tick (045); absent or 0 at rest. */
+  speed?: number;
+  /** Ticks before the pull may take it (045: a cache's item bursting out); absent or 0 for none. */
+  wait?: number;
+  /** Set on a cache's items (045): where it burst from, for the render's flight. */
+  burst?: GroundBurst;
 }
 
 /** The item ids a drop table rolls, one entry per item; `rare` false leaves its rare entries for a single roll of their own (032). */
@@ -119,18 +132,42 @@ export function layItem(state: SimState, itemId: string, roomId: string, x: numb
   state.groundItems.push({ id: state.nextGroundItemId++, itemId, roomId, x, y });
 }
 
-/** Moves ground items in the player's room within PICKUP_RADIUS of their feet box into the inventory, whatever stands in between (021). */
+/** The gap between a point and the player's feet box, px. */
+function gapToFeet(p: { x: number; y: number }, x: number, y: number): number {
+  const gapX = Math.max(0, Math.abs(x - p.x) - FEET_BOX.w / 2);
+  const gapY = Math.max(0, Math.abs(y - p.y) - FEET_BOX.h / 2);
+  return Math.hypot(gapX, gapY);
+}
+
+const ACCEL = MAGNET.accel / (TICK_RATE * TICK_RATE);
+const MAX_SPEED = MAGNET.maxSpeed / TICK_RATE;
+
+/**
+ * The magnet pull (045): each ground item in the player's room within MAGNET.radius of their feet box (whatever stands
+ * in between, 021) moves toward them, faster each tick, and is picked up on contact. One out of reach stops. A
+ * waiting item (a cache's, still bursting out) counts its wait down first, in any room.
+ */
 export function stepPickups(state: SimState): void {
   const p = state.player;
   let kept = 0;
   for (const item of state.groundItems) {
-    if (item.roomId !== state.roomId) {
+    if (item.wait) item.wait -= 1;
+    if (item.roomId !== state.roomId || item.wait || gapToFeet(p, item.x, item.y) > MAGNET.radius) {
+      if (item.speed) item.speed = 0;
       state.groundItems[kept++] = item;
       continue;
     }
-    const gapX = Math.max(0, Math.abs(item.x - p.x) - FEET_BOX.w / 2);
-    const gapY = Math.max(0, Math.abs(item.y - p.y) - FEET_BOX.h / 2);
-    if (Math.hypot(gapX, gapY) <= PICKUP_RADIUS) {
+    const speed = Math.min(MAX_SPEED, (item.speed ?? 0) + ACCEL);
+    const dist = Math.hypot(p.x - item.x, p.y - item.y);
+    if (dist <= speed) {
+      item.x = p.x;
+      item.y = p.y;
+    } else {
+      item.x += ((p.x - item.x) / dist) * speed;
+      item.y += ((p.y - item.y) / dist) * speed;
+    }
+    item.speed = speed;
+    if (gapToFeet(p, item.x, item.y) <= MAGNET.contact) {
       state.inventory[item.itemId] = (state.inventory[item.itemId] ?? 0) + 1;
       state.events.pickups.push({ id: item.id, itemId: item.itemId, x: item.x, y: item.y });
     } else {

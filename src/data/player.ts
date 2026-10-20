@@ -126,5 +126,16 @@ export const HEAL_RATE_STEP = 0.1;
 /** Ticks a hit leaves the player invulnerable. */
 export const HIT_INVULN_TICKS = 30;
 
-/** A ground item this close to the feet box is picked up, px: about two tiles, through anything in between (021). */
-export const PICKUP_RADIUS = 64;
+/**
+ * A ground item this close to the feet box is the player's, px: three tiles (045, from 021's 64), through anything in
+ * between. It is pulled in (MAGNET) and picked up on contact.
+ */
+export const PICKUP_RADIUS = 96;
+
+/**
+ * The magnet pull (045): a ground item within `radius` px of the feet box (the pickup reach) drifts toward the player,
+ * its speed growing by `accel` px/s² from rest to at most `maxSpeed` px/s, so one at the edge arrives in about a
+ * quarter second (045.1). Within `contact` px of the feet box it's picked up. Out of reach it stops where it is. It
+ * works in combat too (045.2).
+ */
+export const MAGNET = { radius: PICKUP_RADIUS, accel: 3000, maxSpeed: 480, contact: 2 } as const;

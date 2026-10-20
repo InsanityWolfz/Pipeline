@@ -114,6 +114,8 @@ describe('the Ruined Cache', () => {
   it('shows open and empty, with nothing more from E, until it re-arms', () => {
     const s = atCache();
     open(s);
+    // 045: what it gave is pulled in meanwhile; only a second haul would count.
+    s.groundItems = [];
     expect(open(s)).toEqual([]);
     expect(s.cacheHold).toBeNull();
   });

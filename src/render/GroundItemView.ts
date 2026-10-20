@@ -12,7 +12,7 @@ interface Drawn {
   shadow: GameObjects.Image;
 }
 
-// Draws items lying on the ground, each over a small shadow and sorted by its ground point.
+// Draws items lying on the ground, each over a small shadow and sorted by its ground point; pulled in (045), they follow.
 // A picked-up item slides into the player instead of vanishing (021).
 export class GroundItemView {
   private readonly drawn = new Map<number, Drawn>();
@@ -33,7 +33,12 @@ export class GroundItemView {
     const live = new Set<number>();
     for (const g of items) {
       live.add(g.id);
-      if (this.drawn.has(g.id)) continue;
+      const drawn = this.drawn.get(g.id);
+      if (drawn) {
+        // 045: the magnet pull moves items; they follow the sim.
+        this.place(drawn, g.x, g.y);
+        continue;
+      }
       const def = ITEMS[g.itemId];
       if (!def) throw new Error(`Unknown item '${g.itemId}'`);
       const x = Math.round(g.x);
@@ -50,6 +55,14 @@ export class GroundItemView {
       else d.item.destroy();
       this.drawn.delete(id);
     }
+  }
+
+  /** An item and its shadow at a ground point, sorted by it. */
+  private place(d: Drawn, gx: number, gy: number): void {
+    const x = Math.round(gx);
+    const y = Math.round(gy);
+    d.shadow.setPosition(x, y);
+    d.item.setPosition(x, y + GROUND_ITEM_LIFT).setDepth(y);
   }
 
   /** Slides an item's image into the player (who may still be moving), shrinking, then removes it. */

@@ -117,9 +117,12 @@ test.describe('review screenshots (021)', () => {
     // The log lying behind the tree, before the tick that picks it up (for the picture only).
     await page.waitForTimeout(1500);
     await page.screenshot({ path: `${SHOTS}/03a-log-behind-tree.png` });
+    // 045: the magnet pulls it in through the tree over a few ticks, then it's picked up.
     const s = await page.evaluate(() => {
       window.__GAME__?.tweenSpeed(0.04);
-      return window.__GAME__?.step(1);
+      let out = window.__GAME__?.step(1);
+      for (let t = 0; t < 40 && out?.events.pickups.length === 0; t++) out = window.__GAME__?.step(1);
+      return out;
     });
     expect(s?.events.pickups.map((p) => p.itemId)).toEqual(['wood']);
     expect(s?.player.y).toBeGreaterThan(tree.y);
