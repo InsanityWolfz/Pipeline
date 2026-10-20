@@ -57,7 +57,7 @@ export const LANDMARK_LOOK = {
    * The Husk Hive's ground (049): amber resin crust in patches on its open tiles (`every` nth, by tile hash), and a
    * darker stain round each nest stone, painted into the ground.
    */
-  hive: { crust: 'resin-dark', alpha: 0.3, every: 2, rx: 11, ry: 5, jitter: 12, stain: { color: 'resin-dark', alpha: 0.22, rx: 22, ry: 9 } },
+  hive: { crust: 'resin-dark', alpha: 0.4, every: 2, rx: 11, ry: 5, jitter: 12, stain: { color: 'resin-dark', alpha: 0.22, rx: 22, ry: 9 } },
   /** The Old Grove's sun: warm patches on its grass (`every` nth open tile), drawn into the ground. */
   grove: { sun: 'sun', alpha: 0.4, every: 3, rx: 20, ry: 9, jitter: 10 },
   /** The marsh: damp ground round its ponds and tufts every `tuftStep` radians round each rim, lilies on the water. */

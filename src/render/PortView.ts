@@ -24,6 +24,8 @@ interface PortParts {
   text: TextLine;
   /** The plate's text as last drawn, so it's only redrawn when it changes. */
   shown: string;
+  /** Whether it was last drawn moved aside for a fixture standing below. */
+  under: boolean;
 }
 
 // The supply ports' faces and plates (028). SiteView draws each port's body; this
@@ -48,7 +50,13 @@ export class PortView {
       const parts = this.parts.get(f.id) ?? this.create(f.id, def.raw, def);
       const pylons = pylonsOf(sim, f);
       const text = portPlate(pylons, portPerMinute(pylons));
-      if (text !== parts.shown) this.drawPlate(parts, text, def);
+      // A fixture standing right below this port (034's wood port under ley-iron, 049's resin port under ley crystal and
+      // the bench under it) would hide the plate, which lies on its tile: the plate moves one tile into the room.
+      const under = sim.fixtures.some((o) => {
+        const d = fixtureDef(o.id);
+        return d.tx === def.tx && d.ty === def.ty + 1;
+      });
+      if (text !== parts.shown || under !== parts.under) this.drawPlate(parts, text, def, under);
       for (const o of [parts.icon, parts.plate, parts.text]) o.setVisible(true);
       this.shown.push({ raw: def.raw, icon: itemDef(def.raw).icon, plate: text });
     }
@@ -65,20 +73,21 @@ export class PortView {
     // The plate lies on the floor below the port: pieces standing south of it draw over it.
     const plate = this.scene.add.graphics();
     const text = new TextLine(this.scene, 0, 0, bottom, true, 'label');
-    const parts = { icon, plate, text, shown: '' };
+    const parts = { icon, plate, text, shown: '', under: false };
     this.parts.set(id, parts);
     return parts;
   }
 
   /** The plate's tablet sized to its text, under the port, reading into the room. */
-  private drawPlate(parts: PortParts, text: string, at: { tx: number; ty: number }): void {
+  private drawPlate(parts: PortParts, text: string, at: { tx: number; ty: number }, under: boolean): void {
     const { platePad: pad, plateGap, plateAlpha, plateX, textDrop } = PORT_LOOK;
     parts.shown = text;
+    parts.under = under;
     parts.text.set(text);
     const top = (at.ty + 1) * TILE_SIZE + plateGap;
     const w = Math.ceil(parts.text.width) + 2 * pad.x;
     const h = parts.text.lineHeight + 2 * pad.y;
-    const left = at.tx * TILE_SIZE + plateX;
+    const left = (at.tx + (under ? 1 : 0)) * TILE_SIZE + plateX;
     const depth = top + h;
     parts.plate.clear().setDepth(depth);
     drawTablet(parts.plate, left, top, w, h, plateAlpha);
