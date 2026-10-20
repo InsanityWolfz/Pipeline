@@ -1,5 +1,7 @@
 # 047: Inventory and hotbars
-status: draft
+status: approved
+
+Approved on draft by Shaun in chat, 2026-10-20 ("Approve 45-47 on draft"): the build follows the proposals in the open questions.
 
 From Shaun's playtest notes (docs/brainstorm/2026-10-20-playtest-notes.md, notes 6, 11, 12, 15) and his interview answers (docs/brainstorm/2026-10-20-playtest-interview.md). Shaun: "we can just copy Factorio's inventory and hopper management screens."
 

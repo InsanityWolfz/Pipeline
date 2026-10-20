@@ -1,5 +1,7 @@
 # 046: Foundry onboarding
-status: draft
+status: approved
+
+Approved on draft by Shaun in chat, 2026-10-20 ("Approve 45-47 on draft"): the build follows the proposals in the open questions.
 
 From Shaun's playtest notes (docs/brainstorm/2026-10-20-playtest-notes.md, notes 1, 4, 10) and his interview answers (docs/brainstorm/2026-10-20-playtest-interview.md). Note 10 came from watching a first-time player struggle in the foundry.
 

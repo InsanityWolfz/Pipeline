@@ -1,5 +1,7 @@
 # 045: Readability fixes
-status: draft
+status: approved
+
+Approved on draft by Shaun in chat, 2026-10-20 ("Approve 45-47 on draft"): the build follows the proposals in the open questions.
 
 From Shaun's playtest notes (docs/brainstorm/2026-10-20-playtest-notes.md, notes 2, 7, 8, 9, 13, 14) and his interview answers (docs/brainstorm/2026-10-20-playtest-interview.md), plus 043.5 from the backlog.
 
