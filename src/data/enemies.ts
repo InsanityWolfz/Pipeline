@@ -91,7 +91,12 @@ export interface MeleeDef extends EnemyBase, ScreenLeashed {
 export interface CasterDef extends EnemyBase, ScreenLeashed {
   kind: 'caster';
   cast: AttackTiming & {
-    /** Aggros when the player is this close, px. */
+    /**
+     * What wakes it (045): 'screen', on screen like other enemies (017), or 'range', only within `aggroRange`. Awake,
+     * it closes to `aggroRange` before keeping its distance and casting.
+     */
+    wake: 'screen' | 'range';
+    /** Aggros when the player is this close, px (with `wake: 'range'`); awake, it closes to this before casting. */
     aggroRange: number;
     /** The distance it tries to keep from the player, px. */
     keepAway: number;
@@ -182,6 +187,8 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
     feetBox: { w: 12, h: 6 },
     hurtbox: { w: 18, h: 22, offsetY: -14 },
     cast: {
+      // 045 (note 13): on screen, so a Wisp at the screen's edge can't be shot standing still.
+      wake: 'screen',
       aggroRange: 160,
       keepAway: 120,
       backOff: 90,

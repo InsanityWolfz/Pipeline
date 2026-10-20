@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { TICK_RATE } from '../../src/data/config';
+import { TICK_RATE, VIEW_WIDTH } from '../../src/data/config';
+import { castWakes } from '../../src/sim/casterAi';
 import { enemyDef, type CasterDef } from '../../src/data/enemies';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import type { SimState } from '../../src/sim/state';
@@ -16,14 +17,35 @@ function placeWisp(s: SimState, x: number, y: number): EnemyState {
 }
 
 describe('the Wisp', () => {
-  it('stays idle out of range and aggros within aggroRange', () => {
+  it('stays idle off screen and wakes as soon as it is on screen (045: like other enemies, 017)', () => {
+    expect(cast.wake).toBe('screen');
     const s = arena();
-    const e = placeWisp(s, PLAYER_AT.x + cast.aggroRange + 20, PLAYER_AT.y);
+    const e = placeWisp(s, PLAYER_AT.x + VIEW_WIDTH / 2 + 20, PLAYER_AT.y);
     run(s, 10);
     expect(e.mode).toBe('idle');
-    e.x = PLAYER_AT.x + cast.aggroRange - 10;
+    // At the screen's right edge, far past aggroRange: it wakes on the next tick.
+    e.x = PLAYER_AT.x + VIEW_WIDTH / 2 - 10;
+    expect(e.x - PLAYER_AT.x).toBeGreaterThan(cast.aggroRange);
     run(s, 1);
     expect(e.mode).not.toBe('idle');
+  });
+
+  it('wakes at the left edge too, then closes in rather than standing still', () => {
+    const s = arena();
+    const e = placeWisp(s, PLAYER_AT.x - VIEW_WIDTH / 2 + 10, PLAYER_AT.y);
+    const x0 = e.x;
+    run(s, 30);
+    expect(e.mode).not.toBe('idle');
+    expect(e.x).toBeGreaterThan(x0);
+  });
+
+  it("a range-woken caster (wake: 'range') still waits for aggroRange", () => {
+    const s = arena();
+    const e = placeWisp(s, PLAYER_AT.x + cast.aggroRange + 20, PLAYER_AT.y);
+    const def: CasterDef = { ...WISP, cast: { ...cast, wake: 'range' } };
+    expect(castWakes(s, e, def)).toBe(false);
+    e.x = PLAYER_AT.x + cast.aggroRange - 10;
+    expect(castWakes(s, e, def)).toBe(true);
   });
 
   it('backs away from a player who crowds it', () => {
