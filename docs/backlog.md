@@ -51,7 +51,7 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 044 | Sandbox: `?sandbox` boots a test room with every item, round, stage and gear piece, max level, a loadout panel for the intake's volley, a spawn panel, enemy pens and both boss arenas, and god mode; from Shaun's request 2026-10-20 | done |
 | 045 | Readability fixes: red HP bar, E prompts on ley crystals and the sealed door (043.5), a 96 px magnet pickup, build controls on screen, Wisps wake on screen, cache loot bursts out | done |
 | 046 | Foundry onboarding: a working example arrow line on the first visit, the tutorial's second line after the Warden, double Region 1 outputs, the Splitter from the start | done |
-| 047 | Inventory and hotbars: an intake bar (left click) and a carried bar (1–5, right click), a Factorio-style grid inventory and hopper screens, crafting tabs per ammo type with tagged rounds in them | approved |
+| 047 | Inventory and hotbars: an intake bar (left click) and a carried bar (1–5, right click), a Factorio-style grid inventory and hopper screens, crafting tabs per ammo type with tagged rounds in them | done |
 | 048 | Volley shape: two entrances fire at two angles, three as a centre and two sides, all together (note 5) | idea |
 | 049 | Resin pylon: a supply for Husk resin so bombs can be automated (note 16) | idea |
 
@@ -84,5 +84,5 @@ Shaun's drive rant on 2026-10-19 (docs/brainstorm/2026-10-19-drive-rant.md) is q
 
 ## Bugs
 Fixes to built behaviour that need no design. Each goes on its own branch and PR.
-- The inventory panel's Wood row draws "3 at risk" over "home 5" (found in review of 045, 045.11; on main since 031). 047 replaces the panel with the grid inventory, so check it there.
+- Fixed in 047 (the grid replaced the panel): the inventory panel's Wood row drew "3 at risk" over "home 5" (found in review of 045, 045.11; on main since 031). 047 replaces the panel with the grid inventory, so check it there.
 - The Stages panel showed "0/4 arrows" while the player had arrows in an intake entrance and in the inventory (Shaun, 2026-10-20). Fixed in InsanityWolfz/Pipeline#27: the panel counts carried rounds plus the intake entrances (Shaun chose option A, 2026-10-20).

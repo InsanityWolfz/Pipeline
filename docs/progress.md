@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-20: 047 merged; the 045–047 batch is done
+**Changed:** Shaun playtested 047 (inventory and hotbars) and merged it (InsanityWolfz/Pipeline#36). SAVE_VERSION is 5; old saves read as too old (Shaun's rule).
+
+**Next:** a newcomer playtest on the real start, then the next spec interview: 048 (volley shape), 049 (resin pylon), plus anything the newcomer test turns up. Optional cleanup: remove the old save migrations (042–046), which can't run any more.
+
 ## 2026-10-20: 046 merged
 **Changed:** Shaun playtested 046 (foundry onboarding) and merged it (InsanityWolfz/Pipeline#34). SAVE_VERSION is 3. Early ammo is 2× per resource.
 

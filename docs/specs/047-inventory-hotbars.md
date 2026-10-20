@@ -1,5 +1,5 @@
 # 047: Inventory and hotbars
-status: approved
+status: done
 
 Approved on draft by Shaun in chat, 2026-10-20 ("Approve 45-47 on draft"): the build follows the proposals in the open questions.
 
@@ -82,3 +82,6 @@ Built on `claude/047-inventory-hotbars` (plan: docs/plans/047-inventory-hotbars.
 - Older shots that 047 changes were retaken. The carried bar and the intake bar are in nearly every in-world shot, and the grid, the hopper screen and the crafting tabs replaced 031's panel, 022's picker and 026/038's columns: 021/01, 03a, 03b; 022/01 (renamed 01-hopper-screen); 025/01–04; 026/01–04; 029/01, 03, 05, 06; 031/01–09; 036/01, 03–07; 038/01–06; 039/01–03, 05–08; 040/01–07; 045/01–07. After review, the 025, 029 and 038 shots were retaken again: their specs now wait out the door's fade and the schematic banners (`quietScreen`), and the 038 field no longer kills the Bulwark, whose first kill brought up the end card over the mines. 038/01–02 still show the level-up line from those kills, as they did before 047. The three bench Stages shots were removed with the panel: 029/02, 036/02 and 039/04. Contact sheets don't change with 047 and were restored.
 - `npm run measure`: unchanged from 046. Ammo line and still 5/5 met. Ring 1 2.2–2.9 s, ring 2 2.8–4.2 s and ring 3 10.2–17.6 s, all met. The Bulwark's decent build is still 13/20 with 3 KOs (MISSED, as in 043.2/045/046), and the naive bot is KO'd 5/5. The bots fire through the intake's entrances (left click), so the split doesn't reach them.
 
+
+## Shaun's answers (2026-10-20)
+- Shaun playtested the preview and said "Merge 36". He changed none of 047.5–047.18, so they stand as built. 047.9 was answered earlier: left click fires carried items until the tube attunes.
