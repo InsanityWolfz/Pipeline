@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-20: 044 sandbox built
+**Changed:** spec 044 built on `claude/044-sandbox` (draft PR). `?sandbox` boots straight into a test room of its own, in dev and production builds, and never touches the save slot, its backup or Settings' save rows. The kit (99 of every item, every recipe, stage and piece, all research, the level cap with every point, every gear piece at each rarity and every relic) is derived from the content lists in src/data/sandbox.ts. The Sandbox panel (backquote) sets each entrance's round (bottomless), god mode, spawns any enemy at ring 1–3 as champions or not, clears, and resets the Warden and the Bulwark in their arenas; six pens refill 5 s after they're cleared. The open questions' proposals are built; nine smaller choices are under "Raised after the build" in the spec.
+
+**Next:** Shaun playtests the preview (`?sandbox`) and answers 044.7–044.15; then legibility work from the playtest notes.
+
 ## 2026-10-20: Everything merged; 044 sandbox drafted
 **Changed:** on Shaun's word ("merge and approve everything") InsanityWolfz/Pipeline#25–#30 are merged into `main`. His approvals are recorded in the specs: 029 option A, 043.1–043.5, 042.15–042.28, and the 042 docs edits (the docs/design.md line, CLAUDE.md, .claude/rules/sim.md). The review-shot rule is in .claude/rules/tests.md. 042 and 043 are done. 043.5 (the seal's E prompt and sounds) is approved but not built; it's in the backlog. Two 042 e2e tests timed out in a fresh container whose browser draws about 14 fps; they got explicit time budgets.
 

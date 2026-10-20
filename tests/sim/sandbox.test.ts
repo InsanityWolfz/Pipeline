@@ -96,6 +96,8 @@ describe('the sandbox start and kit (044)', () => {
     const s = createSandboxSim(1);
     expect(s.enemies.every((e) => e.roomId === SANDBOX_ROOM)).toBe(true);
     expect(createSim(1).sandbox).toBeUndefined();
+    // The shipped game has no way in: no door anywhere leads to the sandbox's room.
+    for (const room of Object.values(WORLD)) expect((room.doorways ?? []).some((d) => d.to === SANDBOX_ROOM), room.id).toBe(false);
     expect(createSim(1).enemies.some((e) => e.roomId === SANDBOX_ROOM)).toBe(false);
     expect(summarize(createSim(1)).sandbox).toBe(false);
     expect(summarize(s).sandbox).toBe(true);

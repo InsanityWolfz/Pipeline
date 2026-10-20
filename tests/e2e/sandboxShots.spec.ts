@@ -70,12 +70,12 @@ test.describe('review screenshots (044)', () => {
     });
     await page.screenshot({ path: `${SHOTS}/06-mixed-volley.png` });
 
-    // Five ring 3 champion Chargers, a short way in front (above, clear of the HUD).
+    // Five ring 3 champion Chargers, a short way in front (to the east, clear of the HUD).
     await page.evaluate(() => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
       const p = g.getState().player;
-      g.step(1, { moveY: -1, aimX: p.x, aimY: p.y - 200 });
+      g.step(1, { moveX: 1, aimX: p.x + 200, aimY: p.y });
     });
     await openPanel(page);
     await spawnPack(page, 'charger', 3, true, 5);

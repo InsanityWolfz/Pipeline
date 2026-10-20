@@ -77,3 +77,15 @@ Each has a proposal. The build follows the proposals if Shaun approves on draft.
 - **044.4 Gear rolls in the stash.** Proposal: each piece at each rarity (Common, Fine, Rare) with mid rolls, plus every relic, so the stash stays browsable.
 - **044.5 Does the sandbox show the objective line and the end card?** Proposal: no. The objective panel is hidden, and the Bulwark's kill doesn't show the end card.
 - **044.6 Does KO still happen with god mode off?** Proposal: yes, but the player wakes at the sandbox's spawn point with the kit intact, since nothing is at risk there.
+
+## Raised after the build
+The build (branch `claude/044-sandbox`) follows the open questions' proposals. These points weren't decided by the spec; each was built the most conservative way, and each is a proposal for Shaun.
+- **044.7 Wearing the stash's gear.** Gear is worn only at the identification bench (036), and the sandbox can't reach the foundry, so the room has its own bench beside the spawn (its gear panel, and its Stages rows). Proposal: keep it.
+- **044.8 Respec.** 037's respec is free but works only in the foundry; in the sandbox it works anywhere in its room (the tree's reset button shows there). Proposal: keep it.
+- **044.9 Boss reset.** Reset puts the boss back at its arena's start at full health, idle, with its adds and bombs gone, at once (043's reset when the player leaves the forum), and brings a dead one back. It doesn't play the altar's crack-and-rise (that draws at the Hollows' altar). Proposal: keep it.
+- **044.10 Where "in front" is.** The cursor is on the panel when Spawn is clicked, so spawns go the way the player faces: 5 tiles out, 2 tiles apart across. A spawn that would stand in a wall comes back toward the player. A boss is never a champion. Proposal: keep it.
+- **044.11 A Bulwark from the spawn panel.** The Bulwark's AI (034) never leaves the Sunken Forum, so one spawned outside it stands idle. The forum's Bulwark is the one to fight. Proposal: leave it.
+- **044.12 God mode's feedback.** A hit lands as usual (knockback, flash, hit invulnerability, and the damage number it would have dealt) but takes no health. Last Ember never fires; a ready Wardstone still blocks. Proposal: keep it.
+- **044.13 The panel's key in Settings.** The key list shows "Sandbox panel" only in the sandbox. A settings file that already binds the backquote to something else leaves the panel unbound (rebind it in Settings). The save rows (Export save, Import save) are hidden in the sandbox. Proposal: keep it.
+- **044.14 The room.** The foundry's tiled floor and walls, with the forum in the Hollows' stone, the overworld's daylight and outdoor sounds. The pens are walled bays open to the south, far enough apart that standing at one doesn't wake the next; their enemies chase and walk home as anywhere. The default loadout is three plain arrows. Only the entrances are bottomless; the 99 carried rounds aren't. Proposal: keep it.
+- **044.15 Saves.** The sandbox's own state exists only in a sandbox run, which is never saved, so a real save's shape is unchanged and `SAVE_VERSION` stays 1 (the save-shape fingerprint test passes as it is).
