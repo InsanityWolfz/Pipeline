@@ -1,8 +1,7 @@
-import { FEET_BOX } from '../data/player';
 import { arenaOf, arenaOfAltar, ALTAR_REACH } from '../data/hollows';
 import { OVERWORLD_ROOM } from '../data/overworld';
 import { RESEARCH_NODES } from '../data/research';
-import { tileRect } from './fixtures';
+import { gapTo } from './claims';
 import { createEnemy } from './enemies';
 import type { Command } from './input';
 import { count } from './inventory';
@@ -37,13 +36,7 @@ export function altarState(state: Pick<SimState, 'bossDefeats' | 'summoning' | '
 
 /** The altar in reach of the player's feet box, if any. */
 export function altarInReach(state: SimState): { id: string; tx: number; ty: number; boss: string } | undefined {
-  const p = state.player;
-  return altarsHere(state).find((a) => {
-    const r = tileRect(a);
-    const gapX = Math.max(0, Math.abs(r.x - p.x) - (FEET_BOX.w + r.w) / 2);
-    const gapY = Math.max(0, Math.abs(r.y - p.y) - (FEET_BOX.h + r.h) / 2);
-    return Math.hypot(gapX, gapY) <= ALTAR_REACH;
-  });
+  return altarsHere(state).find((a) => gapTo(state, a) <= ALTAR_REACH);
 }
 
 /** True if the player carries an altar's offering. */

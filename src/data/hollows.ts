@@ -44,6 +44,9 @@ function forumWalls(): TileStamp[] {
   return [...out, ...FORUM_COLUMNS.map((t) => ({ ...t, symbol: TILE.pillar }))];
 }
 
+/** How close the player's feet box must be to the altar to use it, px. */
+export const ALTAR_REACH = 20;
+
 /** The gap in the eastern cliffs: rows open through the two-tile wall. */
 const GAP = { y0: 26, y1: 29 } as const;
 const EAST_WALL = [38, 39] as const;
@@ -116,7 +119,7 @@ export const HOLLOWS = {
   opensOn: 'shrine',
   /** `?start=hollows` (034): just inside the gap, on the road. */
   start: { tx: 36, ty: 27 } satisfies TilePos,
-  /** The Bulwark's arena (034): a sunken plaza with one wide way in and no door that locks. */
+  /** The Bulwark's arena (034): a sunken plaza with one wide way in, sealed while its boss fights (043). */
   arena: {
     id: 'sunken-forum',
     name: 'Sunken Forum',
@@ -124,6 +127,17 @@ export const HOLLOWS = {
     bounds: FORUM_BOUNDS,
     inside: FORUM_INSIDE,
     walls: forumWalls(),
+    /**
+     * The arena lock (043, was 041.18): while its boss fights, a ley barrier in the Hollows barrier's look seals the
+     * way in (these tiles, the north wall's gap) and no feet pass it. E with the player's feet box within `reach` px of
+     * it leaves: the player stands on `leaveTo`, just outside, and the fight resets as a leash reset does.
+     */
+    seal: {
+      tiles: Array.from({ length: FORUM_WAY.x1 - FORUM_WAY.x0 + 1 }, (_, i) => ({ tx: FORUM_WAY.x0 + i, ty: FORUM_BOUNDS.y0 })) satisfies TilePos[],
+      leaveTo: { tx: 12, ty: FORUM_BOUNDS.y0 - 1 } satisfies TilePos,
+      /** The altar's reach (same E distance as the arena's other interactable). */
+      reach: ALTAR_REACH,
+    },
     /** Where the boss stands and rises; and the altar stone by the west wall. */
     start: { tx: 12, ty: 36 } satisfies TilePos,
     altar: { id: 'forum-altar', tx: 5, ty: 36 },
@@ -143,9 +157,6 @@ export const HOLLOWS = {
     ] satisfies TilePos[],
   },
 } as const;
-
-/** How close the player's feet box must be to the altar to use it, px. */
-export const ALTAR_REACH = 20;
 
 /** The arena whose boss is this enemy (034: the Bulwark's Sunken Forum), if any. */
 export const arenaOf = (enemyId: string): typeof HOLLOWS.arena | undefined => (HOLLOWS.arena.boss === enemyId ? HOLLOWS.arena : undefined);

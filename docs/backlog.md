@@ -47,7 +47,7 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 040 | Legibility UI: hover summary with keyword chips, Shift+hover breakdown with the damage calculation, a Build tab on the T panel, clickable glossary chips | done |
 | 041 | Balance pass: per-hit damage arrow 14, ley bolt 9, bomb 12 (landmine 60); ring ×1/×1.6/×2.5 on enemy HP and damage; the Bulwark at 2,500 HP with an enrage, a rear stomp and adds; scripted sim targets | done |
 | 042 | Shippable playtest build: painted title screen, game-flow state machine, one save slot saved on entering the foundry (Continue, export and import, versioned), Settings (volumes, shake, flashes, key bindings), big-moment-only shake and a locked camera, end-of-demo card, F feedback notes | approved |
-| 043 | Arena lock and slower Shardbacks: the Sunken Forum seals when the Bulwark engages (E at the seal leaves and resets the fight); Shardback shields turn at 70°/s; moved out of 041 (041.18, 041.19) | approved |
+| 043 | Arena lock and slower Shardbacks: the Sunken Forum seals when the Bulwark engages (E at the seal leaves and resets the fight); Shardback shields turn at 70°/s; moved out of 041 (041.18, 041.19) | done |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
 
@@ -69,7 +69,10 @@ Shaun's drive rant on 2026-10-19 (docs/brainstorm/2026-10-19-drive-rant.md) is q
 
 021–041 were merged to main on 2026-10-20 in the catch-up PR InsanityWolfz/Pipeline#24 after Shaun's playtest ("Merge 24") and wrapped up as done.
 
-043 holds 041.18 and 041.19, moved out on 2026-10-20 under the process reset Shaun approved in chat ("approve the reset"), so 041 could close. It goes on its own branch after the 021–041 catch-up PR.
+043 holds 041.18 and 041.19, moved out on 2026-10-20 under the process reset Shaun approved in chat ("approve the reset"), so 041 could close. Built in InsanityWolfz/Pipeline#28 and merged on Shaun's word ("approve everything", 2026-10-20).
+
+## Approved, not built yet
+- 043.5: an "E" prompt over the Bulwark's sealed door, and the barrier's hum and collapse sounds for the seal (Shaun, 2026-10-20). For the legibility work.
 
 ## Bugs
 Fixes to built behaviour that need no design. Each goes on its own branch and PR.

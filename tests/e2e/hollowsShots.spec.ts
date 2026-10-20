@@ -188,15 +188,14 @@ test.describe('review screenshots (034)', () => {
   test('a blocked hit: the brass spark on the shield', async ({ page }) => {
     test.setTimeout(120_000);
     await forum(page, -3);
-    // Woken, step back into the way in: it turns its shield north toward the player but, with them outside
-    // its arena, neither lobs nor pounds, so nothing else is in the shot.
+    // Woken, step back toward the way in: it turns its shield north toward the player. Since 043 the way in is
+    // sealed while it fights, so the player stands on the row just inside the seal, which frames them both.
     await page.evaluate(([tx, ty]) => {
       const g = window.__GAME__;
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
       g.step(1);
-      // In the way's gap itself (the wall's row): still outside its arena, close enough to frame them both.
-      h.walkTo((tx + 0.5) * 32, (ty + 0.4) * 32);
+      h.walkTo((tx + 0.5) * 32, (ty + 1.5) * 32);
       for (let t = 0; t < 300 && Math.abs((g.getState().bosses[0]?.angle ?? 0) - 270) > 5; t++) g.step(1);
     }, [A.start.tx, A.bounds.y0] as const);
     await cameraSettled(page, 20_000);

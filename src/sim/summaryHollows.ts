@@ -3,6 +3,7 @@ import { OVERWORLD_ROOM } from '../data/overworld';
 import { WORLD } from './world';
 import { defOf } from './champions';
 import { altarState, type AltarState } from './altar';
+import { ARENAS, arenaSealed } from './arenaLock';
 import { engaged } from './bulwarkAi';
 import { fuseProgress } from './enemyBombs';
 import type { EnemyMode } from './enemies';
@@ -44,6 +45,8 @@ export interface HollowsSummary {
   bossDefeats: string[];
   /** Each altar: its boss, its state, and the ticks a summon has run (0 when none is). */
   altars: { id: string; boss: string; state: AltarState; summonTicks: number }[];
+  /** Each boss arena (043): whether its way in is sealed (its boss fights), and the seal's tiles. */
+  arenas: { id: string; sealed: boolean; seal: { tx: number; ty: number }[] }[];
 }
 
 
@@ -72,6 +75,7 @@ export function hollowsSummary(state: SimState): HollowsSummary {
       })),
     enemyBombs: state.enemyBombs.map((b) => ({ id: b.id, room: b.roomId, x: round(b.x), y: round(b.y), from: { x: round(b.fromX), y: round(b.fromY) }, radius: b.radius, fuse: b.fuse, fuseTicks: b.fuseTicks, progress: round(fuseProgress(b)), rollProof: b.rollProof })),
     bossDefeats: [...state.bossDefeats],
+    arenas: ARENAS.map((a) => ({ id: a.id, sealed: arenaSealed(state, a), seal: a.seal.tiles.map((t) => ({ tx: t.tx, ty: t.ty })) })),
     altars: (WORLD[OVERWORLD_ROOM]?.altars ?? []).map((a) => ({ id: a.id, boss: a.boss, state: altarState(state, a.id), summonTicks: state.summoning?.altar === a.id ? state.summoning.ticks : 0 })),
   };
 }

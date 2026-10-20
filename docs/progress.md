@@ -19,6 +19,18 @@ Newest entry first.
 1. Shaun reviews the draft PR and answers the 029 question.
 2. Then 043, 042, each on its own branch.
 
+## 2026-10-20: 043 built (arena lock, slower Shardbacks)
+**Changed:**
+- Branch `claude/043-arena-lock`, stacked on `claude/measure-script` (PR #26); draft PR open. Spec status stays `approved`.
+- The Sunken Forum's way in seals with a ley barrier (the Hollows barrier's look) while the Bulwark fights; no feet pass it. E at the seal puts the player just outside and resets the fight at once (full health at its start, adds and bombs gone), and the seal drops. `getState().arenas` and the `arenaLeaves` event report it. A test holds that no spring or pylon safe zone reaches the arena.
+- The Shardback's shield turns at 70°/s (043.1). A strafing test lands an unblocked hit every pass (none at 120°/s).
+- `npm run measure`: packs all met (ring 3 10.2–17.6 s). The Bulwark target now misses, 13/20 and 3 KOs (was 17/20, 1 KO); the lock alone leaves it at 17/20, so the slower Shardback adds moved it. Recorded as 043.2, not tuned.
+- Checks: `npm run check` passes (1,442 unit tests). The full e2e ran once: 102 passed, 1 failed, 104 skipped (review shots). The failure was the new arenaLock.spec.ts waiting only 5 s for the seal's 900 ms fade under load; it now waits for the fade to start, then up to 20 s for it to end, and passed 3 of 3 reruns.
+
+**Next:**
+1. Shaun answers 043.2–043.5 (spec, "Raised after the build") and playtests the preview with `?start=hollows`.
+2. Then the Stages "0/4 arrows" bug (held on `claude/fix-stages-count`) and 042, each on its own branch.
+
 ## 2026-10-20: `npm run measure` (balance targets out of check)
 **Changed:**
 - Branch `claude/measure-script`, stacked on `claude/session-start-hook` (PR #25). Process rule 4 built: 041's scripted-bot targets (the decent-build Bulwark fight over seeds 1–20, the naive bot, the ring 1–3 pack clears, the four ammo scenarios) run under `npm run measure` (tests/measure, `vitest.measure.config.ts`). It prints per-seed tables and a summary table; a missed target never fails it, a crash does.
