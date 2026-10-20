@@ -38,3 +38,9 @@ Spec: docs/specs/043-arena-lock-shardback-turn.md (approved; 043.1's 70°/s is a
 - The leave is instant (the Bulwark is put back, not walked home), as the spec's "is back at its start".
 - No prompt over the sealed door and no seal sound: neither is in the spec.
 - A summoned Bulwark resets the same way (034 already says a summoned one heals and waits when the player leaves).
+
+## Build notes
+- Built as planned: `src/sim/arenaLock.ts` (derived seal, seal rects in `roomBodies`, push-off, E to leave), `arenas[]` and `arenaLeaves` in getState(), `src/render/leyCurtain.ts` shared by the barrier and the seal, `SHARDBACK.shield.turnDegPerSec` 70.
+- The strafing test radius (70 px) was picked from a probe in the scratchpad: at 120°/s no hit landed at 70–100 px; at 70°/s every pass landed at 50–70 px (the first pass at 80–100 px started with it facing the player and landed none).
+- Under the test hook the sim takes E from `step(1, { interact: true })`, not the keyboard, as other hook-driven e2e do.
+- Measurements and questions: the spec's "Raised after the build".
