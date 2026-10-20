@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { SPRITES } from '../../src/data/assets';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
+import { SPREAD_STEP } from '../../src/data/foundry';
 import { HUD_LAYOUT } from '../../src/data/hudLayout';
 import type { BottomHudState } from '../../src/render/HudView';
 import { boot, cameraSettled, quietScreen, watchErrors } from './helpers';
@@ -130,8 +131,8 @@ test('an arrow and a bomb entrance show as the whole volley, each with its count
   expect(out.hud.active).toEqual({
     kind: 'volley',
     rounds: [
-      { ammoId: 'arrow', count: counts[0] },
-      { ammoId: 'bomb', count: counts[1] },
+      { ammoId: 'arrow', count: counts[0], lane: -SPREAD_STEP / 2 },
+      { ammoId: 'bomb', count: counts[1], lane: SPREAD_STEP / 2 },
     ],
   });
   const hud = await hudShowing(page, counts.map(String));

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { SPREAD_STEP } from '../../src/data/foundry';
-import { boot, cameraSettled, watchErrors } from './helpers';
+import { boot, cameraSettled, quietScreen, watchErrors } from './helpers';
 import { feedLines, restoreEntrance, toIntake, ui } from './intakePage';
 
 // Spreads from the intake (024): a warden core restores one side entrance (033: E at
@@ -11,13 +11,16 @@ import { feedLines, restoreEntrance, toIntake, ui } from './intakePage';
 
 const SHOTS = 'docs/review/024';
 
-/** Out in the meadow, aimed east, with ley bolts selected and carried: one press, which fires the volley first (028). Returns that tick's state and the aim. */
-function fireVolley(page: Page, settle = 0) {
-  return page.evaluate((settle) => {
+/**
+ * Out in the meadow (walking there unless `there`), aimed east, with ley bolts selected and carried: one press, which
+ * fires the volley first (028). Returns that tick's state and the aim.
+ */
+function fireVolley(page: Page, settle = 0, there = false) {
+  return page.evaluate(({ settle, there }) => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
-    h.toHall();
+    if (!there) h.toHall();
     window.__helpers?.hold('ley-bolt');
     const s = g.step(0);
     if ((s.inventory['ley-bolt'] ?? 0) === 0) throw new Error('no ley bolts carried');
@@ -28,7 +31,7 @@ function fireVolley(page: Page, settle = 0) {
     if (settle > 0) g.step(settle);
     const fresh = shot.arrows.filter((a) => !before.has(a.id));
     return { next, shot, aim, fresh };
-  }, settle);
+  }, { settle, there });
 }
 
 test('a warden core restores one entrance (033); two fed arrow entrances fire a two-arrow spread', async ({ page }) => {
@@ -113,9 +116,17 @@ test.describe('review screenshots (024)', () => {
     await cameraSettled(page);
     await page.screenshot({ path: `${SHOTS}/03-intake-open-fed.png` });
 
-    // The volley a few ticks out: two arrows fanned ±7.5° and a bomb straight up the middle.
-    const { shot } = await fireVolley(page, 8);
+    // The volley a few ticks out: one fan of three lanes (048), the arrows at ±15° and the bomb straight up the middle.
+    // Out in the hall first, with the door's fade and the schematic banner played out (046's quietScreen).
+    await page.evaluate(() => {
+      window.__helpers?.toHall();
+      window.__GAME__?.step(1);
+    });
+    await cameraSettled(page);
+    await quietScreen(page);
+    const { shot } = await fireVolley(page, 8, true);
     expect(shot.intake.volley).toEqual(['arrow', 'bomb', 'arrow']);
+    expect(shot.intake.lanes).toEqual([-SPREAD_STEP, 0, SPREAD_STEP]);
     expect(shot.tube.shotCount).toBe(3);
     await cameraSettled(page);
     await page.screenshot({ path: `${SHOTS}/04-volley-in-flight.png` });
