@@ -25,15 +25,20 @@ export class SoundView {
     }
   }
 
-  constructor(scene: Scene) {
+  /** `keys`: M, [ and ] work in this scene (the title's player has none, 042). */
+  constructor(scene: Scene, keys = true) {
     this.scene = scene;
     this.settings = loadSoundSettings(window.location.search, navigator.webdriver);
     this.apply();
-    const keys = scene.input.keyboard;
+    if (keys) this.bindKeys();
+    scene.events.once('shutdown', () => this.ambient?.sound.destroy());
+  }
+
+  private bindKeys(): void {
+    const keys = this.scene.input.keyboard;
     keys?.addKey(Input.Keyboard.KeyCodes.M).on('down', () => this.toggleMute());
     keys?.addKey(Input.Keyboard.KeyCodes.OPEN_BRACKET).on('down', () => this.nudgeVolume(-VOLUME_STEP));
     keys?.addKey(Input.Keyboard.KeyCodes.CLOSED_BRACKET).on('down', () => this.nudgeVolume(VOLUME_STEP));
-    scene.events.once('shutdown', () => this.ambient?.sound.destroy());
   }
 
   get volume(): number {

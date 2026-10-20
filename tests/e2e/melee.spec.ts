@@ -42,7 +42,7 @@ function punchNearestHusk(page: Page, settle: number) {
 
 test('a punch before taking the tube hurts a Husk and knocks it away', async ({ page }) => {
   const errors = watchErrors(page);
-  await boot(page, '');
+  await boot(page, '?start=tutorial');
   const { before, player, punched, after } = await punchNearestHusk(page, MELEE.knockTicks);
   expect(punched.hasTube).toBe(false);
   expect(punched.events.melees).toHaveLength(1);
@@ -62,7 +62,7 @@ test.describe('review screenshots (023)', () => {
   test.skip(!process.env.REVIEW_SHOTS, 'set REVIEW_SHOTS=1 to capture docs/review/023');
 
   test('the swoosh mid-punch, with a fist', async ({ page }) => {
-    await boot(page, '');
+    await boot(page, '?start=tutorial');
     await page.evaluate(() => window.__GAME__?.tweenSpeed(0));
     // Held on the punch's own tick: the jab is full and the swoosh holds (tweens stopped).
     const { punched } = await punchNearestHusk(page, 0);

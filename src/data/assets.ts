@@ -8,6 +8,9 @@ export const VECTOR_KEY = 'vectors';
 /** The wanderer's canvas, redrawn every frame (016). */
 export const WANDERER_KEY = 'wanderer';
 
+/** The title screen's painted scene (042), drawn once at the screen's scale. */
+export const TITLE_SCENE_KEY = 'title-scene';
+
 /** The overworld (017): standing sprites drawn from src/data/art/terrain.ts, its ground chunk textures, and the minimap. */
 export const OVERWORLD_SPRITES = {
   trees: ['ow-tree-0', 'ow-tree-1', 'ow-tree-2'],

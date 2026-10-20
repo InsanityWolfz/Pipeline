@@ -33,7 +33,7 @@ import { FeelView } from './FeelView';
 import { highlightOf, NO_TUTORIAL_UI, TutorialUi } from './TutorialUi';
 import { currentFit, type ScreenFit } from './scale';
 import { bakeVectors } from './vector/textures';
-import type { UiState } from './testHook';
+import type { GameUiState, UiState } from './testHook';
 import { NO_ROOM_UI, RoomViews } from './RoomViews';
 import { fontsReady } from './fonts';
 import { MENU_HOVER_EVENT } from './menuFeedback';
@@ -42,6 +42,7 @@ import { PauseMenuView } from './PauseMenuView';
 import { SceneCameras } from './SceneCameras';
 import { CursorView } from './CursorView';
 import { Legibility, NO_LEGIBILITY_UI } from './Legibility';
+import { IDLE_HOST, type GameHost } from './flow/host';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -50,7 +51,10 @@ const inRoom = <T extends { roomId: string }>(list: readonly T[], roomId: string
 
 // Draws the sim and drives it in real time. Holds no game rules.
 export class GameScene extends Scene {
-  private readonly sim: SimState;
+  /** The sim this scene draws and drives (042: the test hook follows the live scene's). */
+  readonly sim: SimState;
+  /** The flow (042): whether to step, and what to tell it. */
+  private readonly host: GameHost;
   private readonly clock = createClock();
   private controls?: Controls;
   private roomViews?: RoomViews;
@@ -88,9 +92,10 @@ export class GameScene extends Scene {
   private fit: ScreenFit = currentFit();
   private sceneCameras?: SceneCameras;
 
-  constructor(sim: SimState) {
+  constructor(sim: SimState, host: GameHost = IDLE_HOST) {
     super('game');
     this.sim = sim;
+    this.host = host;
     this.shownRoomId = sim.roomId;
   }
 
@@ -136,7 +141,7 @@ export class GameScene extends Scene {
 
     this.controls = new Controls(this);
     if (this.menu && this.pause && this.siteMenus && this.picker && this.buildView && this.feel && this.hud && this.wake && this.legibility)
-      this.router = new MenuRouter(this.sim, { craft: this.menu, pause: this.pause, site: this.siteMenus, picker: this.picker, build: this.buildView, sound: this.feel.sound, inventory: this.hud.inventory, research: this.hud.research, talents: this.hud.talents, wake: this.wake, legibility: this.legibility });
+      this.router = new MenuRouter(this.sim, { craft: this.menu, pause: this.pause, site: this.siteMenus, picker: this.picker, build: this.buildView, sound: this.feel.sound, inventory: this.hud.inventory, research: this.hud.research, talents: this.hud.talents, wake: this.wake, legibility: this.legibility, host: this.host });
   }
 
   /** Matches both cameras to the backbuffer (016). Called on boot and whenever the window changes. */
@@ -151,12 +156,17 @@ export class GameScene extends Scene {
       controls.poll({
         building: this.sim.building,
         pieceId: () => this.buildView?.selected ?? FIRST_PIECE,
-        overUi: (x, y) => [this.pause, this.menu, this.buildView, this.picker, this.siteMenus, this.hud, this.tutorial, this.legibility].some((v) => v?.overUi(x, y)),
-        clickUi: (x, y, mods) => this.router?.click(controls, x, y, mods),
+        // Under a flow screen (042) the whole screen is that screen's: nothing reaches the world or the menus.
+        overUi: (x, y) => this.host.covered || [this.pause, this.menu, this.buildView, this.picker, this.siteMenus, this.hud, this.tutorial, this.legibility].some((v) => v?.overUi(x, y)),
+        clickUi: (x, y, mods) => {
+          if (!this.host.covered) this.router?.click(controls, x, y, mods);
+        },
       });
-      this.router?.handle(controls);
-      if (this.pause?.isOpen) {
-        // The world is paused (Esc): no ticks run, and no time is banked to catch up on later.
+      this.pause?.setOpen(this.host.paused);
+      if (this.host.covered) controls.drain();
+      else this.router?.handle(controls);
+      if (!this.host.stepping) {
+        // The world is paused (Esc, or a flow screen, 042): no ticks run, and no time is banked to catch up on later.
         controls.discardPending();
       } else if (!this.manualStepping) {
         const ticks = advanceClock(this.clock, delta);
@@ -167,7 +177,7 @@ export class GameScene extends Scene {
   }
 
   /** The mouse-over text on show, for the test hook (015). */
-  hoverText(): UiState {
+  hoverText(): GameUiState {
     return {
       ready: this.effects !== undefined && fontsReady(),
       craftOpen: this.menu?.isOpen ?? false,
@@ -186,7 +196,8 @@ export class GameScene extends Scene {
       slideProgress: this.groundItemView?.slideProgress ?? 0,
       swooshes: this.effects?.swooshes ?? 0,
       ...(this.tutorial?.state ?? NO_TUTORIAL_UI),
-      camera: { x: this.cameras.main.worldView.centerX, y: this.cameras.main.worldView.centerY },
+      // 042: the camera locks to the player; its centre and the player's sprite point, before any shake.
+      camera: this.cameraUi(),
       hud: this.hud?.bottom ?? null,
       ...(this.hud?.panels ?? NO_HUD_PANELS),
       craftMenu: this.menu?.state ?? null,
@@ -195,6 +206,12 @@ export class GameScene extends Scene {
       ...(this.enemyView?.ui ?? NO_ENEMY_UI),
       ...(this.legibility?.ui ?? NO_LEGIBILITY_UI),
     };
+  }
+
+  private cameraUi(): UiState['camera'] {
+    const view = this.cameras?.main?.worldView;
+    const player = this.playerView?.sprite;
+    return { x: view?.centerX ?? 0, y: view?.centerY ?? 0, player: { x: player?.x ?? 0, y: player?.y ?? 0 } };
   }
 
   /** The sound settings, for the test hook. */
@@ -219,6 +236,7 @@ export class GameScene extends Scene {
   stepOnce(cmd: Command): void {
     stepSim(this.sim, cmd);
     mergeEvents(this.pending, this.sim.events);
+    this.host.afterTick(this.sim);
   }
 
   /** Draws a room's ground and fits the camera to it. */

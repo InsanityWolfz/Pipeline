@@ -15,6 +15,7 @@ import type { PauseAction, PauseMenuView } from './PauseMenuView';
 import type { SiteMenus } from './SiteMenus';
 import type { SoundView } from './SoundView';
 import type { WakeView } from './WakeView';
+import type { GameHost } from './flow/host';
 
 /** The menus the router works, built by the scene. */
 export interface Menus {
@@ -30,6 +31,8 @@ export interface Menus {
   wake: WakeView;
   /** 040: the tips and the glossary. */
   legibility: Legibility;
+  /** 042: the flow, which owns whether the pause menu is up. */
+  host: GameHost;
 }
 
 // Keys and clicks for the menus (split from GameScene in 020): C toggles the craft
@@ -49,7 +52,7 @@ export class MenuRouter {
   }
 
   handle(controls: Controls): void {
-    const { craft, pause, site, picker, build, inventory, research, talents, wake, legibility } = this.m;
+    const { craft, site, picker, build, inventory, research, talents, wake, legibility } = this.m;
     const toggle = controls.takeMenuKey('menu');
     // Esc closes an open glossary entry first (040), before any panel.
     const close = controls.takeMenuKey('close') && !legibility.close();
@@ -59,8 +62,8 @@ export class MenuRouter {
     const list = controls.takeMenuKey('research');
     // T (037): the talent tree, likewise.
     const tree = controls.takeMenuKey('talents');
-    if (pause.isOpen) {
-      if (close) pause.setOpen(false);
+    if (this.m.host.paused) {
+      if (close) this.m.host.resume();
       return;
     }
     if (close && talents.isOpen) talents.setOpen(false);
@@ -70,17 +73,17 @@ export class MenuRouter {
     else if (close && picker.isOpen) picker.close();
     else if (close && craft.isOpen) craft.setOpen(false);
     else if (close && this.sim.building) controls.requestBuildToggle();
-    else if (close) pause.setOpen(true);
+    else if (close) this.m.host.pause();
     else if (toggle) craft.setOpen(!craft.isOpen);
     // The panel and the other menus take turns: opening it closes them (not while the wake panel shows), and theirs closes it.
-    if (bag && !wake.isShown && !pause.isOpen) this.openInventory(!inventory.isOpen);
+    if (bag && !wake.isShown && !this.m.host.paused) this.openInventory(!inventory.isOpen);
     // The list opens anywhere and never pauses; it and the inventory take turns (both are big centred panels).
-    if (list && !wake.isShown && !pause.isOpen) {
+    if (list && !wake.isShown && !this.m.host.paused) {
       research.setOpen(!research.isOpen);
       if (research.isOpen) inventory.setOpen(false);
     }
     // The tree opens anywhere and never pauses (opening it mid-fight is a risk); it closes the other big panels and menus.
-    if (tree && !wake.isShown && !pause.isOpen) {
+    if (tree && !wake.isShown && !this.m.host.paused) {
       talents.setOpen(!talents.isOpen);
       if (talents.isOpen) {
         craft.setOpen(false);
@@ -164,12 +167,12 @@ export class MenuRouter {
 
   /** The pause menu's sound settings and resume. */
   private pauseClick(action: PauseAction | null): void {
-    const { sound, pause } = this.m;
+    const { sound } = this.m;
     if (!action) return;
     sound.play(SOUNDS.menuClick);
     if (action === 'mute') sound.toggleMute();
     else if (action === 'volumeDown') sound.nudgeVolume(-VOLUME_STEP);
     else if (action === 'volumeUp') sound.nudgeVolume(VOLUME_STEP);
-    else pause.setOpen(false);
+    else this.m.host.resume();
   }
 }

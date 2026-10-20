@@ -1,13 +1,6 @@
-import { heldPart, NO_COMMAND, type Command } from '../sim/input';
-import { withUi } from './menuRequests';
-import type { SimState } from '../sim/state';
-import { summarize, type SimSummary } from '../sim/summary';
-import { TILE_SIZE } from '../data/config';
-import { FEET_BOX } from '../data/player';
-import { isSolid, overlapsRect } from '../sim/collision';
-import { roomBodies } from '../sim/bodies';
-import { layItem } from '../sim/drops';
-import type { GameScene } from './GameScene';
+import type { SimSummary } from '../sim/summary';
+import type { Command } from '../sim/input';
+import type { FlowReport, FlowUi } from './flow/FlowScene';
 import type { CursorState } from './CursorView';
 import type { BottomHudState, HudPanelsState } from './HudView';
 import type { MadePopupShown } from './MadePopups';
@@ -22,12 +15,7 @@ import type { RelicsShown } from './RelicView';
 import type { TalentFxShown } from './TalentFxView';
 import type { MinesShown } from './MineView';
 import type { HealingShown } from './HealingView';
-import { claim } from '../sim/claims';
-import { gainXp } from '../sim/leveling';
-import { createEnemy } from '../sim/enemies';
-import { makeChampion } from '../sim/champions';
-import { CHAMPIONS } from '../data/champions';
-import { keywordReport, type KeywordReport } from '../data/keywordReport';
+import type { KeywordReport } from '../data/keywordReport';
 import type { ChampionShown } from './EnemyView';
 import type { LandmarksShown } from './LandmarkView';
 import type { ResearchShown } from './ResearchView';
@@ -39,7 +27,10 @@ import type { HollowsEnemiesShown } from './hollowsEnemyArt';
 import type { Legibility, LegibilityUi } from './Legibility';
 
 export interface GameTestHook {
+  /** The live game's summary; null on the title (042). */
   getState(): SimSummary;
+  /** 042: the flow's state, the save slot's status, saves written this session, and stored notes. */
+  flow(): FlowReport;
   /**
    * Steps `frames` ticks holding `command`. Its dodge, interact, ammo
    * select, build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), setFilter, pylon, travel, takeStash, identify, equip, applyStage, restore (033), summon, takeTalent and respec (037) apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
@@ -140,8 +131,8 @@ export interface UiState {
   madePopups: MadePopupShown[];
   /** The objective line's finished-goal tick, its alpha (0 once faded): screenshots wait for it to go (028). */
   objectiveTick: number;
-  /** The centre of the world camera's view, world px (023: screenshots wait for it to settle on the player). */
-  camera: { x: number; y: number };
+  /** The centre of the world camera's view, world px (023: screenshots wait for it to settle on the player), and the player's sprite point it follows (042: locked to it). */
+  camera: { x: number; y: number; player: { x: number; y: number } };
   /** The bottom HUD as drawn (025), view px: the hotbar row (and whether it shows) and the tube slot with each unit's icon frame and text. */
   hud: BottomHudState | null;
   /** The crafting menu as drawn (026): each recipe row's item names and counts with their boxes, and the group headers. */
@@ -200,93 +191,15 @@ export interface UiState {
   buildTab: HudPanelsState['buildTab'];
   glossary: LegibilityUi['glossary'];
   hoverChips: string[];
+  /** 042: the flow screens as drawn (the title's rows, a card's lines and buttons, Settings, the note). */
+  flow: FlowUi;
 }
+
+/** ui() without the flow's part: what a GameScene reports. */
+export type GameUiState = Omit<UiState, 'flow'>;
 
 declare global {
   interface Window {
     __GAME__?: GameTestHook;
   }
-}
-
-// Dev builds only: lets tests and agents read state and step the sim frame by frame.
-// The first step() takes the sim off the real-time loop so tests own the clock.
-export function installTestHook(sim: SimState, scene: GameScene): void {
-  window.__GAME__ = {
-    getState: () => summarize(sim),
-    step: (frames, command = {}) => {
-      if (!Number.isInteger(frames) || frames < 0) throw new Error(`step() needs a whole number of frames, got ${frames}`);
-      scene.manualStepping = true;
-      const held: Command = { ...NO_COMMAND, aimX: sim.player.aimX, aimY: sim.player.aimY, ...command };
-      const after = heldPart(held);
-      // Building with the mouse and keys works under the hook: the scene's queued actions join each tick.
-      for (let i = 0; i < frames; i++) scene.stepOnce(withUi(i === 0 ? held : after, scene.takeUiCommand()));
-      return summarize(sim);
-    },
-    craft: (recipeId) => {
-      scene.craft(recipeId);
-      return summarize(sim);
-    },
-    ui: () => scene.hoverText(),
-    sound: () => scene.soundSettings(),
-    drop: (itemId, x, y) => {
-      layItem(sim, itemId, sim.roomId, x, y);
-      return summarize(sim);
-    },
-    tweenSpeed: (scale) => {
-      scene.tweens.timeScale = scale;
-    },
-    claim: (site) => {
-      claim(sim, site);
-      return summarize(sim);
-    },
-    completeObjectives: (count) => {
-      sim.objectives = sim.objectives.map((done, i) => done || i < count);
-      return summarize(sim);
-    },
-    setEnemyHealth: (id, health) => {
-      const e = sim.enemies.find((en) => en.id === id);
-      if (e) e.health = health;
-      return summarize(sim);
-    },
-    setPlayerHealth: (health) => {
-      sim.player.health = health;
-      return summarize(sim);
-    },
-    spawnChampionPack: (enemyIds, champion = 0) => {
-      enemyIds.forEach((enemyId, i) => {
-        const e = createEnemy(sim.nextEnemyId++, enemyId, { x: sim.player.x + (CHAMPIONS.devPack.ahead + i * CHAMPIONS.devPack.gap) * TILE_SIZE, y: sim.player.y }, sim.roomId, 'dev');
-        if (i === champion) makeChampion(sim.rng, e);
-        sim.enemies.push(e);
-      });
-      return summarize(sim);
-    },
-    spawnEnemy: (enemyId, x, y, champion = false) => {
-      const e = createEnemy(sim.nextEnemyId++, enemyId, { x, y }, sim.roomId, 'dev');
-      if (champion) makeChampion(sim.rng, e);
-      sim.enemies.push(e);
-      return summarize(sim);
-    },
-    addGear: (piece) => {
-      sim.gear.push({ ...structuredClone(piece), id: sim.nextGearId++ });
-      return summarize(sim);
-    },
-    gainXp: (amount) => {
-      gainXp(sim, amount, 'kill');
-      return summarize(sim);
-    },
-    keywords: () => keywordReport(),
-    summaryRows: () => scene.legibility?.summaryRows(sim) ?? [],
-    passable: () => {
-      const { room, obstacles } = roomBodies(sim, sim.roomId);
-      return room.rows.map((row, ty) =>
-        [...row]
-          .map((_, tx) => {
-            const cx = (tx + 0.5) * TILE_SIZE;
-            const cy = (ty + 0.5) * TILE_SIZE;
-            return isSolid(room, tx, ty) || obstacles.some((r) => overlapsRect(cx, cy, FEET_BOX, r)) ? '#' : '.';
-          })
-          .join(''),
-      );
-    },
-  };
 }

@@ -247,6 +247,14 @@ export class Controls {
     this.queue.length = 0;
   }
 
+  /** Drops everything latched, menu keys and the wheel too (042: a flow screen is over the game). */
+  drain(): void {
+    this.discardPending();
+    for (const k of Object.keys(this.menuKeys) as (keyof Controls['menuKeys'])[]) this.menuKeys[k] = false;
+    this.interactPress = false;
+    this.wheelPending = 0;
+  }
+
   private clearPresses(): void {
     this.dodgePending = false;
     this.interactPending = false;

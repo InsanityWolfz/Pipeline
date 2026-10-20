@@ -73,6 +73,7 @@ export class PauseMenuView {
   }
 
   setOpen(open: boolean): void {
+    if (open === this.open && this.rows.length > 0 && this.dim.visible === open) return;
     this.open = open;
     for (const o of [this.dim, this.panel, ...this.rows]) o.setVisible(open);
     for (const t of this.texts) t.setVisible(open);
