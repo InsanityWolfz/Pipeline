@@ -12,3 +12,5 @@ Oct 20, 2026 · Shaun in chat, while 041 was being built. Raw notes plus Claude'
    - only rounds of the same family fan out (024); different families each fly straight at the cursor
    - each entrance fires at its own rate (028), so mixed ammo comes out staggered, which reads as "in succession"
    - this changes both earlier decisions
+
+6. **Stages are hard to find.** Shaun picked up rimestone, then found no way to make a frost arrow in the crafting menu (C). Stages are hand-applied only at the bench, in its Stages panel, after the shrine claim. Options: a Stages section in C that points to the bench, or applying stages from C directly.
