@@ -78,8 +78,14 @@ export function restore(data: unknown): SimState {
   if (!isRecord(data)) throw new Error('state should be an object');
   if (typeof data.seed !== 'number' || !Number.isInteger(data.seed)) throw new Error('state.seed should be a whole number');
   if (!isRecord(data.start)) throw new Error('state.start should be an object');
-  const fresh = createSim(data.seed, { start: data.start as unknown as StartDef });
-  const state = fill(fresh, data, 'state') as SimState;
+  // 044: a sandbox run is never saved, so a save holding the sandbox's state (an import, a hand edit) loses it: god mode
+  // and the sandbox's other tools never reach a real game.
+  const rest: Record<string, unknown> = { ...data };
+  delete rest.sandbox;
+  const start = { ...(data.start as unknown as StartDef) };
+  delete start.sandbox;
+  const fresh = createSim(data.seed, { start });
+  const state = fill(fresh, { ...rest, start }, 'state') as SimState;
   state.events = createEvents();
   return state;
 }

@@ -1,3 +1,4 @@
+import { restore, snapshot } from '../../src/sim/save';
 import { describe, expect, it } from 'vitest';
 import { TILE_SIZE } from '../../src/data/config';
 import { ENEMIES } from '../../src/data/enemies';
@@ -223,5 +224,18 @@ describe('god mode, the KO and the player tools (044)', () => {
   it('keeps the start out of saves: the start def says sandbox', () => {
     expect(SANDBOX_START.sandbox).toBe(true);
     expect(NO_COMMAND.sandbox).toBeNull();
+  });
+});
+
+describe('the sandbox never reaches a real game through a save (044)', () => {
+  it('drops the sandbox state and the start flag when a save is restored', () => {
+    const s = createSandboxSim(11);
+    once(s, { kind: 'god', on: true });
+    const restored = restore(JSON.parse(JSON.stringify(snapshot(s))));
+    expect(restored.sandbox).toBeUndefined();
+    expect(restored.start.sandbox).toBeUndefined();
+    expect(summarize(restored).god).toBe(false);
+    expect(damagePlayer(restored, 30, 1, 0, 0, 0)).toBe(true);
+    expect(restored.player.health).toBeLessThan(summarize(restored).player.maxHealth);
   });
 });
