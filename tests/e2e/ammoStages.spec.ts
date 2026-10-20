@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { OVERWORLD } from '../../src/data/overworld';
 import { boot, watchErrors } from './helpers';
 import { screenPoint } from './foundryPage';
-import { ui } from './intakePage';
+import { feedLines, toIntake, ui } from './intakePage';
 
 // Ammo stages (029): from ?playtest, a frost rune in an arrow line (a rimestone
 // hopper at its side) feeds frost arrows into the intake, and a frost volley freezes
@@ -117,5 +117,40 @@ test('a frost rune line feeds frost arrows to the tube, and a frost volley freez
   await expect
     .poll(async () => page.evaluate(() => window.__GAME__?.step(1).inventory['arrow+frost'] ?? 0))
     .toBe(before + 4);
+  expect(errors).toEqual([]);
+});
+
+// Bug (Shaun, 2026-10-20): the panel showed "0/4 arrows" with arrows in an intake entrance. Its count is what the
+// sim reads as held: carried plus the entrances' reservoirs (029, raised after the build).
+test("the Stages panel's arrow count includes the arrows in an intake entrance", async ({ page }) => {
+  test.setTimeout(90_000);
+  const errors = watchErrors(page);
+  await boot(page, '?playtest');
+  await toIntake(page);
+  // Every carried arrow goes into a hopper line, which fills the centre entrance to its cap and stops.
+  const fed = await feedLines(page, [{ tx: 12, itemId: 'arrow', amount: 'all' }], 30);
+  expect(fed.intake.entrances[1]).toMatchObject({ ammo: 'arrow', count: 30 });
+  await page.evaluate(() => {
+    const g = window.__GAME__;
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    g.claim('shrine');
+    h.walkTo(2.3 * 32, 12.5 * 32);
+  });
+  await page.keyboard.press('e');
+  await expect.poll(async () => (await ui(page))?.tagged.benchStages?.shown).toBe(true);
+  const shown = () =>
+    page.evaluate(() => {
+      const g = window.__GAME__;
+      if (!g) throw new Error('no game');
+      const s = g.getState();
+      const held = (s.inventory['arrow'] ?? 0) + s.intake.entrances.reduce((n, e) => n + (e.ammo === 'arrow' ? e.count : 0), 0);
+      const row = g.ui().tagged.benchStages?.rows.find((r) => r.stageId === 'frost-rune-arrow');
+      return { want: `${held}/4`, text: row?.texts[0], dimmed: row?.dimmed, carried: s.inventory['arrow'] ?? 0 };
+    });
+  await expect.poll(async () => ((v) => v.text === v.want)(await shown())).toBe(true);
+  const v = await shown();
+  expect(v.text).not.toBe(`${v.carried}/4`);
+  expect(v.dimmed).toBe(false);
   expect(errors).toEqual([]);
 });
