@@ -9,6 +9,7 @@ import { BUILD_BAR, PIECES } from '../../src/data/pieces';
 import { PLAYTEST_START } from '../../src/data/playtest';
 import { MACHINE_SPEED_MULT, nodeOfSchematic, RESEARCH_GROUPS, RESEARCH_NODES, RESEARCH_PIECES, researchNode } from '../../src/data/research';
 import { STATIC_ROOMS, TILE } from '../../src/data/rooms';
+import { RESEARCH_SPRITES } from '../../src/data/researchAssets';
 
 // Research nodes as data (033): every cost a core, machine part or schematic; every
 // reference real; no cycles; the wall panels on walls clear of everything else.
@@ -163,5 +164,13 @@ describe('research drops', () => {
   it('give the playtest start enough to restore every node by hand', () => {
     expect(PLAYTEST_START.inventory).toMatchObject({ 'warden-core': 5, 'bulwark-core': 2, 'ancient-gear': 10, 'aqueduct-valve': 10 });
     for (const s of SCHEMATICS) expect(PLAYTEST_START.inventory[s.id]).toBe(1);
+  });
+});
+
+describe('wall panel art (046)', () => {
+  it('maps every wall node to its own panel art, and nothing else', () => {
+    const walls = RESEARCH_NODES.filter((n) => n.anchor.kind === 'wall').map((n) => n.id);
+    expect(Object.keys(RESEARCH_SPRITES.wallArt).sort()).toEqual([...walls].sort());
+    for (const id of walls) expect(RESEARCH_SPRITES.diagramWall[RESEARCH_SPRITES.wallArt[id] ?? 'merger'], id).toBeDefined();
   });
 });

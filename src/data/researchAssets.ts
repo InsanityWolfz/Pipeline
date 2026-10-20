@@ -11,6 +11,8 @@ export const RESEARCH_SPRITES = {
   diagramPipe: 'research-diagram-pipe',
   /** A wall panel's diagram, by the effect it shows: machine speed (a cog train), the merger (046: the splitter has none). */
   diagramWall: { machineSpeed: 'research-diagram-speed', merger: 'research-diagram-merger' },
+  /** Which wall-panel art each wall node uses, by node id (046: mapped explicitly; a data test holds every wall node to one). */
+  wallArt: { 'machine-speed': 'machineSpeed', merger: 'merger' } as Readonly<Record<string, 'machineSpeed' | 'merger'>>,
   /** A bare wall panel: the carved stone frame every wall diagram sits in. */
   panel: 'research-panel',
   /** A restored wall panel: brass and stone, its part solid, by the same effects. */

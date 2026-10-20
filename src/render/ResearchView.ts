@@ -32,9 +32,13 @@ const INTAKE_DEPTH = AT.y + DEPTH.intakeNudges * FOUNDRY_LAYOUT.onTopNudge;
 /** The sealed wing's node: the one anchored on its door. */
 const WING = RESEARCH_NODES.find((n) => n.anchor.kind === 'wing');
 
-/** A wall panel shows machine speed or the merger (046: the splitter is no longer restored). */
-type WallEffect = 'machineSpeed' | 'merger';
-const wallKey = (node: ResearchNode): WallEffect => (node.effect.kind === 'machineSpeed' ? 'machineSpeed' : 'merger');
+/** Each wall panel's art by node (046: the splitter is no longer restored); a wall node missing here is an error, never drawn as another's. */
+type WallEffect = keyof typeof RESEARCH_SPRITES.diagramWall;
+function wallKey(node: ResearchNode): WallEffect {
+  const key = RESEARCH_SPRITES.wallArt[node.id];
+  if (!key) throw new Error(`No wall panel art for research node '${node.id}'`);
+  return key;
+}
 
 /** Where a diagram is drawn, world px, its frame and depth. */
 function placeOf(d: Pick<Diagram, 'node' | 'entrance'>): { x: number; y: number; frame: string; depth: number } {

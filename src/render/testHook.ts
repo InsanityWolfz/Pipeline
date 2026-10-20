@@ -141,7 +141,7 @@ export interface UiState {
   /** The objective line's finished-goal tick, its alpha (0 once faded): screenshots wait for it to go (028). */
   objectiveTick: number;
   /** The centre of the world camera's view, world px (023: screenshots wait for it to settle on the player), and the player's sprite point it follows (042: locked to it). */
-  camera: { x: number; y: number; player: { x: number; y: number } };
+  camera: { x: number; y: number; player: { x: number; y: number }; fading: boolean };
   /** The bottom HUD as drawn (025), view px: the hotbar row (and whether it shows) and the tube slot with each unit's icon frame and text. */
   hud: BottomHudState | null;
   /** The crafting menu as drawn (026): each recipe row's item names and counts with their boxes, and the group headers. */

@@ -1,5 +1,5 @@
-import { TILE_SIZE } from '../data/config';
-import { DEFAULT_ROOM, type Room } from '../data/rooms';
+import { DEFAULT_ROOM } from '../data/rooms';
+import { roomOf } from './roomLookup';
 import { DEFAULT_START, type StartDef } from '../data/player';
 import { createPopulation, inSafeZone, resetPopulation, type PopulationState } from './population';
 import { LANDMARK_LIST } from '../data/landmarks';
@@ -295,19 +295,5 @@ export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
 
 export { tileCentre } from './tiles';
 
-/** A room's size in pixels. */
-export function roomSize(room: Room): { width: number; height: number } {
-  return { width: (room.rows[0]?.length ?? 0) * TILE_SIZE, height: room.rows.length * TILE_SIZE };
-}
-
-/** Room data by id. Throws on an unknown id. */
-export function roomById(roomId: string): Room {
-  const room = WORLD[roomId];
-  if (!room) throw new Error(`Unknown room '${roomId}'`);
-  return room;
-}
-
-/** The room data the player is in. */
-export function roomOf(state: Pick<SimState, 'roomId'>): Room {
-  return roomById(state.roomId);
-}
+// Room lookups live in src/sim/roomLookup.ts; re-exported here, where most systems import them from.
+export { roomById, roomOf, roomSize } from './roomLookup';
