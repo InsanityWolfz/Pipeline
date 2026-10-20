@@ -1,12 +1,34 @@
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/session-start.mjs"
+          }
+        ]
+      }
+    ],
     "Stop": [
-      { "hooks": [{ "type": "command", "command": "node .claude/hooks/check.mjs" }] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/check.mjs"
+          }
+        ]
+      }
     ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
-        "hooks": [{ "type": "command", "command": "node .claude/hooks/lint-file.mjs" }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/lint-file.mjs"
+          }
+        ]
       }
     ]
   }
