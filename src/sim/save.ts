@@ -28,7 +28,8 @@ export type Migration = (env: SaveEnvelope) => SaveEnvelope;
 /**
  * Each version's upgrade to the next, by the version it upgrades from. Version 2 (045) added optional ground-item
  * fields, so 1 → 2 changes nothing but the number. An added field needs none
- * (it's filled from a fresh sim); a rename or reshape of SimState adds one here and bumps SAVE_VERSION.
+ * (it's filled from a fresh sim). Since 047 a shape change bumps SAVE_VERSION with no migration (Shaun, 2026-10-20):
+ * an older save reads as too old. These older steps stay until a separate cleanup.
  */
 export const SAVE_MIGRATIONS: Readonly<Record<number, Migration>> = {
   // 045: ground items may carry the magnet pull's speed and a cache item's wait and burst, all optional (absent means

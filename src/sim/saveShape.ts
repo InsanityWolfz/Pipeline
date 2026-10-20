@@ -1,6 +1,6 @@
 // The save's shape (042.7): every key path in a saved state and the kinds of value found there, so a test can
-// notice when SimState's shape changes and ask for SAVE_VERSION to be bumped (and a migration, for a rename or a
-// reshape). List items share one path (`[]`); a keyed lookup (an inventory, counts by item) shares one (`{}`), so
+// notice when SimState's shape changes and ask for SAVE_VERSION to be bumped (no migration since
+// 047: an older save reads as too old). List items share one path (`[]`); a keyed lookup (an inventory, counts by item) shares one (`{}`), so
 // what's in them isn't shape.
 
 /** Paths whose keys are data (item ids, slots by id), not shape. */

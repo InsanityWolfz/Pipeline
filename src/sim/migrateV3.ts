@@ -52,9 +52,6 @@ const V2_OBJECTIVES: readonly string[] = [
 const STANDS_FOR: Readonly<Record<string, string>> = {
   'Refill the hoppers with wood, stone and fiber (E)': 'Put wood in the hopper (E)',
   'Build a second arrow line into the new entrance': 'Feed two entrances to fire a spread',
-  // 047 renamed these (tagged rounds are crafted in C, never called stages).
-  'Craft frost arrows (C)': 'Apply a frost rune to arrows at the bench',
-  'Craft homing or split ley bolts (C)': 'Try a ley stage at the bench: homing or split',
 };
 
 /** Version 2's done-list as this version's, by each goal's text. */

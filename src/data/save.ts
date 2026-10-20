@@ -1,6 +1,6 @@
 // Saving (042): the save's version, where things live in browser storage, the export file, the size budget and
-// the feedback note limits. A change to SimState's shape bumps SAVE_VERSION; a rename or reshape adds a migration
-// (src/sim/save.ts, SAVE_MIGRATIONS). Fields only added need neither: they're filled from a fresh sim.
+// the feedback note limits. A change to SimState's shape bumps SAVE_VERSION with no migration (Shaun, 2026-10-20: an
+// older save reads as too old and the player starts over). Fields only added need neither: they're filled from a fresh sim.
 
 /**
  * The save format's version. Starts at 1. 047 made it 4 with no migration (Shaun, 2026-10-20: "do not account for
