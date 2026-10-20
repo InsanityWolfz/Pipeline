@@ -84,4 +84,5 @@ Shaun's drive rant on 2026-10-19 (docs/brainstorm/2026-10-19-drive-rant.md) is q
 
 ## Bugs
 Fixes to built behaviour that need no design. Each goes on its own branch and PR.
+- The inventory panel's Wood row draws "3 at risk" over "home 5" (found in review of 045, 045.11; on main since 031). 047 replaces the panel with the grid inventory, so check it there.
 - The Stages panel showed "0/4 arrows" while the player had arrows in an intake entrance and in the inventory (Shaun, 2026-10-20). Fixed in InsanityWolfz/Pipeline#27: the panel counts carried rounds plus the intake entrances (Shaun chose option A, 2026-10-20).
