@@ -1,10 +1,10 @@
 import type { CasterDef } from '../data/enemies';
-import { engage, leash, startWindup, stepAttack, toward } from './aiCommon';
+import { engage, inAggroBox, leash, startWindup, stepAttack, toward } from './aiCommon';
 import type { EnemyState } from './enemies';
 import { castOrb } from './orbs';
 import type { SimState } from './state';
 
-// The Wisp (009): aggros in range, floats to its preferred distance (backing off
+// The Wisp (009): aggros on screen (045; in range before), floats to its preferred distance (backing off
 // when the player crowds it), charges with its aim locked, then casts a slow orb.
 
 /** Advances a Wisp's mode and returns this tick's own move, px. */
@@ -13,7 +13,8 @@ export function castThink(state: SimState, e: EnemyState, def: CasterDef): [numb
   const dx = state.player.x - e.x;
   const dy = state.player.y - e.y;
   const dist = Math.hypot(dx, dy);
-  const idle = engage(state, e, dist <= cast.aggroRange);
+  // 045: on screen, like every other enemy (017).
+  const idle = engage(state, e, inAggroBox(e, state.player));
   if (idle) return idle;
   const attack = stepAttack(e, def, () => castOrb(state, e));
   if (attack) return attack;

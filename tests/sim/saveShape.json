@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "shape": [
     "state.activatePulse: number",
     "state.arrows: array",
@@ -232,9 +232,15 @@
     "state.gear[].weight: string",
     "state.gear[]: object",
     "state.groundItems: array",
+    "state.groundItems[].burst.delay: number",
+    "state.groundItems[].burst.x: number",
+    "state.groundItems[].burst.y: number",
+    "state.groundItems[].burst: object",
     "state.groundItems[].id: number",
     "state.groundItems[].itemId: string",
     "state.groundItems[].roomId: string",
+    "state.groundItems[].speed: number",
+    "state.groundItems[].wait: number",
     "state.groundItems[].x: number",
     "state.groundItems[].y: number",
     "state.groundItems[]: object",

@@ -2,6 +2,16 @@
 
 Newest entry first.
 
+## 2026-10-20: 045 merged
+**Changed:** Shaun playtested 045 (readability fixes), OK'd its build decisions and merged it (InsanityWolfz/Pipeline#33). SAVE_VERSION is 2.
+
+**Next:** 046 (foundry onboarding, being built), then 047.
+
+## 2026-10-20: 045 readability fixes built (draft PR)
+**Changed:** built 045 on `claude/045-readability`: a red HP bar; an in-reach E prompt over everything E acts on (ley crystal veins like every node, and the Bulwark's sealed door), held to a prompt per kind by a test; the seal hums while up and plays the barrier's collapse as it drops; a 96 px magnet pickup; a build controls strip above the build bar with the bound keys; Wisps wake on screen; a cache's loot bursts out on a fan with names, then flies to the player. `npm run check` and the full Playwright run pass; review shots in docs/review/045. `npm run measure`: ring 2 now 2.8–4.2 s (Wisps wake on screen); the rest unchanged, the Bulwark still 13/20, 3 KOs (043.2). Spec status stays approved.
+
+**Next:** Shaun answers 045.3–045.9 (spec, "Raised after the build") and playtests the preview; then 046.
+
 ## 2026-10-20: Playtest-notes interview; 045–047 drafted
 **Changed:** ran the spec interview on docs/brainstorm/2026-10-20-playtest-notes.md (answers in docs/brainstorm/2026-10-20-playtest-interview.md) and drafted the first batch: 045 readability fixes (with 043.5), 046 foundry onboarding, 047 inventory and hotbars. 048 (volley shape) and 049 (resin pylon) are ideas for the next batch.
 

@@ -1,7 +1,9 @@
 import { ANY_SCHEMATIC } from '../../src/data/drops';
 import { describe, expect, it } from 'vitest';
 import { ITEMS } from '../../src/data/items';
-import { CACHE_DROPS, LANDMARKS, landmarkDef } from '../../src/data/landmarks';
+import { CACHE_BURST, CACHE_DROPS, LANDMARKS, landmarkDef } from '../../src/data/landmarks';
+import { enemyDef } from '../../src/data/enemies';
+import { spawnDrops } from '../../src/sim/drops';
 import { OVERWORLD_ROOM } from '../../src/data/overworld';
 import { createSim, type SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
@@ -100,7 +102,7 @@ describe('the Ruined Cache', () => {
     const s = atCache();
     s.banked = {};
     const gave = open(s);
-    for (let t = 0; t < 40 && s.groundItems.length > 0; t++) {
+    for (let t = 0; t < 300 && s.groundItems.length > 0; t++) {
       const g = s.groundItems[0];
       if (g) movePlayer(s, g.x, g.y);
       run(s, 1);
@@ -111,9 +113,62 @@ describe('the Ruined Cache', () => {
     expect(Object.values(summarize(s).atRisk).reduce((a, b) => a + b, 0)).toBe(held.length);
   });
 
+  it('045: bursts each item out of the chest in turn, then pulls them to the player standing there', () => {
+    const s = atCache();
+    s.inventory = {};
+    run(s, 1, { interact: true });
+    run(s, LANDMARKS.cacheOpenTicks - 1);
+    const items = s.groundItems.filter((g) => g.burst);
+    expect(items.length).toBeGreaterThanOrEqual(3);
+    const chest = tileCentre(AT);
+    const B = CACHE_BURST;
+    items.forEach((g, i) => {
+      expect(g.burst).toEqual({ x: chest.x, y: chest.y, delay: i * B.staggerTicks });
+      // Its wait covers its turn, its flight and the hold with its name showing (counted down once already this tick).
+      expect(g.wait).toBe(i * B.staggerTicks + B.flightTicks + B.holdTicks - 1);
+    });
+    // Each lands on its own spot, apart from the others (the fan round the tile below the chest).
+    for (const a of items) for (const b of items) if (a !== b) expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThan(16);
+    // Nothing is pulled while the burst runs.
+    const where = items.map((g) => ({ x: g.x, y: g.y }));
+    run(s, B.flightTicks + B.holdTicks - 2);
+    expect(s.groundItems.filter((g) => g.burst).slice(0, 1).map((g) => ({ x: g.x, y: g.y }))).toEqual(where.slice(0, 1));
+    expect(s.events.pickups).toEqual([]);
+    // A tick on, the first's wait is over: an ordinary drop again, nothing of its burst left to save.
+    run(s, 1);
+    const first = s.groundItems.find((g) => g.id === items[0]?.id);
+    expect(first).toBeDefined();
+    expect(first).not.toHaveProperty('burst');
+    expect(first).not.toHaveProperty('wait');
+    // Then every one comes to the player and is picked up (the feed lists them from the pickups).
+    const gave = items.map((g) => g.itemId).sort();
+    const ids = new Set(items.map((g) => g.id));
+    // The first was pulled from the tick it was free; count from there.
+    let picked: string[] = [];
+    for (let t = 0; t < 200 && s.groundItems.some((g) => ids.has(g.id)); t++) {
+      run(s, 1);
+      picked = [...picked, ...s.events.pickups.filter((p) => ids.has(p.id)).map((p) => p.itemId)];
+    }
+    expect(picked.sort()).toEqual(gave);
+    expect(s.groundItems.filter((g) => ids.has(g.id))).toEqual([]);
+  });
+
+  it('other drops never burst or wait', () => {
+    const s = atCache();
+    s.groundItems = [];
+    run(s, 1);
+    spawnDrops(s, enemyDef('husk'), s.player.x + 200, s.player.y, OVERWORLD_ROOM);
+    for (const g of s.groundItems) {
+      expect(g.burst).toBeUndefined();
+      expect(g.wait ?? 0).toBe(0);
+    }
+  });
+
   it('shows open and empty, with nothing more from E, until it re-arms', () => {
     const s = atCache();
     open(s);
+    // 045: what it gave is pulled in meanwhile; only a second haul would count.
+    s.groundItems = [];
     expect(open(s)).toEqual([]);
     expect(s.cacheHold).toBeNull();
   });

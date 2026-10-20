@@ -82,6 +82,8 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepNodes(state.nodes);
   // Before the tube, so fire this tick cancels a harvest in progress.
   // Build mode keeps E for hoppers and crates, not harvesting.
+  // 045: a new E handler here adds its kind to INTERACT_KINDS (src/data/interact.ts) and to interactTarget
+  // (src/sim/interactables.ts), whose test then holds it to a prompt.
   const used = stepCache(state, stepClaims(state, stepAltars(state, stepArenaLock(state, stepTubeStone(state, cmd)))));
   if (cmd.identify) identifyAll(state);
   if (cmd.equip) equip(state, cmd.equip);

@@ -238,6 +238,12 @@ export const DEPTHS = {
   worldUi: 100_000,
   /** The mouse-over name (015), over a piece's readout. */
   hoverName: 100_012,
+  /** 045: a cache's item bursting out, over everything standing (the player too), under its name and the slide-ins. */
+  burstItem: 99_996,
+  /** 045: a bursting item's name, over the bursting items. */
+  burstName: 99_997,
+  /** A picked-up item sliding into the player (021): under the pickup sparkle at worldUi - 1 and the "+1" popup. */
+  slideItem: 99_998,
   /** Tutorial key prompts, over other world UI. */
   prompt: 100_005,
   /** The claimed pylon's tendril and the motes on the ley line (018): over everything standing in the world, under world UI. */

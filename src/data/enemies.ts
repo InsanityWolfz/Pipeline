@@ -87,11 +87,11 @@ export interface MeleeDef extends EnemyBase, ScreenLeashed {
   };
 }
 
-/** A Wisp (009): keeps its distance, charges, then casts a slow orb at where the player stood. */
+/** A Wisp (009): wakes on screen (045, note 13), keeps its distance, charges, then casts a slow orb at where the player stood. */
 export interface CasterDef extends EnemyBase, ScreenLeashed {
   kind: 'caster';
   cast: AttackTiming & {
-    /** Aggros when the player is this close, px. */
+    /** 045: it wakes on screen like other enemies (017); awake, it closes to this many px before keeping its distance and casting. */
     aggroRange: number;
     /** The distance it tries to keep from the player, px. */
     keepAway: number;

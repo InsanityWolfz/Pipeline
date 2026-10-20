@@ -71,6 +71,16 @@ export const LANDMARKS = {
   cacheOpenTicks: 60,
 } as const;
 
+/**
+ * A cache's loot bursting out (045, note 14): each item waits `staggerTicks` after the one before, flies from the chest
+ * over `flightTicks` on an arc `arc` px high to its own spot on a fan `fanRadius` px round the tile below the chest
+ * (right, round the front, to left; a spot in a wall keeps its scattered landing), then lies there `holdTicks` with its name over it before
+ * the magnet pull (MAGNET) takes it. Render shows the name, its bottom `nameRise` px over the
+ * item's ground point, from the flight's start until the pull, stacked `nameGap` px apart so no two overlap; the bursting
+ * items draw over the player. Ticks at 60 Hz.
+ */
+export const CACHE_BURST = { staggerTicks: 6, flightTicks: 24, holdTicks: 36, arc: 18, fanRadius: 40, nameRise: 20, nameGap: 1 } as const;
+
 /** Region 1's raws: what a Ruined Cache here always holds some of. */
 const REGION_RAWS = ['wood', 'stone', 'fiber', 'ley-crystal'] as const;
 

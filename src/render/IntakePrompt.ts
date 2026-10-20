@@ -20,6 +20,8 @@ export class IntakePrompt {
   private readonly text: TextLine;
   /** The prompt's text while it shows, for the test hook; null when hidden. */
   shown: string | null = null;
+  /** Shown at full strength: E at the intake would open a cap's restore panel now (045: the in-reach prompt gives way). */
+  lit = false;
 
   constructor(scene: Scene) {
     const L = TUTORIAL_LAYOUT.intakePrompt;
@@ -43,11 +45,13 @@ export class IntakePrompt {
     this.setVisible(on);
     const key = boundLetter(RESTORE_ENTRANCE_PROMPT.key);
     this.shown = on ? `${key}: ${RESTORE_ENTRANCE_PROMPT.text}` : null;
+    this.lit = false;
     if (!on) return;
     // 042: the bound key, which Settings may have changed.
     this.key.set(key);
     // Full strength once E would open a cap's restore panel: a cap's diagram in reach.
     const capInReach = (diagramInReach(sim)?.entrance ?? null) !== null;
+    this.lit = capInReach;
     const alpha = capInReach ? 1 : TUTORIAL_LAYOUT.promptDimAlpha;
     this.cap.setAlpha(alpha);
     this.key.setAlpha(alpha);

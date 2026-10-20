@@ -25,10 +25,15 @@ export interface SaveEnvelope {
 export type Migration = (env: SaveEnvelope) => SaveEnvelope;
 
 /**
- * Each version's upgrade to the next, by the version it upgrades from. Empty at version 1. An added field needs none
+ * Each version's upgrade to the next, by the version it upgrades from. Version 2 (045) added optional ground-item
+ * fields, so 1 → 2 changes nothing but the number. An added field needs none
  * (it's filled from a fresh sim); a rename or reshape of SimState adds one here and bumps SAVE_VERSION.
  */
-export const SAVE_MIGRATIONS: Readonly<Record<number, Migration>> = {};
+export const SAVE_MIGRATIONS: Readonly<Record<number, Migration>> = {
+  // 045: ground items may carry the magnet pull's speed and a cache item's wait and burst, all optional (absent means
+  // none), so a version 1 save reads as it is.
+  1: (env) => ({ ...env, version: 2 }),
+};
 
 export type SaveStatus = 'ok' | 'corrupt' | 'newer' | 'too-old';
 

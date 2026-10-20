@@ -1,5 +1,6 @@
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { BUILD_BAR_LAYOUT, HUD_LAYOUT, tubeSlotWidth } from '../data/hudLayout';
+import { BUILD_STRIP } from '../data/buildStrip';
 import { SLOT_AMMOS } from '../data/tube';
 
 // Where the bottom HUD's pieces sit (025), pure so tests can check the centring:
@@ -63,14 +64,19 @@ export function hotbarBox(): ScreenBox {
   return { x: first.x, y: first.y, w: last.x + last.w - first.x, h: first.h };
 }
 
+/** The top of the build controls strip (045): `gap` px above the build bar's group labels. */
+export function buildStripTop(): number {
+  return buildBarLabelTop() - BUILD_STRIP.gap - BUILD_STRIP.h;
+}
+
 /**
  * The tube slot showing `units` units (a round each, or the fist): centred, `gap` px above
- * the hotbar row, or while building above the build bar's group labels (026).
+ * the hotbar row, or while building above the build controls strip (026, 045).
  */
 export function tubeSlotBox(units: number, building = false): ScreenBox {
   const { tubeSlot, gap } = HUD_LAYOUT;
   const w = tubeSlotWidth(units);
-  const y = (building ? buildBarLabelTop() : hotbarBox().y) - gap - tubeSlot.h;
+  const y = (building ? buildStripTop() : hotbarBox().y) - gap - tubeSlot.h;
   return { x: Math.round((VIEW_WIDTH - w) / 2), y, w, h: tubeSlot.h };
 }
 

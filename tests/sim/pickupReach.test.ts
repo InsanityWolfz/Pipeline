@@ -35,9 +35,11 @@ describe('pickup from behind a tree (021)', () => {
       forced.at = null;
     }
     expect(s.events.harvests).toHaveLength(1);
-    // The log landed north of the tree, with the tree between it and the player, and went straight into the pack.
-    expect(s.events.pickups).toEqual([expect.objectContaining({ itemId: 'wood', x: north.x, y: north.y })]);
+    // The log landed north of the tree, with the tree between it and the player; 045: the magnet pulls it through the tree into the pack.
+    expect(s.groundItems).toEqual([expect.objectContaining({ itemId: 'wood', x: north.x })]);
+    expect(s.groundItems[0]?.y ?? 0).toBeLessThan(treeY - TREE.feetBox.h / 2);
     expect(north.y).toBeLessThan(treeY - TREE.feetBox.h / 2);
+    run(s, 30);
     expect(s.player.y).toBeGreaterThan(treeY + TREE.feetBox.h / 2);
     expect(s.inventory.wood).toBe(1);
     expect(s.groundItems).toEqual([]);

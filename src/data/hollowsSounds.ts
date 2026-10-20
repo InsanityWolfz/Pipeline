@@ -18,6 +18,8 @@ export const HOLLOWS_SOUNDS = {
   bulwarkStomp: 'bulwark-stomp',
   addsRise: 'adds-rise',
   bulwarkWave: 'bulwark-wave',
+  /** 045 (043.5): the forum's seal humming while it stands. */
+  sealHum: 'seal-hum',
 } as const;
 
 export const HOLLOWS_SOUND_RECIPES = {
@@ -89,6 +91,16 @@ export const HOLLOWS_SOUND_RECIPES = {
     layers: [
       { wave: 'noise', from: 3000, to: 600, dur: 0.5, attack: 0.01, volume: 0.3 },
       { wave: 'sine', from: 90, to: 45, dur: 0.35, attack: 0.002, volume: 0.4 },
+    ],
+  },
+  // 045 (043.5): the seal's hum, a quiet ley shimmer looping while it stands (the Hollows barrier had no hum of its
+  // own to reuse): two close sines beating slowly over a soft high shimmer. Its drop plays the barrier's collapse.
+  'seal-hum': {
+    loop: 2,
+    layers: [
+      { wave: 'sine', from: 220, to: 220, dur: 2, attack: 0, volume: 0.16, tremolo: { rate: 1.5, depth: 0.35 } },
+      { wave: 'sine', from: 222, to: 222, dur: 2, attack: 0, volume: 0.1 },
+      { wave: 'sine', from: 880, to: 880, dur: 2, attack: 0, volume: 0.035, tremolo: { rate: 6, depth: 0.5 } },
     ],
   },
   'adds-rise': {

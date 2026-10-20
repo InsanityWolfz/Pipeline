@@ -16,6 +16,8 @@ type Loop = ReturnType<Scene['sound']['add']>;
 export class SoundView {
   private readonly scene: Scene;
   private ambient: { roomId: string; sound: Loop } | null = null;
+  /** 045: effect loops switched on (the seal's hum), by key. */
+  private readonly loops = new Map<SoundKey, { sound: Loop; volume: number }>();
   /** Keys played this frame, so a burst of hits sounds once. */
   private readonly played = new Set<SoundKey>();
 
@@ -39,6 +41,8 @@ export class SoundView {
     scene.events.once('shutdown', () => {
       off();
       this.ambient?.sound.destroy();
+      for (const l of this.loops.values()) l.sound.destroy();
+      this.loops.clear();
     });
   }
 
@@ -56,6 +60,8 @@ export class SoundView {
     this.scene.sound.mute = s.muted;
     this.scene.sound.volume = s.master;
     this.ambient?.sound.setVolume(this.loopLevel());
+    // 045: a playing effect loop follows the effects channel too.
+    for (const l of this.loops.values()) l.sound.setVolume(l.volume * s.effects);
   }
 
   /** How loud a room loop sits: under the effects, scaled by the music channel. */
@@ -68,6 +74,21 @@ export class SoundView {
     if (this.played.has(key) || !this.scene.cache.audio.exists(key)) return;
     this.played.add(key);
     this.scene.sound.play(key, { volume: volume * settings().effects });
+  }
+
+  /** 045: switches a looping effect on or off (the seal's hum while it stands), at `volume` of the effects channel. */
+  loop(key: SoundKey, on: boolean, volume = 1): void {
+    const playing = this.loops.get(key);
+    if (on === (playing !== undefined)) return;
+    if (playing) {
+      playing.sound.destroy();
+      this.loops.delete(key);
+      return;
+    }
+    if (!this.scene.cache.audio.exists(key)) return;
+    const sound = this.scene.sound.add(key, { loop: true, volume: volume * settings().effects });
+    sound.play();
+    this.loops.set(key, { sound, volume });
   }
 
   /** Call once per frame after playing: lets the next frame's sounds through. */

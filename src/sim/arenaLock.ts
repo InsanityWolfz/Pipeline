@@ -74,7 +74,7 @@ export function stepSeal(state: SimState): void {
 }
 
 /** The sealed arena whose seal is within reach of the player's feet box, if any. */
-function sealInReach(state: SimState): Arena | undefined {
+export function sealInReach(state: SimState): Arena | undefined {
   if (!ARENA_ROOMS.includes(state.roomId)) return undefined;
   return ARENAS.find((a) => arenaSealed(state, a, state.roomId) && a.seal.tiles.some((t) => gapTo(state, t) <= a.seal.reach));
 }
