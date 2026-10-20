@@ -86,6 +86,8 @@ export interface SimSummary extends HollowsSummary, LevelingSummary, MinesSummar
   inventory: Record<string, number>;
   /** 047: the carried bar (keys 1–5): each slot's item kind or null, and the selected slot. */
   hotbar: { slots: (string | null)[]; selected: number };
+  /** 047: the grid inventory's order of kinds. */
+  bag: string[];
   tube: {
     fireCooldown: number;
     /** Ticks before the next punch can happen (023). */
@@ -217,6 +219,7 @@ export function summarize(state: SimState): SimSummary {
     springs: OVERWORLD.springs.map((sp) => ({ id: sp.id, tx: sp.tx, ty: sp.ty, radius: sp.radius * TILE_SIZE, inside: springAt(state.roomId, p.x, p.y)?.id === sp.id })),
     inventory: { ...state.inventory },
     hotbar: { slots: [...state.hotbar.slots], selected: state.hotbar.selected },
+    bag: [...state.bag],
     tube: {
       fireCooldown: tube.fireCooldown,
       meleeCooldown: tube.meleeCooldown,

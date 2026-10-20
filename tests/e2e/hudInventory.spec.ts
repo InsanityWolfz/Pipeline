@@ -306,9 +306,9 @@ test('a press on the open panel never fires, and the player still moves with it 
   // The same press with the panel shut fires, so the check above means something.
   await page.keyboard.press('i');
   await expect.poll(() => inventoryOpen(page)).toBe(false);
-  await page.mouse.down();
+  await page.mouse.down({ button: 'right' });
   await expect.poll(async () => (await state(page)).inventory.arrow ?? 0, { timeout: 15_000 }).toBeLessThan(before.inventory.arrow ?? 0);
-  await page.mouse.up();
+  await page.mouse.up({ button: 'right' });
 
   // Under the hook: open, the player walks as usual (the panel doesn't pause the world).
   await page.keyboard.press('i');
@@ -350,7 +350,7 @@ test("a KO closes the panel, and it won't open while the wake panel shows", asyn
   expect(errors).toEqual([]);
 });
 
-test('E on a hopper or the bench closes the panel, and opening the panel closes their menus', async ({ page }) => {
+test('E on a hopper opens its screen over the grid (047), on the bench closes the panel, and I closes them', async ({ page }) => {
   test.setTimeout(90_000);
   const errors = watchErrors(page);
   await boot(page, '?playtest');
@@ -366,12 +366,17 @@ test('E on a hopper or the bench closes the panel, and opening the panel closes 
   });
   await page.keyboard.press('i');
   await expect.poll(() => inventoryOpen(page)).toBe(true);
+  // 047: the hopper's screen is the grid with the hopper's own row on top.
   await page.keyboard.press('e');
   await expect.poll(async () => (await ui(page))?.pickerOpen).toBe(true);
-  expect(await inventoryOpen(page)).toBe(false);
+  expect((await ui(page))?.inventory.mode).toBe('hopper');
+  // I shuts it, as it shuts the plain inventory; again, the plain inventory opens.
+  await page.keyboard.press('i');
+  await expect.poll(() => inventoryOpen(page)).toBe(false);
+  expect((await ui(page))?.pickerOpen).toBe(false);
   await page.keyboard.press('i');
   await expect.poll(() => inventoryOpen(page)).toBe(true);
-  expect((await ui(page))?.pickerOpen).toBe(false);
+  expect((await ui(page))?.inventory.mode).toBe('bag');
 
   // The bench's menu (a site menu), standing on its right.
   if (!BENCH) throw new Error('no bench');
