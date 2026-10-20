@@ -141,6 +141,10 @@ export interface SimState {
   population: PopulationState;
   /** How many of each item machines have made (027), for the foundry steps; hand crafts never count. Kept through a KO. */
   machineMade: Record<string, number>;
+  /** 046: the foundry's lines ran dry once since the tube attuned (the example line's stock used up). Kept through a KO. */
+  lineRanDry: boolean;
+  /** 046: items put in a hopper by hand since the lines ran dry, for the refill goal. Kept through a KO. */
+  refilled: string[];
   /** Raw materials ever harvested, for the gathering objective. */
   gathered: string[];
   /** Which objectives are done, in OBJECTIVES order. */
@@ -230,6 +234,8 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     populated: start.populated,
     population: createPopulation(),
     machineMade: {},
+    lineRanDry: false,
+    refilled: [],
     gathered: [],
     objectives: OBJECTIVES.map(() => false),
     awayTicks: 0,

@@ -111,12 +111,6 @@ export class PromptView {
         const hopper = nearest(sim.foundry.pieces.filter((x) => x.kind === 'hopper').map((h) => ({ ...centre(h), id: h.id })));
         return hopper ? { at: hopper, usable: usableInReach(sim)?.id === hopper.id } : undefined;
       }
-      case 'newestHopper': {
-        // The hopper placed last (027: "put wood in the hopper" means the one just built).
-        if (sim.roomId !== FOUNDRY_ROOM) return undefined;
-        const hopper = sim.foundry.pieces.filter((x) => x.kind === 'hopper').sort((a, b) => b.id - a.id)[0];
-        return hopper ? { at: centre(hopper), usable: usableInReach(sim)?.id === hopper.id } : undefined;
-      }
       case 'node': {
         // Hidden while a harvest runs, so the prompt never sits on the harvest bar (018).
         if (sim.harvest) return undefined;

@@ -236,8 +236,10 @@ describe('sim state', () => {
     const lock = ['arenaLeaves'] as const;
     // 042: entering the foundry (render saves on it).
     const save = ['foundryArrivals'] as const;
-    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save, 'lost', 'ko', 'woke', 'tubeTaken'].sort());
-    for (const name of [...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save]) expect(summary.events[name], name).toEqual([]);
+    // 046: the first time machines make each item (the "+ shaft" popups).
+    const onboarding = ['firstMade'] as const;
+    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save, ...onboarding, 'lost', 'ko', 'woke', 'tubeTaken'].sort());
+    for (const name of [...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save, ...onboarding]) expect(summary.events[name], name).toEqual([]);
     expect(summary.events.ko).toBe(false);
     expect(summary.events.lost).toEqual({});
     expect(summary.events.tubeTaken).toBe(false);

@@ -1,11 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
-import { OBJECTIVES } from '../../src/data/objectives';
 import { HUD_LAYOUT } from '../../src/data/hudLayout';
 import { HEALTH_BLOCK_HEIGHT } from '../../src/data/hudPanels';
 import { OVERWORLD } from '../../src/data/overworld';
 import { PICKUP_RADIUS } from '../../src/data/player';
-import { FOUNDRY_STEPS } from '../fixtures/foundrySteps';
 import { boot, cameraSettled } from './helpers';
 
 // Review screenshots for 031 (REVIEW_SHOTS=1, into docs/review/031): the HUD at full
@@ -22,7 +20,6 @@ const SAFE_SPOT = { x: (PYLON.tx + 2.5) * TILE_SIZE, y: (PYLON.ty + 3.5) * TILE_
 /** The HP block's top at rest (bottom-left, margin px up): raised in build mode, it sits above this. */
 // The block's resting top: the frame and 037's XP row under it, margin px off the bottom.
 const RESTING_TOP = VIEW_HEIGHT - HUD_LAYOUT.margin - HEALTH_BLOCK_HEIGHT;
-const CUTTER_STEP = OBJECTIVES.findIndex((o) => o.text === FOUNDRY_STEPS[2]);
 
 const ui = (page: Page) => page.evaluate(() => window.__GAME__?.ui());
 
@@ -138,12 +135,11 @@ test.describe('review screenshots (031)', () => {
   test('two "+ part" popups at once', async ({ page }) => {
     test.setTimeout(120_000);
     await boot(page, '?playtest');
-    await page.evaluate((cutterStep) => {
+    await page.evaluate(() => {
       const g = window.__GAME__;
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
-      g.completeObjectives(cutterStep);
-      h.toFoundry();
+        h.toFoundry();
       g.step(1, { toggleBuild: true });
       g.step(1, { place: { pieceId: 'hopper', tx: 11, ty: 5, facing: 'up' } });
       g.step(1, { place: { pieceId: 'hopper', tx: 12, ty: 5, facing: 'up' } });
@@ -155,7 +151,7 @@ test.describe('review screenshots (031)', () => {
       }
       h.walkTo(14.5 * 32, 7.5 * 32);
       g.step(1, { toggleBuild: true });
-    }, CUTTER_STEP);
+    });
     await expect.poll(async () => Object.keys((await ui(page))?.nodes ?? { x: 1 }).length).toBe(0);
     await cameraSettled(page, 20_000);
     // The machines go down and are drawn (so each popup starts over its machine's drawn top) before any tick runs them.
@@ -169,12 +165,12 @@ test.describe('review screenshots (031)', () => {
     });
     await cameraSettled(page, 20_000);
     await page.evaluate(() => window.__GAME__?.tweenSpeed(0.05));
-    await page.evaluate((cutterStep) => {
+    await page.evaluate(() => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
       let s = g.step(1);
-      for (let t = 0; t < 600 && (s.objective.index ?? 0) <= cutterStep + 1; t++) s = g.step(1);
-    }, CUTTER_STEP);
+      for (let t = 0; t < 600 && !(s.machineMade.shaft && s.machineMade.arrowhead); t++) s = g.step(1);
+    });
     await expect.poll(async () => (await ui(page))?.madePopups.length).toBe(2);
     await page.evaluate(() => window.__GAME__?.tweenSpeed(0));
     await page.screenshot({ path: `${SHOTS}/07-two-made-popups.png` });

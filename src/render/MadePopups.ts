@@ -1,7 +1,6 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, MADE_POPUP } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
-import { OBJECTIVES } from '../data/objectives';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import type { SimEvents } from '../sim/events';
 import { pieceRect, type FoundryState } from '../sim/pieces';
@@ -25,12 +24,12 @@ export interface MadePopupShown extends PopupBox {
   text: string;
 }
 
-// The foundry tutorial's "+ shaft" (027): when a step that waits on a machine
-// making something completes, the item's name pops above the machine that made
-// it, rises and fades. A step completes once, so each pops once (and not at all
-// if the player is away from the foundry when it does). 031: a popup that would
-// overlap a live one starts just above it, and they rise together; the same machine
-// and item twice in a short window merge into one with a count.
+// The "+ shaft" popups (027): the first time machines ever make an item, its name pops
+// above the machine that made it, rises and fades (046: no longer tied to 027's build
+// steps, so the example line's first run shows +shaft, +arrowhead, +rope and +arrow).
+// Each item pops once (and not at all if the player is away from the foundry then).
+// 031: a popup that would overlap a live one starts just above it, and they rise
+// together; the same machine and item twice in a short window merge into one with a count.
 export class MadePopups {
   private readonly scene: Scene;
   private readonly live: LivePopup[] = [];
@@ -48,18 +47,15 @@ export class MadePopups {
     });
   }
 
-  /** Pops for every machine step completed since the last draw, while the foundry is on screen. `topOf` is a drawn piece's top, world px. */
+  /** Pops for every item machines made for the first time ever since the last draw (046), while the foundry is on screen. `topOf` is a drawn piece's top, world px. */
   play(events: SimEvents, foundry: FoundryState, shown: string, topOf: (id: number) => number | undefined): void {
     if (shown !== FOUNDRY_ROOM) return;
-    for (const { index } of events.objectives) {
-      const check = OBJECTIVES[index]?.check;
-      if (check?.kind !== 'machineMade') continue;
-      const made = events.made.find((m) => m.itemId === check.item);
-      const piece = made && foundry.pieces.find((p) => p.id === made.id);
+    for (const made of events.firstMade) {
+      const piece = foundry.pieces.find((p) => p.id === made.id);
       if (!piece) continue;
       const r = pieceRect(piece);
       const top = topOf(piece.id) ?? r.y - TILE_SIZE;
-      this.pop(piece.id, check.item, r.x, top - MADE_POPUP.above);
+      this.pop(piece.id, made.itemId, r.x, top - MADE_POPUP.above);
     }
   }
 

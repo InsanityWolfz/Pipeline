@@ -16,15 +16,12 @@ export type ObjectiveCheck =
   | { kind: 'craftedAny'; items: readonly string[] }
   | { kind: 'gate'; gate: GateId }
   | { kind: 'inRoom'; room: string }
-  /**
-   * A line feeds the foundry intake (019): a piece's front is one of its mouth tiles. With an `item` (027), that
-   * item must also be arriving: going into an entrance this tick.
-   */
-  | { kind: 'intakeFed'; item?: string }
-  /** A piece of this id stands in the foundry (027). */
-  | { kind: 'placed'; piece: string }
-  /** Some hopper holds this item (027). */
-  | { kind: 'hopperHolds'; item: string }
+  /** 046: the foundry's lines have run dry at least once since the tube attuned (the example line's stock used up). */
+  | { kind: 'lineDry' }
+  /** 046: since the lines ran dry, each of these items has been put in a hopper by hand. */
+  | { kind: 'refilled'; items: readonly string[] }
+  /** 046: at least `min` entrances hold this ammo. */
+  | { kind: 'entrancesHold'; ammo: string; min: number }
   /** Machines have made at least one of this item (027); hand-crafting never counts. */
   | { kind: 'machineMade'; item: string }
   /** An intake entrance has filled from a line at least once. */
@@ -49,7 +46,7 @@ export type ObjectiveCheck =
   | { kind: 'bossDefeated'; boss: string };
 
 /** Which key a goal's prompt shows, and what it floats over (see PromptView). */
-export type PromptTarget = 'tubeStone' | 'node' | 'bench' | 'pylon' | 'hopper' | 'newestHopper' | 'player';
+export type PromptTarget = 'tubeStone' | 'node' | 'bench' | 'pylon' | 'hopper' | 'player';
 
 /**
  * What an arrow marker floats over: the intake, where a line ends (027), the supply ports (028), or the nearest
@@ -69,6 +66,11 @@ export interface ObjectiveDef {
   marker?: MarkerTarget;
   /** The piece whose build-bar cell pulses while the bar is open (027). */
   highlight?: string;
+  /**
+   * 046: the objective line passes over this goal until this check holds (the refill goal waits for the example line
+   * to run dry). It can still complete before then, as any goal can.
+   */
+  waitsFor?: ObjectiveCheck;
 }
 
 export const OBJECTIVES: readonly ObjectiveDef[] = [
@@ -83,56 +85,29 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
   { text: 'Clear the ruin field of Husks', milestone: 'prototype', check: { kind: 'gate', gate: 'foundry' } },
   { text: 'Enter the foundry', milestone: 'prototype', check: { kind: 'inRoom', room: 'foundry' } },
   { text: 'Craft a bomb and a ley bolt (C)', milestone: 'prototype', check: { kind: 'crafted', items: ['bomb', 'ley-bolt'] }, prompt: { key: 'C', over: 'player' } },
-  // 027: the first line, an arrow line, a step at a time (Shaun chose arrows). Each names the piece to pulse on the build bar.
-  { text: 'Press B and place a hopper', milestone: 'prototype', check: { kind: 'placed', piece: 'hopper' }, prompt: { key: 'B', over: 'player' }, highlight: 'hopper' },
+  // 046: the example line stands from the first entry (027's build steps gave way to it). Once it runs dry, the
+  // line asks the player to refill its hoppers.
   {
-    text: 'Put wood in the hopper (E)',
+    text: 'Refill the hoppers with wood, stone and fiber (E)',
     milestone: 'prototype',
-    check: { kind: 'hopperHolds', item: 'wood' },
-    prompt: { key: 'E', over: 'newestHopper' },
-    highlight: 'hopper',
-  },
-  {
-    text: 'Place a cutter in front of the hopper',
-    milestone: 'prototype',
-    check: { kind: 'machineMade', item: 'shaft' },
-    prompt: { key: 'B', over: 'player' },
-    highlight: 'cutter',
-  },
-  {
-    text: 'Make arrowheads: hopper of stone → knapper',
-    milestone: 'prototype',
-    check: { kind: 'machineMade', item: 'arrowhead' },
-    prompt: { key: 'B', over: 'player' },
-    highlight: 'knapper',
-  },
-  {
-    text: 'Make rope: hopper of fiber → spinner',
-    milestone: 'prototype',
-    check: { kind: 'machineMade', item: 'rope' },
-    prompt: { key: 'B', over: 'player' },
-    highlight: 'spinner',
-  },
-  {
-    text: 'Feed all three into an assembler',
-    milestone: 'prototype',
-    check: { kind: 'machineMade', item: 'arrow' },
-    prompt: { key: 'B', over: 'player' },
-    highlight: 'assembler',
-  },
-  {
-    text: 'Run a conduit from the assembler into the intake',
-    milestone: 'prototype',
-    check: { kind: 'intakeFed', item: 'arrow' },
-    prompt: { key: 'B', over: 'player' },
-    marker: 'intake',
-    highlight: 'conduit',
+    check: { kind: 'refilled', items: ['wood', 'stone', 'fiber'] },
+    waitsFor: { kind: 'lineDry' },
+    prompt: { key: 'E', over: 'hopper' },
   },
   { text: 'Fill the tube from your line', milestone: 'prototype', check: { kind: 'lineFull' }, prompt: { key: 'E', over: 'hopper' } },
   { text: 'Identify your armor at the bench (E)', milestone: 'prototype', check: { kind: 'identified' }, prompt: { key: 'E', over: 'bench' } },
   { text: "Claim the shrine's pylon", milestone: 'prototype', check: { kind: 'claimed', site: 'shrine' }, prompt: { key: 'E', over: 'pylon' } },
   // The prototype's one Warden drops one core, and restoring a second entrance costs one (033: one entrance per core).
   { text: 'Restore a second intake entrance (E at a cap with the warden core)', milestone: 'prototype', check: { kind: 'restored', node: 'entrance-2' } },
+  // 046: the second entrance gets a line of its own, built by the player (027's lesson after the Warden).
+  {
+    text: 'Build a second arrow line into the new entrance',
+    milestone: 'prototype',
+    check: { kind: 'entrancesHold', ammo: 'arrow', min: 2 },
+    prompt: { key: 'B', over: 'player' },
+    marker: 'intake',
+    highlight: 'assembler',
+  },
   { text: 'Feed two entrances to fire a spread', milestone: 'prototype', check: { kind: 'volley', min: 2 } },
   { text: 'Head back out — the foundry keeps running', milestone: 'prototype', check: { kind: 'awayRunning', ticks: 600 } },
   // 028: Milestone 1's goals, after the shrine. Later specs append theirs.

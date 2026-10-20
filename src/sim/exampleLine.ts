@@ -1,7 +1,7 @@
 import { EXAMPLE_LINE } from '../data/exampleLine';
 import { FOUNDRY_ROOM, TILE } from '../data/rooms';
 import { fixtureAt } from './fixtures';
-import { createPiece, footprint, pieceAt } from './pieces';
+import { createPiece, footprint, pieceAt, type FoundryState } from './pieces';
 import { roomById, type SimState } from './state';
 
 // The example line (046): laid in the foundry the tick the tube first attunes, on a
@@ -24,4 +24,17 @@ export function placeExampleLine(state: SimState): void {
     }
     state.foundry.pieces.push(piece);
   }
+}
+
+/**
+ * Nothing left to run (046): no hopper holds anything, no machine holds inputs or output or is crafting, and nothing
+ * rides a conduit, sorter, splitter or merger. Crates don't count: they only collect.
+ */
+export function foundryDry(foundry: FoundryState): boolean {
+  return foundry.pieces.every((p) => {
+    if (p.kind === 'hopper') return p.count === 0;
+    if (p.kind === 'machine') return !p.crafting && p.output === 0 && Object.values(p.buffer).every((n) => n === 0);
+    if (p.kind === 'crate') return true;
+    return p.item === null;
+  });
 }

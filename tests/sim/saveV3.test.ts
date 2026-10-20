@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { SAVE_VERSION } from '../../src/data/save';
 import { TUTORIAL_START } from '../../src/data/player';
+import { OBJECTIVES } from '../../src/data/objectives';
+import { FOUNDRY_ROOM } from '../../src/data/rooms';
 import { createSim } from '../../src/sim/state';
+import { stepSim } from '../../src/sim/step';
 import { makeEnvelope, readSave, snapshot } from '../../src/sim/save';
 
 // 046: version 2 → 3. The Splitter left research (it's on the bar from the start), so a version 2 save's splitter
@@ -42,5 +45,50 @@ describe('version 2 → 3 (046)', () => {
     expect(read.state.banked).toEqual({});
     expect(read.state.stash).toEqual({ stone: 3 });
     expect(read.state.groundItems.map((g) => g.itemId)).toEqual(['wood']);
+  });
+});
+
+describe('version 2 → 3 objectives (046)', () => {
+  /** Version 2's goal list length (027's seven steps included). */
+  const V2_LENGTH = 31;
+  const v2Done = (done: number[]): string =>
+    v2((state) => {
+      state.objectives = Array.from({ length: V2_LENGTH }, (_, i) => done.includes(i));
+    });
+
+  it("maps the done goals by text: 027's steps drop out, the rest keep their state", () => {
+    // Done in version 2: the tube (0), entering the foundry (4), filling the tube (13) and claiming the shrine (15).
+    const read = readSave(v2Done([0, 4, 13, 15]));
+    if (read.status !== 'ok') throw new Error(read.reason);
+    const done = OBJECTIVES.filter((_, i) => read.state.objectives[i]).map((o) => o.text);
+    expect(read.state.objectives).toHaveLength(OBJECTIVES.length);
+    expect(done).toEqual(['Pick up the tube (E)', 'Enter the foundry', 'Fill the tube from your line', "Claim the shrine's pylon"]);
+  });
+
+  it('counts the refill goal done where a hopper was filled (027 step 2), and the second line where two entrances were fed', () => {
+    const read = readSave(v2Done([7, 17]));
+    if (read.status !== 'ok') throw new Error(read.reason);
+    const done = OBJECTIVES.filter((_, i) => read.state.objectives[i]).map((o) => o.text);
+    expect(done).toEqual([
+      'Refill the hoppers with wood, stone and fiber (E)',
+      'Build a second arrow line into the new entrance',
+      'Feed two entrances to fire a spread',
+    ]);
+  });
+
+  it('never gives a save from before 046 the example line (046.1), even on its first foundry entry', () => {
+    const text = v2((state) => {
+      const start = { ...(state.start as Record<string, unknown>) };
+      delete start.exampleLine;
+      state.start = start;
+    });
+    const read = readSave(text);
+    if (read.status !== 'ok') throw new Error(read.reason);
+    const s = read.state;
+    expect(s.start.exampleLine).toBeUndefined();
+    s.roomId = FOUNDRY_ROOM;
+    stepSim(s);
+    expect(s.link.attuned).toBe(true);
+    expect(s.foundry.pieces).toEqual([]);
   });
 });
