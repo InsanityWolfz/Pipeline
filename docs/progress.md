@@ -2,6 +2,25 @@
 
 Newest entry first.
 
+## 2026-10-20: 039–041 and handoff to a new session
+**Changed:**
+- Built and reviewed 039 (keyword system) and 040 (legibility UI).
+- Built most of 041 (balance): the damage numbers, ring scaling, and the Bulwark's enrage, stomp, adds, roll-proof pound and lobs, and back wave (5a5ca26). Tuned at 3,600 HP.
+- Screen shake is off entirely (Shaun).
+- Specs 041 and 042 were approved on draft from Shaun's interview.
+- Saved Shaun's and friends' playtest notes in docs/brainstorm/2026-10-20-playtest-notes.md.
+
+**Next:** see docs/handoff.md.
+1. Finish 041's last round (the fix list, 041.18 arena lock, 041.19 slower Shardbacks).
+2. Build 042.
+3. Fix the Stages "0/4 arrows" bug.
+4. Run the playtest-notes spec interview.
+
+**Notes:**
+- A container restart lost the uncommitted 041 work, so builders now commit after each item.
+- Run the full e2e once per spec, not twice.
+- No broad tuning grid searches.
+
 ## 2026-10-19: Keyword audit for the next spec interview
 **Changed:** wrote docs/brainstorm/2026-10-19-keyword-audit.md, from Shaun's drive rant (Part 2, themes 12–14). It covers today's keyword inventory, its problems, a v0 glossary (a proposal), a two-layer legibility proposal, and the open questions for the keyword spec interview.
 
