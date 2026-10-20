@@ -2,21 +2,22 @@ import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { VIEW_WIDTH } from '../data/config';
 import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
-import { OBJECTIVES } from '../data/objectives';
-import { currentObjective } from '../sim/objectives';
+import { objectiveLine } from '../sim/objectives';
 import type { SimState } from '../sim/state';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
 
 // The objective line (012): the first unfinished goal, on the right of the screen
-// below the minimap (019). Finishing one flashes a ley tick beside the line before it moves on.
+// below the minimap (019), or the frontier goal once all are done (028), so it is
+// never blank. Finishing one flashes a ley tick beside the line before it moves on.
 export class ObjectiveView {
   private readonly scene: Scene;
   private readonly line: TextLine;
   private readonly tick: GameObjects.Image;
   private readonly panel: GameObjects.Graphics;
-  private shown: number | null = -1;
+  /** The line's text, or undefined before the first draw. */
+  private shown: string | undefined = undefined;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -31,11 +32,10 @@ export class ObjectiveView {
   }
 
   update(sim: SimState): void {
-    const i = currentObjective(sim);
-    if (i === this.shown) return;
-    const finished = this.shown !== -1;
-    this.shown = i;
-    const text = i === null ? '' : (OBJECTIVES[i]?.text ?? '');
+    const { text } = objectiveLine(sim);
+    if (text === this.shown) return;
+    const finished = this.shown !== undefined;
+    this.shown = text;
     this.line.set(text);
     const x = VIEW_WIDTH - TUTORIAL_LAYOUT.objectiveRight - this.line.width;
     this.line.moveTo(x, TUTORIAL_LAYOUT.objectiveTop);
@@ -46,6 +46,11 @@ export class ObjectiveView {
     this.scene.tweens.addCounter({ from: 0, to: 1, duration: TUTORIAL_LAYOUT.objectiveFadeMs, onUpdate: (t) => this.line.setAlpha(t.getValue() ?? 1) });
     this.tick.setX(x - TUTORIAL_LAYOUT.tickGap).setAlpha(1);
     this.scene.tweens.add({ targets: this.tick, alpha: 0, delay: TUTORIAL_LAYOUT.tickMs / 2, duration: TUTORIAL_LAYOUT.tickMs / 2 });
+  }
+
+  /** How strongly the finished goal's tick shows beside the line (0 once it has faded), for the test hook. */
+  get tickAlpha(): number {
+    return this.tick.alpha;
   }
 
   /** The band's screen rect while it shows, so a press on it never fires (015). */

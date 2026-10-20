@@ -12,7 +12,7 @@ const FLOW_FPS = 4;
 const loop = (key: string, frames: number, frameRate: number): AnimDef => ({ key, frames, frameRate, loop: true });
 
 /** Every machine (020), in build bar order. Listed here because this file has no runtime imports (pieces.ts would be one); a test checks it matches the machine pieces. */
-export const MACHINE_IDS = ['cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser'] as const;
+export const MACHINE_IDS = ['cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'shaper', 'fuse-maker', 'grinder', 'packer', 'cluster-die', 'focuser', 'ley-guide', 'prism-lens', 'plate-press', 'mine-packer'] as const;
 
 /** A machine's look in one view: still (idle or starved), jammed (blocked), and its working loop. */
 export interface MachineLook {
@@ -62,8 +62,9 @@ export const LOGISTICS_ICONS: Readonly<Record<string, string>> = {
   conduit: 'emblem-conduit',
   hopper: 'emblem-hopper',
   crate: 'emblem-crate',
-  'gravity-stager': 'emblem-gravity-stager',
   sorter: 'emblem-sorter',
+  splitter: 'emblem-splitter',
+  merger: 'emblem-merger',
 };
 
 /** Conduits flow toward their front; `side` flows right. They lie flat on the floor. */
@@ -110,23 +111,17 @@ export const HOPPER_SPRITES: Readonly<Record<PieceView, string>> = {
 
 export const CRATE_SPRITE = 'crate';
 
-/** The foundry intake's pipe (019), vector frames: dormant before the tube attunes, then lit. */
-export const INTAKE_SPRITES = { dormant: 'intake-dormant', attuned: 'intake-attuned' } as const;
-
-/** The gravity stager (008): one frame per angle, `gravity-stager/<i>` for STAGER_ANGLES[i]. */
-export const STAGER_SPRITE = { key: 'gravity-stager', frames: 5, frameRate: 1, loop: false } as const satisfies AnimDef;
-
 /**
- * Build mode draws a faint fan from each stager facing the intake: one line at its
- * angle from straight up, so the spread's shape reads before firing. Px and palette id.
+ * The foundry intake's pipe (019), vector frames: dormant before the tube attunes, then lit; and the brass cap
+ * (024) over a side entrance's inlet until a warden core opens it.
  */
-export const SPREAD_FAN = { length: 56, width: 1, color: 'cyan', alpha: 0.55 } as const;
+export const INTAKE_SPRITES = { dormant: 'intake-dormant', attuned: 'intake-attuned', cap: 'intake-cap' } as const;
 
-/** A stager holding an item pulses its alpha between 1 and `alpha`, one beat every `ticksPerBeat` ticks. */
-export const STAGER_PULSE = { alpha: 0.7, ticksPerBeat: 9 } as const;
-
-/** The hover readout's icon for the intake when the reservoir is empty: the tube emblem. */
+/** The hover readout's icon for an empty intake entrance: the tube emblem. */
 export const INTAKE_EMPTY_ICON = 'emblem-intake';
+
+/** The hover readout's icon for a capped intake entrance (024). */
+export const INTAKE_CAP_ICON = 'emblem-intake-cap';
 
 /**
  * Build-mode arrows on a piece's edges, also on the ghost: cyan pointing out of its
@@ -180,7 +175,7 @@ export const PYLON_SPRITES = {
   active: { key: 'pylon-active', frames: 2, frameRate: 3, loop: true },
 } as const satisfies { off: string; activating: AnimDef; active: AnimDef };
 
-/** Fixture sprites by kind. The port's second frame glows while a raw waits to go out. */
+/** Fixture sprites by kind. A supply port's second frame glows while a raw waits to go out (028: one body for every port; its raw's icon sits on its face). */
 export const FIXTURE_SPRITES = {
   stash: 'stash',
   port: { key: 'supply-port', frames: 2, frameRate: 1, loop: false },
@@ -188,6 +183,22 @@ export const FIXTURE_SPRITES = {
   /** The identification bench (010): its lens flares for `flareMs` after an identify. */
   bench: { key: 'identification-bench', frames: 2, frameRate: 1, loop: false },
 } as const satisfies { stash: string; port: AnimDef; waystone: AnimDef; bench: AnimDef };
+
+/**
+ * A supply port's face and plate (028): its raw's icon sits on the round face at `face`, px from the port sprite's
+ * bottom centre, drawn at `iconScale`; the plate hangs `plateGap` below the sprite, padded round its text, its left
+ * edge `plateX` right of the port tile's (it reads into the room, clear of the wall and the HUD's left column).
+ */
+export const PORT_LOOK = {
+  face: { x: -3, y: -18 },
+  iconScale: 0.75,
+  plateGap: 2,
+  plateX: 2,
+  platePad: { x: 3, y: 1 },
+  /** The plate's text sits this much lower than its padding alone puts it, so it reads centred on the tablet. */
+  textDrop: 1,
+  plateAlpha: 0.92,
+} as const;
 
 /** How long the bench's lens flares after an identify, ms. */
 export const BENCH_FLARE_MS = 600;
@@ -205,6 +216,8 @@ export const TUTORIAL_SPRITES = {
   rubble: 'door-rubble',
   keyCap: 'key-cap',
   tick: 'objective-tick',
+  /** The arrow marker over the intake for the conduit step (027). */
+  marker: 'intake-marker',
 } as const satisfies Record<string, string | AnimDef>;
 
 /** Tutorial layout, px: the objective line's top, the tick's gap left of it, a prompt's lift over its target, a gate's crumble. */
@@ -226,5 +239,14 @@ export const TUTORIAL_LAYOUT = {
   keyText: { y: 2.5 },
   /** A prompt not yet usable (out of reach) shows at this alpha. */
   promptDimAlpha: 0.45,
+  /** The intake's prompt (024): its key cap's bottom centre, px from the pipe's anchor (on the wall right of the pipe), and the text's gap after the cap. */
+  intakePrompt: { x: 66, y: -10, textGap: 4 },
+  /**
+   * The arrow marker (027): over the intake, its tip this far above the bottom of the entrance's mouth tile, px, bobbing
+   * this far over `bobMs`; over the supply ports (028), its tip `portLift` above the first port's tile bottom, just clear of
+   * its head (nothing hangs above the first port, while each port's plate hangs over the head of the one below); over a
+   * resource site's pylon (032), its tip `pylonLift` above the pylon's tile bottom, just over its crystal.
+   */
+  marker: { lift: 4, bob: 3, bobMs: 900, portLift: 38, pylonLift: 82 },
   gateFadeMs: 500,
 } as const;

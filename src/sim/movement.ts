@@ -19,7 +19,6 @@ import type { PlayerState } from './player';
 
 const WALK_PER_TICK = WALK_SPEED / TICK_RATE;
 const ACCEL_PER_TICK = WALK_PER_TICK / ACCEL_TICKS;
-const ROLL_PER_TICK = ROLL_DISTANCE / ROLL_TICKS;
 // Absorbs float error so the last acceleration step lands exactly on target.
 const EPSILON = 1e-9;
 
@@ -31,25 +30,34 @@ export function isInvulnerable(p: PlayerState): boolean {
   return p.rollTick > 0 && p.rollTick <= INVULN_TICKS;
 }
 
-/** `walkScale` slows the walk (heavy armor, 010); rolls are unchanged. */
-export function stepPlayer(p: PlayerState, room: Room, cmd: Command, obstacles: readonly Rect[] = [], walkScale = 1): void {
+/** What gear (036) does to moving: the walk's multiplier, the roll's distance over ROLL_TICKS, and its cooldown. */
+export interface MoveStats {
+  walkScale: number;
+  rollDistance: number;
+  rollCooldown: number;
+}
+
+const BARE: MoveStats = { walkScale: 1, rollDistance: ROLL_DISTANCE, rollCooldown: ROLL_COOLDOWN_TICKS };
+
+/** `moves.walkScale` scales the walk (heavy armor, gear speed, firing); rolls take its distance and cooldown, never its walk speed. */
+export function stepPlayer(p: PlayerState, room: Room, cmd: Command, obstacles: readonly Rect[] = [], moves: MoveStats = BARE): void {
   if (p.hurtTicks > 0) p.hurtTicks -= 1;
-  if (p.rollTick >= ROLL_TICKS) endRoll(p);
+  if (p.rollTick >= ROLL_TICKS) endRoll(p, moves.rollCooldown);
 
   let rolling = isRolling(p);
   if (!rolling) {
     if (cmd.dodge && p.cooldown === 0) {
       startRoll(p, cmd);
       rolling = true;
-    } else if (p.cooldown > 0) p.cooldown -= 1;
+    } else if (p.cooldown > 0) p.cooldown = Math.max(0, p.cooldown - 1);
   }
 
   if (rolling) {
     p.rollTick += 1;
-    p.vx = p.rollDirX * ROLL_PER_TICK;
-    p.vy = p.rollDirY * ROLL_PER_TICK;
+    p.vx = (p.rollDirX * moves.rollDistance) / ROLL_TICKS;
+    p.vy = (p.rollDirY * moves.rollDistance) / ROLL_TICKS;
   } else {
-    walk(p, cmd, walkScale);
+    walk(p, cmd, moves.walkScale);
   }
 
   // Knockback adds to the move, so input still steers on top of it.
@@ -66,12 +74,13 @@ function startRoll(p: PlayerState, cmd: Command): void {
   p.rollDirX = dx;
   p.rollDirY = dy;
   p.facing = facingOf(dx, dy, p.facing);
+  p.rollStunned = [];
 }
 
-/** Ends a roll in progress (a death cuts one short too). */
-export function endRoll(p: PlayerState): void {
+/** Ends a roll in progress (a death cuts one short too), starting the cooldown (036: gear shortens it). */
+export function endRoll(p: PlayerState, cooldown = ROLL_COOLDOWN_TICKS): void {
   p.rollTick = 0;
-  p.cooldown = ROLL_COOLDOWN_TICKS;
+  p.cooldown = cooldown;
   p.vx = p.rollDirX * WALK_PER_TICK;
   p.vy = p.rollDirY * WALK_PER_TICK;
 }

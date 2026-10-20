@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CONDUIT_TICKS } from '../../src/data/foundry';
-import { PORT_TICKS } from '../../src/data/claims';
+import { SUPPLY_TICKS } from '../../src/data/claims';
 import { SHRINE_SITE } from '../../src/data/rooms';
 import { claim } from '../../src/sim/claims';
 import { place } from '../../src/sim/placement';
@@ -69,12 +69,12 @@ describe('conduit intake from other pieces', () => {
     expect([h.count, c.item]).toEqual([3, null]);
   });
 
-  it('the supply port feeds a corner that joined it', () => {
+  it('a supply port feeds a corner that joined it', () => {
     const s = foundry();
     claim(s, SHRINE_SITE);
     const c = put<ConduitState>(s, 'conduit', 2, 8, 'up');
-    run(s, PORT_TICKS + 1);
-    expect(c.item).not.toBeNull();
+    run(s, SUPPLY_TICKS + 1);
+    expect(c.item).toBe('fiber');
   });
 });
 

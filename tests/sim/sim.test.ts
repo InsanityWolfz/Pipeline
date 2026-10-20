@@ -1,3 +1,4 @@
+import { REGION_1_X } from '../../src/data/hollows';
 import { DYING_TICKS } from '../../src/data/player';
 import { OVERWORLD } from '../../src/data/overworld';
 import { WORLD } from '../../src/sim/world';
@@ -56,7 +57,8 @@ function scriptedFight(seed: number, ticks: number) {
     const empty = (sim.inventory.arrow ?? 0) === 0;
     // Waking in the foundry after the KO, walk back out through its door to the overworld.
     const door = sim.roomId === 'foundry' ? { x: 24 * 32, y: 8.5 * 32 } : undefined;
-    const goal = door ?? (!fighting ? target : target ? tileCentre({ tx: 40, ty: 22 }) : loot);
+    // After it, back toward the stairs (034 moved Region 1 +40).
+    const goal = door ?? (!fighting ? target : target ? tileCentre({ tx: 40 + REGION_1_X, ty: 22 }) : loot);
     const command: Command = {
       ...NO_COMMAND,
       moveX: goal ? toward(p.x, goal.x) : 0,
@@ -79,7 +81,7 @@ function scriptedSession(seed: number, ticks: number) {
   sim.inventory = { 'husk-resin': 2, stone: 2, 'ley-crystal': 2, wood: 1, fiber: 1 };
   const ammo = ['arrow', 'bomb', 'ley-bolt'];
   for (let t = 0; t < ticks; t++) {
-    if (t === 100) for (const r of ['shaft', 'arrowhead', 'rope', 'arrow', 'casing', 'fuse', 'ley-shard', 'bomb', 'ley-bolt']) craft(sim, r);
+    if (t === 100) for (const r of ['shaft', 'arrowhead', 'rope', 'arrow', 'casing', 'fuse', 'ley-dust', 'bomb', 'ley-bolt']) craft(sim, r);
     const p = sim.player;
     const node = sim.nodes[8];
     const pack = sim.enemies.find((e) => e.roomId === sim.roomId);
@@ -106,7 +108,7 @@ function scriptedSession(seed: number, ticks: number) {
  */
 function scriptedFoundry(seed: number, ticks: number) {
   const sim = createSim(seed);
-  sim.crafted = ['ley-bolt', 'ley-shard'];
+  sim.crafted = ['ley-bolt', 'ley-dust'];
   sim.link.attuned = true;
   sim.inventory = { 'ley-crystal': 3 };
   const door = tileCentre(OVERWORLD.entrance.arrive);
@@ -129,7 +131,7 @@ function scriptedFoundry(seed: number, ticks: number) {
       moveY: toward(p.y, goal.y),
       toggleBuild: t === 59,
       place: placing ? { pieceId: placing[0], tx: placing[1], ty: 5, facing: 'right' } : null,
-      deposit: t === 250 ? { id: 0, itemId: 'ley-crystal' } : null,
+      deposit: t === 250 ? { id: 0, itemId: 'ley-crystal', amount: 'all' } : null,
       interact: t === 850,
       aimX: p.x,
       aimY: p.y,
@@ -167,18 +169,19 @@ describe('sim state', () => {
   });
 
   it('replays a fight with hits, deaths, drops and a KO identically', () => {
-    const a = scriptedFight(11, 3000);
+    // The KO lands at tick 611; 1,200 ticks keep a good stretch of the fight after it, at under half 3,000's cost.
+    const a = scriptedFight(11, 1200);
     // At least one KO (the rooms respawned), and the fight went on afterwards.
     expect(a.nextEnemyId).toBeGreaterThanOrEqual(STARTING_ENEMIES * 2);
     expect(a.nextArrowId).toBeGreaterThan(0);
-    expect(a).toEqual(scriptedFight(11, 3000));
+    expect(a).toEqual(scriptedFight(11, 1200));
   });
 
   it('replays harvests, crafts, ammo switches, bombs and bolts identically', () => {
     const a = scriptedSession(11, 2400);
     expect(a.crafted.length).toBeGreaterThan(0);
     expect(a).toEqual(scriptedSession(11, 2400));
-  });
+  }, 20_000); // Two 2,400-tick replays: about 2 s on a quiet machine (before and after 039); 5 s is too tight when e2e runs alongside.
 
   it('replays building, running and emptying a foundry line identically', () => {
     // Health drops to 0 at tick 1050; the KO lands once the death animation ends.
@@ -217,10 +220,20 @@ describe('sim state', () => {
     expect(summary.groundItems).toEqual([]);
     // Every event list, empty, and no KO: a key missing from createEvents fails here.
     const lists = ['hits', 'deaths', 'pickups', 'harvests', 'crafts', 'craftFails', 'bursts', 'selects', 'roomChanges'] as const;
-    const later = ['places', 'placeFails', 'pickUps', 'deposits', 'crateTakes', 'withdraws', 'attunes', 'refills', 'shots', 'banks'] as const;
-    const site = ['sealed', 'claims', 'stashDeposits', 'stashTakes', 'supplies', 'travels', 'identifies', 'equips', 'angles', 'gates', 'objectives'] as const;
-    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, 'lost', 'ko', 'tubeTaken'].sort());
-    for (const name of [...lists, ...later, ...site]) expect(summary.events[name], name).toEqual([]);
+    const later = ['places', 'placeFails', 'pickUps', 'deposits', 'crateTakes', 'withdraws', 'attunes', 'refills', 'made', 'shots', 'entranceFires', 'melees', 'banks', 'freezes', 'thaws', 'splits', 'heals'] as const;
+    const site = ['sealed', 'claims', 'discoveries', 'cacheOpens', 'stashDeposits', 'stashTakes', 'supplies', 'portDeliveries', 'travels', 'identifies', 'equips', 'intakeOpens', 'restores', 'schematicDrops', 'schematicReveals', 'gates', 'objectives'] as const;
+    // 034: the shield, the Bulwark and its altar; 035: the Charger's charge, the Burrower's eruption, the Sniper's bolt.
+    const hollows = ['blocked', 'bossDefeats', 'summons', 'lobs', 'enemyBursts', 'pounds', 'charges', 'eruptions', 'snipes'] as const;
+    // 036: the relics' rolls through, ward blocks and ember saves.
+    const relics = ['stuns', 'wardBlocks', 'emberSaves'] as const;
+    // 037: XP, levels, talents, respecs, and the keystones' Pools, Pool-bursts and shatters (039's names).
+    const talents = ['xp', 'levelUps', 'talents', 'respecs', 'pools', 'poolBursts', 'shatters'] as const;
+    // 038: landmines arming and bursting, and a cluster bomb's bomblets.
+    const mines = ['mineArms', 'mineBursts', 'bombletBursts'] as const;
+    // 041: the Bulwark's enrage, rear stomp and adds.
+    const balance = ['enrages', 'stomps', 'addsRise', 'waveStarts', 'backWaves'] as const;
+    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, 'lost', 'ko', 'tubeTaken'].sort());
+    for (const name of [...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance]) expect(summary.events[name], name).toEqual([]);
     expect(summary.events.ko).toBe(false);
     expect(summary.events.lost).toEqual({});
     expect(summary.events.tubeTaken).toBe(false);
@@ -229,7 +242,7 @@ describe('sim state', () => {
   it('summarizes rooms, build mode, unlocks and the foundry', () => {
     const s = createSim(8);
     expect(summarize(s)).toMatchObject({ room: 'overworld', rooms: ['foundry', 'overworld'], building: false });
-    expect(summarize(s).unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'gravity-stager']);
+    expect(summarize(s).unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate']);
     expect(summarize(s).enemies.every((e) => e.room === 'overworld')).toBe(true);
     s.roomId = 'foundry';
     s.player.x = 300;
@@ -240,14 +253,15 @@ describe('sim state', () => {
     ]);
   });
 
-  it('summarizes nodes, the harvest, ammo, bombs, burns and the crafted set', () => {
+  it('summarizes nodes, the harvest, ammo, bombs, enemies\' chill and the crafted set', () => {
     const summary = summarize(createSim(8));
     expect(summary.nodes.filter((n) => n.room === 'overworld')).toHaveLength(OVERWORLD.nodes.length);
     expect(summary.nodes[0]).toMatchObject({ nodeId: 'tree', uses: 3, regrow: 0 });
     expect(summary.harvest).toBeNull();
     expect(summary.tube.ammo).toBe('arrow');
     expect(summary.bombs).toEqual([]);
-    expect(summary.enemies[0]?.burnTicks).toBe(0);
+    expect(summary.enemies[0]).toMatchObject({ chill: 0, frozen: 0 });
+    expect(summary.enemies[0]).not.toHaveProperty('burnTicks');
     expect(summary.crafted).toEqual([]);
   });
 });

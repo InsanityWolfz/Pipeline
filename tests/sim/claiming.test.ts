@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { CLAIM_TICKS, FIXTURES, PORT_CYCLE, PORT_TICKS } from '../../src/data/claims';
+import { CLAIM_TICKS, FIXTURES, SUPPLY_TICKS } from '../../src/data/claims';
 import { FOUNDRY_ROOM, SHRINE_SITE } from '../../src/data/rooms';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { WORLD } from '../../src/sim/world';
 import { claim, claimedPylonInReach } from '../../src/sim/claims';
-import { fixtureDef, portFront } from '../../src/sim/fixtures';
+import { fixtureDef } from '../../src/sim/fixtures';
 import { damagePlayer } from '../../src/sim/health';
 import { canPlace } from '../../src/sim/placement';
-import type { ConduitState } from '../../src/sim/pieces';
 import { createSim, type SimState } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
@@ -17,8 +16,9 @@ import { put } from './foundryKit';
 
 // 017: the shrine is a site in the overworld; its pylon carries the site id.
 const SHRINE = WORLD[OVERWORLD_ROOM];
-if (!SHRINE?.pylon) throw new Error('the shrine needs a pylon');
-const PYLON = SHRINE.pylon;
+const FOUND = SHRINE?.pylons?.find((p) => p.site === SHRINE_SITE);
+if (!FOUND) throw new Error('the shrine needs a pylon');
+const PYLON = FOUND;
 
 /** The shrine, with the player standing just below its pylon; `clear` removes its enemies. */
 function atPylon(clear = true): SimState {
@@ -75,7 +75,7 @@ describe('claiming the pylon', () => {
     expect(s.claimHold).toBeNull();
   });
 
-  it('claims after CLAIM_TICKS of standing still, adding the port and waystone', () => {
+  it("claims after CLAIM_TICKS of standing still, adding the four ports and the waystone (not 034's ley-iron port: the shrine sends none)", () => {
     const s = atPylon();
     run(s, 1, { interact: true });
     expect(s.claimHold).toEqual({ site: SHRINE_SITE, progress: 1 });
@@ -84,7 +84,7 @@ describe('claiming the pylon', () => {
     run(s, 1);
     expect(s.claims).toEqual([SHRINE_SITE]);
     expect(s.events.claims).toEqual([{ site: SHRINE_SITE }]);
-    expect(s.fixtures.map((f) => f.id).sort()).toEqual(FIXTURES.map((f) => f.id).sort());
+    expect(s.fixtures.map((f) => f.id).sort()).toEqual(FIXTURES.filter((f) => f.raw !== 'ley-iron').map((f) => f.id).sort());
     expect(summarize(s).claims).toEqual([SHRINE_SITE]);
   });
 
@@ -121,13 +121,13 @@ describe('claiming the pylon', () => {
 
   it('a piece on a fixture tile is picked up into the inventory', () => {
     const s = atPylon();
-    const port = fixtureDef('supply-port');
+    const port = fixtureDef('wood-port');
     s.roomId = FOUNDRY_ROOM;
     put(s, 'crate', port.tx, port.ty);
     s.roomId = OVERWORLD_ROOM;
     claim(s, SHRINE_SITE);
     expect(s.foundry.pieces).toEqual([]);
-    expect(s.fixtures.some((f) => f.id === 'supply-port')).toBe(true);
+    expect(s.fixtures.some((f) => f.id === 'wood-port')).toBe(true);
   });
 
   it('lasts through a KO, and the shrine stays empty', () => {
@@ -145,7 +145,7 @@ describe('fixture tiles', () => {
     s.roomId = FOUNDRY_ROOM;
     movePlayer(s, tileCentre({ tx: 12, ty: 12 }).x, tileCentre({ tx: 12, ty: 12 }).y);
     const stash = fixtureDef('stash');
-    const port = fixtureDef('supply-port');
+    const port = fixtureDef('fiber-port');
     expect(canPlace(s, 'conduit', stash.tx, stash.ty, 'up')).toBe('occupied');
     expect(canPlace(s, 'conduit', port.tx, port.ty, 'up')).toBeNull();
     claim(s, SHRINE_SITE);
@@ -154,85 +154,7 @@ describe('fixture tiles', () => {
   });
 });
 
-describe('the supply port', () => {
-  it('pushes exactly every PORT_TICKS', () => {
-    const s = claimed();
-    s.roomId = FOUNDRY_ROOM;
-    movePlayer(s, tileCentre({ tx: 12, ty: 12 }).x, tileCentre({ tx: 12, ty: 12 }).y);
-    const port = s.fixtures.find((f) => f.id === 'supply-port');
-    if (!port) throw new Error('no port');
-    const front = portFront(port);
-    const c = put<ConduitState>(s, 'conduit', front.tx, front.ty, 'down');
-    const at: number[] = [];
-    for (let t = 0; t < PORT_TICKS * 3 + 5; t++) {
-      run(s, 1);
-      if (c.item) {
-        at.push(s.tick);
-        c.item = null;
-      }
-    }
-    const gaps = at.slice(1).map((t, i) => t - (at[i] ?? 0));
-    expect(gaps.slice(0, 2)).toEqual([PORT_TICKS, PORT_TICKS]);
-  });
-
-  it('reports each raw it produces as a supply (018), in the cycle, even while the player is out', () => {
-    const s = claimed();
-    const port = s.fixtures.find((f) => f.id === 'supply-port');
-    if (!port) throw new Error('no port');
-    const front = portFront(port);
-    // Placed from inside the foundry; then the player heads back out.
-    s.roomId = FOUNDRY_ROOM;
-    const c = put<ConduitState>(s, 'conduit', front.tx, front.ty, 'down');
-    s.roomId = OVERWORLD_ROOM;
-    const supplies: string[] = [];
-    for (let t = 0; t < PORT_TICKS * 2 + 5; t++) {
-      run(s, 1);
-      for (const e of summarize(s).events.supplies) supplies.push(e.itemId);
-      // Empty the conduit each tick so the line never stalls.
-      c.item = null;
-    }
-    expect(supplies).toEqual(PORT_CYCLE.slice(0, 2));
-  });
-
-  it('a raw the next piece cannot use stalls the line, as in 006', () => {
-    const s = claimed();
-    s.roomId = FOUNDRY_ROOM;
-    movePlayer(s, tileCentre({ tx: 12, ty: 12 }).x, tileCentre({ tx: 12, ty: 12 }).y);
-    const port = s.fixtures.find((f) => f.id === 'supply-port');
-    if (!port) throw new Error('no port');
-    const front = portFront(port);
-    const c = put<ConduitState>(s, 'conduit', front.tx, front.ty, 'right');
-    // A grinder only takes ley crystal: the first raw, wood, sticks at the end of the conduit.
-    s.crafted = ['ley-shard'];
-    put(s, 'grinder', front.tx + 1, front.ty, 'right');
-    run(s, PORT_TICKS * 3);
-    expect(c.item).toBe('wood');
-    expect(port.item).toBe('stone');
-  });
-
-  it('pushes the raws in turn every PORT_TICKS into what faces it, and waits when refused', () => {
-    const s = claimed();
-    s.roomId = FOUNDRY_ROOM;
-    const port = s.fixtures.find((f) => f.id === 'supply-port');
-    if (!port) throw new Error('no port');
-    const front = portFront(port);
-    movePlayer(s, tileCentre({ tx: 12, ty: 12 }).x, tileCentre({ tx: 12, ty: 12 }).y);
-    const c = put<ConduitState>(s, 'conduit', front.tx, front.ty, 'down');
-    const got: string[] = [];
-    for (let t = 0; t < PORT_TICKS * 4 + 10; t++) {
-      run(s, 1);
-      if (c.item) {
-        got.push(c.item);
-        c.item = null;
-      }
-    }
-    expect(got).toEqual([...PORT_CYCLE]);
-    // A full conduit refuses: the port holds its raw.
-    c.item = 'wood';
-    run(s, PORT_TICKS + 2);
-    expect(s.fixtures.find((f) => f.id === 'supply-port')?.item).not.toBeNull();
-  });
-});
+// The supply ports (028) are tested in ports.test.ts.
 
 describe('the claimed pylon, stash and waystone', () => {
   it('sends the haul to the stash, then the stash gives it back', () => {
@@ -288,7 +210,7 @@ describe('the claimed pylon, stash and waystone', () => {
       s.inventory = { stone: 2 };
       stepSim(s, command({ pylon: 'deposit' }));
       stepSim(s, command({ pylon: 'travel' }));
-      run(s, PORT_TICKS * 3);
+      run(s, SUPPLY_TICKS * 3);
       return summarize(s);
     };
     expect(play()).toEqual(play());

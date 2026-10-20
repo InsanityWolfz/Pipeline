@@ -1,59 +1,138 @@
 // Layouts for the HUD pieces and the crafting menu added in 005. Px values
 // tuned by eye; colours are palette ids.
 
+import { craftColumnHeight, CRAFT_COLUMNS } from './craftColumns';
+
 /** The harvest progress bar over a node: size, gap above the sprite, and palette ids. */
 export const HARVEST_BAR = { w: 20, h: 3, gap: 2, border: 1, color: 'cyan', back: 'ink' } as const;
 
-/**
- * The ammo strip right of the hotbar slot: one cell per ammo in key order,
- * px from each cell's top-left. Highlight drawn over the selected cell.
- */
-export const AMMO_STRIP_LAYOUT = {
-  gap: 4,
-  cellStep: 26,
-  key: { x: 3, y: 3 },
-  icon: { x: 6, y: 3 },
-  count: { x: 4, y: 20 },
-} as const;
+/** The item and ammo icons' size, px (16×16 vector frames, src/data/art/items.ts). */
+export const ITEM_ICON_SIZE = 16;
+
+/** Size of the hotbar cell (025), px: a tablet with a well, as the build bar's cells use too. */
+const CELL = { w: 24, h: 28, step: 26, key: { x: 3, y: 3 }, icon: { x: 6, y: 3 }, count: { x: 4, y: 20 } } as const;
+/** How much bigger the tube slot's icons and text are than the hotbar's (025). */
+const ACTIVE_SCALE = 1.4;
 
 /**
- * The crafting menu, centred on screen. Rows are listed group by group: a header
- * with the ammo's icon, then one row per recipe. Px from the panel's top-left,
- * then from each row's top-left.
+ * The bottom HUD (025): the hotbar row of three cells (keys 1, 2 and 3: key number,
+ * icon, carried count) centred `margin` px above the bottom edge, and the tube slot
+ * centred `gap` px above it. The tube slot shows what the next press fires: one unit
+ * per round (a carried round, each round of a volley, or the fist), each the cell's size
+ * times `activeScale`, its icon centred and its count or label centred under it, units
+ * `gap` px apart. Px from each cell's or unit's top-left.
+ */
+export const HUD_LAYOUT = {
+  margin: 6,
+  gap: 4,
+  activeScale: ACTIVE_SCALE,
+  cell: CELL,
+  tubeSlot: {
+    /** The cell's width scaled, plus 4 px so the 1.4× "Melee" label (28 px) clears the ring with `labelPad` each side. */
+    w: Math.round(CELL.w * ACTIVE_SCALE) + 4,
+    h: Math.round(CELL.h * ACTIVE_SCALE),
+    /** The icon's top, and the count's or label's top (the top of its capitals), scaled from the cell's. */
+    iconY: Math.round(CELL.icon.y * ACTIVE_SCALE),
+    countY: Math.round(CELL.count.y * ACTIVE_SCALE),
+    /** Each round's well inside the frame, px in from the unit's edges; a label keeps `labelPad` px clear of the well's ring each side. */
+    wellInset: 2,
+    labelPad: 2,
+    melee: 'Melee',
+  },
+} as const;
+
+/** The tube slot's width for `units` rounds (025): units side by side, `gap` px apart. */
+export function tubeSlotWidth(units: number): number {
+  const n = Math.max(1, units);
+  return n * HUD_LAYOUT.tubeSlot.w + (n - 1) * HUD_LAYOUT.gap;
+}
+
+/** Every menu's rows are this wide (the picker, pause and site menus, and the crafting menu), so the menus match. */
+const MENU_ROW_WIDTH = 184;
+
+/** The crafting menu's rows (026): as wide as the other menus' rows, taller, for a name under each icon. */
+const CRAFT_ROW = { w: MENU_ROW_WIDTH, h: 28, gap: 1 } as const;
+const CRAFT_HEADER = 16;
+const CRAFT_ROWS_AT = { x: 6, y: 6 } as const;
+/** The crafting menu's columns (038.4, CRAFT_COLUMNS), `CRAFT_COLUMN_GAP` px apart. */
+const CRAFT_SIZES = { headerHeight: CRAFT_HEADER, rowHeight: CRAFT_ROW.h, rowGap: CRAFT_ROW.gap } as const;
+const CRAFT_COLUMN_GAP = 8;
+const craftTallest = Math.max(...CRAFT_COLUMNS.map((ids) => craftColumnHeight(ids, CRAFT_SIZES)));
+
+/**
+ * The crafting menu, centred on screen with its title card. Rows are listed group by
+ * group: a header with the ammo's icon and name, then one row per recipe. Each input
+ * and the output has its item's name in small text under its icon (026), centred under
+ * it, or starting at its left edge when wider. Px from the panel's top-left, then from
+ * each row's top-left.
  */
 export const CRAFT_MENU_LAYOUT = {
-  width: 196,
-  height: 252,
+  width: CRAFT_COLUMNS.length * CRAFT_ROW.w + (CRAFT_COLUMNS.length - 1) * CRAFT_COLUMN_GAP + 2 * CRAFT_ROWS_AT.x,
+  height: CRAFT_ROWS_AT.y * 2 + craftTallest,
+  columnGap: CRAFT_COLUMN_GAP,
   /** First row's top-left inside the panel. */
-  rowsAt: { x: 6, y: 8 },
-  rowHeight: 20,
-  /** Item icons are this tall; they sit centred in a row. */
-  iconSize: 16,
-  rowGap: 1,
-  headerHeight: 16,
-  /** Up to three inputs: icon, then "have/need" beside it. */
-  input: { x: 2, step: 34, textX: 17, textY: 8 },
-  arrow: { x: 108, y: 8 },
-  output: { x: 120, textX: 18, madeY: 4, ownedY: 11 },
+  rowsAt: CRAFT_ROWS_AT,
+  rowWidth: CRAFT_ROW.w,
+  rowHeight: CRAFT_ROW.h,
+  rowGap: CRAFT_ROW.gap,
+  /** Item icons are this tall, `iconY` px down the row; each name's capitals start `labelY` px down. */
+  iconSize: ITEM_ICON_SIZE,
+  iconY: 2,
+  labelY: 20,
+  headerHeight: CRAFT_HEADER,
+  /** Up to three inputs, `step` px apart (room for the longest name): icon, then "have/need" beside it. */
+  input: { x: 2, step: 40, textX: 17, textY: 7 },
+  arrow: { x: 122, y: 8 },
+  output: { x: 134, textX: 18, madeY: 3, ownedY: 11 },
+  /** The ammo's icon, and its name beside it (026). */
   headerIcon: { x: 2, y: 0 },
-  /** Alpha of a row the player can't afford. */
+  headerName: { x: 22, y: 5 },
+  /** Alpha of the icons on a row the player can't afford; its names and counts stay readable at `greyTextAlpha`. */
   greyAlpha: 0.35,
+  greyTextAlpha: 0.8,
+  /** An input the player is short of: its name and count in this colour (palette id). */
+  missing: 'rust-light',
   /** The title card over the panel (020): a tablet `w` x `h` px, `gap` px above the panel, the title `titleY` px down it. */
   title: { text: 'Crafting', w: 128, h: 22, gap: 4, titleY: 4 },
 } as const;
 
 /**
- * The build bar, along the bottom of the screen above the ammo strip: one cell per
- * unlocked piece in build bar order, its icon inside (a machine shows what it makes). Cells use the ammo strip's
- * cell sprites. Px on screen, then from each cell's top-left.
+ * The build bar, along the bottom of the screen in the hotbar row's place (025: the row
+ * hides while building): one cell per unlocked piece in build bar order, its icon inside
+ * (a machine shows what it makes). Cells use the hotbar's cell sprites. The pieces sit
+ * in groups (026), `groupGap` px apart with a thin divider centred in each gap (a group
+ * with no unlocked piece isn't shown), and each group's label centred over it in a row `label.h`
+ * px tall, `label.gap` px above the cells. Px on screen, then from each cell's top-left.
  */
 export const BUILD_BAR_LAYOUT = {
   /** Distance from the screen's bottom edge to the cells' bottom. */
-  bottom: 34,
-  cellStep: 26,
-  cellWidth: 24,
-  cellHeight: 28,
+  bottom: HUD_LAYOUT.margin,
+  cellStep: CELL.step,
+  cellWidth: CELL.w,
+  cellHeight: CELL.h,
   icon: { x: 4, y: 6 },
+  groupGap: 12,
+  /** The divider: a line this colour (palette id) and alpha, from the label row's top to `inset` px above the cells' bottom. */
+  divider: { color: 'brass', alpha: 0.7, width: 1, inset: 2 },
+  label: { h: 9, gap: 2 },
+} as const;
+
+/** How far the build-bar pulse's ring reaches round its cell, px; its sprite is a px wider still, so the ring's edge isn't clipped. */
+const PULSE_OUT = 3;
+const PULSE_INSET = PULSE_OUT + 1;
+
+/**
+ * The pulse over a build-bar cell the current objective names (027): a ring reaching `out` px round the cell, drawn in
+ * a `w` x `h` sprite with the cell's top-left at (`inset`, `inset`); its alpha swings between `min` and `max` once per `periodMs`.
+ */
+export const BUILD_PULSE = {
+  out: PULSE_OUT,
+  inset: PULSE_INSET,
+  w: BUILD_BAR_LAYOUT.cellWidth + 2 * PULSE_INSET,
+  h: BUILD_BAR_LAYOUT.cellHeight + 2 * PULSE_INSET,
+  periodMs: 1100,
+  min: 0.2,
+  max: 1,
 } as const;
 
 /** The ghost of the piece to place: palette tints for where it can and can't go, and its alpha. */
@@ -67,13 +146,15 @@ export const GHOST = { okTint: 'cyan', badTint: 'rust', alpha: 0.6 } as const;
 export const PICKER_LAYOUT = {
   /** The tablet behind the rows (020): padding round them. */
   pad: 4,
-  rowWidth: 184,
+  rowWidth: MENU_ROW_WIDTH,
   rowHeight: 20,
   rowGap: 1,
   icon: { x: 4, y: 2 },
   count: { x: 24, y: 8 },
   /** How far a take-out row's item icon and count shift right, past the hopper icon. */
   takeShift: 20,
+  /** The one-line hint under the rows (022): how many a click moves, and its gap below the last row. */
+  hint: { text: 'Click 1 · Shift half · Ctrl all', gap: 4 },
 } as const;
 
 /** The hover readout over a machine: a dark box of icon + count lines. Px from its top-left. */
@@ -86,15 +167,16 @@ export const READOUT_LAYOUT = {
   gap: 4,
 } as const;
 
+/** The bench's Stages panel (029): the crafting menu's rows (026) on a tablet, a header over them, `gap` px right of the bench's rows. */
+/** The bench's Stages panel (029); 039: a line under the rows (`lineGap` below them, `lineHeight` tall) shows the hovered row's generated text. */
+export const STAGE_PANEL = { pad: 6, headerHeight: 16, gap: 12, title: 'Stages', lineGap: 4, lineHeight: 9 } as const;
+
 /** Pylon and stash menus (009): rows per column before wrapping, and the gap between columns, px. */
 export const MENU_MAX_ROWS = 10;
 export const MENU_COLUMN_GAP = 8;
 
-/** The worn armor's icon and value, right of the health bar (010). Px on screen. */
-export const HUD_ARMOR_LAYOUT = { x: 62, y: 2, count: { x: 18, y: 6 } } as const;
-
-/** Palette tints on the player's body for the worn armor's weight (010). */
-export const ARMOR_TINTS = { light: 'leaf-light', heavy: 'rock' } as const;
+/** Palette tints on the player's body for the worn body piece's weight (010); Featherplate (036) shows no slow tint. */
+export const ARMOR_TINTS = { light: 'leaf-light', heavy: 'rock', feather: 'leaf-light' } as const;
 
 /**
  * World names on mouse-over (015). Things without a tile (enemies, nodes, ground
@@ -128,10 +210,9 @@ export const WORLD_NAMES = {
   crystal: 'Ley crystal',
   leyLine: 'Ley line',
   intake: 'Foundry intake',
+  /** 034: the Sunken Forum's altar stone. */
+  altar: 'Altar',
 } as const;
-
-/** The build bar's hover tablet (015): wrap width in characters, padding and line height, px, and its gap above the bar. */
-export const BUILD_TIP = { wrap: 34, maxLines: 2, pad: 4, lineHeight: 10, gap: 4 } as const;
 
 /**
  * The minimap (017): the overworld's terrain at `scale` view px per tile in the
@@ -153,13 +234,26 @@ export const MINIMAP = {
     B: 'rock-light',
     '#': 'rock-dark',
     D: 'gold-trim',
+    // Stonefall Hollows (034).
+    C: 'hollow-dark',
+    P: 'hollow-pale',
+    F: 'hollow',
+    A: 'hollow-light',
+    '=': 'hollow-pale',
   } as Readonly<Record<string, string>>,
+  /** The Hollows' own colours (034), by symbol, over `terrain`: its open ground is stone, not grass. */
+  hollowsTerrain: { '.': 'hollow-light', R: 'hollow' } as Readonly<Record<string, string>>,
   markers: {
     player: { color: 'snow', r: 2 },
     entrance: { color: 'gold-trim', r: 2 },
     shrine: { color: 'wisp-light', r: 2 },
     claimed: { color: 'cyan', r: 3 },
+    /** 033: a schematic lying on the ground, pinged by a ring growing out from it over `ping.ms`. */
+    schematic: { color: 'cyan-glow', r: 2 },
   },
+  ping: { ms: 1100, reach: 6, color: 'cyan-glow', width: 1 },
+  /** Discovered landmarks' icons (032), by marker: shown at this scale of their sprite (landmarkAssets' MAP_ICONS). */
+  landmarkScale: 0.8,
 } as const;
 
 /**

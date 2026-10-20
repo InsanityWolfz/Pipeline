@@ -3,11 +3,8 @@
 /** The ammo hotbar slot 1 starts with, and goes back to on a KO. */
 export const STARTING_AMMO = 'arrow';
 
-/** Ammo the slot can be switched to, in key order: keys 1, 2, 3. */
-export const SLOT_AMMOS: readonly string[] = ['arrow', 'bomb', 'ley-bolt'];
-
-/** Rounds the reservoir holds (spec 007). An upgrade later. */
-export const RESERVOIR_CAP = 30;
+/** Ammo the slot can be switched to, in key order: keys 1, 2, 3 and 4 (038: landmines). */
+export const SLOT_AMMOS: readonly string[] = ['arrow', 'bomb', 'ley-bolt', 'landmine'];
 
 /**
  * The attune (019), ticks per beat, played the first time the player walks into
@@ -19,9 +16,6 @@ export const ATTUNE = { gun: 60, panTo: 45, pipe: 60, panBack: 45 } as const;
 
 /** Ticks the whole attune lasts. */
 export const ATTUNE_TICKS = ATTUNE.gun + ATTUNE.panTo + ATTUNE.pipe + ATTUNE.panBack;
-
-/** Ticks the dry-fire flag stays set after an empty-tube shot. */
-export const DRY_FIRE_TICKS = 10;
 
 /** Shots spawn this far from the player's feet along the aim, px. */
 export const MUZZLE_OFFSET = 12;

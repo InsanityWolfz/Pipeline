@@ -1,14 +1,25 @@
 import type { DamageType } from '../data/ammo';
+import { TILE_SIZE } from '../data/config';
+import { OVERWORLD_ROOM, ringOf } from '../data/overworld';
+import type { Ring } from '../data/ringScale';
 import { enemyDef } from '../data/enemies';
+import { defOf } from './champions';
 import type { Room } from '../data/rooms';
 import { moveBox, type Rect } from './collision';
+import { chillEnemy } from './cold';
+import { straightAmmo } from '../data/ammo';
 import { startKnock, type Knockable } from './knockback';
 import type { Facing } from './player';
 import type { SimState } from './state';
 
 // Enemies as plain data: creation, damage and bodies. Their behaviour is in enemyAi.ts.
 
-export type EnemyMode = 'idle' | 'chase' | 'windup' | 'swipe' | 'recover' | 'return';
+/**
+ * `lob` and `throw` (034): the Bulwark rearing back, then holding the throw. 035: `stun`, a Charger dazed by a wall;
+ * `dig`, a Burrower digging in; `peek`, a Sniper stepping out of cover to a clear line. 041: the Bulwark's `roar` as it
+ * enrages, and its rear stomp's `stomp-windup`, `stomp` and `stomp-recover`.
+ */
+export type EnemyMode = 'idle' | 'chase' | 'windup' | 'swipe' | 'recover' | 'return' | 'lob' | 'throw' | 'stun' | 'dig' | 'peek' | 'roar' | 'stomp-windup' | 'stomp' | 'stomp-recover';
 
 export interface EnemyState extends Knockable {
   id: number;
@@ -40,14 +51,58 @@ export interface EnemyState extends Knockable {
   swipeDirY: number;
   /** Ticks of hit flash left, for render. */
   flash: number;
-  /** Ticks of burn left; it deals damage on every `everyTicks`-th. */
-  burnTicks: number;
-  /** The ammo whose burn is running, for its numbers. */
-  burnAmmo: string;
+  /** Chill stacks from cold hits (029); each slows it. */
+  chill: number;
+  /** Ticks before the chill runs out and the stacks drop to 0. */
+  chillTicks: number;
+  /** Ticks left frozen: it doesn't move or think. */
+  frozen: number;
+  /** Ticks after a thaw in which cold hits add no stacks. */
+  refreeze: number;
+  /** A champion (032), by name, or null: the sim reads its scaled def (`defOf`). */
+  champion: { name: string } | null;
+  /** Its danger ring (041): its home tile's, set when it's created and kept as it walks. Its def is scaled by it. */
+  ring: Ring;
+  /** Its continuous facing, radians (034): a shielded enemy's shield points this way and turns, never snapping. */
+  angle: number;
+  /** Ticks before its next bomb lob (034: the Bulwark's). */
+  lobCooldown: number;
+  /** Ticks of shield flash left after a blocked hit (034), for render. */
+  blockFlash: number;
+  /** A Burrower under the ground (035): nothing can hit it, and it neither blocks nor is pushed apart. */
+  underground: boolean;
+  /** Where its attack is anchored (035): a Charger's lane start, a Burrower's locked spot, px. */
+  spotX: number;
+  spotY: number;
+  /** A Charger's charge has struck the player (035): once per charge. */
+  struck: boolean;
+  /** Its last move ran into something solid (035: a charging Charger is stunned by it). */
+  bumped: boolean;
+  /** Ticks left Stunned (039: Rollbreaker's roll, or a Charger's wall daze): it holds and doesn't act. */
+  stunned: number;
+  /** Its Stun is a Charger's wall daze alone (039.6), which keeps the daze's own timing: see stun.ts. */
+  dazed: boolean;
+  /** Ticks left rising from the ground (041: the Bulwark's adds): it can't act, be hit or block until 0. */
+  rising: number;
+  /** The Bulwark's fight (041): enraged below 30%; its rear-stomp counter and cooldown; its adds risen this fight. */
+  enraged: boolean;
+  behind: number;
+  stompCooldown: number;
+  addsRisen: boolean;
+  /** 041.16: ticks before its next pair of adds (counted once the first have risen); its back wave's countdown, the ticks its wind-up has run (0: none), and the unit direction it's locked to. */
+  addsCooldown: number;
+  waveCooldown: number;
+  waveTicks: number;
+  waveDirX: number;
+  waveDirY: number;
 }
+
+/** A home's danger ring (041, the rule 037's XP used): `ringOf` its tile in the overworld, 0 in any other room. */
+export const ringAt = (roomId: string, x: number, y: number): Ring => (roomId === OVERWORLD_ROOM ? ringOf(Math.floor(x / TILE_SIZE), Math.floor(y / TILE_SIZE)) : 0);
 
 export function createEnemy(id: number, enemyId: string, at: { x: number; y: number }, roomId: string, group = ''): EnemyState {
   const def = enemyDef(enemyId);
+  const ring = ringAt(roomId, at.x, at.y);
   return {
     id,
     enemyId,
@@ -64,12 +119,36 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     modeTicks: 0,
     offScreenTicks: 0,
     cooldown: 0,
-    health: def.maxHealth,
+    health: defOf({ enemyId, champion: null, ring }).maxHealth,
     swipeDirX: 0,
     swipeDirY: 1,
     flash: 0,
-    burnTicks: 0,
-    burnAmmo: '',
+    chill: 0,
+    chillTicks: 0,
+    frozen: 0,
+    refreeze: 0,
+    champion: null,
+    ring,
+    angle: Math.PI / 2,
+    lobCooldown: def.kind === 'bulwark' ? def.lob.cooldownTicks : 0,
+    blockFlash: 0,
+    underground: false,
+    spotX: at.x,
+    spotY: at.y,
+    struck: false,
+    bumped: false,
+    stunned: 0,
+    dazed: false,
+    rising: 0,
+    enraged: false,
+    behind: 0,
+    stompCooldown: 0,
+    addsRisen: false,
+    addsCooldown: 0,
+    waveCooldown: def.kind === 'bulwark' ? def.wave.everyTicks : 0,
+    waveTicks: 0,
+    waveDirX: 0,
+    waveDirY: 0,
     knockX: 0,
     knockY: 0,
     knockTicks: 0,
@@ -83,15 +162,18 @@ export function aggro(e: EnemyState): void {
   e.offScreenTicks = 0;
 }
 
-/** How a hit lands: arrows knock back and flash, bursts only flash, burns do neither. */
+/** How a hit lands: a round's Knockback (039: px before the enemy's weight; 0 for none) and its flash. A cold hit chills (029). */
 export interface HitStyle {
-  knock: boolean;
+  knock: number;
   flash: boolean;
   /** Recorded on the hit event so render can colour it; it changes no rule. */
   damageType: DamageType;
+  /** A punch (023): its hit event is marked so render plays the punch's thud for it. */
+  melee?: boolean;
 }
 
-const ARROW_HIT: HitStyle = { knock: true, flash: true, damageType: 'physical' };
+/** An arrow's hit, with its Knockback. */
+const ARROW_HIT: HitStyle = { knock: straightAmmo('arrow').knockback, flash: true, damageType: 'physical' };
 
 /** Damages an enemy, knocking it along (dirX, dirY). A hit always aggros an idle or returning enemy. */
 export function damageEnemy(
@@ -102,17 +184,26 @@ export function damageEnemy(
   dirY: number,
   style: HitStyle = ARROW_HIT,
 ): void {
-  const def = enemyDef(e.enemyId);
+  const def = defOf(e);
   e.health = Math.max(0, e.health - amount);
   if (style.flash) e.flash = def.hitFlashTicks;
-  if (style.knock) startKnock(e, dirX, dirY, def.hitKnockback, def.hitKnockTicks);
+  // Knockback (039): the round's push times the enemy's weight (a boss weighs 0, frozen or not).
+  const push = style.knock * def.weight;
+  if (push > 0) startKnock(e, dirX, dirY, push, def.hitKnockTicks);
+  if (style.damageType === 'cold' && e.health > 0) chillEnemy(state, e);
   if (e.mode === 'idle' || e.mode === 'return') aggro(e);
-  state.events.hits.push({ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: amount, damageType: style.damageType });
+  state.events.hits.push({ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: amount, damageType: style.damageType, ...(style.melee ? { melee: true as const } : {}) });
 }
+
+/** Whether shots, punches and bursts can reach it (035: not a Burrower underground; 041: not an add still rising). */
+export const targetable = (e: Pick<EnemyState, 'underground' | 'rising'>): boolean => !e.underground && e.rising <= 0;
+
+/** It passes through other enemies (035): a Burrower underground, a Charger mid-charge, an add rising (041). Separation leaves it be. */
+export const passesThrough = (e: EnemyState): boolean => e.underground || e.rising > 0 || (e.mode === 'swipe' && defOf(e).kind === 'charger');
 
 /** True if a ground point is inside the enemy's hurtbox. */
 export function inHurtbox(e: EnemyState, x: number, y: number): boolean {
-  const { hurtbox } = enemyDef(e.enemyId);
+  const { hurtbox } = defOf(e);
   return Math.abs(x - e.x) <= hurtbox.w / 2 && Math.abs(y - (e.y + hurtbox.offsetY)) <= hurtbox.h / 2;
 }
 
@@ -132,10 +223,10 @@ export function separate(enemies: EnemyState[], bodies: (roomId: string) => Room
     for (let j = i + 1; j < enemies.length; j++) {
       const a = enemies[i];
       const b = enemies[j];
-      if (!a || !b || a.roomId !== b.roomId) continue;
+      if (!a || !b || a.roomId !== b.roomId || passesThrough(a) || passesThrough(b)) continue;
       const { room, obstacles } = bodies(a.roomId);
-      const fa = enemyDef(a.enemyId).feetBox;
-      const fb = enemyDef(b.enemyId).feetBox;
+      const fa = defOf(a).feetBox;
+      const fb = defOf(b).feetBox;
       const dx = b.x - a.x;
       const dy = b.y - a.y;
       const ox = (fa.w + fb.w) / 2 - Math.abs(dx);
@@ -156,8 +247,8 @@ function pushApart(
   ux: number,
   uy: number,
 ): void {
-  const boxA = enemyDef(a.enemyId).feetBox;
-  const boxB = enemyDef(b.enemyId).feetBox;
+  const boxA = defOf(a).feetBox;
+  const boxB = defOf(b).feetBox;
   const movedA = shove(room, obstacles, a, boxA, -ux * (amount / 2), -uy * (amount / 2));
   const movedB = shove(room, obstacles, b, boxB, ux * (amount - movedA), uy * (amount - movedA));
   const left = amount - movedA - movedB;

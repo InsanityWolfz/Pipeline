@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { lobAmmo } from '../../src/data/ammo';
 import { VIEW_WIDTH } from '../../src/data/config';
 import { PAUSE_MENU } from '../../src/data/hudLayout';
 import { VOLUME_STEP } from '../../src/data/sounds';
@@ -49,12 +50,12 @@ test('the full arrow, bomb and ley bolt chains craft from gathered materials', a
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
     const before = g.getState().inventory.arrow ?? 0;
-    for (const r of ['shaft', 'arrowhead', 'rope', 'arrow', 'casing', 'fuse', 'ley-shard', 'bomb', 'ley-bolt']) g.craft(r);
+    for (const r of ['shaft', 'arrowhead', 'rope', 'arrow', 'casing', 'fuse', 'ley-dust', 'bomb', 'ley-bolt']) g.craft(r);
     return { before, after: g.getState() };
   });
   expect(s.after.inventory.arrow).toBe(s.before + 4);
   expect(s.after.inventory).toMatchObject({ bomb: 2, 'ley-bolt': 2, shaft: 1, arrowhead: 1, rope: 1 });
-  expect(s.after.crafted).toEqual(['arrow', 'arrowhead', 'bomb', 'casing', 'fuse', 'ley-bolt', 'ley-shard', 'rope', 'shaft']);
+  expect(s.after.crafted).toEqual(['arrow', 'arrowhead', 'bomb', 'casing', 'fuse', 'ley-bolt', 'ley-dust', 'rope', 'shaft']);
   expect(errors).toEqual([]);
 });
 
@@ -105,7 +106,10 @@ test('the crafting menu keeps the world running, Esc pauses it, and the menu cra
   expect(errors).toEqual([]);
 });
 
-test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page }) => {
+/** A bomb's burst damage (041: 12). */
+const BOMB_BURST = lobAmmo('bomb').burstDamage;
+
+test('an arrow pierces two Husks (029), and a bomb burst kills one', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page, '?start=field&attuned');
   await page.evaluate(() => window.__GAME__?.step(0));
@@ -119,14 +123,15 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
       h.killHusk();
       // Wake the third by walking past it (017: it sleeps apart from the others in the ruin field), rolling so their swipes miss.
       const g = window.__GAME__;
-      for (let t = 0; t < 200 && g && g.getState().player.x > 38 * 32; t++) g.step(1, { moveX: -1, dodge: t % 40 === 0 });
+      const X = window.__helpers?.ox ?? 0;
+      for (let t = 0; t < 200 && g && g.getState().player.x > (38 + X) * 32; t++) g.step(1, { moveX: -1, dodge: t % 40 === 0 });
     },
     [LEY_VEIN] as const,
   );
-  const result = await page.evaluate(() => {
+  const result = await page.evaluate((burst) => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    for (const r of ['casing', 'fuse', 'ley-shard', 'ley-shard', 'ley-shard', 'bomb']) g.craft(r);
+    for (const r of ['casing', 'fuse', 'ley-dust', 'ley-dust', 'ley-dust', 'bomb']) g.craft(r);
     for (let i = 0; i < 5; i++) g.craft('ley-bolt');
     let s = g.getState();
     const nearest = () => {
@@ -135,9 +140,9 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
     };
     const carried = () => s.inventory[s.tube.ammo] ?? 0;
 
-    // Pierce: back away from the two chasing Husks and fire only once the farther one
-    // stands on the line through the nearer one, so one bolt can pass through both.
-    s = g.step(1, { selectAmmo: 'ley-bolt' });
+    // Pierce (029: arrows pierce, ley bolts don't): back away from the two chasing Husks and fire only once the
+    // farther one stands on the line through the nearer one, so one arrow can pass through both.
+    s = g.step(1, { selectAmmo: 'arrow' });
     let pierced = 0;
     for (let t = 0; t < 3000 && pierced < 2 && s.enemies.filter((e) => e.group === 'field').length === 2; t++) {
       const p = s.player;
@@ -153,7 +158,7 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
       // mound snags chasers, and groves line the meadow); step back in when they drift off, so they never go home.
       const back = !lined && len < 120;
       const closeIn = !lined && len > 200;
-      const cx = 45.5 * 32 - p.x;
+      const cx = (45.5 + (window.__helpers?.ox ?? 0)) * 32 - p.x;
       const cy = 15.5 * 32 - p.y;
       const open = cx * nx + cy * ny < 0 && Math.hypot(cx, cy) > 48;
       const sign = (v: number): -1 | 0 | 1 => (Math.abs(v) < 2 ? 0 : v > 0 ? 1 : -1);
@@ -168,23 +173,23 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
         aimX: near.x,
         aimY: near.y,
       });
-      // Follow each bolt to the end of its flight, even if it kills the nearer Husk.
+      // Follow each arrow to the end of its flight, even if it kills the nearer Husk.
       for (let w = 0; w < 90 && s.arrows.length > 0; w++) {
         for (const arrow of s.arrows) pierced = Math.max(pierced, arrow.hitIds.length);
         s = g.step(1);
       }
     }
 
-    // Burn kill: bring the nearest Husk to 16–27 health with arrows, then bomb it and keep away.
+    // Burst kill (029: no burn): bring the nearest Husk to a bomb's burst or less with arrows (041: 12), then bomb it.
     s = g.step(1, { selectAmmo: 'arrow' });
     const target = nearest();
     if (!target) throw new Error(`no Husk left; pierced ${pierced}, tick ${s.tick}`);
     const id = target.id;
     const health = () => s.enemies.filter((e) => e.group === 'field').find((e) => e.id === id)?.health ?? 0;
-    for (let t = 0; t < 600 && health() > 27; t++) {
+    for (let t = 0; t < 600 && health() > burst; t++) {
       const e = s.enemies.filter((e) => e.group === 'field').find((en) => en.id === id);
       if (!e) break;
-      // One arrow at a time, so the health steps down by 10s.
+      // One arrow at a time, so the health steps down by an arrow's 14 (041).
       const before = health();
       s = g.step(1, { fire: true, aimX: e.x, aimY: e.y });
       for (let w = 0; w < 30 && health() === before && s.arrows.length > 0; w++) s = g.step(1);
@@ -201,7 +206,7 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
       const dist = Math.hypot(e.x - p.x, e.y - p.y);
       const throwNow = bursts === 0 && s.bombs.length === 0 && dist < 70;
       s = g.step(1, {
-        // Close in to throw, then back off until the burn finishes it.
+        // Close in to throw, then back off.
         moveX: throwNow ? 0 : bursts === 0 && dist >= 70 ? (e.x > p.x ? 1 : -1) : e.x > p.x ? -1 : 1,
         moveY: throwNow ? 0 : bursts === 0 && dist >= 70 ? (e.y > p.y ? 1 : -1) : e.y > p.y ? -1 : 1,
         fire: throwNow,
@@ -213,14 +218,14 @@ test('a ley bolt pierces two Husks, and a bomb burn kills one', async ({ page })
       died = s.events.deaths.some((d) => d.id === id);
     }
     return { pierced, beforeBomb, bursts, died, lastDamage, health: s.player.health };
-  });
+  }, BOMB_BURST);
   expect(result.pierced).toBe(2);
-  expect(result.beforeBomb).toBeGreaterThanOrEqual(16);
-  expect(result.beforeBomb).toBeLessThanOrEqual(27);
+  expect(result.beforeBomb).toBeGreaterThan(0);
+  expect(result.beforeBomb).toBeLessThanOrEqual(BOMB_BURST);
   expect(result.bursts).toBe(1);
   expect(result.died).toBe(true);
-  // The killing blow was a burn tick, not the burst.
-  expect(result.lastDamage).toBe(3);
+  // The killing blow was the burst itself: there's no burn (029).
+  expect(result.lastDamage).toBe(BOMB_BURST);
   expect(errors).toEqual([]);
 });
 

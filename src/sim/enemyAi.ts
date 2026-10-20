@@ -1,14 +1,22 @@
-import { enemyDef, type MeleeDef } from '../data/enemies';
+import type { EnemyDef, MeleeDef } from '../data/enemies';
+import { bulwarkThink } from './bulwarkAi';
+import { chargeThink } from './chargerAi';
+import { burrowThink } from './burrowerAi';
+import { shardThink } from './shardbackAi';
+import { snipeThink } from './sniperAi';
+import { defOf } from './champions';
 import { castThink } from './casterAi';
+import { chillScale, chillSlow, tickCold } from './cold';
 import { moveBox } from './collision';
 import { aimFacing } from './direction';
-import { separate, type EnemyState, type RoomBodies } from './enemies';
+import { aggro, separate, type EnemyState, type RoomBodies } from './enemies';
 import { damagePlayer } from './health';
 import { takeKnock } from './knockback';
 import { keepOut } from './population';
 import { slamThink } from './slammerAi';
+import { holdStunned, stunHolds } from './stun';
 import type { SimState } from './state';
-import { engage, inAggroBox, leash, startWindup, stepAttack, toward } from './aiCommon';
+import { engage, inAggroBox, inArc, leash, startWindup, stepAttack, toward } from './aiCommon';
 
 
 // Enemy behaviour, RotMG style: aggro when on screen (or in range) or hit, chase
@@ -17,27 +25,66 @@ import { engage, inAggroBox, leash, startWindup, stepAttack, toward } from './ai
 // Wisp's casting in casterAi.ts and the Warden's slam in slammerAi.ts. A
 // wind-up locks the attack direction; the attack lands once, then recovers.
 
-/** Absorbs float error so a player exactly on the arc's edge is hit. */
-const EPSILON = 1e-9;
-
 /** Thinks, moves and faces every enemy in its own room, then pushes overlapping bodies apart. */
 export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBodies): void {
-  for (const e of state.enemies) {
+  const slowPerStack = chillSlow(state);
+  // The enemies at the tick's start: ones that rise this tick (041: the Bulwark's adds) first act next tick.
+  const list = state.enemies;
+  for (let i = 0, n = list.length; i < n; i++) {
+    const e = list[i];
+    // Gone this tick (041: adds sunk by their Bulwark's reset earlier in the loop): it doesn't act.
+    if (!e || (state.enemies !== list && !state.enemies.includes(e))) continue;
+    // Rising (041): it doesn't act or move; up from the ground, it wakes.
+    if (e.rising > 0) {
+      e.rising -= 1;
+      if (e.rising === 0) aggro(e);
+      continue;
+    }
     const { room, obstacles } = bodies(e.roomId);
-    const def = enemyDef(e.enemyId);
+    const def = defOf(e);
     if (e.cooldown > 0) e.cooldown -= 1;
     if (e.flash > 0) e.flash -= 1;
-    const thought = def.kind === 'melee' ? think(state, e, def) : def.kind === 'caster' ? castThink(state, e, def) : slamThink(state, e, def);
+    if (e.blockFlash > 0) e.blockFlash -= 1;
+    // A frozen enemy doesn't think (029): its wind-up pauses where it is. A chilled one walks slower.
+    // A Stunned one (039) holds, then chases again; a Charger's wall daze is its own think's (stun.ts).
+    const thought: [number, number] = stunHolds(e) ? holdStunned(e) : e.frozen > 0 ? [0, 0] : thinkOf(state, e, def);
+    const slow = chillScale(e, slowPerStack);
     // Claimed ground is safe (017): a chaser stops at the zone's edge, and a knock never carries it in either.
-    const [mx, my] = keepOut(state, e, thought[0], thought[1]);
+    const [mx, my] = keepOut(state, e, thought[0] * slow, thought[1] * slow);
     const [kx, ky] = takeKnock(e);
     const [dx, dy] = keepOut(state, e, mx + kx, my + ky);
     const { hitX, hitY } = moveBox(room, e, def.feetBox, dx, dy, obstacles);
     e.vx = hitX ? 0 : mx;
     e.vy = hitY ? 0 : my;
-    e.facing = attacking(e) ? aimFacing(e.swipeDirX, e.swipeDirY, e.facing) : aimFacing(e.vx, e.vy, e.facing);
+    e.bumped = hitX || hitY;
+    // A shielded enemy (034) faces its shield's continuous angle.
+    if (def.shield) e.facing = aimFacing(Math.cos(e.angle), Math.sin(e.angle), e.facing);
+    else e.facing = attacking(e) ? aimFacing(e.swipeDirX, e.swipeDirY, e.facing) : aimFacing(e.vx, e.vy, e.facing);
+    tickCold(state, e);
   }
   separate(state.enemies, bodies);
+}
+
+/** Each kind's AI: the Husk's here, the Wisp's, the Warden's, the Bulwark's (034) and Region 2's four (035) in their own files. */
+function thinkOf(state: SimState, e: EnemyState, def: EnemyDef): [number, number] {
+  switch (def.kind) {
+    case 'melee':
+      return think(state, e, def);
+    case 'caster':
+      return castThink(state, e, def);
+    case 'slammer':
+      return slamThink(state, e, def);
+    case 'bulwark':
+      return bulwarkThink(state, e, def);
+    case 'charger':
+      return chargeThink(state, e, def);
+    case 'burrower':
+      return burrowThink(state, e, def);
+    case 'shardback':
+      return shardThink(state, e, def);
+    case 'sniper':
+      return snipeThink(state, e, def);
+  }
 }
 
 function attacking(e: EnemyState): boolean {
@@ -66,10 +113,8 @@ function landSwipe(state: SimState, e: EnemyState, def: MeleeDef): void {
   const { swipe } = def;
   const dx = state.player.x - e.x;
   const dy = state.player.y - e.y;
+  if (!inArc(dx, dy, e.swipeDirX, e.swipeDirY, swipe.reach, swipe.arcDegrees)) return;
   const dist = Math.hypot(dx, dy);
-  if (dist > swipe.reach) return;
-  const halfArc = (swipe.arcDegrees * Math.PI) / 360;
-  if (dist > 0 && (dx * e.swipeDirX + dy * e.swipeDirY) / dist < Math.cos(halfArc) - EPSILON) return;
   const [kx, ky] = dist > 0 ? [dx / dist, dy / dist] : [e.swipeDirX, e.swipeDirY];
   damagePlayer(state, swipe.damage, kx, ky, swipe.knockback, swipe.knockTicks);
 }

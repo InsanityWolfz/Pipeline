@@ -1,8 +1,8 @@
-import type { WandererView } from '../../data/art/wanderer';
+import { WANDERER_FEEL, type WandererView } from '../../data/art/wanderer';
 import { REST_POSE, type WandererPose } from './wandererRig';
 
 // Fixed wanderer poses for the contact sheet (016): what PlayerView produces live
-// for idle, walking, firing, a hit, a roll and a death, plus the tube's states.
+// for idle, walking, firing, a hit, a roll and a death, plus the tube's states and the punch (023).
 
 const AIM: Record<WandererView, number> = { side: 0.15, down: Math.PI / 2, up: -Math.PI / 2 };
 
@@ -19,5 +19,7 @@ export function sheetPoses(view: WandererView): { label: string; pose: WandererP
     { label: 'dormant', pose: { ...base, attuned: false, muzzle: 0 } },
     { label: 'attuning', pose: { ...base, attuned: false, attuning: 0.55 } },
     { label: 'no tube', pose: { ...base, hasTube: false } },
+    { label: 'tube jab', pose: { ...base, jab: 1, lean: WANDERER_FEEL.jab.lean, push: WANDERER_FEEL.jab.push } },
+    { label: 'punch', pose: { ...base, hasTube: false, jab: 1, lean: WANDERER_FEEL.jab.lean, push: WANDERER_FEEL.jab.push } },
   ];
 }

@@ -1,85 +1,186 @@
 import type { Scene } from 'phaser';
-import { UNIDENTIFIED_ARMOR } from '../data/armor';
-import { SPRITES } from '../data/assets';
 import { SITE_ICONS } from '../data/foundryAssets';
-import { itemDef, ITEMS } from '../data/items';
-import { claimedPylonInReach, fixtureInReach } from '../sim/claims';
+import { ITEMS } from '../data/items';
+import { claimedPylonInReach, claimedPylons, fixtureInReach } from '../sim/claims';
 import { usableInReach } from '../sim/foundryUse';
 import type { SimState } from '../sim/state';
 import { ChoiceMenu, type Choice } from './ChoiceMenu';
 import type { Controls } from './controls';
 import { pieceIcon } from './foundryLayout';
+import { StagePanel, type StagePanelState } from './StagePanel';
+import { RestorePanel } from './RestorePanel';
+import { diagramInReach } from '../sim/research';
+import { shownItem } from './itemShown';
+import { GearPanel } from './GearPanel';
+import { GEAR_PANEL } from '../data/gearAssets';
+import { stageRowsKnown, stagesKnown } from '../sim/stages';
+import { altarInReach, altarState } from '../sim/altar';
+import { offeringModel } from './altarPanel';
+import type { UiState } from './testHook';
+import type { TipHit } from './tipTypes';
 
 type PylonChoice = 'deposit' | 'travel';
+
+/** The site menus' part of `ui()`. */
+export type SiteUiState = Pick<UiState, 'siteOpen' | 'waystone' | 'restorePanel' | 'altarPanel' | 'gearPanel'>;
+
+/** The site menus' part of `ui()` before the scene has built them. */
+export const NO_SITE_UI: SiteUiState = { siteOpen: false, waystone: null, restorePanel: null, altarPanel: null, gearPanel: null };
 /** A stash row: one item's stack, or null for everything. */
 type StashChoice = { itemId: string | null };
-/** A bench row: identify everything carried, or wear (or take off) a piece. */
-type BenchChoice = { identify: true } | { equip: number };
 /** A sorter row: the item it sends out its side, or null to pass everything (015). */
 type SorterChoice = { itemId: string | null };
+/** A waystone row (032): the claimed site to travel to. */
+type WaystoneChoice = { site: string };
 
-// The claimed pylon's menu (send the haul home, travel to the foundry) and the
+// The claimed pylon's menu (send the haul home, travel to the foundry), the waystone's
+// (travel to any claimed pylon, by landmark name, 032) and the
 // stash's (take all, or one stack), opened by E beside them (009), and the
-// identification bench's (identify all, wear or take off a piece) (010), and a
-// sorter's (pick the item it sends out its side) (015).
+// identification bench's gear panel (036: identify all, wear or take off a piece per
+// slot), and a sorter's (pick the item it sends out its side) (015).
 export class SiteMenus {
   private readonly pylon: ChoiceMenu<PylonChoice>;
   private readonly stash: ChoiceMenu<StashChoice>;
-  private readonly bench: ChoiceMenu<BenchChoice>;
+  private readonly bench: GearPanel;
   private readonly sorter: ChoiceMenu<SorterChoice>;
+  private readonly waystone: ChoiceMenu<WaystoneChoice>;
+  /** The bench's Stages panel (029), beside its rows once the shrine is claimed. */
+  private readonly stages: StagePanel;
+  /** The restore panel (033), opened by E at a diagram in the foundry. */
+  private readonly restore: RestorePanel;
+  /** The altar's offering (034), in the restore panel's style, opened by E at an awake altar. */
+  private readonly offering: RestorePanel;
   /** The sorter whose menu is open. */
   private sorterId: number | null = null;
 
   constructor(scene: Scene) {
     this.pylon = new ChoiceMenu(scene);
     this.stash = new ChoiceMenu(scene);
-    this.bench = new ChoiceMenu(scene);
+    this.bench = new GearPanel(scene);
     this.sorter = new ChoiceMenu(scene);
+    this.waystone = new ChoiceMenu(scene);
+    this.stages = new StagePanel(scene);
+    this.restore = new RestorePanel(scene);
+    this.offering = new RestorePanel(scene, offeringModel);
+  }
+
+  /** The bench's Stages panel as drawn (029). */
+  get stagePanel(): StagePanelState {
+    return this.stages.state;
   }
 
   private get menus(): readonly ChoiceMenu<unknown>[] {
-    return [this.pylon, this.stash, this.bench, this.sorter];
+    return [this.pylon, this.stash, this.sorter, this.waystone];
   }
 
   get isOpen(): boolean {
-    return this.menus.some((m) => m.isOpen);
+    return this.menus.some((m) => m.isOpen) || this.bench.isOpen || this.restore.isOpen || this.offering.isOpen;
   }
 
   overUi(x: number, y: number): boolean {
-    return this.menus.some((m) => m.overUi(x, y));
+    return this.menus.some((m) => m.overUi(x, y)) || this.bench.overUi(x, y) || this.stages.overUi(x, y) || this.restore.overUi(x, y) || this.offering.overUi(x, y);
   }
 
   close(): void {
     for (const m of this.menus) m.close();
+    this.bench.close();
+    this.restore.close();
+    this.offering.close();
+  }
+
+  /** A bench Stages row's stage or a gear piece under a view point (040). */
+  tipAt(x: number, y: number): TipHit | null {
+    return this.stages.tipAt(x, y) ?? this.bench.tipAt(x, y);
   }
 
   /** The cursor is at a screen point: the open menu lights the row under it (020). */
   pointAt(x: number, y: number): void {
     for (const m of this.menus) m.pointAt(x, y);
+    this.bench.pointAt(x, y);
+    this.stages.pointAt(x, y);
+    this.restore.pointAt(x, y);
+    this.offering.pointAt(x, y);
   }
 
-  /** E was pressed: opens the menu of a sorter, a claimed pylon, the stash or the bench in reach. */
+  /**
+   * E was pressed with the restore panel open (033): E again restores, as clicking Restore does, and the panel
+   * closes; without the cost it stays open and nothing is sent. Returns whether the panel took the press.
+   */
+  pressAgain(controls: Controls): boolean {
+    // The altar's offering (034) works the same: E again summons.
+    if (this.offering.isOpen) {
+      const altar = this.offering.confirm;
+      if (!altar) return true;
+      controls.menus.summon(altar);
+      this.offering.flash();
+      this.offering.close();
+      return true;
+    }
+    if (!this.restore.isOpen) return false;
+    const node = this.restore.confirm;
+    if (!node) return true;
+    controls.menus.restore(node);
+    this.restore.flash();
+    this.restore.close();
+    return true;
+  }
+
+  /** E was pressed: opens the menu of a sorter, a diagram's restore panel (033), a claimed pylon, the stash or the bench in reach. */
   interact(sim: SimState): void {
     const piece = usableInReach(sim);
+    const diagram = diagramInReach(sim);
+    const altar = altarInReach(sim);
     if (piece?.kind === 'sorter') {
       this.sorterId = piece.id;
       this.sorter.open();
-    } else if (claimedPylonInReach(sim)) this.pylon.open();
+    } else if (diagram) this.restore.open(diagram.node);
+    // An altar's offering (034): only once its boss has fallen (a dim altar does nothing).
+    else if (altar && altarState(sim, altar.id) !== 'dim') this.offering.open(altar.id);
+    else if (claimedPylonInReach(sim)) this.pylon.open();
+    // With two or more claimed pylons, the waystone offers them by landmark name (032); with one, the sim travels.
+    else if (fixtureInReach(sim, 'waystone') && claimedPylons(sim).length >= 2) this.waystone.open();
     else if (fixtureInReach(sim, 'stash')) this.stash.open();
-    else if (fixtureInReach(sim, 'bench')) this.bench.open();
+    else if (fixtureInReach(sim, 'bench') && !this.bench.isOpen) this.bench.open();
   }
 
   /** A click on a row sends its choice for the next tick. Returns whether it hit a row. */
   click(controls: Controls, x: number, y: number): boolean {
     const p = this.pylon.valueAt(x, y);
     const s = this.stash.valueAt(x, y);
-    const b = this.bench.valueAt(x, y);
+    const gear = this.bench.click(x, y);
     const f = this.sorter.valueAt(x, y);
+    const w = this.waystone.valueAt(x, y);
+    const stage = this.stages.stageAt(x, y);
+    const restore = this.restore.restoreAt(x, y);
+    const summon = this.offering.restoreAt(x, y);
+    if (summon) {
+      controls.menus.summon(summon);
+      this.offering.flash();
+      this.offering.close();
+      return true;
+    }
+    if (restore) {
+      controls.menus.restore(restore);
+      this.restore.flash();
+      this.restore.close();
+      return true;
+    }
+    // The gear panel (036) stays open after a click, so pieces can be swapped and compared.
+    if (gear) {
+      if (gear.kind === 'identify') controls.menus.identify();
+      else if (gear.kind === 'equip') controls.menus.equip({ id: gear.id });
+      return true;
+    }
+    if (stage) {
+      controls.menus.applyStage(stage);
+      // The bench stays open, so a stage can be applied again (029: any number of times).
+      this.stages.flashAt(x, y);
+      return true;
+    }
     if (f && this.sorterId !== null) controls.menus.setFilter(this.sorterId, f.itemId);
+    else if (w) controls.menus.travel(w.site);
     else if (p) controls.menus.pylon(p);
     else if (s) controls.menus.takeStash(s.itemId);
-    else if (b && 'identify' in b) controls.menus.identify();
-    else if (b) controls.menus.equip(b.equip);
     else return false;
     for (const m of this.menus) m.flashAt(x, y);
     this.close();
@@ -88,6 +189,11 @@ export class SiteMenus {
 
   /** Refreshes the rows; walking out of reach closes a menu. */
   update(sim: SimState): void {
+    // The restore panel closes once its diagram is out of reach or gone (restored).
+    if (this.restore.isOpen && diagramInReach(sim)?.node !== this.restore.nodeId) this.restore.close();
+    this.restore.update(sim);
+    if (this.offering.isOpen && altarInReach(sim)?.id !== this.offering.nodeId) this.offering.close();
+    this.offering.update(sim);
     if (this.pylon.isOpen && !claimedPylonInReach(sim)) this.pylon.close();
     if (this.stash.isOpen && !fixtureInReach(sim, 'stash')) this.stash.close();
     const held = Object.values(sim.inventory).reduce((a, b) => a + b, 0);
@@ -102,29 +208,30 @@ export class SiteMenus {
       total > 0
         ? [
             { icons: [SITE_ICONS.stash], text: `Take all (${total})`, value: { itemId: null } },
-            ...stacks.map((id) => ({ icons: [itemDef(id).icon], text: `${itemDef(id).name} ${sim.stash[id] ?? 0}`, value: { itemId: id } })),
+            ...stacks.map((id) => ({ icons: [shownItem(sim, id).icon], text: `${shownItem(sim, id).name} ${sim.stash[id] ?? 0}`, value: { itemId: id } })),
           ]
         : [];
     this.stash.show(stashRows);
     if (this.bench.isOpen && !fixtureInReach(sim, 'bench')) this.bench.close();
-    const unidentified = sim.inventory[UNIDENTIFIED_ARMOR] ?? 0;
-    const benchRows: Choice<BenchChoice>[] = [
-      ...(unidentified > 0
-        ? [{ icons: [SPRITES.emblemIdentify], text: `Identify all (${unidentified})`, value: { identify: true as const } }]
-        : []),
-      // Each piece: its name, weight and armor; the worn one says so, and clicking it takes it off.
-      ...sim.armor.map((a) => ({
-        icons: [a.weight === 'heavy' ? SPRITES.iconArmorHeavy : SPRITES.iconArmorLight],
-        text: `${a.name} ${a.weight} ${a.armor}${a.id === sim.equipped ? ' worn' : ''}`,
-        value: { equip: a.id },
-      })),
-    ];
-    this.bench.show(benchRows);
+    // Once the shrine is claimed, the Stages panel (029) sits beside the gear panel, the two centred together.
+    const staged = this.bench.isOpen && stagesKnown(sim);
+    this.bench.update(sim, staged);
+    this.stages.show(staged ? GEAR_PANEL.w : null, sim.inventory, stageRowsKnown(sim).map((r) => r.id));
     if (this.sorter.isOpen && usableInReach(sim)?.id !== this.sorterId) this.sorter.close();
     const sorterRows: Choice<SorterChoice>[] = [
       { icons: [pieceIcon('sorter')], text: 'Clear', value: { itemId: null } },
-      ...Object.keys(ITEMS).map((id) => ({ icons: [itemDef(id).icon], text: itemDef(id).name, value: { itemId: id } })),
+      // Schematics are left out (033): their names would give away which node an unknown one reveals.
+      ...Object.values(ITEMS)
+        .filter((it) => it.kind !== 'schematic')
+        .map((it) => ({ icons: [it.icon], text: it.name, value: { itemId: it.id } })),
     ];
     this.sorter.show(sorterRows);
+    if (this.waystone.isOpen && !fixtureInReach(sim, 'waystone')) this.waystone.close();
+    this.waystone.show(claimedPylons(sim).map(({ pylon }) => ({ icons: [SITE_ICONS.travel], text: `Travel to ${pylon.name}`, value: { site: pylon.site } })));
+  }
+
+  /** For the test hook: a site menu is open, and the waystone menu's rows as drawn (032), each row's text and box, or null while it's shut. */
+  get ui(): SiteUiState {
+    return { siteOpen: this.isOpen, waystone: this.waystone.isOpen ? this.waystone.rowsShown : null, restorePanel: this.restore.state, altarPanel: this.offering.state, gearPanel: this.bench.state };
   }
 }

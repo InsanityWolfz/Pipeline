@@ -1,10 +1,16 @@
-import { lobAmmo } from '../data/ammo';
-import { TICK_RATE } from '../data/config';
-import { damageEnemy } from './enemies';
+import { lobbedAmmo } from '../data/ammo';
+import { TICK_RATE, TILE_SIZE } from '../data/config';
+import { blastArea } from './blast';
 import type { SimState } from './state';
+import { shotSealed } from './tutorial';
+import { roundEmission } from './emissions';
+import { statOf } from './statResolve';
+import { leavePool } from './keystones';
+import { armMine, scatterBomblets } from './mines';
 
 // Lobbed shots: a bomb arcs over everything to its target and bursts where it
-// lands, setting what it catches on fire. Position is the ground point.
+// lands. Position is the ground point. (029: no burn until the fire rune.) A landmine
+// (038) flies the same way but lands armed (mines.ts); a cluster bomb's burst scatters bomblets.
 
 export interface BombState {
   id: number;
@@ -17,11 +23,14 @@ export interface BombState {
   toY: number;
   x: number;
   y: number;
-  /** Ticks flown; it lands when this reaches `flightTicks`. */
+  /** Ticks flown; it lands on the first tick this reaches `flightTicks` (039: a flight time isn't rounded, so it may be fractional). */
   tick: number;
   flightTicks: number;
   /** Height above the ground point, px (render only). */
   height: number;
+  /** Its burst's damage and radius, px, after talents (037), fixed at the throw. */
+  damage: number;
+  radius: number;
 }
 
 /**
@@ -36,13 +45,19 @@ export function throwBomb(
   feet: { x: number; y: number },
   aim: { x: number; y: number },
   dir: [number, number],
+  across = 0,
 ): void {
-  const ammo = lobAmmo(ammoId);
-  const reach = Math.min(Math.hypot(aim.x - feet.x, aim.y - feet.y), ammo.maxRange);
-  const toX = feet.x + dir[0] * reach;
-  const toY = feet.y + dir[1] * reach;
+  const ammo = lobbedAmmo(ammoId);
+  const e = roundEmission(ammoId);
+  const reach = Math.min(Math.hypot(aim.x - feet.x, aim.y - feet.y), statOf(state, 'range', e, ammo.maxRange));
+  // Side by side in a volley (024): `across` px to the right of the line, clockwise on screen.
+  const toX = feet.x + dir[0] * reach - dir[1] * across;
+  const toY = feet.y + dir[1] * reach + dir[0] * across;
   const distance = Math.hypot(toX - from.x, toY - from.y);
-  const flightTicks = Math.max(1, Math.ceil(distance / (ammo.speed / TICK_RATE)));
+  // Its stats through resolveStat (039), by scope: Swift Arc (Lob) shortens a bomb's flight, not a landmine's (Mine);
+  // Black Powder (Bomb) grows a bomb's damage, not a landmine's; Wide Casing (Burst) grows both bursts. Never rounded.
+  const bomb = ammo.kind === 'lob';
+  const flightTicks = Math.max(1, statOf(state, 'flight-time', e, distance / (ammo.speed / TICK_RATE)));
   state.bombs.push({
     id: state.nextBombId++,
     ammoId,
@@ -56,6 +71,8 @@ export function throwBomb(
     tick: 0,
     flightTicks,
     height: 0,
+    damage: statOf(state, 'damage', e, bomb ? ammo.burstDamage : ammo.damage),
+    radius: statOf(state, 'radius', e, bomb ? ammo.burstRadius : ammo.radius),
   });
 }
 
@@ -65,34 +82,43 @@ export function stepBombs(state: SimState): void {
   for (const b of state.bombs) {
     b.tick += 1;
     const t = b.tick / b.flightTicks;
-    const ammo = lobAmmo(b.ammoId);
+    const ammo = lobbedAmmo(b.ammoId);
     if (t >= 1) {
       b.x = b.toX;
       b.y = b.toY;
       b.height = 0;
-      burst(state, b);
+      land(state, b);
       continue;
     }
     b.x = b.fromX + (b.toX - b.fromX) * t;
     b.y = b.fromY + (b.toY - b.fromY) * t;
     b.height = 4 * ammo.arcPeak * t * (1 - t);
+    // A shut ley barrier (034) stops even a lob: the bomb drops and bursts against it (a landmine arms there).
+    if (shotSealed(state, b.roomId, Math.floor(b.x / TILE_SIZE), Math.floor(b.y / TILE_SIZE))) {
+      b.height = 0;
+      land(state, b);
+      continue;
+    }
     state.bombs[kept++] = b;
   }
   state.bombs.length = kept;
 }
 
-const BURST_HIT = { knock: false, flash: true, damageType: 'fire' } as const;
+/** Where a lobbed round comes down: a landmine arms (038), a bomb bursts. */
+function land(state: SimState, b: BombState): void {
+  const ammo = lobbedAmmo(b.ammoId);
+  if (ammo.kind === 'mine') armMine(state, b, ammo);
+  else burst(state, b);
+}
 
-/** Damages and ignites every live enemy whose feet are within the burst radius. Never the player. */
+/**
+ * Damages every live enemy whose feet are within the burst radius, flashing it without knockback. Never the player,
+ * nor a Burrower underground (035). With Blastfletch (037) the Burst leaves a Pool (039); a cluster bomb (038)
+ * scatters its Bomblets.
+ */
 function burst(state: SimState, b: BombState): void {
-  const ammo = lobAmmo(b.ammoId);
-  for (const e of state.enemies) {
-    if (e.roomId !== b.roomId || e.health <= 0) continue;
-    if (Math.hypot(e.x - b.x, e.y - b.y) > ammo.burstRadius) continue;
-    damageEnemy(state, e, ammo.burstDamage, e.x - b.x, e.y - b.y, BURST_HIT);
-    // A new burst restarts the burn; burns never stack.
-    e.burnTicks = ammo.burn.everyTicks * ammo.burn.times;
-    e.burnAmmo = b.ammoId;
-  }
-  state.events.bursts.push({ x: b.x, y: b.y, radius: ammo.burstRadius });
+  blastArea(state, b.roomId, b.x, b.y, b.radius, b.damage, lobbedAmmo(b.ammoId).damageType);
+  state.events.bursts.push({ x: b.x, y: b.y, radius: b.radius, damageType: lobbedAmmo(b.ammoId).damageType });
+  leavePool(state, b, roundEmission(b.ammoId));
+  scatterBomblets(state, b);
 }

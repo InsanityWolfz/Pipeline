@@ -4,7 +4,6 @@ import { DAYLIGHT_PALETTE, hexToRgb, INK_ID } from '../../src/data/palette';
 import { AMMO } from '../../src/data/ammo';
 import {
   animFrames,
-  BURN_FLAME,
   ENEMY_ANIMS,
   MUZZLE_FLASH,
   DEPOSIT_SWIRL,
@@ -18,7 +17,7 @@ import {
   CONDUIT_ANIMS,
   CONDUIT_CORNERS,
   CRATE_SPRITE,
-  STAGER_SPRITE,
+  INTAKE_SPRITES,
   TUTORIAL_SPRITES,
   PYLON_SPRITES,
   FIXTURE_SPRITES,
@@ -33,23 +32,28 @@ import {
   STATUS_MARKERS,
 } from '../../src/data/foundryAssets';
 import { ENEMIES } from '../../src/data/enemies';
-import { FIXTURES, PORT_CYCLE } from '../../src/data/claims';
-import { ARMOR_DROP_CHANCE, ARMOR_WEIGHTS } from '../../src/data/armor';
+import { FIXTURES, SITE_SUPPLY } from '../../src/data/claims';
+import { ARMOR_DROP_CHANCE, GEAR_NAMES } from '../../src/data/gear';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { TILE, WALKABLE } from '../../src/data/rooms';
 import { ITEMS } from '../../src/data/items';
 import { STARTING_INVENTORY, TUTORIAL_START } from '../../src/data/player';
 import { PLAYTEST_START } from '../../src/data/playtest';
 import { SLOT_AMMOS, STARTING_AMMO } from '../../src/data/tube';
-import { CRAFT_GROUPS, RECIPES } from '../../src/data/recipes';
+import { CRAFT_GROUPS, RECIPES, recipeDef } from '../../src/data/recipes';
+import { STAGE_RECIPES, STAGE_ROWS } from '../../src/data/stages';
 import { NODES } from '../../src/data/nodes';
-import { BUILD_BAR, PIECES } from '../../src/data/pieces';
-import { STAGER_ANGLES, STAGER_START_ANGLE } from '../../src/data/foundry';
+import { BUILD_BAR, PIECE_CATEGORIES, PIECES, pieceDef } from '../../src/data/pieces';
+import { ENTRANCE_CAPS, INTAKE, LOB_SPACING, SPREAD_STEP } from '../../src/data/foundry';
+import { researchNode } from '../../src/data/research';
+import { ENTRANCE_GAUGE_COLORS } from '../../src/data/art/intake';
 import { vectorFrames } from '../../src/render/vector/catalog';
 import { OVERWORLD } from '../../src/data/overworld';
 import { WORLD } from '../../src/sim/world';
 
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+/** A round id (029): a kebab-case base, then its tags, each joined by '+'. */
+const ROUND = /^[a-z0-9]+(-[a-z0-9]+)*(\+[a-z0-9]+(-[a-z0-9]+)*)*$/;
 
 function luminance(hex: string): number {
   const [r, g, b] = hexToRgb(hex);
@@ -117,8 +121,9 @@ describe('assets', () => {
     }
   });
 
-  it('has the fire burst, burn flame, muzzle flash, deposit swirl and stager as frames', () => {
-    for (const anim of [FIRE_BURST, BURN_FLAME, MUZZLE_FLASH, DEPOSIT_SWIRL, STAGER_SPRITE]) {
+  it('has the fire burst, muzzle flash and deposit swirl as frames, and no burn flame (029)', () => {
+    expect(known.some((f) => f.startsWith('burn-flame'))).toBe(false);
+    for (const anim of [FIRE_BURST, MUZZLE_FLASH, DEPOSIT_SWIRL]) {
       expect(anim.key).toMatch(KEBAB);
       for (const frame of animFrames(anim)) expect(known).toContain(frame);
     }
@@ -157,14 +162,16 @@ describe('assets', () => {
   });
 });
 
+const ammoIds = new Set(Object.keys(AMMO));
+
 describe('items and ammo', () => {
   it('have kebab-case ids that match their keys', () => {
     for (const [key, item] of Object.entries(ITEMS)) {
-      expect(item.id).toMatch(KEBAB);
+      expect(item.id).toMatch(ammoIds.has(key) ? ROUND : KEBAB);
       expect(item.id).toBe(key);
     }
     for (const [key, ammo] of Object.entries(AMMO)) {
-      expect(ammo.id).toMatch(KEBAB);
+      expect(ammo.id).toMatch(ROUND);
       expect(ammo.id).toBe(key);
     }
   });
@@ -177,13 +184,23 @@ describe('items and ammo', () => {
 });
 
 describe('item kinds, ammo slots and recipes', () => {
+  it('reveals recipes only after real items (038: shownAfter names an item)', () => {
+    for (const r of Object.values(RECIPES)) if (r.shownAfter !== undefined) expect(ITEMS[r.shownAfter], r.id).toBeDefined();
+  });
+
+  it("lays the crafting menu's groups in columns numbered from 0 with none skipped (038.4)", () => {
+    const columns = [...new Set(CRAFT_GROUPS.map((g) => g.column))].sort((x, y) => x - y);
+    expect(columns).toEqual(columns.map((_, i) => i));
+  });
+
   it('gives every item a kind, and every ammo an ammo item', () => {
-    for (const item of Object.values(ITEMS)) expect(['raw', 'part', 'ammo', 'armor']).toContain(item.kind);
+    // 033: schematics are the one new kind.
+    for (const item of Object.values(ITEMS)) expect(['raw', 'part', 'ammo', 'armor', 'schematic']).toContain(item.kind);
     for (const ammo of Object.values(AMMO)) expect(ITEMS[ammo.itemId]?.kind).toBe('ammo');
   });
 
-  it('switches between arrows, bombs and ley bolts in key order', () => {
-    expect(SLOT_AMMOS).toEqual(['arrow', 'bomb', 'ley-bolt']);
+  it('switches between arrows, bombs, ley bolts and landmines (038) in key order', () => {
+    expect(SLOT_AMMOS).toEqual(['arrow', 'bomb', 'ley-bolt', 'landmine']);
     for (const id of SLOT_AMMOS) expect(AMMO[id]).toBeDefined();
   });
 
@@ -286,7 +303,7 @@ describe('foundry pieces', () => {
       expect(def.id).toBe(key);
       expect(key).toMatch(KEBAB);
       if (def.kind !== 'machine') continue;
-      expect(RECIPES[def.recipeId]).toBeDefined();
+      expect(RECIPES[def.recipeId] ?? STAGE_RECIPES[def.recipeId]).toBeDefined();
       expect(def.craftTicks).toBeGreaterThan(0);
     }
   });
@@ -295,7 +312,8 @@ describe('foundry pieces', () => {
     const wide = Object.values(PIECES)
       .filter((d) => d.footprint === '3x1')
       .map((d) => d.id);
-    expect(wide.sort()).toEqual(['assembler', 'packer']);
+    // 038: the mine packer joins a plate, a fuse and a shard.
+    expect(wide.sort()).toEqual(['assembler', 'mine-packer', 'packer']);
     for (const id of wide) {
       const def = PIECES[id];
       if (def?.kind !== 'machine') throw new Error(`${id} is not a machine`);
@@ -305,11 +323,41 @@ describe('foundry pieces', () => {
 
   it('cover every recipe with exactly one machine', () => {
     const run = Object.values(PIECES).flatMap((d) => (d.kind === 'machine' ? [d.recipeId] : []));
-    expect(run.sort()).toEqual(Object.keys(RECIPES).sort());
+    expect(run.sort()).toEqual([...Object.keys(RECIPES), ...Object.keys(STAGE_RECIPES)].sort());
   });
 
   it('are each on the build bar exactly once', () => {
     expect([...BUILD_BAR].sort()).toEqual(Object.keys(PIECES).sort());
+  });
+});
+
+describe('build bar categories (026)', () => {
+  it('gives every build bar piece a category', () => {
+    const ids = PIECE_CATEGORIES.map((c) => c.id);
+    for (const id of BUILD_BAR) expect(ids, id).toContain(pieceDef(id).category);
+  });
+
+  it('groups the bar left to right: logistics, then each ammo chain, each with its label', () => {
+    expect(PIECE_CATEGORIES.map((c) => [c.id, c.label])).toEqual([
+      ['logistics', 'Logistics'],
+      ['arrows', 'Arrows'],
+      ['bombs', 'Bombs'],
+      ['ley', 'Ley'],
+      ['mines', 'Mines'],
+    ]);
+    const grouped = PIECE_CATEGORIES.map((c) => BUILD_BAR.filter((id) => pieceDef(id).category === c.id));
+    expect(grouped).toEqual([
+      // 033: the splitter and merger, hidden until restored, beside the sorter.
+      ['conduit', 'sorter', 'splitter', 'merger', 'hopper', 'crate'],
+      // 029: each stage in its base ammo's group, after the chain that makes the ammo.
+      ['cutter', 'knapper', 'spinner', 'assembler', 'frost-rune'],
+      ['shaper', 'fuse-maker', 'packer', 'cluster-die'],
+      ['grinder', 'focuser', 'ley-guide', 'prism-lens'],
+      // 038: the landmine chain.
+      ['plate-press', 'mine-packer'],
+    ]);
+    // In bar order the groups never interleave.
+    expect([...BUILD_BAR]).toEqual(grouped.flat());
   });
 });
 
@@ -321,23 +369,35 @@ describe('the tube link (007)', () => {
 
   it('gives the playtest start only real items, and every recipe output as crafted', () => {
     for (const id of Object.keys(PLAYTEST_START.inventory)) expect(ITEMS[id]).toBeDefined();
-    const outputs = new Set(Object.values(RECIPES).map((r) => r.output.itemId));
+    // 029: stage recipes count too, so every stage is unlocked (039: every bench row's).
+    const outputs = new Set([...Object.values(RECIPES), ...STAGE_ROWS.map((r) => r.recipe)].map((r) => r.output.itemId));
     expect(new Set(PLAYTEST_START.crafted)).toEqual(outputs);
   });
 });
 
-describe('spreads (008)', () => {
-  it('has a gravity stager on the build bar costing a warden core', () => {
-    expect(BUILD_BAR).toContain('gravity-stager');
-    expect(PIECES['gravity-stager']).toMatchObject({ kind: 'stager', footprint: '1x1', cost: { 'warden-core': 1 } });
-    for (const def of Object.values(PIECES)) for (const id of Object.keys(def.cost ?? {})) expect(ITEMS[id]).toBeDefined();
+describe('spreads from the intake (024)', () => {
+  it('has no gravity stager: the spread comes from the fed entrances', () => {
+    expect(BUILD_BAR).not.toContain('gravity-stager');
+    expect(PIECES['gravity-stager']).toBeUndefined();
+    expect(Object.values(PIECES).map((d) => d.kind)).not.toContain('stager');
+    expect(drawnFrames().some((f) => f.includes('stager'))).toBe(false);
+  });
+
+  it('restores the second entrance with a real item, which the playtest start carries (033: one entrance per core)', () => {
+    expect(researchNode('entrance-2').cost).toEqual({ 'warden-core': 1 });
     expect(ITEMS['warden-core']).toMatchObject({ kind: 'part' });
     expect(PLAYTEST_START.inventory['warden-core']).toBe(5);
   });
 
-  it('has one stager frame per angle, starting at 0', () => {
-    expect(STAGER_ANGLES).toContain(STAGER_START_ANGLE);
-    expect(STAGER_SPRITE.frames).toBe(STAGER_ANGLES.length);
+  it('has three entrances on the mouth, the centre open, and starting numbers from the spec', () => {
+    expect(INTAKE.entrances).toHaveLength(3);
+    expect(INTAKE.entrances.filter((e) => e.startsOpen)).toEqual([INTAKE.entrances[1]]);
+    expect([ENTRANCE_CAPS[0], SPREAD_STEP, LOB_SPACING]).toEqual([30, 15, 24]);
+  });
+
+  it('draws the brass entrance cap, and has a gauge colour for every ammo', () => {
+    expect(drawnFrames()).toContain(INTAKE_SPRITES.cap);
+    for (const id of Object.keys(AMMO)) expect(ENTRANCE_GAUGE_COLORS[id]).toBeDefined();
   });
 });
 
@@ -353,22 +413,40 @@ describe('claiming (009)', () => {
   it('places only known enemies, on rooms whose pylons stand on floor', () => {
     for (const room of Object.values(WORLD)) {
       for (const e of room.enemies ?? []) expect(ENEMIES[e.enemyId]).toBeDefined();
-      if (room.pylon) expect(room.rows[room.pylon.ty]?.[room.pylon.tx]).toBe(TILE.floor);
+      for (const p of room.pylons ?? []) expect(room.rows[p.ty]?.[p.tx], p.site).toBe(TILE.floor);
     }
     for (const def of Object.values(ENEMIES)) expect(ENEMY_ANIMS[def.anims]).toBeDefined();
   });
 
-  it('puts fixtures on open foundry floor, and the port cycles real raws', () => {
+  it('puts fixtures on open foundry floor, each port on a real raw, one port per raw', () => {
     const foundry = WORLD.foundry;
     for (const f of FIXTURES) expect(foundry?.rows[f.ty]?.[f.tx]).toBe(TILE.floor);
-    for (const id of PORT_CYCLE) expect(ITEMS[id]?.kind).toBe('raw');
+    const raws = FIXTURES.flatMap((f) => (f.kind === 'port' ? [f.raw] : []));
+    for (const id of raws) expect(id && ITEMS[id]?.kind).toBe('raw');
+    expect(new Set(raws).size).toBe(raws.length);
+    for (const f of FIXTURES) expect(f.kind === 'port' ? f.raw !== undefined && f.claim === undefined : f.raw === undefined, f.id).toBe(true);
+  });
+
+  it("gives every raw a site sends a port, and a node of that raw in the site's safe zone (028)", () => {
+    const ports = FIXTURES.flatMap((f) => (f.kind === 'port' ? [f.raw] : []));
+    for (const [site, raws] of Object.entries(SITE_SUPPLY)) {
+      const room = Object.values(WORLD).find((r) => r.pylons?.some((p) => p.site === site));
+      const pylon = room?.pylons?.find((p) => p.site === site);
+      if (!room || !pylon) throw new Error(`no pylon for ${site}`);
+      // Each pylon's own safe radius (032: a resource site's is 7, the shrine's 10).
+      const { tx, ty, safeRadius } = pylon;
+      const nodes = (room.nodes ?? []).filter((n) => Math.hypot(n.tx - tx, n.ty - ty) <= safeRadius);
+      for (const raw of raws) {
+        expect(ports, `${site}: ${raw}`).toContain(raw);
+        expect(nodes.some((n) => NODES[n.nodeId]?.itemId === raw), `${site}: a ${raw} node in its zone`).toBe(true);
+      }
+    }
   });
 });
 
-describe('armor (010)', () => {
-  it('has sane weight ranges, drop chances for real enemies, and the bench on open floor', () => {
-    for (const w of Object.values(ARMOR_WEIGHTS)) {
-      expect(w.min).toBeLessThanOrEqual(w.max);
+describe('gear (010, 036)', () => {
+  it('has sane name lists, drop chances for real enemies, and the bench on open floor', () => {
+    for (const w of [GEAR_NAMES.helm, GEAR_NAMES.boots, GEAR_NAMES.trinket, ...Object.values(GEAR_NAMES.body)]) {
       expect(w.adjectives.length).toBeGreaterThan(0);
       expect(w.nouns.length).toBeGreaterThan(0);
     }
@@ -377,7 +455,7 @@ describe('armor (010)', () => {
       expect(chance).toBeGreaterThanOrEqual(0);
       expect(chance).toBeLessThanOrEqual(1);
     }
-    expect(ITEMS['unidentified-armor']?.kind).toBe('armor');
+    expect(ITEMS['unidentified-armor']).toMatchObject({ kind: 'armor', name: 'Unidentified gear' });
     expect(FIXTURES.some((f) => f.kind === 'bench')).toBe(true);
     for (const frame of animFrames(FIXTURE_SPRITES.bench)) expect(drawnFrames()).toContain(frame);
   });
@@ -394,6 +472,31 @@ describe('the tutorial (012)', () => {
     }
   });
 
+  it('names real pieces and items in the foundry steps (027), each highlighted machine unlocked before its step', () => {
+    /** Every item a recipe's chain makes, the output and its parts all the way down. */
+    const all = [...Object.values(RECIPES), ...Object.values(STAGE_RECIPES)];
+    const chain = (itemId: string): string[] => {
+      const r = all.find((x) => x.output.itemId === itemId);
+      return r ? [itemId, ...Object.keys(r.inputs).flatMap(chain)] : [];
+    };
+    const machineOutputs = Object.values(PIECES).flatMap((p) => (p.kind === 'machine' ? [recipeDef(p.recipeId).output.itemId] : []));
+    for (const [i, o] of OBJECTIVES.entries()) {
+      const c = o.check;
+      if (c.kind === 'placed') expect(PIECES[c.piece], o.text).toBeDefined();
+      if (c.kind === 'hopperHolds') expect(ITEMS[c.item], o.text).toBeDefined();
+      if (c.kind === 'machineMade') expect(machineOutputs, o.text).toContain(c.item);
+      if (c.kind === 'intakeFed' && c.item) expect(Object.values(AMMO).map((a) => a.itemId), o.text).toContain(c.item);
+      if (!o.highlight) continue;
+      expect(BUILD_BAR, o.text).toContain(o.highlight);
+      const def = pieceDef(o.highlight);
+      if (def.kind !== 'machine') continue;
+      // Hidden pieces never show on the bar (026), so an earlier objective must have hand-crafted what it makes.
+      const made = recipeDef(def.recipeId).output.itemId;
+      const before = OBJECTIVES.slice(0, i).flatMap((p) => (p.check.kind === 'crafted' ? p.check.items.flatMap(chain) : []));
+      expect(before, o.text).toContain(made);
+    }
+  });
+
   it('puts the tube stone on floor, the foundry gate on its stairs and the shrine gate on its gap', () => {
     const outside = WORLD[OVERWORLD.id];
     const stone = outside?.tubeStone;
@@ -402,7 +505,8 @@ describe('the tutorial (012)', () => {
     const doorGates = Object.values(WORLD).flatMap((r) => (r.doorways ?? []).flatMap((d) => (d.gate ? [d.gate] : [])));
     expect(doorGates).toEqual(['foundry']);
     const tileGates = new Set((outside.gateTiles ?? []).map((t) => t.gate));
-    expect([...tileGates]).toEqual(['shrine']);
+    // 034: Stonefall Hollows' barrier seals its gap the same way.
+    expect([...tileGates]).toEqual(['shrine', 'hollows']);
     for (const t of outside.gateTiles ?? []) expect(outside.rows[t.ty]?.[t.tx]).toBe(TILE.floor);
     for (const r of Object.values(RECIPES)) if (r.requires) expect(r.requires).toBe('attuned');
     expect(TUTORIAL_START.room).toBe(OVERWORLD.id);

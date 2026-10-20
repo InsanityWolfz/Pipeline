@@ -1,10 +1,14 @@
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { FEET_BOX } from '../data/player';
 import { OVERWORLD, ringOf } from '../data/overworld';
-import { POPULATION, SAFE_RADIUS } from '../data/population';
-import { TILE } from '../data/rooms';
+import { POPULATION, type PackDef, type PopulatedRing } from '../data/population';
+import { ADDS_GROUP } from '../data/bulwark';
+import { HOLLOWS } from '../data/hollows';
+import { LANDMARK_LIST } from '../data/landmarks';
+import { TILE, WALKABLE } from '../data/rooms';
 import { createEnemy, type EnemyState } from './enemies';
 import { nextInt } from './rng';
+import { rollChampions } from './champions';
 import type { SimState } from './state';
 import { tileCentre } from './tiles';
 import { WORLD } from './world';
@@ -17,7 +21,7 @@ import { WORLD } from './world';
 export interface PackSlot {
   /** The group its members carry: `pop-<ring>-<n>`. */
   group: string;
-  ring: 1 | 2;
+  ring: PopulatedRing;
   /** The tick it may spawn again; it waits while its pack lives. */
   respawnAt: number;
   alive: boolean;
@@ -29,7 +33,7 @@ export interface PopulationState {
 
 export function createPopulation(): PopulationState {
   const slots: PackSlot[] = [];
-  for (const ring of [1, 2] as const) {
+  for (const ring of [1, 2, 3] as const) {
     for (let i = 0; i < POPULATION.rings[ring].packs; i++) slots.push({ group: `pop-${ring}-${i}`, ring, respawnAt: 0, alive: false });
   }
   return { slots };
@@ -43,17 +47,24 @@ export interface SafeZone {
   r: number;
 }
 
+/** Every claimed pylon's safe zone, each at its own radius (032: a resource site's is smaller than the shrine's). */
 export function safeZones(state: Pick<SimState, 'claims'>): SafeZone[] {
-  return Object.values(WORLD).flatMap((room) => {
-    const p = room.pylon;
-    if (!p || !state.claims.includes(p.site)) return [];
-    const c = tileCentre(p);
-    return [{ roomId: room.id, x: c.x, y: c.y, r: SAFE_RADIUS * TILE_SIZE }];
-  });
+  return Object.values(WORLD).flatMap((room) =>
+    (room.pylons ?? []).flatMap((p) => {
+      if (!state.claims.includes(p.site)) return [];
+      const c = tileCentre(p);
+      return [{ roomId: room.id, x: c.x, y: c.y, r: p.safeRadius * TILE_SIZE }];
+    }),
+  );
+}
+
+/** The claimed pylon's safe zone holding a point, or null. */
+export function safeZoneAt(state: Pick<SimState, 'claims'>, roomId: string, x: number, y: number): SafeZone | null {
+  return safeZones(state).find((z) => z.roomId === roomId && Math.hypot(x - z.x, y - z.y) <= z.r) ?? null;
 }
 
 export function inSafeZone(state: Pick<SimState, 'claims'>, roomId: string, x: number, y: number): boolean {
-  return safeZones(state).some((z) => z.roomId === roomId && Math.hypot(x - z.x, y - z.y) <= z.r);
+  return safeZoneAt(state, roomId, x, y) !== null;
 }
 
 /** An enemy's move, stopped short if it would carry it into a safe zone it isn't already in. */
@@ -72,6 +83,11 @@ function nearPlayer(state: SimState, roomId: string, x: number, y: number): bool
 /** Enemies within a screen of the player. */
 export function enemiesNearPlayer(state: SimState): number {
   return state.enemies.filter((e) => nearPlayer(state, e.roomId, e.x, e.y)).length;
+}
+
+/** Enemies within a screen of the player that count toward the spawn cap: all but the Bulwark's adds (041.6). */
+export function capCount(state: SimState): number {
+  return state.enemies.filter((e) => e.group !== ADDS_GROUP && nearPlayer(state, e.roomId, e.x, e.y)).length;
 }
 
 /**
@@ -100,16 +116,37 @@ export function enemiesOnScreen(state: SimState): number {
   return state.enemies.filter((e) => inView(state, e.roomId, e.x, e.y)).length;
 }
 
+/** Where packs never stand: the clearings (the meadow, the ruin field, the shrine site), the landmarks' areas (032) and the Sunken Forum (034). */
+const KEEP_OUT = [...OVERWORLD.clearings, ...LANDMARK_LIST.map((l) => l.area), HOLLOWS.arena.bounds];
+
+/** Hollows ground a pack can walk to from the gap (034): the generated cliffs can wall off a pocket, and nothing spawns in one. */
+const fromGap = ((): Set<number> => {
+  const rows = WORLD[OVERWORLD.id]?.rows ?? [];
+  const key = (tx: number, ty: number) => ty * OVERWORLD.width + tx;
+  const seen = new Set<number>([key(HOLLOWS.start.tx, HOLLOWS.start.ty)]);
+  const queue: [number, number][] = [[HOLLOWS.start.tx, HOLLOWS.start.ty]];
+  for (let i = 0; i < queue.length; i++) {
+    const [tx, ty] = queue[i] ?? [0, 0];
+    for (const [nx, ny] of [[tx + 1, ty], [tx - 1, ty], [tx, ty + 1], [tx, ty - 1]] as const) {
+      const symbol = rows[ny]?.[nx];
+      if (symbol === undefined || !WALKABLE.includes(symbol) || ringOf(nx, ny) !== HOLLOWS.ring || seen.has(key(nx, ny))) continue;
+      seen.add(key(nx, ny));
+      queue.push([nx, ny]);
+    }
+  }
+  return seen;
+})();
+
 const walkableOpen = (tx: number, ty: number): boolean => {
   const room = WORLD[OVERWORLD.id];
   const symbol = room?.rows[ty]?.[tx];
   if (symbol !== TILE.floor && symbol !== TILE.path) return false;
-  // Packs keep out of the landmarks' clearings (the meadow, the ruin field, the shrine site).
-  return !OVERWORLD.clearings.some((r) => tx >= r.x0 && tx <= r.x1 && ty >= r.y0 && ty <= r.y1);
+  if (ringOf(tx, ty) === HOLLOWS.ring && !fromGap.has(ty * OVERWORLD.width + tx)) return false;
+  return !KEEP_OUT.some((r) => tx >= r.x0 && tx <= r.x1 && ty >= r.y0 && ty <= r.y1);
 };
 
 /** Open ground each ring offers a pack's centre, found once from the generated map. */
-const candidates: Record<1 | 2, { tx: number; ty: number }[]> = { 1: [], 2: [] };
+const candidates: Record<PopulatedRing, { tx: number; ty: number }[]> = { 1: [], 2: [], 3: [] };
 for (let ty = 1; ty < OVERWORLD.height - 1; ty++) {
   for (let tx = 1; tx < OVERWORLD.width - 1; tx++) {
     const ring = ringOf(tx, ty);
@@ -119,7 +156,7 @@ for (let ty = 1; ty < OVERWORLD.height - 1; ty++) {
 
 /** Tries to place a slot's pack on open ground in its ring, far enough from the player. */
 function spawn(state: SimState, slot: PackSlot): boolean {
-  const def = POPULATION.rings[slot.ring];
+  const def: PackDef = POPULATION.rings[slot.ring];
   const pool = candidates[slot.ring];
   for (let t = 0; t < POPULATION.tries; t++) {
     const pick = pool[nextInt(state.rng, 0, pool.length - 1)];
@@ -146,11 +183,18 @@ function spawn(state: SimState, slot: PackSlot): boolean {
       if (fits(s)) spots.push(s);
     }
     if (spots.length < size) continue;
-    for (const s of spots) {
-      const enemyId = def.enemies[nextInt(state.rng, 0, def.enemies.length - 1)];
+    const picked: string[] = [];
+    const members = spots.map((s) => {
+      // Only ids still under their pack limit (035); with no limits the pool, and the draws, are as before.
+      const pool = def.enemies.filter((id) => picked.filter((p) => p === id).length < (def.limits?.[id] ?? Infinity));
+      const enemyId = pool[nextInt(state.rng, 0, pool.length - 1)];
       if (!enemyId) throw new Error(`Ring ${slot.ring} has no enemies to spawn`);
-      state.enemies.push(createEnemy(state.nextEnemyId++, enemyId, tileCentre(s), OVERWORLD.id, slot.group));
-    }
+      picked.push(enemyId);
+      return createEnemy(state.nextEnemyId++, enemyId, tileCentre(s), OVERWORLD.id, slot.group);
+    });
+    // The pack may hold a champion (032).
+    rollChampions(state.rng, members, slot.ring);
+    state.enemies.push(...members);
     return true;
   }
   return false;
@@ -160,6 +204,8 @@ function spawn(state: SimState, slot: PackSlot): boolean {
 export function stepPopulation(state: SimState): void {
   if (!state.populated) return;
   for (const slot of state.population.slots) {
+    // The Hollows (034) fill once their barrier is down; before that nobody can reach them.
+    if (slot.ring === HOLLOWS.ring && !state.gates.hollows) continue;
     if (state.enemies.some((e) => e.group === slot.group)) {
       slot.alive = true;
       continue;
@@ -170,7 +216,7 @@ export function stepPopulation(state: SimState): void {
     }
     if (state.tick < slot.respawnAt) continue;
     // A whole pack could land within a screen: only spawn if even the largest keeps it at the cap.
-    if (enemiesNearPlayer(state) + POPULATION.rings[slot.ring].size[1] > POPULATION.screenCap) continue;
+    if (capCount(state) + POPULATION.rings[slot.ring].size[1] > POPULATION.screenCap) continue;
     slot.alive = spawn(state, slot);
   }
 }

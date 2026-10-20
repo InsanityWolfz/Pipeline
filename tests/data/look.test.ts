@@ -2,15 +2,17 @@ import { SITE_LOOK, SUPPLY_LOOK } from '../../src/data/art/ground';
 import { RESIN } from '../../src/data/art/husk';
 import { NODE_DAPPLE } from '../../src/data/art/nodes';
 import { CORE } from '../../src/data/art/warden';
-import { PORT_CYCLE } from '../../src/data/claims';
+import { SITE_SUPPLY } from '../../src/data/claims';
 import { ITEMS } from '../../src/data/items';
 import { NODES } from '../../src/data/nodes';
 import { describe, expect, it } from 'vitest';
 import { FLOOR_VARIANTS, WALL_SPRITES } from '../../src/data/roomArt';
-import { animFrames, ENEMY_FX, HUD_HEALTH_LAYOUT, HUD_SLOT_LAYOUT, PLAYER_HIT_FX } from '../../src/data/assets';
+import { animFrames, ENEMY_FX, MELEE_SWOOSH, PLAYER_HIT_FX } from '../../src/data/assets';
+import { HP_BAR, HUD_HEALTH_LAYOUT, INVENTORY_PANEL } from '../../src/data/hudPanels';
 import { ARMOR_TINTS, GHOST, HARVEST_BAR, MINIMAP, TABLET } from '../../src/data/hudLayout';
 import { ENEMIES } from '../../src/data/enemies';
-import { LOGISTICS_ICONS, SORTER_ANIMS, SPREAD_FAN } from '../../src/data/foundryAssets';
+import { LOGISTICS_ICONS, SORTER_ANIMS } from '../../src/data/foundryAssets';
+import { ENTRANCE_GAUGE_COLORS, INTAKE_LOOK } from '../../src/data/art/intake';
 import { AMBIENT, DAMAGE_NUMBERS, GLOWS, HARVEST_BURSTS, HARVEST_WORK, PARTICLES, ROOM_MOOD } from '../../src/data/juice';
 import { DAYLIGHT_PALETTE } from '../../src/data/palette';
 import { FIRE_SOUNDS, ROOM_AMBIENCE, SOUNDS, WINDUP_SOUNDS } from '../../src/data/sounds';
@@ -51,7 +53,7 @@ describe('props', () => {
         ...(room.nodes ?? []),
         ...(room.enemies ?? []),
         ...(room.tubeStone ? [room.tubeStone] : []),
-        ...(room.pylon ? [room.pylon] : []),
+        ...(room.pylons ?? []),
       ];
       for (const p of room.props ?? []) {
         const where = `${room.id} ${p.propId} at ${p.tx},${p.ty}`;
@@ -116,15 +118,22 @@ describe('feel and sound references', () => {
       ...Object.values(MINIMAP.terrain),
       ...Object.values(MINIMAP.markers).map((m) => m.color),
       ...Object.values(ARMOR_TINTS),
-      HUD_SLOT_LAYOUT.dryFireTint,
+      MELEE_SWOOSH.color,
       HUD_HEALTH_LAYOUT.fillColor,
+      HUD_HEALTH_LAYOUT.lowColor,
+      HUD_HEALTH_LAYOUT.chunkColor,
+      HP_BAR.edge.color,
+      HP_BAR.glow.color,
+      ...Object.values(INVENTORY_PANEL.colors),
       ENEMY_FX.flashColor,
       ENEMY_FX.telegraphColor,
       ENEMY_FX.castColor,
       ENEMY_FX.healthBarColor,
       ENEMY_FX.healthBarBack,
       PLAYER_HIT_FX.flashColor,
-      SPREAD_FAN.color,
+      ...Object.values(ENTRANCE_GAUGE_COLORS),
+      INTAKE_LOOK.capLift.ring,
+      INTAKE_LOOK.gauge.dark,
     ];
     for (const id of ids) expect(known.has(id), id).toBe(true);
   });
@@ -135,7 +144,7 @@ describe('feel and sound references', () => {
     for (const id of [NODE_DAPPLE.nodeId, HARVEST_WORK.shakeNodeId]) expect(NODES[id], id).toBeDefined();
     for (const id of [RESIN.enemyId, CORE.enemyId]) expect(ENEMIES[id], id).toBeDefined();
     for (const id of Object.keys(SUPPLY_LOOK.moteColors)) expect(ITEMS[id], id).toBeDefined();
-    for (const id of PORT_CYCLE) expect(SUPPLY_LOOK.moteColors[id], id).toBeDefined();
+    for (const id of Object.values(SITE_SUPPLY).flat()) expect(SUPPLY_LOOK.moteColors[id], id).toBeDefined();
   });
 
   it('key moods and ambience by real rooms, fire sounds by real ammo, and wind-ups by real enemy kinds', () => {

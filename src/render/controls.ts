@@ -8,6 +8,7 @@ import { BUILD_BAR, pieceDef } from '../data/pieces';
 import type { Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { dragTo, release, type ConduitLay, type HeldConduit } from './dragPath';
+import { clickMods, isLeftPress, type ClickMods } from './clickInput';
 import { AMMO_KEYS, bindKeys, type Key } from './keys';
 import { MenuRequests, type UiCommand } from './menuRequests';
 import { toView } from './scale';
@@ -19,22 +20,20 @@ export interface BuildInput {
   pieceId: () => string;
   /** True over the build bar or the hopper picker, where clicks don't reach the world. */
   overUi: (x: number, y: number) => boolean;
-  /** Handles a left click on that UI at once, so a world click in the same frame sees its result. */
-  clickUi: (x: number, y: number) => void;
-  /** The id of the gravity stager on a tile, if any: a left click there turns it rather than placing. */
-  stagerAt: (tile: Tile) => number | null;
+  /** Handles a left click on that UI at once, so a world click in the same frame sees its result; with the held modifiers (022). */
+  clickUi: (x: number, y: number, mods: ClickMods) => void;
 }
 
-type BuildAction = Pick<Command, 'place' | 'pickUp' | 'setAngle'>;
+type BuildAction = Pick<Command, 'place' | 'pickUp'>;
 
 /** The commands that come from build mode and the hopper menu rather than held keys. */
 export { NO_UI_COMMAND, type UiCommand } from './menuRequests';
-// Turns WASD, Space, R, E, B, 1–3 and the mouse into sim commands, and C and Esc
-// into menu toggles for the scene. Presses are latched from the keys' down
+// Turns WASD, Space, R, E, B, 1–3 and the mouse into sim commands, and C, Esc, I and
+// Tab into menu toggles for the scene. Presses are latched from the keys' down
 // events until consumed, so a tap shorter than a frame isn't lost, a press on a
 // frame that runs no ticks isn't lost, and a frame that runs several ticks only
 // acts on the first. In build mode, R turns the ghost (it does nothing outside it),
-// clicks place and pick up pieces or turn a stager (queued, one per tick), and
+// clicks place and pick up pieces (queued, one per tick), and
 // dragging lays conduits.
 export class Controls {
   private readonly keys: Record<Key, Input.Keyboard.Key>;
@@ -45,8 +44,8 @@ export class Controls {
   private interactPending = false;
   private interactPress = false;
   private selectPending: string | null = null;
-  private menuPending = false;
-  private closePending = false;
+  /** C, Esc, I or Tab (031), J (033) and T (037), latched until the scene takes them. */
+  private readonly menuKeys = { menu: false, close: false, inventory: false, research: false, talents: false };
   private buildPending = false;
   private wheelPending = 0;
   /** Choices clicked in the hopper, pylon, stash and bench menus. */
@@ -60,7 +59,6 @@ export class Controls {
     pieceId: () => BUILD_BAR[0] ?? '',
     overUi: () => false,
     clickUi: () => undefined,
-    stagerAt: () => null,
   };
   private aimX = 0;
   private aimY = 0;
@@ -87,8 +85,11 @@ export class Controls {
       this.interactPending = true;
       this.interactPress = true;
     });
-    this.keys.menu.on('down', () => (this.menuPending = true));
-    this.keys.close.on('down', () => (this.closePending = true));
+    this.keys.menu.on('down', () => (this.menuKeys.menu = true));
+    this.keys.close.on('down', () => (this.menuKeys.close = true));
+    for (const key of [this.keys.inventory, this.keys.inventoryTab]) key.on('down', () => (this.menuKeys.inventory = true));
+    this.keys.research.on('down', () => (this.menuKeys.research = true));
+    this.keys.talents.on('down', () => (this.menuKeys.talents = true));
     this.keys.build.on('down', () => (this.buildPending = true));
     for (const [i, key] of this.ammoKeys.entries()) key.on('down', () => (this.selectPending = SLOT_AMMOS[i] ?? null));
     this.pointer = scene.input.activePointer;
@@ -136,6 +137,11 @@ export class Controls {
     return this.view(this.pointer);
   }
 
+  /** Shift is held (040: a tip shows its breakdown). */
+  shiftHeld(): boolean {
+    return this.keys.shift.isDown;
+  }
+
   /** The cursor is over the world, not the screen's UI. */
   overWorld(): boolean {
     const v = this.view(this.pointer);
@@ -154,33 +160,32 @@ export class Controls {
 
   private pointerDown(p: Input.Pointer): void {
     const v = this.view(p);
+    const mods = clickMods(p.event);
+    // Ctrl+click is a game input (022: all of a hopper stack), never a browser shortcut.
+    if (mods.ctrl) p.event.preventDefault();
     if (this.build.overUi(v.x, v.y)) {
       this.uiPress = true;
-      if (p.leftButtonDown()) this.build.clickUi(v.x, v.y);
+      // On macOS Phaser calls Ctrl+left-click a right click; the DOM event knows better.
+      if (isLeftPress(p.event, p.leftButtonDown())) this.build.clickUi(v.x, v.y, mods);
       return;
     }
     if (!this.build.building) return;
     const tile = this.tileUnder(p);
     if (p.rightButtonDown()) {
-      this.queue.push({ place: null, pickUp: tile, setAngle: null });
+      this.queue.push({ place: null, pickUp: tile });
       return;
     }
     if (!p.leftButtonDown()) return;
-    const stager = this.build.stagerAt(tile);
-    if (stager !== null) {
-      this.queue.push({ place: null, pickUp: null, setAngle: { id: stager } });
-      return;
-    }
     const pieceId = this.build.pieceId();
     this.endDrag();
     this.dragTile = tile;
     // A conduit waits for the drag: a click lays it on release, with the ghost's facing.
     if (pieceDef(pieceId).kind === 'conduit') this.held = { tile };
-    else this.queue.push({ place: { pieceId, ...tile, facing: this.facing, ...(this.mirrored ? { mirrored: true } : {}) }, pickUp: null, setAngle: null });
+    else this.queue.push({ place: { pieceId, ...tile, facing: this.facing, ...(this.mirrored ? { mirrored: true } : {}) }, pickUp: null });
   }
 
   private lay(l: ConduitLay): void {
-    this.queue.push({ place: { pieceId: this.build.pieceId(), ...l }, pickUp: null, setAngle: null });
+    this.queue.push({ place: { pieceId: this.build.pieceId(), ...l }, pickUp: null });
   }
 
   /** Release (inside the canvas or out): the held conduit is laid. */
@@ -210,17 +215,10 @@ export class Controls {
     this.dragTile = tile;
   }
 
-  /** C was pressed since the last call. */
-  takeMenuToggle(): boolean {
-    const pressed = this.menuPending;
-    this.menuPending = false;
-    return pressed;
-  }
-
-  /** Esc was pressed since the last call. */
-  takeMenuClose(): boolean {
-    const pressed = this.closePending;
-    this.closePending = false;
+  /** C (`menu`), Esc (`close`), I or Tab (`inventory`, 031), or J (`research`, 033) was pressed since the last call. */
+  takeMenuKey(key: keyof Controls['menuKeys']): boolean {
+    const pressed = this.menuKeys[key];
+    this.menuKeys[key] = false;
     return pressed;
   }
 
@@ -267,7 +265,6 @@ export class Controls {
       toggleBuild: this.buildPending,
       place: action?.place ?? null,
       pickUp: action?.pickUp ?? null,
-      setAngle: action?.setAngle ?? null,
       ...this.menus.take(),
     };
     this.buildPending = false;

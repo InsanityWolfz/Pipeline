@@ -95,9 +95,6 @@ export const VECTOR_SPRITES: readonly VectorSprite[] = [
       ellipse(0, 0, r * 0.75, r * 0.75, { fill: flameFill(r), alpha: 1 - k * 0.25 }),
     ];
   })),
-  sprite('burn-flame', [12, 14], [6, 7], [-1, 1, 0].map((tip, k) => [
-    path(`M ${tip} ${-6 - (k % 2)} Q 4 -1 3 3 Q 2 6 0 6 Q -2 6 -3 3 Q -4 -1 ${tip} ${-6 - (k % 2)} Z`, { fill: flameFill(6), glow: { color: 'cinder', blur: 3 } }),
-  ])),
   sprite('pickup-sparkle', [14, 14], [7, 7], [2.5, 5.5, 4, 2].map((s, k) => [
     path(star(s, 0.3, 4, Math.PI / 4), { fill: k % 2 === 0 ? 'cyan-glow' : 'gold-trim', glow: { color: 'cyan', blur: 3 }, alpha: k === 3 ? 0.6 : 1 }),
   ])),

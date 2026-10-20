@@ -100,6 +100,16 @@ Every colour comes from the palette, by id. The source of truth is `src/data/pal
 | `carve-dark` | #4f3b2f |
 | `carve` | #6f5442 |
 | `carve-light` | #93745a |
+| `hollow-dark` | #3b475c |
+| `hollow` | #5f6f88 |
+| `hollow-light` | #8c9cb4 |
+| `hollow-pale` | #bccadb |
+| `iron-dark` | #2f343f |
+| `iron` | #566070 |
+| `iron-light` | #8a95a6 |
+| `iron-rust` | #9a4b2b |
+| `vein` | #5ef2ff |
+| `danger` | #e8322f |
 | `snow` | #ffffff |
 | `hit-red` | #ff4d4d |
 
@@ -123,7 +133,8 @@ Every colour comes from the palette, by id. The source of truth is `src/data/pal
 - **Items** (`items.ts`): a 16×16 icon per item and ammo, plus the build and menu emblems. The 005 look-alike pairs stay apart by shape: the shaft is a thin rod and the fuse a fat coil; the ley shard is three chunks and the ley bolt one head on a trail; the casing an open shell and the bomb a sealed sphere.
 
 ## HUD, menus and text (020)
-- **Tablets:** HUD pieces and menus are rune-carved stone tablets with brass corners. Fixed-size pieces are vector frames (`hud.ts`); panels that change size are drawn live in the same look (`src/render/tablet.ts`, `TABLET` in `hudLayout.ts`). The hotbar slot is ringed in cyan like the tube.
+- **Tablets:** HUD pieces and menus are rune-carved stone tablets with brass corners. Fixed-size pieces are vector frames (`hud.ts`); panels that change size are drawn live in the same look (`src/render/tablet.ts`, `TABLET` in `hudLayout.ts`). The tube slot (025) is ringed in cyan like the tube: one frame per volley size (1–3 wells, brass studs between), above the hotbar cells.
+- **Fist** (025, `hud-fist`): the tube slot's melee icon, a rust leather glove curled shut with the thumb across the front, a brass cuff and a soft ink shadow, in the 16×16 item-icon box.
 - **Menu rows** light with a cyan rim under the cursor (with the hover sound) and flash brass when pressed. The craft menu, which pauses the game, has a title card.
 - **Fonts:** two OFL fonts bundled in `assets/fonts/` with their licences, loaded locally before the game starts: Cinzel (display: titles, names, objectives) and Source Sans 3 (body: numbers, readouts, descriptions). Styles are in `src/data/fonts.ts`; `TextLine` draws them at the screen's resolution.
 

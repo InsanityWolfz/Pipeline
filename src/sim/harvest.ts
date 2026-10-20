@@ -1,6 +1,6 @@
 import { HARVEST_REACH, nodeDef } from '../data/nodes';
 import { FEET_BOX } from '../data/player';
-import { scatterPoint } from './drops';
+import { layItem, scatterPoint } from './drops';
 import type { Command } from './input';
 import { isRolling } from './movement';
 import { nodeRects, useNode, type NodeState } from './nodes';
@@ -82,7 +82,7 @@ function complete(state: SimState, n: NodeState): void {
   const edgeY = Math.min(Math.max(p.y, n.y - def.feetBox.h / 2), n.y + def.feetBox.h / 2);
   for (let i = 0; i < def.yield; i++) {
     const at = scatterPoint(roomById(n.roomId), state.rng, edgeX, edgeY, rects);
-    state.groundItems.push({ id: state.nextGroundItemId++, itemId: def.itemId, roomId: n.roomId, ...at });
+    layItem(state, def.itemId, n.roomId, at.x, at.y);
   }
   state.events.harvests.push({ id: n.id, nodeId: n.nodeId, itemId: def.itemId, x: n.x, y: n.y });
 }

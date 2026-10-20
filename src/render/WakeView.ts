@@ -1,8 +1,9 @@
+import { keyLook, shownKey } from './itemShown';
+import type { SimState } from '../sim/state';
 import type { GameObjects, Scene, Time, Tweens } from 'phaser';
 import { DEPTHS, KO_FADE_MS, WAKE_TEXT } from '../data/assets';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import type { TextStyleKey } from '../data/fonts';
-import { itemDef } from '../data/items';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 
@@ -21,10 +22,20 @@ export class WakeView {
     this.back = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.menu + 1);
   }
 
-  /** Shows the wake-up text for a KO that lost `lost` (item id to count), once the KO's fade has played. */
-  show(lost: Readonly<Record<string, number>>): void {
+  /** The wake panel is on screen (021: the menu pointer shows over it). */
+  get isShown(): boolean {
+    return this.lines.length > 0;
+  }
+
+  /**
+   * Shows the wake-up text for a KO that lost `lost` (item id to count), once the KO's fade has played, each item as it
+   * shows (033: unknown schematics as one "Unknown schematic" line).
+   */
+  show(lost: Readonly<Record<string, number>>, sim: Pick<SimState, 'research'>): void {
     this.clear();
-    this.timer = this.scene.time.delayedCall(KO_FADE_MS * 2, () => this.draw(lost));
+    const shown: Record<string, number> = {};
+    for (const [id, n] of Object.entries(lost)) if (n > 0) shown[shownKey(sim, id)] = (shown[shownKey(sim, id)] ?? 0) + n;
+    this.timer = this.scene.time.delayedCall(KO_FADE_MS * 2, () => this.draw(shown));
   }
 
   private draw(lost: Readonly<Record<string, number>>): void {
@@ -33,7 +44,7 @@ export class WakeView {
     const text: [string, TextStyleKey][] = [
       [WAKE_TEXT.title, 'title'],
       ...(items.length > 0
-        ? [['', 'body'] as [string, TextStyleKey], [WAKE_TEXT.lostTitle, 'display'] as [string, TextStyleKey], ...items.map(([id, n]): [string, TextStyleKey] => [`${itemDef(id).name} ${n}`, 'body'])]
+        ? [['', 'body'] as [string, TextStyleKey], [WAKE_TEXT.lostTitle, 'display'] as [string, TextStyleKey], ...items.map(([id, n]): [string, TextStyleKey] => [`${keyLook(id).name} ${n}`, 'body'])]
         : []),
     ];
     const cx = VIEW_WIDTH / 2;

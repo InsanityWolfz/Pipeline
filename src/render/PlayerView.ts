@@ -2,15 +2,17 @@ import type { GameObjects, Scene, Textures } from 'phaser';
 import { TintModes } from 'phaser';
 import { PLAYER_HIT_FX, WANDERER_KEY } from '../data/assets';
 import { WANDERER, WANDERER_FEEL, type WandererView } from '../data/art/wanderer';
+import { MELEE } from '../data/combat';
 import { IDLE_SPEED } from '../data/config';
 import { DYING_TICKS, FEET_BOX, HIT_INVULN_TICKS } from '../data/player';
-import type { ArmorWeight } from '../data/armor';
 import { ARMOR_TINTS } from '../data/hudLayout';
 import { aimFacing } from '../sim/direction';
+import { wornPieces, wornRelic } from '../sim/stats';
+import type { SimState } from '../sim/state';
 import { isRolling } from '../sim/movement';
 import type { Facing, PlayerState } from '../sim/player';
 import type { LinkState } from '../sim/link';
-import { isFiringHeavy, type TubeState } from '../sim/tube';
+import type { TubeState } from '../sim/tube';
 import { attuneBeat } from './attune';
 import { colorOf } from './color';
 import { textureScale } from './vector/textures';
@@ -26,7 +28,24 @@ const FEEL = WANDERER_FEEL;
 
 const viewOf = (f: Facing): WandererView => (f === 'up' || f === 'down' ? f : 'side');
 
+/** How the worn body piece shades the body (010): by its weight, Featherplate (036) without heavy plate's slow look. */
+export type BodyLook = keyof typeof ARMOR_TINTS;
+
+/** The worn body piece's look, or null with no body piece worn. */
+export function bodyLook(sim: Pick<SimState, 'gear' | 'equipped'>): BodyLook | null {
+  const body = wornPieces(sim).find((p) => p.slot === 'body');
+  if (!body?.weight) return null;
+  return wornRelic(sim, 'feather') ? 'feather' : body.weight;
+}
+
 const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v));
+
+/** How far out a punch (023) is, 0..1, from the sim's melee cooldown: full on its tick, easing back over `FEEL.jab.ticks`. */
+function jabOf(tube: Pick<TubeState, 'meleeCooldown'>): number {
+  if (tube.meleeCooldown <= 0) return 0;
+  const t = (MELEE.cooldownTicks - tube.meleeCooldown) / FEEL.jab.ticks;
+  return t >= 1 ? 0 : 1 - t * t;
+}
 
 /** The tube's local angle for the view: side aims within ±spread of level, down and up around straight down and up. */
 function localAim(view: WandererView, dx: number, dy: number, flip: boolean): number {
@@ -65,7 +84,7 @@ export class PlayerView {
   }
 
   /** Draws the player; `shown` false hides them (they're in a room not yet on screen). `hasTube` false (012) draws them empty-handed. */
-  update(p: PlayerState, tube: TubeState, link: LinkState, armor: ArmorWeight | null, hasTube: boolean, shown = true): void {
+  update(p: PlayerState, tube: TubeState, link: LinkState, armor: BodyLook | null, hasTube: boolean, shown = true): void {
     const now = this.sprite.scene.time.now;
     const dt = this.lastTime < 0 ? FEEL.frameMs : Math.min(FEEL.maxFrameMs, now - this.lastTime);
     this.lastTime = now;
@@ -82,7 +101,7 @@ export class PlayerView {
     const white = p.hurtTicks > 0 && Math.floor(elapsed / PLAYER_HIT_FX.flickerTicks) % 2 === 0;
     if (white) this.sprite.setTint(colorOf(PLAYER_HIT_FX.flashColor)).setTintMode(TintModes.FILL);
     else if (armor) {
-      // Worn armor shades the body below the hood by its weight.
+      // A worn body piece shades the body below the hood by its weight (Featherplate, 036, as light: no slow look).
       const body = colorOf(ARMOR_TINTS[armor]);
       this.sprite.setTint(UNTINTED, UNTINTED, body, body).setTintMode(TintModes.MULTIPLY);
     } else this.sprite.clearTint();
@@ -100,10 +119,11 @@ export class PlayerView {
     const facing = rolling ? p.facing : aimFacing(p.aimX - p.x, p.aimY - p.y, p.facing);
     const view = viewOf(facing);
     const flip = facing === 'left';
-    const heavy = hasTube && isFiringHeavy(tube);
+    const heavy = hasTube && tube.firing;
     const shot = heavy && tube.shotCount > 0;
     const hit = p.hurtTicks > HIT_INVULN_TICKS - PLAYER_HIT_FX.poseTicks;
     const dying = p.dying > 0 ? 1 - p.dying / DYING_TICKS : 0;
+    const jab = rolling || dying > 0 ? 0 : jabOf(tube);
 
     let target: { lean: number; crouch: number; stance: number; push: number } = { lean: 0, crouch: 0, stance: WANDERER.rig.restStance, push: 0 };
     if (heavy) target = { ...FEEL.firing };
@@ -121,11 +141,11 @@ export class PlayerView {
     return {
       view,
       flip,
-      aim: hasTube ? localAim(view, dx, dy, flip) : prev.aim,
-      lean: ease(prev.lean, target.lean) + (shot ? FEEL.shot.lean : 0),
+      aim: localAim(view, dx, dy, flip),
+      lean: ease(prev.lean, target.lean) + (shot ? FEEL.shot.lean : 0) + jab * FEEL.jab.lean,
       crouch: ease(prev.crouch, target.crouch),
       stance: ease(prev.stance, target.stance),
-      push: ease(prev.push, target.push) + (shot ? FEEL.shot.push : 0),
+      push: ease(prev.push, target.push) + (shot ? FEEL.shot.push : 0) + jab * FEEL.jab.push,
       kick: shot ? FEEL.shot.kick : prev.kick * Math.pow(FEEL.kickDecay, frames),
       stride: walking ? prev.stride + moved * FEEL.stride : prev.stride,
       stepping: ease(prev.stepping, walking ? 1 : 0),
@@ -136,6 +156,7 @@ export class PlayerView {
       attuned: link.attuned,
       attuning: attuneBeat(link.attunePulse).gun,
       muzzle: shot ? FEEL.muzzle.shot : FEEL.muzzle.rest,
+      jab,
     };
   }
 

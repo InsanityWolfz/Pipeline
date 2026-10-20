@@ -20,10 +20,21 @@ export const TILE = {
   tree: 'T',
   /** A boulder: stops feet and shots. */
   rock: 'R',
+  // Stonefall Hollows (034):
+  /** A cliff or quarry face: stops feet and straight shots (lobs fly over everything). */
+  cliff: 'C',
+  /** An aqueduct pillar or a colonnade column: stops feet and shots. */
+  pillar: 'P',
+  /** A fallen aqueduct span, its stones heaped: stops feet and shots. */
+  fallen: 'F',
+  /** Open ground under a standing arch: walkable, shots pass. */
+  arch: 'A',
+  /** A quarry-cut terrace step: walkable. */
+  terrace: '=',
 } as const;
 
 /** Tiles feet can cross. Anything else, and outside the grid, is solid. */
-export const WALKABLE: readonly string[] = [TILE.floor, TILE.path, TILE.shallow];
+export const WALKABLE: readonly string[] = [TILE.floor, TILE.path, TILE.shallow, TILE.arch, TILE.terrace];
 
 /** Tiles shots fly over though feet can't (017). */
 export const SHOT_THROUGH: readonly string[] = [TILE.water];
@@ -46,14 +57,32 @@ export interface Room {
   doorways?: readonly Doorway[];
   /** Where the dormant tube rests until the player takes it (012); solid. */
   tubeStone?: { tx: number; ty: number };
-  /** A ley pylon (009): solid; claiming it claims its site (017: a part of the room, by id). */
-  pylon?: { tx: number; ty: number; site: string };
-  /** Tiles a tutorial gate seals while shut, as the shrine site's gap in the overworld (017). */
+  /** Ley pylons (009, 032): solid; claiming one claims its site (017: a part of the room, by id). */
+  pylons?: readonly PylonDef[];
+  /** Sealed reliquaries (032), by landmark id: solid. */
+  caches?: readonly { id: string; tx: number; ty: number }[];
+  /** Tiles a tutorial gate seals while shut, as the shrine site's gap in the overworld (017) and the Hollows' barrier (034). */
   gateTiles?: readonly { tx: number; ty: number; gate: GateId }[];
+  /** Boss altars (034): solid stones, each by its arena, summoning its boss again after the first kill. */
+  altars?: readonly { id: string; tx: number; ty: number; boss: string }[];
   /** Generated ground features render draws (017): ponds and paths, in tiles. */
   terrain?: Terrain;
   /** Dressing (014): looks only, never collision (block props stand on B tiles, which are solid already). */
   props?: readonly PropPlacement[];
+}
+
+/** A ley pylon in a room (009, 017, 032). */
+export interface PylonDef {
+  tx: number;
+  ty: number;
+  /** The claim's site id: its guards are the enemies in this group. */
+  site: string;
+  /** Its landmark's name, for the waystone's menu (032). */
+  name: string;
+  /** Its safe zone's radius once claimed, tiles. */
+  safeRadius: number;
+  /** A site that must be claimed first: until then it is dormant and can't be claimed (032). */
+  wakes?: string;
 }
 
 export interface Doorway {
@@ -81,8 +110,14 @@ export interface Terrain {
   paths: readonly (readonly { tx: number; ty: number }[])[];
 }
 
-/** The tutorial's gates (012): the foundry opens when the field pack is dead, the shrine when the first line fills the tube. */
-export type GateId = 'foundry' | 'shrine';
+/**
+ * The gates (012): the foundry opens when the field pack is dead, the shrine when the first line fills the tube, and
+ * Stonefall Hollows' ley barrier (034) when the shrine's pylon is claimed.
+ */
+export type GateId = 'foundry' | 'shrine' | 'hollows';
+
+/** Gates whose sealed tiles stop shots too, not just feet (034: the Hollows' barrier stops every projectile). */
+export const SHOT_GATES: readonly GateId[] = ['hollows'];
 
 /** Rooms written out by hand; the overworld is generated (src/sim/world.ts). */
 export const STATIC_ROOMS: Readonly<Record<string, Room>> = {

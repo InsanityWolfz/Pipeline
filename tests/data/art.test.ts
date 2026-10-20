@@ -7,11 +7,18 @@ import { INTERIOR_SPRITES_VECTOR } from '../../src/data/art/interior';
 import { HUD_SPRITES_VECTOR } from '../../src/data/art/hud';
 import { NODE_SPRITES_VECTOR } from '../../src/data/art/nodes';
 import { describe, expect, it } from 'vitest';
-import { ENEMY_ANIMS } from '../../src/data/assets';
+import { ENEMY_ANIMS, SPRITES, TUBE_SLOT_FRAMES } from '../../src/data/assets';
+import { INTAKE } from '../../src/data/foundry';
+import { HUD_LAYOUT, tubeSlotWidth } from '../../src/data/hudLayout';
 import { inksOf, svg, type LimbStyle, type Shape } from '../../src/data/art/types';
 import { VECTOR_SPRITES } from '../../src/data/art/sprites';
 import { TUBE_PARTS, WANDERER, WANDERER_DYNAMIC } from '../../src/data/art/wanderer';
 import { DAYLIGHT_PALETTE } from '../../src/data/palette';
+import { STAGE_SPRITES_VECTOR } from '../../src/data/art/stages';
+import { SPRING_POOL_PX, SPRING_SPRITES_VECTOR } from '../../src/data/art/spring';
+import { SPRING_RADIUS } from '../../src/data/overworld';
+import { TILE_SIZE } from '../../src/data/config';
+import { SPRING_LOOK, SPRING_SPRITES } from '../../src/data/springAssets';
 import { ENEMY_RIGS } from '../../src/data/art/enemies';
 import { poseOfAnim } from '../../src/render/vector/catalog';
 
@@ -55,7 +62,7 @@ describe('vector shapes', () => {
       ...VECTOR_SPRITES.flatMap((s) => s.frames.flat()),
       ...NODE_SPRITES_VECTOR.flatMap((s) => s.frames.flat()),
       ...INTAKE_SPRITES_VECTOR.flatMap((s) => s.frames.flat()),
-      ...[ITEM_SPRITES_VECTOR, LOGISTICS_SPRITES_VECTOR, FIXTURE_SPRITES_VECTOR, MACHINE_SPRITES_VECTOR, INTERIOR_SPRITES_VECTOR, HUD_SPRITES_VECTOR].flatMap((set) =>
+      ...[ITEM_SPRITES_VECTOR, LOGISTICS_SPRITES_VECTOR, FIXTURE_SPRITES_VECTOR, MACHINE_SPRITES_VECTOR, INTERIOR_SPRITES_VECTOR, HUD_SPRITES_VECTOR, STAGE_SPRITES_VECTOR, SPRING_SPRITES_VECTOR].flatMap((set) =>
         set.flatMap((s) => s.frames.flat()),
       ),
     ];
@@ -63,6 +70,17 @@ describe('vector shapes', () => {
     const used = [...shapes.flatMap(inksOf), ...limbs.map((i) => (typeof i === 'string' ? i : i.id))];
     expect(used.length).toBeGreaterThan(100);
     for (const id of used) expect(daylight, id).toContain(id);
+  });
+
+  it('draw the Ley Spring (030) under its keys, its pool as wide as the sim\'s, and colour its look from the palette', () => {
+    expect(SPRING_SPRITES_VECTOR.map((s) => s.key).sort()).toEqual(Object.values(SPRING_SPRITES).sort());
+    // The drawn pool is the sim's: 1.5 tiles, 48 px, and the sprite is wide enough for its rim stones round it.
+    expect(SPRING_POOL_PX).toBe(SPRING_RADIUS * TILE_SIZE);
+    expect(SPRING_POOL_PX).toBe(48);
+    const pool = SPRING_SPRITES_VECTOR.find((s) => s.key === SPRING_SPRITES.spring);
+    expect(Math.min(pool?.anchor[0] ?? 0, pool?.anchor[1] ?? 0)).toBeGreaterThanOrEqual(SPRING_POOL_PX + 8);
+    const L = SPRING_LOOK;
+    for (const id of [L.light.color, L.thread.color, L.thread.glow, L.shimmer.warm, L.shimmer.cool]) expect(daylight, id).toContain(id);
   });
 
   it('parse path strings and reject bad ones', () => {
@@ -148,7 +166,28 @@ describe('vector frame registration', () => {
     };
     const room = await import('../../src/data/roomArt');
     const props = await import('../../src/data/props');
-    walk({ ...assets, ...foundry, ...room, ...props });
+    const stages = await import('../../src/data/stageAssets');
+    const springs = await import('../../src/data/springAssets');
+    const landmarks = await import('../../src/data/landmarkAssets');
+    const research = await import('../../src/data/researchAssets');
+    const hollows = await import('../../src/data/hollowsAssets');
+    const hollowsEnemies = await import('../../src/data/hollowsEnemyAssets');
+    const gear = await import('../../src/data/gearAssets');
+    const talents = await import('../../src/data/talentAssets');
+    const mines = await import('../../src/data/mineAssets');
+    walk({ ...assets, ...foundry, ...room, ...props, ...stages, ...springs, ...landmarks, ...research, ...hollows, ...hollowsEnemies, ...gear, ...talents, ...mines });
     for (const f of vectorFrames()) expect(registered, f.name).toContain(f.name);
+  });
+});
+
+describe('the bottom HUD art (025)', () => {
+  it('has a tube slot frame for every volley size, each a unit wider, and the fist', () => {
+    expect(TUBE_SLOT_FRAMES).toHaveLength(INTAKE.entrances.length);
+    const byKey = new Map(HUD_SPRITES_VECTOR.map((s) => [s.key, s]));
+    TUBE_SLOT_FRAMES.forEach((key, i) => {
+      const n = i + 1;
+      expect(byKey.get(key)?.size).toEqual([tubeSlotWidth(n), HUD_LAYOUT.tubeSlot.h]);
+    });
+    expect(byKey.get(SPRITES.hudFist)?.size).toEqual([16, 16]);
   });
 });

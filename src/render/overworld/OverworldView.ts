@@ -3,7 +3,8 @@ import { DEPTHS, OVERWORLD_SPRITES, OVERWORLD_TEXTURES } from '../../data/assets
 import { GROUND, SITE_LOOK } from '../../data/art/ground';
 import { TILE_SIZE } from '../../data/config';
 import { OVERWORLD } from '../../data/overworld';
-import { SAFE_RADIUS } from '../../data/population';
+import { LANDMARK_LIST } from '../../data/landmarks';
+import { LANDMARK_SPRITES } from '../../data/landmarkAssets';
 import { TILE, type Room } from '../../data/rooms';
 import type { SimState } from '../../sim/state';
 import { colorOf } from '../color';
@@ -11,6 +12,19 @@ import { tileHash } from '../roomTiles';
 import { inkCss } from '../vector/draw';
 import { addVector, textureScale } from '../vector/textures';
 import { drawGround } from './ground';
+import { inHollows } from '../../data/hollows';
+import { HOLLOWS_SPRITES } from '../../data/hollowsAssets';
+
+/** A Hollows tile's standing sprite (034): a cliff (its plateau where another stands in front), a pillar, an arch, a fallen span, rubble. */
+function hollowsFrame(symbol: string, tx: number, ty: number, hash: number, room: Room | null): string | undefined {
+  const S = HOLLOWS_SPRITES;
+  if (symbol === TILE.cliff) return room?.rows[ty + 1]?.[tx] === TILE.cliff ? S.cliffTop : S.cliffs[hash % S.cliffs.length];
+  if (symbol === TILE.pillar) return S.pillar;
+  if (symbol === TILE.arch) return S.arch;
+  if (symbol === TILE.fallen) return S.fallen[hash % S.fallen.length];
+  if (symbol === TILE.rock) return S.rubble[hash % S.rubble.length];
+  return undefined;
+}
 
 // Draws the overworld (017): its ground baked once into chunk textures, then
 // every tree, rock, ruin and the foundry's mound as vector sprites sorted by
@@ -27,6 +41,7 @@ export class OverworldView {
   private readonly dome: GameObjects.Graphics;
   private readonly safe: GameObjects.Image[] = [];
   private built = false;
+  private room: Room | null = null;
   private shown = false;
   private domeOpen = false;
   private claims = '';
@@ -60,6 +75,7 @@ export class OverworldView {
 
   private build(room: Room): void {
     this.built = true;
+    this.room = room;
     this.buildGround(room);
     for (const [ty, row] of room.rows.entries()) for (const [tx, symbol] of [...row].entries()) this.standing(symbol, tx, ty);
     this.drawDome();
@@ -93,14 +109,21 @@ export class OverworldView {
     const x = (tx + 0.5) * T;
     const bottom = (ty + 1) * T;
     const mound = OVERWORLD.entrance.mound.some((t) => t.tx === tx && t.ty === ty);
+    // A landmark's own look (032): the Old Grove's old trees, the Quarry's cut blocks.
+    const landmark = LANDMARK_LIST.find((l) => tx >= l.area.x0 && tx <= l.area.x1 && ty >= l.area.y0 && ty <= l.area.y1);
     let frame: string | undefined;
     let jitter = 0;
-    if (symbol === TILE.tree) {
+    // Stonefall Hollows' own (034): cliffs, the aqueduct, rubble.
+    const hollows = inHollows(tx, ty) ? hollowsFrame(symbol, tx, ty, hash, this.room) : undefined;
+    if (hollows) frame = hollows;
+    else if (symbol === TILE.tree && landmark?.look?.trees === 'old') frame = LANDMARK_SPRITES.oldTrees[hash % LANDMARK_SPRITES.oldTrees.length];
+    else if (symbol === TILE.tree) {
       frame = OVERWORLD_SPRITES.trees[hash % OVERWORLD_SPRITES.trees.length];
       jitter = ((hash >>> 8) % 9) - 4;
     } else if (symbol === TILE.rock) frame = OVERWORLD_SPRITES.rocks[hash % OVERWORLD_SPRITES.rocks.length];
     else if (symbol === TILE.wall) frame = OVERWORLD_SPRITES.ruinWall;
     else if (symbol === TILE.door) frame = OVERWORLD_SPRITES.entrance;
+    else if (symbol === TILE.ruinBlock && landmark?.look?.blocks === 'cut') frame = LANDMARK_SPRITES.cutBlocks[hash % LANDMARK_SPRITES.cutBlocks.length];
     else if (symbol === TILE.ruinBlock && !mound) frame = hash % 3 === 0 ? OVERWORLD_SPRITES.column : OVERWORLD_SPRITES.ruinStone;
     if (!frame) return;
     const image = addVector(this.scene, x + jitter, bottom, frame).setDepth(bottom);
@@ -122,11 +145,12 @@ export class OverworldView {
     this.dome.setDepth(DEPTHS.worldUi - 1);
   }
 
-  /** A claimed pylon's safe ground: a green wash and a ley ring at its radius. */
+  /** Each claimed pylon's safe ground (032: every claimed pylon, at its own radius): a green wash and a ley ring. */
   private drawSafe(sim: SimState): void {
     for (const o of this.safe) o.destroy();
     this.safe.length = 0;
-    if (!sim.claims.includes(OVERWORLD.shrine.site)) return;
+    const claimed = (this.room?.pylons ?? []).filter((p) => sim.claims.includes(p.site));
+    if (claimed.length === 0) return;
     const key = OVERWORLD_TEXTURES.safeGlow;
     if (!this.scene.textures.exists(key)) {
       const size = SAFE.textureSize;
@@ -142,13 +166,14 @@ export class OverworldView {
       c.fillRect(0, 0, size, size);
       tex.refresh();
     }
-    const p = OVERWORLD.shrine.pylon;
-    const r = SAFE_RADIUS * T;
-    const image = this.scene.add
-      .image((p.tx + 0.5) * T, (p.ty + 0.5) * T, key)
-      .setDisplaySize(r * 2, r * 2)
-      .setDepth(DEPTHS.floor + 0.5)
-      .setVisible(this.shown);
-    this.safe.push(image);
+    for (const p of claimed) {
+      const r = p.safeRadius * T;
+      const image = this.scene.add
+        .image((p.tx + 0.5) * T, (p.ty + 0.5) * T, key)
+        .setDisplaySize(r * 2, r * 2)
+        .setDepth(DEPTHS.floor + 0.5)
+        .setVisible(this.shown);
+      this.safe.push(image);
+    }
   }
 }

@@ -166,14 +166,14 @@ describe('hoppers', () => {
     const h = put<HopperState>(s, 'hopper', 5, 5, 'up');
     standBeside(s, 5, 5);
     s.inventory = { shaft: 3, wood: 2, arrow: 4 };
-    run(s, 1, { deposit: { id: h.id, itemId: 'shaft' } });
+    run(s, 1, { deposit: { id: h.id, itemId: 'shaft', amount: 'all' } });
     expect(h).toMatchObject({ item: 'shaft', count: 3 });
     expect(s.inventory.shaft).toBe(0);
     expect(s.events.deposits).toEqual([{ id: h.id, itemId: 'shaft', count: 3 }]);
-    run(s, 1, { deposit: { id: h.id, itemId: 'wood' } });
+    run(s, 1, { deposit: { id: h.id, itemId: 'wood', amount: 'all' } });
     expect(h.count).toBe(3);
     s.inventory.shaft = 2;
-    run(s, 1, { deposit: { id: h.id, itemId: 'shaft' } });
+    run(s, 1, { deposit: { id: h.id, itemId: 'shaft', amount: 'all' } });
     expect(h.count).toBe(5);
     // E on a hopper only opens render's menu; the sim leaves it alone.
     s.inventory.shaft = 1;
@@ -181,7 +181,7 @@ describe('hoppers', () => {
     expect([h.count, s.inventory.shaft]).toEqual([5, 1]);
     h.item = null;
     h.count = 0;
-    run(s, 1, { deposit: { id: h.id, itemId: 'arrow' } });
+    run(s, 1, { deposit: { id: h.id, itemId: 'arrow', amount: 'all' } });
     expect(h).toMatchObject({ item: 'arrow', count: 4 });
   });
 
@@ -189,14 +189,14 @@ describe('hoppers', () => {
     const s = foundry();
     const h = put<HopperState>(s, 'hopper', 5, 5, 'up');
     standBeside(s, 5, 5);
-    h.item = 'ley-shard';
+    h.item = 'ley-dust';
     h.count = 2;
     h.timer = 7;
-    s.inventory = { 'ley-shard': 1 };
-    run(s, 1, { withdraw: { id: h.id } });
+    s.inventory = { 'ley-dust': 1 };
+    run(s, 1, { withdraw: { id: h.id, amount: 'all' } });
     expect(h).toMatchObject({ item: null, count: 0, timer: 0 });
-    expect(s.inventory['ley-shard']).toBe(3);
-    expect(s.events.withdraws).toEqual([{ id: h.id, itemId: 'ley-shard', count: 2 }]);
+    expect(s.inventory['ley-dust']).toBe(3);
+    expect(s.events.withdraws).toEqual([{ id: h.id, itemId: 'ley-dust', count: 2 }]);
   });
 
   it('only withdraw in reach', () => {
@@ -204,7 +204,7 @@ describe('hoppers', () => {
     const h = put<HopperState>(s, 'hopper', 5, 5, 'up');
     h.item = 'wood';
     h.count = 2;
-    run(s, 1, { withdraw: { id: h.id } });
+    run(s, 1, { withdraw: { id: h.id, amount: 'all' } });
     expect(h.count).toBe(2);
   });
 
@@ -212,7 +212,7 @@ describe('hoppers', () => {
     const s = foundry();
     const h = put<HopperState>(s, 'hopper', 5, 5, 'up');
     s.inventory = { wood: 2 };
-    run(s, 1, { deposit: { id: h.id, itemId: 'wood' } });
+    run(s, 1, { deposit: { id: h.id, itemId: 'wood', amount: 'all' } });
     expect(h.count).toBe(0);
   });
 });

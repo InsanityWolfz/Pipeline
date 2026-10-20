@@ -1,12 +1,13 @@
 import { OVERWORLD } from './overworld';
 import { DEFAULT_ROOM, FOUNDRY_ROOM } from './rooms';
+import type { GearPiece } from './gear';
 
 // Player movement tuning. Starting values from spec 002; tune in playtest.
 
 /** Walk top speed, px per second. */
 export const WALK_SPEED = 120;
 
-/** Walk speed multiplier while the tube really fires (016): it's heavy. Stacks with heavy armor. */
+/** Walk speed multiplier while the tube really fires (016): it's heavy. Stacks with heavy armor and gear speed (036). */
 export const FIRING_WALK_MULTIPLIER = 0.7;
 
 /** Ticks to reach top speed from rest, and to come back to rest. */
@@ -46,6 +47,10 @@ export interface StartDef {
   gatesOpen: boolean;
   /** The living population (017) is out from the start, as if the first line had filled the tube. */
   populated: boolean;
+  /** Sites already claimed (034: `?start=hollows` starts with the shrine's, so the Hollows' barrier is down). */
+  claims?: readonly string[];
+  /** Identified gear the player starts with, none worn (036: `?playtest` carries a Rare piece per slot and a relic). */
+  gear?: readonly GearPiece[];
 }
 
 /**
@@ -82,11 +87,42 @@ export const RESPAWN_ROOM = FOUNDRY_ROOM;
 /** Ticks the death animation plays before the player wakes in the foundry (011). */
 export const DYING_TICKS = 60;
 
-/** Health at the start and after a KO. Spec 004; no regen yet. */
+/** Health at the start and after a KO (004). It comes back only in safe spots (030: see HEALING). */
 export const MAX_HEALTH = 100;
+
+/** Where the player heals (030). */
+export type HealSource = 'foundry' | 'pylon' | 'spring' | 'regen';
+
+/**
+ * Healing rates, HP per second (030), all starting values. Only in safe spots: the foundry room, a claimed
+ * pylon's safe zone, a Ley Spring's pool. `fieldRegen` heals anywhere; it's 0 until gear (036) and talents
+ * (037) raise it. Rates never stack: the highest that applies heals. `afterHitDelay`: ticks healing waits after a hit.
+ */
+export interface HealingTuning {
+  readonly foundry: number;
+  readonly pylon: number;
+  readonly spring: number;
+  readonly fieldRegen: number;
+  readonly afterHitDelay: number;
+}
+
+export const HEALING: HealingTuning = {
+  foundry: 50,
+  pylon: 10,
+  spring: 10,
+  fieldRegen: 0,
+  afterHitDelay: 0,
+};
+
+/**
+ * Healing rates come in whole steps of this many HP/s (036: gear's regen affixes in tenths). Healing builds up in
+ * these steps, so every rate must be a whole number of them (a test checks HEALING and the regen affixes; 037's
+ * talents join that test).
+ */
+export const HEAL_RATE_STEP = 0.1;
 
 /** Ticks a hit leaves the player invulnerable. */
 export const HIT_INVULN_TICKS = 30;
 
-/** A ground item this close to the feet box is picked up, px. */
-export const PICKUP_RADIUS = 8;
+/** A ground item this close to the feet box is picked up, px: about two tiles, through anything in between (021). */
+export const PICKUP_RADIUS = 64;

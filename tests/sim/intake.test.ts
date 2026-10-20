@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { CONDUIT_TICKS, INTAKE } from '../../src/data/foundry';
+import { CONDUIT_TICKS, ENTRANCE_CAPS, INTAKE } from '../../src/data/foundry';
 import { BUILD_BAR, PIECES } from '../../src/data/pieces';
-import { RESERVOIR_CAP } from '../../src/data/tube';
 import { canPlace, unlockedPieces } from '../../src/sim/placement';
-import { frontTile, sideTile, sortSide, type ConduitState, type HopperState, type SorterState, type StagerState } from '../../src/sim/pieces';
-import { feedsIntake, intakeStreams } from '../../src/sim/spread';
+import { frontTile, sideTile, sortSide, type ConduitState, type HopperState, type SorterState } from '../../src/sim/pieces';
+import { feedsIntake } from '../../src/sim/intake';
 import { summarize } from '../../src/sim/summary';
 import { HALL, run } from './fight';
 import { foundry, put } from './foundryKit';
 
 // The foundry intake (019): a fixed pipe in the north wall whose three mouth
-// tiles each take items from the floor tile south of them into the tube's one reservoir.
+// tiles each take items from the floor tile south of them, each into its own
+// entrance's reservoir (024). The entrance rules themselves are in entrances.test.ts.
 
-const [WEST, MIDDLE, EAST] = INTAKE.mouth;
-if (!WEST || !MIDDLE || !EAST) throw new Error('the intake needs three mouth tiles');
+const [WEST, MIDDLE, EAST] = INTAKE.entrances;
+if (!WEST || !MIDDLE || !EAST) throw new Error('the intake needs three entrances');
 
 /** A foundry with the tube attuned (unless told otherwise) and a conduit under a mouth tile, facing up into it, holding an item ready to hand over. */
 function feeding(itemId = 'arrow', mouth: { tx: number; ty: number } = MIDDLE, attuned = true) {
@@ -30,22 +30,24 @@ function feeding(itemId = 'arrow', mouth: { tx: number; ty: number } = MIDDLE, a
 describe('the foundry intake', () => {
   it('is three wall tiles at the centre of the north wall, with buildable floor in front', () => {
     const s = foundry();
-    expect(INTAKE.mouth.map((t) => t.ty)).toEqual([0, 0, 0]);
-    expect(INTAKE.mouth.map((t) => t.tx)).toEqual([11, 12, 13]);
-    for (const t of INTAKE.mouth) {
+    expect(INTAKE.entrances.map((t) => t.ty)).toEqual([0, 0, 0]);
+    expect(INTAKE.entrances.map((t) => t.tx)).toEqual([11, 12, 13]);
+    for (const t of INTAKE.entrances) {
       expect(canPlace(s, 'conduit', t.tx, t.ty, 'up')).not.toBeNull();
       expect(canPlace(s, 'conduit', t.tx, t.ty + 1, 'up')).toBeNull();
     }
-    expect(summarize(s).intake.mouth).toEqual(INTAKE.mouth.map((t) => ({ tx: t.tx, ty: t.ty })));
+    expect(summarize(s).intake.entrances.map((e) => ({ tx: e.tx, ty: e.ty }))).toEqual(INTAKE.entrances.map((t) => ({ tx: t.tx, ty: t.ty })));
   });
 
-  it('takes an item from the tile south of a mouth tile into the reservoir, and says which mouth', () => {
-    for (const [i, mouth] of INTAKE.mouth.entries()) {
+  it('takes an item from the tile south of an open mouth tile into its entrance, and says which', () => {
+    for (const [i, mouth] of INTAKE.entrances.entries()) {
       const { s, c } = feeding('arrow', mouth);
+      for (const e of s.link.entrances) e.open = true;
       run(s, 1);
       expect(c.item).toBeNull();
-      expect(s.link.reservoir).toEqual({ itemId: 'arrow', count: 1 });
-      expect(s.events.refills).toEqual([{ mouth: i, itemId: 'arrow' }]);
+      expect(s.link.entrances.map((e) => e.count)).toEqual([0, 1, 2].map((j) => (j === i ? 1 : 0)));
+      expect(s.link.entrances[i]).toEqual({ open: true, ammoId: 'arrow', count: 1, cooldown: 0 });
+      expect(s.events.refills).toEqual([{ entrance: i, itemId: 'arrow' }]);
     }
   });
 
@@ -53,22 +55,22 @@ describe('the foundry intake', () => {
     const { s, c } = feeding('arrow', MIDDLE, false);
     run(s, 5);
     expect(c.item).toBe('arrow');
-    expect(s.link.reservoir.count).toBe(0);
+    expect(s.link.entrances[1]?.count).toBe(0);
   });
 
-  it('takes only the reservoir ammo, and refuses when full so the line backs up', () => {
+  it('takes only its entrance ammo, and refuses when full so the line backs up', () => {
     for (const item of ['wood', 'shaft']) {
       const notAmmo = feeding(item);
       run(notAmmo.s, 1);
       expect(notAmmo.c.item).toBe(item);
     }
     const full = feeding('arrow');
-    full.s.link.reservoir = { itemId: 'arrow', count: RESERVOIR_CAP };
+    Object.assign(full.s.link.entrances[1] ?? {}, { ammoId: 'arrow', count: ENTRANCE_CAPS[0] });
     run(full.s, 5);
     expect(full.c.item).toBe('arrow');
-    expect(full.s.link.reservoir.count).toBe(RESERVOIR_CAP);
+    expect(full.s.link.entrances[1]?.count).toBe(ENTRANCE_CAPS[0]);
     const other = feeding('ley-bolt');
-    other.s.link.reservoir = { itemId: 'arrow', count: 3 };
+    Object.assign(other.s.link.entrances[1] ?? {}, { ammoId: 'arrow', count: 3 });
     run(other.s, 1);
     expect(other.c.item).toBe('ley-bolt');
   });
@@ -80,18 +82,7 @@ describe('the foundry intake', () => {
     h.item = 'arrow';
     h.count = 5;
     run(s, 60);
-    expect(s.link.reservoir.count).toBe(0);
-  });
-
-  it('streams once per stager whose front is a mouth tile, nearest 0° first, then left before right: three at most', () => {
-    const s = foundry();
-    s.inventory['warden-core'] = 4;
-    const angles = [30, -15, 0];
-    for (const [i, mouth] of INTAKE.mouth.entries()) put<StagerState>(s, 'gravity-stager', mouth.tx, mouth.ty + 1, 'up').angle = angles[i] ?? 0;
-    // A stager beside them, facing along the wall, isn't a stream.
-    put<StagerState>(s, 'gravity-stager', EAST.tx + 1, EAST.ty + 1, 'left').angle = 15;
-    expect(intakeStreams(s.foundry)).toEqual([0, -15, 30]);
-    expect(summarize(s).intake.streams).toEqual([0, -15, 30]);
+    expect(s.link.entrances[1]?.count).toBe(0);
   });
 
   it('counts as fed for the objective by a line whose front, or a sorter whose side exit, is a mouth tile; never a hopper or crate', () => {

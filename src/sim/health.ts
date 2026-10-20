@@ -1,19 +1,23 @@
 import { DYING_TICKS, HIT_INVULN_TICKS } from '../data/player';
-import { afterArmor } from './armor';
+import { LAST_EMBER } from '../data/relics';
+import { afterArmor } from './stats';
+import { emberSaves, wardBlocks } from './relics';
 import { startKnock } from './knockback';
 import { endRoll, isInvulnerable } from './movement';
 import { resetWorld, type SimState } from './state';
 import { cancelClaim } from './claims';
 import { cancelHarvest } from './harvest';
-import { count, type Inventory } from './inventory';
+import type { Inventory } from './inventory';
+import { itemRisks } from './banking';
 import { wakeRoom } from './tutorial';
 
 // Player damage, banking and death. Specs 004 and 011.
 
 /**
- * Hits the player for `amount`, pushing them `knockback` px along (dirX, dirY)
- * over `knockTicks`. Does nothing during roll i-frames or hit invulnerability.
- * Returns whether the hit landed.
+ * Hits the player for `amount` (less their armor, 036), pushing them `knockback` px along (dirX, dirY)
+ * over `knockTicks`. Does nothing during roll i-frames (unless `rollProof`, 041.12: the Bulwark's pound and enraged
+ * lobs, which a roll doesn't save from) or hit invulnerability.
+ * Returns whether the hit landed (a Wardstone block counts: the attack is spent on it).
  */
 export function damagePlayer(
   state: SimState,
@@ -22,12 +26,19 @@ export function damagePlayer(
   dirY: number,
   knockback: number,
   knockTicks: number,
+  rollProof = false,
 ): boolean {
   const p = state.player;
-  if (isInvulnerable(p) || p.hurtTicks > 0 || p.dying > 0) return false;
+  if ((!rollProof && isInvulnerable(p)) || p.hurtTicks > 0 || p.dying > 0) return false;
+  // A ready Wardstone (036) takes the hit whole: nothing lands, and the shot or swing is spent.
+  if (wardBlocks(state)) return true;
   const taken = afterArmor(state, amount);
-  p.health = Math.max(0, p.health - taken);
-  p.hurtTicks = HIT_INVULN_TICKS;
+  // Last Ember (036) turns a killing hit into 1 HP and a longer invulnerability, once a trip.
+  const saved = emberSaves(state, taken);
+  p.health = saved === null ? Math.max(0, p.health - taken) : LAST_EMBER.saveHealth;
+  p.hurtTicks = saved ?? HIT_INVULN_TICKS;
+  p.lastHitTick = state.tick;
+  p.wardTicks = 0;
   startKnock(p, dirX, dirY, knockback, knockTicks);
   cancelHarvest(state);
   cancelClaim(state);
@@ -37,7 +48,7 @@ export function damagePlayer(
 
 /**
  * Death (011). At 0 health the player starts dying: no input, no hits, enemies
- * lose them. When the animation ends they wake in the foundry at full health,
+ * lose them. When the animation ends they wake in the foundry at full health (the stats' max, 036),
  * keeping only what was banked of what they carry; the rest is lost and
  * reported on the KO. Unclaimed rooms reset; everything kept by design stays.
  */
@@ -61,10 +72,10 @@ export function checkKo(state: SimState): void {
 function wake(state: SimState): void {
   const lost: Inventory = {};
   const kept: Inventory = {};
-  for (const [itemId, held] of Object.entries(state.inventory)) {
-    const keep = Math.min(held, count(state.banked, itemId));
-    if (keep > 0) kept[itemId] = keep;
-    if (held > keep) lost[itemId] = held - keep;
+  // The at-risk helper (031) is the rule: the safe part is kept, the at-risk part lost.
+  for (const [itemId, r] of Object.entries(itemRisks(state))) {
+    if (r.safe > 0) kept[itemId] = r.safe;
+    if (r.atRisk > 0) lost[itemId] = r.atRisk;
   }
   state.inventory = kept;
   resetWorld(state, wakeRoom(state));

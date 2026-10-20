@@ -1,6 +1,6 @@
 import type { Cameras, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
-import { DAMAGE_NUMBERS, PARTICLES, SHAKE, type ParticleBurst } from '../data/juice';
+import { DAMAGE_NUMBERS, PARTICLES, SHAKE, SHAKE_ON, type ParticleBurst } from '../data/juice';
 import { paletteHex } from '../data/palette';
 import { TEXT_STYLES } from '../data/fonts';
 import { phaserStyle } from './fonts';
@@ -15,6 +15,9 @@ export type ShakeSize = keyof typeof SHAKE;
 
 const SHAKE_ORDER: readonly ShakeSize[] = ['small', 'medium', 'big'];
 
+/** How many recent shakes the log keeps: a cap on a debug-only log the test hook reads (021), not tuning. */
+const SHAKE_LOG_MAX = 50;
+
 export class JuiceView {
   private readonly scene: Scene;
   private readonly camera: Cameras.Scene2D.Camera;
@@ -24,6 +27,8 @@ export class JuiceView {
   private shaking: { size: ShakeSize; until: number } | null = null;
   /** Recent damage numbers, so ones landing together stack instead of overlapping. */
   private recent: { x: number; y: number; at: number }[] = [];
+  /** Every shake asked for, oldest first, up to SHAKE_LOG_MAX: the test hook reports it (021). */
+  readonly shakes: ShakeSize[] = [];
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -33,7 +38,9 @@ export class JuiceView {
   }
 
   shake(size: ShakeSize): void {
-    if (this.reducedMotion) return;
+    this.shakes.push(size);
+    if (this.shakes.length > SHAKE_LOG_MAX) this.shakes.shift();
+    if (this.reducedMotion || !SHAKE_ON) return;
     const now = this.scene.time.now;
     const running = this.shaking && now < this.shaking.until ? this.shaking.size : null;
     if (running && SHAKE_ORDER.indexOf(size) < SHAKE_ORDER.indexOf(running)) return;
@@ -78,7 +85,8 @@ export class JuiceView {
     });
   }
 
+  /** Particles run on the tween clock (034), so the test hook's tween speed can hold a short burst for a screenshot. */
   update(deltaMs: number): void {
-    this.particles.update(deltaMs);
+    this.particles.update(deltaMs * this.scene.tweens.timeScale);
   }
 }

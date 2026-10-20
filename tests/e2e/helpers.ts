@@ -1,5 +1,7 @@
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import type {} from '../../src/render/testHook';
+import { REGION_1_X } from '../../src/data/hollows';
+import { OVERWORLD } from '../../src/data/overworld';
 
 // Page helpers shared by the e2e specs. They run inside the page, so they're
 // installed there before the game boots.
@@ -11,12 +13,20 @@ export interface Helpers {
   harvest(nodeIndex: number, times: number): void;
   /** Walks onto every ground item in the player's room. */
   collect(): void;
-  /** Shoots the nearest Husk until one dies, then collects its drops. */
+  /** Shoots the nearest Husk (of the ruin field's pack while it stands) until one dies, then collects its drops. */
   killHusk(): void;
   /** Walks out of the foundry's door to the overworld (017), where the tube can fire (015). */
   toHall(): void;
   /** Walks to the front of the foundry's stairs in the overworld and down them (017). */
   toFoundry(): void;
+  /** Region 1's first column (034: the old map moved +40 when the Hollows grew west), for tiles specs name by hand. */
+  ox: number;
+}
+
+/** What the in-page helpers need from the map's data (they can't import it). */
+interface MapData {
+  ox: number;
+  door: { tx: number; ty: number };
 }
 
 declare global {
@@ -34,7 +44,7 @@ export function watchErrors(page: Page): string[] {
   return errors;
 }
 
-function installHelpers(): void {
+function installHelpers(map: MapData): void {
   const game = () => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
@@ -177,18 +187,20 @@ function installHelpers(): void {
         collect();
       }
     },
+    ox: map.ox,
     toFoundry() {
       const g = game();
-      // The stairs' door tile is (40, 20); its arrival tile (40, 21) is in front (src/data/overworld.ts).
-      // From the north, round the mound's east side (blocks at x 38–42, y 18–20); from the south,
-      // up the column beside the path, clear of the tube's stone at (40, 33).
+      // The stairs' door tile; its arrival tile is the one in front (src/data/overworld.ts).
+      // From the north, round the mound's east side (blocks 2 tiles either side, 2 rows up); from the south,
+      // up the column beside the path, clear of the tube's stone.
+      const { tx, ty } = map.door;
       const y = game().getState().player.y;
-      if (y < 22 * 32) {
-        walkTo(43.5 * 32, y);
-        walkTo(43.5 * 32, 22.5 * 32);
-      } else walkTo(41.5 * 32, y);
-      walkTo(41.5 * 32, 21.5 * 32);
-      walkTo(40.5 * 32, 21.5 * 32);
+      if (y < (ty + 2) * 32) {
+        walkTo((tx + 3.5) * 32, y);
+        walkTo((tx + 3.5) * 32, (ty + 2.5) * 32);
+      } else walkTo((tx + 1.5) * 32, y);
+      walkTo((tx + 1.5) * 32, (ty + 1.5) * 32);
+      walkTo((tx + 0.5) * 32, (ty + 1.5) * 32);
       for (let t = 0; t < 60 && g.getState().room !== 'foundry'; t++) g.step(1, { moveY: -1 });
       if (g.getState().room !== 'foundry') throw new Error('could not reach the foundry');
     },
@@ -206,7 +218,11 @@ function installHelpers(): void {
       let pathed = true;
       for (let t = 0; t < 2400 && s.enemies.filter((e) => e.room === s.room).length === before; t++) {
         const p = s.player;
-        const target = [...s.enemies.filter((e) => e.room === s.room)].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+        // The ruin field's pack first while it stands: from the meadow's west (the reeds), the Ruined Cache's five guards
+        // (032) are nearer than it, and walking into them is a KO.
+        const field = s.enemies.filter((e) => e.room === s.room && e.group === 'field');
+        const pool = field.length > 0 ? field : s.enemies.filter((e) => e.room === s.room);
+        const target = [...pool].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
         if (!target) break;
         const far = Math.hypot(target.x - p.x, target.y - p.y) > 200;
         // Far off, walk most of the way by path, round whatever's in between (018); once that fails, only straight.
@@ -241,9 +257,21 @@ function installHelpers(): void {
  * default the sandbox start in the ruin hall that most specs are written for.
  */
 export async function boot(page: Page, query = '?start=field'): Promise<void> {
-  await page.addInitScript(installHelpers);
+  await page.addInitScript(installHelpers, { ox: REGION_1_X, door: OVERWORLD.entrance.door });
   await page.goto(`/${query}`);
   // The scene builds its views once the fonts (020) have loaded.
   await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
 }
 
+/** Waits until the camera, easing after the player in real time, has come to rest (`timeout` ms: a long ease under load needs more). */
+export async function cameraSettled(page: Page, timeout = 5000): Promise<void> {
+  let last = { x: NaN, y: NaN };
+  await expect
+    .poll(async () => {
+      const cam = (await page.evaluate(() => window.__GAME__?.ui()))?.camera ?? { x: NaN, y: NaN };
+      const still = Math.hypot(cam.x - last.x, cam.y - last.y) < 0.5;
+      last = cam;
+      return still;
+    }, { timeout })
+    .toBe(true);
+}

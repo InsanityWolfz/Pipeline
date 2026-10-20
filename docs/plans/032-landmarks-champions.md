@@ -1,0 +1,75 @@
+# Plan 032: Landmarks and champions
+
+Spec: docs/specs/032-landmarks-champions.md, with Shaun's decisions in docs/brainstorm/2026-10-19-open-questions.md (032.1–032.13, B, F, G, I; 032.3: the cache refills after about 10 minutes of play, never real time). Written for the unattended run (028–038 as separate commits on `claude/laughing-volta-uac3nf`). 033 isn't built, so the cache opens with its raws only and champions roll no schematic or part (F). docs/design.md already carries the 032 wording (fast travel, landmarks, champions), so it isn't touched; the spec asks for no docs/prototype.md change.
+
+## Shape of the change
+Small vertical commits, failing tests first in each:
+
+1. **Landmark data model** (`src/data/landmarks.ts`, new; `src/data/landmarkSites.ts`, new, for the four resource sites and the cache so each file stays small).
+   - `LandmarkDef`: `id` (kebab-case), `name`, `kind` (`resource-site`, `frozen-grotto`, `ley-springs`, `ruined-cache`), `ring`, `area` (tile rect), `features` and `nodes` (018's rules), `guards` (enemy id and tile; their group is the landmark id), `pylon` (tile, site id and the item it supplies), `leyLine` home (pylon to the stairs), extra `veinLines` (the Ley Grotto's crossing seams), `blocks` (the Quarry's cut stones, solid), `cache` (the reliquary's tile), `marker` (minimap icon).
+   - Entries: Quarry (21, 18) ring 1, Old Grove (8, 19), Ley Grotto (73, 24), Reed Marsh (73, 35), Ruined Cache (11, 38), all ring 2; the Frozen Grotto from 029's `GROTTO` (its area, clusters and guards unchanged); one entry per 030 spring at 030's tile, its area the spring's clearing.
+   - `LANDMARKS` tuning: `bannerMs` 2000, `cacheRearmTicks` 36000 (10 min), `cacheOpenTicks` 60. `CACHE_DROPS`: 3–5 raws picked from the region's (`picks`), `rare: []` (033 fills it as data).
+   - `DropTable` gains optional `picks` (n items picked evenly from a list) and `rare` (each `{ itemId, chance }` rolled once); enemies' tables don't use them.
+   - The springs' data (`SpringDef`, `SPRINGS`, radius, clearing) moves to `src/data/springs.ts` and the tile types to `src/data/tiles.ts`, both re-exported from `overworld.ts`, so `landmarks.ts` can read them without an import cycle.
+   - `overworld.ts` appends the landmarks' features, nodes (after the existing 17, so node indices stay stable), guard packs (the Grotto's first, where 029 put them) and ley lines.
+   - The Grotto's guard group becomes `frozen-grotto`, its landmark id (spec: a guard pack's group equals its landmark's id).
+2. **Placement and clearing stamping** (`src/sim/overworldGen.ts`). Landmark areas are stamped after the terrain is generated, like 030's spring clearings, so the seeded generator's stream is unchanged: a generated pond reaching into a landmark area is removed whole (its water and shallows back to grass; no RNG used), then the area is cleared to grass, then the landmark's features, blocks, pylon and cache tiles go on top. Checked by diffing rows outside the areas before and after.
+   - `Room.pylon` becomes `Room.pylons` (a list): each `{ tx, ty, site, name, safeRadius, wakes? }`. The shrine keeps site `shrine` and radius 10; resource-site pylons have radius 7 (`SITE_SAFE_RADIUS` in `claims.ts`) and `wakes: 'shrine'` (dormant until it's claimed). `Room.caches` lists reliquary tiles (solid).
+   - Data tests: inside the map and clear of the forest edge; no overlaps with each other, the meadow, the ruin field or the shrine; the declared ring; every node keeps its 018 rule; every landmark reachable from the wake tile (reach.ts) with its pylon, cache and nodes reachable; every id named exists; no generated pond in an area; rows outside the areas unchanged.
+3. **Pylons per site** (`src/sim/claims.ts`, `population.ts`, `bodies.ts`, `drops.ts`): `pylonInReach` takes the nearest pylon in reach; a dormant pylon takes E but starts no claim; safe zones per pylon with its own radius; a claim despawns the site's guards and any guard whose home falls in the new zone; `SITE_SUPPLY` gains `quarry: ['stone']`, `old-grove: ['wood']`, `reed-marsh: ['fiber']`, `ley-grotto: ['ley-crystal']`. The waystone: with one claimed pylon E travels as today; with two or more E opens a menu (render), whose choice comes back as a new command `travel: site`, landing one tile below that pylon. `claimedCount { min }` check and the goal "Claim a second pylon" appended after 029's goals, with an arrow marker (`sitePylon`) over the nearest discovered unclaimed resource-site pylon.
+4. **Discovery** (`src/sim/landmarks.ts`, new): once a tick in the overworld, every undiscovered landmark whose area overlaps `viewRect` joins `state.discovered` with a `discoveries: { landmark }` event. Kept through a KO. Summary: `discovered`, and `landmarks: { id, discovered, claimed, opened }[]`.
+5. **The Ruined Cache** (`src/sim/cache.ts`, new): E at the reliquary while a guard of `ruined-cache` lives is `sealed`; after, a 60-tick hold (cancelled like a claim) opens it: `CACHE_DROPS` rolled with the seeded RNG, scattered below it, a `cacheOpens` event. Opened state is kept through a KO (no refill); it re-arms `cacheRearmTicks` after opening, on the first tick its area is out of view, and missing guards come back then.
+6. **Champions** (`src/data/champions.ts`, `src/sim/champions.ts`, new): `CHAMPIONS` tuning (scale 1.5, health 1.5, damage 1.3, speed 1.15, dropRolls [2, 3], armor 1, chanceByRing {1: 1/8, 2: 1/5}, glow, names per enemy id). `championDef(def)` scales a def (feet box, hurtbox, max health, every attack's damage rounded, walk speed; timings and reach unchanged); `defOf(e)` is what the sim reads for an enemy. A population pack or a landmark guard pack (at the start, after a KO, on a cache re-arm) rolls once for its ring; on a hit one non-boss member picked by the RNG becomes a champion with a name from its list. The tutorial's `field` and `shrine` packs never roll. A champion's death rolls its table 2–3 times plus exactly one unidentified armor piece, and its death event carries `champion: true`. `EnemyState.champion: { name } | null`, in the summary. Dev hook `spawnChampionPack(enemyIds, champion)`.
+7. **Render** (behind the existing aggregators; GameScene only gains the hook's new fields):
+   - `LandmarkView` (in `RoomViews`): cut blocks, old trees, marsh tufts, grotto hollow lips and cold light, the reliquary (sealed, open, empty), the discovery banner (display font, top centre below the objective band, fading after `bannerMs`).
+   - `MinimapView`: landmark icons once discovered; claimed pylons keep the cyan marker.
+   - `SiteView`: every pylon in the room (and its claim bar); `SupplyView`: each mote leaves from a claimed pylon supplying its raw (round-robin per raw) and runs home along that pylon's ley line; `OverworldView`: a safe-ground wash per claimed pylon at its own radius.
+   - `SiteMenus`: the waystone's menu by landmark name. `hoverNames`: a landmark pylon reads "Quarry pylon: sends stone home." (`descriptions.ts`); the reliquary has its own lines.
+   - `EnemyView`: a champion at 1.5×, a slow pulsing glow under it (under telegraphs and hit flashes), its name and "Husk champion" above it, its health bar in the champion colour; its hover name is its name.
+   - New vector art (`src/data/art/landmarks.ts`): cut blocks, old trees, marsh tufts, hollow lip stones (plain and frosted), the reliquary's three frames, four minimap icons, the champion glow; all on `/sheet.html`.
+
+## Tests (written first)
+- **Vitest** `tests/data/landmarks.test.ts`: the data tests in 2, ids kebab-case and references real, the table positions, `SITE_SUPPLY` per site with a node of its raw in its 7-tile zone.
+- **Vitest** `tests/sim/landmarks.test.ts`: discovery once when an area first enters `viewRect`, never again, kept through a death, the event; the summary fields.
+- **Vitest** `tests/sim/sitePylons.test.ts`: claim each site in turn (dormant before the shrine; sealed while guards live); deposit at each; waystone travel to each by `travel`; a safe zone per pylon at its radius; the stone port's pylon count and rate rising; "Claim a second pylon" completing on the second claim; population targets met with all five claimed.
+- **Vitest** `tests/sim/cache.test.ts`: sealed while guards live; a 60-tick hold opens it; seeded drops (same seed, same drops; 3–5 raws of the region's); stays empty through a KO; re-arms after 10 minutes only out of view, guards back; table ids exist.
+- **Vitest** `tests/sim/champions.test.ts`: roll rate over many seeds within tolerance per ring; never bosses or tutorial packs; `championDef` over every non-boss entry in `ENEMIES`; 2–3 drop rolls plus exactly one armor piece; the death event's flag; a champion's swipe damage and speed in play.
+- Rewritten where they break: the grotto test's group name, tests reading `Room.pylon`, seeded expectations moved by the champion rolls.
+- **Playwright** `tests/e2e/landmarks.spec.ts`: walk toward the Quarry and see `discovered` gain `quarry` and its minimap marker appear; clear and claim the Quarry pylon, deposit there, fast travel there from the waystone menu; open the cache; fight a champion spawned by the dev hook. `tests/e2e/landmarksShots.spec.ts` with `REVIEW_SHOTS=1` into docs/review/032/: each landmark, the minimap before and after the Quarry, the banner, a claimed Quarry pylon with a mote running home, the stone port at "×2 pylons", the cache sealed and opened with drops, champion Husk and Wisp beside normal ones, the new art on the contact sheet.
+
+## Not dictated by the spec
+- Landmark areas: Quarry (17, 15)–(25, 21), Old Grove (4, 15)–(11, 23), Ley Grotto (68, 19)–(75, 28), Reed Marsh (70, 30)–(75, 39), Ruined Cache (6, 36)–(16, 40); each holds the table's centre tile. The east sites are narrower than square because the south-east spring's clearing and the forest edge bound them.
+- Generated ponds reaching into a landmark area are removed whole (two east ponds fall in the Ley Grotto and the Reed Marsh), keeping the RNG stream.
+- Guard makeups: Quarry 4 Husks (ring 1 is Husks only); Old Grove 3 Husks and a Wisp; Ley Grotto 2 Husks and 2 Wisps; Reed Marsh 3 Husks and a Wisp; the cache 4 Husks and a Wisp.
+- A dormant pylon swallows E (no claim, no event); its hover says it's dormant.
+- The Grotto's group renamed to `frozen-grotto`; the springs have no guards.
+- Packs keep out of landmark areas as they keep out of the other clearings.
+- The waystone menu lists claimed pylons in claim order by landmark name ("Shrine" for the shrine).
+- Champion rolls draw from `state.rng`, so seeded runs shift; the hurtbox's offset scales with the box.
+- A champion that is the first Husk ever killed counts as that Husk's guaranteed piece (one piece, not two).
+- Cache re-arm restores only missing guards, at home, rolling the champion chance again.
+- Supply motes alternate between the claimed pylons supplying a raw (render only; the sim's port timing is 028's).
+- The banner sits top centre below the objective band; the minimap icons are small vector sprites.
+- Dev hook `spawnChampionPack(enemyIds, champion)` puts the pack in a row 6 tiles right of the player, member `champion` a champion.
+
+## Build notes
+- The Reed Marsh's pylon moved to (72, 38), south of its two ponds: between them its sprite stood in the lower pond's rim. Ponds at (72.5, 31.5) and (72.5, 35).
+- The springs' landmark areas are their pool and rim stones (5×5 tiles round each centre), not 030's 7×7 clearings: the north clearing touches the ruin field and the south-east one reaches the forest edge, which the area tests forbid. Seeing any part of the pool discovers it.
+- Both generated ponds on the fixed map sat where the spec puts the Ley Grotto and the Reed Marsh, so the map now has only hand-placed ponds (the meadow's, the shrine's and the marsh's). The rest of the map is tile-for-tile what the seed made (tested).
+- A supply mote leaves from the newest claimed pylon first, then the others in turn: claiming the Quarry shows its line working at its next stone.
+- The cache's drops land below it, where the player stands to open it, so the pickup (2 tiles, 021) takes them the same tick; the screenshot slows the slide to show them.
+- The discovery banner holds on the tween clock (the hook's tween speed holds it for a screenshot); several discoveries queue and show in turn.
+- `ui()` gains `landmarks` (banner and its alpha, each reliquary's frame, lips, tufts, lights), `champions` (name, kind, scale, glow) and `waystone` (the menu's rows and boxes); `supply.inFlight` names each mote's site.
+
+## Review fixes
+- The Quarry's guards stand on its west side, more than half a view (10 tiles) from the ruin field's walls, so the tutorial's fight never wakes them (tested from every open tile inside the walls). The Ley Grotto's pylon sits in the hollow's upper half at (72, 22), so its zone stops short of the Reed Marsh; no guard stands in another site's zone (tested).
+- The Ruined Cache's reliquary has a hover line (sealed, ready, empty); a dormant site pylon's says it waits on the shrine. The shrine goal's E prompt floats only over a pylon that isn't dormant.
+- A champion's rare entries roll once per death; an empty pack (a spring's, a claimed site's) draws nothing from the RNG.
+- SITE_SUPPLY's site entries come from the landmark pylons; the springs carry their own name and ring.
+- e2e: the claiming bot aims at a Wisp's body (it floats; arrows at its feet passed under it), with no health top-up; the tutorial gathers a fifth stone for the bomb's casing rather than counting on a Husk's seeded drop; `killHusk` still takes the ruin field's pack first, since from the reeds the Ruined Cache's guards are nearer.
+
+## Notes for Shaun
+- Champion names are placeholders (Husks: Mossjaw, Rootgrip, Thornback, Barkhide, Gnarlfist, Briarmaw; Wisps: Palewick, Duskmote, Glimmerveil, Hollowlight, Ashflicker).
+- "Claim a second pylon" is built with the spec's wording.
+- Guards wake as soon as they're on screen (017), so every landmark is a fight on arrival; the Ruined Cache's five are the hardest pack outside the shrine.
+- The art (`/sheet.html`, "Landmarks (032)") is pending your review: cut blocks, old trees, reeds and lilies, hollow lips (plain and frosted), the reliquary's three states, the minimap icons and the champion glow.

@@ -3,7 +3,7 @@ import { TILE_SIZE } from '../../src/data/config';
 import { OVERWORLD, ringOf } from '../../src/data/overworld';
 import { POPULATION, SAFE_RADIUS } from '../../src/data/population';
 import { SHRINE_SITE } from '../../src/data/rooms';
-import { RESERVOIR_CAP } from '../../src/data/tube';
+import { ENTRANCE_CAPS } from '../../src/data/foundry';
 import { claim } from '../../src/sim/claims';
 import type { EnemyState } from '../../src/sim/enemies';
 import { damageEnemy } from '../../src/sim/enemies';
@@ -32,7 +32,7 @@ describe('the living population', () => {
     run(s, 120);
     expect(pop(s)).toEqual([]);
     expect(summarize(s).populated).toBe(false);
-    s.link.reservoir = { itemId: 'arrow', count: RESERVOIR_CAP };
+    Object.assign(s.link.entrances[1] ?? {}, { ammoId: 'arrow', count: ENTRANCE_CAPS[0] });
     run(s, 1);
     expect(s.populated).toBe(true);
     run(s, 1);
@@ -116,6 +116,10 @@ describe('the living population', () => {
     run(s, 1);
     const gone = [...packs(s)].find((g) => g.startsWith('pop-2-')) ?? '';
     s.enemies = s.enemies.filter((e) => e.group !== gone);
+    // Packs standing near the screen's edge can drift out of it while the test waits (032 moved where they fall), so
+    // clear them first: the count near the player is then only what the test puts there, and nothing can leave it.
+    const edge = 3 * TILE_SIZE;
+    s.enemies = s.enemies.filter((e) => Math.abs(e.x - s.player.x) > POPULATION.screen.x + edge || Math.abs(e.y - s.player.y) > POPULATION.screen.y + edge);
     // Fill the screen to one past where the largest ring-2 pack still fits under the cap.
     const fill = POPULATION.screenCap - POPULATION.rings[2].size[1] + 1 - enemiesNearPlayer(s);
     for (let i = 0; i < fill; i++) placeHusk(s, PLAYER_AT.x + 200 + (i % 5) * 20, PLAYER_AT.y + Math.floor(i / 5) * 20, OVERWORLD.id);
@@ -152,7 +156,8 @@ describe('the living population', () => {
     die(s);
     expect(s.claims).toEqual([SHRINE_SITE]);
     run(s, 1);
-    expect(packs(s).size).toBe(TARGET);
+    // The shrine's claim dropped the Hollows' barrier (034), so ring 3 fills too.
+    expect(packs(s).size).toBe(TARGET + POPULATION.rings[3].packs);
   });
 });
 

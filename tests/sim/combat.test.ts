@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { straightAmmo } from '../../src/data/ammo';
 import { damageEnemy } from '../../src/sim/enemies';
-import { arena, at, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, at, FIELD_WALL, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
 const DAMAGE = straightAmmo('arrow').damage;
 
@@ -10,8 +10,9 @@ describe('arrows hitting Husks', () => {
     const s = arena();
     const e = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     run(s, 1, fireAt(at(1000).x, PLAYER_AT.y));
-    runUntil(s, () => s.arrows.length === 0, 30);
-    expect(DAMAGE).toBe(10);
+    // 029: an arrow pierces, so it flies on to the end of its range.
+    runUntil(s, () => s.arrows.length === 0, 60);
+    expect(DAMAGE).toBe(14); // 041: was 10
     expect(e.health).toBe(HUSK.maxHealth - DAMAGE);
   });
 
@@ -26,35 +27,38 @@ describe('arrows hitting Husks', () => {
     expect(e.flash).toBe(0);
   });
 
-  it('does not pierce: only the first Husk in line is hit', () => {
+  it('pierces (029): every Husk in line is hit once', () => {
     const s = arena();
     const first = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     const second = placeHusk(s, PLAYER_AT.x + 130, PLAYER_AT.y);
     run(s, 1, fireAt(at(1000).x, PLAYER_AT.y));
-    runUntil(s, () => s.arrows.length === 0, 30);
+    runUntil(s, () => s.arrows.length === 0, 60);
     expect(first.health).toBe(HUSK.maxHealth - DAMAGE);
-    expect(second.health).toBe(HUSK.maxHealth);
+    expect(second.health).toBe(HUSK.maxHealth - DAMAGE);
   });
 
-  it('hits the Husk the arrow reaches first when hurtboxes overlap', () => {
+  it('a ley bolt hits the Husk it reaches first when hurtboxes overlap (029: ley bolts stop in the first)', () => {
     const s = arena();
+    s.inventory['ley-bolt'] = 2;
+    run(s, 1, { selectAmmo: 'ley-bolt' });
     // First in the array but 1 px further along the flight, with hurtboxes overlapping.
     const far = placeHusk(s, PLAYER_AT.x + 101, PLAYER_AT.y);
     const near = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y + HUSK.feetBox.h);
     run(s, 1, fireAt(at(1000).x, PLAYER_AT.y));
-    runUntil(s, () => s.arrows.length === 0, 30);
-    expect(near.health).toBe(HUSK.maxHealth - DAMAGE);
+    runUntil(s, () => s.arrows.length === 0, 90);
+    expect(near.health).toBe(HUSK.maxHealth - 9); // 041: a ley bolt's 9 (was 14)
     expect(far.health).toBe(HUSK.maxHealth);
   });
 
   it('hits a Husk standing against a wall', () => {
-    // The ruin field's east wall is tile column 49 (017); the Husk stands 40 px left of it.
+    // The ruin field's east wall (017); the Husk stands 40 px left of it.
     const y = 14.5 * 32;
-    const s = arena(undefined, { x: 49 * 32 - 280, y });
-    const e = placeHusk(s, 49 * 32 - 40, y);
+    const wall = FIELD_WALL.east * 32;
+    const s = arena(undefined, { x: wall - 280, y });
+    const e = placeHusk(s, wall - 40, y);
     e.mode = 'recover';
     e.modeTicks = 1;
-    run(s, 1, fireAt(49 * 32 + 60, y));
+    run(s, 1, fireAt(wall + 60, y));
     runUntil(s, () => s.arrows.length === 0, 40);
     expect(e.health).toBe(HUSK.maxHealth - DAMAGE);
   });
@@ -68,22 +72,23 @@ describe('Husk knockback', () => {
     expect(e.mode).toBe('windup');
     damageEnemy(s, e, DAMAGE, 0, -1);
     run(s, HUSK.hitKnockTicks - 1);
-    expect(e.y).toBeGreaterThan(PLAYER_AT.y - HUSK.hitKnockback);
+    expect(e.y).toBeGreaterThan(PLAYER_AT.y - straightAmmo('arrow').knockback * HUSK.weight);
     run(s, 1);
-    expect(e.y).toBeCloseTo(PLAYER_AT.y - HUSK.hitKnockback, 6);
+    expect(e.y).toBeCloseTo(PLAYER_AT.y - straightAmmo('arrow').knockback * HUSK.weight, 6);
     run(s, 4);
-    expect(e.y).toBeCloseTo(PLAYER_AT.y - HUSK.hitKnockback, 6);
+    expect(e.y).toBeCloseTo(PLAYER_AT.y - straightAmmo('arrow').knockback * HUSK.weight, 6);
   });
 
   it('stops at a wall', () => {
-    // The ruin field's west wall is tile column 31 (017): its east face is x = 1024.
+    // The ruin field's west wall (017): its east face.
+    const face = (FIELD_WALL.west + 1) * 32;
     const y = 14.5 * 32;
-    const s = arena(undefined, { x: 1024 + 28, y });
-    const e = placeHusk(s, 1024 + 8, y);
+    const s = arena(undefined, { x: face + 28, y });
+    const e = placeHusk(s, face + 8, y);
     run(s, 1);
     damageEnemy(s, e, DAMAGE, -1, 0);
     run(s, HUSK.hitKnockTicks);
-    expect(e.x).toBe(1024 + 8);
+    expect(e.x).toBe(face + 8);
   });
 });
 
@@ -104,7 +109,8 @@ describe('Husk death', () => {
     expect(s.inventory.arrow).toBe(26);
     expect(deaths).toEqual([{ id: e.id, enemyId: 'husk', x: e.x, y: e.y, facing: e.facing }]);
     expect(s.groundItems.length).toBeGreaterThanOrEqual(1);
-    expect(s.groundItems.length).toBeLessThanOrEqual(3);
+    // 1–2 resin, maybe one raw, and the first Husk's guaranteed armor.
+    expect(s.groundItems.length).toBeLessThanOrEqual(4);
   });
 });
 
@@ -119,7 +125,7 @@ describe('ley bolts', () => {
   }
 
   it('fly at 300 px/s for 320 px', () => {
-    expect(BOLT).toMatchObject({ speed: 300, range: 320, damage: 14, pierce: true, damageType: 'physical' });
+    expect(BOLT).toMatchObject({ speed: 300, range: 320, damage: 9, pierce: false, damageType: 'physical' });
     const s = bolted();
     run(s, 1, fireAt(PLAYER_AT.x + 1000, PLAYER_AT.y));
     const bolt = s.arrows[0];
@@ -130,12 +136,12 @@ describe('ley bolts', () => {
     expect(ticks).toBe(Math.ceil(320 / 5) - 1);
   });
 
-  it('pierce: every Husk in line is hit once', () => {
-    const s = bolted();
+  it('an arrow (029: arrows pierce) hits every Husk in line once, each knocked and flashed', () => {
+    const s = arena();
     const first = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     const second = placeHusk(s, PLAYER_AT.x + 140, PLAYER_AT.y);
     run(s, 1, fireAt(PLAYER_AT.x + 1000, PLAYER_AT.y));
-    const bolt = s.arrows[0];
+    const arrow = s.arrows[0];
     // On the tick each Husk is hit: the arrow's knockback and flash, and aggro.
     const onHit: Record<number, { knockTicks: number; flash: number; mode: string }> = {};
     runUntil(
@@ -149,15 +155,15 @@ describe('ley bolts', () => {
       },
       100,
     );
-    expect(first.health).toBe(HUSK.maxHealth - 14);
-    expect(second.health).toBe(HUSK.maxHealth - 14);
-    expect(bolt?.hitIds).toEqual([first.id, second.id]);
+    expect(first.health).toBe(HUSK.maxHealth - DAMAGE);
+    expect(second.health).toBe(HUSK.maxHealth - DAMAGE);
+    expect(arrow?.hitIds).toEqual([first.id, second.id]);
     const struck = { knockTicks: HUSK.hitKnockTicks, flash: HUSK.hitFlashTicks, mode: 'chase' };
     expect(onHit).toEqual({ [first.id]: struck, [second.id]: struck });
   });
 
-  it('never hits the same Husk twice, even knocked back along its flight', () => {
-    const s = bolted();
+  it('an arrow never hits the same Husk twice, even knocked back along its flight', () => {
+    const s = arena();
     const e = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     run(s, 1, fireAt(PLAYER_AT.x + 1000, PLAYER_AT.y));
     const hits: number[] = [];
@@ -169,14 +175,14 @@ describe('ley bolts', () => {
       },
       100,
     );
-    expect(hits).toEqual([14]);
-    expect(e.health).toBe(HUSK.maxHealth - 14);
+    expect(hits).toEqual([DAMAGE]);
+    expect(e.health).toBe(HUSK.maxHealth - DAMAGE);
   });
 
   it('stop at a wall', () => {
     const s = bolted();
-    // The ruin field's west wall is tile column 31 (017); fire at it from 3 tiles away.
-    movePlayer(s, 34.5 * 32, 14.5 * 32);
+    // The ruin field's west wall (017); fire at it from 3 tiles away.
+    movePlayer(s, (FIELD_WALL.west + 3.5) * 32, 14.5 * 32);
     run(s, 1, fireAt(0, 14.5 * 32));
     let lastX = s.player.x;
     runUntil(
@@ -187,7 +193,7 @@ describe('ley bolts', () => {
       },
       100,
     );
-    expect(lastX).toBeGreaterThanOrEqual(32 * 32 - 5);
+    expect(lastX).toBeGreaterThanOrEqual((FIELD_WALL.west + 1) * 32 - 5);
   });
 
   it('stop at a ruin block', () => {

@@ -1,5 +1,6 @@
+import { REGION_1_X } from '../../src/data/hollows';
 import { describe, expect, it } from 'vitest';
-import { BUILD_TIP, WORLD_NAMES } from '../../src/data/hudLayout';
+import { WORLD_NAMES } from '../../src/data/hudLayout';
 import { FIXTURES } from '../../src/data/claims';
 import { DESCRIPTIONS } from '../../src/data/descriptions';
 import { SHRINE_SITE } from '../../src/data/rooms';
@@ -41,8 +42,8 @@ describe('world names on mouse-over', () => {
   it('names the pylon and the tube stone, and nothing on bare ground (017: both in the overworld)', () => {
     const s = createSim(SEED, { roomId: HALL });
     const outside = WORLD[HALL];
-    const shrine = outside?.pylon;
-    if (!shrine) throw new Error('no pylon');
+    const shrine = outside?.pylons?.find((x) => x.site === 'shrine');
+    if (!outside || !shrine) throw new Error('no pylon');
     const p = centre(shrine.tx, shrine.ty);
     expect(nameAt(s, HALL, p.x, p.y)?.name).toBe(WORLD_NAMES.pylon);
     const stone = outside.tubeStone;
@@ -57,7 +58,7 @@ describe('world names on mouse-over', () => {
     expect(nameAt(s, HALL, field.x, field.y)).toBeNull();
   });
 
-  it('says where materials come from over the pylon, a ley line and the supply port (018)', () => {
+  it('says where materials come from over the pylon and a ley line (018), and what each port sends (028)', () => {
     const s = createSim(SEED, { roomId: HALL });
     s.enemies = [];
     s.nodes = [];
@@ -70,25 +71,26 @@ describe('world names on mouse-over', () => {
     if (!a || !b) throw new Error('short ley line');
     const seam = { x: ((a.tx + b.tx) / 2 + 0.5) * 32, y: ((a.ty + b.ty) / 2 + 0.5) * 32 };
     expect(nameAt(s, HALL, seam.x, seam.y)).toMatchObject({ name: WORLD_NAMES.leyLine, description: DESCRIPTIONS.leyLine });
-    const port = FIXTURES.find((f) => f.kind === 'port');
+    const port = FIXTURES.find((f) => f.kind === 'port' && f.raw === 'stone');
     if (!port) throw new Error('no port');
     const at = centre(port.tx, port.ty);
-    expect(nameAt(s, 'foundry', at.x, at.y)).toMatchObject({ name: port.name, description: DESCRIPTIONS.port });
+    expect(nameAt(s, 'foundry', at.x, at.y)).toMatchObject({ name: 'Stone port', description: '×1 pylon · 15/min' });
+    // A refused raw waiting in the port says so.
+    const held = s.fixtures.find((f) => f.id === port.id);
+    if (!held) throw new Error('no stone port');
+    held.item = 'stone';
+    expect(nameAt(s, 'foundry', at.x, at.y)?.description).toBe('×1 pylon · 15/min · waiting');
   });
 });
 
 describe('build bar descriptions', () => {
-  it('every buildable piece has one, short enough for the tip', () => {
-    for (const id of BUILD_BAR) {
-      const def = PIECES[id];
-      expect(def?.description.length, id).toBeGreaterThan(0);
-      expect(wrapText(def?.description ?? '', BUILD_TIP.wrap).length, id).toBeLessThanOrEqual(BUILD_TIP.maxLines);
-    }
+  // 040: the tip is the legibility tablet, which wraps any length to its width (BUILD_TIP's 34-character, 2-line limit is gone).
+  it('every buildable piece has one', () => {
+    for (const id of BUILD_BAR) expect(PIECES[id]?.description.length, id).toBeGreaterThan(0);
   });
 
   it('wrap at spaces within the width', () => {
     expect(wrapText('one two three four', 9)).toEqual(['one two', 'three', 'four']);
-    for (const line of wrapText(PIECES.sorter?.description ?? '', BUILD_TIP.wrap)) expect(line.length).toBeLessThanOrEqual(BUILD_TIP.wrap);
   });
 });
 
@@ -105,5 +107,38 @@ describe('the sorter on screen', () => {
   it('has an input arrow on its back, an output on its front and a gold one on its sort side', () => {
     const spots = arrowSpots({ pieceId: 'sorter', tx: 5, ty: 5, facing: 'right', mirrored: true });
     expect(spots.map((s) => `${s.kind}:${s.edge}`)).toEqual(['in:left', 'out:right', 'sort:up']);
+  });
+});
+
+describe('landmark hovers (032)', () => {
+  it("names a resource site's pylon by its landmark and what it sends: dormant, awake, claimed", () => {
+    const s = createSim(SEED, { roomId: HALL });
+    s.enemies = [];
+    // 032's tiles moved +40 (034).
+    const p = centre(21 + REGION_1_X, 20);
+    expect(nameAt(s, HALL, p.x, p.y)?.description).toBe('Quarry pylon: dormant until the shrine is claimed.');
+    claim(s, SHRINE_SITE);
+    expect(nameAt(s, HALL, p.x, p.y)?.description).toBe('Quarry pylon: claim it to send stone home.');
+    claim(s, 'quarry');
+    expect(nameAt(s, HALL, p.x, p.y)?.description).toBe('Quarry pylon: sends stone home.');
+  });
+
+  it('names the Ruined Cache: sealed while a guard lives, ready, then empty once opened', () => {
+    const s = createSim(SEED, { roomId: HALL });
+    const c = centre(11 + REGION_1_X, 38);
+    expect(nameAt(s, HALL, c.x, c.y)).toMatchObject({ name: 'Ruined Cache', description: DESCRIPTIONS.cacheSealed });
+    s.enemies = s.enemies.filter((e) => e.group !== 'ruined-cache');
+    expect(nameAt(s, HALL, c.x, c.y)?.description).toBe(DESCRIPTIONS.cacheReady);
+    const cache = s.caches.find((x) => x.id === 'ruined-cache');
+    if (cache) cache.openedAt = s.tick;
+    expect(nameAt(s, HALL, c.x, c.y)?.description).toBe(DESCRIPTIONS.cacheEmpty);
+  });
+
+  it("names a champion by its own name", () => {
+    const s = createSim(SEED, { roomId: HALL });
+    s.enemies = [];
+    const e = placeHusk(s, 300, 300);
+    e.champion = { name: 'Mossjaw' };
+    expect(nameAt(s, HALL, e.x, e.y - 12)?.name).toBe('Mossjaw');
   });
 });

@@ -2,6 +2,172 @@
 
 Newest entry first.
 
+## 2026-10-20: Process reset, 041 closed, catch-up PR for 021–041
+**Changed:**
+- Reviewed how the 021–041 run drifted: 21 specs on one branch with no PRs, wrapups that never happened, 041 growing to 19 items, ten specs approved on draft at once, a handoff that went stale. Shaun approved a reset; its rules are in docs/process.md, "Keeping the loop small", and in CLAUDE.md.
+- 041 is closed as built. 041.18 (arena lock) and 041.19 (slower Shardbacks) moved to their own spec, 043. The 041 fix list in the old handoff was already built in 8eb2780 (the back wave waits out the roar, at most 4 adds, HP 3,800, 15 of 20 seeds asserted, dead bot code removed).
+- docs/handoff.md is folded into this entry and removed.
+- Opened the catch-up PR from `claude/laughing-volta-uac3nf` into `main` for 021–041.
+- Measured on this branch: `npm run check` takes about 50 s (1,430 unit tests; the slowest file is bulwarkFight.test.ts at 11 s), and the full e2e takes 6.5 min (102 tests, all passing).
+
+**Next:**
+1. Shaun plays the catch-up preview and says when to merge; then /wrapup marks 021–041 done in one pass.
+2. Each of these on its own branch and PR, stacked on the catch-up branch until it merges: `npm run measure` (balance targets out of `check`), the Stages "0/4 arrows" bug, 043, 042.
+3. The spec interview from docs/brainstorm/2026-10-20-playtest-notes.md (needs Shaun).
+
+**Notes (carried over from the handoff):**
+- **Previews:** https://insanitywolfz.github.io/Pipeline/branch/<branch>/ (add `?playtest` for a full kit, `?start=hollows` for the Bulwark's region). The `main` preview is old until the catch-up merges.
+- **Machine load causes false timeouts.** The stop hook runs `npm run check` while e2e runs, so long scenario tests have explicit budgets with a comment giving their idle time. Never raise a timeout to hide a real slowdown; measure against the commit before first.
+- **Keep scratch scripts out of tests/.** Use the session scratchpad.
+- **Scripted e2e bots** adapt their tactics honestly: no hidden healing, no reading hidden state a player can't see.
+- **One stat path.** All stats go through `resolveStat` (src/sim/statResolve.ts); all player-facing rules text comes from the keyword data (039/040).
+- **Shaun's preferences:** tell him only what needs him (approvals, decisions, playtests). He likes AskUserQuestion interviews with the recommended option first. Voice-to-text "rants" are saved verbatim in docs/brainstorm/ and processed later.
+- **Playtest-notes interview themes** (docs/brainstorm/2026-10-20-playtest-notes.md): a pre-built arrow line as the foundry tutorial example; separate hotbars for the intake and carried items; a Factorio-style grid inventory and hopper screens; stages in the crafting menu (C) instead of the bench; volleys that fan across ammo types and fire together; a resin pylon to automate bombs; more ammo per early resource; a red HP bar; bigger pickup range; an E prompt on ley crystal nodes; on-screen build controls; Wisp aggro range; cache loot visuals; an early Splitter.
+- **Later backlog** (docs/brainstorm/2026-10-19-drive-rant.md): horizontal content (biomes, bosses, projectiles, augments, set bonuses), Terraria-style multiplayer (keep the sim deterministic and command-driven), a bigger foundry with more involved processing.
+
+## 2026-10-20: 039–041 and handoff to a new session
+**Changed:**
+- Built and reviewed 039 (keyword system) and 040 (legibility UI).
+- Built most of 041 (balance): the damage numbers, ring scaling, and the Bulwark's enrage, stomp, adds, roll-proof pound and lobs, and back wave (5a5ca26). Tuned at 3,600 HP.
+- Screen shake is off entirely (Shaun).
+- Specs 041 and 042 were approved on draft from Shaun's interview.
+- Saved Shaun's and friends' playtest notes in docs/brainstorm/2026-10-20-playtest-notes.md.
+
+**Next:** see the 2026-10-20 process reset entry above.
+1. Finish 041's last round (the fix list, 041.18 arena lock, 041.19 slower Shardbacks).
+2. Build 042.
+3. Fix the Stages "0/4 arrows" bug.
+4. Run the playtest-notes spec interview.
+
+**Notes:**
+- A container restart lost the uncommitted 041 work, so builders now commit after each item.
+- Run the full e2e once per spec, not twice.
+- No broad tuning grid searches.
+
+## 2026-10-19: Keyword audit for the next spec interview
+**Changed:** wrote docs/brainstorm/2026-10-19-keyword-audit.md, from Shaun's drive rant (Part 2, themes 12–14). It covers today's keyword inventory, its problems, a v0 glossary (a proposal), a two-layer legibility proposal, and the open questions for the keyword spec interview.
+
+Biggest findings:
+- **Overloaded words.** "Burst" means five things and "Shard" seven.
+- **No rules text.** Ammo shows none to the player.
+- **Talents scope by ammo type, not by keyword.** For example, Wide Casing misses landmines.
+- **Pillar 6 blocks Shaun's "bomb set + cluster relic" example,** because gear can't touch offense.
+- **Shown numbers don't match the real ones.** Fire rate rounds to whole ticks.
+
+**Next:** the keyword spec interview with Shaun (before or after his playtest, his choice), then the shippable-build specs (title screen, soft save, start-to-finish flow), Bulwark difficulty and the factory changes.
+
+## 2026-10-19: 028–038 built, awaiting Shaun's playtest
+**Changed:** built all eleven specs on `claude/laughing-volta-uac3nf` as separate commits:
+- 028 foundry flow
+- 029 ammo stages
+- 030 healing
+- 031 HUD and inventory
+- 032 landmarks and champions
+- 033 research
+- 034 Stonefall Hollows and the Bulwark
+- 035 Hollows enemies
+- 036 equipment
+- 037 leveling and talents
+- 038 landmines and cluster bombs (its spec was moved out of 034 word for word)
+
+Each had a plan (docs/plans/), tests written first, `npm run check`, two full `npm run test:e2e` runs, review screenshots (docs/review/NNN/), and a reviewer pass with every finding fixed. The final tree has 1,223 unit tests; e2e has 89 passed and the rest skipped (REVIEW_SHOTS only).
+
+**Next:**
+1. Shaun playtests 021–038 using docs/review/playtest-021-038.md, then /wrapup.
+2. Turn Shaun's drive rant (docs/brainstorm/2026-10-19-drive-rant.md) into the next spec interview. Proposed first: the keyword system audit.
+
+**Notes:**
+- The biggest tuning flags are listed in the checklist:
+  - the Bulwark is too easy (25 s and no damage taken against a circling bot)
+  - frost can't freeze Husks
+  - the entrance fire pulse can't be seen
+- The "Raised after the build" section in each spec lists the choices made where a spec was silent.
+- e2e tests that waited on render tween timing were made independent of machine load in 036.
+
+## 2026-10-19: 028–038 approved; open questions settled
+**Changed:**
+- **Open questions.** Shaun settled the open questions (docs/brainstorm/2026-10-19-open-questions.md, "Shaun's decisions"):
+  - unlimited arrow pierce
+  - ley bolt homing and star split can't combine
+  - parts pay for research only
+  - the highest healing rate wins
+  - lobs and mines get past shields
+  - schematics reveal once banked
+  - relics are their own tier
+  - the ammo name stays "Ley bolt"
+  - the cache refills after 10 minutes of play
+  - every other proposal accepted
+- **Specs.** All ten specs (028–037) now have their answers written in and are approved.
+- **design.md.** Edited on Shaun's approval, each change tagged with the date and spec number.
+- **Backlog.** 038 is landmines and cluster bombs, split out of 034.
+
+**Next:** build 028 → 038 on this branch, one at a time, with plan, tests, verify and review, the same as 021–027.
+
+**Notes:** the prototype.md edits several specs mention are left for each build. 021–027 still await Shaun's playtest.
+
+## 2026-10-19: Content brainstorm, spec interview, draft specs 028–037
+**Changed:**
+- **Brainstorm.** Ran the content brainstorm with the playtest agent, with no code (docs/brainstorm/2026-10-19-content.md). It came from a full playtest of the 021–027 build and two critique rounds.
+- **Interview.** Interviewed Shaun over 11 rounds (docs/brainstorm/2026-10-19-interview.md).
+- **Drafts.** Drafted specs 028–037 from his answers and cross-checked them for consistency. All 98 open questions, each with a proposed answer, are in docs/brainstorm/2026-10-19-open-questions.md.
+- **Backlog.** The backlog rows 028–037 replace the old 028/029 ideas.
+
+**Next:**
+1. Shaun settles the open questions and approves 028–037.
+2. Shaun playtests 021–027.
+3. Build in order 028 → 037.
+
+**Notes:**
+- **Ammo roster:** nets, swords and the flamethrower are cut. The laser is parked.
+- **Firing:** one tube; one press fires the volley.
+- **Healing:** none in the field; heal at safe spots only.
+- **Spec 024 changes again:** each boss core opens one entrance (033), and the volley fires before carried rounds (028).
+- **design.md edits:** several specs list design.md edits "on approval". Each needs Shaun's explicit OK.
+## 2026-10-19: 021–027 built on one branch, awaiting Shaun's playtest
+**Changed:** built all seven approved specs on `claude/laughing-volta-uac3nf`, as separate commits. Shaun approved using one branch, since this cloud session can only push there. Each spec went through a plan (docs/plans/021–027), tests first, `npm run check`, the full `npm run test:e2e`, review screenshots (docs/review/021–027) and an independent reviewer pass. Every review finding was fixed or is listed below for Shaun. The final tree has 636 unit tests; e2e has 52 passed and 14 skipped (the REVIEW_SHOTS-only screenshot tests).
+- **021:** pickup reaches 64 px through anything, and items slide in. No shake on firing. A pointer draws above menus on `DEPTHS.cursor`. The arrowhead has no wood.
+- **022:** hopper click = 1, Shift = half, Ctrl = all, in and out. Includes a fix for macOS Ctrl+click, which Phaser treats as a right click.
+- **023:** a punch when there's no tube or nothing to fire. A `boss` flag on enemies; the Warden is a boss. Dry fire is removed.
+- **024:** the gravity stager is removed. There are 3 intake entrances with a 30-round reservoir each. The centre entrance is open at the start; a warden core opens the sides. The volley fans aimed rounds 15° apart and spaces lobbed rounds 24 px. `nextPress()` is the single source for what a press fires. docs/prototype.md is updated to match.
+- **025:** the 1/2/3 hotbar is centred along the bottom. The tube slot sits above it at 1.4× and shows the carried round, the volley or a fist.
+- **026:** item names in the crafting menu. The build bar is grouped into Logistics, Arrows, Bombs and Ley. Locked pieces stay hidden (Shaun, 2026-10-19).
+- **027:** seven foundry steps for the arrow line, with a build-bar pulse, prompts, an intake marker and a "+ part" popup.
+
+**Next:** Shaun playtests the branch preview, then /wrapup 021–027. Meanwhile: the content brainstorm with the playtester (no code), a report, then a long spec interview (Shaun's request, 2026-10-18).
+
+**Notes, for Shaun to confirm or overrule at playtest:**
+- **023:** a punch waits out the tube's fire interval after a shot.
+- **024:**
+  - The volley ignores the selected hotbar ammo; fed entrances fire whatever they hold.
+  - E at the intake reaches 40 px, and opening the sides takes priority over nearby hopper or crate menus.
+- **025:**
+  - Before the tube, the fist slot sits where the tube slot will be.
+  - The tube slot stays visible in build mode.
+  - The old reservoir glow is gone.
+- **026:**
+  - Text on rows you can't afford is drawn at 0.8 alpha so it stays readable.
+  - Missing inputs are rust-light.
+  - In build mode the tube slot rises above the group labels.
+- **027:** the scripted tutorial run found the shrine fight harder with an arrow line than with the old ley-bolt line, so it is worth feeling out in the playtest.
+- **Known limit:** the crafting menu has no scroll. One more recipe group would need one.
+
+## 2026-10-18: Specs 021–027 from Shaun's playtest notes
+**Changed:** turned Shaun's playtest notes into seven draft specs after a three-round interview:
+- 021: playtest fixes (2-tile pickup through obstacles, no fire shake, a menu pointer, the arrowhead without wood)
+- 022: hopper amounts
+- 023: melee
+- 024: spread from intake entrances, removing the gravity stager
+- 025: the bottom HUD
+- 026: crafting labels and build categories
+- 027: the foundry tutorial
+
+028 (leveling and the skill tree) and 029 (factory depth) are on the backlog as ideas, to plan together.
+**Next:** Shaun reviews and approves 021–027 and answers the two open questions: the per-entrance cap in 024, and which line the tutorial teaches in 027. Then build in the order 021 → 027, and start the 028/029 discussion.
+**Notes:**
+- Interview decisions are recorded in each spec's design references.
+- design.md edits for 023 (melee) and 024 (no stagers) are pre-approved by Shaun, to be made once those specs are approved.
+- My defaults, which Shaun can override: melee tuning numbers; the volley fires carried rounds first, then reservoirs, then melee; the volley cooldown is the slowest ammo's; before the tube is picked up, the HUD shows only the fist.
+
 ## 2026-10-18: 016–020 wrapped up
 **Changed:**
 - 016–020 were merged to main (one merge of PR #22, which carried the stack) and the Pages build for main went green.

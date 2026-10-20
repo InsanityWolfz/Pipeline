@@ -1,9 +1,13 @@
 import { TILE_SIZE } from '../../data/config';
 import { GROUND } from '../../data/art/ground';
+import { GROTTO } from '../../data/grotto';
 import { OVERWORLD } from '../../data/overworld';
 import { TILE, type Room } from '../../data/rooms';
 import { inkCss } from '../vector/draw';
 import { tileHash } from '../roomTiles';
+import { paintLandmarks } from './landmarkGround';
+import { paintHollows } from './hollowsGround';
+import { inHollows } from '../../data/hollows';
 
 // The overworld's ground (017), drawn once into chunk textures: grass with lighter
 // and darker patches, sun dapple under the groves, worn paving in the ruins, dirt
@@ -39,6 +43,47 @@ function polyline(c: CanvasRenderingContext2D, pts: readonly (readonly [number, 
 
 const inRect = (r: { x0: number; y0: number; x1: number; y1: number }, tx: number, ty: number): boolean => tx >= r.x0 && tx <= r.x1 && ty >= r.y0 && ty <= r.y1;
 
+/**
+ * The Frozen Grotto's frosted ground (029): a pale wash over its clearing with soft rounded edges, drifts of snow,
+ * and little sheets of ice that catch the light.
+ */
+function frost(c: CanvasRenderingContext2D, each: (fn: (tx: number, ty: number, hash: number) => void) => void): void {
+  const f = GROUND.frost;
+  const a = GROTTO.area;
+  // One path of overlapping blobs, a blob per tile (smaller a tile outside the clearing), filled once: an even wash
+  // with a ragged, rounded edge.
+  c.save();
+  c.globalAlpha = f.washAlpha;
+  c.fillStyle = inkCss(f.wash);
+  c.beginPath();
+  for (let ty = a.y0 - 1; ty <= a.y1 + 1; ty++) {
+    for (let tx = a.x0 - 1; tx <= a.x1 + 1; tx++) {
+      const inside = inRect(a, tx, ty);
+      const hash = tileHash(tx, ty);
+      const r = inside ? f.edge + (hash % (f.jitter + 1)) : f.edge * 0.5 + (hash % (f.rimJitter + 1));
+      if (!inside && hash % f.rimSkip === 0) continue;
+      const [x, y] = centre({ tx, ty });
+      c.moveTo(x + r, y);
+      c.ellipse(x, y, r, r * f.squash, 0, 0, Math.PI * 2);
+    }
+  }
+  c.fill();
+  c.restore();
+  each((tx, ty, hash) => {
+    if (!inRect(a, tx, ty)) return;
+    const [x, y] = centre({ tx, ty });
+    const [dsx, dsy] = f.driftShift;
+    if (hash % f.driftEvery === 0) ellipse(c, x + ((hash >>> 5) % dsx) - dsx / 2, y + ((hash >>> 9) % dsy) - dsy / 2, f.driftRx + ((hash >>> 3) % (f.driftGrow + 1)), f.driftRy, f.drift, f.driftAlpha);
+    if (hash % f.glintEvery === 1) {
+      const [isx, isy] = f.iceShift;
+      const gx = x + ((hash >>> 7) % isx) - isx / 2;
+      const gy = y + ((hash >>> 11) % isy) - isy / 2;
+      ellipse(c, gx, gy, f.iceSize[0], f.iceSize[1], f.ice, f.iceAlpha);
+      ellipse(c, gx + f.glintAt[0], gy + f.glintAt[1], f.glintSize[0], f.glintSize[1], f.glint, f.glintAlpha);
+    }
+  });
+}
+
 /** Draws the ground under the world rectangle (x0, y0, w, h), with tiles a margin around it so blobs cross chunk edges seamlessly. */
 export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, y0: number, w: number, h: number, pxPerUnit: number): void {
   const symbol = (tx: number, ty: number): string | undefined => room.rows[ty]?.[tx];
@@ -62,6 +107,8 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
       ellipse(c, x + ((hash >>> 4) % 24) - 12, y, r, r * 0.55, (hash >>> 12) % 2 ? GROUND.patchDark : GROUND.patchLight, 0.6);
     }
   });
+  // Stonefall Hollows' quarry stone over its columns (034), under the road.
+  paintHollows(c, each, symbol);
   // Sun dapple where the groves meet open grass.
   each((tx, ty, hash) => {
     if (symbol(tx, ty) !== TILE.floor || hash % GROUND.dappleEvery !== 0) return;
@@ -94,6 +141,8 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
     const [x, y] = centre({ tx, ty });
     ellipse(c, x + ((hash >>> 5) % 20) - 10, y + ((hash >>> 9) % 14) - 7, 2.2, 1.4, GROUND.pathFleck);
   });
+  frost(c, each);
+  paintLandmarks(c, each, symbol);
   // Ponds: a sandy rim, the shallows, deep water, and the light on it.
   for (const p of room.terrain?.ponds ?? []) {
     const [x, y] = centre({ tx: p.cx, ty: p.cy });
@@ -129,14 +178,15 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
     polyline(c, pts, 1.1, GROUND.ley, 0.75);
   }
   c.restore();
-  // Tufts and flowers on open grass.
+  // Tufts and flowers on open grass; in the Frozen Grotto, rimed tufts and no flowers (029).
   each((tx, ty, hash) => {
-    if (symbol(tx, ty) !== TILE.floor) return;
+    if (symbol(tx, ty) !== TILE.floor || inHollows(tx, ty)) return;
+    const frozen = inRect(GROTTO.area, tx, ty);
     const [x, y] = centre({ tx, ty });
     const ox = ((hash >>> 6) % 20) - 10;
     const oy = ((hash >>> 10) % 16) - 8;
     if (hash % GROUND.tuftEvery === 0) {
-      c.strokeStyle = inkCss(GROUND.tuft);
+      c.strokeStyle = inkCss(frozen ? GROUND.frost.tuft : GROUND.tuft);
       c.lineWidth = 1.2;
       c.beginPath();
       c.moveTo(x + ox - 2, y + oy);
@@ -146,7 +196,7 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
       c.moveTo(x + ox + 2, y + oy);
       c.lineTo(x + ox + 3, y + oy - 4);
       c.stroke();
-    } else if (hash % GROUND.flowerEvery === 1) {
+    } else if (!frozen && hash % GROUND.flowerEvery === 1) {
       ellipse(c, x + ox, y + oy, 1.6, 1.6, GROUND.flowers[(hash >>> 14) % GROUND.flowers.length] ?? GROUND.tuft);
     }
   });

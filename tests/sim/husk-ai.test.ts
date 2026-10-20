@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { straightAmmo } from '../../src/data/ammo';
 import { TICK_RATE, VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { damageEnemy } from '../../src/sim/enemies';
 import { arena, at, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, SWIPE_LANDS } from './fight';
@@ -272,7 +273,7 @@ describe('Husk swipe', () => {
     const { s, e } = windingUp();
     damageEnemy(s, e, 10, 0, 1);
     run(s, HUSK.hitKnockTicks);
-    expect(e.y).toBeCloseTo(PLAYER_AT.y + HUSK.hitKnockback, 6);
+    expect(e.y).toBeCloseTo(PLAYER_AT.y + straightAmmo('arrow').knockback * HUSK.weight, 6);
     expect(e.mode).toBe('windup');
     expect([e.swipeDirX, e.swipeDirY]).toEqual([-1, 0]);
     run(s, SWIPE_LANDS - 1 - HUSK.hitKnockTicks);

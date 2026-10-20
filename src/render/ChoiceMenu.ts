@@ -22,6 +22,8 @@ export class ChoiceMenu<T> {
   private rows: { images: GameObjects.Image[]; text: TextLine }[] = [];
   private choices: Choice<T>[] = [];
   private key = '';
+  /** How far the rows sit left or right of the screen's centre, px (029: the bench moves over for its Stages panel). */
+  private shift = 0;
   private readonly hover: RowHover;
   isOpen = false;
 
@@ -41,42 +43,54 @@ export class ChoiceMenu<T> {
   }
 
   overUi(x: number, y: number): boolean {
-    return this.isOpen && menuRows(this.choices.length).some((r) => inRect(r, x, y));
+    return this.isOpen && this.rects(this.choices.length).some((r) => inRect(r, x, y));
+  }
+
+  /** Each shown row's text and its box on screen, view px (032: for the test hook). */
+  get rowsShown(): { text: string; x: number; y: number; w: number; h: number }[] {
+    const rects = this.rects(this.choices.length);
+    return this.choices.map((c, i) => ({ text: c.text, x: rects[i]?.x ?? 0, y: rects[i]?.y ?? 0, w: rects[i]?.w ?? 0, h: rects[i]?.h ?? 0 }));
   }
 
   /** The value of the row under a screen point, if open. */
   valueAt(x: number, y: number): T | undefined {
     if (!this.isOpen) return undefined;
-    const i = menuRows(this.choices.length).findIndex((r) => inRect(r, x, y));
+    const i = this.rects(this.choices.length).findIndex((r) => inRect(r, x, y));
     return this.choices[i]?.value;
   }
 
   /** The cursor is at a screen point (020): its row lights, with the hover sound on a new row. */
   pointAt(x: number, y: number): void {
-    const i = this.isOpen ? menuRows(this.choices.length).findIndex((r) => inRect(r, x, y)) : -1;
+    const i = this.isOpen ? this.rects(this.choices.length).findIndex((r) => inRect(r, x, y)) : -1;
     if (!this.hover.set(i)) return;
     for (const [k, r] of this.rows.entries()) r.images[0]?.setFrame(this.hover.frame(k));
   }
 
   /** Flashes the row under a screen point, as it's pressed. */
   flashAt(x: number, y: number): void {
-    const r = this.isOpen ? menuRows(this.choices.length).find((rect) => inRect(rect, x, y)) : undefined;
+    const r = this.isOpen ? this.rects(this.choices.length).find((rect) => inRect(rect, x, y)) : undefined;
     if (r) flashRow(this.scene, r.x, r.y);
   }
 
-  /** Shows these rows (while open), rebuilding only on a change. */
-  show(choices: readonly Choice<T>[]): void {
+  /** The rows' rects on screen: centred, then moved by the shift. */
+  private rects(n: number): ReturnType<typeof menuRows> {
+    return menuRows(n).map((r) => ({ ...r, x: r.x + this.shift }));
+  }
+
+  /** Shows these rows (while open), `shift` px off centre, rebuilding only on a change. */
+  show(choices: readonly Choice<T>[], shift = 0): void {
     const list = this.isOpen ? [...choices] : [];
-    const key = list.map((c) => `${c.icons.join('+')}:${c.text}`).join('|');
+    const key = `${shift}#${list.map((c) => `${c.icons.join('+')}:${c.text}`).join('|')}`;
     if (key === this.key) return;
     this.key = key;
+    this.shift = shift;
     for (const r of this.rows) {
       for (const o of r.images) o.destroy();
       r.text.destroy();
     }
     this.choices = list;
     const L = PICKER_LAYOUT;
-    const rects = menuRows(list.length);
+    const rects = this.rects(list.length);
     this.panel.clear();
     if (rects.length > 0) {
       const x0 = Math.min(...rects.map((r) => r.x)) - L.pad;

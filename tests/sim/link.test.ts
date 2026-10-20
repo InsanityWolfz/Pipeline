@@ -3,13 +3,13 @@ import { ammoDef } from '../../src/data/ammo';
 import { PLAYTEST_START } from '../../src/data/playtest';
 import { DEFAULT_START } from '../../src/data/player';
 import { FOUNDRY_ROOM } from '../../src/data/rooms';
-import { ATTUNE_TICKS, RESERVOIR_CAP } from '../../src/data/tube';
+import { ATTUNE_TICKS } from '../../src/data/tube';
+import { ENTRANCE_CAPS } from '../../src/data/foundry';
 import { unlockedPieces } from '../../src/sim/placement';
 import type { HopperState } from '../../src/sim/pieces';
 import { createSim } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
-import { slotCount } from '../../src/sim/tube';
 import { arena, atEntrance, command, die, runUntilKo, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, SEED } from './fight';
 import { foundry, put, stepOutside } from './foundryKit';
 import { OVERWORLD_ROOM } from '../../src/data/overworld';
@@ -24,7 +24,12 @@ function atHallDoor() {
   return s;
 }
 
-/** A foundry sim, attuned, with an empty reservoir. */
+/** Sets what the middle entrance (the one open from the start) holds. */
+function setMiddle(s: ReturnType<typeof foundry>, ammoId: string | null, count: number): void {
+  Object.assign(s.link.entrances[1] ?? {}, { ammoId, count });
+}
+
+/** A foundry sim, attuned, with empty entrances. */
 function attuned() {
   return foundry();
 }
@@ -83,65 +88,53 @@ describe('attunement', () => {
     expect(s.player.x).toBeLessThan(x);
   });
 
-  it('survives a KO, and so does the reservoir', () => {
+  it('survives a KO, and so do the entrances', () => {
     const s = attuned();
-    s.link.reservoir = { itemId: 'arrow', count: 7 };
+    setMiddle(s, 'arrow', 7);
     s.roomId = HALL;
     movePlayer(s, PLAYER_AT.x, PLAYER_AT.y);
     placeHusk(s, PLAYER_AT.x + 20, PLAYER_AT.y);
     s.player.health = HUSK.swipe.damage;
     runUntilKo(s);
     expect(s.link.attuned).toBe(true);
-    expect(s.link.reservoir).toEqual({ itemId: 'arrow', count: 7 });
+    expect(s.link.entrances[1]).toMatchObject({ open: true, ammoId: 'arrow', count: 7 });
   });
 
   it('shows in the summary', () => {
     const s = attuned();
-    s.link.reservoir = { itemId: 'bomb', count: 3 };
-    expect(summarize(s).link).toEqual({
-      attuned: true,
-      attunePulse: 0,
-      reservoir: { item: 'bomb', count: 3, cap: RESERVOIR_CAP },
-    });
+    setMiddle(s, 'bomb', 3);
+    expect(summarize(s).link).toEqual({ attuned: true, attunePulse: 0 });
+    expect(summarize(s).intake.entrances[1]).toMatchObject({ open: true, ammo: 'bomb', count: 3, cap: ENTRANCE_CAPS[0] });
   });
 });
 
 describe('firing from the reservoir', () => {
-  it('fires carried rounds first, then the reservoir, flagging those shots', () => {
+  it('fires the reservoir first, flagging those shots, then carried rounds (028)', () => {
     const s = stepOutside(attuned());
     s.inventory.arrow = 1;
-    s.link.reservoir = { itemId: 'arrow', count: 2 };
+    setMiddle(s, 'arrow', 2);
     const aim = fireAt(s.player.x - 100, s.player.y);
     run(s, 1, aim);
-    expect([s.inventory.arrow, s.link.reservoir.count, s.tube.fromReservoir]).toEqual([0, 2, false]);
-    run(s, FIRE_TICKS, aim);
-    expect([s.link.reservoir.count, s.tube.fromReservoir]).toEqual([1, true]);
+    expect([s.inventory.arrow, s.link.entrances[1]?.count, s.tube.fromReservoir]).toEqual([1, 1, true]);
     expect(summarize(s).tube.fromReservoir).toBe(true);
     run(s, FIRE_TICKS, aim);
-    expect(s.link.reservoir).toEqual({ itemId: null, count: 0 });
+    expect(s.link.entrances[1]).toEqual({ open: true, ammoId: null, count: 0, cooldown: FIRE_TICKS });
+    expect(s.tube.fromReservoir).toBe(true);
+    run(s, FIRE_TICKS, aim);
+    expect([s.inventory.arrow, s.tube.fromReservoir]).toEqual([0, false]);
     expect(s.arrows).toHaveLength(3);
     run(s, FIRE_TICKS, aim);
-    expect(s.tube.dryFire).toBeGreaterThan(0);
+    expect(s.events.melees).toHaveLength(1);
   });
 
-  it('dry-fires when the reservoir holds a different ammo', () => {
+  it('fires the volley when an entrance holds a different ammo to the one selected (024)', () => {
     const s = stepOutside(attuned());
     s.inventory.arrow = 0;
-    s.link.reservoir = { itemId: 'bomb', count: 5 };
+    setMiddle(s, 'bomb', 5);
     run(s, 1, fireAt(s.player.x - 100, s.player.y));
-    expect(s.tube.dryFire).toBeGreaterThan(0);
-    expect(s.link.reservoir.count).toBe(5);
-  });
-
-  it('the slot count switches from carried rounds to the reservoir', () => {
-    const s = attuned();
-    s.inventory.arrow = 2;
-    s.link.reservoir = { itemId: 'arrow', count: 9 };
-    expect(slotCount(s)).toEqual({ count: 2, fromReservoir: false });
-    s.inventory.arrow = 0;
-    expect(slotCount(s)).toEqual({ count: 9, fromReservoir: true });
-    s.tube.ammoId = 'bomb';
-    expect(slotCount(s)).toEqual({ count: 0, fromReservoir: false });
+    expect(s.events.melees).toHaveLength(0);
+    expect(s.bombs).toHaveLength(1);
+    expect(s.link.entrances[1]?.count).toBe(4);
   });
 
   it('a ley bolt line into the intake refills the reservoir while the player fires from it', () => {
@@ -155,7 +148,7 @@ describe('firing from the reservoir', () => {
     put(s, 'grinder', 12, 3, 'up');
     put(s, 'focuser', 12, 2, 'up');
     put(s, 'conduit', 12, 1, 'up');
-    runUntil(s, (x) => x.link.reservoir.count >= 6, 900);
+    runUntil(s, (x) => (x.link.entrances[1]?.count ?? 0) >= 6, 900);
     stepOutside(s);
     let fromReservoir = 0;
     run(s, 300, (x) => {
@@ -171,7 +164,12 @@ describe('the playtest start', () => {
     const s = createSim(SEED, { start: PLAYTEST_START });
     expect(s.inventory).toMatchObject({ arrow: 99, bomb: 99, 'ley-bolt': 99, wood: 99, 'husk-resin': 99, shaft: 20, fuse: 20 });
     expect(s.crafted).toEqual(PLAYTEST_START.crafted);
-    expect(unlockedPieces(s)).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'gravity-stager', 'cutter', 'knapper', 'spinner', 'assembler', 'shaper', 'fuse-maker', 'grinder', 'packer', 'focuser']);
+    // 029: every stage too, with rimestone to feed the frost rune and no tagged rounds carried; 038: the Cluster die and the landmine chain.
+    expect(unlockedPieces(s)).toEqual([
+      'conduit', 'sorter', 'hopper', 'crate', 'cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'shaper', 'fuse-maker', 'packer', 'cluster-die', 'grinder', 'focuser', 'ley-guide', 'prism-lens', 'plate-press', 'mine-packer',
+    ]);
+    expect(s.inventory['rimestone']).toBe(99);
+    expect(s.inventory['arrow+frost']).toBeUndefined();
     // The start is banked, so a death keeps what's still carried of it (011).
     s.inventory = { wood: 1 };
     die(s);

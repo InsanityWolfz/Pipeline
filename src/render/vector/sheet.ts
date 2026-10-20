@@ -61,14 +61,21 @@ if (sideIdle) section('Wanderer: facing left', [wandererCell('idle', { ...sideId
 // by frame-name prefixes rather than the asset tables, which is fine for a review sheet that ships in no build.
 const FAMILIES: readonly [title: string, test: (name: string) => boolean][] = [
   ...MACHINE_IDS.map((id): [string, (n: string) => boolean] => [`Machine: ${id} (idle, jammed, working)`, (n) => n.startsWith(`machine-${id}-`)]),
+  ['Cold and the Split', (n) => n.startsWith('ice-case') || n.startsWith('split-') || n.startsWith('shard')],
+  ['Restoration (033): diagrams, wall panels, the sealed wing, the splitter and merger, research items, the pillar', (n) => /^(research-|splitter-|merger-|schematic-|map-schematic|item-ancient|item-aqueduct|item-bulwark|item-schematic|emblem-splitter|emblem-merger)/.test(n)],
+  ['Stonefall Hollows (034): cliffs, the aqueduct, rubble, ley-iron, the altar, the enemy bomb, the map icon', (n) => /^(ow-cliff|ow-aqueduct|ow-fallen|ow-rubble|item-ley-iron|node-ley-iron|altar-|enemy-bomb|map-aqueduct)/.test(n)],
+  ['Frost rounds on every family (039): the base icon with the frost badge', (n) => /^icon-(bomb|ley-bolt|landmine)-frost/.test(n)],
+  ['Landmines and cluster bombs (038): the mine in flight and armed, its icon, the iron plate, bomblets, the flashes, the cluster bomb', (n) => /^(landmine|icon-landmine|item-iron-plate|bomblet|mine-flash|icon-bomb-cluster)/.test(n)],
   ['Conduits and sorters', (n) => n.startsWith('conduit-') || n.startsWith('sorter-')],
-  ['Hoppers, crates and the gravity stager', (n) => n.startsWith('hopper-') || n === 'crate' || n.startsWith('gravity-stager')],
+  ['Hoppers and crates', (n) => n.startsWith('hopper-') || n === 'crate'],
   ['Build arrows and status markers', (n) => n.includes('-arrow-') || n.startsWith('status-')],
   ['Items, ammo and emblems', (n) => n.startsWith('item-') || n.startsWith('icon-') || n.startsWith('emblem-')],
   ['Fixtures, the pylon and the foundry', (n) => /^(identification-bench|stash|supply-port|doorway-side|waystone|pylon-|door-rubble|ley-crystal|intake-|floor-|wall|prop-|ruin-)/.test(n)],
   ['Gathering nodes', (n) => n.startsWith('node-')],
+  ['Ley Springs', (n) => n.startsWith('ley-spring') || n.startsWith('spring-')],
+  ['Landmarks (032): cut blocks, old trees, the marsh, hollow lips, the reliquary, map icons, the champion glow', (n) => /^(ow-cut-block|ow-old-tree|ow-marsh|ow-lily|ow-hollow|cache-|map-|champion-)/.test(n)],
   ['Overworld', (n) => n.startsWith('ow-')],
-  ['HUD and menus', (n) => n.startsWith('hud-') || n.startsWith('craft-') || n.startsWith('menu-') || n === 'key-cap' || n === 'crosshair' || n === 'objective-tick'],
+  ['HUD and menus', (n) => n.startsWith('hud-') || n.startsWith('craft-') || n.startsWith('menu-') || n === 'key-cap' || n === 'crosshair' || n === 'pointer' || n === 'objective-tick'],
 ];
 
 const groups = new Map<string, Cell[]>();

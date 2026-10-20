@@ -1,135 +1,156 @@
-import type { GameObjects, Scene } from 'phaser';
-import { DEPTHS, HUD_HEALTH_LAYOUT, HUD_MATERIALS_LAYOUT, HUD_SLOT_LAYOUT, SPRITES } from '../data/assets';
-import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
-import { itemDef, ITEMS } from '../data/items';
-import { MAX_HEALTH } from '../data/player';
-import { STARTING_AMMO } from '../data/tube';
-import type { Inventory } from '../sim/inventory';
-import { count } from '../sim/inventory';
-import type { ArmorPiece } from '../sim/armor';
-import type { LinkState } from '../sim/link';
-import type { PlayerState } from '../sim/player';
-import { slotCount, slotItem, type TubeState } from '../sim/tube';
-import { AmmoStripView } from './AmmoStripView';
-import { HUD_ARMOR_LAYOUT } from '../data/hudLayout';
-import { colorOf } from './color';
-import { TextLine } from './textLine';
-import { toView } from './scale';
-import { addVector } from './vector/textures';
+import type { Scene } from 'phaser';
+import { playerStats } from '../sim/stats';
+import { xpToNext } from '../sim/leveling';
+import type { SimEvents } from '../sim/events';
+import { unlockedPieces } from '../sim/placement';
+import type { SimState } from '../sim/state';
+import { hudActive } from '../sim/volley';
+import type { ScreenBox } from './bottomHud';
+import { EdgeTint } from './EdgeTint';
+import { buildBarBox } from './foundryLayout';
+import { HealthBar, type HealthShown } from './HealthBar';
+import { HotbarView } from './HotbarView';
+import { InventoryPanel, type InventoryShown } from './InventoryPanel';
+import { ResearchList, type ResearchListState } from './ResearchList';
+import { PickupFeed } from './PickupFeed';
+import { shownKey } from './itemShown';
+import { TubeSlotView, type TubeSlotState } from './TubeSlotView';
+import { BossBar, type BossBarShown } from './BossBar';
+import { NO_TALENT_PANEL, TalentPanel, type TalentPanelState, type TalentTabState } from './TalentPanel';
+import type { TipHit } from './tipTypes';
+import type { BuildTabState } from './BuildTab';
+import type { ChipId } from '../data/legibility';
 
-/** One material row: its icon and count, shown only while the player holds some. */
-interface MaterialRow {
-  itemId: string;
-  icon: GameObjects.Image;
-  count: TextLine;
+/** The bottom HUD as drawn (025), for `ui().hud`: the hotbar row's rect and whether it shows, and the tube slot. */
+export interface BottomHudState {
+  /** `selected` is the highlighted cell's index (0 for key 1). */
+  hotbar: ScreenBox & { shown: boolean; selected: number };
+  tubeSlot: TubeSlotState;
 }
 
-// The hotbar: slot 1 with its selected ammo's icon and count (carried rounds,
-// else the reservoir's, with a ley glow while it fires from the foundry), and the
-// ammo strip beside it; the health bar and the raw materials and parts held,
-// top-left. Fixed to the screen; reads sim state only.
-export class HudView {
-  private readonly slot: GameObjects.Image;
-  private readonly icon: GameObjects.Image;
-  private readonly glow: GameObjects.Image;
-  private readonly count: TextLine;
-  private readonly crosshair: GameObjects.Image;
-  private readonly scene: Scene;
-  private readonly healthFill: GameObjects.Graphics;
-  private readonly health: GameObjects.Image;
-  private readonly materials: MaterialRow[];
-  private readonly strip: AmmoStripView;
-  private readonly armorIcon: GameObjects.Image;
-  private readonly armorCount: TextLine;
+/** The 031 HUD pieces' part of `ui()`: the inventory panel, the pickup feed and the HP bar. */
+export interface HudPanelsState {
+  inventory: InventoryShown;
+  /** 033: the research list (J). */
+  researchList: ResearchListState;
+  pickupFeed: { itemId: string; count: number }[];
+  health: HealthShown;
+  /** 034: the boss bar along the top while a region boss fights. */
+  bossBar: BossBarShown;
+  /** 037: the tree panel (T). */
+  talents: TalentPanelState;
+  /** 040: the T panel's tab, and the Build tab's rows while it shows. */
+  talentPanel: TalentTabState;
+  buildTab: BuildTabState;
+}
 
-  /** A screen point on any part of the HUD: a press there never fires (015). */
-  overUi(x: number, y: number): boolean {
-    const inBox = (b: { x: number; y: number; w: number; h: number }): boolean => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h;
-    const imageBox = (o: GameObjects.Image) => ({ x: o.x, y: o.y, w: o.displayWidth, h: o.displayHeight });
-    const rows = this.materials.filter((m) => m.icon.visible).map((m) => ({ ...imageBox(m.icon), w: HUD_MATERIALS_LAYOUT.rowWidth }));
-    const parts = [imageBox(this.slot), this.strip.box, imageBox(this.health), ...rows];
-    if (this.armorIcon.visible) parts.push(imageBox(this.armorIcon));
-    return parts.some(inBox);
-  }
+/** The 031 part of `ui()` before the scene has built its views. */
+export const NO_HUD_PANELS: HudPanelsState = {
+  inventory: { open: false, groups: [] },
+  researchList: { open: false, groups: [] },
+  pickupFeed: [],
+  health: { box: { x: 0, y: 0, w: 0, h: 0 }, text: '', low: false, healing: false, chunk: 0, xp: { text: '', fill: 0, pip: false, tick: 0, bar: { x: 0, y: 0, w: 0, h: 0 } } },
+  bossBar: null,
+  talents: NO_TALENT_PANEL,
+  talentPanel: { open: false, tab: 'talents', tabs: [], panel: { x: 0, y: 0, w: 0, h: 0 } },
+  buildTab: { rows: [] },
+};
+
+const inBox = (b: ScreenBox, x: number, y: number): boolean => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h;
+
+// The HUD: along the bottom (025), the hotbar row centred with the tube slot above
+// it showing what the next press fires; bottom-left the HP bar with the armor value
+// (031), red screen edges when low; top-left the pickup feed; and the inventory panel
+// (I or Tab). Fixed to the screen; reads sim state only. Its motion runs on tween time,
+// so the test hook's tween speed slows it with every other effect.
+export class HudView {
+  private readonly scene: Scene;
+  private readonly hotbar: HotbarView;
+  private readonly tubeSlot: TubeSlotView;
+  private readonly health: HealthBar;
+  private readonly edges: EdgeTint;
+  private readonly feed: PickupFeed;
+  readonly inventory: InventoryPanel;
+  /** The research list (033, J). */
+  readonly research: ResearchList;
+  /** A region boss's bar along the top (034). */
+  private readonly boss: BossBar;
+  /** The tree panel (037, T). */
+  readonly talents: TalentPanel;
 
   constructor(scene: Scene) {
     this.scene = scene;
-    const fixed = <T extends GameObjects.Components.ScrollFactor & GameObjects.Components.Depth>(o: T): T => {
-      o.setScrollFactor(0).setDepth(DEPTHS.hud);
-      return o;
-    };
-    this.slot = fixed(addVector(scene, 0, 0, SPRITES.hudSlot).setOrigin(0));
-    const left = Math.round((VIEW_WIDTH - this.slot.displayWidth) / 2);
-    const top = VIEW_HEIGHT - this.slot.displayHeight - HUD_SLOT_LAYOUT.margin;
-    this.slot.setPosition(left, top);
-    const { icon, count: at } = HUD_SLOT_LAYOUT;
-    const startIcon = itemDef(slotItem({ ammoId: STARTING_AMMO })).icon;
-    this.icon = fixed(addVector(scene, left + icon.x, top + icon.y, startIcon).setOrigin(0));
-    this.glow = fixed(addVector(scene, left, top, SPRITES.hudSlotGlow).setOrigin(0)).setVisible(false);
-    this.count = new TextLine(scene, left + at.x, top + at.y, DEPTHS.hud, false, 'count');
-    this.strip = new AmmoStripView(scene, left + this.slot.displayWidth, top + this.slot.displayHeight);
-
-    const hp = HUD_HEALTH_LAYOUT;
-    this.health = fixed(addVector(scene, hp.x, hp.y, SPRITES.hudHealth).setOrigin(0));
-    this.healthFill = fixed(scene.add.graphics({ x: hp.x + hp.fill.x, y: hp.y + hp.fill.y }));
-    const ar = HUD_ARMOR_LAYOUT;
-    this.armorIcon = fixed(addVector(scene, ar.x, ar.y, SPRITES.iconArmorLight).setOrigin(0)).setVisible(false);
-    this.armorCount = new TextLine(scene, ar.x + ar.count.x, ar.y + ar.count.y, DEPTHS.hud, false, 'count');
-
-    // Raw materials and parts, in ITEMS order; ammo shows in the hotbar instead. Rows are placed each frame.
-    this.materials = Object.values(ITEMS)
-      .filter((it) => it.kind !== 'ammo')
-      .map((it) => ({
-        itemId: it.id,
-        icon: fixed(addVector(scene, 0, 0, it.icon).setOrigin(0)),
-        count: new TextLine(scene, 0, 0, DEPTHS.hud, false, 'count'),
-      }));
-
-    scene.input.setDefaultCursor('none');
-    // Over the crafting menu too, where it's the pointer for clicking rows.
-    this.crosshair = fixed(addVector(scene, 0, 0, SPRITES.crosshair)).setDepth(DEPTHS.menu + 1);
+    this.edges = new EdgeTint(scene);
+    this.hotbar = new HotbarView(scene);
+    this.tubeSlot = new TubeSlotView(scene);
+    this.health = new HealthBar(scene);
+    this.feed = new PickupFeed(scene);
+    this.research = new ResearchList(scene);
+    this.inventory = new InventoryPanel(scene);
+    this.boss = new BossBar(scene);
+    this.talents = new TalentPanel(scene);
   }
 
-  update(tube: TubeState, inventory: Inventory, player: PlayerState, link: LinkState, worn: ArmorPiece | undefined, hasTube: boolean): void {
-    // No tube yet (012): no hotbar.
-    for (const o of [this.slot, this.icon]) o.setVisible(hasTube);
-    this.count.setVisible(hasTube);
-    this.strip.setVisible(hasTube);
-    this.armorIcon.setVisible(worn !== undefined);
-    if (worn) this.armorIcon.setFrame(worn.weight === 'heavy' ? SPRITES.iconArmorHeavy : SPRITES.iconArmorLight);
-    this.armorCount.set(worn ? String(worn.armor) : '');
-    const fill = HUD_HEALTH_LAYOUT.fill;
-    this.healthFill.clear();
-    this.healthFill.fillStyle(colorOf(HUD_HEALTH_LAYOUT.fillColor));
-    this.healthFill.fillRect(0, 0, Math.round((fill.w * player.health) / MAX_HEALTH), fill.h);
+  /** The tree panel's hover follows the pointer (view px). */
+  pointAt(x: number, y: number): void {
+    this.talents.pointAt(x, y);
+  }
 
-    const m = HUD_MATERIALS_LAYOUT;
-    let row = 0;
-    for (const r of this.materials) {
-      const n = count(inventory, r.itemId);
-      const shown = n > 0;
-      r.icon.setVisible(shown);
-      r.count.setVisible(shown);
-      if (!shown) continue;
-      const y = m.y + row * m.rowStep;
-      r.icon.setPosition(m.x, y);
-      r.count.moveTo(m.x + m.count.x, y + m.count.y);
-      r.count.set(String(n));
-      row += 1;
+  /** What's under a view point for a tip (040): a talent node, an inventory ammo row, the tube slot's round, a hotbar slot. */
+  tipAt(x: number, y: number): TipHit | null {
+    return this.talents.tipAt(x, y) ?? this.inventory.tipAt(x, y) ?? this.tubeSlot.tipAt(x, y) ?? this.hotbar.tipAt(x, y);
+  }
+
+  /** A Build tab row's chip under a view point (040). */
+  chipAt(x: number, y: number): ChipId | null {
+    return this.talents.chipAt(x, y);
+  }
+
+  /** A screen point on any part of the HUD or the open inventory panel: a press there never fires (015). */
+  overUi(x: number, y: number): boolean {
+    const parts = [this.tubeSlot.box, this.health.box, ...this.feed.boxes];
+    if (this.hotbar.visible) parts.push(this.hotbar.box);
+    return parts.some((b) => inBox(b, x, y)) || this.inventory.overUi(x, y) || this.talents.overUi(x, y);
+  }
+
+  /** What the bottom HUD shows, for the test hook. */
+  get bottom(): BottomHudState {
+    return { hotbar: { ...this.hotbar.box, shown: this.hotbar.visible, selected: this.hotbar.selected }, tubeSlot: this.tubeSlot.state };
+  }
+
+  /** The inventory panel, pickup feed and HP bar as drawn (031), for the test hook. */
+  get panels(): HudPanelsState {
+    return { inventory: this.inventory.shown, researchList: this.research.shown, pickupFeed: this.feed.shown, health: this.health.shown, bossBar: this.boss.shown, talents: this.talents.shown, talentPanel: this.talents.tabState, buildTab: this.talents.buildRows };
+  }
+
+  /**
+   * No tube yet (012): no hotbar row, and the tube slot shows the fist. Building: the build bar takes the row's place,
+   * the tube slot rises over its group labels (026), and the HP block rises too if the bar reaches it (031).
+   * `events` are every tick's since the last draw (the feed reads their pickups); `deltaMs` is the frame's time.
+   */
+  update(sim: SimState, events: SimEvents, deltaMs: number): void {
+    const dt = deltaMs * this.scene.tweens.timeScale;
+    const building = sim.building;
+    this.hotbar.setVisible(sim.hasTube && !building);
+    this.hotbar.update(sim.tube, sim.inventory);
+    this.tubeSlot.update(hudActive(sim), building);
+    const p = sim.player;
+    const stats = playerStats(sim);
+    const toNext = xpToNext(sim);
+    const xp = { level: sim.level, fill: toNext > 0 ? sim.xp / toNext : 1, points: sim.talentPoints, gained: events.xp.length > 0 };
+    const input = { health: p.health, max: stats.maxHealth, healing: p.healing !== null, dying: p.dying > 0, armor: stats.armor, xp };
+    this.health.update(input, building ? buildBarBox(unlockedPieces(sim)) : null, dt);
+    this.edges.update(this.health.shown.low, this.health.pulse);
+    this.feed.update(events.pickups.map((p) => shownKey(sim, p.itemId)), dt);
+    // A KO closes the panel: the wake panel takes the screen (and the panel can't open again while it shows).
+    if (events.ko) {
+      this.inventory.setOpen(false);
+      this.research.setOpen(false);
+      this.talents.setOpen(false);
     }
-
-    const item = slotItem(tube);
-    this.icon.setFrame(itemDef(item).icon);
-    const shown = slotCount({ tube, inventory, link });
-    this.count.set(String(shown.count));
-    this.glow.setVisible(hasTube && shown.fromReservoir);
-    this.strip.update(tube, inventory);
-
-    if (tube.dryFire > 0) this.slot.setTint(colorOf(HUD_SLOT_LAYOUT.dryFireTint));
-    else this.slot.clearTint();
-
-    const pointer = this.scene.input.activePointer;
-    const at = toView(pointer.x, pointer.y, this.scene.cameras.main.zoom);
-    this.crosshair.setPosition(at.x, at.y);
+    this.inventory.update(sim);
+    this.research.update(sim);
+    this.talents.update(sim);
+    this.boss.update(sim);
   }
 }

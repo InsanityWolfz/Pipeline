@@ -4,6 +4,7 @@ import {
   centre,
   clickBar,
   clickTile,
+  ctrlClick,
   enterFoundry,
   LEY_VEIN,
   pieceAt,
@@ -87,15 +88,17 @@ test('build mode places, turns, picks up and drags pieces with the mouse', async
 });
 
 test('a ley bolt line built by hand fills its crate, and the bolts fire', async ({ page }) => {
+  // About 24 s on an idle machine, before 039 and after: the default 30 s left no room under a parallel run's load.
+  test.setTimeout(60_000);
   const errors = watchErrors(page);
   await boot(page, '?start=field&attuned');
   await page.evaluate((vein) => {
     window.__GAME__?.step(0);
     window.__helpers?.harvest(vein, 3);
-    window.__GAME__?.craft('ley-shard');
+    window.__GAME__?.craft('ley-dust');
     window.__GAME__?.craft('ley-bolt');
   }, LEY_VEIN);
-  expect((await state(page)).unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'gravity-stager', 'grinder', 'focuser']);
+  expect((await state(page)).unlocked).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'grinder', 'focuser']);
   await enterFoundry(page);
   await standStill(page);
   await toggleBuild(page);
@@ -132,11 +135,13 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
   await page.mouse.click(p.x, p.y);
   await page.waitForTimeout(50);
   expect(pieceAt(await step(page, 1), 8, 6)).toMatchObject({ kind: 'hopper', item: null });
+  // Ctrl+click puts the whole stack in (022); the picker stays open.
   await page.keyboard.press('e');
   await expect.poll(picker).toBe(true);
-  await page.mouse.click(p.x, p.y);
+  await ctrlClick(page, p.x, p.y);
   await page.waitForTimeout(50);
   const filled = await step(page, 1);
+  expect(await picker()).toBe(true);
   expect(pieceAt(filled, 8, 6)).toMatchObject({ kind: 'hopper', item: 'ley-crystal', count: 2 });
 
   // E on the filled hopper offers to take it back out: the top row does it.
@@ -145,7 +150,7 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
   const take = pickerRows(pickerEntries({ item: 'ley-crystal', count: 2 }, filled.inventory))[0];
   if (take?.action !== 'take') throw new Error('no take-out row');
   const t = await screenPoint(page, take.x + 40, take.y + take.h / 2);
-  await page.mouse.click(t.x, t.y);
+  await ctrlClick(page, t.x, t.y);
   await page.waitForTimeout(50);
   const emptied = await step(page, 1);
   expect(pieceAt(emptied, 8, 6)).toMatchObject({ kind: 'hopper', item: null, count: 0 });
@@ -154,7 +159,7 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
   // And back in again.
   await page.keyboard.press('e');
   await page.waitForTimeout(100);
-  await page.mouse.click(p.x, p.y);
+  await ctrlClick(page, p.x, p.y);
   await page.waitForTimeout(50);
   expect(pieceAt(await step(page, 1), 8, 6)).toMatchObject({ kind: 'hopper', item: 'ley-crystal', count: 2 });
 
@@ -210,7 +215,7 @@ test('dragging an L lays a corner, and items ride round it into a crate', async 
 
   const hopper = pieceAt(laid, 12, 8);
   if (!hopper) throw new Error('no hopper');
-  await step(page, 1, { deposit: { id: hopper.id, itemId: 'arrow' } });
+  await step(page, 1, { deposit: { id: hopper.id, itemId: 'arrow', amount: 'all' } });
   const end = await step(page, 1500);
   expect(pieceAt(end, 15, 10)).toMatchObject({ kind: 'crate', contents: { arrow: 30 } });
   expect(errors).toEqual([]);

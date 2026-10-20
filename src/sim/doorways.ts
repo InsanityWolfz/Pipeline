@@ -1,3 +1,4 @@
+import { leaveArea } from './mines';
 import { FEET_BOX } from '../data/player';
 import { TILE_SIZE } from '../data/config';
 import { arrived } from './banking';
@@ -41,6 +42,7 @@ export function stepDoorways(state: SimState): void {
     p.vy = 0;
     state.building = false;
     state.events.roomChanges.push({ from, to: d.to });
+    leaveArea(state);
     arrived(state, d.to);
     return;
   }

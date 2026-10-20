@@ -1,4 +1,6 @@
 // Asset keys. Render code loads and draws by these keys, never string literals.
+import { enemyAnims, type EnemyAnims } from './enemyAnims';
+import { HOLLOWS_ENEMY_ANIMS } from './hollowsEnemyAssets';
 
 /** Vector frames drawn at boot (016): one texture of shelf-packed canvas pages, holding every sprite frame by name. */
 export const VECTOR_KEY = 'vectors';
@@ -26,16 +28,26 @@ export const SPRITES = {
   arrow: 'arrow',
   arrowShadow: 'arrow-shadow',
   crosshair: 'crosshair',
-  hudSlot: 'hud-slot',
-  /** Ley rim over the hotbar slot while it fires from the reservoir (007). */
-  hudSlotGlow: 'hud-slot-glow',
+  /** The arrow pointer shown instead of the crosshair over menus and the build bar (021). */
+  pointer: 'pointer',
+  /** The fist the tube slot shows when the next press is a punch (025). */
+  hudFist: 'hud-fist',
   iconArrow: 'icon-arrow',
   itemHuskResin: 'item-husk-resin',
   itemWood: 'item-wood',
   itemStone: 'item-stone',
   itemFiber: 'item-fiber',
   itemShadow: 'item-shadow',
+  /** The HP bar's carved frame (031: bottom-left, larger), its healing glow, the shield by the armor value and the at-risk mark. */
   hudHealth: 'hud-health',
+  hudHealthGlow: 'hud-health-glow',
+  hudShield: 'hud-shield',
+  hudWarn: 'hud-warn',
+  /** The inventory panel's tablet and title card (031). */
+  /** 039: the panel's tablet in two halves, left and right, so each fits a texture page at the largest scale. */
+  inventoryPanel: 'inventory-panel',
+  inventoryPanelRight: 'inventory-panel-right',
+  inventoryTitle: 'inventory-title',
   iconBomb: 'icon-bomb',
   iconLeyBolt: 'icon-ley-bolt',
   itemLeyCrystal: 'item-ley-crystal',
@@ -44,7 +56,7 @@ export const SPRITES = {
   itemRope: 'item-rope',
   itemCasing: 'item-casing',
   itemFuse: 'item-fuse',
-  itemLeyShard: 'item-ley-shard',
+  itemLeyDust: 'item-ley-dust',
   itemWardenCore: 'item-warden-core',
   itemUnidentifiedArmor: 'item-unidentified-armor',
   iconArmorLight: 'icon-armor-light',
@@ -59,9 +71,15 @@ export const SPRITES = {
   craftRowHover: 'craft-row-hover',
   /** A menu row's look for a moment after it's pressed (020). */
   craftRowPress: 'craft-row-press',
+  /** The crafting menu's own rows (026): taller, for a name under each icon. */
+  craftRecipeRow: 'craft-recipe-row',
+  craftRecipeRowHover: 'craft-recipe-row-hover',
+  craftRecipeRowPress: 'craft-recipe-row-press',
   craftArrow: 'craft-arrow',
   hudAmmoCell: 'hud-ammo-cell',
   hudAmmoSelect: 'hud-ammo-select',
+  /** The gold ring that pulses over a build-bar cell the current objective names (027). */
+  buildPulse: 'build-pulse',
 } as const;
 
 /**
@@ -79,18 +97,18 @@ export const NODE_SPRITES: Readonly<Record<string, { uses: readonly string[]; re
   rubble: nodeFrames('rubble', 3, 3),
   reeds: nodeFrames('reeds', 3, 3),
   'ley-vein': nodeFrames('ley-vein', 3, 3),
+  'rime-outcrop': nodeFrames('rime-outcrop', 3, 3),
+  'ley-iron-seam': nodeFrames('ley-iron-seam', 3, 3),
 };
 
-/** Hotbar slot layout, px from the slot's top-left. */
-export const HUD_SLOT_LAYOUT = {
-  icon: { x: 4, y: 4 },
-  /** The count: carried rounds, or the reservoir's once none are carried. */
-  count: { x: 25, y: 9 },
-  /** Gap below the slot to the bottom of the screen. */
-  margin: 6,
-  /** Palette id: the slot tint while a dry fire shows. */
-  dryFireTint: 'rust',
-} as const;
+/** The tube slot's frame (025) by how many rounds it shows: one for a carried round or the fist, up to one per intake entrance for a volley. */
+export const TUBE_SLOT_FRAMES = ['hud-tube-slot-1', 'hud-tube-slot-2', 'hud-tube-slot-3'] as const;
+
+/** The tube slot frame for `units` rounds (clamped to the frames there are). */
+export function tubeSlotFrame(units: number): string {
+  const i = Math.min(Math.max(units, 1), TUBE_SLOT_FRAMES.length) - 1;
+  return TUBE_SLOT_FRAMES[i] ?? TUBE_SLOT_FRAMES[0];
+}
 
 /** An animation: the sprite grid `key` with `frames` frames (`key/0`..), or a single frame `key`. */
 export interface AnimDef {
@@ -101,44 +119,16 @@ export interface AnimDef {
   loop: boolean;
 }
 
-const WALK_FRAMES = 4;
-
-/** Enemy animations. `side` faces right; left is drawn flipped. Death has one view. `recover` is optional: without it, a recovering enemy shows idle. */
-export type EnemyAnim = `${'idle' | 'walk' | 'windup' | 'swipe' | 'recover' | 'hit'}-${'down' | 'up' | 'side'}` | 'death';
-
-/** An enemy's animations: every pose but `recover` is required. */
-export type EnemyAnims = Readonly<Record<Exclude<EnemyAnim, `recover-${string}`>, AnimDef>> &
-  Readonly<Partial<Record<`recover-${'down' | 'up' | 'side'}`, AnimDef>>>;
-
-const ENEMY_WALK_FPS = 6;
-const SWIPE_FPS = 20;
-const DEATH_FPS = 8;
-
-function enemyAnims(prefix: string, recover = false): EnemyAnims {
-  const anim = (name: EnemyAnim, frames: number, frameRate: number, loop: boolean): AnimDef => ({
-    key: `${prefix}-${name}`,
-    frames,
-    frameRate,
-    loop,
-  });
-  const views = ['down', 'up', 'side'] as const;
-  const out: Partial<Record<EnemyAnim, AnimDef>> = { death: anim('death', 4, DEATH_FPS, false) };
-  for (const v of views) {
-    out[`idle-${v}`] = anim(`idle-${v}`, 1, 1, true);
-    out[`walk-${v}`] = anim(`walk-${v}`, WALK_FRAMES, ENEMY_WALK_FPS, true);
-    out[`windup-${v}`] = anim(`windup-${v}`, 1, 1, true);
-    out[`swipe-${v}`] = anim(`swipe-${v}`, 2, SWIPE_FPS, false);
-    out[`hit-${v}`] = anim(`hit-${v}`, 1, 1, true);
-    if (recover) out[`recover-${v}`] = anim(`recover-${v}`, 1, 1, true);
-  }
-  return out as EnemyAnims;
-}
+// Enemy animation sets are built in enemyAnims.ts (their poses, views and frame counts).
+export type { EnemyAnim, EnemyAnims, ExtraPose } from './enemyAnims';
 
 /** Animation sets by the `anims` key in src/data/enemies.ts. */
 export const ENEMY_ANIMS: Readonly<Record<string, EnemyAnims>> = {
   husk: enemyAnims('husk'),
   wisp: enemyAnims('wisp'),
   warden: enemyAnims('warden', true),
+  bulwark: enemyAnims('bulwark', true, ['turn', 'lob', 'throw', 'block', 'roar', 'brace', 'stomp']),
+  ...HOLLOWS_ENEMY_ANIMS,
 };
 
 /** The sparkle played where an item is picked up. */
@@ -161,34 +151,10 @@ export const WAKE_TEXT = { holdMs: 3000, fadeMs: 400, top: -24, lineStep: 10, pa
 /** A ley burst at the tube's mouth for each projectile fired (008). */
 export const MUZZLE_FLASH: AnimDef = { key: 'muzzle-flash', frames: 2, frameRate: 20, loop: false };
 
-/** The flame over a burning enemy. */
-export const BURN_FLAME: AnimDef = { key: 'burn-flame', frames: 3, frameRate: 10, loop: true };
-
 /** Frame names for an animation. */
 export function animFrames(anim: AnimDef): string[] {
   return anim.frames === 1 ? [anim.key] : Array.from({ length: anim.frames }, (_, i) => `${anim.key}/${i}`);
 }
-
-/** HUD health bar (the `hud-health` frame) and the material column under it, px from the screen's top-left. */
-export const HUD_HEALTH_LAYOUT = {
-  x: 6,
-  y: 6,
-  /** The well the fill is drawn in, relative to the frame. */
-  fill: { x: 2, y: 2, w: 48, h: 4 },
-  /** Palette id of the fill. */
-  fillColor: 'rust',
-} as const;
-
-export const HUD_MATERIALS_LAYOUT = {
-  x: 6,
-  y: 18,
-  /** Vertical step between rows (one item icon tall). */
-  rowStep: 16,
-  /** Where the count starts, relative to the row's icon. */
-  count: { x: 18, y: 6 },
-  /** How wide a row counts as HUD for clicks (icon and a two-digit count), px (015). */
-  rowWidth: 30,
-} as const;
 
 /** Enemy effects drawn in the world. Colours are palette ids. */
 export const ENEMY_FX = {
@@ -211,6 +177,19 @@ export const ENEMY_FX = {
   corpseFadeMs: 600,
 } as const;
 
+/**
+ * The punch's swoosh (023): a pale slice from the feet at the punch's real reach
+ * and arc, with a brighter rim, drawn over the player and anything in reach, fading
+ * out over `ms`. Colours are palette ids.
+ */
+export const MELEE_SWOOSH = {
+  color: 'rock-pale',
+  fillAlpha: 0.3,
+  rimWidth: 2,
+  rimAlpha: 0.9,
+  ms: 180,
+} as const;
+
 /** Player hit feedback, in sim ticks of hit invulnerability. */
 export const PLAYER_HIT_FX = {
   /** The hit pose shows for the first this-many ticks of a hit. */
@@ -220,15 +199,23 @@ export const PLAYER_HIT_FX = {
   flashColor: 'snow',
 } as const;
 
-/** The "+1 [icon]" popup on pickup, and the KO fade. */
-export const PICKUP_POPUP = { rise: 16, durationMs: 700, gap: 2, stack: 10, startHeight: 44 } as const;
+/**
+ * The foundry tutorial's "+ shaft" (027) when a machine first makes its part: its text before the item's name
+ * (in lower case), how far above the machine's top it starts, how far it rises and how long it lasts. 031: one that
+ * would overlap a live popup starts `stackGap` px above its top, and the same machine and item within `mergeMs`
+ * merge into one popup with a count (`countPrefix` before it: "+ shaft ×2"). Each popup keeps room for a count up to
+ * `reserveCount`, so a merge never widens it onto a neighbour.
+ */
+export const MADE_POPUP = { prefix: '+ ', above: 2, rise: 12, durationMs: 1200, stackGap: 2, mergeMs: 1500, countPrefix: ' ×', reserveCount: 99 } as const;
+
+/** The KO fade, each way, ms. */
 export const KO_FADE_MS = 250;
 
 /** A ground item's sprite bottom sits this far below its ground point, so it rests on its shadow, px. */
 export const GROUND_ITEM_LIFT = 3;
 
-/** Textures drawn at runtime (014): the soft glow and the vignette. */
-export const FX_TEXTURES = { glow: 'fx-glow', vignette: 'fx-vignette' } as const;
+/** Textures drawn at runtime (014): the soft glow and the vignette; the low-HP edges (031), white to be tinted. */
+export const FX_TEXTURES = { glow: 'fx-glow', vignette: 'fx-vignette', lowHp: 'fx-low-hp' } as const;
 
 /** Render depths. World sprites sort by the bottom of their footprint (px); these sit around that. */
 export const DEPTHS = {
@@ -240,35 +227,33 @@ export const DEPTHS = {
   groundFx: 0.5,
   /** Nudge that puts a tutorial seal just in front of its door. */
   tubeNudge: 0.01,
-  /** Nudge that puts a burn flame just in front of the enemy it's on. */
-  flameNudge: 0.01,
+  /** Nudge that puts an overlay (a Husk's resin, the Warden's core, the ice on a frozen enemy) just in front of the enemy it's on. */
+  overlayNudge: 0.01,
   /** Health bars, sparkles and popups over the world. */
   worldUi: 100_000,
   /** The mouse-over name (015), over a piece's readout. */
   hoverName: 100_012,
-  /** The build bar's hover panel (015), over the bar. */
-  buildTip: 1_000_005,
   /** Tutorial key prompts, over other world UI. */
   prompt: 100_005,
   /** The claimed pylon's tendril and the motes on the ley line (018): over everything standing in the world, under world UI. */
   supplyLine: 99_990,
-  /** Build mode's spread fans from the stagers facing the intake, just under the build arrows. */
-  spreadFan: 99_998,
   /** Soft ley light pooled on the floor (014), over shadows and under anything standing. */
   glow: 0.25,
   /** Drifting motes, over the world. */
   motes: 99_000,
   /** A room's dusk tint and vignette, over the world and under the HUD. */
   mood: 500_000,
+  /** The low-HP red screen edges (031), over the mood and under the HUD and menus. */
+  lowHp: 900_000,
   /** The HUD, above the world. */
   hud: 1_000_000,
   /** The crafting menu, above the HUD. */
   menu: 2_000_000,
+  /** The crosshair and the menu pointer (021), above every menu and HUD layer. Nothing draws over them. */
+  cursor: 3_000_000,
 } as const;
 
 /** Bombs draw this far above their arc height, so they leave the hand at tube height, px. */
 export const BOMB_LIFT = 10;
 
-/** The flame over a burning enemy sits this far above its feet, px. */
-export const BURN_FLAME_HEIGHT = 30;
 

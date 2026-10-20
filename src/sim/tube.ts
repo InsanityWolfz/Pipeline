@@ -1,44 +1,46 @@
 import { FOUNDRY_ROOM } from '../data/rooms';
-import { FIRING_WALK_MULTIPLIER } from '../data/player';
 import { ammoDef } from '../data/ammo';
-import { DRY_FIRE_TICKS, MUZZLE_OFFSET, SLOT_AMMOS, STARTING_AMMO } from '../data/tube';
+import { MUZZLE_OFFSET, SLOT_AMMOS, STARTING_AMMO } from '../data/tube';
+import { hasTagKeyword } from '../data/tags';
 import { createArrow } from './arrows';
+import { lockTarget } from './homing';
 import { throwBomb } from './bombs';
 import { aimFacing, facingVector, unit } from './direction';
 import type { Command } from './input';
-import { count, take } from './inventory';
-import { takeFromReservoir } from './link';
+import { take } from './inventory';
+import { takeFromEntrance } from './link';
+import { punch } from './melee';
 import { isRolling } from './movement';
-import { intakeStreams, rotate } from './spread';
+import { nextPress, volleyShots, type VolleyShot } from './volley';
 import type { SimState } from './state';
+import { playerStats } from './stats';
+import { fireInterval, roundEmission } from './emissions';
+import { statOf } from './statResolve';
 
-// The tube: picking the slot's ammo and firing it. Carried rounds fire straight
-// from the inventory; once they run out, the linked tube fires from its reservoir.
+// The tube: picking the slot's ammo and firing it. Once linked, the tube fires the
+// intake's fed entrances first (024), each at its own ammo's rate while fire is held
+// (028); once they're empty, carried rounds fire straight from the inventory. With
+// no tube, or nothing to fire, fire punches instead (023).
 
 export interface TubeState {
   /** The ammo hotbar slot 1 fires. */
   ammoId: string;
-  /** Ticks before the next shot or dry fire can happen. */
+  /** Ticks before the next carried round can fire (a punch waits for it too), fractional (039). Each entrance shot raises it to at least that ammo's interval (028). */
   fireCooldown: number;
-  /** Ticks left on the dry-fire flag. */
-  dryFire: number;
-  /** The last shot attempt found no round (016): holding fire on an empty tube is a dry fire, not a heavy one. */
-  dry: boolean;
-  /** Fire was held this tick and the player could fire (not rolling). */
+  /** Ticks before the next punch can happen (023). */
+  meleeCooldown: number;
+  /** The tube is really firing (016): fire held this tick with a round to fire, not rolling or in the foundry. A punch isn't firing. */
   firing: boolean;
-  /** This tick's shot came from the reservoir. */
+  /** This tick's shot came from the intake's entrances (024). */
   fromReservoir: boolean;
-  /** Projectiles this tick's shot fired: more than 1 for a spread (008), 0 with no shot. */
+  /** Projectiles this tick's shot fired: more than 1 for a volley of several rounds (024), 0 with no shot. */
   shotCount: number;
+  /** Ticks fire has been held while firing (037: Overpressure's ramp), up to its ramp; releasing fire resets it. */
+  overpressure: number;
 }
 
 export function createTube(): TubeState {
-  return { ammoId: STARTING_AMMO, fireCooldown: 0, dryFire: 0, dry: false, firing: false, fromReservoir: false, shotCount: 0 };
-}
-
-/** The item a round of the slot's ammo is. */
-export function slotItem(tube: Pick<TubeState, 'ammoId'>): string {
-  return ammoDef(tube.ammoId).itemId;
+  return { ammoId: STARTING_AMMO, fireCooldown: 0, meleeCooldown: 0, firing: false, fromReservoir: false, shotCount: 0, overpressure: 0 };
 }
 
 /** Switches the slot to another ammo. The current ammo, or one the slot can't take, does nothing. */
@@ -50,96 +52,120 @@ export function selectAmmo(state: SimState, ammoId: string): void {
 }
 
 /**
- * What the hotbar slot shows: the carried count while any is carried, else the
- * reservoir's count if it holds the slot's ammo (fired from the foundry), else 0.
+ * The next fire press has something to fire (023, 024): the tube is in hand and an
+ * open entrance holds a round, or a round of the slot's ammo is carried. Without one, fire punches.
  */
-export function slotCount(state: Pick<SimState, 'tube' | 'inventory' | 'link'>): { count: number; fromReservoir: boolean } {
-  const item = slotItem(state.tube);
-  const carried = count(state.inventory, item);
-  if (carried > 0) return { count: carried, fromReservoir: false };
-  const { reservoir } = state.link;
-  if (reservoir.itemId === item && reservoir.count > 0) return { count: reservoir.count, fromReservoir: true };
-  return { count: 0, fromReservoir: false };
+export function hasRoundToFire(state: Pick<SimState, 'hasTube' | 'tube' | 'inventory' | 'link'>): boolean {
+  return nextPress(state).kind !== 'melee';
 }
 
-/** The walk multiplier from the tube (016): slower while it really fires, by last tick's state. */
-export function firingWalkScale(state: Pick<SimState, 'tube'>): number {
-  return isFiringHeavy(state.tube) ? FIRING_WALK_MULTIPLIER : 1;
+/** The walk multiplier from the tube (016): slower while it really fires, by last tick's state (037: Steady Grip eases it). */
+export function firingWalkScale(state: Pick<SimState, 'tube' | 'gear' | 'equipped' | 'talents'>): number {
+  return state.tube.firing ? playerStats(state).firingWalk : 1;
 }
 
-/** The tube is really firing (016): fire held, rounds coming out, not a dry fire, the foundry or a roll. */
-export function isFiringHeavy(tube: Pick<TubeState, 'firing' | 'dry'>): boolean {
-  return tube.firing && !tube.dry;
+/**
+ * Ticks between shots of a round (037, 039): TICK_RATE over its fire rate (resolveStat: every +% added, Overpressure's
+ * ramp multiplied after). Never rounded (039, Q13): a cooldown is fractional, so the rate shown is the rate fired.
+ */
+export function fireTicksOf(state: SimState, ammoId: string): number {
+  return fireInterval(state, ammoId);
 }
 
-/** Runs after the player has moved this tick, so shots leave from where they stand now. */
+/**
+ * Runs after the player has moved this tick, so shots leave from where they stand now. Cooldowns (039) count down 1 a
+ * tick while above 0; a round fires at 0 or less and adds its interval; one that didn't fire stops at 0, so nothing
+ * banks while fire isn't held.
+ */
 export function stepTube(state: SimState, cmd: Command): void {
+  stepFire(state, cmd);
+  const { tube } = state;
+  tube.fireCooldown = Math.max(0, tube.fireCooldown);
+  for (const e of state.link.entrances) e.cooldown = Math.max(0, e.cooldown);
+}
+
+function stepFire(state: SimState, cmd: Command): void {
   const { tube, player } = state;
   player.aimX = cmd.aimX;
   player.aimY = cmd.aimY;
   if (tube.fireCooldown > 0) tube.fireCooldown -= 1;
-  if (tube.dryFire > 0) tube.dryFire -= 1;
-  // Without the tube (012) there's nothing to switch or fire.
-  if (!state.hasTube) {
-    tube.firing = false;
-    tube.fromReservoir = false;
-    tube.shotCount = 0;
-    return;
-  }
-  if (cmd.selectAmmo !== null) selectAmmo(state, cmd.selectAmmo);
+  if (tube.meleeCooldown > 0) tube.meleeCooldown -= 1;
+  for (const e of state.link.entrances) if (e.cooldown > 0) e.cooldown -= 1;
+  // Without the tube (012) there's nothing to switch.
+  if (state.hasTube && cmd.selectAmmo !== null) selectAmmo(state, cmd.selectAmmo);
 
   tube.firing = false;
   tube.fromReservoir = false;
   tube.shotCount = 0;
-  // The tube is quiet in the foundry (015): clicks there are for building and menus, never shots.
+  // The tube is quiet in the foundry (015): clicks there are for building and menus, never shots or punches.
   if (isRolling(player) || !cmd.fire || state.roomId === FOUNDRY_ROOM) return;
-  tube.firing = true;
-  fire(state, cmd);
-}
-
-/** Takes one round of the slot's ammo: carried first, then the reservoir. Returns where it came from. */
-function takeRound(state: SimState): 'inventory' | 'reservoir' | null {
-  const item = slotItem(state.tube);
-  if (take(state.inventory, item)) return 'inventory';
-  if (takeFromReservoir(state.link, item)) return 'reservoir';
-  return null;
-}
-
-function fire(state: SimState, cmd: Command): void {
-  const { tube, player } = state;
   const aim = unit(cmd.aimX - player.x, cmd.aimY - player.y);
   const [dx, dy] = aim[0] === 0 && aim[1] === 0 ? facingVector(player.facing) : aim;
   player.facing = aimFacing(dx, dy, player.facing);
-  if (tube.fireCooldown > 0) return;
-  const ammo = ammoDef(tube.ammoId);
-  tube.fireCooldown = ammo.fireTicks;
-  const source = takeRound(state);
-  tube.dry = !source;
-  if (!source) {
-    tube.dryFire = DRY_FIRE_TICKS;
+  if (!hasRoundToFire(state)) {
+    punch(state, dx, dy);
     return;
   }
-  tube.fromReservoir = source === 'reservoir';
-  // A reservoir shot fires one projectile per stream, each costing a round; carried rounds never spread.
-  const streams = tube.fromReservoir ? intakeStreams(state.foundry) : [];
-  const angles = streams.length > 0 ? streams : [0];
-  let fired = 0;
-  for (const angle of angles) {
-    if (fired > 0 && !takeFromReservoir(state.link, slotItem(tube))) break;
-    launch(state, ammo.id, rotate(dx, dy, angle), cmd);
-    fired += 1;
-  }
-  tube.shotCount = fired;
+  tube.firing = true;
+  fire(state, cmd, dx, dy);
 }
 
-/** Sends one projectile of the ammo along `dir` from the tube's mouth. A bomb lands at the aim's distance. */
-function launch(state: SimState, ammoId: string, [dx, dy]: [number, number], cmd: Command): void {
+/**
+ * Fires along the unit aim (dx, dy). The volley (028): every fed entrance whose own
+ * cooldown has run out fires one round from its reservoir, and waits its ammo's
+ * interval; rounds fired together are shaped as one volley (024). Otherwise, once
+ * the tube's interval has passed, a carried round of the slot's ammo fires alone.
+ * The caller has checked there's one to fire.
+ */
+function fire(state: SimState, cmd: Command, dx: number, dy: number): void {
+  const { tube } = state;
+  const press = nextPress(state);
+  if (press.kind === 'volley') {
+    // Each round with its entrance, kept only where that entrance's own cooldown has run out. An entrance keeps its
+    // cooldown when it empties and refills with another ammo: the new ammo waits out the old shot's pace.
+    const ready = press.rounds.flatMap((r) => {
+      const e = state.link.entrances[r.entrance];
+      return e && e.cooldown <= 0 ? [{ ...r, e }] : [];
+    });
+    for (const { e, ...r } of ready) {
+      const ticks = fireTicksOf(state, r.ammoId);
+      takeFromEntrance(e);
+      e.cooldown += ticks;
+      // The first carried round once the entrances run dry never comes sooner than the last entrance's own pace.
+      tube.fireCooldown = Math.max(tube.fireCooldown, ticks);
+      state.events.entranceFires.push({ entrance: r.entrance, ammoId: r.ammoId });
+    }
+    if (ready.length === 0) return;
+    tube.fromReservoir = true;
+    const shots = volleyShots(ready.map((r) => r.ammoId), dx, dy);
+    for (const shot of shots) launch(state, shot, cmd);
+    tube.shotCount = shots.length;
+    return;
+  }
+  if (press.kind !== 'carried' || tube.fireCooldown > 0) return;
+  take(state.inventory, ammoDef(press.ammoId).itemId);
+  tube.fireCooldown += fireTicksOf(state, press.ammoId);
+  launch(state, { ammoId: press.ammoId, dir: [dx, dy], across: 0 }, cmd);
+  tube.shotCount = 1;
+}
+
+/** Sends one projectile along its direction from the tube's mouth. A bomb or landmine lands at the aim's distance, `across` px off the line. */
+function launch(state: SimState, { ammoId, dir: [dx, dy], across }: VolleyShot, cmd: Command): void {
   const { player } = state;
   const muzzle = { x: player.x + dx * MUZZLE_OFFSET, y: player.y + dy * MUZZLE_OFFSET };
   state.events.shots.push({ ...muzzle, ammoId });
-  if (ammoDef(ammoId).kind === 'lob') {
-    throwBomb(state, ammoId, muzzle, player, { x: cmd.aimX, y: cmd.aimY }, [dx, dy]);
+  if (ammoDef(ammoId).kind !== 'straight') {
+    throwBomb(state, ammoId, muzzle, player, { x: cmd.aimX, y: cmd.aimY }, [dx, dy], across);
     return;
   }
-  state.arrows.push(createArrow(state.nextArrowId++, ammoId, state.roomId, muzzle.x, muzzle.y, dx, dy));
+  // A homing round (029) locks on at launch: the enemy nearest the cursor, if one is close enough.
+  const target = hasTagKeyword(ammoId, 'homing') ? lockTarget(state, ammoId, cmd.aimX, cmd.aimY) : null;
+  const arrow = createArrow(state.nextArrowId++, ammoId, state.roomId, muzzle.x, muzzle.y, dx, dy, target);
+  // Its stats (037, 039) go onto the round as it leaves.
+  const e = roundEmission(ammoId);
+  arrow.damage = statOf(state, 'damage', e, arrow.damage);
+  arrow.range = statOf(state, 'range', e, arrow.range);
+  arrow.speed = statOf(state, 'speed', e, arrow.speed);
+  arrow.knockback = statOf(state, 'knockback', e, arrow.knockback);
+  state.arrows.push(arrow);
 }

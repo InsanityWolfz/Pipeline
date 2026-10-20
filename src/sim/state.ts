@@ -1,18 +1,27 @@
 import { TILE_SIZE } from '../data/config';
-import { DEFAULT_START, type StartDef } from '../data/player';
 import { DEFAULT_ROOM, type Room } from '../data/rooms';
-import { createPopulation, resetPopulation, type PopulationState } from './population';
+import { DEFAULT_START, type StartDef } from '../data/player';
+import { createPopulation, inSafeZone, resetPopulation, type PopulationState } from './population';
+import { LANDMARK_LIST } from '../data/landmarks';
+import { rollChampions } from './champions';
 import { WORLD } from './world';
-import type { ArmorPiece } from './armor';
+import type { GearPiece, GearSlot } from '../data/gear';
+import { NOTHING_WORN } from './gear';
+import { TALENT_START } from '../data/talents';
+import type { Pool } from './keystones';
+import { playerStats } from './stats';
 import type { ArrowState } from './arrows';
 import type { BombState } from './bombs';
 import type { GroundItem } from './drops';
 import { createEnemy, type EnemyState } from './enemies';
 import { createEvents, type SimEvents } from './events';
-import type { ClaimHold } from './claims';
+import { createCaches, type CacheHold, type CacheState } from './cache';
 import { startingFixtures, type FixtureState } from './fixtures';
 import type { HarvestState } from './harvest';
-import { createGates, type Gates } from './tutorial';
+import { createGates, foundIn, type Gates } from './tutorial';
+import { HOLLOWS } from '../data/hollows';
+import { claim, type ClaimHold } from './claims';
+import { clearMines, createMines, type MinesState } from './mines';
 import { OBJECTIVES } from '../data/objectives';
 import type { OrbState } from './orbs';
 import type { Inventory } from './inventory';
@@ -23,6 +32,10 @@ import { createPlayer, type PlayerState } from './player';
 import { createRng, type RngState } from './rng';
 import { tileCentre } from './tiles';
 import { createTube, type TubeState } from './tube';
+import { createResearch, type ResearchState } from './research';
+import type { EnemyBombState } from './enemyBombs';
+import { bossReturns, settleSummons, type SummoningState } from './altar';
+import { noteCarried } from './knownRounds';
 
 /** The whole sim: plain serializable data. */
 export interface SimState {
@@ -34,8 +47,10 @@ export interface SimState {
   player: PlayerState;
   inventory: Inventory;
   tube: TubeState;
-  /** The tube's link to the foundry and its reservoir. Kept through a KO. */
+  /** The tube's link to the foundry and the intake's entrances (024). Kept through a KO. */
   link: LinkState;
+  /** Each research node's state (033): hidden, revealed or restored. Kept through a KO. */
+  research: ResearchState;
   /** How this run started; a KO restores its inventory. */
   start: StartDef;
   /** Straight shots in flight: arrows and ley bolts. */
@@ -56,8 +71,23 @@ export interface SimState {
   /** Bombs in flight. */
   bombs: BombState[];
   nextBombId: number;
+  /** Armed landmines and bomblets on their way (038). */
+  mines: MinesState;
+  /** The Bulwark's bombs on the ground, fuses burning (034). */
+  enemyBombs: EnemyBombState[];
+  nextEnemyBombId: number;
+  /** Region bosses killed at least once (034), in order. Kept through a KO: they never respawn but by their altar. */
+  bossDefeats: string[];
+  /** Region bosses summoned at their altar and still living (034). Kept through a KO, so the offering is never lost. */
+  summoned: string[];
+  /** A summon rising at an altar (034), or null. */
+  summoning: SummoningState | null;
   /** Item ids hand-crafted at least once, sorted. Kept through a KO; it unlocks machines. */
   crafted: string[];
+  /** Rounds ever carried (040.2: the Build tab's known rounds), in the order first carried. Kept through a KO. */
+  carried: string[];
+  /** Items that reveal recipes once carried (038: ley-iron), in the order found. Kept through a KO. */
+  found: string[];
   /** The buildable grid in the foundry room. Kept through a KO. */
   foundry: FoundryState;
   /** Wisp orbs in flight (009). */
@@ -67,27 +97,49 @@ export interface SimState {
   claims: string[];
   /** The claim in progress, if any. */
   claimHold: ClaimHold | null;
+  /** Landmark ids seen at least once (032), in the order found. Kept through a KO. */
+  discovered: string[];
+  /** Each Ruined Cache (032): the tick it was opened, or null while it's full. Kept through a KO (no refill). */
+  caches: CacheState[];
+  /** Opening a cache in progress (032), if any. */
+  cacheHold: CacheHold | null;
   /** Ticks left on a pylon's activation (cosmetic). */
   activatePulse: number;
   /** The foundry's fixed furniture (stash, and what claims add). Kept through a KO. */
   fixtures: FixtureState[];
   /** What pylon deposits have sent home. Kept through a KO. */
   stash: Inventory;
-  /** Identified armor (010). Kept through a KO. */
-  armor: ArmorPiece[];
-  nextArmorId: number;
-  /** The worn piece's id, or null. */
-  equipped: number | null;
+  /** Identified gear (036). Kept through a KO. */
+  gear: GearPiece[];
+  nextGearId: number;
+  /** The worn piece's id in each slot, or null (036). Kept through a KO. */
+  equipped: Record<GearSlot, number | null>;
+  /** 037: the level (from 1), XP toward the next, unspent talent points and the taken talents (the centre start always). Kept through a KO. */
+  level: number;
+  xp: number;
+  talentPoints: number;
+  talents: string[];
+  /** Bomb blasts' Pool (037: Blastfletch), and the id for the next. */
+  pools: Pool[];
+  nextPoolId: number;
+  /**
+   * Bosses killed at least once (037), the Warden included: only the first kill gives a boss's full XP. 034's
+   * `bossDefeats` holds only region bosses with altars, and its goals and altars read it, so this is its own list.
+   * Kept through a KO.
+   */
+  killedBosses: string[];
   /** The player holds the tube (012); without it nothing fires. Kept through a KO. */
   hasTube: boolean;
   /** The tutorial's gates (012), true once open. Kept through a KO. */
   gates: Gates;
-  /** The reservoir has filled from a line at least once (opens the shrine gate). */
+  /** An entrance has filled from a line at least once (opens the shrine gate). */
   firstLineFull: boolean;
   /** The overworld's living population is out (017): from the first full line on, or from a populated start. Kept through a KO. */
   populated: boolean;
   /** The population's pack slots (017). */
   population: PopulationState;
+  /** How many of each item machines have made (027), for the foundry steps; hand crafts never count. Kept through a KO. */
+  machineMade: Record<string, number>;
   /** Raw materials ever harvested, for the gathering objective. */
   gathered: string[];
   /** Which objectives are done, in OBJECTIVES order. */
@@ -125,6 +177,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     inventory: { ...start.inventory },
     tube: createTube(),
     link: { ...createLink(), attuned: start.attuned },
+    research: createResearch(),
     start,
     arrows: [],
     nextArrowId: 0,
@@ -136,18 +189,36 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     harvest: null,
     bombs: [],
     nextBombId: 0,
+    mines: createMines(),
+    enemyBombs: [],
+    nextEnemyBombId: 0,
+    bossDefeats: [],
+    summoned: [],
+    summoning: null,
     crafted: [...start.crafted],
+    carried: [],
+    found: foundIn(start.inventory),
     foundry: createFoundry(),
     orbs: [],
     nextOrbId: 0,
     claims: [],
     claimHold: null,
+    discovered: [],
+    caches: createCaches(),
+    cacheHold: null,
     activatePulse: 0,
     fixtures: startingFixtures(),
     stash: {},
-    armor: [],
-    nextArmorId: 0,
-    equipped: null,
+    gear: (start.gear ?? []).map((g) => structuredClone(g)),
+    nextGearId: Math.max(0, ...(start.gear ?? []).map((g) => g.id + 1)),
+    equipped: { ...NOTHING_WORN },
+    level: 1,
+    xp: 0,
+    talentPoints: 0,
+    talents: [TALENT_START],
+    killedBosses: [],
+    pools: [],
+    nextPoolId: 0,
     firstHuskDropped: false,
     banked: { ...start.inventory },
     hasTube: start.hasTube,
@@ -155,6 +226,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     firstLineFull: false,
     populated: start.populated,
     population: createPopulation(),
+    machineMade: {},
     gathered: [],
     objectives: OBJECTIVES.map(() => false),
     awayTicks: 0,
@@ -163,6 +235,10 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     events: createEvents(),
   };
   resetWorld(state, roomId);
+  noteCarried(state);
+  // A start's claims (034) are made before the first tick, as if long done: the barrier they drop is already down.
+  for (const site of start.claims ?? []) claim(state, site);
+  state.gates.hollows ||= state.claims.includes(HOLLOWS.opensOn);
   return state;
 }
 
@@ -172,7 +248,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
  * room's enemies at home and nodes at full, and nothing harvesting, on the
  * ground or in flight, and build mode off. The tick, seed, RNG, id counters,
  * the inventory (a death trims it first), the crafted set, the tube's link and
- * reservoir, claims, the stash, armor and the whole foundry carry on. Claimed rooms get no enemies back.
+ * the intake's entrances, research (033), claims, the stash, gear and the whole foundry carry on. Claimed rooms get no enemies back.
  */
 export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   const rooms = Object.values(WORLD);
@@ -180,21 +256,31 @@ export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   // The start's own spawn when waking in its room (017: the overworld has several), else the room's.
   const spawn = spawnRoomId === state.start.room ? state.start.spawn : roomOf(state).spawn;
   state.player = createPlayer(tileCentre(spawn));
+  // Waking at full health means the worn gear's max (036).
+  state.player.health = playerStats(state).maxHealth;
   state.tube = createTube();
   state.arrows = [];
   state.groundItems = [];
   state.nodes = createNodes(rooms);
   state.harvest = null;
   state.bombs = [];
+  clearMines(state);
+  state.pools = [];
+  state.enemyBombs = [];
+  settleSummons(state);
   state.orbs = [];
   state.claimHold = null;
+  state.cacheHold = null;
   state.building = false;
-  // A claimed site's guards are gone for good (017: a site is a group of the room's enemies).
+  // A claimed site's guards are gone for good (017: a site is a group of the room's enemies), and no guard comes back
+  // inside a claimed pylon's safe zone (032).
   state.enemies = rooms.flatMap((room) =>
     (room.enemies ?? [])
-      .filter((p) => !p.group || !state.claims.includes(p.group))
+      .filter((p) => (!p.group || !state.claims.includes(p.group)) && !inSafeZone(state, room.id, tileCentre(p).x, tileCentre(p).y) && bossReturns(state, p.enemyId))
       .map((p) => createEnemy(state.nextEnemyId++, p.enemyId, tileCentre(p), room.id, p.group)),
   );
+  // Each landmark's guard pack may hold a champion (032); the tutorial's packs never do.
+  for (const l of LANDMARK_LIST) rollChampions(state.rng, state.enemies.filter((e) => e.group === l.id), l.ring);
   resetPopulation(state);
 }
 

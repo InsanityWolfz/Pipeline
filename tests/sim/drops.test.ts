@@ -6,7 +6,8 @@ import { rollDrops, scatterPoint, spawnDrops } from '../../src/sim/drops';
 import { createRng } from '../../src/sim/rng';
 import { roomOf } from '../../src/sim/state';
 import { openRoom } from './helpers';
-import { arena, at, HALL, HUSK, PLAYER_AT, run } from './fight';
+import { arena, at, FIELD_WALL, HALL, HUSK, placeNode, PLAYER_AT, run, SEED } from './fight';
+import { FOUNDRY_ROOM } from '../../src/data/rooms';
 
 const EXTRAS = ['wood', 'stone', 'fiber'];
 
@@ -23,7 +24,8 @@ describe('drop rolls', () => {
   });
 
   it('adds one wood, stone or fiber about half the time', () => {
-    const extras = rolls.map((items) => items.filter((i) => i !== 'husk-resin'));
+    // 033's ancient gear is a rare entry of its own.
+    const extras = rolls.map((items) => items.filter((i) => i !== 'husk-resin' && i !== 'ancient-gear'));
     for (const e of extras) {
       expect(e.length).toBeLessThanOrEqual(1);
       for (const id of e) expect(EXTRAS).toContain(id);
@@ -93,6 +95,47 @@ describe('pickup', () => {
   it('leaves items further away on the ground', () => {
     const s = itemAt(PICKUP_RADIUS + 0.5);
     run(s, 120);
+    expect(s.groundItems.length).toBe(1);
+    expect(s.inventory.wood).toBeUndefined();
+  });
+
+  it('reaches about two tiles (021): 63 px is picked up, 65 px is not', () => {
+    expect(PICKUP_RADIUS).toBe(64);
+    const near = itemAt(63);
+    run(near, 1);
+    expect(near.inventory.wood).toBe(1);
+    const far = itemAt(65);
+    run(far, 1);
+    expect(far.groundItems.length).toBe(1);
+  });
+
+  it('picks up through a solid tile (021)', () => {
+    // The tile east of the ruin field's west wall (017); the item lies past that wall tile.
+    const wall = FIELD_WALL.west;
+    const s = arena(SEED, { x: (wall + 1) * 32 + 16, y: 13 * 32 + 16 });
+    const room = roomOf(s);
+    expect(isSolid(room, wall, 13)).toBe(true);
+    const x = s.player.x - FEET_BOX.w / 2 - 50;
+    expect(Math.floor(x / 32)).toBeLessThan(wall);
+    s.groundItems.push({ id: s.nextGroundItemId++, itemId: 'stone', roomId: HALL, x, y: s.player.y });
+    run(s, 1);
+    expect(s.inventory.stone).toBe(1);
+    expect(s.groundItems).toEqual([]);
+  });
+
+  it("picks up through a node's box (021)", () => {
+    const s = arena();
+    // A boulder standing right of the player, and the item past it.
+    placeNode(s, 'rubble', PLAYER_AT.x + FEET_BOX.w / 2 + 20, PLAYER_AT.y);
+    s.groundItems.push({ id: s.nextGroundItemId++, itemId: 'wood', roomId: HALL, x: PLAYER_AT.x + FEET_BOX.w / 2 + 45, y: PLAYER_AT.y });
+    run(s, 1);
+    expect(s.inventory.wood).toBe(1);
+  });
+
+  it('never picks up an item in another room, however close (021)', () => {
+    const s = arena();
+    s.groundItems.push({ id: s.nextGroundItemId++, itemId: 'wood', roomId: FOUNDRY_ROOM, x: PLAYER_AT.x + 4, y: PLAYER_AT.y });
+    run(s, 30);
     expect(s.groundItems.length).toBe(1);
     expect(s.inventory.wood).toBeUndefined();
   });

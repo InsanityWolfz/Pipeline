@@ -1,5 +1,6 @@
 import { TICK_RATE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
-import { attackOf, enemyDef, type EnemyDef } from '../data/enemies';
+import { attackOf, type BulwarkDef, type EnemyDef } from '../data/enemies';
+import { defOf } from './champions';
 import { unit } from './direction';
 import { aggro, type EnemyState } from './enemies';
 import type { SimState } from './state';
@@ -55,12 +56,12 @@ export function startWindup(e: EnemyState, def: EnemyDef, dx: number, dy: number
 /**
  * Runs a wind-up, attack or recover in progress: `land` fires as the attack
  * pose starts. Returns the tick's move, or null once it's back to chasing (or
- * wasn't attacking), so the caller moves on.
+ * wasn't attacking), so the caller moves on. `windupTicks` overrides the def's (041.16: an enraged Bulwark's pound).
  */
-export function stepAttack(e: EnemyState, def: EnemyDef, land: () => void): [number, number] | null {
+export function stepAttack(e: EnemyState, def: EnemyDef, land: () => void, windupTicks?: number): [number, number] | null {
   const timing = attackOf(def);
   if (e.mode === 'windup') {
-    if (e.modeTicks < timing.windupTicks) return hold(e);
+    if (e.modeTicks < (windupTicks ?? timing.windupTicks)) return hold(e);
     enter(e, 'swipe');
     land();
     return [0, 0];
@@ -79,7 +80,7 @@ export function stepAttack(e: EnemyState, def: EnemyDef, land: () => void): [num
 }
 
 /** Past the off-screen grace, a chasing enemy heads home. Returns its move if so. */
-export function leash(e: EnemyState, def: EnemyDef): [number, number] | null {
+export function leash(e: EnemyState, def: Exclude<EnemyDef, BulwarkDef>): [number, number] | null {
   if (e.offScreenTicks < def.leashGraceTicks) return null;
   e.mode = 'return';
   e.modeTicks = 0;
@@ -101,9 +102,20 @@ export function engage(state: SimState, e: EnemyState, sees: boolean): [number, 
   }
   if (e.mode === 'idle' || e.mode === 'return') {
     // Anything on screen wakes, however many (Shaun, 017: a player who rounds up a crowd gets the crowd).
-    if (!here || !sees) return e.mode === 'return' ? walkHome(e, enemyDef(e.enemyId)) : [0, 0];
+    if (!here || !sees) return e.mode === 'return' ? walkHome(e, defOf(e)) : [0, 0];
     aggro(e);
   }
   e.offScreenTicks = here && inAggroBox(e, state.player) ? 0 : e.offScreenTicks + 1;
   return null;
+}
+
+/** Absorbs float error so a player exactly on an arc's edge is hit. */
+const ARC_EPSILON = 1e-9;
+
+/** True if a point (dx, dy) from an attacker's feet is within `reach` and inside the `arcDegrees` arc along the unit (dirX, dirY): a Husk's swipe, a Shardback's bash. */
+export function inArc(dx: number, dy: number, dirX: number, dirY: number, reach: number, arcDegrees: number): boolean {
+  const dist = Math.hypot(dx, dy);
+  if (dist > reach) return false;
+  const half = (arcDegrees * Math.PI) / 360;
+  return dist === 0 || (dx * dirX + dy * dirY) / dist >= Math.cos(half) - ARC_EPSILON;
 }

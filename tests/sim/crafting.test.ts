@@ -7,6 +7,8 @@ describe('crafting', () => {
   it.each(Object.values(RECIPES))('$id takes its inputs and adds its output', (recipe) => {
     const s = arena();
     s.link.attuned = true;
+    // 038: the landmine chain shows once ley-iron has been carried.
+    s.found = ['ley-iron'];
     s.inventory = { ...recipe.inputs };
     expect(craft(s, recipe.id)).toBe(true);
     for (const id of Object.keys(recipe.inputs)) if (id !== recipe.output.itemId) expect(s.inventory[id]).toBe(0);
@@ -22,7 +24,7 @@ describe('crafting', () => {
     expect(s.inventory.shaft).toBe(2);
     craft(s, 'arrow');
     expect(s.inventory).toMatchObject({ shaft: 1, arrowhead: 0, rope: 0, arrow: 4 });
-    s.inventory = { casing: 1, fuse: 1, 'ley-shard': 1 };
+    s.inventory = { casing: 1, fuse: 1, 'ley-dust': 1 };
     craft(s, 'bomb');
     expect(s.inventory.bomb).toBe(2);
   });
@@ -30,11 +32,11 @@ describe('crafting', () => {
   it('refuses bomb and ley bolt recipes until the tube attunes (012)', () => {
     const s = arena();
     s.inventory = { 'ley-crystal': 1, stone: 1 };
-    expect(craft(s, 'ley-shard')).toBe(false);
+    expect(craft(s, 'ley-dust')).toBe(false);
     expect(craft(s, 'casing')).toBe(false);
-    expect(s.events.craftFails).toEqual([{ recipeId: 'ley-shard' }, { recipeId: 'casing' }]);
+    expect(s.events.craftFails).toEqual([{ recipeId: 'ley-dust' }, { recipeId: 'casing' }]);
     s.link.attuned = true;
-    expect(craft(s, 'ley-shard')).toBe(true);
+    expect(craft(s, 'ley-dust')).toBe(true);
   });
 
   it('does nothing when any input is short, and records the failure', () => {

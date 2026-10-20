@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { UNIDENTIFIED_ARMOR } from '../../src/data/armor';
+import { UNIDENTIFIED_ARMOR } from '../../src/data/gear';
+import { bodyPiece, piece, wear } from '../fixtures/gear';
 import { DYING_TICKS } from '../../src/data/player';
 import { FOUNDRY_ROOM, SHRINE_SITE } from '../../src/data/rooms';
 import { OVERWORLD } from '../../src/data/overworld';
 import { claim } from '../../src/sim/claims';
 import type { ConduitState, HopperState } from '../../src/sim/pieces';
 import { createSim } from '../../src/sim/state';
+import { defOf } from '../../src/sim/champions';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
 import { arena, atEntrance, atPylon, command, die, HUSK, placeHusk, PLAYER_AT, run, runUntil, SEED } from './fight';
@@ -97,30 +99,31 @@ describe('dying', () => {
     const h = put<HopperState>(s, 'hopper', 20, 12, 'down');
     h.item = 'stone';
     h.count = 4;
-    run(s, 1, { withdraw: { id: h.id } });
+    run(s, 1, { withdraw: { id: h.id, amount: 'all' } });
     expect(s.inventory).toEqual({ wood: 5, stone: 4 });
     die(s);
     expect(s.inventory).toEqual({ wood: 5 });
     expect(s.events.lost).toEqual({ stone: 4 });
   });
 
-  it('keeps identified and worn armor, the stash, claims, the reservoir and the foundry', () => {
+  it('keeps identified and worn gear, the stash, claims, the entrances and the foundry', () => {
     const s = foundry();
     run(s, 1);
-    s.armor = [{ id: 0, weight: 'light', armor: 3, name: 'Worn Vest' }];
-    s.equipped = 0;
+    wear(s, bodyPiece(0, 'light', 3), piece(1, 'helm', { baseArmor: 1 }));
+    s.gear.push(piece(2, 'boots'));
     s.stash = { wood: 9 };
     claim(s, SHRINE_SITE);
-    s.link.reservoir = { itemId: 'arrow', count: 5 };
+    Object.assign(s.link.entrances[1] ?? {}, { ammoId: 'arrow', count: 5 });
     const c = put<ConduitState>(s, 'conduit', 4, 4, 'up');
     c.item = 'stone';
     const pieces = s.foundry.pieces.length;
     die(s);
-    expect(s.armor).toHaveLength(1);
-    expect(s.equipped).toBe(0);
+    expect(s.gear).toHaveLength(3);
+    expect(s.equipped).toEqual({ helm: 1, body: 0, boots: null, trinket: null });
     expect(s.stash).toEqual({ wood: 9 });
     expect(s.claims).toEqual([SHRINE_SITE]);
-    expect(s.link).toMatchObject({ attuned: true, reservoir: { itemId: 'arrow', count: 5 } });
+    expect(s.link).toMatchObject({ attuned: true });
+    expect(s.link.entrances[1]).toMatchObject({ open: true, ammoId: 'arrow', count: 5 });
     expect(s.foundry.pieces).toHaveLength(pieces);
   });
 
@@ -132,7 +135,9 @@ describe('dying', () => {
     const field = OVERWORLD.packs.filter((p) => p.group === 'field').length;
     expect(s.enemies.filter((e) => e.group === 'field')).toHaveLength(field);
     expect(s.enemies.filter((e) => e.group === SHRINE_SITE)).toEqual([]);
-    expect(s.enemies.every((e) => e.health === HUSK.maxHealth || e.enemyId !== 'husk')).toBe(true);
+    // Full health: a champion's own (032), else the Husk's.
+    expect(s.enemies.every((e) => e.health === defOf(e).maxHealth)).toBe(true);
+    expect(s.enemies.some((e) => e.enemyId === 'husk' && !e.champion && e.health === HUSK.maxHealth)).toBe(true);
   });
 
   it('enemies lose a dying player', () => {

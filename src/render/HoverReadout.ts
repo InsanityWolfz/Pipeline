@@ -1,14 +1,15 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { READOUT_LAYOUT } from '../data/hudLayout';
-import { LOGISTICS_ICONS, INTAKE_EMPTY_ICON } from '../data/foundryAssets';
+import { INTAKE_CAP_ICON, INTAKE_EMPTY_ICON } from '../data/foundryAssets';
+import { ammoDef } from '../data/ammo';
+import { CAPPED_LABEL } from '../data/objectives';
 import { itemDef } from '../data/items';
-import { machineDef } from '../data/pieces';
-import { recipeDef, RECIPES } from '../data/recipes';
-import { RESERVOIR_CAP } from '../data/tube';
+import { RECIPES } from '../data/recipes';
 import { count } from '../sim/inventory';
-import type { ReservoirState } from '../sim/link';
+import type { EntranceState } from '../sim/link';
 import type { MachineState, PieceState } from '../sim/pieces';
+import { machineRecipe } from '../sim/stages';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
@@ -21,34 +22,32 @@ type Line = [frame: string, text: string];
 
 /** A machine's lines: each input with how many are buffered, then the output waiting to go out. */
 export function machineLines(m: MachineState): Line[] {
-  const recipe = recipeDef(machineDef(m.pieceId).recipeId);
+  // A stage's recipe follows the round it's working on (029).
+  const recipe = machineRecipe(m);
   return [
     ...Object.keys(recipe.inputs).map((id): Line => [itemDef(id).icon, String(count(m.buffer, id))]),
-    [itemDef(recipe.output.itemId).icon, String(m.output)],
+    [itemDef(m.made).icon, String(m.output)],
   ];
 }
 
-/** The intake's line (019): the reservoir's ammo (or the tube emblem when empty) and count out of the cap. */
-export function intakeLines(r: ReservoirState): Line[] {
-  const icon = r.itemId ? itemDef(r.itemId).icon : INTAKE_EMPTY_ICON;
-  return [[icon, `${r.count}/${RESERVOIR_CAP}`]];
+/**
+ * The intake's lines (019, 024), one per entrance west to east: its ammo (the tube emblem when empty) and its
+ * count out of the cap, or the cap emblem and "capped" while it's shut.
+ */
+export function intakeLines(entrances: readonly EntranceState[], cap: number): Line[] {
+  return entrances.map((e): Line => {
+    if (!e.open) return [INTAKE_CAP_ICON, CAPPED_LABEL];
+    const icon = e.ammoId ? itemDef(ammoDef(e.ammoId).itemId).icon : INTAKE_EMPTY_ICON;
+    return [icon, `${e.count}/${cap}`];
+  });
 }
 
-/** A gravity stager's line: its emblem and its angle in degrees, signed. */
-export function stagerLines(angle: number): Line[] {
-  const icon = LOGISTICS_ICONS['gravity-stager'];
-  if (!icon) throw new Error('No gravity stager emblem');
-  return [[icon, angle > 0 ? `+${angle}` : String(angle)]];
-}
-
-/** The readout for any piece: machines and stagers have one; other pieces show nothing. */
+/** The readout for any piece: machines have one; other pieces show nothing. */
 export function pieceLines(p: PieceState): Line[] {
-  if (p.kind === 'machine') return machineLines(p);
-  if (p.kind === 'stager') return stagerLines(p.angle);
-  return [];
+  return p.kind === 'machine' ? machineLines(p) : [];
 }
 
-// Over the machine, intake or stager under the cursor, a small panel of icon and text lines.
+// Over the machine or intake under the cursor, a small panel of icon and text lines.
 export class HoverReadout {
   private readonly back: GameObjects.Graphics;
   private readonly icons: GameObjects.Image[] = [];

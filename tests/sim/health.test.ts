@@ -4,10 +4,10 @@ import { STATIC_ROOMS } from '../../src/data/rooms';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { damagePlayer } from '../../src/sim/health';
 import { nextFloat } from '../../src/sim/rng';
-import { createSim, tileCentre } from '../../src/sim/state';
+import { createSim, resetWorld, tileCentre } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { DYING_TICKS } from '../../src/data/player';
-import { arena, at, runUntilKo, HUSK, placeHusk, PLAYER_AT, run, SEED, SWIPE_LANDS } from './fight';
+import { arena, at, FIELD_WALL, runUntilKo, HUSK, placeHusk, PLAYER_AT, run, SEED, SWIPE_LANDS } from './fight';
 
 const { damage, knockback, knockTicks } = HUSK.swipe;
 
@@ -74,11 +74,12 @@ describe('player health', () => {
   });
 
   it('stops the knockback at a wall', () => {
-    // Against the east face (x = 1024) of the ruin field's west wall, tile column 31 (017).
-    const s = arena(SEED, { x: 1024 + 16, y: 14.5 * 32 });
+    // Against the east face of the ruin field's west wall (017).
+    const face = (FIELD_WALL.west + 1) * 32;
+    const s = arena(SEED, { x: face + 16, y: 14.5 * 32 });
     hitFromEast(s);
     run(s, knockTicks);
-    expect(s.player.x).toBe(1024 + 8);
+    expect(s.player.x).toBe(face + 8);
   });
 
   it('keeps firing through a hit', () => {
@@ -147,13 +148,18 @@ describe('death and the KO (011)', () => {
     expect(summarize(s).player.ko).toBe(false);
   });
 
-  it('keeps the RNG running instead of reseeding it', () => {
+  it('keeps the RNG running instead of reseeding it: a KO draws only what the world reset rolls', () => {
     const s = koSim();
     nextFloat(s.rng);
     run(s, SWIPE_LANDS);
     const before = [...s.rng];
     runUntilKo(s);
-    expect(s.rng).toEqual(before);
+    // The reset rolls each landmark guard pack's champion chance (032), carrying on from where the RNG was.
+    const twin = createSim(SEED);
+    twin.claims = [...s.claims];
+    twin.rng = [before[0] ?? 0, before[1] ?? 0, before[2] ?? 0, before[3] ?? 0];
+    resetWorld(twin);
+    expect(s.rng).toEqual(twin.rng);
     expect(s.rng).not.toEqual(createSim(SEED).rng);
   });
 

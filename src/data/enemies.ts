@@ -1,18 +1,29 @@
+import { BULWARK, type BulwarkDef } from './bulwark';
+import { BOSS_WEIGHT } from './combat';
+import { REGION_1_PART, type RarePart } from './drops';
+import { HOLLOWS_ENEMIES, type HollowsEnemyDef } from './hollowsEnemies';
+
 // Enemies. Starting values from specs 004 and 009; tune in playtest.
 
-/** Items an enemy drops on death. */
+/** Items an enemy (or a Ruined Cache, 032) drops. */
 export interface DropTable {
   /** Always dropped: `min`..`max` of the item, rolled. */
   always: readonly { itemId: string; min: number; max: number }[];
   /** Chance (0..1) of one extra item, picked evenly from `oneOf`. */
   chance: number;
   oneOf: readonly string[];
+  /** `min`..`max` items, rolled, each picked evenly from `items` (032: the cache's raws). */
+  picks?: readonly { items: readonly string[]; min: number; max: number }[];
+  /** Rare entries (032), each rolled once per death at its chance (0..1), a champion's at `championChance` (033). */
+  rare?: readonly RarePart[];
 }
 
 /** What every enemy has, whatever its attack. */
-interface EnemyBase {
+export interface EnemyBase {
   id: string;
   name: string;
+  /** A boss (023) shrugs off the punch's knockback. */
+  boss: boolean;
   maxHealth: number;
   /** Walk speed, px per second. */
   walkSpeed: number;
@@ -20,21 +31,31 @@ interface EnemyBase {
   feetBox: { w: number; h: number };
   /** Box arrows hit, px, centred `offsetY` from the feet (negative is up). */
   hurtbox: { w: number; h: number; offsetY: number };
-  /** Push from an arrow hit, px, spread over `hitKnockTicks`. */
-  hitKnockback: number;
+  /** Its weight against Knockback (039, Q11): a round's hit pushes it `knockback × weight` px over `hitKnockTicks`. A boss weighs BOSS_WEIGHT (0). */
+  weight: number;
   hitKnockTicks: number;
   hitFlashTicks: number;
-  /** Ticks off screen before a chasing enemy heads home. */
-  leashGraceTicks: number;
   /** Within this distance of home, px, a returning enemy is home. */
   homeTolerance: number;
   drops: DropTable;
+  /** XP for a kill (037): times its ring's and a champion's multiplier, or a boss's on its first kill. */
+  xp: number;
   /** Key into ENEMY_ANIMS in src/data/assets.ts. */
   anims: string;
+  /**
+   * A shield (034, shared with 035): straight shots and punches whose hit point lies within `arcDegrees / 2` of its
+   * facing are blocked. It turns toward the player at no more than `turnDegPerSec`.
+   */
+  shield?: ShieldDef;
+}
+
+export interface ShieldDef {
+  arcDegrees: number;
+  turnDegPerSec: number;
 }
 
 /** The timing every attack shares: a telegraphed wind-up, the attack pose, a recovery, and a cooldown. */
-interface AttackTiming {
+export interface AttackTiming {
   windupTicks: number;
   /** Ticks the attack pose holds; the attack lands on the first. */
   swipeTicks: number;
@@ -43,8 +64,14 @@ interface AttackTiming {
   cooldownTicks: number;
 }
 
+/** Enemies that chase while on screen and head home after a grace period off it (the Bulwark leashes by its arena instead, 034). */
+export interface ScreenLeashed {
+  /** Ticks off screen before a chasing enemy heads home. */
+  leashGraceTicks: number;
+}
+
 /** A Husk: walks up and swipes an arc in front of it. Aggros when on screen. */
-export interface MeleeDef extends EnemyBase {
+export interface MeleeDef extends EnemyBase, ScreenLeashed {
   kind: 'melee';
   swipe: AttackTiming & {
     /** Feet-to-feet distance that starts a wind-up, px. */
@@ -61,7 +88,7 @@ export interface MeleeDef extends EnemyBase {
 }
 
 /** A Wisp (009): keeps its distance, charges, then casts a slow orb at where the player stood. */
-export interface CasterDef extends EnemyBase {
+export interface CasterDef extends EnemyBase, ScreenLeashed {
   kind: 'caster';
   cast: AttackTiming & {
     /** Aggros when the player is this close, px. */
@@ -86,7 +113,7 @@ export interface CasterDef extends EnemyBase {
 }
 
 /** The Pylon Warden (009): chases, then slams the ground around itself. */
-export interface SlammerDef extends EnemyBase {
+export interface SlammerDef extends EnemyBase, ScreenLeashed {
   kind: 'slammer';
   slam: AttackTiming & {
     /** Aggros when the player is this close, px. */
@@ -101,7 +128,12 @@ export interface SlammerDef extends EnemyBase {
   };
 }
 
-export type EnemyDef = MeleeDef | CasterDef | SlammerDef;
+/** The Bulwark (034) is in bulwark.ts; Region 2's four (035) are in hollowsEnemies.ts. */
+export type { BulwarkDef };
+export type EnemyDef = MeleeDef | CasterDef | SlammerDef | BulwarkDef | HollowsEnemyDef;
+
+/** Every attack's wind-up is at least this long (035): long enough to read and dodge. A data test holds every enemy to it. */
+export const MIN_TELEGRAPH_TICKS = 30;
 
 /** Shared tuning for the base fields that all three start from. */
 const BASE = { hitKnockTicks: 4, hitFlashTicks: 6, leashGraceTicks: 60, homeTolerance: 4 } as const;
@@ -112,6 +144,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
     kind: 'melee',
     id: 'husk',
     name: 'Husk',
+    boss: false,
     maxHealth: 40,
     walkSpeed: 50,
     feetBox: { w: 16, h: 8 },
@@ -128,12 +161,14 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
       knockback: 24,
       knockTicks: 6,
     },
-    hitKnockback: 6,
+    weight: 1,
     drops: {
       always: [{ itemId: 'husk-resin', min: 1, max: 2 }],
       chance: 0.5,
       oneOf: ['wood', 'stone', 'fiber'],
+      rare: [REGION_1_PART],
     },
+    xp: 5,
     anims: 'husk',
   },
   wisp: {
@@ -141,6 +176,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
     kind: 'caster',
     id: 'wisp',
     name: 'Wisp',
+    boss: false,
     maxHealth: 20,
     walkSpeed: 40,
     feetBox: { w: 12, h: 6 },
@@ -162,8 +198,9 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
       knockback: 10,
       knockTicks: 4,
     },
-    hitKnockback: 8,
-    drops: { always: [{ itemId: 'ley-crystal', min: 1, max: 2 }], chance: 0, oneOf: [] },
+    weight: 4 / 3,
+    drops: { always: [{ itemId: 'ley-crystal', min: 1, max: 2 }], chance: 0, oneOf: [], rare: [REGION_1_PART] },
+    xp: 6,
     anims: 'wisp',
   },
   'pylon-warden': {
@@ -171,6 +208,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
     kind: 'slammer',
     id: 'pylon-warden',
     name: 'Pylon Warden',
+    boss: true,
     maxHealth: 200,
     walkSpeed: 35,
     feetBox: { w: 28, h: 12 },
@@ -188,7 +226,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
       knockback: 32,
       knockTicks: 8,
     },
-    hitKnockback: 1,
+    weight: BOSS_WEIGHT,
     leashGraceTicks: 120,
     drops: {
       always: [
@@ -198,8 +236,11 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
       chance: 0,
       oneOf: [],
     },
+    xp: 150,
     anims: 'warden',
   },
+  bulwark: BULWARK,
+  ...HOLLOWS_ENEMIES,
 };
 
 /** Dropped items land within this distance of the corpse, px. */
@@ -222,6 +263,24 @@ export function meleeDef(id: string): MeleeDef {
 }
 
 /** The wind-up, attack, recover and cooldown timing of any enemy's attack. */
-export function attackOf(def: EnemyDef): MeleeDef['swipe'] | CasterDef['cast'] | SlammerDef['slam'] {
-  return def.kind === 'melee' ? def.swipe : def.kind === 'caster' ? def.cast : def.slam;
+export function attackOf(def: EnemyDef): AttackTiming {
+  switch (def.kind) {
+    case 'melee':
+      return def.swipe;
+    case 'caster':
+      return def.cast;
+    case 'slammer':
+      return def.slam;
+    case 'bulwark':
+      return def.pound;
+    case 'charger':
+      return def.charge;
+    case 'burrower':
+      // Its recovery is its daze on the surface.
+      return { ...def.burrow, recoverTicks: def.burrow.surfacedTicks };
+    case 'shardback':
+      return def.bash;
+    case 'sniper':
+      return def.snipe;
+  }
 }

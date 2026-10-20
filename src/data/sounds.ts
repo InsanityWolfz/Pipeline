@@ -1,29 +1,15 @@
+import { RESEARCH_SOUND_RECIPES } from './researchSounds.ts';
+import { HOLLOWS_SOUND_RECIPES, HOLLOWS_SOUNDS } from './hollowsSounds.ts';
+import { HOLLOWS_ENEMY_SOUND_RECIPES, HOLLOWS_ENEMY_SOUNDS, HOLLOWS_ENEMY_WINDUPS } from './hollowsEnemySounds.ts';
+import { GEAR_SOUND_RECIPES, GEAR_SOUNDS } from './gearSounds.ts';
+import { TALENT_SOUND_RECIPES, TALENT_SOUNDS } from './talentSounds.ts';
+import { MINE_SOUND_RECIPES, MINE_SOUNDS } from './mineSounds.ts';
+
 // Sound effects and ambient loops (014), as synth recipes. `npm run sound` renders
 // each one to assets/build/sounds/<key>.wav; render plays them by these keys.
 
-/** One voice of a sound: a wave whose pitch sweeps `from` → `to` Hz under an attack/decay envelope. */
-export interface SoundLayer {
-  wave: 'sine' | 'square' | 'saw' | 'triangle' | 'noise';
-  /** Start and end pitch, Hz. Noise uses `to` as its low-pass cutoff sweep instead. */
-  from: number;
-  to: number;
-  /** When it starts and how long it lasts, s. */
-  delay?: number;
-  dur: number;
-  attack?: number;
-  /** Peak level, 0–1. */
-  volume: number;
-  /** Amplitude wobble: rate Hz and depth 0–1. */
-  tremolo?: { rate: number; depth: number };
-  /** A one-pole low-pass cutoff, Hz. */
-  lowpass?: number;
-}
-
-export interface SoundRecipe {
-  layers: readonly SoundLayer[];
-  /** Ambient loops: this long, s; layers wrap round the end so it loops seamlessly. */
-  loop?: number;
-}
+export type { SoundLayer, SoundRecipe } from './soundRecipe.ts';
+import type { SoundLayer, SoundRecipe } from './soundRecipe.ts';
 
 export const SOUND_RATE = 22050;
 
@@ -32,7 +18,8 @@ export const SOUNDS = {
   fireArrow: 'fire-arrow',
   fireBomb: 'fire-bomb',
   fireLeyBolt: 'fire-ley-bolt',
-  dryFire: 'dry-fire',
+  meleeHit: 'melee-hit',
+  meleeWhiff: 'melee-whiff',
   hit: 'hit',
   enemyHurt: 'enemy-hurt',
   enemyDeath: 'enemy-death',
@@ -47,16 +34,30 @@ export const SOUNDS = {
   craft: 'craft',
   place: 'place',
   pickUpPiece: 'pick-up-piece',
-  rotate: 'rotate',
   machineCraft: 'machine-craft',
   refill: 'refill',
   attune: 'attune',
+  intakeOpen: 'intake-open',
   claim: 'claim',
   travel: 'travel',
   menuClick: 'menu-click',
   menuHover: 'menu-hover',
   gateOpen: 'gate-open',
   roll: 'roll',
+  /** 029: an enemy freezing solid, and a Split round bursting into shards. */
+  freeze: 'freeze',
+  split: 'split',
+  /** 030: healing starts in a safe spot. */
+  healStart: 'heal-start',
+  /** 033: a lost part restored, a schematic landing, a banked schematic's diagram appearing. */
+  restore: 'restore',
+  schematicChime: 'schematic-chime',
+  reveal: 'reveal',
+  ...HOLLOWS_SOUNDS,
+  ...HOLLOWS_ENEMY_SOUNDS,
+  ...GEAR_SOUNDS,
+  ...TALENT_SOUNDS,
+  ...MINE_SOUNDS,
   ambientClearing: 'ambient-clearing',
   ambientFoundry: 'ambient-foundry',
 } as const;
@@ -70,6 +71,12 @@ const birds = (times: readonly number[], pitch: number): SoundLayer[] =>
   ]);
 
 export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
+  ...RESEARCH_SOUND_RECIPES,
+  ...HOLLOWS_SOUND_RECIPES,
+  ...HOLLOWS_ENEMY_SOUND_RECIPES,
+  ...GEAR_SOUND_RECIPES,
+  ...TALENT_SOUND_RECIPES,
+  ...MINE_SOUND_RECIPES,
   'fire-arrow': {
     layers: [
       { wave: 'noise', from: 6000, to: 1500, dur: 0.12, attack: 0.002, volume: 0.35 },
@@ -88,7 +95,14 @@ export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
       { wave: 'sine', from: 2200, to: 900, dur: 0.18, attack: 0.002, volume: 0.25, tremolo: { rate: 40, depth: 0.5 } },
     ],
   },
-  'dry-fire': { layers: [{ wave: 'square', from: 220, to: 200, dur: 0.05, attack: 0.001, volume: 0.15, lowpass: 1500 }] },
+  // The punch (023): a light, low thud on a hit; a short soft rush of air on a miss.
+  'melee-hit': {
+    layers: [
+      { wave: 'sine', from: 150, to: 60, dur: 0.1, attack: 0.002, volume: 0.45 },
+      { wave: 'noise', from: 900, to: 200, dur: 0.06, attack: 0.001, volume: 0.25 },
+    ],
+  },
+  'melee-whiff': { layers: [{ wave: 'noise', from: 2400, to: 600, dur: 0.11, attack: 0.03, volume: 0.18 }] },
   hit: {
     layers: [
       { wave: 'noise', from: 3000, to: 800, dur: 0.07, attack: 0.001, volume: 0.4 },
@@ -158,7 +172,6 @@ export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
     ],
   },
   'pick-up-piece': { layers: [{ wave: 'triangle', from: 300, to: 600, dur: 0.1, attack: 0.002, volume: 0.25 }] },
-  rotate: { layers: [{ wave: 'square', from: 900, to: 900, dur: 0.03, attack: 0.001, volume: 0.1, lowpass: 3000 }] },
   'machine-craft': {
     layers: [
       { wave: 'noise', from: 900, to: 300, dur: 0.18, attack: 0.01, volume: 0.25 },
@@ -171,6 +184,15 @@ export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
       { wave: 'sine', from: 220, to: 440, dur: 1.4, attack: 0.6, volume: 0.3 },
       { wave: 'sine', from: 330, to: 660, dur: 1.4, attack: 0.6, volume: 0.2 },
       { wave: 'sine', from: 1320, to: 1760, delay: 0.5, dur: 1, attack: 0.3, volume: 0.1, tremolo: { rate: 12, depth: 0.5 } },
+    ],
+  },
+  // The intake's side caps lift off (024): a brass clank, then a rising two-note ley chime.
+  'intake-open': {
+    layers: [
+      { wave: 'noise', from: 2400, to: 600, dur: 0.09, attack: 0.001, volume: 0.3 },
+      { wave: 'square', from: 220, to: 160, dur: 0.12, attack: 0.001, volume: 0.12, lowpass: 1400 },
+      { wave: 'sine', from: 523, to: 784, delay: 0.1, dur: 0.5, attack: 0.04, volume: 0.22 },
+      { wave: 'sine', from: 784, to: 1175, delay: 0.25, dur: 0.55, attack: 0.04, volume: 0.16, tremolo: { rate: 14, depth: 0.4 } },
     ],
   },
   claim: {
@@ -195,6 +217,30 @@ export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
     ],
   },
   roll: { layers: [{ wave: 'noise', from: 600, to: 2200, dur: 0.18, attack: 0.05, volume: 0.2 }] },
+  // Ice closing over an enemy: a glassy crackle and a high, cold ring.
+  freeze: {
+    layers: [
+      { wave: 'noise', from: 9000, to: 3000, dur: 0.22, attack: 0.002, volume: 0.3 },
+      { wave: 'triangle', from: 2400, to: 1800, dur: 0.35, attack: 0.005, volume: 0.22, tremolo: { rate: 30, depth: 0.5 } },
+      { wave: 'sine', from: 3600, to: 3300, delay: 0.05, dur: 0.45, attack: 0.01, volume: 0.12 },
+    ],
+  },
+  // Ley light shattering: a bright crack and five quick chimes spreading out.
+  split: {
+    layers: [
+      { wave: 'noise', from: 7000, to: 1500, dur: 0.1, attack: 0.001, volume: 0.3 },
+      ...[0, 1, 2, 3, 4].map((i): SoundLayer => ({ wave: 'sine', from: 1500 + i * 260, to: 1100 + i * 200, delay: i * 0.025, dur: 0.16, attack: 0.003, volume: 0.1 })),
+    ],
+  },
+  // Healing starting (030): a soft, rising chime, a fifth over a warm hum.
+  'heal-start': {
+    layers: [
+      { wave: 'sine', from: 880, to: 880, dur: 0.7, attack: 0.02, volume: 0.1 },
+      { wave: 'sine', from: 1320, to: 1320, delay: 0.09, dur: 0.6, attack: 0.02, volume: 0.08 },
+      { wave: 'sine', from: 1760, to: 1760, delay: 0.18, dur: 0.5, attack: 0.02, volume: 0.05, tremolo: { rate: 6, depth: 0.3 } },
+      { wave: 'triangle', from: 440, to: 440, dur: 0.6, attack: 0.08, volume: 0.04, lowpass: 1200 },
+    ],
+  },
   'ambient-clearing': {
     loop: 8,
     layers: [
@@ -236,6 +282,8 @@ export const FIRE_SOUNDS: Readonly<Record<string, SoundKey>> = {
   arrow: SOUNDS.fireArrow,
   bomb: SOUNDS.fireBomb,
   'ley-bolt': SOUNDS.fireLeyBolt,
+  // 038.10: a landmine leaves the tube as a bomb does.
+  landmine: SOUNDS.fireBomb,
 };
 
 /** The wind-up cue by enemy kind. The Warden growls like a Husk; its slam lands with its own sound. */
@@ -243,4 +291,7 @@ export const WINDUP_SOUNDS: Readonly<Record<string, SoundKey>> = {
   melee: SOUNDS.huskWindup,
   caster: SOUNDS.wispCharge,
   slammer: SOUNDS.huskWindup,
+  // 034: the Bulwark's stone grinds as it plants its shield (the pound lands with its own sound).
+  bulwark: SOUNDS.bulwarkGrind,
+  ...HOLLOWS_ENEMY_WINDUPS,
 };

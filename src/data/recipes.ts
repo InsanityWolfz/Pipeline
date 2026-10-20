@@ -1,9 +1,14 @@
-// Hand-crafting recipes. Starting values from spec 005; tune in playtest.
+import { STAGE_RECIPES } from './stages';
+
+// Hand-crafting recipes. Starting values from spec 005; tune in playtest. A stage's
+// recipe (029: hand-applied at the bench, run by its machine) is found here too.
 
 export interface RecipeDef {
   id: string;
   /** Unknown until this holds (012): bombs, ley bolts and their parts appear once the tube attunes. */
   requires?: 'attuned';
+  /** Unknown until this item has been carried (038: the landmine chain shows once ley-iron is picked up). */
+  shownAfter?: string;
   /** Item id to count taken from the inventory. */
   inputs: Readonly<Record<string, number>>;
   output: { itemId: string; count: number };
@@ -22,20 +27,28 @@ export const RECIPES: Readonly<Record<string, RecipeDef>> = {
   arrow: recipe('arrow', { shaft: 1, arrowhead: 1, rope: 1 }, 'arrow', 4),
   casing: { ...recipe('casing', { stone: 1 }, 'casing', 1), requires: 'attuned' },
   fuse: { ...recipe('fuse', { 'husk-resin': 1 }, 'fuse', 1), requires: 'attuned' },
-  'ley-shard': { ...recipe('ley-shard', { 'ley-crystal': 1 }, 'ley-shard', 2), requires: 'attuned' },
-  bomb: { ...recipe('bomb', { casing: 1, fuse: 1, 'ley-shard': 1 }, 'bomb', 2), requires: 'attuned' },
-  'ley-bolt': { ...recipe('ley-bolt', { 'ley-shard': 1 }, 'ley-bolt', 2), requires: 'attuned' },
+  'ley-dust': { ...recipe('ley-dust', { 'ley-crystal': 1 }, 'ley-dust', 2), requires: 'attuned' },
+  bomb: { ...recipe('bomb', { casing: 1, fuse: 1, 'ley-dust': 1 }, 'bomb', 2), requires: 'attuned' },
+  'ley-bolt': { ...recipe('ley-bolt', { 'ley-dust': 1 }, 'ley-bolt', 2), requires: 'attuned' },
+  // 038: the landmine chain, reusing the bomb chain's fuse and shard.
+  'iron-plate': { ...recipe('iron-plate', { 'ley-iron': 1 }, 'iron-plate', 2), shownAfter: 'ley-iron' },
+  landmine: { ...recipe('landmine', { 'iron-plate': 1, fuse: 1, 'ley-dust': 1 }, 'landmine', 2), shownAfter: 'ley-iron' },
 };
 
-/** The crafting menu's groups, one per ammo, each listing its chain in order. */
-export const CRAFT_GROUPS: readonly { ammoId: string; recipes: readonly string[] }[] = [
-  { ammoId: 'arrow', recipes: ['shaft', 'arrowhead', 'rope', 'arrow'] },
-  { ammoId: 'bomb', recipes: ['casing', 'fuse', 'ley-shard', 'bomb'] },
-  { ammoId: 'ley-bolt', recipes: ['ley-bolt'] },
+/** Items whose first carrying reveals recipes (038), each remembered in `found`. */
+export const REVEALING_ITEMS: readonly string[] = [...new Set(Object.values(RECIPES).flatMap((r) => (r.shownAfter ? [r.shownAfter] : [])))];
+
+/** The crafting menu's groups, one per ammo, each listing its chain in order, and its column (038.4: two side by side). */
+export const CRAFT_GROUPS: readonly { ammoId: string; recipes: readonly string[]; column: number }[] = [
+  { ammoId: 'arrow', recipes: ['shaft', 'arrowhead', 'rope', 'arrow'], column: 0 },
+  { ammoId: 'bomb', recipes: ['casing', 'fuse', 'ley-dust', 'bomb'], column: 0 },
+  { ammoId: 'ley-bolt', recipes: ['ley-bolt'], column: 1 },
+  { ammoId: 'landmine', recipes: ['iron-plate', 'landmine'], column: 1 },
 ];
 
+/** A hand-crafting recipe, or a stage's (029). */
 export function recipeDef(id: string): RecipeDef {
-  const def = RECIPES[id];
+  const def = RECIPES[id] ?? STAGE_RECIPES[id];
   if (!def) throw new Error(`Unknown recipe '${id}'`);
   return def;
 }

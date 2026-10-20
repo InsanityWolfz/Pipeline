@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { DESCRIPTIONS } from '../../src/data/descriptions';
+import { ENEMIES } from '../../src/data/enemies';
 import { OVERWORLD } from '../../src/data/overworld';
 import { FEET_BOX } from '../../src/data/player';
 import { menuRows } from '../../src/render/foundryLayout';
@@ -26,23 +27,24 @@ async function pylonMenu(page: Page, row: 0 | 1, done: () => Promise<boolean>): 
 
 // Claiming (009): walk up to the shrine, clear it with the playtest ammo, claim
 // its pylon, send the haul home, travel to the foundry, take from the stash, see
-// the supply port push into a conduit, and ride the waystone back. Since 017 the
+// the fiber port push into a conduit (028: a port per raw), and ride the waystone back. Since 017 the
 // shrine is a walled site in the overworld, reached by the dirt path east.
 
 test('clear the shrine, claim the pylon, deposit, travel and use the stash and port', async ({ page }) => {
   test.setTimeout(120_000);
   const errors = watchErrors(page);
   await boot(page, '?playtest');
-  const result = await page.evaluate(() => {
+  const result = await page.evaluate((wispLift) => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     g.step(0);
     // Round the start stone, north up the path, then east along it to the shrine's gap (src/data/overworld.ts).
-    h.walkTo(41.5 * 32, g.getState().player.y);
-    for (const [tx, ty] of [[41.5, 22.5], [52.5, 21.5], [60.5, 18.5], [66.5, 17.5], [66.5, 13.5]]) h.walkTo((tx ?? 0) * 32, (ty ?? 0) * 32);
+    const X = h.ox;
+    h.walkTo((41.5 + X) * 32, g.getState().player.y);
+    for (const [tx, ty] of [[41.5, 22.5], [52.5, 21.5], [60.5, 18.5], [66.5, 17.5], [66.5, 13.5]]) h.walkTo(((tx ?? 0) + X) * 32, (ty ?? 0) * 32);
     let s = g.getState();
-    const inside = (e: { x: number; y: number }) => e.x > 58 * 32 && e.x < 75 * 32 && e.y > 3 * 32 && e.y < 16 * 32;
+    const inside = (e: { x: number; y: number }) => e.x > (58 + X) * 32 && e.x < (75 + X) * 32 && e.y > 3 * 32 && e.y < 16 * 32;
     const arrived = inside(s.player) ? 'shrine' : `${s.player.x},${s.player.y}`;
     const guards = () => s.enemies.filter((e) => e.group === 'shrine');
     // Fight with piercing ley bolts: back off from anything close, fire at the nearest (any wanderer that
@@ -67,7 +69,8 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
         dodge: windup && t % 30 === 0,
         fire: true,
         aimX: near.x,
-        aimY: near.y,
+        // At the body: a Wisp floats, its hurtbox well above its feet (an arrow at its feet passes under it).
+        aimY: near.y + (near.enemyId === 'wisp' ? wispLift : 0),
       });
       if (s.events.ko) return { arrived, failed: `knocked out at tick ${s.tick}` };
       // Closing in but stuck on something (018: the shrine has a grove, a pond and rocks): go round it.
@@ -86,9 +89,9 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
     // Claim: stand below the pylon, E, stand still.
     try {
       // Around the pylon's east side, so it never stands in the way.
-      h.walkTo(68.5 * 32, g.getState().player.y);
-      h.walkTo(68.5 * 32, 9.5 * 32);
-      h.walkTo(66.5 * 32, 9.5 * 32);
+      h.walkTo((68.5 + X) * 32, g.getState().player.y);
+      h.walkTo((68.5 + X) * 32, 9.5 * 32);
+      h.walkTo((66.5 + X) * 32, 9.5 * 32);
     } catch {
       const q = g.getState();
       return { arrived, failed: `stuck at ${q.player.x},${q.player.y} room ${q.room} cleared ${cleared} enemies ${JSON.stringify(guards().map((e) => [e.enemyId, e.x, e.y]))}` };
@@ -96,23 +99,25 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
     g.step(1, { interact: true });
     s = g.step(130);
     return { arrived, cleared, claimed: s.claims.includes('shrine'), failed: '' };
-  });
+  }, ENEMIES.wisp?.hurtbox.offsetY ?? 0);
   expect(result.failed).toBe('');
   expect(result.arrived).toBe('shrine');
   expect(result.cleared).toBe(true);
   expect(result.claimed).toBe(true);
 
-  // The pylon's harvest (018): the moment the supply port produces a raw, a mote of it sets off home along the ley line.
+  // The pylon's harvest (018): the moment the ports produce their raws (028: one port per raw, all four starting
+  // together at the claim), a mote of each sets off home along the ley line.
+  const RAWS = ['wood', 'stone', 'fiber', 'ley-crystal'];
   const supplied = await page.evaluate(() => {
     const g = window.__GAME__;
     let s = g?.getState();
     for (let t = 0; t < 400 && s && s.events.supplies.length === 0; t++) s = g?.step(1);
-    return { supplies: s?.events.supplies.map((e) => e.itemId) ?? [], port: s?.fixtures.find((f) => f.kind === 'port')?.item ?? null };
+    return { supplies: s?.events.supplies.map((e) => e.itemId) ?? [], ports: s?.ports.map((p) => [p.raw, p.waiting]) ?? [] };
   });
-  // The same raw comes up at the foundry's supply port.
-  expect(supplied).toEqual({ supplies: ['wood'], port: 'wood' });
-  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().supply))?.inFlight.map((m) => m.itemId)).toEqual(['wood']);
-  expect((await page.evaluate(() => window.__GAME__?.ui().supply))?.started).toBe(1);
+  // Each raw comes up at its own port, and waits there with nothing in front.
+  expect(supplied).toEqual({ supplies: RAWS, ports: RAWS.map((raw) => [raw, true]) });
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().supply))?.inFlight.map((m) => m.itemId)).toEqual(RAWS);
+  expect((await page.evaluate(() => window.__GAME__?.ui().supply))?.started).toBe(4);
 
   // Hovering the pylon says where the materials come from.
   const at = await state(page);
@@ -142,12 +147,12 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
-    const inside = (e: { x: number; y: number }) => e.x > 58 * 32 && e.x < 75 * 32 && e.y > 3 * 32 && e.y < 16 * 32;
+    const inside = (e: { x: number; y: number }) => e.x > (58 + h.ox) * 32 && e.x < (75 + h.ox) * 32 && e.y > 3 * 32 && e.y < 16 * 32;
     // Take one stack from the stash (fixture at tile 22,11), standing beside it.
     h.walkTo(21.5 * 32, 11.5 * 32);
     let s = g.step(1, { takeStash: { itemId: 'wood' } });
     const wood = s.inventory.wood ?? 0;
-    // A conduit in front of the supply port (1,8 facing right) gets a raw.
+    // A conduit in front of the fiber port (1,8 facing right) gets its raw.
     g.step(1, { place: { pieceId: 'conduit', tx: 2, ty: 8, facing: 'down' } });
     let raw: string | null = null;
     for (let t = 0; t < 300 && !raw; t++) {
@@ -163,7 +168,7 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
   expect(stashed).toBeGreaterThan(0);
   expect(home).toBe('foundry');
   expect(after.wood).toBeGreaterThan(0);
-  expect(after.raw).toBe('wood');
+  expect(after.raw).toBe('fiber');
   expect(after.back).toBe('shrine');
   expect(errors).toEqual([]);
 });

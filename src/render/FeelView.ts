@@ -1,4 +1,7 @@
+import { isFlatKind } from '../data/pieces';
 import type { Scene } from 'phaser';
+import { AMMO } from '../data/ammo';
+import { STAGES } from '../data/stages';
 import { TILE_SIZE } from '../data/config';
 import { enemyDef } from '../data/enemies';
 import { INTAKE } from '../data/foundry';
@@ -6,6 +9,7 @@ import { DUST, GLOWS, HARVEST_BURSTS, HARVEST_WORK, HIT_STOP_MS } from '../data/
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { FIRE_SOUNDS, SOUND_LEVELS, SOUNDS, WINDUP_SOUNDS } from '../data/sounds';
 import { isClaimed } from '../sim/claims';
+import { wornRelic } from '../sim/stats';
 import type { SimEvents } from '../sim/events';
 import { pieceRect } from '../sim/pieces';
 import { roomById, type SimState } from '../sim/state';
@@ -14,6 +18,9 @@ import { JuiceView } from './JuiceView';
 import { SoundView } from './SoundView';
 import { attuneBeat } from './attune';
 import { intakeAnchor } from './foundryLayout';
+import { playHollows } from './hollowsFeel';
+import { playMines } from './mineFeel';
+import { HollowsEnemyFeel } from './hollowsEnemyFeel';
 
 // Look and feel (014), driven by what the sim did since the last draw and how
 // its state moved on: sound, shake, hit-stop, particles, numbers and light.
@@ -32,11 +39,12 @@ export class FeelView {
   private modes = new Map<number, string>();
   private outputs = new Map<number, number>();
   private rolling = false;
-  private dryFire = false;
   private dustMs = 0;
   private workMs = 0;
   /** Ms left on the intake's glow swelling after an item went in (019). */
   private intakeMs = 0;
+  /** Region 2's four's charges, eruptions, bashes and bolts (035). */
+  private readonly hollowsEnemies = new HollowsEnemyFeel();
 
   static preload(scene: Scene): void {
     SoundView.preload(scene);
@@ -76,16 +84,42 @@ export class FeelView {
   private play(sim: SimState, ev: SimEvents): void {
     const j = this.juice;
     const s = this.sound;
+    // No shake on firing (021): too jarring.
+    // A tagged round (029) fires with its base's sound.
     for (const shot of ev.shots) {
-      const key = FIRE_SOUNDS[shot.ammoId];
+      const key = FIRE_SOUNDS[AMMO[shot.ammoId]?.base ?? shot.ammoId];
       if (key) s.play(key);
-      j.shake('small');
     }
+    // Cold and the Split (029): a freeze rings and frosts, a thaw throws off ice, a Split chimes.
+    for (const f of ev.freezes) {
+      s.play(SOUNDS.freeze);
+      j.burst('hitCold', f.x, f.y);
+    }
+    for (const t of ev.thaws) j.burst('thawShards', t.x, t.y);
+    if (ev.splits.length > 0) s.play(SOUNDS.split, SOUND_LEVELS.cue);
+    // The relics (036): a relic identified at the bench, the ward breaking on a block, Last Ember's save.
+    if (ev.identifies.some((piece) => piece.relic !== null)) s.play(SOUNDS.relicIdentify, SOUND_LEVELS.cue);
+    const relicSound = (rule: 'ward' | 'ember') => wornRelic(sim, rule)?.sound;
+    const ward = relicSound('ward');
+    const ember = relicSound('ember');
+    if (ev.wardBlocks.length > 0 && ward) s.play(ward);
+    if (ev.emberSaves.length > 0 && ember) s.play(ember);
+    // 037: a level-up chimes, a taken talent sets into its socket, a respec runs the lights down.
+    if (ev.levelUps.length > 0) s.play(SOUNDS.levelUp, SOUND_LEVELS.cue);
+    if (ev.talents.length > 0) s.play(SOUNDS.talentTake);
+    if (ev.respecs.length > 0) s.play(SOUNDS.respec);
+    // Healing starting in a safe spot (030) chimes once; nothing while it carries on, or when it only changes source.
+    if (ev.heals.some((h) => h.kind === 'start') && !ev.heals.some((h) => h.kind === 'stop')) s.play(SOUNDS.healStart, SOUND_LEVELS.quiet);
+    // A stage hand-applied at the bench (029) sounds like a hand craft (the crafting menu plays its own).
+    if (ev.crafts.some((c) => STAGES[c.recipeId])) s.play(SOUNDS.craft);
+    // A punch (023) thuds on a hit, or whiffs; its hits otherwise land like any other.
+    for (const m of ev.melees) s.play(m.hits.length > 0 ? SOUNDS.meleeHit : SOUNDS.meleeWhiff);
     for (const h of ev.hits) {
       if (h.target === 'enemy') {
-        s.play(SOUNDS.hit);
+        if (!h.melee) s.play(SOUNDS.hit);
         s.play(SOUNDS.enemyHurt, SOUND_LEVELS.under);
-        j.burst(h.damageType === 'fire' ? 'hitFire' : 'hitPhysical', h.x, h.y);
+        // Nothing deals fire until the fire rune (029); a fire hit gets its own burst when it comes back.
+        j.burst(h.damageType === 'cold' ? 'hitCold' : 'hitPhysical', h.x, h.y);
         j.damageNumber(h.damage, h.x, h.y, false);
         this.freeze(h.id, HIT_STOP_MS);
       } else {
@@ -124,28 +158,45 @@ export class FeelView {
       j.burst('place', c.x, c.y + TILE_SIZE / 2);
     }
     if (ev.pickUps.length > 0) s.play(SOUNDS.pickUpPiece);
-    if (ev.angles.length > 0) s.play(SOUNDS.rotate);
     if (ev.deposits.length > 0 || ev.withdraws.length > 0 || ev.crateTakes.length > 0) s.play(SOUNDS.pickUpPiece, SOUND_LEVELS.under);
     for (const r of ev.refills) {
       s.play(SOUNDS.refill, SOUND_LEVELS.quiet);
       // Sparks at the inlet the item went into.
-      const mouth = INTAKE.mouth[r.mouth];
-      if (mouth) j.burst('refill', (mouth.tx + 0.5) * TILE_SIZE, (mouth.ty + 1) * TILE_SIZE);
+      const inlet = INTAKE.entrances[r.entrance];
+      if (inlet) j.burst('refill', (inlet.tx + 0.5) * TILE_SIZE, (inlet.ty + 1) * TILE_SIZE);
+      this.intakeMs = GLOWS.intake.ms;
+    }
+    for (const open of ev.intakeOpens) {
+      // The cap lifts off (024, one entrance per restore since 033): a brass clank and a rising chime, and flecks from its inlet.
+      s.play(SOUNDS.intakeOpen);
+      const inlet = INTAKE.entrances[open.entrance];
+      if (inlet) j.burst('capLift', (inlet.tx + 0.5) * TILE_SIZE, (inlet.ty + 1) * TILE_SIZE);
       this.intakeMs = GLOWS.intake.ms;
     }
     if (ev.attunes.length > 0) s.play(SOUNDS.attune);
+    // 033: restoring, a schematic landing with its sparks, and a banked schematic's diagram appearing.
+    if (ev.restores.length > 0) s.play(SOUNDS.restore);
+    for (const d of ev.schematicDrops) j.burst('schematic', d.x, d.y);
+    if (ev.schematicDrops.length > 0) s.play(SOUNDS.schematicChime);
+    if (ev.schematicReveals.length > 0) s.play(SOUNDS.reveal);
     if (ev.claims.length > 0) s.play(SOUNDS.claim);
     if (ev.travels.length > 0) s.play(SOUNDS.travel);
-    if (ev.gates.length > 0) {
+    // 034: the Hollows' shield, bombs, pound, summon and barrier; the barrier's fall has its own sound.
+    const barrier = playHollows(ev, j, s);
+    // 038: landmines arming and bursting, and the bomblets.
+    playMines(ev, j, s);
+    this.hollowsEnemies.events(ev, j, s);
+    if (ev.gates.length > (barrier ? 1 : 0)) {
       s.play(SOUNDS.gateOpen);
       j.shake('medium');
     }
     if (ev.tubeTaken || ev.identifies.length > 0 || ev.stashDeposits.length > 0) s.play(SOUNDS.claim, SOUND_LEVELS.quiet);
   }
 
-  /** Changes with no event: wind-ups, machine crafts, rolls, dry fire and footsteps. */
+  /** Changes with no event: wind-ups, machine crafts, rolls and footsteps. */
   private watch(sim: SimState, shown: string, deltaMs: number): void {
     const j = this.juice;
+    this.hollowsEnemies.watch(sim, shown, deltaMs, j, this.sound);
     const live = new Set<number>();
     for (const e of sim.enemies) {
       if (e.roomId !== shown) continue;
@@ -184,9 +235,6 @@ export class FeelView {
     const rolling = player.rollTick > 0;
     if (rolling && !this.rolling) this.sound.play(SOUNDS.roll);
     this.rolling = rolling;
-    const dry = sim.tube.dryFire > 0;
-    if (dry && !this.dryFire) this.sound.play(SOUNDS.dryFire);
-    this.dryFire = dry;
 
     const moving = Math.hypot(player.vx, player.vy) > DUST.minSpeed;
     this.dustMs += deltaMs;
@@ -205,16 +253,15 @@ export class FeelView {
     }
   }
 
-  /** Lights that move or come and go: live veins, a claimed pylon, items on conduits, the intake and the tube. */
+  /** Lights that move or come and go: live veins, claimed pylons, items on conduits, the intake and the tube. */
   private movingGlows(sim: SimState, shown: string): GlowSpot[] {
     const spots: GlowSpot[] = [];
     for (const n of sim.nodes) if (n.roomId === shown && n.nodeId === 'ley-vein' && n.uses > 0) spots.push({ x: n.x, y: n.y, ...GLOWS.vein });
-    const pylon = roomById(shown).pylon;
-    if (pylon && isClaimed(sim, pylon.site)) spots.push({ ...tileCentre(pylon.tx, pylon.ty), ...GLOWS.pylon });
+    for (const pylon of roomById(shown).pylons ?? []) if (isClaimed(sim, pylon.site)) spots.push({ ...tileCentre(pylon.tx, pylon.ty), ...GLOWS.pylon });
     if (shown === FOUNDRY_ROOM) {
       for (const p of sim.foundry.pieces) {
         const r = pieceRect(p);
-        if (p.kind === 'conduit' || p.kind === 'sorter') spots.push({ x: r.x, y: r.y, ...GLOWS.conduit });
+        if (isFlatKind(p.kind)) spots.push({ x: r.x, y: r.y, ...GLOWS.conduit });
         if (p.kind === 'conduit' && p.item) spots.push({ x: r.x, y: r.y, ...GLOWS.conduitItem });
       }
       // The intake glows once attuned (growing as its rings light), swelling as each item goes in.

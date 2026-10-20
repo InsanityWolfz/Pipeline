@@ -1,7 +1,15 @@
+import { altarState } from '../sim/altar';
+import { shownItem } from './itemShown';
 import { TILE_SIZE } from '../data/config';
-import { DESCRIPTIONS } from '../data/descriptions';
+import { DESCRIPTIONS, portHover, portPlate, sitePylonLine } from '../data/descriptions';
+import { landmarkDef, landmarkOfSite } from '../data/landmarks';
+import type { PylonDef } from '../data/rooms';
+import { isOpened } from '../sim/cache';
+import { dormant, occupied } from '../sim/claims';
+import { portPerMinute, pylonsOf } from '../sim/claims';
 import { INTAKE } from '../data/foundry';
 import { enemyDef } from '../data/enemies';
+import { CHAMPIONS } from '../data/champions';
 import { HOVER_NAME, WORLD_NAMES } from '../data/hudLayout';
 import { itemDef } from '../data/items';
 import { nodeDef } from '../data/nodes';
@@ -28,6 +36,22 @@ export interface HoverName {
   description?: string;
   /** The foundry intake (019): render shows the reservoir's readout under the name. */
   intake?: boolean;
+  /** An enemy's id (040: its trait and status chips show under its name). */
+  enemy?: number;
+}
+
+/** A pylon's hover line: the shrine's (018), or a landmark pylon's naming its landmark and what it sends (032). */
+function pylonLine(sim: SimState, pylon: PylonDef): string {
+  const claimed = sim.claims.includes(pylon.site);
+  const landmark = landmarkOfSite(pylon.site);
+  if (!landmark?.pylon) return claimed ? DESCRIPTIONS.pylon : DESCRIPTIONS.pylonDormant;
+  return sitePylonLine(landmark.name, landmark.pylon.supplies.map((id) => itemDef(id).name).join(' and '), claimed ? 'claimed' : dormant(sim, pylon) ? 'dormant' : 'awake');
+}
+
+/** The Ruined Cache's hover line (032): sealed while a guard lives, ready, or empty until it re-arms. */
+function cacheLine(sim: SimState, id: string): string {
+  if (isOpened(sim, id)) return DESCRIPTIONS.cacheEmpty;
+  return occupied(sim, id) ? DESCRIPTIONS.cacheSealed : DESCRIPTIONS.cacheReady;
 }
 
 /** Distance from a point to a polyline of tile points, px. */
@@ -63,30 +87,46 @@ export function nameAt(sim: SimState, roomId: string, px: number, py: number): H
     const piece = pieceAt(sim.foundry, tx, ty);
     if (piece) return { name: pieceDef(piece.pieceId).name, ...centre(piece), rise: HOVER_NAME.tile.rise, pieceId: piece.id };
     // The intake's mouth (019), or the pipe rising above it up the wall shown over the top row.
-    if (INTAKE.mouth.some((m) => m.tx === tx && ty <= m.ty)) {
+    if (INTAKE.entrances.some((m) => m.tx === tx && ty <= m.ty)) {
       const at = intakeAnchor();
       return { name: WORLD_NAMES.intake, x: at.x, y: at.y, rise: HOVER_NAME.tile.rise, intake: true };
     }
     const fixture = fixtureAt(sim.fixtures, tx, ty);
     if (fixture) {
       const def = fixtureDef(fixture.id);
-      return { name: def.name, ...centre(def), rise: HOVER_NAME.tile.rise, ...(def.kind === 'port' ? { description: DESCRIPTIONS.port } : {}) };
+      if (def.kind !== 'port') return { name: def.name, ...centre(def), rise: HOVER_NAME.tile.rise };
+      // A supply port (028): its plate's text, and whether a refused raw is waiting in it.
+      const pylons = pylonsOf(sim, fixture);
+      const plate = portPlate(pylons, portPerMinute(pylons));
+      return { name: def.name, ...centre(def), rise: HOVER_NAME.tile.rise, description: portHover(plate, fixture.item !== null) };
     }
   }
   for (const e of sim.enemies) {
-    if (e.roomId === roomId && e.health > 0 && inBox(px, py, e.x, e.y, HOVER_NAME.enemy)) {
-      return { name: enemyDef(e.enemyId).name, x: e.x, y: e.y, rise: HOVER_NAME.enemy.rise };
+    // A champion (032) is bigger, and goes by its own name.
+    const k = e.champion ? CHAMPIONS.scale : 1;
+    const box = { w: HOVER_NAME.enemy.w * k, h: HOVER_NAME.enemy.h * k };
+    if (e.roomId === roomId && e.health > 0 && inBox(px, py, e.x, e.y, box)) {
+      return { name: e.champion?.name ?? enemyDef(e.enemyId).name, x: e.x, y: e.y, rise: HOVER_NAME.enemy.rise * k, enemy: e.id };
     }
   }
   for (const g of sim.groundItems) {
-    if (g.roomId === roomId && inBox(px, py, g.x, g.y, HOVER_NAME.item)) return { name: itemDef(g.itemId).name, x: g.x, y: g.y, rise: HOVER_NAME.item.rise };
+    if (g.roomId === roomId && inBox(px, py, g.x, g.y, HOVER_NAME.item)) return { name: shownItem(sim, g.itemId).name, x: g.x, y: g.y, rise: HOVER_NAME.item.rise };
   }
   for (const n of sim.nodes) {
     if (n.roomId === roomId && inBox(px, py, n.x, n.y, HOVER_NAME.node)) return { name: nodeDef(n.nodeId).name, x: n.x, y: n.y, rise: HOVER_NAME.node.rise };
   }
   const room = roomById(roomId);
   const on = (t: { tx: number; ty: number } | undefined) => t !== undefined && t.tx === tx && t.ty === ty;
-  if (on(room.pylon) && room.pylon) return { name: WORLD_NAMES.pylon, ...centre(room.pylon), rise: HOVER_NAME.tile.rise, description: sim.claims.includes(room.pylon.site) ? DESCRIPTIONS.pylon : DESCRIPTIONS.pylonDormant };
+  const pylon = (room.pylons ?? []).find((p) => on(p));
+  if (pylon) return { name: WORLD_NAMES.pylon, ...centre(pylon), rise: HOVER_NAME.tile.rise, description: pylonLine(sim, pylon) };
+  // The forum's altar (034): what an offering does now.
+  const altar = (room.altars ?? []).find((a) => on(a));
+  if (altar) {
+    const state = altarState(sim, altar.id);
+    return { name: WORLD_NAMES.altar, ...centre(altar), rise: HOVER_NAME.tile.rise, description: state === 'dim' ? DESCRIPTIONS.altarDim : state === 'awake' ? DESCRIPTIONS.altarAwake : DESCRIPTIONS.altarSpent };
+  }
+  const cache = (room.caches ?? []).find((c) => on(c));
+  if (cache) return { name: landmarkDef(cache.id).name, ...centre(cache), rise: HOVER_NAME.tile.rise, description: cacheLine(sim, cache.id) };
   if (on(room.tubeStone) && room.tubeStone) {
     return { name: sim.hasTube ? WORLD_NAMES.tubeStone : WORLD_NAMES.dormantTube, ...centre(room.tubeStone), rise: HOVER_NAME.tile.rise };
   }

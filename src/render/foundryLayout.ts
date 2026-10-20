@@ -1,10 +1,11 @@
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
+import { buildBarLabelTop, groupedBottomRow } from './bottomHud';
 import { INTAKE } from '../data/foundry';
 import { BUILD_BAR_LAYOUT, MENU_COLUMN_GAP, MENU_MAX_ROWS, PICKER_LAYOUT } from '../data/hudLayout';
 import type { AnimDef } from '../data/assets';
 import { CONDUIT_ANIMS, CONDUIT_CORNERS, LOGISTICS_ICONS, SORTER_ANIMS, type CornerKey } from '../data/foundryAssets';
 import { itemDef, ITEMS } from '../data/items';
-import { pieceDef } from '../data/pieces';
+import { BUILD_BAR, PIECE_CATEGORIES, pieceDef, type PieceCategory } from '../data/pieces';
 import { recipeDef } from '../data/recipes';
 import { facingVector, opposite } from '../sim/direction';
 import { footprint, sortSideOf, type Tile } from '../sim/pieces';
@@ -23,13 +24,73 @@ export interface ScreenRect {
 export const inRect = (r: ScreenRect, x: number, y: number): boolean =>
   x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h;
 
-/** One cell per piece in `pieces`, centred along the bottom of the screen. */
-export function buildBarCells(pieces: readonly string[]): (ScreenRect & { pieceId: string })[] {
+/** The pieces the bar shows (the unlocked ones), by group in bar order (026); a group with none shown is left out. */
+function barGroups(shown: readonly string[]): { category: PieceCategory; label: string; pieces: string[] }[] {
+  return PIECE_CATEGORIES.map((c) => ({
+    category: c.id,
+    label: c.label,
+    pieces: BUILD_BAR.filter((id) => shown.includes(id) && pieceDef(id).category === c.id),
+  })).filter((g) => g.pieces.length > 0);
+}
+
+function groupedCells(shown: readonly string[]): (ScreenRect & { pieceId: string })[][] {
   const L = BUILD_BAR_LAYOUT;
-  const width = pieces.length * L.cellStep - (L.cellStep - L.cellWidth);
-  const left = Math.round((VIEW_WIDTH - width) / 2);
-  const y = VIEW_HEIGHT - L.bottom - L.cellHeight;
-  return pieces.map((pieceId, i) => ({ pieceId, x: left + i * L.cellStep, y, w: L.cellWidth, h: L.cellHeight }));
+  const groups = barGroups(shown);
+  const rows = groupedBottomRow(
+    groups.map((g) => g.pieces.length),
+    { w: L.cellWidth, h: L.cellHeight, step: L.cellStep },
+    L.groupGap,
+    L.bottom,
+  );
+  return groups.map((g, gi) =>
+    g.pieces.flatMap((pieceId, i) => {
+      const box = rows[gi]?.[i];
+      return box ? [{ pieceId, ...box }] : [];
+    }),
+  );
+}
+
+/**
+ * One cell per piece in `shown` (the unlocked pieces: locked ones are hidden), in bar
+ * order and in their groups (026), centred along the bottom of the screen.
+ */
+export function buildBarCells(shown: readonly string[]): (ScreenRect & { pieceId: string })[] {
+  return groupedCells(shown).flat();
+}
+
+/** Each shown group's label row (026): over its cells, `label.gap` px above them. */
+export function buildBarGroups(shown: readonly string[]): (ScreenRect & { category: PieceCategory; label: string })[] {
+  const L = BUILD_BAR_LAYOUT;
+  const cells = groupedCells(shown);
+  return barGroups(shown).flatMap((g, i) => {
+    const mine = cells[i] ?? [];
+    const first = mine[0];
+    const last = mine[mine.length - 1];
+    if (!first || !last) return [];
+    return [{ category: g.category, label: g.label, x: first.x, y: buildBarLabelTop(), w: last.x + last.w - first.x, h: L.label.h }];
+  });
+}
+
+/** The thin dividers between build bar groups (026): centred in each gap, from the label row's top to `divider.inset` px above the cells' bottom. */
+export function buildBarDividers(shown: readonly string[]): { x: number; y: number; h: number }[] {
+  const L = BUILD_BAR_LAYOUT;
+  const groups = buildBarGroups(shown);
+  const top = buildBarLabelTop();
+  const bottom = VIEW_HEIGHT - L.bottom - L.divider.inset;
+  return groups.slice(1).flatMap((right, i) => {
+    const left = groups[i];
+    return left ? [{ x: (left.x + left.w + right.x) / 2, y: top, h: bottom - top }] : [];
+  });
+}
+
+/** The whole build bar with its labels, so a click anywhere on it is the bar's, not a place in the world. */
+export function buildBarBox(shown: readonly string[]): ScreenRect {
+  const groups = buildBarGroups(shown);
+  const first = groups[0];
+  const last = groups[groups.length - 1];
+  if (!first || !last) return { x: VIEW_WIDTH / 2, y: VIEW_HEIGHT, w: 0, h: 0 };
+  const y = buildBarLabelTop();
+  return { x: first.x, y, w: last.x + last.w - first.x, h: VIEW_HEIGHT - BUILD_BAR_LAYOUT.bottom - y };
 }
 
 /** A hopper menu row: take everything in the hopper out, or put all of a held item in. */
@@ -65,12 +126,15 @@ export function pickerRows(entries: readonly PickerEntry[]): (ScreenRect & Picke
 /**
  * A menu of `n` rows styled like the hopper picker (009's pylon and stash menus):
  * a centred column, wrapping into side-by-side columns once it would pass
- * MENU_MAX_ROWS, so a long stash stays on screen.
+ * MENU_MAX_ROWS, so a long stash stays on screen; once the columns fill the view's width they grow longer instead.
  */
 export function menuRows(n: number): ScreenRect[] {
   const L = PICKER_LAYOUT;
-  const perColumn = Math.min(n, MENU_MAX_ROWS);
-  const columns = Math.max(1, Math.ceil(n / MENU_MAX_ROWS));
+  // No more columns than the view's width holds (038: a sorter lists every item): past that, the columns grow longer.
+  const fit = Math.max(1, Math.floor((VIEW_WIDTH - 2 * L.pad + MENU_COLUMN_GAP) / (L.rowWidth + MENU_COLUMN_GAP)));
+  const wanted = Math.max(1, Math.ceil(n / MENU_MAX_ROWS));
+  const columns = Math.min(fit, wanted);
+  const perColumn = columns < wanted ? Math.ceil(n / columns) : Math.min(n, MENU_MAX_ROWS);
   const step = L.rowHeight + L.rowGap;
   const top = Math.round((VIEW_HEIGHT - perColumn * step) / 2);
   const width = columns * L.rowWidth + (columns - 1) * MENU_COLUMN_GAP;
@@ -109,8 +173,8 @@ export interface ArrowSpot extends Tile {
 
 /**
  * Where a piece's build-mode arrows go. Its front edge gets one output arrow
- * pointing out (machines, hoppers and stagers). Every outer edge that takes items gets an
- * input arrow pointing in: machines and stagers on all but their front side, crates on every
+ * pointing out (machines and hoppers). Every outer edge that takes items gets an
+ * input arrow pointing in: machines on all but their front side, crates on every
  * side. Conduits show their flow instead, so they get none. The intake's arrows are IntakeView's.
  */
 export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing; mirrored?: boolean }): ArrowSpot[] {
@@ -123,6 +187,15 @@ export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing:
       { kind: 'in', tx: p.tx, ty: p.ty, edge: back, points: p.facing },
       { kind: 'out', tx: p.tx, ty: p.ty, edge: p.facing, points: p.facing },
       { kind: 'sort', tx: p.tx, ty: p.ty, edge: side, points: side },
+    ];
+  }
+  // A splitter (033) takes from its back and hands out of its front and its side in turn.
+  if (kind === 'splitter') {
+    const side = sortSideOf(p.facing, p.mirrored ?? false);
+    return [
+      { kind: 'in', tx: p.tx, ty: p.ty, edge: opposite(p.facing), points: p.facing },
+      { kind: 'out', tx: p.tx, ty: p.ty, edge: p.facing, points: p.facing },
+      { kind: 'out', tx: p.tx, ty: p.ty, edge: side, points: side },
     ];
   }
   // A conduit shows its flow; since 013 it also marks the one side it takes items from.
@@ -187,7 +260,7 @@ export function wrapText(text: string, width: number): string[] {
 
 /** The foundry intake's anchor (019): the middle of its mouth's bottom edge, where the north wall meets the floor, px. */
 export function intakeAnchor(): { x: number; y: number } {
-  const middle = INTAKE.mouth[1];
-  if (!middle) throw new Error('The intake needs three mouth tiles');
+  const middle = INTAKE.entrances[1];
+  if (!middle) throw new Error('The intake needs three entrances');
   return { x: (middle.tx + 0.5) * TILE_SIZE, y: (middle.ty + 1) * TILE_SIZE };
 }

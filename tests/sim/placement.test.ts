@@ -19,9 +19,9 @@ import { foundry, put, STAND } from './foundryKit';
 describe('unlocks', () => {
   it('locks each machine until its output has been hand-crafted; logistics are always open', () => {
     const s = foundry(false);
-    expect(unlockedPieces(s)).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'gravity-stager']);
-    s.crafted = ['ley-shard'];
-    expect(unlockedPieces(s)).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'gravity-stager', 'grinder']);
+    expect(unlockedPieces(s)).toEqual(['conduit', 'sorter', 'hopper', 'crate']);
+    s.crafted = ['ley-dust'];
+    expect(unlockedPieces(s)).toEqual(['conduit', 'sorter', 'hopper', 'crate', 'grinder']);
   });
 
   it('refuses a locked piece', () => {
@@ -166,15 +166,15 @@ describe('piece bodies', () => {
     expect(s.player.y).toBeLessThan(tileCentre(STAND).y);
   });
 
-  it('the tube never fires in the foundry: no shot, no round spent, no dry fire', () => {
+  it('the tube never fires in the foundry: no shot, no round spent, no punch', () => {
     const s = foundry();
     const { x, y } = tileCentre(STAND);
     s.inventory = { arrow: 5 };
     run(s, 30, fireAt(x - 200, y));
-    expect([s.arrows.length, s.inventory.arrow, s.tube.dryFire, s.tube.firing]).toEqual([0, 5, 0, false]);
+    expect([s.arrows.length, s.inventory.arrow, s.tube.meleeCooldown, s.tube.firing]).toEqual([0, 5, 0, false]);
     s.inventory = {};
     run(s, 1, fireAt(x - 200, y));
-    expect(s.tube.dryFire).toBe(0);
+    expect(s.tube.meleeCooldown).toBe(0);
   });
 
   it('a KO keeps the whole foundry', () => {

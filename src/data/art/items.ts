@@ -1,13 +1,13 @@
-import { INTAKE_EMPTY_ICON, LOGISTICS_ICONS, SITE_ICONS } from '../foundryAssets';
+import { INTAKE_CAP_ICON, INTAKE_EMPTY_ICON, LOGISTICS_ICONS, SITE_ICONS } from '../foundryAssets';
 import { SPRITES } from '../assets';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSprite } from './types';
 
 // Item icons and build emblems (020), in the 016 vector style: 16x16 world px
 // round the centre, used on the ground, in the HUD, in menus and riding
 // conduits. The 005 look-alike pairs stay apart by shape: the shaft is a thin
-// straight rod and the fuse a fat twisted coil; the ley shard is three loose
-// chunks and the ley bolt one head on a trail; the casing an open shell and the
-// bomb a sealed sphere.
+// straight rod and the fuse a fat twisted coil; the ley dust is three loose
+// chunks and the ley bolt one head on a trail. The casing (031) is the bomb's plain
+// black sphere: only the bomb's wick and cinder band tell them apart.
 
 const icon = (key: string, shapes: readonly Shape[]): VectorSprite => ({ key, size: [16, 16], anchor: [8, 8], frames: [shapes] });
 
@@ -74,8 +74,8 @@ const SHAFT: Shape[] = [
   path('M -6.6 4.4 L -5.2 5.8 L -4.4 6.8', trim('wood-dark', 0.8)),
 ];
 
+// The arrowhead: only the knapped stone head, no wood (021).
 const ARROWHEAD: Shape[] = [
-  line([-5.5, 5.5, -2, 2], 1.6, 'wood', true),
   path('M 6 -6 L -2.8 -1.2 L -0.6 0.6 L 1.2 2.8 Z', { fill: { linear: [6, -6, -1, 1], stops: [{ at: 0, color: 'rock-pale' }, { at: 1, color: 'rock-light' }] }, outline: true }),
   path('M 6 -6 L -0.6 0.6', trim('rock', 0.5)),
   path('M 2.6 -4.2 L 1.4 -2.4 M 4.2 -2.6 L 2.4 -1.4', trim('rock', 0.4)),
@@ -89,14 +89,6 @@ const ROPE: Shape[] = [
   path('M 5.4 2.6 Q 7.4 5 5.6 6.8', trim('straw-dark', 2)),
   path('M 5.4 2.6 Q 7.4 5 5.6 6.8', trim('straw', 1.1)),
   ...[-4, -1.5, 1.5, 4].map((x) => line([x - 0.5, -3, x + 0.5, -2.2], 0.4, 'straw-dark')),
-];
-
-// The casing: an open shell of pale stone, its dark hollow showing at the top and a ley rune on its side. Open and upright next to the sealed bomb.
-const CASING: Shape[] = [
-  path('M -5 -3.4 L -4.4 4.6 Q 0 6.6 4.4 4.6 L 5 -3.4 Z', { fill: { linear: [-5, 0, 5, 0], stops: [{ at: 0, color: 'rock-pale' }, { at: 0.5, color: 'rock-light' }, { at: 1, color: 'rock' }] }, outline: true }),
-  ellipse(0, -3.4, 5, 1.9, solid('rock-pale')),
-  ellipse(0, -3.2, 3.6, 1.2, flat('ink')),
-  path('M -1.4 0 L 0 1.8 L 1.4 0 L 0 3.6', { ...trim('cyan', 0.7), glow: { color: 'cyan', blur: 2 } }),
 ];
 
 // The fuse: a fat coil of resin-soaked cord, twisted, its loose end lit.
@@ -115,7 +107,7 @@ const FUSE: Shape[] = [
   glowDot(0.4, 5.2, 0.6, 'cinder'),
 ];
 
-// The ley shard: three small loose chunks of ground crystal.
+// The ley dust: three small loose chunks of ground crystal.
 const shard = (x: number, y: number, s: number, turn: number): Shape =>
   path(`M ${x} ${y - 2.2 * s} L ${x + 1.8 * s} ${y - turn} L ${x + 0.8 * s} ${y + 1.8 * s} L ${x - 1.6 * s} ${y + 1 * s} L ${x - 1.4 * s} ${y - 1 * s} Z`, {
     fill: { linear: [x - 2, y + 2, x + 2, y - 2], stops: [{ at: 0, color: 'cyan-deep' }, { at: 1, color: 'cyan-glow' }] },
@@ -164,22 +156,30 @@ const ARMOR_HEAVY: Shape[] = [
 ];
 
 // Ammo icons, pointing up-right, matching their projectiles (016).
-const ICON_ARROW: Shape[] = [
+/** The arrow icon's stone head: an element tag (029) recolours just this shape. */
+export const ICON_ARROW_HEAD: Shape = path('M 6.4 -6.4 L 1.8 -4.2 L 4.2 -1.8 Z', solid('rock-pale'));
+export const ICON_ARROW: Shape[] = [
   line([-6, 6, 3.4, -3.4], 1.4, 'wood-light', true),
   path('M -6.4 6.4 L -7 3.2 L -4.6 4.6 Z', flat('rust-light')),
   path('M -6.4 6.4 L -3.2 7 L -4.6 4.6 Z', flat('rust')),
-  path('M 6.4 -6.4 L 1.8 -4.2 L 4.2 -1.8 Z', solid('rock-pale')),
+  ICON_ARROW_HEAD,
 ];
 
-const ICON_BOMB: Shape[] = [
+/** The bomb's sphere (031): a dark radial ball, outlined, with a highlight. The casing is this alone. */
+export const BOMB_SPHERE: Shape[] = [
   ellipse(-0.6, 1.4, 5.4, 5.4, { fill: { radial: [-2, -0.6, 6], stops: [{ at: 0, color: 'rock-dark' }, { at: 1, color: 'ink' }] }, outline: true }),
-  rect(-5.8, 0.3, 10.4, 2.2, 1, { fill: 'cinder', glow: { color: 'cinder', blur: 2 } }),
   ellipse(-2.6, -1.4, 1.4, 0.9, flat('rock-light')),
+];
+
+/** The bomb: the casing's sphere with its cinder band, the wick and the spark. */
+export const ICON_BOMB: Shape[] = [
+  ...BOMB_SPHERE,
+  rect(-5.8, 0.3, 10.4, 2.2, 1, { fill: 'cinder', glow: { color: 'cinder', blur: 2 } }),
   line([2.4, -3, 4.2, -5.6], 1.1, 'wood', true),
   glowDot(4.6, -6.2, 1.3, 'cinder-light'),
 ];
 
-const ICON_LEY_BOLT: Shape[] = [
+export const ICON_LEY_BOLT: Shape[] = [
   { ...line([-6.4, 6.4, 0.6, -0.6], 2.4, { id: 'cyan', alpha: 0.5 }), glow: { color: 'cyan', blur: 3 } },
   path('M 6.6 -6.6 L 0.4 -3.6 L -0.6 0.6 L 3.6 -0.4 Z', { fill: 'cyan-glow', outline: true, glow: { color: 'cyan', blur: 4 } }),
 ];
@@ -218,15 +218,12 @@ const HOPPER_EMBLEM: Shape[] = [
   rect(-3, 1.8, 6, 1.4, 0.4, solid('brass')),
 ];
 
-const STAGER_EMBLEM: Shape[] = [
-  ellipse(0, 0, 6.4, 6.4, trim('brass-dark', 2.4)),
-  ellipse(0, 0, 6.4, 6.4, trim('brass', 1.4)),
-  ...[-50, -25, 0, 25, 50].map((deg) => {
-    const a = ((deg - 90) * Math.PI) / 180;
-    return line([Math.cos(a) * 4.6, Math.sin(a) * 4.6, Math.cos(a) * 5.8, Math.sin(a) * 5.8], 0.5, 'ink');
-  }),
-  { ...line([0, 1.6, 3, -4.6], 1.2, 'cyan-glow', true), glow: { color: 'cyan', blur: 2 } },
-  ellipse(0, 1.6, 1.6, 1.6, solid('brass-light')),
+// A capped intake entrance (024), small: a brass cap with a rivet ring and a ley rune.
+const INTAKE_CAP_EMBLEM: Shape[] = [
+  ellipse(0, 1, 7, 4.6, { fill: { linear: [0, -3, 0, 6], stops: [{ at: 0, color: 'brass-light' }, { at: 1, color: 'brass-dark' }] }, outline: true }),
+  ellipse(0, -0.4, 5, 2.6, { fill: { linear: [0, -3, 0, 2], stops: [{ at: 0, color: 'brass-light' }, { at: 1, color: 'brass' }] }, outline: true }),
+  ...[-4.6, 4.6].map((x) => ellipse(x, 2.4, 0.7, 0.7, solid('brass-dark'))),
+  { ...line([-1.6, -0.6, 1.6, -0.6], 0.8, 'cyan-glow', true), glow: { color: 'cyan', blur: 2 } },
 ];
 
 const IDENTIFY_EMBLEM: Shape[] = [
@@ -266,9 +263,9 @@ export const ITEM_SPRITES_VECTOR: readonly VectorSprite[] = [
   icon(SPRITES.itemShaft, SHAFT),
   icon(SPRITES.itemArrowhead, ARROWHEAD),
   icon(SPRITES.itemRope, ROPE),
-  icon(SPRITES.itemCasing, CASING),
+  icon(SPRITES.itemCasing, BOMB_SPHERE),
   icon(SPRITES.itemFuse, FUSE),
-  icon(SPRITES.itemLeyShard, LEY_SHARD),
+  icon(SPRITES.itemLeyDust, LEY_SHARD),
   icon(SPRITES.itemWardenCore, WARDEN_CORE),
   icon(SPRITES.itemUnidentifiedArmor, UNIDENTIFIED_ARMOR),
   icon(SPRITES.iconArmorLight, ARMOR_LIGHT),
@@ -281,9 +278,9 @@ export const ITEM_SPRITES_VECTOR: readonly VectorSprite[] = [
   icon(LOGISTICS_ICONS.sorter ?? 'emblem-sorter', channel(true)),
   icon(LOGISTICS_ICONS.crate ?? 'emblem-crate', CRATE_EMBLEM),
   icon(LOGISTICS_ICONS.hopper ?? 'emblem-hopper', HOPPER_EMBLEM),
-  icon(LOGISTICS_ICONS['gravity-stager'] ?? 'emblem-gravity-stager', STAGER_EMBLEM),
   icon(SPRITES.emblemIdentify, IDENTIFY_EMBLEM),
   icon(SITE_ICONS.stash, CHEST),
   icon(SITE_ICONS.travel, TRAVEL_EMBLEM),
   icon(INTAKE_EMPTY_ICON, INTAKE_EMBLEM),
+  icon(INTAKE_CAP_ICON, INTAKE_CAP_EMBLEM),
 ];

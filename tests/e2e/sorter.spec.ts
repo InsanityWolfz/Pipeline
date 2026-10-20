@@ -49,7 +49,7 @@ test('a sorter placed and flipped with the mouse, set from its picker, sends its
   // Fill the hopper with the 30 starting arrows, then stand by the sorter and pick arrows from its menu.
   const hopper = pieceAt(placed, 12, 8);
   if (!hopper) throw new Error('no hopper');
-  await step(page, 1, { deposit: { id: hopper.id, itemId: 'arrow' }, toggleBuild: true });
+  await step(page, 1, { deposit: { id: hopper.id, itemId: 'arrow', amount: 'all' }, toggleBuild: true });
   const beside = centre(11, 9);
   await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [beside.x, beside.y] as const);
   await page.keyboard.press('e');
@@ -82,6 +82,8 @@ test('a sorter placed and flipped with the mouse, set from its picker, sends its
 });
 
 test('hovering a Husk names it, and a press that starts on the hotbar never fires', async ({ page }) => {
+  // About 22 s alone: room for parallel workers.
+  test.setTimeout(90_000);
   const errors = watchErrors(page);
   await boot(page);
   const s = await step(page, 0);
@@ -107,7 +109,7 @@ test('hovering a Husk names it, and a press that starts on the hotbar never fire
         await page.waitForTimeout(100);
         return page.evaluate(() => window.__GAME__?.ui().hoverName);
       },
-      { timeout: 10_000 },
+      { timeout: 30_000 },
     )
     .toBe('Husk');
 
@@ -117,20 +119,20 @@ test('hovering a Husk names it, and a press that starts on the hotbar never fire
   await page.waitForTimeout(500);
   const slot = await screenPoint(page, VIEW_WIDTH / 2, VIEW_HEIGHT - 18);
   const world = await screenPoint(page, VIEW_WIDTH / 2 + 120, VIEW_HEIGHT / 2);
-  const before = (await state(page)).inventory.arrow;
+  const start = await state(page);
+  const before = start.inventory.arrow;
   await page.mouse.move(slot.x, slot.y);
   await page.mouse.down();
-  await page.waitForTimeout(150);
   await page.mouse.move(world.x, world.y, { steps: 4 });
-  await page.waitForTimeout(400);
+  // Held, dragged into the world, while the world runs on: half a second of ticks (waits on the sim, not the clock).
+  await expect.poll(async () => (await state(page)).tick, { timeout: 15_000 }).toBeGreaterThan(start.tick + 30);
   await page.mouse.up();
   const after = await state(page);
   expect(after.inventory.arrow).toBe(before);
   expect(after.arrows).toEqual([]);
-  // A press that starts in the world does fire, so the check above means something.
+  // A press that starts in the world does fire, so the check above means something: held until a round leaves.
   await page.mouse.down();
-  await page.waitForTimeout(200);
+  await expect.poll(async () => (await state(page)).inventory.arrow ?? 0, { timeout: 15_000 }).toBeLessThan(before ?? 0);
   await page.mouse.up();
-  expect((await state(page)).inventory.arrow).toBeLessThan(before ?? 0);
   expect(errors).toEqual([]);
 });

@@ -212,6 +212,8 @@ export const WANDERER = {
     sleeve: { top: [-2, -3], bulge: [7, -1], elbowOut: [3, 2], elbowIn: [-3, 3], back: [-4, 6] },
     /** The elbow sits this far off the shoulder–grip midpoint. */
     elbow: [1, 1],
+    /** A full punch (023): the tube thrusts this far forward along its aim (the butt jab); empty-handed, the near fist reaches this far from the shoulder. */
+    jab: { thrust: 7, fist: 15 },
   },
   views: { side: sideView, down: downView, up: upView } satisfies Record<WandererView, WandererViewDef>,
   limbs: {
@@ -235,6 +237,8 @@ export const WANDERER = {
 export const WANDERER_FEEL = {
   firing: { lean: -0.16, crouch: 2.2, stance: 8.5, push: -2.5 },
   shot: { kick: 3.5, lean: -0.05, push: -1 },
+  /** The punch (023): full on its tick, easing back over `ticks` sim ticks; the body leans and shifts into it. */
+  jab: { ticks: 10, lean: 0.12, push: 2 },
   hit: { lean: 0.2, push: -2 },
   roll: { lean: 0.55, crouch: 9, stance: 3 },
   death: { lean: -1.2, crouch: 10, stance: 7 },

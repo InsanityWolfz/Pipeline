@@ -1,25 +1,30 @@
 import { FEET_BOX } from '../data/player';
-import { BUILD_BAR, isSolidPiece, machineDef, pieceDef } from '../data/pieces';
+import { BUILD_BAR, isSolidPiece, pieceDef } from '../data/pieces';
 import { recipeDef } from '../data/recipes';
 import { FOUNDRY_ROOM, TILE } from '../data/rooms';
 import { overlapsRect } from './collision';
 import { count, type Inventory } from './inventory';
 import { opposite } from './direction';
 import { fixtureAt, fixtureDef, portFront } from './fixtures';
-import { createPiece, footprint, frontTile, pieceAt, pieceRect, sameTile, sideTile, sortSide, type PieceShape, type PieceState, type PlaceFail } from './pieces';
+import { createPiece, footprint, frontTile, pieceAt, pieceRect, sameTile, sideTile, sortSide, splitSide, type PieceShape, type PieceState, type PlaceFail } from './pieces';
 import type { Facing } from './player';
 import { roomById, type SimState } from './state';
+import { machineRecipe, stagesUnlocked } from './stages';
+import { lockedByResearch } from './research';
 
 // Placing pieces on the foundry grid and picking them back up. Both are free.
 
 /**
- * Pieces the player can place, in build bar order: logistics always, machines
- * once their output is hand-crafted.
+ * Pieces the player can place, in build bar order: logistics always (033: the splitter and merger once restored),
+ * machines once their output is hand-crafted (a stage once any of its rounds is).
  */
-export function unlockedPieces(state: Pick<SimState, 'crafted'>): string[] {
+export function unlockedPieces(state: Pick<SimState, 'crafted' | 'research'>): string[] {
+  const locked = lockedByResearch(state);
   return BUILD_BAR.filter((id) => {
+    if (locked.includes(id)) return false;
     const def = pieceDef(id);
-    if (def.kind === 'machine') return state.crafted.includes(recipeDef(def.recipeId).output.itemId);
+    // A stage once any of its rounds has been hand-made (039: hand-applied once to any family).
+    if (def.kind === 'machine') return def.stage ? stagesUnlocked(state).includes(def.stage) : state.crafted.includes(recipeDef(def.recipeId).output.itemId);
     return true;
   });
 }
@@ -32,8 +37,6 @@ export function canPlace(state: SimState, pieceId: string, tx: number, ty: numbe
   const tiles = footprint(pieceId, tx, ty, facing);
   if (tiles.some((t) => room.rows[t.ty]?.[t.tx] !== TILE.floor)) return 'blocked';
   if (tiles.some((t) => pieceAt(state.foundry, t.tx, t.ty) || fixtureAt(state.fixtures, t.tx, t.ty))) return 'occupied';
-  const { cost } = pieceDef(pieceId);
-  if (cost && Object.entries(cost).some(([itemId, n]) => count(state.inventory, itemId) < n)) return 'cost';
   const p = state.player;
   if (isSolidPiece(pieceId) && overlapsRect(p.x, p.y, FEET_BOX, pieceRect({ pieceId, tx, ty, facing }))) {
     return 'player';
@@ -56,6 +59,7 @@ export function conduitInFrom(state: SimState, tx: number, ty: number, facing: F
     const t = sideTile(here, side);
     const piece = pieceAt(state.foundry, t.tx, t.ty);
     if (piece?.kind === 'sorter') return sameTile(frontTile(piece), here) || sameTile(sideTile(piece, sortSide(piece)), here);
+    if (piece?.kind === 'splitter') return sameTile(frontTile(piece), here) || sameTile(sideTile(piece, splitSide(piece)), here);
     if (piece) return piece.kind !== 'crate' && sameTile(frontTile(piece), here);
     const port = fixtureAt(state.fixtures, t.tx, t.ty);
     return port !== undefined && fixtureDef(port.id).kind === 'port' && sameTile(portFront(port), here);
@@ -72,31 +76,29 @@ export function place(state: SimState, pieceId: string, tx: number, ty: number, 
     state.events.placeFails.push({ pieceId, tx, ty, reason });
     return null;
   }
-  for (const [itemId, n] of Object.entries(pieceDef(pieceId).cost ?? {})) state.inventory[itemId] = count(state.inventory, itemId) - n;
   const kind = pieceDef(pieceId).kind;
   const made: PieceShape =
-    kind === 'conduit' ? { inFrom: conduitInFrom(state, tx, ty, facing, shape.inFrom) } : kind === 'sorter' ? { mirrored: shape.mirrored ?? false } : {};
+    kind === 'conduit' ? { inFrom: conduitInFrom(state, tx, ty, facing, shape.inFrom) } : kind === 'sorter' || kind === 'splitter' ? { mirrored: shape.mirrored ?? false } : {};
   const piece = createPiece(state.foundry.nextPieceId++, pieceId, tx, ty, facing, made);
   state.foundry.pieces.push(piece);
   state.events.places.push({ id: piece.id, pieceId, tx, ty, facing });
   return piece;
 }
 
-/** Everything a piece holds, plus what it cost to place, as items. A craft in progress gives back its inputs. */
+/** Everything a piece holds, as items. A craft in progress gives back its inputs. */
 export function pieceContents(p: PieceState): Inventory {
   const items: Inventory = {};
   const add = (itemId: string, n: number): void => {
     if (n > 0) items[itemId] = count(items, itemId) + n;
   };
-  for (const [itemId, n] of Object.entries(pieceDef(p.pieceId).cost ?? {})) add(itemId, n);
-  if ((p.kind === 'conduit' || p.kind === 'stager' || p.kind === 'sorter') && p.item) add(p.item, 1);
+  if ((p.kind === 'conduit' || p.kind === 'sorter' || p.kind === 'splitter' || p.kind === 'merger') && p.item) add(p.item, 1);
   if (p.kind === 'hopper' && p.item) add(p.item, p.count);
   if (p.kind === 'crate') for (const [itemId, n] of Object.entries(p.contents)) add(itemId, n);
   if (p.kind === 'machine') {
-    const recipe = recipeDef(machineDef(p.pieceId).recipeId);
+    const recipe = machineRecipe(p);
     for (const [itemId, n] of Object.entries(p.buffer)) add(itemId, n);
     if (p.crafting) for (const [itemId, n] of Object.entries(recipe.inputs)) add(itemId, n);
-    add(recipe.output.itemId, p.output);
+    add(p.made, p.output);
   }
   return items;
 }

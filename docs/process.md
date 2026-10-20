@@ -58,7 +58,7 @@ docs/
   process.md              this doc
   art.md                  art spec: palette, sizes, camera angle
   backlog.md              ordered list of specs and their status
-  progress.md             session log and handoff notes
+  progress.md             session log and current state
   decisions.md            technical decisions and why
   specs/NNN-name.md       one spec per feature
   plans/NNN-name.md       plans written by unattended /next runs
@@ -103,6 +103,19 @@ _Loop: Spec, then you approve, then Plan, Build, Verify, Review, then you playte
 6. **Log** (`/wrapup`): you playtest the branch's preview build, then Claude marks the spec done, updates `docs/progress.md`, and turns any repeated mistake into a new rule in `.claude/rules`. That's how the process improves over time.
 
 Failures loop back to Build. If the spec itself turns out wrong, Claude stops and asks rather than redesigning on its own.
+
+### Keeping the loop small (Shaun, 2026-10-20)
+
+From 021 to 041, 21 specs were stacked on one branch with no pull requests. `main` fell behind, nothing could be wrapped up, the diff was too large to review, and the stop hook ran the full check on every reply. These rules prevent that:
+
+1. **One spec, one branch, one PR.** Each spec gets its own branch (`claude/NNN-name`) and its own PR into `main`, merged after Shaun's playtest and before the next spec starts. Unattended runs may build several specs, but each one stacks on the previous spec's branch and has its own draft PR, so each can be reviewed and merged on its own.
+2. **A spec closes.** It is done when its acceptance criteria are met, or the unmet ones are recorded with measurements and a question for Shaun. New playtest notes and new ideas become new specs, never new items in a spec that is still open.
+3. **At most one "raised after the build" round per spec.** If Shaun's answers lead to more building that misses again, record the numbers and put the follow-up in a new spec.
+4. **Balance targets are measurements.** Scripted-bot targets over many seeds (fight lengths, clear times, damage taken) are printed by `npm run measure` and recorded in the spec and PR. They are not tests in `npm run check`, and the build doesn't loop on tuning to make chaotic seeds pass. Balance is judged at playtest.
+5. **Small approval batches.** About three specs approved at a time, so the proposals Shaun approves on draft are ones he has read.
+6. **Verify once.** While building, run only the e2e files the change touches. Run the full `npm run test:e2e` once per spec, at /verify (about 7 minutes; `npm run check` is about 50 seconds).
+7. **Commit after each item.** A container restart loses anything uncommitted.
+8. **One state log.** The current state lives in docs/progress.md (latest entry first), the spec statuses in docs/backlog.md, and the work in PRs. There's no separate handoff file.
 
 ## Agents, commands and hooks
 
@@ -347,7 +360,7 @@ The starting contents of `docs/backlog.md`, in build order: combat first, then t
 
 ## Unattended runs and token discipline
 
-**Unattended runs.** Because every bit of context lives in files, a fresh session can pick up work at any time, including a scheduled one after usage limits reset. A scheduled run executes `/next`: it takes the top approved spec, runs plan, build, verify and review on its own branch, and stops with a draft pull request ready for your review. Scheduled runs can happen on your computer (it needs to be on with Claude Code available) or in a Claude Code cloud session, since the repo is on GitHub. It never merges, never writes or approves specs, and never makes design decisions. Your job is to keep a few specs approved ahead of time and review the pull requests it opens.
+**Unattended runs.** Because every bit of context lives in files, a fresh session can pick up work at any time, including a scheduled one after usage limits reset. A scheduled run executes `/next`: it takes the top approved spec, runs plan, build, verify and review on its own branch, and stops with a draft pull request ready for your review. Scheduled runs can happen on your computer (it needs to be on with Claude Code available) or in a Claude Code cloud session, since the repo is on GitHub. It never merges, never writes or approves specs, and never makes design decisions. An overnight run that builds several specs starts each one on a new branch stacked on the previous one and opens a draft PR for each (see "Keeping the loop small"). Your job is to keep a few specs approved ahead of time and review the pull requests it opens.
 
 **Token discipline:**
 

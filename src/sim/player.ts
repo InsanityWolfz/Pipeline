@@ -1,4 +1,4 @@
-import { MAX_HEALTH } from '../data/player';
+import { MAX_HEALTH, type HealSource } from '../data/player';
 import type { Knockable } from './knockback';
 
 // The player's state: plain data so it serializes with the sim.
@@ -28,6 +28,18 @@ export interface PlayerState extends Knockable {
   hurtTicks: number;
   /** Ticks left on the death animation before waking in the foundry (011); 0 when alive. */
   dying: number;
+  /** What raised health this tick (030), or null. */
+  healing: HealSource | null;
+  /** Healing built up toward the next whole HP, in tenths of an HP·tick (10 × TICK_RATE of them make 1 HP, 036). */
+  healCarry: number;
+  /** The tick the last hit landed on, or null: healing waits HEALING.afterHitDelay ticks from it. */
+  lastHitTick: number | null;
+  /** Ticks without a hit while the Wardstone Circlet is worn (036), up to its wardTicks; 0 when not worn. */
+  wardTicks: number;
+  /** Last Ember (036) has saved the player since the last bank. */
+  emberSpent: boolean;
+  /** Enemies this roll has stunned (036: Rollbreaker Greaves, once each a roll). */
+  rollStunned: number[];
 }
 
 export function createPlayer(at: { x: number; y: number }): PlayerState {
@@ -46,6 +58,12 @@ export function createPlayer(at: { x: number; y: number }): PlayerState {
     health: MAX_HEALTH,
     hurtTicks: 0,
     dying: 0,
+    healing: null,
+    healCarry: 0,
+    lastHitTick: null,
+    wardTicks: 0,
+    emberSpent: false,
+    rollStunned: [],
     knockX: 0,
     knockY: 0,
     knockTicks: 0,
