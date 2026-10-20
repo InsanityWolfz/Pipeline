@@ -2,9 +2,11 @@ import { expect, test, type Page } from '@playwright/test';
 import { REGION_1_X } from '../../src/data/hollows';
 import { CACHE_BURST, LANDMARKS } from '../../src/data/landmarks';
 import { boot, watchErrors } from './helpers';
+import { intoForum } from './hollowsSandbox';
 
 // The readability fixes (045): a Ruined Cache's loot bursts out as named icons, then flies
-// to the player; [later slices add the E prompts and the build strip].
+// to the player; an E prompt shows over a ley crystal vein and over the Bulwark's sealed door
+// in reach; the build strip shows in build mode only, with the bound keys.
 
 const CACHE = { tx: 11 + REGION_1_X, ty: 38 };
 const ui = (page: Page) => page.evaluate(() => window.__GAME__?.ui());
@@ -57,5 +59,58 @@ test('a cache bursts its items out as named icons, then each flies to the player
   expect(picked.left).toBe(0);
   expect(picked.ids.sort()).toEqual([...gave].sort());
   await expect.poll(async () => (await ui(page))?.pickupFeed.reduce((n, l) => n + l.count, 0)).toBeGreaterThanOrEqual(gave.length);
+  expect(errors).toEqual([]);
+});
+
+/** Walks to just left of the nearest ley crystal vein in the overworld; returns its point. */
+export async function atLeyVein(page: Page): Promise<{ x: number; y: number }> {
+  return page.evaluate(() => {
+    const g = window.__GAME__;
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    const s = g.step(1);
+    const p = s.player;
+    const vein = s.nodes.filter((n) => n.nodeId === 'ley-vein' && n.room === 'overworld').sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+    if (!vein) throw new Error('no ley vein');
+    for (const e of g.getState().enemies) g.setEnemyHealth(e.id, 0);
+    h.walkTo(vein.x - 20, vein.y);
+    g.step(1);
+    return { x: vein.x, y: vein.y };
+  });
+}
+
+test('a ley crystal vein in reach shows the E prompt, as other nodes do', async ({ page }) => {
+  test.setTimeout(150_000);
+  const errors = watchErrors(page);
+  await boot(page, '?start=field');
+  await page.evaluate(() => window.__GAME__?.completeObjectives(2));
+  const vein = await atLeyVein(page);
+  // Past the gathering goal (whose own prompt shows E over the nearest node), the in-reach prompt is the only E.
+  await expect.poll(async () => (await ui(page))?.interactPrompt).toEqual({ kind: 'node', key: 'E', x: vein.x, y: vein.y });
+  expect((await ui(page))?.prompt?.key ?? null).not.toBe('E');
+  // Walking off, the in-reach prompt goes.
+  await page.evaluate(() => window.__GAME__?.step(40, { moveX: -1 }));
+  await expect.poll(async () => (await ui(page))?.interactPrompt).toBeNull();
+  expect(errors).toEqual([]);
+});
+
+test("the Bulwark's sealed door shows the E prompt in reach, and the seal hums until it drops", async ({ page }) => {
+  test.setTimeout(150_000);
+  const errors = watchErrors(page);
+  await intoForum(page);
+  await page.evaluate(() => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    for (let t = 0; t < 60; t++) {
+      g.step(1, { moveY: -1 });
+      g.setPlayerHealth(100);
+    }
+  });
+  await expect.poll(async () => (await ui(page))?.interactPrompt?.kind).toBe('arena-seal');
+  await expect.poll(async () => (await ui(page))?.hollows.sealHum).toBe(true);
+  await page.evaluate(() => window.__GAME__?.step(1, { interact: true }));
+  await expect.poll(async () => (await ui(page))?.interactPrompt?.kind ?? null).not.toBe('arena-seal');
+  await expect.poll(async () => (await ui(page))?.hollows.sealHum).toBe(false);
+  await expect.poll(async () => (await ui(page))?.hollows.sealDrops).toBe(1);
   expect(errors).toEqual([]);
 });

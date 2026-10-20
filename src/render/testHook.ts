@@ -1,4 +1,5 @@
 import type { GroundItemShown } from './GroundItemView';
+import type { InteractPromptState } from './InteractPrompt';
 import type { SimSummary } from '../sim/summary';
 import type { Command } from '../sim/input';
 import type { FlowReport, FlowUi } from './flow/flowTypes';
@@ -129,6 +130,8 @@ export interface UiState {
   ports: PortShown[];
   /** The tutorial's key prompt as drawn (its key, the world point it floats over, whether the key works now), or null (027). */
   prompt: PromptState | null;
+  /** 045: the in-reach E prompt as drawn (what it's over, its bound key, the world point), or null. */
+  interactPrompt: InteractPromptState | null;
   /** The arrow marker, over the intake for the conduit step (027) or over the ports for the port goal (028): the world point its tip bobs over, or null. */
   marker: { x: number; y: number } | null;
   /** The "+ shaft" popups still on screen (027), by text, with each one's box in view px (031: none overlap). */

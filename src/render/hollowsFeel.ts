@@ -55,3 +55,21 @@ export function playHollows(ev: SimEvents, j: JuiceView, s: SoundView): boolean 
   }
   return fell;
 }
+
+/**
+ * The forum's seal heard (045, 043.5): its hum loops while it stands in the room on screen, and the barrier's collapse
+ * plays as it drops. `drops` counts the drops heard (for the test hook).
+ */
+export class SealSound {
+  humming = false;
+  drops = 0;
+
+  update(sealedHere: boolean, s: SoundView): void {
+    if (this.humming && !sealedHere) {
+      s.play(SOUNDS.barrierCollapse);
+      this.drops += 1;
+    }
+    this.humming = sealedHere;
+    s.loop(SOUNDS.sealHum, sealedHere, SOUND_LEVELS.under);
+  }
+}

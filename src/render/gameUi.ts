@@ -25,6 +25,8 @@ export function gameUi(g: GameScene): GameUiState {
     ...(g.hover?.ui ?? NO_HOVER_UI),
     buildTip: g.buildView?.tipShown ?? null,
     ...(g.roomViews?.state ?? NO_ROOM_UI),
+    // 045: the seal's hum and drops are heard in FeelView.
+    hollows: { ...(g.roomViews?.state ?? NO_ROOM_UI).hollows, sealHum: g.feel?.seal.humming ?? false, sealDrops: g.feel?.seal.drops ?? 0 },
     nodes: g.nodeView?.frames ?? {},
     shakes: [...(g.feel?.juice.shakes ?? [])],
     cursor: g.cursorView?.state ?? null,
