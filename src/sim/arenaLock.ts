@@ -4,6 +4,7 @@ import { OVERWORLD_ROOM } from '../data/overworld';
 import { FEET_BOX } from '../data/player';
 import { engaged } from './bulwarkAi';
 import { resetFight } from './bulwarkPhases';
+import { gapTo } from './claims';
 import { defOf } from './champions';
 import { overlapsRect, type Box, type Rect } from './collision';
 import { createEnemy, type EnemyState } from './enemies';
@@ -64,17 +65,7 @@ export function stepSeal(state: SimState): void {
 /** The sealed arena whose seal is within reach of the player's feet box, if any. */
 export function sealInReach(state: SimState): Arena | undefined {
   if (state.roomId !== OVERWORLD_ROOM) return undefined;
-  const p = state.player;
-  return ARENAS.find(
-    (a) =>
-      arenaSealed(state, a) &&
-      a.seal.tiles.some((t) => {
-        const r = tileRect(t);
-        const gapX = Math.max(0, Math.abs(r.x - p.x) - (FEET_BOX.w + r.w) / 2);
-        const gapY = Math.max(0, Math.abs(r.y - p.y) - (FEET_BOX.h + r.h) / 2);
-        return Math.hypot(gapX, gapY) <= a.seal.reach;
-      }),
-  );
+  return ARENAS.find((a) => arenaSealed(state, a) && a.seal.tiles.some((t) => gapTo(state, t) <= a.seal.reach));
 }
 
 /** The boss back at its start as it was placed (full health, idle, nothing on it), its adds and bombs gone: a leash reset, at once. */
