@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test';
+import { HOLLOWS } from '../../src/data/hollows';
 import { boot, cameraSettled } from './helpers';
 
 // The `?start=hollows` sandbox (035) for fighting and photographing Region 2's enemies: its
@@ -76,4 +77,18 @@ export async function frames(page: Page, n = 4): Promise<void> {
   await page.evaluate(async (k) => {
     for (let i = 0; i < k; i++) await new Promise((r) => requestAnimationFrame(r));
   }, n);
+}
+
+/** 043: into the Sunken Forum with only the Bulwark left, the player just inside its way in; returns once it fights (and the seal stands). */
+export async function intoForum(page: Page): Promise<void> {
+  await boot(page, '?start=hollows');
+  await page.evaluate((door) => {
+    const g = window.__GAME__;
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark') g.setEnemyHealth(e.id, 0);
+    g.step(1);
+    for (const [x, y] of [[25, 27], [12, 27], [12, door - 1], [12, door + 1]] as const) h.walkTo((x + 0.5) * 32, (y + 0.5) * 32);
+    for (let t = 0; t < 120 && !g.getState().bosses[0]?.engaged; t++) g.step(1);
+  }, HOLLOWS.arena.seal.tiles[0]?.ty ?? 0);
 }
