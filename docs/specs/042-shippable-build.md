@@ -225,3 +225,7 @@ Each has a proposed answer that the build follows (approve-on-draft); Shaun may 
 - **042.12 Does "no easing pan" remove the attune look (019)?** Proposal: no. It's a one-off scripted look at the intake when the tube first links, not a follow pan. Everything that follows the player locks.
 - **042.13 Quit in a browser?** Proposal: a page can't close a tab the player opened, so Quit shows a farewell card ("You can close this tab now") with Back to title, and tries `window.close()` first.
 - **042.14 Does Continue keep the player's health?** Proposal: Continue wakes the player as a KO's wake does, with the health a wake gives, in the foundry, which heals at 50 HP/s anyway (030).
+
+
+## Changed by Shaun, 2026-10-20
+- **Screen shake is off entirely** ("we need to turn off the screen shake entirely"). Already done: `SHAKE_ON = false` in src/data/juice.ts. 042 removes the shake toggle from Settings and doesn't build the "big moments only" shake list. The camera still locks tightly to the player with no easing pan, as the spec says.
