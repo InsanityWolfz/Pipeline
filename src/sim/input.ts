@@ -53,8 +53,6 @@ export interface Command {
   identify: boolean;
   /** At the bench this tick (an edge, 036): wear a piece by id (the worn one comes off), or take a slot off with `{ slot, id: null }`; null for no change. */
   equip: EquipRequest | null;
-  /** Hand-apply a stage (by stage id) at the bench this tick (an edge, 029), or null. */
-  applyStage: string | null;
   /** Restore a research node (by id) at its diagram in reach this tick (an edge, 033), or null. */
   restore: string | null;
   /** Pay the offering at an altar (by id) in reach, summoning its boss again (an edge, 034), or null. */
@@ -88,7 +86,6 @@ export const NO_COMMAND: Readonly<Command> = {
   takeStash: null,
   identify: false,
   equip: null,
-  applyStage: null,
   restore: null,
   summon: null,
   takeTalent: null,

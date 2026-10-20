@@ -63,10 +63,7 @@ test.describe('review screenshots (036)', () => {
     await expect.poll(async () => (await ui(page))?.gearPanel?.cells.every((c) => c.worn !== null)).toBe(true);
     await page.mouse.move(canvas.x + 4, canvas.y + 4);
     await page.screenshot({ path: `${SHOTS}/01-bench-four-slots-relic-row.png` });
-    // With the shrine claimed, the Stages panel (029) sits beside it.
-    await page.evaluate(() => window.__GAME__?.claim('shrine'));
-    await expect.poll(async () => (await ui(page))?.tagged.benchStages?.shown).toBe(true);
-    await page.screenshot({ path: `${SHOTS}/02-bench-beside-stages.png` });
+    // 047: the bench's Stages panel is gone (tagged rounds are crafted in C), so 02-bench-beside-stages is no longer taken.
     await page.keyboard.press('Escape');
     await expect.poll(async () => (await ui(page))?.gearPanel ?? null).toBeNull();
     // The HP bar's armor value: the total of every worn piece.

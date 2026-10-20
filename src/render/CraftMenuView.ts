@@ -1,27 +1,28 @@
 import type { GameObjects, Scene } from 'phaser';
 import { ammoDef } from '../data/ammo';
 import { DEPTHS, SPRITES } from '../data/assets';
+import { CRAFT_TABS, craftRecipeDef } from '../data/craftTabs';
 import { CRAFT_MENU_LAYOUT } from '../data/hudLayout';
 import { itemDef } from '../data/items';
-import { CRAFT_GROUPS, recipeDef } from '../data/recipes';
-import { canCraft } from '../sim/crafting';
-import type { LinkState } from '../sim/link';
+import { RECIPES } from '../data/recipes';
+import { stageRow } from '../data/stages';
+import { canCraft, type CraftStores } from '../sim/crafting';
+import { count } from '../sim/inventory';
+import { taggedHeld, taggedKnown } from '../sim/stages';
 import { knownRecipe } from '../sim/tutorial';
-import { count, type Inventory } from '../sim/inventory';
-
-import { craftMenuLines, craftPanelAt } from './craftMenuLayout';
+import { colorOf } from './color';
+import { craftPanelAt, craftTabBoxes, craftTabRows } from './craftMenuLayout';
 import { flashRow, RowHover, type RowFrames } from './menuFeedback';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
 
-/** What decides which recipes show and which can be made: the inventory, the attunement and the revealing items found. */
-type Known = { inventory: Inventory; link: Pick<LinkState, 'attuned'>; found: readonly string[] };
-
 const RECIPE_ROW_FRAMES: RowFrames = { plain: SPRITES.craftRecipeRow, hover: SPRITES.craftRecipeRowHover, press: SPRITES.craftRecipeRowPress };
 
 interface Row {
   recipeId: string;
+  /** Which tab it's on (047): a part two families use has a row on each. */
+  tab: number;
   frame: GameObjects.Image;
   /** The icons and arrow drawn on the row, greyed together when it can't be afforded. */
   parts: GameObjects.Image[];
@@ -33,6 +34,12 @@ interface Row {
   outputName: TextLine;
 }
 
+interface Tab {
+  ammoId: string;
+  icon: GameObjects.Image;
+  name: TextLine;
+}
+
 /** A line of text as drawn, view px: (x, y) is the top of its capitals, `h` its line height. */
 export interface TextBox {
   text: string;
@@ -42,11 +49,16 @@ export interface TextBox {
   h: number;
 }
 
-/** The crafting menu as drawn (026), for `ui().craftMenu`: each recipe row with its item names and counts, and the group headers. */
+/** The crafting menu as drawn (026, 047), for `ui().craftMenu`: its tabs, the open one, and each tab's rows with their item names and counts. */
 export interface CraftMenuState {
   open: boolean;
+  /** The open tab's family (its base ammo id). */
+  tab: string;
+  tabs: { ammoId: string; label: string; shown: boolean; x: number; y: number; w: number; h: number }[];
   rows: {
     recipeId: string;
+    /** The tab it's on, by family. */
+    tab: string;
     shown: boolean;
     x: number;
     y: number;
@@ -57,27 +69,36 @@ export interface CraftMenuState {
     /** The counts beside the icons: each input's have/need (missing when short), then the output's made and owned. */
     counts: (TextBox & { missing: boolean })[];
   }[];
-  headers: (TextBox & { ammoId: string; shown: boolean })[];
 }
 
 const box = (line: TextLine): TextBox => ({ text: line.obj.text, ...line.at, w: line.width, h: line.lineHeight });
 
-// The crafting menu: every recipe grouped by ammo, each header naming its ammo, each row
-// showing its inputs (held/needed) and what it makes and how many of that are held, with
-// every item's name under its icon (026). Clicking an affordable row crafts it once.
-// Reads sim state; crafting goes through `onCraft`.
+/** Whether a row's recipe is known: a plain recipe as 012 and 038 say, a tagged round's once the shrine is claimed and its family known (029). */
+function rowKnown(sim: CraftStores, recipeId: string): boolean {
+  if (RECIPES[recipeId]) return knownRecipe(sim, recipeId);
+  const row = stageRow(recipeId);
+  return row !== undefined && taggedKnown(sim, row);
+}
+
+/** How many of an item a row counts as held: carried, plus the intake's entrances for a tagged round's rows (029 option A). */
+const heldFor = (sim: CraftStores, recipeId: string, itemId: string): number => (RECIPES[recipeId] ? count(sim.inventory, itemId) : taggedHeld(sim, itemId));
+
+// The crafting menu (026; 047): a tab per ammo family down the left (Arrows, Bombs, Ley, Landmines), the open tab's
+// recipes to the right, its whole chain (parts included) then its tagged rounds. Each row shows its inputs
+// (held/needed) and what it makes and how many of that are held, every item's name under its icon. Clicking an
+// affordable row crafts it once; clicking a tab opens it. Reads sim state; crafting goes through `onCraft`.
 export class CraftMenuView {
   private readonly objects: (GameObjects.Image & GameObjects.Components.Visible)[] = [];
   private readonly lines: TextLine[] = [];
   private readonly rows: Row[] = [];
+  private readonly tabs: Tab[] = [];
   private readonly hover: RowHover;
   private open = false;
-  /** What the menu reads (038: `found` shows the landmine chain once ley-iron is carried). */
-  private known: Known = { inventory: {}, link: { attuned: false }, found: [] };
-  /** Each group's header icon and name, by ammo id: hidden while none of its recipes is known (012). */
-  private readonly headers = new Map<string, { icon: GameObjects.Image; name: TextLine }>();
-  /** The title card's tablet. */
+  private tab = 0;
+  private known: CraftStores = { inventory: {}, link: { attuned: false, entrances: [] }, found: [], claims: [] };
+  /** The title card's tablet, and the tabs' tablets. */
   private readonly card: GameObjects.Graphics;
+  private readonly tabBacks: GameObjects.Graphics;
 
   constructor(scene: Scene, onCraft: (recipeId: string) => void) {
     const L = CRAFT_MENU_LAYOUT;
@@ -108,47 +129,50 @@ export class CraftMenuView {
     const title = new TextLine(scene, 0, cardY + T.titleY, DEPTHS.menu + 2, false, 'title').set(T.text);
     title.moveTo(Math.round(panel.x + L.width / 2 - title.width / 2), cardY + T.titleY);
     this.lines.push(title);
+    this.tabBacks = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.menu + 1);
 
-    for (const line of craftMenuLines()) {
-      if (line.kind === 'header') {
-        const item = itemDef(ammoDef(line.id).itemId);
-        const icon = add(line.x + L.headerIcon.x, line.y + L.headerIcon.y, item.icon, DEPTHS.menu + 1);
-        this.headers.set(line.id, { icon, name: text(line.x + L.headerName.x, line.y + L.headerName.y, 'display').set(item.name) });
-        continue;
+    for (const t of craftTabBoxes()) {
+      const icon = add(t.x + L.tab.icon.x, t.y + L.tab.icon.y, itemDef(ammoDef(t.ammoId).itemId).icon, DEPTHS.menu + 2);
+      this.tabs.push({ ammoId: t.ammoId, icon, name: text(t.x + L.tab.name.x, t.y + L.tab.name.y, 'label').set(t.label) });
+    }
+
+    for (const [tab] of CRAFT_TABS.entries()) {
+      for (const line of craftTabRows(tab)) {
+        const recipe = craftRecipeDef(line.id);
+        const frame = add(line.x, line.y, SPRITES.craftRecipeRow, DEPTHS.menu + 1);
+        const iconY = line.y + L.iconY;
+        const parts: GameObjects.Image[] = [];
+        const inputs = Object.entries(recipe.inputs).map(([itemId, need], i) => {
+          const x = line.x + L.input.x + i * L.input.step;
+          parts.push(add(x, iconY, itemDef(itemId).icon, DEPTHS.menu + 2));
+          return { itemId, need, text: text(x + L.input.textX, line.y + L.input.textY), name: name(itemId, x, line.y) };
+        });
+        parts.push(add(line.x + L.arrow.x, line.y + L.arrow.y, SPRITES.craftArrow, DEPTHS.menu + 2));
+        const outX = line.x + L.output.x;
+        parts.push(add(outX, iconY, itemDef(recipe.output.itemId).icon, DEPTHS.menu + 2));
+        const made = text(outX + L.output.textX, line.y + L.output.madeY);
+        made.set(`+${recipe.output.count}`);
+        const row: Row = {
+          recipeId: line.id,
+          tab,
+          frame,
+          parts,
+          inputs,
+          made,
+          owned: text(outX + L.output.textX, line.y + L.output.ownedY),
+          outputId: recipe.output.itemId,
+          outputName: name(recipe.output.itemId, outX, line.y),
+        };
+        frame.on('pointerdown', () => {
+          if (!this.open || this.tab !== row.tab || !canCraft(this.known, row.recipeId)) return;
+          flashRow(scene, frame.x, frame.y, RECIPE_ROW_FRAMES.press);
+          onCraft(row.recipeId);
+        });
+        const index = this.rows.length;
+        frame.on('pointerover', () => this.hover.set(index, canCraft(this.known, row.recipeId)));
+        frame.on('pointerout', () => this.hover.leave(index));
+        this.rows.push(row);
       }
-      const recipe = recipeDef(line.id);
-      const frame = add(line.x, line.y, SPRITES.craftRecipeRow, DEPTHS.menu + 1);
-      const iconY = line.y + L.iconY;
-      const parts: GameObjects.Image[] = [];
-      const inputs = Object.entries(recipe.inputs).map(([itemId, need], i) => {
-        const x = line.x + L.input.x + i * L.input.step;
-        parts.push(add(x, iconY, itemDef(itemId).icon, DEPTHS.menu + 2));
-        return { itemId, need, text: text(x + L.input.textX, line.y + L.input.textY), name: name(itemId, x, line.y) };
-      });
-      parts.push(add(line.x + L.arrow.x, line.y + L.arrow.y, SPRITES.craftArrow, DEPTHS.menu + 2));
-      const outX = line.x + L.output.x;
-      parts.push(add(outX, iconY, itemDef(recipe.output.itemId).icon, DEPTHS.menu + 2));
-      const made = text(outX + L.output.textX, line.y + L.output.madeY);
-      made.set(`+${recipe.output.count}`);
-      const row: Row = {
-        recipeId: recipe.id,
-        frame,
-        parts,
-        inputs,
-        made,
-        owned: text(outX + L.output.textX, line.y + L.output.ownedY),
-        outputId: recipe.output.itemId,
-        outputName: name(recipe.output.itemId, outX, line.y),
-      };
-      frame.on('pointerdown', () => {
-        if (!this.open || !canCraft(this.known, row.recipeId)) return;
-        flashRow(scene, frame.x, frame.y, RECIPE_ROW_FRAMES.press);
-        onCraft(row.recipeId);
-      });
-      const index = this.rows.length;
-      frame.on('pointerover', () => this.hover.set(index, canCraft(this.known, row.recipeId)));
-      frame.on('pointerout', () => this.hover.leave(index));
-      this.rows.push(row);
     }
     this.setOpen(false);
   }
@@ -157,13 +181,16 @@ export class CraftMenuView {
     return this.open;
   }
 
-  /** What the menu shows, for the test hook (026). */
+  /** What the menu shows, for the test hook (026, 047). */
   get state(): CraftMenuState {
     const L = CRAFT_MENU_LAYOUT;
     return {
       open: this.open,
+      tab: CRAFT_TABS[this.tab]?.ammoId ?? '',
+      tabs: craftTabBoxes().map((t, i) => ({ ammoId: t.ammoId, label: t.label, shown: this.open && (this.tabs[i]?.icon.visible ?? false), x: t.x, y: t.y, w: t.w, h: t.h })),
       rows: this.rows.map((r) => ({
         recipeId: r.recipeId,
+        tab: CRAFT_TABS[r.tab]?.ammoId ?? '',
         shown: this.open && r.frame.visible,
         x: r.frame.x,
         y: r.frame.y,
@@ -179,7 +206,6 @@ export class CraftMenuView {
           { ...box(r.owned), missing: false },
         ],
       })),
-      headers: [...this.headers.entries()].map(([ammoId, h]) => ({ ...box(h.name), ammoId, shown: this.open && h.icon.visible })),
     };
   }
 
@@ -192,48 +218,73 @@ export class CraftMenuView {
     return x >= panel.x && x < panel.x + L.width && y >= top && y < panel.y + L.height;
   }
 
+  /** A click on a shown tab opens it (047). Returns whether it hit one. */
+  click(x: number, y: number): boolean {
+    if (!this.open) return false;
+    const i = craftTabBoxes().findIndex((t, k) => (this.tabs[k]?.icon.visible ?? false) && x >= t.x && x < t.x + t.w && y >= t.y && y < t.y + t.h);
+    if (i < 0) return false;
+    this.showTab(i);
+    return true;
+  }
+
+  /** Opens a tab by index (the test hook and clicks). */
+  showTab(i: number): void {
+    if (i < 0 || i >= CRAFT_TABS.length) return;
+    this.tab = i;
+    this.hover.set(-1);
+    this.update(this.known);
+  }
+
   setOpen(open: boolean): void {
     this.open = open;
     for (const o of this.objects) o.setVisible(open);
     this.card.setVisible(open);
+    this.tabBacks.setVisible(open);
     for (const l of this.lines) l.setVisible(open);
-    for (const r of this.rows) {
-      if (open) r.frame.setInteractive();
-      else r.frame.disableInteractive();
-    }
     if (!open) this.hover.set(-1);
     // Hide unknown recipes straight away, not a frame later.
-    else this.update(this.known);
+    this.update(this.known);
   }
 
-  /** Refreshes counts, greying and missing inputs while open; recipes not yet known (012) stay hidden. */
-  update(sim: Known): void {
+  /** Refreshes the tabs, counts, greying and missing inputs while open; recipes not yet known (012) stay hidden, and a tab until its ammo is known (038: Landmines after ley-iron). */
+  update(sim: CraftStores): void {
     this.known = sim;
-    const { inventory } = sim;
-    if (!this.open) return;
+    if (!this.open) {
+      for (const r of this.rows) r.frame.disableInteractive();
+      return;
+    }
     const L = CRAFT_MENU_LAYOUT;
-    for (const group of CRAFT_GROUPS) {
-      const header = this.headers.get(group.ammoId);
-      const known = group.recipes.some((id) => knownRecipe(sim, id));
-      header?.icon.setVisible(known);
-      header?.name.setVisible(known);
+    const tabKnown = CRAFT_TABS.map((t) => rowKnown(sim, t.ammoId));
+    // The open tab is always one the player can see: the first known, if the open one isn't.
+    if (!tabKnown[this.tab]) this.tab = Math.max(0, tabKnown.indexOf(true));
+    this.tabBacks.clear();
+    for (const [i, t] of craftTabBoxes().entries()) {
+      const view = this.tabs[i];
+      const shown = tabKnown[i] ?? false;
+      view?.icon.setVisible(shown);
+      view?.name.setVisible(shown).setAlpha(i === this.tab ? 1 : L.tabClosedAlpha);
+      if (!shown) continue;
+      drawTablet(this.tabBacks, t.x, t.y, t.w, t.h, i === this.tab ? 1 : L.tabClosedAlpha);
+      if (i === this.tab) this.tabBacks.fillStyle(colorOf(L.tabOpen), 1).fillRect(t.x + t.w - 2, t.y + 2, 2, t.h - 4);
     }
     for (const [i, r] of this.rows.entries()) {
-      const known = knownRecipe(sim, r.recipeId);
-      for (const o of [r.frame, ...r.parts]) o.setVisible(known);
-      for (const t of [...r.inputs.flatMap((i) => [i.text, i.name]), r.made, r.owned, r.outputName]) t.setVisible(known);
-      if (!known) continue;
+      const shown = r.tab === this.tab && rowKnown(sim, r.recipeId);
+      for (const o of [r.frame, ...r.parts]) o.setVisible(shown);
+      for (const t of [...r.inputs.flatMap((i) => [i.text, i.name]), r.made, r.owned, r.outputName]) t.setVisible(shown);
+      if (shown) r.frame.setInteractive();
+      else r.frame.disableInteractive();
+      if (!shown) continue;
       const affordable = canCraft(sim, r.recipeId);
       const alpha = affordable ? 1 : L.greyAlpha;
       const textAlpha = affordable ? 1 : L.greyTextAlpha;
       for (const input of r.inputs) {
-        const have = count(inventory, input.itemId);
+        const have = heldFor(sim, r.recipeId, input.itemId);
         input.text.set(`${have}/${input.need}`);
         // Short of an input: its name and count in the missing colour (026).
         const fill = have < input.need ? L.missing : undefined;
         for (const t of [input.text, input.name]) t.setFill(fill).setAlpha(textAlpha);
       }
-      r.owned.set(String(count(inventory, r.outputId)));
+      r.owned.set(String(heldFor(sim, r.recipeId, r.outputId)));
       for (const t of [r.made, r.owned, r.outputName]) t.setAlpha(textAlpha);
       for (const p of r.parts) p.setAlpha(alpha);
       r.frame.setAlpha(alpha);

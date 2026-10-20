@@ -1,0 +1,42 @@
+import { describe, expect, it } from 'vitest';
+import { CRAFT_TABS, craftRecipeDef } from '../../src/data/craftTabs';
+import { ITEMS } from '../../src/data/items';
+import { CRAFT_MENU_LAYOUT } from '../../src/data/hudLayout';
+import { OBJECTIVES } from '../../src/data/objectives';
+
+// 047 (notes 6 and 15): a crafting tab per ammo family, each holding its whole chain, parts included, then its
+// tagged rounds, crafted like any recipe. Tagged rounds are never called "stages" where the player sees them.
+
+describe('the crafting tabs (047)', () => {
+  it('are Arrows, Bombs, Ley and Landmines, each its whole chain then its tagged rounds', () => {
+    expect(CRAFT_TABS.map((t) => [t.label, t.recipes])).toEqual([
+      ['Arrows', ['shaft', 'arrowhead', 'rope', 'arrow', 'frost-rune-arrow']],
+      ['Bombs', ['casing', 'fuse', 'ley-dust', 'bomb', 'frost-rune-bomb', 'cluster-die-bomb']],
+      ['Ley', ['ley-dust', 'ley-bolt', 'frost-rune-ley-bolt', 'ley-guide-ley-bolt', 'prism-lens-ley-bolt']],
+      ['Landmines', ['iron-plate', 'fuse', 'ley-dust', 'landmine', 'frost-rune-landmine']],
+    ]);
+  });
+
+  it('show a part two families use in each (fuse, ley dust)', () => {
+    const tabsWith = (id: string) => CRAFT_TABS.filter((t) => t.recipes.includes(id)).map((t) => t.label);
+    expect(tabsWith('fuse')).toEqual(['Bombs', 'Landmines']);
+    expect(tabsWith('ley-dust')).toEqual(['Bombs', 'Ley', 'Landmines']);
+  });
+
+  it("put each tagged round in its family's tab: frost arrows under Arrows, Frost ley bolts under Ley", () => {
+    for (const t of CRAFT_TABS) {
+      for (const id of t.recipes) {
+        const out = craftRecipeDef(id).output.itemId;
+        expect(ITEMS[out], id).toBeDefined();
+        // Each tab's rounds are its own family's (a part or raw-made input aside).
+        if (ITEMS[out]?.kind === 'ammo') expect(out.split('+')[0], `${t.label}: ${id}`).toBe(t.ammoId);
+      }
+    }
+    expect(craftRecipeDef('frost-rune-arrow')).toMatchObject({ inputs: { arrow: 4, rimestone: 1 }, output: { itemId: 'arrow+frost', count: 4 } });
+  });
+
+  it('never call a tagged round a stage (Shaun)', () => {
+    const shown = [...CRAFT_TABS.map((t) => t.label), CRAFT_MENU_LAYOUT.title.text, ...OBJECTIVES.map((o) => o.text)];
+    for (const text of shown) expect(text, text).not.toMatch(/\bstages?\b/i);
+  });
+});

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { GROTTO } from '../../src/data/grotto';
-import { boot, cameraSettled, quietScreen } from './helpers';
+import { boot, cameraSettled } from './helpers';
 import { ui } from './intakePage';
 
 // Review screenshots for 029 (REVIEW_SHOTS=1, into docs/review/029): the three stage
@@ -53,7 +53,7 @@ test.describe('review screenshots (029)', () => {
     await page.screenshot({ path: `${SHOTS}/01-stages-working.png` });
   });
 
-  test('the bench Stages section, a homing bolt mid-curve and a Split', async ({ page }) => {
+  test('a homing bolt mid-curve and a Split', async ({ page }) => {
     test.setTimeout(120_000);
     await boot(page, '?playtest');
     await page.evaluate(() => {
@@ -61,25 +61,9 @@ test.describe('review screenshots (029)', () => {
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
       g.claim('shrine');
-      h.toFoundry();
-      h.walkTo(2.3 * 32, 12.5 * 32);
-      // Some frost arrows already made, so the frost rune's row shows what's held.
-      g.step(1, { applyStage: 'frost-rune' });
-    });
-    await page.keyboard.press('e');
-    await expect.poll(async () => (await ui(page))?.tagged.benchStages?.shown).toBe(true);
-    await cameraSettled(page);
-    await quietScreen(page);
-    await page.screenshot({ path: `${SHOTS}/02-bench-stages.png` });
-    await page.keyboard.press('Escape');
-
-    // Hand-apply both ley stages, then out to the meadow.
-    await page.evaluate(() => {
-      const g = window.__GAME__;
-      const h = window.__helpers;
-      if (!g || !h) throw new Error('no game');
-      g.step(1, { applyStage: 'ley-guide' });
-      g.step(1, { applyStage: 'prism-lens' });
+      // 047: the bench's Stages section is gone (02-bench-stages is no longer taken); tagged rounds are crafted in C.
+      g.craft('ley-guide-ley-bolt');
+      g.craft('prism-lens-ley-bolt');
       h.toHall();
       // South of the ruin field's Husks (017), which stand a few tiles north, on screen.
       h.walkTo((44.5 + h.ox) * 32, 19.5 * 32);
@@ -149,9 +133,7 @@ test.describe('review screenshots (029)', () => {
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
       g.claim('shrine');
-      h.toFoundry();
-      h.walkTo(2.3 * 32, 12.5 * 32);
-      g.step(1, { applyStage: 'frost-rune' });
+      g.craft('frost-rune-arrow');
       h.toHall();
       h.walkTo((44.5 + h.ox) * 32, 19.5 * 32);
       let s = g.step(0);

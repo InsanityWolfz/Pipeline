@@ -1,7 +1,7 @@
 // Layouts for the HUD pieces and the crafting menu added in 005. Px values
 // tuned by eye; colours are palette ids.
 
-import { craftColumnHeight, CRAFT_COLUMNS } from './craftColumns';
+import { CRAFT_TAB_ROWS, CRAFT_TABS } from './craftTabs';
 
 /** The harvest progress bar over a node: size, gap above the sprite, and palette ids. */
 export const HARVEST_BAR = { w: 20, h: 3, gap: 2, border: 1, color: 'cyan', back: 'ink' } as const;
@@ -52,26 +52,31 @@ const MENU_ROW_WIDTH = 184;
 
 /** The crafting menu's rows (026): as wide as the other menus' rows, taller, for a name under each icon. */
 const CRAFT_ROW = { w: MENU_ROW_WIDTH, h: 28, gap: 1 } as const;
-const CRAFT_HEADER = 16;
 const CRAFT_ROWS_AT = { x: 6, y: 6 } as const;
-/** The crafting menu's columns (038.4, CRAFT_COLUMNS), `CRAFT_COLUMN_GAP` px apart. */
-const CRAFT_SIZES = { headerHeight: CRAFT_HEADER, rowHeight: CRAFT_ROW.h, rowGap: CRAFT_ROW.gap } as const;
-const CRAFT_COLUMN_GAP = 8;
-const craftTallest = Math.max(...CRAFT_COLUMNS.map((ids) => craftColumnHeight(ids, CRAFT_SIZES)));
+/** The crafting menu's tabs (047): a column down the panel's left, `w` x `h` each, `gap` px apart; icon and name inside. */
+const CRAFT_TAB = { w: 74, h: 22, gap: 2, icon: { x: 3, y: 3 }, name: { x: 22, y: 8 } } as const;
+const CRAFT_TAB_GAP = 6;
+const craftRowsHeight = CRAFT_TAB_ROWS * CRAFT_ROW.h + (CRAFT_TAB_ROWS - 1) * CRAFT_ROW.gap;
+const craftTabsHeight = CRAFT_TABS.length * CRAFT_TAB.h + (CRAFT_TABS.length - 1) * CRAFT_TAB.gap;
 
 /**
- * The crafting menu, centred on screen with its title card. Rows are listed group by
- * group: a header with the ammo's icon and name, then one row per recipe. Each input
- * and the output has its item's name in small text under its icon (026), centred under
- * it, or starting at its left edge when wider. Px from the panel's top-left, then from
- * each row's top-left.
+ * The crafting menu (026; 047: a tab per ammo family), centred on screen with its title card. The tabs run down the
+ * panel's left, the open tab's rows to their right, one row per recipe. Each input and the output has its item's name
+ * in small text under its icon (026), centred under it, or starting at its left edge when wider. The menu doesn't
+ * print the click controls (Shaun: "don't show those controls on the menu it looks bad"). Px from the panel's
+ * top-left, then from each row's or tab's top-left.
  */
 export const CRAFT_MENU_LAYOUT = {
-  width: CRAFT_COLUMNS.length * CRAFT_ROW.w + (CRAFT_COLUMNS.length - 1) * CRAFT_COLUMN_GAP + 2 * CRAFT_ROWS_AT.x,
-  height: CRAFT_ROWS_AT.y * 2 + craftTallest,
-  columnGap: CRAFT_COLUMN_GAP,
+  width: CRAFT_ROWS_AT.x + CRAFT_TAB.w + CRAFT_TAB_GAP + CRAFT_ROW.w + CRAFT_ROWS_AT.x,
+  height: CRAFT_ROWS_AT.y * 2 + Math.max(craftRowsHeight, craftTabsHeight),
+  /** The tabs' column: its top-left inside the panel, each tab's size and gap, and where its icon and name sit. */
+  tabsAt: CRAFT_ROWS_AT,
+  tab: CRAFT_TAB,
+  /** The open tab's colours (palette ids): its fill, and a closed tab's text alpha. */
+  tabOpen: 'brass',
+  tabClosedAlpha: 0.7,
   /** First row's top-left inside the panel. */
-  rowsAt: CRAFT_ROWS_AT,
+  rowsAt: { x: CRAFT_ROWS_AT.x + CRAFT_TAB.w + CRAFT_TAB_GAP, y: CRAFT_ROWS_AT.y },
   rowWidth: CRAFT_ROW.w,
   rowHeight: CRAFT_ROW.h,
   rowGap: CRAFT_ROW.gap,
@@ -79,14 +84,10 @@ export const CRAFT_MENU_LAYOUT = {
   iconSize: ITEM_ICON_SIZE,
   iconY: 2,
   labelY: 20,
-  headerHeight: CRAFT_HEADER,
   /** Up to three inputs, `step` px apart (room for the longest name): icon, then "have/need" beside it. */
   input: { x: 2, step: 40, textX: 17, textY: 7 },
   arrow: { x: 122, y: 8 },
   output: { x: 134, textX: 18, madeY: 3, ownedY: 11 },
-  /** The ammo's icon, and its name beside it (026). */
-  headerIcon: { x: 2, y: 0 },
-  headerName: { x: 22, y: 5 },
   /** Alpha of the icons on a row the player can't afford; its names and counts stay readable at `greyTextAlpha`. */
   greyAlpha: 0.35,
   greyTextAlpha: 0.8,
@@ -166,10 +167,6 @@ export const READOUT_LAYOUT = {
   /** Gap above the machine's sprite. */
   gap: 4,
 } as const;
-
-/** The bench's Stages panel (029): the crafting menu's rows (026) on a tablet, a header over them, `gap` px right of the bench's rows. */
-/** The bench's Stages panel (029); 039: a line under the rows (`lineGap` below them, `lineHeight` tall) shows the hovered row's generated text. */
-export const STAGE_PANEL = { pad: 6, headerHeight: 16, gap: 12, title: 'Stages', lineGap: 4, lineHeight: 9 } as const;
 
 /** Pylon and stash menus (009): rows per column before wrapping, and the gap between columns, px. */
 export const MENU_MAX_ROWS = 10;

@@ -169,7 +169,7 @@ test('without Shift, every summary source shows a summary and never a breakdown 
     g.claim('shrine');
     h.toFoundry();
     h.walkTo(2.3 * 32, 12.5 * 32);
-    for (const row of ['frost-rune-arrow', 'frost-rune-bomb']) g.step(1, { applyStage: row });
+    for (const row of ['frost-rune-arrow', 'frost-rune-bomb']) g.craft(row);
     g.step(1, { identify: true });
     const s = g.step(1);
     const helm = s.gear.find((p) => p.slot === 'helm');
@@ -187,13 +187,9 @@ test('without Shift, every summary source shows a summary and never a breakdown 
     expect(tip?.box.w).toBeLessThanOrEqual(200);
     seen.push(kind);
   };
-  // The bench: a Stages row, a gear row, a worn cell.
+  // The bench: a gear row, a worn cell (047: its Stages rows are gone; a stage's tip shows on the build bar).
   await page.keyboard.press('e');
-  await expect.poll(async () => (await ui(page))?.tagged.benchStages?.shown).toBe(true);
-  const stageRow = (await ui(page))?.tagged.benchStages?.rows[0];
-  if (!stageRow) throw new Error('no stage row');
-  await hoverBox(page, stageRow);
-  await check('stage');
+  await expect.poll(async () => (await ui(page))?.gearPanel?.open).toBe(true);
   const gear = (await ui(page))?.gearPanel;
   const gearRow = gear?.rows[0];
   if (!gearRow) throw new Error('no gear row');
@@ -239,7 +235,7 @@ test('without Shift, every summary source shows a summary and never a breakdown 
   if (!slot) throw new Error('no tube slot');
   await hover(page, slot.x + 10, slot.y + 10);
   await check('round');
-  expect(seen).toEqual(['stage', 'gear', 'gear', 'stage', 'round', 'talent', 'round', 'round']);
+  expect(seen).toEqual(['gear', 'gear', 'stage', 'round', 'talent', 'round', 'round']);
   expect(errors).toEqual([]);
 });
 
@@ -302,46 +298,3 @@ test('every summary the game can show holds at most four drawn rows, with no tal
   expect(errors).toEqual([]);
 });
 
-test('a click on the gear tip, over the bench’s Stages rows, is the tip’s: no stage is applied', async ({ page }) => {
-  test.setTimeout(120_000);
-  const errors = watchErrors(page);
-  await boot(page, '?playtest');
-  await page.evaluate(() => {
-    const g = window.__GAME__;
-    const h = window.__helpers;
-    if (!g || !h) throw new Error('no game');
-    g.claim('shrine');
-    h.toFoundry();
-    h.walkTo(2.3 * 32, 12.5 * 32);
-    g.step(1, { identify: true });
-    g.step(10);
-  });
-  // The camera eases on real time: under parallel workers it can take a while.
-  await cameraSettled(page, 20_000);
-  await page.keyboard.press('e');
-  await expect.poll(async () => (await ui(page))?.tagged.benchStages?.shown).toBe(true);
-  const gearRow = (await ui(page))?.gearPanel?.rows[0];
-  if (!gearRow) throw new Error('no gear row');
-  await hover(page, gearRow.box.x + gearRow.box.w - 30, gearRow.box.y + gearRow.box.h / 2);
-  await expect.poll(async () => (await ui(page))?.tip?.source.kind).toBe('gear');
-  const tip = (await ui(page))?.tip;
-  const rows = (await ui(page))?.tagged.benchStages?.rows ?? [];
-  // A point on the tip and on an affordable Stages row under it.
-  const under = rows.find((r) => !r.dimmed && tip && r.x < tip.box.x + tip.box.w - 4 && r.x + r.w > tip.box.x + 4 && r.y < tip.box.y + tip.box.h - 4 && r.y + r.h > tip.box.y + 4);
-  if (!tip || !under) throw new Error('no Stages row under the tip');
-  const x = Math.max(under.x, tip.box.x) + 4;
-  const y = Math.max(under.y, tip.box.y) + 4;
-  const before = await state(page);
-  const at = await screenPoint(page, x, y);
-  await page.mouse.click(at.x, at.y);
-  const after = await step(page, 2);
-  expect(after.inventory).toEqual(before.inventory);
-  expect(after.events.craftFails).toEqual([]);
-  expect((await ui(page))?.tip?.source.kind).toBe('gear');
-  // The same click with no tip there applies the row, so the check above means something.
-  await hover(page, under.x + under.w / 2, under.y + under.h / 2);
-  await expect.poll(async () => (await ui(page))?.tip?.source.kind).toBe('stage');
-  await page.mouse.click(at.x, at.y);
-  await expect.poll(async () => JSON.stringify((await step(page, 1)).inventory) !== JSON.stringify(before.inventory)).toBe(true);
-  expect(errors).toEqual([]);
-});

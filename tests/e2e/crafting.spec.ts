@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { lobAmmo } from '../../src/data/ammo';
 import { VIEW_WIDTH } from '../../src/data/config';
-import { craftMenuLines } from '../../src/render/craftMenuLayout';
+import { craftTabRows } from '../../src/render/craftMenuLayout';
 import { boot, watchErrors } from './helpers';
 
 // Gathering, crafting and the three ammo, driven through window.__GAME__.
@@ -87,7 +87,7 @@ test('the crafting menu keeps the world running, Esc pauses it, and the menu cra
     window.__helpers?.harvest(tree, 1);
   }, TREE);
   await page.keyboard.press('c');
-  const row = craftMenuLines().find((l) => l.kind === 'recipe' && l.id === 'shaft');
+  const row = craftTabRows(0).find((l) => l.id === 'shaft');
   const box = await page.locator('canvas').boundingBox();
   if (!row || !box) throw new Error('no shaft row or canvas');
   const zoom = box.width / VIEW_WIDTH;

@@ -31,7 +31,6 @@ import { stepObjectives } from './objectives';
 import { noteFound, shotSealed, stepGates, stepTubeStone } from './tutorial';
 import { roomBodies } from './bodies';
 import { stepPopulation } from './population';
-import { applyStage } from './stages';
 import { entranceCap, machineSpeed, restore } from './research';
 import { stepEnemyBombs } from './enemyBombs';
 import { stepAltars } from './altar';
@@ -87,7 +86,6 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   const used = stepCache(state, stepClaims(state, stepAltars(state, stepArenaLock(state, stepTubeStone(state, cmd)))));
   if (cmd.identify) identifyAll(state);
   if (cmd.equip) equip(state, cmd.equip);
-  if (cmd.applyStage) applyStage(state, cmd.applyStage);
   if (cmd.restore) restore(state, cmd.restore);
   if (cmd.takeTalent) takeTalent(state, cmd.takeTalent);
   if (cmd.respec) respec(state);

@@ -22,7 +22,7 @@ async function atBench(page: Page): Promise<void> {
     g.claim('shrine');
     h.toFoundry();
     h.walkTo(2.3 * 32, 12.5 * 32);
-    for (const row of ['frost-rune-bomb', 'frost-rune-bomb', 'frost-rune-ley-bolt', 'frost-rune-ley-bolt', 'frost-rune-landmine', 'cluster-die-bomb']) g.step(1, { applyStage: row });
+    for (const row of ['frost-rune-bomb', 'frost-rune-bomb', 'frost-rune-ley-bolt', 'frost-rune-ley-bolt', 'frost-rune-landmine', 'cluster-die-bomb']) g.craft(row);
   });
   // The playtest's schematics bank on the way in: let their banners play out (fast) so they cover nothing.
   await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
@@ -102,13 +102,8 @@ test.describe('review screenshots (039)', () => {
       g.step(120);
     });
     await page.keyboard.press('e');
-    await expect.poll(async () => (await ui(page))?.tagged.benchStages?.shown).toBe(true);
-    const row = (await ui(page))?.tagged.benchStages?.rows.find((r) => r.stageId === 'frost-rune-bomb');
-    if (!row) throw new Error('no row');
-    const p = await screenPoint(page, row.x + row.w / 2, row.y + row.h / 2);
-    await page.mouse.move(p.x, p.y);
-    await expect.poll(async () => (await ui(page))?.tagged.benchStages?.line).toBe('Cold: added to any round');
-    await page.screenshot({ path: `${SHOTS}/04-bench-stages-rows.png` });
+    await expect.poll(async () => (await ui(page))?.gearPanel?.open).toBe(true);
+    // 047: the bench's Stages rows are gone (tagged rounds are crafted in C), so 04-bench-stages-rows is no longer taken.
     const totals = (await ui(page))?.gearPanel?.totals ?? [];
     expect(totals[0]).toMatch(/^Armor \d+ · Max health \d+ · Field regen \d+\.\d HP\/s$/);
     expect(totals[1]).toMatch(/^Move speed \d+% · Roll cooldown \d\.\d s · Roll distance \d+%$/);

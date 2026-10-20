@@ -7,8 +7,8 @@ import { BUILD_BAR_LAYOUT, CRAFT_MENU_LAYOUT, HUD_LAYOUT } from '../../src/data/
 import { BUILD_STRIP } from '../../src/data/buildStrip';
 import { SLOT_AMMOS } from '../../src/data/tube';
 import { hotbarBox, hotbarCells, tubeSlotBox, tubeSlotUnits, type ScreenBox } from '../../src/render/bottomHud';
-import { craftMenuLines, craftPanelAt } from '../../src/render/craftMenuLayout';
-import { CRAFT_COLUMNS } from '../../src/data/craftColumns';
+import { craftPanelAt, craftTabBoxes, craftTabRows } from '../../src/render/craftMenuLayout';
+import { CRAFT_TABS } from '../../src/data/craftTabs';
 import { buildBarBox, buildBarCells, buildBarDividers, buildBarGroups } from '../../src/render/foundryLayout';
 
 // The bottom HUD's layout (025): the hotbar row and the tube slot centred, the slot
@@ -150,27 +150,26 @@ describe('the crafting menu with labels (026)', () => {
     // A name sits under its icon, inside the row.
     expect(L.labelY).toBeGreaterThanOrEqual(L.iconY + L.iconSize);
     expect(L.labelY + TEXT_STYLES.label.lineHeight).toBeLessThanOrEqual(L.rowHeight);
-    const lines = craftMenuLines();
-    for (const [i, line] of lines.entries()) {
-      const h = line.kind === 'header' ? L.headerHeight : L.rowHeight;
-      expect(line.y + h).toBeLessThanOrEqual(panel.y + L.height);
-      expect(line.x + L.rowWidth).toBeLessThanOrEqual(panel.x + L.width);
-      // Down a column, each line below the last.
-      const next = lines[i + 1];
-      if (next && next.x === line.x) expect(next.y).toBeGreaterThanOrEqual(line.y + h);
+    for (const [tab] of CRAFT_TABS.entries()) {
+      const rows = craftTabRows(tab);
+      for (const [i, row] of rows.entries()) {
+        expect(row.y + L.rowHeight).toBeLessThanOrEqual(panel.y + L.height);
+        expect(row.x + L.rowWidth).toBeLessThanOrEqual(panel.x + L.width);
+        const next = rows[i + 1];
+        if (next) expect(next.y).toBeGreaterThanOrEqual(row.y + L.rowHeight);
+      }
     }
   });
 
-  it('lays its groups in two columns, as one is too tall (038.4): Arrows and Bombs, then Ley and Landmines, side by side', () => {
-    const L = CRAFT_MENU_LAYOUT;
-    expect(CRAFT_COLUMNS).toEqual([
-      ['arrow', 'bomb'],
-      ['ley-bolt', 'landmine'],
-    ]);
-    const headers = craftMenuLines().filter((l) => l.kind === 'header');
-    const xs = [...new Set(headers.map((h) => h.x))];
-    expect(xs).toHaveLength(2);
-    expect((xs[1] ?? 0) - (xs[0] ?? 0)).toBe(L.rowWidth + L.columnGap);
-    expect(headers.filter((h) => h.x === xs[1]).map((h) => h.id)).toEqual(['ley-bolt', 'landmine']);
+  it('has a tab per ammo family down its left, clear of the rows (047)', () => {
+    const tabs = craftTabBoxes();
+    expect(tabs.map((t) => t.label)).toEqual(['Arrows', 'Bombs', 'Ley', 'Landmines']);
+    const panel = craftPanelAt();
+    const rowsLeft = Math.min(...CRAFT_TABS.flatMap((_, i) => craftTabRows(i).map((r) => r.x)));
+    for (const t of tabs) {
+      expect(t.x + t.w).toBeLessThanOrEqual(rowsLeft);
+      expect(t.x).toBeGreaterThanOrEqual(panel.x);
+      expect(t.y + t.h).toBeLessThanOrEqual(panel.y + CRAFT_MENU_LAYOUT.height);
+    }
   });
 });

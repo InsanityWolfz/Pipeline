@@ -14,8 +14,8 @@ const rows = (n: number, relicEvery = 0): RowSpec[] => Array.from({ length: n },
 
 describe('the gear panel layout', () => {
   it('fits the screen, centred alone, its parts inside it and apart', () => {
-    for (const staged of [false, true]) {
-      const L = gearPanelLayout(staged, rows(4, 2), 0);
+    {
+      const L = gearPanelLayout(rows(4, 2), 0);
       expect(inside(L.panel, { x: 0, y: 0, w: VIEW_WIDTH, h: VIEW_HEIGHT })).toBe(true);
       const parts = [L.identify, ...L.cells.map((c) => c.box), ...L.tabs.map((t) => t.box), ...L.rows.map((r) => r.box), L.pager];
       for (const p of parts) expect(inside(p, L.panel), JSON.stringify(p)).toBe(true);
@@ -24,7 +24,7 @@ describe('the gear panel layout', () => {
       expect(L.cells.map((c) => c.slot)).toEqual(GEAR_SLOTS);
       expect(L.tabs.map((t) => t.slot)).toEqual(GEAR_SLOTS);
     }
-    const alone = gearPanelLayout(false, [], 0).panel;
+    const alone = gearPanelLayout([], 0).panel;
     expect(alone.x + alone.w / 2).toBeCloseTo(VIEW_WIDTH / 2, 0);
     // Clear of the bottom HUD: the hotbar row and the tube slot at its widest.
     for (const hud of [hotbarBox(), tubeSlotBox(5)]) expect(overlaps(alone, hud), JSON.stringify(hud)).toBe(false);
@@ -51,10 +51,10 @@ describe('the gear panel layout', () => {
     const all = rows(14);
     const count = gearPages(all).length;
     expect(count).toBeGreaterThan(1);
-    const second = gearPanelLayout(false, all, 1);
+    const second = gearPanelLayout(all, 1);
     expect(second.page).toEqual({ index: 1, count });
     expect(second.rows[0]?.id).toBe(gearPages(all)[1]?.[0]?.id);
-    expect(gearPanelLayout(false, all, count).page.index).toBe(0);
+    expect(gearPanelLayout(all, count).page.index).toBe(0);
     const tab = second.tabs[2]?.box;
     if (!tab) throw new Error('no tab');
     expect(inBox(tab, tab.x + 1, tab.y + 1)).toBe(true);

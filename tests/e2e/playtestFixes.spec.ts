@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { VIEW_WIDTH } from '../../src/data/config';
 import { DEPTHS } from '../../src/data/assets';
 import { nodeDef } from '../../src/data/nodes';
-import { craftMenuLines } from '../../src/render/craftMenuLayout';
+import { craftTabRows } from '../../src/render/craftMenuLayout';
 import { boot, watchErrors } from './helpers';
 
 // Playtest fixes (021): the menu pointer over the crafting menu, no shake on firing,
@@ -15,7 +15,7 @@ const ui = (page: Page) => page.evaluate(() => window.__GAME__?.ui());
 async function hoverCraftRow(page: Page): Promise<void> {
   await page.keyboard.press('c');
   await expect.poll(async () => (await ui(page))?.craftOpen).toBe(true);
-  const row = craftMenuLines().find((l) => l.kind === 'recipe' && l.id === 'shaft');
+  const row = craftTabRows(0).find((l) => l.id === 'shaft');
   const box = await page.locator('canvas').boundingBox();
   if (!row || !box) throw new Error('no shaft row or canvas');
   const zoom = box.width / VIEW_WIDTH;

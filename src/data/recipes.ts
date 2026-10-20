@@ -41,14 +41,6 @@ export const RECIPES: Readonly<Record<string, RecipeDef>> = {
 /** Items whose first carrying reveals recipes (038), each remembered in `found`. */
 export const REVEALING_ITEMS: readonly string[] = [...new Set(Object.values(RECIPES).flatMap((r) => (r.shownAfter ? [r.shownAfter] : [])))];
 
-/** The crafting menu's groups, one per ammo, each listing its chain in order, and its column (038.4: two side by side). */
-export const CRAFT_GROUPS: readonly { ammoId: string; recipes: readonly string[]; column: number }[] = [
-  { ammoId: 'arrow', recipes: ['shaft', 'arrowhead', 'rope', 'arrow'], column: 0 },
-  { ammoId: 'bomb', recipes: ['casing', 'fuse', 'ley-dust', 'bomb'], column: 0 },
-  { ammoId: 'ley-bolt', recipes: ['ley-bolt'], column: 1 },
-  { ammoId: 'landmine', recipes: ['iron-plate', 'landmine'], column: 1 },
-];
-
 /** A hand-crafting recipe, or a stage's (029). */
 export function recipeDef(id: string): RecipeDef {
   const def = RECIPES[id] ?? STAGE_RECIPES[id];

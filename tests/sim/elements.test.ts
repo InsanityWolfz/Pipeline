@@ -10,7 +10,8 @@ import { roundEmission } from '../../src/sim/emissions';
 import { fixtureDef } from '../../src/sim/fixtures';
 import { leavePool } from '../../src/sim/keystones';
 import { unlockedPieces } from '../../src/sim/placement';
-import { stageRowsKnown } from '../../src/sim/stages';
+import { taggedKnown } from '../../src/sim/stages';
+import { craft } from '../../src/sim/crafting';
 import { offerFromOutside } from '../../src/sim/flow';
 import type { MachineState } from '../../src/sim/pieces';
 import type { SimState } from '../../src/sim/state';
@@ -157,19 +158,21 @@ describe('stages on every family (039.12)', () => {
     expect(STAGE_ROWS.find((r) => r.id === 'frost-rune-bomb')?.recipe).toEqual({ id: 'frost-rune-bomb', inputs: { bomb: 4, rimestone: 1 }, output: { itemId: 'bomb+frost', count: 4 } });
   });
 
-  it('hand-applying the frost rune to bombs makes Frost bombs and unlocks the rune; the landmine row shows once ley-iron is found', () => {
+  it('crafting Frost bombs (047) makes them and unlocks the rune; the landmine row shows once ley-iron is found', () => {
     const s = foundry(false);
     const bench = fixtureDef('identification-bench');
     const at = tileCentre({ tx: bench.tx + 1, ty: bench.ty });
     movePlayer(s, at.x, at.y);
     s.claims.push('shrine');
     s.inventory = { bomb: 4, rimestone: 1 };
-    expect(stageRowsKnown(s).map((r) => r.id)).not.toContain('frost-rune-landmine');
-    run(s, 1, { applyStage: 'frost-rune-bomb' });
+    const landmineRow = STAGE_ROWS.find((r) => r.id === 'frost-rune-landmine');
+    if (!landmineRow) throw new Error('no landmine row');
+    expect(taggedKnown(s, landmineRow)).toBe(false);
+    expect(craft(s, 'frost-rune-bomb')).toBe(true);
     expect(s.inventory).toMatchObject({ bomb: 0, rimestone: 0, 'bomb+frost': 4 });
     expect(unlockedPieces(s)).toContain('frost-rune');
     s.found.push('ley-iron');
-    expect(stageRowsKnown(s).map((r) => r.id)).toContain('frost-rune-landmine');
+    expect(taggedKnown(s, landmineRow)).toBe(true);
   });
 
   it('the frost rune machine takes any round without an element, of any family, and frosts it', () => {

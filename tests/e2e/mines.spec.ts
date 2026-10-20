@@ -56,7 +56,7 @@ test('key 4 picks landmines: one arms where it lands, only its arm time sets it 
   expect(errors).toEqual([]);
 });
 
-test('the Cluster die hand-applied at the bench makes cluster bombs, whose bomblets burst round the bomb', async ({ page }) => {
+test('cluster bombs crafted (047: in C) unlock the Cluster die, and their bomblets, whose bomblets burst round the bomb', async ({ page }) => {
   test.setTimeout(180_000);
   const errors = watchErrors(page);
   await boot(page, '?playtest');
@@ -66,8 +66,8 @@ test('the Cluster die hand-applied at the bench makes cluster bombs, whose bombl
     if (!g || !h) throw new Error('no game');
     g.claim('shrine');
     h.toFoundry();
-    h.walkTo(2.3 * 32, 12.5 * 32);
-    const s = g.step(1, { applyStage: 'cluster-die' });
+    g.craft('cluster-die-bomb');
+    const s = g.step(1);
     return { cluster: s.inventory['bomb+cluster'] ?? 0, unlocked: s.stagesUnlocked };
   });
   expect(made.cluster).toBe(4);

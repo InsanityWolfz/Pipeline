@@ -7,13 +7,10 @@ import type { SimState } from '../sim/state';
 import { ChoiceMenu, type Choice } from './ChoiceMenu';
 import type { Controls } from './controls';
 import { pieceIcon } from './foundryLayout';
-import { StagePanel, type StagePanelState } from './StagePanel';
 import { RestorePanel } from './RestorePanel';
 import { diagramInReach } from '../sim/research';
 import { shownItem } from './itemShown';
 import { GearPanel } from './GearPanel';
-import { GEAR_PANEL } from '../data/gearAssets';
-import { stageRowsKnown, stagesKnown } from '../sim/stages';
 import { altarInReach, altarState } from '../sim/altar';
 import { offeringModel } from './altarPanel';
 import type { UiState } from './testHook';
@@ -44,8 +41,6 @@ export class SiteMenus {
   private readonly bench: GearPanel;
   private readonly sorter: ChoiceMenu<SorterChoice>;
   private readonly waystone: ChoiceMenu<WaystoneChoice>;
-  /** The bench's Stages panel (029), beside its rows once the shrine is claimed. */
-  private readonly stages: StagePanel;
   /** The restore panel (033), opened by E at a diagram in the foundry. */
   private readonly restore: RestorePanel;
   /** The altar's offering (034), in the restore panel's style, opened by E at an awake altar. */
@@ -59,14 +54,8 @@ export class SiteMenus {
     this.bench = new GearPanel(scene);
     this.sorter = new ChoiceMenu(scene);
     this.waystone = new ChoiceMenu(scene);
-    this.stages = new StagePanel(scene);
     this.restore = new RestorePanel(scene);
     this.offering = new RestorePanel(scene, offeringModel);
-  }
-
-  /** The bench's Stages panel as drawn (029). */
-  get stagePanel(): StagePanelState {
-    return this.stages.state;
   }
 
   private get menus(): readonly ChoiceMenu<unknown>[] {
@@ -78,7 +67,7 @@ export class SiteMenus {
   }
 
   overUi(x: number, y: number): boolean {
-    return this.menus.some((m) => m.overUi(x, y)) || this.bench.overUi(x, y) || this.stages.overUi(x, y) || this.restore.overUi(x, y) || this.offering.overUi(x, y);
+    return this.menus.some((m) => m.overUi(x, y)) || this.bench.overUi(x, y) || this.restore.overUi(x, y) || this.offering.overUi(x, y);
   }
 
   close(): void {
@@ -88,16 +77,15 @@ export class SiteMenus {
     this.offering.close();
   }
 
-  /** A bench Stages row's stage or a gear piece under a view point (040). */
+  /** A gear piece under a view point (040). */
   tipAt(x: number, y: number): TipHit | null {
-    return this.stages.tipAt(x, y) ?? this.bench.tipAt(x, y);
+    return this.bench.tipAt(x, y);
   }
 
   /** The cursor is at a screen point: the open menu lights the row under it (020). */
   pointAt(x: number, y: number): void {
     for (const m of this.menus) m.pointAt(x, y);
     this.bench.pointAt(x, y);
-    this.stages.pointAt(x, y);
     this.restore.pointAt(x, y);
     this.offering.pointAt(x, y);
   }
@@ -150,7 +138,6 @@ export class SiteMenus {
     const gear = this.bench.click(x, y);
     const f = this.sorter.valueAt(x, y);
     const w = this.waystone.valueAt(x, y);
-    const stage = this.stages.stageAt(x, y);
     const restore = this.restore.restoreAt(x, y);
     const summon = this.offering.restoreAt(x, y);
     if (summon) {
@@ -169,12 +156,6 @@ export class SiteMenus {
     if (gear) {
       if (gear.kind === 'identify') controls.menus.identify();
       else if (gear.kind === 'equip') controls.menus.equip({ id: gear.id });
-      return true;
-    }
-    if (stage) {
-      controls.menus.applyStage(stage);
-      // The bench stays open, so a stage can be applied again (029: any number of times).
-      this.stages.flashAt(x, y);
       return true;
     }
     if (f && this.sorterId !== null) controls.menus.setFilter(this.sorterId, f.itemId);
@@ -213,10 +194,8 @@ export class SiteMenus {
         : [];
     this.stash.show(stashRows);
     if (this.bench.isOpen && !fixtureInReach(sim, 'bench')) this.bench.close();
-    // Once the shrine is claimed, the Stages panel (029) sits beside the gear panel, the two centred together.
-    const staged = this.bench.isOpen && stagesKnown(sim);
-    this.bench.update(sim, staged);
-    this.stages.show(staged ? GEAR_PANEL.w : null, sim, stageRowsKnown(sim).map((r) => r.id));
+    // 047: the bench's Stages panel is gone; tagged rounds are crafted in the crafting menu (C).
+    this.bench.update(sim);
     if (this.sorter.isOpen && usableInReach(sim)?.id !== this.sorterId) this.sorter.close();
     const sorterRows: Choice<SorterChoice>[] = [
       { icons: [pieceIcon('sorter')], text: 'Clear', value: { itemId: null } },

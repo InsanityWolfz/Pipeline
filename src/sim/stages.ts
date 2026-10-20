@@ -4,8 +4,7 @@ import { SHRINE_SITE } from '../data/rooms';
 import { stageDef, stageRecipeFor, stageRow, STAGE_ROWS, STAGES, type StageDef, type StageRow } from '../data/stages';
 import { withoutTag, withTag } from '../data/tags';
 import { INPUT_CAP } from '../data/foundry';
-import { fixtureInReach, isClaimed } from './claims';
-import { make } from './crafting';
+import { make } from './make';
 import { count } from './inventory';
 import { ammoOfItem, takeFromEntrance } from './link';
 import type { MachineState } from './pieces';
@@ -54,35 +53,17 @@ export function offerToStage(m: MachineState, st: StageDef, item: string): boole
   return true;
 }
 
-/** The bench shows its Stages rows, and stages can be hand-applied, once the shrine is claimed. */
-export const stagesKnown = (state: Pick<SimState, 'claims'>): boolean => isClaimed(state, SHRINE_SITE);
+/** Tagged rounds can be crafted (029, 047: in the crafting menu, anywhere) once the shrine is claimed. */
+export const stagesKnown = (state: { claims: readonly string[] }): boolean => state.claims.includes(SHRINE_SITE);
+
+/** The parts of the sim a tagged round's held count reads: the inventory (carried rounds) and the intake's entrances (their reservoirs). */
+export type TaggedStores = Pick<SimState, 'inventory'> & { link: Pick<SimState['link'], 'entrances'> };
 
 /**
- * Hand-applies a stage at the bench (029): with the shrine claimed, the bench in reach and the inputs held (stageHeld), takes them
- * (carried first, then from the intake's entrances) and gives the tagged rounds, so the tagged item counts as hand-made and the stage unlocks. Any number of times.
- * The crafting menu's `craft` refuses stage ids, so this is the only way to apply one by hand. `rowId` names a bench
- * row (039.12: `frost-rune-bomb`), or a stage for its home row; a row the player can't see yet refuses.
+ * How many of an item count as held for a tagged round's recipe (029 option A): carried, plus the rounds in the
+ * intake's entrances. The crafting menu's counts and dimming read this.
  */
-export function applyStage(state: SimState, rowId: string): boolean {
-  const row = stageRow(rowId);
-  const known = row !== undefined && stageRowsKnown(state).includes(row);
-  if (!row || !known || !stagesKnown(state) || !fixtureInReach(state, 'bench') || !stageAffordable(state, row.id)) {
-    state.events.craftFails.push({ recipeId: rowId });
-    return false;
-  }
-  for (const [itemId, need] of Object.entries(row.recipe.inputs)) pullFromEntrances(state, itemId, need - count(state.inventory, itemId));
-  make(state, row.recipe);
-  return true;
-}
-
-/** The parts of the sim a bench row's held count reads: the inventory (carried rounds) and the intake's entrances (their reservoirs). */
-export type StageStores = Pick<SimState, 'inventory'> & { link: Pick<SimState['link'], 'entrances'> };
-
-/**
- * How many of an item count as held for a bench row (029, raised after the build): carried, plus the rounds in the
- * intake's entrances. The Stages panel's counts and dimming read this.
- */
-export function stageHeld(state: StageStores, itemId: string): number {
+export function taggedHeld(state: TaggedStores, itemId: string): number {
   const ammoId = ammoOfItem(itemId);
   const inEntrances = ammoId === null ? 0 : state.link.entrances.reduce((n, e) => n + (e.ammoId === ammoId ? e.count : 0), 0);
   return count(state.inventory, itemId) + inEntrances;
@@ -102,15 +83,27 @@ function pullFromEntrances(state: SimState, itemId: string, n: number): void {
   }
 }
 
-/** The bench rows the player can see (039.12): a family's row once its own ammo can be made (landmines after ley-iron is found, 038.3). */
-export function stageRowsKnown(state: Pick<SimState, 'found'> & { link: Pick<SimState['link'], 'attuned'> }): StageRow[] {
-  return STAGE_ROWS.filter((r) => knownRecipe(state, r.base));
+/** A tagged round's recipe shows once the shrine is claimed and its family's own ammo can be made (landmines after ley-iron is found, 038.3). */
+export function taggedKnown(state: { found: readonly string[]; claims: readonly string[]; link: Pick<SimState['link'], 'attuned'> }, row: StageRow): boolean {
+  return stagesKnown(state) && knownRecipe(state, row.base);
 }
 
-/** Whether a bench row's inputs are held, carried or in the intake's entrances (029: the row is dimmed otherwise). */
-export function stageAffordable(state: StageStores, rowId: string): boolean {
+/** Whether a tagged round's inputs are held, carried or in the intake's entrances (029 option A). */
+export function taggedAffordable(state: TaggedStores, rowId: string): boolean {
   const row = stageRow(rowId);
-  return row !== undefined && Object.entries(row.recipe.inputs).every(([itemId, n]) => stageHeld(state, itemId) >= n);
+  return row !== undefined && Object.entries(row.recipe.inputs).every(([itemId, n]) => taggedHeld(state, itemId) >= n);
+}
+
+/**
+ * Crafts a tagged round (047; 029's hand-apply, now in the crafting menu): takes its inputs, carried first and then
+ * from the intake's entrances, and gives the tagged rounds, so the round counts as hand-made and its stage machine
+ * unlocks. The caller (crafting.ts) has checked it's known and affordable.
+ */
+export function craftTagged(state: SimState, rowId: string): void {
+  const row = stageRow(rowId);
+  if (!row) throw new Error(`Unknown tagged round recipe '${rowId}'`);
+  for (const [itemId, need] of Object.entries(row.recipe.inputs)) pullFromEntrances(state, itemId, need - count(state.inventory, itemId));
+  make(state, row.recipe);
 }
 
 /** Stage ids the player can build (any of their tagged rounds has been hand-made: 039, hand-applied once to any round), in stage order. */

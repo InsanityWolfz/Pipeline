@@ -134,7 +134,7 @@ export class MenuRouter {
    * A picker row moves one, Shift half, Ctrl all (022), and the picker stays open for the next click.
    */
   click(controls: Controls, x: number, y: number, mods: ClickMods): void {
-    const { pause, site, picker, build, sound, talents, legibility, sandbox } = this.m;
+    const { pause, site, picker, build, sound, talents, legibility, sandbox, craft } = this.m;
     if (pause.isOpen) {
       this.pauseClick(pause.click(x, y));
       return;
@@ -158,7 +158,8 @@ export class MenuRouter {
       else if ('respec' in tree) controls.menus.respec();
       return;
     }
-    if (build.click(x, y) || site.click(controls, x, y)) {
+    // 047: the crafting menu's tabs (its rows craft from their own press handlers).
+    if (craft.click(x, y) || build.click(x, y) || site.click(controls, x, y)) {
       sound.play(SOUNDS.menuClick);
       return;
     }

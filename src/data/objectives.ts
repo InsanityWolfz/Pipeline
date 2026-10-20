@@ -114,10 +114,11 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
   { text: 'Run a supply port into your line', milestone: 'm1', check: { kind: 'portDelivered' }, marker: 'ports', highlight: 'conduit' },
   { text: 'Put a second kind of ammo in another entrance', milestone: 'm1', check: { kind: 'mixedVolley' } },
   // 029: the first stage, frost on arrows, from the Grotto's rime to a frost rune in the line; then a ley stage by hand.
+  // 047: tagged rounds are crafted in the crafting menu (C), anywhere, and never called stages where the player sees.
   { text: 'Gather rimestone at the Frozen Grotto', milestone: 'm1', check: { kind: 'gathered', items: ['rimestone'] } },
-  { text: 'Apply a frost rune to arrows at the bench', milestone: 'm1', check: { kind: 'crafted', items: ['arrow+frost'] } },
+  { text: 'Craft frost arrows (C)', milestone: 'm1', check: { kind: 'crafted', items: ['arrow+frost'] } },
   { text: 'Build a frost rune into your arrow line', milestone: 'm1', check: { kind: 'machineMade', item: 'arrow+frost' }, highlight: 'frost-rune' },
-  { text: 'Try a ley stage at the bench: homing or split', milestone: 'm1', check: { kind: 'craftedAny', items: ['ley-bolt+homing', 'ley-bolt+split'] } },
+  { text: 'Craft homing or split ley bolts (C)', milestone: 'm1', check: { kind: 'craftedAny', items: ['ley-bolt+homing', 'ley-bolt+split'] } },
   // 032: a resource site's pylon, marked once one is discovered.
   { text: 'Claim a second pylon', milestone: 'm1', check: { kind: 'claimedCount', min: 2 }, marker: 'sitePylon' },
   // 034: Region 2, behind the barrier the shrine's claim drops: in, its pylon, its boss, and the entrance its core restores.

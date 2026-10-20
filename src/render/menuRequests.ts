@@ -9,9 +9,9 @@ export function clickAmount(mods: { shift: boolean; ctrl: boolean }): HopperAmou
 }
 
 /** The commands that menus send: the hopper, sorter, pylon, stash and bench menus' choices. */
-export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'setFilter' | 'pylon' | 'travel' | 'takeStash' | 'identify' | 'equip' | 'applyStage' | 'restore' | 'summon' | 'takeTalent' | 'respec' | 'sandbox'>;
+export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'setFilter' | 'pylon' | 'travel' | 'takeStash' | 'identify' | 'equip' | 'restore' | 'summon' | 'takeTalent' | 'respec' | 'sandbox'>;
 
-const NONE: MenuCommand = { deposit: null, withdraw: null, setFilter: null, pylon: null, travel: null, takeStash: null, identify: false, equip: null, applyStage: null, restore: null, summon: null, takeTalent: null, respec: false, sandbox: null };
+const NONE: MenuCommand = { deposit: null, withdraw: null, setFilter: null, pylon: null, travel: null, takeStash: null, identify: false, equip: null, restore: null, summon: null, takeTalent: null, respec: false, sandbox: null };
 
 // Choices clicked in the world's menus, held until the next tick takes them.
 export class MenuRequests {
@@ -55,11 +55,6 @@ export class MenuRequests {
   /** Wears a piece (the worn one comes off), or takes a slot off, at the bench (036). */
   equip(req: EquipRequest): void {
     this.pending.equip = req;
-  }
-
-  /** Hand-applies a stage at the bench (029: the bench's Stages rows). */
-  applyStage(stageId: string): void {
-    this.pending.applyStage = stageId;
   }
 
   /** Restores a research node at its diagram (033: the restore panel's Restore row, or E again). */

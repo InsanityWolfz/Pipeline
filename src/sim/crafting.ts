@@ -1,43 +1,34 @@
-import { RECIPES, recipeDef, type RecipeDef } from '../data/recipes';
-import { count, type Inventory } from './inventory';
+import { RECIPES, recipeDef } from '../data/recipes';
+import { stageRow } from '../data/stages';
 import type { SimState } from './state';
+import { craftTagged, taggedAffordable, taggedKnown, type TaggedStores } from './stages';
 import { knownRecipe } from './tutorial';
+import { hasInputs, make } from './make';
 
-// Hand crafting: instant, from the inventory. Render calls this between ticks
-// (the menu pauses the sim), so it's an action on the state, not part of a step.
-// Stage recipes (029) aren't hand crafts: they go through the bench (src/sim/stages.ts).
+// Hand crafting: instant, from the inventory. Render calls this between ticks (the menu doesn't pause the world), so
+// it's an action on the state, not part of a step. 047: a tagged round (frost arrows and the rest) is a recipe of the
+// crafting menu too, made anywhere, its rounds counted carried plus in the intake's entrances (src/sim/stages.ts).
 
-/** True if the inventory holds every input of a recipe. */
-export function hasInputs(inventory: Inventory, recipe: RecipeDef): boolean {
-  return Object.entries(recipe.inputs).every(([itemId, n]) => count(inventory, itemId) >= n);
-}
+export { hasInputs, make } from './make';
 
-/** Takes a recipe's inputs and gives its output, marking the output hand-made (it unlocks the machine that makes it). The caller has checked the inputs. */
-export function make(state: SimState, recipe: RecipeDef): void {
-  for (const [itemId, n] of Object.entries(recipe.inputs)) state.inventory[itemId] = count(state.inventory, itemId) - n;
-  const { itemId, count: made } = recipe.output;
-  state.inventory[itemId] = count(state.inventory, itemId) + made;
-  if (!state.crafted.includes(itemId)) {
-    state.crafted.push(itemId);
-    state.crafted.sort();
-  }
-  state.events.crafts.push({ recipeId: recipe.id });
-}
+/** What deciding a craft reads: the inventory, the attunement and entrances, the revealing items found and the claims. */
+export type CraftStores = TaggedStores & { link: Pick<SimState['link'], 'attuned'>; found: readonly string[]; claims: readonly string[] };
 
-/** Crafts one batch of a recipe. Returns false, changing nothing but the events, if an input is short. */
+/** Crafts one batch of a recipe or a tagged round. Returns false, changing nothing but the events, if it can't. */
 export function craft(state: SimState, recipeId: string): boolean {
   if (!canCraft(state, recipeId)) {
     state.events.craftFails.push({ recipeId });
     return false;
   }
-  make(state, recipeDef(recipeId));
+  if (RECIPES[recipeId]) make(state, recipeDef(recipeId));
+  else craftTagged(state, recipeId);
   return true;
 }
 
-/** True if the recipe is a hand-crafting recipe (never a stage's), known (012), and the inventory holds every input. */
-export function canCraft(state: Pick<SimState, 'inventory'> & { link: Pick<SimState['link'], 'attuned'>; found: readonly string[] }, recipeId: string): boolean {
-  // An unknown id throws; a stage's recipe is known but never a hand craft.
-  const recipe = recipeDef(recipeId);
-  if (!RECIPES[recipeId] || !knownRecipe(state, recipeId)) return false;
-  return hasInputs(state.inventory, recipe);
+/** True if the recipe is known (012, 038; a tagged round's once its family is and the shrine is claimed, 029) and its inputs are held. */
+export function canCraft(state: CraftStores, recipeId: string): boolean {
+  if (RECIPES[recipeId]) return knownRecipe(state, recipeId) && hasInputs(state.inventory, recipeDef(recipeId));
+  const row = stageRow(recipeId);
+  if (!row) throw new Error(`Unknown recipe '${recipeId}'`);
+  return taggedKnown(state, row) && taggedAffordable(state, row.id);
 }

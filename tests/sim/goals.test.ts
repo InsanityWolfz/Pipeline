@@ -29,9 +29,9 @@ describe('the chain', () => {
       'Run a supply port into your line',
       'Put a second kind of ammo in another entrance',
       'Gather rimestone at the Frozen Grotto',
-      'Apply a frost rune to arrows at the bench',
+      'Craft frost arrows (C)',
       'Build a frost rune into your arrow line',
-      'Try a ley stage at the bench: homing or split',
+      'Craft homing or split ley bolts (C)',
       'Claim a second pylon',
       // 034: Region 2's steps.
       'Breach Stonefall Hollows',

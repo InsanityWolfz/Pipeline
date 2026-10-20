@@ -40,7 +40,8 @@ import { ITEMS } from '../../src/data/items';
 import { STARTING_INVENTORY, TUTORIAL_START } from '../../src/data/player';
 import { PLAYTEST_START } from '../../src/data/playtest';
 import { SLOT_AMMOS, STARTING_AMMO } from '../../src/data/tube';
-import { CRAFT_GROUPS, RECIPES, recipeDef } from '../../src/data/recipes';
+import { RECIPES, recipeDef } from '../../src/data/recipes';
+import { CRAFT_TABS } from '../../src/data/craftTabs';
 import { STAGE_RECIPES, STAGE_ROWS } from '../../src/data/stages';
 import { NODES } from '../../src/data/nodes';
 import { BUILD_BAR, PIECE_CATEGORIES, PIECES, pieceDef } from '../../src/data/pieces';
@@ -188,11 +189,6 @@ describe('item kinds, ammo slots and recipes', () => {
     for (const r of Object.values(RECIPES)) if (r.shownAfter !== undefined) expect(ITEMS[r.shownAfter], r.id).toBeDefined();
   });
 
-  it("lays the crafting menu's groups in columns numbered from 0 with none skipped (038.4)", () => {
-    const columns = [...new Set(CRAFT_GROUPS.map((g) => g.column))].sort((x, y) => x - y);
-    expect(columns).toEqual(columns.map((_, i) => i));
-  });
-
   it('gives every item a kind, and every ammo an ammo item', () => {
     // 033: schematics are the one new kind.
     for (const item of Object.values(ITEMS)) expect(['raw', 'part', 'ammo', 'armor', 'schematic']).toContain(item.kind);
@@ -217,10 +213,10 @@ describe('item kinds, ammo slots and recipes', () => {
     }
   });
 
-  it('lists every recipe in exactly one menu group, grouped under real ammo', () => {
-    const listed = CRAFT_GROUPS.flatMap((g) => g.recipes);
-    expect([...listed].sort()).toEqual(Object.keys(RECIPES).sort());
-    for (const g of CRAFT_GROUPS) expect(AMMO[g.ammoId]).toBeDefined();
+  it('lists every recipe on at least one crafting tab (047), each tab under real ammo', () => {
+    const listed = new Set(CRAFT_TABS.flatMap((t) => t.recipes));
+    for (const id of Object.keys(RECIPES)) expect(listed.has(id), id).toBe(true);
+    for (const t of CRAFT_TABS) expect(AMMO[t.ammoId]).toBeDefined();
   });
 
   it('has kebab-case nodes that give items that exist', () => {

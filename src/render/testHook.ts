@@ -10,7 +10,6 @@ import type { BuildBarState } from './BuildView';
 import type { CraftMenuState } from './CraftMenuView';
 import type { PromptState } from './PromptView';
 import type { PortShown } from './PortView';
-import type { StagePanelState } from './StagePanel';
 import type { GearPanelState } from './GearPanel';
 import type { GearPiece } from '../data/gear';
 import type { RelicsShown } from './RelicView';
@@ -36,7 +35,7 @@ export interface GameTestHook {
   flow(): FlowReport;
   /**
    * Steps `frames` ticks holding `command`. Its dodge, interact, ammo
-   * select, build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), setFilter, pylon, travel, takeStash, identify, equip, applyStage, restore (033), summon, takeTalent and respec (037) apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
+   * select, build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), setFilter, pylon, travel, takeStash, identify, equip, restore (033), summon, takeTalent and respec (037) apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
    */
   step(frames: number, command?: Partial<Command>): SimSummary;
   /** Crafts a recipe once between ticks, as clicking its menu row does. */
@@ -152,7 +151,7 @@ export interface UiState {
    * 029: the bench's Stages panel as drawn, Split flashes still showing, and the tagged rounds' trails in flight
    * (how many, and the most points one runs along).
    */
-  tagged: { benchStages: StagePanelState | null; splitFlashes: number; trails: { count: number; longest: number } };
+  tagged: { splitFlashes: number; trails: { count: number; longest: number } };
   /** 030: the Ley Springs drawn, healing motes in the air, the pylon's thread, the foundry's shimmer, and the spring glowing under the player. */
   healing: HealingShown;
   /** 031: the inventory panel (open, and each group's rows: carried count, at risk, home in the stash). */

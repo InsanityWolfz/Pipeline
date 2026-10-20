@@ -56,7 +56,7 @@ export class GearPanel {
   private readonly empty: TextLine;
   private readonly pager: TextLine;
   private readonly totals: TextLine[];
-  private layout: GearPanelLayout = gearPanelLayout(false, [], 0);
+  private layout: GearPanelLayout = gearPanelLayout([], 0);
   private pieces: GearPiece[] = [];
   private hover = '';
   private flash: { box: Box; ms: number } | null = null;
@@ -147,12 +147,12 @@ export class GearPanel {
     return { kind: 'panel' };
   }
 
-  /** Redraws from the sim: beside the Stages panel when `staged`. The press flash runs on the tween clock. */
-  update(sim: SimState, staged: boolean): void {
+  /** Redraws from the sim. The press flash runs on the tween clock. */
+  update(sim: SimState): void {
     if (!this.isOpen) return;
     const deltaMs = this.scene.game.loop.delta * this.scene.tweens.timeScale;
     this.pieces = sim.gear.filter((p) => p.slot === this.tab);
-    this.layout = gearPanelLayout(staged, this.pieces.map((p) => ({ id: p.id, relic: p.relic !== null })), this.page);
+    this.layout = gearPanelLayout(this.pieces.map((p) => ({ id: p.id, relic: p.relic !== null })), this.page);
     this.page = this.layout.page.index;
     if (this.flash) this.flash = this.flash.ms - deltaMs > 0 ? { ...this.flash, ms: this.flash.ms - deltaMs } : null;
     this.draw(sim);
