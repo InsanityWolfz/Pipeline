@@ -111,9 +111,9 @@ From 021 to 041, 21 specs were stacked on one branch with no pull requests. `mai
 1. **One spec, one branch, one PR.** Each spec gets its own branch (`claude/NNN-name`) and its own PR into `main`, merged after Shaun's playtest and before the next spec starts. Unattended runs may build several specs, but each one stacks on the previous spec's branch and has its own draft PR, so each can be reviewed and merged on its own.
 2. **A spec closes.** It is done when its acceptance criteria are met, or the unmet ones are recorded with measurements and a question for Shaun. New playtest notes and new ideas become new specs, never new items in a spec that is still open.
 3. **At most one "raised after the build" round per spec.** If Shaun's answers lead to more building that misses again, record the numbers and put the follow-up in a new spec.
-4. **Balance targets are measurements.** Scripted-bot targets over many seeds (fight lengths, clear times, damage taken) are printed by `npm run measure` and recorded in the spec and PR. They are not tests in `npm run check`, and the build doesn't loop on tuning to make chaotic seeds pass. Balance is judged at playtest.
+4. **Balance targets are measurements.** Scripted-bot targets over many seeds (fight lengths, clear times, damage taken) are printed by `npm run measure` (tests/measure, its own Vitest config; a missed target never fails it) and recorded in the spec and PR. They are not tests in `npm run check`, and the build doesn't loop on tuning to make chaotic seeds pass. Balance is judged at playtest.
 5. **Small approval batches.** About three specs approved at a time, so the proposals Shaun approves on draft are ones he has read.
-6. **Verify once.** While building, run only the e2e files the change touches. Run the full `npm run test:e2e` once per spec, at /verify (about 7 minutes; `npm run check` is about 50 seconds).
+6. **Verify once.** While building, run only the e2e files the change touches. Run the full `npm run test:e2e` once per spec, at /verify (about 7 minutes; `npm run check` is about 45 seconds).
 7. **Commit after each item.** A container restart loses anything uncommitted.
 8. **One state log.** The current state lives in docs/progress.md (latest entry first), the spec statuses in docs/backlog.md, and the work in PRs. There's no separate handoff file.
 
@@ -171,6 +171,7 @@ How we work: docs/process.md. Current state: docs/progress.md.
 - npm run dev        start the game
 - npm run check      typecheck + lint + unit tests (must pass)
 - npm run test:e2e   Playwright game tests
+- npm run measure    balance measurements (report only)
 
 ## Architecture (non-negotiable)
 - src/sim: all game rules, pure TypeScript, never imports Phaser

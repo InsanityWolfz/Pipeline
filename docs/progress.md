@@ -2,6 +2,16 @@
 
 Newest entry first.
 
+## 2026-10-20: `npm run measure` (balance targets out of check)
+**Changed:**
+- Branch `claude/measure-script`, stacked on `claude/session-start-hook` (PR #25). Process rule 4 built: 041's scripted-bot targets (the decent-build Bulwark fight over seeds 1–20, the naive bot, the ring 1–3 pack clears, the four ammo scenarios) run under `npm run measure` (tests/measure, `vitest.measure.config.ts`). It prints per-seed tables and a summary table; a missed target never fails it, a crash does.
+- `npm run check` keeps one-seed, bounded determinism checks of each harness and the naive bot's KO (fast and the same on every seed). The shared fights live in tests/sim/bulwarkBot.ts, packBot.ts and ammoScenarios.ts.
+- `npm run check`: about 57 s before, 43 s after (Vitest 32.5 s to 26 s). `npm run measure` takes about 13 s; all 7 targets met today, 2 recorded.
+
+**Next:**
+1. Shaun reviews the draft PR for `claude/measure-script`.
+2. Then, as before: the Stages "0/4 arrows" bug, 043, 042, each on its own branch.
+
 ## 2026-10-20: Process reset, 041 closed, catch-up PR for 021–041
 **Changed:**
 - Reviewed how the 021–041 run drifted: 21 specs on one branch with no PRs, wrapups that never happened, 041 growing to 19 items, ten specs approved on draft at once, a handoff that went stale. Shaun approved a reset; its rules are in docs/process.md, "Keeping the loop small", and in CLAUDE.md.

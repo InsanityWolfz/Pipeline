@@ -15,6 +15,7 @@ How we work: docs/process.md. Current state: docs/progress.md.
 - npm run dev        start the game
 - npm run check      typecheck + lint + unit tests (must pass)
 - npm run test:e2e   Playwright game tests
+- npm run measure    balance measurements (report only)
 
 ## Architecture (non-negotiable)
 - src/sim: all game rules, pure TypeScript, never imports Phaser
