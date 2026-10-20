@@ -1,6 +1,6 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
-import { BUILD_STRIP } from '../data/hudLayout';
+import { BUILD_STRIP } from '../data/buildStrip';
 import type { ScreenBox } from './bottomHud';
 import { buildStripEntries, buildStripLayout, type StripEntry } from './buildStrip';
 import { colorOf } from './color';

@@ -2,7 +2,6 @@
 // tuned by eye; colours are palette ids.
 
 import { craftColumnHeight, CRAFT_COLUMNS } from './craftColumns';
-import type { BindAction } from './settings';
 
 /** The harvest progress bar over a node: size, gap above the sprite, and palette ids. */
 export const HARVEST_BAR = { w: 20, h: 3, gap: 2, border: 1, color: 'cyan', back: 'ink' } as const;
@@ -118,32 +117,6 @@ export const BUILD_BAR_LAYOUT = {
   label: { h: 9, gap: 2 },
 } as const;
 
-/**
- * The build controls strip (045, note 9): in build mode only, a line of controls centred `gap` px above the build
- * bar's group labels, `h` px tall: each entry its input in `keyColor` (a bound action's key, 042, or a fixed mouse
- * input), then `keyGap` px on what it does, entries `entryGap` px apart, on a faint ink back `pad` px round them at
- * `backAlpha`. Text at the top of its capitals `textY` px down. The tube slot sits `gap` px above it while building.
- */
-export const BUILD_STRIP = {
-  entries: [
-    { input: { mouse: 'Click' }, does: 'place' },
-    { input: { action: 'rotate' }, does: 'rotate' },
-    { input: { action: 'flip' }, does: 'flip' },
-    { input: { mouse: 'Right-click' }, does: 'pick up' },
-    { input: { mouse: 'Drag' }, does: 'line' },
-    { input: { action: 'build' }, does: 'exit' },
-  ] as readonly { input: { action: BindAction } | { mouse: string }; does: string }[],
-  h: 9,
-  gap: 2,
-  textY: 1,
-  keyGap: 2,
-  entryGap: 6,
-  pad: 2,
-  keyColor: 'gold-trim',
-  backColor: 'ink',
-  backAlpha: 0.55,
-} as const;
-
 /** How far the build-bar pulse's ring reaches round its cell, px; its sprite is a px wider still, so the ring's edge isn't clipped. */
 const PULSE_OUT = 3;
 const PULSE_INSET = PULSE_OUT + 1;
@@ -186,7 +159,7 @@ export const PICKER_LAYOUT = {
 
 /** The hover readout over a machine: a dark box of icon + count lines. Px from its top-left. */
 export const READOUT_LAYOUT = {
-  pad: 2,
+  pad: 3,
   lineHeight: 17,
   width: 44,
   count: { x: 19, y: 6 },

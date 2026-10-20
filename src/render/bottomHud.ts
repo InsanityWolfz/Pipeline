@@ -1,5 +1,6 @@
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
-import { BUILD_BAR_LAYOUT, BUILD_STRIP, HUD_LAYOUT, tubeSlotWidth } from '../data/hudLayout';
+import { BUILD_BAR_LAYOUT, HUD_LAYOUT, tubeSlotWidth } from '../data/hudLayout';
+import { BUILD_STRIP } from '../data/buildStrip';
 import { SLOT_AMMOS } from '../data/tube';
 
 // Where the bottom HUD's pieces sit (025), pure so tests can check the centring:

@@ -1,5 +1,5 @@
 import { VIEW_WIDTH } from '../data/config';
-import { BUILD_STRIP } from '../data/hudLayout';
+import { BUILD_STRIP } from '../data/buildStrip';
 import type { BindAction } from '../data/settings';
 import { buildStripTop, type ScreenBox } from './bottomHud';
 import { keyLabel } from './keyHint';

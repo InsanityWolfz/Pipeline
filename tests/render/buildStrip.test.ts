@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { VIEW_WIDTH } from '../../src/data/config';
-import { BUILD_STRIP, HUD_LAYOUT } from '../../src/data/hudLayout';
+import { HUD_LAYOUT } from '../../src/data/hudLayout';
+import { BUILD_STRIP } from '../../src/data/buildStrip';
 import { DEFAULT_BINDINGS } from '../../src/data/settings';
 import { TEXT_STYLES } from '../../src/data/fonts';
 import { buildBarLabelTop, buildStripTop, tubeSlotBox } from '../../src/render/bottomHud';
