@@ -10,8 +10,8 @@ import type { SimState } from '../sim/state';
 import { colorOf } from './color';
 import { TextLine } from './textLine';
 
-/** The boss bar as drawn (034), for `ui().bossBar`: the boss's name, health and max, or null while none fights. */
-export type BossBarShown = { name: string; health: number; maxHealth: number } | null;
+/** The boss bar as drawn (034), for `ui().bossBar`: the boss's name, health and max, and whether it's enraged (041), or null while none fights. */
+export type BossBarShown = { name: string; health: number; maxHealth: number; enraged: boolean } | null;
 
 const B = HOLLOWS_LOOK.bossBar;
 
@@ -37,13 +37,13 @@ export class BossBar {
     }
     const max = defOf(boss).maxHealth;
     const def = enemyDef(boss.enemyId);
-    this.shown = { name: def.name, health: boss.health, maxHealth: max };
+    this.shown = { name: def.name, health: boss.health, maxHealth: max, enraged: boss.enraged };
     const x = Math.round((VIEW_WIDTH - B.w) / 2);
     const g = this.bar;
     g.clear();
     g.fillStyle(colorOf(B.frame)).fillRect(x - B.border * 2, B.top - B.border * 2, B.w + B.border * 4, B.h + B.border * 4);
     g.fillStyle(colorOf(B.back)).fillRect(x - B.border, B.top - B.border, B.w + B.border * 2, B.h + B.border * 2);
-    g.fillStyle(colorOf(B.fill)).fillRect(x, B.top, Math.max(0, Math.round((B.w * boss.health) / max)), B.h);
+    g.fillStyle(colorOf(boss.enraged ? B.enragedFill : B.fill)).fillRect(x, B.top, Math.max(0, Math.round((B.w * boss.health) / max)), B.h);
     this.name.set(def.name);
     this.name.moveTo(Math.round((VIEW_WIDTH - this.name.width) / 2), B.top - B.nameGap - B.border * 2 - this.name.lineHeight);
     this.setVisible(true);

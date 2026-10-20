@@ -127,7 +127,7 @@ export const ENEMY_ANIMS: Readonly<Record<string, EnemyAnims>> = {
   husk: enemyAnims('husk'),
   wisp: enemyAnims('wisp'),
   warden: enemyAnims('warden', true),
-  bulwark: enemyAnims('bulwark', true, ['turn', 'lob', 'throw', 'block']),
+  bulwark: enemyAnims('bulwark', true, ['turn', 'lob', 'throw', 'block', 'roar', 'brace', 'stomp']),
   ...HOLLOWS_ENEMY_ANIMS,
 };
 

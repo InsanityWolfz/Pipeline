@@ -8,8 +8,9 @@ import type { SoundView } from './SoundView';
 // Stonefall Hollows' feel (034), for FeelView: a shot ringing off a shield (a clang and
 // brass sparks), the Bulwark's lob (the stone grinding, its bombs' fuses ticking), a bomb
 // bursting, the pound shaking the screen, the summon's drone and crack, and the barrier
-// breaking into shards with a sound of its own. Returns whether the barrier fell this
-// frame, so FeelView doesn't also play the tutorial gate's sound for it.
+// breaking into shards with a sound of its own; 041's roar, rear stomp and adds rising.
+// Returns whether the barrier fell this frame, so FeelView doesn't also play the tutorial
+// gate's sound for it.
 
 export function playHollows(ev: SimEvents, j: JuiceView, s: SoundView): boolean {
   for (const b of ev.blocked) {
@@ -28,6 +29,17 @@ export function playHollows(ev: SimEvents, j: JuiceView, s: SoundView): boolean 
     j.shake('big');
   }
   if (ev.summons.length > 0) s.play(SOUNDS.summon);
+  // 041: the enrage's roar, the rear stomp (a smaller pound behind it), the adds rising.
+  if (ev.enrages.length > 0) {
+    s.play(SOUNDS.bulwarkRoar);
+    j.shake('medium');
+  }
+  for (const p of ev.stomps) {
+    s.play(SOUNDS.bulwarkStomp);
+    j.burst('stompDust', p.x + (p.dirX * p.radius) / 2, p.y + (p.dirY * p.radius) / 2);
+    j.shake('small');
+  }
+  if (ev.addsRise.length > 0) s.play(SOUNDS.addsRise);
   const fell = ev.gates.some((g) => g.gate === 'hollows');
   if (fell) {
     s.play(SOUNDS.barrierCollapse);

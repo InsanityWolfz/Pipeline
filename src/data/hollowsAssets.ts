@@ -73,8 +73,28 @@ export const HOLLOWS_LOOK = {
   },
   /** The altar's offering row (in the 033 restore panel's style). */
   panel: { name: "The Bulwark's altar", effect: 'Offer to summon the Bulwark again.', action: 'Summon', spent: 'The Bulwark is here' },
-  /** The boss bar along the top of the screen while a boss fights: its width and height, view px, gap under the objective band, colours. */
-  bossBar: { w: 240, h: 8, top: 20, border: 1, fill: 'danger', back: 'ink', frame: 'brass', nameGap: 2 },
+  /**
+   * The boss bar along the top of the screen while a boss fights: its width and height, view px, gap under the objective
+   * band, colours. 041: `enragedFill` while the boss is enraged (the same danger red as its fill today: open question
+   * 041.15 asks Shaun what the bar's enrage should be).
+   */
+  bossBar: { w: 240, h: 8, top: 20, border: 1, fill: 'danger', enragedFill: 'danger', back: 'ink', frame: 'brass', nameGap: 2 },
+  /** The rear stomp's wind-up (041): a half-disc over its back in the pound circle's style, danger red. */
+  stomp: { color: 'danger', alpha: 0.22, fillAlpha: 0.5 },
+  /**
+   * Enraged (041, draft for Shaun's eye): the back seam's halo and the shield's runes burn danger red, the seam pulsing
+   * faster; steam puffs rise from its shoulders, each `riseMs` long, `rise` px up, swelling from `radius` to twice it.
+   */
+  enraged: {
+    color: 'danger',
+    seamPulseMs: 360,
+    seamAlpha: [0.45, 0.9] as const,
+    runeAlpha: 0.85,
+    runeWidth: 2,
+    steam: { color: 'snow', puffs: 4, riseMs: 900, rise: 34, radius: 4, alpha: 0.35, spread: 14, top: -64 },
+  },
+  /** An add rising (041): the summon's cracked circle at its feet, `scale` of the summon's size, and the add fading up from `sink` px under the ground. */
+  addRise: { scale: 0.55, sink: 14 },
 } as const;
 
 /**

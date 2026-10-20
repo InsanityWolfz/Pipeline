@@ -82,6 +82,8 @@ export const PARTICLES = {
   blockSpark: { colors: ['brass-light', 'brass', 'gold-trim', 'snow'], count: 22, speed: [70, 170], gravity: 200, lifeMs: [180, 340], size: 3, lift: 20 },
   enemyBurst: { colors: ['danger', 'cinder', 'hollow-light', 'hollow'], count: 26, speed: [40, 130], gravity: 120, lifeMs: [300, 650], size: 3 },
   poundDust: { colors: ['hollow-pale', 'hollow-light', 'hollow'], count: 36, speed: [60, 150], gravity: -20, lifeMs: [400, 800], size: 3 },
+  // 041: the Bulwark's rear stomp, a smaller pound's dust.
+  stompDust: { colors: ['hollow-pale', 'hollow-light', 'hollow'], count: 18, speed: [40, 110], gravity: -20, lifeMs: [300, 600], size: 2 },
   barrierShards: { colors: ['cyan', 'cyan-glow', 'snow'], count: 40, speed: [20, 90], gravity: 160, lifeMs: [500, 1000], size: 2, lift: 40 },
   // 038: a landmine bursting (iron shards and ley sparks) and a cluster bomb's bomblets popping (a few embers).
   mineShards: { colors: ['iron-light', 'iron', 'cyan-glow', 'snow'], count: 30, speed: [60, 160], gravity: 200, lifeMs: [220, 480], size: 2, lift: 6 },

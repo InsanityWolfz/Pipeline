@@ -5,7 +5,7 @@ import type { SoundRecipe } from './sounds.ts';
 // bombs' fuse ticking and bursting, its pound shaking the ground, the stone grinding as it
 // rears back to lob, and the summon at its altar (a low rising drone, then the crack).
 
-/** 034's sound keys (joined into SOUNDS): the barrier falling, a shot ringing off a shield, the Bulwark's bombs ticking and bursting, its pound, its lob, the summon. */
+/** 034's sound keys (joined into SOUNDS): the barrier falling, a shot ringing off a shield, the Bulwark's bombs ticking and bursting, its pound, its lob, the summon; 041's roar, rear stomp and adds rising. */
 export const HOLLOWS_SOUNDS = {
   barrierCollapse: 'barrier-collapse',
   shieldClang: 'shield-clang',
@@ -14,6 +14,9 @@ export const HOLLOWS_SOUNDS = {
   bulwarkPound: 'bulwark-pound',
   bulwarkGrind: 'bulwark-grind',
   summon: 'summon',
+  bulwarkRoar: 'bulwark-roar',
+  bulwarkStomp: 'bulwark-stomp',
+  addsRise: 'adds-rise',
 } as const;
 
 export const HOLLOWS_SOUND_RECIPES = {
@@ -62,6 +65,28 @@ export const HOLLOWS_SOUND_RECIPES = {
       { wave: 'sine', from: 220, to: 330, dur: 1.6, attack: 0.5, volume: 0.12 },
       { wave: 'noise', from: 1800, to: 200, delay: 1.5, dur: 0.4, attack: 0.002, volume: 0.4 },
       { wave: 'sine', from: 80, to: 35, delay: 1.5, dur: 0.5, attack: 0.002, volume: 0.5 },
+    ],
+  },
+  // 041: the enrage's roar (a grinding growl swelling and falling), the rear stomp (the pound pitched up and shorter),
+  // and the adds rising (a short rumble, then the crack).
+  'bulwark-roar': {
+    layers: [
+      { wave: 'saw', from: 70, to: 95, dur: 0.9, attack: 0.12, volume: 0.22, lowpass: 500, tremolo: { rate: 22, depth: 0.5 } },
+      { wave: 'noise', from: 1200, to: 400, dur: 0.9, attack: 0.15, volume: 0.22, tremolo: { rate: 16, depth: 0.5 } },
+      { wave: 'square', from: 55, to: 45, dur: 0.8, attack: 0.1, volume: 0.1, lowpass: 300 },
+    ],
+  },
+  'bulwark-stomp': {
+    layers: [
+      { wave: 'sine', from: 112, to: 48, dur: 0.4, attack: 0.002, volume: 0.6 },
+      { wave: 'noise', from: 1440, to: 190, dur: 0.33, attack: 0.002, volume: 0.4 },
+      { wave: 'square', from: 96, to: 64, dur: 0.2, attack: 0.002, volume: 0.12, lowpass: 640 },
+    ],
+  },
+  'adds-rise': {
+    layers: [
+      { wave: 'saw', from: 50, to: 80, dur: 0.8, attack: 0.2, volume: 0.14, lowpass: 500, tremolo: { rate: 8, depth: 0.4 } },
+      { wave: 'noise', from: 1600, to: 220, delay: 0.7, dur: 0.3, attack: 0.002, volume: 0.35 },
     ],
   },
 } as const satisfies Record<string, SoundRecipe>;

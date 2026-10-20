@@ -64,12 +64,19 @@ const seam = (x: number, wide: boolean): EnemyPart => ({
   ],
 });
 
+/**
+ * The shield's ley runes (041 lights them red when it enrages): three chevrons down its face, `half` px wide either side
+ * and `dip` deep, at `face` heights; edge-on in the side view, one line `side.dx` px past the shield's middle.
+ */
+export const BULWARK_RUNES = { face: [-46, -34, -22] as const, half: 6, dip: 6, side: { x: 22, dx: 2, y0: -50, y1: -20 } } as const;
+
 /** The shield plate: tall cut stone in an iron frame, three ley runes down it; turned edge-on in the side view. */
 function shield(face: boolean, x: number): EnemyPart {
   const w = face ? 46 : 12;
+  const R = BULWARK_RUNES;
   const runes: Shape[] = face
-    ? [-46, -34, -22].map((y) => ({ ...path(`M -6 ${y} L 0 ${y + 6} L 6 ${y}`, trim('cyan', 1.4)), glow: { color: 'cyan', blur: 3 } }))
-    : [line([x + 2, -50, x + 2, -20], 1.2, { id: 'cyan', alpha: 0.8 })];
+    ? R.face.map((y) => ({ ...path(`M ${-R.half} ${y} L 0 ${y + R.dip} L ${R.half} ${y}`, trim('cyan', 1.4)), glow: { color: 'cyan', blur: 3 } }))
+    : [line([x + R.side.dx, R.side.y0, x + R.side.dx, R.side.y1], 1.2, { id: 'cyan', alpha: 0.8 })];
   return {
     id: 'shield',
     role: 'arm-front',
@@ -98,7 +105,7 @@ export const BULWARK_RIG: EnemyRigDef = {
       seam(BULWARK_SEAM.side, false),
       head,
       eye(5, 6),
-      shield(false, 22),
+      shield(false, BULWARK_RUNES.side.x),
     ],
     // Facing the camera: the shield's face covers the body; the eye shows over its top.
     down: [
@@ -147,6 +154,14 @@ export const BULWARK_RIG: EnemyRigDef = {
     hit: [{ lean: -0.1, bob: 1 }],
     // A shot rings off the shield: it rocks back behind it.
     block: [{ armFront: -0.18, lean: -0.08, glow: 1 }],
+    // 041 (draft for Shaun's eye): the enrage's roar, head thrown back and shaking; the stomp's brace, its weight
+    // rocked forward onto the shield with a back foot raised; the stamp down behind it.
+    roar: [
+      { lean: -0.2, bob: -3, armBack: 1.4, armFront: -0.2, glow: 1 },
+      { lean: -0.24, bob: -2, armBack: 1.6, armFront: -0.24, glow: 1 },
+    ],
+    brace: [{ lean: 0.16, step: -4, lift: 6, armBack: 0.6, sink: 1, glow: 1 }],
+    stomp: [{ lean: 0.07, step: -2, sink: 5, scaleY: 0.9, glow: 1 }],
     death: DEATH_POSES,
   },
 };

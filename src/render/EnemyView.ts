@@ -18,7 +18,7 @@ import { addVector, addVectorSprite, showFrame, textureScale } from './vector/te
 import { CHILL_TINT, ICE_CRACK_TICKS, STAGE_SPRITES } from '../data/stageAssets';
 import { COLD } from '../data/tags';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
-import { bulwarkPose, drawSeam } from './bulwarkLook';
+import { bulwarkPose, drawSeam, riseShown } from './bulwarkLook';
 import { drawTelegraph } from './telegraphs';
 import { destroyHollowsArt, drawHollowsArt, makeHollowsArt, shownOf, type HollowsArt, type HollowsEnemiesShown } from './hollowsEnemyArt';
 
@@ -106,7 +106,9 @@ export class EnemyView {
       if (!anims) throw new Error(`Unknown enemy anims '${def.anims}'`);
       // A champion (032) is drawn 1.5× its kind.
       d.sprite.setScale(d.baseScale * (e.champion ? CHAMPIONS.scale : 1));
-      d.sprite.setPosition(e.x, bottom).setDepth(bottom).setFlipX(e.facing === 'left');
+      // An add rising (041) fades up from under the ground.
+      const up = riseShown(e);
+      d.sprite.setPosition(e.x, bottom + HOLLOWS_LOOK.addRise.sink * (1 - up)).setDepth(bottom).setFlipX(e.facing === 'left').setAlpha(up);
       // Switch only on a change, so a one-shot swipe holds its last frame instead of restarting.
       const view = viewOf(e.facing);
       if (d.angle !== undefined && Math.abs(d.angle - e.angle) > 1e-6) d.turnUntil = now + HOLLOWS_LOOK.turnHoldMs;

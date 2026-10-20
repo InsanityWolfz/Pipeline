@@ -46,8 +46,8 @@ export interface EnemyPose {
   readonly charge?: number;
 }
 
-/** `turn`, `lob`, `throw` and `block` (034) only where an enemy has them (the Bulwark); `stun`, `dig` and `step` (035) likewise. */
-export type EnemyPoseName = 'idle' | 'walk' | 'windup' | 'swipe' | 'recover' | 'hit' | 'death' | 'turn' | 'lob' | 'throw' | 'block' | 'stun' | 'dig' | 'step';
+/** `turn`, `lob`, `throw` and `block` (034) only where an enemy has them (the Bulwark); `stun`, `dig` and `step` (035) likewise; `roar`, `brace` and `stomp` (041) the Bulwark's. */
+export type EnemyPoseName = 'idle' | 'walk' | 'windup' | 'swipe' | 'recover' | 'hit' | 'death' | 'turn' | 'lob' | 'throw' | 'block' | 'stun' | 'dig' | 'step' | 'roar' | 'brace' | 'stomp';
 
 export interface EnemyRigDef {
   /** The `anims` key in src/data/enemies.ts. */

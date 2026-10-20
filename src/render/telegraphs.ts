@@ -2,7 +2,7 @@ import type { GameObjects } from 'phaser';
 import { ENEMY_FX } from '../data/assets';
 import { attackOf, enemyDef } from '../data/enemies';
 import type { EnemyState } from '../sim/enemies';
-import { drawPound } from './bulwarkLook';
+import { drawPound, drawRise, drawStomp } from './bulwarkLook';
 import { colorOf } from './color';
 import { drawHollowsTelegraph } from './hollowsTelegraphs';
 
@@ -13,6 +13,12 @@ import { drawHollowsTelegraph } from './hollowsTelegraphs';
 export function drawTelegraph(g: GameObjects.Graphics, e: EnemyState): void {
   g.clear();
   const def = enemyDef(e.enemyId);
+  // 041: an add rising from the ground, and the Bulwark's rear stomp.
+  drawRise(g, e);
+  if (def.kind === 'bulwark' && e.mode === 'stomp-windup') {
+    drawStomp(g, e);
+    return;
+  }
   if (drawHollowsTelegraph(g, e, def)) return;
   if (e.mode !== 'windup') return;
   const progress = Math.min(1, e.modeTicks / attackOf(def).windupTicks);
