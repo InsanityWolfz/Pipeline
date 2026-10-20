@@ -1,5 +1,5 @@
 # 042: Shippable playtest build
-status: approved
+status: done
 
 Approved on draft by Shaun in chat, 2026-10-19 ("Approve on draft"); from docs/brainstorm/2026-10-19-balance-ship-interview.md.
 
@@ -249,3 +249,8 @@ Built 2026-10-20 on `claude/042-shippable-build` (stacked on #28). Where the spe
 - **042.26 Headless screenshots and the note box.** In the review shot the note's box has a white block under it. Any DOM element over the WebGL canvas shows the same in headless Chromium (a plain dark div does), and the box itself measures right (680×300 px at 2×). Proposal: check it by eye in a real browser at playtest; if it shows there, draw the box on the canvas and keep the textarea invisible.
 - **042.27 Importing a bare save.** Import save takes an export file and also a bare save envelope (a `pipeline.save` value copied out of the browser by hand), checked the same way; an export's notes are merged, a bare save has none. Proposal: keep both.
 - **042.28 New game with storage full.** If the old save can't be copied to the backup key, New game keeps it, doesn't start, and says so (042.18's wording), so a confirm never loses a save. Proposal: keep that; the player exports from Settings first.
+
+## Shaun's answers (2026-10-20, "approve everything")
+- **042.15–042.28:** all as built.
+- **Docs:** approved and applied: the docs/design.md line under "Death and tension", the `flow()` note in CLAUDE.md, and the SAVE_VERSION rule in .claude/rules/sim.md.
+- **Title screen and end-card words:** approved as built; Shaun reviews them in the playtest.

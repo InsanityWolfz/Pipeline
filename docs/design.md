@@ -120,6 +120,8 @@ When you die, you're sent back to the foundry and lose everything you picked up 
 
 The tension lives in the stretch between your last pylon and wherever you're pushing, which is also the stretch without healing (Added 2026-10-19, Shaun, spec 030). Grabbing a rare schematic deep in unclaimed land means surviving the trip back with it. Running away is always an option.
 
+The game saves each time you enter the foundry. Continue wakes you there, and anything carried since is lost, as on a death. (Added 2026-10-19, Shaun, spec 042.)
+
 ## Economy and progression
 
 Two separate reward streams keep players doing both halves of the game.

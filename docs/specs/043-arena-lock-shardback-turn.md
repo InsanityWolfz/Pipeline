@@ -1,5 +1,5 @@
 # 043: Arena lock and slower Shardbacks
-status: approved
+status: done
 
 Moved out of 041 on 2026-10-20 as part of the process reset Shaun approved in chat ("approve the reset"): new playtest notes become new specs instead of growing a spec that is still open. These were 041.18 and 041.19, playtest notes 17–18 in docs/brainstorm/2026-10-20-playtest-notes.md. The text below is unchanged from 041.
 
@@ -71,3 +71,9 @@ Bulwark after, per seed (s, outcome, share of max health taken): 1 KO 64.2 1.30;
 - **A body in the doorway as the seal rises** (the player's feet box still reaches into the door row as it wakes the Bulwark) is pushed off it to its own side, into the arena for the player.
 - **The leave tile** is (12, 29), on the road just north of the door; E works with the player's feet box within 20 px of a seal tile (the altar's reach).
 - **No healing source reaches the arena** already: the Hollows spring's pool (7, 26) and the Cistern Terrace's safe zone are both clear of the forum's bounds; a test now holds it for every spring and every pylon, claimed or not.
+
+## Shaun's answers (2026-10-20, "approve everything")
+- **043.1:** 70°/s, as built.
+- **043.2:** (a) accept the miss and judge the Bulwark fight at playtest.
+- **043.3, 043.4:** as built (the seal stops feet only; leaving resets at once).
+- **043.5:** approved: an "E" prompt over the sealed door, and the barrier's hum and collapse sounds for the seal. Not built here; it is in docs/backlog.md for the legibility work.
