@@ -8,7 +8,9 @@ import type { CrateState, HopperState } from '../sim/pieces';
 import type { ScreenBox } from './bottomHud';
 import { colorOf } from './color';
 import { cellAt, inventoryLayout, type GridLayout } from './inventoryLayout';
-import { containerSlots, gearLine, inventorySlots, type Held, type ShownSlot } from './inventoryRows';
+import { containerSlots, gearLine, inventorySlots, type GridAction, type Held, type InventoryShown, type ShownSlot, type SlotShown } from './inventoryRows';
+
+export type { InventoryShown } from './inventoryRows';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import type { TipHit } from './tipTypes';
@@ -22,48 +24,12 @@ interface CellView {
   warn: GameObjects.Image;
 }
 
-/** A slot as drawn, for the test hook. */
-export interface SlotShown extends ScreenBox {
-  itemId: string;
-  name: string;
-  count: number;
-  atRisk: number;
-  /** The count's and the warning mark's boxes (a stack's text must never overlap: the 045.11 bug). */
-  countBox: ScreenBox;
-  warnBox: ScreenBox | null;
-}
-
-/** The grid inventory as drawn (047), for `ui().inventory`. */
-export interface InventoryShown {
-  open: boolean;
-  /** The plain inventory (I or Tab), or a hopper's or crate's screen. */
-  mode: 'bag' | 'hopper' | 'crate' | null;
-  /** The open hopper's or crate's piece id. */
-  containerId: number | null;
-  /** The first shown row, and how many rows the grid holds. */
-  scroll: number;
-  rows: number;
-  /** Every slot shown now (scrolled into view), in order; `index` is its place in the whole grid. */
-  slots: (SlotShown & { index: number })[];
-  /** The hopper's or crate's own slots shown. */
-  container: SlotShown[];
-  sort: ScreenBox;
-  footer: string[];
-  panel: ScreenBox;
-}
-
 /** Where a press began: a grid slot or a container slot (by index into its slots), with the modifiers held. */
 interface Press {
   from: 'grid' | 'container';
   index: number;
   amount: HopperAmount;
 }
-
-/** What a release does: a move between the grid and the open container, or a stack dropped on a carried bar slot. */
-export type GridAction =
-  | { kind: 'deposit'; id: number; itemId: string; amount: HopperAmount; stack: number }
-  | { kind: 'withdraw'; id: number; itemId: string; amount: HopperAmount; stack: number }
-  | { kind: 'assign'; slot: number; itemId: string };
 
 const NO_BOX: ScreenBox = { x: 0, y: 0, w: 0, h: 0 };
 

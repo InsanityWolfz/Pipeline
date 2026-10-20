@@ -2,7 +2,9 @@ import { INVENTORY_GRID, SCHEMATICS_LABEL, sparesText } from '../data/hudPanels'
 import { ITEMS, UNKNOWN_SCHEMATIC, itemDef } from '../data/items';
 import { RESEARCH_ICONS } from '../data/researchAssets';
 import { containerStacks, gridSlots } from '../sim/bag';
+import type { HopperAmount } from '../sim/input';
 import type { Inventory } from '../sim/inventory';
+import type { ScreenBox } from './bottomHud';
 import { schematicKnown } from '../sim/schematics';
 import type { SimState } from '../sim/state';
 import { playerStats, wornPieces } from '../sim/stats';
@@ -75,3 +77,39 @@ export function gearLine(sim: Held): string {
   const parts = [...(worn > 0 ? [`${worn} ${T.worn}${T.sep}${T.armor} ${playerStats(sim).armor}`] : []), ...(spares > 0 ? [sparesText(spares)] : [])];
   return parts.join(T.sep);
 }
+
+/** A slot as drawn, for the test hook. */
+export interface SlotShown extends ScreenBox {
+  itemId: string;
+  name: string;
+  count: number;
+  atRisk: number;
+  /** The count's and the warning mark's boxes (a stack's text must never overlap: the 045.11 bug). */
+  countBox: ScreenBox;
+  warnBox: ScreenBox | null;
+}
+
+/** The grid inventory as drawn (047), for `ui().inventory`. */
+export interface InventoryShown {
+  open: boolean;
+  /** The plain inventory (I or Tab), or a hopper's or crate's screen. */
+  mode: 'bag' | 'hopper' | 'crate' | null;
+  /** The open hopper's or crate's piece id. */
+  containerId: number | null;
+  /** The first shown row, and how many rows the grid holds. */
+  scroll: number;
+  rows: number;
+  /** Every slot shown now (scrolled into view), in order; `index` is its place in the whole grid. */
+  slots: (SlotShown & { index: number })[];
+  /** The hopper's or crate's own slots shown. */
+  container: SlotShown[];
+  sort: ScreenBox;
+  footer: string[];
+  panel: ScreenBox;
+}
+
+/** What a release does: a move between the grid and the open container, or a stack dropped on a carried bar slot. */
+export type GridAction =
+  | { kind: 'deposit'; id: number; itemId: string; amount: HopperAmount; stack: number }
+  | { kind: 'withdraw'; id: number; itemId: string; amount: HopperAmount; stack: number }
+  | { kind: 'assign'; slot: number; itemId: string };
