@@ -73,16 +73,17 @@ async function mixedVolley(page: Page) {
   }) };
 }
 
-test('the carried bar holds the arrows and the intake bar the fist; spent, the arrows\' slot shows empty; both rows centred (047)', async ({ page }) => {
+test('the carried bar holds the arrows, and before attuning the intake bar shows them too; spent, the arrows\' slot shows empty and the bar the fist; both rows centred (047, 047.9)', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page, '?start=field');
   const s = await page.evaluate(() => window.__GAME__?.step(1));
   const arrows = s?.inventory.arrow ?? 0;
   expect(arrows).toBeGreaterThan(0);
-  // Left click with the intake dry is a punch: the intake bar shows the fist, never the carried arrows.
-  expect(s?.hud.active).toEqual({ kind: 'melee' });
-  const carried = await hudShowing(page, [HUD_LAYOUT.tubeSlot.melee]);
-  expect(carried.tubeSlot.icons).toEqual([SPRITES.hudFist]);
+  // 047.9: before the tube attunes, left click fires the selected carried round, so the intake bar shows it.
+  expect(s?.link.attuned).toBe(false);
+  expect(s?.hud.active).toEqual({ kind: 'carried', ammoId: 'arrow', count: arrows });
+  const carried = await hudShowing(page, [String(arrows)]);
+  expect(carried.tubeSlot.icons).toEqual([SPRITES.iconArrow]);
   expect(carried.hotbar.shown).toBe(true);
   expect(carried.hotbar.selected).toBe(0);
   expect(carried.hotbar.slots[0]).toEqual({ itemId: 'arrow', count: arrows, empty: false });
