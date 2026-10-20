@@ -4,7 +4,7 @@ import { HUD_LAYOUT } from '../../src/data/hudLayout';
 import { HEALTH_BLOCK_HEIGHT } from '../../src/data/hudPanels';
 import { OVERWORLD } from '../../src/data/overworld';
 import { PICKUP_RADIUS } from '../../src/data/player';
-import { boot, cameraSettled } from './helpers';
+import { boot, cameraSettled, quietScreen } from './helpers';
 
 // Review screenshots for 031 (REVIEW_SHOTS=1, into docs/review/031): the HUD at full
 // HP with armor worn, low HP with the red edges, a damage chunk mid-hold, the healing
@@ -154,6 +154,7 @@ test.describe('review screenshots (031)', () => {
     });
     await expect.poll(async () => Object.keys((await ui(page))?.nodes ?? { x: 1 }).length).toBe(0);
     await cameraSettled(page, 20_000);
+    await quietScreen(page);
     // The machines go down and are drawn (so each popup starts over its machine's drawn top) before any tick runs them.
     await page.evaluate(() => {
       const g = window.__GAME__;
@@ -220,6 +221,7 @@ test.describe('review screenshots (031)', () => {
     await expect.poll(async () => (await ui(page))?.buildBar?.shown).toBe(true);
     await expect.poll(async () => (await ui(page))?.health.box.y).toBeLessThan(RESTING_TOP);
     await cameraSettled(page, 20_000);
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/09-build-mode-every-piece.png` });
   });
 });

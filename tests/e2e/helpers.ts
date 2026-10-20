@@ -280,3 +280,15 @@ export async function cameraSettled(page: Page, timeout = 5000): Promise<void> {
     }, { timeout })
     .toBe(true);
 }
+
+/**
+ * 046: waits until nothing passing covers a review shot: a door's fade over, and no discovery or schematic banner
+ * showing (played out fast on the tween clock).
+ */
+export async function quietScreen(page: Page): Promise<void> {
+  await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
+  await expect.poll(async () => page.evaluate(() => window.__GAME__?.ui().schematics.bannerIdle), { timeout: 20_000 }).toBe(true);
+  await expect.poll(async () => page.evaluate(() => window.__GAME__?.ui().landmarks.banner ?? null), { timeout: 20_000 }).toBeNull();
+  await expect.poll(async () => page.evaluate(() => window.__GAME__?.ui().camera.fading), { timeout: 20_000 }).toBe(false);
+  await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
+}

@@ -64,5 +64,10 @@ Built on `claude/046-foundry-onboarding` (plan: docs/plans/046-foundry-onboardin
 ### Results
 - `npm run check`: passes (1590 unit tests).
 - `npx playwright test` (full run, once): 127 passed, 113 skipped (review shots), 0 failed.
-- Review shots (docs/review/046): `01-example-line-running.png` (first entry, the parts' popups, arrows up the tube) and `02-refill-objective.png` (the goal with E over a hopper). These older shots changed because of 046 and were recommitted: 026/01–04 and 045/04 (the Splitter in Logistics, doubled counts), 029/02 (the refill line behind the bench), 031/07 and 031/09, and 033/01–07, 09 and 10 (the Splitter's wall panel and list row gone). The rest of the drift (029, 031, 040 and 045 shots in this container) also shows on the base branch, so it was restored and not recommitted.
+- Review shots (docs/review/046): `01-example-line-running.png` (first entry, the parts' popups, arrows up the tube) and `02-refill-objective.png` (the goal with E over a hopper).
+- Older shots that 046 changes were refreshed:
+  - Retaken after the door's fade with no banner showing, using a new `quietScreen` e2e helper: 026/01–04, 029/02, 031/07 and 031/09.
+  - Recommitted as captured: 033/01–07, 09 and 10 (the Splitter's wall panel and list row are gone), and 045/04 (the Splitter in Logistics).
+  - Refreshed, so they also carry drift from 045 and earlier unrelated to 046: the red HP bar, the Mines group, the XP row and the shot-capture timing.
+  - The other drift in this container also shows on the base branch, so it was restored and not recommitted.
 - `npm run measure`: unchanged from 045. Ammo line and still 5/5 met. Ring 1 2.2–2.9 s, ring 2 2.8–4.2 s and ring 3 10.2–17.6 s, all met. The Bulwark's decent build is still 13/20 with 3 KOs (MISSED, as in 043.2/045), and the naive bot is KO'd 5/5. The bots start with fixed ammo, so the doubled outputs don't reach them.

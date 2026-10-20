@@ -27,3 +27,6 @@ Already settled before the interview: note 3 dropped (the Warden stays), notes 1
 - **Hopper screen:** the hopper's own slots on top, the grid inventory underneath; click one, Shift+click half, Ctrl+click the stack, both ways (rec).
 - **Carried bar:** drag a stack onto a slot, and a newly picked-up usable kind fills the first empty slot (rec).
 - **Dry intake:** left click punches (023); carried items only go out on right click (rec).
+
+## After the 046 build
+- **046.7, early ammo:** "2× per resource" (rec). Only the last step of each Region 1 chain doubles, so one wood, stone and fiber make 16 arrows (from 8); parts and landmine costs stay as they were. The build had doubled every step, which compounded to 4×.

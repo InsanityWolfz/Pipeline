@@ -7,7 +7,7 @@ import { BUILD_BAR, PIECE_CATEGORIES, pieceDef } from '../../src/data/pieces';
 import { CRAFT_GROUPS, recipeDef } from '../../src/data/recipes';
 import type { BuildBarState } from '../../src/render/BuildView';
 import type { CraftMenuState } from '../../src/render/CraftMenuView';
-import { boot, cameraSettled, watchErrors } from './helpers';
+import { boot, cameraSettled, watchErrors, quietScreen } from './helpers';
 import { enterFoundry } from './foundryPage';
 
 // Labels in the crafting menu and categories in the build bar (026): every recipe item
@@ -191,6 +191,7 @@ test.describe('review screenshots (026)', () => {
     const zoom = canvas.width / VIEW_WIDTH;
     await page.mouse.move(canvas.x + (header.x + 120) * zoom, canvas.y + (header.y + 2) * zoom);
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().cursor))?.kind).toBe('pointer');
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/01-crafting-menu.png` });
     await page.keyboard.press('Escape');
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().craftOpen))).toBe(false);
@@ -198,6 +199,7 @@ test.describe('review screenshots (026)', () => {
     await openBuildBar(page);
     await cameraSettled(page, SETTLE_MS);
     await page.mouse.move(0, 0);
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/02-build-bar-locked.png` });
   });
 
@@ -211,6 +213,7 @@ test.describe('review screenshots (026)', () => {
     const bar = await openBuildBar(page);
     await cameraSettled(page, SETTLE_MS);
     await page.mouse.move(0, 0);
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/03-build-bar.png` });
     const cell = bar.cells.find((c) => c.pieceId === 'assembler');
     const box = await page.locator('canvas').boundingBox();
@@ -218,6 +221,7 @@ test.describe('review screenshots (026)', () => {
     const zoom = box.width / VIEW_WIDTH;
     await page.mouse.move(box.x + (cell.x + cell.w / 2) * zoom, box.y + (cell.y + cell.h / 2) * zoom);
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().buildTip))).toBe('assembler');
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/04-build-bar-tip.png` });
   });
 });
