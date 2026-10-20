@@ -1,0 +1,45 @@
+import { fontsReady } from './fonts';
+import { NO_SITE_UI } from './SiteMenus';
+import { NO_HOVER_UI } from './HoverView';
+import { NO_ROOM_UI } from './RoomViews';
+import { NO_TUTORIAL_UI } from './TutorialUi';
+import { NO_HUD_PANELS } from './HudView';
+import { NO_ENEMY_UI } from './EnemyView';
+import { NO_LEGIBILITY_UI } from './Legibility';
+import type { GameScene } from './GameScene';
+import type { GameUiState } from './testHook';
+
+// What a game scene shows, for the test hook's ui() (split from GameScene in 042). Every view may be missing (before
+// the scene is created, or on the title's blank), so each falls back to its empty value.
+
+export function gameUi(g: GameScene): GameUiState {
+  const main = g.cameras?.main?.worldView;
+  return {
+    ready: g.effects !== undefined && fontsReady(),
+    craftOpen: g.menu?.isOpen ?? false,
+    paused: g.pause?.isOpen ?? false,
+    pickerOpen: g.picker?.isOpen ?? false,
+    ...(g.siteMenus?.ui ?? NO_SITE_UI),
+    pickerHint: g.picker?.hintShown ?? null,
+    pickerCounts: [...(g.picker?.shownCounts ?? [])],
+    ...(g.hover?.ui ?? NO_HOVER_UI),
+    buildTip: g.buildView?.tipShown ?? null,
+    ...(g.roomViews?.state ?? NO_ROOM_UI),
+    nodes: g.nodeView?.frames ?? {},
+    shakes: [...(g.feel?.juice.shakes ?? [])],
+    cursor: g.cursorView?.state ?? null,
+    sliding: g.groundItemView?.sliding ?? 0,
+    slideProgress: g.groundItemView?.slideProgress ?? 0,
+    swooshes: g.effects?.swooshes ?? 0,
+    ...(g.tutorial?.state ?? NO_TUTORIAL_UI),
+    // 042: the camera locks to the player: its centre, and the player's sprite point.
+    camera: { x: main?.centerX ?? 0, y: main?.centerY ?? 0, player: { x: g.playerView?.sprite.x ?? 0, y: g.playerView?.sprite.y ?? 0 } },
+    hud: g.hud?.bottom ?? null,
+    ...(g.hud?.panels ?? NO_HUD_PANELS),
+    craftMenu: g.menu?.state ?? null,
+    buildBar: g.buildView?.state ?? null,
+    tagged: { benchStages: g.siteMenus?.stagePanel ?? null, splitFlashes: g.effects?.splitFlashes ?? 0, trails: g.arrowView?.trails ?? { count: 0, longest: 0 } },
+    ...(g.enemyView?.ui ?? NO_ENEMY_UI),
+    ...(g.legibility?.ui ?? NO_LEGIBILITY_UI),
+  };
+}

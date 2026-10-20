@@ -20,3 +20,14 @@ export function isLeftPress(event: { button?: number; ctrlKey: boolean }, leftDo
   if (event.ctrlKey && typeof event.button === 'number') return event.button === 0;
   return leftDown;
 }
+
+/** What the scene tells the controls each frame about build mode and the screen's UI. */
+export interface BuildInput {
+  building: boolean;
+  /** The piece selected on the build bar, read at click time (a bar click can land in the same frame). */
+  pieceId: () => string;
+  /** True over the build bar or the hopper picker, where clicks don't reach the world. */
+  overUi: (x: number, y: number) => boolean;
+  /** Handles a left click on that UI at once, so a world click in the same frame sees its result; with the held modifiers (022). */
+  clickUi: (x: number, y: number, mods: ClickMods) => void;
+}

@@ -17,31 +17,31 @@ import { Controls, NO_UI_COMMAND, type UiCommand } from './controls';
 import { ghostShape } from './dragPath';
 import { CraftMenuView } from './CraftMenuView';
 import { EffectsView } from './EffectsView';
-import { EnemyView, NO_ENEMY_UI } from './EnemyView';
+import { EnemyView } from './EnemyView';
 import { FoundryView } from './FoundryView';
 import { GroundItemView } from './GroundItemView';
 import { HopperPicker } from './HopperPicker';
-import { HoverView, NO_HOVER_UI } from './HoverView';
-import { HudView, NO_HUD_PANELS } from './HudView';
+import { HoverView } from './HoverView';
+import { HudView } from './HudView';
 import { NodeView } from './NodeView';
 import { bodyLook, PlayerView } from './PlayerView';
-import { NO_SITE_UI, SiteMenus } from './SiteMenus';
+import { SiteMenus } from './SiteMenus';
 import { SiteView } from './SiteView';
 import { WakeView } from './WakeView';
 import { mergeEvents } from './eventLog';
 import { FeelView } from './FeelView';
-import { highlightOf, NO_TUTORIAL_UI, TutorialUi } from './TutorialUi';
+import { highlightOf, TutorialUi } from './TutorialUi';
 import { currentFit, type ScreenFit } from './scale';
 import { bakeVectors } from './vector/textures';
 import type { GameUiState } from './testHook';
-import { NO_ROOM_UI, RoomViews } from './RoomViews';
-import { fontsReady } from './fonts';
+import { gameUi } from './gameUi';
+import { RoomViews } from './RoomViews';
 import { MENU_HOVER_EVENT } from './menuFeedback';
 import { MenuRouter } from './MenuRouter';
 import { PauseMenuView } from './PauseMenuView';
 import { SceneCameras } from './SceneCameras';
 import { CursorView } from './CursorView';
-import { Legibility, NO_LEGIBILITY_UI } from './Legibility';
+import { Legibility } from './Legibility';
 import { IDLE_HOST, type GameHost } from './flow/host';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
@@ -57,28 +57,28 @@ export class GameScene extends Scene {
   private readonly host: GameHost;
   private readonly clock = createClock();
   private controls?: Controls;
-  private roomViews?: RoomViews;
-  private playerView?: PlayerView;
-  private arrowView?: ArrowView;
-  private hud?: HudView;
-  private enemyView?: EnemyView;
-  private groundItemView?: GroundItemView;
-  private effects?: EffectsView;
-  private nodeView?: NodeView;
+  roomViews?: RoomViews;
+  playerView?: PlayerView;
+  arrowView?: ArrowView;
+  hud?: HudView;
+  enemyView?: EnemyView;
+  groundItemView?: GroundItemView;
+  effects?: EffectsView;
+  nodeView?: NodeView;
   private bombView?: BombView;
   private foundryView?: FoundryView;
-  private buildView?: BuildView;
-  private hover?: HoverView;
-  private picker?: HopperPicker;
-  private menu?: CraftMenuView;
-  private pause?: PauseMenuView;
+  buildView?: BuildView;
+  hover?: HoverView;
+  picker?: HopperPicker;
+  menu?: CraftMenuView;
+  pause?: PauseMenuView;
   private router?: MenuRouter;
   private site?: SiteView;
-  private siteMenus?: SiteMenus;
+  siteMenus?: SiteMenus;
   private wake?: WakeView;
-  private tutorial?: TutorialUi;
-  private feel?: FeelView;
-  private cursorView?: CursorView;
+  tutorial?: TutorialUi;
+  feel?: FeelView;
+  cursorView?: CursorView;
   /** 040: hover tips (Shift for the breakdown) and the glossary; the test hook measures its summaries. */
   legibility?: Legibility;
   /** The room on screen. It lags the player's room through a door's fade. */
@@ -177,36 +177,9 @@ export class GameScene extends Scene {
     this.draw();
   }
 
-  /** The mouse-over text on show, for the test hook (015). */
+  /** What the render shows, for the test hook (015; gameUi.ts). */
   hoverText(): GameUiState {
-    return {
-      ready: this.effects !== undefined && fontsReady(),
-      craftOpen: this.menu?.isOpen ?? false,
-      paused: this.pause?.isOpen ?? false,
-      pickerOpen: this.picker?.isOpen ?? false,
-      ...(this.siteMenus?.ui ?? NO_SITE_UI),
-      pickerHint: this.picker?.hintShown ?? null,
-      pickerCounts: [...(this.picker?.shownCounts ?? [])],
-      ...(this.hover?.ui ?? NO_HOVER_UI),
-      buildTip: this.buildView?.tipShown ?? null,
-      ...(this.roomViews?.state ?? NO_ROOM_UI),
-      nodes: this.nodeView?.frames ?? {},
-      shakes: [...(this.feel?.juice.shakes ?? [])],
-      cursor: this.cursorView?.state ?? null,
-      sliding: this.groundItemView?.sliding ?? 0,
-      slideProgress: this.groundItemView?.slideProgress ?? 0,
-      swooshes: this.effects?.swooshes ?? 0,
-      ...(this.tutorial?.state ?? NO_TUTORIAL_UI),
-      // 042: the camera locks to the player: its centre, and the player's sprite point.
-      camera: { x: this.cameras?.main?.worldView.centerX ?? 0, y: this.cameras?.main?.worldView.centerY ?? 0, player: { x: this.playerView?.sprite.x ?? 0, y: this.playerView?.sprite.y ?? 0 } },
-      hud: this.hud?.bottom ?? null,
-      ...(this.hud?.panels ?? NO_HUD_PANELS),
-      craftMenu: this.menu?.state ?? null,
-      buildBar: this.buildView?.state ?? null,
-      tagged: { benchStages: this.siteMenus?.stagePanel ?? null, splitFlashes: this.effects?.splitFlashes ?? 0, trails: this.arrowView?.trails ?? { count: 0, longest: 0 } },
-      ...(this.enemyView?.ui ?? NO_ENEMY_UI),
-      ...(this.legibility?.ui ?? NO_LEGIBILITY_UI),
-    };
+    return gameUi(this);
   }
 
   /** Crafts once, between ticks. The test hook crafts through here too. Crafting has no drawn effects. */

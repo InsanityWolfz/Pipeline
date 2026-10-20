@@ -8,23 +8,13 @@ import { BUILD_BAR, pieceDef } from '../data/pieces';
 import type { Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { dragTo, release, type ConduitLay, type HeldConduit } from './dragPath';
-import { clickMods, isLeftPress, type ClickMods } from './clickInput';
-import { bindKeys, type Key } from './keys';
+import { clickMods, isLeftPress, type BuildInput } from './clickInput';
+import { bindKeys, listenKeys, type Key } from './keys';
 import { onSettings, settings } from './flow/settingsStore';
 import { MenuRequests, type UiCommand } from './menuRequests';
 import { toView } from './scale';
 
-/** What the scene tells the controls each frame about build mode and the screen's UI. */
-export interface BuildInput {
-  building: boolean;
-  /** The piece selected on the build bar, read at click time (a bar click can land in the same frame). */
-  pieceId: () => string;
-  /** True over the build bar or the hopper picker, where clicks don't reach the world. */
-  overUi: (x: number, y: number) => boolean;
-  /** Handles a left click on that UI at once, so a world click in the same frame sees its result; with the held modifiers (022). */
-  clickUi: (x: number, y: number, mods: ClickMods) => void;
-}
-
+export type { BuildInput } from './clickInput';
 type BuildAction = Pick<Command, 'place' | 'pickUp'>;
 
 /** The commands that come from build mode and the hopper menu rather than held keys. */
@@ -103,24 +93,16 @@ export class Controls {
     const { keys, ammo } = bindKeys(this.keyboard, bindings);
     this.keys = keys;
     this.ammoKeys = ammo;
-    keys.dodge.on('down', () => (this.dodgePending = true));
-    keys.rotate.on('down', () => {
-      if (this.build.building) this.facing = rotateCw(this.facing);
+    listenKeys(keys, ammo, {
+      dodge: () => (this.dodgePending = true),
+      // R and G only turn and flip the ghost in build mode.
+      rotate: () => void (this.build.building && (this.facing = rotateCw(this.facing))),
+      flip: () => void (this.build.building && (this.mirrored = !this.mirrored)),
+      interact: () => (this.interactPending = this.interactPress = true),
+      menu: (key) => (this.menuKeys[key] = true),
+      build: () => (this.buildPending = true),
+      ammo: (i) => (this.selectPending = SLOT_AMMOS[i] ?? null),
     });
-    keys.flip.on('down', () => {
-      if (this.build.building) this.mirrored = !this.mirrored;
-    });
-    keys.interact.on('down', () => {
-      this.interactPending = true;
-      this.interactPress = true;
-    });
-    keys.menu.on('down', () => (this.menuKeys.menu = true));
-    keys.close.on('down', () => (this.menuKeys.close = true));
-    for (const k of [keys.inventory, keys.inventoryTab]) k.on('down', () => (this.menuKeys.inventory = true));
-    keys.research.on('down', () => (this.menuKeys.research = true));
-    keys.talents.on('down', () => (this.menuKeys.talents = true));
-    keys.build.on('down', () => (this.buildPending = true));
-    for (const [i, k] of ammo.entries()) k.on('down', () => (this.selectPending = SLOT_AMMOS[i] ?? null));
   }
 
   /** Call once per frame before taking commands. */

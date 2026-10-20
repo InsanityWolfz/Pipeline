@@ -51,3 +51,27 @@ export function bindKeys(keyboard: Input.Keyboard.KeyboardPlugin, bindings: Read
   };
   return { keys, ammo: AMMO_ACTIONS.slice(0, SLOT_AMMOS.length).map(add) };
 }
+
+/** What each key's press does (042: wired here so Controls can rebind them in one call). */
+export interface KeyHandlers {
+  dodge(): void;
+  rotate(): void;
+  flip(): void;
+  interact(): void;
+  /** C, Esc, I or Tab, J and T: the menu keys the scene takes. */
+  menu(key: 'menu' | 'close' | 'inventory' | 'research' | 'talents'): void;
+  build(): void;
+  ammo(slot: number): void;
+}
+
+/** Wires each key's down event to its handler. */
+export function listenKeys(keys: Record<Key, Input.Keyboard.Key>, ammo: readonly Input.Keyboard.Key[], h: KeyHandlers): void {
+  keys.dodge.on('down', () => h.dodge());
+  keys.rotate.on('down', () => h.rotate());
+  keys.flip.on('down', () => h.flip());
+  keys.interact.on('down', () => h.interact());
+  for (const m of ['menu', 'close', 'research', 'talents'] as const) keys[m].on('down', () => h.menu(m));
+  for (const k of [keys.inventory, keys.inventoryTab]) k.on('down', () => h.menu('inventory'));
+  keys.build.on('down', () => h.build());
+  for (const [i, k] of ammo.entries()) k.on('down', () => h.ammo(i));
+}
