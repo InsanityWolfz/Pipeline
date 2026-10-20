@@ -1,0 +1,38 @@
+// Saving (042): the save's version, where things live in browser storage, the export file, the size budget and
+// the feedback note limits. A change to SimState's shape bumps SAVE_VERSION; a rename or reshape adds a migration
+// (src/sim/save.ts, SAVE_MIGRATIONS). Fields only added need neither: they're filled from a fresh sim.
+
+/** The save format's version. Starts at 1. */
+export const SAVE_VERSION = 1;
+
+/** The envelope's and the export file's format tags. */
+export const SAVE_FORMAT = 'pipeline-save';
+export const EXPORT_FORMAT = 'pipeline-export';
+/** The export file's own version (its wrapper, not the save inside it). */
+export const EXPORT_VERSION = 1;
+
+/** Browser storage keys (042.6: one backup of a replaced save, recoverable by hand). */
+export const STORAGE_KEYS = {
+  save: 'pipeline.save',
+  backup: 'pipeline.save.backup',
+  settings: 'pipeline.settings',
+  feedback: 'pipeline.feedback',
+} as const;
+
+/** The export's file name for a day: `pipeline-save-YYYY-MM-DD.json`; a damaged save downloads as its raw text. */
+export const EXPORT_FILE = (isoDate: string): string => `pipeline-save-${isoDate}.json`;
+export const DAMAGED_FILE = (isoDate: string): string => `pipeline-save-damaged-${isoDate}.txt`;
+
+/** A late-game save stays under this much JSON, bytes. */
+export const SAVE_BUDGET_BYTES = 1_000_000;
+
+/** Feedback notes: the longest note, how many are kept (the oldest dropped), and when to warn the limit is near. */
+export const NOTES = { maxChars: 2000, maxNotes: 50, warnAt: 45 } as const;
+
+/** What the player is told about saves. */
+export const SAVE_TEXT = {
+  failed: "Couldn't save. Export your save from Settings.",
+  blocked: "Settings and saves won't be kept: this browser is blocking storage.",
+  importBad: { format: 'Not a Pipeline save.', newer: 'That save is from a newer version of the game.', corrupt: "That save couldn't be read." },
+  imported: 'Save imported. Continue from the title to play it.',
+} as const;

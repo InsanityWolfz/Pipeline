@@ -269,11 +269,11 @@ export class GameScene extends Scene {
     // Before create() runs there are no views to hand events to; keep them for later.
     if (!this.effects) return;
     const sim = this.sim;
-    this.followRoom(this.pending.ko);
+    this.followRoom(this.pending.woke);
     if (!this.fading && this.playerView) this.sceneCameras?.attuneLook(sim, this.shownRoomId, this.playerView.sprite);
     this.effects.play(this.pending, sim.player);
     if (this.pending.identifies.length > 0) this.site?.identified();
-    if (this.pending.ko) this.wake?.show(this.pending.lost, sim);
+    if (this.pending.woke) this.wake?.show(this.pending.lost, sim);
     const shown = this.shownRoomId;
     this.feel?.update(sim, this.pending, shown, this.game.loop.delta);
     this.roomViews?.update(sim, this.pending, shown, this.game.loop.delta);

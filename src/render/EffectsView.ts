@@ -64,7 +64,8 @@ export class EffectsView {
       if (events.roomChanges.length > 0) this.scene.time.delayedCall(DOOR_FADE_MS * 2, () => this.swirl(player));
       else this.swirl(player);
     }
-    if (events.ko) this.koFade(player);
+    // A KO's wake, or Continue's (042): the same fade in the foundry.
+    if (events.woke) this.koFade(player);
   }
 
   private corpse(enemyId: string, x: number, y: number, flip: boolean, champion: boolean): void {

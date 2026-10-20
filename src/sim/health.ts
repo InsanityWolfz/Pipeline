@@ -10,6 +10,7 @@ import { cancelHarvest } from './harvest';
 import type { Inventory } from './inventory';
 import { itemRisks } from './banking';
 import { wakeRoom } from './tutorial';
+import { FOUNDRY_ROOM } from '../data/rooms';
 
 // Player damage, banking and death. Specs 004 and 011.
 
@@ -78,10 +79,14 @@ function wake(state: SimState): void {
     if (r.atRisk > 0) lost[itemId] = r.atRisk;
   }
   state.inventory = kept;
-  resetWorld(state, wakeRoom(state));
+  const room = wakeRoom(state);
+  resetWorld(state, room);
   state.banked = { ...kept };
   state.events.ko = true;
+  state.events.woke = true;
   state.events.lost = lost;
+  // Waking in the foundry is entering it (042.2): render saves.
+  if (room === FOUNDRY_ROOM) state.events.foundryArrivals.push({ via: 'wake' });
 }
 
 

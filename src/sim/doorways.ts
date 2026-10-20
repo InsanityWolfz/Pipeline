@@ -43,7 +43,7 @@ export function stepDoorways(state: SimState): void {
     state.building = false;
     state.events.roomChanges.push({ from, to: d.to });
     leaveArea(state);
-    arrived(state, d.to);
+    arrived(state, d.to, 'door');
     return;
   }
 }

@@ -175,10 +175,14 @@ export interface SimEvents {
   bombletBursts: BurstEvent[];
   /** What the player carried was banked (on entering the foundry or depositing). */
   banks: Record<string, number>[];
+  /** 042: the player entered the foundry (by its door, by fast travel, or waking there after a KO): render saves. */
+  foundryArrivals: { via: 'door' | 'travel' | 'wake' }[];
   /** On a KO, what was lost: item id to count. */
   lost: Record<string, number>;
   /** The player was KO'd and the room reset this tick. */
   ko: boolean;
+  /** 042: the player woke in the foundry: after a KO, or on Continue (render plays the wake). */
+  woke: boolean;
 }
 
 export function createEvents(): SimEvents {
@@ -255,8 +259,10 @@ export function createEvents(): SimEvents {
     mineBursts: [],
     bombletBursts: [],
     banks: [],
+    foundryArrivals: [],
     lost: {},
     ko: false,
+    woke: false,
   };
 }
 
@@ -266,4 +272,5 @@ export function clearEvents(events: SimEvents): void {
   events.tubeTaken = false;
   events.lost = {};
   events.ko = false;
+  events.woke = false;
 }

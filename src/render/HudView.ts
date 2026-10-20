@@ -143,7 +143,7 @@ export class HudView {
     this.edges.update(this.health.shown.low, this.health.pulse);
     this.feed.update(events.pickups.map((p) => shownKey(sim, p.itemId)), dt);
     // A KO closes the panel: the wake panel takes the screen (and the panel can't open again while it shows).
-    if (events.ko) {
+    if (events.woke) {
       this.inventory.setOpen(false);
       this.research.setOpen(false);
       this.talents.setOpen(false);

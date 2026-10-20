@@ -16,9 +16,11 @@ export function bank(state: SimState): void {
   rechargeEmber(state);
 }
 
-/** Banks on arriving in the foundry; called by doors and travel. */
-export function arrived(state: SimState, roomId: string): void {
-  if (roomId === FOUNDRY_ROOM) bank(state);
+/** Banks on arriving in the foundry, called by doors and travel, and records the arrival (042: render saves on it). */
+export function arrived(state: SimState, roomId: string, via: 'door' | 'travel'): void {
+  if (roomId !== FOUNDRY_ROOM) return;
+  bank(state);
+  state.events.foundryArrivals.push({ via });
 }
 
 /** One carried item's split (031): how many a death would keep and how many it would take. */
