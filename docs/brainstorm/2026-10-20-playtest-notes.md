@@ -14,3 +14,18 @@ Oct 20, 2026 · Shaun in chat, while 041 was being built. Raw notes plus Claude'
    - this changes both earlier decisions
 
 6. **Stages are hard to find.** Shaun picked up rimestone, then found no way to make a frost arrow in the crafting menu (C). Stages are hand-applied only at the bench, in its Stages panel, after the shrine claim. Options: a Stages section in C that points to the bench, or applying stages from C directly.
+
+## Later notes (same day), including watching a first-time player
+
+> ley crystal gathering has no E indicator / pickup range is still too small to grab the resources easily / building controls on screen when in build mode somewhere / so I watched someone whose never played these kind of games really struggle and I think what we need in the foundry is an example. so maybe we should start the game where when you first walk to the foundry it activates and theres already an arrow maker with some resources in the three hoppers and it activates so you can see how it works and then the tutorial can have you build a second arrow maker to feed into the second tube once you beat the 1st boss / I think we should have a separate hot bar for the foundry intake and for things in your inventory just in case you wanted to bring some one off landmines and use them. And we definitely need some kind of grid inventory because the other one fills quite and has not scroll bar and the hoppers should only show what is in them not what matches it from your inventory its too confusing. we can just copy factorios inventory and hopper management screens and I think thatd be fine / aggro range for the wisp looks too small when they were on the far left of right of the screen you can shoot them when they arent moving / better graphics of what you got out of the cache chests / had a bug where the player had arrows in their foundry intake and in their inventory and the stages menu said 0/4 arrows but either way stages need to added to the crafting menu instead of the gear bench / There should be a resin pylon somewhere so bombs become solved
+
+7. **No E prompt on ley crystal nodes.**
+8. **Pickup range still too small** (64 px today, from 021).
+9. **On-screen build controls** in build mode (place, rotate/flip, pick up, drag).
+10. **A working example foundry.** Watching a first-time player struggle, Shaun suggests that on first entry the foundry activates with an arrow line already built: the three hoppers stocked, running into the intake, so the player sees how it works. The tutorial then has them build a second arrow line into the second entrance after the first boss. This changes 027's tutorial flow.
+11. **Two hotbars:** one for the foundry intake (the volley) and one for carried items such as one-off landmines.
+12. **A grid inventory, Factorio-style,** that holds more and can scroll. **Hopper screens** show only what's in the hopper, not the matching items you carry. Copying Factorio's inventory and hopper screens is fine.
+13. **Wisp aggro range too small.** Wisps at the far left or right of the screen stand still and can be shot.
+14. **Better visuals for what comes out of a cache.**
+15. **Bug:** with arrows in an intake entrance and in the inventory, the Stages panel showed "0/4 arrows". Also, stages should move into the crafting menu instead of the gear bench (repeats note 6).
+16. **A resin pylon somewhere,** so bombs can be automated. Husk resin is only a drop today, so the bomb line can't be fed from supply.
