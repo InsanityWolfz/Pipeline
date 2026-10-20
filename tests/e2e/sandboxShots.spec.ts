@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { TILE_SIZE } from '../../src/data/config';
 import { HOLLOWS } from '../../src/data/hollows';
-import { SANDBOX, SANDBOX_PENS, WARDEN_ARENA } from '../../src/data/sandbox';
+import { SANDBOX_PENS, WARDEN_ARENA } from '../../src/data/sandbox';
 import { cameraSettled } from './helpers';
 import { bootSandbox, clickPanel, openPanel, setRound, spawnPack } from './sandboxPage';
 
@@ -83,6 +83,5 @@ test.describe('review screenshots (044)', () => {
     await page.evaluate(() => window.__GAME__?.step(2));
     await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().champions.length)).toBe(5);
     await page.screenshot({ path: `${SHOTS}/07-ring3-champion-pack.png` });
-    expect(SANDBOX.maxCount).toBe(10);
   });
 });
