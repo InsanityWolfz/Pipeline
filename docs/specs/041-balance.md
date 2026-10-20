@@ -219,16 +219,5 @@ Shaun's answer to 041.16 left these to the build; each has a proposal that is bu
 - **Measured with these** (HP 3,800, under 041.16's ceiling of about 5,000): the decent build meets all three 041.7 targets on 17 of seeds 1–20 (seed 5 KO'd; seeds 10 and 11 take under 40%), and the fight test asserts at least 15 of 20 with at most 2 KOs rather than five picked seeds. Seeds 1–5: 73.8 s / 1.05, 79.7 s / 0.61, 66.3 s / 0.44, 72.1 s / 0.96, KO at 79.9 s. The naive bot is KO'd at 15 s on every seed.
 
 
-## Playtest notes 17–18 (Shaun, 2026-10-20)
-From docs/brainstorm/2026-10-20-playtest-notes.md. The Pylon Warden stays as it is.
-
-### 041.18 The arena locks
-Shaun's words: "**Exploit: healing during the Bulwark fight.** Players fought him where a pylon's safe zone (or a spring) heals them. Shaun's fix: when the fight starts, the arena locks. Pressing E on the locking door leaves, but the fight's progress resets (the Bulwark heals)."
-- When the Bulwark engages, the forum's way in seals: a ley barrier across the door, in the Hollows barrier's look. Feet can't pass it, the player's or an enemy's.
-- E at the sealed door leaves: the player stands just outside the door, and the fight resets as a leash reset does: the Bulwark is back at its start at full health, its adds and any wave or bombs of its are gone. The seal then drops.
-- No healing source inside the arena: no spring pool and no claimable pylon's safe zone overlaps it (checked by a test).
-- The Bulwark fight is re-measured with the lock (seeds 1–20).
-
-### 041.19 Shardbacks turn slower
-Shaun's words: "**Shardbacks turn too fast** (120°/s today). They need a window, even just enough for one projectile to land."
-- Proposal: 70°/s. A test shows a player strafing round a Shardback lands at least one unblocked hit each pass. Pack clears are re-measured.
+## Closed (2026-10-20)
+041 is closed for the build as it stands, under the process reset Shaun approved: the targets that are met are tests, the rest are recorded measurements above. Playtest notes 17–18 (041.18 the arena lock, 041.19 slower Shardbacks) moved to their own spec, docs/specs/043-arena-lock-shardback-turn.md. The status stays `approved` until Shaun's /wrapup.

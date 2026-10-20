@@ -28,6 +28,9 @@ How we work: docs/process.md. Current state: docs/progress.md.
 ## Workflow
 Every feature runs /spec -> /plan -> /build -> /verify -> /review -> /wrapup.
 One backlog item per branch. Never skip verify or review.
+One spec = one branch = one PR into main; never stack specs on one branch.
+A spec closes when its criteria are met or recorded; new notes become new specs.
+Balance targets are measurements (npm run measure), not check tests.
 Never report done while checks fail.
 When something needs Shaun (an approval, a decision, a playtest), end the reply with it; when nothing does, leave that out. Report only what is relevant to Shaun; keep internal progress to yourself unless he asks for a status report.
 

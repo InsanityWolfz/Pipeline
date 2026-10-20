@@ -2,6 +2,29 @@
 
 Newest entry first.
 
+## 2026-10-20: Process reset, 041 closed, catch-up PR for 021–041
+**Changed:**
+- Reviewed how the 021–041 run drifted: 21 specs on one branch with no PRs, wrapups that never happened, 041 growing to 19 items, ten specs approved on draft at once, a handoff that went stale. Shaun approved a reset; its rules are in docs/process.md, "Keeping the loop small", and in CLAUDE.md.
+- 041 is closed as built. 041.18 (arena lock) and 041.19 (slower Shardbacks) moved to their own spec, 043. The 041 fix list in the old handoff was already built in 8eb2780 (the back wave waits out the roar, at most 4 adds, HP 3,800, 15 of 20 seeds asserted, dead bot code removed).
+- docs/handoff.md is folded into this entry and removed.
+- Opened the catch-up PR from `claude/laughing-volta-uac3nf` into `main` for 021–041.
+- Measured on this branch: `npm run check` takes about 50 s (1,430 unit tests; the slowest file is bulwarkFight.test.ts at 11 s), and the full e2e takes 6.5 min (102 tests, all passing).
+
+**Next:**
+1. Shaun plays the catch-up preview and says when to merge; then /wrapup marks 021–041 done in one pass.
+2. Each of these on its own branch and PR, stacked on the catch-up branch until it merges: `npm run measure` (balance targets out of `check`), the Stages "0/4 arrows" bug, 043, 042.
+3. The spec interview from docs/brainstorm/2026-10-20-playtest-notes.md (needs Shaun).
+
+**Notes (carried over from the handoff):**
+- **Previews:** https://insanitywolfz.github.io/Pipeline/branch/<branch>/ (add `?playtest` for a full kit, `?start=hollows` for the Bulwark's region). The `main` preview is old until the catch-up merges.
+- **Machine load causes false timeouts.** The stop hook runs `npm run check` while e2e runs, so long scenario tests have explicit budgets with a comment giving their idle time. Never raise a timeout to hide a real slowdown; measure against the commit before first.
+- **Keep scratch scripts out of tests/.** Use the session scratchpad.
+- **Scripted e2e bots** adapt their tactics honestly: no hidden healing, no reading hidden state a player can't see.
+- **One stat path.** All stats go through `resolveStat` (src/sim/statResolve.ts); all player-facing rules text comes from the keyword data (039/040).
+- **Shaun's preferences:** tell him only what needs him (approvals, decisions, playtests). He likes AskUserQuestion interviews with the recommended option first. Voice-to-text "rants" are saved verbatim in docs/brainstorm/ and processed later.
+- **Playtest-notes interview themes** (docs/brainstorm/2026-10-20-playtest-notes.md): a pre-built arrow line as the foundry tutorial example; separate hotbars for the intake and carried items; a Factorio-style grid inventory and hopper screens; stages in the crafting menu (C) instead of the bench; volleys that fan across ammo types and fire together; a resin pylon to automate bombs; more ammo per early resource; a red HP bar; bigger pickup range; an E prompt on ley crystal nodes; on-screen build controls; Wisp aggro range; cache loot visuals; an early Splitter.
+- **Later backlog** (docs/brainstorm/2026-10-19-drive-rant.md): horizontal content (biomes, bosses, projectiles, augments, set bonuses), Terraria-style multiplayer (keep the sim deterministic and command-driven), a bigger foundry with more involved processing.
+
 ## 2026-10-20: 039–041 and handoff to a new session
 **Changed:**
 - Built and reviewed 039 (keyword system) and 040 (legibility UI).
@@ -10,7 +33,7 @@ Newest entry first.
 - Specs 041 and 042 were approved on draft from Shaun's interview.
 - Saved Shaun's and friends' playtest notes in docs/brainstorm/2026-10-20-playtest-notes.md.
 
-**Next:** see docs/handoff.md.
+**Next:** see the 2026-10-20 process reset entry above.
 1. Finish 041's last round (the fix list, 041.18 arena lock, 041.19 slower Shardbacks).
 2. Build 042.
 3. Fix the Stages "0/4 arrows" bug.
