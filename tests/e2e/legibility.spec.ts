@@ -41,7 +41,7 @@ test('hovering the arrow’s hotbar slot shows its summary; Shift shows the brea
   await page.keyboard.down('Shift');
   await expect.poll(async () => (await ui(page))?.tip?.mode).toBe('breakdown');
   tip = (await ui(page))?.tip;
-  expect(tip?.lines[0]).toMatch(/^Damage 10/);
+  expect(tip?.lines[0]).toMatch(/^Damage 14/); // 041: an arrow's 14 (was 10)
   expect(tip?.lines.some((l) => l.startsWith('Linked:'))).toBe(true);
   expect(tip?.box.w).toBeLessThanOrEqual(280);
   await page.keyboard.up('Shift');

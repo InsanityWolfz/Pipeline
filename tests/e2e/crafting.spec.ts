@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { lobAmmo } from '../../src/data/ammo';
 import { VIEW_WIDTH } from '../../src/data/config';
 import { PAUSE_MENU } from '../../src/data/hudLayout';
 import { VOLUME_STEP } from '../../src/data/sounds';
@@ -105,6 +106,9 @@ test('the crafting menu keeps the world running, Esc pauses it, and the menu cra
   expect(errors).toEqual([]);
 });
 
+/** A bomb's burst damage (041: 12). */
+const BOMB_BURST = lobAmmo('bomb').burstDamage;
+
 test('an arrow pierces two Husks (029), and a bomb burst kills one', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page, '?start=field&attuned');
@@ -124,7 +128,7 @@ test('an arrow pierces two Husks (029), and a bomb burst kills one', async ({ pa
     },
     [LEY_VEIN] as const,
   );
-  const result = await page.evaluate(() => {
+  const result = await page.evaluate((burst) => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
     for (const r of ['casing', 'fuse', 'ley-dust', 'ley-dust', 'ley-dust', 'bomb']) g.craft(r);
@@ -176,16 +180,16 @@ test('an arrow pierces two Husks (029), and a bomb burst kills one', async ({ pa
       }
     }
 
-    // Burst kill (029: no burn): bring the nearest Husk to 15 health or less with arrows, then bomb it.
+    // Burst kill (029: no burn): bring the nearest Husk to a bomb's burst or less with arrows (041: 12), then bomb it.
     s = g.step(1, { selectAmmo: 'arrow' });
     const target = nearest();
     if (!target) throw new Error(`no Husk left; pierced ${pierced}, tick ${s.tick}`);
     const id = target.id;
     const health = () => s.enemies.filter((e) => e.group === 'field').find((e) => e.id === id)?.health ?? 0;
-    for (let t = 0; t < 600 && health() > 15; t++) {
+    for (let t = 0; t < 600 && health() > burst; t++) {
       const e = s.enemies.filter((e) => e.group === 'field').find((en) => en.id === id);
       if (!e) break;
-      // One arrow at a time, so the health steps down by 10s.
+      // One arrow at a time, so the health steps down by an arrow's 14 (041).
       const before = health();
       s = g.step(1, { fire: true, aimX: e.x, aimY: e.y });
       for (let w = 0; w < 30 && health() === before && s.arrows.length > 0; w++) s = g.step(1);
@@ -214,14 +218,14 @@ test('an arrow pierces two Husks (029), and a bomb burst kills one', async ({ pa
       died = s.events.deaths.some((d) => d.id === id);
     }
     return { pierced, beforeBomb, bursts, died, lastDamage, health: s.player.health };
-  });
+  }, BOMB_BURST);
   expect(result.pierced).toBe(2);
   expect(result.beforeBomb).toBeGreaterThan(0);
-  expect(result.beforeBomb).toBeLessThanOrEqual(15);
+  expect(result.beforeBomb).toBeLessThanOrEqual(BOMB_BURST);
   expect(result.bursts).toBe(1);
   expect(result.died).toBe(true);
   // The killing blow was the burst itself: there's no burn (029).
-  expect(result.lastDamage).toBe(15);
+  expect(result.lastDamage).toBe(BOMB_BURST);
   expect(errors).toEqual([]);
 });
 

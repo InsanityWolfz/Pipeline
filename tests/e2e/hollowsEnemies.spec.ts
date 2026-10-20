@@ -72,10 +72,13 @@ test('a Shardback: its front blocks; circling inside its turn to its back, the a
       blocked += g.step(1, { fire: true, aimX: e?.x ?? 0, aimY: (e?.y ?? 0) - 12 }).events.blocked.length;
     }
     g.step(10);
-    return { blocked, health: g.getState().enemies.find((x) => x.id === eid)?.health };
+    const e = g.getState().enemies.find((x) => x.id === eid);
+    return { blocked, health: e?.health, max: e?.maxHealth };
   }, id);
   expect(front.blocked).toBeGreaterThan(0);
-  expect(front.health).toBe(70);
+  // Untouched: its own full health, ring 3's (041: 175).
+  expect(front.health).toBe(front.max);
+  expect(front.max).toBe(175);
   const fight = await page.evaluate((eid) => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
@@ -109,7 +112,8 @@ test('a Shardback: its front blocks; circling inside its turn to its back, the a
   }, id);
   expect(fight.dead).toBe(true);
   expect(fight.ko).toBe(false);
-  expect(fight.backHits).toBeGreaterThanOrEqual(7);
+  // Its 175 HP at an arrow's 14 (041).
+  expect(fight.backHits).toBeGreaterThanOrEqual(Math.ceil(175 / 14));
   // It bashes as the player circles, but always at where they were: no bash lands on the flanking route.
   expect(fight.bashes).toBeGreaterThan(0);
   expect(fight.bashHits).toBe(0);
