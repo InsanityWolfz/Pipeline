@@ -44,6 +44,8 @@ export class HollowsView {
   private readonly scene: Scene;
   private readonly barrier: GameObjects.Graphics;
   private readonly seal: GameObjects.Graphics;
+  /** The seal's span across the way in, px, and the door row (fixed data, worked out once). */
+  private readonly sealSpan: { x0: number; x1: number; ty: number };
   private readonly altar: GameObjects.Image;
   private readonly summon: GameObjects.Graphics;
   private readonly circles: GameObjects.Graphics;
@@ -61,6 +63,8 @@ export class HollowsView {
     this.scene = scene;
     this.barrier = scene.add.graphics().setVisible(false);
     this.seal = scene.add.graphics().setVisible(false);
+    const tiles = HOLLOWS.arena.seal.tiles;
+    this.sealSpan = { x0: Math.min(...tiles.map((t) => t.tx)) * T, x1: (Math.max(...tiles.map((t) => t.tx)) + 1) * T, ty: tiles[0]?.ty ?? 0 };
     const a = HOLLOWS.arena.altar;
     this.altar = addVector(scene, (a.tx + 0.5) * T, (a.ty + 1) * T, HOLLOWS_SPRITES.altar.dim).setDepth((a.ty + 1) * T).setVisible(false);
     this.summon = scene.add.graphics().setDepth(DEPTHS.groundFx).setBlendMode(BlendModes.ADD).setVisible(false);
@@ -140,12 +144,10 @@ export class HollowsView {
       g.setVisible(false);
       return 0;
     }
-    const tiles = HOLLOWS.arena.seal.tiles;
-    const x0 = Math.min(...tiles.map((t) => t.tx)) * T;
-    const x1 = (Math.max(...tiles.map((t) => t.tx)) + 1) * T;
+    const { x0, x1, ty } = this.sealSpan;
     // It stands on the door row's middle, its curtain's footprint as deep as the barrier's is wide.
     const half = (T * B.width) / 2;
-    const bottom = ((tiles[0]?.ty ?? 0) + 0.5) * T + half;
+    const bottom = (ty + 0.5) * T + half;
     const k = this.sealState === 'fading' ? this.sealFadeMs / B.collapseMs : 0;
     const alpha = this.sealState === 'fading' ? Math.max(0, 1 - k) : 1;
     g.setVisible(true).setDepth(bottom);
