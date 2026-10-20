@@ -1,6 +1,8 @@
 import { FRONTIER_GOAL, OBJECTIVES, type ObjectiveCheck, type ObjectiveDef } from '../data/objectives';
 import { feedsIntake } from './intake';
-import { foundryDry } from './exampleLine';
+import { machineRecipe } from './stages';
+import { count } from './inventory';
+import type { FoundryState } from './pieces';
 import { volleyRounds } from './volley';
 import type { SimState } from './state';
 import { FOUNDRY_ROOM } from '../data/rooms';
@@ -11,6 +13,19 @@ import { regionOf } from './regions';
 // its check holds and stays done, so they can finish in any order. The objective
 // line shows the first unfinished one, or the frontier goal once all are done;
 // finishing the prototype's goals marks the prototype complete.
+
+/**
+ * The lines have run dry (046): no hopper holds anything, and no machine is crafting or holds a whole craft's inputs.
+ * Parts left over in a buffer, finished items waiting to go out and items on carriers don't count, so leftovers stuck
+ * in a line (one wood more than the stones and fibers it needs) never keep it from counting as dry.
+ */
+export function foundryDry(foundry: FoundryState): boolean {
+  return foundry.pieces.every((p) => {
+    if (p.kind === 'hopper') return p.count === 0;
+    if (p.kind !== 'machine') return true;
+    return !p.crafting && !Object.entries(machineRecipe(p).inputs).every(([id, n]) => count(p.buffer, id) >= n);
+  });
+}
 
 /** Whether a check holds right now. `awayRunning` counts ticks in state.awayTicks; `machineMade` reads the tally in state.machineMade. */
 function holds(state: SimState, check: ObjectiveCheck): boolean {
@@ -30,7 +45,8 @@ function holds(state: SimState, check: ObjectiveCheck): boolean {
     case 'lineDry':
       return state.lineRanDry;
     case 'refilled':
-      return state.lineRanDry && check.items.every((id) => state.refilled.includes(id));
+      // With no hopper left to refill (a save from before 046 has no example line), it counts as done.
+      return state.lineRanDry && (!state.foundry.pieces.some((p) => p.kind === 'hopper') || check.items.every((id) => state.refilled.includes(id)));
     case 'entrancesHold':
       return state.link.entrances.filter((e) => e.ammoId === check.ammo && e.count > 0).length >= check.min;
     case 'machineMade':

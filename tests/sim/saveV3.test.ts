@@ -31,6 +31,7 @@ describe('version 2 → 3 (046)', () => {
       state.inventory = { 'schematic-splitter': 1, wood: 2 };
       state.banked = { 'schematic-splitter': 1 };
       state.stash = { 'schematic-splitter': 1, stone: 3 };
+      state.start = { ...(state.start as Record<string, unknown>), inventory: { 'schematic-splitter': 1 } };
       state.groundItems = [
         { id: 1, itemId: 'schematic-splitter', roomId: 'overworld', x: 10, y: 10 },
         { id: 2, itemId: 'wood', roomId: 'overworld', x: 12, y: 10 },
@@ -44,6 +45,7 @@ describe('version 2 → 3 (046)', () => {
     expect(read.state.inventory).toEqual({ wood: 2 });
     expect(read.state.banked).toEqual({});
     expect(read.state.stash).toEqual({ stone: 3 });
+    expect(read.state.start.inventory).toEqual({});
     expect(read.state.groundItems.map((g) => g.itemId)).toEqual(['wood']);
   });
 });
@@ -90,5 +92,8 @@ describe('version 2 → 3 objectives (046)', () => {
     stepSim(s);
     expect(s.link.attuned).toBe(true);
     expect(s.foundry.pieces).toEqual([]);
+    // No hoppers to refill: the refill goal counts as done rather than asking for them (046.8).
+    const refill = OBJECTIVES.findIndex((o) => o.check.kind === 'refilled');
+    expect(s.objectives[refill]).toBe(true);
   });
 });

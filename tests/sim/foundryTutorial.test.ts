@@ -8,7 +8,8 @@ import { createSim, roomById, type SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
 import { AFTER_REFILL, REFILL_GOAL, SECOND_LINE_GOAL } from '../fixtures/foundrySteps';
-import { die, movePlayer, run } from './fight';
+import { craft } from '../../src/sim/crafting';
+import { die, movePlayer, run, runUntil } from './fight';
 import { foundry, put } from './foundryKit';
 
 // 046 (note 10, 027): the foundry tutorial now starts from the example line. 027's seven build steps are one goal:
@@ -121,9 +122,33 @@ describe('the refill goal (046)', () => {
     expect(currentObjective(s)).toBe(REFILL);
   });
 
-  it('a foundry with nothing to run counts as dry once attuned (a start without the example line)', () => {
+  it('leftovers stuck in the line still count as dry: one wood too many, and the goal still shows', () => {
+    const s = newGame();
+    const wood = s.foundry.pieces.find((p): p is HopperState => p.kind === 'hopper' && p.tx === 11);
+    if (!wood) throw new Error('no wood hopper');
+    wood.item = 'wood';
+    wood.count += 1;
+    runDry(s);
+    expect(s.lineRanDry).toBe(true);
+    // Shafts are left over in the line, never to be used without more stone and fiber.
+    const leftover = s.foundry.pieces.some((p) => p.kind === 'machine' && ((p.buffer.shaft ?? 0) > 0 || (p.made === 'shaft' && p.output > 0)));
+    expect(leftover).toBe(true);
+    expect(currentObjective(s)).toBe(REFILL);
+  });
+
+  it('with no hopper in the foundry (a start or save without the example line) it counts as done once attuned (046.8)', () => {
     const s = foundry();
     s.objectives = OBJECTIVES.map((_, i) => i < REFILL);
+    run(s, 1);
+    expect(s.lineRanDry).toBe(true);
+    expect(s.objectives[REFILL]).toBe(true);
+    expect(currentObjective(s)).toBe(REFILL + 1);
+  });
+
+  it('with a hopper of its own, an empty foundry waits for the refill as any other', () => {
+    const s = foundry();
+    s.objectives = OBJECTIVES.map((_, i) => i < REFILL);
+    put(s, 'hopper', 11, 5, 'up');
     run(s, 1);
     expect(s.lineRanDry).toBe(true);
     expect(currentObjective(s)).toBe(REFILL);
@@ -170,9 +195,32 @@ describe('first-made popups (046)', () => {
   it('hand-crafting never counts as machine-made', () => {
     const s = foundry();
     s.inventory = { wood: 1 };
-    run(s, 1, {});
+    expect(craft(s, 'shaft')).toBe(true);
+    run(s, 1);
+    expect(s.inventory.shaft).toBe(4);
+    expect(s.crafted).toContain('shaft');
     expect(s.machineMade).toEqual({});
-    put(s, 'hopper', 11, 5, 'up');
     expect(s.events.firstMade).toEqual([]);
+  });
+
+  it('a machine finishing a craft records what it made, by whom', () => {
+    const s = foundry();
+    const h = put<HopperState>(s, 'hopper', 11, 5, 'up');
+    Object.assign(h, { item: 'wood', count: 1 });
+    const cutter = put(s, 'cutter', 11, 4, 'up');
+    runUntil(s, (x) => x.events.made.length > 0, 200);
+    expect(s.events.made).toEqual([{ id: cutter.id, pieceId: 'cutter', itemId: 'shaft', count: 4 }]);
+    expect(s.events.firstMade).toEqual([{ id: cutter.id, itemId: 'shaft' }]);
+    expect(summarize(s).machineMade).toEqual({ shaft: 4 });
+  });
+
+  it('keeps the machine-made tally through a KO', () => {
+    const s = foundry();
+    const h = put<HopperState>(s, 'hopper', 11, 5, 'up');
+    Object.assign(h, { item: 'wood', count: 1 });
+    put(s, 'cutter', 11, 4, 'up');
+    runUntil(s, (x) => (x.machineMade.shaft ?? 0) > 0, 200);
+    die(s);
+    expect(s.machineMade).toEqual({ shaft: 4 });
   });
 });
