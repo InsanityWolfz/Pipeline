@@ -35,6 +35,7 @@ import { applyStage } from './stages';
 import { entranceCap, machineSpeed, restore } from './research';
 import { stepEnemyBombs } from './enemyBombs';
 import { stepAltars } from './altar';
+import { stepArenaLock, stepSeal } from './arenaLock';
 import { stepLeveling } from './leveling';
 import { respec, takeTalent } from './talents';
 import { rampOverpressure, stepPools } from './keystones';
@@ -75,10 +76,12 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   // Before enemies act, so a Bulwark bomb thrown this tick starts its fuse at 0 (034; its fuseTicks keep the word).
   stepEnemyBombs(state);
   stepEnemies(state, bodies);
+  // 043: a body in an arena's doorway as its seal rises is pushed off it.
+  stepSeal(state);
   stepNodes(state.nodes);
   // Before the tube, so fire this tick cancels a harvest in progress.
   // Build mode keeps E for hoppers and crates, not harvesting.
-  const used = stepCache(state, stepClaims(state, stepAltars(state, stepTubeStone(state, cmd))));
+  const used = stepCache(state, stepClaims(state, stepAltars(state, stepArenaLock(state, stepTubeStone(state, cmd)))));
   if (cmd.identify) identifyAll(state);
   if (cmd.equip) equip(state, cmd.equip);
   if (cmd.applyStage) applyStage(state, cmd.applyStage);
