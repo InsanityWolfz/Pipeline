@@ -90,8 +90,9 @@ describe('the HP bar data (031)', () => {
     expect(frame?.size).toEqual([L.frame.w, L.frame.h]);
   });
 
-  it('fills leaf green, red when low, below a quarter of max health', () => {
-    expect(HUD_HEALTH_LAYOUT.fillColor).toBe('leaf');
+  it('fills red (045: a palette red, not 031\'s green), hit-red when low, below a quarter of max health', () => {
+    expect(HUD_HEALTH_LAYOUT.fillColor).toBe('danger');
+    expect(HUD_HEALTH_LAYOUT.fillColor).not.toBe(HUD_HEALTH_LAYOUT.lowColor);
     expect(HUD_HEALTH_LAYOUT.lowColor).toBe('hit-red');
     expect(HP_BAR.lowFraction).toBe(0.25);
     expect(HP_BAR.pulseMs).toBe(900);

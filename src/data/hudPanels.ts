@@ -16,7 +16,8 @@ export const HUD_HEALTH_LAYOUT = {
   frame: { w: 152, h: 20 },
   fill: { x: 4, y: 4, w: 144, h: 12 },
   textY: 7,
-  fillColor: 'leaf',
+  // 045: red (Shaun's note 2), a palette red; the low colour and the low-HP edges stay as 031 set them.
+  fillColor: 'danger',
   lowColor: 'hit-red',
   chunkColor: 'snow',
   shield: { gap: 4, w: 14, h: 16, valueGap: 2, valueW: 12, valueY: 6 },
