@@ -139,3 +139,93 @@ Supersedes the bootstrap's art decisions: the committed atlas, the art script, t
 - **Floating text** (damage numbers, the "+1" popup) is plain objects tweened together, the text drawn at the resolution of its biggest pop. QA had reported them missing; that was screenshot timing, since a capture lands after their 0.7 s life. They were drawn all along.
 - **A frame that was never drawn** logs a console error from `showFrame`, so e2e catches it.
 - **No pause for crafting (Shaun):** the craft menu leaves the world running. Esc, with nothing to close, opens the pause menu, the only thing that stops the clock. It holds the sound settings, which are saved in localStorage as before.
+
+## 2026-10-20: 021–041
+Each plan's build notes hold the detail; these are the lasting technical choices.
+- **021 playtest fixes:**
+  - `CursorView` owns the crosshair and the menu pointer, on `DEPTHS.cursor` above everything. The scene tells it each frame whether a menu is open.
+  - `ui().shakes` and `ui().cursor` report what render asked for, so e2e checks feel without reading pixels.
+- **022 hopper amounts:**
+  - `deposit` and `withdraw` carry a required `amount` (`one`, `half`, `all`); `amountOf` in `src/sim/foundryUse.ts` turns it into a count.
+  - `isLeftPress` (`src/render/clickInput.ts`) reads the DOM button, since macOS reports Ctrl+click as a right click.
+- **023 melee:**
+  - The punch is `src/sim/melee.ts`. Its hit test is an exact sector-against-box test in `src/sim/sector.ts`.
+  - `boss` on an enemy def is the one flag for boss exceptions (no melee knockback, its own freeze length, no ring scaling).
+- **024 intake spread:**
+  - `nextPress(state)` in `src/sim/volley.ts` is the one answer to "what does the next press fire": volley, carried round or melee. The tube and the HUD (`hudActive`, 025) both read it.
+  - `link.entrances` holds one reservoir per mouth tile. Opening the sides lives in `src/sim/intake.ts`.
+- **025 bottom HUD:**
+  - Bottom-row layout is pure in `src/render/bottomHud.ts`, shared by the hotbar, tube slot and build bar, so unit tests check centring and fit.
+  - `TextLine` takes a scale and draws the font bigger, never stretched.
+- **026 menu labels:**
+  - Every piece has a `category`; `PIECE_CATEGORIES` orders the build bar's groups. Only unlocked pieces show.
+  - Group, label and divider layout is pure (`foundryLayout.ts`, `bottomHud.ts`).
+- **027 foundry tutorial:**
+  - Objective checks are data (`placed`, `hopperHolds`, `machineMade`). `state.machineMade` tallies machine output from `events.made`, never hand crafts, and survives a KO.
+  - Looping UI pulses are tweens (`src/render/pulse.ts`), so `tweenSpeed(0)` holds them for a screenshot.
+- **028 foundry flow:**
+  - Port rules live in `src/sim/claims.ts`. Ports are fixtures a claim adds, one per raw in `SITE_SUPPLY`.
+  - Each entrance has its own cooldown. A volley ignores `tube.fireCooldown`; carried rounds still wait on it.
+  - Goals carry a `milestone`. Views and the summary read `objectiveLine(state)`.
+  - Dev hooks `claim(site)` and `completeObjectives(n)` stage tests without playing the run.
+- **029 ammo stages:**
+  - Tags are data (`src/data/tags.ts`). A round id is its base, then its tags joined by `+` (`arrow+frost`). Tagged entries in `ROUNDS`, `AMMO` and `ITEMS` are derived, never written by hand.
+  - A stage machine is an ordinary machine piece whose `recipeId` is the stage id, so status, hover and refunds come free. Its rules are in `src/sim/stages.ts`.
+  - Cold is `src/sim/cold.ts`. Freezing stops an enemy's thinking, not its cooldowns.
+  - Each shot carries its own speed, range, pierce, split and target.
+- **030 healing:**
+  - `src/sim/healing.ts` runs after the KO check. Healing builds in integer HP·ticks (`healCarry`), so 10 HP/s is exactly 10 HP in 60 ticks.
+  - New ground is stamped after generation, never added to `OVERWORLD.clearings`, which would shift the seeded stream and move the whole map. 032 and 034 follow the same rule.
+  - Sim functions take optional tuning arguments, so tests change numbers without touching data.
+- **031 HUD inventory:**
+  - `itemRisks` and `atRiskCounts` in `src/sim/banking.ts` are the one source of safe vs at risk. `wake()` and the panel both use them.
+  - Every item has a `group`. HUD panel layouts go in `src/data/hudPanels.ts`, since `hudLayout.ts` is full.
+  - The HP bar, pickup feed and popup stack have pure models (`healthBarModel.ts`, `pickupFeedModel.ts`, `popupStack.ts`) and run on tween time.
+- **032 landmarks and champions:**
+  - The fixed map has only hand-placed ponds. Everything else is tile for tile what the seed makes, and a test holds that.
+  - Landmark areas are data; seeing any part of one discovers it.
+- **033 research:**
+  - Restoring is a `restore` command, checked again in the sim. E at the intake does nothing in the sim.
+  - `stepFoundry` takes `FlowTuning` (cap, machine speed), with defaults so older tests read the same.
+  - The drop token `any-schematic` resolves in `scatterItems` and draws from the RNG only when one is eligible.
+  - `Banner` (`src/render/Banner.ts`) is the one queue for discovery and schematic banners.
+- **034 Stonefall Hollows:**
+  - Region 1 is the old map moved +40 columns, fingerprinted in `tests/sim/hollows.test.ts`. The Hollows draw from `seed ^ HOLLOWS.salt` after it.
+  - New things in an old region are stamped after generation and appended to their lists, so old ids and seeded tests never move.
+  - e2e names Region 1 tiles through `OVERWORLD` data or its offset, never raw numbers.
+  - Shield bearings (`src/sim/shield.ts`) are taken from the hurtbox's middle, not the feet.
+  - Boss progress (`bossDefeats`, `summoned`, `summoning`) survives a KO.
+- **035 Hollows enemies:**
+  - Line of sight walks the exact tiles crossed (`src/sim/sightLine.ts`). Cover, the Sniper and the punch's wall test all use it.
+  - `targetable` and `passesThrough` on an enemy gate hits and separation (a Burrower underground, a charging Charger).
+  - A data test holds every telegraph at or above its minimum.
+  - Dev hook `spawnEnemy` stages sandbox fights; e2e and shots share `tests/e2e/hollowsSandbox.ts`.
+- **036 equipment:**
+  - Worn gear is read through `src/sim/worn.ts`, and player stats through `playerStats` (`src/sim/stats.ts`).
+  - e2e on tweened effects holds or speeds the tween clock and waits on a record (`ui().schematics.bannersSeen`), not on the wall clock.
+  - A change to RNG draw order reshuffles every later seeded run; scripted e2e adapts to it.
+- **037 leveling and talents:**
+  - Bonuses land on a shot at launch, so a respec never changes one in flight.
+  - The test hook takes held ticks from `heldPart` (`input.ts`) and UI actions through `withUi` (`menuRequests.ts`), so new edge commands need no hook change.
+  - `clearEvents` empties every event list generically.
+  - Effects shown after a long in-page loop start their clock on their first drawn frame, since that frame carries the loop's time.
+- **038 landmines and cluster:**
+  - Mines and bomblets live in `state.mines`. A room change clears them in `leaveArea` (`src/sim/mines.ts`), not from events.
+  - `blastArea` is in `src/sim/blast.ts`, shared by bombs, mines and keystones.
+  - Crafting menu groups carry their column in data (`CRAFT_GROUPS[].column`).
+- **039 keyword system:**
+  - Every rule has one name from the closed list in `src/data/keywords.ts`, with a digit-free template. Reserved keywords exist in data but never show.
+  - All player-facing rules text is generated by `src/data/rulesText.ts` from keyword and content data. Content holds no rules text of its own. A data test scans names and lines for misused reserved words.
+  - One stat path: `resolveStat` in `src/sim/statResolve.ts` gives any stat of any emission with every source. Every system reads stats through it. Nothing is rounded there; only text rounds.
+  - Behaviour a refactor must keep is pinned in `tests/sim/pinned039*.test.ts` against a named commit, old values in a comment.
+- **040 legibility:**
+  - The describe modules (`src/render/describe*.ts`, `keywordRule.ts`, `statSteps.ts`) are pure and hold no rules text. Numbers come from `resolveStat`, `playerStats` or sim helpers; words from 039's data.
+  - The rounds a player knows are `carried`, `crafted` and `machineMade` (`src/sim/knownRounds.ts`).
+  - `__GAME__.summaryRows()` lets e2e check that every summary fits.
+  - Long scenario tests have explicit budgets (`test.setTimeout`) with a comment giving their idle time. Never raise one to hide a slowdown; measure against the previous commit first.
+- **041 balance:**
+  - The sim reads enemy defs through `defOf`, which uses `scaledDef` (`src/sim/ringScale.ts`): ring, then champion, rounded once, memoised. Bosses never scale.
+  - Bulwark phases live in `src/sim/bulwarkPhases.ts`; enraged wind-ups are read through `windupsOf`.
+  - Scenario bots (`tests/sim/bots.ts`, `packBot.ts`, and the e2e bots) adapt honestly: they read only what a player sees, each telegraph as a zone after a reaction delay. No hidden healing, no hidden state.
+  - Balance targets over seeds are measurements recorded in the spec, not check tests.
+  - An enemy removed mid-tick doesn't act that tick.

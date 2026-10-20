@@ -6,7 +6,7 @@ import { fixtureDef } from '../../src/sim/fixtures';
 import { offerFromOutside } from '../../src/sim/flow';
 import type { ConduitState, CrateState, HopperState, MachineState } from '../../src/sim/pieces';
 import { unlockedPieces } from '../../src/sim/placement';
-import { applyStage, stagesKnown } from '../../src/sim/stages';
+import { applyStage, stageAffordable, stageHeld, stagesKnown } from '../../src/sim/stages';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
 import type { SimState } from '../../src/sim/state';
@@ -180,5 +180,48 @@ describe('hand-applying a stage at the bench', () => {
     run(s, 1, { applyStage: 'prism-lens' });
     expect(s.inventory).toMatchObject({ 'ley-bolt': 0, 'ley-crystal': 0, 'ley-bolt+split': 4 });
     expect(unlockedPieces(s)).toContain('prism-lens');
+  });
+});
+
+// Bug (Shaun, 2026-10-20): the Stages panel showed "0/4 arrows" with arrows in an intake
+// entrance and in the inventory. The panel counts what the sim says is held for a row:
+// carried rounds plus the intake entrances' reservoirs (029, raised after the build).
+describe('what the Stages panel counts as held', () => {
+  /** At the bench with the shrine claimed, `carried` arrows and `inEntrance` arrows in the first entrance. */
+  function heldAt(carried: number, inEntrance: number): SimState {
+    const s = atBench();
+    s.claims.push('shrine');
+    s.inventory = { arrow: carried, rimestone: 1 };
+    const [e] = s.link.entrances;
+    if (!e) throw new Error('no entrance');
+    Object.assign(e, { open: true, ammoId: inEntrance > 0 ? 'arrow' : null, count: inEntrance });
+    return s;
+  }
+
+  it('counts arrows in an intake entrance as well as carried ones', () => {
+    expect(stageHeld(heldAt(0, 4), 'arrow')).toBe(4);
+    expect(stageHeld(heldAt(1, 3), 'arrow')).toBe(4);
+    expect(stageHeld(heldAt(1, 3), 'rimestone')).toBe(1);
+  });
+
+  it('is affordable from an entrance and the inventory together, taking carried rounds first', () => {
+    const s = heldAt(1, 5);
+    expect(stageAffordable(s, 'frost-rune-arrow')).toBe(true);
+    expect(applyStage(s, 'frost-rune-arrow')).toBe(true);
+    expect(s.inventory).toMatchObject({ arrow: 0, rimestone: 0, 'arrow+frost': 4 });
+    expect(s.link.entrances[0]).toMatchObject({ ammoId: 'arrow', count: 2 });
+  });
+
+  it('empties an entrance it drains, which then forgets its ammo', () => {
+    const s = heldAt(0, 4);
+    expect(applyStage(s, 'frost-rune-arrow')).toBe(true);
+    expect(s.link.entrances[0]).toMatchObject({ ammoId: null, count: 0 });
+  });
+
+  it('still refuses when carried and entrance rounds together fall short', () => {
+    const s = heldAt(1, 2);
+    expect(stageAffordable(s, 'frost-rune-arrow')).toBe(false);
+    expect(applyStage(s, 'frost-rune-arrow')).toBe(false);
+    expect(s.link.entrances[0]).toMatchObject({ count: 2 });
   });
 });
