@@ -70,7 +70,7 @@ describe('inventory panel groups (031)', () => {
     const C = INVENTORY_GRID.cell;
     // The widest count a slot shows is a full stack of 100.
     expect(C.count.x + widthOf('100', 'count')).toBeLessThanOrEqual(C.warn.x);
-    expect(C.warn.x + 8).toBeLessThanOrEqual(C.w);
+    expect(C.warn.x + C.warn.w).toBeLessThanOrEqual(C.w);
     expect(C.count.y + 8).toBeLessThanOrEqual(C.h);
     const inner = inventoryPanelSize().w - 2 * INVENTORY_GRID.pad;
     for (const line of INVENTORY_GRID.footer.text) expect(widthOf(line, 'body') * 0.8, line).toBeLessThanOrEqual(inner);

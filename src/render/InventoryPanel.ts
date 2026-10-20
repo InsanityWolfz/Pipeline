@@ -1,7 +1,7 @@
 import type { GameObjects, Scene } from 'phaser';
 import { AMMO } from '../data/ammo';
 import { DEPTHS, SPRITES } from '../data/assets';
-import { INVENTORY_GRID } from '../data/hudPanels';
+import { FOOTER_LINES, INVENTORY_GRID } from '../data/hudPanels';
 import { pieceDef } from '../data/pieces';
 import type { HopperAmount } from '../sim/input';
 import type { CrateState, HopperState } from '../sim/pieces';
@@ -64,7 +64,7 @@ export class InventoryPanel {
     this.titleText = text('title').set(G.title.text);
     this.sortText = text().set(G.sort.text);
     this.name = text('display');
-    this.footLines = [0, 1, 2].map(() => text().setFill(G.colors.dim).setAlpha(G.dimAlpha));
+    this.footLines = Array.from({ length: FOOTER_LINES }, () => text().setFill(G.colors.dim).setAlpha(G.dimAlpha));
     const cell = (): CellView => ({
       frame: addVector(scene, 0, 0, SPRITES.hudAmmoCell).setOrigin(0).setScrollFactor(0).setDepth(DEPTHS.menu + 1),
       icon: addVector(scene, 0, 0, SPRITES.iconArrow).setOrigin(0).setScrollFactor(0).setDepth(DEPTHS.menu + 2),
@@ -130,7 +130,7 @@ export class InventoryPanel {
     const C = INVENTORY_GRID.cell;
     const view = this.cellViewAt(box);
     const countBox = { x: box.x + C.count.x, y: box.y + C.count.y, w: view?.count.width ?? 0, h: view?.count.lineHeight ?? 0 };
-    const warnBox = s.atRisk > 0 ? { x: box.x + C.warn.x, y: box.y + C.warn.y, w: 8, h: 8 } : null;
+    const warnBox = s.atRisk > 0 ? { x: box.x + C.warn.x, y: box.y + C.warn.y, w: C.warn.w, h: C.warn.h } : null;
     return [{ ...box, index, itemId: s.itemId, name: s.name, count: s.count, atRisk: s.atRisk, countBox, warnBox }];
   }
 
@@ -240,7 +240,7 @@ export class InventoryPanel {
     this.sortText.moveTo(Math.round(L.sort.x + (L.sort.w - this.sortText.width) / 2), L.sort.y + G.sort.textY);
     // The scroll bar: its track, and a thumb the shown rows' share of the grid long.
     const rows = this.rowCount();
-    const thumb = Math.max(4, Math.round((L.scroll.h * Math.min(rows, G.rows)) / rows));
+    const thumb = Math.max(G.scroll.minThumb, Math.round((L.scroll.h * Math.min(rows, G.rows)) / rows));
     const at = rows > G.rows ? Math.round(((L.scroll.h - thumb) * this.scrollRow) / (rows - G.rows)) : 0;
     this.back.fillStyle(colorOf(G.scroll.track), G.scroll.trackAlpha).fillRect(L.scroll.x, L.scroll.y, L.scroll.w, L.scroll.h);
     this.back.fillStyle(colorOf(G.scroll.thumb), 1).fillRect(L.scroll.x, L.scroll.y + at, L.scroll.w, thumb);
@@ -259,7 +259,7 @@ export class InventoryPanel {
       if (pos) t.moveTo(pos.x, pos.y);
     });
     // The gear line reads as safe (a death never takes identified gear).
-    this.footLines[2]?.setFill(G.colors.safe).setAlpha(1);
+    this.footLines[FOOTER_LINES - 1]?.setFill(G.colors.safe).setAlpha(1);
   }
 
   private drawCell(c: CellView | undefined, s: ShownSlot | undefined, box: ScreenBox, shown: boolean): void {

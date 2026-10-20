@@ -265,7 +265,7 @@ export class CraftMenuView {
       view?.name.setVisible(shown).setAlpha(i === this.tab ? 1 : L.tabClosedAlpha);
       if (!shown) continue;
       drawTablet(this.tabBacks, t.x, t.y, t.w, t.h, i === this.tab ? 1 : L.tabClosedAlpha);
-      if (i === this.tab) this.tabBacks.fillStyle(colorOf(L.tabOpen), 1).fillRect(t.x + t.w - 2, t.y + 2, 2, t.h - 4);
+      if (i === this.tab) this.tabBacks.fillStyle(colorOf(L.tabOpen), 1).fillRect(t.x + t.w - L.tabStripe.w, t.y + L.tabStripe.inset, L.tabStripe.w, t.h - 2 * L.tabStripe.inset);
     }
     for (const [i, r] of this.rows.entries()) {
       const shown = r.tab === this.tab && rowKnown(sim, r.recipeId);

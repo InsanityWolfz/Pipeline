@@ -1,5 +1,5 @@
 import { VIEW_WIDTH } from '../data/config';
-import { gridSize, INVENTORY_GRID, inventoryPanelSize } from '../data/hudPanels';
+import { FOOTER_LINES, gridSize, INVENTORY_GRID, inventoryPanelSize } from '../data/hudPanels';
 import { tubeSlotBox, type ScreenBox } from './bottomHud';
 
 // Where the grid inventory's pieces sit (047), pure so tests can check them and e2e can find a slot to click: the
@@ -42,7 +42,7 @@ export function inventoryLayout(container = false): GridLayout {
   const cells = Array.from({ length: G.rows }, (_, r) => row(y + r * G.cell.stepY, G.cols)).flat();
   const scroll = { x: left + grid.w + G.scroll.gap, y, w: G.scroll.w, h: grid.h };
   const footTop = y + grid.h + G.footer.gap;
-  const footer = [0, 1, 2].map((i) => ({ x: left, y: footTop + i * G.footer.lineHeight }));
+  const footer = Array.from({ length: FOOTER_LINES }, (_, i) => ({ x: left, y: footTop + i * G.footer.lineHeight }));
   return { panel, title, container: box, sort, cells, scroll, footer };
 }
 

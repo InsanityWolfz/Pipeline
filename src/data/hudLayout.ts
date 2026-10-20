@@ -72,8 +72,9 @@ export const CRAFT_MENU_LAYOUT = {
   /** The tabs' column: its top-left inside the panel, each tab's size and gap, and where its icon and name sit. */
   tabsAt: CRAFT_ROWS_AT,
   tab: CRAFT_TAB,
-  /** The open tab's colours (palette ids): its fill, and a closed tab's text alpha. */
+  /** The open tab's brass stripe (palette id) down its right edge, `w` wide and `inset` px from its top and bottom; a closed tab's alpha. */
   tabOpen: 'brass',
+  tabStripe: { w: 2, inset: 2 },
   tabClosedAlpha: 0.7,
   /** First row's top-left inside the panel. */
   rowsAt: { x: CRAFT_ROWS_AT.x + CRAFT_TAB.w + CRAFT_TAB_GAP, y: CRAFT_ROWS_AT.y },

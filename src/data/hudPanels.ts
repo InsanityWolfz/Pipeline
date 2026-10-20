@@ -89,13 +89,13 @@ export const INVENTORY_GRID = {
   title: { text: 'Inventory', w: 128, h: 22, gap: 4, titleY: 4 },
   cols: 8,
   rows: 5,
-  cell: { w: 24, h: 28, stepX: 26, stepY: 30, icon: { x: 4, y: 3 }, count: { x: 2, y: 20 }, warn: { x: 16, y: 19 } },
+  cell: { w: 24, h: 28, stepX: 26, stepY: 30, icon: { x: 4, y: 3 }, count: { x: 2, y: 20 }, warn: { x: 16, y: 19, w: 8, h: 8 } },
   pad: 6,
   /** The row above the grid holding the Sort button at its right: `h` tall, `gap` above the grid. */
   toolbar: { h: 13, gap: 2 },
   sort: { text: 'Sort', w: 30, h: 13, textY: 3 },
-  /** The scroll bar: `w` wide, `gap` px right of the grid; its thumb in `thumb`, the track in `track` (palette ids). */
-  scroll: { w: 3, gap: 4, track: 'ink', thumb: 'brass', trackAlpha: 0.5 },
+  /** The scroll bar: `w` wide, `gap` px right of the grid; its thumb in `thumb` (at least `minThumb` px long), the track in `track` (palette ids). */
+  scroll: { w: 3, gap: 4, track: 'ink', thumb: 'brass', trackAlpha: 0.5, minThumb: 4 },
   /** A hopper's or crate's own slots: a header `headerH` tall (its name), one row of `cols` cells, `gap` above the grid's toolbar. */
   container: { headerH: 10, nameY: 1, cols: 8, gap: 4 },
   footer: {
@@ -124,12 +124,15 @@ export function gridSize(): { w: number; h: number } {
   return { w: (G.cols - 1) * G.cell.stepX + G.cell.w, h: (G.rows - 1) * G.cell.stepY + G.cell.h };
 }
 
+/** The footer's lines (047): the at-risk rule's lines, then the gear line. */
+export const FOOTER_LINES = INVENTORY_GRID.footer.text.length + 1;
+
 /** The panel's size (047), with a container's slots on top or not. */
 export function inventoryPanelSize(container = false): { w: number; h: number } {
   const G = INVENTORY_GRID;
   const grid = gridSize();
   const top = container ? G.container.headerH + G.cell.h + G.container.gap : 0;
-  const footer = G.footer.gap + 2 * G.footer.lineHeight + G.footer.lineHeight;
+  const footer = G.footer.gap + FOOTER_LINES * G.footer.lineHeight;
   return { w: 2 * G.pad + grid.w + G.scroll.gap + G.scroll.w, h: 2 * G.pad + top + G.toolbar.h + G.toolbar.gap + grid.h + footer };
 }
 
