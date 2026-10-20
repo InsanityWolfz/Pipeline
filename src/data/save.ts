@@ -21,6 +21,8 @@ export const STORAGE_KEYS = {
 
 /** The export's file name for a day: `pipeline-save-YYYY-MM-DD.json`; a damaged save downloads as its raw text. */
 export const EXPORT_FILE = (isoDate: string): string => `pipeline-save-${isoDate}.json`;
+/** How long a download's object URL is kept before it's released, ms. */
+export const DOWNLOAD_URL_MS = 1000;
 export const DAMAGED_FILE = (isoDate: string): string => `pipeline-save-damaged-${isoDate}.txt`;
 
 /** A late-game save stays under this much JSON, bytes. */

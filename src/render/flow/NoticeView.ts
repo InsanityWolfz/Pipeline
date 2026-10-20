@@ -15,8 +15,8 @@ export class NoticeView {
   private shown: string | null = null;
 
   constructor(scene: Scene) {
-    this.back = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.menu + 40);
-    this.text = new TextLine(scene, NOTICE.x, NOTICE.y + NOTICE.textY, DEPTHS.menu + 41, false, 'body');
+    this.back = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.flowNotice);
+    this.text = new TextLine(scene, NOTICE.x, NOTICE.y + NOTICE.textY, DEPTHS.flowNotice + 1, false, 'body');
     this.draw(0);
   }
 

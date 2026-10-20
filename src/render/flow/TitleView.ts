@@ -1,5 +1,6 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, TITLE_SCENE_KEY } from '../../data/assets';
+import { VIEW_WIDTH } from '../../data/config';
 import { FLOW_ROWS } from '../../data/flowLayout';
 import { TITLE_ROWS, TITLE_SCREEN, type TitleRow } from '../../data/titleScreen';
 import { colorOf } from '../color';
@@ -49,18 +50,18 @@ export class TitleView {
     this.scene = scene;
     const T = TITLE_SCREEN;
     const s = paintTitle(scene, screenScale);
-    this.back = scene.add.image(0, 0, TITLE_SCENE_KEY).setOrigin(0).setScale(1 / s).setScrollFactor(0).setDepth(DEPTHS.menu - 10);
-    this.pipe = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.menu - 9);
+    this.back = scene.add.image(0, 0, TITLE_SCENE_KEY).setOrigin(0).setScale(1 / s).setScrollFactor(0).setDepth(DEPTHS.titleScene);
+    this.pipe = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.titlePipe);
     const P = T.pipeGlow;
     for (let i = P.rings; i >= 1; i--) this.pipe.fillStyle(colorOf(P.color), 1 / P.rings).fillEllipse(P.x, P.y, (P.rx * 2 * i) / P.rings, (P.ry * 2 * i) / P.rings);
-    this.motes = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.menu - 8);
+    this.motes = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.titleMotes);
     const M = T.motes;
     for (let i = 0; i < M.count; i++)
-      this.moteList.push({ x: Math.random() * 640, y: 40 + Math.random() * 300, vx: between(M.speed), vy: -between(M.rise), r: between(M.size), alpha: between(M.alpha), phase: Math.random() * Math.PI * 2 });
+      this.moteList.push({ x: Math.random() * VIEW_WIDTH, y: between(M.band), vx: between(M.speed), vy: -between(M.rise), r: between(M.size), alpha: between(M.alpha), phase: Math.random() * Math.PI * 2 });
     const L = T.logo;
-    this.glow = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.menu - 7);
+    this.glow = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.titleGlow);
     for (let i = L.glow.rings; i >= 1; i--) this.glow.fillStyle(colorOf(L.glow.color), L.glow.alpha).fillEllipse(L.cx, L.y + L.glow.dy, (L.glow.rx * 2 * i) / L.glow.rings, (L.glow.ry * 2 * i) / L.glow.rings);
-    this.logo = new TextLine(scene, 0, L.y, DEPTHS.menu - 6, false, 'title', L.scale / 2).set(L.text);
+    this.logo = new TextLine(scene, 0, L.y, DEPTHS.titleLogo, false, 'title', L.scale / 2).set(L.text);
     this.logo.moveTo(Math.round(L.cx - this.logo.width / 2), L.y);
     this.menu = new MenuColumn(scene, T.menu.x, T.menu.y, FLOW_ROWS);
     this.setContinue({ usable: false, line: null });
@@ -101,8 +102,8 @@ export class TitleView {
     for (const m of this.moteList) {
       m.x += m.vx * dt;
       m.y += m.vy * dt;
-      if (m.x > 644) m.x = -4;
-      if (m.y < 20) m.y = 340;
+      if (m.x > VIEW_WIDTH + M.wrap) m.x = -M.wrap;
+      if (m.y < M.band[0]) m.y = M.band[1];
       const twinkle = 0.6 + 0.4 * Math.sin(m.phase + (this.elapsed / M.twinkleMs) * Math.PI * 2);
       this.motes.fillStyle(colorOf(M.color), m.alpha * twinkle).fillCircle(m.x, m.y, m.r);
     }

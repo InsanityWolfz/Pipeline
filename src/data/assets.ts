@@ -254,6 +254,18 @@ export const DEPTHS = {
   hud: 1_000_000,
   /** The crafting menu, above the HUD. */
   menu: 2_000_000,
+  /** 042's title screen, under the menu rows: its painted scene, the pipe's glow, the motes, the logo's glow, the logo. */
+  titleScene: 1_999_990,
+  titlePipe: 1_999_991,
+  titleMotes: 1_999_992,
+  titleGlow: 1_999_993,
+  titleLogo: 1_999_994,
+  /** 042's flow screens over the game, bottom to top: the end card, Settings, a confirm or farewell card, the note, a notice. */
+  flowEndCard: 2_000_006,
+  flowSettings: 2_000_010,
+  flowCard: 2_000_020,
+  flowNote: 2_000_030,
+  flowNotice: 2_000_040,
   /** The crosshair and the menu pointer (021), above every menu and HUD layer. Nothing draws over them. */
   cursor: 3_000_000,
 } as const;

@@ -32,7 +32,7 @@ export class NoteView {
   private onSave: (text: string) => void = () => undefined;
   private onCancel: () => void = () => undefined;
 
-  constructor(scene: Scene, depth: number = DEPTHS.menu + 30) {
+  constructor(scene: Scene, depth: number = DEPTHS.flowNote) {
     this.scene = scene;
     const P = NOTE_PANEL;
     this.dim = scene.add.rectangle(0, 0, VIEW_WIDTH, VIEW_HEIGHT, colorOf(FLOW_DIM.color), FLOW_DIM.alpha).setOrigin(0).setScrollFactor(0).setDepth(depth);
@@ -69,7 +69,7 @@ export class NoteView {
     s.background = paletteHex('ink');
     s.color = paletteHex(TEXT_STYLES.body.fill);
     s.fontFamily = `"${FONT_FILES[TEXT_STYLES.body.font].family}", sans-serif`;
-    s.zIndex = '10';
+    s.zIndex = String(NOTE_PANEL.box.zIndex);
     box.addEventListener('input', () => this.showCount());
     box.addEventListener('keydown', (e) => {
       // Nothing typed here reaches the page's other listeners (the game's keyboard is off too).
@@ -139,7 +139,7 @@ export class NoteView {
     s.height = `${P.box.h * k}px`;
     s.fontSize = `${P.fontPx * k}px`;
     s.lineHeight = `${P.lineHeight * k}px`;
-    s.padding = `${3 * k}px`;
+    s.padding = `${P.box.padding * k}px`;
   }
 
   pointAt(x: number, y: number): void {

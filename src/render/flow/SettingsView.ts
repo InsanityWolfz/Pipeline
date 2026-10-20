@@ -33,7 +33,7 @@ export class SettingsView {
   /** The action waiting for a key in the key list, or null. */
   waiting: string | null = null;
 
-  constructor(scene: Scene, depth: number = DEPTHS.menu + 10) {
+  constructor(scene: Scene, depth: number = DEPTHS.flowSettings) {
     this.dim = scene.add.rectangle(0, 0, VIEW_WIDTH, VIEW_HEIGHT, colorOf(FLOW_DIM.color), FLOW_DIM.alpha).setOrigin(0).setScrollFactor(0).setDepth(depth);
     this.panel = scene.add.graphics().setScrollFactor(0).setDepth(depth + 1);
     this.title = new TextLine(scene, 0, 0, depth + 3, false, 'title');

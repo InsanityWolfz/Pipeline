@@ -11,7 +11,7 @@ export class EndCardView {
 
   constructor(scene: Scene) {
     // Under the note (the note opens over it) and a confirm.
-    this.card = new CardView(scene, DEPTHS.menu + 6);
+    this.card = new CardView(scene, DEPTHS.flowEndCard);
   }
 
   get isOpen(): boolean {

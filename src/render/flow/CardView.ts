@@ -45,7 +45,7 @@ export class CardView {
   private open = false;
   private actions = new Map<string, () => void>();
 
-  constructor(scene: Scene, depth: number = DEPTHS.menu + 20) {
+  constructor(scene: Scene, depth: number = DEPTHS.flowCard) {
     this.scene = scene;
     this.depth = depth;
     this.dim = scene.add.rectangle(0, 0, VIEW_WIDTH, VIEW_HEIGHT, colorOf(FLOW_DIM.color), FLOW_DIM.alpha).setOrigin(0).setScrollFactor(0).setDepth(depth);

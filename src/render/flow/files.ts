@@ -1,3 +1,5 @@
+import { DOWNLOAD_URL_MS } from '../../data/save';
+
 // File download and the file picker (042: Export save, Export damaged save, Import save), in the browser only.
 
 /** Downloads `text` as a file named `name`. */
@@ -9,7 +11,7 @@ export function download(name: string, text: string, type = 'application/json'):
   document.body.appendChild(a);
   a.click();
   a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  setTimeout(() => URL.revokeObjectURL(url), DOWNLOAD_URL_MS);
 }
 
 /** Opens the browser's file picker for a save file; resolves with its text, or null if none was picked. */
@@ -34,8 +36,11 @@ export function pickFile(): Promise<string | null> {
   });
 }
 
+/** Two digits: 7 → "07". */
+export const pad2 = (n: number): string => String(n).padStart(2, '0');
+
 /** Today as YYYY-MM-DD in the player's own time zone, for file names. */
 export function isoDate(now: Date): string {
-  const pad = (n: number): string => String(n).padStart(2, '0');
+  const pad = pad2;
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }

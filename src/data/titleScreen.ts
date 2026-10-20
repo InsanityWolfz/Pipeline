@@ -1,3 +1,5 @@
+import { VIEW_HEIGHT } from './config';
+
 // The title screen (042): the painted scene's layout, the logo, the menu rows and their words, the Continue line,
 // and the confirm and farewell cards' texts. View px (640×360). The scene, logo and rows are pending Shaun's approval
 // by eye; the words are his to rewrite.
@@ -21,8 +23,12 @@ export const TITLE_SCREEN = {
   wanderer: { x: 148, y: 244, scale: 2.4, aim: 0.18, glow: 0.95 },
   /** The intake pipe's glow over the ruin, breathing slowly (019's cyan): its centre, size and alpha range over a period. */
   pipeGlow: { x: 392, y: 240, rx: 15, ry: 22, rings: 5, color: 'cyan', alpha: [0.18, 0.5] as const, periodMs: 3600 },
-  /** Ley motes drifting across the scene (014's ambient motes, slower): count, speed px/s, size px, colour and alpha. */
-  motes: { count: 26, speed: [3, 8] as const, rise: [1, 4] as const, size: [0.6, 1.3] as const, color: 'cyan-glow', alpha: [0.25, 0.7] as const, twinkleMs: 2400 },
+  /**
+   * Ley motes drifting across the scene (014's ambient motes, slower): count, speed px/s, size px, colour and alpha.
+   * They start between `band` (y, px) and drift right and up; past the view's right edge (by `wrap`) a mote comes
+   * back at the left, and above `band[0]` it comes back at `band[1]`.
+   */
+  motes: { count: 26, speed: [3, 8] as const, rise: [1, 4] as const, size: [0.6, 1.3] as const, color: 'cyan-glow', alpha: [0.25, 0.7] as const, twinkleMs: 2400, band: [20, VIEW_HEIGHT - 20] as const, wrap: 4 },
 } as const;
 
 /** The Continue row's line under it (042): "Level 8 · 3 pylons · Bulwark · saved 19 Oct, 21:40". */
