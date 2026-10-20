@@ -315,7 +315,6 @@ export class GameScene extends Scene {
     // The arrow pointer while a menu is open or over the build bar, else the crosshair (021).
     const inMenu = [this.menu, this.pause, this.picker, this.siteMenus, this.hud?.inventory, this.hud?.talents, this.legibility].some((m) => m?.isOpen) || (this.wake?.isShown ?? false);
     this.cursorView?.update(inMenu || (pointer !== undefined && [this.buildView, this.legibility].some((v) => v?.overUi(pointer.x, pointer.y))));
-    if (this.feel) this.pause?.update(this.feel.sound);
     const point = controls?.overWorld() ? controls.cursorPoint() : null;
     this.hover?.update(sim, shown, point, (id) => this.foundryView?.topOf(id), this.cameras.main.worldView);
     this.legibility?.update(sim, this.pause?.isOpen ? null : (pointer ?? null), controls?.shiftHeld() ?? false, this.game.loop.delta);

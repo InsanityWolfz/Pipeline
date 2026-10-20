@@ -93,8 +93,8 @@ function stageMachine(st: StageDef): MachineDef {
 
 export const PIECES: Readonly<Record<string, PieceDef>> = {
   conduit: logistics('conduit', 'Ley conduit', 'Carries items toward its front. Drag to lay a run that bends.'),
-  sorter: logistics('sorter', 'Sorter', 'Sends one chosen item out its side. E sets it, F flips the side.'),
-  splitter: logistics('splitter', 'Splitter', 'Sends items out its front and side in turn. F flips the side.'),
+  sorter: logistics('sorter', 'Sorter', 'Sends one chosen item out its side. E sets it, G flips the side.'),
+  splitter: logistics('splitter', 'Splitter', 'Sends items out its front and side in turn. G flips the side.'),
   merger: logistics('merger', 'Merger', 'Takes items from its back and both sides in turn, out its front.'),
   hopper: logistics('hopper', 'Hopper', 'Holds one kind of item, put in with E, and feeds it forward.'),
   crate: logistics('crate', 'Crate', 'Collects whatever reaches it from any side. E empties it.'),

@@ -3,6 +3,7 @@ import { DEPTHS, FX_TEXTURES } from '../data/assets';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { HP_BAR } from '../data/hudPanels';
 import { colorOf } from './color';
+import { settings } from './flow/settingsStore';
 
 // The low-HP screen edges (031): a red tint round the screen's edges, pulsing with
 // the HP bar below a quarter health, drawn over the room's mood and under the HUD
@@ -19,7 +20,9 @@ export class EdgeTint {
   /** `low` shows it; `pulse` (0 to 1) swells it with the bar. */
   update(low: boolean, pulse: number): void {
     const { alpha, floor } = HP_BAR.edge;
-    this.image.setVisible(low).setAlpha(alpha * (floor + (1 - floor) * pulse));
+    // 042.10: with Flashes off it holds steady, halfway through its swell, instead of pulsing.
+    const swell = settings().flashes ? pulse : 0.5;
+    this.image.setVisible(low).setAlpha(alpha * (floor + (1 - floor) * swell));
   }
 }
 

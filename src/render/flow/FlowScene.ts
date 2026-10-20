@@ -4,60 +4,35 @@ import { TUTORIAL_START } from '../../data/player';
 import { SAVE_TEXT } from '../../data/save';
 import { SOUNDS } from '../../data/sounds';
 import { FOUNDRY_ROOM } from '../../data/rooms';
-import { createSim, type SimState } from '../../sim/state';
+import { createSim } from '../../sim/state';
 import { wakeInFoundry } from '../../sim/save';
 import { fontsReady } from '../fonts';
-import { GameScene } from '../GameScene';
+import type { GameScene } from '../GameScene';
+import { codeOf } from '../keys';
 import { MENU_HOVER_EVENT } from '../menuFeedback';
 import { parseStart } from '../playtest';
 import { currentFit, toView, type ScreenFit } from '../scale';
 import { parseSeed } from '../seed';
 import { SoundView } from '../SoundView';
 import { bakeVectors } from '../vector/textures';
-import { CardView, type CardUi } from './CardView';
+import { CardView } from './CardView';
 import { continueShown } from './continueLine';
-import type { MenuRowShown } from './MenuColumn';
-import { FlowMachine, type FlowEvent, type FlowState } from './flowMachine';
+import { loadNotes } from './feedbackStore';
+import { FlowMachine, type FlowEvent } from './flowMachine';
+import { skipsTitle, type FlowReport, type FlowUi } from './flowTypes';
+import { GameRunner } from './GameRunner';
 import type { GameHost } from './host';
 import { NoticeView } from './NoticeView';
-import { SaveStore, type SlotRead, type SlotStatus } from './saveStore';
+import { applyImport, exportDamaged, exportSave, pickImport } from './saveFiles';
+import { SaveStore, type SlotRead } from './saveStore';
+import { SettingsScreen } from './SettingsScreen';
+import { settings } from './settingsStore';
 import { storageBlocked } from './storage';
-import { TitleView, type TitleUi } from './TitleView';
+import { TitleView } from './TitleView';
 
 // The flow scene (042): runs for the whole session, drawn over the game. It owns the flow machine and every screen
-// that isn't the game itself (the title, the cards, notices), the save slot, and starts and ends GameScenes: a fresh
-// one, under a fresh key, for each New game or Continue, removed on Quit to title. A `?start=…` or `?playtest` URL
-// skips the title and never touches the save slot (042.1).
-
-/** The flow as the test hook reports it (042). */
-export interface FlowReport {
-  state: FlowState;
-  hasSave: boolean;
-  saveStatus: SlotStatus;
-  /** Saves written this session. */
-  saves: number;
-  notes: number;
-}
-
-/** The flow screens as drawn, for `ui().flow`. */
-export interface FlowUi {
-  state: FlowState;
-  title: TitleUi | null;
-  /** A confirm or the farewell card. */
-  card: CardUi | null;
-  settings: { rows: MenuRowShown[] } | null;
-  bindings: { rows: MenuRowShown[]; waiting: string | null } | null;
-  endCard: CardUi | null;
-  note: { rows: MenuRowShown[]; text: string; open: boolean } | null;
-  /** The notice on screen ("Couldn't save…"), or null. */
-  notice: string | null;
-}
-
-/** Whether a URL is a dev or test start that skips the title and never touches the save slot (042.1). */
-export function skipsTitle(search: string): boolean {
-  const params = new URLSearchParams(search);
-  return params.has('start') || params.has('playtest');
-}
+// that isn't the game itself (the title, Settings, the cards, notices) and the save slot, and starts and ends games
+// (GameRunner). A `?start=…` or `?playtest` URL skips the title and never touches the save slot (042.1).
 
 export class FlowScene extends Scene {
   private readonly search: string;
@@ -65,17 +40,14 @@ export class FlowScene extends Scene {
   readonly saves: SaveStore;
   private slot: SlotRead = { status: 'none', envelope: null, state: null, raw: null };
   private fit: ScreenFit = currentFit();
+  private runner?: GameRunner;
   private sounds?: SoundView;
   private title?: TitleView;
   private card?: CardView;
   private notice?: NoticeView;
-  /** What the open card's buttons do. */
-  private cardActions: Record<string, () => void> = {};
-  /** The running game, or null on the title. */
-  running: GameScene | null = null;
-  /** The running game's end card has been seen (042: saved in the envelope at the next foundry entry). */
-  endCardSeen = false;
-  private games = 0;
+  private settingsScreen?: SettingsScreen;
+  /** Input taken this frame, acted on next frame: the game scene below sees this frame's keys and clicks while still covered, so none reach it. */
+  private queued: { frame: number; run: () => void }[] = [];
   private built = false;
   /** What the running game asks of the flow. */
   private readonly host: GameHost;
@@ -98,8 +70,11 @@ export class FlowScene extends Scene {
       },
       pause: () => void this.send('pause'),
       resume: () => void this.send('resume'),
-      pauseAction: () => undefined,
-      afterTick: (sim) => this.afterTick(sim),
+      pauseAction: (action) => this.pauseAction(action),
+      afterTick: (sim) => {
+        // The slot now holds a save; the title reads it in full when it's next shown.
+        if (this.runner?.afterTick(sim)) this.slot = { ...this.slot, status: 'ok' };
+      },
     };
   }
 
@@ -110,16 +85,30 @@ export class FlowScene extends Scene {
   create(): void {
     bakeVectors(this, this.fit.scale);
     this.applyFit(this.fit);
-    this.sounds = new SoundView(this, false);
+    this.sounds = new SoundView(this, true);
     this.events.on(MENU_HOVER_EVENT, () => this.sounds?.play(SOUNDS.menuHover));
     this.title = new TitleView(this, this.fit.scale);
     this.card = new CardView(this);
     this.notice = new NoticeView(this);
+    this.runner = new GameRunner(this.game, this.saves, () => this.scene.bringToTop(), (m) => this.notice?.show(m));
+    this.settingsScreen = new SettingsScreen(this, {
+      back: () => {
+        this.settingsScreen?.close();
+        this.send('back');
+      },
+      exportSave: () => exportSave(),
+      importSave: () => void this.importSave(),
+      exportDamaged: () => exportDamaged(),
+      damaged: () => this.slot.status === 'corrupt' || this.slot.status === 'too-old',
+      notes: () => loadNotes().length,
+      click: () => this.sounds?.play(SOUNDS.menuClick),
+    });
     this.input.on('pointermove', (p: { x: number; y: number }) => this.pointAt(p));
-    this.input.on('pointerdown', (p: { x: number; y: number }) => this.click(p));
+    this.input.on('pointerdown', (p: { x: number; y: number }) => this.later(() => this.click(p)));
+    this.input.keyboard?.on('keydown', (e: KeyboardEvent) => this.later(() => this.keyDown(e)));
     this.built = true;
     if (this.saves.enabled && storageBlocked()) this.notice.show(SAVE_TEXT.blocked);
-    if (this.machine.state === 'play') this.startGame(createSim(parseSeed(this.search), { start: parseStart(this.search) }));
+    if (this.machine.state === 'play') this.runner.start(createSim(parseSeed(this.search), { start: parseStart(this.search) }), this.host, false, this.fit);
     else this.readSlot();
     this.sync();
   }
@@ -131,17 +120,21 @@ export class FlowScene extends Scene {
 
   /** The running game scene, or null on the title. */
   get live(): GameScene | null {
-    return this.running;
+    return this.runner?.scene ?? null;
   }
 
   /** Matches the camera (and the running game's) to the backbuffer. */
   applyFit(fit: ScreenFit): void {
     this.fit = fit;
     if (this.cameras?.main) this.cameras.main.setOrigin(0, 0).setSize(fit.width, fit.height).setZoom(fit.scale);
-    this.running?.applyFit(fit);
+    this.live?.applyFit(fit);
   }
 
   override update(_time: number, delta: number): void {
+    const frame = this.game.loop.frame;
+    const due = this.queued.filter((q) => q.frame < frame);
+    this.queued = this.queued.filter((q) => q.frame >= frame);
+    for (const q of due) q.run();
     this.title?.update(delta);
     this.notice?.update(delta);
     this.sync();
@@ -157,8 +150,14 @@ export class FlowScene extends Scene {
     return changed;
   }
 
+  /** Runs `run` next frame (see `queued`), unless the flow has moved on since: a click that opened a card isn't also a click on it. */
+  private later(run: () => void): void {
+    const at = this.machine.state;
+    this.queued.push({ frame: this.game.loop.frame, run: () => this.machine.state === at && run() });
+  }
+
   /** Reads the save slot again and shows it on the title's Continue row. */
-  readSlot(): void {
+  private readSlot(): void {
     this.slot = this.saves.read();
     this.title?.setContinue(continueShown(this.slot));
   }
@@ -171,6 +170,8 @@ export class FlowScene extends Scene {
     // The title's ambience is the foundry's loop (042); in a game, the game plays its rooms' loops.
     this.sounds?.ambience(onTitle ? FOUNDRY_ROOM : '');
     if (s !== 'farewell' && s !== 'confirm' && this.card?.isOpen) this.card.hide();
+    // Settings stays under a confirm or the note opened over it, and closes when the flow leaves it.
+    if (s !== 'settings' && s !== 'confirm' && s !== 'feedback' && this.settingsScreen?.isOpen) this.settingsScreen.close();
   }
 
   private view(p: { x: number; y: number }): { x: number; y: number } {
@@ -179,47 +180,61 @@ export class FlowScene extends Scene {
 
   private pointAt(p: { x: number; y: number }): void {
     const v = this.view(p);
+    const s = this.machine.state;
     if (this.card?.isOpen) this.card.pointAt(v.x, v.y);
-    else if (this.machine.state === 'title') this.title?.pointAt(v.x, v.y);
+    else if (s === 'settings') this.settingsScreen?.pointAt(v.x, v.y);
+    else if (s === 'title') this.title?.pointAt(v.x, v.y);
   }
 
   private click(p: { x: number; y: number }): void {
     const v = this.view(p);
+    const s = this.machine.state;
     if (this.card?.isOpen) {
-      const id = this.card.click(v.x, v.y);
-      const act = id ? this.cardActions[id] : undefined;
-      if (act) {
-        this.sounds?.play(SOUNDS.menuClick);
-        act();
-      }
+      if (this.card.click(v.x, v.y)) this.sounds?.play(SOUNDS.menuClick);
       return;
     }
-    if (this.machine.state !== 'title') return;
+    if (s === 'settings') return this.settingsScreen?.click(v.x, v.y);
+    if (s !== 'title') return;
     const row = this.title?.click(v.x, v.y);
     if (!row) return;
     this.sounds?.play(SOUNDS.menuClick);
     if (row === 'newGame') this.newGame();
     else if (row === 'continue') this.continueGame();
-    else if (row === 'quit') this.quit();
+    else if (row === 'settings') this.openSettings();
+    else this.quit();
   }
 
-  /** Shows a confirm card over the current screen: its yes runs `onYes`, its no runs `onNo` (or cancels). */
-  ask(kind: ConfirmKind, onYes: () => void, onNo: () => void = () => void this.send('cancel')): void {
+  /** A key on a flow screen: Settings takes it first (a binding, Esc), then Esc cancels a confirm; the feedback key opens the note. */
+  private keyDown(e: KeyboardEvent): void {
+    const isEsc = e.keyCode === codeOf('ESC');
+    if (this.machine.state === 'settings' && this.settingsScreen?.keyDown(e.keyCode, isEsc)) return;
+    if (isEsc && this.machine.state === 'confirm') this.card?.press('no');
+    else if (e.keyCode === codeOf(settings().bindings.feedback)) this.openFeedback();
+  }
+
+  /** The note (042): built in its own slice. */
+  private openFeedback(): void {
+    return;
+  }
+
+  private openSettings(): void {
+    if (this.send('settings')) this.settingsScreen?.open();
+  }
+
+  /** Shows a confirm card over the current screen: yes runs `onYes`, no runs `onNo` (or cancels). */
+  private ask(kind: ConfirmKind, onYes: () => void, onNo: () => void = () => void this.send('cancel')): void {
     if (!this.send('confirm')) return;
     const c = CONFIRMS[kind];
-    this.cardActions = { yes: onYes, no: onNo };
     this.card?.show([{ text: c.text, style: 'display' }], [
-      { id: 'yes', label: c.yes },
-      { id: 'no', label: c.no },
+      { id: 'yes', label: c.yes, run: onYes },
+      { id: 'no', label: c.no, run: onNo },
     ]);
   }
 
   /** New game: at once with no save; with one, after a confirm that moves it to the backup key (042.6). */
   private newGame(): void {
     const start = (): void => {
-      if (!this.send('start')) return;
-      this.endCardSeen = false;
-      this.startGame(createSim(parseSeed(this.search), { start: TUTORIAL_START }));
+      if (this.send('start')) this.runner?.start(createSim(parseSeed(this.search), { start: TUTORIAL_START }), this.host, false, this.fit);
     };
     if (this.slot.status === 'none') return start();
     this.ask('newGame', () => {
@@ -233,60 +248,60 @@ export class FlowScene extends Scene {
   private continueGame(): void {
     this.readSlot();
     const { state, envelope } = this.slot;
-    if (this.slot.status !== 'ok' || !state || !envelope) return;
-    if (!this.send('start')) return;
-    this.endCardSeen = envelope.meta.endCardSeen;
+    if (this.slot.status !== 'ok' || !state || !envelope || !this.send('start')) return;
     wakeInFoundry(state);
-    this.startGame(state);
+    this.runner?.start(state, this.host, envelope.meta.endCardSeen, this.fit);
   }
 
   /** Quit (042.13): try to close the tab, which works only where the browser allows it, then say goodbye. */
   private quit(): void {
     window.close();
     if (!this.send('quit')) return;
-    this.cardActions = {
-      farewellBack: () => {
-        this.card?.hide();
-        this.send('back');
-      },
-    };
-    this.card?.show([{ text: FAREWELL.text, style: 'display' }], [{ id: 'farewellBack', label: FAREWELL.back }]);
+    this.card?.show([{ text: FAREWELL.text, style: 'display' }], [{ id: 'farewellBack', label: FAREWELL.back, run: () => void this.send('back') }]);
   }
 
-  /** After each tick: a foundry entry saves (042.2); a failed write says so and play goes on. */
-  private afterTick(sim: SimState): void {
-    if (sim.events.foundryArrivals.length === 0) return;
-    const result = this.saves.write(sim, this.endCardSeen, new Date());
-    if (result === 'failed') this.notice?.show(SAVE_TEXT.failed);
-    // The slot now holds a save; the title reads it in full when it's next shown.
-    if (result === 'saved') this.slot = { ...this.slot, status: 'ok' };
+  /** The pause menu's Settings and Quit to title (042). */
+  private pauseAction(action: 'settings' | 'quit'): void {
+    if (action === 'settings') return this.openSettings();
+    const inFoundry = this.live?.sim.roomId === FOUNDRY_ROOM;
+    this.ask(inFoundry ? 'quitInFoundry' : 'quitOutside', () => {
+      if (!this.send('toTitle')) return;
+      this.runner?.end();
+      this.readSlot();
+    });
   }
 
-  /** Starts a game on `sim`: a fresh GameScene under a fresh key, drawn under this scene. */
-  private startGame(sim: SimState): void {
-    this.endGame();
-    const scene = new GameScene(sim, this.host);
-    this.games += 1;
-    this.game.scene.add(`game-${this.games}`, scene, true);
-    this.scene.bringToTop();
-    this.running = scene;
-  }
-
-  /** Discards the running game, if any. */
-  endGame(): void {
-    const old = this.running;
-    if (!old) return;
-    this.running = null;
-    this.game.scene.remove(old.scene.key);
+  /** Import save: the picker, then a confirm; a bad file says why and changes nothing (042). */
+  private async importSave(): Promise<void> {
+    const picked = await pickImport();
+    if (!picked) return;
+    if ('bad' in picked) return this.notice?.show(picked.bad);
+    this.ask('importSave', () => {
+      applyImport(this.saves, picked.good);
+      this.send('accept');
+      this.readSlot();
+      this.settingsScreen?.refresh();
+      this.notice?.show(SAVE_TEXT.imported);
+    });
   }
 
   /** The flow for the test hook. */
   report(): FlowReport {
-    return { state: this.machine.state, hasSave: this.slot.status !== 'none', saveStatus: this.slot.status, saves: this.saves.saves, notes: 0 };
+    return { state: this.machine.state, hasSave: this.slot.status !== 'none', saveStatus: this.slot.status, saves: this.saves.saves, notes: loadNotes().length };
   }
 
   get ui(): FlowUi {
-    const onTitle = this.title?.isVisible ?? false;
-    return { state: this.machine.state, title: onTitle ? (this.title?.ui ?? null) : null, card: this.card?.ui ?? null, settings: null, bindings: null, endCard: null, note: null, notice: this.notice?.current ?? null };
+    const t = this.title;
+    const s = this.settingsScreen;
+    return {
+      state: this.machine.state,
+      title: t?.isVisible ? t.ui : null,
+      card: this.card?.ui ?? null,
+      settings: s?.rows.length ? { rows: s.rows } : null,
+      bindings: s?.keyRows.length ? { rows: s.keyRows, waiting: s.waiting } : null,
+      endCard: null,
+      note: null,
+      notice: this.notice?.current ?? null,
+    };
   }
 }

@@ -11,26 +11,19 @@ import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
 
 /** What a click on the pause menu asks for. */
-export type PauseAction = 'mute' | 'volumeDown' | 'volumeUp' | 'resume';
+export type PauseAction = (typeof PAUSE_ROWS)[number];
 
-/** The sound settings the menu shows. */
-export interface SoundShown {
-  muted: boolean;
-  volume: number;
-}
-
-// The pause menu (020): Esc stops the world and shows this over it, a carved title
-// card and rows for the sound settings (on/off, master volume) and resume. Rows
-// light under the cursor and flash when pressed, like every menu.
+// The pause menu (020): Esc stops the world and shows this over it, a carved title card and rows: Resume, Settings
+// and Quit to title (042; the sound rows moved into Settings). Rows light under the cursor and flash when pressed,
+// like every menu. Whether it shows is the flow's to say (042).
 export class PauseMenuView {
   private readonly scene: Scene;
   private readonly dim: GameObjects.Rectangle;
   private readonly panel: GameObjects.Graphics;
   private readonly rows: GameObjects.Image[];
   private readonly texts: TextLine[] = [];
-  private readonly values: TextLine[];
   private readonly hover: RowHover;
-  private open = false;
+  private open = true;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -56,15 +49,7 @@ export class PauseMenuView {
     text(0, cardY + P.card.titleY, P.title, 'title', true);
     text(0, cardY + P.card.noteY, P.note, 'body', true);
     this.rows = rects.map((r) => fixed(addVector(scene, r.x, r.y, SPRITES.craftRow).setOrigin(0), DEPTHS.menu));
-    for (const [i, r] of rects.entries()) {
-      const name = PAUSE_ROWS[i] ?? 'resume';
-      text(r.x + P.label.x, r.y + P.label.y, P.rows[name], 'display');
-    }
-    const sound = rects[0] ?? first;
-    const volume = rects[1] ?? first;
-    this.values = [text(sound.x + P.value.x, sound.y + P.value.y, ''), text(volume.x + P.value.x, volume.y + P.value.y, '')];
-    text(volume.x + P.volume.down, volume.y + P.value.y, '−');
-    text(volume.x + P.volume.up, volume.y + P.value.y, '+');
+    for (const [i, r] of rects.entries()) text(r.x + P.label.x, r.y + P.label.y, P.rows[PAUSE_ROWS[i] ?? 'resume'], 'display');
     this.setOpen(false);
   }
 
@@ -73,7 +58,7 @@ export class PauseMenuView {
   }
 
   setOpen(open: boolean): void {
-    if (open === this.open && this.rows.length > 0 && this.dim.visible === open) return;
+    if (open === this.open) return;
     this.open = open;
     for (const o of [this.dim, this.panel, ...this.rows]) o.setVisible(open);
     for (const t of this.texts) t.setVisible(open);
@@ -83,13 +68,6 @@ export class PauseMenuView {
   /** While open, the whole screen is the menu: no press reaches the world. */
   overUi(): boolean {
     return this.open;
-  }
-
-  /** Shows the current sound settings. */
-  update(sound: SoundShown): void {
-    if (!this.open) return;
-    this.values[0]?.set(sound.muted ? 'Off' : 'On');
-    this.values[1]?.set(`${Math.round(sound.volume * 100)}%`);
   }
 
   /** The cursor is at a screen point: its row lights, with the hover sound on a new row. */
@@ -107,13 +85,6 @@ export class PauseMenuView {
     const r = rects[i];
     if (!r) return null;
     flashRow(this.scene, r.x, r.y);
-    const name = PAUSE_ROWS[i];
-    if (name === 'sound') return 'mute';
-    if (name === 'resume') return 'resume';
-    // The volume row: its − lowers and its + raises; anywhere else on the row does nothing.
-    const { down, up, hit } = PAUSE_MENU.volume;
-    if (Math.abs(x - (r.x + down)) <= hit) return 'volumeDown';
-    if (Math.abs(x - (r.x + up)) <= hit) return 'volumeUp';
-    return null;
+    return PAUSE_ROWS[i] ?? null;
   }
 }

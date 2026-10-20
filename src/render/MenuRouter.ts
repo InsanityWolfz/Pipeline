@@ -1,4 +1,4 @@
-import { SOUNDS, VOLUME_STEP } from '../data/sounds';
+import { SOUNDS } from '../data/sounds';
 import { usableInReach } from '../sim/foundryUse';
 import type { SimState } from '../sim/state';
 import type { BuildView } from './BuildView';
@@ -165,14 +165,11 @@ export class MenuRouter {
     inventory.setOpen(open);
   }
 
-  /** The pause menu's sound settings and resume. */
+  /** The pause menu's rows (042): Resume, Settings, Quit to title. */
   private pauseClick(action: PauseAction | null): void {
-    const { sound } = this.m;
     if (!action) return;
-    sound.play(SOUNDS.menuClick);
-    if (action === 'mute') sound.toggleMute();
-    else if (action === 'volumeDown') sound.nudgeVolume(-VOLUME_STEP);
-    else if (action === 'volumeUp') sound.nudgeVolume(VOLUME_STEP);
-    else this.m.host.resume();
+    this.m.sound.play(SOUNDS.menuClick);
+    if (action === 'resume') this.m.host.resume();
+    else this.m.host.pauseAction(action);
   }
 }

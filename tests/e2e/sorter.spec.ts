@@ -34,10 +34,10 @@ test('a sorter placed and flipped with the mouse, set from its picker, sends its
   await page.waitForTimeout(50);
   expect(await page.evaluate(() => window.__GAME__?.ui().buildTip)).toBe('sorter');
 
-  // R turns the ghost from right to down. Facing down it sorts left; F flips it to sort right, into the side crate.
+  // R turns the ghost from right to down. Facing down it sorts left; G flips it to sort right, into the side crate.
   await page.keyboard.press('r');
   await page.waitForTimeout(60);
-  await page.keyboard.press('f');
+  await page.keyboard.press('g');
   await page.waitForTimeout(60);
   const at = await tileOnCanvas(page, 12, 9);
   await page.mouse.click(at.x, at.y);

@@ -163,6 +163,8 @@ export function animFrames(anim: AnimDef): string[] {
 export const ENEMY_FX = {
   /** Fill colour of a hit flash (the palette's white). */
   flashColor: 'snow',
+  /** 042.10: with Flashes off, a hit flash is this short multiply tint instead of white. */
+  dimFlashColor: 'rock-light',
   /** The swipe telegraph: a faint arc of the full reach, filling in with the wind-up. */
   telegraphColor: 'rust',
   telegraphAlpha: 0.25,

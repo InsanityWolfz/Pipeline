@@ -1,9 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { lobAmmo } from '../../src/data/ammo';
 import { VIEW_WIDTH } from '../../src/data/config';
-import { PAUSE_MENU } from '../../src/data/hudLayout';
-import { VOLUME_STEP } from '../../src/data/sounds';
-import { craftMenuLines, pauseRows } from '../../src/render/craftMenuLayout';
+import { craftMenuLines } from '../../src/render/craftMenuLayout';
 import { boot, watchErrors } from './helpers';
 
 // Gathering, crafting and the three ammo, driven through window.__GAME__.
@@ -226,33 +224,5 @@ test('an arrow pierces two Husks (029), and a bomb burst kills one', async ({ pa
   expect(result.died).toBe(true);
   // The killing blow was the burst itself: there's no burn (029).
   expect(result.lastDamage).toBe(BOMB_BURST);
-  expect(errors).toEqual([]);
-});
-
-test('the pause menu toggles the sound and steps the volume, then resumes', async ({ page }) => {
-  const errors = watchErrors(page);
-  await boot(page, '?start=field');
-  await page.keyboard.press('Escape');
-  await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().paused)).toBe(true);
-  const box = await page.locator('canvas').boundingBox();
-  if (!box) throw new Error('no canvas');
-  const zoom = box.width / VIEW_WIDTH;
-  const rows = pauseRows();
-  const at = async (x: number, y: number) => {
-    await page.mouse.click(box.x + x * zoom, box.y + y * zoom);
-    await page.waitForTimeout(60);
-  };
-  const sound = () => page.evaluate(() => window.__GAME__?.sound());
-  const before = await sound();
-  const [soundRow, volumeRow, resumeRow] = rows;
-  if (!soundRow || !volumeRow || !resumeRow || !before) throw new Error('no rows');
-  await at(soundRow.x + 40, soundRow.y + 10);
-  expect((await sound())?.muted).toBe(!before.muted);
-  await at(volumeRow.x + PAUSE_MENU.volume.down, volumeRow.y + 10);
-  expect((await sound())?.volume).toBeCloseTo(Math.max(0, before.volume - VOLUME_STEP));
-  await at(volumeRow.x + PAUSE_MENU.volume.up, volumeRow.y + 10);
-  expect((await sound())?.volume).toBeCloseTo(before.volume);
-  await at(resumeRow.x + 40, resumeRow.y + 10);
-  expect(await page.evaluate(() => window.__GAME__?.ui().paused)).toBe(false);
   expect(errors).toEqual([]);
 });

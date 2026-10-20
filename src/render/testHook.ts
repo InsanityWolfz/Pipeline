@@ -1,6 +1,6 @@
 import type { SimSummary } from '../sim/summary';
 import type { Command } from '../sim/input';
-import type { FlowReport, FlowUi } from './flow/FlowScene';
+import type { FlowReport, FlowUi } from './flow/flowTypes';
 import type { CursorState } from './CursorView';
 import type { BottomHudState, HudPanelsState } from './HudView';
 import type { MadePopupShown } from './MadePopups';

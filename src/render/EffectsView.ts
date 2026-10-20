@@ -24,6 +24,7 @@ import { colorOf } from './color';
 import { burstTint, tintBurst } from './roundLook';
 import { addVector, addVectorSprite } from './vector/textures';
 import { UI_CAMERA } from './scale';
+import { settings } from './flow/settingsStore';
 
 // One-shot effects driven by sim events: corpses, pickup sparkles,
 // fire bursts, muzzle flashes, the punch's swoosh, the deposit swirl, and the KO fade. Nothing here feeds back into the sim.
@@ -54,10 +55,12 @@ export class EffectsView {
   play(events: SimEvents, player: { x: number; y: number }): void {
     for (const d of events.deaths) this.corpse(d.enemyId, d.x, d.y, d.facing === 'left', d.champion === true);
     for (const p of events.pickups) this.pickup(p.x, p.y);
-    for (const b of events.bursts) this.burst(b.x, b.y, b.radius, burstTint(b.damageType));
-    for (const s of events.shots) this.muzzle(s.x, s.y);
+    // 042.10: with Flashes off, no burst, muzzle or Split flash (nor the Cold Burst's frost tint on it).
+    const flashes = settings().flashes;
+    if (flashes) for (const b of events.bursts) this.burst(b.x, b.y, b.radius, burstTint(b.damageType));
+    if (flashes) for (const s of events.shots) this.muzzle(s.x, s.y);
     for (const m of events.melees) this.swoosh(m.x, m.y, m.angle);
-    for (const b of events.splits) this.splitFlash(b.x, b.y);
+    if (flashes) for (const b of events.splits) this.splitFlash(b.x, b.y);
     // Banking (entering the foundry, or a pylon deposit) swirls ley light off the
     // player. Through a door or travel, it waits out the fade so it shows in the new room.
     if (events.banks.length > 0) {

@@ -18,6 +18,13 @@ export interface CardUi {
   box: { x: number; y: number; w: number; h: number };
 }
 
+/** A button on a card and what it does. */
+export interface CardButton {
+  id: string;
+  label: string;
+  run: () => void;
+}
+
 /** One block of the card's text: its words and its style (a title in the display face, the body under it). */
 export interface CardLine {
   text: string;
@@ -36,6 +43,7 @@ export class CardView {
   private lines: string[] = [];
   private box = { x: 0, y: 0, w: 0, h: 0 };
   private open = false;
+  private actions = new Map<string, () => void>();
 
   constructor(scene: Scene, depth: number = DEPTHS.menu + 20) {
     this.scene = scene;
@@ -51,7 +59,12 @@ export class CardView {
   }
 
   /** Shows the card: its lines (wrapped to the card's width) and its buttons, centred on screen. */
-  show(lines: readonly CardLine[], buttons: readonly MenuRowSpec[], width: number = CARD.w): void {
+  show(lines: readonly CardLine[], buttons: readonly CardButton[], width: number = CARD.w): void {
+    this.actions = new Map(buttons.map((b) => [b.id, b.run]));
+    this.layout(lines, buttons.map((b) => ({ id: b.id, label: b.label })), width);
+  }
+
+  private layout(lines: readonly CardLine[], buttons: readonly MenuRowSpec[], width: number): void {
     for (const t of this.texts) t.destroy();
     const inner = width - 2 * CARD.pad;
     let y = 0;
@@ -95,9 +108,19 @@ export class CardView {
     if (this.open) this.menu.pointAt(x, y);
   }
 
-  /** The button a click picks, or null. */
-  click(x: number, y: number): string | null {
-    return this.open ? (this.menu.click(x, y)?.id ?? null) : null;
+  /** A click on the card: runs the button it picks; returns whether it picked one. */
+  click(x: number, y: number): boolean {
+    const id = this.open ? this.menu.click(x, y)?.id : undefined;
+    const run = id ? this.actions.get(id) : undefined;
+    run?.();
+    return run !== undefined;
+  }
+
+  /** Runs a button by id (Esc on a confirm runs its `no`); returns whether the card has it. */
+  press(id: string): boolean {
+    const run = this.open ? this.actions.get(id) : undefined;
+    run?.();
+    return run !== undefined;
   }
 
   get ui(): CardUi | null {

@@ -1,4 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
+import { boundLetter } from './keyHint';
 import { DEPTHS } from '../data/assets';
 import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
 import { RESTORE_ENTRANCE_PROMPT } from '../data/objectives';
@@ -40,8 +41,11 @@ export class IntakePrompt {
     const capped = sim.link.entrances.some((e) => !e.open);
     const on = shown === FOUNDRY_ROOM && sim.link.attuned && capped && next !== undefined && nodeReady(sim, next.id);
     this.setVisible(on);
-    this.shown = on ? `${RESTORE_ENTRANCE_PROMPT.key}: ${RESTORE_ENTRANCE_PROMPT.text}` : null;
+    const key = boundLetter(RESTORE_ENTRANCE_PROMPT.key);
+    this.shown = on ? `${key}: ${RESTORE_ENTRANCE_PROMPT.text}` : null;
     if (!on) return;
+    // 042: the bound key, which Settings may have changed.
+    this.key.set(key);
     // Full strength once E would open a cap's restore panel: a cap's diagram in reach.
     const capInReach = (diagramInReach(sim)?.entrance ?? null) !== null;
     const alpha = capInReach ? 1 : TUTORIAL_LAYOUT.promptDimAlpha;
