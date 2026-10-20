@@ -21,12 +21,13 @@ describe('crafting', () => {
     s.link.attuned = true;
     s.inventory = { wood: 1, shaft: 0, arrowhead: 1, rope: 1, arrow: 0 };
     craft(s, 'shaft');
-    expect(s.inventory.shaft).toBe(2);
+    // 046: Region 1's outputs doubled.
+    expect(s.inventory.shaft).toBe(4);
     craft(s, 'arrow');
-    expect(s.inventory).toMatchObject({ shaft: 1, arrowhead: 0, rope: 0, arrow: 4 });
+    expect(s.inventory).toMatchObject({ shaft: 3, arrowhead: 0, rope: 0, arrow: 8 });
     s.inventory = { casing: 1, fuse: 1, 'ley-dust': 1 };
     craft(s, 'bomb');
-    expect(s.inventory.bomb).toBe(2);
+    expect(s.inventory.bomb).toBe(4);
   });
 
   it('refuses bomb and ley bolt recipes until the tube attunes (012)', () => {

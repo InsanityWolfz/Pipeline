@@ -75,8 +75,8 @@ describe('the at-risk helper (031)', () => {
     craft(s, 'shaft');
     expect(itemRisks(s).wood).toEqual({ held: 1, safe: 1, atRisk: 0 });
     // What the crafts made was never banked: all of it is at risk.
-    expect(itemRisks(s).shaft).toEqual({ held: 6, safe: 0, atRisk: 6 });
-    expect(atRiskCounts(s)).toEqual({ shaft: 6 });
+    expect(itemRisks(s).shaft).toEqual({ held: 12, safe: 0, atRisk: 12 });
+    expect(atRiskCounts(s)).toEqual({ shaft: 12 });
   });
 
   it('lists only carried items: none held reads as nothing, whatever was banked', () => {

@@ -77,11 +77,14 @@ describe('a stage machine', () => {
     run(s, 1);
     expect(m.status).toBe('starved');
     expect(m.missing).toEqual(['rimestone']);
-    // Nothing takes its output: one batch fills it, and the next arrows wait on the conduit behind.
+    // Nothing takes its output: two batches fill it (046: OUTPUT_CAP 8), and the next arrows wait on the conduit behind.
     m.buffer = { arrow: 4, 'rimestone': 2 };
     const c = put<ConduitState>(s, 'conduit', 5, 5, 'right');
     run(s, FROST.craftTicks + 2);
     expect(m.output).toBe(4);
+    m.buffer = { arrow: 4, 'rimestone': 2 };
+    run(s, FROST.craftTicks + 2);
+    expect(m.output).toBe(8);
     m.buffer = { arrow: 4, 'rimestone': 1 };
     c.item = 'arrow';
     c.progress = CONDUIT_TICKS;

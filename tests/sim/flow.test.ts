@@ -92,7 +92,7 @@ describe('machines', () => {
     run(s, CUTTER.craftTicks - 1);
     expect(m.output).toBe(0);
     run(s, 1);
-    expect(m).toMatchObject({ crafting: false, output: 2, status: 'idle' });
+    expect(m).toMatchObject({ crafting: false, output: 4, status: 'idle' });
   });
 
   it('only start a craft whose whole output fits', () => {
@@ -129,10 +129,10 @@ describe('machines', () => {
     const s = foundry();
     const cutter = put<MachineState>(s, 'cutter', 4, 6, 'right');
     put(s, 'grinder', 5, 6, 'right');
-    cutter.output = 3;
+    cutter.output = 5;
     cutter.buffer = { wood: 1 };
     run(s, 5);
-    expect(cutter).toMatchObject({ output: 3, crafting: false, status: 'blocked' });
+    expect(cutter).toMatchObject({ output: 5, crafting: false, status: 'blocked' });
   });
 });
 
