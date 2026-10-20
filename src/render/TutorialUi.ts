@@ -5,6 +5,7 @@ import type { SimState } from '../sim/state';
 import { IntakePrompt } from './IntakePrompt';
 import { InteractPrompt } from './InteractPrompt';
 import { boundLetter } from './keyHint';
+import { RESTORE_ENTRANCE_PROMPT } from '../data/objectives';
 import { MadePopups } from './MadePopups';
 import { ObjectiveView } from './ObjectiveView';
 import { PromptView } from './PromptView';
@@ -69,9 +70,8 @@ export class TutorialUi {
     this.objective.update(sim);
     this.prompt.update(sim, shown);
     this.intake.update(sim, shown);
-    // 045: the in-reach E prompt, unless the objective's or the intake's already shows E lit.
-    const e = boundLetter('E');
-    const eShown = (this.prompt.shown?.key === e && this.prompt.shown.usable) || this.intake.lit;
-    this.interact.update(sim, shown, eShown);
+    // 045: the in-reach prompt, unless the objective's or the intake's already shows its key lit.
+    const lit = [...(this.prompt.shown?.usable ? [this.prompt.shown.key] : []), ...(this.intake.lit ? [boundLetter(RESTORE_ENTRANCE_PROMPT.key)] : [])];
+    this.interact.update(sim, shown, lit);
   }
 }

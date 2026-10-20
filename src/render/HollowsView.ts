@@ -28,12 +28,9 @@ export interface HollowsShown {
   summonCircle: boolean;
   /** Enemy bombs drawn: each one's id and how far its inner circle has grown (0..1). */
   enemyBombs: { id: number; progress: number }[];
-  /** 045 (043.5): the seal's hum is looping, and how many drops have played the collapse (FeelView's, merged in by gameUi). */
-  sealHum: boolean;
-  sealDrops: number;
 }
 
-export const NO_HOLLOWS_SHOWN: HollowsShown = { barrier: 'shut', barrierAlpha: 0, seal: 'down', sealAlpha: 0, altar: null, summonCircle: false, enemyBombs: [], sealHum: false, sealDrops: 0 };
+export const NO_HOLLOWS_SHOWN: HollowsShown = { barrier: 'shut', barrierAlpha: 0, seal: 'down', sealAlpha: 0, altar: null, summonCircle: false, enemyBombs: [] };
 
 const T = TILE_SIZE;
 const L = HOLLOWS_LOOK;
@@ -103,7 +100,7 @@ export class HollowsView {
     const summoning = here && sim.summoning !== null;
     this.drawSummon(summoning ? (sim.summoning?.ticks ?? 0) / HOLLOWS.arena.summonTicks : null);
     const bombs = this.drawBombs(sim, arenaHere);
-    this.shownState = { barrier: this.barrierState, barrierAlpha: alpha, seal: this.sealState, sealAlpha, altar: state, summonCircle: summoning, enemyBombs: bombs, sealHum: false, sealDrops: 0 };
+    this.shownState = { barrier: this.barrierState, barrierAlpha: alpha, seal: this.sealState, sealAlpha, altar: state, summonCircle: summoning, enemyBombs: bombs };
   }
 
   /** The barrier: a cyan curtain of light over the gap, its ripples climbing; collapsing, it flashes and fades. Returns its alpha. */

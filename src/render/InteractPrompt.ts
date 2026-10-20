@@ -29,9 +29,10 @@ export class InteractPrompt {
     this.key = new TextLine(scene, 0, 0, DEPTHS.prompt + 1, true).setVisible(false);
   }
 
-  /** `eShown`: the objective's or the intake's prompt already shows E at full strength. */
-  update(sim: SimState, shown: string, eShown: boolean): void {
-    const target = shown === sim.roomId && !eShown ? interactTarget(sim) : null;
+  /** `litKeys`: the keys the objective's and the intake's prompts already show at full strength (it gives way to them). */
+  update(sim: SimState, shown: string, litKeys: readonly string[]): void {
+    const found = shown === sim.roomId ? interactTarget(sim) : null;
+    const target = found && !litKeys.includes(boundLetter(INTERACT_PROMPTS[found.kind].key)) ? found : null;
     const prompt = target ? INTERACT_PROMPTS[target.kind] : null;
     this.cap.setVisible(target !== null);
     this.key.setVisible(target !== null);

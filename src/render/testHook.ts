@@ -130,6 +130,8 @@ export interface UiState {
   ports: PortShown[];
   /** The tutorial's key prompt as drawn (its key, the world point it floats over, whether the key works now), or null (027). */
   prompt: PromptState | null;
+  /** 045 (043.5): the forum seal's hum is looping, and how many drops have played the barrier's collapse. */
+  sealSound: { humming: boolean; drops: number };
   /** 045: the in-reach E prompt as drawn (what it's over, its bound key, the world point), or null. */
   interactPrompt: InteractPromptState | null;
   /** The arrow marker, over the intake for the conduit step (027) or over the ports for the port goal (028): the world point its tip bobs over, or null. */

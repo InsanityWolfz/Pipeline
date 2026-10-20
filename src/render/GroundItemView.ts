@@ -64,7 +64,7 @@ export class GroundItemView {
         d = {
           shadow: addVector(this.scene, 0, 0, SPRITES.itemShadow).setDepth(DEPTHS.shadow),
           item: addVector(this.scene, 0, 0, look.icon).setOrigin(0.5, 1),
-          name: g.burst ? new TextLine(this.scene, 0, 0, DEPTHS.worldUi - 3, true, 'float').set(look.name) : null,
+          name: g.burst ? new TextLine(this.scene, 0, 0, DEPTHS.burstName, true, 'float').set(look.name) : null,
         };
         this.drawn.set(g.id, d);
       }
@@ -99,7 +99,7 @@ export class GroundItemView {
     const visible = burst?.phase !== 'chest';
     d.shadow.setPosition(rx, ry).setVisible(visible);
     // Bursting, it rides over what stands round the chest, the player too.
-    d.item.setPosition(rx, Math.round(ry + GROUND_ITEM_LIFT - lift)).setDepth(burst ? DEPTHS.worldUi - 4 : ry).setVisible(visible);
+    d.item.setPosition(rx, Math.round(ry + GROUND_ITEM_LIFT - lift)).setDepth(burst ? DEPTHS.burstItem : ry).setVisible(visible);
     const named = d.name !== null && burst !== null && visible;
     if (d.name) {
       d.name.setVisible(named);
@@ -118,7 +118,7 @@ export class GroundItemView {
     const from = { x: image.x, y: image.y, scale: image.scaleX };
     // Over everything standing in the world (the tree it lay behind), just under the pickup sparkle and
     // particles at worldUi - 1 and the "+1" popup at worldUi.
-    image.setDepth(DEPTHS.worldUi - 2);
+    image.setDepth(DEPTHS.slideItem);
     this.sliding += 1;
     this.scene.tweens.addCounter({
       from: 0,

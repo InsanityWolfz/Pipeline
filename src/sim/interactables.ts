@@ -42,8 +42,12 @@ export function interactTarget(state: SimState): InteractTarget | null {
   if (altar) return altarState(state, altar.id) === 'dim' ? null : at('altar', tileCentre(altar));
   const pylon = pylonInReach(state);
   if (pylon) return dormant(state, pylon) ? null : at('pylon', tileCentre(pylon));
-  if (fixtureInReach(state, 'waystone')) return claimedPylons(state).length > 0 ? fixtureAt('waystone', state) : null;
-  for (const kind of ['stash', 'bench'] as const) if (fixtureInReach(state, kind)) return fixtureAt(kind, state);
+  for (const kind of ['waystone', 'stash', 'bench'] as const) {
+    const f = fixtureInReach(state, kind);
+    if (!f) continue;
+    if (kind === 'waystone' && claimedPylons(state).length === 0) return null;
+    return at(kind, state.sandbox && state.roomId === SANDBOX_ROOM ? tileCentre(SANDBOX.bench) : tileCentre(fixtureDef(f.id)));
+  }
   const cache = cacheInReach(state);
   if (cache) return isOpened(state, cache.id) ? null : at('cache', tileCentre(cache));
   const diagram = diagramInReach(state);
@@ -55,11 +59,4 @@ export function interactTarget(state: SimState): InteractTarget | null {
   }
   const node = state.building ? undefined : nodeInReach(state);
   return node ? at('node', node) : null;
-}
-
-/** A fixture's tile centre (044: the sandbox's bench stands at its own tile). */
-function fixtureAt(kind: 'waystone' | 'stash' | 'bench', state: SimState): InteractTarget | null {
-  if (state.sandbox && state.roomId === SANDBOX_ROOM) return kind === 'bench' ? at(kind, tileCentre(SANDBOX.bench)) : null;
-  const f = fixtureInReach(state, kind);
-  return f ? at(kind, tileCentre(fixtureDef(f.id))) : null;
 }

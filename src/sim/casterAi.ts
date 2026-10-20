@@ -7,19 +7,14 @@ import type { SimState } from './state';
 // The Wisp (009): aggros on screen (045; in range before), floats to its preferred distance (backing off
 // when the player crowds it), charges with its aim locked, then casts a slow orb.
 
-/** Whether the caster sees the player to wake (045): on screen like other enemies (017), or only within its aggro range. */
-export function castWakes(state: SimState, e: EnemyState, def: CasterDef): boolean {
-  const dist = Math.hypot(state.player.x - e.x, state.player.y - e.y);
-  return dist <= def.cast.aggroRange || (def.cast.wake === 'screen' && inAggroBox(e, state.player));
-}
-
 /** Advances a Wisp's mode and returns this tick's own move, px. */
 export function castThink(state: SimState, e: EnemyState, def: CasterDef): [number, number] {
   const { cast } = def;
   const dx = state.player.x - e.x;
   const dy = state.player.y - e.y;
   const dist = Math.hypot(dx, dy);
-  const idle = engage(state, e, castWakes(state, e, def));
+  // 045: on screen, like every other enemy (017).
+  const idle = engage(state, e, inAggroBox(e, state.player));
   if (idle) return idle;
   const attack = stepAttack(e, def, () => castOrb(state, e));
   if (attack) return attack;

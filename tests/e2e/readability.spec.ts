@@ -71,11 +71,11 @@ test("the Bulwark's sealed door shows the E prompt in reach, and the seal hums u
     }
   });
   await expect.poll(async () => (await ui(page))?.interactPrompt?.kind).toBe('arena-seal');
-  await expect.poll(async () => (await ui(page))?.hollows.sealHum).toBe(true);
+  await expect.poll(async () => (await ui(page))?.sealSound.humming).toBe(true);
   await page.evaluate(() => window.__GAME__?.step(1, { interact: true }));
   await expect.poll(async () => (await ui(page))?.interactPrompt?.kind ?? null).not.toBe('arena-seal');
-  await expect.poll(async () => (await ui(page))?.hollows.sealHum).toBe(false);
-  await expect.poll(async () => (await ui(page))?.hollows.sealDrops).toBe(1);
+  await expect.poll(async () => (await ui(page))?.sealSound.humming).toBe(false);
+  await expect.poll(async () => (await ui(page))?.sealSound.drops).toBe(1);
   expect(errors).toEqual([]);
 });
 
