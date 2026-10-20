@@ -93,7 +93,8 @@ test('arrows and bombs in two entrances, held 120 frames, fire 8 arrows and 3 bo
     if (!g || !h) throw new Error('no game');
     h.toHall();
     // Ley bolts selected and carried: the volley still fires first.
-    let s = g.step(1, { selectAmmo: 'ley-bolt' });
+    window.__helpers?.hold('ley-bolt');
+    let s = g.step(0);
     const next = s.tube.next;
     const bolts = s.inventory['ley-bolt'] ?? 0;
     const aim = { aimX: s.player.x + 200, aimY: s.player.y };

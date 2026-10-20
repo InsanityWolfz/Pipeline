@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-import { pickerEntries, pickerRows } from '../../src/render/foundryLayout';
 import {
   centre,
   clickBar,
@@ -8,13 +7,13 @@ import {
   enterFoundry,
   LEY_VEIN,
   pieceAt,
-  screenPoint,
   standStill,
   state,
   step,
   tileOnCanvas,
   toggleBuild,
 } from './foundryPage';
+import { slotPoint } from './gridPage';
 import { boot, watchErrors } from './helpers';
 
 // The foundry: the doorway, build mode with the mouse and keys, and a working
@@ -122,20 +121,18 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
   await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [below.x, below.y] as const);
   // walkTo stops a step short of the hopper's reach: one more step up closes it.
   await step(page, 1, { moveY: -1 });
-  const rows = pickerRows(pickerEntries({ item: null, count: 0 }, (await state(page)).inventory));
-  const crystal = rows.find((r) => r.itemId === 'ley-crystal');
-  if (!crystal) throw new Error('no ley crystal row');
-  const p = await screenPoint(page, crystal.x + 40, crystal.y + crystal.h / 2);
-  // Esc closes the picker: a click where its row was then does nothing.
+  // 047: E opens the hopper's screen, its own row over the grid inventory.
   const picker = () => page.evaluate(() => window.__GAME__?.ui().pickerOpen);
   await page.keyboard.press('e');
   await expect.poll(picker).toBe(true);
+  const p = await slotPoint(page, 'ley-crystal');
+  // Esc closes the screen: a click where the stack was then does nothing.
   await page.keyboard.press('Escape');
   await expect.poll(picker).toBe(false);
   await page.mouse.click(p.x, p.y);
   await page.waitForTimeout(50);
   expect(pieceAt(await step(page, 1), 8, 6)).toMatchObject({ kind: 'hopper', item: null });
-  // Ctrl+click puts the whole stack in (022); the picker stays open.
+  // Ctrl+click puts the whole stack in (022, 047); the screen stays open.
   await page.keyboard.press('e');
   await expect.poll(picker).toBe(true);
   await ctrlClick(page, p.x, p.y);
@@ -144,12 +141,8 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
   expect(await picker()).toBe(true);
   expect(pieceAt(filled, 8, 6)).toMatchObject({ kind: 'hopper', item: 'ley-crystal', count: 2 });
 
-  // E on the filled hopper offers to take it back out: the top row does it.
-  await page.keyboard.press('e');
-  await page.waitForTimeout(100);
-  const take = pickerRows(pickerEntries({ item: 'ley-crystal', count: 2 }, filled.inventory))[0];
-  if (take?.action !== 'take') throw new Error('no take-out row');
-  const t = await screenPoint(page, take.x + 40, take.y + take.h / 2);
+  // The hopper's own row shows its stack: Ctrl+click takes it back out (047).
+  const t = await slotPoint(page, 'ley-crystal', 'container');
   await ctrlClick(page, t.x, t.y);
   await page.waitForTimeout(50);
   const emptied = await step(page, 1);
@@ -157,9 +150,8 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
   expect(emptied.inventory['ley-crystal']).toBe(2);
 
   // And back in again.
-  await page.keyboard.press('e');
-  await page.waitForTimeout(100);
-  await ctrlClick(page, p.x, p.y);
+  const back = await slotPoint(page, 'ley-crystal');
+  await ctrlClick(page, back.x, back.y);
   await page.waitForTimeout(50);
   expect(pieceAt(await step(page, 1), 8, 6)).toMatchObject({ kind: 'hopper', item: 'ley-crystal', count: 2 });
 
@@ -171,16 +163,21 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
   // Just below the crate, well in reach (USE_REACH).
   const beside = { x: centre(12, 7).x, y: centre(12, 7).y - 8 };
   await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [beside.x, beside.y] as const);
-  const taken = await step(page, 1, { interact: true });
-  expect(taken.inventory['ley-bolt']).toBeGreaterThanOrEqual(5);
+  // 047: E opens the crate's screen; Ctrl+click on its bolts takes the stack.
+  await page.keyboard.press('e');
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().inventory))?.mode).toBe('crate');
+  const bolts = await slotPoint(page, 'ley-bolt', 'container');
+  await ctrlClick(page, bolts.x, bolts.y);
+  await expect.poll(async () => (await step(page, 1)).inventory['ley-bolt'] ?? 0).toBeGreaterThanOrEqual(5);
+  await page.keyboard.press('Escape');
 
   // The tube is quiet in the foundry (015): firing there does nothing, out in the hall it fires.
-  await step(page, 1, { selectAmmo: 'ley-bolt' });
-  const quiet = await step(page, 1, { fire: true, aimX: beside.x, aimY: beside.y + 200 });
+  await page.evaluate((id) => window.__helpers?.hold(id), 'ley-bolt');
+  const quiet = await step(page, 1, { fire: true, use: true, aimX: beside.x, aimY: beside.y + 200 });
   expect(quiet.arrows).toEqual([]);
   await page.evaluate(() => window.__helpers?.toHall());
   const out = await state(page);
-  const shot = await step(page, 1, { fire: true, aimX: out.player.x + 200, aimY: out.player.y });
+  const shot = await step(page, 1, { use: true, aimX: out.player.x + 200, aimY: out.player.y });
   expect(shot.arrows.map((a) => a.ammoId)).toEqual(['ley-bolt']);
   expect(errors).toEqual([]);
 });

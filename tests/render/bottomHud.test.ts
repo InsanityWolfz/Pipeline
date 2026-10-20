@@ -5,10 +5,10 @@ import { TEXT_STYLES } from '../../src/data/fonts';
 import { BUILD_BAR, PIECE_CATEGORIES, pieceDef } from '../../src/data/pieces';
 import { BUILD_BAR_LAYOUT, CRAFT_MENU_LAYOUT, HUD_LAYOUT } from '../../src/data/hudLayout';
 import { BUILD_STRIP } from '../../src/data/buildStrip';
-import { SLOT_AMMOS } from '../../src/data/tube';
+import { CARRIED_SLOTS } from '../../src/data/tube';
 import { hotbarBox, hotbarCells, tubeSlotBox, tubeSlotUnits, type ScreenBox } from '../../src/render/bottomHud';
-import { craftMenuLines, craftPanelAt } from '../../src/render/craftMenuLayout';
-import { CRAFT_COLUMNS } from '../../src/data/craftColumns';
+import { craftPanelAt, craftTabBoxes, craftTabRows } from '../../src/render/craftMenuLayout';
+import { CRAFT_TABS } from '../../src/data/craftTabs';
 import { buildBarBox, buildBarCells, buildBarDividers, buildBarGroups } from '../../src/render/foundryLayout';
 
 // The bottom HUD's layout (025): the hotbar row and the tube slot centred, the slot
@@ -18,10 +18,10 @@ const centre = (b: ScreenBox) => b.x + b.w / 2;
 const inView = (b: ScreenBox) => b.x >= 0 && b.y >= 0 && b.x + b.w <= VIEW_WIDTH && b.y + b.h <= VIEW_HEIGHT;
 
 describe('the bottom HUD layout', () => {
-  it('centres the four hotbar cells (038: key 4 for landmines), in key order, margin px above the bottom', () => {
+  it('centres the carried bar\'s five cells (047: keys 1–5), in key order, margin px above the bottom', () => {
     const cells = hotbarCells();
-    expect(cells.map((c) => c.ammoId)).toEqual([...SLOT_AMMOS]);
-    expect(cells).toHaveLength(4);
+    expect(cells.map((c) => c.slot)).toEqual([0, 1, 2, 3, 4]);
+    expect(cells).toHaveLength(CARRIED_SLOTS);
     const row = hotbarBox();
     expect(Math.abs(centre(row) - VIEW_WIDTH / 2)).toBeLessThanOrEqual(1);
     expect(row.y + row.h).toBe(VIEW_HEIGHT - HUD_LAYOUT.margin);
@@ -150,27 +150,30 @@ describe('the crafting menu with labels (026)', () => {
     // A name sits under its icon, inside the row.
     expect(L.labelY).toBeGreaterThanOrEqual(L.iconY + L.iconSize);
     expect(L.labelY + TEXT_STYLES.label.lineHeight).toBeLessThanOrEqual(L.rowHeight);
-    const lines = craftMenuLines();
-    for (const [i, line] of lines.entries()) {
-      const h = line.kind === 'header' ? L.headerHeight : L.rowHeight;
-      expect(line.y + h).toBeLessThanOrEqual(panel.y + L.height);
-      expect(line.x + L.rowWidth).toBeLessThanOrEqual(panel.x + L.width);
-      // Down a column, each line below the last.
-      const next = lines[i + 1];
-      if (next && next.x === line.x) expect(next.y).toBeGreaterThanOrEqual(line.y + h);
+    for (const [tab] of CRAFT_TABS.entries()) {
+      const rows = craftTabRows(tab);
+      for (const [i, row] of rows.entries()) {
+        expect(row.y + L.rowHeight).toBeLessThanOrEqual(panel.y + L.height);
+        expect(row.x + L.rowWidth).toBeLessThanOrEqual(panel.x + L.width);
+        const next = rows[i + 1];
+        if (next) expect(next.y).toBeGreaterThanOrEqual(row.y + L.rowHeight);
+      }
     }
   });
 
-  it('lays its groups in two columns, as one is too tall (038.4): Arrows and Bombs, then Ley and Landmines, side by side', () => {
-    const L = CRAFT_MENU_LAYOUT;
-    expect(CRAFT_COLUMNS).toEqual([
-      ['arrow', 'bomb'],
-      ['ley-bolt', 'landmine'],
-    ]);
-    const headers = craftMenuLines().filter((l) => l.kind === 'header');
-    const xs = [...new Set(headers.map((h) => h.x))];
-    expect(xs).toHaveLength(2);
-    expect((xs[1] ?? 0) - (xs[0] ?? 0)).toBe(L.rowWidth + L.columnGap);
-    expect(headers.filter((h) => h.x === xs[1]).map((h) => h.id)).toEqual(['ley-bolt', 'landmine']);
+  it('stays clear of the intake bar (047)', () => {
+    expect(craftPanelAt().y + CRAFT_MENU_LAYOUT.height).toBeLessThan(tubeSlotBox(3).y);
+  });
+
+  it('has a tab per ammo family down its left, clear of the rows (047)', () => {
+    const tabs = craftTabBoxes();
+    expect(tabs.map((t) => t.label)).toEqual(['Arrows', 'Bombs', 'Ley', 'Landmines']);
+    const panel = craftPanelAt();
+    const rowsLeft = Math.min(...CRAFT_TABS.flatMap((_, i) => craftTabRows(i).map((r) => r.x)));
+    for (const t of tabs) {
+      expect(t.x + t.w).toBeLessThanOrEqual(rowsLeft);
+      expect(t.x).toBeGreaterThanOrEqual(panel.x);
+      expect(t.y + t.h).toBeLessThanOrEqual(panel.y + CRAFT_MENU_LAYOUT.height);
+    }
   });
 });

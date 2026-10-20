@@ -9,7 +9,7 @@ import { tileCentre } from '../../src/sim/tiles';
 import { hasRoundToFire } from '../../src/sim/tube';
 import { hudActive, nextPress, rotate } from '../../src/sim/volley';
 import type { SimState } from '../../src/sim/state';
-import { fireAt, HALL, movePlayer, run, runUntil } from './fight';
+import { HALL, hold, movePlayer, run, runUntil, useAt, volleyAt } from './fight';
 import { foundry, put, stepOutside } from './foundryKit';
 
 // The intake's three entrances (024): each mouth tile is an entrance with its own
@@ -164,7 +164,7 @@ describe('the volley', () => {
     ];
     for (const [rounds, want] of cases) {
       const s = volley(rounds);
-      run(s, 1, fireAt(600, 400));
+      run(s, 1, volleyAt(600, 400));
       expect(arrowAngles(s)).toEqual(want);
       expect(s.tube.shotCount).toBe(want.length);
       expect(s.tube.fromReservoir).toBe(true);
@@ -174,10 +174,10 @@ describe('the volley', () => {
 
   it('each round costs one from its own entrance, and an empty entrance is skipped', () => {
     const s = volley([['arrow', 5], null, ['arrow', 1]]);
-    run(s, 1, fireAt(600, 400));
+    run(s, 1, volleyAt(600, 400));
     expect(s.link.entrances.map((e) => [e.ammoId, e.count])).toEqual([['arrow', 4], [null, 0], [null, 0]]);
     // The east entrance ran dry, so the next press is a single arrow from the west one.
-    runUntil(s, (x) => x.tube.shotCount > 0, ARROW_TICKS + 2, fireAt(600, 400));
+    runUntil(s, (x) => x.tube.shotCount > 0, ARROW_TICKS + 2, volleyAt(600, 400));
     expect(s.tube.shotCount).toBe(1);
     expect(s.link.entrances[0]?.count).toBe(3);
   });
@@ -185,7 +185,7 @@ describe('the volley', () => {
   it('two bomb entrances land side by side, LOB_SPACING apart across the aim point', () => {
     expect(LOB_SPACING).toBe(24);
     const s = volley([['bomb', 3], ['bomb', 3], null]);
-    run(s, 1, fireAt(550, 400));
+    run(s, 1, volleyAt(550, 400));
     expect(s.bombs).toHaveLength(2);
     const landings = s.bombs.map((b) => [Math.round(b.toX * 100) / 100, Math.round(b.toY * 100) / 100]).sort((a, b) => (a[1] ?? 0) - (b[1] ?? 0));
     expect(landings).toEqual([
@@ -197,7 +197,7 @@ describe('the volley', () => {
 
   it('two arrows and a bomb fire two angled arrows and one straight bomb', () => {
     const s = volley([['arrow', 3], ['bomb', 3], ['arrow', 3]]);
-    run(s, 1, fireAt(550, 400));
+    run(s, 1, volleyAt(550, 400));
     expect(arrowAngles(s)).toEqual([-7.5, 7.5]);
     expect(s.bombs).toHaveLength(1);
     expect(s.bombs[0]).toMatchObject({ toX: 550, toY: 400 });
@@ -212,7 +212,7 @@ describe('the volley', () => {
     for (let t = 0; t < 120; t++) {
       const before = s.arrows.length;
       const bombsBefore = s.bombs.length;
-      run(s, 1, fireAt(600, 400));
+      run(s, 1, volleyAt(600, 400));
       const fresh = s.arrows.slice(before);
       if (fresh.length > 0) {
         expect(fresh).toHaveLength(2);
@@ -230,9 +230,9 @@ describe('the volley', () => {
 
   it('an entrance on cooldown does not hold back a ready one', () => {
     const s = volley([['bomb', 5], ['arrow', 5], null]);
-    run(s, 1, fireAt(600, 400));
+    run(s, 1, volleyAt(600, 400));
     expect(s.link.entrances.map((e) => e.cooldown)).toEqual([BOMB_TICKS, ARROW_TICKS, 0]);
-    run(s, ARROW_TICKS, fireAt(600, 400));
+    run(s, ARROW_TICKS, volleyAt(600, 400));
     // The arrow entrance fired again on its own; the bomb entrance is still cooling down.
     expect(s.tube.shotCount).toBe(1);
     expect(s.link.entrances.map((e) => e.count)).toEqual([4, 3, 0]);
@@ -242,17 +242,17 @@ describe('the volley', () => {
 
   it('each entrance counts its cooldown down every tick, fire held or not', () => {
     const s = volley([null, ['bomb', 5], null]);
-    run(s, 1, fireAt(600, 400));
+    run(s, 1, volleyAt(600, 400));
     run(s, 10);
     expect(s.link.entrances[1]?.cooldown).toBe(BOMB_TICKS - 10);
   });
 
   it('an entrance keeps its cooldown across an ammo change: a bomb after its last arrow waits out the arrow pace', () => {
     const s = volley([null, ['arrow', 1], null]);
-    run(s, 1, fireAt(600, 400));
+    run(s, 1, volleyAt(600, 400));
     expect(s.link.entrances[1]).toMatchObject({ ammoId: null, count: 0, cooldown: ARROW_TICKS });
     Object.assign(s.link.entrances[1] as EntranceState, { ammoId: 'bomb', count: 2 });
-    const waited = runUntil(s, (x) => x.bombs.length > 0, ARROW_TICKS * 2, fireAt(600, 400));
+    const waited = runUntil(s, (x) => x.bombs.length > 0, ARROW_TICKS * 2, volleyAt(600, 400));
     expect(waited).toBe(ARROW_TICKS);
     expect(s.link.entrances[1]?.cooldown).toBe(BOMB_TICKS);
   });
@@ -261,7 +261,7 @@ describe('the volley', () => {
     const s = volley([['arrow', 9], null, ['arrow', 9]]);
     for (let t = 0; t < ARROW_TICKS * 4; t++) {
       const before = s.arrows.length;
-      run(s, 1, fireAt(600, 400));
+      run(s, 1, volleyAt(600, 400));
       const fresh = s.arrows.slice(before);
       if (fresh.length === 0) continue;
       const angles = fresh.map((a) => Math.round(((Math.atan2(a.dy, a.dx) * 180) / Math.PI) * 10) / 10).sort((a, b) => a - b);
@@ -270,44 +270,41 @@ describe('the volley', () => {
     expect(s.link.entrances.map((e) => e.count)).toEqual([5, 0, 5]);
   });
 
-  it('each entrance shot raises the tube interval to its fireTicks, so the first carried round after waits it out', () => {
+  it('a volley never holds back a carried round: right click keeps its own pace (047)', () => {
     const s = volley([null, ['bomb', 1], null]);
     s.inventory = { arrow: 5 };
-    s.tube.ammoId = 'arrow';
-    run(s, 1, fireAt(600, 400));
+    hold(s, 'arrow');
+    run(s, 1, volleyAt(600, 400));
     expect(s.bombs).toHaveLength(1);
-    expect(s.tube.fireCooldown).toBe(BOMB_TICKS);
-    // The entrances are dry: the next round is a carried arrow, but not before the bomb's own pace.
-    expect(nextPress(s).kind).toBe('carried');
-    const waited = runUntil(s, (x) => x.arrows.length > 0, BOMB_TICKS * 2, fireAt(600, 400));
-    expect(waited).toBe(BOMB_TICKS);
+    expect(s.tube.fireCooldown).toBe(0);
+    run(s, 1, useAt(600, 400));
+    expect(s.arrows).toHaveLength(1);
     expect(s.inventory.arrow).toBe(4);
   });
 
   it('a volley fires straight away, whatever the carried rounds left on the tube interval', () => {
     const s = volley([null, null, null]);
     s.inventory = { arrow: 1 };
-    s.tube.ammoId = 'arrow';
-    run(s, 1, fireAt(600, 400));
+    hold(s, 'arrow');
+    run(s, 1, useAt(600, 400));
     expect(s.tube.fireCooldown).toBe(ARROW_TICKS);
     Object.assign(s.link.entrances[1] as EntranceState, { ammoId: 'bomb', count: 1 });
-    run(s, 1, fireAt(600, 400));
+    run(s, 1, volleyAt(600, 400));
     expect(s.bombs).toHaveLength(1);
   });
 
   it('fires whatever ammo the entrances hold, whatever is selected', () => {
     const s = volley([null, ['bomb', 2], null]);
-    s.tube.ammoId = 'arrow';
-    run(s, 1, fireAt(550, 400));
+    hold(s, 'arrow');
+    run(s, 1, volleyAt(550, 400));
     expect(s.bombs).toHaveLength(1);
     expect(s.link.entrances[1]?.count).toBe(1);
   });
 
-  it('fires the volley first, then a carried round of the selected ammo, alone; then melee (028)', () => {
+  it('left click fires the volley, then punches once the entrances are dry, never a carried round (028, 047)', () => {
     const s = volley([['arrow', 1], null, ['bomb', 1]]);
     s.inventory = { arrow: 1, bomb: 4 };
-    s.tube.ammoId = 'arrow';
-    // Carried arrows of the selected ammo, but an entrance holds a round: the volley.
+    hold(s, 'arrow');
     expect(nextPress(s)).toEqual({
       kind: 'volley',
       rounds: [
@@ -317,25 +314,17 @@ describe('the volley', () => {
     });
     expect(hudActive(s).kind).toBe('volley');
     expect(summarize(s).tube.next).toBe('volley');
-    run(s, 1, fireAt(600, 400));
+    run(s, 1, volleyAt(600, 400));
     expect(s.tube.shotCount).toBe(2);
     expect(s.tube.fromReservoir).toBe(true);
     expect(s.link.entrances.map((e) => e.count)).toEqual([0, 0, 0]);
-    expect(s.inventory.arrow).toBe(1);
-    // The entrances are empty: the carried arrow, alone.
-    expect(nextPress(s)).toEqual({ kind: 'carried', ammoId: 'arrow', count: 1 });
-    expect(hudActive(s)).toEqual(nextPress(s));
-    expect(summarize(s).tube.next).toBe('carried');
-    runUntil(s, (x) => x.tube.shotCount > 0, BOMB_TICKS + 2, fireAt(600, 400));
-    expect(s.tube.shotCount).toBe(1);
-    expect(s.tube.fromReservoir).toBe(false);
-    expect(s.inventory.arrow ?? 0).toBe(0);
-    // Carried bombs aren't the selected ammo: nothing left to fire, so melee.
+    // The entrances are empty: carried arrows and bombs stay put, and the press punches.
     expect(nextPress(s)).toEqual({ kind: 'melee' });
     expect(hudActive(s)).toEqual({ kind: 'melee' });
+    expect(summarize(s).tube.next).toBe('melee');
     expect(hasRoundToFire(s)).toBe(false);
-    run(s, ARROW_TICKS + 1, fireAt(600, 400));
-    expect(s.inventory.bomb).toBe(4);
+    run(s, ARROW_TICKS + 1, volleyAt(600, 400));
+    expect(s.inventory).toMatchObject({ arrow: 1, bomb: 4 });
     expect(s.tube.meleeCooldown).toBeGreaterThan(0);
     expect(s.tube.meleeCooldown).toBeLessThanOrEqual(MELEE.cooldownTicks);
   });
@@ -349,7 +338,7 @@ describe('the volley', () => {
   it('three ley bolt lines into the three entrances fire three bolts per press', () => {
     const s = opened();
     s.inventory = {};
-    s.tube.ammoId = 'ley-bolt';
+    hold(s, 'ley-bolt');
     // Three columns up into the three entrances: hopper → grinder → focuser → conduit.
     for (const e of INTAKE.entrances) {
       const h = put<HopperState>(s, 'hopper', e.tx, 4, 'up');
@@ -362,7 +351,7 @@ describe('the volley', () => {
     runUntil(s, (x) => x.link.entrances.every((e) => e.count >= 3), 1500);
     stepOutside(s);
     movePlayer(s, 400, 400);
-    run(s, 1, fireAt(600, 400));
+    run(s, 1, volleyAt(600, 400));
     expect(s.tube.shotCount).toBe(3);
     expect(arrowAngles(s)).toEqual([-15, 0, 15]);
     expect(s.arrows.every((a) => a.ammoId === 'ley-bolt')).toBe(true);
@@ -391,7 +380,7 @@ describe('the volley', () => {
       run(s, 200);
       s.inventory = {};
       stepOutside(s);
-      run(s, 300, (x) => ({ ...fireAt(x.player.x + 120 + (x.tick % 40), x.player.y + 20), moveX: x.tick % 90 < 45 ? 1 : -1 }));
+      run(s, 300, (x) => ({ ...volleyAt(x.player.x + 120 + (x.tick % 40), x.player.y + 20), moveX: x.tick % 90 < 45 ? 1 : -1 }));
       return summarize(s);
     };
     const a = play();

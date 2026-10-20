@@ -7,7 +7,7 @@ import { nextFloat } from '../../src/sim/rng';
 import { createSim, resetWorld, tileCentre } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { DYING_TICKS } from '../../src/data/player';
-import { arena, at, FIELD_WALL, runUntilKo, HUSK, placeHusk, PLAYER_AT, run, SEED, SWIPE_LANDS } from './fight';
+import { arena, at, FIELD_WALL, hold, HUSK, placeHusk, PLAYER_AT, run, runUntilKo, SEED, SWIPE_LANDS } from './fight';
 
 const { damage, knockback, knockTicks } = HUSK.swipe;
 
@@ -84,9 +84,9 @@ describe('player health', () => {
 
   it('keeps firing through a hit', () => {
     const s = arena();
-    run(s, 1, { fire: true, aimX: 0, aimY: PLAYER_AT.y });
+    run(s, 1, { use: true, aimX: 0, aimY: PLAYER_AT.y });
     hitFromEast(s);
-    run(s, 15, { fire: true, aimX: 0, aimY: PLAYER_AT.y });
+    run(s, 15, { use: true, aimX: 0, aimY: PLAYER_AT.y });
     expect(s.inventory.arrow).toBe(28);
   });
 });
@@ -122,13 +122,13 @@ describe('death and the KO (011)', () => {
     for (const e of s.enemies) expect(idsBefore).not.toContain(e.id);
   });
 
-  it('also resets nodes, bombs, the harvest and the ammo selection, but keeps the crafted set', () => {
+  it('also resets nodes, bombs and the harvest, but keeps the crafted set and the carried bar', () => {
     const s = koSim();
     const fresh = createSim(SEED);
     s.nodes = fresh.nodes.map((n) => ({ ...n, uses: 0, regrow: 99 }));
     s.inventory.bomb = 2;
-    run(s, 1, { selectAmmo: 'bomb' });
-    run(s, 1, { fire: true, aimX: PLAYER_AT.x - 150, aimY: PLAYER_AT.y });
+    hold(s, 'bomb');
+    run(s, 1, { use: true, aimX: PLAYER_AT.x - 150, aimY: PLAYER_AT.y });
     expect(s.bombs).toHaveLength(1);
     s.harvest = { nodeId: 0, progress: 5 };
     s.crafted = ['shaft'];
@@ -136,7 +136,8 @@ describe('death and the KO (011)', () => {
     expect(s.nodes).toEqual(fresh.nodes);
     expect(s.bombs).toEqual([]);
     expect(s.harvest).toBeNull();
-    expect(s.tube.ammoId).toBe('arrow');
+    // 047.3: the carried bar keeps its slots, the selected one too.
+    expect(s.hotbar.slots).toContain('bomb');
     expect(s.crafted).toEqual(['shaft']);
   });
 

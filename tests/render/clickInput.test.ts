@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clickMods, isLeftPress } from '../../src/render/clickInput';
+import { clickMods, heldButtons, isLeftPress } from '../../src/render/clickInput';
 import { clickAmount } from '../../src/render/menuRequests';
 
 // 022 review: on macOS Phaser reports Ctrl+left-click as a right click, so a left
@@ -27,5 +27,17 @@ describe('clickMods and clickAmount', () => {
     expect(clickAmount(clickMods({ shiftKey: true, ctrlKey: false }))).toBe('half');
     expect(clickAmount(clickMods({ shiftKey: false, ctrlKey: true }))).toBe('all');
     expect(clickAmount(clickMods({ shiftKey: true, ctrlKey: true }))).toBe('all');
+  });
+});
+
+describe('heldButtons (047: left fires the volley, right uses the carried item)', () => {
+  it("reads a Mac's Ctrl+left-click as the left button, though Phaser calls it a right click", () => {
+    expect(heldButtons({ buttons: 1, ctrlKey: true }, false, true)).toEqual({ left: true, right: false });
+    expect(heldButtons({ buttons: 2, ctrlKey: true }, false, true)).toEqual({ left: false, right: true });
+  });
+
+  it("goes by Phaser's buttons without Ctrl, or without an event", () => {
+    expect(heldButtons({ buttons: 2, ctrlKey: false }, true, false)).toEqual({ left: true, right: false });
+    expect(heldButtons(undefined, false, true)).toEqual({ left: false, right: true });
   });
 });

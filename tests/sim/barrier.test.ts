@@ -7,7 +7,7 @@ import { createEnemy } from '../../src/sim/enemies';
 import { createSim } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
-import { arena, die, fireAt, movePlayer, run, runUntil } from './fight';
+import { arena, die, fireAt, hold, movePlayer, run, runUntil } from './fight';
 
 // Stonefall Hollows' ley barrier (034): it seals the gap in the region's eastern cliffs
 // against the player, enemies and every projectile until the shrine's pylon is claimed,
@@ -49,7 +49,7 @@ describe('the Hollows barrier', () => {
     expect(lastX).toBeGreaterThanOrEqual(39 * 32);
     const b = arena(undefined, OUTSIDE);
     b.inventory = { bomb: 1 };
-    b.tube.ammoId = 'bomb';
+    hold(b, 'bomb');
     run(b, 1, fireAt(OUTSIDE.x - 150, OUTSIDE.y));
     runUntil(b, () => b.events.bursts.length > 0, 120);
     expect(b.events.bursts[0]?.x).toBeGreaterThanOrEqual(39 * 32);

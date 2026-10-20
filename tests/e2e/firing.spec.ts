@@ -18,15 +18,15 @@ async function boot(page: Page): Promise<void> {
   await page.evaluate(() => window.__GAME__?.step(0));
 }
 
-/** Holds fire for `frames` ticks, aimed `dx, dy` px from the player's feet. */
-function fire(page: Page, frames: number, dx: number, dy: number) {
+/** Holds right click (047: the carried bar's selected item) for `frames` ticks, aimed `dx, dy` px from the player's feet; `left` holds left click instead. */
+function fire(page: Page, frames: number, dx: number, dy: number, left = false) {
   return page.evaluate(
-    ({ frames, dx, dy }) => {
+    ({ frames, dx, dy, left }) => {
       const p = window.__GAME__?.getState().player;
       if (!p) throw new Error('no game');
-      return window.__GAME__?.step(frames, { fire: true, aimX: p.x + dx, aimY: p.y + dy });
+      return window.__GAME__?.step(frames, { [left ? 'fire' : 'use']: true, aimX: p.x + dx, aimY: p.y + dy });
     },
-    { frames, dx, dy },
+    { frames, dx, dy, left },
   );
 }
 
@@ -74,13 +74,13 @@ test('arrows stop at a wall before their range', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test('the tube punches once the carried arrows run out (023)', async ({ page }) => {
+test('left click punches with the intake dry once the carried arrows run out (023, 047)', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page);
   const emptied = await fire(page, 15 * 29 + 1, 0, 100);
   expect(emptied?.inventory.arrow).toBe(0);
   // The punch waits out the last shot's interval, then lands on the 15th tick.
-  const punched = await fire(page, 15, 0, 100);
+  const punched = await fire(page, 15, 0, 100, true);
   expect(punched?.events.melees).toHaveLength(1);
   expect(punched?.events.shots).toHaveLength(0);
   expect(punched?.tube).toMatchObject({ meleeCooldown: MELEE.cooldownTicks, firing: false });

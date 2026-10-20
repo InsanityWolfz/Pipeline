@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { lobAmmo } from '../../src/data/ammo';
 import { VIEW_WIDTH } from '../../src/data/config';
-import { craftMenuLines } from '../../src/render/craftMenuLayout';
+import { craftTabRows } from '../../src/render/craftMenuLayout';
 import { boot, watchErrors } from './helpers';
 
 // Gathering, crafting and the three ammo, driven through window.__GAME__.
@@ -87,7 +87,7 @@ test('the crafting menu keeps the world running, Esc pauses it, and the menu cra
     window.__helpers?.harvest(tree, 1);
   }, TREE);
   await page.keyboard.press('c');
-  const row = craftMenuLines().find((l) => l.kind === 'recipe' && l.id === 'shaft');
+  const row = craftTabRows(0).find((l) => l.id === 'shaft');
   const box = await page.locator('canvas').boundingBox();
   if (!row || !box) throw new Error('no shaft row or canvas');
   const zoom = box.width / VIEW_WIDTH;
@@ -137,11 +137,12 @@ test('an arrow pierces two Husks (029), and a bomb burst kills one', async ({ pa
       const p = s.player;
       return [...s.enemies.filter((e) => e.group === 'field')].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
     };
-    const carried = () => s.inventory[s.tube.ammo] ?? 0;
+    const carried = () => s.inventory[(s.hotbar.slots[s.hotbar.selected] ?? '')] ?? 0;
 
     // Pierce (029: arrows pierce, ley bolts don't): back away from the two chasing Husks and fire only once the
     // farther one stands on the line through the nearer one, so one arrow can pass through both.
-    s = g.step(1, { selectAmmo: 'arrow' });
+    window.__helpers?.hold('arrow');
+    s = g.step(0);
     let pierced = 0;
     for (let t = 0; t < 3000 && pierced < 2 && s.enemies.filter((e) => e.group === 'field').length === 2; t++) {
       const p = s.player;
@@ -168,7 +169,7 @@ test('an arrow pierces two Husks (029), and a bomb burst kills one', async ({ pa
       s = g.step(1, {
         moveX: back ? away.moveX : closeIn ? sign(nx) : strafe ? sign(-ny * turn) : 0,
         moveY: back ? away.moveY : closeIn ? sign(ny) : strafe ? sign(nx * turn) : 0,
-        fire: lined && carried() > 0,
+        use: lined && carried() > 0,
         aimX: near.x,
         aimY: near.y,
       });
@@ -180,7 +181,8 @@ test('an arrow pierces two Husks (029), and a bomb burst kills one', async ({ pa
     }
 
     // Burst kill (029: no burn): bring the nearest Husk to a bomb's burst or less with arrows (041: 12), then bomb it.
-    s = g.step(1, { selectAmmo: 'arrow' });
+    window.__helpers?.hold('arrow');
+    s = g.step(0);
     const target = nearest();
     if (!target) throw new Error(`no Husk left; pierced ${pierced}, tick ${s.tick}`);
     const id = target.id;
@@ -190,11 +192,12 @@ test('an arrow pierces two Husks (029), and a bomb burst kills one', async ({ pa
       if (!e) break;
       // One arrow at a time, so the health steps down by an arrow's 14 (041).
       const before = health();
-      s = g.step(1, { fire: true, aimX: e.x, aimY: e.y });
+      s = g.step(1, { use: true, aimX: e.x, aimY: e.y });
       for (let w = 0; w < 30 && health() === before && s.arrows.length > 0; w++) s = g.step(1);
     }
     const beforeBomb = health();
-    s = g.step(1, { selectAmmo: 'bomb' });
+    window.__helpers?.hold('bomb');
+    s = g.step(0);
     let bursts = 0;
     let lastDamage = 0;
     let died = false;
@@ -208,7 +211,7 @@ test('an arrow pierces two Husks (029), and a bomb burst kills one', async ({ pa
         // Close in to throw, then back off.
         moveX: throwNow ? 0 : bursts === 0 && dist >= 70 ? (e.x > p.x ? 1 : -1) : e.x > p.x ? -1 : 1,
         moveY: throwNow ? 0 : bursts === 0 && dist >= 70 ? (e.y > p.y ? 1 : -1) : e.y > p.y ? -1 : 1,
-        fire: throwNow,
+        use: throwNow,
         aimX: e.x,
         aimY: e.y,
       });

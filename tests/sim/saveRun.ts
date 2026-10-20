@@ -16,7 +16,7 @@ export function script(s: SimState, ticks: number): void {
   run(s, ticks, (x) => {
     i += 1;
     const phase = Math.floor(i / 45) % 4;
-    return { moveX: phase === 0 ? 1 : phase === 2 ? -1 : 0, moveY: phase === 1 ? 1 : phase === 3 ? -1 : 0, fire: i % 90 < 40, dodge: i % 150 === 0, aimX: x.player.x + 40, aimY: x.player.y - 10, interact: i % 200 === 0 };
+    return { moveX: phase === 0 ? 1 : phase === 2 ? -1 : 0, moveY: phase === 1 ? 1 : phase === 3 ? -1 : 0, fire: i % 90 < 40, use: i % 90 < 40, dodge: i % 150 === 0, aimX: x.player.x + 40, aimY: x.player.y - 10, interact: i % 200 === 0 };
   });
 }
 

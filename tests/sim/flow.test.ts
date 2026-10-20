@@ -232,10 +232,12 @@ describe('crates', () => {
     c.item = null;
     standBeside(s, 5, 5);
     s.inventory = {};
-    run(s, 1, { interact: true });
+    // 047: the crate's screen takes each stack out (Ctrl+click: all of it).
+    run(s, 1, { withdraw: { id: crate.id, amount: 'all', itemId: 'arrow' } });
+    run(s, 1, { withdraw: { id: crate.id, amount: 'all', itemId: 'bomb' } });
     expect(s.inventory).toEqual({ arrow: CRATE_CAP - 1, bomb: 1 });
     expect(crate.contents).toEqual({});
-    expect(s.events.crateTakes).toEqual([{ id: crate.id, items: { arrow: CRATE_CAP - 1, bomb: 1 } }]);
+    expect(s.events.withdraws).toEqual([{ id: crate.id, itemId: 'bomb', count: 1 }]);
   });
 });
 

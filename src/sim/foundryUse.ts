@@ -1,18 +1,17 @@
-import { USE_REACH } from '../data/foundry';
+import { CRATE_CAP, USE_REACH } from '../data/foundry';
 import { FEET_BOX } from '../data/player';
 import { ITEMS } from '../data/items';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import type { Command, HopperAmount } from './input';
 import { count } from './inventory';
-import { diagramInReach } from './research';
 import { pieceRect, type CrateState, type HopperState, type PieceState, type SorterState } from './pieces';
 import type { SimState } from './state';
 
-// Using hoppers, crates and sorters: E empties a crate into the inventory (the
-// intake's caps are restored at their diagrams, 033). E on a hopper or a
-// sorter opens render's menu, whose choices arrive as deposit (put some of a held
-// item in), withdraw (take some out) and setFilter commands. Deposits and
-// withdraws move one, half (rounded up) or all of the stack they draw from (022).
+// Using hoppers, crates and sorters (the intake's caps are restored at their diagrams,
+// 033). E on a hopper or a crate opens render's screen (047: its own slots over the grid
+// inventory), and on a sorter its menu; their choices arrive as deposit (put some of a
+// held item in), withdraw (take some out) and setFilter commands. Deposits and withdraws
+// move one, half (rounded up) or all of the stack clicked (022, 047).
 
 type Usable = HopperState | CrateState | SorterState;
 
@@ -54,38 +53,63 @@ export function amountOf(amount: HopperAmount, n: number): number {
   return n;
 }
 
-/** Moves some of a held item into a hopper in reach that's empty or already holds it. */
-export function deposit(state: SimState, id: number, itemId: string, amount: HopperAmount): void {
-  const h = state.foundry.pieces.find((p) => p.id === id);
-  if (h?.kind !== 'hopper' || !inReach(state, h) || (h.item !== null && h.item !== itemId)) return;
+/** How many a click moves from a stack of `stack` items (047) with `have` in all: one, half or the stack, never more than there are. */
+const fromStack = (amount: HopperAmount, have: number, stack: number | undefined): number => amountOf(amount, Math.min(have, stack ?? have));
+
+/** A crate's total, over every kind it holds. */
+const crateTotal = (c: CrateState): number => Object.values(c.contents).reduce((n, k) => n + k, 0);
+
+/**
+ * Moves some of a held item into a hopper in reach that's empty or already holds it, or into a crate in reach up to
+ * its cap (047: the crate's screen); how many by `amount` of the clicked stack (`stack`, or all held).
+ */
+export function deposit(state: SimState, id: number, itemId: string, amount: HopperAmount, stack?: number): void {
+  const p = state.foundry.pieces.find((q) => q.id === id);
+  if (!p || (p.kind !== 'hopper' && p.kind !== 'crate') || !inReach(state, p)) return;
   const held = count(state.inventory, itemId);
-  const n = amountOf(amount, held);
+  if (p.kind === 'crate') {
+    const n = Math.min(fromStack(amount, held, stack), CRATE_CAP - crateTotal(p));
+    if (n <= 0) return;
+    state.inventory[itemId] = held - n;
+    p.contents[itemId] = count(p.contents, itemId) + n;
+    state.events.deposits.push({ id, itemId, count: n });
+    return;
+  }
+  if (p.item !== null && p.item !== itemId) return;
+  const n = fromStack(amount, held, stack);
   if (n === 0) return;
   state.inventory[itemId] = held - n;
-  h.item = itemId;
-  h.count += n;
+  p.item = itemId;
+  p.count += n;
   state.events.deposits.push({ id, itemId, count: n });
 }
 
-/** Moves some of what's in a hopper in reach back into the inventory; at 0 the hopper forgets its type. */
-export function withdraw(state: SimState, id: number, amount: HopperAmount): void {
-  const h = state.foundry.pieces.find((p) => p.id === id);
-  if (h?.kind !== 'hopper' || !inReach(state, h) || !h.item || h.count === 0) return;
-  const n = amountOf(amount, h.count);
-  state.inventory[h.item] = count(state.inventory, h.item) + n;
-  state.events.withdraws.push({ id, itemId: h.item, count: n });
-  h.count -= n;
-  if (h.count > 0) return;
-  h.item = null;
-  h.timer = 0;
-}
-
-function takeCrate(state: SimState, c: CrateState): void {
-  const items = c.contents;
-  if (Object.keys(items).length === 0) return;
-  for (const [itemId, n] of Object.entries(items)) state.inventory[itemId] = count(state.inventory, itemId) + n;
-  c.contents = {};
-  state.events.crateTakes.push({ id: c.id, items });
+/**
+ * Moves some of what's in a hopper or crate in reach back into the inventory (a crate's `itemId` kind, 047); how many
+ * by `amount` of the clicked stack (`stack`, or all of the kind). At 0 a hopper forgets its type.
+ */
+export function withdraw(state: SimState, id: number, amount: HopperAmount, itemId?: string, stack?: number): void {
+  const p = state.foundry.pieces.find((q) => q.id === id);
+  if (!p || (p.kind !== 'hopper' && p.kind !== 'crate') || !inReach(state, p)) return;
+  if (p.kind === 'crate') {
+    if (itemId === undefined) return;
+    const have = count(p.contents, itemId);
+    const n = fromStack(amount, have, stack);
+    if (n === 0) return;
+    state.inventory[itemId] = count(state.inventory, itemId) + n;
+    // A kind taken out whole leaves the crate's contents (as the old empty-all left `{}`).
+    p.contents = have - n > 0 ? { ...p.contents, [itemId]: have - n } : Object.fromEntries(Object.entries(p.contents).filter(([k]) => k !== itemId));
+    state.events.withdraws.push({ id, itemId, count: n });
+    return;
+  }
+  if (!p.item || p.count === 0 || (itemId !== undefined && itemId !== p.item)) return;
+  const n = fromStack(amount, p.count, stack);
+  state.inventory[p.item] = count(state.inventory, p.item) + n;
+  state.events.withdraws.push({ id, itemId: p.item, count: n });
+  p.count -= n;
+  if (p.count > 0) return;
+  p.item = null;
+  p.timer = 0;
 }
 
 /** Sets the item a sorter in reach sends out its side; null passes everything (015). */
@@ -97,15 +121,11 @@ export function setFilter(state: SimState, id: number, itemId: string | null): v
 }
 
 /**
- * Withdraws, deposits, filters, then E: on the nearest crate it empties it. E on a
- * hopper or sorter does nothing here; render opens its menu. With a diagram in reach
- * (033) E is the restore panel's (render opens it), so it empties no crate.
+ * Withdraws, deposits and filters. E on a hopper, a crate (047: its screen, as Factorio's) or a sorter does nothing
+ * here; render opens its screen or menu, whose clicks arrive as these commands.
  */
 export function stepFoundryUse(state: SimState, cmd: Command): void {
-  if (cmd.withdraw) withdraw(state, cmd.withdraw.id, cmd.withdraw.amount);
+  if (cmd.withdraw) withdraw(state, cmd.withdraw.id, cmd.withdraw.amount, cmd.withdraw.itemId, cmd.withdraw.stack);
   if (cmd.setFilter) setFilter(state, cmd.setFilter.id, cmd.setFilter.itemId);
-  if (cmd.deposit) deposit(state, cmd.deposit.id, cmd.deposit.itemId, cmd.deposit.amount);
-  if (!cmd.interact || diagramInReach(state)) return;
-  const target = usableInReach(state);
-  if (target?.kind === 'crate') takeCrate(state, target);
+  if (cmd.deposit) deposit(state, cmd.deposit.id, cmd.deposit.itemId, cmd.deposit.amount, cmd.deposit.stack);
 }

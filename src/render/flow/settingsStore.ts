@@ -1,4 +1,4 @@
-import { BIND_ACTIONS, DEFAULT_SETTINGS, FIXED_KEYS, SANDBOX_ONLY, SETTINGS_VERSION, VOLUME_STEP, type BindAction, type Settings } from '../../data/settings';
+import { BIND_ACTIONS, DEFAULT_SETTINGS, FIXED_KEYS, MOUSE_INPUTS, SANDBOX_ONLY, SETTINGS_VERSION, VOLUME_STEP, type BindAction, type Settings } from '../../data/settings';
 import { STORAGE_KEYS } from '../../data/save';
 import { SOUND_SETTINGS_KEY } from '../../data/sounds';
 import { readKey, writeKey } from './storage';
@@ -37,7 +37,8 @@ export function parseSettings(raw: string | null): Settings | null {
     const b = d.bindings as Record<string, unknown>;
     for (const a of BIND_ACTIONS) {
       const key = b[a];
-      if (typeof key === 'string' && key !== '' && !FIXED_KEYS.includes(key)) {
+      // 047: only `use` may hold a mouse input (right click).
+      if (typeof key === 'string' && key !== '' && !FIXED_KEYS.includes(key) && (a === 'use' || !MOUSE_INPUTS.includes(key))) {
         bindings[a] = key;
         stored.add(a);
       }
@@ -116,6 +117,8 @@ export function rebind(bindings: Readonly<Record<BindAction, string>>, action: B
   if (FIXED_KEYS.includes(key)) return null;
   const next = { ...bindings };
   const holder = BIND_ACTIONS.find((a) => a !== action && next[a] === key);
+  // 047: right click belongs to `use` alone; a swap that would hand it to a key action is refused.
+  if (holder && holder !== 'use' && MOUSE_INPUTS.includes(next[action])) return null;
   if (holder) next[holder] = !sandbox && SANDBOX_ONLY.includes(holder) ? '' : next[action];
   next[action] = key;
   return next;

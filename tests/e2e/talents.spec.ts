@@ -28,7 +28,7 @@ async function killUntilLevelUp(page: Page): Promise<number> {
       for (let t = 0; t < 600; t++) {
         const e = g.getState().enemies.find((en) => en.id === id);
         if (!e) break;
-        g.step(1, { fire: true, aimX: e.x, aimY: e.y - 4 });
+        g.step(1, { fire: true, use: true, aimX: e.x, aimY: e.y - 4 });
       }
       if (!g.getState().enemies.some((en) => en.id === id)) kills += 1;
       // Back to full health between fights, so a stray swipe can't end the run.

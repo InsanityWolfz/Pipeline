@@ -21,12 +21,16 @@ export interface Command {
   /** Where the cursor points, world px. */
   aimX: number;
   aimY: number;
-  /** Fire is held. */
+  /** Fire (left click) is held: the intake's volley, or the punch with the intake dry (047). */
   fire: boolean;
+  /** Use (right click, 047) is held: the carried bar's selected item, thrown or fired. */
+  use: boolean;
   /** Interact (harvest) was pressed this tick (an edge, not held). */
   interact: boolean;
-  /** An ammo picked for the slot this tick (an edge), or null. */
-  selectAmmo: string | null;
+  /** A carried bar slot picked this tick (keys 1–5, an edge, 047), or null. */
+  selectSlot: number | null;
+  /** A stack dragged onto a carried bar slot this tick (an edge, 047): its kind goes on the slot; or null. */
+  assignSlot: { slot: number; itemId: string } | null;
   /** Build mode was toggled this tick (an edge). Only works in the foundry. */
   toggleBuild: boolean;
   /** A piece to place this tick (an edge), or null. */
@@ -37,10 +41,18 @@ export interface Command {
   place: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing; mirrored?: boolean } | null;
   /** A tile whose piece to pick up this tick (an edge), or null. */
   pickUp: { tx: number; ty: number } | null;
-  /** Put some of a held item into a hopper (by piece id) that's empty or holds it, this tick (an edge), or null (022: how many by `amount`). */
-  deposit: { id: number; itemId: string; amount: HopperAmount } | null;
-  /** Take some of what's in a hopper (by piece id) out, this tick (an edge), or null (022: how many by `amount`). */
-  withdraw: { id: number; amount: HopperAmount } | null;
+  /**
+   * Put some of a held item into a hopper (by piece id) that's empty or holds it, or into a crate (047), this tick (an
+   * edge), or null. How many by `amount` (022) of the clicked stack's `stack` items (047; left out, all held).
+   */
+  deposit: { id: number; itemId: string; amount: HopperAmount; stack?: number } | null;
+  /**
+   * Take some of what's in a hopper or crate (by piece id) out, this tick (an edge), or null: a crate's `itemId` kind
+   * (047). How many by `amount` (022) of the clicked stack's `stack` items (047; left out, all it holds of the kind).
+   */
+  withdraw: { id: number; amount: HopperAmount; itemId?: string; stack?: number } | null;
+  /** The grid inventory's Sort button this tick (an edge, 047). */
+  sortInventory: boolean;
   /** Set the item a sorter in reach sends out its side (null: pass everything), this tick (an edge), or null (015). */
   setFilter: { id: number; itemId: string | null } | null;
   /** The claimed pylon's menu choice this tick (an edge), or null. */
@@ -53,8 +65,6 @@ export interface Command {
   identify: boolean;
   /** At the bench this tick (an edge, 036): wear a piece by id (the worn one comes off), or take a slot off with `{ slot, id: null }`; null for no change. */
   equip: EquipRequest | null;
-  /** Hand-apply a stage (by stage id) at the bench this tick (an edge, 029), or null. */
-  applyStage: string | null;
   /** Restore a research node (by id) at its diagram in reach this tick (an edge, 033), or null. */
   restore: string | null;
   /** Pay the offering at an altar (by id) in reach, summoning its boss again (an edge, 034), or null. */
@@ -75,20 +85,22 @@ export const NO_COMMAND: Readonly<Command> = {
   aimX: 0,
   aimY: 0,
   fire: false,
+  use: false,
   interact: false,
-  selectAmmo: null,
+  selectSlot: null,
+  assignSlot: null,
   toggleBuild: false,
   place: null,
   pickUp: null,
   deposit: null,
   withdraw: null,
+  sortInventory: false,
   setFilter: null,
   pylon: null,
   travel: null,
   takeStash: null,
   identify: false,
   equip: null,
-  applyStage: null,
   restore: null,
   summon: null,
   takeTalent: null,
@@ -96,5 +108,5 @@ export const NO_COMMAND: Readonly<Command> = {
   sandbox: null,
 };
 
-/** A command's held part (stick, aim and fire) with every one-tick edge cleared: what a held command is after its first tick. */
-export const heldPart = (cmd: Command): Command => ({ ...NO_COMMAND, moveX: cmd.moveX, moveY: cmd.moveY, aimX: cmd.aimX, aimY: cmd.aimY, fire: cmd.fire });
+/** A command's held part (stick, aim, fire and use) with every one-tick edge cleared: what a held command is after its first tick. */
+export const heldPart = (cmd: Command): Command => ({ ...NO_COMMAND, moveX: cmd.moveX, moveY: cmd.moveY, aimX: cmd.aimX, aimY: cmd.aimY, fire: cmd.fire, use: cmd.use });

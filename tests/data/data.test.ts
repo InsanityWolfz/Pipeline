@@ -39,8 +39,9 @@ import { TILE, WALKABLE } from '../../src/data/rooms';
 import { ITEMS } from '../../src/data/items';
 import { STARTING_INVENTORY, TUTORIAL_START } from '../../src/data/player';
 import { PLAYTEST_START } from '../../src/data/playtest';
-import { SLOT_AMMOS, STARTING_AMMO } from '../../src/data/tube';
-import { CRAFT_GROUPS, RECIPES, recipeDef } from '../../src/data/recipes';
+import { CARRIED_SLOTS } from '../../src/data/tube';
+import { RECIPES, recipeDef } from '../../src/data/recipes';
+import { CRAFT_TABS } from '../../src/data/craftTabs';
 import { STAGE_RECIPES, STAGE_ROWS } from '../../src/data/stages';
 import { NODES } from '../../src/data/nodes';
 import { BUILD_BAR, PIECE_CATEGORIES, PIECES, pieceDef } from '../../src/data/pieces';
@@ -178,7 +179,6 @@ describe('items and ammo', () => {
 
   it('reference items and ammo that exist', () => {
     for (const ammo of Object.values(AMMO)) expect(ITEMS[ammo.itemId]).toBeDefined();
-    expect(AMMO[STARTING_AMMO]).toBeDefined();
     for (const id of Object.keys(STARTING_INVENTORY)) expect(ITEMS[id]).toBeDefined();
   });
 });
@@ -188,20 +188,14 @@ describe('item kinds, ammo slots and recipes', () => {
     for (const r of Object.values(RECIPES)) if (r.shownAfter !== undefined) expect(ITEMS[r.shownAfter], r.id).toBeDefined();
   });
 
-  it("lays the crafting menu's groups in columns numbered from 0 with none skipped (038.4)", () => {
-    const columns = [...new Set(CRAFT_GROUPS.map((g) => g.column))].sort((x, y) => x - y);
-    expect(columns).toEqual(columns.map((_, i) => i));
-  });
-
   it('gives every item a kind, and every ammo an ammo item', () => {
     // 033: schematics are the one new kind.
     for (const item of Object.values(ITEMS)) expect(['raw', 'part', 'ammo', 'armor', 'schematic']).toContain(item.kind);
     for (const ammo of Object.values(AMMO)) expect(ITEMS[ammo.itemId]?.kind).toBe('ammo');
   });
 
-  it('switches between arrows, bombs, ley bolts and landmines (038) in key order', () => {
-    expect(SLOT_AMMOS).toEqual(['arrow', 'bomb', 'ley-bolt', 'landmine']);
-    for (const id of SLOT_AMMOS) expect(AMMO[id]).toBeDefined();
+  it('has a carried bar of five slots, keys 1–5 (047)', () => {
+    expect(CARRIED_SLOTS).toBe(5);
   });
 
   it('has kebab-case recipes over items that exist', () => {
@@ -217,10 +211,10 @@ describe('item kinds, ammo slots and recipes', () => {
     }
   });
 
-  it('lists every recipe in exactly one menu group, grouped under real ammo', () => {
-    const listed = CRAFT_GROUPS.flatMap((g) => g.recipes);
-    expect([...listed].sort()).toEqual(Object.keys(RECIPES).sort());
-    for (const g of CRAFT_GROUPS) expect(AMMO[g.ammoId]).toBeDefined();
+  it('lists every recipe on at least one crafting tab (047), each tab under real ammo', () => {
+    const listed = new Set(CRAFT_TABS.flatMap((t) => t.recipes));
+    for (const id of Object.keys(RECIPES)) expect(listed.has(id), id).toBe(true);
+    for (const t of CRAFT_TABS) expect(AMMO[t.ammoId]).toBeDefined();
   });
 
   it('has kebab-case nodes that give items that exist', () => {

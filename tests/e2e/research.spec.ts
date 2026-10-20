@@ -67,7 +67,8 @@ test('the west cap restores with the warden core (E, then E again), two entrance
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     h.toHall();
-    const at = g.step(1, { selectAmmo: 'ley-bolt' });
+    window.__helpers?.hold('ley-bolt');
+    const at = g.step(0);
     const before = new Set(at.arrows.map((a) => a.id));
     const out = g.step(1, { fire: true, aimX: at.player.x + 160, aimY: at.player.y });
     return { count: out.tube.shotCount, from: out.tube.fromReservoir, fresh: out.arrows.filter((a) => !before.has(a.id)).map((a) => Math.round((Math.atan2(a.dy, a.dx) * 1800) / Math.PI) / 10).sort((a, b) => a - b) };
@@ -184,9 +185,10 @@ test('the open list never takes clicks meant for the world: a press on it still 
   const before = await state(page);
   expect(before.inventory.arrow ?? 0).toBeGreaterThan(0);
   await page.mouse.move(centre.x, centre.y);
-  await page.mouse.down();
+  // 047: carried arrows go out on right click.
+  await page.mouse.down({ button: 'right' });
   await expect.poll(async () => (await state(page)).inventory.arrow ?? 0, { timeout: 15_000 }).toBeLessThan(before.inventory.arrow ?? 0);
-  await page.mouse.up();
+  await page.mouse.up({ button: 'right' });
   expect((await ui(page))?.researchList.open).toBe(true);
   expect(errors).toEqual([]);
 });

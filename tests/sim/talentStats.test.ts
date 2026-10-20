@@ -14,7 +14,7 @@ import { statOf, statusEmission } from '../../src/sim/statResolve';
 import type { SimState } from '../../src/sim/state';
 import { tileCentre } from '../../src/sim/tiles';
 import { firingWalkScale } from '../../src/sim/tube';
-import { arena, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, fireAt, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, volleyAt } from './fight';
 
 // Each minor talent (037) reaches playerStats, the one place stats are computed (036), or
 // the 029 value it changes: damage and fire rate per ammo, freeze hits and length, blast
@@ -31,7 +31,7 @@ const FAR = { x: PLAYER_AT.x + 1000, y: PLAYER_AT.y };
 /** The first round fired at FAR with `ammo` carried and selected. */
 function firstShot(s: SimState, item: string, slot: string): ArrowState {
   s.inventory = { [item]: 5 };
-  run(s, 1, { selectAmmo: slot });
+  hold(s, slot);
   run(s, 1, fireAt(FAR.x, FAR.y));
   const a = s.arrows[0];
   if (!a) throw new Error('no shot');
@@ -73,7 +73,7 @@ describe('the lanes’ damage', () => {
     const e = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     e.mode = 'windup';
     e.modeTicks = -10_000;
-    run(s, 1, { selectAmmo: 'bomb' });
+    hold(s, 'bomb');
     run(s, 1, fireAt(e.x, e.y));
     runUntil(s, () => s.events.bursts.length > 0, 60);
     expect(e.health).toBeCloseTo(HUSK.maxHealth - 13.2, 9); // 041: 12 × 1.1 (was 16.5)
@@ -93,7 +93,7 @@ describe('fire rate', () => {
     expect(cooldown(taking(arena(), 't1'))).toBeCloseTo(15 / 1.08, 9);
     const s = taking(arena(), 't1');
     s.inventory = { bomb: 2 };
-    run(s, 1, { selectAmmo: 'bomb' });
+    hold(s, 'bomb');
     run(s, 1, fireAt(PLAYER_AT.x + 100, PLAYER_AT.y));
     expect(s.tube.fireCooldown).toBeCloseTo(40 / 1.08, 9);
   });
@@ -104,7 +104,7 @@ describe('fire rate', () => {
     const e = s.link.entrances[1];
     if (!e) throw new Error('no entrance');
     Object.assign(e, { open: true, ammoId: 'arrow', count: 10 });
-    run(s, 1, fireAt(FAR.x, FAR.y));
+    run(s, 1, volleyAt(FAR.x, FAR.y));
     expect(s.events.entranceFires).toHaveLength(1);
     expect(e.cooldown).toBeCloseTo(15 / 1.1, 9);
   });
@@ -139,7 +139,7 @@ describe('the ammo behaviours (029)', () => {
     const near = placeHusk(s, PLAYER_AT.x + 100 + 52, PLAYER_AT.y);
     near.mode = 'windup';
     near.modeTicks = -10_000;
-    run(s, 1, { selectAmmo: 'bomb' });
+    hold(s, 'bomb');
     run(s, 1, fireAt(PLAYER_AT.x + 100, PLAYER_AT.y));
     runUntil(s, () => s.events.bursts.length > 0, 60);
     expect(s.events.bursts[0]?.radius).toBeCloseTo(55.2, 9);
@@ -149,7 +149,7 @@ describe('the ammo behaviours (029)', () => {
   it('Swift Arc: a bomb’s flight takes a quarter less time (039: never rounded; it lands on the first tick past it)', () => {
     const flight = (s: SimState) => {
       s.inventory = { bomb: 2 };
-      run(s, 1, { selectAmmo: 'bomb' });
+      hold(s, 'bomb');
       run(s, 1, fireAt(PLAYER_AT.x + 150, PLAYER_AT.y));
       return s.bombs[0]?.flightTicks ?? 0;
     };
@@ -163,7 +163,7 @@ describe('the ammo behaviours (029)', () => {
     expect(statOf(s, 'turn-rate', roundEmission('ley-bolt+homing'), HOMING.turnDegrees)).toBeCloseTo(HOMING.turnDegrees * 1.3, 9);
     s.inventory = { 'ley-bolt+homing': 5 };
     placeHusk(s, PLAYER_AT.x + 150, PLAYER_AT.y);
-    run(s, 1, { selectAmmo: 'ley-bolt' });
+    hold(s, 'ley-bolt');
     run(s, 1, fireAt(PLAYER_AT.x + 150, PLAYER_AT.y - 50));
     const bolt = s.arrows[0];
     if (!bolt) throw new Error('no bolt');
@@ -176,7 +176,7 @@ describe('the ammo behaviours (029)', () => {
     const s = taking(arena(), 'l3');
     s.inventory = { 'ley-bolt+split': 5 };
     placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
-    run(s, 1, { selectAmmo: 'ley-bolt' });
+    hold(s, 'ley-bolt');
     run(s, 1, fireAt(FAR.x, FAR.y));
     runUntil(s, () => s.events.splits.length > 0, 60);
     expect(s.arrows.filter((a) => a.ammoId === SPLIT.projectile)).toHaveLength(7);

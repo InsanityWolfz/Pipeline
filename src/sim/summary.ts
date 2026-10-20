@@ -8,10 +8,10 @@ import { unlockedPieces } from './placement';
 import { stagesUnlocked } from './stages';
 import { isInvulnerable, isRolling } from './movement';
 import type { Facing } from './player';
+import { portSummary } from './summaryPorts';
 import { fixtureDef } from './fixtures';
-import { portPerMinute, pylonsOf } from './claims';
 import { objectiveLine } from './objectives';
-import { volleyRounds, nextPress, hudActive, type HudActive } from './volley';
+import { volleyRounds, nextPress, hudActive, type HudActive, type NextPress } from './volley';
 import { INTAKE } from '../data/foundry';
 import { entranceCap } from './research';
 import { researchSummary, type ResearchSummary } from './researchSummary';
@@ -84,8 +84,11 @@ export interface SimSummary extends HollowsSummary, LevelingSummary, MinesSummar
   springs: { id: string; tx: number; ty: number; radius: number; inside: boolean }[];
   /** Item id to count. */
   inventory: Record<string, number>;
+  /** 047: the carried bar (keys 1–5): each slot's item kind or null, and the selected slot. */
+  hotbar: { slots: (string | null)[]; selected: number };
+  /** 047: the grid inventory's order of kinds. */
+  bag: string[];
   tube: {
-    ammo: string;
     fireCooldown: number;
     /** Ticks before the next punch can happen (023). */
     meleeCooldown: number;
@@ -94,8 +97,8 @@ export interface SimSummary extends HollowsSummary, LevelingSummary, MinesSummar
     fromReservoir: boolean;
     /** Projectiles this tick's shot fired (a volley of several rounds fires several). */
     shotCount: number;
-    /** What the next fire press does (023, 024): a carried round, a volley, or a punch. */
-    next: 'carried' | 'volley' | 'melee';
+    /** What the next fire press (left click) does (023, 024, 047): a volley, a carried round before attuning (047.9), or a punch. */
+    next: NextPress['kind'];
   };
   /** The bottom HUD (025): what the tube slot shows, which is what the next fire press does. */
   hud: { active: HudActive };
@@ -215,8 +218,9 @@ export function summarize(state: SimState): SimSummary {
     },
     springs: OVERWORLD.springs.map((sp) => ({ id: sp.id, tx: sp.tx, ty: sp.ty, radius: sp.radius * TILE_SIZE, inside: springAt(state.roomId, p.x, p.y)?.id === sp.id })),
     inventory: { ...state.inventory },
+    hotbar: { slots: [...state.hotbar.slots], selected: state.hotbar.selected },
+    bag: [...state.bag],
     tube: {
-      ammo: tube.ammoId,
       fireCooldown: tube.fireCooldown,
       meleeCooldown: tube.meleeCooldown,
       firing: tube.firing,
@@ -288,13 +292,4 @@ export function summarize(state: SimState): SimSummary {
     ...sandboxSummary(state),
     events: structuredClone(state.events),
   };
-}
-
-function portSummary(state: SimState): SimSummary['ports'] {
-  return state.fixtures.flatMap((f) => {
-    const d = fixtureDef(f.id);
-    if (d.kind !== 'port' || d.raw === undefined) return [];
-    const pylons = pylonsOf(state, f);
-    return [{ id: f.id, raw: d.raw, tx: d.tx, ty: d.ty, pylons, perMinute: portPerMinute(pylons), waiting: f.item !== null }];
-  });
 }

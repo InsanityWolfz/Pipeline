@@ -1,15 +1,11 @@
 import { Input } from 'phaser';
-import { SLOT_AMMOS } from '../data/tube';
-import { DEFAULT_BINDINGS, type BindAction } from '../data/settings';
+import { DEFAULT_BINDINGS, MOUSE_INPUTS, SLOT_ACTIONS, type BindAction } from '../data/settings';
 
 // The keyboard's bindings: what each key does is in controls.ts. 042: the rebindable keys come from the settings
 // (src/data/settings.ts has today's defaults); Esc, Tab and Shift-for-tips are fixed.
 
 export type Key = 'up' | 'down' | 'left' | 'right' | 'dodge' | 'rotate' | 'flip' | 'interact' | 'menu' | 'close' | 'build' | 'inventory' | 'inventoryTab' | 'research' | 'talents' | 'shift';
 
-/** The ammo slot actions, in SLOT_AMMOS order: the first key picks the first slot's ammo, and so on. */
-const AMMO_ACTIONS: readonly BindAction[] = ['ammo1', 'ammo2', 'ammo3', 'ammo4'];
-if (SLOT_AMMOS.length > AMMO_ACTIONS.length) throw new Error(`Only ${AMMO_ACTIONS.length} ammo keys for ${SLOT_AMMOS.length} slot ammo`);
 
 /** A key code name ("W", "SPACE") as its code; unknown names fall back to none (the action has no key). */
 export function codeOf(name: string): number | null {
@@ -32,7 +28,7 @@ export function bindKeys(
   keyboard: Input.Keyboard.KeyboardPlugin,
   bindings: Readonly<Record<BindAction, string>>,
   sandbox = false,
-): { keys: Record<Key, Input.Keyboard.Key>; ammo: Input.Keyboard.Key[]; sandbox: Input.Keyboard.Key | null } {
+): { keys: Record<Key, Input.Keyboard.Key>; ammo: Input.Keyboard.Key[]; use: Input.Keyboard.Key | null; sandbox: Input.Keyboard.Key | null } {
   const codes = Input.Keyboard.KeyCodes;
   const add = (action: BindAction): Input.Keyboard.Key => keyboard.addKey(codeOf(bindings[action]) ?? codeOf(DEFAULT_BINDINGS[action]) ?? 0);
   const keys: Record<Key, Input.Keyboard.Key> = {
@@ -55,7 +51,9 @@ export function bindKeys(
   };
   // 044: the sandbox panel's key, only in the sandbox (the shipped game never captures it); unbound ('') it has none.
   const panel = sandbox ? codeOf(bindings.sandbox) : null;
-  return { keys, ammo: AMMO_ACTIONS.slice(0, SLOT_AMMOS.length).map(add), sandbox: panel === null ? null : keyboard.addKey(panel) };
+  // 047: `use` is right click by default (the pointer's, read in controls.ts); bound to a key, that key.
+  const use = MOUSE_INPUTS.includes(bindings.use) ? null : codeOf(bindings.use);
+  return { keys, ammo: SLOT_ACTIONS.map(add), use: use === null ? null : keyboard.addKey(use), sandbox: panel === null ? null : keyboard.addKey(panel) };
 }
 
 /** What each key's press does (042: wired here so Controls can rebind them in one call). */
@@ -67,6 +65,7 @@ export interface KeyHandlers {
   /** C, Esc, I or Tab, J and T, and the sandbox panel's key (044): the menu keys the scene takes. */
   menu(key: 'menu' | 'close' | 'inventory' | 'research' | 'talents' | 'sandbox'): void;
   build(): void;
+  /** Keys 1–5 (047): a carried bar slot, by index. */
   ammo(slot: number): void;
 }
 

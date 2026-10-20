@@ -1,7 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { hotbarCells } from '../../src/render/bottomHud';
-import { inventoryLayout } from '../../src/render/inventoryLayout';
 import { boot, cameraSettled, watchErrors } from './helpers';
 import { screenPoint, state, step } from './foundryPage';
 
@@ -20,7 +19,7 @@ async function hover(page: Page, x: number, y: number): Promise<void> {
 
 /** The arrow's hotbar slot, view px. */
 function arrowSlot(): { x: number; y: number; w: number; h: number } {
-  const cell = hotbarCells().find((c) => c.ammoId === 'arrow');
+  const cell = hotbarCells().find((c) => c.slot === 0) /* 047: the arrows' carried slot, first carried */;
   if (!cell) throw new Error('no arrow slot');
   return cell;
 }
@@ -128,7 +127,7 @@ test('clicking the Burst chip opens its glossary entry and never fires; Esc clos
   const errors = watchErrors(page);
   await boot(page, '?playtest');
   // On the real-time clock (no step), so a press drives the tube as in play.
-  const bombSlot = hotbarCells().find((c) => c.ammoId === 'bomb');
+  const bombSlot = hotbarCells().find((c) => c.slot === 1) /* 047: the bombs' carried slot */;
   if (!bombSlot) throw new Error('no bomb slot');
   await hoverBox(page, bombSlot);
   await expect.poll(async () => (await ui(page))?.tip?.chips).toContain('burst');
@@ -169,7 +168,7 @@ test('without Shift, every summary source shows a summary and never a breakdown 
     g.claim('shrine');
     h.toFoundry();
     h.walkTo(2.3 * 32, 12.5 * 32);
-    for (const row of ['frost-rune-arrow', 'frost-rune-bomb']) g.step(1, { applyStage: row });
+    for (const row of ['frost-rune-arrow', 'frost-rune-bomb']) g.craft(row);
     g.step(1, { identify: true });
     const s = g.step(1);
     const helm = s.gear.find((p) => p.slot === 'helm');
@@ -187,13 +186,9 @@ test('without Shift, every summary source shows a summary and never a breakdown 
     expect(tip?.box.w).toBeLessThanOrEqual(200);
     seen.push(kind);
   };
-  // The bench: a Stages row, a gear row, a worn cell.
+  // The bench: a gear row, a worn cell (047: its Stages rows are gone; a stage's tip shows on the build bar).
   await page.keyboard.press('e');
-  await expect.poll(async () => (await ui(page))?.tagged.benchStages?.shown).toBe(true);
-  const stageRow = (await ui(page))?.tagged.benchStages?.rows[0];
-  if (!stageRow) throw new Error('no stage row');
-  await hoverBox(page, stageRow);
-  await check('stage');
+  await expect.poll(async () => (await ui(page))?.gearPanel?.open).toBe(true);
   const gear = (await ui(page))?.gearPanel;
   const gearRow = gear?.rows[0];
   if (!gearRow) throw new Error('no gear row');
@@ -218,9 +213,11 @@ test('without Shift, every summary source shows a summary and never a breakdown 
   // The inventory's first ammo row.
   await page.keyboard.press('i');
   await expect.poll(async () => (await ui(page))?.inventory.open).toBe(true);
-  const ammo = inventoryLayout().groups.find((g) => g.id === 'ammo');
-  if (!ammo) throw new Error('no ammo group');
-  await hover(page, ammo.x + 30, ammo.rowsY + 7);
+  // 047: the grid's first round's slot.
+  await expect.poll(async () => (await ui(page))?.inventory.slots.some((sl) => sl.itemId === 'arrow')).toBe(true);
+  const ammo = (await ui(page))?.inventory.slots.find((sl) => sl.itemId === 'arrow');
+  if (!ammo) throw new Error('no arrow slot');
+  await hover(page, ammo.x + ammo.w / 2, ammo.y + ammo.h / 2);
   await check('round');
   await page.keyboard.press('i');
   // A talent node.
@@ -239,7 +236,7 @@ test('without Shift, every summary source shows a summary and never a breakdown 
   if (!slot) throw new Error('no tube slot');
   await hover(page, slot.x + 10, slot.y + 10);
   await check('round');
-  expect(seen).toEqual(['stage', 'gear', 'gear', 'stage', 'round', 'talent', 'round', 'round']);
+  expect(seen).toEqual(['gear', 'gear', 'stage', 'round', 'talent', 'round', 'round']);
   expect(errors).toEqual([]);
 });
 
@@ -252,7 +249,8 @@ test('a Husk with frost hits shows Chill and its stacks on its hover name', asyn
     if (!g) throw new Error('no game');
     let s = g.step(1);
     g.drop('arrow+frost', s.player.x, s.player.y);
-    g.step(5, { selectAmmo: 'arrow' });
+    g.step(5);
+      window.__helpers?.hold('arrow+frost');
     s = g.spawnEnemy('husk', s.player.x + 90, s.player.y);
     const id = s.enemies.at(-1)?.id ?? -1;
     g.setEnemyHealth(id, 1000);
@@ -260,7 +258,7 @@ test('a Husk with frost hits shows Chill and its stacks on its hover name', asyn
     for (let t = 0; t < 60 && (g.getState().enemies.find((e) => e.id === id)?.chill ?? 0) < 2; t++) {
       const e = g.getState().enemies.find((en) => en.id === id);
       if (!e) break;
-      g.step(1, { fire: true, aimX: e.x, aimY: e.y - 4 });
+      g.step(1, { use: true, aimX: e.x, aimY: e.y - 4 });
     }
     const e = g.step(1).enemies.find((en) => en.id === id);
     return { x: e?.x ?? 0, y: e?.y ?? 0, chill: e?.chill ?? 0 };
@@ -302,46 +300,3 @@ test('every summary the game can show holds at most four drawn rows, with no tal
   expect(errors).toEqual([]);
 });
 
-test('a click on the gear tip, over the bench’s Stages rows, is the tip’s: no stage is applied', async ({ page }) => {
-  test.setTimeout(120_000);
-  const errors = watchErrors(page);
-  await boot(page, '?playtest');
-  await page.evaluate(() => {
-    const g = window.__GAME__;
-    const h = window.__helpers;
-    if (!g || !h) throw new Error('no game');
-    g.claim('shrine');
-    h.toFoundry();
-    h.walkTo(2.3 * 32, 12.5 * 32);
-    g.step(1, { identify: true });
-    g.step(10);
-  });
-  // The camera eases on real time: under parallel workers it can take a while.
-  await cameraSettled(page, 20_000);
-  await page.keyboard.press('e');
-  await expect.poll(async () => (await ui(page))?.tagged.benchStages?.shown).toBe(true);
-  const gearRow = (await ui(page))?.gearPanel?.rows[0];
-  if (!gearRow) throw new Error('no gear row');
-  await hover(page, gearRow.box.x + gearRow.box.w - 30, gearRow.box.y + gearRow.box.h / 2);
-  await expect.poll(async () => (await ui(page))?.tip?.source.kind).toBe('gear');
-  const tip = (await ui(page))?.tip;
-  const rows = (await ui(page))?.tagged.benchStages?.rows ?? [];
-  // A point on the tip and on an affordable Stages row under it.
-  const under = rows.find((r) => !r.dimmed && tip && r.x < tip.box.x + tip.box.w - 4 && r.x + r.w > tip.box.x + 4 && r.y < tip.box.y + tip.box.h - 4 && r.y + r.h > tip.box.y + 4);
-  if (!tip || !under) throw new Error('no Stages row under the tip');
-  const x = Math.max(under.x, tip.box.x) + 4;
-  const y = Math.max(under.y, tip.box.y) + 4;
-  const before = await state(page);
-  const at = await screenPoint(page, x, y);
-  await page.mouse.click(at.x, at.y);
-  const after = await step(page, 2);
-  expect(after.inventory).toEqual(before.inventory);
-  expect(after.events.craftFails).toEqual([]);
-  expect((await ui(page))?.tip?.source.kind).toBe('gear');
-  // The same click with no tip there applies the row, so the check above means something.
-  await hover(page, under.x + under.w / 2, under.y + under.h / 2);
-  await expect.poll(async () => (await ui(page))?.tip?.source.kind).toBe('stage');
-  await page.mouse.click(at.x, at.y);
-  await expect.poll(async () => JSON.stringify((await step(page, 1)).inventory) !== JSON.stringify(before.inventory)).toBe(true);
-  expect(errors).toEqual([]);
-});

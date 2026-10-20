@@ -6,7 +6,8 @@ import { HUD_SPRITES_VECTOR } from '../../src/data/art/hud';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { HUD_LAYOUT } from '../../src/data/hudLayout';
 import { HP_BAR, HUD_HEALTH_LAYOUT } from '../../src/data/hudPanels';
-import { INVENTORY_GROUPS, INVENTORY_PANEL, inventoryColumns, inventoryPanelSize, PICKUP_FEED, reservedRows } from '../../src/data/hudPanels';
+import { gridSize, INVENTORY_GRID, INVENTORY_GROUPS, inventoryPanelSize, PICKUP_FEED } from '../../src/data/hudPanels';
+import { widthOf } from './textFit';
 import { ITEMS } from '../../src/data/items';
 import { DAYLIGHT_PALETTE } from '../../src/data/palette';
 
@@ -54,27 +55,33 @@ describe('inventory panel groups (031)', () => {
     expect(ITEMS['warden-core']?.kind).toBe('part');
   });
 
-  it('reserves a row per item of a group, and Gear two more for the worn and spare lines', () => {
-    expect(reservedRows('raw')).toBe(7);
-    expect(reservedRows('gear')).toBe(2 + 1);
-    expect(reservedRows('cores')).toBe(2);
-    // 033: the schematics share one row.
-    expect(reservedRows('parts')).toBe(7 + 2 + 1);
+  it('the grid shows 8×5 slots (047.2), each the HUD\'s cell, and the panel with a hopper\'s row fits the view', () => {
+    const G = INVENTORY_GRID;
+    expect([G.cols, G.rows]).toEqual([8, 5]);
+    expect(gridSize()).toEqual({ w: 7 * G.cell.stepX + G.cell.w, h: 4 * G.cell.stepY + G.cell.h });
+    for (const container of [false, true]) {
+      const { w, h } = inventoryPanelSize(container);
+      expect(w).toBeLessThanOrEqual(VIEW_WIDTH - 2 * HUD_LAYOUT.margin);
+      expect(h + G.title.gap + G.title.h).toBeLessThanOrEqual(VIEW_HEIGHT - 2 * HUD_LAYOUT.margin);
+    }
   });
 
-  it('the panel and its title card fit the 640x360 view, in three columns as two do not (039: six more rounds)', () => {
-    const { w, h } = inventoryPanelSize();
-    const T = INVENTORY_PANEL.title;
-    expect(w).toBeLessThanOrEqual(VIEW_WIDTH - 2 * HUD_LAYOUT.margin);
-    expect(h + T.gap + T.h).toBeLessThanOrEqual(VIEW_HEIGHT - 2 * HUD_LAYOUT.margin);
-    const columns = inventoryColumns();
-    expect(columns).toHaveLength(3);
-    // Groups stay whole and in order across the columns.
-    expect(columns.flat()).toEqual(INVENTORY_GROUPS.map((g) => g.id));
+  it('a slot\'s count and warning mark never overlap (the 031 panel\'s Wood row bug, 045.11), and the footer lines fit', () => {
+    const C = INVENTORY_GRID.cell;
+    // The widest count a slot shows is a full stack of 100.
+    expect(C.count.x + widthOf('100', 'count')).toBeLessThanOrEqual(C.warn.x);
+    expect(C.warn.x + C.warn.w).toBeLessThanOrEqual(C.w);
+    expect(C.count.y + 8).toBeLessThanOrEqual(C.h);
+    const inner = inventoryPanelSize().w - 2 * INVENTORY_GRID.pad;
+    for (const line of INVENTORY_GRID.footer.text) expect(widthOf(line, 'body') * 0.8, line).toBeLessThanOrEqual(inner);
+  });
+
+  it('never prints the click controls (Shaun: "don\'t show those controls on the menu it looks bad")', () => {
+    expect(JSON.stringify(INVENTORY_GRID)).not.toMatch(/shift|ctrl|click/i);
   });
 
   it('the panel colours are daylight ids', () => {
-    for (const c of Object.values(INVENTORY_PANEL.colors)) expect(daylight.has(c), c).toBe(true);
+    for (const c of Object.values(INVENTORY_GRID.colors)) expect(daylight.has(c), c).toBe(true);
   });
 });
 
@@ -113,14 +120,9 @@ describe('the HP bar data (031)', () => {
 
   it('draws the new HUD sprites', () => {
     const keys = new Set(HUD_SPRITES_VECTOR.map((s) => s.key));
-    for (const key of [SPRITES.hudHealth, SPRITES.hudHealthGlow, SPRITES.hudShield, SPRITES.hudWarn, SPRITES.inventoryPanel, SPRITES.inventoryTitle]) {
+    for (const key of [SPRITES.hudHealth, SPRITES.hudHealthGlow, SPRITES.hudShield, SPRITES.hudWarn, SPRITES.inventoryTitle]) {
       expect(keys.has(key), key).toBe(true);
     }
-    // 039: the tablet in two halves that together make the panel.
-    const left = HUD_SPRITES_VECTOR.find((s) => s.key === SPRITES.inventoryPanel);
-    const right = HUD_SPRITES_VECTOR.find((s) => s.key === SPRITES.inventoryPanelRight);
-    const { w, h } = inventoryPanelSize();
-    expect([(left?.size[0] ?? 0) + (right?.size[0] ?? 0), left?.size[1], right?.size[1]]).toEqual([w, h, h]);
   });
 });
 

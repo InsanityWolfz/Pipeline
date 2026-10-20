@@ -5,7 +5,7 @@ import { TICK_RATE } from '../../src/data/config';
 import { MUZZLE_OFFSET } from '../../src/data/tube';
 import { stepBombs, throwBomb } from '../../src/sim/bombs';
 import type { EnemyState } from '../../src/sim/enemies';
-import { arena, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, fireAt, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
 const BOMB = lobAmmo('bomb');
 const STEP = BOMB.speed / TICK_RATE;
@@ -13,7 +13,7 @@ const STEP = BOMB.speed / TICK_RATE;
 function armed(at: { x: number; y: number } = PLAYER_AT) {
   const s = arena(undefined, at);
   s.inventory.bomb = 6;
-  run(s, 1, { selectAmmo: 'bomb' });
+  hold(s, 'bomb');
   return s;
 }
 

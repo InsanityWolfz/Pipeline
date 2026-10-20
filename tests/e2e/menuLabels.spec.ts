@@ -2,16 +2,17 @@ import { expect, test, type Page } from '@playwright/test';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { CRAFT_MENU_LAYOUT } from '../../src/data/hudLayout';
 import { itemDef } from '../../src/data/items';
-import { ammoDef } from '../../src/data/ammo';
 import { BUILD_BAR, PIECE_CATEGORIES, pieceDef } from '../../src/data/pieces';
-import { CRAFT_GROUPS, recipeDef } from '../../src/data/recipes';
+import { CRAFT_TABS, craftRecipeDef } from '../../src/data/craftTabs';
+import { RECIPES } from '../../src/data/recipes';
 import type { BuildBarState } from '../../src/render/BuildView';
 import type { CraftMenuState } from '../../src/render/CraftMenuView';
 import { boot, cameraSettled, watchErrors, quietScreen } from './helpers';
 import { enterFoundry } from './foundryPage';
+import { openCraftTab } from './craftPage';
 
 // Labels in the crafting menu and categories in the build bar (026): every recipe item
-// named under its icon, missing inputs flagged, headers naming their ammo; the build bar
+// named under its icon, missing inputs flagged, a tab per ammo family (047); the build bar
 // in labelled groups with dividers, showing only unlocked pieces (a group with none
 // unlocked is left out), the wheel stepping in the new order. With REVIEW_SHOTS=1, the review screenshots in docs/review/026.
 
@@ -24,13 +25,13 @@ type Box = { x: number; y: number; w: number; h: number };
 const overlaps = (a: Box, b: Box) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 const inside = (a: Box, b: Box) => a.x >= b.x && a.y >= b.y && a.x + a.w <= b.x + b.w && a.y + a.h <= b.y + b.h;
 
-/** A recipe shown only after an item is carried (038: the landmine chain, once ley-iron is): hidden on these starts. */
-const later = (recipeId: string): boolean => recipeDef(recipeId).shownAfter !== undefined;
+/** A row shown on these starts: on the Arrows tab (open first), a plain recipe not waiting on an item (038: the landmine chain, once ley-iron is); tagged rounds wait for the shrine. */
+const shownFirst = (r: { recipeId: string; tab: string }): boolean => r.tab === 'arrow' && RECIPES[r.recipeId] !== undefined && RECIPES[r.recipeId]?.shownAfter === undefined;
 
-/** Opens the crafting menu with C and returns it once every row and header it knows is drawn. */
+/** Opens the crafting menu with C and returns it once its first tab's rows are drawn. */
 async function openCraftMenu(page: Page): Promise<CraftMenuState> {
   await page.keyboard.press('c');
-  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().craftMenu))?.rows.every((r) => r.shown === !later(r.recipeId))).toBe(true);
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().craftMenu))?.rows.every((r) => r.shown === shownFirst(r))).toBe(true);
   const menu = await page.evaluate(() => window.__GAME__?.ui().craftMenu);
   if (!menu) throw new Error('no craft menu');
   return menu;
@@ -85,7 +86,7 @@ function expectGroups(bar: BuildBarState, shown: readonly string[]): void {
   }
 }
 
-test('the crafting menu names every recipe item under its icon, and its headers name their ammo', async ({ page }) => {
+test('the crafting menu names every recipe item under its icon, on a tab per ammo family (047)', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page, '?start=field&attuned');
   // One wood: the shaft row has its input, every other input is short.
@@ -97,40 +98,45 @@ test('the crafting menu names every recipe item under its icon, and its headers 
   expect(wood).toBeGreaterThanOrEqual(1);
   const menu = await openCraftMenu(page);
 
-  const rows = CRAFT_GROUPS.flatMap((g) => g.recipes);
-  expect(menu.rows.map((r) => r.recipeId)).toEqual(rows);
-  // 038: no ley-iron carried, so the landmine chain's rows are hidden.
-  expect(menu.rows.filter((r) => !r.shown).map((r) => r.recipeId)).toEqual(['iron-plate', 'landmine']);
-  for (const row of menu.rows.filter((r) => r.shown)) {
-    const recipe = recipeDef(row.recipeId);
-    const items = [...Object.keys(recipe.inputs), recipe.output.itemId];
-    // A label for each item, its name from the data, under the icon, inside the row.
-    expect(row.labels.map((l) => l.itemId), row.recipeId).toEqual(items);
-    expect(row.labels.map((l) => l.text), row.recipeId).toEqual(items.map((id) => itemDef(id).name));
-    const texts = [...row.labels, ...row.counts];
-    for (const [i, t] of texts.entries()) {
-      expect(t.w, `${row.recipeId} ${t.text}`).toBeGreaterThan(0);
-      expect(inside(t, row), `${row.recipeId} ${t.text} inside its row`).toBe(true);
-      for (const other of texts.slice(i + 1)) expect(overlaps(t, other), `${row.recipeId}: ${t.text} / ${other.text}`).toBe(false);
+  expect(menu.rows.map((r) => r.recipeId)).toEqual(CRAFT_TABS.flatMap((t) => t.recipes));
+  // 047: a tab per family; Landmines hidden with no ley-iron carried (038), every other tab shown.
+  expect(menu.tabs.map((t) => [t.label, t.shown])).toEqual([['Arrows', true], ['Bombs', true], ['Ley', true], ['Landmines', false]]);
+  for (const tab of ['arrow', 'bomb', 'ley-bolt']) {
+    await openCraftTab(page, tab);
+    const open = await page.evaluate(() => window.__GAME__?.ui().craftMenu);
+    const shown = open?.rows.filter((r) => r.shown) ?? [];
+    // Only the open tab's plain recipes: tagged rounds wait for the shrine's claim.
+    expect(shown.map((r) => r.recipeId)).toEqual((CRAFT_TABS.find((t) => t.ammoId === tab)?.recipes ?? []).filter((id) => RECIPES[id]));
+    for (const row of shown) {
+      const recipe = craftRecipeDef(row.recipeId);
+      const items = [...Object.keys(recipe.inputs), recipe.output.itemId];
+      // A label for each item, its name from the data, under the icon, inside the row.
+      expect(row.labels.map((l) => l.itemId), row.recipeId).toEqual(items);
+      expect(row.labels.map((l) => l.text), row.recipeId).toEqual(items.map((id) => itemDef(id).name));
+      const texts = [...row.labels, ...row.counts];
+      for (const [i, t] of texts.entries()) {
+        expect(t.w, `${row.recipeId} ${t.text}`).toBeGreaterThan(0);
+        expect(inside(t, row), `${row.recipeId} ${t.text} inside its row`).toBe(true);
+        for (const other of texts.slice(i + 1)) expect(overlaps(t, other), `${row.recipeId}: ${t.text} / ${other.text}`).toBe(false);
+      }
+      for (const l of row.labels.slice(0, -1)) expect(l.y - row.y).toBe(CRAFT_MENU_LAYOUT.labelY);
+      // Short of an input: its name shows as missing.
+      for (const l of row.labels.slice(0, -1)) {
+        const need = recipe.inputs[l.itemId] ?? 0;
+        const have = l.itemId === 'wood' ? wood : 0;
+        expect(l.missing, `${row.recipeId} ${l.itemId}`).toBe(have < need);
+      }
+      // ...and so does its have/need count; the output's made and owned counts never do.
+      const inputs = Object.keys(recipe.inputs);
+      expect(row.counts.map((c) => c.missing), row.recipeId).toEqual([...row.labels.slice(0, inputs.length).map((l) => l.missing), false, false]);
     }
-    for (const l of row.labels.slice(0, -1)) expect(l.y - row.y).toBe(CRAFT_MENU_LAYOUT.labelY);
-    // Short of an input: its name shows as missing.
-    for (const l of row.labels.slice(0, -1)) {
-      const need = recipe.inputs[l.itemId] ?? 0;
-      const have = l.itemId === 'wood' ? wood : 0;
-      expect(l.missing, `${row.recipeId} ${l.itemId}`).toBe(have < need);
+    // No row overlaps the next, nor any tab.
+    for (const [i, row] of shown.entries()) {
+      const next = shown[i + 1];
+      if (next) expect(overlaps(row, next)).toBe(false);
+      for (const t of open?.tabs ?? []) expect(overlaps(row, t)).toBe(false);
     }
-    // ...and so does its have/need count; the output's made and owned counts never do.
-    const inputs = Object.keys(recipe.inputs);
-    expect(row.counts.map((c) => c.missing), row.recipeId).toEqual([...row.labels.slice(0, inputs.length).map((l) => l.missing), false, false]);
   }
-  // No row overlaps the next.
-  for (const [i, row] of menu.rows.entries()) {
-    const next = menu.rows[i + 1];
-    if (next) expect(overlaps(row, next)).toBe(false);
-  }
-  expect(menu.headers.map((h) => h.text)).toEqual(CRAFT_GROUPS.map((g) => itemDef(ammoDef(g.ammoId).itemId).name));
-  for (const h of menu.headers) expect(h.shown, h.text).toBe(h.ammoId !== 'landmine');
   expect(errors).toEqual([]);
 });
 
@@ -184,12 +190,12 @@ test.describe('review screenshots (026)', () => {
     }, TREE);
     await cameraSettled(page, SETTLE_MS);
     const menu = await openCraftMenu(page);
-    // The pointer parked on the panel, over the first header's empty right-hand side (it lights no row).
-    const header = menu.headers[0];
+    // The pointer parked on the panel, under the tabs (it lights no row).
+    const tab = menu.tabs[menu.tabs.length - 1];
     const canvas = await page.locator('canvas').boundingBox();
-    if (!header || !canvas) throw new Error('no header');
+    if (!tab || !canvas) throw new Error('no tab');
     const zoom = canvas.width / VIEW_WIDTH;
-    await page.mouse.move(canvas.x + (header.x + 120) * zoom, canvas.y + (header.y + 2) * zoom);
+    await page.mouse.move(canvas.x + (tab.x + 10) * zoom, canvas.y + (tab.y + tab.h + 12) * zoom);
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().cursor))?.kind).toBe('pointer');
     await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/01-crafting-menu.png` });

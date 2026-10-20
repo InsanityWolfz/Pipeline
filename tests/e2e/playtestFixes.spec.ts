@@ -2,8 +2,8 @@ import { expect, test, type Page } from '@playwright/test';
 import { VIEW_WIDTH } from '../../src/data/config';
 import { DEPTHS } from '../../src/data/assets';
 import { nodeDef } from '../../src/data/nodes';
-import { craftMenuLines } from '../../src/render/craftMenuLayout';
-import { boot, watchErrors } from './helpers';
+import { craftTabRows } from '../../src/render/craftMenuLayout';
+import { boot, quietScreen, watchErrors } from './helpers';
 
 // Playtest fixes (021): the menu pointer over the crafting menu, no shake on firing,
 // and (with REVIEW_SHOTS=1) the review screenshots in docs/review/021.
@@ -15,7 +15,7 @@ const ui = (page: Page) => page.evaluate(() => window.__GAME__?.ui());
 async function hoverCraftRow(page: Page): Promise<void> {
   await page.keyboard.press('c');
   await expect.poll(async () => (await ui(page))?.craftOpen).toBe(true);
-  const row = craftMenuLines().find((l) => l.kind === 'recipe' && l.id === 'shaft');
+  const row = craftTabRows(0).find((l) => l.id === 'shaft');
   const box = await page.locator('canvas').boundingBox();
   if (!row || !box) throw new Error('no shaft row or canvas');
   const zoom = box.width / VIEW_WIDTH;
@@ -55,14 +55,14 @@ test('firing shakes nothing, whatever the ammo; a bomb burst still shakes', asyn
     let shots = 0;
     // Arrows, then ley bolts, east into open ground.
     for (const ammo of ['arrow', 'ley-bolt'] as const) {
-      g.step(1, { selectAmmo: ammo });
-      for (let t = 0; t < 40; t++) shots += g.step(1, { fire: true, aimX: p.x + 200, aimY: p.y }).events.shots.length;
+      window.__helpers?.hold(ammo);
+      for (let t = 0; t < 40; t++) shots += g.step(1, { use: true, aimX: p.x + 200, aimY: p.y }).events.shots.length;
     }
     // Then one bomb, lobbed a few tiles away; wait for its burst.
-    g.step(1, { selectAmmo: 'bomb' });
+    window.__helpers?.hold('bomb');
     let thrown = 0;
     for (let t = 0; t < 120 && thrown === 0; t++) {
-      s = g.step(1, { fire: true, aimX: p.x + 90, aimY: p.y });
+      s = g.step(1, { use: true, aimX: p.x + 90, aimY: p.y });
       thrown = s.events.shots.length;
     }
     shots += thrown;
@@ -114,7 +114,9 @@ test.describe('review screenshots (021)', () => {
       g.drop('wood', n.x + 34, n.y - half - 4);
       return { x: n.x, y: n.y };
     }, nodeDef('tree').feetBox.h / 2);
-    // The log lying behind the tree, before the tick that picks it up (for the picture only).
+    // The log lying behind the tree, before the tick that picks it up (for the picture only), once the Quarry's
+    // discovery banner from the walk has played out.
+    await quietScreen(page);
     await page.waitForTimeout(1500);
     await page.screenshot({ path: `${SHOTS}/03a-log-behind-tree.png` });
     // 045: the magnet pulls it in through the tree over a few ticks, then it's picked up.

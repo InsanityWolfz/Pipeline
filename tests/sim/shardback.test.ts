@@ -8,7 +8,7 @@ import { summarize } from '../../src/sim/summary';
 import { degrees } from '../../src/sim/summaryKinds';
 import { walkTo } from './bots';
 import { feed, lines } from './builds';
-import { arena, fireAt, HALL, movePlayer, PLAYER_AT, run, runUntil } from './fight';
+import { arena, fireAt, HALL, hold, movePlayer, PLAYER_AT, run, runUntil, volleyAt } from './fight';
 
 // The Shardback (035): 034's shield rule on a small construct. Shots and punches into its
 // front are blocked, from behind they land, bursts always do; it turns at most its rate,
@@ -61,7 +61,7 @@ describe('the Shardback', () => {
     const s = arena();
     s.inventory = {};
     const e = held(placeShardback(s, 20, 0, Math.PI));
-    run(s, 1, fireAt(PLAYER_AT.x + 20, PLAYER_AT.y));
+    run(s, 1, volleyAt(PLAYER_AT.x + 20, PLAYER_AT.y));
     expect(e.health).toBe(DEF.maxHealth);
     expect(s.events.blocked).toEqual([expect.objectContaining({ id: e.id })]);
   });
@@ -69,7 +69,7 @@ describe('the Shardback', () => {
   it('lets a lobbed burst land on its front side', () => {
     const s = arena();
     s.inventory = { bomb: 1 };
-    s.tube.ammoId = 'bomb';
+    hold(s, 'bomb');
     const e = held(placeShardback(s, 120, 0, Math.PI));
     run(s, 1, fireAt(PLAYER_AT.x + 110, PLAYER_AT.y));
     runUntil(s, () => s.bombs.length === 0, 120);

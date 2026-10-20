@@ -1,19 +1,13 @@
-import { DEFAULT_ROOM } from '../data/rooms';
-import { roomOf } from './roomLookup';
 import { DEFAULT_START, type StartDef } from '../data/player';
-import { createPopulation, inSafeZone, resetPopulation, type PopulationState } from './population';
-import { LANDMARK_LIST } from '../data/landmarks';
-import { rollChampions } from './champions';
-import { WORLD } from './world';
+import { createPopulation, type PopulationState } from './population';
 import type { GearPiece, GearSlot } from '../data/gear';
 import { NOTHING_WORN } from './gear';
 import { TALENT_START } from '../data/talents';
 import type { Pool } from './keystones';
-import { playerStats } from './stats';
 import type { ArrowState } from './arrows';
 import type { BombState } from './bombs';
 import type { GroundItem } from './drops';
-import { createEnemy, type EnemyState } from './enemies';
+import { type EnemyState } from './enemies';
 import { createEvents, type SimEvents } from './events';
 import { createCaches, type CacheHold, type CacheState } from './cache';
 import { startingFixtures, type FixtureState } from './fixtures';
@@ -21,21 +15,23 @@ import type { HarvestState } from './harvest';
 import { createGates, foundIn, type Gates } from './tutorial';
 import { HOLLOWS } from '../data/hollows';
 import { claim, type ClaimHold } from './claims';
-import { clearMines, createMines, type MinesState } from './mines';
+import { createMines, type MinesState } from './mines';
 import { OBJECTIVES } from '../data/objectives';
 import type { OrbState } from './orbs';
 import type { Inventory } from './inventory';
 import { createLink, type LinkState } from './link';
-import { createNodes, type NodeState } from './nodes';
+import { type NodeState } from './nodes';
 import { createFoundry, type FoundryState } from './pieces';
 import { createPlayer, type PlayerState } from './player';
 import { createRng, type RngState } from './rng';
-import { tileCentre } from './tiles';
 import { createTube, type TubeState } from './tube';
 import { createResearch, type ResearchState } from './research';
 import type { EnemyBombState } from './enemyBombs';
-import { bossReturns, settleSummons, type SummoningState } from './altar';
+import { type SummoningState } from './altar';
 import { noteCarried } from './knownRounds';
+import { createHotbar, type HotbarState } from './hotbar';
+import { noteBag } from './bag';
+import { resetWorld } from './resetWorld';
 import type { SandboxState } from './sandbox';
 
 /** The whole sim: plain serializable data. */
@@ -47,6 +43,10 @@ export interface SimState {
   roomId: string;
   player: PlayerState;
   inventory: Inventory;
+  /** 047: the grid inventory's order of kinds (src/sim/bag.ts): the stacks are the inventory's counts in this order. */
+  bag: string[];
+  /** 047: the carried bar (keys 1–5), its slots' kinds and the selected one. Kept through a KO (047.3). */
+  hotbar: HotbarState;
   tube: TubeState;
   /** The tube's link to the foundry and the intake's entrances (024). Kept through a KO. */
   link: LinkState;
@@ -182,6 +182,8 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     roomId,
     player: createPlayer({ x: 0, y: 0 }),
     inventory: { ...start.inventory },
+    bag: [],
+    hotbar: createHotbar(),
     tube: createTube(),
     link: { ...createLink(), attuned: start.attuned },
     research: createResearch(),
@@ -245,54 +247,15 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
   };
   resetWorld(state, roomId);
   noteCarried(state);
+  noteBag(state);
   // A start's claims (034) are made before the first tick, as if long done: the barrier they drop is already down.
   for (const site of start.claims ?? []) claim(state, site);
   state.gates.hollows ||= state.claims.includes(HOLLOWS.opensOn);
   return state;
 }
 
-/**
- * Puts the world back to its start: player at the spawn room's spawn with full
- * health, the tube on its starting ammo, every
- * room's enemies at home and nodes at full, and nothing harvesting, on the
- * ground or in flight, and build mode off. The tick, seed, RNG, id counters,
- * the inventory (a death trims it first), the crafted set, the tube's link and
- * the intake's entrances, research (033), claims, the stash, gear and the whole foundry carry on. Claimed rooms get no enemies back.
- */
-export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
-  const rooms = Object.values(WORLD);
-  state.roomId = spawnRoomId;
-  // The start's own spawn when waking in its room (017: the overworld has several), else the room's.
-  const spawn = spawnRoomId === state.start.room ? state.start.spawn : roomOf(state).spawn;
-  state.player = createPlayer(tileCentre(spawn));
-  // Waking at full health means the worn gear's max (036).
-  state.player.health = playerStats(state).maxHealth;
-  state.tube = createTube();
-  state.arrows = [];
-  state.groundItems = [];
-  state.nodes = createNodes(rooms);
-  state.harvest = null;
-  state.bombs = [];
-  clearMines(state);
-  state.pools = [];
-  state.enemyBombs = [];
-  settleSummons(state);
-  state.orbs = [];
-  state.claimHold = null;
-  state.cacheHold = null;
-  state.building = false;
-  // A claimed site's guards are gone for good (017: a site is a group of the room's enemies), and no guard comes back
-  // inside a claimed pylon's safe zone (032).
-  state.enemies = rooms.flatMap((room) =>
-    (room.enemies ?? [])
-      .filter((p) => (!p.group || !state.claims.includes(p.group)) && !inSafeZone(state, room.id, tileCentre(p).x, tileCentre(p).y) && bossReturns(state, p.enemyId))
-      .map((p) => createEnemy(state.nextEnemyId++, p.enemyId, tileCentre(p), room.id, p.group)),
-  );
-  // Each landmark's guard pack may hold a champion (032); the tutorial's packs never do.
-  for (const l of LANDMARK_LIST) rollChampions(state.rng, state.enemies.filter((e) => e.group === l.id), l.ring);
-  resetPopulation(state);
-}
-
+// 047: resetWorld moved to src/sim/resetWorld.ts (state.ts passed 300 lines); re-exported here, where systems import it.
+export { resetWorld };
 export { tileCentre } from './tiles';
 
 // Room lookups live in src/sim/roomLookup.ts; re-exported here, where most systems import them from.

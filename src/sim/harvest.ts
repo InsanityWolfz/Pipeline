@@ -47,9 +47,9 @@ export function cancelHarvest(state: SimState): void {
 
 /** Anything the player does this tick other than standing still ends a harvest. */
 function interrupted(state: SimState, cmd: Command): boolean {
-  // Without the tube (012) fire and ammo select do nothing, so they don't interrupt either.
-  const switching = state.hasTube && cmd.selectAmmo !== null && cmd.selectAmmo !== state.tube.ammoId;
-  return cmd.moveX !== 0 || cmd.moveY !== 0 || isRolling(state.player) || (state.hasTube && cmd.fire) || switching;
+  // Without the tube (012) fire, use and a slot pick do nothing, so they don't interrupt either.
+  const switching = state.hasTube && cmd.selectSlot !== null && cmd.selectSlot !== state.hotbar.selected;
+  return cmd.moveX !== 0 || cmd.moveY !== 0 || isRolling(state.player) || (state.hasTube && (cmd.fire || cmd.use)) || switching;
 }
 
 /** Runs after the player and enemies act, before the tube. */

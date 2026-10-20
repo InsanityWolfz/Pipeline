@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { AMMO, lobAmmo, straightAmmo } from '../../src/data/ammo';
 import { stepBombs, throwBomb } from '../../src/sim/bombs';
-import { arena, FIELD_WALL, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, FIELD_WALL, fireAt, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
 // The beginner ammo's jobs (029): arrows pierce without limit, ley bolts hit hard
 // without piercing, bombs burst wider with no burn.
@@ -61,7 +61,7 @@ describe('ley bolts do not pierce (029)', () => {
     expect(BOLT.pierce).toBe(false);
     const s = arena();
     s.inventory['ley-bolt'] = 4;
-    run(s, 1, { selectAmmo: 'ley-bolt' });
+    hold(s, 'ley-bolt');
     const first = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y);
     const second = placeHusk(s, PLAYER_AT.x + 140, PLAYER_AT.y);
     run(s, 1, fireAt(PLAYER_AT.x + 1000, PLAYER_AT.y));

@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { CONDUIT_TICKS } from '../../src/data/foundry';
 import { STAGES } from '../../src/data/stages';
-import { canCraft, craft } from '../../src/sim/crafting';
+import { canCraft, craft, craftHeld, craftKnown } from '../../src/sim/crafting';
 import { fixtureDef } from '../../src/sim/fixtures';
 import { offerFromOutside } from '../../src/sim/flow';
 import type { ConduitState, CrateState, HopperState, MachineState } from '../../src/sim/pieces';
 import { unlockedPieces } from '../../src/sim/placement';
-import { applyStage, stageAffordable, stageHeld, stagesKnown } from '../../src/sim/stages';
+import { stagesKnown, taggedAffordable, taggedHeld } from '../../src/sim/stages';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
 import type { SimState } from '../../src/sim/state';
@@ -14,8 +14,8 @@ import { movePlayer, run } from './fight';
 import { foundry, put } from './foundryKit';
 
 // Stage machines (029): a stage takes finished rounds of its base plus a little
-// material and hands them out of its front with its tag added. Each is hand-applied
-// once at the bench before it can be built.
+// material and hands them out of its front with its tag added. Each unlocks once its
+// tagged round is crafted by hand (047: in the crafting menu, anywhere).
 
 const FROST = STAGES['frost-rune'];
 if (!FROST) throw new Error('no frost rune');
@@ -130,22 +130,25 @@ function atBench(): SimState {
   return s;
 }
 
-describe('hand-applying a stage at the bench', () => {
+describe('crafting a tagged round (047: in the crafting menu, anywhere)', () => {
   it('is unknown before the shrine claim', () => {
     const s = atBench();
     expect(stagesKnown(s)).toBe(false);
-    expect(applyStage(s, 'frost-rune')).toBe(false);
+    expect(canCraft(s, 'frost-rune-arrow')).toBe(false);
+    expect(craft(s, 'frost-rune-arrow')).toBe(false);
+    expect(s.events.craftFails).toEqual([{ recipeId: 'frost-rune-arrow' }]);
     expect(s.inventory).toMatchObject({ arrow: 9, 'rimestone': 3 });
   });
 
-  it('takes the inputs and gives the tagged rounds, which unlocks the stage in the build bar', () => {
+  it('takes the inputs and gives the tagged rounds, which unlocks the stage machine in the build bar', () => {
     const s = atBench();
     s.claims.push('shrine');
     expect(stagesKnown(s)).toBe(true);
     expect(unlockedPieces(s)).not.toContain('frost-rune');
-    expect(applyStage(s, 'frost-rune')).toBe(true);
+    expect(craft(s, 'frost-rune-arrow')).toBe(true);
     expect(s.inventory).toMatchObject({ arrow: 5, 'rimestone': 2, 'arrow+frost': 4 });
     expect(s.crafted).toContain('arrow+frost');
+    expect(s.events.crafts).toEqual([{ recipeId: 'frost-rune-arrow' }]);
     expect(unlockedPieces(s)).toContain('frost-rune');
     expect(unlockedPieces(s)).not.toContain('ley-guide');
     expect(summarize(s).stagesUnlocked).toEqual(['frost-rune']);
@@ -154,33 +157,19 @@ describe('hand-applying a stage at the bench', () => {
   it('works any number of times, until the inputs run short', () => {
     const s = atBench();
     s.claims.push('shrine');
-    expect(applyStage(s, 'frost-rune')).toBe(true);
-    expect(applyStage(s, 'frost-rune')).toBe(true);
-    expect(applyStage(s, 'frost-rune')).toBe(false);
+    expect(craft(s, 'frost-rune-arrow')).toBe(true);
+    expect(craft(s, 'frost-rune-arrow')).toBe(true);
+    expect(craft(s, 'frost-rune-arrow')).toBe(false);
     expect(s.inventory).toMatchObject({ arrow: 1, 'rimestone': 1, 'arrow+frost': 8 });
   });
 
-  it("can't be done through the crafting menu's craft, which refuses stage ids", () => {
-    const s = atBench();
-    s.claims.push('shrine');
-    expect(canCraft(s, 'frost-rune')).toBe(false);
-    expect(craft(s, 'frost-rune')).toBe(false);
-    expect(s.events.craftFails).toEqual([{ recipeId: 'frost-rune' }]);
-    expect(s.inventory).toMatchObject({ arrow: 9, 'rimestone': 3 });
-    expect(s.crafted).not.toContain('arrow+frost');
-  });
-
-  it('needs the bench in reach', () => {
+  it('needs no bench: anywhere, the overworld too', () => {
     const s = atBench();
     s.claims.push('shrine');
     movePlayer(s, s.player.x + 200, s.player.y);
-    expect(applyStage(s, 'frost-rune')).toBe(false);
-  });
-
-  it('comes as a command from the bench menu', () => {
-    const s = atBench();
-    s.claims.push('shrine');
-    run(s, 1, { applyStage: 'prism-lens' });
+    expect(craft(s, 'frost-rune-arrow')).toBe(true);
+    s.roomId = 'overworld';
+    expect(craft(s, 'prism-lens-ley-bolt')).toBe(true);
     expect(s.inventory).toMatchObject({ 'ley-bolt': 0, 'ley-crystal': 0, 'ley-bolt+split': 4 });
     expect(unlockedPieces(s)).toContain('prism-lens');
   });
@@ -189,7 +178,7 @@ describe('hand-applying a stage at the bench', () => {
 // Bug (Shaun, 2026-10-20): the Stages panel showed "0/4 arrows" with arrows in an intake
 // entrance and in the inventory. The panel counts what the sim says is held for a row:
 // carried rounds plus the intake entrances' reservoirs (029, raised after the build).
-describe('what the Stages panel counts as held', () => {
+describe('what a tagged round\'s recipe counts as held (029 option A)', () => {
   /** At the bench with the shrine claimed, `carried` arrows and `inEntrance` arrows in the first entrance. */
   function heldAt(carried: number, inEntrance: number): SimState {
     const s = atBench();
@@ -202,29 +191,44 @@ describe('what the Stages panel counts as held', () => {
   }
 
   it('counts arrows in an intake entrance as well as carried ones', () => {
-    expect(stageHeld(heldAt(0, 4), 'arrow')).toBe(4);
-    expect(stageHeld(heldAt(1, 3), 'arrow')).toBe(4);
-    expect(stageHeld(heldAt(1, 3), 'rimestone')).toBe(1);
+    expect(taggedHeld(heldAt(0, 4), 'arrow')).toBe(4);
+    expect(taggedHeld(heldAt(1, 3), 'arrow')).toBe(4);
+    expect(taggedHeld(heldAt(1, 3), 'rimestone')).toBe(1);
   });
 
   it('is affordable from an entrance and the inventory together, taking carried rounds first', () => {
     const s = heldAt(1, 5);
-    expect(stageAffordable(s, 'frost-rune-arrow')).toBe(true);
-    expect(applyStage(s, 'frost-rune-arrow')).toBe(true);
+    expect(taggedAffordable(s, 'frost-rune-arrow')).toBe(true);
+    expect(craft(s, 'frost-rune-arrow')).toBe(true);
     expect(s.inventory).toMatchObject({ arrow: 0, rimestone: 0, 'arrow+frost': 4 });
     expect(s.link.entrances[0]).toMatchObject({ ammoId: 'arrow', count: 2 });
   });
 
   it('empties an entrance it drains, which then forgets its ammo', () => {
     const s = heldAt(0, 4);
-    expect(applyStage(s, 'frost-rune-arrow')).toBe(true);
+    expect(craft(s, 'frost-rune-arrow')).toBe(true);
     expect(s.link.entrances[0]).toMatchObject({ ammoId: null, count: 0 });
   });
 
   it('still refuses when carried and entrance rounds together fall short', () => {
     const s = heldAt(1, 2);
-    expect(stageAffordable(s, 'frost-rune-arrow')).toBe(false);
-    expect(applyStage(s, 'frost-rune-arrow')).toBe(false);
+    expect(taggedAffordable(s, 'frost-rune-arrow')).toBe(false);
+    expect(craft(s, 'frost-rune-arrow')).toBe(false);
     expect(s.link.entrances[0]).toMatchObject({ count: 2 });
+  });
+});
+
+describe('the crafting menu\'s rules for a row (047)', () => {
+  it('knows a tagged row once the shrine is claimed, and counts its inputs carried plus in the entrances', () => {
+    const s = atBench();
+    expect(craftKnown(s, 'frost-rune-arrow')).toBe(false);
+    expect(craftKnown(s, 'shaft')).toBe(true);
+    s.claims.push('shrine');
+    expect(craftKnown(s, 'frost-rune-arrow')).toBe(true);
+    const [e] = s.link.entrances;
+    if (!e) throw new Error('no entrance');
+    Object.assign(e, { open: true, ammoId: 'arrow', count: 5 });
+    expect(craftHeld(s, 'frost-rune-arrow', 'arrow')).toBe(14);
+    expect(craftHeld(s, 'arrow', 'arrow')).toBe(9);
   });
 });

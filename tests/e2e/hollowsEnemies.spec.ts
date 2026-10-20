@@ -69,7 +69,7 @@ test('a Shardback: its front blocks; circling inside its turn to its back, the a
     let blocked = 0;
     for (let t = 0; t < 20; t++) {
       const e = g.getState().enemies.find((x) => x.id === eid);
-      blocked += g.step(1, { fire: true, aimX: e?.x ?? 0, aimY: (e?.y ?? 0) - 12 }).events.blocked.length;
+      blocked += g.step(1, { use: true, aimX: e?.x ?? 0, aimY: (e?.y ?? 0) - 12 }).events.blocked.length;
     }
     g.step(10);
     const e = g.getState().enemies.find((x) => x.id === eid);
@@ -100,7 +100,7 @@ test('a Shardback: its front blocks; circling inside its turn to its back, the a
       const along = bearing + 0.7;
       const goal = { x: e.x + Math.cos(along) * 26, y: e.y + Math.sin(along) * 26 };
       const behind = off > (110 * Math.PI) / 180;
-      const next = g.step(1, { moveX: sign(goal.x - p.x), moveY: sign(goal.y - p.y), fire: behind, aimX: e.x, aimY: e.y - 12 });
+      const next = g.step(1, { moveX: sign(goal.x - p.x), moveY: sign(goal.y - p.y), use: behind, aimX: e.x, aimY: e.y - 12 });
       const bashing = next.enemies.find((x) => x.id === eid)?.mode === 'swipe';
       if (bashing && e.mode !== 'swipe') bashes += 1;
       if (bashing) bashHits += next.events.hits.filter((h) => h.target === 'player').length;

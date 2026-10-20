@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { straightAmmo } from '../../src/data/ammo';
 import { damageEnemy } from '../../src/sim/enemies';
-import { arena, at, FIELD_WALL, fireAt, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, at, FIELD_WALL, fireAt, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 
 const DAMAGE = straightAmmo('arrow').damage;
 
@@ -40,7 +40,7 @@ describe('arrows hitting Husks', () => {
   it('a ley bolt hits the Husk it reaches first when hurtboxes overlap (029: ley bolts stop in the first)', () => {
     const s = arena();
     s.inventory['ley-bolt'] = 2;
-    run(s, 1, { selectAmmo: 'ley-bolt' });
+    hold(s, 'ley-bolt');
     // First in the array but 1 px further along the flight, with hurtboxes overlapping.
     const far = placeHusk(s, PLAYER_AT.x + 101, PLAYER_AT.y);
     const near = placeHusk(s, PLAYER_AT.x + 100, PLAYER_AT.y + HUSK.feetBox.h);
@@ -120,7 +120,7 @@ describe('ley bolts', () => {
   function bolted() {
     const s = arena();
     s.inventory['ley-bolt'] = 6;
-    run(s, 1, { selectAmmo: 'ley-bolt' });
+    hold(s, 'ley-bolt');
     return s;
   }
 

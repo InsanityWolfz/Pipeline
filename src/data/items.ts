@@ -93,6 +93,22 @@ export const ITEMS: Readonly<Record<string, ItemDef>> = {
   ...Object.fromEntries(ROUNDS.map((r) => [r, roundItem(r)])),
 };
 
+/**
+ * Stack sizes (047.1): how many of a kind one inventory, hopper or crate slot holds. Resources 50, parts and rounds
+ * 100, bombs and landmines (every round of those families) 20, gear 1. Schematics stack as parts.
+ */
+export const STACK_SIZES = { raw: 50, part: 100, round: 100, thrown: 20, armor: 1, schematic: 100 } as const;
+
+/** The families whose rounds are thrown (047.1: they stack 20). */
+export const THROWN_FAMILIES: readonly string[] = ['bomb', 'landmine'];
+
+/** How many of an item one slot holds (047.1). */
+export function stackSize(id: string): number {
+  const def = itemDef(id);
+  if (def.kind === 'ammo') return THROWN_FAMILIES.includes(roundBase(id)) ? STACK_SIZES.thrown : STACK_SIZES.round;
+  return STACK_SIZES[def.kind];
+}
+
 export function itemDef(id: string): ItemDef {
   const def = ITEMS[id];
   if (!def) throw new Error(`Unknown item '${id}'`);

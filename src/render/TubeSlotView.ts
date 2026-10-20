@@ -23,10 +23,10 @@ export interface TubeSlotState extends ScreenBox {
   labelBoxes: { x: number; w: number }[];
 }
 
-// The tube slot (025): centred above the hotbar row and `activeScale` times its size,
-// it shows what the next fire press does, as the sim's `hudActive` says: the carried
-// round of the selected ammo and its count; else the volley, one icon per round with
-// its entrance's count; else a fist labelled "Melee".
+// The intake's bar (025, 047: the tube slot): centred above the carried bar and `activeScale`
+// times its size, it shows what the next left click does, as the sim's `hudActive` says: the
+// volley, one icon per round with its entrance's count; before the tube attunes, the selected
+// carried round with how many are carried (047.9); else a fist labelled "Melee".
 export class TubeSlotView {
   private readonly frame: GameObjects.Image;
   private readonly units: Unit[];
@@ -64,12 +64,9 @@ export class TubeSlotView {
     if (active.kind === 'volley' && active.rounds.length > this.units.length) {
       console.error(`The tube slot has ${this.units.length} units, but the volley has ${active.rounds.length} rounds`);
     }
+    const rounds = active.kind === 'volley' ? active.rounds.slice(0, this.units.length) : active.kind === 'carried' ? [active] : [];
     const shows: { icon: string; label: string; ammoId?: string }[] =
-      active.kind === 'carried'
-        ? [{ icon: ammoIcon(active.ammoId), label: String(active.count), ammoId: active.ammoId }]
-        : active.kind === 'volley'
-          ? active.rounds.slice(0, this.units.length).map((r) => ({ icon: ammoIcon(r.ammoId), label: String(r.count), ammoId: r.ammoId }))
-          : [{ icon: SPRITES.hudFist, label: S.melee }];
+      active.kind === 'melee' ? [{ icon: SPRITES.hudFist, label: S.melee }] : rounds.map((r) => ({ icon: ammoIcon(r.ammoId), label: String(r.count), ammoId: r.ammoId }));
     const box = tubeSlotBox(shows.length, building);
     showFrame(this.frame, tubeSlotFrame(shows.length)).setOrigin(0).setPosition(box.x, box.y);
     const at = tubeSlotUnits(shows.length, building);

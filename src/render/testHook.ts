@@ -10,7 +10,6 @@ import type { BuildBarState } from './BuildView';
 import type { CraftMenuState } from './CraftMenuView';
 import type { PromptState } from './PromptView';
 import type { PortShown } from './PortView';
-import type { StagePanelState } from './StagePanel';
 import type { GearPanelState } from './GearPanel';
 import type { GearPiece } from '../data/gear';
 import type { RelicsShown } from './RelicView';
@@ -22,6 +21,7 @@ import type { ChampionShown } from './EnemyView';
 import type { LandmarksShown } from './LandmarkView';
 import type { ResearchShown } from './ResearchView';
 import type { SchematicsShown } from './SchematicView';
+import type { HintShown } from './Banner';
 import type { RestorePanelState } from './RestorePanel';
 import type { ResearchListState } from './ResearchList';
 import type { HollowsShown } from './HollowsView';
@@ -35,8 +35,8 @@ export interface GameTestHook {
   /** 042: the flow's state, the save slot's status, saves written this session, and stored notes. */
   flow(): FlowReport;
   /**
-   * Steps `frames` ticks holding `command`. Its dodge, interact, ammo
-   * select, build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), setFilter, pylon, travel, takeStash, identify, equip, applyStage, restore (033), summon, takeTalent and respec (037) apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
+   * Steps `frames` ticks holding `command`. Its dodge, interact, carried slot
+   * select and assign (047), build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), sortInventory (047), setFilter, pylon, travel, takeStash, identify, equip, restore (033), summon, takeTalent and respec (037) apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
    */
   step(frames: number, command?: Partial<Command>): SimSummary;
   /** Crafts a recipe once between ticks, as clicking its menu row does. */
@@ -92,13 +92,11 @@ export interface UiState {
   /** The craft menu is open (it doesn't pause, 020), and the pause menu is (Esc: the world stops). */
   craftOpen: boolean;
   paused: boolean;
-  /** The hopper picker is open. */
+  /** A hopper's or crate's screen is open (047; it replaced 022's hopper picker). */
   pickerOpen: boolean;
   /** A site menu (a claimed pylon's, the stash's, the bench's or a sorter's) is open (031: it and the inventory take turns). */
   siteOpen: boolean;
-  /** The hopper picker's hint line while it shows (022), else null. */
-  pickerHint: string | null;
-  /** The counts the hopper picker's rows show, top to bottom (022: they update live). */
+  /** The counts the open hopper's or crate's own slots show, in order (047; they update live). */
   pickerCounts: number[];
   hoverName: string | null;
   hoverDescription: string | null;
@@ -149,10 +147,10 @@ export interface UiState {
   /** The build bar as drawn (026): the unlocked pieces' cells, the shown groups' labels and the dividers. */
   buildBar: BuildBarState | null;
   /**
-   * 029: the bench's Stages panel as drawn, Split flashes still showing, and the tagged rounds' trails in flight
-   * (how many, and the most points one runs along).
+   * 029: Split flashes still showing, and the tagged rounds' trails in flight (how many, and the most points one runs
+   * along). 047 removed the bench's Stages panel from here.
    */
-  tagged: { benchStages: StagePanelState | null; splitFlashes: number; trails: { count: number; longest: number } };
+  tagged: { splitFlashes: number; trails: { count: number; longest: number } };
   /** 030: the Ley Springs drawn, healing motes in the air, the pylon's thread, the foundry's shimmer, and the spring glowing under the player. */
   healing: HealingShown;
   /** 031: the inventory panel (open, and each group's rows: carried count, at risk, home in the stash). */
@@ -175,6 +173,8 @@ export interface UiState {
   research: ResearchShown;
   /** 033: the schematics' light pillars and the banner's schematic line. */
   schematics: SchematicsShown;
+  /** 047.9: the one-time hint on the banner ("Right click: carried items") while it shows, and the hints started lately. */
+  hint: HintShown;
   /** 033: the restore panel while open (E at a diagram), else null. */
   restorePanel: RestorePanelState | null;
   /** 034: the altar's offering while open (E at an awake altar), in the restore panel's shape (its `node` the altar), else null. */

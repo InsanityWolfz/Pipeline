@@ -1,10 +1,8 @@
 import { VIEW_WIDTH } from '../data/config';
 import { GEAR_SLOTS, type GearSlot } from '../data/gear';
 import { GEAR_PANEL } from '../data/gearAssets';
-import { stagePanelLayout } from './stagePanelLayout';
 
-// Where the bench's gear panel (036) and its parts sit on screen: centred, or left of
-// 029's Stages panel once the shrine is claimed. The open tab's rows are paged by
+// Where the bench's gear panel (036) and its parts sit on screen: centred. The open tab's rows are paged by
 // height (a relic's row is taller). No Phaser, so tests can find what to click.
 
 export interface Box {
@@ -64,10 +62,10 @@ function across(x: number, y: number, h: number, gap: number, count: number): Bo
   return Array.from({ length: count }, (_, i) => ({ x: x + GEAR_PANEL.pad + i * (w + gap), y, w, h }));
 }
 
-/** The panel's layout: beside the Stages panel when `staged`, the open tab's `rows`, showing page `page` (wrapped into range). */
-export function gearPanelLayout(staged: boolean, rows: readonly RowSpec[], page: number): GearPanelLayout {
+/** The panel's layout, centred: the open tab's `rows`, showing page `page` (wrapped into range). */
+export function gearPanelLayout(rows: readonly RowSpec[], page: number): GearPanelLayout {
   const P = GEAR_PANEL;
-  const x = staged ? stagePanelLayout(P.w).benchX : Math.round((VIEW_WIDTH - P.w) / 2);
+  const x = Math.round((VIEW_WIDTH - P.w) / 2);
   const y = P.y;
   const inner = P.w - 2 * P.pad;
   const pages = gearPages(rows);

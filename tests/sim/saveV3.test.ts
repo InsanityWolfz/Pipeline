@@ -5,10 +5,14 @@ import { OBJECTIVES } from '../../src/data/objectives';
 import { FOUNDRY_ROOM } from '../../src/data/rooms';
 import { createSim } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
-import { makeEnvelope, readSave, snapshot } from '../../src/sim/save';
+import { makeEnvelope, readSave, SAVE_MIGRATIONS, snapshot } from '../../src/sim/save';
 
 // 046: version 2 → 3. The Splitter left research (it's on the bar from the start), so a version 2 save's splitter
-// node and any Splitter schematic are dropped; nothing is refunded (046.5).
+// node and any Splitter schematic are dropped; nothing is refunded (046.5). 047 made SAVE_VERSION 4 with no
+// migration (Shaun's rule), so these read with version 3 as the target, as the game did before 047.
+
+/** Reading as the game did at version 3. */
+const V3 = { version: 3, migrations: SAVE_MIGRATIONS };
 
 const META = { build: 'test', savedAt: '2026-10-20T12:00:00.000Z', endCardSeen: false };
 
@@ -21,8 +25,9 @@ function v2(edit: (state: Record<string, unknown>) => void): string {
 }
 
 describe('version 2 → 3 (046)', () => {
-  it('is the current version', () => {
-    expect(SAVE_VERSION).toBe(3);
+  it('is no longer the current version (047: 4, then 5 for 047.9, with no migration)', () => {
+    expect(SAVE_VERSION).toBe(5);
+    expect(SAVE_MIGRATIONS[3]).toBeUndefined();
   });
 
   it("drops the splitter node and every Splitter schematic: carried, banked, at home, at the start and on the ground", () => {
@@ -37,7 +42,7 @@ describe('version 2 → 3 (046)', () => {
         { id: 2, itemId: 'wood', roomId: 'overworld', x: 12, y: 10 },
       ];
     });
-    const read = readSave(text);
+    const read = readSave(text, V3);
     expect(read.status).toBe('ok');
     if (read.status !== 'ok') return;
     expect(read.envelope.version).toBe(3);
@@ -60,7 +65,7 @@ describe('version 2 → 3 objectives (046)', () => {
 
   it("maps the done goals by text: 027's steps drop out, the rest keep their state", () => {
     // Done in version 2: the tube (0), entering the foundry (4), filling the tube (13) and claiming the shrine (15).
-    const read = readSave(v2Done([0, 4, 13, 15]));
+    const read = readSave(v2Done([0, 4, 13, 15]), V3);
     if (read.status !== 'ok') throw new Error(read.reason);
     const done = OBJECTIVES.filter((_, i) => read.state.objectives[i]).map((o) => o.text);
     expect(read.state.objectives).toHaveLength(OBJECTIVES.length);
@@ -68,7 +73,7 @@ describe('version 2 → 3 objectives (046)', () => {
   });
 
   it('counts the refill goal done where a hopper was filled (027 step 2), and the second line where two entrances were fed', () => {
-    const read = readSave(v2Done([7, 17]));
+    const read = readSave(v2Done([7, 17]), V3);
     if (read.status !== 'ok') throw new Error(read.reason);
     const done = OBJECTIVES.filter((_, i) => read.state.objectives[i]).map((o) => o.text);
     expect(done).toEqual([
@@ -84,7 +89,7 @@ describe('version 2 → 3 objectives (046)', () => {
       delete start.exampleLine;
       state.start = start;
     });
-    const read = readSave(text);
+    const read = readSave(text, V3);
     if (read.status !== 'ok') throw new Error(read.reason);
     const s = read.state;
     expect(s.start.exampleLine).toBeUndefined();

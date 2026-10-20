@@ -1,25 +1,30 @@
 import { expect, test, type Page } from '@playwright/test';
-import { boot, cameraSettled } from './helpers';
+import { openCraftTab } from './craftPage';
+import { boot, cameraSettled, quietScreen } from './helpers';
 import { ui } from './intakePage';
 
 // Review screenshots for 038 (REVIEW_SHOTS=1, into docs/review/038): armed mines with their
 // arm rings (one fresh, one in its red last second) and key 4 lit on the hotbar, a mine's
-// burst, a cluster bomb's bomblets in the air and bursting, the crafting menu's two columns
-// with the Landmines group, the new machines working in a line, and the art on the contact
+// burst, a cluster bomb's bomblets in the air and bursting, the crafting menu's Landmines
+// tab (047), the new machines working in a line, and the art on the contact
 // sheet. Under the hook the sim holds still between steps; flashes are held by slowing tweens.
 
 const SHOTS = 'docs/review/038';
 
-/** `?playtest` on open ground, every enemy gone, the camera still. */
+/**
+ * `?playtest` on open ground, every enemy gone but the Bulwark (its first kill would bring up the end card, 042),
+ * the camera still and nothing passing over the screen.
+ */
 async function field(page: Page): Promise<{ x: number; y: number }> {
   await boot(page, '?playtest');
   const p = await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    for (const e of g.getState().enemies) g.setEnemyHealth(e.id, 0);
+    for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark') g.setEnemyHealth(e.id, 0);
     return g.step(1).player;
   });
   await cameraSettled(page, 20_000);
+  await quietScreen(page);
   return { x: p.x, y: p.y };
 }
 
@@ -32,11 +37,11 @@ test.describe('review screenshots (038)', () => {
     await page.evaluate((at) => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
-      g.step(1, { selectAmmo: 'landmine' });
+      window.__helpers?.hold('landmine');
       // The first is thrown 200 ticks before the second, so it shows in its red last second as the second fills.
-      g.step(1, { fire: true, aimX: at.x + 90, aimY: at.y - 30 });
+      g.step(1, { use: true, aimX: at.x + 90, aimY: at.y - 30 });
       g.step(200);
-      g.step(1, { fire: true, aimX: at.x - 90, aimY: at.y + 20 });
+      g.step(1, { use: true, aimX: at.x - 90, aimY: at.y + 20 });
       g.step(75);
     }, p);
     await expect.poll(async () => (await ui(page))?.mines.armed.length).toBe(2);
@@ -52,8 +57,8 @@ test.describe('review screenshots (038)', () => {
     await page.evaluate((at) => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
-      g.step(1, { selectAmmo: 'landmine' });
-      g.step(1, { fire: true, aimX: at.x + 80, aimY: at.y });
+      window.__helpers?.hold('landmine');
+      g.step(1, { use: true, aimX: at.x + 80, aimY: at.y });
       g.tweenSpeed(0.03);
       let s = g.step(1);
       for (let t = 0; t < 400 && s.events.mineBursts.length === 0; t++) s = g.step(1);
@@ -69,12 +74,12 @@ test.describe('review screenshots (038)', () => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
       // The playtest carries no tagged rounds: a cluster bomb laid at the player's feet is picked up.
-      g.step(1, { selectAmmo: 'bomb' });
       g.drop('bomb+cluster', at.x, at.y);
       let s = g.step(1);
       for (let t = 0; t < 60 && !s.inventory['bomb+cluster']; t++) s = g.step(1);
+      window.__helpers?.hold('bomb+cluster');
       g.tweenSpeed(0.03);
-      s = g.step(1, { fire: true, aimX: at.x + 110, aimY: at.y });
+      s = g.step(1, { use: true, aimX: at.x + 110, aimY: at.y });
       for (let t = 0; t < 120 && s.events.bursts.length === 0; t++) s = g.step(1);
       g.step(6);
     }, p);
@@ -90,11 +95,10 @@ test.describe('review screenshots (038)', () => {
     await page.screenshot({ path: `${SHOTS}/04-cluster-burst.png` });
   });
 
-  test("the crafting menu's two columns, with the Landmines group", async ({ page }) => {
+  test("the crafting menu's Landmines tab (047; 038 had its group in a second column)", async ({ page }) => {
     test.setTimeout(60_000);
     await field(page);
-    await page.keyboard.press('c');
-    await expect.poll(async () => (await ui(page))?.craftOpen).toBe(true);
+    await openCraftTab(page, 'landmine');
     const rows = (await ui(page))?.craftMenu?.rows.filter((r) => r.shown).map((r) => r.recipeId) ?? [];
     expect(rows).toEqual(expect.arrayContaining(['iron-plate', 'landmine']));
     await page.screenshot({ path: `${SHOTS}/05-crafting-menu.png` });
@@ -145,7 +149,7 @@ test.describe('review screenshots (038)', () => {
       // Stop with all three mid-batch if the timing allows; the shot shows what's working now.
       return [...busy];
     });
-    expect(working.sort()).toEqual(['mine-packer', 'plate-press', 'cluster-die']);
+    expect(working.sort()).toEqual(['cluster-die', 'mine-packer', 'plate-press']);
     // The schematic banners from banking on the way in, played out fast so none covers the line.
     await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
     await expect.poll(async () => (await ui(page))?.schematics.bannerIdle, { timeout: 20_000 }).toBe(true);

@@ -30,6 +30,7 @@ function scripted(seed: number, ticks: number) {
       moveY: t % 70 < 20 ? 1 : 0,
       dodge: t % 150 === 75,
       fire: t % 120 > 100,
+      use: t % 120 > 100,
       aimX: sim.player.x + Math.cos(t / 10) * 100,
       aimY: sim.player.y + Math.sin(t / 10) * 100,
     };
@@ -63,7 +64,7 @@ function scriptedFight(seed: number, ticks: number) {
       ...NO_COMMAND,
       moveX: goal ? toward(p.x, goal.x) : 0,
       moveY: goal ? toward(p.y, goal.y) : 0,
-      fire: fighting && !empty && target !== undefined,
+      use: fighting && !empty && target !== undefined,
       aimX: target?.x ?? p.x,
       aimY: target?.y ?? p.y,
     };
@@ -79,7 +80,6 @@ function scriptedFight(seed: number, ticks: number) {
 function scriptedSession(seed: number, ticks: number) {
   const sim = createSim(seed);
   sim.inventory = { 'husk-resin': 2, stone: 2, 'ley-crystal': 2, wood: 1, fiber: 1 };
-  const ammo = ['arrow', 'bomb', 'ley-bolt'];
   for (let t = 0; t < ticks; t++) {
     if (t === 100) for (const r of ['shaft', 'arrowhead', 'rope', 'arrow', 'casing', 'fuse', 'ley-dust', 'bomb', 'ley-bolt']) craft(sim, r);
     const p = sim.player;
@@ -92,8 +92,8 @@ function scriptedSession(seed: number, ticks: number) {
       moveX: goal && !sim.harvest ? toward(p.x, goal.x) : 0,
       moveY: goal && !sim.harvest ? toward(p.y, goal.y + 20) : 0,
       interact: gathering && t % 40 === 0,
-      selectAmmo: !gathering && t % 300 === 0 ? (ammo[(t / 300) % 3] ?? null) : null,
-      fire: !gathering && t % 50 > 30,
+      selectSlot: !gathering && t % 300 === 0 ? (t / 300) % 3 : null,
+      use: !gathering && t % 50 > 30,
       aimX: pack?.x ?? p.x,
       aimY: pack?.y ?? p.y,
     };
@@ -104,7 +104,7 @@ function scriptedSession(seed: number, ticks: number) {
 
 /**
  * Walks into the foundry, builds a ley bolt line, fills its hopper, waits,
- * empties the crate, walks back out and gets KO'd.
+ * takes the crate's bolts (047: its screen), walks back out and gets KO'd.
  */
 function scriptedFoundry(seed: number, ticks: number) {
   const sim = createSim(seed);
@@ -132,7 +132,8 @@ function scriptedFoundry(seed: number, ticks: number) {
       toggleBuild: t === 59,
       place: placing ? { pieceId: placing[0], tx: placing[1], ty: 5, facing: 'right' } : null,
       deposit: t === 250 ? { id: 0, itemId: 'ley-crystal', amount: 'all' } : null,
-      interact: t === 850,
+      // 047: the crate's screen, Ctrl+click on its bolts (E opens the screen in render; the sim takes the click).
+      withdraw: t === 850 ? { id: 3, amount: 'all', itemId: 'ley-bolt' } : null,
       aimX: p.x,
       aimY: p.y,
     };
@@ -220,7 +221,7 @@ describe('sim state', () => {
     expect(summary.groundItems).toEqual([]);
     // Every event list, empty, and no KO: a key missing from createEvents fails here.
     const lists = ['hits', 'deaths', 'pickups', 'harvests', 'crafts', 'craftFails', 'bursts', 'selects', 'roomChanges'] as const;
-    const later = ['places', 'placeFails', 'pickUps', 'deposits', 'crateTakes', 'withdraws', 'attunes', 'refills', 'made', 'shots', 'entranceFires', 'melees', 'banks', 'freezes', 'thaws', 'splits', 'heals'] as const;
+    const later = ['places', 'placeFails', 'pickUps', 'deposits', 'withdraws', 'attunes', 'hints', 'refills', 'made', 'shots', 'entranceFires', 'melees', 'banks', 'freezes', 'thaws', 'splits', 'heals'] as const;
     const site = ['sealed', 'claims', 'discoveries', 'cacheOpens', 'stashDeposits', 'stashTakes', 'supplies', 'portDeliveries', 'travels', 'identifies', 'equips', 'intakeOpens', 'restores', 'schematicDrops', 'schematicReveals', 'gates', 'objectives'] as const;
     // 034: the shield, the Bulwark and its altar; 035: the Charger's charge, the Burrower's eruption, the Sniper's bolt.
     const hollows = ['blocked', 'bossDefeats', 'summons', 'lobs', 'enemyBursts', 'pounds', 'charges', 'eruptions', 'snipes'] as const;
@@ -264,7 +265,8 @@ describe('sim state', () => {
     expect(summary.nodes.filter((n) => n.room === 'overworld')).toHaveLength(OVERWORLD.nodes.length);
     expect(summary.nodes[0]).toMatchObject({ nodeId: 'tree', uses: 3, regrow: 0 });
     expect(summary.harvest).toBeNull();
-    expect(summary.tube.ammo).toBe('arrow');
+    expect(summary.hotbar).toEqual({ slots: createSim(8).hotbar.slots, selected: 0 });
+    expect(summary.hotbar.slots).toHaveLength(5);
     expect(summary.bombs).toEqual([]);
     expect(summary.enemies[0]).toMatchObject({ chill: 0, frozen: 0 });
     expect(summary.enemies[0]).not.toHaveProperty('burnTicks');

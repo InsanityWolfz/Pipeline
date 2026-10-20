@@ -207,7 +207,8 @@ test.describe('review screenshots (034)', () => {
       // Effects on a slowed tween clock (particles run on it), so the sparks fly out over a few frames however slow they are.
       g.tweenSpeed(0.2);
       for (let t = 0; t < 60; t++) {
-        const s = g.step(1, { fire: true, aimX: b.x, aimY: b.y - 20, selectAmmo: t === 0 ? 'arrow' : null });
+        if (t === 0) window.__helpers?.hold('arrow');
+        const s = g.step(1, { use: true, aimX: b.x, aimY: b.y - 20 });
         if (s.events.blocked.length > 0) return true;
       }
       return false;

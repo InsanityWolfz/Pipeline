@@ -154,11 +154,11 @@ describe('the in-reach E prompts (045)', () => {
     expect(interactTarget(s)).toBeNull();
   });
 
-  it('no prompt where E would do nothing, or while a hold runs', () => {
+  it('no prompt where E would do nothing, or while a hold runs; an empty crate has one (047: E opens its screen)', () => {
     const empty = SCENES.crate();
     const crate = empty.foundry.pieces.find((p) => p.kind === 'crate') as CrateState;
     crate.contents = {};
-    expect(interactTarget(empty)).toBeNull();
+    expect(interactTarget(empty)?.kind).toBe('crate');
     const lonely = SCENES.waystone();
     lonely.claims = [];
     expect(interactTarget(lonely)).toBeNull();

@@ -12,7 +12,7 @@ import { gainXp, xpToNext } from '../../src/sim/leveling';
 import { createSim, roomById, type SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
-import { arena, atEntrance, die, fireAt, movePlayer, run, SEED } from './fight';
+import { arena, atEntrance, die, fireAt, movePlayer, run, SEED, volleyAt } from './fight';
 import { foundry } from './foundryKit';
 import { standAtBench } from '../fixtures/gear';
 import { claim } from '../../src/sim/claims';
@@ -83,7 +83,7 @@ describe('kill XP', () => {
     s.enemies.push(e);
     const ring = ringOf(Math.floor(e.homeX / 32), Math.floor(e.homeY / 32));
     // The punch lands after this tick's removals: the death is the next tick's.
-    run(s, 2, fireAt(e.x, e.y));
+    run(s, 2, volleyAt(e.x, e.y));
     expect(s.enemies).toEqual([]);
     expect(s.xp).toBe(5 * (RING_XP[ring] ?? 0));
   });

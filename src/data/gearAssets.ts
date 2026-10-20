@@ -39,7 +39,7 @@ export const RARITY_FRAMES: Readonly<Record<Rarity, string>> = {
 export const SLOT_NAMES: Readonly<Record<GearSlot, string>> = { helm: 'Helm', body: 'Body', boots: 'Boots', trinket: 'Trinket' };
 
 /**
- * The bench's gear panel (036), centred on screen (left of 029's Stages panel, STAGE_PANEL.gap apart, once the shrine is claimed): a title and
+ * The bench's gear panel (036), centred on screen: a title and
  * the Identify button, four slot cells (the worn piece in each), a tab per slot, the open tab's rows (paged when they
  * don't fit), a pager and the totals. View px from the panel's top-left, then from each part's top-left; text at the
  * top of its capitals.

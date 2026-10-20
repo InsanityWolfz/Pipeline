@@ -10,13 +10,13 @@ import { offerFromOutside } from '../../src/sim/flow';
 import { fixtureDef } from '../../src/sim/fixtures';
 import type { CrateState, MachineState } from '../../src/sim/pieces';
 import { unlockedPieces } from '../../src/sim/placement';
-import { applyStage } from '../../src/sim/stages';
+import { craft } from '../../src/sim/crafting';
 import { bombletEmission } from '../../src/sim/emissions';
 import { statOf } from '../../src/sim/statResolve';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
 import type { SimState } from '../../src/sim/state';
-import { arena, fireAt, HALL, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, fireAt, HALL, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
 import { foundry, put } from './foundryKit';
 
 // The cluster stage (038): the Cluster die tags bombs `cluster` (a shape) for 1 ley-iron per
@@ -37,7 +37,7 @@ function armed(talents: string[] = []): SimState {
   const s = arena();
   s.inventory = { 'bomb+cluster': 4 };
   s.talents = [TALENT_START, ...talents];
-  run(s, 1, { selectAmmo: 'bomb' });
+  hold(s, 'bomb');
   return s;
 }
 
@@ -79,7 +79,7 @@ describe('the Cluster die', () => {
     expect(offer('ley-iron')).toBe(true);
   });
 
-  it('sits in the Bombs group and unlocks by hand-applying it to bombs at the bench', () => {
+  it('sits in the Bombs group and unlocks by crafting cluster bombs (047)', () => {
     const s = foundry(false);
     const bench = fixtureDef('identification-bench');
     const at = tileCentre({ tx: bench.tx + 1, ty: bench.ty });
@@ -87,7 +87,7 @@ describe('the Cluster die', () => {
     s.claims.push('shrine');
     s.inventory = { bomb: 4, 'ley-iron': 1 };
     expect(unlockedPieces(s)).not.toContain('cluster-die');
-    expect(applyStage(s, 'cluster-die')).toBe(true);
+    expect(craft(s, 'cluster-die-bomb')).toBe(true);
     expect(s.inventory).toMatchObject({ bomb: 0, 'ley-iron': 0, 'bomb+cluster': 4 });
     expect(unlockedPieces(s)).toContain('cluster-die');
     expect(summarize(s).stagesUnlocked).toContain('cluster-die');

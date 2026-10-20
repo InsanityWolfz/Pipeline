@@ -30,3 +30,4 @@ Already settled before the interview: note 3 dropped (the Warden stays), notes 1
 
 ## After the 046 build
 - **046.7, early ammo:** "2× per resource" (rec). Only the last step of each Region 1 chain doubles, so one wood, stone and fiber make 16 arrows (from 8); parts and landmine costs stay as they were. The build had doubled every step, which compounded to 4×.
+- **047.9, teaching right click:** "Left fires carried until attuned". Before the tube attunes (no intake yet), left click fires the selected carried item as right click does; once attuned, left click is the volley (or the punch) and right click the carried item. A one-time "Right click: carried items" hint shows as the attune ends, once per save.

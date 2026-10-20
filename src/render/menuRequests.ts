@@ -2,29 +2,39 @@ import type { EquipRequest } from '../sim/gear';
 import type { Command, HopperAmount } from '../sim/input';
 import type { SandboxCommand } from '../sim/sandbox';
 
-/** How many a hopper menu click moves (022): Ctrl+click all (Ctrl wins over Shift), Shift+click half, a plain click one. */
+/** How many a click on a stack moves (022, 047): Ctrl+click the whole stack (Ctrl wins over Shift), Shift+click half, a plain click one. */
 export function clickAmount(mods: { shift: boolean; ctrl: boolean }): HopperAmount {
   if (mods.ctrl) return 'all';
   return mods.shift ? 'half' : 'one';
 }
 
 /** The commands that menus send: the hopper, sorter, pylon, stash and bench menus' choices. */
-export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'setFilter' | 'pylon' | 'travel' | 'takeStash' | 'identify' | 'equip' | 'applyStage' | 'restore' | 'summon' | 'takeTalent' | 'respec' | 'sandbox'>;
+export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'sortInventory' | 'assignSlot' | 'setFilter' | 'pylon' | 'travel' | 'takeStash' | 'identify' | 'equip' | 'restore' | 'summon' | 'takeTalent' | 'respec' | 'sandbox'>;
 
-const NONE: MenuCommand = { deposit: null, withdraw: null, setFilter: null, pylon: null, travel: null, takeStash: null, identify: false, equip: null, applyStage: null, restore: null, summon: null, takeTalent: null, respec: false, sandbox: null };
+const NONE: MenuCommand = { deposit: null, withdraw: null, sortInventory: false, assignSlot: null, setFilter: null, pylon: null, travel: null, takeStash: null, identify: false, equip: null, restore: null, summon: null, takeTalent: null, respec: false, sandbox: null };
 
 // Choices clicked in the world's menus, held until the next tick takes them.
 export class MenuRequests {
   private pending: MenuCommand = { ...NONE };
 
-  /** Puts one, half or all of a held item into a hopper (the hopper menu's choice, 022). */
-  deposit(id: number, itemId: string, amount: HopperAmount): void {
-    this.pending.deposit = { id, itemId, amount };
+  /** Puts one, half or the whole of a clicked stack into a hopper or crate (022; 047: the grid's click). */
+  deposit(id: number, itemId: string, amount: HopperAmount, stack?: number): void {
+    this.pending.deposit = { id, itemId, amount, ...(stack !== undefined ? { stack } : {}) };
   }
 
-  /** Takes one, half or all of a hopper's items into the inventory (the hopper menu's choice, 022). */
-  withdraw(id: number, amount: HopperAmount): void {
-    this.pending.withdraw = { id, amount };
+  /** Takes one, half or the whole of a hopper's or crate's clicked stack into the inventory (022; 047: the container's click). */
+  withdraw(id: number, amount: HopperAmount, itemId?: string, stack?: number): void {
+    this.pending.withdraw = { id, amount, ...(itemId !== undefined ? { itemId } : {}), ...(stack !== undefined ? { stack } : {}) };
+  }
+
+  /** The grid's Sort button (047). */
+  sortInventory(): void {
+    this.pending.sortInventory = true;
+  }
+
+  /** A stack dragged onto a carried bar slot (047). */
+  assignSlot(slot: number, itemId: string): void {
+    this.pending.assignSlot = { slot, itemId };
   }
 
   /** Sets the item a sorter sends out its side, or null to pass everything (the sorter menu's choice). */
@@ -55,11 +65,6 @@ export class MenuRequests {
   /** Wears a piece (the worn one comes off), or takes a slot off, at the bench (036). */
   equip(req: EquipRequest): void {
     this.pending.equip = req;
-  }
-
-  /** Hand-applies a stage at the bench (029: the bench's Stages rows). */
-  applyStage(stageId: string): void {
-    this.pending.applyStage = stageId;
   }
 
   /** Restores a research node at its diagram (033: the restore panel's Restore row, or E again). */

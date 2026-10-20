@@ -18,9 +18,14 @@ function sim(): SimState {
 
 const command = (c: Partial<Command> = {}): Command => ({ ...NO_COMMAND, ...c });
 
-/** Fire held, aimed `dx, dy` px from the player's feet. */
+/** Use (right click, 047: the carried bar's selected item) held, aimed `dx, dy` px from the player's feet. */
 function fireAt(s: SimState, dx = 100, dy = 0, extra: Partial<Command> = {}): Command {
-  return command({ fire: true, aimX: s.player.x + dx, aimY: s.player.y + dy, ...extra });
+  return command({ use: true, aimX: s.player.x + dx, aimY: s.player.y + dy, ...extra });
+}
+
+/** Fire (left click: the volley or the punch) held, aimed `dx, dy` px from the player's feet. */
+function leftAt(s: SimState, dx = 100, dy = 0): Command {
+  return command({ fire: true, aimX: s.player.x + dx, aimY: s.player.y + dy });
 }
 
 function run(s: SimState, c: Command | ((s: SimState) => Command), ticks: number): void {
@@ -35,11 +40,12 @@ function firedOn(s: SimState, c: Command): boolean {
 }
 
 describe('firing from the inventory', () => {
-  it('starts with the starting arrows, ready to fire', () => {
+  it('starts with the starting arrows, ready to fire (on left click too, before attuning: 047.9)', () => {
     const s = sim();
     expect(s.inventory.arrow).toBe(STARTING_INVENTORY.arrow);
     expect(STARTING_INVENTORY.arrow).toBe(30);
-    expect(summarize(s).tube).toEqual({ ammo: 'arrow', fireCooldown: 0, meleeCooldown: 0, firing: false, fromReservoir: false, shotCount: 0, next: 'carried' });
+    expect(summarize(s).tube).toEqual({ fireCooldown: 0, meleeCooldown: 0, firing: false, fromReservoir: false, shotCount: 0, next: 'carried' });
+    expect(summarize(s).hotbar).toEqual({ slots: ['arrow', null, null, null, null], selected: 0 });
   });
 
   it('takes each shot straight from the inventory', () => {
@@ -49,12 +55,14 @@ describe('firing from the inventory', () => {
     expect(s.tube.fromReservoir).toBe(false);
   });
 
-  it('punches once the carried rounds run out (023)', () => {
+  it('does nothing once the carried rounds run out; left click punches (023, 047)', () => {
     const s = sim();
     s.inventory.arrow = 1;
     expect(firedOn(s, fireAt(s))).toBe(true);
     run(s, command(), FIRE_TICKS);
     expect(firedOn(s, fireAt(s))).toBe(false);
+    expect(s.events.melees).toHaveLength(0);
+    expect(firedOn(s, leftAt(s))).toBe(false);
     expect(s.events.melees).toHaveLength(1);
     expect(s.tube.meleeCooldown).toBe(MELEE.cooldownTicks);
   });
@@ -84,10 +92,10 @@ describe('firing', () => {
     expect(firedOn(s, fireAt(s))).toBe(false);
   });
 
-  it('punches with nothing carried, and the melee cooldown counts down (023)', () => {
+  it('punches with the intake dry, and the melee cooldown counts down (023)', () => {
     const s = sim();
     s.inventory.arrow = 0;
-    expect(firedOn(s, fireAt(s))).toBe(false);
+    expect(firedOn(s, leftAt(s))).toBe(false);
     expect(summarize(s).tube.meleeCooldown).toBe(MELEE.cooldownTicks);
     run(s, command(), MELEE.cooldownTicks);
     expect(summarize(s).tube.meleeCooldown).toBe(0);
@@ -150,36 +158,37 @@ describe('firing', () => {
   });
 });
 
-describe('ammo select', () => {
-  it('starts on arrows', () => {
-    expect(sim().tube.ammoId).toBe('arrow');
+describe('the carried bar select (047: keys 1–5)', () => {
+  it('starts on slot 1, holding the starting arrows', () => {
+    expect(sim().hotbar).toEqual({ slots: ['arrow', null, null, null, null], selected: 0 });
   });
 
-  it('switching changes the ammo and moves nothing', () => {
+  it('switching changes the slot and moves nothing', () => {
     const s = sim();
-    stepSim(s, command({ selectAmmo: 'bomb' }));
-    expect(s.tube.ammoId).toBe('bomb');
+    stepSim(s, command({ selectSlot: 2 }));
+    expect(s.hotbar.selected).toBe(2);
     expect(s.inventory.arrow).toBe(30);
-    expect(s.events.selects).toEqual([{ ammoId: 'bomb' }]);
-    expect(summarize(s).tube.ammo).toBe('bomb');
+    expect(s.events.selects).toEqual([{ slot: 2 }]);
+    expect(summarize(s).hotbar.selected).toBe(2);
   });
 
-  it('selecting the current ammo does nothing', () => {
+  it('selecting the current slot does nothing', () => {
     const s = sim();
-    stepSim(s, command({ selectAmmo: 'arrow' }));
+    stepSim(s, command({ selectSlot: 0 }));
     expect(s.events.selects).toEqual([]);
   });
 
-  it('ignores ammo that is not in the slot list', () => {
+  it('ignores a slot past the bar', () => {
     const s = sim();
-    stepSim(s, command({ selectAmmo: 'wood' }));
-    expect(s.tube.ammoId).toBe('arrow');
+    stepSim(s, command({ selectSlot: 5 }));
+    expect(s.hotbar.selected).toBe(0);
   });
 
-  it('fires the selected ammo item', () => {
+  it('fires the selected item', () => {
     const s = sim();
     s.inventory['ley-bolt'] = 3;
-    stepSim(s, command({ selectAmmo: 'ley-bolt' }));
+    stepSim(s, command());
+    stepSim(s, command({ selectSlot: s.hotbar.slots.indexOf('ley-bolt') }));
     stepSim(s, fireAt(s));
     expect(s.inventory['ley-bolt']).toBe(2);
     expect(s.inventory.arrow).toBe(30);
@@ -192,7 +201,8 @@ describe('ammo select', () => {
   ])('fires %s at most once per %i ticks', (ammoId, interval) => {
     const s = sim();
     s.inventory[ammoId] = 10;
-    stepSim(s, command({ selectAmmo: ammoId }));
+    stepSim(s, command());
+    stepSim(s, command({ selectSlot: s.hotbar.slots.indexOf(ammoId) }));
     const shots: number[] = [];
     for (let t = 1; t <= interval * 2 + 1; t++) {
       const before = s.inventory[ammoId] ?? 0;

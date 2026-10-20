@@ -9,15 +9,17 @@ import { ui } from './intakePage';
 // fired at a Husk bursts, and its four bomblets burst round it. The review screenshots
 // are in minesShots.spec.ts.
 
-test('key 4 picks landmines: one arms where it lands, only its arm time sets it off, and its burst kills a Husk on it', async ({ page }) => {
+test('a key picks the landmines\' carried slot: one arms where it lands, only its arm time sets it off, and its burst kills a Husk on it', async ({ page }) => {
   test.setTimeout(120_000);
   const errors = watchErrors(page);
   await boot(page, '?playtest');
-  // Real keys, before the hook takes the clock.
-  await page.keyboard.press('4');
-  await expect.poll(async () => page.evaluate(() => window.__GAME__?.getState().tube.ammo)).toBe('landmine');
-  // The hotbar's fourth cell (key 4) is highlighted.
-  await expect.poll(async () => (await ui(page))?.hud?.hotbar.selected).toBe(3);
+  // 047: the landmines took a carried bar slot when first carried; its key, a real key before the hook takes the clock.
+  const slot = (await page.evaluate(() => window.__GAME__?.getState().hotbar.slots.indexOf('landmine'))) ?? -1;
+  expect(slot).toBeGreaterThanOrEqual(0);
+  await page.keyboard.press(String(slot + 1));
+  await expect.poll(async () => page.evaluate(() => window.__GAME__?.getState().hotbar.selected)).toBe(slot);
+  // That cell is highlighted.
+  await expect.poll(async () => (await ui(page))?.hud?.hotbar.selected).toBe(slot);
 
   const result = await page.evaluate(() => {
     const g = window.__GAME__;
@@ -26,7 +28,7 @@ test('key 4 picks landmines: one arms where it lands, only its arm time sets it 
     for (const e of g.getState().enemies) g.setEnemyHealth(e.id, 0);
     let s = g.step(1);
     const at = { x: s.player.x + 120, y: s.player.y };
-    s = g.step(1, { fire: true, aimX: at.x, aimY: at.y });
+    s = g.step(1, { use: true, aimX: at.x, aimY: at.y });
     const carried = s.inventory.landmine ?? 0;
     for (let t = 0; t < 120 && s.mines.length === 0; t++) s = g.step(1);
     const mine = s.mines[0];
@@ -56,7 +58,7 @@ test('key 4 picks landmines: one arms where it lands, only its arm time sets it 
   expect(errors).toEqual([]);
 });
 
-test('the Cluster die hand-applied at the bench makes cluster bombs, whose bomblets burst round the bomb', async ({ page }) => {
+test('cluster bombs crafted (047: in C) unlock the Cluster die, and their bomblets burst round the bomb', async ({ page }) => {
   test.setTimeout(180_000);
   const errors = watchErrors(page);
   await boot(page, '?playtest');
@@ -66,8 +68,8 @@ test('the Cluster die hand-applied at the bench makes cluster bombs, whose bombl
     if (!g || !h) throw new Error('no game');
     g.claim('shrine');
     h.toFoundry();
-    h.walkTo(2.3 * 32, 12.5 * 32);
-    const s = g.step(1, { applyStage: 'cluster-die' });
+    g.craft('cluster-die-bomb');
+    const s = g.step(1);
     return { cluster: s.inventory['bomb+cluster'] ?? 0, unlocked: s.stagesUnlocked };
   });
   expect(made.cluster).toBe(4);
@@ -79,12 +81,13 @@ test('the Cluster die hand-applied at the bench makes cluster bombs, whose bombl
     if (!g || !h) throw new Error('no game');
     h.toHall();
     for (const e of g.getState().enemies) g.setEnemyHealth(e.id, 0);
-    let s = g.step(1, { selectAmmo: 'bomb' });
+    window.__helpers?.hold('bomb+cluster');
+    let s = g.step(0);
     // A Husk 120 px off, and one 40 px past it, where the far bomblet lands, outside the bomb's own 48 px.
     const p = s.player;
     g.spawnEnemy('husk', p.x + 120, p.y);
     g.spawnEnemy('husk', p.x + 120 + 58, p.y);
-    s = g.step(1, { fire: true, aimX: p.x + 120, aimY: p.y });
+    s = g.step(1, { use: true, aimX: p.x + 120, aimY: p.y });
     const shot = s.events.shots[0]?.ammoId;
     let bursts = 0;
     let bomblets: { x: number; y: number }[] = [];

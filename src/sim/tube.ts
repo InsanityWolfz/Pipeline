@@ -1,6 +1,6 @@
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { ammoDef } from '../data/ammo';
-import { MUZZLE_OFFSET, SLOT_AMMOS, STARTING_AMMO } from '../data/tube';
+import { MUZZLE_OFFSET } from '../data/tube';
 import { hasTagKeyword } from '../data/tags';
 import { createArrow } from './arrows';
 import { lockTarget } from './homing';
@@ -12,24 +12,24 @@ import { takeFromEntrance } from './link';
 import { punch } from './melee';
 import { isRolling } from './movement';
 import { nextPress, volleyShots, type VolleyShot } from './volley';
+import { assignSlot, readyItem, selectSlot } from './hotbar';
 import type { SimState } from './state';
 import { playerStats } from './stats';
 import { fireInterval, roundEmission } from './emissions';
 import { statOf } from './statResolve';
 
-// The tube: picking the slot's ammo and firing it. Once linked, the tube fires the
-// intake's fed entrances first (024), each at its own ammo's rate while fire is held
-// (028); once they're empty, carried rounds fire straight from the inventory. With
-// no tube, or nothing to fire, fire punches instead (023).
+// The tube (047, note 11): left click (fire) fires the intake's fed entrances (024), each
+// at its own ammo's rate while held (028); with the intake dry, or no tube, it punches (023).
+// Right click (use) uses the carried bar's selected item (src/sim/hotbar.ts): a carried round
+// fired straight from the inventory, or a bomb or landmine thrown. Before the tube attunes
+// there's no intake, so left click uses the carried item too (047.9); `nextPress` says which.
 
 export interface TubeState {
-  /** The ammo hotbar slot 1 fires. */
-  ammoId: string;
   /** Ticks before the next carried round can fire (a punch waits for it too), fractional (039). Each entrance shot raises it to at least that ammo's interval (028). */
   fireCooldown: number;
   /** Ticks before the next punch can happen (023). */
   meleeCooldown: number;
-  /** The tube is really firing (016): fire held this tick with a round to fire, not rolling or in the foundry. A punch isn't firing. */
+  /** The tube is really firing (016): a round went out this tick or fire or use is held with one to send, not rolling or in the foundry. A punch isn't firing. */
   firing: boolean;
   /** This tick's shot came from the intake's entrances (024). */
   fromReservoir: boolean;
@@ -40,22 +40,11 @@ export interface TubeState {
 }
 
 export function createTube(): TubeState {
-  return { ammoId: STARTING_AMMO, fireCooldown: 0, meleeCooldown: 0, firing: false, fromReservoir: false, shotCount: 0, overpressure: 0 };
+  return { fireCooldown: 0, meleeCooldown: 0, firing: false, fromReservoir: false, shotCount: 0, overpressure: 0 };
 }
 
-/** Switches the slot to another ammo. The current ammo, or one the slot can't take, does nothing. */
-export function selectAmmo(state: SimState, ammoId: string): void {
-  const { tube } = state;
-  if (ammoId === tube.ammoId || !SLOT_AMMOS.includes(ammoId)) return;
-  tube.ammoId = ammoId;
-  state.events.selects.push({ ammoId });
-}
-
-/**
- * The next fire press has something to fire (023, 024): the tube is in hand and an
- * open entrance holds a round, or a round of the slot's ammo is carried. Without one, fire punches.
- */
-export function hasRoundToFire(state: Pick<SimState, 'hasTube' | 'tube' | 'inventory' | 'link'>): boolean {
+/** The next fire press has a round to fire (023, 024; 047.9): the volley, or a carried round before attuning. Without one, fire punches. */
+export function hasRoundToFire(state: Pick<SimState, 'hasTube' | 'link' | 'hotbar' | 'inventory'>): boolean {
   return nextPress(state).kind !== 'melee';
 }
 
@@ -91,62 +80,68 @@ function stepFire(state: SimState, cmd: Command): void {
   if (tube.fireCooldown > 0) tube.fireCooldown -= 1;
   if (tube.meleeCooldown > 0) tube.meleeCooldown -= 1;
   for (const e of state.link.entrances) if (e.cooldown > 0) e.cooldown -= 1;
+  if (cmd.assignSlot) assignSlot(state, cmd.assignSlot.slot, cmd.assignSlot.itemId);
   // Without the tube (012) there's nothing to switch.
-  if (state.hasTube && cmd.selectAmmo !== null) selectAmmo(state, cmd.selectAmmo);
+  if (state.hasTube && cmd.selectSlot !== null) selectSlot(state, cmd.selectSlot);
 
   tube.firing = false;
   tube.fromReservoir = false;
   tube.shotCount = 0;
   // The tube is quiet in the foundry (015): clicks there are for building and menus, never shots or punches.
-  if (isRolling(player) || !cmd.fire || state.roomId === FOUNDRY_ROOM) return;
+  if (isRolling(player) || (!cmd.fire && !cmd.use) || state.roomId === FOUNDRY_ROOM) return;
   const aim = unit(cmd.aimX - player.x, cmd.aimY - player.y);
   const [dx, dy] = aim[0] === 0 && aim[1] === 0 ? facingVector(player.facing) : aim;
   player.facing = aimFacing(dx, dy, player.facing);
-  if (!hasRoundToFire(state)) {
-    punch(state, dx, dy);
-    return;
-  }
-  tube.firing = true;
-  fire(state, cmd, dx, dy);
+  const press = cmd.fire ? nextPress(state).kind : null;
+  if (press === 'volley') {
+    tube.firing = true;
+    fireVolley(state, cmd, dx, dy);
+  } else if (press === 'melee') punch(state, dx, dy);
+  // 047.9: before attuning, left click uses the carried item as right click does; both held use it once.
+  if (press === 'carried' || (cmd.use && state.hasTube)) useCarried(state, cmd, dx, dy);
 }
 
 /**
- * Fires along the unit aim (dx, dy). The volley (028): every fed entrance whose own
- * cooldown has run out fires one round from its reservoir, and waits its ammo's
- * interval; rounds fired together are shaped as one volley (024). Otherwise, once
- * the tube's interval has passed, a carried round of the slot's ammo fires alone.
- * The caller has checked there's one to fire.
+ * The volley (028): every fed entrance whose own cooldown has run out fires one round from its reservoir, and waits
+ * its ammo's interval; rounds fired together are shaped as one volley (024). The caller has checked there's one.
  */
-function fire(state: SimState, cmd: Command, dx: number, dy: number): void {
+function fireVolley(state: SimState, cmd: Command, dx: number, dy: number): void {
   const { tube } = state;
   const press = nextPress(state);
-  if (press.kind === 'volley') {
-    // Each round with its entrance, kept only where that entrance's own cooldown has run out. An entrance keeps its
-    // cooldown when it empties and refills with another ammo: the new ammo waits out the old shot's pace.
-    const ready = press.rounds.flatMap((r) => {
-      const e = state.link.entrances[r.entrance];
-      return e && e.cooldown <= 0 ? [{ ...r, e }] : [];
-    });
-    for (const { e, ...r } of ready) {
-      const ticks = fireTicksOf(state, r.ammoId);
-      takeFromEntrance(e);
-      e.cooldown += ticks;
-      // The first carried round once the entrances run dry never comes sooner than the last entrance's own pace.
-      tube.fireCooldown = Math.max(tube.fireCooldown, ticks);
-      state.events.entranceFires.push({ entrance: r.entrance, ammoId: r.ammoId });
-    }
-    if (ready.length === 0) return;
-    tube.fromReservoir = true;
-    const shots = volleyShots(ready.map((r) => r.ammoId), dx, dy);
-    for (const shot of shots) launch(state, shot, cmd);
-    tube.shotCount = shots.length;
-    return;
+  if (press.kind !== 'volley') return;
+  // Each round with its entrance, kept only where that entrance's own cooldown has run out. An entrance keeps its
+  // cooldown when it empties and refills with another ammo: the new ammo waits out the old shot's pace.
+  const ready = press.rounds.flatMap((r) => {
+    const e = state.link.entrances[r.entrance];
+    return e && e.cooldown <= 0 ? [{ ...r, e }] : [];
+  });
+  for (const { e, ...r } of ready) {
+    const ticks = fireTicksOf(state, r.ammoId);
+    takeFromEntrance(e);
+    e.cooldown += ticks;
+    state.events.entranceFires.push({ entrance: r.entrance, ammoId: r.ammoId });
   }
-  if (press.kind !== 'carried' || tube.fireCooldown > 0) return;
-  take(state.inventory, ammoDef(press.ammoId).itemId);
-  tube.fireCooldown += fireTicksOf(state, press.ammoId);
-  launch(state, { ammoId: press.ammoId, dir: [dx, dy], across: 0 }, cmd);
-  tube.shotCount = 1;
+  if (ready.length === 0) return;
+  tube.fromReservoir = true;
+  const shots = volleyShots(ready.map((r) => r.ammoId), dx, dy);
+  for (const shot of shots) launch(state, shot, cmd);
+  tube.shotCount = shots.length;
+}
+
+/**
+ * Right click (047): the carried bar's selected item, if any is carried, once the tube's interval has passed: a round
+ * fires alone, a bomb or landmine is thrown. A selected slot that's empty does nothing.
+ */
+function useCarried(state: SimState, cmd: Command, dx: number, dy: number): void {
+  const { tube } = state;
+  const itemId = readyItem(state);
+  if (itemId === null) return;
+  tube.firing = true;
+  if (tube.fireCooldown > 0) return;
+  take(state.inventory, ammoDef(itemId).itemId);
+  tube.fireCooldown += fireTicksOf(state, itemId);
+  launch(state, { ammoId: itemId, dir: [dx, dy], across: 0 }, cmd);
+  tube.shotCount += 1;
 }
 
 /** Sends one projectile along its direction from the tube's mouth. A bomb or landmine lands at the aim's distance, `across` px off the line. */

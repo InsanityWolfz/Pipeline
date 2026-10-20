@@ -3,7 +3,7 @@ import { enemyDef, type BulwarkDef } from '../../src/data/enemies';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import { shieldBlocks } from '../../src/sim/shield';
 import type { SimState } from '../../src/sim/state';
-import { arena, fireAt, HALL, HUSK, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, fireAt, HALL, hold, HUSK, placeHusk, PLAYER_AT, run, runUntil, volleyAt } from './fight';
 
 // The shield rule (034, shared with 035): a straight shot or a punch into a shielded
 // enemy's front arc is blocked; from outside the arc it lands. Lobbed bursts always land.
@@ -65,7 +65,7 @@ describe('the shield rule', () => {
     const s = arena();
     s.inventory = {};
     const e = shielded(s, 24, Math.PI);
-    run(s, 1, fireAt(PLAYER_AT.x + 24, PLAYER_AT.y));
+    run(s, 1, volleyAt(PLAYER_AT.x + 24, PLAYER_AT.y));
     expect(s.events.melees).toHaveLength(1);
     expect(e.health).toBe(BULWARK.maxHealth);
     expect(e.knockTicks).toBe(0);
@@ -75,7 +75,7 @@ describe('the shield rule', () => {
   it('never blocks a bomb, even bursting on its front side', () => {
     const s = arena();
     s.inventory = { bomb: 1 };
-    s.tube.ammoId = 'bomb';
+    hold(s, 'bomb');
     const e = shielded(s, 120, Math.PI);
     run(s, 1, fireAt(PLAYER_AT.x + 100, PLAYER_AT.y));
     runUntil(s, () => s.events.bursts.length > 0, 120);

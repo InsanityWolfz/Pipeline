@@ -77,3 +77,18 @@ describe('rebinding (042)', () => {
     for (const k of FIXED_KEYS) expect(rebind(DEFAULT_BINDINGS, 'dodge', k)).toBeNull();
   });
 });
+
+describe('the carried bar keys and right click (047)', () => {
+  it('binds keys 1–5 to the carried bar and right click to use, both rebindable', () => {
+    expect(['slot1', 'slot2', 'slot3', 'slot4', 'slot5'].map((a) => DEFAULT_BINDINGS[a as keyof typeof DEFAULT_BINDINGS])).toEqual(['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE']);
+    expect(DEFAULT_BINDINGS.use).toBe('RIGHT_CLICK');
+    expect(rebind(DEFAULT_BINDINGS, 'use', 'Q')?.use).toBe('Q');
+    expect(rebind(DEFAULT_BINDINGS, 'slot1', 'Z')?.slot1).toBe('Z');
+  });
+
+  it('never hands right click to a key action: such a swap is refused, and a stored one falls back', () => {
+    expect(rebind(DEFAULT_BINDINGS, 'use', 'E')).toBeNull();
+    const stored = parseSettings(JSON.stringify({ bindings: { interact: 'RIGHT_CLICK' } }));
+    expect(stored?.bindings.interact).toBe(DEFAULT_BINDINGS.interact);
+  });
+});

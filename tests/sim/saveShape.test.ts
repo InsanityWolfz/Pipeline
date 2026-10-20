@@ -9,8 +9,8 @@ import { lateGame } from './saveRun';
 import FIXED from './saveShape.json';
 
 // 042.7: the save's key paths and value types, from a fresh and a late-game state, are fixed per SAVE_VERSION.
-// When SimState's shape changes, this fails until SAVE_VERSION is bumped (with a migration for a rename or a
-// reshape) and the fixture regenerated: `UPDATE_SAVE_SHAPE=1 npx vitest run tests/sim/saveShape.test.ts`.
+// When SimState's shape changes, this fails until SAVE_VERSION is bumped (no migration since 047: an older
+// save reads as too old) and the fixture regenerated: `UPDATE_SAVE_SHAPE=1 npx vitest run tests/sim/saveShape.test.ts`.
 
 const FIXTURE = new URL('./saveShape.json', import.meta.url);
 
@@ -28,7 +28,7 @@ describe('save shape fingerprint (042.7)', () => {
     const removed = fixed.shape.filter((p) => !shape.includes(p));
     expect(
       { added, removed },
-      "The save's shape changed. Bump SAVE_VERSION in src/data/save.ts, add a migration to SAVE_MIGRATIONS (src/sim/save.ts) if a field was renamed or reshaped (added fields are filled from a fresh sim), then regenerate the fixture with UPDATE_SAVE_SHAPE=1.",
+      "The save's shape changed. Bump SAVE_VERSION in src/data/save.ts (no migration: an older save reads as too old, Shaun's rule), then regenerate the fixture with UPDATE_SAVE_SHAPE=1.",
     ).toEqual({ added: [], removed: [] });
   });
 });

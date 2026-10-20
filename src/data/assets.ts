@@ -48,8 +48,6 @@ export const SPRITES = {
   hudWarn: 'hud-warn',
   /** The inventory panel's tablet and title card (031). */
   /** 039: the panel's tablet in two halves, left and right, so each fits a texture page at the largest scale. */
-  inventoryPanel: 'inventory-panel',
-  inventoryPanelRight: 'inventory-panel-right',
   inventoryTitle: 'inventory-title',
   iconBomb: 'icon-bomb',
   iconLeyBolt: 'icon-ley-bolt',

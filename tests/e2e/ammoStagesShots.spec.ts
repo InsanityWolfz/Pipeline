@@ -50,10 +50,11 @@ test.describe('review screenshots (029)', () => {
       if (working() < 3) throw new Error('the stages never all worked at once');
     });
     await cameraSettled(page);
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/01-stages-working.png` });
   });
 
-  test('the bench Stages section, a homing bolt mid-curve and a Split', async ({ page }) => {
+  test('a homing bolt mid-curve and a Split', async ({ page }) => {
     test.setTimeout(120_000);
     await boot(page, '?playtest');
     await page.evaluate(() => {
@@ -61,30 +62,18 @@ test.describe('review screenshots (029)', () => {
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
       g.claim('shrine');
+      // Into the foundry first: the tube attunes there, and ley rounds are known from then on.
       h.toFoundry();
-      h.walkTo(2.3 * 32, 12.5 * 32);
-      // Some frost arrows already made, so the frost rune's row shows what's held.
-      g.step(1, { applyStage: 'frost-rune' });
-    });
-    await page.keyboard.press('e');
-    await expect.poll(async () => (await ui(page))?.tagged.benchStages?.shown).toBe(true);
-    await cameraSettled(page);
-    await quietScreen(page);
-    await page.screenshot({ path: `${SHOTS}/02-bench-stages.png` });
-    await page.keyboard.press('Escape');
-
-    // Hand-apply both ley stages, then out to the meadow.
-    await page.evaluate(() => {
-      const g = window.__GAME__;
-      const h = window.__helpers;
-      if (!g || !h) throw new Error('no game');
-      g.step(1, { applyStage: 'ley-guide' });
-      g.step(1, { applyStage: 'prism-lens' });
+      // 047: the bench's Stages section is gone (02-bench-stages is no longer taken); tagged rounds are crafted in C.
+      g.craft('ley-guide-ley-bolt');
+      g.craft('prism-lens-ley-bolt');
       h.toHall();
       // South of the ruin field's Husks (017), which stand a few tiles north, on screen.
       h.walkTo((44.5 + h.ox) * 32, 19.5 * 32);
-      g.step(1, { selectAmmo: 'ley-bolt' });
+      h.hold('ley-bolt+homing');
     });
+    // The schematic banners from banking in the foundry and the door's fade, played out before the shot.
+    await quietScreen(page);
     // The nearest Husk; the cursor beside it, inside the lock radius, so the bolt sets off wide and bends in.
     const shot = await page.evaluate(() => {
       const g = window.__GAME__;
@@ -98,7 +87,7 @@ test.describe('review screenshots (029)', () => {
       const dx = husk.x - s.player.x;
       const dy = husk.y - s.player.y;
       const len = Math.hypot(dx, dy);
-      return g.step(1, { fire: true, aimX: husk.x - (dy / len) * 60, aimY: husk.y + (dx / len) * 60 });
+      return g.step(1, { use: true, aimX: husk.x - (dy / len) * 60, aimY: husk.y + (dx / len) * 60 });
     });
     expect(shot.arrows.some((a) => a.ammoId === 'ley-bolt+homing' && a.targetId !== null)).toBe(true);
     // A tick per drawn frame, so the trail gathers its points.
@@ -109,13 +98,14 @@ test.describe('review screenshots (029)', () => {
     }
     await page.screenshot({ path: `${SHOTS}/03-homing-mid-curve.png` });
 
-    // Spend the homing bolts, then a Split bolt at the nearest Husk; the flash slowed so the capture catches it.
+    // The Split bolts' slot (047: each round its own carried bar slot), then a Split bolt at the nearest Husk; the
+    // flash slowed so the capture catches it.
     await page.evaluate(() => {
       const g = window.__GAME__;
-      if (!g) throw new Error('no game');
-      let s = g.step(30);
-      const homing = s.inventory['ley-bolt+homing'] ?? 0;
-      for (let i = 0; i < homing; i++) s = g.step(25, { fire: true, aimX: s.player.x - 300, aimY: s.player.y - 200 });
+      const h = window.__helpers;
+      if (!g || !h) throw new Error('no game');
+      g.step(30);
+      h.hold('ley-bolt+split');
       g.step(60);
       g.tweenSpeed(0.02);
     });
@@ -129,7 +119,7 @@ test.describe('review screenshots (029)', () => {
         // Only at a Husk well off, so the burst stands clear of the player; backing off while one is close.
         const d = Math.hypot(husk.x - s.player.x, husk.y - s.player.y);
         const back = d < 120 ? { moveY: (husk.y > s.player.y ? -1 : 1) as -1 | 1 } : {};
-        s = g.step(1, { ...back, fire: s.arrows.length === 0 && d >= 120 && d < 220, aimX: husk.x, aimY: husk.y - 8 });
+        s = g.step(1, { ...back, use: s.arrows.length === 0 && d >= 120 && d < 220, aimX: husk.x, aimY: husk.y - 8 });
       }
       return s.events.splits.length;
     });
@@ -143,28 +133,30 @@ test.describe('review screenshots (029)', () => {
     test.setTimeout(150_000);
     await boot(page, '?playtest');
     // A Husk dies to the hit that would freeze it (40 health, 10 a frost arrow), so this one is topped up between hits
-    // through the hook, to show the ice. Frost arrows from the bench.
+    // through the hook, to show the ice. Frost arrows crafted (047: in C).
     await page.evaluate(() => {
       const g = window.__GAME__;
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
       g.claim('shrine');
       h.toFoundry();
-      h.walkTo(2.3 * 32, 12.5 * 32);
-      g.step(1, { applyStage: 'frost-rune' });
+      // A few batches (047: crafted in C), so a miss or two still leaves the four hits a freeze takes.
+      for (let i = 0; i < 3; i++) g.craft('frost-rune-arrow');
       h.toHall();
       h.walkTo((44.5 + h.ox) * 32, 19.5 * 32);
+      h.hold('arrow+frost');
       let s = g.step(0);
       for (let t = 0; t < 1500 && !s.enemies.some((e) => e.frozen > 30); t++) {
         const husk = s.enemies.filter((e) => e.room === s.room && e.enemyId === 'husk').sort((a, b) => Math.hypot(a.x - s.player.x, a.y - s.player.y) - Math.hypot(b.x - s.player.x, b.y - s.player.y))[0];
         if (!husk) break;
         g.setEnemyHealth(husk.id, 40);
-        s = g.step(1, { fire: Math.hypot(husk.x - s.player.x, husk.y - s.player.y) < 200, aimX: husk.x, aimY: husk.y - 8 });
+        s = g.step(1, { use: Math.hypot(husk.x - s.player.x, husk.y - s.player.y) < 200, aimX: husk.x, aimY: husk.y - 8 });
       }
       if (!s.enemies.some((e) => e.frozen > 0)) throw new Error('no Husk froze');
     });
     // The camera eases in from the foundry's door over a few seconds; under load that can pass 5 s.
     await cameraSettled(page, 20_000);
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/05-frozen-husk.png` });
 
     // The Grotto: up the new path from the west path's end, into its frosted clearing.
@@ -179,6 +171,7 @@ test.describe('review screenshots (029)', () => {
       [GROTTO.path[1] ?? { tx: 14, ty: 14 }] as const,
     );
     await cameraSettled(page, 20_000);
+    await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/06-frozen-grotto.png` });
   });
 

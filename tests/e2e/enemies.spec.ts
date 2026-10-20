@@ -95,7 +95,7 @@ test('shooting a Husk dead drops items the player can pick up', async ({ page })
       const p = s.player;
       const target = [...s.enemies.filter((e) => e.group === 'field')].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
       s = g.step(1, {
-        fire: target !== undefined,
+        use: target !== undefined,
         aimX: target?.x ?? p.x,
         aimY: target?.y ?? p.y,
       });
@@ -132,7 +132,7 @@ test('Husks walk home and heal once the player runs away', async ({ page }) => {
     if (!target) throw new Error('no Husk');
     for (let t = 0; t < 120 && s.enemies.filter((e) => e.group === 'field').every((e) => e.health === 40); t++) {
       const now = s.enemies.find((e) => e.id === target.id) ?? target;
-      s = g.step(1, { fire: true, aimX: now.x, aimY: now.y });
+      s = g.step(1, { use: true, aimX: now.x, aimY: now.y });
     }
     const hurt = s.enemies.filter((e) => e.group === 'field').some((e) => e.health < 40);
     for (let t = 0; t < 2400 && !s.enemies.filter((e) => e.group === 'field').every((e) => e.mode === 'idle'); t++) {

@@ -42,7 +42,7 @@ test('the camera locks to the player: walking, rolling and firing for 120 frames
     g.step(0);
     let worst = 0;
     for (let i = 0; i < 120; i++) {
-      g.step(1, { moveX: i < 60 ? 1 : -1, moveY: i % 40 < 20 ? 1 : 0, fire: true, dodge: i === 30, aimX: g.getState().player.x + 50, aimY: g.getState().player.y });
+      g.step(1, { moveX: i < 60 ? 1 : -1, moveY: i % 40 < 20 ? 1 : 0, fire: true, use: true, dodge: i === 30, aimX: g.getState().player.x + 50, aimY: g.getState().player.y });
       // The camera follows on the next render: wait a frame, then compare its centre with the player's sprite point.
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
       const cam = g.ui().camera;

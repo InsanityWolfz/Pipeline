@@ -67,14 +67,14 @@ describe('the tube', () => {
     expect(s.hasTube).toBe(true);
   });
 
-  it('without it, fire and ammo select do not interrupt a harvest', () => {
+  it('without it, fire, use and a slot pick do not interrupt a harvest', () => {
     const s = tutorial();
     const n = placeNode(s, 'tree', s.player.x + 20, s.player.y, CLEARING_ROOM);
     run(s, 1, { interact: true });
     expect(s.harvest?.nodeId).toBe(n.id);
-    run(s, 1, { fire: true, selectAmmo: 'bomb', aimX: s.player.x + 50, aimY: s.player.y });
+    run(s, 1, { fire: true, use: true, selectSlot: 2, aimX: s.player.x + 50, aimY: s.player.y });
     expect(s.harvest).not.toBeNull();
-    expect(s.tube.ammoId).toBe('arrow');
+    expect(s.hotbar.selected).toBe(0);
   });
 
   it('a KO before the foundry is open wakes the player back by the stone', () => {

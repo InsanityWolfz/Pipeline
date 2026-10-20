@@ -25,14 +25,15 @@ describe('build mode', () => {
     expect(s.building).toBe(false);
   });
 
-  it('ignores fire, ammo select and harvest, but not moving, rolling or building', () => {
+  it('ignores fire, use, a slot pick and harvest, but not moving, rolling or building', () => {
     const s = foundry();
     run(s, 1, { toggleBuild: true });
     s.inventory.bomb = 2;
     placeNode(s, 'tree', s.player.x + 20, s.player.y, 'foundry');
-    run(s, 1, { fire: true, aimX: s.player.x + 100, aimY: s.player.y, interact: true, selectAmmo: 'bomb' });
+    const selected = s.hotbar.selected;
+    run(s, 1, { fire: true, use: true, aimX: s.player.x + 100, aimY: s.player.y, interact: true, selectSlot: 3 });
     expect(s.arrows).toEqual([]);
-    expect(s.tube.ammoId).toBe('arrow');
+    expect(s.hotbar.selected).toBe(selected);
     expect(s.inventory.arrow).toBe(30);
     expect(s.harvest).toBeNull();
     const x = s.player.x;

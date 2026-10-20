@@ -2,10 +2,22 @@
 
 Newest entry first.
 
+## 2026-10-20: 047 merged; the 045–047 batch is done
+**Changed:** Shaun playtested 047 (inventory and hotbars) and merged it (InsanityWolfz/Pipeline#36). SAVE_VERSION is 5; old saves read as too old (Shaun's rule).
+
+**Next:** a newcomer playtest on the real start, then the next spec interview: 048 (volley shape), 049 (resin pylon), plus anything the newcomer test turns up. Optional cleanup: remove the old save migrations (042–046), which can't run any more.
+
 ## 2026-10-20: 046 merged
 **Changed:** Shaun playtested 046 (foundry onboarding) and merged it (InsanityWolfz/Pipeline#34). SAVE_VERSION is 3. Early ammo is 2× per resource.
 
 **Next:** 047 (inventory and hotbars, being built).
+
+## 2026-10-20: 047 inventory and hotbars built (draft PR)
+**Changed:** built 047 on `claude/047-inventory-hotbars`, stacked on 046. Left click fires the intake's volley (or punches with it dry); a carried bar of five slots (keys 1–5) picks an item and right click (rebindable) uses it. A newly carried round takes the first empty slot; a grid stack dragged onto a slot goes there. The inventory is a grid of stacks (stack sizes in data, 8×5 shown, it scrolls, Sort), marking the at-risk part. E on a hopper or crate opens its screen, its own stacks over the grid; click one, Shift half, Ctrl the stack, with no controls printed. The crafting menu has a tab per family with its whole chain, tagged rounds crafted there anywhere; the bench's Stages panel is gone. SAVE_VERSION 4 with no migration (Shaun's rule): an older save reads as too old. `npm run check` passes; the full Playwright run had one stale left-click test, fixed and re-run. Review shots in docs/review/047; older HUD, crafting and hopper shots retaken. `npm run measure` unchanged. Spec status stays approved.
+
+047.9 answered (Shaun: "left fires carried until attuned"): before the tube attunes, left click fires the selected carried item, and the intake bar shows that round, not "Melee"; as the attune ends a one-time "Right click: carried items" hint shows on the banner. SAVE_VERSION 5, no migration. The pre-attune review shots were retaken (021/03a–b, 025/01, 031/02–04, 031/06, 045/01, 03, 05, 06). `npm run check` passes (1630); the full Playwright run after review: 131 passed, 0 failed, 117 skipped.
+
+**Next:** Shaun answers 047.5–047.17 (spec, "Raised after the build") and playtests the preview.
 
 ## 2026-10-20: 045 merged
 **Changed:** Shaun playtested 045 (readability fixes), OK'd its build decisions and merged it (InsanityWolfz/Pipeline#33). SAVE_VERSION is 2.
