@@ -1,6 +1,7 @@
 import { CRAFT_MENU_LAYOUT, PAUSE_MENU, PICKER_LAYOUT } from '../data/hudLayout';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { CRAFT_TABS } from '../data/craftTabs';
+import { tubeSlotBox } from './bottomHud';
 
 // Where the crafting menu's panel, tabs and rows (047), and the pause menu's rows (020), sit
 // on screen. No Phaser, so e2e tests can find a tab or a row to click.
@@ -13,13 +14,14 @@ export interface MenuBox {
   h: number;
 }
 
-/** The panel's top-left on screen: the panel and its title card above it, centred together (026: the taller menu fits). */
+/** The panel's top-left on screen: the panel and its title card above it, centred together (026), raised clear of the intake bar (047). */
 export function craftPanelAt(): { x: number; y: number } {
   const L = CRAFT_MENU_LAYOUT;
   const card = L.title.h + L.title.gap;
+  const centred = Math.round((VIEW_HEIGHT - L.height - card) / 2) + card;
   return {
     x: Math.round((VIEW_WIDTH - L.width) / 2),
-    y: Math.round((VIEW_HEIGHT - L.height - card) / 2) + card,
+    y: Math.min(centred, tubeSlotBox(1).y - L.title.gap - L.height),
   };
 }
 

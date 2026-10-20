@@ -161,6 +161,10 @@ describe('the crafting menu with labels (026)', () => {
     }
   });
 
+  it('stays clear of the intake bar (047)', () => {
+    expect(craftPanelAt().y + CRAFT_MENU_LAYOUT.height).toBeLessThan(tubeSlotBox(3).y);
+  });
+
   it('has a tab per ammo family down its left, clear of the rows (047)', () => {
     const tabs = craftTabBoxes();
     expect(tabs.map((t) => t.label)).toEqual(['Arrows', 'Bombs', 'Ley', 'Landmines']);

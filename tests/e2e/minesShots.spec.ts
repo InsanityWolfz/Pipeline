@@ -1,11 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openCraftTab } from './craftPage';
 import { boot, cameraSettled } from './helpers';
 import { ui } from './intakePage';
 
 // Review screenshots for 038 (REVIEW_SHOTS=1, into docs/review/038): armed mines with their
 // arm rings (one fresh, one in its red last second) and key 4 lit on the hotbar, a mine's
-// burst, a cluster bomb's bomblets in the air and bursting, the crafting menu's two columns
-// with the Landmines group, the new machines working in a line, and the art on the contact
+// burst, a cluster bomb's bomblets in the air and bursting, the crafting menu's Landmines
+// tab (047), the new machines working in a line, and the art on the contact
 // sheet. Under the hook the sim holds still between steps; flashes are held by slowing tweens.
 
 const SHOTS = 'docs/review/038';
@@ -90,11 +91,10 @@ test.describe('review screenshots (038)', () => {
     await page.screenshot({ path: `${SHOTS}/04-cluster-burst.png` });
   });
 
-  test("the crafting menu's two columns, with the Landmines group", async ({ page }) => {
+  test("the crafting menu's Landmines tab (047; 038 had its group in a second column)", async ({ page }) => {
     test.setTimeout(60_000);
     await field(page);
-    await page.keyboard.press('c');
-    await expect.poll(async () => (await ui(page))?.craftOpen).toBe(true);
+    await openCraftTab(page, 'landmine');
     const rows = (await ui(page))?.craftMenu?.rows.filter((r) => r.shown).map((r) => r.recipeId) ?? [];
     expect(rows).toEqual(expect.arrayContaining(['iron-plate', 'landmine']));
     await page.screenshot({ path: `${SHOTS}/05-crafting-menu.png` });
@@ -145,7 +145,7 @@ test.describe('review screenshots (038)', () => {
       // Stop with all three mid-batch if the timing allows; the shot shows what's working now.
       return [...busy];
     });
-    expect(working.sort()).toEqual(['mine-packer', 'plate-press', 'cluster-die']);
+    expect(working.sort()).toEqual(['cluster-die', 'mine-packer', 'plate-press']);
     // The schematic banners from banking on the way in, played out fast so none covers the line.
     await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
     await expect.poll(async () => (await ui(page))?.schematics.bannerIdle, { timeout: 20_000 }).toBe(true);

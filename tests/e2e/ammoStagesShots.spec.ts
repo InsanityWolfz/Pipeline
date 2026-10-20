@@ -61,6 +61,8 @@ test.describe('review screenshots (029)', () => {
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
       g.claim('shrine');
+      // Into the foundry first: the tube attunes there, and ley rounds are known from then on.
+      h.toFoundry();
       // 047: the bench's Stages section is gone (02-bench-stages is no longer taken); tagged rounds are crafted in C.
       g.craft('ley-guide-ley-bolt');
       g.craft('prism-lens-ley-bolt');
@@ -128,13 +130,15 @@ test.describe('review screenshots (029)', () => {
     test.setTimeout(150_000);
     await boot(page, '?playtest');
     // A Husk dies to the hit that would freeze it (40 health, 10 a frost arrow), so this one is topped up between hits
-    // through the hook, to show the ice. Frost arrows from the bench.
+    // through the hook, to show the ice. Frost arrows crafted (047: in C).
     await page.evaluate(() => {
       const g = window.__GAME__;
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
       g.claim('shrine');
-      g.craft('frost-rune-arrow');
+      h.toFoundry();
+      // A few batches (047: crafted in C), so a miss or two still leaves the four hits a freeze takes.
+      for (let i = 0; i < 3; i++) g.craft('frost-rune-arrow');
       h.toHall();
       h.walkTo((44.5 + h.ox) * 32, 19.5 * 32);
       h.hold('arrow+frost');
