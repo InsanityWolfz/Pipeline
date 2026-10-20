@@ -53,10 +53,8 @@ export function interactTarget(state: SimState): InteractTarget | null {
   const diagram = diagramInReach(state);
   if (diagram) return at('diagram', diagram.rect);
   const piece = usableInReach(state);
-  if (piece) {
-    if (piece.kind === 'crate' && Object.keys(piece.contents).length === 0) return null;
-    return at(piece.kind, pieceRect(piece));
-  }
+  // 047: E opens a crate's screen even when it's empty (stacks can go in), so an empty crate has its prompt too.
+  if (piece) return at(piece.kind, pieceRect(piece));
   const node = state.building ? undefined : nodeInReach(state);
   return node ? at('node', node) : null;
 }

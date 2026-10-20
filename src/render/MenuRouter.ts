@@ -1,5 +1,6 @@
 import { SOUNDS } from '../data/sounds';
 import { usableInReach } from '../sim/foundryUse';
+import { diagramInReach } from '../sim/research';
 import type { SimState } from '../sim/state';
 import type { BuildView } from './BuildView';
 import type { ClickMods } from './clickInput';
@@ -116,7 +117,8 @@ export class MenuRouter {
     // E on a hopper or crate opens its screen (047); the sim does nothing with it. With the restore panel open, E again restores (033).
     if (controls.takeInteractPress() && !site.pressAgain(controls)) {
       const target = usableInReach(this.sim);
-      if (target?.kind === 'hopper' || target?.kind === 'crate') {
+      // A diagram in reach wins over a crate (033's priority, as E's prompt shows), as before 047.
+      if (target?.kind === 'hopper' || (target?.kind === 'crate' && !diagramInReach(this.sim))) {
         craft.setOpen(false);
         site.close();
         inventory.openContainer(target.kind, target.id);
