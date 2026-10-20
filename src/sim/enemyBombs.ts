@@ -1,3 +1,4 @@
+import { windupsOf } from './bulwarkPhases';
 import { defOf } from './champions';
 import { damagePlayer } from './health';
 import type { EnemyState } from './enemies';
@@ -49,7 +50,7 @@ export function throwBombs(state: SimState, e: EnemyState): void {
       fromY: e.y,
       radius: lob.radius,
       fuse: 0,
-      fuseTicks: e.enraged ? def.enrage.windups.fuse : lob.fuseTicks,
+      fuseTicks: windupsOf(e, def).fuse,
       damage: lob.damage,
       rollProof: e.enraged && def.enrage.rollProofLobs,
     });

@@ -3,7 +3,7 @@ import type { BulwarkDef } from '../data/enemies';
 import { arenaOf } from '../data/hollows';
 import { enter, hold, startWindup, stepAttack, toward, walkHome } from './aiCommon';
 import { aggro, type EnemyState } from './enemies';
-import { countBehind, enrageIfDue, lobCooldownOf, poundTiming, resetFight, riseAddsIfDue, startStomp, stepRoar, stepStomp, stepWave, stompReady, turnRateOf, windupsOf } from './bulwarkPhases';
+import { countBehind, enrageIfDue, lobCooldownOf, resetFight, riseAddsIfDue, startStomp, stepRoar, stepStomp, stepWave, stompReady, turnRateOf, windupsOf } from './bulwarkPhases';
 import { throwBombs } from './enemyBombs';
 import { damagePlayer } from './health';
 import { turnToward } from './shield';
@@ -87,7 +87,7 @@ export function bulwarkThink(state: SimState, e: EnemyState, def: BulwarkDef): [
   // The stomp and the pound: wind-up, attack and recovery, all without turning.
   const stomping = stepStomp(state, e, def);
   if (stomping) return stomping;
-  const pounding = stepAttack(e, poundTiming(e, def), () => landPound(state, e, def));
+  const pounding = stepAttack(e, def, () => landPound(state, e, def), windupsOf(e, def).pound);
   if (pounding) return pounding;
   if (e.mode === 'lob' || e.mode === 'throw') {
     turnToward(e, p.x, p.y, rate);

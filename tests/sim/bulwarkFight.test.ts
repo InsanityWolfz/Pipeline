@@ -16,6 +16,12 @@ import { forum } from './forum';
 
 const SEEDS = [1, 2, 3, 4, 5] as const;
 const TARGET = { min: 60 * 60, max: 90 * 60 } as const;
+/** 041.7's damage target: at least this share of max health taken. */
+const MIN_SHARE = 0.4;
+/** The decent build is held to a pass rate over these seeds (review): at least ROBUST_PASSES meet all three targets, at most ROBUST_KOS are KO'd. */
+const ROBUST = Array.from({ length: 20 }, (_, i) => i + 1);
+const ROBUST_PASSES = 15;
+const ROBUST_KOS = 2;
 
 /** What a fight came to. */
 interface Fight {
@@ -74,25 +80,17 @@ function decentBot(): (s: SimState, b: EnemyState) => Parameters<typeof run>[2] 
 /** The naive bot: walks straight at its front, fire held on it, never rolling. */
 const naiveBot = (s: SimState, b: EnemyState): Parameters<typeof run>[2] => ({ ...walkTo(s, { x: b.x + Math.cos(b.angle) * 30, y: b.y + Math.sin(b.angle) * 30 }), fire: true, aimX: b.x, aimY: b.y - 20 });
 
-let decentRuns: Fight[] | null = null;
-/** The decent fights, run once for this file's tests. */
-const decent = (): Fight[] => (decentRuns ??= SEEDS.map((seed) => fight(seed, TARGET.max + 600, decentBot())));
 
 describe('the Bulwark with a decent build (041.7, 041.16)', () => {
-  // Five fights of up to 6,000 ticks, all bot and sim, no idle time: about 4 s on a quiet machine, so it gets its own budget.
-  it('wins in 60–90 s on every seed, without a KO, taking at least 40% of its max health', () => {
-    const runs = decent();
-    console.log('041 Bulwark, decent build (ticks, damage taken, share of max health, ticks behind):', runs.map((r) => `${r.ticks} ${r.taken} ${r.share} ${r.behind}`).join(' | '));
-    // Measured: 4,287 / 5,059 / 4,198 / 4,433 / 4,015 ticks (71.5, 84.3, 70.0, 73.9, 66.9 s), shares 0.61 / 0.83 / 0.79 /
-    // 0.88 / 0.86. Seeds 6–20 for robustness (not asserted): 12 of those 15 also meet all three; two take under 40%
-    // and two are KO'd.
-    for (const [i, r] of runs.entries()) {
-      expect(r, `seed ${SEEDS[i]}`).toMatchObject({ won: true, ko: false });
-      expect(r.ticks, `seed ${SEEDS[i]}`).toBeGreaterThanOrEqual(TARGET.min);
-      expect(r.ticks, `seed ${SEEDS[i]}`).toBeLessThanOrEqual(TARGET.max);
-      expect(r.share, `seed ${SEEDS[i]}`).toBeGreaterThanOrEqual(0.4);
-    }
-  }, 60_000);
+  // Twenty fights of up to 6,000 ticks, all bot and sim, no idle time: about 15 s on a quiet machine, so it gets its own budget.
+  it('wins in 60–90 s without a KO, taking at least 40% of its max health, on at least 15 of seeds 1–20, with at most 2 KOs', () => {
+    const runs = ROBUST.map((seed) => fight(seed, TARGET.max + 600, decentBot()));
+    const meets = (r: Fight): boolean => r.won && !r.ko && r.ticks >= TARGET.min && r.ticks <= TARGET.max && r.share >= MIN_SHARE;
+    console.log('041 Bulwark, decent build, seeds 1–20 (ticks, damage taken, share of max health, ticks behind; * meets all three):', runs.map((r, i) => `${ROBUST[i]}: ${r.ko ? 'KO ' : ''}${r.ticks} ${r.taken} ${r.share} ${r.behind}${meets(r) ? ' *' : ''}`).join(' | '));
+    // A chaotic fight: any change moves each seed's numbers, so the target is a share of seeds, not five picked ones.
+    expect(runs.filter(meets).length).toBeGreaterThanOrEqual(ROBUST_PASSES);
+    expect(runs.filter((r) => r.ko).length).toBeLessThanOrEqual(ROBUST_KOS);
+  }, 120_000);
 });
 
 describe('a naive bot (041.7)', () => {

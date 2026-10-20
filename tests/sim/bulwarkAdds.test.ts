@@ -34,7 +34,7 @@ describe('the adds', () => {
     const { s, b } = risen();
     const up = addsOf(s);
     expect(up.map((e) => e.enemyId)).toEqual(adds.enemies);
-    expect(up.map((e) => ({ x: e.x, y: e.y }))).toEqual(TILES);
+    expect(up.map((e) => ({ x: e.x, y: e.y }))).toEqual(TILES.slice(0, 2));
     for (const e of up) {
       expect(e).toMatchObject({ ring: 3, champion: null, rising: adds.riseTicks, roomId: b.roomId });
       expect(Math.hypot(e.x - s.player.x, e.y - s.player.y)).toBeGreaterThanOrEqual(adds.minDistance);
@@ -50,13 +50,13 @@ describe('the adds', () => {
     expect(sum.bosses[0]?.addsRisen).toBe(true);
   });
 
-  it('use the other tile when one is within 96 px of the player', () => {
+  it('use the other tile when one is within 96 px of the player, never both on one (041.17)', () => {
     const f = forum(160);
     run(f.s, 1);
     movePlayer(f.s, TILES[0]?.x ?? 0, (TILES[0]?.y ?? 0) + 40);
     f.b.health = HALF;
     run(f.s, 1);
-    expect(addsOf(f.s).map((e) => ({ x: e.x, y: e.y }))).toEqual([TILES[1], TILES[1]]);
+    expect(addsOf(f.s).map((e) => ({ x: e.x, y: e.y }))).toEqual([TILES[1], TILES[2]]);
   });
 
   it('can’t act, be hit or block while rising, then fight as usual', () => {
@@ -158,25 +158,30 @@ describe('the adds', () => {
     expect(capCount(s)).toBe(s.enemies.length - addsOf(s).length);
   });
 
-  it('is deterministic with the stomp, the enrage and the adds', () => {
-    const fight = (): string => {
+  it('is deterministic with the stomp, the enrage, the back wave and the adds that keep coming', () => {
+    const fight = (): { seen: { enrages: number; stomps: number; waves: number; adds: number }; state: string } => {
       const { s, b } = forum(90, 3);
       run(s, 1);
       b.health = Math.floor(DEF.maxHealth * DEF.enrage.below) - 1;
-      const seen = { enrages: 0, stomps: 0 };
-      run(s, 1500, (x) => {
-        seen.enrages += x.events.enrages.length;
-        seen.stomps += x.events.stomps.length;
-        x.player.health = 100;
+      const seen = { enrages: 0, stomps: 0, waves: 0, adds: 0 };
+      // Past the second pair's rise (041.16: every `everyTicks`).
+      for (let t = 0; t < adds.everyTicks + 100; t++) {
         const behind = { x: b.x - Math.cos(b.angle) * 90, y: b.y - Math.sin(b.angle) * 90 };
-        return x.tick % 400 < 250 ? { moveX: Math.sign(behind.x - x.player.x) as -1 | 0 | 1, moveY: Math.sign(behind.y - x.player.y) as -1 | 0 | 1 } : { moveX: x.tick % 120 < 60 ? 1 : -1 };
-      });
-      return JSON.stringify({ seen, enemies: s.enemies, bombs: s.enemyBombs, player: s.player, rng: s.rng });
+        s.player.health = 100;
+        run(s, 1, s.tick % 400 < 250 ? { moveX: Math.sign(behind.x - s.player.x) as -1 | 0 | 1, moveY: Math.sign(behind.y - s.player.y) as -1 | 0 | 1 } : { moveX: s.tick % 120 < 60 ? 1 : -1 });
+        seen.enrages += s.events.enrages.length;
+        seen.stomps += s.events.stomps.length;
+        seen.waves += s.events.backWaves.length;
+        seen.adds += s.events.addsRise.reduce((n, r) => n + r.adds.length, 0);
+      }
+      return { seen, state: JSON.stringify({ enemies: s.enemies, bombs: s.enemyBombs, player: s.player, rng: s.rng }) };
     };
     const a = fight();
-    expect(a).toContain(ADDS_GROUP);
-    expect(a).toContain('"seen":{"enrages":1,');
-    expect(a).not.toContain('"stomps":0}');
-    expect(a).toBe(fight());
+    expect(a.seen.enrages).toBe(1);
+    expect(a.seen.stomps).toBeGreaterThanOrEqual(1);
+    expect(a.seen.waves).toBeGreaterThanOrEqual(1);
+    expect(a.seen.adds).toBe(4);
+    expect(a.state).toContain(ADDS_GROUP);
+    expect(a).toEqual(fight());
   });
 });

@@ -77,13 +77,14 @@ export const HOLLOWS_LOOK = {
   bossBar: { w: 240, h: 8, top: 20, border: 1, fill: 'danger', back: 'ink', frame: 'brass', nameGap: 2 },
   /**
    * The back wave's build-up (041.16, draft for Shaun's eye): `rings` arcs over its rear arc in danger red, rippling
-   * outward from its feet and closing in on the arc's edge as the wind-up runs, over a faint fill of the whole arc.
+   * outward from its feet to the arc's edge as the wind-up runs (rings only, unlike the stomp's filled half-disc); its
+   * spray bursts `sprayAt` of its radius out as it breaks.
    */
-  wave: { color: 'danger', alpha: 0.14, rings: 3, ringWidth: 2, ringAlpha: 0.75 },
+  wave: { color: 'danger', rings: 4, ringWidth: 2.5, ringAlpha: 0.85, sprayAt: 0.5 },
   /** A circle a roll won't save from (041.12: the pound, an enraged Bulwark's bombs): a second ring `gap` px outside its edge. */
   rollProof: { color: 'danger', width: 2, alpha: 0.9, gap: 4 },
-  /** The rear stomp's wind-up (041): a half-disc over its back in the pound circle's style, danger red. */
-  stomp: { color: 'danger', alpha: 0.22, fillAlpha: 0.5 },
+  /** The rear stomp's wind-up (041): a half-disc over its back in the pound circle's style, danger red; its dust rises `dustAt` of its radius out. */
+  stomp: { color: 'danger', alpha: 0.22, fillAlpha: 0.5, dustAt: 0.5 },
   /**
    * Enraged (041, draft for Shaun's eye): the back seam's halo and the shield's runes burn danger red, the seam pulsing
    * faster; steam puffs rise from its shoulders, each `riseMs` long, `rise` px up, swelling from `radius` to twice it.

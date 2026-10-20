@@ -110,11 +110,9 @@ export function drawWave(g: GameObjects.Graphics, e: EnemyState): void {
   const angle = Math.atan2(e.waveDirY, e.waveDirX);
   const half = (def.wave.arcDegrees * Math.PI) / 360;
   const color = colorOf(W.color);
-  g.fillStyle(color, W.alpha);
-  g.slice(e.x, e.y, def.wave.radius, angle - half, angle + half, false);
-  g.fillPath();
+  // Rings only, no fill: it reads apart from the stomp's filled half-disc (both enemy red).
   for (let i = 0; i < W.rings; i++) {
-    // Each ripple starts further out, and all reach the edge together as the wave breaks.
+    // Each ripple runs out ahead of the one before it; all lie on the edge as the wave breaks.
     const r = def.wave.radius * Math.min(1, progress * (1 + i / W.rings));
     g.lineStyle(W.ringWidth, color, W.ringAlpha * (1 - i / (W.rings + 1)));
     g.beginPath();

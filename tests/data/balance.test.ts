@@ -139,8 +139,8 @@ describe('ring scaling (041)', () => {
 describe('the Bulwark (041)', () => {
   const B = BULWARK;
 
-  it('has 3,600 HP (041.16: under its raised ceiling of about 5,000); its lob and pound are as before', () => {
-    expect(B.maxHealth).toBe(3600); // was 900
+  it('has 3,800 HP (041.16: under its raised ceiling of about 5,000); its lob and pound are as before', () => {
+    expect(B.maxHealth).toBe(3800); // was 900
     expect(B.lob).toMatchObject({ cooldownTicks: 240, windupTicks: 30, count: 3, damage: 25 });
     expect(B.pound).toMatchObject({ windupTicks: 60, damage: 35, cooldownTicks: 300 });
   });
@@ -152,7 +152,7 @@ describe('the Bulwark (041)', () => {
     expect(B.pound.rollProof).toBe(true);
     expect(B.stomp).toEqual({ range: 160, behindTicks: 120, behindDecay: 2, windupTicks: 40, swipeTicks: 8, radius: 96, arcDegrees: 180, damage: 30, knockback: 40, knockTicks: 8, recoverTicks: 40, cooldownTicks: 360 });
     // 041.16 (Shaun): a new pair about every 20 s after the first (25 s, tuned).
-    expect(B.adds).toEqual({ below: 0.5, enemies: ['shardback', 'charger'], riseTicks: 60, minDistance: 96, everyTicks: 1500 });
+    expect(B.adds).toEqual({ below: 0.5, enemies: ['shardback', 'charger'], riseTicks: 60, minDistance: 96, everyTicks: 1500, maxAlive: 4 });
     for (const id of B.adds.enemies) expect(enemyDef(id).boss, id).toBe(false);
   });
 
@@ -164,14 +164,14 @@ describe('the Bulwark (041)', () => {
     expect([w.pound <= B.pound.windupTicks, w.lob <= B.lob.windupTicks, w.stomp <= B.stomp.windupTicks, w.wave <= B.wave.windupTicks, w.fuse <= B.lob.fuseTicks]).toEqual([true, true, true, true, true]);
   });
 
-  it('its add tiles are open floor inside the arena, one either side of its start, one per add', () => {
+  it('its add tiles are open floor inside the arena, the first two either side of its start, more than a pair (041.17)', () => {
     const A = HOLLOWS.arena;
     const rows = WORLD[OVERWORLD_ROOM]?.rows ?? [];
-    expect(A.addTiles).toHaveLength(B.adds.enemies.length);
+    expect(A.addTiles.length).toBeGreaterThan(B.adds.enemies.length);
     for (const t of A.addTiles) {
       expect(t.tx >= A.inside.x0 && t.tx <= A.inside.x1 && t.ty >= A.inside.y0 && t.ty <= A.inside.y1, `${t.tx},${t.ty}`).toBe(true);
       expect(WALKABLE.includes(rows[t.ty]?.[t.tx] ?? TILE.wall), `${t.tx},${t.ty}`).toBe(true);
     }
-    expect(A.addTiles.map((t) => Math.sign(t.tx - A.start.tx)).sort()).toEqual([-1, 1]);
+    expect(A.addTiles.slice(0, 2).map((t) => Math.sign(t.tx - A.start.tx)).sort()).toEqual([-1, 1]);
   });
 });

@@ -95,3 +95,43 @@ test('?start=hollows: a player who stays behind the Bulwark sees its stomp wind 
   expect(seen.behind).toBeGreaterThanOrEqual(BULWARK.stomp.behindTicks - 1);
   expect(errors).toEqual([]);
 });
+
+test('?start=hollows: the back wave comes within its interval, and a second pair of adds after the first (041.16)', async ({ page }) => {
+  test.setTimeout(120_000);
+  const errors = watchErrors(page);
+  const id = await forum(page, 4);
+  // A wave starts within `wave.everyTicks` of it waking.
+  const wave = await page.evaluate((every) => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    for (let t = 1; t <= every; t++) {
+      const s = g.step(1);
+      if (s.events.waveStarts.length > 0) return { tick: t, building: s.bosses[0]?.waveTicks ?? 0 };
+    }
+    return { tick: 0, building: 0 };
+  }, BULWARK.wave.everyTicks);
+  expect(wave.tick).toBeGreaterThan(0);
+  expect(wave.building).toBeGreaterThan(0);
+  // Below half its adds rise; `adds.everyTicks` later the next pair does, the first two taken out so the cap allows it.
+  const pairs = await page.evaluate(
+    ([bid, hp, every]) => {
+      const g = window.__GAME__;
+      if (!g) throw new Error('no game');
+      g.setEnemyHealth(bid, hp);
+      const at: number[] = [];
+      for (let t = 1; t <= every + 2; t++) {
+        const s = g.step(1);
+        // Staging, not a fight: this checks the adds' clock, so the standing player is kept up through its 25 s.
+        g.setPlayerHealth(100);
+        if (s.events.addsRise.length > 0) at.push(t);
+        if (t === 2) for (const e of s.enemies) if (e.group === 'bulwark-adds') g.setEnemyHealth(e.id, 0);
+        if (s.player.dying > 0) break;
+      }
+      return at;
+    },
+    [id, Math.floor(BULWARK.maxHealth * BULWARK.adds.below) - 1, BULWARK.adds.everyTicks] as const,
+  );
+  expect(pairs).toEqual([1, 1 + BULWARK.adds.everyTicks]);
+  expect(errors).toEqual([]);
+});
+

@@ -208,3 +208,13 @@ The targets stand: 60–90 s, real damage taken by the decent bot reacting only 
 - **Enraged telegraphs:** pound 36 (from 60), lob 30 (as before), stomp 30 (from 40), back wave 30 (from 36), bomb fuse 45 (from 90); none under MIN_TELEGRAPH_TICKS (30).
 - **Adds keep coming:** a pair every 1,500 ticks (25 s) it fights after the first; 20 s KO'd the decent build more often. Never champions, outside the spawn cap, cleared on a reset.
 - **HP 3,600** (ceiling about 5,000): with the levers above, the decent build (reading every on-screen telegraph a quarter second after it shows) wins in 71.5, 84.3, 70.0, 73.9 and 66.9 s on seeds 1–5, taking 0.61, 0.83, 0.79, 0.88 and 0.86 of its max health, never KO'd; the naive bot is KO'd at 15 s on every seed. Both 041.7 targets are normal tests again. On seeds 6–20 (not asserted) 12 of 15 also meet all three: two take under 40%, two are KO'd. The fight is chaotic, so a seed's numbers move with any change.
+
+### 041.17 Calls the 041.16 build made (open, proposals built)
+Shaun's answer to 041.16 left these to the build; each has a proposal that is built, for Shaun to change at playtest. (Review, 2026-10-20.)
+- **(a) The back wave is roll-proof.** Proposal: yes, like 041.12's pound, with the same second-ring cue: "standing behind always costs something", and with a roll through it the decent bot paid nothing.
+- **(b) Its shape and numbers.** Proposal: every 180 ticks (3 s), a 36-tick wind-up (30 enraged), a 150 px rear arc 140° wide locked as it starts, 20 damage and 30 px of knockback; drawn as ripple rings only (no fill), so it reads apart from the stomp's filled half-disc, both in enemy red.
+- **(c) Adds every 25 s, not about 20 s.** Proposal: 1,500 ticks; at 20 s the decent build was KO'd more often.
+- **(d) No wave during the roar.** Proposal: the roar attacks nothing (041.4), so the wave's countdown and any wave building wait it out.
+- **(e) A cap on living adds.** Proposal: at most 4 alive (two pairs); a pair that comes due waits until it fits under the cap. Each add rises on a tile of its own: the arena gains two add tiles north and south of the Bulwark's start, for when one of the first two is too near the player.
+- **Measured with these** (HP 3,800, under 041.16's ceiling of about 5,000): the decent build meets all three 041.7 targets on 17 of seeds 1–20 (seed 5 KO'd; seeds 10 and 11 take under 40%), and the fight test asserts at least 15 of 20 with at most 2 KOs rather than five picked seeds. Seeds 1–5: 73.8 s / 1.05, 79.7 s / 0.61, 66.3 s / 0.44, 72.1 s / 0.96, KO at 79.9 s. The naive bot is KO'd at 15 s on every seed.
+

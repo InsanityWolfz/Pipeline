@@ -24,8 +24,6 @@ type Shape = (
   left: number;
   /** A roll's i-frames don't save from it (041.12: its second ring shows it): the player has to be out by then. */
   rollProof?: boolean;
-  /** The Bulwark's own arcs: its rear stomp (041.5) and its back wave (041.16). */
-  boss?: boolean;
 };
 
 /** A shape and the ticks it has shown. */
@@ -85,7 +83,7 @@ function zoneOf(e: EnemyState, def: EnemyDef, left: (windup: number) => number):
     case 'bulwark': {
       const w = windupsOf(e, def);
       if (e.mode === 'windup') return { kind: 'circle', x: e.x, y: e.y, r: def.pound.radius, left: left(w.pound), rollProof: def.pound.rollProof };
-      return e.mode === 'stomp-windup' ? { kind: 'arc', x: e.x, y: e.y, r: def.stomp.radius, dirX: e.swipeDirX, dirY: e.swipeDirY, deg: def.stomp.arcDegrees, left: left(w.stomp), boss: true } : null;
+      return e.mode === 'stomp-windup' ? { kind: 'arc', x: e.x, y: e.y, r: def.stomp.radius, dirX: e.swipeDirX, dirY: e.swipeDirY, deg: def.stomp.arcDegrees, left: left(w.stomp) } : null;
     }
     case 'caster':
       return null;
@@ -104,7 +102,7 @@ export function dangerZones(s: SimState): Zone[] {
   for (const e of s.enemies) {
     const def = defOf(e);
     if (def.kind !== 'bulwark' || e.waveTicks <= 0 || e.roomId !== s.roomId) continue;
-    out.push({ kind: 'arc', x: e.x, y: e.y, r: def.wave.radius, dirX: e.waveDirX, dirY: e.waveDirY, deg: def.wave.arcDegrees, left: windupsOf(e, def).wave - e.waveTicks, age: e.waveTicks, boss: true, rollProof: def.wave.rollProof });
+    out.push({ kind: 'arc', x: e.x, y: e.y, r: def.wave.radius, dirX: e.waveDirX, dirY: e.waveDirY, deg: def.wave.arcDegrees, left: windupsOf(e, def).wave - e.waveTicks, age: e.waveTicks, rollProof: def.wave.rollProof });
   }
   for (const b of s.enemyBombs) if (b.roomId === s.roomId) out.push({ kind: 'circle', x: b.x, y: b.y, r: b.radius, left: b.fuseTicks - b.fuse, age: b.fuse, rollProof: b.rollProof });
   for (const o of s.orbs) {
@@ -148,8 +146,6 @@ export interface Reading {
   firing: boolean;
   /** It walks round what it has read (a careful player), or keeps to its goal and only rolls out of what is about to land. */
   walksRound: boolean;
-  /** It reads only telegraphed circles (the Bulwark's bombs and pound, a Burrower's ring) and the Bulwark's own arcs (its stomp and back wave), not other arcs, lanes or orbs. */
-  circlesOnly?: boolean;
 }
 
 /** A careful player's reading: a quarter second to react, fire held, walking round every telegraph. */
@@ -164,7 +160,7 @@ export const ROLLER: Reading = { react: 15, horizon: 45, firing: true, walksRoun
  */
 export function steer(s: SimState, goal: { x: number; y: number }, read: Reading = CAREFUL): Steer {
   const p = s.player;
-  const zones = dangerZones(s).filter((z) => z.left <= read.horizon && z.age >= read.react && (!read.circlesOnly || z.kind === 'circle' || z.boss === true));
+  const zones = dangerZones(s).filter((z) => z.left <= read.horizon && z.age >= read.react);
   const threat = zones.filter((z) => inZone(z, p.x, p.y));
   const danger = threat.length > 0;
   let best: { move: readonly [number, number]; score: number } = { move: [0, 0], score: Infinity };

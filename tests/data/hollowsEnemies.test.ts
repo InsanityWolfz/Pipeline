@@ -15,7 +15,7 @@ describe('the telegraph minimum', () => {
     expect(MIN_TELEGRAPH_TICKS).toBe(30);
   });
 
-  it('holds every enemy, old and new: each wind-up (and every one of the Bulwark’s: lob, pound and stomp, 041) at least MIN_TELEGRAPH_TICKS', () => {
+  it('holds every enemy, old and new: each wind-up (and every one of the Bulwark’s: lob, pound, stomp and back wave, enraged too, 041) at least MIN_TELEGRAPH_TICKS', () => {
     for (const def of Object.values(ENEMIES)) {
       expect(attackOf(def).windupTicks, def.id).toBeGreaterThanOrEqual(MIN_TELEGRAPH_TICKS);
       if (def.kind === 'bulwark') {

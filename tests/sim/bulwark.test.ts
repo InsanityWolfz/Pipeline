@@ -20,8 +20,8 @@ const topUp = (s: SimState): void => {
 
 describe('the Bulwark', () => {
   it('is a boss with the spec starting values in data', () => {
-    // 041: 3,600 HP (was 900).
-    expect(DEF).toMatchObject({ kind: 'bulwark', boss: true, maxHealth: 3600, walkSpeed: 18, shield: { arcDegrees: 180, turnDegPerSec: 40 } });
+    // 041: 3,800 HP (was 900).
+    expect(DEF).toMatchObject({ kind: 'bulwark', boss: true, maxHealth: 3800, walkSpeed: 18, shield: { arcDegrees: 180, turnDegPerSec: 40 } });
     expect(lob).toMatchObject({ cooldownTicks: 240, windupTicks: 30, count: 3, scatter: 80, radius: 40, fuseTicks: 90, damage: 25 });
     expect(pound).toMatchObject({ triggerRange: 72, windupTicks: 60, radius: 112, damage: 35, knockback: 40, recoverTicks: 60, cooldownTicks: 300 });
     expect(DEF.drops.always).toEqual([

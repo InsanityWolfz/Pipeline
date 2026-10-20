@@ -1,5 +1,6 @@
 import { TILE_SIZE } from '../data/config';
 import { HOLLOWS } from '../data/hollows';
+import { HOLLOWS_LOOK } from '../data/hollowsAssets';
 import { SOUND_LEVELS, SOUNDS } from '../data/sounds';
 import type { SimEvents } from '../sim/events';
 import type { JuiceView } from './JuiceView';
@@ -36,13 +37,15 @@ export function playHollows(ev: SimEvents, j: JuiceView, s: SoundView): boolean 
   }
   for (const p of ev.stomps) {
     s.play(SOUNDS.bulwarkStomp);
-    j.burst('stompDust', p.x + (p.dirX * p.radius) / 2, p.y + (p.dirY * p.radius) / 2);
+    const k = HOLLOWS_LOOK.stomp.dustAt * p.radius;
+    j.burst('stompDust', p.x + p.dirX * k, p.y + p.dirY * k);
     j.shake('small');
   }
   if (ev.addsRise.length > 0) s.play(SOUNDS.addsRise);
   for (const w of ev.backWaves) {
     s.play(SOUNDS.bulwarkWave);
-    j.burst('waveSpray', w.x + (w.dirX * w.radius) / 2, w.y + (w.dirY * w.radius) / 2);
+    const k = HOLLOWS_LOOK.wave.sprayAt * w.radius;
+    j.burst('waveSpray', w.x + w.dirX * k, w.y + w.dirY * k);
   }
   const fell = ev.gates.some((g) => g.gate === 'hollows');
   if (fell) {

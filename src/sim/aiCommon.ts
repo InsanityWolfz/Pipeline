@@ -56,12 +56,12 @@ export function startWindup(e: EnemyState, def: EnemyDef, dx: number, dy: number
 /**
  * Runs a wind-up, attack or recover in progress: `land` fires as the attack
  * pose starts. Returns the tick's move, or null once it's back to chasing (or
- * wasn't attacking), so the caller moves on.
+ * wasn't attacking), so the caller moves on. `windupTicks` overrides the def's (041.16: an enraged Bulwark's pound).
  */
-export function stepAttack(e: EnemyState, def: EnemyDef, land: () => void): [number, number] | null {
+export function stepAttack(e: EnemyState, def: EnemyDef, land: () => void, windupTicks?: number): [number, number] | null {
   const timing = attackOf(def);
   if (e.mode === 'windup') {
-    if (e.modeTicks < timing.windupTicks) return hold(e);
+    if (e.modeTicks < (windupTicks ?? timing.windupTicks)) return hold(e);
     enter(e, 'swipe');
     land();
     return [0, 0];

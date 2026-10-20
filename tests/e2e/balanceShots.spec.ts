@@ -175,13 +175,26 @@ test.describe('review screenshots (041)', () => {
   test('the back wave building off its back (041.16)', async ({ page }) => {
     test.setTimeout(120_000);
     await forum(page, -3);
+    // West of it, so it faces west and its wave builds east, across the middle of the shot.
+    await page.evaluate(
+      ([tx, ty]) => {
+        const h = window.__helpers;
+        const g = window.__GAME__;
+        if (!h || !g) throw new Error('no game');
+        h.walkTo((tx - 4 + 0.5) * 32, (ty + 0.5) * 32);
+        g.setPlayerHealth(100);
+      },
+      [A.start.tx, A.start.ty] as const,
+    );
     const ok = await page.evaluate((windup) => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
-      for (let t = 0; t < 600; t++) {
+      for (let t = 0; t < 2400; t++) {
         const s = g.step(1);
         g.setPlayerHealth(100);
-        if ((s.bosses[0]?.waveTicks ?? 0) >= windup * 0.6) return true;
+        // The wave alone: no stomp, pound or bombs beside it (the player stays in front, so no stomp comes).
+        const b = s.bosses[0];
+        if ((b?.waveTicks ?? 0) >= windup * 0.6 && b?.mode !== 'stomp-windup' && b?.mode !== 'windup' && s.enemyBombs.length === 0) return true;
       }
       return false;
     }, BULWARK.wave.windupTicks);
@@ -190,27 +203,33 @@ test.describe('review screenshots (041)', () => {
     await page.screenshot({ path: `${SHOTS}/06-back-wave.png` });
   });
 
-  test('its adds keep coming: the second pair rising beside the first (041.16)', async ({ page }) => {
+  test('its adds keep coming: the second pair rising (041.16)', async ({ page }) => {
     test.setTimeout(120_000);
     const id = await forum(page, 3);
     const ok = await page.evaluate(
-      ([bid, hp, every, rise]) => {
+      ([bid, hp, every, rise, tx, ty]) => {
         const g = window.__GAME__;
-        if (!g) throw new Error('no game');
+        const h = window.__helpers;
+        if (!g || !h) throw new Error('no game');
         g.setEnemyHealth(bid, hp);
+        g.step(1);
+        // The first pair out of the shot (041.17's cap would hold the next back otherwise), the player back below its start.
+        for (const e of g.getState().enemies) if (e.group === 'bulwark-adds') g.setEnemyHealth(e.id, 0);
         for (let t = 0; t < every + rise; t++) {
+          if (t === every - 120) h.walkTo((tx + 0.5) * 32, (ty + 0.5) * 32);
           const s = g.step(1);
           g.setPlayerHealth(100);
-          if (s.events.addsRise.length > 0 && t > 1) {
+          if (s.events.addsRise.length > 0) {
             g.step(Math.floor(rise / 2));
             return true;
           }
         }
         return false;
       },
-      [id, Math.floor(BULWARK.maxHealth * BULWARK.adds.below) - 1, BULWARK.adds.everyTicks, BULWARK.adds.riseTicks] as const,
+      [id, Math.floor(BULWARK.maxHealth * BULWARK.adds.below) - 1, BULWARK.adds.everyTicks, BULWARK.adds.riseTicks, A.start.tx, A.start.ty + 3] as const,
     );
     expect(ok).toBe(true);
+    expect((await page.evaluate(() => window.__GAME__?.getState().enemies.filter((e) => e.rising > 0).length)) ?? 0).toBe(2);
     await cameraSettled(page, 20_000);
     await page.screenshot({ path: `${SHOTS}/07-adds-second-pair.png` });
   });

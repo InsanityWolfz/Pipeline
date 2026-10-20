@@ -22,9 +22,6 @@ export function windupsOf(e: Pick<EnemyState, 'enraged'>, def: BulwarkDef): Bulw
   return { pound: def.pound.windupTicks, lob: def.lob.windupTicks, stomp: def.stomp.windupTicks, wave: def.wave.windupTicks, fuse: def.lob.fuseTicks };
 }
 
-/** Its def with the pound's wind-up as it is now (041.16), for the shared wind-up step. */
-export const poundTiming = (e: EnemyState, def: BulwarkDef): BulwarkDef => (e.enraged ? { ...def, pound: { ...def.pound, windupTicks: def.enrage.windups.pound } } : def);
-
 /** Its lob cooldown now, ticks: the enrage's while enraged. */
 export const lobCooldownOf = (e: EnemyState, def: BulwarkDef): number => (e.enraged ? def.enrage.lobCooldownTicks : def.lob.cooldownTicks);
 
@@ -121,17 +118,25 @@ export function riseAddsIfDue(state: SimState, e: EnemyState, def: BulwarkDef): 
     if (e.health >= def.maxHealth * def.adds.below) return;
     e.addsRisen = true;
   } else {
-    // 041.16: they keep coming, a pair every `everyTicks` it fights.
-    e.addsCooldown -= 1;
+    // 041.16: they keep coming, a pair every `everyTicks` it fights; 041.17: once due, a pair waits while it would
+    // take the living adds past `maxAlive`.
+    e.addsCooldown = Math.max(0, e.addsCooldown - 1);
     if (e.addsCooldown > 0) return;
+    const alive = state.enemies.filter((x) => x.group === ADDS_GROUP && x.roomId === e.roomId && x.health > 0).length;
+    if (alive + def.adds.enemies.length > def.adds.maxAlive) return;
   }
   e.addsCooldown = def.adds.everyTicks;
   const spots = arena.addTiles.map(tileCentre);
   const far = (at: { x: number; y: number }) => Math.hypot(at.x - state.player.x, at.y - state.player.y) >= def.adds.minDistance;
+  const used = new Set<number>();
   const risen = def.adds.enemies.flatMap((enemyId, i) => {
-    const own = spots[i % spots.length];
-    if (!own) return [];
-    const at = far(own) ? own : (spots.find((t, j) => j !== i % spots.length && far(t)) ?? own);
+    const mine = i % spots.length;
+    // Its own tile if it's clear of the player and free; else the first other tile that is (041.17: never two on one);
+    // else its own.
+    const pick = [mine, ...spots.map((_, j) => j).filter((j) => j !== mine)].find((j) => !used.has(j) && far(spots[j] ?? { x: Infinity, y: Infinity })) ?? mine;
+    used.add(pick);
+    const at = spots[pick];
+    if (!at) return [];
     const add = createEnemy(state.nextEnemyId++, enemyId, at, e.roomId, ADDS_GROUP);
     add.rising = def.adds.riseTicks;
     return [add];
@@ -159,6 +164,8 @@ export function resetFight(state: SimState, e: EnemyState, def: BulwarkDef): voi
  */
 export function stepWave(state: SimState, e: EnemyState, def: BulwarkDef): void {
   const { wave } = def;
+  // 041.17: the roar attacks nothing; the wave and its countdown wait it out.
+  if (e.mode === 'roar') return;
   // The countdown runs through a wave's wind-up too: one starts every `everyTicks`.
   if (e.waveCooldown > 0) e.waveCooldown -= 1;
   if (e.waveTicks > 0) {

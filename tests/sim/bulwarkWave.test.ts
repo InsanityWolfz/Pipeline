@@ -9,7 +9,8 @@ import { DEF, forum, offFacing, START } from './forum';
 
 // 041.16 (Shaun's answer): standing behind the Bulwark always costs something (a back wave
 // off it every few seconds), its telegraphs shorten while enraged (never under the minimum),
-// and its adds keep coming, a pair every 20 s after the first.
+// and its adds keep coming, a pair every 25 s after the first (at most four alive, 041.17);
+// the wave waits out the roar (041.17).
 
 const { wave, enrage, adds } = DEF;
 
@@ -82,6 +83,43 @@ describe('the back wave', () => {
   });
 });
 
+describe('the back wave and the roar (041.17)', () => {
+  it('waits out the roar: no wave starts or breaks while it roars, its countdown and a wind-up held', () => {
+    const f = forum(160);
+    run(f.s, 1);
+    // Its lobs, stomp and adds off; its wave left as it is, due just as the roar starts, and another mid-build.
+    Object.assign(f.b, { lobCooldown: 100_000, stompCooldown: 100_000, addsRisen: true, addsCooldown: 100_000 });
+    f.b.health = Math.floor(DEF.maxHealth * enrage.below) - 1;
+    f.b.waveCooldown = 3;
+    run(f.s, 1);
+    expect(f.b.mode).toBe('roar');
+    let waves = 0;
+    const held = f.b.waveCooldown;
+    for (let t = 1; t < enrage.roarTicks; t++) {
+      run(f.s, 1);
+      waves += f.s.events.waveStarts.length + f.s.events.backWaves.length;
+    }
+    expect(waves).toBe(0);
+    expect(f.b.waveCooldown).toBe(held);
+    run(f.s, held + 1);
+    expect(f.b.mode).not.toBe('roar');
+    expect(f.b.waveTicks).toBeGreaterThan(0);
+    // A wave building when a roar starts holds where it is until the roar ends.
+    const g = forum(160);
+    run(g.s, 1);
+    Object.assign(g.b, { lobCooldown: 100_000, stompCooldown: 100_000, addsRisen: true, addsCooldown: 100_000, waveCooldown: 1 });
+    run(g.s, 2);
+    expect(g.b.waveTicks).toBeGreaterThan(0);
+    g.b.health = Math.floor(DEF.maxHealth * enrage.below) - 1;
+    run(g.s, 1);
+    expect(g.b.mode).toBe('roar');
+    const building = g.b.waveTicks;
+    run(g.s, enrage.roarTicks - 1);
+    expect(g.b.waveTicks).toBe(building);
+    expect(g.s.events.backWaves).toEqual([]);
+  });
+});
+
 describe('enraged telegraphs (041.16)', () => {
   /** Awake and enraged, its roar done. */
   function enraged(): { s: SimState; b: EnemyState } {
@@ -120,22 +158,28 @@ describe('enraged telegraphs (041.16)', () => {
 });
 
 describe('adds that keep coming (041.16)', () => {
-  it('a new pair every `everyTicks` it fights after the first, never champions; a reset clears the count', () => {
+  it('a new pair every `everyTicks` it fights after the first, never champions, at most `maxAlive` living (041.17); a reset clears the count', () => {
     const f = forum(160);
     run(f.s, 1);
     Object.assign(f.b, { lobCooldown: 100_000, stompCooldown: 100_000, waveCooldown: 100_000, health: DEF.maxHealth * adds.below - 1 });
     const pairs: number[] = [];
+    const keepUp = (x: SimState) => {
+      x.player.health = 100;
+      return {};
+    };
     for (let t = 1; t <= adds.everyTicks * 2 + 2; t++) {
-      run(f.s, 1, (x) => {
-        x.player.health = 100;
-        return {};
-      });
+      run(f.s, 1, keepUp);
       if (f.s.events.addsRise.length > 0) pairs.push(t);
     }
-    expect(pairs).toEqual([1, 1 + adds.everyTicks, 1 + 2 * adds.everyTicks]);
+    // The third pair is due but waits: two pairs are up.
+    expect(pairs).toEqual([1, 1 + adds.everyTicks]);
     const all = f.s.enemies.filter((e) => e.group === ADDS_GROUP);
-    expect(all.length).toBeLessThanOrEqual(6);
+    expect(all).toHaveLength(adds.maxAlive);
     expect(all.every((e) => e.champion === null)).toBe(true);
+    // Two of them fall: the waiting pair rises at once, back to the cap.
+    for (const e of all.slice(0, 2)) e.health = 0;
+    run(f.s, 2, keepUp);
+    expect(f.s.enemies.filter((e) => e.group === ADDS_GROUP)).toHaveLength(adds.maxAlive);
     movePlayer(f.s, START.x, (HOLLOWS.arena.bounds.y0 - 3) * 32);
     runUntil(f.s, () => f.b.mode === 'idle', DEF.leashTicks + 3000);
     expect(f.s.enemies.filter((e) => e.group === ADDS_GROUP)).toEqual([]);

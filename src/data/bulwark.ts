@@ -65,7 +65,7 @@ export interface BulwarkDef extends EnemyBase {
     cooldownTicks: number;
   };
   /** Its adds (041.6): enemy ids, risen at the arena's add tiles. */
-  adds: { below: number; enemies: readonly string[]; riseTicks: number; minDistance: number; everyTicks: number };
+  adds: { below: number; enemies: readonly string[]; riseTicks: number; minDistance: number; everyTicks: number; maxAlive: number };
 }
 
 /** The group the Bulwark's adds carry (041.6): not a population pack, so never counted toward packs or the spawn cap. */
@@ -77,11 +77,11 @@ export const BULWARK: BulwarkDef = {
   name: 'Bulwark',
   boss: true,
   /**
-   * 041: 3,600 (was 900). 041.16 (Shaun) raised its ceiling to about 5,000; with the back wave, the enrage's shorter
-   * telegraphs and the adds that keep coming, 3,600 is where a decent build's fight lands in 60–90 s, taking real damage
-   * (041.7, tests/sim/bulwarkFight.test.ts).
+   * 041: 3,800 (was 900). 041.16 (Shaun) raised its ceiling to about 5,000; with the back wave, the enrage's shorter
+   * telegraphs and the adds that keep coming (at most four, 041.17), 3,800 is where the most seeds of a decent build's
+   * fight land in 60–90 s, taking real damage (041.7, tests/sim/bulwarkFight.test.ts).
    */
-  maxHealth: 3600,
+  maxHealth: 3800,
   walkSpeed: 18,
   feetBox: { w: 36, h: 14 },
   hurtbox: { w: 44, h: 54, offsetY: -22 },
@@ -129,9 +129,9 @@ export const BULWARK: BulwarkDef = {
    * wave builds off its back for `windupTicks` (its own rippling arcs on the ground over a rear arc of `radius` px,
    * `arcDegrees` wide, locked as it starts), then breaks for `damage` and `knockback` px over `knockTicks` on feet
    * inside it; with `rollProof` a roll's i-frames don't save from it (as 041.12's pound), so standing behind costs a
-   * step out or a hit. It runs beside its other attacks, never holding them up.
+   * step out or a hit. It runs beside its other attacks, never holding them up, and waits out the roar (041.17).
    */
-  wave: { everyTicks: 210, windupTicks: 36, radius: 150, arcDegrees: 140, damage: 20, knockback: 30, knockTicks: 6, rollProof: true },
+  wave: { everyTicks: 180, windupTicks: 36, radius: 150, arcDegrees: 140, damage: 20, knockback: 30, knockTicks: 6, rollProof: true },
   /**
    * The rear stomp (041.5): its `behind` counter gains 1 a tick while the player's feet are outside its shield arc and
    * within `range` px, and loses `behindDecay` a tick otherwise (never below 0). At `behindTicks` with its cooldown
@@ -145,10 +145,11 @@ export const BULWARK: BulwarkDef = {
   /**
    * The first time in a fight its health drops below `below` of its max (041.6), one of each of `enemies` rises at the
    * arena's add tiles (the other tile when one is within `minDistance` px of the player's feet) over `riseTicks`; then
-   * another pair every `everyTicks` it fights (041.16: they keep coming).
+   * another pair every `everyTicks` it fights (041.16: they keep coming), each add on its own tile; a pair due waits
+   * while it would take the living adds past `maxAlive` (041.17).
    */
   // 041.16 tuning: a pair every 25 s (Shaun's "about every 20 s"; 20 s left the decent build KO'd more often).
-  adds: { below: 0.5, enemies: ['shardback', 'charger'], riseTicks: 60, minDistance: 96, everyTicks: 1500 },
+  adds: { below: 0.5, enemies: ['shardback', 'charger'], riseTicks: 60, minDistance: 96, everyTicks: 1500, maxAlive: 4 },
   drops: {
     always: [
       { itemId: 'bulwark-core', min: 1, max: 1 },
