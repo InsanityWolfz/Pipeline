@@ -1,5 +1,5 @@
 # 025: Bottom HUD: centred hotbar, active ammo above it, fist when empty
-status: approved
+status: done
 
 Approved by Shaun in chat, 2026-10-18 ("approve 21-27").
 
