@@ -1,4 +1,3 @@
-import { TILE_SIZE } from '../data/config';
 import { enemyDef, type BulwarkDef } from '../data/enemies';
 import { HOLLOWS } from '../data/hollows';
 import { OVERWORLD_ROOM } from '../data/overworld';
@@ -11,7 +10,7 @@ import { createEnemy, type EnemyState } from './enemies';
 import { tileRect } from './fixtures';
 import type { Command } from './input';
 import type { SimState } from './state';
-import { tileCentre } from './tiles';
+import { insideTiles, tileCentre } from './tiles';
 
 // The arena lock (043, was 041.18): while a region boss fights, a ley barrier seals its
 // arena's way in, so the fight can't be walked out to a healing spot and back. Feet can't
@@ -41,17 +40,11 @@ export function sealRects(state: Pick<SimState, 'enemies'>, roomId: string): Rec
   return ARENAS.filter((a) => arenaSealed(state, a)).flatMap((a) => a.seal.tiles.map(tileRect));
 }
 
-/** True if a feet point is inside the arena's floor. */
-const inside = (arena: Arena, x: number, y: number): boolean => {
-  const r = arena.inside;
-  return x >= r.x0 * TILE_SIZE && x < (r.x1 + 1) * TILE_SIZE && y >= r.y0 * TILE_SIZE && y < (r.y1 + 1) * TILE_SIZE;
-};
-
 /** Moves a body already overlapping a seal tile off it, to its own side (into the arena if its feet are in it), so it can't walk on through. */
 function pushOff(arena: Arena, body: { x: number; y: number }, box: Box): void {
   for (const r of arena.seal.tiles.map(tileRect)) {
     if (!overlapsRect(body.x, body.y, box, r)) continue;
-    const south = inside(arena, body.x, body.y);
+    const south = insideTiles(arena.inside, body.x, body.y);
     body.y = south ? r.y + (r.h + box.h) / 2 : r.y - (r.h + box.h) / 2;
   }
 }

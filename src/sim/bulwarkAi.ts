@@ -7,6 +7,7 @@ import { countBehind, enrageIfDue, lobCooldownOf, resetFight, riseAddsIfDue, sta
 import { throwBombs } from './enemyBombs';
 import { damagePlayer } from './health';
 import { turnToward } from './shield';
+import { insideTiles } from './tiles';
 import type { SimState } from './state';
 
 // The Bulwark (034): it stands in its arena and wakes when the player's feet enter it.
@@ -15,10 +16,6 @@ import type { SimState } from './state';
 // pounds the ground round itself, then recovers without turning, the window to punish it.
 // It never leaves its arena, and walks home to heal after the player has been out of it a while.
 // 041 adds the rear stomp, the enrage and the adds (bulwarkPhases.ts).
-
-/** True if a feet point is inside a tile rect, px. */
-const insidePx = (r: { x0: number; y0: number; x1: number; y1: number }, x: number, y: number): boolean =>
-  x >= r.x0 * TILE_SIZE && x < (r.x1 + 1) * TILE_SIZE && y >= r.y0 * TILE_SIZE && y < (r.y1 + 1) * TILE_SIZE;
 
 /** A move, with each axis dropped that would carry the feet out of the arena (it never steps out). */
 function inArena(e: EnemyState, def: BulwarkDef, mx: number, my: number): [number, number] {
@@ -56,7 +53,7 @@ export function bulwarkThink(state: SimState, e: EnemyState, def: BulwarkDef): [
   const p = state.player;
   const arena = arenaOf(e.enemyId);
   const here = e.roomId === state.roomId && p.dying === 0;
-  const playerIn = here && arena !== undefined && insidePx(arena.inside, p.x, p.y);
+  const playerIn = here && arena !== undefined && insideTiles(arena.inside, p.x, p.y);
   const rate = turnRateOf(e, def);
   // A dying player is gone: it turns for home at once (as every chaser does).
   if (engaged(e) && !here && p.dying > 0) {
