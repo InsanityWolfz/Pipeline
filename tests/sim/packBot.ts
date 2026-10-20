@@ -1,5 +1,5 @@
 import { ammoDef } from '../../src/data/ammo';
-import { TILE_SIZE } from '../../src/data/config';
+import { TICK_RATE, TILE_SIZE } from '../../src/data/config';
 import { SPREAD_STEP } from '../../src/data/foundry';
 import { OVERWORLD, OVERWORLD_ROOM, ringOf } from '../../src/data/overworld';
 import { TILE } from '../../src/data/rooms';
@@ -13,8 +13,8 @@ import { clearShot } from '../../src/sim/sightLine';
 import { tileCentre } from '../../src/sim/tiles';
 import { WORLD } from '../../src/sim/world';
 import { CAREFUL, steer, takenThisTick } from './bots';
-import { feed } from './builds';
-import { run } from './fight';
+import { feed, lines } from './builds';
+import { arena, run } from './fight';
 
 // A pack fight for 041's targets (test code): a pack placed as the population places one
 // (each member on open ground within 2 tiles of its centre, picked with the sim's RNG, all
@@ -137,3 +137,21 @@ export function fightPack(s: SimState, pack: readonly EnemyState[], home: { x: n
 
 /** A tile's centre in px. */
 export const at = (tx: number, ty: number): { x: number; y: number } => ({ x: (tx + 0.5) * TILE_SIZE, y: (ty + 0.5) * TILE_SIZE });
+
+/** 041.8's ring-matched packs: each pack, the lines of its fitting volley, its centre tile, and the player's start 6 to 7 tiles off. */
+export const PACKS = {
+  1: { ids: ['husk', 'husk', 'husk', 'husk'], lines: ['arrow'], centre: { tx: 61, ty: 32 }, start: at(67, 32) },
+  2: { ids: ['husk', 'husk', 'husk', 'husk', 'wisp'], lines: ['arrow', 'arrow'], centre: { tx: 49, ty: 30 }, start: at(56, 30) },
+  3: { ids: ['shardback', 'charger', 'charger', 'burrower', 'sniper'], lines: ['bomb', 'arrow'], centre: { tx: 22, ty: 12 }, start: at(28, 12) },
+} as const;
+
+/** The longest a pack fight runs, ticks: 60 s. */
+export const PACK_LIMIT = 60 * TICK_RATE;
+
+/** One ring's pack fight on a seed: no talents, nothing worn, only the volley's lines (041.8's arithmetic). */
+export function packClear(ring: keyof typeof PACKS, seed: number): PackFight {
+  const def = PACKS[ring];
+  const s = arena(seed, def.start);
+  lines(s, ...def.lines);
+  return fightPack(s, placePack(s, def.ids, def.centre), def.start, PACK_LIMIT);
+}

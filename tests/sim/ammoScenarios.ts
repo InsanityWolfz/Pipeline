@@ -1,4 +1,5 @@
 import { lobbedAmmo, straightAmmo } from '../../src/data/ammo';
+import { TICK_RATE } from '../../src/data/config';
 import type { Ring } from '../../src/data/ringScale';
 import { TILE, type Room } from '../../src/data/rooms';
 import { HOMING } from '../../src/data/tags';
@@ -124,3 +125,62 @@ export const MEADOW = PLAYER_AT;
 
 /** A tile's centre. */
 export const tile = (tx: number, ty: number): { x: number; y: number } => tileCentre({ tx, ty });
+
+/** The longest a scenario runs, ticks: a family that can't finish in 60 s scores 60 s and never wins. */
+export const CAP = 60 * TICK_RATE;
+/** The winner's margin over the next: at least 10%. */
+const MARGIN = 1.1;
+
+/** The meadow's harness-built wall (041.9): a 3-tile segment, one column, 48 px east of the player. */
+const WALL = [26, 27, 28].map((ty) => ({ tx: 82, ty }));
+
+/** Keeps placed enemies coming at the player, on screen or not (they'd otherwise leash home off it). */
+const keepComing = (_s: unknown, placed: readonly { offScreenTicks: number }[]): void => {
+  for (const e of placed) e.offScreenTicks = 0;
+};
+
+/** 041.9's four scenarios. */
+export const SCENARIOS: Record<'line' | 'cluster' | 'walls' | 'still', Scenario> = {
+  // 5 ring 1 Husks single file, 24 px apart, the first 280 px off, walking straight at the player.
+  line: { at: MEADOW, place: (s) => [0, 1, 2, 3, 4].map((i) => ringed(s, 'husk', MEADOW.x + 280 + i * 24, MEADOW.y, 1)), hold: keepComing },
+  // 8 ring 2 Husks evenly round a 40 px ring, 240 px off, walking at the player.
+  cluster: {
+    at: MEADOW,
+    place: (s) => Array.from({ length: 8 }, (_, i) => ringed(s, 'husk', MEADOW.x + 240 + Math.cos((i * Math.PI) / 4) * 40, MEADOW.y + Math.sin((i * Math.PI) / 4) * 40, 2)),
+    hold: keepComing,
+  },
+  // 4 ring 2 Wisps 200 px off behind the wall, keeping their distance as Wisps do.
+  walls: { at: MEADOW, walls: WALL, place: (s) => [-36, -12, 12, 36].map((dy) => ringed(s, 'wisp', MEADOW.x + 200, MEADOW.y + dy, 2)), hold: keepComing },
+  // One ring 3 Shardback 150 px off, its shield facing the player, held in place (041.10).
+  still: {
+    at: MEADOW,
+    place: (s) => {
+      const e = ringed(s, 'shardback', MEADOW.x + 150, MEADOW.y, 3);
+      e.angle = Math.PI;
+      return [e];
+    },
+    hold: (_s, placed) => {
+      for (const e of placed) {
+        e.x = MEADOW.x + 150;
+        e.y = MEADOW.y;
+      }
+    },
+  },
+};
+
+/**
+ * Whether `family` wins `scenario` on a seed: its time, and the first other family to finish within its time × 1.1
+ * (none, if it wins). The others only run that long: past it, they've lost by the margin.
+ */
+export function wins(seed: number, scenario: Scenario, family: Family): { ticks: number; beaten: string | null } {
+  const ticks = clearTicks(seed, scenario, family, CAP);
+  // A family that never finishes (60 s) can't win, however the others do.
+  if (ticks >= CAP) return { ticks, beaten: 'never finished' };
+  const cut = Math.ceil(ticks * MARGIN);
+  for (const other of Object.keys(FAMILIES) as Family[]) {
+    if (other === family) continue;
+    const t = clearTicks(seed, scenario, other, cut);
+    if (t < cut) return { ticks, beaten: `${other} ${t}` };
+  }
+  return { ticks, beaten: null };
+}
