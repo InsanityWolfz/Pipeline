@@ -117,6 +117,33 @@ From 021 to 041, 21 specs were stacked on one branch with no pull requests. `mai
 7. **Commit after each item.** A container restart loses anything uncommitted.
 8. **One state log.** The current state lives in docs/progress.md (latest entry first), the spec statuses in docs/backlog.md, and the work in PRs. There's no separate handoff file.
 
+## Working with Shaun (2026-10-20)
+
+Shaun follows the work from his phone, so sessions keep him informed without him having to check in. Do it exactly this way.
+
+**The status page.** "Pipeline Build Status" is a claude.ai artifact: https://claude.ai/artifact/A7a8wWq39rvSPn6PpeKEdQ. It renders from its own database, so update the data with the `ArtifactData` tool; republish the page only to change its design. Read a document first and pin each write with `if_version`.
+- `meta/now`: `headline` (one line on what's happening now), `needsYou` (exactly what Shaun should do, or `""`), `updated` (an ISO time).
+- `specs/<NNN>`: `order` (the number), `num` ("047"), `name`, `step` (0 Spec, 1 Build, 2 Review, 3 Fixes, 4 Playtest, 5 Merged), `state` (`working`, `you`, `queued` or `done`), `eta` (a clock time in Eastern time, e.g. "ready to play about 6:30 pm ET"), `note` (one or two plain sentences), `pr` and `preview` (full https links).
+- Update it at every step change: build started, built, review findings, fixes done, ready to play, merged. Move an ETA when it slips. Add a row when a spec is drafted. Mark a merged spec `done` and drop its `eta`.
+
+**Notifications.** When something needs Shaun (a playtest, a decision, a merge), set `needsYou` and send one `PushNotification`: one line that leads with what to do, e.g. "046 is ready to play: New game, walk into the foundry. Say 'merge 34' when happy." Clear `needsYou` once he's done it. Don't notify for routine progress.
+
+**Each spec, end to end.**
+1. A `general-purpose` builder agent builds it on its own branch (stacked on the previous spec's branch when that one isn't merged yet), opens a draft PR, and keeps `npm run check` green at every commit.
+2. A separate `reviewer` agent reviews the diff. The builder fixes every blocking issue and the reasonable suggestions.
+3. One full `npx playwright test` run on the final head. Then mark the PR ready, set the page to Playtest with `needsYou`, and notify.
+4. When Shaun says "merge NN": commit the wrapup (spec `done`, backlog, a progress entry) to that branch, then merge with a merge commit (keeps stacked branches valid), and retarget the next stacked PR to `main`. If a builder is using the main checkout, do the wrapup in a `git worktree` so its files aren't touched.
+
+**Talking to him.**
+- Keep replies short and phone-friendly: what's ready, the preview link, and what's needed, at the end.
+- List the build's own decisions as short bullets with the conservative choice already built; he OKs or changes them.
+- Ask design questions with AskUserQuestion, recommended option first; save his answers in docs/brainstorm/.
+- A balance or design fork found mid-build (like 046.7's compounding) goes to him as one question with a recommendation, while the builder carries on with the rest.
+
+**Saves.** Don't preserve old saves (Shaun, 2026-10-20). A change that breaks the save format bumps `SAVE_VERSION` with no migration; an older save reads as too old and the player starts over.
+
+**While a builder works.** Never edit files a builder is changing. If the stop hook reports the builder's in-progress failures, wait with one bounded loop (`timeout 570 bash -c 'until npm run check ...; do sleep 30; done'`) rather than replying to each report.
+
 ## Agents, commands and hooks
 
 Keep the team small. More agents means more tokens and more places for drift.

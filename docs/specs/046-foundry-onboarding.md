@@ -1,5 +1,5 @@
 # 046: Foundry onboarding
-status: approved
+status: done
 
 Approved on draft by Shaun in chat, 2026-10-20 ("Approve 45-47 on draft"): the build follows the proposals in the open questions.
 
@@ -71,3 +71,6 @@ Built on `claude/046-foundry-onboarding` (plan: docs/plans/046-foundry-onboardin
   - Refreshed, so they also carry drift from 045 and earlier unrelated to 046: the red HP bar, the Mines group, the XP row and the shot-capture timing.
   - The other drift in this container also shows on the base branch, so it was restored and not recommitted.
 - `npm run measure`: unchanged from 045. Ammo line and still 5/5 met. Ring 1 2.2–2.9 s, ring 2 2.8–4.2 s and ring 3 10.2–17.6 s, all met. The Bulwark's decent build is still 13/20 with 3 KOs (MISSED, as in 043.2/045), and the naive bot is KO'd 5/5. The bots start with fixed ammo, so the doubled outputs don't reach them.
+
+## Shaun's answers (2026-10-20)
+- Shaun playtested the preview ("Playtest is good go ahead and merge"). He changed none of 046.4–046.11, so they stand as built. 046.7 was answered earlier: 2× per resource.
