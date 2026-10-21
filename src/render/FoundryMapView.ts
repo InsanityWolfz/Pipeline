@@ -66,14 +66,14 @@ export class FoundryMapView {
     for (const l of lines) g.lineBetween(l.x1, l.y1, l.x2, l.y2);
     for (const d of dots) {
       const style = FOUNDRY_MAP.dots[d.kind];
-      g.fillStyle(colorOf('ink'), 1).fillCircle(d.x, d.y, style.r + 0.6);
+      g.fillStyle(colorOf('ink'), 1).fillCircle(d.x, d.y, style.r + FOUNDRY_MAP.rim);
       g.fillStyle(colorOf(style.color), 1).fillCircle(d.x, d.y, style.r);
     }
     let n = 0;
     for (const i of icons) {
       if (i.kind === 'entrance' || i.kind === 'player') {
         const style = i.kind === 'entrance' ? FOUNDRY_MAP.entrance : FOUNDRY_MAP.player;
-        g.fillStyle(colorOf('ink'), 1).fillCircle(i.x, i.y, style.r + 0.6);
+        g.fillStyle(colorOf('ink'), 1).fillCircle(i.x, i.y, style.r + FOUNDRY_MAP.rim);
         g.fillStyle(colorOf(style.color), 1).fillCircle(i.x, i.y, style.r);
         continue;
       }

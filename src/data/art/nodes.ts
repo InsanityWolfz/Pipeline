@@ -235,5 +235,19 @@ export const NODE_GLOW = {
   outline: 2,
   alpha: { min: 0.45, max: 0.8 },
   periodMs: 2000,
-  sparkle: { everyMs: 2600, ms: 650, peak: 1.15 },
+  /**
+   * The glint: every `everyMs`, for `ms`, growing to `peak` of its sprite's size and back. Its spot moves each time,
+   * picked from the cycle's number and the node's id by `hash` (multipliers, mod 100, as fractions); it lands across
+   * `spanX` of the node's width round its middle, and from `rise.min` to `rise.min + rise.span` of its height up.
+   * Each node's cycle is offset `offsetMs` per id, so they don't glint together.
+   */
+  sparkle: {
+    everyMs: 2600,
+    ms: 650,
+    peak: 1.15,
+    offsetMs: 977,
+    hash: { cycleX: 37, idX: 11, cycleY: 53, idY: 7 },
+    spanX: 0.7,
+    rise: { min: 0.3, span: 0.6 },
+  },
 } as const;

@@ -24,6 +24,8 @@ export const FOUNDRY_MAP = {
   player: { color: 'snow', r: 1.6 },
   /** An open intake entrance: a dot on its mouth. */
   entrance: { color: 'cyan-glow', r: 1.2 },
+  /** Each dot sits on an ink disc this much wider, px. */
+  rim: 0.6,
   /** The icons' sprites are drawn at this scale (src/data/art/landmarks.ts' minimap icons). */
   iconScale: 0.7,
   /** A supply port shows its raw's item icon at this scale. */

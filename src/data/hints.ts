@@ -15,9 +15,9 @@ export const CARRIED_HINT: HintDef = { id: 'carried-items' };
 
 /**
  * 051 (B.7): the mouse beside the carried bar (`hud-mouse`, its right button lit), `gap` px right of the bar's last
- * cell, centred on the bar; with `use` bound to a key, that key's cap and label instead.
+ * cell, centred on the bar; with `use` bound to a key, that key's label instead, in a tablet padded `pad` px.
  */
-export const MOUSE_HINT = { gap: 5 } as const;
+export const MOUSE_HINT = { gap: 5, pad: 3 } as const;
 
 /**
  * 051 (B.7): as the attune ends, the old left-click slot (the carried round the intake's bar showed) shrinks down into

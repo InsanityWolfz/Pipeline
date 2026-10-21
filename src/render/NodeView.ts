@@ -98,7 +98,7 @@ export class NodeView {
     const breath = (Math.sin((this.time / G.periodMs) * Math.PI * 2 + n.id) + 1) / 2;
     view.glow.setScale(k).setY(bottom).setDepth(bottom - 0.5).setAlpha(G.alpha.min + (G.alpha.max - G.alpha.min) * breath);
     const S = G.sparkle;
-    const t = this.time + n.id * 977;
+    const t = this.time + n.id * S.offsetMs;
     const phase = (t % S.everyMs) / S.ms;
     view.sparkle.setVisible(phase < 1);
     if (phase >= 1) return;
@@ -106,11 +106,11 @@ export class NodeView {
     const cycle = Math.floor(t / S.everyMs);
     const w = view.image.displayWidth;
     const h = view.image.displayHeight;
-    const fx = ((cycle * 37 + n.id * 11) % 100) / 100 - 0.5;
-    const fy = ((cycle * 53 + n.id * 7) % 100) / 100;
+    const fx = ((cycle * S.hash.cycleX + n.id * S.hash.idX) % 100) / 100 - 0.5;
+    const fy = ((cycle * S.hash.cycleY + n.id * S.hash.idY) % 100) / 100;
     const size = Math.sin(phase * Math.PI) * S.peak;
     showFrame(view.sparkle, SPRITES.nodeSparkle);
-    view.sparkle.setScale(view.sparkle.scaleX * size).setPosition(n.x + fx * w * 0.7, bottom - h * (0.3 + fy * 0.6)).setDepth(bottom + 0.5);
+    view.sparkle.setScale(view.sparkle.scaleX * size).setPosition(n.x + fx * w * S.spanX, bottom - h * (S.rise.min + fy * S.rise.span)).setDepth(bottom + 0.5);
   }
 
   private drawBar(nodes: readonly NodeState[], harvest: HarvestState | null): void {

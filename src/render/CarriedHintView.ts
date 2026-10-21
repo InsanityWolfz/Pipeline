@@ -67,7 +67,7 @@ export class CarriedHintView {
       this.mouse.setPosition(box.x, box.y);
     } else {
       this.key.set(label);
-      const pad = 3;
+      const pad = MOUSE_HINT.pad;
       box = { x, y: Math.round(bar.y + (bar.h - this.key.lineHeight) / 2) - pad, w: this.key.width + 2 * pad, h: this.key.lineHeight + 2 * pad };
       if (visible) drawTablet(this.keyPanel, box.x, box.y, box.w, box.h);
       this.key.moveTo(box.x + pad, box.y + pad);
