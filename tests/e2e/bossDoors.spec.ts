@@ -37,7 +37,7 @@ test("?playtest: E at the shrine's door goes in, the Warden's fight locks it, an
     // Round the start stone onto the north-east road (053), as claiming.spec does.
     h.walkTo((41.5 + h.ox) * 32, g.getState().player.y);
   }, W.boss);
-  await enterArena(page, W.door);
+  await enterArena(page, W);
   const inside = await page.evaluate((boss) => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');

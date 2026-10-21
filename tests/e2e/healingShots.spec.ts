@@ -63,7 +63,8 @@ test.describe('review screenshots (030)', () => {
       if (!g || !h) throw new Error('no game');
       g.claim('shrine');
       g.setPlayerHealth(30);
-      // Inside the site, a few tiles down and right of the pylon, on open flagstones.
+      // Inside the site (055: in by its door), a few tiles down and right of the pylon, on open flagstones.
+      h.enterArena('shrine');
       h.walkTo((pylon.tx + 2.5) * 32, (pylon.ty + 3.5) * 32);
       if (g.step(10).player.healing !== 'pylon') throw new Error('not healing in the safe zone');
     }, OVERWORLD.shrine.pylon);

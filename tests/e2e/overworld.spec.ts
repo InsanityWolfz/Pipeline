@@ -20,8 +20,10 @@ test('the minimap shows the player, the foundry and the shrine once seen (051: f
     if (!g || !h) throw new Error('no game');
     const p = g.getState().player;
     h.walkTo(p.x, p.y - 4 * 32);
-    // 053: into the shrine, in the round map's north-east, a few tiles below its pylon.
+    // 053: into the shrine, in the round map's north-east (055: by its door), a few tiles below its pylon.
+    h.enterArena('shrine');
     h.walkTo((pylon.tx + 0.5) * 32, (pylon.ty + 4.5) * 32);
+    h.leaveArena('shrine');
     h.walkTo(p.x, p.y);
   }, OVERWORLD.shrine.pylon);
   const places = ['entrance', 'shrine', 'player'];

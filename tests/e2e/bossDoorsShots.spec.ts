@@ -79,7 +79,7 @@ test.describe('review screenshots (055)', () => {
     await page.screenshot({ path: `${SHOTS}/02-warden-door-open.png` });
 
     await page.mouse.move(0, 0);
-    await enterArena(page, W.door);
+    await enterArena(page, W);
     await page.evaluate(() => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
@@ -106,7 +106,7 @@ test.describe('review screenshots (055)', () => {
     await page.screenshot({ path: `${SHOTS}/05-forum-door-open.png` });
 
     await page.mouse.move(0, 0);
-    await enterArena(page, F.door);
+    await enterArena(page, F);
     await page.evaluate((start) => {
       const g = window.__GAME__;
       const h = window.__helpers;

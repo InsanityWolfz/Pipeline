@@ -2,6 +2,7 @@ import { expect, type Page } from '@playwright/test';
 import type {} from '../../src/render/testHook';
 import { HOME_SHIFT, RUIN } from '../../src/data/home';
 import { OVERWORLD } from '../../src/data/overworld';
+import { ARENAS } from '../../src/data/arenas';
 
 // Page helpers shared by the e2e specs. They run inside the page, so they're
 // installed there before the game boots.
@@ -25,6 +26,13 @@ export interface Helpers {
    */
   hold(itemId: string): void;
   /**
+   * 055: into a boss arena by its door, as a player goes in: walks to the floor just outside the door's middle and
+   * presses E. Does nothing if the player is already inside; fails if the door didn't open.
+   */
+  enterArena(id: string): void;
+  /** 055: out of a boss arena by its door: walks to the floor just inside the door's middle and presses E. Does nothing outside it. */
+  leaveArena(id: string): void;
+  /**
    * The ground round the foundry, for tiles specs name by hand in its pre-034 tiles: add `ox` to a column and `oy` to a
    * row (034 moved it +40 columns, 053 to the round map's centre, +4 and +64 more).
    */
@@ -39,6 +47,8 @@ interface MapData {
   /** The ruin over the stairs reaches this many tiles either side of the door (053). */
   half: number;
   door: { tx: number; ty: number };
+  /** 055: each boss arena's id, its outside walk-in point (leaveTo), and the floor tile just outside its door's middle. */
+  arenas: { id: string; out: { tx: number; ty: number }; by: { tx: number; ty: number }; in: { tx: number; ty: number } }[];
 }
 
 declare global {
@@ -232,6 +242,23 @@ function installHelpers(map: MapData): void {
       if (g.getState().room === 'foundry') throw new Error('could not leave the foundry');
     },
     hold,
+    enterArena(id) {
+      const g = game();
+      const a = map.arenas.find((x) => x.id === id);
+      if (!a) throw new Error(`no arena ${id}`);
+      if (g.getState().arenas.find((x) => x.id === id)?.inside) return;
+      walkTo((a.out.tx + 0.5) * 32, (a.out.ty + 0.5) * 32);
+      walkTo((a.by.tx + 0.5) * 32, (a.by.ty + 0.5) * 32);
+      if (g.step(1, { interact: true }).events.arenaEnters.length === 0) throw new Error(`the door of ${id} did not open`);
+    },
+    leaveArena(id) {
+      const g = game();
+      const a = map.arenas.find((x) => x.id === id);
+      if (!a) throw new Error(`no arena ${id}`);
+      if (!g.getState().arenas.find((x) => x.id === id)?.inside) return;
+      walkTo((a.in.tx + 0.5) * 32, (a.in.ty + 0.5) * 32);
+      if (g.step(1, { interact: true }).events.arenaLeaves.length === 0) throw new Error(`could not leave ${id}`);
+    },
     killHusk() {
       const g = game();
       if ((g.getState().inventory.arrow ?? 0) > 0) hold('arrow');
@@ -282,7 +309,12 @@ function installHelpers(map: MapData): void {
  */
 /** Installs the in-page helpers (`window.__helpers`) before the page's game boots (042: for specs that boot the title). */
 export async function installPageHelpers(page: Page): Promise<void> {
-  await page.addInitScript(installHelpers, { ox: 40 + HOME_SHIFT.dx, oy: HOME_SHIFT.dy, half: Math.floor(RUIN.w / 2), door: OVERWORLD.entrance.door });
+  const arenas = ARENAS.map((a) => {
+    const mid = a.door.tiles[Math.floor(a.door.tiles.length / 2)] ?? a.door.leaveTo;
+    const side = Math.sign(a.door.leaveTo.ty - mid.ty);
+    return { id: a.id, out: a.door.leaveTo, by: { tx: mid.tx, ty: mid.ty + side }, in: { tx: mid.tx, ty: mid.ty - side } };
+  });
+  await page.addInitScript(installHelpers, { ox: 40 + HOME_SHIFT.dx, oy: HOME_SHIFT.dy, half: Math.floor(RUIN.w / 2), door: OVERWORLD.entrance.door, arenas });
 }
 
 export async function boot(page: Page, query = '?start=field'): Promise<void> {
@@ -292,21 +324,9 @@ export async function boot(page: Page, query = '?start=field'): Promise<void> {
   await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
 }
 
-/**
- * 055: walks to the floor just outside a boss arena's door (by its `leaveTo` tile, then up to the door's middle) and
- * presses E there, going in; fails if the door didn't open.
- */
-export async function enterArena(page: Page, door: { tiles: readonly { tx: number; ty: number }[]; leaveTo: { tx: number; ty: number } }): Promise<void> {
-  const mid = door.tiles[Math.floor(door.tiles.length / 2)] ?? door.leaveTo;
-  const by = { tx: mid.tx, ty: mid.ty + Math.sign(door.leaveTo.ty - mid.ty) };
-  await page.evaluate(([out, t]) => {
-    const g = window.__GAME__;
-    const h = window.__helpers;
-    if (!g || !h) throw new Error('no game');
-    h.walkTo((out.tx + 0.5) * 32, (out.ty + 0.5) * 32);
-    h.walkTo((t.tx + 0.5) * 32, (t.ty + 0.5) * 32);
-    if (g.step(1, { interact: true }).events.arenaEnters.length === 0) throw new Error(`the door by ${t.tx},${t.ty} did not open`);
-  }, [door.leaveTo, by] as const);
+/** 055: into a boss arena by E at its door (the in-page `enterArena`). */
+export async function enterArena(page: Page, arena: { id: string }): Promise<void> {
+  await page.evaluate((id) => window.__helpers?.enterArena(id), arena.id);
 }
 
 /** Waits until the camera, easing after the player in real time, has come to rest (`timeout` ms: a long ease under load needs more). */
