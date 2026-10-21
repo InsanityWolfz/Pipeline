@@ -118,9 +118,15 @@ test.describe('review screenshots (024)', () => {
 
     // The volley a few ticks out: one fan of three lanes (048), the arrows at ±15° and the bomb straight up the middle.
     // Out in the hall first, with the door's fade and the schematic banner played out (046's quietScreen).
+    // A few steps south of the hall's door, so its dome doesn't stop the left lane's arrow.
     await page.evaluate(() => {
-      window.__helpers?.toHall();
-      window.__GAME__?.step(1);
+      const g = window.__GAME__;
+      const h = window.__helpers;
+      if (!g || !h) throw new Error('no game');
+      h.toHall();
+      const s = g.step(1);
+      h.walkTo(s.player.x, s.player.y + 96);
+      g.step(1);
     });
     await cameraSettled(page);
     await quietScreen(page);
