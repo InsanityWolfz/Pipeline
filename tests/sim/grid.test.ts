@@ -3,7 +3,7 @@ import { STACK_SIZES, stackSize } from '../../src/data/items';
 import { containerStacks, gridSlots, gridStacks, stacksOf } from '../../src/sim/bag';
 import type { CrateState, HopperState } from '../../src/sim/pieces';
 import { run } from './fight';
-import { foundry, put } from './foundryKit';
+import { foundry, put, stepOutside } from './foundryKit';
 
 // 047 (note 12): the grid inventory. Each slot holds one stack, stack sizes in data (047.1); the grid's order is the
 // order kinds were first carried, and Sort orders it by group then item. Click moves one, Shift half, Ctrl the whole
@@ -53,7 +53,8 @@ describe('the grid', () => {
   });
 
   it('marks what a death would take (031): a kind\'s safe items fill its first stacks', () => {
-    const s = foundry();
+    // Outside: in the foundry, gains are banked at once (050).
+    const s = stepOutside(foundry());
     s.inventory = { wood: 70, stone: 4 };
     s.banked = { wood: 60, stone: 4 };
     run(s, 1);
