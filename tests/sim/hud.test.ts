@@ -46,9 +46,9 @@ describe('hudActive (025)', () => {
     expect(hudActive(s)).toEqual({
       kind: 'volley',
       rounds: [
-        { ammoId: 'arrow', count: 12 },
-        { ammoId: 'arrow', count: 9 },
-        { ammoId: 'bomb', count: 4 },
+        { ammoId: 'arrow', count: 12, lane: -15 },
+        { ammoId: 'arrow', count: 9, lane: 0 },
+        { ammoId: 'bomb', count: 4, lane: 15 },
       ],
     });
     press(s);
@@ -62,7 +62,7 @@ describe('hudActive (025)', () => {
 
   it('skips an empty entrance in the volley', () => {
     const s = meadow([['arrow', 2], null, ['bomb', 1]], {});
-    expect(hudActive(s)).toEqual({ kind: 'volley', rounds: [{ ammoId: 'arrow', count: 2 }, { ammoId: 'bomb', count: 1 }] });
+    expect(hudActive(s)).toEqual({ kind: 'volley', rounds: [{ ammoId: 'arrow', count: 2, lane: -7.5 }, { ammoId: 'bomb', count: 1, lane: 7.5 }] });
   });
 
   it('shows melee when nothing can fire, and the press punches', () => {
@@ -98,6 +98,6 @@ describe('hudActive (025)', () => {
 
   it('is reported by getState() as hud.active', () => {
     const s = meadow([['bomb', 4], null, null], {});
-    expect(summarize(s).hud).toEqual({ active: { kind: 'volley', rounds: [{ ammoId: 'bomb', count: 4 }] } });
+    expect(summarize(s).hud).toEqual({ active: { kind: 'volley', rounds: [{ ammoId: 'bomb', count: 4, lane: 0 }] } });
   });
 });

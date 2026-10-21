@@ -37,6 +37,8 @@ Already settled before the interview: note 3 dropped (the Warden stays), notes 1
 - **Angle:** 15° between shots, today's `SPREAD_STEP` (rec).
 - **Timing:** "Together, each keeps its rate": each entrance fires on its own beat, and when beats line up they fire together. (Recommended was "together at the slowest rate".)
 - **Bombs:** land on an arc at the cursor's distance, each rotated to its lane's angle (rec).
+- **048.7, mixed volleys and the bots (2026-10-21):** "Keep it, judge at playtest": a mixed volley that can't put every round on one target is the trade; the bots stay as they are; balance is judged at playtest.
+- **048.4, design.md (2026-10-21):** approved: "The Foundry" now says every fed entrance fires down its own lane of one fan, whatever its ammo; bombs land on an arc at the cursor's distance.
 
 ## Next batch: 049 resin pylon (note 16)
 - **Site:** a new Husk Hive landmark: a Husk nest of amber-crusted stone, guarded by a Husk pack with a champion; its pylon supplies resin (rec).

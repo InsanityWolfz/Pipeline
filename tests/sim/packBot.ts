@@ -1,13 +1,12 @@
 import { ammoDef } from '../../src/data/ammo';
 import { TICK_RATE, TILE_SIZE } from '../../src/data/config';
-import { SPREAD_STEP } from '../../src/data/foundry';
 import { OVERWORLD, OVERWORLD_ROOM, ringOf } from '../../src/data/overworld';
 import { TILE } from '../../src/data/rooms';
 import { defOf } from '../../src/sim/champions';
 import { createEnemy, targetable, type EnemyState } from '../../src/sim/enemies';
 import { nextInt } from '../../src/sim/rng';
 import { angleDiff } from '../../src/sim/shield';
-import { rotate } from '../../src/sim/volley';
+import { rotate, volleyRounds } from '../../src/sim/volley';
 import type { SimState } from '../../src/sim/state';
 import { clearShot } from '../../src/sim/sightLine';
 import { tileCentre } from '../../src/sim/tiles';
@@ -62,16 +61,17 @@ export function targetOf(s: SimState, pack: readonly EnemyState[]): EnemyState |
 }
 
 /**
- * Where to aim at a target: its body (the hurtbox's middle). With two or more straight rounds of one ammo in the volley
- * (024's spread, SPREAD_STEP apart), the aim turns so the round nearest the middle flies straight at it, as a player
- * learns to.
+ * Where to aim at a target: its body (the hurtbox's middle). When no straight round's lane is on the cursor (048: every
+ * fed entrance takes a lane of the fan, whatever its ammo), the aim turns so the straight round nearest the middle
+ * flies straight at it, as a player learns to.
  */
 function aimAt(s: SimState, target: EnemyState): { aimX: number; aimY: number } {
   const p = s.player;
   const body = { x: target.x, y: target.y + defOf(target).hurtbox.offsetY };
-  const straight = s.link.entrances.filter((e) => e.open && e.ammoId && ammoDef(e.ammoId).kind === 'straight').length;
-  if (straight % 2 === 1 || straight === 0) return { aimX: body.x, aimY: body.y };
-  const [dx, dy] = rotate(body.x - p.x, body.y - p.y, SPREAD_STEP / 2);
+  const lanes = volleyRounds(s).filter((r) => ammoDef(r.ammoId).kind === 'straight').map((r) => r.lane);
+  const lane = lanes.sort((a, b) => Math.abs(a) - Math.abs(b))[0] ?? 0;
+  if (lane === 0) return { aimX: body.x, aimY: body.y };
+  const [dx, dy] = rotate(body.x - p.x, body.y - p.y, -lane);
   return { aimX: p.x + dx, aimY: p.y + dy };
 }
 

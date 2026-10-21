@@ -45,7 +45,7 @@ import { CRAFT_TABS } from '../../src/data/craftTabs';
 import { STAGE_RECIPES, STAGE_ROWS } from '../../src/data/stages';
 import { NODES } from '../../src/data/nodes';
 import { BUILD_BAR, PIECE_CATEGORIES, PIECES, pieceDef } from '../../src/data/pieces';
-import { ENTRANCE_CAPS, INTAKE, LOB_SPACING, SPREAD_STEP } from '../../src/data/foundry';
+import { ENTRANCE_CAPS, INTAKE, SPREAD_STEP } from '../../src/data/foundry';
 import { researchNode } from '../../src/data/research';
 import { ENTRANCE_GAUGE_COLORS } from '../../src/data/art/intake';
 import { vectorFrames } from '../../src/render/vector/catalog';
@@ -386,7 +386,14 @@ describe('spreads from the intake (024)', () => {
   it('has three entrances on the mouth, the centre open, and starting numbers from the spec', () => {
     expect(INTAKE.entrances).toHaveLength(3);
     expect(INTAKE.entrances.filter((e) => e.startsOpen)).toEqual([INTAKE.entrances[1]]);
-    expect([ENTRANCE_CAPS[0], SPREAD_STEP, LOB_SPACING]).toEqual([30, 15, 24]);
+    expect([ENTRANCE_CAPS[0], SPREAD_STEP]).toEqual([30, 15]);
+  });
+
+  it('gives each entrance its own lane, in order west to east like its tile (048)', () => {
+    const lanes = INTAKE.entrances.map((e) => e.lane);
+    expect(new Set(lanes).size).toBe(INTAKE.entrances.length);
+    const byLane = [...INTAKE.entrances].sort((a, b) => a.lane - b.lane).map((e) => e.tx);
+    expect(byLane).toEqual([...byLane].sort((a, b) => a - b));
   });
 
   it('draws the brass entrance cap, and has a gauge colour for every ammo', () => {
