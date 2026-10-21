@@ -119,8 +119,8 @@ export interface UiState {
   nodeGlow: number[];
   /** 032: each mote's site, the claimed pylon it left from. */
   supply: { started: number; inFlight: { itemId: string; progress: number; site: string; icon: string; iconShown: boolean }[] };
-  /** 053: the overworld's ground chunks built now (only those near the camera are). */
-  overworldChunks: number;
+  /** 053: the overworld's ground chunks built now, as `cx,cy` keys (only those near the camera are). */
+  overworldChunks: string[];
   /** The camera shakes asked for since boot, oldest first (the last 50) (021). */
   shakes: string[];
   /** Which cursor shows (021: the menu pointer or the crosshair), its depth, and the highest depth of anything else. */

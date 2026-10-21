@@ -57,9 +57,9 @@ export class OverworldView {
     this.dome.setVisible(this.shown && !this.domeOpen);
   }
 
-  /** Chunks built now, for the test hook. */
-  get builtChunks(): number {
-    return this.chunks.size;
+  /** The chunks built now, as `cx,cy` keys, for the test hook. */
+  get builtChunks(): string[] {
+    return [...this.chunks.keys()];
   }
 
   update(sim: SimState): void {
@@ -84,8 +84,9 @@ export class OverworldView {
   }
 
   /**
-   * Builds the chunks the camera needs and drops the far ones: every chunk the view touches now, one more a frame
-   * within `GROUND.ahead` chunks of it, and none kept past `GROUND.keep` chunks away.
+   * Builds the chunks the camera needs and drops the far ones: every chunk the view touches now and the row below it
+   * (tall sprites standing there reach up into the view, so a teleport or a KO shows no pop-in along the bottom), one
+   * more a frame within `GROUND.ahead` chunks of it, nearest the view first, and none kept past `GROUND.keep` chunks away.
    */
   private stream(): void {
     const room = this.room;
@@ -101,12 +102,19 @@ export class OverworldView {
       y1: Math.min(rows - 1, Math.floor((v.y + v.height) / C) + pad),
     });
     const now = span(0);
-    for (let cy = now.y0; cy <= now.y1; cy++) for (let cx = now.x0; cx <= now.x1; cx++) this.chunk(room, cx, cy);
+    const below = Math.min(rows - 1, now.y1 + 1);
+    for (let cy = now.y0; cy <= below; cy++) for (let cx = now.x0; cx <= now.x1; cx++) this.chunk(room, cx, cy);
     const ahead = span(GROUND.ahead);
-    let built = 0;
-    for (let cy = ahead.y0; cy <= ahead.y1 && built < 1; cy++) {
-      for (let cx = ahead.x0; cx <= ahead.x1 && built < 1; cx++) if (!this.chunks.has(`${cx},${cy}`) && this.chunk(room, cx, cy)) built++;
+    const mx = (now.x0 + now.x1) / 2;
+    const my = (now.y0 + now.y1) / 2;
+    let next: { cx: number; cy: number; d: number } | null = null;
+    for (let cy = ahead.y0; cy <= ahead.y1; cy++) {
+      for (let cx = ahead.x0; cx <= ahead.x1; cx++) {
+        const d = Math.hypot(cx - mx, cy - my);
+        if (!this.chunks.has(`${cx},${cy}`) && (!next || d < next.d)) next = { cx, cy, d };
+      }
     }
+    if (next) this.chunk(room, next.cx, next.cy);
     const keep = span(GROUND.keep);
     for (const [id, c] of this.chunks) {
       const [cx = 0, cy = 0] = id.split(',').map(Number);

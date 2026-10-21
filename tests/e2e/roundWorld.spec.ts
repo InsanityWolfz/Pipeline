@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { itemDef } from '../../src/data/items';
 import { OVERWORLD } from '../../src/data/overworld';
+import { GROUND } from '../../src/data/art/ground';
+import { WORLD_SHAPE } from '../../src/data/worldShape';
 import { boot, watchErrors } from './helpers';
 
 // The round world (053) in the game: a claimed pylon's haul runs home along its ley line as the icons of its raws
@@ -37,12 +39,23 @@ test('the overworld builds its ground near the camera only, and builds it again 
   test.setTimeout(90_000);
   const errors = watchErrors(page);
   await boot(page);
-  const chunks = () => page.evaluate(() => window.__GAME__?.ui().overworldChunks ?? 0);
-  await expect.poll(chunks).toBeGreaterThan(0);
+  const chunks = () => page.evaluate(() => window.__GAME__?.ui().overworldChunks ?? []);
+  /** The player's chunk and the one below it (tall sprites standing there reach up into the view): built at once. */
+  const around = async () => {
+    const p = (await page.evaluate(() => window.__GAME__?.getState().player)) ?? { x: 0, y: 0 };
+    const cx = Math.floor(p.x / GROUND.chunk);
+    const cy = Math.floor(p.y / GROUND.chunk);
+    return [`${cx},${cy}`, `${cx},${Math.min(cy + 1, Math.ceil((WORLD_SHAPE.size * 32) / GROUND.chunk) - 1)}`];
+  };
+  const hasAround = async () => {
+    const built = await chunks();
+    return (await around()).every((k) => built.includes(k));
+  };
+  await expect.poll(hasAround).toBe(true);
   // The whole world is 9 × 9 chunks; a view and its margin is far fewer.
-  expect(await chunks()).toBeLessThan(30);
+  expect((await chunks()).length).toBeLessThan(30);
   await page.evaluate(() => window.__helpers?.walkTo(82 * 32, 128 * 32));
-  await expect.poll(chunks).toBeGreaterThan(0);
-  expect(await chunks()).toBeLessThan(30);
+  await expect.poll(hasAround).toBe(true);
+  expect((await chunks()).length).toBeLessThan(30);
   expect(errors).toEqual([]);
 });
