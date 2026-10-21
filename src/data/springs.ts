@@ -30,7 +30,7 @@ export const SPRING_CLEARING = 3;
 
 /**
  * The round map's springs (030, moved by 053). West: beside the road west to the Hollows, above the Ruined Cache.
- * South-east: at the end of the south-east road's spur, past the Husk Hive. North: north-west of the ruin field,
+ * South-east: at the end of the Husk Hive's road, on past the Hive. North: north-west of the ruin field,
  * between home and the Grotto, beside the north road, in its own clearing (to be cut if healing near home is too easy).
  */
 export const SPRINGS: readonly SpringDef[] = [

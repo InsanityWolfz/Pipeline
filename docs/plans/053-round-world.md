@@ -32,7 +32,6 @@ Spec: docs/specs/053-round-world.md (approved on draft: 053.1–053.3's proposal
 
 ### 5. The foundry's entrance (D.2)
 - **Data** `art/terrain.ts`: a larger ruined gatehouse over a 9 × 5 footprint: tall rune pillars with lit crystals, a lit doorway, steps going down; `home.ts` (new) holds the footprint, the courtyard and the ruin field's walls.
-- **Render** `OverworldView`: the doorway's light pulses.
 - **Tests first**: the footprint is solid but the door; the arrival tile open; the sprite on the contact sheet.
 
 ### 6. Render for a bigger world
