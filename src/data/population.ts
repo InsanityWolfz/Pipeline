@@ -16,12 +16,17 @@ export interface PackDef {
 /** The rings that keep a population: ring 0 stays calm; ring 3 is Stonefall Hollows (034). */
 export type PopulatedRing = 1 | 2 | 3;
 
+/**
+ * 053: the round world is about twice the old map's area, and every ring's pack count doubled with it (4, 8, 6 before),
+ * so the land is about as busy as it was where it was measured (017's ring 2 crowd); the Hollows grew more than
+ * that, and are not filled to their old density (see the spec's "Raised after the build").
+ */
 export const POPULATION = {
   rings: {
-    1: { packs: 4, size: [3, 4], enemies: ['husk'] },
-    2: { packs: 8, size: [4, 5], enemies: ['husk', 'husk', 'wisp'] },
+    1: { packs: 8, size: [3, 4], enemies: ['husk'] },
+    2: { packs: 16, size: [4, 5], enemies: ['husk', 'husk', 'wisp'] },
     // Stonefall Hollows (035): its four, at most one Sniper and two Burrowers to a pack.
-    3: { packs: 6, size: [4, 5], enemies: ['shardback', 'charger', 'charger', 'burrower', 'sniper'], limits: { sniper: 1, burrower: 2 } },
+    3: { packs: 12, size: [4, 5], enemies: ['shardback', 'charger', 'charger', 'burrower', 'sniper'], limits: { sniper: 1, burrower: 2 } },
   } satisfies Record<PopulatedRing, PackDef>,
   /** A pack spawns at least this far from the player (1.5 half-screens; see the spec's open question on "1.5 screens"). */
   spawnDistance: 480,

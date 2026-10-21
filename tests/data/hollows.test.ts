@@ -69,7 +69,7 @@ describe('the Hollows landmarks', () => {
       const a = HOLLOWS.arena.bounds;
       expect(l.area.x1 < a.x0 || l.area.x0 > a.x1 || l.area.y1 < a.y0 || l.area.y0 > a.y1, l.id).toBe(true);
     }
-    expect(POPULATION.rings[3]).toEqual({ packs: 6, size: [4, 5], enemies: ['shardback', 'charger', 'charger', 'burrower', 'sniper'], limits: { sniper: 1, burrower: 2 } });
+    expect(POPULATION.rings[3]).toEqual({ packs: 12, size: [4, 5], enemies: ['shardback', 'charger', 'charger', 'burrower', 'sniper'], limits: { sniper: 1, burrower: 2 } });
   });
 });
 
