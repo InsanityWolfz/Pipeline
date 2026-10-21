@@ -8,7 +8,7 @@ import { HOLLOWS } from '../data/hollows';
 import { LANDMARK_LIST, type LandmarkMarker } from '../data/landmarks';
 import { MAP_ICONS } from '../data/landmarkAssets';
 import type { Room } from '../data/rooms';
-import { revealed } from '../sim/fog';
+import { ARENA_MID, revealedSince, seenPlaces } from '../sim/fog';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
 import { drawTablet } from './tablet';
@@ -119,20 +119,18 @@ export class MinimapView {
     this.clearFog(sim.fog);
     const at = (px: number, py: number) => ({ x: this.x + (px / TILE_SIZE) * MINIMAP.scale, y: this.y + (py / TILE_SIZE) * MINIMAP.scale });
     const tile = (t: { tx: number; ty: number }) => at((t.tx + 0.5) * TILE_SIZE, (t.ty + 0.5) * TILE_SIZE);
-    const seen = (t: { tx: number; ty: number }) => revealed(sim.fog, t.tx, t.ty);
+    const seen = seenPlaces(sim.fog);
     const shrineClaimed = sim.claims.includes(OVERWORLD.shrine.site);
-    const arena = HOLLOWS.arena;
     // A landmark shows only once discovered (032): its icon, or the cyan claimed dot on its pylon once claimed.
     const landmarks: MinimapMarker[] = LANDMARK_LIST.filter((l) => sim.discovered.includes(l.id)).map((l) =>
       l.pylon && sim.claims.includes(l.pylon.site)
         ? { kind: 'claimed', landmark: l.id, name: l.name, ...tile(l.pylon) }
         : { kind: l.marker, landmark: l.id, name: l.name, ...at(((l.area.x0 + l.area.x1 + 1) / 2) * TILE_SIZE, ((l.area.y0 + l.area.y1 + 1) / 2) * TILE_SIZE) },
     );
-    const arenaMid = { tx: Math.floor((arena.bounds.x0 + arena.bounds.x1) / 2), ty: Math.floor((arena.bounds.y0 + arena.bounds.y1) / 2) };
     this.markers = [
-      ...(seen(OVERWORLD.entrance.door) ? [{ kind: 'entrance' as const, name: MINIMAP.names.entrance, ...tile(OVERWORLD.entrance.door) }] : []),
-      ...(seen(OVERWORLD.shrine.pylon) ? [{ kind: shrineClaimed ? ('claimed' as const) : ('shrine' as const), name: MINIMAP.names.shrine, ...tile(OVERWORLD.shrine.pylon) }] : []),
-      ...(seen(arenaMid) || seen(arena.start) ? [{ kind: 'arena' as const, name: arena.name, ...tile(arenaMid) }] : []),
+      ...(seen.entrance ? [{ kind: 'entrance' as const, name: MINIMAP.names.entrance, ...tile(OVERWORLD.entrance.door) }] : []),
+      ...(seen.shrine ? [{ kind: shrineClaimed ? ('claimed' as const) : ('shrine' as const), name: MINIMAP.names.shrine, ...tile(OVERWORLD.shrine.pylon) }] : []),
+      ...(seen.arena ? [{ kind: 'arena' as const, name: HOLLOWS.arena.name, ...tile(ARENA_MID) }] : []),
       ...landmarks,
       // 033: a ping over each schematic lying on the ground out here.
       ...sim.groundItems.filter((g) => g.roomId === OVERWORLD.id && ITEMS[g.itemId]?.kind === 'schematic').map((g): MinimapMarker => ({ kind: 'schematic', ...at(g.x, g.y) })),
@@ -159,20 +157,11 @@ export class MinimapView {
   private clearFog(fog: readonly number[]): void {
     const tex = this.fogTex;
     if (!tex) return;
-    let changed = false;
-    for (const [w, bits] of fog.entries()) {
-      const was = this.drawnFog[w] ?? 0;
-      if (bits === was) continue;
-      const fresh = (bits & ~was) >>> 0;
-      for (let b = 0; b < 32; b++) {
-        if (((fresh >>> b) & 1) === 0) continue;
-        const i = w * 32 + b;
-        tex.context.clearRect((i % OVERWORLD.width) * this.k, Math.floor(i / OVERWORLD.width) * this.k, this.k, this.k);
-      }
-      this.drawnFog[w] = bits;
-      changed = true;
-    }
-    if (changed) tex.refresh();
+    const fresh = revealedSince(fog, this.drawnFog);
+    for (const t of fresh) tex.context.clearRect(t.tx * this.k, t.ty * this.k, this.k, this.k);
+    if (fresh.length === 0) return;
+    this.drawnFog = [...fog];
+    tex.refresh();
   }
 
   /** Icons: one image per icon marker on show, under the dots. */

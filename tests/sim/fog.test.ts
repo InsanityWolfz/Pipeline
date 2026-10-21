@@ -3,7 +3,8 @@ import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { OVERWORLD } from '../../src/data/overworld';
 import { FOUNDRY_ROOM } from '../../src/data/rooms';
 import { TUTORIAL_START } from '../../src/data/player';
-import { revealed } from '../../src/sim/fog';
+import { HOLLOWS } from '../../src/data/hollows';
+import { ARENA_MID, createFog, revealed, revealedSince, seenPlaces } from '../../src/sim/fog';
 import { makeEnvelope, readSave, snapshot } from '../../src/sim/save';
 import { createSim } from '../../src/sim/state';
 import { movePlayer, run, SEED } from './fight';
@@ -50,5 +51,41 @@ describe('the fog of war (051)', () => {
       expect(read.state.fog).toEqual(s.fog);
       expect(revealed(read.state.fog, OVERWORLD.wake.tx, OVERWORLD.wake.ty)).toBe(true);
     }
+  });
+
+  it('names the tiles revealed since an earlier copy, and only those', () => {
+    const s = createSim(SEED, { start: TUTORIAL_START });
+    run(s, 1);
+    const before = [...s.fog];
+    const at = OVERWORLD.wake;
+    movePlayer(s, (at.tx + 3.5) * TILE_SIZE, (at.ty + 0.5) * TILE_SIZE);
+    run(s, 1);
+    const fresh = revealedSince(s.fog, before);
+    expect(fresh.length).toBeGreaterThan(0);
+    for (const t of fresh) {
+      expect(revealed(s.fog, t.tx, t.ty)).toBe(true);
+      expect(revealed(before, t.tx, t.ty)).toBe(false);
+    }
+    expect(revealedSince(s.fog, s.fog)).toEqual([]);
+    expect(revealedSince(s.fog, createFog()).length).toBe(s.fog.reduce((n, w) => n + w.toString(2).split('1').length - 1, 0));
+  });
+
+  it('shows the foundry, the shrine and the arena once their tile has been seen (the arena by its middle or its start)', () => {
+    const fog = createFog();
+    expect(seenPlaces(fog)).toEqual({ entrance: false, shrine: false, arena: false });
+    const reveal = (f: number[], t: { tx: number; ty: number }) => {
+      const i = t.ty * OVERWORLD.width + t.tx;
+      f[Math.floor(i / 32)] = ((f[Math.floor(i / 32)] ?? 0) | (1 << i % 32)) >>> 0;
+    };
+    reveal(fog, OVERWORLD.entrance.door);
+    expect(seenPlaces(fog)).toEqual({ entrance: true, shrine: false, arena: false });
+    reveal(fog, OVERWORLD.shrine.pylon);
+    expect(seenPlaces(fog).shrine).toBe(true);
+    const byStart = createFog();
+    reveal(byStart, HOLLOWS.arena.start);
+    expect(seenPlaces(byStart).arena).toBe(true);
+    const byMid = createFog();
+    reveal(byMid, ARENA_MID);
+    expect(seenPlaces(byMid).arena).toBe(true);
   });
 });
