@@ -67,14 +67,16 @@ export class MenuRouter {
     const list = controls.takeMenuKey('research');
     // T (037): the talent tree, likewise.
     const tree = controls.takeMenuKey('talents');
-    // 044: the Sandbox panel's key, only in the sandbox; likewise.
+    // 044: the Sandbox panel's key, only in the sandbox; likewise. 056.1: it hides and shows both strips.
     const panel = controls.takeMenuKey('sandbox') && this.sim.sandbox !== undefined;
     if (this.m.host.paused) {
+      // 056.10: the sandbox's controls step aside under the pause menu, as under a big panel.
+      sandbox.setCovered(true);
       if (close) this.m.host.resume();
       return;
     }
-    if (close && sandbox.isOpen) sandbox.setOpen(false);
-    else if (close && talents.isOpen) talents.setOpen(false);
+    // 056: Esc no longer closes the sandbox's controls (they stay on screen); it closes the menus as everywhere else.
+    if (close && talents.isOpen) talents.setOpen(false);
     else if (close && inventory.isOpen) inventory.setOpen(false);
     else if (close && research.isOpen) research.setOpen(false);
     else if (close && site.isOpen) site.close();
@@ -106,12 +108,17 @@ export class MenuRouter {
       research.setOpen(false);
       talents.setOpen(false);
     }
-    // The Sandbox panel never pauses; it and the big panels take turns.
+    // The sandbox's controls never pause. Their key hides or shows them (056.1); showing them closes the big panels, as
+    // opening the panel did (044), so the press is seen.
     if (panel && !wake.isShown) {
-      sandbox.setOpen(!sandbox.isOpen);
-      if (sandbox.isOpen) for (const p of [inventory, research, talents, craft]) p.setOpen(false);
+      // Stepped aside under a big panel (056.5), a press brings them back rather than hiding them unseen.
+      const show = !sandbox.isOpen || sandbox.isCovered;
+      sandbox.setOpen(show);
+      if (show) {
+        for (const p of [inventory, research, talents, craft]) p.setOpen(false);
+        site.close();
+      }
     }
-    if ((bag && inventory.isOpen) || (list && research.isOpen) || (tree && talents.isOpen) || (toggle && craft.isOpen)) sandbox.setOpen(false);
     const steps = controls.takeWheel();
     if (steps !== 0 && this.sim.building) build.step(steps);
     else if (steps !== 0 && !site.scrollGear(steps)) inventory.scroll(steps, controls.viewPointer());
@@ -145,6 +152,8 @@ export class MenuRouter {
     const open = inventory.container;
     if (open !== null && !stillUsable(this.sim, open)) inventory.close();
     if (inventory.stashOpen && !fixtureInReach(this.sim, 'stash')) inventory.close();
+    // 056.5: the sandbox's controls step aside while a big centred panel is open over them, and come back when it closes.
+    sandbox.setCovered([inventory, research, talents, craft].some((p) => p.isOpen) || site.isOpen);
   }
 
   /**

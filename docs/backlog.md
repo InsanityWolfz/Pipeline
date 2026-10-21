@@ -60,7 +60,7 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 053 | The round world: Region 1 a circle about 2× today's area, the Hollows a ring around it, one clean road network, tidy ley lines carrying resource icons, an obvious foundry entrance | done |
 | 054 | Combat readability: a blue shield health bar while an enemy can't be hurt, the back wave shaded, burning Pool arrows, homing bolts at 60% speed, the visible 5-shard star shot | done |
 | 055 | Boss doors and the rimestone pylon: both arenas walled with a door, sealed until ready, E to enter, locked inside; a Frozen Grotto pylon supplying rimestone | done |
-| 056 | Sandbox controls always on screen: the loadout column and a key list in a fixed left strip, the spawn column fixed on the right, no key needed | approved |
+| 056 | Sandbox controls always on screen: the loadout column and a key list in a fixed left strip, the spawn column fixed on the right, no key needed | done |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
 

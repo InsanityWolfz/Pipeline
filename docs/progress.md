@@ -2,6 +2,16 @@
 
 Newest entry first.
 
+## 2026-10-21: 056 merged
+**Changed:** Shaun merged 056 (the sandbox's controls always on screen: the loadout and a key list in a left strip, the spawn column on the right), InsanityWolfz/Pipeline#53.
+
+**Next:** Shaun's playthrough with commentary tonight, then the playtest interview for the next batch.
+
+## 2026-10-21: 056 built
+**Changed:** on `claude/056-sandbox-strip` (InsanityWolfz/Pipeline#53), the sandbox's controls are always on screen: the loadout's rows and a key list (from the player's bindings, so a rebind shows at once) in a strip down the left, the spawn column on the right under the minimap's space, shown from load. The backquote hides and shows both (056.1). Render and data only. Raised 056.4–056.8 (the pickup feed moves right of the strip in the sandbox, the strips step aside for big panels, tighter rows, the key list's words, the pointer). New docs/review/056 shots; 044's shots retaken.
+
+**Next:** review, then Shaun's playtest of `?sandbox`.
+
 ## 2026-10-21: 056 drafted
 **Changed:** drafted 056 (the sandbox's controls always on screen) from Shaun's request and his two answers (both the panel and a key list in a left strip; spawn stays on the right).
 

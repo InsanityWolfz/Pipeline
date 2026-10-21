@@ -83,7 +83,7 @@ export class GameScene extends Scene {
   cursorView?: CursorView;
   /** 040: hover tips (Shift for the breakdown) and the glossary; the test hook measures its summaries. */
   legibility?: Legibility;
-  /** 044: the Sandbox panel (opens in the sandbox only). */
+  /** 044: the Sandbox panel (056: the sandbox's controls, always on screen there, and only there). */
   sandboxPanel?: SandboxPanel;
   /** The room on screen. It lags the player's room through a door's fade. */
   private shownRoomId: string;
@@ -171,8 +171,11 @@ export class GameScene extends Scene {
         releaseUi: (x, y) => void (this.host.covered || this.router?.release(controls, x, y)),
       });
       this.pause?.setOpen(this.host.paused);
-      if (this.host.covered) controls.drain();
-      else this.router?.handle(controls);
+      if (this.host.covered) {
+        controls.drain();
+        // 056.10: under a flow screen the sandbox's controls step aside; the router brings them back after.
+        this.sandboxPanel?.setCovered(true);
+      } else this.router?.handle(controls);
       if (!this.host.stepping) {
         // The world is paused (Esc, or a flow screen, 042): no ticks run, and no time is banked to catch up on later.
         controls.discardPending();
@@ -285,8 +288,9 @@ export class GameScene extends Scene {
     const pointer = controls?.viewPointer();
     if (pointer) for (const menu of [this.siteMenus, this.pause, this.hud, this.sandboxPanel, this.roomViews]) menu?.pointAt(pointer.x, pointer.y);
     // The arrow pointer while a menu is open or over the build bar, else the crosshair (021).
-    const inMenu = [this.menu, this.pause, this.siteMenus, this.hud?.inventory, this.hud?.talents, this.legibility, this.sandboxPanel].some((m) => m?.isOpen) || (this.wake?.isShown ?? false);
-    this.cursorView?.update(inMenu || (pointer !== undefined && [this.buildView, this.legibility].some((v) => v?.overUi(pointer.x, pointer.y))));
+    // 056: the sandbox's controls are always up, so they turn the pointer to the arrow only under it.
+    const inMenu = [this.menu, this.pause, this.siteMenus, this.hud?.inventory, this.hud?.talents, this.legibility].some((m) => m?.isOpen) || (this.wake?.isShown ?? false);
+    this.cursorView?.update(inMenu || (pointer !== undefined && [this.buildView, this.legibility, this.sandboxPanel].some((v) => v?.overUi(pointer.x, pointer.y))));
     const point = controls?.overWorld() ? controls.cursorPoint() : null;
     this.hover?.update(sim, shown, point, (id) => this.foundryView?.topOf(id), this.cameras.main.worldView);
     this.legibility?.update(sim, this.pause?.isOpen ? null : (pointer ?? null), controls?.shiftHeld() ?? false, this.game.loop.delta);

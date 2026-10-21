@@ -3,11 +3,12 @@ import { TILE_SIZE } from '../../src/data/config';
 import { HOLLOWS } from '../../src/data/hollows';
 import { SANDBOX_PENS, WARDEN_ARENA } from '../../src/data/sandbox';
 import { cameraSettled } from './helpers';
-import { bootSandbox, clickPanel, openPanel, setRound, spawnPack } from './sandboxPage';
+import { bootSandbox, clickPanel, hidePanel, openPanel, setRound, spawnPack } from './sandboxPage';
 
 // Review screenshots for 044 (REVIEW_SHOTS=1, into docs/review/044): the sandbox's room (the
 // spawn, a pen, the Warden's arena and the sealed forum), the Sandbox panel, a mixed volley in
-// flight, and a ring 3 champion pack.
+// flight, and a ring 3 champion pack. 056: the controls show from the start, so the room's shots have them;
+// the volley and the pack hide them (056.1).
 
 const SHOTS = 'docs/review/044';
 const T = TILE_SIZE;
@@ -61,9 +62,8 @@ test.describe('review screenshots (044)', () => {
     await cameraSettled(page, 20_000);
     await page.screenshot({ path: `${SHOTS}/05-panel.png` });
 
-    // Close the panel and fire the volley east, into the open middle.
-    await page.keyboard.press('Backquote');
-    await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().sandbox?.open)).toBe(false);
+    // Hide the controls (056.1) and fire the volley east, into the open middle.
+    await hidePanel(page);
     await page.evaluate(() => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
@@ -81,7 +81,7 @@ test.describe('review screenshots (044)', () => {
     });
     await openPanel(page);
     await spawnPack(page, 'charger', 3, true, 5);
-    await page.keyboard.press('Backquote');
+    await hidePanel(page);
     await page.evaluate(() => window.__GAME__?.step(2));
     await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().champions.length)).toBe(5);
     await page.screenshot({ path: `${SHOTS}/07-ring3-champion-pack.png` });
