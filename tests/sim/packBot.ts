@@ -140,7 +140,7 @@ export const at = (tx: number, ty: number): { x: number; y: number } => ({ x: (t
 
 /**
  * 041.8's ring-matched packs: each pack, the lines of its fitting volley, its centre tile, and the player's start 6 to 7
- * tiles off. 053: on the round map, open ground in each ring: south-west of the meadow (ring 1), by the south road (ring 2)
+ * tiles off. 053: on the round map, open ground in each ring: south-west of the meadow (ring 1), by the south road
  * (ring 2), and the Cistern Terrace's flagstones (ring 3, where it was before, moved with the Terrace).
  */
 export const PACKS = {
