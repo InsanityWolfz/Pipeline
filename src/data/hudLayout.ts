@@ -141,7 +141,7 @@ export const BUILD_PULSE = {
 export const GHOST = { okTint: 'cyan', badTint: 'rust', alpha: 0.6 } as const;
 
 /**
- * The menus' rows (the pylon, stash, sorter and waystone menus; 047 replaced the hopper menu with the grid's hopper
+ * The menus' rows (the pylon, stash and waystone menus; 047 replaced the hopper menu with the grid's hopper
  * screen): a column of rows, centred on screen. A row shows its icons (`takeShift` apart) and its text. Px on screen,
  * then per row.
  */

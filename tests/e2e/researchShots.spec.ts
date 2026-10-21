@@ -59,7 +59,7 @@ test.describe('review screenshots (033)', () => {
   test('a wall panel diagram before, while and after restoring; the restore panel with a missing input', async ({ page }) => {
     test.setTimeout(120_000);
     await boot(page, '?playtest');
-    // Banked on the way in: the machine-speed and merger schematics reveal their panels.
+    // Banked on the way in: the schematics reveal their panels.
     await standAt(page, 7, 3);
     await expect.poll(async () => (await ui(page))?.research.diagrams.some((d) => d.node === 'machine-speed')).toBe(true);
     await page.screenshot({ path: `${SHOTS}/03-wall-panel-diagram.png` });
@@ -77,8 +77,8 @@ test.describe('review screenshots (033)', () => {
     await expect.poll(async () => (await ui(page))?.research.restored).toContain('machine-speed');
     await page.screenshot({ path: `${SHOTS}/05-wall-panel-restored.png` });
 
-    // Gears spent on Reservoir I (4) and machine speed (3) leave three; two go into a hopper (046: the splitter's
-    // panel, which spent them before, is gone), so the merger's panel shows 1/2 in rust-light.
+    // Reservoir I restored, the pipe shows Reservoir II; seven of the ten aqueduct valves go into a hopper (052: the
+    // merger's panel, which showed this before, is gone), so its panel shows 3/4 in rust-light.
     await standAt(page, 12, 1);
     await restore(page, 'reservoir-1');
     await standAt(page, 17, 2);
@@ -90,12 +90,12 @@ test.describe('review screenshots (033)', () => {
       const hopper = s.foundry.pieces.find((p) => p.kind === 'hopper' && p.tx === 17 && p.ty === 3);
       if (!hopper) throw new Error('no hopper');
       g.step(1, { toggleBuild: true });
-      for (let i = 0; i < 2; i++) g.step(1, { deposit: { id: hopper.id, itemId: 'ancient-gear', amount: 'one' } });
+      for (let i = 0; i < 7; i++) g.step(1, { deposit: { id: hopper.id, itemId: 'aqueduct-valve', amount: 'one' } });
     });
-    await standAt(page, 19, 1);
+    await standAt(page, 12, 1);
     await page.keyboard.press('e');
-    await expect.poll(async () => (await ui(page))?.restorePanel?.node).toBe('merger');
-    expect((await ui(page))?.restorePanel?.cost).toContainEqual({ itemId: 'ancient-gear', text: '1/2', missing: true });
+    await expect.poll(async () => (await ui(page))?.restorePanel?.node).toBe('reservoir-2');
+    expect((await ui(page))?.restorePanel?.cost).toContainEqual({ itemId: 'aqueduct-valve', text: '3/4', missing: true });
     expect((await ui(page))?.restorePanel?.enabled).toBe(false);
     await page.screenshot({ path: `${SHOTS}/06-restore-panel-missing-input.png` });
   });
@@ -119,7 +119,7 @@ test.describe('review screenshots (033)', () => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
       const s = g.step(1);
-      g.drop('schematic-merger', s.player.x + 96, s.player.y - 10);
+      g.drop('schematic-machine-speed', s.player.x + 96, s.player.y - 10);
       g.step(1, { aimX: s.player.x + 96, aimY: s.player.y - 10 });
     });
     await cameraSettled(page);

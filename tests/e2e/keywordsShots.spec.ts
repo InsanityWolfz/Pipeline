@@ -21,7 +21,7 @@ async function atBench(page: Page): Promise<void> {
     if (!g || !h) throw new Error('no game');
     g.claim('shrine');
     h.toFoundry();
-    h.walkTo(2.3 * 32, 12.5 * 32);
+    h.walkTo(21.7 * 32, 9.5 * 32);
     for (const row of ['frost-rune-bomb', 'frost-rune-bomb', 'frost-rune-ley-bolt', 'frost-rune-ley-bolt', 'frost-rune-landmine', 'cluster-die-bomb']) g.craft(row);
   });
   // The playtest's schematics bank on the way in: let their banners play out (fast) so they cover nothing.

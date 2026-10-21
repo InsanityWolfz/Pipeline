@@ -1,3 +1,4 @@
+import type { TunnelMark } from './tunnelMarks';
 import type { GroundItemShown } from './GroundItemView';
 import type { InteractPromptState } from './InteractPrompt';
 import type { SimSummary } from '../sim/summary';
@@ -38,7 +39,7 @@ export interface GameTestHook {
   flow(): FlowReport;
   /**
    * Steps `frames` ticks holding `command`. Its dodge, interact, carried slot
-   * select and assign (047), build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), sortInventory (047), setFilter, pylon, travel, takeStash, identify, equip, restore (033), summon, takeTalent and respec (037) apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
+   * select and assign (047), build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), sortInventory (047), pylon, travel, takeStash, identify, equip, restore (033), summon, takeTalent and respec (037) apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
    */
   step(frames: number, command?: Partial<Command>): SimSummary;
   /** Crafts a recipe once between ticks, as clicking its menu row does. */
@@ -102,7 +103,7 @@ export interface UiState {
   paused: boolean;
   /** A hopper's or crate's screen is open (047; it replaced 022's hopper picker). */
   pickerOpen: boolean;
-  /** A site menu (a claimed pylon's, the stash's, the bench's or a sorter's) is open (031: it and the inventory take turns). */
+  /** A site menu (a claimed pylon's, the stash's or the bench's) is open (031: it and the inventory take turns). */
   siteOpen: boolean;
   /** The counts the open hopper's or crate's own slots show, in order (047; they update live). */
   pickerCounts: number[];
@@ -165,6 +166,8 @@ export interface UiState {
   craftMenu: CraftMenuState | null;
   /** The build bar as drawn (026): the unlocked pieces' cells, the shown groups' labels and the dividers. */
   buildBar: BuildBarState | null;
+  /** 052: the underground pair's marks on the floor: a pair's tunnel (hovered, or the ghost that would pair) and an entrance's reach while placing. */
+  tunnels: TunnelMark[];
   /**
    * 029: Split flashes still showing, and the tagged rounds' trails in flight (how many, and the most points one runs
    * along). 047 removed the bench's Stages panel from here.

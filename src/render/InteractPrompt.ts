@@ -16,6 +16,12 @@ export interface InteractPromptState {
   y: number;
 }
 
+/** The x the prompt's key cap is centred on: over its point, or `beside` it on the side away from the player (052.9). */
+export function promptCapX(kind: InteractKind, x: number, playerX: number): number {
+  const side = INTERACT_PROMPTS[kind].beside ?? 0;
+  return Math.round(x + (playerX > x ? -side : side));
+}
+
 // The in-reach E prompt (045, note 7 and 043.5): the objective prompt's key cap (012) and the bound key (042) over
 // whatever E would act on now, from a node (a ley crystal vein like any other) to the Bulwark's sealed door. It gives
 // way to the objective's own prompt or the intake's when either already shows E.
@@ -38,7 +44,7 @@ export class InteractPrompt {
     this.key.setVisible(target !== null);
     this.shown = target && prompt ? { kind: target.kind, key: boundLetter(prompt.key), x: target.x, y: target.y } : null;
     if (!target || !prompt) return;
-    const x = Math.round(target.x);
+    const x = promptCapX(target.kind, target.x, sim.player.x);
     const bottom = Math.round(target.y - prompt.rise - TUTORIAL_LAYOUT.promptLift);
     this.cap.setPosition(x, bottom);
     this.key.set(boundLetter(prompt.key));

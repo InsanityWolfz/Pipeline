@@ -202,7 +202,7 @@ describe('the playtest start', () => {
     expect(s.crafted).toEqual(PLAYTEST_START.crafted);
     // 029: every stage too, with rimestone to feed the frost rune and no tagged rounds carried; 038: the Cluster die and the landmine chain.
     expect(unlockedPieces(s)).toEqual([
-      'conduit', 'sorter', 'splitter', 'hopper', 'crate', 'cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'shaper', 'fuse-maker', 'packer', 'cluster-die', 'grinder', 'focuser', 'ley-guide', 'prism-lens', 'plate-press', 'mine-packer',
+      'conduit', 'splitter', 'underground-entrance', 'underground-exit', 'hopper', 'crate', 'cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'shaper', 'fuse-maker', 'packer', 'cluster-die', 'grinder', 'focuser', 'ley-guide', 'prism-lens', 'plate-press', 'mine-packer',
     ]);
     expect(s.inventory['rimestone']).toBe(99);
     expect(s.inventory['arrow+frost']).toBeUndefined();

@@ -107,8 +107,6 @@ export interface SimEvents {
   cacheOpens: { id: string; x: number; y: number }[];
   /** The haul went into the stash from a claimed pylon. */
   stashDeposits: { items: Record<string, number> }[];
-  /** Items came out of the stash. */
-  stashTakes: { items: Record<string, number> }[];
   /** A claimed site's supply port produced a raw (018): the render shows it harvested and sent home along the ley line. */
   supplies: { id: string; itemId: string }[];
   /** A piece took a raw from a supply port (028). */
@@ -225,7 +223,6 @@ export function createEvents(): SimEvents {
     discoveries: [],
     cacheOpens: [],
     stashDeposits: [],
-    stashTakes: [],
     supplies: [],
     portDeliveries: [],
     travels: [],

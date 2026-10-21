@@ -8,8 +8,10 @@ import { claim } from '../../src/sim/claims';
 import { BUILD_BAR, PIECES } from '../../src/data/pieces';
 import { OVERWORLD } from '../../src/data/overworld';
 import { WORLD } from '../../src/sim/world';
-import { arrowSpots, sorterLook, wrapText } from '../../src/render/foundryLayout';
-import { sortSideOf } from '../../src/sim/pieces';
+import { arrowSpots, wrapText } from '../../src/render/foundryLayout';
+import { splitterLook } from '../../src/render/flatPieces';
+import { splitSideOf } from '../../src/sim/pieces';
+import { fixtureDef } from '../../src/sim/fixtures';
 import { nameAt } from '../../src/render/hoverNames';
 import { createSim } from '../../src/sim/state';
 import { HALL, placeHusk, SEED } from '../sim/fight';
@@ -20,10 +22,11 @@ const centre = (tx: number, ty: number) => ({ x: (tx + 0.5) * 32, y: (ty + 0.5) 
 describe('world names on mouse-over', () => {
   it('names a foundry piece and a fixture', () => {
     const s = foundry();
-    put(s, 'sorter', 5, 5);
+    put(s, 'splitter', 5, 5);
     const at = centre(5, 5);
-    expect(nameAt(s, 'foundry', at.x, at.y)?.name).toBe('Sorter');
-    const bench = centre(1, 12);
+    expect(nameAt(s, 'foundry', at.x, at.y)?.name).toBe('Splitter');
+    const def = fixtureDef('identification-bench');
+    const bench = centre(def.tx, def.ty);
     expect(nameAt(s, 'foundry', bench.x, bench.y)?.name).toBe('Identification bench');
   });
 
@@ -94,19 +97,19 @@ describe('build bar descriptions', () => {
   });
 });
 
-describe('the sorter on screen', () => {
-  it('sorts right of its facing, or left mirrored, matching its sprite turns', () => {
-    expect(sortSideOf('right', false)).toBe('down');
-    expect(sortSideOf('right', true)).toBe('up');
-    expect(sortSideOf('down', false)).toBe('left');
-    expect(sortSideOf('up', false)).toBe('right');
-    expect(sorterLook('left', false)).toMatchObject({ flipX: true, flipY: true });
-    expect(sorterLook('down', true)).toMatchObject({ flipX: true, flipY: false });
+describe('the splitter on screen', () => {
+  it('splits right of its facing, or left mirrored, matching its sprite turns', () => {
+    expect(splitSideOf('right', false)).toBe('down');
+    expect(splitSideOf('right', true)).toBe('up');
+    expect(splitSideOf('down', false)).toBe('left');
+    expect(splitSideOf('up', false)).toBe('right');
+    expect(splitterLook('left', false)).toMatchObject({ flipX: true, flipY: true });
+    expect(splitterLook('down', true)).toMatchObject({ flipX: true, flipY: false });
   });
 
-  it('has an input arrow on its back, an output on its front and a gold one on its sort side', () => {
-    const spots = arrowSpots({ pieceId: 'sorter', tx: 5, ty: 5, facing: 'right', mirrored: true });
-    expect(spots.map((s) => `${s.kind}:${s.edge}`)).toEqual(['in:left', 'out:right', 'sort:up']);
+  it('has an input arrow on its back and outputs on its front and side', () => {
+    const spots = arrowSpots({ pieceId: 'splitter', tx: 5, ty: 5, facing: 'right', mirrored: true });
+    expect(spots.map((s) => `${s.kind}:${s.edge}`)).toEqual(['in:left', 'out:right', 'out:up']);
   });
 });
 

@@ -1,5 +1,5 @@
 // Asset keys and look numbers for 033's art: the diagrams of the foundry's lost parts,
-// the wall panels and the sealed wing's door, the splitter and merger, the research
+// the wall panels and the sealed wing's door, the splitter, the research
 // items' icons, the schematic's light pillar, and the restore panel and research list.
 // Render draws by these keys; the shapes are in src/data/art/research.ts. Times ms,
 // sizes world px (view px for the HUD), alphas 0..1.
@@ -9,21 +9,20 @@ export const RESEARCH_SPRITES = {
   diagramCap: 'research-diagram-cap',
   /** A diagram on the intake pipe: a bigger reservoir's tank and bands drawn round the pipe. */
   diagramPipe: 'research-diagram-pipe',
-  /** A wall panel's diagram, by the effect it shows: machine speed (a cog train), the merger (046: the splitter has none). */
-  diagramWall: { machineSpeed: 'research-diagram-speed', merger: 'research-diagram-merger' },
+  /** A wall panel's diagram, by the effect it shows: machine speed (a cog train). */
+  diagramWall: { machineSpeed: 'research-diagram-speed' },
   /** Which wall-panel art each wall node uses, by node id (046: mapped explicitly; a data test holds every wall node to one). */
-  wallArt: { 'machine-speed': 'machineSpeed', merger: 'merger' } as Readonly<Record<string, 'machineSpeed' | 'merger'>>,
+  wallArt: { 'machine-speed': 'machineSpeed' } as Readonly<Record<string, 'machineSpeed'>>,
   /** A bare wall panel: the carved stone frame every wall diagram sits in. */
   panel: 'research-panel',
   /** A restored wall panel: brass and stone, its part solid, by the same effects. */
-  restoredWall: { machineSpeed: 'research-restored-speed', merger: 'research-restored-merger' },
+  restoredWall: { machineSpeed: 'research-restored-speed' },
   /** The reservoir's restored collars: brass bands round the pipe, by restored tier (1, 2). */
   restoredPipe: ['research-restored-pipe-1', 'research-restored-pipe-2'],
   /** The sealed wing's door, two tiles wide in the north wall's notch. */
   wingDoor: 'research-wing-door',
-  /** The splitter and the merger as they lie on the floor, by view (side, up, down), like the sorter. */
+  /** The splitter as it lies on the floor, by view (side, up, down). */
   splitter: { side: 'splitter-side', up: 'splitter-up', down: 'splitter-down' },
-  merger: { side: 'merger-side', up: 'merger-up', down: 'merger-down' },
   /** The schematic's ley-light pillar while it lies on the ground, drawn white for render to tint. */
   pillar: 'schematic-pillar',
 } as const;

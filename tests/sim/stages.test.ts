@@ -124,7 +124,7 @@ describe('a stage machine', () => {
 function atBench(): SimState {
   const s = foundry(false);
   const bench = fixtureDef('identification-bench');
-  const at = tileCentre({ tx: bench.tx + 1, ty: bench.ty });
+  const at = tileCentre({ tx: bench.tx - 1, ty: bench.ty });
   movePlayer(s, at.x, at.y);
   s.inventory = { arrow: 9, 'rimestone': 3, 'ley-bolt': 4, 'ley-crystal': 2 };
   return s;

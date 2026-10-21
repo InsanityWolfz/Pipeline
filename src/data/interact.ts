@@ -16,16 +16,20 @@ export const INTERACT_KINDS = [
   'cache',
   'diagram',
   'hopper',
-  'sorter',
   'crate',
   'node',
 ] as const;
 export type InteractKind = (typeof INTERACT_KINDS)[number];
 
-/** A kind's prompt: its key (a default letter, shown as the bound key, 042) and how far above its point the cap's bottom sits, px. */
+/**
+ * A kind's prompt: its key (a default letter, shown as the bound key, 042) and how far above its point the cap's bottom
+ * sits, px. With `beside`, the cap sits that far to one side of the point instead, on the side away from the player,
+ * so it never covers them.
+ */
 export interface InteractPrompt {
   key: 'E';
   rise: number;
+  beside?: number;
 }
 
 /** The objective prompt's height (012): a tile over the thing's centre. */
@@ -39,11 +43,13 @@ export const INTERACT_PROMPTS: Readonly<Record<InteractKind, InteractPrompt>> = 
   pylon: { key: 'E', rise: OVER + TILE_SIZE / 2 },
   waystone: { key: 'E', rise: OVER },
   stash: { key: 'E', rise: OVER },
-  bench: { key: 'E', rise: OVER },
+  // 052.9: the bench is in reach on the tile the player arrives on, right above it, so its prompt sits beside it, at
+  // its middle's height, on the side away from the player (in the foundry, on the door's wall below the doorway),
+  // never on the player's chest.
+  bench: { key: 'E', rise: 0, beside: TILE_SIZE * 0.75 },
   cache: { key: 'E', rise: OVER },
   diagram: { key: 'E', rise: OVER },
   hopper: { key: 'E', rise: OVER },
-  sorter: { key: 'E', rise: OVER },
   crate: { key: 'E', rise: OVER },
   // A node's point is its feet; the same height as the gathering objective's prompt (012).
   node: { key: 'E', rise: OVER },

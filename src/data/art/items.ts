@@ -187,12 +187,11 @@ export const ICON_LEY_BOLT: Shape[] = [
 const ITEM_SHADOW: VectorSprite = { key: SPRITES.itemShadow, size: [12, 5], anchor: [6, 2.5], frames: [[ellipse(0, 0, 5, 1.5, { fill: { id: 'ground-shade', alpha: 0.4 } })]] };
 
 // Build and menu emblems.
-const channel = (exitGold: boolean): Shape[] => [
+const CHANNEL: Shape[] = [
   rect(-7, -3.6, 14, 7.2, 1.6, solid('rock-light')),
   rect(-7, -2, 14, 4, 0.8, { fill: 'cyan-deep', glow: { color: 'cyan', blur: 2 } }),
   path('M -2.6 -1.8 L 1 0 L -2.6 1.8', trim('cyan-glow', 1.1)),
   path('M 2 -1.8 L 5.6 0 L 2 1.8', trim('cyan-glow', 1.1)),
-  ...(exitGold ? [rect(-1.6, -7.2, 3.2, 4.4, 0.8, solid('gold-trim')), path('M -1.6 -5.4 L 0 -7.2 L 1.6 -5.4', trim('brass-dark', 0.8))] : []),
 ];
 
 const CHEST: Shape[] = [
@@ -274,8 +273,7 @@ export const ITEM_SPRITES_VECTOR: readonly VectorSprite[] = [
   icon(SPRITES.iconBomb, ICON_BOMB),
   icon(SPRITES.iconLeyBolt, ICON_LEY_BOLT),
   ITEM_SHADOW,
-  icon(LOGISTICS_ICONS.conduit ?? 'emblem-conduit', channel(false)),
-  icon(LOGISTICS_ICONS.sorter ?? 'emblem-sorter', channel(true)),
+  icon(LOGISTICS_ICONS.conduit ?? 'emblem-conduit', CHANNEL),
   icon(LOGISTICS_ICONS.crate ?? 'emblem-crate', CRATE_EMBLEM),
   icon(LOGISTICS_ICONS.hopper ?? 'emblem-hopper', HOPPER_EMBLEM),
   icon(SPRITES.emblemIdentify, IDENTIFY_EMBLEM),

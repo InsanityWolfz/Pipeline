@@ -66,7 +66,6 @@ const BASE_ITEMS: Readonly<Record<string, ItemDef>> = {
   ...schematics({
     'schematic-reservoir-2': 'Reservoir II',
     'schematic-machine-speed': 'Machine speed',
-    'schematic-merger': 'Merger',
   }),
 };
 

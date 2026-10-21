@@ -222,7 +222,7 @@ describe('sim state', () => {
     // Every event list, empty, and no KO: a key missing from createEvents fails here.
     const lists = ['hits', 'deaths', 'pickups', 'harvests', 'crafts', 'craftFails', 'bursts', 'selects', 'roomChanges'] as const;
     const later = ['places', 'placeFails', 'pickUps', 'deposits', 'withdraws', 'attunes', 'hints', 'refills', 'made', 'shots', 'entranceFires', 'melees', 'banks', 'freezes', 'thaws', 'splits', 'heals'] as const;
-    const site = ['sealed', 'claims', 'discoveries', 'cacheOpens', 'stashDeposits', 'stashTakes', 'supplies', 'portDeliveries', 'travels', 'identifies', 'equips', 'intakeOpens', 'restores', 'schematicDrops', 'schematicReveals', 'gates', 'objectives'] as const;
+    const site = ['sealed', 'claims', 'discoveries', 'cacheOpens', 'stashDeposits', 'supplies', 'portDeliveries', 'travels', 'identifies', 'equips', 'intakeOpens', 'restores', 'schematicDrops', 'schematicReveals', 'gates', 'objectives'] as const;
     // 034: the shield, the Bulwark and its altar; 035: the Charger's charge, the Burrower's eruption, the Sniper's bolt.
     const hollows = ['blocked', 'bossDefeats', 'summons', 'lobs', 'enemyBursts', 'pounds', 'charges', 'eruptions', 'snipes'] as const;
     // 036: the relics' rolls through, ward blocks and ember saves.
@@ -249,7 +249,7 @@ describe('sim state', () => {
   it('summarizes rooms, build mode, unlocks and the foundry', () => {
     const s = createSim(8);
     expect(summarize(s)).toMatchObject({ room: 'overworld', rooms: ['foundry', 'overworld', 'sandbox'], building: false });
-    expect(summarize(s).unlocked).toEqual(['conduit', 'sorter', 'splitter', 'hopper', 'crate']);
+    expect(summarize(s).unlocked).toEqual(['conduit', 'splitter', 'underground-entrance', 'underground-exit', 'hopper', 'crate']);
     expect(summarize(s).enemies.every((e) => e.room === 'overworld')).toBe(true);
     s.roomId = 'foundry';
     s.player.x = 300;

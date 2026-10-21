@@ -58,7 +58,7 @@ test.describe('review screenshots (031)', () => {
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
       g.step(1, { pylon: 'travel' });
-      h.walkTo(2.3 * 32, 12.5 * 32);
+      h.walkTo(21.7 * 32, 9.5 * 32);
       const s = g.step(1, { identify: true });
       const piece = s.gear[0];
       if (!piece) throw new Error('nothing identified');

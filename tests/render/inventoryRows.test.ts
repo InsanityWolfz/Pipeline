@@ -29,7 +29,7 @@ describe('the grid slots', () => {
   });
 
   it('folds the schematics into one slot that never moves: "Unknown schematic" while every one is unbanked (033)', () => {
-    const slots = inventorySlots({ ...base, inventory: { 'schematic-machine-speed': 1, 'schematic-merger': 1, 'ancient-gear': 2 } });
+    const slots = inventorySlots({ ...base, inventory: { 'schematic-machine-speed': 1, 'schematic-reservoir-2': 1, 'ancient-gear': 2 } });
     expect(slots.map((s) => [s.name, s.count, s.movable])).toEqual([
       ['Ancient gear', 2, true],
       ['Unknown schematic', 2, false],
@@ -51,21 +51,24 @@ describe('the grid slots', () => {
 });
 
 describe('the grid layout', () => {
-  for (const container of [false, true]) {
-    it(`centres the panel under its title card, above the bottom HUD (${container ? 'a hopper\'s screen' : 'the plain inventory'})`, () => {
-      const L = inventoryLayout(container);
+  for (const mode of ['bag', 'container', 'stash'] as const) {
+    it(`centres the panel under its title card, above the bottom HUD (${mode})`, () => {
+      const L = inventoryLayout(mode);
       expect(Math.abs(L.panel.x + L.panel.w / 2 - VIEW_WIDTH / 2)).toBeLessThanOrEqual(1);
       expect(L.title.y + L.title.h + INVENTORY_GRID.title.gap).toBe(L.panel.y);
       expect(L.title.y).toBeGreaterThanOrEqual(0);
       expect(L.panel.y + L.panel.h).toBeLessThan(tubeSlotBox(3).y);
       // The carried bar stays in view, to drop stacks on.
       expect(overlaps(L.panel, hotbarBox())).toBe(false);
-      expect(L.cells).toHaveLength(40);
-      const parts = [L.sort, L.scroll, ...L.cells, ...(L.container?.cells ?? [])];
+      // 052: the stash's screen shows 3 rows of the stash over 4 of the inventory.
+      expect(L.cells).toHaveLength(mode === 'stash' ? 32 : 40);
+      expect(L.stash?.cells.length ?? 0).toBe(mode === 'stash' ? 24 : 0);
+      const parts = [L.sort, L.scroll, ...L.cells, ...(L.container?.cells ?? []), ...(L.stash ? [...L.stash.cells, L.stash.scroll] : [])];
       for (const p of parts) expect(inside(p, L.panel), JSON.stringify(p)).toBe(true);
       for (let i = 0; i < parts.length; i++) for (let j = i + 1; j < parts.length; j++) expect(overlaps(parts[i] as Box, parts[j] as Box)).toBe(false);
       for (const f of L.footer) expect(f.y + INVENTORY_GRID.footer.lineHeight).toBeLessThanOrEqual(L.panel.y + L.panel.h);
-      expect(L.container === null).toBe(!container);
+      expect(L.container === null).toBe(mode !== 'container');
+      if (L.stash) for (const c of L.stash.cells) expect(c.y + c.h).toBeLessThan(L.sort.y);
     });
   }
 

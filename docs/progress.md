@@ -7,6 +7,16 @@ Newest entry first.
 
 **Next:** Shaun approves 053–055. 054 can build alongside 053; 055 follows 053.
 
+## 2026-10-21: 052 merged
+**Changed:** Shaun merged 052 (foundry logistics: underground belts, stash, bench), InsanityWolfz/Pipeline#43.
+
+**Next:** the rest of 050–052, then the next batch: 053 (world and bosses) and 054 (combat readability).
+
+## 2026-10-21: 052 merged with main (050, 051)
+**Changed:** on `claude/052-foundry-logistics`, merged main after 050 and 051. E closes the inventory, hopper, crate and stash screens (the stash's screen is the inventory's now) and opens the hovered hopper or crate within 3 tiles; a crate's slots link the screen's cols and the stash screen keeps its own entry; item name tips also show in the stash's grid; the name tag avoids the bench's beside-prompt. The foundry map draws an underground pair's ends as lines and lists no sorter or merger; the bench's map icon and waypoint follow it to (22, 9) (tested). SAVE_VERSION 9, no migration. 050's bench e2e and shots walk to the new bench. Older review shots retaken where the merge changes them; noise restored.
+
+**Next:** review of the merge; Shaun answers 052.4–052.12 and playtests the preview.
+
 ## 2026-10-21: 051 merged
 **Changed:** Shaun merged 051 (guidance), InsanityWolfz/Pipeline#44.
 
@@ -31,6 +41,15 @@ Newest entry first.
 **Changed:** built 050 on `claude/050-playtest-fixes`. The second-line goal's cause, reproduced from Shaun's save: it checked "two entrances hold arrows" and its arrow took the middle open entrance; each entrance now records the node that opened it, the goal reads "Feed ammo into the new entrance" (any ammo in the Warden core's entrance) and points at that entrance. SAVE_VERSION 7, no migration. E opens the hovered hopper or crate within 3 tiles and closes the inventory, hopper, crate and stash screens; a crate's 8 slots hold stacks; gains in the foundry are banked at once. Name tags are small and sit under the feet (050.1), banners at the top, the end card has a cursor; inventory items show their names; the gear list scrolls; a gear tip goes as the cursor leaves its square. No sparkle for field regen; the ward ring keeps still, with a shield. The wanderer facing forward has matched arms, shoulders under the hood and a belt that wraps. The title's wanderer breathes and sways, its tube glow pulses; the logo and buttons are bigger. F11: the page no longer overflows (050.2). `npm run check` passes (1701); the full Playwright run: 141 passed, 2 failed (050's own gear test, fixed; settings.spec timed out under load, passes alone here and on main), 128 skipped. `npm run measure` identical to main. Review shots in docs/review/050; older shots retaken only where 050 changes them. Spec status stays approved.
 
 **Next:** review, then Shaun answers 050.4–050.9 (spec, "Raised after the build") and playtests the preview.
+
+## 2026-10-21: 052 review suggestions applied
+**Changed:** on `claude/052-foundry-logistics`. The bench's magnifying glass is about a tile across (thicker rim, readable at play scale) and its rack stays inside its tile, clear of the door's wall. The bench's E prompt sits beside it, away from the player (on the door's wall in the foundry), so it never covers the arriving player (052.9). The stash screen says "Stash" once. Tunnel look numbers and emblem keys moved into data; the stash's unused take/put events dropped (SAVE_VERSION stays 7). Shot specs wait on state; 036/07, 028/01, 052/03–05 and 036's bench shots retaken.
+**Next:** Shaun answers 052.4–052.12 and playtests the preview.
+
+## 2026-10-21: 052 built (foundry logistics)
+**Changed:** on `claude/052-foundry-logistics` (draft PR). The underground pair: an entrance and an exit, up to 5 tiles between in a straight line, anything built between; a tunnel holds as many items as tiles it spans, like a conduit that long. Its reach shows while placing, the tunnel on hover; placing one end selects the other. Shaun's crossing case (an arrow line and a bomb line whose feeds cross) is a sim test. The sorter and the merger are gone, with the merger's research, schematic and art. The stash opens a two-panel screen (its own scrolling grid over the inventory, the same clicks). The bench sits just inside the door at (22, 9), redrawn as a workbench with a magnifying glass and an armor rack. SAVE_VERSION 7, no migration. `npm run check` passes (1678); full Playwright: 135 passed, 1 failed (fixed, file re-run passes), 126 skipped. Measure unchanged from main (ring 3 and the Bulwark's decent build MISSED there too).
+
+**Next:** review; Shaun answers 052.4–052.12 and playtests the preview.
 
 ## 2026-10-21: Live-playtest interview; 050–052 drafted
 **Changed:** ran the spec interview on Shaun's live playtest notes (answers in docs/brainstorm/2026-10-21-playtest-interview.md) and drafted 050 (playtest fixes and title screen), 051 (guidance), 052 (foundry logistics). 053 (world and bosses) and 054 (combat readability) are ideas for the next batch.

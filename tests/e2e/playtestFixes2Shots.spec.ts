@@ -108,7 +108,7 @@ test.describe('review screenshots (050)', () => {
       if (!g || !h) throw new Error('no game');
       g.step(1);
       h.toFoundry();
-      h.walkTo(2.3 * 32, 12.5 * 32);
+      h.walkTo(21.7 * 32, 9.5 * 32); // 052: beside the bench, just inside the door at (22, 9)
       const s = g.addGear({ slot: 'helm', rarity: 'relic', weight: null, baseArmor: 2, affixes: [], relic: 'wardstone-circlet', name: 'Wardstone Circlet' });
       g.step(1, { equip: { id: s.gear.at(-1)?.id ?? -1 } });
       h.walkTo(8 * 32, 9.5 * 32);
@@ -138,7 +138,7 @@ test.describe('review screenshots (050)', () => {
       g.step(1);
       for (let i = 0; i < 8; i++) g.addGear({ slot: 'body', rarity: i % 2 ? 'fine' : 'rare', weight: 'heavy', baseArmor: 10 + i, affixes: [{ kind: 'armor', value: 3 }], relic: null, name: `Plate ${i + 1}` });
       h.toFoundry();
-      h.walkTo(2.3 * 32, 12.5 * 32);
+      h.walkTo(21.7 * 32, 9.5 * 32); // 052: beside the bench, just inside the door at (22, 9)
     });
     await quietScreen(page);
     await page.keyboard.press('e');

@@ -238,7 +238,7 @@ async function benchWithGear(page: Page): Promise<void> {
     g.step(1);
     for (let i = 0; i < 8; i++) g.addGear({ slot: 'body', rarity: 'rare', weight: 'heavy', baseArmor: 10 + i, affixes: [{ kind: 'armor', value: 3 }], relic: null, name: `Plate ${i + 1}` });
     h.toFoundry();
-    h.walkTo(2.3 * 32, 12.5 * 32);
+    h.walkTo(21.7 * 32, 9.5 * 32); // 052: beside the bench, just inside the door at (22, 9)
   });
   await page.keyboard.press('e');
   await expect.poll(async () => (await ui(page))?.gearPanel?.open, { timeout: 15_000 }).toBe(true);
@@ -306,14 +306,15 @@ test('Mending-style field regen heals with no sparkle; the ward ring keeps still
     if (!g || !h) throw new Error('no game');
     g.step(1);
     h.toFoundry();
-    h.walkTo(2.3 * 32, 12.5 * 32);
+    h.walkTo(21.7 * 32, 9.5 * 32); // 052: beside the bench, just inside the door at (22, 9)
     let s = g.addGear({ slot: 'body', rarity: 'rare', weight: 'light', baseArmor: 2, affixes: [{ kind: 'regen', value: 2 }], relic: null, name: 'Mending Robe' });
     g.step(1, { equip: { id: s.gear.at(-1)?.id ?? -1 } });
     s = g.addGear({ slot: 'helm', rarity: 'relic', weight: null, baseArmor: 2, affixes: [], relic: 'wardstone-circlet', name: 'Wardstone Circlet' });
     g.step(1, { equip: { id: s.gear.at(-1)?.id ?? -1 } });
     h.toHall();
     g.setPlayerHealth(40);
-    g.step(200);
+    // The ward charges for 360 ticks from its equip (052: the bench is by the door now, no long walk to cover that).
+    g.step(400);
   });
   expect((await state(page)).player.healing).toBe('regen');
   await expect.poll(async () => (await ui(page))?.relics.shield).toBe(true);
