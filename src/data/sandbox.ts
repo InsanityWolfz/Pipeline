@@ -8,6 +8,7 @@ import type { StartDef } from './player';
 import { ALL_CRAFTED } from './playtest';
 import { RELICS } from './relics';
 import type { Ring } from './ringScale';
+import type { BindAction } from './settings';
 import { SANDBOX_ROOM } from './rooms';
 import type { TilePos, TileRect } from './tiles';
 
@@ -115,7 +116,7 @@ export const SANDBOX = {
   spawnDefaults: { enemyId: 'husk', ring: 1 as Ring, champion: false, count: 1 },
   /** Each entrance's round at the start: plain arrows, the first volley (024). Null is empty. */
   loadout: ['arrow', 'arrow', 'arrow'] as readonly (string | null)[],
-  /** 044.1: the panel's key, the backquote (unbound in the game), rebindable (042). */
+  /** 044.1: the panel's key, the backquote (unbound in the game), rebindable (042); 056.1: it hides and shows both strips. */
   panelKey: 'BACKTICK',
 } as const;
 
@@ -173,18 +174,22 @@ export const SANDBOX_START: StartDef = {
 };
 
 /**
- * The Sandbox panel (044), view px: two tablets of 020-style rows under their titles, the loadout's at the screen's
- * left edge and the spawn panel's at its right, `margin` in, so the player in the middle stays in view. Rows step with −
- * and + at their right end, so a round's name has the row's width.
+ * The sandbox's controls (044; 056: always on screen), view px. Down the left edge, the strip: one tablet holding the
+ * loadout's rows under their title and, under them past a `keys.gap` divider, the key list (056.2) one `keys.step` line
+ * an action, its name at `keys.label.x` and its keys ending at `keys.value.right`. On the right edge, the spawn
+ * column's tablet. Both `margin` in from their edges. The strip's top `leftY` clears the boss bar (HOLLOWS_LOOK.bossBar);
+ * the spawn column's top `rightY` sits under the minimap's frame (056.3), and both end above the HP block (a data test
+ * checks). Rows step with − and + at their right end, so a round's name has the row's width.
  */
 export const SANDBOX_PANEL = {
-  y: 40,
   margin: 8,
+  leftY: 34,
+  rightY: 113,
   pad: 8,
   titleH: 20,
   titleY: 4,
   rows: {
-    gap: 4,
+    gap: 2,
     subH: 11,
     label: { x: 10, y: 6 },
     sub: { x: 10, y: 2 },
@@ -192,7 +197,37 @@ export const SANDBOX_PANEL = {
     stepper: { down: 152, up: 174, hit: 10 },
     greyAlpha: 0.45,
   },
+  /** 056.4: the pickup feed's gap right of the strip, in the sandbox. */
+  feed: { gap: 8 },
+  keys: { gap: 6, step: 9, label: { x: 10 }, value: { right: 176 }, rule: { inset: 6, color: 'brass', alpha: 0.5 } },
 } as const;
+
+/**
+ * One line of the key list (056.2): an action's keys from the player's bindings (042), joined on one line when several
+ * (Move's four, the carried slots' five), under 042's name for a single action unless `label` gives one; or a fixed
+ * input (`fixed`, shown as written) that no binding moves.
+ */
+export type SandboxKeyLine = { actions: readonly BindAction[]; label?: string } | { label: string; fixed: string };
+
+/**
+ * 056.2: the bound actions that do something in the sandbox, in 042's order (Move's keys up, left, down, right, so the
+ * defaults read W A S D), then the hide key (056.1) and the fixed ones. Build, Research, Rotate and Flip are left off:
+ * they work only in the foundry, which the sandbox can't reach.
+ */
+export const SANDBOX_KEY_LIST: readonly SandboxKeyLine[] = [
+  { label: 'Move', actions: ['up', 'left', 'down', 'right'] },
+  { actions: ['dodge'] },
+  { actions: ['interact'] },
+  { actions: ['menu'] },
+  { actions: ['inventory'] },
+  { actions: ['talents'] },
+  { actions: ['use'] },
+  { label: 'Carried slots', actions: ['slot1', 'slot2', 'slot3', 'slot4', 'slot5'] },
+  { actions: ['feedback'] },
+  { label: 'Hide controls', actions: ['sandbox'] },
+  { label: 'Fire', fixed: 'Left click' },
+  { label: 'Pause', fixed: 'Esc' },
+];
 
 /** The panel's words. */
 export const SANDBOX_TEXT = {
@@ -207,4 +242,6 @@ export const SANDBOX_TEXT = {
   clear: 'Clear spawned',
   on: 'On',
   off: 'Off',
+  /** 056.2: an action with no key bound. */
+  unbound: '—',
 } as const;

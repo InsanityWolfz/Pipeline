@@ -20,6 +20,8 @@ interface Slot {
 // hold. Driven by the sim's `pickups` events only. Fixed to the screen.
 export class PickupFeed {
   private lines: FeedLine[] = [];
+  /** The first line's top-left: PICKUP_FEED's, or 056.4's in the sandbox (right of its controls' strip). */
+  private at: { x: number; y: number } = { x: PICKUP_FEED.x, y: PICKUP_FEED.y };
   private readonly slots: Slot[];
 
   constructor(scene: Scene) {
@@ -40,11 +42,15 @@ export class PickupFeed {
   /** The drawn lines' boxes: a press there never fires (015). */
   get boxes(): ScreenBox[] {
     const F = PICKUP_FEED;
-    return this.lines.map((_, i) => ({ x: F.x, y: F.y + i * F.lineStep, w: F.width, h: F.lineStep }));
+    return this.lines.map((_, i) => ({ x: this.at.x, y: this.at.y + i * F.lineStep, w: F.width, h: F.lineStep }));
   }
 
-  /** Pickups since the last frame join the feed, by the key each shows under (033: unknown schematics share one); the lines age `dtMs`. */
-  update(pickups: readonly string[], dtMs: number): void {
+  /**
+   * Pickups since the last frame join the feed, by the key each shows under (033: unknown schematics share one); the
+   * lines age `dtMs`. `at` moves the first line's top-left (056.4: the sandbox's), else PICKUP_FEED's.
+   */
+  update(pickups: readonly string[], dtMs: number, at: { x: number; y: number } | null = null): void {
+    this.at = at ?? { x: PICKUP_FEED.x, y: PICKUP_FEED.y };
     this.lines = ageFeed(this.lines, dtMs);
     for (const key of pickups) this.lines = addPickup(this.lines, key);
     this.draw();
@@ -59,12 +65,13 @@ export class PickupFeed {
       slot.text.setVisible(line !== undefined);
       if (!line) return;
       const item = keyLook(line.itemId);
-      const y = F.y + i * F.lineStep;
+      const { x } = this.at;
+      const y = this.at.y + i * F.lineStep;
       const alpha = lineAlpha(line);
-      slot.icon.setFrame(item.icon).setPosition(F.x + F.icon.x, y + F.icon.y).setAlpha(alpha);
-      slot.text.set(`+${line.count} ${item.name}`).moveTo(F.x + F.text.x, y + F.text.y).setAlpha(alpha);
+      slot.icon.setFrame(item.icon).setPosition(x + F.icon.x, y + F.icon.y).setAlpha(alpha);
+      slot.text.set(`+${line.count} ${item.name}`).moveTo(x + F.text.x, y + F.text.y).setAlpha(alpha);
       const w = Math.min(F.width, F.text.x + slot.text.width + F.pad);
-      drawTablet(slot.back, F.x - F.pad, y + F.back.y, w + F.pad, F.back.h, F.alpha * alpha);
+      drawTablet(slot.back, x - F.pad, y + F.back.y, w + F.pad, F.back.h, F.alpha * alpha);
     });
   }
 }

@@ -4,7 +4,7 @@ import { ENEMY_CHOICES, ROUND_CHOICES } from '../../src/render/sandboxRows';
 import { boot } from './helpers';
 import { clickView } from './flowPage';
 
-// The sandbox (044) for the e2e specs: booting `?sandbox`, the panel open, and its rows
+// The sandbox (044) for the e2e specs: booting `?sandbox`, the controls on screen (056), and its rows
 // clicked as a player would (each click then a tick, so the sim takes it before the next).
 
 /** Boots `?sandbox` and waits for the game. */
@@ -13,10 +13,19 @@ export async function bootSandbox(page: Page): Promise<void> {
   await expect.poll(() => page.evaluate(() => window.__GAME__?.getState()?.sandbox)).toBe(true);
 }
 
-/** Opens the panel with its key. */
+/** Whether the sandbox's controls are on screen (056: from the start). */
+export const controlsShown = (page: Page) => page.evaluate(() => window.__GAME__?.ui().sandbox?.open ?? false);
+
+/** Makes sure the controls are on screen: they start shown (056); only if hidden does their key (056.1) show them. */
 export async function openPanel(page: Page): Promise<void> {
+  if (!(await controlsShown(page))) await page.keyboard.press('Backquote');
+  await expect.poll(() => controlsShown(page)).toBe(true);
+}
+
+/** Hides the controls with their key (056.1), for a clean shot. */
+export async function hidePanel(page: Page): Promise<void> {
   await page.keyboard.press('Backquote');
-  await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().sandbox?.open)).toBe(true);
+  await expect.poll(() => controlsShown(page)).toBe(false);
 }
 
 /** Clicks a panel row (its − or +, or its label side), then runs a tick so the sim takes what it sent. */
