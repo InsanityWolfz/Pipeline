@@ -1,5 +1,5 @@
 # 048: Volley shape
-status: approved
+status: done
 
 Approved by Shaun in chat, 2026-10-20 ("Start 48/49"), taken as approval on draft: the build follows the proposals in the open questions.
 
@@ -66,3 +66,6 @@ Built on `claude/048-volley-shape` (plan: docs/plans/048-volley-shape.md). 048.1
   The decent Bulwark build feeds an arrow line and a bomb line. Before 048 both flew at the cursor; now they take the two lanes 7.5° either side of it, and 041.7's bot still aims at the Bulwark's middle, so at its 100 px circle each round lands about 13 px off. The pack bot turns its aim so a straight round's lane is on the target (as it did for 024's two-arrow fan), so its bombs land off to the side. Question for Shaun at playtest: is a mixed volley that can't put every round on one target the trade he wants (proposal: yes, it's the spread he asked for; the bots stay as they are), or should the Bulwark bot learn to aim like the pack bot? Either way balance is judged at playtest.
 
   **Answered (Shaun, 2026-10-21):** "Keep it, judge at playtest." The mixed volley that can't put every round on one target is the trade; the bots stay as they are, and balance is judged at playtest.
+
+## Shaun's playtest (2026-10-21)
+- "048 preview looks great", then "merge 38". 048.3, 048.5 and 048.6 stand as built; 048.4 and 048.7 were answered earlier.

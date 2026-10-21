@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: 048 merged
+**Changed:** Shaun tried 048 (volley shape), "looks great", and merged it (InsanityWolfz/Pipeline#38) after the specs PR (#37). design.md describes the fan.
+
+**Next:** 049 (Husk Hive) is getting its review fixes. Shaun is doing a live playtest of main with voice notes; they become the next spec interview.
+
 ## 2026-10-21: 048 review fixes, Shaun's answers recorded
 **Changed:** on `claude/048-volley-shape` (PR #38): Shaun's answers recorded (048.4: design.md "The Foundry" now says every fed entrance fires down its own lane of one fan and bombs land on an arc; 048.7: "Keep it, judge at playtest", bots unchanged). Review fixes: stale "Volleys fan by it" comment in ammo.ts, a 048.5 re-fan test, 024/04 retaken with all three lanes in view, a spec note on spread.spec.ts's settling and the retakes' 047 HUD, summary computes the volley once, an entrance without a lane throws. `npm run check` passes (1645); volleyShape, spread and hud e2e pass.
 
