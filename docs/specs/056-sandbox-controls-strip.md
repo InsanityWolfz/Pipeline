@@ -53,4 +53,4 @@ Built on `claude/056-sandbox-strip`. 056.1–056.3 are built as proposed. Each c
 
 ## Review fixes
 - 056.9 and 056.10 recorded above. The row counts the layout uses come from `sandboxColumns`, with a test that no row has a sub line. The normal-game e2e reads the panel's own objects (`ui().sandboxDrawn`). A new e2e step checks that Esc pauses with the strips up and resumes back to them.
-- **Checks after the fixes:** `npm run check` passes (1,841 tests). The full Playwright run: RESULT.
+- **Checks after the fixes:** `npm run check` passes (1,841 tests). The full Playwright run: 163 passed, 0 failed, 155 skipped (review shots).
