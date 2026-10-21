@@ -57,14 +57,16 @@ export interface FixtureDef {
 
 export const FIXTURES: readonly FixtureDef[] = [
   { id: 'stash', kind: 'stash', name: 'Stash', tx: 22, ty: 11, facing: 'down' },
-  { id: 'identification-bench', kind: 'bench', name: 'Identification bench', tx: 1, ty: 12, facing: 'right' },
+  // 052: just inside the door, right below the tile the player arrives on (22, 8), against the door's wall: in view
+  // (clear of the objective line, drawn in front of the arriving player) and in reach as the player walks in.
+  { id: 'identification-bench', kind: 'bench', name: 'Identification bench', tx: 22, ty: 9, facing: 'left' },
   { id: 'wood-port', kind: 'port', name: 'Wood port', tx: 1, ty: 4, facing: 'right', raw: 'wood' },
   { id: 'stone-port', kind: 'port', name: 'Stone port', tx: 1, ty: 6, facing: 'right', raw: 'stone' },
   { id: 'fiber-port', kind: 'port', name: 'Fiber port', tx: 1, ty: 8, facing: 'right', raw: 'fiber' },
   { id: 'ley-crystal-port', kind: 'port', name: 'Ley crystal port', tx: 1, ty: 10, facing: 'right', raw: 'ley-crystal' },
-  // 034: above the wood port, clear of the bench.
+  // 034: above the wood port.
   { id: 'ley-iron-port', kind: 'port', name: 'Ley-iron port', tx: 1, ty: 3, facing: 'right', raw: 'ley-iron' },
-  // 049: below the ley crystal port, above the bench, so a bomb line's resin and ley crystal come in side by side.
+  // 049: below the ley crystal port, so a bomb line's resin and ley crystal come in side by side.
   { id: 'husk-resin-port', kind: 'port', name: 'Husk resin port', tx: 1, ty: 11, facing: 'right', raw: 'husk-resin' },
   { id: 'waystone', kind: 'waystone', name: 'Waystone', tx: 22, ty: 4, facing: 'down', claim: 'shrine' },
 ];

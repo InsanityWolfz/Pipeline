@@ -1,12 +1,13 @@
 import { expect, test, type Page } from '@playwright/test';
 import { fixtureDef } from '../../src/sim/fixtures';
 import { ITEMS } from '../../src/data/items';
-import { screenPoint, state, step } from './foundryPage';
+import { enterFoundry, screenPoint, state, step } from './foundryPage';
 import { clickWith, slotPoint } from './gridPage';
 import { boot, cameraSettled, quietScreen, watchErrors } from './helpers';
 
 // 052 (C.3): E at the stash opens its screen, the stash's own grid (8 wide, scrolling) over the inventory, with the
-// same clicks both ways (Shaun). Review shot (REVIEW_SHOTS=1): docs/review/052/04-stash-screen.png.
+// same clicks both ways (Shaun). Review shots (REVIEW_SHOTS=1): docs/review/052/04-stash-screen.png, and 052 (C.4)'s
+// bench just inside the door as the player walks in, 05-bench-by-door.png.
 
 const SHOTS = 'docs/review/052';
 const STASH = fixtureDef('stash');
@@ -93,5 +94,14 @@ test.describe('review screenshots (052)', () => {
     await page.mouse.move(p.x, p.y);
     await expect.poll(async () => (await ui(page))?.cursor?.kind).toBe('pointer');
     await page.screenshot({ path: `${SHOTS}/04-stash-screen.png` });
+  });
+
+  test('the bench just inside the door, as the player walks in', async ({ page }) => {
+    test.setTimeout(90_000);
+    await boot(page);
+    await enterFoundry(page);
+    await quietScreen(page);
+    await cameraSettled(page);
+    await page.screenshot({ path: `${SHOTS}/05-bench-by-door.png` });
   });
 });

@@ -14,18 +14,42 @@ const vertical = (top: string, bottom: string, y0: number, y1: number): Paint =>
 const glowLine = (pts: number[], width: number, color: string, blur: number): Shape => ({ ...line(pts, width, color), glow: { color, blur } });
 const rune = (x: number, y: number, s: number, color: string): Shape => path(`M ${x - s} ${y - s * 1.2} L ${x + s * 0.4} ${y - s * 0.2} L ${x - s * 0.6} ${y + s * 0.3} L ${x + s} ${y + s * 1.2}`, trim(color, 0.8));
 
-// The identification bench: a rune table with a ley lens on a brass stand; frame 1 flares as armor is identified.
+// The identification bench (052, Shaun: "a workbench with a big magnifying glass on one side and an armor rack on
+// the other"): a wooden workbench with a rune-carved front; on its left a big brass-rimmed ley lens on an arm; on its
+// right a rack holding a breastplate. Frame 1 flares the lens as gear is identified. Wider than its tile.
+const LENS = { x: -8, y: -33, r: 7 } as const;
 const bench = (flare: boolean): Shape[] => [
-  shadow(15),
-  ...[-11, 11].map((x) => rect(x - 2, -16, 4, 14, 1, solid('rock'))),
-  rect(-15, -22, 30, 7, 2, { fill: vertical('rock-pale', 'rock-light', -22, -15), outline: true }),
-  rune(-8, -18.5, 1.6, 'cyan-deep'),
-  rune(8, -18.5, 1.6, 'cyan-deep'),
-  line([0, -22, 0, -28], 1.6, 'brass-dark', true),
-  ellipse(0, -32, 6, 6, solid('brass')),
-  ellipse(0, -32, 4.4, 4.4, { fill: { radial: [-1.4, -33.4, 5], stops: [{ at: 0, color: 'cyan-glow' }, { at: 1, color: 'cyan-deep' }] }, glow: { color: 'cyan', blur: flare ? 10 : 3 } }),
-  ...(flare ? [ellipse(0, -32, 9, 9, { stroke: { color: { id: 'cyan-glow', alpha: 0.7 }, width: 1.2 }, glow: { color: 'cyan-glow', blur: 6 } })] : []),
-  path('M -2.4 -34 Q -1.6 -35.6 0 -35.8', trim({ id: 'snow', alpha: 0.8 }, 0.7)),
+  ellipse(1, -2, 19, 3.4, { fill: { id: 'ground-shade', alpha: 0.4 } }),
+  // The armor rack, behind the bench's right end: two posts, a crossbar, a breastplate with brass trim.
+  ...[9, 18].map((x) => rect(x - 1.1, -38, 2.2, 36, 0.8, solid('wood-dark'))),
+  rect(7, -38.5, 13, 2.4, 0.8, solid('wood')),
+  path('M 8.4 -35.4 L 11.2 -35.4 Q 13.5 -32.4 15.8 -35.4 L 18.6 -35.4 L 18.6 -30 Q 18.4 -21.5 13.5 -19.5 Q 8.6 -21.5 8.4 -30 Z', { fill: vertical('iron-light', 'iron-dark', -36, -19.5), outline: true }),
+  path('M 11.2 -35 Q 13.5 -31.8 15.8 -35', trim('brass', 0.9)),
+  ...[8.6, 18.4].map((x) => ellipse(x, -34.6, 2.4, 1.7, solid('iron'))),
+  line([9.4, -26.5, 17.6, -26.5], 0.8, 'brass'),
+  line([13.5, -33.4, 13.5, -22], 0.7, { id: 'iron-dark', alpha: 0.8 }),
+  path('M 10.8 -30 Q 12 -29.2 12.6 -27', trim({ id: 'snow', alpha: 0.5 }, 0.6)),
+  // The workbench: legs, a thick plank top, and a front board with a ley rune.
+  ...[-13, 6].map((x) => rect(x - 1.6, -14, 3.2, 12, 0.8, solid('wood-dark'))),
+  rect(-15, -12, 22, 2, 0.6, solid('wood')),
+  rect(-16, -20, 24, 6.5, 1.6, { fill: vertical('wood-light', 'wood', -20, -13.5), outline: true }),
+  rect(-16, -20, 24, 1.6, 0.8, { fill: { id: 'straw-light', alpha: 0.6 } }),
+  rune(-4, -16.6, 1.4, 'cyan-deep'),
+  // A small unidentified piece on the bench, under the glass.
+  rect(-12.5, -22.6, 6, 2.8, 0.8, solid('leather')),
+  // The magnifying glass on a brass arm from the bench's left end: a wooden handle with a brass ferrule, a brass
+  // rim round a pale ley glass that shows the piece below enlarged.
+  line([-14, -20, -14, -24, -9, -27], 1.4, 'brass-dark', true),
+  line([LENS.x + 4.6, LENS.y + 5.4, LENS.x + 10, LENS.y + 11.4], 3, 'wood-dark', true),
+  line([LENS.x + 4.6, LENS.y + 5.4, LENS.x + 6.2, LENS.y + 7.2], 3.4, 'brass', true),
+  ellipse(LENS.x, LENS.y, LENS.r, LENS.r, {
+    fill: { radial: [LENS.x - 2.4, LENS.y - 2.4, LENS.r + 2], stops: [{ at: 0, color: { id: 'cyan-glow', alpha: 0.9 } }, { at: 1, color: { id: 'cyan', alpha: 0.45 } }] },
+    glow: { color: 'cyan', blur: flare ? 10 : 2 },
+  }),
+  rect(LENS.x - 4.2, LENS.y + 0.6, 8.4, 3.6, 1.2, { fill: { id: 'leather', alpha: 0.75 } }),
+  ellipse(LENS.x, LENS.y, LENS.r, LENS.r, { stroke: { color: 'brass', width: 1.8 }, outline: true }),
+  ...(flare ? [ellipse(LENS.x, LENS.y, LENS.r + 4, LENS.r + 4, { stroke: { color: { id: 'cyan-glow', alpha: 0.7 }, width: 1.2 }, glow: { color: 'cyan-glow', blur: 6 } })] : []),
+  path(`M ${LENS.x - 4.6} ${LENS.y - 1} Q ${LENS.x - 4} ${LENS.y - 4.4} ${LENS.x - 0.6} ${LENS.y - 5}`, trim({ id: 'snow', alpha: 0.85 }, 0.9)),
 ];
 
 // The stash: a rune-banded wooden chest with brass bands and a ley lock.
@@ -133,7 +157,7 @@ const LEY_CRYSTAL: Shape[] = [
 ];
 
 export const FIXTURE_SPRITES_VECTOR: readonly VectorSprite[] = [
-  stand(FIXTURE_SPRITES.bench.key, [32, 40], [bench(false), bench(true)]),
+  stand(FIXTURE_SPRITES.bench.key, [42, 46], [bench(false), bench(true)]),
   stand(FIXTURE_SPRITES.stash, [32, 36], [STASH]),
   stand(FIXTURE_SPRITES.port.key, [32, 36], [port(false), port(true)]),
   { key: DOORWAY_SPRITE, size: [32, 48], anchor: [0, 48], frames: [DOORWAY] },
