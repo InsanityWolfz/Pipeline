@@ -1,5 +1,5 @@
 # 057: Sandbox panels as click-open pop-outs, and a steady waypoint arrow
-status: approved
+status: done
 
 Approved on draft by Shaun in chat, 2026-10-21 ("add the waypoint arrow stuttering while you're walking fix ... and then I approve on draft"): the build follows the proposals in the open questions.
 
@@ -12,14 +12,14 @@ The sandbox's controls stay one click away without covering the fight: each pane
 - Specs: 044 (the sandbox and its panel), 056 (the left strip, the key list, the spawn column, the backquote key), 051 (the waypoint arrow).
 
 ## Acceptance criteria
-- [ ] In the sandbox, the left edge shows a small "Loadout" tab and the right edge a small "Spawn" tab, always visible; nothing else of the panels shows until opened (Shaun).
-- [ ] Clicking a tab pops its panel out from that edge, with the same rows as 056 (the left one with the key list under the loadout); clicking the tab again closes it (Shaun).
-- [ ] An open panel's rows work as today and never pause the game.
-- [ ] Nothing else changes outside the sandbox.
+- [x] In the sandbox, the left edge shows a small "Loadout" tab and the right edge a small "Spawn" tab, always visible; nothing else of the panels shows until opened (Shaun).
+- [x] Clicking a tab pops its panel out from that edge, with the same rows as 056 (the left one with the key list under the loadout); clicking the tab again closes it (Shaun).
+- [x] An open panel's rows work as today and never pause the game.
+- [x] Nothing else changes outside the sandbox.
 
 **The waypoint arrow (051)**
-- [ ] While the player walks, the waypoint arrow doesn't stutter: at the screen's edge it slides smoothly along it, and over a target it stays put on the target, only bobbing as today (Shaun). This applies in the whole game, not only the sandbox.
-- [ ] Where it points and when it switches between edge and over-target are unchanged.
+- [x] While the player walks, the waypoint arrow doesn't stutter: at the screen's edge it slides smoothly along it, and over a target it stays put on the target, only bobbing as today (Shaun). This applies in the whole game, not only the sandbox.
+- [x] Where it points and when it switches between edge and over-target are unchanged.
 
 ## Data changes
 - `src/data/sandbox.ts`: the tabs' layout and labels, the pop-out's timing.
@@ -59,3 +59,9 @@ Built on `claude/fervent-hamilton-u3qlqf` (plan: docs/plans/057-sandbox-popouts.
 - **Criteria:** all six met. Unit (tests/render/sandboxStrip.test.ts): closed only the tabs show, on their edges at the strips' old tops; open the panels are 056's boxes with each tab on its outer edge; the slide moves one way in whole px; the tabs clear the HP block, carried bar, tube slot, minimap, boss bar and player, closed and open; start closed, a tab toggles its own panel, the key both; the slide's time; the feed beside the tab. tests/render/waypointPlace.test.ts: the view at a scroll matches Phaser's. E2e (tests/e2e/sandboxStrip.spec.ts): only the tabs on load; each tab opens its panel and a second click closes it; a row click works and nothing pauses; firing leaves them open; Esc closes them before pausing; the backquote opens and closes both; a big panel steps them aside; the key list follows a rebind; the normal game shows none of it. sandbox.spec.ts and sandboxShots.spec.ts open the panels by their tabs. tests/e2e/waypointSteady.spec.ts as in 057.6.
 - **Review shots:** docs/review/057: 01 both tabs closed, 02 the Loadout panel out, 03 the Spawn panel out, 04 the waypoint arrow on the edge mid-walk, 05 the arrow over its target mid-walk.
 - **Checks:** `npm run check` passes (1,848 unit tests). The full `npx playwright test`, once on the build's head: 165 passed, 0 failed, 157 skipped (review shots). Earlier, while two specs ran side by side, settings.spec.ts's persist-across-reload test timed out once under the load; it passed on its own and in the full run.
+
+## Review fixes
+- **Blocking:** the over-target e2e (waypointSteady.spec.ts) was slow and timed out once: it now has a 120 s budget (about 25 s idle) and walks on to the edge in 6-tick strides, where only the edge/over switch is checked (about 18 s under load; passed 3 of 3 with `--repeat-each=3`). Older specs' review shots retaken in the build (044, 051/01–02, 054/04, 056) are put back as on main (process rule 9); only docs/review/057 is new.
+- **Suggestions:** the sandbox's panels slide before the HUD draws and the pickup feed takes the Loadout panel's slide as an argument, so it follows the tab the same frame (no public field). The tab's hover outline and the slide's ease are data (`SANDBOX_PANEL.tabs.hover`, `slideEase`). Stepping aside clears a tab's hover. The e2e uses TILE_SIZE. The plan names the right unit test file. WaypointView's update-time placement is kept and commented: it covers the camera not following (the attune's look), when no follow update comes.
+- **Checks after the fixes:** `npm run check` passes (1,848 tests). The touched e2e files: waypointSteady.spec.ts (3 runs, 6 passed), sandboxStrip.spec.ts and sandbox.spec.ts (8 passed, 2 skipped review shots). CI runs the full suite on push.
+
