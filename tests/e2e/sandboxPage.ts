@@ -4,7 +4,7 @@ import { ENEMY_CHOICES, ROUND_CHOICES } from '../../src/render/sandboxRows';
 import { boot } from './helpers';
 import { clickView } from './flowPage';
 
-// The sandbox (044) for the e2e specs: booting `?sandbox`, the controls on screen (056), and its rows
+// The sandbox (044) for the e2e specs: booting `?sandbox`, the pop-outs opened by their tabs (057), and their rows
 // clicked as a player would (each click then a tick, so the sim takes it before the next).
 
 /** Boots `?sandbox` and waits for the game. */
@@ -13,19 +13,42 @@ export async function bootSandbox(page: Page): Promise<void> {
   await expect.poll(() => page.evaluate(() => window.__GAME__?.getState()?.sandbox)).toBe(true);
 }
 
-/** Whether the sandbox's controls are on screen (056: from the start). */
+/** Whether a sandbox panel is all the way out (057: they start closed, only their tabs showing). */
 export const controlsShown = (page: Page) => page.evaluate(() => window.__GAME__?.ui().sandbox?.open ?? false);
 
-/** Makes sure the controls are on screen: they start shown (056); only if hidden does their key (056.1) show them. */
-export async function openPanel(page: Page): Promise<void> {
-  if (!(await controlsShown(page))) await page.keyboard.press('Backquote');
-  await expect.poll(() => controlsShown(page)).toBe(true);
+/** Which panels are all the way out, and whether either is still sliding (057). */
+export const panelsOut = (page: Page) =>
+  page.evaluate(() => {
+    const sb = window.__GAME__?.ui().sandbox;
+    const ids = sb?.rows.map((r) => r.id) ?? [];
+    return { loadout: ids.includes('god'), spawn: ids.includes('spawn'), sliding: sb?.sliding ?? false };
+  });
+
+/** Clicks a pop-out's tab (057), as a player would, once it's on screen and still (not stepped aside, not sliding). */
+export async function clickTab(page: Page, id: 'loadout' | 'spawn'): Promise<void> {
+  const find = () =>
+    page.evaluate((tabId) => {
+      const sb = window.__GAME__?.ui().sandbox;
+      return sb && !sb.sliding ? (sb.tabs.find((t) => t.id === tabId) ?? null) : null;
+    }, id);
+  await expect.poll(async () => (await find()) !== null).toBe(true);
+  const tab = await find();
+  if (!tab) throw new Error(`no sandbox tab '${id}'`);
+  await clickView(page, tab.x + tab.w / 2, tab.y + tab.h / 2);
 }
 
-/** Hides the controls with their key (056.1), for a clean shot. */
+/** Makes sure both panels are out: each closed one's tab is clicked (057), then it waits for the slide. */
+export async function openPanel(page: Page): Promise<void> {
+  const tabs = (await page.evaluate(() => window.__GAME__?.ui().sandbox?.tabs)) ?? [];
+  for (const t of tabs) if (!t.open) await clickTab(page, t.id);
+  await expect.poll(() => panelsOut(page)).toEqual({ loadout: true, spawn: true, sliding: false });
+}
+
+/** Closes both panels with their key (057.3), for a clean shot: only the tabs stay. */
 export async function hidePanel(page: Page): Promise<void> {
-  await page.keyboard.press('Backquote');
-  await expect.poll(() => controlsShown(page)).toBe(false);
+  const tabs = (await page.evaluate(() => window.__GAME__?.ui().sandbox?.tabs)) ?? [];
+  if (tabs.some((t) => t.open)) await page.keyboard.press('Backquote');
+  await expect.poll(() => panelsOut(page)).toEqual({ loadout: false, spawn: false, sliding: false });
 }
 
 /** Clicks a panel row (its − or +, or its label side), then runs a tick so the sim takes what it sent. */

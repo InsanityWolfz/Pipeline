@@ -65,9 +65,3 @@ export function keyListLines(bindings: Readonly<Record<BindAction, string>>): Ke
     return { label, keys: keys.length > 0 ? keys.join(' ') : SANDBOX_TEXT.unbound };
   });
 }
-
-/** 056.4: the pickup feed's first line in the sandbox: `feed.gap` px right of the strip, level with its top. */
-export function sandboxFeedAt(): { x: number; y: number } {
-  const { left } = stripLayout();
-  return { x: left.x + left.w + P.feed.gap, y: left.y };
-}

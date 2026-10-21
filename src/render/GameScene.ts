@@ -83,7 +83,7 @@ export class GameScene extends Scene {
   cursorView?: CursorView;
   /** 040: hover tips (Shift for the breakdown) and the glossary; the test hook measures its summaries. */
   legibility?: Legibility;
-  /** 044: the Sandbox panel (056: the sandbox's controls, always on screen there, and only there). */
+  /** 044: the Sandbox panel (056, 057: the sandbox's controls, pop-outs there, and only there). */
   sandboxPanel?: SandboxPanel;
   /** The room on screen. It lags the player's room through a door's fade. */
   private shownRoomId: string;
@@ -270,7 +270,8 @@ export class GameScene extends Scene {
     this.site?.update(sim, shown);
     this.siteMenus?.update(sim);
     this.menu?.update(sim);
-    this.sandboxPanel?.update(sim);
+    this.sandboxPanel?.update(sim, this.game.loop.delta);
+    if (this.hud) this.hud.loadoutOut = this.sandboxPanel?.loadoutOut ?? 0;
     const controls = this.controls;
     const cursor = controls && inFoundry && controls.overWorld() ? controls.cursorTile() : null;
     this.buildView?.update(
@@ -288,7 +289,7 @@ export class GameScene extends Scene {
     const pointer = controls?.viewPointer();
     if (pointer) for (const menu of [this.siteMenus, this.pause, this.hud, this.sandboxPanel, this.roomViews]) menu?.pointAt(pointer.x, pointer.y);
     // The arrow pointer while a menu is open or over the build bar, else the crosshair (021).
-    // 056: the sandbox's controls are always up, so they turn the pointer to the arrow only under it.
+    // 056: the sandbox's tabs are always up, so they turn the pointer to the arrow only under them.
     const inMenu = [this.menu, this.pause, this.siteMenus, this.hud?.inventory, this.hud?.talents, this.legibility].some((m) => m?.isOpen) || (this.wake?.isShown ?? false);
     this.cursorView?.update(inMenu || (pointer !== undefined && [this.buildView, this.legibility, this.sandboxPanel].some((v) => v?.overUi(pointer.x, pointer.y))));
     const point = controls?.overWorld() ? controls.cursorPoint() : null;

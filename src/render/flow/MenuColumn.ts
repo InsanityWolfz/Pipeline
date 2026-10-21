@@ -141,6 +141,20 @@ export class MenuColumn {
     this.setVisible(this.visible);
   }
 
+  /** Moves the laid-out rows so the column's top-left is at (x, y), without rebuilding them (057: a sliding panel). */
+  moveTo(x: number, y: number): void {
+    const dx = x - this.x;
+    const dy = y - this.y;
+    if (dx === 0 && dy === 0) return;
+    this.x = x;
+    this.y = y;
+    for (const r of this.rows) {
+      r.y += dy;
+      r.image.setPosition(r.image.x + dx, r.image.y + dy);
+      for (const t of r.texts) t.moveTo(t.at.x + dx, t.at.y + dy);
+    }
+  }
+
   private refresh(i: number, spec: MenuRowSpec): void {
     const row = this.rows[i];
     if (!row) return;

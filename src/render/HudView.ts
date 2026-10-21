@@ -13,7 +13,7 @@ import { HotbarView, type CarriedBarShown } from './HotbarView';
 import { InventoryPanel, type InventoryShown } from './InventoryPanel';
 import { ResearchList, type ResearchListState } from './ResearchList';
 import { PickupFeed } from './PickupFeed';
-import { sandboxFeedAt } from './sandboxStrip';
+import { sandboxFeedAt } from './sandboxPopout';
 import { shownKey } from './itemShown';
 import { TubeSlotView, type TubeSlotState } from './TubeSlotView';
 import { CarriedHintView, type CarriedHintShown } from './CarriedHintView';
@@ -79,6 +79,8 @@ export class HudView {
   private readonly health: HealthBar;
   private readonly edges: EdgeTint;
   private readonly feed: PickupFeed;
+  /** 057: how far the sandbox's Loadout panel is out (0–1), set by the scene: the feed moves out beside its tab. */
+  loadoutOut = 0;
   readonly inventory: InventoryPanel;
   /** The research list (033, J). */
   readonly research: ResearchList;
@@ -179,8 +181,8 @@ export class HudView {
     const input = { health: p.health, max: stats.maxHealth, healing: p.healing !== null, dying: p.dying > 0, armor: stats.armor, xp };
     this.health.update(input, building ? buildBarBox(unlockedPieces(sim)) : null, dt);
     this.edges.update(this.health.shown.low, this.health.pulse);
-    // 056.4: in the sandbox the feed sits right of the controls' strip, which holds the top-left.
-    this.feed.update(events.pickups.map((p) => shownKey(sim, p.itemId)), dt, sim.sandbox ? sandboxFeedAt() : null);
+    // 056.4, 057: in the sandbox the feed sits right of the Loadout tab, which holds the top-left, and moves out with it.
+    this.feed.update(events.pickups.map((p) => shownKey(sim, p.itemId)), dt, sim.sandbox ? sandboxFeedAt(this.loadoutOut) : null);
     // A KO closes the panel: the wake panel takes the screen (and the panel can't open again while it shows).
     if (events.woke) {
       this.inventory.setOpen(false);

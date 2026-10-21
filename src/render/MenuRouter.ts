@@ -67,7 +67,7 @@ export class MenuRouter {
     const list = controls.takeMenuKey('research');
     // T (037): the talent tree, likewise.
     const tree = controls.takeMenuKey('talents');
-    // 044: the Sandbox panel's key, only in the sandbox; likewise. 056.1: it hides and shows both strips.
+    // 044: the Sandbox panel's key, only in the sandbox; likewise. 057.3: it opens or closes both panels.
     const panel = controls.takeMenuKey('sandbox') && this.sim.sandbox !== undefined;
     if (this.m.host.paused) {
       // 056.10: the sandbox's controls step aside under the pause menu, as under a big panel.
@@ -75,13 +75,14 @@ export class MenuRouter {
       if (close) this.m.host.resume();
       return;
     }
-    // 056: Esc no longer closes the sandbox's controls (they stay on screen); it closes the menus as everywhere else.
+    // Esc closes the menus as everywhere else; 057.2: then the sandbox's open panels, before it pauses.
     if (close && talents.isOpen) talents.setOpen(false);
     else if (close && inventory.isOpen) inventory.setOpen(false);
     else if (close && research.isOpen) research.setOpen(false);
     else if (close && site.isOpen) site.close();
     else if (close && craft.isOpen) craft.setOpen(false);
     else if (close && this.sim.building) controls.requestBuildToggle();
+    else if (close && sandbox.closeOpen()) this.m.sound.play(SOUNDS.menuClick);
     else if (close) this.m.host.pause();
     else if (toggle) craft.setOpen(!craft.isOpen);
     // The panel and the other menus take turns: opening it closes them (not while the wake panel shows), and theirs closes it.
@@ -108,10 +109,10 @@ export class MenuRouter {
       research.setOpen(false);
       talents.setOpen(false);
     }
-    // The sandbox's controls never pause. Their key hides or shows them (056.1); showing them closes the big panels, as
-    // opening the panel did (044), so the press is seen.
+    // The sandbox's panels never pause. Their key opens both, or closes both if either is open (057.3); opening them
+    // closes the big panels, as opening the panel did (044), so the press is seen.
     if (panel && !wake.isShown) {
-      // Stepped aside under a big panel (056.5), a press brings them back rather than hiding them unseen.
+      // Stepped aside under a big panel (056.5), a press brings them back open rather than closing them unseen.
       const show = !sandbox.isOpen || sandbox.isCovered;
       sandbox.setOpen(show);
       if (show) {
@@ -166,7 +167,7 @@ export class MenuRouter {
       this.pauseClick(pause.click(x, y));
       return;
     }
-    // 044: the Sandbox panel's rows; its spawn choices change the panel, the rest go to the sim.
+    // 044: the Sandbox panel's rows; its spawn choices change the panel, the rest go to the sim. 057: its tabs.
     const panel = sandbox.click(this.sim, x, y);
     if (panel) {
       if (panel.hit) sound.play(SOUNDS.menuClick);

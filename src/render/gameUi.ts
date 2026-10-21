@@ -46,7 +46,7 @@ export function gameUi(g: GameScene): GameUiState {
     tagged: { splitFlashes: g.effects?.splitFlashes ?? 0, trails: g.arrowView?.trails ?? { count: 0, longest: 0 }, burning: g.arrowView?.burning ?? 0, shards: g.arrowView?.shards ?? 0 },
     ...(g.enemyView?.ui ?? NO_ENEMY_UI),
     ...(g.legibility?.ui ?? NO_LEGIBILITY_UI),
-    sandbox: g.sim.sandbox ? (g.sandboxPanel?.state ?? { open: false, rows: [], keys: [], boxes: [] }) : null,
+    sandbox: g.sim.sandbox ? (g.sandboxPanel?.state ?? { open: false, rows: [], keys: [], boxes: [], tabs: [], sliding: false }) : null,
     sandboxDrawn: g.sandboxPanel?.drawn ?? false,
   };
 }
