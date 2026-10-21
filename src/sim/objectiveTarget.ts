@@ -30,7 +30,7 @@ export interface GoalPoint {
   kind: TargetKind;
   /** What stands there, for the arrow's lift: a node or an enemy type. */
   ref?: string;
-  /** 051 (B.2): the raw a hopper takes, for its icon. */
+  /** 051 (B.2): the raw a hopper takes, for its icon (the refill goal's hoppers only). */
   itemId?: string;
   /** A room as a whole (the foundry, or outside): reached once the player is in it. */
   whole?: true;
@@ -106,7 +106,8 @@ export function targetPoints(state: SimState, target: TargetDef, goal: number): 
         if (p.kind !== 'hopper') return [];
         const raw = hopperRaw(state, p);
         if (target.unfilled && raw !== null && state.refilled.includes(raw)) return [];
-        return [{ roomId: FOUNDRY_ROOM, ...tileBase(p), kind: k, ...(raw ? { itemId: raw } : {}) }];
+        // Only the refill goal shows each hopper's raw (B.2); the next goal keeps a plain arrow.
+        return [{ roomId: FOUNDRY_ROOM, ...tileBase(p), kind: k, ...(raw && target.unfilled ? { itemId: raw } : {}) }];
       });
     case 'bench':
     case 'ports':

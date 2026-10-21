@@ -133,6 +133,10 @@ describe("the refill goal's hoppers (051, B.2)", () => {
     expect(objectiveTargets(s).map((p) => p.itemId)).toEqual(['wood', 'stone', 'fiber']);
     s.refilled.push('stone');
     expect(objectiveTargets(s).map((p) => p.itemId)).toEqual(['wood', 'fiber']);
+    // The next goal ("Fill the tube from your line") points at the hoppers too, with no icons.
+    const fill = targetPoints(s, { kind: 'hoppers' }, at('Fill the tube from your line'));
+    expect(fill).toHaveLength(3);
+    expect(fill.map((p) => p.itemId)).toEqual([undefined, undefined, undefined]);
   });
 });
 
