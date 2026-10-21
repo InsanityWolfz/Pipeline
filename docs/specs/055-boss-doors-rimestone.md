@@ -1,5 +1,7 @@
 # 055: Boss doors and the rimestone pylon
-status: draft
+status: approved
+
+Approved on draft by Shaun in chat, 2026-10-21 ("approve 053-055"): the build follows the proposals in the open questions (053.1's design.md line included).
 
 From Shaun's live playtest (docs/brainstorm/2026-10-21-playtest-notes.md, theme D: D.5, D.6) and his interview answers (docs/brainstorm/2026-10-21-world-combat-interview.md). Shaun: "Just put a door there, like, ooh, what's this? I'm going to go in. And then the boss is there and you can leave if you'd like."
 

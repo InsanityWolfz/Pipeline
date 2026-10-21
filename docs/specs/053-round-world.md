@@ -1,5 +1,7 @@
 # 053: The round world
-status: draft
+status: approved
+
+Approved on draft by Shaun in chat, 2026-10-21 ("approve 053-055"): the build follows the proposals in the open questions (053.1's design.md line included).
 
 From Shaun's live playtest (docs/brainstorm/2026-10-21-playtest-notes.md, theme D: D.1–D.4) and his interview answers (docs/brainstorm/2026-10-21-world-combat-interview.md). Shaun: "we don't want a square or rectangle. We want like a circle… the stone area… would be the outer ring of the grass area, like a donut… it's a much bigger map, but I think we need to leave a lot of room for exploration."
 
