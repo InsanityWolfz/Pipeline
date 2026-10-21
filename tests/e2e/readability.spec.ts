@@ -72,10 +72,10 @@ test("the Bulwark's locked door shows the E prompt in reach, and the seal hums u
   });
   await expect.poll(async () => (await ui(page))?.interactPrompt?.kind).toBe('arena-door');
   await expect.poll(async () => (await ui(page))?.sealSound.humming).toBe(true);
-  // 055: out of the door; outside, the open door's prompt offers the way back in.
+  // 055: out of the door, two tiles off it (clear of its sprite), out of its reach: no prompt.
   const left = await page.evaluate(() => window.__GAME__?.step(1, { interact: true }));
   expect(left?.events.arenaLeaves.length).toBe(1);
-  await expect.poll(async () => (await ui(page))?.interactPrompt?.kind ?? null).toBe('arena-door');
+  await expect.poll(async () => (await ui(page))?.interactPrompt?.kind ?? null).toBeNull();
   await expect.poll(async () => (await ui(page))?.sealSound.humming).toBe(false);
   await expect.poll(async () => (await ui(page))?.sealSound.drops).toBe(1);
   expect(errors).toEqual([]);

@@ -32,3 +32,19 @@ Both boss arenas have a real door: sealed until you're ready, E to go in, and lo
 ## Open questions
 - **055.1 The hint on a sealed door.** Proposal: a short line on hover: "Sealed: claim the shrine's pylon" for the Warden, "Sealed: break the Hollows barrier" for the Bulwark.
 - **055.2 Built on 053.** Proposal: build 055 after 053, since 053 moves both arenas.
+
+## Raised after the build
+The build's own choices where the spec didn't decide, each with the conservative option built. One round. Plan: docs/plans/055-boss-doors-rimestone.md.
+
+- **055.3 What unlocks the Warden's door, and its hint.** The shrine's pylon stands inside the Warden's arena, so its claim can't be what opens the door. The door opens with 012's shrine gate, as the old gap did (the first line fills the tube, so the tutorial runs as before), and its hover hint says what opens it: "Sealed: fill the tube from your line". 055.1 proposed "Sealed: claim the shrine's pylon"; if you'd rather have that wording, it's one line in `src/data/arenas.ts`. The Bulwark's door opens when the Hollows barrier falls, hint "Sealed: break the Hollows barrier" as proposed (in play the barrier keeps players away from that door until then).
+- **055.4 The door stops shots.** The door is part of the wall, so straight shots don't pass it either way (lobbed bombs fly over walls, as everywhere). 043.3 let shots through the forum's seal; with a closed door there's no gap to shoot through.
+- **055.5 Locked means a fight with the player inside.** 043's seal (the ley curtain over the door, its hum) shows while the boss fights the player inside. The Warden wakes on sight through its walls (017's rule), so a fight seen from outside doesn't lock anything. Leaving resets only the boss, as 043 does: the Warden's Wisps and Husks keep any damage.
+- **055.6 Doors are always shut.** E goes in and E comes out, before and after the kill; nothing walks through an open door.
+- **055.7 Kept as it was:** the dome over the shrine while its gate is shut (012), and the waypoint arrow, which still points at the pylon or the boss rather than the door.
+- **055.8 New text:** an open door's hover line: "E to go in. E here again leaves, and the fight starts over."
+- **055.9 Where E puts the player.** One tile off a door on its south side, two tiles off on its north side, so the door's sprite (taller than the walls) never hides the player.
+- **055.10 The sandbox.** The forum's door in the sandbox's room is always open. The sandbox's own Warden arena (044, open on its north side) is unchanged.
+- **055.11 The Grotto's pylon.** It stands between the two upper rime outcrops (all three in its safe zone). Its ley line runs east of the north road to the ruin's north edge (bearing 355°). The rimestone port is on the foundry's west wall below the resin port; its plate sits a tile into the room, clear of the wall corner. No new goal points at it.
+- **055.12 The tutorial e2e.** Its bot still fights the Warden unaided and wins. Fought inside the shrine's walls, the fight can end before the example line has run dry, so after the claim the bot fires its tube at the open floor until the line runs dry (the goal chain then reads as before).
+
+## Results (build)
