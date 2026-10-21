@@ -89,6 +89,8 @@ export class GameScene extends Scene {
   private readonly pending: SimEvents = createEvents();
   /** Set by the test hook: the real-time loop stops advancing the sim (the menu still opens and crafts). */
   manualStepping = false;
+  /** The sim tick the last drawn frame showed, or -1 before the first (for ui().drawnTick: tests wait on it, not on time). */
+  drawnTick = -1;
   /** The screen fit (016): cameras zoom by its scale so the same 640×360 of the world fills a full-resolution backbuffer. */
   private fit: ScreenFit = currentFit();
   private sceneCameras?: SceneCameras;
@@ -279,5 +281,6 @@ export class GameScene extends Scene {
     const point = controls?.overWorld() ? controls.cursorPoint() : null;
     this.hover?.update(sim, shown, point, (id) => this.foundryView?.topOf(id), this.cameras.main.worldView);
     this.legibility?.update(sim, this.pause?.isOpen ? null : (pointer ?? null), controls?.shiftHeld() ?? false, this.game.loop.delta);
+    this.drawnTick = sim.tick;
   }
 }

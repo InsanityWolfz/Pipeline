@@ -27,8 +27,8 @@ export function titleMotion(ms: number): TitleMotion {
   return {
     crouch: M.crouch * breath,
     flap: M.flap * wind,
-    // The hose trails the cloak's swing by an eighth of a loop.
-    hose: M.hose * Math.sin((ms / M.swayMs) * Math.PI * 2 - Math.PI / 4),
+    // The hose trails the cloak's swing.
+    hose: M.hose * Math.sin((ms / M.swayMs - M.hoseLag) * Math.PI * 2),
     muzzle: M.muzzle[0] + (M.muzzle[1] - M.muzzle[0]) * pulse,
     glow: M.glow[0] + (M.glow[1] - M.glow[0]) * pulse,
   };

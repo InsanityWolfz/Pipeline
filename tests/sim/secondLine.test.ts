@@ -80,6 +80,28 @@ describe("the second-line goal, from Shaun's save (050, A.11)", () => {
     expect(markerPoint(s)).not.toEqual(over(1));
   });
 
+  it("end to end: 046's old check never holds on his state, while his bomb line, run tick by tick, completes the new goal", () => {
+    const s = shaunsFoundry();
+    // 046's check, as main had it: two entrances holding arrows.
+    const oldCheck = (st: SimState) => st.link.entrances.filter((e) => e.ammoId === 'arrow' && e.count > 0).length >= 2;
+    expect(oldCheck(s)).toBe(false);
+    // His packer (15,3) is starved of fuse: its fuse maker's hopper (15,5) is empty in the save. Resin in it, as he'd add.
+    const fuseHopper = s.foundry.pieces.find((p) => p.kind === 'hopper' && p.tx === 15 && p.ty === 5);
+    if (fuseHopper?.kind !== 'hopper') throw new Error('no fuse hopper');
+    expect(fuseHopper.count).toBe(0);
+    fuseHopper.item = 'husk-resin';
+    fuseHopper.count = 10;
+    const east = () => s.link.entrances[2];
+    let ticks = 0;
+    for (; ticks < 3000 && (east()?.count ?? 0) === 0; ticks++) stepSim(s);
+    // A bomb came down his line (15,2 → 14,2 → 13,2 → 13,1) into the east entrance, and the goal holds.
+    expect(east()).toMatchObject({ ammoId: 'bomb', node: 'entrance-2' });
+    expect(east()?.count).toBeGreaterThan(0);
+    expect(s.objectives[GOAL]).toBe(true);
+    // The old check still wouldn't: no entrance holds arrows.
+    expect(oldCheck(s)).toBe(false);
+  });
+
   it('completes once his bomb line puts a bomb in the new entrance (any ammo, not two arrow lines)', () => {
     const s = shaunsFoundry();
     const east = s.link.entrances[2];

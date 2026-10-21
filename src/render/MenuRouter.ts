@@ -118,6 +118,8 @@ export class MenuRouter {
     const press = controls.takeInteractPress();
     // 050 (Shaun: "you hit E to get out or escape. It should be both buttons"): E closes the inventory, a hopper's or
     // crate's screen, or the stash, as Esc does, before it opens anything.
+    // That E is used up: it doesn't also reach the sim as an interact (it harvested or claimed whatever was in reach).
+    if (press && (inventory.isOpen || site.stashOpen)) controls.dropInteract();
     if (press && inventory.isOpen) inventory.setOpen(false);
     else if (press && site.stashOpen) site.close();
     else if (press && !site.pressAgain(controls)) {

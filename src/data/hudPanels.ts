@@ -2,6 +2,7 @@
 // feed. Px tuned by eye; colours are palette ids. Beside hudLayout.ts, which holds
 // the 025 bottom row these must stay clear of.
 
+import { CRATE_SLOTS } from './foundry';
 import { HUD_LAYOUT } from './hudLayout';
 import { type ItemGroup } from './items';
 
@@ -96,8 +97,8 @@ export const INVENTORY_GRID = {
   sort: { text: 'Sort', w: 30, h: 13, textY: 3 },
   /** The scroll bar: `w` wide, `gap` px right of the grid; its thumb in `thumb` (at least `minThumb` px long), the track in `track` (palette ids). */
   scroll: { w: 3, gap: 4, track: 'ink', thumb: 'brass', trackAlpha: 0.5, minThumb: 4 },
-  /** A hopper's or crate's own slots: a header `headerH` tall (its name), one row of `cols` cells, `gap` above the grid's toolbar. */
-  container: { headerH: 10, nameY: 1, cols: 8, gap: 4 },
+  /** A hopper's or crate's own slots: a header `headerH` tall (its name), one row of `cols` cells (a crate's slots, 050), `gap` above the grid's toolbar. */
+  container: { headerH: 10, nameY: 1, cols: CRATE_SLOTS, gap: 4 },
   footer: {
     gap: 3,
     lineHeight: 9,

@@ -27,8 +27,23 @@ test.describe('review screenshots (050)', () => {
 
   test('01 the wanderer facing forward, in play and on the contact sheet', async ({ page }) => {
     await boot(page, '?start=field&attuned');
-    await page.evaluate(() => window.__GAME__?.step(1, { moveY: 1 }));
-    await page.evaluate(() => window.__GAME__?.step(30));
+    // The drawn facing follows the aim (the hook steps by hand, so the mouse doesn't aim): step with the aim well below
+    // the player, then wait until the state reads it as facing down before the shot.
+    await page.evaluate(() => {
+      const g = window.__GAME__;
+      if (!g) throw new Error('no game');
+      const at = g.getState().player;
+      g.step(1, { moveY: 1, aimX: at.x, aimY: at.y + 80 });
+      g.step(30);
+    });
+    await expect
+      .poll(async () =>
+        page.evaluate(() => {
+          const pl = window.__GAME__?.getState().player;
+          return !!pl && pl.facing === 'down' && pl.aim.y - pl.y > Math.abs(pl.aim.x - pl.x);
+        }),
+      )
+      .toBe(true);
     await quietScreen(page);
     await cameraSettled(page);
     const p = (await ui(page))?.camera.player;

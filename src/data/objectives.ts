@@ -111,7 +111,7 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
   { text: 'Identify your armor at the bench (E)', milestone: 'prototype', check: { kind: 'identified' }, prompt: { key: 'E', over: 'bench' }, target: { kind: 'bench' } },
   { text: "Claim the shrine's pylon", milestone: 'prototype', check: { kind: 'claimed', site: 'shrine' }, prompt: { key: 'E', over: 'pylon' }, target: { kind: 'pylon', site: 'shrine' } },
   // The prototype's one Warden drops one core, and restoring a second entrance costs one (033: one entrance per core).
-  { text: 'Restore a second intake entrance (E at a cap with the warden core)', milestone: 'prototype', check: { kind: 'restored', node: 'entrance-2' }, target: { kind: 'caps' } },
+  { text: 'Restore a second intake entrance (E at a cap with the warden core)', milestone: 'prototype', check: { kind: 'restored', node: NEW_ENTRANCE_NODE }, target: { kind: 'caps' } },
   // 046: the second entrance gets a line of its own, built by the player (027's lesson after the Warden). 050 (Shaun):
   // any ammo in the entrance the Warden's core opened counts, and the arrow points at that entrance.
   {

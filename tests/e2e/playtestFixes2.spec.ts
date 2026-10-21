@@ -13,6 +13,17 @@ import { boot, cameraSettled, watchErrors } from './helpers';
 // 050: Shaun's live-playtest fixes (docs/specs/050-playtest-fixes-2.md), checked in the running game.
 
 const ui = (page: Page) => page.evaluate(() => window.__GAME__?.ui());
+/** Waits until a frame has drawn the state's current tick, so what ui() reports is what was stepped. */
+async function frameDrawn(page: Page): Promise<void> {
+  await expect
+    .poll(async () =>
+      page.evaluate(() => {
+        const g = window.__GAME__;
+        return !!g && g.ui().drawnTick === g.getState().tick;
+      }),
+    )
+    .toBe(true);
+}
 
 test('E opens the hopper under the cursor within 3 tiles, not the nearest; E closes its screen and the inventory (050 A.8, A.9)', async ({ page }) => {
   test.setTimeout(90_000);
@@ -54,6 +65,75 @@ test('E opens the hopper under the cursor within 3 tiles, not the nearest; E clo
   await expect.poll(async () => (await ui(page))?.inventory.open).toBe(true);
   await page.keyboard.press('e');
   await expect.poll(async () => (await ui(page))?.inventory.open).toBe(false);
+  expect(errors).toEqual([]);
+});
+
+test('E that closes the bag beside a boulder does not also harvest it (050 review)', async ({ page }) => {
+  test.setTimeout(90_000);
+  const errors = watchErrors(page);
+  await boot(page, '?start=field&attuned');
+  // Stand just below the nearest boulder, in E's reach.
+  await page.evaluate(() => {
+    const g = window.__GAME__;
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    const s = g.step(1);
+    const p = s.player;
+    const near = s.nodes.filter((n) => n.nodeId === 'rubble' && n.room === s.room).sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+    if (!near) throw new Error('no boulder');
+    h.walkTo(near.x, near.y + 14);
+  });
+  // The in-reach E prompt, or the gathering goal's own E prompt standing in for it (as in the name-tag test).
+  await expect.poll(async () => { const u = await ui(page); return (u?.interactPrompt ?? u?.prompt)?.key; }).toBe('E');
+  await page.keyboard.press('i');
+  await expect.poll(async () => (await ui(page))?.inventory.open).toBe(true);
+  // Live ticks from here, so the key presses reach the sim as play sends them.
+  await page.evaluate(() => window.__GAME__?.resume());
+  const tickAfter = async (n: number) => {
+    const t0 = (await state(page)).tick;
+    await expect.poll(async () => (await state(page)).tick, { timeout: 20_000 }).toBeGreaterThan(t0 + n);
+  };
+  await page.keyboard.press('e');
+  await expect.poll(async () => (await ui(page))?.inventory.open).toBe(false);
+  await tickAfter(10);
+  expect((await state(page)).harvest).toBeNull();
+  // The next E, with nothing open, harvests as usual.
+  await page.keyboard.press('e');
+  await expect.poll(async () => (await state(page)).harvest, { timeout: 20_000 }).not.toBeNull();
+  expect(errors).toEqual([]);
+});
+
+test("a champion's hover tag leaves its name to the nameplate; a plain enemy's tag names it (050 review)", async ({ page }) => {
+  test.setTimeout(60_000);
+  const errors = watchErrors(page);
+  await boot(page, '?playtest');
+  const [champ, husk] = await page.evaluate(() => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    const p = g.step(1).player;
+    const a = g.spawnEnemy('husk', p.x + 90, p.y, true).enemies.at(-1);
+    const b = g.spawnEnemy('husk', p.x - 90, p.y, false).enemies.at(-1);
+    if (!a || !b) throw new Error('no enemies');
+    for (const e of [a, b]) g.setEnemyHealth(e.id, 1000);
+    return [a.id, b.id];
+  });
+  await cameraSettled(page);
+  const hoverEnemy = async (id: number) => {
+    const s = await state(page);
+    const e = s.enemies.find((en) => en.id === id);
+    const cam = (await ui(page))?.camera;
+    if (!e || !cam) throw new Error('no enemy');
+    const at = await screenPoint(page, e.x - (cam.x - VIEW_WIDTH / 2), e.y - 12 - (cam.y - VIEW_HEIGHT / 2));
+    await page.mouse.move(at.x, at.y);
+  };
+  await hoverEnemy(champ);
+  await expect.poll(async () => (await ui(page))?.hoverName).not.toBeNull();
+  const named = (await state(page)).enemies.find((e) => e.id === champ)?.champion?.name;
+  expect((await ui(page))?.hoverName).toBe(named);
+  expect((await ui(page))?.hoverNameDrawn).toBe(false);
+  await hoverEnemy(husk);
+  await expect.poll(async () => (await ui(page))?.hoverName).toBe('Husk');
+  expect((await ui(page))?.hoverNameDrawn).toBe(true);
   expect(errors).toEqual([]);
 });
 
@@ -239,14 +319,14 @@ test('Mending-style field regen heals with no sparkle; the ward ring keeps still
   await expect.poll(async () => (await ui(page))?.relics.shield).toBe(true);
   for (let i = 0; i < 10; i++) {
     await page.evaluate(() => window.__GAME__?.step(4));
-    await page.waitForTimeout(30);
+    await frameDrawn(page);
     expect((await ui(page))?.healing.motes).toBe(0);
   }
   // Walking: the ring sits on the player's own point every frame (rounded against it, it was up to half a px off and shook).
   const offsets: { dx: number; dy: number }[] = [];
   for (let i = 0; i < 20; i++) {
     await page.evaluate((k) => window.__GAME__?.step(3, { moveX: 1, moveY: k % 2 === 0 ? 1 : 0 }), i);
-    await page.waitForTimeout(20);
+    await frameDrawn(page);
     const u = await ui(page);
     const ring = u?.relics.ring;
     const p = (await state(page)).player;

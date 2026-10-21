@@ -43,6 +43,8 @@ export interface GameTestHook {
   step(frames: number, command?: Partial<Command>): SimSummary;
   /** Crafts a recipe once between ticks, as clicking its menu row does. */
   craft(recipeId: string): SimSummary;
+  /** Hands the ticks back to the game loop after step() took them (050: a test of what a live key press reaches the sim). */
+  resume(): void;
   ui(): UiState;
   /** The sound settings (020: set from the pause menu). */
   sound(): { muted: boolean; volume: number };
@@ -91,6 +93,8 @@ export interface GameTestHook {
 export interface UiState {
   /** The scene has built its views and the fonts are loaded (020): before this, nothing is drawn. */
   ready: boolean;
+  /** The sim tick the last drawn frame showed (-1 before one): after a step, wait until it matches the state's tick before reading what's drawn. */
+  drawnTick: number;
   /** The craft menu is open (it doesn't pause, 020), and the pause menu is (Esc: the world stops). */
   craftOpen: boolean;
   paused: boolean;
@@ -211,6 +215,8 @@ export interface UiState {
   hoverChips: string[];
   /** 050: the hover name tag's tablet, world px, while one shows. */
   hoverBox: { x: number; y: number; w: number; h: number } | null;
+  /** 050: whether the hover tag draws the name line (not over a champion, whose nameplate names it). */
+  hoverNameDrawn: boolean;
   /** 042: the flow screens as drawn (the title's rows, a card's lines and buttons, Settings, the note). */
   flow: FlowUi;
   /** 044: the Sandbox panel as drawn (open, and its rows with their boxes), or null outside the sandbox. */
