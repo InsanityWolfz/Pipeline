@@ -174,10 +174,10 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     for (let i = 0; i < 40 && (g.getState().inventory['ley-dust'] ?? 0) > 0; i++) g.craft('ley-bolt');
   });
 
-  // 15. Identify the first Husk's armor at the bench (tile 1,12), and wear it for the fights ahead.
+  // 15. Identify the first Husk's armor at the bench (052: tile 22,9, by the door), and wear it for the fights ahead.
   await page.evaluate((tile) => {
     const g = window.__GAME__;
-    window.__helpers?.walkTo(2.5 * tile, 12.5 * tile);
+    window.__helpers?.walkTo(21.7 * tile, 9.5 * tile);
     const piece = g?.step(1, { identify: true }).gear[0];
     if (piece) g?.step(1, { equip: { id: piece.id } });
   }, T);

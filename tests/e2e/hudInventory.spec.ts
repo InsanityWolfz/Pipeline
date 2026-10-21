@@ -378,9 +378,9 @@ test('E on a hopper opens its screen over the grid (047), on the bench closes th
   await expect.poll(() => inventoryOpen(page)).toBe(true);
   expect((await ui(page))?.inventory.mode).toBe('bag');
 
-  // The bench's menu (a site menu), standing on its right.
+  // The bench's menu (a site menu), standing on its left (052: by the door).
   if (!BENCH) throw new Error('no bench');
-  await page.evaluate(([tx, ty]) => window.__helpers?.walkTo((tx + 1.3) * 32, (ty + 0.5) * 32), [BENCH.tx, BENCH.ty] as const);
+  await page.evaluate(([tx, ty]) => window.__helpers?.walkTo((tx - 0.3) * 32, (ty + 0.5) * 32), [BENCH.tx, BENCH.ty] as const);
   await page.keyboard.press('e');
   await expect.poll(async () => (await ui(page))?.siteOpen).toBe(true);
   expect(await inventoryOpen(page)).toBe(false);

@@ -65,7 +65,7 @@ test.describe('review screenshots (040)', () => {
       if (!g || !h) throw new Error('no game');
       g.claim('shrine');
       h.toFoundry();
-      h.walkTo(2.3 * 32, 12.5 * 32);
+      h.walkTo(21.7 * 32, 9.5 * 32);
       g.step(1, { identify: true });
       g.step(60);
     });
