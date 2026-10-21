@@ -11,6 +11,12 @@ export const INPUT_CAP = 4;
 /** Most finished items a machine holds; it won't start a craft whose output wouldn't fit. 046: 8, one doubled arrow craft (the largest). */
 export const OUTPUT_CAP = 8;
 
+/**
+ * The underground pair (052): at most this many tiles between an entrance and its exit, in a straight line (Shaun).
+ * A tunnel holds one item per tile it spans, each crossing a tile in CONDUIT_TICKS, like a conduit that long (052.1).
+ */
+export const TUNNEL_REACH = 5;
+
 /** Ticks between a hopper's pushes. */
 export const HOPPER_TICKS = 15;
 

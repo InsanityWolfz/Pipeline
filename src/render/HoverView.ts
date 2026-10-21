@@ -6,6 +6,7 @@ import { INTERACT_PROMPTS } from '../data/interact';
 import { TUTORIAL_LAYOUT } from '../data/foundryAssets';
 import { interactTarget } from '../sim/interactables';
 import { placeNameTag, type TagBox } from './nameTagPlace';
+import { promptCapX } from './InteractPrompt';
 import { HOVER_NAME } from '../data/hudLayout';
 import { MINIMAP } from '../data/minimap';
 import { OVERWORLD } from '../data/overworld';
@@ -116,8 +117,8 @@ export class HoverView {
     const cap = HOVER_NAME.promptCap;
     const avoid = [
       ...(here ? [{ x: p.x - playerBox.w / 2, y: feet - playerBox.h, w: playerBox.w, h: playerBox.h }] : []),
-      // The E prompt's key cap over whatever E acts on (045), wherever it is.
-      ...(prompt ? [{ x: prompt.x - cap.w / 2, y: prompt.y - INTERACT_PROMPTS[prompt.kind].rise - TUTORIAL_LAYOUT.promptLift - cap.h, w: cap.w, h: cap.h }] : []),
+      // The E prompt's key cap over whatever E acts on (045), wherever it is (beside the bench, 052.9).
+      ...(prompt ? [{ x: promptCapX(prompt.kind, prompt.x, p.x) - cap.w / 2, y: prompt.y - INTERACT_PROMPTS[prompt.kind].rise - TUTORIAL_LAYOUT.promptLift - cap.h, w: cap.w, h: cap.h }] : []),
       ...(shown === OVERWORLD.id ? [minimapBox(view)] : []),
     ];
     const halfW = piece ? pieceRect(piece).w / 2 : HOVER_NAME.node.w / 2;

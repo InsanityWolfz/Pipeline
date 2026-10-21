@@ -58,14 +58,33 @@ export const ICON_RISE: Readonly<Record<'1x1' | '3x1', Record<PieceView, number>
  * Build bar icons for the logistics pieces. A machine has no emblem of its own:
  * the icon of the item it makes is drawn on its top face and on the bar.
  */
+/** The underground pair's build bar emblems (052), drawn in art/tunnels.ts. */
+export const TUNNEL_ICONS = { in: 'emblem-tunnel-in', out: 'emblem-tunnel-out' } as const;
+
 export const LOGISTICS_ICONS: Readonly<Record<string, string>> = {
   conduit: 'emblem-conduit',
   hopper: 'emblem-hopper',
   crate: 'emblem-crate',
-  sorter: 'emblem-sorter',
   splitter: 'emblem-splitter',
-  merger: 'emblem-merger',
+  'underground-entrance': TUNNEL_ICONS.in,
+  'underground-exit': TUNNEL_ICONS.out,
 };
+
+/** The underground pair (052), flat on the floor by view; `side` flows right (render flips it for left). */
+export const TUNNEL_SPRITES = {
+  in: { side: 'tunnel-in-side', up: 'tunnel-in-up', down: 'tunnel-in-down' },
+  out: { side: 'tunnel-out-side', up: 'tunnel-out-up', down: 'tunnel-out-down' },
+} as const satisfies Record<'in' | 'out', Record<PieceView, string>>;
+
+/**
+ * How a tunnel shows on the floor (052, Shaun: "little lines on the top and bottom of the tiles you're going to be
+ * going under ... just like Factorio"): two lines along each tile it passes under, `inset` px in from the tile's sides,
+ * `width` px wide, in `color`. A tunnel to its pair (hovered, or the exit's ghost in reach) at `alpha`; an entrance's
+ * reach while placing (its ghost, or every free entrance while the exit is selected) at `reachAlpha`, ending in a tick
+ * across the farthest tile; under each line a glow `glowSpread` px wider at `glowAlpha` of it. World px. A riding item
+ * dives in (or climbs out) at the end's mouth, `mouth` of a tile from its middle: the entrance's ahead, the exit's behind.
+ */
+export const TUNNEL_LOOK = { color: 'cyan-glow', glow: 'cyan', glowAlpha: 0.3, glowSpread: 2, alpha: 0.95, reachAlpha: 0.45, width: 1.5, inset: 5, tick: 6, mouth: 0.1 } as const;
 
 /** Conduits flow toward their front; `side` flows right. They lie flat on the floor. */
 export const CONDUIT_ANIMS: Readonly<Record<PieceView, AnimDef>> = {
@@ -73,20 +92,6 @@ export const CONDUIT_ANIMS: Readonly<Record<PieceView, AnimDef>> = {
   up: loop('conduit-up', 2, FLOW_FPS),
   side: loop('conduit-side', 2, FLOW_FPS),
 };
-
-/**
- * Sorters (015) flow like conduits. `side` flows right and sorts down; `down`
- * sorts left and `up` sorts right. Render turns or flips them for the other facings
- * and for a mirrored sorter.
- */
-export const SORTER_ANIMS: Readonly<Record<PieceView, AnimDef>> = {
-  down: loop('sorter-down', 2, FLOW_FPS),
-  up: loop('sorter-up', 2, FLOW_FPS),
-  side: loop('sorter-side', 2, FLOW_FPS),
-};
-
-/** The sorter's filter icon shows at this scale in its slot. */
-export const SORTER_LOOK = { slotScale: 0.5 } as const;
 
 /** Conduit corners (013) by the side items come in from and the side they leave by: `${in}-${out}`. Flat on the floor like the straights. */
 export const CONDUIT_CORNERS = {
@@ -125,13 +130,11 @@ export const INTAKE_CAP_ICON = 'emblem-intake-cap';
 
 /**
  * Build-mode arrows on a piece's edges, also on the ghost: cyan pointing out of its
- * output side, ember pointing in on each side that takes items, gold out of a
- * sorter's sort side (020: its own frames, no longer a tint). `side` points right.
+ * output side, ember pointing in on each side that takes items (020: their own frames). `side` points right.
  */
-export const FACING_ARROWS: Readonly<Record<'in' | 'out' | 'sort', Record<PieceView, string>>> = {
+export const FACING_ARROWS: Readonly<Record<'in' | 'out', Record<PieceView, string>>> = {
   out: { down: 'facing-arrow-down', up: 'facing-arrow-up', side: 'facing-arrow-side' },
   in: { down: 'input-arrow-down', up: 'input-arrow-up', side: 'input-arrow-side' },
-  sort: { down: 'sort-arrow-down', up: 'sort-arrow-up', side: 'sort-arrow-side' },
 };
 
 /** A door in a side wall, drawn as is on the right wall and flipped on the left. */

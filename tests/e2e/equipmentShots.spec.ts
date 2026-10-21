@@ -13,18 +13,21 @@ import { boot, cameraSettled } from './helpers';
 // the tween clock for their shot.
 
 const SHOTS = 'docs/review/036';
-const BENCH_STAND = { x: 2.3 * 32, y: 12.5 * 32 };
+// 052: the bench is by the door (tile 22, 9); stand on its left.
+const BENCH_STAND = { x: 21.7 * 32, y: 9.5 * 32 };
+/** Just clear of the bench's drawn left edge (its glass), still in reach: for the flare, so the player doesn't cover it. */
+const BESIDE_BENCH = { x: 21.25 * 32, y: 9.5 * 32 };
 
 const ui = (page: Page) => page.evaluate(() => window.__GAME__?.ui());
 
-/** ?playtest, in the foundry beside the bench. */
-async function atBench(page: Page): Promise<void> {
+/** ?playtest, in the foundry beside the bench (at `stand`). */
+async function atBench(page: Page, stand = BENCH_STAND): Promise<void> {
   await boot(page, '?playtest');
   await page.evaluate((at) => {
     window.__GAME__?.step(1);
     window.__helpers?.toFoundry();
     window.__helpers?.walkTo(at.x, at.y);
-  }, BENCH_STAND);
+  }, stand);
   // The playtest's schematics bank on the way in: let their banners play out (fast) so they cover nothing.
   await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
   await expect.poll(async () => (await ui(page))?.schematics.bannerIdle, { timeout: 30_000 }).toBe(true);
@@ -139,7 +142,7 @@ test.describe('review screenshots (036)', () => {
 
   test('a relic flaring over the bench as it’s identified', async ({ page }) => {
     test.setTimeout(120_000);
-    await atBench(page);
+    await atBench(page, BESIDE_BENCH);
     // Enough pieces that one rolls a relic (3% each), on the seeded RNG.
     await page.evaluate(() => {
       const g = window.__GAME__;

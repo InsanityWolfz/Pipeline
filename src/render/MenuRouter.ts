@@ -1,4 +1,5 @@
 import { SOUNDS } from '../data/sounds';
+import { fixtureInReach } from '../sim/claims';
 import { stillUsable, usableInReach } from '../sim/foundryUse';
 import { diagramInReach } from '../sim/research';
 import type { SimState } from '../sim/state';
@@ -113,32 +114,37 @@ export class MenuRouter {
     if ((bag && inventory.isOpen) || (list && research.isOpen) || (tree && talents.isOpen) || (toggle && craft.isOpen)) sandbox.setOpen(false);
     const steps = controls.takeWheel();
     if (steps !== 0 && this.sim.building) build.step(steps);
-    else if (steps !== 0 && !site.scrollGear(steps)) inventory.scroll(steps);
+    else if (steps !== 0 && !site.scrollGear(steps)) inventory.scroll(steps, controls.viewPointer());
     // E on a hopper or crate opens its screen (047); the sim does nothing with it. With the restore panel open, E again restores (033).
     const press = controls.takeInteractPress();
     // 050 (Shaun: "you hit E to get out or escape. It should be both buttons"): E closes the inventory, a hopper's or
-    // crate's screen, or the stash, as Esc does, before it opens anything.
+    // crate's screen, or the stash's (052: the stash's screen is the inventory's), as Esc does, before it opens anything.
     // That E is used up: it doesn't also reach the sim as an interact (it harvested or claimed whatever was in reach).
-    if (press && (inventory.isOpen || site.stashOpen)) controls.dropInteract();
-    if (press && inventory.isOpen) inventory.setOpen(false);
-    else if (press && site.stashOpen) site.close();
-    else if (press && !site.pressAgain(controls)) {
+    if (press && inventory.isOpen) {
+      controls.dropInteract();
+      inventory.setOpen(false);
+    } else if (press && !site.pressAgain(controls)) {
       const target = usableInReach(this.sim);
       // A diagram in reach wins over a crate (033's priority, as E's prompt shows), as before 047.
       if (target?.kind === 'hopper' || (target?.kind === 'crate' && !diagramInReach(this.sim))) {
         craft.setOpen(false);
         site.close();
         inventory.openContainer(target.kind, target.id);
-      } else site.interact(this.sim);
-      if (inventory.container !== null || site.isOpen) {
+      } else if (site.interact(this.sim) === 'stash') {
+        // 052: the stash's screen, its own grid over the inventory.
+        craft.setOpen(false);
+        inventory.openStash();
+      }
+      if (inventory.container !== null || inventory.stashOpen || site.isOpen) {
         research.setOpen(false);
         talents.setOpen(false);
       }
       if (site.isOpen) inventory.setOpen(false);
     }
-    // Walking out of reach closes a hopper's or crate's screen.
+    // Walking out of reach closes a hopper's or crate's screen, or the stash's.
     const open = inventory.container;
     if (open !== null && !stillUsable(this.sim, open)) inventory.close();
+    if (inventory.stashOpen && !fixtureInReach(this.sim, 'stash')) inventory.close();
   }
 
   /**
@@ -182,8 +188,8 @@ export class MenuRouter {
   }
 
   /**
-   * A release after a press on the UI (047): on the grid slot it went down on, with a hopper or crate open, the stack
-   * moves one, Shift half, Ctrl the whole stack, either way; over a carried bar slot, a usable kind goes on it.
+   * A release after a press on the UI (047): on the grid slot it went down on, with a hopper, a crate or the stash (052)
+   * open, the stack moves one, Shift half, Ctrl the whole stack, either way; over a carried bar slot, a usable kind goes on it.
    */
   release(controls: Controls, x: number, y: number): void {
     const action = this.m.inventory.releaseAt(x, y, this.m.carriedSlotAt(x, y));
@@ -191,7 +197,9 @@ export class MenuRouter {
     this.m.sound.play(SOUNDS.menuClick);
     if (action.kind === 'assign') controls.menus.assignSlot(action.slot, action.itemId);
     else if (action.kind === 'deposit') controls.menus.deposit(action.id, action.itemId, action.amount, action.stack);
-    else controls.menus.withdraw(action.id, action.amount, action.itemId, action.stack);
+    else if (action.kind === 'withdraw') controls.menus.withdraw(action.id, action.amount, action.itemId, action.stack);
+    else if (action.kind === 'stashPut') controls.menus.stashPut(action.itemId, action.amount, action.stack);
+    else controls.menus.takeStash(action.itemId, action.amount, action.stack);
   }
 
   /** Opens or closes the inventory panel; opening it closes the crafting menu, any site menu (031) and the tree (037). */

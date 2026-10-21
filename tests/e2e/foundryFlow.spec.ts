@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { ITEMS } from '../../src/data/items';
 import { OBJECTIVES } from '../../src/data/objectives';
-import { boot, cameraSettled, watchErrors } from './helpers';
+import { boot, cameraSettled, quietScreen, watchErrors } from './helpers';
 import { feedLines, restoreEntrance, toIntake, ui } from './intakePage';
 
 // Foundry flow (028): the shrine claim brings a supply port per raw onto the
@@ -128,6 +128,8 @@ test.describe('review screenshots (028)', () => {
       window.__helpers?.walkTo(6.5 * 32, 7.5 * 32);
       window.__GAME__?.step(1, { aimX: 6.5 * 32, aimY: 9 * 32 });
     });
+    // The playtest's "Schematic revealed" banners play out first, so none covers the wall.
+    await quietScreen(page);
     await cameraSettled(page);
     await expect.poll(async () => (await ui(page))?.ports.length).toBe(4);
     await page.screenshot({ path: `${SHOTS}/01-west-wall-ports.png` });

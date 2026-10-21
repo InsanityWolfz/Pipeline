@@ -174,10 +174,11 @@ export type PieceSummary = { id: number; pieceId: string; tx: number; ty: number
     }
   | { kind: 'hopper'; item: string | null; count: number }
   | { kind: 'crate'; contents: Record<string, number> }
-  | { kind: 'sorter'; item: string | null; progress: number; filter: string | null; mirrored: boolean }
-  /** 033: `next` is the output a splitter tries first; `turn` the input a merger takes from next (0 back, 1 left, 2 right). */
+  /** 033: `next` is the output a splitter tries first. */
   | { kind: 'splitter'; item: string | null; progress: number; mirrored: boolean; next: 'front' | 'side' }
-  | { kind: 'merger'; item: string | null; progress: number; turn: number }
+  /** 052: an underground end's paired end (a piece id, or null); an entrance's tunnel, the item on each tile between. */
+  | { kind: 'tunnel-in'; item: string | null; progress: number; pair: number | null; tunnel: (string | null)[] }
+  | { kind: 'tunnel-out'; item: string | null; progress: number; pair: number | null }
 );
 
 export function pieceSummary(p: PieceState): PieceSummary {
@@ -185,9 +186,9 @@ export function pieceSummary(p: PieceState): PieceSummary {
   if (p.kind === 'conduit') return { ...common, kind: p.kind, inFrom: p.inFrom, item: p.item, progress: p.progress };
   if (p.kind === 'hopper') return { ...common, kind: p.kind, item: p.item, count: p.count };
   if (p.kind === 'crate') return { ...common, kind: p.kind, contents: { ...p.contents } };
-  if (p.kind === 'sorter') return { ...common, kind: p.kind, item: p.item, progress: p.progress, filter: p.filter, mirrored: p.mirrored };
   if (p.kind === 'splitter') return { ...common, kind: p.kind, item: p.item, progress: p.progress, mirrored: p.mirrored, next: p.next };
-  if (p.kind === 'merger') return { ...common, kind: p.kind, item: p.item, progress: p.progress, turn: p.turn };
+  if (p.kind === 'tunnel-in') return { ...common, kind: p.kind, item: p.item, progress: p.progress, pair: p.pair, tunnel: p.tunnel.map((t) => t?.item ?? null) };
+  if (p.kind === 'tunnel-out') return { ...common, kind: p.kind, item: p.item, progress: p.progress, pair: p.pair };
   const { buffer, output, made, crafting, progress, status, missing } = p;
   return { ...common, kind: p.kind, buffer: { ...buffer }, output, made, crafting, progress, status, missing: [...missing] };
 }

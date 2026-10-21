@@ -15,7 +15,7 @@ type Point = { x: number; y: number };
 export interface FoundryMapItems {
   /** The map's box, view px. */
   box: { x: number; y: number; w: number; h: number };
-  /** Carriers (conduits, splitters, mergers, sorters): each a line from the side it takes from to the side it hands to. */
+  /** Carriers (conduits, splitters, an underground pair's ends, 052): each a line from the side it takes from to the side it hands to. */
   lines: { x1: number; y1: number; x2: number; y2: number }[];
   /** Placed pieces that aren't carriers: machines, hoppers and crates. */
   dots: ({ kind: keyof typeof FOUNDRY_MAP.dots } & Point)[];

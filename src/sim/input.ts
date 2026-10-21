@@ -36,7 +36,7 @@ export interface Command {
   /** A piece to place this tick (an edge), or null. */
   /**
    * `inFrom` shapes a conduit (013): left out, a single conduit joins a lone side
-   * feeder as a corner. `mirrored` makes a sorter send its item left (015).
+   * feeder as a corner. `mirrored` makes a splitter's side its left (033).
    */
   place: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing; mirrored?: boolean } | null;
   /** A tile whose piece to pick up this tick (an edge), or null. */
@@ -53,14 +53,18 @@ export interface Command {
   withdraw: { id: number; amount: HopperAmount; itemId?: string; stack?: number } | null;
   /** The grid inventory's Sort button this tick (an edge, 047). */
   sortInventory: boolean;
-  /** Set the item a sorter in reach sends out its side (null: pass everything), this tick (an edge), or null (015). */
-  setFilter: { id: number; itemId: string | null } | null;
   /** The claimed pylon's menu choice this tick (an edge), or null. */
   pylon: 'deposit' | 'travel' | null;
   /** The waystone menu's choice (032): the claimed site to travel to, standing at the waystone, this tick (an edge), or null. */
   travel: string | null;
-  /** Take a stack (or everything, for a null item) out of the stash this tick (an edge), or null. */
-  takeStash: { itemId: string | null } | null;
+  /**
+   * Take some of a kind out of the stash, standing at it, this tick (an edge), or null: by `amount` (052: the stash
+   * screen's click, one, half or the stack) of the clicked stack's `stack` items; with no amount, all of the kind; a null
+   * item takes everything.
+   */
+  takeStash: { itemId: string | null; amount?: HopperAmount; stack?: number } | null;
+  /** Put some of a held kind into the stash, standing at it, this tick (an edge, 052: the stash screen's click), or null; amounts as `takeStash`'s. */
+  stashPut: { itemId: string; amount: HopperAmount; stack?: number } | null;
   /** Identify every carried piece at the bench this tick (an edge). */
   identify: boolean;
   /** At the bench this tick (an edge, 036): wear a piece by id (the worn one comes off), or take a slot off with `{ slot, id: null }`; null for no change. */
@@ -95,10 +99,10 @@ export const NO_COMMAND: Readonly<Command> = {
   deposit: null,
   withdraw: null,
   sortInventory: false,
-  setFilter: null,
   pylon: null,
   travel: null,
   takeStash: null,
+  stashPut: null,
   identify: false,
   equip: null,
   restore: null,

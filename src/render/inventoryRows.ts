@@ -92,8 +92,8 @@ export interface SlotShown extends ScreenBox {
 /** The grid inventory as drawn (047), for `ui().inventory`. */
 export interface InventoryShown {
   open: boolean;
-  /** The plain inventory (I or Tab), or a hopper's or crate's screen. */
-  mode: 'bag' | 'hopper' | 'crate' | null;
+  /** The plain inventory (I or Tab), a hopper's or crate's screen, or the stash's (052). */
+  mode: 'bag' | 'hopper' | 'crate' | 'stash' | null;
   /** The open hopper's or crate's piece id. */
   containerId: number | null;
   /** The first shown row, and how many rows the grid holds. */
@@ -103,13 +103,19 @@ export interface InventoryShown {
   slots: (SlotShown & { index: number })[];
   /** The hopper's or crate's own slots shown. */
   container: SlotShown[];
+  /** 052: the stash's own slots shown (scrolled into view; `index` is its place in the whole stash), its first shown row and its rows. */
+  stash: (SlotShown & { index: number })[];
+  stashScroll: number;
+  stashRows: number;
   sort: ScreenBox;
   footer: string[];
   panel: ScreenBox;
 }
 
-/** What a release does: a move between the grid and the open container, or a stack dropped on a carried bar slot. */
+/** What a release does: a move between the grid and the open container or the stash (052), or a stack dropped on a carried bar slot. */
 export type GridAction =
   | { kind: 'deposit'; id: number; itemId: string; amount: HopperAmount; stack: number }
   | { kind: 'withdraw'; id: number; itemId: string; amount: HopperAmount; stack: number }
+  | { kind: 'stashPut'; itemId: string; amount: HopperAmount; stack: number }
+  | { kind: 'stashTake'; itemId: string; amount: HopperAmount; stack: number }
   | { kind: 'assign'; slot: number; itemId: string };

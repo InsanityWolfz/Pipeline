@@ -7,6 +7,7 @@ import { INTAKE_SPRITES_VECTOR } from '../../data/art/intake';
 import { ITEM_SPRITES_VECTOR } from '../../data/art/items';
 import { FIXTURE_SPRITES_VECTOR } from '../../data/art/fixtures';
 import { LOGISTICS_SPRITES_VECTOR } from '../../data/art/logistics';
+import { TUNNEL_SPRITES_VECTOR } from '../../data/art/tunnels';
 import { MACHINE_SPRITES_VECTOR } from '../../data/art/machines';
 import { INTERIOR_SPRITES_VECTOR } from '../../data/art/interior';
 import { HUD_SPRITES_VECTOR } from '../../data/art/hud';
@@ -64,7 +65,7 @@ function enemyFrames(rig: EnemyRigDef): VectorFrame[] {
 }
 
 export function vectorFrames(): VectorFrame[] {
-  const sprites = [...VECTOR_SPRITES, ...TERRAIN_SPRITES, ...NODE_SPRITES_VECTOR, ...INTAKE_SPRITES_VECTOR, ...ITEM_SPRITES_VECTOR, ...LOGISTICS_SPRITES_VECTOR, ...FIXTURE_SPRITES_VECTOR, ...MACHINE_SPRITES_VECTOR, ...INTERIOR_SPRITES_VECTOR, ...HUD_SPRITES_VECTOR, ...STAGE_SPRITES_VECTOR, ...SPRING_SPRITES_VECTOR, ...LANDMARK_SPRITES_VECTOR, ...HIVE_SPRITES_VECTOR, ...RESEARCH_SPRITES_VECTOR, ...HOLLOWS_SPRITES_VECTOR, ...BURROWER_SPRITES_VECTOR, ...GEAR_SPRITES_VECTOR, ...TALENT_SPRITES_VECTOR, ...MINE_SPRITES_VECTOR].flatMap((s) =>
+  const sprites = [...VECTOR_SPRITES, ...TERRAIN_SPRITES, ...NODE_SPRITES_VECTOR, ...INTAKE_SPRITES_VECTOR, ...ITEM_SPRITES_VECTOR, ...LOGISTICS_SPRITES_VECTOR, ...TUNNEL_SPRITES_VECTOR, ...FIXTURE_SPRITES_VECTOR, ...MACHINE_SPRITES_VECTOR, ...INTERIOR_SPRITES_VECTOR, ...HUD_SPRITES_VECTOR, ...STAGE_SPRITES_VECTOR, ...SPRING_SPRITES_VECTOR, ...LANDMARK_SPRITES_VECTOR, ...HIVE_SPRITES_VECTOR, ...RESEARCH_SPRITES_VECTOR, ...HOLLOWS_SPRITES_VECTOR, ...BURROWER_SPRITES_VECTOR, ...GEAR_SPRITES_VECTOR, ...TALENT_SPRITES_VECTOR, ...MINE_SPRITES_VECTOR].flatMap((s) =>
     s.frames.map((shapes, i) => ({
       name: s.frames.length === 1 ? s.key : `${s.key}/${i}`,
       size: s.size,

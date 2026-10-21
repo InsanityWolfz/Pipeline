@@ -91,7 +91,8 @@ describe('through the foundry door (051)', () => {
     s.roomId = OVERWORLD_ROOM;
     expect(waypoint(s)).toMatchObject({ via: 'door', ...base(OVERWORLD.entrance.door), target: { kind: 'bench', roomId: FOUNDRY_ROOM } });
     s.roomId = FOUNDRY_ROOM;
-    expect(waypoint(s)).toMatchObject({ via: 'target', target: { kind: 'bench' } });
+    // 052: the bench stands just inside the door, at (22, 9).
+    expect(waypoint(s)).toMatchObject({ via: 'target', target: { kind: 'bench', ...base({ tx: 22, ty: 9 }) } });
   });
 
   it('inside, a goal outside points at the foundry door; "Enter the foundry" points at the stairs and is nothing inside', () => {

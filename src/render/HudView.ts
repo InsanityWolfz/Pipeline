@@ -50,7 +50,7 @@ export interface HudPanelsState {
 
 /** The 031 part of `ui()` before the scene has built its views. */
 export const NO_HUD_PANELS: HudPanelsState = {
-  inventory: { open: false, mode: null, containerId: null, scroll: 0, rows: 0, slots: [], container: [], sort: { x: 0, y: 0, w: 0, h: 0 }, footer: [], panel: { x: 0, y: 0, w: 0, h: 0 } },
+  inventory: { open: false, mode: null, containerId: null, scroll: 0, rows: 0, slots: [], container: [], stash: [], stashScroll: 0, stashRows: 0, sort: { x: 0, y: 0, w: 0, h: 0 }, footer: [], panel: { x: 0, y: 0, w: 0, h: 0 } },
   researchList: { open: false, groups: [] },
   pickupFeed: [],
   health: { box: { x: 0, y: 0, w: 0, h: 0 }, text: '', low: false, healing: false, chunk: 0, xp: { text: '', fill: 0, pip: false, tick: 0, bar: { x: 0, y: 0, w: 0, h: 0 } } },

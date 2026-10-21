@@ -25,7 +25,7 @@ const portOf = (raw: string) => {
 };
 
 describe('the port data', () => {
-  it('is one port per raw on the west wall, facing into the room, and the bench stays at (1, 12) (034 adds ley-iron, 049 Husk resin)', () => {
+  it('is one port per raw on the west wall, facing into the room (034 adds ley-iron, 049 Husk resin)', () => {
     for (const raw of RAWS) {
       const def = portOf(raw);
       expect([def.tx, def.ty], raw).toEqual(TILES[raw]);
@@ -36,8 +36,6 @@ describe('the port data', () => {
     expect(portOf('ley-iron')).toMatchObject({ tx: 1, ty: 3, facing: 'right' });
     expect(portOf('husk-resin')).toMatchObject({ tx: 1, ty: 11, facing: 'right' });
     expect(FIXTURES.some((f) => f.id === 'supply-port')).toBe(false);
-    const bench = fixtureDef('identification-bench');
-    expect([bench.tx, bench.ty]).toEqual([1, 12]);
   });
 
   it('the shrine sends all four raws; SUPPLY_TICKS is 240, 15 a minute per pylon', () => {

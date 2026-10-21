@@ -8,10 +8,10 @@ export function clickAmount(mods: { shift: boolean; ctrl: boolean }): HopperAmou
   return mods.shift ? 'half' : 'one';
 }
 
-/** The commands that menus send: the hopper, sorter, pylon, stash and bench menus' choices. */
-export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'sortInventory' | 'assignSlot' | 'setFilter' | 'pylon' | 'travel' | 'takeStash' | 'identify' | 'equip' | 'restore' | 'summon' | 'takeTalent' | 'respec' | 'sandbox'>;
+/** The commands that menus send: the hopper, pylon, stash and bench menus' choices. */
+export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'sortInventory' | 'assignSlot' | 'pylon' | 'travel' | 'takeStash' | 'stashPut' | 'identify' | 'equip' | 'restore' | 'summon' | 'takeTalent' | 'respec' | 'sandbox'>;
 
-const NONE: MenuCommand = { deposit: null, withdraw: null, sortInventory: false, assignSlot: null, setFilter: null, pylon: null, travel: null, takeStash: null, identify: false, equip: null, restore: null, summon: null, takeTalent: null, respec: false, sandbox: null };
+const NONE: MenuCommand = { deposit: null, withdraw: null, sortInventory: false, assignSlot: null, pylon: null, travel: null, takeStash: null, stashPut: null, identify: false, equip: null, restore: null, summon: null, takeTalent: null, respec: false, sandbox: null };
 
 // Choices clicked in the world's menus, held until the next tick takes them.
 export class MenuRequests {
@@ -37,11 +37,6 @@ export class MenuRequests {
     this.pending.assignSlot = { slot, itemId };
   }
 
-  /** Sets the item a sorter sends out its side, or null to pass everything (the sorter menu's choice). */
-  setFilter(id: number, itemId: string | null): void {
-    this.pending.setFilter = { id, itemId };
-  }
-
   /** The claimed pylon's choice. */
   pylon(action: NonNullable<Command['pylon']>): void {
     this.pending.pylon = action;
@@ -52,9 +47,14 @@ export class MenuRequests {
     this.pending.travel = site;
   }
 
-  /** Takes a stack (or everything, for null) out of the stash. */
-  takeStash(itemId: string | null): void {
-    this.pending.takeStash = { itemId };
+  /** Takes one, half or the whole of a clicked stash stack into the inventory (052: the stash screen's click). */
+  takeStash(itemId: string, amount: HopperAmount, stack?: number): void {
+    this.pending.takeStash = { itemId, amount, ...(stack !== undefined ? { stack } : {}) };
+  }
+
+  /** Puts one, half or the whole of a clicked inventory stack into the stash (052: the stash screen's click). */
+  stashPut(itemId: string, amount: HopperAmount, stack?: number): void {
+    this.pending.stashPut = { itemId, amount, ...(stack !== undefined ? { stack } : {}) };
   }
 
   /** Identifies every carried piece at the bench. */

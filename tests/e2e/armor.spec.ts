@@ -16,10 +16,10 @@ test('the first Husk drops armor, the bench identifies it, and wearing it soften
     h.killHusk();
     let s = g.getState();
     const carried = s.inventory['unidentified-armor'] ?? 0;
-    // Into the foundry and over to the bench (tile 1,12), standing on its right.
+    // Into the foundry and over to the bench (052: tile 22,9, by the door), standing on its left.
     // The rest of the field pack guards the stairs (017): duck straight down them, where Husks don't follow.
     h.toFoundry();
-    h.walkTo(2.3 * 32, 12.5 * 32);
+    h.walkTo(21.7 * 32, 9.5 * 32);
     s = g.step(1, { identify: true });
     const piece = s.gear[0];
     if (!piece) return { carried, failed: `nothing identified (carried ${carried}, now ${s.inventory['unidentified-armor'] ?? 0})` };
