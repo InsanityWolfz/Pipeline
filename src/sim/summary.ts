@@ -186,6 +186,7 @@ export interface SimSummary extends HollowsSummary, LevelingSummary, MinesSummar
 
 export function summarize(state: SimState): SimSummary {
   const { player: p, tube } = state;
+  const volley = volleyRounds(state);
   return {
     tick: state.tick,
     seed: state.seed,
@@ -252,8 +253,8 @@ export function summarize(state: SimState): SimSummary {
         const e = state.link.entrances[i];
         return { tx: t.tx, ty: t.ty, open: e?.open ?? false, ammo: e?.ammoId ?? null, count: e?.count ?? 0, cap: entranceCap(state), cooldown: e?.cooldown ?? 0 };
       }),
-      volley: volleyRounds(state).map((r) => r.ammoId),
-      lanes: volleyRounds(state).map((r) => r.lane),
+      volley: volley.map((r) => r.ammoId),
+      lanes: volley.map((r) => r.lane),
     },
     orbs: state.orbs.map((o) => ({ id: o.id, enemyId: o.enemyId, room: o.roomId, x: round(o.x), y: round(o.y), dx: round(o.dx), dy: round(o.dy) })),
     claims: [...state.claims],
