@@ -113,6 +113,7 @@ Your base is your magical foundry, built and abandoned by a lost magical civiliz
 - **Regional pull:** ammo chains need materials from several regions, so growing a line means claiming new ground.
 - **Boss gates:** each boss unlocks a new foundry wing and the next region, Terraria-style, and drops the cores for top-tier machines. After the first kill, an offering at the boss's altar summons it again for its drops. (Added 2026-10-19, Shaun, spec 034.)
 - **Regions:** Region 2 is Stonefall Hollows, a collapsed quarry-city west of the start, opened by claiming the shrine. Its boss is the Bulwark, and its metal is ley-iron. (Added 2026-10-19, Shaun, spec 034.)
+- **The world is round:** Region 1 is a circle round the foundry, and each next region a ring round the last, like a donut (Stonefall Hollows the first ring). (Added 2026-10-21, Shaun, spec 053.)
 
 ## Death and tension
 

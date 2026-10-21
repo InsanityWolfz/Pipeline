@@ -187,7 +187,7 @@ test('the discovery banner shows at the top of the screen, clear of the player (
     if (!g || !h) throw new Error('no game');
     let s = g.step(1);
     for (let x = 36 + h.ox; x >= 24 + h.ox && !s.discovered.includes('quarry'); x -= 2) {
-      h.walkTo((x + 0.5) * 32, 25.5 * 32);
+      h.walkTo((x + 0.5) * 32, (25.5 + h.oy) * 32);
       s = g.getState();
     }
   });

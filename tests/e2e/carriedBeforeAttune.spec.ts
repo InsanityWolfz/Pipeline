@@ -20,7 +20,7 @@ test("a new game's first Husk fight fires arrows on left click", async ({ page }
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     g.step(0);
-    h.walkTo((40.5 + h.ox) * tile, 34.5 * tile);
+    h.walkTo((40.5 + h.ox) * tile, (34.5 + h.oy) * tile);
     g.step(1, { interact: true });
     for (const i of [8, 3, 7, 5, 6, 1, 0]) h.harvest(i, 3);
     for (const r of ['shaft', 'shaft', 'shaft', 'arrowhead', 'arrowhead', 'arrowhead', 'rope', 'rope', 'rope']) g.craft(r);
@@ -43,10 +43,12 @@ test("a new game's first Husk fight fires arrows on left click", async ({ page }
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     const X = h.ox;
+    const Y = h.oy;
+    // Round the foundry ruin's east side (053: 9 tiles wide).
     h.walkTo((41.5 + X) * tile, g.getState().player.y);
-    h.walkTo((41.5 + X) * tile, 22.5 * tile);
-    h.walkTo((43.5 + X) * tile, 22.5 * tile);
-    h.walkTo((43.5 + X) * tile, 19.5 * tile);
+    h.walkTo((41.5 + X) * tile, (22.5 + Y) * tile);
+    h.walkTo((45.5 + X) * tile, (22.5 + Y) * tile);
+    h.walkTo((45.5 + X) * tile, (19.5 + Y) * tile);
     const shots: string[] = [];
     let melees = 0;
     let hits = 0;

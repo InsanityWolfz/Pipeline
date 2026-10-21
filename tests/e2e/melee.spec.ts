@@ -23,8 +23,17 @@ function punchNearestHusk(page: Page, settle: number) {
     const dist = (e: { x: number; y: number }) => Math.hypot(e.x - s.player.x, e.y - s.player.y);
     const first = husks().sort((a, b) => Math.hypot(a.x - p0.x, a.y - p0.y) - Math.hypot(b.x - p0.x, b.y - p0.y))[0];
     if (!first) throw new Error('no Husk');
-    // Close enough that the pack sees the player, then stand still while the nearest closes in to swing range.
-    h.walkTo(first.x, first.y + 150);
+    // Close enough that the pack sees the player, then stand still while the nearest closes in to swing range (053:
+    // from the first side of it that isn't in the foundry's ruin).
+    const sides = [[0, 150], [150, 0], [-150, 0], [0, -150]] as const;
+    if (!sides.some(([dx, dy]) => {
+      try {
+        h.walkTo(first.x + dx, first.y + dy);
+        return true;
+      } catch {
+        return false;
+      }
+    })) throw new Error('no way near the Husk');
     s = g.step(0);
     let near = husks().sort((a, b) => dist(a) - dist(b))[0];
     for (let t = 0; t < 600 && near && dist(near) > 30; t++) {

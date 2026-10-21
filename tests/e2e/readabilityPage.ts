@@ -15,7 +15,7 @@ export async function openCache(page: Page): Promise<number[]> {
       if (!g || !h) throw new Error('no game');
       for (const e of g.getState().enemies.filter((x) => x.group === 'ruined-cache')) g.setEnemyHealth(e.id, 0);
       g.step(1);
-      h.walkTo((12.5 + h.ox) * 32, 30.5 * 32);
+      h.walkTo((tx + 0.5) * 32, (ty + 6.5) * 32);
       h.walkTo((tx + 0.5) * 32, (ty + 1.5) * 32);
       const before = new Set(g.step(1, { interact: true }).groundItems.map((i) => i.id));
       return g

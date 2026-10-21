@@ -47,3 +47,16 @@ The world becomes round: the grass region a circle around the foundry, the Hollo
 - **053.1 design.md.** "World, regions, ley lines, bosses" describes regions; proposal: add one line that Region 1 is a circle and the next region a ring around it, on Shaun's OK.
 - **053.2 Hollows width and the barrier.** Proposal: the Hollows ring is as wide as Region 1's radius minus its inner ring, and the barrier is a full circle, so the Hollows open all round once it falls.
 - **053.3 Travel time.** A bigger map means longer trips home. Proposal: keep fast travel as it is (claimed pylons and the waystone) and judge at playtest.
+
+## Raised after the build
+The build's own choices where the spec didn't decide, each with the conservative option built. One round.
+
+- **053.4 Size.** "About twice today's overworld area" read as twice Region 1's 80 × 45 tiles: Region 1 is the disc of radius 48 (7,238 tiles). If it meant the whole old map (120 × 45), the radius would be 59.
+- **053.5 Danger rings.** Ring 0 keeps its 17 tiles (the tutorial's ground unchanged), ring 1 runs to 30, ring 2 to the barrier at 48. The Hollows (053.2) run from 48 to 79.
+- **053.6 Placement.** Every landmark kept its spec's inner layout and moved whole round the circle: the Warden's shrine in the north-east quadrant (bearing 40°, 31 tiles), the Quarry west in ring 1, the Old Grove west-north-west, the Frozen Grotto north, the Ley Grotto east, the Husk Hive east-south-east across from the Grove (049.1), the Reed Marsh south-south-east, the Ruined Cache south-west; in the Hollows the Bulwark's forum north-west, the Cut and Cistern Terrace west-south-west, the aqueduct south. Most of the Hollows' east is empty ground for now.
+- **053.7 The roads' hub.** A ley line can't reach the foundry without crossing a road that also reaches it, so the roads meet at the foundry's courtyard (the paved ruin field round the stairs, 11 tiles), not at a junction: five roads leave it, each between two ley lines, and branch from there (junctions out in the field). The ley lines cross the courtyard's paving to the ruin.
+- **053.8 Ley lines.** Each pylon's line home ends on the edge of the foundry's ruin, at its own bearing. The meadow's and the start stone's seams (no pylon) are gone; the meadow's ley vein now stands on the Reed Marsh's line. The shrine's and the Ley Grotto's short vein seams stay, meeting only their pylon.
+- **053.9 The world's edge.** Past the Hollows: a ragged band of cliffs, then solid cliff plateau to the grid's edge (drawn flat). Not water: the minimap shows water as ground since 051.
+- **053.10 Population.** Pack counts rose with the map: ring 1 4 → 8, ring 2 8 → 12, ring 3 6 → 12. Ring 2 doubled put packs round the shrine (now in open ground, no longer at the map's edge) that swamped its fight; 12 still fills 017's ring 2 crowd. Each ring is a little sparser than before, the Hollows (now ~7× its old ground) much sparser. Fuller Hollows would need far enemies to sleep (the sim ticks every enemy). Proposal: judge the density at playtest.
+- **053.11 Minimap.** The whole round world at 0.6 view px a tile (about 100 px square, was 180 × 67); the objective band moved down under it.
+- **053.12 design.md.** 053.1's line is added. The "Regions" line still says the Hollows are "west of the start"; proposal: drop "west of the start" (needs your OK).
