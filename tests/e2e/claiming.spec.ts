@@ -1,7 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { DESCRIPTIONS } from '../../src/data/descriptions';
-import { ENEMIES } from '../../src/data/enemies';
 import { OVERWORLD } from '../../src/data/overworld';
 import { FEET_BOX } from '../../src/data/player';
 import { menuRows } from '../../src/render/foundryLayout';
@@ -25,16 +24,16 @@ async function pylonMenu(page: Page, row: 0 | 1, done: () => Promise<boolean>): 
   }
 }
 
-// Claiming (009): walk up to the shrine, clear it with the playtest ammo, claim
+// Claiming (009): walk up to the shrine, clear its guards (through the hook, 049), claim
 // its pylon, send the haul home, travel to the foundry, take from the stash, see
 // the fiber port push into a conduit (028: a port per raw), and ride the waystone back. Since 017 the
 // shrine is a walled site in the overworld, reached by the dirt path east.
 
-test('clear the shrine, claim the pylon, deposit, travel and use the stash and port', async ({ page }) => {
+test('clear the shrine (through the hook), claim the pylon, deposit, travel and use the stash and port', async ({ page }) => {
   test.setTimeout(120_000);
   const errors = watchErrors(page);
   await boot(page, '?playtest');
-  const result = await page.evaluate((wispLift) => {
+  const result = await page.evaluate(() => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
@@ -47,47 +46,11 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
     const inside = (e: { x: number; y: number }) => e.x > (58 + X) * 32 && e.x < (75 + X) * 32 && e.y > 3 * 32 && e.y < 16 * 32;
     const arrived = inside(s.player) ? 'shrine' : `${s.player.x},${s.player.y}`;
     const guards = () => s.enemies.filter((e) => e.group === 'shrine');
-    // Fight with piercing ley bolts: back off from anything close, fire at the nearest (any wanderer that
-    // follows in first, else the nearest guard).
-    window.__helpers?.hold('ley-bolt');
-    let stuck = 0;
-    for (let t = 0; t < 12000 && guards().length > 0; t++) {
-      const p = s.player;
-      const dist = (e: { x: number; y: number }) => Math.hypot(e.x - p.x, e.y - p.y);
-      const close = s.enemies.filter((e) => dist(e) < 200).sort((a, b) => dist(a) - dist(b));
-      const near = close[0] ?? guards().sort((a, b) => dist(a) - dist(b))[0];
-      if (!near) break;
-      const d = Math.hypot(near.x - p.x, near.y - p.y);
-      const away = (from: number, to: number): -1 | 0 | 1 => (Math.abs(to - from) < 2 ? 0 : to > from ? -1 : 1);
-      const kite = d < 90;
-      const far = d > 170;
-      const windup = near.mode === 'windup' && d < 80;
-      if ((s.inventory[(s.hotbar.slots[s.hotbar.selected] ?? '')] ?? 0) === 0) window.__helpers?.hold((s.hotbar.slots[s.hotbar.selected] ?? '') === 'ley-bolt' ? 'arrow' : 'bomb');
-      s = g.step(1, {
-        moveX: kite ? away(p.x, near.x) : far ? away(near.x, p.x) : 0,
-        moveY: kite ? away(p.y, near.y) : far ? away(near.y, p.y) : 0,
-        dodge: windup && t % 30 === 0,
-        use: true,
-        aimX: near.x,
-        // At the body: a Wisp floats, its hurtbox well above its feet (an arrow at its feet passes under it).
-        aimY: near.y + (near.enemyId === 'wisp' ? wispLift : 0),
-      });
-      if (s.events.ko) return { arrived, failed: `knocked out at tick ${s.tick}` };
-      // The scripted fight is chaotic (any change to the seeded RNG's stream replays it differently, 049), and this
-      // test is about the claim, not the fight: a low player is topped up.
-      if (s.player.health < 30) s = g.setPlayerHealth(100);
-      // Closing in but stuck on something (018: the shrine has a grove, a pond and rocks): go round it.
-      stuck = far && Math.hypot(s.player.x - p.x, s.player.y - p.y) < 0.1 ? stuck + 1 : 0;
-      if (stuck > 20) {
-        stuck = 0;
-        try {
-          h.walkTo(near.x, near.y + 64);
-        } catch {
-          // Unreachable from here; the fight goes on.
-        }
-        s = g.getState();
-      }
-    }
+    // Declared setup, not play: the shrine's guards (and any wanderers about) are cleared through the hook. This
+    // test is about the claim; a scripted fight is chaotic (any change to the seeded RNG's stream replays it
+    // differently, 049) and a scripted bot gets no hidden healing.
+    for (const e of s.enemies) if (e.group === 'shrine' || e.group.startsWith('pop-')) g.setEnemyHealth(e.id, 0);
+    s = g.step(1);
     const cleared = guards().length === 0;
     // Claim: stand below the pylon, E, stand still.
     try {
@@ -102,7 +65,7 @@ test('clear the shrine, claim the pylon, deposit, travel and use the stash and p
     g.step(1, { interact: true });
     s = g.step(130);
     return { arrived, cleared, claimed: s.claims.includes('shrine'), failed: '' };
-  }, ENEMIES.wisp?.hurtbox.offsetY ?? 0);
+  });
   expect(result.failed).toBe('');
   expect(result.arrived).toBe('shrine');
   expect(result.cleared).toBe(true);
