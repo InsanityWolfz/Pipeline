@@ -34,12 +34,42 @@ async function bannersGone(page: Page): Promise<void> {
   await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
 }
 
+/**
+ * Walks to each tile of the round map (053) in turn; a tile that's solid or cut off from the player (the rock and
+ * ledges round a landmark) is swapped for the nearest tile the player can reach from where they stand.
+ */
 async function walk(page: Page, points: readonly (readonly [number, number])[]): Promise<void> {
   await page.evaluate((pts) => {
+    const g = window.__GAME__;
     const h = window.__helpers;
-    if (!h) throw new Error('no helpers');
-    // Tiles of the round map (053).
-    for (const [tx, ty] of pts) h.walkTo((tx + 0.5) * 32, (ty + 0.5) * 32);
+    if (!g || !h) throw new Error('no helpers');
+    const rows = g.passable();
+    const open = (tx: number, ty: number) => rows[ty]?.[tx] === '.';
+    const reachableNear = (gx: number, gy: number): [number, number] => {
+      const p = g.getState().player;
+      const start: [number, number] = [Math.floor(p.x / 32), Math.floor(p.y / 32)];
+      const seen = new Set([start[1] * 1000 + start[0]]);
+      const queue = [start];
+      let best = start;
+      for (let i = 0; i < queue.length; i++) {
+        const t = queue[i];
+        if (!t) break;
+        const [tx, ty] = t;
+        if (Math.hypot(tx - gx, ty - gy) < Math.hypot(best[0] - gx, best[1] - gy)) best = t;
+        if (tx === gx && ty === gy) break;
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+          const k = (ty + dy) * 1000 + tx + dx;
+          if (!open(tx + dx, ty + dy) || seen.has(k)) continue;
+          seen.add(k);
+          queue.push([tx + dx, ty + dy]);
+        }
+      }
+      return best;
+    };
+    for (const [gx, gy] of pts) {
+      const [tx, ty] = reachableNear(gx, gy);
+      h.walkTo((tx + 0.5) * 32, (ty + 0.5) * 32);
+    }
   }, points);
 }
 
