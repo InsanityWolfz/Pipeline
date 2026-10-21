@@ -51,6 +51,12 @@ export function takePool(state: SimState, arrow: ArrowState): void {
   arrow.pooledBy.push(c.id);
 }
 
+/**
+ * Burning (054): an arrow that has drawn from a Pool burns for the rest of its flight, past the Burst that spends its
+ * charge (`pooled`). Render's look only: a burning arrow does nothing a pooled one doesn't (054.2).
+ */
+export const burning = (arrow: Pick<ArrowState, 'pooledBy'>): boolean => arrow.pooledBy.length > 0;
+
 /** How a straight shot's hit lands with the keystones: its damage scale, and whether it bursts (pooled) or shatters. */
 export interface KeystoneHit {
   scale: number;

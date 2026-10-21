@@ -105,6 +105,13 @@ const SHIELD: Shape[] = [
   line([3.2, 3.6, 5.6, 3.6], 0.6, { id: 'snow', alpha: 0.6 }),
 ];
 
+// 054: an immune enemy's shield (7x8) by its blue bar: a blue heater shield with a pale rim and a snow glint.
+const IMMUNE: Shape[] = [
+  path('M 0.6 0.8 L 6.4 0.8 L 6.4 3.8 Q 6.4 6.4 3.5 7.6 Q 0.6 6.4 0.6 3.8 Z', { fill: vertical('water-light', 'water-deep', 0.8, 7.6), outline: true }),
+  path('M 3.5 1.8 L 3.5 6.2', trim('foam', 0.7)),
+  line([1.5, 1.7, 2.8, 1.7], 0.5, { id: 'snow', alpha: 0.8 }),
+];
+
 // The at-risk mark (031, 8x8): a rust warning triangle with an ink bar and dot.
 const WARN: Shape[] = [
   path('M 4 0.6 L 7.6 7.2 L 0.4 7.2 Z', { fill: vertical('cinder-light', 'rust-light', 0.6, 7.2), outline: true }),
@@ -201,6 +208,7 @@ export const HUD_SPRITES_VECTOR: readonly VectorSprite[] = [
   sprite(SPRITES.hudHealthGlow, [HP.frame.w + 2 * G.pad, HP.frame.h + 2 * G.pad], HEALTH_GLOW),
   sprite(SPRITES.hudShield, [HP.shield.w, HP.shield.h], SHIELD),
   sprite(SPRITES.hudWarn, [8, 8], WARN),
+  sprite(SPRITES.enemyImmune, [7, 8], IMMUNE),
   sprite(SPRITES.inventoryTitle, [PANEL_TITLE.w, PANEL_TITLE.h], tablet(PANEL_TITLE.w, PANEL_TITLE.h)),
   sprite(SPRITES.craftPanel, [CRAFT_MENU_LAYOUT.width, CRAFT_MENU_LAYOUT.height], CRAFT_PANEL),
   sprite(SPRITES.craftRow, [ROW.w, ROW.h], CRAFT_ROW),

@@ -47,8 +47,8 @@ describe('per-hit damage (041)', () => {
     expect([ammoDef('arrow').fireTicks, ammoDef('ley-bolt').fireTicks, ammoDef('bomb').fireTicks, ammoDef('landmine').fireTicks]).toEqual([15, 20, 40, 40]);
   });
 
-  it('children and Frost are unchanged (041.1): a Shard 4, a Bomblet 8, Shatterpoint’s Shards half the bolt; 4 Chill to Freeze, 90 ticks, a boss 45', () => {
-    expect(SPLIT.damage).toBe(4);
+  it('children and Frost (041.1): a Split Shard half the bolt (054, was 4), a Bomblet 8, Shatterpoint’s Shards half the bolt; 4 Chill to Freeze, 90 ticks, a boss 45', () => {
+    expect(SPLIT.damageShare).toBe(0.5);
     expect(CLUSTER.damage).toBe(8);
     expect(SHATTERPOINT.shardScale).toBe(0.5);
     expect(COLD).toEqual({ chillPerHit: 1, slowPerStack: 0.15, stacksToFreeze: 4, stackTicks: 120, freezeTicks: 90, bossFreezeTicks: 45, refreezeTicks: 120 });

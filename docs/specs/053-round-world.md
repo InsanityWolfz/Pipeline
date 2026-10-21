@@ -1,5 +1,5 @@
 # 053: The round world
-status: approved
+status: done
 
 Approved on draft by Shaun in chat, 2026-10-21 ("approve 053-055"): the build follows the proposals in the open questions (053.1's design.md line included).
 
@@ -69,3 +69,6 @@ The build's own choices where the spec didn't decide, each with the conservative
 ## Results (after review)
 - `npm run measure` re-run after the population change (packs off the barrier's band, out of the shrine's surroundings): unchanged, since the measure places its packs and the Bulwark's fight by hand, not through the population. Ring 1 5/5 (2.2–3.2 s), ring 2 5/5 (2.4–4 s), ring 3 4/5 in band (14.1–21.6 s); the Bulwark's decent build 9/20 meet all three, 6 KOs; the naive bot KO'd 5/5. Shaun: judge at playtest (053.10).
 - The tutorial e2e's bot fights the Warden unaided and wins (3/3 runs).
+
+## Shaun's merge (2026-10-21)
+- Shaun said "merge 46 and 47" after playing the preview. He changed none of the raised items, so they stand as built.

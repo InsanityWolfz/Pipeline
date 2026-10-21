@@ -156,6 +156,23 @@ const HEAT: Shape[] = [
   ...[-3, 0, 3].map((x) => ({ ...path(`M ${x} 0 Q ${x - 2} -4 ${x} -8 Q ${x + 2} -12 ${x} -16`, { stroke: { color: { id: 'cinder-light', alpha: 0.7 }, width: 0.9 } }), glow: { color: 'cinder', blur: 1.5 } })),
 ];
 
+// 054: a burning arrow's flame, pointing right round its head at (0, 0): a cinder glow and tongues streaming back.
+const BURNING_TIP: Shape[] = [
+  ellipse(-1, 0, 6, 4, { fill: { radial: [-1, 0, 6], stops: [{ at: 0, color: { id: 'cinder-light', alpha: 0.8 } }, { at: 1, color: { id: 'cinder', alpha: 0 } }] } }),
+  { ...path('M 3 0 Q 0 -3.2 -8 -1.4 Q -4 -0.4 -5 0 Q -4 0.4 -8 1.4 Q 0 3.2 3 0 Z', { fill: { linear: [3, 0, -8, 0], stops: [{ at: 0, color: 'cinder-light' }, { at: 0.5, color: 'cinder' }, { at: 1, color: { id: 'flame-dark', alpha: 0 } }] } }), glow: { color: 'cinder', blur: 3 } },
+  ellipse(1, 0, 1.6, 1, flat('snow')),
+];
+
+// 054: where a burning arrow hits: a small ember flash, a hot core with sparks thrown out.
+const BURNING_FLASH: Shape[] = [
+  ellipse(0, 0, 9, 9, { fill: { radial: [0, 0, 9], stops: [{ at: 0, color: { id: 'cinder-light', alpha: 0.9 } }, { at: 1, color: { id: 'cinder', alpha: 0 } }] } }),
+  ...Array.from({ length: 6 }, (_, i) => {
+    const a = (i / 6) * Math.PI * 2 + 0.5;
+    return { ...line([Math.cos(a) * 3, Math.sin(a) * 3, Math.cos(a) * 8, Math.sin(a) * 8], 1, 'cinder-light'), glow: { color: 'cinder', blur: 2 } };
+  }),
+  glowDot(0, 0, 2.2, 'snow'),
+];
+
 export const TALENT_SPRITES_VECTOR: readonly VectorSprite[] = [
   sprite(TALENT_SPRITES.node, [18, 18], [9, 9], NODE),
   sprite(TALENT_SPRITES.keystone, [26, 26], [13, 13], KEYSTONE),
@@ -176,4 +193,6 @@ export const TALENT_SPRITES_VECTOR: readonly VectorSprite[] = [
   sprite(TALENT_SPRITES.iceBurst, [34, 34], [17, 17], ICE_BURST),
   sprite(TALENT_SPRITES.coldShard, [12, 6], [7, 3], ICE_SHARD),
   sprite(TALENT_SPRITES.heatShimmer, [18, 24], [9, 20], HEAT),
+  sprite(TALENT_SPRITES.burningTip, [16, 10], [10, 5], BURNING_TIP),
+  sprite(TALENT_SPRITES.burningFlash, [20, 20], [10, 10], BURNING_FLASH),
 ];

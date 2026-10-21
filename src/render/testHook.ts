@@ -30,6 +30,7 @@ import type { ResearchListState } from './ResearchList';
 import type { HollowsShown } from './HollowsView';
 import type { ArenaDoorShown } from './ArenaDoorView';
 import type { HollowsEnemiesShown } from './hollowsEnemyArt';
+import type { EnemyBarShown } from './enemyBar';
 import type { Legibility, LegibilityUi } from './Legibility';
 import type { SandboxPanelState } from './SandboxPanel';
 
@@ -171,9 +172,9 @@ export interface UiState {
   tunnels: TunnelMark[];
   /**
    * 029: Split flashes still showing, and the tagged rounds' trails in flight (how many, and the most points one runs
-   * along). 047 removed the bench's Stages panel from here.
+   * along). 047 removed the bench's Stages panel from here. 054: burning arrows drawn with their flame, and Shards drawn.
    */
-  tagged: { splitFlashes: number; trails: { count: number; longest: number } };
+  tagged: { splitFlashes: number; trails: { count: number; longest: number }; burning: number; shards: number };
   /** 030: the Ley Springs drawn, healing motes in the air, the pylon's thread, the foundry's shimmer, and the spring glowing under the player. */
   healing: HealingShown;
   /** 031: the inventory panel (open, and each group's rows: carried count, at risk, home in the stash). */
@@ -190,6 +191,8 @@ export interface UiState {
   champions: ChampionShown[];
   /** 035: Burrower ripples on show, Shardback flares lit, and each Sniper's laser as drawn (locked, its blink on, its ends). */
   hollowsEnemies: HollowsEnemiesShown;
+  /** 054: each drawn enemy's health bar: whether it shows, and whether it reads immune (blue, with the shield). */
+  enemyBars: EnemyBarShown[];
   /** 032: the waystone's menu while open (two or more claimed pylons): each row's text and box, view px; else null. */
   waystone: { text: string; x: number; y: number; w: number; h: number }[] | null;
   /** 033: the diagrams drawn on the foundry, restored parts, running effects and the wing door. */

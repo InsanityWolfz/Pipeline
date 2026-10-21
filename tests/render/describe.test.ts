@@ -35,6 +35,11 @@ describe('a round', () => {
     expect(texts(d.breakdown)[0]).toBe("Damage 14 × (1 + 10% Fletcher's Eye + 6% Hard Bore) = 16.2");
   });
 
+  it('a homing ley bolt’s Shot rule reads its own, slower speed (054)', () => {
+    const lines = texts(describeRound(player(), 'ley-bolt+homing').breakdown);
+    expect(lines.find((l) => l.startsWith('Shot'))).toBe('Shot: Flies straight at the cursor up to 320 px at 180 px/s. Stops at walls and Shield fronts.');
+  });
+
   it('one bonus reads "1 bonus"; a new player sees no hint (040.7)', () => {
     expect(texts(describeRound(player('a1'), 'arrow').summary)).toEqual(['15.4 dmg · 4.0/s', '1 bonus · hold Shift']); // 041: was 11
     const fresh = describeRound(player(), 'arrow');
@@ -82,7 +87,7 @@ describe('a round', () => {
     expect(texts(frost.summary)[0]).toBe('12 Burst dmg · 1.5/s · Freeze in 4 hits'); // 041: was 15
     expect(texts(describeRound(player(), 'bomb+cluster').summary)[0]).toBe('12 Burst dmg · 1.5/s · 4 Bomblets × 8');
     expect(texts(describeRound(player(), 'landmine').summary)[0]).toBe('60 Burst dmg · 1.5/s · arms in 5.0 s');
-    expect(texts(describeRound(player('l3'), 'ley-bolt+split').summary)[0]).toBe('9 dmg · 3.0/s · 7 Shards × 4'); // 041: was 14
+    expect(texts(describeRound(player('l3'), 'ley-bolt+split').summary)[0]).toBe('9 dmg · 3.0/s · 7 Shards × 4.5'); // 041: was 14; 054: a Shard half the bolt (was 4)
   });
 });
 

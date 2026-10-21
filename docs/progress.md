@@ -2,6 +2,21 @@
 
 Newest entry first.
 
+## 2026-10-21: 053 merged
+**Changed:** Shaun merged 053 (the round world: Region 1 a disc round the foundry, the Hollows a ring round it, one road network, ley lines carrying icons, the foundry gatehouse), InsanityWolfz/Pipeline#47.
+
+**Next:** 055 (boss doors and the rimestone pylon), InsanityWolfz/Pipeline#48, merges main and goes to Shaun's playtest.
+
+## 2026-10-21: 054 merged
+**Changed:** Shaun merged 054 (combat readability: the blue immune bar, the shaded back wave, burning Pool arrows, slower homing bolts, the star shot's shards), InsanityWolfz/Pipeline#46.
+
+**Next:** 053 merges next; 055 (boss doors) follows it.
+
+## 2026-10-21: 054 combat readability built (draft PR)
+**Changed:** built 054 on `claude/054-combat-readability` (merged with main's 052). The sim's `immune` flag (a burrowed Burrower, a rising add; never a shield's front) turns an enemy's bar blue with a small shield, shown even at full health. The Bulwark's back wave shades its area red under its ripples. An arrow through a Pool (Blastfletch) burns for the rest of its flight: a flame on its head, an ember trail and a small flash on each hit, nothing extra (054.2). Homing ley bolts fly at 0.6 speed (180 px/s), same turn. The star shot: 5 bigger Shards with a short trail, each half the bolt's damage, out to 96 px, skipping the struck enemy; the Split rule reads 054.1's text. No save shape change. `npm run check` passes (1763); the full Playwright run: 155 passed, 0 failed, 144 skipped. `npm run measure` identical to 051. Review shots in docs/review/054; older shots retaken only where 054 shows. Spec status stays approved.
+
+**Next:** review, then Shaun answers 054.3–054.9 (spec, "Raised after the build") and playtests the preview.
+
 ## 2026-10-21: 055 boss doors and the rimestone pylon built (draft PR)
 **Changed:** built 055 on `claude/055-boss-doors`, stacked on 053. Both boss arenas are walled all round with one big door (a new solid tile, `G`, stopping feet and straight shots): the Warden's shrine (its fallen stretches and side gaps closed, its door where 012's gate was) and the Bulwark's forum (its door across 034's way in). A door is sealed until its gate opens (the shrine gate for the Warden, the Hollows barrier for the Bulwark), with its hint on hover; then E goes in, and E inside leaves and resets a live boss through 043's lock (`src/sim/arenaLock.ts` is the shared door system; 043's seal now shows while the player fights inside either arena). The sandbox's forum door is always open. Door art: one sprite per width, sealed and open. The Frozen Grotto has a pylon, claimed like any site, sending rimestone up a new port at (1, 12), with a ley line home. SAVE_VERSION 11, no migration. e2e helpers enter and leave arenas by their doors. `npm run check` passes (1,819); the full Playwright run: 155 passed, 0 failed (the review-shot specs skipped). `npm run measure`: as 053 but the Bulwark's decent build 8/20, 7 KOs (053: 9/20, 6). Review shots in docs/review/055; 043/01–02, 044/04, 032/06 and 031/04 retaken. Spec status stays approved; its "Raised after the build" lists 055.3–055.12.
 
