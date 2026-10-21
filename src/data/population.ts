@@ -35,6 +35,13 @@ export const POPULATION = {
   viewMargin: 64,
   /** A wiped-out pack comes back this many ticks later (20 s). */
   respawnTicks: 1200,
+  /**
+   * No pack's centre or member stands within this many tiles of the shrine's site, either way (053: in the round
+   * world the shrine stands in open ring 2 ground, and packs homed round it woke on the way in and joined the Warden's
+   * fight through its side gaps). With the pack spread, a home this far out sits past the aggro box (half a view,
+   * 10 × 5.6 tiles) of a player anywhere in the site or on its side and front approaches.
+   */
+  shrineMargin: { x: 14, y: 9 },
   /** Pack members stand within this many tiles of the pack's centre. */
   spread: 2,
   /** No new pack spawns that could take the enemies within a screen of the player past this. It caps spawning only: everything on screen wakes, however many the player rounds up (Shaun, 2026-10-18). */
