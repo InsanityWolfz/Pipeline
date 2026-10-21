@@ -106,3 +106,20 @@ test('057.6: over a target the arrow stays on it while the player walks, and swi
   expect(modes.slice(1).filter((m, i) => m !== modes[i]).length).toBe(1);
   expect(errors).toEqual([]);
 });
+
+test.describe('review screenshots (057)', () => {
+  test.skip(!process.env.REVIEW_SHOTS, 'set REVIEW_SHOTS=1 to capture docs/review/057');
+
+  test('the waypoint arrow on the edge mid-walk, and over its target', async ({ page }) => {
+    test.setTimeout(120_000);
+    await boot(page, '?start=tutorial');
+    const { tx, ty } = OVERWORLD.startStone;
+    await page.evaluate(([x, y]) => window.__helpers?.walkTo(x ?? 0, y ?? 0), [(tx - 5.5) * T, (ty - 2.5) * T]);
+    await cameraSettled(page);
+    await walkFrames(page, 1);
+    await page.screenshot({ path: 'docs/review/057/05-waypoint-over.png' });
+    for (let i = 0; i < 20 && (await walkFrames(page, 1)).at(-1)?.mode !== 'edge'; i++);
+    await walkFrames(page, 1);
+    await page.screenshot({ path: 'docs/review/057/04-waypoint-edge.png' });
+  });
+});
