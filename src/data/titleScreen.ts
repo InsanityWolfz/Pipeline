@@ -33,7 +33,7 @@ export const TITLE_SCREEN = {
    */
   motion: { breathMs: 3600, crouch: 1, swayMs: 2700, flap: 0.12, hose: 2.5, hoseLag: 0.125, hoseLift: 0.25, glowMs: 2200, muzzle: [0.25, 1] as const, glow: [0.8, 1] as const, frameMs: 33 },
   /** The intake pipe's glow over the ruin, breathing slowly (019's cyan): its centre, size and alpha range over a period. */
-  pipeGlow: { x: 392, y: 240, rx: 15, ry: 22, rings: 5, color: 'cyan', alpha: [0.18, 0.5] as const, periodMs: 3600 },
+  pipeGlow: { x: 368, y: 240, rx: 15, ry: 22, rings: 5, color: 'cyan', alpha: [0.18, 0.5] as const, periodMs: 3600 },
   /**
    * Ley motes drifting across the scene (014's ambient motes, slower): count, speed px/s, size px, colour and alpha.
    * They start between `band` (y, px) and drift right and up; past the view's right edge (by `wrap`) a mote comes

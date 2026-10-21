@@ -60,12 +60,13 @@ const RUIN: Shape[] = [
   // A standing arch to the left.
   path('M 262 256 L 262 220 Q 274 206 286 220 L 286 256 L 280 256 L 280 226 Q 274 216 268 226 L 268 256 Z', solid('rock-light')),
   rect(258, 214, 32, 7, 1, solid('rock-pale')),
-  // The pipe: a brass column with ringed bands and a cyan core, a cap at the top.
-  rect(344, 176, 16, 80, 2, { fill: brass, outline: true }),
-  ...[188, 204, 220, 236].map((y) => rect(342, y, 20, 4, 1, solid('brass-dark'))),
-  rect(348, 180, 8, 72, 2, flat({ id: 'cyan', alpha: 0.55 })),
-  { ...line([352, 182, 352, 250], 1.2, 'cyan-glow'), glow: { color: 'cyan', blur: 4 } },
-  rect(338, 170, 28, 9, 3, solid('brass-light')),
+  // The pipe: a brass column with ringed bands and a cyan core, a cap at the top. 050: against the left wall, so its
+  // cap stays clear of the bigger menu column (its left edge, TITLE_SCREEN.menu.x, is at view x 385; the cap ends at 382).
+  rect(320, 176, 16, 80, 2, { fill: brass, outline: true }),
+  ...[188, 204, 220, 236].map((y) => rect(318, y, 20, 4, 1, solid('brass-dark'))),
+  rect(324, 180, 8, 72, 2, flat({ id: 'cyan', alpha: 0.55 })),
+  { ...line([328, 182, 328, 250], 1.2, 'cyan-glow'), glow: { color: 'cyan', blur: 4 } },
+  rect(314, 170, 28, 9, 3, solid('brass-light')),
   // Front blocks and rubble.
   rect(318, 236, 26, 20, 2, { fill: stone, outline: true }),
   rect(360, 240, 22, 16, 2, { fill: stone, outline: true }),
