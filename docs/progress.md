@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: 053 merged
+**Changed:** Shaun merged 053 (the round world: Region 1 a disc round the foundry, the Hollows a ring round it, one road network, ley lines carrying icons, the foundry gatehouse), InsanityWolfz/Pipeline#47.
+
+**Next:** 055 (boss doors and the rimestone pylon), InsanityWolfz/Pipeline#48, merges main and goes to Shaun's playtest.
+
 ## 2026-10-21: 054 merged
 **Changed:** Shaun merged 054 (combat readability: the blue immune bar, the shaded back wave, burning Pool arrows, slower homing bolts, the star shot's shards), InsanityWolfz/Pipeline#46.
 
