@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { CLAIM_TICKS } from '../../src/data/claims';
 import { BULWARK } from '../../src/data/bulwark';
 import { HOLLOWS } from '../../src/data/hollows';
+import { HOLLOWS_SITES } from '../../src/data/hollowsSites';
 import { boot, watchErrors } from './helpers';
 import { clickRow, flowIs } from './flowPage';
 
@@ -11,6 +12,10 @@ import { clickRow, flowIs } from './flowPage';
 
 const A = HOLLOWS.arena;
 const T = 32;
+/** 053: where the terrace road crosses the barrier's circle, and the barrier's tile nearest Region 1 on that row. */
+const ROW = HOLLOWS.crossing.ty;
+const GATE_X = Math.max(...HOLLOWS.gate.filter((t) => t.ty === ROW && t.tx < HOLLOWS.crossing.tx + 3).map((t) => t.tx));
+const TERRACE = HOLLOWS_SITES.find((l) => l.id === 'cistern-terrace')?.pylon ?? { tx: 0, ty: 0 };
 
 /** Kills every enemy but those of `keep`'s enemy ids, through the hook. */
 async function quiet(page: Page, keep: readonly string[] = []): Promise<void> {
@@ -35,8 +40,8 @@ test('the barrier holds until the shrine is claimed (?playtest), then drops, and
   const errors = watchErrors(page);
   await boot(page, '?playtest');
   await quiet(page);
-  await walk(page, [[52, 27], [42, 27]]);
-  // Walking at the gap: the barrier stops the player.
+  await walk(page, [[GATE_X + 4, ROW]]);
+  // Walking at it (053: on the circle where the terrace road crosses): the barrier stops the player.
   const blocked = await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
@@ -45,7 +50,7 @@ test('the barrier holds until the shrine is claimed (?playtest), then drops, and
     return { x: s.player.x, gate: s.gates.hollows, region: s.area.region };
   });
   expect(blocked).toEqual({ x: expect.any(Number), gate: false, region: 1 });
-  expect(blocked.x).toBeGreaterThan(40 * T);
+  expect(blocked.x).toBeGreaterThan((GATE_X + 1) * T);
   expect((await page.evaluate(() => window.__GAME__?.ui().hollows))?.barrier).toBe('shut');
   const fell = await page.evaluate(() => {
     const g = window.__GAME__;
@@ -73,7 +78,7 @@ test('?start=hollows: clear and claim the Cistern Terrace; its ley-iron comes up
   test.setTimeout(120_000);
   await boot(page, '?start=hollows');
   await quiet(page, ['bulwark']);
-  await walk(page, [[25, 27], [25, 13]]);
+  await walk(page, [[TERRACE.tx, TERRACE.ty + 5], [TERRACE.tx, TERRACE.ty + 1]]);
   const claimed = await page.evaluate((ticks) => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
@@ -91,7 +96,7 @@ test('?start=hollows: the shield blocks arrows into its front; from behind they 
   const errors = watchErrors(page);
   await boot(page, '?start=hollows');
   await quiet(page, ['bulwark']);
-  await walk(page, [[25, 27], [12, 27], [12, 30], [A.start.tx, A.start.ty + 3]]);
+  await walk(page, [[A.seal.leaveTo.tx, A.seal.leaveTo.ty], [A.start.tx, A.start.ty + 3]]);
 
   // From the front: once it has turned to face the player, every arrow is blocked.
   const front = await page.evaluate(() => {

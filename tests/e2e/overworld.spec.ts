@@ -70,29 +70,33 @@ test('out in ring 2 a fight fills the screen with 10 or more enemies', async ({ 
     h.walkTo((41.5 + h.ox) * 32, (22.5 + h.oy) * 32);
     // Ring 2's packs; the crowd round one counts every enemy out there within a screen of it (029: since the Frozen
     // Grotto's clearing keeps packs out, the packs fall elsewhere, and ring 1's can stand within a screen of ring 2's).
-    const out = g.getState().enemies.filter((e) => e.room === 'overworld' && e.group.startsWith('pop-'));
-    const ring2 = out.filter((e) => e.group.startsWith('pop-2-'));
-    const crowd = (e: { x: number; y: number }) => out.filter((o) => Math.abs(o.x - e.x) <= 320 && Math.abs(o.y - e.y) <= 180).length;
-    const busiest = [...ring2].sort((a, b) => crowd(b) - crowd(a))[0];
-    if (!busiest) throw new Error('no ring 2 packs');
-    for (let t = 0; t < 30; t++) sample(g.step(1));
-    // Half a screen from it, on ground the player can stand (035: which spot depends on where the packs fell).
-    const open = g.passable();
-    const near = [[0, 160], [0, -160], [160, 0], [-160, 0], [120, 120], [-120, 120], [120, -120], [-120, -120]]
-      .map(([dx, dy]) => ({ x: busiest.x + (dx ?? 0), y: busiest.y + (dy ?? 0) }))
-      .filter((p) => open[Math.floor(p.y / 32)]?.[Math.floor(p.x / 32)] === '.');
-    // 053: some spots round a pack by the barrier are behind it; the first one walkable to.
-    const reached = near.some((p) => {
-      try {
-        h.walkTo(p.x, p.y);
-        return true;
-      } catch {
-        return false;
-      }
-    });
-    if (!reached) throw new Error('no open ground near the busiest pack');
-    sample(g.getState());
-    for (let t = 0; t < 600 && !ko; t++) sample(g.step(1, { dodge: t % 30 === 0 }));
+    // 053: the round map is big, and on the long walk there the packs can change (a wiped pack respawns elsewhere), so
+    // it looks again from where it got to, up to three times.
+    for (let tries = 0; tries < 3 && onScreen < 10 && !ko; tries++) {
+      const out = g.getState().enemies.filter((e) => e.room === 'overworld' && e.group.startsWith('pop-'));
+      const ring2 = out.filter((e) => e.group.startsWith('pop-2-'));
+      const crowd = (e: { x: number; y: number }) => out.filter((o) => Math.abs(o.x - e.x) <= 320 && Math.abs(o.y - e.y) <= 180).length;
+      const busiest = [...ring2].sort((a, b) => crowd(b) - crowd(a))[0];
+      if (!busiest) throw new Error('no ring 2 packs');
+      for (let t = 0; t < 30; t++) sample(g.step(1));
+      // Half a screen from it, on ground the player can stand (035: which spot depends on where the packs fell).
+      const open = g.passable();
+      const near = [[0, 160], [0, -160], [160, 0], [-160, 0], [120, 120], [-120, 120], [120, -120], [-120, -120]]
+        .map(([dx, dy]) => ({ x: busiest.x + (dx ?? 0), y: busiest.y + (dy ?? 0) }))
+        .filter((p) => open[Math.floor(p.y / 32)]?.[Math.floor(p.x / 32)] === '.');
+      // 053: some spots round a pack by the barrier are behind it; the first one walkable to.
+      const reached = near.some((p) => {
+        try {
+          h.walkTo(p.x, p.y);
+          return true;
+        } catch {
+          return false;
+        }
+      });
+      if (!reached) continue;
+      sample(g.getState());
+      for (let t = 0; t < 600 && !ko; t++) sample(g.step(1, { dodge: t % 30 === 0 }));
+    }
     return { onScreen, rings: [...rings], populated: g.getState().populated, ko };
   });
   expect(seen.populated).toBe(true);

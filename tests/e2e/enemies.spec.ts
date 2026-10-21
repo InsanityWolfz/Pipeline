@@ -26,8 +26,9 @@ function approachPack(page: Page) {
   return page.evaluate(([door, half]) => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    // East past the ruin (053: `half` tiles either side of the door), then up to the row above the door's, beside it.
-    const x = (door.tx + half + 2.5) * 32;
+    // East past the ruin (053: `half` tiles either side of the door), then up to the row above the door's, beside it,
+    // west of the ruin field's wall stub there.
+    const x = (door.tx + half + 1.5) * 32;
     const y = (door.ty - 0.5) * 32;
     for (let t = 1; t <= 600; t++) {
       const p = g.getState().player;

@@ -33,17 +33,18 @@ test('clear the shrine (through the hook), claim the pylon, deposit, travel and 
   test.setTimeout(120_000);
   const errors = watchErrors(page);
   await boot(page, '?playtest');
-  const result = await page.evaluate(() => {
+  const result = await page.evaluate(([area, gate, pylon]) => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     g.step(0);
-    // Round the start stone, north up the path, then east along it to the shrine's gap (src/data/overworld.ts).
+    // Round the start stone, then by the north-east road to the shrine's gap and in (053: src/data/roads.ts).
     const X = h.ox;
     h.walkTo((41.5 + X) * 32, g.getState().player.y);
-    for (const [tx, ty] of [[41.5, 22.5], [52.5, 21.5], [60.5, 18.5], [66.5, 17.5], [66.5, 13.5]]) h.walkTo(((tx ?? 0) + X) * 32, (ty ?? 0) * 32);
+    h.walkTo((gate.tx + 0.5) * 32, (gate.ty + 2.5) * 32);
+    h.walkTo((gate.tx + 0.5) * 32, (gate.ty - 1.5) * 32);
     let s = g.getState();
-    const inside = (e: { x: number; y: number }) => e.x > (58 + X) * 32 && e.x < (75 + X) * 32 && e.y > 3 * 32 && e.y < 16 * 32;
+    const inside = (e: { x: number; y: number }) => e.x > area.x0 * 32 && e.x < (area.x1 + 1) * 32 && e.y > area.y0 * 32 && e.y < (area.y1 + 1) * 32;
     const arrived = inside(s.player) ? 'shrine' : `${s.player.x},${s.player.y}`;
     const guards = () => s.enemies.filter((e) => e.group === 'shrine');
     // Declared setup, not play: the shrine's guards (and any wanderers about) are cleared through the hook. This
@@ -55,9 +56,9 @@ test('clear the shrine (through the hook), claim the pylon, deposit, travel and 
     // Claim: stand below the pylon, E, stand still.
     try {
       // Around the pylon's east side, so it never stands in the way.
-      h.walkTo((68.5 + X) * 32, g.getState().player.y);
-      h.walkTo((68.5 + X) * 32, 9.5 * 32);
-      h.walkTo((66.5 + X) * 32, 9.5 * 32);
+      h.walkTo((pylon.tx + 2.5) * 32, g.getState().player.y);
+      h.walkTo((pylon.tx + 2.5) * 32, (pylon.ty + 1.5) * 32);
+      h.walkTo((pylon.tx + 0.5) * 32, (pylon.ty + 1.5) * 32);
     } catch {
       const q = g.getState();
       return { arrived, failed: `stuck at ${q.player.x},${q.player.y} room ${q.room} cleared ${cleared} enemies ${JSON.stringify(guards().map((e) => [e.enemyId, e.x, e.y]))}` };
@@ -65,7 +66,7 @@ test('clear the shrine (through the hook), claim the pylon, deposit, travel and 
     g.step(1, { interact: true });
     s = g.step(130);
     return { arrived, cleared, claimed: s.claims.includes('shrine'), failed: '' };
-  });
+  }, [OVERWORLD.shrine.area, OVERWORLD.shrine.gate[1] ?? OVERWORLD.shrine.pylon, OVERWORLD.shrine.pylon] as const);
   expect(result.failed).toBe('');
   expect(result.arrived).toBe('shrine');
   expect(result.cleared).toBe(true);
@@ -109,11 +110,11 @@ test('clear the shrine (through the hook), claim the pylon, deposit, travel and 
   await pylonMenu(page, 1, async () => (await state(page)).room === 'foundry');
   const home = (await state(page)).room;
 
-  const after = await page.evaluate(() => {
+  const after = await page.evaluate((area) => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
-    const inside = (e: { x: number; y: number }) => e.x > (58 + h.ox) * 32 && e.x < (75 + h.ox) * 32 && e.y > 3 * 32 && e.y < 16 * 32;
+    const inside = (e: { x: number; y: number }) => e.x > area.x0 * 32 && e.x < (area.x1 + 1) * 32 && e.y > area.y0 * 32 && e.y < (area.y1 + 1) * 32;
     // Take one stack from the stash (fixture at tile 22,11), standing beside it.
     h.walkTo(21.5 * 32, 11.5 * 32);
     let s = g.step(1, { takeStash: { itemId: 'wood' } });
@@ -130,7 +131,7 @@ test('clear the shrine (through the hook), claim the pylon, deposit, travel and 
     h.walkTo(22.5 * 32, 5.5 * 32);
     s = g.step(1, { interact: true });
     return { wood, raw, back: s.room === 'overworld' && inside(s.player) ? 'shrine' : s.room };
-  });
+  }, OVERWORLD.shrine.area);
   expect(stashed).toBeGreaterThan(0);
   expect(home).toBe('foundry');
   expect(after.wood).toBeGreaterThan(0);
