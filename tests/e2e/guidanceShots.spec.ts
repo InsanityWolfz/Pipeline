@@ -133,4 +133,28 @@ test.describe('review screenshots (051)', () => {
     await expect.poll(async () => (await ui(page))?.minimap.hover).toBe('Foundry');
     await page.screenshot({ path: `${SHOTS}/05-fogged-minimap.png`, clip: { x: canvas.x + canvas.width * 0.55, y: canvas.y, width: canvas.width * 0.45, height: canvas.height * 0.32 } });
   });
+
+  test('06 the foundry minimap', async ({ page }) => {
+    await boot(page, '?start=tutorial');
+    await page.evaluate(() => {
+      const g = window.__GAME__;
+      const h = window.__helpers;
+      if (!g || !h) throw new Error('no game');
+      h.walkTo((40.5 + h.ox) * 32, 34.5 * 32);
+      g.step(1, { interact: true });
+      for (const e of g.getState().enemies.filter((x) => x.group === 'field')) g.setEnemyHealth(e.id, 0);
+      g.step(2);
+      h.toFoundry();
+      g.step(400);
+      g.claim('quarry');
+      h.walkTo(17.5 * 32, 9.5 * 32);
+    });
+    await quietScreen(page);
+    await cameraSettled(page);
+    await expect.poll(async () => (await ui(page))?.foundryMap.shown).toBe(true);
+    await page.screenshot({ path: `${SHOTS}/06a-foundry-minimap.png` });
+    const canvas = await page.locator('canvas').boundingBox();
+    if (!canvas) throw new Error('no canvas');
+    await page.screenshot({ path: `${SHOTS}/06b-foundry-minimap-close.png`, clip: { x: canvas.x + canvas.width * 0.66, y: canvas.y, width: canvas.width * 0.34, height: canvas.height * 0.3 } });
+  });
 });

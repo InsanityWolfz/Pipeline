@@ -48,6 +48,21 @@ test('inside the foundry a goal outside points at the door; the bomb goal lists 
   }, SHRINE);
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().waypoint))?.via).toBe('door');
   expect((await page.evaluate(() => window.__GAME__?.ui().waypoint))?.x).toBeCloseTo(23.5 * T, 0);
+  // B.6: the foundry's own map in the minimap's place: its icons, and no overworld minimap.
+  const inside = await page.evaluate(() => window.__GAME__?.ui());
+  expect(inside?.minimap.shown).toBe(false);
+  expect(inside?.foundryMap.shown).toBe(true);
+  for (const kind of ['tube', 'bench', 'stash', 'door', 'entrance', 'player']) expect(inside?.foundryMap.icons.map((i) => i.kind)).toContain(kind);
+  // A conduit laid shows as a line.
+  const before = inside?.foundryMap.lines.length ?? 0;
+  await page.evaluate(() => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    g.step(1, { toggleBuild: true });
+    g.step(1, { place: { pieceId: 'conduit', tx: 16, ty: 12, facing: 'up' } });
+    g.step(1, { toggleBuild: true });
+  });
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().foundryMap))?.lines.length).toBe(before + 2);
 
   await boot(page, '?start=tutorial');
   await page.evaluate((n) => {

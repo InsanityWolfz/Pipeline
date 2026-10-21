@@ -9,6 +9,7 @@ import type { MadePopupShown } from './MadePopups';
 import type { BuildBarState } from './BuildView';
 import type { CraftMenuState } from './CraftMenuView';
 import type { WaypointShown } from './WaypointView';
+import type { FoundryMapShown } from './FoundryMapView';
 import type { SubStepShown } from './ObjectiveView';
 import type { PromptState } from './PromptView';
 import type { PortShown } from './PortView';
@@ -105,6 +106,8 @@ export interface UiState {
   buildTip: string | null;
   /** 017, 051: the minimap, its markers (view px, with the name hovering shows), and the hovered one's name. */
   minimap: { shown: boolean; markers: { kind: string; x: number; y: number; name?: string }[]; hover: string | null };
+  /** 051 (B.6): the foundry's minimap while it shows: carriers' lines, pieces' dots and the icons, view px. */
+  foundryMap: FoundryMapShown;
   nodes: Record<number, string>;
   /** 051 (B.4): the drawn nodes whose harvestable glow shows, by node id. */
   nodeGlow: number[];

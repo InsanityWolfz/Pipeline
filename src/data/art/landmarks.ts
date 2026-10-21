@@ -1,4 +1,4 @@
-import { LANDMARK_LOOK, LANDMARK_SPRITES, MAP_ICONS } from '../landmarkAssets';
+import { FOUNDRY_MAP_ICONS, LANDMARK_LOOK, LANDMARK_SPRITES, MAP_ICONS } from '../landmarkAssets';
 import { canopy, shadow } from './terrain';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSprite } from './types';
 
@@ -130,6 +130,20 @@ const ICON_ARENA: Shape[] = [
   line([2.4, -2.4, -2.4, 2.4], 1.1, 'rust-light', true),
 ];
 
+// 051 (B.6): the foundry map's icons: the intake (a cyan-ringed tube mouth), the bench (a table with a lens) and the
+// stash (a chest).
+const ICON_TUBE: Shape[] = [
+  rect(-2.2, -4.6, 4.4, 7, 1, { fill: 'brass', outline: true }),
+  { ...ellipse(0, 3, 3.4, 1.8, { fill: 'cyan', outline: true }), glow: { color: 'cyan-glow', blur: 2 } },
+];
+const ICON_BENCH: Shape[] = [
+  rect(-4, -1, 8, 2.4, 0.6, { fill: 'wood-light', outline: true }),
+  line([-3, 1.4, -3, 4], 1, 'wood-dark'),
+  line([3, 1.4, 3, 4], 1, 'wood-dark'),
+  ellipse(1.2, -3, 1.8, 1.8, { fill: 'cyan-glow', stroke: { color: 'brass', width: 0.8 } }),
+];
+const ICON_STASH: Shape[] = [rect(-4, -3, 8, 6, 1, { fill: 'wood', outline: true }), rect(-4, -3, 8, 2, 0.6, flat('wood-light')), rect(-0.8, -1.4, 1.6, 2, 0.3, flat('brass'))];
+
 /** The champion's glow: a soft round light, white so render can tint it (gold-trim by data). */
 const G = LANDMARK_LOOK.championGlowPx;
 const GLOW: Shape[] = [ellipse(0, 0, G, G, { fill: { radial: [0, 0, G], stops: [{ at: 0, color: { id: 'snow', alpha: 0.9 } }, { at: 0.55, color: { id: 'snow', alpha: 0.4 } }, { at: 1, color: { id: 'snow', alpha: 0 } }] } })];
@@ -153,5 +167,8 @@ export const LANDMARK_SPRITES_VECTOR: readonly VectorSprite[] = [
   one(MAP_ICONS.foundry, [11, 11], [5.5, 5.5], ICON_FOUNDRY),
   one(MAP_ICONS.pylon, [8, 13], [4, 6.5], ICON_PYLON),
   one(MAP_ICONS.arena, [11, 11], [5.5, 5.5], ICON_ARENA),
+  one(FOUNDRY_MAP_ICONS.tube, [9, 11], [4.5, 5.5], ICON_TUBE),
+  one(FOUNDRY_MAP_ICONS.bench, [10, 10], [5, 5], ICON_BENCH),
+  one(FOUNDRY_MAP_ICONS.stash, [10, 8], [5, 4], ICON_STASH),
   one(LANDMARK_SPRITES.championGlow, [G * 2 + 4, G * 2 + 4], [G + 2, G + 2], GLOW),
 ];

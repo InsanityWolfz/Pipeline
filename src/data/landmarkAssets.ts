@@ -37,6 +37,14 @@ export const MAP_ICONS = {
   arena: 'map-arena',
 } as const;
 
+/** 051 (B.6): the foundry map's icon frames (src/data/foundryMap.ts), by what they mark; the door shares the stairs' arch. */
+export const FOUNDRY_MAP_ICONS = {
+  tube: 'fmap-tube',
+  bench: 'fmap-bench',
+  stash: 'fmap-stash',
+  door: MAP_ICONS.foundry,
+} as const;
+
 export const LANDMARK_LOOK = {
   /**
    * A grotto hollow: a sunken basin over its area, `inset` tiles in from the area's edge, its floor darker and its lip
