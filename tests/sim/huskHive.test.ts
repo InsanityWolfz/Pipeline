@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { NODE_SPRITES } from '../../src/data/assets';
 import { CHAMPIONS } from '../../src/data/champions';
 import { CLAIM_TICKS, SUPPLY_TICKS } from '../../src/data/claims';
 import { enemyDef } from '../../src/data/enemies';
@@ -6,6 +7,7 @@ import { landmarkDef } from '../../src/data/landmarks';
 import { nodeDef, REGROW_STAGES } from '../../src/data/nodes';
 import { OVERWORLD_ROOM } from '../../src/data/overworld';
 import { SHRINE_SITE } from '../../src/data/rooms';
+import { nodeFrame } from '../../src/render/nodeStages';
 import { claim } from '../../src/sim/claims';
 import { fixtureDef, portFront } from '../../src/sim/fixtures';
 import { place } from '../../src/sim/placement';
@@ -116,6 +118,17 @@ describe('a resin seep', () => {
     expect(n.regrow).toBeGreaterThan(def.regrowTicks - 10);
     expect(summarize(s).nodes[i]).toMatchObject({ nodeId: 'resin-seep', uses: 0 });
     expect(REGROW_STAGES).toBeGreaterThan(0);
+    // Halfway back: still used up (E there gives nothing), its remains at a middle regrow stage.
+    run(s, Math.floor(def.regrowTicks / 2));
+    expect(n.uses).toBe(0);
+    expect(n.regrow).toBeGreaterThan(0);
+    expect(n.regrow).toBeLessThan(def.regrowTicks);
+    expect(summarize(s).nodes[i]).toMatchObject({ uses: 0, regrow: n.regrow });
+    expect(nodeFrame(n)).toBe(NODE_SPRITES['resin-seep']?.regrow[Math.floor((REGROW_STAGES + 1) / 2)]);
+    movePlayer(s, n.x, n.y + 16);
+    run(s, 1, { interact: true });
+    run(s, def.harvestTicks);
+    expect(s.inventory['husk-resin']).toBe(def.uses);
     run(s, def.regrowTicks);
     expect(n.uses).toBe(def.uses);
   });
