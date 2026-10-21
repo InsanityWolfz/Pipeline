@@ -2,7 +2,7 @@ import { ITEMS } from '../data/items';
 import type { GameObjects, Scene, Textures } from 'phaser';
 import { DEPTHS, OVERWORLD_TEXTURES } from '../data/assets';
 import { TILE_SIZE, VIEW_WIDTH } from '../data/config';
-import { MINIMAP } from '../data/hudLayout';
+import { MINIMAP } from '../data/minimap';
 import { OVERWORLD } from '../data/overworld';
 import { HOLLOWS, inHollows } from '../data/hollows';
 import { LANDMARK_LIST, type LandmarkMarker } from '../data/landmarks';

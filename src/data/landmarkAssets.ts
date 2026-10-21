@@ -24,7 +24,7 @@ export const LANDMARK_SPRITES = {
   championGlow: 'champion-glow',
 } as const;
 
-/** The minimap's landmark icons, by marker (hudLayout's `MINIMAP.landmarkScale` sizes them). */
+/** The minimap's landmark icons, by marker (`MINIMAP.landmarkScale`, src/data/minimap.ts, sizes them). */
 export const MAP_ICONS = {
   site: 'map-site',
   grotto: 'map-grotto',
