@@ -58,13 +58,16 @@ export const ICON_RISE: Readonly<Record<'1x1' | '3x1', Record<PieceView, number>
  * Build bar icons for the logistics pieces. A machine has no emblem of its own:
  * the icon of the item it makes is drawn on its top face and on the bar.
  */
+/** The underground pair's build bar emblems (052), drawn in art/tunnels.ts. */
+export const TUNNEL_ICONS = { in: 'emblem-tunnel-in', out: 'emblem-tunnel-out' } as const;
+
 export const LOGISTICS_ICONS: Readonly<Record<string, string>> = {
   conduit: 'emblem-conduit',
   hopper: 'emblem-hopper',
   crate: 'emblem-crate',
   splitter: 'emblem-splitter',
-  'underground-entrance': 'emblem-tunnel-in',
-  'underground-exit': 'emblem-tunnel-out',
+  'underground-entrance': TUNNEL_ICONS.in,
+  'underground-exit': TUNNEL_ICONS.out,
 };
 
 /** The underground pair (052), flat on the floor by view; `side` flows right (render flips it for left). */
@@ -78,9 +81,10 @@ export const TUNNEL_SPRITES = {
  * going under ... just like Factorio"): two lines along each tile it passes under, `inset` px in from the tile's sides,
  * `width` px wide, in `color`. A tunnel to its pair (hovered, or the exit's ghost in reach) at `alpha`; an entrance's
  * reach while placing (its ghost, or every free entrance while the exit is selected) at `reachAlpha`, ending in a tick
- * across the farthest tile; under each line a glow 2 px wider at `glowAlpha` of it. World px.
+ * across the farthest tile; under each line a glow `glowSpread` px wider at `glowAlpha` of it. World px. A riding item
+ * dives in (or climbs out) at the end's mouth, `mouth` of a tile from its middle: the entrance's ahead, the exit's behind.
  */
-export const TUNNEL_LOOK = { color: 'cyan-glow', glow: 'cyan', glowAlpha: 0.3, alpha: 0.95, reachAlpha: 0.45, width: 1.5, inset: 5, tick: 6 } as const;
+export const TUNNEL_LOOK = { color: 'cyan-glow', glow: 'cyan', glowAlpha: 0.3, glowSpread: 2, alpha: 0.95, reachAlpha: 0.45, width: 1.5, inset: 5, tick: 6, mouth: 0.1 } as const;
 
 /** Conduits flow toward their front; `side` flows right. They lie flat on the floor. */
 export const CONDUIT_ANIMS: Readonly<Record<PieceView, AnimDef>> = {

@@ -1,5 +1,5 @@
 import { CONDUIT_TICKS } from '../data/foundry';
-import { TUNNEL_SPRITES } from '../data/foundryAssets';
+import { TUNNEL_LOOK, TUNNEL_SPRITES } from '../data/foundryAssets';
 import { RESEARCH_SPRITES } from '../data/researchAssets';
 import { TILE_SIZE } from '../data/config';
 import { facingVector } from '../sim/direction';
@@ -42,9 +42,6 @@ export function tunnelLook(kind: 'tunnel-in' | 'tunnel-out', facing: Facing): { 
   return { frame: TUNNEL_SPRITES[kind === 'tunnel-in' ? 'in' : 'out'][viewOf(facing)], flipX: facing === 'left' };
 }
 
-/** How far from the tile's middle an end's mouth is, as a share of a tile: the entrance's ahead of it, the exit's behind. */
-const MOUTH = 0.1;
-
 /**
  * Where a riding item sits on an underground end, world px: on an entrance, sliding from its back edge into the mouth;
  * on an exit, from the mouth out to its front edge.
@@ -52,7 +49,8 @@ const MOUTH = 0.1;
 export function tunnelRiderAt(p: TunnelInState | TunnelOutState): { x: number; y: number } {
   const t = p.progress / CONDUIT_TICKS;
   const [vx, vy] = facingVector(p.facing);
-  const k = p.kind === 'tunnel-in' ? -0.5 + t * (0.5 + MOUTH) : -MOUTH + t * (0.5 + MOUTH);
+  const { mouth } = TUNNEL_LOOK;
+  const k = p.kind === 'tunnel-in' ? -0.5 + t * (0.5 + mouth) : -mouth + t * (0.5 + mouth);
   const r = pieceRect(p);
   return { x: Math.round(r.x + vx * k * TILE_SIZE), y: Math.round(r.y + vy * k * TILE_SIZE) };
 }

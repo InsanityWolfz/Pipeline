@@ -1,4 +1,4 @@
-import { LOGISTICS_ICONS, TUNNEL_SPRITES, type PieceView } from '../foundryAssets';
+import { TUNNEL_ICONS, TUNNEL_SPRITES, type PieceView } from '../foundryAssets';
 import { channel, chevron, collar, floorPiece, STRAIGHT, T, trough, type Pt } from './logistics';
 import { ellipse, line, rect, solid, trim, type PathCmd, type Shape, type ShapeStyle, type VectorSprite } from './types';
 
@@ -96,6 +96,6 @@ const icon = (key: string, shapes: readonly Shape[]): VectorSprite => ({ key, si
 
 export const TUNNEL_SPRITES_VECTOR: readonly VectorSprite[] = [
   ...VIEWS.flatMap((view) => [floorPiece(TUNNEL_SPRITES.in[view], [entrance(view)]), floorPiece(TUNNEL_SPRITES.out[view], [exit(view)])]),
-  icon(LOGISTICS_ICONS['underground-entrance'] ?? 'emblem-tunnel-in', emblem(false)),
-  icon(LOGISTICS_ICONS['underground-exit'] ?? 'emblem-tunnel-out', emblem(true)),
+  icon(TUNNEL_ICONS.in, emblem(false)),
+  icon(TUNNEL_ICONS.out, emblem(true)),
 ];

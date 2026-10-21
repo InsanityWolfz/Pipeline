@@ -27,7 +27,7 @@ export class TunnelView {
     this.g.clear();
     for (const m of this.marks) {
       const alpha = m.kind === 'tunnel' ? L.alpha : L.reachAlpha;
-      this.g.lineStyle(L.width + 2, colorOf(L.glow), alpha * L.glowAlpha);
+      this.g.lineStyle(L.width + L.glowSpread, colorOf(L.glow), alpha * L.glowAlpha);
       this.drawLines(m);
       this.g.lineStyle(L.width, colorOf(L.color), alpha);
       this.drawLines(m);
