@@ -36,6 +36,8 @@ export class PortView {
   private readonly parts = new Map<string, PortParts>();
   /** What shows, for the test hook. */
   shown: PortShown[] = [];
+  /** The fixtures' tiles, and the fixture list they were read from (see occupied). */
+  private tiles: { from: readonly unknown[] | null; count: number; at: ReadonlySet<string> } = { from: null, count: 0, at: new Set() };
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -52,16 +54,25 @@ export class PortView {
       const text = portPlate(pylons, portPerMinute(pylons));
       // A fixture standing right below this port (034's wood port under ley-iron, 049's resin port under ley crystal and
       // the bench under it) would hide the plate, which lies on its tile: the plate moves one tile into the room.
-      const under = sim.fixtures.some((o) => {
-        const d = fixtureDef(o.id);
-        return d.tx === def.tx && d.ty === def.ty + 1;
-      });
+      const under = this.occupied(sim).has(`${def.tx},${def.ty + 1}`);
       if (text !== parts.shown || under !== parts.under) this.drawPlate(parts, text, def, under);
       for (const o of [parts.icon, parts.plate, parts.text]) o.setVisible(true);
       this.shown.push({ raw: def.raw, icon: itemDef(def.raw).icon, plate: text });
     }
     const live = new Set(here ? sim.fixtures.map((f) => f.id) : []);
     for (const [id, p] of this.parts) if (!live.has(id)) for (const o of [p.icon, p.plate, p.text]) o.setVisible(false);
+  }
+
+  /**
+   * The tiles fixtures stand on, worked out again only when the fixtures change (a claim adds its ports), not every
+   * frame.
+   */
+  private occupied(sim: SimState): ReadonlySet<string> {
+    if (this.tiles.from !== sim.fixtures || this.tiles.count !== sim.fixtures.length) {
+      const at = sim.fixtures.map((o) => fixtureDef(o.id)).map((d) => `${d.tx},${d.ty}`);
+      this.tiles = { from: sim.fixtures, count: sim.fixtures.length, at: new Set(at) };
+    }
+    return this.tiles.at;
   }
 
   /** The icon on a port's face, in front of the port's body, and its plate's parts. */
