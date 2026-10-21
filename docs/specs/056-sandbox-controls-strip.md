@@ -42,3 +42,8 @@ Built on `claude/056-sandbox-strip`. 056.1–056.3 are built as proposed. Each c
 - **056.6 Fitting the strip.** For the loadout's rows and the 12-line key list to fit above the HP block, the rows are 2 px apart (were 4) in both columns, and the strip starts at y 34, under the boss bar (a boss fight's bar would otherwise sit over its corner). The spawn column starts under the minimap's space (056.3). Both stay 200 px wide. Proposal: keep.
 - **056.7 The key list's words.** Move shows its keys up, left, down, right, so the defaults read "W A S D". The panel key's line says "Hide controls" (Settings still calls it "Sandbox panel"). An unbound action shows "—". The backquote shows as "`", as in Settings; it's small. Proposal: keep.
 - **056.8 The pointer.** It's the arrow only over the strips; elsewhere it stays the crosshair (it was the arrow whenever the old panel was open). Proposal: keep.
+
+## Results (build)
+- **Criteria:** all five met. tests/render/sandboxStrip.test.ts checks the strip's and spawn column's boxes against the HP block, carried bar, tube slot (1–5 units), minimap, boss bar and player, and the key list against a rebind; tests/e2e/sandboxStrip.spec.ts checks both columns and the key list on load with no key press, a row click, no pause, the hide key, a big panel stepping them aside, a rebind through Settings, and that the normal game shows none of it.
+- **Checks:** `npm run check` passes (1,840 tests). The full Playwright run: 163 passed, 0 failed, 155 skipped (review shots).
+- **Review shots:** docs/review/056: 01 the strip on load, 02 the key list after rebinding Roll to Shift. 044's shots all retaken (the room's shots now show the controls; the volley and pack shots hide them with the backquote).
