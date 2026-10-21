@@ -31,3 +31,15 @@ Already settled before the interview: note 3 dropped (the Warden stays), notes 1
 ## After the 046 build
 - **046.7, early ammo:** "2× per resource" (rec). Only the last step of each Region 1 chain doubles, so one wood, stone and fiber make 16 arrows (from 8); parts and landmine costs stay as they were. The build had doubled every step, which compounded to 4×.
 - **047.9, teaching right click:** "Left fires carried until attuned". Before the tube attunes (no intake yet), left click fires the selected carried item as right click does; once attuned, left click is the volley (or the punch) and right click the carried item. A one-time "Right click: carried items" hint shows as the attune ends, once per save.
+
+## Next batch: 048 volley shape (note 5)
+- **Lanes:** each entrance owns a fixed lane: west fires left, centre the middle, east right; two fed entrances fire either side of the cursor (rec).
+- **Angle:** 15° between shots, today's `SPREAD_STEP` (rec).
+- **Timing:** "Together, each keeps its rate": each entrance fires on its own beat, and when beats line up they fire together. (Recommended was "together at the slowest rate".)
+- **Bombs:** land on an arc at the cursor's distance, each rotated to its lane's angle (rec).
+
+## Next batch: 049 resin pylon (note 16)
+- **Site:** a new Husk Hive landmark: a Husk nest of amber-crusted stone, guarded by a Husk pack with a champion; its pylon supplies resin (rec).
+- **Nodes:** resin seeps at the site, harvested with E like other nodes (rec).
+- **Rate:** the same as other pylons (028) (rec).
+- **Timing:** ring 2, reached after the Warden (rec).
