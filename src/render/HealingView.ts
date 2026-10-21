@@ -106,7 +106,7 @@ export class HealingView {
     const source = shown === sim.roomId ? p.healing : null;
     this.poolGlow = source === 'spring' ? (springAt(sim.roomId, p.x, p.y)?.id ?? null) : null;
     this.drawSprings(shown === OVERWORLD.id, deltaMs);
-    this.drawMotes(p, source !== null, deltaMs);
+    this.drawMotes(p, source !== null && SPRING_LOOK.motes.sources.includes(source), deltaMs);
     this.drawThread(sim, source === 'pylon');
     this.drawShimmer(p, source === 'foundry' && shown === FOUNDRY_ROOM, deltaMs);
   }

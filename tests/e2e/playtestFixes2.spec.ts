@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { END_CARD } from '../../src/data/endCard';
+import { RELIC_LOOK } from '../../src/data/gearAssets';
 import { TUTORIAL_LAYOUT } from '../../src/data/foundryAssets';
 import { HOVER_NAME } from '../../src/data/hudLayout';
 import { INTERACT_PROMPTS } from '../../src/data/interact';
@@ -210,5 +211,50 @@ test('hovering an inventory item shows its name in a tip (050 A.14)', async ({ p
   await page.mouse.move(at.x, at.y);
   await expect.poll(async () => (await ui(page))?.tip?.name).toBe('Warden core');
   expect((await ui(page))?.tip?.source.kind).toBe('item');
+  expect(errors).toEqual([]);
+});
+
+test('Mending-style field regen heals with no sparkle; the ward ring keeps still under the walking player, a shield on it (050 A.15, A.16)', async ({ page }) => {
+  test.setTimeout(60_000);
+  const errors = watchErrors(page);
+  await boot(page, '?playtest');
+  // A regen piece and the Wardstone Circlet, worn at the bench; then hurt, out in the field.
+  await page.evaluate(() => {
+    const g = window.__GAME__;
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    g.step(1);
+    h.toFoundry();
+    h.walkTo(2.3 * 32, 12.5 * 32);
+    let s = g.addGear({ slot: 'body', rarity: 'rare', weight: 'light', baseArmor: 2, affixes: [{ kind: 'regen', value: 2 }], relic: null, name: 'Mending Robe' });
+    g.step(1, { equip: { id: s.gear.at(-1)?.id ?? -1 } });
+    s = g.addGear({ slot: 'helm', rarity: 'relic', weight: null, baseArmor: 2, affixes: [], relic: 'wardstone-circlet', name: 'Wardstone Circlet' });
+    g.step(1, { equip: { id: s.gear.at(-1)?.id ?? -1 } });
+    h.toHall();
+    g.setPlayerHealth(40);
+    g.step(200);
+  });
+  expect((await state(page)).player.healing).toBe('regen');
+  await expect.poll(async () => (await ui(page))?.relics.shield).toBe(true);
+  for (let i = 0; i < 10; i++) {
+    await page.evaluate(() => window.__GAME__?.step(4));
+    await page.waitForTimeout(30);
+    expect((await ui(page))?.healing.motes).toBe(0);
+  }
+  // Walking: the ring sits on the player's own point every frame (rounded against it, it was up to half a px off and shook).
+  const offsets: { dx: number; dy: number }[] = [];
+  for (let i = 0; i < 20; i++) {
+    await page.evaluate((k) => window.__GAME__?.step(3, { moveX: 1, moveY: k % 2 === 0 ? 1 : 0 }), i);
+    await page.waitForTimeout(20);
+    const u = await ui(page);
+    const ring = u?.relics.ring;
+    const p = (await state(page)).player;
+    if (!ring) throw new Error('no ring');
+    offsets.push({ dx: ring.x - p.x, dy: ring.y - p.y });
+  }
+  for (const o of offsets) {
+    expect(Math.abs(o.dx)).toBeLessThan(0.05);
+    expect(Math.abs(o.dy + RELIC_LOOK.shimmer.lift)).toBeLessThan(0.05);
+  }
   expect(errors).toEqual([]);
 });

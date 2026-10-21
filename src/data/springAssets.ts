@@ -1,3 +1,4 @@
+import type { HealSource } from './player';
 // Asset keys and look numbers for 030's art: the Ley Spring, its ripples and light,
 // and the signs of healing on the player. Render draws by these keys; the shapes are
 // in src/data/art/spring.ts. Times ms, sizes world px, alphas 0..1.
@@ -34,6 +35,8 @@ export const SPRING_LOOK = {
     scale: [0.8, 1.2] as const,
     fadeIn: 1 / 6,
     shrink: 0.4,
+    /** 050 (A.15, Shaun: "don't have any animations when you're regenning"): the sources whose healing shows motes; field regen (Mending, gear) shows none. */
+    sources: ['spring', 'pylon', 'foundry'] as readonly HealSource[],
   },
   /** A claimed pylon's thread to a healing player: from this far above the pylon's base to this far above the feet; its wave (as the supply tendril's). */
   thread: { color: 'cyan-glow', glow: 'cyan', width: 1, glowWidth: 4, alpha: 0.45, glowAlpha: 0.18, pylonRise: 26, playerRise: 16, wobble: 3, waves: 2, waveMs: 140, steps: 18 },

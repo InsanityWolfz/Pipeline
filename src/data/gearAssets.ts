@@ -21,6 +21,8 @@ export const GEAR_SPRITES = {
   relicEmber: 'relic-ember',
   /** The Wardstone's ready shimmer round the player: a faint violet ring of light. */
   wardShimmer: 'ward-shimmer',
+  /** 050 (A.16): a small shield on the ring's front edge while the ward is ready. */
+  wardShield: 'ward-shield',
   /** Last Ember's flash as it saves the player. */
   emberFlash: 'ember-flash',
   /** A relic's flare over the bench as it's identified. */
@@ -107,6 +109,8 @@ export const GEAR_PANEL = {
 export const RELIC_LOOK = {
   /** The Wardstone's shimmer while ready: at the player's feet, `lift` px up, breathing between two alphas once per `breatheMs`. */
   shimmer: { lift: 6, alpha: [0.55, 0.95] as const, breatheMs: 1400, depthBelow: 1 },
+  /** 050 (A.16): the shield icon on the ring's front edge, `drop` px below its centre, drawn over the feet. */
+  shield: { drop: 8, depthAbove: 1 },
   /** The ward breaking on a block: the shimmer swells from `from` to `to` times and fades over `ms`. */
   wardBreak: { ms: 420, from: 1, to: 2.2, depthAbove: 1 },
   /** Last Ember's flash on a save: from `from` to `to` times, fading over `ms`, `lift` px over the feet. */
