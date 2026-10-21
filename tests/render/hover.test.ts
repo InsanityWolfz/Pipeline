@@ -166,7 +166,7 @@ describe('arena door hovers (055.1)', () => {
       s.gates[a.door.unlock] = true;
       expect(nameAt(s, OVERWORLD.id, (t.tx + 0.5) * 32, (t.ty + 0.9) * 32)).toMatchObject({ name: a.door.name, description: DESCRIPTIONS.arenaDoorOpen });
     }
-    expect(SHRINE_ARENA.door.sealed).toBe('Sealed: fill the tube from your line');
+    expect(SHRINE_ARENA.door.sealed).toBe('Sealed: discover the Foundry');
     expect(FORUM_ARENA.door.sealed).toBe('Sealed: break the Hollows barrier');
   });
 });

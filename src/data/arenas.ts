@@ -61,7 +61,7 @@ export const SHRINE_ARENA: ArenaDef = {
     // 012's shrine gate: open once the first line fills the tube (see the spec's 055.3).
     unlock: 'shrine',
     name: 'Shrine door',
-    sealed: 'Sealed: fill the tube from your line',
+    sealed: 'Sealed: discover the Foundry',
   },
   rooms: [OVERWORLD_ROOM],
 };
