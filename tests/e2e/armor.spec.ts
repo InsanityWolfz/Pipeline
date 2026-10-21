@@ -32,7 +32,15 @@ test('the first Husk drops armor, the bench identifies it, and wearing it soften
     let damage = 0;
     // 053: the foundry's ruin stands between the stairs and the ruin field's pack: round it by path first.
     const nearest = s.enemies.filter((e) => e.room === s.room).sort((a, b) => Math.hypot(a.x - s.player.x, a.y - s.player.y) - Math.hypot(b.x - s.player.x, b.y - s.player.y))[0];
-    if (nearest) h.walkTo(nearest.x + 64, nearest.y);
+    const sides = [[64, 0], [-64, 0], [0, -64], [0, 64]] as const;
+    if (nearest) sides.some(([dx, dy]) => {
+      try {
+        h.walkTo(nearest.x + dx, nearest.y + dy);
+        return true;
+      } catch {
+        return false;
+      }
+    });
     s = g.getState();
     for (let t = 0; t < 3000 && damage === 0; t++) {
       const p = s.player;
