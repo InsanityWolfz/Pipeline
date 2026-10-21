@@ -5,7 +5,7 @@ import { ellipse, flat, line, path, rect, solid, trim, type Ink, type Shape, typ
 // Restoration's art (033), in the 020 vector style: the faint cyan linework of a
 // lost part's diagram (over a cap, round the intake pipe, in a wall panel), the
 // carved wall panel and its restored brass parts, the reservoir's brass collars, the
-// sealed wing's door, the research items' icons, the splitter's and merger's build
+// sealed wing's door, the research items' icons, the splitter's build
 // bar emblems, the schematic's ley-light pillar and its light. Wall pieces sit
 // on a north-wall tile's face, world px round the tile's bottom centre.
 
@@ -32,19 +32,6 @@ function cog(x: number, y: number, r: number, teeth: number, style: 'diagram' | 
 const chev = (x: number, y: number, dx: number, dy: number, color: Ink = 'cyan-glow', s = 1.8): Shape =>
   glowLine([x - dx * s - dy * s, y - dy * s + dx * s, x + dx * s * 0.6, y + dy * s * 0.6, x - dx * s + dy * s, y - dy * s - dx * s], 0.8, color);
 
-/** The panel's middle, px above the wall tile's bottom. */
-const PY = -13;
-
-/** The merger's emblem in a panel: in from the left, top and bottom, out right. */
-const mergerLines = (color: Ink, w: number): Shape[] => [
-  glowLine([-8, PY, 8, PY], w, color),
-  glowLine([0, PY - 7, 0, PY + 7], w, color),
-  chev(-4, PY, 1, 0, color),
-  chev(0, PY - 4, 0, 1, color),
-  chev(0, PY + 4, 0, -1, color),
-  chev(6, PY, 1, 0, color),
-];
-
 /** The carved stone frame every wall diagram sits in, on the wall face under its brass band. */
 const PANEL: Shape[] = [
   rect(-11, -23, 22, 20, 1.6, { fill: { linear: [0, -23, 0, -3], stops: [{ at: 0, color: 'carve-dark' }, { at: 1, color: 'carve' }] } }),
@@ -53,17 +40,9 @@ const PANEL: Shape[] = [
   ...[-9.6, 9.6].flatMap((x) => [ellipse(x, -22, 0.8, 0.8, flat('brass')), ellipse(x, -4, 0.8, 0.8, flat('brass'))]),
 ];
 
-/** The restored parts in brass: the cog train and the merger's channels, on their panel. */
+/** The restored parts in brass: the cog train, on its panel. */
 const brassBack = rect(-8.6, -20.6, 17.2, 15.2, 1, { fill: { id: 'ink', alpha: 0.25 } });
 const RESTORED_SPEED: Shape[] = [...PANEL, brassBack, ...cog(-3, -14.5, 3.6, 8, 'brass'), ...cog(3.8, -9.6, 2.6, 6, 'brass')];
-/** A restored channel emblem: brass troughs under the cyan lines. */
-const channelBrass = (lines: Shape[]): Shape[] => [
-  ...PANEL,
-  brassBack,
-  ...lines.flatMap((s) => (s.kind === 'line' ? [line(s.pts, s.width + 2.4, 'brass-dark')] : [])),
-  ...lines,
-];
-
 /** A capped entrance's diagram: the open inlet and its collar, as faint linework over the brass cap. */
 const DIAGRAM_CAP: Shape[] = [
   ellipse(0, 0.4, 14, 5.4, { stroke: { color: 'cyan-glow', width: 1.1 }, glow: { color: 'cyan', blur: 3 } }),
@@ -134,15 +113,14 @@ const scroll = (known: boolean): Shape[] => [
   rect(-1.4, 3.2, 2.8, 2.4, 0.6, solid('rust')),
 ];
 
-/** Build bar emblems for the splitter and merger, like the sorter's: a stone channel and its cyan exits. */
-const emblem = (merge: boolean): Shape[] => [
+/** The splitter's build bar emblem: a stone channel and its two cyan exits. */
+const SPLITTER_EMBLEM: Shape[] = [
   rect(-7, -3.6, 14, 7.2, 1.6, solid('rock-light')),
   rect(-7, -2, 14, 4, 0.8, { fill: 'cyan-deep', glow: { color: 'cyan', blur: 2 } }),
-  rect(-2, merge ? -7.2 : 0, 4, 7.2, 0.8, solid('rock-light')),
-  rect(-1.2, merge ? -7.2 : 0, 2.4, 7.2, 0.6, { fill: 'cyan-deep', glow: { color: 'cyan', blur: 2 } }),
-  ...(merge ? [rect(-2, 0, 4, 7.2, 0.8, solid('rock-light')), rect(-1.2, 0, 2.4, 7.2, 0.6, { fill: 'cyan-deep', glow: { color: 'cyan', blur: 2 } })] : []),
+  rect(-2, 0, 4, 7.2, 0.8, solid('rock-light')),
+  rect(-1.2, 0, 2.4, 7.2, 0.6, { fill: 'cyan-deep', glow: { color: 'cyan', blur: 2 } }),
   path('M 2 -1.8 L 5.6 0 L 2 1.8', trim('cyan-glow', 1.1)),
-  path(merge ? 'M -1.8 -5.6 L 0 -3.2 L 1.8 -5.6' : 'M -1.8 3.2 L 0 5.6 L 1.8 3.2', trim('cyan-glow', 1)),
+  path('M -1.8 3.2 L 0 5.6 L 1.8 3.2', trim('cyan-glow', 1)),
   ellipse(0, 0, 2.2, 2.2, solid('brass')),
 ];
 
@@ -161,9 +139,7 @@ export const RESEARCH_SPRITES_VECTOR: readonly VectorSprite[] = [
   sprite(W.diagramPipe, [72, 50], [36, 67], [DIAGRAM_PIPE]),
   wall(W.panel, PANEL),
   wall(W.diagramWall.machineSpeed, [...cog(-3, -14.5, 3.6, 8, 'diagram'), ...cog(3.8, -9.6, 2.6, 6, 'diagram')]),
-  wall(W.diagramWall.merger, mergerLines('cyan-glow', 0.8)),
   wall(W.restoredWall.machineSpeed, RESTORED_SPEED),
-  wall(W.restoredWall.merger, channelBrass(mergerLines('cyan', 1.2))),
   sprite(W.restoredPipe[0], [52, 50], [26, 67], [collars([-58, -27])]),
   sprite(W.restoredPipe[1], [52, 50], [26, 67], [collars([-58, -47, -37, -27])]),
   sprite(W.wingDoor, [60, 46], [30, 44], [WING_DOOR]),
@@ -173,6 +149,5 @@ export const RESEARCH_SPRITES_VECTOR: readonly VectorSprite[] = [
   icon(RESEARCH_ICONS.bulwarkCore, BULWARK_CORE),
   icon(RESEARCH_ICONS.schematicUnknown, scroll(false)),
   icon(RESEARCH_ICONS.schematic, scroll(true)),
-  icon(LOGISTICS_ICONS.splitter ?? 'emblem-splitter', emblem(false)),
-  icon(LOGISTICS_ICONS.merger ?? 'emblem-merger', emblem(true)),
+  icon(LOGISTICS_ICONS.splitter ?? 'emblem-splitter', SPLITTER_EMBLEM),
 ];

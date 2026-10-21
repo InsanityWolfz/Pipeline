@@ -82,7 +82,7 @@ describe('the Cluster die', () => {
   it('sits in the Bombs group and unlocks by crafting cluster bombs (047)', () => {
     const s = foundry(false);
     const bench = fixtureDef('identification-bench');
-    const at = tileCentre({ tx: bench.tx + 1, ty: bench.ty });
+    const at = tileCentre({ tx: bench.tx - 1, ty: bench.ty });
     movePlayer(s, at.x, at.y);
     s.claims.push('shrine');
     s.inventory = { bomb: 4, 'ley-iron': 1 };

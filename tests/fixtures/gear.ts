@@ -42,7 +42,7 @@ export function standAtBench(s: SimState): SimState {
   s.roomId = FOUNDRY_ROOM;
   s.link.attuned = true;
   const bench = fixtureDef('identification-bench');
-  const at = tileCentre({ tx: bench.tx + 1, ty: bench.ty });
+  const at = tileCentre({ tx: bench.tx - 1, ty: bench.ty });
   s.player.x = at.x;
   s.player.y = at.y;
   s.player.aimX = at.x;

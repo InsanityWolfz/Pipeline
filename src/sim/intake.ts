@@ -2,7 +2,7 @@ import { INTAKE, INTAKE_REACH } from '../data/foundry';
 import { FEET_BOX } from '../data/player';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { TILE_SIZE } from '../data/config';
-import { frontTile, sameTile, sideTile, sortSide, splitSide, type FoundryState } from './pieces';
+import { frontTile, sameTile, sideTile, splitSide, type FoundryState } from './pieces';
 import type { SimState } from './state';
 
 // The foundry intake (019): which lines feed it, and whether the player is near its
@@ -10,12 +10,12 @@ import type { SimState } from './state';
 
 const isEntrance = (t: { tx: number; ty: number }): boolean => INTAKE.entrances.some((m) => sameTile(t, m));
 
-/** A line feeds the intake: some piece that hands items on (not a hopper or crate) has a mouth tile as its front, or a sorter's or splitter's side exit. */
+/** A line feeds the intake: some piece that hands items out its front (not a hopper, crate or underground entrance) has a mouth tile as its front, or a splitter's side exit. */
 export function feedsIntake(foundry: FoundryState): boolean {
   return foundry.pieces.some((p) => {
-    if (p.kind === 'hopper' || p.kind === 'crate') return false;
+    if (p.kind === 'hopper' || p.kind === 'crate' || p.kind === 'tunnel-in') return false;
     if (isEntrance(frontTile(p))) return true;
-    return (p.kind === 'sorter' && isEntrance(sideTile(p, sortSide(p)))) || (p.kind === 'splitter' && isEntrance(sideTile(p, splitSide(p))));
+    return p.kind === 'splitter' && isEntrance(sideTile(p, splitSide(p)));
   });
 }
 

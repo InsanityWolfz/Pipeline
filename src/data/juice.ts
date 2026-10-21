@@ -150,7 +150,7 @@ export const GLOWS = {
   vein: { color: 'cyan', radius: 22 },
   pylon: { color: 'cyan-glow', radius: 44 },
   conduitItem: { color: 'cyan', radius: 9 },
-  /** Ley light pooling along every conduit and sorter (020). */
+  /** Ley light pooling along every conduit (020). */
   conduit: { color: 'cyan', radius: 13 },
   tube: { color: 'cyan', radius: 14 },
   intake: { color: 'cyan-glow', radius: 40, pulse: 1.4, ms: 300 },

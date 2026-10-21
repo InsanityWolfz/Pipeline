@@ -115,7 +115,6 @@ export function stepClaims(state: SimState, cmd: Command): Command {
   advanceHold(state, cmd);
   if (cmd.pylon) usePylon(state, cmd.pylon);
   if (cmd.travel !== null && fixtureInReach(state, 'waystone')) travelToPylon(state, cmd.travel);
-  if (cmd.takeStash) takeStash(state, cmd.takeStash.itemId);
   if (!cmd.interact) return cmd;
   const pylon = pylonInReach(state);
   if (pylon) {
@@ -191,22 +190,6 @@ function usePylon(state: SimState, action: 'deposit' | 'travel'): void {
   if (Object.keys(items).length > 0) state.events.stashDeposits.push({ items });
   // A deposit banks what's left to carry, which is nothing, even when nothing moved.
   bank(state);
-}
-
-/** Takes one stack (or everything, for null) out of the stash, standing at it. */
-function takeStash(state: SimState, itemId: string | null): void {
-  if (!fixtureInReach(state, 'stash')) return;
-  const ids = itemId === null ? Object.keys(state.stash) : [itemId];
-  const items: Record<string, number> = {};
-  for (const id of ids) {
-    const n = count(state.stash, id);
-    if (n <= 0) continue;
-    state.inventory[id] = count(state.inventory, id) + n;
-    items[id] = n;
-  }
-  // Emptied stacks leave the stash rather than sitting there at 0.
-  state.stash = Object.fromEntries(Object.entries(state.stash).filter(([id]) => !(id in items)));
-  if (Object.keys(items).length > 0) state.events.stashTakes.push({ items });
 }
 
 /** The waystone: to a claimed pylon by its site, standing one tile below it. */

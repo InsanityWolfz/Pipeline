@@ -161,7 +161,7 @@ describe('stages on every family (039.12)', () => {
   it('crafting Frost bombs (047) makes them and unlocks the rune; the landmine row shows once ley-iron is found', () => {
     const s = foundry(false);
     const bench = fixtureDef('identification-bench');
-    const at = tileCentre({ tx: bench.tx + 1, ty: bench.ty });
+    const at = tileCentre({ tx: bench.tx - 1, ty: bench.ty });
     movePlayer(s, at.x, at.y);
     s.claims.push('shrine');
     s.inventory = { bomb: 4, rimestone: 1 };

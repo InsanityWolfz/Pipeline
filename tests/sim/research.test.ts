@@ -25,7 +25,6 @@ describe('node states', () => {
       'reservoir-1': 'revealed',
       'reservoir-2': 'hidden',
       'machine-speed': 'hidden',
-      merger: 'hidden',
       'sealed-wing': 'revealed',
     });
     const s = foundry();
@@ -73,28 +72,28 @@ describe('restoring', () => {
 
   it('refuses without the cost, hidden, sealed, out of reach, outside the foundry or before attuning, spending nothing', () => {
     const s = foundry();
-    s.research.merger = 'revealed';
-    below(s, 19, 0);
-    expect(restoreFail(s, 'merger')).toBe('cost');
-    s.inventory['schematic-merger'] = 1;
-    expect(restoreFail(s, 'merger')).toBe('cost');
-    s.inventory['ancient-gear'] = 2;
-    expect(restoreFail(s, 'merger')).toBeNull();
-    expect(restoreFail(s, 'machine-speed')).toBe('hidden');
+    s.research['machine-speed'] = 'revealed';
+    below(s, 6, 0);
+    expect(restoreFail(s, 'machine-speed')).toBe('cost');
+    s.inventory['schematic-machine-speed'] = 1;
+    expect(restoreFail(s, 'machine-speed')).toBe('cost');
+    s.inventory['ancient-gear'] = 3;
+    expect(restoreFail(s, 'machine-speed')).toBeNull();
+    expect(restoreFail(s, 'reservoir-2')).toBe('hidden');
     below(s, 9, 1);
     expect(diagramInReach(s)?.node).toBe('sealed-wing');
     expect(restoreFail(s, 'sealed-wing')).toBe('sealed');
-    expect(restoreFail(s, 'merger')).toBe('reach');
-    run(s, 1, { restore: 'merger' });
-    expect(s.inventory).toMatchObject({ 'schematic-merger': 1, 'ancient-gear': 2 });
-    below(s, 19, 0);
+    expect(restoreFail(s, 'machine-speed')).toBe('reach');
+    run(s, 1, { restore: 'machine-speed' });
+    expect(s.inventory).toMatchObject({ 'schematic-machine-speed': 1, 'ancient-gear': 3 });
+    below(s, 6, 0);
     s.link.attuned = false;
-    expect(restoreFail(s, 'merger')).toBe('not-attuned');
+    expect(restoreFail(s, 'machine-speed')).toBe('not-attuned');
     s.link.attuned = true;
     stepOutside(s);
-    expect(restoreFail(s, 'merger')).toBe('not-foundry');
-    run(s, 1, { restore: 'merger' });
-    expect(s.research.merger).toBe('revealed');
+    expect(restoreFail(s, 'machine-speed')).toBe('not-foundry');
+    run(s, 1, { restore: 'machine-speed' });
+    expect(s.research['machine-speed']).toBe('revealed');
   });
 
   it('the nearest diagram in reach is the one E uses: a cap from beside it, the pipe from under the middle', () => {
@@ -111,11 +110,11 @@ describe('restoring', () => {
 
   it('restored nodes survive a KO, like claims', () => {
     const s = foundry();
-    s.research.merger = 'restored';
+    s.research['machine-speed'] = 'restored';
     s.research['reservoir-1'] = 'restored';
     stepOutside(s);
     die(s);
-    expect([s.research.merger, s.research['reservoir-1'], s.research['entrance-2']]).toEqual(['restored', 'restored', 'revealed']);
+    expect([s.research['machine-speed'], s.research['reservoir-1'], s.research['entrance-2']]).toEqual(['restored', 'restored', 'revealed']);
   });
 
   it('with a crate and a diagram both in reach, one E does only one thing: the diagram is the panel\'s, the crate keeps its contents', () => {
@@ -139,12 +138,12 @@ describe('restoring', () => {
 
   it('a schematic a restore spent is no longer reported banked', () => {
     const s = foundry();
-    s.research.merger = 'revealed';
-    Object.assign(s.inventory, { 'schematic-merger': 1, 'ancient-gear': 2 });
+    s.research['machine-speed'] = 'revealed';
+    Object.assign(s.inventory, { 'schematic-machine-speed': 1, 'ancient-gear': 3 });
     s.banked = { ...s.inventory };
-    expect(summarize(s).research.schematics.banked).toEqual(['schematic-merger']);
-    below(s, 19, 0);
-    run(s, 1, { restore: 'merger' });
+    expect(summarize(s).research.schematics.banked).toEqual(['schematic-machine-speed']);
+    below(s, 6, 0);
+    run(s, 1, { restore: 'machine-speed' });
     expect(summarize(s).research.schematics).toEqual({ carried: [], banked: [] });
   });
 

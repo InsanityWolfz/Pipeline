@@ -3,13 +3,13 @@ import { SUPPLY_TICKS } from '../../src/data/claims';
 import { CONDUIT_TICKS, HOPPER_FLOW_CAP, HOPPER_TICKS } from '../../src/data/foundry';
 import { SHRINE_SITE } from '../../src/data/rooms';
 import { claim } from '../../src/sim/claims';
-import type { ConduitState, CrateState, HopperState, MachineState, SorterState } from '../../src/sim/pieces';
+import type { ConduitState, CrateState, HopperState, MachineState, SplitterState } from '../../src/sim/pieces';
 import { tileCentre } from '../../src/sim/tiles';
 import { movePlayer, run } from './fight';
 import { foundry, put } from './foundryKit';
 
 // 028: hoppers fed by lines. A hopper takes items from any side but its front (a
-// conduit, a sorter's exit, a machine's output or a supply port) while it is empty or
+// conduit, a splitter's side, a machine's output or a supply port) while it is empty or
 // already holds that item, up to HOPPER_FLOW_CAP. Hand-filling stays uncapped.
 
 /** A conduit at (tx, ty) facing `facing`, holding `item` ready to hand over. */
@@ -45,11 +45,11 @@ describe('a hopper fed by a line', () => {
     expect([m.output, h.item, h.count]).toEqual([0, 'shaft', 2]);
   });
 
-  it("takes a sorter's chosen item out of its side", () => {
+  it("takes a splitter's item out of its side", () => {
     const s = foundry();
-    // A sorter at (5,5) facing right sends its filter item out of its right side, (5,6).
-    const so = put<SorterState>(s, 'sorter', 5, 5, 'right');
-    so.filter = 'stone';
+    // A splitter at (5,5) facing right whose side has the turn sends it out of its right side, (5,6).
+    const so = put<SplitterState>(s, 'splitter', 5, 5, 'right');
+    so.next = 'side';
     so.item = 'stone';
     so.progress = CONDUIT_TICKS;
     const h = put<HopperState>(s, 'hopper', 5, 6, 'down');
