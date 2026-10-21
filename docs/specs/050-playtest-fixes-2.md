@@ -1,5 +1,5 @@
 # 050: Playtest fixes and the title screen
-status: approved
+status: done
 
 Approved on draft by Shaun in chat, 2026-10-21 ("approve 050-052"): the build follows the proposals in the open questions.
 
@@ -76,3 +76,6 @@ Built on `claude/050-playtest-fixes` (plan: docs/plans/050-playtest-fixes-2.md).
 - **050.12 A champion's name showed twice (seen in the retaken 040/07).** Its nameplate (032) names it over its head, and the hover tag named it again under its feet. Built: over a champion the hover tag shows only its chips (Chill 2 and the like), and nothing when it has none; any other enemy's tag still names it. Proposal: keep.
 - **050.13 The title's pipe.** The bigger Quit row covered the intake pipe's cap. The pipe now stands against the ruin's left wall (24 px left, its glow with it), so the cap and the menu both show and the menu stays centred where it was. Proposal: keep.
 - **050.14 After review.** `npm run check` passes (1702 unit tests; one run timed out exampleLine's "fills the entrance" under load, which passes alone in about 1.3 s). The full `npx playwright test` on the reviewed head: 145 passed, 0 failed, 128 skipped (review shots).
+
+## Shaun's answers (2026-10-21)
+- Shaun said "Merge 42-44". He changed none of the raised items, so they stand as built.
