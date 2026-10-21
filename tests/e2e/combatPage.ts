@@ -1,7 +1,7 @@
 import { expect, type Page } from '@playwright/test';
 import { XP_CURVE } from '../../src/data/leveling';
 import { boot, cameraSettled, quietScreen } from './helpers';
-import { bootSandbox, openPanel, setRound } from './sandboxPage';
+import { bootSandbox } from './sandboxPage';
 
 // 054's setups for its e2e and review shots: Blastfletch taken and an arrow burning past its Pool, and a star shot
 // fired from the sandbox, the sim held just after its burst.
@@ -44,15 +44,16 @@ export async function burningArrow(page: Page, after = 0): Promise<boolean> {
   return caught;
 }
 
-/** `?sandbox` with Split bolts in every entrance, a Husk 150 px right and two more round it; fires and holds the sim `after` ticks past the burst. */
+/** `?sandbox` with Split bolts in one entrance only (the others empty, so one bolt makes one clean 5-point star), a Husk 150 px right and two more round it; fires and holds the sim `after` ticks past the burst, returning the Shards then in flight. */
 export async function starShot(page: Page, after: number): Promise<number> {
   await bootSandbox(page);
-  await openPanel(page);
-  await setRound(page, 0, 'ley-bolt+split');
-  await setRound(page, 1, 'ley-bolt+split');
-  await setRound(page, 2, 'ley-bolt+split');
-  await page.keyboard.press('Backquote');
-  await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().sandbox?.open)).toBe(false);
+  // Loaded through the sandbox's own loadout command (as volleyShape's), not the panel's clicks.
+  await page.evaluate(() => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    (['ley-bolt+split', null, null] as const).forEach((round, entrance) => g.step(1, { sandbox: { kind: 'loadout', entrance, round } }));
+  });
+  await expect.poll(() => page.evaluate(() => window.__GAME__?.getState().loadout)).toEqual(['ley-bolt+split', null, null]);
   await quietScreen(page);
   return page.evaluate((ticks) => {
     const g = window.__GAME__;
