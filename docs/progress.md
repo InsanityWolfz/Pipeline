@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: Shaun's live playtest notes saved
+**Changed:** saved Shaun's narrated playtest of main verbatim, with a themed reading, in docs/brainstorm/2026-10-21-playtest-notes.md, plus his exported save.
+
+**Next:** the spec interview on those notes.
+
 ## 2026-10-21: 049 merged
 **Changed:** Shaun merged 049 (the Husk Hive, resin pylon), InsanityWolfz/Pipeline#39. SAVE_VERSION is 6.
 
