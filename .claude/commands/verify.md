@@ -1,1 +1,1 @@
-Run npm run check and npm run test:e2e. Delegate to the qa agent for screenshots against the acceptance criteria. Fix failures and rerun until green.
+Run npm run check and the e2e files the change touches (npx playwright test <files>). Push; CI (.github/workflows/ci.yml) runs the full Playwright suite. Delegate to the qa agent for screenshots of this spec's acceptance criteria only (don't retake older specs' shots). Fix failures and rerun until green, including CI on the final head. Run the full suite locally only if CI can't be read, once per spec.

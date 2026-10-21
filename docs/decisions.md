@@ -229,3 +229,5 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - Scenario bots (`tests/sim/bots.ts`, `packBot.ts`, and the e2e bots) adapt honestly: they read only what a player sees, each telegraph as a zone after a reaction delay. No hidden healing, no hidden state.
   - Balance targets over seeds are measurements recorded in the spec, not check tests.
   - An enemy removed mid-tick doesn't act that tick.
+- **Process (2026-10-21):**
+  - CI (`.github/workflows/ci.yml`) runs on every push: `npm run check`, then Playwright in 4 shards (`--shard=N/4`), push trigger only so PRs don't run twice. Review shots stay out of CI (they skip without REVIEW_SHOTS=1).

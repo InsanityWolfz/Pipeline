@@ -76,6 +76,7 @@ assets/maps/              Tiled maps
 scripts/build-sound.ts    generates the sound effects
 .github/workflows/
   pages.yml               builds every branch and publishes a playable preview
+  ci.yml                  npm run check and the full Playwright suite on every push
 .claude/
   rules/  commands/  agents/  skills/phaser/  hooks/  settings.json
 ```
@@ -89,18 +90,26 @@ scripts/build-sound.ts    generates the sound effects
 5. **Small files.** One system per file, roughly 300 lines max.
 6. **TypeScript strict mode, ESLint, no `any`.**
 
+## Two tracks (Shaun, 2026-10-21)
+
+The ceremony fits the change. Every change still gets its own branch, a test, green CI and Shaun's merge.
+
+- **Feature track:** anything with new design, new content or several systems. It runs the feature loop below.
+- **Fix track:** a bug or small tweak with no design question: it changes how something already specced behaves or looks, in about one system and under about 100 lines. No spec, no plan, no reviewer, no wrapup. Branch `claude/fix-<name>` off `main`; a failing test first (Vitest, or Playwright for render-only bugs), then the fix; `npm run check` and the touched e2e files locally; push and let CI run the rest; one PR with what was wrong, the cause, the fix and the test. Add a `fix-<name>` row to the status page; skip progress.md unless there's a handoff note. If a fix turns out to need design, stop and make it a spec.
+- Several small fixes Shaun names together may share one fix branch and PR.
+
 ## The feature loop
 
-Every backlog item goes through the same six steps, each with its own slash command. Nothing skips a step.
+Every backlog item on the feature track goes through the same steps, each with its own slash command.
 
 _Loop: Spec, then you approve, then Plan, Build, Verify, Review, then you playtest, then Log. Verify failures and review changes loop back to Build._
 
-1. **Spec** (`/spec`): Claude interviews you about the feature, then writes `docs/specs/NNN-name.md` with testable acceptance criteria tied to the design doc. You approve it before anything is built.
-2. **Plan** (`/plan`): in plan mode, Claude breaks the spec into a vertical slice that works end to end (sim, render and data together), not one layer at a time.
-3. **Build** (`/build`): sim tests are written first, then the code. Small commits on a feature branch.
-4. **Verify** (`/verify`): typecheck, lint, unit tests and Playwright game tests must all pass. A hook enforces this, so Claude can't declare done with failing checks.
+1. **Spec** (`/spec`): Claude interviews you about the feature, then writes `docs/specs/NNN-name.md` with testable acceptance criteria tied to the design doc, as the first commit on the spec's own branch (`claude/NNN-name`), and opens that branch's draft PR. There is no separate spec PR: the same PR carries the spec, the build and the wrapup. You approve it before anything is built.
+2. **Plan** (`/plan`): Claude breaks the spec into a vertical slice that works end to end (sim, render and data together), not one layer at a time. A written plan file (`docs/plans/NNN-name.md`) only for a spec that spans several systems or is expected to pass about 300 lines; otherwise the plan is a short checklist in the PR body.
+3. **Build** (`/build`): sim tests are written first, then the code. Small commits on the spec's branch.
+4. **Verify** (`/verify`): `npm run check` and the e2e files the change touches, locally; the full Playwright suite runs in CI (`.github/workflows/ci.yml`, 4 shards) on every push. A hook enforces `npm run check`, so Claude can't declare done with failing checks, and a PR is ready only when CI is green on its head.
 5. **Review** (`/review`): a separate reviewer agent with fresh context checks the diff against the spec, the architecture rules and the design doc. It never sees the build session's reasoning, so the work isn't grading itself.
-6. **Log** (`/wrapup`): you playtest the branch's preview build, then Claude marks the spec done, updates `docs/progress.md`, and turns any repeated mistake into a new rule in `.claude/rules`. That's how the process improves over time.
+6. **Log** (`/wrapup`): written into the PR before it goes to you for the playtest, so "merge" is only the merge: the spec marked done, backlog, decisions, one progress entry, and any repeated mistake turned into a new rule in `.claude/rules`. That's how the process improves over time.
 
 Failures loop back to Build. If the spec itself turns out wrong, Claude stops and asks rather than redesigning on its own.
 
@@ -113,9 +122,10 @@ From 021 to 041, 21 specs were stacked on one branch with no pull requests. `mai
 3. **At most one "raised after the build" round per spec.** If Shaun's answers lead to more building that misses again, record the numbers and put the follow-up in a new spec.
 4. **Balance targets are measurements.** Scripted-bot targets over many seeds (fight lengths, clear times, damage taken) are printed by `npm run measure` (tests/measure, its own Vitest config; a missed target never fails it) and recorded in the spec and PR. They are not tests in `npm run check`, and the build doesn't loop on tuning to make chaotic seeds pass. Balance is judged at playtest.
 5. **Small approval batches.** About three specs approved at a time, so the proposals Shaun approves on draft are ones he has read.
-6. **Verify once.** While building, run only the e2e files the change touches. Run the full `npm run test:e2e` once per spec, at /verify (about 7 minutes; `npm run check` takes under a minute).
+6. **CI runs the full suite.** Sessions run `npm run check` and the e2e files the change touches; the full Playwright suite runs in CI on every push (2026-10-21). A local full `npm run test:e2e` (about 7 minutes) only when CI can't be read, once per spec.
 7. **Commit after each item.** A container restart loses anything uncommitted.
-8. **One state log.** The current state lives in docs/progress.md (latest entry first), the spec statuses in docs/backlog.md, and the work in PRs. There's no separate handoff file.
+8. **Each fact in one place.** Live step state (building, review, ready to play) lives on the status page; the work and its history in the PR and git; spec status in the spec and docs/backlog.md. docs/progress.md is a handoff log: one entry per merged PR or per session that leaves something unfinished, never one per step.
+9. **Review shots for the current change only.** Take shots for the spec being built. Don't retake older specs' shots because the map or HUD moved; old shots are history. A shot spec that breaks is fixed only when Shaun asks for it.
 
 ## Working with Shaun (2026-10-20)
 
@@ -128,11 +138,15 @@ Shaun follows the work from his phone, so sessions keep him informed without him
 
 **Notifications.** When something needs Shaun (a playtest, a decision, a merge), set `needsYou` and send one `PushNotification`: one line that leads with what to do, e.g. "046 is ready to play: New game, walk into the foundry. Say 'merge 34' when happy." Clear `needsYou` once he's done it. Don't notify for routine progress.
 
+**ETAs.** Base an ETA on how long similar recent PRs took in git history (056: about 45 minutes from approval to ready), not a guess.
+
 **Each spec, end to end.**
-1. A `general-purpose` builder agent builds it on its own branch (stacked on the previous spec's branch when that one isn't merged yet), opens a draft PR, and keeps `npm run check` green at every commit.
+1. The spec's draft PR already exists (from /spec). On approval, a `general-purpose` builder agent builds on that same branch (stacked on the previous spec's branch when that one isn't merged yet) and keeps `npm run check` green at every commit.
 2. A separate `reviewer` agent reviews the diff. The builder fixes every blocking issue and the reasonable suggestions.
-3. One full `npx playwright test` run on the final head. Then mark the PR ready, set the page to Playtest with `needsYou`, and notify.
-4. When Shaun says "merge NN": commit the wrapup (spec `done`, backlog, a progress entry) to that branch, then merge with a merge commit (keeps stacked branches valid), and retarget the next stacked PR to `main`. If a builder is using the main checkout, do the wrapup in a `git worktree` so its files aren't touched.
+3. CI green on the final head (the full Playwright suite runs there). The wrapup goes in now: spec `done`, backlog, decisions, one progress entry. Then mark the PR ready, set the page to Playtest with `needsYou`, and notify.
+4. When Shaun says "merge NN": merge with a merge commit (keeps stacked branches valid) and retarget the next stacked PR to `main`. If his playtest asks for changes instead, they go on the same branch, and the wrapup is touched up only if it changed.
+
+**Fixes, end to end.** Fix track (see "Two tracks"): the main session or one builder agent makes the fix on `claude/fix-<name>`, CI green, PR ready, page set to Playtest with `needsYou`, notify. Shaun says "merge" as for a spec.
 
 **Talking to him.**
 - Keep replies short and phone-friendly: what's ready, the preview link, and what's needed, at the end.
@@ -161,12 +175,12 @@ Keep the team small. More agents means more tokens and more places for drift.
 
 | Command | Does |
 | --- | --- |
-| `/spec <item>` | Interviews you, writes the spec, sets status to draft |
-| `/plan` | Plans the approved spec as a vertical slice |
+| `/spec <item>` | Interviews you, writes the spec on its own branch, opens its draft PR, sets status to draft |
+| `/plan` | Plans the approved spec as a vertical slice (a plan file only for big specs) |
 | `/build` | Implements the plan, tests first |
-| `/verify` | Runs all checks and the `qa` agent |
+| `/verify` | Runs `npm run check`, the touched e2e files and the `qa` agent; CI runs the rest |
 | `/review` | Runs the `reviewer` agent on the branch diff |
-| `/wrapup` | Marks done, updates progress and rules, opens a pull request into main |
+| `/wrapup` | Before the playtest: marks done, updates backlog, decisions, progress and rules in the PR |
 | `/next` | Unattended mode: takes the top approved spec, runs plan through review, opens a draft pull request |
 
 **Hooks** (deterministic, unlike CLAUDE.md, which is advisory):
@@ -259,7 +273,7 @@ paths: src/data/**
 
 ### .claude/commands
 
-One file per command, each a short instruction:
+One file per command, each a short instruction. These are the bootstrap versions; the live text is in `.claude/commands` (updated 2026-10-21 for the two tracks, one PR per spec, CI and the early wrapup).
 
 - **spec.md:** "Read docs/design.md, docs/prototype.md and the backlog item $ARGUMENTS. Interview me with AskUserQuestion until the feature is unambiguous. Write docs/specs/NNN-name.md from the spec template in docs/process.md with status: draft. Stop."
 - **plan.md:** "Only for a spec with status: approved. Enter plan mode. Plan a vertical slice touching sim, render and data together. List the tests first. Stop for my approval."
@@ -367,7 +381,7 @@ An ordered list, one line per item: number, name, status (`idea`, `draft`, `appr
 
 ### Progress log (docs/progress.md)
 
-Each session appends a short entry: date, what changed, what's next, and any notes for the next session. A fresh session reads the latest entry first.
+A handoff log, latest entry first: one short entry per merged PR, or per session that leaves work unfinished (date, what changed, what's next, notes for the next session). Never one entry per step; the status page and the PR carry those. A fresh session reads the latest entry first.
 
 ## Prototype backlog
 
