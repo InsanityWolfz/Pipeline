@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: Bug: 037's Shatterpoint review shot
+**Changed:** on `claude/fix-037-shatterpoint-shot`, the Shatterpoint shot (talentsShots.spec.ts) selects the frost arrows it picks up; it fired the plain arrows in the hotbar's first slot, so the Husk never froze and no shatter came. Retook docs/review/037/05 only. `npm run check` passes; talentsShots.spec.ts passes with REVIEW_SHOTS=1.
+
+**Next:** Shaun merges the PR.
+
 ## 2026-10-21: 055 merged
 **Changed:** Shaun merged 055 (boss doors and the rimestone pylon: both arenas walled with a door, E in and out, the Frozen Grotto's rimestone pylon), InsanityWolfz/Pipeline#48.
 
