@@ -125,6 +125,7 @@ export const KEYWORD_LIST: readonly KeywordDef[] = [
     turn: fixed('deg-per-tick', HOMING.turnDegrees),
   }, ['turn-rate', 'lock-radius']),
   // 054.1: the star shot's rule. Its damage param (half the bolt's) still feeds the round's summary and breakdown.
+  // "half" is SPLIT.damageShare in words; tests/data/keywords.test.ts ties the two.
   kw('split', 'Split', 'behaviour', 'On hit: {count} {{shard}}s fly out, each dealing half damage to another enemy. A {{shard}} is a small {{shot}} that never {{pierce}}s or {{split}}s.', {
     count: fixed('count', SPLIT.shards),
     damage: fixed('count', shardBaseDamage('ley-bolt+split')),

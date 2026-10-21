@@ -4,7 +4,7 @@ import { DERIVED_TAGS, KEYWORD_DEBT, KEYWORD_LIST, KEYWORDS, NOUNS, type Keyword
 import { keywordPayoffs, keywordSources } from '../../src/data/keywordGraph';
 import { REF, SLOT, textSources as paramSources, keywordText, refName } from '../../src/data/rulesText';
 import { bombletKeywords, poolBurstKeywords, roundKeywords, shardKeywords } from '../../src/data/roundKeywords';
-import { ROUNDS } from '../../src/data/tags';
+import { ROUNDS, SPLIT } from '../../src/data/tags';
 import { keywordReport } from '../../src/data/keywordReport';
 import { STATS } from '../../src/data/statDefs';
 
@@ -68,6 +68,11 @@ describe('the keyword list', () => {
     expect(keywordText('cluster')).toBe('0.2 s after its Burst, 4 Bomblets land 40 px out, each a Burst of 8 in 20 px.');
     expect(keywordText('split')).toBe('On hit: 5 Shards fly out, each dealing half damage to another enemy. A Shard is a small Shot that never Pierces or Splits.');
     expect(keywordText('cold')).toBe('Each hit adds 1 Chill.');
+  });
+
+  it("ties the Split's \"half damage\" wording to SPLIT.damageShare (054.1): change one, change the other", () => {
+    expect(keywordText('split')).toContain('half damage');
+    expect(SPLIT.damageShare).toBe(0.5);
   });
 
   it('has the child nouns Shard and Bomblet, which are no keyword', () => {
