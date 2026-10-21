@@ -1,3 +1,5 @@
+import { inHollows } from './hollows';
+
 /**
  * The minimap (017): the overworld's terrain at `scale` view px per tile in the
  * top-right corner, a stone frame, and markers. Colours are palette ids; no
@@ -29,8 +31,8 @@ export const MINIMAP = {
     A: 'hollow-light',
     '=': 'hollow-pale',
   } as Readonly<Record<string, string>>,
-  /** The Hollows' own colours (034), by symbol, over `terrain`: its open ground is stone, not grass (051: its boulders too). */
-  hollowsTerrain: { '.': 'hollow-light', R: 'hollow-light', T: 'hollow-light' } as Readonly<Record<string, string>>,
+  /** The Hollows' own colours (034), by symbol, over `terrain`: its open ground is stone, not grass (051: its scenery too). */
+  hollowsTerrain: { '.': 'hollow-light', ':': 'hollow-light', '~': 'hollow-light', R: 'hollow-light', T: 'hollow-light', B: 'hollow-light' } as Readonly<Record<string, string>>,
   /** 051 (B.5): a tile never on screen is fogged, this colour (palette id). */
   fog: 'hood-dark',
   markers: {
@@ -52,3 +54,10 @@ export const MINIMAP = {
   /** 051 (B.5): what hovering names the places that aren't landmarks (an arena and a landmark go by their own names). */
   names: { entrance: 'Foundry', shrine: 'Shrine' },
 } as const;
+
+/** 051: the symbols that are scenery, drawn on the minimap as the ground round them (water, shallows, trees, ruin stones, boulders). */
+export const MINIMAP_SCENERY = [':', '~', 'T', 'R', 'B'] as const;
+
+/** The palette id the minimap draws an overworld tile in: the Hollows' own colour there (034), else Region 1's. */
+export const minimapColor = (symbol: string, tx: number, ty: number): string =>
+  (inHollows(tx, ty) ? MINIMAP.hollowsTerrain[symbol] : undefined) ?? MINIMAP.terrain[symbol] ?? 'grass-bright';

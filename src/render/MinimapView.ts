@@ -2,9 +2,9 @@ import { ITEMS } from '../data/items';
 import type { GameObjects, Scene, Textures } from 'phaser';
 import { DEPTHS, OVERWORLD_TEXTURES } from '../data/assets';
 import { TILE_SIZE, VIEW_WIDTH } from '../data/config';
-import { MINIMAP } from '../data/minimap';
+import { MINIMAP, minimapColor } from '../data/minimap';
 import { OVERWORLD } from '../data/overworld';
-import { HOLLOWS, inHollows } from '../data/hollows';
+import { HOLLOWS } from '../data/hollows';
 import { LANDMARK_LIST, type LandmarkMarker } from '../data/landmarks';
 import { MAP_ICONS } from '../data/landmarkAssets';
 import type { Room } from '../data/rooms';
@@ -73,7 +73,7 @@ export class MinimapView {
     if (tex) {
       for (const [ty, row] of room.rows.entries()) {
         for (const [tx, symbol] of [...row].entries()) {
-          tex.context.fillStyle = inkCss((inHollows(tx, ty) ? MINIMAP.hollowsTerrain[symbol] : undefined) ?? MINIMAP.terrain[symbol] ?? 'grass-bright');
+          tex.context.fillStyle = inkCss(minimapColor(symbol, tx, ty));
           tex.context.fillRect(tx * k, ty * k, k, k);
         }
       }
