@@ -59,7 +59,7 @@ interface Drawn {
 }
 
 /** `ui()`'s enemy part before the scene has built its views. */
-export const NO_ENEMY_UI: { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown; enemyBars: EnemyBarShown[] } = { champions: [], hollowsEnemies: { ripples: 0, flares: 0, lasers: [] }, enemyBars: [] };
+export const NO_ENEMY_UI: { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown; enemyBars: EnemyBarShown[] } = { champions: [], hollowsEnemies: { ripples: 0, flares: 0, lasers: [], waveShades: 0 }, enemyBars: [] };
 
 const viewOf = (f: Facing): 'down' | 'up' | 'side' => (f === 'up' || f === 'down' ? f : 'side');
 
@@ -224,7 +224,7 @@ export class EnemyView {
 
   /** What the test hook's `ui()` reads here: the champions (032), Region 2's four's extras (035) and the bars (054). */
   get ui(): { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown; enemyBars: EnemyBarShown[] } {
-    const hollowsEnemies: HollowsEnemiesShown = { ripples: 0, flares: 0, lasers: [] };
+    const hollowsEnemies: HollowsEnemiesShown = { ripples: 0, flares: 0, lasers: [], waveShades: 0 };
     for (const [id, d] of this.drawn) if (this.last.has(id)) shownOf(id, this.last.get(id) as EnemyState, d.hollows, hollowsEnemies);
     return { champions: this.champions, hollowsEnemies, enemyBars: [...this.drawn.values()].map((d) => ({ ...d.bar.shown })) };
   }

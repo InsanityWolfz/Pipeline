@@ -40,6 +40,8 @@ export interface HollowsEnemiesShown {
   ripples: number;
   flares: number;
   lasers: (LaserShown & { id: number })[];
+  /** 054: the Bulwark's back waves building, each with its area shaded red. */
+  waveShades: number;
 }
 
 /** The extras an enemy of these kinds needs, made once with its sprite. */
@@ -112,6 +114,7 @@ export function shownOf(id: number, e: EnemyState, art: HollowsArt | undefined, 
   if (art?.ripple?.visible) into.ripples += 1;
   if (art?.light && !art.laser && e.mode === 'windup' && enemyDef(e.enemyId).kind === 'shardback') into.flares += 1;
   if (art?.laser) into.lasers.push({ id, ...art.laser });
+  if (e.waveTicks > 0 && enemyDef(e.enemyId).kind === 'bulwark') into.waveShades += 1;
 }
 
 /** Sniper bolts in flight (the Wisp's orbs are SiteView's): a red streak with a white-hot core, raised off its ground point. */

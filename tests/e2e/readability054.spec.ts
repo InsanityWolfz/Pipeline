@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { frames, sandbox, spawn, stepUntil } from './hollowsSandbox';
+import { BULWARK } from '../../src/data/bulwark';
+import { frames, intoForum, sandbox, spawn, stepUntil } from './hollowsSandbox';
 
 // 054: combat readability, as drawn. A burrowed Burrower's bar reads immune (blue, with its shield) and goes back as it
 // surfaces; the Bulwark's back wave shades its area; a star shot's Shards are drawn in flight.
@@ -18,4 +19,21 @@ test('a burrowed Burrower’s bar reads immune, and goes back once it surfaces',
   await stepUntil(page, id, 'recover', 1);
   await frames(page);
   await expect.poll(() => barOf(page, id)).toMatchObject({ immune: false });
+});
+
+test('the Bulwark’s back wave shades its area while it builds', async ({ page }) => {
+  test.setTimeout(120_000);
+  await intoForum(page);
+  const building = await page.evaluate((every) => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    for (let t = 0; t < every * 3; t++) {
+      const s = g.step(1);
+      g.setPlayerHealth(100);
+      if ((s.bosses[0]?.waveTicks ?? 0) > 4) return true;
+    }
+    return false;
+  }, BULWARK.wave.everyTicks);
+  expect(building).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().hollowsEnemies.waveShades)).toBe(1);
 });

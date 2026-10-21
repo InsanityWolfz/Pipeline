@@ -78,9 +78,10 @@ export const HOLLOWS_LOOK = {
   /**
    * The back wave's build-up (041.16, draft for Shaun's eye): `rings` arcs over its rear arc in danger red, rippling
    * outward from its feet to the arc's edge as the wind-up runs (rings only, unlike the stomp's filled half-disc); its
-   * spray bursts `sprayAt` of its radius out as it breaks.
+   * spray bursts `sprayAt` of its radius out as it breaks. 054 (E.2): its whole area is shaded red on the ground
+   * (`shadeAlpha`), a fill (`fillAlpha`) growing out to its edge through the wind-up, in the other telegraphs' style.
    */
-  wave: { color: 'danger', rings: 4, ringWidth: 2.5, ringAlpha: 0.85, sprayAt: 0.5 },
+  wave: { color: 'danger', rings: 4, ringWidth: 2.5, ringAlpha: 0.85, sprayAt: 0.5, shadeAlpha: 0.2, fillAlpha: 0.3 },
   /** A circle a roll won't save from (041.12: the pound, an enraged Bulwark's bombs): a second ring `gap` px outside its edge. */
   rollProof: { color: 'danger', width: 2, alpha: 0.9, gap: 4 },
   /** The rear stomp's wind-up (041): a half-disc over its back in the pound circle's style, danger red; its dust rises `dustAt` of its radius out. */
