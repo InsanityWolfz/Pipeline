@@ -50,6 +50,8 @@ export function tutorialRects(state: Pick<SimState, 'gates'>, roomId: string): R
 
 /** A room's gate tiles, sorted once (the world is fixed): those that stop shots too by tile key, their gates, and the rest. */
 interface RoomGates {
+  /** The room's width in tiles: a tile's key is `ty * width + tx`. */
+  width: number;
   shot: Map<number, GateId>;
   shotGates: GateId[];
   feetOnly: { tx: number; ty: number; gate: GateId }[];
@@ -61,20 +63,20 @@ function gatesOf(roomId: string): RoomGates {
   let g = ROOM_GATES.get(roomId);
   if (!g) {
     const all = WORLD[roomId]?.gateTiles ?? [];
+    const width = WORLD[roomId]?.rows[0]?.length ?? 0;
     const shot = new Map<number, GateId>();
-    for (const t of all) if (SHOT_GATES.includes(t.gate)) shot.set(t.ty * GATE_KEY + t.tx, t.gate);
-    g = { shot, shotGates: [...new Set(shot.values())], feetOnly: all.filter((t) => !SHOT_GATES.includes(t.gate)) };
+    for (const t of all) if (SHOT_GATES.includes(t.gate)) shot.set(t.ty * width + t.tx, t.gate);
+    g = { width, shot, shotGates: [...new Set(shot.values())], feetOnly: all.filter((t) => !SHOT_GATES.includes(t.gate)) };
     ROOM_GATES.set(roomId, g);
   }
   return g;
 }
 
-/** Tile keys: a row is never this wide. */
-const GATE_KEY = 100_000;
-
 /** True if a tile is sealed by a shut gate that stops shots as well as feet (034: the Hollows' barrier stops every projectile). */
 export function shotSealed(state: Pick<SimState, 'gates'>, roomId: string, tx: number, ty: number): boolean {
-  const gate = gatesOf(roomId).shot.get(ty * GATE_KEY + tx);
+  const g = gatesOf(roomId);
+  if (tx < 0 || tx >= g.width) return false;
+  const gate = g.shot.get(ty * g.width + tx);
   return gate !== undefined && !state.gates[gate];
 }
 

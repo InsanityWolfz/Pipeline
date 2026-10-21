@@ -2,7 +2,8 @@ import type { DamageType } from '../data/ammo';
 import { TILE_SIZE } from '../data/config';
 import { OVERWORLD_ROOM, ringOf } from '../data/overworld';
 import type { Ring } from '../data/ringScale';
-import { enemyDef } from '../data/enemies';
+import { ENEMIES, enemyDef } from '../data/enemies';
+import { CHAMPIONS } from '../data/champions';
 import { defOf } from './champions';
 import type { Room } from '../data/rooms';
 import { moveBox, type Rect } from './collision';
@@ -213,12 +214,15 @@ export interface RoomBodies {
   obstacles: readonly Rect[];
 }
 
+/** The largest side any enemy's feet box can have, px: a champion's scaled up (032), a boss's its own. */
+const LARGEST_FEET = Math.max(...Object.values(ENEMIES).map((d) => Math.max(d.feetBox.w, d.feetBox.h) * (d.boss ? 1 : CHAMPIONS.scale)));
+
 /**
  * Bodies further apart than this on both axes at the tick's start can't be touching by the time their pair comes up,
- * px: wider than any two feet boxes together plus every push in between (053: the round world's many packs made the
- * all-pairs check the tick's biggest cost).
+ * px: twice two of the largest feet boxes side by side, room for any two to touch plus the pushes in between (053: the
+ * round world's many packs made the all-pairs check the tick's biggest cost).
  */
-const NEAR = 128;
+export const NEAR = 4 * LARGEST_FEET;
 
 /** Every pair (i < j) of same-room enemies within NEAR on both axes, in array order, found through a grid of NEAR cells. */
 function nearPairs(enemies: readonly EnemyState[]): [number, number][] {
