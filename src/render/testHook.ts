@@ -232,7 +232,7 @@ export interface UiState {
   hoverNameDrawn: boolean;
   /** 042: the flow screens as drawn (the title's rows, a card's lines and buttons, Settings, the note). */
   flow: FlowUi;
-  /** 044: the Sandbox panel as drawn (056: shown, its rows with their boxes, the key list and its tablets), or null outside the sandbox. */
+  /** 044: the Sandbox panel as drawn (056, 057: its tabs, the rows of each panel all the way out with their boxes, the key list, every box drawn), or null outside the sandbox. */
   sandbox: SandboxPanelState | null;
   /** 056: whether any of the sandbox controls' objects is on screen, read from the objects themselves (never outside the sandbox). */
   sandboxDrawn: boolean;

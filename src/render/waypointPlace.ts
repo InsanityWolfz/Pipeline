@@ -24,6 +24,16 @@ export function tipLift(target: Pick<GoalPoint, 'kind' | 'ref'>, via: Waypoint['
 /** The arrow's tip over a point (world px). */
 export const arrowTip = (p: Point & Pick<GoalPoint, 'kind' | 'ref'>, via: Waypoint['via'] = 'target'): Point => ({ x: p.x, y: p.y - tipLift(p, via) });
 
+/**
+ * The world rect a camera shows at a scroll (057.6), as Phaser's camera works it out when it renders: its midpoint the
+ * scroll plus half its size (screen px), its view that size over its zoom.
+ */
+export function viewAt(scrollX: number, scrollY: number, width: number, height: number, zoom: number): { x: number; y: number; width: number; height: number } {
+  const w = width / zoom;
+  const h = height / zoom;
+  return { x: scrollX + width / 2 - w / 2, y: scrollY + height / 2 - h / 2, width: w, height: h };
+}
+
 /** The arrow as placed: hovering over the tip (`over`, pointing down), or at the view's edge pointing at it (`edge`). */
 export interface ArrowPlace {
   mode: 'over' | 'edge';

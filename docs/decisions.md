@@ -229,5 +229,9 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - Scenario bots (`tests/sim/bots.ts`, `packBot.ts`, and the e2e bots) adapt honestly: they read only what a player sees, each telegraph as a zone after a reaction delay. No hidden healing, no hidden state.
   - Balance targets over seeds are measurements recorded in the spec, not check tests.
   - An enemy removed mid-tick doesn't act that tick.
+- **057 sandbox pop-outs and the waypoint arrow:**
+  - World-space UI that's placed against the camera's view (the waypoint arrow) is placed again on the main camera's `FOLLOW_UPDATE`, which Phaser fires inside `Camera.preRender` once the follow has moved the view and before anything draws. In the scene's update the view is still last frame's. The update-time placement stays for frames with no follow (the attune's look).
+  - A frame-exact e2e steps inside a `requestAnimationFrame` callback queued after the game loop's, so exactly one draw happens between two reads (`tests/e2e/waypointSteady.spec.ts`), with an uneven 0–2 ticks per frame as a real display gives.
+  - The sandbox's open/close state and slide are pure (`src/render/sandboxPopout.ts`); `MenuColumn.moveTo` slides laid-out rows without rebuilding their text.
 - **Process (2026-10-21):**
   - CI (`.github/workflows/ci.yml`) runs on every push: `npm run check`, then Playwright in 4 shards (`--shard=N/4`), push trigger only so PRs don't run twice. Review shots stay out of CI (they skip without REVIEW_SHOTS=1).

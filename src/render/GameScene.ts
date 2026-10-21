@@ -83,7 +83,7 @@ export class GameScene extends Scene {
   cursorView?: CursorView;
   /** 040: hover tips (Shift for the breakdown) and the glossary; the test hook measures its summaries. */
   legibility?: Legibility;
-  /** 044: the Sandbox panel (056: the sandbox's controls, always on screen there, and only there). */
+  /** 044: the Sandbox panel (056, 057: the sandbox's controls, pop-outs there, and only there). */
   sandboxPanel?: SandboxPanel;
   /** The room on screen. It lags the player's room through a door's fade. */
   private shownRoomId: string;
@@ -255,7 +255,9 @@ export class GameScene extends Scene {
     const hudBoxes = [...(this.hud?.fixedBoxes ?? []), ...(mapBox ? [mapBox] : [])];
     this.tutorial?.update(sim, shown, this.pending, (id) => this.foundryView?.topOf(id), hudBoxes);
     const picked = new Set(this.pending.pickups.map((p) => p.id));
-    this.hud?.update(sim, this.pending, this.game.loop.delta);
+    // 057: the sandbox's panels slide first, so the pickup feed beside the Loadout tab follows it this frame.
+    this.sandboxPanel?.update(sim, this.game.loop.delta);
+    this.hud?.update(sim, this.pending, this.game.loop.delta, this.sandboxPanel?.loadoutOut ?? 0);
     this.buildView?.placed(this.pending.places.map((p) => p.pieceId));
     clearEvents(this.pending);
     const inFoundry = shown === FOUNDRY_ROOM;
@@ -270,7 +272,6 @@ export class GameScene extends Scene {
     this.site?.update(sim, shown);
     this.siteMenus?.update(sim);
     this.menu?.update(sim);
-    this.sandboxPanel?.update(sim);
     const controls = this.controls;
     const cursor = controls && inFoundry && controls.overWorld() ? controls.cursorTile() : null;
     this.buildView?.update(
@@ -288,7 +289,7 @@ export class GameScene extends Scene {
     const pointer = controls?.viewPointer();
     if (pointer) for (const menu of [this.siteMenus, this.pause, this.hud, this.sandboxPanel, this.roomViews]) menu?.pointAt(pointer.x, pointer.y);
     // The arrow pointer while a menu is open or over the build bar, else the crosshair (021).
-    // 056: the sandbox's controls are always up, so they turn the pointer to the arrow only under it.
+    // 056: the sandbox's tabs are always up, so they turn the pointer to the arrow only under them.
     const inMenu = [this.menu, this.pause, this.siteMenus, this.hud?.inventory, this.hud?.talents, this.legibility].some((m) => m?.isOpen) || (this.wake?.isShown ?? false);
     this.cursorView?.update(inMenu || (pointer !== undefined && [this.buildView, this.legibility, this.sandboxPanel].some((v) => v?.overUi(pointer.x, pointer.y))));
     const point = controls?.overWorld() ? controls.cursorPoint() : null;

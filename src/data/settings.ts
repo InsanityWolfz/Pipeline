@@ -32,7 +32,7 @@ export const ACTION_LABELS: Readonly<Record<BindAction, string>> = {
   slot4: 'Carried slot 4',
   slot5: 'Carried slot 5',
   feedback: 'Feedback note',
-  sandbox: 'Sandbox panel',
+  sandbox: 'Sandbox panels',
 };
 
 /** Actions the key list shows only in the sandbox (044): the shipped game has no way into it. */

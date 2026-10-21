@@ -13,7 +13,7 @@ import { HotbarView, type CarriedBarShown } from './HotbarView';
 import { InventoryPanel, type InventoryShown } from './InventoryPanel';
 import { ResearchList, type ResearchListState } from './ResearchList';
 import { PickupFeed } from './PickupFeed';
-import { sandboxFeedAt } from './sandboxStrip';
+import { sandboxFeedAt } from './sandboxPopout';
 import { shownKey } from './itemShown';
 import { TubeSlotView, type TubeSlotState } from './TubeSlotView';
 import { CarriedHintView, type CarriedHintShown } from './CarriedHintView';
@@ -153,8 +153,9 @@ export class HudView {
    * No tube yet (012): no hotbar row, and the tube slot shows the fist. Building: the build bar takes the row's place,
    * the tube slot rises over its group labels (026), and the HP block rises too if the bar reaches it (031).
    * `events` are every tick's since the last draw (the feed reads their pickups); `deltaMs` is the frame's time.
+   * `loadoutOut`: how far the sandbox's Loadout panel is out (057, 0–1): there the feed moves out beside its tab.
    */
-  update(sim: SimState, events: SimEvents, deltaMs: number): void {
+  update(sim: SimState, events: SimEvents, deltaMs: number, loadoutOut = 0): void {
     const dt = deltaMs * this.scene.tweens.timeScale;
     const building = sim.building;
     this.hotbar.setVisible(sim.hasTube && !building);
@@ -179,8 +180,8 @@ export class HudView {
     const input = { health: p.health, max: stats.maxHealth, healing: p.healing !== null, dying: p.dying > 0, armor: stats.armor, xp };
     this.health.update(input, building ? buildBarBox(unlockedPieces(sim)) : null, dt);
     this.edges.update(this.health.shown.low, this.health.pulse);
-    // 056.4: in the sandbox the feed sits right of the controls' strip, which holds the top-left.
-    this.feed.update(events.pickups.map((p) => shownKey(sim, p.itemId)), dt, sim.sandbox ? sandboxFeedAt() : null);
+    // 056.4, 057: in the sandbox the feed sits right of the Loadout tab, which holds the top-left, and moves out with it.
+    this.feed.update(events.pickups.map((p) => shownKey(sim, p.itemId)), dt, sim.sandbox ? sandboxFeedAt(loadoutOut) : null);
     // A KO closes the panel: the wake panel takes the screen (and the panel can't open again while it shows).
     if (events.woke) {
       this.inventory.setOpen(false);

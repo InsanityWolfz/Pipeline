@@ -180,6 +180,10 @@ export const SANDBOX_START: StartDef = {
  * column's tablet. Both `margin` in from their edges. The strip's top `leftY` clears the boss bar (HOLLOWS_LOOK.bossBar);
  * the spawn column's top `rightY` sits under the minimap's frame (056.3), and both end above the HP block (tests/render/sandboxStrip.test.ts
  * checks). Rows step with − and + at their right end, so a round's name has the row's width.
+ * 057: both are pop-outs. Each has a `tabs` tab on its edge, always shown in the sandbox, the left one's top at `leftY`
+ * and the right one's at `rightY`, its label written sideways (`turn`, radians: the left reads upward, the right
+ * downward). A click slides its panel out from that edge over `slideMs` (and back), the tab riding on the panel's
+ * outer edge.
  */
 export const SANDBOX_PANEL = {
   margin: 8,
@@ -197,7 +201,12 @@ export const SANDBOX_PANEL = {
     stepper: { down: 152, up: 174, hit: 10 },
     greyAlpha: 0.45,
   },
-  /** 056.4: the pickup feed's gap right of the strip, in the sandbox. */
+  /** `hover`: the outline a tab gets under the pointer, `inset` px in, `width` px wide. */
+  tabs: { w: 16, h: 64, turn: { left: -Math.PI / 2, right: Math.PI / 2 }, hover: { width: 1, inset: 1.5, color: 'brass', alpha: 1 } },
+  slideMs: 150,
+  /** The slide's ease-out power: quick from the edge, settling at the end. */
+  slideEase: 3,
+  /** 056.4: the pickup feed's gap right of the strip (057: of the Loadout tab), in the sandbox. */
   feed: { gap: 8 },
   keys: { gap: 6, step: 9, label: { x: 10 }, value: { right: 176 }, rule: { inset: 6, color: 'brass', alpha: 0.5 } },
 } as const;
@@ -211,7 +220,7 @@ export type SandboxKeyLine = { actions: readonly BindAction[]; label?: string } 
 
 /**
  * 056.2: the bound actions that do something in the sandbox, in 042's order (Move's keys up, left, down, right, so the
- * defaults read W A S D), then the hide key (056.1) and the fixed ones. Build, Research, Rotate and Flip are left off:
+ * defaults read W A S D), then the panels' key (056.1; 057.3: it opens or closes both) and the fixed ones. Build, Research, Rotate and Flip are left off:
  * they work only in the foundry, which the sandbox can't reach.
  */
 export const SANDBOX_KEY_LIST: readonly SandboxKeyLine[] = [
@@ -224,7 +233,7 @@ export const SANDBOX_KEY_LIST: readonly SandboxKeyLine[] = [
   { actions: ['use'] },
   { label: 'Carried slots', actions: ['slot1', 'slot2', 'slot3', 'slot4', 'slot5'] },
   { actions: ['feedback'] },
-  { label: 'Hide controls', actions: ['sandbox'] },
+  { actions: ['sandbox'] },
   { label: 'Fire', fixed: 'Left click' },
   { label: 'Pause', fixed: 'Esc' },
 ];

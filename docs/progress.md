@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: 057 Sandbox pop-outs and a steady waypoint arrow
+**Changed:** on `claude/fervent-hamilton-u3qlqf` (InsanityWolfz/Pipeline#56), the sandbox's panels are click-open pop-outs: a "Loadout" tab on the left edge and a "Spawn" tab on the right, always shown; a click slides the panel out (0.15 s) with 056's rows, a second closes it. Both start closed; Esc closes them before pausing; the backquote opens or closes both ("Sandbox panels"). The waypoint arrow's stutter is fixed (057.6: it was placed against the previous frame's camera view; now placed again on the camera's follow update). Render and data only. Raised 057.7–057.13. Reviewed: the over-target e2e made steady, older specs' retaken shots put back (rule 9), the pickup feed follows the tab the same frame, the tab hover and ease in data. New docs/review/057 shots.
+
+**Next:** Shaun's playtest of `?sandbox` and a walk with the waypoint arrow; "merge 56" when happy.
+
 ## 2026-10-21: Faster process
 **Changed:** at Shaun's request, the process got lighter (docs/process.md "Two tracks", "Keeping the loop small" 6, 8, 9, "Working with Shaun"; CLAUDE.md; .claude/commands): a fix track for small bugs (no spec, plan, review or wrapup); the spec as the first commit of its build PR, no separate spec PR; plan files only for big specs; CI (.github/workflows/ci.yml) runs `npm run check` and the full Playwright suite in 4 shards on every push, so sessions run only the touched e2e files; the wrapup goes in before the playtest; progress.md is one entry per merged PR, not per step; review shots for the current spec only; ETAs from git history.
 
