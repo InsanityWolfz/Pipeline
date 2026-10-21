@@ -42,7 +42,7 @@ export function gameUi(g: GameScene): GameUiState {
     ...(g.hud?.panels ?? NO_HUD_PANELS),
     craftMenu: g.menu?.state ?? null,
     buildBar: g.buildView?.state ?? null,
-    tagged: { splitFlashes: g.effects?.splitFlashes ?? 0, trails: g.arrowView?.trails ?? { count: 0, longest: 0 } },
+    tagged: { splitFlashes: g.effects?.splitFlashes ?? 0, trails: g.arrowView?.trails ?? { count: 0, longest: 0 }, burning: g.arrowView?.burning ?? 0 },
     ...(g.enemyView?.ui ?? NO_ENEMY_UI),
     ...(g.legibility?.ui ?? NO_LEGIBILITY_UI),
     sandbox: g.sim.sandbox ? (g.sandboxPanel?.state ?? { open: false, rows: [] }) : null,

@@ -1,6 +1,7 @@
 import { roundKeywords } from '../data/roundKeywords';
 import { defOf } from './champions';
 import type { ArrowState } from './arrows';
+import { burning } from './keystones';
 import type { BombState } from './bombs';
 import { immune, type EnemyMode, type EnemyState } from './enemies';
 import type { NodeState } from './nodes';
@@ -31,6 +32,8 @@ export interface ArrowSummary {
   keywords: string[];
   /** It carries a Pool it passed through (037: Blastfletch) to its next hit. */
   pooled: boolean;
+  /** It has passed through a Pool and burns for the rest of its flight (054). */
+  burning: boolean;
 }
 
 export function arrowSummary(a: ArrowState): ArrowSummary {
@@ -47,6 +50,7 @@ export function arrowSummary(a: ArrowState): ArrowSummary {
     targetId: a.targetId,
     keywords: [...a.keywords],
     pooled: a.pooled,
+    burning: burning(a),
   };
 }
 

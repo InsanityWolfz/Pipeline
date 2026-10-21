@@ -170,6 +170,8 @@ export interface HitStyle {
   damageType: DamageType;
   /** A punch (023): its hit event is marked so render plays the punch's thud for it. */
   melee?: boolean;
+  /** A burning arrow (054): its hit event is marked so render flashes it; it changes no rule. */
+  burning?: boolean;
 }
 
 /** An arrow's hit, with its Knockback. */
@@ -192,7 +194,7 @@ export function damageEnemy(
   if (push > 0) startKnock(e, dirX, dirY, push, def.hitKnockTicks);
   if (style.damageType === 'cold' && e.health > 0) chillEnemy(state, e);
   if (e.mode === 'idle' || e.mode === 'return') aggro(e);
-  state.events.hits.push({ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: amount, damageType: style.damageType, ...(style.melee ? { melee: true as const } : {}) });
+  state.events.hits.push({ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: amount, damageType: style.damageType, ...(style.melee ? { melee: true as const } : {}), ...(style.burning ? { burning: true as const } : {}) });
 }
 
 /**

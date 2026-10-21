@@ -11,8 +11,8 @@ import type { XpSource } from '../data/leveling';
 // between ticks and land in the list of the tick before.
 
 export type HitEvent =
-  /** `melee` marks a punch's hit (023). */
-  | { target: 'enemy'; id: number; x: number; y: number; damage: number; damageType: DamageType; melee?: true }
+  /** `melee` marks a punch's hit (023); `burning` a burning arrow's (054: through a Pool, for its flash). */
+  | { target: 'enemy'; id: number; x: number; y: number; damage: number; damageType: DamageType; melee?: true; burning?: true }
   | { target: 'player'; x: number; y: number; damage: number };
 
 export interface DeathEvent {

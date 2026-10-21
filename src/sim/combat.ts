@@ -5,7 +5,7 @@ import { aggro, damageEnemy, inHurtbox, targetable, type EnemyState, type HitSty
 import { recordBlock, shieldBlocks } from './shield';
 import { onBossDeath } from './altar';
 import { killXp } from './leveling';
-import { afterKeystoneHit, keystoneHit, takePool } from './keystones';
+import { afterKeystoneHit, burning, keystoneHit, takePool } from './keystones';
 import { spawnDrops } from './drops';
 import type { SimState } from './state';
 import { rotate } from './volley';
@@ -14,8 +14,8 @@ import { statOf } from './statResolve';
 
 // Arrows against enemies, and what happens when an enemy dies.
 
-/** An arrow knocks and flashes; its hit records its damage type (a cold one chills, 029). */
-const arrowHit = (arrow: ArrowState): HitStyle => ({ knock: arrow.knockback, flash: true, damageType: arrow.damageType });
+/** An arrow knocks and flashes; its hit records its damage type (a cold one chills, 029) and whether it burns (054). */
+const arrowHit = (arrow: ArrowState): HitStyle => ({ knock: arrow.knockback, flash: true, damageType: arrow.damageType, burning: burning(arrow) });
 
 /**
  * A Split (029): the stats' shards (SPLIT.shards, 037: Splinter's more) from the hit point, 360 / shards
