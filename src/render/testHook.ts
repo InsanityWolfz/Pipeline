@@ -206,6 +206,8 @@ export interface UiState {
   hoverChips: string[];
   /** 050: the hover name tag's tablet, world px, while one shows. */
   hoverBox: { x: number; y: number; w: number; h: number } | null;
+  /** 050: whether the hover tag draws the name line (not over a champion, whose nameplate names it). */
+  hoverNameDrawn: boolean;
   /** 042: the flow screens as drawn (the title's rows, a card's lines and buttons, Settings, the note). */
   flow: FlowUi;
   /** 044: the Sandbox panel as drawn (open, and its rows with their boxes), or null outside the sandbox. */

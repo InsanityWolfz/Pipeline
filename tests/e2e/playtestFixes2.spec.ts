@@ -103,6 +103,40 @@ test('E that closes the bag beside a boulder does not also harvest it (050 revie
   expect(errors).toEqual([]);
 });
 
+test("a champion's hover tag leaves its name to the nameplate; a plain enemy's tag names it (050 review)", async ({ page }) => {
+  test.setTimeout(60_000);
+  const errors = watchErrors(page);
+  await boot(page, '?playtest');
+  const [champ, husk] = await page.evaluate(() => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    const p = g.step(1).player;
+    const a = g.spawnEnemy('husk', p.x + 90, p.y, true).enemies.at(-1);
+    const b = g.spawnEnemy('husk', p.x - 90, p.y, false).enemies.at(-1);
+    if (!a || !b) throw new Error('no enemies');
+    for (const e of [a, b]) g.setEnemyHealth(e.id, 1000);
+    return [a.id, b.id];
+  });
+  await cameraSettled(page);
+  const hoverEnemy = async (id: number) => {
+    const s = await state(page);
+    const e = s.enemies.find((en) => en.id === id);
+    const cam = (await ui(page))?.camera;
+    if (!e || !cam) throw new Error('no enemy');
+    const at = await screenPoint(page, e.x - (cam.x - VIEW_WIDTH / 2), e.y - 12 - (cam.y - VIEW_HEIGHT / 2));
+    await page.mouse.move(at.x, at.y);
+  };
+  await hoverEnemy(champ);
+  await expect.poll(async () => (await ui(page))?.hoverName).not.toBeNull();
+  const named = (await state(page)).enemies.find((e) => e.id === champ)?.champion?.name;
+  expect((await ui(page))?.hoverName).toBe(named);
+  expect((await ui(page))?.hoverNameDrawn).toBe(false);
+  await hoverEnemy(husk);
+  await expect.poll(async () => (await ui(page))?.hoverName).toBe('Husk');
+  expect((await ui(page))?.hoverNameDrawn).toBe(true);
+  expect(errors).toEqual([]);
+});
+
 /** Boxes meet. */
 const meets = (a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 

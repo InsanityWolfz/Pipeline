@@ -20,8 +20,8 @@ import { ChipLabels, drawChip, flowChips } from './KeywordChip';
 import { CHIP } from '../data/legibility';
 import type { PlacedChip } from './tipTypes';
 
-/** What the hover name shows, for `ui()`: the name, its description (018) and an enemy's chips (040.4). */
-export const NO_HOVER_UI = { hoverName: null as string | null, hoverDescription: null as string | null, hoverChips: [] as string[], hoverBox: null as TagBox | null };
+/** What the hover name shows, for `ui()`: the name, its description (018) and an enemy's chips (040.4); whether the tag draws the name (050: not over a champion). */
+export const NO_HOVER_UI = { hoverName: null as string | null, hoverDescription: null as string | null, hoverChips: [] as string[], hoverBox: null as TagBox | null, hoverNameDrawn: false };
 
 // What the cursor is over in the world (015): its name, and over a machine or the
 // intake (019, 024), the readout of what it holds (006) under the name.
@@ -35,13 +35,16 @@ export class HoverView {
   shown: string | null = null;
   shownDescription: string | null = null;
   get ui(): typeof NO_HOVER_UI {
-    return { hoverName: this.shown, hoverDescription: this.shownDescription, hoverChips: this.shownChips, hoverBox: this.shown === null ? null : this.box };
+    return { hoverName: this.shown, hoverDescription: this.shownDescription, hoverChips: this.shownChips, hoverBox: this.shown === null || !this.tagShown ? null : this.box, hoverNameDrawn: this.shown !== null && this.nameDrawn };
   }
 
   /** An enemy's chips under its name (040.4: traits, then live statuses), by their words. Not clickable: a click there fires. */
   shownChips: string[] = [];
   /** 050: the name tag's tablet, world px. */
   private box: TagBox = { x: 0, y: 0, w: 0, h: 0 };
+  /** Whether the tag draws the name line (050: not over a champion, whose nameplate already names it) and draws at all. */
+  private nameDrawn = false;
+  private tagShown = false;
   private readonly chipLabels: ChipLabels;
 
   constructor(scene: Scene) {
@@ -78,25 +81,30 @@ export class HoverView {
       below = panel.bottom;
     } else this.readout.show([], 0, 0);
     this.back.clear();
-    this.name.setVisible(hit !== null);
-    this.description.setVisible(hit?.description !== undefined);
     const enemy = hit?.enemy !== undefined ? sim.enemies.find((e) => e.id === hit.enemy) : undefined;
     const chips = enemy ? enemyChips(enemy) : [];
     this.shownChips = chips.map((c) => c.label);
-    if (!hit) {
+    // 050 (review): a champion's nameplate (032) already names it over its head, so its tag shows only its chips.
+    const named = !enemy?.champion;
+    this.nameDrawn = named;
+    this.tagShown = hit !== null && (named || chips.length > 0);
+    this.name.setVisible(hit !== null && named);
+    this.description.setVisible(hit?.description !== undefined);
+    if (!hit || !this.tagShown) {
       this.chipLabels.hide();
       return;
     }
     this.name.set(hit.name);
     const { pad, descriptionGap } = HOVER_NAME;
+    const nameH = named ? this.name.lineHeight : 0;
     // The enemy's chips in a row under its name (040.4).
     const row = flowChips(chips, (l) => this.chipLabels.width(l), { x: 0, y: 0, firstX: 0, right: Infinity, rowStep: 0 });
     const chipsW = Math.max(0, ...row.placed.map((c) => c.box.x + c.box.w));
-    const chipRow = chips.length > 0 ? descriptionGap + CHIP.h : 0;
+    const chipRow = chips.length > 0 ? (named ? descriptionGap : 0) + CHIP.h : 0;
     const extra = (hit.description !== undefined ? descriptionGap + this.description.lineHeight : 0) + chipRow;
     if (hit.description !== undefined) this.description.set(hit.description);
-    const w = Math.max(this.name.width, hit.description !== undefined ? this.description.width : 0, chipsW);
-    const h = this.name.lineHeight + extra;
+    const w = Math.max(named ? this.name.width : 0, hit.description !== undefined ? this.description.width : 0, chipsW);
+    const h = nameH + extra;
     // 050.1: under the thing's feet, clear of the E prompt; just above it where that would cover the player (or the
     // prompt), else beside it, else above its prompt; kept in the view and off the minimap.
     const p = sim.player;
@@ -131,7 +139,7 @@ export class HoverView {
     const y = Math.round(at.y + pad);
     const cx = at.x + pad + w / 2;
     this.name.moveTo(Math.round(cx - this.name.width / 2), y);
-    if (hit.description !== undefined) this.description.moveTo(Math.round(cx - this.description.width / 2), y + this.name.lineHeight + descriptionGap);
+    if (hit.description !== undefined) this.description.moveTo(Math.round(cx - this.description.width / 2), y + nameH + descriptionGap);
     const left = Math.round(cx - w / 2);
     this.box = { x: left - pad, y: y - pad, w: w + 2 * pad, h: h + 2 * pad };
     drawTablet(this.back, left - pad, y - pad, w + 2 * pad, h + 2 * pad, HOVER_NAME.alpha);
