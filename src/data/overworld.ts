@@ -6,7 +6,7 @@
 
 import { GROTTO } from './grotto';
 import { HOLLOWS, inHollows } from './hollows';
-import { ARRIVE, ENTRANCE, FIELD_WALLS, HOME_SHIFT, MEADOW_VEIN, MOUND, SHRINE, SHRINE_GATE, SHRINE_PYLON, SHRINE_SHIFT, shrineWalls } from './home';
+import { ARRIVE, ENTRANCE, FIELD_WALLS, HOME_SHIFT, MEADOW_VEIN, MOUND, SHRINE, SHRINE_DOOR, SHRINE_PYLON, SHRINE_SHIFT, shrineWalls } from './home';
 import { LANDMARK_LIST } from './landmarks';
 import { LEY_LINES } from './leyLines';
 import { shiftRect, shiftTile } from './place';
@@ -76,8 +76,8 @@ export const OVERWORLD = {
   shrine: {
     area: SHRINE,
     walls: shrineWalls(),
-    /** The gap the ley barrier seals until the first line fills the tube (012). */
-    gate: SHRINE_GATE,
+    /** Its door (055): the Warden's arena's way in, where 012's gate stood (src/data/arenas.ts). */
+    door: SHRINE_DOOR,
     pylon: SHRINE_PYLON,
     /** The claim id: objectives and fixtures name the shrine by it. */
     site: 'shrine',

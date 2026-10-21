@@ -164,12 +164,14 @@ export function generateOverworld(seed: number = OVERWORLD.seed, landmarks: read
   for (const p of OVERWORLD.paths) path(grid, p);
   for (const t of [...OVERWORLD.ruinField.walls, ...OVERWORLD.entrance.mound, ...landmarks.flatMap((l) => l.blocks ?? [])]) set(grid, t.tx, t.ty, TILE.ruinBlock);
   for (const t of OVERWORLD.shrine.walls) set(grid, t.tx, t.ty, TILE.wall);
+  // 055: the Warden's arena's door, in its front wall (the forum's is in its walls, stamped with the Hollows').
+  for (const t of OVERWORLD.shrine.door) set(grid, t.tx, t.ty, TILE.arenaDoor);
   // The Hollows' cliffs, aqueduct and forum (034), over the road where they cross it.
   stampHollows(grid, landmarks);
   const pylons = overworldPylons(landmarks);
   const caches = landmarks.flatMap((l) => (l.cache ? [{ id: l.id, ...l.cache }] : []));
   const altar = HOLLOWS.arena.altar;
-  for (const t of [...pylons, ...caches, altar, OVERWORLD.startStone, ...OVERWORLD.nodes, ...OVERWORLD.shrine.gate, ...HOLLOWS.gate]) set(grid, t.tx, t.ty, TILE.floor);
+  for (const t of [...pylons, ...caches, altar, OVERWORLD.startStone, ...OVERWORLD.nodes, ...HOLLOWS.gate]) set(grid, t.tx, t.ty, TILE.floor);
   for (const f of OVERWORLD.features) {
     const p = feature(grid, f);
     if (p) kept.push(p);
@@ -191,7 +193,8 @@ export function generateOverworld(seed: number = OVERWORLD.seed, landmarks: read
     tubeStone: OVERWORLD.startStone,
     pylons,
     caches,
-    gateTiles: [...OVERWORLD.shrine.gate.map((t) => ({ ...t, gate: 'shrine' as const })), ...HOLLOWS.gate.map((t) => ({ ...t, gate: 'hollows' as const }))],
+    // 055: the shrine's gate has no tiles any more; its door (TILE.arenaDoor) stands where they were.
+    gateTiles: HOLLOWS.gate.map((t) => ({ ...t, gate: 'hollows' as const })),
     altars: [{ ...altar, boss: HOLLOWS.arena.boss }],
     terrain: { ponds: kept, paths: OVERWORLD.paths },
   };

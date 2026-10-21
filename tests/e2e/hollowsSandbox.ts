@@ -83,7 +83,7 @@ export async function frames(page: Page, n = 4): Promise<void> {
   }, n);
 }
 
-/** 043: into the Sunken Forum with only the Bulwark left, the player just inside its way in; returns once it fights (and the seal stands). */
+/** 043: into the Sunken Forum with only the Bulwark left, the player just inside its door (055: E at it); returns once it fights (and the lock stands). */
 export async function intoForum(page: Page): Promise<void> {
   await boot(page, '?start=hollows');
   await page.evaluate(([door, x]) => {
@@ -92,8 +92,9 @@ export async function intoForum(page: Page): Promise<void> {
     if (!g || !h) throw new Error('no game');
     for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark') g.setEnemyHealth(e.id, 0);
     g.step(1);
-    // 053: round to the forum's north side and in through its way.
-    for (const [tx, ty] of [[x, door - 1], [x, door + 1]] as const) h.walkTo((tx + 0.5) * 32, (ty + 0.5) * 32);
+    // 053: round to the forum's north side; 055: E at its door goes in.
+    h.walkTo((x + 0.5) * 32, (door - 0.5) * 32);
+    if (g.step(1, { interact: true }).events.arenaEnters.length === 0) throw new Error('the forum door did not open');
     for (let t = 0; t < 120 && !g.getState().bosses[0]?.engaged; t++) g.step(1);
-  }, [HOLLOWS.arena.seal.tiles[0]?.ty ?? 0, HOLLOWS.arena.seal.leaveTo.tx] as const);
+  }, [HOLLOWS.arena.door.tiles[0]?.ty ?? 0, HOLLOWS.arena.door.leaveTo.tx] as const);
 }

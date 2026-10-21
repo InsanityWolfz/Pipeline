@@ -125,9 +125,10 @@ test("the Bulwark's arena shows on the minimap once it has been on screen, named
     if (!g || !h) throw new Error('no game');
     for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark') g.setEnemyHealth(e.id, 0);
     g.step(1);
-    // 053: round to the forum's north side and in through its way.
-    for (const [x, y] of [[way, door - 1], [way, door + 1]] as const) h.walkTo((x + 0.5) * 32, (y + 0.5) * 32);
-  }, [HOLLOWS.arena.seal.tiles[0]?.ty ?? 0, HOLLOWS.arena.seal.leaveTo.tx] as const);
+    // 053: round to the forum's north side; 055: E at its door goes in.
+    h.walkTo((way + 0.5) * 32, (door - 0.5) * 32);
+    g.step(1, { interact: true });
+  }, [HOLLOWS.arena.door.tiles[0]?.ty ?? 0, HOLLOWS.arena.door.leaveTo.tx] as const);
   await expect.poll(async () => (await arena())?.name).toBe(HOLLOWS.arena.name);
   const at = await arena();
   const canvas = await page.locator('canvas').boundingBox();

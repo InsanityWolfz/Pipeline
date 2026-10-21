@@ -24,7 +24,7 @@ export const SUPPLY_TICKS = 240;
 export const SITE_SUPPLY: Readonly<Record<string, readonly string[]>> = {
   shrine: ['wood', 'stone', 'fiber', 'ley-crystal'],
   // Each landmark pylon's own raws, from its entry (quarry: stone, old-grove: wood, reed-marsh: fiber, ley-grotto: ley crystal;
-  // 034's cistern-terrace: its area's ley-iron and stone; 049's husk-hive: Husk resin).
+  // 034's cistern-terrace: its area's ley-iron and stone; 049's husk-hive: Husk resin; 055's frozen-grotto: rimestone).
   ...Object.fromEntries(LANDMARK_LIST.flatMap((l) => (l.pylon ? [[l.pylon.site, l.pylon.supplies]] : []))),
 };
 
@@ -68,5 +68,7 @@ export const FIXTURES: readonly FixtureDef[] = [
   { id: 'ley-iron-port', kind: 'port', name: 'Ley-iron port', tx: 1, ty: 3, facing: 'right', raw: 'ley-iron' },
   // 049: below the ley crystal port, so a bomb line's resin and ley crystal come in side by side.
   { id: 'husk-resin-port', kind: 'port', name: 'Husk resin port', tx: 1, ty: 11, facing: 'right', raw: 'husk-resin' },
+  // 055: below the resin port, the last free tile of the west wall's ports.
+  { id: 'rimestone-port', kind: 'port', name: 'Rimestone port', tx: 1, ty: 12, facing: 'right', raw: 'rimestone' },
   { id: 'waystone', kind: 'waystone', name: 'Waystone', tx: 22, ty: 4, facing: 'down', claim: 'shrine' },
 ];

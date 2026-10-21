@@ -65,7 +65,7 @@ describe('the Frozen Grotto', () => {
     expect(s.groundItems.some((g) => g.itemId === 'rimestone') || (s.inventory['rimestone'] ?? 0) > 0).toBe(true);
   });
 
-  it('is held by a hand-placed guard pack in its landmark\'s group (032: frozen-grotto): 3 Husks and a Wisp, back after a KO', () => {
+  it('is held by a hand-placed guard pack in its landmark\'s group (032: frozen-grotto): 3 Husks and a Wisp, back after a KO until claimed', () => {
     const guards = OVERWORLD.packs.filter((p) => p.group === GROTTO_GROUP);
     expect(guards.map((p) => p.enemyId).sort()).toEqual(['husk', 'husk', 'husk', 'wisp']);
     for (const g of guards) {
@@ -77,7 +77,7 @@ describe('the Frozen Grotto', () => {
     s.enemies = s.enemies.filter((e) => e.group !== GROTTO_GROUP);
     die(s);
     expect(grotto()).toHaveLength(4);
-    // No pylon: it can't be claimed, and even a stray claim id wouldn't change its guards.
+    // Unclaimed (055 gave it a pylon: tests/sim/grottoPylon.test.ts), its guards keep coming back.
     expect(GROTTO_GROUP).toBe('frozen-grotto');
     expect(OVERWORLD.shrine.site).not.toBe(GROTTO_GROUP);
     resetWorld(s);

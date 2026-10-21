@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { HOLLOWS } from '../../src/data/hollows';
 import { HOLLOWS_SITES } from '../../src/data/hollowsSites';
 import { boot, cameraSettled } from './helpers';
+import { enterArena } from './arenaHelpers';
 
 // Review screenshots for 034 (REVIEW_SHOTS=1, into docs/review/034): the barrier and
 // breached, the Ley-iron Cut, the aqueduct and the Cistern Terrace, the Bulwark facing the
@@ -68,7 +69,8 @@ async function bannersGone(page: Page): Promise<void> {
 async function forum(page: Page, dy: number): Promise<void> {
   await boot(page, '?start=hollows');
   await quiet(page, ['bulwark']);
-  await walk(page, [[A.seal.leaveTo.tx, A.seal.leaveTo.ty], [A.start.tx, A.start.ty + dy]]);
+  await enterArena(page, A);
+  await walk(page, [[A.start.tx, A.start.ty + dy]]);
   await bannersGone(page);
 }
 
@@ -236,7 +238,8 @@ test.describe('review screenshots (034)', () => {
     test.setTimeout(150_000);
     await boot(page, '?start=hollows');
     await quiet(page, ['bulwark']);
-    await walk(page, [[A.seal.leaveTo.tx, A.seal.leaveTo.ty], [A.altar.tx + 2, A.altar.ty + 1]]);
+    await enterArena(page, A);
+    await walk(page, [[A.altar.tx + 2, A.altar.ty + 1]]);
     await bannersGone(page);
     await cameraSettled(page, 20_000);
     expect((await page.evaluate(() => window.__GAME__?.ui().hollows))?.altar).toBe('dim');

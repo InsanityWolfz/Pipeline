@@ -25,6 +25,8 @@ export const MINIMAP = {
     B: 'grass-bright',
     '#': 'rock-dark',
     D: 'gold-trim',
+    // 055: a boss arena's door, brass in its wall.
+    G: 'brass',
     // Stonefall Hollows (034).
     C: 'hollow-dark',
     P: 'hollow-pale',

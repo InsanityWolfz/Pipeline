@@ -18,14 +18,18 @@ async function forum(page: Page, dy: number): Promise<number> {
       if (!g || !h) throw new Error('no game');
       for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark') g.setEnemyHealth(e.id, 0);
       g.step(1);
-      for (const [x, y] of [[lx, ly], [tx, ty]] as const) h.walkTo((x + 0.5) * 32, (y + 0.5) * 32);
+      // 055: E at the forum's door goes in.
+      h.walkTo((lx + 0.5) * 32, (ly + 0.5) * 32);
+      h.walkTo((lx + 0.5) * 32, (ly + 1.5) * 32);
+      if (g.step(1, { interact: true }).events.arenaEnters.length === 0) throw new Error('the forum door did not open');
+      h.walkTo((tx + 0.5) * 32, (ty + 0.5) * 32);
       for (let t = 0; t < 120 && !g.getState().bosses[0]?.engaged; t++) g.step(1);
       const b = g.getState().bosses[0];
       if (!b?.engaged) throw new Error('the Bulwark never woke');
       return b.id;
     },
-    // 053: by the forum's way in on its north side.
-    [A.start.tx, A.start.ty + dy, A.seal.leaveTo.tx, A.seal.leaveTo.ty] as const,
+    // 053: by the forum's door on its north side.
+    [A.start.tx, A.start.ty + dy, A.door.leaveTo.tx, A.door.leaveTo.ty] as const,
   );
 }
 

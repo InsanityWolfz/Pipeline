@@ -125,7 +125,8 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
   each((tx, ty, hash) => {
     if (!paved(tx, ty) || hash % GROUND.pavingGapEvery === 0) return;
     const s = symbol(tx, ty);
-    if (s !== TILE.floor && s !== TILE.path) return;
+    // 055: the paving runs on under the shrine's door.
+    if (s !== TILE.floor && s !== TILE.path && s !== TILE.arenaDoor) return;
     c.globalAlpha = GROUND.pavingAlpha;
     c.fillStyle = inkCss(GROUND.paving);
     c.beginPath();

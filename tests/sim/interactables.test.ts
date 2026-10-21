@@ -39,10 +39,10 @@ const SCENES: Readonly<Record<InteractKind, () => SimState>> = {
     below(s, stone);
     return s;
   },
-  'arena-seal': () => {
+  'arena-door': () => {
     const { s } = forum(160);
     run(s, 1);
-    const seal = HOLLOWS.arena.seal.tiles;
+    const seal = HOLLOWS.arena.door.tiles;
     const door = tileCentre(seal[Math.floor(seal.length / 2)] ?? { tx: 0, ty: 0 });
     movePlayer(s, door.x, door.y + TILE_SIZE / 2 + FEET_BOX.h / 2 + 1);
     s.enemies = s.enemies.filter((e) => e.enemyId === DEF.id);
@@ -144,15 +144,23 @@ describe('the in-reach E prompts (045)', () => {
     }
   });
 
-  it("the sealed door's prompt floats over the middle of the way in, only while it's sealed (043.5)", () => {
-    const s = SCENES['arena-seal']();
-    const tiles = HOLLOWS.arena.seal.tiles;
+  it("the door's prompt floats over the middle of its tiles, from inside whether or not the fight is on (043.5, 055)", () => {
+    const s = SCENES['arena-door']();
+    const tiles = HOLLOWS.arena.door.tiles;
     const x0 = (tiles[0]?.tx ?? 0) * TILE_SIZE;
     const x1 = ((tiles[tiles.length - 1]?.tx ?? 0) + 1) * TILE_SIZE;
-    expect(interactTarget(s)).toEqual({ kind: 'arena-seal', x: (x0 + x1) / 2, y: ((tiles[0]?.ty ?? 0) + 0.5) * TILE_SIZE });
-    // Unsealed (the Bulwark gone), there's nothing to press.
+    const prompt = { kind: 'arena-door', x: (x0 + x1) / 2, y: ((tiles[0]?.ty ?? 0) + 0.5) * TILE_SIZE };
+    expect(interactTarget(s)).toEqual(prompt);
+    // 055: with the Bulwark gone, E still leaves.
     s.enemies = [];
+    expect(interactTarget(s)).toEqual(prompt);
+    // Outside a sealed door there's nothing to press (its hover says what opens it).
+    const out = tileCentre({ tx: HOLLOWS.arena.door.leaveTo.tx, ty: (tiles[0]?.ty ?? 0) - 1 });
+    movePlayer(s, out.x, out.y);
+    s.gates.hollows = false;
     expect(interactTarget(s)).toBeNull();
+    s.gates.hollows = true;
+    expect(interactTarget(s)).toEqual(prompt);
   });
 
   it('no prompt where E would do nothing, or while a hold runs; an empty crate has one (047: E opens its screen)', () => {

@@ -10,12 +10,13 @@ import { RECIPES } from '../../src/data/recipes';
 import { RELICS } from '../../src/data/relics';
 import { RESEARCH_NODES } from '../../src/data/research';
 import { RING_SCALE } from '../../src/data/ringScale';
-import { SANDBOX_ROOM, WALKABLE } from '../../src/data/rooms';
+import { SANDBOX_ROOM, TILE, WALKABLE } from '../../src/data/rooms';
 import { KIT_COUNT, SANDBOX, SANDBOX_ARENAS, SANDBOX_GEAR, SANDBOX_PENS, WARDEN_ARENA } from '../../src/data/sandbox';
 import { STAGE_ROWS, STAGES } from '../../src/data/stages';
 import { ROUNDS, TAGS } from '../../src/data/tags';
 import { TALENT_LIST } from '../../src/data/talents';
-import { arenaSealed, sealRects } from '../../src/sim/arenaLock';
+import { arenaLocked } from '../../src/sim/arenaLock';
+import { FORUM_ARENA } from '../../src/data/arenas';
 import { defOf } from '../../src/sim/champions';
 import { unlockedPieces } from '../../src/sim/placement';
 import { createSandboxSim, PEN_GROUP, SPAWN_GROUP, type SandboxCommand } from '../../src/sim/sandbox';
@@ -144,22 +145,21 @@ describe('the room (044)', () => {
     }
     const rows = roomById(SANDBOX_ROOM).rows;
     for (const t of HOLLOWS.arena.walls) expect(rows[t.ty]?.[t.tx]).toBe(t.symbol);
-    for (const t of HOLLOWS.arena.seal.tiles) expect(WALKABLE).toContain(rows[t.ty]?.[t.tx]);
-    expect(WALKABLE).toContain(rows[HOLLOWS.arena.seal.leaveTo.ty]?.[HOLLOWS.arena.seal.leaveTo.tx]);
+    for (const t of HOLLOWS.arena.door.tiles) expect(rows[t.ty]?.[t.tx]).toBe(TILE.arenaDoor);
+    expect(WALKABLE).toContain(rows[HOLLOWS.arena.door.leaveTo.ty]?.[HOLLOWS.arena.door.leaveTo.tx]);
     expect(rows[WARDEN_ARENA.bounds.y1]?.[WARDEN_ARENA.bounds.x0]).toBe('#');
     expect(WORLD[SANDBOX_ROOM]).toBeDefined();
   });
 
-  it('seals the forum while its Bulwark fights, as in the Hollows (043)', () => {
+  it('locks the forum while its Bulwark fights, as in the Hollows (043)', () => {
     const s = createSandboxSim(1);
-    const A = HOLLOWS.arena;
-    expect(arenaSealed(s, A, SANDBOX_ROOM)).toBe(false);
+    const A = FORUM_ARENA;
+    expect(arenaLocked(s, A, SANDBOX_ROOM)).toBe(false);
     const inside = tileCentre({ tx: A.start.tx, ty: A.start.ty - 3 });
     movePlayer(s, inside.x, inside.y);
     once(s, { kind: 'god', on: true });
     run(s, 2);
-    expect(arenaSealed(s, A, SANDBOX_ROOM)).toBe(true);
-    expect(sealRects(s, SANDBOX_ROOM).length).toBe(A.seal.tiles.length);
-    expect(summarize(s).arenas[0]?.sealed).toBe(true);
+    expect(arenaLocked(s, A, SANDBOX_ROOM)).toBe(true);
+    expect(summarize(s).arenas.find((a) => a.id === A.id)?.locked).toBe(true);
   });
 });

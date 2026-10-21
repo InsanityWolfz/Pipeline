@@ -1,82 +1,63 @@
-import { enemyDef } from '../data/enemies';
-import { HOLLOWS } from '../data/hollows';
-import { OVERWORLD_ROOM } from '../data/overworld';
+import { ARENAS, type ArenaDef } from '../data/arenas';
 import { FEET_BOX } from '../data/player';
+import type { TilePos } from '../data/tiles';
+import { roomBodies } from './bodies';
+import { defOf } from './champions';
+import { boxHitsSolid, overlapsRect } from './collision';
+import { enemyDef } from '../data/enemies';
+import { OVERWORLD_ROOM } from '../data/overworld';
 import { SANDBOX_ROOM } from '../data/rooms';
 import { engaged } from './bulwarkAi';
 import { resetFight } from './bulwarkPhases';
 import { gapTo } from './claims';
-import { defOf } from './champions';
-import { overlapsRect, type Box, type Rect } from './collision';
 import { createEnemy, type EnemyState } from './enemies';
-import { tileRect } from './fixtures';
 import type { Command } from './input';
 import type { SimState } from './state';
 import { insideTiles, tileCentre } from './tiles';
 
-// The arena lock (043, was 041.18): while a region boss fights, a ley barrier seals its
-// arena's way in, so the fight can't be walked out to a healing spot and back. Feet can't
-// pass it, the player's or an enemy's. E at the sealed door leaves: the player stands just
-// outside, and the fight resets as a leash reset does, at once (the boss back at its start
-// at full health, its adds and bombs gone), so the seal drops. The seal is derived from
-// the boss's state, never stored: it stands exactly while the boss is engaged. 044: the
-// sandbox's room holds the forum at the same tiles, so its seal works there the same way.
+// The arena doors and lock (055, D.5; 043's lock, was 041.18). Each boss arena (src/data/arenas.ts) is walled all
+// round, its door part of the wall: solid to feet and shots, always. The door is sealed until its gate opens (the
+// shrine's for the Warden, the Hollows' barrier for the Bulwark); then E at it from outside stands the player just
+// inside. From inside, E at it leaves, sealed or not: the player stands just outside, and if the boss lives the fight
+// resets as 043's did, at once (the boss back at its start at full health, its adds and bombs gone). "Locked" is 043's
+// seal, derived from the boss, never stored: it stands exactly while the boss fights, and render draws it over the door.
+// The sandbox's room holds the forum at the same tiles (044), its door always open.
 
-export type Arena = typeof HOLLOWS.arena;
+type Arena = ArenaDef;
 
-/** Every arena with a seal. */
-export const ARENAS: readonly Arena[] = [HOLLOWS.arena];
+/** The rooms any arena stands in: the overworld, and the sandbox's room (044). */
+export const ARENA_ROOMS: readonly string[] = [...new Set(ARENAS.flatMap((a) => a.rooms))];
 
-/** The rooms the arenas stand in, at the same tiles: the overworld, and the sandbox's room (044). */
-export const ARENA_ROOMS: readonly string[] = [OVERWORLD_ROOM, SANDBOX_ROOM];
-
-/** The arena's boss, alive in `roomId`, if any. */
+/** The arena's boss, alive in `roomId`, if any: the one in the arena's group, or (044) any in the sandbox. */
 const bossOf = (state: Pick<SimState, 'enemies'>, arena: Arena, roomId: string): EnemyState | undefined =>
-  state.enemies.find((e) => e.enemyId === arena.boss && e.roomId === roomId && e.health > 0);
+  !arena.rooms.includes(roomId) ? undefined : state.enemies.find((e) => e.enemyId === arena.boss && e.roomId === roomId && e.health > 0 && (roomId === SANDBOX_ROOM || e.group === arena.id));
 
-/** True while the arena's boss fights in `roomId` (the overworld unless told): its way in is sealed. */
-export function arenaSealed(state: Pick<SimState, 'enemies'>, arena: Arena, roomId: string = OVERWORLD_ROOM): boolean {
+/**
+ * True while the player is inside the arena (in `roomId`, the overworld unless told) and its boss fights them: 043's
+ * lock, drawn over the door. (The Warden wakes on sight, through its walls, so a fight seen from outside isn't one.)
+ */
+export function arenaLocked(state: Pick<SimState, 'enemies' | 'player' | 'roomId'>, arena: Arena, roomId: string = OVERWORLD_ROOM): boolean {
   const boss = bossOf(state, arena, roomId);
-  return boss !== undefined && engaged(boss);
+  return boss !== undefined && engaged(boss) && state.roomId === roomId && insideTiles(arena.inside, state.player.x, state.player.y);
 }
 
-/** The solid boxes of every sealed arena's seal in a room. */
-export function sealRects(state: Pick<SimState, 'enemies'>, roomId: string): Rect[] {
-  if (!ARENA_ROOMS.includes(roomId)) return [];
-  return ARENAS.filter((a) => arenaSealed(state, a, roomId)).flatMap((a) => a.seal.tiles.map(tileRect));
+/** True once the arena's door opens to E from outside: its gate is open, or (044) it stands in the sandbox. */
+export function doorUnlocked(state: Pick<SimState, 'gates'>, arena: Arena, roomId: string = OVERWORLD_ROOM): boolean {
+  return roomId === SANDBOX_ROOM || state.gates[arena.door.unlock];
 }
 
-/**
- * Moves a body already overlapping a seal tile off it, to its own side (into the arena if its feet are in it), so it
- * can't walk on through. It moves straight north or south and assumes the tiles either side of the seal are open floor
- * (the forum's first floor row and the road outside its way in, both cleared in data), so it never lands in a wall.
- */
-function pushOff(arena: Arena, body: { x: number; y: number }, box: Box): void {
-  for (const r of arena.seal.tiles.map(tileRect)) {
-    if (!overlapsRect(body.x, body.y, box, r)) continue;
-    const south = insideTiles(arena.inside, body.x, body.y);
-    body.y = south ? r.y + (r.h + box.h) / 2 : r.y - (r.h + box.h) / 2;
-  }
+/** True if the player's feet are inside the arena (in a room it stands in). */
+export const playerInside = (state: Pick<SimState, 'player' | 'roomId'>, arena: Arena): boolean => arena.rooms.includes(state.roomId) && insideTiles(arena.inside, state.player.x, state.player.y);
+
+/** The arena in the player's room whose door is within reach of the player's feet box, if any. */
+export function doorInReach(state: SimState): Arena | undefined {
+  return ARENAS.find((a) => a.rooms.includes(state.roomId) && a.door.tiles.some((t) => gapTo(state, t) <= a.door.reach));
 }
 
-/**
- * After enemies act: a body standing in a sealed doorway as the seal rises (the player's feet box reaches into the
- * door row as it wakes the boss) is pushed off it; the seal stops it from then on.
- */
-export function stepSeal(state: SimState): void {
-  for (const roomId of ARENA_ROOMS) {
-    for (const arena of ARENAS) {
-      if (!arenaSealed(state, arena, roomId)) continue;
-      if (state.roomId === roomId) pushOff(arena, state.player, FEET_BOX);
-      for (const e of state.enemies) if (e.roomId === roomId) pushOff(arena, e, defOf(e).feetBox);
-    }
-  }
-}
-
-/** The sealed arena whose seal is within reach of the player's feet box, if any. */
-export function sealInReach(state: SimState): Arena | undefined {
-  if (!ARENA_ROOMS.includes(state.roomId)) return undefined;
-  return ARENAS.find((a) => arenaSealed(state, a, state.roomId) && a.seal.tiles.some((t) => gapTo(state, t) <= a.seal.reach));
+/** What E at a door in reach would do: go in, go out, or nothing (sealed, from outside). */
+export function doorUse(state: SimState, arena: Arena): 'enter' | 'leave' | null {
+  if (playerInside(state, arena)) return 'leave';
+  return doorUnlocked(state, arena, state.roomId) ? 'enter' : null;
 }
 
 /** The boss back at its start as it was placed (full health, idle, nothing on it), its adds and bombs gone: a leash reset, at once (044: the sandbox's reset too). */
@@ -88,16 +69,47 @@ export function resetBoss(state: SimState, boss: EnemyState): void {
   state.enemyBombs = state.enemyBombs.filter((b) => b.enemyId !== boss.enemyId || b.roomId !== boss.roomId);
 }
 
-/** E at a sealed door, before the altars: the player leaves and the fight resets. Returns the command the rest of the tick sees. */
+/** True if the player's feet box at (x, y) would stand clear of walls, solid things and every live enemy's feet in the room. */
+function clearAt(state: SimState, x: number, y: number): boolean {
+  const { room, obstacles } = roomBodies(state, state.roomId);
+  if (boxHitsSolid(room, x, y, FEET_BOX) || obstacles.some((r) => overlapsRect(x, y, FEET_BOX, r))) return false;
+  return !state.enemies.some((e) => {
+    if (e.roomId !== state.roomId || e.health <= 0) return false;
+    const f = defOf(e).feetBox;
+    return overlapsRect(x, y, FEET_BOX, { x: e.x, y: e.y, w: f.w, h: f.h });
+  });
+}
+
+/**
+ * Where E at a door puts the player: its tile, or if something stands there (an enemy waiting at the door), the first
+ * clear tile of: a tile further from the door, then either side of the tile, then either side of the further one, in
+ * that fixed order. With none clear, the tile itself.
+ */
+function landing(state: SimState, arena: Arena, to: TilePos): { x: number; y: number } {
+  const mid = arena.door.tiles[Math.floor(arena.door.tiles.length / 2)] ?? to;
+  const away = Math.sign(to.ty - mid.ty);
+  const tries: TilePos[] = [to, { tx: to.tx, ty: to.ty + away }, { tx: to.tx - 1, ty: to.ty }, { tx: to.tx + 1, ty: to.ty }, { tx: to.tx - 1, ty: to.ty + away }, { tx: to.tx + 1, ty: to.ty + away }];
+  for (const t of tries) {
+    const c = tileCentre(t);
+    if (clearAt(state, c.x, c.y)) return c;
+  }
+  return tileCentre(to);
+}
+
+/** E at a door, before the altars: in, or out with the fight reset. Returns the command the rest of the tick sees. */
 export function stepArenaLock(state: SimState, cmd: Command): Command {
   if (!cmd.interact) return cmd;
-  const arena = sealInReach(state);
-  const boss = arena && bossOf(state, arena, state.roomId);
-  if (!arena || !boss) return cmd;
-  const out = tileCentre(arena.seal.leaveTo);
-  state.player.x = out.x;
-  state.player.y = out.y;
-  resetBoss(state, boss);
-  state.events.arenaLeaves.push({ arena: arena.id });
+  const arena = doorInReach(state);
+  const use = arena && doorUse(state, arena);
+  if (!arena || !use) return cmd;
+  const to = landing(state, arena, use === 'enter' ? arena.door.enterTo : arena.door.leaveTo);
+  state.player.x = to.x;
+  state.player.y = to.y;
+  if (use === 'enter') state.events.arenaEnters.push({ arena: arena.id });
+  else {
+    const boss = bossOf(state, arena, state.roomId);
+    if (boss) resetBoss(state, boss);
+    state.events.arenaLeaves.push({ arena: arena.id });
+  }
   return { ...cmd, interact: false };
 }

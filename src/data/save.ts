@@ -11,9 +11,11 @@
  * research node that opened it), again with no migration. 051 made it 8 (the goal's sub-steps, the bomb goal moved
  * before the foundry, and the minimap's fog of war), again with no migration. 052 made it 9 (the sorter and merger
  * gone, the underground pair's pieces added), again with no migration. 053 made it 10 (the round world: every saved
- * position, and the fog's bitmap, are on a new map), again with no migration.
+ * position, and the fog's bitmap, are on a new map), again with no migration. 055 made it 11 (the arena doors' enter
+ * event, the shrine's walls closed round a player who stood in its old gaps, and the Frozen Grotto's pylon and
+ * rimestone port), again with no migration.
  */
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 11;
 
 /** The envelope's and the export file's format tags. */
 export const SAVE_FORMAT = 'pipeline-save';

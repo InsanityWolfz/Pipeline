@@ -22,7 +22,9 @@ async function forum(page: Page, dy: number): Promise<number> {
       if (!g || !h) throw new Error('no game');
       for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark') g.setEnemyHealth(e.id, 0);
       g.step(1);
-      for (const [x, y] of [[25, 27], [12, 27], [12, 30], [tx, ty]] as const) h.walkTo((x + 0.5) * 32, (y + 0.5) * 32);
+      // 055: in by the forum's door.
+      h.enterArena('sunken-forum');
+      h.walkTo((tx + 0.5) * 32, (ty + 0.5) * 32);
       for (let t = 0; t < 120 && !g.getState().bosses[0]?.engaged; t++) g.step(1);
       return g.getState().bosses[0]?.id ?? -1;
     },

@@ -60,7 +60,8 @@ test('a frost rune line feeds frost arrows to the tube, and a frost volley freez
   expect(line.made).toBeGreaterThanOrEqual(8);
   expect(line.entrance).toMatchObject({ ammo: 'arrow+frost' });
 
-  // Out to the shrine's Warden (the shrine still unclaimed), firing frost volleys until it freezes; a Husk on the way chills.
+  // Out to the shrine's Warden (the shrine still unclaimed; 055: in by its door), firing frost volleys until it freezes;
+  // a Husk on the way chills.
   const fight = await page.evaluate(
     ([pylon]) => {
       const g = window.__GAME__;
@@ -68,6 +69,7 @@ test('a frost rune line feeds frost arrows to the tube, and a frost volley freez
       if (!g || !h) throw new Error('no game');
       h.toHall();
       h.walkTo((pylon.tx + 0.5) * 32, (pylon.ty + 9.5) * 32);
+      h.enterArena('shrine');
       let s = g.step(1);
       let chilled = 0;
       let frozen: { enemyId: string; frozen: number } | null = null;

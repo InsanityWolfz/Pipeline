@@ -47,6 +47,8 @@ test.describe('review screenshots (031)', () => {
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
       g.claim('shrine');
+      // 055: in by the shrine's door.
+      h.enterArena('shrine');
       h.walkTo((tx + 0.5) * 32, (ty + 1.5) * 32);
     }, [PYLON.tx, PYLON.ty] as const);
     await pickUp(page, [['wood', 5], ['arrowhead', 4], ['ley-crystal', 2]]);
@@ -115,6 +117,8 @@ test.describe('review screenshots (031)', () => {
       if (!g || !h) throw new Error('no game');
       g.claim('shrine');
       g.setPlayerHealth(40);
+      // 055: in by the shrine's door.
+      h.enterArena('shrine');
       h.walkTo(zone.x, zone.y);
       if (g.step(10).player.healing !== 'pylon') throw new Error('not healing in the safe zone');
     }, SAFE_SPOT);

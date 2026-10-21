@@ -1,3 +1,4 @@
+import { SHRINE_ARENA } from '../../src/data/arenas';
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { DAYLIGHT_PALETTE, hexToRgb, INK_ID } from '../../src/data/palette';
@@ -496,7 +497,7 @@ describe('the tutorial (012)', () => {
     }
   });
 
-  it('puts the tube stone on floor, the foundry gate on its stairs and the shrine gate on its gap', () => {
+  it('puts the tube stone on floor, the foundry gate on its stairs and the Hollows gate on its barrier (055: the shrine gate has no tiles; its door unlocks with it)', () => {
     const outside = WORLD[OVERWORLD.id];
     const stone = outside?.tubeStone;
     if (!stone) throw new Error('no tube stone');
@@ -504,8 +505,9 @@ describe('the tutorial (012)', () => {
     const doorGates = Object.values(WORLD).flatMap((r) => (r.doorways ?? []).flatMap((d) => (d.gate ? [d.gate] : [])));
     expect(doorGates).toEqual(['foundry']);
     const tileGates = new Set((outside.gateTiles ?? []).map((t) => t.gate));
-    // 034: Stonefall Hollows' barrier seals its gap the same way.
-    expect([...tileGates]).toEqual(['shrine', 'hollows']);
+    // 034: Stonefall Hollows' barrier seals its gap; 055: the shrine's gap is its arena's door, which the shrine gate unlocks.
+    expect([...tileGates]).toEqual(['hollows']);
+    expect(SHRINE_ARENA.door.unlock).toBe('shrine');
     for (const t of outside.gateTiles ?? []) expect(outside.rows[t.ty]?.[t.tx]).toBe(TILE.floor);
     for (const r of Object.values(RECIPES)) if (r.requires) expect(r.requires).toBe('attuned');
     expect(TUTORIAL_START.room).toBe(OVERWORLD.id);

@@ -2,6 +2,7 @@ import { expect, type Page } from '@playwright/test';
 import type {} from '../../src/render/testHook';
 import { HOME_SHIFT, RUIN } from '../../src/data/home';
 import { OVERWORLD } from '../../src/data/overworld';
+import { installArenaHelpers } from './arenaHelpers';
 
 // Page helpers shared by the e2e specs. They run inside the page, so they're
 // installed there before the game boots.
@@ -192,7 +193,7 @@ function installHelpers(map: MapData): void {
     const s = g.getState();
     throw new Error(`could not collect the drops: ${JSON.stringify(s.groundItems.filter((it) => it.room === s.room))} from ${s.player.x},${s.player.y}`);
   };
-  window.__helpers = {
+  const core: Omit<Helpers, 'enterArena' | 'leaveArena'> = {
     walkTo,
     collect,
     harvest(nodeIndex, times) {
@@ -274,6 +275,11 @@ function installHelpers(map: MapData): void {
       collect();
     },
   };
+  // 055: the arena door helpers are arenaHelpers.ts's, added by its own init script right after this one.
+  const notYet = (): void => {
+    throw new Error('the arena helpers are not installed');
+  };
+  window.__helpers = { ...core, enterArena: notYet, leaveArena: notYet };
 }
 
 /**
@@ -283,6 +289,7 @@ function installHelpers(map: MapData): void {
 /** Installs the in-page helpers (`window.__helpers`) before the page's game boots (042: for specs that boot the title). */
 export async function installPageHelpers(page: Page): Promise<void> {
   await page.addInitScript(installHelpers, { ox: 40 + HOME_SHIFT.dx, oy: HOME_SHIFT.dy, half: Math.floor(RUIN.w / 2), door: OVERWORLD.entrance.door });
+  await installArenaHelpers(page);
 }
 
 export async function boot(page: Page, query = '?start=field'): Promise<void> {

@@ -2,7 +2,7 @@ import type { InteractKind } from '../data/interact';
 import { SANDBOX } from '../data/sandbox';
 import { SANDBOX_ROOM } from '../data/rooms';
 import { altarInReach, altarState } from './altar';
-import { sealInReach } from './arenaLock';
+import { doorInReach, doorUse } from './arenaLock';
 import { cacheInReach, isOpened } from './cache';
 import { claimedPylons, dormant, fixtureInReach, pylonInReach } from './claims';
 import { fixtureDef } from './fixtures';
@@ -32,11 +32,12 @@ export function interactTarget(state: SimState): InteractTarget | null {
   if (state.harvest || state.claimHold || state.cacheHold || state.player.dying > 0) return null;
   const room = roomOf(state);
   if (room.tubeStone && stoneInReach(state)) return at('tube-stone', tileCentre(room.tubeStone));
-  const seal = sealInReach(state);
-  if (seal) {
-    const first = seal.seal.tiles[0];
-    const last = seal.seal.tiles[seal.seal.tiles.length - 1];
-    if (first && last) return at('arena-seal', tileCentre({ tx: (first.tx + last.tx) / 2, ty: first.ty }));
+  // 055: an arena's door, while E there goes in or out (a sealed door, from outside, has no prompt: its hover says why).
+  const door = doorInReach(state);
+  if (door && doorUse(state, door)) {
+    const first = door.door.tiles[0];
+    const last = door.door.tiles[door.door.tiles.length - 1];
+    if (first && last) return at('arena-door', tileCentre({ tx: (first.tx + last.tx) / 2, ty: first.ty }));
   }
   const altar = altarInReach(state);
   if (altar) return altarState(state, altar.id) === 'dim' ? null : at('altar', tileCentre(altar));

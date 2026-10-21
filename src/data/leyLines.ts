@@ -49,6 +49,8 @@ const ROUTES: Readonly<Record<string, LeyRoute>> = {
   'reed-marsh': { via: [{ tx: 93, ty: 113 }, MEADOW_VEIN], arrive: 170 },
   'husk-hive': { via: [toward(118, APPROACH)], arrive: 118 },
   // Out of the Hollows across Region 1's west, between the west and south roads.
+  // 055: east of the north road, down to the ruin's north edge between that road and the shrine's line.
+  'frozen-grotto': { via: [{ tx: 84, ty: 52 }, { tx: 85, ty: 63 }, toward(355, APPROACH)], arrive: 355 },
   'cistern-terrace': { via: [{ tx: 40, ty: 104 }, { tx: 55, ty: 100 }, { tx: 72, ty: 93 }, toward(240, APPROACH)], arrive: 240 },
 };
 

@@ -1,5 +1,5 @@
 {
-  "version": 10,
+  "version": 11,
   "shape": [
     "state.activatePulse: number",
     "state.arrows: array",
@@ -106,6 +106,7 @@
     "state.equipped.trinket: null",
     "state.equipped: object",
     "state.events.addsRise: array",
+    "state.events.arenaEnters: array",
     "state.events.arenaLeaves: array",
     "state.events.attunes: array",
     "state.events.backWaves: array",

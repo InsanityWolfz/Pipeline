@@ -1,3 +1,6 @@
+import { ARENAS, FORUM_ARENA, SHRINE_ARENA } from '../../src/data/arenas';
+import { ARENA_DOOR_LOOK } from '../../src/data/arenaAssets';
+import { TUTORIAL_START } from '../../src/data/player';
 import { landmarkDef } from '../../src/data/landmarks';
 import { describe, expect, it } from 'vitest';
 import { WORLD_NAMES } from '../../src/data/hudLayout';
@@ -146,5 +149,24 @@ describe('landmark hovers (032)', () => {
     const e = placeHusk(s, 300, 300);
     e.champion = { name: 'Mossjaw' };
     expect(nameAt(s, HALL, e.x, e.y - 12)?.name).toBe('Mossjaw');
+  });
+});
+
+describe('arena door hovers (055.1)', () => {
+  it("names each door, with what opens it while sealed, then how it works once open, over its sprite's height too", () => {
+    const s = createSim(SEED, { start: TUTORIAL_START });
+    s.enemies = [];
+    for (const a of ARENAS) {
+      const t = a.door.tiles[0];
+      if (!t) throw new Error('no door tile');
+      s.gates[a.door.unlock] = false;
+      const low = nameAt(s, OVERWORLD.id, (t.tx + 0.5) * 32, (t.ty + 0.9) * 32);
+      expect(low).toMatchObject({ name: a.door.name, description: a.door.sealed });
+      expect(nameAt(s, OVERWORLD.id, (t.tx + 0.5) * 32, (t.ty + 1) * 32 - ARENA_DOOR_LOOK.height + 4)?.name).toBe(a.door.name);
+      s.gates[a.door.unlock] = true;
+      expect(nameAt(s, OVERWORLD.id, (t.tx + 0.5) * 32, (t.ty + 0.9) * 32)).toMatchObject({ name: a.door.name, description: DESCRIPTIONS.arenaDoorOpen });
+    }
+    expect(SHRINE_ARENA.door.sealed).toBe('Sealed: discover the Foundry');
+    expect(FORUM_ARENA.door.sealed).toBe('Sealed: break the Hollows barrier');
   });
 });

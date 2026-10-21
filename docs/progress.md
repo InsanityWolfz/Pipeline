@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: 055 merged
+**Changed:** Shaun merged 055 (boss doors and the rimestone pylon: both arenas walled with a door, E in and out, the Frozen Grotto's rimestone pylon), InsanityWolfz/Pipeline#48.
+
+**Next:** the small fixes (sandbox minus button, 037's Shatterpoint shot, older review shots), then a full-loop playtest and its interview.
+
 ## 2026-10-21: 053 merged
 **Changed:** Shaun merged 053 (the round world: Region 1 a disc round the foundry, the Hollows a ring round it, one road network, ley lines carrying icons, the foundry gatehouse), InsanityWolfz/Pipeline#47.
 
@@ -16,6 +21,13 @@ Newest entry first.
 **Changed:** built 054 on `claude/054-combat-readability` (merged with main's 052). The sim's `immune` flag (a burrowed Burrower, a rising add; never a shield's front) turns an enemy's bar blue with a small shield, shown even at full health. The Bulwark's back wave shades its area red under its ripples. An arrow through a Pool (Blastfletch) burns for the rest of its flight: a flame on its head, an ember trail and a small flash on each hit, nothing extra (054.2). Homing ley bolts fly at 0.6 speed (180 px/s), same turn. The star shot: 5 bigger Shards with a short trail, each half the bolt's damage, out to 96 px, skipping the struck enemy; the Split rule reads 054.1's text. No save shape change. `npm run check` passes (1763); the full Playwright run: 155 passed, 0 failed, 144 skipped. `npm run measure` identical to 051. Review shots in docs/review/054; older shots retaken only where 054 shows. Spec status stays approved.
 
 **Next:** review, then Shaun answers 054.3–054.9 (spec, "Raised after the build") and playtests the preview.
+
+## 2026-10-21: 055 boss doors and the rimestone pylon built (draft PR)
+**Changed:** built 055 on `claude/055-boss-doors`, stacked on 053. Both boss arenas are walled all round with one big door (a new solid tile, `G`, stopping feet and straight shots): the Warden's shrine (its fallen stretches and side gaps closed, its door where 012's gate was) and the Bulwark's forum (its door across 034's way in). A door is sealed until its gate opens (the shrine gate for the Warden, the Hollows barrier for the Bulwark), with its hint on hover; then E goes in, and E inside leaves and resets a live boss through 043's lock (`src/sim/arenaLock.ts` is the shared door system; 043's seal now shows while the player fights inside either arena). The sandbox's forum door is always open. Door art: one sprite per width, sealed and open. The Frozen Grotto has a pylon, claimed like any site, sending rimestone up a new port at (1, 12), with a ley line home. SAVE_VERSION 11, no migration. e2e helpers enter and leave arenas by their doors. `npm run check` passes (1,819); the full Playwright run: 155 passed, 0 failed (the review-shot specs skipped). `npm run measure`: as 053 but the Bulwark's decent build 8/20, 7 KOs (053: 9/20, 6). Review shots in docs/review/055; 043/01–02, 044/04, 032/06 and 031/04 retaken. Spec status stays approved; its "Raised after the build" lists 055.3–055.12.
+
+Review fixes (no blockers): a test for the forum door's gate in the overworld; E at a door steps aside to a clear tile if an enemy stands on its landing tile; arena exports only from src/data/arenas.ts; the e2e arena helpers in tests/e2e/arenaHelpers.ts; the spec's criterion 2 recorded as met as amended by 055.3. After them `npm run check` passes (1,822) and the full Playwright run is 155 passed, 0 failed. Six older review-shot tests (032 landmark walks, 030/031 timing) fail on 053 too, so they are not 055's.
+
+**Next:** Shaun answers 055.3–055.12 and playtests the preview.
 
 ## 2026-10-21: 053 review fixes
 **Changed:** on `claude/053-round-world`, fixed 053's review. Packs keep off the barrier's band and every tile touching it (an enemy there was pushed to the Hollows side and stuck) and out of the shrine's surroundings (`POPULATION.shrineMargin`), so the Warden's fight is unjoined and the tutorial e2e wins it unaided (no pops cleared through the hook). Separation's `NEAR` derived from the largest feet box (144 px) and tested against an all-pairs pass; gate keys by the room's width. Region 1 reachable with the barrier shut; pylons block in the reach fixture. The overworld builds the chunk row below the view at once and the rest nearest-first; `ui().overworldChunks` lists keys. The hive road's hairpin is left (a road change rerolls the generated map; 053.14). Shaun's answers recorded (053.4 keep radius 48; 053.10 keep 8/12/12, judge at playtest) in the spec and the interview notes. `npm run check` passes (1,795); the full Playwright run: 153 passed, 0 failed; `npm run measure` unchanged.
