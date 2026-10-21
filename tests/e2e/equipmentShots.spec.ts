@@ -13,7 +13,8 @@ import { boot, cameraSettled } from './helpers';
 // the tween clock for their shot.
 
 const SHOTS = 'docs/review/036';
-const BENCH_STAND = { x: 2.3 * 32, y: 12.5 * 32 };
+// 052: the bench is by the door (tile 22, 9); stand on its left.
+const BENCH_STAND = { x: 21.7 * 32, y: 9.5 * 32 };
 
 const ui = (page: Page) => page.evaluate(() => window.__GAME__?.ui());
 
