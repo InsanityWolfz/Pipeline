@@ -56,6 +56,8 @@ export class MinimapView {
   /** The fog words already cleared on the fog texture. */
   private drawnFog: number[] = [];
   private pointer: { x: number; y: number } | null = null;
+  /** The pointer has left the game's canvas (no hover until it comes back). */
+  private outside = false;
   /** What it shows now, for the test hook. */
   shown = false;
   markers: MinimapMarker[] = [];
@@ -100,11 +102,19 @@ export class MinimapView {
     this.marks = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.hud + 2);
     this.labelPanel = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.hud + 3);
     this.label = new TextLine(scene, 0, 0, DEPTHS.hud + 4, false, 'body');
+    // The last pointer position would otherwise keep a name showing after the cursor leaves the canvas.
+    scene.input.on('gameout', () => {
+      this.outside = true;
+      this.pointer = null;
+    });
+    scene.input.on('gameover', () => {
+      this.outside = false;
+    });
   }
 
-  /** The pointer in view px (051: hovering an icon names it), or null off the screen. */
+  /** The pointer in view px (051: hovering an icon names it); ignored while it's off the canvas. */
   pointAt(x: number, y: number): void {
-    this.pointer = { x, y };
+    this.pointer = this.outside ? null : { x, y };
   }
 
   update(sim: SimState): void {
