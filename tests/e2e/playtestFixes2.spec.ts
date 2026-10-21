@@ -279,3 +279,18 @@ test('the title: the wanderer breathes, sways and glows; the logo and buttons ar
   expect(Math.abs((top + last.y + last.h) / 2 - 182)).toBeLessThanOrEqual(2);
   expect(errors).toEqual([]);
 });
+
+test('at a fullscreen size the page never overflows, so no scroll bar comes and goes (050 A.4)', async ({ page }) => {
+  // F11 on a 1080p screen: the view fits at zoom 3 exactly (1920×1080).
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await bootTitle(page);
+  const sizes = () =>
+    page.evaluate(() => {
+      const d = document.documentElement;
+      return { scrollW: d.scrollWidth, scrollH: d.scrollHeight, w: d.clientWidth, h: d.clientHeight, overflow: getComputedStyle(document.body).overflow };
+    });
+  const s = await sizes();
+  expect(s.scrollH, JSON.stringify(s)).toBeLessThanOrEqual(s.h);
+  expect(s.scrollW, JSON.stringify(s)).toBeLessThanOrEqual(s.w);
+  expect(s.overflow).toBe('hidden');
+});
