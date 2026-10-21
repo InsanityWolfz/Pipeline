@@ -187,9 +187,9 @@ export const ENEMY_FX = {
   healthBarBack: 'ink',
   /**
    * 054 (E.1): while nothing can damage it (the sim's immune flag) its bar shows even at full health, its fill in
-   * `color`, with the shield icon (`w` x `h` px) `gap` px left of the bar, centred on it.
+   * `color`, with the shield icon (`w` x `h` px) `gap` px left of the bar, centred on it, `depth` over the world's UI.
    */
-  immuneBar: { color: 'water', icon: { w: 7, h: 8, gap: 1 } },
+  immuneBar: { color: 'water', icon: { w: 7, h: 8, gap: 1, depth: 0.5 } },
   /** A corpse lingers this long after its death animation, then fades over `corpseFadeMs`. */
   corpseLingerMs: 600,
   corpseFadeMs: 600,

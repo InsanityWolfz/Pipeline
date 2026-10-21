@@ -97,7 +97,7 @@ export class ArrowView {
     const flicker = 1 + B.flicker * Math.sin((now / B.flickerMs) * Math.PI * 2 + a.id);
     const base = Number(tip.getData('base')) || tip.scaleX * B.tipScale;
     tip.setData('base', base);
-    tip.setPosition(a.x + a.dx * B.tipAhead, y + a.dy * B.tipAhead).setRotation(angle).setDepth(a.y + 0.01).setScale(base * flicker).setAlpha(Math.min(1, 1.1 - B.flicker + B.flicker * flicker));
+    tip.setPosition(a.x + a.dx * B.tipAhead, y + a.dy * B.tipAhead).setRotation(angle).setDepth(a.y + B.tipDepth).setScale(base * flicker).setAlpha(Math.min(1, B.tipAlpha - B.flicker + B.flicker * flicker));
     this.drawTrail(trail, a.x, y, a.y);
     const E = B.ember;
     const { g, points } = trail;
@@ -105,7 +105,7 @@ export class ArrowView {
       const p = points[i];
       if (!p) continue;
       const k = (i + 1) / points.length;
-      const drift = E.drift * (1 - k) * Math.sin(now / B.flickerMs + i * 1.7 + a.id);
+      const drift = E.drift * (1 - k) * Math.sin(now / B.flickerMs + i * E.phase + a.id);
       g.fillStyle(colorOf(E.color), E.alpha * k).fillCircle(p[0] + drift, p[1] - E.drift * (1 - k), E.r);
     }
   }

@@ -48,6 +48,6 @@ export function drawEnemyBar(scene: Scene, bar: EnemyBar, e: EnemyState, top: nu
   g.fillStyle(colorOf(color)).fillRect(x, y, Math.max(1, Math.round((w * e.health) / max)), h);
   if (!shield) return;
   const I = ENEMY_FX.immuneBar.icon;
-  bar.icon ??= addVector(scene, 0, 0, SPRITES.enemyImmune).setOrigin(0).setDepth(DEPTHS.worldUi + 0.5);
+  bar.icon ??= addVector(scene, 0, 0, SPRITES.enemyImmune).setOrigin(0).setDepth(DEPTHS.worldUi + I.depth);
   bar.icon.setVisible(true).setPosition(x - border - I.gap - I.w, Math.round(y + h / 2 - I.h / 2));
 }
