@@ -201,8 +201,11 @@ export const SANDBOX_PANEL = {
     stepper: { down: 152, up: 174, hit: 10 },
     greyAlpha: 0.45,
   },
-  tabs: { w: 16, h: 64, turn: { left: -Math.PI / 2, right: Math.PI / 2 } },
+  /** `hover`: the outline a tab gets under the pointer, `inset` px in, `width` px wide. */
+  tabs: { w: 16, h: 64, turn: { left: -Math.PI / 2, right: Math.PI / 2 }, hover: { width: 1, inset: 1.5, color: 'brass', alpha: 1 } },
   slideMs: 150,
+  /** The slide's ease-out power: quick from the edge, settling at the end. */
+  slideEase: 3,
   /** 056.4: the pickup feed's gap right of the strip (057: of the Loadout tab), in the sandbox. */
   feed: { gap: 8 },
   keys: { gap: 6, step: 9, label: { x: 10 }, value: { right: 176 }, rule: { inset: 6, color: 'brass', alpha: 0.5 } },

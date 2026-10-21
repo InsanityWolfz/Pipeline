@@ -41,11 +41,11 @@ against the view the camera's scroll gives (right while the attune's look drives
    it one way only (fails before the fix by a step's distance); over a target its world point stays on the target, so
    on screen it moves exactly with the camera, and the edge/over switch happens once with no flicker.
    **Unit (tests/render/waypointPlace.test.ts):** `viewAt` matches Phaser's view at zoom 1 and 2.
-2. **Pop-out layout and state (tests/render/sandboxPopout.test.ts):** closed, only the tabs are on screen, at their
+2. **Pop-out layout and state (tests/render/sandboxStrip.test.ts):** closed, only the tabs are on screen, at their
    edges, panels fully off screen; open, the panels are 056's boxes and each tab sits on its panel's outer edge; the
    tabs clear the HP block, carried bar, tube slot, minimap and boss bar in both states; toggling one leaves the other;
    the slide takes `slideMs` and runs both ways; `setBoth`/`closeAll`; the start state is closed.
-   tests/render/sandboxStrip.test.ts keeps 056's checks; its key list line is renamed.
+   The same file keeps 056's checks; its key list line is renamed.
 3. **E2E (tests/e2e/sandboxStrip.spec.ts, updated, and sandboxPage.ts):** `?sandbox` shows only the two tabs; a click
    opens each panel and a second closes it; a row click works with it open and doesn't pause; firing leaves it open;
    Esc closes open panels before pausing; the backquote opens and closes both; a big panel steps tabs and panels aside;

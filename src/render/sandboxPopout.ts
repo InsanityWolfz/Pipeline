@@ -20,7 +20,7 @@ export interface PopoutPlace {
 }
 
 /** Eased out: quick from the edge, settling at the end. */
-const easeOut = (t: number): number => 1 - (1 - t) ** 3;
+const easeOut = (t: number): number => 1 - (1 - t) ** P.slideEase;
 
 /**
  * The panel and its tab with the panel `t` of the way out (0 closed, off the edge; 1 open, 056's box), whole px. The

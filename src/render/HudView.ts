@@ -79,8 +79,6 @@ export class HudView {
   private readonly health: HealthBar;
   private readonly edges: EdgeTint;
   private readonly feed: PickupFeed;
-  /** 057: how far the sandbox's Loadout panel is out (0–1), set by the scene: the feed moves out beside its tab. */
-  loadoutOut = 0;
   readonly inventory: InventoryPanel;
   /** The research list (033, J). */
   readonly research: ResearchList;
@@ -155,8 +153,9 @@ export class HudView {
    * No tube yet (012): no hotbar row, and the tube slot shows the fist. Building: the build bar takes the row's place,
    * the tube slot rises over its group labels (026), and the HP block rises too if the bar reaches it (031).
    * `events` are every tick's since the last draw (the feed reads their pickups); `deltaMs` is the frame's time.
+   * `loadoutOut`: how far the sandbox's Loadout panel is out (057, 0–1): there the feed moves out beside its tab.
    */
-  update(sim: SimState, events: SimEvents, deltaMs: number): void {
+  update(sim: SimState, events: SimEvents, deltaMs: number, loadoutOut = 0): void {
     const dt = deltaMs * this.scene.tweens.timeScale;
     const building = sim.building;
     this.hotbar.setVisible(sim.hasTube && !building);
@@ -182,7 +181,7 @@ export class HudView {
     this.health.update(input, building ? buildBarBox(unlockedPieces(sim)) : null, dt);
     this.edges.update(this.health.shown.low, this.health.pulse);
     // 056.4, 057: in the sandbox the feed sits right of the Loadout tab, which holds the top-left, and moves out with it.
-    this.feed.update(events.pickups.map((p) => shownKey(sim, p.itemId)), dt, sim.sandbox ? sandboxFeedAt(this.loadoutOut) : null);
+    this.feed.update(events.pickups.map((p) => shownKey(sim, p.itemId)), dt, sim.sandbox ? sandboxFeedAt(loadoutOut) : null);
     // A KO closes the panel: the wake panel takes the screen (and the panel can't open again while it shows).
     if (events.woke) {
       this.inventory.setOpen(false);

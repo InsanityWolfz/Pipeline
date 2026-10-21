@@ -68,8 +68,9 @@ export class WaypointView {
     const raws = wp?.via === 'target' ? objectiveTargets(sim).filter((p) => p.roomId === sim.roomId && p.itemId) : [];
     this.goal = { wp, raws, hud };
     this.markerAt = wp?.via === 'target' ? arrowTip(wp.target) : null;
-    // 057.6: placed now against the view the camera's scroll gives (the attune's look sets it before this), and again
-    // once a follow has moved it this frame.
+    // 057.6: placed now against the view the camera's scroll gives, deliberately: while the camera isn't following
+    // (the attune's look centres it by hand, stopFollow) no follow update comes. When it follows, the follow update
+    // places it again once the view has moved this frame.
     const c = this.scene.cameras.main;
     const sx = c.useBounds ? c.clampX(c.scrollX) : c.scrollX;
     const sy = c.useBounds ? c.clampY(c.scrollY) : c.scrollY;

@@ -129,6 +129,8 @@ export class SandboxPanel {
     if (!v) {
       this.boxes = [];
       this.tabs = [];
+      this.hovered = -1;
+      this.tabHover.set(-1);
     }
     this.panel.setVisible(v);
     for (const t of this.tabLabels) t.setVisible(v);
@@ -173,7 +175,8 @@ export class SandboxPanel {
       this.boxes.push(tab);
       this.tabs.push({ id, ...tab, open: this.popout.isOpen(id) });
       drawTablet(this.panel, tab.x, tab.y, tab.w, tab.h);
-      if (this.hovered === i) this.panel.lineStyle(1, colorOf(P.keys.rule.color), 1).strokeRect(tab.x + 1.5, tab.y + 1.5, tab.w - 3, tab.h - 3);
+      const H = P.tabs.hover;
+      if (this.hovered === i) this.panel.lineStyle(H.width, colorOf(H.color), H.alpha).strokeRect(tab.x + H.inset, tab.y + H.inset, tab.w - 2 * H.inset, tab.h - 2 * H.inset);
       this.tabLabels[i]?.obj.setPosition(tab.x + tab.w / 2, tab.y + tab.h / 2);
     });
   }

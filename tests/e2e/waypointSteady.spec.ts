@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
+import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { OVERWORLD } from '../../src/data/overworld';
 import { WAYPOINT } from '../../src/data/targets';
 import type { Axis } from '../../src/sim/input';
@@ -9,9 +9,11 @@ import { boot, cameraSettled, watchErrors } from './helpers';
 // the display's clock and the sim's fixed step drift, so the walk here steps a mix of them, one rendered frame each,
 // and reads the arrow after every frame: its screen position (its world point less the camera's view as rendered).
 
-const T = 32;
+const T = TILE_SIZE;
 /** Ticks run before each rendered frame: an uneven mix, as a real display's frames give. */
 const TICKS = [1, 2, 0, 1, 1, 2, 0, 1, 2, 1, 0, 1, 2, 2, 0, 1, 1, 0, 2, 1, 1, 2, 0, 1];
+/** Longer strides (6 ticks a frame) for walking on where only the edge/over switch is checked, not each frame's step. */
+const STRIDES = Array.from({ length: 24 }, () => 6);
 
 interface Sample {
   mode: 'over' | 'edge';
@@ -26,10 +28,10 @@ interface Sample {
 }
 
 /**
- * Walks `moveX` for TICKS, one rendered frame per entry (each step is taken in a frame callback queued after the game
+ * Walks `moveX` for `ticks` (TICKS unless given), one rendered frame per entry (each step is taken in a frame callback queued after the game
  * loop's, so the game draws exactly once between two reads), and samples the arrow after each frame.
  */
-async function walkFrames(page: Page, moveX: Axis): Promise<Sample[]> {
+async function walkFrames(page: Page, moveX: Axis, ticks: readonly number[] = TICKS): Promise<Sample[]> {
   return page.evaluate(
     async ({ ticks, moveX, w, h }) => {
       const g = window.__GAME__;
@@ -48,7 +50,7 @@ async function walkFrames(page: Page, moveX: Axis): Promise<Sample[]> {
       }
       return out;
     },
-    { ticks: TICKS, moveX, w: VIEW_WIDTH, h: VIEW_HEIGHT },
+    { ticks, moveX, w: VIEW_WIDTH, h: VIEW_HEIGHT },
   );
 }
 
@@ -81,6 +83,8 @@ test('057.6: at the screen edge the arrow slides along it smoothly while the pla
 });
 
 test('057.6: over a target the arrow stays on it while the player walks, and switches to the edge once', async ({ page }) => {
+  // About 25 s idle (boot, the walk to the start, a frame-by-frame walk and the walk on in strides); slower under load.
+  test.setTimeout(120_000);
   const errors = watchErrors(page);
   await boot(page, '?start=tutorial');
   // Three rows up and six tiles west of the tube's stone, a clear row east: the arrow hovers over the stone.
@@ -99,9 +103,10 @@ test('057.6: over a target the arrow stays on it while the player walks, and swi
     if (prev) expect(f.sx - prev.sx).toBeCloseTo(-(f.px - prev.px), 6);
   }
   expect((over.at(-1)?.px ?? 0) - (over[0]?.px ?? 0)).toBeGreaterThan(30);
-  // On east until the stone leaves the screen: over, then the edge, once, with no flicker between them.
+  // On east in strides until the stone leaves the screen (about 450 px; each call walks about 170): over, then the
+  // edge, once, with no flicker between them.
   const modes = over.map((f) => f.mode);
-  for (let i = 0; i < 20 && modes.at(-1) !== 'edge'; i++) modes.push(...(await walkFrames(page, 1)).map((f) => f.mode));
+  for (let i = 0; i < 6 && modes.at(-1) !== 'edge'; i++) modes.push(...(await walkFrames(page, 1, STRIDES)).map((f) => f.mode));
   expect(modes.at(-1)).toBe('edge');
   expect(modes.slice(1).filter((m, i) => m !== modes[i]).length).toBe(1);
   expect(errors).toEqual([]);
@@ -118,7 +123,7 @@ test.describe('review screenshots (057)', () => {
     await cameraSettled(page);
     await walkFrames(page, 1);
     await page.screenshot({ path: 'docs/review/057/05-waypoint-over.png' });
-    for (let i = 0; i < 20 && (await walkFrames(page, 1)).at(-1)?.mode !== 'edge'; i++);
+    for (let i = 0; i < 6 && (await walkFrames(page, 1, STRIDES)).at(-1)?.mode !== 'edge'; i++);
     await walkFrames(page, 1);
     await page.screenshot({ path: 'docs/review/057/04-waypoint-edge.png' });
   });
