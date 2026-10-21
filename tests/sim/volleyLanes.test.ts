@@ -108,6 +108,42 @@ describe('timing (028 kept)', () => {
   });
 });
 
+describe('re-fanning (048.5)', () => {
+  it('when an entrance runs dry mid-hold the others re-fan from ±15° to ±7.5°, and back when it refills', () => {
+    const s = volley([['arrow', 20], ['ley-bolt', 1], ['arrow', 20]]);
+    const shotsAt = (ticks: number): [string, number][] => {
+      let fired: [string, number][] = [];
+      for (let t = 0; t < ticks; t++) {
+        const from = s.arrows.length;
+        run(s, 1, volleyAt(600, 400));
+        if (s.arrows.length > from) fired = arrowAngles(s, from);
+      }
+      return fired;
+    };
+    // Tick 0: all three fed, so left, centre, right; the centre's one ley bolt empties it.
+    expect(shotsAt(1)).toEqual([
+      ['arrow', -15],
+      ['ley-bolt', 0],
+      ['arrow', 15],
+    ]);
+    expect(s.link.entrances[1]?.count).toBe(0);
+    expect(summarize(s).intake.lanes).toEqual([-7.5, 7.5]);
+    // The arrows' next beat (tick 15): two fed, so 7.5° either side.
+    expect(shotsAt(15)).toEqual([
+      ['arrow', -7.5],
+      ['arrow', 7.5],
+    ]);
+    // Refilled, the centre takes its lane back and the arrows return to ±15°.
+    Object.assign(s.link.entrances[1] ?? {}, { ammoId: 'ley-bolt', count: 5 });
+    expect(summarize(s).intake.lanes).toEqual([-15, 0, 15]);
+    const next = shotsAt(15).filter(([ammoId]) => ammoId === 'arrow');
+    expect(next).toEqual([
+      ['arrow', -15],
+      ['arrow', 15],
+    ]);
+  });
+});
+
 describe('bombs', () => {
   it('two bomb entrances land on the arc at the cursor’s distance, 7.5° either side of the aim point', () => {
     const s = volley([['bomb', 3], null, ['bomb', 3]]);
