@@ -167,7 +167,7 @@ test('without Shift, every summary source shows a summary and never a breakdown 
     if (!g || !h) throw new Error('no game');
     g.claim('shrine');
     h.toFoundry();
-    h.walkTo(2.3 * 32, 12.5 * 32);
+    h.walkTo(21.7 * 32, 9.5 * 32);
     for (const row of ['frost-rune-arrow', 'frost-rune-bomb']) g.craft(row);
     g.step(1, { identify: true });
     const s = g.step(1);
