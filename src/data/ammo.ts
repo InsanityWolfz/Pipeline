@@ -15,7 +15,7 @@ interface AmmoBase {
   id: string;
   /** The inventory item a loaded round is made from. */
   itemId: string;
-  /** The base ammo it's a round of (029): itself for a plain round. Volleys fan by it, and it fires from its slot. */
+  /** The base ammo it's a round of (029): itself for a plain round. It fires from its slot. */
   base: string;
   /** Its tags, elements first (029); none for a plain round. */
   tags: readonly string[];
