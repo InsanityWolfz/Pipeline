@@ -150,6 +150,8 @@ test.describe('review screenshots (037)', () => {
       const p = g.step(1).player;
       for (let i = 0; i < 6; i++) g.drop('arrow+frost', p.x, p.y + 4);
       h.collect();
+      // Selected by name: the hotbar's first slot holds the plain arrows ?playtest carries.
+      h.hold('arrow+frost');
       const q = g.getState().player;
       const id = g.spawnEnemy('husk', q.x + 120, q.y).enemies.at(-1)?.id;
       // Frost arrows until it freezes (its health topped up), then a ley bolt.
