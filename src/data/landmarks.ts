@@ -102,6 +102,8 @@ const FROZEN_GROTTO: LandmarkDef = {
   features: [],
   nodes: GROTTO.nodes,
   guards: GROTTO.pack,
+  // 055 (D.6): its pylon sends rimestone home.
+  pylon: { ...GROTTO.pylon, site: GROTTO_GROUP, supplies: ['rimestone'] },
   marker: 'grotto',
   look: { hollow: 'frost' },
 };

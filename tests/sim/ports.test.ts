@@ -25,16 +25,17 @@ const portOf = (raw: string) => {
 };
 
 describe('the port data', () => {
-  it('is one port per raw on the west wall, facing into the room (034 adds ley-iron, 049 Husk resin)', () => {
+  it('is one port per raw on the west wall, facing into the room (034 adds ley-iron, 049 Husk resin, 055 rimestone)', () => {
     for (const raw of RAWS) {
       const def = portOf(raw);
       expect([def.tx, def.ty], raw).toEqual(TILES[raw]);
       expect(def.facing).toBe('right');
       expect(def.claim).toBeUndefined();
     }
-    expect(FIXTURES.filter((f) => f.kind === 'port')).toHaveLength(6);
+    expect(FIXTURES.filter((f) => f.kind === 'port')).toHaveLength(7);
     expect(portOf('ley-iron')).toMatchObject({ tx: 1, ty: 3, facing: 'right' });
     expect(portOf('husk-resin')).toMatchObject({ tx: 1, ty: 11, facing: 'right' });
+    expect(portOf('rimestone')).toMatchObject({ tx: 1, ty: 12, facing: 'right' });
     expect(FIXTURES.some((f) => f.id === 'supply-port')).toBe(false);
   });
 

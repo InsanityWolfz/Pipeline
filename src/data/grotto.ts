@@ -3,8 +3,9 @@ import type { TilePos, TileRect } from './tiles';
 
 // The Frozen Grotto, minimal (029): a hand-placed site in the overworld's north, in ring 2, the guarded source of
 // rimestone for the frost rune. A clearing with frosted ground, three rime outcrops and a guard pack in its own
-// group. It has no pylon and can't be claimed, so its guards come back on every world reset. 032 later folds it
-// into the landmark system; 053 moved it whole to the round map's north (its road is in roads.ts).
+// group. 032 later folds it into the landmark system; 053 moved it whole to the round map's north (its road is in
+// roads.ts). 055 (D.6) gives it a pylon, claimed like any site's (032), that sends rimestone home; until it's claimed
+// its guards come back on every world reset.
 
 /** Its guards' group: its landmark id (032). */
 export const GROTTO_GROUP = 'frozen-grotto';
@@ -27,6 +28,8 @@ export const GROTTO = {
     { group: GROTTO_GROUP, enemyId: 'husk', tx: 55, ty: 6 },
     { group: GROTTO_GROUP, enemyId: 'wisp', tx: 54, ty: 9 },
   ].map((g) => shiftTile(g, SHIFT)),
+  /** 055: its pylon, among the outcrops between the two upper ones, so all three stand in its safe zone. */
+  pylon: shiftTile({ tx: 54, ty: 8 }, SHIFT),
 } as const;
 
 /** The Grotto's mouth: the middle of its south edge, where its road arrives. */
