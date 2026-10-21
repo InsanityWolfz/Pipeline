@@ -113,7 +113,7 @@ export class MenuRouter {
     if ((bag && inventory.isOpen) || (list && research.isOpen) || (tree && talents.isOpen) || (toggle && craft.isOpen)) sandbox.setOpen(false);
     const steps = controls.takeWheel();
     if (steps !== 0 && this.sim.building) build.step(steps);
-    else if (steps !== 0) inventory.scroll(steps);
+    else if (steps !== 0 && !site.scrollGear(steps)) inventory.scroll(steps);
     // E on a hopper or crate opens its screen (047); the sim does nothing with it. With the restore panel open, E again restores (033).
     const press = controls.takeInteractPress();
     // 050 (Shaun: "you hit E to get out or escape. It should be both buttons"): E closes the inventory, a hopper's or

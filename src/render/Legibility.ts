@@ -126,7 +126,12 @@ export class Legibility {
     const box = this.tip.box;
     const onTip = box !== null && inBox(box, pointer.x, pointer.y);
     const kept = this.current && this.stillThere(this.current) ? this.current : null;
-    if (onTip && kept) this.grace = TIP.graceMs;
+    // 050: a gear piece's tip goes as soon as the cursor leaves its square, with no grace and not kept by the tablet.
+    const leaves = kept?.hit.leaveAtOnce === true && !inBox(kept.hit.at, pointer.x, pointer.y);
+    if (leaves) {
+      this.current = this.hitAt(pointer.x, pointer.y);
+      this.grace = TIP.graceMs;
+    } else if (onTip && kept) this.grace = TIP.graceMs;
     else {
       const hit = this.hitAt(pointer.x, pointer.y);
       if (hit) {

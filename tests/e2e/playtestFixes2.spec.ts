@@ -145,3 +145,70 @@ test('the end-of-playtest card shows the cursor over it (050 A.5)', async ({ pag
   await expect.poll(async () => page.evaluate(() => window.__GAME__?.ui().flow.cursor)).toBeNull();
   expect(errors).toEqual([]);
 });
+
+/** Into the foundry from the playtest start with eight body pieces, over to the bench, its panel open (036). */
+async function benchWithGear(page: Page): Promise<void> {
+  await boot(page, '?playtest');
+  await page.evaluate(() => {
+    const g = window.__GAME__;
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    g.step(1);
+    for (let i = 0; i < 8; i++) g.addGear({ slot: 'body', rarity: 'rare', weight: 'heavy', baseArmor: 10 + i, affixes: [{ kind: 'armor', value: 3 }], relic: null, name: `Plate ${i + 1}` });
+    h.toFoundry();
+    h.walkTo(2.3 * 32, 12.5 * 32);
+  });
+  await page.keyboard.press('e');
+  await expect.poll(async () => (await ui(page))?.gearPanel?.open, { timeout: 15_000 }).toBe(true);
+}
+
+test('gear: the list scrolls on the wheel, a row’s tip goes as the cursor leaves it (even onto the tip), and Shift shows its breakdown (050 A.6, A.7, A.13)', async ({ page }) => {
+  test.setTimeout(90_000);
+  const errors = watchErrors(page);
+  await benchWithGear(page);
+  const panel = (await ui(page))?.gearPanel;
+  if (!panel) throw new Error('no panel');
+  expect(panel.scroll.first).toBe(0);
+  expect(panel.scroll.last).toBeGreaterThan(0);
+  const row = panel.rows[0];
+  if (!row) throw new Error('no row');
+  // The wheel over the panel scrolls the list a row a step.
+  const over = await screenPoint(page, row.box.x + row.box.w / 2, row.box.y + row.box.h / 2);
+  await page.mouse.move(over.x, over.y);
+  await page.mouse.wheel(0, 100);
+  await expect.poll(async () => (await ui(page))?.gearPanel?.scroll.first).toBe(1);
+  await page.mouse.wheel(0, -100);
+  await expect.poll(async () => (await ui(page))?.gearPanel?.scroll.first).toBe(0);
+
+  // Hovering a row: its summary; Shift: its breakdown; released, the summary again.
+  await page.mouse.move(over.x + 1, over.y);
+  await expect.poll(async () => (await ui(page))?.tip?.mode).toBe('summary');
+  expect((await ui(page))?.tip?.source.kind).toBe('gear');
+  await page.keyboard.down('Shift');
+  await expect.poll(async () => (await ui(page))?.tip?.mode).toBe('breakdown');
+  await page.keyboard.up('Shift');
+  await expect.poll(async () => (await ui(page))?.tip?.mode).toBe('summary');
+
+  // Onto the tip itself (off the row): it goes at once.
+  const tip = (await ui(page))?.tip?.box;
+  if (!tip) throw new Error('no tip');
+  const onTip = await screenPoint(page, tip.x + tip.w / 2, tip.y + tip.h / 2);
+  await page.mouse.move(onTip.x, onTip.y);
+  await expect.poll(async () => (await ui(page))?.tip ?? null, { timeout: 2000 }).toBeNull();
+  expect(errors).toEqual([]);
+});
+
+test('hovering an inventory item shows its name in a tip (050 A.14)', async ({ page }) => {
+  const errors = watchErrors(page);
+  await boot(page, '?playtest');
+  await page.evaluate(() => window.__GAME__?.step(1));
+  await page.keyboard.press('i');
+  await expect.poll(async () => (await ui(page))?.inventory.open).toBe(true);
+  const slot = (await ui(page))?.inventory.slots.find((s) => s.itemId === 'warden-core');
+  if (!slot) throw new Error(`no warden core slot: ${JSON.stringify((await ui(page))?.inventory.slots.map((s) => s.itemId))}`);
+  const at = await screenPoint(page, slot.x + slot.w / 2, slot.y + slot.h / 2);
+  await page.mouse.move(at.x, at.y);
+  await expect.poll(async () => (await ui(page))?.tip?.name).toBe('Warden core');
+  expect((await ui(page))?.tip?.source.kind).toBe('item');
+  expect(errors).toEqual([]);
+});
