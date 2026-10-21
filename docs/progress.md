@@ -7,15 +7,10 @@ Newest entry first.
 
 **Next:** review, then Shaun's playtest of `?sandbox` and a walk with the waypoint arrow.
 
-## 2026-10-21: 057 approved
-**Changed:** added Shaun's waypoint-arrow stutter fix to 057; Shaun approved it on draft (proposals stand).
+## 2026-10-21: Faster process
+**Changed:** at Shaun's request, the process got lighter (docs/process.md "Two tracks", "Keeping the loop small" 6, 8, 9, "Working with Shaun"; CLAUDE.md; .claude/commands): a fix track for small bugs (no spec, plan, review or wrapup); the spec as the first commit of its build PR, no separate spec PR; plan files only for big specs; CI (.github/workflows/ci.yml) runs `npm run check` and the full Playwright suite in 4 shards on every push, so sessions run only the touched e2e files; the wrapup goes in before the playtest; progress.md is one entry per merged PR, not per step; review shots for the current spec only; ETAs from git history.
 
-**Next:** build 057.
-
-## 2026-10-21: 057 drafted
-**Changed:** drafted 057 (the sandbox panels as click-open pop-outs) from Shaun's sandbox playtest of 056.
-
-**Next:** Shaun approves 057; then build.
+**Next:** 057 (already building under the old steps) is the last spec on them.
 
 ## 2026-10-21: 056 merged
 **Changed:** Shaun merged 056 (the sandbox's controls always on screen: the loadout and a key list in a left strip, the spawn column on the right), InsanityWolfz/Pipeline#53.
