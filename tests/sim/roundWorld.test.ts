@@ -149,6 +149,22 @@ describe('places on the circle', () => {
     for (const t of OVERWORLD.shrine.gate) expect(has(t)).toBe(true);
   });
 
+  it('can reach every Region 1 site, pylon, node, spring and guard from the wake tile with the barrier shut', () => {
+    const gate = new Set(HOLLOWS.gate.map(tileKey));
+    const shut = { ...room, rows: room.rows.map((row, ty) => [...row].map((s, tx) => (gate.has(`${tx},${ty}`) ? TILE.wall : s)).join('')) };
+    const seen = reachable(shut, OVERWORLD.wake);
+    const has = (t: { tx: number; ty: number }) => seen.has(tileKey(t));
+    const inside = (t: { tx: number; ty: number }) => fromCentre(t.tx, t.ty) < region1 - 1;
+    for (const p of OVERWORLD.packs.filter(inside)) expect(has(p), `${p.enemyId} at ${tileKey(p)}`).toBe(true);
+    for (const n of OVERWORLD.nodes.filter(inside)) expect(has({ tx: n.tx, ty: n.ty + 1 }), `${n.nodeId} at ${tileKey(n)}`).toBe(true);
+    const pylons = (room.pylons ?? []).filter(inside);
+    expect(pylons.length).toBeGreaterThan(0);
+    for (const p of pylons) expect(has({ tx: p.tx, ty: p.ty + 1 }), p.site).toBe(true);
+    for (const s of OVERWORLD.springs.filter(inside)) expect(has(s), s.id).toBe(true);
+    for (const l of LANDMARK_LIST.filter((l) => l.ring !== 3)) expect(has(l.pylon ? { tx: l.pylon.tx, ty: l.pylon.ty + 1 } : { tx: Math.floor(mid(l.area).tx), ty: Math.floor(mid(l.area).ty) }), l.id).toBe(true);
+    for (const t of OVERWORLD.shrine.gate) expect(has(t)).toBe(true);
+  });
+
   it('leaves most of the open Hollows reachable, and no pocket of Region 1 cut off but behind landmark walls', () => {
     const seen = all();
     let open = 0;
