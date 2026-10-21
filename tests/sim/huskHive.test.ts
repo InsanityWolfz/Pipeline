@@ -11,7 +11,7 @@ import { fixtureDef, portFront } from '../../src/sim/fixtures';
 import { place } from '../../src/sim/placement';
 import type { CrateState } from '../../src/sim/pieces';
 import { scaledDef } from '../../src/sim/ringScale';
-import { createSim, type SimState } from '../../src/sim/state';
+import { createSim, resetWorld, type SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
 import { die, movePlayer, run, runUntil, SEED } from './fight';
@@ -54,6 +54,18 @@ describe("the Hive's guards", () => {
     claim(s, HIVE.id);
     die(s);
     expect(guards(s)).toEqual([]);
+  });
+
+  it('hold their placed champion and draw no extra random one, over many seeds and world resets', () => {
+    // Ring 2 rolls a champion for 1 pack in 5 (CHAMPIONS.chanceByRing): without resetWorld's guard, some of these
+    // seeds' packs would hold two.
+    for (let seed = 1; seed <= 100; seed++) {
+      const s = createSim(seed);
+      for (let reset = 0; reset < 3; reset++) {
+        expect(guards(s).filter((e) => e.champion !== null), `seed ${seed}, reset ${reset}`).toHaveLength(1);
+        resetWorld(s);
+      }
+    }
   });
 
   it('seal the pylon while any lives; with them gone, held E claims it', () => {
