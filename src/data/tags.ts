@@ -39,10 +39,11 @@ export const COLD = { chillPerHit: 1, slowPerStack: 0.15, stacksToFreeze: 4, sta
 export const HOMING = { lockRadius: 64, turnDegrees: 4, speedScale: 0.6 } as const;
 
 /**
- * The Split: a Split round that hits an enemy bursts into `shards` shards, `360 / shards` degrees apart, each
- * flying `range` px at `speed` px/s for `damage` physical damage. Shards are the `projectile`, not an item.
+ * The Split, the star shot: a Split round that hits an enemy bursts into `shards` shards, `360 / shards` degrees
+ * apart, each flying `range` px at `speed` px/s for `damageShare` of its round's damage (054, Shaun: half the bolt's,
+ * out to about 3 tiles; was a flat 4 over 64 px), skipping the enemy struck. Shards are the `projectile`, not an item.
  */
-export const SPLIT = { shards: 5, damage: 4, range: 64, speed: 360, projectile: 'shard' } as const;
+export const SPLIT = { shards: 5, damageShare: 0.5, range: 96, speed: 360, projectile: 'shard' } as const;
 
 /**
  * The cluster split (038): `delayTicks` after a cluster bomb bursts, `count` bomblets land evenly round the burst point

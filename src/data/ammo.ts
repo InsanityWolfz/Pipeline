@@ -1,6 +1,6 @@
 import { SPRITES } from './assets';
 import { MINE_SPRITES } from './mineAssets';
-import { elementOf, ROUNDS, roundBase, roundTags, tagDef } from './tags';
+import { elementOf, ROUNDS, roundBase, roundTags, SPLIT, tagDef } from './tags';
 
 // Ammo the tube can fire. Starting values from specs 003, 005 and 029; tune in playtest.
 // Each tagged round (029) is derived from its base and its tags (src/data/tags.ts).
@@ -177,6 +177,9 @@ export function straightAmmo(id: string): StraightAmmo {
   if (def.kind !== 'straight') throw new Error(`Ammo '${id}' doesn't fly straight`);
   return def;
 }
+
+/** A Split round's Shard's damage before stats (054): its round's damage times SPLIT.damageShare. */
+export const shardBaseDamage = (roundId: string): number => straightAmmo(roundId).damage * SPLIT.damageShare;
 
 /** A bomb or a landmine: anything that arcs to the aim (038). */
 export function lobbedAmmo(id: string): LobbedAmmo {

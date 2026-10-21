@@ -1,7 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import { BULWARK } from '../../src/data/bulwark';
 import { XP_CURVE } from '../../src/data/leveling';
-import { boot, cameraSettled } from './helpers';
+import { boot, cameraSettled, quietScreen } from './helpers';
+import { bootSandbox, openPanel, setRound } from './sandboxPage';
 import { frames, intoForum, sandbox, spawn, stepUntil } from './hollowsSandbox';
 
 // 054: combat readability, as drawn. A burrowed Burrower's bar reads immune (blue, with its shield) and goes back as it
@@ -91,4 +92,35 @@ test('an arrow through a Pool burns, and its hit flashes', async ({ page }) => {
   expect(hit).toBe(true);
   await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().talentFx.burningFlashes)).toBeGreaterThan(0);
   await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
+});
+
+/** `?sandbox` with Split bolts in every entrance, a Husk 150 px right and two more round it; fires and holds the sim `after` ticks past the burst. */
+export async function starShot(page: Page, after: number): Promise<number> {
+  await bootSandbox(page);
+  await openPanel(page);
+  await setRound(page, 0, 'ley-bolt+split');
+  await setRound(page, 1, 'ley-bolt+split');
+  await setRound(page, 2, 'ley-bolt+split');
+  await page.keyboard.press('Backquote');
+  await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().sandbox?.open)).toBe(false);
+  await quietScreen(page);
+  return page.evaluate((ticks) => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    const p = g.step(1).player;
+    g.spawnEnemy('husk', p.x + 150, p.y);
+    g.spawnEnemy('husk', p.x + 200, p.y - 50);
+    g.spawnEnemy('husk', p.x + 190, p.y + 60);
+    let s = g.step(1, { fire: true, aimX: p.x + 150, aimY: p.y - 4 });
+    for (let t = 0; t < 60 && s.events.splits.length === 0; t++) s = g.step(1);
+    if (s.events.splits.length === 0) return 0;
+    if (ticks > 0) s = g.step(ticks);
+    return s.arrows.filter((a) => a.ammoId === 'shard').length;
+  }, after);
+}
+
+test('a star shot’s Shards are drawn in flight', async ({ page }) => {
+  test.setTimeout(120_000);
+  expect(await starShot(page, 3)).toBeGreaterThan(0);
+  await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().tagged.shards)).toBeGreaterThan(0);
 });

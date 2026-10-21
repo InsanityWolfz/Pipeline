@@ -1,4 +1,4 @@
-import { lobAmmo, mineAmmo, straightAmmo } from './ammo';
+import { lobAmmo, mineAmmo, shardBaseDamage, straightAmmo } from './ammo';
 import { BULWARK } from './bulwark';
 import { BOSS_WEIGHT } from './combat';
 import { CHARGER, SHARDBACK } from './hollowsEnemies';
@@ -124,9 +124,10 @@ export const KEYWORD_LIST: readonly KeywordDef[] = [
     lock: fixed('px', HOMING.lockRadius),
     turn: fixed('deg-per-tick', HOMING.turnDegrees),
   }, ['turn-rate', 'lock-radius']),
-  kw('split', 'Split', 'behaviour', 'On an enemy hit, sends {count} {{shard}}s in a star for {damage} each. A {{shard}} is a small {{shot}} that never {{pierce}}s or {{split}}s and can’t hit that enemy.', {
+  // 054.1: the star shot's rule. Its damage param (half the bolt's) still feeds the round's summary and breakdown.
+  kw('split', 'Split', 'behaviour', 'On hit: {count} {{shard}}s fly out, each dealing half damage to another enemy. A {{shard}} is a small {{shot}} that never {{pierce}}s or {{split}}s.', {
     count: fixed('count', SPLIT.shards),
-    damage: fixed('count', SPLIT.damage),
+    damage: fixed('count', shardBaseDamage('ley-bolt+split')),
   }, ['shards', 'shard-damage']),
   kw('burst', 'Burst', 'behaviour', 'Deals {damage} to every enemy within {radius}. Ignores {{shield}}. No {{knockback}}.', {
     damage: per('count', { bomb: BOMB.burstDamage, bomblet: CLUSTER.damage, landmine: LANDMINE.damage }),

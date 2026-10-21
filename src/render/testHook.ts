@@ -164,9 +164,9 @@ export interface UiState {
   buildBar: BuildBarState | null;
   /**
    * 029: Split flashes still showing, and the tagged rounds' trails in flight (how many, and the most points one runs
-   * along). 047 removed the bench's Stages panel from here. 054: burning arrows drawn with their flame.
+   * along). 047 removed the bench's Stages panel from here. 054: burning arrows drawn with their flame, and Shards drawn.
    */
-  tagged: { splitFlashes: number; trails: { count: number; longest: number }; burning: number };
+  tagged: { splitFlashes: number; trails: { count: number; longest: number }; burning: number; shards: number };
   /** 030: the Ley Springs drawn, healing motes in the air, the pylon's thread, the foundry's shimmer, and the spring glowing under the player. */
   healing: HealingShown;
   /** 031: the inventory panel (open, and each group's rows: carried count, at risk, home in the stash). */

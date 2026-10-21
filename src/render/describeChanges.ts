@@ -1,4 +1,4 @@
-import { ammoDef, lobAmmo, mineAmmo, straightAmmo } from '../data/ammo';
+import { ammoDef, lobAmmo, mineAmmo, shardBaseDamage, straightAmmo } from '../data/ammo';
 import { TICK_RATE } from '../data/config';
 import { itemDef } from '../data/items';
 import { KEYWORDS } from '../data/keywords';
@@ -53,7 +53,7 @@ function buildTargets(): Target[] {
     round('ley-bolt', shot(bolt)),
     round('ley-bolt+homing', { ...shot(bolt), 'turn-rate': HOMING.turnDegrees, 'lock-radius': HOMING.lockRadius }, 'ley-bolt'),
     round('ley-bolt+split', { ...shot(bolt), shards: SPLIT.shards }, 'ley-bolt'),
-    { id: 'shard', name: renderTemplate('{{shard}}'), emission: shardEmissionOf('ley-bolt+split', true), bases: { damage: SPLIT.damage, range: SPLIT.range, speed: SPLIT.speed } },
+    { id: 'shard', name: renderTemplate('{{shard}}'), emission: shardEmissionOf('ley-bolt+split', true), bases: { damage: shardBaseDamage('ley-bolt+split'), range: SPLIT.range, speed: SPLIT.speed } },
     round('bomb', bombBases),
     round('bomb+cluster', { ...bombBases, bomblets: CLUSTER.count }, 'bomb'),
     { id: 'bomblet', name: renderTemplate('{{bomblet}}'), emission: bombletEmission('bomb+cluster'), bases: { damage: CLUSTER.damage, radius: CLUSTER.radius } },

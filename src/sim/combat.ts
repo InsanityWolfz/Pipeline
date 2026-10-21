@@ -1,3 +1,4 @@
+import { shardBaseDamage } from '../data/ammo';
 import { enemyDef } from '../data/enemies';
 import { SPLIT } from '../data/tags';
 import { createShard, type ArrowState } from './arrows';
@@ -18,9 +19,10 @@ import { statOf } from './statResolve';
 const arrowHit = (arrow: ArrowState): HitStyle => ({ knock: arrow.knockback, flash: true, damageType: arrow.damageType, burning: burning(arrow) });
 
 /**
- * A Split (029): the stats' shards (SPLIT.shards, 037: Splinter's more) from the hit point, 360 / shards
- * degrees apart, the first along its flight, none able to hit the enemy it struck, each for SPLIT.damage times the ley
- * bolt's damage bonus. They join the flight after this tick's (`spawned`).
+ * A Split, the star shot (029, 054): the stats' shards (SPLIT.shards, 037: Splinter's more) from the hit point,
+ * 360 / shards degrees apart, the first along its flight, none able to hit the enemy it struck, each for half the
+ * bolt's damage: half its round's base, through the Shards' damage stats (so Ley and All ammo reach it as they reach
+ * the bolt). They join the flight after this tick's (`spawned`).
  */
 function sendShards(state: SimState, arrow: ArrowState, struck: EnemyState, spawned: ArrowState[]): void {
   // Split's Shards and their damage through resolveStat (039): Splinter adds Shards; Ley and All ammo damage reach each one.
@@ -29,7 +31,7 @@ function sendShards(state: SimState, arrow: ArrowState, struck: EnemyState, spaw
   const def = {
     speed: statOf(state, 'speed', shard, SPLIT.speed),
     range: statOf(state, 'range', shard, SPLIT.range),
-    damage: statOf(state, 'damage', shard, SPLIT.damage),
+    damage: statOf(state, 'damage', shard, shardBaseDamage(arrow.ammoId)),
     damageType: arrow.damageType,
     fromSplit: true,
   };

@@ -87,7 +87,7 @@ describe('a round', () => {
     expect(texts(frost.summary)[0]).toBe('12 Burst dmg · 1.5/s · Freeze in 4 hits'); // 041: was 15
     expect(texts(describeRound(player(), 'bomb+cluster').summary)[0]).toBe('12 Burst dmg · 1.5/s · 4 Bomblets × 8');
     expect(texts(describeRound(player(), 'landmine').summary)[0]).toBe('60 Burst dmg · 1.5/s · arms in 5.0 s');
-    expect(texts(describeRound(player('l3'), 'ley-bolt+split').summary)[0]).toBe('9 dmg · 3.0/s · 7 Shards × 4'); // 041: was 14
+    expect(texts(describeRound(player('l3'), 'ley-bolt+split').summary)[0]).toBe('9 dmg · 3.0/s · 7 Shards × 4.5'); // 041: was 14; 054: a Shard half the bolt (was 4)
   });
 });
 

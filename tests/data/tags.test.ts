@@ -26,7 +26,7 @@ describe('tags', () => {
     }
     expect(COLD).toEqual({ chillPerHit: 1, slowPerStack: 0.15, stacksToFreeze: 4, stackTicks: 120, freezeTicks: 90, bossFreezeTicks: 45, refreezeTicks: 120 });
     expect(HOMING).toEqual({ lockRadius: 64, turnDegrees: 4, speedScale: 0.6 });
-    expect(SPLIT).toMatchObject({ shards: 5, damage: 4, range: 64, speed: 360 });
+    expect(SPLIT).toMatchObject({ shards: 5, damageShare: 0.5, range: 96, speed: 360 });
   });
 
   it('derive every legal round, each in AMMO and ITEMS', () => {

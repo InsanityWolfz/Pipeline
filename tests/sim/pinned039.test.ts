@@ -95,7 +95,7 @@ describe('039 pins: children and statuses', () => {
     }
   });
 
-  it('a split bolt’s shards: 5 (7 with Splinter), 4 × the ley bonus each', () => {
+  it('a split bolt’s shards: 5 (7 with Splinter), half the bolt’s 9 (054, was 4) × the ley bonus each', () => {
     const shards = (...talents: string[]) => {
       const s = taking(arena(), ...talents);
       s.inventory = { 'ley-bolt+split': 5 };
@@ -107,7 +107,7 @@ describe('039 pins: children and statuses', () => {
     };
     expect(shards()).toHaveLength(5);
     expect(shards('l3')).toHaveLength(7);
-    expect(shards('l1', 't3')[0]?.damage).toBeCloseTo(4.64, 9);
+    expect(shards('l1', 't3')[0]?.damage).toBeCloseTo(4.5 * 1.16, 9);
   });
 
   it('Rimecraft: 3 cold hits freeze for 120 ticks (a boss 75); without it 4 hits, 90 (a boss 45)', () => {

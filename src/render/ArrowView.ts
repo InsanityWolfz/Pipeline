@@ -1,7 +1,7 @@
 import type { GameObjects, Scene } from 'phaser';
 import { AMMO } from '../data/ammo';
 import { DEPTHS } from '../data/assets';
-import { ROUND_LOOKS, STAGE_SPRITES, TRAIL_SHAPE } from '../data/stageAssets';
+import { ROUND_LOOKS, SHARD_TRAILS, STAGE_SPRITES, TRAIL_SHAPE } from '../data/stageAssets';
 import { SPLIT } from '../data/tags';
 import { BURNING_LOOK, TALENT_SPRITES } from '../data/talentAssets';
 import { DRAW_HEIGHT } from '../data/tube';
@@ -24,6 +24,8 @@ interface Drawn {
   shadow: GameObjects.Image;
   /** A tagged round's trail (029). */
   trail?: Trail;
+  /** A Shard (054: drawn with a short trail). */
+  shard?: boolean;
   /** A burning arrow's flame and ember trail (054), from the frame it caught fire. */
   burn?: { tip: GameObjects.Image; trail: Trail };
 }
@@ -51,6 +53,11 @@ export class ArrowView {
   get trails(): { count: number; longest: number } {
     const all = [...this.drawn.values()].flatMap((d) => (d.trail ? [d.trail.points.length] : []));
     return { count: all.length, longest: Math.max(0, ...all) };
+  }
+
+  /** How many Shards (029, 054's star shot) are drawn, for the test hook. */
+  get shards(): number {
+    return [...this.drawn.values()].filter((d) => d.shard).length;
   }
 
   /** How many burning arrows (054) are drawn with their flame, for the test hook. */
@@ -126,6 +133,10 @@ export class ArrowView {
       arrow: addVector(this.scene, 0, 0, sprite),
       shadow: addVector(this.scene, 0, 0, shadow).setDepth(DEPTHS.shadow),
     };
+    if (a.ammoId === SPLIT.projectile) {
+      d.shard = true;
+      d.trail = { g: this.scene.add.graphics(), look: a.damageType === 'cold' ? SHARD_TRAILS.cold : SHARD_TRAILS.ley, points: [] };
+    }
     for (const tag of AMMO[a.ammoId]?.tags ?? []) {
       const look = ROUND_LOOKS[tag];
       if (look?.tint) d.arrow.setTint(colorOf(look.tint));
