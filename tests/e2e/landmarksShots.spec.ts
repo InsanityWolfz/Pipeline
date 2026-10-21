@@ -64,6 +64,8 @@ async function walk(page: Page, points: readonly (readonly [number, number])[]):
           queue.push([tx + dx, ty + dy]);
         }
       }
+      // A walk cut off from its aim would frame the wrong place: fail loudly instead.
+      if (Math.hypot(best[0] - gx, best[1] - gy) > 3) throw new Error(`no reachable tile within 3 of (${gx}, ${gy}); nearest (${best[0]}, ${best[1]})`);
       return best;
     };
     for (const [gx, gy] of pts) {
@@ -83,16 +85,22 @@ test.describe('review screenshots (032)', () => {
     const a = landmarkDef(id).area;
     return [[Math.floor((a.x0 + a.x1) / 2), a.y1 + 3]];
   };
+  // Old Grove, Ley Grotto and North Spring are too tall for that (the player stands too far south to frame them):
+  // walked to the area's middle instead, or the nearest reachable tile to it.
+  const middle = (id: string): (readonly [number, number])[] => {
+    const a = landmarkDef(id).area;
+    return [[Math.floor((a.x0 + a.x1) / 2), Math.floor((a.y0 + a.y1) / 2)]];
+  };
   const views: [string, string, (readonly [number, number])[]][] = [
     ['quarry', '01-quarry', below('quarry')],
-    ['old-grove', '02-old-grove', below('old-grove')],
-    ['ley-grotto', '03-ley-grotto', below('ley-grotto')],
+    ['old-grove', '02-old-grove', middle('old-grove')],
+    ['ley-grotto', '03-ley-grotto', middle('ley-grotto')],
     ['reed-marsh', '04-reed-marsh', below('reed-marsh')],
     ['ruined-cache', '05-ruined-cache-sealed', below('ruined-cache')],
     ['frozen-grotto', '06-frozen-grotto', below('frozen-grotto')],
     ['west-spring', '07-west-spring', below('west-spring')],
     ['south-east-spring', '08-south-east-spring', below('south-east-spring')],
-    ['north-spring', '09-north-spring', below('north-spring')],
+    ['north-spring', '09-north-spring', middle('north-spring')],
   ];
   for (const [id, file, points] of views) {
     test(`the landmark ${id}`, async ({ page }) => {

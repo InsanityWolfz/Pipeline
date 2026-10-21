@@ -3,7 +3,7 @@
 Newest entry first.
 
 ## 2026-10-21: Bug: older review shots on the round map
-**Changed:** on `claude/fix-old-review-shots`, 032's landmark shots walk to the nearest tile the player can reach below each landmark (the fixed spot was solid or cut off on the round map for the Quarry, Old Grove, Ley Grotto and North Spring). Retook 032/01, 02, 03, 09, and 030/05 (the shrine moved and got its walls). 030's and 031's specs already passed on main after 055; nothing to change there. `npm run check` passes; landmarksShots, healingShots and hudInventoryShots pass with REVIEW_SHOTS=1 (26/26).
+**Changed:** on `claude/fix-old-review-shots`, 032's landmark shots walk to the nearest tile the player can reach below each landmark (the fixed spot was solid or cut off on the round map for the Quarry, Old Grove, Ley Grotto and North Spring), failing if that tile is more than 3 from the aim; Old Grove, Ley Grotto and North Spring aim at their area's middle so they're framed whole (review). Retook 032/01, 02, 03, 09, and 030/05 (the shrine moved and got its walls). 030's and 031's specs already passed on main after 055; nothing to change there. `npm run check` passes; landmarksShots, healingShots and hudInventoryShots pass with REVIEW_SHOTS=1 (26/26).
 
 **Next:** Shaun merges the PR.
 
