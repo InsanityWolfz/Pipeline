@@ -93,6 +93,8 @@ export class SupplyView {
 
   update(sim: SimState, events: SimEvents, shown: string, deltaMs: number): void {
     const pylons = (WORLD[OVERWORLD.id]?.pylons ?? []).filter((p) => sim.claims.includes(p.site));
+    // 053: hauls leaving the same pylon in the same frame go one after another, `staggerMs` apart, so each raw's icon reads.
+    const leaving = new Map<string, number>();
     for (const s of events.supplies) {
       // The claimed pylons supplying this raw, in turn, the newest claim first so its line shows working at once.
       const from = pylons.filter((p) => SITE_SUPPLY[p.site]?.includes(s.itemId)).sort((a, b) => sim.claims.indexOf(b.site) - sim.claims.indexOf(a.site));
@@ -104,7 +106,9 @@ export class SupplyView {
       const at = centre(p);
       const node = harvestTarget(sim.nodes, OVERWORLD.id, s.itemId, at, p.safeRadius * T);
       const icon = addVector(this.scene, at.x, at.y, itemDef(s.itemId).icon).setDepth(DEPTHS.supplyLine + 2).setVisible(false);
-      this.motes.push({ itemId: s.itemId, icon, from: node ? { x: node.x, y: node.y } : null, pylon: at, line, ageMs: 0 });
+      const queued = leaving.get(p.site) ?? 0;
+      leaving.set(p.site, queued + 1);
+      this.motes.push({ itemId: s.itemId, icon, from: node ? { x: node.x, y: node.y } : null, pylon: at, line, ageMs: -queued * SUPPLY_LOOK.staggerMs });
       this.started += 1;
     }
     const L = SUPPLY_LOOK;
@@ -134,6 +138,11 @@ export class SupplyView {
 
   private draw(m: Mote): void {
     const L = SUPPLY_LOOK;
+    // Still waiting its turn to leave (053).
+    if (m.ageMs < 0) {
+      m.icon.setVisible(false);
+      return;
+    }
     const pylon = m.pylon;
     const g = this.g;
     // The tendril reaches out to the node and fades as the mote sets off, and the node pulses.

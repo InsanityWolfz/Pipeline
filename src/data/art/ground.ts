@@ -108,7 +108,9 @@ export const SUPPLY_LOOK = {
   pulseRise: 6,
   moteSpeed: 200,
   /** 053 (D.4, Shaun: "show each resource that that pylon's collecting go along the line"): each haul runs home as its raw's item icon at this scale, over its halo. */
-  iconScale: 0.7,
+  iconScale: 0.85,
+  /** Hauls leaving one pylon together set off this far apart, ms, so each raw's icon reads on its own. */
+  staggerMs: 450,
   /** The disc of the raw's colour under its icon: radius px and alpha. */
   plateRadius: 6,
   plateAlpha: 0.55,
