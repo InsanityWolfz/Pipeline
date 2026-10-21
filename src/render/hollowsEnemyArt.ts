@@ -40,6 +40,8 @@ export interface HollowsEnemiesShown {
   ripples: number;
   flares: number;
   lasers: (LaserShown & { id: number })[];
+  /** 054: the Bulwark's back waves whose red shade was drawn this frame (counted by EnemyView from its telegraph). */
+  waveShades: number;
 }
 
 /** The extras an enemy of these kinds needs, made once with its sprite. */

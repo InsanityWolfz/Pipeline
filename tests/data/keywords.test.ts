@@ -4,7 +4,7 @@ import { DERIVED_TAGS, KEYWORD_DEBT, KEYWORD_LIST, KEYWORDS, NOUNS, type Keyword
 import { keywordPayoffs, keywordSources } from '../../src/data/keywordGraph';
 import { REF, SLOT, textSources as paramSources, keywordText, refName } from '../../src/data/rulesText';
 import { bombletKeywords, poolBurstKeywords, roundKeywords, shardKeywords } from '../../src/data/roundKeywords';
-import { ROUNDS } from '../../src/data/tags';
+import { ROUNDS, SPLIT } from '../../src/data/tags';
 import { keywordReport } from '../../src/data/keywordReport';
 import { STATS } from '../../src/data/statDefs';
 
@@ -59,15 +59,20 @@ describe('the keyword list', () => {
 
   it('reads its numbers from data: a few rendered lines', () => {
     expect(keywordText('shot', 'arrow')).toBe('Flies straight at the cursor up to 320 px at 480 px/s. Stops at walls and Shield fronts.');
-    expect(keywordText('shot', 'shard')).toBe('Flies straight at the cursor up to 64 px at 360 px/s. Stops at walls and Shield fronts.');
+    expect(keywordText('shot', 'shard')).toBe('Flies straight at the cursor up to 96 px at 360 px/s. Stops at walls and Shield fronts.'); // 054: was 64 px
     expect(keywordText('homing')).toBe('At launch, locks onto the enemy nearest the cursor within 64 px of it and turns up to 240°/s toward it. Flies straight without a target.');
     expect(keywordText('chill')).toBe('Stacks up to 4. Each stack slows the enemy’s movement 15%. Lasts 2.0 s, refreshed by each Cold hit. At 4 it Freezes.');
     expect(keywordText('freeze')).toBe('Can’t move or act for 1.5 s (0.8 s for a Boss); a wind-up pauses. Still takes damage and Knockback. Then can’t gain Chill for 2.0 s.');
     expect(keywordText('stun', 'charger')).toBe('Can’t move or act for 1.0 s, and a wind-up is cancelled. A Boss or Burrowed enemy can’t be Stunned.');
     expect(keywordText('knockback')).toBe('Each hit pushes the enemy 6 px times its weight. A Boss weighs 0.');
     expect(keywordText('cluster')).toBe('0.2 s after its Burst, 4 Bomblets land 40 px out, each a Burst of 8 in 20 px.');
-    expect(keywordText('split')).toBe('On an enemy hit, sends 5 Shards in a star for 4 each. A Shard is a small Shot that never Pierces or Splits and can’t hit that enemy.');
+    expect(keywordText('split')).toBe('On hit: 5 Shards fly out, each dealing half damage to another enemy. A Shard is a small Shot that never Pierces or Splits.');
     expect(keywordText('cold')).toBe('Each hit adds 1 Chill.');
+  });
+
+  it("ties the Split's \"half damage\" wording to SPLIT.damageShare (054.1): change one, change the other", () => {
+    expect(keywordText('split')).toContain('half damage');
+    expect(SPLIT.damageShare).toBe(0.5);
   });
 
   it('has the child nouns Shard and Bomblet, which are no keyword', () => {

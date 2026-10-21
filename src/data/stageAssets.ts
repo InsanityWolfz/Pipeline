@@ -44,6 +44,12 @@ export const ROUND_LOOKS: Readonly<Record<string, { tint?: string; trail?: { col
   homing: { trail: { color: 'cyan', core: 'cyan-glow', points: 20, width: 4, alpha: 0.9 } },
 };
 
+/** 054: a Shard's short trail in flight (a Cold one's in frost), in ROUND_LOOKS' style, so a star shot's Shards read. */
+export const SHARD_TRAILS = {
+  ley: { color: 'cyan', core: 'cyan-glow', points: 6, width: 2.5, alpha: 0.85 },
+  cold: { color: 'water-light', core: 'snow', points: 6, width: 2.5, alpha: 0.8 },
+} as const;
+
 /** The Split's flash (029): grows from `from` to `to` scale and fades over `ms`, at shot height. */
 export const SPLIT_FLASH = { ms: 280, from: 1, to: 2.2 } as const;
 

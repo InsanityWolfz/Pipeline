@@ -101,16 +101,22 @@ export function drawStomp(g: GameObjects.Graphics, e: EnemyState): void {
   g.fillPath();
 }
 
-/** Its back wave building (041.16): ripples running out over its rear arc to the arc's edge as the wind-up runs. */
-export function drawWave(g: GameObjects.Graphics, e: EnemyState): void {
+/** Its back wave building (041.16): its rear arc shaded red (054) under ripples running out to the arc's edge as the wind-up runs. Whether it drew the shade, for `ui()`. */
+export function drawWave(g: GameObjects.Graphics, e: EnemyState): boolean {
   const def = enemyDef(e.enemyId);
-  if (def.kind !== 'bulwark' || e.waveTicks <= 0) return;
+  if (def.kind !== 'bulwark' || e.waveTicks <= 0) return false;
   const W = HOLLOWS_LOOK.wave;
   const progress = Math.min(1, e.waveTicks / windupsOf(e, def).wave);
   const angle = Math.atan2(e.waveDirY, e.waveDirX);
   const half = (def.wave.arcDegrees * Math.PI) / 360;
   const color = colorOf(W.color);
-  // Rings only, no fill: it reads apart from the stomp's filled half-disc (both enemy red).
+  // 054 (E.2): its area shaded red on the ground, a fill growing out to its edge; the ripples over it keep it apart from the stomp.
+  g.fillStyle(color, W.shadeAlpha);
+  g.slice(e.x, e.y, def.wave.radius, angle - half, angle + half, false);
+  g.fillPath();
+  g.fillStyle(color, W.fillAlpha);
+  g.slice(e.x, e.y, def.wave.radius * progress, angle - half, angle + half, false);
+  g.fillPath();
   for (let i = 0; i < W.rings; i++) {
     // Each ripple runs out ahead of the one before it; all lie on the edge as the wave breaks.
     const r = def.wave.radius * Math.min(1, progress * (1 + i / W.rings));
@@ -127,6 +133,7 @@ export function drawWave(g: GameObjects.Graphics, e: EnemyState): void {
     g.arc(e.x, e.y, def.wave.radius + R.gap, angle - half, angle + half, false);
     g.strokePath();
   }
+  return true;
 }
 
 /** An add rising (041): the summon's cracked red circle at its feet, smaller, its ring and cracks opening as it rises. */

@@ -144,10 +144,11 @@ function roundIcon(round: string): VectorSprite {
   return icon(ROUND_ICONS[round] ?? '', [...shapes, ...badges]);
 }
 
-/** A Shard in flight (029), pointing right: a small cyan sliver. */
+/** A Shard in flight (029), pointing right: a small ley crystal (054: bigger and brighter, so a star shot reads). */
 const SHARD: Shape[] = [
-  { ...line([-6, 0, -1, 0], 1.2, { id: 'cyan', alpha: 0.5 }), glow: { color: 'cyan', blur: 2 } },
-  path('M 3.4 0 L -0.6 -1.4 L -1.6 0 L -0.6 1.4 Z', { fill: 'cyan-glow', outline: true, glow: { color: 'cyan', blur: 3 } }),
+  { ...line([-8, 0, -1, 0], 1.6, { id: 'cyan', alpha: 0.6 }), glow: { color: 'cyan', blur: 3 } },
+  path('M 5 0 L -0.4 -2.2 L -2.4 0 L -0.4 2.2 Z', { fill: 'cyan-glow', outline: true, glow: { color: 'cyan', blur: 4 } }),
+  ellipse(1, -0.5, 1, 0.5, flat('snow')),
 ];
 
 /** The Split's flash: a five-point star of ley light. */
@@ -185,7 +186,7 @@ const sprite = (key: string, size: readonly [number, number], anchor: readonly [
 export const STAGE_SPRITES_VECTOR: readonly VectorSprite[] = [
   icon(STAGE_SPRITES.itemRimestone, RIME_SHARD),
   ...ROUNDS.map(roundIcon),
-  sprite(STAGE_SPRITES.shard, [12, 6], [7, 3], SHARD),
+  sprite(STAGE_SPRITES.shard, [16, 8], [10, 4], SHARD),
   sprite(STAGE_SPRITES.shardShadow, [8, 4], [4, 2], [ellipse(0, 0, 3, 1, { fill: { id: 'ground-shade', alpha: 0.35 } })]),
   sprite(STAGE_SPRITES.splitFlash, [28, 28], [14, 14], SPLIT_FLASH_SHAPES),
   sprite(STAGE_SPRITES.iceCase, [38, 50], [19, 46], iceCase(28, 40, false)),

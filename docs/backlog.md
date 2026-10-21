@@ -58,7 +58,7 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 051 | Guidance: waypoint arrows to the current goal, resource icons on hoppers, sub-steps with icons, glowing harvestable nodes, a fog-of-war minimap with labels, a foundry minimap, the mouse-icon right-click hint | done |
 | 052 | Foundry logistics: underground belts (5 tiles), the sorter and merger removed, the stash as a two-panel inventory, the bench by the door redrawn | done |
 | 053 | The round world: Region 1 a circle about 2× today's area, the Hollows a ring around it, one clean road network, tidy ley lines carrying resource icons, an obvious foundry entrance | approved |
-| 054 | Combat readability: a blue shield health bar while an enemy can't be hurt, the back wave shaded, burning Pool arrows, homing bolts at 60% speed, the visible 5-shard star shot | approved |
+| 054 | Combat readability: a blue shield health bar while an enemy can't be hurt, the back wave shaded, burning Pool arrows, homing bolts at 60% speed, the visible 5-shard star shot | done |
 | 055 | Boss doors and the rimestone pylon: both arenas walled with a door, sealed until ready, E to enter, locked inside; a Frozen Grotto pylon supplying rimestone | approved |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
@@ -92,3 +92,5 @@ Shaun's drive rant on 2026-10-19 (docs/brainstorm/2026-10-19-drive-rant.md) is q
 Fixes to built behaviour that need no design. Each goes on its own branch and PR.
 - Fixed in 047 (the grid replaced the panel): the inventory panel's Wood row drew "3 at risk" over "home 5" (found in review of 045, 045.11; on main since 031). 047 replaces the panel with the grid inventory, so check it there.
 - The Stages panel showed "0/4 arrows" while the player had arrows in an intake entrance and in the inventory (Shaun, 2026-10-20). Fixed in InsanityWolfz/Pipeline#27: the panel counts carried rounds plus the intake entrances (Shaun chose option A, 2026-10-20).
+- 037's Shatterpoint review shot is broken on main (found in 054's review); retake or fix the shot's staging.
+- The sandbox loadout panel's "−" button (setRound) may not cycle an entrance's ammo backwards (found in 054's review); check and fix.

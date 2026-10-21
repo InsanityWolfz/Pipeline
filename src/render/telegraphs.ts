@@ -1,6 +1,6 @@
 import type { GameObjects } from 'phaser';
 import { ENEMY_FX } from '../data/assets';
-import { attackOf, enemyDef } from '../data/enemies';
+import { attackOf, enemyDef, type EnemyDef } from '../data/enemies';
 import type { EnemyState } from '../sim/enemies';
 import { drawPound, drawRise, drawStomp, drawWave } from './bulwarkLook';
 import { colorOf } from './color';
@@ -10,17 +10,20 @@ import { drawHollowsTelegraph } from './hollowsTelegraphs';
 // a Husk's swipe arc at its real reach and angle, a Wisp's tightening ring and aim line, the
 // Warden's slam circle at its real radius, the Bulwark's pound, and Region 2's four's.
 
-export function drawTelegraph(g: GameObjects.Graphics, e: EnemyState): void {
+/** Draws it; returns whether the Bulwark's back wave was shaded (054), for `ui()`. */
+export function drawTelegraph(g: GameObjects.Graphics, e: EnemyState): boolean {
   g.clear();
   const def = enemyDef(e.enemyId);
   // 041: an add rising from the ground, the Bulwark's back wave (beside its other attacks) and its rear stomp.
   drawRise(g, e);
-  drawWave(g, e);
-  if (def.kind === 'bulwark' && e.mode === 'stomp-windup') {
-    drawStomp(g, e);
-    return;
-  }
-  if (drawHollowsTelegraph(g, e, def)) return;
+  const waveShaded = drawWave(g, e);
+  if (def.kind === 'bulwark' && e.mode === 'stomp-windup') drawStomp(g, e);
+  else if (!drawHollowsTelegraph(g, e, def)) drawAttack(g, e, def);
+  return waveShaded;
+}
+
+/** The enemy's own attack's wind-up. */
+function drawAttack(g: GameObjects.Graphics, e: EnemyState, def: EnemyDef): void {
   if (e.mode !== 'windup') return;
   const progress = Math.min(1, e.modeTicks / attackOf(def).windupTicks);
   if (def.kind === 'caster') {

@@ -1,8 +1,9 @@
 import { roundKeywords } from '../data/roundKeywords';
 import { defOf } from './champions';
 import type { ArrowState } from './arrows';
+import { burning } from './keystones';
 import type { BombState } from './bombs';
-import type { EnemyMode, EnemyState } from './enemies';
+import { immune, type EnemyMode, type EnemyState } from './enemies';
 import type { NodeState } from './nodes';
 import type { MachineStatus, PieceState } from './pieces';
 import type { Facing } from './player';
@@ -31,6 +32,8 @@ export interface ArrowSummary {
   keywords: string[];
   /** It carries a Pool it passed through (037: Blastfletch) to its next hit. */
   pooled: boolean;
+  /** It has passed through a Pool and burns for the rest of its flight (054). */
+  burning: boolean;
 }
 
 export function arrowSummary(a: ArrowState): ArrowSummary {
@@ -47,6 +50,7 @@ export function arrowSummary(a: ArrowState): ArrowSummary {
     targetId: a.targetId,
     keywords: [...a.keywords],
     pooled: a.pooled,
+    burning: burning(a),
   };
 }
 
@@ -82,6 +86,8 @@ export interface EnemySummary extends KindSummary {
   ring: number;
   /** Ticks left rising from the ground (041: the Bulwark's adds), 0 once up. */
   rising: number;
+  /** Nothing can damage it now (054): under the ground or still rising. Its bar shows blue with a shield. */
+  immune: boolean;
 }
 
 export function enemySummary(state: SimState, e: EnemyState): EnemySummary {
@@ -101,6 +107,7 @@ export function enemySummary(state: SimState, e: EnemyState): EnemySummary {
     champion: e.champion ? { ...e.champion } : null,
     ring: e.ring,
     rising: e.rising,
+    immune: immune(e),
     swipeDir: { x: round(e.swipeDirX), y: round(e.swipeDirY) },
     flash: e.flash,
     chill: e.chill,
