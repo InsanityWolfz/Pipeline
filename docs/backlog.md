@@ -56,7 +56,7 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 049 | Resin pylon: the Husk Hive, a ring 2 landmark with resin seeps and a pylon that supplies resin, so bombs can be automated (note 16) | done |
 | 050 | Playtest fixes and title screen: character art, name tags, top banners, E closes screens and opens the hovered hopper or crate, crate slots, tooltips, safe foundry items, the second-line goal, ward and Mending effects, F11, a livelier title | done |
 | 051 | Guidance: waypoint arrows to the current goal, resource icons on hoppers, sub-steps with icons, glowing harvestable nodes, a fog-of-war minimap with labels, a foundry minimap, the mouse-icon right-click hint | done |
-| 052 | Foundry logistics: underground belts (5 tiles), the sorter and merger removed, the stash as a two-panel inventory, the bench by the door redrawn | approved |
+| 052 | Foundry logistics: underground belts (5 tiles), the sorter and merger removed, the stash as a two-panel inventory, the bench by the door redrawn | done |
 | 053 | World and bosses: a round map with ring-shaped regions, an obvious foundry entrance, clean paths and ley lines with resource icons, boss arenas with doors (E in, locked inside), a rimestone pylon (2026-10-21 notes, theme D) | idea |
 | 054 | Combat readability: a blue shield health bar when an enemy can't be hit, the Bulwark back wave shaded, the Pool-arrow visual, slower homing bolts, the visible 5-shard star shot (2026-10-21 notes, theme E) | idea |
 

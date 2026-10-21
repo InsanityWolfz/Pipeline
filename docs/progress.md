@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: 052 merged
+**Changed:** Shaun merged 052 (foundry logistics: underground belts, stash, bench), InsanityWolfz/Pipeline#43.
+
+**Next:** the rest of 050–052, then the next batch: 053 (world and bosses) and 054 (combat readability).
+
 ## 2026-10-21: 052 merged with main (050, 051)
 **Changed:** on `claude/052-foundry-logistics`, merged main after 050 and 051. E closes the inventory, hopper, crate and stash screens (the stash's screen is the inventory's now) and opens the hovered hopper or crate within 3 tiles; a crate's slots link the screen's cols and the stash screen keeps its own entry; item name tips also show in the stash's grid; the name tag avoids the bench's beside-prompt. The foundry map draws an underground pair's ends as lines and lists no sorter or merger; the bench's map icon and waypoint follow it to (22, 9) (tested). SAVE_VERSION 9, no migration. 050's bench e2e and shots walk to the new bench. Older review shots retaken where the merge changes them; noise restored.
 

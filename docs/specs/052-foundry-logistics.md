@@ -1,5 +1,5 @@
 # 052: Foundry logistics
-status: approved
+status: done
 
 Approved on draft by Shaun in chat, 2026-10-21 ("approve 050-052"): the build follows the proposals in the open questions.
 
@@ -66,3 +66,6 @@ Built on `claude/052-foundry-logistics` (plan: docs/plans/052-foundry-logistics.
 - `npx playwright test` (full run, once, on port 5252): 135 passed, 1 failed, 126 skipped (review shots). The failure was legibility.spec walking to the bench's old spot; fixed, and that file re-run passes (7 passed). Under three workers some older review-shot specs timed out on HP-chunk and healing-mote polls; they pass run alone (26 passed).
 - Review shots (docs/review/052): `01-tunnel-placing-reach.png`, `02-tunnel-hovered.png`, `03-crossing-lines.png`, `04-stash-screen.png`, `05-bench-by-door.png`. Older shots 052 changes were retaken: 026/02–04 and 045/04 (the build bar's Logistics), 031/09 (every piece), 033/01–07, 09, 10 (the merger's panel and sheet row gone; 06 now Reservoir II), 028/01–03 (the west wall without the bench), 036/01 and 036/07, 039/05, 039/08 and 040/04 (at the bench by the door).
 - `npm run measure`: ammo line and still 5/5 met; ring 1 2.2–3.2 s and ring 2 2.4–4.0 s met; ring 3 4/5 in band, 14.1–21.6 s (MISSED); the Bulwark's decent build 14/20 with 2 KOs (MISSED), the naive bot KO'd 5/5. Main gives the same numbers today, so 052 changes none of them.
+
+## Shaun's answers (2026-10-21)
+- Shaun said "Merge 42-44". He changed none of the raised items, so they stand as built.
