@@ -34,12 +34,44 @@ async function bannersGone(page: Page): Promise<void> {
   await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
 }
 
+/**
+ * Walks to each tile of the round map (053) in turn; a tile that's solid or cut off from the player (the rock and
+ * ledges round a landmark) is swapped for the nearest tile the player can reach from where they stand.
+ */
 async function walk(page: Page, points: readonly (readonly [number, number])[]): Promise<void> {
   await page.evaluate((pts) => {
+    const g = window.__GAME__;
     const h = window.__helpers;
-    if (!h) throw new Error('no helpers');
-    // Tiles of the round map (053).
-    for (const [tx, ty] of pts) h.walkTo((tx + 0.5) * 32, (ty + 0.5) * 32);
+    if (!g || !h) throw new Error('no helpers');
+    const rows = g.passable();
+    const open = (tx: number, ty: number) => rows[ty]?.[tx] === '.';
+    const reachableNear = (gx: number, gy: number): [number, number] => {
+      const p = g.getState().player;
+      const start: [number, number] = [Math.floor(p.x / 32), Math.floor(p.y / 32)];
+      const seen = new Set([start[1] * 1000 + start[0]]);
+      const queue = [start];
+      let best = start;
+      for (let i = 0; i < queue.length; i++) {
+        const t = queue[i];
+        if (!t) break;
+        const [tx, ty] = t;
+        if (Math.hypot(tx - gx, ty - gy) < Math.hypot(best[0] - gx, best[1] - gy)) best = t;
+        if (tx === gx && ty === gy) break;
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+          const k = (ty + dy) * 1000 + tx + dx;
+          if (!open(tx + dx, ty + dy) || seen.has(k)) continue;
+          seen.add(k);
+          queue.push([tx + dx, ty + dy]);
+        }
+      }
+      // A walk cut off from its aim would frame the wrong place: fail loudly instead.
+      if (Math.hypot(best[0] - gx, best[1] - gy) > 3) throw new Error(`no reachable tile within 3 of (${gx}, ${gy}); nearest (${best[0]}, ${best[1]})`);
+      return best;
+    };
+    for (const [gx, gy] of pts) {
+      const [tx, ty] = reachableNear(gx, gy);
+      h.walkTo((tx + 0.5) * 32, (ty + 0.5) * 32);
+    }
   }, points);
 }
 
@@ -53,16 +85,22 @@ test.describe('review screenshots (032)', () => {
     const a = landmarkDef(id).area;
     return [[Math.floor((a.x0 + a.x1) / 2), a.y1 + 3]];
   };
+  // Old Grove, Ley Grotto and North Spring are too tall for that (the player stands too far south to frame them):
+  // walked to the area's middle instead, or the nearest reachable tile to it.
+  const middle = (id: string): (readonly [number, number])[] => {
+    const a = landmarkDef(id).area;
+    return [[Math.floor((a.x0 + a.x1) / 2), Math.floor((a.y0 + a.y1) / 2)]];
+  };
   const views: [string, string, (readonly [number, number])[]][] = [
     ['quarry', '01-quarry', below('quarry')],
-    ['old-grove', '02-old-grove', below('old-grove')],
-    ['ley-grotto', '03-ley-grotto', below('ley-grotto')],
+    ['old-grove', '02-old-grove', middle('old-grove')],
+    ['ley-grotto', '03-ley-grotto', middle('ley-grotto')],
     ['reed-marsh', '04-reed-marsh', below('reed-marsh')],
     ['ruined-cache', '05-ruined-cache-sealed', below('ruined-cache')],
     ['frozen-grotto', '06-frozen-grotto', below('frozen-grotto')],
     ['west-spring', '07-west-spring', below('west-spring')],
     ['south-east-spring', '08-south-east-spring', below('south-east-spring')],
-    ['north-spring', '09-north-spring', below('north-spring')],
+    ['north-spring', '09-north-spring', middle('north-spring')],
   ];
   for (const [id, file, points] of views) {
     test(`the landmark ${id}`, async ({ page }) => {

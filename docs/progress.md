@@ -2,11 +2,19 @@
 
 Newest entry first.
 
+## 2026-10-21: 49–51 merged
+**Changed:** Shaun merged the three small fixes ("Merge 49-51"): the sandbox panel's − onto Empty (InsanityWolfz/Pipeline#49), 037's Shatterpoint shot (#50), the older review shots on the round map (#51).
+
+**Next:** spec 056, the sandbox's controls strip.
+
 ## 2026-10-21: Bug: the sandbox panel's − onto Empty
 **Changed:** on `claude/fix-sandbox-minus`, the sandbox loadout panel's "−" now steps an entrance onto Empty (and "+" wraps onto it); render's `cycle` treated the null Empty choice as a miss and kept the current round. Render only; the sim's loadout command was already right. New unit and e2e tests. `npm run check` passes; sandbox.spec.ts and sandboxShots.spec.ts pass.
 
 ## 2026-10-21: Bug: 037's Shatterpoint review shot
 **Changed:** on `claude/fix-037-shatterpoint-shot`, the Shatterpoint shot (talentsShots.spec.ts) selects the frost arrows it picks up; it fired the plain arrows in the hotbar's first slot, so the Husk never froze and no shatter came. Retook docs/review/037/05 only. `npm run check` passes; talentsShots.spec.ts passes with REVIEW_SHOTS=1.
+
+## 2026-10-21: Bug: older review shots on the round map
+**Changed:** on `claude/fix-old-review-shots`, 032's landmark shots walk to the nearest tile the player can reach below each landmark (the fixed spot was solid or cut off on the round map for the Quarry, Old Grove, Ley Grotto and North Spring), failing if that tile is more than 3 from the aim; Old Grove, Ley Grotto and North Spring aim at their area's middle so they're framed whole (review). Retook 032/01, 02, 03, 09, and 030/05 (the shrine moved and got its walls). 030's and 031's specs already passed on main after 055; nothing to change there. `npm run check` passes; landmarksShots, healingShots and hudInventoryShots pass with REVIEW_SHOTS=1 (26/26).
 
 **Next:** Shaun merges the PR.
 
