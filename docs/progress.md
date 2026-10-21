@@ -2,6 +2,9 @@
 
 Newest entry first.
 
+## 2026-10-21: Bug: the sandbox panel's − onto Empty
+**Changed:** on `claude/fix-sandbox-minus`, the sandbox loadout panel's "−" now steps an entrance onto Empty (and "+" wraps onto it); render's `cycle` treated the null Empty choice as a miss and kept the current round. Render only; the sim's loadout command was already right. New unit and e2e tests. `npm run check` passes; sandbox.spec.ts and sandboxShots.spec.ts pass.
+
 ## 2026-10-21: Bug: 037's Shatterpoint review shot
 **Changed:** on `claude/fix-037-shatterpoint-shot`, the Shatterpoint shot (talentsShots.spec.ts) selects the frost arrows it picks up; it fired the plain arrows in the hotbar's first slot, so the Husk never froze and no shatter came. Retook docs/review/037/05 only. `npm run check` passes; talentsShots.spec.ts passes with REVIEW_SHOTS=1.
 

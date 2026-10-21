@@ -32,6 +32,10 @@ describe('the Sandbox panel rows (044)', () => {
     expect(sandboxClick(up('entrance-0'), sb, DEFAULT_PICK).command).toEqual({ kind: 'loadout', entrance: 0, round: ROUND_CHOICES[2] });
     expect(sandboxClick(down('entrance-1'), sb, DEFAULT_PICK).command).toEqual({ kind: 'loadout', entrance: 1, round: ROUND_CHOICES[ROUND_CHOICES.length - 1] });
     expect(sandboxClick(up('entrance-1'), sb, DEFAULT_PICK).command).toEqual({ kind: 'loadout', entrance: 1, round: 'arrow' });
+    // Onto Empty both ways (a null choice is a choice, not a miss).
+    expect(sandboxClick(down('entrance-0'), sb, DEFAULT_PICK).command).toEqual({ kind: 'loadout', entrance: 0, round: null });
+    const last = { loadout: [ROUND_CHOICES[ROUND_CHOICES.length - 1] ?? null], god: false };
+    expect(sandboxClick(up('entrance-0'), last, DEFAULT_PICK).command).toEqual({ kind: 'loadout', entrance: 0, round: null });
   });
 
   it('toggles god mode and resets a boss', () => {
