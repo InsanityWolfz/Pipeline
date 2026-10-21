@@ -122,7 +122,13 @@ describe('the in-reach E prompts (045)', () => {
     expect(Object.keys(SCENES).sort()).toEqual([...INTERACT_KINDS].sort());
     for (const kind of INTERACT_KINDS) {
       expect(INTERACT_PROMPTS[kind], kind).toMatchObject({ key: 'E' });
-      expect(INTERACT_PROMPTS[kind].rise, kind).toBeGreaterThan(0);
+      // Over its point, or beside it (052.9: the bench) at no less than its point's height.
+      const { rise, beside } = INTERACT_PROMPTS[kind];
+      if (beside === undefined) expect(rise, kind).toBeGreaterThan(0);
+      else {
+        expect(rise, kind).toBeGreaterThanOrEqual(0);
+        expect(beside, kind).toBeGreaterThan(TILE_SIZE / 2);
+      }
       expect(interactTarget(SCENES[kind]())?.kind, kind).toBe(kind);
     }
   });

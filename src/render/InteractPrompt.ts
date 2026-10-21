@@ -38,7 +38,8 @@ export class InteractPrompt {
     this.key.setVisible(target !== null);
     this.shown = target && prompt ? { kind: target.kind, key: boundLetter(prompt.key), x: target.x, y: target.y } : null;
     if (!target || !prompt) return;
-    const x = Math.round(target.x);
+    const side = prompt.beside ?? 0;
+    const x = Math.round(target.x + (sim.player.x > target.x ? -side : side));
     const bottom = Math.round(target.y - prompt.rise - TUTORIAL_LAYOUT.promptLift);
     this.cap.setPosition(x, bottom);
     this.key.set(boundLetter(prompt.key));

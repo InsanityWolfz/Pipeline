@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { fixtureDef } from '../../src/sim/fixtures';
 import { ITEMS } from '../../src/data/items';
+import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { enterFoundry, screenPoint, state, step } from './foundryPage';
 import { clickWith, slotPoint } from './gridPage';
 import { boot, cameraSettled, quietScreen, watchErrors } from './helpers';
@@ -102,6 +103,19 @@ test.describe('review screenshots (052)', () => {
     await enterFoundry(page);
     await quietScreen(page);
     await cameraSettled(page);
+    // The bench (its whole sprite) in view, and its E prompt up beside it.
+    const bench = fixtureDef('identification-bench');
+    const half = { x: VIEW_WIDTH / 2 - 21, y: VIEW_HEIGHT / 2 - 50 };
+    await expect
+      .poll(async () => {
+        const cam = (await ui(page))?.camera;
+        if (!cam) return false;
+        const dx = (bench.tx + 0.5) * TILE_SIZE - cam.x;
+        const dy = (bench.ty + 1) * TILE_SIZE - cam.y;
+        return Math.abs(dx) < half.x && dy < VIEW_HEIGHT / 2 && dy > -half.y;
+      })
+      .toBe(true);
+    await expect.poll(async () => (await ui(page))?.interactPrompt?.kind).toBe('bench');
     await page.screenshot({ path: `${SHOTS}/05-bench-by-door.png` });
   });
 });
