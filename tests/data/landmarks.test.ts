@@ -1,3 +1,4 @@
+import { HOLLOWS_LOOK } from '../../src/data/hollowsAssets';
 import { describe, expect, it } from 'vitest';
 import { SITE_SAFE_RADIUS, SITE_SUPPLY } from '../../src/data/claims';
 import { ENEMIES } from '../../src/data/enemies';
@@ -93,9 +94,13 @@ describe('landmark entries', () => {
     expect(LANDMARKS).toEqual({ bannerMs: 2000, cacheRearmTicks: 36_000, cacheOpenTicks: 60 });
   });
 
-  it('put the discovery banner below the objective band, so it never covers it', () => {
+  it('put the discovery banner at the top (050), under the boss bar and above the objective band, so it covers neither', () => {
     const { objectiveTop, objectivePanel } = TUTORIAL_LAYOUT;
-    expect(DISCOVERY_BANNER.top).toBeGreaterThan(objectiveTop + TEXT_STYLES.display.lineHeight + objectivePanel.padY);
+    const B = DISCOVERY_BANNER;
+    const height = 2 * B.pad.y + TEXT_STYLES.label.lineHeight + B.kickerGap + TEXT_STYLES.title.lineHeight;
+    const bar = HOLLOWS_LOOK.bossBar;
+    expect(B.top).toBeGreaterThan(bar.top + bar.h + 2 * bar.border);
+    expect(B.top + height).toBeLessThan(objectiveTop - objectivePanel.padY);
   });
 
   it('give every marker an icon, and every look a sprite on the contact sheet', () => {

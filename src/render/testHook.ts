@@ -200,6 +200,8 @@ export interface UiState {
   buildTab: HudPanelsState['buildTab'];
   glossary: LegibilityUi['glossary'];
   hoverChips: string[];
+  /** 050: the hover name tag's tablet, world px, while one shows. */
+  hoverBox: { x: number; y: number; w: number; h: number } | null;
   /** 042: the flow screens as drawn (the title's rows, a card's lines and buttons, Settings, the note). */
   flow: FlowUi;
   /** 044: the Sandbox panel as drawn (open, and its rows with their boxes), or null outside the sandbox. */

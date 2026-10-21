@@ -196,6 +196,16 @@ export const HOVER_NAME = {
   /** The name's tablet (020): padding px, and its alpha. */
   pad: 2,
   alpha: 0.85,
+  /** 050 (A.2): the name and its description in the small label font. */
+  style: 'label',
+  /**
+   * 050.1: the tag sits `gap` px under the thing's ground point, so its E prompt (a tile over its centre, 045) stays
+   * clear; where that would cover the player, it goes above, its bottom at least this far over the ground point (a
+   * piece's prompt, over its centre, tops out about 65 px over its ground point).
+   */
+  promptClear: 68,
+  /** The player's sprite a tag never covers: this wide, this tall up from the feet, px. */
+  playerBox: { w: 24, h: 44 },
 } as const;
 
 /** World names for things that aren't pieces, enemies, nodes or items (015). */

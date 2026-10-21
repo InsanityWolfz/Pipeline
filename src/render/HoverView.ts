@@ -1,6 +1,8 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
-import { VIEW_WIDTH } from '../data/config';
+import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
+import { FEET_BOX } from '../data/player';
+import { placeNameTag, type TagBox } from './nameTagPlace';
 import { HOVER_NAME, MINIMAP } from '../data/hudLayout';
 import { OVERWORLD } from '../data/overworld';
 import { pieceRect } from '../sim/pieces';
@@ -16,7 +18,7 @@ import { CHIP } from '../data/legibility';
 import type { PlacedChip } from './tipTypes';
 
 /** What the hover name shows, for `ui()`: the name, its description (018) and an enemy's chips (040.4). */
-export const NO_HOVER_UI = { hoverName: null as string | null, hoverDescription: null as string | null, hoverChips: [] as string[] };
+export const NO_HOVER_UI = { hoverName: null as string | null, hoverDescription: null as string | null, hoverChips: [] as string[], hoverBox: null as TagBox | null };
 
 // What the cursor is over in the world (015): its name, and over a machine or the
 // intake (019, 024), the readout of what it holds (006) under the name.
@@ -30,18 +32,20 @@ export class HoverView {
   shown: string | null = null;
   shownDescription: string | null = null;
   get ui(): typeof NO_HOVER_UI {
-    return { hoverName: this.shown, hoverDescription: this.shownDescription, hoverChips: this.shownChips };
+    return { hoverName: this.shown, hoverDescription: this.shownDescription, hoverChips: this.shownChips, hoverBox: this.shown === null ? null : this.box };
   }
 
   /** An enemy's chips under its name (040.4: traits, then live statuses), by their words. Not clickable: a click there fires. */
   shownChips: string[] = [];
+  /** 050: the name tag's tablet, world px. */
+  private box: TagBox = { x: 0, y: 0, w: 0, h: 0 };
   private readonly chipLabels: ChipLabels;
 
   constructor(scene: Scene) {
     this.readout = new HoverReadout(scene);
     this.back = scene.add.graphics().setDepth(DEPTHS.hoverName);
-    this.name = new TextLine(scene, 0, 0, DEPTHS.hoverName + 1, true, 'display');
-    this.description = new TextLine(scene, 0, 0, DEPTHS.hoverName + 1, true);
+    this.name = new TextLine(scene, 0, 0, DEPTHS.hoverName + 1, true, HOVER_NAME.style);
+    this.description = new TextLine(scene, 0, 0, DEPTHS.hoverName + 1, true, HOVER_NAME.style);
     this.chipLabels = new ChipLabels(scene, DEPTHS.hoverName + 2, true);
   }
 
@@ -56,7 +60,7 @@ export class HoverView {
     this.shownDescription = hit?.description ?? null;
     const piece = hit?.pieceId !== undefined ? sim.foundry.pieces.find((p) => p.id === hit.pieceId) : undefined;
     let top = hit ? hit.y - hit.rise : 0;
-    /** Where the name goes when there's no room above: under the readout, or under the thing. */
+    /** 050.1: where the tag goes: under the thing's feet (its ground point), or under the intake's readout. */
     let below = hit ? hit.y : 0;
     const lines = piece ? pieceLines(piece) : hit?.intake ? intakeLines(sim.link.entrances, entranceCap(sim)) : [];
     if (piece) {
@@ -64,7 +68,6 @@ export class HoverView {
       const spriteTop = topOf(piece.id) ?? r.y;
       const panel = this.readout.show(lines, r.x, spriteTop, viewTop);
       top = lines.length > 0 ? panel.top : spriteTop;
-      below = lines.length > 0 ? panel.bottom : hit?.y ?? 0;
     } else if (hit?.intake) {
       // The intake (019, 024): each entrance's count over its mouth, kept on screen.
       const panel = this.readout.show(lines, hit.x, hit.y, viewTop);
@@ -91,18 +94,23 @@ export class HoverView {
     if (hit.description !== undefined) this.description.set(hit.description);
     const w = Math.max(this.name.width, hit.description !== undefined ? this.description.width : 0, chipsW);
     const h = this.name.lineHeight + extra;
-    const above = top - HOVER_NAME.gap - this.name.lineHeight - extra;
-    // Near the top of the view there's no room above, so the name drops below instead of covering the readout.
-    let y = Math.round(above >= viewTop + pad ? above : below + HOVER_NAME.gap + pad);
-    // Kept inside the view's sides (018: a long description by the view's edge), and clear of the minimap outside.
-    let cx = Math.min(Math.max(hit.x, view.x + pad + w / 2), view.x + VIEW_WIDTH - pad - w / 2);
-    const map = shown === OVERWORLD.id ? minimapRect(view) : null;
-    const overlaps = (bx: number, by: number) => map !== null && bx - w / 2 - pad < map.x1 && bx + w / 2 + pad > map.x0 && by - pad < map.y1 && by + h + pad > map.y0;
-    if (overlaps(cx, y)) y = Math.round(below + HOVER_NAME.gap + pad);
-    if (map && overlaps(cx, y)) cx = map.x0 - pad - w / 2;
+    // 050.1: under the thing's feet, clear of its E prompt; above it (clear of the prompt) where that would cover the
+    // player; kept in the view and off the minimap.
+    const p = sim.player;
+    const feet = p.y + FEET_BOX.h / 2;
+    const { playerBox } = HOVER_NAME;
+    const avoid = [
+      ...(shown === sim.roomId ? [{ x: p.x - playerBox.w / 2, y: feet - playerBox.h, w: playerBox.w, h: playerBox.h }] : []),
+      ...(shown === OVERWORLD.id ? [minimapBox(view)] : []),
+    ];
+    const above = Math.min(top - HOVER_NAME.gap, hit.y - HOVER_NAME.promptClear);
+    const at = placeNameTag({ cx: hit.x, below: below + HOVER_NAME.gap, above, w: w + 2 * pad, h: h + 2 * pad, avoid, view: { x: view.x, y: viewTop, w: VIEW_WIDTH, h: VIEW_HEIGHT }, edge: 0 });
+    const y = Math.round(at.y + pad);
+    const cx = at.x + pad + w / 2;
     this.name.moveTo(Math.round(cx - this.name.width / 2), y);
     if (hit.description !== undefined) this.description.moveTo(Math.round(cx - this.description.width / 2), y + this.name.lineHeight + descriptionGap);
     const left = Math.round(cx - w / 2);
+    this.box = { x: left - pad, y: y - pad, w: w + 2 * pad, h: h + 2 * pad };
     drawTablet(this.back, left - pad, y - pad, w + 2 * pad, h + 2 * pad, HOVER_NAME.alpha);
     const chipsY = y + h - CHIP.h;
     const placed: PlacedChip[] = row.placed.map((c) => ({ ...c, box: { ...c.box, x: Math.round(cx - chipsW / 2 + c.box.x), y: chipsY } }));
@@ -112,10 +120,10 @@ export class HoverView {
 }
 
 /** The minimap's frame (017) in world px, for a camera whose top left is `view`. */
-function minimapRect(view: { x: number; y: number }): { x0: number; y0: number; x1: number; y1: number } {
+function minimapBox(view: { x: number; y: number }): TagBox {
   const w = OVERWORLD.width * MINIMAP.scale + 2 * MINIMAP.frame.width;
   const h = OVERWORLD.height * MINIMAP.scale + 2 * MINIMAP.frame.width;
   const x1 = view.x + VIEW_WIDTH - MINIMAP.margin + MINIMAP.frame.width;
   const y0 = view.y + MINIMAP.margin - MINIMAP.frame.width;
-  return { x0: x1 - w, y0, x1, y1: y0 + h };
+  return { x: x1 - w, y: y0, w, h };
 }

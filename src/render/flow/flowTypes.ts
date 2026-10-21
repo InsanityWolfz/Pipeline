@@ -1,3 +1,4 @@
+import type { CursorState } from '../CursorView';
 import type { CardUi } from './CardView';
 import type { FlowState } from './flowMachine';
 import type { MenuRowShown } from './MenuColumn';
@@ -27,6 +28,8 @@ export interface FlowUi {
   note: { rows: MenuRowShown[]; text: string; open: boolean } | null;
   /** The notice on screen ("Couldn't save…"), or null. */
   notice: string | null;
+  /** 050: the flow's own pointer over its screens (while a game hides the OS cursor), its depth over the rest, or null. */
+  cursor: CursorState | null;
 }
 
 /** Whether a URL is a dev or test start that skips the title and never touches the save slot (042.1), the sandbox's (044) among them. */

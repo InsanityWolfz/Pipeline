@@ -14,25 +14,32 @@ export interface CursorState {
 // The mouse cursor (021): the crosshair over the world, and an arrow pointer while
 // a menu is open or the mouse is over the build bar. Both draw on DEPTHS.cursor,
 // above every menu and HUD layer. The OS cursor stays hidden. Fixed to the screen.
+// 050 (A.5): the flow scene, drawn over the game, has its own (`hideOs` false), shown
+// over its screens (the end card) while the game has hidden the OS cursor.
 export class CursorView {
   private readonly scene: Scene;
   private readonly crosshair: GameObjects.Image;
   private readonly pointer: GameObjects.Image;
 
-  constructor(scene: Scene) {
+  constructor(scene: Scene, hideOs = true) {
     this.scene = scene;
-    scene.input.setDefaultCursor('none');
+    if (hideOs) scene.input.setDefaultCursor('none');
     const fixed = (o: GameObjects.Image) => o.setScrollFactor(0).setDepth(DEPTHS.cursor);
     this.crosshair = fixed(addVector(scene, 0, 0, SPRITES.crosshair));
     this.pointer = fixed(addVector(scene, 0, 0, SPRITES.pointer)).setVisible(false);
   }
 
-  /** Follows the mouse; `pointer` shows the arrow (a menu is open, or the mouse is over clickable HUD), else the crosshair. */
-  update(pointer: boolean): void {
+  /** Follows the mouse; `pointer` shows the arrow (a menu is open, or the mouse is over clickable HUD), else the crosshair; `shown` false hides both. */
+  update(pointer: boolean, shown = true): void {
     const p = this.scene.input.activePointer;
     const at = toView(p.x, p.y, this.scene.cameras.main.zoom);
-    this.crosshair.setPosition(at.x, at.y).setVisible(!pointer);
-    this.pointer.setPosition(at.x, at.y).setVisible(pointer);
+    this.crosshair.setPosition(at.x, at.y).setVisible(shown && !pointer);
+    this.pointer.setPosition(at.x, at.y).setVisible(shown && pointer);
+  }
+
+  /** Whether either shows. */
+  get visible(): boolean {
+    return this.crosshair.visible || this.pointer.visible;
   }
 
   get state(): CursorState {
