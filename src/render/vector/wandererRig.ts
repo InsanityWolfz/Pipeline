@@ -134,6 +134,11 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
       case '@far-arm': {
         const rest = WANDERER.rig.restHand.far;
         const end = pose.hasTube ? gun(TUBE_PARTS.frontGrip) : ([def.shoulders.far[0] + rest[0], def.shoulders.far[1] + rest[1]] as const);
+        // 050: facing forward, the far arm is the near arm's sleeve and forearm, mirrored, so the two match.
+        if (def.matchedArms) {
+          nearArm(c, def.shoulders.far, end, o, -1);
+          break;
+        }
         limb(c, [...def.shoulders.far, end[0], end[1]], WANDERER.limbs.sleeveFar, o);
         hand(c, end, o);
         break;
@@ -178,20 +183,20 @@ function hand(c: CanvasRenderingContext2D, at: Pt, o: DrawOpts): void {
   c.restore();
 }
 
-/** The near arm: a wide sleeve to the elbow, then a wrapped forearm and glove at `grip`. */
-function nearArm(c: CanvasRenderingContext2D, shoulder: Pt, grip: Pt, o: DrawOpts): void {
+/** The near arm: a wide sleeve to the elbow, then a wrapped forearm and glove at `grip`. `side` -1 mirrors it (050: the far arm facing forward). */
+function nearArm(c: CanvasRenderingContext2D, shoulder: Pt, grip: Pt, o: DrawOpts, side: 1 | -1 = 1): void {
   const [sx, sy] = shoulder;
   const { sleeve: v, elbow } = WANDERER.rig;
-  const ex = (sx + grip[0]) / 2 + elbow[0];
+  const ex = (sx + grip[0]) / 2 + elbow[0] * side;
   const ey = (sy + grip[1]) / 2 + elbow[1];
   limb(c, [ex, ey, grip[0], grip[1]], WANDERER.limbs.forearm, o);
   const sleeve: Shape = {
     kind: 'path',
     d: [
-      ['M', sx + v.top[0], sy + v.top[1]],
-      ['Q', sx + v.bulge[0], sy + v.bulge[1], ex + v.elbowOut[0], ey + v.elbowOut[1]],
-      ['L', ex + v.elbowIn[0], ey + v.elbowIn[1]],
-      ['Q', sx + v.back[0], sy + v.back[1], sx + v.top[0], sy + v.top[1]],
+      ['M', sx + v.top[0] * side, sy + v.top[1]],
+      ['Q', sx + v.bulge[0] * side, sy + v.bulge[1], ex + v.elbowOut[0] * side, ey + v.elbowOut[1]],
+      ['L', ex + v.elbowIn[0] * side, ey + v.elbowIn[1]],
+      ['Q', sx + v.back[0] * side, sy + v.back[1], sx + v.top[0] * side, sy + v.top[1]],
       ['Z'],
     ],
     fill: WANDERER.limbs.sleeveNear.color,
