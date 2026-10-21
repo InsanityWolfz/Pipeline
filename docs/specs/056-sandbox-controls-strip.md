@@ -1,5 +1,7 @@
 # 056: Sandbox controls always on screen
-status: draft
+status: approved
+
+Approved on draft by Shaun in chat, 2026-10-21 ("approve 56"): the build follows the proposals in the open questions.
 
 From Shaun in chat, 2026-10-21: "add the controls in the sandbox to a static strip on the left side of the screen so i always know my options in the sand box". His answers to the two interview questions: the strip shows **both** the sandbox panel's controls and a key list; the spawn controls **stay on the right**.
 
