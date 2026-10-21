@@ -46,15 +46,10 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     /** From the foundry, by the north-east road to below the shrine's gap (053: src/data/roads.ts). */
     w.toShrine = () => h.walkTo((gate.tx + 0.5) * tile, (gate.ty + 2.5) * tile);
     /** Fights until a group is dead, kiting and rolling, picking ammo it has; anything else that comes close is fought first. */
-    w.clearGroup = (group: string, quietPops = false) => {
+    w.clearGroup = (group: string) => {
       let s = g.getState();
       let stuck = 0;
       for (let t = 0; t < 20000; t++) {
-        if (quietPops) {
-          const pops = s.enemies.filter((e) => e.room === s.room && e.group.startsWith('pop-') && Math.hypot(e.x - s.player.x, e.y - s.player.y) < 12 * tile);
-          for (const e of pops) g.setEnemyHealth(e.id, 0);
-          if (pops.length > 0) s = g.getState();
-        }
         const foes = s.enemies.filter((e) => e.group === group);
         if (foes.length === 0) break;
         if (s.events.ko) throw new Error(`knocked out clearing ${group}`);
@@ -195,16 +190,14 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
   await page.evaluate((tile) => {
     const g = window.__GAME__;
     const h = window.__helpers;
-    const w = window as unknown as { through: (...a: unknown[]) => void; toShrine: () => void; clearGroup: (group: string, quietPops?: boolean) => void; pylon: { tx: number; ty: number }; gate: { tx: number; ty: number } };
+    const w = window as unknown as { through: (...a: unknown[]) => void; toShrine: () => void; clearGroup: (group: string) => void; pylon: { tx: number; ty: number }; gate: { tx: number; ty: number } };
     if (!g || !h) throw new Error('no game');
     w.through(23, 8, 1, 0, 'overworld');
     w.toShrine();
     h.walkTo((w.gate.tx + 0.5) * tile, (w.gate.ty - 1.5) * tile);
-    // 053: the shrine stands in open ring 2 ground now, where roaming packs settle round it and join the fight through
-    // its side gaps. Declared setup, not play (as claiming.spec.ts clears its wanderers): any that come within 12 tiles
-    // during it are cleared through the hook, so this is the Warden's fight it always was (a scripted bot gets no
-    // hidden healing).
-    w.clearGroup('shrine', true);
+    // 053: the shrine stands in open ring 2 ground now; packs keep out of its surroundings (population.ts), so the
+    // Warden's fight is its own, played unaided.
+    w.clearGroup('shrine');
     // Around the pylon's east side, so it never stands in the way.
     const { tx, ty } = w.pylon;
     h.walkTo((tx + 2.5) * tile, g.getState().player.y);
