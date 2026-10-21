@@ -29,8 +29,9 @@ export const TITLE_SCREEN = {
    * 050 (F, Shaun: "a tad more movement"): the wanderer breathes (the hips dip `crouch` style px and back, once per
    * `breathMs`), the cloak sways `flap` radians and the hose `hose` px in the wind (once per `swayMs`), and the tube's
    * glow pulses between `muzzle` strengths (and the face glow between `glow`) once per `glowMs`. Redrawn every `frameMs`.
+   * The hose trails the cloak's swing by `hoseLag` of a loop, and its sag dips `hoseLift` px per px it sways sideways.
    */
-  motion: { breathMs: 3600, crouch: 1, swayMs: 2700, flap: 0.12, hose: 2.5, glowMs: 2200, muzzle: [0.25, 1] as const, glow: [0.8, 1] as const, frameMs: 33 },
+  motion: { breathMs: 3600, crouch: 1, swayMs: 2700, flap: 0.12, hose: 2.5, hoseLag: 0.125, hoseLift: 0.25, glowMs: 2200, muzzle: [0.25, 1] as const, glow: [0.8, 1] as const, frameMs: 33 },
   /** The intake pipe's glow over the ruin, breathing slowly (019's cyan): its centre, size and alpha range over a period. */
   pipeGlow: { x: 392, y: 240, rx: 15, ry: 22, rings: 5, color: 'cyan', alpha: [0.18, 0.5] as const, periodMs: 3600 },
   /**

@@ -1,6 +1,7 @@
 import type { LimbStyle, Part, Shape } from '../../data/art/types';
 import { TUBE_PARTS, WANDERER, type WandererView } from '../../data/art/wanderer';
 import { OUTLINE_WIDTH } from '../../data/art/style';
+import { TITLE_SCREEN } from '../../data/titleScreen';
 import { drawShape, drawShapes, type DrawOpts } from './draw';
 
 // Poses and draws the wanderer (016) onto a canvas whose origin is at the feet,
@@ -161,7 +162,7 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
         const back = rotate([-bend.back, 0], pose.aim);
         const [fx, fy] = def.hose.from;
         const sway = pose.hoseSway ?? 0;
-        const pts = [fx, fy, fx + def.hose.sag[0] + sway, fy + def.hose.sag[1] + sway * 0.25, rear[0] + back[0], rear[1] + back[1] + bend.drop, rear[0], rear[1]];
+        const pts = [fx, fy, fx + def.hose.sag[0] + sway, fy + def.hose.sag[1] + sway * TITLE_SCREEN.motion.hoseLift, rear[0] + back[0], rear[1] + back[1] + bend.drop, rear[0], rear[1]];
         const style = lit ? WANDERER.limbs.hose : WANDERER.limbs.hoseDormant;
         c.save();
         if (lit) c.lineDashOffset = -pose.flow;
