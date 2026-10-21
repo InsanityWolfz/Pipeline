@@ -1,5 +1,5 @@
 # 049: Resin pylon (Husk Hive)
-status: approved
+status: done
 
 Approved by Shaun in chat, 2026-10-20 ("Start 48/49"), taken as approval on draft: the build follows the proposals in the open questions.
 
@@ -62,3 +62,6 @@ Built on `claude/049-resin-pylon` (plan: docs/plans/049-resin-pylon.md). 049.1�
 - Review shots (docs/review/049): `01-hive-unclaimed-guards.png` (with Thornback, the Husk champion), `02-sheet-seep-stages-and-stones.png` (the seep at each use, bare and regrowing, and the nest stones at 4×), `03-seep-worked-in-world.png`, `04-hive-claimed-resin-mote.png`, `05-resin-port.png`. Of 032's shots only `08-south-east-spring.png` changes (the Hive stands beside the spring) and was retaken; the old one was stale, so the new one also shows earlier specs' HUD changes and the Hollows on the minimap, not only the Hive; 032's minimap shots don't change (the Hive isn't found there). At review, 030's `02-south-east-spring.png` turned out to show the Hive and its pack too, so it was retaken as well (also stale before, it shows the same earlier HUD changes); both south-east spring shots were retaken after the nest stone's light fix.
 - `npm run measure`: ammo line and still 5/5 met; ring 1 2.2–3.2 s, ring 2 2.4–4.0 s, ring 3 13.9–14.9 s, all met; the Bulwark's decent build 13/20 with 4 KOs (MISSED, as before 049: 13/20 with 3), the naive bot KO'd 5/5. The small shifts come from the RNG stream (049.10), not from tuning.
 - After review (merged with main, so with 048): `npm run check` passes (1671 unit tests); the full `npx playwright test`, once on the final code: 134 passed, 0 failed, 122 skipped (review shots). Review changed: claiming.spec clears the shrine's guards through the hook (no top-up); the mirrored nest stone keeps its light top-left (049 shots and both south-east spring shots retaken); a test that the placed champion draws no extra one over 100 seeds and resets; a mid-regrow check in the seep test; the grove's and Hive's ground patches share one loop; port plates read the fixtures' tiles only when the fixtures change.
+
+## Shaun's answers (2026-10-21)
+- Shaun said "merge 39" after his playtest of main. He changed none of the raised items (minimap icon only, text goal line, the cleared ground), so they stand as built.
