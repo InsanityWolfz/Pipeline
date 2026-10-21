@@ -11,6 +11,10 @@ import { boot, cameraSettled, quietScreen } from './helpers';
 // the hook the sim holds still between steps, so a woken guard stays where it stood.
 
 const SHOTS = 'docs/review/032';
+/** 053: the Quarry on the round map, its pylon, and a spot south-east of it whose view takes in its corner. */
+const Q = landmarkDef('quarry').area;
+const QP = landmarkDef('quarry').pylon ?? { tx: 0, ty: 0 };
+const QUARRY_NEAR = [Q.x1 + 8, Q.y1 + 5] as const;
 
 /** Kills every landmark guard but `keep`'s through the hook, so the walk there is quiet. */
 async function quiet(page: Page, keep: string | null): Promise<void> {
@@ -80,7 +84,7 @@ test.describe('review screenshots (032)', () => {
     await page.evaluate(() => window.__GAME__?.step(1));
     await cameraSettled(page);
     await page.screenshot({ path: `${SHOTS}/10-minimap-before-quarry.png`, clip: { x: 0, y: 0, width: 1280, height: 240 } });
-    await walk(page, [[30, 25], [23, 22]]);
+    await walk(page, [QUARRY_NEAR, [Q.x1 + 3, Q.y1 + 3]]);
     // The banner held still on the tween clock once it has faded in.
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().landmarks))?.banner).toBe('quarry');
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().landmarks))?.bannerAlpha, { intervals: [10] }).toBe(1);
@@ -95,7 +99,7 @@ test.describe('review screenshots (032)', () => {
     test.setTimeout(150_000);
     await boot(page);
     await quiet(page, null);
-    await walk(page, [[30, 25], [23, 22], [21, 21]]);
+    await walk(page, [QUARRY_NEAR, [QP.tx, QP.ty + 1]]);
     await bannersGone(page);
     // The shrine claimed just now, so the Quarry's claim lands before the ports' first push.
     await page.evaluate((ticks) => {
@@ -106,7 +110,7 @@ test.describe('review screenshots (032)', () => {
       g.step(ticks + 2);
     }, CLAIM_TICKS);
     // Step a little to the east so the line home shows, then wait for a stone mote leaving the Quarry.
-    await walk(page, [[23, 22]]);
+    await walk(page, [[QP.tx + 2, QP.ty + 2]]);
     await expect
       .poll(
         async () => {
@@ -140,7 +144,8 @@ test.describe('review screenshots (032)', () => {
     await boot(page);
     await quiet(page, null);
     // Beside it, to its west, so the player never hides it.
-    await walk(page, [[12, 30], [10, 39], [10, 38]]);
+    const C = landmarkDef('ruined-cache').area;
+    await walk(page, [[C.x0 + 4, C.y1 + 4], [C.x0 + 4, C.y0 + 3], [C.x0 + 4, C.y0 + 2]]);
     await bannersGone(page);
     await cameraSettled(page, 20_000);
     await page.screenshot({ path: `${SHOTS}/15-cache-sealed-close.png` });

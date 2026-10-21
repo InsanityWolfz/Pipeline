@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { HOLLOWS } from '../../src/data/hollows';
+import { HOLLOWS_SITES } from '../../src/data/hollowsSites';
 import { boot, cameraSettled } from './helpers';
 
 // Review screenshots for 034 (REVIEW_SHOTS=1, into docs/review/034): the barrier and
@@ -12,6 +13,14 @@ import { boot, cameraSettled } from './helpers';
 const SHOTS = 'docs/review/034';
 const T = 32;
 const A = HOLLOWS.arena;
+/** 053: where the terrace road crosses the barrier's circle, and the barrier's tile nearest Region 1 on that row. */
+const ROW = HOLLOWS.crossing.ty;
+const GATE_X = Math.max(...HOLLOWS.gate.filter((t) => t.ty === ROW && t.tx < HOLLOWS.crossing.tx + 3).map((t) => t.tx));
+/** Each Hollows landmark's middle and bottom row, by id. */
+const site = (id: string) => {
+  const a = HOLLOWS_SITES.find((l) => l.id === id)?.area ?? { x0: 0, y0: 0, x1: 0, y1: 0 };
+  return { mx: Math.floor((a.x0 + a.x1) / 2), y0: a.y0, y1: a.y1 };
+};
 
 /** Kills every enemy but those whose id is in `keep` (by enemy id), so a walk is quiet. */
 async function quiet(page: Page, keep: readonly string[] = []): Promise<void> {
@@ -59,7 +68,7 @@ async function bannersGone(page: Page): Promise<void> {
 async function forum(page: Page, dy: number): Promise<void> {
   await boot(page, '?start=hollows');
   await quiet(page, ['bulwark']);
-  await walk(page, [[25, 27], [12, 27], [12, 30], [A.start.tx, A.start.ty + dy]]);
+  await walk(page, [[A.seal.leaveTo.tx, A.seal.leaveTo.ty], [A.start.tx, A.start.ty + dy]]);
   await bannersGone(page);
 }
 
@@ -69,7 +78,7 @@ test.describe('review screenshots (034)', () => {
   test('the barrier shut, collapsing and breached', async ({ page }) => {
     test.setTimeout(180_000);
     await boot(page);
-    await walk(page, [[52, 27], [43, 27]]);
+    await walk(page, [[GATE_X + 4, ROW]]);
     await bannersGone(page);
     await cameraSettled(page, 20_000);
     expect((await page.evaluate(() => window.__GAME__?.ui().hollows))?.barrier).toBe('shut');
@@ -83,15 +92,15 @@ test.describe('review screenshots (034)', () => {
     await page.screenshot({ path: `${SHOTS}/02-barrier-collapsing.png` });
     await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hollows))?.barrier).toBe('down');
-    await walk(page, [[37, 27]]);
+    await walk(page, [[GATE_X - 4, ROW]]);
     await bannersGone(page);
     await cameraSettled(page, 20_000);
     await page.screenshot({ path: `${SHOTS}/03-barrier-breached.png` });
   });
 
   const views: [string, string, (readonly [number, number])[]][] = [
-    ['04-ley-iron-cut', 'ley-iron-cut', [[25, 27], [25, 14], [25, 9]]],
-    ['05-broken-aqueduct', 'broken-aqueduct', [[25, 27], [16, 24]]],
+    ['04-ley-iron-cut', 'ley-iron-cut', [[site('cistern-terrace').mx, site('cistern-terrace').y1 + 1], [site('ley-iron-cut').mx, site('ley-iron-cut').y1]]],
+    ['05-broken-aqueduct', 'broken-aqueduct', [[site('broken-aqueduct').mx - 12, site('broken-aqueduct').y0 - 3]]],
   ];
   for (const [file, id, points] of views) {
     test(`the landmark ${id}`, async ({ page }) => {
@@ -109,7 +118,7 @@ test.describe('review screenshots (034)', () => {
   test('the Cistern Terrace with its pylon and guards', async ({ page }) => {
     test.setTimeout(120_000);
     await boot(page, '?start=hollows');
-    await walk(page, [[25, 27], [25, 17]]);
+    await walk(page, [[site('cistern-terrace').mx, site('cistern-terrace').y1 + 5]]);
     await bannersGone(page);
     await cameraSettled(page, 20_000);
     await page.screenshot({ path: `${SHOTS}/06-cistern-terrace.png` });
@@ -227,7 +236,7 @@ test.describe('review screenshots (034)', () => {
     test.setTimeout(150_000);
     await boot(page, '?start=hollows');
     await quiet(page, ['bulwark']);
-    await walk(page, [[25, 27], [12, 27], [12, 30], [A.altar.tx + 2, A.altar.ty + 1]]);
+    await walk(page, [[A.seal.leaveTo.tx, A.seal.leaveTo.ty], [A.altar.tx + 2, A.altar.ty + 1]]);
     await bannersGone(page);
     await cameraSettled(page, 20_000);
     expect((await page.evaluate(() => window.__GAME__?.ui().hollows))?.altar).toBe('dim');

@@ -24,10 +24,10 @@ import { MineView, NO_MINES_SHOWN } from './MineView';
 import type { ScreenBox } from './bottomHud';
 
 /** What the room views report to the test hook's `ui()`. */
-export type RoomUiState = Pick<UiState, 'minimap' | 'foundryMap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows' | 'relics' | 'talentFx' | 'mines'>;
+export type RoomUiState = Pick<UiState, 'minimap' | 'foundryMap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows' | 'relics' | 'talentFx' | 'mines' | 'overworldChunks'>;
 
 /** The room views' part of `ui()` before the scene has built them. */
-export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [], hover: null }, foundryMap: NO_FOUNDRY_MAP, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN, relics: NO_RELICS_SHOWN, talentFx: NO_TALENT_FX, mines: NO_MINES_SHOWN };
+export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [], hover: null }, foundryMap: NO_FOUNDRY_MAP, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN, relics: NO_RELICS_SHOWN, talentFx: NO_TALENT_FX, mines: NO_MINES_SHOWN, overworldChunks: 0 };
 
 // The ground on screen: a tiled room (the foundry) or the overworld's terrain
 // with its landmarks (017), plus the corner minimap while outside, and the
@@ -127,6 +127,7 @@ export class RoomViews {
       minimap: { shown: this.minimap.shown, markers: this.minimap.markers, hover: this.minimap.hover },
       foundryMap: this.foundryMap.shown,
       supply: { started: this.supply.started, inFlight: this.supply.inFlight },
+      overworldChunks: this.overworld.builtChunks,
       intakeCaps: this.intake.capsShown,
       intakeLift: this.intake.liftShown,
       intakeFirePulses: this.intake.firePulsesShown,
