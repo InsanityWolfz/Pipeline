@@ -49,8 +49,8 @@ function hood(view: PieceView, u0: number, u1: number, mouth: number, runeUp: bo
   const tip = runeUp ? 3 : -3;
   return [
     rect(b.x + 1, b.y + 2, b.w, b.h, 3, { fill: { id: 'ground-shade', alpha: 0.35 } }),
-    rect(b.x, b.y, b.w, b.h, 3, { ...solid({ linear: [0, b.y, 0, b.y + b.h], stops: [{ at: 0, color: 'rock-light' }, { at: 1, color: 'rock-dark' }] }) }),
-    rect(top.x, top.y, top.w, top.h, 2, { fill: { linear: [top.x, top.y, top.x + top.w, top.y + top.h], stops: [{ at: 0, color: 'rock-pale' }, { at: 1, color: 'rock' }] } }),
+    rect(b.x, b.y, b.w, b.h, 3, { ...solid({ linear: [0, b.y, 0, b.y + b.h], stops: [{ at: 0, color: 'rock' }, { at: 1, color: 'rock-dark' }] }) }),
+    rect(top.x, top.y, top.w, top.h, 2, { fill: { linear: [top.x, top.y, top.x + top.w, top.y + top.h], stops: [{ at: 0, color: 'rock-light' }, { at: 1, color: 'rock' }] } }),
     // The dark mouth, with the channel's glow deep inside.
     oval(view, mouth, 0, 2.8, 6.4, solid('ink')),
     oval(view, mouth + face * 0.8, 0, 1.4, 3.6, { fill: 'cyan-deep', glow: { color: 'cyan', blur: 3 } }),
