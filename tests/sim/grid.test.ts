@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { STACK_SIZES, stackSize } from '../../src/data/items';
-import { CRATE_CAP } from '../../src/data/foundry';
 import { containerStacks, gridSlots, gridStacks, stacksOf } from '../../src/sim/bag';
 import type { CrateState, HopperState } from '../../src/sim/pieces';
 import { run } from './fight';
@@ -113,7 +112,7 @@ describe('moving stacks to and from a hopper (047)', () => {
 });
 
 describe('a crate\'s screen (047: the same grid, the same clicks)', () => {
-  it('takes stacks of any kind up to its cap, and gives them back by kind', () => {
+  it('takes stacks of any kind into its slots (050: 8 stacks), and gives them back by kind', () => {
     const s = foundry();
     const c = put<CrateState>(s, 'crate', 5, 5, 'down');
     s.player.x = (5 + 0.5) * 32;
@@ -121,8 +120,8 @@ describe('a crate\'s screen (047: the same grid, the same clicks)', () => {
     s.inventory = { wood: 80, arrow: 100 };
     run(s, 1, { deposit: { id: c.id, itemId: 'wood', amount: 'all', stack: 50 } });
     run(s, 1, { deposit: { id: c.id, itemId: 'arrow', amount: 'all', stack: 100 } });
-    expect(c.contents).toEqual({ wood: 50, arrow: CRATE_CAP - 50 });
-    expect(s.inventory.arrow).toBe(100 - (CRATE_CAP - 50));
+    expect(c.contents).toEqual({ wood: 50, arrow: 100 });
+    expect(s.inventory.arrow ?? 0).toBe(0);
     run(s, 1, { withdraw: { id: c.id, amount: 'half', itemId: 'wood', stack: 50 } });
     expect([c.contents.wood, s.inventory.wood]).toEqual([25, 55]);
     run(s, 1, { interact: true });

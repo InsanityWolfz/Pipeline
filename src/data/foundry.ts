@@ -14,8 +14,8 @@ export const OUTPUT_CAP = 8;
 /** Ticks between a hopper's pushes. */
 export const HOPPER_TICKS = 15;
 
-/** Most items a crate holds, all kinds together. */
-export const CRATE_CAP = 99;
+/** 050 (A.12): a crate's slots, each holding one stack (047's stack sizes); its screen shows them in a row. */
+export const CRATE_SLOTS = 8;
 
 /** Most items a hopper takes from a line (028); hand-filling is uncapped. */
 export const HOPPER_FLOW_CAP = 99;
