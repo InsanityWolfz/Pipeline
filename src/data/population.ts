@@ -17,14 +17,15 @@ export interface PackDef {
 export type PopulatedRing = 1 | 2 | 3;
 
 /**
- * 053: the round world is about twice the old map's area, and every ring's pack count doubled with it (4, 8, 6 before),
- * so the land is about as busy as it was where it was measured (017's ring 2 crowd); the Hollows grew more than
- * that, and are not filled to their old density (see the spec's "Raised after the build").
+ * 053: the round world is about twice the old map's area, and the pack counts grew with it (4, 8, 6 before): rings 1
+ * and 3 doubled, ring 2 by half again (doubled, its packs settled round the shrine in the open and swamped its fight),
+ * which still fills 017's ring 2 crowd. Every ring is a little sparser than it was, the Hollows most (see the spec's
+ * "Raised after the build").
  */
 export const POPULATION = {
   rings: {
     1: { packs: 8, size: [3, 4], enemies: ['husk'] },
-    2: { packs: 16, size: [4, 5], enemies: ['husk', 'husk', 'wisp'] },
+    2: { packs: 12, size: [4, 5], enemies: ['husk', 'husk', 'wisp'] },
     // Stonefall Hollows (035): its four, at most one Sniper and two Burrowers to a pack.
     3: { packs: 12, size: [4, 5], enemies: ['shardback', 'charger', 'charger', 'burrower', 'sniper'], limits: { sniper: 1, burrower: 2 } },
   } satisfies Record<PopulatedRing, PackDef>,
