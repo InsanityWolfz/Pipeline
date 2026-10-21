@@ -19,7 +19,7 @@ export interface WaypointShown {
   angle: number;
   via: 'door' | 'target';
   kind: string;
-  /** 051 (B.2): the raw icons over the refill goal's hoppers, each by its arrow's tip. */
+  /** 051 (B.2): the refill goal's hoppers marked, each by its arrow's tip (world px), with the raw its icon shows. */
   icons: { itemId: string; x: number; y: number }[];
 }
 
@@ -57,11 +57,12 @@ export class WaypointView {
     const rect: ViewRect = { x0: view.x, y0: view.y, x1: view.x + view.width, y1: view.y + view.height };
     // Each in-room target that carries a raw gets its own arrow and icon (on screen only; the edge arrow leads to the rest).
     const raws = wp?.via === 'target' ? objectiveTargets(sim).filter((p) => p.roomId === sim.roomId && p.itemId) : [];
-    const icons = raws.flatMap((p) => {
+    const marked = raws.flatMap((p) => {
       const tip = arrowTip(p);
-      return p.itemId && placeArrow(rect, tip).mode === 'over' ? [{ itemId: p.itemId, ...tip }] : [];
+      return p.itemId && placeArrow(rect, tip).mode === 'over' ? [{ itemId: p.itemId, ...tip, base: p.y }] : [];
     });
-    this.drawIcons(icons);
+    this.drawIcons(marked);
+    const icons = marked.map(({ itemId, x, y }) => ({ itemId, x, y }));
     this.markerAt = wp?.via === 'target' ? arrowTip(wp.target) : null;
     if (!wp) {
       this.arrow.setVisible(false);
@@ -73,13 +74,14 @@ export class WaypointView {
     // On screen with its own icon arrow already over it, the main arrow isn't drawn twice.
     const covered = place.mode === 'over' && icons.some((i) => i.x === tip.x && i.y === tip.y);
     this.arrow.setVisible(!covered);
+    const k = showFrame(this.arrow, TUTORIAL_SPRITES.marker).scaleX;
     if (place.mode === 'over') this.arrow.setPosition(place.x, Math.round(place.y - this.bob.value)).setRotation(0).setAlpha(1);
-    else this.arrow.setPosition(place.x, place.y).setRotation(place.angle - Math.PI / 2).setAlpha(this.glow.value);
+    else this.arrow.setPosition(place.x, place.y).setRotation(place.angle - Math.PI / 2).setAlpha(this.glow.value).setScale(k * WAYPOINT.edgeScale);
     this.shown = { ...place, via: wp.via, kind: wp.target.kind, icons };
   }
 
-  /** An arrow and a raw's icon in a plate over each tip; spare ones hidden. */
-  private drawIcons(icons: readonly { itemId: string; x: number; y: number }[]): void {
+  /** An arrow at each tip and the raw's icon in a plate in front of the thing's base; spare ones hidden. */
+  private drawIcons(icons: readonly { itemId: string; x: number; y: number; base: number }[]): void {
     const P = WAYPOINT.plate;
     const size = ITEM_ICON_SIZE + 2 * P.pad;
     while (this.marks.length < icons.length) {
@@ -96,7 +98,7 @@ export class WaypointView {
       if (!at) return;
       const y = Math.round(at.y - this.bob.value);
       m.arrow.setPosition(at.x, y);
-      const top = y - WAYPOINT.arrowLength - P.gap - size;
+      const top = Math.round(at.base + P.gap);
       m.plate.clear();
       drawTablet(m.plate, Math.round(at.x - size / 2), top, size, size, P.alpha);
       showFrame(m.icon, itemDef(at.itemId).icon).setPosition(at.x, top + size / 2);

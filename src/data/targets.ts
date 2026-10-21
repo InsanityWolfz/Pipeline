@@ -52,7 +52,8 @@ export const TARGET_LIFT: Readonly<Record<TargetKind, number>> & { door: number;
   collect: 44,
   pack: 46,
   room: 52,
-  hoppers: 52,
+  // Just over the bowl's rim, under the E prompt's cap (012), which floats over the machine behind.
+  hoppers: 28,
   bench: 52,
   // 032's: over the pylon's crystal.
   pylon: 82,
@@ -72,14 +73,16 @@ export const TARGET_LIFT: Readonly<Record<TargetKind, number>> & { door: number;
 
 /**
  * The waypoint arrow (051): at the screen's edge `edgeInset` px in from it while the target's off screen, and hovering
- * over it (bobbing as 027's marker) while it's on screen, its tip `onScreenMargin` px inside the edge at least. The
- * refill goal's raw icon sits in a plate `plate` px over the arrow's top.
+ * over it (bobbing as 027's marker) while it's on screen, its tip `onScreenMargin` px inside the edge at least; at the
+ * edge it's drawn `edgeScale` times bigger. The refill goal's raw icon sits in a plate `plate.gap` px in front of
+ * (below) the hopper's base, where the player stands to fill it.
  */
 export const WAYPOINT = {
   edgeInset: 14,
   onScreenMargin: 8,
   /** The edge arrow pulses between these alphas once per `pulseMs`. */
   pulse: { min: 0.65, max: 1, ms: 1100 },
+  edgeScale: 1.3,
   plate: { gap: 2, pad: 2, alpha: 0.9 },
   /** The arrow sprite is this tall, tip to tail (TUTORIAL_SPRITES.marker). */
   arrowLength: 20,

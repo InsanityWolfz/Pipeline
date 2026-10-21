@@ -14,10 +14,10 @@ import { WaypointView } from './WaypointView';
 import type { UiState } from './testHook';
 
 /** What the tutorial reports to the test hook's `ui()`. */
-export type TutorialUiState = Pick<UiState, 'intakePrompt' | 'prompt' | 'marker' | 'waypoint' | 'madePopups' | 'objectiveTick' | 'interactPrompt'>;
+export type TutorialUiState = Pick<UiState, 'intakePrompt' | 'prompt' | 'marker' | 'waypoint' | 'objective' | 'madePopups' | 'objectiveTick' | 'interactPrompt'>;
 
 /** The tutorial's part of `ui()` before the scene has built its views. */
-export const NO_TUTORIAL_UI: TutorialUiState = { intakePrompt: null, prompt: null, marker: null, waypoint: null, madePopups: [], objectiveTick: 0, interactPrompt: null };
+export const NO_TUTORIAL_UI: TutorialUiState = { intakePrompt: null, prompt: null, marker: null, waypoint: null, objective: { text: '', subSteps: [] }, madePopups: [], objectiveTick: 0, interactPrompt: null };
 
 /** The piece the current objective names, whose build-bar cell pulses (027), or null. */
 export function highlightOf(sim: SimState): string | null {
@@ -56,6 +56,7 @@ export class TutorialUi {
       prompt: this.prompt.shown,
       marker: this.waypoint.markerAt,
       waypoint: this.waypoint.shown,
+      objective: { text: this.objective.text, subSteps: this.objective.subSteps },
       madePopups: this.made.shown,
       objectiveTick: this.objective.tickAlpha,
       interactPrompt: this.interact.shown,

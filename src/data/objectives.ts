@@ -146,6 +146,9 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
   { text: 'Feed all three entrances', milestone: 'm1', check: { kind: 'volley', min: 3 }, target: { kind: 'intake' } },
 ];
 
+/** 051 (B.3): a sub-line's words, from the raw's name ("Collect stone"). */
+export const SUB_STEP_TEXT = (name: string): string => `Collect ${name.toLowerCase()}`;
+
 /** The standing line once every goal is done (028): no check, and it never names the next milestone. */
 export const FRONTIER_GOAL = { text: 'Explore beyond the shrine' } as const;
 

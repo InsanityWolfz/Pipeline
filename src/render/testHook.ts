@@ -9,6 +9,7 @@ import type { MadePopupShown } from './MadePopups';
 import type { BuildBarState } from './BuildView';
 import type { CraftMenuState } from './CraftMenuView';
 import type { WaypointShown } from './WaypointView';
+import type { SubStepShown } from './ObjectiveView';
 import type { PromptState } from './PromptView';
 import type { PortShown } from './PortView';
 import type { GearPanelState } from './GearPanel';
@@ -137,6 +138,8 @@ export interface UiState {
   marker: { x: number; y: number } | null;
   /** 051: the waypoint arrow as drawn: at the screen's edge or over its target, its tip (world px) and angle, through a door or not, and the refill goal's raw icons. */
   waypoint: WaypointShown | null;
+  /** 051 (B.3): the objective line's text and its sub-lines as drawn (raw, words, ticked, box). */
+  objective: { text: string; subSteps: SubStepShown[] };
   /** The "+ shaft" popups still on screen (027), by text, with each one's box in view px (031: none overlap). */
   madePopups: MadePopupShown[];
   /** The objective line's finished-goal tick, its alpha (0 once faded): screenshots wait for it to go (028). */

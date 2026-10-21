@@ -233,6 +233,12 @@ export const TUTORIAL_LAYOUT = {
   tickRise: 2,
   tickGap: 4,
   tickMs: 1200,
+  /**
+   * 051 (B.3): the goal's sub-lines under it, `gap` px below the line, `step` px apart, indented `indent` px from the
+   * band's left: a tick (`tickW`) once done, the raw's icon at `iconScale`, then the text, `iconGap` px apart. A done
+   * line's text shows at `doneAlpha`.
+   */
+  subStep: { gap: 4, step: 12, indent: 10, tickW: 9, iconScale: 0.7, iconGap: 3, doneAlpha: 0.55 },
   /** A prompt floats this far above the top of its target's tile, px. */
   promptLift: 6,
   /** The key's letter: its capitals' top this far below the cap's top (it's centred across). */
