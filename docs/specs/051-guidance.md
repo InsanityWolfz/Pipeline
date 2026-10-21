@@ -1,5 +1,7 @@
 # 051: Guidance
-status: draft
+status: approved
+
+Approved on draft by Shaun in chat, 2026-10-21 ("approve 050-052"): the build follows the proposals in the open questions.
 
 From Shaun's live playtest (docs/brainstorm/2026-10-21-playtest-notes.md, theme B) and his interview answers (docs/brainstorm/2026-10-21-playtest-interview.md). Shaun: "Just so people know where they're going. Like, claim the shrine's pylon is kind of vague, unless you have an arrow to go there and do that."
 

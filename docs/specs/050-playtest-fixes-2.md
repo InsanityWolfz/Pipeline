@@ -1,5 +1,7 @@
 # 050: Playtest fixes and the title screen
-status: draft
+status: approved
+
+Approved on draft by Shaun in chat, 2026-10-21 ("approve 050-052"): the build follows the proposals in the open questions.
 
 From Shaun's live playtest (docs/brainstorm/2026-10-21-playtest-notes.md, themes A and F) and his interview answers (docs/brainstorm/2026-10-21-playtest-interview.md).
 

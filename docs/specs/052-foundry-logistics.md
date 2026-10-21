@@ -1,5 +1,7 @@
 # 052: Foundry logistics
-status: draft
+status: approved
+
+Approved on draft by Shaun in chat, 2026-10-21 ("approve 050-052"): the build follows the proposals in the open questions.
 
 From Shaun's live playtest (docs/brainstorm/2026-10-21-playtest-notes.md, theme C) and his interview answers (docs/brainstorm/2026-10-21-playtest-interview.md). Shaun found mixed arrow and bomb lines impossible to build: "until we get an underground belt, it's gonna be probably too hard to get multiple setups because you gotta cross the lines to get to different assemblers."
 
