@@ -40,7 +40,7 @@ describe('landmark entries', () => {
       expect(['resource-site', 'frozen-grotto', 'ley-springs', 'ruined-cache', 'ruin']).toContain(l.kind);
       expect(['site', 'grotto', 'spring', 'cache', 'aqueduct']).toContain(l.marker);
     }
-    // 034's (the Hollows' spring among the springs, then its three) after 032's.
+    // 034's (the Hollows' spring among the springs, then its three) after 032's; 049's Husk Hive after 032's sites.
     expect(ids).toEqual([
       'frozen-grotto',
       'quarry',
@@ -48,6 +48,7 @@ describe('landmark entries', () => {
       'ley-grotto',
       'reed-marsh',
       'ruined-cache',
+      'husk-hive',
       'west-spring',
       'south-east-spring',
       'north-spring',
@@ -192,12 +193,13 @@ describe('landmark areas', () => {
 });
 
 describe('resource sites', () => {
-  it('are the Quarry, Old Grove, Ley Grotto and Reed Marsh, each a cluster of 5 of its node with a pylon supplying its raw', () => {
+  it('are the Quarry, Old Grove, Ley Grotto, Reed Marsh and Husk Hive (049), each a cluster of 5 of its node with a pylon supplying its raw', () => {
     expect(SITES.map((l) => [l.id, l.pylon?.supplies])).toEqual([
       ['quarry', ['stone']],
       ['old-grove', ['wood']],
       ['ley-grotto', ['ley-crystal']],
       ['reed-marsh', ['fiber']],
+      ['husk-hive', ['husk-resin']],
     ]);
     for (const l of SITES) {
       expect(l.nodes, l.id).toHaveLength(5);
@@ -260,6 +262,7 @@ describe('resource sites', () => {
       ['old-grove', 7, 'shrine'],
       ['ley-grotto', 7, 'shrine'],
       ['reed-marsh', 7, 'shrine'],
+      ['husk-hive', 7, 'shrine'],
       // 034: the Hollows' one claimable site, behind the barrier the shrine's claim drops.
       ['cistern-terrace', 7, 'shrine'],
     ]);

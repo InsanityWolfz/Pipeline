@@ -6,6 +6,8 @@
 export const LANDMARK_SPRITES = {
   /** The Quarry's cut stone blocks (on its ruin-block tiles), by tile hash. */
   cutBlocks: ['ow-cut-block-0', 'ow-cut-block-1'],
+  /** The Husk Hive's nest stones, amber-crusted (on its ruin-block tiles), by tile hash (049). */
+  hiveStones: ['ow-hive-stone-0', 'ow-hive-stone-1'],
   /** The Old Grove's old trees (on its tree tiles), by tile hash. */
   oldTrees: ['ow-old-tree-0', 'ow-old-tree-1'],
   /** A clump of reeds and cattails at a marsh pond's rim, and a lily pad on its water. */
@@ -51,6 +53,11 @@ export const LANDMARK_LOOK = {
     /** Lip slabs lie flat this far over the floor's depth. */
     depth: 0.6,
   },
+  /**
+   * The Husk Hive's ground (049): amber resin crust in patches on its open tiles (`every` nth, by tile hash), and a
+   * darker stain round each nest stone, painted into the ground.
+   */
+  hive: { crust: 'resin-dark', alpha: 0.4, every: 2, rx: 11, ry: 5, jitter: 12, stain: { color: 'resin-dark', alpha: 0.22, rx: 22, ry: 9 } },
   /** The Old Grove's sun: warm patches on its grass (`every` nth open tile), drawn into the ground. */
   grove: { sun: 'sun', alpha: 0.4, every: 3, rx: 20, ry: 9, jitter: 10 },
   /** The marsh: damp ground round its ponds and tufts every `tuftStep` radians round each rim, lilies on the water. */

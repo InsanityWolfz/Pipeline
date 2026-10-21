@@ -112,5 +112,5 @@ export const SUPPLY_LOOK = {
   /** No frame moves a mote on further than this many ms, so a hitch never skips its run. */
   maxStepMs: 50,
   /** A mote takes its raw's colour. */
-  moteColors: { wood: 'wood-light', stone: 'rock-pale', fiber: 'leaf-light', 'ley-crystal': 'cyan-glow', 'ley-iron': 'iron-light' } as Readonly<Record<string, string>>,
+  moteColors: { wood: 'wood-light', stone: 'rock-pale', fiber: 'leaf-light', 'ley-crystal': 'cyan-glow', 'ley-iron': 'iron-light', 'husk-resin': 'resin-light' } as Readonly<Record<string, string>>,
 } as const;

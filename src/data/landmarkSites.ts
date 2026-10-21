@@ -1,6 +1,6 @@
 import type { LandmarkDef } from './landmarks';
 
-// The resource sites and the Ruined Cache (032): hand-placed landmarks in the empty
+// The resource sites and the Ruined Cache (032), and the Husk Hive (049): hand-placed landmarks in the empty
 // outer ground. Each resource site is a dense cluster of one node (starting at 5) with a
 // ley pylon guarded by one pack of its ring's makeup and a ley line home; the cache is a
 // sealed reliquary in a broken ruin, guarded too. Tiles throughout.
@@ -179,4 +179,45 @@ const RUINED_CACHE: LandmarkDef = {
   marker: 'cache',
 };
 
-export const SITES: readonly LandmarkDef[] = [QUARRY, OLD_GROVE, LEY_GROTTO, REED_MARSH, RUINED_CACHE];
+/**
+ * Husk resin (049, ring 2): the Husk Hive, a Husk nest of amber-crusted stone on Region 1's east side, across the
+ * foundry from the Old Grove (049.1), between the meadow's south-east corner and the South-east Ley Spring. Its stones
+ * ring the back of the nest; resin seeps well up between them. Every guard's home is a ring 2 tile.
+ */
+const HUSK_HIVE: LandmarkDef = {
+  id: 'husk-hive',
+  name: 'Husk Hive',
+  kind: 'resource-site',
+  ring: 2,
+  area: { x0: 99, y0: 34, x1: 103, y1: 40 },
+  features: [],
+  nodes: [
+    { nodeId: 'resin-seep', tx: 101, ty: 35 },
+    { nodeId: 'resin-seep', tx: 99, ty: 37 },
+    { nodeId: 'resin-seep', tx: 103, ty: 37 },
+    { nodeId: 'resin-seep', tx: 99, ty: 40 },
+    { nodeId: 'resin-seep', tx: 103, ty: 40 },
+  ],
+  guards: [
+    { enemyId: 'husk', tx: 101, ty: 37, champion: true },
+    { enemyId: 'husk', tx: 100, ty: 38 },
+    { enemyId: 'husk', tx: 102, ty: 38 },
+    { enemyId: 'husk', tx: 102, ty: 40 },
+  ],
+  pylon: { tx: 101, ty: 39, site: 'husk-hive', supplies: ['husk-resin'] },
+  // Up the meadow's east side, clear of the start stone, to the stairs.
+  leyLine: [{ tx: 101, ty: 39 }, { tx: 97, ty: 32 }, { tx: 90, ty: 27 }, { tx: 84, ty: 24 }, STAIRS],
+  blocks: [
+    { tx: 99, ty: 34 },
+    { tx: 100, ty: 34 },
+    { tx: 102, ty: 34 },
+    { tx: 103, ty: 34 },
+    { tx: 99, ty: 35 },
+    // Not (103, 35): that is the South-east Ley Spring's clearing (030).
+    { tx: 100, ty: 35 },
+  ],
+  marker: 'site',
+  look: { blocks: 'hive' },
+};
+
+export const SITES: readonly LandmarkDef[] = [QUARRY, OLD_GROVE, LEY_GROTTO, REED_MARSH, RUINED_CACHE, HUSK_HIVE];

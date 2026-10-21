@@ -50,7 +50,7 @@ export interface Room {
   /** Optional decoration tile for the ley crystal from 001. No gameplay, no collision. */
   crystal?: { tx: number; ty: number };
   /** Enemies placed in the room; each one's tile is its home. A `group` (017) ties it to a gate or a site. */
-  enemies?: readonly { enemyId: string; tx: number; ty: number; group?: string }[];
+  enemies?: readonly { enemyId: string; tx: number; ty: number; group?: string; champion?: true }[];
   /** Gathering nodes; each stands at its tile's centre. */
   nodes?: readonly { nodeId: string; tx: number; ty: number }[];
   /** Door tiles on the outer wall, each linked to a door in another room (by its index there). */

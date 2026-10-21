@@ -7,7 +7,7 @@ import { inkCss } from '../vector/draw';
 // The landmarks' ground (032), painted into the overworld's ground chunks after 029's
 // frost: a sunken basin over each grotto hollow (darker, with a rocky rim; pale and icy
 // over the Frozen Grotto), warm sun on the Old Grove's grass, and damp ground round the
-// marsh's ponds. Pure canvas in world px, like ground.ts.
+// marsh's ponds, and amber crust over the Husk Hive's floor (049). Pure canvas in world px, like ground.ts.
 
 const T = TILE_SIZE;
 
@@ -27,8 +27,23 @@ function ellipse(c: CanvasRenderingContext2D, x: number, y: number, rx: number, 
   c.globalAlpha = 1;
 }
 
+type Each = (fn: (tx: number, ty: number, hash: number) => void) => void;
+type Area = { x0: number; y0: number; x1: number; y1: number };
+
+/** Walks the area's tiles whose hash picks them (one in `every`). */
+function onTiles(each: Each, a: Area, every: number, fn: (tx: number, ty: number, hash: number) => void): void {
+  each((tx, ty, hash) => {
+    if (tx >= a.x0 && tx <= a.x1 && ty >= a.y0 && ty <= a.y1 && hash % every === 0) fn(tx, ty, hash);
+  });
+}
+
+/** A soft patch on an open tile, nudged sideways by the tile's hash (the grove's sun, the Hive's crust). */
+function patch(c: CanvasRenderingContext2D, tx: number, ty: number, hash: number, p: { jitter: number; rx: number; ry: number }, color: string, alpha: number): void {
+  ellipse(c, (tx + 0.5) * T + ((hash >>> 5) % p.jitter) - p.jitter / 2, (ty + 0.5) * T, p.rx, p.ry, color, alpha);
+}
+
 /** Paints every landmark's ground; `each` walks the chunk's tiles with their hash, `symbol` reads the map. */
-export function paintLandmarks(c: CanvasRenderingContext2D, each: (fn: (tx: number, ty: number, hash: number) => void) => void, symbol: (tx: number, ty: number) => string | undefined): void {
+export function paintLandmarks(c: CanvasRenderingContext2D, each: Each, symbol: (tx: number, ty: number) => string | undefined): void {
   const H = LANDMARK_LOOK.hollow;
   for (const l of LANDMARK_LIST) {
     const a = l.area;
@@ -46,9 +61,17 @@ export function paintLandmarks(c: CanvasRenderingContext2D, each: (fn: (tx: numb
     }
     if (l.look?.trees === 'old') {
       const G = LANDMARK_LOOK.grove;
-      each((tx, ty, hash) => {
-        if (tx < a.x0 || tx > a.x1 || ty < a.y0 || ty > a.y1 || symbol(tx, ty) !== TILE.floor || hash % G.every !== 0) return;
-        ellipse(c, (tx + 0.5) * T + ((hash >>> 5) % G.jitter) - G.jitter / 2, (ty + 0.5) * T, G.rx, G.ry, G.sun, G.alpha);
+      onTiles(each, a, G.every, (tx, ty, hash) => {
+        if (symbol(tx, ty) === TILE.floor) patch(c, tx, ty, hash, G, G.sun, G.alpha);
+      });
+    }
+    if (l.look?.blocks === 'hive') {
+      // 049: amber crust on the nest's floor, and a stain round each stone.
+      const V = LANDMARK_LOOK.hive;
+      onTiles(each, a, V.every, (tx, ty, hash) => {
+        const t = symbol(tx, ty);
+        if (t === TILE.ruinBlock) ellipse(c, (tx + 0.5) * T, (ty + 1) * T, V.stain.rx, V.stain.ry, V.stain.color, V.stain.alpha);
+        else if (t === TILE.floor) patch(c, tx, ty, hash, V, V.crust, V.alpha);
       });
     }
     for (const f of l.features) {

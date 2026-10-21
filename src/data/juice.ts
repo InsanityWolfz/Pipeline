@@ -71,6 +71,8 @@ export const PARTICLES = {
   harvestLeaves: { colors: ['leaf-light', 'leaf-pale', 'sun'], count: 12, speed: [25, 70], gravity: 70, lifeMs: [600, 1000], size: 3, lift: 40 },
   harvestChips: { colors: ['rock-pale', 'snow', 'rock-light'], count: 10, speed: [50, 110], gravity: 260, lifeMs: [300, 480], size: 3, lift: 14 },
   harvestStalks: { colors: ['leaf-light', 'straw-light', 'straw'], count: 8, speed: [20, 55], gravity: 140, lifeMs: [500, 800], size: 3, lift: 22 },
+  // 049: amber beads off a resin seep.
+  harvestResin: { colors: ['resin-light', 'resin', 'resin-dark'], count: 10, speed: [25, 70], gravity: 200, lifeMs: [350, 600], size: 2, lift: 10 },
   harvestSparks: { colors: ['cyan-glow', 'cyan', 'snow'], count: 14, speed: [50, 130], gravity: 120, lifeMs: [250, 450], size: 2, lift: 14 },
   craftPuff: { colors: ['rock-pale', 'dirt-light', 'dirt'], count: 6, speed: [8, 24], gravity: -50, lifeMs: [400, 650], size: 2, lift: 14 },
   refill: { colors: ['cyan', 'cyan-glow'], count: 5, speed: [10, 30], gravity: -60, lifeMs: [300, 500], size: 1, lift: 6 },
@@ -112,6 +114,7 @@ export const HARVEST_BURSTS: Readonly<Record<string, keyof typeof PARTICLES>> = 
   'rime-outcrop': 'harvestRime',
   // 034: ley-iron chips like stone.
   'ley-iron-seam': 'harvestChips',
+  'resin-seep': 'harvestResin',
 };
 
 /** While a node is worked: a small burst this often, ms; a tree shakes this far either way, px, this many times a second. */

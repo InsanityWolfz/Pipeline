@@ -100,6 +100,7 @@ export const NODE_SPRITES: Readonly<Record<string, { uses: readonly string[]; re
   'ley-vein': nodeFrames('ley-vein', 3, 3),
   'rime-outcrop': nodeFrames('rime-outcrop', 3, 3),
   'ley-iron-seam': nodeFrames('ley-iron-seam', 3, 3),
+  'resin-seep': nodeFrames('resin-seep', 3, 3),
 };
 
 /** The tube slot's frame (025) by how many rounds it shows: one for a carried round or the fist, up to one per intake entrance for a volley. */

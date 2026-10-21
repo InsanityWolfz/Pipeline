@@ -53,7 +53,7 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 046 | Foundry onboarding: a working example arrow line on the first visit, the tutorial's second line after the Warden, double Region 1 outputs, the Splitter from the start | done |
 | 047 | Inventory and hotbars: an intake bar (left click) and a carried bar (1–5, right click), a Factorio-style grid inventory and hopper screens, crafting tabs per ammo type with tagged rounds in them | done |
 | 048 | Volley shape: each entrance fires down its own lane of a 15° fan, every family, each at its own rate; bombs land on an arc at the cursor (note 5) | done |
-| 049 | Resin pylon: the Husk Hive, a ring 2 landmark with resin seeps and a pylon that supplies resin, so bombs can be automated (note 16) | approved |
+| 049 | Resin pylon: the Husk Hive, a ring 2 landmark with resin seeps and a pylon that supplies resin, so bombs can be automated (note 16) | done |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
 

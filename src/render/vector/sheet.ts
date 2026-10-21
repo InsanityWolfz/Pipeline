@@ -66,6 +66,7 @@ const FAMILIES: readonly [title: string, test: (name: string) => boolean][] = [
   ['Stonefall Hollows (034): cliffs, the aqueduct, rubble, ley-iron, the altar, the enemy bomb, the map icon', (n) => /^(ow-cliff|ow-aqueduct|ow-fallen|ow-rubble|item-ley-iron|node-ley-iron|altar-|enemy-bomb|map-aqueduct)/.test(n)],
   ['Frost rounds on every family (039): the base icon with the frost badge', (n) => /^icon-(bomb|ley-bolt|landmine)-frost/.test(n)],
   ['Landmines and cluster bombs (038): the mine in flight and armed, its icon, the iron plate, bomblets, the flashes, the cluster bomb', (n) => /^(landmine|icon-landmine|item-iron-plate|bomblet|mine-flash|icon-bomb-cluster)/.test(n)],
+  ['The Husk Hive (049): nest stones, the resin seep at each use, bare and regrowing', (n) => /^(ow-hive|node-resin-seep)/.test(n)],
   ['Conduits and sorters', (n) => n.startsWith('conduit-') || n.startsWith('sorter-')],
   ['Hoppers and crates', (n) => n.startsWith('hopper-') || n === 'crate'],
   ['Build arrows and status markers', (n) => n.includes('-arrow-') || n.startsWith('status-')],

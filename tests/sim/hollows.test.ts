@@ -41,10 +41,13 @@ describe('the map', () => {
 
   it("keeps Region 1 exactly as the seed made it before 034, moved +40, but for the road west and the gap's approach", () => {
     // Fingerprint of the pre-034 map's 80 columns, with the road's tiles (x 40–53, rows 27–28) and the approach clearing
-    // (x 40–45, rows 25–30) masked: taken from the old generator before the map grew.
-    const masked = (tx: number, ty: number) => (tx >= 40 && tx <= 45 && ty >= 25 && ty <= 30) || (tx >= 40 && tx <= 53 && ty >= 27 && ty <= 28);
+    // (x 40–45, rows 25–30) masked: taken from the old generator before the map grew (and retaken on the same map with the
+    // Hive masked: unchanged outside it).
+    // 049's Husk Hive (x 99–103, rows 34–40) is masked too: a landmark stamped over the seed's map after 034.
+    const masked = (tx: number, ty: number) =>
+      (tx >= 40 && tx <= 45 && ty >= 25 && ty <= 30) || (tx >= 40 && tx <= 53 && ty >= 27 && ty <= 28) || (tx >= 99 && tx <= 103 && ty >= 34 && ty <= 40);
     const text = room.rows.map((row, ty) => [...row.slice(REGION_1_X)].map((s, i) => (masked(i + REGION_1_X, ty) ? '?' : s)).join('')).join('\n');
-    expect(fnv(text).toString(16)).toBe('2fa0b7ee');
+    expect(fnv(text).toString(16)).toBe('a5ad93db');
   });
 
   it('is grey-blue stone with cliff runs, rubble and quarry-cut terraces, and ends in cliffs, never a bare wall', () => {

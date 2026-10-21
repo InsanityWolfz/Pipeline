@@ -121,6 +121,8 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
   { text: 'Craft homing or split ley bolts (C)', milestone: 'm1', check: { kind: 'craftedAny', items: ['ley-bolt+homing', 'ley-bolt+split'] } },
   // 032: a resource site's pylon, marked once one is discovered.
   { text: 'Claim a second pylon', milestone: 'm1', check: { kind: 'claimedCount', min: 2 }, marker: 'sitePylon' },
+  // 049.2: no lock on ring 2; after the Warden the goal line points to the Husk Hive, whose pylon supplies resin.
+  { text: 'Find the Husk Hive and claim its pylon', milestone: 'm1', check: { kind: 'claimed', site: 'husk-hive' } },
   // 034: Region 2, behind the barrier the shrine's claim drops: in, its pylon, its boss, and the entrance its core restores.
   { text: 'Breach Stonefall Hollows', milestone: 'm1', check: { kind: 'inRegion', region: 2 } },
   { text: "Claim the Cistern Terrace's pylon", milestone: 'm1', check: { kind: 'claimed', site: 'cistern-terrace' } },
