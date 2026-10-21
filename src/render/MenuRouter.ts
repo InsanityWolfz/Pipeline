@@ -109,8 +109,13 @@ export class MenuRouter {
     // The sandbox's controls never pause. Their key hides or shows them (056.1); showing them closes the big panels, as
     // opening the panel did (044), so the press is seen.
     if (panel && !wake.isShown) {
-      sandbox.setOpen(!sandbox.isOpen);
-      if (sandbox.isOpen) for (const p of [inventory, research, talents, craft]) p.setOpen(false);
+      // Stepped aside under a big panel (056.5), a press brings them back rather than hiding them unseen.
+      const show = !sandbox.isOpen || sandbox.isCovered;
+      sandbox.setOpen(show);
+      if (show) {
+        for (const p of [inventory, research, talents, craft]) p.setOpen(false);
+        site.close();
+      }
     }
     const steps = controls.takeWheel();
     if (steps !== 0 && this.sim.building) build.step(steps);

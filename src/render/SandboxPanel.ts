@@ -37,6 +37,11 @@ export class SandboxPanel {
   private pick: SpawnPick = { ...DEFAULT_PICK };
   /** 056.1: the player's choice, shown from the start. */
   private open = true;
+  /** 056.5: stepped aside under a big centred panel. */
+  get isCovered(): boolean {
+    return this.covered;
+  }
+
   /** 056.5: a big centred panel is open over them. */
   private covered = false;
   /** Only a sandbox sim draws them. */

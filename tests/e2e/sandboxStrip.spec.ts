@@ -60,6 +60,12 @@ test('?sandbox shows both columns and the key list on load, and a row still work
   await expect.poll(() => controlsShown(page)).toBe(false);
   await page.keyboard.press('i');
   await expect.poll(() => controlsShown(page)).toBe(true);
+  // With a big panel open, the key brings them back and closes it.
+  await page.keyboard.press('i');
+  await expect.poll(() => controlsShown(page)).toBe(false);
+  await page.keyboard.press('Backquote');
+  await expect.poll(() => controlsShown(page)).toBe(true);
+  expect(await page.evaluate(() => window.__GAME__?.ui().inventory.open)).toBe(false);
 });
 
 test('the key list follows a rebind at once', async ({ page }) => {
