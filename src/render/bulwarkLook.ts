@@ -101,10 +101,10 @@ export function drawStomp(g: GameObjects.Graphics, e: EnemyState): void {
   g.fillPath();
 }
 
-/** Its back wave building (041.16): its rear arc shaded red (054) under ripples running out to the arc's edge as the wind-up runs. */
-export function drawWave(g: GameObjects.Graphics, e: EnemyState): void {
+/** Its back wave building (041.16): its rear arc shaded red (054) under ripples running out to the arc's edge as the wind-up runs. Whether it drew the shade, for `ui()`. */
+export function drawWave(g: GameObjects.Graphics, e: EnemyState): boolean {
   const def = enemyDef(e.enemyId);
-  if (def.kind !== 'bulwark' || e.waveTicks <= 0) return;
+  if (def.kind !== 'bulwark' || e.waveTicks <= 0) return false;
   const W = HOLLOWS_LOOK.wave;
   const progress = Math.min(1, e.waveTicks / windupsOf(e, def).wave);
   const angle = Math.atan2(e.waveDirY, e.waveDirX);
@@ -133,6 +133,7 @@ export function drawWave(g: GameObjects.Graphics, e: EnemyState): void {
     g.arc(e.x, e.y, def.wave.radius + R.gap, angle - half, angle + half, false);
     g.strokePath();
   }
+  return true;
 }
 
 /** An add rising (041): the summon's cracked red circle at its feet, smaller, its ring and cracks opening as it rises. */

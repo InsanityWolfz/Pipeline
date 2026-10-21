@@ -56,6 +56,8 @@ interface Drawn {
   turnUntil?: number;
   /** Region 2's extras (035): a Burrower's ripple. */
   hollows?: HollowsArt | undefined;
+  /** Whether its telegraph last drew the Bulwark's back wave shaded (054). */
+  waveShaded?: boolean;
 }
 
 /** `ui()`'s enemy part before the scene has built its views. */
@@ -132,7 +134,7 @@ export class EnemyView {
       const top = bottom - d.sprite.displayHeight * d.sprite.originY;
       drawEnemyBar(this.scene, d.bar, e, top);
       if (d.champion) this.drawChampion(d.champion, e, bottom, top, now);
-      drawTelegraph(d.telegraph, e);
+      d.waveShaded = drawTelegraph(d.telegraph, e);
       drawHollowsArt(d.hollows, d.sprite, e, def, sim, now);
       if (d.overlay && e.enemyId === RESIN.enemyId) this.drawResin(d.overlay, e, bottom, view, now);
       if (d.overlay && e.enemyId === CORE.enemyId) this.drawCore(d.overlay, e, bottom, view, now);
@@ -225,7 +227,10 @@ export class EnemyView {
   /** What the test hook's `ui()` reads here: the champions (032), Region 2's four's extras (035) and the bars (054). */
   get ui(): { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown; enemyBars: EnemyBarShown[] } {
     const hollowsEnemies: HollowsEnemiesShown = { ripples: 0, flares: 0, lasers: [], waveShades: 0 };
-    for (const [id, d] of this.drawn) if (this.last.has(id)) shownOf(id, this.last.get(id) as EnemyState, d.hollows, hollowsEnemies);
+    for (const [id, d] of this.drawn) {
+      if (this.last.has(id)) shownOf(id, this.last.get(id) as EnemyState, d.hollows, hollowsEnemies);
+      if (d.waveShaded && d.telegraph.visible) hollowsEnemies.waveShades += 1;
+    }
     return { champions: this.champions, hollowsEnemies, enemyBars: [...this.drawn.values()].map((d) => ({ ...d.bar.shown })) };
   }
 
