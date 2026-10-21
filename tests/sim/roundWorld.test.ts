@@ -1,3 +1,4 @@
+import { SHRINE_ARENA } from '../../src/data/arenas';
 import { describe, expect, it } from 'vitest';
 import { HOLLOWS, inHollows, regionAt } from '../../src/data/hollows';
 import { LANDMARK_LIST } from '../../src/data/landmarks';
@@ -144,9 +145,9 @@ describe('places on the circle', () => {
     for (const p of WORLD[OVERWORLD.id]?.pylons ?? []) expect(has({ tx: p.tx, ty: p.ty + 1 }), p.site).toBe(true);
     for (const s of OVERWORLD.springs) expect(has(s), s.id).toBe(true);
     expect(has(HOLLOWS.arena.start)).toBe(true);
-    expect(has(HOLLOWS.arena.seal.leaveTo)).toBe(true);
+    expect(has(HOLLOWS.arena.door.leaveTo)).toBe(true);
     expect(has({ tx: HOLLOWS.arena.altar.tx, ty: HOLLOWS.arena.altar.ty + 1 })).toBe(true);
-    for (const t of OVERWORLD.shrine.gate) expect(has(t)).toBe(true);
+    expect(has(SHRINE_ARENA.door.enterTo)).toBe(true);
   });
 
   it('can reach every Region 1 site, pylon, node, spring and guard from the wake tile with the barrier shut', () => {
@@ -162,7 +163,7 @@ describe('places on the circle', () => {
     for (const p of pylons) expect(has({ tx: p.tx, ty: p.ty + 1 }), p.site).toBe(true);
     for (const s of OVERWORLD.springs.filter(inside)) expect(has(s), s.id).toBe(true);
     for (const l of LANDMARK_LIST.filter((l) => l.ring !== 3)) expect(has(l.pylon ? { tx: l.pylon.tx, ty: l.pylon.ty + 1 } : { tx: Math.floor(mid(l.area).tx), ty: Math.floor(mid(l.area).ty) }), l.id).toBe(true);
-    for (const t of OVERWORLD.shrine.gate) expect(has(t)).toBe(true);
+    expect(has(SHRINE_ARENA.door.enterTo)).toBe(true);
   });
 
   it('leaves most of the open Hollows reachable, and no pocket of Region 1 cut off but behind landmark walls', () => {

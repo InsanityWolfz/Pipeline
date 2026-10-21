@@ -28,6 +28,7 @@ import type { SchematicsShown } from './SchematicView';
 import type { RestorePanelState } from './RestorePanel';
 import type { ResearchListState } from './ResearchList';
 import type { HollowsShown } from './HollowsView';
+import type { ArenaDoorShown } from './ArenaDoorView';
 import type { HollowsEnemiesShown } from './hollowsEnemyArt';
 import type { EnemyBarShown } from './enemyBar';
 import type { Legibility, LegibilityUi } from './Legibility';
@@ -206,6 +207,8 @@ export interface UiState {
   researchList: ResearchListState;
   /** 034: the Hollows' barrier, the altar's state, the summon's circle and the Bulwark's bombs, as drawn. */
   hollows: HollowsShown;
+  /** 055: each boss arena's door in the room on screen, sealed or open, and 043's seal over it while its boss fights. */
+  arenaDoors: ArenaDoorShown[];
   /** 036: the bench's gear panel while open (its cells, tabs, rows with ids and boxes, page and totals), else null. */
   gearPanel: GearPanelState | null;
   /** 036: the relics' effects as drawn: the Wardstone's shimmer (its alpha, 0 when hidden), ward breaks, ember flashes and bench flares live. */

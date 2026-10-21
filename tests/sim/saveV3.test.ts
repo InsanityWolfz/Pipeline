@@ -25,8 +25,8 @@ function v2(edit: (state: Record<string, unknown>) => void): string {
 }
 
 describe('version 2 → 3 (046)', () => {
-  it('is no longer the current version (047: 4, then 5 for 047.9, 6 for 049, 7 for 050, 8 for 051, 9 for 052, 10 for 053, with no migration)', () => {
-    expect(SAVE_VERSION).toBe(10);
+  it('is no longer the current version (047: 4, then 5 for 047.9, 6 for 049, 7 for 050, 8 for 051, 9 for 052, 10 for 053, 11 for 055, with no migration)', () => {
+    expect(SAVE_VERSION).toBe(11);
     expect(SAVE_MIGRATIONS[3]).toBeUndefined();
   });
 

@@ -98,7 +98,7 @@ test.describe('review screenshots (045)', () => {
       }
     });
     await noBanners(page);
-    await expect.poll(async () => (await ui(page))?.interactPrompt?.kind).toBe('arena-seal');
+    await expect.poll(async () => (await ui(page))?.interactPrompt?.kind).toBe('arena-door');
     await cameraSettled(page, 20_000);
     await page.screenshot({ path: `${SHOTS}/07-sealed-door-prompt.png` });
   });

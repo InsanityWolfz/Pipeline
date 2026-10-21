@@ -43,7 +43,7 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
       for (let i = 0; i < 90 && g.getState().room !== to; i++) g.step(1, { moveX: dx, moveY: dy });
       if (g.getState().room !== to) throw new Error(`could not reach ${to}`);
     };
-    /** From the foundry, by the north-east road to below the shrine's gap (053: src/data/roads.ts). */
+    /** From the foundry, by the north-east road to below the shrine's door (053: src/data/roads.ts). */
     w.toShrine = () => h.walkTo((gate.tx + 0.5) * tile, (gate.ty + 2.5) * tile);
     /** Fights until a group is dead, kiting and rolling, picking ammo it has; anything else that comes close is fought first. */
     w.clearGroup = (group: string) => {
@@ -91,7 +91,7 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
       }
       h.collect();
     };
-  }, [T, OVERWORLD.shrine.gate[1] ?? OVERWORLD.shrine.pylon, OVERWORLD.shrine.pylon] as const);
+  }, [T, OVERWORLD.shrine.door[1] ?? OVERWORLD.shrine.pylon, OVERWORLD.shrine.pylon] as const);
 
   // 1. Pick up the tube from its stone (tile 40,33 before 034; `ox`, `oy` since), just north of where the player wakes.
   await page.evaluate((tile) => {
@@ -186,7 +186,7 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
   }, T);
   expect(await done(page)).toBe(FILL + 2);
 
-  // 16. Up the stairs, along the path to the shrine (its gap opened with the full line), clear it and claim the pylon.
+  // 16. Up the stairs, along the path to the shrine (its door opened with the full line, 055), E in, clear it and claim the pylon.
   await page.evaluate((tile) => {
     const g = window.__GAME__;
     const h = window.__helpers;
@@ -194,7 +194,9 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     if (!g || !h) throw new Error('no game');
     w.through(23, 8, 1, 0, 'overworld');
     w.toShrine();
-    h.walkTo((w.gate.tx + 0.5) * tile, (w.gate.ty - 1.5) * tile);
+    // 055: just outside the door, and E goes in.
+    h.walkTo((w.gate.tx + 0.5) * tile, (w.gate.ty + 1.5) * tile);
+    if (g.step(1, { interact: true }).events.arenaEnters.length === 0) throw new Error('the shrine door did not open');
     // 053: the shrine stands in open ring 2 ground now; packs keep out of its surroundings (population.ts), so the
     // Warden's fight is its own, played unaided.
     w.clearGroup('shrine');
@@ -214,6 +216,12 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     }
     g.step(1, { interact: true });
     g.step(130);
+    // The example line runs dry as the tube's arrows are spent (046). 055: fought inside the shrine's walls, the
+    // Warden's fight can end before it has; the player fires the rest off at the open floor before heading home.
+    for (let t = 0; t < 6000 && !g.getState().lineRanDry; t++) {
+      const p = g.getState().player;
+      g.step(1, { fire: true, aimX: p.x, aimY: p.y - 96 });
+    }
   }, T);
   // The shrine's pylon is claimed; the example line ran dry through the fights (046), so its refill goal, earlier in
   // the chain, now shows ahead of the next.

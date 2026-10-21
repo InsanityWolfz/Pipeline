@@ -58,7 +58,7 @@ test('a ley crystal vein in reach shows the E prompt, as other nodes do', async 
   expect(errors).toEqual([]);
 });
 
-test("the Bulwark's sealed door shows the E prompt in reach, and the seal hums until it drops", async ({ page }) => {
+test("the Bulwark's locked door shows the E prompt in reach, and the seal hums until it drops", async ({ page }) => {
   test.setTimeout(150_000);
   const errors = watchErrors(page);
   await intoForum(page);
@@ -70,10 +70,12 @@ test("the Bulwark's sealed door shows the E prompt in reach, and the seal hums u
       g.setPlayerHealth(100);
     }
   });
-  await expect.poll(async () => (await ui(page))?.interactPrompt?.kind).toBe('arena-seal');
+  await expect.poll(async () => (await ui(page))?.interactPrompt?.kind).toBe('arena-door');
   await expect.poll(async () => (await ui(page))?.sealSound.humming).toBe(true);
-  await page.evaluate(() => window.__GAME__?.step(1, { interact: true }));
-  await expect.poll(async () => (await ui(page))?.interactPrompt?.kind ?? null).not.toBe('arena-seal');
+  // 055: out of the door, two tiles off it (clear of its sprite), out of its reach: no prompt.
+  const left = await page.evaluate(() => window.__GAME__?.step(1, { interact: true }));
+  expect(left?.events.arenaLeaves.length).toBe(1);
+  await expect.poll(async () => (await ui(page))?.interactPrompt?.kind ?? null).toBeNull();
   await expect.poll(async () => (await ui(page))?.sealSound.humming).toBe(false);
   await expect.poll(async () => (await ui(page))?.sealSound.drops).toBe(1);
   expect(errors).toEqual([]);

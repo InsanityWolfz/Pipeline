@@ -130,8 +130,9 @@ describe('reachability', () => {
     expect(inside(a.altar)).toBe(true);
     const open: number[] = [];
     for (let tx = a.bounds.x0; tx <= a.bounds.x1; tx++) if (!isSolid(room, tx, a.bounds.y0)) open.push(tx);
-    expect(open).toEqual(a.seal.tiles.map((t) => t.tx));
-    expect(open).toHaveLength(5);
+    // 055: the way in is a door now, part of the wall.
+    expect(open).toEqual([]);
+    expect(a.door.tiles).toHaveLength(5);
     for (let ty = a.bounds.y0 + 1; ty <= a.bounds.y1; ty++) {
       expect(isSolid(room, a.bounds.x0, ty)).toBe(true);
       expect(isSolid(room, a.bounds.x1, ty)).toBe(true);

@@ -21,13 +21,14 @@ import { HollowsView, NO_HOLLOWS_SHOWN } from './HollowsView';
 import { NO_RELICS_SHOWN, RelicView } from './RelicView';
 import { NO_TALENT_FX, TalentFxView } from './TalentFxView';
 import { MineView, NO_MINES_SHOWN } from './MineView';
+import { ArenaDoorView } from './ArenaDoorView';
 import type { ScreenBox } from './bottomHud';
 
 /** What the room views report to the test hook's `ui()`. */
-export type RoomUiState = Pick<UiState, 'minimap' | 'foundryMap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows' | 'relics' | 'talentFx' | 'mines' | 'overworldChunks'>;
+export type RoomUiState = Pick<UiState, 'minimap' | 'foundryMap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows' | 'relics' | 'talentFx' | 'mines' | 'overworldChunks' | 'arenaDoors'>;
 
 /** The room views' part of `ui()` before the scene has built them. */
-export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [], hover: null }, foundryMap: NO_FOUNDRY_MAP, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN, relics: NO_RELICS_SHOWN, talentFx: NO_TALENT_FX, mines: NO_MINES_SHOWN, overworldChunks: [] };
+export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [], hover: null }, foundryMap: NO_FOUNDRY_MAP, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN, relics: NO_RELICS_SHOWN, talentFx: NO_TALENT_FX, mines: NO_MINES_SHOWN, overworldChunks: [], arenaDoors: [] };
 
 // The ground on screen: a tiled room (the foundry) or the overworld's terrain
 // with its landmarks (017), plus the corner minimap while outside, and the
@@ -55,6 +56,7 @@ export class RoomViews {
   private readonly relics: RelicView;
   private readonly talentFx: TalentFxView;
   private readonly mines: MineView;
+  private readonly arenaDoors: ArenaDoorView;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -74,6 +76,7 @@ export class RoomViews {
     this.relics = new RelicView(scene);
     this.talentFx = new TalentFxView(scene);
     this.mines = new MineView(scene);
+    this.arenaDoors = new ArenaDoorView(scene);
   }
 
   /** The pointer, view px: 051's minimap names the icon under it. */
@@ -111,6 +114,7 @@ export class RoomViews {
     this.research.update(sim, events, shown, tweenMs);
     this.schematics.update(sim, events, shown, tweenMs);
     this.hollows.update(sim, events, shown, tweenMs);
+    this.arenaDoors.update(sim, shown, tweenMs);
     this.relics.update(sim, events, shown, tweenMs);
     this.talentFx.update(sim, events, shown, tweenMs);
     this.mines.update(sim, events, shown, tweenMs);
@@ -140,6 +144,7 @@ export class RoomViews {
       relics: this.relics.shown,
       talentFx: this.talentFx.shown,
       mines: this.mines.shown,
+      arenaDoors: this.arenaDoors.shown,
     };
   }
 }

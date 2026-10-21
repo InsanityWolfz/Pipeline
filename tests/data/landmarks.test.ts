@@ -272,6 +272,8 @@ describe('resource sites', () => {
     const pylons = WORLD[OVERWORLD.id]?.pylons ?? [];
     expect(pylons.map((p) => [p.site, p.safeRadius, p.wakes ?? null])).toEqual([
       ['shrine', 10, null],
+      // 055: the Frozen Grotto's, first of the landmarks (029's place in the list).
+      ['frozen-grotto', 7, 'shrine'],
       ['quarry', 7, 'shrine'],
       ['old-grove', 7, 'shrine'],
       ['ley-grotto', 7, 'shrine'],

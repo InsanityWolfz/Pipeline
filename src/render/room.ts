@@ -45,7 +45,8 @@ export class RoomView {
         const left = tx * TILE_SIZE;
         const bottom = (ty + 1) * TILE_SIZE;
         add(left, ty * TILE_SIZE, floorFrame(SPRITES.floor, tx, ty)).setOrigin(0).setDepth(DEPTHS.floor);
-        if (symbol === TILE.floor) continue;
+        // 055: an arena's door stands on floor; ArenaDoorView draws it.
+        if (symbol === TILE.floor || symbol === TILE.arenaDoor) continue;
         if (symbol === TILE.door) {
           // The sprite is drawn for the right wall; a door on the left wall mirrors it.
           // A door in the top or bottom wall uses the same arch, unflipped.

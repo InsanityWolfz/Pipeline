@@ -136,6 +136,8 @@ test('a deposit at the claimed shrine pylon leaves nothing carried and nothing a
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     g.claim('shrine');
+    // 055: in by the shrine's door.
+    h.enterArena('shrine');
     h.walkTo((tx + 0.5) * 32, (ty + 1.5) * 32);
     const p = g.getState().player;
     for (const id of ['wood', 'stone', 'shaft']) g.drop(id, p.x, p.y);
@@ -282,6 +284,7 @@ test('below 25% the bar is low; a drop leaves a white chunk that drains away; he
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     g.claim('shrine');
+    h.enterArena('shrine');
     h.walkTo(zone.x, zone.y);
     return g.step(10).player.healing;
   }, SAFE_SPOT);

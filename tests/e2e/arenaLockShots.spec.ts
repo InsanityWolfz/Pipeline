@@ -43,7 +43,7 @@ test.describe('review screenshots (043)', () => {
       g.setPlayerHealth(100);
     });
     await noBanners(page);
-    await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hollows))?.seal).toBe('shut');
+    await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().arenaDoors.find((d) => d.id === 'sunken-forum')))?.seal).toBe('shut');
     await cameraSettled(page, 20_000);
     await page.screenshot({ path: `${SHOTS}/01-sealed-door.png` });
 
@@ -58,11 +58,11 @@ test.describe('review screenshots (043)', () => {
       }
       const b = g.getState();
       const r = g.step(1, { interact: true });
-      if (r.events.arenaLeaves.length === 0) throw new Error(JSON.stringify({ p: b.player, a: b.arenas[0]?.sealed, boss: b.bosses[0]?.mode, by: b.bosses[0]?.health }));
+      if (r.events.arenaLeaves.length === 0) throw new Error(JSON.stringify({ p: b.player, a: b.arenas.find((x) => x.id === 'sunken-forum')?.locked, boss: b.bosses[0]?.mode, by: b.bosses[0]?.health }));
       return r;
     }, Math.floor(BULWARK.maxHealth * 0.6));
     expect(left.events.arenaLeaves).toEqual([{ arena: HOLLOWS.arena.id }]);
-    await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hollows))?.seal, { timeout: 10_000 }).toBe('down');
+    await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().arenaDoors.find((d) => d.id === 'sunken-forum')))?.seal, { timeout: 10_000 }).toBe('down');
     await cameraSettled(page, 20_000);
     expect((await page.evaluate(() => window.__GAME__?.getState().bosses[0]))?.health).toBe(BULWARK.maxHealth);
     await page.screenshot({ path: `${SHOTS}/02-reset-after-leaving.png` });
