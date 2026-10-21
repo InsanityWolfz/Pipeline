@@ -103,7 +103,7 @@ function stepFire(state: SimState, cmd: Command): void {
 
 /**
  * The volley (028): every fed entrance whose own cooldown has run out fires one round from its reservoir, and waits
- * its ammo's interval; rounds fired together are shaped as one volley (024). The caller has checked there's one.
+ * its ammo's interval; each round flies down its entrance's lane (048). The caller has checked there's one.
  */
 function fireVolley(state: SimState, cmd: Command, dx: number, dy: number): void {
   const { tube } = state;
@@ -123,7 +123,7 @@ function fireVolley(state: SimState, cmd: Command, dx: number, dy: number): void
   }
   if (ready.length === 0) return;
   tube.fromReservoir = true;
-  const shots = volleyShots(ready.map((r) => r.ammoId), dx, dy);
+  const shots = volleyShots(ready, dx, dy);
   for (const shot of shots) launch(state, shot, cmd);
   tube.shotCount = shots.length;
 }
@@ -140,17 +140,17 @@ function useCarried(state: SimState, cmd: Command, dx: number, dy: number): void
   if (tube.fireCooldown > 0) return;
   take(state.inventory, ammoDef(itemId).itemId);
   tube.fireCooldown += fireTicksOf(state, itemId);
-  launch(state, { ammoId: itemId, dir: [dx, dy], across: 0 }, cmd);
+  launch(state, { ammoId: itemId, dir: [dx, dy] }, cmd);
   tube.shotCount += 1;
 }
 
-/** Sends one projectile along its direction from the tube's mouth. A bomb or landmine lands at the aim's distance, `across` px off the line. */
-function launch(state: SimState, { ammoId, dir: [dx, dy], across }: VolleyShot, cmd: Command): void {
+/** Sends one projectile along its direction from the tube's mouth. A bomb or landmine lands at the aim's distance along it. */
+function launch(state: SimState, { ammoId, dir: [dx, dy] }: VolleyShot, cmd: Command): void {
   const { player } = state;
   const muzzle = { x: player.x + dx * MUZZLE_OFFSET, y: player.y + dy * MUZZLE_OFFSET };
   state.events.shots.push({ ...muzzle, ammoId });
   if (ammoDef(ammoId).kind !== 'straight') {
-    throwBomb(state, ammoId, muzzle, player, { x: cmd.aimX, y: cmd.aimY }, [dx, dy], across);
+    throwBomb(state, ammoId, muzzle, player, { x: cmd.aimX, y: cmd.aimY }, [dx, dy]);
     return;
   }
   // A homing round (029) locks on at launch: the enemy nearest the cursor, if one is close enough.

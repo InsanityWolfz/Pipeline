@@ -2,6 +2,21 @@
 
 Newest entry first.
 
+## 2026-10-21: 048 merged
+**Changed:** Shaun tried 048 (volley shape), "looks great", and merged it (InsanityWolfz/Pipeline#38) after the specs PR (#37). design.md describes the fan.
+
+**Next:** 049 (Husk Hive) is getting its review fixes. Shaun is doing a live playtest of main with voice notes; they become the next spec interview.
+
+## 2026-10-21: 048 review fixes, Shaun's answers recorded
+**Changed:** on `claude/048-volley-shape` (PR #38): Shaun's answers recorded (048.4: design.md "The Foundry" now says every fed entrance fires down its own lane of one fan and bombs land on an arc; 048.7: "Keep it, judge at playtest", bots unchanged). Review fixes: stale "Volleys fan by it" comment in ammo.ts, a 048.5 re-fan test, 024/04 retaken with all three lanes in view, a spec note on spread.spec.ts's settling and the retakes' 047 HUD, summary computes the volley once, an entrance without a lane throws. `npm run check` passes (1645); volleyShape, spread and hud e2e pass.
+
+**Next:** Shaun playtests 048 and merges PR #38.
+
+## 2026-10-20: 048 volley shape built (draft PR)
+**Changed:** built 048 on `claude/048-volley-shape`, stacked on the 048/049 specs branch. Each fed entrance fires down its own lane of one fan, west to east, whatever its ammo: the fed entrances fan symmetrically about the cursor, `SPREAD_STEP` (15°) apart (048.1: one at the cursor, two at ±7.5°, three at −15°, 0°, +15°). Each entrance keeps its own rate (028) and always uses its lane. A bomb or landmine lands at the cursor's distance on its lane, so a bomb volley lands on an arc; `LOB_SPACING` and 024's grouping by family are gone. Each entrance's lane index is data (`INTAKE.entrances[].lane`). `getState().intake.lanes` gives each fed entrance's lane; `hud.active`'s rounds carry theirs. No SimState change, so SAVE_VERSION stays 5. `npm run check` passes (1644); the full Playwright run: 133 passed, 0 failed, 118 skipped. Review shots in docs/review/048; 024/04 and 044/06 retaken. `npm run measure`: packs ring 1–2 unchanged, ring 3 3/5 in band (10.3–21.8 s, was all met), the Bulwark's decent build 10/20 with 6 KOs (was 13/20, 3 KOs): recorded as 048.7, not tuned. Spec status stays approved.
+
+**Next:** Shaun answers 048.3–048.7 (spec, "Raised after the build") and playtests the preview.
+
 ## 2026-10-20: 049 resin pylon built (draft PR)
 **Changed:** built 049 on `claude/049-resin-pylon`, stacked on the 048/049 specs branch. The Husk Hive is a new landmark entry: a nest of amber-crusted stones on Region 1's east side (x 99–103, y 34–40, by the South-east Ley Spring), five resin seeps (the boulder's numbers, giving Husk resin), four Husks with a placed champion at ring 2, and a pylon that sends Husk resin up a new resin port at (1, 11). A bomb line now runs from supply alone (tested). A goal after "Claim a second pylon" points to the Hive. Stacked port plates move one tile into the room so the port below doesn't hide them. SAVE_VERSION 6, no migration. `npm run check` passes (1655); the full Playwright run: 131 passed, 1 failed (claiming.spec's scripted fight, KO'd by the shifted RNG stream; since review it clears the shrine's guards through the hook as declared setup, no health top-up; re-run passes), 121 skipped. Review shots in docs/review/049; 032/08 retaken. `npm run measure`: 6 of 7 met as before (the Bulwark's decent build 13/20, 4 KOs). Spec status stays approved.
 

@@ -25,7 +25,8 @@ export interface TubeSlotState extends ScreenBox {
 
 // The intake's bar (025, 047: the tube slot): centred above the carried bar and `activeScale`
 // times its size, it shows what the next left click does, as the sim's `hudActive` says: the
-// volley, one icon per round with its entrance's count; before the tube attunes, the selected
+// volley, one icon per round with its entrance's count, in lane order (048: the left unit fires
+// left of the cursor, the right one right); before the tube attunes, the selected
 // carried round with how many are carried (047.9); else a fist labelled "Melee".
 export class TubeSlotView {
   private readonly frame: GameObjects.Image;

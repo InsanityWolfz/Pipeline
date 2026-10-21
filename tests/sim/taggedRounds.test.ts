@@ -7,8 +7,8 @@ import type { SimState } from '../../src/sim/state';
 import { arena, fireAt, hold, movePlayer, run, volleyAt } from './fight';
 import { foundry, stepOutside } from './foundryKit';
 
-// Tagged rounds in the tube (029): entrances hold one exact round kind, rounds that
-// fire together fan by base ammo, and carried tagged rounds fire from their base's slot first.
+// Tagged rounds in the tube (029): entrances hold one exact round kind, each fed entrance fires
+// down its own lane whatever its round (048), and carried tagged rounds fire from their own slot.
 
 const angles = (s: SimState): number[] =>
   s.arrows.map((a) => Math.round(((Math.atan2(a.dy, a.dx) * 180) / Math.PI) * 10) / 10).sort((a, b) => a - b);
@@ -36,10 +36,14 @@ describe('tagged rounds and the entrances', () => {
     expect(s.arrows.map((a) => a.ammoId).sort()).toEqual(['arrow', 'arrow+frost']);
   });
 
-  it('groups a volley by base ammo', () => {
-    const shots = volleyShots(['arrow', 'ley-bolt+homing', 'arrow+frost'], 1, 0);
-    expect(shots.map((v) => v.ammoId)).toEqual(['arrow', 'arrow+frost', 'ley-bolt+homing']);
-    expect(shots[2]?.dir).toEqual([1, 0]);
+  it('fires each round down its own lane, in lane order, never grouped by base ammo (048: replaces 029’s grouping)', () => {
+    const shots = volleyShots([
+      { ammoId: 'arrow', lane: -SPREAD_STEP },
+      { ammoId: 'ley-bolt+homing', lane: 0 },
+      { ammoId: 'arrow+frost', lane: SPREAD_STEP },
+    ], 1, 0);
+    expect(shots.map((v) => v.ammoId)).toEqual(['arrow', 'ley-bolt+homing', 'arrow+frost']);
+    expect(shots[1]?.dir).toEqual([1, 0]);
   });
 });
 

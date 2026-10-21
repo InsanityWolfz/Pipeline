@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ammoDef, lobAmmo, lobbedAmmo } from '../../src/data/ammo';
 import { enemyDef, type BulwarkDef } from '../../src/data/enemies';
-import { LOB_SPACING } from '../../src/data/foundry';
+import { SPREAD_STEP } from '../../src/data/foundry';
 import { TALENT_START } from '../../src/data/talents';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import { travelTo } from '../../src/sim/claims';
@@ -123,10 +123,12 @@ describe('landmines', () => {
     expect(s.mines.armed.length).toBe(4);
   });
 
-  it('land side by side in a volley, LOB_SPACING apart across the aim', () => {
-    const shots = volleyShots(['landmine', 'landmine'], 1, 0);
-    expect(shots.map((x) => x.across)).toEqual([-LOB_SPACING / 2, LOB_SPACING / 2]);
-    expect(shots.every((x) => x.dir[0] === 1 && x.dir[1] === 0)).toBe(true);
+  it('take their lanes in a volley like any round (048: was side by side across the aim)', () => {
+    const shots = volleyShots([
+      { ammoId: 'landmine', lane: -SPREAD_STEP / 2 },
+      { ammoId: 'landmine', lane: SPREAD_STEP / 2 },
+    ], 1, 0);
+    expect(shots.map((x) => Math.round((Math.atan2(x.dir[1], x.dir[0]) * 180) / Math.PI * 10) / 10)).toEqual([-SPREAD_STEP / 2, SPREAD_STEP / 2]);
   });
 
   it('vanish, armed or in flight, when the player changes room or travels', () => {
