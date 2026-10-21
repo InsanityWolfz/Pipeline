@@ -54,6 +54,11 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 047 | Inventory and hotbars: an intake bar (left click) and a carried bar (1–5, right click), a Factorio-style grid inventory and hopper screens, crafting tabs per ammo type with tagged rounds in them | done |
 | 048 | Volley shape: each entrance fires down its own lane of a 15° fan, every family, each at its own rate; bombs land on an arc at the cursor (note 5) | done |
 | 049 | Resin pylon: the Husk Hive, a ring 2 landmark with resin seeps and a pylon that supplies resin, so bombs can be automated (note 16) | done |
+| 050 | Playtest fixes and title screen: character art, name tags, top banners, E closes screens and opens the hovered hopper or crate, crate slots, tooltips, safe foundry items, the second-line goal, ward and Mending effects, F11, a livelier title | draft |
+| 051 | Guidance: waypoint arrows to the current goal, resource icons on hoppers, sub-steps with icons, glowing harvestable nodes, a fog-of-war minimap with labels, a foundry minimap, the mouse-icon right-click hint | draft |
+| 052 | Foundry logistics: underground belts (5 tiles), the sorter and merger removed, the stash as a two-panel inventory, the bench by the door redrawn | draft |
+| 053 | World and bosses: a round map with ring-shaped regions, an obvious foundry entrance, clean paths and ley lines with resource icons, boss arenas with doors (E in, locked inside), a rimestone pylon (2026-10-21 notes, theme D) | idea |
+| 054 | Combat readability: a blue shield health bar when an enemy can't be hit, the Bulwark back wave shaded, the Pool-arrow visual, slower homing bolts, the visible 5-shard star shot (2026-10-21 notes, theme E) | idea |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
 
