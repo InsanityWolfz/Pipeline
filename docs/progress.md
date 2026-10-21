@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: World and combat interview; 053–055 drafted
+**Changed:** ran the interview for the next batch (docs/brainstorm/2026-10-21-world-combat-interview.md) and drafted 053 (the round world), 054 (combat readability) and 055 (boss doors and the rimestone pylon).
+
+**Next:** Shaun approves 053–055. 054 can build alongside 053; 055 follows 053.
+
 ## 2026-10-21: 052 merged
 **Changed:** Shaun merged 052 (foundry logistics: underground belts, stash, bench), InsanityWolfz/Pipeline#43.
 
