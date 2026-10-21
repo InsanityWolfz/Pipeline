@@ -34,6 +34,7 @@ import { noteBag } from './bag';
 import { resetWorld } from './resetWorld';
 import type { SandboxState } from './sandbox';
 import { createSubSteps, type SubStepState } from './subSteps';
+import { createFog } from './fog';
 
 /** The whole sim: plain serializable data. */
 export interface SimState {
@@ -101,6 +102,8 @@ export interface SimState {
   claimHold: ClaimHold | null;
   /** Landmark ids seen at least once (032), in the order found. Kept through a KO. */
   discovered: string[];
+  /** 051 (B.5): the minimap's fog of war, overworld tiles once on screen, 32 to a number (src/sim/fog.ts). Kept through a KO. */
+  fog: number[];
   /** Each Ruined Cache (032): the tick it was opened, or null while it's full. Kept through a KO (no refill). */
   caches: CacheState[];
   /** Opening a cache in progress (032), if any. */
@@ -216,6 +219,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     claims: [],
     claimHold: null,
     discovered: [],
+    fog: createFog(),
     caches: createCaches(),
     cacheHold: null,
     activatePulse: 0,

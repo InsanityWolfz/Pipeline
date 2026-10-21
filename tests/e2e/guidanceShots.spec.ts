@@ -109,4 +109,28 @@ test.describe('review screenshots (051)', () => {
     expect((await ui(page))?.nodeGlow).not.toContain(rock.spent);
     await page.screenshot({ path: `${SHOTS}/04-node-glow.png`, clip: await clipAround(page, rock.x + 40, rock.y - 20, 300, 200) });
   });
+
+  test('05 the fogged minimap, the foundry named on hover', async ({ page }) => {
+    test.setTimeout(90_000);
+    await boot(page, '?start=field');
+    // Up to the stairs and round the ruin field, so a patch of the map is revealed.
+    await page.evaluate(() => {
+      const g = window.__GAME__;
+      const h = window.__helpers;
+      if (!g || !h) throw new Error('no game');
+      const p = g.getState().player;
+      h.walkTo(p.x, p.y - 5 * 32);
+      h.walkTo(p.x + 12 * 32, p.y - 5 * 32);
+      h.walkTo(p.x, p.y);
+    });
+    await quietScreen(page);
+    const foundry = (await ui(page))?.minimap.markers.find((m) => m.kind === 'entrance');
+    if (!foundry) throw new Error('no foundry icon');
+    const canvas = await page.locator('canvas').boundingBox();
+    if (!canvas) throw new Error('no canvas');
+    const k = canvas.width / VIEW_WIDTH;
+    await page.mouse.move(canvas.x + foundry.x * k, canvas.y + foundry.y * k);
+    await expect.poll(async () => (await ui(page))?.minimap.hover).toBe('Foundry');
+    await page.screenshot({ path: `${SHOTS}/05-fogged-minimap.png`, clip: { x: canvas.x + canvas.width * 0.55, y: canvas.y, width: canvas.width * 0.45, height: canvas.height * 0.32 } });
+  });
 });

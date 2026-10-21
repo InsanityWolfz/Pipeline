@@ -190,6 +190,8 @@
     "state.fixtures[].item: null",
     "state.fixtures[].timer: number",
     "state.fixtures[]: object",
+    "state.fog: array",
+    "state.fog[]: number",
     "state.found: array",
     "state.found[]: string",
     "state.foundry.nextPieceId: number",

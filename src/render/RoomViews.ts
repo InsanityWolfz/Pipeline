@@ -28,7 +28,7 @@ import { MineView, NO_MINES_SHOWN } from './MineView';
 export type RoomUiState = Pick<UiState, 'minimap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows' | 'relics' | 'talentFx' | 'mines' | 'hint'>;
 
 /** The room views' part of `ui()` before the scene has built them. */
-export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [] }, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN, relics: NO_RELICS_SHOWN, talentFx: NO_TALENT_FX, mines: NO_MINES_SHOWN, hint: NO_HINT_SHOWN };
+export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [], hover: null }, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN, relics: NO_RELICS_SHOWN, talentFx: NO_TALENT_FX, mines: NO_MINES_SHOWN, hint: NO_HINT_SHOWN };
 
 // The ground on screen: a tiled room (the foundry) or the overworld's terrain
 // with its landmarks (017), plus the corner minimap while outside, and the
@@ -75,6 +75,11 @@ export class RoomViews {
     this.mines = new MineView(scene);
   }
 
+  /** The pointer, view px: 051's minimap names the icon under it. */
+  pointAt(x: number, y: number): void {
+    this.minimap.pointAt(x, y);
+  }
+
   /** Draws a room's ground and fits the camera to it. */
   show(room: Room): void {
     this.tiles.show(room);
@@ -114,7 +119,7 @@ export class RoomViews {
    */
   get state(): RoomUiState {
     return {
-      minimap: { shown: this.minimap.shown, markers: this.minimap.markers },
+      minimap: { shown: this.minimap.shown, markers: this.minimap.markers, hover: this.minimap.hover },
       supply: { started: this.supply.started, inFlight: this.supply.inFlight },
       intakeCaps: this.intake.capsShown,
       intakeLift: this.intake.liftShown,

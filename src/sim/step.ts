@@ -10,6 +10,7 @@ import { bankGains } from './banking';
 import { stepClaims, stepPorts } from './claims';
 import { stepCache, stepCacheRearm } from './cache';
 import { stepDiscovery } from './landmarks';
+import { stepFog } from './fog';
 import { arrowHits, removeDead } from './combat';
 import { stepDoorways } from './doorways';
 import { stepPickups } from './drops';
@@ -79,6 +80,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepLink(state);
   // Enemies act after the player moves, so a swipe lands on where the player stands now.
   stepDiscovery(state);
+  stepFog(state);
   stepPopulation(state);
   stepCacheRearm(state);
   // Before enemies act, so a Bulwark bomb thrown this tick starts its fuse at 0 (034; its fuseTicks keep the word).

@@ -103,7 +103,8 @@ export interface UiState {
   hoverName: string | null;
   hoverDescription: string | null;
   buildTip: string | null;
-  minimap: { shown: boolean; markers: { kind: string; x: number; y: number }[] };
+  /** 017, 051: the minimap, its markers (view px, with the name hovering shows), and the hovered one's name. */
+  minimap: { shown: boolean; markers: { kind: string; x: number; y: number; name?: string }[]; hover: string | null };
   nodes: Record<number, string>;
   /** 051 (B.4): the drawn nodes whose harvestable glow shows, by node id. */
   nodeGlow: number[];
