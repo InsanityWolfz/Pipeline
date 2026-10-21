@@ -191,12 +191,12 @@ test('gear: the list scrolls on the wheel, a row’s tip goes as the cursor leav
   await page.keyboard.up('Shift');
   await expect.poll(async () => (await ui(page))?.tip?.mode).toBe('summary');
 
-  // Onto the tip itself (off the row): it goes at once.
-  const tip = (await ui(page))?.tip?.box;
-  if (!tip) throw new Error('no tip');
-  const onTip = await screenPoint(page, tip.x + tip.w / 2, tip.y + tip.h / 2);
+  // Onto the tip itself (off the row): the row's tip goes at once (where the tip covers another row, that row's shows).
+  const shown = (await ui(page))?.tip;
+  if (!shown) throw new Error('no tip');
+  const onTip = await screenPoint(page, shown.box.x + shown.box.w / 2, shown.box.y + shown.box.h / 2);
   await page.mouse.move(onTip.x, onTip.y);
-  await expect.poll(async () => (await ui(page))?.tip ?? null, { timeout: 2000 }).toBeNull();
+  await expect.poll(async () => (await ui(page))?.tip?.source.id ?? null, { timeout: 2000 }).not.toBe(shown.source.id);
   expect(errors).toEqual([]);
 });
 
