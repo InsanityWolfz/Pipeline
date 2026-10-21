@@ -41,6 +41,8 @@ export interface GameTestHook {
   step(frames: number, command?: Partial<Command>): SimSummary;
   /** Crafts a recipe once between ticks, as clicking its menu row does. */
   craft(recipeId: string): SimSummary;
+  /** Hands the ticks back to the game loop after step() took them (050: a test of what a live key press reaches the sim). */
+  resume(): void;
   ui(): UiState;
   /** The sound settings (020: set from the pause menu). */
   sound(): { muted: boolean; volume: number };

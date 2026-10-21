@@ -68,6 +68,41 @@ test('E opens the hopper under the cursor within 3 tiles, not the nearest; E clo
   expect(errors).toEqual([]);
 });
 
+test('E that closes the bag beside a boulder does not also harvest it (050 review)', async ({ page }) => {
+  test.setTimeout(90_000);
+  const errors = watchErrors(page);
+  await boot(page, '?start=field&attuned');
+  // Stand just below the nearest boulder, in E's reach.
+  await page.evaluate(() => {
+    const g = window.__GAME__;
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    const s = g.step(1);
+    const p = s.player;
+    const near = s.nodes.filter((n) => n.nodeId === 'rubble' && n.room === s.room).sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+    if (!near) throw new Error('no boulder');
+    h.walkTo(near.x, near.y + 14);
+  });
+  // The in-reach E prompt, or the gathering goal's own E prompt standing in for it (as in the name-tag test).
+  await expect.poll(async () => { const u = await ui(page); return (u?.interactPrompt ?? u?.prompt)?.key; }).toBe('E');
+  await page.keyboard.press('i');
+  await expect.poll(async () => (await ui(page))?.inventory.open).toBe(true);
+  // Live ticks from here, so the key presses reach the sim as play sends them.
+  await page.evaluate(() => window.__GAME__?.resume());
+  const tickAfter = async (n: number) => {
+    const t0 = (await state(page)).tick;
+    await expect.poll(async () => (await state(page)).tick, { timeout: 20_000 }).toBeGreaterThan(t0 + n);
+  };
+  await page.keyboard.press('e');
+  await expect.poll(async () => (await ui(page))?.inventory.open).toBe(false);
+  await tickAfter(10);
+  expect((await state(page)).harvest).toBeNull();
+  // The next E, with nothing open, harvests as usual.
+  await page.keyboard.press('e');
+  await expect.poll(async () => (await state(page)).harvest, { timeout: 20_000 }).not.toBeNull();
+  expect(errors).toEqual([]);
+});
+
 /** Boxes meet. */
 const meets = (a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 
