@@ -65,3 +65,7 @@ The build's own choices where the spec didn't decide, each with the conservative
 
 ## Results (build)
 - `npm run measure`: ammo targets met as before; ring 1 and ring 2 packs met (2.2–3.2 s, 2.4–4 s, the measure arenas moved to open ground on the round map); ring 3 4/5 in band (14.1–21.6 s, as main). The Bulwark's decent build: 9/20 meet all three, 6 KOs (main: 14/20, 2 KOs); the naive bot KO'd on 5/5. The forum is unchanged inside, but it no longer sits against the map's edge, where the camera (and so what counts as on screen for the fight) was clamped; recorded, not tuned.
+
+## Results (after review)
+- `npm run measure` re-run after the population change (packs off the barrier's band, out of the shrine's surroundings): unchanged, since the measure places its packs and the Bulwark's fight by hand, not through the population. Ring 1 5/5 (2.2–3.2 s), ring 2 5/5 (2.4–4 s), ring 3 4/5 in band (14.1–21.6 s); the Bulwark's decent build 9/20 meet all three, 6 KOs; the naive bot KO'd 5/5. Shaun: judge at playtest (053.10).
+- The tutorial e2e's bot fights the Warden unaided and wins (3/3 runs).
