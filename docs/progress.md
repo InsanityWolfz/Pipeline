@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: 050 merged
+**Changed:** Shaun merged 050 (playtest fixes and the title screen), InsanityWolfz/Pipeline#42.
+
+**Next:** the rest of 050–052, then the next batch: 053 (world and bosses) and 054 (combat readability).
+
 ## 2026-10-21: 051 review fixes
 **Changed:** fixed 051's review on `claude/051-guidance`: 032/14 waits out the door's fade (retaken); TUTORIAL_LAYOUT.marker keeps only the bob; the Hollows' boulders draw as its stone on the minimap (tested in both regions); default-run e2e for the minimap's hover name (cleared as the pointer leaves the canvas) and the arena's icon once seen; the waypoint arrow keeps clear of the corner map, objective band and bottom HUD (051/03 retaken); hopper icons only on the refill goal; the minimap's seen rule and fog packing in src/sim/fog.ts; render magic numbers to data; `gates` required; more objectiveTarget tests; 051/07b polls the swap's progress; noise retakes put back; the minimap's data in src/data/minimap.ts. `npm run check` passes (1743); the full Playwright run: 149 passed, 0 failed, 135 skipped.
 
