@@ -1,10 +1,12 @@
 import { expect, test } from '@playwright/test';
+import { VIEW_WIDTH } from '../../src/data/config';
+import { HOLLOWS } from '../../src/data/hollows';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { OVERWORLD } from '../../src/data/overworld';
 import { boot, cameraSettled, watchErrors } from './helpers';
 
 // 051: guidance. The waypoint arrow (B.1) at the screen's edge for an off-screen goal and over it on screen, through
-// the foundry's door; the bomb goal's sub-lines (B.3).
+// the foundry's door; the bomb goal's sub-lines (B.3); the minimap's icons named on hover, and the arena's once seen (B.5).
 
 const T = 32;
 const CRAFT = OBJECTIVES.findIndex((o) => o.text === 'Craft bombs and ley bolts (C)');
@@ -76,5 +78,60 @@ test('inside the foundry a goal outside points at the door; the bomb goal lists 
     ['Collect husk resin', false],
     ['Collect ley crystal', false],
   ]);
+  expect(errors).toEqual([]);
+});
+
+test('hovering a minimap icon names it; the name goes as the cursor leaves the canvas', async ({ page }) => {
+  const errors = watchErrors(page);
+  await boot(page, '?start=field');
+  // Up past the stairs, so the foundry's icon is on the minimap.
+  await page.evaluate(() => {
+    const g = window.__GAME__;
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    const p = g.getState().player;
+    h.walkTo(p.x, p.y - 5 * 32);
+  });
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().minimap))?.markers.some((m) => m.kind === 'entrance')).toBe(true);
+  const foundry = (await page.evaluate(() => window.__GAME__?.ui().minimap))?.markers.find((m) => m.kind === 'entrance');
+  const canvas = await page.locator('canvas').boundingBox();
+  if (!foundry || !canvas) throw new Error('no icon');
+  const k = canvas.width / VIEW_WIDTH;
+  await page.mouse.move(canvas.x + foundry.x * k, canvas.y + foundry.y * k);
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().minimap))?.hover).toBe('Foundry');
+  // Off the icon: no name.
+  await page.mouse.move(canvas.x + canvas.width / 2, canvas.y + canvas.height / 2);
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().minimap))?.hover).toBeNull();
+  // Back on it, then out of the canvas: the name goes.
+  await page.mouse.move(canvas.x + foundry.x * k, canvas.y + foundry.y * k);
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().minimap))?.hover).toBe('Foundry');
+  await page.locator('canvas').dispatchEvent('mouseout');
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().minimap))?.hover).toBeNull();
+  expect(errors).toEqual([]);
+});
+
+test("the Bulwark's arena shows on the minimap once it has been on screen, named on hover", async ({ page }) => {
+  test.setTimeout(90_000);
+  const errors = watchErrors(page);
+  await boot(page, '?start=hollows');
+  await page.evaluate(() => window.__GAME__?.step(1));
+  const arena = async () => (await page.evaluate(() => window.__GAME__?.ui().minimap))?.markers.find((m) => m.kind === 'arena');
+  expect(await arena()).toBeUndefined();
+  // West along the road and in at the forum's way in (043's walk), the Hollows' other enemies cleared.
+  await page.evaluate((door) => {
+    const g = window.__GAME__;
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark') g.setEnemyHealth(e.id, 0);
+    g.step(1);
+    for (const [x, y] of [[25, 27], [12, 27], [12, door - 1], [12, door + 1]] as const) h.walkTo((x + 0.5) * 32, (y + 0.5) * 32);
+  }, HOLLOWS.arena.seal.tiles[0]?.ty ?? 0);
+  await expect.poll(async () => (await arena())?.name).toBe(HOLLOWS.arena.name);
+  const at = await arena();
+  const canvas = await page.locator('canvas').boundingBox();
+  if (!at || !canvas) throw new Error('no icon');
+  const k = canvas.width / VIEW_WIDTH;
+  await page.mouse.move(canvas.x + at.x * k, canvas.y + at.y * k);
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().minimap))?.hover).toBe(HOLLOWS.arena.name);
   expect(errors).toEqual([]);
 });
