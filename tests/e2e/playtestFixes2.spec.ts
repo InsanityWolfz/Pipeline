@@ -5,7 +5,8 @@ import { RELIC_LOOK } from '../../src/data/gearAssets';
 import { TUTORIAL_LAYOUT } from '../../src/data/foundryAssets';
 import { HOVER_NAME } from '../../src/data/hudLayout';
 import { INTERACT_PROMPTS } from '../../src/data/interact';
-import { clickRow, flowIs } from './flowPage';
+import { MENU_ROW_W } from '../../src/data/flowLayout';
+import { bootTitle, clickRow, flowIs } from './flowPage';
 import { centre, enterFoundry, pieceAt, screenPoint, standStill, state, step, toggleBuild } from './foundryPage';
 import { boot, cameraSettled, watchErrors } from './helpers';
 
@@ -256,5 +257,25 @@ test('Mending-style field regen heals with no sparkle; the ward ring keeps still
     expect(Math.abs(o.dx)).toBeLessThan(0.05);
     expect(Math.abs(o.dy + RELIC_LOOK.shimmer.lift)).toBeLessThan(0.05);
   }
+  expect(errors).toEqual([]);
+});
+
+test('the title: the wanderer breathes, sways and glows; the logo and buttons are bigger, centred where they were (050 F)', async ({ page }) => {
+  const errors = watchErrors(page);
+  await bootTitle(page);
+  const motion = () => page.evaluate(() => window.__GAME__?.ui().flow.title?.motion);
+  const first = await motion();
+  if (!first) throw new Error('no title');
+  // Each part of the motion moves on its own while the title shows.
+  for (const key of ['crouch', 'flap', 'hose', 'muzzle'] as const) await expect.poll(async () => (await motion())?.[key], { timeout: 5000 }).not.toBe(first[key]);
+  const title = await page.evaluate(() => window.__GAME__?.ui().flow.title);
+  expect(title?.logoScale).toBeGreaterThan(5);
+  const rows = title?.rows ?? [];
+  expect(rows[0]?.w).toBeGreaterThan(MENU_ROW_W);
+  const top = rows[0]?.y ?? 0;
+  const last = rows.at(-1);
+  if (!last || !rows[0]) throw new Error('no rows');
+  expect(rows[0].x + rows[0].w / 2).toBeCloseTo(500, 0);
+  expect(Math.abs((top + last.y + last.h) / 2 - 182)).toBeLessThanOrEqual(2);
   expect(errors).toEqual([]);
 });

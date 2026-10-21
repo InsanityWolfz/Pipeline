@@ -42,6 +42,8 @@ export interface WandererPose {
   muzzle: number;
   /** A punch (023), 0..1 (1 fully out): the tube thrusts along its aim, or empty-handed the near fist drives out. */
   jab: number;
+  /** 050 (F): the hose's sag swings this far sideways, px (the title's wind); 0 when absent. */
+  hoseSway?: number;
 }
 
 export const REST_POSE: WandererPose = {
@@ -158,7 +160,8 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
         const bend = WANDERER.rig.hoseBend;
         const back = rotate([-bend.back, 0], pose.aim);
         const [fx, fy] = def.hose.from;
-        const pts = [fx, fy, fx + def.hose.sag[0], fy + def.hose.sag[1], rear[0] + back[0], rear[1] + back[1] + bend.drop, rear[0], rear[1]];
+        const sway = pose.hoseSway ?? 0;
+        const pts = [fx, fy, fx + def.hose.sag[0] + sway, fy + def.hose.sag[1] + sway * 0.25, rear[0] + back[0], rear[1] + back[1] + bend.drop, rear[0], rear[1]];
         const style = lit ? WANDERER.limbs.hose : WANDERER.limbs.hoseDormant;
         c.save();
         if (lit) c.lineDashOffset = -pose.flow;

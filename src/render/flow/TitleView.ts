@@ -7,9 +7,11 @@ import { colorOf } from '../color';
 import { TextLine } from '../textLine';
 import { MenuColumn, type MenuRowShown } from './MenuColumn';
 import { paintTitle } from './titlePainter';
+import { TitleWanderer, type TitleMotion } from './TitleWanderer';
 
 // The title screen (042): the painted scene, the intake pipe's glow breathing, ley motes drifting slowly across it,
 // the "Pipeline" logo in the display font with a soft cyan glow, and the menu: New game, Continue, Settings, Quit.
+// 050 (F): the wanderer on the ridge breathes and sways in the wind, its tube's glow pulsing; the logo and rows are bigger.
 
 /** What the Continue row shows: whether it can be used, and the line under it (or none). */
 export interface ContinueShown {
@@ -20,6 +22,9 @@ export interface ContinueShown {
 export interface TitleUi {
   rows: MenuRowShown[];
   logo: string;
+  /** 050: the wanderer's motion as last drawn (it changes while the title shows), and the logo's text scale. */
+  motion: TitleMotion;
+  logoScale: number;
 }
 
 interface Mote {
@@ -42,6 +47,7 @@ export class TitleView {
   private readonly glow: GameObjects.Graphics;
   private readonly logo: TextLine;
   private readonly menu: MenuColumn;
+  private readonly wanderer: TitleWanderer;
   private readonly moteList: Mote[] = [];
   private elapsed = 0;
   private visible = true;
@@ -51,6 +57,7 @@ export class TitleView {
     const T = TITLE_SCREEN;
     const s = paintTitle(scene, screenScale);
     this.back = scene.add.image(0, 0, TITLE_SCENE_KEY).setOrigin(0).setScale(1 / s).setScrollFactor(0).setDepth(DEPTHS.titleScene);
+    this.wanderer = new TitleWanderer(scene, screenScale);
     this.pipe = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.titlePipe);
     const P = T.pipeGlow;
     for (let i = P.rings; i >= 1; i--) this.pipe.fillStyle(colorOf(P.color), 1 / P.rings).fillEllipse(P.x, P.y, (P.rx * 2 * i) / P.rings, (P.ry * 2 * i) / P.rings);
@@ -63,7 +70,7 @@ export class TitleView {
     for (let i = L.glow.rings; i >= 1; i--) this.glow.fillStyle(colorOf(L.glow.color), L.glow.alpha).fillEllipse(L.cx, L.y + L.glow.dy, (L.glow.rx * 2 * i) / L.glow.rings, (L.glow.ry * 2 * i) / L.glow.rings);
     this.logo = new TextLine(scene, 0, L.y, DEPTHS.titleLogo, false, 'title', L.scale / 2).set(L.text);
     this.logo.moveTo(Math.round(L.cx - this.logo.width / 2), L.y);
-    this.menu = new MenuColumn(scene, T.menu.x, T.menu.y, FLOW_ROWS);
+    this.menu = new MenuColumn(scene, T.menu.x, T.menu.y, { ...FLOW_ROWS, scale: T.menu.scale });
     this.setContinue({ usable: false, line: null });
   }
 
@@ -83,16 +90,18 @@ export class TitleView {
     for (const o of [this.back, this.pipe, this.motes, this.glow]) o.setVisible(visible);
     this.logo.setVisible(visible);
     this.menu.setVisible(visible);
+    this.wanderer.setVisible(visible);
   }
 
   get isVisible(): boolean {
     return this.visible;
   }
 
-  /** The pipe's glow breathes; the motes drift and twinkle. Real time: the title isn't the sim. */
+  /** The pipe's glow breathes; the motes drift and twinkle; the wanderer breathes and sways (050). Real time: the title isn't the sim. */
   update(deltaMs: number): void {
     if (!this.visible) return;
     this.elapsed += deltaMs;
+    this.wanderer.update(this.elapsed, deltaMs);
     const P = TITLE_SCREEN.pipeGlow;
     const breath = 0.5 - 0.5 * Math.cos((this.elapsed / P.periodMs) * Math.PI * 2);
     this.pipe.setAlpha(P.alpha[0] + (P.alpha[1] - P.alpha[0]) * breath);
@@ -120,6 +129,6 @@ export class TitleView {
   }
 
   get ui(): TitleUi {
-    return { rows: this.menu.shown, logo: TITLE_SCREEN.logo.text };
+    return { rows: this.menu.shown, logo: TITLE_SCREEN.logo.text, motion: this.wanderer.shown, logoScale: TITLE_SCREEN.logo.scale };
   }
 }
