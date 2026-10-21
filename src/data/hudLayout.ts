@@ -206,6 +206,8 @@ export const HOVER_NAME = {
   promptClear: 68,
   /** The player's sprite a tag never covers: this wide, this tall up from the feet, px. */
   playerBox: { w: 24, h: 44 },
+  /** The E prompt's key cap a tag never covers (the 11 px key cap, 045), px. */
+  promptCap: { w: 12, h: 11 },
 } as const;
 
 /** World names for things that aren't pieces, enemies, nodes or items (015). */

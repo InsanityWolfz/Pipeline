@@ -2,6 +2,9 @@ import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { FEET_BOX } from '../data/player';
+import { INTERACT_PROMPTS } from '../data/interact';
+import { TUTORIAL_LAYOUT } from '../data/foundryAssets';
+import { interactTarget } from '../sim/interactables';
 import { placeNameTag, type TagBox } from './nameTagPlace';
 import { HOVER_NAME, MINIMAP } from '../data/hudLayout';
 import { OVERWORLD } from '../data/overworld';
@@ -94,17 +97,37 @@ export class HoverView {
     if (hit.description !== undefined) this.description.set(hit.description);
     const w = Math.max(this.name.width, hit.description !== undefined ? this.description.width : 0, chipsW);
     const h = this.name.lineHeight + extra;
-    // 050.1: under the thing's feet, clear of its E prompt; above it (clear of the prompt) where that would cover the
-    // player; kept in the view and off the minimap.
+    // 050.1: under the thing's feet, clear of the E prompt; just above it where that would cover the player (or the
+    // prompt), else beside it, else above its prompt; kept in the view and off the minimap.
     const p = sim.player;
     const feet = p.y + FEET_BOX.h / 2;
     const { playerBox } = HOVER_NAME;
+    const here = shown === sim.roomId;
+    const prompt = here ? interactTarget(sim) : null;
+    const cap = HOVER_NAME.promptCap;
     const avoid = [
-      ...(shown === sim.roomId ? [{ x: p.x - playerBox.w / 2, y: feet - playerBox.h, w: playerBox.w, h: playerBox.h }] : []),
+      ...(here ? [{ x: p.x - playerBox.w / 2, y: feet - playerBox.h, w: playerBox.w, h: playerBox.h }] : []),
+      // The E prompt's key cap over whatever E acts on (045), wherever it is.
+      ...(prompt ? [{ x: prompt.x - cap.w / 2, y: prompt.y - INTERACT_PROMPTS[prompt.kind].rise - TUTORIAL_LAYOUT.promptLift - cap.h, w: cap.w, h: cap.h }] : []),
       ...(shown === OVERWORLD.id ? [minimapBox(view)] : []),
     ];
-    const above = Math.min(top - HOVER_NAME.gap, hit.y - HOVER_NAME.promptClear);
-    const at = placeNameTag({ cx: hit.x, below: below + HOVER_NAME.gap, above, w: w + 2 * pad, h: h + 2 * pad, avoid, view: { x: view.x, y: viewTop, w: VIEW_WIDTH, h: VIEW_HEIGHT }, edge: 0 });
+    const halfW = piece ? pieceRect(piece).w / 2 : HOVER_NAME.node.w / 2;
+    const at = placeNameTag({
+      cx: hit.x,
+      halfW,
+      feet: hit.y,
+      rise: hit.rise,
+      below: below + HOVER_NAME.gap,
+      top,
+      playerX: p.x,
+      gap: HOVER_NAME.gap,
+      promptClear: HOVER_NAME.promptClear,
+      w: w + 2 * pad,
+      h: h + 2 * pad,
+      avoid,
+      view: { x: view.x, y: viewTop, w: VIEW_WIDTH, h: VIEW_HEIGHT },
+      edge: 0,
+    });
     const y = Math.round(at.y + pad);
     const cx = at.x + pad + w / 2;
     this.name.moveTo(Math.round(cx - this.name.width / 2), y);

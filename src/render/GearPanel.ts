@@ -122,8 +122,11 @@ export class GearPanel {
     const [kind, arg] = hit?.key.split(':') ?? [];
     const id = kind === 'row' ? Number(arg) : kind === 'cell' ? this.shown?.cells.find((c) => c.slot === arg)?.worn : undefined;
     if (!hit || id === undefined || id === null) return null;
-    // 050 (A.6): it goes the moment the cursor leaves the piece's square, even onto the tip.
-    return { source: { kind: 'gear', id: String(id) }, at: hit.box, anchor: { box: hit.box, prefer: ['right', 'left', 'below'] }, leaveAtOnce: true };
+    // 050 (A.6): it goes the moment the cursor leaves the piece's square, even onto the tip. A row's tip goes beside the
+    // panel, clear of the list's scroll bar.
+    const P = this.layout.panel;
+    const beside = kind === 'row' ? { ...hit.box, w: P.x + P.w - hit.box.x } : hit.box;
+    return { source: { kind: 'gear', id: String(id) }, at: hit.box, anchor: { box: beside, prefer: ['right', 'left', 'below'] }, leaveAtOnce: true };
   }
 
   /** The cursor is at a screen point: what it's over lights, with the hover sound on a new target. */
