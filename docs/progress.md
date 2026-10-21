@@ -2,6 +2,10 @@
 
 Newest entry first.
 
+## 2026-10-21: 052 review suggestions applied
+**Changed:** on `claude/052-foundry-logistics`. The bench's magnifying glass is about a tile across (thicker rim, readable at play scale) and its rack stays inside its tile, clear of the door's wall. The bench's E prompt sits beside it, away from the player (on the door's wall in the foundry), so it never covers the arriving player (052.9). The stash screen says "Stash" once. Tunnel look numbers and emblem keys moved into data; the stash's unused take/put events dropped (SAVE_VERSION stays 7). Shot specs wait on state; 036/07, 028/01, 052/03–05 and 036's bench shots retaken.
+**Next:** Shaun answers 052.4–052.12 and playtests the preview.
+
 ## 2026-10-21: 052 built (foundry logistics)
 **Changed:** on `claude/052-foundry-logistics` (draft PR). The underground pair: an entrance and an exit, up to 5 tiles between in a straight line, anything built between; a tunnel holds as many items as tiles it spans, like a conduit that long. Its reach shows while placing, the tunnel on hover; placing one end selects the other. Shaun's crossing case (an arrow line and a bomb line whose feeds cross) is a sim test. The sorter and the merger are gone, with the merger's research, schematic and art. The stash opens a two-panel screen (its own scrolling grid over the inventory, the same clicks). The bench sits just inside the door at (22, 9), redrawn as a workbench with a magnifying glass and an armor rack. SAVE_VERSION 7, no migration. `npm run check` passes (1678); full Playwright: 135 passed, 1 failed (fixed, file re-run passes), 126 skipped. Measure unchanged from main (ring 3 and the Bulwark's decent build MISSED there too).
 
