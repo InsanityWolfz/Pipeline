@@ -86,21 +86,23 @@ export const RESIN_SEEP = {
 
 /**
  * A nest stone: a heaped boulder caked in amber resin running down from its top, straw stuck in the crust, one with a
- * dark burrow mouth where the Husks crawl in. `flip` mirrors it.
+ * dark burrow mouth where the Husks crawl in. `flip` mirrors its silhouette, crust and straw; the light stays top-left.
  */
 function hiveStone(flip: number, burrow: boolean): Shape[] {
   const s = flip;
   return [
     shadow(20, 5, -1),
     path(`M ${-19 * s} 0 Q ${-21 * s} -14 ${-12 * s} -24 Q ${-2 * s} -33 ${9 * s} -28 Q ${19 * s} -22 ${19 * s} -9 Q ${19 * s} -2 ${16 * s} 0 Z`, solid('rock')),
-    path(`M ${-14 * s} -16 Q ${-12 * s} -25 ${-3 * s} -29 Q ${5 * s} -31 ${10 * s} -26 Q ${2 * s} -24 ${-5 * s} -20 Z`, flat('rock-light')),
-    path(`M ${16 * s} 0 Q ${19 * s} -10 ${15 * s} -20 Q ${13 * s} -9 ${8 * s} 0 Z`, flat('rock-dark')),
+    // Lit top-left and shaded right whichever way it faces (docs/art.md): only the silhouette, crust and straw mirror.
+    ...(s > 0
+      ? [path('M -14 -16 Q -12 -25 -3 -29 Q 5 -31 10 -26 Q 2 -24 -5 -20 Z', flat('rock-light')), path('M 16 0 Q 19 -10 15 -20 Q 13 -9 8 0 Z', flat('rock-dark'))]
+      : [path('M -15 -12 Q -15 -22 -8 -27 Q 0 -31 6 -27 Q -2 -24 -8 -18 Z', flat('rock-light')), path('M 18.5 0 Q 20 -11 14 -21 Q 13 -9 9 0 Z', flat('rock-dark'))]),
     // The amber crust over its crown, running down in drips.
     path(
       `M ${-12 * s} -22 Q ${-4 * s} -32 ${8 * s} -28 Q ${15 * s} -25 ${16 * s} -18 L ${13 * s} -15 L ${12 * s} -9 L ${10 * s} -16 L ${4 * s} -18 L ${2 * s} -11 L ${0} -19 L ${-7 * s} -18 L ${-9 * s} -13 L ${-10 * s} -19 Z`,
       { fill: { linear: [0, -32, 0, -10], stops: AMBER }, outline: true },
     ),
-    ellipse(-2 * s, -27, 4, 1.4, flat({ id: 'resin-light', alpha: 0.85 })),
+    ellipse(-2, -27, 4, 1.4, flat({ id: 'resin-light', alpha: 0.85 })),
     ...[
       [12 * s, -8.4],
       [2 * s, -10.4],
