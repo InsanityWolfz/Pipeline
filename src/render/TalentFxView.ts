@@ -104,7 +104,7 @@ export class TalentFxView {
     if (here) for (const c of events.poolBursts) this.burst('pool', TALENT_SPRITES.pool, c.x, c.y, c.y + B.depthAbove, { ms: B.ms, from: B.from * k(c.radius), to: B.to * k(c.radius) }, true, burstTint(c.damageType));
     // 054: a burning arrow's hit flashes small and ember-hot on the body it hits (042.10: none with Flashes off).
     const F = BURNING_LOOK.flash;
-    if (here && settings().flashes) for (const h of events.hits) if (h.target === 'enemy' && h.burning) this.burst('burning', TALENT_SPRITES.burningFlash, h.x, h.y - F.lift, h.y + F.depthAbove, F, true);
+    if (here && settings().flashes) for (const h of events.hits) if (h.target === 'enemy' && h.burning) this.burst('burning', TALENT_SPRITES.burningFlash, h.x, h.y - F.lift, h.y + F.depthAbove, F);
     this.stepBursts(deltaMs);
     this.stepLine(deltaMs);
     this.drawPools(sim, shown);

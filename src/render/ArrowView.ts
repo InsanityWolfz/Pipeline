@@ -95,7 +95,7 @@ export class ArrowView {
     const { tip, trail } = d.burn;
     const now = this.scene.time.now;
     const flicker = 1 + B.flicker * Math.sin((now / B.flickerMs) * Math.PI * 2 + a.id);
-    const base = Number(tip.getData('base')) || tip.scaleX;
+    const base = Number(tip.getData('base')) || tip.scaleX * B.tipScale;
     tip.setData('base', base);
     tip.setPosition(a.x + a.dx * B.tipAhead, y + a.dy * B.tipAhead).setRotation(angle).setDepth(a.y + 0.01).setScale(base * flicker).setAlpha(Math.min(1, 1.1 - B.flicker + B.flicker * flicker));
     this.drawTrail(trail, a.x, y, a.y);
