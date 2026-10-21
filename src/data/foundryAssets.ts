@@ -222,8 +222,8 @@ export const TUTORIAL_SPRITES = {
 
 /** Tutorial layout, px: the objective line's top, the tick's gap left of it, a prompt's lift over its target, a gate's crumble. */
 export const TUTORIAL_LAYOUT = {
-  /** The objective line sits on the right of the screen (019), right-aligned `objectiveRight` px from the edge, below the minimap. */
-  objectiveTop: 86,
+  /** The objective line sits on the right of the screen (019), right-aligned `objectiveRight` px from the edge, below the minimap (053: the round world's, ~101 px tall). */
+  objectiveTop: 116,
   objectiveRight: 10,
   /** The objective line's tablet (020): padding round the text, and its alpha. */
   objectivePanel: { padX: 6, padY: 3, alpha: 0.85 },

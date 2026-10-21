@@ -9,13 +9,15 @@ import type { SimState } from '../sim/state';
 import { WORLD } from '../sim/world';
 import { colorOf } from './color';
 import { harvestTarget } from './nodeStages';
+import { itemDef } from '../data/items';
+import { addVector, showFrame } from './vector/textures';
 
 // Each claimed pylon's harvest, made visible (018). Each raw a supply port produces
-// (028: one port per raw) shows here first as its own mote: a ley tendril from a claimed
+// (028: one port per raw) shows here first as its own haul: a ley tendril from a claimed
 // pylon supplying that raw to the nearest node of it in the pylon's zone, the node
-// pulsing, then a mote running along that pylon's ley line to the foundry's stairs, where
-// it sinks in. With several pylons supplying a raw (032), its motes leave from each in
-// turn. Visual only: nodes are never used up.
+// pulsing, then (053, D.4) a small icon of the raw running along that pylon's ley line to
+// the foundry's ruin, where it sinks in. With several pylons supplying a raw (032), its
+// hauls leave from each in turn. Visual only: nodes are never used up.
 
 /** A ley line home as points with its segments' lengths, px. */
 interface Line {
@@ -26,6 +28,8 @@ interface Line {
 
 interface Mote {
   itemId: string;
+  /** The raw's icon, running home (053). */
+  icon: GameObjects.Image;
   /** The node it was drawn from, px; null when the zone holds none of that raw. */
   from: { x: number; y: number } | null;
   /** The pylon it leaves from, px, and the line it runs home along. */
@@ -69,15 +73,18 @@ export class SupplyView {
   /** Motes started per raw, to take the supplying pylons in turn. */
   private readonly turns = new Map<string, number>();
 
+  private readonly scene: Scene;
+
   constructor(scene: Scene) {
+    this.scene = scene;
     // Over everything standing in the world, so a stone or tree on the line never hides the haul going home.
     this.glow = scene.add.graphics().setDepth(DEPTHS.supplyLine).setBlendMode(BlendModes.ADD);
     this.g = scene.add.graphics().setDepth(DEPTHS.supplyLine + 1);
   }
 
-  /** Motes on their way, for the test hook: the raw and how far along (0..1, past 1 while sinking). */
-  get inFlight(): { itemId: string; progress: number; site: string }[] {
-    return this.motes.map((m) => ({ itemId: m.itemId, progress: this.travelled(m) / m.line.length, site: this.siteOf(m) }));
+  /** Hauls on their way, for the test hook: the raw, how far along (0..1, past 1 while sinking), and the icon frame it shows (053). */
+  get inFlight(): { itemId: string; progress: number; site: string; icon: string; iconShown: boolean }[] {
+    return this.motes.map((m) => ({ itemId: m.itemId, progress: this.travelled(m) / m.line.length, site: this.siteOf(m), icon: m.icon.frame.name, iconShown: m.icon.visible }));
   }
 
   private siteOf(m: Mote): string {
@@ -96,14 +103,19 @@ export class SupplyView {
       if (!p || !line) continue;
       const at = centre(p);
       const node = harvestTarget(sim.nodes, OVERWORLD.id, s.itemId, at, p.safeRadius * T);
-      this.motes.push({ itemId: s.itemId, from: node ? { x: node.x, y: node.y } : null, pylon: at, line, ageMs: 0 });
+      const icon = addVector(this.scene, at.x, at.y, itemDef(s.itemId).icon).setDepth(DEPTHS.supplyLine + 2).setVisible(false);
+      this.motes.push({ itemId: s.itemId, icon, from: node ? { x: node.x, y: node.y } : null, pylon: at, line, ageMs: 0 });
       this.started += 1;
     }
     const L = SUPPLY_LOOK;
     // A long frame (a hitch, a background tab) moves motes no further than a short one, so none skips its run.
     const step = Math.min(deltaMs, L.maxStepMs);
     for (const m of this.motes) m.ageMs += step;
-    this.motes = this.motes.filter((m) => this.travelled(m) < m.line.length || m.ageMs < this.arriveMs(m) + L.sinkMs);
+    this.motes = this.motes.filter((m) => {
+      const live = this.travelled(m) < m.line.length || m.ageMs < this.arriveMs(m) + L.sinkMs;
+      if (!live) m.icon.destroy();
+      return live;
+    });
     this.g.clear();
     this.glow.clear();
     this.g.setVisible(shown === OVERWORLD.id);
@@ -145,14 +157,19 @@ export class SupplyView {
       const pulse = Math.max(0, (m.ageMs - L.tendrilMs * L.pulseAt) / L.pulseMs);
       if (pulse > 0 && pulse < 1) g.lineStyle(L.pulseWidth, colorOf(L.tendrilColor), 1 - pulse).strokeCircle(m.from.x, m.from.y - L.pulseRise, L.pulseRadius * pulse);
     }
+    const shown = this.g.visible;
+    m.icon.setVisible(shown && m.ageMs >= L.tendrilMs);
     if (m.ageMs < L.tendrilMs) return;
-    // The mote runs along the ley line, then sinks into the stairs.
+    // The raw's icon runs along the ley line, over its halo, then sinks into the ruin.
     const d = this.travelled(m);
     const sink = d >= m.line.length ? Math.min(1, (m.ageMs - this.arriveMs(m)) / L.sinkMs) : 0;
     const p = along(m.line, d);
     const colour = L.moteColors[m.itemId] ?? L.tendrilColor;
     const shrink = 1 - sink * L.sinkShrink;
+    // The ley's cyan halo, and a disc of the raw's colour the icon sits on.
     this.glow.fillStyle(colorOf(L.halo), L.haloAlpha * (1 - sink)).fillCircle(p.x, p.y, L.haloRadius * shrink);
-    g.fillStyle(colorOf(colour), 1 - sink).fillCircle(p.x, p.y, L.moteRadius * shrink);
+    g.fillStyle(colorOf(colour), L.plateAlpha * (1 - sink)).fillCircle(p.x, p.y, L.plateRadius * shrink);
+    showFrame(m.icon, itemDef(m.itemId).icon);
+    m.icon.setOrigin(0.5).setPosition(p.x, p.y).setAlpha(1 - sink).setScale(m.icon.scaleX * L.iconScale * shrink);
   }
 }

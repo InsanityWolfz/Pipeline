@@ -14,19 +14,27 @@ import { addVector, textureScale } from '../vector/textures';
 import { drawGround } from './ground';
 import { inHollows } from '../../data/hollows';
 import { hollowsFrame } from '../hollowsTiles';
+import { isPlateau } from './plateau';
 
-// Draws the overworld (017): its ground baked once into chunk textures, then
-// every tree, rock, ruin and the foundry's mound as vector sprites sorted by
-// their feet; the ley barrier dome over the shrine site while its gate is shut;
-// and greener ground with a ley ring round a claimed pylon.
+// Draws the overworld (017): its ground baked into chunk textures, then every tree, rock, ruin and the foundry's ruin
+// as vector sprites sorted by their feet; the ley barrier dome over the shrine site while its gate is shut; and
+// greener ground with a ley ring round a claimed pylon. 053: the round map is too big to bake whole, so each chunk
+// (its ground and its standing sprites) is built as the camera nears it and dropped once it's far behind.
 
 const T = TILE_SIZE;
 
 const { dome: DOME, safe: SAFE } = SITE_LOOK;
 
+/** A built chunk: its ground image (and texture) and the sprites standing on its tiles. */
+interface Chunk {
+  key: string;
+  objects: GameObjects.Image[];
+}
+
 export class OverworldView {
   private readonly scene: Scene;
-  private readonly objects: GameObjects.GameObject[] = [];
+  /** Built chunks by `cx,cy`. */
+  private readonly chunks = new Map<string, Chunk>();
   private readonly dome: GameObjects.Graphics;
   private readonly safe: GameObjects.Image[] = [];
   private built = false;
@@ -44,13 +52,19 @@ export class OverworldView {
   show(room: Room | null): void {
     if (room && !this.built) this.build(room);
     this.shown = room !== null;
-    for (const o of this.objects) (o as GameObjects.Image).setVisible(this.shown);
+    for (const c of this.chunks.values()) for (const o of c.objects) o.setVisible(this.shown);
     for (const o of this.safe) o.setVisible(this.shown);
     this.dome.setVisible(this.shown && !this.domeOpen);
   }
 
+  /** Chunks built now, for the test hook. */
+  get builtChunks(): number {
+    return this.chunks.size;
+  }
+
   update(sim: SimState): void {
     if (!this.built) return;
+    if (this.shown) this.stream();
     if (!this.domeOpen && sim.gates.shrine) {
       this.domeOpen = true;
       this.scene.tweens.add({ targets: this.dome, alpha: 0, duration: DOME.fadeMs, onComplete: () => this.dome.setVisible(false) });
@@ -65,35 +79,78 @@ export class OverworldView {
   private build(room: Room): void {
     this.built = true;
     this.room = room;
-    this.buildGround(room);
-    for (const [ty, row] of room.rows.entries()) for (const [tx, symbol] of [...row].entries()) this.standing(symbol, tx, ty);
     this.drawDome();
+    this.stream();
   }
 
-  private buildGround(room: Room): void {
-    const scale = Math.min(GROUND.maxScale, textureScale());
-    const width = (room.rows[0]?.length ?? 0) * T;
-    const height = room.rows.length * T;
-    let i = 0;
-    for (let y0 = 0; y0 < height; y0 += GROUND.chunk) {
-      for (let x0 = 0; x0 < width; x0 += GROUND.chunk) {
-        const w = Math.min(GROUND.chunk, width - x0);
-        const h = Math.min(GROUND.chunk, height - y0);
-        const key = `${OVERWORLD_TEXTURES.ground}-${i++}`;
-        const tex = this.scene.textures.exists(key) ? null : this.scene.textures.createCanvas(key, Math.ceil(w * scale), Math.ceil(h * scale));
-        if (tex) {
-          const c = tex.context;
-          c.setTransform(scale, 0, 0, scale, -x0 * scale, -y0 * scale);
-          drawGround(c, room, x0, y0, w, h, scale);
-          tex.refresh();
-        }
-        this.objects.push(this.scene.add.image(x0, y0, key).setOrigin(0).setScale(1 / scale).setDepth(DEPTHS.floor));
-      }
+  /**
+   * Builds the chunks the camera needs and drops the far ones: every chunk the view touches now, one more a frame
+   * within `GROUND.ahead` chunks of it, and none kept past `GROUND.keep` chunks away.
+   */
+  private stream(): void {
+    const room = this.room;
+    if (!room) return;
+    const C = GROUND.chunk;
+    const v = this.scene.cameras.main.worldView;
+    const cols = Math.ceil(((room.rows[0]?.length ?? 0) * T) / C);
+    const rows = Math.ceil((room.rows.length * T) / C);
+    const span = (pad: number) => ({
+      x0: Math.max(0, Math.floor(v.x / C) - pad),
+      x1: Math.min(cols - 1, Math.floor((v.x + v.width) / C) + pad),
+      y0: Math.max(0, Math.floor(v.y / C) - pad),
+      y1: Math.min(rows - 1, Math.floor((v.y + v.height) / C) + pad),
+    });
+    const now = span(0);
+    for (let cy = now.y0; cy <= now.y1; cy++) for (let cx = now.x0; cx <= now.x1; cx++) this.chunk(room, cx, cy);
+    const ahead = span(GROUND.ahead);
+    let built = 0;
+    for (let cy = ahead.y0; cy <= ahead.y1 && built < 1; cy++) {
+      for (let cx = ahead.x0; cx <= ahead.x1 && built < 1; cx++) if (!this.chunks.has(`${cx},${cy}`) && this.chunk(room, cx, cy)) built++;
+    }
+    const keep = span(GROUND.keep);
+    for (const [id, c] of this.chunks) {
+      const [cx = 0, cy = 0] = id.split(',').map(Number);
+      if (cx >= keep.x0 && cx <= keep.x1 && cy >= keep.y0 && cy <= keep.y1) continue;
+      for (const o of c.objects) o.destroy();
+      if (this.scene.textures.exists(c.key)) this.scene.textures.remove(c.key);
+      this.chunks.delete(id);
     }
   }
 
+  /** Builds one chunk if it isn't built: its ground texture and its tiles' standing sprites. True if it built it. */
+  private chunk(room: Room, cx: number, cy: number): boolean {
+    const id = `${cx},${cy}`;
+    if (this.chunks.has(id)) return false;
+    const C = GROUND.chunk;
+    const scale = Math.min(GROUND.maxScale, textureScale());
+    const width = (room.rows[0]?.length ?? 0) * T;
+    const height = room.rows.length * T;
+    const x0 = cx * C;
+    const y0 = cy * C;
+    const w = Math.min(C, width - x0);
+    const h = Math.min(C, height - y0);
+    const key = `${OVERWORLD_TEXTURES.ground}-${cx}-${cy}`;
+    const tex = this.scene.textures.exists(key) ? null : this.scene.textures.createCanvas(key, Math.ceil(w * scale), Math.ceil(h * scale));
+    if (tex) {
+      const c = tex.context;
+      c.setTransform(scale, 0, 0, scale, -x0 * scale, -y0 * scale);
+      drawGround(c, room, x0, y0, w, h, scale);
+      tex.refresh();
+    }
+    const objects: GameObjects.Image[] = [this.scene.add.image(x0, y0, key).setOrigin(0).setScale(1 / scale).setDepth(DEPTHS.floor).setVisible(this.shown)];
+    for (let ty = y0 / T; ty < (y0 + h) / T; ty++) {
+      const row = room.rows[ty] ?? '';
+      for (let tx = x0 / T; tx < (x0 + w) / T; tx++) {
+        const image = this.standing(row[tx] ?? '', tx, ty);
+        if (image) objects.push(image.setVisible(this.shown));
+      }
+    }
+    this.chunks.set(id, { key, objects });
+    return true;
+  }
+
   /** A tile's standing sprite, if it has one, at the bottom centre of the tile. */
-  private standing(symbol: string, tx: number, ty: number): void {
+  private standing(symbol: string, tx: number, ty: number): GameObjects.Image | null {
     const hash = tileHash(tx, ty);
     const x = (tx + 0.5) * T;
     const bottom = (ty + 1) * T;
@@ -103,7 +160,8 @@ export class OverworldView {
     let frame: string | undefined;
     let jitter = 0;
     // Stonefall Hollows' own (034): cliffs, the aqueduct, rubble.
-    const hollows = inHollows(tx, ty) ? hollowsFrame(symbol, tx, ty, hash, this.room) : undefined;
+    // 053: the world's cliff edge away from its face is flat plateau in the ground, not sprites.
+    const hollows = inHollows(tx, ty) && !(this.room && isPlateau(this.room, tx, ty)) ? hollowsFrame(symbol, tx, ty, hash, this.room) : undefined;
     if (hollows) frame = hollows;
     else if (symbol === TILE.tree && landmark?.look?.trees === 'old') frame = LANDMARK_SPRITES.oldTrees[hash % LANDMARK_SPRITES.oldTrees.length];
     else if (symbol === TILE.tree) {
@@ -115,10 +173,10 @@ export class OverworldView {
     else if (symbol === TILE.ruinBlock && landmark?.look?.blocks === 'cut') frame = LANDMARK_SPRITES.cutBlocks[hash % LANDMARK_SPRITES.cutBlocks.length];
     else if (symbol === TILE.ruinBlock && landmark?.look?.blocks === 'hive') frame = LANDMARK_SPRITES.hiveStones[hash % LANDMARK_SPRITES.hiveStones.length];
     else if (symbol === TILE.ruinBlock && !mound) frame = hash % 3 === 0 ? OVERWORLD_SPRITES.column : OVERWORLD_SPRITES.ruinStone;
-    if (!frame) return;
+    if (!frame) return null;
     const image = addVector(this.scene, x + jitter, bottom, frame).setDepth(bottom);
     if (symbol === TILE.tree && (hash >>> 16) % 2 === 0) image.setFlipX(true);
-    this.objects.push(image);
+    return image;
   }
 
   /** The ley barrier: a translucent dome over the shrine site, sealing its gap until the first line fills the tube. */

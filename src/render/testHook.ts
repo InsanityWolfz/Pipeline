@@ -115,7 +115,7 @@ export interface UiState {
   /** 051 (B.4): the drawn nodes whose harvestable glow shows, by node id. */
   nodeGlow: number[];
   /** 032: each mote's site, the claimed pylon it left from. */
-  supply: { started: number; inFlight: { itemId: string; progress: number; site: string }[] };
+  supply: { started: number; inFlight: { itemId: string; progress: number; site: string; icon: string; iconShown: boolean }[] };
   /** The camera shakes asked for since boot, oldest first (the last 50) (021). */
   shakes: string[];
   /** Which cursor shows (021: the menu pointer or the crosshair), its depth, and the highest depth of anything else. */

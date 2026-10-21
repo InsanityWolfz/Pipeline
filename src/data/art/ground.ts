@@ -13,8 +13,6 @@ export const GROUND = {
   paving: 'rock-light',
   pavingGapEvery: 3,
   pavingAlpha: 0.28,
-  /** The ruin field's old paving round the stairs. */
-  fieldPaving: { x0: 73, y0: 13, x1: 87, y1: 22 },
   path: 'dirt',
   pathEdge: 'dirt-dark',
   pathFleck: 'dirt-light',
@@ -26,9 +24,6 @@ export const GROUND = {
   foam: 'foam',
   ley: 'cyan',
   leyDeep: 'cyan-deep',
-  /** A seam bends every this many px, by up to 4 × `leyJag` px either way. */
-  leyStep: 18,
-  leyJag: 1.6,
   tuft: 'grass-dark',
   tuftEvery: 4,
   flowers: ['snow', 'gold-trim', 'wisp-light'],
@@ -69,6 +64,16 @@ export const GROUND = {
   /** Ground chunks are drawn at up to this many texels per world px (memory), in squares of this many world px. */
   maxScale: 2,
   chunk: 640,
+  /**
+   * 053: the round map is too big to bake whole (≈460 MB of textures at scale 2), so chunks, their ground and their
+   * standing sprites, are built near the camera and dropped far from it: every chunk the view touches at once, those
+   * within `ahead` chunks of it one a frame, and any past `keep` chunks away dropped.
+   */
+  ahead: 1,
+  keep: 2,
+  /** 053: the world's cliff edge past the Hollows, away from its face: flat plateau stone, and its darker cracks. */
+  plateau: 'hollow-dark',
+  plateauEdge: 'rock-dark',
 } as const;
 
 /** The shrine site's looks (017): the barrier dome while sealed, and the safe zone once claimed. */
@@ -81,7 +86,7 @@ export const SITE_LOOK = {
 
 /**
  * The claimed pylon's harvest, made visible (018): a ley tendril reaches from the pylon to a node, the node
- * pulses, then a mote of the raw runs along the shrine's ley line to the foundry's stairs and sinks in.
+ * pulses, then the raw's icon runs along the pylon's ley line to the foundry's ruin and sinks in (053, D.4).
  * Times ms, sizes px, speed px/s.
  */
 export const SUPPLY_LOOK = {
@@ -102,15 +107,19 @@ export const SUPPLY_LOOK = {
   pulseRadius: 18,
   pulseRise: 6,
   moteSpeed: 200,
-  moteRadius: 2.5,
-  haloRadius: 6,
+  /** 053 (D.4, Shaun: "show each resource that that pylon's collecting go along the line"): each haul runs home as its raw's item icon at this scale, over its halo. */
+  iconScale: 0.7,
+  /** The disc of the raw's colour under its icon: radius px and alpha. */
+  plateRadius: 6,
+  plateAlpha: 0.55,
+  haloRadius: 9,
   halo: 'cyan',
   haloAlpha: 0.35,
-  /** Sinking into the stairs, a mote shrinks by this fraction as it fades. */
+  /** Sinking into the ruin, a haul's icon shrinks by this fraction as it fades. */
   sinkMs: 400,
   sinkShrink: 0.6,
   /** No frame moves a mote on further than this many ms, so a hitch never skips its run. */
   maxStepMs: 50,
-  /** A mote takes its raw's colour. */
+  /** A haul's plate takes its raw's colour. */
   moteColors: { wood: 'wood-light', stone: 'rock-pale', fiber: 'leaf-light', 'ley-crystal': 'cyan-glow', 'ley-iron': 'iron-light', 'husk-resin': 'resin-light' } as Readonly<Record<string, string>>,
 } as const;

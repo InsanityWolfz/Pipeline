@@ -1,6 +1,7 @@
 import { TILE_SIZE } from '../../data/config';
 import { HOLLOWS, inHollows } from '../../data/hollows';
 import { HOLLOWS_GROUND } from '../../data/hollowsAssets';
+import { GROUND } from '../../data/art/ground';
 import { LANDMARK_LIST } from '../../data/landmarks';
 import { TILE } from '../../data/rooms';
 import { inkCss } from '../vector/draw';
@@ -43,11 +44,22 @@ const FLAGGED = [...LANDMARK_LIST.filter((l) => l.look?.paving).map((l) => l.are
 const flagged = (tx: number, ty: number): boolean => FLAGGED.some((r) => tx >= r.x0 && tx <= r.x1 && ty >= r.y0 && ty <= r.y1);
 
 /** Paints the Hollows' ground; `each` walks the chunk's tiles with their hash, `symbol` reads the map. */
-export function paintHollows(c: CanvasRenderingContext2D, each: (fn: (tx: number, ty: number, hash: number) => void) => void, symbol: (tx: number, ty: number) => string | undefined): void {
+export function paintHollows(
+  c: CanvasRenderingContext2D,
+  each: (fn: (tx: number, ty: number, hash: number) => void) => void,
+  symbol: (tx: number, ty: number) => string | undefined,
+  plateau: (tx: number, ty: number) => boolean,
+): void {
   each((tx, ty, hash) => {
     if (!inHollows(tx, ty)) return;
     const x = tx * T;
     const y = ty * T;
+    // 053: the world's cliff edge past its face, flat plateau stone with a crack now and then.
+    if (plateau(tx, ty)) {
+      fill(c, GROUND.plateau, 1, () => c.rect(x - 0.5, y - 0.5, T + 1, T + 1));
+      if (hash % G.crackEvery === 1) line(c, [x + 4, y + 8 + (hash % 9), x + 14, y + 12, x + 22 + (hash % 6), y + 9], 1, GROUND.plateauEdge, 0.5);
+      return;
+    }
     fill(c, G.base, 1, () => c.rect(x - 0.5, y - 0.5, T + 1, T + 1));
     if (hash % G.slabEvery === 0) fill(c, (hash >>> 7) % 2 ? G.slabLight : G.slabDark, G.slabAlpha, () => c.roundRect(x + 2 + ((hash >>> 3) % 6), y + 3 + ((hash >>> 5) % 6), 18 + ((hash >>> 9) % 8), 12 + ((hash >>> 11) % 6), 2));
     if (hash % G.rustEvery === 2) fill(c, G.rust, G.rustAlpha, () => c.ellipse(x + 16, y + 18, 10, 5, 0, 0, Math.PI * 2));

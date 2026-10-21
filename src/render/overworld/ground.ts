@@ -7,7 +7,10 @@ import { inkCss } from '../vector/draw';
 import { tileHash } from '../roomTiles';
 import { paintLandmarks } from './landmarkGround';
 import { paintHollows } from './hollowsGround';
+import { isPlateau } from './plateau';
 import { inHollows } from '../../data/hollows';
+import { COURTYARD } from '../../data/roads';
+import { fromCentre } from '../../data/worldShape';
 
 // The overworld's ground (017), drawn once into chunk textures: grass with lighter
 // and darker patches, sun dapple under the groves, worn paving in the ruins, dirt
@@ -108,7 +111,7 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
     }
   });
   // Stonefall Hollows' quarry stone over its columns (034), under the road.
-  paintHollows(c, each, symbol);
+  paintHollows(c, each, symbol, (tx, ty) => isPlateau(room, tx, ty));
   // Sun dapple where the groves meet open grass.
   each((tx, ty, hash) => {
     if (symbol(tx, ty) !== TILE.floor || hash % GROUND.dappleEvery !== 0) return;
@@ -117,10 +120,10 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
     const [x, y] = centre({ tx, ty });
     ellipse(c, x, y, 18, 7, GROUND.sun, 0.55);
   });
-  // Worn paving: the shrine site's floor and the ruin field round the stairs.
-  const paved = [OVERWORLD.shrine.area, GROUND.fieldPaving];
+  // Worn paving: the shrine site's floor and the courtyard round the stairs (053: the roads' hub, a circle).
+  const paved = (tx: number, ty: number) => inRect(OVERWORLD.shrine.area, tx, ty) || fromCentre(tx, ty) <= COURTYARD.radius;
   each((tx, ty, hash) => {
-    if (!paved.some((r) => inRect(r, tx, ty)) || hash % GROUND.pavingGapEvery === 0) return;
+    if (!paved(tx, ty) || hash % GROUND.pavingGapEvery === 0) return;
     const s = symbol(tx, ty);
     if (s !== TILE.floor && s !== TILE.path) return;
     c.globalAlpha = GROUND.pavingAlpha;
@@ -155,25 +158,13 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
     ellipse(c, x - rx * 0.35, y - ry * 0.45, rx * 0.35, ry * 0.12, GROUND.foam, 0.8);
     ellipse(c, x + rx * 0.3, y + ry * 0.3, rx * 0.18, ry * 0.07, GROUND.foam, 0.6);
   }
-  // Ley seams glowing in the ground, running to the stairs.
+  // Ley seams glowing in the ground (053: each one smooth curve, home to the foundry's ruin): deep cyan with a thin
+  // bright core.
   c.save();
   c.shadowColor = inkCss(GROUND.ley);
   c.shadowBlur = 6 * pxPerUnit;
   for (const seam of Object.values(OVERWORLD.leyLines)) {
-    // A crack in the ground, not a beam: jagged between its points, deep cyan with a thin bright core.
-    const pts: [number, number][] = [];
-    seam.forEach((t, i) => {
-      const [x, y] = centre(t);
-      const next = seam[i + 1];
-      pts.push([x, y]);
-      if (!next) return;
-      const [nx, ny] = centre(next);
-      const steps = Math.max(1, Math.round(Math.hypot(nx - x, ny - y) / GROUND.leyStep));
-      for (let k = 1; k < steps; k++) {
-        const jag = ((tileHash(i * 31 + k, k * 7 + i) % 9) - 4) * GROUND.leyJag;
-        pts.push([x + ((nx - x) * k) / steps + jag, y + ((ny - y) * k) / steps - jag]);
-      }
-    });
+    const pts = seam.map((t) => centre(t));
     polyline(c, pts, 3, GROUND.leyDeep, 0.55);
     polyline(c, pts, 1.1, GROUND.ley, 0.75);
   }

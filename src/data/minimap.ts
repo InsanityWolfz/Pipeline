@@ -6,7 +6,8 @@ import { inHollows } from './hollows';
  * enemies are shown.
  */
 export const MINIMAP = {
-  scale: 1.5,
+  /** 053: the whole round world (168 tiles across) at this many view px a tile: about 100 px square. */
+  scale: 0.6,
   margin: 6,
   /** The stone tablet framing it (020), px beyond the map. */
   frame: { width: 2 },
@@ -45,7 +46,7 @@ export const MINIMAP = {
   icons: { entrance: 'foundry', shrine: 'pylon', arena: 'arena' },
   ping: { ms: 1100, reach: 6, color: 'cyan-glow', width: 1 },
   /** Discovered landmarks' icons (032), by marker: shown at this scale of their sprite (landmarkAssets' MAP_ICONS). */
-  landmarkScale: 0.8,
+  landmarkScale: 0.6,
   /**
    * 051 (B.5): hovering an icon (or a claimed pylon's dot) within `reach` view px names it in a small tablet `gap` px
    * left of the minimap's frame, level with the icon, padded `pad` px.
