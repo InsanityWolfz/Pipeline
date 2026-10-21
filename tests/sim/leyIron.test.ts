@@ -56,7 +56,7 @@ describe('the Cistern Terrace', () => {
 
   it('is dormant until the shrine is claimed, sealed while its guards live, then claimed by held E', () => {
     const dormant = createSim(3);
-    const below = tileCentre({ tx: 25, ty: 13 });
+    const below = tileCentre({ tx: 25, ty: 109 });
     dormant.enemies = [];
     movePlayer(dormant, below.x, below.y);
     run(dormant, 1, { interact: true });
@@ -99,7 +99,7 @@ describe('the Cistern Terrace', () => {
     movePlayer(s, way.x, way.y);
     run(s, 1, { travel: TERRACE });
     expect(s.roomId).toBe(OVERWORLD.id);
-    expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre({ tx: 25, ty: 13 }));
+    expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre({ tx: 25, ty: 109 }));
     runUntil(s, () => s.events.supplies.some((e) => e.itemId === 'ley-iron'), 300);
   });
 

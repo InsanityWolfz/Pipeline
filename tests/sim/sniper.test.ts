@@ -8,8 +8,7 @@ import { clearShot } from '../../src/sim/sightLine';
 import { roomById, type SimState } from '../../src/sim/state';
 import { TILE } from '../../src/data/rooms';
 import { summarize } from '../../src/sim/summary';
-import { tileCentre } from '../../src/sim/tiles';
-import { arena, HALL, movePlayer, PLAYER_AT, run, runUntil , homeTile, HOME_X } from './fight';
+import { arena, HALL, movePlayer, PLAYER_AT, run, runUntil, homeTile, HOME_X } from './fight';
 
 // The Sniper construct (035): cover from the tile grid; keeping its distance without it;
 // stepping out to a clear line; the sight tracking, then locked; a blocked line cancelling;

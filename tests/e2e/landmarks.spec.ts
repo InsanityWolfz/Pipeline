@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { REGION_1_X } from '../../src/data/hollows';
+import { landmarkDef } from '../../src/data/landmarks';
 import { CLAIM_TICKS, FIXTURES } from '../../src/data/claims';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { OVERWORLD } from '../../src/data/overworld';
@@ -15,8 +15,8 @@ import { boot, watchErrors } from './helpers';
 // spawned by the dev hook.
 
 const T = 32;
-const QUARRY_PYLON = { tx: 21 + REGION_1_X, ty: 20 };
-const CACHE = { tx: 11 + REGION_1_X, ty: 38 };
+const QUARRY_PYLON = landmarkDef('quarry').pylon ?? { tx: 0, ty: 0 };
+const CACHE = landmarkDef('ruined-cache').cache ?? { tx: 0, ty: 0 };
 
 /** Kills every guard of a landmark through the dev hook, then steps once so they're gone. */
 async function clearGuards(page: Page, group: string): Promise<void> {

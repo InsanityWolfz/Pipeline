@@ -34,17 +34,18 @@ export const ROAD_DEFS: readonly RoadDef[] = [
   // To the Old Grove's open east side.
   { id: 'grove', from: 'north', waypoints: [t(75, 66), t(66, 64), t(56, 65)] },
   // Through the barrier, past the Hollows Ley Spring, round to the Sunken Forum's way in on its north side.
-  { id: 'forum', from: 'north', waypoints: [t(74, 58), t(64, 52), t(55, 44), t(50, 36), t(44, 32), t(40, 32)] },
+  { id: 'forum', from: 'north', waypoints: [t(74, 58), t(64, 52), t(55, 44), t(52, 37), t(49, 31), t(44, 31), t(40, 32)] },
   // North-east: to the shrine's gate.
   { id: 'shrine', waypoints: [t(93, 80), t(99, 74), t(103, 67)] },
   // To the Ley Grotto's north rim.
   { id: 'ley-grotto', from: 'shrine', waypoints: [t(99, 74), t(110, 76), t(121, 80)] },
   // East-south-east: to the Husk Hive's open south side.
-  { id: 'hive', waypoints: [t(89, 91), t(98, 99), t(106, 105), t(113, 107)] },
+  // East-south-east, north of the meadow's east pond: to the Husk Hive's open south side.
+  { id: 'hive', waypoints: [t(89, 91), t(97, 96), t(105, 101), t(113, 107)] },
   // To the Reed Marsh's north edge.
-  { id: 'marsh', from: 'hive', waypoints: [t(98, 99), t(100, 106), t(101, 111)] },
-  // To the South-east Ley Spring.
-  { id: 'south-east-spring', from: 'hive', waypoints: [t(106, 105), t(110, 111)] },
+  { id: 'marsh', from: 'hive', waypoints: [t(105, 101), t(103, 106), t(101, 111)] },
+  // On past the Hive to the South-east Ley Spring.
+  { id: 'south-east-spring', from: 'hive', waypoints: [t(113, 107), t(110, 110)] },
 ];
 
 /** Each road as laid: its smooth curve sampled about every tile, as top-left tiles (fractional between waypoints). */

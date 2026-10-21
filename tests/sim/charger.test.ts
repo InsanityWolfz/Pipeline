@@ -5,8 +5,7 @@ import type { ChargerDef } from '../../src/data/hollowsEnemies';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
-import { tileCentre } from '../../src/sim/tiles';
-import { arena, HALL, HUSK, movePlayer, placeNode, PLAYER_AT, run, runUntil , homeTile } from './fight';
+import { arena, HALL, HUSK, movePlayer, placeNode, PLAYER_AT, run, runUntil, homeTile } from './fight';
 
 // The Charger (035): shows its lane, then rams down it. A sidestep in the wind-up dodges;
 // it strikes once per charge, stops at the lane's end, is stunned by a wall, and passes

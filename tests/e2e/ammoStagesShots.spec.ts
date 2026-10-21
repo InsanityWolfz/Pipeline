@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { GROTTO } from '../../src/data/grotto';
+import { GROTTO, GROTTO_MOUTH } from '../../src/data/grotto';
 import { boot, cameraSettled, quietScreen } from './helpers';
 import { ui } from './intakePage';
 
@@ -69,7 +69,7 @@ test.describe('review screenshots (029)', () => {
       g.craft('prism-lens-ley-bolt');
       h.toHall();
       // South of the ruin field's Husks (017), which stand a few tiles north, on screen.
-      h.walkTo((44.5 + h.ox) * 32, 19.5 * 32);
+      h.walkTo((44.5 + h.ox) * 32, (19.5 + h.oy) * 32);
       h.hold('ley-bolt+homing');
     });
     // The schematic banners from banking in the foundry and the door's fade, played out before the shot.
@@ -143,7 +143,7 @@ test.describe('review screenshots (029)', () => {
       // A few batches (047: crafted in C), so a miss or two still leaves the four hits a freeze takes.
       for (let i = 0; i < 3; i++) g.craft('frost-rune-arrow');
       h.toHall();
-      h.walkTo((44.5 + h.ox) * 32, 19.5 * 32);
+      h.walkTo((44.5 + h.ox) * 32, (19.5 + h.oy) * 32);
       h.hold('arrow+frost');
       let s = g.step(0);
       for (let t = 0; t < 1500 && !s.enemies.some((e) => e.frozen > 30); t++) {
@@ -159,16 +159,16 @@ test.describe('review screenshots (029)', () => {
     await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/05-frozen-husk.png` });
 
-    // The Grotto: up the new path from the west path's end, into its frosted clearing.
+    // The Grotto: up its road to its mouth, into its frosted clearing.
     await page.evaluate(
-      ([mouth]) => {
+      ([mouth, area]) => {
         const h = window.__helpers;
         if (!h) throw new Error('no helpers');
         h.walkTo((mouth.tx + 0.5) * 32, (mouth.ty + 1.5) * 32);
-        // Into the clearing, between the clusters, so the camera holds all of it.
-        h.walkTo((15.5 + h.ox) * 32, 10.5 * 32);
+        // Into the clearing, between the clusters, so the camera holds all of it (029's tile 15, 10 in it).
+        h.walkTo((area.x0 + 6.5) * 32, (area.y0 + 5.5) * 32);
       },
-      [GROTTO.path[1] ?? { tx: 14, ty: 14 }] as const,
+      [GROTTO_MOUTH, GROTTO.area] as const,
     );
     await cameraSettled(page, 20_000);
     await quietScreen(page);

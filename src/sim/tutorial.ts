@@ -76,20 +76,22 @@ export function shutShotGates(state: Pick<SimState, 'gates'>, roomId: string): G
   return [...new Set(shotGateTiles(roomId).values())].filter((g) => !state.gates[g]);
 }
 
-/** Each room with its shut shot-stopping gates' tiles turned to wall, by room and gates, built once each (053). */
-const SEALED = new Map<string, Room>();
+/** Each room's grid with its shut shot-stopping gates' tiles turned to wall, by the grid it was built from and the gates, built once each (053). */
+const SEALED = new WeakMap<readonly string[], Map<string, Room>>();
 
 /** The room as movers meet it: its shut shot-stopping gates' tiles solid, like walls. */
 export function sealedRoom(state: Pick<SimState, 'gates'>, room: Room): Room {
   const shut = shutShotGates(state, room.id);
   if (shut.length === 0) return room;
-  const key = `${room.id}|${shut.join(',')}`;
-  let sealed = SEALED.get(key);
+  const key = shut.join(',');
+  let byGates = SEALED.get(room.rows);
+  if (!byGates) SEALED.set(room.rows, (byGates = new Map()));
+  let sealed = byGates.get(key);
   if (!sealed) {
     const rows = room.rows.map((r) => [...r]);
     for (const g of room.gateTiles ?? []) if (shut.includes(g.gate)) (rows[g.ty] ?? [])[g.tx] = TILE.wall;
     sealed = { ...room, rows: rows.map((r) => r.join('')) };
-    SEALED.set(key, sealed);
+    byGates.set(key, sealed);
   }
   return sealed;
 }

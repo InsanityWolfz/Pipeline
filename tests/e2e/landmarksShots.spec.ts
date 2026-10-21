@@ -1,3 +1,4 @@
+import { landmarkDef } from '../../src/data/landmarks';
 import { expect, test, type Page } from '@playwright/test';
 import { CLAIM_TICKS, FIXTURES } from '../../src/data/claims';
 import { LANDMARKS } from '../../src/data/landmarks';
@@ -33,8 +34,8 @@ async function walk(page: Page, points: readonly (readonly [number, number])[]):
   await page.evaluate((pts) => {
     const h = window.__helpers;
     if (!h) throw new Error('no helpers');
-    // 032's tiles, moved +40 with Region 1 (034).
-    for (const [tx, ty] of pts) h.walkTo((tx + h.ox + 0.5) * 32, (ty + 0.5) * 32);
+    // Tiles of the round map (053).
+    for (const [tx, ty] of pts) h.walkTo((tx + 0.5) * 32, (ty + 0.5) * 32);
   }, points);
 }
 
@@ -43,16 +44,21 @@ test.describe('review screenshots (032)', () => {
 
   // Each from a fresh start with its own guards in place (the others are cleared so the walk is quiet), once the
   // banner has gone.
+  // 053: each walked to from just below its area, the round map's tiles from data.
+  const below = (id: string): (readonly [number, number])[] => {
+    const a = landmarkDef(id).area;
+    return [[Math.floor((a.x0 + a.x1) / 2), a.y1 + 3]];
+  };
   const views: [string, string, (readonly [number, number])[]][] = [
-    ['quarry', '01-quarry', [[30, 25], [23, 22], [22, 19]]],
-    ['old-grove', '02-old-grove', [[12, 26], [11, 20]]],
-    ['ley-grotto', '03-ley-grotto', [[66, 18], [72, 26]]],
-    ['reed-marsh', '04-reed-marsh', [[66, 30], [69, 34]]],
-    ['ruined-cache', '05-ruined-cache-sealed', [[12, 30], [11, 35], [11, 36]]],
-    ['frozen-grotto', '06-frozen-grotto', [[14, 15], [15, 11]]],
-    ['west-spring', '07-west-spring', [[10, 34]]],
-    ['south-east-spring', '08-south-east-spring', [[66, 41]]],
-    ['north-spring', '09-north-spring', [[26, 11]]],
+    ['quarry', '01-quarry', below('quarry')],
+    ['old-grove', '02-old-grove', below('old-grove')],
+    ['ley-grotto', '03-ley-grotto', below('ley-grotto')],
+    ['reed-marsh', '04-reed-marsh', below('reed-marsh')],
+    ['ruined-cache', '05-ruined-cache-sealed', below('ruined-cache')],
+    ['frozen-grotto', '06-frozen-grotto', below('frozen-grotto')],
+    ['west-spring', '07-west-spring', below('west-spring')],
+    ['south-east-spring', '08-south-east-spring', below('south-east-spring')],
+    ['north-spring', '09-north-spring', below('north-spring')],
   ];
   for (const [id, file, points] of views) {
     test(`the landmark ${id}`, async ({ page }) => {

@@ -1,10 +1,10 @@
 import type { Page } from '@playwright/test';
-import { REGION_1_X } from '../../src/data/hollows';
+import { landmarkDef } from '../../src/data/landmarks';
 import { LANDMARKS } from '../../src/data/landmarks';
 
 // 045's e2e scenes, shared by readability.spec.ts and its review shots.
 
-const CACHE = { tx: 11 + REGION_1_X, ty: 38 };
+const CACHE = landmarkDef('ruined-cache').cache ?? { tx: 0, ty: 0 };
 
 /** Walks to the Ruined Cache, its guards gone, and opens it with a held E. Returns the ids of the items it gave. */
 export async function openCache(page: Page): Promise<number[]> {

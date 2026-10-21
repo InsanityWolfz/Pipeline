@@ -14,7 +14,9 @@ import { TEXT_STYLES } from '../../src/data/fonts';
 import { vectorFrames } from '../../src/render/vector/catalog';
 import { WORLD } from '../../src/sim/world';
 import { reachable, tileKey } from '../fixtures/reach';
-import { REGION_1_X } from '../../src/data/hollows';
+import { HOLLOWS, inHollows } from '../../src/data/hollows';
+import { RUIN_AREA } from '../../src/data/home';
+import { fromCentre, polar, WORLD_SHAPE } from '../../src/data/worldShape';
 
 // Landmarks as data (032): typed entries stamped onto the fixed map, clear of each
 // other and of the tutorial's ground, each in its declared ring and reachable on foot.
@@ -60,21 +62,24 @@ describe('landmark entries', () => {
     ]);
   });
 
-  it('start at the spec positions, the Grotto and the springs where 029 and 030 put them', () => {
-    // 034 moved Region 1 +40 tiles: each spec position plus REGION_1_X.
-    const centres: [string, number, number, 1 | 2][] = [
-      ['old-grove', 8, 19, 2],
-      ['quarry', 21, 18, 1],
-      ['ley-grotto', 73, 24, 2],
-      ['reed-marsh', 73, 35, 2],
-      ['ruined-cache', 11, 38, 2],
-      ['frozen-grotto', 14, 9, 2],
+  it('stand at their places on the round map (053), each in its spec ring; the Grotto moved whole, the springs in their own places', () => {
+    // Each Region 1 site's middle tile at its bearing and distance from the foundry's door.
+    const places: [string, number, number, 1 | 2][] = [
+      ['quarry', 272, 22, 1],
+      ['old-grove', 297, 37, 2],
+      ['ley-grotto', 95, 36, 2],
+      ['reed-marsh', 155, 38, 2],
+      ['ruined-cache', 212, 37, 2],
+      ['husk-hive', 120, 35, 2],
     ];
-    for (const [id, tx, ty, ring] of centres) {
-      expect(inside(byId(id).area, { tx: tx + REGION_1_X, ty }), id).toBe(true);
+    for (const [id, bearing, r, ring] of places) {
+      const a = byId(id).area;
+      expect({ tx: Math.floor((a.x0 + a.x1) / 2), ty: Math.floor((a.y0 + a.y1) / 2) }, id).toEqual(polar(bearing, r));
       expect(byId(id).ring, id).toBe(ring);
     }
-    expect(byId('frozen-grotto').area).toEqual({ x0: 9 + REGION_1_X, y0: 5, x1: 19 + REGION_1_X, y1: 13 });
+    // 029's Grotto, moved whole (+25, +39 from its tiles before 034) to the north.
+    expect(byId('frozen-grotto').area).toEqual({ x0: 9 + 40 + 25, y0: 5 + 39, x1: 19 + 40 + 25, y1: 13 + 39 });
+    expect(byId('frozen-grotto').ring).toBe(2);
     for (const s of OVERWORLD.springs) {
       const l = byId(s.id);
       expect(l.kind).toBe('ley-springs');
@@ -111,14 +116,17 @@ describe('landmark entries', () => {
 });
 
 describe('landmark areas', () => {
-  const edge = OVERWORLD.edge.depth + OVERWORLD.edge.ragged;
-
-  it('lie inside the map and clear of the forest edge', () => {
+  it("lie wholly in their region: Region 1's clear of the barrier's band, the Hollows' clear of it and of the cliff edge", () => {
     for (const { id, area: a } of LANDMARK_LIST) {
-      expect(a.x0, id).toBeGreaterThanOrEqual(edge);
-      expect(a.y0, id).toBeGreaterThanOrEqual(edge);
-      expect(a.x1, id).toBeLessThanOrEqual(OVERWORLD.width - 1 - edge);
-      expect(a.y1, id).toBeLessThanOrEqual(OVERWORLD.height - 1 - edge);
+      const corners = [[a.x0, a.y0], [a.x1, a.y0], [a.x0, a.y1], [a.x1, a.y1]] as const;
+      const hollows = inHollows(Math.round((a.x0 + a.x1) / 2), Math.round((a.y0 + a.y1) / 2));
+      for (const [tx, ty] of corners) {
+        const d = fromCentre(tx, ty);
+        if (hollows) {
+          expect(d, id).toBeGreaterThan(WORLD_SHAPE.region1 + 1);
+          expect(d, id).toBeLessThan(WORLD_SHAPE.hollows - HOLLOWS.edge.ragged);
+        } else expect(d, id).toBeLessThan(WORLD_SHAPE.region1 - 1);
+      }
     }
   });
 
@@ -248,14 +256,15 @@ describe('resource sites', () => {
     }
   });
 
-  it('each has a ley line home from its pylon to the foundry stairs', () => {
-    const door = OVERWORLD.entrance.door;
+  it('each has a ley line home from its pylon to the foundry ruin', () => {
+    const r = RUIN_AREA;
     for (const l of SITES) {
       const line = OVERWORLD.leyLines[l.id];
       expect(line, l.id).toBeDefined();
       expect(line?.[0], l.id).toEqual({ tx: l.pylon?.tx, ty: l.pylon?.ty });
+      // 053: home is the edge of the foundry's ruin over the stairs.
       const end = line?.[line.length - 1];
-      expect(end && Math.hypot(end.tx - door.tx, end.ty - door.ty) <= 3, l.id).toBe(true);
+      expect(end && end.tx >= r.x0 - 0.51 && end.tx <= r.x1 + 0.51 && end.ty >= r.y0 - 0.51 && end.ty <= r.y1 + 0.51, l.id).toBe(true);
     }
   });
 
@@ -271,6 +280,6 @@ describe('resource sites', () => {
       // 034: the Hollows' one claimable site, behind the barrier the shrine's claim drops.
       ['cistern-terrace', 7, 'shrine'],
     ]);
-    expect(WORLD[OVERWORLD.id]?.caches).toEqual([{ id: 'ruined-cache', tx: 11 + REGION_1_X, ty: 38 }]);
+    expect(WORLD[OVERWORLD.id]?.caches).toEqual([{ id: 'ruined-cache', ...byId('ruined-cache').cache }]);
   });
 });

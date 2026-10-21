@@ -64,7 +64,7 @@ test('out in ring 2 a fight fills the screen with 10 or more enemies', async ({ 
     };
     // Into ring 2 where it's busiest: beside the ring-2 enemy with the most others within a screen of it, by path.
     h.walkTo((41.5 + h.ox) * 32, g.getState().player.y);
-    h.walkTo((41.5 + h.ox) * 32, 22.5 * 32);
+    h.walkTo((41.5 + h.ox) * 32, (22.5 + h.oy) * 32);
     // Ring 2's packs; the crowd round one counts every enemy out there within a screen of it (029: since the Frozen
     // Grotto's clearing keeps packs out, the packs fall elsewhere, and ring 1's can stand within a screen of ring 2's).
     const out = g.getState().enemies.filter((e) => e.room === 'overworld' && e.group.startsWith('pop-'));

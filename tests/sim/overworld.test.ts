@@ -42,8 +42,8 @@ describe('generation', () => {
   it('grows groves, rock fields and ponds with shallow edges', () => {
     const all = room.rows.join('');
     const count = (symbol: string) => [...all].filter((c) => c === symbol).length;
-    // Trees beyond the forest edge alone.
-    expect(count(TILE.tree)).toBeGreaterThan(2 * (OVERWORLD.width + OVERWORLD.height) * OVERWORLD.edge.depth);
+    // 053: no forest edge any more (the world ends in the Hollows' cliffs); Region 1's groves alone.
+    expect(count(TILE.tree)).toBeGreaterThan(OVERWORLD.groves.count * 10);
     expect(count(TILE.rock)).toBeGreaterThan(0);
     expect(count(TILE.water)).toBeGreaterThan(0);
     expect(count(TILE.shallow)).toBeGreaterThan(0);

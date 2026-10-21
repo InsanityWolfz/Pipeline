@@ -138,11 +138,15 @@ export function fightPack(s: SimState, pack: readonly EnemyState[], home: { x: n
 /** A tile's centre in px. */
 export const at = (tx: number, ty: number): { x: number; y: number } => ({ x: (tx + 0.5) * TILE_SIZE, y: (ty + 0.5) * TILE_SIZE });
 
-/** 041.8's ring-matched packs: each pack, the lines of its fitting volley, its centre tile, and the player's start 6 to 7 tiles off. */
+/**
+ * 041.8's ring-matched packs: each pack, the lines of its fitting volley, its centre tile, and the player's start 6 to 7
+ * tiles off. 053: on the round map, open ground in each ring: south-west of the meadow (ring 1), west by the barrier
+ * (ring 2), and the Cistern Terrace's flagstones (ring 3, where it was before, moved with the Terrace).
+ */
 export const PACKS = {
-  1: { ids: ['husk', 'husk', 'husk', 'husk'], lines: ['arrow'], centre: { tx: 61, ty: 32 }, start: at(67, 32) },
-  2: { ids: ['husk', 'husk', 'husk', 'husk', 'wisp'], lines: ['arrow', 'arrow'], centre: { tx: 49, ty: 30 }, start: at(56, 30) },
-  3: { ids: ['shardback', 'charger', 'charger', 'burrower', 'sniper'], lines: ['bomb', 'arrow'], centre: { tx: 22, ty: 12 }, start: at(28, 12) },
+  1: { ids: ['husk', 'husk', 'husk', 'husk'], lines: ['arrow'], centre: { tx: 74, ty: 103 }, start: at(80, 103) },
+  2: { ids: ['husk', 'husk', 'husk', 'husk', 'wisp'], lines: ['arrow', 'arrow'], centre: { tx: 41, ty: 81 }, start: at(48, 81) },
+  3: { ids: ['shardback', 'charger', 'charger', 'burrower', 'sniper'], lines: ['bomb', 'arrow'], centre: { tx: 22, ty: 108 }, start: at(28, 108) },
 } as const;
 
 /** The longest a pack fight runs, ticks: 60 s. */

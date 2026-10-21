@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import type {} from '../../src/render/testHook';
-import { REGION_1_X } from '../../src/data/hollows';
+import { HOME_SHIFT, RUIN } from '../../src/data/home';
 import { OVERWORLD } from '../../src/data/overworld';
 
 // Page helpers shared by the e2e specs. They run inside the page, so they're
@@ -24,13 +24,20 @@ export interface Helpers {
    * sim's commands as a drag and a key press would; right click (`use`) then uses it.
    */
   hold(itemId: string): void;
-  /** Region 1's first column (034: the old map moved +40 when the Hollows grew west), for tiles specs name by hand. */
+  /**
+   * The ground round the foundry, for tiles specs name by hand in its pre-034 tiles: add `ox` to a column and `oy` to a
+   * row (034 moved it +40 columns, 053 to the round map's centre, +4 and +64 more).
+   */
   ox: number;
+  oy: number;
 }
 
 /** What the in-page helpers need from the map's data (they can't import it). */
 interface MapData {
   ox: number;
+  oy: number;
+  /** The ruin over the stairs reaches this many tiles either side of the door (053). */
+  half: number;
   door: { tx: number; ty: number };
 }
 
@@ -200,16 +207,17 @@ function installHelpers(map: MapData): void {
       }
     },
     ox: map.ox,
+    oy: map.oy,
     toFoundry() {
       const g = game();
       // The stairs' door tile; its arrival tile is the one in front (src/data/overworld.ts).
-      // From the north, round the mound's east side (blocks 2 tiles either side, 2 rows up); from the south,
-      // up the column beside the path, clear of the tube's stone.
+      // From the north, round the ruin's east side (053: `half` tiles either side of the door); from the south,
+      // up the column beside the door, clear of the tube's stone.
       const { tx, ty } = map.door;
       const y = game().getState().player.y;
       if (y < (ty + 2) * 32) {
-        walkTo((tx + 3.5) * 32, y);
-        walkTo((tx + 3.5) * 32, (ty + 2.5) * 32);
+        walkTo((tx + map.half + 1.5) * 32, y);
+        walkTo((tx + map.half + 1.5) * 32, (ty + 2.5) * 32);
       } else walkTo((tx + 1.5) * 32, y);
       walkTo((tx + 1.5) * 32, (ty + 1.5) * 32);
       walkTo((tx + 0.5) * 32, (ty + 1.5) * 32);
@@ -274,7 +282,7 @@ function installHelpers(map: MapData): void {
  */
 /** Installs the in-page helpers (`window.__helpers`) before the page's game boots (042: for specs that boot the title). */
 export async function installPageHelpers(page: Page): Promise<void> {
-  await page.addInitScript(installHelpers, { ox: REGION_1_X, door: OVERWORLD.entrance.door });
+  await page.addInitScript(installHelpers, { ox: 40 + HOME_SHIFT.dx, oy: HOME_SHIFT.dy, half: Math.floor(RUIN.w / 2), door: OVERWORLD.entrance.door });
 }
 
 export async function boot(page: Page, query = '?start=field'): Promise<void> {

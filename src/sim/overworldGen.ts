@@ -158,7 +158,8 @@ export function generateOverworld(seed: number = OVERWORLD.seed, landmarks: read
   // Landmarks override the terrain: clearings, roads, walls, the ruin and the door. The landmarks' areas (032)
   // and the springs' clearings (030) are stamped here rather than steering the generator, so its stream is unchanged.
   const areas = landmarks.map((l) => l.area);
-  const kept = dropPonds(grid, ponds, areas);
+  // 053: and any reaching a spring's clearing (030), which on the round map the generator can now reach.
+  const kept = dropPonds(grid, ponds, [...areas, ...OVERWORLD.springs.map(springClearing)]);
   for (const r of [...OVERWORLD.clearings, ...OVERWORLD.springs.map(springClearing), ...areas, ...HOLLOWS.clears]) fill(grid, r, TILE.floor);
   for (const p of OVERWORLD.paths) path(grid, p);
   for (const t of [...OVERWORLD.ruinField.walls, ...OVERWORLD.entrance.mound, ...landmarks.flatMap((l) => l.blocks ?? [])]) set(grid, t.tx, t.ty, TILE.ruinBlock);

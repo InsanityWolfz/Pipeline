@@ -1,3 +1,4 @@
+import { OVERWORLD } from '../../src/data/overworld';
 import { expect, test } from '@playwright/test';
 import { boot, cameraSettled } from './helpers';
 
@@ -56,16 +57,16 @@ test.describe('review screenshots (030)', () => {
   test("healing in the shrine's safe zone, with the thread to the pylon", async ({ page }) => {
     test.setTimeout(90_000);
     await boot(page);
-    await page.evaluate(() => {
+    await page.evaluate((pylon) => {
       const g = window.__GAME__;
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
       g.claim('shrine');
       g.setPlayerHealth(30);
-      // Inside the site, a few tiles down and right of the pylon (66, 8; +40 since 034), on open flagstones.
-      h.walkTo((68.5 + h.ox) * 32, 11.5 * 32);
+      // Inside the site, a few tiles down and right of the pylon, on open flagstones.
+      h.walkTo((pylon.tx + 2.5) * 32, (pylon.ty + 3.5) * 32);
       if (g.step(10).player.healing !== 'pylon') throw new Error('not healing in the safe zone');
-    });
+    }, OVERWORLD.shrine.pylon);
     await cameraSettled(page, 20_000);
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().healing))?.thread).toBe(true);
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().healing))?.motes ?? 0).toBeGreaterThan(6);

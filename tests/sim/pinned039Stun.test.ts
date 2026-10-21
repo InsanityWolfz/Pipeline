@@ -3,9 +3,8 @@ import { ROLLBREAKER } from '../../src/data/relics';
 import { TALENT_START } from '../../src/data/talents';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import type { SimState } from '../../src/sim/state';
-import { tileCentre } from '../../src/sim/tiles';
 import { piece, wear } from '../fixtures/gear';
-import { arena, fireAt, HALL, hold, movePlayer, placeHusk, PLAYER_AT, run, runUntil , homeTile } from './fight';
+import { arena, fireAt, HALL, hold, movePlayer, placeHusk, PLAYER_AT, run, runUntil, homeTile } from './fight';
 
 // 039 pins, beside pinned039.test.ts: the Stun's two sources and the landmine's timing,
 // taken from the code before the keyword refactor (fd75ac9) and held after it.

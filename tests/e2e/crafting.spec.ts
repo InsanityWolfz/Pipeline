@@ -159,7 +159,7 @@ test('an arrow pierces two Husks (029), and a bomb burst kills one', async ({ pa
       const back = !lined && len < 120;
       const closeIn = !lined && len > 200;
       const cx = (45.5 + (window.__helpers?.ox ?? 0)) * 32 - p.x;
-      const cy = 15.5 * 32 - p.y;
+      const cy = (15.5 + (window.__helpers?.oy ?? 0)) * 32 - p.y;
       const open = cx * nx + cy * ny < 0 && Math.hypot(cx, cy) > 48;
       const sign = (v: number): -1 | 0 | 1 => (Math.abs(v) < 2 ? 0 : v > 0 ? 1 : -1);
       const away = open ? { moveX: sign(cx), moveY: sign(cy) } : { moveX: sign(-nx), moveY: sign(-ny) };

@@ -6,6 +6,7 @@ import { SAFE_RADIUS } from '../../src/data/population';
 import { TILE } from '../../src/data/rooms';
 import { WORLD } from '../../src/sim/world';
 import { landmarkDef } from '../../src/data/landmarks';
+import { RUIN_AREA } from '../../src/data/home';
 import type { TileRect } from '../../src/data/tiles';
 
 // Believable resources (018): every node stands where its material comes from.
@@ -73,12 +74,13 @@ describe('where nodes stand', () => {
     expect(RULES[rule](n), `${n.nodeId} at ${n.tx},${n.ty} breaks '${rule}'`).toBe(true);
   });
 
-  it('every ley line leads to the foundry stairs, directly or through another line', () => {
-    const door = OVERWORLD.entrance.door;
+  it("every ley line leads to the foundry's ruin, directly or through another line", () => {
+    // 053: a line home ends on the edge of the ruin over the stairs (RUIN_AREA, half a tile out).
+    const r = RUIN_AREA;
     for (const line of LINES) {
       const end = line[line.length - 1];
       if (!end) throw new Error('empty ley line');
-      const atDoor = Math.hypot(end.tx - door.tx, end.ty - door.ty) <= 3;
+      const atDoor = end.tx >= r.x0 - 0.51 && end.tx <= r.x1 + 0.51 && end.ty >= r.y0 - 0.51 && end.ty <= r.y1 + 0.51;
       const joins = LINES.some((other) => other !== line && other[0]?.tx === end.tx && other[0]?.ty === end.ty);
       expect(atDoor || joins, `line ending ${end.tx},${end.ty}`).toBe(true);
     }

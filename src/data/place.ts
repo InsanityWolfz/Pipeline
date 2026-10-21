@@ -22,11 +22,10 @@ export const shiftTo = (r: TileRect, to: TilePos): Shift => {
   return { dx: to.tx - m.tx, dy: to.ty - m.ty };
 };
 
-/** A landmark moved whole by `d`: its area, features, nodes, guards, pylon, seams, blocks, reliquary and stamped tiles. Its ley line home is the round map's (leyLines.ts), so any old one is dropped. */
+/** A landmark moved whole by `d`: its area, features, nodes, guards, pylon, seams, blocks, reliquary and stamped tiles. */
 export function shiftLandmark(l: LandmarkDef, d: Shift): LandmarkDef {
-  const { leyLine: _old, ...rest } = l;
   return {
-    ...rest,
+    ...l,
     area: shiftRect(l.area, d),
     features: l.features.map((f) => ({ ...f, cx: f.cx + d.dx, cy: f.cy + d.dy })),
     nodes: l.nodes.map((n) => shiftTile(n, d)),
