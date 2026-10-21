@@ -1,3 +1,4 @@
+import { TUNNEL_REACH } from './foundry';
 import { stageText } from './rulesText';
 import { stageBase, STAGES, type StageDef } from './stages';
 
@@ -41,11 +42,12 @@ export interface MachineDef extends PieceBase {
 
 /**
  * Moves or holds items: conduits carry them, hoppers feed a line, crates collect
- * what it makes, and a splitter deals items out its front and side in turn (033;
- * there from the start, 046).
+ * what it makes, a splitter deals items out its front and side in turn (033;
+ * there from the start, 046), and an underground entrance sends items under the
+ * floor to its exit (052).
  */
 export interface LogisticsDef extends PieceBase {
-  kind: 'conduit' | 'hopper' | 'crate' | 'splitter';
+  kind: 'conduit' | 'hopper' | 'crate' | 'splitter' | 'tunnel-in' | 'tunnel-out';
 }
 
 export type PieceDef = MachineDef | LogisticsDef;
@@ -70,9 +72,9 @@ const machine = (
   craftTicks,
 });
 
-const logistics = (kind: LogisticsDef['kind'], name: string, description: string): LogisticsDef => ({
+const logistics = (kind: LogisticsDef['kind'], name: string, description: string, id: string = kind): LogisticsDef => ({
   kind,
-  id: kind,
+  id,
   name,
   category: 'logistics',
   description,
@@ -93,6 +95,8 @@ function stageMachine(st: StageDef): MachineDef {
 export const PIECES: Readonly<Record<string, PieceDef>> = {
   conduit: logistics('conduit', 'Ley conduit', 'Carries items toward its front. Drag to lay a run that bends.'),
   splitter: logistics('splitter', 'Splitter', 'Sends items out its front and side in turn. G flips the side.'),
+  'underground-entrance': logistics('tunnel-in', 'Underground entrance', `Takes items from its back and sends them under the floor to its exit, up to ${TUNNEL_REACH} tiles ahead.`, 'underground-entrance'),
+  'underground-exit': logistics('tunnel-out', 'Underground exit', 'Brings up what its entrance sends, out its front. Place it in line ahead, facing the same way.', 'underground-exit'),
   hopper: logistics('hopper', 'Hopper', 'Holds one kind of item, put in with E, and feeds it forward.'),
   crate: logistics('crate', 'Crate', 'Collects whatever reaches it from any side. E empties it.'),
   cutter: machine('cutter', 'Cutter', 'arrows', 'shaft', '1x1', 60, 'Cuts wood into shafts.'),
@@ -110,10 +114,15 @@ export const PIECES: Readonly<Record<string, PieceDef>> = {
   ...Object.fromEntries(Object.values(STAGES).map((st) => [st.id, stageMachine(st)])),
 };
 
+/** The underground pair's pieces (052): placing one selects the other next, as Factorio's underground belts. */
+export const TUNNEL_PIECES = { in: 'underground-entrance', out: 'underground-exit' } as const;
+
 /** The build bar's order, group by group (026): logistics, then each ammo chain's machines. */
 export const BUILD_BAR: readonly string[] = [
   'conduit',
   'splitter',
+  'underground-entrance',
+  'underground-exit',
   'hopper',
   'crate',
   'cutter',
@@ -145,8 +154,8 @@ export function machineDef(id: string): MachineDef {
   return def;
 }
 
-/** Pieces that lie flat on the floor (conduits and 033's splitter): the player walks over them. */
-export const isFlatKind = (kind: PieceKind): boolean => kind === 'conduit' || kind === 'splitter';
+/** Pieces that lie flat on the floor (conduits, 033's splitter and 052's underground pair): the player walks over them. */
+export const isFlatKind = (kind: PieceKind): boolean => kind === 'conduit' || kind === 'splitter' || kind === 'tunnel-in' || kind === 'tunnel-out';
 
 /** Flat pieces can be walked over; every other piece blocks the player. */
 export function isSolidPiece(id: string): boolean {

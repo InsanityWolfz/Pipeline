@@ -73,7 +73,34 @@ export interface SplitterState extends PieceCommon {
   next: 'front' | 'side';
 }
 
-export type PieceState = ConduitState | MachineState | HopperState | CrateState | SplitterState;
+/** An item under the floor, `progress` ticks into crossing its tile (052). */
+export interface TunnelSlot {
+  item: string;
+  progress: number;
+}
+
+/**
+ * An underground entrance (052) takes items only from its back and carries one across its tile like a conduit, then
+ * hands it into its tunnel: one slot per tile between it and its exit (`pair`, a piece id), entrance side first. Unpaired,
+ * it has no tunnel and holds its item. Rules: src/sim/tunnels.ts.
+ */
+export interface TunnelInState extends PieceCommon {
+  kind: 'tunnel-in';
+  item: string | null;
+  progress: number;
+  pair: number | null;
+  tunnel: (TunnelSlot | null)[];
+}
+
+/** An underground exit (052): takes items only from its entrance's tunnel and carries them out its front like a conduit. */
+export interface TunnelOutState extends PieceCommon {
+  kind: 'tunnel-out';
+  item: string | null;
+  progress: number;
+  pair: number | null;
+}
+
+export type PieceState = ConduitState | MachineState | HopperState | CrateState | SplitterState | TunnelInState | TunnelOutState;
 
 /** How a new piece is shaped: a conduit's intake side (013), a splitter's mirrored side (033). */
 export interface PieceShape {
@@ -100,6 +127,8 @@ export function createPiece(id: number, pieceId: string, tx: number, ty: number,
   const { kind } = pieceDef(pieceId);
   if (kind === 'conduit') return { ...common, kind, inFrom: shape.inFrom ?? opposite(facing), item: null, progress: 0 };
   if (kind === 'splitter') return { ...common, kind, item: null, progress: 0, mirrored: shape.mirrored ?? false, next: 'front' };
+  if (kind === 'tunnel-in') return { ...common, kind, item: null, progress: 0, pair: null, tunnel: [] };
+  if (kind === 'tunnel-out') return { ...common, kind, item: null, progress: 0, pair: null };
   if (kind === 'hopper') return { ...common, kind, item: null, count: 0, timer: 0 };
   if (kind === 'crate') return { ...common, kind, contents: {} };
   return { ...common, kind, buffer: {}, output: 0, made: recipeDef(machineDef(pieceId).recipeId).output.itemId, crafting: false, progress: 0, status: 'idle', missing: [] };

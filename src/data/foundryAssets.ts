@@ -63,7 +63,24 @@ export const LOGISTICS_ICONS: Readonly<Record<string, string>> = {
   hopper: 'emblem-hopper',
   crate: 'emblem-crate',
   splitter: 'emblem-splitter',
+  'underground-entrance': 'emblem-tunnel-in',
+  'underground-exit': 'emblem-tunnel-out',
 };
+
+/** The underground pair (052), flat on the floor by view; `side` flows right (render flips it for left). */
+export const TUNNEL_SPRITES = {
+  in: { side: 'tunnel-in-side', up: 'tunnel-in-up', down: 'tunnel-in-down' },
+  out: { side: 'tunnel-out-side', up: 'tunnel-out-up', down: 'tunnel-out-down' },
+} as const satisfies Record<'in' | 'out', Record<PieceView, string>>;
+
+/**
+ * How a tunnel shows on the floor (052, Shaun: "little lines on the top and bottom of the tiles you're going to be
+ * going under ... just like Factorio"): two lines along each tile it passes under, `inset` px in from the tile's sides,
+ * `width` px wide, in `color`. A tunnel to its pair (hovered, or the exit's ghost in reach) at `alpha`; an entrance's
+ * reach while placing (its ghost, or every free entrance while the exit is selected) at `reachAlpha`, ending in a tick
+ * across the farthest tile; under each line a glow 2 px wider at `glowAlpha` of it. World px.
+ */
+export const TUNNEL_LOOK = { color: 'cyan-glow', glow: 'cyan', glowAlpha: 0.3, alpha: 0.95, reachAlpha: 0.45, width: 1.5, inset: 5, tick: 6 } as const;
 
 /** Conduits flow toward their front; `side` flows right. They lie flat on the floor. */
 export const CONDUIT_ANIMS: Readonly<Record<PieceView, AnimDef>> = {

@@ -7,6 +7,7 @@ import { fillEntrance, type EntranceState } from './link';
 import { machineRecipe, offerToStage, stageOf } from './stages';
 import { craftTicksAt } from './research';
 import { afterSplit, splitterOrder } from './splitter';
+import { advanceTunnel, transferTunnel } from './tunnels';
 import {
   footprint,
   frontSide,
@@ -42,9 +43,10 @@ export interface FlowTuning {
 /** Before anything is restored. */
 export const BASE_TUNING: FlowTuning = { cap: ENTRANCE_CAPS[0] ?? 0, speed: 1 };
 
-/** What a tick's flow needs beyond the grid: the entrances the intake fills (once `attuned`) up to `cap`, and where refills are recorded. */
+/** What a tick's flow needs beyond the grid (and each piece by id): the entrances the intake fills (once `attuned`) up to `cap`, and where refills are recorded. */
 interface FlowContext {
   grid: ReadonlyMap<string, PieceState>;
+  byId: ReadonlyMap<number, PieceState>;
   entrances: EntranceState[];
   refills: SimEvents['refills'];
   attuned: boolean;
@@ -80,8 +82,9 @@ function advanceMachine(m: MachineState, made: SimEvents['made'], speed: number)
 }
 
 function advance(p: PieceState, made: SimEvents['made'], speed: number): void {
-  // Conduits and splitters carry one item across a tile.
-  if ((p.kind === 'conduit' || p.kind === 'splitter') && p.item && p.progress < CONDUIT_TICKS) p.progress += 1;
+  // Conduits, splitters and both underground ends (052) carry one item across a tile; an entrance's tunnel carries its own.
+  if ((p.kind === 'conduit' || p.kind === 'splitter' || p.kind === 'tunnel-in' || p.kind === 'tunnel-out') && p.item && p.progress < CONDUIT_TICKS) p.progress += 1;
+  if (p.kind === 'tunnel-in') advanceTunnel(p);
   if (p.kind === 'hopper' && p.count > 0 && p.timer < HOPPER_TICKS) p.timer += 1;
   if (p.kind === 'machine') advanceMachine(p, made, speed);
 }
@@ -106,8 +109,10 @@ function offer(ctx: FlowContext, to: Tile, from: Tile, item: string): boolean {
   if (target.kind !== 'crate' && frontSide(target).some((t) => sameTile(t, from))) return false;
   // A conduit takes items only from the side it's shaped to take them from (013); a splitter only from its back (033).
   if (target.kind === 'conduit' && !sameTile(from, sideTile(target, target.inFrom))) return false;
-  if (target.kind === 'splitter' && !sameTile(from, sideTile(target, opposite(target.facing)))) return false;
-  if (target.kind === 'conduit' || target.kind === 'splitter') {
+  if ((target.kind === 'splitter' || target.kind === 'tunnel-in') && !sameTile(from, sideTile(target, opposite(target.facing)))) return false;
+  // An underground exit (052) takes only from its entrance's tunnel, never from a neighbour.
+  if (target.kind === 'tunnel-out') return false;
+  if (target.kind === 'conduit' || target.kind === 'splitter' || target.kind === 'tunnel-in') {
     if (target.item) return false;
     target.item = item;
     target.progress = 0;
@@ -139,7 +144,7 @@ function offer(ctx: FlowContext, to: Tile, from: Tile, item: string): boolean {
 
 function transfer(ctx: FlowContext, p: PieceState): void {
   const to = frontTile(p);
-  if (p.kind === 'conduit') {
+  if (p.kind === 'conduit' || p.kind === 'tunnel-out') {
     if (p.item && p.progress >= CONDUIT_TICKS && offer(ctx, to, p, p.item)) {
       p.item = null;
       p.progress = 0;
@@ -153,6 +158,10 @@ function transfer(ctx: FlowContext, p: PieceState): void {
     p.item = null;
     p.progress = 0;
     afterSplit(p, used);
+  } else if (p.kind === 'tunnel-in') {
+    // Under the floor to its exit; an unpaired entrance holds its item.
+    const exit = p.pair === null ? undefined : ctx.byId.get(p.pair);
+    if (exit?.kind === 'tunnel-out') transferTunnel(p, exit);
   } else if (p.kind === 'hopper') {
     if (p.item && p.timer >= HOPPER_TICKS) offerFromHopper(ctx, to, p, p.item);
   } else if (p.kind === 'machine') {
@@ -160,7 +169,7 @@ function transfer(ctx: FlowContext, p: PieceState): void {
   }
 }
 
-/** Hoppers feed conduits, splitters and machines, never crates, hoppers or the intake. */
+/** Hoppers feed conduits, splitters, underground entrances and machines, never crates, hoppers or the intake. */
 function offerFromHopper(ctx: FlowContext, to: Tile, h: HopperState, item: string): void {
   const kind = ctx.grid.get(key(to))?.kind;
   if (kind === undefined || kind === 'crate' || kind === 'hopper') return;
@@ -187,7 +196,7 @@ export function offerFromOutside(foundry: FoundryState, to: Tile, from: Tile, it
   const target = pieceAt(foundry, to.tx, to.ty);
   if (!target) return false;
   const grid = new Map<string, PieceState>([[key(to), target]]);
-  return offer({ grid, entrances: [], refills: [], attuned: false, cap: BASE_TUNING.cap }, to, from, item);
+  return offer({ grid, byId: new Map([[target.id, target]]), entrances: [], refills: [], attuned: false, cap: BASE_TUNING.cap }, to, from, item);
 }
 
 /**
@@ -198,7 +207,8 @@ export function offerFromOutside(foundry: FoundryState, to: Tile, from: Tile, it
 export function stepFoundry(foundry: FoundryState, entrances: EntranceState[], events: FlowEvents, attuned: boolean, tuning: FlowTuning = BASE_TUNING): void {
   const grid = new Map<string, PieceState>();
   for (const p of foundry.pieces) for (const t of footprint(p.pieceId, p.tx, p.ty, p.facing)) grid.set(key(t), p);
-  const ctx: FlowContext = { grid, entrances, refills: events.refills, attuned, cap: tuning.cap };
+  const byId = new Map(foundry.pieces.map((p) => [p.id, p]));
+  const ctx: FlowContext = { grid, byId, entrances, refills: events.refills, attuned, cap: tuning.cap };
   for (const p of foundry.pieces) advance(p, events.made, tuning.speed);
   for (const p of foundry.pieces) transfer(ctx, p);
   for (const p of foundry.pieces) if (p.kind === 'machine') setStatus(p);

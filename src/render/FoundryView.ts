@@ -26,7 +26,7 @@ import { registerAnim } from './anims';
 import { arrowSpots, conduitLook, pieceIcon } from './foundryLayout';
 import { TextLine } from './textLine';
 import { addVector, addVectorSprite, textureScale } from './vector/textures';
-import { riderAt, splitterLook } from './flatPieces';
+import { riderAt, splitterLook, tunnelLook, tunnelRiderAt } from './flatPieces';
 
 export const viewOf = (f: Facing): PieceView => (f === 'up' || f === 'down' ? f : 'side');
 
@@ -62,6 +62,7 @@ function firstFrame(p: PieceState): string {
   if (p.kind === 'conduit') return animFrames(conduitLook(p.facing, p.inFrom).anim)[0] ?? '';
   if (p.kind === 'machine') return machineLook(p.pieceId, view).idle;
   if (p.kind === 'splitter') return splitterLook(p.facing, p.mirrored).frame;
+  if (p.kind === 'tunnel-in' || p.kind === 'tunnel-out') return tunnelLook(p.kind, p.facing).frame;
   return p.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE;
 }
 
@@ -157,6 +158,10 @@ export class FoundryView {
       const look = splitterLook(p.facing, p.mirrored);
       d.body.setOrigin(0.5).setPosition(r.x, r.y).setDepth(FOUNDRY_LAYOUT.conduitDepth).setFlip(look.flipX, look.flipY);
       d.icon.setDepth(FOUNDRY_LAYOUT.itemDepth);
+    } else if (p.kind === 'tunnel-in' || p.kind === 'tunnel-out') {
+      // 052: flat and still like the splitter; the riding item slides into, or out of, the hood's mouth.
+      d.body.setOrigin(0.5).setPosition(r.x, r.y).setDepth(FOUNDRY_LAYOUT.conduitDepth).setFlip(tunnelLook(p.kind, p.facing).flipX, false);
+      d.icon.setDepth(FOUNDRY_LAYOUT.itemDepth);
     } else {
       d.body.setFrame(p.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE);
       d.icon.setPosition(r.x, bottom - FOUNDRY_LAYOUT.contentsRise).setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge);
@@ -169,10 +174,10 @@ export class FoundryView {
   private draw(p: PieceState, d: Drawn): void {
     if (p.kind === 'conduit') this.drawConduit(p, d);
     else if (p.kind === 'machine') this.drawMachine(p, d);
-    else if (p.kind === 'splitter') {
+    else if (p.kind === 'splitter' || p.kind === 'tunnel-in' || p.kind === 'tunnel-out') {
       d.icon.setVisible(p.item !== null);
       if (!p.item) return;
-      const at = riderAt(p);
+      const at = p.kind === 'splitter' ? riderAt(p) : tunnelRiderAt(p);
       d.icon.setFrame(itemDef(p.item).icon).setPosition(at.x, at.y - FOUNDRY_LAYOUT.itemLift);
     } else {
       const items = p.kind === 'hopper' ? (p.item ? { [p.item]: p.count } : {}) : p.contents;

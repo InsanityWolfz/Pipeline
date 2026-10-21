@@ -43,6 +43,7 @@ import { CursorView } from './CursorView';
 import { Legibility } from './Legibility';
 import { IDLE_HOST, type GameHost } from './flow/host';
 import { SandboxPanel } from './SandboxPanel';
+import { TunnelView } from './TunnelView';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -68,6 +69,8 @@ export class GameScene extends Scene {
   private bombView?: BombView;
   private foundryView?: FoundryView;
   buildView?: BuildView;
+  /** 052: the underground pair's tunnels and reach on the floor. */
+  tunnelView?: TunnelView;
   hover?: HoverView;
   menu?: CraftMenuView;
   pause?: PauseMenuView;
@@ -122,6 +125,7 @@ export class GameScene extends Scene {
     this.bombView = new BombView(this);
     this.hud = new HudView(this);
     this.buildView = new BuildView(this);
+    this.tunnelView = new TunnelView(this);
     this.hover = new HoverView(this);
     this.site = new SiteView(this);
     this.siteMenus = new SiteMenus(this);
@@ -244,6 +248,7 @@ export class GameScene extends Scene {
     this.tutorial?.update(sim, shown, this.pending, (id) => this.foundryView?.topOf(id));
     const picked = new Set(this.pending.pickups.map((p) => p.id));
     this.hud?.update(sim, this.pending, this.game.loop.delta);
+    this.buildView?.placed(this.pending.places.map((p) => p.pieceId));
     clearEvents(this.pending);
     const inFoundry = shown === FOUNDRY_ROOM;
     this.foundryView?.update(sim.foundry, inFoundry, sim.building);
@@ -270,6 +275,7 @@ export class GameScene extends Scene {
       (t, f) => ghostShape(controls?.heldLay() ?? null, t, f, (u, g) => conduitInFrom(sim, u.tx, u.ty, g)),
       highlightOf(sim),
     );
+    this.tunnelView?.update(sim.foundry, inFoundry, { building: sim.building, selected: this.buildView?.selected ?? '', cursor, facing: controls?.facing ?? 'right' });
     // Menu rows light under the cursor (020).
     const pointer = controls?.viewPointer();
     if (pointer) for (const menu of [this.siteMenus, this.pause, this.hud, this.sandboxPanel]) menu?.pointAt(pointer.x, pointer.y);

@@ -152,6 +152,9 @@ export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing:
       { kind: 'out', tx: p.tx, ty: p.ty, edge: side, points: side },
     ];
   }
+  // An underground entrance (052) takes from its back and hands nothing out its front; its exit only hands out its front.
+  if (kind === 'tunnel-in') return [{ kind: 'in', tx: p.tx, ty: p.ty, edge: opposite(p.facing), points: p.facing }];
+  if (kind === 'tunnel-out') return [{ kind: 'out', tx: p.tx, ty: p.ty, edge: p.facing, points: p.facing }];
   // A conduit shows its flow; since 013 it also marks the one side it takes items from.
   if (kind === 'conduit') {
     const edge = p.inFrom ?? opposite(p.facing);

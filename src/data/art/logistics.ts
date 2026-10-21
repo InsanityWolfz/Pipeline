@@ -8,12 +8,12 @@ import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSp
 // violet stone hopper; the rune-locked crate; build-mode arrows; machine status markers. Floor pieces are
 // drawn in tile px from their top-left; standing pieces round their bottom centre.
 
-type Edge = 'up' | 'down' | 'left' | 'right';
-type Pt = readonly [number, number];
+export type Edge = 'up' | 'down' | 'left' | 'right';
+export type Pt = readonly [number, number];
 
-const T = 32;
+export const T = 32;
 const MID: Pt = [T / 2, T / 2];
-const EDGE: Readonly<Record<Edge, Pt>> = { up: [T / 2, 0], down: [T / 2, T], left: [0, T / 2], right: [T, T / 2] };
+export const EDGE: Readonly<Record<Edge, Pt>> = { up: [T / 2, 0], down: [T / 2, T], left: [0, T / 2], right: [T, T / 2] };
 
 /** Points along a conduit's centre line from the edge items come in by to the edge they leave by: straight, or a curve round the middle. */
 function route(from: Edge, to: Edge): Pt[] {
@@ -44,10 +44,10 @@ function along(pts: readonly Pt[], f: number): { at: Pt; dir: Pt } {
   return { at: pts[0] ?? MID, dir: [1, 0] };
 }
 
-const flatPts = (pts: readonly Pt[], dy = 0): number[] => pts.flatMap(([x, y]) => [x, y + dy]);
+export const flatPts = (pts: readonly Pt[], dy = 0): number[] => pts.flatMap(([x, y]) => [x, y + dy]);
 
 /** A brass collar across the trough where it meets a tile edge. */
-function collar(edge: Edge, w = 16): Shape {
+export function collar(edge: Edge, w = 16): Shape {
   const half = w / 2;
   if (edge === 'up') return rect(T / 2 - half, 0, w, 2.2, 0.5, solid('brass'));
   if (edge === 'down') return rect(T / 2 - half, T - 2.2, w, 2.2, 0.5, solid('brass'));
@@ -56,7 +56,7 @@ function collar(edge: Edge, w = 16): Shape {
 }
 
 /** A small chevron at `at`, pointing along `dir`. */
-function chevron(at: Pt, dir: Pt, color: string, size = 2.6): Shape {
+export function chevron(at: Pt, dir: Pt, color: string, size = 2.6): Shape {
   const [x, y] = at;
   const [dx, dy] = dir;
   const nx = -dy;
@@ -69,14 +69,14 @@ function chevron(at: Pt, dir: Pt, color: string, size = 2.6): Shape {
 }
 
 /** A trough along `pts`: its shadow, stone body and top. */
-const trough = (pts: readonly Pt[], stone: string, top: string, w = 15): Shape[] => [
+export const trough = (pts: readonly Pt[], stone: string, top: string, w = 15): Shape[] => [
   line(flatPts(pts, 2), w + 2, { id: 'ground-shade', alpha: 0.3 }),
   line(flatPts(pts), w, stone, true),
   line(flatPts(pts, -0.6), w - 3.4, top),
 ];
 
 /** The ley channel along `pts`: a dark cut, the deep crystal and a glowing core. */
-const channel = (pts: readonly Pt[], deep = 'cyan-deep', core = 'cyan'): Shape[] => [
+export const channel = (pts: readonly Pt[], deep = 'cyan-deep', core = 'cyan'): Shape[] => [
   line(flatPts(pts), 7, 'ink'),
   { ...line(flatPts(pts), 5, deep), glow: { color: 'cyan', blur: 2 } },
   { ...line(flatPts(pts), 1.8, core), glow: { color: 'cyan-glow', blur: 3 } },
@@ -94,10 +94,10 @@ function conduit(from: Edge, to: Edge, frame: number): Shape[] {
   return [...trough(pts, 'rock', 'rock-light'), ...channel(pts), collar(from), collar(to), ...flow(pts, frame)];
 }
 
-const floorPiece = (key: string, frames: readonly (readonly Shape[])[]): VectorSprite => ({ key, size: [T, T], anchor: [0, 0], frames });
+export const floorPiece = (key: string, frames: readonly (readonly Shape[])[]): VectorSprite => ({ key, size: [T, T], anchor: [0, 0], frames });
 const twoFrames = (draw: (frame: number) => Shape[]): Shape[][] => [draw(0), draw(1)];
 
-const STRAIGHT: Readonly<Record<PieceView, [Edge, Edge]>> = { side: ['left', 'right'], up: ['down', 'up'], down: ['up', 'down'] };
+export const STRAIGHT: Readonly<Record<PieceView, [Edge, Edge]>> = { side: ['left', 'right'], up: ['down', 'up'], down: ['up', 'down'] };
 
 const CONDUITS: VectorSprite[] = [
   ...Object.entries(CONDUIT_ANIMS).map(([view, anim]) => {

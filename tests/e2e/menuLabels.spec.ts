@@ -146,9 +146,9 @@ test('on a fresh start the build bar shows only the Logistics group, and the whe
   await enterFoundry(page);
   const bar = await openBuildBar(page);
   // Before any hand-crafting only logistics is unlocked: locked machines, and their groups' labels, are hidden.
-  expectGroups(bar, ['conduit', 'splitter', 'hopper', 'crate']);
+  expectGroups(bar, ['conduit', 'splitter', 'underground-entrance', 'underground-exit', 'hopper', 'crate']);
   expect(bar.selected).toBe('conduit');
-  for (const id of ['splitter', 'hopper', 'crate', 'conduit']) await wheel(page, id);
+  for (const id of ['splitter', 'underground-entrance', 'underground-exit', 'hopper', 'crate', 'conduit']) await wheel(page, id);
   expect(errors).toEqual([]);
 });
 

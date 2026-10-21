@@ -1,3 +1,4 @@
+import type { TunnelMark } from './tunnelMarks';
 import type { GroundItemShown } from './GroundItemView';
 import type { InteractPromptState } from './InteractPrompt';
 import type { SimSummary } from '../sim/summary';
@@ -146,6 +147,8 @@ export interface UiState {
   craftMenu: CraftMenuState | null;
   /** The build bar as drawn (026): the unlocked pieces' cells, the shown groups' labels and the dividers. */
   buildBar: BuildBarState | null;
+  /** 052: the underground pair's marks on the floor: a pair's tunnel (hovered, or the ghost that would pair) and an entrance's reach while placing. */
+  tunnels: TunnelMark[];
   /**
    * 029: Split flashes still showing, and the tagged rounds' trails in flight (how many, and the most points one runs
    * along). 047 removed the bench's Stages panel from here.

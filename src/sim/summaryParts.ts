@@ -169,6 +169,9 @@ export type PieceSummary = { id: number; pieceId: string; tx: number; ty: number
   | { kind: 'crate'; contents: Record<string, number> }
   /** 033: `next` is the output a splitter tries first. */
   | { kind: 'splitter'; item: string | null; progress: number; mirrored: boolean; next: 'front' | 'side' }
+  /** 052: an underground end's paired end (a piece id, or null); an entrance's tunnel, the item on each tile between. */
+  | { kind: 'tunnel-in'; item: string | null; progress: number; pair: number | null; tunnel: (string | null)[] }
+  | { kind: 'tunnel-out'; item: string | null; progress: number; pair: number | null }
 );
 
 export function pieceSummary(p: PieceState): PieceSummary {
@@ -177,6 +180,8 @@ export function pieceSummary(p: PieceState): PieceSummary {
   if (p.kind === 'hopper') return { ...common, kind: p.kind, item: p.item, count: p.count };
   if (p.kind === 'crate') return { ...common, kind: p.kind, contents: { ...p.contents } };
   if (p.kind === 'splitter') return { ...common, kind: p.kind, item: p.item, progress: p.progress, mirrored: p.mirrored, next: p.next };
+  if (p.kind === 'tunnel-in') return { ...common, kind: p.kind, item: p.item, progress: p.progress, pair: p.pair, tunnel: p.tunnel.map((t) => t?.item ?? null) };
+  if (p.kind === 'tunnel-out') return { ...common, kind: p.kind, item: p.item, progress: p.progress, pair: p.pair };
   const { buffer, output, made, crafting, progress, status, missing } = p;
   return { ...common, kind: p.kind, buffer: { ...buffer }, output, made, crafting, progress, status, missing: [...missing] };
 }
