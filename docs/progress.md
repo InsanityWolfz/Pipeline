@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: 052 built (foundry logistics)
+**Changed:** on `claude/052-foundry-logistics` (draft PR). The underground pair: an entrance and an exit, up to 5 tiles between in a straight line, anything built between; a tunnel holds as many items as tiles it spans, like a conduit that long. Its reach shows while placing, the tunnel on hover; placing one end selects the other. Shaun's crossing case (an arrow line and a bomb line whose feeds cross) is a sim test. The sorter and the merger are gone, with the merger's research, schematic and art. The stash opens a two-panel screen (its own scrolling grid over the inventory, the same clicks). The bench sits just inside the door at (22, 9), redrawn as a workbench with a magnifying glass and an armor rack. SAVE_VERSION 7, no migration. `npm run check` passes (1678); full Playwright: 135 passed, 1 failed (fixed, file re-run passes), 126 skipped. Measure unchanged from main (ring 3 and the Bulwark's decent build MISSED there too).
+
+**Next:** review; Shaun answers 052.4–052.12 and playtests the preview.
+
 ## 2026-10-21: Live-playtest interview; 050–052 drafted
 **Changed:** ran the spec interview on Shaun's live playtest notes (answers in docs/brainstorm/2026-10-21-playtest-interview.md) and drafted 050 (playtest fixes and title screen), 051 (guidance), 052 (foundry logistics). 053 (world and bosses) and 054 (combat readability) are ideas for the next batch.
 
