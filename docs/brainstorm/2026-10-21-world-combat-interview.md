@@ -13,3 +13,8 @@ Oct 21, 2026 · Shaun's answers to the spec interview on themes D and E of docs/
 - **Homing bolts:** about 60% of a plain bolt's speed, same turn rate (rec).
 - **Pool arrow:** an arrow through a bomb pool catches fire: a burning tip and a short ember trail for the rest of its flight, a small flash on hit (rec).
 - **Immune health bar:** blue with a shield icon only while nothing can damage the enemy (a burrowed Burrower, an add still rising); not for shielded fronts (rec).
+
+## After the 053 build
+Oct 21, 2026 · Shaun's answers to 053's "Raised after the build".
+- **053.4 Size:** "Keep radius 48" (twice the old Region 1). Play it first; grow it later if it feels small.
+- **053.10 Population:** pack counts 8/12/12 kept, "judge at playtest", along with the Bulwark measure (the decent build met all three targets on 9/20 seeds, 6 KOs).
