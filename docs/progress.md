@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: 049 review fixes
+**Changed:** on `claude/049-resin-pylon` (PR #39), merged with main (048). claiming.spec no longer heals its bot: it clears the shrine's guards through the hook as declared setup. The mirrored nest stone is lit from the top left (049 shots and the south-east spring shots of 030 and 032 retaken). New tests: the Hive's placed champion draws no extra one (100 seeds, resets) and a seep mid-regrow. The spec's Results now say 049.6 (minimap icon only) and 049.7 (goal text, no marker) are built as recorded, and 049.4 says the Hive clears about 8 trees and two path tiles. Two small render cleanups. `npm run check` passes (1671); full Playwright run: 134 passed, 0 failed, 122 skipped. SAVE_VERSION stays 6.
+
+**Next:** Shaun answers 049.4–049.10 and playtests the preview.
+
 ## 2026-10-21: 048 merged
 **Changed:** Shaun tried 048 (volley shape), "looks great", and merged it (InsanityWolfz/Pipeline#38) after the specs PR (#37). design.md describes the fan.
 
