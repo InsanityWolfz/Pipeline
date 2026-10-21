@@ -17,8 +17,8 @@ import { foundry } from './foundryKit';
 // shows as an unknown until banked; banking reveals its node, a KO before banking loses
 // it with the node still hidden. Machine parts drop from Husks, Wisps and the cache.
 
-const ALL = ['schematic-machine-speed', 'schematic-merger', 'schematic-reservoir-2'];
-const REGION_1 = ['schematic-machine-speed', 'schematic-merger'];
+const ALL = ['schematic-machine-speed', 'schematic-reservoir-2'];
+const REGION_1 = ['schematic-machine-speed'];
 const share = (n: number, of: number): number => n / of;
 
 describe('the schematic roll', () => {
@@ -55,14 +55,18 @@ describe('the schematic roll', () => {
     expect([...seen].sort()).toEqual(REGION_1);
     // Reservoir II drops only in Region 2 (034).
     expect(eligibleSchematics(s, HALL)).not.toContain('schematic-reservoir-2');
-    s.inventory['schematic-merger'] = 1;
-    s.research.merger = 'revealed';
+    const carried = arena();
+    carried.inventory['schematic-machine-speed'] = 1;
+    expect(eligibleSchematics(carried, HALL)).toEqual([]);
+    const revealed = arena();
+    revealed.research['machine-speed'] = 'revealed';
+    expect(eligibleSchematics(revealed, HALL)).toEqual([]);
     s.stash['schematic-machine-speed'] = 1;
     expect(eligibleSchematics(s, HALL)).toEqual([]);
     expect(pickSchematic(s, HALL)).toBeNull();
     const ground = arena();
     scatterItems(ground, [ANY_SCHEMATIC, ANY_SCHEMATIC, ANY_SCHEMATIC, ANY_SCHEMATIC], HALL, PLAYER_AT.x + 100, PLAYER_AT.y);
-    // Three eligible: three land, all different; the fourth finds none and drops nothing.
+    // One eligible (052: the merger's schematic is gone): one lands; the rest find none and drop nothing.
     const landed = ground.groundItems.map((g) => g.itemId);
     expect(landed.sort()).toEqual(REGION_1);
     expect(ground.events.schematicDrops.map((d) => d.itemId).sort()).toEqual(REGION_1);
@@ -101,55 +105,55 @@ describe('unknown until banked', () => {
   it('a carried schematic reveals nothing; banking it reveals its node and gives it its name', () => {
     const s = foundry();
     s.roomId = HALL;
-    s.inventory['schematic-merger'] = 1;
+    s.inventory['schematic-machine-speed'] = 1;
     run(s, 1);
-    expect([s.research.merger, schematicKnown(s, 'schematic-merger')]).toEqual(['hidden', false]);
-    expect(summarize(s).research.schematics).toEqual({ carried: ['schematic-merger'], banked: [] });
+    expect([s.research['machine-speed'], schematicKnown(s, 'schematic-machine-speed')]).toEqual(['hidden', false]);
+    expect(summarize(s).research.schematics).toEqual({ carried: ['schematic-machine-speed'], banked: [] });
     bank(s);
-    expect([s.research.merger, schematicKnown(s, 'schematic-merger')]).toEqual(['revealed', true]);
-    expect(s.events.schematicReveals).toEqual([{ itemId: 'schematic-merger', node: 'merger' }]);
-    expect(summarize(s).research.schematics).toEqual({ carried: ['schematic-merger'], banked: ['schematic-merger'] });
+    expect([s.research['machine-speed'], schematicKnown(s, 'schematic-machine-speed')]).toEqual(['revealed', true]);
+    expect(s.events.schematicReveals).toEqual([{ itemId: 'schematic-machine-speed', node: 'machine-speed' }]);
+    expect(summarize(s).research.schematics).toEqual({ carried: ['schematic-machine-speed'], banked: ['schematic-machine-speed'] });
     // Banking again reveals nothing new.
     bank(s);
     expect(s.events.schematicReveals).toHaveLength(1);
   });
 
   it('walking into the foundry banks and reveals; so does sending the haul home from a pylon', () => {
-    const s = createSim(5, { start: { ...createSim(5).start, inventory: { 'schematic-merger': 1 } } });
+    const s = createSim(5, { start: { ...createSim(5).start, inventory: { 'schematic-machine-speed': 1 } } });
     s.roomId = FOUNDRY_ROOM;
-    expect(s.research.merger).toBe('hidden');
+    expect(s.research['machine-speed']).toBe('hidden');
     bank(s);
-    expect(s.research.merger).toBe('revealed');
+    expect(s.research['machine-speed']).toBe('revealed');
     const p = arena();
-    p.inventory['schematic-machine-speed'] = 1;
+    p.inventory['schematic-reservoir-2'] = 1;
     // A pylon deposit moves the haul to the stash, then banks: the schematic sent home reveals its node.
     for (const [itemId, n] of Object.entries(p.inventory)) p.stash[itemId] = n;
     p.inventory = {};
     bank(p);
-    expect(p.research['machine-speed']).toBe('revealed');
+    expect(p.research['reservoir-2']).toBe('revealed');
   });
 
   it('a KO before banking loses it, and its node stays hidden', () => {
     const s = arena();
-    s.inventory['schematic-merger'] = 1;
+    s.inventory['schematic-machine-speed'] = 1;
     die(s);
-    expect(s.inventory['schematic-merger'] ?? 0).toBe(0);
-    expect(s.events.lost).toMatchObject({ 'schematic-merger': 1 });
-    expect(s.research.merger).toBe('hidden');
+    expect(s.inventory['schematic-machine-speed'] ?? 0).toBe(0);
+    expect(s.events.lost).toMatchObject({ 'schematic-machine-speed': 1 });
+    expect(s.research['machine-speed']).toBe('hidden');
     // Lost, so it can drop again.
-    expect(eligibleSchematics(s, HALL)).toContain('schematic-merger');
+    expect(eligibleSchematics(s, HALL)).toContain('schematic-machine-speed');
   });
 
   it('restoring spends the schematic as part of the cost', () => {
     const s = foundry();
-    s.research.merger = 'revealed';
-    Object.assign(s.inventory, { 'schematic-merger': 1, 'ancient-gear': 2 });
-    const at = { x: 19.5 * 32, y: 1.5 * 32 };
+    s.research['machine-speed'] = 'revealed';
+    Object.assign(s.inventory, { 'schematic-machine-speed': 1, 'ancient-gear': 3 });
+    const at = { x: 6.5 * 32, y: 1.5 * 32 };
     s.player.x = at.x;
     s.player.y = at.y;
-    run(s, 1, { restore: 'merger' });
-    expect(s.research.merger).toBe('restored');
-    expect(s.inventory).toMatchObject({ 'schematic-merger': 0, 'ancient-gear': 0 });
+    run(s, 1, { restore: 'machine-speed' });
+    expect(s.research['machine-speed']).toBe('restored');
+    expect(s.inventory).toMatchObject({ 'schematic-machine-speed': 0, 'ancient-gear': 0 });
   });
 
   it('is deterministic: the same seed and inputs give the same drops and reveals', () => {

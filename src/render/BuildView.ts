@@ -10,12 +10,12 @@ import {
 } from '../data/foundryAssets';
 import { BUILD_BAR_LAYOUT, BUILD_PULSE, GHOST } from '../data/hudLayout';
 import { BUILD_BAR, isFlatKind, pieceDef } from '../data/pieces';
-import { mergerLook, splitterLook } from './flatPieces';
+import { splitterLook } from './flatPieces';
 import { pieceRect, type PlaceFail, type Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { colorOf } from './color';
 import { buildBarLabelTop } from './bottomHud';
-import { buildBarBox, buildBarCells, buildBarDividers, buildBarGroups, conduitLook, inRect, pieceIcon, sorterLook, type ScreenRect } from './foundryLayout';
+import { buildBarBox, buildBarCells, buildBarDividers, buildBarGroups, conduitLook, inRect, pieceIcon, type ScreenRect } from './foundryLayout';
 import { MAX_ARROWS, placeArrows, viewOf } from './FoundryView';
 import { toView } from './scale';
 import { Pulse } from './pulse';
@@ -191,13 +191,9 @@ export class BuildView {
     const { facing, inFrom } = def.kind === 'conduit' ? shapeAt(cursor, ghostFacing) : { facing: ghostFacing, inFrom: ghostFacing };
     const r = pieceRect({ pieceId, tx: cursor.tx, ty: cursor.ty, facing });
     const bottom = r.y + r.h / 2;
-    if (def.kind === 'sorter') {
-      // A sorter's ghost shows which side its item will leave by; F flips it (015).
-      const look = sorterLook(facing, mirrored);
-      showFrame(this.ghost, animFrames(look.anim)[0] ?? '').setFlip(look.flipX, look.flipY);
-    } else if (def.kind === 'splitter' || def.kind === 'merger') {
-      // 033: the splitter's ghost shows its side too, which F flips.
-      const look = def.kind === 'splitter' ? splitterLook(facing, mirrored) : mergerLook(facing);
+    if (def.kind === 'splitter') {
+      // 033: the splitter's ghost shows its side, which G flips.
+      const look = splitterLook(facing, mirrored);
       showFrame(this.ghost, look.frame).setFlip(look.flipX, look.flipY);
     } else {
       const flip = def.kind === 'conduit' ? conduitLook(facing, inFrom).flip : facing === 'left';

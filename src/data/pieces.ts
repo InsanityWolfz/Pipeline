@@ -41,12 +41,11 @@ export interface MachineDef extends PieceBase {
 
 /**
  * Moves or holds items: conduits carry them, hoppers feed a line, crates collect
- * what it makes, a sorter sends one chosen item out its side (015), a splitter
- * deals items out its front and side in turn, and a merger joins three inputs into
- * one (033; never crafted: the splitter is there from the start, 046, the merger restored).
+ * what it makes, and a splitter deals items out its front and side in turn (033;
+ * there from the start, 046).
  */
 export interface LogisticsDef extends PieceBase {
-  kind: 'conduit' | 'hopper' | 'crate' | 'sorter' | 'splitter' | 'merger';
+  kind: 'conduit' | 'hopper' | 'crate' | 'splitter';
 }
 
 export type PieceDef = MachineDef | LogisticsDef;
@@ -93,9 +92,7 @@ function stageMachine(st: StageDef): MachineDef {
 
 export const PIECES: Readonly<Record<string, PieceDef>> = {
   conduit: logistics('conduit', 'Ley conduit', 'Carries items toward its front. Drag to lay a run that bends.'),
-  sorter: logistics('sorter', 'Sorter', 'Sends one chosen item out its side. E sets it, G flips the side.'),
   splitter: logistics('splitter', 'Splitter', 'Sends items out its front and side in turn. G flips the side.'),
-  merger: logistics('merger', 'Merger', 'Takes items from its back and both sides in turn, out its front.'),
   hopper: logistics('hopper', 'Hopper', 'Holds one kind of item, put in with E, and feeds it forward.'),
   crate: logistics('crate', 'Crate', 'Collects whatever reaches it from any side. E empties it.'),
   cutter: machine('cutter', 'Cutter', 'arrows', 'shaft', '1x1', 60, 'Cuts wood into shafts.'),
@@ -116,9 +113,7 @@ export const PIECES: Readonly<Record<string, PieceDef>> = {
 /** The build bar's order, group by group (026): logistics, then each ammo chain's machines. */
 export const BUILD_BAR: readonly string[] = [
   'conduit',
-  'sorter',
   'splitter',
-  'merger',
   'hopper',
   'crate',
   'cutter',
@@ -150,8 +145,8 @@ export function machineDef(id: string): MachineDef {
   return def;
 }
 
-/** Pieces that lie flat on the floor (conduits, sorters, and 033's splitter and merger): the player walks over them. */
-export const isFlatKind = (kind: PieceKind): boolean => kind === 'conduit' || kind === 'sorter' || kind === 'splitter' || kind === 'merger';
+/** Pieces that lie flat on the floor (conduits and 033's splitter): the player walks over them. */
+export const isFlatKind = (kind: PieceKind): boolean => kind === 'conduit' || kind === 'splitter';
 
 /** Flat pieces can be walked over; every other piece blocks the player. */
 export function isSolidPiece(id: string): boolean {

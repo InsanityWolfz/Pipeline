@@ -3,12 +3,12 @@ import { buildBarLabelTop, groupedBottomRow } from './bottomHud';
 import { INTAKE } from '../data/foundry';
 import { BUILD_BAR_LAYOUT, MENU_COLUMN_GAP, MENU_MAX_ROWS, PICKER_LAYOUT } from '../data/hudLayout';
 import type { AnimDef } from '../data/assets';
-import { CONDUIT_ANIMS, CONDUIT_CORNERS, LOGISTICS_ICONS, SORTER_ANIMS, type CornerKey } from '../data/foundryAssets';
+import { CONDUIT_ANIMS, CONDUIT_CORNERS, LOGISTICS_ICONS, type CornerKey } from '../data/foundryAssets';
 import { itemDef } from '../data/items';
 import { BUILD_BAR, PIECE_CATEGORIES, pieceDef, type PieceCategory } from '../data/pieces';
 import { recipeDef } from '../data/recipes';
 import { facingVector, opposite } from '../sim/direction';
-import { footprint, sortSideOf, type Tile } from '../sim/pieces';
+import { footprint, splitSideOf, type Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 
 // Where the build bar's cells and the menus' rows sit on screen. No
@@ -94,13 +94,13 @@ export function buildBarBox(shown: readonly string[]): ScreenRect {
 }
 
 /**
- * A menu of `n` rows (009's pylon and stash menus, 015's sorter):
+ * A menu of `n` rows (009's pylon menu, 032's waystone):
  * a centred column, wrapping into side-by-side columns once it would pass
- * MENU_MAX_ROWS, so a long stash stays on screen; once the columns fill the view's width they grow longer instead.
+ * MENU_MAX_ROWS, so a long menu stays on screen; once the columns fill the view's width they grow longer instead.
  */
 export function menuRows(n: number): ScreenRect[] {
   const L = PICKER_LAYOUT;
-  // No more columns than the view's width holds (038: a sorter lists every item): past that, the columns grow longer.
+  // No more columns than the view's width holds: past that, the columns grow longer.
   const fit = Math.max(1, Math.floor((VIEW_WIDTH - 2 * L.pad + MENU_COLUMN_GAP) / (L.rowWidth + MENU_COLUMN_GAP)));
   const wanted = Math.max(1, Math.ceil(n / MENU_MAX_ROWS));
   const columns = Math.min(fit, wanted);
@@ -130,8 +130,7 @@ const SIDES: readonly Facing[] = ['up', 'right', 'down', 'left'];
 
 /** A facing arrow: on tile (tx, ty), at its `edge`, pointing `points`. */
 export interface ArrowSpot extends Tile {
-  /** `sort` is a sorter's side exit (015), drawn as an output arrow in gold. */
-  kind: 'in' | 'out' | 'sort';
+  kind: 'in' | 'out';
   edge: Facing;
   points: Facing;
 }
@@ -144,19 +143,9 @@ export interface ArrowSpot extends Tile {
  */
 export function arrowSpots(p: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing; mirrored?: boolean }): ArrowSpot[] {
   const { kind } = pieceDef(p.pieceId);
-  // A sorter takes from its back and hands out of its front and, for its item, its sort side.
-  if (kind === 'sorter') {
-    const back = opposite(p.facing);
-    const side = sortSideOf(p.facing, p.mirrored ?? false);
-    return [
-      { kind: 'in', tx: p.tx, ty: p.ty, edge: back, points: p.facing },
-      { kind: 'out', tx: p.tx, ty: p.ty, edge: p.facing, points: p.facing },
-      { kind: 'sort', tx: p.tx, ty: p.ty, edge: side, points: side },
-    ];
-  }
   // A splitter (033) takes from its back and hands out of its front and its side in turn.
   if (kind === 'splitter') {
-    const side = sortSideOf(p.facing, p.mirrored ?? false);
+    const side = splitSideOf(p.facing, p.mirrored ?? false);
     return [
       { kind: 'in', tx: p.tx, ty: p.ty, edge: opposite(p.facing), points: p.facing },
       { kind: 'out', tx: p.tx, ty: p.ty, edge: p.facing, points: p.facing },
@@ -196,17 +185,6 @@ export function conduitLook(facing: Facing, inFrom: Facing): { anim: AnimDef; fl
 }
 
 const isCorner = (key: string): key is CornerKey => key in CONDUIT_CORNERS;
-
-/**
- * A sorter's animation and flips (015). The side sprite flows right and sorts
- * down, so facing left turns it round; the down and up sprites flip across their
- * flow to sort the other way.
- */
-export function sorterLook(facing: Facing, mirrored: boolean): { anim: AnimDef; flipX: boolean; flipY: boolean } {
-  if (facing === 'right') return { anim: SORTER_ANIMS.side, flipX: false, flipY: mirrored };
-  if (facing === 'left') return { anim: SORTER_ANIMS.side, flipX: true, flipY: !mirrored };
-  return { anim: SORTER_ANIMS[facing], flipX: mirrored, flipY: false };
-}
 
 /** Breaks `text` into lines of at most `width` glyphs, at spaces. */
 export function wrapText(text: string, width: number): string[] {

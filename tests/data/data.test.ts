@@ -152,7 +152,6 @@ describe('assets', () => {
       DOORWAY_SPRITE,
       ...Object.values(FACING_ARROWS.in),
       ...Object.values(FACING_ARROWS.out),
-      ...Object.values(FACING_ARROWS.sort),
       SPRITES.craftRowPress,
       STATUS_MARKERS.blocked,
       STATUS_MARKERS.starved,
@@ -341,8 +340,8 @@ describe('build bar categories (026)', () => {
     ]);
     const grouped = PIECE_CATEGORIES.map((c) => BUILD_BAR.filter((id) => pieceDef(id).category === c.id));
     expect(grouped).toEqual([
-      // 033: the splitter and merger, hidden until restored, beside the sorter.
-      ['conduit', 'sorter', 'splitter', 'merger', 'hopper', 'crate'],
+      // 033: the splitter, after the conduit.
+      ['conduit', 'splitter', 'hopper', 'crate'],
       // 029: each stage in its base ammo's group, after the chain that makes the ammo.
       ['cutter', 'knapper', 'spinner', 'assembler', 'frost-rune'],
       ['shaper', 'fuse-maker', 'packer', 'cluster-die'],

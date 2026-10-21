@@ -11,7 +11,6 @@ import { animFrames, ENEMY_FX, MELEE_SWOOSH, PLAYER_HIT_FX } from '../../src/dat
 import { HP_BAR, HUD_HEALTH_LAYOUT, INVENTORY_GRID } from '../../src/data/hudPanels';
 import { ARMOR_TINTS, GHOST, HARVEST_BAR, MINIMAP, TABLET } from '../../src/data/hudLayout';
 import { ENEMIES } from '../../src/data/enemies';
-import { LOGISTICS_ICONS, SORTER_ANIMS } from '../../src/data/foundryAssets';
 import { ENTRANCE_GAUGE_COLORS, INTAKE_LOOK } from '../../src/data/art/intake';
 import { AMBIENT, DAMAGE_NUMBERS, GLOWS, HARVEST_BURSTS, HARVEST_WORK, PARTICLES, ROOM_MOOD } from '../../src/data/juice';
 import { DAYLIGHT_PALETTE } from '../../src/data/palette';
@@ -162,9 +161,3 @@ describe('feel and sound references', () => {
   });
 });
 
-describe('the sorter (015)', () => {
-  it('has every frame in the atlas', () => {
-    for (const anim of Object.values(SORTER_ANIMS)) for (const frame of animFrames(anim)) expect(frames).toContain(frame);
-    expect(frames).toContain(LOGISTICS_ICONS.sorter);
-  });
-});

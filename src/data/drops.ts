@@ -16,7 +16,6 @@ export const SCHEMATIC_CHANCE = { enemy: 0.01, champion: 0.05 } as const;
 export const SCHEMATIC_REGIONS: Readonly<Record<string, readonly number[]>> = {
   'schematic-reservoir-2': [2],
   'schematic-machine-speed': [1, 2],
-  'schematic-merger': [1, 2],
 };
 
 /** Which region a room is in; a room not listed is in DEFAULT_REGION. The overworld's west columns are Region 2 (034: src/sim/regions.ts). */

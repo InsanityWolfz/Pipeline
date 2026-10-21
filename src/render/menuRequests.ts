@@ -8,10 +8,10 @@ export function clickAmount(mods: { shift: boolean; ctrl: boolean }): HopperAmou
   return mods.shift ? 'half' : 'one';
 }
 
-/** The commands that menus send: the hopper, sorter, pylon, stash and bench menus' choices. */
-export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'sortInventory' | 'assignSlot' | 'setFilter' | 'pylon' | 'travel' | 'takeStash' | 'identify' | 'equip' | 'restore' | 'summon' | 'takeTalent' | 'respec' | 'sandbox'>;
+/** The commands that menus send: the hopper, pylon, stash and bench menus' choices. */
+export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'sortInventory' | 'assignSlot' | 'pylon' | 'travel' | 'takeStash' | 'identify' | 'equip' | 'restore' | 'summon' | 'takeTalent' | 'respec' | 'sandbox'>;
 
-const NONE: MenuCommand = { deposit: null, withdraw: null, sortInventory: false, assignSlot: null, setFilter: null, pylon: null, travel: null, takeStash: null, identify: false, equip: null, restore: null, summon: null, takeTalent: null, respec: false, sandbox: null };
+const NONE: MenuCommand = { deposit: null, withdraw: null, sortInventory: false, assignSlot: null, pylon: null, travel: null, takeStash: null, identify: false, equip: null, restore: null, summon: null, takeTalent: null, respec: false, sandbox: null };
 
 // Choices clicked in the world's menus, held until the next tick takes them.
 export class MenuRequests {
@@ -35,11 +35,6 @@ export class MenuRequests {
   /** A stack dragged onto a carried bar slot (047). */
   assignSlot(slot: number, itemId: string): void {
     this.pending.assignSlot = { slot, itemId };
-  }
-
-  /** Sets the item a sorter sends out its side, or null to pass everything (the sorter menu's choice). */
-  setFilter(id: number, itemId: string | null): void {
-    this.pending.setFilter = { id, itemId };
   }
 
   /** The claimed pylon's choice. */

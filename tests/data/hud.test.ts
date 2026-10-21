@@ -43,7 +43,6 @@ describe('inventory panel groups (031)', () => {
       'ley-dust',
       'rope',
       'schematic-machine-speed',
-      'schematic-merger',
       'schematic-reservoir-2',
       'shaft',
     ]);

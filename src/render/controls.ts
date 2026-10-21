@@ -61,7 +61,7 @@ export class Controls {
   private uiPress = false;
   /** That press was a left one (047: only a left press's release reaches the UI). */
   private leftUiPress = false;
-  /** Flip (G since 042, F before) turns a sorter's ghost to send its item left (015); sent with every place. */
+  /** Flip (G since 042, F before) turns a splitter's ghost to send items out its left (033); sent with every place. */
   mirrored = false;
 
   /** 044: in the sandbox only, the panel's key is bound (the shipped game never captures it). */

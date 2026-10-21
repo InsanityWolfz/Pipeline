@@ -7,9 +7,10 @@
  * corrupting old saves or preserving their playability. If a feature breaks a save then the person just starts
  * over."): an older save reads as too old, Continue is unavailable, and a New game starts fresh. 047.9 made it 5
  * (the carried items' hint event), again with no migration. 049 made it 6 (the Husk Hive's goal shifts the saved goal
- * flags, and a new game holds a placed champion), again with no migration.
+ * flags, and a new game holds a placed champion), again with no migration. 052 made it 7 (the sorter and merger
+ * gone, the underground pair's pieces added), again with no migration.
  */
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 /** The envelope's and the export file's format tags. */
 export const SAVE_FORMAT = 'pipeline-save';

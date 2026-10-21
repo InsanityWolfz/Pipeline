@@ -49,11 +49,11 @@ describe('the restore panel', () => {
 describe('the research list', () => {
   it('lists every node by group, "Lost schematic" while hidden, its state, cost for revealed nodes, and where', () => {
     const sim = { ...fresh(), inventory: { 'warden-core': 1, 'ancient-gear': 1 } };
-    sim.research.merger = 'restored';
+    sim.research['machine-speed'] = 'restored';
     const groups = researchRows(sim);
     expect(groups.map((g) => [g.label, g.rows.map((r) => r.id)])).toEqual([
       ['Intake', ['entrance-2', 'entrance-3', 'reservoir-1', 'reservoir-2']],
-      ['Walls', ['machine-speed', 'merger']],
+      ['Walls', ['machine-speed']],
       ['Sealed wing', ['sealed-wing']],
     ]);
     const row = (id: string) => groups.flatMap((g) => g.rows).find((r) => r.id === id);
@@ -61,7 +61,7 @@ describe('the research list', () => {
     expect(row('entrance-3')).toMatchObject({ state: 'revealed', cost: [{ itemId: 'bulwark-core', have: 0, need: 1 }] });
     expect(row('reservoir-1')).toMatchObject({ state: 'revealed', cost: [{ itemId: 'ancient-gear', have: 1, need: 4 }], where: 'on the intake pipe' });
     expect(row('reservoir-2')).toMatchObject({ name: 'Lost schematic', state: 'hidden', cost: [] });
-    expect(row('merger')).toMatchObject({ name: 'Merger', state: 'restored', cost: [], where: 'north wall, east' });
+    expect(row('machine-speed')).toMatchObject({ name: 'Machine speed', state: 'restored', cost: [], where: 'north wall, west' });
     expect(row('sealed-wing')).toMatchObject({ state: 'revealed', where: 'the sealed door' });
   });
 
@@ -87,7 +87,7 @@ describe('unknown schematics', () => {
   it('show as "Unknown schematic" with one icon until their node is revealed, then by name', () => {
     const sim = fresh();
     expect(shownKey(sim, 'schematic-machine-speed')).toBe(UNKNOWN_SCHEMATIC_KEY);
-    expect(shownKey(sim, 'schematic-merger')).toBe(UNKNOWN_SCHEMATIC_KEY);
+    expect(shownKey(sim, 'schematic-reservoir-2')).toBe(UNKNOWN_SCHEMATIC_KEY);
     expect(keyLook(UNKNOWN_SCHEMATIC_KEY)).toEqual({ name: 'Unknown schematic', icon: 'item-schematic-unknown' });
     sim.research['machine-speed'] = 'revealed';
     expect(shownItem(sim, 'schematic-machine-speed')).toEqual({ name: 'Schematic: Machine speed', icon: 'item-schematic' });

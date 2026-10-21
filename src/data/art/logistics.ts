@@ -1,10 +1,10 @@
-import { CONDUIT_ANIMS, CONDUIT_CORNERS, CRATE_SPRITE, FACING_ARROWS, HOPPER_SPRITES, SORTER_ANIMS, STATUS_MARKERS, type PieceView } from '../foundryAssets';
+import { CONDUIT_ANIMS, CONDUIT_CORNERS, CRATE_SPRITE, FACING_ARROWS, HOPPER_SPRITES, STATUS_MARKERS, type PieceView } from '../foundryAssets';
 import { RESEARCH_SPRITES } from '../researchAssets';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSprite } from './types';
 
 // Logistics pieces (020), in the 016 vector style: ley conduits as a cyan crystal
 // channel in a stone trough with brass collars where tiles meet, chevrons riding
-// the flow over two frames; the sorter's gold side exit and filter slot; the
+// the flow over two frames; the splitter's hub; the
 // violet stone hopper; the rune-locked crate; build-mode arrows; machine status markers. Floor pieces are
 // drawn in tile px from their top-left; standing pieces round their bottom centre.
 
@@ -110,32 +110,9 @@ const CONDUITS: VectorSprite[] = [
   }),
 ];
 
-// Sorters (015): the straight channel, a gold-lined exit to the sort side, and a brass slot in the middle for the chosen item.
-const SORT_SIDE: Readonly<Record<PieceView, Edge>> = { side: 'down', down: 'left', up: 'right' };
-function sorter(view: PieceView, frame: number): Shape[] {
-  const [from, to] = STRAIGHT[view];
-  const main = route(from, to);
-  const side: Pt[] = [MID, EDGE[SORT_SIDE[view]]];
-  return [
-    ...trough(main, 'rock', 'rock-light'),
-    ...trough(side, 'brass-dark', 'brass', 13),
-    ...channel(main),
-    line(flatPts(side), 5, 'ink'),
-    { ...line(flatPts(side), 3, 'gold-trim'), glow: { color: 'gold-trim', blur: 2 } },
-    collar(from),
-    collar(to),
-    collar(SORT_SIDE[view], 13),
-    ...flow(main, frame),
-    ellipse(MID[0], MID[1], 6.4, 6.4, solid('brass')),
-    ellipse(MID[0], MID[1], 4.8, 4.8, flat('ink')),
-  ];
-}
-const SORTERS: VectorSprite[] = Object.entries(SORTER_ANIMS).map(([view, anim]) => floorPiece(anim.key, twoFrames((f) => sorter(view as PieceView, f))));
-
-// The splitter and merger (033), lying flat like the sorter: cyan channels meeting at a brass hub.
-// A splitter runs in from its back and out its front and its side (the sorter's sort side);
-// a merger runs in from its back and both sides and out its front.
-const SIDES: Readonly<Record<PieceView, readonly [Edge, Edge]>> = { side: ['up', 'down'], up: ['left', 'right'], down: ['left', 'right'] };
+// The splitter (033) runs in from its back and out its front and its side.
+const SPLIT_SIDE: Readonly<Record<PieceView, Edge>> = { side: 'down', down: 'left', up: 'right' };
+// Lying flat: cyan channels meeting at a brass hub.
 /** Channels in from each of `ins` and out to each of `outs`, meeting at a brass hub, a chevron riding each. */
 function hub(ins: readonly Edge[], outs: readonly Edge[]): Shape[] {
   const arms: Pt[][] = [...ins.map((e) => [EDGE[e], MID]), ...outs.map((e) => [MID, EDGE[e]])];
@@ -153,16 +130,9 @@ function hub(ins: readonly Edge[], outs: readonly Edge[]): Shape[] {
 }
 function splitter(view: PieceView): Shape[] {
   const [from, to] = STRAIGHT[view];
-  return hub([from], [to, SORT_SIDE[view]]);
+  return hub([from], [to, SPLIT_SIDE[view]]);
 }
-function merger(view: PieceView): Shape[] {
-  const [from, to] = STRAIGHT[view];
-  return hub([from, ...SIDES[view]], [to]);
-}
-const SPLIT_MERGE: VectorSprite[] = (['side', 'up', 'down'] as const).flatMap((view) => [
-  floorPiece(RESEARCH_SPRITES.splitter[view], [splitter(view)]),
-  floorPiece(RESEARCH_SPRITES.merger[view], [merger(view)]),
-]);
+const SPLITTERS: VectorSprite[] = (['side', 'up', 'down'] as const).map((view) => floorPiece(RESEARCH_SPRITES.splitter[view], [splitter(view)]));
 
 // Hoppers: a violet stone funnel on a stone footing, its brass spout toward the side it feeds.
 const standing = (key: string, h: number, shapes: readonly Shape[]): VectorSprite => ({ key, size: [T, h], anchor: [T / 2, h], frames: [shapes] });
@@ -199,15 +169,15 @@ const CRATE: VectorSprite = standing(CRATE_SPRITE, 36, [
   ellipse(0, -12, 1, 1, flat('ink')),
 ]);
 
-// Build mode's arrows (10x10): cyan for the side a piece hands out of, ember for a side that takes items, gold for a sorter's sort side.
+// Build mode's arrows (10x10): cyan for the side a piece hands out of, ember for a side that takes items.
 const ARROW_TURN: Readonly<Record<PieceView, number>> = { side: 0, down: 90, up: -90 };
 function arrow(view: PieceView, fill: string, edge: string): Shape[] {
   const r = (ARROW_TURN[view] * Math.PI) / 180;
   const pt = (x: number, y: number) => `${(x * Math.cos(r) - y * Math.sin(r)).toFixed(2)} ${(x * Math.sin(r) + y * Math.cos(r)).toFixed(2)}`;
   return [path(`M ${pt(4, 0)} L ${pt(-1, -4)} L ${pt(-1, -1.6)} L ${pt(-4, -1.6)} L ${pt(-4, 1.6)} L ${pt(-1, 1.6)} L ${pt(-1, 4)} Z`, { fill, outline: true, stroke: { color: edge, width: 0.5 } })];
 }
-const ARROW_COLOURS = { out: ['cyan', 'cyan-glow'], in: ['cinder', 'gold-trim'], sort: ['gold-trim', 'straw-light'] } as const;
-const ARROWS: VectorSprite[] = (['out', 'in', 'sort'] as const).flatMap((kind) =>
+const ARROW_COLOURS = { out: ['cyan', 'cyan-glow'], in: ['cinder', 'gold-trim'] } as const;
+const ARROWS: VectorSprite[] = (['out', 'in'] as const).flatMap((kind) =>
   Object.entries(FACING_ARROWS[kind]).map(([view, key]) => ({
     key,
     size: [10, 10] as const,
@@ -257,4 +227,4 @@ function shift(shape: Shape, dx: number, dy: number): Shape {
   return shape;
 }
 
-export const LOGISTICS_SPRITES_VECTOR: readonly VectorSprite[] = [...CONDUITS, ...SORTERS, ...SPLIT_MERGE, ...HOPPERS, CRATE, ...ARROWS, ...MARKERS];
+export const LOGISTICS_SPRITES_VECTOR: readonly VectorSprite[] = [...CONDUITS, ...SPLITTERS, ...HOPPERS, CRATE, ...ARROWS, ...MARKERS];

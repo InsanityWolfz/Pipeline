@@ -146,14 +146,13 @@ test('on a fresh start the build bar shows only the Logistics group, and the whe
   await enterFoundry(page);
   const bar = await openBuildBar(page);
   // Before any hand-crafting only logistics is unlocked: locked machines, and their groups' labels, are hidden.
-  expectGroups(bar, ['conduit', 'sorter', 'splitter', 'hopper', 'crate']);
+  expectGroups(bar, ['conduit', 'splitter', 'hopper', 'crate']);
   expect(bar.selected).toBe('conduit');
-  for (const id of ['sorter', 'splitter', 'hopper', 'crate', 'conduit']) await wheel(page, id);
+  for (const id of ['splitter', 'hopper', 'crate', 'conduit']) await wheel(page, id);
   expect(errors).toEqual([]);
 });
 
 test('with everything unlocked, the bar shows every labelled group (038: five, with Mines) and the wheel steps through them in bar order', async ({ page }) => {
-  // Restoring the merger on the way adds a walk to a busy test.
   test.setTimeout(90_000);
   const errors = watchErrors(page);
   await boot(page, '?playtest');
@@ -161,12 +160,8 @@ test('with everything unlocked, the bar shows every labelled group (038: five, w
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
+    // 046: the splitter is there from the start; 052: no piece waits on research any more.
     if (g.step(0).room !== 'foundry') h.toFoundry();
-    // 033: the merger joins the bar once restored at its wall panel (the playtest carries its schematic and gears); 046: the splitter is there from the start.
-    for (const [node, tx] of [['merger', 19]] as const) {
-      h.walkTo((tx + 0.5) * 32, 1.5 * 32);
-      g.step(1, { restore: node });
-    }
   });
   const bar = await openBuildBar(page);
   expectGroups(bar, BUILD_BAR);

@@ -101,16 +101,6 @@ export const RESEARCH_NODES: readonly ResearchNode[] = [
     effect: { kind: 'machineSpeed' },
   },
   {
-    id: 'merger',
-    name: 'Merger',
-    description: 'Adds the Merger to the build bar.',
-    anchor: { kind: 'wall', tx: 19, ty: WALL_Y, where: 'north wall, east' },
-    cost: { 'schematic-merger': 1, 'ancient-gear': 2 },
-    requires: [],
-    reveal: 'schematic-merger',
-    effect: { kind: 'unlockPiece', piece: 'merger' },
-  },
-  {
     id: 'sealed-wing',
     name: 'Sealed wing',
     description: "Sealed. The Bulwark's first kill unseals it.",

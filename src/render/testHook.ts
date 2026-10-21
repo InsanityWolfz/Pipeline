@@ -36,7 +36,7 @@ export interface GameTestHook {
   flow(): FlowReport;
   /**
    * Steps `frames` ticks holding `command`. Its dodge, interact, carried slot
-   * select and assign (047), build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), sortInventory (047), setFilter, pylon, travel, takeStash, identify, equip, restore (033), summon, takeTalent and respec (037) apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
+   * select and assign (047), build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), sortInventory (047), pylon, travel, takeStash, identify, equip, restore (033), summon, takeTalent and respec (037) apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
    */
   step(frames: number, command?: Partial<Command>): SimSummary;
   /** Crafts a recipe once between ticks, as clicking its menu row does. */
@@ -94,7 +94,7 @@ export interface UiState {
   paused: boolean;
   /** A hopper's or crate's screen is open (047; it replaced 022's hopper picker). */
   pickerOpen: boolean;
-  /** A site menu (a claimed pylon's, the stash's, the bench's or a sorter's) is open (031: it and the inventory take turns). */
+  /** A site menu (a claimed pylon's, the stash's or the bench's) is open (031: it and the inventory take turns). */
   siteOpen: boolean;
   /** The counts the open hopper's or crate's own slots show, in order (047; they update live). */
   pickerCounts: number[];

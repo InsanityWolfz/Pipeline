@@ -16,7 +16,6 @@ export const INTERACT_KINDS = [
   'cache',
   'diagram',
   'hopper',
-  'sorter',
   'crate',
   'node',
 ] as const;
@@ -43,7 +42,6 @@ export const INTERACT_PROMPTS: Readonly<Record<InteractKind, InteractPrompt>> = 
   cache: { key: 'E', rise: OVER },
   diagram: { key: 'E', rise: OVER },
   hopper: { key: 'E', rise: OVER },
-  sorter: { key: 'E', rise: OVER },
   crate: { key: 'E', rise: OVER },
   // A node's point is its feet; the same height as the gathering objective's prompt (012).
   node: { key: 'E', rise: OVER },

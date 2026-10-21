@@ -6,16 +6,14 @@ import type { SimEvents } from './events';
 import { fillEntrance, type EntranceState } from './link';
 import { machineRecipe, offerToStage, stageOf } from './stages';
 import { craftTicksAt } from './research';
-import { afterSplit, mergerTakes, splitterOrder } from './splitMerge';
+import { afterSplit, splitterOrder } from './splitter';
 import {
   footprint,
   frontSide,
-  mergerInputs,
   frontTile,
   pieceAt,
   sideTile,
   sameTile,
-  sorterExit,
   type FoundryState,
   type HopperState,
   type MachineState,
@@ -25,7 +23,7 @@ import {
 
 // Items moving through the foundry, one tick at a time. Hoppers take items from
 // lines too (028), up to HOPPER_FLOW_CAP. Every piece hands items
-// out of its front, except a sorter's chosen item, which leaves by its side.
+// out of its front, except a splitter, which takes turns with its side.
 // First everything advances (items cross conduits, crafts finish and start,
 // hoppers count down), then items move in piece order. An item that arrives
 // this tick starts from zero, so nothing moves two hops in one tick.
@@ -82,8 +80,8 @@ function advanceMachine(m: MachineState, made: SimEvents['made'], speed: number)
 }
 
 function advance(p: PieceState, made: SimEvents['made'], speed: number): void {
-  // Conduits, sorters, splitters and mergers carry one item across a tile.
-  if ((p.kind === 'conduit' || p.kind === 'sorter' || p.kind === 'splitter' || p.kind === 'merger') && p.item && p.progress < CONDUIT_TICKS) p.progress += 1;
+  // Conduits and splitters carry one item across a tile.
+  if ((p.kind === 'conduit' || p.kind === 'splitter') && p.item && p.progress < CONDUIT_TICKS) p.progress += 1;
   if (p.kind === 'hopper' && p.count > 0 && p.timer < HOPPER_TICKS) p.timer += 1;
   if (p.kind === 'machine') advanceMachine(p, made, speed);
 }
@@ -106,18 +104,10 @@ function offer(ctx: FlowContext, to: Tile, from: Tile, item: string): boolean {
   if (!target) return false;
   // Crates have no output, so they take items from every side.
   if (target.kind !== 'crate' && frontSide(target).some((t) => sameTile(t, from))) return false;
-  // A conduit takes items only from the side it's shaped to take them from (013); a sorter only from its back (015).
+  // A conduit takes items only from the side it's shaped to take them from (013); a splitter only from its back (033).
   if (target.kind === 'conduit' && !sameTile(from, sideTile(target, target.inFrom))) return false;
-  if ((target.kind === 'sorter' || target.kind === 'splitter') && !sameTile(from, sideTile(target, opposite(target.facing)))) return false;
-  if (target.kind === 'merger') {
-    const input = mergerTakes(target, from, (t) => ctx.grid.get(key(t)));
-    if (input < 0) return false;
-    target.item = item;
-    target.progress = 0;
-    target.turn = (input + 1) % mergerInputs(target.facing).length;
-    return true;
-  }
-  if (target.kind === 'conduit' || target.kind === 'sorter' || target.kind === 'splitter') {
+  if (target.kind === 'splitter' && !sameTile(from, sideTile(target, opposite(target.facing)))) return false;
+  if (target.kind === 'conduit' || target.kind === 'splitter') {
     if (target.item) return false;
     target.item = item;
     target.progress = 0;
@@ -154,12 +144,6 @@ function transfer(ctx: FlowContext, p: PieceState): void {
       p.item = null;
       p.progress = 0;
     }
-  } else if (p.kind === 'sorter') {
-    // A refused item waits, so a blocked exit stalls the sorter and the line behind it.
-    if (p.item && p.progress >= CONDUIT_TICKS && offer(ctx, sorterExit(p, p.item), p, p.item)) {
-      p.item = null;
-      p.progress = 0;
-    }
   } else if (p.kind === 'splitter') {
     // Out the output whose turn it is, else the other; with both refusing it waits holding the item.
     if (!p.item || p.progress < CONDUIT_TICKS) return;
@@ -169,11 +153,6 @@ function transfer(ctx: FlowContext, p: PieceState): void {
     p.item = null;
     p.progress = 0;
     afterSplit(p, used);
-  } else if (p.kind === 'merger') {
-    if (p.item && p.progress >= CONDUIT_TICKS && offer(ctx, to, p, p.item)) {
-      p.item = null;
-      p.progress = 0;
-    }
   } else if (p.kind === 'hopper') {
     if (p.item && p.timer >= HOPPER_TICKS) offerFromHopper(ctx, to, p, p.item);
   } else if (p.kind === 'machine') {
@@ -181,7 +160,7 @@ function transfer(ctx: FlowContext, p: PieceState): void {
   }
 }
 
-/** Hoppers feed conduits, sorters, splitters, mergers and machines, never crates, hoppers or the intake. */
+/** Hoppers feed conduits, splitters and machines, never crates, hoppers or the intake. */
 function offerFromHopper(ctx: FlowContext, to: Tile, h: HopperState, item: string): void {
   const kind = ctx.grid.get(key(to))?.kind;
   if (kind === undefined || kind === 'crate' || kind === 'hopper') return;

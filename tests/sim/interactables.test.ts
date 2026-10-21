@@ -104,11 +104,6 @@ const SCENES: Readonly<Record<InteractKind, () => SimState>> = {
     put(s, 'hopper', STAND.tx + 1, STAND.ty);
     return s;
   },
-  sorter: () => {
-    const s = foundry();
-    put(s, 'sorter', STAND.tx + 1, STAND.ty);
-    return s;
-  },
   crate: () => {
     const s = foundry();
     const c = put<CrateState>(s, 'crate', STAND.tx + 1, STAND.ty);

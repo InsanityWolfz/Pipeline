@@ -29,7 +29,7 @@ describe('the grid slots', () => {
   });
 
   it('folds the schematics into one slot that never moves: "Unknown schematic" while every one is unbanked (033)', () => {
-    const slots = inventorySlots({ ...base, inventory: { 'schematic-machine-speed': 1, 'schematic-merger': 1, 'ancient-gear': 2 } });
+    const slots = inventorySlots({ ...base, inventory: { 'schematic-machine-speed': 1, 'schematic-reservoir-2': 1, 'ancient-gear': 2 } });
     expect(slots.map((s) => [s.name, s.count, s.movable])).toEqual([
       ['Ancient gear', 2, true],
       ['Unknown schematic', 2, false],

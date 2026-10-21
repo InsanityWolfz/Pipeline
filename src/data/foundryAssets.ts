@@ -62,9 +62,7 @@ export const LOGISTICS_ICONS: Readonly<Record<string, string>> = {
   conduit: 'emblem-conduit',
   hopper: 'emblem-hopper',
   crate: 'emblem-crate',
-  sorter: 'emblem-sorter',
   splitter: 'emblem-splitter',
-  merger: 'emblem-merger',
 };
 
 /** Conduits flow toward their front; `side` flows right. They lie flat on the floor. */
@@ -73,20 +71,6 @@ export const CONDUIT_ANIMS: Readonly<Record<PieceView, AnimDef>> = {
   up: loop('conduit-up', 2, FLOW_FPS),
   side: loop('conduit-side', 2, FLOW_FPS),
 };
-
-/**
- * Sorters (015) flow like conduits. `side` flows right and sorts down; `down`
- * sorts left and `up` sorts right. Render turns or flips them for the other facings
- * and for a mirrored sorter.
- */
-export const SORTER_ANIMS: Readonly<Record<PieceView, AnimDef>> = {
-  down: loop('sorter-down', 2, FLOW_FPS),
-  up: loop('sorter-up', 2, FLOW_FPS),
-  side: loop('sorter-side', 2, FLOW_FPS),
-};
-
-/** The sorter's filter icon shows at this scale in its slot. */
-export const SORTER_LOOK = { slotScale: 0.5 } as const;
 
 /** Conduit corners (013) by the side items come in from and the side they leave by: `${in}-${out}`. Flat on the floor like the straights. */
 export const CONDUIT_CORNERS = {
@@ -125,13 +109,11 @@ export const INTAKE_CAP_ICON = 'emblem-intake-cap';
 
 /**
  * Build-mode arrows on a piece's edges, also on the ghost: cyan pointing out of its
- * output side, ember pointing in on each side that takes items, gold out of a
- * sorter's sort side (020: its own frames, no longer a tint). `side` points right.
+ * output side, ember pointing in on each side that takes items (020: their own frames). `side` points right.
  */
-export const FACING_ARROWS: Readonly<Record<'in' | 'out' | 'sort', Record<PieceView, string>>> = {
+export const FACING_ARROWS: Readonly<Record<'in' | 'out', Record<PieceView, string>>> = {
   out: { down: 'facing-arrow-down', up: 'facing-arrow-up', side: 'facing-arrow-side' },
   in: { down: 'input-arrow-down', up: 'input-arrow-up', side: 'input-arrow-side' },
-  sort: { down: 'sort-arrow-down', up: 'sort-arrow-up', side: 'sort-arrow-side' },
 };
 
 /** A door in a side wall, drawn as is on the right wall and flipped on the left. */

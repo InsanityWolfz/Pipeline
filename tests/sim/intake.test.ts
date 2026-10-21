@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CONDUIT_TICKS, ENTRANCE_CAPS, INTAKE } from '../../src/data/foundry';
 import { BUILD_BAR, PIECES } from '../../src/data/pieces';
 import { canPlace, unlockedPieces } from '../../src/sim/placement';
-import { frontTile, sideTile, sortSide, type ConduitState, type HopperState, type SorterState } from '../../src/sim/pieces';
+import { frontTile, sideTile, splitSide, type ConduitState, type HopperState, type SplitterState } from '../../src/sim/pieces';
 import { feedsIntake } from '../../src/sim/intake';
 import { summarize } from '../../src/sim/summary';
 import { HALL, run } from './fight';
@@ -85,7 +85,7 @@ describe('the foundry intake', () => {
     expect(s.link.entrances[1]?.count).toBe(0);
   });
 
-  it('counts as fed for the objective by a line whose front, or a sorter whose side exit, is a mouth tile; never a hopper or crate', () => {
+  it('counts as fed for the objective by a line whose front, or a splitter whose side exit, is a mouth tile; never a hopper or crate', () => {
     for (const pieceId of ['hopper', 'crate']) {
       const s = foundry();
       put(s, pieceId, MIDDLE.tx, MIDDLE.ty + 1, 'up');
@@ -94,12 +94,12 @@ describe('the foundry intake', () => {
     const conduit = foundry();
     put(conduit, 'conduit', MIDDLE.tx, MIDDLE.ty + 1, 'up');
     expect(feedsIntake(conduit.foundry)).toBe(true);
-    // Facing right, a sorter sorts out its right side: up, from a tile facing along the wall.
-    const sorter = foundry();
-    const sorted = put<SorterState>(sorter, 'sorter', MIDDLE.tx, MIDDLE.ty + 1, 'left');
-    expect(frontTile(sorted)).not.toEqual(MIDDLE);
-    expect(sideTile(sorted, sortSide(sorted))).toEqual({ tx: MIDDLE.tx, ty: MIDDLE.ty });
-    expect(feedsIntake(sorter.foundry)).toBe(true);
+    // Facing left, a splitter splits out its right side: up, from a tile facing along the wall.
+    const splitter = foundry();
+    const split = put<SplitterState>(splitter, 'splitter', MIDDLE.tx, MIDDLE.ty + 1, 'left');
+    expect(frontTile(split)).not.toEqual(MIDDLE);
+    expect(sideTile(split, splitSide(split))).toEqual({ tx: MIDDLE.tx, ty: MIDDLE.ty });
+    expect(feedsIntake(splitter.foundry)).toBe(true);
   });
 
   it('replaces the tube socket: no socket piece, build bar entry or unlock', () => {
