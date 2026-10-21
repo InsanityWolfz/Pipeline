@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { BULWARK } from '../../src/data/bulwark';
+import { SPLIT } from '../../src/data/tags';
 import { burningArrow, starShot, withBlastfletch } from './combatPage';
 import { frames, intoForum, sandbox, spawn, stepUntil } from './hollowsSandbox';
 
@@ -61,6 +62,7 @@ test('an arrow through a Pool burns, and its hit flashes', async ({ page }) => {
 
 test('a star shot’s Shards are drawn in flight', async ({ page }) => {
   test.setTimeout(120_000);
-  expect(await starShot(page, 3)).toBeGreaterThan(0);
-  await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().tagged.shards)).toBeGreaterThan(0);
+  // One bolt, one burst: exactly SPLIT.shards (5) in flight, and all 5 drawn.
+  expect(await starShot(page, 3)).toBe(SPLIT.shards);
+  await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().tagged.shards)).toBe(SPLIT.shards);
 });
