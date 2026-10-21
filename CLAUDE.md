@@ -28,9 +28,18 @@ How we work: docs/process.md. Current state: docs/progress.md.
 - One system per file, ~300 lines max, no `any`
 
 ## Workflow
-Every feature runs /spec -> /plan -> /build -> /verify -> /review -> /wrapup.
-One backlog item per branch. Never skip verify or review.
+Two tracks (docs/process.md "Two tracks"):
+- Feature: /spec -> /plan -> /build -> /verify -> /review -> /wrapup.
+  Never skip verify or review. The spec is the first commit of its own
+  branch and draft PR; build and wrapup land in that same PR.
+- Fix (a bug or small tweak, no design question, ~1 system, <~100 lines):
+  claude/fix-<name>, failing test, fix, PR. No spec, plan, review or wrapup.
 One spec = one branch = one PR into main; never stack specs on one branch.
+CI runs the full Playwright suite on every push; locally run npm run check
+and the touched e2e files. A PR is ready only with CI green on its head.
+The wrapup goes in before the playtest, so "merge NN" is only the merge.
+progress.md: one entry per merged PR or unfinished session, not per step.
+Review shots: only for the current spec; don't retake older specs' shots.
 A spec closes when its criteria are met or recorded; new notes become new specs.
 Balance targets are measurements (npm run measure), not check tests.
 Never report done while checks fail.
