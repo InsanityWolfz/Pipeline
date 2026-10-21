@@ -8,9 +8,10 @@
  * over."): an older save reads as too old, Continue is unavailable, and a New game starts fresh. 047.9 made it 5
  * (the carried items' hint event), again with no migration. 049 made it 6 (the Husk Hive's goal shifts the saved goal
  * flags, and a new game holds a placed champion), again with no migration. 050 made it 7 (each entrance records the
- * research node that opened it), again with no migration.
+ * research node that opened it), again with no migration. 051 made it 8 (the goal's sub-steps, the bomb goal moved
+ * before the foundry, and the minimap's fog of war), again with no migration.
  */
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 /** The envelope's and the export file's format tags. */
 export const SAVE_FORMAT = 'pipeline-save';

@@ -10,13 +10,14 @@ import { MadePopups } from './MadePopups';
 import { ObjectiveView } from './ObjectiveView';
 import { PromptView } from './PromptView';
 import { TutorialView } from './TutorialView';
+import { WaypointView } from './WaypointView';
 import type { UiState } from './testHook';
 
 /** What the tutorial reports to the test hook's `ui()`. */
-export type TutorialUiState = Pick<UiState, 'intakePrompt' | 'prompt' | 'marker' | 'madePopups' | 'objectiveTick' | 'interactPrompt'>;
+export type TutorialUiState = Pick<UiState, 'intakePrompt' | 'prompt' | 'marker' | 'waypoint' | 'madePopups' | 'objectiveTick' | 'interactPrompt'>;
 
 /** The tutorial's part of `ui()` before the scene has built its views. */
-export const NO_TUTORIAL_UI: TutorialUiState = { intakePrompt: null, prompt: null, marker: null, madePopups: [], objectiveTick: 0, interactPrompt: null };
+export const NO_TUTORIAL_UI: TutorialUiState = { intakePrompt: null, prompt: null, marker: null, waypoint: null, madePopups: [], objectiveTick: 0, interactPrompt: null };
 
 /** The piece the current objective names, whose build-bar cell pulses (027), or null. */
 export function highlightOf(sim: SimState): string | null {
@@ -33,6 +34,7 @@ export class TutorialUi {
   private readonly intake: IntakePrompt;
   private readonly interact: InteractPrompt;
   private readonly made: MadePopups;
+  private readonly waypoint: WaypointView;
 
   constructor(scene: Scene) {
     this.world = new TutorialView(scene);
@@ -41,6 +43,7 @@ export class TutorialUi {
     this.intake = new IntakePrompt(scene);
     this.interact = new InteractPrompt(scene);
     this.made = new MadePopups(scene);
+    this.waypoint = new WaypointView(scene);
   }
 
   /**
@@ -51,7 +54,8 @@ export class TutorialUi {
     return {
       intakePrompt: this.intake.shown,
       prompt: this.prompt.shown,
-      marker: this.prompt.markerAt,
+      marker: this.waypoint.markerAt,
+      waypoint: this.waypoint.shown,
       madePopups: this.made.shown,
       objectiveTick: this.objective.tickAlpha,
       interactPrompt: this.interact.shown,
@@ -69,6 +73,7 @@ export class TutorialUi {
     this.world.update(sim, shown);
     this.objective.update(sim);
     this.prompt.update(sim, shown);
+    this.waypoint.update(sim, shown);
     this.intake.update(sim, shown);
     // 045: the in-reach prompt, unless the objective's or the intake's already shows its key lit.
     const lit = [...(this.prompt.shown?.usable ? [this.prompt.shown.key] : []), ...(this.intake.lit ? [boundLetter(RESTORE_ENTRANCE_PROMPT.key)] : [])];

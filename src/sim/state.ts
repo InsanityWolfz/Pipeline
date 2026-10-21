@@ -33,6 +33,7 @@ import { createHotbar, type HotbarState } from './hotbar';
 import { noteBag } from './bag';
 import { resetWorld } from './resetWorld';
 import type { SandboxState } from './sandbox';
+import { createSubSteps, type SubStepState } from './subSteps';
 
 /** The whole sim: plain serializable data. */
 export interface SimState {
@@ -149,6 +150,8 @@ export interface SimState {
   gathered: string[];
   /** Which objectives are done, in OBJECTIVES order. */
   objectives: boolean[];
+  /** 051 (B.3): the raws the current craft goal has lacked, for its sub-lines. */
+  subSteps: SubStepState;
   /** Ticks in a row outside the foundry with a line built into the intake, once every other goal is done. */
   awayTicks: number;
   /** Every objective done: the prototype's end. */
@@ -240,6 +243,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     refilled: [],
     gathered: [],
     objectives: OBJECTIVES.map(() => false),
+    subSteps: createSubSteps(),
     awayTicks: 0,
     prototypeComplete: false,
     building: false,

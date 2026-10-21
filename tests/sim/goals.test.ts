@@ -66,7 +66,7 @@ describe('the chain', () => {
 
   it('the port goal points at the ports and pulses the conduit cell', () => {
     const [port] = M1[0] ?? [];
-    expect(port?.marker).toBe('ports');
+    expect(port?.target).toEqual({ kind: 'ports' });
     expect(port?.highlight).toBe('conduit');
   });
 

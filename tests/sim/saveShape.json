@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 8,
   "shape": [
     "state.activatePulse: number",
     "state.arrows: array",
@@ -371,6 +371,9 @@
     "state.start.spawn: object",
     "state.start: object",
     "state.stash: object",
+    "state.subSteps.goal: number",
+    "state.subSteps.items: array",
+    "state.subSteps: object",
     "state.summoned: array",
     "state.summoning: null",
     "state.talentPoints: number",

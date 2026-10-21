@@ -8,6 +8,7 @@ import type { BottomHudState, HudPanelsState } from './HudView';
 import type { MadePopupShown } from './MadePopups';
 import type { BuildBarState } from './BuildView';
 import type { CraftMenuState } from './CraftMenuView';
+import type { WaypointShown } from './WaypointView';
 import type { PromptState } from './PromptView';
 import type { PortShown } from './PortView';
 import type { GearPanelState } from './GearPanel';
@@ -132,8 +133,10 @@ export interface UiState {
   sealSound: { humming: boolean; drops: number };
   /** 045: the in-reach E prompt as drawn (what it's over, its bound key, the world point), or null. */
   interactPrompt: InteractPromptState | null;
-  /** The arrow marker, over the intake for the conduit step (027) or over the ports for the port goal (028): the world point its tip bobs over, or null. */
+  /** The waypoint arrow's tip over a target in the player's room (051; was 027's marker), world px, or null. */
   marker: { x: number; y: number } | null;
+  /** 051: the waypoint arrow as drawn: at the screen's edge or over its target, its tip (world px) and angle, through a door or not, and the refill goal's raw icons. */
+  waypoint: WaypointShown | null;
   /** The "+ shaft" popups still on screen (027), by text, with each one's box in view px (031: none overlap). */
   madePopups: MadePopupShown[];
   /** The objective line's finished-goal tick, its alpha (0 once faded): screenshots wait for it to go (028). */
