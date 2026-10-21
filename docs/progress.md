@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: 054 merged
+**Changed:** Shaun merged 054 (combat readability: the blue immune bar, the shaded back wave, burning Pool arrows, slower homing bolts, the star shot's shards), InsanityWolfz/Pipeline#46.
+
+**Next:** 053 merges next; 055 (boss doors) follows it.
+
 ## 2026-10-21: 054 combat readability built (draft PR)
 **Changed:** built 054 on `claude/054-combat-readability` (merged with main's 052). The sim's `immune` flag (a burrowed Burrower, a rising add; never a shield's front) turns an enemy's bar blue with a small shield, shown even at full health. The Bulwark's back wave shades its area red under its ripples. An arrow through a Pool (Blastfletch) burns for the rest of its flight: a flame on its head, an ember trail and a small flash on each hit, nothing extra (054.2). Homing ley bolts fly at 0.6 speed (180 px/s), same turn. The star shot: 5 bigger Shards with a short trail, each half the bolt's damage, out to 96 px, skipping the struck enemy; the Split rule reads 054.1's text. No save shape change. `npm run check` passes (1763); the full Playwright run: 155 passed, 0 failed, 144 skipped. `npm run measure` identical to 051. Review shots in docs/review/054; older shots retaken only where 054 shows. Spec status stays approved.
 
