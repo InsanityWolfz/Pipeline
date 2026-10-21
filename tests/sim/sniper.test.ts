@@ -9,7 +9,7 @@ import { roomById, type SimState } from '../../src/sim/state';
 import { TILE } from '../../src/data/rooms';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
-import { arena, HALL, movePlayer, PLAYER_AT, run, runUntil } from './fight';
+import { arena, HALL, movePlayer, PLAYER_AT, run, runUntil , homeTile, HOME_X } from './fight';
 
 // The Sniper construct (035): cover from the tile grid; keeping its distance without it;
 // stepping out to a clear line; the sight tracking, then locked; a blocked line cancelling;
@@ -21,7 +21,8 @@ const ROOM = roomById(HALL);
 const BOLT_STEP = snipe.boltSpeed / TICK_RATE;
 
 /** The meadow's south rock cluster (rocks 69–71 on row 33, 68–72 on row 34, 68 and 72 on row 35) and tiles round it. */
-const at = (tx: number, ty: number) => tileCentre({ tx, ty });
+/** A tile of the meadow by its 034-era tile (053 moved it with the foundry). */
+const at = (tx: number, ty: number) => homeTile(tx, ty);
 
 function placeSniper(s: SimState, x: number, y: number): EnemyState {
   const e = createEnemy(s.nextEnemyId++, 'sniper', { x, y }, HALL);
@@ -163,13 +164,13 @@ describe('the Sniper construct', () => {
 
   it('ends its bolt at a solid', () => {
     const s = arena();
-    // East along row 34 at a player in front of the rocks (68 on); the player steps aside once it locks.
-    movePlayer(s, at(66, 34).x, at(66, 34).y);
-    const e = placeSniper(s, at(61, 34).x, at(61, 34).y);
+    // 053: west along row 34 at a player in front of the rocks' east face (72 their last); the player steps aside once it locks.
+    movePlayer(s, at(74, 34).x, at(74, 34).y);
+    const e = placeSniper(s, at(77, 34).x, at(77, 34).y);
     run(s, 1);
     runUntil(s, () => snipeOf(s)?.phase === 'locked', snipe.trackTicks + 2);
-    expect(snipeOf(s)?.line?.x1).toBeCloseTo(68 * 32);
-    movePlayer(s, at(66, 37).x, at(66, 37).y);
+    expect(snipeOf(s)?.line?.x1).toBeCloseTo(HOME_X(73));
+    movePlayer(s, at(74, 37).x, at(74, 37).y);
     runUntil(s, () => s.events.snipes.length > 0, snipe.lockTicks + 2);
     let last = s.orbs[0];
     while (s.orbs.length > 0) {
@@ -177,8 +178,8 @@ describe('the Sniper construct', () => {
       run(s, 1);
     }
     expect(last?.travelled ?? 0).toBeLessThan(snipe.range);
-    expect(last?.x ?? 0).toBeLessThanOrEqual(68 * 32);
-    expect(last?.x ?? 0).toBeGreaterThan(68 * 32 - 2 * BOLT_STEP);
+    expect(last?.x ?? 0).toBeGreaterThanOrEqual(HOME_X(73) - BOLT_STEP);
+    expect(last?.x ?? 0).toBeLessThan(HOME_X(73) + 2 * BOLT_STEP);
     expect(s.player.health).toBe(100);
     expect(e.health).toBe(DEF.maxHealth);
   });
@@ -241,7 +242,7 @@ describe('the Sniper construct', () => {
     movePlayer(s, at(67, 33).x, at(67, 33).y);
     run(s, 20);
     expect(e.modeTicks).toBe(ticks);
-    expect(snipeOf(s)?.line?.x1).toBeCloseTo(72 * 32);
+    expect(snipeOf(s)?.line?.x1).toBeCloseTo(HOME_X(72));
     // Back in the open before the thaw: the wind-up runs on from where it paused, and fires.
     movePlayer(s, at(74, 30).x, at(74, 30).y);
     runUntil(s, () => e.frozen === 0, 20);

@@ -6,7 +6,7 @@ import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
-import { arena, HALL, HUSK, movePlayer, placeNode, PLAYER_AT, run, runUntil } from './fight';
+import { arena, HALL, HUSK, movePlayer, placeNode, PLAYER_AT, run, runUntil , homeTile } from './fight';
 
 // The Charger (035): shows its lane, then rams down it. A sidestep in the wind-up dodges;
 // it strikes once per charge, stops at the lane's end, is stunned by a wall, and passes
@@ -29,7 +29,7 @@ function meadow(dx = 150): { s: SimState; e: EnemyState } {
 }
 
 /** A rock cluster in the meadow's south (tiles 69–71 on row 33, 68–72 on 34, open below at (70, 35)): the Charger north of it at (70, 26). */
-const ROCKS = { charger: tileCentre({ tx: 70, ty: 26 }), behind: tileCentre({ tx: 70, ty: 37 }), before: tileCentre({ tx: 70, ty: 31 }) };
+const ROCKS = { charger: homeTile(70, 26), behind: homeTile(70, 37), before: homeTile(70, 31) };
 
 describe('the Charger', () => {
   it("has the spec's starting values in data, its wind-up past the telegraph minimum", () => {

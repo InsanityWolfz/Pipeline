@@ -6,7 +6,7 @@ import { rollDrops, scatterPoint, spawnDrops } from '../../src/sim/drops';
 import { createRng } from '../../src/sim/rng';
 import { roomOf } from '../../src/sim/state';
 import { openRoom } from './helpers';
-import { arena, at, FIELD_WALL, HALL, HUSK, placeNode, PLAYER_AT, run, SEED } from './fight';
+import { arena, at, FIELD_WALL, HALL, HUSK, placeNode, PLAYER_AT, run, SEED, FIELD_ROW } from './fight';
 import { FOUNDRY_ROOM } from '../../src/data/rooms';
 
 const EXTRAS = ['wood', 'stone', 'fiber'];
@@ -54,8 +54,8 @@ describe('drop scatter', () => {
     const s = arena();
     const room = roomOf(s);
     for (let i = 0; i < 200; i++) {
-      // Tile (32, 13) has the ruin field's wall on its left and above (017).
-      const p = scatterPoint(room, s.rng, 32 * 32 + 4, 13 * 32 + 4);
+      // The tile right of the ruin field's west wall on its first row has the wall on its left and above (017).
+      const p = scatterPoint(room, s.rng, (FIELD_WALL.west + 1) * 32 + 4, FIELD_ROW(13) - 12);
       expect(isSolid(room, Math.floor(p.x / 32), Math.floor(p.y / 32))).toBe(false);
     }
   });
@@ -150,9 +150,9 @@ describe('pickup (021; 045: a 96 px magnet pull)', () => {
   it('pulls through a solid tile (021)', () => {
     // The tile east of the ruin field's west wall (017); the item lies past that wall tile.
     const wall = FIELD_WALL.west;
-    const s = arena(SEED, { x: (wall + 1) * 32 + 16, y: 13 * 32 + 16 });
+    const s = arena(SEED, { x: (wall + 1) * 32 + 16, y: FIELD_ROW(13) });
     const room = roomOf(s);
-    expect(isSolid(room, wall, 13)).toBe(true);
+    expect(isSolid(room, wall, Math.floor(FIELD_ROW(13) / 32))).toBe(true);
     const x = s.player.x - FEET_BOX.w / 2 - 50;
     expect(Math.floor(x / 32)).toBeLessThan(wall);
     s.groundItems.push({ id: s.nextGroundItemId++, itemId: 'stone', roomId: HALL, x, y: s.player.y });

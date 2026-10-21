@@ -1,3 +1,4 @@
+import { HOLLOWS } from '../../src/data/hollows';
 import { describe, expect, it } from 'vitest';
 import { ammoDef } from '../../src/data/ammo';
 import { TALENT_START } from '../../src/data/talents';
@@ -216,9 +217,15 @@ describe('039 pins: what the spec changes (each flips in its own commit)', () =>
   });
 
   it('039 changed (unrounded flight): a bomb sealed by the Hollows barrier mid-flight drops where its unrounded path is', () => {
-    // Before 039 (its flight rounded up to whole ticks): (1279.857, 880) on tick 11 and (1276.822, 886.542) on tick 12.
+    // Before 039 (its flight rounded up to whole ticks): (1279.857, 880) on tick 11 and (1276.822, 886.542) on tick 12,
+    // fired from two tiles east of the barrier's old straight gap (tile 39). 053: the same shot two tiles east of the
+    // round barrier where the terrace road crosses it, the pinned points moved with it.
+    const row = HOLLOWS.crossing.ty;
+    const gateX = Math.max(...HOLLOWS.gate.filter((t) => t.ty === row && t.tx < HOLLOWS.crossing.tx + 3).map((t) => t.tx));
+    const ox = (gateX - 39) * 32;
+    const oy = (row - 27) * 32;
     const sealed = (dx: number, dy: number) => {
-      const outside = tileCentre({ tx: 41, ty: 27 });
+      const outside = tileCentre({ tx: gateX + 2, ty: row });
       const b = arena(undefined, outside);
       b.inventory = { bomb: 1 };
       hold(b, 'bomb');
@@ -226,11 +233,11 @@ describe('039 pins: what the spec changes (each flips in its own commit)', () =>
       return [runUntil(b, () => b.events.bursts.length > 0, 120), b.events.bursts[0]?.x, b.events.bursts[0]?.y];
     };
     const [t1, x1, y1] = sealed(-150, 0);
-    expect([t1, y1]).toEqual([11, 880]);
-    expect(x1).toBeCloseTo(1279.3333, 3);
+    expect([t1, y1]).toEqual([11, 880 + oy]);
+    expect(x1).toBeCloseTo(1279.3333 + ox, 3);
     const [t2, x2, y2] = sealed(-133, 17);
     expect(t2).toBe(11);
-    expect(x2).toBeCloseTo(1279.7261, 3);
-    expect(y2).toBeCloseTo(886.1704, 3);
+    expect(x2).toBeCloseTo(1279.7261 + ox, 3);
+    expect(y2).toBeCloseTo(886.1704 + oy, 3);
   });
 });

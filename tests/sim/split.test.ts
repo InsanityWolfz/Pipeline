@@ -3,7 +3,7 @@ import { straightAmmo } from '../../src/data/ammo';
 import { SPLIT } from '../../src/data/tags';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
-import { arena, FIELD_WALL, fireAt, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, FIELD_WALL, fireAt, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, FIELD_ROW } from './fight';
 
 // The Split (029): a Split round that hits an enemy bursts at the hit point into
 // SPLIT.shards shards, 360 / shards degrees apart, the first along its flight.
@@ -64,8 +64,8 @@ describe('a Split ley bolt', () => {
   it("doesn't split when it hits a wall or runs out of range", () => {
     const s = starred();
     // The ruin field's west wall (017); fire at it from 3 tiles away.
-    movePlayer(s, (FIELD_WALL.west + 3.5) * 32, 14.5 * 32);
-    run(s, 1, fireAt(0, 14.5 * 32));
+    movePlayer(s, (FIELD_WALL.west + 3.5) * 32, FIELD_ROW(14));
+    run(s, 1, fireAt(0, FIELD_ROW(14)));
     let bursts = 0;
     runUntil(
       s,

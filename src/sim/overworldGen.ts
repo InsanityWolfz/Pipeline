@@ -1,25 +1,25 @@
 import { SITE_SAFE_RADIUS, SITE_WAKES } from '../data/claims';
-import { HOLLOWS, REGION_1_X } from '../data/hollows';
+import { HOLLOWS } from '../data/hollows';
 import { LANDMARK_LIST, type LandmarkDef } from '../data/landmarks';
 import { OVERWORLD, type Feature, type TileRect } from '../data/overworld';
 import { TILE, type Doorway, type PylonDef, type Pond, type Room } from '../data/rooms';
 import { springClearing } from '../data/springs';
 import { fill, inRect, path, set, type Grid } from './genGrid';
+import { fromCentre, WORLD_SHAPE } from '../data/worldShape';
 import { generateHollows, stampHollows } from './hollowsGen';
 import { createRng, nextFloat, nextInt, type RngState } from './rng';
 
-// Generates the overworld (017) from its fixed seed: grass, groves of trees, rock
-// fields, ponds with shallow edges, scattered ruin stones and a forest edge, then
-// the hand-placed landmarks and clearings on top. The same seed always gives the
-// same map, so it can be built once at load. Region 1 (the old map) takes the columns
-// from REGION_1_X on and is generated exactly as it was before Region 2 (034) grew the
-// map west: the same draws, offset, never spilling into the Hollows. The Hollows are
+// Generates the overworld (017) from its fixed seed: grass, groves of trees, rock fields, ponds with shallow edges
+// and scattered ruin stones, then the hand-placed landmarks, roads and clearings on top. The same seed always gives
+// the same map, so it can be built once at load. Since 053 the map is round: Region 1's terrain fills the disc
+// inside the barrier's circle, keeping `keepOff` tiles clear of it; the Hollows' ring and the cliff edge past it are
 // generated after it from their own stream (hollowsGen.ts).
 
-/** Region 1's columns: the old map, generated as before at an offset. */
-const R1 = { x0: REGION_1_X, w: OVERWORLD.width - REGION_1_X } as const;
+const C = WORLD_SHAPE.centre;
+/** Region 1's generated ground: inside this radius. */
+const R1 = WORLD_SHAPE.region1 - OVERWORLD.keepOff;
 
-const inRegion1 = (tx: number): boolean => tx >= R1.x0 && tx < R1.x0 + R1.w;
+const inRegion1 = (tx: number, ty: number): boolean => fromCentre(tx, ty) < R1;
 
 function open(tx: number, ty: number): boolean {
   return !OVERWORLD.clearings.some((r) => inRect(r, tx, ty));
@@ -29,13 +29,13 @@ function open(tx: number, ty: number): boolean {
 function cluster(grid: Grid, rng: RngState, def: { radius: readonly [number, number]; density: number; rim: number }, symbol: string): void {
   const { radius, density, rim } = def;
   const r = nextInt(rng, radius[0], radius[1]);
-  const cx = R1.x0 + nextInt(rng, 2, R1.w - 3);
-  const cy = nextInt(rng, 2, OVERWORLD.height - 3);
+  const cx = C.tx + nextInt(rng, -R1, R1);
+  const cy = C.ty + nextInt(rng, -R1, R1);
   for (let ty = cy - r; ty <= cy + r; ty++) {
     for (let tx = cx - r; tx <= cx + r; tx++) {
       const d = Math.hypot(tx - cx, ty - cy) / r;
-      // Tiles west of Region 1 were off the old map's grid: no draw, as before.
-      if (d > 1 || !open(tx, ty) || !inRegion1(tx)) continue;
+      // Tiles outside Region 1's disc are the Hollows' or the barrier's: no draw.
+      if (d > 1 || !open(tx, ty) || !inRegion1(tx, ty)) continue;
       // Thicker in the middle, thinning to the rim.
       if (grid[ty]?.[tx] === TILE.floor && nextFloat(rng) < density * (1 - d * rim)) set(grid, tx, ty, symbol);
     }
@@ -46,8 +46,10 @@ function pond(grid: Grid, rng: RngState): Pond | null {
   const rx = nextInt(rng, OVERWORLD.ponds.radius[0], OVERWORLD.ponds.radius[1]);
   const ry = Math.max(2, rx - 1);
   const m = OVERWORLD.ponds.edgeMargin;
-  const cx = R1.x0 + nextInt(rng, rx + m, R1.w - rx - m - 1);
-  const cy = nextInt(rng, ry + m, OVERWORLD.height - ry - m - 1);
+  const cx = C.tx + nextInt(rng, -R1, R1);
+  const cy = C.ty + nextInt(rng, -R1, R1);
+  // The whole pond, shallows and margin, inside Region 1's disc.
+  if (fromCentre(cx, cy) + Math.max(rx, ry) * OVERWORLD.ponds.shore + m > R1) return null;
   // A pond keeps a tile of grass between itself and any clearing in OVERWORLD.clearings or path. The springs'
   // clearings (030) are stamped later and don't steer this; tests/data/springs.test.ts checks no pond reaches them.
   for (let ty = cy - ry - 2; ty <= cy + ry + 2; ty++) {
@@ -61,17 +63,6 @@ function pond(grid: Grid, rng: RngState): Pond | null {
     }
   }
   return { cx, cy, rx, ry };
-}
-
-/** Region 1's forest edge, all four sides of its own columns: its west side is now the border with the Hollows. */
-function edge(grid: Grid, rng: RngState): void {
-  const { depth, ragged, raggedChance } = OVERWORLD.edge;
-  for (let ty = 0; ty < OVERWORLD.height; ty++) {
-    for (let tx = R1.x0; tx < R1.x0 + R1.w; tx++) {
-      const d = Math.min(tx - R1.x0, ty, R1.x0 + R1.w - 1 - tx, OVERWORLD.height - 1 - ty);
-      if (d < depth || (d < depth + ragged && nextFloat(rng) < raggedChance / (d - depth + 1))) set(grid, tx, ty, TILE.tree);
-    }
-  }
 }
 
 /** Tiles a feature never covers: the landmarks' paths, walls and door. */
@@ -158,19 +149,18 @@ export function generateOverworld(seed: number = OVERWORLD.seed, landmarks: read
   for (let i = 0; i < OVERWORLD.groves.count; i++) cluster(grid, rng, OVERWORLD.groves, TILE.tree);
   for (let i = 0; i < OVERWORLD.rockFields.count; i++) cluster(grid, rng, OVERWORLD.rockFields, TILE.rock);
   for (let i = 0; i < OVERWORLD.ruinStones; i++) {
-    const tx = R1.x0 + nextInt(rng, 3, R1.w - 4);
-    const ty = nextInt(rng, 3, OVERWORLD.height - 4);
-    if (open(tx, ty) && grid[ty]?.[tx] === TILE.floor) set(grid, tx, ty, TILE.ruinBlock);
+    const tx = C.tx + nextInt(rng, -R1, R1);
+    const ty = C.ty + nextInt(rng, -R1, R1);
+    if (inRegion1(tx, ty) && open(tx, ty) && grid[ty]?.[tx] === TILE.floor) set(grid, tx, ty, TILE.ruinBlock);
   }
-  edge(grid, rng);
   generateHollows(grid, seed);
 
-  // Landmarks override the terrain: clearings, paths, walls, the mound and the door. The landmarks' areas (032)
+  // Landmarks override the terrain: clearings, roads, walls, the ruin and the door. The landmarks' areas (032)
   // and the springs' clearings (030) are stamped here rather than steering the generator, so its stream is unchanged.
   const areas = landmarks.map((l) => l.area);
   const kept = dropPonds(grid, ponds, areas);
   for (const r of [...OVERWORLD.clearings, ...OVERWORLD.springs.map(springClearing), ...areas, ...HOLLOWS.clears]) fill(grid, r, TILE.floor);
-  for (const p of [...OVERWORLD.paths, ...HOLLOWS.roads]) path(grid, p);
+  for (const p of OVERWORLD.paths) path(grid, p);
   for (const t of [...OVERWORLD.ruinField.walls, ...OVERWORLD.entrance.mound, ...landmarks.flatMap((l) => l.blocks ?? [])]) set(grid, t.tx, t.ty, TILE.ruinBlock);
   for (const t of OVERWORLD.shrine.walls) set(grid, t.tx, t.ty, TILE.wall);
   // The Hollows' cliffs, aqueduct and forum (034), over the road where they cross it.
@@ -202,6 +192,6 @@ export function generateOverworld(seed: number = OVERWORLD.seed, landmarks: read
     caches,
     gateTiles: [...OVERWORLD.shrine.gate.map((t) => ({ ...t, gate: 'shrine' as const })), ...HOLLOWS.gate.map((t) => ({ ...t, gate: 'hollows' as const }))],
     altars: [{ ...altar, boss: HOLLOWS.arena.boss }],
-    terrain: { ponds: kept, paths: [...OVERWORLD.paths, ...HOLLOWS.roads] },
+    terrain: { ponds: kept, paths: OVERWORLD.paths },
   };
 }

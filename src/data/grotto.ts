@@ -1,33 +1,33 @@
+import { shiftRect, shiftTile, type Shift } from './place';
 import type { TilePos, TileRect } from './tiles';
 
-// The Frozen Grotto, minimal (029): a hand-placed site in the overworld's north-west,
-// in ring 2, the guarded source of rimestone for the frost rune. A clearing with
-// frosted ground, three rime outcrops, a path north from the west path's end, and a
-// guard pack in its own group. It has no pylon and can't be claimed, so its guards
-// come back on every world reset. 032 later folds it into the landmark system
-// without moving it (034 may shift every tile by +40 for Region 2).
+// The Frozen Grotto, minimal (029): a hand-placed site in the overworld's north, in ring 2, the guarded source of
+// rimestone for the frost rune. A clearing with frosted ground, three rime outcrops and a guard pack in its own
+// group. It has no pylon and can't be claimed, so its guards come back on every world reset. 032 later folds it
+// into the landmark system; 053 moved it whole to the round map's north (its road is in roads.ts).
 
 /** Its guards' group: its landmark id (032). */
 export const GROTTO_GROUP = 'frozen-grotto';
 
+/** 053: the Grotto's layout as 029 drew it, moved whole to the north of the round map (bearing 352°, 36 tiles). */
+const SHIFT: Shift = { dx: 25, dy: 39 };
+
 export const GROTTO = {
   /** The Grotto's clearing, kept open and frosted. */
-  area: { x0: 49, y0: 5, x1: 59, y1: 13 } satisfies TileRect,
-  /** Two tiles wide, from the west path's end north to the Grotto's mouth: that end becomes a fork. */
-  path: [
-    { tx: 52, ty: 27 },
-    { tx: 54, ty: 14 },
-  ] satisfies TilePos[],
+  area: shiftRect({ x0: 49, y0: 5, x1: 59, y1: 13 }, SHIFT) satisfies TileRect,
   nodes: [
     { nodeId: 'rime-outcrop', tx: 52, ty: 7 },
     { nodeId: 'rime-outcrop', tx: 56, ty: 8 },
     { nodeId: 'rime-outcrop', tx: 54, ty: 11 },
-  ],
+  ].map((n) => shiftTile(n, SHIFT)),
   /** The guard pack, placed by hand round the clusters: three Husks and a Wisp. */
   pack: [
     { group: GROTTO_GROUP, enemyId: 'husk', tx: 51, ty: 10 },
     { group: GROTTO_GROUP, enemyId: 'husk', tx: 57, ty: 11 },
     { group: GROTTO_GROUP, enemyId: 'husk', tx: 55, ty: 6 },
     { group: GROTTO_GROUP, enemyId: 'wisp', tx: 54, ty: 9 },
-  ],
+  ].map((g) => shiftTile(g, SHIFT)),
 } as const;
+
+/** The Grotto's mouth: the middle of its south edge, where its road arrives. */
+export const GROTTO_MOUTH: TilePos = { tx: Math.floor((GROTTO.area.x0 + GROTTO.area.x1) / 2), ty: GROTTO.area.y1 + 1 };

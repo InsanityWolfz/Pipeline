@@ -1,11 +1,12 @@
 import type { LandmarkDef } from './landmarks';
+import { placeLandmark } from './place';
+import { polar } from './worldShape';
 
 // The resource sites and the Ruined Cache (032), and the Husk Hive (049): hand-placed landmarks in the empty
 // outer ground. Each resource site is a dense cluster of one node (starting at 5) with a
-// ley pylon guarded by one pack of its ring's makeup and a ley line home; the cache is a
-// sealed reliquary in a broken ruin, guarded too. Tiles throughout.
-
-const STAIRS = { tx: 81, ty: 21 } as const;
+// ley pylon guarded by one pack of its ring's makeup and a ley line home (leyLines.ts); the cache is a
+// sealed reliquary in a broken ruin, guarded too. Each is laid out here as its spec drew it, then moved whole to its
+// place on the round map (053, `SITES` below). Tiles throughout.
 
 /** Stone (ring 1): boulders in a rock field among cut stone blocks. */
 const QUARRY: LandmarkDef = {
@@ -38,7 +39,6 @@ const QUARRY: LandmarkDef = {
     { enemyId: 'husk', tx: 60, ty: 21 },
   ],
   pylon: { tx: 61, ty: 20, site: 'quarry', supplies: ['stone'] },
-  leyLine: [{ tx: 61, ty: 20 }, { tx: 67, ty: 21 }, { tx: 74, ty: 22 }, { tx: 79, ty: 22 }, STAIRS],
   blocks: [
     { tx: 57, ty: 21 },
     { tx: 58, ty: 21 },
@@ -79,7 +79,6 @@ const OLD_GROVE: LandmarkDef = {
     { enemyId: 'wisp', tx: 51, ty: 22 },
   ],
   pylon: { tx: 48, ty: 22, site: 'old-grove', supplies: ['wood'] },
-  leyLine: [{ tx: 48, ty: 22 }, { tx: 55, ty: 24 }, { tx: 63, ty: 24 }, { tx: 72, ty: 23 }, { tx: 78, ty: 22 }, STAIRS],
   marker: 'site',
   look: { trees: 'old' },
 };
@@ -108,7 +107,6 @@ const LEY_GROTTO: LandmarkDef = {
   ],
   // In the hollow's upper half, so its 7-tile zone stops short of the Reed Marsh below.
   pylon: { tx: 112, ty: 22, site: 'ley-grotto', supplies: ['ley-crystal'] },
-  leyLine: [{ tx: 112, ty: 22 }, { tx: 104, ty: 22 }, { tx: 95, ty: 22 }, { tx: 86, ty: 21 }, STAIRS],
   veinLines: [
     [{ tx: 109, ty: 19 }, { tx: 112, ty: 22 }],
     [{ tx: 115, ty: 19 }, { tx: 112, ty: 22 }],
@@ -145,7 +143,6 @@ const REED_MARSH: LandmarkDef = {
   ],
   // South of the ponds, clear of their rims.
   pylon: { tx: 112, ty: 38, site: 'reed-marsh', supplies: ['fiber'] },
-  leyLine: [{ tx: 112, ty: 38 }, { tx: 104, ty: 33 }, { tx: 94, ty: 28 }, { tx: 85, ty: 23 }, STAIRS],
   marker: 'site',
 };
 
@@ -205,8 +202,6 @@ const HUSK_HIVE: LandmarkDef = {
     { enemyId: 'husk', tx: 102, ty: 40 },
   ],
   pylon: { tx: 101, ty: 39, site: 'husk-hive', supplies: ['husk-resin'] },
-  // Up the meadow's east side, clear of the start stone, to the stairs.
-  leyLine: [{ tx: 101, ty: 39 }, { tx: 97, ty: 32 }, { tx: 90, ty: 27 }, { tx: 84, ty: 24 }, STAIRS],
   blocks: [
     { tx: 99, ty: 34 },
     { tx: 100, ty: 34 },
@@ -220,4 +215,16 @@ const HUSK_HIVE: LandmarkDef = {
   look: { blocks: 'hive' },
 };
 
-export const SITES: readonly LandmarkDef[] = [QUARRY, OLD_GROVE, LEY_GROTTO, REED_MARSH, RUINED_CACHE, HUSK_HIVE];
+/**
+ * 053: each site moved whole to its place on the round map, by bearing (degrees clockwise from north) and distance
+ * from the foundry's door: the Quarry in ring 1 to the west, the rest in ring 2, spread round the circle; the Husk
+ * Hive across the foundry from the Old Grove (049.1).
+ */
+export const SITES: readonly LandmarkDef[] = [
+  placeLandmark(QUARRY, polar(272, 22)),
+  placeLandmark(OLD_GROVE, polar(297, 37)),
+  placeLandmark(LEY_GROTTO, polar(95, 36)),
+  placeLandmark(REED_MARSH, polar(155, 38)),
+  placeLandmark(RUINED_CACHE, polar(212, 37)),
+  placeLandmark(HUSK_HIVE, polar(120, 35)),
+];

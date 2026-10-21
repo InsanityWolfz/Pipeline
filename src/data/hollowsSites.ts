@@ -1,4 +1,5 @@
-import { REGION_1_X, type TileStamp } from './hollows';
+import type { TileStamp } from './hollows';
+import { shiftLandmark, type Shift } from './place';
 import type { LandmarkDef } from './landmarks';
 import { TILE } from './rooms';
 import type { TilePos } from './tiles';
@@ -6,10 +7,8 @@ import type { TilePos } from './tiles';
 // Stonefall Hollows' landmarks (034): the Ley-iron Cut, the Broken Aqueduct and the
 // Cistern Terrace, the region's one claimable site, beside the Cut (the Hollows Ley Spring
 // is 030's, in springs.ts). Hand-placed, hidden until found (032), each stamping its own
-// tiles over the generated ground. Names are Shaun's placeholders. Tiles throughout.
-
-/** The foundry stairs' front, where every ley line home ends. */
-const STAIRS = { tx: REGION_1_X + 41, ty: 21 } as const;
+// tiles over the generated ground. Names are Shaun's placeholders. Tiles throughout: laid out as 034 drew them, then
+// moved whole into the round map's ring (053, `HOLLOWS_SITES` below).
 
 /** The Cut's quarry face: a cliff wall across its back, the seams in its foot. */
 const CUT_FACE: readonly TileStamp[] = Array.from({ length: 17 }, (_, i) => ({ tx: 17 + i, ty: 4, symbol: TILE.cliff }));
@@ -96,8 +95,6 @@ const CISTERN_TERRACE: LandmarkDef = {
     { enemyId: 'sniper', tx: 25, ty: 11 },
   ],
   pylon: { ...TERRACE_PYLON, site: 'cistern-terrace', supplies: ['ley-iron', 'stone'] },
-  // Down the road, out through the gap and along the west path to the stairs.
-  leyLine: [TERRACE_PYLON, { tx: 25, ty: 26 }, { tx: 38, ty: 28 }, { tx: REGION_1_X + 12, ty: 28 }, { tx: REGION_1_X + 26, ty: 31 }, { tx: REGION_1_X + 39, ty: 26 }, STAIRS],
   blocks: [
     { tx: 17, ty: 11 },
     { tx: 18, ty: 11 },
@@ -110,4 +107,8 @@ const CISTERN_TERRACE: LandmarkDef = {
   look: { paving: 'terrace' },
 };
 
-export const HOLLOWS_SITES: readonly LandmarkDef[] = [LEY_IRON_CUT, BROKEN_AQUEDUCT, CISTERN_TERRACE];
+/** 053: the Cut and the Terrace together in the ring's west-south-west (bearing 250°, 63 tiles), the aqueduct across its south. */
+const WEST: Shift = { dx: 0, dy: 96 };
+const SOUTH: Shift = { dx: 65, dy: 126 };
+
+export const HOLLOWS_SITES: readonly LandmarkDef[] = [shiftLandmark(LEY_IRON_CUT, WEST), shiftLandmark(BROKEN_AQUEDUCT, SOUTH), shiftLandmark(CISTERN_TERRACE, WEST)];

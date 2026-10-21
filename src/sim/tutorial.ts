@@ -2,7 +2,7 @@ import { HOLLOWS } from '../data/hollows';
 import { STONE_REACH } from '../data/objectives';
 import { FEET_BOX } from '../data/player';
 import { RESPAWN_ROOM } from '../data/player';
-import { SHOT_GATES, type GateId } from '../data/rooms';
+import { SHOT_GATES, TILE, type GateId, type Room } from '../data/rooms';
 import { WORLD } from './world';
 import { recipeDef, REVEALING_ITEMS } from '../data/recipes';
 import { count, type Inventory } from './inventory';
@@ -36,17 +36,62 @@ export const createGates = (open: boolean, hollows = false): Gates => ({ foundry
 /** True if a door's gate (if any) is open. */
 export const doorOpen = (state: Pick<SimState, 'gates'>, gate: GateId | undefined): boolean => !gate || state.gates[gate];
 
-/** Solid boxes in a room for the tutorial: the tube stone, and doors and gate tiles (017) whose gate is shut. */
+/**
+ * Solid boxes in a room for the tutorial: the tube stone, and doors and gate tiles (017) whose gate is shut. A gate
+ * that stops shots too (034's barrier, since 053 a whole circle of tiles) isn't here: roomBodies seals its tiles in
+ * the room's grid instead (sealedRoom), so movers don't test hundreds of boxes a tick.
+ */
 export function tutorialRects(state: Pick<SimState, 'gates'>, roomId: string): Rect[] {
   const room = WORLD[roomId];
   if (!room) return [];
-  const sealed = [...(room.doorways ?? []), ...(room.gateTiles ?? [])].filter((d) => !doorOpen(state, d.gate)).map(tileRect);
+  const gates = (room.gateTiles ?? []).filter((g) => !SHOT_GATES.includes(g.gate));
+  const sealed = [...(room.doorways ?? []), ...gates].filter((d) => !doorOpen(state, d.gate)).map(tileRect);
   return room.tubeStone ? [...sealed, tileRect(room.tubeStone)] : sealed;
 }
 
+/** Each room's gate tiles that stop shots too, by tile key, with their gate (built once: the world is fixed). */
+const SHOT_GATE_TILES = new Map<string, Map<number, GateId>>();
+
+function shotGateTiles(roomId: string): Map<number, GateId> {
+  let tiles = SHOT_GATE_TILES.get(roomId);
+  if (!tiles) {
+    tiles = new Map();
+    for (const g of WORLD[roomId]?.gateTiles ?? []) if (SHOT_GATES.includes(g.gate)) tiles.set(g.ty * GATE_KEY + g.tx, g.gate);
+    SHOT_GATE_TILES.set(roomId, tiles);
+  }
+  return tiles;
+}
+
+/** Tile keys: a row is never this wide. */
+const GATE_KEY = 100_000;
+
 /** True if a tile is sealed by a shut gate that stops shots as well as feet (034: the Hollows' barrier stops every projectile). */
 export function shotSealed(state: Pick<SimState, 'gates'>, roomId: string, tx: number, ty: number): boolean {
-  return (WORLD[roomId]?.gateTiles ?? []).some((g) => g.tx === tx && g.ty === ty && SHOT_GATES.includes(g.gate) && !state.gates[g.gate]);
+  const gate = shotGateTiles(roomId).get(ty * GATE_KEY + tx);
+  return gate !== undefined && !state.gates[gate];
+}
+
+/** The gates that stop shots as well as feet that are shut in a room (034's barrier while the shrine is unclaimed). */
+export function shutShotGates(state: Pick<SimState, 'gates'>, roomId: string): GateId[] {
+  return [...new Set(shotGateTiles(roomId).values())].filter((g) => !state.gates[g]);
+}
+
+/** Each room with its shut shot-stopping gates' tiles turned to wall, by room and gates, built once each (053). */
+const SEALED = new Map<string, Room>();
+
+/** The room as movers meet it: its shut shot-stopping gates' tiles solid, like walls. */
+export function sealedRoom(state: Pick<SimState, 'gates'>, room: Room): Room {
+  const shut = shutShotGates(state, room.id);
+  if (shut.length === 0) return room;
+  const key = `${room.id}|${shut.join(',')}`;
+  let sealed = SEALED.get(key);
+  if (!sealed) {
+    const rows = room.rows.map((r) => [...r]);
+    for (const g of room.gateTiles ?? []) if (shut.includes(g.gate)) (rows[g.ty] ?? [])[g.tx] = TILE.wall;
+    sealed = { ...room, rows: rows.map((r) => r.join('')) };
+    SEALED.set(key, sealed);
+  }
+  return sealed;
 }
 
 /**
