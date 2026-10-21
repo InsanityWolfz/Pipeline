@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { TILE_SIZE } from '../../src/data/config';
 import { INTAKE } from '../../src/data/foundry';
-import { REGION_1_X } from '../../src/data/hollows';
+import { HOLLOWS, REGION_1_X } from '../../src/data/hollows';
 import { nodeDef } from '../../src/data/nodes';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { TUTORIAL_START } from '../../src/data/player';
 import { FOUNDRY_ROOM, SHRINE_SITE } from '../../src/data/rooms';
 import { claim } from '../../src/sim/claims';
+import { fixtureDef } from '../../src/sim/fixtures';
 import { hopperRaw, objectiveTargets, targetPoints, waypoint } from '../../src/sim/objectiveTarget';
 import { currentObjective } from '../../src/sim/objectives';
 import type { HopperState } from '../../src/sim/pieces';
@@ -161,5 +162,55 @@ describe('the intake goals (051)', () => {
     expect(waypoint(s)).toMatchObject({ x: boss?.x, y: boss?.y });
     s.enemies = s.enemies.filter((e) => e.enemyId !== 'bulwark');
     expect(waypoint(s)?.target.kind).toBe('boss');
+  });
+});
+
+describe('the other targets (051.4, 051.5)', () => {
+  it("the bomb goal's Husk resin points at the overworld's Husks, the Hive's seeps only once none is left", () => {
+    const s = upTo('Craft bombs and ley bolts (C)');
+    s.inventory = {};
+    const i = at('Craft bombs and ley bolts (C)');
+    const resin = () => targetPoints(s, { kind: 'collect' }, i).filter((p) => p.ref === 'husk' || p.ref === 'resin-seep');
+    const husks = s.enemies.filter((e) => e.enemyId === 'husk' && e.roomId === OVERWORLD_ROOM && e.health > 0);
+    expect(husks.length).toBeGreaterThan(0);
+    expect(resin().map((p) => p.ref)).toEqual(husks.map(() => 'husk'));
+    expect(resin().map((p) => ({ x: p.x, y: p.y }))).toEqual(husks.map((e) => ({ x: e.x, y: e.y })));
+    for (const e of husks) e.health = 0;
+    const seeps = resin();
+    expect(seeps.length).toBeGreaterThan(0);
+    expect(seeps.every((p) => p.ref === 'resin-seep')).toBe(true);
+  });
+
+  it("the supply port goal points at the foundry's ports (the shrine's claim brings them)", () => {
+    const s = upTo('Run a supply port into your line');
+    claim(s, SHRINE_SITE);
+    s.roomId = FOUNDRY_ROOM;
+    const ports = s.fixtures.filter((f) => fixtureDef(f.id).kind === 'port').map((f) => base(fixtureDef(f.id)));
+    expect(ports.length).toBeGreaterThan(0);
+    expect(objectiveTargets(s).map((p) => ({ x: p.x, y: p.y }))).toEqual(ports);
+    expect(waypoint(s)?.target.kind).toBe('ports');
+  });
+
+  it("breaching the Hollows points at the middle of the barrier's gap", () => {
+    const s = upTo('Breach Stonefall Hollows');
+    const mid = HOLLOWS.gate[Math.floor(HOLLOWS.gate.length / 2)];
+    if (!mid) throw new Error('no gate');
+    expect(waypoint(s)).toMatchObject({ via: 'target', ...base(mid), target: { kind: 'barrier' } });
+  });
+
+  it('the frost rune goal points at the foundry: its stairs outside, nothing inside', () => {
+    const s = upTo('Build a frost rune into your arrow line');
+    s.roomId = OVERWORLD_ROOM;
+    expect(waypoint(s)).toMatchObject({ via: 'door', ...base(OVERWORLD.entrance.door), target: { kind: 'room', roomId: FOUNDRY_ROOM } });
+    s.roomId = FOUNDRY_ROOM;
+    expect(waypoint(s)).toBeNull();
+  });
+
+  it('a site pylon goal skips dormant pylons: none until the shrine is claimed', () => {
+    const s = upTo('Claim a second pylon');
+    const i = at('Claim a second pylon');
+    expect(targetPoints(s, { kind: 'sitePylon' }, i)).toEqual([]);
+    claim(s, SHRINE_SITE);
+    expect(targetPoints(s, { kind: 'sitePylon' }, i).length).toBeGreaterThan(0);
   });
 });
