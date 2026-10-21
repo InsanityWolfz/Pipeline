@@ -31,7 +31,7 @@ test.describe('review screenshots (054)', () => {
   test('the back wave building, its area shaded red', async ({ page }) => {
     test.setTimeout(120_000);
     await intoForum(page);
-    // West of it, so it faces west and its wave builds east, across the middle of the shot (as 041's shot).
+    // The player west of it: its back wave builds west, toward the player, across the middle of the shot (as 041's shot).
     await page.evaluate(
       ([tx, ty]) => {
         const h = window.__helpers;
