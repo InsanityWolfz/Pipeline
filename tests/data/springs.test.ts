@@ -82,7 +82,7 @@ describe('Ley Springs', () => {
 
   it('the south-east pool sits at the end of its road, on past the Husk Hive', () => {
     const se = OVERWORLD.springs.find((s) => s.id === 'south-east-spring');
-    const path = ROADS[ROAD_DEFS.findIndex((r) => r.id === 'hive')];
+    const path = ROADS[ROAD_DEFS.findIndex((r) => r.id === 'south-east-spring')];
     const end = path?.[path.length - 1];
     if (!se || !end) throw new Error('no south-east spring or path');
     expect(Math.hypot(end.tx + 1 - se.tx - 0.5, end.ty + 1 - se.ty - 0.5)).toBeLessThanOrEqual(se.radius + 2.5);

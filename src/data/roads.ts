@@ -39,11 +39,12 @@ export const ROAD_DEFS: readonly RoadDef[] = [
   { id: 'shrine', waypoints: [t(93, 80), t(99, 74), t(103, 67)] },
   // To the Ley Grotto's north rim.
   { id: 'ley-grotto', from: 'shrine', waypoints: [t(99, 74), t(110, 76), t(121, 80)] },
-  // East-south-east, north of the meadow's east pond: to the Husk Hive's open south side, then bending south on to the
-  // South-east Ley Spring (it was a spur doubling back from the Hive, a hairpin).
-  { id: 'hive', waypoints: [t(89, 91), t(97, 96), t(105, 101), t(113, 107), t(112, 111)] },
+  // East-south-east, north of the meadow's east pond: to the Husk Hive's open south side.
+  { id: 'hive', waypoints: [t(89, 91), t(97, 96), t(105, 101), t(113, 107)] },
   // To the Reed Marsh's north edge.
   { id: 'marsh', from: 'hive', waypoints: [t(105, 101), t(103, 106), t(101, 111)] },
+  // On past the Hive to the South-east Ley Spring.
+  { id: 'south-east-spring', from: 'hive', waypoints: [t(113, 107), t(110, 110)] },
 ];
 
 /** Each road as laid: its smooth curve sampled about every tile, as top-left tiles (fractional between waypoints). */
