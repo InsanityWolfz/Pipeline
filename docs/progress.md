@@ -2,6 +2,16 @@
 
 Newest entry first.
 
+## 2026-10-21: 054 merged
+**Changed:** Shaun merged 054 (combat readability: the blue immune bar, the shaded back wave, burning Pool arrows, slower homing bolts, the star shot's shards), InsanityWolfz/Pipeline#46.
+
+**Next:** 053 merges next; 055 (boss doors) follows it.
+
+## 2026-10-21: 054 combat readability built (draft PR)
+**Changed:** built 054 on `claude/054-combat-readability` (merged with main's 052). The sim's `immune` flag (a burrowed Burrower, a rising add; never a shield's front) turns an enemy's bar blue with a small shield, shown even at full health. The Bulwark's back wave shades its area red under its ripples. An arrow through a Pool (Blastfletch) burns for the rest of its flight: a flame on its head, an ember trail and a small flash on each hit, nothing extra (054.2). Homing ley bolts fly at 0.6 speed (180 px/s), same turn. The star shot: 5 bigger Shards with a short trail, each half the bolt's damage, out to 96 px, skipping the struck enemy; the Split rule reads 054.1's text. No save shape change. `npm run check` passes (1763); the full Playwright run: 155 passed, 0 failed, 144 skipped. `npm run measure` identical to 051. Review shots in docs/review/054; older shots retaken only where 054 shows. Spec status stays approved.
+
+**Next:** review, then Shaun answers 054.3–054.9 (spec, "Raised after the build") and playtests the preview.
+
 ## 2026-10-21: 053 review fixes
 **Changed:** on `claude/053-round-world`, fixed 053's review. Packs keep off the barrier's band and every tile touching it (an enemy there was pushed to the Hollows side and stuck) and out of the shrine's surroundings (`POPULATION.shrineMargin`), so the Warden's fight is unjoined and the tutorial e2e wins it unaided (no pops cleared through the hook). Separation's `NEAR` derived from the largest feet box (144 px) and tested against an all-pairs pass; gate keys by the room's width. Region 1 reachable with the barrier shut; pylons block in the reach fixture. The overworld builds the chunk row below the view at once and the rest nearest-first; `ui().overworldChunks` lists keys. The hive road's hairpin is left (a road change rerolls the generated map; 053.14). Shaun's answers recorded (053.4 keep radius 48; 053.10 keep 8/12/12, judge at playtest) in the spec and the interview notes. `npm run check` passes (1,795); the full Playwright run: 153 passed, 0 failed; `npm run measure` unchanged.
 

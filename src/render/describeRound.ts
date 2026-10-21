@@ -39,12 +39,12 @@ function emissionFor(k: KeywordId, on: 'shard' | 'bomblet' | undefined, ammoId: 
   return roundEmission(ammoId);
 }
 
-/** A keyword param's base for this round: fixed, or read for its base ammo (or its first source). */
+/** A keyword param's base for this round: fixed, or read for the round itself (054: a homing round's speed), its base ammo, or its first source. */
 function paramBase(k: KeywordId, name: string, a: AmmoDef): number | null {
   const p = KEYWORDS[k].params[name];
   if (!p) return null;
   if ('value' in p) return p.value;
-  return p.perSource[a.base] ?? p.perSource[textSources(k)[0] ?? ''] ?? null;
+  return p.perSource[a.id] ?? p.perSource[a.base] ?? p.perSource[textSources(k)[0] ?? ''] ?? null;
 }
 
 interface ParamNumber {

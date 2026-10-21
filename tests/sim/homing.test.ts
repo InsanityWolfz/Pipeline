@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { straightAmmo } from '../../src/data/ammo';
 import { HOMING } from '../../src/data/tags';
 import type { ArrowState } from '../../src/sim/arrows';
 import type { SimState } from '../../src/sim/state';
@@ -93,9 +94,10 @@ describe('a homing ley bolt', () => {
     const bolt = s.arrows[0];
     if (!bolt) throw new Error('no bolt');
     expect(bolt.targetId).toBe(e.id);
-    // The target jumps behind the player: the bolt turns its widest circle after it, never reaching it.
-    e.x = PLAYER_AT.x - 250;
+    // The target jumps far behind the player, held there: the bolt turns its widest circle after it, never reaching it.
+    e.x = PLAYER_AT.x - 350;
     e.homeX = e.x;
+    e.frozen = 10_000;
     const steps: number[] = [];
     let travelled = 0;
     let turned = false;
@@ -114,9 +116,26 @@ describe('a homing ley bolt', () => {
     );
     expect(turned).toBe(true);
     expect(s.events.hits).toEqual([]);
-    for (const d of steps) expect(d).toBeCloseTo(5);
+    for (const d of steps) expect(d).toBeCloseTo(straightAmmo('ley-bolt+homing').speed / 60);
     // Last seen a step short of its 320 px range; the next step ended it.
     expect(travelled).toBeGreaterThanOrEqual(320 - 5);
     expect(travelled).toBeLessThan(320);
+  });
+
+  it('flies at about 60% of a plain bolt’s speed (054: time to home), with the same turn rate and range', () => {
+    const plain = straightAmmo('ley-bolt');
+    expect(HOMING.speedScale).toBe(0.6);
+    for (const id of ['ley-bolt+homing', 'ley-bolt+frost+homing']) {
+      expect(straightAmmo(id).speed).toBeCloseTo(plain.speed * 0.6, 9);
+      expect(straightAmmo(id).range).toBe(plain.range);
+    }
+    expect(straightAmmo('ley-bolt+split').speed).toBe(plain.speed);
+    expect(straightAmmo('ley-bolt+frost').speed).toBe(plain.speed);
+    expect(HOMING.turnDegrees).toBe(4);
+    const s = homing();
+    run(s, 1, fireAt(PLAYER_AT.x + 300, PLAYER_AT.y));
+    const bolt = s.arrows[0];
+    if (!bolt) throw new Error('no bolt');
+    expect(bolt.speed).toBeCloseTo(plain.speed * 0.6, 9);
   });
 });

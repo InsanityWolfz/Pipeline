@@ -1,7 +1,8 @@
 import { BlendModes, type GameObjects, type Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { FEET_BOX } from '../data/player';
-import { KEYSTONE_LOOK, LEVEL_UP, TALENT_SPRITES, levelUpLine } from '../data/talentAssets';
+import { BURNING_LOOK, KEYSTONE_LOOK, LEVEL_UP, TALENT_SPRITES, levelUpLine } from '../data/talentAssets';
+import { settings } from './flow/settingsStore';
 import { VIEW_WIDTH } from '../data/config';
 import type { SimEvents } from '../sim/events';
 import type { SimState } from '../sim/state';
@@ -18,15 +19,17 @@ export interface TalentFxShown {
   levelRings: number;
   iceBursts: number;
   poolBursts: number;
+  /** 054: a burning arrow's hit flashes still live. */
+  burningFlashes: number;
   pools: number;
   heat: number;
 }
 
-export const NO_TALENT_FX: TalentFxShown = { levelLine: null, lineAlpha: 0, levelRings: 0, iceBursts: 0, poolBursts: 0, pools: 0, heat: 0 };
+export const NO_TALENT_FX: TalentFxShown = { levelLine: null, lineAlpha: 0, levelRings: 0, iceBursts: 0, poolBursts: 0, burningFlashes: 0, pools: 0, heat: 0 };
 
 interface Burst {
   image: GameObjects.Image;
-  kind: 'ring' | 'ice' | 'pool';
+  kind: 'ring' | 'ice' | 'pool' | 'burning';
   ms: number;
   look: { ms: number; from: number; to: number };
   /** Made this frame: its clock starts next frame, so a long frame (the hook's stepping) can't run it out unseen. */
@@ -65,6 +68,7 @@ export class TalentFxView {
       levelRings: live('ring'),
       iceBursts: live('ice'),
       poolBursts: live('pool'),
+      burningFlashes: live('burning'),
       pools: [...this.pools.values()].filter((c) => c.visible).length,
       heat: this.heat.visible ? Math.round(this.heat.alpha * 100) / 100 : 0,
     };
@@ -98,6 +102,9 @@ export class TalentFxView {
     const B = KEYSTONE_LOOK.poolBurst;
     const k = (r: number) => r / KEYSTONE_LOOK.pool.spriteRadius;
     if (here) for (const c of events.poolBursts) this.burst('pool', TALENT_SPRITES.pool, c.x, c.y, c.y + B.depthAbove, { ms: B.ms, from: B.from * k(c.radius), to: B.to * k(c.radius) }, true, burstTint(c.damageType));
+    // 054: a burning arrow's hit flashes small and ember-hot on the body it hits (042.10: none with Flashes off).
+    const F = BURNING_LOOK.flash;
+    if (here && settings().flashes) for (const h of events.hits) if (h.target === 'enemy' && h.burning) this.burst('burning', TALENT_SPRITES.burningFlash, h.x, h.y - F.lift, h.y + F.depthAbove, F);
     this.stepBursts(deltaMs);
     this.stepLine(deltaMs);
     this.drawPools(sim, shown);

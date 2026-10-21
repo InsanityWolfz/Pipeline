@@ -1,9 +1,9 @@
-import { lobAmmo, mineAmmo, straightAmmo } from './ammo';
+import { lobAmmo, mineAmmo, shardBaseDamage, straightAmmo } from './ammo';
 import { BULWARK } from './bulwark';
 import { BOSS_WEIGHT } from './combat';
 import { CHARGER, SHARDBACK } from './hollowsEnemies';
 import { ROLLBREAKER } from './relics';
-import { CLUSTER, COLD, HOMING, SPLIT } from './tags';
+import { CLUSTER, COLD, HOMING, ROUNDS, roundTags, SPLIT } from './tags';
 import { BLASTFLETCH } from './talents';
 import type { StatId } from './statDefs';
 
@@ -81,6 +81,8 @@ export type NounId = keyof typeof NOUNS;
 
 const ARROW = straightAmmo('arrow');
 const LEY_BOLT = straightAmmo('ley-bolt');
+/** 054: the homing rounds fly slower than their base, so a Shot's speed is read for each of them. */
+const HOMING_SPEEDS = Object.fromEntries(ROUNDS.filter((r) => roundTags(r).includes('homing')).map((r) => [r, straightAmmo(r).speed]));
 const BOMB = lobAmmo('bomb');
 const LANDMINE = mineAmmo('landmine');
 
@@ -107,7 +109,7 @@ const family = (id: KeywordId, name: string): KeywordDef => kw(id, name, 'family
 export const KEYWORD_LIST: readonly KeywordDef[] = [
   kw('shot', 'Shot', 'delivery', 'Flies straight at the cursor up to {range} at {speed}. Stops at walls and {{shield}} fronts.', {
     range: per('px', { arrow: ARROW.range, 'ley-bolt': LEY_BOLT.range, shard: SPLIT.range }),
-    speed: per('px-per-s', { arrow: ARROW.speed, 'ley-bolt': LEY_BOLT.speed, shard: SPLIT.speed }),
+    speed: per('px-per-s', { arrow: ARROW.speed, 'ley-bolt': LEY_BOLT.speed, shard: SPLIT.speed, ...HOMING_SPEEDS }),
   }, ['damage', 'fire-rate', 'range', 'speed']),
   kw('lob', 'Lob', 'delivery', 'Arcs over everything to the cursor, up to {range} away, and lands. Ignores {{shield}}.', {
     range: per('px', { bomb: BOMB.maxRange }),
@@ -122,9 +124,11 @@ export const KEYWORD_LIST: readonly KeywordDef[] = [
     lock: fixed('px', HOMING.lockRadius),
     turn: fixed('deg-per-tick', HOMING.turnDegrees),
   }, ['turn-rate', 'lock-radius']),
-  kw('split', 'Split', 'behaviour', 'On an enemy hit, sends {count} {{shard}}s in a star for {damage} each. A {{shard}} is a small {{shot}} that never {{pierce}}s or {{split}}s and can’t hit that enemy.', {
+  // 054.1: the star shot's rule. Its damage param (half the bolt's) still feeds the round's summary and breakdown.
+  // "half" is SPLIT.damageShare in words; tests/data/keywords.test.ts ties the two.
+  kw('split', 'Split', 'behaviour', 'On hit: {count} {{shard}}s fly out, each dealing half damage to another enemy. A {{shard}} is a small {{shot}} that never {{pierce}}s or {{split}}s.', {
     count: fixed('count', SPLIT.shards),
-    damage: fixed('count', SPLIT.damage),
+    damage: fixed('count', shardBaseDamage('ley-bolt+split')),
   }, ['shards', 'shard-damage']),
   kw('burst', 'Burst', 'behaviour', 'Deals {damage} to every enemy within {radius}. Ignores {{shield}}. No {{knockback}}.', {
     damage: per('count', { bomb: BOMB.burstDamage, bomblet: CLUSTER.damage, landmine: LANDMINE.damage }),

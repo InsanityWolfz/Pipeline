@@ -21,6 +21,7 @@ import { COLD } from '../data/tags';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
 import { bulwarkPose, drawSeam, riseShown } from './bulwarkLook';
 import { drawTelegraph } from './telegraphs';
+import { destroyEnemyBar, drawEnemyBar, makeEnemyBar, type EnemyBar, type EnemyBarShown } from './enemyBar';
 import { destroyHollowsArt, drawHollowsArt, makeHollowsArt, shownOf, type HollowsArt, type HollowsEnemiesShown } from './hollowsEnemyArt';
 
 /** A champion's extras (032): its glow, and its name with its kind under it. */
@@ -45,7 +46,7 @@ interface Drawn {
   baseScale: number;
   champion?: ChampionArt;
   telegraph: GameObjects.Graphics;
-  bar: GameObjects.Graphics;
+  bar: EnemyBar;
   /** The ice round it while frozen (029), made on its first freeze. */
   ice?: GameObjects.Image;
   /** A Husk's resin drip and glint, or the Warden's core halo (018), or the Bulwark's seam halo (034). */
@@ -55,10 +56,12 @@ interface Drawn {
   turnUntil?: number;
   /** Region 2's extras (035): a Burrower's ripple. */
   hollows?: HollowsArt | undefined;
+  /** Whether its telegraph last drew the Bulwark's back wave shaded (054). */
+  waveShaded?: boolean;
 }
 
 /** `ui()`'s enemy part before the scene has built its views. */
-export const NO_ENEMY_UI: { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown } = { champions: [], hollowsEnemies: { ripples: 0, flares: 0, lasers: [] } };
+export const NO_ENEMY_UI: { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown; enemyBars: EnemyBarShown[] } = { champions: [], hollowsEnemies: { ripples: 0, flares: 0, lasers: [], waveShades: 0 }, enemyBars: [] };
 
 const viewOf = (f: Facing): 'down' | 'up' | 'side' => (f === 'up' || f === 'down' ? f : 'side');
 
@@ -129,9 +132,9 @@ export class EnemyView {
       else d.sprite.clearTint();
       this.drawIce(d, e, bottom);
       const top = bottom - d.sprite.displayHeight * d.sprite.originY;
-      this.drawBar(d.bar, e, top);
+      drawEnemyBar(this.scene, d.bar, e, top);
       if (d.champion) this.drawChampion(d.champion, e, bottom, top, now);
-      drawTelegraph(d.telegraph, e);
+      d.waveShaded = drawTelegraph(d.telegraph, e);
       drawHollowsArt(d.hollows, d.sprite, e, def, sim, now);
       if (d.overlay && e.enemyId === RESIN.enemyId) this.drawResin(d.overlay, e, bottom, view, now);
       if (d.overlay && e.enemyId === CORE.enemyId) this.drawCore(d.overlay, e, bottom, view, now);
@@ -142,7 +145,7 @@ export class EnemyView {
       this.frozenUntil.delete(id);
       d.sprite.destroy();
       d.telegraph.destroy();
-      d.bar.destroy();
+      destroyEnemyBar(d.bar);
       d.overlay?.destroy();
       d.ice?.destroy();
       destroyHollowsArt(d.hollows);
@@ -161,7 +164,7 @@ export class EnemyView {
       sprite,
       baseScale: sprite.scaleX,
       telegraph: this.scene.add.graphics().setDepth(DEPTHS.groundFx),
-      bar: this.scene.add.graphics().setDepth(DEPTHS.worldUi),
+      bar: makeEnemyBar(this.scene, e.id),
       hollows: makeHollowsArt(this.scene, enemyDef(e.enemyId)),
     };
     if (e.champion) {
@@ -221,11 +224,14 @@ export class EnemyView {
     g.fillStyle(colorOf(CORE.haloColor), CORE.rest + (CORE.peak - CORE.rest) * pulse).fillCircle(x, y, CORE.halo * k * (1 + CORE.swell * pulse));
   }
 
-  /** What the test hook's `ui()` reads here: the champions (032) and Region 2's four's extras (035). */
-  get ui(): { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown } {
-    const hollowsEnemies: HollowsEnemiesShown = { ripples: 0, flares: 0, lasers: [] };
-    for (const [id, d] of this.drawn) if (this.last.has(id)) shownOf(id, this.last.get(id) as EnemyState, d.hollows, hollowsEnemies);
-    return { champions: this.champions, hollowsEnemies };
+  /** What the test hook's `ui()` reads here: the champions (032), Region 2's four's extras (035) and the bars (054). */
+  get ui(): { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown; enemyBars: EnemyBarShown[] } {
+    const hollowsEnemies: HollowsEnemiesShown = { ripples: 0, flares: 0, lasers: [], waveShades: 0 };
+    for (const [id, d] of this.drawn) {
+      if (this.last.has(id)) shownOf(id, this.last.get(id) as EnemyState, d.hollows, hollowsEnemies);
+      if (d.waveShaded && d.telegraph.visible) hollowsEnemies.waveShades += 1;
+    }
+    return { champions: this.champions, hollowsEnemies, enemyBars: [...this.drawn.values()].map((d) => ({ ...d.bar.shown })) };
   }
 
   /** The champions on show (032), for the test hook. */
@@ -246,18 +252,6 @@ export class EnemyView {
     const kindY = Math.round(top - gap - h - border - L.rise - c.kind.lineHeight);
     c.kind.moveTo(Math.round(e.x - c.kind.width / 2), kindY);
     c.name.moveTo(Math.round(e.x - c.name.width / 2), kindY - L.gap - c.name.lineHeight);
-  }
-
-  /** A small bar over the sprite, only once the enemy has taken damage; a champion's is in its colour (032). */
-  private drawBar(g: GameObjects.Graphics, e: EnemyState, top: number): void {
-    g.clear();
-    const max = defOf(e).maxHealth;
-    if (e.health >= max) return;
-    const { w, h, gap, border } = ENEMY_FX.healthBar;
-    const x = Math.round(e.x - w / 2);
-    const y = Math.round(top - gap - h);
-    g.fillStyle(colorOf(ENEMY_FX.healthBarBack)).fillRect(x - border, y - border, w + 2 * border, h + 2 * border);
-    g.fillStyle(colorOf(e.champion ? CHAMPIONS.barColor : ENEMY_FX.healthBarColor)).fillRect(x, y, Math.max(1, Math.round((w * e.health) / max)), h);
   }
 }
 

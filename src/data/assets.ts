@@ -53,6 +53,8 @@ export const SPRITES = {
   hudHealthGlow: 'hud-health-glow',
   hudShield: 'hud-shield',
   hudWarn: 'hud-warn',
+  /** 054: the small blue shield by an immune enemy's bar. */
+  enemyImmune: 'enemy-immune',
   /** The inventory panel's tablet and title card (031). */
   /** 039: the panel's tablet in two halves, left and right, so each fits a texture page at the largest scale. */
   inventoryTitle: 'inventory-title',
@@ -183,6 +185,11 @@ export const ENEMY_FX = {
   healthBar: { w: 20, h: 3, gap: 2, border: 1 },
   healthBarColor: 'rust',
   healthBarBack: 'ink',
+  /**
+   * 054 (E.1): while nothing can damage it (the sim's immune flag) its bar shows even at full health, its fill in
+   * `color`, with the shield icon (`w` x `h` px) `gap` px left of the bar, centred on it, `depth` over the world's UI.
+   */
+  immuneBar: { color: 'water', icon: { w: 7, h: 8, gap: 1, depth: 0.5 } },
   /** A corpse lingers this long after its death animation, then fades over `corpseFadeMs`. */
   corpseLingerMs: 600,
   corpseFadeMs: 600,
