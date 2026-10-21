@@ -23,6 +23,8 @@ const W = SHRINE_ARENA;
 const rows = (roomId: string): readonly string[] => WORLD[roomId]?.rows ?? [];
 const at = (roomId: string, t: { tx: number; ty: number }): string | undefined => rows(roomId)[t.ty]?.[t.tx];
 const mid = (a: ArenaDef) => a.door.tiles[Math.floor(a.door.tiles.length / 2)] ?? { tx: 0, ty: 0 };
+/** The shrine's floor tile right inside its door's middle, in E's reach. */
+const BY_DOOR = tileCentre({ tx: mid(W).tx, ty: mid(W).ty - 1 });
 
 /** The tutorial with the shrine's guards gone and the player just outside its door. */
 function outsideShrine(open: boolean): SimState {
@@ -52,7 +54,7 @@ function wardenFight(): { s: SimState; warden: NonNullable<SimState['enemies'][n
   expect(arenaLocked(s, W)).toBe(true);
   warden.health = Math.floor(warden.health / 2);
   // Back at the door for E.
-  movePlayer(s, inside.x, inside.y);
+  movePlayer(s, BY_DOOR.x, BY_DOOR.y);
   return { s, warden };
 }
 
@@ -72,14 +74,17 @@ describe('the arenas are walled all round', () => {
       });
     }
 
-    it(`${a.name}: E puts the player on open floor just inside or just outside the door's middle`, () => {
+    it(`${a.name}: E puts the player on open floor inside or just outside the door's middle`, () => {
       const m = mid(a);
       for (const room of a.rooms) {
         expect(WALKABLE).toContain(at(room, a.door.enterTo));
         expect(WALKABLE).toContain(at(room, a.door.leaveTo));
       }
-      expect(Math.abs(a.door.enterTo.ty - m.ty) + Math.abs(a.door.enterTo.tx - m.tx)).toBe(1);
-      expect(Math.abs(a.door.leaveTo.ty - m.ty) + Math.abs(a.door.leaveTo.tx - m.tx)).toBe(1);
+      // North of a door the player stands two tiles off, clear of the door's sprite (it stands over the row above).
+      expect(a.door.enterTo.tx).toBe(m.tx);
+      expect(Math.abs(a.door.enterTo.ty - m.ty)).toBe(a.door.enterTo.ty < m.ty ? 2 : 1);
+      expect(a.door.leaveTo.tx).toBe(m.tx);
+      expect(Math.abs(a.door.leaveTo.ty - m.ty)).toBe(a.door.leaveTo.ty < m.ty ? 2 : 1);
       const c = (t: { tx: number; ty: number }) => tileCentre(t);
       expect(insideTiles(a.inside, c(a.door.enterTo).x, c(a.door.enterTo).y)).toBe(true);
       expect(insideTiles(a.inside, c(a.door.leaveTo).x, c(a.door.leaveTo).y)).toBe(false);
@@ -153,10 +158,18 @@ describe("the Warden's door", () => {
     expect(arenaLocked(s, W)).toBe(false);
   });
 
+  it('from the go-in tile, the door is out of reach: E there does nothing', () => {
+    const s = outsideShrine(true);
+    run(s, 1, { interact: true });
+    const at = { x: s.player.x, y: s.player.y };
+    run(s, 1, { interact: true });
+    expect({ x: s.player.x, y: s.player.y }).toEqual(at);
+    expect(s.events.arenaLeaves).toEqual([]);
+  });
+
   it('inside, E leaves even while the door is sealed (leaving needs no unlock)', () => {
     const s = outsideShrine(false);
-    const inside = tileCentre(W.door.enterTo);
-    movePlayer(s, inside.x, inside.y);
+    movePlayer(s, BY_DOOR.x, BY_DOOR.y);
     expect(interactTarget(s)?.kind).toBe('arena-door');
     run(s, 1, { interact: true });
     expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre(W.door.leaveTo));
@@ -166,7 +179,7 @@ describe("the Warden's door", () => {
     const go = (): string => {
       const { s } = wardenFight();
       run(s, 200, (st) => ({ moveX: st.tick % 60 < 30 ? 1 : -1, use: true, aimX: st.player.x, aimY: st.player.y - 120 }));
-      movePlayer(s, tileCentre(W.door.enterTo).x, tileCentre(W.door.enterTo).y);
+      movePlayer(s, BY_DOOR.x, BY_DOOR.y);
       run(s, 1, { interact: true });
       run(s, 60);
       const sum = summarize(s);
@@ -182,7 +195,8 @@ describe("the forum's door in the sandbox (044)", () => {
     expect(s.roomId).toBe(SANDBOX_ROOM);
     expect(s.gates.hollows).toBe(false);
     expect(doorUnlocked(s, FORUM_ARENA, SANDBOX_ROOM)).toBe(true);
-    const out = tileCentre(FORUM_ARENA.door.leaveTo);
+    // Just outside the door's middle (north of it), in E's reach.
+    const out = tileCentre({ tx: mid(FORUM_ARENA).tx, ty: mid(FORUM_ARENA).ty - 1 });
     movePlayer(s, out.x, out.y);
     run(s, 1, { interact: true });
     expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre(FORUM_ARENA.door.enterTo));

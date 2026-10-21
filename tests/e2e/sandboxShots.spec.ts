@@ -43,7 +43,7 @@ test.describe('review screenshots (044)', () => {
     await standAt(page, WARDEN_ARENA.start.tx, WARDEN_ARENA.bounds.y0 + 3);
     await page.screenshot({ path: `${SHOTS}/03-warden-arena.png` });
     // Inside the Sunken Forum (055: E at its door): the Bulwark wakes and the seal shuts behind the player (043).
-    await standAt(page, HOLLOWS.arena.door.leaveTo.tx, HOLLOWS.arena.door.leaveTo.ty);
+    await standAt(page, HOLLOWS.arena.door.leaveTo.tx, HOLLOWS.arena.door.leaveTo.ty + 1);
     await page.evaluate(() => window.__GAME__?.step(1, { interact: true }));
     await standAt(page, HOLLOWS.arena.start.tx, HOLLOWS.arena.bounds.y0 + 2);
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().arenaDoors.find((d) => d.id === 'sunken-forum')))?.seal).toBe('shut');

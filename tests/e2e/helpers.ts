@@ -293,17 +293,20 @@ export async function boot(page: Page, query = '?start=field'): Promise<void> {
 }
 
 /**
- * 055: walks to just outside a boss arena's door (its `leaveTo` tile) and presses E there, going in; fails if the door
- * didn't open.
+ * 055: walks to the floor just outside a boss arena's door (by its `leaveTo` tile, then up to the door's middle) and
+ * presses E there, going in; fails if the door didn't open.
  */
-export async function enterArena(page: Page, leaveTo: { tx: number; ty: number }): Promise<void> {
-  await page.evaluate((t) => {
+export async function enterArena(page: Page, door: { tiles: readonly { tx: number; ty: number }[]; leaveTo: { tx: number; ty: number } }): Promise<void> {
+  const mid = door.tiles[Math.floor(door.tiles.length / 2)] ?? door.leaveTo;
+  const by = { tx: mid.tx, ty: mid.ty + Math.sign(door.leaveTo.ty - mid.ty) };
+  await page.evaluate(([out, t]) => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
+    h.walkTo((out.tx + 0.5) * 32, (out.ty + 0.5) * 32);
     h.walkTo((t.tx + 0.5) * 32, (t.ty + 0.5) * 32);
     if (g.step(1, { interact: true }).events.arenaEnters.length === 0) throw new Error(`the door by ${t.tx},${t.ty} did not open`);
-  }, leaveTo);
+  }, [door.leaveTo, by] as const);
 }
 
 /** Waits until the camera, easing after the player in real time, has come to rest (`timeout` ms: a long ease under load needs more). */

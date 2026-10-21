@@ -120,7 +120,8 @@ export const HOLLOWS = {
     door: {
       tiles: FORUM_DOOR,
       enterTo: { tx: fx(12), ty: FORUM_BOUNDS.y0 + 1 },
-      leaveTo: { tx: fx(12), ty: FORUM_BOUNDS.y0 - 1 },
+      // Two tiles out, clear of the door's sprite standing over the row above it (src/data/arenas.ts).
+      leaveTo: { tx: fx(12), ty: FORUM_BOUNDS.y0 - 2 },
       /** The altar's reach (same E distance as the arena's other interactable). */
       reach: ALTAR_REACH,
       unlock: 'hollows',

@@ -40,7 +40,7 @@ describe('the lock', () => {
   it('has its door across the forum way in, and a leave tile just outside it, in data', () => {
     expect(SEAL.length).toBeGreaterThan(0);
     for (const t of SEAL) expect(t.ty).toBe(A.bounds.y0);
-    expect(A.door.leaveTo.ty).toBe(SEAL_ROW - 1);
+    expect(A.door.leaveTo.ty).toBe(SEAL_ROW - 2);
     const room = WORLD[OVERWORLD_ROOM];
     expect(room?.rows[A.door.leaveTo.ty]?.[A.door.leaveTo.tx]).not.toBeUndefined();
   });

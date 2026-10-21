@@ -37,7 +37,7 @@ test("?playtest: E at the shrine's door goes in, the Warden's fight locks it, an
     // Round the start stone onto the north-east road (053), as claiming.spec does.
     h.walkTo((41.5 + h.ox) * 32, g.getState().player.y);
   }, W.boss);
-  await enterArena(page, W.door.leaveTo);
+  await enterArena(page, W.door);
   const inside = await page.evaluate((boss) => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
@@ -55,13 +55,13 @@ test("?playtest: E at the shrine's door goes in, the Warden's fight locks it, an
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().arenaDoors.find((d) => d.id === 'shrine')))?.seal).toBe('shut');
 
   // Back to the door and E: out, and the Warden is reset.
-  const out = await page.evaluate((enter) => {
+  const out = await page.evaluate((door) => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
-    h.walkTo((enter.tx + 0.5) * 32, (enter.ty + 0.5) * 32);
+    h.walkTo((door.tx + 0.5) * 32, (door.ty - 0.5) * 32);
     return g.step(1, { interact: true });
-  }, W.door.enterTo);
+  }, W.door.tiles[1] ?? W.door.leaveTo);
   expect(out.events.arenaLeaves).toEqual([{ arena: 'shrine' }]);
   expect(out.player.y).toBeGreaterThan((W.door.leaveTo.ty) * 32);
   expect(out.enemies.find((e) => e.enemyId === W.boss)).toMatchObject({ health: MAX, mode: 'idle' });

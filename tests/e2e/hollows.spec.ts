@@ -96,7 +96,7 @@ test('?start=hollows: the shield blocks arrows into its front; from behind they 
   const errors = watchErrors(page);
   await boot(page, '?start=hollows');
   await quiet(page, ['bulwark']);
-  await enterArena(page, A.door.leaveTo);
+  await enterArena(page, A.door);
   await walk(page, [[A.start.tx, A.start.ty + 3]]);
 
   // From the front: once it has turned to face the player, every arrow is blocked.

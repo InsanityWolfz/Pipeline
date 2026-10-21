@@ -12,9 +12,12 @@ import type { TilePos, TileRect } from './tiles';
 /** An arena's door: tiles in its wall (TILE.arenaDoor, solid to feet and shots) and where E puts the player. */
 export interface ArenaDoor {
   readonly tiles: readonly TilePos[];
-  /** The floor tile just inside the door's middle: E from outside stands the player here. */
+  /**
+   * The floor tile inside, by the door's middle: E from outside stands the player here. Inside a door in a south wall,
+   * two tiles in, clear of the door's sprite standing over the row above it.
+   */
   readonly enterTo: TilePos;
-  /** The floor tile just outside it: E from inside stands the player here. */
+  /** The floor tile outside, by the door's middle: E from inside stands the player here (two tiles out north of the door). */
   readonly leaveTo: TilePos;
   /** How close the player's feet box must be to a door tile for E, px. */
   readonly reach: number;
@@ -50,7 +53,7 @@ export const SHRINE_ARENA: ArenaDef = {
   inside: SHRINE_INSIDE,
   door: {
     tiles: SHRINE_DOOR,
-    enterTo: { tx: SHRINE_DOOR_MID.tx, ty: SHRINE_DOOR_MID.ty - 1 },
+    enterTo: { tx: SHRINE_DOOR_MID.tx, ty: SHRINE_DOOR_MID.ty - 2 },
     leaveTo: { tx: SHRINE_DOOR_MID.tx, ty: SHRINE_DOOR_MID.ty + 1 },
     reach: HOLLOWS.arena.door.reach,
     // 012's shrine gate: open once the first line fills the tube (see the spec's 055.3).

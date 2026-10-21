@@ -68,7 +68,7 @@ async function bannersGone(page: Page): Promise<void> {
 async function forum(page: Page, dy: number): Promise<void> {
   await boot(page, '?start=hollows');
   await quiet(page, ['bulwark']);
-  await enterArena(page, A.door.leaveTo);
+  await enterArena(page, A.door);
   await walk(page, [[A.start.tx, A.start.ty + dy]]);
   await bannersGone(page);
 }
@@ -237,7 +237,7 @@ test.describe('review screenshots (034)', () => {
     test.setTimeout(150_000);
     await boot(page, '?start=hollows');
     await quiet(page, ['bulwark']);
-    await enterArena(page, A.door.leaveTo);
+    await enterArena(page, A.door);
     await walk(page, [[A.altar.tx + 2, A.altar.ty + 1]]);
     await bannersGone(page);
     await cameraSettled(page, 20_000);

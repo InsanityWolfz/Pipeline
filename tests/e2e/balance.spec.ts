@@ -20,6 +20,7 @@ async function forum(page: Page, dy: number): Promise<number> {
       g.step(1);
       // 055: E at the forum's door goes in.
       h.walkTo((lx + 0.5) * 32, (ly + 0.5) * 32);
+      h.walkTo((lx + 0.5) * 32, (ly + 1.5) * 32);
       if (g.step(1, { interact: true }).events.arenaEnters.length === 0) throw new Error('the forum door did not open');
       h.walkTo((tx + 0.5) * 32, (ty + 0.5) * 32);
       for (let t = 0; t < 120 && !g.getState().bosses[0]?.engaged; t++) g.step(1);

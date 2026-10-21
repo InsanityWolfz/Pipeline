@@ -216,6 +216,12 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     }
     g.step(1, { interact: true });
     g.step(130);
+    // The example line runs dry as the tube's arrows are spent (046). 055: fought inside the shrine's walls, the
+    // Warden's fight can end before it has; the player fires the rest off at the open floor before heading home.
+    for (let t = 0; t < 6000 && !g.getState().lineRanDry; t++) {
+      const p = g.getState().player;
+      g.step(1, { fire: true, aimX: p.x, aimY: p.y - 96 });
+    }
   }, T);
   // The shrine's pylon is claimed; the example line ran dry through the fights (046), so its refill goal, earlier in
   // the chain, now shows ahead of the next.

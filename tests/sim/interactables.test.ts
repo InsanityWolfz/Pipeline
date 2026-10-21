@@ -155,7 +155,7 @@ describe('the in-reach E prompts (045)', () => {
     s.enemies = [];
     expect(interactTarget(s)).toEqual(prompt);
     // Outside a sealed door there's nothing to press (its hover says what opens it).
-    const out = tileCentre(HOLLOWS.arena.door.leaveTo);
+    const out = tileCentre({ tx: HOLLOWS.arena.door.leaveTo.tx, ty: (tiles[0]?.ty ?? 0) - 1 });
     movePlayer(s, out.x, out.y);
     s.gates.hollows = false;
     expect(interactTarget(s)).toBeNull();

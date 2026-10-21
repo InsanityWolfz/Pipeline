@@ -3,7 +3,7 @@ import { TILE_SIZE } from '../data/config';
 import { portPlate } from '../data/descriptions';
 import { FOUNDRY_LAYOUT, PORT_LOOK } from '../data/foundryAssets';
 import { itemDef } from '../data/items';
-import { FOUNDRY_ROOM } from '../data/rooms';
+import { FOUNDRY_ROOM, STATIC_ROOMS, TILE } from '../data/rooms';
 import { portPerMinute, pylonsOf } from '../sim/claims';
 import { fixtureDef } from '../sim/fixtures';
 import type { SimState } from '../sim/state';
@@ -54,7 +54,8 @@ export class PortView {
       const text = portPlate(pylons, portPerMinute(pylons));
       // A fixture standing right below this port (034's wood port under ley-iron, 049's resin port under ley crystal and
       // the bench under it) would hide the plate, which lies on its tile: the plate moves one tile into the room.
-      const under = this.occupied(sim).has(`${def.tx},${def.ty + 1}`);
+      // 055: as does a wall below (the rimestone port's, in the room's south-west corner).
+      const under = this.occupied(sim).has(`${def.tx},${def.ty + 1}`) || STATIC_ROOMS[FOUNDRY_ROOM]?.rows[def.ty + 1]?.[def.tx] === TILE.wall;
       if (text !== parts.shown || under !== parts.under) this.drawPlate(parts, text, def, under);
       for (const o of [parts.icon, parts.plate, parts.text]) o.setVisible(true);
       this.shown.push({ raw: def.raw, icon: itemDef(def.raw).icon, plate: text });
