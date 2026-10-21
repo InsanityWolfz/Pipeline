@@ -29,7 +29,6 @@ describe('the stash screen', () => {
     expect([s.inventory.wood, s.stash.wood]).toEqual([44, 26]);
     run(s, 1, { stashPut: { itemId: 'arrow', amount: 'all', stack: 9 } });
     expect([s.inventory.arrow ?? 0, s.stash.arrow]).toEqual([0, 9]);
-    expect(s.events.stashPuts).toEqual([{ items: { arrow: 9 } }]);
     run(s, 1, { takeStash: { itemId: 'wood', amount: 'one' } });
     expect([s.inventory.wood, s.stash.wood]).toEqual([45, 25]);
     run(s, 1, { takeStash: { itemId: 'wood', amount: 'half', stack: 25 } });
@@ -38,7 +37,6 @@ describe('the stash screen', () => {
     expect(s.inventory.arrow).toBe(9);
     // An emptied kind leaves the stash.
     expect(s.stash).toEqual({ wood: 12 });
-    expect(s.events.stashTakes).toEqual([{ items: { arrow: 9 } }]);
   });
 
   it('has no practical limit', () => {

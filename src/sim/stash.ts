@@ -18,15 +18,12 @@ function move(from: Inventory, to: Inventory, itemId: string, n: number): Invent
 /** Takes from the stash: a click's amount of a kind, all of a kind with no amount, or everything for a null item. */
 function takeStash(state: SimState, take: NonNullable<Command['takeStash']>): void {
   const ids = take.itemId === null ? Object.keys(state.stash) : [take.itemId];
-  const items: Inventory = {};
   for (const id of ids) {
     const have = count(state.stash, id);
     const n = take.amount === undefined ? have : fromStack(take.amount, have, take.stack);
     if (n <= 0) continue;
     state.stash = move(state.stash, state.inventory, id, n);
-    items[id] = n;
   }
-  if (Object.keys(items).length > 0) state.events.stashTakes.push({ items });
 }
 
 /** Puts a click's amount of a held kind into the stash. */
@@ -34,7 +31,6 @@ function putStash(state: SimState, put: NonNullable<Command['stashPut']>): void 
   const n = fromStack(put.amount, count(state.inventory, put.itemId), put.stack);
   if (n <= 0) return;
   state.inventory = move(state.inventory, state.stash, put.itemId, n);
-  state.events.stashPuts.push({ items: { [put.itemId]: n } });
 }
 
 /** The stash screen's moves, standing at the stash. */

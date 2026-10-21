@@ -168,8 +168,6 @@
     "state.events.snipes: array",
     "state.events.splits: array",
     "state.events.stashDeposits: array",
-    "state.events.stashPuts: array",
-    "state.events.stashTakes: array",
     "state.events.stomps: array",
     "state.events.stuns: array",
     "state.events.summons: array",
