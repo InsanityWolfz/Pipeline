@@ -1,13 +1,11 @@
 import type { Scene } from 'phaser';
 import { SITE_ICONS } from '../data/foundryAssets';
-import { ITEMS } from '../data/items';
 import { claimedPylonInReach, claimedPylons, fixtureInReach } from '../sim/claims';
 import type { SimState } from '../sim/state';
 import { ChoiceMenu, type Choice } from './ChoiceMenu';
 import type { Controls } from './controls';
 import { RestorePanel } from './RestorePanel';
 import { diagramInReach } from '../sim/research';
-import { shownItem } from './itemShown';
 import { GearPanel } from './GearPanel';
 import { altarInReach, altarState } from '../sim/altar';
 import { offeringModel } from './altarPanel';
@@ -21,19 +19,16 @@ export type SiteUiState = Pick<UiState, 'siteOpen' | 'waystone' | 'restorePanel'
 
 /** The site menus' part of `ui()` before the scene has built them. */
 export const NO_SITE_UI: SiteUiState = { siteOpen: false, waystone: null, restorePanel: null, altarPanel: null, gearPanel: null };
-/** A stash row: one item's stack, or null for everything. */
-type StashChoice = { itemId: string | null };
 /** A waystone row (032): the claimed site to travel to. */
 type WaystoneChoice = { site: string };
 
-// The claimed pylon's menu (send the haul home, travel to the foundry), the waystone's
-// (travel to any claimed pylon, by landmark name, 032) and the
-// stash's (take all, or one stack), opened by E beside them (009), and the
+// The claimed pylon's menu (send the haul home, travel to the foundry) and the waystone's
+// (travel to any claimed pylon, by landmark name, 032), opened by E beside them (009; 052:
+// the stash's screen is the grid panel's, which the router opens), and the
 // identification bench's gear panel (036: identify all, wear or take off a piece per
 // slot).
 export class SiteMenus {
   private readonly pylon: ChoiceMenu<PylonChoice>;
-  private readonly stash: ChoiceMenu<StashChoice>;
   private readonly bench: GearPanel;
   private readonly waystone: ChoiceMenu<WaystoneChoice>;
   /** The restore panel (033), opened by E at a diagram in the foundry. */
@@ -43,7 +38,6 @@ export class SiteMenus {
 
   constructor(scene: Scene) {
     this.pylon = new ChoiceMenu(scene);
-    this.stash = new ChoiceMenu(scene);
     this.bench = new GearPanel(scene);
     this.waystone = new ChoiceMenu(scene);
     this.restore = new RestorePanel(scene);
@@ -51,7 +45,7 @@ export class SiteMenus {
   }
 
   private get menus(): readonly ChoiceMenu<unknown>[] {
-    return [this.pylon, this.stash, this.waystone];
+    return [this.pylon, this.waystone];
   }
 
   get isOpen(): boolean {
@@ -105,8 +99,11 @@ export class SiteMenus {
     return true;
   }
 
-  /** E was pressed: opens a diagram's restore panel (033), or the menu of a claimed pylon, the stash or the bench in reach. */
-  interact(sim: SimState): void {
+  /**
+   * E was pressed: opens a diagram's restore panel (033), or the menu of a claimed pylon or the bench in reach. At the
+   * stash it returns 'stash' for the router to open the stash's screen (052).
+   */
+  interact(sim: SimState): 'stash' | null {
     const diagram = diagramInReach(sim);
     const altar = altarInReach(sim);
     if (diagram) this.restore.open(diagram.node);
@@ -115,14 +112,14 @@ export class SiteMenus {
     else if (claimedPylonInReach(sim)) this.pylon.open();
     // With two or more claimed pylons, the waystone offers them by landmark name (032); with one, the sim travels.
     else if (fixtureInReach(sim, 'waystone') && claimedPylons(sim).length >= 2) this.waystone.open();
-    else if (fixtureInReach(sim, 'stash')) this.stash.open();
+    else if (fixtureInReach(sim, 'stash')) return 'stash';
     else if (fixtureInReach(sim, 'bench') && !this.bench.isOpen) this.bench.open();
+    return null;
   }
 
   /** A click on a row sends its choice for the next tick. Returns whether it hit a row. */
   click(controls: Controls, x: number, y: number): boolean {
     const p = this.pylon.valueAt(x, y);
-    const s = this.stash.valueAt(x, y);
     const gear = this.bench.click(x, y);
     const w = this.waystone.valueAt(x, y);
     const restore = this.restore.restoreAt(x, y);
@@ -147,7 +144,6 @@ export class SiteMenus {
     }
     if (w) controls.menus.travel(w.site);
     else if (p) controls.menus.pylon(p);
-    else if (s) controls.menus.takeStash(s.itemId);
     else return false;
     for (const m of this.menus) m.flashAt(x, y);
     this.close();
@@ -162,23 +158,12 @@ export class SiteMenus {
     if (this.offering.isOpen && altarInReach(sim)?.id !== this.offering.nodeId) this.offering.close();
     this.offering.update(sim);
     if (this.pylon.isOpen && !claimedPylonInReach(sim)) this.pylon.close();
-    if (this.stash.isOpen && !fixtureInReach(sim, 'stash')) this.stash.close();
     const held = Object.values(sim.inventory).reduce((a, b) => a + b, 0);
     const pylonRows: Choice<PylonChoice>[] = [
       { icons: [SITE_ICONS.stash], text: `Send haul home (${held})`, value: 'deposit' },
       { icons: [SITE_ICONS.travel], text: 'Travel to foundry', value: 'travel' },
     ];
     this.pylon.show(pylonRows);
-    const stacks = Object.keys(ITEMS).filter((id) => (sim.stash[id] ?? 0) > 0);
-    const total = stacks.reduce((n, id) => n + (sim.stash[id] ?? 0), 0);
-    const stashRows: Choice<StashChoice>[] =
-      total > 0
-        ? [
-            { icons: [SITE_ICONS.stash], text: `Take all (${total})`, value: { itemId: null } },
-            ...stacks.map((id) => ({ icons: [shownItem(sim, id).icon], text: `${shownItem(sim, id).name} ${sim.stash[id] ?? 0}`, value: { itemId: id } })),
-          ]
-        : [];
-    this.stash.show(stashRows);
     if (this.bench.isOpen && !fixtureInReach(sim, 'bench')) this.bench.close();
     // 047: the bench's Stages panel is gone; tagged rounds are crafted in the crafting menu (C).
     this.bench.update(sim);

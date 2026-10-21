@@ -98,6 +98,12 @@ export const INVENTORY_GRID = {
   scroll: { w: 3, gap: 4, track: 'ink', thumb: 'brass', trackAlpha: 0.5, minThumb: 4 },
   /** A hopper's or crate's own slots: a header `headerH` tall (its name), one row of `cols` cells, `gap` above the grid's toolbar. */
   container: { headerH: 10, nameY: 1, cols: 8, gap: 4 },
+  /**
+   * 052: the stash's screen. Its title card reads `title`; the stash's own grid sits on top, `rows` of the grid's
+   * columns scrolling by rows with no limit, under a header `headerH` tall naming it `name`, `gap` above the inventory's
+   * toolbar (which names it `invName`). The inventory shows `invRows` and no footer, so both fit over the HUD.
+   */
+  stash: { title: 'Stash', name: 'Stash', invName: 'Inventory', rows: 3, invRows: 4, headerH: 10, nameY: 1, gap: 4 },
   footer: {
     gap: 3,
     lineHeight: 9,
@@ -118,21 +124,26 @@ export const sparesText = (n: number): string => `${n} spare piece${n === 1 ? ''
 /** The schematics' shared slot (033): "Schematics" while it holds several known kinds or known and unknown together. */
 export const SCHEMATICS_LABEL = 'Schematics';
 
-/** The grid's size, px: its columns and rows of cells. */
-export function gridSize(): { w: number; h: number } {
+/** The grid's size, px: its columns and `rows` rows of cells (the inventory's 5 unless told). */
+export function gridSize(rows: number = INVENTORY_GRID.rows): { w: number; h: number } {
   const G = INVENTORY_GRID;
-  return { w: (G.cols - 1) * G.cell.stepX + G.cell.w, h: (G.rows - 1) * G.cell.stepY + G.cell.h };
+  return { w: (G.cols - 1) * G.cell.stepX + G.cell.w, h: (rows - 1) * G.cell.stepY + G.cell.h };
 }
+
+/** What the grid panel shows (047, 052): the plain inventory, a hopper's or crate's screen, or the stash's. */
+export type GridMode = 'bag' | 'container' | 'stash';
 
 /** The footer's lines (047): the at-risk rule's lines, then the gear line. */
 export const FOOTER_LINES = INVENTORY_GRID.footer.text.length + 1;
 
-/** The panel's size (047), with a container's slots on top or not. */
-export function inventoryPanelSize(container = false): { w: number; h: number } {
+/** The panel's size (047): a container's row on top, the stash's grid on top (052, and a shorter inventory with no footer), or neither. */
+export function inventoryPanelSize(mode: GridMode = 'bag'): { w: number; h: number } {
   const G = INVENTORY_GRID;
-  const grid = gridSize();
-  const top = container ? G.container.headerH + G.cell.h + G.container.gap : 0;
-  const footer = G.footer.gap + FOOTER_LINES * G.footer.lineHeight;
+  const S = G.stash;
+  const stash = mode === 'stash';
+  const grid = gridSize(stash ? S.invRows : G.rows);
+  const top = mode === 'container' ? G.container.headerH + G.cell.h + G.container.gap : stash ? S.headerH + gridSize(S.rows).h + S.gap : 0;
+  const footer = stash ? 0 : G.footer.gap + FOOTER_LINES * G.footer.lineHeight;
   return { w: 2 * G.pad + grid.w + G.scroll.gap + G.scroll.w, h: 2 * G.pad + top + G.toolbar.h + G.toolbar.gap + grid.h + footer };
 }
 

@@ -54,12 +54,12 @@ describe('inventory panel groups (031)', () => {
     expect(ITEMS['warden-core']?.kind).toBe('part');
   });
 
-  it('the grid shows 8×5 slots (047.2), each the HUD\'s cell, and the panel with a hopper\'s row fits the view', () => {
+  it('the grid shows 8×5 slots (047.2), each the HUD\'s cell, and the panel with a hopper\'s row or the stash\'s grid (052) fits the view', () => {
     const G = INVENTORY_GRID;
     expect([G.cols, G.rows]).toEqual([8, 5]);
     expect(gridSize()).toEqual({ w: 7 * G.cell.stepX + G.cell.w, h: 4 * G.cell.stepY + G.cell.h });
-    for (const container of [false, true]) {
-      const { w, h } = inventoryPanelSize(container);
+    for (const mode of ['bag', 'container', 'stash'] as const) {
+      const { w, h } = inventoryPanelSize(mode);
       expect(w).toBeLessThanOrEqual(VIEW_WIDTH - 2 * HUD_LAYOUT.margin);
       expect(h + G.title.gap + G.title.h).toBeLessThanOrEqual(VIEW_HEIGHT - 2 * HUD_LAYOUT.margin);
     }
