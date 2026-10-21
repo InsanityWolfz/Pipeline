@@ -109,6 +109,8 @@ export interface SimEvents {
   stashDeposits: { items: Record<string, number> }[];
   /** Items came out of the stash. */
   stashTakes: { items: Record<string, number> }[];
+  /** Items went into the stash from its screen (052). */
+  stashPuts: { items: Record<string, number> }[];
   /** A claimed site's supply port produced a raw (018): the render shows it harvested and sent home along the ley line. */
   supplies: { id: string; itemId: string }[];
   /** A piece took a raw from a supply port (028). */
@@ -226,6 +228,7 @@ export function createEvents(): SimEvents {
     cacheOpens: [],
     stashDeposits: [],
     stashTakes: [],
+    stashPuts: [],
     supplies: [],
     portDeliveries: [],
     travels: [],

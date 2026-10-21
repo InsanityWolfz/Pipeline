@@ -53,7 +53,7 @@ export function amountOf(amount: HopperAmount, n: number): number {
 }
 
 /** How many a click moves from a stack of `stack` items (047) with `have` in all: one, half or the stack, never more than there are. */
-const fromStack = (amount: HopperAmount, have: number, stack: number | undefined): number => amountOf(amount, Math.min(have, stack ?? have));
+export const fromStack = (amount: HopperAmount, have: number, stack: number | undefined): number => amountOf(amount, Math.min(have, stack ?? have));
 
 /** A crate's total, over every kind it holds. */
 const crateTotal = (c: CrateState): number => Object.values(c.contents).reduce((n, k) => n + k, 0);

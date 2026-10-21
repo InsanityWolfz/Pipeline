@@ -57,8 +57,14 @@ export interface Command {
   pylon: 'deposit' | 'travel' | null;
   /** The waystone menu's choice (032): the claimed site to travel to, standing at the waystone, this tick (an edge), or null. */
   travel: string | null;
-  /** Take a stack (or everything, for a null item) out of the stash this tick (an edge), or null. */
-  takeStash: { itemId: string | null } | null;
+  /**
+   * Take some of a kind out of the stash, standing at it, this tick (an edge), or null: by `amount` (052: the stash
+   * screen's click, one, half or the stack) of the clicked stack's `stack` items; with no amount, all of the kind; a null
+   * item takes everything.
+   */
+  takeStash: { itemId: string | null; amount?: HopperAmount; stack?: number } | null;
+  /** Put some of a held kind into the stash, standing at it, this tick (an edge, 052: the stash screen's click), or null; amounts as `takeStash`'s. */
+  stashPut: { itemId: string; amount: HopperAmount; stack?: number } | null;
   /** Identify every carried piece at the bench this tick (an edge). */
   identify: boolean;
   /** At the bench this tick (an edge, 036): wear a piece by id (the worn one comes off), or take a slot off with `{ slot, id: null }`; null for no change. */
@@ -96,6 +102,7 @@ export const NO_COMMAND: Readonly<Command> = {
   pylon: null,
   travel: null,
   takeStash: null,
+  stashPut: null,
   identify: false,
   equip: null,
   restore: null,

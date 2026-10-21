@@ -16,6 +16,7 @@ import type { RoomBodies } from './enemies';
 import { clearEvents } from './events';
 import { offerFromOutside, stepFoundry } from './flow';
 import { stepFoundryUse } from './foundryUse';
+import { stepStash } from './stash';
 import { stepHarvest } from './harvest';
 import { stepLink } from './link';
 import { checkKo } from './health';
@@ -117,6 +118,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   rampOverpressure(state, cmd);
   stepBuild(state, cmd);
   stepFoundryUse(state, cmd);
+  stepStash(state, cmd);
   stepFoundry(state.foundry, state.link.entrances, state.events, state.link.attuned, { cap: entranceCap(state), speed: machineSpeed(state) });
   stepPorts(state, (to, from, item) => offerFromOutside(state.foundry, to, from, item));
   stepPickups(state);
