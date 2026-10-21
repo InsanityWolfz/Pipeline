@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: 057 drafted
+**Changed:** drafted 057 (the sandbox panels as click-open pop-outs) from Shaun's sandbox playtest of 056.
+
+**Next:** Shaun approves 057; then build.
+
 ## 2026-10-21: 056 merged
 **Changed:** Shaun merged 056 (the sandbox's controls always on screen: the loadout and a key list in a left strip, the spawn column on the right), InsanityWolfz/Pipeline#53.
 
