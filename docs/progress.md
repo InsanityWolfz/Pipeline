@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: Bug: the sandbox panel's − onto Empty
+**Changed:** on `claude/fix-sandbox-minus`, the sandbox loadout panel's "−" now steps an entrance onto Empty (and "+" wraps onto it); render's `cycle` treated the null Empty choice as a miss and kept the current round. Render only; the sim's loadout command was already right. New unit and e2e tests. `npm run check` passes; sandbox.spec.ts and sandboxShots.spec.ts pass.
+
+**Next:** Shaun merges the PR.
+
 ## 2026-10-21: 053 merged
 **Changed:** Shaun merged 053 (the round world: Region 1 a disc round the foundry, the Hollows a ring round it, one road network, ley lines carrying icons, the foundry gatehouse), InsanityWolfz/Pipeline#47.
 

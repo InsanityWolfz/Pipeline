@@ -93,4 +93,4 @@ Fixes to built behaviour that need no design. Each goes on its own branch and PR
 - Fixed in 047 (the grid replaced the panel): the inventory panel's Wood row drew "3 at risk" over "home 5" (found in review of 045, 045.11; on main since 031). 047 replaces the panel with the grid inventory, so check it there.
 - The Stages panel showed "0/4 arrows" while the player had arrows in an intake entrance and in the inventory (Shaun, 2026-10-20). Fixed in InsanityWolfz/Pipeline#27: the panel counts carried rounds plus the intake entrances (Shaun chose option A, 2026-10-20).
 - 037's Shatterpoint review shot is broken on main (found in 054's review); retake or fix the shot's staging.
-- The sandbox loadout panel's "−" button (setRound) may not cycle an entrance's ammo backwards (found in 054's review); check and fix.
+- Fixed on `claude/fix-sandbox-minus`: the sandbox loadout panel's "−" never stepped an entrance onto Empty (and "+" never wrapped onto it), found in 054's review. The panel's `cycle` fell back on the current round with `??`, and Empty is a null choice; other steps worked. A unit test and an e2e test (sandbox.spec.ts) step it backwards past Empty.
