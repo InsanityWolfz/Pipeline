@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: 055 merged
+**Changed:** Shaun merged 055 (boss doors and the rimestone pylon: both arenas walled with a door, E in and out, the Frozen Grotto's rimestone pylon), InsanityWolfz/Pipeline#48.
+
+**Next:** the small fixes (sandbox minus button, 037's Shatterpoint shot, older review shots), then a full-loop playtest and its interview.
+
 ## 2026-10-21: 053 merged
 **Changed:** Shaun merged 053 (the round world: Region 1 a disc round the foundry, the Hollows a ring round it, one road network, ley lines carrying icons, the foundry gatehouse), InsanityWolfz/Pipeline#47.
 

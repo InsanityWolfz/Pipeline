@@ -1,5 +1,5 @@
 # 055: Boss doors and the rimestone pylon
-status: approved
+status: done
 
 Approved on draft by Shaun in chat, 2026-10-21 ("approve 053-055"): the build follows the proposals in the open questions (053.1's design.md line included).
 
@@ -56,3 +56,6 @@ The build's own choices where the spec didn't decide, each with the conservative
 
 ## Shaun's answers (2026-10-21)
 - **055.3:** "just do Sealed: Discover the Foundry since the first line should already be working". The door keeps 012's shrine gate as its unlock; its hint reads "Sealed: discover the Foundry".
+
+## Shaun's merge (2026-10-21)
+- Shaun said "merge 48" after playing the preview. He changed none of the raised items, so they stand as built.
