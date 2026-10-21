@@ -234,6 +234,8 @@ export interface UiState {
   flow: FlowUi;
   /** 044: the Sandbox panel as drawn (056: shown, its rows with their boxes, the key list and its tablets), or null outside the sandbox. */
   sandbox: SandboxPanelState | null;
+  /** 056: whether any of the sandbox controls' objects is on screen, read from the objects themselves (never outside the sandbox). */
+  sandboxDrawn: boolean;
 }
 
 /** ui() without the flow's part: what a GameScene reports. */

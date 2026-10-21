@@ -171,8 +171,11 @@ export class GameScene extends Scene {
         releaseUi: (x, y) => void (this.host.covered || this.router?.release(controls, x, y)),
       });
       this.pause?.setOpen(this.host.paused);
-      if (this.host.covered) controls.drain();
-      else this.router?.handle(controls);
+      if (this.host.covered) {
+        controls.drain();
+        // 056.10: under a flow screen the sandbox's controls step aside; the router brings them back after.
+        this.sandboxPanel?.setCovered(true);
+      } else this.router?.handle(controls);
       if (!this.host.stepping) {
         // The world is paused (Esc, or a flow screen, 042): no ticks run, and no time is banked to catch up on later.
         controls.discardPending();

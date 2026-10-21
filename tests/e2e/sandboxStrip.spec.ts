@@ -50,6 +50,15 @@ test('?sandbox shows both columns and the key list on load, and a row still work
   await clickPanel(page, 'god');
   await expect.poll(() => page.evaluate(() => window.__GAME__?.getState().god)).toBe(true);
   expect(await page.evaluate(() => window.__GAME__?.flow().state)).toBe('play');
+  // Esc pauses with the strips up (they step aside under the pause menu, 056.10); Esc again resumes back to them.
+  await page.keyboard.press('Escape');
+  await flowIs(page, 'paused');
+  await expect.poll(() => controlsShown(page)).toBe(false);
+  await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().sandboxDrawn)).toBe(false);
+  await page.keyboard.press('Escape');
+  await flowIs(page, 'play');
+  await expect.poll(() => controlsShown(page)).toBe(true);
+  expect(await page.evaluate(() => window.__GAME__?.ui().sandboxDrawn)).toBe(true);
   // 056.1: the key hides both strips and shows them again.
   await hidePanel(page);
   expect((await ui(page))?.rows).toEqual([]);
@@ -79,9 +88,14 @@ test('the key list follows a rebind at once', async ({ page }) => {
 test('the normal game shows none of it', async ({ page }) => {
   test.setTimeout(60_000);
   await boot(page);
-  expect(await ui(page)).toBeNull();
+  const drawn = () => page.evaluate(() => window.__GAME__?.ui().sandboxDrawn);
+  // Read from the panel's own objects: ui().sandbox is null outside the sandbox whatever is drawn.
+  expect(await drawn()).toBe(false);
   await page.keyboard.press('Backquote');
   await page.evaluate(() => window.__GAME__?.step(2));
+  // A few drawn frames after the press, so the scene has had its chance to show anything.
+  await page.evaluate(() => new Promise<void>((done) => { let n = 0; const f = () => (++n >= 5 ? done() : requestAnimationFrame(f)); requestAnimationFrame(f); }));
+  expect(await drawn()).toBe(false);
   expect(await ui(page)).toBeNull();
 });
 

@@ -8,7 +8,9 @@ import { SANDBOX_KEY_LIST } from '../../src/data/sandbox';
 import { DEFAULT_BINDINGS } from '../../src/data/settings';
 import { hotbarBox, tubeSlotBox, type ScreenBox } from '../../src/render/bottomHud';
 import { healthBlockBox } from '../../src/render/healthLayout';
-import { keyListLines, sandboxFeedAt, stripLayout } from '../../src/render/sandboxStrip';
+import { DEFAULT_PICK, sandboxColumns } from '../../src/render/sandboxRows';
+import { keyListLines, LOADOUT_ROWS, sandboxFeedAt, SPAWN_ROWS, stripLayout } from '../../src/render/sandboxStrip';
+import { SANDBOX } from '../../src/data/sandbox';
 
 // 056: the sandbox's controls always on screen: the strip down the left (the loadout's rows, then the key list) and the
 // spawn column on the right, clear of the HUD; and the key list read from the bindings, so a rebind shows at once.
@@ -29,7 +31,11 @@ const BOSS: ScreenBox = (() => {
   return { x: (VIEW_WIDTH - B.w) / 2 - B.border, y: 0, w: B.w + 2 * B.border, h: B.top + B.h + B.border };
 })();
 
-/** The player, the camera centred on them (056.3): two tiles square round the view's centre. */
+/**
+ * The player while the camera is centred on them (056.3): two tiles square round the view's centre. Near the room's
+ * walls the camera clamps to the room (RoomViews), the player walks off centre and can pass under a strip (056.9); this
+ * box covers the centred case only.
+ */
 const PLAYER: ScreenBox = { x: VIEW_WIDTH / 2 - TILE_SIZE, y: VIEW_HEIGHT / 2 - TILE_SIZE, w: 2 * TILE_SIZE, h: 2 * TILE_SIZE };
 
 describe("the sandbox's controls (056)", () => {
@@ -40,7 +46,7 @@ describe("the sandbox's controls (056)", () => {
     ...[1, 2, 3, 4, 5].map((n): [string, ScreenBox] => [`the tube slot (${n})`, tubeSlotBox(n)]),
     ['the minimap', MAP],
     ['the boss bar', BOSS],
-    ['the player', PLAYER],
+    ['the player, camera centred', PLAYER],
   ];
 
   it('puts the strip at the left edge and the spawn column at the right, inside the view', () => {
@@ -59,6 +65,14 @@ describe("the sandbox's controls (056)", () => {
       expect(overlaps(L.left, box), `the strip over ${name}`).toBe(false);
       expect(overlaps(L.right, box), `the spawn column over ${name}`).toBe(false);
     }
+  });
+
+  it("sizes the tablets from sandboxColumns' rows, none with a sub line", () => {
+    const sb = { loadout: [...SANDBOX.loadout], god: true };
+    const [loadout, spawn] = sandboxColumns(sb, { ...DEFAULT_PICK, champion: true, count: 10 });
+    expect(loadout).toHaveLength(LOADOUT_ROWS);
+    expect(spawn).toHaveLength(SPAWN_ROWS);
+    for (const r of [...loadout, ...spawn]) expect(r.sub, r.id).toBeUndefined();
   });
 
   it('runs the spawn column from under the minimap (056.3)', () => {

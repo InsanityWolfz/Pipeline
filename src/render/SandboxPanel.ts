@@ -1,6 +1,6 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
-import { SANDBOX_PANEL, SANDBOX_TEXT } from '../data/sandbox';
+import { SANDBOX_KEY_LIST, SANDBOX_PANEL, SANDBOX_TEXT } from '../data/sandbox';
 import type { SandboxCommand } from '../sim/sandbox';
 import type { SimState } from '../sim/state';
 import type { ScreenBox } from './bottomHud';
@@ -37,12 +37,7 @@ export class SandboxPanel {
   private pick: SpawnPick = { ...DEFAULT_PICK };
   /** 056.1: the player's choice, shown from the start. */
   private open = true;
-  /** 056.5: stepped aside under a big centred panel. */
-  get isCovered(): boolean {
-    return this.covered;
-  }
-
-  /** 056.5: a big centred panel is open over them. */
+  /** 056.5: a big centred panel, or the pause menu or a flow screen (056.9), is open over them. */
   private covered = false;
   /** Only a sandbox sim draws them. */
   private active = false;
@@ -55,10 +50,15 @@ export class SandboxPanel {
     this.titles = [SANDBOX_TEXT.loadout, SANDBOX_TEXT.spawn].map((t) => new TextLine(scene, 0, 0, depth + 3, false, 'title').set(t));
     this.columns = [new MenuColumn(scene, 0, 0, P.rows, depth), new MenuColumn(scene, 0, 0, P.rows, depth)];
     const line = (): TextLine => new TextLine(scene, 0, 0, depth + 2, false, 'body');
-    const n = keyListLines(settings().bindings).length;
+    const n = SANDBOX_KEY_LIST.length;
     this.keyNames = Array.from({ length: n }, line);
     this.keyValues = Array.from({ length: n }, line);
     this.show();
+  }
+
+  /** 056.5: stepped aside under a big centred panel or the pause menu. */
+  get isCovered(): boolean {
+    return this.covered;
   }
 
   /** Shown: the player hasn't hidden them (056.1). */
@@ -71,8 +71,12 @@ export class SandboxPanel {
     this.show();
   }
 
-  /** 056.5: a big centred panel (the inventory, research list, talents, crafting menu or a site's menu) is open over them. */
+  /**
+   * 056.5: a big centred panel (the inventory, research list, talents, crafting menu or a site's menu) is open over them;
+   * 056.10: or the game is paused, or a flow screen is up.
+   */
   setCovered(covered: boolean): void {
+    if (covered === this.covered) return;
     this.covered = covered;
     this.show();
   }
@@ -144,6 +148,11 @@ export class SandboxPanel {
       return { hit: true, command: out.command };
     }
     return { hit: false, command: null };
+  }
+
+  /** Whether any of its objects is on screen (056: never outside the sandbox), for the test hook. */
+  get drawn(): boolean {
+    return this.panel.visible || [...this.titles, ...this.keyNames, ...this.keyValues].some((t) => t.obj.visible);
   }
 
   get state(): SandboxPanelState {

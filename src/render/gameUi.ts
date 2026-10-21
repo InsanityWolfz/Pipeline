@@ -47,5 +47,6 @@ export function gameUi(g: GameScene): GameUiState {
     ...(g.enemyView?.ui ?? NO_ENEMY_UI),
     ...(g.legibility?.ui ?? NO_LEGIBILITY_UI),
     sandbox: g.sim.sandbox ? (g.sandboxPanel?.state ?? { open: false, rows: [], keys: [], boxes: [] }) : null,
+    sandboxDrawn: g.sandboxPanel?.drawn ?? false,
   };
 }

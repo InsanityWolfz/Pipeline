@@ -1,9 +1,10 @@
 import { VIEW_WIDTH } from '../data/config';
 import { MENU_ROW_H, MENU_ROW_W } from '../data/flowLayout';
-import { SANDBOX, SANDBOX_ARENAS, SANDBOX_KEY_LIST, SANDBOX_PANEL, SANDBOX_TEXT } from '../data/sandbox';
+import { SANDBOX, SANDBOX_KEY_LIST, SANDBOX_PANEL, SANDBOX_TEXT } from '../data/sandbox';
 import { ACTION_LABELS, type BindAction } from '../data/settings';
 import type { ScreenBox } from './bottomHud';
 import { keyLabel } from './keyHint';
+import { DEFAULT_PICK, sandboxColumns } from './sandboxRows';
 
 // Where the sandbox's controls sit (056), pure so they're unit tested: the strip down the left edge (the loadout's
 // rows, then the key list) and the spawn column on the right; and the key list's lines from the player's bindings.
@@ -27,12 +28,14 @@ export interface StripLayout {
   keysY: number;
 }
 
-/** The loadout's rows: each entrance, god mode, each boss reset (sandboxColumns' order). */
-export const LOADOUT_ROWS = SANDBOX.loadout.length + 1 + SANDBOX_ARENAS.length;
+/** Both columns' rows at the start (sandboxColumns): their counts never change in play, only their words. */
+const START_COLUMNS = sandboxColumns({ loadout: [...SANDBOX.loadout], god: false }, DEFAULT_PICK);
+/** The loadout's rows: each entrance, god mode, each boss reset. */
+export const LOADOUT_ROWS = START_COLUMNS[0].length;
 /** The spawn column's rows: enemy, ring, champion, count, Spawn, Clear. */
-export const SPAWN_ROWS = 6;
+export const SPAWN_ROWS = START_COLUMNS[1].length;
 
-/** `n` rows' height with their gaps (no sub lines in the sandbox's rows). */
+/** `n` rows' height with their gaps (the sandbox's rows have no sub lines; a test checks). */
 const rowsHeight = (n: number): number => n * MENU_ROW_H + Math.max(0, n - 1) * P.rows.gap;
 
 /** The strip and the spawn column, both their full height. */

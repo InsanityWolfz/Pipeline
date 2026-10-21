@@ -178,7 +178,7 @@ export const SANDBOX_START: StartDef = {
  * loadout's rows under their title and, under them past a `keys.gap` divider, the key list (056.2) one `keys.step` line
  * an action, its name at `keys.label.x` and its keys ending at `keys.value.right`. On the right edge, the spawn
  * column's tablet. Both `margin` in from their edges. The strip's top `leftY` clears the boss bar (HOLLOWS_LOOK.bossBar);
- * the spawn column's top `rightY` sits under the minimap's frame (056.3), and both end above the HP block (a data test
+ * the spawn column's top `rightY` sits under the minimap's frame (056.3), and both end above the HP block (tests/render/sandboxStrip.test.ts
  * checks). Rows step with − and + at their right end, so a round's name has the row's width.
  */
 export const SANDBOX_PANEL = {

@@ -70,6 +70,8 @@ export class MenuRouter {
     // 044: the Sandbox panel's key, only in the sandbox; likewise. 056.1: it hides and shows both strips.
     const panel = controls.takeMenuKey('sandbox') && this.sim.sandbox !== undefined;
     if (this.m.host.paused) {
+      // 056.10: the sandbox's controls step aside under the pause menu, as under a big panel.
+      sandbox.setCovered(true);
       if (close) this.m.host.resume();
       return;
     }
