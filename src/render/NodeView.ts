@@ -94,7 +94,7 @@ export class NodeView {
     }
     const G = NODE_GLOW;
     if (view.glow.frame.name !== frame) showFrame(view.glow, frame);
-    const k = view.image.scaleX * G.scale;
+    const k = view.image.scaleX * (1 + (2 * G.outline) / Math.max(1, view.image.displayWidth));
     const breath = (Math.sin((this.time / G.periodMs) * Math.PI * 2 + n.id) + 1) / 2;
     view.glow.setScale(k).setY(bottom).setDepth(bottom - 0.5).setAlpha(G.alpha.min + (G.alpha.max - G.alpha.min) * breath);
     const S = G.sparkle;

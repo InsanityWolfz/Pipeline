@@ -48,8 +48,8 @@ export const COLLECT_FROM: Readonly<Record<string, { enemy: string }>> = { 'husk
  */
 export const TARGET_LIFT: Readonly<Record<TargetKind, number>> & { door: number; nodeTypes: Readonly<Record<string, number>> } = {
   tubeStone: 40,
-  nodes: 44,
-  collect: 44,
+  nodes: 34,
+  collect: 34,
   pack: 46,
   room: 52,
   // Just over the bowl's rim, under the E prompt's cap (012), which floats over the machine behind.
@@ -68,7 +68,7 @@ export const TARGET_LIFT: Readonly<Record<TargetKind, number>> & { door: number;
   boss: 86,
   /** The door to another room (the foundry's, or its stairs outside). */
   door: 40,
-  nodeTypes: { tree: 70, rubble: 44, reeds: 40, 'ley-vein': 44, 'rime-outcrop': 46, 'ley-iron-seam': 44, 'resin-seep': 40 },
+  nodeTypes: { tree: 70, rubble: 30, reeds: 36, 'ley-vein': 34, 'rime-outcrop': 36, 'ley-iron-seam': 32, 'resin-seep': 30 },
 };
 
 /**

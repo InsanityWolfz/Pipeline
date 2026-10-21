@@ -226,13 +226,13 @@ export const NODE_SPRITES_VECTOR: readonly VectorSprite[] = Object.entries(NODE_
 export const NODE_DAPPLE = { nodeId: 'tree', rx: 26, ry: 11, rise: 2, color: 'sun', alpha: 0.4 } as const;
 
 /**
- * 051 (B.4): a harvestable node's glow: its own frame filled `color`, `scale` times its size round its base, behind it,
+ * 051 (B.4): a harvestable node's glow: its own frame filled `color`, `outline` px bigger each side round its base, behind it,
  * breathing between the alphas once per `periodMs`; and now and then (every `sparkle.everyMs`, each node at its own
  * offset) a glint twinkles somewhere on it, over `sparkle.ms`. A used-up node shows neither until it regrows.
  */
 export const NODE_GLOW = {
   color: 'snow',
-  scale: 1.14,
+  outline: 2,
   alpha: { min: 0.45, max: 0.8 },
   periodMs: 2000,
   sparkle: { everyMs: 2600, ms: 650, peak: 1.15 },
