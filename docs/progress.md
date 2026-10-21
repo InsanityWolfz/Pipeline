@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: 056 drafted
+**Changed:** drafted 056 (the sandbox's controls always on screen) from Shaun's request and his two answers (both the panel and a key list in a left strip; spawn stays on the right).
+
+**Next:** Shaun approves 056; then build.
+
 ## 2026-10-21: 49–51 merged
 **Changed:** Shaun merged the three small fixes ("Merge 49-51"): the sandbox panel's − onto Empty (InsanityWolfz/Pipeline#49), 037's Shatterpoint shot (#50), the older review shots on the round map (#51).
 
