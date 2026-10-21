@@ -136,6 +136,7 @@ test.describe('review screenshots (052)', () => {
     expect(inCrate(s, 16, 13, 'bomb')).toBeGreaterThan(0);
     await cameraSettled(page, 15_000);
     await hover(page, 16, 6);
+    await expect.poll(async () => (await ui(page))?.tunnels).toEqual([{ kind: 'tunnel', tiles: [{ tx: 16, ty: 7 }], facing: 'down' }]);
     await page.screenshot({ path: `${SHOTS}/03-crossing-lines.png` });
   });
 });

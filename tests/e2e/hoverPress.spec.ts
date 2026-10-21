@@ -3,7 +3,7 @@ import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { FEET_BOX } from '../../src/data/player';
 import { OVERWORLD } from '../../src/data/overworld';
 import { screenPoint, state, step } from './foundryPage';
-import { boot, watchErrors } from './helpers';
+import { boot, cameraSettled, watchErrors } from './helpers';
 
 // The overworld (017) the camera is clamped to.
 const HALL_W = OVERWORLD.width * TILE_SIZE;
@@ -21,7 +21,7 @@ test('hovering a Husk names it, and a press that starts on the hotbar never fire
   if (!husk) throw new Error('no husk');
   // Walk close so the Husk is on screen, without waking it.
   await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [husk.x - 220, husk.y + 60] as const);
-  await page.waitForTimeout(1500);
+  await cameraSettled(page);
   const now = await step(page, 0);
   const target = now.enemies.find((e) => e.id === husk.id);
   if (!target) throw new Error('husk gone');
@@ -36,7 +36,6 @@ test('hovering a Husk names it, and a press that starts on the hotbar never fire
       async () => {
         await page.mouse.move(p.x + 1, p.y);
         await page.mouse.move(p.x, p.y);
-        await page.waitForTimeout(100);
         return page.evaluate(() => window.__GAME__?.ui().hoverName);
       },
       { timeout: 30_000 },
@@ -46,7 +45,8 @@ test('hovering a Husk names it, and a press that starts on the hotbar never fire
   // Back on the real-time clock: a press that starts on the hotbar never fires, even dragged out into the world.
   await page.reload();
   await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
-  await page.waitForTimeout(500);
+  // The hotbar drawn where the press starts.
+  await expect.poll(async () => page.evaluate(() => window.__GAME__?.ui().hud?.hotbar.shown ?? false)).toBe(true);
   const slot = await screenPoint(page, VIEW_WIDTH / 2, VIEW_HEIGHT - 18);
   const world = await screenPoint(page, VIEW_WIDTH / 2 + 120, VIEW_HEIGHT / 2);
   const start = await state(page);
