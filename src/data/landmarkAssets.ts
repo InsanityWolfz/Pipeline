@@ -88,8 +88,11 @@ export const LANDMARK_LOOK = {
 
 /** The discovery banner (032): the landmark's name in the display font, top centre below the objective band. */
 export const DISCOVERY_BANNER = {
-  /** View px from the top: below the minimap (to 74) and the objective band (86 + a line), so it never covers it. */
-  top: 112,
+  /**
+   * View px from the top (050, A.3: at the top of the screen, never over the player): under the boss bar (20 + 8) and
+   * above the objective band (86), between the minimap and the left edge.
+   */
+  top: 34,
   /** A small line above the name. */
   kicker: 'Discovered',
   kickerGap: 2,

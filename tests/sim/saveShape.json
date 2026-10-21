@@ -1,5 +1,5 @@
 {
-  "version": 6,
+  "version": 7,
   "shape": [
     "state.activatePulse: number",
     "state.arrows: array",
@@ -269,6 +269,7 @@
     "state.link.entrances[].ammoId: null",
     "state.link.entrances[].cooldown: number",
     "state.link.entrances[].count: number",
+    "state.link.entrances[].node: null",
     "state.link.entrances[].open: boolean",
     "state.link.entrances[]: object",
     "state.link: object",

@@ -1,4 +1,5 @@
-import { CRATE_CAP, USE_REACH } from '../data/foundry';
+import { HOVER_USE_REACH, USE_REACH } from '../data/foundry';
+import { crateRoom } from './crateSlots';
 import { FEET_BOX } from '../data/player';
 import { ITEMS } from '../data/items';
 import { FOUNDRY_ROOM } from '../data/rooms';
@@ -29,8 +30,34 @@ function gapTo(state: SimState, p: PieceState): number {
 const inReach = (state: SimState, p: PieceState): boolean =>
   state.roomId === FOUNDRY_ROOM && gapTo(state, p) <= USE_REACH;
 
-/** The nearest hopper, crate or sorter in reach, by centre distance; the first placed wins ties. */
+/** 050: a hopper or crate is worked (deposits, withdraws, its open screen) while the player is this close to it. */
+const inHoverReach = (state: SimState, p: PieceState): boolean => state.roomId === FOUNDRY_ROOM && gapTo(state, p) <= HOVER_USE_REACH;
+
+const isStore = (p: PieceState): p is HopperState | CrateState => p.kind === 'hopper' || p.kind === 'crate';
+
+/** The hopper or crate under the cursor (the player's aim point) within HOVER_USE_REACH (050), if any. */
+function hoveredStore(state: SimState): HopperState | CrateState | undefined {
+  const { aimX, aimY } = state.player;
+  return state.foundry.pieces.find((p): p is HopperState | CrateState => {
+    if (!isStore(p) || !inHoverReach(state, p)) return false;
+    const r = pieceRect(p);
+    return Math.abs(aimX - r.x) <= r.w / 2 && Math.abs(aimY - r.y) <= r.h / 2;
+  });
+}
+
+/** 050: whether the hopper or crate with this id can still be worked (its screen stays open): it stands within HOVER_USE_REACH. */
+export function stillUsable(state: SimState, id: number): boolean {
+  const p = state.foundry.pieces.find((q) => q.id === id);
+  return p !== undefined && isStore(p) && inHoverReach(state, p);
+}
+
+/**
+ * What E acts on among the foundry's pieces: the hopper or crate under the cursor within 3 tiles (050); else the
+ * nearest hopper, crate or sorter in reach, by centre distance, the first placed winning ties.
+ */
 export function usableInReach(state: SimState): Usable | undefined {
+  const hovered = hoveredStore(state);
+  if (hovered) return hovered;
   let best: Usable | undefined;
   let bestDist = Infinity;
   for (const p of state.foundry.pieces) {
@@ -56,19 +83,16 @@ export function amountOf(amount: HopperAmount, n: number): number {
 /** How many a click moves from a stack of `stack` items (047) with `have` in all: one, half or the stack, never more than there are. */
 const fromStack = (amount: HopperAmount, have: number, stack: number | undefined): number => amountOf(amount, Math.min(have, stack ?? have));
 
-/** A crate's total, over every kind it holds. */
-const crateTotal = (c: CrateState): number => Object.values(c.contents).reduce((n, k) => n + k, 0);
-
 /**
- * Moves some of a held item into a hopper in reach that's empty or already holds it, or into a crate in reach up to
- * its cap (047: the crate's screen); how many by `amount` of the clicked stack (`stack`, or all held).
+ * Moves some of a held item into a hopper in reach that's empty or already holds it, or into a crate in reach while its
+ * 8 slots have room (047: the crate's screen; 050: each slot a stack); how many by `amount` of the clicked stack (`stack`, or all held).
  */
 export function deposit(state: SimState, id: number, itemId: string, amount: HopperAmount, stack?: number): void {
   const p = state.foundry.pieces.find((q) => q.id === id);
-  if (!p || (p.kind !== 'hopper' && p.kind !== 'crate') || !inReach(state, p)) return;
+  if (!p || !isStore(p) || !inHoverReach(state, p)) return;
   const held = count(state.inventory, itemId);
   if (p.kind === 'crate') {
-    const n = Math.min(fromStack(amount, held, stack), CRATE_CAP - crateTotal(p));
+    const n = Math.min(fromStack(amount, held, stack), crateRoom(p.contents, itemId));
     if (n <= 0) return;
     state.inventory[itemId] = held - n;
     p.contents[itemId] = count(p.contents, itemId) + n;
@@ -90,7 +114,7 @@ export function deposit(state: SimState, id: number, itemId: string, amount: Hop
  */
 export function withdraw(state: SimState, id: number, amount: HopperAmount, itemId?: string, stack?: number): void {
   const p = state.foundry.pieces.find((q) => q.id === id);
-  if (!p || (p.kind !== 'hopper' && p.kind !== 'crate') || !inReach(state, p)) return;
+  if (!p || !isStore(p) || !inHoverReach(state, p)) return;
   if (p.kind === 'crate') {
     if (itemId === undefined) return;
     const have = count(p.contents, itemId);

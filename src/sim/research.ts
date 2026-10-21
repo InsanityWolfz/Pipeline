@@ -153,7 +153,10 @@ export function restore(state: SimState, nodeId: string): boolean {
   state.events.restores.push({ node: nodeId });
   if (node.effect.kind === 'entrance' && at?.entrance !== null && at?.entrance !== undefined) {
     const e = state.link.entrances[at.entrance];
-    if (e) e.open = true;
+    if (e) {
+      e.open = true;
+      e.node = nodeId;
+    }
     state.events.intakeOpens.push({ entrance: at.entrance });
   }
   return true;

@@ -1,7 +1,8 @@
-import { CONDUIT_TICKS, CRATE_CAP, ENTRANCE_CAPS, HOPPER_FLOW_CAP, HOPPER_TICKS, INPUT_CAP, INTAKE, OUTPUT_CAP } from '../data/foundry';
+import { CONDUIT_TICKS, ENTRANCE_CAPS, HOPPER_FLOW_CAP, HOPPER_TICKS, INPUT_CAP, INTAKE, OUTPUT_CAP } from '../data/foundry';
 import type { RecipeDef } from '../data/recipes';
 import { opposite } from './direction';
 import { count } from './inventory';
+import { crateRoom } from './crateSlots';
 import type { SimEvents } from './events';
 import { fillEntrance, type EntranceState } from './link';
 import { machineRecipe, offerToStage, stageOf } from './stages';
@@ -132,8 +133,7 @@ function offer(ctx: FlowContext, to: Tile, from: Tile, item: string): boolean {
     return true;
   }
   if (target.kind === 'crate') {
-    const total = Object.values(target.contents).reduce((a, b) => a + b, 0);
-    if (total >= CRATE_CAP) return false;
+    if (crateRoom(target.contents, item) <= 0) return false;
     target.contents[item] = count(target.contents, item) + 1;
     return true;
   }

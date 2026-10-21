@@ -24,6 +24,8 @@ export interface LandmarksShown {
   /** The landmark named by the discovery banner while it shows, else null, and how strongly it shows (0..1). */
   banner: string | null;
   bannerAlpha: number;
+  /** 050: the banner's tablet while it shows, view px, else null. */
+  bannerBox: { x: number; y: number; w: number; h: number } | null;
   /** Each reliquary's frame, by landmark id: `sealed`, `open` or `empty`. */
   caches: Record<string, 'sealed' | 'open' | 'empty'>;
   /** Hollow lip slabs and marsh tufts drawn, and the hollows' lights. */
@@ -32,7 +34,7 @@ export interface LandmarksShown {
   lights: number;
 }
 
-export const NO_LANDMARKS_SHOWN: LandmarksShown = { banner: null, bannerAlpha: 0, caches: {}, lips: 0, tufts: 0, lights: 0 };
+export const NO_LANDMARKS_SHOWN: LandmarksShown = { banner: null, bannerAlpha: 0, bannerBox: null, caches: {}, lips: 0, tufts: 0, lights: 0 };
 
 const T = TILE_SIZE;
 
@@ -65,6 +67,7 @@ export class LandmarkView {
     return {
       banner: discovery?.id ?? null,
       bannerAlpha: discovery?.alpha ?? 0,
+      bannerBox: discovery?.box ?? null,
       caches: Object.fromEntries([...this.caches].map(([id, c]) => [id, c.frame])),
       lips: this.lipCount,
       tufts: this.tuftCount,

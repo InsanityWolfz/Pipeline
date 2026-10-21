@@ -3,10 +3,10 @@ import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { GEAR_SLOTS } from '../../src/data/gear';
 import { GEAR_PANEL } from '../../src/data/gearAssets';
 import { hotbarBox, tubeSlotBox } from '../../src/render/bottomHud';
-import { gearPages, gearPanelLayout, inBox, type Box, type RowSpec } from '../../src/render/gearPanelLayout';
+import { gearPanelLayout, inBox, lastScroll, type Box, type RowSpec } from '../../src/render/gearPanelLayout';
 
 // The bench's gear panel (036): every part inside the panel and the panel on screen,
-// nothing overlapping, the open tab's rows paged by height.
+// nothing overlapping, the open tab's rows scrolled by row (050, A.13: no pages).
 
 const inside = (b: Box, p: Box): boolean => b.x >= p.x && b.y >= p.y && b.x + b.w <= p.x + p.w && b.y + b.h <= p.y + p.h;
 const overlaps = (a: Box, b: Box): boolean => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
@@ -17,10 +17,10 @@ describe('the gear panel layout', () => {
     {
       const L = gearPanelLayout(rows(4, 2), 0);
       expect(inside(L.panel, { x: 0, y: 0, w: VIEW_WIDTH, h: VIEW_HEIGHT })).toBe(true);
-      const parts = [L.identify, ...L.cells.map((c) => c.box), ...L.tabs.map((t) => t.box), ...L.rows.map((r) => r.box), L.pager];
+      const parts = [L.identify, ...L.cells.map((c) => c.box), ...L.tabs.map((t) => t.box), ...L.rows.map((r) => r.box), L.track];
       for (const p of parts) expect(inside(p, L.panel), JSON.stringify(p)).toBe(true);
       for (let i = 0; i < parts.length; i++) for (let j = i + 1; j < parts.length; j++) expect(overlaps(parts[i] as Box, parts[j] as Box)).toBe(false);
-      for (const t of L.totals) expect(t.y).toBeGreaterThan(L.pager.y + L.pager.h - 1);
+      for (const t of L.totals) expect(t.y).toBeGreaterThan(L.track.y + L.track.h - 1);
       expect(L.cells.map((c) => c.slot)).toEqual(GEAR_SLOTS);
       expect(L.tabs.map((t) => t.slot)).toEqual(GEAR_SLOTS);
     }
@@ -30,32 +30,37 @@ describe('the gear panel layout', () => {
     for (const hud of [hotbarBox(), tubeSlotBox(5)]) expect(overlaps(alone, hud), JSON.stringify(hud)).toBe(false);
   });
 
-  it('pages the rows by height, a relic’s row taller, every row on exactly one page', () => {
-    expect(gearPages([])).toEqual([[]]);
-    for (const [n, relics] of [[3, 0], [5, 0], [6, 0], [12, 0], [9, 2], [20, 3]] as const) {
+  it('shows the rows from the scrolled-to one while they fit, a relic’s row taller (050: no pages)', () => {
+    const fits = (shown: RowSpec[]) => shown.reduce((h, r, i) => h + (r.relic ? GEAR_PANEL.list.relicH : GEAR_PANEL.list.rowH) + (i > 0 ? GEAR_PANEL.list.gap : 0), 0) <= GEAR_PANEL.list.h;
+    for (const [n, relics] of [[3, 0], [5, 0], [12, 0], [9, 2], [20, 3]] as const) {
       const all = rows(n, relics);
-      const pages = gearPages(all);
-      expect(pages.flat()).toEqual(all);
-      for (const page of pages) {
-        const used = page.reduce((h, r, i) => h + (r.relic ? GEAR_PANEL.list.relicH : GEAR_PANEL.list.rowH) + (i > 0 ? GEAR_PANEL.list.gap : 0), 0);
-        expect(used).toBeLessThanOrEqual(GEAR_PANEL.list.h);
-        expect(page.length).toBeGreaterThan(0);
+      for (let first = 0; first <= lastScroll(all); first++) {
+        const L = gearPanelLayout(all, first);
+        const shown = L.rows.map((r) => all.find((a) => a.id === r.id) as RowSpec);
+        expect(shown[0]?.id).toBe(first);
+        expect(fits(shown)).toBe(true);
+        // As many as fit: one more wouldn't.
+        const next = all[first + shown.length];
+        if (next) expect(fits([...shown, next])).toBe(false);
       }
-      // Each page is as full as it can be: the next page's first row wouldn't have fit.
-      for (let i = 0; i + 1 < pages.length; i++) expect(gearPages([...(pages[i] ?? []), ...(pages[i + 1] ?? []).slice(0, 1)])).toHaveLength(2);
     }
-    expect(gearPages(rows(4))).toHaveLength(1);
   });
 
-  it('shows the asked page, wrapping round, and hit-tests its parts', () => {
+  it('scrolls no further than shows the last row, nor above the first; the thumb follows', () => {
+    expect(lastScroll([])).toBe(0);
+    expect(lastScroll(rows(4))).toBe(0);
     const all = rows(14);
-    const count = gearPages(all).length;
-    expect(count).toBeGreaterThan(1);
-    const second = gearPanelLayout(all, 1);
-    expect(second.page).toEqual({ index: 1, count });
-    expect(second.rows[0]?.id).toBe(gearPages(all)[1]?.[0]?.id);
-    expect(gearPanelLayout(all, count).page.index).toBe(0);
-    const tab = second.tabs[2]?.box;
+    const last = lastScroll(all);
+    expect(last).toBeGreaterThan(0);
+    const end = gearPanelLayout(all, last + 5);
+    expect(end.scroll).toEqual({ first: last, last });
+    expect(end.rows.at(-1)?.id).toBe(13);
+    const top = gearPanelLayout(all, -3);
+    expect(top.scroll.first).toBe(0);
+    expect(top.thumb.y).toBe(top.track.y);
+    expect(end.thumb.y + end.thumb.h).toBeCloseTo(end.track.y + end.track.h, 5);
+    expect(gearPanelLayout(rows(4), 0).thumb.h).toBe(gearPanelLayout(rows(4), 0).track.h);
+    const tab = end.tabs[2]?.box;
     if (!tab) throw new Error('no tab');
     expect(inBox(tab, tab.x + 1, tab.y + 1)).toBe(true);
     expect(inBox(tab, tab.x + tab.w, tab.y)).toBe(false);

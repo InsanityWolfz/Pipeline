@@ -50,6 +50,8 @@ export interface MenuColumnLayout {
   value: { right: number; y: number };
   stepper: { down: number; up: number; hit: number };
   greyAlpha: number;
+  /** 050 (F): the whole column drawn this many times bigger (the title's menu); 1 when absent. */
+  scale?: number;
 }
 
 interface RowParts {
@@ -71,6 +73,10 @@ export class MenuColumn {
   private x: number;
   private y: number;
   private visible = true;
+  /** The column's scale (050), and its rows' size at that scale. */
+  private readonly k: number;
+  private readonly rowW: number;
+  private readonly rowH: number;
 
   constructor(scene: Scene, x: number, y: number, layout: MenuColumnLayout, depth: number = DEPTHS.menu) {
     this.scene = scene;
@@ -79,11 +85,15 @@ export class MenuColumn {
     this.layout = layout;
     this.depth = depth;
     this.hover = new RowHover(scene);
+    this.k = layout.scale ?? 1;
+    this.rowW = MENU_ROW_W * this.k;
+    this.rowH = MENU_ROW_H * this.k;
   }
 
   /** The column's height for these rows, view px. */
-  static heightOf(rows: readonly MenuRowSpec[], layout: Pick<MenuColumnLayout, 'gap' | 'subH'>): number {
-    return rows.reduce((h, r, i) => h + MENU_ROW_H + (r.sub ? layout.subH : 0) + (i > 0 ? layout.gap : 0), 0);
+  static heightOf(rows: readonly MenuRowSpec[], layout: Pick<MenuColumnLayout, 'gap' | 'subH' | 'scale'>): number {
+    const k = layout.scale ?? 1;
+    return rows.reduce((h, r, i) => h + (MENU_ROW_H + (r.sub ? layout.subH : 0) + (i > 0 ? layout.gap : 0)) * k, 0);
   }
 
   get height(): number {
@@ -105,23 +115,26 @@ export class MenuColumn {
     this.x = x;
     this.y = y;
     const L = this.layout;
+    const k = this.k;
+    const text = (tx: number, ty: number, style: 'display' | 'body'): TextLine => new TextLine(this.scene, tx, ty, this.depth + 2, false, style, k);
     let top = y;
     this.rows = specs.map((spec) => {
       const image = addVector(this.scene, x, top, SPRITES.craftRow).setOrigin(0).setScrollFactor(0).setDepth(this.depth);
-      const label = new TextLine(this.scene, x + L.label.x, top + L.label.y, this.depth + 2, false, 'display').set(spec.label);
+      image.setScale(image.scaleX * k, image.scaleY * k);
+      const label = text(x + L.label.x * k, top + L.label.y * k, 'display').set(spec.label);
       const texts = [label];
       let value: TextLine | null = null;
       if (spec.value !== undefined) {
-        value = new TextLine(this.scene, 0, top + L.value.y, this.depth + 2, false, 'body');
+        value = text(0, top + L.value.y * k, 'body');
         texts.push(value);
         if (spec.stepper) {
-          texts.push(new TextLine(this.scene, x + L.stepper.down, top + L.value.y, this.depth + 2, false, 'body').set('−'));
-          texts.push(new TextLine(this.scene, x + L.stepper.up, top + L.value.y, this.depth + 2, false, 'body').set('+'));
+          texts.push(text(x + L.stepper.down * k, top + L.value.y * k, 'body').set('−'));
+          texts.push(text(x + L.stepper.up * k, top + L.value.y * k, 'body').set('+'));
         }
       }
-      if (spec.sub) texts.push(new TextLine(this.scene, x + L.sub.x, top + MENU_ROW_H + L.sub.y, this.depth + 2, false, 'body').set(spec.sub));
+      if (spec.sub) texts.push(text(x + L.sub.x * k, top + this.rowH + L.sub.y * k, 'body').set(spec.sub));
       const parts: RowParts = { spec, image, texts, value, y: top };
-      top += MENU_ROW_H + (spec.sub ? L.subH : 0) + L.gap;
+      top += this.rowH + (spec.sub ? L.subH * k : 0) + L.gap * k;
       return parts;
     });
     for (const [i, s] of specs.entries()) this.refresh(i, s);
@@ -133,16 +146,17 @@ export class MenuColumn {
     if (!row) return;
     row.spec = spec;
     const L = this.layout;
+    const k = this.k;
     row.texts[0]?.set(spec.label);
     if (row.value && spec.value !== undefined) {
       row.value.set(spec.value);
       // Right-aligned to the value column; centred between the steppers when it has them.
-      const vx = spec.stepper ? Math.round(this.x + (L.stepper.down + L.stepper.up) / 2 - row.value.width / 2 + 3) : Math.round(this.x + L.value.right - row.value.width);
-      row.value.moveTo(vx, row.y + L.value.y);
+      const vx = spec.stepper ? Math.round(this.x + ((L.stepper.down + L.stepper.up) / 2 + 3) * k - row.value.width / 2) : Math.round(this.x + L.value.right * k - row.value.width);
+      row.value.moveTo(vx, row.y + L.value.y * k);
     }
     // A line under the row ends at the row's right end, so a long one (the Continue line) grows leftward, on screen.
     const sub = spec.sub ? row.texts[row.texts.length - 1] : undefined;
-    if (sub && spec.sub) sub.set(spec.sub).moveTo(Math.round(this.x + MENU_ROW_W - L.sub.x - sub.width), row.y + MENU_ROW_H + L.sub.y);
+    if (sub && spec.sub) sub.set(spec.sub).moveTo(Math.round(this.x + this.rowW - L.sub.x * k - sub.width), row.y + this.rowH + L.sub.y * k);
     const usable = spec.usable !== false;
     const alpha = usable ? 1 : L.greyAlpha;
     row.image.setAlpha(alpha).setFrame(this.hover.frame(i, usable));
@@ -160,11 +174,11 @@ export class MenuColumn {
 
   /** The rows as drawn, for the test hook. */
   get shown(): MenuRowShown[] {
-    return this.rows.map((r) => ({ id: r.spec.id, label: r.spec.label, value: r.spec.value ?? null, sub: r.spec.sub ?? null, usable: r.spec.usable !== false, x: this.x, y: r.y, w: MENU_ROW_W, h: MENU_ROW_H }));
+    return this.rows.map((r) => ({ id: r.spec.id, label: r.spec.label, value: r.spec.value ?? null, sub: r.spec.sub ?? null, usable: r.spec.usable !== false, x: this.x, y: r.y, w: this.rowW, h: this.rowH }));
   }
 
   private indexAt(x: number, y: number): number {
-    return this.rows.findIndex((r) => inBox({ x: this.x, y: r.y, w: MENU_ROW_W, h: MENU_ROW_H }, x, y));
+    return this.rows.findIndex((r) => inBox({ x: this.x, y: r.y, w: this.rowW, h: this.rowH }, x, y));
   }
 
   /** The cursor is at a view point: its row lights, with the hover sound on a new usable row. */
@@ -181,11 +195,12 @@ export class MenuColumn {
     const i = this.indexAt(x, y);
     const row = this.rows[i];
     if (!row || row.spec.usable === false) return null;
-    flashRow(this.scene, this.x, row.y);
+    flashRow(this.scene, this.x, row.y, undefined, this.k);
     if (row.spec.stepper) {
       const { down, up, hit } = this.layout.stepper;
-      if (Math.abs(x - (this.x + down)) <= hit) return { id: row.spec.id, part: 'down' };
-      if (Math.abs(x - (this.x + up)) <= hit) return { id: row.spec.id, part: 'up' };
+      const k = this.k;
+      if (Math.abs(x - (this.x + down * k)) <= hit * k) return { id: row.spec.id, part: 'down' };
+      if (Math.abs(x - (this.x + up * k)) <= hit * k) return { id: row.spec.id, part: 'up' };
       return null;
     }
     return { id: row.spec.id, part: 'row' };

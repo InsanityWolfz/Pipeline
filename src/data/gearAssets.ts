@@ -21,6 +21,8 @@ export const GEAR_SPRITES = {
   relicEmber: 'relic-ember',
   /** The Wardstone's ready shimmer round the player: a faint violet ring of light. */
   wardShimmer: 'ward-shimmer',
+  /** 050 (A.16): a small shield on the ring's front edge while the ward is ready. */
+  wardShield: 'ward-shield',
   /** Last Ember's flash as it saves the player. */
   emberFlash: 'ember-flash',
   /** A relic's flare over the bench as it's identified. */
@@ -40,8 +42,8 @@ export const SLOT_NAMES: Readonly<Record<GearSlot, string>> = { helm: 'Helm', bo
 
 /**
  * The bench's gear panel (036), centred on screen: a title and
- * the Identify button, four slot cells (the worn piece in each), a tab per slot, the open tab's rows (paged when they
- * don't fit), a pager and the totals. View px from the panel's top-left, then from each part's top-left; text at the
+ * the Identify button, four slot cells (the worn piece in each), a tab per slot, the open tab's rows (scrolling on the
+ * wheel when they don't fit, 050) and the totals. View px from the panel's top-left, then from each part's top-left; text at the
  * top of its capitals.
  */
 export const GEAR_PANEL = {
@@ -57,8 +59,19 @@ export const GEAR_PANEL = {
   cells: { y: 22, h: 36, gap: 4, icon: { x: 13, y: 13 }, slot: { x: 27, y: 5 }, armor: { x: 27, y: 14 }, name: { x: 4, y: 27 } },
   tabs: { y: 62, h: 13, gap: 4, textY: 3 },
   /** The open tab's rows: a frame and icon (centred at `icon`), the name over the affixes, a relic's rule under them; a worn row's edge `wornEdge` px wide. */
-  list: { y: 79, h: 96, gap: 2, rowH: 22, relicH: 30, icon: { x: 13, y: 11 }, text: { x: 26, line1: 4, line2: 13, line3: 22 }, rightPad: 4, wornEdge: 2 },
-  pager: { y: 177, h: 10, textY: 2 },
+  list: {
+    y: 79,
+    h: 106,
+    gap: 2,
+    rowH: 22,
+    relicH: 30,
+    icon: { x: 13, y: 11 },
+    text: { x: 26, line1: 4, line2: 13, line3: 22 },
+    rightPad: 4,
+    wornEdge: 2,
+    /** 050 (A.13): the list scrolls by row on the wheel; a bar `w` px wide, `gap` px right of the rows, its thumb at least `minThumb` tall. */
+    scrollbar: { w: 3, gap: 2, minThumb: 8 },
+  },
   totals: { y: 191, step: 9 },
   /** The words it shows. */
   words: {
@@ -67,7 +80,6 @@ export const GEAR_PANEL = {
     worn: 'worn',
     armor: 'armor',
     sep: ' · ',
-    page: (index: number, count: number): string => `Page ${index + 1}/${count} ›`,
   },
   /** An empty cell's frame and slot icon are drawn this faint. */
   emptyAlpha: { frame: 0.5, icon: 0.35 },
@@ -83,7 +95,9 @@ export const GEAR_PANEL = {
     dim: 'rock-light',
     wornText: 'cyan',
     rule: 'wisp-light',
-    pagerHover: 'brass-light',
+    /** 050: the scroll bar's track and thumb. */
+    track: { color: 'ink', alpha: 0.4 },
+    thumb: { color: 'brass', alpha: 0.85 },
     /** A press flashes this colour, fading from `alpha` over `flashMs`. */
     flash: { color: 'brass-light', alpha: 0.35 },
   },
@@ -95,6 +109,8 @@ export const GEAR_PANEL = {
 export const RELIC_LOOK = {
   /** The Wardstone's shimmer while ready: at the player's feet, `lift` px up, breathing between two alphas once per `breatheMs`. */
   shimmer: { lift: 6, alpha: [0.55, 0.95] as const, breatheMs: 1400, depthBelow: 1 },
+  /** 050 (A.16): the shield icon on the ring's front edge, `drop` px below its centre, drawn over the feet. */
+  shield: { drop: 8, depthAbove: 1 },
   /** The ward breaking on a block: the shimmer swells from `from` to `to` times and fades over `ms`. */
   wardBreak: { ms: 420, from: 1, to: 2.2, depthAbove: 1 },
   /** Last Ember's flash on a save: from `from` to `to` times, fading over `ms`, `lift` px over the feet. */

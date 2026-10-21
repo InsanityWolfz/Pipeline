@@ -47,8 +47,8 @@ function holds(state: SimState, check: ObjectiveCheck): boolean {
     case 'refilled':
       // With no hopper left to refill (a save from before 046 has no example line), it counts as done.
       return state.lineRanDry && (!state.foundry.pieces.some((p) => p.kind === 'hopper') || check.items.every((id) => state.refilled.includes(id)));
-    case 'entrancesHold':
-      return state.link.entrances.filter((e) => e.ammoId === check.ammo && e.count > 0).length >= check.min;
+    case 'entranceFed':
+      return state.link.entrances.some((e) => e.node === check.node && e.ammoId !== null && e.count > 0);
     case 'machineMade':
       return (state.machineMade[check.item] ?? 0) > 0;
     case 'lineFull':

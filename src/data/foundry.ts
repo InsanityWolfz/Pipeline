@@ -1,3 +1,5 @@
+import { TILE_SIZE } from './config';
+
 // Foundry tuning. Starting values from specs 006, 019 and 024; tune in playtest.
 
 /** Ticks an item takes to cross one conduit tile. */
@@ -12,14 +14,20 @@ export const OUTPUT_CAP = 8;
 /** Ticks between a hopper's pushes. */
 export const HOPPER_TICKS = 15;
 
-/** Most items a crate holds, all kinds together. */
-export const CRATE_CAP = 99;
+/** 050 (A.12): a crate's slots, each holding one stack (047's stack sizes); its screen shows them in a row. */
+export const CRATE_SLOTS = 8;
 
 /** Most items a hopper takes from a line (028); hand-filling is uncapped. */
 export const HOPPER_FLOW_CAP = 99;
 
 /** How close the player's feet box must be to a hopper or crate to use it, px. */
 export const USE_REACH = 12;
+
+/**
+ * 050 (Shaun: "within 3 tiles of a hopper and your mouse is on it"): E opens the hopper or crate under the cursor while
+ * the player's feet box is this close to it, px, and its screen works (and stays open) that far.
+ */
+export const HOVER_USE_REACH = 3 * TILE_SIZE;
 
 /**
  * The foundry intake (019): the waterslide pipe built into the centre of the north wall. Its mouth is three wall

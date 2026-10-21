@@ -2,6 +2,16 @@
 
 Newest entry first.
 
+## 2026-10-21: 050 merged
+**Changed:** Shaun merged 050 (playtest fixes and the title screen), InsanityWolfz/Pipeline#42.
+
+**Next:** the rest of 050–052, then the next batch: 053 (world and bosses) and 054 (combat readability).
+
+## 2026-10-21: 050 playtest fixes and the title screen built (draft PR)
+**Changed:** built 050 on `claude/050-playtest-fixes`. The second-line goal's cause, reproduced from Shaun's save: it checked "two entrances hold arrows" and its arrow took the middle open entrance; each entrance now records the node that opened it, the goal reads "Feed ammo into the new entrance" (any ammo in the Warden core's entrance) and points at that entrance. SAVE_VERSION 7, no migration. E opens the hovered hopper or crate within 3 tiles and closes the inventory, hopper, crate and stash screens; a crate's 8 slots hold stacks; gains in the foundry are banked at once. Name tags are small and sit under the feet (050.1), banners at the top, the end card has a cursor; inventory items show their names; the gear list scrolls; a gear tip goes as the cursor leaves its square. No sparkle for field regen; the ward ring keeps still, with a shield. The wanderer facing forward has matched arms, shoulders under the hood and a belt that wraps. The title's wanderer breathes and sways, its tube glow pulses; the logo and buttons are bigger. F11: the page no longer overflows (050.2). `npm run check` passes (1701); the full Playwright run: 141 passed, 2 failed (050's own gear test, fixed; settings.spec timed out under load, passes alone here and on main), 128 skipped. `npm run measure` identical to main. Review shots in docs/review/050; older shots retaken only where 050 changes them. Spec status stays approved.
+
+**Next:** review, then Shaun answers 050.4–050.9 (spec, "Raised after the build") and playtests the preview.
+
 ## 2026-10-21: Live-playtest interview; 050–052 drafted
 **Changed:** ran the spec interview on Shaun's live playtest notes (answers in docs/brainstorm/2026-10-21-playtest-interview.md) and drafted 050 (playtest fixes and title screen), 051 (guidance), 052 (foundry logistics). 053 (world and bosses) and 054 (combat readability) are ideas for the next batch.
 

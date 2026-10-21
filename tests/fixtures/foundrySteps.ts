@@ -8,4 +8,4 @@ export const REFILL_GOAL = 'Refill the hoppers with wood, stone and fiber (E)';
 export const AFTER_REFILL = 'Fill the tube from your line';
 
 /** After the Warden's core restores the second entrance (046.3): a second line of the player's own. */
-export const SECOND_LINE_GOAL = 'Build a second arrow line into the new entrance';
+export const SECOND_LINE_GOAL = 'Feed ammo into the new entrance';

@@ -46,7 +46,7 @@ import { STAGE_RECIPES, STAGE_ROWS } from '../../src/data/stages';
 import { NODES } from '../../src/data/nodes';
 import { BUILD_BAR, PIECE_CATEGORIES, PIECES, pieceDef } from '../../src/data/pieces';
 import { ENTRANCE_CAPS, INTAKE, SPREAD_STEP } from '../../src/data/foundry';
-import { researchNode } from '../../src/data/research';
+import { RESEARCH_NODES, researchNode } from '../../src/data/research';
 import { ENTRANCE_GAUGE_COLORS } from '../../src/data/art/intake';
 import { vectorFrames } from '../../src/render/vector/catalog';
 import { OVERWORLD } from '../../src/data/overworld';
@@ -485,7 +485,7 @@ describe('the tutorial (012)', () => {
       const c = o.check;
       if (c.kind === 'refilled') for (const id of c.items) expect(ITEMS[id], o.text).toBeDefined();
       if (c.kind === 'machineMade') expect(machineOutputs, o.text).toContain(c.item);
-      if (c.kind === 'entrancesHold') expect(AMMO[c.ammo], o.text).toBeDefined();
+      if (c.kind === 'entranceFed') expect(RESEARCH_NODES.some((n) => n.id === c.node), o.text).toBe(true);
       if (!o.highlight) continue;
       expect(BUILD_BAR, o.text).toContain(o.highlight);
       const def = pieceDef(o.highlight);

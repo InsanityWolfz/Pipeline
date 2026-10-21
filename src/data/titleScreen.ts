@@ -12,17 +12,28 @@ export const TITLE_SCREEN = {
   logo: {
     text: 'Pipeline',
     cx: 500,
-    y: 42,
-    scale: 5,
-    glow: { color: 'cyan', rx: 112, ry: 30, rings: 6, alpha: 0.09, dy: 12 },
+    // 050 (F, Shaun: "make the pipeline text bigger"): 6.4 (from 5), its middle where it was (about y 54).
+    y: 38,
+    scale: 6.4,
+    glow: { color: 'cyan', rx: 143, ry: 38, rings: 6, alpha: 0.09, dy: 15 },
   },
-  /** The menu column's top-left: 020's 184×20 rows (flowLayout.ts). */
-  menu: { x: 408, y: 136 },
+  /**
+   * The menu column's top-left and scale: 020's 184×20 rows (flowLayout.ts). 050 (F, "the buttons bigger… they're
+   * fine where they're at"): 1.25 times (230×25), centred on the same point as before (x 500, y about 182).
+   */
+  menu: { x: 385, y: 124, scale: 1.25 },
   rows: { newGame: 'New game', continue: 'Continue', settings: 'Settings', quit: 'Quit' } satisfies Record<TitleRow, string>,
   /** The posed wanderer on the ridge: feet at (x, y), drawn this many times its world size, facing the ruin. */
   wanderer: { x: 148, y: 244, scale: 2.4, aim: 0.18, glow: 0.95 },
+  /**
+   * 050 (F, Shaun: "a tad more movement"): the wanderer breathes (the hips dip `crouch` style px and back, once per
+   * `breathMs`), the cloak sways `flap` radians and the hose `hose` px in the wind (once per `swayMs`), and the tube's
+   * glow pulses between `muzzle` strengths (and the face glow between `glow`) once per `glowMs`. Redrawn every `frameMs`.
+   * The hose trails the cloak's swing by `hoseLag` of a loop, and its sag dips `hoseLift` px per px it sways sideways.
+   */
+  motion: { breathMs: 3600, crouch: 1, swayMs: 2700, flap: 0.12, hose: 2.5, hoseLag: 0.125, hoseLift: 0.25, glowMs: 2200, muzzle: [0.25, 1] as const, glow: [0.8, 1] as const, frameMs: 33 },
   /** The intake pipe's glow over the ruin, breathing slowly (019's cyan): its centre, size and alpha range over a period. */
-  pipeGlow: { x: 392, y: 240, rx: 15, ry: 22, rings: 5, color: 'cyan', alpha: [0.18, 0.5] as const, periodMs: 3600 },
+  pipeGlow: { x: 368, y: 240, rx: 15, ry: 22, rings: 5, color: 'cyan', alpha: [0.18, 0.5] as const, periodMs: 3600 },
   /**
    * Ley motes drifting across the scene (014's ambient motes, slower): count, speed px/s, size px, colour and alpha.
    * They start between `band` (y, px) and drift right and up; past the view's right edge (by `wrap`) a mote comes

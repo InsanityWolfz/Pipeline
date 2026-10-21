@@ -5,8 +5,8 @@ import { revealBanked } from './schematics';
 import { rechargeEmber } from './relics';
 
 // Banking (011): what a death keeps. Walking into the foundry, by any way in,
-// and a pylon deposit set the banked snapshot to what the player holds. Banking a
-// schematic reveals its node (033).
+// and a pylon deposit set the banked snapshot to what the player holds; in the
+// foundry, gains are banked at once (050). Banking a schematic reveals its node (033).
 
 /** Banks everything the player carries right now, recording it, reveals the nodes of carried schematics, and recharges Last Ember (036). */
 export function bank(state: SimState): void {
@@ -14,6 +14,22 @@ export function bank(state: SimState): void {
   state.events.banks.push({ ...state.inventory });
   revealBanked(state);
   rechargeEmber(state);
+}
+
+/**
+ * 050 (A.10, Shaun): in the foundry, anything gained (picked up, crafted, taken from a crate, a hopper or the stash) is
+ * banked at once: each item held above what's banked is banked up to what's held, revealing a schematic's node as
+ * banking does. Once a tick, after the tick's pickups; spending never lowers what's banked (031).
+ */
+export function bankGains(state: SimState): void {
+  if (state.roomId !== FOUNDRY_ROOM) return;
+  let gained = false;
+  for (const [itemId, held] of Object.entries(state.inventory)) {
+    if (held <= count(state.banked, itemId)) continue;
+    state.banked[itemId] = held;
+    gained = true;
+  }
+  if (gained) revealBanked(state);
 }
 
 /** Banks on arriving in the foundry, called by doors and travel, and records the arrival (042: render saves on it). */

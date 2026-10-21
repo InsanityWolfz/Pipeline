@@ -6,6 +6,7 @@ import { FOUNDRY_ROOM } from '../../data/rooms';
 import { createSim } from '../../sim/state';
 import { fontsReady } from '../fonts';
 import type { GameScene } from '../GameScene';
+import { CursorView } from '../CursorView';
 import { codeOf } from '../keys';
 import { MENU_HOVER_EVENT } from '../menuFeedback';
 import { simForUrl } from '../playtest';
@@ -50,6 +51,8 @@ export class FlowScene extends Scene {
   private endCard?: EndCardView;
   private actions?: FlowActions;
   private note?: NoteView;
+  /** 050 (A.5): the pointer over the flow's screens while a game has hidden the OS cursor (the game's own draws under this scene). */
+  private cursor?: CursorView;
   /** Input taken this frame, acted on next frame: the game scene below sees this frame's keys and clicks while still covered, so none reach it. */
   private queued: { frame: number; run: () => void }[] = [];
   private built = false;
@@ -98,6 +101,7 @@ export class FlowScene extends Scene {
     this.notice = new NoticeView(this);
     this.endCard = new EndCardView(this);
     this.note = new NoteView(this);
+    this.cursor = new CursorView(this, false);
     this.runner = new GameRunner(this.game, this.saves, () => this.scene.bringToTop(), (m) => this.notice?.show(m));
     this.settingsScreen = new SettingsScreen(this, {
       back: () => {
@@ -167,6 +171,8 @@ export class FlowScene extends Scene {
     this.title?.update(delta);
     this.notice?.update(delta);
     this.note?.place();
+    const covering = this.machine.state !== 'play' && this.machine.state !== 'paused';
+    this.cursor?.update(true, covering && this.game.canvas.style.cursor === 'none');
     this.sync();
     this.sounds?.endFrame();
   }
@@ -282,6 +288,7 @@ export class FlowScene extends Scene {
       endCard: this.endCard?.ui ?? null,
       note: this.note?.isOpen ? this.note.ui : null,
       notice: this.notice?.current ?? null,
+      cursor: this.cursor?.visible ? this.cursor.state : null,
     };
   }
 }

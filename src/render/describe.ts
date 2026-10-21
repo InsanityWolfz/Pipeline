@@ -18,6 +18,14 @@ export { describeRound } from './describeRound';
 export { describeGear, describePiece, describeStage, describeTalent } from './describeContent';
 export { describeKeyword } from './describeGlossary';
 
+/**
+ * 050 (A.14): an inventory item that isn't a round, by its name alone. Its source's id is the name its slot shows (a
+ * schematic folds under "Unknown schematic" until banked, 033), so the tip never names more than the slot does.
+ */
+function describeItem(name: string): Description {
+  return { source: { kind: 'item', id: name }, name, chips: [], summary: [], breakdown: [], bonuses: 0 };
+}
+
 /** Whatever a tip's source is, described; null for a gear piece that's gone or a reserved keyword. */
 export function describe(seen: Seen, src: TipSource): Description | null {
   switch (src.kind) {
@@ -33,6 +41,8 @@ export function describe(seen: Seen, src: TipSource): Description | null {
       return describePiece(src.id);
     case 'keyword':
       return describeKeyword(seen, src.id as ChipId);
+    case 'item':
+      return describeItem(src.id);
   }
 }
 

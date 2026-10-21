@@ -62,6 +62,18 @@ export class SiteMenus {
     return [this.pylon, this.stash, this.sorter, this.waystone];
   }
 
+  /** 050 (A.13): the wheel scrolls the bench's gear list while it's open; returns whether it took the steps. */
+  scrollGear(steps: number): boolean {
+    if (!this.bench.isOpen) return false;
+    this.bench.scroll(steps);
+    return true;
+  }
+
+  /** 050: the stash's menu is open (E closes it, as Esc does). */
+  get stashOpen(): boolean {
+    return this.stash.isOpen;
+  }
+
   get isOpen(): boolean {
     return this.menus.some((m) => m.isOpen) || this.bench.isOpen || this.restore.isOpen || this.offering.isOpen;
   }

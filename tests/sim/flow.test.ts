@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CONDUIT_TICKS, CRATE_CAP, HOPPER_TICKS, INPUT_CAP } from '../../src/data/foundry';
+import { CONDUIT_TICKS, HOPPER_TICKS, INPUT_CAP } from '../../src/data/foundry';
 import { machineDef } from '../../src/data/pieces';
 import type { ConduitState, CrateState, HopperState, MachineState } from '../../src/sim/pieces';
 import { tileCentre } from '../../src/sim/tiles';
@@ -218,24 +218,25 @@ describe('hoppers', () => {
 });
 
 describe('crates', () => {
-  it('take anything up to CRATE_CAP, and E empties them into the inventory', () => {
+  it('take any kind while a slot has room (050: 8 stacks), and their screen empties them into the inventory', () => {
     const s = foundry();
     const c = put<ConduitState>(s, 'conduit', 4, 5);
     const crate = put<CrateState>(s, 'crate', 5, 5);
-    crate.contents = { arrow: CRATE_CAP - 1 };
+    // Seven slots of arrows: the eighth takes a bomb, then no ninth kind.
+    crate.contents = { arrow: 699 };
     c.item = 'bomb';
     run(s, CONDUIT_TICKS);
-    expect(crate.contents).toEqual({ arrow: CRATE_CAP - 1, bomb: 1 });
-    c.item = 'bomb';
+    expect(crate.contents).toEqual({ arrow: 699, bomb: 1 });
+    c.item = 'stone';
     run(s, CONDUIT_TICKS);
-    expect(c.item).toBe('bomb');
+    expect(c.item).toBe('stone');
     c.item = null;
     standBeside(s, 5, 5);
     s.inventory = {};
     // 047: the crate's screen takes each stack out (Ctrl+click: all of it).
     run(s, 1, { withdraw: { id: crate.id, amount: 'all', itemId: 'arrow' } });
     run(s, 1, { withdraw: { id: crate.id, amount: 'all', itemId: 'bomb' } });
-    expect(s.inventory).toEqual({ arrow: CRATE_CAP - 1, bomb: 1 });
+    expect(s.inventory).toEqual({ arrow: 699, bomb: 1 });
     expect(crate.contents).toEqual({});
     expect(s.events.withdraws).toEqual([{ id: crate.id, itemId: 'bomb', count: 1 }]);
   });

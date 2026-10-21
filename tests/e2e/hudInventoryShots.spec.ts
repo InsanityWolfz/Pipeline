@@ -72,7 +72,10 @@ test.describe('review screenshots (031)', () => {
     await expect.poll(async () => (await ui(page))?.health.text).toBe('100 / 100');
     await page.screenshot({ path: `${SHOTS}/01-hud-full-hp-armor-worn.png` });
 
-    // ...and a last few are picked up there, unbanked: at risk (beyond the banked counts: the 3 identified pieces still count as banked).
+    // ...and a last few are picked up back outside (050: in the foundry, gains are banked at once), unbanked: at risk
+    // (beyond the banked counts: the 3 identified pieces still count as banked).
+    await page.evaluate(() => window.__helpers?.toHall());
+    await quietScreen(page);
     await pickUp(page, [['wood', 3], ['rimestone', 2], ['fuse', 2], ['arrow+frost', 4], ['unidentified-armor', 4], ['warden-core', 1]]);
     await page.keyboard.press('i');
     await expect.poll(async () => (await ui(page))?.inventory.open).toBe(true);

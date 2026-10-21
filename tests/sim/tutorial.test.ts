@@ -187,7 +187,7 @@ describe('objectives', () => {
     expect(OBJECTIVES[open]?.text).toBe('Restore a second intake entrance (E at a cap with the warden core)');
     expect(OBJECTIVES[fed]?.text).toBe('Feed two entrances to fire a spread');
     // 046: the second-line goal sits between them.
-    expect(OBJECTIVES[open + 1]?.text).toBe('Build a second arrow line into the new entrance');
+    expect(OBJECTIVES[open + 1]?.text).toBe('Feed ammo into the new entrance');
     expect(fed).toBe(open + 2);
     s.roomId = FOUNDRY_ROOM;
     // Under the west cap.

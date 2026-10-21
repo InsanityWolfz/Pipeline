@@ -16,6 +16,7 @@ export function gameUi(g: GameScene): GameUiState {
   const main = g.cameras?.main?.worldView;
   return {
     ready: g.effects !== undefined && fontsReady(),
+    drawnTick: g.drawnTick,
     craftOpen: g.menu?.isOpen ?? false,
     paused: g.pause?.isOpen ?? false,
     pickerOpen: (g.hud?.inventory.container ?? null) !== null,

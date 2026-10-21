@@ -34,11 +34,12 @@ export interface TipLine {
   short?: string;
 }
 
-/** What a tablet can describe (040), and the build bar's other pieces (015's tip, now the same tablet). */
-export type TipKind = 'round' | 'stage' | 'talent' | 'gear' | 'piece' | 'keyword';
+/** What a tablet can describe (040), the build bar's other pieces (015's tip, now the same tablet), and any carried item by name (050). */
+export type TipKind = 'round' | 'stage' | 'talent' | 'gear' | 'piece' | 'keyword' | 'item';
 
 export interface TipSource {
   kind: TipKind;
+  /** The thing's id; for an item (050), the name its slot shows. */
   id: string;
 }
 
@@ -72,6 +73,8 @@ export interface TipHit {
   /** The tallest and widest its summary may be, px (the talent tree's info strip: it never covers a node or the reset button). */
   maxH?: number;
   maxW?: number;
+  /** 050 (A.6): the tablet goes the moment the cursor leaves `at`, even onto the tablet (no grace, chips unclickable). */
+  leaveAtOnce?: true;
 }
 
 /** A panel or HUD part that can show tips: what's under a view point, and (the Build tab) a chip there. */
