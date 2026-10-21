@@ -1,4 +1,9 @@
 import { ARENAS, type ArenaDef } from '../data/arenas';
+import { FEET_BOX } from '../data/player';
+import type { TilePos } from '../data/tiles';
+import { roomBodies } from './bodies';
+import { defOf } from './champions';
+import { boxHitsSolid, overlapsRect } from './collision';
 import { enemyDef } from '../data/enemies';
 import { OVERWORLD_ROOM } from '../data/overworld';
 import { SANDBOX_ROOM } from '../data/rooms';
@@ -18,8 +23,7 @@ import { insideTiles, tileCentre } from './tiles';
 // seal, derived from the boss, never stored: it stands exactly while the boss fights, and render draws it over the door.
 // The sandbox's room holds the forum at the same tiles (044), its door always open.
 
-export type Arena = ArenaDef;
-export { ARENAS };
+type Arena = ArenaDef;
 
 /** The rooms any arena stands in: the overworld, and the sandbox's room (044). */
 export const ARENA_ROOMS: readonly string[] = [...new Set(ARENAS.flatMap((a) => a.rooms))];
@@ -65,13 +69,40 @@ export function resetBoss(state: SimState, boss: EnemyState): void {
   state.enemyBombs = state.enemyBombs.filter((b) => b.enemyId !== boss.enemyId || b.roomId !== boss.roomId);
 }
 
+/** True if the player's feet box at (x, y) would stand clear of walls, solid things and every live enemy's feet in the room. */
+function clearAt(state: SimState, x: number, y: number): boolean {
+  const { room, obstacles } = roomBodies(state, state.roomId);
+  if (boxHitsSolid(room, x, y, FEET_BOX) || obstacles.some((r) => overlapsRect(x, y, FEET_BOX, r))) return false;
+  return !state.enemies.some((e) => {
+    if (e.roomId !== state.roomId || e.health <= 0) return false;
+    const f = defOf(e).feetBox;
+    return overlapsRect(x, y, FEET_BOX, { x: e.x, y: e.y, w: f.w, h: f.h });
+  });
+}
+
+/**
+ * Where E at a door puts the player: its tile, or if something stands there (an enemy waiting at the door), the first
+ * clear tile of: a tile further from the door, then either side of the tile, then either side of the further one, in
+ * that fixed order. With none clear, the tile itself.
+ */
+function landing(state: SimState, arena: Arena, to: TilePos): { x: number; y: number } {
+  const mid = arena.door.tiles[Math.floor(arena.door.tiles.length / 2)] ?? to;
+  const away = Math.sign(to.ty - mid.ty);
+  const tries: TilePos[] = [to, { tx: to.tx, ty: to.ty + away }, { tx: to.tx - 1, ty: to.ty }, { tx: to.tx + 1, ty: to.ty }, { tx: to.tx - 1, ty: to.ty + away }, { tx: to.tx + 1, ty: to.ty + away }];
+  for (const t of tries) {
+    const c = tileCentre(t);
+    if (clearAt(state, c.x, c.y)) return c;
+  }
+  return tileCentre(to);
+}
+
 /** E at a door, before the altars: in, or out with the fight reset. Returns the command the rest of the tick sees. */
 export function stepArenaLock(state: SimState, cmd: Command): Command {
   if (!cmd.interact) return cmd;
   const arena = doorInReach(state);
   const use = arena && doorUse(state, arena);
   if (!arena || !use) return cmd;
-  const to = tileCentre(use === 'enter' ? arena.door.enterTo : arena.door.leaveTo);
+  const to = landing(state, arena, use === 'enter' ? arena.door.enterTo : arena.door.leaveTo);
   state.player.x = to.x;
   state.player.y = to.y;
   if (use === 'enter') state.events.arenaEnters.push({ arena: arena.id });

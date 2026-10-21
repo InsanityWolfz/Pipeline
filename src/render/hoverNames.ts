@@ -1,5 +1,6 @@
 import { altarState } from '../sim/altar';
-import { ARENAS, doorUnlocked } from '../sim/arenaLock';
+import { ARENAS } from '../data/arenas';
+import { doorUnlocked } from '../sim/arenaLock';
 import { ARENA_DOOR_LOOK } from '../data/arenaAssets';
 import { shownItem } from './itemShown';
 import { TILE_SIZE } from '../data/config';

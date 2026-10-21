@@ -1,7 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import { HOLLOWS } from '../../src/data/hollows';
 import { HOLLOWS_SITES } from '../../src/data/hollowsSites';
-import { boot, cameraSettled, enterArena } from './helpers';
+import { boot, cameraSettled } from './helpers';
+import { enterArena } from './arenaHelpers';
 
 // Review screenshots for 034 (REVIEW_SHOTS=1, into docs/review/034): the barrier and
 // breached, the Ley-iron Cut, the aqueduct and the Cistern Terrace, the Bulwark facing the

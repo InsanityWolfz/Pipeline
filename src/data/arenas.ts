@@ -13,8 +13,10 @@ import type { TilePos, TileRect } from './tiles';
 export interface ArenaDoor {
   readonly tiles: readonly TilePos[];
   /**
-   * The floor tile inside, by the door's middle: E from outside stands the player here. Inside a door in a south wall,
-   * two tiles in, clear of the door's sprite standing over the row above it.
+   * The floor tile inside, by the door's middle: E from outside stands the player here. Behind a door in a south wall
+   * (the shrine's) it is two tiles in, clear of the door's sprite standing over the row above it; behind a door in a
+   * north wall (the forum's) it is the tile right below the door. `leaveTo` mirrors this: two tiles out north of a door,
+   * one tile out south of it. src/sim/arenaLock.ts steps the player aside if something stands on the tile.
    */
   readonly enterTo: TilePos;
   /** The floor tile outside, by the door's middle: E from inside stands the player here (two tiles out north of the door). */

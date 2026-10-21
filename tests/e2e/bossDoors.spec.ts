@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { SHRINE_ARENA } from '../../src/data/arenas';
 import { enemyDef } from '../../src/data/enemies';
-import { boot, enterArena, watchErrors } from './helpers';
+import { boot, watchErrors } from './helpers';
+import { enterArena } from './arenaHelpers';
 
 // The boss doors (055, D.5): the Warden's walled shrine has a door, sealed in the tutorial until the first line fills
 // the tube; with the gates open (?playtest), E at it goes in, the Warden wakes and the shrine locks (043's seal over the
@@ -63,7 +64,8 @@ test("?playtest: E at the shrine's door goes in, the Warden's fight locks it, an
     return g.step(1, { interact: true });
   }, W.door.tiles[1] ?? W.door.leaveTo);
   expect(out.events.arenaLeaves).toEqual([{ arena: 'shrine' }]);
-  expect(out.player.y).toBeGreaterThan((W.door.leaveTo.ty) * 32);
+  const left = { x: (W.door.leaveTo.tx + 0.5) * 32, y: (W.door.leaveTo.ty + 0.5) * 32 };
+  expect({ x: out.player.x, y: out.player.y }).toEqual(left);
   expect(out.enemies.find((e) => e.enemyId === W.boss)).toMatchObject({ health: MAX, mode: 'idle' });
   expect(out.arenas.find((a) => a.id === 'shrine')).toMatchObject({ locked: false, inside: false });
   expect(errors).toEqual([]);

@@ -19,7 +19,8 @@ import { SoundView } from './SoundView';
 import { attuneBeat } from './attune';
 import { intakeAnchor } from './foundryLayout';
 import { playHollows, SealSound } from './hollowsFeel';
-import { ARENAS, arenaLocked } from '../sim/arenaLock';
+import { ARENAS } from '../data/arenas';
+import { arenaLocked } from '../sim/arenaLock';
 import { playMines } from './mineFeel';
 import { HollowsEnemyFeel } from './hollowsEnemyFeel';
 

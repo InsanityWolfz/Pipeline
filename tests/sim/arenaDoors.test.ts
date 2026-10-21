@@ -5,6 +5,7 @@ import { enemyDef } from '../../src/data/enemies';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { TUTORIAL_START } from '../../src/data/player';
 import { SANDBOX_START } from '../../src/data/sandbox';
+import { HOLLOWS_START } from '../../src/data/playtest';
 import { SANDBOX_ROOM, TILE, WALKABLE } from '../../src/data/rooms';
 import { arenaLocked, doorUnlocked } from '../../src/sim/arenaLock';
 import { createEnemy } from '../../src/sim/enemies';
@@ -200,5 +201,49 @@ describe("the forum's door in the sandbox (044)", () => {
     movePlayer(s, out.x, out.y);
     run(s, 1, { interact: true });
     expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre(FORUM_ARENA.door.enterTo));
+  });
+});
+
+describe("the forum's door in the overworld", () => {
+  /** The Hollows start (the shrine claimed), the forum's guards gone, the player just outside its door's middle. */
+  function outsideForum(open: boolean): SimState {
+    const s = createSim(SEED, { start: HOLLOWS_START });
+    s.enemies = s.enemies.filter((e) => e.enemyId !== FORUM_ARENA.boss);
+    s.gates.hollows = open;
+    const out = tileCentre({ tx: mid(FORUM_ARENA).tx, ty: mid(FORUM_ARENA).ty - 1 });
+    movePlayer(s, out.x, out.y);
+    return s;
+  }
+
+  it('is sealed while the Hollows barrier stands: E does nothing', () => {
+    const s = outsideForum(false);
+    const at = { x: s.player.x, y: s.player.y };
+    expect(interactTarget(s)).toBeNull();
+    run(s, 1, { interact: true });
+    expect({ x: s.player.x, y: s.player.y }).toEqual(at);
+    expect(s.events.arenaEnters).toEqual([]);
+  });
+
+  it('opens once the barrier has fallen: E goes in', () => {
+    const s = outsideForum(true);
+    run(s, 1, { interact: true });
+    expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre(FORUM_ARENA.door.enterTo));
+    expect(s.events.arenaEnters).toEqual([{ arena: FORUM_ARENA.id }]);
+  });
+});
+
+describe('where E at a door lands', () => {
+  it('steps aside of an enemy standing on the tile, to a tile further from the door, the same way every run', () => {
+    const go = () => {
+      const s = outsideShrine(true);
+      const husk = createEnemy(s.nextEnemyId++, 'husk', tileCentre(W.door.enterTo), OVERWORLD_ROOM);
+      husk.frozen = 10_000;
+      s.enemies.push(husk);
+      run(s, 1, { interact: true });
+      return { x: s.player.x, y: s.player.y };
+    };
+    const landed = go();
+    expect(landed).toEqual(tileCentre({ tx: W.door.enterTo.tx, ty: W.door.enterTo.ty - 1 }));
+    expect(go()).toEqual(landed);
   });
 });

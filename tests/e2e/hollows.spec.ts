@@ -3,7 +3,8 @@ import { CLAIM_TICKS } from '../../src/data/claims';
 import { BULWARK } from '../../src/data/bulwark';
 import { HOLLOWS } from '../../src/data/hollows';
 import { HOLLOWS_SITES } from '../../src/data/hollowsSites';
-import { boot, enterArena, watchErrors } from './helpers';
+import { boot, watchErrors } from './helpers';
+import { enterArena } from './arenaHelpers';
 import { clickRow, flowIs } from './flowPage';
 
 // Stonefall Hollows (034): the barrier drops when the shrine is claimed; in the Hollows,

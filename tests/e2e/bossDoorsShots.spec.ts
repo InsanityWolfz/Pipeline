@@ -2,7 +2,8 @@ import { expect, test, type Page } from '@playwright/test';
 import { FORUM_ARENA, SHRINE_ARENA, type ArenaDef } from '../../src/data/arenas';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { GROTTO } from '../../src/data/grotto';
-import { boot, cameraSettled, enterArena, quietScreen } from './helpers';
+import { boot, cameraSettled, quietScreen } from './helpers';
+import { enterArena } from './arenaHelpers';
 
 // Review screenshots for 055 (REVIEW_SHOTS=1, into docs/review/055): the Warden's door sealed (hovered, its hint
 // showing) and open, the forum's open, both sealed and open on the contact sheet, inside each arena locked (043's seal
