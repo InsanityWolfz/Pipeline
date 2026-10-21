@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TILE_SIZE } from '../../src/data/config';
 import { INTAKE } from '../../src/data/foundry';
-import { TUTORIAL_LAYOUT } from '../../src/data/foundryAssets';
+import { TARGET_LIFT } from '../../src/data/targets';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { arrowTip } from '../../src/render/waypointPlace';
 import { targetPoints } from '../../src/sim/objectiveTarget';
@@ -37,11 +37,11 @@ const markerPoint = (s: SimState): { x: number; y: number } | null => {
 /** Shaun's save state, as the export wrote it. */
 const saved = SAVE.save.state as unknown as { foundry: FoundryState; link: { entrances: Omit<EntranceState, 'node'>[] }; research: Record<string, string> };
 
-/** The mouth an arrow marker floats over for an entrance (027's lift). */
+/** The mouth an arrow marker floats over for an entrance (TARGET_LIFT.newEntrance). */
 const over = (i: number) => {
   const t = INTAKE.entrances[i];
   if (!t) throw new Error(`no entrance ${i}`);
-  return { x: (t.tx + 0.5) * TILE_SIZE, y: (t.ty + 1) * TILE_SIZE - TUTORIAL_LAYOUT.marker.lift };
+  return { x: (t.tx + 0.5) * TILE_SIZE, y: (t.ty + 1) * TILE_SIZE - TARGET_LIFT.newEntrance };
 };
 
 /**
