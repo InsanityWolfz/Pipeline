@@ -1,5 +1,5 @@
 # 051: Guidance
-status: approved
+status: done
 
 Approved on draft by Shaun in chat, 2026-10-21 ("approve 050-052"): the build follows the proposals in the open questions.
 
@@ -62,3 +62,6 @@ Built on `claude/051-guidance` (plan: docs/plans/051-guidance.md). 051.1 and 051
 - **051.11 Small choices.** The node glow is a 2 px pale outline of the node's own shape, breathing, with a glint every 2.6 s at a spot that moves. The edge arrow sits 14 px in from the edge, 1.3× the hovering arrow's size, pulsing; the corner map, the objective band and the bottom HUD count as part of the edge (it stops 14 px short of them, still on its line), and a target under one of them gets the edge arrow (after review). The arrow stays on alongside an E prompt over the same thing. Proposal: keep.
 - **051.12 Results.** `npm run check` passes (1731 unit tests). The full `npx playwright test`, once at the end (merged with 050's review fixes): 147 passed, 0 failed, 135 skipped (review shots). Review shots in docs/review/051: 01 an edge arrow, 02 the arrows over the example line's hoppers with their raws, 03 the bomb goal's sub-lines (stone ticked), 04 a glowing tree beside a cut one, 05 the fogged minimap with the foundry named on hover, 06a/b the foundry minimap, 07a the mouse beside the carried bar, 07b the slot swap mid-way. Older shots covering the HUD, minimap, objectives and foundry rerun with REVIEW_SHOTS=1 (028, 031, 032, 033, 042, 045, 046, 047, 050) and retaken, since each shows the minimap's fog, the waypoint arrow, the foundry map or the mouse; the title-only ones (042/01–07, 050/05) and the contact sheet (032/19) are unchanged and kept. 031's low-HP shot timed out once under the parallel shot run and passes alone. `npm run measure`, recorded, not tuned, identical to 050: ammo line and still 5/5 met; ring 1 2.2–3.2 s, ring 2 2.4–4.0 s met; ring 3 4/5 in band (14.1–21.6 s, MISSED); the Bulwark's decent build 14/20 with 2 KOs (MISSED); the naive bot KO'd 5/5.
 - **After review.** `npm run check` passes (1743 unit tests). The full `npx playwright test`, once on the review's head: 149 passed, 0 failed, 135 skipped (review shots). Retaken: 032/14 (it caught the door's fade), 051/03 (the edge arrow now clear of the minimap), 051/07b (waits on the swap's progress). Put back as they were: 050/01a, 050/04, 045/02, 031/08 (no 051 change). 046/02 keeps its retake: its carried bar's change (four ammo cells to five empty ones) is 047's, which that shot predated.
+
+## Shaun's answers (2026-10-21)
+- Shaun said "Merge 42-44". He changed none of the raised items, so they stand as built.

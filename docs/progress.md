@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: 051 merged
+**Changed:** Shaun merged 051 (guidance), InsanityWolfz/Pipeline#44.
+
+**Next:** the rest of 050–052, then the next batch: 053 (world and bosses) and 054 (combat readability).
+
 ## 2026-10-21: 050 merged
 **Changed:** Shaun merged 050 (playtest fixes and the title screen), InsanityWolfz/Pipeline#42.
 
