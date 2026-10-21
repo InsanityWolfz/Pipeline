@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: 057 approved
+**Changed:** added Shaun's waypoint-arrow stutter fix to 057; Shaun approved it on draft (proposals stand).
+
+**Next:** build 057.
+
 ## 2026-10-21: 057 drafted
 **Changed:** drafted 057 (the sandbox panels as click-open pop-outs) from Shaun's sandbox playtest of 056.
 
