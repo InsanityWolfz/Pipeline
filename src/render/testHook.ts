@@ -28,6 +28,7 @@ import type { RestorePanelState } from './RestorePanel';
 import type { ResearchListState } from './ResearchList';
 import type { HollowsShown } from './HollowsView';
 import type { HollowsEnemiesShown } from './hollowsEnemyArt';
+import type { EnemyBarShown } from './enemyBar';
 import type { Legibility, LegibilityUi } from './Legibility';
 import type { SandboxPanelState } from './SandboxPanel';
 
@@ -182,6 +183,8 @@ export interface UiState {
   champions: ChampionShown[];
   /** 035: Burrower ripples on show, Shardback flares lit, and each Sniper's laser as drawn (locked, its blink on, its ends). */
   hollowsEnemies: HollowsEnemiesShown;
+  /** 054: each drawn enemy's health bar: whether it shows, and whether it reads immune (blue, with the shield). */
+  enemyBars: EnemyBarShown[];
   /** 032: the waystone's menu while open (two or more claimed pylons): each row's text and box, view px; else null. */
   waystone: { text: string; x: number; y: number; w: number; h: number }[] | null;
   /** 033: the diagrams drawn on the foundry, restored parts, running effects and the wing door. */

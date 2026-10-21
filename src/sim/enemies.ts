@@ -195,8 +195,14 @@ export function damageEnemy(
   state.events.hits.push({ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: amount, damageType: style.damageType, ...(style.melee ? { melee: true as const } : {}) });
 }
 
-/** Whether shots, punches and bursts can reach it (035: not a Burrower underground; 041: not an add still rising). */
-export const targetable = (e: Pick<EnemyState, 'underground' | 'rising'>): boolean => !e.underground && e.rising <= 0;
+/**
+ * Immune (054): nothing can damage it now — a Burrower underground (035), an add still rising (041). A shield's front
+ * isn't immunity (it can be hit from behind). Render draws its bar blue with a shield while it holds.
+ */
+export const immune = (e: Pick<EnemyState, 'underground' | 'rising'>): boolean => e.underground || e.rising > 0;
+
+/** Whether shots, punches and bursts can reach it: whenever it isn't immune (054). */
+export const targetable = (e: Pick<EnemyState, 'underground' | 'rising'>): boolean => !immune(e);
 
 /** It passes through other enemies (035): a Burrower underground, a Charger mid-charge, an add rising (041). Separation leaves it be. */
 export const passesThrough = (e: EnemyState): boolean => e.underground || e.rising > 0 || (e.mode === 'swipe' && defOf(e).kind === 'charger');
