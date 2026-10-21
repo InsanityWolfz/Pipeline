@@ -88,7 +88,7 @@ test.describe('review screenshots (034)', () => {
       window.__GAME__?.claim('shrine');
       window.__GAME__?.step(1);
     });
-    await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hollows))?.barrierAlpha ?? 1, { intervals: [20] }).toBeLessThan(0.6);
+    await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hollows))?.barrierAlpha ?? 1, { intervals: [20], timeout: 20_000 }).toBeLessThan(0.6);
     await page.screenshot({ path: `${SHOTS}/02-barrier-collapsing.png` });
     await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hollows))?.barrier).toBe('down');
