@@ -47,3 +47,6 @@ export function stepNodes(nodes: NodeState[]): void {
     if (n.regrow === 0) n.uses = nodeDef(n.nodeId).uses;
   }
 }
+
+/** 051 (B.4): a node that can be harvested now glows; a used-up one doesn't until it regrows. */
+export const harvestable = (n: Pick<NodeState, 'uses'>): boolean => n.uses > 0;

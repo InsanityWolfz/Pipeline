@@ -1,4 +1,5 @@
 import type { GateId } from './rooms';
+import type { TargetDef } from './targets';
 
 // The objectives: one ordered chain (028). The prototype's goals (012) run first,
 // in its beat order, then each milestone's, tagged by milestone; later specs append
@@ -20,8 +21,8 @@ export type ObjectiveCheck =
   | { kind: 'lineDry' }
   /** 046: since the lines ran dry, each of these items has been put in a hopper by hand. */
   | { kind: 'refilled'; items: readonly string[] }
-  /** 046: at least `min` entrances hold this ammo. */
-  | { kind: 'entrancesHold'; ammo: string; min: number }
+  /** 050: the entrance this research node opened holds ammo, any ammo. */
+  | { kind: 'entranceFed'; node: string }
   /** Machines have made at least one of this item (027); hand-crafting never counts. */
   | { kind: 'machineMade'; item: string }
   /** An intake entrance has filled from a line at least once. */
@@ -48,12 +49,6 @@ export type ObjectiveCheck =
 /** Which key a goal's prompt shows, and what it floats over (see PromptView). */
 export type PromptTarget = 'tubeStone' | 'node' | 'bench' | 'pylon' | 'hopper' | 'player';
 
-/**
- * What an arrow marker floats over: the intake, where a line ends (027), the supply ports (028), or the nearest
- * discovered resource-site pylon not yet claimed (032).
- */
-export type MarkerTarget = 'intake' | 'ports' | 'sitePylon';
-
 /** Which milestone a goal belongs to (028): the prototype's, or Milestone 1's. */
 export type Milestone = 'prototype' | 'm1';
 
@@ -62,8 +57,13 @@ export interface ObjectiveDef {
   milestone: Milestone;
   check: ObjectiveCheck;
   prompt?: { key: 'E' | 'C' | 'B'; over: PromptTarget };
-  /** An arrow marker over the thing to build toward (027), shown anywhere in its room, beside any key prompt. */
-  marker?: MarkerTarget;
+  /**
+   * 051 (B.1): what the waypoint arrow points at (src/data/targets.ts). It replaces 027's marker: an arrow at the
+   * screen's edge while it's off screen, over it while it's on screen, always on.
+   */
+  target: TargetDef;
+  /** 051 (B.3): indented sub-lines under the goal, one per raw its crafts still lack, each ticking off once gathered. */
+  subSteps?: 'collect';
   /** The piece whose build-bar cell pulses while the bar is open (027). */
   highlight?: string;
   /**
@@ -73,18 +73,30 @@ export interface ObjectiveDef {
   waitsFor?: ObjectiveCheck;
 }
 
+/** 050: the research node whose entrance the second-line goal asks to feed, and its marker points at: the Warden core's. */
+export const NEW_ENTRANCE_NODE = 'entrance-2';
+
 export const OBJECTIVES: readonly ObjectiveDef[] = [
-  { text: 'Pick up the tube (E)', milestone: 'prototype', check: { kind: 'hasTube' }, prompt: { key: 'E', over: 'tubeStone' } },
+  { text: 'Pick up the tube (E)', milestone: 'prototype', check: { kind: 'hasTube' }, prompt: { key: 'E', over: 'tubeStone' }, target: { kind: 'tubeStone' } },
   {
     text: 'Gather wood, stone and fiber (E)',
     milestone: 'prototype',
     check: { kind: 'gathered', items: ['wood', 'stone', 'fiber'] },
     prompt: { key: 'E', over: 'node' },
+    target: { kind: 'nodes' },
   },
-  { text: 'Craft arrows (C)', milestone: 'prototype', check: { kind: 'crafted', items: ['arrow'] }, prompt: { key: 'C', over: 'player' } },
-  { text: 'Clear the ruin field of Husks', milestone: 'prototype', check: { kind: 'gate', gate: 'foundry' } },
-  { text: 'Enter the foundry', milestone: 'prototype', check: { kind: 'inRoom', room: 'foundry' } },
-  { text: 'Craft a bomb and a ley bolt (C)', milestone: 'prototype', check: { kind: 'crafted', items: ['bomb', 'ley-bolt'] }, prompt: { key: 'C', over: 'player' } },
+  { text: 'Craft arrows (C)', milestone: 'prototype', check: { kind: 'crafted', items: ['arrow'] }, prompt: { key: 'C', over: 'player' }, target: { kind: 'collect' } },
+  { text: 'Clear the ruin field of Husks', milestone: 'prototype', check: { kind: 'gate', gate: 'foundry' }, target: { kind: 'pack', group: 'field' } },
+  // 051 (B.3, Shaun): bombs and ley bolts are crafted before the foundry, with a sub-line for each raw still lacking.
+  {
+    text: 'Craft bombs and ley bolts (C)',
+    milestone: 'prototype',
+    check: { kind: 'crafted', items: ['bomb', 'ley-bolt'] },
+    prompt: { key: 'C', over: 'player' },
+    target: { kind: 'collect' },
+    subSteps: 'collect',
+  },
+  { text: 'Enter the foundry', milestone: 'prototype', check: { kind: 'inRoom', room: 'foundry' }, target: { kind: 'room', room: 'foundry' } },
   // 046: the example line stands from the first entry (027's build steps gave way to it). Once it runs dry, the
   // line asks the player to refill its hoppers.
   {
@@ -93,44 +105,49 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
     check: { kind: 'refilled', items: ['wood', 'stone', 'fiber'] },
     waitsFor: { kind: 'lineDry' },
     prompt: { key: 'E', over: 'hopper' },
+    target: { kind: 'hoppers', unfilled: true },
   },
-  { text: 'Fill the tube from your line', milestone: 'prototype', check: { kind: 'lineFull' }, prompt: { key: 'E', over: 'hopper' } },
-  { text: 'Identify your armor at the bench (E)', milestone: 'prototype', check: { kind: 'identified' }, prompt: { key: 'E', over: 'bench' } },
-  { text: "Claim the shrine's pylon", milestone: 'prototype', check: { kind: 'claimed', site: 'shrine' }, prompt: { key: 'E', over: 'pylon' } },
+  { text: 'Fill the tube from your line', milestone: 'prototype', check: { kind: 'lineFull' }, prompt: { key: 'E', over: 'hopper' }, target: { kind: 'hoppers' } },
+  { text: 'Identify your armor at the bench (E)', milestone: 'prototype', check: { kind: 'identified' }, prompt: { key: 'E', over: 'bench' }, target: { kind: 'bench' } },
+  { text: "Claim the shrine's pylon", milestone: 'prototype', check: { kind: 'claimed', site: 'shrine' }, prompt: { key: 'E', over: 'pylon' }, target: { kind: 'pylon', site: 'shrine' } },
   // The prototype's one Warden drops one core, and restoring a second entrance costs one (033: one entrance per core).
-  { text: 'Restore a second intake entrance (E at a cap with the warden core)', milestone: 'prototype', check: { kind: 'restored', node: 'entrance-2' } },
-  // 046: the second entrance gets a line of its own, built by the player (027's lesson after the Warden).
+  { text: 'Restore a second intake entrance (E at a cap with the warden core)', milestone: 'prototype', check: { kind: 'restored', node: NEW_ENTRANCE_NODE }, target: { kind: 'caps' } },
+  // 046: the second entrance gets a line of its own, built by the player (027's lesson after the Warden). 050 (Shaun):
+  // any ammo in the entrance the Warden's core opened counts, and the arrow points at that entrance.
   {
-    text: 'Build a second arrow line into the new entrance',
+    text: 'Feed ammo into the new entrance',
     milestone: 'prototype',
-    check: { kind: 'entrancesHold', ammo: 'arrow', min: 2 },
+    check: { kind: 'entranceFed', node: NEW_ENTRANCE_NODE },
     prompt: { key: 'B', over: 'player' },
-    marker: 'intake',
+    target: { kind: 'newEntrance' },
     highlight: 'assembler',
   },
-  { text: 'Feed two entrances to fire a spread', milestone: 'prototype', check: { kind: 'volley', min: 2 } },
-  { text: 'Head back out — the foundry keeps running', milestone: 'prototype', check: { kind: 'awayRunning', ticks: 600 } },
+  { text: 'Feed two entrances to fire a spread', milestone: 'prototype', check: { kind: 'volley', min: 2 }, target: { kind: 'intake' } },
+  { text: 'Head back out — the foundry keeps running', milestone: 'prototype', check: { kind: 'awayRunning', ticks: 600 }, target: { kind: 'room', room: 'overworld' } },
   // 028: Milestone 1's goals, after the shrine. Later specs append theirs.
-  { text: 'Run a supply port into your line', milestone: 'm1', check: { kind: 'portDelivered' }, marker: 'ports', highlight: 'conduit' },
-  { text: 'Put a second kind of ammo in another entrance', milestone: 'm1', check: { kind: 'mixedVolley' } },
+  { text: 'Run a supply port into your line', milestone: 'm1', check: { kind: 'portDelivered' }, target: { kind: 'ports' }, highlight: 'conduit' },
+  { text: 'Put a second kind of ammo in another entrance', milestone: 'm1', check: { kind: 'mixedVolley' }, target: { kind: 'intake' } },
   // 029: the first stage, frost on arrows, from the Grotto's rime to a frost rune in the line; then a ley stage by hand.
   // 047: tagged rounds are crafted in the crafting menu (C), anywhere, and never called stages where the player sees.
-  { text: 'Gather rimestone at the Frozen Grotto', milestone: 'm1', check: { kind: 'gathered', items: ['rimestone'] } },
-  { text: 'Craft frost arrows (C)', milestone: 'm1', check: { kind: 'crafted', items: ['arrow+frost'] } },
-  { text: 'Build a frost rune into your arrow line', milestone: 'm1', check: { kind: 'machineMade', item: 'arrow+frost' }, highlight: 'frost-rune' },
-  { text: 'Craft homing or split ley bolts (C)', milestone: 'm1', check: { kind: 'craftedAny', items: ['ley-bolt+homing', 'ley-bolt+split'] } },
-  // 032: a resource site's pylon, marked once one is discovered.
-  { text: 'Claim a second pylon', milestone: 'm1', check: { kind: 'claimedCount', min: 2 }, marker: 'sitePylon' },
+  { text: 'Gather rimestone at the Frozen Grotto', milestone: 'm1', check: { kind: 'gathered', items: ['rimestone'] }, target: { kind: 'nodes' } },
+  { text: 'Craft frost arrows (C)', milestone: 'm1', check: { kind: 'crafted', items: ['arrow+frost'] }, target: { kind: 'collect' } },
+  { text: 'Build a frost rune into your arrow line', milestone: 'm1', check: { kind: 'machineMade', item: 'arrow+frost' }, target: { kind: 'room', room: 'foundry' }, highlight: 'frost-rune' },
+  { text: 'Craft homing or split ley bolts (C)', milestone: 'm1', check: { kind: 'craftedAny', items: ['ley-bolt+homing', 'ley-bolt+split'] }, target: { kind: 'collect' } },
+  // 032: a resource site's pylon, a discovered one first.
+  { text: 'Claim a second pylon', milestone: 'm1', check: { kind: 'claimedCount', min: 2 }, target: { kind: 'sitePylon' } },
   // 049.2: no lock on ring 2; after the Warden the goal line points to the Husk Hive, whose pylon supplies resin.
-  { text: 'Find the Husk Hive and claim its pylon', milestone: 'm1', check: { kind: 'claimed', site: 'husk-hive' } },
+  { text: 'Find the Husk Hive and claim its pylon', milestone: 'm1', check: { kind: 'claimed', site: 'husk-hive' }, target: { kind: 'pylon', site: 'husk-hive' } },
   // 034: Region 2, behind the barrier the shrine's claim drops: in, its pylon, its boss, and the entrance its core restores.
-  { text: 'Breach Stonefall Hollows', milestone: 'm1', check: { kind: 'inRegion', region: 2 } },
-  { text: "Claim the Cistern Terrace's pylon", milestone: 'm1', check: { kind: 'claimed', site: 'cistern-terrace' } },
-  { text: 'Defeat the Bulwark', milestone: 'm1', check: { kind: 'bossDefeated', boss: 'bulwark' } },
-  { text: "Restore the intake's third entrance (E with the Bulwark core)", milestone: 'm1', check: { kind: 'restored', node: 'entrance-3' } },
+  { text: 'Breach Stonefall Hollows', milestone: 'm1', check: { kind: 'inRegion', region: 2 }, target: { kind: 'barrier' } },
+  { text: "Claim the Cistern Terrace's pylon", milestone: 'm1', check: { kind: 'claimed', site: 'cistern-terrace' }, target: { kind: 'pylon', site: 'cistern-terrace' } },
+  { text: 'Defeat the Bulwark', milestone: 'm1', check: { kind: 'bossDefeated', boss: 'bulwark' }, target: { kind: 'boss', boss: 'bulwark' } },
+  { text: "Restore the intake's third entrance (E with the Bulwark core)", milestone: 'm1', check: { kind: 'restored', node: 'entrance-3' }, target: { kind: 'caps' } },
   // 033: the third entrance needs the Bulwark's core, so feeding all three comes after restoring it, just before the frontier line.
-  { text: 'Feed all three entrances', milestone: 'm1', check: { kind: 'volley', min: 3 } },
+  { text: 'Feed all three entrances', milestone: 'm1', check: { kind: 'volley', min: 3 }, target: { kind: 'intake' } },
 ];
+
+/** 051 (B.3): a sub-line's words, from the raw's name ("Collect stone"). */
+export const SUB_STEP_TEXT = (name: string): string => `Collect ${name.toLowerCase()}`;
 
 /** The standing line once every goal is done (028): no check, and it never names the next milestone. */
 export const FRONTIER_GOAL = { text: 'Explore beyond the shrine' } as const;

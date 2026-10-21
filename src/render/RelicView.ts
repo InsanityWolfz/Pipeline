@@ -12,12 +12,15 @@ import { addVector } from './vector/textures';
 /** The relics' effects as drawn, for `ui().relics`: the ward shimmer's alpha (0 when hidden), and the bursts still live. */
 export interface RelicsShown {
   shimmer: number;
+  /** 050: where the ring sits (world px) and whether the shield shows on it, while the ward is ready. */
+  ring: { x: number; y: number } | null;
+  shield: boolean;
   wardBreaks: number;
   emberFlashes: number;
   benchFlares: number;
 }
 
-export const NO_RELICS_SHOWN: RelicsShown = { shimmer: 0, wardBreaks: 0, emberFlashes: 0, benchFlares: 0 };
+export const NO_RELICS_SHOWN: RelicsShown = { shimmer: 0, ring: null, shield: false, wardBreaks: 0, emberFlashes: 0, benchFlares: 0 };
 
 /** A burst playing out: its image, which kind, its age and how it grows. */
 interface Burst {
@@ -33,24 +36,27 @@ interface Burst {
 }
 
 // The relics' signs (036): the Wardstone's faint violet shimmer at the player's feet
-// while its ward is ready, the ring bursting outward when it blocks a hit, Last Ember's
+// while its ward is ready, with a small shield on it (050), the ring bursting outward when it blocks a hit, Last Ember's
 // flash when it saves the player, and a violet flare over the bench when a relic is
 // identified. Time on the tween clock, so the test hook can hold them for a screenshot.
 // FeelView plays their sounds.
 export class RelicView {
   private readonly scene: Scene;
   private readonly shimmer: GameObjects.Image;
+  private readonly shield: GameObjects.Image;
   private bursts: Burst[] = [];
   private time = 0;
 
   constructor(scene: Scene) {
     this.scene = scene;
     this.shimmer = addVector(scene, 0, 0, GEAR_SPRITES.wardShimmer).setBlendMode(BlendModes.ADD).setVisible(false);
+    this.shield = addVector(scene, 0, 0, GEAR_SPRITES.wardShield).setVisible(false);
   }
 
   get shown(): RelicsShown {
     const live = (kind: Burst['kind']) => this.bursts.filter((b) => b.kind === kind).length;
-    return { shimmer: this.shimmer.visible ? this.shimmer.alpha : 0, wardBreaks: live('ward'), emberFlashes: live('ember'), benchFlares: live('flare') };
+    const ring = this.shimmer.visible ? { x: this.shimmer.x, y: this.shimmer.y } : null;
+    return { shimmer: this.shimmer.visible ? this.shimmer.alpha : 0, ring, shield: this.shield.visible, wardBreaks: live('ward'), emberFlashes: live('ember'), benchFlares: live('flare') };
   }
 
   private burst(kind: Burst['kind'], frame: string, x: number, y: number, depth: number, look: { ms: number; from: number; to: number }, rise = 0): void {
@@ -67,11 +73,17 @@ export class RelicView {
     const S = RELIC_LOOK.shimmer;
     const ready = here && p.dying === 0 && wardReady(sim);
     const breathe = (Math.sin((this.time / S.breatheMs) * Math.PI * 2) + 1) / 2;
+    // 050 (A.16): on the player's own point, unrounded as the sprite is, so the two never drift a pixel apart as they
+    // walk (the ring shook); the shield stands on its front edge.
     this.shimmer
       .setVisible(ready)
-      .setPosition(Math.round(p.x), Math.round(p.y - S.lift))
+      .setPosition(p.x, p.y - S.lift)
       .setDepth(feet - S.depthBelow)
       .setAlpha(S.alpha[0] + (S.alpha[1] - S.alpha[0]) * breathe);
+    this.shield
+      .setVisible(ready)
+      .setPosition(p.x, p.y - S.lift + RELIC_LOOK.shield.drop)
+      .setDepth(feet + RELIC_LOOK.shield.depthAbove);
     if (here) {
       for (const w of events.wardBlocks) this.burst('ward', GEAR_SPRITES.wardShimmer, w.x, w.y - S.lift, feet + RELIC_LOOK.wardBreak.depthAbove, RELIC_LOOK.wardBreak);
       const E = RELIC_LOOK.ember;

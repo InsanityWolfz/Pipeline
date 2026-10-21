@@ -7,8 +7,12 @@ import { layItem } from '../../src/sim/drops';
 import { createSim, type SimState } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
-import { arena, atEntrance, atPylon, command, die, run, runUntil, SEED } from './fight';
+import { arena, atEntrance, atPylon, command, die, movePlayer, run, runUntil, SEED } from './fight';
 import { bodyPiece, wear } from '../fixtures/gear';
+import { fixtureDef } from '../../src/sim/fixtures';
+import type { CrateState } from '../../src/sim/pieces';
+import { tileCentre } from '../../src/sim/tiles';
+import { foundry, put } from './foundryKit';
 
 // What a death would take (031): per carried item, safe = min(held, banked) and at risk = the rest.
 // The inventory panel and getState().atRisk read the same helper, and a death keeps and loses exactly that.
@@ -19,17 +23,21 @@ function pickUp(s: SimState, itemId: string, n: number): void {
   runUntil(s, (x) => !x.groundItems.some((g) => g.roomId === x.roomId), 120);
 }
 
-/** Into the foundry by its stairs, banking what's carried, and back out so the tests run in the meadow. */
-function bankAtFoundry(s: SimState): void {
+/**
+ * Into the foundry by its stairs, banking what's carried, and back out so the tests run in the meadow (050: in the
+ * foundry, gains are banked at once). `stay` keeps the player in the foundry.
+ */
+function bankAtFoundry(s: SimState, stay = false): void {
   atEntrance(s);
   runUntil(s, (x) => x.roomId === FOUNDRY_ROOM, 60, { moveY: -1 });
+  if (!stay) atEntrance(s);
 }
 
 describe('the at-risk helper (031)', () => {
   it('right after entering the foundry, nothing is at risk', () => {
     const s = arena();
     s.inventory = { arrow: 12, wood: 4, 'warden-core': 1 };
-    bankAtFoundry(s);
+    bankAtFoundry(s, true);
     expect(s.roomId).toBe(FOUNDRY_ROOM);
     expect(itemRisks(s)).toEqual({
       arrow: { held: 12, safe: 12, atRisk: 0 },
@@ -121,5 +129,59 @@ describe('the at-risk helper (031)', () => {
     die(s);
     expect(s.gear).toHaveLength(1);
     expect(s.equipped.body).toBe(1);
+  });
+});
+
+// 050 (A.10, Shaun): "make sure anything you pick up or take out a chest or stuff in the foundry becomes automatically
+// safe." Gains in the foundry are banked at once; outside they stay at risk until the next banking.
+describe('gains in the foundry are banked at once (050)', () => {
+  /** In the foundry with nothing carried and nothing banked. */
+  function inFoundry(): SimState {
+    const s = foundry();
+    s.inventory = {};
+    s.banked = {};
+    return s;
+  }
+
+  it('taken from the stash', () => {
+    const s = inFoundry();
+    s.stash = { wood: 3, arrow: 5 };
+    const stash = fixtureDef('stash');
+    const by = tileCentre({ tx: stash.tx, ty: stash.ty + 1 });
+    movePlayer(s, by.x, by.y);
+    run(s, 1, { takeStash: { itemId: null } });
+    expect(s.inventory).toEqual({ wood: 3, arrow: 5 });
+    expect(atRiskCounts(s)).toEqual({});
+  });
+
+  it('taken from a crate', () => {
+    const s = inFoundry();
+    const crate = put<CrateState>(s, 'crate', 10, 8);
+    crate.contents = { stone: 40 };
+    const by = tileCentre({ tx: 10, ty: 9 });
+    movePlayer(s, by.x, by.y);
+    run(s, 1, { withdraw: { id: crate.id, amount: 'all', itemId: 'stone' } });
+    expect(s.inventory.stone).toBe(40);
+    expect(atRiskCounts(s)).toEqual({});
+  });
+
+  it('picked up off the floor, and crafted', () => {
+    const s = inFoundry();
+    pickUp(s, 'stone', 2);
+    expect(s.inventory.stone).toBe(2);
+    s.inventory = { ...s.inventory, wood: 1 };
+    run(s, 1);
+    expect(craft(s, 'shaft')).toBe(true);
+    run(s, 1);
+    expect(s.inventory.shaft).toBeGreaterThan(0);
+    expect(atRiskCounts(s)).toEqual({});
+  });
+
+  it('outside, a pickup is still at risk', () => {
+    const s = arena();
+    s.inventory = {};
+    s.banked = {};
+    pickUp(s, 'stone', 2);
+    expect(atRiskCounts(s)).toEqual({ stone: 2 });
   });
 });

@@ -8,6 +8,7 @@ import type { SimState } from './state';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { isRestored } from './research';
 import { regionOf } from './regions';
+import { noteSubSteps } from './subSteps';
 
 // The objectives (012, 028): one ordered chain. Each one completes the first tick
 // its check holds and stays done, so they can finish in any order. The objective
@@ -47,8 +48,8 @@ function holds(state: SimState, check: ObjectiveCheck): boolean {
     case 'refilled':
       // With no hopper left to refill (a save from before 046 has no example line), it counts as done.
       return state.lineRanDry && (!state.foundry.pieces.some((p) => p.kind === 'hopper') || check.items.every((id) => state.refilled.includes(id)));
-    case 'entrancesHold':
-      return state.link.entrances.filter((e) => e.ammoId === check.ammo && e.count > 0).length >= check.min;
+    case 'entranceFed':
+      return state.link.entrances.some((e) => e.node === check.node && e.ammoId !== null && e.count > 0);
     case 'machineMade':
       return (state.machineMade[check.item] ?? 0) > 0;
     case 'lineFull':
@@ -98,6 +99,7 @@ export function stepObjectives(state: SimState): void {
     state.objectives[i] = true;
     state.events.objectives.push({ index: i });
   }
+  noteSubSteps(state, currentObjective(state));
   if (!state.prototypeComplete && OBJECTIVES.every((o, i) => o.milestone !== 'prototype' || state.objectives[i])) state.prototypeComplete = true;
 }
 

@@ -66,7 +66,7 @@ describe('the chain', () => {
 
   it('the port goal points at the ports and pulses the conduit cell', () => {
     const [port] = M1[0] ?? [];
-    expect(port?.marker).toBe('ports');
+    expect(port?.target).toEqual({ kind: 'ports' });
     expect(port?.highlight).toBe('conduit');
   });
 
@@ -165,7 +165,7 @@ describe('the line after the shrine', () => {
       // The full summary is costly; check it agrees on a spread of masks, ends included.
       if (mask % 97 === 0 || mask === (1 << after) - 1) expect(summarize(s).objective).toEqual(line);
     }
-  });
+  }, 20_000); // Every mask of the goals after the claim: about 2.4 s alone on main and on 050 alike (load ~14; 049's goal doubled the masks), so 5 s is too tight under load.
 
   it('shows the frontier goal once every goal is done, with no index', () => {
     const s = createSim(SEED);

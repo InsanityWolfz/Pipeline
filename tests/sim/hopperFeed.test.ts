@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SUPPLY_TICKS } from '../../src/data/claims';
-import { CONDUIT_TICKS, HOPPER_FLOW_CAP, HOPPER_TICKS, CRATE_CAP } from '../../src/data/foundry';
+import { CONDUIT_TICKS, HOPPER_FLOW_CAP, HOPPER_TICKS } from '../../src/data/foundry';
 import { SHRINE_SITE } from '../../src/data/rooms';
 import { claim } from '../../src/sim/claims';
 import type { ConduitState, CrateState, HopperState, MachineState, SplitterState } from '../../src/sim/pieces';
@@ -21,9 +21,8 @@ function loaded(s: ReturnType<typeof foundry>, tx: number, ty: number, item: str
 }
 
 describe('a hopper fed by a line', () => {
-  it('HOPPER_FLOW_CAP is the crate cap, 99', () => {
+  it('HOPPER_FLOW_CAP is 99 (the old crate cap; 050 gave crates 8 stacks)', () => {
     expect(HOPPER_FLOW_CAP).toBe(99);
-    expect(HOPPER_FLOW_CAP).toBe(CRATE_CAP);
   });
 
   it('takes from a conduit into its back, and from its sides', () => {

@@ -1,6 +1,7 @@
 import type { LimbStyle, Part, Shape } from '../../data/art/types';
 import { TUBE_PARTS, WANDERER, type WandererView } from '../../data/art/wanderer';
 import { OUTLINE_WIDTH } from '../../data/art/style';
+import { TITLE_SCREEN } from '../../data/titleScreen';
 import { drawShape, drawShapes, type DrawOpts } from './draw';
 
 // Poses and draws the wanderer (016) onto a canvas whose origin is at the feet,
@@ -42,6 +43,8 @@ export interface WandererPose {
   muzzle: number;
   /** A punch (023), 0..1 (1 fully out): the tube thrusts along its aim, or empty-handed the near fist drives out. */
   jab: number;
+  /** 050 (F): the hose's sag swings this far sideways, px (the title's wind); 0 when absent. */
+  hoseSway?: number;
 }
 
 export const REST_POSE: WandererPose = {
@@ -134,6 +137,11 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
       case '@far-arm': {
         const rest = WANDERER.rig.restHand.far;
         const end = pose.hasTube ? gun(TUBE_PARTS.frontGrip) : ([def.shoulders.far[0] + rest[0], def.shoulders.far[1] + rest[1]] as const);
+        // 050: facing forward, the far arm is the near arm's sleeve and forearm, mirrored, so the two match.
+        if (def.matchedArms) {
+          nearArm(c, def.shoulders.far, end, o, -1);
+          break;
+        }
         limb(c, [...def.shoulders.far, end[0], end[1]], WANDERER.limbs.sleeveFar, o);
         hand(c, end, o);
         break;
@@ -153,7 +161,8 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
         const bend = WANDERER.rig.hoseBend;
         const back = rotate([-bend.back, 0], pose.aim);
         const [fx, fy] = def.hose.from;
-        const pts = [fx, fy, fx + def.hose.sag[0], fy + def.hose.sag[1], rear[0] + back[0], rear[1] + back[1] + bend.drop, rear[0], rear[1]];
+        const sway = pose.hoseSway ?? 0;
+        const pts = [fx, fy, fx + def.hose.sag[0] + sway, fy + def.hose.sag[1] + sway * TITLE_SCREEN.motion.hoseLift, rear[0] + back[0], rear[1] + back[1] + bend.drop, rear[0], rear[1]];
         const style = lit ? WANDERER.limbs.hose : WANDERER.limbs.hoseDormant;
         c.save();
         if (lit) c.lineDashOffset = -pose.flow;
@@ -178,20 +187,20 @@ function hand(c: CanvasRenderingContext2D, at: Pt, o: DrawOpts): void {
   c.restore();
 }
 
-/** The near arm: a wide sleeve to the elbow, then a wrapped forearm and glove at `grip`. */
-function nearArm(c: CanvasRenderingContext2D, shoulder: Pt, grip: Pt, o: DrawOpts): void {
+/** The near arm: a wide sleeve to the elbow, then a wrapped forearm and glove at `grip`. `side` -1 mirrors it (050: the far arm facing forward). */
+function nearArm(c: CanvasRenderingContext2D, shoulder: Pt, grip: Pt, o: DrawOpts, side: 1 | -1 = 1): void {
   const [sx, sy] = shoulder;
   const { sleeve: v, elbow } = WANDERER.rig;
-  const ex = (sx + grip[0]) / 2 + elbow[0];
+  const ex = (sx + grip[0]) / 2 + elbow[0] * side;
   const ey = (sy + grip[1]) / 2 + elbow[1];
   limb(c, [ex, ey, grip[0], grip[1]], WANDERER.limbs.forearm, o);
   const sleeve: Shape = {
     kind: 'path',
     d: [
-      ['M', sx + v.top[0], sy + v.top[1]],
-      ['Q', sx + v.bulge[0], sy + v.bulge[1], ex + v.elbowOut[0], ey + v.elbowOut[1]],
-      ['L', ex + v.elbowIn[0], ey + v.elbowIn[1]],
-      ['Q', sx + v.back[0], sy + v.back[1], sx + v.top[0], sy + v.top[1]],
+      ['M', sx + v.top[0] * side, sy + v.top[1]],
+      ['Q', sx + v.bulge[0] * side, sy + v.bulge[1], ex + v.elbowOut[0] * side, ey + v.elbowOut[1]],
+      ['L', ex + v.elbowIn[0] * side, ey + v.elbowIn[1]],
+      ['Q', sx + v.back[0] * side, sy + v.back[1], sx + v.top[0] * side, sy + v.top[1]],
       ['Z'],
     ],
     fill: WANDERER.limbs.sleeveNear.color,

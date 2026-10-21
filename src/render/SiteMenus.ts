@@ -48,6 +48,13 @@ export class SiteMenus {
     return [this.pylon, this.waystone];
   }
 
+  /** 050 (A.13): the wheel scrolls the bench's gear list while it's open; returns whether it took the steps. */
+  scrollGear(steps: number): boolean {
+    if (!this.bench.isOpen) return false;
+    this.bench.scroll(steps);
+    return true;
+  }
+
   get isOpen(): boolean {
     return this.menus.some((m) => m.isOpen) || this.bench.isOpen || this.restore.isOpen || this.offering.isOpen;
   }

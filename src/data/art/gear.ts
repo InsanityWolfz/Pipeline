@@ -116,6 +116,19 @@ const SHIMMER: VectorSprite = {
   ],
 };
 
+// 050 (A.16): the ward's ready sign, a small violet shield with a pale rim, standing on the ring's front edge.
+const WARD_SHIELD: VectorSprite = {
+  key: GEAR_SPRITES.wardShield,
+  size: [12, 12],
+  anchor: [6, 6],
+  frames: [
+    [
+      { ...path('M 0 -4.5 L 3.8 -3 Q 3.8 2 0 4.5 Q -3.8 2 -3.8 -3 Z', { fill: { linear: [0, -4.5, 0, 4.5], stops: [{ at: 0, color: 'wisp-light' }, { at: 1, color: 'wisp' }] }, outline: true }), glow: { color: 'wisp', blur: 2 } },
+      path('M 0 -3 L 0 3', trim({ id: 'snow', alpha: 0.7 }, 0.8)),
+    ],
+  ],
+};
+
 // Last Ember's flash: a burst of flame and rays round a white-hot heart.
 const EMBER_FLASH: VectorSprite = {
   key: GEAR_SPRITES.emberFlash,
@@ -162,6 +175,7 @@ export const GEAR_SPRITES_VECTOR: readonly VectorSprite[] = [
   frame(GEAR_SPRITES.frameRare, RARITIES.rare.color, 2.5, false),
   frame(GEAR_SPRITES.frameRelic, RARITIES.relic.color, 3.5, true),
   SHIMMER,
+  WARD_SHIELD,
   EMBER_FLASH,
   RELIC_FLARE,
 ];

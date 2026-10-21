@@ -89,7 +89,7 @@ test('I and Tab toggle the inventory, Esc closes it, Tab keeps focus; it swaps w
   expect(errors).toEqual([]);
 });
 
-test('3 wood picked up after entering the foundry are 3 at risk, in the panel and the feed', async ({ page }) => {
+test('wood picked up in the foundry is safe at once (050); 3 picked up back outside are 3 at risk, in the panel and the feed', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page, '?start=field&attuned');
   const s = await page.evaluate(() => {
@@ -98,25 +98,32 @@ test('3 wood picked up after entering the foundry are 3 at risk, in the panel an
     if (!g || !h) throw new Error('no game');
     h.toFoundry();
     const p = g.getState().player;
-    for (let i = 0; i < 3; i++) g.drop('wood', p.x, p.y);
+    for (let i = 0; i < 2; i++) g.drop('stone', p.x, p.y);
     h.collect();
-    return g.getState();
+    const inFoundry = g.getState();
+    h.toHall();
+    const q = g.getState().player;
+    for (let i = 0; i < 3; i++) g.drop('wood', q.x, q.y);
+    h.collect();
+    return { inFoundry, outside: g.getState() };
   });
-  expect(s.room).toBe('foundry');
-  expect(s.inventory.wood).toBe(3);
-  expect(s.atRisk).toEqual({ wood: 3 });
+  expect(s.inFoundry.room).toBe('foundry');
+  expect(s.inFoundry.inventory.stone).toBe(2);
+  expect(s.inFoundry.atRisk).toEqual({});
+  expect(s.outside.inventory.wood).toBe(3);
+  expect(s.outside.atRisk).toEqual({ wood: 3 });
   // The arrows carried in were banked at the door: all safe.
-  expect(s.atRisk.arrow).toBeUndefined();
+  expect(s.outside.atRisk.arrow).toBeUndefined();
 
   await page.keyboard.press('i');
   await expect.poll(() => slotsOf(page, 'wood')).toEqual([{ count: 3, atRisk: 3 }]);
-  expect(await slotsOf(page, 'arrow')).toEqual([{ count: s.inventory.arrow, atRisk: 0 }]);
+  expect(await slotsOf(page, 'arrow')).toEqual([{ count: s.outside.inventory.arrow, atRisk: 0 }]);
   // The wood's slot marks its at-risk count, its count and mark apart (045.11: the 031 panel drew them over each other).
   const wood = (await ui(page))?.inventory.slots.find((sl) => sl.itemId === 'wood');
   if (!wood?.warnBox) throw new Error('no at-risk mark on the wood');
   expect(overlaps(wood.countBox, wood.warnBox)).toBe(false);
   // One feed line for the three.
-  await expect.poll(async () => (await ui(page))?.pickupFeed).toEqual([{ itemId: 'wood', count: 3 }]);
+  await expect.poll(async () => (await ui(page))?.pickupFeed[0]).toEqual({ itemId: 'wood', count: 3 });
   expect(errors).toEqual([]);
 });
 
@@ -350,7 +357,7 @@ test("a KO closes the panel, and it won't open while the wake panel shows", asyn
   expect(errors).toEqual([]);
 });
 
-test('E on a hopper opens its screen over the grid (047), on the bench closes the panel, and I closes them', async ({ page }) => {
+test('E on a hopper opens its screen over the grid (047; 050: E first closes an open inventory), the bench\'s menu likewise, and I closes them', async ({ page }) => {
   test.setTimeout(90_000);
   const errors = watchErrors(page);
   await boot(page, '?playtest');
@@ -366,6 +373,9 @@ test('E on a hopper opens its screen over the grid (047), on the bench closes th
   });
   await page.keyboard.press('i');
   await expect.poll(() => inventoryOpen(page)).toBe(true);
+  // 050: E closes the open inventory, as Esc does; again, it opens the hopper's screen.
+  await page.keyboard.press('e');
+  await expect.poll(() => inventoryOpen(page)).toBe(false);
   // 047: the hopper's screen is the grid with the hopper's own row on top.
   await page.keyboard.press('e');
   await expect.poll(async () => (await ui(page))?.pickerOpen).toBe(true);
@@ -381,6 +391,8 @@ test('E on a hopper opens its screen over the grid (047), on the bench closes th
   // The bench's menu (a site menu), standing on its left (052: by the door).
   if (!BENCH) throw new Error('no bench');
   await page.evaluate(([tx, ty]) => window.__helpers?.walkTo((tx - 0.3) * 32, (ty + 0.5) * 32), [BENCH.tx, BENCH.ty] as const);
+  await page.keyboard.press('e');
+  await expect.poll(() => inventoryOpen(page)).toBe(false);
   await page.keyboard.press('e');
   await expect.poll(async () => (await ui(page))?.siteOpen).toBe(true);
   expect(await inventoryOpen(page)).toBe(false);

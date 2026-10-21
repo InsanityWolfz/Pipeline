@@ -18,6 +18,8 @@ export interface EntranceState {
   count: number;
   /** Ticks before it can fire again (028): each entrance fires at its own ammo's rate. */
   cooldown: number;
+  /** 050: the research node that opened it (the Warden's core opens 'entrance-2' at whichever cap), null for the centre. */
+  node: string | null;
 }
 
 export interface LinkState {
@@ -32,7 +34,7 @@ export function createLink(): LinkState {
   return {
     attuned: false,
     attunePulse: 0,
-    entrances: INTAKE.entrances.map((e) => ({ open: e.startsOpen, ammoId: null, count: 0, cooldown: 0 })),
+    entrances: INTAKE.entrances.map((e) => ({ open: e.startsOpen, ammoId: null, count: 0, cooldown: 0, node: null })),
   };
 }
 

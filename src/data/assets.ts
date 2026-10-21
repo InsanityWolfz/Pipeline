@@ -11,6 +11,9 @@ export const WANDERER_KEY = 'wanderer';
 /** The title screen's painted scene (042), drawn once at the screen's scale. */
 export const TITLE_SCENE_KEY = 'title-scene';
 
+/** 050 (F): the title's wanderer, drawn live over the scene (it breathes, its cloak and hose sway, the tube's glow pulses). */
+export const TITLE_WANDERER_KEY = 'title-wanderer';
+
 /** The overworld (017): standing sprites drawn from src/data/art/terrain.ts, its ground chunk textures, and the minimap. */
 export const OVERWORLD_SPRITES = {
   trees: ['ow-tree-0', 'ow-tree-1', 'ow-tree-2'],
@@ -20,7 +23,7 @@ export const OVERWORLD_SPRITES = {
   entrance: 'ow-entrance',
   column: 'ow-column',
 } as const;
-export const OVERWORLD_TEXTURES = { ground: 'ow-ground', safeGlow: 'ow-safe-glow', minimap: 'ow-minimap' } as const;
+export const OVERWORLD_TEXTURES = { ground: 'ow-ground', safeGlow: 'ow-safe-glow', minimap: 'ow-minimap', minimapFog: 'ow-minimap-fog' } as const;
 
 /** Frame names for single-frame sprites (vector shape data in src/data/art). */
 export const SPRITES = {
@@ -35,6 +38,10 @@ export const SPRITES = {
   pointer: 'pointer',
   /** The fist the tube slot shows when the next press is a punch (025). */
   hudFist: 'hud-fist',
+  /** 051 (B.7): the mouse beside the carried bar, its right button lit: right click uses the carried bar. */
+  hudMouse: 'hud-mouse',
+  /** 051 (B.4): the glint that now and then twinkles on a harvestable node. */
+  nodeSparkle: 'node-sparkle',
   iconArrow: 'icon-arrow',
   itemHuskResin: 'item-husk-resin',
   itemWood: 'item-wood',
@@ -261,6 +268,8 @@ export const DEPTHS = {
   menu: 2_000_000,
   /** 042's title screen, under the menu rows: its painted scene, the pipe's glow, the motes, the logo's glow, the logo. */
   titleScene: 1_999_990,
+  /** 050: the title's live wanderer, on the painted ridge. */
+  titleWanderer: 1_999_990.5,
   titlePipe: 1_999_991,
   titleMotes: 1_999_992,
   titleGlow: 1_999_993,

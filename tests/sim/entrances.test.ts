@@ -68,9 +68,9 @@ describe('the entrances', () => {
   it('are the three mouth tiles, the centre open and the sides capped at the start', () => {
     const s = foundry();
     expect(s.link.entrances).toEqual([
-      { open: false, ammoId: null, count: 0, cooldown: 0 },
-      { open: true, ammoId: null, count: 0, cooldown: 0 },
-      { open: false, ammoId: null, count: 0, cooldown: 0 },
+      { open: false, ammoId: null, count: 0, cooldown: 0, node: null },
+      { open: true, ammoId: null, count: 0, cooldown: 0, node: null },
+      { open: false, ammoId: null, count: 0, cooldown: 0, node: null },
     ]);
     expect(INTAKE.entrances.map((e) => e.startsOpen)).toEqual([false, true, false]);
     expect(ENTRANCE_CAPS[0]).toBe(30);
@@ -82,7 +82,7 @@ describe('the entrances', () => {
       const c = feed(s, 1, item);
       run(s, 1);
       expect(c.item).toBeNull();
-      expect(s.link.entrances[1]).toEqual({ open: true, ammoId: item, count: 1, cooldown: 0 });
+      expect(s.link.entrances[1]).toEqual({ open: true, ammoId: item, count: 1, cooldown: 0, node: null });
       expect(s.events.refills).toEqual([{ entrance: 1, itemId: item }]);
     }
     const s = foundry();

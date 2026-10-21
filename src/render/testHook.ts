@@ -9,6 +9,9 @@ import type { BottomHudState, HudPanelsState } from './HudView';
 import type { MadePopupShown } from './MadePopups';
 import type { BuildBarState } from './BuildView';
 import type { CraftMenuState } from './CraftMenuView';
+import type { WaypointShown } from './WaypointView';
+import type { FoundryMapShown } from './FoundryMapView';
+import type { SubStepShown } from './ObjectiveView';
 import type { PromptState } from './PromptView';
 import type { PortShown } from './PortView';
 import type { GearPanelState } from './GearPanel';
@@ -22,7 +25,6 @@ import type { ChampionShown } from './EnemyView';
 import type { LandmarksShown } from './LandmarkView';
 import type { ResearchShown } from './ResearchView';
 import type { SchematicsShown } from './SchematicView';
-import type { HintShown } from './Banner';
 import type { RestorePanelState } from './RestorePanel';
 import type { ResearchListState } from './ResearchList';
 import type { HollowsShown } from './HollowsView';
@@ -42,6 +44,8 @@ export interface GameTestHook {
   step(frames: number, command?: Partial<Command>): SimSummary;
   /** Crafts a recipe once between ticks, as clicking its menu row does. */
   craft(recipeId: string): SimSummary;
+  /** Hands the ticks back to the game loop after step() took them (050: a test of what a live key press reaches the sim). */
+  resume(): void;
   ui(): UiState;
   /** The sound settings (020: set from the pause menu). */
   sound(): { muted: boolean; volume: number };
@@ -90,6 +94,8 @@ export interface GameTestHook {
 export interface UiState {
   /** The scene has built its views and the fonts are loaded (020): before this, nothing is drawn. */
   ready: boolean;
+  /** The sim tick the last drawn frame showed (-1 before one): after a step, wait until it matches the state's tick before reading what's drawn. */
+  drawnTick: number;
   /** The craft menu is open (it doesn't pause, 020), and the pause menu is (Esc: the world stops). */
   craftOpen: boolean;
   paused: boolean;
@@ -102,8 +108,13 @@ export interface UiState {
   hoverName: string | null;
   hoverDescription: string | null;
   buildTip: string | null;
-  minimap: { shown: boolean; markers: { kind: string; x: number; y: number }[] };
+  /** 017, 051: the minimap, its markers (view px, with the name hovering shows), and the hovered one's name. */
+  minimap: { shown: boolean; markers: { kind: string; x: number; y: number; name?: string }[]; hover: string | null };
+  /** 051 (B.6): the foundry's minimap while it shows: carriers' lines, pieces' dots and the icons, view px. */
+  foundryMap: FoundryMapShown;
   nodes: Record<number, string>;
+  /** 051 (B.4): the drawn nodes whose harvestable glow shows, by node id. */
+  nodeGlow: number[];
   /** 032: each mote's site, the claimed pylon it left from. */
   supply: { started: number; inFlight: { itemId: string; progress: number; site: string }[] };
   /** The camera shakes asked for since boot, oldest first (the last 50) (021). */
@@ -133,8 +144,12 @@ export interface UiState {
   sealSound: { humming: boolean; drops: number };
   /** 045: the in-reach E prompt as drawn (what it's over, its bound key, the world point), or null. */
   interactPrompt: InteractPromptState | null;
-  /** The arrow marker, over the intake for the conduit step (027) or over the ports for the port goal (028): the world point its tip bobs over, or null. */
+  /** The waypoint arrow's tip over a target in the player's room (051; was 027's marker), world px, or null. */
   marker: { x: number; y: number } | null;
+  /** 051: the waypoint arrow as drawn: at the screen's edge or over its target, its tip (world px) and angle, through a door or not, and the refill goal's raw icons. */
+  waypoint: WaypointShown | null;
+  /** 051 (B.3): the objective line's text and its sub-lines as drawn (raw, words, ticked, box). */
+  objective: { text: string; subSteps: SubStepShown[] };
   /** The "+ shaft" popups still on screen (027), by text, with each one's box in view px (031: none overlap). */
   madePopups: MadePopupShown[];
   /** The objective line's finished-goal tick, its alpha (0 once faded): screenshots wait for it to go (028). */
@@ -176,8 +191,6 @@ export interface UiState {
   research: ResearchShown;
   /** 033: the schematics' light pillars and the banner's schematic line. */
   schematics: SchematicsShown;
-  /** 047.9: the one-time hint on the banner ("Right click: carried items") while it shows, and the hints started lately. */
-  hint: HintShown;
   /** 033: the restore panel while open (E at a diagram), else null. */
   restorePanel: RestorePanelState | null;
   /** 034: the altar's offering while open (E at an awake altar), in the restore panel's shape (its `node` the altar), else null. */
@@ -203,6 +216,10 @@ export interface UiState {
   buildTab: HudPanelsState['buildTab'];
   glossary: LegibilityUi['glossary'];
   hoverChips: string[];
+  /** 050: the hover name tag's tablet, world px, while one shows. */
+  hoverBox: { x: number; y: number; w: number; h: number } | null;
+  /** 050: whether the hover tag draws the name line (not over a champion, whose nameplate names it). */
+  hoverNameDrawn: boolean;
   /** 042: the flow screens as drawn (the title's rows, a card's lines and buttons, Settings, the note). */
   flow: FlowUi;
   /** 044: the Sandbox panel as drawn (open, and its rows with their boxes), or null outside the sandbox. */

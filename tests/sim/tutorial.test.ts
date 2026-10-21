@@ -161,13 +161,13 @@ describe('objectives', () => {
     run(s, 1, { interact: true });
     expect(s.objectives[0]).toBe(true);
     expect(currentObjective(s)).toBe(1);
-    // Done out of order: entering the foundry ticks objective 4, the line still shows 1 (046: the example line, laid
-    // on this entry, ticks nothing itself).
+    // Done out of order: entering the foundry ticks its goal (051: the fifth, after the bomb goal), the line still
+    // shows 1 (046: the example line, laid on this entry, ticks nothing itself).
     s.roomId = FOUNDRY_ROOM;
     run(s, 1);
-    expect(s.objectives[4]).toBe(true);
+    expect(s.objectives[5]).toBe(true);
     expect(currentObjective(s)).toBe(1);
-    expect(s.events.objectives).toEqual([{ index: 4 }]);
+    expect(s.events.objectives).toEqual([{ index: 5 }]);
   });
 
   it('gathering counts each raw harvested', () => {
@@ -187,7 +187,7 @@ describe('objectives', () => {
     expect(OBJECTIVES[open]?.text).toBe('Restore a second intake entrance (E at a cap with the warden core)');
     expect(OBJECTIVES[fed]?.text).toBe('Feed two entrances to fire a spread');
     // 046: the second-line goal sits between them.
-    expect(OBJECTIVES[open + 1]?.text).toBe('Build a second arrow line into the new entrance');
+    expect(OBJECTIVES[open + 1]?.text).toBe('Feed ammo into the new entrance');
     expect(fed).toBe(open + 2);
     s.roomId = FOUNDRY_ROOM;
     // Under the west cap.

@@ -30,12 +30,16 @@ describe('crafting', () => {
     expect(s.inventory.bomb).toBe(4);
   });
 
-  it('refuses bomb and ley bolt recipes until the tube attunes (012)', () => {
+  it('refuses bomb and ley bolt recipes until the tube attunes (012) or the foundry opens (051: crafted before it)', () => {
     const s = arena();
-    s.inventory = { 'ley-crystal': 1, stone: 1 };
+    s.gates.foundry = false;
+    s.inventory = { 'ley-crystal': 2, stone: 1 };
     expect(craft(s, 'ley-dust')).toBe(false);
     expect(craft(s, 'casing')).toBe(false);
     expect(s.events.craftFails).toEqual([{ recipeId: 'ley-dust' }, { recipeId: 'casing' }]);
+    s.gates.foundry = true;
+    expect(craft(s, 'casing')).toBe(true);
+    s.gates.foundry = false;
     s.link.attuned = true;
     expect(craft(s, 'ley-dust')).toBe(true);
   });

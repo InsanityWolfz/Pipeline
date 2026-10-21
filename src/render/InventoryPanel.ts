@@ -222,14 +222,21 @@ export class InventoryPanel {
     return { kind: 'withdraw', id: this.containerId, itemId: s.itemId, amount: press.amount, stack: s.count };
   }
 
-  /** A round's slot under a view point (040: its summary beside the panel). */
+  /**
+   * A slot under a view point: a round's summary beside the panel (040); any other item's name over its slot (050,
+   * A.14), in the grid, a hopper's or crate's own row or the stash's grid (052).
+   */
   tipAt(x: number, y: number): TipHit | null {
     if (!this.isOpen) return null;
-    const g = cellAt(this.layout.cells, x, y);
-    const s = g >= 0 ? this.slots[this.scrollRow * G.cols + g] : undefined;
-    const box = this.layout.cells[g];
-    if (!s || !box || !AMMO[s.itemId]) return null;
-    return { source: { kind: 'round', id: s.itemId }, at: box, anchor: { box: this.layout.panel, prefer: ['right', 'left'] } };
+    const L = this.layout;
+    const g = cellAt(L.cells, x, y);
+    const c = g < 0 && L.container ? cellAt(L.container.cells, x, y) : -1;
+    const k = g < 0 && c < 0 && L.stash ? cellAt(L.stash.cells, x, y) : -1;
+    const s = g >= 0 ? this.slots[this.scrollRow * G.cols + g] : c >= 0 ? this.boxSlots[c] : k >= 0 ? this.stashSlots[this.stashRow * G.cols + k] : undefined;
+    const box = g >= 0 ? L.cells[g] : c >= 0 ? L.container?.cells[c] : k >= 0 ? L.stash?.cells[k] : undefined;
+    if (!s || !box) return null;
+    if (AMMO[s.itemId]) return { source: { kind: 'round', id: s.itemId }, at: box, anchor: { box: L.panel, prefer: ['right', 'left'] } };
+    return { source: { kind: 'item', id: s.name }, at: box, anchor: { box, prefer: ['above', 'below'] } };
   }
 
   /** Reads the haul (and the stash) every frame, so the hook can report it; draws it while open. `container` is the open hopper or crate. */

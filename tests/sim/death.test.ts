@@ -91,7 +91,7 @@ describe('dying', () => {
     expect(s.banked).toEqual({ arrow: 10, wood: 1 });
   });
 
-  it('items withdrawn from a hopper after banking are lost', () => {
+  it('items withdrawn from a hopper in the foundry are banked at once (050), so a death keeps them', () => {
     const s = foundry();
     run(s, 1);
     s.inventory = { wood: 5 };
@@ -101,9 +101,10 @@ describe('dying', () => {
     h.count = 4;
     run(s, 1, { withdraw: { id: h.id, amount: 'all' } });
     expect(s.inventory).toEqual({ wood: 5, stone: 4 });
+    expect(s.banked).toEqual({ wood: 5, stone: 4 });
     die(s);
-    expect(s.inventory).toEqual({ wood: 5 });
-    expect(s.events.lost).toEqual({ stone: 4 });
+    expect(s.inventory).toEqual({ wood: 5, stone: 4 });
+    expect(s.events.lost).toEqual({});
   });
 
   it('keeps identified and worn gear, the stash, claims, the entrances and the foundry', () => {

@@ -92,6 +92,8 @@ export class GameScene extends Scene {
   private readonly pending: SimEvents = createEvents();
   /** Set by the test hook: the real-time loop stops advancing the sim (the menu still opens and crafts). */
   manualStepping = false;
+  /** The sim tick the last drawn frame showed, or -1 before the first (for ui().drawnTick: tests wait on it, not on time). */
+  drawnTick = -1;
   /** The screen fit (016): cameras zoom by its scale so the same 640×360 of the world fills a full-resolution backbuffer. */
   private fit: ScreenFit = currentFit();
   private sceneCameras?: SceneCameras;
@@ -245,7 +247,10 @@ export class GameScene extends Scene {
     const shown = this.shownRoomId;
     this.feel?.update(sim, this.pending, shown, this.game.loop.delta);
     this.roomViews?.update(sim, this.pending, shown, this.game.loop.delta);
-    this.tutorial?.update(sim, shown, this.pending, (id) => this.foundryView?.topOf(id));
+    // 051: the fixed HUD boxes the waypoint arrow keeps clear of.
+    const mapBox = this.roomViews?.mapBox;
+    const hudBoxes = [...(this.hud?.fixedBoxes ?? []), ...(mapBox ? [mapBox] : [])];
+    this.tutorial?.update(sim, shown, this.pending, (id) => this.foundryView?.topOf(id), hudBoxes);
     const picked = new Set(this.pending.pickups.map((p) => p.id));
     this.hud?.update(sim, this.pending, this.game.loop.delta);
     this.buildView?.placed(this.pending.places.map((p) => p.pieceId));
@@ -278,12 +283,13 @@ export class GameScene extends Scene {
     this.tunnelView?.update(sim.foundry, inFoundry, { building: sim.building, selected: this.buildView?.selected ?? '', cursor, facing: controls?.facing ?? 'right' });
     // Menu rows light under the cursor (020).
     const pointer = controls?.viewPointer();
-    if (pointer) for (const menu of [this.siteMenus, this.pause, this.hud, this.sandboxPanel]) menu?.pointAt(pointer.x, pointer.y);
+    if (pointer) for (const menu of [this.siteMenus, this.pause, this.hud, this.sandboxPanel, this.roomViews]) menu?.pointAt(pointer.x, pointer.y);
     // The arrow pointer while a menu is open or over the build bar, else the crosshair (021).
     const inMenu = [this.menu, this.pause, this.siteMenus, this.hud?.inventory, this.hud?.talents, this.legibility, this.sandboxPanel].some((m) => m?.isOpen) || (this.wake?.isShown ?? false);
     this.cursorView?.update(inMenu || (pointer !== undefined && [this.buildView, this.legibility].some((v) => v?.overUi(pointer.x, pointer.y))));
     const point = controls?.overWorld() ? controls.cursorPoint() : null;
     this.hover?.update(sim, shown, point, (id) => this.foundryView?.topOf(id), this.cameras.main.worldView);
     this.legibility?.update(sim, this.pause?.isOpen ? null : (pointer ?? null), controls?.shiftHeld() ?? false, this.game.loop.delta);
+    this.drawnTick = sim.tick;
   }
 }

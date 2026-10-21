@@ -58,7 +58,8 @@ describe('the foundry goals (046)', () => {
   it("027's build steps are gone; the refill goal takes their place, before filling the tube", () => {
     const texts = OBJECTIVES.map((o) => o.text);
     for (const old of ['Press B and place a hopper', 'Put wood in the hopper (E)', 'Run a conduit from the assembler into the intake']) expect(texts).not.toContain(old);
-    expect(OBJECTIVES[REFILL - 1]?.text).toBe('Craft a bomb and a ley bolt (C)');
+    // 051: the bomb goal moved before the foundry.
+    expect(OBJECTIVES[REFILL - 1]?.text).toBe('Enter the foundry');
     expect(OBJECTIVES[REFILL + 1]?.text).toBe(AFTER_REFILL);
     expect(OBJECTIVES[REFILL]).toEqual({
       text: REFILL_GOAL,
@@ -66,6 +67,7 @@ describe('the foundry goals (046)', () => {
       check: { kind: 'refilled', items: ['wood', 'stone', 'fiber'] },
       waitsFor: { kind: 'lineDry' },
       prompt: { key: 'E', over: 'hopper' },
+      target: { kind: 'hoppers', unfilled: true },
     });
   });
 
@@ -74,9 +76,9 @@ describe('the foundry goals (046)', () => {
     expect(OBJECTIVES[SECOND + 1]?.text).toBe('Feed two entrances to fire a spread');
     expect(OBJECTIVES[SECOND]).toMatchObject({
       milestone: 'prototype',
-      check: { kind: 'entrancesHold', ammo: 'arrow', min: 2 },
+      check: { kind: 'entranceFed', node: 'entrance-2' },
       prompt: { key: 'B', over: 'player' },
-      marker: 'intake',
+      target: { kind: 'newEntrance' },
       highlight: 'assembler',
     });
   });
@@ -156,19 +158,16 @@ describe('the refill goal (046)', () => {
 });
 
 describe('the second-line goal (046)', () => {
-  it('holds once two entrances hold arrows, not one, and not ley bolts', () => {
+  it('holds once the entrance the Warden core opened holds any ammo (050: not two arrow lines); ammo elsewhere never counts', () => {
     const s = foundry();
     s.objectives = OBJECTIVES.map((_, i) => i < SECOND);
     const [west, centre] = s.link.entrances;
     if (!west || !centre) throw new Error('no entrances');
-    west.open = true;
+    Object.assign(west, { open: true, node: 'entrance-2' });
     Object.assign(centre, { ammoId: 'arrow', count: 5 });
     run(s, 1);
     expect(s.objectives[SECOND]).toBe(false);
     Object.assign(west, { ammoId: 'ley-bolt', count: 5 });
-    run(s, 1);
-    expect(s.objectives[SECOND]).toBe(false);
-    Object.assign(west, { ammoId: 'arrow', count: 5 });
     run(s, 1);
     expect(s.objectives[SECOND]).toBe(true);
   });

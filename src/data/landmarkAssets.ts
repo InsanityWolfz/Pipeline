@@ -24,13 +24,25 @@ export const LANDMARK_SPRITES = {
   championGlow: 'champion-glow',
 } as const;
 
-/** The minimap's landmark icons, by marker (hudLayout's `MINIMAP.landmarkScale` sizes them). */
+/** The minimap's landmark icons, by marker (`MINIMAP.landmarkScale`, src/data/minimap.ts, sizes them). */
 export const MAP_ICONS = {
   site: 'map-site',
   grotto: 'map-grotto',
   spring: 'map-spring',
   cache: 'map-cache',
   aqueduct: 'map-aqueduct',
+  /** 051 (B.5): the foundry's stairs, the shrine's pylon and a boss arena, once each has been seen. */
+  foundry: 'map-foundry',
+  pylon: 'map-pylon',
+  arena: 'map-arena',
+} as const;
+
+/** 051 (B.6): the foundry map's icon frames (src/data/foundryMap.ts), by what they mark; the door shares the stairs' arch. */
+export const FOUNDRY_MAP_ICONS = {
+  tube: 'fmap-tube',
+  bench: 'fmap-bench',
+  stash: 'fmap-stash',
+  door: MAP_ICONS.foundry,
 } as const;
 
 export const LANDMARK_LOOK = {
@@ -88,8 +100,11 @@ export const LANDMARK_LOOK = {
 
 /** The discovery banner (032): the landmark's name in the display font, top centre below the objective band. */
 export const DISCOVERY_BANNER = {
-  /** View px from the top: below the minimap (to 74) and the objective band (86 + a line), so it never covers it. */
-  top: 112,
+  /**
+   * View px from the top (050, A.3: at the top of the screen, never over the player): under the boss bar (20 + 8) and
+   * above the objective band (86), between the minimap and the left edge.
+   */
+  top: 34,
   /** A small line above the name. */
   kicker: 'Discovered',
   kickerGap: 2,

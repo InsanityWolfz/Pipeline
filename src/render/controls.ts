@@ -222,6 +222,11 @@ export class Controls {
     return pressed;
   }
 
+  /** Drops this frame's E before it reaches the sim (050: an E that closes a screen mustn't also harvest or claim). */
+  dropInteract(): void {
+    this.interactPending = false;
+  }
+
   /** Wheel notches since the last call: positive scrolls down. */
   takeWheel(): number {
     const n = this.wheelPending;

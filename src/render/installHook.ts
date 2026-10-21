@@ -57,6 +57,9 @@ export function installTestHook(flow: FlowScene): void {
       for (let i = 0; i < frames; i++) scene.stepOnce(withUi(i === 0 ? held : after, scene.takeUiCommand()));
     }),
     craft: act((_sim, scene, recipeId: string) => scene.craft(recipeId)),
+    resume: () => {
+      live().manualStepping = false;
+    },
     ui: () => {
       const scene = flow.live;
       const game = scene ? scene.hoverText() : { ...titleUi(), ready: flow.ready };

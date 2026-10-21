@@ -61,6 +61,8 @@ export interface WandererViewDef {
   trail?: string;
   /** Feet sit this far either side of the centre at rest; side views stride along x, others alternate lifts. */
   feet: number;
+  /** 050 (A.1): both arms the near arm's wide sleeve and forearm, the far one mirrored, so facing forward they match. */
+  matchedArms?: boolean;
 }
 
 const sideView: WandererViewDef = {
@@ -99,18 +101,28 @@ const sideView: WandererViewDef = {
   feet: 5,
 };
 
+/**
+ * 050 (A.1): the belt seen from the front wraps the body edge to edge, curving down round the front (3/4 view), its
+ * shaded right end darker; it used to stop short of the cloak's edges and read as a stick held in the hands.
+ */
+const BELT_FRONT: readonly Shape[] = [
+  path('M -12.8 -6.5 Q 0 -4 12.8 -6.5 L 13.3 -2.6 Q 0 0 -13.3 -2.6 Z', solid('strap')),
+  path('M 9 -5.9 Q 11.2 -6.2 12.8 -6.5 L 13.3 -2.6 Q 11.5 -2.2 9.2 -1.9 Z', flat('leather-dark')),
+];
+
 const downView: WandererViewDef = {
-  order: ['tank-back', 'cloak-body', 'mantle', 'hood', '@glow', '@hose', '@tube', '@far-arm', '@near-arm'],
+  // 050 (A.1): the arms come before the hood, so the shoulders never cross the head.
+  order: ['tank-back', 'cloak-body', 'mantle', '@hose', '@tube', '@far-arm', '@near-arm', 'hood', '@glow'],
   parts: [
     part('tank-back', [0, -15], [rect(-12.5, -28, 25, 23, 4, solid('brass')), rect(-12.5, -30, 25, 3.4, 1, solid('brass-dark'))]),
     part('cloak-body', [0, 0], [
       path(CLOAK_FRONT, solid('rust')),
       path('M 5 -22 Q 11 -2 10 17.8 L 14 17 Q 15 -2 9 -24 Z', flat('rust-dark')),
       path('M -2.5 -16 Q -3 2 -3 18.8 L 3 18.8 Q 3 2 2.5 -16 Z', solid('robe')),
-      rect(-11, -6, 22, 4, 1.5, solid('strap')),
-      line([-7, -20, -6, -6], 2, 'strap'),
-      line([7, -20, 6, -6], 2, 'strap'),
-      ellipse(0, -4, 2.2, 2.2, solid('cyan')),
+      ...BELT_FRONT,
+      line([-7, -20, -6, -5.6], 2, 'strap'),
+      line([7, -20, 6, -5.6], 2, 'strap'),
+      ellipse(0, -3.2, 2.2, 2.2, solid('cyan')),
       path(HEM_FRONT, trim('gold-trim', 1.8)),
     ]),
     part('mantle', [0, -18], [
@@ -124,11 +136,12 @@ const downView: WandererViewDef = {
       ellipse(0, -29, 7.4, 8.4, solid('hood-dark')),
     ]),
   ],
-  shoulders: { far: [-8, -18], near: [8, -18] },
+  shoulders: { far: [-9, -17], near: [9, -17] },
   gunPivot: [6, -6],
   hose: { from: [11, -6], sag: [6, 10] },
   glow: GLOW(0, -29),
   feet: 4,
+  matchedArms: true,
 };
 
 const upView: WandererViewDef = {

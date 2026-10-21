@@ -13,7 +13,7 @@ import { TextLine } from './textLine';
 import type { TipHit } from './tipTypes';
 import { addVector } from './vector/textures';
 
-/** What a click on the panel asks for: identify, wear (or take off) a piece, or nothing past the panel's own tab and page. */
+/** What a click on the panel asks for: identify, wear (or take off) a piece, or nothing past the panel's own tab. */
 export type GearClick = { kind: 'identify' } | { kind: 'equip'; id: number } | { kind: 'panel' };
 
 /** The panel as drawn, for `ui().gear.panel`: its parts' boxes (view px) and words. */
@@ -24,7 +24,8 @@ export interface GearPanelState {
   cells: { slot: GearSlot; worn: number | null; name: string; box: Box }[];
   tabs: { slot: GearSlot; text: string; box: Box }[];
   rows: { id: number; worn: boolean; color: string; texts: string[]; box: Box }[];
-  page: { index: number; count: number };
+  /** 050: the first row shown and the furthest the list scrolls. */
+  scroll: { first: number; last: number };
   totals: string[];
 }
 
@@ -42,8 +43,8 @@ function fit(line: TextLine, text: string, w: number): TextLine {
 
 // The identification bench's menu (036): the Identify button, a cell per slot with
 // the piece worn there, a tab per slot listing its pieces (each in its rarity's colour
-// and frame, with its weight, armor, affixes and a relic's rule), paged when they
-// don't fit, and the totals. A click on a row wears the piece (or takes the worn one
+// and frame, with its weight, armor, affixes and a relic's rule), scrolling on the
+// wheel when they don't fit (050: no pages), and the totals. A click on a row wears the piece (or takes the worn one
 // off); a cell or tab opens that slot's tab. It stays open, so pieces can be swapped.
 export class GearPanel {
   private readonly scene: Scene;
@@ -54,7 +55,6 @@ export class GearPanel {
   private readonly tabs: TextLine[];
   private readonly rows: RowView[] = [];
   private readonly empty: TextLine;
-  private readonly pager: TextLine;
   private readonly totals: TextLine[];
   private layout: GearPanelLayout = gearPanelLayout([], 0);
   private pieces: GearPiece[] = [];
@@ -63,7 +63,7 @@ export class GearPanel {
   private shown: GearPanelState | null = null;
   isOpen = false;
   tab: GearSlot = 'body';
-  private page = 0;
+  private first = 0;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -79,7 +79,6 @@ export class GearPanel {
       this.rows.push({ frame: image(rarityLook({ rarity: 'common' }).frame), icon: image(slotIcon('helm'), d + 2), name: text('display'), detail: text('body'), affixes: text('body'), rule: text('label').setFill(P.colors.rule) });
     }
     this.empty = text('body').setFill(P.colors.dim);
-    this.pager = text('body');
     this.totals = [text('body'), text('body')];
     this.setVisible(false);
   }
@@ -87,7 +86,12 @@ export class GearPanel {
   open(): void {
     this.isOpen = true;
     this.tab = 'body';
-    this.page = 0;
+    this.first = 0;
+  }
+
+  /** 050 (A.13): the wheel scrolls the open tab's list a row a step (kept in range when next drawn). */
+  scroll(steps: number): void {
+    if (this.isOpen) this.first = Math.max(0, this.first + steps);
   }
 
   close(): void {
@@ -100,7 +104,7 @@ export class GearPanel {
     return this.isOpen && inBox(this.layout.panel, x, y);
   }
 
-  /** What the cursor is over, as a key ('row:3', 'tab:helm', 'cell:body', 'identify', 'pager'), or ''. */
+  /** What the cursor is over, as a key ('row:3', 'tab:helm', 'cell:body', 'identify'), or ''. */
   private targetAt(x: number, y: number): { key: string; box: Box } | null {
     const L = this.layout;
     const carried = this.shown?.identify ?? null;
@@ -108,7 +112,6 @@ export class GearPanel {
     for (const r of L.rows) if (inBox(r.box, x, y)) return { key: `row:${r.id}`, box: r.box };
     for (const t of L.tabs) if (inBox(t.box, x, y)) return { key: `tab:${t.slot}`, box: t.box };
     for (const c of L.cells) if (inBox(c.box, x, y)) return { key: `cell:${c.slot}`, box: c.box };
-    if (L.page.count > 1 && inBox(L.pager, x, y)) return { key: 'pager', box: L.pager };
     return null;
   }
 
@@ -119,7 +122,11 @@ export class GearPanel {
     const [kind, arg] = hit?.key.split(':') ?? [];
     const id = kind === 'row' ? Number(arg) : kind === 'cell' ? this.shown?.cells.find((c) => c.slot === arg)?.worn : undefined;
     if (!hit || id === undefined || id === null) return null;
-    return { source: { kind: 'gear', id: String(id) }, at: hit.box, anchor: { box: hit.box, prefer: ['right', 'left', 'below'] } };
+    // 050 (A.6): it goes the moment the cursor leaves the piece's square, even onto the tip. A row's tip goes beside the
+    // panel, clear of the list's scroll bar.
+    const P = this.layout.panel;
+    const beside = kind === 'row' ? { ...hit.box, w: P.x + P.w - hit.box.x } : hit.box;
+    return { source: { kind: 'gear', id: String(id) }, at: hit.box, anchor: { box: beside, prefer: ['right', 'left', 'below'] }, leaveAtOnce: true };
   }
 
   /** The cursor is at a screen point: what it's over lights, with the hover sound on a new target. */
@@ -130,7 +137,7 @@ export class GearPanel {
     this.hover = key;
   }
 
-  /** A click at a screen point: a tab or cell opens its slot, the pager turns, a row or the button is sent on. Null off the panel. */
+  /** A click at a screen point: a tab or cell opens its slot, a row or the button is sent on. Null off the panel. */
   click(x: number, y: number): GearClick | null {
     if (!this.isOpen || !inBox(this.layout.panel, x, y)) return null;
     const hit = this.targetAt(x, y);
@@ -139,10 +146,9 @@ export class GearPanel {
     const [kind, arg] = hit.key.split(':');
     if (kind === 'identify') return { kind: 'identify' };
     if (kind === 'row') return { kind: 'equip', id: Number(arg) };
-    if (kind === 'pager') this.page += 1;
-    else if ((kind === 'tab' || kind === 'cell') && arg) {
+    if ((kind === 'tab' || kind === 'cell') && arg) {
       this.tab = arg as GearSlot;
-      this.page = 0;
+      this.first = 0;
     }
     return { kind: 'panel' };
   }
@@ -152,15 +158,15 @@ export class GearPanel {
     if (!this.isOpen) return;
     const deltaMs = this.scene.game.loop.delta * this.scene.tweens.timeScale;
     this.pieces = sim.gear.filter((p) => p.slot === this.tab);
-    this.layout = gearPanelLayout(this.pieces.map((p) => ({ id: p.id, relic: p.relic !== null })), this.page);
-    this.page = this.layout.page.index;
+    this.layout = gearPanelLayout(this.pieces.map((p) => ({ id: p.id, relic: p.relic !== null })), this.first);
+    this.first = this.layout.scroll.first;
     if (this.flash) this.flash = this.flash.ms - deltaMs > 0 ? { ...this.flash, ms: this.flash.ms - deltaMs } : null;
     this.draw(sim);
   }
 
   private setVisible(on: boolean): void {
     this.g.setVisible(on);
-    for (const t of [this.title, this.button, this.empty, this.pager, ...this.tabs, ...this.totals]) t.setVisible(on);
+    for (const t of [this.title, this.button, this.empty, ...this.tabs, ...this.totals]) t.setVisible(on);
     for (const c of this.cells) for (const o of [c.frame, c.icon, c.slot, c.armor, c.name]) o.setVisible(on);
     for (const r of this.rows) for (const o of [r.frame, r.icon, r.name, r.detail, r.affixes, r.rule]) o.setVisible(on);
   }
@@ -242,12 +248,15 @@ export class GearPanel {
       return { id: piece.id, worn, color: look.color, texts: [lines.name, lines.detail, lines.affixes, ...(lines.rule ? [lines.rule] : [])], box: b };
     });
     this.empty.setVisible(this.pieces.length === 0).set(W.empty(SLOT_NAMES[this.tab])).moveTo(L.empty.x, L.empty.y);
-    this.pager.setVisible(L.page.count > 1).set(W.page(L.page.index, L.page.count));
-    this.pager.moveTo(L.pager.x + L.pager.w - this.pager.width - P.list.rightPad, L.pager.y + P.pager.textY).setFill(this.hover === 'pager' ? C.pagerHover : undefined);
+    // 050: the scroll bar, while the list scrolls.
+    if (L.scroll.last > 0) {
+      this.fill(L.track, C.track);
+      this.fill(L.thumb, C.thumb);
+    }
     const totals = totalsLines(playerStats(sim));
     totals.forEach((t, i) => this.totals[i]?.set(t).moveTo(L.totals[i]?.x ?? 0, L.totals[i]?.y ?? 0));
     if (this.flash) this.fill(this.flash.box, { color: C.flash.color, alpha: C.flash.alpha * (this.flash.ms / P.flashMs) });
-    this.shown = { open: true, tab: this.tab, identify, cells, tabs, rows: rows.flatMap((r) => (r ? [r] : [])), page: L.page, totals };
+    this.shown = { open: true, tab: this.tab, identify, cells, tabs, rows: rows.flatMap((r) => (r ? [r] : [])), scroll: L.scroll, totals };
   }
 
   /** What it shows, for the test hook. */

@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 9,
   "shape": [
     "state.activatePulse: number",
     "state.arrows: array",
@@ -189,6 +189,8 @@
     "state.fixtures[].item: null",
     "state.fixtures[].timer: number",
     "state.fixtures[]: object",
+    "state.fog: array",
+    "state.fog[]: number",
     "state.found: array",
     "state.found[]: string",
     "state.foundry.nextPieceId: number",
@@ -270,6 +272,7 @@
     "state.link.entrances[].ammoId: null",
     "state.link.entrances[].cooldown: number",
     "state.link.entrances[].count: number",
+    "state.link.entrances[].node: null",
     "state.link.entrances[].open: boolean",
     "state.link.entrances[]: object",
     "state.link: object",
@@ -371,6 +374,9 @@
     "state.start.spawn: object",
     "state.start: object",
     "state.stash: object",
+    "state.subSteps.goal: number",
+    "state.subSteps.items: array",
+    "state.subSteps: object",
     "state.summoned: array",
     "state.summoning: null",
     "state.talentPoints: number",

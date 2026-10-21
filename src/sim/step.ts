@@ -6,9 +6,11 @@ import { steerArrows } from './homing';
 import { stepBombs } from './bombs';
 import { stepMines } from './mines';
 import { maskCommand, stepBuild } from './build';
+import { bankGains } from './banking';
 import { stepClaims, stepPorts } from './claims';
 import { stepCache, stepCacheRearm } from './cache';
 import { stepDiscovery } from './landmarks';
+import { stepFog } from './fog';
 import { arrowHits, removeDead } from './combat';
 import { stepDoorways } from './doorways';
 import { stepPickups } from './drops';
@@ -79,6 +81,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepLink(state);
   // Enemies act after the player moves, so a swipe lands on where the player stands now.
   stepDiscovery(state);
+  stepFog(state);
   stepPopulation(state);
   stepCacheRearm(state);
   // Before enemies act, so a Bulwark bomb thrown this tick starts its fuse at 0 (034; its fuseTicks keep the word).
@@ -122,6 +125,8 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepFoundry(state.foundry, state.link.entrances, state.events, state.link.attuned, { cap: entranceCap(state), speed: machineSpeed(state) });
   stepPorts(state, (to, from, item) => offerFromOutside(state.foundry, to, from, item));
   stepPickups(state);
+  // 050: in the foundry, the tick's gains (and crafts from the menu since the last tick) are safe at once.
+  bankGains(state);
   noteCarried(state);
   noteBag(state);
   noteFound(state);

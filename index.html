@@ -5,8 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pipeline</title>
     <style>
-      html, body { margin: 0; height: 100%; background: #1e1a2e; } /* palette `ink`, src/data/palette.ts */
-      #game { width: 100%; height: 100%; }
+      html, body { margin: 0; height: 100%; background: #1e1a2e; overflow: hidden; } /* palette `ink`, src/data/palette.ts */
+      /* 050 (A.4): an inline canvas left a few px under it, so a window the view fits exactly (F11 at 1080p) scrolled;
+         the scroll bar narrowed the window, the fit shrank, the bar went, and round it went. A block canvas and no
+         overflow keep the page exactly the window's size. */
+      #game { width: 100%; height: 100%; overflow: hidden; }
+      #game canvas { display: block; }
     </style>
   </head>
   <body>

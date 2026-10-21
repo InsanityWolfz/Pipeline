@@ -4,16 +4,30 @@ import { boot, watchErrors } from './helpers';
 // The overworld (017): the corner minimap and its markers, and the living
 // population's crowd out in ring 2, never past the screen cap.
 
-test('the minimap shows the entrance, the shrine and the player, follows the player, and hides in the foundry', async ({ page }) => {
+test('the minimap shows the player, the foundry and the shrine once seen (051: fog), follows the player, and hides in the foundry', async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page);
   await page.evaluate(() => window.__GAME__?.step(0));
   const minimap = () => page.evaluate(() => window.__GAME__?.ui().minimap);
-  await expect.poll(async () => (await minimap())?.markers.map((m) => m.kind)).toEqual(['entrance', 'shrine', 'player']);
+  // 051 (B.5): only what has been on screen shows: at the start, neither the stairs (7 tiles north) nor the shrine.
+  await expect.poll(async () => (await minimap())?.markers.map((m) => m.kind)).toEqual(['player']);
+  // Up to the stairs, then near the shrine: each shows once seen, and stays.
+  await page.evaluate(() => {
+    const g = window.__GAME__;
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    const p = g.getState().player;
+    h.walkTo(p.x, p.y - 4 * 32);
+    h.walkTo(106.5 * 32, 12.5 * 32);
+    h.walkTo(p.x, p.y);
+  });
+  const places = ['entrance', 'shrine', 'player'];
+  await expect.poll(async () => (await minimap())?.markers.filter((m) => places.includes(m.kind)).map((m) => m.kind)).toEqual(places);
   const before = await minimap();
   expect(before?.shown).toBe(true);
   // The shrine is east of the entrance and north of the start; the player south of the entrance.
-  const [entrance, shrine, player] = before?.markers ?? [];
+  const [entrance, shrine, player] = before?.markers.filter((m) => places.includes(m.kind)) ?? [];
+  expect(entrance?.name).toBe('Foundry');
   expect(shrine?.x).toBeGreaterThan(entrance?.x ?? 0);
   expect(shrine?.y).toBeLessThan(entrance?.y ?? 0);
   expect(player?.y).toBeGreaterThan(entrance?.y ?? 0);
@@ -24,7 +38,7 @@ test('the minimap shows the entrance, the shrine and the player, follows the pla
     const x = g?.getState().player.x ?? 0;
     for (let t = 0; t < 400 && (g?.getState().player.x ?? 0) < x + 320; t++) g?.step(1, { moveX: 1 });
   });
-  await expect.poll(async () => (await minimap())?.markers[2]?.x).toBeCloseTo((player?.x ?? 0) + 15, 0);
+  await expect.poll(async () => (await minimap())?.markers.find((m) => m.kind === 'player')?.x).toBeCloseTo((player?.x ?? 0) + 15, 0);
 
   await page.evaluate(() => window.__helpers?.toFoundry());
   await expect.poll(async () => (await minimap())?.shown).toBe(false);

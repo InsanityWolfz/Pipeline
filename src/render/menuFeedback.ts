@@ -51,7 +51,9 @@ export class RowHover {
 }
 
 /** A brass flash over the row at (x, y), screen px, fading out. */
-export function flashRow(scene: Scene, x: number, y: number, frame: string = MENU_ROW_FRAMES.press): void {
+export function flashRow(scene: Scene, x: number, y: number, frame: string = MENU_ROW_FRAMES.press, scale = 1): void {
   const flash = addVector(scene, x, y, frame).setOrigin(0).setScrollFactor(0).setDepth(DEPTHS.menu + 3);
+  // 050: a scaled column's (the title's) flash covers its bigger row.
+  flash.setScale(flash.scaleX * scale, flash.scaleY * scale);
   scene.tweens.add({ targets: flash, alpha: 0, duration: MENU_FEEDBACK.pressMs, onComplete: () => flash.destroy() });
 }
