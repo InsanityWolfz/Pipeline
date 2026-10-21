@@ -62,6 +62,11 @@ export class SiteMenus {
     return [this.pylon, this.stash, this.sorter, this.waystone];
   }
 
+  /** 050: the stash's menu is open (E closes it, as Esc does). */
+  get stashOpen(): boolean {
+    return this.stash.isOpen;
+  }
+
   get isOpen(): boolean {
     return this.menus.some((m) => m.isOpen) || this.bench.isOpen || this.restore.isOpen || this.offering.isOpen;
   }

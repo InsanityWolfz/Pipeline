@@ -1,5 +1,5 @@
 import { SOUNDS } from '../data/sounds';
-import { usableInReach } from '../sim/foundryUse';
+import { stillUsable, usableInReach } from '../sim/foundryUse';
 import { diagramInReach } from '../sim/research';
 import type { SimState } from '../sim/state';
 import type { BuildView } from './BuildView';
@@ -115,7 +115,12 @@ export class MenuRouter {
     if (steps !== 0 && this.sim.building) build.step(steps);
     else if (steps !== 0) inventory.scroll(steps);
     // E on a hopper or crate opens its screen (047); the sim does nothing with it. With the restore panel open, E again restores (033).
-    if (controls.takeInteractPress() && !site.pressAgain(controls)) {
+    const press = controls.takeInteractPress();
+    // 050 (Shaun: "you hit E to get out or escape. It should be both buttons"): E closes the inventory, a hopper's or
+    // crate's screen, or the stash, as Esc does, before it opens anything.
+    if (press && inventory.isOpen) inventory.setOpen(false);
+    else if (press && site.stashOpen) site.close();
+    else if (press && !site.pressAgain(controls)) {
       const target = usableInReach(this.sim);
       // A diagram in reach wins over a crate (033's priority, as E's prompt shows), as before 047.
       if (target?.kind === 'hopper' || (target?.kind === 'crate' && !diagramInReach(this.sim))) {
@@ -131,7 +136,7 @@ export class MenuRouter {
     }
     // Walking out of reach closes a hopper's or crate's screen.
     const open = inventory.container;
-    if (open !== null && usableInReach(this.sim)?.id !== open) inventory.close();
+    if (open !== null && !stillUsable(this.sim, open)) inventory.close();
   }
 
   /**
