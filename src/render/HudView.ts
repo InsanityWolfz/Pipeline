@@ -4,7 +4,7 @@ import { xpToNext } from '../sim/leveling';
 import type { SimEvents } from '../sim/events';
 import { unlockedPieces } from '../sim/placement';
 import type { SimState } from '../sim/state';
-import { hudActive } from '../sim/volley';
+import { hudActive, type HudActive } from '../sim/volley';
 import type { ScreenBox } from './bottomHud';
 import { EdgeTint } from './EdgeTint';
 import { buildBarBox } from './foundryLayout';
@@ -15,6 +15,8 @@ import { ResearchList, type ResearchListState } from './ResearchList';
 import { PickupFeed } from './PickupFeed';
 import { shownKey } from './itemShown';
 import { TubeSlotView, type TubeSlotState } from './TubeSlotView';
+import { CarriedHintView, type CarriedHintShown } from './CarriedHintView';
+import { CARRIED_HINT } from '../data/hints';
 import { BossBar, type BossBarShown } from './BossBar';
 import { NO_TALENT_PANEL, TalentPanel, type TalentPanelState, type TalentTabState } from './TalentPanel';
 import type { TipHit } from './tipTypes';
@@ -26,6 +28,8 @@ export interface BottomHudState {
   /** `selected` is the highlighted cell's index (0 for key 1). */
   hotbar: ScreenBox & { shown: boolean; selected: number } & CarriedBarShown;
   tubeSlot: TubeSlotState;
+  /** 051 (B.7): the mouse (or bound key) beside the carried bar, and the slot swap as the attune ends. */
+  carriedHint: CarriedHintShown;
 }
 
 /** The 031 HUD pieces' part of `ui()`: the inventory panel, the pickup feed and the HP bar. */
@@ -67,6 +71,10 @@ export class HudView {
   private readonly scene: Scene;
   private readonly hotbar: HotbarView;
   private readonly tubeSlot: TubeSlotView;
+  private readonly carriedHint: CarriedHintView;
+  /** 051 (B.7): what the intake's bar showed last frame, and the old left-click slot it keeps through the attune. */
+  private lastActive: HudActive | null = null;
+  private heldActive: HudActive | null = null;
   private readonly health: HealthBar;
   private readonly edges: EdgeTint;
   private readonly feed: PickupFeed;
@@ -83,6 +91,7 @@ export class HudView {
     this.edges = new EdgeTint(scene);
     this.hotbar = new HotbarView(scene);
     this.tubeSlot = new TubeSlotView(scene);
+    this.carriedHint = new CarriedHintView(scene);
     this.health = new HealthBar(scene);
     this.feed = new PickupFeed(scene);
     this.research = new ResearchList(scene);
@@ -111,16 +120,27 @@ export class HudView {
     return this.talents.chipAt(x, y);
   }
 
+  /** 051: the bottom HUD's fixed boxes (the tube slot, the health bar, the carried bar and its hint), view px. */
+  get fixedBoxes(): ScreenBox[] {
+    const boxes = [this.tubeSlot.box, this.health.box];
+    if (this.hotbar.visible) boxes.push(this.hotbar.box);
+    const hint = this.carriedHint.box;
+    if (hint) boxes.push(hint);
+    return boxes;
+  }
+
   /** A screen point on any part of the HUD or the open inventory panel: a press there never fires (015). */
   overUi(x: number, y: number): boolean {
     const parts = [this.tubeSlot.box, this.health.box, ...this.feed.boxes];
     if (this.hotbar.visible) parts.push(this.hotbar.box);
+    const hint = this.carriedHint.box;
+    if (hint) parts.push(hint);
     return parts.some((b) => inBox(b, x, y)) || this.inventory.overUi(x, y) || this.talents.overUi(x, y);
   }
 
   /** What the bottom HUD shows, for the test hook. */
   get bottom(): BottomHudState {
-    return { hotbar: { ...this.hotbar.box, shown: this.hotbar.visible, selected: this.hotbar.selected, ...this.hotbar.state }, tubeSlot: this.tubeSlot.state };
+    return { hotbar: { ...this.hotbar.box, shown: this.hotbar.visible, selected: this.hotbar.selected, ...this.hotbar.state }, tubeSlot: this.tubeSlot.state, carriedHint: this.carriedHint.shown };
   }
 
   /** The inventory panel, pickup feed and HP bar as drawn (031), for the test hook. */
@@ -138,7 +158,19 @@ export class HudView {
     const building = sim.building;
     this.hotbar.setVisible(sim.hasTube && !building);
     this.hotbar.update(sim.hotbar, sim.inventory);
-    this.tubeSlot.update(hudActive(sim), building);
+    this.carriedHint.update(this.hotbar.visible);
+    // 051 (B.7): through the attune the intake's bar keeps the old left-click slot (the carried round); as it ends, that
+    // slot shrinks into the carried bar and the intake's appears in its place.
+    const active = hudActive(sim);
+    if (events.attunes.length > 0 && this.lastActive?.kind === 'carried') this.heldActive = this.lastActive;
+    const ending = events.hints.some((h) => h.id === CARRIED_HINT.id);
+    const before = this.tubeSlot.state;
+    this.tubeSlot.update(this.heldActive && sim.link.attunePulse > 0 && !ending ? this.heldActive : active, building);
+    if (ending) {
+      this.carriedHint.swap(before, before.icons[0], sim.hotbar.selected, (a) => this.tubeSlot.setAlpha(a));
+      this.heldActive = null;
+    }
+    this.lastActive = active;
     const p = sim.player;
     const stats = playerStats(sim);
     const toNext = xpToNext(sim);

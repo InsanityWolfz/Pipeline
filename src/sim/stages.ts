@@ -84,7 +84,7 @@ function pullFromEntrances(state: SimState, itemId: string, n: number): void {
 }
 
 /** A tagged round's recipe shows once the shrine is claimed and its family's own ammo can be made (landmines after ley-iron is found, 038.3). */
-export function taggedKnown(state: { found: readonly string[]; claims: readonly string[]; link: Pick<SimState['link'], 'attuned'> }, row: StageRow): boolean {
+export function taggedKnown(state: { found: readonly string[]; claims: readonly string[]; link: Pick<SimState['link'], 'attuned'>; gates: Pick<SimState['gates'], 'foundry'> }, row: StageRow): boolean {
   return stagesKnown(state) && knownRecipe(state, row.base);
 }
 

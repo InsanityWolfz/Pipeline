@@ -58,7 +58,8 @@ describe('the foundry goals (046)', () => {
   it("027's build steps are gone; the refill goal takes their place, before filling the tube", () => {
     const texts = OBJECTIVES.map((o) => o.text);
     for (const old of ['Press B and place a hopper', 'Put wood in the hopper (E)', 'Run a conduit from the assembler into the intake']) expect(texts).not.toContain(old);
-    expect(OBJECTIVES[REFILL - 1]?.text).toBe('Craft a bomb and a ley bolt (C)');
+    // 051: the bomb goal moved before the foundry.
+    expect(OBJECTIVES[REFILL - 1]?.text).toBe('Enter the foundry');
     expect(OBJECTIVES[REFILL + 1]?.text).toBe(AFTER_REFILL);
     expect(OBJECTIVES[REFILL]).toEqual({
       text: REFILL_GOAL,
@@ -66,6 +67,7 @@ describe('the foundry goals (046)', () => {
       check: { kind: 'refilled', items: ['wood', 'stone', 'fiber'] },
       waitsFor: { kind: 'lineDry' },
       prompt: { key: 'E', over: 'hopper' },
+      target: { kind: 'hoppers', unfilled: true },
     });
   });
 
@@ -76,7 +78,7 @@ describe('the foundry goals (046)', () => {
       milestone: 'prototype',
       check: { kind: 'entranceFed', node: 'entrance-2' },
       prompt: { key: 'B', over: 'player' },
-      marker: 'newEntrance',
+      target: { kind: 'newEntrance' },
       highlight: 'assembler',
     });
   });

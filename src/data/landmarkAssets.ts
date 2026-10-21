@@ -24,13 +24,25 @@ export const LANDMARK_SPRITES = {
   championGlow: 'champion-glow',
 } as const;
 
-/** The minimap's landmark icons, by marker (hudLayout's `MINIMAP.landmarkScale` sizes them). */
+/** The minimap's landmark icons, by marker (`MINIMAP.landmarkScale`, src/data/minimap.ts, sizes them). */
 export const MAP_ICONS = {
   site: 'map-site',
   grotto: 'map-grotto',
   spring: 'map-spring',
   cache: 'map-cache',
   aqueduct: 'map-aqueduct',
+  /** 051 (B.5): the foundry's stairs, the shrine's pylon and a boss arena, once each has been seen. */
+  foundry: 'map-foundry',
+  pylon: 'map-pylon',
+  arena: 'map-arena',
+} as const;
+
+/** 051 (B.6): the foundry map's icon frames (src/data/foundryMap.ts), by what they mark; the door shares the stairs' arch. */
+export const FOUNDRY_MAP_ICONS = {
+  tube: 'fmap-tube',
+  bench: 'fmap-bench',
+  stash: 'fmap-stash',
+  door: MAP_ICONS.foundry,
 } as const;
 
 export const LANDMARK_LOOK = {

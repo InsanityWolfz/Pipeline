@@ -10,13 +10,15 @@ import { MadePopups } from './MadePopups';
 import { ObjectiveView } from './ObjectiveView';
 import { PromptView } from './PromptView';
 import { TutorialView } from './TutorialView';
+import { WaypointView } from './WaypointView';
 import type { UiState } from './testHook';
+import type { ScreenBox } from './bottomHud';
 
 /** What the tutorial reports to the test hook's `ui()`. */
-export type TutorialUiState = Pick<UiState, 'intakePrompt' | 'prompt' | 'marker' | 'madePopups' | 'objectiveTick' | 'interactPrompt'>;
+export type TutorialUiState = Pick<UiState, 'intakePrompt' | 'prompt' | 'marker' | 'waypoint' | 'objective' | 'madePopups' | 'objectiveTick' | 'interactPrompt'>;
 
 /** The tutorial's part of `ui()` before the scene has built its views. */
-export const NO_TUTORIAL_UI: TutorialUiState = { intakePrompt: null, prompt: null, marker: null, madePopups: [], objectiveTick: 0, interactPrompt: null };
+export const NO_TUTORIAL_UI: TutorialUiState = { intakePrompt: null, prompt: null, marker: null, waypoint: null, objective: { text: '', subSteps: [] }, madePopups: [], objectiveTick: 0, interactPrompt: null };
 
 /** The piece the current objective names, whose build-bar cell pulses (027), or null. */
 export function highlightOf(sim: SimState): string | null {
@@ -33,6 +35,7 @@ export class TutorialUi {
   private readonly intake: IntakePrompt;
   private readonly interact: InteractPrompt;
   private readonly made: MadePopups;
+  private readonly waypoint: WaypointView;
 
   constructor(scene: Scene) {
     this.world = new TutorialView(scene);
@@ -41,6 +44,7 @@ export class TutorialUi {
     this.intake = new IntakePrompt(scene);
     this.interact = new InteractPrompt(scene);
     this.made = new MadePopups(scene);
+    this.waypoint = new WaypointView(scene);
   }
 
   /**
@@ -51,7 +55,9 @@ export class TutorialUi {
     return {
       intakePrompt: this.intake.shown,
       prompt: this.prompt.shown,
-      marker: this.prompt.markerAt,
+      marker: this.waypoint.markerAt,
+      waypoint: this.waypoint.shown,
+      objective: { text: this.objective.text, subSteps: this.objective.subSteps },
       madePopups: this.made.shown,
       objectiveTick: this.objective.tickAlpha,
       interactPrompt: this.interact.shown,
@@ -64,11 +70,13 @@ export class TutorialUi {
   }
 
   /** Draws the tutorial for the room on screen; `events` since the last draw pop a machine step's "+ shaft" (027) over its piece's top (`topOf`). */
-  update(sim: SimState, shown: string, events: SimEvents, topOf: (id: number) => number | undefined): void {
+  update(sim: SimState, shown: string, events: SimEvents, topOf: (id: number) => number | undefined, hud: readonly ScreenBox[] = []): void {
     this.made.play(events, sim.foundry, shown, topOf);
     this.world.update(sim, shown);
     this.objective.update(sim);
     this.prompt.update(sim, shown);
+    const band = this.objective.box;
+    this.waypoint.update(sim, shown, band ? [...hud, band] : hud);
     this.intake.update(sim, shown);
     // 045: the in-reach prompt, unless the objective's or the intake's already shows its key lit.
     const lit = [...(this.prompt.shown?.usable ? [this.prompt.shown.key] : []), ...(this.intake.lit ? [boundLetter(RESTORE_ENTRANCE_PROMPT.key)] : [])];

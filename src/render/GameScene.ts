@@ -243,7 +243,10 @@ export class GameScene extends Scene {
     const shown = this.shownRoomId;
     this.feel?.update(sim, this.pending, shown, this.game.loop.delta);
     this.roomViews?.update(sim, this.pending, shown, this.game.loop.delta);
-    this.tutorial?.update(sim, shown, this.pending, (id) => this.foundryView?.topOf(id));
+    // 051: the fixed HUD boxes the waypoint arrow keeps clear of.
+    const mapBox = this.roomViews?.mapBox;
+    const hudBoxes = [...(this.hud?.fixedBoxes ?? []), ...(mapBox ? [mapBox] : [])];
+    this.tutorial?.update(sim, shown, this.pending, (id) => this.foundryView?.topOf(id), hudBoxes);
     const picked = new Set(this.pending.pickups.map((p) => p.id));
     this.hud?.update(sim, this.pending, this.game.loop.delta);
     clearEvents(this.pending);
@@ -274,7 +277,7 @@ export class GameScene extends Scene {
     );
     // Menu rows light under the cursor (020).
     const pointer = controls?.viewPointer();
-    if (pointer) for (const menu of [this.siteMenus, this.pause, this.hud, this.sandboxPanel]) menu?.pointAt(pointer.x, pointer.y);
+    if (pointer) for (const menu of [this.siteMenus, this.pause, this.hud, this.sandboxPanel, this.roomViews]) menu?.pointAt(pointer.x, pointer.y);
     // The arrow pointer while a menu is open or over the build bar, else the crosshair (021).
     const inMenu = [this.menu, this.pause, this.siteMenus, this.hud?.inventory, this.hud?.talents, this.legibility, this.sandboxPanel].some((m) => m?.isOpen) || (this.wake?.isShown ?? false);
     this.cursorView?.update(inMenu || (pointer !== undefined && [this.buildView, this.legibility].some((v) => v?.overUi(pointer.x, pointer.y))));

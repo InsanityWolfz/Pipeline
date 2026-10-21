@@ -49,10 +49,14 @@ export function shotSealed(state: Pick<SimState, 'gates'>, roomId: string, tx: n
   return (WORLD[roomId]?.gateTiles ?? []).some((g) => g.tx === tx && g.ty === ty && SHOT_GATES.includes(g.gate) && !state.gates[g.gate]);
 }
 
-/** Recipes the player knows: those needing attunement only once the tube is attuned, and those shown after an item (038) once it's been carried. */
-export function knownRecipe(state: { link: Pick<SimState['link'], 'attuned'>; found: readonly string[] }, recipeId: string): boolean {
+/**
+ * Recipes the player knows: those needing attunement once the tube is attuned or (051, B.3: bombs and ley bolts are
+ * crafted before the foundry) once the foundry's stairs are open, and those shown after an item (038) once it's been carried.
+ */
+export function knownRecipe(state: { link: Pick<SimState['link'], 'attuned'>; found: readonly string[]; gates: Pick<Gates, 'foundry'> }, recipeId: string): boolean {
   const def = recipeDef(recipeId);
-  return (def.requires !== 'attuned' || state.link.attuned) && (def.shownAfter === undefined || state.found.includes(def.shownAfter));
+  const attuned = state.link.attuned || state.gates.foundry;
+  return (def.requires !== 'attuned' || attuned) && (def.shownAfter === undefined || state.found.includes(def.shownAfter));
 }
 
 /** The revealing items (038) an inventory holds, in REVEALING_ITEMS order. */

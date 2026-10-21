@@ -233,6 +233,12 @@ export const TUTORIAL_LAYOUT = {
   tickRise: 2,
   tickGap: 4,
   tickMs: 1200,
+  /**
+   * 051 (B.3): the goal's sub-lines under it, `gap` px below the line, `step` px apart, indented `indent` px from the
+   * band's left: a tick (`tickW`) once done, the raw's icon at `iconScale`, then the text, `iconGap` px apart. A done
+   * line's text shows at `doneAlpha`.
+   */
+  subStep: { gap: 4, step: 12, indent: 10, tickW: 9, iconScale: 0.7, iconGap: 3, doneAlpha: 0.55 },
   /** A prompt floats this far above the top of its target's tile, px. */
   promptLift: 6,
   /** The key's letter: its capitals' top this far below the cap's top (it's centred across). */
@@ -241,12 +247,7 @@ export const TUTORIAL_LAYOUT = {
   promptDimAlpha: 0.45,
   /** The intake's prompt (024): its key cap's bottom centre, px from the pipe's anchor (on the wall right of the pipe), and the text's gap after the cap. */
   intakePrompt: { x: 66, y: -10, textGap: 4 },
-  /**
-   * The arrow marker (027): over the intake, its tip this far above the bottom of the entrance's mouth tile, px, bobbing
-   * this far over `bobMs`; over the supply ports (028), its tip `portLift` above the first port's tile bottom, just clear of
-   * its head (nothing hangs above the first port, while each port's plate hangs over the head of the one below); over a
-   * resource site's pylon (032), its tip `pylonLift` above the pylon's tile bottom, just over its crystal.
-   */
-  marker: { lift: 4, bob: 3, bobMs: 900, portLift: 38, pylonLift: 82 },
+  /** The hovering arrow (027, 051) bobs this far, px, over `bobMs`; how high it floats over each target is TARGET_LIFT (src/data/targets.ts). */
+  marker: { bob: 3, bobMs: 900 },
   gateFadeMs: 500,
 } as const;

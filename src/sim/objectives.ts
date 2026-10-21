@@ -8,6 +8,7 @@ import type { SimState } from './state';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { isRestored } from './research';
 import { regionOf } from './regions';
+import { noteSubSteps } from './subSteps';
 
 // The objectives (012, 028): one ordered chain. Each one completes the first tick
 // its check holds and stays done, so they can finish in any order. The objective
@@ -98,6 +99,7 @@ export function stepObjectives(state: SimState): void {
     state.objectives[i] = true;
     state.events.objectives.push({ index: i });
   }
+  noteSubSteps(state, currentObjective(state));
   if (!state.prototypeComplete && OBJECTIVES.every((o, i) => o.milestone !== 'prototype' || state.objectives[i])) state.prototypeComplete = true;
 }
 

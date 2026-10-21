@@ -2,10 +2,25 @@
 
 Newest entry first.
 
+## 2026-10-21: 051 merged
+**Changed:** Shaun merged 051 (guidance), InsanityWolfz/Pipeline#44.
+
+**Next:** the rest of 050–052, then the next batch: 053 (world and bosses) and 054 (combat readability).
+
 ## 2026-10-21: 050 merged
 **Changed:** Shaun merged 050 (playtest fixes and the title screen), InsanityWolfz/Pipeline#42.
 
 **Next:** the rest of 050–052, then the next batch: 053 (world and bosses) and 054 (combat readability).
+
+## 2026-10-21: 051 review fixes
+**Changed:** fixed 051's review on `claude/051-guidance`: 032/14 waits out the door's fade (retaken); TUTORIAL_LAYOUT.marker keeps only the bob; the Hollows' boulders draw as its stone on the minimap (tested in both regions); default-run e2e for the minimap's hover name (cleared as the pointer leaves the canvas) and the arena's icon once seen; the waypoint arrow keeps clear of the corner map, objective band and bottom HUD (051/03 retaken); hopper icons only on the refill goal; the minimap's seen rule and fog packing in src/sim/fog.ts; render magic numbers to data; `gates` required; more objectiveTarget tests; 051/07b polls the swap's progress; noise retakes put back; the minimap's data in src/data/minimap.ts. `npm run check` passes (1743); the full Playwright run: 149 passed, 0 failed, 135 skipped.
+
+**Next:** Shaun answers 051.3–051.11 and playtests the preview.
+
+## 2026-10-21: 051 guidance built (draft PR)
+**Changed:** built 051 on `claude/051-guidance`, stacked on 050 (merged with its review fixes). Every goal names a target (src/data/targets.ts, src/sim/objectiveTarget.ts): an arrow at the screen's edge while it's off screen, over it on screen, through the foundry's door or to its stairs when it's on the other side; the nearest of several (051.2). The refill goal marks each unfilled hopper with an arrow and its raw's icon. "Craft bombs and ley bolts (C)" comes before the foundry (its recipes known once the stairs open, 051.3) with indented "Collect stone"-style sub-lines and icons that tick off. Harvestable nodes have a pale outline glow and a glint. The minimap has a saved fog of war (051.1), no water or scenery, icons for the foundry, the shrine's pylon and the arena once seen, and names on hover; in the foundry its place shows the foundry map. 047.9's banner gave way to a mouse beside the carried bar and the slot swap as the attune ends. SAVE_VERSION 8, no migration. `npm run check` passes (1731); the full Playwright run: 147 passed, 0 failed, 135 skipped. `npm run measure` identical to 050. Review shots in docs/review/051; older shots retaken where 051 shows. Spec status stays approved.
+
+**Next:** review, then Shaun answers 051.3–051.11 (spec, "Raised after the build") and playtests the preview.
 
 ## 2026-10-21: 050 playtest fixes and the title screen built (draft PR)
 **Changed:** built 050 on `claude/050-playtest-fixes`. The second-line goal's cause, reproduced from Shaun's save: it checked "two entrances hold arrows" and its arrow took the middle open entrance; each entrance now records the node that opened it, the goal reads "Feed ammo into the new entrance" (any ammo in the Warden core's entrance) and points at that entrance. SAVE_VERSION 7, no migration. E opens the hovered hopper or crate within 3 tiles and closes the inventory, hopper, crate and stash screens; a crate's 8 slots hold stacks; gains in the foundry are banked at once. Name tags are small and sit under the feet (050.1), banners at the top, the end card has a cursor; inventory items show their names; the gear list scrolls; a gear tip goes as the cursor leaves its square. No sparkle for field regen; the ward ring keeps still, with a shield. The wanderer facing forward has matched arms, shoulders under the hood and a belt that wraps. The title's wanderer breathes and sways, its tube glow pulses; the logo and buttons are bigger. F11: the page no longer overflows (050.2). `npm run check` passes (1701); the full Playwright run: 141 passed, 2 failed (050's own gear test, fixed; settings.spec timed out under load, passes alone here and on main), 128 skipped. `npm run measure` identical to main. Review shots in docs/review/050; older shots retaken only where 050 changes them. Spec status stays approved.

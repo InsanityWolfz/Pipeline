@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { CLAIM_TICKS, FIXTURES } from '../../src/data/claims';
 import { LANDMARKS } from '../../src/data/landmarks';
-import { boot, cameraSettled } from './helpers';
+import { boot, cameraSettled, quietScreen } from './helpers';
 
 // Review screenshots for 032 (REVIEW_SHOTS=1, into docs/review/032): each landmark, the
 // minimap before and after finding the Quarry, the discovery banner, a claimed Quarry
@@ -122,6 +122,9 @@ test.describe('review screenshots (032)', () => {
       h.walkTo((tx + 3.5) * 32, (ty + 0.5) * 32);
     }, [port.tx, port.ty] as const);
     expect((await page.evaluate(() => window.__GAME__?.getState()))?.ports.find((p) => p.raw === 'stone')?.pylons).toBe(2);
+    // The door's fade and the attune's slot swap (051) both run on the tween clock: wait them out.
+    await quietScreen(page);
+    await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hud))?.carriedHint.swapping, { timeout: 20_000 }).toBe(false);
     await cameraSettled(page, 20_000);
     await page.screenshot({ path: `${SHOTS}/14-stone-port-two-pylons.png` });
   });

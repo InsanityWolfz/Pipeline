@@ -1,4 +1,4 @@
-import { LANDMARK_LOOK, LANDMARK_SPRITES, MAP_ICONS } from '../landmarkAssets';
+import { FOUNDRY_MAP_ICONS, LANDMARK_LOOK, LANDMARK_SPRITES, MAP_ICONS } from '../landmarkAssets';
 import { canopy, shadow } from './terrain';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSprite } from './types';
 
@@ -114,6 +114,36 @@ const ICON_GROTTO: Shape[] = [
 const ICON_SPRING: Shape[] = [ellipse(0, 0, 3.6, 3.6, { fill: 'cyan', outline: true }), ellipse(-1, -1, 1.4, 1.4, flat('cyan-glow'))];
 const ICON_CACHE: Shape[] = [rect(-3.6, -2.4, 7.2, 5, 1, { fill: 'rock-light', outline: true }), rect(-3.6, -2.6, 7.2, 1.2, 0.5, flat('cyan'))];
 
+// 051 (B.5): the foundry's stairs (a brass arch over a dark doorway), the shrine's pylon (a stone needle with its
+// violet crystal) and a boss arena (a ring of stone round two crossed blades).
+const ICON_FOUNDRY: Shape[] = [
+  path('M -4.2 4 L -4.2 -1 Q -4.2 -4.6 0 -4.6 Q 4.2 -4.6 4.2 -1 L 4.2 4 Z', { fill: 'brass', outline: true }),
+  path('M -2.2 4 L -2.2 -0.6 Q -2.2 -2.6 0 -2.6 Q 2.2 -2.6 2.2 -0.6 L 2.2 4 Z', flat('ink')),
+];
+const ICON_PYLON: Shape[] = [
+  path('M -2 4.5 L -1.2 -2 L 1.2 -2 L 2 4.5 Z', { fill: 'rock-light', outline: true }),
+  { ...path('M 0 -5.5 L 1.6 -3 L 0 -1 L -1.6 -3 Z', { fill: 'wisp-light', outline: true }), glow: { color: 'wisp', blur: 2 } },
+];
+const ICON_ARENA: Shape[] = [
+  ellipse(0, 0, 4.4, 4.4, { fill: 'hollow-dark', outline: true }),
+  line([-2.4, -2.4, 2.4, 2.4], 1.1, 'rust-light', true),
+  line([2.4, -2.4, -2.4, 2.4], 1.1, 'rust-light', true),
+];
+
+// 051 (B.6): the foundry map's icons: the intake (a cyan-ringed tube mouth), the bench (a table with a lens) and the
+// stash (a chest).
+const ICON_TUBE: Shape[] = [
+  rect(-2.2, -4.6, 4.4, 7, 1, { fill: 'brass', outline: true }),
+  { ...ellipse(0, 3, 3.4, 1.8, { fill: 'cyan', outline: true }), glow: { color: 'cyan-glow', blur: 2 } },
+];
+const ICON_BENCH: Shape[] = [
+  rect(-4, -1, 8, 2.4, 0.6, { fill: 'wood-light', outline: true }),
+  line([-3, 1.4, -3, 4], 1, 'wood-dark'),
+  line([3, 1.4, 3, 4], 1, 'wood-dark'),
+  ellipse(1.2, -3, 1.8, 1.8, { fill: 'cyan-glow', stroke: { color: 'brass', width: 0.8 } }),
+];
+const ICON_STASH: Shape[] = [rect(-4, -3, 8, 6, 1, { fill: 'wood', outline: true }), rect(-4, -3, 8, 2, 0.6, flat('wood-light')), rect(-0.8, -1.4, 1.6, 2, 0.3, flat('brass'))];
+
 /** The champion's glow: a soft round light, white so render can tint it (gold-trim by data). */
 const G = LANDMARK_LOOK.championGlowPx;
 const GLOW: Shape[] = [ellipse(0, 0, G, G, { fill: { radial: [0, 0, G], stops: [{ at: 0, color: { id: 'snow', alpha: 0.9 } }, { at: 0.55, color: { id: 'snow', alpha: 0.4 } }, { at: 1, color: { id: 'snow', alpha: 0 } }] } })];
@@ -134,5 +164,11 @@ export const LANDMARK_SPRITES_VECTOR: readonly VectorSprite[] = [
   one(MAP_ICONS.grotto, [10, 10], [5, 5], ICON_GROTTO),
   one(MAP_ICONS.spring, [10, 10], [5, 5], ICON_SPRING),
   one(MAP_ICONS.cache, [10, 8], [5, 4], ICON_CACHE),
+  one(MAP_ICONS.foundry, [11, 11], [5.5, 5.5], ICON_FOUNDRY),
+  one(MAP_ICONS.pylon, [8, 13], [4, 6.5], ICON_PYLON),
+  one(MAP_ICONS.arena, [11, 11], [5.5, 5.5], ICON_ARENA),
+  one(FOUNDRY_MAP_ICONS.tube, [9, 11], [4.5, 5.5], ICON_TUBE),
+  one(FOUNDRY_MAP_ICONS.bench, [10, 10], [5, 5], ICON_BENCH),
+  one(FOUNDRY_MAP_ICONS.stash, [10, 8], [5, 4], ICON_STASH),
   one(LANDMARK_SPRITES.championGlow, [G * 2 + 4, G * 2 + 4], [G + 2, G + 2], GLOW),
 ];

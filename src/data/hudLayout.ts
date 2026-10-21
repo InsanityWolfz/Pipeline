@@ -223,48 +223,6 @@ export const WORLD_NAMES = {
 } as const;
 
 /**
- * The minimap (017): the overworld's terrain at `scale` view px per tile in the
- * top-right corner, a stone frame, and markers. Colours are palette ids; no
- * enemies are shown.
- */
-export const MINIMAP = {
-  scale: 1.5,
-  margin: 6,
-  /** The stone tablet framing it (020), px beyond the map. */
-  frame: { width: 2 },
-  terrain: {
-    '.': 'grass-bright',
-    ',': 'dirt',
-    ':': 'water-light',
-    '~': 'water',
-    T: 'leaf-dark',
-    R: 'rock',
-    B: 'rock-light',
-    '#': 'rock-dark',
-    D: 'gold-trim',
-    // Stonefall Hollows (034).
-    C: 'hollow-dark',
-    P: 'hollow-pale',
-    F: 'hollow',
-    A: 'hollow-light',
-    '=': 'hollow-pale',
-  } as Readonly<Record<string, string>>,
-  /** The Hollows' own colours (034), by symbol, over `terrain`: its open ground is stone, not grass. */
-  hollowsTerrain: { '.': 'hollow-light', R: 'hollow' } as Readonly<Record<string, string>>,
-  markers: {
-    player: { color: 'snow', r: 2 },
-    entrance: { color: 'gold-trim', r: 2 },
-    shrine: { color: 'wisp-light', r: 2 },
-    claimed: { color: 'cyan', r: 3 },
-    /** 033: a schematic lying on the ground, pinged by a ring growing out from it over `ping.ms`. */
-    schematic: { color: 'cyan-glow', r: 2 },
-  },
-  ping: { ms: 1100, reach: 6, color: 'cyan-glow', width: 1 },
-  /** Discovered landmarks' icons (032), by marker: shown at this scale of their sprite (landmarkAssets' MAP_ICONS). */
-  landmarkScale: 0.8,
-} as const;
-
-/**
  * Panels that change size (020), drawn live in the look of the HUD's vector tablets (src/data/art/hud.ts):
  * carved stone with an ink edge, a lit top bevel, a dark base line and brass corner brackets `corner` px long.
  * Palette ids and alphas.

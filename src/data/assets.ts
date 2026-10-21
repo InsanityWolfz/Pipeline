@@ -23,7 +23,7 @@ export const OVERWORLD_SPRITES = {
   entrance: 'ow-entrance',
   column: 'ow-column',
 } as const;
-export const OVERWORLD_TEXTURES = { ground: 'ow-ground', safeGlow: 'ow-safe-glow', minimap: 'ow-minimap' } as const;
+export const OVERWORLD_TEXTURES = { ground: 'ow-ground', safeGlow: 'ow-safe-glow', minimap: 'ow-minimap', minimapFog: 'ow-minimap-fog' } as const;
 
 /** Frame names for single-frame sprites (vector shape data in src/data/art). */
 export const SPRITES = {
@@ -38,6 +38,10 @@ export const SPRITES = {
   pointer: 'pointer',
   /** The fist the tube slot shows when the next press is a punch (025). */
   hudFist: 'hud-fist',
+  /** 051 (B.7): the mouse beside the carried bar, its right button lit: right click uses the carried bar. */
+  hudMouse: 'hud-mouse',
+  /** 051 (B.4): the glint that now and then twinkles on a harvestable node. */
+  nodeSparkle: 'node-sparkle',
   iconArrow: 'icon-arrow',
   itemHuskResin: 'item-husk-resin',
   itemWood: 'item-wood',

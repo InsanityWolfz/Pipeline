@@ -33,6 +33,8 @@ import { createHotbar, type HotbarState } from './hotbar';
 import { noteBag } from './bag';
 import { resetWorld } from './resetWorld';
 import type { SandboxState } from './sandbox';
+import { createSubSteps, type SubStepState } from './subSteps';
+import { createFog } from './fog';
 
 /** The whole sim: plain serializable data. */
 export interface SimState {
@@ -100,6 +102,8 @@ export interface SimState {
   claimHold: ClaimHold | null;
   /** Landmark ids seen at least once (032), in the order found. Kept through a KO. */
   discovered: string[];
+  /** 051 (B.5): the minimap's fog of war, overworld tiles once on screen, 32 to a number (src/sim/fog.ts). Kept through a KO. */
+  fog: number[];
   /** Each Ruined Cache (032): the tick it was opened, or null while it's full. Kept through a KO (no refill). */
   caches: CacheState[];
   /** Opening a cache in progress (032), if any. */
@@ -149,6 +153,8 @@ export interface SimState {
   gathered: string[];
   /** Which objectives are done, in OBJECTIVES order. */
   objectives: boolean[];
+  /** 051 (B.3): the raws the current craft goal has lacked, for its sub-lines. */
+  subSteps: SubStepState;
   /** Ticks in a row outside the foundry with a line built into the intake, once every other goal is done. */
   awayTicks: number;
   /** Every objective done: the prototype's end. */
@@ -213,6 +219,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     claims: [],
     claimHold: null,
     discovered: [],
+    fog: createFog(),
     caches: createCaches(),
     cacheHold: null,
     activatePulse: 0,
@@ -240,6 +247,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     refilled: [],
     gathered: [],
     objectives: OBJECTIVES.map(() => false),
+    subSteps: createSubSteps(),
     awayTicks: 0,
     prototypeComplete: false,
     building: false,

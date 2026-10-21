@@ -93,6 +93,15 @@ export class TubeSlotView {
     this.rounds = shows.flatMap((sh, i) => (sh.ammoId && at[i] ? [{ ammoId: sh.ammoId, box: { ...(at[i] ?? { x: 0, y: 0 }), w: S.w, h: S.h } }] : []));
   }
 
+  /** 051 (B.7): the whole slot at this alpha (the intake's slot fading in as the old one shrinks away). */
+  setAlpha(alpha: number): void {
+    this.frame.setAlpha(alpha);
+    for (const u of this.units) {
+      u.icon.setAlpha(alpha);
+      u.label.setAlpha(alpha);
+    }
+  }
+
   /** The round under a view point (040: its summary above the slot). */
   tipAt(x: number, y: number): TipHit | null {
     const u = this.rounds.find((r) => inBox(r.box, x, y));

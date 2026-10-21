@@ -5,6 +5,7 @@ import { ROOM_TOP_MARGIN } from '../data/roomArt';
 import type { SimEvents } from '../sim/events';
 import { roomById, roomSize, type SimState } from '../sim/state';
 import { MinimapView } from './MinimapView';
+import { FoundryMapView, NO_FOUNDRY_MAP } from './FoundryMapView';
 import type { UiState } from './testHook';
 import { OverworldView } from './overworld/OverworldView';
 import { RoomView } from './room';
@@ -13,22 +14,20 @@ import { SupplyView } from './SupplyView';
 import { PortView } from './PortView';
 import { HealingView, NO_HEALING_SHOWN } from './HealingView';
 import { LandmarkView, NO_LANDMARKS_SHOWN } from './LandmarkView';
-import { Banner, hintShown, NO_HINT_SHOWN } from './Banner';
-import { CARRIED_HINT } from '../data/hints';
-import { keyLabel } from './keyHint';
-import { settings } from './flow/settingsStore';
+import { Banner } from './Banner';
 import { NO_RESEARCH_SHOWN, ResearchView } from './ResearchView';
 import { NO_SCHEMATICS_SHOWN, SchematicView } from './SchematicView';
 import { HollowsView, NO_HOLLOWS_SHOWN } from './HollowsView';
 import { NO_RELICS_SHOWN, RelicView } from './RelicView';
 import { NO_TALENT_FX, TalentFxView } from './TalentFxView';
 import { MineView, NO_MINES_SHOWN } from './MineView';
+import type { ScreenBox } from './bottomHud';
 
 /** What the room views report to the test hook's `ui()`. */
-export type RoomUiState = Pick<UiState, 'minimap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows' | 'relics' | 'talentFx' | 'mines' | 'hint'>;
+export type RoomUiState = Pick<UiState, 'minimap' | 'foundryMap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows' | 'relics' | 'talentFx' | 'mines'>;
 
 /** The room views' part of `ui()` before the scene has built them. */
-export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [] }, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN, relics: NO_RELICS_SHOWN, talentFx: NO_TALENT_FX, mines: NO_MINES_SHOWN, hint: NO_HINT_SHOWN };
+export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [], hover: null }, foundryMap: NO_FOUNDRY_MAP, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN, relics: NO_RELICS_SHOWN, talentFx: NO_TALENT_FX, mines: NO_MINES_SHOWN };
 
 // The ground on screen: a tiled room (the foundry) or the overworld's terrain
 // with its landmarks (017), plus the corner minimap while outside, and the
@@ -43,6 +42,7 @@ export class RoomViews {
   private readonly tiles: RoomView;
   private readonly overworld: OverworldView;
   private readonly minimap: MinimapView;
+  private readonly foundryMap: FoundryMapView;
   private readonly supply: SupplyView;
   private readonly intake: IntakeView;
   private readonly ports: PortView;
@@ -61,6 +61,7 @@ export class RoomViews {
     this.tiles = new RoomView(scene);
     this.overworld = new OverworldView(scene);
     this.minimap = new MinimapView(scene, roomById(OVERWORLD.id));
+    this.foundryMap = new FoundryMapView(scene);
     this.supply = new SupplyView(scene);
     this.intake = new IntakeView(scene);
     this.ports = new PortView(scene);
@@ -75,6 +76,11 @@ export class RoomViews {
     this.mines = new MineView(scene);
   }
 
+  /** The pointer, view px: 051's minimap names the icon under it. */
+  pointAt(x: number, y: number): void {
+    this.minimap.pointAt(x, y);
+  }
+
   /** Draws a room's ground and fits the camera to it. */
   show(room: Room): void {
     this.tiles.show(room);
@@ -85,10 +91,16 @@ export class RoomViews {
     this.scene.cameras.main.setBounds(0, -above, width, height + above);
   }
 
+  /** The corner map on show (the overworld's minimap or the foundry's), view px, or null. */
+  get mapBox(): ScreenBox | null {
+    return this.minimap.box ?? this.foundryMap.box;
+  }
+
   /** `events` are the ticks' since the last draw; the supply line starts a mote for each raw a port produced. */
   update(sim: SimState, events: SimEvents, shown: string, deltaMs: number): void {
     this.overworld.update(sim);
     this.minimap.update(sim);
+    this.foundryMap.update(sim, shown);
     this.supply.update(sim, events, shown, deltaMs);
     this.intake.update(sim, events, shown, sim.building, deltaMs);
     this.ports.update(sim, shown);
@@ -102,8 +114,6 @@ export class RoomViews {
     this.relics.update(sim, events, shown, tweenMs);
     this.talentFx.update(sim, events, shown, tweenMs);
     this.mines.update(sim, events, shown, tweenMs);
-    // 047.9: a one-time hint the sim calls for (the carried items' as the attune ends), with the key bound to it.
-    for (const h of events.hints) if (h.id === CARRIED_HINT.id) this.banner.push({ kind: 'hint', id: h.id, kicker: '', name: CARRIED_HINT.text(keyLabel(settings().bindings.use)) });
     this.banner.update(tweenMs);
   }
 
@@ -114,7 +124,8 @@ export class RoomViews {
    */
   get state(): RoomUiState {
     return {
-      minimap: { shown: this.minimap.shown, markers: this.minimap.markers },
+      minimap: { shown: this.minimap.shown, markers: this.minimap.markers, hover: this.minimap.hover },
+      foundryMap: this.foundryMap.shown,
       supply: { started: this.supply.started, inFlight: this.supply.inFlight },
       intakeCaps: this.intake.capsShown,
       intakeLift: this.intake.liftShown,
@@ -128,7 +139,6 @@ export class RoomViews {
       relics: this.relics.shown,
       talentFx: this.talentFx.shown,
       mines: this.mines.shown,
-      hint: hintShown(this.banner),
     };
   }
 }

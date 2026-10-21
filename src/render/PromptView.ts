@@ -4,16 +4,13 @@ import { TILE_SIZE } from '../data/config';
 import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
 import { PROMPT_RANGE, type PromptTarget } from '../data/objectives';
 import { FOUNDRY_ROOM } from '../data/rooms';
-import { OVERWORLD_ROOM } from '../data/overworld';
 import { dormant, fixtureInReach, pylonInReach } from '../sim/claims';
 import { fixtureDef } from '../sim/fixtures';
-import { markerPoint } from './markerPoint';
 import { usableInReach } from '../sim/foundryUse';
 import { nodeInReach } from '../sim/harvest';
 import { currentObjectiveDef } from '../sim/objectives';
 import { roomById, type SimState } from '../sim/state';
 import { stoneInReach } from '../sim/tutorial';
-import { Pulse } from './pulse';
 import { TextLine } from './textLine';
 import { boundLetter } from './keyHint';
 import { addVector } from './vector/textures';
@@ -31,32 +28,20 @@ export interface PromptState extends Point {
 // the thing it uses, once the player is near it: dimmed while still out of reach,
 // full strength once pressing the key would work. Craft prompts float over the
 // player anywhere; the build prompt only in the foundry, where building works.
-// The foundry's conduit step (027) has an arrow marker over the intake instead,
-// bobbing over its open entrance anywhere in the foundry; the supply port goal
-// (028) has one over the ports, bobbing over the first (northmost) one.
+// 051: the arrow markers (027, 028, 032) gave way to the waypoint arrow (WaypointView).
 export class PromptView {
-  private readonly bob: Pulse;
   private readonly cap: GameObjects.Image;
   private readonly key: TextLine;
-  private readonly marker: GameObjects.Image;
   /** What shows, for the test hook. */
   shown: PromptState | null = null;
-  markerAt: Point | null = null;
 
   constructor(scene: Scene) {
-    this.bob = new Pulse(scene, 0, TUTORIAL_LAYOUT.marker.bob, TUTORIAL_LAYOUT.marker.bobMs);
     this.cap = addVector(scene, 0, 0, TUTORIAL_SPRITES.keyCap).setOrigin(0.5, 1).setDepth(DEPTHS.prompt);
     this.key = new TextLine(scene, 0, 0, DEPTHS.prompt + 1, true);
-    this.marker = addVector(scene, 0, 0, TUTORIAL_SPRITES.marker).setDepth(DEPTHS.prompt).setVisible(false);
   }
 
   update(sim: SimState, shown: string): void {
     const def = currentObjectiveDef(sim);
-    const inFoundry = shown === FOUNDRY_ROOM && sim.roomId === FOUNDRY_ROOM;
-    // The intake's and ports' markers show in the foundry; a site pylon's out in the overworld (032).
-    const outside = shown === OVERWORLD_ROOM && sim.roomId === OVERWORLD_ROOM;
-    const here = def?.marker === 'sitePylon' ? outside : inFoundry;
-    this.showMarker(here && def?.marker ? markerPoint(sim, def.marker) : null);
     const prompt = def?.prompt;
     const target = prompt && shown === sim.roomId ? this.target(sim, prompt.over) : undefined;
     const near = target !== undefined && Math.hypot(target.at.x - sim.player.x, target.at.y - sim.player.y) <= PROMPT_RANGE;
@@ -74,14 +59,6 @@ export class PromptView {
     this.key.setAlpha(alpha);
     // The letter centred on the cap's face.
     this.key.moveTo(Math.round(x - this.key.width / 2), bottom - this.cap.displayHeight + TUTORIAL_LAYOUT.keyText.y);
-  }
-
-  /** The arrow with its tip at `at`, bobbing; hidden for null. */
-  private showMarker(at: Point | null): void {
-    this.markerAt = at;
-    this.marker.setVisible(this.markerAt !== null);
-    if (!this.markerAt) return;
-    this.marker.setPosition(this.markerAt.x, Math.round(this.markerAt.y - this.bob.value));
   }
 
   /** Where a prompt floats, and whether its key would work right now; undefined when nothing fits in this room. */
