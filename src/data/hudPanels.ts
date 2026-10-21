@@ -99,11 +99,11 @@ export const INVENTORY_GRID = {
   /** A hopper's or crate's own slots: a header `headerH` tall (its name), one row of `cols` cells, `gap` above the grid's toolbar. */
   container: { headerH: 10, nameY: 1, cols: 8, gap: 4 },
   /**
-   * 052: the stash's screen. Its title card reads `title`; the stash's own grid sits on top, `rows` of the grid's
-   * columns scrolling by rows with no limit, under a header `headerH` tall naming it `name`, `gap` above the inventory's
-   * toolbar (which names it `invName`). The inventory shows `invRows` and no footer, so both fit over the HUD.
+   * 052: the stash's screen. Its title card reads `title` (the stash's only label); the stash's own grid sits on top,
+   * `rows` of the grid's columns scrolling by rows with no limit, `gap` above the inventory's toolbar (which names it
+   * `invName`). The inventory shows `invRows` and no footer, so both fit over the HUD.
    */
-  stash: { title: 'Stash', name: 'Stash', invName: 'Inventory', rows: 3, invRows: 4, headerH: 10, nameY: 1, gap: 4 },
+  stash: { title: 'Stash', invName: 'Inventory', rows: 3, invRows: 4, gap: 4 },
   footer: {
     gap: 3,
     lineHeight: 9,
@@ -142,7 +142,7 @@ export function inventoryPanelSize(mode: GridMode = 'bag'): { w: number; h: numb
   const S = G.stash;
   const stash = mode === 'stash';
   const grid = gridSize(stash ? S.invRows : G.rows);
-  const top = mode === 'container' ? G.container.headerH + G.cell.h + G.container.gap : stash ? S.headerH + gridSize(S.rows).h + S.gap : 0;
+  const top = mode === 'container' ? G.container.headerH + G.cell.h + G.container.gap : stash ? gridSize(S.rows).h + S.gap : 0;
   const footer = stash ? 0 : G.footer.gap + FOOTER_LINES * G.footer.lineHeight;
   return { w: 2 * G.pad + grid.w + G.scroll.gap + G.scroll.w, h: 2 * G.pad + top + G.toolbar.h + G.toolbar.gap + grid.h + footer };
 }

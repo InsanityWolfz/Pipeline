@@ -273,9 +273,9 @@ export class InventoryPanel {
     const stashFirst = this.stashRow * G.cols;
     this.stashCells.forEach((c, i) => drawCell(c, this.stashSlots[stashFirst + i], L.stash?.cells[i] ?? NO_BOX, L.stash !== null));
     if (L.stash) drawScrollBar(this.back, L.stash.scroll, this.stashRowCount(), G.stash.rows, this.stashRow);
-    const header = L.container ?? L.stash;
+    const header = L.container;
     this.name.setVisible(header !== null);
-    if (header) this.name.set(L.stash ? G.stash.name : pieceDef(this.mode === 'crate' ? 'crate' : 'hopper').name).moveTo(header.name.x, header.name.y);
+    if (header) this.name.set(pieceDef(this.mode === 'crate' ? 'crate' : 'hopper').name).moveTo(header.name.x, header.name.y);
     this.invName.setVisible(L.invName !== null);
     if (L.invName) this.invName.moveTo(L.invName.x, L.invName.y);
     this.footLines.forEach((t, i) => {

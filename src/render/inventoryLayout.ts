@@ -15,7 +15,7 @@ export interface GridLayout {
   /** A hopper's or crate's own slots (047): its name's top-left, and one row of cells; null otherwise. */
   container: { name: { x: number; y: number }; cells: ScreenBox[] } | null;
   /** 052: the stash's own grid: its name's top-left, its shown cells row by row, and its scroll bar; null otherwise. */
-  stash: { name: { x: number; y: number }; cells: ScreenBox[]; scroll: ScreenBox } | null;
+  stash: { cells: ScreenBox[]; scroll: ScreenBox } | null;
   /** The inventory's name at the toolbar's left (052: on the stash's screen, under the stash's grid), or null. */
   invName: { x: number; y: number } | null;
   sort: ScreenBox;
@@ -46,10 +46,9 @@ export function inventoryLayout(m: GridMode = 'bag'): GridLayout {
     box = { name: { x: left, y: y + G.container.nameY }, cells: row(y + G.container.headerH, G.container.cols) };
     y += G.container.headerH + G.cell.h + G.container.gap;
   } else if (m === 'stash') {
-    const top = y + S.headerH;
     const h = gridSize(S.rows).h;
-    stash = { name: { x: left, y: y + S.nameY }, cells: rows(top, S.rows), scroll: { x: left + grid.w + G.scroll.gap, y: top, w: G.scroll.w, h } };
-    y += S.headerH + h + S.gap;
+    stash = { cells: rows(y, S.rows), scroll: { x: left + grid.w + G.scroll.gap, y, w: G.scroll.w, h } };
+    y += h + S.gap;
   }
   const sort = { x: left + grid.w - G.sort.w, y, w: G.sort.w, h: G.sort.h };
   const invName = m === 'stash' ? { x: left, y: y + G.sort.textY } : null;
