@@ -1,3 +1,4 @@
+import { SPRITES } from '../assets';
 import { ellipse, flat, line, path, rect, solid, type Shape, type VectorSprite } from './types';
 
 // Static and frame-by-frame vector sprites (016): projectiles, combat effects, and
@@ -98,6 +99,8 @@ export const VECTOR_SPRITES: readonly VectorSprite[] = [
   sprite('pickup-sparkle', [14, 14], [7, 7], [2.5, 5.5, 4, 2].map((s, k) => [
     path(star(s, 0.3, 4, Math.PI / 4), { fill: k % 2 === 0 ? 'cyan-glow' : 'gold-trim', glow: { color: 'cyan', blur: 3 }, alpha: k === 3 ? 0.6 : 1 }),
   ])),
+  // 051 (B.4): a harvestable node's glint, a pale four-point star.
+  sprite(SPRITES.nodeSparkle, [10, 10], [5, 5], [[path(star(4.2, 0.28, 4, 0), { fill: 'snow', glow: { color: 'sun', blur: 3 } }), ellipse(0, 0, 1, 1, solid('snow'))]]),
   sprite('deposit-swirl', [28, 34], [14, 33], [0, 1, 2, 3].map((k) =>
     Array.from({ length: 6 }, (_, i) => {
       const a = k * 0.8 + i * 1.05;

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { OVERWORLD } from '../../src/data/overworld';
 import { boot, cameraSettled, quietScreen } from './helpers';
@@ -11,6 +12,17 @@ const SHOTS = 'docs/review/051';
 const T = 32;
 const ui = (page: Page) => page.evaluate(() => window.__GAME__?.ui());
 const goal = (text: string): number => OBJECTIVES.findIndex((o) => o.text === text);
+
+/** A clip of the view round a world point, view px either side. */
+async function clipAround(page: Page, x: number, y: number, w: number, h: number): Promise<{ x: number; y: number; width: number; height: number }> {
+  const u = await ui(page);
+  const canvas = await page.locator('canvas').boundingBox();
+  if (!u || !canvas) throw new Error('no view');
+  const k = canvas.width / VIEW_WIDTH;
+  const vx = x - (u.camera.x - VIEW_WIDTH / 2);
+  const vy = y - (u.camera.y - VIEW_HEIGHT / 2);
+  return { x: canvas.x + (vx - w / 2) * k, y: canvas.y + (vy - h / 2) * k, width: w * k, height: h * k };
+}
 
 test.describe('review screenshots (051)', () => {
   test.skip(!process.env.REVIEW_SHOTS, 'set REVIEW_SHOTS=1 to capture docs/review/051');
@@ -74,5 +86,27 @@ test.describe('review screenshots (051)', () => {
     await quietScreen(page);
     await expect.poll(async () => (await ui(page))?.objective.subSteps.some((s) => s.done)).toBe(true);
     await page.screenshot({ path: `${SHOTS}/03-sub-steps.png` });
+  });
+
+  test('04 a harvestable node glows; a used-up one does not', async ({ page }) => {
+    test.setTimeout(90_000);
+    await boot(page, '?start=field&attuned');
+    // The meadow's first two trees (018), four tiles apart: the second cut down, the first still standing.
+    const rock = await page.evaluate(() => {
+      const g = window.__GAME__;
+      const h = window.__helpers;
+      if (!g || !h) throw new Error('no game');
+      const s = g.step(1);
+      const [lit, spent] = s.nodes;
+      if (!spent || !lit) throw new Error('no trees');
+      h.harvest(1, 3);
+      h.walkTo((spent.x + lit.x) / 2 + 120, (spent.y + lit.y) / 2 + 10);
+      return { spent: spent.id, lit: lit.id, x: (spent.x + lit.x) / 2, y: (spent.y + lit.y) / 2 };
+    });
+    await quietScreen(page);
+    await cameraSettled(page, 20_000);
+    await expect.poll(async () => (await ui(page))?.nodeGlow.includes(rock.lit)).toBe(true);
+    expect((await ui(page))?.nodeGlow).not.toContain(rock.spent);
+    await page.screenshot({ path: `${SHOTS}/04-node-glow.png`, clip: await clipAround(page, rock.x + 40, rock.y - 20, 300, 200) });
   });
 });

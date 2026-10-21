@@ -105,6 +105,8 @@ export interface UiState {
   buildTip: string | null;
   minimap: { shown: boolean; markers: { kind: string; x: number; y: number }[] };
   nodes: Record<number, string>;
+  /** 051 (B.4): the drawn nodes whose harvestable glow shows, by node id. */
+  nodeGlow: number[];
   /** 032: each mote's site, the claimed pylon it left from. */
   supply: { started: number; inFlight: { itemId: string; progress: number; site: string }[] };
   /** The camera shakes asked for since boot, oldest first (the last 50) (021). */

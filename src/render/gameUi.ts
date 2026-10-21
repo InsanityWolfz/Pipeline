@@ -26,6 +26,7 @@ export function gameUi(g: GameScene): GameUiState {
     ...(g.roomViews?.state ?? NO_ROOM_UI),
     sealSound: { humming: g.feel?.seal.humming ?? false, drops: g.feel?.seal.drops ?? 0 },
     nodes: g.nodeView?.frames ?? {},
+    nodeGlow: g.nodeView?.glowing ?? [],
     shakes: [...(g.feel?.juice.shakes ?? [])],
     cursor: g.cursorView?.state ?? null,
     sliding: g.groundItemView?.sliding ?? 0,
