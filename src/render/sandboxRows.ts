@@ -51,7 +51,9 @@ export function sandboxColumns(sb: Pick<SandboxState, 'loadout' | 'god'>, pick: 
 /** The next item of a list from `current`, `dir` steps on, wrapping round. */
 function cycle<T>(list: readonly T[], current: T, dir: number): T {
   const i = Math.max(0, list.indexOf(current));
-  return list[(i + dir + list.length) % list.length] ?? current;
+  const next = list[(i + dir + list.length) % list.length];
+  // Not `?? current`: Empty is a null choice, and falling back on null would skip it.
+  return next === undefined ? current : next;
 }
 
 const clamp = (n: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, n));
