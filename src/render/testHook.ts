@@ -67,6 +67,8 @@ export interface GameTestHook {
   setEnemyHealth(id: number, health: number): SimSummary;
   /** Sets the player's health (030: a hurt player for the healing e2e and screenshots, without a fight). */
   setPlayerHealth(health: number): SimSummary;
+  /** Reveals the whole overworld on the minimap, as if every tile had been on screen (053: the round world's shot). */
+  revealMap(): SimSummary;
   /**
    * Spawns a pack near the player (032: to fight a champion): `enemyIds` in a row 6 tiles right of the player, a
    * tile and a half apart, member `champion` (or none, for null) a champion named with the seeded RNG.
@@ -117,7 +119,9 @@ export interface UiState {
   /** 051 (B.4): the drawn nodes whose harvestable glow shows, by node id. */
   nodeGlow: number[];
   /** 032: each mote's site, the claimed pylon it left from. */
-  supply: { started: number; inFlight: { itemId: string; progress: number; site: string }[] };
+  supply: { started: number; inFlight: { itemId: string; progress: number; site: string; icon: string; iconShown: boolean }[] };
+  /** 053: the overworld's ground chunks built now, as `cx,cy` keys (only those near the camera are). */
+  overworldChunks: string[];
   /** The camera shakes asked for since boot, oldest first (the last 50) (021). */
   shakes: string[];
   /** Which cursor shows (021: the menu pointer or the crosshair), its depth, and the highest depth of anything else. */

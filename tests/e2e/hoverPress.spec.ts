@@ -17,10 +17,11 @@ test('hovering a Husk names it, and a press that starts on the hotbar never fire
   const errors = watchErrors(page);
   await boot(page);
   const s = await step(page, 0);
-  const husk = s.enemies.find((e) => e.room === s.room);
+  // 053: the ruin field's east Husk, clear of the foundry's ruin, which stands south of the other two.
+  const husk = s.enemies.filter((e) => e.room === s.room && e.group === 'field').sort((a, b) => b.x - a.x)[0];
   if (!husk) throw new Error('no husk');
-  // Walk close so the Husk is on screen, without waking it.
-  await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [husk.x - 220, husk.y + 60] as const);
+  // Walk close so the Husk is on screen, without waking it: down and right of it, beside the ruin.
+  await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [husk.x + 150, husk.y + 100] as const);
   await cameraSettled(page);
   const now = await step(page, 0);
   const target = now.enemies.find((e) => e.id === husk.id);

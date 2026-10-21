@@ -13,7 +13,9 @@ test('a Charger: sidestep its lane during the wind-up and the charge runs past',
   const id = await spawn(page, 'charger', 150, 0);
   await stepUntil(page, id, 'windup');
   const lane = await page.evaluate((eid) => window.__GAME__?.getState().enemies.find((e) => e.id === eid)?.lane, id);
-  expect(lane).toMatchObject({ dx: -1, dy: 0, length: 220, width: 24 });
+  // West at the player, level (053: on the round map's ground it can step a hair off the row as it closes).
+  expect(lane).toMatchObject({ dx: -1, length: 220, width: 24 });
+  expect(lane?.dy ?? 1).toBeCloseTo(0, 1);
   const run = await page.evaluate((eid) => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');

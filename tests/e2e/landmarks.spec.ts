@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { REGION_1_X } from '../../src/data/hollows';
+import { landmarkDef } from '../../src/data/landmarks';
 import { CLAIM_TICKS, FIXTURES } from '../../src/data/claims';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { OVERWORLD } from '../../src/data/overworld';
@@ -15,8 +15,8 @@ import { boot, watchErrors } from './helpers';
 // spawned by the dev hook.
 
 const T = 32;
-const QUARRY_PYLON = { tx: 21 + REGION_1_X, ty: 20 };
-const CACHE = { tx: 11 + REGION_1_X, ty: 38 };
+const QUARRY_PYLON = landmarkDef('quarry').pylon ?? { tx: 0, ty: 0 };
+const CACHE = landmarkDef('ruined-cache').cache ?? { tx: 0, ty: 0 };
 
 /** Kills every guard of a landmark through the dev hook, then steps once so they're gone. */
 async function clearGuards(page: Page, group: string): Promise<void> {
@@ -56,7 +56,7 @@ test('walking toward the Quarry discovers it: its minimap icon appears and the b
     // West along the meadow's north edge until the Quarry's south side comes into view.
     let s = g.getState();
     for (let x = 36 + h.ox; x >= 24 + h.ox && !s.discovered.includes('quarry'); x -= 2) {
-      h.walkTo((x + 0.5) * 32, 25.5 * 32);
+      h.walkTo((x + 0.5) * 32, (25.5 + h.oy) * 32);
       s = g.getState();
     }
     return { discovered: s.discovered, landmark: s.landmarks.find((l) => l.id === 'quarry') };
@@ -136,8 +136,8 @@ test('the Ruined Cache is sealed while its guards live, then opens with a held E
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
-    // Down the west road past the spring, keeping clear of the guards' sight until the cache is reached.
-    h.walkTo((12.5 + h.ox) * 32, 30.5 * 32);
+    // By the south road to below the cache (053), out of its guards' sight.
+    h.walkTo((tx + 0.5) * 32, (ty + 6.5) * 32);
     const guards = g.getState().enemies.filter((e) => e.group === 'ruined-cache');
     // Up to the reliquary with its guards alive (they wake and come; the seal is tried at once).
     h.walkTo((tx + 0.5) * 32, (ty + 1.5) * 32);

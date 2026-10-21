@@ -1,4 +1,4 @@
-import { REGION_1_X } from '../../src/data/hollows';
+import { HOME_SHIFT } from '../../src/data/home';
 import { DYING_TICKS } from '../../src/data/player';
 import { OVERWORLD } from '../../src/data/overworld';
 import { WORLD } from '../../src/sim/world';
@@ -58,8 +58,8 @@ function scriptedFight(seed: number, ticks: number) {
     const empty = (sim.inventory.arrow ?? 0) === 0;
     // Waking in the foundry after the KO, walk back out through its door to the overworld.
     const door = sim.roomId === 'foundry' ? { x: 24 * 32, y: 8.5 * 32 } : undefined;
-    // After it, back toward the stairs (034 moved Region 1 +40).
-    const goal = door ?? (!fighting ? target : target ? tileCentre({ tx: 40 + REGION_1_X, ty: 22 }) : loot);
+    // After it, back toward the stairs (053 moved them to the round map's centre).
+    const goal = door ?? (!fighting ? target : target ? tileCentre({ tx: 80 + HOME_SHIFT.dx, ty: 22 + HOME_SHIFT.dy }) : loot);
     const command: Command = {
       ...NO_COMMAND,
       moveX: goal ? toward(p.x, goal.x) : 0,

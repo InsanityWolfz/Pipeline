@@ -48,7 +48,7 @@ test.describe('review screenshots (051)', () => {
       const g = window.__GAME__;
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
-      h.walkTo((40.5 + h.ox) * 32, 34.5 * 32);
+      h.walkTo((40.5 + h.ox) * 32, (34.5 + h.oy) * 32);
       g.step(1, { interact: true });
       for (const e of g.getState().enemies.filter((x) => x.group === 'field')) g.setEnemyHealth(e.id, 0);
       g.step(2);
@@ -140,7 +140,7 @@ test.describe('review screenshots (051)', () => {
       const g = window.__GAME__;
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
-      h.walkTo((40.5 + h.ox) * 32, 34.5 * 32);
+      h.walkTo((40.5 + h.ox) * 32, (34.5 + h.oy) * 32);
       g.step(1, { interact: true });
       for (const e of g.getState().enemies.filter((x) => x.group === 'field')) g.setEnemyHealth(e.id, 0);
       g.step(2);

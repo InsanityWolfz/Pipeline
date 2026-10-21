@@ -3,6 +3,7 @@ import { BlendModes } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
 import { HOLLOWS } from '../data/hollows';
+import { WORLD_SHAPE } from '../data/worldShape';
 import { HOLLOWS_LOOK, HOLLOWS_SPRITES } from '../data/hollowsAssets';
 import { OVERWORLD_ROOM } from '../data/overworld';
 import { altarState, type AltarState } from '../sim/altar';
@@ -35,14 +36,34 @@ export const NO_HOLLOWS_SHOWN: HollowsShown = { barrier: 'shut', barrierAlpha: 0
 const T = TILE_SIZE;
 const L = HOLLOWS_LOOK;
 
-// Stonefall Hollows' live things (034): the ley barrier shimmering across the gap in the
-// eastern cliffs until the shrine is claimed, then collapsing; the same curtain across the
+/** The barrier's circle (053.2) in world px: its centre and radius, through the middle of its band of tiles. */
+const RING = {
+  x: (WORLD_SHAPE.centre.tx + 0.5) * TILE_SIZE,
+  y: (WORLD_SHAPE.centre.ty + 0.5) * TILE_SIZE,
+  r: WORLD_SHAPE.region1 * TILE_SIZE,
+};
+
+/** Fills the upright quad standing `h` px tall on the ground from a to b, in the graphics' current fill. */
+function quad(g: GameObjects.Graphics, a: { x: number; y: number }, b: { x: number; y: number }, h: number): void {
+  g.beginPath();
+  g.moveTo(a.x, a.y);
+  g.lineTo(b.x, b.y);
+  g.lineTo(b.x, b.y - h);
+  g.lineTo(a.x, a.y - h);
+  g.closePath();
+  g.fillPath();
+}
+
+// Stonefall Hollows' live things (034): the ley barrier shimmering on the circle round Region 1 (053) until the
+// shrine is claimed, then collapsing; the same curtain across the
 // forum's way in while the Bulwark fights (043), fading as it drops; the forum's altar (dim,
 // awake, summoning) and the red circle cracking open where the Bulwark rises; and the
 // Bulwark's bombs, each a red ring with a disc growing inside it, the bomb arcing in first.
 export class HollowsView {
   private readonly scene: Scene;
-  private readonly barrier: GameObjects.Graphics;
+  /** 053: the barrier's curtain, one graphics per gate row in view (each at its row's depth), reused frame to frame. */
+  private readonly barrier: GameObjects.Graphics[] = [];
+
   private readonly seal: GameObjects.Graphics;
   /** The seal's span across the way in, px, and the door row (fixed data, worked out once). */
   private readonly sealSpan: { x0: number; x1: number; ty: number };
@@ -61,7 +82,6 @@ export class HollowsView {
 
   constructor(scene: Scene) {
     this.scene = scene;
-    this.barrier = scene.add.graphics().setVisible(false);
     this.seal = scene.add.graphics().setVisible(false);
     const tiles = HOLLOWS.arena.seal.tiles;
     this.sealSpan = { x0: Math.min(...tiles.map((t) => t.tx)) * T, x1: (Math.max(...tiles.map((t) => t.tx)) + 1) * T, ty: tiles[0]?.ty ?? 0 };
@@ -103,25 +123,48 @@ export class HollowsView {
     this.shownState = { barrier: this.barrierState, barrierAlpha: alpha, seal: this.sealState, sealAlpha, altar: state, summonCircle: summoning, enemyBombs: bombs };
   }
 
-  /** The barrier: a cyan curtain of light over the gap, its ripples climbing; collapsing, it flashes and fades. Returns its alpha. */
+  /**
+   * The barrier (053.2: the whole circle round Region 1): a curtain of cyan light standing up from the circle, its top
+   * rim bright and its ripples climbing; collapsing, it flashes and fades. Drawn in short straight lengths, only those
+   * in view, each in a graphics at its foot's row so the curtain stands behind what's south of it. Returns its alpha.
+   */
   private drawBarrier(here: boolean): number {
-    const g = this.barrier;
-    g.clear();
-    if (!here || this.barrierState === 'down') {
-      g.setVisible(false);
-      return 0;
-    }
+    for (const g of this.barrier) g.clear().setVisible(false);
+    if (!here || this.barrierState === 'down') return 0;
     const B = L.barrier;
-    const gate = HOLLOWS.gate;
-    const x = (gate[0]?.tx ?? 0) * T + T / 2;
-    const top = (gate[0]?.ty ?? 0) * T;
-    const bottom = ((gate[gate.length - 1]?.ty ?? 0) + 1) * T;
     const k = this.barrierState === 'collapsing' ? this.collapseMs / B.collapseMs : 0;
     const alpha = this.barrierState === 'collapsing' ? Math.max(0, 1 - k) : 1;
-    // The curtain stands up from the ground: drawn from the gap's top less its height to its bottom.
-    const w = T * B.width;
-    g.setVisible(true).setDepth(bottom);
-    drawCurtain(g, { x0: x - w / 2, x1: x + w / 2, top: top - B.height, bottom }, this.time, k, alpha);
+    const v = this.scene.cameras.main.worldView;
+    const color = colorOf(B.color);
+    const glow = colorOf(B.glow);
+    const shimmer = (Math.sin((this.time / B.shimmerMs) * Math.PI * 2) + 1) / 2;
+    const fill = B.fill * alpha * (1 - B.shimmerDip + B.shimmerDip * shimmer);
+    const n = Math.ceil((2 * Math.PI * RING.r) / B.segment);
+    const rows = new Map<number, GameObjects.Graphics>();
+    let used = 0;
+    const at = (i: number) => ({ x: RING.x + RING.r * Math.cos((i / n) * 2 * Math.PI), y: RING.y + RING.r * Math.sin((i / n) * 2 * Math.PI) });
+    for (let i = 0; i < n; i++) {
+      const a = at(i);
+      const b = at(i + 1);
+      if (Math.max(a.x, b.x) < v.x || Math.min(a.x, b.x) > v.x + v.width || Math.max(a.y, b.y) < v.y || Math.min(a.y, b.y) - B.height > v.y + v.height) continue;
+      const row = Math.floor(Math.max(a.y, b.y) / T);
+      let g = rows.get(row);
+      if (!g) {
+        g = this.barrier[used] ?? this.scene.add.graphics();
+        this.barrier[used++] = g;
+        g.setVisible(true).setDepth((row + 1) * T);
+        rows.set(row, g);
+      }
+      const fall = k > 0 ? k * k * B.shardFall : 0;
+      quad(g.fillStyle(color, fill), a, b, B.height);
+      if (k > 0) quad(g.fillStyle(glow, B.flash * Math.max(0, 1 - k * B.flashFade)), a, b, B.height);
+      g.lineStyle(B.rimWidth, color, B.rim * alpha).lineBetween(a.x, a.y - B.height, b.x, b.y - B.height);
+      for (let r = 0; r < B.ripples; r++) {
+        const f = (((this.time / B.shimmerMs + r / B.ripples + i * B.rippleSkew) % 1) + 1) % 1;
+        const h = f * B.height - fall * ((r % 2) + 1);
+        g.lineStyle(B.ripple.width, glow, (B.ripple.alpha - B.ripple.fade * f) * alpha).lineBetween(a.x, a.y - h, b.x, b.y - h);
+      }
+    }
     return alpha;
   }
 

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { TILE_SIZE } from '../../src/data/config';
 import { INTAKE } from '../../src/data/foundry';
-import { HOLLOWS, REGION_1_X } from '../../src/data/hollows';
+import { HOLLOWS } from '../../src/data/hollows';
+import { landmarkDef } from '../../src/data/landmarks';
 import { nodeDef } from '../../src/data/nodes';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
@@ -74,14 +75,16 @@ describe('every goal names a target (051)', () => {
     expect(waypoint(s)).toMatchObject(base(OVERWORLD.shrine.pylon));
     claim(s, SHRINE_SITE);
     const i = at('Claim a second pylon');
-    const X = REGION_1_X;
-    movePlayer(s, tileCentre({ tx: 12 + X, ty: 22 }).x, tileCentre({ tx: 12 + X, ty: 22 }).y);
-    // Nothing found yet: the nearest awake one (the Old Grove's pylon at 8, 22).
+    const grove = landmarkDef('old-grove').pylon;
+    const quarry = landmarkDef('quarry').pylon;
+    if (!grove || !quarry) throw new Error('no pylons');
+    movePlayer(s, tileCentre({ tx: grove.tx + 4, ty: grove.ty }).x, tileCentre({ tx: grove.tx + 4, ty: grove.ty }).y);
+    // Nothing found yet: the nearest awake one (the Old Grove's pylon).
     const nearest = (pts: { x: number; y: number }[]) => [...pts].sort((a, b) => Math.hypot(a.x - s.player.x, a.y - s.player.y) - Math.hypot(b.x - s.player.x, b.y - s.player.y))[0];
-    expect(nearest(targetPoints(s, { kind: 'sitePylon' }, i))).toMatchObject(base({ tx: 8 + X, ty: 22 }));
+    expect(nearest(targetPoints(s, { kind: 'sitePylon' }, i))).toMatchObject(base(grove));
     // Found ones come first, however far.
     s.discovered.push('quarry');
-    expect(targetPoints(s, { kind: 'sitePylon' }, i).map((p) => ({ x: p.x, y: p.y }))).toEqual([base({ tx: 21 + X, ty: 20 })]);
+    expect(targetPoints(s, { kind: 'sitePylon' }, i).map((p) => ({ x: p.x, y: p.y }))).toEqual([base(quarry)]);
   });
 });
 
@@ -192,11 +195,9 @@ describe('the other targets (051.4, 051.5)', () => {
     expect(waypoint(s)?.target.kind).toBe('ports');
   });
 
-  it("breaching the Hollows points at the middle of the barrier's gap", () => {
+  it("breaching the Hollows points where the Cistern Terrace's road crosses the barrier (053: it rings Region 1)", () => {
     const s = upTo('Breach Stonefall Hollows');
-    const mid = HOLLOWS.gate[Math.floor(HOLLOWS.gate.length / 2)];
-    if (!mid) throw new Error('no gate');
-    expect(waypoint(s)).toMatchObject({ via: 'target', ...base(mid), target: { kind: 'barrier' } });
+    expect(waypoint(s)).toMatchObject({ via: 'target', ...base(HOLLOWS.crossing), target: { kind: 'barrier' } });
   });
 
   it('the frost rune goal points at the foundry: its stairs outside, nothing inside', () => {

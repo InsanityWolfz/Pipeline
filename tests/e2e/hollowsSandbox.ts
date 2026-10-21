@@ -6,18 +6,22 @@ import { boot, cameraSettled } from './helpers';
 // guards gone, the player on the road, enemies spawned through the dev hook, and the sim
 // stepped tick by tick until an enemy reaches a mode.
 
-/** The `?start=hollows` sandbox with its guards gone, the player on the road at (28, 27), banners played out and the camera still. */
+/** Open Hollows ground on the round map (053): the tile the sandbox stands the player on, with room east for spawns. */
+const OPEN_GROUND = { tx: 36, ty: 118 };
+
+/** The `?start=hollows` sandbox with its guards gone, the player on the road just past the barrier, banners played out and the camera still. */
 export async function sandbox(page: Page): Promise<{ x: number; y: number }> {
   await boot(page, '?start=hollows');
-  await page.evaluate(() => {
+  await page.evaluate((at) => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark') g.setEnemyHealth(e.id, 0);
     g.step(1);
-    h.walkTo(28.5 * 32, 27.5 * 32);
+    // 053: on the terrace road under the ley-iron quarry wall, open ground 9 tiles east and 3 either side.
+    h.walkTo((at.tx + 0.5) * 32, (at.ty + 0.5) * 32);
     g.setPlayerHealth(100);
-  });
+  }, OPEN_GROUND);
   // Queued banners show in turn, briefly none between two: gone means none over several frames running.
   await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
   await expect
@@ -82,13 +86,14 @@ export async function frames(page: Page, n = 4): Promise<void> {
 /** 043: into the Sunken Forum with only the Bulwark left, the player just inside its way in; returns once it fights (and the seal stands). */
 export async function intoForum(page: Page): Promise<void> {
   await boot(page, '?start=hollows');
-  await page.evaluate((door) => {
+  await page.evaluate(([door, x]) => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark') g.setEnemyHealth(e.id, 0);
     g.step(1);
-    for (const [x, y] of [[25, 27], [12, 27], [12, door - 1], [12, door + 1]] as const) h.walkTo((x + 0.5) * 32, (y + 0.5) * 32);
+    // 053: round to the forum's north side and in through its way.
+    for (const [tx, ty] of [[x, door - 1], [x, door + 1]] as const) h.walkTo((tx + 0.5) * 32, (ty + 0.5) * 32);
     for (let t = 0; t < 120 && !g.getState().bosses[0]?.engaged; t++) g.step(1);
-  }, HOLLOWS.arena.seal.tiles[0]?.ty ?? 0);
+  }, [HOLLOWS.arena.seal.tiles[0]?.ty ?? 0, HOLLOWS.arena.seal.leaveTo.tx] as const);
 }

@@ -28,7 +28,7 @@ test('a new game finds the example line in the foundry, sees arrows go up the tu
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     g.step(0);
-    h.walkTo((40.5 + h.ox) * 32, 34.5 * 32);
+    h.walkTo((40.5 + h.ox) * 32, (34.5 + h.oy) * 32);
     g.step(1, { interact: true });
     for (const e of g.getState().enemies.filter((x) => x.group === 'field')) g.setEnemyHealth(e.id, 0);
     return g.step(2);

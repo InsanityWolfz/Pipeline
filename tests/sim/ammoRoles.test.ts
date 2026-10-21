@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { AMMO, lobAmmo, straightAmmo } from '../../src/data/ammo';
 import { stepBombs, throwBomb } from '../../src/sim/bombs';
-import { arena, FIELD_WALL, fireAt, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, FIELD_WALL, fireAt, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, FIELD_ROW } from './fight';
 
 // The beginner ammo's jobs (029): arrows pierce without limit, ley bolts hit hard
 // without piercing, bombs burst wider with no burn.
@@ -41,8 +41,8 @@ describe('arrows pierce (029)', () => {
   it('stop at a solid', () => {
     const s = arena();
     // The ruin field's west wall (017); fire at it from 3 tiles away.
-    movePlayer(s, (FIELD_WALL.west + 3.5) * 32, 14.5 * 32);
-    run(s, 1, fireAt(0, 14.5 * 32));
+    movePlayer(s, (FIELD_WALL.west + 3.5) * 32, FIELD_ROW(14));
+    run(s, 1, fireAt(0, FIELD_ROW(14)));
     let lastX = s.player.x;
     runUntil(
       s,

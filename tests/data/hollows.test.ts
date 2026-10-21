@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { SITE_SAFE_RADIUS } from '../../src/data/claims';
 import { ENEMIES } from '../../src/data/enemies';
 import { HOLLOWS } from '../../src/data/hollows';
+import { RUIN_AREA } from '../../src/data/home';
 import { HOLLOWS_SITES } from '../../src/data/hollowsSites';
 import { ITEMS } from '../../src/data/items';
 import { NODES } from '../../src/data/nodes';
@@ -57,9 +58,10 @@ describe('the Hollows landmarks', () => {
     for (const raw of pylon.supplies) expect(nodes.some((n) => NODES[n.nodeId]?.itemId === raw), raw).toBe(true);
     const line = OVERWORLD.leyLines[t.id];
     expect(line?.[0]).toEqual({ tx: pylon.tx, ty: pylon.ty });
-    const door = OVERWORLD.entrance.door;
+    // 053: it ends on the edge of the foundry's ruin, round the stairs.
+    const r = RUIN_AREA;
     const end = line?.[line.length - 1];
-    expect(end && Math.hypot(end.tx - door.tx, end.ty - door.ty) <= 3).toBe(true);
+    expect(end && end.tx >= r.x0 - 0.51 && end.tx <= r.x1 + 0.51 && end.ty >= r.y0 - 0.51 && end.ty <= r.y1 + 0.51).toBe(true);
   });
 
   it('keep the arena out of every landmark, and packs out of it', () => {
@@ -67,7 +69,7 @@ describe('the Hollows landmarks', () => {
       const a = HOLLOWS.arena.bounds;
       expect(l.area.x1 < a.x0 || l.area.x0 > a.x1 || l.area.y1 < a.y0 || l.area.y0 > a.y1, l.id).toBe(true);
     }
-    expect(POPULATION.rings[3]).toEqual({ packs: 6, size: [4, 5], enemies: ['shardback', 'charger', 'charger', 'burrower', 'sniper'], limits: { sniper: 1, burrower: 2 } });
+    expect(POPULATION.rings[3]).toEqual({ packs: 12, size: [4, 5], enemies: ['shardback', 'charger', 'charger', 'burrower', 'sniper'], limits: { sniper: 1, burrower: 2 } });
   });
 });
 

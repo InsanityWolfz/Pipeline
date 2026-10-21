@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import type {} from '../../src/render/testHook';
-import { REGION_1_X } from '../../src/data/hollows';
+import { RUIN } from '../../src/data/home';
+import { OVERWORLD } from '../../src/data/overworld';
 
 // The ruin field's Husk pack (017: group `field`) sits up and to the right of the field start, off screen.
 // Each test drives the game tick by tick through window.__GAME__ inside the page.
@@ -22,17 +23,20 @@ async function boot(page: Page): Promise<void> {
 
 /** Walks toward the pack until a Husk aggros: east of the mound, then north up the open side of the ruin field (017). Returns the ticks taken. */
 function approachPack(page: Page) {
-  return page.evaluate((ox) => {
+  return page.evaluate(([door, half]) => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
+    // East past the ruin (053: `half` tiles either side of the door), then up to the row above the door's, beside it,
+    // west of the ruin field's wall stub there.
+    const x = (door.tx + half + 1.5) * 32;
+    const y = (door.ty - 0.5) * 32;
     for (let t = 1; t <= 600; t++) {
-      // Up to row 19, beside the mound: the nearest Husk then has a clear line to the player.
       const p = g.getState().player;
-      const s = g.step(1, p.x < (44.5 + ox) * 32 ? { moveX: 1 } : p.y > 19.5 * 32 ? { moveY: -1 } : {});
-      if (s.player.y <= 19.5 * 32 + 2 && s.enemies.filter((e) => e.group === 'field').some((e) => e.mode === 'chase')) return t;
+      const s = g.step(1, p.x < x ? { moveX: 1 } : p.y > y ? { moveY: -1 } : {});
+      if (s.player.y <= y + 2 && s.enemies.filter((e) => e.group === 'field').some((e) => e.mode === 'chase')) return t;
     }
     return -1;
-  }, REGION_1_X);
+  }, [OVERWORLD.entrance.door, Math.floor(RUIN.w / 2)] as const);
 }
 
 test('Husks aggro when the player comes near', async ({ page }) => {

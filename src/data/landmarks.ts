@@ -48,8 +48,6 @@ export interface LandmarkDef {
   /** Its guard pack, placed by hand, in a group named by the landmark's id. */
   readonly guards: readonly GuardPlacement[];
   readonly pylon?: LandmarkPylon;
-  /** The pylon's ley line home (018): from the pylon to the foundry's stairs. */
-  readonly leyLine?: readonly TilePos[];
   /** More ley seams, each ending on the pylon (the Ley Grotto's crossing lines, where its veins stand). */
   readonly veinLines?: readonly (readonly TilePos[])[];
   /** Cut stones of the lost civilisation (the Quarry) or a broken ruin's walls (the cache): solid ruin blocks. */

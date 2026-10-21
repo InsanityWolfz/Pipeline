@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: 053 merged
+**Changed:** Shaun merged 053 (the round world: Region 1 a disc round the foundry, the Hollows a ring round it, one road network, ley lines carrying icons, the foundry gatehouse), InsanityWolfz/Pipeline#47.
+
+**Next:** 055 (boss doors and the rimestone pylon), InsanityWolfz/Pipeline#48, merges main and goes to Shaun's playtest.
+
 ## 2026-10-21: 054 merged
 **Changed:** Shaun merged 054 (combat readability: the blue immune bar, the shaded back wave, burning Pool arrows, slower homing bolts, the star shot's shards), InsanityWolfz/Pipeline#46.
 
@@ -11,6 +16,16 @@ Newest entry first.
 **Changed:** built 054 on `claude/054-combat-readability` (merged with main's 052). The sim's `immune` flag (a burrowed Burrower, a rising add; never a shield's front) turns an enemy's bar blue with a small shield, shown even at full health. The Bulwark's back wave shades its area red under its ripples. An arrow through a Pool (Blastfletch) burns for the rest of its flight: a flame on its head, an ember trail and a small flash on each hit, nothing extra (054.2). Homing ley bolts fly at 0.6 speed (180 px/s), same turn. The star shot: 5 bigger Shards with a short trail, each half the bolt's damage, out to 96 px, skipping the struck enemy; the Split rule reads 054.1's text. No save shape change. `npm run check` passes (1763); the full Playwright run: 155 passed, 0 failed, 144 skipped. `npm run measure` identical to 051. Review shots in docs/review/054; older shots retaken only where 054 shows. Spec status stays approved.
 
 **Next:** review, then Shaun answers 054.3–054.9 (spec, "Raised after the build") and playtests the preview.
+
+## 2026-10-21: 053 review fixes
+**Changed:** on `claude/053-round-world`, fixed 053's review. Packs keep off the barrier's band and every tile touching it (an enemy there was pushed to the Hollows side and stuck) and out of the shrine's surroundings (`POPULATION.shrineMargin`), so the Warden's fight is unjoined and the tutorial e2e wins it unaided (no pops cleared through the hook). Separation's `NEAR` derived from the largest feet box (144 px) and tested against an all-pairs pass; gate keys by the room's width. Region 1 reachable with the barrier shut; pylons block in the reach fixture. The overworld builds the chunk row below the view at once and the rest nearest-first; `ui().overworldChunks` lists keys. The hive road's hairpin is left (a road change rerolls the generated map; 053.14). Shaun's answers recorded (053.4 keep radius 48; 053.10 keep 8/12/12, judge at playtest) in the spec and the interview notes. `npm run check` passes (1,795); the full Playwright run: 153 passed, 0 failed; `npm run measure` unchanged.
+
+**Next:** Shaun playtests the preview.
+
+## 2026-10-21: 053 the round world built (draft PR)
+**Changed:** built 053 on `claude/053-round-world`. Region 1 is a disc of radius 48 round the foundry (twice the old region), its danger rings concentric (17, 30); Stonefall Hollows is the ring to 79 (053.2) with the ley barrier on the whole circle and a ragged cliff edge past it. Every landmark moved whole to its place round the circle (the Warden's shrine north-east, the Bulwark's forum in the ring's north-west). Roads are one network out of the foundry's courtyard without crossings or doubled strips (src/data/roads.ts); each pylon's ley line is one smooth curve to the foundry's ruin, meeting no road or other line (src/data/leyLines.ts); claimed lines carry their raws' icons home, staggered. The foundry's entrance is a 9 × 5 gatehouse with a lit doorway, steps down and beacon pillars. The overworld's ground streams by chunk near the camera; the minimap shows the whole round world at 0.6 px a tile. Pack counts grew with the map (8/12/12). Two per-tick costs fixed (gate tiles, enemy separation). design.md's round-world line (053.1). Merged 052 from main; SAVE_VERSION 10, no migration. `npm run check` passes (1780); the full Playwright run: 152 passed, 1 failed (armor's walk round the ruin, fixed and passed alone twice), 145 skipped. `npm run measure`: as main but the Bulwark's decent build (9/20, 6 KOs; main 14/20, 2 KOs). Review shots in docs/review/053; older shots retaken where 053 changes their subject (032/10, 11, 13; 034/01–03; 049/04; 051/05). Spec status stays approved; its "Raised after the build" lists 053.4–053.13.
+
+**Next:** review, then Shaun answers 053.4–053.13 and playtests the preview.
 
 ## 2026-10-21: World and combat interview; 053–055 drafted
 **Changed:** ran the interview for the next batch (docs/brainstorm/2026-10-21-world-combat-interview.md) and drafted 053 (the round world), 054 (combat readability) and 055 (boss doors and the rimestone pylon).

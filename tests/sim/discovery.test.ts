@@ -1,7 +1,6 @@
-import { REGION_1_X } from '../../src/data/hollows';
 import { describe, expect, it } from 'vitest';
-import { LANDMARK_LIST } from '../../src/data/landmarks';
-import { OVERWORLD_ROOM } from '../../src/data/overworld';
+import { LANDMARK_LIST, landmarkDef } from '../../src/data/landmarks';
+import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { FOUNDRY_ROOM, SHRINE_SITE } from '../../src/data/rooms';
 import { claim } from '../../src/sim/claims';
 import { viewRect } from '../../src/sim/population';
@@ -13,8 +12,9 @@ import { die, movePlayer, run, SEED } from './fight';
 // Discovery (032): a landmark is found the first tick any part of its area is in the
 // camera's view (`viewRect`), recorded once ever, and never lost.
 
-/** A spot in the meadow's west whose view takes in the Quarry's south edge and nothing else. */
-const NEAR_QUARRY = tileCentre({ tx: 24 + REGION_1_X, ty: 25 });
+/** A spot south-east of the Quarry whose view takes in the Quarry's south-east corner and nothing else. */
+const QUARRY = landmarkDef('quarry').area;
+const NEAR_QUARRY = tileCentre({ tx: QUARRY.x1 + 8, ty: QUARRY.y1 + 5 });
 
 describe('discovery', () => {
   it('finds nothing from the wake tile, and the shrine and foundry are never landmarks', () => {
@@ -39,7 +39,7 @@ describe('discovery', () => {
     run(s, 1);
     expect(s.events.discoveries).toEqual([]);
     // Away and back: no second sighting.
-    const away = tileCentre({ tx: 40 + REGION_1_X, ty: 30 });
+    const away = tileCentre(OVERWORLD.wake);
     movePlayer(s, away.x, away.y);
     run(s, 1);
     movePlayer(s, NEAR_QUARRY.x, NEAR_QUARRY.y);

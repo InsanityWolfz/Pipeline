@@ -10,9 +10,10 @@
  * flags, and a new game holds a placed champion), again with no migration. 050 made it 7 (each entrance records the
  * research node that opened it), again with no migration. 051 made it 8 (the goal's sub-steps, the bomb goal moved
  * before the foundry, and the minimap's fog of war), again with no migration. 052 made it 9 (the sorter and merger
- * gone, the underground pair's pieces added), again with no migration.
+ * gone, the underground pair's pieces added), again with no migration. 053 made it 10 (the round world: every saved
+ * position, and the fog's bitmap, are on a new map), again with no migration.
  */
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 
 /** The envelope's and the export file's format tags. */
 export const SAVE_FORMAT = 'pipeline-save';

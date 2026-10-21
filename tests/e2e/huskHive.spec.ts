@@ -31,12 +31,8 @@ async function quiet(page: Page, keep: string | null): Promise<void> {
   }, keep);
 }
 
-/** South-east from the meadow along the path to the Hive's west side. */
-const TO_HIVE: readonly (readonly [number, number])[] = [
-  [88, 37],
-  [94, 40],
-  [97, 40],
-];
+/** 053: by the east-south-east road to below the Hive's open south side. */
+const TO_HIVE: readonly (readonly [number, number])[] = [[Math.floor((HIVE.area.x0 + HIVE.area.x1) / 2), HIVE.area.y1 + 3]];
 
 test('walking to the Husk Hive finds it: its minimap marker shows; claimed, it sends resin up the resin port', async ({ page }) => {
   test.setTimeout(120_000);
@@ -116,7 +112,7 @@ test.describe('review screenshots (049)', () => {
         g.step(40);
       }
     });
-    await walk(page, [[97, 39]]);
+    await walk(page, [[HIVE.area.x0 - 2, HIVE.area.y0 + 5]]);
     await quietScreen(page);
     await cameraSettled(page, 20_000);
     const seep = (await page.evaluate(() => window.__GAME__?.getState()))?.nodes.find((n) => n.nodeId === 'resin-seep' && n.uses < 3);

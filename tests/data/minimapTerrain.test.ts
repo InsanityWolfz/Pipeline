@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { inHollows } from '../../src/data/hollows';
-import { MINIMAP_SCENERY, minimapColor } from '../../src/data/minimap';
+import { MINIMAP, MINIMAP_SCENERY, minimapColor } from '../../src/data/minimap';
+import { TUTORIAL_LAYOUT } from '../../src/data/foundryAssets';
 import { OVERWORLD } from '../../src/data/overworld';
 import { roomById } from '../../src/sim/roomLookup';
 
@@ -28,5 +29,16 @@ describe('the minimap draws scenery as the ground', () => {
       expect(minimapColor(s, r1.tx, r1.ty)).toBe(minimapColor('.', r1.tx, r1.ty));
       expect(minimapColor(s, h.tx, h.ty)).toBe(minimapColor('.', h.tx, h.ty));
     }
+  });
+});
+
+describe('the round world on the minimap (053)', () => {
+  it('fits the whole world in about 100 px, with the objective band below it', () => {
+    const size = OVERWORLD.width * MINIMAP.scale;
+    expect(OVERWORLD.width).toBe(OVERWORLD.height);
+    expect(size).toBeGreaterThan(90);
+    expect(size).toBeLessThan(120);
+    const bottom = MINIMAP.margin + size + MINIMAP.frame.width;
+    expect(TUTORIAL_LAYOUT.objectiveTop - TUTORIAL_LAYOUT.objectivePanel.padY).toBeGreaterThan(bottom + 4);
   });
 });

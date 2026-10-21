@@ -219,6 +219,9 @@ describe('objectives', () => {
     // A conduit feeding the intake's middle mouth tile (019) is a line running.
     stepSim(s, command({ place: { pieceId: 'conduit', tx: 12, ty: 1, facing: 'up' } }));
     s.roomId = OVERWORLD_ROOM;
+    // Out in the meadow (053: the foundry's tiles are the round map's cliff edge, where nobody stands).
+    const out = tileCentre(OVERWORLD.field);
+    movePlayer(s, out.x, out.y);
     const last = OBJECTIVES[away]?.check;
     const ticks = last?.kind === 'awayRunning' ? last.ticks : 0;
     run(s, ticks - 1);

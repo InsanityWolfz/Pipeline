@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { straightAmmo } from '../../src/data/ammo';
 import { damageEnemy } from '../../src/sim/enemies';
-import { arena, at, FIELD_WALL, fireAt, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, at, FIELD_WALL, fireAt, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, FIELD_ROW } from './fight';
 
 const DAMAGE = straightAmmo('arrow').damage;
 
@@ -52,7 +52,7 @@ describe('arrows hitting Husks', () => {
 
   it('hits a Husk standing against a wall', () => {
     // The ruin field's east wall (017); the Husk stands 40 px left of it.
-    const y = 14.5 * 32;
+    const y = FIELD_ROW(14);
     const wall = FIELD_WALL.east * 32;
     const s = arena(undefined, { x: wall - 280, y });
     const e = placeHusk(s, wall - 40, y);
@@ -82,7 +82,7 @@ describe('Husk knockback', () => {
   it('stops at a wall', () => {
     // The ruin field's west wall (017): its east face.
     const face = (FIELD_WALL.west + 1) * 32;
-    const y = 14.5 * 32;
+    const y = FIELD_ROW(14);
     const s = arena(undefined, { x: face + 28, y });
     const e = placeHusk(s, face + 8, y);
     run(s, 1);
@@ -182,8 +182,8 @@ describe('ley bolts', () => {
   it('stop at a wall', () => {
     const s = bolted();
     // The ruin field's west wall (017); fire at it from 3 tiles away.
-    movePlayer(s, (FIELD_WALL.west + 3.5) * 32, 14.5 * 32);
-    run(s, 1, fireAt(0, 14.5 * 32));
+    movePlayer(s, (FIELD_WALL.west + 3.5) * 32, FIELD_ROW(14));
+    run(s, 1, fireAt(0, FIELD_ROW(14)));
     let lastX = s.player.x;
     runUntil(
       s,
@@ -198,9 +198,9 @@ describe('ley bolts', () => {
 
   it('stop at a ruin block', () => {
     const s = bolted();
-    // The ruin field has a block at tile (49, 15), two tiles straight above open (49, 17) (017).
-    movePlayer(s, 49.5 * 32, 17.5 * 32);
-    run(s, 1, fireAt(49.5 * 32, 0));
+    // The ruin field's east wall has a block at its third row, two tiles straight above an open gap (017).
+    movePlayer(s, (FIELD_WALL.east + 0.5) * 32, FIELD_ROW(17));
+    run(s, 1, fireAt((FIELD_WALL.east + 0.5) * 32, 0));
     let lastY = s.player.y;
     runUntil(
       s,
@@ -211,6 +211,6 @@ describe('ley bolts', () => {
       100,
     );
     // Removed at the block's bottom edge, well short of its 320 px range.
-    expect(lastY).toBeGreaterThanOrEqual(16 * 32 - 5);
+    expect(lastY).toBeGreaterThanOrEqual(FIELD_ROW(16) - 16 - 5);
   });
 });

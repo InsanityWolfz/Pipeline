@@ -1,10 +1,10 @@
 import type { Page } from '@playwright/test';
-import { REGION_1_X } from '../../src/data/hollows';
+import { landmarkDef } from '../../src/data/landmarks';
 import { LANDMARKS } from '../../src/data/landmarks';
 
 // 045's e2e scenes, shared by readability.spec.ts and its review shots.
 
-const CACHE = { tx: 11 + REGION_1_X, ty: 38 };
+const CACHE = landmarkDef('ruined-cache').cache ?? { tx: 0, ty: 0 };
 
 /** Walks to the Ruined Cache, its guards gone, and opens it with a held E. Returns the ids of the items it gave. */
 export async function openCache(page: Page): Promise<number[]> {
@@ -15,7 +15,7 @@ export async function openCache(page: Page): Promise<number[]> {
       if (!g || !h) throw new Error('no game');
       for (const e of g.getState().enemies.filter((x) => x.group === 'ruined-cache')) g.setEnemyHealth(e.id, 0);
       g.step(1);
-      h.walkTo((12.5 + h.ox) * 32, 30.5 * 32);
+      h.walkTo((tx + 0.5) * 32, (ty + 6.5) * 32);
       h.walkTo((tx + 0.5) * 32, (ty + 1.5) * 32);
       const before = new Set(g.step(1, { interact: true }).groundItems.map((i) => i.id));
       return g

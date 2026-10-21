@@ -1,8 +1,9 @@
+import { landmarkDef } from '../../src/data/landmarks';
 import { describe, expect, it } from 'vitest';
 import { BOSS_REFIGHT_XP, CHAMPION_XP, CLAIM_XP, LANDMARK_XP, LEVEL_CAP, RING_XP, XP_CURVE } from '../../src/data/leveling';
 import { CLAIM_TICKS } from '../../src/data/claims';
 import { enemyDef } from '../../src/data/enemies';
-import { HOLLOWS, REGION_1_X } from '../../src/data/hollows';
+import { HOLLOWS } from '../../src/data/hollows';
 import { HOLLOWS_START } from '../../src/data/playtest';
 import { OVERWORLD, OVERWORLD_ROOM, ringOf } from '../../src/data/overworld';
 import { FOUNDRY_ROOM, SHRINE_SITE, WALKABLE } from '../../src/data/rooms';
@@ -137,7 +138,8 @@ describe('claims and discoveries', () => {
   it('a landmark’s first discovery gives LANDMARK_XP, once', () => {
     const s = createSim(SEED);
     s.enemies = [];
-    const near = tileCentre({ tx: 24 + REGION_1_X, ty: 25 });
+    const quarry = landmarkDef('quarry').area;
+    const near = tileCentre({ tx: quarry.x1 + 8, ty: quarry.y1 + 5 });
     movePlayer(s, near.x, near.y);
     run(s, 1);
     expect(s.discovered).toEqual(['quarry']);

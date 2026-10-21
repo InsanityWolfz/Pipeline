@@ -49,7 +49,8 @@ test('inside the foundry a goal outside points at the door; the bomb goal lists 
     g.completeObjectives(n);
   }, SHRINE);
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().waypoint))?.via).toBe('door');
-  expect((await page.evaluate(() => window.__GAME__?.ui().waypoint))?.x).toBeCloseTo(23.5 * T, 0);
+  // Within a few px: the edge arrow keeps clear of the corner map and the objective band (053 moved the band down).
+  expect(Math.abs(((await page.evaluate(() => window.__GAME__?.ui().waypoint))?.x ?? 0) - 23.5 * T)).toBeLessThanOrEqual(4);
   // B.6: the foundry's own map in the minimap's place: its icons, and no overworld minimap.
   const inside = await page.evaluate(() => window.__GAME__?.ui());
   expect(inside?.minimap.shown).toBe(false);
@@ -117,15 +118,16 @@ test("the Bulwark's arena shows on the minimap once it has been on screen, named
   await page.evaluate(() => window.__GAME__?.step(1));
   const arena = async () => (await page.evaluate(() => window.__GAME__?.ui().minimap))?.markers.find((m) => m.kind === 'arena');
   expect(await arena()).toBeUndefined();
-  // West along the road and in at the forum's way in (043's walk), the Hollows' other enemies cleared.
-  await page.evaluate((door) => {
+  // To the forum's way in (043's walk), the Hollows' other enemies cleared.
+  await page.evaluate(([door, way]) => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark') g.setEnemyHealth(e.id, 0);
     g.step(1);
-    for (const [x, y] of [[25, 27], [12, 27], [12, door - 1], [12, door + 1]] as const) h.walkTo((x + 0.5) * 32, (y + 0.5) * 32);
-  }, HOLLOWS.arena.seal.tiles[0]?.ty ?? 0);
+    // 053: round to the forum's north side and in through its way.
+    for (const [x, y] of [[way, door - 1], [way, door + 1]] as const) h.walkTo((x + 0.5) * 32, (y + 0.5) * 32);
+  }, [HOLLOWS.arena.seal.tiles[0]?.ty ?? 0, HOLLOWS.arena.seal.leaveTo.tx] as const);
   await expect.poll(async () => (await arena())?.name).toBe(HOLLOWS.arena.name);
   const at = await arena();
   const canvas = await page.locator('canvas').boundingBox();

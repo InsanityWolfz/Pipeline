@@ -12,19 +12,20 @@ const A = HOLLOWS.arena;
 async function forum(page: Page, dy: number): Promise<number> {
   await boot(page, '?start=hollows');
   return page.evaluate(
-    ([tx, ty]) => {
+    ([tx, ty, lx, ly]) => {
       const g = window.__GAME__;
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
       for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark') g.setEnemyHealth(e.id, 0);
       g.step(1);
-      for (const [x, y] of [[25, 27], [12, 27], [12, 30], [tx, ty]] as const) h.walkTo((x + 0.5) * 32, (y + 0.5) * 32);
+      for (const [x, y] of [[lx, ly], [tx, ty]] as const) h.walkTo((x + 0.5) * 32, (y + 0.5) * 32);
       for (let t = 0; t < 120 && !g.getState().bosses[0]?.engaged; t++) g.step(1);
       const b = g.getState().bosses[0];
       if (!b?.engaged) throw new Error('the Bulwark never woke');
       return b.id;
     },
-    [A.start.tx, A.start.ty + dy] as const,
+    // 053: by the forum's way in on its north side.
+    [A.start.tx, A.start.ty + dy, A.seal.leaveTo.tx, A.seal.leaveTo.ty] as const,
   );
 }
 

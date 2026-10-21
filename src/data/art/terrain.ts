@@ -1,8 +1,8 @@
 import { ellipse, flat, line, path, rect, solid, type Shape, type VectorSprite } from './types';
 
 // The overworld's standing things (017), in the style test's look: trees with sun
-// on their canopies, rounded boulders, ruin stones and walls, the grassy mound the
-// foundry's stairs sink into, and broken columns. World px around each anchor,
+// on their canopies, rounded boulders, ruin stones and walls, the ruined gatehouse over
+// the foundry's stairs (053), and broken columns. World px around each anchor,
 // which sits at the bottom centre of the tile it stands on.
 
 const sprite = (key: string, size: readonly [number, number], anchor: readonly [number, number], shapes: readonly Shape[]): VectorSprite => ({
@@ -89,31 +89,75 @@ export const RUIN_WALL = sprite('ow-ruin-wall', [34, 52], [17, 48], [
   ellipse(-10, -41, 5, 2, flat('moss-tuft')),
 ]);
 
+/** A lit crystal on a pillar's cap: a cut stone of ley light, glowing so the entrance shows from afar. */
+const beacon = (x: number, y: number): Shape[] => [
+  ellipse(x, y + 2, 15, 6, { fill: { id: 'cyan', alpha: 0.35 }, glow: { color: 'cyan-glow', blur: 18 } }),
+  path(`M ${x} ${y - 22} L ${x + 9} ${y - 6} L ${x} ${y + 4} L ${x - 9} ${y - 6} Z`, { ...solid('cyan'), glow: { color: 'cyan-glow', blur: 12 } }),
+  path(`M ${x} ${y - 22} L ${x + 9} ${y - 6} L ${x} ${y - 4} Z`, flat('cyan-glow')),
+];
+
+/** A tall rune pillar of the gatehouse, its ley rune lit, centred on `x`. */
+const gatePillar = (x: number): Shape[] => [
+  rect(x - 14, -252, 28, 252, 4, solid('rock-light')),
+  rect(x + 4, -252, 10, 252, 3, flat('rock')),
+  rect(x - 18, -262, 36, 14, 3, solid('rock')),
+  rect(x - 18, -16, 36, 16, 3, solid('rock')),
+  line([x, -232, x, -40], 1.6, { id: 'cyan', alpha: 0.9 }),
+  path(`M ${x - 6} -200 L ${x} -192 L ${x + 6} -200 M ${x - 6} -150 L ${x} -142 L ${x + 6} -150 M ${x - 6} -100 L ${x} -92 L ${x + 6} -100`, { stroke: { color: 'cyan', width: 1.4 }, glow: { color: 'cyan', blur: 4 } }),
+  ...beacon(x, -270),
+];
+
 /**
- * The foundry's entrance (017): a grassy mound with a half-sunken stone archway,
- * rune pillars either side and stairs going down into the dark. Anchored at the
- * bottom centre of the door tile; the mound covers the blocks around it.
+ * The foundry's entrance (017; 053, D.2: "make it really obvious that it's like a big thing"): a ruined gatehouse of
+ * the lost civilisation over the whole 9 × 5 tile footprint round the stairs, its broken facade carved with ley runes,
+ * two tall rune pillars with lit crystals that show from afar, and a great arch whose doorway glows with ley light
+ * from below, steps going down into it. Anchored at the bottom centre of the door tile; it covers the ruin's blocks.
  */
-export const ENTRANCE = sprite('ow-entrance', [176, 120], [88, 104], [
-  ellipse(0, -4, 84, 18, { fill: { id: 'ground-shade', alpha: 0.25 } }),
-  path('M -82 -2 Q -78 -66 -20 -82 Q 20 -90 60 -72 Q 86 -56 82 -2 Z', solid('grass')),
-  path('M -70 -10 Q -64 -60 -18 -74 Q 10 -80 30 -74 Q -20 -60 -40 -10 Z', flat('grass-light')),
-  path('M 40 -8 Q 70 -30 72 -6 Z', flat('grass-dark')),
-  // The archway: stone jambs and a lintel with the ley rune.
-  rect(-30, -66, 60, 66, 4, solid('rock-light')),
-  rect(-22, -56, 44, 56, 3, flat('hood-dark')),
-  // Stairs going down, lit less as they sink.
-  rect(-20, -12, 40, 6, 1, flat('rock-dark')),
-  rect(-18, -22, 36, 6, 1, { fill: 'rock-dark', alpha: 0.7 }),
-  rect(-16, -32, 32, 6, 1, { fill: 'rock-dark', alpha: 0.45 }),
-  rect(-34, -76, 68, 14, 3, solid('rock')),
-  path('M -6 -72 L 0 -64 L 6 -72', { stroke: { color: 'cyan', width: 1.6 }, glow: { color: 'cyan', blur: 5 } }),
-  // Rune pillars.
-  rect(-46, -58, 12, 58, 3, solid('rock')),
-  rect(34, -58, 12, 58, 3, solid('rock')),
-  line([-40, -48, -40, -12], 1.4, { id: 'cyan', alpha: 0.85 }),
-  line([40, -48, 40, -12], 1.4, { id: 'cyan', alpha: 0.85 }),
-  ellipse(-40, -60, 7, 3, flat('moss-tuft')),
+export const ENTRANCE = sprite('ow-entrance', [340, 330], [170, 300], [
+  ellipse(0, -2, 168, 24, { fill: { id: 'ground-shade', alpha: 0.3 } }),
+  // Rubble and moss round its foot.
+  rect(-150, -24, 34, 24, 4, solid('rock')),
+  rect(118, -20, 30, 20, 4, solid('rock')),
+  ellipse(-146, -4, 10, 4, flat('moss-tuft')),
+  // The facade: a broken wall of cut stone, its top fallen away in steps, with its lit courses.
+  path('M -136 0 L -136 -178 L -112 -178 L -112 -196 L -70 -196 L -70 -214 L -20 -214 L -12 -222 L 30 -222 L 30 -206 L 76 -206 L 76 -190 L 104 -190 L 112 -170 L 136 -170 L 136 0 Z', solid('rock')),
+  path('M -136 -178 L -112 -178 L -112 -196 L -70 -196 L -70 -214 L -20 -214 L -12 -222 L 30 -222 L 30 -206 L 76 -206 L 76 -190 L 104 -190 L 112 -170 L 136 -170 L 136 -160 L -136 -160 Z', flat('rock-light')),
+  line([-136, -120, 136, -120], 1, 'rock-dark'),
+  line([-136, -80, 136, -80], 1, 'rock-dark'),
+  line([-136, -40, 136, -40], 1, 'rock-dark'),
+  line([-96, -160, -96, -120], 1, 'rock-dark'),
+  line([88, -120, 88, -80], 1, 'rock-dark'),
+  line([-80, -80, -80, -40], 1, 'rock-dark'),
+  line([96, -40, 96, 0], 1, 'rock-dark'),
+  // Carved ley bands either side of the arch.
+  path('M -112 -140 L -96 -132 L -80 -140 L -64 -132 M 64 -132 L 80 -140 L 96 -132 L 112 -140', { stroke: { color: 'cyan', width: 1.4 }, glow: { color: 'cyan', blur: 5 } }),
+  // The great arch.
+  rect(-54, -168, 108, 168, 10, solid('rock-light')),
+  ellipse(0, -166, 54, 26, solid('rock-light')),
+  rect(-40, -150, 80, 150, 8, flat('hood-dark')),
+  ellipse(0, -150, 40, 20, flat('hood-dark')),
+  // The doorway lit from below: ley light rising out of the stairs.
+  rect(-36, -146, 72, 146, 8, {
+    fill: { linear: [0, 0, 0, -146], stops: [{ at: 0, color: { id: 'cyan-glow', alpha: 0.95 } }, { at: 0.45, color: { id: 'cyan', alpha: 0.55 } }, { at: 1, color: { id: 'hood-dark', alpha: 0 } }] },
+    glow: { color: 'cyan-glow', blur: 16 },
+  }),
+  // Steps going down, each edge lit.
+  rect(-34, -12, 68, 8, 1, flat('rock-dark')),
+  rect(-30, -26, 60, 8, 1, { fill: 'rock-dark', alpha: 0.8 }),
+  rect(-26, -40, 52, 8, 1, { fill: 'rock-dark', alpha: 0.6 }),
+  rect(-22, -54, 44, 8, 1, { fill: 'rock-dark', alpha: 0.4 }),
+  line([-34, -12, 34, -12], 1.2, { id: 'cyan-glow', alpha: 0.9 }),
+  line([-30, -26, 30, -26], 1.2, { id: 'cyan-glow', alpha: 0.7 }),
+  line([-26, -40, 26, -40], 1.2, { id: 'cyan-glow', alpha: 0.5 }),
+  // The keystone and its rune.
+  rect(-14, -196, 28, 26, 3, solid('rock')),
+  path('M -7 -190 L 0 -178 L 7 -190', { stroke: { color: 'cyan-glow', width: 2 }, glow: { color: 'cyan', blur: 6 } }),
+  // Light spilling out over the ground in front.
+  ellipse(0, 4, 44, 9, { fill: { id: 'cyan-glow', alpha: 0.35 }, glow: { color: 'cyan', blur: 10 } }),
+  ...gatePillar(-118),
+  ...gatePillar(118),
+  ellipse(-60, -214, 12, 4, flat('moss-tuft')),
+  ellipse(124, -170, 9, 3, flat('moss-tuft')),
 ]);
 
 /** A broken column in the ruin field. */

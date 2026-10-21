@@ -8,6 +8,7 @@ import { createSim, type SimState } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { tileCentre } from '../../src/sim/tiles';
+import { HOME_SHIFT } from '../../src/data/home';
 
 // Fight scenarios in the overworld's meadow (017): open ground beside the ruin field, the sandbox start.
 
@@ -108,7 +109,15 @@ export function die(s: SimState): void {
   runUntilKo(s, DYING_TICKS + 3);
 }
 
-/** The ruin field's walls' columns (017), from data: its west wall and its east wall (34 tiles apart since 034 moved them +40). */
+/** A row of 017's ground round the foundry by its old tile row (053 moved it to the round map's centre), as a y in px at the row's middle. */
+export const FIELD_ROW = (ty: number): number => (ty + HOME_SHIFT.dy + 0.5) * 32;
+
+/** A tile of 017's ground round the foundry by its old tile (053 moved it to the round map's centre), as its centre in px. */
+export const homeTile = (tx: number, ty: number): { x: number; y: number } => tileCentre({ tx: tx + HOME_SHIFT.dx, ty: ty + HOME_SHIFT.dy });
+/** A column of that ground by its old tile column, as the column's left edge in px. */
+export const HOME_X = (tx: number): number => (tx + HOME_SHIFT.dx) * 32;
+
+/** The ruin field's walls' columns (017), from data: its west wall and its east wall (18 tiles apart). */
 export const FIELD_WALL = {
   west: Math.min(...OVERWORLD.ruinField.walls.map((t) => t.tx)),
   east: Math.max(...OVERWORLD.ruinField.walls.map((t) => t.tx)),

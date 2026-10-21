@@ -1,6 +1,5 @@
-import { REGION_1_X } from '../../src/data/hollows';
 import { describe, expect, it } from 'vitest';
-import { GROTTO, GROTTO_GROUP } from '../../src/data/grotto';
+import { GROTTO, GROTTO_GROUP, GROTTO_MOUTH } from '../../src/data/grotto';
 import { FEET_BOX } from '../../src/data/player';
 import { nodeDef } from '../../src/data/nodes';
 import { OVERWORLD, ringOf } from '../../src/data/overworld';
@@ -10,23 +9,19 @@ import { createSim, resetWorld } from '../../src/sim/state';
 import { reachable, tileKey } from '../fixtures/reach';
 import { die, movePlayer, run, runUntil, SEED } from './fight';
 
-// The Frozen Grotto, minimal (029): a hand-placed clearing in the north-west, three
-// rime outcrops, a path from the west path's end, and a guard pack that never stays dead.
+// The Frozen Grotto, minimal (029): a hand-placed clearing (053: in the round map's north), three
+// rime outcrops, a road to its mouth, and a guard pack that never stays dead.
 
 const room = generateOverworld();
 const key = tileKey;
 
 describe('the Frozen Grotto', () => {
-  it('sits in ring 2 in the north-west, kept as a clearing, with a path from the west path\'s end', () => {
-    // 029's tiles, moved +40 with the rest of Region 1 (034).
-    const X = REGION_1_X;
-    expect(GROTTO.area).toEqual({ x0: 9 + X, y0: 5, x1: 19 + X, y1: 13 });
-    expect(ringOf(14 + X, 9)).toBe(2);
+  it('sits in ring 2 in the north, kept as a clearing, with a road to its mouth', () => {
+    // 029's layout, moved whole by 053 (25, 39 from 029's tiles).
+    expect(GROTTO.area).toEqual({ x0: 74, y0: 44, x1: 84, y1: 52 });
+    expect(ringOf(79, 48)).toBe(2);
     expect(OVERWORLD.clearings).toContainEqual(GROTTO.area);
-    expect(OVERWORLD.paths).toContainEqual([
-      { tx: 12 + X, ty: 27 },
-      { tx: 14 + X, ty: 14 },
-    ]);
+    expect(OVERWORLD.paths.some((p) => p.some((t) => Math.hypot(t.tx + 1 - GROTTO_MOUTH.tx, t.ty + 1 - GROTTO_MOUTH.ty) <= 2))).toBe(true);
     for (let ty = GROTTO.area.y0; ty <= GROTTO.area.y1; ty++) {
       for (let tx = GROTTO.area.x0; tx <= GROTTO.area.x1; tx++) expect([TILE.tree, TILE.rock, TILE.water]).not.toContain(room.rows[ty]?.[tx]);
     }
@@ -34,7 +29,8 @@ describe('the Frozen Grotto', () => {
 
   it('holds three rime outcrops at the spec tiles, each placed for the Grotto', () => {
     const rime = OVERWORLD.nodes.filter((n) => n.nodeId === 'rime-outcrop');
-    expect(rime.map(({ tx, ty }) => ({ tx: tx - REGION_1_X, ty }))).toEqual([
+    // 029's tiles (before 034's +40), moved by 053.
+    expect(rime.map(({ tx, ty }) => ({ tx: tx - 25 - 40, ty: ty - 39 }))).toEqual([
       { tx: 12, ty: 7 },
       { tx: 16, ty: 8 },
       { tx: 14, ty: 11 },

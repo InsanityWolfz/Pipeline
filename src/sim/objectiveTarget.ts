@@ -132,10 +132,9 @@ export function targetPoints(state: SimState, target: TargetDef, goal: number): 
       const empty = indicesWhere(state, (e) => e.open && e.count === 0);
       return mouths(empty.length > 0 ? empty : indicesWhere(state, (e) => e.open), k);
     }
-    case 'barrier': {
-      const mid = HOLLOWS.gate[Math.floor(HOLLOWS.gate.length / 2)];
-      return mid ? [{ roomId: OVERWORLD_ROOM, ...tileBase(mid), kind: k }] : [];
-    }
+    case 'barrier':
+      // 053: the barrier rings Region 1; the goal points where the road west to the Cistern Terrace crosses it.
+      return [{ roomId: OVERWORLD_ROOM, ...tileBase(HOLLOWS.crossing), kind: k }];
     case 'boss': {
       const foe = enemyPoints(state, (e) => e.enemyId === target.boss, k);
       const arena = arenaOf(target.boss);

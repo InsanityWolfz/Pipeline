@@ -5,9 +5,9 @@ import { TILE } from '../../src/data/rooms';
 import { generateOverworld } from '../../src/sim/overworldGen';
 import { springClearing } from '../../src/data/springs';
 import { reachable, tileKey } from '../fixtures/reach';
-import { REGION_1_X } from '../../src/data/hollows';
+import { ROAD_DEFS, ROADS } from '../../src/data/roads';
 
-// Ley Springs (030): three pools on the fixed map, each in its own clearing, on open
+// Ley Springs (030): pools on the fixed map, each in its own clearing, on open
 // ground and reachable on foot from where the player wakes.
 
 const room = generateOverworld();
@@ -22,13 +22,13 @@ function poolTiles(s: { tx: number; ty: number; radius: number }): { tx: number;
 }
 
 describe('Ley Springs', () => {
-  it("three springs at the spec tiles and rings (moved +40 by 034), and the Hollows' deep in Region 2, each with a 1.5-tile pool", () => {
+  it("three springs at their tiles and rings on the round map (053), and the Hollows' out in Region 2, each with a 1.5-tile pool", () => {
     expect(SPRING_RADIUS).toBe(1.5);
     expect(OVERWORLD.springs.map(({ id, tx, ty, radius }) => ({ id, tx, ty, radius }))).toEqual([
-      { id: 'west-spring', tx: 10 + REGION_1_X, ty: 31, radius: 1.5 },
-      { id: 'south-east-spring', tx: 66 + REGION_1_X, ty: 38, radius: 1.5 },
-      { id: 'north-spring', tx: 26 + REGION_1_X, ty: 8, radius: 1.5 },
-      { id: 'hollows-spring', tx: 7, ty: 26, radius: 1.5 },
+      { id: 'west-spring', tx: 60, ty: 106, radius: 1.5 },
+      { id: 'south-east-spring', tx: 111, ty: 114, radius: 1.5 },
+      { id: 'north-spring', tx: 71, ty: 69, radius: 1.5 },
+      { id: 'hollows-spring', tx: 56, ty: 38, radius: 1.5 },
     ]);
     expect(OVERWORLD.springs.map((s) => ringOf(s.tx, s.ty))).toEqual([2, 2, 1, 3]);
     for (const s of OVERWORLD.springs) expect(s.id).toMatch(/^[a-z]+(-[a-z]+)*$/);
@@ -68,22 +68,23 @@ describe('Ley Springs', () => {
     }
   });
 
-  it("the west pool sits beside the road south of the west path's fork, not on it, and clear of the Grotto", () => {
-    const west = OVERWORLD.springs.find((s) => s.id === 'west-spring');
-    if (!west) throw new Error('no west spring');
-    for (const t of poolTiles(west)) expect(at(t.tx, t.ty), tileKey(t)).toBe(TILE.floor);
-    expect(OVERWORLD.paths.some((p) => p.some((t) => t.tx === 12 + REGION_1_X && t.ty === 27))).toBe(true);
+  it('every pool sits beside a road, not on it, and clear of the Grotto', () => {
+    for (const s of OVERWORLD.springs) {
+      for (const t of poolTiles(s)) expect(at(t.tx, t.ty), `${s.id} ${tileKey(t)}`).toBe(TILE.floor);
+      const near = ROADS.some((r) => r.some((p) => Math.hypot(p.tx + 1 - s.tx - 0.5, p.ty + 1 - s.ty - 0.5) <= SPRING_CLEARING + 3));
+      expect(near, s.id).toBe(true);
+    }
     for (const s of OVERWORLD.springs) {
       const inGrotto = s.tx + SPRING_CLEARING >= GROTTO.area.x0 && s.tx - SPRING_CLEARING <= GROTTO.area.x1 && s.ty + SPRING_CLEARING >= GROTTO.area.y0 && s.ty - SPRING_CLEARING <= GROTTO.area.y1;
       expect(inGrotto, s.id).toBe(false);
     }
   });
 
-  it('the south-east pool sits at the end of the south-east path', () => {
+  it('the south-east pool sits at the end of its road, on past the Husk Hive', () => {
     const se = OVERWORLD.springs.find((s) => s.id === 'south-east-spring');
-    const path = OVERWORLD.paths.find((p) => p[0]?.tx === 41 + REGION_1_X && p[0]?.ty === 36);
+    const path = ROADS[ROAD_DEFS.findIndex((r) => r.id === 'south-east-spring')];
     const end = path?.[path.length - 1];
     if (!se || !end) throw new Error('no south-east spring or path');
-    expect(Math.hypot(end.tx - se.tx, end.ty - se.ty)).toBeLessThanOrEqual(se.radius + 1);
+    expect(Math.hypot(end.tx + 1 - se.tx - 0.5, end.ty + 1 - se.ty - 0.5)).toBeLessThanOrEqual(se.radius + 2.5);
   });
 });

@@ -6,6 +6,7 @@ import { ADDS_GROUP } from '../data/bulwark';
 import { HOLLOWS } from '../data/hollows';
 import { LANDMARK_LIST } from '../data/landmarks';
 import { TILE, WALKABLE } from '../data/rooms';
+import type { TileRect } from '../data/tiles';
 import { createEnemy, type EnemyState } from './enemies';
 import { nextInt } from './rng';
 import { rollChampions } from './champions';
@@ -116,8 +117,15 @@ export function enemiesOnScreen(state: SimState): number {
   return state.enemies.filter((e) => inView(state, e.roomId, e.x, e.y)).length;
 }
 
-/** Where packs never stand: the clearings (the meadow, the ruin field, the shrine site), the landmarks' areas (032) and the Sunken Forum (034). */
-const KEEP_OUT = [...OVERWORLD.clearings, ...LANDMARK_LIST.map((l) => l.area), HOLLOWS.arena.bounds];
+/** The shrine's surroundings (053): its site grown by `shrineMargin`, so no pack's home is near enough to join the Warden's fight or its approaches. */
+const SHRINE_GROUND = ((): TileRect => {
+  const a = OVERWORLD.shrine.area;
+  const m = POPULATION.shrineMargin;
+  return { x0: a.x0 - m.x, y0: a.y0 - m.y, x1: a.x1 + m.x, y1: a.y1 + m.y };
+})();
+
+/** Where packs never stand: the clearings (the meadow, the ruin field, the shrine site), the shrine's surroundings, the landmarks' areas (032) and the Sunken Forum (034). */
+export const KEEP_OUT: readonly TileRect[] = [...OVERWORLD.clearings, SHRINE_GROUND, ...LANDMARK_LIST.map((l) => l.area), HOLLOWS.arena.bounds];
 
 /** Hollows ground a pack can walk to from the gap (034): the generated cliffs can wall off a pocket, and nothing spawns in one. */
 const fromGap = ((): Set<number> => {
@@ -137,10 +145,24 @@ const fromGap = ((): Set<number> => {
   return seen;
 })();
 
-const walkableOpen = (tx: number, ty: number): boolean => {
+/**
+ * Gate tiles and every tile touching one (053): the barrier's band is ring 2 floor on its inner half, but movers meet
+ * it as wall while it's shut, so a pack standing on it would be pushed out to the Hollows side and stuck there.
+ */
+const byGate = ((): Set<number> => {
+  const out = new Set<number>();
+  for (const g of WORLD[OVERWORLD.id]?.gateTiles ?? []) {
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) out.add((g.ty + dy) * OVERWORLD.width + g.tx + dx);
+  }
+  return out;
+})();
+
+/** True if a pack's centre or member may stand on a tile: open floor or road, off gates and the keep-out areas, and (in the Hollows) reachable from the gap. */
+export const packGround = (tx: number, ty: number): boolean => {
   const room = WORLD[OVERWORLD.id];
   const symbol = room?.rows[ty]?.[tx];
   if (symbol !== TILE.floor && symbol !== TILE.path) return false;
+  if (byGate.has(ty * OVERWORLD.width + tx)) return false;
   if (ringOf(tx, ty) === HOLLOWS.ring && !fromGap.has(ty * OVERWORLD.width + tx)) return false;
   return !KEEP_OUT.some((r) => tx >= r.x0 && tx <= r.x1 && ty >= r.y0 && ty <= r.y1);
 };
@@ -150,7 +172,7 @@ const candidates: Record<PopulatedRing, { tx: number; ty: number }[]> = { 1: [],
 for (let ty = 1; ty < OVERWORLD.height - 1; ty++) {
   for (let tx = 1; tx < OVERWORLD.width - 1; tx++) {
     const ring = ringOf(tx, ty);
-    if (ring !== 0 && walkableOpen(tx, ty)) candidates[ring].push({ tx, ty });
+    if (ring !== 0 && packGround(tx, ty)) candidates[ring].push({ tx, ty });
   }
 }
 
@@ -171,7 +193,7 @@ function spawn(state: SimState, slot: PackSlot): boolean {
     const fits = (s: { tx: number; ty: number }): boolean => {
       const m = tileCentre(s);
       return (
-        walkableOpen(s.tx, s.ty) &&
+        packGround(s.tx, s.ty) &&
         ringOf(s.tx, s.ty) === slot.ring &&
         !inSafeZone(state, OVERWORLD.id, m.x, m.y) &&
         !inView(state, OVERWORLD.id, m.x, m.y, POPULATION.viewMargin) &&

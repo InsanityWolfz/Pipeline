@@ -3,16 +3,15 @@ import { ROLLBREAKER } from '../../src/data/relics';
 import { TALENT_START } from '../../src/data/talents';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import type { SimState } from '../../src/sim/state';
-import { tileCentre } from '../../src/sim/tiles';
 import { piece, wear } from '../fixtures/gear';
-import { arena, fireAt, HALL, hold, movePlayer, placeHusk, PLAYER_AT, run, runUntil } from './fight';
+import { arena, fireAt, HALL, hold, movePlayer, placeHusk, PLAYER_AT, run, runUntil, homeTile } from './fight';
 
 // 039 pins, beside pinned039.test.ts: the Stun's two sources and the landmine's timing,
 // taken from the code before the keyword refactor (fd75ac9) and held after it.
 
 /** A Charger run into the rocks south of it (charger.test.ts's), on the tick the wall dazes it. */
 function dazedCharger(s: SimState): EnemyState {
-  const rocks = { charger: tileCentre({ tx: 70, ty: 26 }), before: tileCentre({ tx: 70, ty: 31 }) };
+  const rocks = { charger: homeTile(70, 26), before: homeTile(70, 31) };
   const e = createEnemy(s.nextEnemyId++, 'charger', rocks.charger, HALL);
   s.enemies.push(e);
   movePlayer(s, rocks.before.x, rocks.before.y);
@@ -93,7 +92,8 @@ describe('039 pins: Stun (the wall daze and Rollbreaker keep their own timing, 0
       run(s, 1, fireAt(PLAYER_AT.x + 137, PLAYER_AT.y + 41));
       expect(runUntil(s, () => s.events.mineArms.length > 0, 200)).toBe(40);
       expect(runUntil(s, () => s.events.mineBursts.length > 0, 600)).toBe(300);
-      expect(s.events.mineBursts[0]).toMatchObject({ x: 2713, y: 921, radius: 24 });
+      // 053 moved the meadow +4, +64 tiles: the pinned point (2713, 921) moved with it.
+      expect(s.events.mineBursts[0]).toMatchObject({ x: 2713 + 4 * 32, y: 921 + 64 * 32, radius: 24 });
     }
   });
 });

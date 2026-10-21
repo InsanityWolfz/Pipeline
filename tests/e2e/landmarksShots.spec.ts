@@ -1,3 +1,4 @@
+import { landmarkDef } from '../../src/data/landmarks';
 import { expect, test, type Page } from '@playwright/test';
 import { CLAIM_TICKS, FIXTURES } from '../../src/data/claims';
 import { LANDMARKS } from '../../src/data/landmarks';
@@ -10,6 +11,10 @@ import { boot, cameraSettled, quietScreen } from './helpers';
 // the hook the sim holds still between steps, so a woken guard stays where it stood.
 
 const SHOTS = 'docs/review/032';
+/** 053: the Quarry on the round map, its pylon, and a spot south-east of it whose view takes in its corner. */
+const Q = landmarkDef('quarry').area;
+const QP = landmarkDef('quarry').pylon ?? { tx: 0, ty: 0 };
+const QUARRY_NEAR = [Q.x1 + 8, Q.y1 + 5] as const;
 
 /** Kills every landmark guard but `keep`'s through the hook, so the walk there is quiet. */
 async function quiet(page: Page, keep: string | null): Promise<void> {
@@ -33,8 +38,8 @@ async function walk(page: Page, points: readonly (readonly [number, number])[]):
   await page.evaluate((pts) => {
     const h = window.__helpers;
     if (!h) throw new Error('no helpers');
-    // 032's tiles, moved +40 with Region 1 (034).
-    for (const [tx, ty] of pts) h.walkTo((tx + h.ox + 0.5) * 32, (ty + 0.5) * 32);
+    // Tiles of the round map (053).
+    for (const [tx, ty] of pts) h.walkTo((tx + 0.5) * 32, (ty + 0.5) * 32);
   }, points);
 }
 
@@ -43,16 +48,21 @@ test.describe('review screenshots (032)', () => {
 
   // Each from a fresh start with its own guards in place (the others are cleared so the walk is quiet), once the
   // banner has gone.
+  // 053: each walked to from just below its area, the round map's tiles from data.
+  const below = (id: string): (readonly [number, number])[] => {
+    const a = landmarkDef(id).area;
+    return [[Math.floor((a.x0 + a.x1) / 2), a.y1 + 3]];
+  };
   const views: [string, string, (readonly [number, number])[]][] = [
-    ['quarry', '01-quarry', [[30, 25], [23, 22], [22, 19]]],
-    ['old-grove', '02-old-grove', [[12, 26], [11, 20]]],
-    ['ley-grotto', '03-ley-grotto', [[66, 18], [72, 26]]],
-    ['reed-marsh', '04-reed-marsh', [[66, 30], [69, 34]]],
-    ['ruined-cache', '05-ruined-cache-sealed', [[12, 30], [11, 35], [11, 36]]],
-    ['frozen-grotto', '06-frozen-grotto', [[14, 15], [15, 11]]],
-    ['west-spring', '07-west-spring', [[10, 34]]],
-    ['south-east-spring', '08-south-east-spring', [[66, 41]]],
-    ['north-spring', '09-north-spring', [[26, 11]]],
+    ['quarry', '01-quarry', below('quarry')],
+    ['old-grove', '02-old-grove', below('old-grove')],
+    ['ley-grotto', '03-ley-grotto', below('ley-grotto')],
+    ['reed-marsh', '04-reed-marsh', below('reed-marsh')],
+    ['ruined-cache', '05-ruined-cache-sealed', below('ruined-cache')],
+    ['frozen-grotto', '06-frozen-grotto', below('frozen-grotto')],
+    ['west-spring', '07-west-spring', below('west-spring')],
+    ['south-east-spring', '08-south-east-spring', below('south-east-spring')],
+    ['north-spring', '09-north-spring', below('north-spring')],
   ];
   for (const [id, file, points] of views) {
     test(`the landmark ${id}`, async ({ page }) => {
@@ -74,7 +84,7 @@ test.describe('review screenshots (032)', () => {
     await page.evaluate(() => window.__GAME__?.step(1));
     await cameraSettled(page);
     await page.screenshot({ path: `${SHOTS}/10-minimap-before-quarry.png`, clip: { x: 0, y: 0, width: 1280, height: 240 } });
-    await walk(page, [[30, 25], [23, 22]]);
+    await walk(page, [QUARRY_NEAR, [Q.x1 + 3, Q.y1 + 3]]);
     // The banner held still on the tween clock once it has faded in.
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().landmarks))?.banner).toBe('quarry');
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().landmarks))?.bannerAlpha, { intervals: [10] }).toBe(1);
@@ -89,7 +99,7 @@ test.describe('review screenshots (032)', () => {
     test.setTimeout(150_000);
     await boot(page);
     await quiet(page, null);
-    await walk(page, [[30, 25], [23, 22], [21, 21]]);
+    await walk(page, [QUARRY_NEAR, [QP.tx, QP.ty + 1]]);
     await bannersGone(page);
     // The shrine claimed just now, so the Quarry's claim lands before the ports' first push.
     await page.evaluate((ticks) => {
@@ -100,7 +110,7 @@ test.describe('review screenshots (032)', () => {
       g.step(ticks + 2);
     }, CLAIM_TICKS);
     // Step a little to the east so the line home shows, then wait for a stone mote leaving the Quarry.
-    await walk(page, [[23, 22]]);
+    await walk(page, [[QP.tx + 2, QP.ty + 2]]);
     await expect
       .poll(
         async () => {
@@ -134,7 +144,8 @@ test.describe('review screenshots (032)', () => {
     await boot(page);
     await quiet(page, null);
     // Beside it, to its west, so the player never hides it.
-    await walk(page, [[12, 30], [10, 39], [10, 38]]);
+    const C = landmarkDef('ruined-cache').area;
+    await walk(page, [[C.x0 + 4, C.y1 + 4], [C.x0 + 4, C.y0 + 3], [C.x0 + 4, C.y0 + 2]]);
     await bannersGone(page);
     await cameraSettled(page, 20_000);
     await page.screenshot({ path: `${SHOTS}/15-cache-sealed-close.png` });

@@ -38,7 +38,7 @@ async function toMeadow(page: Page, slot: string): Promise<void> {
     if (!g || !h) throw new Error('no game');
     h.toHall();
     // South of the ruin field (017), on open ground.
-    h.walkTo((44.5 + h.ox) * 32, 19.5 * 32);
+    h.walkTo((44.5 + h.ox) * 32, (19.5 + h.oy) * 32);
     window.__helpers?.hold(s);
     g.spawnChampionPack(['husk', 'husk', 'husk'], null);
     g.step(20);

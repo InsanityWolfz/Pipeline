@@ -13,7 +13,7 @@ import type { SoundView } from './SoundView';
 // Returns whether the barrier fell this frame, so FeelView doesn't also play the tutorial
 // gate's sound for it.
 
-export function playHollows(ev: SimEvents, j: JuiceView, s: SoundView): boolean {
+export function playHollows(ev: SimEvents, j: JuiceView, s: SoundView, v: { x: number; y: number; width: number; height: number }): boolean {
   for (const b of ev.blocked) {
     s.play(SOUNDS.shieldClang);
     j.burst('blockSpark', b.x, b.y);
@@ -50,7 +50,12 @@ export function playHollows(ev: SimEvents, j: JuiceView, s: SoundView): boolean 
   const fell = ev.gates.some((g) => g.gate === 'hollows');
   if (fell) {
     s.play(SOUNDS.barrierCollapse);
-    for (const t of HOLLOWS.gate) j.burst('barrierShards', (t.tx + 0.5) * TILE_SIZE, (t.ty + 0.5) * TILE_SIZE);
+    // 053: the barrier rings Region 1; its shards burst along the stretch in view (every other tile, as the gap's did).
+    for (const [i, t] of HOLLOWS.gate.entries()) {
+      const x = (t.tx + 0.5) * TILE_SIZE;
+      const y = (t.ty + 0.5) * TILE_SIZE;
+      if (i % 2 === 0 && x >= v.x && x <= v.x + v.width && y >= v.y && y <= v.y + v.height) j.burst('barrierShards', x, y);
+    }
     j.shake('medium');
   }
   return fell;

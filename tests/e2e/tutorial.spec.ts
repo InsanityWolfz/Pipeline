@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { boot, watchErrors } from './helpers';
+import { OVERWORLD } from '../../src/data/overworld';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { AFTER_REFILL, REFILL_GOAL, SECOND_LINE_GOAL } from '../fixtures/foundrySteps';
 
@@ -27,12 +28,14 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
   const errors = watchErrors(page);
   await boot(page, '?start=tutorial');
   // Page-side helpers for this run: leaving the foundry, the route to the shrine and fighting a group clear (017).
-  await page.evaluate((tile) => {
+  await page.evaluate(([tile, gate, pylon]) => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     g.step(0);
     const w = window as unknown as Record<string, unknown>;
+    w.pylon = pylon;
+    w.gate = gate;
     const toward = (from: number, to: number): -1 | 0 | 1 => (Math.abs(to - from) < 2 ? 0 : to > from ? 1 : -1);
     /** Walks to a door tile's inside neighbour, then steps through it. */
     w.through = (tx: number, ty: number, dx: -1 | 0 | 1, dy: -1 | 0 | 1, to: string) => {
@@ -40,10 +43,8 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
       for (let i = 0; i < 90 && g.getState().room !== to; i++) g.step(1, { moveX: dx, moveY: dy });
       if (g.getState().room !== to) throw new Error(`could not reach ${to}`);
     };
-    /** From the foundry's stairs, east along the dirt path and in through the shrine's gap (src/data/overworld.ts). */
-    w.toShrine = () => {
-      for (const [tx, ty] of [[41.5, 22.5], [52.5, 21.5], [60.5, 18.5], [66.5, 17.5], [66.5, 13.5]]) h.walkTo(((tx ?? 0) + h.ox) * tile, (ty ?? 0) * tile);
-    };
+    /** From the foundry, by the north-east road to below the shrine's gap (053: src/data/roads.ts). */
+    w.toShrine = () => h.walkTo((gate.tx + 0.5) * tile, (gate.ty + 2.5) * tile);
     /** Fights until a group is dead, kiting and rolling, picking ammo it has; anything else that comes close is fought first. */
     w.clearGroup = (group: string) => {
       let s = g.getState();
@@ -90,11 +91,11 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
       }
       h.collect();
     };
-  }, T);
+  }, [T, OVERWORLD.shrine.gate[1] ?? OVERWORLD.shrine.pylon, OVERWORLD.shrine.pylon] as const);
 
-  // 1. Pick up the tube from its stone (tile 40,33; +40 since 034), just north of where the player wakes.
+  // 1. Pick up the tube from its stone (tile 40,33 before 034; `ox`, `oy` since), just north of where the player wakes.
   await page.evaluate((tile) => {
-    window.__helpers?.walkTo((40.5 + (window.__helpers?.ox ?? 0)) * tile, 34.5 * tile);
+    window.__helpers?.walkTo((40.5 + (window.__helpers?.ox ?? 0)) * tile, (34.5 + (window.__helpers?.oy ?? 0)) * tile);
     window.__GAME__?.step(1, { interact: true });
   }, T);
   expect(await done(page)).toBe(1);
@@ -114,15 +115,16 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
   });
   expect(await done(page)).toBe(3);
 
-  // 4. Up the path round the mound's east side into the ruin field, and clear the Husk pack.
+  // 4. Up round the foundry ruin's east side into the ruin field (053: the ruin is 9 tiles wide), and clear the Husk pack.
   await page.evaluate(() => {
     const w = window as unknown as { clearGroup: (group: string) => void };
     const h = window.__helpers;
     const X = h?.ox ?? 0;
+    const Y = h?.oy ?? 0;
     h?.walkTo((41.5 + X) * 32, window.__GAME__?.getState().player.y ?? 0);
-    h?.walkTo((41.5 + X) * 32, 22.5 * 32);
-    h?.walkTo((43.5 + X) * 32, 22.5 * 32);
-    h?.walkTo((43.5 + X) * 32, 17.5 * 32);
+    h?.walkTo((41.5 + X) * 32, (22.5 + Y) * 32);
+    h?.walkTo((45.5 + X) * 32, (22.5 + Y) * 32);
+    h?.walkTo((45.5 + X) * 32, (17.5 + Y) * 32);
     w.clearGroup('field');
   });
   expect(await done(page)).toBe(4);
@@ -188,15 +190,19 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
   await page.evaluate((tile) => {
     const g = window.__GAME__;
     const h = window.__helpers;
-    const w = window as unknown as { through: (...a: unknown[]) => void; toShrine: () => void; clearGroup: (group: string) => void };
+    const w = window as unknown as { through: (...a: unknown[]) => void; toShrine: () => void; clearGroup: (group: string) => void; pylon: { tx: number; ty: number }; gate: { tx: number; ty: number } };
     if (!g || !h) throw new Error('no game');
     w.through(23, 8, 1, 0, 'overworld');
     w.toShrine();
+    h.walkTo((w.gate.tx + 0.5) * tile, (w.gate.ty - 1.5) * tile);
+    // 053: the shrine stands in open ring 2 ground now; packs keep out of its surroundings (population.ts), so the
+    // Warden's fight is its own, played unaided.
     w.clearGroup('shrine');
     // Around the pylon's east side, so it never stands in the way.
-    h.walkTo((68.5 + h.ox) * tile, g.getState().player.y);
-    h.walkTo((68.5 + h.ox) * tile, 9.5 * tile);
-    h.walkTo((66.5 + h.ox) * tile, 9.5 * tile);
+    const { tx, ty } = w.pylon;
+    h.walkTo((tx + 2.5) * tile, g.getState().player.y);
+    h.walkTo((tx + 2.5) * tile, (ty + 1.5) * tile);
+    h.walkTo((tx + 0.5) * tile, (ty + 1.5) * tile);
     // A roaming pack that wandered up meanwhile is fought off first, so the claim's hold isn't broken (039: with the
     // Warden no longer pushed by arrows, the shrine fight's timing moved and a population pack can arrive here).
     for (let i = 0; i < 3; i++) {
@@ -204,7 +210,7 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
       const near = s.enemies.find((e) => e.room === s.room && Math.hypot(e.x - s.player.x, e.y - s.player.y) < 200);
       if (!near) break;
       w.clearGroup(near.group);
-      h.walkTo((66.5 + h.ox) * tile, 9.5 * tile);
+      h.walkTo((tx + 0.5) * tile, (ty + 1.5) * tile);
     }
     g.step(1, { interact: true });
     g.step(130);
