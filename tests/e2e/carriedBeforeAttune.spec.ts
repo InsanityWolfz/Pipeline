@@ -1,14 +1,14 @@
 import { expect, test } from '@playwright/test';
-import { CARRIED_HINT } from '../../src/data/hints';
 import { HUD_LAYOUT } from '../../src/data/hudLayout';
 import { boot, watchErrors } from './helpers';
 
 // 047.9 (Shaun, 2026-10-20: "left fires carried until attuned"): before the tube attunes there's no intake, so left
 // click fires the carried bar's selected round, and the intake bar shows that round, not the fist. As the attune
-// (019) ends, a one-time hint says right click is the carried items.
+// (019) ends, a one-time hint says right click is the carried items. 051 (B.7): the hint is no longer a banner line: a
+// small mouse with its right button lit sits beside the carried bar, and as the attune ends the old left-click slot
+// shrinks down into the carried bar while the intake's slot appears in its place.
 
 const T = 32;
-const HINT = CARRIED_HINT.text('Right click');
 
 test("a new game's first Husk fight fires arrows on left click", async ({ page }) => {
   test.setTimeout(120_000);
@@ -71,10 +71,18 @@ test("a new game's first Husk fight fires arrows on left click", async ({ page }
   expect(errors).toEqual([]);
 });
 
-test('the right click hint shows once, as the attune ends', async ({ page }) => {
+test('a mouse beside the carried bar shows right click; the slot swap plays once, as the attune ends (051)', async ({ page }) => {
   test.setTimeout(60_000);
   const errors = watchErrors(page);
   await boot(page, '?start=field');
+  const hud = () => page.evaluate(() => window.__GAME__?.ui().hud);
+  // The mouse sits right of the carried bar, level with it.
+  await expect.poll(async () => (await hud())?.carriedHint.shown).toBe(true);
+  const h0 = await hud();
+  expect(h0?.carriedHint.input).toBe('mouse');
+  expect(h0?.carriedHint.box.x).toBeGreaterThanOrEqual((h0?.hotbar.x ?? 0) + (h0?.hotbar.w ?? 0));
+  expect(h0?.carriedHint.box.y).toBeGreaterThanOrEqual(h0?.hotbar.y ?? 0);
+  expect(h0?.carriedHint.swaps).toBe(0);
   const attuning = await page.evaluate(() => {
     const g = window.__GAME__;
     const h = window.__helpers;
@@ -86,18 +94,19 @@ test('the right click hint shows once, as the attune ends', async ({ page }) => 
   expect(attuning.link.attunePulse).toBeGreaterThan(0);
   // Not while the attune plays.
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.step(0)))?.link.attunePulse).toBeGreaterThan(0);
-  expect((await page.evaluate(() => window.__GAME__?.ui().hint))?.seen).toEqual([]);
+  expect((await hud())?.carriedHint.swaps).toBe(0);
+  await page.evaluate(() => window.__GAME__?.tweenSpeed(0.2));
   await page.evaluate((ticks) => window.__GAME__?.step(ticks), attuning.link.attunePulse);
-  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hint))?.text).toBe(HINT);
-  // It fades out and never comes back while the game goes on.
+  await expect.poll(async () => (await hud())?.carriedHint.swapping).toBe(true);
   await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
-  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hint))?.text, { timeout: 15_000 }).toBeNull();
+  await expect.poll(async () => (await hud())?.carriedHint.swapping, { timeout: 15_000 }).toBe(false);
+  // Never again while the game goes on.
   await page.evaluate(() => {
     window.__helpers?.toHall();
     window.__helpers?.toFoundry();
     window.__GAME__?.step(600);
   });
-  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().schematics.bannerIdle)) ?? false).toBe(true);
-  expect((await page.evaluate(() => window.__GAME__?.ui().hint))?.seen).toEqual([HINT]);
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().camera.fading)) ?? true).toBe(false);
+  expect((await hud())?.carriedHint.swaps).toBe(1);
   expect(errors).toEqual([]);
 });

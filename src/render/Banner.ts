@@ -6,9 +6,9 @@ import { LANDMARKS } from '../data/landmarks';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 
-/** One banner: what it's about (`kind`, `id`, for the test hook), a small kicker line and the name under it. A hint (047.9) has no kicker: its one line is the name. */
+/** One banner: what it's about (`kind`, `id`, for the test hook), a small kicker line and the name under it. */
 export interface BannerEntry {
-  kind: 'discovery' | 'schematic' | 'hint';
+  kind: 'discovery' | 'schematic';
   id: string;
   kicker: string;
   name: string;
@@ -87,20 +87,4 @@ export class Banner {
     this.on = null;
     for (const o of parts) o.setVisible(false);
   }
-}
-
-/** The one-time hints (047.9) for the test hook: the line showing now and how strongly, and every hint started lately. */
-export interface HintShown {
-  text: string | null;
-  alpha: number;
-  seen: string[];
-}
-
-export const NO_HINT_SHOWN: HintShown = { text: null, alpha: 0, seen: [] };
-
-/** What the banner shows of the hints (047.9), for `ui().hint`. */
-export function hintShown(banner: Banner): HintShown {
-  const on = banner.current;
-  const hint = on?.kind === 'hint' ? on : null;
-  return { text: hint?.name ?? null, alpha: hint?.alpha ?? 0, seen: banner.seen.filter((b) => b.kind === 'hint').map((b) => b.name) };
 }

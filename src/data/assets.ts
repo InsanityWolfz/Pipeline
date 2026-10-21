@@ -38,6 +38,8 @@ export const SPRITES = {
   pointer: 'pointer',
   /** The fist the tube slot shows when the next press is a punch (025). */
   hudFist: 'hud-fist',
+  /** 051 (B.7): the mouse beside the carried bar, its right button lit: right click uses the carried bar. */
+  hudMouse: 'hud-mouse',
   /** 051 (B.4): the glint that now and then twinkles on a harvestable node. */
   nodeSparkle: 'node-sparkle',
   iconArrow: 'icon-arrow',

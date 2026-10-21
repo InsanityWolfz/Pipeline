@@ -14,10 +14,7 @@ import { SupplyView } from './SupplyView';
 import { PortView } from './PortView';
 import { HealingView, NO_HEALING_SHOWN } from './HealingView';
 import { LandmarkView, NO_LANDMARKS_SHOWN } from './LandmarkView';
-import { Banner, hintShown, NO_HINT_SHOWN } from './Banner';
-import { CARRIED_HINT } from '../data/hints';
-import { keyLabel } from './keyHint';
-import { settings } from './flow/settingsStore';
+import { Banner } from './Banner';
 import { NO_RESEARCH_SHOWN, ResearchView } from './ResearchView';
 import { NO_SCHEMATICS_SHOWN, SchematicView } from './SchematicView';
 import { HollowsView, NO_HOLLOWS_SHOWN } from './HollowsView';
@@ -26,10 +23,10 @@ import { NO_TALENT_FX, TalentFxView } from './TalentFxView';
 import { MineView, NO_MINES_SHOWN } from './MineView';
 
 /** What the room views report to the test hook's `ui()`. */
-export type RoomUiState = Pick<UiState, 'minimap' | 'foundryMap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows' | 'relics' | 'talentFx' | 'mines' | 'hint'>;
+export type RoomUiState = Pick<UiState, 'minimap' | 'foundryMap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows' | 'relics' | 'talentFx' | 'mines'>;
 
 /** The room views' part of `ui()` before the scene has built them. */
-export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [], hover: null }, foundryMap: NO_FOUNDRY_MAP, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN, relics: NO_RELICS_SHOWN, talentFx: NO_TALENT_FX, mines: NO_MINES_SHOWN, hint: NO_HINT_SHOWN };
+export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [], hover: null }, foundryMap: NO_FOUNDRY_MAP, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN, relics: NO_RELICS_SHOWN, talentFx: NO_TALENT_FX, mines: NO_MINES_SHOWN };
 
 // The ground on screen: a tiled room (the foundry) or the overworld's terrain
 // with its landmarks (017), plus the corner minimap while outside, and the
@@ -111,8 +108,6 @@ export class RoomViews {
     this.relics.update(sim, events, shown, tweenMs);
     this.talentFx.update(sim, events, shown, tweenMs);
     this.mines.update(sim, events, shown, tweenMs);
-    // 047.9: a one-time hint the sim calls for (the carried items' as the attune ends), with the key bound to it.
-    for (const h of events.hints) if (h.id === CARRIED_HINT.id) this.banner.push({ kind: 'hint', id: h.id, kicker: '', name: CARRIED_HINT.text(keyLabel(settings().bindings.use)) });
     this.banner.update(tweenMs);
   }
 
@@ -138,7 +133,6 @@ export class RoomViews {
       relics: this.relics.shown,
       talentFx: this.talentFx.shown,
       mines: this.mines.shown,
-      hint: hintShown(this.banner),
     };
   }
 }

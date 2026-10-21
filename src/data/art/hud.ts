@@ -179,6 +179,16 @@ const MARKER: Shape[] = [
   line([-2, -17.4, -2, -10.2], 0.8, { id: 'snow', alpha: 0.7 }),
 ];
 
+// 051 (B.7): the mouse (10x14): a pale body with an ink edge, its two buttons split down the middle, the right one
+// lit cyan like the tube, the left one dark.
+const MOUSE: Shape[] = [
+  rect(0.6, 0.6, 8.8, 12.8, 4.2, { fill: vertical('robe', 'mask', 0, 14), outline: true }),
+  path('M 5 0.9 L 5 5.6 L 9.1 5.6 L 9.1 4.4 Q 9.1 0.9 5.6 0.9 Z', { fill: 'cyan', glow: { color: 'cyan-glow', blur: 3 } }),
+  path('M 5 0.9 L 5 5.6 L 0.9 5.6 L 0.9 4.4 Q 0.9 0.9 4.4 0.9 Z', flat('carve-light')),
+  line([5, 0.9, 5, 5.6], 0.6, 'ink'),
+  line([0.9, 5.6, 9.1, 5.6], 0.6, 'ink'),
+];
+
 // The objective tick (9x9): a ley check mark.
 const TICK: Shape[] = [{ ...line([1.2, 4.8, 3.6, 7.4, 7.8, 1.4], 1.6, 'cyan-glow', true), glow: { color: 'cyan', blur: 3 } }];
 
@@ -204,6 +214,7 @@ export const HUD_SPRITES_VECTOR: readonly VectorSprite[] = [
   { key: SPRITES.pointer, size: [10, 14], anchor: [1, 1], frames: [POINTER] },
   sprite(TUTORIAL_SPRITES.keyCap, [11, 11], KEY_CAP),
   sprite(TUTORIAL_SPRITES.tick, [9, 9], TICK),
+  sprite(SPRITES.hudMouse, [10, 14], MOUSE),
   sprite(SPRITES.buildPulse, [PULSE.w, PULSE.h], BUILD_PULSE_RING),
   { key: TUTORIAL_SPRITES.marker, size: [16, 20], anchor: [8, 20], frames: [MARKER] },
 ];

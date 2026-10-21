@@ -157,4 +157,32 @@ test.describe('review screenshots (051)', () => {
     if (!canvas) throw new Error('no canvas');
     await page.screenshot({ path: `${SHOTS}/06b-foundry-minimap-close.png`, clip: { x: canvas.x + canvas.width * 0.66, y: canvas.y, width: canvas.width * 0.34, height: canvas.height * 0.3 } });
   });
+
+  test('07 the mouse beside the carried bar, and the slot swap as the attune ends', async ({ page }) => {
+    test.setTimeout(90_000);
+    await boot(page, '?start=field');
+    await quietScreen(page);
+    await expect.poll(async () => (await ui(page))?.hud?.carriedHint.shown).toBe(true);
+    const canvas = await page.locator('canvas').boundingBox();
+    if (!canvas) throw new Error('no canvas');
+    const k = canvas.width / VIEW_WIDTH;
+    const bottom = { x: canvas.x + canvas.width * 0.3, y: canvas.y + canvas.height * 0.72, width: canvas.width * 0.4, height: canvas.height * 0.28 };
+    await page.screenshot({ path: `${SHOTS}/07a-mouse-icon.png`, clip: bottom });
+    const pulse = await page.evaluate(() => {
+      const g = window.__GAME__;
+      const h = window.__helpers;
+      if (!g || !h) throw new Error('no game');
+      h.toFoundry();
+      return g.step(1).link.attunePulse;
+    });
+    await quietScreen(page);
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(0.05));
+    await page.evaluate((t) => window.__GAME__?.step(t), pulse);
+    await expect.poll(async () => (await ui(page))?.hud?.carriedHint.swapping).toBe(true);
+    await page.waitForTimeout(7000);
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(0));
+    await page.screenshot({ path: `${SHOTS}/07b-slot-swap.png`, clip: bottom });
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
+    expect(k).toBeGreaterThan(0);
+  });
 });
