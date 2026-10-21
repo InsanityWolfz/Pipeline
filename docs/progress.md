@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: 057 built
+**Changed:** on `claude/fervent-hamilton-u3qlqf`, the sandbox's panels are click-open pop-outs: a "Loadout" tab on the left edge and a "Spawn" tab on the right, always shown; a click slides the panel out (0.15 s) with 056's rows, a second closes it. Both start closed; Esc closes them before pausing; the backquote opens or closes both. The waypoint arrow's stutter is fixed (057.6: it was placed against the previous frame's camera view; now placed again once the camera has followed the player). Render and data only. Raised 057.7–057.13. New docs/review/057 shots; 044's and 056's retaken.
+
+**Next:** review, then Shaun's playtest of `?sandbox` and a walk with the waypoint arrow.
+
 ## 2026-10-21: 057 approved
 **Changed:** added Shaun's waypoint-arrow stutter fix to 057; Shaun approved it on draft (proposals stand).
 
