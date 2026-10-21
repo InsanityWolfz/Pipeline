@@ -55,8 +55,12 @@ export function volleyRounds(state: Pick<SimState, 'link'>): VolleyRound[] {
   return fed.map((r, i) => ({ ...r, lane: lanes[i] ?? 0 }));
 }
 
-/** An entrance's place in the fan, from data (048). */
-const laneOf = (entrance: number): number => INTAKE.entrances[entrance]?.lane ?? entrance;
+/** An entrance's place in the fan, from data (048). An entrance with no lane in INTAKE is a bug. */
+function laneOf(entrance: number): number {
+  const lane = INTAKE.entrances[entrance]?.lane;
+  if (lane === undefined) throw new Error(`entrance ${entrance} has no lane in INTAKE`);
+  return lane;
+}
 
 /**
  * What the next fire press does: the volley; before the tube attunes, the carried bar's selected item if any is carried
