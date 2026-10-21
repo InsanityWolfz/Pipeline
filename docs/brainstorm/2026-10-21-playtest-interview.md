@@ -13,3 +13,9 @@ Oct 21, 2026 · Shaun's answers to the spec interview on docs/brainstorm/2026-10
 - **Minimap fog:** any tile that has been on screen is revealed for good; pylons, the foundry and arenas show as icons once discovered; water and other scenery stay off the minimap (rec).
 - **Sub-steps:** "do the indented sub lines and maybe even include a little picture of the resource they have to get so its very clear."
 - **Stash:** a big grid like the inventory, 8 wide, scrolling, above the inventory, same clicks both ways (rec).
+
+## Round 3
+- **Foundry minimap:** in the minimap's place inside the foundry: conduits as lines, machines as dots, icons for the tube, bench, stash, entrances and ports; no moving items (rec).
+- **Bench:** moved just inside the door; redrawn as a workbench with a big magnifying glass on one side and an armor rack on the other (rec).
+- **Title screen:** the wanderer gets a slow breathing bob, the cloak and hose sway in the wind, the tube's glow pulses; the logo and buttons get bigger, centred where they are (rec).
+- **Safe items:** anything picked up, crafted or taken from a crate or the stash inside the foundry is banked at once (rec).
