@@ -29,5 +29,5 @@ In the sandbox (044), every option is always visible: the loadout controls and a
 
 ## Open questions
 - **056.1 The backquote key.** Today it opens the panel. Proposal: it now hides and shows both strips together (for clean screenshots), and they start shown.
-- **056.2 Which keys the list shows.** Proposal: every bound action that does something in the sandbox (move, fire, use carried item, slots 1–5, E interact, C craft, I inventory, T talents, the hide key, F feedback, Esc pause), one line each as "key  action", in 042's names; mouse buttons as "Left click" and "Right click".
+- **056.2 Which keys the list shows.** Proposal: the bound actions that do something in the sandbox, in 042's names and order: Move (the four keys on one line), Roll, Interact, Crafting menu, Inventory, Talents, Use carried item, Carried slots 1–5 (one line), Feedback note, and the hide key (056.1); plus the fixed ones, Left click (fire), Esc (pause). Build, Research, Rotate and Flip are left off: they work only in the foundry, which the sandbox can't reach.
 - **056.3 The objective band and minimap space.** The sandbox has no objectives (044.5), so the right column runs from under the minimap to above the hotbar. Proposal: keep both columns at today's width and let the camera stay centred on the player (the room is wide enough to keep the player clear of both).
