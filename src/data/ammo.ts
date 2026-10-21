@@ -1,6 +1,6 @@
 import { SPRITES } from './assets';
 import { MINE_SPRITES } from './mineAssets';
-import { elementOf, ROUNDS, roundBase, roundTags } from './tags';
+import { elementOf, ROUNDS, roundBase, roundTags, tagDef } from './tags';
 
 // Ammo the tube can fire. Starting values from specs 003, 005 and 029; tune in playtest.
 // Each tagged round (029) is derived from its base and its tags (src/data/tags.ts).
@@ -151,11 +151,13 @@ const BASE_AMMO: Readonly<Record<string, AmmoDef>> = {
   },
 };
 
-/** A tagged round: its base's numbers, its own id and tags, and its element's damage type. */
+/** A tagged round: its base's numbers (its speed scaled by its tags', 054), its own id and tags, and its element's damage type. */
 function tagged(round: string): AmmoDef {
   const base = BASE_AMMO[roundBase(round)];
   if (!base) throw new Error(`No base ammo for '${round}'`);
-  return { ...base, id: round, itemId: round, tags: roundTags(round), damageType: elementOf(round)?.damageType ?? base.damageType };
+  const tags = roundTags(round);
+  const speed = tags.reduce((v, t) => v * (tagDef(t).speedScale ?? 1), base.speed);
+  return { ...base, id: round, itemId: round, tags, speed, damageType: elementOf(round)?.damageType ?? base.damageType };
 }
 
 /** Every ammo: the four bases, then every legal tagged round (029). */

@@ -21,6 +21,8 @@ export interface TagDef {
   keyword: KeywordId;
   /** An element's damage type, which the round takes on. */
   damageType?: DamageType;
+  /** Its rounds fly at this share of their base's speed (054: a homing bolt slower, so it has time to home). */
+  speedScale?: number;
 }
 
 /**
@@ -30,8 +32,11 @@ export interface TagDef {
  */
 export const COLD = { chillPerHit: 1, slowPerStack: 0.15, stacksToFreeze: 4, stackTicks: 120, freezeTicks: 90, bossFreezeTicks: 45, refreezeTicks: 120 } as const;
 
-/** Homing: at launch it locks onto the living enemy nearest the cursor within `lockRadius` px, then turns toward it by at most `turnDegrees` a tick. */
-export const HOMING = { lockRadius: 64, turnDegrees: 4 } as const;
+/**
+ * Homing: at launch it locks onto the living enemy nearest the cursor within `lockRadius` px, then turns toward it by
+ * at most `turnDegrees` a tick. 054 (Shaun): it flies at `speedScale` of its base's speed, so it has time to home.
+ */
+export const HOMING = { lockRadius: 64, turnDegrees: 4, speedScale: 0.6 } as const;
 
 /**
  * The Split: a Split round that hits an enemy bursts into `shards` shards, `360 / shards` degrees apart, each
@@ -48,7 +53,7 @@ export const CLUSTER = { delayTicks: 12, count: 4, distance: 40, damage: 8, radi
 export const TAGS: Readonly<Record<string, TagDef>> = {
   // 039 (Q12): an element tags any family; a shape stays with one.
   frost: { id: 'frost', slot: 'element', prefix: 'Frost', appliesTo: ['arrow', 'bomb', 'ley-bolt', 'landmine'], keyword: 'cold', damageType: 'cold' },
-  homing: { id: 'homing', slot: 'shape', prefix: 'Homing', appliesTo: ['ley-bolt'], keyword: 'homing' },
+  homing: { id: 'homing', slot: 'shape', prefix: 'Homing', appliesTo: ['ley-bolt'], keyword: 'homing', speedScale: HOMING.speedScale },
   split: { id: 'split', slot: 'shape', prefix: 'Split', appliesTo: ['ley-bolt'], keyword: 'split' },
   cluster: { id: 'cluster', slot: 'shape', prefix: 'Cluster', appliesTo: ['bomb'], keyword: 'cluster' },
 };

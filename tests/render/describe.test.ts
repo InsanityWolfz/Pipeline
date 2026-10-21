@@ -35,6 +35,11 @@ describe('a round', () => {
     expect(texts(d.breakdown)[0]).toBe("Damage 14 × (1 + 10% Fletcher's Eye + 6% Hard Bore) = 16.2");
   });
 
+  it('a homing ley bolt’s Shot rule reads its own, slower speed (054)', () => {
+    const lines = texts(describeRound(player(), 'ley-bolt+homing').breakdown);
+    expect(lines.find((l) => l.startsWith('Shot'))).toBe('Shot: Flies straight at the cursor up to 320 px at 180 px/s. Stops at walls and Shield fronts.');
+  });
+
   it('one bonus reads "1 bonus"; a new player sees no hint (040.7)', () => {
     expect(texts(describeRound(player('a1'), 'arrow').summary)).toEqual(['15.4 dmg · 4.0/s', '1 bonus · hold Shift']); // 041: was 11
     const fresh = describeRound(player(), 'arrow');

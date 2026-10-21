@@ -3,7 +3,7 @@ import { BULWARK } from './bulwark';
 import { BOSS_WEIGHT } from './combat';
 import { CHARGER, SHARDBACK } from './hollowsEnemies';
 import { ROLLBREAKER } from './relics';
-import { CLUSTER, COLD, HOMING, SPLIT } from './tags';
+import { CLUSTER, COLD, HOMING, ROUNDS, roundTags, SPLIT } from './tags';
 import { BLASTFLETCH } from './talents';
 import type { StatId } from './statDefs';
 
@@ -81,6 +81,8 @@ export type NounId = keyof typeof NOUNS;
 
 const ARROW = straightAmmo('arrow');
 const LEY_BOLT = straightAmmo('ley-bolt');
+/** 054: the homing rounds fly slower than their base, so a Shot's speed is read for each of them. */
+const HOMING_SPEEDS = Object.fromEntries(ROUNDS.filter((r) => roundTags(r).includes('homing')).map((r) => [r, straightAmmo(r).speed]));
 const BOMB = lobAmmo('bomb');
 const LANDMINE = mineAmmo('landmine');
 
@@ -107,7 +109,7 @@ const family = (id: KeywordId, name: string): KeywordDef => kw(id, name, 'family
 export const KEYWORD_LIST: readonly KeywordDef[] = [
   kw('shot', 'Shot', 'delivery', 'Flies straight at the cursor up to {range} at {speed}. Stops at walls and {{shield}} fronts.', {
     range: per('px', { arrow: ARROW.range, 'ley-bolt': LEY_BOLT.range, shard: SPLIT.range }),
-    speed: per('px-per-s', { arrow: ARROW.speed, 'ley-bolt': LEY_BOLT.speed, shard: SPLIT.speed }),
+    speed: per('px-per-s', { arrow: ARROW.speed, 'ley-bolt': LEY_BOLT.speed, shard: SPLIT.speed, ...HOMING_SPEEDS }),
   }, ['damage', 'fire-rate', 'range', 'speed']),
   kw('lob', 'Lob', 'delivery', 'Arcs over everything to the cursor, up to {range} away, and lands. Ignores {{shield}}.', {
     range: per('px', { bomb: BOMB.maxRange }),
