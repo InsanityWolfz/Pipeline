@@ -165,7 +165,6 @@ test.describe('review screenshots (051)', () => {
     await expect.poll(async () => (await ui(page))?.hud?.carriedHint.shown).toBe(true);
     const canvas = await page.locator('canvas').boundingBox();
     if (!canvas) throw new Error('no canvas');
-    const k = canvas.width / VIEW_WIDTH;
     const bottom = { x: canvas.x + canvas.width * 0.3, y: canvas.y + canvas.height * 0.72, width: canvas.width * 0.4, height: canvas.height * 0.28 };
     await page.screenshot({ path: `${SHOTS}/07a-mouse-icon.png`, clip: bottom });
     const pulse = await page.evaluate(() => {
@@ -179,10 +178,10 @@ test.describe('review screenshots (051)', () => {
     await page.evaluate(() => window.__GAME__?.tweenSpeed(0.05));
     await page.evaluate((t) => window.__GAME__?.step(t), pulse);
     await expect.poll(async () => (await ui(page))?.hud?.carriedHint.swapping).toBe(true);
-    await page.waitForTimeout(7000);
+    // Half way through the shrink (the tweens slowed to a twentieth), then held still for the shot.
+    await expect.poll(async () => (await ui(page))?.hud?.carriedHint.progress ?? 0, { timeout: 30_000, intervals: [50] }).toBeGreaterThanOrEqual(0.5);
     await page.evaluate(() => window.__GAME__?.tweenSpeed(0));
     await page.screenshot({ path: `${SHOTS}/07b-slot-swap.png`, clip: bottom });
     await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
-    expect(k).toBeGreaterThan(0);
   });
 });

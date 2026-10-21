@@ -17,8 +17,9 @@ export interface CarriedHintShown {
   input: 'mouse' | 'key';
   label: string;
   box: ScreenBox;
-  /** The slot swap: playing now, and how many times it has played. */
+  /** The slot swap: playing now, how far through its shrink (0..1, on the tween clock), and how many times it has played. */
   swapping: boolean;
+  progress: number;
   swaps: number;
 }
 
@@ -31,7 +32,7 @@ export class CarriedHintView {
   private readonly mouse: GameObjects.Image;
   private readonly keyPanel: GameObjects.Graphics;
   private readonly key: TextLine;
-  private state: CarriedHintShown = { shown: false, input: 'mouse', label: '', box: { x: 0, y: 0, w: 0, h: 0 }, swapping: false, swaps: 0 };
+  private state: CarriedHintShown = { shown: false, input: 'mouse', label: '', box: { x: 0, y: 0, w: 0, h: 0 }, swapping: false, progress: 0, swaps: 0 };
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -90,7 +91,7 @@ export class CarriedHintView {
     const scales = parts.map((p) => p.scaleX * (p === frame ? 1 : HUD_LAYOUT.activeScale));
     for (const [i, p] of parts.entries()) p.setScale(scales[i] ?? 1);
     const to = { x: cell.x + cell.w / 2, y: cell.y + cell.h / 2 };
-    this.state = { ...this.state, swapping: true, swaps: this.state.swaps + 1 };
+    this.state = { ...this.state, swapping: true, progress: 0, swaps: this.state.swaps + 1 };
     grow(0);
     this.scene.tweens.addCounter({
       from: 0,
@@ -99,6 +100,7 @@ export class CarriedHintView {
       ease: 'Quad.InOut',
       onUpdate: (t) => {
         const k = t.getValue() ?? 1;
+        this.state = { ...this.state, progress: t.progress };
         const fade = Math.min(1, Math.max(0, (S.shrinkMs - k * S.shrinkMs) / S.fadeMs));
         for (const [i, p] of parts.entries()) {
           p.setPosition(from.x + from.w / 2 + (to.x - from.x - from.w / 2) * k, from.y + from.h / 2 + (to.y - from.y - from.h / 2) * k);
@@ -107,7 +109,7 @@ export class CarriedHintView {
       },
       onComplete: () => {
         for (const p of parts) p.destroy();
-        this.state = { ...this.state, swapping: false };
+        this.state = { ...this.state, swapping: false, progress: 1 };
       },
     });
     this.scene.tweens.addCounter({ from: 0, to: 1, delay: S.growDelayMs, duration: S.growMs, onUpdate: (t) => grow(t.getValue() ?? 1), onComplete: () => grow(1) });
