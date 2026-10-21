@@ -1,12 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { ADDS_GROUP } from '../../src/data/bulwark';
 import { TILE_SIZE } from '../../src/data/config';
-import { HOLLOWS } from '../../src/data/hollows';
+import { FORUM_ARENA } from '../../src/data/arenas';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { FEET_BOX } from '../../src/data/player';
-import { arenaSealed } from '../../src/sim/arenaLock';
-import { roomBodies } from '../../src/sim/bodies';
-import { tileRect } from '../../src/sim/fixtures';
+import { arenaLocked } from '../../src/sim/arenaLock';
 import { createEnemy } from '../../src/sim/enemies';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
@@ -15,20 +13,20 @@ import { WORLD } from '../../src/sim/world';
 import { movePlayer, run, runUntil } from './fight';
 import { DEF, forum, START } from './forum';
 
-// The arena lock (043, was 041.18): when the Bulwark engages, a ley barrier seals the Sunken
-// Forum's way in; feet can't pass it. E at the sealed door leaves: the player stands just
-// outside, and the fight resets as a leash reset does (the Bulwark back at its start at full
-// health, its adds and bombs gone), so the seal drops. No healing source reaches the arena.
+// The arena lock (043, was 041.18), on the forum's door since 055: when the Bulwark engages with the player inside,
+// the forum locks (043's seal over its door). The door is part of the wall: feet and shots never pass it. E at it from
+// inside leaves: the player stands just outside, and the fight resets as a leash reset does (the Bulwark back at its
+// start at full health, its adds and bombs gone), so the lock drops. No healing source reaches the arena.
 
-const A = HOLLOWS.arena;
+const A = FORUM_ARENA;
 const T = TILE_SIZE;
-const SEAL = A.seal.tiles;
+const SEAL = A.door.tiles;
 const SEAL_ROW = SEAL[0]?.ty ?? 0;
 /** The door's middle column, px. */
 const DOOR_X = ((SEAL[0]?.tx ?? 0) + (SEAL[SEAL.length - 1]?.tx ?? 0) + 1) * (T / 2);
-/** Feet pressed against the seal from inside: the box's top on the seal's bottom edge. */
+/** Feet pressed against the door from inside: the box's top on the door's bottom edge. */
 const INSIDE_DOOR_Y = (SEAL_ROW + 1) * T + FEET_BOX.h / 2;
-const sealedNow = (s: SimState): boolean => arenaSealed(s, A);
+const sealedNow = (s: SimState): boolean => arenaLocked(s, A);
 
 /** The forum with the Bulwark awake (one tick run with the player inside). */
 function awake(dy = 160): ReturnType<typeof forum> {
@@ -38,26 +36,23 @@ function awake(dy = 160): ReturnType<typeof forum> {
   return f;
 }
 
-describe('the seal', () => {
-  it('has its tiles across the forum way in, and a leave tile just outside it, in data', () => {
+describe('the lock', () => {
+  it('has its door across the forum way in, and a leave tile just outside it, in data', () => {
     expect(SEAL.length).toBeGreaterThan(0);
     for (const t of SEAL) expect(t.ty).toBe(A.bounds.y0);
-    expect(A.seal.leaveTo.ty).toBe(SEAL_ROW - 1);
+    expect(A.door.leaveTo.ty).toBe(SEAL_ROW - 1);
     const room = WORLD[OVERWORLD_ROOM];
-    expect(room?.rows[A.seal.leaveTo.ty]?.[A.seal.leaveTo.tx]).not.toBeUndefined();
+    expect(room?.rows[A.door.leaveTo.ty]?.[A.door.leaveTo.tx]).not.toBeUndefined();
   });
 
-  it('is open while the Bulwark idles, and seals the tick it engages, shown in getState()', () => {
+  it('is open while the Bulwark idles, and locks the tick it engages, shown in getState()', () => {
     const { s } = forum(160);
     expect(sealedNow(s)).toBe(false);
-    expect(summarize(s).arenas).toEqual([{ id: A.id, sealed: false, seal: SEAL.map((t) => ({ tx: t.tx, ty: t.ty })) }]);
-    const sealBoxes = SEAL.map(tileRect);
-    expect(roomBodies(s, OVERWORLD_ROOM).obstacles).not.toEqual(expect.arrayContaining(sealBoxes));
+    const door = SEAL.map((t) => ({ tx: t.tx, ty: t.ty }));
+    expect(summarize(s).arenas.find((a) => a.id === A.id)).toEqual({ id: A.id, locked: false, unlocked: true, inside: true, door });
     run(s, 1);
     expect(sealedNow(s)).toBe(true);
-    expect(summarize(s).arenas[0]?.sealed).toBe(true);
-    // Solid to every mover's feet: the player's and enemies' moves both collide with the room's bodies.
-    expect(roomBodies(s, OVERWORLD_ROOM).obstacles).toEqual(expect.arrayContaining(sealBoxes));
+    expect(summarize(s).arenas.find((a) => a.id === A.id)?.locked).toBe(true);
   });
 
   it('stops a roll at it too', () => {
@@ -75,17 +70,6 @@ describe('the seal', () => {
     expect(s.player.y).toBeGreaterThanOrEqual(INSIDE_DOOR_Y);
   });
 
-  it('pushes a player standing in the door row as the Bulwark wakes into the arena, so they cannot walk out', () => {
-    const { s } = forum(160);
-    // Feet just inside: the box still reaches into the door row.
-    movePlayer(s, DOOR_X, A.inside.y0 * T);
-    run(s, 1);
-    expect(sealedNow(s)).toBe(true);
-    expect(s.player.y).toBeGreaterThanOrEqual(INSIDE_DOOR_Y);
-    run(s, 40, { moveY: -1 });
-    expect(s.player.y).toBeGreaterThanOrEqual(INSIDE_DOOR_Y);
-  });
-
   it("stops an enemy's feet walking in while sealed", () => {
     const { s } = awake();
     movePlayer(s, DOOR_X, INSIDE_DOOR_Y + 40);
@@ -99,7 +83,7 @@ describe('the seal', () => {
     expect(husk.y).toBeLessThanOrEqual(SEAL_ROW * T);
   });
 
-  it('lets shots through both ways (043.3: it stops feet only)', () => {
+  it('stops shots both ways (055: the door is part of the wall; 043.3 let them through the seal)', () => {
     const { s } = awake();
     movePlayer(s, DOOR_X, INSIDE_DOOR_Y + 4);
     const husk = createEnemy(s.nextEnemyId++, 'husk', { x: DOOR_X, y: (SEAL_ROW - 2) * T }, OVERWORLD_ROOM);
@@ -111,7 +95,7 @@ describe('the seal', () => {
       run(s, 1, { use: true, aimX: husk.x, aimY: husk.y - 12 });
     }
     expect(sealedNow(s)).toBe(true);
-    expect(husk.health).toBeLessThan(max);
+    expect(husk.health).toBe(max);
   });
 
   it("drops when the player is KO'd inside (the Bulwark turns for home)", () => {
@@ -174,7 +158,7 @@ describe('E at the sealed door', () => {
     // A back wave building as the player leaves is gone with the rest.
     b.waveTicks = 5;
     run(s, 1, { interact: true });
-    const out = tileCentre(A.seal.leaveTo);
+    const out = tileCentre(A.door.leaveTo);
     expect({ x: s.player.x, y: s.player.y }).toEqual(out);
     expect(b).toMatchObject({ x: START.x, y: START.y, health: DEF.maxHealth, mode: 'idle', enraged: false, addsRisen: false, behind: 0, waveTicks: 0 });
     expect(s.enemies.some((e) => e.group === ADDS_GROUP)).toBe(false);
@@ -187,7 +171,7 @@ describe('E at the sealed door', () => {
     expect(b.health).toBe(DEF.maxHealth);
   });
 
-  it('does nothing away from the door, or at the door while it is open', () => {
+  it('does nothing away from the door; from outside the door, E goes in (055) and leaves the Bulwark asleep', () => {
     const { s, b } = awake(96);
     run(s, 1, { interact: true });
     expect(s.events.arenaLeaves).toEqual([]);
@@ -196,6 +180,8 @@ describe('E at the sealed door', () => {
     movePlayer(f.s, DOOR_X, (SEAL_ROW - 1) * T + T / 2);
     run(f.s, 1, { interact: true });
     expect(f.s.events.arenaLeaves).toEqual([]);
+    expect(f.s.events.arenaEnters).toEqual([{ arena: A.id }]);
+    expect({ x: f.s.player.x, y: f.s.player.y }).toEqual(tileCentre(A.door.enterTo));
   });
 
   it('is deterministic: a fight with a leave, run twice, ends the same', () => {

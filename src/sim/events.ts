@@ -141,8 +141,10 @@ export interface SimEvents {
   bossDefeats: { boss: string }[];
   /** An offering at an altar (034) summons its boss again: it rises after the summon. */
   summons: { altar: string; boss: string }[];
-  /** E at a sealed arena's door (043): the player left and its fight reset. */
+  /** E at an arena's door from inside (043, 055): the player left and its fight reset. */
   arenaLeaves: { arena: string }[];
+  /** E at an unlocked arena's door from outside (055): the player went in. */
+  arenaEnters: { arena: string }[];
   /** The Bulwark lobbed its bombs (034): which enemy, how many. */
   lobs: { id: number; count: number }[];
   /** An enemy bomb burst where its circles met (034): its point and ring radius, px. */
@@ -237,6 +239,7 @@ export function createEvents(): SimEvents {
     bossDefeats: [],
     summons: [],
     arenaLeaves: [],
+    arenaEnters: [],
     lobs: [],
     enemyBursts: [],
     pounds: [],

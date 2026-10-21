@@ -19,7 +19,7 @@ import { SoundView } from './SoundView';
 import { attuneBeat } from './attune';
 import { intakeAnchor } from './foundryLayout';
 import { playHollows, SealSound } from './hollowsFeel';
-import { ARENA_ROOMS, ARENAS, arenaSealed } from '../sim/arenaLock';
+import { ARENAS, arenaLocked } from '../sim/arenaLock';
 import { playMines } from './mineFeel';
 import { HollowsEnemyFeel } from './hollowsEnemyFeel';
 
@@ -46,7 +46,7 @@ export class FeelView {
   private intakeMs = 0;
   /** Region 2's four's charges, eruptions, bashes and bolts (035). */
   private readonly hollowsEnemies = new HollowsEnemyFeel();
-  /** 045: the forum seal's hum and drop. */
+  /** 045: the arena seal's hum and drop (055: either arena's). */
   readonly seal = new SealSound();
 
   static preload(scene: Scene): void {
@@ -203,7 +203,7 @@ export class FeelView {
   private watch(sim: SimState, shown: string, deltaMs: number): void {
     const j = this.juice;
     this.hollowsEnemies.watch(sim, shown, deltaMs, j, this.sound);
-    this.seal.update(ARENA_ROOMS.includes(shown) && ARENAS.some((a) => arenaSealed(sim, a, shown)), this.sound);
+    this.seal.update(ARENAS.some((a) => arenaLocked(sim, a, shown)), this.sound);
     const live = new Set<number>();
     for (const e of sim.enemies) {
       if (e.roomId !== shown) continue;

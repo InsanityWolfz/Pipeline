@@ -12,7 +12,7 @@ import { arena, fireAt, movePlayer, run, runUntil } from './fight';
 const room = generateOverworld();
 const at = (t: { tx: number; ty: number }): string | undefined => room.rows[t.ty]?.[t.tx];
 
-/** Tiles reachable on foot from a start, treating the door as passable (it leads on). */
+/** Tiles reachable on foot from a start, treating the door as passable (it leads on), and an arena's door (055: E goes through). */
 function reachable(from: { tx: number; ty: number }): Set<string> {
   const seen = new Set<string>([`${from.tx},${from.ty}`]);
   const queue = [from];
@@ -24,7 +24,7 @@ function reachable(from: { tx: number; ty: number }): Set<string> {
       const key = `${n.tx},${n.ty}`;
       if (seen.has(key)) continue;
       const symbol = at(n);
-      if (symbol === undefined || !(WALKABLE.includes(symbol) || symbol === TILE.door)) continue;
+      if (symbol === undefined || !(WALKABLE.includes(symbol) || symbol === TILE.door || symbol === TILE.arenaDoor)) continue;
       seen.add(key);
       queue.push(n);
     }
@@ -57,7 +57,8 @@ describe('generation', () => {
     for (const t of OVERWORLD.entrance.mound) expect(at(t)).toBe(TILE.ruinBlock);
     for (const t of OVERWORLD.ruinField.walls) expect(at(t)).toBe(TILE.ruinBlock);
     for (const t of OVERWORLD.shrine.walls) expect(at(t)).toBe(TILE.wall);
-    for (const t of [OVERWORLD.startStone, OVERWORLD.shrine.pylon, ...OVERWORLD.shrine.gate, ...OVERWORLD.nodes]) expect(WALKABLE).toContain(at(t));
+    for (const t of [OVERWORLD.startStone, OVERWORLD.shrine.pylon, ...OVERWORLD.nodes]) expect(WALKABLE).toContain(at(t));
+    for (const t of OVERWORLD.shrine.door) expect(at(t)).toBe(TILE.arenaDoor);
     // Clearings hold no trees, rocks or water, but for the hand-placed features round the nodes (018).
     const inFeature = (tx: number, ty: number) =>
       OVERWORLD.features.some((f) => (f.kind === 'pond' ? Math.hypot((tx - f.cx) / f.rx, (ty - f.cy) / f.ry) <= OVERWORLD.ponds.shore : Math.hypot(tx - f.cx, ty - f.cy) <= f.r));

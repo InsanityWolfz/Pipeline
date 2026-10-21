@@ -1,3 +1,4 @@
+import type { ArenaDoor } from './arenas';
 import { shiftRect, shiftTile, type Shift } from './place';
 import { TILE } from './rooms';
 import type { TilePos, TileRect } from './tiles';
@@ -17,9 +18,11 @@ const fy = (ty: number): number => ty + FORUM_SHIFT.dy;
 /** The tiles a mover can stand in the Sunken Forum: the player in here wakes its boss. */
 const FORUM_INSIDE: TileRect = shiftRect({ x0: 4, y0: 31, x1: 20, y1: 41 }, FORUM_SHIFT);
 
-/** The forum's walls: cliffs round three sides, a broken colonnade on the north with its one wide way in. */
+/** The forum's walls: cliffs round three sides, a broken colonnade on the north with its door (055, was its open way in). */
 const FORUM_BOUNDS: TileRect = shiftRect({ x0: 3, y0: 30, x1: 21, y1: 42 }, FORUM_SHIFT);
 const FORUM_WAY = { x0: fx(10), x1: fx(14) } as const;
+/** 055: the door across 034's way in, its tiles in the colonnade's row. */
+const FORUM_DOOR: readonly TilePos[] = Array.from({ length: FORUM_WAY.x1 - FORUM_WAY.x0 + 1 }, (_, i) => ({ tx: FORUM_WAY.x0 + i, ty: FORUM_BOUNDS.y0 }));
 /** Colonnade columns standing in the north wall, and fallen drums between some of them. */
 const COLONNADE = { pillars: [4, 7, 17, 20].map(fx), fallen: [5, 6, 18, 19].map(fx) } as const;
 /** Broken columns standing inside the forum's corners. */
@@ -40,7 +43,10 @@ function forumWalls(): TileStamp[] {
   const out: TileStamp[] = [];
   for (let tx = b.x0; tx <= b.x1; tx++) {
     out.push({ tx, ty: b.y1, symbol: TILE.cliff });
-    if (tx >= FORUM_WAY.x0 && tx <= FORUM_WAY.x1) continue;
+    if (tx >= FORUM_WAY.x0 && tx <= FORUM_WAY.x1) {
+      out.push({ tx, ty: b.y0, symbol: TILE.arenaDoor });
+      continue;
+    }
     const symbol = (COLONNADE.pillars as readonly number[]).includes(tx) ? TILE.pillar : (COLONNADE.fallen as readonly number[]).includes(tx) ? TILE.fallen : TILE.cliff;
     out.push({ tx, ty: b.y0, symbol });
   }
@@ -98,7 +104,7 @@ export const HOLLOWS = {
   opensOn: 'shrine',
   /** `?start=hollows` (034): just past the barrier on the road west to the Cistern Terrace (053). */
   start: { tx: 44, ty: 115 } satisfies TilePos,
-  /** The Bulwark's arena (034): a sunken plaza with one wide way in, sealed while its boss fights (043). */
+  /** The Bulwark's arena (034): a sunken plaza walled all round, its door in the north wall (055, was its open way in). */
   arena: {
     id: 'sunken-forum',
     name: 'Sunken Forum',
@@ -107,16 +113,21 @@ export const HOLLOWS = {
     inside: FORUM_INSIDE,
     walls: forumWalls(),
     /**
-     * The arena lock (043, was 041.18): while its boss fights, a ley barrier in the Hollows barrier's look seals the
-     * way in (these tiles, the north wall's gap) and no feet pass it. E with the player's feet box within `reach` px of
-     * it leaves: the player stands on `leaveTo`, just outside, and the fight resets as a leash reset does.
+     * Its door (055, D.5, in place of 043's seal across the way in): sealed until the Hollows' barrier falls; then E
+     * with the player's feet box within `reach` px of it goes in, to `enterTo`, and E from inside leaves, to `leaveTo`,
+     * the fight resetting as 043's lock did.
      */
-    seal: {
-      tiles: Array.from({ length: FORUM_WAY.x1 - FORUM_WAY.x0 + 1 }, (_, i) => ({ tx: FORUM_WAY.x0 + i, ty: FORUM_BOUNDS.y0 })) satisfies TilePos[],
-      leaveTo: { tx: fx(12), ty: FORUM_BOUNDS.y0 - 1 } satisfies TilePos,
+    door: {
+      tiles: FORUM_DOOR,
+      enterTo: { tx: fx(12), ty: FORUM_BOUNDS.y0 + 1 },
+      leaveTo: { tx: fx(12), ty: FORUM_BOUNDS.y0 - 1 },
       /** The altar's reach (same E distance as the arena's other interactable). */
       reach: ALTAR_REACH,
-    },
+      unlock: 'hollows',
+      name: 'Forum door',
+      /** 055.1: its hover line while sealed. */
+      sealed: 'Sealed: break the Hollows barrier',
+    } satisfies ArenaDoor,
     /** Where the boss stands and rises; and the altar stone by the west wall. */
     start: { tx: fx(12), ty: fy(36) } satisfies TilePos,
     altar: { id: 'forum-altar', tx: fx(5), ty: fy(36) },

@@ -292,6 +292,20 @@ export async function boot(page: Page, query = '?start=field'): Promise<void> {
   await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
 }
 
+/**
+ * 055: walks to just outside a boss arena's door (its `leaveTo` tile) and presses E there, going in; fails if the door
+ * didn't open.
+ */
+export async function enterArena(page: Page, leaveTo: { tx: number; ty: number }): Promise<void> {
+  await page.evaluate((t) => {
+    const g = window.__GAME__;
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    h.walkTo((t.tx + 0.5) * 32, (t.ty + 0.5) * 32);
+    if (g.step(1, { interact: true }).events.arenaEnters.length === 0) throw new Error(`the door by ${t.tx},${t.ty} did not open`);
+  }, leaveTo);
+}
+
 /** Waits until the camera, easing after the player in real time, has come to rest (`timeout` ms: a long ease under load needs more). */
 export async function cameraSettled(page: Page, timeout = 5000): Promise<void> {
   let last = { x: NaN, y: NaN };

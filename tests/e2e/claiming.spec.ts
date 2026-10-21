@@ -38,11 +38,12 @@ test('clear the shrine (through the hook), claim the pylon, deposit, travel and 
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     g.step(0);
-    // Round the start stone, then by the north-east road to the shrine's gap and in (053: src/data/roads.ts).
+    // Round the start stone, then by the north-east road to the shrine's door (053: src/data/roads.ts), and E in (055).
     const X = h.ox;
     h.walkTo((41.5 + X) * 32, g.getState().player.y);
     h.walkTo((gate.tx + 0.5) * 32, (gate.ty + 2.5) * 32);
-    h.walkTo((gate.tx + 0.5) * 32, (gate.ty - 1.5) * 32);
+    h.walkTo((gate.tx + 0.5) * 32, (gate.ty + 1.5) * 32);
+    g.step(1, { interact: true });
     let s = g.getState();
     const inside = (e: { x: number; y: number }) => e.x > area.x0 * 32 && e.x < (area.x1 + 1) * 32 && e.y > area.y0 * 32 && e.y < (area.y1 + 1) * 32;
     const arrived = inside(s.player) ? 'shrine' : `${s.player.x},${s.player.y}`;
@@ -66,7 +67,7 @@ test('clear the shrine (through the hook), claim the pylon, deposit, travel and 
     g.step(1, { interact: true });
     s = g.step(130);
     return { arrived, cleared, claimed: s.claims.includes('shrine'), failed: '' };
-  }, [OVERWORLD.shrine.area, OVERWORLD.shrine.gate[1] ?? OVERWORLD.shrine.pylon, OVERWORLD.shrine.pylon] as const);
+  }, [OVERWORLD.shrine.area, OVERWORLD.shrine.door[1] ?? OVERWORLD.shrine.pylon, OVERWORLD.shrine.pylon] as const);
   expect(result.failed).toBe('');
   expect(result.arrived).toBe('shrine');
   expect(result.cleared).toBe(true);

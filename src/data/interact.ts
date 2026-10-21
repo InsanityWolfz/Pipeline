@@ -7,7 +7,7 @@ import { TILE_SIZE } from './config';
 /** Every kind of thing E acts on, in the order the sim takes an E press (src/sim/step.ts). */
 export const INTERACT_KINDS = [
   'tube-stone',
-  'arena-seal',
+  'arena-door',
   'altar',
   'pylon',
   'waystone',
@@ -37,8 +37,8 @@ const OVER = TILE_SIZE;
 
 export const INTERACT_PROMPTS: Readonly<Record<InteractKind, InteractPrompt>> = {
   'tube-stone': { key: 'E', rise: OVER },
-  // The seal's point is the door's middle at its row; the curtain stands about a tile tall over it.
-  'arena-seal': { key: 'E', rise: OVER },
+  // 055: an arena's door (043's seal before it): its point is the door's middle at its row.
+  'arena-door': { key: 'E', rise: OVER },
   altar: { key: 'E', rise: OVER },
   pylon: { key: 'E', rise: OVER + TILE_SIZE / 2 },
   waystone: { key: 'E', rise: OVER },

@@ -114,17 +114,19 @@ describe('gates', () => {
     expect(s.enemies.some((e) => e.group === 'field')).toBe(true);
   });
 
-  it("the shrine site's gap is sealed until its gate opens (017)", () => {
+  it("the shrine site's door is sealed until its gate opens (017, 055: then E at it goes in)", () => {
     const s = tutorial();
     s.enemies = [];
-    const gap = OVERWORLD.shrine.gate[1];
-    if (!gap) throw new Error('no gate tile');
-    const below = tileCentre({ tx: gap.tx, ty: gap.ty + 2 });
+    const door = OVERWORLD.shrine.door[1];
+    if (!door) throw new Error('no door tile');
+    const below = tileCentre({ tx: door.tx, ty: door.ty + 1 });
     movePlayer(s, below.x, below.y);
     run(s, 40, { moveY: -1 });
-    expect(s.player.y).toBeGreaterThan(tileCentre(gap).y);
+    run(s, 1, { interact: true });
+    expect(s.player.y).toBeGreaterThan(tileCentre(door).y);
     s.gates.shrine = true;
-    runUntil(s, (x) => x.player.y < tileCentre(gap).y - 32, 60, { moveY: -1 });
+    run(s, 1, { interact: true });
+    expect(s.player.y).toBeLessThan(tileCentre(door).y);
   });
 
   it('the shrine opens the first time an entrance fills', () => {

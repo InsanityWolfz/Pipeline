@@ -11,7 +11,7 @@ import { createSim, type SimState } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
-import { command, die, movePlayer, run, runUntil, SEED } from './fight';
+import { command, die, movePlayer, run, SEED } from './fight';
 import { put } from './foundryKit';
 
 // 017: the shrine is a site in the overworld; its pylon carries the site id.
@@ -40,20 +40,23 @@ function claimed(): SimState {
 }
 
 describe('the shrine', () => {
-  it('is walled, entered through the gap in its front wall', () => {
+  it('is walled, entered by E at the door in its front wall (055)', () => {
     const s = createSim(SEED);
     s.enemies = [];
-    const gap = OVERWORLD.shrine.gate[1];
-    if (!gap) throw new Error('no gate tile');
-    const outside = tileCentre({ tx: gap.tx, ty: gap.ty + 2 });
+    const door = OVERWORLD.shrine.door[1];
+    if (!door) throw new Error('no door tile');
+    const outside = tileCentre({ tx: door.tx, ty: door.ty + 1 });
     movePlayer(s, outside.x, outside.y);
-    runUntil(s, (x) => x.player.y < tileCentre(gap).y - 32, 60, { moveY: -1 });
+    run(s, 30, { moveY: -1 });
+    expect(s.player.y).toBeGreaterThan(tileCentre(door).y);
+    run(s, 1, { interact: true });
+    expect(s.player.y).toBeLessThan(tileCentre(door).y);
     expect(s.roomId).toBe(OVERWORLD_ROOM);
-    // The front wall beside the gap is solid.
-    const wall = tileCentre({ tx: gap.tx + 3, ty: gap.ty + 2 });
+    // The front wall beside the door is solid.
+    const wall = tileCentre({ tx: door.tx + 3, ty: door.ty + 2 });
     movePlayer(s, wall.x, wall.y);
     run(s, 30, { moveY: -1 });
-    expect(s.player.y).toBeGreaterThan(tileCentre(gap).y);
+    expect(s.player.y).toBeGreaterThan(tileCentre(door).y);
   });
 
   it('holds Wisps, Husks and the Warden, and its pylon is solid', () => {

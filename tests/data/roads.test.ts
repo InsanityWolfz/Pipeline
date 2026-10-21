@@ -128,9 +128,9 @@ describe('the roads', () => {
     const touch = (a: TileRect, b: TileRect) => a.x0 <= b.x1 + 1 && b.x0 <= a.x1 + 1 && a.y0 <= b.y1 + 1 && b.y0 <= a.y1 + 1;
     const joined = LANDMARK_LIST.filter((l) => nearRect(l.area, 2));
     for (const l of LANDMARK_LIST) expect(joined.includes(l) || joined.some((j) => touch(j.area, l.area)), l.id).toBe(true);
-    for (const t of OVERWORLD.shrine.gate) expect(near(t, 3)).toBe(true);
+    for (const t of OVERWORLD.shrine.door) expect(near(t, 3)).toBe(true);
     expect(near(GROTTO_MOUTH, 3)).toBe(true);
-    expect(near(HOLLOWS.arena.seal.leaveTo, 3)).toBe(true);
+    expect(near(HOLLOWS.arena.door.leaveTo, 3)).toBe(true);
     expect(near(HOLLOWS.crossing, 2)).toBe(true);
   });
 });

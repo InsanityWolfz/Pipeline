@@ -31,6 +31,8 @@ export const TILE = {
   arch: 'A',
   /** A quarry-cut terrace step: walkable. */
   terrace: '=',
+  /** A boss arena's door (055): part of its wall, stopping feet and shots; E at it enters or leaves (src/sim/arenaLock.ts). */
+  arenaDoor: 'G',
 } as const;
 
 /** Tiles feet can cross. Anything else, and outside the grid, is solid. */

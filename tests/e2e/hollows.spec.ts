@@ -3,7 +3,7 @@ import { CLAIM_TICKS } from '../../src/data/claims';
 import { BULWARK } from '../../src/data/bulwark';
 import { HOLLOWS } from '../../src/data/hollows';
 import { HOLLOWS_SITES } from '../../src/data/hollowsSites';
-import { boot, watchErrors } from './helpers';
+import { boot, enterArena, watchErrors } from './helpers';
 import { clickRow, flowIs } from './flowPage';
 
 // Stonefall Hollows (034): the barrier drops when the shrine is claimed; in the Hollows,
@@ -96,7 +96,8 @@ test('?start=hollows: the shield blocks arrows into its front; from behind they 
   const errors = watchErrors(page);
   await boot(page, '?start=hollows');
   await quiet(page, ['bulwark']);
-  await walk(page, [[A.seal.leaveTo.tx, A.seal.leaveTo.ty], [A.start.tx, A.start.ty + 3]]);
+  await enterArena(page, A.door.leaveTo);
+  await walk(page, [[A.start.tx, A.start.ty + 3]]);
 
   // From the front: once it has turned to face the player, every arrow is blocked.
   const front = await page.evaluate(() => {
