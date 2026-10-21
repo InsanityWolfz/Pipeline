@@ -20,8 +20,8 @@ export type ObjectiveCheck =
   | { kind: 'lineDry' }
   /** 046: since the lines ran dry, each of these items has been put in a hopper by hand. */
   | { kind: 'refilled'; items: readonly string[] }
-  /** 046: at least `min` entrances hold this ammo. */
-  | { kind: 'entrancesHold'; ammo: string; min: number }
+  /** 050: the entrance this research node opened holds ammo, any ammo. */
+  | { kind: 'entranceFed'; node: string }
   /** Machines have made at least one of this item (027); hand-crafting never counts. */
   | { kind: 'machineMade'; item: string }
   /** An intake entrance has filled from a line at least once. */
@@ -49,10 +49,10 @@ export type ObjectiveCheck =
 export type PromptTarget = 'tubeStone' | 'node' | 'bench' | 'pylon' | 'hopper' | 'player';
 
 /**
- * What an arrow marker floats over: the intake, where a line ends (027), the supply ports (028), or the nearest
+ * What an arrow marker floats over: the entrance the Warden's core opened (050), the supply ports (028), or the nearest
  * discovered resource-site pylon not yet claimed (032).
  */
-export type MarkerTarget = 'intake' | 'ports' | 'sitePylon';
+export type MarkerTarget = 'newEntrance' | 'ports' | 'sitePylon';
 
 /** Which milestone a goal belongs to (028): the prototype's, or Milestone 1's. */
 export type Milestone = 'prototype' | 'm1';
@@ -72,6 +72,9 @@ export interface ObjectiveDef {
    */
   waitsFor?: ObjectiveCheck;
 }
+
+/** 050: the research node whose entrance the second-line goal asks to feed, and its marker points at: the Warden core's. */
+export const NEW_ENTRANCE_NODE = 'entrance-2';
 
 export const OBJECTIVES: readonly ObjectiveDef[] = [
   { text: 'Pick up the tube (E)', milestone: 'prototype', check: { kind: 'hasTube' }, prompt: { key: 'E', over: 'tubeStone' } },
@@ -99,13 +102,14 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
   { text: "Claim the shrine's pylon", milestone: 'prototype', check: { kind: 'claimed', site: 'shrine' }, prompt: { key: 'E', over: 'pylon' } },
   // The prototype's one Warden drops one core, and restoring a second entrance costs one (033: one entrance per core).
   { text: 'Restore a second intake entrance (E at a cap with the warden core)', milestone: 'prototype', check: { kind: 'restored', node: 'entrance-2' } },
-  // 046: the second entrance gets a line of its own, built by the player (027's lesson after the Warden).
+  // 046: the second entrance gets a line of its own, built by the player (027's lesson after the Warden). 050 (Shaun):
+  // any ammo in the entrance the Warden's core opened counts, and the marker points at that entrance.
   {
-    text: 'Build a second arrow line into the new entrance',
+    text: 'Feed ammo into the new entrance',
     milestone: 'prototype',
-    check: { kind: 'entrancesHold', ammo: 'arrow', min: 2 },
+    check: { kind: 'entranceFed', node: NEW_ENTRANCE_NODE },
     prompt: { key: 'B', over: 'player' },
-    marker: 'intake',
+    marker: 'newEntrance',
     highlight: 'assembler',
   },
   { text: 'Feed two entrances to fire a spread', milestone: 'prototype', check: { kind: 'volley', min: 2 } },

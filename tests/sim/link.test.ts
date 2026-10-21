@@ -149,7 +149,7 @@ describe('firing from the reservoir', () => {
     expect([s.inventory.arrow, s.link.entrances[1]?.count, s.tube.fromReservoir]).toEqual([1, 1, true]);
     expect(summarize(s).tube.fromReservoir).toBe(true);
     run(s, FIRE_TICKS, aim);
-    expect(s.link.entrances[1]).toEqual({ open: true, ammoId: null, count: 0, cooldown: FIRE_TICKS });
+    expect(s.link.entrances[1]).toEqual({ open: true, ammoId: null, count: 0, cooldown: FIRE_TICKS, node: null });
     expect(s.tube.fromReservoir).toBe(true);
     let punches = 0;
     run(s, FIRE_TICKS, (x) => {

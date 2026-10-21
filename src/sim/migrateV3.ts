@@ -51,7 +51,7 @@ const V2_OBJECTIVES: readonly string[] = [
 /** 046's new goals, each done in a version 2 save where the old goal it stands for was. */
 const STANDS_FOR: Readonly<Record<string, string>> = {
   'Refill the hoppers with wood, stone and fiber (E)': 'Put wood in the hopper (E)',
-  'Build a second arrow line into the new entrance': 'Feed two entrances to fire a spread',
+  'Feed ammo into the new entrance': 'Feed two entrances to fire a spread',
 };
 
 /** Version 2's done-list as this version's, by each goal's text. */

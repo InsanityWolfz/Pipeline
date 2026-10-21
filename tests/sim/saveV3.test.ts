@@ -25,8 +25,8 @@ function v2(edit: (state: Record<string, unknown>) => void): string {
 }
 
 describe('version 2 → 3 (046)', () => {
-  it('is no longer the current version (047: 4, then 5 for 047.9, 6 for 049, with no migration)', () => {
-    expect(SAVE_VERSION).toBe(6);
+  it('is no longer the current version (047: 4, then 5 for 047.9, 6 for 049, 7 for 050, with no migration)', () => {
+    expect(SAVE_VERSION).toBe(7);
     expect(SAVE_MIGRATIONS[3]).toBeUndefined();
   });
 
@@ -78,7 +78,7 @@ describe('version 2 → 3 objectives (046)', () => {
     const done = OBJECTIVES.filter((_, i) => read.state.objectives[i]).map((o) => o.text);
     expect(done).toEqual([
       'Refill the hoppers with wood, stone and fiber (E)',
-      'Build a second arrow line into the new entrance',
+      'Feed ammo into the new entrance',
       'Feed two entrances to fire a spread',
     ]);
   });
