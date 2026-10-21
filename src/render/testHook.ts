@@ -89,6 +89,8 @@ export interface GameTestHook {
 export interface UiState {
   /** The scene has built its views and the fonts are loaded (020): before this, nothing is drawn. */
   ready: boolean;
+  /** The sim tick the last drawn frame showed (-1 before one): after a step, wait until it matches the state's tick before reading what's drawn. */
+  drawnTick: number;
   /** The craft menu is open (it doesn't pause, 020), and the pause menu is (Esc: the world stops). */
   craftOpen: boolean;
   paused: boolean;

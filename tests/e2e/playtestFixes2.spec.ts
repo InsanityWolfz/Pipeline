@@ -13,6 +13,17 @@ import { boot, cameraSettled, watchErrors } from './helpers';
 // 050: Shaun's live-playtest fixes (docs/specs/050-playtest-fixes-2.md), checked in the running game.
 
 const ui = (page: Page) => page.evaluate(() => window.__GAME__?.ui());
+/** Waits until a frame has drawn the state's current tick, so what ui() reports is what was stepped. */
+async function frameDrawn(page: Page): Promise<void> {
+  await expect
+    .poll(async () =>
+      page.evaluate(() => {
+        const g = window.__GAME__;
+        return !!g && g.ui().drawnTick === g.getState().tick;
+      }),
+    )
+    .toBe(true);
+}
 
 test('E opens the hopper under the cursor within 3 tiles, not the nearest; E closes its screen and the inventory (050 A.8, A.9)', async ({ page }) => {
   test.setTimeout(90_000);
@@ -239,14 +250,14 @@ test('Mending-style field regen heals with no sparkle; the ward ring keeps still
   await expect.poll(async () => (await ui(page))?.relics.shield).toBe(true);
   for (let i = 0; i < 10; i++) {
     await page.evaluate(() => window.__GAME__?.step(4));
-    await page.waitForTimeout(30);
+    await frameDrawn(page);
     expect((await ui(page))?.healing.motes).toBe(0);
   }
   // Walking: the ring sits on the player's own point every frame (rounded against it, it was up to half a px off and shook).
   const offsets: { dx: number; dy: number }[] = [];
   for (let i = 0; i < 20; i++) {
     await page.evaluate((k) => window.__GAME__?.step(3, { moveX: 1, moveY: k % 2 === 0 ? 1 : 0 }), i);
-    await page.waitForTimeout(20);
+    await frameDrawn(page);
     const u = await ui(page);
     const ring = u?.relics.ring;
     const p = (await state(page)).player;
