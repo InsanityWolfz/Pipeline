@@ -1,5 +1,6 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
+import { VIEW_WIDTH } from '../data/config';
 import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
 import { ITEM_ICON_SIZE } from '../data/hudLayout';
 import { itemDef } from '../data/items';
@@ -10,6 +11,7 @@ import { Pulse } from './pulse';
 import { drawTablet } from './tablet';
 import { arrowTip, placeArrow, type ViewRect } from './waypointPlace';
 import { addVector, showFrame } from './vector/textures';
+import type { ScreenBox } from './bottomHud';
 
 /** The waypoint arrow as drawn (051), for `ui().waypoint`: where its tip is (world px), how it points, and what it leads to. */
 export interface WaypointShown {
@@ -51,15 +53,19 @@ export class WaypointView {
     this.arrow = addVector(scene, 0, 0, TUTORIAL_SPRITES.marker).setDepth(DEPTHS.prompt).setVisible(false);
   }
 
-  update(sim: SimState, shown: string): void {
+  /** `hud`: the fixed HUD boxes on screen (view px), which the arrow keeps clear of. */
+  update(sim: SimState, shown: string, hud: readonly ScreenBox[] = []): void {
     const wp = shown === sim.roomId ? waypoint(sim) : null;
     const view = this.scene.cameras.main.worldView;
     const rect: ViewRect = { x0: view.x, y0: view.y, x1: view.x + view.width, y1: view.y + view.height };
+    // A view px is a world px (both cameras share the screen's zoom), so a HUD box sits at the view's corner plus its own.
+    const z = view.width / VIEW_WIDTH;
+    const boxes: ViewRect[] = hud.map((b) => ({ x0: view.x + b.x * z, y0: view.y + b.y * z, x1: view.x + (b.x + b.w) * z, y1: view.y + (b.y + b.h) * z }));
     // Each in-room target that carries a raw gets its own arrow and icon (on screen only; the edge arrow leads to the rest).
     const raws = wp?.via === 'target' ? objectiveTargets(sim).filter((p) => p.roomId === sim.roomId && p.itemId) : [];
     const marked = raws.flatMap((p) => {
       const tip = arrowTip(p);
-      return p.itemId && placeArrow(rect, tip).mode === 'over' ? [{ itemId: p.itemId, ...tip, base: p.y }] : [];
+      return p.itemId && placeArrow(rect, tip, boxes).mode === 'over' ? [{ itemId: p.itemId, ...tip, base: p.y }] : [];
     });
     this.drawIcons(marked);
     const icons = marked.map(({ itemId, x, y }) => ({ itemId, x, y }));
@@ -70,7 +76,7 @@ export class WaypointView {
       return;
     }
     const tip = arrowTip({ ...wp.target, x: wp.x, y: wp.y }, wp.via);
-    const place = placeArrow(rect, tip);
+    const place = placeArrow(rect, tip, boxes);
     // On screen with its own icon arrow already over it, the main arrow isn't drawn twice.
     const covered = place.mode === 'over' && icons.some((i) => i.x === tip.x && i.y === tip.y);
     this.arrow.setVisible(!covered);

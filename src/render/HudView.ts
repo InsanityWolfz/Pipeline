@@ -120,6 +120,15 @@ export class HudView {
     return this.talents.chipAt(x, y);
   }
 
+  /** 051: the bottom HUD's fixed boxes (the tube slot, the health bar, the carried bar and its hint), view px. */
+  get fixedBoxes(): ScreenBox[] {
+    const boxes = [this.tubeSlot.box, this.health.box];
+    if (this.hotbar.visible) boxes.push(this.hotbar.box);
+    const hint = this.carriedHint.box;
+    if (hint) boxes.push(hint);
+    return boxes;
+  }
+
   /** A screen point on any part of the HUD or the open inventory panel: a press there never fires (015). */
   overUi(x: number, y: number): boolean {
     const parts = [this.tubeSlot.box, this.health.box, ...this.feed.boxes];

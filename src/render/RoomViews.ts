@@ -21,6 +21,7 @@ import { HollowsView, NO_HOLLOWS_SHOWN } from './HollowsView';
 import { NO_RELICS_SHOWN, RelicView } from './RelicView';
 import { NO_TALENT_FX, TalentFxView } from './TalentFxView';
 import { MineView, NO_MINES_SHOWN } from './MineView';
+import type { ScreenBox } from './bottomHud';
 
 /** What the room views report to the test hook's `ui()`. */
 export type RoomUiState = Pick<UiState, 'minimap' | 'foundryMap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows' | 'relics' | 'talentFx' | 'mines'>;
@@ -88,6 +89,11 @@ export class RoomViews {
     // A tiled room shows a little more wall above its top row (019); the overworld's edge is its edge.
     const above = room.terrain ? 0 : ROOM_TOP_MARGIN;
     this.scene.cameras.main.setBounds(0, -above, width, height + above);
+  }
+
+  /** The corner map on show (the overworld's minimap or the foundry's), view px, or null. */
+  get mapBox(): ScreenBox | null {
+    return this.minimap.box ?? this.foundryMap.box;
   }
 
   /** `events` are the ticks' since the last draw; the supply line starts a mote for each raw a port produced. */

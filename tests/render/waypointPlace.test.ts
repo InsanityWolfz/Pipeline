@@ -32,6 +32,31 @@ describe('placing the waypoint arrow (051)', () => {
     expect(placeArrow(VIEW, { x: 300, y: WAYPOINT.arrowLength }).mode).toBe('edge');
   });
 
+  it('counts a HUD box as part of the edge: the arrow stops short of the minimap, still on the line to the target', () => {
+    const minimap = { x0: 440, y0: 0, x1: 640, y1: 100 };
+    const target = { x: 2000, y: -600 };
+    const free = placeArrow(VIEW, target);
+    const p = placeArrow(VIEW, target, [minimap]);
+    expect(p.mode).toBe('edge');
+    expect(p.angle).toBeCloseTo(free.angle);
+    // Outside the minimap by the edge inset on at least one side.
+    const clear = p.x <= minimap.x0 - WAYPOINT.edgeInset + 1e-6 || p.y >= minimap.y1 + WAYPOINT.edgeInset - 1e-6;
+    expect(clear).toBe(true);
+    // Still on the line from the view's centre to the target.
+    const cross = (p.x - 320) * (target.y - 180) - (p.y - 180) * (target.x - 320);
+    expect(Math.abs(cross)).toBeLessThan(1e-6);
+    // A box the line never meets changes nothing.
+    expect(placeArrow(VIEW, { x: -2000, y: 180 }, [minimap])).toEqual(placeArrow(VIEW, { x: -2000, y: 180 }));
+  });
+
+  it('a target under a HUD box gets the edge arrow, stopping at the box', () => {
+    const bar = { x0: 260, y0: 320, x1: 380, y1: 360 };
+    const p = placeArrow(VIEW, { x: 320, y: 345 }, [bar]);
+    expect(p.mode).toBe('edge');
+    expect(p.y).toBeCloseTo(bar.y0 - WAYPOINT.edgeInset);
+    expect(p.angle).toBeCloseTo(Math.PI / 2);
+  });
+
   it("lifts the tip by the target's kind, a node's by its type, a door's by the door's", () => {
     expect(tipLift({ kind: 'pylon' })).toBe(TARGET_LIFT.pylon);
     expect(tipLift({ kind: 'nodes', ref: 'tree' })).toBe(TARGET_LIFT.nodeTypes.tree);

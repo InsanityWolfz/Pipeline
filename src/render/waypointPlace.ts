@@ -34,14 +34,37 @@ export interface ArrowPlace {
   angle: number;
 }
 
+/** Where the ray from `c` along `d` first enters `box` (as a multiple of `d`), or Infinity if it never does. */
+function entry(c: Point, d: Point, box: ViewRect): number {
+  let lo = -Infinity;
+  let hi = Infinity;
+  for (const [o, v, b0, b1] of [[c.x, d.x, box.x0, box.x1], [c.y, d.y, box.y0, box.y1]] as const) {
+    if (v === 0) {
+      if (o < b0 || o > b1) return Infinity;
+      continue;
+    }
+    const t0 = (b0 - o) / v;
+    const t1 = (b1 - o) / v;
+    lo = Math.max(lo, Math.min(t0, t1));
+    hi = Math.min(hi, Math.max(t0, t1));
+  }
+  return lo <= hi && lo > 0 ? lo : Infinity;
+}
+
+const grow = (b: ViewRect, by: number): ViewRect => ({ x0: b.x0 - by, y0: b.y0 - by, x1: b.x1 + by, y1: b.y1 + by });
+
 /**
- * Over the target while the whole arrow (tip to tail) is inside the view by `onScreenMargin`; else on the view's edge,
- * `edgeInset` in, where the line from the view's centre to the tip crosses it, pointing along that line.
+ * Over the target while the whole arrow (tip to tail) is inside the view by `onScreenMargin` and clear of every fixed
+ * HUD box in `hud` (world rects: the minimap, the objective, the bottom bars); else on the view's edge, `edgeInset` in,
+ * where the line from the view's centre to the tip crosses it, pointing along that line. A HUD box counts as part of the
+ * edge: where the line meets one first, the arrow stops `edgeInset` short of it, so it never hides under it.
  */
-export function placeArrow(view: ViewRect, tip: Point): ArrowPlace {
+export function placeArrow(view: ViewRect, tip: Point, hud: readonly ViewRect[] = []): ArrowPlace {
   const m = WAYPOINT.onScreenMargin;
+  const arrow: ViewRect = { x0: tip.x, y0: tip.y - WAYPOINT.arrowLength, x1: tip.x, y1: tip.y };
+  const hidden = hud.map((b) => grow(b, m)).some((g) => arrow.x0 <= g.x1 && arrow.x1 >= g.x0 && arrow.y0 <= g.y1 && arrow.y1 >= g.y0);
   const inside = tip.x >= view.x0 + m && tip.x <= view.x1 - m && tip.y - WAYPOINT.arrowLength >= view.y0 + m && tip.y <= view.y1 - m;
-  if (inside) return { mode: 'over', x: tip.x, y: tip.y, angle: Math.PI / 2 };
+  if (inside && !hidden) return { mode: 'over', x: tip.x, y: tip.y, angle: Math.PI / 2 };
   const cx = (view.x0 + view.x1) / 2;
   const cy = (view.y0 + view.y1) / 2;
   const dx = tip.x - cx;
@@ -49,7 +72,8 @@ export function placeArrow(view: ViewRect, tip: Point): ArrowPlace {
   const angle = Math.atan2(dy, dx);
   const halfW = (view.x1 - view.x0) / 2 - WAYPOINT.edgeInset;
   const halfH = (view.y1 - view.y0) / 2 - WAYPOINT.edgeInset;
-  // The smaller of the two scales that bring the line to a vertical or a horizontal edge.
-  const s = Math.min(dx !== 0 ? halfW / Math.abs(dx) : Infinity, dy !== 0 ? halfH / Math.abs(dy) : Infinity);
+  // The smaller of the two scales that bring the line to a vertical or a horizontal edge, or sooner to a HUD box.
+  const edge = Math.min(dx !== 0 ? halfW / Math.abs(dx) : Infinity, dy !== 0 ? halfH / Math.abs(dy) : Infinity);
+  const s = Math.min(edge, ...hud.map((b) => entry({ x: cx, y: cy }, { x: dx, y: dy }, grow(b, WAYPOINT.edgeInset))));
   return { mode: 'edge', x: cx + dx * s, y: cy + dy * s, angle };
 }

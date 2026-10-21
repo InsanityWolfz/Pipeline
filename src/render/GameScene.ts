@@ -243,7 +243,10 @@ export class GameScene extends Scene {
     const shown = this.shownRoomId;
     this.feel?.update(sim, this.pending, shown, this.game.loop.delta);
     this.roomViews?.update(sim, this.pending, shown, this.game.loop.delta);
-    this.tutorial?.update(sim, shown, this.pending, (id) => this.foundryView?.topOf(id));
+    // 051: the fixed HUD boxes the waypoint arrow keeps clear of.
+    const mapBox = this.roomViews?.mapBox;
+    const hudBoxes = [...(this.hud?.fixedBoxes ?? []), ...(mapBox ? [mapBox] : [])];
+    this.tutorial?.update(sim, shown, this.pending, (id) => this.foundryView?.topOf(id), hudBoxes);
     const picked = new Set(this.pending.pickups.map((p) => p.id));
     this.hud?.update(sim, this.pending, this.game.loop.delta);
     clearEvents(this.pending);

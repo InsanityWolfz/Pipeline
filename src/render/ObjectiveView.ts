@@ -91,6 +91,11 @@ export class ObjectiveView {
   /** The band's screen rect while it shows, so a press on it never fires (015). */
   private band: { x: number; y: number; w: number; h: number } | null = null;
 
+  /** The band while it shows (the waypoint arrow never hides under it), view px. */
+  get box(): { x: number; y: number; w: number; h: number } | null {
+    return this.band;
+  }
+
   overUi(x: number, y: number): boolean {
     const b = this.band;
     return b !== null && x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h;

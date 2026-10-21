@@ -10,6 +10,7 @@ import { MAP_ICONS } from '../data/landmarkAssets';
 import type { Room } from '../data/rooms';
 import { ARENA_MID, revealedSince, seenPlaces } from '../sim/fog';
 import type { SimState } from '../sim/state';
+import type { ScreenBox } from './bottomHud';
 import { colorOf } from './color';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
@@ -110,6 +111,13 @@ export class MinimapView {
     scene.input.on('gameover', () => {
       this.outside = false;
     });
+  }
+
+  /** The map's frame while it shows (051: the waypoint arrow never hides under it), view px. */
+  get box(): ScreenBox | null {
+    if (!this.shown) return null;
+    const f = MINIMAP.frame.width;
+    return { x: this.x - f, y: this.y - f, w: OVERWORLD.width * MINIMAP.scale + 2 * f, h: OVERWORLD.height * MINIMAP.scale + 2 * f };
   }
 
   /** The pointer in view px (051: hovering an icon names it); ignored while it's off the canvas. */

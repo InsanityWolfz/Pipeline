@@ -9,6 +9,7 @@ import { colorOf } from './color';
 import { foundryMapBox, foundryMapItems, type FoundryMapItems } from './foundryMap';
 import { drawTablet } from './tablet';
 import { addVector, showFrame } from './vector/textures';
+import type { ScreenBox } from './bottomHud';
 
 /** The foundry map as drawn (051), for `ui().foundryMap`: whether it shows, and its lines, dots and icons (view px). */
 export type FoundryMapShown = { shown: boolean } & Omit<FoundryMapItems, 'box'>;
@@ -39,6 +40,14 @@ export class FoundryMapView {
       }
     }
     this.marks = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.hud + 1);
+  }
+
+  /** The map's frame while it shows (the waypoint arrow never hides under it), view px. */
+  get box(): ScreenBox | null {
+    if (!this.shown.shown) return null;
+    const b = foundryMapBox();
+    const f = FOUNDRY_MAP.frame.width;
+    return { x: b.x - f, y: b.y - f, w: b.w + 2 * f, h: b.h + 2 * f };
   }
 
   update(sim: SimState, roomShown: string): void {
