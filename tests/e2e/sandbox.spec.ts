@@ -3,6 +3,7 @@ import { STORAGE_KEYS } from '../../src/data/save';
 import { TILE_SIZE } from '../../src/data/config';
 import { SANDBOX } from '../../src/data/sandbox';
 import { SPAWN_GROUP } from '../../src/sim/sandbox';
+import { ROUND_CHOICES } from '../../src/render/sandboxRows';
 import { pauseRows } from '../../src/render/craftMenuLayout';
 import { clickView, flowIs } from './flowPage';
 import { watchErrors } from './helpers';
@@ -44,6 +45,23 @@ test('boots ?sandbox into its room, and a mixed loadout fires from the panel', a
   expect(fired.bombs).toBeGreaterThan(0);
   expect(fired.loadout).toEqual(['arrow+frost', 'ley-bolt+frost+homing', 'bomb+cluster']);
   expect(errors).toEqual([]);
+});
+
+test("an entrance's − steps its round backwards, wrapping past Empty", async ({ page }) => {
+  test.setTimeout(120_000);
+  await bootSandbox(page);
+  await openPanel(page);
+  const roundOf = () => page.evaluate(() => window.__GAME__?.getState().loadout?.[0] ?? null);
+  const start = await roundOf();
+  const at = ROUND_CHOICES.indexOf(start);
+  // Back to Empty, then once more round to the last choice.
+  for (let i = at - 1; i >= -1; i--) {
+    await clickPanel(page, 'entrance-0', 'down');
+    const want = ROUND_CHOICES[(i + ROUND_CHOICES.length) % ROUND_CHOICES.length] ?? null;
+    await expect.poll(roundOf).toBe(want);
+  }
+  await clickPanel(page, 'entrance-0', 'up');
+  await expect.poll(roundOf).toBeNull();
 });
 
 test('spawns a ring 3 champion pack from the panel, and Clear removes it', async ({ page }) => {
