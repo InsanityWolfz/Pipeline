@@ -2,6 +2,11 @@
 
 Newest entry first.
 
+## 2026-10-21: Live-playtest interview; 050–052 drafted
+**Changed:** ran the spec interview on Shaun's live playtest notes (answers in docs/brainstorm/2026-10-21-playtest-interview.md) and drafted 050 (playtest fixes and title screen), 051 (guidance), 052 (foundry logistics). 053 (world and bosses) and 054 (combat readability) are ideas for the next batch.
+
+**Next:** Shaun approves 050–052; build them one branch and PR each.
+
 ## 2026-10-21: Shaun's live playtest notes saved
 **Changed:** saved Shaun's narrated playtest of main verbatim, with a themed reading, in docs/brainstorm/2026-10-21-playtest-notes.md, plus his exported save.
 
