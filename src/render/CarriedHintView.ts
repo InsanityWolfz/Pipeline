@@ -59,7 +59,7 @@ export class CarriedHintView {
     this.key.setVisible(visible && !mouse);
     this.keyPanel.clear();
     const label = mouse ? '' : keyLabel(bound);
-    let box: ScreenBox = { x, y: bar.y, w: 0, h: 0 };
+    let box: ScreenBox;
     if (mouse) {
       const w = this.mouse.displayWidth;
       const h = this.mouse.displayHeight;
