@@ -65,6 +65,8 @@ export interface GameTestHook {
   setEnemyHealth(id: number, health: number): SimSummary;
   /** Sets the player's health (030: a hurt player for the healing e2e and screenshots, without a fight). */
   setPlayerHealth(health: number): SimSummary;
+  /** Reveals the whole overworld on the minimap, as if every tile had been on screen (053: the round world's shot). */
+  revealMap(): SimSummary;
   /**
    * Spawns a pack near the player (032: to fight a champion): `enemyIds` in a row 6 tiles right of the player, a
    * tile and a half apart, member `champion` (or none, for null) a champion named with the seeded RNG.

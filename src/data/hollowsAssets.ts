@@ -42,6 +42,9 @@ export const HOLLOWS_LOOK = {
     ripples: 4,
     ripple: { width: 1, alpha: 0.7, fade: 0.5, inset: 2, slant: 6 },
     collapseMs: 900,
+    /** 053: the round barrier is drawn in straight lengths this many px long round its circle, its ripples offset by `rippleSkew` of a cycle from one length to the next. */
+    segment: 16,
+    rippleSkew: 0.004,
     /** Its collapse: a flash of `flash` fading `flashFade` times faster than the wall, shards falling up to `shardFall` px. */
     flash: 0.9,
     flashFade: 3,

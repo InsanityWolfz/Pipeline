@@ -81,6 +81,10 @@ export function installTestHook(flow: FlowScene): void {
     setPlayerHealth: act((sim, _scene, health: number) => {
       sim.player.health = health;
     }),
+    revealMap: act((sim) => {
+      // 053: every overworld tile seen, for the whole round world's minimap shot.
+      sim.fog = sim.fog.map(() => 0xffffffff);
+    }),
     spawnChampionPack: act((sim, _scene, enemyIds: string[], champion: number | null = 0) => {
       enemyIds.forEach((enemyId, i) => {
         spawnEnemy(sim, enemyId, { x: sim.player.x + (CHAMPIONS.devPack.ahead + i * CHAMPIONS.devPack.gap) * TILE_SIZE, y: sim.player.y }, sim.roomId, { group: 'dev', champion: i === champion });
