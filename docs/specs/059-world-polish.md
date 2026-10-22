@@ -1,5 +1,7 @@
 # 059: World and arena polish
-status: draft
+status: approved
+
+Approved on draft by Shaun in chat, 2026-10-22 ("approve 59"): the build follows the proposals in the open questions.
 
 From Shaun's fresh playtest on 2026-10-22 (docs/brainstorm/2026-10-22-playtest-notes.md, theme D, landing with 058 in InsanityWolfz/Pipeline#64) and his spec interview the same day (docs/brainstorm/2026-10-22-world-polish-interview.md).
 
