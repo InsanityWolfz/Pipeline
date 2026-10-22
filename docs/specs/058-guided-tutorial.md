@@ -48,43 +48,43 @@ Removed: "Feed ammo into the new entrance", "Feed two entrances to fire a spread
 
 ## Acceptance criteria
 **The chain**
-- [ ] A new game's goals run in the order above, with the texts above; the removed steps never show (Shaun).
-- [ ] Step 12 shows only if the example line has run dry when the player reaches the foundry from step 11; otherwise the chain goes straight to step 13.
-- [ ] Step 15 is done the moment the player is outside the foundry; step 16 shows at once (Shaun: "make it go to … the second you leave the foundry").
-- [ ] The talent step cuts in as soon as the first point is earned and is done once a point is spent; the goal it interrupted comes back (Shaun).
-- [ ] After step 25 the goal panel and the waypoint arrows are gone for good; the minimap stays (Shaun).
+- [x] A new game's goals run in the order above, with the texts above; the removed steps never show (Shaun).
+- [x] Step 12 shows only if the example line has run dry when the player reaches the foundry from step 11; otherwise the chain goes straight to step 13.
+- [x] Step 15 is done the moment the player is outside the foundry; step 16 shows at once (Shaun: "make it go to … the second you leave the foundry").
+- [x] The talent step cuts in as soon as the first point is earned and is done once a point is spent; the goal it interrupted comes back (Shaun).
+- [x] After step 25 the goal panel and the waypoint arrows are gone for good; the minimap stays (Shaun).
 
 **Equip (step 9)**
-- [ ] With the bench's screen open, arrows point at the identified piece and then at what to click to wear it; the step is done when any piece is worn (Shaun: "maybe you put some little arrows in the menu").
+- [x] With the bench's screen open, arrows point at the identified piece and then at what to click to wear it; the step is done when any piece is worn (Shaun: "maybe you put some little arrows in the menu").
 
 **The right entrance (step 13)**
-- [ ] During the tutorial, only the right entrance's cap takes the Warden's core (Shaun, 058.5); the waypoint arrow points at it.
+- [x] During the tutorial, only the right entrance's cap takes the Warden's core (Shaun, 058.5); the waypoint arrow points at it.
 
 **The build lock**
-- [ ] From the first foundry visit until step 19 is done, the player can't place, pick up or rotate pieces in the foundry, except as the guided steps below allow (Shaun). Hoppers, crates, the stash, the bench and the intake still work as today.
-- [ ] During steps 14 and 19, the only piece that can be placed is the one the step asks for next, only on its ghost tile, facing the ghost's way; anything else is refused with a short hint (Shaun).
-- [ ] After step 19, building is open as today.
-- [ ] A save that had already restored the second entrance when this ships builds freely and keeps its goals; earlier saves get the new steps (Shaun). If the build has to bump `SAVE_VERSION`, older saves read as too old (docs/process.md "Saves") and this applies only to saves the build can still read.
+- [x] From the first foundry visit until step 19 is done, the player can't place, pick up or rotate pieces in the foundry, except as the guided steps below allow (Shaun). Hoppers, crates, the stash, the bench and the intake still work as today.
+- [x] During steps 14 and 19, the only piece that can be placed is the one the step asks for next, only on its ghost tile, facing the ghost's way; anything else is refused with a short hint (Shaun).
+- [x] After step 19, building is open as today.
+- [x] A save that had already restored the second entrance when this ships builds freely and keeps its goals; earlier saves get the new steps (Shaun). If the build has to bump `SAVE_VERSION`, older saves read as too old (docs/process.md "Saves") and this applies only to saves the build can still read.
 
 **The ley bolt line (step 14)**
-- [ ] Ghosts show a complete ley bolt line: from the ley crystal port, by conduits, into a grinder, then a focuser, then by conduits into the right entrance. They don't touch the example arrow line (Shaun).
-- [ ] The step's sub-lines name the next piece to place; in build mode an arrow points at that piece in the build bar, and the ghost tile it goes on is marked (Shaun: "the arrows like point you in the bottom left when you're in build mode, like what to build").
-- [ ] The step is done when ley bolts reach the right entrance.
+- [x] Ghosts show a complete ley bolt line: from the ley crystal port, by conduits, into a grinder, then a focuser, then by conduits into the right entrance. They don't touch the example arrow line (Shaun).
+- [x] The step's sub-lines name the next piece to place; in build mode an arrow points at that piece in the build bar, and the ghost tile it goes on is marked (Shaun: "the arrows like point you in the bottom left when you're in build mode, like what to build").
+- [x] The step is done when ley bolts reach the right entrance.
 
 **The frost rune (step 19)**
-- [ ] An arrow points at the conduit leaving the arrow assembler, with "Right click to remove" (Shaun). Once it's removed, an arrow points at the frost rune in the build bar and a ghost shows where it goes (Shaun).
-- [ ] Then ghost conduits run from the rimestone port to the frost rune, with a ghost underground entrance and exit where they cross the ley bolt line from step 14, so the player builds their first underground belt there (Shaun).
-- [ ] The step is done when the line makes frost arrows (today's check); the build lock lifts at the same moment.
+- [x] An arrow points at the conduit leaving the arrow assembler, with "Right click to remove" (Shaun). Once it's removed, an arrow points at the frost rune in the build bar and a ghost shows where it goes (Shaun).
+- [x] Then ghost conduits run from the rimestone port to the frost rune, with a ghost underground entrance and exit where they cross the ley bolt line from step 14, so the player builds their first underground belt there (Shaun).
+- [x] The step is done when the line makes frost arrows (today's check); the build lock lifts at the same moment.
 
 **Placement**
-- [ ] The waypoint arrow over a target never overlaps the target's key prompt (E, C, B) (Shaun).
-- [ ] In the foundry, the goal panel sits right under the minimap (Shaun).
+- [x] The waypoint arrow over a target never overlaps the target's key prompt (E, C, B) (Shaun).
+- [x] In the foundry, the goal panel sits right under the minimap (Shaun).
 
 **Texts outside the goal line**
-- [ ] The pylon's "Send haul home" button reads "Send inventory to stash" (Shaun).
+- [x] The pylon's "Send haul home" button reads "Send inventory to stash" (Shaun).
 
 **Unlock banner**
-- [ ] When a crafting recipe becomes available, a banner at the top (where the area banners show) says "Unlocked <name>"; several unlocked at once share one banner (Shaun).
+- [x] When a crafting recipe becomes available, a banner at the top (where the area banners show) says "Unlocked <name>"; several unlocked at once share one banner (Shaun).
 
 ## Data changes
 - `src/data/objectives.ts`: the new chain, texts and checks (equip, fast travel, talent spent, claimed frozen-grotto, outside the foundry); the talent step as a cut-in; no frontier line.
@@ -113,3 +113,23 @@ Each has a proposal; the build follows it unless Shaun says otherwise.
 - **058.5 The ghost layouts.** Decided by Shaun after the plan found a problem (2026-10-22, "Ley bolts to the right"). Into the left entrance, the ley line and the example line fence off the room's top-left corner, so the rimestone line would cross the ley line twice or not at all. So the ley bolt line goes to the right entrance: from the ley crystal port it runs east under the example line and up into the right entrance. The rimestone line goes north from its port, crosses the ley line once with one underground pair, and feeds the frost rune from its left side. The plan picks the exact tiles; both lines stay clear of the example line, the stash, the bench and the door.
 - **058.6 Removing the conduit.** Proposal: during step 19 the conduit leaving the assembler is the only piece right click can pick up; it goes into the inventory as usual.
 - **058.7 The equip arrows.** Proposal: the first arrow points at the identified piece in the bench's screen, the second at the slot it goes in (or its equip button, whichever the screen uses).
+
+## Raised after the build
+Build-time choices the spec didn't decide; the conservative option is built. Shaun OKs or changes them.
+- **058.8 The bench screen's arrows.** The screen has no equip button: a click on a piece's row wears it. Built: on another slot's tab, the first arrow points at that slot's tab; on it, the arrow points at the piece's row.
+- **058.9 Feeding the left entrance after the tutorial.** With the frost rune fed from (11,2), the left entrance's floor tile (11,1) is boxed in by the rimestone conduit, the wall and the example line. Step 25 ("Feed all three entrances") then needs an underground pair from (11,6) up under the example line to (11,1), or a reroute; the tutorial bot uses the pair. Built: no extra hint. Does step 24 or 25 need a pointer?
+- **058.10 When the first talent point comes.** The tutorial bot reaches level 2 while gathering (at goal 3, "Craft arrows"), before the ruin field, so the cut-in shows there and the line goes back to "Craft arrows (C)".
+- **058.11 The talent cut-in's marks.** It has no waypoint arrow or key prompt (it's done anywhere, with T); the text names the key.
+- **058.12 Who the build lock applies to.** Only the real game's start (New game): `?playtest`, `?start=…` and the sandbox build freely. The goal flags moved, so `SAVE_VERSION` is 12 with no migration; no existing save can be read, so the old-save rule applies to none.
+- **058.13 The sub-line's count.** A run of the same piece counts what's built of it: "Place conduits 0/2", then "1/2"; a lone piece reads "Place a grinder"; the removal reads "Remove the conduit".
+- **058.14 The unlock banner's look.** "Unlocked" as the small line over the names, joined with commas; past 420 px it breaks after a comma onto a second line (the shrine's claim unlocks six tagged rounds at once). Recipes known when the game scene starts (a New game's arrows, a loaded save's) aren't announced.
+- **058.15 The refusal hint.** "Build on the glowing outline" (guided step) or "Not yet" shows over the build bar for 1.6 s, for refused placements and pick-ups.
+- **058.16 A guided conduit's shape.** On its ghost a conduit always takes the ghost's corner, whatever way the drag laid it.
+- **058.17 Small things the new chain left over.** "Wait for the tube to fill with arrows" points at the intake with no key prompt; the waypoint targets no goal uses any more (site pylons, ports, the new entrance) and the away clock are gone; the prototype counts as complete at "Leave the foundry".
+
+## Results (build)
+- Layouts (058.5, docs/plans/058-guided-tutorial.md): the ley line is 25 pieces from (2,10) along row 10 (grinder (4,10), focuser (5,10)), up column 15 and along row 1 into (13,1); the frost step is a removal, the frost rune at (12,2) and 19 pieces from (2,12) up column 3, under the ley conduit (3,10) by the pair (3,11)→(3,9), and along row 2 into (11,2). A sim test builds each in order: ley bolts reach the right entrance, frost arrows the centre one.
+- Criteria: all met. Chain, refill skip, leave-at-once, talent cut-in (and 058.4), the end with no panel or arrows, the lock and its ghost-only exceptions, the right cap only, both guided lines, the pylon text: Vitest (tests/sim/guidedTutorial.test.ts, guidedLayouts.test.ts, goals, foundryTutorial, objectiveTarget). The bench arrows, the build-bar arrow with greyed cells and their locked line, the refusal hint and the unlock banner: tests/e2e/guidedTutorial.spec.ts. The prompt clearance: tests/render/waypointPlace.test.ts. The old-save criterion: met as its own clause allows (058.12).
+- tests/e2e/tutorial.spec.ts plays a New game to the end: the ruin field and the shrine fought by the bot, both guided lines built ghost by ghost (an off-ghost placement refused each time), the lock checked, and from the Frozen Grotto on the guards and the Bulwark felled through the hook (as hollows.spec.ts does). It ends with the line empty, no waypoint, the minimap shown. About 35 s locally.
+- Review shots, docs/review/058: 01–02 the bench arrows (tab, then row), 03 the ley line's ghosts with the build-bar arrow, 04 the remove arrow, 05 the frost rune ghost, 06 the underground ghosts, 07 the goal panel under the foundry minimap with the arrow clear of the bench's E, 08 an unlock banner, 09 the goal area empty after the end.
+- Checks: `npm run check` green (1,857 unit tests). Locally the touched e2e passed (tutorial, guidedTutorial, foundryTutorial, foundryFlow, guidance, claiming, equipment, research, tunnels and the other tutorial-start specs); older shot specs run with REVIEW_SHOTS=1 had their staging fixed where the chain moved (guidanceShots' refill text, foundryFlow's port goal) and their images restored as on main. CI green on 76de8d4.

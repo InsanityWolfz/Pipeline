@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { PYLON_MENU_TEXT } from '../../src/data/claims';
 import { GUIDED_BUILDS, GUIDED_TEXT, type Ghost } from '../../src/data/guidedBuilds';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { PLAYTEST_START } from '../../src/data/playtest';
@@ -253,5 +254,11 @@ describe('the guided sub-line (058.2)', () => {
     expect(GUIDED_TEXT.place('conduit', 1, 2)).toBe('Place conduits 1/2');
     expect(GUIDED_TEXT.place('grinder', 0, 1)).toBe('Place a grinder');
     expect(GUIDED_TEXT.place('underground entrance', 0, 1)).toBe('Place an underground entrance');
+  });
+});
+
+describe("the pylon's menu (058)", () => {
+  it('reads "Send inventory to stash"', () => {
+    expect(PYLON_MENU_TEXT.deposit(3)).toBe('Send inventory to stash (3)');
   });
 });
