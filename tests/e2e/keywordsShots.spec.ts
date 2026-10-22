@@ -37,8 +37,9 @@ async function toMeadow(page: Page, slot: string): Promise<void> {
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     h.toHall();
-    // South of the ruin field (017), on open ground.
-    h.walkTo((44.5 + h.ox) * 32, (19.5 + h.oy) * 32);
+    // South of the ruin field (017), on open ground just east of the foundry's gatehouse (053), which covers 017's
+    // spot two tiles west.
+    h.walkTo((46.5 + h.ox) * 32, (19.5 + h.oy) * 32);
     window.__helpers?.hold(s);
     g.spawnChampionPack(['husk', 'husk', 'husk'], null);
     g.step(20);
