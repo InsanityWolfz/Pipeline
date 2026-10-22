@@ -28,6 +28,11 @@ export const SITE_SUPPLY: Readonly<Record<string, readonly string[]>> = {
   ...Object.fromEntries(LANDMARK_LIST.flatMap((l) => (l.pylon ? [[l.pylon.site, l.pylon.supplies]] : []))),
 };
 
+/** 059: sites whose pylon sends at more than one pylon's rate, by site id (the Grotto's at 2×); any other counts 1. */
+export const SITE_RATE: Readonly<Record<string, number>> = Object.fromEntries(
+  LANDMARK_LIST.flatMap((l) => (l.pylon?.rate !== undefined && l.pylon.rate !== 1 ? [[l.pylon.site, l.pylon.rate]] : [])),
+);
+
 /** A resource site's safe radius, tiles (032): smaller than the shrine's 10, so five claims don't starve spawning. */
 export const SITE_SAFE_RADIUS = 7;
 

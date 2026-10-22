@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { CLAIM_TICKS, SITE_SAFE_RADIUS, SITE_SUPPLY, SUPPLY_TICKS } from '../../src/data/claims';
+import { CLAIM_TICKS, SITE_RATE, SITE_SAFE_RADIUS, SITE_SUPPLY, SUPPLY_TICKS } from '../../src/data/claims';
 import { GROTTO, GROTTO_GROUP } from '../../src/data/grotto';
 import { landmarkDef } from '../../src/data/landmarks';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { SHRINE_SITE } from '../../src/data/rooms';
-import { claim, dormant } from '../../src/sim/claims';
+import { claim, dormant, portPerMinute, portSupply } from '../../src/sim/claims';
 import { fixtureDef, portFront } from '../../src/sim/fixtures';
 import type { CrateState } from '../../src/sim/pieces';
 import { createSim, type SimState } from '../../src/sim/state';
@@ -79,10 +79,11 @@ describe('the rimestone port', () => {
     claim(s, SHRINE_SITE);
     expect(rimePort(s)).toBeUndefined();
     claim(s, GROTTO_GROUP);
-    expect(summarize(s).ports.find((p) => p.raw === 'rimestone')).toMatchObject({ id: 'rimestone-port', pylons: 1, perMinute: 15 });
+    // 059: the Grotto's pylon sends at twice a pylon's rate, 30 a minute, still one pylon on the plate.
+    expect(summarize(s).ports.find((p) => p.raw === 'rimestone')).toMatchObject({ id: 'rimestone-port', pylons: 1, perMinute: 30 });
   });
 
-  it('pushes rimestone into the piece in front of it every SUPPLY_TICKS', () => {
+  it('pushes rimestone into the piece in front of it every SUPPLY_TICKS / 2 (059: 30 a minute)', () => {
     const s = foundry();
     claim(s, SHRINE_SITE);
     claim(s, GROTTO_GROUP);
@@ -91,7 +92,14 @@ describe('the rimestone port', () => {
     const front = portFront(port);
     const crate = put<CrateState>(s, 'crate', front.tx, front.ty);
     run(s, SUPPLY_TICKS * 2);
-    expect(crate.contents).toEqual({ rimestone: 2 });
+    expect(crate.contents).toEqual({ rimestone: 4 });
+  });
+
+  it("is the only pylon at 2×: every other site's rate is unchanged (059)", () => {
+    expect(SITE_RATE).toEqual({ [GROTTO_GROUP]: 2 });
+    expect(portSupply([SHRINE_SITE, GROTTO_GROUP], 'rimestone')).toBe(2);
+    expect(portSupply([SHRINE_SITE, GROTTO_GROUP], 'wood')).toBe(1);
+    expect(portPerMinute(portSupply([GROTTO_GROUP], 'rimestone'))).toBe(30);
   });
 
   it('replays identically', () => {

@@ -9,7 +9,7 @@ import { landmarkDef, landmarkOfSite } from '../data/landmarks';
 import type { PylonDef } from '../data/rooms';
 import { isOpened } from '../sim/cache';
 import { dormant, occupied } from '../sim/claims';
-import { portPerMinute, pylonsOf } from '../sim/claims';
+import { portPerMinute, pylonsOf, supplyOf } from '../sim/claims';
 import { INTAKE } from '../data/foundry';
 import { enemyDef } from '../data/enemies';
 import { CHAMPIONS } from '../data/champions';
@@ -100,7 +100,7 @@ export function nameAt(sim: SimState, roomId: string, px: number, py: number): H
       if (def.kind !== 'port') return { name: def.name, ...centre(def), rise: HOVER_NAME.tile.rise };
       // A supply port (028): its plate's text, and whether a refused raw is waiting in it.
       const pylons = pylonsOf(sim, fixture);
-      const plate = portPlate(pylons, portPerMinute(pylons));
+      const plate = portPlate(pylons, portPerMinute(supplyOf(sim, fixture)));
       return { name: def.name, ...centre(def), rise: HOVER_NAME.tile.rise, description: portHover(plate, fixture.item !== null) };
     }
   }

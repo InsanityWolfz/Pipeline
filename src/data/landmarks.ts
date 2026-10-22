@@ -33,6 +33,8 @@ export interface GuardPlacement {
 export interface LandmarkPylon extends TilePos {
   readonly site: string;
   readonly supplies: readonly string[];
+  /** 059: how many pylons' worth it sends (default 1): the Grotto's sends rimestone at 2×. */
+  readonly rate?: number;
 }
 
 export interface LandmarkDef {
@@ -102,8 +104,8 @@ const FROZEN_GROTTO: LandmarkDef = {
   features: [],
   nodes: GROTTO.nodes,
   guards: GROTTO.pack,
-  // 055 (D.6): its pylon sends rimestone home.
-  pylon: { ...GROTTO.pylon, site: GROTTO_GROUP, supplies: ['rimestone'] },
+  // 055 (D.6): its pylon sends rimestone home; 059 (Shaun): at 2×, 30 a minute, so frost arrows keep going.
+  pylon: { ...GROTTO.pylon, site: GROTTO_GROUP, supplies: ['rimestone'], rate: 2 },
   marker: 'grotto',
   look: { hollow: 'frost' },
 };
