@@ -116,3 +116,6 @@ export const DISCOVERY_BANNER = {
 
 /** 058 (Shaun): a recipe new to the crafting menu (C) shows in the same banner: this kicker over its name, several joined in one. */
 export const UNLOCK_BANNER = { kicker: 'Unlocked', join: ', ' } as const;
+
+/** 058: a banner's name wider than this, view px, breaks onto more lines after a comma (several unlocks in one). */
+export const BANNER_NAME_MAX_W = 420;

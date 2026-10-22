@@ -202,6 +202,8 @@ export interface UiState {
   research: ResearchShown;
   /** 058: the last few banners that started (discoveries, schematics, recipe unlocks), oldest first. */
   banners: { kind: string; kicker: string; name: string }[];
+  /** 058: how strongly the banner showing now shows (0..1; 0 with none). */
+  bannerAlpha: number;
   /** 033: the schematics' light pillars and the banner's schematic line. */
   schematics: SchematicsShown;
   /** 033: the restore panel while open (E at a diagram), else null. */
