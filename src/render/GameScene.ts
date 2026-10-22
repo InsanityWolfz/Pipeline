@@ -7,14 +7,12 @@ import { advanceClock, createClock } from '../sim/clock';
 import { craft } from '../sim/crafting';
 import { clearEvents, createEvents, type SimEvents } from '../sim/events';
 import type { Command } from '../sim/input';
-import { canPlace, conduitInFrom, unlockedPieces } from '../sim/placement';
 import { roomById, type SimState } from '../sim/state';
 import { stepSim } from '../sim/step';
 import { ArrowView } from './ArrowView';
 import { BombView } from './BombView';
 import { BuildView } from './BuildView';
 import { Controls, NO_UI_COMMAND, type UiCommand } from './controls';
-import { ghostShape } from './dragPath';
 import { CraftMenuView } from './CraftMenuView';
 import { EffectsView } from './EffectsView';
 import { EnemyView } from './EnemyView';
@@ -29,7 +27,7 @@ import { SiteView } from './SiteView';
 import { WakeView } from './WakeView';
 import { mergeEvents } from './eventLog';
 import { FeelView } from './FeelView';
-import { highlightOf, TutorialUi } from './TutorialUi';
+import { TutorialUi } from './TutorialUi';
 import { currentFit, type ScreenFit } from './scale';
 import { bakeVectors } from './vector/textures';
 import type { GameUiState } from './testHook';
@@ -44,6 +42,8 @@ import { Legibility } from './Legibility';
 import { IDLE_HOST, type GameHost } from './flow/host';
 import { SandboxPanel } from './SandboxPanel';
 import { TunnelView } from './TunnelView';
+import { drawPointerUi } from './pointerUi';
+import { RoomFollow } from './roomFollow';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -85,9 +85,8 @@ export class GameScene extends Scene {
   legibility?: Legibility;
   /** 044: the Sandbox panel (056, 057: the sandbox's controls, pop-outs there, and only there). */
   sandboxPanel?: SandboxPanel;
-  /** The room on screen. It lags the player's room through a door's fade. */
-  private shownRoomId: string;
-  private fading = false;
+  /** The room on screen. It lags the player's room through a door's fade (roomFollow.ts). */
+  private readonly room: RoomFollow;
   /** Events from every tick since the last draw; the sim clears its own each tick. */
   private readonly pending: SimEvents = createEvents();
   /** Set by the test hook: the real-time loop stops advancing the sim (the menu still opens and crafts). */
@@ -102,7 +101,12 @@ export class GameScene extends Scene {
     super('game');
     this.sim = sim;
     this.host = host;
-    this.shownRoomId = sim.roomId;
+    this.room = new RoomFollow(sim.roomId, {
+      playerRoom: () => this.sim.roomId,
+      show: (roomId) => this.roomViews?.show(roomById(roomId)),
+      fadeThrough: (atDark) => this.sceneCameras?.fadeThrough(atDark),
+      centreOnPlayer: () => this.cameras.main.centerOn(this.sim.player.x, this.sim.player.y),
+    });
     // Events made before the first tick (042: Continue's wake in the foundry) play on the first draw.
     mergeEvents(this.pending, sim.events);
   }
@@ -139,7 +143,7 @@ export class GameScene extends Scene {
     this.legibility = new Legibility(this, [this.hud, this.siteMenus, this.buildView]);
     this.cursorView = new CursorView(this);
     this.feel = new FeelView(this, (id) => this.foundryView?.dropIn(id), (id, ms) => this.enemyView?.freeze(id, ms));
-    this.showRoom(this.sim.roomId);
+    this.room.show(this.sim.roomId);
     this.draw();
 
     const camera = this.cameras.main;
@@ -212,42 +216,16 @@ export class GameScene extends Scene {
     this.host.afterTick(this.sim);
   }
 
-  /** Draws a room's ground and fits the camera to it. */
-  private showRoom(roomId: string): void {
-    this.shownRoomId = roomId;
-    this.roomViews?.show(roomById(roomId));
-  }
-
-  /**
-   * Keeps the room on screen in step with the player's. Through a door it fades
-   * out, swaps the room at dark and fades back in. A KO has its own fade, so the
-   * room swaps straight away.
-   */
-  private followRoom(ko: boolean): void {
-    if (this.fading || this.shownRoomId === this.sim.roomId) return;
-    const camera = this.cameras.main;
-    if (ko) {
-      this.showRoom(this.sim.roomId);
-      return;
-    }
-    this.fading = true;
-    this.sceneCameras?.fadeThrough(() => {
-      this.showRoom(this.sim.roomId);
-      camera.centerOn(this.sim.player.x, this.sim.player.y);
-      this.fading = false;
-    });
-  }
-
   private draw(): void {
     // Before create() runs there are no views to hand events to; keep them for later.
     if (!this.effects) return;
     const sim = this.sim;
-    this.followRoom(this.pending.woke);
-    if (!this.fading && this.playerView) this.sceneCameras?.attuneLook(sim, this.shownRoomId, this.playerView.sprite);
+    this.room.follow(this.pending.woke);
+    if (!this.room.fading && this.playerView) this.sceneCameras?.attuneLook(sim, this.room.shownRoomId, this.playerView.sprite);
     this.effects.play(this.pending, sim.player);
     if (this.pending.identifies.length > 0) this.site?.identified();
     if (this.pending.woke) this.wake?.show(this.pending.lost, sim);
-    const shown = this.shownRoomId;
+    const shown = this.room.shownRoomId;
     this.feel?.update(sim, this.pending, shown, this.game.loop.delta);
     this.roomViews?.update(sim, this.pending, shown, this.game.loop.delta);
     // 051: the fixed HUD boxes the waypoint arrow keeps clear of.
@@ -272,29 +250,8 @@ export class GameScene extends Scene {
     this.site?.update(sim, shown);
     this.siteMenus?.update(sim);
     this.menu?.update(sim);
-    const controls = this.controls;
-    const cursor = controls && inFoundry && controls.overWorld() ? controls.cursorTile() : null;
-    this.buildView?.update(
-      sim.building,
-      unlockedPieces(sim),
-      cursor,
-      controls?.facing ?? 'right',
-      controls?.mirrored ?? false,
-      (...a) => canPlace(sim, ...a),
-      (t, f) => ghostShape(controls?.heldLay() ?? null, t, f, (u, g) => conduitInFrom(sim, u.tx, u.ty, g)),
-      highlightOf(sim),
-    );
-    this.tunnelView?.update(sim.foundry, inFoundry, { building: sim.building, selected: this.buildView?.selected ?? '', cursor, facing: controls?.facing ?? 'right' });
-    // Menu rows light under the cursor (020).
-    const pointer = controls?.viewPointer();
-    if (pointer) for (const menu of [this.siteMenus, this.pause, this.hud, this.sandboxPanel, this.roomViews]) menu?.pointAt(pointer.x, pointer.y);
-    // The arrow pointer while a menu is open or over the build bar, else the crosshair (021).
-    // 056: the sandbox's tabs are always up, so they turn the pointer to the arrow only under them.
-    const inMenu = [this.menu, this.pause, this.siteMenus, this.hud?.inventory, this.hud?.talents, this.legibility].some((m) => m?.isOpen) || (this.wake?.isShown ?? false);
-    this.cursorView?.update(inMenu || (pointer !== undefined && [this.buildView, this.legibility, this.sandboxPanel].some((v) => v?.overUi(pointer.x, pointer.y))));
-    const point = controls?.overWorld() ? controls.cursorPoint() : null;
-    this.hover?.update(sim, shown, point, (id) => this.foundryView?.topOf(id), this.cameras.main.worldView);
-    this.legibility?.update(sim, this.pause?.isOpen ? null : (pointer ?? null), controls?.shiftHeld() ?? false, this.game.loop.delta);
+    const topOf = (id: number) => this.foundryView?.topOf(id);
+    drawPointerUi(this, sim, { controls: this.controls, topOf, wakeShown: () => this.wake?.isShown ?? false, shown, inFoundry });
     this.drawnTick = sim.tick;
   }
 }
