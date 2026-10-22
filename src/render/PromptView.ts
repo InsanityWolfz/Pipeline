@@ -13,7 +13,7 @@ import { roomById, type SimState } from '../sim/state';
 import { stoneInReach } from '../sim/tutorial';
 import { TextLine } from './textLine';
 import { boundLetter } from './keyHint';
-import type { ViewRect } from './waypointPlace';
+import { capBox, type ViewRect } from './waypointPlace';
 import { addVector } from './vector/textures';
 
 /** A world point, px: where a prompt's target stands. */
@@ -41,11 +41,9 @@ export class PromptView {
     this.key = new TextLine(scene, 0, 0, DEPTHS.prompt + 1, true);
   }
 
-  /** 058: the key cap's world rect while it shows (the waypoint arrow keeps clear of it), else null. */
+  /** 058: the key cap's world rect while it shows, else null. */
   get capBox(): ViewRect | null {
-    if (!this.cap.visible) return null;
-    const c = this.cap;
-    return { x0: c.x - c.displayWidth / 2, y0: c.y - c.displayHeight, x1: c.x + c.displayWidth / 2, y1: c.y };
+    return capBox(this.cap);
   }
 
   update(sim: SimState, shown: string): void {

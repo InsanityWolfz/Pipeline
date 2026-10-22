@@ -74,11 +74,14 @@ export class TutorialUi {
     return this.objective.overUi(x, y);
   }
 
-  /** Draws the tutorial for the room on screen; `events` since the last draw pop a machine step's "+ shaft" (027) over its piece's top (`topOf`). */
-  update(sim: SimState, shown: string, events: SimEvents, topOf: (id: number) => number | undefined, hud: readonly ScreenBox[] = []): void {
+  /**
+   * Draws the tutorial for the room on screen; `events` since the last draw pop a machine step's "+ shaft" (027) over its
+   * piece's top (`topOf`). `deltaMs` is the frame's time on the tween clock (as the banner's), for the guided hint.
+   */
+  update(sim: SimState, shown: string, events: SimEvents, deltaMs: number, topOf: (id: number) => number | undefined, hud: readonly ScreenBox[] = []): void {
     this.made.play(events, sim.foundry, shown, topOf);
     this.world.update(sim, shown);
-    this.guided.update(sim, shown, events);
+    this.guided.update(sim, shown, events, deltaMs);
     this.objective.update(sim);
     this.prompt.update(sim, shown);
     const band = this.objective.box;

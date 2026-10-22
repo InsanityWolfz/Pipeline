@@ -14,6 +14,14 @@ export interface ViewRect {
   y1: number;
 }
 
+/** A key cap as drawn: shown or not, and its bottom-centre point (origin 0.5, 1) and size. */
+type CapLike = { visible: boolean; x: number; y: number; displayWidth: number; displayHeight: number };
+
+/** 058: a key cap's world rect while it shows (the waypoint arrow keeps clear of it), else null. */
+export function capBox(c: CapLike): ViewRect | null {
+  return c.visible ? { x0: c.x - c.displayWidth / 2, y0: c.y - c.displayHeight, x1: c.x + c.displayWidth / 2, y1: c.y } : null;
+}
+
 /** How far over its ground point the arrow's tip sits (src/data/targets.ts). */
 export function tipLift(target: Pick<GoalPoint, 'kind' | 'ref'>, via: Waypoint['via'] = 'target'): number {
   if (via === 'door') return TARGET_LIFT.door;

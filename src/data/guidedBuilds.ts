@@ -80,15 +80,8 @@ function plural(name: string): string {
   return name.endsWith('s') ? name : `${name}s`;
 }
 
-/** The short names the sub-lines use for pieces whose build-bar name is longer ("Ley conduit" reads "conduit"). */
-export const GUIDED_NAMES: Readonly<Record<string, string>> = {
-  conduit: 'conduit',
-  grinder: 'grinder',
-  focuser: 'focuser',
-  'frost-rune': 'frost rune',
-  'underground-entrance': 'underground entrance',
-  'underground-exit': 'underground exit',
-};
+/** The short names the sub-lines use where a piece's build-bar name is longer ("Ley conduit" reads "conduit"); others use it lowercased. */
+export const GUIDED_NAMES: Readonly<Record<string, string>> = { conduit: 'conduit' };
 
 /** 058.5: during the tutorial the Warden core's entrance node fits only this cap, the right one (INTAKE.entrances' index). */
 export const TUTORIAL_CAP = 2;

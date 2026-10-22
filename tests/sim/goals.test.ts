@@ -13,6 +13,8 @@ import { foundry } from './foundryKit';
 const LEAVE = OBJECTIVES.findIndex((o) => o.check.kind === 'outside');
 const CLAIMED = OBJECTIVES.findIndex((o) => o.check.kind === 'claimed');
 const CHAIN = OBJECTIVES.filter((o) => !o.cutIn);
+/** The chain's last goal's index in OBJECTIVES (the talent cut-in may sit after it). */
+const LAST = OBJECTIVES.findIndex((o) => o === CHAIN.at(-1));
 const M1 = CHAIN.filter((o) => o.milestone === 'm1');
 
 describe('the chain', () => {
@@ -86,10 +88,11 @@ describe('the line after the shrine', () => {
   it('shows the first unfinished goal, and agrees with the summary, whichever goals after the claim are done', () => {
     const after = CHAIN.length - CLAIMED - 1;
     expect(after).toBeGreaterThan(0);
+    expect(LAST).toBeGreaterThan(CLAIMED);
     const s = createSim(SEED);
     // The chain's last goal open, so the line isn't over; the rest after the claim in every combination.
     for (let mask = 0; mask < 1 << (after - 1); mask++) {
-      s.objectives = OBJECTIVES.map((o, i) => !o.cutIn && i !== OBJECTIVES.length - 2 && (i <= CLAIMED || ((mask >> (i - CLAIMED - 1)) & 1) === 1));
+      s.objectives = OBJECTIVES.map((o, i) => !o.cutIn && i !== LAST && (i <= CLAIMED || ((mask >> (i - CLAIMED - 1)) & 1) === 1));
       const line = objectiveLine(s);
       const first = currentObjective(s);
       expect(first, `mask ${mask}`).not.toBeNull();

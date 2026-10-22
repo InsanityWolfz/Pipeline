@@ -99,7 +99,8 @@ export function stepObjectives(state: SimState): void {
     if (state.objectives[i] || !holds(state, def.check) || (def.inOrder && !before(state, i))) continue;
     state.objectives[i] = true;
     state.events.objectives.push({ index: i });
-    // 058: a goal that shows only if the lines ran dry by now is skipped, unseen, if they haven't.
+    // 058: a goal that shows only if the lines ran dry by now is skipped, unseen, if they haven't (its trigger goal is
+    // `inOrder`, so this is decided when that goal is the current one).
     if (!state.lineRanDry) for (const [k, other] of OBJECTIVES.entries()) if (other.skipUnlessDryAfter === def.check.kind) state.objectives[k] = true;
   }
   noteSubSteps(state, currentObjective(state));

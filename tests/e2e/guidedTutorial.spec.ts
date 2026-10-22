@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { GUIDED_BUILDS, GUIDED_TEXT } from '../../src/data/guidedBuilds';
-import { boot, watchErrors } from './helpers';
+import { boot, cameraSettled, watchErrors } from './helpers';
 import { goalTo, newGameInFoundry } from './guidedPage';
 import { clickBar, screenPoint, state, step, STAND, centre, clickTile, toggleBuild } from './foundryPage';
 
@@ -60,7 +60,7 @@ test('in build mode the bar points at the next ghost piece; the rest is greyed a
   await page.evaluate(() => window.__GAME__?.claim('shrine'));
   await goalTo(page, 'Put ley bolts into the second entrance (B)');
   await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [centre(STAND.tx, STAND.ty).x, centre(STAND.tx, STAND.ty).y] as const);
-  await page.waitForTimeout(1500);
+  await cameraSettled(page);
   // The ghosts show in the world, the next first; its tile is the waypoint's target.
   await expect.poll(async () => (await ui(page))?.guided.ghosts.length).toBe(GUIDED_BUILDS['ley-line'].length);
   expect((await ui(page))?.guided.ghosts[0]).toMatchObject({ pieceId: 'conduit', tx: 2, ty: 10, next: true });
@@ -89,7 +89,11 @@ test('new recipes in the crafting menu show an "Unlocked" banner, several in one
   const errors = watchErrors(page);
   await boot(page, '?start=tutorial');
   await page.evaluate(() => window.__GAME__?.step(1));
-  await page.waitForTimeout(300);
+  // A frame drawn on that tick: the unlock banner has taken the start's recipes as seen.
+  await page.waitForFunction(() => {
+    const g = window.__GAME__;
+    return !!g && g.ui().drawnTick === g.getState().tick;
+  });
   // The ruin field's pack felled: the foundry's stairs open, and bombs and ley bolts become craftable (051, B.3).
   await page.evaluate(() => {
     const g = window.__GAME__;

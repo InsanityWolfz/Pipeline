@@ -36,7 +36,6 @@ const hintFor = (reason: PlaceFail): string | null => (reason === 'ghost' ? GUID
 // brighter with its piece drawn faintly, facing the way it must; a piece to remove gets "Right click to remove" beside
 // it. A placement the build lock refuses shows a short hint over the build bar for a moment.
 export class GuidedView {
-  private readonly scene: Scene;
   private readonly lines: GameObjects.Graphics;
   private readonly body: GameObjects.Image;
   private readonly arrows: GameObjects.Image[];
@@ -46,7 +45,6 @@ export class GuidedView {
   shown: GuidedShown = NO_GUIDED;
 
   constructor(scene: Scene) {
-    this.scene = scene;
     this.lines = scene.add.graphics().setDepth(DEPTHS.worldUi - 2);
     this.body = addVector(scene, 0, 0, bodyFrame('conduit', 'right', 'left')).setAlpha(GUIDED_LOOK.bodyAlpha).setDepth(DEPTHS.worldUi - 2).setVisible(false);
     this.arrows = Array.from({ length: MAX_ARROWS }, () => addVector(scene, 0, 0, FACING_ARROWS.out.down).setDepth(DEPTHS.worldUi - 1).setVisible(false));
@@ -54,12 +52,13 @@ export class GuidedView {
     this.hint = new TextLine(scene, 0, 0, DEPTHS.hud + 3, false, 'body').setVisible(false);
   }
 
-  update(sim: SimState, roomShown: string, events: SimEvents): void {
+  /** `deltaMs`: the frame's time on the tween clock, which counts the refusal hint down. */
+  update(sim: SimState, roomShown: string, events: SimEvents, deltaMs: number): void {
     const fail = [...events.placeFails, ...events.pickUpFails].map((f) => hintFor(f.reason)).find((t) => t !== null);
     if (fail) {
       this.hint.set(fail).moveTo(Math.round((VIEW_WIDTH - this.hint.width) / 2), buildBarLabelTop() - GUIDED_LOOK.hintRise - this.hint.lineHeight);
       this.hintMs = GUIDED_LOOK.hintMs;
-    } else this.hintMs = Math.max(0, this.hintMs - this.scene.game.loop.delta);
+    } else this.hintMs = Math.max(0, this.hintMs - deltaMs);
     const hint = this.hintMs > 0 ? this.hint.obj.text : null;
     this.hint.setVisible(hint !== null);
     const ghosts = roomShown === FOUNDRY_ROOM && sim.roomId === FOUNDRY_ROOM ? ghostsLeft(sim) : [];

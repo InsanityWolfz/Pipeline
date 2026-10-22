@@ -125,6 +125,20 @@ describe('the refill step', () => {
     expect(s.objectives[REFILL]).toBe(true);
     expect(currentObjective(s)).toBe(REFILL + 1);
   });
+
+  it('is decided when the fast travel goal is current, not by a fast travel made earlier', () => {
+    const s = tutorialAt(TRAVEL - 2);
+    s.travelled = true;
+    run(s, 1);
+    expect(s.objectives[TRAVEL]).toBe(false);
+    expect(s.objectives[REFILL]).toBe(false);
+    s.lineRanDry = true;
+    s.objectives[TRAVEL - 2] = true;
+    s.objectives[TRAVEL - 1] = true;
+    run(s, 1);
+    expect(s.objectives[TRAVEL]).toBe(true);
+    expect(currentObjective(s)).toBe(REFILL);
+  });
 });
 
 describe('leaving the foundry', () => {
@@ -206,12 +220,17 @@ describe('the build lock', () => {
     const first = nextGhost(s)?.ghost;
     expect(first).toEqual(GUIDED_BUILDS['ley-line'][0]);
     // Wrong facing, wrong tile, wrong piece: each refused with the ghost hint.
-    run(s, 1, { place: { pieceId: 'conduit', tx: 2, ty: 10, facing: 'up' } });
-    run(s, 1, { place: { pieceId: 'conduit', tx: 2, ty: 11, facing: 'right' } });
-    run(s, 1, { place: { pieceId: 'grinder', tx: 2, ty: 10, facing: 'right' } });
+    const refused = [
+      { pieceId: 'conduit', tx: 2, ty: 10, facing: 'up' },
+      { pieceId: 'conduit', tx: 2, ty: 11, facing: 'right' },
+      { pieceId: 'grinder', tx: 2, ty: 10, facing: 'right' },
+      { pieceId: 'conduit', tx: 18, ty: 12, facing: 'up' },
+    ] as const;
+    for (const place of refused) {
+      run(s, 1, { place });
+      expect(s.events.placeFails.map((f) => f.reason)).toEqual(['ghost']);
+    }
     expect(s.foundry.pieces.some((p) => p.tx === 2)).toBe(false);
-    run(s, 1, { place: { pieceId: 'conduit', tx: 18, ty: 12, facing: 'up' } });
-    expect(s.events.placeFails[0]?.reason).toBe('ghost');
     build(s, GUIDED_BUILDS['ley-line'][0] as Ghost);
     expect(nextGhost(s)?.index).toBe(1);
   });

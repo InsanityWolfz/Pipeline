@@ -66,7 +66,7 @@ export interface ObjectiveDef {
   subSteps?: 'collect';
   /** 058: a goal built piece by piece on ghosts (src/data/guidedBuilds.ts), with a sub-line for the next piece. */
   guided?: GuidedId;
-  /** 058: completes only once every goal before it is done (leaving the foundry would hold from the start). */
+  /** 058: completes only once every goal before it is done (leaving the foundry would hold from the start; a fast travel could come early). */
   inOrder?: true;
   /** 058: done unseen (skipped) if the lines haven't run dry by the tick the goal of this check completes. */
   skipUnlessDryAfter?: ObjectiveCheck['kind'];
@@ -112,6 +112,8 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
     text: 'Fast-travel to the foundry from the pylon (E)',
     milestone: 'prototype',
     check: { kind: 'travelled' },
+    // In order, so the refill's skip below is decided when this is the current goal, not by an earlier fast travel.
+    inOrder: true,
     prompt: { key: 'E', over: 'pylon' },
     target: { kind: 'pylon', site: 'shrine', claimed: true },
   },
