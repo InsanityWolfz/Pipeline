@@ -11,9 +11,12 @@ on:
 permissions:
   contents: write
 
+# One run per branch and event: a newer push to the same branch replaces its waiting run. Different branches no longer share
+# one group, since GitHub keeps only one waiting run per group and cancels the rest (a preview was lost that way);
+# the publish step retries instead when two branches push to gh-pages at once.
 concurrency:
-  group: gh-pages
-  cancel-in-progress: false
+  group: pages-${{ github.event_name }}-${{ github.event.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' }}
 
 jobs:
   deploy:
@@ -36,24 +39,37 @@ jobs:
           if [ "$BRANCH" = "main" ]; then target="."; else target="branch/$BRANCH"; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git fetch --depth=1 origin gh-pages; then
-            git worktree add site FETCH_HEAD
-          else
-            git worktree add --orphan -b gh-pages site
-          fi
-          if [ "$target" = "." ]; then
-            find site -mindepth 1 -maxdepth 1 ! -name .git ! -name branch -exec rm -rf {} +
-          else
-            rm -rf "site/$target"
-          fi
-          mkdir -p "site/$target"
-          cp -r dist/. "site/$target/"
-          touch site/.nojekyll
-          cd site
-          git add -A
-          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
-          git commit -qm "Deploy $BRANCH @ ${GITHUB_SHA::7}"
-          git push origin HEAD:gh-pages
+          publish() {
+            rm -rf site
+            git worktree prune
+            if git fetch --depth=1 origin gh-pages; then
+              git worktree add site FETCH_HEAD
+            else
+              git worktree add --orphan -b gh-pages site
+            fi
+            if [ "$target" = "." ]; then
+              find site -mindepth 1 -maxdepth 1 ! -name .git ! -name branch -exec rm -rf {} +
+            else
+              rm -rf "site/$target"
+            fi
+            mkdir -p "site/$target"
+            cp -r dist/. "site/$target/"
+            touch site/.nojekyll
+            cd site
+            git add -A
+            if git diff --cached --quiet; then echo "No changes"; cd ..; return 0; fi
+            git commit -qm "Deploy $BRANCH @ ${GITHUB_SHA::7}"
+            if git push origin HEAD:gh-pages; then cd ..; return 0; fi
+            cd ..
+            return 1
+          }
+          # Another branch's run may push to gh-pages first: start again from its new head.
+          for attempt in 1 2 3 4 5; do
+            if publish; then exit 0; fi
+            echo "gh-pages moved; retrying ($attempt)"
+            sleep $((attempt * 5))
+          done
+          exit 1
 
   remove:
     if: github.event_name == 'delete' && github.event.ref_type == 'branch'
@@ -71,4 +87,10 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rm -rq "branch/$BRANCH"
           git commit -qm "Remove preview for $BRANCH"
-          git push origin HEAD:gh-pages
+          # A deploy may push to gh-pages first: replay the removal on its new head.
+          for attempt in 1 2 3 4 5; do
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            sleep $((attempt * 5))
+            git pull -q --rebase origin gh-pages
+          done
+          exit 1
