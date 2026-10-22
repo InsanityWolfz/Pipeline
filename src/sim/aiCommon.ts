@@ -2,6 +2,7 @@ import { TICK_RATE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { attackOf, type BulwarkDef, type EnemyDef } from '../data/enemies';
 import { defOf } from './champions';
 import { unit } from './direction';
+import { arenaWaits } from './arenaWait';
 import { aggro, type EnemyState } from './enemies';
 import type { SimState } from './state';
 
@@ -100,9 +101,16 @@ export function engage(state: SimState, e: EnemyState, sees: boolean): [number, 
     e.mode = 'return';
     e.modeTicks = 0;
   }
+  // 059: posted in a boss arena, it waits for the player to come through the door, and goes back to its post once
+  // they're out (src/sim/arenaWait.ts).
+  const waits = arenaWaits(state, e);
+  if (waits && e.mode === 'chase') {
+    e.mode = 'return';
+    e.modeTicks = 0;
+  }
   if (e.mode === 'idle' || e.mode === 'return') {
     // Anything on screen wakes, however many (Shaun, 017: a player who rounds up a crowd gets the crowd).
-    if (!here || !sees) return e.mode === 'return' ? walkHome(e, defOf(e)) : [0, 0];
+    if (!here || !sees || waits) return e.mode === 'return' ? walkHome(e, defOf(e)) : [0, 0];
     aggro(e);
   }
   e.offScreenTicks = here && inAggroBox(e, state.player) ? 0 : e.offScreenTicks + 1;
