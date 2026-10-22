@@ -7,6 +7,7 @@ import { IDLE_SPEED } from '../data/config';
 import { DYING_TICKS, FEET_BOX, HIT_INVULN_TICKS } from '../data/player';
 import { ARMOR_TINTS } from '../data/hudLayout';
 import { aimFacing } from '../sim/direction';
+import { shownFacing } from './playerFacing';
 import { wornPieces, wornRelic } from '../sim/stats';
 import type { SimState } from '../sim/state';
 import { isRolling } from '../sim/movement';
@@ -70,6 +71,8 @@ export class PlayerView {
   private lastY = 0;
   private flapClock = 0;
   private lastTime = -1;
+  /** The facing drawn last frame, or null before the first. */
+  private facing: Facing | null = null;
 
   constructor(scene: Scene) {
     this.scale = textureScale();
@@ -116,7 +119,10 @@ export class PlayerView {
     const rolling = isRolling(p);
     const dx = p.aimX - p.x;
     const dy = p.aimY - (p.y - FEEL.aimHeight);
-    const facing = rolling ? p.facing : aimFacing(p.aimX - p.x, p.aimY - p.y, p.facing);
+    const ax = p.aimX - p.x;
+    const ay = p.aimY - p.y;
+    const facing = rolling ? p.facing : this.facing === null ? aimFacing(ax, ay, p.facing) : shownFacing(ax, ay, this.facing, FEEL.facingBand);
+    this.facing = facing;
     const view = viewOf(facing);
     const flip = facing === 'left';
     const heavy = hasTube && tube.firing;

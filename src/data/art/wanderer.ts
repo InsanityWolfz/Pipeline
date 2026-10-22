@@ -278,4 +278,10 @@ export const WANDERER_FEEL = {
   aimSpread: 0.85,
   /** Aim from this high above the feet, world px. */
   aimHeight: 14,
+  /**
+   * The sprite turns to the other axis only once the aim leads on it by this many world px. The aim is read once a
+   * frame but a frame steps 0 to 2 ticks, so walking one diagonal with the cursor on the other swings the aim across
+   * the 45° tie by up to two ticks' walk (about 5.7 px): without this the sprite flipped every frame.
+   */
+  facingBand: 6,
 } as const;
