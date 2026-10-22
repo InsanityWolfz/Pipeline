@@ -235,3 +235,5 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - The sandbox's open/close state and slide are pure (`src/render/sandboxPopout.ts`); `MenuColumn.moveTo` slides laid-out rows without rebuilding their text.
 - **Process (2026-10-21):**
   - CI (`.github/workflows/ci.yml`) runs on every push: `npm run check`, then Playwright in 4 shards (`--shard=N/4`), push trigger only so PRs don't run twice. Review shots stay out of CI (they skip without REVIEW_SHOTS=1).
+- **Housekeeping (2026-10-22):**
+  - Files at or over the ~300-line limit split along their seams, no behaviour change: enemy separation in `src/sim/separation.ts` (from `enemies.ts`); the player and springs part of `getState()` in `src/sim/summaryPlayer.ts` (from `summary.ts`); the mouse in `src/render/pointerInput.ts` (from `controls.ts`); GameScene's cursor-driven UI in `src/render/pointerUi.ts` and the room on screen through a door's fade in `src/render/roomFollow.ts`.

@@ -14,7 +14,7 @@ import { stepFog } from './fog';
 import { arrowHits, removeDead } from './combat';
 import { stepDoorways } from './doorways';
 import { stepPickups } from './drops';
-import type { RoomBodies } from './enemies';
+import type { RoomBodies } from './separation';
 import { clearEvents } from './events';
 import { offerFromOutside, stepFoundry } from './flow';
 import { stepFoundryUse } from './foundryUse';
