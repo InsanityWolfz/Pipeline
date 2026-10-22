@@ -5,8 +5,8 @@ import type { Rect } from './collision';
 import { pieceFrame } from './tileLook';
 
 // A small terrain piece's footprint (059, 059.3): the box it blocks in place of its whole tile, from its drawn base
-// (src/data/footprints.ts) clipped to the tile. Collision (src/sim/collision.ts) blocks feet on it only there; shots
-// still stop at its whole tile.
+// (src/data/footprints.ts) clipped to the tile. Collision (src/sim/collision.ts) blocks feet and shots on it only
+// there.
 
 const T = TILE_SIZE;
 

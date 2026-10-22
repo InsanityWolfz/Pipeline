@@ -183,8 +183,10 @@ describe('ley bolts', () => {
   it('stop at a wall', () => {
     const s = bolted();
     // The ruin field's west wall (017); fire at it from 3 tiles away.
-    movePlayer(s, (FIELD_WALL.west + 3.5) * 32, FIELD_ROW(14));
-    run(s, 1, fireAt(0, FIELD_ROW(14)));
+    // 059: at the west wall stone's footprint.
+    const foot = westWallFoot(14);
+    movePlayer(s, (FIELD_WALL.west + 3.5) * 32, foot.y);
+    run(s, 1, fireAt(0, foot.y));
     let lastX = s.player.x;
     runUntil(
       s,
@@ -194,7 +196,7 @@ describe('ley bolts', () => {
       },
       100,
     );
-    expect(lastX).toBeGreaterThanOrEqual((FIELD_WALL.west + 1) * 32 - 5);
+    expect(lastX).toBeGreaterThanOrEqual(foot.x + foot.w / 2 - 5);
   });
 
   it('stop at a ruin block', () => {

@@ -4,7 +4,7 @@ import type { KeywordId } from '../data/keywords';
 import type { Room } from '../data/rooms';
 import { roundKeywords, shardKeywords } from '../data/roundKeywords';
 import { hasTagKeyword, SPLIT } from '../data/tags';
-import { blocksShot } from './collision';
+import { shotStopsAt } from './collision';
 
 // Straight shots in flight: arrows, ley bolts and Shards (029). Position is the
 // ground (shadow) point, which is what collides; render draws the shot raised above it.
@@ -123,5 +123,5 @@ function flies(arrow: ArrowState, stops: (x: number, y: number) => boolean, hits
 }
 
 function inSolid(room: Room, x: number, y: number): boolean {
-  return blocksShot(room, Math.floor(x / TILE_SIZE), Math.floor(y / TILE_SIZE));
+  return shotStopsAt(room, x, y);
 }

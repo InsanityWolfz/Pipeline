@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { AMMO, lobAmmo, straightAmmo } from '../../src/data/ammo';
 import { stepBombs, throwBomb } from '../../src/sim/bombs';
-import { arena, FIELD_WALL, fireAt, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, FIELD_ROW } from './fight';
+import { arena, FIELD_WALL, fireAt, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, westWallFoot } from './fight';
 
 // The beginner ammo's jobs (029): arrows pierce without limit, ley bolts hit hard
 // without piercing, bombs burst wider with no burn.
@@ -40,9 +40,10 @@ describe('arrows pierce (029)', () => {
 
   it('stop at a solid', () => {
     const s = arena();
-    // The ruin field's west wall (017); fire at it from 3 tiles away.
-    movePlayer(s, (FIELD_WALL.west + 3.5) * 32, FIELD_ROW(14));
-    run(s, 1, fireAt(0, FIELD_ROW(14)));
+    // The ruin field's west wall (017); fire at its stone's footprint (059) from 3 tiles away.
+    const foot = westWallFoot(14);
+    movePlayer(s, (FIELD_WALL.west + 3.5) * 32, foot.y);
+    run(s, 1, fireAt(0, foot.y));
     let lastX = s.player.x;
     runUntil(
       s,
@@ -52,7 +53,7 @@ describe('arrows pierce (029)', () => {
       },
       100,
     );
-    expect(lastX).toBeGreaterThanOrEqual((FIELD_WALL.west + 1) * 32 - 8);
+    expect(lastX).toBeGreaterThanOrEqual(foot.x + foot.w / 2 - 8);
   });
 });
 

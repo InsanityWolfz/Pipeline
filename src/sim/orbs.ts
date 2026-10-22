@@ -2,7 +2,7 @@ import { TICK_RATE, TILE_SIZE } from '../data/config';
 import { enemyDef, type EnemyDef } from '../data/enemies';
 import { defOf } from './champions';
 import { FEET_BOX } from '../data/player';
-import { blocksShot } from './collision';
+import { shotStopsAt } from './collision';
 import type { EnemyState } from './enemies';
 import { damagePlayer } from './health';
 import { roomById, type SimState } from './state';
@@ -76,7 +76,7 @@ export function stepOrbs(state: SimState): void {
     o.travelled += step;
     const tx = Math.floor(o.x / TILE_SIZE);
     const ty = Math.floor(o.y / TILE_SIZE);
-    if (o.travelled > shot.range || blocksShot(roomById(o.roomId), tx, ty) || shotSealed(state, o.roomId, tx, ty)) return false;
+    if (o.travelled > shot.range || shotStopsAt(roomById(o.roomId), o.x, o.y) || shotSealed(state, o.roomId, tx, ty)) return false;
     if (o.roomId !== state.roomId) return true;
     const p = state.player;
     const near = Math.abs(o.x - p.x) <= (FEET_BOX.w + shot.size) / 2 && Math.abs(o.y - p.y) <= (FEET_BOX.h + shot.size) / 2;

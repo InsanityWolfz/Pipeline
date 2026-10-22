@@ -4,7 +4,7 @@ import { SPLIT } from '../../src/data/tags';
 import { TALENT_START } from '../../src/data/talents';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
-import { arena, FIELD_WALL, fireAt, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, FIELD_ROW } from './fight';
+import { arena, FIELD_WALL, fireAt, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, westWallFoot } from './fight';
 
 // The Split (029), the star shot (054): a Split round that hits an enemy bursts at the hit point into
 // SPLIT.shards shards, 360 / shards degrees apart, the first along its flight, each for half the bolt's damage,
@@ -67,9 +67,10 @@ describe('a Split ley bolt', () => {
 
   it("doesn't split when it hits a wall or runs out of range", () => {
     const s = starred();
-    // The ruin field's west wall (017); fire at it from 3 tiles away.
-    movePlayer(s, (FIELD_WALL.west + 3.5) * 32, FIELD_ROW(14));
-    run(s, 1, fireAt(0, FIELD_ROW(14)));
+    // The ruin field's west wall (017); fire at its stone's footprint (059) from 3 tiles away.
+    const foot = westWallFoot(14);
+    movePlayer(s, (FIELD_WALL.west + 3.5) * 32, foot.y);
+    run(s, 1, fireAt(0, foot.y));
     let bursts = 0;
     runUntil(
       s,

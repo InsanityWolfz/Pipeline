@@ -5,9 +5,9 @@ import { footprintAt } from './footprints';
 // Feet-box collision against a room's tile grid and solid things standing in it.
 // Anything that isn't floor, including outside the grid, is solid. Door tiles
 // are solid too, except to a mover that passes `doors` (only the player).
-// 059: a small terrain piece (a rock, a ruin stone, a pillar…) blocks feet only over its footprint, the box of its
-// drawn base (src/sim/footprints.ts); its tile still stops shots whole, and stays solid to everything that reads whole
-// tiles (sight lines, cover, drops, spawning).
+// 059: a small terrain piece (a rock, a ruin stone, a pillar…) blocks feet and shots only over its footprint, the box
+// of its drawn base (src/sim/footprints.ts), so a body standing in the top of its tile can shoot and be shot; its tile
+// stays solid to everything that reads whole tiles (sight lines, cover, drops, spawning).
 
 export interface Box {
   w: number;
@@ -36,6 +36,15 @@ export function blocksShot(room: Room, tx: number, ty: number): boolean {
 /** True if a box centred on (cx, cy) overlaps a rect. Touching an edge is not overlap. */
 export function overlapsRect(cx: number, cy: number, box: Box, r: Rect): boolean {
   return Math.abs(cx - r.x) < (box.w + r.w) / 2 && Math.abs(cy - r.y) < (box.h + r.h) / 2;
+}
+
+/** 059: true if a point stops a shot: a tile that stops shots, only within its footprint if it has one. */
+export function shotStopsAt(room: Room, x: number, y: number): boolean {
+  const tx = Math.floor(x / TILE_SIZE);
+  const ty = Math.floor(y / TILE_SIZE);
+  if (!blocksShot(room, tx, ty)) return false;
+  const f = footprintAt(room, tx, ty);
+  return f === null || (Math.abs(x - f.x) < f.w / 2 && Math.abs(y - f.y) < f.h / 2);
 }
 
 /** The tiles a box centred on (cx, cy) overlaps, as a range. */

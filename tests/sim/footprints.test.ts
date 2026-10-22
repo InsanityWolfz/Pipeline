@@ -101,12 +101,14 @@ describe('a small piece blocks only its footprint (059)', () => {
     }
   });
 
-  it("still stops shots at its whole tile (059.5)", () => {
+  it("a shot flies over the empty part of a small piece's tile, and stops in its footprint (059.5)", () => {
     const t = tileDrawn('ow-rubble-1', inHollows);
     const over = createArrow(1, 'arrow', OVERWORLD_ROOM, (t.tx - 0.5) * T, t.ty * T + 6, 1, 0);
-    const arrows = [over];
-    for (let i = 0; i < 30 && arrows.length > 0; i++) stepArrows(arrows, () => OW);
-    expect(arrows).toEqual([]);
-    expect(over.x).toBeLessThan((t.tx + 1) * T);
+    const into = createArrow(2, 'arrow', OVERWORLD_ROOM, (t.tx - 0.5) * T, (t.ty + 1) * T - 2, 1, 0);
+    const arrows = [over, into];
+    for (let i = 0; i < 30 && over.x <= (t.tx + 1) * T + 4; i++) stepArrows(arrows, () => OW);
+    expect(arrows).toContain(over);
+    expect(over.x).toBeGreaterThan((t.tx + 1) * T);
+    expect(arrows).not.toContain(into);
   });
 });

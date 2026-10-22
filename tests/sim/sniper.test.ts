@@ -164,8 +164,10 @@ describe('the Sniper construct', () => {
   it('ends its bolt at a solid', () => {
     const s = arena();
     // 053: west along row 34 at a player in front of the rocks' east face (72 their last); the player steps aside once it locks.
-    movePlayer(s, at(74, 34).x, at(74, 34).y);
-    const e = placeSniper(s, at(77, 34).x, at(77, 34).y);
+    // 059: along the foot of the row, where the rocks' footprints stand (a bolt flies over the top of their tiles).
+    const low = at(74, 34).y + 13;
+    movePlayer(s, at(74, 34).x, low);
+    const e = placeSniper(s, at(77, 34).x, low);
     run(s, 1);
     runUntil(s, () => snipeOf(s)?.phase === 'locked', snipe.trackTicks + 2);
     expect(snipeOf(s)?.line?.x1).toBeCloseTo(HOME_X(73));
