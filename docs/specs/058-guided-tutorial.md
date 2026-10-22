@@ -1,8 +1,8 @@
 # 058: The guided tutorial
 status: approved
 
-
 Approved on draft by Shaun in chat, 2026-10-22 ("approve 58"): the build follows the proposals in the open questions.
+
 From Shaun's fresh playtest on 2026-10-22 (docs/brainstorm/2026-10-22-playtest-notes.md, theme C) and his spec interview the same day (docs/brainstorm/2026-10-22-tutorial-interview.md). The tutorial should be "almost brain dead" for a new player: one clear thing at a time, the foundry's first lines built piece by piece on ghosts, and nothing else to build until they've done it.
 
 ## Goal
@@ -64,7 +64,7 @@ Removed: "Feed ammo into the new entrance", "Feed two entrances to fire a spread
 - [ ] From the first foundry visit until step 19 is done, the player can't place, pick up or rotate pieces in the foundry, except as the guided steps below allow (Shaun). Hoppers, crates, the stash, the bench and the intake still work as today.
 - [ ] During steps 14 and 19, the only piece that can be placed is the one the step asks for next, only on its ghost tile, facing the ghost's way; anything else is refused with a short hint (Shaun).
 - [ ] After step 19, building is open as today.
-- [ ] A save that had already restored the second entrance when this ships builds freely and keeps its goals; earlier saves get the new steps (Shaun).
+- [ ] A save that had already restored the second entrance when this ships builds freely and keeps its goals; earlier saves get the new steps (Shaun). If the build has to bump `SAVE_VERSION`, older saves read as too old (docs/process.md "Saves") and this applies only to saves the build can still read.
 
 **The ley bolt line (step 14)**
 - [ ] Ghosts show a complete ley bolt line: from the ley crystal port, by conduits, into a grinder, then a focuser, then by conduits into the left entrance. They don't touch the example arrow line (Shaun).
