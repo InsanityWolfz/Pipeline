@@ -314,12 +314,14 @@ export async function cameraSettled(page: Page, timeout = 5000): Promise<void> {
 
 /**
  * 046: waits until nothing passing covers a review shot: a door's fade over, and no discovery or schematic banner
- * showing (played out fast on the tween clock).
+ * showing (played out fast on the tween clock). `timeout` ms per wait: the banners queue and play one by one, and an
+ * unfocused page's render clock advances at most one 60 fps frame per drawn frame, so a long queue on a slow page
+ * (several landmarks found on one walk, under load) needs more than the default.
  */
-export async function quietScreen(page: Page): Promise<void> {
+export async function quietScreen(page: Page, timeout = 20_000): Promise<void> {
   await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
-  await expect.poll(async () => page.evaluate(() => window.__GAME__?.ui().schematics.bannerIdle), { timeout: 20_000 }).toBe(true);
-  await expect.poll(async () => page.evaluate(() => window.__GAME__?.ui().landmarks.banner ?? null), { timeout: 20_000 }).toBeNull();
-  await expect.poll(async () => page.evaluate(() => window.__GAME__?.ui().camera.fading), { timeout: 20_000 }).toBe(false);
+  await expect.poll(async () => page.evaluate(() => window.__GAME__?.ui().schematics.bannerIdle), { timeout }).toBe(true);
+  await expect.poll(async () => page.evaluate(() => window.__GAME__?.ui().landmarks.banner ?? null), { timeout }).toBeNull();
+  await expect.poll(async () => page.evaluate(() => window.__GAME__?.ui().camera.fading), { timeout }).toBe(false);
   await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
 }
