@@ -28,8 +28,8 @@ Changed or new steps are in **bold**; the rest are as today.
 10. Claim the shrine's pylon
 11. **Fast-travel to the foundry from the pylon**
 12. **Refill the hoppers in the foundry with wood, stone and fiber (E)**, only if the example line has run dry by then; skipped otherwise
-13. **Restore the left intake entrance (E at its cap with the warden core)**
-14. **Put ley bolts into the second entrance** (guided, ghosts)
+13. **Restore the right intake entrance (E at its cap with the warden core)**
+14. **Put ley bolts into the second entrance** (guided, ghosts; the right entrance)
 15. **Leave the foundry** (done on the step outside, no wait)
 16. **Gather rimestone at the Frozen Grotto**
 17. **Claim the Frozen Grotto's pylon**
@@ -57,8 +57,8 @@ Removed: "Feed ammo into the new entrance", "Feed two entrances to fire a spread
 **Equip (step 9)**
 - [ ] With the bench's screen open, arrows point at the identified piece and then at what to click to wear it; the step is done when any piece is worn (Shaun: "maybe you put some little arrows in the menu").
 
-**The left entrance (step 13)**
-- [ ] During the tutorial, only the left entrance's cap takes the Warden's core (Shaun); the waypoint arrow points at it.
+**The right entrance (step 13)**
+- [ ] During the tutorial, only the right entrance's cap takes the Warden's core (Shaun, 058.5); the waypoint arrow points at it.
 
 **The build lock**
 - [ ] From the first foundry visit until step 19 is done, the player can't place, pick up or rotate pieces in the foundry, except as the guided steps below allow (Shaun). Hoppers, crates, the stash, the bench and the intake still work as today.
@@ -67,9 +67,9 @@ Removed: "Feed ammo into the new entrance", "Feed two entrances to fire a spread
 - [ ] A save that had already restored the second entrance when this ships builds freely and keeps its goals; earlier saves get the new steps (Shaun). If the build has to bump `SAVE_VERSION`, older saves read as too old (docs/process.md "Saves") and this applies only to saves the build can still read.
 
 **The ley bolt line (step 14)**
-- [ ] Ghosts show a complete ley bolt line: from the ley crystal port, by conduits, into a grinder, then a focuser, then by conduits into the left entrance. They don't touch the example arrow line (Shaun).
+- [ ] Ghosts show a complete ley bolt line: from the ley crystal port, by conduits, into a grinder, then a focuser, then by conduits into the right entrance. They don't touch the example arrow line (Shaun).
 - [ ] The step's sub-lines name the next piece to place; in build mode an arrow points at that piece in the build bar, and the ghost tile it goes on is marked (Shaun: "the arrows like point you in the bottom left when you're in build mode, like what to build").
-- [ ] The step is done when ley bolts reach the left entrance.
+- [ ] The step is done when ley bolts reach the right entrance.
 
 **The frost rune (step 19)**
 - [ ] An arrow points at the conduit leaving the arrow assembler, with "Right click to remove" (Shaun). Once it's removed, an arrow points at the frost rune in the build bar and a ghost shows where it goes (Shaun).
@@ -100,16 +100,16 @@ Removed: "Feed ammo into the new entrance", "Feed two entrances to fire a spread
 - Goals after the third entrance.
 
 ## Test plan
-- Vitest (sim): the chain's order and texts; the refill skip; the talent cut-in and return; "Leave the foundry" on exit; the build lock refusing placement, pickup and rotation, and allowing only the next ghost piece on its tile and facing; the lock lifting after step 19; old saves past the second entrance building freely; only the left cap taking the core during the tutorial.
+- Vitest (sim): the chain's order and texts; the refill skip; the talent cut-in and return; "Leave the foundry" on exit; the build lock refusing placement, pickup and rotation, and allowing only the next ghost piece on its tile and facing; the lock lifting after step 19; old saves past the second entrance building freely; only the right cap taking the core during the tutorial.
 - Playwright: the tutorial bot plays the new chain from a New game to the end (rewriting today's tutorial e2e), building both guided lines on their ghosts; the bench's arrows; the build-bar arrow; the unlock banner.
 - Screenshots: step 9's arrows in the bench screen; step 14's ghosts with the build-bar arrow; step 19's remove arrow, the frost rune ghost, and the underground ghosts; the goal panel under the foundry minimap; the waypoint arrow above an E prompt; an unlock banner; the empty goal area after the end.
 
 ## Open questions
 Each has a proposal; the build follows it unless Shaun says otherwise.
-- **058.1 The new texts.** Proposal: "Equip a piece of armor at the bench (E)", "Fast-travel to the foundry from the pylon (E)", "Restore the left intake entrance (E with the warden core)", "Put ley bolts into the second entrance (B)", "Claim the Frozen Grotto's pylon", "Press T to spend a talent point".
+- **058.1 The new texts.** Proposal: "Equip a piece of armor at the bench (E)", "Fast-travel to the foundry from the pylon (E)", "Restore the right intake entrance (E with the warden core)", "Put ley bolts into the second entrance (B)", "Claim the Frozen Grotto's pylon", "Press T to spend a talent point".
 - **058.2 The guided sub-lines.** Proposal: one sub-line under the step for the next piece only, with its icon ("Place a conduit", "Place a grinder", "Place an underground entrance"), counting ("Place conduits 3/7") when several of the same piece come in a row.
 - **058.3 Build mode while locked.** Proposal: B still opens build mode so the bar can be seen; locked pieces are greyed, and their hover says "Unlocks as the tutorial goes on". A refused placement shows "Build on the glowing outline" during a guided step and "Not yet" otherwise.
 - **058.4 The talent cut-in during a guided step.** Proposal: if the point arrives while step 14 or 19 is current, the talent step waits until that step is done, so the guided build isn't broken up.
-- **058.5 The ghost layouts.** Proposal: the plan picks the exact tiles. The ley bolt line runs from the ley crystal port along the room's west side and the top row into the left entrance. The rimestone line runs from its port and crosses the ley bolt line once with an underground pair, reaching the frost rune from the side. Both stay clear of the example line, the stash, the bench and the door.
+- **058.5 The ghost layouts.** Decided by Shaun after the plan found a problem (2026-10-22, "Ley bolts to the right"). Into the left entrance, the ley line and the example line fence off the room's top-left corner, so the rimestone line would cross the ley line twice or not at all. So the ley bolt line goes to the right entrance: from the ley crystal port it runs east under the example line and up into the right entrance. The rimestone line goes north from its port, crosses the ley line once with one underground pair, and feeds the frost rune from its left side. The plan picks the exact tiles; both lines stay clear of the example line, the stash, the bench and the door.
 - **058.6 Removing the conduit.** Proposal: during step 19 the conduit leaving the assembler is the only piece right click can pick up; it goes into the inventory as usual.
 - **058.7 The equip arrows.** Proposal: the first arrow points at the identified piece in the bench's screen, the second at the slot it goes in (or its equip button, whichever the screen uses).
