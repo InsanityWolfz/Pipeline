@@ -104,7 +104,8 @@ test.describe('review screenshots (031)', () => {
       window.__GAME__?.setPlayerHealth(18);
     });
     await expect.poll(async () => (await ui(page))?.health.low).toBe(true);
-    await expect.poll(async () => (await ui(page))?.health.chunk).toBe(0);
+    // The chunk drains a frame's step each drawn frame: on a slow machine that's more than 5 s.
+    await expect.poll(async () => (await ui(page))?.health.chunk, { timeout: 20_000 }).toBe(0);
     await page.screenshot({ path: `${SHOTS}/02-low-hp-edge-tint.png` });
   });
 

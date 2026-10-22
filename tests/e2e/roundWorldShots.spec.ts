@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { SUPPLY_TICKS } from '../../src/data/claims';
 import { HOLLOWS } from '../../src/data/hollows';
 import { OVERWORLD } from '../../src/data/overworld';
 import { ROAD_DEFS } from '../../src/data/roads';
@@ -88,10 +89,12 @@ test.describe('review screenshots (053)', () => {
     const mid = line[Math.floor(line.length / 2)] ?? OVERWORLD.shrine.pylon;
     await walk(page, [[Math.round(mid.tx) + 1, Math.round(mid.ty) + 1]]);
     await settle(page);
-    await page.evaluate(() => {
+    // Claimed, then stepped to just short of the pylon's first push (as 049's resin shot), so the poll below steps a
+    // tick a frame only through the hauls' run, not the whole wait for them.
+    await page.evaluate((t) => {
       window.__GAME__?.claim('shrine');
-      window.__GAME__?.step(1);
-    });
+      window.__GAME__?.step(t);
+    }, SUPPLY_TICKS - 10);
     // Wait for the hauls to be on the stretch in view, near the line's middle.
     await expect
       .poll(

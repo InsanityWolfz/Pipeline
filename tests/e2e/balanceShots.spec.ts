@@ -30,7 +30,8 @@ async function forum(page: Page, dy: number): Promise<number> {
     },
     [A.start.tx, A.start.ty + dy] as const,
   );
-  // Banners off the shot: played out fast on the tween clock.
+  // Banners off the shot: played out fast on the tween clock. The walk in queues half a dozen, and on a slow machine
+  // they take most of 20 s to play out even fast.
   await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
   await expect
     .poll(
@@ -42,7 +43,7 @@ async function forum(page: Page, dy: number): Promise<number> {
           }
           return true;
         }),
-      { timeout: 20_000 },
+      { timeout: 60_000 },
     )
     .toBe(true);
   await page.evaluate(() => window.__GAME__?.tweenSpeed(1));

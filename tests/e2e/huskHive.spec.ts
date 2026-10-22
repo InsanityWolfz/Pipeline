@@ -99,19 +99,20 @@ test.describe('review screenshots (049)', () => {
       g.step(1);
     });
     await walk(page, TO_HIVE);
-    // Two harvests off the west seep (99, 37), standing just below it.
-    await page.evaluate(() => {
+    // Two harvests off the west seep, standing just below it.
+    // 053: the Hive moved with the round map; its west seep is the one at its area's west edge, three rows down.
+    await page.evaluate((area) => {
       const g = window.__GAME__;
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
-      const n = g.getState().nodes.find((x) => x.nodeId === 'resin-seep' && x.x < 100 * 32 && x.y < 38 * 32);
+      const n = g.getState().nodes.find((x) => x.nodeId === 'resin-seep' && x.x < (area.x0 + 1) * 32 && x.y < (area.y0 + 4) * 32);
       if (!n) throw new Error('no seep');
       h.walkTo(n.x, n.y + 16);
       for (let k = 0; k < 2; k++) {
         g.step(1, { interact: true });
         g.step(40);
       }
-    });
+    }, HIVE.area);
     await walk(page, [[HIVE.area.x0 - 2, HIVE.area.y0 + 5]]);
     await quietScreen(page);
     await cameraSettled(page, 20_000);

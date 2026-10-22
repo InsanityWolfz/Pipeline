@@ -68,8 +68,9 @@ test.describe('review screenshots (029)', () => {
       g.craft('ley-guide-ley-bolt');
       g.craft('prism-lens-ley-bolt');
       h.toHall();
-      // South of the ruin field's Husks (017), which stand a few tiles north, on screen.
-      h.walkTo((44.5 + h.ox) * 32, (19.5 + h.oy) * 32);
+      // South of the ruin field's Husks (017), which stand a few tiles north, on screen; just east of the foundry's
+      // gatehouse (053), which covers 017's spot two tiles west.
+      h.walkTo((46.5 + h.ox) * 32, (19.5 + h.oy) * 32);
       h.hold('ley-bolt+homing');
     });
     // The schematic banners from banking in the foundry and the door's fade, played out before the shot.
@@ -143,7 +144,7 @@ test.describe('review screenshots (029)', () => {
       // A few batches (047: crafted in C), so a miss or two still leaves the four hits a freeze takes.
       for (let i = 0; i < 3; i++) g.craft('frost-rune-arrow');
       h.toHall();
-      h.walkTo((44.5 + h.ox) * 32, (19.5 + h.oy) * 32);
+      h.walkTo((46.5 + h.ox) * 32, (19.5 + h.oy) * 32);
       h.hold('arrow+frost');
       let s = g.step(0);
       for (let t = 0; t < 1500 && !s.enemies.some((e) => e.frozen > 30); t++) {

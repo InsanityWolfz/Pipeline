@@ -9,6 +9,11 @@ import { boot, cameraSettled } from './helpers';
 // (and every effect it drives) stays on while the camera settles.
 
 const SHOTS = 'docs/review/030';
+/**
+ * The motes and the shimmer advance by a frame's step each drawn frame, so on a slow machine (software rendering, a
+ * busy runner) they build up slower than in real time: more than the default 5 s to wait for.
+ */
+const MOTES_WAIT = { timeout: 20_000 };
 
 test.describe('review screenshots (030)', () => {
   test.skip(!process.env.REVIEW_SHOTS, 'set REVIEW_SHOTS=1 to capture docs/review/030');
@@ -49,7 +54,7 @@ test.describe('review screenshots (030)', () => {
       if (g.step(10).player.healing !== 'spring') throw new Error('not healing in the spring');
     });
     await cameraSettled(page, 20_000);
-    await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().healing))?.motes ?? 0).toBeGreaterThan(6);
+    await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().healing))?.motes ?? 0, MOTES_WAIT).toBeGreaterThan(6);
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().healing))?.poolGlow).toBe('west-spring');
     await page.screenshot({ path: `${SHOTS}/04-healing-in-spring.png` });
   });
@@ -70,7 +75,7 @@ test.describe('review screenshots (030)', () => {
     }, OVERWORLD.shrine.pylon);
     await cameraSettled(page, 20_000);
     await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().healing))?.thread).toBe(true);
-    await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().healing))?.motes ?? 0).toBeGreaterThan(6);
+    await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().healing))?.motes ?? 0, MOTES_WAIT).toBeGreaterThan(6);
     await page.screenshot({ path: `${SHOTS}/05-healing-in-safe-zone.png` });
   });
 
@@ -93,7 +98,7 @@ test.describe('review screenshots (030)', () => {
       .poll(async () => {
         const at = (await page.evaluate(() => window.__GAME__?.ui().healing))?.shimmer ?? null;
         return at !== null && at > 0.35 && at < 0.6;
-      }, { intervals: [10] })
+      }, { intervals: [10], ...MOTES_WAIT })
       .toBe(true);
     await page.screenshot({ path: `${SHOTS}/06-foundry-shimmer.png` });
   });
