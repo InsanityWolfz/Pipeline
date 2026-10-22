@@ -1,4 +1,3 @@
-import type { HealSource } from '../data/player';
 import type { GearPiece, GearSlot } from '../data/gear';
 import { playerStats, type PlayerStats } from './stats';
 import { wardReady } from './relics';
@@ -6,8 +5,6 @@ import { WORLD } from './world';
 import type { SimEvents } from './events';
 import { unlockedPieces } from './placement';
 import { stagesUnlocked } from './stages';
-import { isInvulnerable, isRolling } from './movement';
-import type { Facing } from './player';
 import { portSummary } from './summaryPorts';
 import { fixtureDef } from './fixtures';
 import { objectiveLine } from './objectives';
@@ -32,7 +29,6 @@ import {
 import { OVERWORLD, ringOf } from '../data/overworld';
 import { TILE_SIZE } from '../data/config';
 import { enemiesNearPlayer, enemiesOnScreen } from './population';
-import { springAt } from './healing';
 import { atRiskCounts } from './banking';
 import { LANDMARK_LIST } from '../data/landmarks';
 import { isOpened } from './cache';
@@ -41,9 +37,10 @@ import { hollowsSummary, type HollowsSummary } from './summaryHollows';
 import { levelingSummary, type LevelingSummary } from './summaryLeveling';
 import { minesSummary, type MinesSummary } from './summaryMines';
 import { sandboxSummary, type SandboxSummary } from './summarySandbox';
+import { playerSummary, type PlayerSummary } from './summaryPlayer';
 
-/** The compact JSON summary that window.__GAME__.getState() returns. Stonefall Hollows' part (034) is in summaryHollows.ts, landmines' (038) in summaryMines.ts. */
-export interface SimSummary extends HollowsSummary, LevelingSummary, MinesSummary, SandboxSummary {
+/** The compact JSON summary that window.__GAME__.getState() returns. The player and springs (`player`, `springs`) are in summaryPlayer.ts. Stonefall Hollows' part (034) is in summaryHollows.ts, landmines' (038) in summaryMines.ts. */
+export interface SimSummary extends PlayerSummary, HollowsSummary, LevelingSummary, MinesSummary, SandboxSummary {
   tick: number;
   seed: number;
   /** The room the player is in. */
@@ -56,32 +53,6 @@ export interface SimSummary extends HollowsSummary, LevelingSummary, MinesSummar
   onScreen: number;
   /** Every room id. */
   rooms: string[];
-  player: {
-    /** Feet centre, px. */
-    x: number;
-    y: number;
-    /** Velocity, px per tick. */
-    vx: number;
-    vy: number;
-    facing: Facing;
-    rolling: boolean;
-    invulnerable: boolean;
-    rollCooldown: number;
-    /** The last aim point, world px. */
-    aim: { x: number; y: number };
-    health: number;
-    maxHealth: number;
-    /** Hit invulnerability after taking a hit (roll i-frames are `invulnerable`). */
-    hitInvulnerable: boolean;
-    /** KO'd this tick; the room has already reset. */
-    ko: boolean;
-    /** Ticks left on the death animation; 0 when alive. */
-    dying: number;
-    /** What raised health this tick (030), or null: 031's HP bar glows cyan while it's set. */
-    healing: HealSource | null;
-  };
-  /** The Ley Springs (030): each one's centre tile, pool radius px, and whether the player's feet are in it. */
-  springs: { id: string; tx: number; ty: number; radius: number; inside: boolean }[];
   /** Item id to count. */
   inventory: Record<string, number>;
   /** 047: the carried bar (keys 1–5): each slot's item kind or null, and the selected slot. */
@@ -201,24 +172,7 @@ export function summarize(state: SimState): SimSummary {
     nearPlayer: enemiesNearPlayer(state),
     onScreen: enemiesOnScreen(state),
     rooms: Object.keys(WORLD),
-    player: {
-      x: round(p.x),
-      y: round(p.y),
-      vx: round(p.vx),
-      vy: round(p.vy),
-      facing: p.facing,
-      rolling: isRolling(p),
-      invulnerable: isInvulnerable(p),
-      rollCooldown: p.cooldown,
-      aim: { x: round(p.aimX), y: round(p.aimY) },
-      health: p.health,
-      maxHealth: playerStats(state).maxHealth,
-      hitInvulnerable: p.hurtTicks > 0,
-      ko: state.events.ko,
-      dying: p.dying,
-      healing: p.healing,
-    },
-    springs: OVERWORLD.springs.map((sp) => ({ id: sp.id, tx: sp.tx, ty: sp.ty, radius: sp.radius * TILE_SIZE, inside: springAt(state.roomId, p.x, p.y)?.id === sp.id })),
+    ...playerSummary(state),
     inventory: { ...state.inventory },
     hotbar: { slots: [...state.hotbar.slots], selected: state.hotbar.selected },
     bag: [...state.bag],
