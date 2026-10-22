@@ -150,7 +150,7 @@ export class OverworldView {
     for (let ty = y0 / T; ty < (y0 + h) / T; ty++) {
       const row = room.rows[ty] ?? '';
       for (let tx = x0 / T; tx < (x0 + w) / T; tx++) {
-        const image = this.standing(row[tx] ?? '', tx, ty);
+        const image = this.standing(room, row[tx] ?? '', tx, ty);
         if (image) objects.push(image.setVisible(this.shown));
       }
     }
@@ -159,7 +159,7 @@ export class OverworldView {
   }
 
   /** A tile's standing sprite, if it has one, at the bottom centre of the tile. */
-  private standing(symbol: string, tx: number, ty: number): GameObjects.Image | null {
+  private standing(room: Room, symbol: string, tx: number, ty: number): GameObjects.Image | null {
     const hash = tileHash(tx, ty);
     const x = (tx + 0.5) * T;
     const bottom = (ty + 1) * T;
@@ -169,7 +169,7 @@ export class OverworldView {
     let jitter = 0;
     // Stonefall Hollows' own (034): cliffs, the aqueduct, rubble.
     // 053: the world's cliff edge away from its face is flat plateau in the ground, not sprites.
-    const hollows = inHollows(tx, ty) && !(this.room && isPlateau(this.room, tx, ty)) ? hollowsFrame(symbol, tx, ty, hash, this.room) : undefined;
+    const hollows = inHollows(tx, ty) && !isPlateau(room, tx, ty) ? hollowsFrame(symbol, tx, ty, hash, room) : undefined;
     if (hollows) frame = hollows;
     else if (symbol === TILE.tree && landmark?.look?.trees === 'old') frame = LANDMARK_SPRITES.oldTrees[hash % LANDMARK_SPRITES.oldTrees.length];
     else if (symbol === TILE.tree) {
@@ -178,7 +178,7 @@ export class OverworldView {
     } else if (symbol === TILE.wall) frame = OVERWORLD_SPRITES.ruinWall;
     else if (symbol === TILE.door) frame = OVERWORLD_SPRITES.entrance;
     // 059: rocks and ruin blocks (a landmark's own, the ruin's columns and stones) by the rule their footprints follow.
-    else if (this.room && (symbol === TILE.rock || symbol === TILE.ruinBlock)) frame = pieceFrame(this.room, tx, ty);
+    else if (symbol === TILE.rock || symbol === TILE.ruinBlock) frame = pieceFrame(room, tx, ty);
     if (!frame) return null;
     const image = addVector(this.scene, x + jitter, bottom, frame).setDepth(bottom);
     if (symbol === TILE.tree && (hash >>> 16) % 2 === 0) image.setFlipX(true);

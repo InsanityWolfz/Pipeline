@@ -11,8 +11,9 @@ import { OVERWORLD_ROOM } from '../../src/data/overworld';
 import { FEET_BOX } from '../../src/data/player';
 import { TILE, WALKABLE, type Room } from '../../src/data/rooms';
 import { createArrow, stepArrows } from '../../src/sim/arrows';
-import { boxHitsSolid, moveBox } from '../../src/sim/collision';
+import { boxHitsSolid, moveBox, shotStopsAt } from '../../src/sim/collision';
 import { footprintAt } from '../../src/sim/footprints';
+import { clearGround, clearShot, shotReach } from '../../src/sim/sightLine';
 import { pieceFrame } from '../../src/sim/tileLook';
 import { WORLD } from '../../src/sim/world';
 
@@ -63,6 +64,23 @@ describe('footprints as data (059.3)', () => {
     for (const f of seen) expect(FOOTPRINTS[f], f).toBeDefined();
     for (const f of ['ow-rock-0', 'ow-rock-1', 'ow-rubble-0', 'ow-rubble-1', 'ow-ruin-stone', 'ow-column']) expect(seen, f).toContain(f);
   });
+
+  it('cover every look a small piece can take in a tiled room (the sandbox\'s forum, any other)', () => {
+    let pieces = 0;
+    for (const room of Object.values(WORLD)) {
+      if (!room || room.terrain !== undefined) continue;
+      for (let ty = 0; ty < room.rows.length; ty++) {
+        for (let tx = 0; tx < (room.rows[ty]?.length ?? 0); tx++) {
+          const f = pieceFrame(room, tx, ty);
+          if (!f) continue;
+          pieces++;
+          expect(FOOTPRINTS[f], `${room.id} ${tx},${ty} ${f}`).toBeDefined();
+          expect(footprintAt(room, tx, ty), `${room.id} ${tx},${ty}`).not.toBeNull();
+        }
+      }
+    }
+    expect(pieces).toBeGreaterThan(0);
+  });
 });
 
 describe('a small piece blocks only its footprint (059)', () => {
@@ -110,5 +128,31 @@ describe('a small piece blocks only its footprint (059)', () => {
     expect(arrows).toContain(over);
     expect(over.x).toBeGreaterThan((t.tx + 1) * T);
     expect(arrows).not.toContain(into);
+  });
+});
+
+describe('lines across the grid meet the footprint, as feet and shots do (059.5)', () => {
+  it('a line over the top of a small piece\'s tile is clear; one through its footprint is not, and stops where a shot would', () => {
+    const t = tileDrawn('ow-rubble-1', inHollows);
+    const f = footprintAt(OW, t.tx, t.ty);
+    if (!f) throw new Error('no footprint');
+    const x0 = (t.tx - 1.5) * T;
+    const x1 = (t.tx + 1.5) * T;
+    const top = t.ty * T + 6;
+    const foot = f.y;
+    expect(clearGround(OW, x0, top, x1, top)).toBe(true);
+    expect(clearShot(OW, x0, top, x1, top)).toBe(true);
+    expect(shotReach(OW, x0, top, 1, 0, x1 - x0)).toBeCloseTo(x1 - x0);
+    expect(clearGround(OW, x0, foot, x1, foot)).toBe(false);
+    expect(clearShot(OW, x0, foot, x1, foot)).toBe(false);
+    const reach = shotReach(OW, x0, foot, 1, 0, x1 - x0);
+    expect(x0 + reach).toBeCloseTo(f.x - f.w / 2);
+    // Just short of where the line ends a shot flies on; just past it a shot stops.
+    expect(shotStopsAt(OW, x0 + reach - 0.5, foot)).toBe(false);
+    expect(shotStopsAt(OW, x0 + reach + 0.5, foot)).toBe(true);
+    // From the top of the tile itself (where feet can stand), up and away is clear, down through the footprint is not.
+    const at = { x: (t.tx + 0.5) * T, y: t.ty * T + 6 };
+    expect(clearGround(OW, at.x, at.y, at.x, at.y - 2 * T)).toBe(true);
+    expect(clearShot(OW, at.x, at.y, at.x, (t.ty + 2) * T)).toBe(false);
   });
 });

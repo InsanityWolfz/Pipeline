@@ -6,8 +6,10 @@ import { footprintAt } from './footprints';
 // Anything that isn't floor, including outside the grid, is solid. Door tiles
 // are solid too, except to a mover that passes `doors` (only the player).
 // 059: a small terrain piece (a rock, a ruin stone, a pillar…) blocks feet and shots only over its footprint, the box
-// of its drawn base (src/sim/footprints.ts), so a body standing in the top of its tile can shoot and be shot; its tile
-// stays solid to everything that reads whole tiles (sight lines, cover, drops, spawning).
+// of its drawn base (src/sim/footprints.ts), so a body standing in the top of its tile can shoot and be shot; lines
+// across the grid (src/sim/sightLine.ts: a punch's reach, the Charger's run, the Sniper's sight, cover and laser) meet
+// the same box (059.5, Shaun: "shots match what's drawn"). Its tile stays solid to whatever reads whole tiles (drops,
+// spawning, free tiles to stand on).
 
 export interface Box {
   w: number;

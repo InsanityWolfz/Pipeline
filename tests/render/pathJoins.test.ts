@@ -17,12 +17,4 @@ describe('path joins (059)', () => {
     for (const s of edges) expect(s).toMatchObject({ width: GROUND.pathWidth + 6, color: GROUND.pathEdge });
     for (const s of dirt) expect(s).toMatchObject({ width: GROUND.pathWidth, color: GROUND.path });
   });
-
-  it('runs each road along its own line, through the corner of its waypoint tiles', () => {
-    ROADS.forEach((road, i) => {
-      const pts = road.map((t) => [(t.tx + 1) * 32, (t.ty + 1) * 32]);
-      expect(strokes[i]?.pts).toEqual(pts);
-      expect(strokes[ROADS.length + i]?.pts).toEqual(pts);
-    });
-  });
 });

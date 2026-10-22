@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { TICK_RATE } from '../../src/data/config';
 import { enemyDef, MIN_TELEGRAPH_TICKS } from '../../src/data/enemies';
 import type { SniperDef } from '../../src/data/hollowsEnemies';
+import type { Rect } from '../../src/sim/collision';
 import { coverSpot } from '../../src/sim/cover';
+import { footprintAt } from '../../src/sim/footprints';
 import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import { clearShot } from '../../src/sim/sightLine';
 import { roomById, type SimState } from '../../src/sim/state';
@@ -22,6 +24,38 @@ const BOLT_STEP = snipe.boltSpeed / TICK_RATE;
 /** The meadow's south rock cluster (rocks 69–71 on row 33, 68–72 on row 34, 68 and 72 on row 35) and tiles round it. */
 /** A tile of the meadow by its 034-era tile (053 moved it with the foundry). */
 const at = (tx: number, ty: number) => homeTile(tx, ty);
+
+/** 059.5: a y near the foot of a home row, inside its rocks' footprints, or near its top, above them. */
+const low = (ty: number): number => at(0, ty).y + 13;
+const high = (ty: number): number => at(0, ty).y - 13;
+
+/** The footprint of the piece on a home tile. */
+function footOf(tx: number, ty: number): Rect {
+  const { x, y } = at(tx, ty);
+  const f = footprintAt(roomById(HALL), Math.floor(x / 32), Math.floor(y / 32));
+  if (!f) throw new Error(`no footprint at ${tx},${ty}`);
+  return f;
+}
+
+/**
+ * West along row 34 at height `y`: a player at 74 painted by a Sniper at 77, who steps aside once it locks; returns the
+ * locked line and the bolt's last position before it ended.
+ */
+function lockAndFire(s: SimState, y: number) {
+  movePlayer(s, at(74, 34).x, y);
+  const e = placeSniper(s, at(77, 34).x, y);
+  run(s, 1);
+  runUntil(s, () => snipeOf(s)?.phase === 'locked', snipe.trackTicks + 2);
+  const line = snipeOf(s)?.line;
+  movePlayer(s, at(74, 37).x, at(74, 37).y);
+  runUntil(s, () => s.events.snipes.length > 0, snipe.lockTicks + 2);
+  let last = s.orbs[0];
+  while (s.orbs.length > 0) {
+    last = s.orbs[0];
+    run(s, 1);
+  }
+  return { line, last, e };
+}
 
 function placeSniper(s: SimState, x: number, y: number): EnemyState {
   const e = createEnemy(s.nextEnemyId++, 'sniper', { x, y }, HALL);
@@ -118,20 +152,23 @@ describe('the Sniper construct', () => {
   it('cancels the wind-up when a solid blocks the line while tracking, and tries again later', () => {
     const s = arena();
     movePlayer(s, at(74, 30).x, at(74, 30).y);
-    const e = placeSniper(s, at(74, 33).x, at(74, 33).y);
+    // 059.5: along the foot of row 33, where the rocks' footprints stand (a line over the top of their tiles is clear).
+    const e = placeSniper(s, at(74, 33).x, low(33));
     run(s, 1);
     expect(e.mode).toBe('windup');
     run(s, 10);
     // Behind the rocks, west along row 33.
-    movePlayer(s, at(67, 33).x, at(67, 33).y);
+    movePlayer(s, at(67, 33).x, low(33));
     run(s, 1);
-    // No tile a step away sees the player there: it waits out a fresh cooldown instead of stepping out.
-    expect(e.mode).toBe('chase');
-    expect(e.cooldown).toBe(snipe.cooldownTicks);
-    expect(snipeOf(s)).toEqual({ phase: 'cover', line: null });
-    run(s, 120);
-    expect(s.orbs).toEqual([]);
+    // The shot is off; a tile a step up the row sees the player over the rocks' footprints (059.5), so it steps out.
+    expect(e.mode).toBe('peek');
+    expect(snipeOf(s)).toEqual({ phase: 'peek', line: null });
     expect(s.events.snipes).toEqual([]);
+    // It tries again from there: its next wind-up starts with a clear line to the player, and no bolt flew meanwhile.
+    runUntil(s, () => e.mode === 'windup', 120);
+    expect(clearShot(roomById(HALL), e.x, e.y, s.player.x, s.player.y)).toBe(true);
+    expect(e.y).toBeLessThan(low(33) - 4);
+    expect(s.orbs).toEqual([]);
   });
 
   it('fires one bolt down the locked line at its speed, hitting a player who stayed for its damage', () => {
@@ -161,28 +198,43 @@ describe('the Sniper construct', () => {
     expect(s.player.health).toBe(100);
   });
 
+  it('paints and hits a player standing in the top of a rock\'s tile, above its footprint (059)', () => {
+    const s = arena();
+    // The meadow's rock at (72, 34), open ground above it; the Sniper six tiles north.
+    const rock = homeTile(72, 34);
+    movePlayer(s, rock.x, rock.y - 8);
+    const e = placeSniper(s, rock.x, at(72, 28).y);
+    run(s, 1);
+    expect(e.mode).toBe('windup');
+    expect(snipeOf(s)?.phase).toBe('tracking');
+    expect(snipeOf(s)?.line?.y1).toBeCloseTo(rock.y - 8);
+    runUntil(s, () => s.player.health < 100, snipe.windupTicks + 40);
+    expect(s.player.health).toBe(100 - snipe.damage);
+  });
+
   it('ends its bolt at a solid', () => {
     const s = arena();
     // 053: west along row 34 at a player in front of the rocks' east face (72 their last); the player steps aside once it locks.
-    // 059: along the foot of the row, where the rocks' footprints stand (a bolt flies over the top of their tiles).
-    const low = at(74, 34).y + 13;
-    movePlayer(s, at(74, 34).x, low);
-    const e = placeSniper(s, at(77, 34).x, low);
-    run(s, 1);
-    runUntil(s, () => snipeOf(s)?.phase === 'locked', snipe.trackTicks + 2);
-    expect(snipeOf(s)?.line?.x1).toBeCloseTo(HOME_X(73));
-    movePlayer(s, at(74, 37).x, at(74, 37).y);
-    runUntil(s, () => s.events.snipes.length > 0, snipe.lockTicks + 2);
-    let last = s.orbs[0];
-    while (s.orbs.length > 0) {
-      last = s.orbs[0];
-      run(s, 1);
-    }
+    // 059.5: along the foot of the row, where the rocks' footprints stand: line and bolt both end at 72's footprint.
+    const { line, last, e } = lockAndFire(s, low(34));
+    const face = footOf(72, 34);
+    expect(line?.x1).toBeCloseTo(face.x + face.w / 2);
     expect(last?.travelled ?? 0).toBeLessThan(snipe.range);
-    expect(last?.x ?? 0).toBeGreaterThanOrEqual(HOME_X(73) - BOLT_STEP);
-    expect(last?.x ?? 0).toBeLessThan(HOME_X(73) + 2 * BOLT_STEP);
+    expect(last?.x ?? 0).toBeGreaterThanOrEqual((line?.x1 ?? 0) - BOLT_STEP);
+    expect(last?.x ?? 0).toBeLessThan((line?.x1 ?? 0) + 2 * BOLT_STEP);
     expect(s.player.health).toBe(100);
     expect(e.health).toBe(DEF.maxHealth);
+  });
+
+  it('over the top of the rocks\' tiles, its line and its bolt both run on past them (059.5: shots match what\'s drawn)', () => {
+    const s = arena();
+    // The same row, along the top of its tiles, above the rocks' footprints.
+    const { line, last } = lockAndFire(s, high(34));
+    expect(line?.x1).toBeLessThan(HOME_X(68));
+    // The bolt flies to the end of the line it showed: past the rocks, out to its range or the first footprint or wall.
+    expect(last?.x ?? 0).toBeLessThan(HOME_X(68));
+    expect(Math.abs((last?.x ?? 0) - (line?.x1 ?? 0))).toBeLessThan(2 * BOLT_STEP);
+    expect(s.player.health).toBe(100);
   });
 
   it('backs off a player closer than `backOff` rather than firing: to cover farther away, or straight away in the open', () => {
@@ -234,16 +286,17 @@ describe('the Sniper construct', () => {
   it('frozen mid-wind-up it pauses, its line never through the rocks, then resumes (and a blocked line cancels it)', () => {
     const s = arena();
     movePlayer(s, at(74, 30).x, at(74, 30).y);
-    const e = placeSniper(s, at(74, 33).x, at(74, 33).y);
+    const e = placeSniper(s, at(74, 33).x, low(33));
     run(s, 11);
     expect(e.mode).toBe('windup');
     const ticks = e.modeTicks;
     e.frozen = 30;
-    // Behind the rocks while it can't think: its line stops at them.
-    movePlayer(s, at(67, 33).x, at(67, 33).y);
+    // Behind the rocks while it can't think: its line stops at the first one's footprint (71's, on row 33's foot).
+    movePlayer(s, at(67, 33).x, low(33));
     run(s, 20);
     expect(e.modeTicks).toBe(ticks);
-    expect(snipeOf(s)?.line?.x1).toBeCloseTo(HOME_X(72));
+    const face = footOf(71, 33);
+    expect(snipeOf(s)?.line?.x1).toBeCloseTo(face.x + face.w / 2);
     // Back in the open before the thaw: the wind-up runs on from where it paused, and fires.
     movePlayer(s, at(74, 30).x, at(74, 30).y);
     runUntil(s, () => e.frozen === 0, 20);

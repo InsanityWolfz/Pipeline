@@ -1,6 +1,7 @@
 import { TILE_SIZE } from '../data/config';
 import type { Room } from '../data/rooms';
-import { blocksShot, isSolid } from './collision';
+import { blocksShot, isSolid, type Rect } from './collision';
+import { footprintAt } from './footprints';
 
 // Lines across the tile grid (035): whether a straight line between two points crosses a
 // tile that stops feet or shots, walking exactly the tiles the segment passes through
@@ -37,29 +38,72 @@ function walkTiles(ax: number, ay: number, bx: number, by: number, visit: (tx: n
   return false;
 }
 
-/** True if no tile solid to feet lies on the straight line from a to b (035: the Charger's clear line). */
-export function clearGround(room: Room, ax: number, ay: number, bx: number, by: number): boolean {
-  return !walkTiles(ax, ay, bx, by, (tx, ty) => isSolid(room, tx, ty));
-}
-
-/** True if no tile that stops shots lies on the straight line from a to b (035: the Sniper's sight and cover). */
-export function clearShot(room: Room, ax: number, ay: number, bx: number, by: number): boolean {
-  return !walkTiles(ax, ay, bx, by, (tx, ty) => blocksShot(room, tx, ty));
+/**
+ * 059: how far along the segment a → b (0..1) it enters a box, or null if it never does; touching an edge is not
+ * entering, as with feet (overlapsRect) and shots (shotStopsAt).
+ */
+function entersRect(ax: number, ay: number, bx: number, by: number, r: Rect): number | null {
+  let enter = 0;
+  let exit = 1;
+  for (const [a, d, c, half] of [
+    [ax, bx - ax, r.x, r.w / 2],
+    [ay, by - ay, r.y, r.h / 2],
+  ] as const) {
+    if (d === 0) {
+      if (Math.abs(a - c) >= half) return null;
+      continue;
+    }
+    const t0 = (c - half - a) / d;
+    const t1 = (c + half - a) / d;
+    enter = Math.max(enter, Math.min(t0, t1));
+    exit = Math.min(exit, Math.max(t0, t1));
+  }
+  return enter < exit ? enter : null;
 }
 
 /**
- * How far a shot from (x, y) along the unit (dx, dy) runs before a tile stops it, at most `range`, px: the point where
- * the line enters the first tile that stops shots.
+ * Where along the segment a → b (0..1) it first meets what a tile stops, among the tiles `stops` says are solid, or
+ * null when nothing: the tile's edge for one that blocks whole, its footprint for a small piece (059), the same box
+ * feet and shots meet.
+ */
+function firstStop(room: Room, ax: number, ay: number, bx: number, by: number, stops: (tx: number, ty: number) => boolean): number | null {
+  let at: number | null = null;
+  walkTiles(ax, ay, bx, by, (tx, ty) => {
+    if (!stops(tx, ty)) return false;
+    const f = footprintAt(room, tx, ty);
+    at = f === null ? tileEntry(ax, ay, bx, by, tx, ty) : entersRect(ax, ay, bx, by, f);
+    return at !== null;
+  });
+  return at;
+}
+
+/** How far along the segment a → b (0..1) it enters a tile it passes through: the larger of the two axis entries. */
+function tileEntry(ax: number, ay: number, bx: number, by: number, tx: number, ty: number): number {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const ex = dx === 0 ? -Infinity : ((dx > 0 ? tx * TILE_SIZE : (tx + 1) * TILE_SIZE) - ax) / dx;
+  const ey = dy === 0 ? -Infinity : ((dy > 0 ? ty * TILE_SIZE : (ty + 1) * TILE_SIZE) - ay) / dy;
+  return Math.max(0, ex, ey);
+}
+
+/** True if nothing solid to feet lies on the straight line from a to b (035: the Charger's clear line; 059: footprints). */
+export function clearGround(room: Room, ax: number, ay: number, bx: number, by: number): boolean {
+  return firstStop(room, ax, ay, bx, by, (tx, ty) => isSolid(room, tx, ty)) === null;
+}
+
+/**
+ * True if nothing that stops shots lies on the straight line from a to b (035: the Sniper's sight and cover): the
+ * same boxes its bolt meets (059.5, Shaun: "shots match what's drawn").
+ */
+export function clearShot(room: Room, ax: number, ay: number, bx: number, by: number): boolean {
+  return firstStop(room, ax, ay, bx, by, (tx, ty) => blocksShot(room, tx, ty)) === null;
+}
+
+/**
+ * How far a shot from (x, y) along the unit (dx, dy) runs before something stops it, at most `range`, px: where the
+ * line enters the first tile that stops shots, or a small piece's footprint (059.5), as its bolt does.
  */
 export function shotReach(room: Room, x: number, y: number, dx: number, dy: number, range: number): number {
-  let reach = range;
-  walkTiles(x, y, x + dx * range, y + dy * range, (tx, ty) => {
-    if (!blocksShot(room, tx, ty)) return false;
-    // Where the line enters this tile: the larger of the two axis entry distances.
-    const ex = dx === 0 ? -Infinity : ((dx > 0 ? tx * TILE_SIZE : (tx + 1) * TILE_SIZE) - x) / dx;
-    const ey = dy === 0 ? -Infinity : ((dy > 0 ? ty * TILE_SIZE : (ty + 1) * TILE_SIZE) - y) / dy;
-    reach = Math.max(0, Math.min(range, Math.max(ex, ey)));
-    return true;
-  });
-  return reach;
+  const at = firstStop(room, x, y, x + dx * range, y + dy * range, (tx, ty) => blocksShot(room, tx, ty));
+  return at === null ? range : Math.max(0, Math.min(range, at * range));
 }

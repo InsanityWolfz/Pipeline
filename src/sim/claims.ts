@@ -200,7 +200,7 @@ function travelToPylon(state: SimState, site: string): void {
 
 /** How many claimed sites supply a raw (028): its port's pylon count. `supply` defaults to the game's site table. */
 export function portPylons(claims: readonly string[], raw: string, supply: Readonly<Record<string, readonly string[]>> = SITE_SUPPLY): number {
-  return claims.filter((site) => supply[site]?.includes(raw)).length;
+  return portSupply(claims, raw, supply, {});
 }
 
 /**

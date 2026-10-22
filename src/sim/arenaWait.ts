@@ -1,4 +1,5 @@
 import { ARENAS, type ArenaDef } from '../data/arenas';
+import { playerInside } from './arenaLock';
 import type { EnemyState } from './enemies';
 import type { SimState } from './state';
 import { insideTiles } from './tiles';
@@ -17,6 +18,5 @@ export function arenaOfPost(e: Pick<EnemyState, 'roomId' | 'homeX' | 'homeY'>): 
 /** True while this enemy is posted in an arena and the player isn't inside that arena (in its room, on its floor). */
 export function arenaWaits(state: Pick<SimState, 'player' | 'roomId'>, e: Pick<EnemyState, 'roomId' | 'homeX' | 'homeY'>): boolean {
   const arena = arenaOfPost(e);
-  if (!arena) return false;
-  return !(state.roomId === e.roomId && insideTiles(arena.inside, state.player.x, state.player.y));
+  return arena !== undefined && !(state.roomId === e.roomId && playerInside(state, arena));
 }

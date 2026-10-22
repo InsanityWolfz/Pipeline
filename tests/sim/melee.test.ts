@@ -11,7 +11,7 @@ import { sectorHitsBox } from '../../src/sim/sector';
 import { roomById, type SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { hasRoundToFire } from '../../src/sim/tube';
-import { arena, HALL, movePlayer, PLAYER_AT, placeHusk, run, useAt, volleyAt } from './fight';
+import { arena, HALL, homeTile, movePlayer, PLAYER_AT, placeHusk, run, useAt, volleyAt } from './fight';
 
 // 023: with no tube, or nothing to fire, the fire button punches.
 
@@ -36,6 +36,17 @@ function placeWarden(s: SimState, x: number, y: number): EnemyState {
 }
 
 describe('the punch', () => {
+  it('from the top of a rock\'s tile, above its footprint, lands on a Husk north of it (059)', () => {
+    const s = bare();
+    // The meadow's rock at (72, 34), open ground above it: the player stands in its tile's top, the Husk a step north.
+    const rock = homeTile(72, 34);
+    movePlayer(s, rock.x, rock.y - 8);
+    const husk = placeHusk(s, rock.x, rock.y - 30);
+    punchToward(s, 0, -100);
+    expect(s.events.melees[0]?.hits).toEqual([husk.id]);
+    expect(husk.health).toBe(enemyDef('husk').maxHealth - MELEE.damage);
+  });
+
   it('with no tube, hits a Husk in the arc and misses one behind the player', () => {
     const s = bare();
     const ahead = placeHusk(s, P.x + 20, P.y);

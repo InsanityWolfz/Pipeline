@@ -54,6 +54,17 @@ describe('the Charger', () => {
     expect(far.e.mode).toBe('chase');
   });
 
+  it('winds up at a player standing in the top of a rock\'s tile, above its footprint (059)', () => {
+    const s = arena();
+    // The meadow's rock at (72, 34), open ground above it; the Charger four tiles north.
+    const rock = homeTile(72, 34);
+    movePlayer(s, rock.x, rock.y - 8);
+    const e = placeCharger(s, rock.x, homeTile(72, 30).y);
+    run(s, 1);
+    expect(e.mode).toBe('windup');
+    expect({ x: e.swipeDirX, y: e.swipeDirY }).toEqual({ x: 0, y: 1 });
+  });
+
   it('locks its lane at the wind-up start from where it stands, and holds it however the player moves', () => {
     const { s, e } = meadow();
     run(s, 1);
