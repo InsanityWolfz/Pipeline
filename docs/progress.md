@@ -3,9 +3,14 @@
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
 ## 2026-10-22: Housekeeping
-**Changed:** at Shaun's request, a cleanup batch, each its own PR: progress entries before 050 moved to docs/progress-archive.md (this PR); workflow actions on v5 (Node 24); the cut-off bomb+frost+cluster summary; files over 300 lines split; the review-shot specs audited. Merged branches still to delete (needs Shaun's permission or the GitHub branches page).
+**Changed:** a cleanup batch at Shaun's request, each its own PR, all merged: workflow actions on v5 (InsanityWolfz/Pipeline#57); progress entries before 050 moved to docs/progress-archive.md (#58); agent worktrees under .claude/worktrees ignored by git and ESLint (#59); files over 300 lines split (#60: separation.ts, pointerInput.ts, pointerUi.ts, roomFollow.ts, summaryPlayer.ts); the bomb+frost+cluster summary no longer cut under full font hinting (#61: a Burst line drops "dmg" only when the summary wouldn't fit, Shaun OK'd); all 37 review-shot specs run again (#62). Shaun deleted the old branches and turned on "Automatically delete head branches", so merged PR branches go away by themselves.
 
-**Next:** Shaun merges the housekeeping PRs, then the next spec.
+**Next:** the next spec, from Shaun's playthrough notes.
+
+**Notes:**
+- This container has 4 cores: run at most two agents with Playwright at once, or unit tests time out under load. CI runs the full suite.
+- Effects in review shots advance per drawn frame, so waits on a busy machine need generous budgets.
+- This session's git access can push but can't delete remote branches; GitHub's auto-delete covers it now.
 
 ## 2026-10-21: 057 Sandbox pop-outs and a steady waypoint arrow
 **Changed:** on `claude/fervent-hamilton-u3qlqf` (InsanityWolfz/Pipeline#56), the sandbox's panels are click-open pop-outs: a "Loadout" tab on the left edge and a "Spawn" tab on the right, always shown; a click slides the panel out (0.15 s) with 056's rows, a second closes it. Both start closed; Esc closes them before pausing; the backquote opens or closes both ("Sandbox panels"). The waypoint arrow's stutter is fixed (057.6: it was placed against the previous frame's camera view; now placed again on the camera's follow update). Render and data only. Raised 057.7–057.13. Reviewed: the over-target e2e made steady, older specs' retaken shots put back (rule 9), the pickup feed follows the tab the same frame, the tab hover and ease in data. New docs/review/057 shots.
