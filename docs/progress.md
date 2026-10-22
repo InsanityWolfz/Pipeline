@@ -2,6 +2,11 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-22: Playtest notes
+**Changed:** Shaun's fresh playtest from the title screen is in docs/brainstorm/2026-10-22-playtest-notes.md (verbatim, then grouped into proposed PRs: two fixes, a guided-tutorial spec, a world-polish spec). Shaun dropped shared processing, a bigger foundry and boss gear sets for now, with no note to do them or not.
+
+**Next:** Shaun confirms the grouping; then the two fixes and the spec interviews.
+
 ## 2026-10-22: Housekeeping
 **Changed:** a cleanup batch at Shaun's request, each its own PR, all merged: workflow actions on v5 (InsanityWolfz/Pipeline#57); progress entries before 050 moved to docs/progress-archive.md (#58); agent worktrees under .claude/worktrees ignored by git and ESLint (#59); files over 300 lines split (#60: separation.ts, pointerInput.ts, pointerUi.ts, roomFollow.ts, summaryPlayer.ts); the bomb+frost+cluster summary no longer cut under full font hinting (#61: a Burst line drops "dmg" only when the summary wouldn't fit, Shaun OK'd); all 37 review-shot specs run again (#62). Shaun deleted the old branches and turned on "Automatically delete head branches", so merged PR branches go away by themselves.
 
