@@ -12,7 +12,7 @@ Room facts used: the foundry is 24×16; row 1 is floor on columns 3–8 and 11�
 
 ### Step 14: ley bolts into the right entrance
 
-In build order (21 conduits, a grinder, a focuser):
+In build order (23 conduits, a grinder and a focuser: 25 pieces):
 1. conduit (2,10) right (the ley crystal port feeds its back)
 2. conduit (3,10) right
 3. grinder (4,10) right
@@ -28,7 +28,7 @@ Row 10 is four rows below the example line's hoppers, and column 15 one column e
 
 ### Step 19: the frost rune and the rimestone line
 
-In order (17 conduits and one underground pair):
+In order (a removal, the frost rune, 17 conduits and one underground pair: 21 steps):
 1. remove the conduit (12,2) (058.6: right click, into the inventory)
 2. frost rune (12,2) up: arrows from the assembler behind it, frost arrows out its front into (12,1) and the centre entrance
 3. conduit (2,12) right (the rimestone port feeds its back)
