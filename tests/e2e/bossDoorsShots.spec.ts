@@ -33,9 +33,10 @@ async function quiet(page: Page): Promise<void> {
   });
 }
 
+/** The walks here find several landmarks (five on the way round to the forum), whose banners play in turn: a long wait. */
 async function settle(page: Page): Promise<void> {
   await cameraSettled(page, 20_000);
-  await quietScreen(page);
+  await quietScreen(page, 60_000);
   await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().talentFx))?.levelLine ?? null, { timeout: 20_000 }).toBeNull();
   await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
