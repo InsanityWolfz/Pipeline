@@ -8,6 +8,7 @@ import { tileHash } from '../roomTiles';
 import { paintLandmarks } from './landmarkGround';
 import { paintHollows } from './hollowsGround';
 import { isPlateau } from './plateau';
+import { pathStrokes } from './pathStrokes';
 import { inHollows } from '../../data/hollows';
 import { COURTYARD } from '../../data/roads';
 import { fromCentre } from '../../data/worldShape';
@@ -134,12 +135,9 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
     c.fill();
     c.globalAlpha = 1;
   });
-  // Dirt paths, two tiles wide along their polylines.
-  for (const p of room.terrain?.paths ?? []) {
-    const pts = p.map((t) => [(t.tx + 1) * T, (t.ty + 1) * T] as const);
-    polyline(c, pts, GROUND.pathWidth + 6, GROUND.pathEdge);
-    polyline(c, pts, GROUND.pathWidth, GROUND.path);
-  }
+  // Dirt paths, two tiles wide along their polylines: every edge, then every road's dirt over them (059: joins read
+  // as one shape).
+  for (const s of pathStrokes(room.terrain?.paths ?? [])) polyline(c, s.pts, s.width, s.color);
   each((tx, ty, hash) => {
     if (symbol(tx, ty) !== TILE.path || hash % 3 !== 0) return;
     const [x, y] = centre({ tx, ty });
