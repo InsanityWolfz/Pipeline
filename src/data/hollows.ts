@@ -126,8 +126,8 @@ export const HOLLOWS = {
       reach: ALTAR_REACH,
       unlock: 'hollows',
       name: 'Forum door',
-      /** 055.1: its hover line while sealed. */
-      sealed: 'Sealed: break the Hollows barrier',
+      /** 055.1: its hover line while sealed (059: just "Sealed"). */
+      sealed: 'Sealed',
     } satisfies ArenaDoor,
     /** Where the boss stands and rises; and the altar stone by the west wall. */
     start: { tx: fx(12), ty: fy(36) } satisfies TilePos,

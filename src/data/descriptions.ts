@@ -16,8 +16,6 @@ export const DESCRIPTIONS = {
   altarDim: 'Cold stone. Something here must fall first.',
   altarAwake: 'Offer 8 ley-iron (E) to call the Bulwark back.',
   altarSpent: 'The Bulwark walks. The altar waits.',
-  /** 055: an arena's door once open (sealed, it shows its own hint, src/data/arenas.ts). */
-  arenaDoorOpen: 'E to go in. E here again leaves, and the fight starts over.',
 } as const;
 
 /**

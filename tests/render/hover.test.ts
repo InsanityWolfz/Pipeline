@@ -152,8 +152,8 @@ describe('landmark hovers (032)', () => {
   });
 });
 
-describe('arena door hovers (055.1)', () => {
-  it("names each door, with what opens it while sealed, then how it works once open, over its sprite's height too", () => {
+describe('arena door hovers (055.1, 059)', () => {
+  it("names each door, with a plain Sealed while sealed and no description once open, over its sprite's height too", () => {
     const s = createSim(SEED, { start: TUTORIAL_START });
     s.enemies = [];
     for (const a of ARENAS) {
@@ -164,9 +164,11 @@ describe('arena door hovers (055.1)', () => {
       expect(low).toMatchObject({ name: a.door.name, description: a.door.sealed });
       expect(nameAt(s, OVERWORLD.id, (t.tx + 0.5) * 32, (t.ty + 1) * 32 - ARENA_DOOR_LOOK.height + 4)?.name).toBe(a.door.name);
       s.gates[a.door.unlock] = true;
-      expect(nameAt(s, OVERWORLD.id, (t.tx + 0.5) * 32, (t.ty + 0.9) * 32)).toMatchObject({ name: a.door.name, description: DESCRIPTIONS.arenaDoorOpen });
+      const open = nameAt(s, OVERWORLD.id, (t.tx + 0.5) * 32, (t.ty + 0.9) * 32);
+      expect(open?.name).toBe(a.door.name);
+      expect(open?.description).toBeUndefined();
     }
-    expect(SHRINE_ARENA.door.sealed).toBe('Sealed: discover the Foundry');
-    expect(FORUM_ARENA.door.sealed).toBe('Sealed: break the Hollows barrier');
+    expect(SHRINE_ARENA.door.sealed).toBe('Sealed');
+    expect(FORUM_ARENA.door.sealed).toBe('Sealed');
   });
 });

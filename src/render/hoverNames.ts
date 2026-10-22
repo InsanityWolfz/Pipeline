@@ -128,13 +128,14 @@ export function nameAt(sim: SimState, roomId: string, px: number, py: number): H
     const state = altarState(sim, altar.id);
     return { name: WORLD_NAMES.altar, ...centre(altar), rise: HOVER_NAME.tile.rise, description: state === 'dim' ? DESCRIPTIONS.altarDim : state === 'awake' ? DESCRIPTIONS.altarAwake : DESCRIPTIONS.altarSpent };
   }
-  // 055: an arena's door (its tiles, or the sprite standing over them), sealed (what opens it) or open.
+  // 055: an arena's door (its tiles, or the sprite standing over them). 059: sealed it says only "Sealed"; open, no
+  // description (its E prompt says the rest).
   const onDoor = (t: { tx: number; ty: number }) => t.tx === tx && py <= (t.ty + 1) * TILE_SIZE && py >= (t.ty + 1) * TILE_SIZE - ARENA_DOOR_LOOK.height;
   const arena = ARENAS.find((a) => a.rooms.includes(roomId) && a.door.tiles.some(onDoor));
   if (arena) {
     const t = arena.door.tiles[Math.floor(arena.door.tiles.length / 2)] ?? arena.door.enterTo;
     const open = doorUnlocked(sim, arena, roomId);
-    return { name: arena.door.name, ...centre(t), rise: HOVER_NAME.tile.rise, description: open ? DESCRIPTIONS.arenaDoorOpen : arena.door.sealed };
+    return { name: arena.door.name, ...centre(t), rise: HOVER_NAME.tile.rise, ...(open ? {} : { description: arena.door.sealed }) };
   }
   const cache = (room.caches ?? []).find((c) => on(c));
   if (cache) return { name: landmarkDef(cache.id).name, ...centre(cache), rise: HOVER_NAME.tile.rise, description: cacheLine(sim, cache.id) };
