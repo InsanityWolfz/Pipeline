@@ -59,6 +59,7 @@ docs/
   art.md                  art spec: palette, sizes, camera angle
   backlog.md              ordered list of specs and their status
   progress.md             session log and current state
+  progress-archive.md     older progress entries
   decisions.md            technical decisions and why
   specs/NNN-name.md       one spec per feature
   plans/NNN-name.md       plans written by unattended /next runs
@@ -381,7 +382,7 @@ An ordered list, one line per item: number, name, status (`idea`, `draft`, `appr
 
 ### Progress log (docs/progress.md)
 
-A handoff log, latest entry first: one short entry per merged PR, or per session that leaves work unfinished (date, what changed, what's next, notes for the next session). Never one entry per step; the status page and the PR carry those. A fresh session reads the latest entry first.
+A handoff log, latest entry first: one short entry per merged PR, or per session that leaves work unfinished (date, what changed, what's next, notes for the next session). Never one entry per step; the status page and the PR carry those. A fresh session reads the latest entry first. When it passes about 30 KB, move the older entries to `docs/progress-archive.md`.
 
 ## Prototype backlog
 
