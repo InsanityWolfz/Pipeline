@@ -74,6 +74,8 @@ export class PlayerView {
   constructor(scene: Scene) {
     this.scale = textureScale();
     const [w, h] = WANDERER.box.size;
+    // Textures are the game's, not the scene's: an earlier game's (before Quit to title) is still there.
+    if (scene.textures.exists(WANDERER_KEY)) scene.textures.remove(WANDERER_KEY);
     const canvas = scene.textures.createCanvas(WANDERER_KEY, Math.ceil(w * this.scale), Math.ceil(h * this.scale));
     if (!canvas) throw new Error('Could not create the wanderer canvas');
     this.canvas = canvas;
