@@ -95,12 +95,13 @@ export const HOLLOWS_SOUND_RECIPES = {
   },
   // 045 (043.5): the seal's hum, a quiet ley shimmer looping while it stands (the Hollows barrier had no hum of its
   // own to reuse): two close sines beating slowly over a soft high shimmer. Its drop plays the barrier's collapse.
+  // 059 (Shaun): at half 045's volume (each layer's peak halved).
   'seal-hum': {
     loop: 2,
     layers: [
-      { wave: 'sine', from: 220, to: 220, dur: 2, attack: 0, volume: 0.16, tremolo: { rate: 1.5, depth: 0.35 } },
-      { wave: 'sine', from: 222, to: 222, dur: 2, attack: 0, volume: 0.1 },
-      { wave: 'sine', from: 880, to: 880, dur: 2, attack: 0, volume: 0.035, tremolo: { rate: 6, depth: 0.5 } },
+      { wave: 'sine', from: 220, to: 220, dur: 2, attack: 0, volume: 0.08, tremolo: { rate: 1.5, depth: 0.35 } },
+      { wave: 'sine', from: 222, to: 222, dur: 2, attack: 0, volume: 0.05 },
+      { wave: 'sine', from: 880, to: 880, dur: 2, attack: 0, volume: 0.0175, tremolo: { rate: 6, depth: 0.5 } },
     ],
   },
   'adds-rise': {
