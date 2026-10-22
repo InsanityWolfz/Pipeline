@@ -68,7 +68,7 @@ Names are placeholders Shaun may rename.
 
 **The Fire rune (data, sim)**
 - [ ] A new element tag `fire` (prefix "Fire", damage type `fire`) that applies to every family: arrow, bomb, ley bolt and landmine. A round still holds at most one element, so a round is frost or fire, never both.
-- [ ] A new stage, the **Fire rune**: 1 cinderite per batch of 4 rounds, in each family's build bar group like the frost rune. It is unlocked by hand-crafting one fire round in the crafting menu (029), and its rows show once cinderite has been carried.
+- [ ] A new stage, the **Fire rune**: 1 cinderite per batch of 4 rounds, one build-bar piece in the Arrows group, like the frost rune (whose group is its first family). It is unlocked by hand-crafting one fire round in the crafting menu (029), and its rows show once cinderite has been carried.
 - [ ] **Burn** (Shaun: spreads on death): each hit by a fire round, and each fire Burst, Bomblet and Shard, sets the enemy burning for `burnTicks` (start 180), dealing `burnShare` (start 0.25) of that hit's damage each second.
   - A new fire hit resets the timer, and the burn's damage per second becomes the larger of the old and the new. Burns never stack.
   - When a burning enemy dies, every living enemy within `spreadRadius` (start 64 px, 2 tiles) catches its burn, at its damage per second, for the full `burnTicks`. Spreading can chain.
