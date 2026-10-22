@@ -124,6 +124,8 @@ export const TALENT_COST = { point: 'point', points: 'points', free: 'free' } as
 export const LEGIBILITY_WORDS = {
   shotLine: '{damage} dmg · {rate}',
   burstLine: '{damage} {{burst}} dmg · {rate}',
+  /** A Burst line's short form, when the whole line would run the summary past its rows (its Burst chip already says it's damage). */
+  burstShort: '{damage} {{burst}} · {rate}',
   freezeIn: '{{freeze}} in {hits} hits',
   shards: '{count} {{shard}}s × {damage}',
   bomblets: '{count} {{bomblet}}s × {damage}',
