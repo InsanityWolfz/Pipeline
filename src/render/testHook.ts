@@ -12,6 +12,7 @@ import type { CraftMenuState } from './CraftMenuView';
 import type { WaypointShown } from './WaypointView';
 import type { FoundryMapShown } from './FoundryMapView';
 import type { SubStepShown } from './ObjectiveView';
+import type { GuidedShown } from './GuidedView';
 import type { PromptState } from './PromptView';
 import type { PortShown } from './PortView';
 import type { GearPanelState } from './GearPanel';
@@ -156,6 +157,8 @@ export interface UiState {
   waypoint: WaypointShown | null;
   /** 051 (B.3): the objective line's text and its sub-lines as drawn (raw, words, ticked, box). */
   objective: { text: string; subSteps: SubStepShown[] };
+  /** 058: the guided build's ghosts as drawn (the next first), the remove label and a refused placement's hint. */
+  guided: GuidedShown;
   /** The "+ shaft" popups still on screen (027), by text, with each one's box in view px (031: none overlap). */
   madePopups: MadePopupShown[];
   /** The objective line's finished-goal tick, its alpha (0 once faded): screenshots wait for it to go (028). */
@@ -197,6 +200,8 @@ export interface UiState {
   waystone: { text: string; x: number; y: number; w: number; h: number }[] | null;
   /** 033: the diagrams drawn on the foundry, restored parts, running effects and the wing door. */
   research: ResearchShown;
+  /** 058: the last few banners that started (discoveries, schematics, recipe unlocks), oldest first. */
+  banners: { kind: string; kicker: string; name: string }[];
   /** 033: the schematics' light pillars and the banner's schematic line. */
   schematics: SchematicsShown;
   /** 033: the restore panel while open (E at a diagram), else null. */

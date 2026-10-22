@@ -78,6 +78,9 @@ export const WAYPOINT = {
   pulse: { min: 0.65, max: 1, ms: 1100 },
   edgeScale: 1.3,
   plate: { gap: 2, pad: 2, alpha: 0.9 },
-  /** The arrow sprite is this tall, tip to tail (TUTORIAL_SPRITES.marker). */
+  /** The arrow sprite is this tall, tip to tail (TUTORIAL_SPRITES.marker), and this wide. */
   arrowLength: 20,
+  arrowWidth: 12,
+  /** 058 (Shaun): a hovering arrow that would overlap a key prompt (E, C, B) rises to sit this far above its cap. */
+  promptClear: 2,
 } as const;

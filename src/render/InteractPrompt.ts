@@ -6,6 +6,7 @@ import { interactTarget } from '../sim/interactables';
 import type { SimState } from '../sim/state';
 import { boundLetter } from './keyHint';
 import { TextLine } from './textLine';
+import type { ViewRect } from './waypointPlace';
 import { addVector } from './vector/textures';
 
 /** The in-reach prompt as drawn (045), for the test hook: what it's over, its key and the world point it floats over. */
@@ -36,6 +37,13 @@ export class InteractPrompt {
   }
 
   /** `litKeys`: the keys the objective's and the intake's prompts already show at full strength (it gives way to them). */
+  /** 058: the key cap's world rect while it shows (the waypoint arrow keeps clear of it), else null. */
+  get capBox(): ViewRect | null {
+    if (!this.cap.visible) return null;
+    const c = this.cap;
+    return { x0: c.x - c.displayWidth / 2, y0: c.y - c.displayHeight, x1: c.x + c.displayWidth / 2, y1: c.y };
+  }
+
   update(sim: SimState, shown: string, litKeys: readonly string[]): void {
     const found = shown === sim.roomId ? interactTarget(sim) : null;
     const target = found && !litKeys.includes(boundLetter(INTERACT_PROMPTS[found.kind].key)) ? found : null;

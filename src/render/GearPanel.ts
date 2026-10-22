@@ -12,6 +12,9 @@ import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import type { TipHit } from './tipTypes';
 import { addVector } from './vector/textures';
+import { benchGuide, type BenchGuide } from './benchGuide';
+import { TUTORIAL_SPRITES } from '../data/foundryAssets';
+import { GUIDED_LOOK } from '../data/hudLayout';
 
 /** What a click on the panel asks for: identify, wear (or take off) a piece, or nothing past the panel's own tab. */
 export type GearClick = { kind: 'identify' } | { kind: 'equip'; id: number } | { kind: 'panel' };
@@ -27,6 +30,8 @@ export interface GearPanelState {
   /** 050: the first row shown and the furthest the list scrolls. */
   scroll: { first: number; last: number };
   totals: string[];
+  /** 058: the tutorial's arrow (to the piece's tab, then its row), or null. */
+  guide: BenchGuide | null;
 }
 
 interface CellView { frame: GameObjects.Image; icon: GameObjects.Image; slot: TextLine; armor: TextLine; name: TextLine }
@@ -56,6 +61,8 @@ export class GearPanel {
   private readonly rows: RowView[] = [];
   private readonly empty: TextLine;
   private readonly totals: TextLine[];
+  /** 058: the arrow on what to click to wear the identified piece. */
+  private readonly arrow: GameObjects.Image;
   private layout: GearPanelLayout = gearPanelLayout([], 0);
   private pieces: GearPiece[] = [];
   private hover = '';
@@ -80,6 +87,7 @@ export class GearPanel {
     }
     this.empty = text('body').setFill(P.colors.dim);
     this.totals = [text('body'), text('body')];
+    this.arrow = image(TUTORIAL_SPRITES.marker, d + 3).setOrigin(0.5, 1).setRotation(-Math.PI / 2);
     this.setVisible(false);
   }
 
@@ -166,6 +174,7 @@ export class GearPanel {
 
   private setVisible(on: boolean): void {
     this.g.setVisible(on);
+    this.arrow.setVisible(on);
     for (const t of [this.title, this.button, this.empty, ...this.tabs, ...this.totals]) t.setVisible(on);
     for (const c of this.cells) for (const o of [c.frame, c.icon, c.slot, c.armor, c.name]) o.setVisible(on);
     for (const r of this.rows) for (const o of [r.frame, r.icon, r.name, r.detail, r.affixes, r.rule]) o.setVisible(on);
@@ -256,7 +265,12 @@ export class GearPanel {
     const totals = totalsLines(playerStats(sim));
     totals.forEach((t, i) => this.totals[i]?.set(t).moveTo(L.totals[i]?.x ?? 0, L.totals[i]?.y ?? 0));
     if (this.flash) this.fill(this.flash.box, { color: C.flash.color, alpha: C.flash.alpha * (this.flash.ms / P.flashMs) });
-    this.shown = { open: true, tab: this.tab, identify, cells, tabs, rows: rows.flatMap((r) => (r ? [r] : [])), scroll: L.scroll, totals };
+    const shown = { open: true, tab: this.tab, identify, cells, tabs, rows: rows.flatMap((r) => (r ? [r] : [])), scroll: L.scroll, totals, guide: null };
+    // 058: pointing right at the box's left edge, its tip `benchArrowGap` px short of it.
+    const guide = benchGuide(sim, shown);
+    this.arrow.setVisible(guide !== null);
+    if (guide) this.arrow.setPosition(guide.box.x - GUIDED_LOOK.benchArrowGap, guide.box.y + guide.box.h / 2);
+    this.shown = { ...shown, guide };
   }
 
   /** What it shows, for the test hook. */

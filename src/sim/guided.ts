@@ -76,3 +76,24 @@ export function pickUpRefusal(state: SimState, tx: number, ty: number): PlaceFai
   if (g?.kind === 'remove' && g.tx === tx && g.ty === ty) return null;
   return currentGuided(state) ? 'ghost' : 'tutorial';
 }
+
+/**
+ * The guided step's sub-line (058.2): the next ghost's piece, whether it's placed or removed, and, for a run of the
+ * same piece in a row, how many of the run are built and its length (1 for a lone piece).
+ */
+export function guidedSubLine(state: SimState): { pieceId: string; kind: Ghost['kind']; built: number; of: number } | null {
+  const next = nextGhost(state);
+  if (!next) return null;
+  const ghosts = GUIDED_BUILDS[next.id];
+  const same = (g: Ghost | undefined): boolean => g !== undefined && g.kind === next.ghost.kind && g.piece === next.ghost.piece;
+  let start = next.index;
+  while (same(ghosts[start - 1])) start -= 1;
+  let end = next.index;
+  while (same(ghosts[end + 1])) end += 1;
+  return { pieceId: next.ghost.piece, kind: next.ghost.kind, built: next.index - start, of: end - start + 1 };
+}
+
+/** For getState() (058): whether the build lock holds, the current guided build, and its ghosts still to build (the next first). */
+export function guidedSummary(state: SimState): { guided: { locked: boolean; build: GuidedId | null; ghosts: Ghost[] } } {
+  return { guided: { locked: buildLocked(state), build: currentGuided(state), ghosts: ghostsLeft(state) } };
+}

@@ -43,7 +43,8 @@ import { PLAYTEST_START } from '../../src/data/playtest';
 import { CARRIED_SLOTS } from '../../src/data/tube';
 import { RECIPES, recipeDef } from '../../src/data/recipes';
 import { CRAFT_TABS } from '../../src/data/craftTabs';
-import { STAGE_RECIPES, STAGE_ROWS } from '../../src/data/stages';
+import { STAGE_RECIPES, STAGE_ROWS, STAGES } from '../../src/data/stages';
+import { GUIDED_BUILDS } from '../../src/data/guidedBuilds';
 import { NODES } from '../../src/data/nodes';
 import { BUILD_BAR, PIECE_CATEGORIES, PIECES, pieceDef } from '../../src/data/pieces';
 import { ENTRANCE_CAPS, INTAKE, SPREAD_STEP } from '../../src/data/foundry';
@@ -486,14 +487,16 @@ describe('the tutorial (012)', () => {
       if (c.kind === 'refilled') for (const id of c.items) expect(ITEMS[id], o.text).toBeDefined();
       if (c.kind === 'machineMade') expect(machineOutputs, o.text).toContain(c.item);
       if (c.kind === 'entranceFed') expect(RESEARCH_NODES.some((n) => n.id === c.node), o.text).toBe(true);
-      if (!o.highlight) continue;
-      expect(BUILD_BAR, o.text).toContain(o.highlight);
-      const def = pieceDef(o.highlight);
-      if (def.kind !== 'machine') continue;
-      // Hidden pieces never show on the bar (026), so an earlier objective must have hand-crafted what it makes.
-      const made = recipeDef(def.recipeId).output.itemId;
-      const before = OBJECTIVES.slice(0, i).flatMap((p) => (p.check.kind === 'crafted' ? p.check.items.flatMap(chain) : []));
-      expect(before, o.text).toContain(made);
+      // 058: a guided build's pieces are on the bar; hidden pieces never show (026), so an earlier objective must have
+      // hand-crafted what each machine makes (a stage's, its tagged round).
+      for (const g of o.guided ? GUIDED_BUILDS[o.guided] : []) {
+        expect(BUILD_BAR, o.text).toContain(g.piece);
+        const def = pieceDef(g.piece);
+        if (def.kind !== 'machine') continue;
+        const before = OBJECTIVES.slice(0, i).flatMap((p) => (p.check.kind === 'crafted' ? p.check.items.flatMap(chain) : []));
+        if (def.stage) expect(before.some((id) => id.endsWith(`+${STAGES[def.stage ?? '']?.tag ?? ''}`)), o.text).toBe(true);
+        else expect(before, o.text).toContain(recipeDef(def.recipeId).output.itemId);
+      }
     }
   });
 

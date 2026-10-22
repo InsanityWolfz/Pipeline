@@ -227,6 +227,8 @@ export const TUTORIAL_SPRITES = {
 export const TUTORIAL_LAYOUT = {
   /** The objective line sits on the right of the screen (019), right-aligned `objectiveRight` px from the edge, below the minimap (053: the round world's, ~101 px tall). */
   objectiveTop: 116,
+  /** 058 (Shaun): in the foundry the line sits this far under the foundry's own, smaller minimap. */
+  objectiveFoundryGap: 6,
   objectiveRight: 10,
   /** The objective line's tablet (020): padding round the text, and its alpha. */
   objectivePanel: { padX: 6, padY: 3, alpha: 0.85 },

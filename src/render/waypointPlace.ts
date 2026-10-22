@@ -87,3 +87,17 @@ export function placeArrow(view: ViewRect, tip: Point, hud: readonly ViewRect[] 
   const s = Math.min(edge, ...hud.map((b) => entry({ x: cx, y: cy }, { x: dx, y: dy }, grow(b, WAYPOINT.edgeInset))));
   return { mode: 'edge', x: cx + dx * s, y: cy + dy * s, angle };
 }
+
+/**
+ * 058: the hovering arrow's tip raised clear of the key prompts on screen (world rects of their caps): an arrow whose
+ * body would overlap a cap sits `promptClear` px above it instead, so it never hides the key.
+ */
+export function clearOfPrompts(tip: Point, prompts: readonly ViewRect[]): Point {
+  const half = WAYPOINT.arrowWidth / 2;
+  let y = tip.y;
+  for (const b of [...prompts].sort((p, q) => q.y0 - p.y0)) {
+    const across = tip.x + half > b.x0 && tip.x - half < b.x1;
+    if (across && y > b.y0 - WAYPOINT.promptClear && y - WAYPOINT.arrowLength < b.y1) y = b.y0 - WAYPOINT.promptClear;
+  }
+  return { x: tip.x, y };
+}

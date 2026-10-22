@@ -13,6 +13,7 @@ import { roomById, type SimState } from '../sim/state';
 import { stoneInReach } from '../sim/tutorial';
 import { TextLine } from './textLine';
 import { boundLetter } from './keyHint';
+import type { ViewRect } from './waypointPlace';
 import { addVector } from './vector/textures';
 
 /** A world point, px: where a prompt's target stands. */
@@ -38,6 +39,13 @@ export class PromptView {
   constructor(scene: Scene) {
     this.cap = addVector(scene, 0, 0, TUTORIAL_SPRITES.keyCap).setOrigin(0.5, 1).setDepth(DEPTHS.prompt);
     this.key = new TextLine(scene, 0, 0, DEPTHS.prompt + 1, true);
+  }
+
+  /** 058: the key cap's world rect while it shows (the waypoint arrow keeps clear of it), else null. */
+  get capBox(): ViewRect | null {
+    if (!this.cap.visible) return null;
+    const c = this.cap;
+    return { x0: c.x - c.displayWidth / 2, y0: c.y - c.displayHeight, x1: c.x + c.displayWidth / 2, y1: c.y };
   }
 
   update(sim: SimState, shown: string): void {

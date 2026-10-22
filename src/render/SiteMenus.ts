@@ -1,6 +1,7 @@
 import type { Scene } from 'phaser';
 import { SITE_ICONS } from '../data/foundryAssets';
 import { claimedPylonInReach, claimedPylons, fixtureInReach } from '../sim/claims';
+import { PYLON_MENU_TEXT } from '../data/claims';
 import type { SimState } from '../sim/state';
 import { ChoiceMenu, type Choice } from './ChoiceMenu';
 import type { Controls } from './controls';
@@ -22,7 +23,7 @@ export const NO_SITE_UI: SiteUiState = { siteOpen: false, waystone: null, restor
 /** A waystone row (032): the claimed site to travel to. */
 type WaystoneChoice = { site: string };
 
-// The claimed pylon's menu (send the haul home, travel to the foundry) and the waystone's
+// The claimed pylon's menu (send the inventory to the stash, travel to the foundry) and the waystone's
 // (travel to any claimed pylon, by landmark name, 032), opened by E beside them (009; 052:
 // the stash's screen is the grid panel's, which the router opens), and the
 // identification bench's gear panel (036: identify all, wear or take off a piece per
@@ -167,8 +168,8 @@ export class SiteMenus {
     if (this.pylon.isOpen && !claimedPylonInReach(sim)) this.pylon.close();
     const held = Object.values(sim.inventory).reduce((a, b) => a + b, 0);
     const pylonRows: Choice<PylonChoice>[] = [
-      { icons: [SITE_ICONS.stash], text: `Send haul home (${held})`, value: 'deposit' },
-      { icons: [SITE_ICONS.travel], text: 'Travel to foundry', value: 'travel' },
+      { icons: [SITE_ICONS.stash], text: PYLON_MENU_TEXT.deposit(held), value: 'deposit' },
+      { icons: [SITE_ICONS.travel], text: PYLON_MENU_TEXT.travel, value: 'travel' },
     ];
     this.pylon.show(pylonRows);
     if (this.bench.isOpen && !fixtureInReach(sim, 'bench')) this.bench.close();

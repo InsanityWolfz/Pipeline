@@ -113,3 +113,6 @@ export const DISCOVERY_BANNER = {
   fadeOutMs: 500,
   alpha: 0.9,
 } as const;
+
+/** 058 (Shaun): a recipe new to the crafting menu (C) shows in the same banner: this kicker over its name, several joined in one. */
+export const UNLOCK_BANNER = { kicker: 'Unlocked', join: ', ' } as const;

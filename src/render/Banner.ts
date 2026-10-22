@@ -8,7 +8,7 @@ import { TextLine } from './textLine';
 
 /** One banner: what it's about (`kind`, `id`, for the test hook), a small kicker line and the name under it. */
 export interface BannerEntry {
-  kind: 'discovery' | 'schematic';
+  kind: 'discovery' | 'schematic' | 'unlock';
   id: string;
   kicker: string;
   name: string;
@@ -17,7 +17,7 @@ export interface BannerEntry {
 /** How many started entries the banner remembers for the test hook. */
 const SEEN_KEPT = 8;
 
-// The banner (032, shared by 033's schematics): top centre (050: at the top, never over the player),
+// The banner (032, shared by 033's schematics and 058's recipe unlocks): top centre (050: at the top, never over the player),
 // a kicker line over a name on a tablet, fading in, holding `bannerMs`, fading out.
 // Entries queue and show in turn, so a discovery and a schematic never overlap. Its
 // time runs on the tween clock the caller passes, so the test hook can hold it.

@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { GUIDED_BUILDS, type Ghost } from '../../src/data/guidedBuilds';
+import { GUIDED_BUILDS, GUIDED_TEXT, type Ghost } from '../../src/data/guidedBuilds';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { PLAYTEST_START } from '../../src/data/playtest';
 import { TUTORIAL_START } from '../../src/data/player';
 import { FOUNDRY_ROOM } from '../../src/data/rooms';
 import { OVERWORLD_ROOM } from '../../src/data/overworld';
 import { placeExampleLine } from '../../src/sim/exampleLine';
-import { buildLocked, nextGhost } from '../../src/sim/guided';
+import { buildLocked, guidedSubLine, nextGhost } from '../../src/sim/guided';
 import { currentObjective, objectiveLine } from '../../src/sim/objectives';
 import type { HopperState } from '../../src/sim/pieces';
 import { diagrams } from '../../src/sim/research';
@@ -239,5 +239,19 @@ describe('the right entrance (058.5)', () => {
     expect(diagrams(s).filter((d) => d.entrance !== null).map((d) => d.entrance)).toEqual([2]);
     const free = createSim(3, { start: PLAYTEST_START });
     expect(diagrams(free).filter((d) => d.entrance !== null).map((d) => d.entrance)).toEqual([0, 2]);
+  });
+});
+
+describe('the guided sub-line (058.2)', () => {
+  it('names the next piece, counting a run of the same piece', () => {
+    const s = tutorialAt(LEY);
+    expect(guidedSubLine(s)).toEqual({ pieceId: 'conduit', kind: 'place', built: 0, of: 2 });
+    build(s, GUIDED_BUILDS['ley-line'][0] as Ghost);
+    expect(guidedSubLine(s)).toEqual({ pieceId: 'conduit', kind: 'place', built: 1, of: 2 });
+    build(s, GUIDED_BUILDS['ley-line'][1] as Ghost);
+    expect(guidedSubLine(s)).toEqual({ pieceId: 'grinder', kind: 'place', built: 0, of: 1 });
+    expect(GUIDED_TEXT.place('conduit', 1, 2)).toBe('Place conduits 1/2');
+    expect(GUIDED_TEXT.place('grinder', 0, 1)).toBe('Place a grinder');
+    expect(GUIDED_TEXT.place('underground entrance', 0, 1)).toBe('Place an underground entrance');
   });
 });

@@ -64,8 +64,6 @@ export interface ObjectiveDef {
   target?: TargetDef;
   /** 051 (B.3): indented sub-lines under the goal, one per raw its crafts still lack, each ticking off once gathered. */
   subSteps?: 'collect';
-  /** The piece whose build-bar cell pulses while the bar is open (027). */
-  highlight?: string;
   /** 058: a goal built piece by piece on ghosts (src/data/guidedBuilds.ts), with a sub-line for the next piece. */
   guided?: GuidedId;
   /** 058: completes only once every goal before it is done (leaving the foundry would hold from the start). */
