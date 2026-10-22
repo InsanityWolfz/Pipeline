@@ -20,6 +20,7 @@ import { MAX_ARROWS, placeArrows, viewOf } from './FoundryView';
 import { toView } from './scale';
 import { Pulse } from './pulse';
 import { BuildStripView, type BuildStripState } from './BuildStripView';
+import { GuideBar, type GuideBarState } from './GuideBar';
 import { TextLine } from './textLine';
 import type { TipHit } from './tipTypes';
 import { addVector, showFrame } from './vector/textures';
@@ -27,7 +28,7 @@ import { addVector, showFrame } from './vector/textures';
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
 /** The resting frame of a piece's body as placed with `facing`. */
-function bodyFrame(pieceId: string, facing: Facing, inFrom: Facing): string {
+export function bodyFrame(pieceId: string, facing: Facing, inFrom: Facing): string {
   const def = pieceDef(pieceId);
   const view = viewOf(facing);
   if (def.kind === 'machine') return machineLook(def.id, view).idle;
@@ -49,6 +50,8 @@ export interface BuildBarState {
   pulseAlpha: number;
   /** 045: the build controls strip over the bar. */
   strip: BuildStripState;
+  /** 058: the guided tutorial's arrow and greyed cells. */
+  guide: GuideBarState;
 }
 
 // Build mode on screen: the bar of unlocked pieces in their groups (026), each
@@ -71,6 +74,7 @@ export class BuildView {
   private readonly ghostIcon: GameObjects.Image;
   private readonly ghostArrows: GameObjects.Image[];
   private readonly strip: BuildStripView;
+  private readonly guide: GuideBar;
   private unlocked: readonly string[] = [];
   private visible = false;
   /** The piece whose cell the cursor is over (015's tip, now the legibility tablet: 040), for the test hook. */
@@ -95,6 +99,7 @@ export class BuildView {
     for (const o of [this.ghost, this.ghostIcon, ...this.ghostArrows]) o.setDepth(DEPTHS.worldUi - 1);
     this.dividers = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.hud);
     this.strip = new BuildStripView(scene);
+    this.guide = new GuideBar(scene);
     this.setVisible(false);
   }
 
@@ -114,6 +119,7 @@ export class BuildView {
       pulsing: this.pulsing,
       pulseAlpha: this.wave.value,
       strip: this.strip.state,
+      guide: this.guide.shown,
     };
   }
 
@@ -123,7 +129,8 @@ export class BuildView {
    */
   tipAt(x: number, y: number): TipHit | null {
     const cell = this.visible ? buildBarCells(this.unlocked).find((c) => inRect(c, x, y)) : undefined;
-    if (!cell) return null;
+    // 058.3: a cell the build lock holds back shows its locked line instead (GuideBar).
+    if (!cell || this.guide.shown.locked.includes(cell.pieceId)) return null;
     const def = pieceDef(cell.pieceId);
     const top = buildBarLabelTop();
     const box = { x: cell.x, y: top, w: cell.w, h: cell.y + cell.h - top };
@@ -147,6 +154,7 @@ export class BuildView {
     canPlace: (pieceId: string, tx: number, ty: number, facing: Facing) => PlaceFail | null,
     shapeAt: (tile: Tile, facing: Facing) => { facing: Facing; inFrom: Facing },
     highlight: string | null = null,
+    locked = false,
   ): void {
     if (unlocked.join() !== this.unlocked.join()) this.rebuild(unlocked);
     if (!unlocked.includes(this.selected)) this.selected = unlocked[0] ?? FIRST_PIECE;
@@ -157,6 +165,9 @@ export class BuildView {
     const hovered = building ? buildBarCells(unlocked).find((c) => inRect(c, at.x, at.y)) : undefined;
     this.tipShown = hovered?.pieceId ?? null;
     this.showPulse(building ? buildBarCells(unlocked).find((c) => c.pieceId === highlight) : undefined);
+    const rects = buildBarCells(unlocked);
+    const cells = this.cells.flatMap((c) => rects.filter((r) => r.pieceId === c.pieceId).map((cell) => ({ cell, images: c.images })));
+    this.guide.update(building, cells, highlight, locked, this.tipShown);
     if (!building) return;
     const cell = buildBarCells(unlocked).find((c) => c.pieceId === this.selected);
     if (cell) this.highlight.setPosition(cell.x, cell.y);

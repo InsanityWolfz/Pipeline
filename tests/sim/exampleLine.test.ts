@@ -101,6 +101,8 @@ describe('the example line (046)', () => {
     expect(s.events.pickUps).toMatchObject([{ pieceId: 'hopper', items: { wood: 4 } }]);
     s.crafted = [...s.crafted, 'shaft'];
     removePieceAt(s, 11, 4);
+    // 058: once the tutorial's build lock has lifted.
+    s.objectives = s.objectives.map(() => true);
     expect(place(s, 'cutter', 6, 6, 'up')).toMatchObject({ pieceId: 'cutter', tx: 6, ty: 6 });
   });
 

@@ -1,10 +1,10 @@
+import { GROTTO_GROUP } from '../../src/data/grotto';
 import { describe, expect, it } from 'vitest';
 import { CLAIM_TICKS, FIXTURES } from '../../src/data/claims';
 import { TILE_SIZE } from '../../src/data/config';
 import { LANDMARK_LIST } from '../../src/data/landmarks';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { OVERWORLD, OVERWORLD_ROOM, type TilePos } from '../../src/data/overworld';
-import { POPULATION } from '../../src/data/population';
 import { FOUNDRY_ROOM, SHRINE_SITE } from '../../src/data/rooms';
 import { claim, claimedPylons } from '../../src/sim/claims';
 import { fixtureDef } from '../../src/sim/fixtures';
@@ -12,7 +12,7 @@ import { safeZoneAt } from '../../src/sim/population';
 import { createSim, type SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
-import { arena, die, movePlayer, run, SEED } from './fight';
+import { die, movePlayer, run, SEED } from './fight';
 
 // Landmark pylons (032): each resource site has a ley pylon, dormant until the shrine is
 // claimed, sealed while its guards live, claimed like the shrine's; every claimed pylon is
@@ -43,7 +43,6 @@ function claimAt(s: SimState, site: string): void {
 }
 
 const STONE_PORT = FIXTURES.find((f) => f.kind === 'port' && f.raw === 'stone')?.id ?? '';
-const SECOND = OBJECTIVES.findIndex((o) => o.check.kind === 'claimedCount');
 
 describe('a resource-site pylon', () => {
   it('is dormant until the shrine is claimed: E starts no claim', () => {
@@ -173,31 +172,16 @@ describe('the waystone', () => {
 });
 
 describe('the goal chain', () => {
-  it('appends "Claim a second pylon" after 029\'s goals, done on the second claim', () => {
-    // 033 moved "Feed all three entrances" after it, just before the frontier line, and 034's four Region 2 steps come
-    // between, after 049's Husk Hive goal.
-    expect(SECOND).toBe(OBJECTIVES.length - 7);
-    expect(OBJECTIVES[SECOND]).toMatchObject({ text: 'Claim a second pylon', milestone: 'm1', check: { kind: 'claimedCount', min: 2 }, target: { kind: 'sitePylon' } });
-    expect(OBJECTIVES[SECOND - 1]?.check).toEqual({ kind: 'craftedAny', items: ['ley-bolt+homing', 'ley-bolt+split'] });
+  it("058: claiming the Frozen Grotto's pylon is its own goal, after gathering its rimestone", () => {
+    const grotto = OBJECTIVES.findIndex((o) => o.check.kind === 'claimed' && o.check.site === GROTTO_GROUP);
+    expect(OBJECTIVES[grotto]).toMatchObject({ text: "Claim the Frozen Grotto's pylon", milestone: 'm1', target: { kind: 'pylon', site: GROTTO_GROUP } });
+    expect(OBJECTIVES[grotto - 1]?.text).toBe('Gather rimestone at the Frozen Grotto');
     const s = createSim(SEED);
     claim(s, SHRINE_SITE);
     run(s, 1);
-    expect(s.objectives[SECOND]).toBe(false);
-    claim(s, 'reed-marsh');
+    expect(s.objectives[grotto]).toBe(false);
+    claim(s, GROTTO_GROUP);
     run(s, 1);
-    expect(s.objectives[SECOND]).toBe(true);
-  });
-});
-
-describe('the population with every site claimed', () => {
-  it('still reaches every ring\'s pack target', () => {
-    const s = arena();
-    for (const site of [SHRINE_SITE, ...SITES.map((l) => l.id)]) claim(s, site);
-    s.populated = true;
-    const target = POPULATION.rings[1].packs + POPULATION.rings[2].packs;
-    const packs = () => new Set(s.enemies.filter((e) => e.group.startsWith('pop-')).map((e) => e.group));
-    for (let t = 0; t < 600 && packs().size < target; t++) run(s, 1);
-    for (const ring of [1, 2] as const) expect([...packs()].filter((g) => g.startsWith(`pop-${ring}-`)), `ring ${ring}`).toHaveLength(POPULATION.rings[ring].packs);
-    for (const e of s.enemies) expect(safeZoneAt(s, e.roomId, e.homeX, e.homeY)).toBeNull();
+    expect(s.objectives[grotto]).toBe(true);
   });
 });

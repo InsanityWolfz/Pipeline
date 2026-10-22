@@ -1,5 +1,7 @@
 import type { GateId } from './rooms';
 import type { TargetDef } from './targets';
+import { GROTTO_GROUP } from './grotto';
+import type { GuidedId } from './guidedBuilds';
 
 // The objectives: one ordered chain (028). The prototype's goals (012) run first,
 // in its beat order, then each milestone's, tagged by milestone; later specs append
@@ -17,30 +19,28 @@ export type ObjectiveCheck =
   | { kind: 'craftedAny'; items: readonly string[] }
   | { kind: 'gate'; gate: GateId }
   | { kind: 'inRoom'; room: string }
-  /** 046: the foundry's lines have run dry at least once since the tube attuned (the example line's stock used up). */
-  | { kind: 'lineDry' }
+  /** 058: the player is anywhere but the foundry. */
+  | { kind: 'outside' }
   /** 046: since the lines ran dry, each of these items has been put in a hopper by hand. */
   | { kind: 'refilled'; items: readonly string[] }
-  /** 050: the entrance this research node opened holds ammo, any ammo. */
-  | { kind: 'entranceFed'; node: string }
+  /** 050: the entrance this research node opened holds ammo (058: of this kind, when given). */
+  | { kind: 'entranceFed'; node: string; ammo?: string }
   /** Machines have made at least one of this item (027); hand-crafting never counts. */
   | { kind: 'machineMade'; item: string }
   /** An intake entrance has filled from a line at least once. */
   | { kind: 'lineFull' }
   | { kind: 'identified' }
+  /** 058: a piece of gear is worn. */
+  | { kind: 'equipped' }
+  /** 058: the player has fast-travelled home from a pylon. */
+  | { kind: 'travelled' }
+  /** 058: a talent has been taken. */
+  | { kind: 'talentSpent' }
   | { kind: 'claimed'; site: string }
   /** A research node is restored (033). */
   | { kind: 'restored'; node: string }
   /** The volley the next press would fire has at least this many rounds (024). */
   | { kind: 'volley'; min: number }
-  /** This long outside the foundry with a line built into the intake, once every goal before it is done. */
-  | { kind: 'awayRunning'; ticks: number }
-  /** A piece has taken an item from a supply port (028). */
-  | { kind: 'portDelivered' }
-  /** The volley holds at least two different ammo (028). */
-  | { kind: 'mixedVolley' }
-  /** At least this many pylons claimed (032). */
-  | { kind: 'claimedCount'; min: number }
   /** The player stands in this region (034: Region 2, Stonefall Hollows, reached once its barrier is down). */
   | { kind: 'inRegion'; region: number }
   /** A region boss has been killed at least once (034). */
@@ -59,18 +59,22 @@ export interface ObjectiveDef {
   prompt?: { key: 'E' | 'C' | 'B'; over: PromptTarget };
   /**
    * 051 (B.1): what the waypoint arrow points at (src/data/targets.ts). It replaces 027's marker: an arrow at the
-   * screen's edge while it's off screen, over it while it's on screen, always on.
+   * screen's edge while it's off screen, over it while it's on screen, always on. None for a goal done anywhere.
    */
-  target: TargetDef;
+  target?: TargetDef;
   /** 051 (B.3): indented sub-lines under the goal, one per raw its crafts still lack, each ticking off once gathered. */
   subSteps?: 'collect';
-  /** The piece whose build-bar cell pulses while the bar is open (027). */
-  highlight?: string;
+  /** 058: a goal built piece by piece on ghosts (src/data/guidedBuilds.ts), with a sub-line for the next piece. */
+  guided?: GuidedId;
+  /** 058: completes only once every goal before it is done (leaving the foundry would hold from the start; a fast travel could come early). */
+  inOrder?: true;
+  /** 058: done unseen (skipped) if the lines haven't run dry by the tick the goal of this check completes. */
+  skipUnlessDryAfter?: ObjectiveCheck['kind'];
   /**
-   * 046: the objective line passes over this goal until this check holds (the refill goal waits for the example line
-   * to run dry). It can still complete before then, as any goal can.
+   * 058: not in the chain's order: the current goal whenever its trigger holds (the first talent point) and it isn't
+   * done, unless a guided build is current (058.4). The chain picks up where it was once it's done.
    */
-  waitsFor?: ObjectiveCheck;
+  cutIn?: true;
 }
 
 /** 050: the research node whose entrance the second-line goal asks to feed, and its marker points at: the Warden core's. */
@@ -97,60 +101,65 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
     subSteps: 'collect',
   },
   { text: 'Enter the foundry', milestone: 'prototype', check: { kind: 'inRoom', room: 'foundry' }, target: { kind: 'room', room: 'foundry' } },
-  // 046: the example line stands from the first entry (027's build steps gave way to it). Once it runs dry, the
-  // line asks the player to refill its hoppers.
+  // 046: the example line stands from the first entry and fills the tube on its own (058, Shaun: just wait for it).
+  { text: 'Wait for the tube to fill with arrows', milestone: 'prototype', check: { kind: 'lineFull' }, target: { kind: 'intake' } },
+  { text: 'Identify your armor at the bench (E)', milestone: 'prototype', check: { kind: 'identified' }, prompt: { key: 'E', over: 'bench' }, target: { kind: 'bench' } },
+  // 058: wear a piece, with arrows in the bench's screen on what to click.
+  { text: 'Equip a piece of armor at the bench (E)', milestone: 'prototype', check: { kind: 'equipped' }, prompt: { key: 'E', over: 'bench' }, target: { kind: 'bench' } },
+  { text: "Claim the shrine's pylon", milestone: 'prototype', check: { kind: 'claimed', site: 'shrine' }, prompt: { key: 'E', over: 'pylon' }, target: { kind: 'pylon', site: 'shrine' } },
+  // 058: the waypoints, taught from the first pylon.
   {
-    text: 'Refill the hoppers with wood, stone and fiber (E)',
+    text: 'Fast-travel to the foundry from the pylon (E)',
+    milestone: 'prototype',
+    check: { kind: 'travelled' },
+    // In order, so the refill's skip below is decided when this is the current goal, not by an earlier fast travel.
+    inOrder: true,
+    prompt: { key: 'E', over: 'pylon' },
+    target: { kind: 'pylon', site: 'shrine', claimed: true },
+  },
+  // 046: once the example line has run dry, refill its hoppers; 058: only if it's dry when the fast travel lands.
+  {
+    text: 'Refill the hoppers in the foundry with wood, stone and fiber (E)',
     milestone: 'prototype',
     check: { kind: 'refilled', items: ['wood', 'stone', 'fiber'] },
-    waitsFor: { kind: 'lineDry' },
+    skipUnlessDryAfter: 'travelled',
     prompt: { key: 'E', over: 'hopper' },
     target: { kind: 'hoppers', unfilled: true },
   },
-  { text: 'Fill the tube from your line', milestone: 'prototype', check: { kind: 'lineFull' }, prompt: { key: 'E', over: 'hopper' }, target: { kind: 'hoppers' } },
-  { text: 'Identify your armor at the bench (E)', milestone: 'prototype', check: { kind: 'identified' }, prompt: { key: 'E', over: 'bench' }, target: { kind: 'bench' } },
-  { text: "Claim the shrine's pylon", milestone: 'prototype', check: { kind: 'claimed', site: 'shrine' }, prompt: { key: 'E', over: 'pylon' }, target: { kind: 'pylon', site: 'shrine' } },
-  // The prototype's one Warden drops one core, and restoring a second entrance costs one (033: one entrance per core).
-  { text: 'Restore a second intake entrance (E at a cap with the warden core)', milestone: 'prototype', check: { kind: 'restored', node: NEW_ENTRANCE_NODE }, target: { kind: 'caps' } },
-  // 046: the second entrance gets a line of its own, built by the player (027's lesson after the Warden). 050 (Shaun):
-  // any ammo in the entrance the Warden's core opened counts, and the arrow points at that entrance.
+  // The prototype's one Warden drops one core (033: one entrance per core); 058.5: during the tutorial it fits the right cap only.
+  { text: 'Restore the right intake entrance (E with the warden core)', milestone: 'prototype', check: { kind: 'restored', node: NEW_ENTRANCE_NODE }, target: { kind: 'caps' } },
+  // 058: built piece by piece on ghosts (src/data/guidedBuilds.ts).
   {
-    text: 'Feed ammo into the new entrance',
+    text: 'Put ley bolts into the second entrance (B)',
     milestone: 'prototype',
-    check: { kind: 'entranceFed', node: NEW_ENTRANCE_NODE },
+    check: { kind: 'entranceFed', node: NEW_ENTRANCE_NODE, ammo: 'ley-bolt' },
     prompt: { key: 'B', over: 'player' },
-    target: { kind: 'newEntrance' },
-    highlight: 'assembler',
+    target: { kind: 'ghost' },
+    guided: 'ley-line',
   },
-  { text: 'Feed two entrances to fire a spread', milestone: 'prototype', check: { kind: 'volley', min: 2 }, target: { kind: 'intake' } },
-  { text: 'Head back out — the foundry keeps running', milestone: 'prototype', check: { kind: 'awayRunning', ticks: 600 }, target: { kind: 'room', room: 'overworld' } },
-  // 028: Milestone 1's goals, after the shrine. Later specs append theirs.
-  { text: 'Run a supply port into your line', milestone: 'm1', check: { kind: 'portDelivered' }, target: { kind: 'ports' }, highlight: 'conduit' },
-  { text: 'Put a second kind of ammo in another entrance', milestone: 'm1', check: { kind: 'mixedVolley' }, target: { kind: 'intake' } },
-  // 029: the first stage, frost on arrows, from the Grotto's rime to a frost rune in the line; then a ley stage by hand.
-  // 047: tagged rounds are crafted in the crafting menu (C), anywhere, and never called stages where the player sees.
+  { text: 'Leave the foundry', milestone: 'prototype', check: { kind: 'outside' }, inOrder: true, target: { kind: 'room', room: 'overworld' } },
+  // 029: the first stage, frost on arrows, from the Grotto's rime to a frost rune in the line. 055: the Grotto's pylon.
   { text: 'Gather rimestone at the Frozen Grotto', milestone: 'm1', check: { kind: 'gathered', items: ['rimestone'] }, target: { kind: 'nodes' } },
+  { text: "Claim the Frozen Grotto's pylon", milestone: 'm1', check: { kind: 'claimed', site: GROTTO_GROUP }, prompt: { key: 'E', over: 'pylon' }, target: { kind: 'pylon', site: GROTTO_GROUP } },
+  // 047: tagged rounds are crafted in the crafting menu (C), anywhere, and never called stages where the player sees.
   { text: 'Craft frost arrows (C)', milestone: 'm1', check: { kind: 'crafted', items: ['arrow+frost'] }, target: { kind: 'collect' } },
-  { text: 'Build a frost rune into your arrow line', milestone: 'm1', check: { kind: 'machineMade', item: 'arrow+frost' }, target: { kind: 'room', room: 'foundry' }, highlight: 'frost-rune' },
-  { text: 'Craft homing or split ley bolts (C)', milestone: 'm1', check: { kind: 'craftedAny', items: ['ley-bolt+homing', 'ley-bolt+split'] }, target: { kind: 'collect' } },
-  // 032: a resource site's pylon, a discovered one first.
-  { text: 'Claim a second pylon', milestone: 'm1', check: { kind: 'claimedCount', min: 2 }, target: { kind: 'sitePylon' } },
+  // 058: guided like the ley line; building opens fully once it's done (LOCK_UNTIL).
+  { text: 'Build a frost rune into your arrow line', milestone: 'm1', check: { kind: 'machineMade', item: 'arrow+frost' }, target: { kind: 'ghost' }, guided: 'frost-line' },
   // 049.2: no lock on ring 2; after the Warden the goal line points to the Husk Hive, whose pylon supplies resin.
   { text: 'Find the Husk Hive and claim its pylon', milestone: 'm1', check: { kind: 'claimed', site: 'husk-hive' }, target: { kind: 'pylon', site: 'husk-hive' } },
   // 034: Region 2, behind the barrier the shrine's claim drops: in, its pylon, its boss, and the entrance its core restores.
-  { text: 'Breach Stonefall Hollows', milestone: 'm1', check: { kind: 'inRegion', region: 2 }, target: { kind: 'barrier' } },
+  { text: 'Reach Stonefall Hollows', milestone: 'm1', check: { kind: 'inRegion', region: 2 }, target: { kind: 'barrier' } },
   { text: "Claim the Cistern Terrace's pylon", milestone: 'm1', check: { kind: 'claimed', site: 'cistern-terrace' }, target: { kind: 'pylon', site: 'cistern-terrace' } },
   { text: 'Defeat the Bulwark', milestone: 'm1', check: { kind: 'bossDefeated', boss: 'bulwark' }, target: { kind: 'boss', boss: 'bulwark' } },
   { text: "Restore the intake's third entrance (E with the Bulwark core)", milestone: 'm1', check: { kind: 'restored', node: 'entrance-3' }, target: { kind: 'caps' } },
-  // 033: the third entrance needs the Bulwark's core, so feeding all three comes after restoring it, just before the frontier line.
+  // 033: the third entrance needs the Bulwark's core, so feeding all three comes after restoring it. 058: the tutorial ends here.
   { text: 'Feed all three entrances', milestone: 'm1', check: { kind: 'volley', min: 3 }, target: { kind: 'intake' } },
+  // 058: cuts in as the current goal once the first talent point comes (058.4: never during a guided build).
+  { text: 'Press T to spend a talent point', milestone: 'm1', check: { kind: 'talentSpent' }, cutIn: true },
 ];
 
 /** 051 (B.3): a sub-line's words, from the raw's name ("Collect stone"). */
 export const SUB_STEP_TEXT = (name: string): string => `Collect ${name.toLowerCase()}`;
-
-/** The standing line once every goal is done (028): no check, and it never names the next milestone. */
-export const FRONTIER_GOAL = { text: 'Explore beyond the shrine' } as const;
 
 /**
  * The intake's own prompt (024, 033), shown in the foundry while the next entrance node's cost is carried (a warden

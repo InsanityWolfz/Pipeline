@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { OBJECTIVES } from '../../src/data/objectives';
+import { TALENT_START, TALENTS } from '../../src/data/talents';
 import { OVERWORLD } from '../../src/data/overworld';
 import { boot, cameraSettled, quietScreen } from './helpers';
 
@@ -12,6 +13,7 @@ const SHOTS = 'docs/review/051';
 const T = 32;
 const ui = (page: Page) => page.evaluate(() => window.__GAME__?.ui());
 const goal = (text: string): number => OBJECTIVES.findIndex((o) => o.text === text);
+const FIRST_TALENT = Object.values(TALENTS).find((t) => t.id !== TALENT_START && t.links.includes(TALENT_START))?.id ?? '';
 
 /** A clip of the view round a world point, view px either side. */
 async function clipAround(page: Page, x: number, y: number, w: number, h: number): Promise<{ x: number; y: number; width: number; height: number }> {
@@ -44,7 +46,7 @@ test.describe('review screenshots (051)', () => {
   test('02 the arrow over each hopper with its raw', async ({ page }) => {
     test.setTimeout(120_000);
     await boot(page, '?start=tutorial');
-    await page.evaluate((n) => {
+    await page.evaluate(([n, talent]) => {
       const g = window.__GAME__;
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
@@ -63,8 +65,11 @@ test.describe('review screenshots (051)', () => {
         x = g.step(1, { fire: true, aimX: x.player.x + 200, aimY: x.player.y });
       }
       h.toFoundry();
-      h.walkTo(12.5 * 32, 8.5 * 32);
-    }, goal('Refill the hoppers with wood, stone and fiber (E)'));
+      // 058: just below the hoppers, so their arrows clear the goal band, which sits higher in the foundry now.
+      h.walkTo(12.5 * 32, 6.5 * 32);
+      // 058: the field's XP brings the first talent point; its cut-in is answered so the refill goal shows.
+      g.step(1, { takeTalent: talent });
+    }, [goal('Refill the hoppers in the foundry with wood, stone and fiber (E)'), FIRST_TALENT] as const);
     await quietScreen(page);
     await cameraSettled(page);
     await expect.poll(async () => (await ui(page))?.waypoint?.icons.length ?? 0, { timeout: 20_000 }).toBe(3);

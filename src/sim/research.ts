@@ -7,6 +7,9 @@ import { FOUNDRY_ROOM } from '../data/rooms';
 import type { Rect } from './collision';
 import { count, type Inventory } from './inventory';
 import type { SimState } from './state';
+import { NEW_ENTRANCE_NODE } from '../data/objectives';
+import { TUTORIAL_CAP } from '../data/guidedBuilds';
+import { isGuidedGame } from './guided';
 
 // Research as restoration (033). Each node is hidden, revealed (its diagram shows
 // at its anchor) or restored (back for good, through a KO). The player restores a
@@ -79,14 +82,18 @@ const nextOf = (state: Research, kind: 'entrance' | 'pipe'): ResearchNode | unde
 /** The middle mouth tile, where the pipe rises. */
 const PIPE = INTAKE.entrances[Math.floor(INTAKE.entrances.length / 2)] ?? { tx: 0, ty: 0 };
 
+/** 058.5: in a guided game, the Warden core's entrance node fits only the right cap. */
+const capFits = (state: Pick<SimState, 'start' | 'sandbox'>, node: ResearchNode, i: number): boolean =>
+  !isGuidedGame(state) || node.id !== NEW_ENTRANCE_NODE || i === TUTORIAL_CAP;
+
 /** Every diagram on the foundry now, in a fixed order: the caps west to east, the pipe, then walls and the wing in data order. */
-export function diagrams(state: Pick<SimState, 'research' | 'link'>): Diagram[] {
+export function diagrams(state: Pick<SimState, 'research' | 'link' | 'start' | 'sandbox'>): Diagram[] {
   const out: Diagram[] = [];
   const entrance = nextOf(state, 'entrance');
   if (entrance) {
     for (const [i, e] of state.link.entrances.entries()) {
       const t = INTAKE.entrances[i];
-      if (!e.open && t) out.push({ node: entrance.id, entrance: i, rect: tileBox(t.tx, t.ty), dimmed: !requiresMet(state, entrance) });
+      if (!e.open && t && capFits(state, entrance, i)) out.push({ node: entrance.id, entrance: i, rect: tileBox(t.tx, t.ty), dimmed: !requiresMet(state, entrance) });
     }
   }
   const pipe = nextOf(state, 'pipe');
@@ -108,7 +115,7 @@ function gapTo(state: Pick<SimState, 'player'>, r: Rect): number {
 }
 
 /** The diagram E would use: in the foundry once attuned, the nearest within RESEARCH_REACH by centre distance (the first on a tie). */
-export function diagramInReach(state: Pick<SimState, 'research' | 'link' | 'roomId' | 'player'>): Diagram | undefined {
+export function diagramInReach(state: Pick<SimState, 'research' | 'link' | 'roomId' | 'player' | 'start' | 'sandbox'>): Diagram | undefined {
   if (state.roomId !== FOUNDRY_ROOM || !state.link.attuned) return undefined;
   let best: Diagram | undefined;
   let bestDist = Infinity;

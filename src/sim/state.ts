@@ -155,8 +155,8 @@ export interface SimState {
   objectives: boolean[];
   /** 051 (B.3): the raws the current craft goal has lacked, for its sub-lines. */
   subSteps: SubStepState;
-  /** Ticks in a row outside the foundry with a line built into the intake, once every other goal is done. */
-  awayTicks: number;
+  /** 058: the player has fast-travelled home from a pylon at least once, for its goal. Kept through a KO. */
+  travelled: boolean;
   /** Every objective done: the prototype's end. */
   prototypeComplete: boolean;
   /** What a death keeps (011): what the player held when they last entered the foundry or deposited at a pylon. */
@@ -248,7 +248,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     gathered: [],
     objectives: OBJECTIVES.map(() => false),
     subSteps: createSubSteps(),
-    awayTicks: 0,
+    travelled: false,
     prototypeComplete: false,
     building: false,
     events: createEvents(),

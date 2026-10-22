@@ -63,9 +63,9 @@ describe('the Husk Hive entry', () => {
     expect(OVERWORLD.leyLines['husk-hive']?.[0]).toEqual({ tx: pylon.tx, ty: pylon.ty });
   });
 
-  it('has a goal line after "Claim a second pylon" that points to it (049.2: no lock)', () => {
-    const second = OBJECTIVES.findIndex((o) => o.check.kind === 'claimedCount');
-    expect(OBJECTIVES[second + 1]).toMatchObject({ text: 'Find the Husk Hive and claim its pylon', milestone: 'm1', check: { kind: 'claimed', site: 'husk-hive' } });
+  it('has a goal line after the frost rune build that points to it (049.2: no lock; 058: the frost rune goes before it)', () => {
+    const frost = OBJECTIVES.findIndex((o) => o.guided === 'frost-line');
+    expect(OBJECTIVES[frost + 1]).toMatchObject({ text: 'Find the Husk Hive and claim its pylon', milestone: 'm1', check: { kind: 'claimed', site: 'husk-hive' } });
   });
 });
 

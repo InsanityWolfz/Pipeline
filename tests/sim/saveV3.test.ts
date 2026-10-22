@@ -25,8 +25,8 @@ function v2(edit: (state: Record<string, unknown>) => void): string {
 }
 
 describe('version 2 → 3 (046)', () => {
-  it('is no longer the current version (047: 4, then 5 for 047.9, 6 for 049, 7 for 050, 8 for 051, 9 for 052, 10 for 053, 11 for 055, with no migration)', () => {
-    expect(SAVE_VERSION).toBe(11);
+  it('is no longer the current version (047: 4, then 5 for 047.9, 6 for 049, 7 for 050, 8 for 051, 9 for 052, 10 for 053, 11 for 055, 12 for 058, with no migration)', () => {
+    expect(SAVE_VERSION).toBe(12);
     expect(SAVE_MIGRATIONS[3]).toBeUndefined();
   });
 
@@ -69,18 +69,15 @@ describe('version 2 → 3 objectives (046)', () => {
     if (read.status !== 'ok') throw new Error(read.reason);
     const done = OBJECTIVES.filter((_, i) => read.state.objectives[i]).map((o) => o.text);
     expect(read.state.objectives).toHaveLength(OBJECTIVES.length);
-    expect(done).toEqual(['Pick up the tube (E)', 'Enter the foundry', 'Fill the tube from your line', "Claim the shrine's pylon"]);
+    // 058 dropped "Fill the tube from your line" (now "Wait for the tube to fill with arrows").
+    expect(done).toEqual(['Pick up the tube (E)', 'Enter the foundry', "Claim the shrine's pylon"]);
   });
 
-  it('counts the refill goal done where a hopper was filled (027 step 2), and the second line where two entrances were fed', () => {
+  it('counts the refill goal done where a hopper was filled (027 step 2); 058 dropped the second-line goal', () => {
     const read = readSave(v2Done([7, 17]), V3);
     if (read.status !== 'ok') throw new Error(read.reason);
     const done = OBJECTIVES.filter((_, i) => read.state.objectives[i]).map((o) => o.text);
-    expect(done).toEqual([
-      'Refill the hoppers with wood, stone and fiber (E)',
-      'Feed ammo into the new entrance',
-      'Feed two entrances to fire a spread',
-    ]);
+    expect(done).toEqual(['Refill the hoppers in the foundry with wood, stone and fiber (E)']);
   });
 
   it('never gives a save from before 046 the example line (046.1), even on its first foundry entry', () => {

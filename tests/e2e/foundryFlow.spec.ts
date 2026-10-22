@@ -1,6 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
 import { ITEMS } from '../../src/data/items';
-import { OBJECTIVES } from '../../src/data/objectives';
 import { boot, cameraSettled, quietScreen, watchErrors } from './helpers';
 import { feedLines, restoreEntrance, toIntake, ui } from './intakePage';
 
@@ -13,7 +12,6 @@ import { feedLines, restoreEntrance, toIntake, ui } from './intakePage';
 const SHOTS = 'docs/review/028';
 const RAWS = ['wood', 'stone', 'fiber', 'ley-crystal'] as const;
 const ROWS: Record<string, number> = { wood: 4, stone: 6, fiber: 8, 'ley-crystal': 10 };
-const PORT_GOAL = OBJECTIVES.findIndex((o) => o.check.kind === 'portDelivered');
 
 /** From ?playtest: claims the shrine through the hook, then walks down into the foundry. */
 function claimAndEnter(page: Page) {
@@ -44,10 +42,8 @@ test('the shrine claim brings four ports at ×1; the wood port feeds a hopper an
   const run = await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    const done: number[] = [];
     const delivered: string[] = [];
     const note = (st: ReturnType<typeof g.step>) => {
-      done.push(...st.events.objectives.map((o) => o.index));
       delivered.push(...st.events.portDeliveries.map((d) => d.itemId));
       return st;
     };
@@ -63,14 +59,12 @@ test('the shrine claim brings four ports at ×1; the wood port feeds a hopper an
     for (let t = 0; t < 1500 && shafts() < 4; t++) {
       s = note(g.step(1));
     }
-    return { shafts: shafts(), made: s.machineMade.shaft ?? 0, done, delivered: [...new Set(delivered)] };
+    return { shafts: shafts(), made: s.machineMade.shaft ?? 0, delivered: [...new Set(delivered)] };
   });
   // Two woods, two shafts from each.
   expect(run.shafts).toBeGreaterThanOrEqual(4);
   expect(run.made).toBeGreaterThanOrEqual(4);
   expect(run.delivered).toEqual(['wood']);
-  // The first goal after the prototype's, "Run a supply port into your line", completed with the first delivery.
-  expect(run.done).toContain(PORT_GOAL);
   expect(errors).toEqual([]);
 });
 
@@ -134,10 +128,7 @@ test.describe('review screenshots (028)', () => {
     await expect.poll(async () => (await ui(page))?.ports.length).toBe(4);
     await page.screenshot({ path: `${SHOTS}/01-west-wall-ports.png` });
 
-    // Goal 1: every goal before it done, the line reads it and the marker bobs over the ports.
-    const s = await page.evaluate((n) => window.__GAME__?.completeObjectives(n), PORT_GOAL);
-    expect(s?.objective).toEqual({ index: PORT_GOAL, text: 'Run a supply port into your line' });
-    await expect.poll(async () => (await ui(page))?.marker).not.toBeNull();
+    // 058 dropped the port goal ("Run a supply port into your line"); the shot keeps its place in the run (images as taken on 028).
     // The tick for the goals just finished fades first, so none sits beside the unfinished goal.
     await expect.poll(async () => (await ui(page))?.objectiveTick, { timeout: 10_000 }).toBe(0);
     await page.screenshot({ path: `${SHOTS}/02-goal-port-marker.png` });
@@ -154,11 +145,10 @@ test.describe('review screenshots (028)', () => {
         return h?.kind === 'hopper' ? h : null;
       };
       for (let t = 0; t < 600 && (hopper()?.count ?? 0) < 2; t++) st = g.step(1);
-      return { item: hopper()?.item ?? null, count: hopper()?.count ?? 0, objective: st.objective };
+      return { item: hopper()?.item ?? null, count: hopper()?.count ?? 0 };
     });
     expect(fed.item).toBe('stone');
     expect(fed.count).toBeGreaterThanOrEqual(2);
-    expect(fed.objective.index).not.toBe(PORT_GOAL);
     await cameraSettled(page);
     await page.screenshot({ path: `${SHOTS}/03-stone-port-into-hopper.png` });
   });

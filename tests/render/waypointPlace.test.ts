@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TARGET_LIFT, WAYPOINT } from '../../src/data/targets';
-import { arrowTip, placeArrow, tipLift, viewAt } from '../../src/render/waypointPlace';
+import { arrowTip, clearOfPrompts, placeArrow, tipLift, viewAt } from '../../src/render/waypointPlace';
 
 // 051 (B.1): the waypoint arrow hovers over an on-screen target and sits at the screen's edge, pointing at it, while
 // the target is off screen.
@@ -70,5 +70,22 @@ describe('the view the arrow is placed against (057.6)', () => {
     expect(viewAt(100, 50, 640, 360, 1)).toEqual({ x: 100, y: 50, width: 640, height: 360 });
     // A 2× screen: the scroll is in screen px from the centre, the view half the size about the same midpoint.
     expect(viewAt(100, 50, 1280, 720, 2)).toEqual({ x: 420, y: 230, width: 640, height: 360 });
+  });
+});
+
+describe('clear of the key prompts (058)', () => {
+  const cap = { x0: 90, y0: 40, x1: 110, y1: 56 };
+
+  it('raises an arrow whose body would overlap a cap to sit just above it', () => {
+    expect(clearOfPrompts({ x: 100, y: 60 }, [cap])).toEqual({ x: 100, y: 40 - WAYPOINT.promptClear });
+    expect(clearOfPrompts({ x: 100, y: 50 }, [cap])).toEqual({ x: 100, y: 40 - WAYPOINT.promptClear });
+  });
+
+  it('leaves an arrow already above it, beside it, or with no prompt alone', () => {
+    expect(clearOfPrompts({ x: 100, y: 30 }, [cap])).toEqual({ x: 100, y: 30 });
+    expect(clearOfPrompts({ x: 140, y: 50 }, [cap])).toEqual({ x: 140, y: 50 });
+    expect(clearOfPrompts({ x: 100, y: 50 }, [])).toEqual({ x: 100, y: 50 });
+    // Below the cap by more than its length: the arrow's tail never reaches it.
+    expect(clearOfPrompts({ x: 100, y: 56 + WAYPOINT.arrowLength + 1 }, [cap])).toEqual({ x: 100, y: 56 + WAYPOINT.arrowLength + 1 });
   });
 });

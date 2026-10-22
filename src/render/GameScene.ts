@@ -231,7 +231,7 @@ export class GameScene extends Scene {
     // 051: the fixed HUD boxes the waypoint arrow keeps clear of.
     const mapBox = this.roomViews?.mapBox;
     const hudBoxes = [...(this.hud?.fixedBoxes ?? []), ...(mapBox ? [mapBox] : [])];
-    this.tutorial?.update(sim, shown, this.pending, (id) => this.foundryView?.topOf(id), hudBoxes);
+    this.tutorial?.update(sim, shown, this.pending, this.game.loop.delta * this.tweens.timeScale, (id) => this.foundryView?.topOf(id), hudBoxes);
     const picked = new Set(this.pending.pickups.map((p) => p.id));
     // 057: the sandbox's panels slide first, so the pickup feed beside the Loadout tab follows it this frame.
     this.sandboxPanel?.update(sim, this.game.loop.delta);

@@ -8,13 +8,12 @@ import { WORLD } from '../../src/sim/world';
 import { ENTRANCE_CAPS, INTAKE, INTAKE_REACH } from '../../src/data/foundry';
 import { currentObjective } from '../../src/sim/objectives';
 import { createSim, type SimState } from '../../src/sim/state';
-import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
 import { knownRecipe } from '../../src/sim/tutorial';
 import { RECIPES } from '../../src/data/recipes';
 import { placeNode } from './fight';
-import { atEntrance, command, die, fireAt, movePlayer, run, runUntil, SEED } from './fight';
+import { atEntrance, die, fireAt, movePlayer, run, runUntil, SEED } from './fight';
 
 // 017: the tutorial wakes in the overworld's meadow, by the tube's stone.
 const CLEARING_ROOM = OVERWORLD_ROOM;
@@ -182,15 +181,12 @@ describe('objectives', () => {
     expect(s.objectives[1]).toBe(true);
   });
 
-  it('restoring a second entrance, then feeding two, complete the spread goals (033: one entrance per core)', () => {
+  it('restoring a second entrance completes its goal (033: one entrance per core); off the tutorial, any cap takes it', () => {
     const s = createSim(SEED, { start: PLAYTEST_START });
     const open = OBJECTIVES.findIndex((o) => o.check.kind === 'restored' && o.check.node === 'entrance-2');
-    const fed = OBJECTIVES.findIndex((o) => o.check.kind === 'volley');
-    expect(OBJECTIVES[open]?.text).toBe('Restore a second intake entrance (E at a cap with the warden core)');
-    expect(OBJECTIVES[fed]?.text).toBe('Feed two entrances to fire a spread');
-    // 046: the second-line goal sits between them.
-    expect(OBJECTIVES[open + 1]?.text).toBe('Feed ammo into the new entrance');
-    expect(fed).toBe(open + 2);
+    expect(OBJECTIVES[open]?.text).toBe('Restore the right intake entrance (E with the warden core)');
+    // 058: the guided ley bolt line follows it.
+    expect(OBJECTIVES[open + 1]?.text).toBe('Put ley bolts into the second entrance (B)');
     s.roomId = FOUNDRY_ROOM;
     // Under the west cap.
     const under = INTAKE.entrances[0] ?? { tx: 11, ty: 0 };
@@ -198,40 +194,29 @@ describe('objectives', () => {
     s.player.y = (under.ty + 1.5) * 32;
     expect(INTAKE_REACH).toBeGreaterThan(0);
     run(s, 1);
-    expect([s.objectives[open], s.objectives[fed]]).toEqual([false, false]);
+    expect(s.objectives[open]).toBe(false);
     // E alone does nothing in the sim now: render opens the restore panel, whose Restore sends `restore`.
     run(s, 1, { interact: true });
     expect(s.objectives[open]).toBe(false);
     run(s, 1, { restore: 'entrance-2' });
     expect(s.objectives[open]).toBe(true);
     expect(s.link.entrances.map((e) => e.open)).toEqual([true, true, false]);
-    Object.assign(s.link.entrances[1] ?? {}, { ammoId: 'ley-bolt', count: 4 });
-    run(s, 1);
-    expect(s.objectives[fed]).toBe(false);
-    Object.assign(s.link.entrances[0] ?? {}, { ammoId: 'arrow', count: 1 });
-    run(s, 1);
-    expect(s.objectives[fed]).toBe(true);
   });
 
-  it("the prototype's last completes after its time away with a line running, and ends the prototype", () => {
+  it("leaving the foundry is the prototype's last goal, and ends the prototype", () => {
     const s = createSim(SEED, { start: PLAYTEST_START });
-    const away = OBJECTIVES.findIndex((o) => o.check.kind === 'awayRunning');
-    s.objectives = OBJECTIVES.map((_, i) => i < away);
+    const leave = OBJECTIVES.findIndex((o) => o.check.kind === 'outside');
+    expect(OBJECTIVES.filter((o) => o.milestone === 'prototype').at(-1)?.text).toBe('Leave the foundry');
+    s.objectives = OBJECTIVES.map((_, i) => i < leave);
     s.roomId = FOUNDRY_ROOM;
-    // A conduit feeding the intake's middle mouth tile (019) is a line running.
-    stepSim(s, command({ place: { pieceId: 'conduit', tx: 12, ty: 1, facing: 'up' } }));
+    run(s, 1);
+    expect(s.prototypeComplete).toBe(false);
     s.roomId = OVERWORLD_ROOM;
-    // Out in the meadow (053: the foundry's tiles are the round map's cliff edge, where nobody stands).
     const out = tileCentre(OVERWORLD.field);
     movePlayer(s, out.x, out.y);
-    const last = OBJECTIVES[away]?.check;
-    const ticks = last?.kind === 'awayRunning' ? last.ticks : 0;
-    run(s, ticks - 1);
-    expect(s.prototypeComplete).toBe(false);
     run(s, 1);
     expect(s.prototypeComplete).toBe(true);
-    // The line moves on to Milestone 1's first goal (028).
-    expect(summarize(s).objective).toEqual({ index: away + 1, text: 'Run a supply port into your line' });
+    expect(summarize(s).objective).toEqual({ index: leave + 1, text: 'Gather rimestone at the Frozen Grotto' });
   });
 
   it('replay identically', () => {

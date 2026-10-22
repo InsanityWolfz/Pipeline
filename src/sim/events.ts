@@ -71,6 +71,8 @@ export interface SimEvents {
   placeFails: { pieceId: string; tx: number; ty: number; reason: PlaceFail }[];
   /** A piece was picked up, and the items it held went into the inventory. */
   pickUps: { id: number; pieceId: string; items: Record<string, number> }[];
+  /** 058: a pick-up the tutorial's build lock refused. */
+  pickUpFails: { tx: number; ty: number; reason: PlaceFail }[];
   deposits: { id: number; itemId: string; count: number }[];
   /** A hopper was emptied back into the inventory. */
   withdraws: { id: number; itemId: string; count: number }[];
@@ -201,6 +203,7 @@ export function createEvents(): SimEvents {
     places: [],
     placeFails: [],
     pickUps: [],
+    pickUpFails: [],
     deposits: [],
     withdraws: [],
     attunes: [],

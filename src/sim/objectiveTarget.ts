@@ -1,13 +1,11 @@
 import { TILE_SIZE } from '../data/config';
 import { INTAKE } from '../data/foundry';
 import { arenaOf, HOLLOWS } from '../data/hollows';
-import { LANDMARK_LIST } from '../data/landmarks';
 import { nodeDef } from '../data/nodes';
-import { NEW_ENTRANCE_NODE, OBJECTIVES } from '../data/objectives';
+import { OBJECTIVES } from '../data/objectives';
 import { OVERWORLD_ROOM } from '../data/overworld';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { COLLECT_FROM, type TargetDef, type TargetKind } from '../data/targets';
-import { dormant } from './claims';
 import { facingVector } from './direction';
 import { fixtureDef } from './fixtures';
 import { currentObjective } from './objectives';
@@ -17,6 +15,8 @@ import { roomById, roomOf, type SimState } from './state';
 import { goalLacks } from './subSteps';
 import { tileCentre } from './tiles';
 import { WORLD } from './world';
+import { diagrams } from './research';
+import { nextGhost } from './guided';
 
 // Where the current goal points (051, B.1): every point its target names, and the one the waypoint arrow goes to —
 // the nearest in the player's room (051.2), or the door of the player's room that leads to the target's (the
@@ -110,24 +110,20 @@ export function targetPoints(state: SimState, target: TargetDef, goal: number): 
         return [{ roomId: FOUNDRY_ROOM, ...tileBase(p), kind: k, ...(raw && target.unfilled ? { itemId: raw } : {}) }];
       });
     case 'bench':
-    case 'ports':
       return state.fixtures.flatMap((f) => {
         const d = fixtureDef(f.id);
-        return d.kind === (target.kind === 'bench' ? 'bench' : 'port') ? [{ roomId: FOUNDRY_ROOM, ...tileBase(d), kind: k }] : [];
+        return d.kind === 'bench' ? [{ roomId: FOUNDRY_ROOM, ...tileBase(d), kind: k }] : [];
       });
     case 'pylon':
       return pylons()
-        .filter(({ p }) => p.site === target.site && !state.claims.includes(p.site))
+        .filter(({ p }) => p.site === target.site && state.claims.includes(p.site) === (target.claimed ?? false))
         .map(({ roomId, p }) => ({ roomId, ...tileBase(p), kind: k }));
-    case 'sitePylon': {
-      const open = pylons().filter(({ p }) => LANDMARK_LIST.some((l) => l.pylon?.site === p.site) && !state.claims.includes(p.site) && !dormant(state, p));
-      const found = open.filter(({ p }) => LANDMARK_LIST.some((l) => l.pylon?.site === p.site && state.discovered.includes(l.id)));
-      return (found.length > 0 ? found : open).map(({ roomId, p }) => ({ roomId, ...tileBase(p), kind: k }));
-    }
     case 'caps':
-      return mouths(indicesWhere(state, (e) => !e.open), k);
-    case 'newEntrance':
-      return mouths(indicesWhere(state, (e) => e.node === NEW_ENTRANCE_NODE), k);
+      return mouths(diagrams(state).flatMap((d) => (d.entrance === null ? [] : [d.entrance])), k);
+    case 'ghost': {
+      const g = nextGhost(state)?.ghost;
+      return g ? [{ roomId: FOUNDRY_ROOM, ...tileBase(g), kind: k }] : [];
+    }
     case 'intake': {
       const empty = indicesWhere(state, (e) => e.open && e.count === 0);
       return mouths(empty.length > 0 ? empty : indicesWhere(state, (e) => e.open), k);
@@ -147,7 +143,7 @@ export function targetPoints(state: SimState, target: TargetDef, goal: number): 
 export function objectiveTargets(state: SimState): GoalPoint[] {
   const goal = currentObjective(state);
   const def = goal === null ? undefined : OBJECTIVES[goal];
-  if (state.sandbox || goal === null || !def) return [];
+  if (state.sandbox || goal === null || !def?.target) return [];
   return targetPoints(state, def.target, goal);
 }
 

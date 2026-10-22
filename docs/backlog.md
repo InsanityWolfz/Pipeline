@@ -62,6 +62,7 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 055 | Boss doors and the rimestone pylon: both arenas walled with a door, sealed until ready, E to enter, locked inside; a Frozen Grotto pylon supplying rimestone | done |
 | 056 | Sandbox controls always on screen: the loadout column and a key list in a fixed left strip, the spawn column fixed on the right, no key needed | done |
 | 057 | Sandbox panels as click-open pop-outs: a Loadout tab on the left and a Spawn tab on the right that pop their panels out when clicked; the waypoint arrow no longer stutters while walking | done |
+| 058 | Guided tutorial: equip, fast travel and talent steps; the ley bolt line and the frost rune built piece by piece on ghosts (the first underground belt); building locked until then; the goals end at three fed entrances; recipe unlock banners; from Shaun's playtest 2026-10-22 | done |
 | 059 | World and arena polish: paths joined as one shape, collision fitted to drawn props, darker Bulwark walls, arena enemies wait inside, no boss-door descriptions, a softer seal hum, rimestone at 30 a minute; from Shaun's playtest 2026-10-22 | done |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
@@ -87,6 +88,8 @@ Shaun's drive rant on 2026-10-19 (docs/brainstorm/2026-10-19-drive-rant.md) is q
 043 holds 041.18 and 041.19, moved out on 2026-10-20 under the process reset Shaun approved in chat ("approve the reset"), so 041 could close. Built in InsanityWolfz/Pipeline#28 and merged on Shaun's word ("approve everything", 2026-10-20).
 
 045–047 come from the playtest-notes interview on 2026-10-20 (docs/brainstorm/2026-10-20-playtest-interview.md); 048 and 049 are the next batch.
+
+058 comes from Shaun's playtest and spec interview on 2026-10-22 (docs/brainstorm/2026-10-22-playtest-notes.md, docs/brainstorm/2026-10-22-tutorial-interview.md). The same notes hold two fixes and a world-polish spec, next.
 
 ## Approved, not built yet
 - Done in 045: 043.5, an "E" prompt over the Bulwark's sealed door, and the barrier's hum and collapse sounds for the seal (Shaun, 2026-10-20). For the legibility work.

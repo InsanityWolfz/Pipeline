@@ -1,121 +1,43 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { boot, watchErrors } from './helpers';
+import { buildGhosts, CHAIN, cutIn, expectGoal, installRunHelpers, T } from './tutorialPage';
 import { OVERWORLD } from '../../src/data/overworld';
-import { OBJECTIVES } from '../../src/data/objectives';
-import { AFTER_REFILL, REFILL_GOAL, SECOND_LINE_GOAL } from '../fixtures/foundrySteps';
 
-// The prototype end to end (012): a fresh tutorial start, no ?playtest, every
-// beat played through the hook in order, checking each objective advances.
+// The tutorial end to end (012; 058's chain), in two files. This one: a New game, no ?playtest, every goal from the
+// tube to leaving the foundry played through the hook in order, checking each one comes up and ticks off. The ley bolt
+// line is built on its ghosts, piece by piece, as getState() lists them, with the build lock refusing anything else.
+// The ruin field's Husks and the shrine's Warden are fought by the bot. tutorialFrost.spec.ts plays on from there.
 
-const T = 32;
-
-async function run<R>(page: Page, fn: () => R): Promise<R> {
-  return page.evaluate(fn);
-}
-
-/** The current objective's index after one more tick (crafts land between ticks), or the count once all are done (the frontier line). */
-async function done(page: Page): Promise<number> {
-  const s = await page.evaluate(() => window.__GAME__?.step(1));
-  return s?.objective?.index ?? OBJECTIVES.length;
-}
-
-const REFILL = OBJECTIVES.findIndex((o) => o.text === REFILL_GOAL);
-const FILL = OBJECTIVES.findIndex((o) => o.text === AFTER_REFILL);
-const SECOND = OBJECTIVES.findIndex((o) => o.text === SECOND_LINE_GOAL);
-
-test('the whole prototype plays through from the start stone', async ({ page }) => {
-  test.setTimeout(300_000);
+test('the guided tutorial plays from a New game until it leaves the foundry', async ({ page }) => {
+  test.setTimeout(600_000);
   const errors = watchErrors(page);
   await boot(page, '?start=tutorial');
-  // Page-side helpers for this run: leaving the foundry, the route to the shrine and fighting a group clear (017).
-  await page.evaluate(([tile, gate, pylon]) => {
-    const g = window.__GAME__;
-    const h = window.__helpers;
-    if (!g || !h) throw new Error('no game');
-    g.step(0);
-    const w = window as unknown as Record<string, unknown>;
-    w.pylon = pylon;
-    w.gate = gate;
-    const toward = (from: number, to: number): -1 | 0 | 1 => (Math.abs(to - from) < 2 ? 0 : to > from ? 1 : -1);
-    /** Walks to a door tile's inside neighbour, then steps through it. */
-    w.through = (tx: number, ty: number, dx: -1 | 0 | 1, dy: -1 | 0 | 1, to: string) => {
-      h.walkTo((tx - dx + 0.5) * tile, (ty - dy + 0.5) * tile);
-      for (let i = 0; i < 90 && g.getState().room !== to; i++) g.step(1, { moveX: dx, moveY: dy });
-      if (g.getState().room !== to) throw new Error(`could not reach ${to}`);
-    };
-    /** From the foundry, by the north-east road to below the shrine's door (053: src/data/roads.ts). */
-    w.toShrine = () => h.walkTo((gate.tx + 0.5) * tile, (gate.ty + 2.5) * tile);
-    /** Fights until a group is dead, kiting and rolling, picking ammo it has; anything else that comes close is fought first. */
-    w.clearGroup = (group: string) => {
-      let s = g.getState();
-      let stuck = 0;
-      for (let t = 0; t < 20000; t++) {
-        const foes = s.enemies.filter((e) => e.group === group);
-        if (foes.length === 0) break;
-        if (s.events.ko) throw new Error(`knocked out clearing ${group}`);
-        const p = s.player;
-        const dist = (e: { x: number; y: number }) => Math.hypot(e.x - p.x, e.y - p.y);
-        const near = s.enemies.filter((e) => dist(e) < 150).sort((a, b) => dist(a) - dist(b))[0] ?? foes.sort((a, b) => dist(a) - dist(b))[0];
-        if (!near) break;
-        const d = dist(near);
-        const have = (id: string) => (s.inventory[id] ?? 0) + s.intake.entrances.reduce((n, e) => n + (e.ammo === id ? e.count : 0), 0);
-        // Piercing ammo first (029: arrows pierce now, ley bolts don't).
-        const ammo = have('arrow') > 0 ? 'arrow' : have('ley-bolt') > 0 ? 'ley-bolt' : 'bomb';
-        if ((s.hotbar.slots[s.hotbar.selected] ?? '') !== ammo) window.__helpers?.hold(ammo);
-    s = g.step(0);
-        // Out of every ammo, the fire button punches (023): close right in rather than keeping range.
-        const dry = have('arrow') + have('ley-bolt') + have('bomb') === 0;
-        const kite = !dry && d < 80;
-        const close = dry ? d > 18 : d > 150;
-        s = g.step(1, {
-          moveX: kite ? toward(near.x, p.x) : close ? toward(p.x, near.x) : 0,
-          moveY: kite ? toward(near.y, p.y) : close ? toward(p.y, near.y) : 0,
-          dodge: near.mode === 'windup' && d < 90 && t % 20 === 0,
-          fire: true,
-          use: true,
-          // At the body, not the feet: a Wisp's hurtbox floats above its feet, where a shot's ground point passes under it.
-          aimX: near.x,
-          aimY: near.y - 8,
-        });
-        // Closing in but stuck on something (018: groves, ponds and rocks): go round it.
-        stuck = close && Math.hypot(s.player.x - p.x, s.player.y - p.y) < 0.1 ? stuck + 1 : 0;
-        if (stuck > 20) {
-          stuck = 0;
-          try {
-            h.walkTo(near.x, near.y + 64);
-          } catch {
-            // Unreachable from here; the fight goes on.
-          }
-          s = g.getState();
-        }
-      }
-      h.collect();
-    };
-  }, [T, OVERWORLD.shrine.door[1] ?? OVERWORLD.shrine.pylon, OVERWORLD.shrine.pylon] as const);
+  await installRunHelpers(page);
 
-  // 1. Pick up the tube from its stone (tile 40,33 before 034; `ox`, `oy` since), just north of where the player wakes.
+  // 1. The tube from its stone, just north of where the player wakes.
+  await expectGoal(page, 1);
   await page.evaluate((tile) => {
     window.__helpers?.walkTo((40.5 + (window.__helpers?.ox ?? 0)) * tile, (34.5 + (window.__helpers?.oy ?? 0)) * tile);
     window.__GAME__?.step(1, { interact: true });
   }, T);
-  expect(await done(page)).toBe(1);
+  await expectGoal(page, 2);
 
   // 2. Gather in the meadow (nodes 0-8, src/data/overworld.ts): the ley vein, then east and back west.
-  await run(page, () => {
-    const h = window.__helpers;
-    for (const i of [8, 3, 7, 5, 6, 1, 0]) h?.harvest(i, 3);
+  await page.evaluate(() => {
+    for (const i of [8, 3, 7, 5, 6, 1, 0]) window.__helpers?.harvest(i, 3);
   });
-  expect(await done(page)).toBe(2);
+  await expectGoal(page, 3);
 
   // 3. Craft arrows.
-  await run(page, () => {
+  await page.evaluate(() => {
     const g = window.__GAME__;
     for (const r of ['shaft', 'shaft', 'shaft', 'arrowhead', 'arrowhead', 'arrowhead', 'rope', 'rope', 'rope']) g?.craft(r);
     for (let i = 0; i < 6; i++) g?.craft('arrow');
   });
-  expect(await done(page)).toBe(3);
+  await expectGoal(page, 4);
 
-  // 4. Up round the foundry ruin's east side into the ruin field (053: the ruin is 9 tiles wide), and clear the Husk pack.
+  // 4. Round the foundry ruin's east side into the ruin field, and clear the Husk pack. The first talent point's cut-in
+  // is answered by `goal` wherever it comes (T, a talent linked to the start).
   await page.evaluate(() => {
     const w = window as unknown as { clearGroup: (group: string) => void };
     const h = window.__helpers;
@@ -127,129 +49,109 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     h?.walkTo((45.5 + X) * 32, (17.5 + Y) * 32);
     w.clearGroup('field');
   });
-  expect(await done(page)).toBe(4);
+  await expectGoal(page, 5);
 
-  // 5. The meadow vein grows back three times over (waited out): crystals for ley bolts. Raws to refill the example
-  // line later (046), and the bomb's casing takes a stone, so a tree and reeds once more and a rubble pile twice (the
-  // Husks' raws are a seeded roll, not to be counted on).
-  const raws = await page.evaluate(() => {
+  // 5. The meadow vein grows back three times over (waited out): crystals for ley bolts; raws for the refill later.
+  await page.evaluate(() => {
     const h = window.__helpers;
     const g = window.__GAME__;
     for (let i = 0; i < 3; i++) {
       g?.step(1800);
       h?.harvest(8, 3);
     }
-    for (const node of [1, 6]) h?.harvest(node, 1);
-    h?.harvest(5, 2);
-    return g?.getState().inventory;
-  });
-  for (const raw of ['wood', 'stone', 'fiber']) expect(raws?.[raw] ?? 0, JSON.stringify(raws)).toBeGreaterThanOrEqual(raw === 'stone' ? 5 : 4);
-
-  // 6. Craft a bomb and a ley bolt, before the foundry (051, B.3: their recipes are known once its stairs open).
-  await run(page, () => {
-    const g = window.__GAME__;
+    for (const node of [1, 6]) h?.harvest(node, 2);
+    h?.harvest(5, 3);
     for (const r of ['ley-dust', 'casing', 'fuse', 'bomb', 'ley-bolt']) g?.craft(r);
   });
-  expect(await done(page)).toBe(5);
+  await expectGoal(page, 6);
 
-  // 7. Down the foundry's stairs: the tube attunes, and the example line stands there, running.
+  // 6. Down the foundry's stairs: the tube attunes and the example line stands there, running.
   await page.evaluate(() => window.__helpers?.toFoundry());
-  const line = await page.evaluate(() => window.__GAME__?.getState().foundry.pieces.length);
-  expect(line).toBe(9);
-  // The refill goal waits while the example line runs (046): the line shows filling the tube.
-  expect(await done(page)).toBe(FILL);
-
-  // 14. The line runs until the centre entrance is full.
+  expect(await page.evaluate(() => window.__GAME__?.getState().foundry.pieces.length)).toBe(9);
+  // 7. The line fills the tube on its own.
+  await expectGoal(page, 7);
   const filled = await page.evaluate(() => {
     const g = window.__GAME__;
     let s = g?.getState();
     for (let t = 0; t < 4000 && s && !s.firstLineFull; t++) s = g?.step(1);
-    return { full: s?.firstLineFull, inventory: s?.inventory, entrance: s?.intake.entrances[1] };
+    return s?.firstLineFull;
   });
-  expect(filled.full, JSON.stringify(filled)).toBe(true);
-  expect(await done(page)).toBe(FILL + 1);
-
-  // The meadow vein's crystals are hand-crafted into ley bolts; the raws are kept for the refill.
+  expect(filled).toBe(true);
+  // The build lock holds: building is refused, with the line still standing.
+  const locked = await page.evaluate(() => {
+    const g = window.__GAME__;
+    g?.step(1, { toggleBuild: true });
+    const s = g?.step(1, { place: { pieceId: 'conduit', tx: 18, ty: 12, facing: 'up' } });
+    const p = g?.step(1, { pickUp: { tx: 12, ty: 1 } });
+    g?.step(1, { toggleBuild: true });
+    return { locked: s?.guided.locked, fails: s?.events.placeFails.map((f) => f.reason), pickUpFails: p?.events.pickUpFails.length, pieces: p?.foundry.pieces.length };
+  });
+  expect(locked).toEqual({ locked: true, fails: ['tutorial'], pickUpFails: 1, pieces: 9 });
   await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) return;
     for (let i = 0; i < 20 && (g.getState().inventory['ley-crystal'] ?? 0) > 0; i++) g.craft('ley-dust');
     for (let i = 0; i < 40 && (g.getState().inventory['ley-dust'] ?? 0) > 0; i++) g.craft('ley-bolt');
   });
+  await expectGoal(page, 8);
 
-  // 15. Identify the first Husk's armor at the bench (052: tile 22,9, by the door), and wear it for the fights ahead.
+  // 8-9. Identify the first Husk's armor at the bench (by the door), then wear it.
   await page.evaluate((tile) => {
-    const g = window.__GAME__;
     window.__helpers?.walkTo(21.7 * tile, 9.5 * tile);
-    const piece = g?.step(1, { identify: true }).gear[0];
+    window.__GAME__?.step(1, { identify: true });
+  }, T);
+  await expectGoal(page, 9);
+  await page.evaluate(() => {
+    const g = window.__GAME__;
+    const piece = g?.getState().gear[0];
     if (piece) g?.step(1, { equip: { id: piece.id } });
-  }, T);
-  expect(await done(page)).toBe(FILL + 2);
+  });
+  await expectGoal(page, 10);
 
-  // 16. Up the stairs, along the path to the shrine (its door opened with the full line, 055), E in, clear it and claim the pylon.
-  await page.evaluate((tile) => {
-    const g = window.__GAME__;
-    const h = window.__helpers;
-    const w = window as unknown as { through: (...a: unknown[]) => void; toShrine: () => void; clearGroup: (group: string) => void; pylon: { tx: number; ty: number }; gate: { tx: number; ty: number } };
-    if (!g || !h) throw new Error('no game');
-    w.through(23, 8, 1, 0, 'overworld');
-    w.toShrine();
-    // 055: just outside the door, and E goes in.
-    h.walkTo((w.gate.tx + 0.5) * tile, (w.gate.ty + 1.5) * tile);
-    if (g.step(1, { interact: true }).events.arenaEnters.length === 0) throw new Error('the shrine door did not open');
-    // 053: the shrine stands in open ring 2 ground now; packs keep out of its surroundings (population.ts), so the
-    // Warden's fight is its own, played unaided.
-    w.clearGroup('shrine');
-    // Around the pylon's east side, so it never stands in the way.
-    const { tx, ty } = w.pylon;
-    h.walkTo((tx + 2.5) * tile, g.getState().player.y);
-    h.walkTo((tx + 2.5) * tile, (ty + 1.5) * tile);
-    h.walkTo((tx + 0.5) * tile, (ty + 1.5) * tile);
-    // A roaming pack that wandered up meanwhile is fought off first, so the claim's hold isn't broken (039: with the
-    // Warden no longer pushed by arrows, the shrine fight's timing moved and a population pack can arrive here).
-    for (let i = 0; i < 3; i++) {
-      const s = g.getState();
-      const near = s.enemies.find((e) => e.room === s.room && Math.hypot(e.x - s.player.x, e.y - s.player.y) < 200);
-      if (!near) break;
-      w.clearGroup(near.group);
+  // 10. Up the stairs to the shrine (its door opened with the full line, 055), E in, clear it and claim the pylon; the
+  // tube fires off the rest of the line's arrows, so it has run dry by the time the player is home.
+  await page.evaluate(
+    ([tile, gate, pylon]) => {
+      const g = window.__GAME__;
+      const h = window.__helpers;
+      const w = window as unknown as { through: (...a: unknown[]) => void; clearGroup: (group: string) => void };
+      if (!g || !h) throw new Error('no game');
+      w.through(23, 8, 1, 0, 'overworld');
+      h.walkTo((gate.tx + 0.5) * tile, (gate.ty + 2.5) * tile);
+      h.walkTo((gate.tx + 0.5) * tile, (gate.ty + 1.5) * tile);
+      if (g.step(1, { interact: true }).events.arenaEnters.length === 0) throw new Error('the shrine door did not open');
+      w.clearGroup('shrine');
+      const { tx, ty } = pylon;
+      h.walkTo((tx + 2.5) * tile, g.getState().player.y);
+      h.walkTo((tx + 2.5) * tile, (ty + 1.5) * tile);
       h.walkTo((tx + 0.5) * tile, (ty + 1.5) * tile);
-    }
-    g.step(1, { interact: true });
-    g.step(130);
-    // The example line runs dry as the tube's arrows are spent (046). 055: fought inside the shrine's walls, the
-    // Warden's fight can end before it has; the player fires the rest off at the open floor before heading home.
-    for (let t = 0; t < 6000 && !g.getState().lineRanDry; t++) {
-      const p = g.getState().player;
-      g.step(1, { fire: true, aimX: p.x, aimY: p.y - 96 });
-    }
-  }, T);
-  // The shrine's pylon is claimed; the example line ran dry through the fights (046), so its refill goal, earlier in
-  // the chain, now shows ahead of the next.
-  const claimed = await page.evaluate(() => window.__GAME__?.step(1));
-  expect(claimed?.lineRanDry).toBe(true);
-  expect(claimed?.objective).toEqual({ index: REFILL, text: REFILL_GOAL });
-  expect(claimed?.claims).toContain('shrine');
-  // 034: the shrine's claim dropped Stonefall Hollows' barrier.
-  expect((await page.evaluate(() => window.__GAME__?.getState()))?.gates.hollows).toBe(true);
+      for (let i = 0; i < 3; i++) {
+        const s = g.getState();
+        const near = s.enemies.find((e) => e.room === s.room && Math.hypot(e.x - s.player.x, e.y - s.player.y) < 200);
+        if (!near) break;
+        w.clearGroup(near.group);
+        h.walkTo((tx + 0.5) * tile, (ty + 1.5) * tile);
+      }
+      g.step(1, { interact: true });
+      g.step(130);
+      for (let t = 0; t < 6000 && !g.getState().lineRanDry; t++) {
+        const p = g.getState().player;
+        g.step(1, { fire: true, aimX: p.x, aimY: p.y - 96 });
+      }
+    },
+    [T, OVERWORLD.shrine.door[1] ?? OVERWORLD.shrine.pylon, OVERWORLD.shrine.pylon] as const,
+  );
+  expect(await page.evaluate(() => window.__GAME__?.getState().claims)).toContain('shrine');
+  await expectGoal(page, 11);
 
-  // 17. Home by the pylon; the Warden's core came home in hand, and at the east cap the restore panel's Restore spends
-  // it on one more entrance (033: one per core).
-  const opened = await page.evaluate((tile) => {
+  // 11. Home by the pylon's fast travel; the line ran dry first, so 12, the refill, shows.
+  const home = await page.evaluate(() => {
     const g = window.__GAME__;
-    const h = window.__helpers;
-    if (!g || !h) throw new Error('no game');
-    g.step(1, { pylon: 'travel' });
-    g.step(1, { takeStash: { itemId: null } });
-    const cores = g.getState().inventory['warden-core'] ?? 0;
-    // Beside the arrow line's conduit, on the floor under the intake's east end.
-    h.walkTo(14.5 * tile, 1.5 * tile);
-    const s = g.step(1, { restore: 'entrance-2' });
-    return { cores, after: s.inventory['warden-core'] ?? 0, open: s.intake.entrances.map((e) => e.open) };
-  }, T);
-  expect(opened).toEqual({ cores: 1, after: 0, open: [false, true, true] });
-
-  // The refill goal still shows; the raws kept from the meadow go back into the example line's hoppers by hand.
-  expect(await done(page)).toBe(REFILL);
+    g?.step(1, { pylon: 'travel' });
+    return g?.step(1, { takeStash: { itemId: null } });
+  });
+  expect(home?.room).toBe('foundry');
+  await expectGoal(page, 12);
   await page.evaluate((tile) => {
     const g = window.__GAME__;
     const h = window.__helpers;
@@ -261,34 +163,37 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
       g.step(1, { deposit: { id: hopper.id, itemId: raw, amount: 'all' } });
     }
   }, T);
-  // 18. After the Warden (046.3): a second arrow line into the new entrance. The line's first conduit gives way to a
-  // splitter (on the bar from the start), whose side runs a conduit up into the east mouth.
-  expect(await done(page)).toBe(SECOND);
-  const volley = await page.evaluate((tile) => {
+  await expectGoal(page, 13);
+
+  // 13. The Warden's core restores the right entrance: only its cap takes it during the tutorial (058.5).
+  const opened = await page.evaluate((tile) => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
-    h.walkTo(15.5 * tile, 3.5 * tile);
-    g.step(1, { pickUp: { tx: 12, ty: 2 } });
-    g.step(1, { place: { pieceId: 'splitter', tx: 12, ty: 2, facing: 'up' } });
-    g.step(1, { place: { pieceId: 'conduit', tx: 13, ty: 2, facing: 'up' } });
-    g.step(1, { place: { pieceId: 'conduit', tx: 13, ty: 1, facing: 'up' } });
-    let s = g.step(1);
-    for (let t = 0; t < 2400 && s.intake.volley.length < 2; t++) s = g.step(1);
-    return { volley: s.intake.volley.length, ammo: s.intake.entrances.map((e) => e.ammo) };
+    h.walkTo(14.5 * tile, 1.5 * tile);
+    const s = g.step(1, { restore: 'entrance-2' });
+    return s.intake.entrances.map((e) => e.open);
   }, T);
-  expect(volley, JSON.stringify(volley)).toEqual({ volley: 2, ammo: [null, 'arrow', 'arrow'] });
-  expect(await done(page)).toBe(SECOND + 2);
+  expect(opened).toEqual([false, true, true]);
+  await expectGoal(page, 14);
 
-  // 19. Head back out and let the foundry run.
-  const end = await page.evaluate(() => {
-    const w = window as unknown as { through: (...a: unknown[]) => void };
-    w.through(23, 8, 1, 0, 'overworld');
-    const s = window.__GAME__?.step(620);
-    return s ? { complete: s.prototypeComplete, objective: s.objective } : null;
+  // 14. The ley bolt line, piece by piece on its ghosts, until ley bolts reach the right entrance.
+  const ley = await buildGhosts(page);
+  expect(ley).toEqual({ placed: 25, refused: 1 });
+  const bolts = await page.evaluate(() => {
+    const g = window.__GAME__;
+    let s = g?.step(1);
+    for (let t = 0; t < 6000 && s && s.intake.entrances[2]?.ammo !== 'ley-bolt'; t++) s = g?.step(1);
+    return s?.intake.entrances[2]?.ammo;
   });
-  // The prototype is done, and the line goes on to Milestone 1's first goal (028) rather than going blank.
-  const port = OBJECTIVES.findIndex((o) => o.check.kind === 'portDelivered');
-  expect(end).toEqual({ complete: true, objective: { index: port, text: 'Run a supply port into your line' } });
+  expect(bolts).toBe('ley-bolt');
+  await expectGoal(page, 15);
+
+  // 15. Out of the foundry: done on the step outside, and the Grotto's goal at once.
+  await page.evaluate(() => (window as unknown as { through: (...a: unknown[]) => void }).through(23, 8, 1, 0, 'overworld'));
+  expect((await page.evaluate(() => window.__GAME__?.getState()))?.objective.text).toBe(CHAIN[15]);
+  // The first talent point came and was spent through its cut-in.
+  expect(cutIn.at).not.toBeNull();
+  test.info().annotations.push({ type: 'talent cut-in', description: cutIn.at ?? '' });
   expect(errors).toEqual([]);
 });

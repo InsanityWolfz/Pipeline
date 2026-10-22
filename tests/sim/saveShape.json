@@ -1,5 +1,5 @@
 {
-  "version": 11,
+  "version": 12,
   "shape": [
     "state.activatePulse: number",
     "state.arrows: array",
@@ -25,7 +25,6 @@
     "state.arrows[].x: number",
     "state.arrows[].y: number",
     "state.arrows[]: object",
-    "state.awayTicks: number",
     "state.bag: array",
     "state.bag[]: string",
     "state.banked: object",
@@ -148,6 +147,7 @@
     "state.events.mineArms: array",
     "state.events.mineBursts: array",
     "state.events.objectives: array",
+    "state.events.pickUpFails: array",
     "state.events.pickUps: array",
     "state.events.pickups: array",
     "state.events.placeFails: array",
@@ -365,6 +365,7 @@
     "state.start.gear[].weight: null",
     "state.start.gear[].weight: string",
     "state.start.gear[]: object",
+    "state.start.guided: boolean",
     "state.start.hasTube: boolean",
     "state.start.inventory: object",
     "state.start.inventory{}: number",
@@ -384,6 +385,7 @@
     "state.talents: array",
     "state.talents[]: string",
     "state.tick: number",
+    "state.travelled: boolean",
     "state.tube.fireCooldown: number",
     "state.tube.firing: boolean",
     "state.tube.fromReservoir: boolean",

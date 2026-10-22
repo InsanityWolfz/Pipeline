@@ -77,3 +77,9 @@ export const FIXTURES: readonly FixtureDef[] = [
   { id: 'rimestone-port', kind: 'port', name: 'Rimestone port', tx: 1, ty: 12, facing: 'right', raw: 'rimestone' },
   { id: 'waystone', kind: 'waystone', name: 'Waystone', tx: 22, ty: 4, facing: 'down', claim: 'shrine' },
 ];
+
+/** The claimed pylon's menu rows (009; 058, Shaun: "Send inventory to stash", was "Send haul home"), with how much is carried. */
+export const PYLON_MENU_TEXT = {
+  deposit: (held: number): string => `Send inventory to stash (${held})`,
+  travel: 'Travel to foundry',
+} as const;

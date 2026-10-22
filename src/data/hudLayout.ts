@@ -253,3 +253,24 @@ export const PAUSE_MENU = {
   label: { x: 10, y: 6 },
   rows: { resume: 'Resume', settings: 'Settings', quit: 'Quit to title' },
 } as const;
+
+/**
+ * 058: the guided builds' look. Each ghost still to build is a glowing outline on its tile (`outline`), the next one
+ * brighter (`next`) with its piece drawn faintly (`bodyAlpha`) and its facing arrows. In build mode an arrow bobs
+ * `barArrowLift` px over the next piece's build-bar cell, and the cells the lock holds back show at `lockedAlpha`, with
+ * the locked line `lockTipGap` px over the hovered one. A refused placement's hint shows for `hintMs`, `hintRise` px
+ * over the build bar's labels. The bench screen's arrows point right at what to click, `benchArrowGap` px left of it.
+ */
+export const GUIDED_LOOK = {
+  outline: { color: 'cyan', alpha: 0.35, width: 1 },
+  next: { color: 'cyan-glow', alpha: 0.95, width: 2 },
+  bodyAlpha: 0.4,
+  inset: 2,
+  barArrowLift: 4,
+  lockedAlpha: 0.3,
+  lockTipGap: 4,
+  hintMs: 1600,
+  hintRise: 14,
+  benchArrowGap: 2,
+  removeLabelRise: 8,
+} as const;
