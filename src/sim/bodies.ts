@@ -1,5 +1,5 @@
 import { FOUNDRY_ROOM } from '../data/rooms';
-import type { RoomBodies } from './enemies';
+import type { RoomBodies } from './separation';
 import { fixtureRects, standingRects } from './fixtures';
 import { nodeRects } from './nodes';
 import { solidRects } from './pieces';

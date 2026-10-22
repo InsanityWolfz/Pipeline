@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { roomBodies } from '../../src/sim/bodies';
-import { createEnemy, NEAR, separate, type EnemyState } from '../../src/sim/enemies';
+import { createEnemy, type EnemyState } from '../../src/sim/enemies';
+import { NEAR, separate } from '../../src/sim/separation';
 import { createRng, nextInt } from '../../src/sim/rng';
 import { arena, HALL, PLAYER_AT } from './fight';
 
