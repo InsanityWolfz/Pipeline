@@ -64,6 +64,9 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 057 | Sandbox panels as click-open pop-outs: a Loadout tab on the left and a Spawn tab on the right that pop their panels out when clicked; the waypoint arrow no longer stutters while walking | done |
 | 058 | Guided tutorial: equip, fast travel and talent steps; the ley bolt line and the frost rune built piece by piece on ghosts (the first underground belt); building locked until then; the goals end at three fed entrances; recipe unlock banners; from Shaun's playtest 2026-10-22 | done |
 | 059 | World and arena polish: paths joined as one shape, collision fitted to drawn props, darker Bulwark walls, arena enemies wait inside, no boss-door descriptions, a softer seal hum, rimestone at 30 a minute; from Shaun's playtest 2026-10-22 | done |
+| 060 | Region 3, the Emberworks: a third ring up the cliffs opened by the Bulwark's kill (×4), cinderite at flaring vents, the Ash Kilns' pylon, the Fire rune (burn that spreads on death) with two Bombs-lane talents, the Forgewright (plated, vented by breaking both bellows), the fourth entrance | draft |
+| 061 | Emberworks enemies: the cinder mote, bellows hound, slag golem and kiln-tender, and the region's packs | idea |
+| 062 | Material tiers: the Smelter (ley-iron and cinderite into ley-steel), steel arrowheads, casings and plates, the kiln and glass bolts; ×1.6 per tier, stages and talents kept | idea |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
 
@@ -88,6 +91,8 @@ Shaun's drive rant on 2026-10-19 (docs/brainstorm/2026-10-19-drive-rant.md) is q
 043 holds 041.18 and 041.19, moved out on 2026-10-20 under the process reset Shaun approved in chat ("approve the reset"), so 041 could close. Built in InsanityWolfz/Pipeline#28 and merged on Shaun's word ("approve everything", 2026-10-20).
 
 045–047 come from the playtest-notes interview on 2026-10-20 (docs/brainstorm/2026-10-20-playtest-interview.md); 048 and 049 are the next batch.
+
+060–062 come from Shaun's region brainstorm and spec interview on 2026-10-22 (docs/brainstorm/2026-10-22-region-3.md): the Emberworks split like the Hollows into the region and boss, its enemies, and its ammo.
 
 058 comes from Shaun's playtest and spec interview on 2026-10-22 (docs/brainstorm/2026-10-22-playtest-notes.md, docs/brainstorm/2026-10-22-tutorial-interview.md). The same notes hold two fixes and a world-polish spec, next.
 
