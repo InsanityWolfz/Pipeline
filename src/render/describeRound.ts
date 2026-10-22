@@ -96,7 +96,9 @@ export function describeRound(seen: Seen, ammoId: string): Description {
   const shown = [damage, rate, ...nums.flatMap((n) => (n.resolved ? [n.resolved] : []))];
   const bonuses = new Set([...shown.flatMap(bonusSources), ...(ramp ? [ramp.source] : [])]).size;
   const numbers = { damage: formatDamage(damage.final), perSecond: formatStat(rate.final, 'per-s') };
-  const summary = [line([head, ...extras].join(LINE_SEP))];
+  // A Burst line too long for its row drops "dmg" before anything is cut (tipFit's short form).
+  const short = a.kind === 'straight' ? null : fill(W.burstShort, { damage: formatDamage(damage.final), rate: formatStat(rate.final, 'per-s') });
+  const summary: TipLine[] = [{ ...line([head, ...extras].join(LINE_SEP)), ...(short ? { short: [short, ...extras].join(LINE_SEP) } : {}) }];
   if (bonuses > 0) summary.push(line(fill(bonuses === 1 ? W.bonus : W.bonuses, { count: bonuses }), 'hint'));
   return {
     source: { kind: 'round', id: ammoId },

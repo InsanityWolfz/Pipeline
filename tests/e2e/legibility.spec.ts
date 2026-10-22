@@ -274,7 +274,8 @@ test('a Husk with frost hits shows Chill and its stacks on its hover name', asyn
   expect(errors).toEqual([]);
 });
 
-test('every summary the game can show holds at most four drawn rows, with no talents or the whole tree', async ({ page }) => {
+/** Every summary the game can show holds at most four drawn rows, with no talents or the whole tree. */
+async function summariesFit(page: Page): Promise<void> {
   test.setTimeout(60_000);
   const errors = watchErrors(page);
   await boot(page, '?playtest');
@@ -298,5 +299,19 @@ test('every summary the game can show holds at most four drawn rows, with no tal
     expect(all.filter((r) => r.cut && (r.source.kind === 'round' || r.source.kind === 'talent'))).toEqual([]);
   }
   expect(errors).toEqual([]);
+}
+
+test('every summary the game can show holds at most four drawn rows, with no talents or the whole tree', async ({ page }) => summariesFit(page));
+
+// Full hinting (GitHub's runner, many players' machines) measures text a few px wider than the config's pinned
+// none, so the summaries must fit whole under both. Launch options can't change per test, so this one starts its own.
+test('every summary still holds at most four drawn rows, whole, under full font hinting', async ({ playwright, baseURL }) => {
+  const browser = await playwright.chromium.launch({ args: ['--font-render-hinting=full'] });
+  try {
+    const context = await browser.newContext(baseURL ? { baseURL } : {});
+    await summariesFit(await context.newPage());
+  } finally {
+    await browser.close();
+  }
 });
 
