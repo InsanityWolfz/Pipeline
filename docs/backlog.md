@@ -62,7 +62,7 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 055 | Boss doors and the rimestone pylon: both arenas walled with a door, sealed until ready, E to enter, locked inside; a Frozen Grotto pylon supplying rimestone | done |
 | 056 | Sandbox controls always on screen: the loadout column and a key list in a fixed left strip, the spawn column fixed on the right, no key needed | done |
 | 057 | Sandbox panels as click-open pop-outs: a Loadout tab on the left and a Spawn tab on the right that pop their panels out when clicked; the waypoint arrow no longer stutters while walking | done |
-| 058 | Guided tutorial: equip, fast travel and talent steps; the ley bolt line and the frost rune built piece by piece on ghosts (the first underground belt); building locked until then; the goals end at three fed entrances; recipe unlock banners; from Shaun's playtest 2026-10-22 | approved |
+| 058 | Guided tutorial: equip, fast travel and talent steps; the ley bolt line and the frost rune built piece by piece on ghosts (the first underground belt); building locked until then; the goals end at three fed entrances; recipe unlock banners; from Shaun's playtest 2026-10-22 | done |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
 

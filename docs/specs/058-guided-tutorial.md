@@ -1,5 +1,5 @@
 # 058: The guided tutorial
-status: approved
+status: done
 
 Approved on draft by Shaun in chat, 2026-10-22 ("approve 58"): the build follows the proposals in the open questions.
 
