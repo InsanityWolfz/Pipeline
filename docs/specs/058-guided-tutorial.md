@@ -1,6 +1,8 @@
 # 058: The guided tutorial
-status: draft
+status: approved
 
+
+Approved on draft by Shaun in chat, 2026-10-22 ("approve 58"): the build follows the proposals in the open questions.
 From Shaun's fresh playtest on 2026-10-22 (docs/brainstorm/2026-10-22-playtest-notes.md, theme C) and his spec interview the same day (docs/brainstorm/2026-10-22-tutorial-interview.md). The tutorial should be "almost brain dead" for a new player: one clear thing at a time, the foundry's first lines built piece by piece on ghosts, and nothing else to build until they've done it.
 
 ## Goal
