@@ -12,7 +12,7 @@ import { atLeyVein, openCache } from './readabilityPage';
 const SHOTS = 'docs/review/045';
 const ui = (page: Page) => page.evaluate(() => window.__GAME__?.ui());
 
-/** Banners (a landmark's or a schematic's) played out fast on the tween clock, so none covers the shot. */
+/** Banners (a landmark's or a schematic's) played out fast on the tween clock, so none covers the shot (a queue on a slow page takes a while). */
 async function noBanners(page: Page): Promise<void> {
   await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
   await expect
@@ -26,7 +26,7 @@ async function noBanners(page: Page): Promise<void> {
           }
           return true;
         }),
-      { timeout: 20_000 },
+      { timeout: 60_000 },
     )
     .toBe(true);
   await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
@@ -42,8 +42,11 @@ test.describe('review screenshots (045)', () => {
     await page.screenshot({ path: `${SHOTS}/01-hp-bar-full.png` });
     await page.evaluate(() => window.__GAME__?.setPlayerHealth(72));
     await expect.poll(async () => (await ui(page))?.health.text).toBe('72 / 100');
-    // Past the white chunk's drain.
-    await expect.poll(async () => (await ui(page))?.health.chunk).toBe(0);
+    // Past the white chunk's drain, played out fast on the tween clock: an unfocused page's render clock advances at most
+    // one 60 fps frame per drawn frame, so on a slow page the 0.7 s hold and drain take several seconds at speed 1.
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
+    await expect.poll(async () => (await ui(page))?.health.chunk, { timeout: 20_000 }).toBe(0);
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
     const box = (await ui(page))?.health.box;
     const canvas = await page.locator('canvas').boundingBox();
     if (!box || !canvas) throw new Error('no view');
