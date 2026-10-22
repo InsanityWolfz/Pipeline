@@ -65,7 +65,8 @@ test.describe('review screenshots (051)', () => {
         x = g.step(1, { fire: true, aimX: x.player.x + 200, aimY: x.player.y });
       }
       h.toFoundry();
-      h.walkTo(12.5 * 32, 8.5 * 32);
+      // 058: just below the hoppers, so their arrows clear the goal band, which sits higher in the foundry now.
+      h.walkTo(12.5 * 32, 6.5 * 32);
       // 058: the field's XP brings the first talent point; its cut-in is answered so the refill goal shows.
       g.step(1, { takeTalent: talent });
     }, [goal('Refill the hoppers in the foundry with wood, stone and fiber (E)'), FIRST_TALENT] as const);
