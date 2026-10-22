@@ -4,6 +4,7 @@ import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { HOME_SHIFT } from '../../src/data/home';
 import { ROAD_DEFS } from '../../src/data/roads';
 import { boot, cameraSettled, quietScreen } from './helpers';
+import { enterArena } from './arenaHelpers';
 
 // Review screenshots for 059 (REVIEW_SHOTS=1, into docs/review/059): two road joins (with SHOTS_BEFORE=1 the same two
 // framed on the code before the change, as *-before), the forum's dark walls, the shrine's guards waiting inside its
@@ -84,13 +85,18 @@ test.describe('review screenshots (059)', () => {
   test.describe('after only', () => {
     test.skip(BEFORE, 'only the road joins are taken before');
 
-    test("the forum's walls, seen from its open door", async ({ page }) => {
+    test("the forum's walls, from its open door and just inside", async ({ page }) => {
       test.setTimeout(120_000);
-      await boot(page, '?playtest');
+      // ?start=hollows: the shrine claimed, so the barrier is down and the door open (as 055's shots).
+      await boot(page, '?start=hollows');
       await quiet(page);
-      await walk(page, [[FORUM_ARENA.door.leaveTo.tx, FORUM_ARENA.door.leaveTo.ty]]);
+      await walk(page, [[FORUM_ARENA.door.leaveTo.tx, FORUM_ARENA.door.leaveTo.ty], [FORUM_ARENA.door.leaveTo.tx + 1, FORUM_ARENA.door.leaveTo.ty]]);
       await settle(page);
       await page.screenshot({ path: `${SHOTS}/03-forum-walls.png` });
+      // And from inside, just through the door.
+      await enterArena(page, FORUM_ARENA);
+      await cameraSettled(page, 20_000);
+      await page.screenshot({ path: `${SHOTS}/03b-forum-walls-inside.png` });
     });
 
     test("the shrine's guards waiting at their posts inside its open door, and the door's E prompt", async ({ page }) => {
