@@ -39,7 +39,7 @@ Order and new steps
 10. The second-entrance steps merge into one named step, "Put ley bolts into the second entrance" (no "Feed ammo into the new entrance", "Feed two entrances" or "second kind of ammo" steps): ghost pieces show the whole line, from the ley crystal port through its machines into the new entrance, with arrows on the build bar for what to pick.
 11. Rimestone: go to the Frozen Grotto, gather rimestone, claim the Grotto's rimestone pylon.
 12. Frost rune into the arrow line, step by step: an arrow on the belt leaving the arrow assembler with "Right click to remove"; an arrow on the frost rune in the build bar; a ghost spot for it; then ghost belts from the rimestone port, with a ghost underground belt crossing the ley crystal line from step 10 (the player's first underground belt).
-13. Build lock: in the foundry, nothing can be built until step 10; during steps 10 and 12 only the pieces those steps need can be picked; after the frost arrows run, building opens fully.
+13. Build lock: in the foundry, building stays locked from the first visit until the frost arrows run (step 12). The only exceptions are the guided steps 10 and 12, and during them only the pieces those steps need can be picked. After the frost arrows run, building opens fully (Shaun, 2026-10-22: "building is locked until after you make the frost arrows portion").
 14. The goals end when all three entrances are fed: no frontier line ("Explore beyond the shrine") and no goal panel after that.
 
 Placement
