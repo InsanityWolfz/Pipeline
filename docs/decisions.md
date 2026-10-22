@@ -237,3 +237,9 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - CI (`.github/workflows/ci.yml`) runs on every push: `npm run check`, then Playwright in 4 shards (`--shard=N/4`), push trigger only so PRs don't run twice. Review shots stay out of CI (they skip without REVIEW_SHOTS=1).
 - **Housekeeping (2026-10-22):**
   - Files at or over the ~300-line limit split along their seams, no behaviour change: enemy separation in `src/sim/separation.ts` (from `enemies.ts`); the player and springs part of `getState()` in `src/sim/summaryPlayer.ts` (from `summary.ts`); the mouse in `src/render/pointerInput.ts` (from `controls.ts`); GameScene's cursor-driven UI in `src/render/pointerUi.ts` and the room on screen through a door's fade in `src/render/roomFollow.ts`.
+- **058 guided tutorial:**
+  - The guided builds are data (`src/data/guidedBuilds.ts`): each step's ghosts in order (piece, tile, facing, or a piece to remove), the build lock's end goal and the tutorial's cap. A new guided build is new data.
+  - The build lock and the next ghost are read off the foundry (`src/sim/guided.ts`): the next ghost is the first one the foundry doesn't match yet, and the lock holds in a guided game (the real start, never the sandbox) until the frost rune goal is done. Nothing extra is saved, so a pickup or a rebuild can't leave the guide out of step.
+  - A goal can be `inOrder` (done only once every chain goal before it is) or a `cutIn` (the talent step, current whenever due except during a guided build); a goal with `skipUnlessDryAfter` is decided when its trigger goal completes, which is `inOrder` so that happens at its step.
+  - `SAVE_VERSION` 12: the objectives' flags moved, with no migration (older saves read as too old).
+

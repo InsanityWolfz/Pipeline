@@ -8,18 +8,53 @@ import { SUB_STEP_TEXT } from '../data/objectives';
 import { objectiveLine } from '../sim/objectives';
 import type { SimState } from '../sim/state';
 import { subStepLines } from '../sim/subSteps';
+import { guidedSubLine } from '../sim/guided';
+import { GUIDED_NAMES, GUIDED_TEXT } from '../data/guidedBuilds';
+import { pieceDef } from '../data/pieces';
+import { FOUNDRY_ROOM } from '../data/rooms';
+import { FOUNDRY_MAP } from '../data/foundryMap';
+import { pieceIcon } from './foundryLayout';
+import { foundryMapBox } from './foundryMap';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import { addVector, showFrame, textureScale } from './vector/textures';
 
-/** A goal's sub-line as drawn (051, B.3), for `ui().objective`: its raw, its words, ticked or not, and its box (view px). */
+/** A goal's sub-line as drawn (051, B.3), for `ui().objective`: its raw (058: or the guided step's piece), its words, ticked or not, and its box (view px). */
 export interface SubStepShown {
   itemId: string;
+  pieceId?: string;
   text: string;
   done: boolean;
   x: number;
   y: number;
   w: number;
+}
+
+/** A sub-line to draw: its icon frame, words, and whether it's ticked. */
+interface SubLine {
+  icon: string;
+  text: string;
+  done: boolean;
+  itemId: string;
+  pieceId?: string;
+}
+
+/** The current goal's sub-lines: a craft goal's raws (051, B.3), or a guided step's next piece (058.2). */
+function subLines(sim: SimState, index: number | null): SubLine[] {
+  const guided = guidedSubLine(sim);
+  if (guided) {
+    const name = GUIDED_NAMES[guided.pieceId] ?? pieceDef(guided.pieceId).name.toLowerCase();
+    const text = guided.kind === 'remove' ? GUIDED_TEXT.removeLine(name) : GUIDED_TEXT.place(name, guided.built, guided.of);
+    return [{ icon: pieceIcon(guided.pieceId), text, done: false, itemId: '', pieceId: guided.pieceId }];
+  }
+  return subStepLines(sim, index).map((s) => ({ icon: itemDef(s.itemId).icon, text: SUB_STEP_TEXT(itemDef(s.itemId).name), done: s.done, itemId: s.itemId }));
+}
+
+/** The line's top: under the minimap, or (058, Shaun) right under the foundry's smaller minimap inside it. */
+function lineTop(sim: SimState): number {
+  if (sim.roomId !== FOUNDRY_ROOM || sim.sandbox) return TUTORIAL_LAYOUT.objectiveTop;
+  const b = foundryMapBox();
+  return b.y + b.h + FOUNDRY_MAP.frame.width + TUTORIAL_LAYOUT.objectiveFoundryGap;
 }
 
 interface SubRow {
@@ -41,6 +76,8 @@ export class ObjectiveView {
   /** The line's text and sub-lines, or undefined before the first draw. */
   private shown: string | undefined = undefined;
   private shownKey = '';
+  /** The line's top now (058: higher in the foundry). */
+  private top: number = TUTORIAL_LAYOUT.objectiveTop;
   /** The sub-lines as drawn, for the test hook. */
   subSteps: SubStepShown[] = [];
 
@@ -65,21 +102,23 @@ export class ObjectiveView {
     // 044.5: the sandbox has no objective line.
     const line = objectiveLine(sim);
     const text = sim.sandbox ? '' : line.text;
-    const subs = sim.sandbox ? [] : subStepLines(sim, line.index);
-    const key = `${text}|${subs.map((s) => `${s.itemId}:${s.done}`).join(',')}`;
+    const subs = sim.sandbox ? [] : subLines(sim, line.index);
+    const top = lineTop(sim);
+    const key = `${text}|${top}|${subs.map((s) => `${s.text}:${s.done}`).join(',')}`;
     if (key === this.shownKey) return;
+    this.top = top;
     this.shownKey = key;
     const finished = this.shown !== undefined && text !== this.shown;
     this.shown = text;
     this.line.set(text);
     const x = VIEW_WIDTH - TUTORIAL_LAYOUT.objectiveRight - this.line.width;
-    this.line.moveTo(x, TUTORIAL_LAYOUT.objectiveTop);
+    this.line.moveTo(x, top);
     this.drawPanel(x - TUTORIAL_LAYOUT.tickGap - this.tick.displayWidth, text, subs);
     if (!finished) return;
     // The new goal fades in beside the tick for the one just done.
     this.line.setAlpha(0);
     this.scene.tweens.addCounter({ from: 0, to: 1, duration: TUTORIAL_LAYOUT.objectiveFadeMs, onUpdate: (t) => this.line.setAlpha(t.getValue() ?? 1) });
-    this.tick.setX(x - TUTORIAL_LAYOUT.tickGap).setAlpha(1);
+    this.tick.setPosition(x - TUTORIAL_LAYOUT.tickGap, top - TUTORIAL_LAYOUT.tickRise).setAlpha(1);
     this.scene.tweens.add({ targets: this.tick, alpha: 0, delay: TUTORIAL_LAYOUT.tickMs / 2, duration: TUTORIAL_LAYOUT.tickMs / 2 });
   }
 
@@ -120,11 +159,12 @@ export class ObjectiveView {
    * A dark band behind the text and the tick's place left of it, so both read over doors, barriers and busy floors;
    * it grows down over the sub-lines, which sit indented from its left.
    */
-  private drawPanel(x: number, text: string, subs: readonly { itemId: string; done: boolean }[]): void {
-    const { objectivePanel: P, objectiveTop, subStep: S } = TUTORIAL_LAYOUT;
+  private drawPanel(x: number, text: string, subs: readonly SubLine[]): void {
+    const { objectivePanel: P, subStep: S } = TUTORIAL_LAYOUT;
+    const objectiveTop = this.top;
     const right = VIEW_WIDTH - TUTORIAL_LAYOUT.objectiveRight;
     const icon = ITEM_ICON_SIZE * S.iconScale;
-    const words = subs.map((s) => SUB_STEP_TEXT(itemDef(s.itemId).name));
+    const words = subs.map((s) => s.text);
     const widths = words.map((w, i) => S.tickW + S.iconGap + icon + S.iconGap + this.row(i).text.set(w).width);
     const left = Math.min(x, ...widths.map((w) => right - w - S.indent));
     this.rows.forEach((r, i) => {
@@ -142,10 +182,10 @@ export class ObjectiveView {
       const y = top + i * S.step;
       const mid = y + this.line.lineHeight / 2 - 1;
       r.tick.setPosition(rowX, mid).setAlpha(s.done ? 1 : 0);
-      showFrame(r.icon, itemDef(s.itemId).icon).setScale(S.iconScale / textureScale()).setPosition(rowX + S.tickW + S.iconGap + icon / 2, mid);
+      showFrame(r.icon, s.icon).setScale(S.iconScale / textureScale()).setPosition(rowX + S.tickW + S.iconGap + icon / 2, mid);
       r.text.moveTo(rowX + S.tickW + S.iconGap + icon + S.iconGap, y);
       r.text.setAlpha(s.done ? S.doneAlpha : 1);
-      this.subSteps.push({ itemId: s.itemId, text: words[i] ?? '', done: s.done, x: rowX, y, w: widths[i] ?? 0 });
+      this.subSteps.push({ itemId: s.itemId, ...(s.pieceId ? { pieceId: s.pieceId } : {}), text: words[i] ?? '', done: s.done, x: rowX, y, w: widths[i] ?? 0 });
     });
     const h = this.line.lineHeight + (subs.length > 0 ? S.gap + subs.length * S.step - (S.step - this.line.lineHeight) : 0);
     this.band = { x: left - P.padX, y: objectiveTop - P.padY, w: right - left + 2 * P.padX, h: h + 2 * P.padY };

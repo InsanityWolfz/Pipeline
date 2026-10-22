@@ -1,6 +1,6 @@
 import type { Scene } from 'phaser';
 import type { SimEvents } from '../sim/events';
-import { currentObjectiveDef } from '../sim/objectives';
+import { nextGhost } from '../sim/guided';
 import type { SimState } from '../sim/state';
 import { IntakePrompt } from './IntakePrompt';
 import { InteractPrompt } from './InteractPrompt';
@@ -11,18 +11,20 @@ import { ObjectiveView } from './ObjectiveView';
 import { PromptView } from './PromptView';
 import { TutorialView } from './TutorialView';
 import { WaypointView } from './WaypointView';
+import { GuidedView, NO_GUIDED } from './GuidedView';
 import type { UiState } from './testHook';
 import type { ScreenBox } from './bottomHud';
 
 /** What the tutorial reports to the test hook's `ui()`. */
-export type TutorialUiState = Pick<UiState, 'intakePrompt' | 'prompt' | 'marker' | 'waypoint' | 'objective' | 'madePopups' | 'objectiveTick' | 'interactPrompt'>;
+export type TutorialUiState = Pick<UiState, 'intakePrompt' | 'prompt' | 'marker' | 'waypoint' | 'objective' | 'madePopups' | 'objectiveTick' | 'interactPrompt' | 'guided'>;
 
 /** The tutorial's part of `ui()` before the scene has built its views. */
-export const NO_TUTORIAL_UI: TutorialUiState = { intakePrompt: null, prompt: null, marker: null, waypoint: null, objective: { text: '', subSteps: [] }, madePopups: [], objectiveTick: 0, interactPrompt: null };
+export const NO_TUTORIAL_UI: TutorialUiState = { intakePrompt: null, prompt: null, marker: null, waypoint: null, objective: { text: '', subSteps: [] }, madePopups: [], objectiveTick: 0, interactPrompt: null, guided: NO_GUIDED };
 
-/** The piece the current objective names, whose build-bar cell pulses (027), or null. */
+/** The piece whose build-bar cell pulses (027) and takes the guide arrow (058): the guided step's next piece to place, or null. */
 export function highlightOf(sim: SimState): string | null {
-  return currentObjectiveDef(sim)?.highlight ?? null;
+  const g = nextGhost(sim)?.ghost;
+  return g?.kind === 'place' ? g.piece : null;
 }
 
 // Everything the tutorial (012) draws: the tube stone and sealed doors in the
@@ -36,6 +38,7 @@ export class TutorialUi {
   private readonly interact: InteractPrompt;
   private readonly made: MadePopups;
   private readonly waypoint: WaypointView;
+  private readonly guided: GuidedView;
 
   constructor(scene: Scene) {
     this.world = new TutorialView(scene);
@@ -45,6 +48,7 @@ export class TutorialUi {
     this.interact = new InteractPrompt(scene);
     this.made = new MadePopups(scene);
     this.waypoint = new WaypointView(scene);
+    this.guided = new GuidedView(scene);
   }
 
   /**
@@ -61,6 +65,7 @@ export class TutorialUi {
       madePopups: this.made.shown,
       objectiveTick: this.objective.tickAlpha,
       interactPrompt: this.interact.shown,
+      guided: this.guided.shown,
     };
   }
 
@@ -69,17 +74,23 @@ export class TutorialUi {
     return this.objective.overUi(x, y);
   }
 
-  /** Draws the tutorial for the room on screen; `events` since the last draw pop a machine step's "+ shaft" (027) over its piece's top (`topOf`). */
-  update(sim: SimState, shown: string, events: SimEvents, topOf: (id: number) => number | undefined, hud: readonly ScreenBox[] = []): void {
+  /**
+   * Draws the tutorial for the room on screen; `events` since the last draw pop a machine step's "+ shaft" (027) over its
+   * piece's top (`topOf`). `deltaMs` is the frame's time on the tween clock (as the banner's), for the guided hint.
+   */
+  update(sim: SimState, shown: string, events: SimEvents, deltaMs: number, topOf: (id: number) => number | undefined, hud: readonly ScreenBox[] = []): void {
     this.made.play(events, sim.foundry, shown, topOf);
     this.world.update(sim, shown);
+    this.guided.update(sim, shown, events, deltaMs);
     this.objective.update(sim);
     this.prompt.update(sim, shown);
     const band = this.objective.box;
-    this.waypoint.update(sim, shown, band ? [...hud, band] : hud);
     this.intake.update(sim, shown);
     // 045: the in-reach prompt, unless the objective's or the intake's already shows its key lit.
     const lit = [...(this.prompt.shown?.usable ? [this.prompt.shown.key] : []), ...(this.intake.lit ? [boundLetter(RESTORE_ENTRANCE_PROMPT.key)] : [])];
     this.interact.update(sim, shown, lit);
+    // 058: after the prompts, so the arrow keeps clear of their caps.
+    const caps = [this.prompt.capBox, this.interact.capBox].flatMap((b) => (b ? [b] : []));
+    this.waypoint.update(sim, shown, band ? [...hud, band] : hud, caps);
   }
 }

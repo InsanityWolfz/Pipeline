@@ -1,14 +1,14 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { VIEW_WIDTH } from '../data/config';
-import { DISCOVERY_BANNER } from '../data/landmarkAssets';
+import { BANNER_NAME_MAX_W, DISCOVERY_BANNER } from '../data/landmarkAssets';
 import { LANDMARKS } from '../data/landmarks';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 
 /** One banner: what it's about (`kind`, `id`, for the test hook), a small kicker line and the name under it. */
 export interface BannerEntry {
-  kind: 'discovery' | 'schematic';
+  kind: 'discovery' | 'schematic' | 'unlock';
   id: string;
   kicker: string;
   name: string;
@@ -17,7 +17,7 @@ export interface BannerEntry {
 /** How many started entries the banner remembers for the test hook. */
 const SEEN_KEPT = 8;
 
-// The banner (032, shared by 033's schematics): top centre (050: at the top, never over the player),
+// The banner (032, shared by 033's schematics and 058's recipe unlocks): top centre (050: at the top, never over the player),
 // a kicker line over a name on a tablet, fading in, holding `bannerMs`, fading out.
 // Entries queue and show in turn, so a discovery and a schematic never overlap. Its
 // time runs on the tween clock the caller passes, so the test hook can hold it.
@@ -37,6 +37,7 @@ export class Banner {
     this.panel = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.hud - 1).setVisible(false);
     this.kicker = new TextLine(scene, 0, 0, DEPTHS.hud, false, 'label').setVisible(false);
     this.name = new TextLine(scene, 0, 0, DEPTHS.hud, false, 'title').setVisible(false);
+    this.name.obj.setAlign('center');
   }
 
   /** The entry showing, how strongly (0..1) and its tablet's box (view px), or null. */
@@ -54,6 +55,18 @@ export class Banner {
     return this.started;
   }
 
+  /** 058: the name in lines no wider than BANNER_NAME_MAX_W, broken after commas (a single long name stays whole). */
+  private wrap(name: string): string[] {
+    const parts = name.split(/(?<=,) /);
+    const lines: string[] = [];
+    for (const part of parts) {
+      const last = lines[lines.length - 1];
+      if (last !== undefined && this.name.set(`${last} ${part}`).width <= BANNER_NAME_MAX_W) lines[lines.length - 1] = `${last} ${part}`;
+      else lines.push(part);
+    }
+    return lines;
+  }
+
   push(entry: BannerEntry): void {
     this.queue.push(entry);
   }
@@ -69,10 +82,11 @@ export class Banner {
       this.ms = 0;
       this.started = [...this.started, next].slice(-SEEN_KEPT);
       this.kicker.set(next.kicker);
-      this.name.set(next.name);
+      const lines = this.wrap(next.name);
+      this.name.set(lines.join('\n'));
       const kickerH = next.kicker ? this.kicker.lineHeight + B.kickerGap : 0;
       const w = Math.max(this.name.width, next.kicker ? this.kicker.width : 0) + B.pad.x * 2;
-      const h = kickerH + this.name.lineHeight + B.pad.y * 2;
+      const h = kickerH + this.name.lineHeight * lines.length + B.pad.y * 2;
       this.panel.clear();
       this.box = { x: Math.round(VIEW_WIDTH / 2 - w / 2), y: B.top, w, h };
       drawTablet(this.panel, this.box.x, B.top, w, h, B.alpha);

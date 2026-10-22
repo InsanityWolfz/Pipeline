@@ -2,21 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { TILE_SIZE } from '../../src/data/config';
 import { INTAKE } from '../../src/data/foundry';
 import { HOLLOWS } from '../../src/data/hollows';
-import { landmarkDef } from '../../src/data/landmarks';
 import { nodeDef } from '../../src/data/nodes';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { TUTORIAL_START } from '../../src/data/player';
 import { FOUNDRY_ROOM, SHRINE_SITE } from '../../src/data/rooms';
 import { claim } from '../../src/sim/claims';
-import { fixtureDef } from '../../src/sim/fixtures';
 import { hopperRaw, objectiveTargets, targetPoints, waypoint } from '../../src/sim/objectiveTarget';
 import { currentObjective } from '../../src/sim/objectives';
 import type { HopperState } from '../../src/sim/pieces';
 import { placeExampleLine } from '../../src/sim/exampleLine';
 import { createSim, type SimState } from '../../src/sim/state';
-import { tileCentre } from '../../src/sim/tiles';
-import { movePlayer, SEED } from './fight';
+import { SEED } from './fight';
 
 // 051 (B.1, B.2, 051.2): every goal names a target, and the waypoint arrow goes to the nearest of its points in the
 // player's room, or to the door that leads to them.
@@ -31,15 +28,15 @@ const at = (text: string): number => {
 function upTo(text: string): SimState {
   const s = createSim(SEED, { start: TUTORIAL_START });
   const goal = at(text);
-  s.objectives = OBJECTIVES.map((_, i) => i < goal);
+  s.objectives = OBJECTIVES.map((o, i) => i < goal && !o.cutIn);
   return s;
 }
 
 const base = (t: { tx: number; ty: number }) => ({ x: (t.tx + 0.5) * TILE_SIZE, y: (t.ty + 1) * TILE_SIZE });
 
 describe('every goal names a target (051)', () => {
-  it('each objective has one', () => {
-    for (const o of OBJECTIVES) expect(o.target, o.text).toBeDefined();
+  it('each objective has one, but the talent cut-in (done anywhere)', () => {
+    for (const o of OBJECTIVES) expect(o.target !== undefined, o.text).toBe(!o.cutIn);
   });
 
   it('the first goal points at the tube on its stone, and nothing once it is taken', () => {
@@ -70,21 +67,14 @@ describe('every goal names a target (051)', () => {
     expect(s.enemies.some((e) => e.group === 'field' && e.x === wp?.x && e.y === wp?.y)).toBe(true);
   });
 
-  it('the shrine goal points at its pylon; a site pylon goal at the nearest awake unclaimed one, discovered first', () => {
+  it('the shrine goal points at its pylon; the fast-travel goal at the same pylon once claimed', () => {
     const s = upTo("Claim the shrine's pylon");
     expect(waypoint(s)).toMatchObject(base(OVERWORLD.shrine.pylon));
     claim(s, SHRINE_SITE);
-    const i = at('Claim a second pylon');
-    const grove = landmarkDef('old-grove').pylon;
-    const quarry = landmarkDef('quarry').pylon;
-    if (!grove || !quarry) throw new Error('no pylons');
-    movePlayer(s, tileCentre({ tx: grove.tx + 4, ty: grove.ty }).x, tileCentre({ tx: grove.tx + 4, ty: grove.ty }).y);
-    // Nothing found yet: the nearest awake one (the Old Grove's pylon).
-    const nearest = (pts: { x: number; y: number }[]) => [...pts].sort((a, b) => Math.hypot(a.x - s.player.x, a.y - s.player.y) - Math.hypot(b.x - s.player.x, b.y - s.player.y))[0];
-    expect(nearest(targetPoints(s, { kind: 'sitePylon' }, i))).toMatchObject(base(grove));
-    // Found ones come first, however far.
-    s.discovered.push('quarry');
-    expect(targetPoints(s, { kind: 'sitePylon' }, i).map((p) => ({ x: p.x, y: p.y }))).toEqual([base(quarry)]);
+    expect(objectiveTargets(s)).toEqual([]);
+    s.objectives[at("Claim the shrine's pylon")] = true;
+    expect(currentObjective(s)).toBe(at('Fast-travel to the foundry from the pylon (E)'));
+    expect(waypoint(s)).toMatchObject(base(OVERWORLD.shrine.pylon));
   });
 });
 
@@ -108,8 +98,8 @@ describe('through the foundry door (051)', () => {
     expect(waypoint(e)).toBeNull();
   });
 
-  it('heading back out points at the door inside and at nothing outside', () => {
-    const s = upTo('Head back out — the foundry keeps running');
+  it('leaving the foundry points at the door inside and at nothing outside', () => {
+    const s = upTo('Leave the foundry');
     s.roomId = FOUNDRY_ROOM;
     expect(waypoint(s)?.via).toBe('door');
     s.roomId = OVERWORLD_ROOM;
@@ -125,7 +115,7 @@ describe('through the foundry door (051)', () => {
 
 describe("the refill goal's hoppers (051, B.2)", () => {
   it('marks each example-line hopper with the raw it takes, and drops a hopper once its raw is put back', () => {
-    const s = upTo('Refill the hoppers with wood, stone and fiber (E)');
+    const s = upTo('Refill the hoppers in the foundry with wood, stone and fiber (E)');
     s.roomId = FOUNDRY_ROOM;
     placeExampleLine(s);
     s.lineRanDry = true;
@@ -138,26 +128,30 @@ describe("the refill goal's hoppers (051, B.2)", () => {
     expect(objectiveTargets(s).map((p) => p.itemId)).toEqual(['wood', 'stone', 'fiber']);
     s.refilled.push('stone');
     expect(objectiveTargets(s).map((p) => p.itemId)).toEqual(['wood', 'fiber']);
-    // The next goal ("Fill the tube from your line") points at the hoppers too, with no icons.
-    const fill = targetPoints(s, { kind: 'hoppers' }, at('Fill the tube from your line'));
-    expect(fill).toHaveLength(3);
-    expect(fill.map((p) => p.itemId)).toEqual([undefined, undefined, undefined]);
+    // Without `unfilled`, the hoppers have no icons.
+    const plain = targetPoints(s, { kind: 'hoppers' }, at('Wait for the tube to fill with arrows'));
+    expect(plain.map((p) => p.itemId)).toEqual([undefined, undefined, undefined]);
   });
 });
 
 describe('the intake goals (051)', () => {
-  it('restoring an entrance points at the caps; feeding two at the open entrances still empty', () => {
-    const s = upTo('Restore a second intake entrance (E at a cap with the warden core)');
+  it('restoring the right entrance points at the right cap only (058.5); the fill goal at the intake', () => {
+    const s = upTo('Restore the right intake entrance (E with the warden core)');
     s.roomId = FOUNDRY_ROOM;
-    const caps = [INTAKE.entrances[0], INTAKE.entrances[2]].map((t) => (t ? base(t) : null));
-    expect(objectiveTargets(s).map((p) => ({ x: p.x, y: p.y }))).toEqual(caps);
-    const f = at('Feed two entrances to fire a spread');
+    expect(objectiveTargets(s).map((p) => ({ x: p.x, y: p.y }))).toEqual([base(INTAKE.entrances[2] ?? { tx: 0, ty: 0 })]);
+    const f = at('Wait for the tube to fill with arrows');
     const [, centre, east] = s.link.entrances;
     if (!centre || !east) throw new Error('no entrances');
     east.open = true;
     centre.ammoId = 'arrow';
     centre.count = 5;
     expect(targetPoints(s, { kind: 'intake' }, f).map((p) => p.x)).toEqual([base(INTAKE.entrances[2] ?? { tx: 0, ty: 0 }).x]);
+  });
+
+  it('a guided goal points at its next ghost', () => {
+    const s = upTo('Put ley bolts into the second entrance (B)');
+    s.roomId = FOUNDRY_ROOM;
+    expect(waypoint(s)).toMatchObject({ via: 'target', ...base({ tx: 2, ty: 10 }), target: { kind: 'ghost' } });
   });
 
   it('the Bulwark goal points at the boss, or its arena once it is gone', () => {
@@ -185,34 +179,17 @@ describe('the other targets (051.4, 051.5)', () => {
     expect(seeps.every((p) => p.ref === 'resin-seep')).toBe(true);
   });
 
-  it("the supply port goal points at the foundry's ports (the shrine's claim brings them)", () => {
-    const s = upTo('Run a supply port into your line');
-    claim(s, SHRINE_SITE);
-    s.roomId = FOUNDRY_ROOM;
-    const ports = s.fixtures.filter((f) => fixtureDef(f.id).kind === 'port').map((f) => base(fixtureDef(f.id)));
-    expect(ports.length).toBeGreaterThan(0);
-    expect(objectiveTargets(s).map((p) => ({ x: p.x, y: p.y }))).toEqual(ports);
-    expect(waypoint(s)?.target.kind).toBe('ports');
-  });
-
-  it("breaching the Hollows points where the Cistern Terrace's road crosses the barrier (053: it rings Region 1)", () => {
-    const s = upTo('Breach Stonefall Hollows');
+  it("reaching the Hollows points where the Cistern Terrace's road crosses the barrier (053: it rings Region 1)", () => {
+    const s = upTo('Reach Stonefall Hollows');
     expect(waypoint(s)).toMatchObject({ via: 'target', ...base(HOLLOWS.crossing), target: { kind: 'barrier' } });
   });
 
-  it('the frost rune goal points at the foundry: its stairs outside, nothing inside', () => {
+  it('the frost rune goal points at the foundry outside, and at the conduit to remove inside', () => {
     const s = upTo('Build a frost rune into your arrow line');
     s.roomId = OVERWORLD_ROOM;
-    expect(waypoint(s)).toMatchObject({ via: 'door', ...base(OVERWORLD.entrance.door), target: { kind: 'room', roomId: FOUNDRY_ROOM } });
+    expect(waypoint(s)).toMatchObject({ via: 'door', ...base(OVERWORLD.entrance.door) });
     s.roomId = FOUNDRY_ROOM;
-    expect(waypoint(s)).toBeNull();
-  });
-
-  it('a site pylon goal skips dormant pylons: none until the shrine is claimed', () => {
-    const s = upTo('Claim a second pylon');
-    const i = at('Claim a second pylon');
-    expect(targetPoints(s, { kind: 'sitePylon' }, i)).toEqual([]);
-    claim(s, SHRINE_SITE);
-    expect(targetPoints(s, { kind: 'sitePylon' }, i).length).toBeGreaterThan(0);
+    placeExampleLine(s);
+    expect(waypoint(s)).toMatchObject({ via: 'target', ...base({ tx: 12, ty: 2 }), target: { kind: 'ghost' } });
   });
 });

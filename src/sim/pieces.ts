@@ -108,8 +108,8 @@ export interface PieceShape {
   mirrored?: boolean;
 }
 
-/** Why a piece can't be placed. */
-export type PlaceFail = 'locked' | 'not-foundry' | 'blocked' | 'occupied' | 'player';
+/** Why a piece can't be placed (058: `ghost` off the guided step's next ghost, `tutorial` while building is locked). */
+export type PlaceFail = 'locked' | 'not-foundry' | 'blocked' | 'occupied' | 'player' | 'ghost' | 'tutorial';
 
 export interface FoundryState {
   /** In placement order, which is also the order they act in. */

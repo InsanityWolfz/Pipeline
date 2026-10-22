@@ -9,7 +9,7 @@ import { objectiveTargets, waypoint, type GoalPoint, type Waypoint } from '../si
 import type { SimState } from '../sim/state';
 import { Pulse } from './pulse';
 import { drawTablet } from './tablet';
-import { arrowTip, placeArrow, viewAt, type ViewRect } from './waypointPlace';
+import { arrowTip, clearOfPrompts, placeArrow, viewAt, type ViewRect } from './waypointPlace';
 import { addVector, showFrame } from './vector/textures';
 import type { ScreenBox } from './bottomHud';
 
@@ -46,7 +46,7 @@ export class WaypointView {
   markerAt: { x: number; y: number } | null = null;
 
   /** This frame's goal, its in-room targets that carry a raw, and the HUD boxes (view px): placed against the view. */
-  private goal: { wp: Waypoint | null; raws: GoalPoint[]; hud: readonly ScreenBox[] } = { wp: null, raws: [], hud: [] };
+  private goal: { wp: Waypoint | null; raws: GoalPoint[]; hud: readonly ScreenBox[]; prompts: readonly ViewRect[] } = { wp: null, raws: [], hud: [], prompts: [] };
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -61,13 +61,13 @@ export class WaypointView {
     camera.on(Cameras.Scene2D.Events.FOLLOW_UPDATE, () => this.place(camera.worldView));
   }
 
-  /** `hud`: the fixed HUD boxes on screen (view px), which the arrow keeps clear of. */
-  update(sim: SimState, shown: string, hud: readonly ScreenBox[] = []): void {
+  /** `hud`: the fixed HUD boxes on screen (view px), which the arrow keeps clear of; `prompts`: the key caps showing (world px, 058). */
+  update(sim: SimState, shown: string, hud: readonly ScreenBox[] = [], prompts: readonly ViewRect[] = []): void {
     const wp = shown === sim.roomId ? waypoint(sim) : null;
     // Each in-room target that carries a raw gets its own arrow and icon (on screen only; the edge arrow leads to the rest).
     const raws = wp?.via === 'target' ? objectiveTargets(sim).filter((p) => p.roomId === sim.roomId && p.itemId) : [];
-    this.goal = { wp, raws, hud };
-    this.markerAt = wp?.via === 'target' ? arrowTip(wp.target) : null;
+    this.goal = { wp, raws, hud, prompts };
+    this.markerAt = wp?.via === 'target' ? clearOfPrompts(arrowTip(wp.target), prompts) : null;
     // 057.6: placed now against the view the camera's scroll gives, deliberately: while the camera isn't following
     // (the attune's look centres it by hand, stopFollow) no follow update comes. When it follows, the follow update
     // places it again once the view has moved this frame.
@@ -79,13 +79,13 @@ export class WaypointView {
 
   /** The arrow and the hoppers' marks against the camera's view (world px). */
   private place(view: { x: number; y: number; width: number; height: number }): void {
-    const { wp, raws, hud } = this.goal;
+    const { wp, raws, hud, prompts } = this.goal;
     const rect: ViewRect = { x0: view.x, y0: view.y, x1: view.x + view.width, y1: view.y + view.height };
     // A view px is a world px (both cameras share the screen's zoom), so a HUD box sits at the view's corner plus its own.
     const z = view.width / VIEW_WIDTH;
     const boxes: ViewRect[] = hud.map((b) => ({ x0: view.x + b.x * z, y0: view.y + b.y * z, x1: view.x + (b.x + b.w) * z, y1: view.y + (b.y + b.h) * z }));
     const marked = raws.flatMap((p) => {
-      const tip = arrowTip(p);
+      const tip = clearOfPrompts(arrowTip(p), prompts);
       return p.itemId && placeArrow(rect, tip, boxes).mode === 'over' ? [{ itemId: p.itemId, ...tip, base: p.y }] : [];
     });
     this.drawIcons(marked);
@@ -95,7 +95,7 @@ export class WaypointView {
       this.shown = null;
       return;
     }
-    const tip = arrowTip({ ...wp.target, x: wp.x, y: wp.y }, wp.via);
+    const tip = clearOfPrompts(arrowTip({ ...wp.target, x: wp.x, y: wp.y }, wp.via), prompts);
     const place = placeArrow(rect, tip, boxes);
     // On screen with its own icon arrow already over it, the main arrow isn't drawn twice.
     const covered = place.mode === 'over' && icons.some((i) => i.x === tip.x && i.y === tip.y);

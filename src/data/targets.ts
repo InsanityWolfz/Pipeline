@@ -17,18 +17,14 @@ export type TargetDef =
   /** The foundry's hoppers; `unfilled`: only those whose raw hasn't been put back since the lines ran dry (046). */
   | { kind: 'hoppers'; unfilled?: true }
   | { kind: 'bench' }
-  /** A site's pylon, by its claim id (found or not: the goal names it). */
-  | { kind: 'pylon'; site: string }
-  /** The nearest resource-site pylon not yet claimed and awake (032), a discovered one first. */
-  | { kind: 'sitePylon' }
-  /** The intake's capped entrances (033). */
+  /** A site's pylon, by its claim id (found or not: the goal names it); unclaimed, or (058: fast travel) once `claimed`. */
+  | { kind: 'pylon'; site: string; claimed?: true }
+  /** The intake's capped entrances whose diagram shows (033; 058.5: the right one only for the Warden core during the tutorial). */
   | { kind: 'caps' }
-  /** The entrance the Warden's core opened (050). */
-  | { kind: 'newEntrance' }
+  /** 058: the current guided build's next ghost: its tile, or the piece to remove. */
+  | { kind: 'ghost' }
   /** The intake's open entrances that hold nothing, or all the open ones once every one holds ammo. */
   | { kind: 'intake' }
-  /** The supply ports (028). */
-  | { kind: 'ports' }
   /** Stonefall Hollows' barrier gap (034). */
   | { kind: 'barrier' }
   /** A region boss: where it stands, or its arena's start. */
@@ -57,13 +53,11 @@ export const TARGET_LIFT: Readonly<Record<TargetKind, number>> & { door: number;
   bench: 52,
   // 032's: over the pylon's crystal.
   pylon: 82,
-  sitePylon: 82,
   // 027's: just over the mouth tile's bottom, on the wall.
   caps: 4,
-  newEntrance: 4,
+  // 058: over a piece's top on its tile.
+  ghost: 30,
   intake: 4,
-  // 028's: clear of the port's head.
-  ports: 38,
   barrier: 52,
   boss: 86,
   /** The door to another room (the foundry's, or its stairs outside). */
@@ -84,6 +78,9 @@ export const WAYPOINT = {
   pulse: { min: 0.65, max: 1, ms: 1100 },
   edgeScale: 1.3,
   plate: { gap: 2, pad: 2, alpha: 0.9 },
-  /** The arrow sprite is this tall, tip to tail (TUTORIAL_SPRITES.marker). */
+  /** The arrow sprite is this tall, tip to tail (TUTORIAL_SPRITES.marker), and this wide. */
   arrowLength: 20,
+  arrowWidth: 12,
+  /** 058 (Shaun): a hovering arrow that would overlap a key prompt (E, C, B) rises to sit this far above its cap. */
+  promptClear: 2,
 } as const;

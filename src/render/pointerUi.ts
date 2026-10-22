@@ -4,6 +4,7 @@ import type { Controls } from './controls';
 import { ghostShape } from './dragPath';
 import type { GameScene } from './GameScene';
 import { highlightOf } from './TutorialUi';
+import { buildLocked } from '../sim/guided';
 
 /** What the cursor's UI needs from the scene beyond its public views. */
 export interface PointerUiInput {
@@ -29,6 +30,7 @@ export function drawPointerUi(g: GameScene, sim: SimState, { controls, topOf, wa
     (...a) => canPlace(sim, ...a),
     (t, f) => ghostShape(controls?.heldLay() ?? null, t, f, (u, d) => conduitInFrom(sim, u.tx, u.ty, d)),
     highlightOf(sim),
+    buildLocked(sim),
   );
   g.tunnelView?.update(sim.foundry, inFoundry, { building: sim.building, selected: g.buildView?.selected ?? '', cursor, facing: controls?.facing ?? 'right' });
   // Menu rows light under the cursor (020).

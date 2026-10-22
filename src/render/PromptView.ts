@@ -13,6 +13,7 @@ import { roomById, type SimState } from '../sim/state';
 import { stoneInReach } from '../sim/tutorial';
 import { TextLine } from './textLine';
 import { boundLetter } from './keyHint';
+import { capBox, type ViewRect } from './waypointPlace';
 import { addVector } from './vector/textures';
 
 /** A world point, px: where a prompt's target stands. */
@@ -38,6 +39,11 @@ export class PromptView {
   constructor(scene: Scene) {
     this.cap = addVector(scene, 0, 0, TUTORIAL_SPRITES.keyCap).setOrigin(0.5, 1).setDepth(DEPTHS.prompt);
     this.key = new TextLine(scene, 0, 0, DEPTHS.prompt + 1, true);
+  }
+
+  /** 058: the key cap's world rect while it shows, else null. */
+  get capBox(): ViewRect | null {
+    return capBox(this.cap);
   }
 
   update(sim: SimState, shown: string): void {

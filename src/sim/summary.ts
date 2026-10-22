@@ -8,6 +8,7 @@ import { stagesUnlocked } from './stages';
 import { portSummary } from './summaryPorts';
 import { fixtureDef } from './fixtures';
 import { objectiveLine } from './objectives';
+import { guidedSummary } from './guided';
 import { volleyRounds, nextPress, hudActive, type HudActive, type NextPress } from './volley';
 import { INTAKE } from '../data/foundry';
 import { entranceCap } from './research';
@@ -134,7 +135,7 @@ export interface SimSummary extends PlayerSummary, HollowsSummary, LevelingSumma
   lineRanDry: boolean;
   refilled: string[];
   firstLineFull: boolean;
-  /** The objective line (028): the first unfinished goal's index and text, or the frontier goal with no index once all are done. */
+  /** The objective line (028): the current goal's index and text, or no index and no text once the tutorial is over (058). */
   objective: { index: number | null; text: string };
   prototypeComplete: boolean;
   /**
@@ -151,6 +152,8 @@ export interface SimSummary extends PlayerSummary, HollowsSummary, LevelingSumma
   atRisk: Record<string, number>;
   /** Research (033): each node's state and whether it's ready, the entrance cap and machine speed now, and the schematics carried and banked. */
   research: ResearchSummary;
+  /** 058: the guided tutorial's build lock and the current guided build's ghosts still to build. */
+  guided: ReturnType<typeof guidedSummary>['guided'];
   /** What happened on the last tick. */
   events: SimEvents;
 }
@@ -247,6 +250,7 @@ export function summarize(state: SimState): SimSummary {
     ...levelingSummary(state),
     ...minesSummary(state),
     ...sandboxSummary(state),
+    ...guidedSummary(state),
     events: structuredClone(state.events),
   };
 }

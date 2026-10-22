@@ -6,6 +6,7 @@ import { interactTarget } from '../sim/interactables';
 import type { SimState } from '../sim/state';
 import { boundLetter } from './keyHint';
 import { TextLine } from './textLine';
+import { capBox, type ViewRect } from './waypointPlace';
 import { addVector } from './vector/textures';
 
 /** The in-reach prompt as drawn (045), for the test hook: what it's over, its key and the world point it floats over. */
@@ -33,6 +34,11 @@ export class InteractPrompt {
   constructor(scene: Scene) {
     this.cap = addVector(scene, 0, 0, TUTORIAL_SPRITES.keyCap).setOrigin(0.5, 1).setDepth(DEPTHS.prompt).setVisible(false);
     this.key = new TextLine(scene, 0, 0, DEPTHS.prompt + 1, true).setVisible(false);
+  }
+
+  /** 058: the key cap's world rect while it shows, else null. */
+  get capBox(): ViewRect | null {
+    return capBox(this.cap);
   }
 
   /** `litKeys`: the keys the objective's and the intake's prompts already show at full strength (it gives way to them). */

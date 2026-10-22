@@ -2,6 +2,20 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-22: 058 Guided tutorial
+**Changed:** on `claude/058-guided-tutorial` (InsanityWolfz/Pipeline#64), a New game walks the player through the first loop one step at a time: the new goal chain (wait for the tube, equip at the bench with arrows on what to click, fast travel from the shrine's pylon, the refill only if the line ran dry, the right entrance restored, leave the foundry, the Grotto's rimestone and pylon, Reach Stonefall Hollows), with "Press T to spend a talent point" cutting in at the first point. The ley bolt line and the frost rune (with the first underground pair) are built piece by piece on glowing ghosts, with a build-bar arrow on the next piece; building is locked from the first foundry visit until the frost rune step is done. The goals end at three fed entrances, the goal panel and arrows go for good. Recipe unlock banners, the goal panel under the foundry minimap, the waypoint arrow clear of key prompts, the pylon's "Send inventory to stash". `SAVE_VERSION` 12: older saves read as too old. Reviewed: no blocking issues; the suggestions applied (the refill's skip decided only at the fast-travel step, the sandbox agreeing on the right cap, the tutorial e2e split in two). New docs/review/058 shots.
+
+Raised for Shaun (spec "Raised after the build"): 058.8 the bench's arrows (tab, then row: the screen has no equip button), 058.10 the first talent point comes while gathering, 058.15 the refusal hint's words and 1.6 s, 058.17 the prototype counts as complete at "Leave the foundry", 058.18 a long goal under the foundry minimap can reach over the hoppers' arrows. 058.9 answered: no hint for the left entrance.
+
+**Next:** Shaun's playtest from New game; "merge 64" when happy.
+
+## 2026-10-22: Playtest notes and 058 drafted
+**Changed:** Shaun's fresh playtest from the title screen is in docs/brainstorm/2026-10-22-playtest-notes.md (verbatim, then grouped into proposed PRs: two fixes, a guided-tutorial spec, a world-polish spec). Shaun dropped shared processing, a bigger foundry and boss gear sets for now, with no note to do them or not.
+
+Shaun confirmed the grouping, moved the build lock to last until the frost arrows run, and answered 058's interview (docs/brainstorm/2026-10-22-tutorial-interview.md). 058 is drafted on `claude/058-guided-tutorial`.
+
+**Next:** Shaun approves 058; the two fixes (the New game crash, the diagonal flicker); the world-polish spec's interview.
+
 ## 2026-10-22: Housekeeping
 **Changed:** a cleanup batch at Shaun's request, each its own PR, all merged: workflow actions on v5 (InsanityWolfz/Pipeline#57); progress entries before 050 moved to docs/progress-archive.md (#58); agent worktrees under .claude/worktrees ignored by git and ESLint (#59); files over 300 lines split (#60: separation.ts, pointerInput.ts, pointerUi.ts, roomFollow.ts, summaryPlayer.ts); the bomb+frost+cluster summary no longer cut under full font hinting (#61: a Burst line drops "dmg" only when the summary wouldn't fit, Shaun OK'd); all 37 review-shot specs run again (#62). Shaun deleted the old branches and turned on "Automatically delete head branches", so merged PR branches go away by themselves.
 

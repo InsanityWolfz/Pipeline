@@ -13,9 +13,10 @@
  * gone, the underground pair's pieces added), again with no migration. 053 made it 10 (the round world: every saved
  * position, and the fog's bitmap, are on a new map), again with no migration. 055 made it 11 (the arena doors' enter
  * event, the shrine's walls closed round a player who stood in its old gaps, and the Frozen Grotto's pylon and
- * rimestone port), again with no migration.
+ * rimestone port), again with no migration. 058 made it 12 (the tutorial's new goal chain shifts the saved goal flags,
+ * and the fast-travel flag replaces the away clock), again with no migration.
  */
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;
 
 /** The envelope's and the export file's format tags. */
 export const SAVE_FORMAT = 'pipeline-save';

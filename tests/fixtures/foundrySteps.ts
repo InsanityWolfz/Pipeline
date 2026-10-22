@@ -1,11 +1,11 @@
-// The foundry tutorial's goals (046: 027's build steps gave way to the example line) as the spec words them,
-// shared by the sim test and the e2e runs so the wording is checked in one place.
+// The foundry tutorial's goals as the spec words them (046; 058's wording), shared by the sim test and the e2e runs
+// so the wording is checked in one place.
 
-/** Shown once the example line has run dry: refill its hoppers by hand. */
-export const REFILL_GOAL = 'Refill the hoppers with wood, stone and fiber (E)';
+/** 058: shown after the fast travel home only if the example line has run dry by then: refill its hoppers by hand. */
+export const REFILL_GOAL = 'Refill the hoppers in the foundry with wood, stone and fiber (E)';
 
-/** The goal after it in the chain, done by the example line on its own. */
-export const AFTER_REFILL = 'Fill the tube from your line';
+/** 058: the goal on the first foundry visit, done by the example line on its own. */
+export const FILL_GOAL = 'Wait for the tube to fill with arrows';
 
-/** After the Warden's core restores the second entrance (046.3): a second line of the player's own. */
-export const SECOND_LINE_GOAL = 'Feed ammo into the new entrance';
+/** 058: the fast travel home whose landing decides whether the refill goal shows. */
+export const TRAVEL_GOAL = 'Fast-travel to the foundry from the pylon (E)';

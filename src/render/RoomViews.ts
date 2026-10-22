@@ -1,3 +1,4 @@
+import { UnlockBanner } from './UnlockBanner';
 import type { Scene } from 'phaser';
 import { OVERWORLD } from '../data/overworld';
 import type { Room } from '../data/rooms';
@@ -25,10 +26,10 @@ import { ArenaDoorView } from './ArenaDoorView';
 import type { ScreenBox } from './bottomHud';
 
 /** What the room views report to the test hook's `ui()`. */
-export type RoomUiState = Pick<UiState, 'minimap' | 'foundryMap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows' | 'relics' | 'talentFx' | 'mines' | 'overworldChunks' | 'arenaDoors'>;
+export type RoomUiState = Pick<UiState, 'minimap' | 'foundryMap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows' | 'relics' | 'talentFx' | 'mines' | 'overworldChunks' | 'arenaDoors' | 'banners' | 'bannerAlpha'>;
 
 /** The room views' part of `ui()` before the scene has built them. */
-export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [], hover: null }, foundryMap: NO_FOUNDRY_MAP, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN, relics: NO_RELICS_SHOWN, talentFx: NO_TALENT_FX, mines: NO_MINES_SHOWN, overworldChunks: [], arenaDoors: [] };
+export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [], hover: null }, foundryMap: NO_FOUNDRY_MAP, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN, relics: NO_RELICS_SHOWN, talentFx: NO_TALENT_FX, mines: NO_MINES_SHOWN, overworldChunks: [], arenaDoors: [], banners: [], bannerAlpha: 0 };
 
 // The ground on screen: a tiled room (the foundry) or the overworld's terrain
 // with its landmarks (017), plus the corner minimap while outside, and the
@@ -50,6 +51,7 @@ export class RoomViews {
   private readonly healing: HealingView;
   private readonly landmarks: LandmarkView;
   private readonly banner: Banner;
+  private readonly unlocks: UnlockBanner;
   private readonly research: ResearchView;
   private readonly schematics: SchematicView;
   private readonly hollows: HollowsView;
@@ -69,6 +71,7 @@ export class RoomViews {
     this.ports = new PortView(scene);
     this.healing = new HealingView(scene);
     this.banner = new Banner(scene);
+    this.unlocks = new UnlockBanner(this.banner);
     this.landmarks = new LandmarkView(scene, this.banner);
     this.research = new ResearchView(scene);
     this.schematics = new SchematicView(scene, this.banner);
@@ -118,6 +121,7 @@ export class RoomViews {
     this.relics.update(sim, events, shown, tweenMs);
     this.talentFx.update(sim, events, shown, tweenMs);
     this.mines.update(sim, events, shown, tweenMs);
+    this.unlocks.update(sim);
     this.banner.update(tweenMs);
   }
 
@@ -145,6 +149,8 @@ export class RoomViews {
       talentFx: this.talentFx.shown,
       mines: this.mines.shown,
       arenaDoors: this.arenaDoors.shown,
+      banners: this.banner.seen.map((b) => ({ kind: b.kind, kicker: b.kicker, name: b.name })),
+      bannerAlpha: this.banner.current?.alpha ?? 0,
     };
   }
 }
