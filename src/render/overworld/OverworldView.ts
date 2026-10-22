@@ -15,6 +15,7 @@ import { drawGround } from './ground';
 import { inHollows } from '../../data/hollows';
 import { hollowsFrame } from '../hollowsTiles';
 import { isPlateau } from './plateau';
+import { pieceFrame } from '../../sim/tileLook';
 
 // Draws the overworld (017): its ground baked into chunk textures, then every tree, rock, ruin and the foundry's ruin
 // as vector sprites sorted by their feet; the ley barrier dome over the shrine site while its gate is shut; and
@@ -149,7 +150,7 @@ export class OverworldView {
     for (let ty = y0 / T; ty < (y0 + h) / T; ty++) {
       const row = room.rows[ty] ?? '';
       for (let tx = x0 / T; tx < (x0 + w) / T; tx++) {
-        const image = this.standing(row[tx] ?? '', tx, ty);
+        const image = this.standing(room, row[tx] ?? '', tx, ty);
         if (image) objects.push(image.setVisible(this.shown));
       }
     }
@@ -158,29 +159,26 @@ export class OverworldView {
   }
 
   /** A tile's standing sprite, if it has one, at the bottom centre of the tile. */
-  private standing(symbol: string, tx: number, ty: number): GameObjects.Image | null {
+  private standing(room: Room, symbol: string, tx: number, ty: number): GameObjects.Image | null {
     const hash = tileHash(tx, ty);
     const x = (tx + 0.5) * T;
     const bottom = (ty + 1) * T;
-    const mound = OVERWORLD.entrance.mound.some((t) => t.tx === tx && t.ty === ty);
     // A landmark's own look (032): the Old Grove's old trees, the Quarry's cut blocks, the Husk Hive's nest stones (049).
     const landmark = LANDMARK_LIST.find((l) => tx >= l.area.x0 && tx <= l.area.x1 && ty >= l.area.y0 && ty <= l.area.y1);
     let frame: string | undefined;
     let jitter = 0;
     // Stonefall Hollows' own (034): cliffs, the aqueduct, rubble.
     // 053: the world's cliff edge away from its face is flat plateau in the ground, not sprites.
-    const hollows = inHollows(tx, ty) && !(this.room && isPlateau(this.room, tx, ty)) ? hollowsFrame(symbol, tx, ty, hash, this.room) : undefined;
+    const hollows = inHollows(tx, ty) && !isPlateau(room, tx, ty) ? hollowsFrame(symbol, tx, ty, hash, room) : undefined;
     if (hollows) frame = hollows;
     else if (symbol === TILE.tree && landmark?.look?.trees === 'old') frame = LANDMARK_SPRITES.oldTrees[hash % LANDMARK_SPRITES.oldTrees.length];
     else if (symbol === TILE.tree) {
       frame = OVERWORLD_SPRITES.trees[hash % OVERWORLD_SPRITES.trees.length];
       jitter = ((hash >>> 8) % 9) - 4;
-    } else if (symbol === TILE.rock) frame = OVERWORLD_SPRITES.rocks[hash % OVERWORLD_SPRITES.rocks.length];
-    else if (symbol === TILE.wall) frame = OVERWORLD_SPRITES.ruinWall;
+    } else if (symbol === TILE.wall) frame = OVERWORLD_SPRITES.ruinWall;
     else if (symbol === TILE.door) frame = OVERWORLD_SPRITES.entrance;
-    else if (symbol === TILE.ruinBlock && landmark?.look?.blocks === 'cut') frame = LANDMARK_SPRITES.cutBlocks[hash % LANDMARK_SPRITES.cutBlocks.length];
-    else if (symbol === TILE.ruinBlock && landmark?.look?.blocks === 'hive') frame = LANDMARK_SPRITES.hiveStones[hash % LANDMARK_SPRITES.hiveStones.length];
-    else if (symbol === TILE.ruinBlock && !mound) frame = hash % 3 === 0 ? OVERWORLD_SPRITES.column : OVERWORLD_SPRITES.ruinStone;
+    // 059: rocks and ruin blocks (a landmark's own, the ruin's columns and stones) by the rule their footprints follow.
+    else if (symbol === TILE.rock || symbol === TILE.ruinBlock) frame = pieceFrame(room, tx, ty);
     if (!frame) return null;
     const image = addVector(this.scene, x + jitter, bottom, frame).setDepth(bottom);
     if (symbol === TILE.tree && (hash >>> 16) % 2 === 0) image.setFlipX(true);

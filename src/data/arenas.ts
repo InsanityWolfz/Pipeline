@@ -25,7 +25,7 @@ export interface ArenaDoor {
   readonly reach: number;
   /** The gate whose opening unlocks it (src/sim/tutorial.ts). */
   readonly unlock: GateId;
-  /** Its hover name, and its hover line while sealed (055.1). */
+  /** Its hover name, and its hover line while sealed (055.1; 059: "Sealed", and none once open). */
   readonly name: string;
   readonly sealed: string;
 }
@@ -61,7 +61,7 @@ export const SHRINE_ARENA: ArenaDef = {
     // 012's shrine gate: open once the first line fills the tube (see the spec's 055.3).
     unlock: 'shrine',
     name: 'Shrine door',
-    sealed: 'Sealed: discover the Foundry',
+    sealed: 'Sealed',
   },
   rooms: [OVERWORLD_ROOM],
 };

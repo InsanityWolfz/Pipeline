@@ -243,3 +243,7 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - A goal can be `inOrder` (done only once every chain goal before it is) or a `cutIn` (the talent step, current whenever due except during a guided build); a goal with `skipUnlessDryAfter` is decided when its trigger goal completes, which is `inOrder` so that happens at its step.
   - `SAVE_VERSION` 12: the objectives' flags moved, with no migration (older saves read as too old).
 
+- **059 world polish:**
+  - A terrain piece smaller than its tile has a footprint box in `src/data/footprints.ts` (from its sprite's base, rounded out, clipped to the tile); a test checks each against its sprite. Feet, shots and every line across the grid (`src/sim/sightLine.ts`: punch reach, Charger runs, Sniper sight, cover and laser) read the same box; drops and spawning read whole tiles. Lookups are cached per room (`src/sim/footprints.ts`, a WeakMap).
+  - Which sprite a tile shows is decided in `src/sim/tileLook.ts`, so drawing and collision can't disagree.
+  - Roads draw in two passes, every edge then every dirt fill, so joins have no seams.

@@ -1,5 +1,5 @@
 import { leaveArea } from './mines';
-import { ACTIVATE_TICKS, CLAIM_TICKS, FIXTURE_REACH, FIXTURES, PYLON_REACH, SITE_SUPPLY, SUPPLY_TICKS, type FixtureDef } from '../data/claims';
+import { ACTIVATE_TICKS, CLAIM_TICKS, FIXTURE_REACH, FIXTURES, PYLON_REACH, SITE_RATE, SITE_SUPPLY, SUPPLY_TICKS, type FixtureDef } from '../data/claims';
 import { TICK_RATE } from '../data/config';
 import { FEET_BOX } from '../data/player';
 import { FOUNDRY_ROOM, SANDBOX_ROOM, type PylonDef } from '../data/rooms';
@@ -201,13 +201,26 @@ function travelToPylon(state: SimState, site: string): void {
 
 /** How many claimed sites supply a raw (028): its port's pylon count. `supply` defaults to the game's site table. */
 export function portPylons(claims: readonly string[], raw: string, supply: Readonly<Record<string, readonly string[]>> = SITE_SUPPLY): number {
-  return claims.filter((site) => supply[site]?.includes(raw)).length;
+  return portSupply(claims, raw, supply, {});
 }
 
-/** Ticks between a port's pushes with `pylons` supplying it (at least 1): round(SUPPLY_TICKS / N). */
+/**
+ * How many pylons' worth supply a raw (059): each claimed site that sends it counts its rate (SITE_RATE, the Grotto's
+ * 2), any other 1. With no faster pylon it is portPylons.
+ */
+export function portSupply(
+  claims: readonly string[],
+  raw: string,
+  supply: Readonly<Record<string, readonly string[]>> = SITE_SUPPLY,
+  rates: Readonly<Record<string, number>> = SITE_RATE,
+): number {
+  return claims.filter((site) => supply[site]?.includes(raw)).reduce((n, site) => n + (rates[site] ?? 1), 0);
+}
+
+/** Ticks between a port's pushes with `pylons` pylons' worth supplying it (at least 1): round(SUPPLY_TICKS / N). */
 export const portTicks = (pylons: number): number => Math.round(SUPPLY_TICKS / Math.max(1, pylons));
 
-/** Raws a port sends a minute with `pylons` supplying it. */
+/** Raws a port sends a minute with `pylons` pylons' worth supplying it. */
 export const portPerMinute = (pylons: number): number => Math.round((60 * TICK_RATE) / portTicks(pylons));
 
 /** A port's pylon count (028): the claimed sites that supply its raw. */
@@ -216,9 +229,15 @@ export function pylonsOf(state: Pick<SimState, 'claims'>, f: FixtureState): numb
   return raw === undefined ? 0 : portPylons(state.claims, raw);
 }
 
+/** A port's supply (059): the pylons' worth feeding it, which sets its rate. */
+export function supplyOf(state: Pick<SimState, 'claims'>, f: FixtureState): number {
+  const raw = fixtureDef(f.id).raw;
+  return raw === undefined ? 0 : portSupply(state.claims, raw);
+}
+
 /**
  * Supply ports (028), once per tick: each one with no raw waiting counts up to its
- * rate, round(SUPPLY_TICKS / its pylons), then brings up one of its own raw; `offer`
+ * rate, round(SUPPLY_TICKS / its supply), then brings up one of its own raw; `offer`
  * tries to hand it to whatever is in front, and a refused raw waits.
  */
 export function stepPorts(state: SimState, offer: (to: Tile, from: Tile, item: string) => boolean): void {
@@ -227,7 +246,7 @@ export function stepPorts(state: SimState, offer: (to: Tile, from: Tile, item: s
     if (def.kind !== 'port' || def.raw === undefined) continue;
     if (f.item === null) {
       f.timer += 1;
-      if (f.timer < portTicks(pylonsOf(state, f))) continue;
+      if (f.timer < portTicks(supplyOf(state, f))) continue;
       f.item = def.raw;
       state.events.supplies.push({ id: f.id, itemId: f.item });
     }

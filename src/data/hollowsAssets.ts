@@ -7,6 +7,8 @@ export const HOLLOWS_SPRITES = {
   /** A cliff tile's face with its lit top edge, by tile hash; `cliffTop` where another cliff stands in front (south). */
   cliffs: ['ow-cliff-0', 'ow-cliff-1', 'ow-cliff-2'],
   cliffTop: 'ow-cliff-top',
+  /** 059: a length of the Sunken Forum's wall (its cliff tiles round the arena), dark like a wall, not a cliff. */
+  forumWall: 'ow-forum-wall',
   /** An aqueduct pillar (or colonnade column), a standing arch's span over a walkable bay, a fallen span's heap. */
   pillar: 'ow-aqueduct-pillar',
   arch: 'ow-aqueduct-arch',
@@ -20,6 +22,12 @@ export const HOLLOWS_SPRITES = {
   /** The Bulwark's lobbed bomb: a riveted stone shell with a red fuse-glow. */
   enemyBomb: 'enemy-bomb',
 } as const;
+
+/**
+ * The forum's walls (059, 059.1): the Hollows' darkest stone for the body, a lighter top (still darker than the floor)
+ * and dark joints, drawn like the shrine's walls (src/data/art/terrain.ts RUIN_WALL), so they read as walls. Palette ids.
+ */
+export const FORUM_WALL_LOOK = { body: 'hollow-dark', top: 'hollow', edge: 'hollow-light', joint: 'ink', jointAlpha: 0.45 } as const;
 
 /** How the Hollows' live effects look (034): palette ids, ms, world px (view px for the boss bar), alphas 0..1. */
 export const HOLLOWS_LOOK = {

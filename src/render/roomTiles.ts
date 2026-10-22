@@ -1,15 +1,11 @@
 import { FLOOR_VARIANTS, WALL_ALT_ONE_IN, WALL_SPRITES } from '../data/roomArt';
 import { TILE } from '../data/rooms';
+import { tileHash } from '../sim/tileLook';
+
+export { tileHash };
 
 // Which tile art goes where (014). Pure, so tests can pin it down: variants come
 // from a fixed hash of the tile, so they never shimmer between draws.
-
-/** A stable 32-bit hash of a tile position. */
-export function tileHash(tx: number, ty: number): number {
-  let x = (Math.imul(tx, 374761393) + Math.imul(ty, 668265263)) >>> 0;
-  x = Math.imul(x ^ (x >>> 13), 1274126177) >>> 0;
-  return (x ^ (x >>> 16)) >>> 0;
-}
 
 /** The floor frame for a tile: the base most of the time, else one of its variants. */
 export function floorFrame(base: string, tx: number, ty: number): string {

@@ -1,4 +1,4 @@
-import { HOLLOWS_SPRITES } from '../hollowsAssets';
+import { FORUM_WALL_LOOK, HOLLOWS_SPRITES } from '../hollowsAssets';
 import { MAP_ICONS } from '../landmarkAssets';
 import { shadow } from './terrain';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSprite } from './types';
@@ -37,6 +37,21 @@ function cliff(variant: number): Shape[] {
 
 /** The top of a cliff whose face is hidden by another cliff in front: one even plateau. */
 const CLIFF_TOP: Shape[] = [rect(-17, -40, 34, 34, 2, { fill: stoneTop }), line([-12, -30, 2, -28], 0.7, { id: 'hollow', alpha: 0.6 })];
+
+/** 059: a length of the forum's wall, shaped like the shrine's (RUIN_WALL): dark cut blocks, a lighter top, a lit edge, a vein. */
+const W = FORUM_WALL_LOOK;
+const joint = { id: W.joint, alpha: W.jointAlpha };
+const FORUM_WALL: Shape[] = [
+  shadow(16, 4, -1),
+  rect(-16, -34, 32, 34, 2, solid(W.body)),
+  rect(-16, -42, 32, 10, 2, solid(W.top)),
+  line([-15, -41, 15, -41], 1, W.edge),
+  line([-16, -18, 16, -18], 1, joint),
+  line([0, -32, 0, -18], 1, joint),
+  line([-8, -18, -8, 0], 1, joint),
+  line([8, -18, 8, 0], 1, joint),
+  ...vein([3, -6, 6, -11, 9, -10, 12, -14]),
+];
 
 /** An aqueduct pillar: stacked cut drums, a capital, a rust streak down from the old water channel. */
 const PILLAR: Shape[] = [
@@ -128,6 +143,7 @@ const ICON_AQUEDUCT: Shape[] = [rect(-5, -4, 10, 2, 0.5, solid('hollow-pale')), 
 export const HOLLOWS_SPRITES_VECTOR: readonly VectorSprite[] = [
   ...HOLLOWS_SPRITES.cliffs.map((key, i) => one(key, [36, 44], [18, 40], cliff(i))),
   one(HOLLOWS_SPRITES.cliffTop, [36, 44], [18, 40], CLIFF_TOP),
+  one(HOLLOWS_SPRITES.forumWall, [34, 52], [17, 48], FORUM_WALL),
   one(HOLLOWS_SPRITES.pillar, [30, 76], [15, 72], PILLAR),
   one(HOLLOWS_SPRITES.arch, [36, 78], [18, 74], ARCH),
   ...HOLLOWS_SPRITES.fallen.map((key, i) => one(key, [36, 28], [18, 25], fallen(i === 1))),

@@ -35,3 +35,9 @@ describe("the seal's sounds (045, 043.5)", () => {
     expect(HOLLOWS_SOUND_RECIPES['seal-hum'].loop).toBeGreaterThan(0);
   });
 });
+
+describe("the boss room's hum (059)", () => {
+  it("plays at half 045's volume: each layer's peak halved", () => {
+    expect(HOLLOWS_SOUND_RECIPES['seal-hum'].layers.map((l) => l.volume)).toEqual([0.16 / 2, 0.1 / 2, 0.035 / 2]);
+  });
+});

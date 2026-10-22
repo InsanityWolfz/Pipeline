@@ -1,4 +1,4 @@
-import { portPerMinute, pylonsOf } from './claims';
+import { portPerMinute, pylonsOf, supplyOf } from './claims';
 import { fixtureDef } from './fixtures';
 import type { SimState } from './state';
 import type { SimSummary } from './summary';
@@ -11,6 +11,6 @@ export function portSummary(state: SimState): SimSummary['ports'] {
     const d = fixtureDef(f.id);
     if (d.kind !== 'port' || d.raw === undefined) return [];
     const pylons = pylonsOf(state, f);
-    return [{ id: f.id, raw: d.raw, tx: d.tx, ty: d.ty, pylons, perMinute: portPerMinute(pylons), waiting: f.item !== null }];
+    return [{ id: f.id, raw: d.raw, tx: d.tx, ty: d.ty, pylons, perMinute: portPerMinute(supplyOf(state, f)), waiting: f.item !== null }];
   });
 }

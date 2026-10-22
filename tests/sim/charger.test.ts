@@ -28,7 +28,8 @@ function meadow(dx = 150): { s: SimState; e: EnemyState } {
 }
 
 /** A rock cluster in the meadow's south (tiles 69–71 on row 33, 68–72 on 34, open below at (70, 35)): the Charger north of it at (70, 26). */
-const ROCKS = { charger: homeTile(70, 26), behind: homeTile(70, 37), before: homeTile(70, 31) };
+// 059: the charger a row nearer the rocks (row 27), so its lane reaches the rock's footprint at the foot of its tile.
+const ROCKS = { charger: homeTile(70, 27), behind: homeTile(70, 37), before: homeTile(70, 31) };
 
 describe('the Charger', () => {
   it("has the spec's starting values in data, its wind-up past the telegraph minimum", () => {
@@ -51,6 +52,17 @@ describe('the Charger', () => {
     const far = meadow(charge.triggerRange + 40);
     run(far.s, 1);
     expect(far.e.mode).toBe('chase');
+  });
+
+  it('winds up at a player standing in the top of a rock\'s tile, above its footprint (059)', () => {
+    const s = arena();
+    // The meadow's rock at (72, 34), open ground above it; the Charger four tiles north.
+    const rock = homeTile(72, 34);
+    movePlayer(s, rock.x, rock.y - 8);
+    const e = placeCharger(s, rock.x, homeTile(72, 30).y);
+    run(s, 1);
+    expect(e.mode).toBe('windup');
+    expect({ x: e.swipeDirX, y: e.swipeDirY }).toEqual({ x: 0, y: 1 });
   });
 
   it('locks its lane at the wind-up start from where it stands, and holds it however the player moves', () => {
