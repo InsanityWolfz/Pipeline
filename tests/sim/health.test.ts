@@ -7,7 +7,7 @@ import { nextFloat } from '../../src/sim/rng';
 import { createSim, resetWorld, tileCentre } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { DYING_TICKS } from '../../src/data/player';
-import { arena, at, FIELD_WALL, hold, HUSK, placeHusk, PLAYER_AT, run, runUntilKo, SEED, SWIPE_LANDS, FIELD_ROW } from './fight';
+import { arena, at, hold, HUSK, placeHusk, PLAYER_AT, run, runUntilKo, SEED, SWIPE_LANDS, westWallFoot } from './fight';
 
 const { damage, knockback, knockTicks } = HUSK.swipe;
 
@@ -74,9 +74,10 @@ describe('player health', () => {
   });
 
   it('stops the knockback at a wall', () => {
-    // Against the east face of the ruin field's west wall (017).
-    const face = (FIELD_WALL.west + 1) * 32;
-    const s = arena(SEED, { x: face + 16, y: FIELD_ROW(14) });
+    // Against the east face of the ruin field's west wall (017): its stone's footprint (059).
+    const foot = westWallFoot(14);
+    const face = foot.x + foot.w / 2;
+    const s = arena(SEED, { x: face + 16, y: foot.y });
     hitFromEast(s);
     run(s, knockTicks);
     expect(s.player.x).toBe(face + 8);

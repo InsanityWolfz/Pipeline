@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { straightAmmo } from '../../src/data/ammo';
 import { damageEnemy } from '../../src/sim/enemies';
-import { arena, at, FIELD_WALL, fireAt, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, FIELD_ROW } from './fight';
+import { arena, at, FIELD_WALL, fireAt, hold, HUSK, movePlayer, placeHusk, PLAYER_AT, run, runUntil, FIELD_ROW, westWallFoot } from './fight';
 
 const DAMAGE = straightAmmo('arrow').damage;
 
@@ -80,9 +80,10 @@ describe('Husk knockback', () => {
   });
 
   it('stops at a wall', () => {
-    // The ruin field's west wall (017): its east face.
-    const face = (FIELD_WALL.west + 1) * 32;
-    const y = FIELD_ROW(14);
+    // The ruin field's west wall (017): the east face of its stone's footprint (059).
+    const foot = westWallFoot(14);
+    const face = foot.x + foot.w / 2;
+    const y = foot.y;
     const s = arena(undefined, { x: face + 28, y });
     const e = placeHusk(s, face + 8, y);
     run(s, 1);

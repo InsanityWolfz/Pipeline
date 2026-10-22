@@ -1,9 +1,13 @@
 import { TILE_SIZE } from '../data/config';
 import { SHOT_THROUGH, TILE, WALKABLE, type Room } from '../data/rooms';
+import { footprintAt } from './footprints';
 
 // Feet-box collision against a room's tile grid and solid things standing in it.
 // Anything that isn't floor, including outside the grid, is solid. Door tiles
 // are solid too, except to a mover that passes `doors` (only the player).
+// 059: a small terrain piece (a rock, a ruin stone, a pillar…) blocks feet only over its footprint, the box of its
+// drawn base (src/sim/footprints.ts); its tile still stops shots whole, and stays solid to everything that reads whole
+// tiles (sight lines, cover, drops, spawning).
 
 export interface Box {
   w: number;
@@ -34,16 +38,41 @@ export function overlapsRect(cx: number, cy: number, box: Box, r: Rect): boolean
   return Math.abs(cx - r.x) < (box.w + r.w) / 2 && Math.abs(cy - r.y) < (box.h + r.h) / 2;
 }
 
-/** True if a box centred on (cx, cy) overlaps a solid tile. Touching an edge is not overlap. */
-export function boxHitsSolid(room: Room, cx: number, cy: number, box: Box, doors = false): boolean {
-  const x0 = Math.floor((cx - box.w / 2) / TILE_SIZE);
-  const x1 = Math.ceil((cx + box.w / 2) / TILE_SIZE) - 1;
-  const y0 = Math.floor((cy - box.h / 2) / TILE_SIZE);
-  const y1 = Math.ceil((cy + box.h / 2) / TILE_SIZE) - 1;
-  for (let ty = y0; ty <= y1; ty++) {
-    for (let tx = x0; tx <= x1; tx++) if (isSolid(room, tx, ty, doors)) return true;
+/** The tiles a box centred on (cx, cy) overlaps, as a range. */
+function tilesUnder(cx: number, cy: number, box: Box): { x0: number; x1: number; y0: number; y1: number } {
+  return {
+    x0: Math.floor((cx - box.w / 2) / TILE_SIZE),
+    x1: Math.ceil((cx + box.w / 2) / TILE_SIZE) - 1,
+    y0: Math.floor((cy - box.h / 2) / TILE_SIZE),
+    y1: Math.ceil((cy + box.h / 2) / TILE_SIZE) - 1,
+  };
+}
+
+/** True if a box centred on (cx, cy) overlaps a solid tile that blocks whole (one with no footprint). */
+function hitsWholeTile(room: Room, cx: number, cy: number, box: Box, doors: boolean): boolean {
+  const r = tilesUnder(cx, cy, box);
+  for (let ty = r.y0; ty <= r.y1; ty++) {
+    for (let tx = r.x0; tx <= r.x1; tx++) if (isSolid(room, tx, ty, doors) && footprintAt(room, tx, ty) === null) return true;
   }
   return false;
+}
+
+/** The footprints (059) of the small pieces on the tiles a box centred on (cx, cy) overlaps. */
+function footprintsUnder(room: Room, cx: number, cy: number, box: Box): Rect[] {
+  const r = tilesUnder(cx, cy, box);
+  const out: Rect[] = [];
+  for (let ty = r.y0; ty <= r.y1; ty++) {
+    for (let tx = r.x0; tx <= r.x1; tx++) {
+      const f = isSolid(room, tx, ty) ? footprintAt(room, tx, ty) : null;
+      if (f) out.push(f);
+    }
+  }
+  return out;
+}
+
+/** True if a box centred on (cx, cy) overlaps a solid tile, or a small piece's footprint (059). Touching an edge is not overlap. */
+export function boxHitsSolid(room: Room, cx: number, cy: number, box: Box, doors = false): boolean {
+  return hitsWholeTile(room, cx, cy, box, doors) || footprintsUnder(room, cx, cy, box).some((f) => overlapsRect(cx, cy, box, f));
 }
 
 /**
@@ -62,7 +91,10 @@ export function moveBox(
   obstacles: readonly Rect[] = [],
   doors = false,
 ): { hitX: boolean; hitY: boolean } {
-  const blocking = obstacles.filter((r) => !overlapsRect(pos.x, pos.y, box, r));
+  // 059: the footprints of small pieces round the move stop it like obstacles.
+  const reach = { w: box.w + 2 * Math.abs(dx), h: box.h + 2 * Math.abs(dy) };
+  const all = [...obstacles, ...footprintsUnder(room, pos.x, pos.y, reach)];
+  const blocking = all.filter((r) => !overlapsRect(pos.x, pos.y, box, r));
   const hitX = moveAxis(room, pos, box, dx, 'x', blocking, doors);
   const hitY = moveAxis(room, pos, box, dy, 'y', blocking, doors);
   return { hitX, hitY };
@@ -83,7 +115,7 @@ function moveAxis(
   const nx = axis === 'x' ? next : pos.x;
   const ny = axis === 'y' ? next : pos.y;
   let stop: number | undefined;
-  if (boxHitsSolid(room, nx, ny, box, doors)) {
+  if (hitsWholeTile(room, nx, ny, box, doors)) {
     // Flush to the edge of the tile that was hit.
     stop =
       d > 0

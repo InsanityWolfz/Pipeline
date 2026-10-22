@@ -11,7 +11,8 @@ import { arena, fireAt, HALL, hold, movePlayer, placeHusk, PLAYER_AT, run, runUn
 
 /** A Charger run into the rocks south of it (charger.test.ts's), on the tick the wall dazes it. */
 function dazedCharger(s: SimState): EnemyState {
-  const rocks = { charger: homeTile(70, 26), before: homeTile(70, 31) };
+  // 059: a row nearer the rocks (27), so its lane reaches the rock's footprint at the foot of its tile.
+  const rocks = { charger: homeTile(70, 27), before: homeTile(70, 31) };
   const e = createEnemy(s.nextEnemyId++, 'charger', rocks.charger, HALL);
   s.enemies.push(e);
   movePlayer(s, rocks.before.x, rocks.before.y);

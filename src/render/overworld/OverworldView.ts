@@ -15,6 +15,7 @@ import { drawGround } from './ground';
 import { inHollows } from '../../data/hollows';
 import { hollowsFrame } from '../hollowsTiles';
 import { isPlateau } from './plateau';
+import { pieceFrame } from '../../sim/tileLook';
 
 // Draws the overworld (017): its ground baked into chunk textures, then every tree, rock, ruin and the foundry's ruin
 // as vector sprites sorted by their feet; the ley barrier dome over the shrine site while its gate is shut; and
@@ -162,7 +163,6 @@ export class OverworldView {
     const hash = tileHash(tx, ty);
     const x = (tx + 0.5) * T;
     const bottom = (ty + 1) * T;
-    const mound = OVERWORLD.entrance.mound.some((t) => t.tx === tx && t.ty === ty);
     // A landmark's own look (032): the Old Grove's old trees, the Quarry's cut blocks, the Husk Hive's nest stones (049).
     const landmark = LANDMARK_LIST.find((l) => tx >= l.area.x0 && tx <= l.area.x1 && ty >= l.area.y0 && ty <= l.area.y1);
     let frame: string | undefined;
@@ -175,12 +175,10 @@ export class OverworldView {
     else if (symbol === TILE.tree) {
       frame = OVERWORLD_SPRITES.trees[hash % OVERWORLD_SPRITES.trees.length];
       jitter = ((hash >>> 8) % 9) - 4;
-    } else if (symbol === TILE.rock) frame = OVERWORLD_SPRITES.rocks[hash % OVERWORLD_SPRITES.rocks.length];
-    else if (symbol === TILE.wall) frame = OVERWORLD_SPRITES.ruinWall;
+    } else if (symbol === TILE.wall) frame = OVERWORLD_SPRITES.ruinWall;
     else if (symbol === TILE.door) frame = OVERWORLD_SPRITES.entrance;
-    else if (symbol === TILE.ruinBlock && landmark?.look?.blocks === 'cut') frame = LANDMARK_SPRITES.cutBlocks[hash % LANDMARK_SPRITES.cutBlocks.length];
-    else if (symbol === TILE.ruinBlock && landmark?.look?.blocks === 'hive') frame = LANDMARK_SPRITES.hiveStones[hash % LANDMARK_SPRITES.hiveStones.length];
-    else if (symbol === TILE.ruinBlock && !mound) frame = hash % 3 === 0 ? OVERWORLD_SPRITES.column : OVERWORLD_SPRITES.ruinStone;
+    // 059: rocks and ruin blocks (a landmark's own, the ruin's columns and stones) by the rule their footprints follow.
+    else if (this.room && (symbol === TILE.rock || symbol === TILE.ruinBlock)) frame = pieceFrame(this.room, tx, ty);
     if (!frame) return null;
     const image = addVector(this.scene, x + jitter, bottom, frame).setDepth(bottom);
     if (symbol === TILE.tree && (hash >>> 16) % 2 === 0) image.setFlipX(true);

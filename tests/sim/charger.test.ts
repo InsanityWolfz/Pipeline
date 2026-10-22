@@ -28,7 +28,8 @@ function meadow(dx = 150): { s: SimState; e: EnemyState } {
 }
 
 /** A rock cluster in the meadow's south (tiles 69–71 on row 33, 68–72 on 34, open below at (70, 35)): the Charger north of it at (70, 26). */
-const ROCKS = { charger: homeTile(70, 26), behind: homeTile(70, 37), before: homeTile(70, 31) };
+// 059: the charger a row nearer the rocks (row 27), so its lane reaches the rock's footprint at the foot of its tile.
+const ROCKS = { charger: homeTile(70, 27), behind: homeTile(70, 37), before: homeTile(70, 31) };
 
 describe('the Charger', () => {
   it("has the spec's starting values in data, its wind-up past the telegraph minimum", () => {

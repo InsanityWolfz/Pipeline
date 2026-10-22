@@ -9,6 +9,9 @@ import { stepSim } from '../../src/sim/step';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { tileCentre } from '../../src/sim/tiles';
 import { HOME_SHIFT } from '../../src/data/home';
+import type { Rect } from '../../src/sim/collision';
+import { footprintAt } from '../../src/sim/footprints';
+import { WORLD } from '../../src/sim/world';
 
 // Fight scenarios in the overworld's meadow (017): open ground beside the ruin field, the sandbox start.
 
@@ -122,6 +125,17 @@ export const FIELD_WALL = {
   west: Math.min(...OVERWORLD.ruinField.walls.map((t) => t.tx)),
   east: Math.max(...OVERWORLD.ruinField.walls.map((t) => t.tx)),
 } as const;
+
+/**
+ * 059: the footprint of the ruin field's west wall stone on a row (home coordinates), the box that stops feet there (a
+ * ruin stone or column blocks only its drawn base).
+ */
+export function westWallFoot(ty: number): Rect {
+  const room = WORLD[OVERWORLD_ROOM];
+  const f = room ? footprintAt(room, FIELD_WALL.west, ty + HOME_SHIFT.dy) : null;
+  if (!f) throw new Error(`no west wall stone on row ${ty}`);
+  return f;
+}
 
 /** The ruin hall's arena centre, where pre-017 tests measured from. */
 const HALL_AT = { x: 400, y: 448 } as const;

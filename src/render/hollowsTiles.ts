@@ -1,6 +1,7 @@
 import { HOLLOWS } from '../data/hollows';
 import { HOLLOWS_SPRITES } from '../data/hollowsAssets';
 import { TILE, type Room } from '../data/rooms';
+import { hollowsPiece } from '../sim/tileLook';
 
 // Stonefall Hollows' standing tiles (034), shared by the overworld's view and, since 044, the
 // tiled rooms' (the sandbox's Sunken Forum).
@@ -18,9 +19,7 @@ export function hollowsFrame(symbol: string, tx: number, ty: number, hash: numbe
   // 059: the forum's own walls (the cliffs round its outline) are drawn dark, as walls.
   if (symbol === TILE.cliff && onForumWall(tx, ty)) return S.forumWall;
   if (symbol === TILE.cliff) return room?.rows[ty + 1]?.[tx] === TILE.cliff ? S.cliffTop : S.cliffs[hash % S.cliffs.length];
-  if (symbol === TILE.pillar) return S.pillar;
   if (symbol === TILE.arch) return S.arch;
-  if (symbol === TILE.fallen) return S.fallen[hash % S.fallen.length];
-  if (symbol === TILE.rock) return S.rubble[hash % S.rubble.length];
-  return undefined;
+  // 059: its small pieces (pillars, fallen spans, rubble) by the same rule collision reads their footprints by.
+  return hollowsPiece(symbol, hash);
 }
