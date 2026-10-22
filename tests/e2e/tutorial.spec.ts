@@ -2,7 +2,9 @@ import { expect, test, type Page } from '@playwright/test';
 import { boot, watchErrors } from './helpers';
 import { OVERWORLD } from '../../src/data/overworld';
 import { OBJECTIVES } from '../../src/data/objectives';
-import { AFTER_REFILL, REFILL_GOAL, SECOND_LINE_GOAL } from '../fixtures/foundrySteps';
+import { FILL_GOAL as AFTER_REFILL, REFILL_GOAL } from '../fixtures/foundrySteps';
+
+const SECOND_LINE_GOAL = 'Put ley bolts into the second entrance (B)';
 
 // The prototype end to end (012): a fresh tutorial start, no ?playtest, every
 // beat played through the hook in order, checking each objective advances.
@@ -288,7 +290,7 @@ test('the whole prototype plays through from the start stone', async ({ page }) 
     return s ? { complete: s.prototypeComplete, objective: s.objective } : null;
   });
   // The prototype is done, and the line goes on to Milestone 1's first goal (028) rather than going blank.
-  const port = OBJECTIVES.findIndex((o) => o.check.kind === 'portDelivered');
+  const port = OBJECTIVES.findIndex((o) => o.check.kind === 'outside') + 1;
   expect(end).toEqual({ complete: true, objective: { index: port, text: 'Run a supply port into your line' } });
   expect(errors).toEqual([]);
 });

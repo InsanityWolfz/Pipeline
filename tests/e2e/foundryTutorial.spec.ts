@@ -3,13 +3,13 @@ import { boot, cameraSettled, watchErrors } from './helpers';
 import { centre, state } from './foundryPage';
 import { EXAMPLE_LINE } from '../../src/data/exampleLine';
 import { OBJECTIVES } from '../../src/data/objectives';
-import { AFTER_REFILL, REFILL_GOAL } from '../fixtures/foundrySteps';
+import { REFILL_GOAL, TRAVEL_GOAL } from '../fixtures/foundrySteps';
 
 // 046 (note 10, 027): the foundry tutorial from the example line. A new game takes the tube, the ruin field's pack
 // falls (by the hook), and the first walk into the foundry finds a complete arrow line, which starts with the attune:
 // its machines pop "+ shaft" and the rest, and arrows go up the tube. Out in the field the tube fires until the line
-// runs dry; the objective line then asks for its hoppers to be refilled, with E over a hopper, and refilling them
-// ticks it off. With REVIEW_SHOTS=1, the review screenshots go in docs/review/046.
+// runs dry; 058: back home by fast travel (the hook here), the objective line then asks for its hoppers to be
+// refilled, with E over a hopper, and refilling them ticks it off. With REVIEW_SHOTS=1, the review screenshots go in docs/review/046.
 
 const SHOTS = 'docs/review/046';
 const SHOOT = !!process.env.REVIEW_SHOTS;
@@ -68,9 +68,9 @@ test('a new game finds the example line in the foundry, sees arrows go up the tu
   }
   await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
 
-  // Every goal before the refill done (the hook), so the line shows what the foundry asks next: not the refill yet.
-  s = await page.evaluate((n) => window.__GAME__?.completeObjectives(n), REFILL) ?? s;
-  expect(s.objective.text).not.toBe(REFILL_GOAL);
+  // Every goal before the fast travel home done (the hook): the line asks for the fast travel, not the refill.
+  s = await page.evaluate((n) => window.__GAME__?.completeObjectives(n), REFILL - 1) ?? s;
+  expect(s.objective.text).toBe(TRAVEL_GOAL);
   expect(s.lineRanDry).toBe(false);
 
   // Out in the field, the tube fires until the line has sent up its last arrow.
@@ -87,6 +87,8 @@ test('a new game finds the example line in the foundry, sees arrows go up the tu
     return x;
   }) ?? s;
   expect(s.lineRanDry).toBe(true);
+  // The fast travel home (the hook marks it done): the line ran dry first, so the refill shows.
+  s = await page.evaluate((n) => window.__GAME__?.completeObjectives(n), REFILL) ?? s;
   expect(s.objective).toEqual({ index: REFILL, text: REFILL_GOAL });
 
   // Back in, with a wood, a stone and a fiber: E over the nearest hopper.
@@ -125,7 +127,7 @@ test('a new game finds the example line in the foundry, sees arrows go up the tu
   expect(s.refilled).toEqual(['wood', 'stone', 'fiber']);
   expect(s.objective.text).not.toBe(REFILL_GOAL);
   expect(s.objective.index ?? OBJECTIVES.length).toBeGreaterThan(REFILL);
-  expect(OBJECTIVES[REFILL + 1]?.text).toBe(AFTER_REFILL);
+  expect(OBJECTIVES[REFILL + 1]?.text).toBe('Restore the right intake entrance (E with the warden core)');
 
   // Nothing paused the game or opened a panel along the way.
   const after = await ui(page);

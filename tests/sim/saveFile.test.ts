@@ -64,7 +64,7 @@ describe('save envelope (042)', () => {
   it('047.9: a version 4 save (before the carried items\' hint) reads as too old: no migration, by Shaun\'s rule', () => {
     const v4 = { ...makeEnvelope(snapshot(sim()), META), version: 4 };
     expect(readSave(text(v4)).status).toBe('too-old');
-    expect(SAVE_VERSION).toBe(11);
+    expect(SAVE_VERSION).toBe(12);
     expect(SAVE_MIGRATIONS[4]).toBeUndefined();
   });
 
@@ -94,7 +94,7 @@ describe('save envelope (042)', () => {
     const env = good();
     const state = { ...(env.state as unknown as Record<string, unknown>) };
     delete state.killedBosses;
-    delete state.awayTicks;
+    delete state.travelled;
     const player = { ...(state.player as Record<string, unknown>) };
     delete player.wardTicks;
     state.player = player;
@@ -102,7 +102,7 @@ describe('save envelope (042)', () => {
     expect(read.status).toBe('ok');
     if (read.status === 'ok') {
       expect(read.state.killedBosses).toEqual([]);
-      expect(read.state.awayTicks).toBe(0);
+      expect(read.state.travelled).toBe(false);
       expect(read.state.player.wardTicks).toBe(sim().player.wardTicks);
     }
   });

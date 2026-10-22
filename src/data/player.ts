@@ -55,6 +55,8 @@ export interface StartDef {
   sandbox?: boolean;
   /** 046: the example line (src/data/exampleLine.ts) stands in the foundry from the first entry. The real game's start only. */
   exampleLine?: boolean;
+  /** 058: the guided tutorial's builds and build lock (src/data/guidedBuilds.ts). The real game's start only. */
+  guided?: boolean;
 }
 
 /**
@@ -84,6 +86,7 @@ export const TUTORIAL_START: StartDef = {
   gatesOpen: false,
   populated: false,
   exampleLine: true,
+  guided: true,
 };
 
 /** Where a death wakes the player (011). */

@@ -4,8 +4,8 @@ import type { SaveEnvelope } from './save';
 // Save version 2 → 3 (046: foundry onboarding). The Splitter is on the build bar from the start, so its research
 // node and its schematic are gone: a version 2 save's `research.splitter` and every `schematic-splitter` it holds
 // are dropped, with nothing refunded (046.5). The objectives, saved by index, are mapped from version 2's list onto
-// this one by text: 027's build steps are gone, the refill goal counts as done where "Put wood in the hopper" was, and
-// the second-line goal where "Feed two entrances" was. A save keeps its start, so it never gets the example line (046.1).
+// this one by text: 027's build steps are gone, and the refill goal counts as done where "Put wood in the hopper" was
+// (058 reworded it and dropped 046's second-line goal). A save keeps its start, so it never gets the example line (046.1).
 
 /** The item and the node 046 removed. */
 const GONE_ITEM = 'schematic-splitter';
@@ -50,8 +50,7 @@ const V2_OBJECTIVES: readonly string[] = [
 
 /** 046's new goals, each done in a version 2 save where the old goal it stands for was. */
 const STANDS_FOR: Readonly<Record<string, string>> = {
-  'Refill the hoppers with wood, stone and fiber (E)': 'Put wood in the hopper (E)',
-  'Feed ammo into the new entrance': 'Feed two entrances to fire a spread',
+  'Refill the hoppers in the foundry with wood, stone and fiber (E)': 'Put wood in the hopper (E)',
 };
 
 /** Version 2's done-list as this version's, by each goal's text. */

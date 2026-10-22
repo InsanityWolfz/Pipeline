@@ -12,6 +12,7 @@ import { roomById, type SimState } from './state';
 import { machineRecipe, stagesUnlocked } from './stages';
 import { lockedByResearch } from './research';
 import { pairOnPlace, tunnelContents, unpair } from './tunnels';
+import { guidedShape, lockRefusal, pickUpRefusal } from './guided';
 
 // Placing pieces on the foundry grid and picking them back up. Both are free.
 
@@ -34,6 +35,9 @@ export function unlockedPieces(state: Pick<SimState, 'crafted' | 'research'>): s
 export function canPlace(state: SimState, pieceId: string, tx: number, ty: number, facing: Facing): PlaceFail | null {
   if (state.roomId !== FOUNDRY_ROOM) return 'not-foundry';
   if (!unlockedPieces(state).includes(pieceId)) return 'locked';
+  // 058: the tutorial's build lock, which lets through only the guided step's next ghost.
+  const refused = lockRefusal(state, pieceId, tx, ty, facing);
+  if (refused) return refused;
   const room = roomById(FOUNDRY_ROOM);
   const tiles = footprint(pieceId, tx, ty, facing);
   if (tiles.some((t) => room.rows[t.ty]?.[t.tx] !== TILE.floor)) return 'blocked';
@@ -78,8 +82,9 @@ export function place(state: SimState, pieceId: string, tx: number, ty: number, 
     return null;
   }
   const kind = pieceDef(pieceId).kind;
+  const guided = guidedShape(state, shape);
   const made: PieceShape =
-    kind === 'conduit' ? { inFrom: conduitInFrom(state, tx, ty, facing, shape.inFrom) } : kind === 'splitter' ? { mirrored: shape.mirrored ?? false } : {};
+    kind === 'conduit' ? { inFrom: conduitInFrom(state, tx, ty, facing, guided.inFrom) } : kind === 'splitter' ? { mirrored: shape.mirrored ?? false } : {};
   const piece = createPiece(state.foundry.nextPieceId++, pieceId, tx, ty, facing, made);
   state.foundry.pieces.push(piece);
   pairOnPlace(state.foundry, piece);
@@ -106,9 +111,12 @@ export function pieceContents(p: PieceState): Inventory {
   return items;
 }
 
-/** Removes the piece covering a tile, putting what it held in the inventory. Only in the foundry. */
+/** Removes the piece covering a tile, putting what it held in the inventory. Only in the foundry, and (058) as the build lock allows. */
 export function pickUp(state: SimState, tx: number, ty: number): void {
-  if (state.roomId === FOUNDRY_ROOM) removePieceAt(state, tx, ty);
+  if (state.roomId !== FOUNDRY_ROOM || !pieceAt(state.foundry, tx, ty)) return;
+  const refused = pickUpRefusal(state, tx, ty);
+  if (refused) state.events.pickUpFails.push({ tx, ty, reason: refused });
+  else removePieceAt(state, tx, ty);
 }
 
 /** Removes the piece covering a foundry tile wherever the player is, putting what it held in the inventory. */
