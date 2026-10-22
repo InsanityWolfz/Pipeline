@@ -1,5 +1,7 @@
 # 060: Region 3: the Emberworks and the Forgewright
-status: draft
+status: approved
+
+Approved by Shaun in chat, 2026-10-22 ("Approve 60"), with the draft's listed decisions.
 
 Drafted from Shaun's region brainstorm and spec interview (docs/brainstorm/2026-10-22-region-3.md), 2026-10-22.
 
