@@ -2,6 +2,11 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-22: Region 3 brainstorm
+**Changed:** Shaun's spoken idea (material tiers: better raws from harder regions, processed into the lines you already have, so a build keeps its stages and talents) and a region built on it are in docs/brainstorm/2026-10-22-region-3.md: the Emberworks, ley-steel from ley-iron plus cinderite in a Smelter, the Fire rune, the Bulwark's empty wing as the forge room, and the Forgewright boss. No code.
+
+**Next:** Shaun answers the brainstorm's open questions; then a spec.
+
 ## 2026-10-22: 059 World and arena polish (058 and 059 merged)
 **Changed:** on `claude/059-world-polish` (InsanityWolfz/Pipeline#65): paths read as one shape where they cross or join (every road's edge drawn before any road's dirt); small rocks, rubble, ruin stones, pillars and the forum's columns block feet, shots and every sight line only over their drawn base (`src/data/footprints.ts`; 059.5 shots too, Shaun's call); the forum's walls drawn dark; arena enemies, the Warden included, wait until E puts the player through the door; no boss-door descriptions ("Sealed" when shut); the seal hum at half volume; the Grotto's pylon at 30 rimestone a minute. Also merged today: the New game after Quit fix (#66), the diagonal flicker fix (#67), per-branch preview queues (#68).
 
