@@ -237,3 +237,7 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - CI (`.github/workflows/ci.yml`) runs on every push: `npm run check`, then Playwright in 4 shards (`--shard=N/4`), push trigger only so PRs don't run twice. Review shots stay out of CI (they skip without REVIEW_SHOTS=1).
 - **Housekeeping (2026-10-22):**
   - Files at or over the ~300-line limit split along their seams, no behaviour change: enemy separation in `src/sim/separation.ts` (from `enemies.ts`); the player and springs part of `getState()` in `src/sim/summaryPlayer.ts` (from `summary.ts`); the mouse in `src/render/pointerInput.ts` (from `controls.ts`); GameScene's cursor-driven UI in `src/render/pointerUi.ts` and the room on screen through a door's fade in `src/render/roomFollow.ts`.
+- **059 world polish:**
+  - A terrain piece smaller than its tile has a footprint box in `src/data/footprints.ts` (from its sprite's base, rounded out, clipped to the tile); a test checks each against its sprite. Feet, shots and every line across the grid (`src/sim/sightLine.ts`: punch reach, Charger runs, Sniper sight, cover and laser) read the same box; drops and spawning read whole tiles. Lookups are cached per room (`src/sim/footprints.ts`, a WeakMap).
+  - Which sprite a tile shows is decided in `src/sim/tileLook.ts`, so drawing and collision can't disagree.
+  - Roads draw in two passes, every edge then every dirt fill, so joins have no seams.

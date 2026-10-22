@@ -2,6 +2,15 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-22: 059 World and arena polish
+**Changed:** on `claude/059-world-polish` (InsanityWolfz/Pipeline#65): paths read as one shape where they cross or join (every road's edge drawn before any road's dirt); small rocks, rubble, ruin stones, pillars and the forum's columns block feet, shots and every sight line only over their drawn base (`src/data/footprints.ts`; 059.5 shots too, Shaun's call); the forum's walls drawn dark; arena enemies, the Warden included, wait until E puts the player through the door; no boss-door descriptions ("Sealed" when shut); the seal hum at half volume; the Grotto's pylon at 30 rimestone a minute. Also merged today: the New game after Quit fix (#66), the diagonal flicker fix (#67), per-branch preview queues (#68).
+
+**Next:** Shaun's playtest of the preview; "merge 65" when happy.
+
+**Notes:**
+- `npm run measure`: the Bulwark's decent build meets all three on 16/20 seeds (main 8/20) with 3 KOs against the ≤2 target; the forum's columns now block only their footprints, so it's an easier fight. Recorded, not tuned.
+- Two older shot tests fail on main in this container too (bossDoorsShots' Bulwark door, readabilityShots' HP bar); worth a fix-track look.
+
 ## 2026-10-22: Housekeeping
 **Changed:** a cleanup batch at Shaun's request, each its own PR, all merged: workflow actions on v5 (InsanityWolfz/Pipeline#57); progress entries before 050 moved to docs/progress-archive.md (#58); agent worktrees under .claude/worktrees ignored by git and ESLint (#59); files over 300 lines split (#60: separation.ts, pointerInput.ts, pointerUi.ts, roomFollow.ts, summaryPlayer.ts); the bomb+frost+cluster summary no longer cut under full font hinting (#61: a Burst line drops "dmg" only when the summary wouldn't fit, Shaun OK'd); all 37 review-shot specs run again (#62). Shaun deleted the old branches and turned on "Automatically delete head branches", so merged PR branches go away by themselves.
 
