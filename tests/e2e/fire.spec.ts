@@ -6,7 +6,7 @@ import { bootSandbox, setRound, openPanel } from './sandboxPage';
 // 060: Fire in the game. In the sandbox, a Fire bomb lobbed into a pack sets it burning: the enemies show flames,
 // and their burns beat as small numbers once a second.
 
-/** The sandbox with entrance 0 on Fire bombs (set from the panel as a player would) and the other two empty. */
+/** The sandbox with entrance 0 on Fire bombs (set from the panel as a player would) and the other three empty. */
 async function fireBombs(page: Page): Promise<void> {
   await bootSandbox(page);
   await openPanel(page);
@@ -16,6 +16,7 @@ async function fireBombs(page: Page): Promise<void> {
     if (!g) throw new Error('no game');
     g.step(1, { sandbox: { kind: 'loadout', entrance: 1, round: null } });
     g.step(1, { sandbox: { kind: 'loadout', entrance: 2, round: null } });
+    g.step(1, { sandbox: { kind: 'loadout', entrance: 3, round: null } });
     g.step(1, { sandbox: { kind: 'god', on: true } });
     // A pack of Husks ahead, tough enough to burn a while (ring 3).
     g.step(1, { sandbox: { kind: 'spawn', enemyId: 'husk', ring: 3, champion: false, count: 5 } });
@@ -26,7 +27,7 @@ test('a Fire bomb sets a pack burning: flames on the enemies, and burn numbers o
   test.setTimeout(120_000);
   const errors = watchErrors(page);
   await fireBombs(page);
-  expect(await page.evaluate(() => window.__GAME__?.getState().loadout)).toEqual(['bomb+fire', null, null]);
+  expect(await page.evaluate(() => window.__GAME__?.getState().loadout)).toEqual(['bomb+fire', null, null, null]);
   // Lob at the pack's middle until one burns.
   await expect
     .poll(

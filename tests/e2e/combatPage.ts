@@ -51,9 +51,10 @@ export async function starShot(page: Page, after: number): Promise<number> {
   await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    (['ley-bolt+split', null, null] as const).forEach((round, entrance) => g.step(1, { sandbox: { kind: 'loadout', entrance, round } }));
+    // 060: four entrances, the other three empty.
+    (['ley-bolt+split', null, null, null] as const).forEach((round, entrance) => g.step(1, { sandbox: { kind: 'loadout', entrance, round } }));
   });
-  await expect.poll(() => page.evaluate(() => window.__GAME__?.getState().loadout)).toEqual(['ley-bolt+split', null, null]);
+  await expect.poll(() => page.evaluate(() => window.__GAME__?.getState().loadout)).toEqual(['ley-bolt+split', null, null, null]);
   await quietScreen(page);
   return page.evaluate((ticks) => {
     const g = window.__GAME__;

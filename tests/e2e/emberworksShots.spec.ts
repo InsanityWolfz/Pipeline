@@ -116,6 +116,7 @@ test.describe('review screenshots (060)', () => {
       if (!g) throw new Error('no game');
       g.step(1, { sandbox: { kind: 'loadout', entrance: 1, round: null } });
       g.step(1, { sandbox: { kind: 'loadout', entrance: 2, round: null } });
+      g.step(1, { sandbox: { kind: 'loadout', entrance: 3, round: null } });
       g.step(1, { sandbox: { kind: 'god', on: true } });
       g.step(1, { sandbox: { kind: 'spawn', enemyId: 'husk', ring: 3, champion: false, count: 5 } });
     });
