@@ -25,7 +25,7 @@ test('a key picks the landmines\' carried slot: one arms where it lands, only it
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
     // Quiet ground: every enemy gone.
-    for (const e of g.getState().enemies) g.setEnemyHealth(e.id, 0);
+    for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
     let s = g.step(1);
     const at = { x: s.player.x + 120, y: s.player.y };
     s = g.step(1, { use: true, aimX: at.x, aimY: at.y });
@@ -80,7 +80,7 @@ test('cluster bombs crafted (047: in C) unlock the Cluster die, and their bomble
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     h.toHall();
-    for (const e of g.getState().enemies) g.setEnemyHealth(e.id, 0);
+    for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
     window.__helpers?.hold('bomb+cluster');
     let s = g.step(0);
     // A Husk 120 px off, and one 40 px past it, where the far bomblet lands, outside the bomb's own 48 px.

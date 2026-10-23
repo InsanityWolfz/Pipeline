@@ -20,7 +20,8 @@ async function emberworks(page: Page): Promise<void> {
   await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    for (const e of g.getState().enemies) g.setEnemyHealth(e.id, 0);
+    // 060: the Forgewright spared, far off in its hall (its first kill is the end card's).
+    for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
     g.step(200);
   });
   if ((await page.evaluate(() => window.__GAME__?.flow().state)) === 'endCard') {
