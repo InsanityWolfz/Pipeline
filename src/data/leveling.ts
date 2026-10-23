@@ -20,6 +20,9 @@ export const CLAIM_XP = 50;
 /** A landmark's first discovery (032's event, once per landmark). */
 export const LANDMARK_XP = 25;
 
+/** The Forgewright's first kill (060). */
+export const FORGEWRIGHT_XP = 500;
+
 /** A boss killed again (034's altar refight) gives this share of its XP. */
 export const BOSS_REFIGHT_XP = 0.5;
 

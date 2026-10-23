@@ -20,7 +20,7 @@ async function field(page: Page): Promise<{ x: number; y: number }> {
   const p = await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark') g.setEnemyHealth(e.id, 0);
+    for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark' && e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
     return g.step(1).player;
   });
   await cameraSettled(page, 20_000);

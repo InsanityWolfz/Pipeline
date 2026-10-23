@@ -85,6 +85,11 @@ function zoneOf(e: EnemyState, def: EnemyDef, left: (windup: number) => number):
       if (e.mode === 'windup') return { kind: 'circle', x: e.x, y: e.y, r: def.pound.radius, left: left(w.pound), rollProof: def.pound.rollProof };
       return e.mode === 'stomp-windup' ? { kind: 'arc', x: e.x, y: e.y, r: def.stomp.radius, dirX: e.swipeDirX, dirY: e.swipeDirY, deg: def.stomp.arcDegrees, left: left(w.stomp) } : null;
     }
+    case 'forgewright': {
+      // 060: its slam's circle ahead of it (its flood and spray the Forgewright's own bot reads, tests/sim/forgewrightBot.ts).
+      const r = def.slam.reach;
+      return e.mode === 'windup' ? { kind: 'circle', x: e.x + e.swipeDirX * r, y: e.y + e.swipeDirY * r, r: def.slam.radius, left: left(def.slam.windupTicks) } : null;
+    }
     case 'caster':
       return null;
   }
@@ -108,7 +113,7 @@ export function dangerZones(s: SimState): Zone[] {
   for (const o of s.orbs) {
     if (o.roomId !== s.roomId) continue;
     const def = defOf({ enemyId: o.enemyId, champion: null, ring: 0 });
-    const speed = def.kind === 'sniper' ? def.snipe.boltSpeed : def.kind === 'caster' ? def.cast.orbSpeed : 0;
+    const speed = def.kind === 'sniper' ? def.snipe.boltSpeed : def.kind === 'caster' ? def.cast.orbSpeed : def.kind === 'forgewright' ? def.spray.speed : 0;
     out.push({ kind: 'lane', x: o.x, y: o.y, dirX: o.dx, dirY: o.dy, length: (speed / TICK_RATE) * 40, width: 14, left: 0, age: speed > 0 ? Math.floor(o.travelled / (speed / TICK_RATE)) : 0 });
   }
   return out;

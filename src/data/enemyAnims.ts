@@ -7,10 +7,11 @@ const WALK_FRAMES = 4;
 
 /**
  * Poses only some enemies have (034: the Bulwark's turn, lob, throw and shield block; 035: the Charger's stun, the
- * Burrower's dig, the Sniper's step out of cover; 041: the Bulwark's roar, and its stomp's brace and stamp), besides
+ * Burrower's dig, the Sniper's step out of cover; 041: the Bulwark's roar, and its stomp's brace and stamp; 060: the
+ * Forgewright's spray, flood and vent stagger), besides
  * `recover`.
  */
-export type ExtraPose = 'turn' | 'lob' | 'throw' | 'block' | 'stun' | 'dig' | 'step' | 'roar' | 'brace' | 'stomp';
+export type ExtraPose = 'turn' | 'lob' | 'throw' | 'block' | 'stun' | 'dig' | 'step' | 'roar' | 'brace' | 'stomp' | 'spray' | 'flood' | 'vent';
 
 /** Enemy animations. `side` faces right; left is drawn flipped. Death has one view. `recover` is optional: without it, a recovering enemy shows idle. */
 export type EnemyAnim = `${'idle' | 'walk' | 'windup' | 'swipe' | 'recover' | 'hit' | ExtraPose}-${'down' | 'up' | 'side'}` | 'death';
@@ -23,8 +24,8 @@ const ENEMY_WALK_FPS = 6;
 const SWIPE_FPS = 20;
 const DEATH_FPS = 8;
 
-/** Looping poses of more than one frame: the Bulwark's shuffle, a Charger's daze, a Burrower digging, a Sniper's sidestep. */
-const MULTI_FRAME_EXTRAS: Readonly<Partial<Record<ExtraPose, number>>> = { turn: 2, stun: 2, dig: 2, step: 2, roar: 2 };
+/** Looping poses of more than one frame: the Bulwark's shuffle, a Charger's daze, a Burrower digging, a Sniper's sidestep, the Forgewright's vent stagger (060). */
+const MULTI_FRAME_EXTRAS: Readonly<Partial<Record<ExtraPose, number>>> = { turn: 2, stun: 2, dig: 2, step: 2, roar: 2, vent: 2 };
 
 /** `windupFrames` > 1 makes the wind-up loop at walk pace (035: a Charger pawing the ground). */
 export function enemyAnims(prefix: string, recover = false, extras: readonly ExtraPose[] = [], windupFrames = 1): EnemyAnims {

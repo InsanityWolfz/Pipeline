@@ -87,9 +87,10 @@ export class HollowsView {
     const state = here ? altarState(sim, HOLLOWS.arena.altar.id) : null;
     this.altar.setVisible(here);
     if (state) showFrame(this.altar, state === 'awake' ? HOLLOWS_SPRITES.altar.awake : state === 'summoning' ? HOLLOWS_SPRITES.altar.summoning : HOLLOWS_SPRITES.altar.dim);
-    if (sim.summoning === null && this.shownState.summonCircle) this.riseMs = L.summon.riseMs;
+    if (sim.summoning?.altar !== HOLLOWS.arena.altar.id && this.shownState.summonCircle) this.riseMs = L.summon.riseMs;
     this.riseMs = Math.max(0, this.riseMs - deltaMs);
-    const summoning = here && sim.summoning !== null;
+    // 060: the forum's own summon (the Anvil Hall's is EmberworksView's).
+    const summoning = here && sim.summoning?.altar === HOLLOWS.arena.altar.id;
     this.drawSummon(summoning ? (sim.summoning?.ticks ?? 0) / HOLLOWS.arena.summonTicks : null);
     const bombs = this.drawBombs(sim, arenaHere);
     this.shownState = { barrier: this.barrierState, barrierAlpha: alpha, altar: state, summonCircle: summoning, enemyBombs: bombs };

@@ -1,6 +1,6 @@
 import { ADDS_GROUP } from '../data/bulwark';
 import type { BulwarkDef } from '../data/enemies';
-import { arenaOf } from '../data/hollows';
+import { arenaOf } from '../data/arenas';
 import { enter, hold, inArc } from './aiCommon';
 import { createEnemy, type EnemyState } from './enemies';
 import { damagePlayer } from './health';
@@ -126,7 +126,7 @@ export function riseAddsIfDue(state: SimState, e: EnemyState, def: BulwarkDef): 
     if (alive + def.adds.enemies.length > def.adds.maxAlive) return;
   }
   e.addsCooldown = def.adds.everyTicks;
-  const spots = arena.addTiles.map(tileCentre);
+  const spots = (arena.addTiles ?? []).map(tileCentre);
   const far = (at: { x: number; y: number }) => Math.hypot(at.x - state.player.x, at.y - state.player.y) >= def.adds.minDistance;
   const used = new Set<number>();
   const risen = def.adds.enemies.flatMap((enemyId, i) => {

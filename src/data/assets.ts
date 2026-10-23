@@ -1,6 +1,7 @@
 // Asset keys. Render code loads and draws by these keys, never string literals.
 import { enemyAnims, type EnemyAnims } from './enemyAnims';
 import { HOLLOWS_ENEMY_ANIMS } from './hollowsEnemyAssets';
+import { FORGE_ANIMS } from './forgewrightAssets';
 
 /** Vector frames drawn at boot (016): one texture of shelf-packed canvas pages, holding every sprite frame by name. */
 export const VECTOR_KEY = 'vectors';
@@ -142,6 +143,7 @@ export const ENEMY_ANIMS: Readonly<Record<string, EnemyAnims>> = {
   warden: enemyAnims('warden', true),
   bulwark: enemyAnims('bulwark', true, ['turn', 'lob', 'throw', 'block', 'roar', 'brace', 'stomp']),
   ...HOLLOWS_ENEMY_ANIMS,
+  ...FORGE_ANIMS,
 };
 
 /** The sparkle played where an item is picked up. */
@@ -295,5 +297,3 @@ export const DEPTHS = {
 
 /** Bombs draw this far above their arc height, so they leave the hand at tube height, px. */
 export const BOMB_LIFT = 10;
-
-

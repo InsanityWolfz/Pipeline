@@ -20,6 +20,7 @@ import { BURN_FLAMES, burnFlamesFrame, CHILL_TINT, ICE_CRACK_TICKS, STAGE_SPRITE
 import { COLD } from '../data/tags';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
 import { bulwarkPose, drawSeam, riseShown } from './bulwarkLook';
+import { forgePose } from './forgewrightLook';
 import { drawTelegraph } from './telegraphs';
 import { destroyEnemyBar, drawEnemyBar, makeEnemyBar, type EnemyBar, type EnemyBarShown } from './enemyBar';
 import { destroyHollowsArt, drawHollowsArt, makeHollowsArt, shownOf, type HollowsArt, type HollowsEnemiesShown } from './hollowsEnemyArt';
@@ -125,7 +126,7 @@ export class EnemyView {
       if (d.angle !== undefined && Math.abs(d.angle - e.angle) > 1e-6) d.turnUntil = now + HOLLOWS_LOOK.turnHoldMs;
       d.angle = e.angle;
       // A shielded enemy (the Bulwark, 034; the Shardback, 035) shuffles round and rocks behind its shield on a block.
-      const pose = def.shield ? bulwarkPose(e, now < (d.turnUntil ?? 0)) : poseOf(e);
+      const pose = def.shield ? bulwarkPose(e, now < (d.turnUntil ?? 0)) : def.kind === 'forgewright' ? forgePose(e) : poseOf(e);
       // Enemies without a recover pose stand idle through it.
       // Optional poses (`recover`, and the Bulwark's extras, 034) fall back to idle where an enemy has none.
       const anim = anims[`${pose}-${view}`] ?? anims[`idle-${view}`];

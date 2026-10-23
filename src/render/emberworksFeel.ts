@@ -9,9 +9,10 @@ import type { SoundView } from './SoundView';
 
 // The Emberworks' feel (060), for FeelView: its barrier across the ramps breaking with the Hollows barrier's sound and
 // shards (034) (`playEmberworks` returns whether it fell this frame, so FeelView doesn't also play the tutorial gate's
-// sound for it); and a cinder vent in view flaring open, with its roar and embers (`VentFeel`).
+// sound for it); the Forgewright's fight; and a cinder vent in view flaring open, with its roar and embers (`VentFeel`).
 
 export function playEmberworks(ev: SimEvents, j: JuiceView, s: SoundView, v: { x: number; y: number; width: number; height: number }): boolean {
+  playForge(ev, j, s);
   const fell = ev.gates.some((g) => g.gate === 'emberworks');
   if (!fell) return false;
   s.play(SOUNDS.barrierCollapse);
@@ -23,6 +24,35 @@ export function playEmberworks(ev: SimEvents, j: JuiceView, s: SoundView, v: { x
   }
   j.shake('medium');
   return true;
+}
+
+/**
+ * The Forgewright's fight (060): a bellows bursting, its vent's hiss (and embers off its core), its hammer slam shaking
+ * the screen, its ember spray, and the Forge Flood's roar as the pools spread. A hit on its plating is the Shield's
+ * clang and spark (hollowsFeel.ts plays every `blocked`).
+ */
+function playForge(ev: SimEvents, j: JuiceView, s: SoundView): void {
+  for (const b of ev.bellowsBreaks) {
+    s.play(SOUNDS.bellowsBreak);
+    j.burst('bellowsBurst', b.x, b.y);
+    j.shake('small');
+  }
+  for (const v of ev.vents) {
+    s.play(SOUNDS.ventHiss);
+    j.burst('embers', v.x, v.y - 40);
+    j.shake('medium');
+  }
+  for (const sl of ev.slams) {
+    s.play(SOUNDS.hammerSlam);
+    j.burst('slamDust', sl.x, sl.y);
+    j.shake('big');
+  }
+  if (ev.sprays.length > 0) s.play(SOUNDS.emberSpray);
+  for (const f of ev.floods) {
+    s.play(SOUNDS.floodRoar);
+    j.burst('floodFlare', (f.x0 + f.x1) / 2, (f.y0 + f.y1) / 2);
+    j.shake('medium');
+  }
 }
 
 /** How far above a vent's base its embers burst, px: its mouth. */

@@ -28,6 +28,7 @@ import { NO_COMMAND, type Command } from './input';
 import { stepPlayer } from './movement';
 import { stepNodes } from './nodes';
 import { stepOrbs } from './orbs';
+import { stepFloodPools } from './floodPools';
 import { stepBurns } from './fire';
 import { roomById, type SimState } from './state';
 import { firingWalkScale, stepTube } from './tube';
@@ -113,6 +114,8 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepMines(state);
   stepBombs(state);
   stepOrbs(state);
+  // 060: the Forge Flood's pools beat on the player standing in them.
+  stepFloodPools(state);
   // 060: burns beat after everything that hits this tick, so a burn's beat can kill before the dead are removed.
   stepBurns(state);
   removeDead(state);

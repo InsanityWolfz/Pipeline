@@ -1,6 +1,7 @@
 import { TILE_SIZE } from '../data/config';
 import { INTAKE } from '../data/foundry';
-import { arenaOf, HOLLOWS } from '../data/hollows';
+import { arenaOf } from '../data/arenas';
+import { HOLLOWS } from '../data/hollows';
 import { nodeDef } from '../data/nodes';
 import { OBJECTIVES } from '../data/objectives';
 import { OVERWORLD_ROOM } from '../data/overworld';

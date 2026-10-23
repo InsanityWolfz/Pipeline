@@ -3,6 +3,7 @@ import { DEPTHS, ENEMY_FX, SPRITES } from '../data/assets';
 import { CHAMPIONS } from '../data/champions';
 import { defOf } from '../sim/champions';
 import { immune, type EnemyState } from '../sim/enemies';
+import { plated } from '../sim/forgewrightParts';
 import { colorOf } from './color';
 import { addVector } from './vector/textures';
 
@@ -35,7 +36,8 @@ export function destroyEnemyBar(bar: EnemyBar): void {
 export function drawEnemyBar(scene: Scene, bar: EnemyBar, e: EnemyState, top: number): void {
   const g = bar.g.clear();
   const max = defOf(e).maxHealth;
-  const shield = immune(e);
+  // 060: the Forgewright's plating shows the same blue shield until it vents.
+  const shield = immune(e) || plated(e);
   const shown = shield || e.health < max;
   bar.shown = { id: e.id, shown, immune: shield && shown };
   bar.icon?.setVisible(false);

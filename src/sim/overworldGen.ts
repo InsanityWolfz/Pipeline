@@ -178,13 +178,14 @@ export function generateOverworld(seed: number = OVERWORLD.seed, landmarks: read
   const pylons = overworldPylons(landmarks);
   const caches = landmarks.flatMap((l) => (l.cache ? [{ id: l.id, ...l.cache }] : []));
   const altar = HOLLOWS.arena.altar;
-  for (const t of [...pylons, ...caches, altar, OVERWORLD.startStone, ...OVERWORLD.nodes, ...HOLLOWS.gate]) set(grid, t.tx, t.ty, TILE.floor);
+  const anvilAltar = ANVIL_HALL.altar;
+  for (const t of [...pylons, ...caches, altar, anvilAltar, OVERWORLD.startStone, ...OVERWORLD.nodes, ...HOLLOWS.gate]) set(grid, t.tx, t.ty, TILE.floor);
   for (const f of OVERWORLD.features) {
     const p = feature(grid, f);
     if (p) kept.push(p);
   }
   // A feature never buries a pylon, a reliquary or the altar.
-  for (const t of [...pylons, ...caches, altar]) set(grid, t.tx, t.ty, TILE.floor);
+  for (const t of [...pylons, ...caches, altar, anvilAltar]) set(grid, t.tx, t.ty, TILE.floor);
   const door = OVERWORLD.entrance.door;
   set(grid, door.tx, door.ty, TILE.door);
   set(grid, OVERWORLD.entrance.arrive.tx, OVERWORLD.entrance.arrive.ty, TILE.path);
@@ -202,7 +203,10 @@ export function generateOverworld(seed: number = OVERWORLD.seed, landmarks: read
     caches,
     // 055: the shrine's gate has no tiles any more; its door (TILE.arenaDoor) stands where they were.
     gateTiles: [...HOLLOWS.gate.map((t) => ({ ...t, gate: 'hollows' as const })), ...EMBERWORKS_GATE.map((t) => ({ ...t, gate: 'emberworks' as const }))],
-    altars: [{ ...altar, boss: HOLLOWS.arena.boss }],
+    altars: [
+      { ...altar, boss: HOLLOWS.arena.boss },
+      { ...anvilAltar, boss: ANVIL_HALL.boss },
+    ],
     terrain: { ponds: kept, paths: OVERWORLD.paths },
   };
 }

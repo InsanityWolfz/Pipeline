@@ -4,6 +4,7 @@ import { damageEnemy, targetable, type HitStyle } from './enemies';
 import { startKnock } from './knockback';
 import { sectorHitsBox } from './sector';
 import { recordBlock, shieldBlocks } from './shield';
+import { bellowsBox, forgeDefOf, hitPart } from './forgewrightParts';
 import { roomById, type SimState } from './state';
 import { clearGround } from './sightLine';
 
@@ -30,6 +31,9 @@ export function punch(state: SimState, dirX: number, dirY: number): void {
     if (e.roomId !== state.roomId || e.health <= 0 || !targetable(e)) continue;
     const def = defOf(e);
     const { hurtbox } = def;
+    // 060: each of the Forgewright's whole bellows in the arc takes the punch; its plated body blocks it (damageEnemy).
+    const forge = forgeDefOf(e);
+    if (forge) for (const [part, b] of e.bellows.entries()) if (b.patch === 0 && sectorHitsBox(arc, bellowsBox(e, forge, part)) && clearGround(room, player.x, player.y, e.x, e.y)) hitPart(state, e, part, MELEE.damage, PUNCH_HIT);
     if (!sectorHitsBox(arc, { x: e.x, y: e.y + hurtbox.offsetY, w: hurtbox.w, h: hurtbox.h })) continue;
     if (!clearGround(room, player.x, player.y, e.x, e.y)) continue;
     // Into a shield's front (034): no damage, no knockback, a block between them.

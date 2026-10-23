@@ -4,6 +4,7 @@ import { SPLIT } from '../data/tags';
 import { createShard, type ArrowState } from './arrows';
 import { aggro, damageEnemy, inHurtbox, targetable, type EnemyState, type HitStyle } from './enemies';
 import { recordBlock, shieldBlocks } from './shield';
+import { hitPart, partAt, partKey, plated } from './forgewrightParts';
 import { onBossDeath } from './altar';
 import { killXp } from './leveling';
 import { afterKeystoneHit, burning, keystoneHit, takePool } from './keystones';
@@ -54,12 +55,34 @@ function strike(state: SimState, arrow: ArrowState, e: EnemyState, spawned: Arro
     if (e.mode === 'idle' || e.mode === 'return') aggro(e);
     return false;
   }
+  // 060: the Forgewright's plating takes a hit on its body: no damage, no burst. A piercing shot glances off and flies
+  // on (so a line through both bellows, past its body, still works).
+  if (plated(e)) {
+    recordBlock(state, e, arrow.x, arrow.y);
+    if (e.mode === 'idle' || e.mode === 'return') aggro(e);
+    return arrow.pierce;
+  }
   // The keystones (037): a pooled arrow hits harder and bursts; a ley bolt shatters a frozen enemy.
   const hit = keystoneHit(state, arrow, e);
   damageEnemy(state, e, arrow.damage * hit.scale, arrow.dx, arrow.dy, arrowHit(arrow));
   if (arrow.split) sendShards(state, arrow, e, spawned);
   afterKeystoneHit(state, arrow, e, hit, spawned);
   return true;
+}
+
+/** 060: a hit on one of the Forgewright's bellows: the bellows takes it (a Split still bursts, the keystones still act). */
+function strikePart(state: SimState, arrow: ArrowState, e: EnemyState, part: number, spawned: ArrowState[]): void {
+  arrow.hitIds.push(partKey(e.id, part));
+  const hit = keystoneHit(state, arrow, e);
+  hitPart(state, e, part, arrow.damage * hit.scale, arrowHit(arrow));
+  if (arrow.split) sendShards(state, arrow, e, spawned);
+  afterKeystoneHit(state, arrow, e, hit, spawned);
+}
+
+/** The bellows (060) under a point that this arrow hasn't hit yet, if any. */
+function freshPart(arrow: ArrowState, e: EnemyState): number | null {
+  const part = partAt(e, arrow.x, arrow.y);
+  return part !== null && !arrow.hitIds.includes(partKey(e.id, part)) ? part : null;
 }
 
 /**
@@ -74,24 +97,36 @@ export function arrowHits(state: SimState, spawned: ArrowState[] = []): (arrow: 
     takePool(state, arrow);
     if (arrow.pierce) {
       for (const en of state.enemies) {
-        if (en.roomId !== arrow.roomId || en.health <= 0 || !targetable(en) || arrow.hitIds.includes(en.id)) continue;
-        if (!inHurtbox(en, arrow.x, arrow.y)) continue;
+        if (en.roomId !== arrow.roomId || en.health <= 0 || !targetable(en)) continue;
+        // 060: a bellows first, each once, then the body.
+        const part = freshPart(arrow, en);
+        if (part !== null) {
+          strikePart(state, arrow, en, part, spawned);
+          continue;
+        }
+        if (arrow.hitIds.includes(en.id) || !inHurtbox(en, arrow.x, arrow.y)) continue;
         if (!strike(state, arrow, en, spawned)) return true;
       }
       return false;
     }
     let e: EnemyState | undefined;
     let first = Infinity;
+    let hitPartOf: number | null = null;
     for (const en of state.enemies) {
-      if (en.roomId !== arrow.roomId || en.health <= 0 || !targetable(en) || arrow.hitIds.includes(en.id) || !inHurtbox(en, arrow.x, arrow.y)) continue;
+      if (en.roomId !== arrow.roomId || en.health <= 0 || !targetable(en)) continue;
+      // 060: a bellows under the arrow is hit before the body it belongs to.
+      const part = freshPart(arrow, en);
+      if (part === null && (arrow.hitIds.includes(en.id) || !inHurtbox(en, arrow.x, arrow.y))) continue;
       const along = (en.x - arrow.x) * arrow.dx + (en.y - arrow.y) * arrow.dy;
       if (along < first) {
         first = along;
         e = en;
+        hitPartOf = part;
       }
     }
     if (!e) return false;
-    strike(state, arrow, e, spawned);
+    if (hitPartOf !== null) strikePart(state, arrow, e, hitPartOf, spawned);
+    else strike(state, arrow, e, spawned);
     return true;
   };
 }

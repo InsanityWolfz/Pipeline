@@ -138,6 +138,6 @@ describe('reachability', () => {
       expect(isSolid(room, a.bounds.x1, ty)).toBe(true);
     }
     for (let tx = a.bounds.x0; tx <= a.bounds.x1; tx++) expect(isSolid(room, tx, a.bounds.y1)).toBe(true);
-    expect(room.altars).toEqual([{ id: a.altar.id, tx: a.altar.tx, ty: a.altar.ty, boss: 'bulwark' }]);
+    expect(room.altars?.[0]).toEqual({ id: a.altar.id, tx: a.altar.tx, ty: a.altar.ty, boss: 'bulwark' });
   });
 });

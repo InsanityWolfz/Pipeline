@@ -29,6 +29,8 @@ function damageOf(d: EnemyDef): number {
       return d.slam.damage;
     case 'bulwark':
       return d.pound.damage;
+    case 'forgewright':
+      return d.slam.damage;
     case 'charger':
       return d.charge.damage;
     case 'burrower':

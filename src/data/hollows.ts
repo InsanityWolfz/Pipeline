@@ -150,11 +150,7 @@ export const HOLLOWS = {
   },
 } as const;
 
-/** The arena whose boss is this enemy (034: the Bulwark's Sunken Forum), if any. */
-export const arenaOf = (enemyId: string): typeof HOLLOWS.arena | undefined => (HOLLOWS.arena.boss === enemyId ? HOLLOWS.arena : undefined);
-
-/** The arena whose altar this is (034), if any. */
-export const arenaOfAltar = (altarId: string): typeof HOLLOWS.arena | undefined => (HOLLOWS.arena.altar.id === altarId ? HOLLOWS.arena : undefined);
+// 060: arenaOf and arenaOfAltar look across every region boss's arena (src/data/arenas.ts).
 
 /** True if a tile is in the Hollows (053: from the barrier's circle out to its cliff edge; 060: the Emberworks past it). */
 export const inHollows = (tx: number, ty: number): boolean => {

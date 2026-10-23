@@ -11,7 +11,7 @@ import { fromCentre, polar, WORLD_SHAPE } from './worldShape';
 // moved whole to its place in the ring (`EMBERWORKS.places`). The Ash Kilns is the region's claimable site: its pylon
 // overlooks the Cinder Vents behind it and sends their cinderite home (as 034's Cistern Terrace does the Cut's
 // ley-iron); the Slag River crosses the ring with two bridges; the Outpost Forge, a ruined miniature foundry, holds a
-// Ruined Cache; the Anvil Hall is the Forgewright's walled arena (its boss comes in a later slice). Names are Shaun's
+// Ruined Cache; the Anvil Hall is the Forgewright's walled arena, with its altar. Names are Shaun's
 // placeholders. Tiles throughout; the Ley Spring is in springs.ts.
 
 const P = EMBERWORKS.places;
@@ -163,7 +163,8 @@ const DOOR_REACH = 20;
 
 /**
  * The Forgewright's arena (060): walled all round, its door in the south wall (055's rules: sealed until the
- * Emberworks' barrier falls, E in and out). Its boss, altar and fight come with the Forgewright.
+ * Emberworks' barrier falls, E in and out). Its boss stands in the middle; its altar by the west wall summons it again
+ * after its first kill (034's rule) for cinderite.
  */
 export const ANVIL_HALL = {
   id: 'anvil-hall',
@@ -182,8 +183,14 @@ export const ANVIL_HALL = {
     name: 'Anvil Hall door',
     sealed: 'Sealed',
   } satisfies ArenaDoor,
-  /** Where its boss will stand: the middle of the hall. */
+  /** Where its boss stands and rises: the middle of the hall. */
   start: hall({ tx: 9, ty: 6 }),
+  /** Its altar stone by the west wall (the forum's is by its west wall too). */
+  altar: { id: 'anvil-altar', ...hall({ tx: 2, ty: 6 }) },
+  /** The spec's offering: 8 cinderite, from the carried inventory. */
+  offering: { cinderite: 8 } as Readonly<Record<string, number>>,
+  /** The summon's crack before it rises, ticks (the forum's). */
+  summonTicks: 120,
 } as const;
 
 /** The road's last waypoint: the tile outside the hall's door (a road point is its 2 × 2 block's top-left). */

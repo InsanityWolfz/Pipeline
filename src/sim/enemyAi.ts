@@ -1,5 +1,7 @@
 import type { EnemyDef, MeleeDef } from '../data/enemies';
 import { bulwarkThink } from './bulwarkAi';
+import { forgewrightThink } from './forgewrightAi';
+import { stepBellows } from './forgewrightParts';
 import { chargeThink } from './chargerAi';
 import { burrowThink } from './burrowerAi';
 import { shardThink } from './shardbackAi';
@@ -46,6 +48,8 @@ export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBod
     if (e.cooldown > 0) e.cooldown -= 1;
     if (e.flash > 0) e.flash -= 1;
     if (e.blockFlash > 0) e.blockFlash -= 1;
+    // 060: the Forgewright's vent and broken bellows count down whatever it does, frozen too.
+    if (def.kind === 'forgewright') stepBellows(state, e, def);
     // A frozen enemy doesn't think (029): its wind-up pauses where it is. A chilled one walks slower.
     // A Stunned one (039) holds, then chases again; a Charger's wall daze is its own think's (stun.ts).
     const thought: [number, number] = stunHolds(e) ? holdStunned(e) : e.frozen > 0 ? [0, 0] : thinkOf(state, e, def);
@@ -58,8 +62,8 @@ export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBod
     e.vx = hitX ? 0 : mx;
     e.vy = hitY ? 0 : my;
     e.bumped = hitX || hitY;
-    // A shielded enemy (034) faces its shield's continuous angle.
-    if (def.shield) e.facing = aimFacing(Math.cos(e.angle), Math.sin(e.angle), e.facing);
+    // A shielded enemy (034), and the Forgewright (060), faces its continuous angle.
+    if (def.shield || def.kind === 'forgewright') e.facing = aimFacing(Math.cos(e.angle), Math.sin(e.angle), e.facing);
     else e.facing = attacking(e) ? aimFacing(e.swipeDirX, e.swipeDirY, e.facing) : aimFacing(e.vx, e.vy, e.facing);
     tickCold(state, e);
   }
@@ -77,6 +81,8 @@ function thinkOf(state: SimState, e: EnemyState, def: EnemyDef): [number, number
       return slamThink(state, e, def);
     case 'bulwark':
       return bulwarkThink(state, e, def);
+    case 'forgewright':
+      return forgewrightThink(state, e, def);
     case 'charger':
       return chargeThink(state, e, def);
     case 'burrower':

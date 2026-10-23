@@ -8,7 +8,7 @@ import { damagePlayer } from './health';
 import { roomById, type SimState } from './state';
 import { shotSealed } from './tutorial';
 
-// Enemy projectiles: Wisp orbs (009), slow, and the Sniper construct's bolts (035), fast.
+// Enemy projectiles: Wisp orbs (009), slow, the Sniper construct's bolts (035), fast, and the Forgewright's embers (060), slow, fanned.
 // They fly straight from the shooter along its locked aim, end at a wall or their range,
 // and hit the player once (a roll's i-frames let them through). Player shots don't touch them.
 
@@ -26,6 +26,10 @@ function shotOf(def: EnemyDef): ShotNumbers | null {
   if (def.kind === 'caster') {
     const { cast: c } = def;
     return { speed: c.orbSpeed, damage: c.orbDamage, range: c.orbRange, size: c.orbSize, knockback: c.knockback, knockTicks: c.knockTicks };
+  }
+  if (def.kind === 'forgewright') {
+    const { spray: s } = def;
+    return { speed: s.speed, damage: s.damage, range: s.range, size: s.size, knockback: s.knockback, knockTicks: s.knockTicks };
   }
   if (def.kind === 'sniper') {
     const { snipe: s } = def;
@@ -48,8 +52,8 @@ export interface OrbState {
   damage?: number;
 }
 
-/** Casts an orb (or fires a bolt, 035) from the shooter's feet along its locked aim. */
-export function castOrb(state: SimState, e: EnemyState): void {
+/** Casts an orb (or fires a bolt, 035) from the shooter's feet along its locked aim, or (060: each of the Forgewright's embers) along its own unit direction. */
+export function castOrb(state: SimState, e: EnemyState, dx = e.swipeDirX, dy = e.swipeDirY): void {
   const damage = shotOf(defOf(e))?.damage ?? 0;
   const base = shotOf(enemyDef(e.enemyId))?.damage ?? 0;
   state.orbs.push({
@@ -58,8 +62,8 @@ export function castOrb(state: SimState, e: EnemyState): void {
     roomId: e.roomId,
     x: e.x,
     y: e.y,
-    dx: e.swipeDirX,
-    dy: e.swipeDirY,
+    dx,
+    dy,
     travelled: 0,
     ...(damage !== base ? { damage } : {}),
   });

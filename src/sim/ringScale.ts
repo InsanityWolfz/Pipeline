@@ -46,6 +46,8 @@ function scaleAttack(def: EnemyDef, base: Pick<EnemyDef, 'feetBox' | 'hurtbox' |
       return { ...def, ...base, slam: { ...def.slam, damage: dmg(def.slam.damage) } };
     case 'bulwark':
       return { ...def, ...base, lob: { ...def.lob, damage: dmg(def.lob.damage) }, pound: { ...def.pound, damage: dmg(def.pound.damage) } };
+    case 'forgewright':
+      return { ...def, ...base, slam: { ...def.slam, damage: dmg(def.slam.damage) }, spray: { ...def.spray, damage: dmg(def.spray.damage) } };
     case 'charger':
       return { ...def, ...base, charge: { ...def.charge, damage: dmg(def.charge.damage), speed: def.charge.speed * speed } };
     case 'burrower':

@@ -9,6 +9,7 @@ import { OVERWORLD_ROOM } from '../data/overworld';
 import { SANDBOX_ROOM } from '../data/rooms';
 import { engaged } from './bulwarkAi';
 import { resetFight } from './bulwarkPhases';
+import { resetForge } from './forgewrightAi';
 import { gapTo } from './claims';
 import { createEnemy, type EnemyState } from './enemies';
 import type { Command } from './input';
@@ -65,8 +66,11 @@ export function resetBoss(state: SimState, boss: EnemyState): void {
   // resetFight sinks its adds (it filters them out only while `addsRisen` is set), so it runs before the fresh copy clears that flag.
   const def = enemyDef(boss.enemyId);
   if (def.kind === 'bulwark') resetFight(state, boss, def);
+  // 060: the Forgewright's pools dry and its embers go out.
+  if (def.kind === 'forgewright') resetForge(state, boss, def);
   Object.assign(boss, createEnemy(boss.id, boss.enemyId, { x: boss.homeX, y: boss.homeY }, boss.roomId, boss.group));
   state.enemyBombs = state.enemyBombs.filter((b) => b.enemyId !== boss.enemyId || b.roomId !== boss.roomId);
+  state.orbs = state.orbs.filter((o) => o.enemyId !== boss.enemyId || o.roomId !== boss.roomId);
 }
 
 /** True if the player's feet box at (x, y) would stand clear of walls, solid things and every live enemy's feet in the room. */

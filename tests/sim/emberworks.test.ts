@@ -89,7 +89,7 @@ describe('the ring', () => {
     for (const r of EMBERWORKS.ramps) for (const t of rampTiles(r)) expect(at(t.tx, t.ty), `${r.id} ${t.tx},${t.ty}`).toBe(TILE.ramp);
   });
 
-  it('spawns no packs (061 brings its enemies)', () => {
+  it('spawns no packs (061 brings its enemies): only the Forgewright, in its hall', () => {
     const s = createSim(3, { start: HOLLOWS_START });
     s.populated = true;
     s.bossDefeats.push('bulwark');
@@ -98,7 +98,7 @@ describe('the ring', () => {
       movePlayer(s, top.x, top.y);
       run(s, 300);
     }
-    expect(s.enemies.filter((e) => e.roomId === OVERWORLD.id && ringOf(Math.floor(e.x / 32), Math.floor(e.y / 32)) === 4)).toEqual([]);
+    expect(s.enemies.filter((e) => e.roomId === OVERWORLD.id && ringOf(Math.floor(e.x / 32), Math.floor(e.y / 32)) === 4).map((e) => [e.enemyId, e.group])).toEqual([['forgewright', 'anvil-hall']]);
     expect(s.population.slots.every((p) => p.ring !== (4 as number))).toBe(true);
   });
 });

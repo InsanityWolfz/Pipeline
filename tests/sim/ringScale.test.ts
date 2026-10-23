@@ -38,6 +38,8 @@ function attackDamage(def: EnemyDef): number {
       return def.slam.damage;
     case 'bulwark':
       return def.pound.damage;
+    case 'forgewright':
+      return def.slam.damage;
     case 'charger':
       return def.charge.damage;
     case 'burrower':

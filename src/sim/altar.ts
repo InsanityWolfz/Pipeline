@@ -1,4 +1,5 @@
-import { arenaOf, arenaOfAltar, ALTAR_REACH } from '../data/hollows';
+import { arenaOf, arenaOfAltar } from '../data/arenas';
+import { ALTAR_REACH } from '../data/hollows';
 import { OVERWORLD_ROOM } from '../data/overworld';
 import { RESEARCH_NODES } from '../data/research';
 import { gapTo } from './claims';
