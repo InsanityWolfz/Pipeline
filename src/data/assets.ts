@@ -115,7 +115,7 @@ export const NODE_SPRITES: Readonly<Record<string, { uses: readonly string[]; re
 };
 
 /** The tube slot's frame (025) by how many rounds it shows: one for a carried round or the fist, up to one per intake entrance for a volley. */
-export const TUBE_SLOT_FRAMES = ['hud-tube-slot-1', 'hud-tube-slot-2', 'hud-tube-slot-3'] as const;
+export const TUBE_SLOT_FRAMES = ['hud-tube-slot-1', 'hud-tube-slot-2', 'hud-tube-slot-3', 'hud-tube-slot-4'] as const;
 
 /** The tube slot frame for `units` rounds (clamped to the frames there are). */
 export function tubeSlotFrame(units: number): string {

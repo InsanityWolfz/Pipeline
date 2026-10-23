@@ -258,7 +258,8 @@ describe('the right entrance (058.5)', () => {
     const s = tutorialAt(LEY - 1);
     expect(diagrams(s).filter((d) => d.entrance !== null).map((d) => d.entrance)).toEqual([2]);
     const free = createSim(3, { start: PLAYTEST_START });
-    expect(diagrams(free).filter((d) => d.entrance !== null).map((d) => d.entrance)).toEqual([0, 2]);
+    // 060: off the tutorial, any cap, the fourth entrance's too.
+    expect(diagrams(free).filter((d) => d.entrance !== null).map((d) => d.entrance)).toEqual([0, 2, 3]);
   });
 });
 

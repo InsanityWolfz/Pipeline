@@ -37,6 +37,8 @@ describe('inventory panel groups (031)', () => {
       'aqueduct-valve',
       'arrowhead',
       'casing',
+      // 060: Region 3's machine part.
+      'forge-rivet',
       'fuse',
       // 038: the landmine chain's plate.
       'iron-plate',
@@ -71,7 +73,7 @@ describe('inventory panel groups (031)', () => {
       'ley-bolt+split',
     ]);
     expect(byGroup('gear')).toEqual(['unidentified-armor']);
-    expect(byGroup('cores')).toEqual(['bulwark-core', 'warden-core']);
+    expect(byGroup('cores')).toEqual(['bulwark-core', 'forgewright-core', 'warden-core']);
     // The warden core's kind stays a part: only the panel's group places it.
     expect(ITEMS['warden-core']?.kind).toBe('part');
   });

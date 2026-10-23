@@ -1,6 +1,6 @@
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { buildBarLabelTop, groupedBottomRow } from './bottomHud';
-import { INTAKE } from '../data/foundry';
+import { INTAKE, INTAKE_MID_TX } from '../data/foundry';
 import { BUILD_BAR_LAYOUT, MENU_COLUMN_GAP, MENU_MAX_ROWS, PICKER_LAYOUT } from '../data/hudLayout';
 import type { AnimDef } from '../data/assets';
 import { CONDUIT_ANIMS, CONDUIT_CORNERS, LOGISTICS_ICONS, type CornerKey } from '../data/foundryAssets';
@@ -206,7 +206,6 @@ export function wrapText(text: string, width: number): string[] {
 
 /** The foundry intake's anchor (019): the middle of its mouth's bottom edge, where the north wall meets the floor, px. */
 export function intakeAnchor(): { x: number; y: number } {
-  const middle = INTAKE.entrances[1];
-  if (!middle) throw new Error('The intake needs three entrances');
-  return { x: (middle.tx + 0.5) * TILE_SIZE, y: (middle.ty + 1) * TILE_SIZE };
+  // 060: the mouth's middle whatever its count (four entrances: between tx 12 and 13).
+  return { x: (INTAKE_MID_TX + 0.5) * TILE_SIZE, y: ((INTAKE.entrances[0]?.ty ?? 0) + 1) * TILE_SIZE };
 }

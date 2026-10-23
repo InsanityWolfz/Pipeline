@@ -129,6 +129,29 @@ const CINDERITE: Shape[] = [
   { ...line([-3, -2, -1, -5], 0.8, 'cinder-light'), glow: { color: 'cinder', blur: 3 } },
 ];
 
+/** The Forgewright core: a soot-iron octagon banded in brass, a forge-glow at its heart through a cyan ley ring. */
+const FORGEWRIGHT_CORE: Shape[] = [
+  path('M -2.8 -6.6 L 2.8 -6.6 L 6.6 -2.8 L 6.6 2.8 L 2.8 6.6 L -2.8 6.6 L -6.6 2.8 L -6.6 -2.8 Z', {
+    fill: { linear: [-6, -6, 6, 6] as const, stops: [{ at: 0, color: 'iron-light' }, { at: 0.5, color: 'iron' }, { at: 1, color: 'iron-dark' }] },
+    outline: true,
+  }),
+  rect(-6.6, -1, 13.2, 2, 0.4, solid('brass')),
+  ellipse(0, 0, 3.4, 3.4, { stroke: { color: 'cyan', width: 0.8 }, glow: { color: 'cyan', blur: 2 } }),
+  ellipse(0, 0, 2.2, 2.2, { fill: 'cinder', glow: { color: 'cinder-light', blur: 5 } }),
+  ellipse(-0.6, -0.6, 0.8, 0.8, flat('cinder-light')),
+];
+
+/** The forge rivet: a fat iron rivet, its domed head lit from the top left, glowing at its heated tip. */
+const FORGE_RIVET: Shape[] = [
+  rect(-1.8, -0.5, 3.6, 7, 0.8, { fill: { linear: [-2, 0, 2, 0] as const, stops: [{ at: 0, color: 'iron-light' }, { at: 1, color: 'iron-dark' }] }, outline: true }),
+  { ...ellipse(0, 6.2, 1.8, 0.9, { fill: 'cinder' }), glow: { color: 'cinder', blur: 3 } },
+  path('M -5.6 0 Q -5.4 -6 0 -6.2 Q 5.4 -6 5.6 0 Z', {
+    fill: { linear: [-4, -6, 4, 0] as const, stops: [{ at: 0, color: 'iron-light' }, { at: 0.6, color: 'iron' }, { at: 1, color: 'iron-dark' }] },
+    outline: true,
+  }),
+  path('M -3.6 -2 Q -3 -4.6 -0.4 -4.8', { stroke: { color: 'snow', width: 0.8 }, alpha: 0.6 }),
+];
+
 /** The minimap's Slag River: an ember channel under a bridge. */
 const ICON_RIVER: Shape[] = [rect(-5, -1.5, 10, 3, 0.8, { fill: 'cinder', outline: true }), rect(-1.5, -3.5, 3, 7, 0.5, solid('carve-light'))];
 
@@ -143,5 +166,7 @@ export const EMBERWORKS_SPRITES_VECTOR: readonly VectorSprite[] = [
   one(EMBERWORKS_SPRITES.vent.closed, CINDER_VENT.size, CINDER_VENT.anchor, VENT_CLOSED),
   one(EMBERWORKS_SPRITES.vent.warning, CINDER_VENT.size, CINDER_VENT.anchor, VENT_WARNING),
   one(EMBERWORKS_SPRITES.itemCinderite, [16, 16], [8, 8], CINDERITE),
+  one(EMBERWORKS_SPRITES.itemForgewrightCore, [16, 16], [8, 8], FORGEWRIGHT_CORE),
+  one(EMBERWORKS_SPRITES.itemForgeRivet, [16, 16], [8, 8], FORGE_RIVET),
   one(MAP_ICONS.river, [12, 10], [6, 5], ICON_RIVER),
 ];

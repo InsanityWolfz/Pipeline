@@ -114,8 +114,8 @@ export const SANDBOX = {
   rings: [1, 2, 3] as readonly Ring[],
   maxCount: 10,
   spawnDefaults: { enemyId: 'husk', ring: 1 as Ring, champion: false, count: 1 },
-  /** Each entrance's round at the start: plain arrows, the first volley (024). Null is empty. */
-  loadout: ['arrow', 'arrow', 'arrow'] as readonly (string | null)[],
+  /** Each entrance's round at the start: plain arrows, the first volley (024; 060: four entrances). Null is empty. */
+  loadout: ['arrow', 'arrow', 'arrow', 'arrow'] as readonly (string | null)[],
   /** 044.1: the panel's key, the backquote (unbound in the game), rebindable (042); 056.1: it hides and shows both strips. */
   panelKey: 'BACKTICK',
 } as const;
@@ -208,7 +208,8 @@ export const SANDBOX_PANEL = {
   slideEase: 3,
   /** 056.4: the pickup feed's gap right of the strip (057: of the Loadout tab), in the sandbox. */
   feed: { gap: 8 },
-  keys: { gap: 6, step: 9, label: { x: 10 }, value: { right: 176 }, rule: { inset: 6, color: 'brass', alpha: 0.5 } },
+  // 060: lines 8 px apart (were 9), so the strip still ends above the HP block with the fourth entrance's row.
+  keys: { gap: 6, step: 8, label: { x: 10 }, value: { right: 176 }, rule: { inset: 6, color: 'brass', alpha: 0.5 } },
 } as const;
 
 /**

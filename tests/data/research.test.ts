@@ -46,13 +46,15 @@ describe('research nodes', () => {
     }
     // Tagged as the spec says: the cores, the two regions' parts, the schematics (052: the merger's gone).
     const tagged = (tag: string) => Object.values(ITEMS).filter((it) => it.research === tag).map((it) => it.id).sort();
-    expect(tagged('core')).toEqual(['bulwark-core', 'warden-core']);
-    expect(tagged('machinePart')).toEqual(['ancient-gear', 'aqueduct-valve']);
+    // 060: the Forgewright's core and Region 3's forge rivet.
+    expect(tagged('core')).toEqual(['bulwark-core', 'forgewright-core', 'warden-core']);
+    expect(tagged('machinePart')).toEqual(['ancient-gear', 'aqueduct-valve', 'forge-rivet']);
     expect(tagged('schematic')).toEqual(['schematic-machine-speed', 'schematic-reservoir-2']);
     // Kinds unchanged (031 keeps cores a part); the schematics are the one new kind. Panel groups: cores in Cores, the rest in Parts.
     expect(ITEMS['warden-core']).toMatchObject({ kind: 'part', group: 'cores' });
     expect(ITEMS['bulwark-core']).toMatchObject({ kind: 'part', group: 'cores' });
-    for (const id of ['ancient-gear', 'aqueduct-valve']) expect(ITEMS[id]).toMatchObject({ kind: 'part', group: 'parts' });
+    expect(ITEMS['forgewright-core']).toMatchObject({ kind: 'part', group: 'cores' });
+    for (const id of ['ancient-gear', 'aqueduct-valve', 'forge-rivet']) expect(ITEMS[id]).toMatchObject({ kind: 'part', group: 'parts' });
     for (const s of SCHEMATICS) expect(s).toMatchObject({ kind: 'schematic', group: 'parts' });
   });
 

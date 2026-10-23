@@ -43,7 +43,8 @@ test('boots ?sandbox into its room, and a mixed loadout fires from the panel', a
   });
   expect(fired.seen).toEqual(expect.arrayContaining(['arrow+frost', 'ley-bolt+frost+homing']));
   expect(fired.bombs).toBeGreaterThan(0);
-  expect(fired.loadout).toEqual(['arrow+frost', 'ley-bolt+frost+homing', 'bomb+cluster']);
+  // 060: the fourth entrance keeps its plain arrows.
+  expect(fired.loadout).toEqual(['arrow+frost', 'ley-bolt+frost+homing', 'bomb+cluster', 'arrow']);
   expect(errors).toEqual([]);
 });
 

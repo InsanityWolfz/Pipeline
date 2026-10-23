@@ -1,5 +1,5 @@
 import { TILE_SIZE, VIEW_WIDTH } from '../data/config';
-import { INTAKE } from '../data/foundry';
+import { INTAKE, INTAKE_MID_TX } from '../data/foundry';
 import { FOUNDRY_MAP } from '../data/foundryMap';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { facingVector, opposite } from '../sim/direction';
@@ -53,9 +53,10 @@ export function foundryMapItems(sim: SimState): FoundryMapItems {
     const to = edge(c, p.facing);
     lines.push({ x1: from.x, y1: from.y, x2: c.x, y2: c.y }, { x1: c.x, y1: c.y, x2: to.x, y2: to.y });
   }
-  const mid = INTAKE.entrances[Math.floor(INTAKE.entrances.length / 2)];
+  // 060: the pipe at the mouth's middle, whatever its count.
+  const mid = { tx: INTAKE_MID_TX, ty: INTAKE.entrances[0]?.ty ?? 0 };
   const icons: FoundryMapItems['icons'] = [
-    ...(mid ? [{ kind: 'tube' as const, ...tile(mid) }] : []),
+    { kind: 'tube' as const, ...tile(mid) },
     ...INTAKE.entrances.flatMap((m, i) => (sim.link.entrances[i]?.open ? [{ kind: 'entrance' as const, ...tile({ tx: m.tx, ty: m.ty + 1 }) }] : [])),
     ...(roomById(FOUNDRY_ROOM).doorways ?? []).map((d) => ({ kind: 'door' as const, ...tile(d) })),
     ...sim.fixtures.flatMap((f): FoundryMapItems['icons'] => {

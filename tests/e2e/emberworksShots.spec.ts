@@ -2,14 +2,15 @@ import { expect, test, type Page } from '@playwright/test';
 import { EMBERWORKS } from '../../src/data/emberworks';
 import { landmarkDef } from '../../src/data/landmarks';
 import { polar } from '../../src/data/worldShape';
-import { boot, cameraSettled } from './helpers';
+import { boot, cameraSettled, quietScreen } from './helpers';
 import { clickRow, flowIs } from './flowPage';
 import { SPAWN_GROUP } from '../../src/sim/sandbox';
+import { feedLines, restoreEntrance, ui } from './intakePage';
 import { bootSandbox, hidePanel, openPanel, setRound } from './sandboxPage';
 
 // Review screenshots for 060 (REVIEW_SHOTS=1, into docs/review/060): the Emberworks from the top of a ramp, the
-// Cinder Vents flaring open, the Ash Kilns claimed, and a pack set burning by Fire bombs in the sandbox. Later
-// slices add the Forgewright's and the fourth entrance's.
+// Cinder Vents flaring open, the Ash Kilns claimed, a pack set burning by Fire bombs in the sandbox, the intake
+// with its four entrances open and fed, and a four-lane volley. Later slices add the Forgewright's.
 
 const SHOTS = 'docs/review/060';
 
@@ -140,5 +141,48 @@ test.describe('review screenshots (060)', () => {
     await cameraSettled(page, 20_000);
     await page.screenshot({ path: `${SHOTS}/04-fire-bomb-pack-burning.png` });
     await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
+  });
+
+  test('the four-entrance intake, every cap restored and each entrance fed', async ({ page }) => {
+    test.setTimeout(120_000);
+    await boot(page, '?playtest');
+    for (const tx of [11, 13, 14]) await restoreEntrance(page, tx);
+    await expect.poll(async () => (await ui(page))?.intakeCaps).toBe(0);
+    // Four ammo, four gauge colours, west to east.
+    await feedLines(page, [
+      { tx: 11, itemId: 'arrow', amount: 'half' },
+      { tx: 12, itemId: 'bomb', amount: 'all' },
+      { tx: 13, itemId: 'ley-bolt', amount: 'all' },
+      { tx: 14, itemId: 'landmine', amount: 'all' },
+    ], 12);
+    // South of the lines, the pipe in the top of the view, with the schematic banner played out.
+    await page.evaluate(() => {
+      window.__helpers?.walkTo(16.5 * 32, 5.5 * 32);
+      window.__GAME__?.step(1, { aimX: 13 * 32, aimY: 0 });
+    });
+    await quietScreen(page);
+    await cameraSettled(page);
+    await page.screenshot({ path: `${SHOTS}/05-four-entrance-intake.png` });
+  });
+
+  test('a four-lane volley', async ({ page }) => {
+    test.setTimeout(120_000);
+    await bootSandbox(page);
+    await hidePanel(page);
+    await cameraSettled(page, 20_000);
+    // An arrow, a ley bolt, a Fire arrow and a Frost arrow, west to east: four lanes a few ticks out, each its own colour.
+    const fresh = await page.evaluate(() => {
+      const g = window.__GAME__;
+      if (!g) throw new Error('no game');
+      g.step(1, { sandbox: { kind: 'god', on: true } });
+      ['arrow', 'ley-bolt', 'arrow+fire', 'arrow+frost'].forEach((round, entrance) => g.step(1, { sandbox: { kind: 'loadout', entrance, round } }));
+      const p = g.step(1).player;
+      const known = new Set(g.step(0).arrows.map((a) => a.id));
+      const shot = g.step(1, { fire: true, aimX: p.x + 220, aimY: p.y });
+      g.step(10);
+      return shot.arrows.filter((a) => !known.has(a.id)).map((a) => a.ammoId);
+    });
+    expect(fresh).toEqual(['arrow', 'ley-bolt', 'arrow+fire', 'arrow+frost']);
+    await page.screenshot({ path: `${SHOTS}/06-four-lane-volley.png` });
   });
 });

@@ -62,10 +62,14 @@ const BASE_ITEMS: Readonly<Record<string, ItemDef>> = {
   'warden-core': { id: 'warden-core', name: 'Warden core', kind: 'part', group: 'cores', icon: SPRITES.itemWardenCore, research: 'core' },
   /** The Bulwark's core (034 drops it): the third entrance and the second reservoir cost one each (033). */
   'bulwark-core': { id: 'bulwark-core', name: 'Bulwark core', kind: 'part', group: 'cores', icon: RESEARCH_ICONS.bulwarkCore, research: 'core' },
+  /** The Forgewright's core (060): it restores the fourth intake entrance. */
+  'forgewright-core': { id: 'forgewright-core', name: 'Forgewright core', kind: 'part', group: 'cores', icon: EMBERWORKS_SPRITES.itemForgewrightCore, research: 'core' },
   /** Region 1's machine part (033): Husks, Wisps, champions and the Ruined Cache drop it; restoring spends it. */
   'ancient-gear': { id: 'ancient-gear', name: 'Ancient gear', kind: 'part', group: 'parts', icon: RESEARCH_ICONS.ancientGear, research: 'machinePart' },
   /** Region 2's machine part (034): a brass valve from the Hollows' waterworks. */
   'aqueduct-valve': { id: 'aqueduct-valve', name: 'Aqueduct valve', kind: 'part', group: 'parts', icon: RESEARCH_ICONS.aqueductValve, research: 'machinePart' },
+  /** Region 3's machine part (060): the Forgewright drops it; nothing spends it until a later spec's research. */
+  'forge-rivet': { id: 'forge-rivet', name: 'Forge rivet', kind: 'part', group: 'parts', icon: EMBERWORKS_SPRITES.itemForgeRivet, research: 'machinePart' },
   ...schematics({
     'schematic-reservoir-2': 'Reservoir II',
     'schematic-machine-speed': 'Machine speed',

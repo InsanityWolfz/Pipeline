@@ -22,6 +22,7 @@ describe('node states', () => {
     expect(createResearch()).toEqual({
       'entrance-2': 'revealed',
       'entrance-3': 'revealed',
+      'entrance-4': 'revealed',
       'reservoir-1': 'revealed',
       'reservoir-2': 'hidden',
       'machine-speed': 'hidden',
@@ -37,11 +38,12 @@ describe('node states', () => {
     expect([r.entranceCap, r.machineSpeed]).toEqual([30, 1]);
   });
 
-  it('draws the diagrams of revealed nodes: both caps, the pipe, the sealed wing; walls once revealed', () => {
+  it('draws the diagrams of revealed nodes: every cap (060: three), the pipe, the sealed wing; walls once revealed', () => {
     const s = foundry();
     expect(diagrams(s).map((d) => [d.node, d.entrance])).toEqual([
       ['entrance-2', 0],
       ['entrance-2', 2],
+      ['entrance-2', 3],
       ['reservoir-1', null],
       ['sealed-wing', null],
     ]);

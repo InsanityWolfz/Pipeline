@@ -30,7 +30,8 @@ const ofGroup = (s: SimState, group: string) => s.enemies.filter((e) => e.group 
 describe('the loadout (044)', () => {
   it('sets each entrance to any round, and the volley fires them all, bottomless', () => {
     const s = createSandboxSim(2);
-    const rounds = ['arrow+frost', 'ley-bolt+frost+homing', 'bomb+cluster'];
+    // 060: four entrances, the fourth on Fire arrows.
+    const rounds = ['arrow+frost', 'ley-bolt+frost+homing', 'bomb+cluster', 'arrow+fire'];
     rounds.forEach((round, entrance) => once(s, { kind: 'loadout', entrance, round }));
     expect(s.sandbox?.loadout).toEqual(rounds);
     const fired = new Set<string>();

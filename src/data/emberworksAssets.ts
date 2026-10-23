@@ -15,6 +15,9 @@ export const EMBERWORKS_SPRITES = {
   hallWall: 'ow-anvil-wall',
   /** The cinderite item: a glassy ember-red crystal with a dark core. */
   itemCinderite: 'item-cinderite',
+  /** 060: the Forgewright's core (an iron-banded heart with a forge-glow at its middle) and the forge rivet, Region 3's machine part. */
+  itemForgewrightCore: 'item-forgewright-core',
+  itemForgeRivet: 'item-forge-rivet',
   /** A cinder vent's looks while it isn't open (it's open in its node frames, by uses left): shut, and its warning glow. */
   vent: { closed: 'node-cinder-vent-closed', warning: 'node-cinder-vent-warning' },
 } as const;

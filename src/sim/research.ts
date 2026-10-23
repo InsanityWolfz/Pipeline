@@ -1,5 +1,5 @@
 import { TILE_SIZE } from '../data/config';
-import { ENTRANCE_CAPS, INTAKE } from '../data/foundry';
+import { ENTRANCE_CAPS, INTAKE, INTAKE_MID_TX } from '../data/foundry';
 import { machineDef } from '../data/pieces';
 import { FEET_BOX } from '../data/player';
 import { MACHINE_SPEED_MULT, RESEARCH_NODES, RESEARCH_PIECES, RESEARCH_REACH, researchNode, type ResearchNode } from '../data/research';
@@ -79,8 +79,8 @@ const tileBox = (tx: number, ty: number, w = 1): Rect => ({ x: (tx + w / 2) * TI
 const nextOf = (state: Research, kind: 'entrance' | 'pipe'): ResearchNode | undefined =>
   RESEARCH_NODES.find((n) => n.anchor.kind === kind && nodeState(state, n.id) === 'revealed');
 
-/** The middle mouth tile, where the pipe rises. */
-const PIPE = INTAKE.entrances[Math.floor(INTAKE.entrances.length / 2)] ?? { tx: 0, ty: 0 };
+/** The middle of the mouth, where the pipe rises (060: between two tiles for four entrances). */
+const PIPE = { tx: INTAKE_MID_TX, ty: INTAKE.entrances[0]?.ty ?? 0 };
 
 /** 058.5: in a guided game, the Warden core's entrance node fits only the right cap. */
 const capFits = (state: Pick<SimState, 'start' | 'sandbox'>, node: ResearchNode, i: number): boolean =>
