@@ -32,9 +32,9 @@ describe('the ring', () => {
     expect(WORLD_SHAPE.size).toBeGreaterThanOrEqual(2 * (outer + EMBERWORKS.edge.ragged));
   });
 
-  it('is danger ring 4 and region 3 anywhere in it; the Hollows stop at its edge', () => {
+  it('is danger ring 4 and region 3 anywhere in it past its barrier; the Hollows’ ground stops at its edge', () => {
     for (let b = 0; b < 360; b += 15) {
-      for (const r of [inner + 1, (inner + outer) / 2, outer - 1, outer + 2]) {
+      for (const r of [EMBERWORKS.ramp.gateAt + 1, (inner + outer) / 2, outer - 1, outer + 2]) {
         const t = polar(b, r);
         expect(ringOf(t.tx, t.ty), `${b}° ${r}`).toBe(4);
         expect(regionAt(t.tx, t.ty), `${b}° ${r}`).toBe(3);
@@ -46,6 +46,24 @@ describe('the ring', () => {
     }
     expect(EMBERWORKS.ring).toBe(4);
     expect(EMBERWORKS.region).toBe(3);
+  });
+
+  it('starts its ring and region at its barrier’s circle, not the ramps’ feet: below it is still the Hollows’ ring 3 and region 2', () => {
+    const { gateAt } = EMBERWORKS.ramp;
+    expect(gateAt).toBeGreaterThan(inner);
+    for (let ty = 0; ty < WORLD_SHAPE.size; ty++) {
+      for (let tx = 0; tx < WORLD_SHAPE.size; tx++) {
+        const d = fromCentre(tx, ty);
+        if (d >= inner - 1 && d <= gateAt + 2) expect([ringOf(tx, ty), regionAt(tx, ty)], `${tx},${ty}`).toEqual(d >= gateAt ? [4, 3] : [3, 2]);
+      }
+    }
+    for (const r of EMBERWORKS.ramps) {
+      const tiles = rampTiles(r);
+      const below = tiles.filter((t) => fromCentre(t.tx, t.ty) < gateAt);
+      expect(below.some((t) => fromCentre(t.tx, t.ty) >= inner), r.id).toBe(true);
+      for (const t of below) expect([ringOf(t.tx, t.ty), regionAt(t.tx, t.ty)], `${r.id} ${t.tx},${t.ty}`).toEqual([3, 2]);
+      for (const t of tiles.filter((x) => fromCentre(x.tx, x.ty) >= gateAt)) expect([ringOf(t.tx, t.ty), regionAt(t.tx, t.ty)], `${r.id} ${t.tx},${t.ty}`).toEqual([4, 3]);
+    }
   });
 
   it('multiplies health and damage ×4 and kill XP ×4', () => {
@@ -112,6 +130,9 @@ describe('reaching it', () => {
     for (const key of reachable(shut, OVERWORLD.wake)) {
       const [tx = 0, ty = 0] = key.split(',').map(Number);
       expect(fromCentre(tx, ty) < inner || (ramps.has(key) && fromCentre(tx, ty) < EMBERWORKS.ramp.gateAt), key).toBe(true);
+      // So "Reach the Emberworks" (region 3) and ring 4 are never reached while shut.
+      expect(ringOf(tx, ty), key).not.toBe(EMBERWORKS.ring);
+      expect(regionAt(tx, ty), key).not.toBe(EMBERWORKS.region);
     }
     for (const r of EMBERWORKS.ramps) expect(EMBERWORKS_GATE.some((t) => rampTiles(r).some((x) => x.tx === t.tx && x.ty === t.ty)), r.id).toBe(true);
   });

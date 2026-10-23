@@ -72,8 +72,14 @@ export const EMBERWORKS = {
   },
 } as const;
 
-/** True if a tile is in the Emberworks (060: anywhere from the Hollows' outer circle out, the cliff edge included). */
+/** True if a tile is on the Emberworks' ground (060: anywhere from the Hollows' outer circle out, the cliff edge included). */
 export const inEmberworks = (tx: number, ty: number): boolean => fromCentre(tx, ty) >= EMBERWORKS.radii.inner;
+
+/**
+ * True if a tile is in Region 3 and danger ring 4 (060, after the build): from its barrier's circle across the ramps
+ * out, so a ramp's foot below the barrier is still the Hollows' region and ring, and only passing it reaches them.
+ */
+export const pastEmberworksBarrier = (tx: number, ty: number): boolean => fromCentre(tx, ty) >= EMBERWORKS.ramp.gateAt;
 
 /** A tile's distance from a ramp's centre line (the ray from the centre at its bearing), tiles. */
 function offLine(ramp: RampDef, tx: number, ty: number): number {

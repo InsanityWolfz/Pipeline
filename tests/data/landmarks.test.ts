@@ -14,7 +14,7 @@ import { TEXT_STYLES } from '../../src/data/fonts';
 import { vectorFrames } from '../../src/render/vector/catalog';
 import { WORLD } from '../../src/sim/world';
 import { reachable, tileKey } from '../fixtures/reach';
-import { EMBERWORKS, inEmberworks } from '../../src/data/emberworks';
+import { inEmberworks } from '../../src/data/emberworks';
 import { HOLLOWS, inHollows } from '../../src/data/hollows';
 import { RUIN_AREA } from '../../src/data/home';
 import { fromCentre, polar, WORLD_SHAPE } from '../../src/data/worldShape';
@@ -123,17 +123,15 @@ describe('landmark entries', () => {
 });
 
 describe('landmark areas', () => {
-  it("lie wholly in their region: Region 1's clear of the barrier's band, the Hollows' clear of it and of the cliff edge, the Emberworks' (060) clear of both its edges", () => {
+  it("lie wholly in their region: Region 1's clear of the barrier's band, the Hollows' clear of it and of the cliff edge (the Emberworks', 060, in emberworksLandmarks.test.ts)", () => {
     for (const { id, area: a } of LANDMARK_LIST) {
       const corners = [[a.x0, a.y0], [a.x1, a.y0], [a.x0, a.y1], [a.x1, a.y1]] as const;
-      const hollows = inHollows(Math.round((a.x0 + a.x1) / 2), Math.round((a.y0 + a.y1) / 2));
-      const ember = inEmberworks(Math.round((a.x0 + a.x1) / 2), Math.round((a.y0 + a.y1) / 2));
+      const mid = [Math.round((a.x0 + a.x1) / 2), Math.round((a.y0 + a.y1) / 2)] as const;
+      if (inEmberworks(...mid)) continue;
+      const hollows = inHollows(...mid);
       for (const [tx, ty] of corners) {
         const d = fromCentre(tx, ty);
-        if (ember) {
-          expect(d, id).toBeGreaterThan(EMBERWORKS.radii.inner + EMBERWORKS.wall);
-          expect(d, id).toBeLessThan(EMBERWORKS.radii.outer - EMBERWORKS.edge.ragged);
-        } else if (hollows) {
+        if (hollows) {
           expect(d, id).toBeGreaterThan(WORLD_SHAPE.region1 + 1);
           expect(d, id).toBeLessThan(WORLD_SHAPE.hollows - HOLLOWS.edge.ragged);
         } else expect(d, id).toBeLessThan(WORLD_SHAPE.region1 - 1);
@@ -281,9 +279,9 @@ describe('resource sites', () => {
     }
   });
 
-  it('put their pylons in the world as dormant until the shrine is claimed, at radius 7; the shrine keeps 10', () => {
+  it('put their pylons in the world as dormant until the shrine is claimed, at radius 7; the shrine keeps 10 (the Emberworks’ last, in emberworksLandmarks.test.ts)', () => {
     const pylons = WORLD[OVERWORLD.id]?.pylons ?? [];
-    expect(pylons.map((p) => [p.site, p.safeRadius, p.wakes ?? null])).toEqual([
+    expect(pylons.slice(0, -1).map((p) => [p.site, p.safeRadius, p.wakes ?? null])).toEqual([
       ['shrine', 10, null],
       // 055: the Frozen Grotto's, first of the landmarks (029's place in the list).
       ['frozen-grotto', 7, 'shrine'],
@@ -294,12 +292,7 @@ describe('resource sites', () => {
       ['husk-hive', 7, 'shrine'],
       // 034: the Hollows' one claimable site, behind the barrier the shrine's claim drops.
       ['cistern-terrace', 7, 'shrine'],
-      // 060: the Emberworks' one, behind the barrier the Bulwark's first kill drops.
-      ['ash-kilns', 7, 'shrine'],
     ]);
-    expect(WORLD[OVERWORLD.id]?.caches).toEqual([
-      { id: 'ruined-cache', ...byId('ruined-cache').cache },
-      { id: 'outpost-forge', ...byId('outpost-forge').cache },
-    ]);
+    expect(WORLD[OVERWORLD.id]?.caches?.slice(0, -1)).toEqual([{ id: 'ruined-cache', ...byId('ruined-cache').cache }]);
   });
 });

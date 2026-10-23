@@ -1,5 +1,5 @@
 import type { ArenaDoor } from './arenas';
-import { EMBERWORKS, inEmberworks } from './emberworks';
+import { EMBERWORKS, pastEmberworksBarrier } from './emberworks';
 import { shiftRect, shiftTile, type Shift } from './place';
 import { TILE } from './rooms';
 import type { TilePos, TileRect } from './tiles';
@@ -158,5 +158,8 @@ export const inHollows = (tx: number, ty: number): boolean => {
   return d >= HOLLOWS.radii.inner && d < HOLLOWS.radii.outer;
 };
 
-/** The region a tile is in: 3 in the Emberworks (060), 2 in the Hollows, else 1 (033's schematic regions). */
-export const regionAt = (tx: number, ty: number): 1 | 2 | 3 => (inEmberworks(tx, ty) ? EMBERWORKS.region : inHollows(tx, ty) ? 2 : 1);
+/**
+ * The region a tile is in (033's schematic regions): 3 in the Emberworks past its barrier (060), 2 in the Hollows out to
+ * there (its cliff edge and the ramps' feet included), else 1.
+ */
+export const regionAt = (tx: number, ty: number): 1 | 2 | 3 => (pastEmberworksBarrier(tx, ty) ? EMBERWORKS.region : fromCentre(tx, ty) >= HOLLOWS.radii.inner ? HOLLOWS.region : 1);

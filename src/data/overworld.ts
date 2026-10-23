@@ -4,10 +4,10 @@
 // lines (leyLines.ts) laid without crossings. The ground round the foundry keeps 017's shapes, moved to the centre
 // (home.ts). Tile coordinates throughout. Numbers are tuning values.
 
-import { EMBERWORKS, inEmberworks } from './emberworks';
+import { EMBERWORKS } from './emberworks';
 import { ANVIL_HALL } from './emberworksSites';
 import { GROTTO } from './grotto';
-import { HOLLOWS, inHollows } from './hollows';
+import { HOLLOWS, regionAt } from './hollows';
 import { ARRIVE, ENTRANCE, FIELD_WALLS, HOME_SHIFT, MEADOW_VEIN, MOUND, SHRINE, SHRINE_DOOR, SHRINE_PYLON, SHRINE_SHIFT, shrineWalls } from './home';
 import { LANDMARK_LIST } from './landmarks';
 import { LEY_LINES } from './leyLines';
@@ -163,10 +163,11 @@ export const OVERWORLD = {
   ],
 } as const;
 
-/** The ring a tile is in: 0 near the foundry, 1 the near field, 2 the shrine's ground out to the barrier, 3 anywhere in Stonefall Hollows (034), 4 in the Emberworks (060). */
+/** The ring a tile is in: 0 near the foundry, 1 the near field, 2 the shrine's ground out to the barrier, 3 anywhere in Stonefall Hollows (034), 4 in the Emberworks (060), each its region's (regionAt). */
 export function ringOf(tx: number, ty: number): Ring {
-  if (inEmberworks(tx, ty)) return EMBERWORKS.ring;
-  if (inHollows(tx, ty)) return HOLLOWS.ring;
+  const region = regionAt(tx, ty);
+  if (region === EMBERWORKS.region) return EMBERWORKS.ring;
+  if (region === HOLLOWS.region) return HOLLOWS.ring;
   const { bounds } = OVERWORLD.rings;
   const d = fromCentre(tx, ty);
   return d < bounds[0] ? 0 : d < bounds[1] ? 1 : 2;

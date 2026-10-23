@@ -226,3 +226,7 @@ Slice 8:
 - 060.36 The sandbox room grows east to hold the Anvil Hall at its Emberworks tiles (its spawn and bench stay put), and the three boss resets move under Clear in the spawn column, so the strip still ends above the HP block. Every enemy can be spawned at ring 1–4.
 - 060.37 e2e specs that fell every enemy now spare the Forgewright, as they spare the Bulwark, since its first kill opens the end card.
 
+After the review:
+- 060.38 A Burst or punch that breaks the second bellows vents it but spends itself there: it lands nothing on the body it just opened; only later hits do.
+- 060.39 A dying enemy's burn never spreads onto a plated Forgewright (its body passes no Fire, 060.26); a vented one catches it.
+

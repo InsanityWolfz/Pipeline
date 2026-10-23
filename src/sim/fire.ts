@@ -1,6 +1,7 @@
 import { TICK_RATE } from '../data/config';
 import { FIRE } from '../data/tags';
 import { damageEnemy, targetable, type EnemyState, type HitStyle } from './enemies';
+import { plated } from './forgewrightParts';
 import type { SimState } from './state';
 import { statOf, statusEmission, type Statted } from './statResolve';
 
@@ -50,13 +51,13 @@ export function stepBurns(state: SimState): void {
   for (const e of state.enemies) if (e.burnTicks > 0 && e.health > 0) tickBurn(state, e);
 }
 
-/** A burning enemy that died passes its burn to every living, hittable enemy in its room within the spread radius. */
+/** A burning enemy that died passes its burn to every living, hittable enemy in its room within the spread radius; a plated Forgewright's body passes no Fire (060.26), so never catches. */
 export function spreadBurn(state: SimState, dead: EnemyState): void {
   if (dead.burnDps <= 0) return;
   const radius = spreadRadiusOf(state);
   const to: number[] = [];
   for (const e of state.enemies) {
-    if (e === dead || e.roomId !== dead.roomId || e.health <= 0 || !targetable(e)) continue;
+    if (e === dead || e.roomId !== dead.roomId || e.health <= 0 || !targetable(e) || plated(e)) continue;
     if (Math.hypot(e.x - dead.x, e.y - dead.y) > radius) continue;
     igniteEnemy(state, e, dead.burnDps);
     to.push(e.id);
