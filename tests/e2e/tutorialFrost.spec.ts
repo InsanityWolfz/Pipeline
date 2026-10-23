@@ -165,7 +165,10 @@ test('the guided tutorial plays from leaving the foundry to its end', async ({ p
   await claimHere(page);
   await expectGoal(page, 23);
 
-  // 23. Into the Bulwark's arena by its door; it falls through the hook, and its core is picked up.
+  // 23. Into the Bulwark's arena by its door; it falls through the hook, and its core is picked up. 060: the way to the
+  // door can pass a Hollows pack (the roads up into the Emberworks moved where packs stand), so it's felled at the door too.
+  await fell(page, []);
+  await walk(page, [[HOLLOWS.arena.door.leaveTo.tx, HOLLOWS.arena.door.leaveTo.ty]]);
   await fell(page, []);
   await enterArena(page, HOLLOWS.arena);
   await page.evaluate(() => {
