@@ -16,7 +16,7 @@ import type { Facing } from '../sim/player';
 import { registerAnim } from './anims';
 import { colorOf } from './color';
 import { addVector, addVectorSprite, showFrame, textureScale } from './vector/textures';
-import { CHILL_TINT, ICE_CRACK_TICKS, STAGE_SPRITES } from '../data/stageAssets';
+import { BURN_FLAMES, burnFlamesFrame, CHILL_TINT, ICE_CRACK_TICKS, STAGE_SPRITES } from '../data/stageAssets';
 import { COLD } from '../data/tags';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
 import { bulwarkPose, drawSeam, riseShown } from './bulwarkLook';
@@ -49,6 +49,8 @@ interface Drawn {
   bar: EnemyBar;
   /** The ice round it while frozen (029), made on its first freeze. */
   ice?: GameObjects.Image;
+  /** The flames on it while burning (060), made on its first burn. */
+  flames?: GameObjects.Image;
   /** A Husk's resin drip and glint, or the Warden's core halo (018), or the Bulwark's seam halo (034). */
   overlay?: GameObjects.Graphics;
   /** A shielded enemy's facing angle last frame (034), and until when (scene ms) a change shows it shuffling round. */
@@ -61,7 +63,12 @@ interface Drawn {
 }
 
 /** `ui()`'s enemy part before the scene has built its views. */
-export const NO_ENEMY_UI: { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown; enemyBars: EnemyBarShown[] } = { champions: [], hollowsEnemies: { ripples: 0, flares: 0, lasers: [], waveShades: 0 }, enemyBars: [] };
+export const NO_ENEMY_UI: { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown; enemyBars: EnemyBarShown[]; enemyFlames: number } = {
+  champions: [],
+  hollowsEnemies: { ripples: 0, flares: 0, lasers: [], waveShades: 0 },
+  enemyBars: [],
+  enemyFlames: 0,
+};
 
 const viewOf = (f: Facing): 'down' | 'up' | 'side' => (f === 'up' || f === 'down' ? f : 'side');
 
@@ -131,6 +138,7 @@ export class EnemyView {
       else if (e.chill > 0 || e.frozen > 0) d.sprite.setTint(chillTint(e.frozen > 0 ? COLD.stacksToFreeze : e.chill)).setTintMode(TintModes.MULTIPLY);
       else d.sprite.clearTint();
       this.drawIce(d, e, bottom);
+      this.drawFlames(d, e, bottom, now);
       const top = bottom - d.sprite.displayHeight * d.sprite.originY;
       drawEnemyBar(this.scene, d.bar, e, top);
       if (d.champion) this.drawChampion(d.champion, e, bottom, top, now);
@@ -148,6 +156,7 @@ export class EnemyView {
       destroyEnemyBar(d.bar);
       d.overlay?.destroy();
       d.ice?.destroy();
+      d.flames?.destroy();
       destroyHollowsArt(d.hollows);
       d.champion?.glow.destroy();
       d.champion?.name.destroy();
@@ -195,6 +204,19 @@ export class EnemyView {
     d.ice.setVisible(true).setPosition(e.x, bottom).setDepth(bottom + DEPTHS.overlayNudge);
   }
 
+  /** Burning (060): flames lick round it, flickering out of step from enemy to enemy, bigger on a boss; hidden otherwise. */
+  private drawFlames(d: Drawn, e: EnemyState, bottom: number, now: number): void {
+    if (e.burnTicks <= 0) {
+      d.flames?.setVisible(false);
+      return;
+    }
+    const frame = burnFlamesFrame(Math.floor((now + e.id * BURN_FLAMES.phaseMs) / BURN_FLAMES.frameMs));
+    d.flames ??= addVector(this.scene, 0, 0, frame).setAlpha(BURN_FLAMES.alpha);
+    if (d.flames.frame.name !== frame) showFrame(d.flames, frame);
+    const k = enemyDef(e.enemyId).boss ? BURN_FLAMES.big : 1;
+    d.flames.setVisible(true).setScale(d.baseScale * k * (e.champion ? CHAMPIONS.scale : 1)).setPosition(e.x, bottom).setDepth(bottom + DEPTHS.overlayNudge);
+  }
+
   /** A slow drop of resin falling from the binding, and a glint on the bead; out of step from Husk to Husk. Hidden from behind. */
   private drawResin(g: GameObjects.Graphics, e: EnemyState, bottom: number, view: 'down' | 'up' | 'side', now: number): void {
     g.clear();
@@ -225,13 +247,14 @@ export class EnemyView {
   }
 
   /** What the test hook's `ui()` reads here: the champions (032), Region 2's four's extras (035) and the bars (054). */
-  get ui(): { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown; enemyBars: EnemyBarShown[] } {
+  get ui(): { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown; enemyBars: EnemyBarShown[]; enemyFlames: number } {
     const hollowsEnemies: HollowsEnemiesShown = { ripples: 0, flares: 0, lasers: [], waveShades: 0 };
     for (const [id, d] of this.drawn) {
       if (this.last.has(id)) shownOf(id, this.last.get(id) as EnemyState, d.hollows, hollowsEnemies);
       if (d.waveShaded && d.telegraph.visible) hollowsEnemies.waveShades += 1;
     }
-    return { champions: this.champions, hollowsEnemies, enemyBars: [...this.drawn.values()].map((d) => ({ ...d.bar.shown })) };
+    const enemyFlames = [...this.drawn.values()].filter((d) => d.flames?.visible === true).length;
+    return { champions: this.champions, hollowsEnemies, enemyBars: [...this.drawn.values()].map((d) => ({ ...d.bar.shown })), enemyFlames };
   }
 
   /** The champions on show (032), for the test hook. */

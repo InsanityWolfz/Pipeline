@@ -11,8 +11,8 @@ import type { XpSource } from '../data/leveling';
 // between ticks and land in the list of the tick before.
 
 export type HitEvent =
-  /** `melee` marks a punch's hit (023); `burning` a burning arrow's (054: through a Pool, for its flash). */
-  | { target: 'enemy'; id: number; x: number; y: number; damage: number; damageType: DamageType; melee?: true; burning?: true }
+  /** `melee` marks a punch's hit (023); `burning` a burning arrow's (054: through a Pool, for its flash); `burn` a burn's beat (060). */
+  | { target: 'enemy'; id: number; x: number; y: number; damage: number; damageType: DamageType; melee?: true; burning?: true; burn?: true }
   | { target: 'player'; x: number; y: number; damage: number };
 
 export interface DeathEvent {
@@ -95,6 +95,10 @@ export interface SimEvents {
   /** A cold hit froze an enemy (029), and a frozen enemy thawed: its id and where it stood. */
   freezes: { id: number; x: number; y: number }[];
   thaws: { id: number; x: number; y: number }[];
+  /** 060: an enemy caught fire (a first burn, from a hit or a spread; a refresh isn't one). */
+  ignites: { id: number; x: number; y: number }[];
+  /** 060: a burning enemy died and passed its burn to these enemies, from where it fell. */
+  spreads: { from: number; to: number[]; x: number; y: number }[];
   /** A Split round burst into shards where it hit (029). */
   splits: { x: number; y: number }[];
   /** Healing started or stopped (030), by source; a change of source stops one and starts the other. */
@@ -235,6 +239,8 @@ export function createEvents(): SimEvents {
     entranceFires: [],
     freezes: [],
     thaws: [],
+    ignites: [],
+    spreads: [],
     splits: [],
     heals: [],
     melees: [],

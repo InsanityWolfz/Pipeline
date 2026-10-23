@@ -124,8 +124,8 @@ describe('assets', () => {
     }
   });
 
-  it('has the fire burst, muzzle flash and deposit swirl as frames, and no burn flame (029)', () => {
-    expect(known.some((f) => f.startsWith('burn-flame'))).toBe(false);
+  it('has the fire burst, muzzle flash and deposit swirl as frames; no burn flame (029) but the burning enemy’s flames (060)', () => {
+    expect(known.filter((f) => f.startsWith('burn-flame'))).toEqual(['burn-flames/0', 'burn-flames/1', 'burn-flames/2']);
     for (const anim of [FIRE_BURST, MUZZLE_FLASH, DEPOSIT_SWIRL]) {
       expect(anim.key).toMatch(KEBAB);
       for (const frame of animFrames(anim)) expect(known).toContain(frame);
@@ -345,7 +345,8 @@ describe('build bar categories (026)', () => {
       // 033: the splitter, after the conduit.
       ['conduit', 'splitter', 'underground-entrance', 'underground-exit', 'hopper', 'crate'],
       // 029: each stage in its base ammo's group, after the chain that makes the ammo.
-      ['cutter', 'knapper', 'spinner', 'assembler', 'frost-rune'],
+      // 060: the Fire rune beside the frost rune (its tag's first family is arrows).
+      ['cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'fire-rune'],
       ['shaper', 'fuse-maker', 'packer', 'cluster-die'],
       ['grinder', 'focuser', 'ley-guide', 'prism-lens'],
       // 038: the landmine chain.

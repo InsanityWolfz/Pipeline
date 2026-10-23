@@ -26,7 +26,8 @@ describe('the keyword list', () => {
       expect(GROUPS).toContain(k.group);
       expect(KEYWORDS[k.id]).toBe(k);
     }
-    expect(KEYWORD_LIST.filter((k) => k.state === 'reserved').map((k) => k.id)).toEqual(['fire', 'lightning', 'poison']);
+    // 060: Fire shipped; Lightning and Poison stay reserved.
+    expect(KEYWORD_LIST.filter((k) => k.state === 'reserved').map((k) => k.id)).toEqual(['lightning', 'poison']);
   });
 
   it('groups as the spec lists them', () => {
@@ -68,6 +69,10 @@ describe('the keyword list', () => {
     expect(keywordText('cluster')).toBe('0.2 s after its Burst, 4 Bomblets land 40 px out, each a Burst of 8 in 20 px.');
     expect(keywordText('split')).toBe('On hit: 5 Shards fly out, each dealing half damage to another enemy. A Shard is a small Shot that never Pierces or Splits.');
     expect(keywordText('cold')).toBe('Each hit adds 1 Chill.');
+    // 060: Fire's burn and spread, from FIRE.
+    expect(keywordText('fire')).toBe(
+      'Each hit sets the enemy burning for 3.0 s, dealing 25% of that hit’s damage each second. A new hit restarts the burn at the stronger of the two; burns never stack. An enemy that dies burning passes its burn to every enemy within 64 px.',
+    );
   });
 
   it("ties the Split's \"half damage\" wording to SPLIT.damageShare (054.1): change one, change the other", () => {
@@ -93,10 +98,32 @@ describe('round keywords (derived from data)', () => {
     expect(names(roundKeywords('ley-bolt+homing'))).toEqual(['Ley', 'Shot', 'Knockback', 'Homing', 'Physical']);
   });
 
-  it('the ten tagged rounds exist and nothing else', () => {
+  it('the seventeen tagged rounds exist and nothing else (060: seven Fire rounds)', () => {
     expect([...ROUNDS].sort()).toEqual(
-      ['arrow+frost', 'bomb+frost', 'bomb+cluster', 'bomb+frost+cluster', 'ley-bolt+frost', 'ley-bolt+homing', 'ley-bolt+split', 'ley-bolt+frost+homing', 'ley-bolt+frost+split', 'landmine+frost'].sort(),
+      [
+        'arrow+frost',
+        'bomb+frost',
+        'bomb+cluster',
+        'bomb+frost+cluster',
+        'ley-bolt+frost',
+        'ley-bolt+homing',
+        'ley-bolt+split',
+        'ley-bolt+frost+homing',
+        'ley-bolt+frost+split',
+        'landmine+frost',
+        'arrow+fire',
+        'bomb+fire',
+        'bomb+fire+cluster',
+        'ley-bolt+fire',
+        'ley-bolt+fire+homing',
+        'ley-bolt+fire+split',
+        'landmine+fire',
+      ].sort(),
     );
+    const names = (ids: readonly KeywordId[]) => ids.map((id) => KEYWORDS[id].name);
+    expect(names(roundKeywords('bomb+fire+cluster'))).toEqual(['Bomb', 'Lob', 'Burst', 'Cluster', 'Fire']);
+    expect(shardKeywords('ley-bolt+fire+split', true)).toEqual(['ley', 'shot', 'knockback', 'split', 'fire']);
+    expect(poolBurstKeywords('arrow+fire')).toEqual(['arrow', 'burst', 'fire']);
   });
 
   it('no round carries a reserved keyword', () => {
@@ -126,9 +153,17 @@ describe('the new-keyword rule (039, Q17)', () => {
   const meets = (id: KeywordId) => (sources.get(id) ?? []).length >= 1 && (payoffs.get(id) ?? []).length >= 2;
   const ruled = KEYWORD_LIST.filter((k) => k.state === 'live' && k.group !== 'trait');
 
+  // 060, slice 4 only: Fire is live before its two talents land in slice 5, so for this one commit it is expected to
+  // fall short here. It is never in KEYWORD_DEBT.
+  const PENDING: readonly KeywordId[] = ['fire'];
+
   it('every live keyword outside the debt list has a source and two payoffs', () => {
     for (const k of ruled) {
       if (k.id in KEYWORD_DEBT) continue;
+      if (PENDING.includes(k.id)) {
+        expect(meets(k.id), `${k.name} now meets the rule: take it off PENDING`).toBe(false);
+        continue;
+      }
       expect(meets(k.id), `${k.name}: sources ${JSON.stringify(sources.get(k.id))}, payoffs ${JSON.stringify(payoffs.get(k.id))}`).toBe(true);
     }
   });
@@ -136,7 +171,8 @@ describe('the new-keyword rule (039, Q17)', () => {
   it('the debt is exactly the spec’s list, each still short (so the list only shrinks)', () => {
     expect(Object.keys(KEYWORD_DEBT).sort()).toEqual(['shot', 'lob', 'mine', 'pierce', 'homing', 'split', 'cluster', 'knockback', 'physical', 'cold', 'chill', 'stun', 'pool', 'landmine'].sort());
     for (const id of Object.keys(KEYWORD_DEBT) as KeywordId[]) expect(meets(id), `${id} now meets the rule: take it off KEYWORD_DEBT`).toBe(false);
-    expect(ruled.filter((k) => !(k.id in KEYWORD_DEBT)).map((k) => k.name)).toEqual(['Burst', 'Freeze', 'Arrow', 'Bomb', 'Ley']);
+    expect(ruled.filter((k) => !(k.id in KEYWORD_DEBT)).map((k) => k.name)).toEqual(['Burst', 'Fire', 'Freeze', 'Arrow', 'Bomb', 'Ley']);
+    expect(KEYWORD_DEBT.fire).toBeUndefined();
   });
 
   it('every live keyword has at least one source', () => {

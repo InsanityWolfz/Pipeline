@@ -4,10 +4,12 @@ import { landmarkDef } from '../../src/data/landmarks';
 import { polar } from '../../src/data/worldShape';
 import { boot, cameraSettled } from './helpers';
 import { clickRow, flowIs } from './flowPage';
+import { SPAWN_GROUP } from '../../src/sim/sandbox';
+import { bootSandbox, hidePanel, openPanel, setRound } from './sandboxPage';
 
 // Review screenshots for 060 (REVIEW_SHOTS=1, into docs/review/060): the Emberworks from the top of a ramp, the
-// Cinder Vents flaring open, and the Ash Kilns claimed. Later slices add the Fire rune's, the Forgewright's and the
-// fourth entrance's.
+// Cinder Vents flaring open, the Ash Kilns claimed, and a pack set burning by Fire bombs in the sandbox. Later
+// slices add the Forgewright's and the fourth entrance's.
 
 const SHOTS = 'docs/review/060';
 
@@ -100,5 +102,43 @@ test.describe('review screenshots (060)', () => {
     await bannersGone(page);
     await cameraSettled(page, 20_000);
     await page.screenshot({ path: `${SHOTS}/03-ash-kilns-claimed.png` });
+  });
+
+  test('a Fire bomb pack burning', async ({ page }) => {
+    test.setTimeout(120_000);
+    await bootSandbox(page);
+    await openPanel(page);
+    await setRound(page, 0, 'bomb+fire');
+    await hidePanel(page);
+    await page.evaluate(() => {
+      const g = window.__GAME__;
+      if (!g) throw new Error('no game');
+      g.step(1, { sandbox: { kind: 'loadout', entrance: 1, round: null } });
+      g.step(1, { sandbox: { kind: 'loadout', entrance: 2, round: null } });
+      g.step(1, { sandbox: { kind: 'god', on: true } });
+      g.step(1, { sandbox: { kind: 'spawn', enemyId: 'husk', ring: 3, champion: false, count: 5 } });
+    });
+    // Lob into the pack's middle as it comes on, then let the first beat land while it's still a few tiles off.
+    const burning = await page.evaluate((group) => {
+      const g = window.__GAME__;
+      if (!g) throw new Error('no game');
+      let lit = 0;
+      for (let t = 0; t < 1200; t++) {
+        const pack = g.getState().enemies.filter((e) => e.group === group);
+        const x = pack.reduce((n, e) => n + e.x, 0) / Math.max(1, pack.length);
+        const y = pack.reduce((n, e) => n + e.y, 0) / Math.max(1, pack.length);
+        const st = g.step(1, { fire: lit < 3, aimX: x, aimY: y });
+        lit = Math.max(lit, st.enemies.filter((e) => e.burn > 0).length);
+        if (lit >= 3 && st.events.hits.some((h) => h.target === 'enemy' && h.burn)) return st.enemies.filter((e) => e.burn > 0).length;
+      }
+      return 0;
+    }, SPAWN_GROUP);
+    expect(burning).toBeGreaterThanOrEqual(3);
+    // Hold the burn numbers still for the capture.
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(0.05));
+    await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().enemyFlames ?? 0)).toBeGreaterThanOrEqual(3);
+    await cameraSettled(page, 20_000);
+    await page.screenshot({ path: `${SHOTS}/04-fire-bomb-pack-burning.png` });
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
   });
 });

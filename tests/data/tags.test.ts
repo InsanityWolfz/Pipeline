@@ -4,7 +4,7 @@ import { ITEMS } from '../../src/data/items';
 import { BUILD_BAR, PIECES, pieceDef } from '../../src/data/pieces';
 import { recipeDef } from '../../src/data/recipes';
 import { STAGE_RECIPES, STAGES, stageLines } from '../../src/data/stages';
-import { COLD, HOMING, ROUNDS, roundBase, roundId, roundTags, SPLIT, TAGS, withTag, type TagDef } from '../../src/data/tags';
+import { COLD, FIRE, HOMING, ROUNDS, roundBase, roundId, roundTags, SPLIT, TAGS, withTag, type TagDef } from '../../src/data/tags';
 
 // Tags and stages as data (029): a round is its base ammo plus at most one element
 // tag and one shape tag; every legal combination's item and ammo are derived.
@@ -12,9 +12,10 @@ import { COLD, HOMING, ROUNDS, roundBase, roundId, roundTags, SPLIT, TAGS, withT
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 describe('tags', () => {
-  it("are Milestone 1's three and 038's cluster, each with a slot, prefix, base and numbers", () => {
+  it("are Milestone 1's three, 038's cluster and 060's fire, each with a slot, prefix, base and numbers", () => {
     expect(Object.values(TAGS).map(({ id, slot, prefix, appliesTo }) => ({ id, slot, prefix, appliesTo }))).toEqual([
       { id: 'frost', slot: 'element', prefix: 'Frost', appliesTo: ['arrow', 'bomb', 'ley-bolt', 'landmine'] },
+      { id: 'fire', slot: 'element', prefix: 'Fire', appliesTo: ['arrow', 'bomb', 'ley-bolt', 'landmine'] },
       { id: 'homing', slot: 'shape', prefix: 'Homing', appliesTo: ['ley-bolt'] },
       { id: 'split', slot: 'shape', prefix: 'Split', appliesTo: ['ley-bolt'] },
       { id: 'cluster', slot: 'shape', prefix: 'Cluster', appliesTo: ['bomb'] },
@@ -25,13 +26,32 @@ describe('tags', () => {
       for (const base of t.appliesTo) expect(AMMO[base]).toBeDefined();
     }
     expect(COLD).toEqual({ chillPerHit: 1, slowPerStack: 0.15, stacksToFreeze: 4, stackTicks: 120, freezeTicks: 90, bossFreezeTicks: 45, refreezeTicks: 120 });
+    expect(FIRE).toEqual({ burnTicks: 180, burnShare: 0.25, spreadRadius: 64 });
     expect(HOMING).toEqual({ lockRadius: 64, turnDegrees: 4, speedScale: 0.6 });
     expect(SPLIT).toMatchObject({ shards: 5, damageShare: 0.5, range: 96, speed: 360 });
   });
 
   it('derive every legal round, each in AMMO and ITEMS', () => {
-    // 039: the frost tag on every family; shapes per family.
-    expect([...ROUNDS]).toEqual(['arrow+frost', 'bomb+frost', 'bomb+cluster', 'bomb+frost+cluster', 'ley-bolt+frost', 'ley-bolt+homing', 'ley-bolt+split', 'ley-bolt+frost+homing', 'ley-bolt+frost+split', 'landmine+frost']);
+    // 039: the frost tag on every family; shapes per family. 060: the fire tag on every family too.
+    expect([...ROUNDS]).toEqual([
+      'arrow+frost',
+      'arrow+fire',
+      'bomb+frost',
+      'bomb+fire',
+      'bomb+cluster',
+      'bomb+frost+cluster',
+      'bomb+fire+cluster',
+      'ley-bolt+frost',
+      'ley-bolt+fire',
+      'ley-bolt+homing',
+      'ley-bolt+split',
+      'ley-bolt+frost+homing',
+      'ley-bolt+frost+split',
+      'ley-bolt+fire+homing',
+      'ley-bolt+fire+split',
+      'landmine+frost',
+      'landmine+fire',
+    ]);
     for (const id of ROUNDS) {
       const ammo = ammoDef(id);
       expect(ammo.itemId).toBe(id);
@@ -87,13 +107,15 @@ describe('tags', () => {
 });
 
 describe('stages', () => {
-  it("are Milestone 1's three and 038's Cluster die, with the specs' starting values", () => {
+  it("are Milestone 1's three, 038's Cluster die and 060's Fire rune, with the specs' starting values", () => {
     expect(Object.values(STAGES).map(({ id, tag, batch, material, materialCount, craftTicks }) => ({ id, tag, batch, material, materialCount, craftTicks }))).toEqual([
       { id: 'frost-rune', tag: 'frost', batch: 4, material: 'rimestone', materialCount: 1, craftTicks: 60 },
+      { id: 'fire-rune', tag: 'fire', batch: 4, material: 'cinderite', materialCount: 1, craftTicks: 60 },
       { id: 'ley-guide', tag: 'homing', batch: 4, material: 'ley-crystal', materialCount: 1, craftTicks: 60 },
       { id: 'prism-lens', tag: 'split', batch: 4, material: 'ley-crystal', materialCount: 2, craftTicks: 60 },
       { id: 'cluster-die', tag: 'cluster', batch: 4, material: 'ley-iron', materialCount: 1, craftTicks: 60 },
     ]);
+    expect(STAGES['fire-rune']?.shownAfter).toBe('cinderite');
     for (const [key, st] of Object.entries(STAGES)) {
       expect(st.id).toBe(key);
       expect(ITEMS[st.material]?.kind).toBe('raw');
@@ -117,6 +139,9 @@ describe('stages', () => {
     for (const id of Object.keys(STAGES)) expect(BUILD_BAR).toContain(id);
     expect(BUILD_BAR.indexOf('frost-rune')).toBeGreaterThan(BUILD_BAR.indexOf('assembler'));
     expect(BUILD_BAR.indexOf('frost-rune')).toBeLessThan(BUILD_BAR.indexOf('shaper'));
+    // 060: one Fire rune piece, in the Arrows group (its tag's first family) beside the frost rune.
+    expect(pieceDef('fire-rune')).toMatchObject({ kind: 'machine', name: 'Fire rune', category: 'arrows', recipeId: 'fire-rune', footprint: '1x1', craftTicks: 60 });
+    expect(BUILD_BAR.indexOf('fire-rune')).toBe(BUILD_BAR.indexOf('frost-rune') + 1);
     expect(BUILD_BAR.slice(-4, -2)).toEqual(['ley-guide', 'prism-lens']);
     expect(pieceDef('cluster-die')).toMatchObject({ kind: 'machine', name: 'Cluster die', category: 'bombs', footprint: '1x1' });
     expect(Object.keys(PIECES)).toContain('prism-lens');

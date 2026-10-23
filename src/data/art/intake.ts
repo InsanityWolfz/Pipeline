@@ -92,6 +92,14 @@ export const ENTRANCE_GAUGE_COLORS: Readonly<Record<string, string>> = {
   'ley-bolt+frost+homing': 'water-light',
   'ley-bolt+frost+split': 'water-light',
   'landmine+frost': 'water-light',
+  // 060: Fire rounds of every family glow flame red, apart from a plain bomb's ember.
+  'arrow+fire': 'flame-dark',
+  'bomb+fire': 'flame-dark',
+  'bomb+fire+cluster': 'flame-dark',
+  'ley-bolt+fire': 'flame-dark',
+  'ley-bolt+fire+homing': 'flame-dark',
+  'ley-bolt+fire+split': 'flame-dark',
+  'landmine+fire': 'flame-dark',
 };
 
 /**

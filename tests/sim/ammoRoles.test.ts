@@ -100,7 +100,7 @@ describe('bombs (029)', () => {
     expect(hits).toEqual([{ id: near.id, damageType: 'physical' }]);
   });
 
-  it('nothing burns: a burst deals its damage once and no more', () => {
+  it('a plain bomb never burns: its burst deals its damage once and no more (060: only a fire round burns)', () => {
     const s = arena();
     // A Husk far off to the side, out of the player's view, so nothing else ever hits it.
     const e = placeHusk(s, PLAYER_AT.x + 400, PLAYER_AT.y);
@@ -111,6 +111,6 @@ describe('bombs (029)', () => {
       damage.push(...s.events.hits.filter((h) => h.target === 'enemy' && h.id === e.id).map((h) => h.damage));
     }
     expect(damage).toEqual([BOMB.burstDamage]);
-    expect(Object.keys(e)).not.toContain('burnTicks');
+    expect([e.burnTicks, e.burnDps]).toEqual([0, 0]);
   });
 });

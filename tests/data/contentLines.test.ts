@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { AFFIXES, affixLine, type AffixKind } from '../../src/data/gear';
-import { KEYWORDS } from '../../src/data/keywords';
+import { KEYWORDS, withoutFireVerb } from '../../src/data/keywords';
 import { contentLines } from '../../src/data/keywordGraph';
 import { isRuleLine, RULES } from '../../src/data/lines';
 import { RELICS } from '../../src/data/relics';
@@ -44,6 +44,7 @@ const EXPECTED: Readonly<Record<string, string>> = {
   'ley-guide': 'Homing: added to Ley rounds · 1 ley crystal per 4',
   'prism-lens': 'Split: added to Ley rounds · 2 ley crystal per 4',
   'cluster-die': 'Cluster: added to Bomb rounds · 1 ley-iron per 4',
+  'fire-rune': 'Fire: added to any round · 1 cinderite per 4',
 };
 
 describe('the expected text (039’s table, line for line)', () => {
@@ -131,9 +132,9 @@ describe('generated text only', () => {
   });
 
   it('no template, rule text or stat label types a keyword or noun name by hand', () => {
-    // Reserved keywords never show in game; "fire" stays the verb in "fire rate" until Fire ships (see the reserved-word scan).
+    // Reserved keywords never show in game. 060: "fire" stays the verb in "fire rate" and "held fire" (FIRE_VERB_PHRASES).
     const names = [...Object.values(KEYWORDS).filter((k) => k.state === 'live').map((k) => k.name), 'Shard', 'Bomblet', 'Frozen'];
-    const bare = [...Object.values(KEYWORDS).map((k) => k.template), ...Object.values(RULES).map((r) => r.template), ...Object.values(STATS).map((s) => s.label)].map((t) => t.replace(REF, '').replace(SLOT, ''));
+    const bare = [...Object.values(KEYWORDS).map((k) => k.template), ...Object.values(RULES).map((r) => r.template), ...Object.values(STATS).map((s) => s.label)].map((t) => withoutFireVerb(t.replace(REF, '').replace(SLOT, '')));
     for (const text of bare) for (const n of names) expect(new RegExp(`\\b${n}`, 'i').test(text), `"${text}" types "${n}"`).toBe(false);
   });
 

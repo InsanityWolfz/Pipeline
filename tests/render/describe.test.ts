@@ -89,6 +89,16 @@ describe('a round', () => {
     expect(texts(describeRound(player(), 'landmine').summary)[0]).toBe('60 Burst dmg · 1.5/s · arms in 5.0 s');
     expect(texts(describeRound(player('l3'), 'ley-bolt+split').summary)[0]).toBe('9 dmg · 3.0/s · 7 Shards × 4.5'); // 041: was 14; 054: a Shard half the bolt (was 4)
   });
+
+  it('060: a Fire round’s summary shows its burn; its breakdown shows Fire’s rule with the burn and the spread', () => {
+    const bomb = describeRound(player(), 'bomb+fire');
+    expect(bomb.chips.map((c) => c.id)).toEqual(['bomb', 'lob', 'burst', 'fire']);
+    expect(texts(bomb.summary)[0]).toBe('12 Burst dmg · 1.5/s · burns 3/s for 3.0 s');
+    expect(texts(describeRound(player('a1'), 'arrow+fire').summary)[0]).toBe('15.4 dmg · 4.0/s · burns 3.9/s for 3.0 s');
+    expect(texts(bomb.breakdown).at(-1)).toBe(
+      'Fire: Each hit sets the enemy burning for 3.0 s, dealing 25% of that hit’s damage each second. A new hit restarts the burn at the stronger of the two; burns never stack. An enemy that dies burning passes its burn to every enemy within 64 px.',
+    );
+  });
 });
 
 describe('content', () => {
@@ -182,5 +192,8 @@ describe('enemy chips (040.4)', () => {
     const bulwark = createEnemy(1, 'bulwark', { x: 0, y: 0 }, 'field');
     bulwark.frozen = 30;
     expect(enemyChips(bulwark).map((c) => c.label)).toEqual(['Boss', 'Shield', 'Freeze']);
+    // 060: a burning enemy's Fire chip reads "Burning", after its Freeze and before its Stun.
+    husk.burnTicks = 40;
+    expect(enemyChips(husk).map((c) => [c.id, c.label])).toEqual([['chill', 'Chill 2'], ['fire', 'Burning'], ['stun', 'Stun']]);
   });
 });

@@ -8,6 +8,7 @@ import { onBossDeath } from './altar';
 import { killXp } from './leveling';
 import { afterKeystoneHit, burning, keystoneHit, takePool } from './keystones';
 import { spawnDrops } from './drops';
+import { spreadBurn } from './fire';
 import type { SimState } from './state';
 import { rotate } from './volley';
 import { shardEmissionOf, shotEmission } from './emissions';
@@ -108,6 +109,8 @@ export function removeDead(state: SimState): void {
     // Any kill gives XP (037): by ammo, burst or punch. Before the boss's own record, which drops a summoned boss.
     killXp(state, e);
     onBossDeath(state, e.enemyId);
+    // 060: a burning enemy passes its burn on as it dies (to the living: later ones in the list are checked as they come).
+    spreadBurn(state, e);
   }
   state.enemies.length = kept;
 }

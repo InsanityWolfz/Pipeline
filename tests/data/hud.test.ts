@@ -46,8 +46,30 @@ describe('inventory panel groups (031)', () => {
       'schematic-reservoir-2',
       'shaft',
     ]);
-    // 039: the six Frost rounds of every family.
-    expect(byGroup('ammo')).toEqual(['arrow', 'arrow+frost', 'bomb', 'bomb+cluster', 'bomb+frost', 'bomb+frost+cluster', 'landmine', 'landmine+frost', 'ley-bolt', 'ley-bolt+frost', 'ley-bolt+frost+homing', 'ley-bolt+frost+split', 'ley-bolt+homing', 'ley-bolt+split']);
+    // 039: the six Frost rounds of every family. 060: the seven Fire rounds.
+    expect(byGroup('ammo')).toEqual([
+      'arrow',
+      'arrow+fire',
+      'arrow+frost',
+      'bomb',
+      'bomb+cluster',
+      'bomb+fire',
+      'bomb+fire+cluster',
+      'bomb+frost',
+      'bomb+frost+cluster',
+      'landmine',
+      'landmine+fire',
+      'landmine+frost',
+      'ley-bolt',
+      'ley-bolt+fire',
+      'ley-bolt+fire+homing',
+      'ley-bolt+fire+split',
+      'ley-bolt+frost',
+      'ley-bolt+frost+homing',
+      'ley-bolt+frost+split',
+      'ley-bolt+homing',
+      'ley-bolt+split',
+    ]);
     expect(byGroup('gear')).toEqual(['unidentified-armor']);
     expect(byGroup('cores')).toEqual(['bulwark-core', 'warden-core']);
     // The warden core's kind stays a part: only the panel's group places it.

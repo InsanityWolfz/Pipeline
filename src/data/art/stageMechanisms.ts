@@ -58,6 +58,27 @@ const frostRune: Mechanism = (b, t) => {
   ];
 };
 
+/** Fire rune (060): a carved rune stone glows ember and drops flame onto an arrow, its head kindling red. */
+const fireRune: Mechanism = (b, t) => {
+  const [cx] = centre(b);
+  const glow = swell(t);
+  const stoneY = b.y + 1.5;
+  const sparks = [0, 1, 2].map((i) => {
+    const k = (t + i / 3) % 1;
+    return ellipse(cx - 2.5 + i * 2.5 + Math.sin((k + i) * TAU) * 0.6, stoneY + 6 + k * 6, 0.8 - k * 0.3, 1.1 - k * 0.4, { fill: k < 0.5 ? 'cinder-light' : 'cinder', alpha: 0.9 * (1 - k) });
+  });
+  return [
+    bed(b),
+    ...arrowOnBed(b, glow > 0.5 ? 'cinder-light' : 'rust'),
+    path(`M ${cx - 5} ${stoneY + 5} L ${cx - 4} ${stoneY} L ${cx + 4} ${stoneY} L ${cx + 5} ${stoneY + 5} Z`, { fill: { linear: [0, stoneY, 0, stoneY + 5], stops: [{ at: 0, color: 'ash-light' }, { at: 1, color: 'ash' }] }, outline: true }),
+    path(`M ${cx} ${stoneY + 4.4} Q ${cx - 1.8} ${stoneY + 2.6} ${cx - 0.2} ${stoneY + 0.8} Q ${cx + 0.2} ${stoneY + 2} ${cx + 1.4} ${stoneY + 2.2} Q ${cx + 1.6} ${stoneY + 3.6} ${cx} ${stoneY + 4.4} Z`, {
+      fill: 'cinder',
+      glow: { color: 'cinder-light', blur: 1 + 3 * glow },
+    }),
+    ...sparks,
+  ];
+};
+
 /** Ley guide: a brass ring with a crystal on it turns, and the bolt beneath swings to follow it. */
 const leyGuide: Mechanism = (b, t) => {
   const [cx] = centre(b);
@@ -103,6 +124,7 @@ const prismLens: Mechanism = (b, t) => {
 /** Each stage machine's mechanism, by stage id. */
 export const STAGE_MECHANISMS: Readonly<Record<string, Mechanism>> = {
   'frost-rune': frostRune,
+  'fire-rune': fireRune,
   'ley-guide': leyGuide,
   'prism-lens': prismLens,
 };

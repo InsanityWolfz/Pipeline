@@ -105,6 +105,9 @@ export class FeelView {
       j.burst('hitCold', f.x, f.y);
     }
     for (const t of ev.thaws) j.burst('thawShards', t.x, t.y);
+    // 060: an enemy catching fire (a hit's or a spread's) puffs embers; the crackle plays once a frame however many caught.
+    for (const i of ev.ignites) j.burst('ignite', i.x, i.y);
+    if (ev.ignites.length > 0) s.play(SOUNDS.burnCrackle, SOUND_LEVELS.quiet);
     if (ev.splits.length > 0) s.play(SOUNDS.split, SOUND_LEVELS.cue);
     // The relics (036): a relic identified at the bench, the ward breaking on a block, Last Ember's save.
     if (ev.identifies.some((piece) => piece.relic !== null)) s.play(SOUNDS.relicIdentify, SOUND_LEVELS.cue);
@@ -124,11 +127,14 @@ export class FeelView {
     // A punch (023) thuds on a hit, or whiffs; its hits otherwise land like any other.
     for (const m of ev.melees) s.play(m.hits.length > 0 ? SOUNDS.meleeHit : SOUNDS.meleeWhiff);
     for (const h of ev.hits) {
-      if (h.target === 'enemy') {
+      if (h.target === 'enemy' && h.burn) {
+        // 060: a burn's beat is a small number only: no hit sound, burst or hit stop.
+        j.damageNumber(h.damage, h.x, h.y, false, true);
+      } else if (h.target === 'enemy') {
         if (!h.melee) s.play(SOUNDS.hit);
         s.play(SOUNDS.enemyHurt, SOUND_LEVELS.under);
-        // Nothing deals fire until the fire rune (029); a fire hit gets its own burst when it comes back.
-        j.burst(h.damageType === 'cold' ? 'hitCold' : 'hitPhysical', h.x, h.y);
+        // 060: a fire hit throws rising sparks, as a cold one throws frost.
+        j.burst(h.damageType === 'cold' ? 'hitCold' : h.damageType === 'fire' ? 'hitFire' : 'hitPhysical', h.x, h.y);
         j.damageNumber(h.damage, h.x, h.y, false);
         this.freeze(h.id, HIT_STOP_MS);
       } else {

@@ -34,6 +34,8 @@ export const DAMAGE_NUMBERS = {
   stackPx: 12,
   stackMs: 400,
   stackNear: 24,
+  /** 060: a burn's beat, `scale` the size of a hit's, in ember. */
+  burn: { scale: 0.65, color: 'cinder-light' },
 } as const;
 
 export interface ParticleBurst {
@@ -58,6 +60,9 @@ export const PARTICLES = {
   hitPhysical: { colors: ['snow', 'rock-pale', 'gold-trim'], count: 14, speed: [60, 150], gravity: 220, lifeMs: [220, 380], size: 2, lift: 12 },
   // A cold hit (029): frost flakes that drift down.
   hitCold: { colors: ['foam', 'snow', 'water-light'], count: 14, speed: [40, 110], gravity: 90, lifeMs: [300, 520], size: 2, lift: 12 },
+  // 060: a fire hit throws sparks that rise; a burn's catch, a puff of embers.
+  hitFire: { colors: ['cinder-light', 'cinder', 'flame-dark'], count: 12, speed: [40, 110], gravity: -60, lifeMs: [260, 460], size: 2, lift: 12 },
+  ignite: { colors: ['cinder-light', 'cinder', 'gold-trim'], count: 8, speed: [15, 45], gravity: -90, lifeMs: [350, 600], size: 2, lift: 16 },
   // A frozen enemy cracking free (029): chips of ice flung out and falling.
   thawShards: { colors: ['foam', 'snow', 'water-light', 'rock-pale'], count: 18, speed: [50, 130], gravity: 240, lifeMs: [300, 520], size: 3, lift: 16 },
   // Rime flaking off a cluster as it's worked (029).

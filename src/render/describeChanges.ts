@@ -7,7 +7,7 @@ import { RULES, type RuleLine, type StatLine } from '../data/lines';
 import { ROLLBREAKER } from '../data/relics';
 import { LINE_SEP, renderTemplate, ruleText, scopeName } from '../data/rulesText';
 import { STATS, type StatId } from '../data/statDefs';
-import { CLUSTER, COLD, HOMING, SPLIT } from '../data/tags';
+import { CLUSTER, COLD, FIRE, HOMING, SPLIT } from '../data/tags';
 import { BLASTFLETCH } from '../data/talents';
 import { bombletEmission, poolBurstEmission, roundEmission, shardEmissionOf } from '../sim/emissions';
 import { playerStats, type PlayerStats } from '../sim/stats';
@@ -59,6 +59,8 @@ function buildTargets(): Target[] {
     { id: 'bomblet', name: renderTemplate('{{bomblet}}'), emission: bombletEmission('bomb+cluster'), bases: { damage: CLUSTER.damage, radius: CLUSTER.radius } },
     round('landmine', { damage: mine.damage, 'fire-rate': TICK_RATE / mine.fireTicks, radius: mine.radius, range: mine.maxRange, 'arm-time': mine.armTicks }),
     { id: 'pool-burst', name: renderTemplate(CHILD_NAMES['pool-burst']), emission: poolBurstEmission('arrow'), bases: { radius: BLASTFLETCH.burstRadius } },
+    // 060: Fire's burn, read on Fire alone as the sim reads it.
+    { id: 'fire', name: '', emission: statusEmission('fire'), bases: { duration: FIRE.burnTicks } },
     { id: 'chill', name: '', emission: statusEmission('chill'), bases: { 'stacks-to-freeze': COLD.stacksToFreeze, duration: COLD.stackTicks, slow: COLD.slowPerStack } },
     { id: 'freeze', name: '', emission: statusEmission('freeze'), bases: { duration: COLD.freezeTicks, immunity: COLD.refreezeTicks } },
     { id: 'boss-freeze', name: KEYWORDS.boss.name, emission: statusEmission('freeze'), bases: { duration: COLD.bossFreezeTicks } },

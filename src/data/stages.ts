@@ -18,6 +18,8 @@ export interface StageDef {
   material: string;
   materialCount: number;
   craftTicks: number;
+  /** 060: its crafting rows show only once this item has been carried (as a recipe's `shownAfter`, 038). */
+  shownAfter?: string;
 }
 
 const stage = (id: string, name: string, tag: string, material: string, materialCount: number): StageDef => ({
@@ -32,6 +34,9 @@ const stage = (id: string, name: string, tag: string, material: string, material
 
 export const STAGES: Readonly<Record<string, StageDef>> = {
   'frost-rune': stage('frost-rune', 'Frost rune', 'frost', 'rimestone', 1),
+  // 060: 1 cinderite per 4 rounds; its rows show once cinderite has been carried. Beside the frost rune, so the
+  // crafting menu lists the two elements together.
+  'fire-rune': { ...stage('fire-rune', 'Fire rune', 'fire', 'cinderite', 1), shownAfter: 'cinderite' },
   'ley-guide': stage('ley-guide', 'Ley guide', 'homing', 'ley-crystal', 1),
   // Twice the guide's crystal: a Split bolt adds five projectiles (pillar 3).
   'prism-lens': stage('prism-lens', 'Prism lens', 'split', 'ley-crystal', 2),
@@ -80,7 +85,7 @@ export interface StageRow {
   recipe: RecipeDef;
 }
 
-/** The tagged rounds' crafting rows (047), in stage order and each stage's families in its tag's order: Frost rune × Arrow, Bomb, Ley bolt, Landmine, then one row each for the shapes. */
+/** The tagged rounds' crafting rows (047), in stage order and each stage's families in its tag's order: Frost rune × Arrow, Bomb, Ley bolt, Landmine, the same for the Fire rune (060), then one row each for the shapes. */
 export const STAGE_ROWS: readonly StageRow[] = Object.values(STAGES).flatMap((s) =>
   tagDef(s.tag).appliesTo.map((base) => {
     const r = stageRecipeFor(s, base);

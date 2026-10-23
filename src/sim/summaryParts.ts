@@ -76,6 +76,8 @@ export interface EnemySummary extends KindSummary {
   /** Chill stacks from cold hits (029), and ticks left frozen. */
   chill: number;
   frozen: number;
+  /** Ticks of burn left (060: Fire), 0 when not burning. */
+  burn: number;
   /** Ticks left Stunned (039: by Rollbreaker or a Charger's wall). */
   stunned: number;
   /** Its weight against Knockback (039: a boss 0). */
@@ -112,6 +114,7 @@ export function enemySummary(state: SimState, e: EnemyState): EnemySummary {
     flash: e.flash,
     chill: e.chill,
     frozen: e.frozen,
+    burn: e.burnTicks,
     stunned: e.stunned,
     weight: defOf(e).weight,
     ...kindSummary(state, e),

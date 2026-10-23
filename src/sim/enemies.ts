@@ -5,7 +5,9 @@ import type { Ring } from '../data/ringScale';
 import { enemyDef } from '../data/enemies';
 import { defOf } from './champions';
 import { chillEnemy } from './cold';
+import { igniteEnemy } from './fire';
 import { straightAmmo } from '../data/ammo';
+import { FIRE } from '../data/tags';
 import { startKnock, type Knockable } from './knockback';
 import type { Facing } from './player';
 import type { SimState } from './state';
@@ -57,6 +59,10 @@ export interface EnemyState extends Knockable {
   frozen: number;
   /** Ticks after a thaw in which cold hits add no stacks. */
   refreeze: number;
+  /** Fire (060): ticks of burn left (0: not burning), its damage a second, and ticks to its next once-a-second beat. */
+  burnTicks: number;
+  burnDps: number;
+  burnNext: number;
   /** A champion (032), by name, or null: the sim reads its scaled def (`defOf`). */
   champion: { name: string } | null;
   /** Its danger ring (041): its home tile's, set when it's created and kept as it walks. Its def is scaled by it. */
@@ -125,6 +131,9 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     chillTicks: 0,
     frozen: 0,
     refreeze: 0,
+    burnTicks: 0,
+    burnDps: 0,
+    burnNext: 0,
     champion: null,
     ring,
     angle: Math.PI / 2,
@@ -170,6 +179,8 @@ export interface HitStyle {
   melee?: boolean;
   /** A burning arrow (054): its hit event is marked so render flashes it; it changes no rule. */
   burning?: boolean;
+  /** 060: a burn's once-a-second beat. It never sets a burn going again; render shows it as a small number, with no hit stop or hit sound. */
+  burn?: boolean;
 }
 
 /** An arrow's hit, with its Knockback. */
@@ -191,8 +202,20 @@ export function damageEnemy(
   const push = style.knock * def.weight;
   if (push > 0) startKnock(e, dirX, dirY, push, def.hitKnockTicks);
   if (style.damageType === 'cold' && e.health > 0) chillEnemy(state, e);
+  // 060: a fire hit sets it burning, the killing hit too (it dies burning, and its burn spreads); a burn's beat never does.
+  if (style.damageType === 'fire' && !style.burn) igniteEnemy(state, e, amount * FIRE.burnShare);
   if (e.mode === 'idle' || e.mode === 'return') aggro(e);
-  state.events.hits.push({ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: amount, damageType: style.damageType, ...(style.melee ? { melee: true as const } : {}), ...(style.burning ? { burning: true as const } : {}) });
+  state.events.hits.push({
+    target: 'enemy',
+    id: e.id,
+    x: e.x,
+    y: e.y,
+    damage: amount,
+    damageType: style.damageType,
+    ...(style.melee ? { melee: true as const } : {}),
+    ...(style.burning ? { burning: true as const } : {}),
+    ...(style.burn ? { burn: true as const } : {}),
+  });
 }
 
 /**

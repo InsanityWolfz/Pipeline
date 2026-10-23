@@ -127,6 +127,9 @@ export interface UiState {
   overworldChunks: string[];
   /** The camera shakes asked for since boot, oldest first (the last 50) (021). */
   shakes: string[];
+  /** 060: burn beats' small numbers shown since boot, and enemies drawn with flames on them now. */
+  burnNumbers: number;
+  enemyFlames: number;
   /** Which cursor shows (021: the menu pointer or the crosshair), its depth, and the highest depth of anything else. */
   cursor: CursorState | null;
   /** Picked-up items still sliding into the player (021). */

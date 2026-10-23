@@ -127,6 +127,8 @@ export const LEGIBILITY_WORDS = {
   /** A Burst line's short form, when the whole line would run the summary past its rows (its Burst chip already says it's damage). */
   burstShort: '{damage} {{burst}} · {rate}',
   freezeIn: '{{freeze}} in {hits} hits',
+  /** 060: a Fire round's burn, each second and how long. */
+  burns: 'burns {damage}/s for {time}',
   shards: '{count} {{shard}}s × {damage}',
   bomblets: '{count} {{bomblet}}s × {damage}',
   arms: 'arms in {time}',
@@ -182,10 +184,13 @@ export const WHEN_LINES: Readonly<Partial<Record<'pool-strike' | 'shatter', stri
 /** Child emissions a breakdown names (Shard and Bomblet are 039's nouns): the Pool-burst. */
 export const CHILD_NAMES = { 'pool-burst': '{{pool}}-burst' } as const;
 
-/** Where a keyword param's number resolves (040): its stat, on the round (default), its Shards or its Bomblets. A status's params resolve on the status. */
+/**
+ * Where a keyword param's number resolves (040): its stat, on the round (default), its Shards or its Bomblets. A
+ * status's params resolve on the status, as does a param marked `status` (060: Fire's burn, which the sim reads on Fire alone).
+ */
 export interface ParamStat {
   stat: StatId;
-  on?: 'shard' | 'bomblet';
+  on?: 'shard' | 'bomblet' | 'status';
 }
 
 /**
@@ -201,6 +206,7 @@ export const PARAM_STATS: Readonly<Partial<Record<KeywordId, Readonly<Record<str
   burst: { damage: { stat: 'damage' }, radius: { stat: 'radius' } },
   cluster: { count: { stat: 'bomblets' }, damage: { stat: 'damage', on: 'bomblet' }, radius: { stat: 'radius', on: 'bomblet' } },
   knockback: { push: { stat: 'knockback' } },
+  fire: { duration: { stat: 'duration', on: 'status' } },
   chill: { stacks: { stat: 'stacks-to-freeze' }, slow: { stat: 'slow' }, duration: { stat: 'duration' } },
   freeze: { duration: { stat: 'duration' }, bossDuration: { stat: 'duration' }, immune: { stat: 'immunity' } },
   stun: { duration: { stat: 'duration' } },

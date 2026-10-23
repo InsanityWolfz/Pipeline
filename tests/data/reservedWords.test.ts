@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CHAMPIONS } from '../../src/data/champions';
 import { ENEMIES } from '../../src/data/enemies';
 import { ITEMS } from '../../src/data/items';
-import { KEYWORD_LIST, KEYWORDS } from '../../src/data/keywords';
+import { FIRE_VERB_PHRASES, KEYWORD_LIST, KEYWORDS, withoutFireVerb } from '../../src/data/keywords';
 import { contentLines } from '../../src/data/keywordGraph';
 import { LANDMARK_LIST } from '../../src/data/landmarks';
 import { RULES } from '../../src/data/lines';
@@ -49,8 +49,9 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = {
   Cold: ['Coldlens'],
   // The Burrower is the enemy whose trait Burrowed is.
   Burrowed: ['Burrower'],
-  // The stage that adds Cluster, and the machine that packs Mine rounds.
+  // The stages that add Cluster and Fire (060), and the machine that packs Mine rounds.
   Cluster: ['Cluster die'],
+  Fire: ['Fire rune'],
   Mine: ['Mine packer'],
   // The ammo's own parts and chain.
   Arrow: ['Arrow'],
@@ -82,8 +83,7 @@ describe('reserved words (039)', () => {
       // A tag's prefix names its own keyword's round (Split, Homing, Cluster); Frost isn't reserved.
       if (n.what.startsWith('tag ')) own.push(KEYWORDS[TAGS[n.what.slice(4)]?.keyword ?? 'shot'].name);
       for (const [word, re] of Object.entries(WORDS)) {
-        if (!re.test(n.name) || own.includes(word) || ALLOWED[word]?.includes(n.name)) continue;
-        // Fire never shows yet; the word stays a verb in "fire rate" until it ships.
+        if (!re.test(withoutFireVerb(n.name)) || own.includes(word) || ALLOWED[word]?.includes(n.name)) continue;
         bad.push(`${n.what} "${n.name}" holds ${word}`);
       }
     }
@@ -98,15 +98,19 @@ describe('reserved words (039)', () => {
   it('generated lines use reserved words only through references: no template, rule or label types one', () => {
     const typed = [...KEYWORD_LIST.map((k) => k.template), ...Object.values(RULES).map((r) => r.template), ...Object.values(STATS).map((s) => s.label)];
     const bad = typed.flatMap((t) => {
-      const bare = t.replace(REF, '').replace(SLOT, '');
-      return Object.entries(WORDS).flatMap(([word, re]) => (word !== 'Fire' && re.test(bare) ? [`"${t}" types ${word}`] : []));
+      const bare = withoutFireVerb(t.replace(REF, '').replace(SLOT, ''));
+      return Object.entries(WORDS).flatMap(([word, re]) => (re.test(bare) ? [`"${t}" types ${word}`] : []));
     });
     expect(bad).toEqual([]);
   });
 
-  it('"fire" shows only as the verb, in "fire rate" and "held fire", while Fire is reserved', () => {
-    expect(KEYWORDS.fire.state).toBe('reserved');
+  it('060: "fire" in a content line is the Fire scope, or the verb in one of its phrases ("fire rate", "held fire")', () => {
+    expect(KEYWORDS.fire.state).toBe('live');
+    expect(FIRE_VERB_PHRASES).toEqual(['fire rate', 'held fire', 'you fire']);
     const lines = contentLines().map((o) => lineText(o.line, { rounds: '' }));
-    for (const l of lines.filter((x) => /\bfire\b/i.test(x))) expect(l, l).toMatch(/fire rate/);
+    const fireLines = lines.filter((x) => /\bfire\b/i.test(x));
+    expect(fireLines.length).toBeGreaterThan(0);
+    for (const l of fireLines) expect(withoutFireVerb(l).replace(/^Fire: /, ''), l).not.toMatch(/\bfire\b/i);
+    expect(lines).toContain('Fire: added to ');
   });
 });
