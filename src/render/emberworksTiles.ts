@@ -18,5 +18,7 @@ export function emberworksFrame(symbol: string, tx: number, ty: number, hash: nu
   if (symbol === TILE.cliff) return room.rows[ty + 1]?.[tx] === TILE.cliff ? S.cliffTop : S.cliffs[hash % S.cliffs.length];
   if (symbol === TILE.kiln) return room.rows[ty + 1]?.[tx] === TILE.kiln ? S.kilnTop : S.kiln;
   if (symbol === TILE.chimney) return S.chimney[hash % S.chimney.length];
+  // The Anvil Hall's walls (the only walls out here).
+  if (symbol === TILE.wall) return S.hallWall;
   return undefined;
 }

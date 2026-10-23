@@ -35,7 +35,7 @@ export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   state.tube = createTube();
   state.arrows = [];
   state.groundItems = [];
-  state.nodes = createNodes(rooms);
+  state.nodes = createNodes(rooms, state.seed);
   state.harvest = null;
   state.bombs = [];
   clearMines(state);

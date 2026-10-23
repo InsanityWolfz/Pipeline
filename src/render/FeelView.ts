@@ -19,7 +19,7 @@ import { SoundView } from './SoundView';
 import { attuneBeat } from './attune';
 import { intakeAnchor } from './foundryLayout';
 import { playHollows, SealSound } from './hollowsFeel';
-import { playEmberworks } from './emberworksFeel';
+import { playEmberworks, VentFeel } from './emberworksFeel';
 import { ARENAS } from '../data/arenas';
 import { arenaLocked } from '../sim/arenaLock';
 import { playMines } from './mineFeel';
@@ -50,6 +50,7 @@ export class FeelView {
   private readonly hollowsEnemies = new HollowsEnemyFeel();
   /** 045: the arena seal's hum and drop (055: either arena's). */
   readonly seal = new SealSound();
+  private readonly vents = new VentFeel();
 
   static preload(scene: Scene): void {
     SoundView.preload(scene);
@@ -208,6 +209,8 @@ export class FeelView {
     const j = this.juice;
     this.hollowsEnemies.watch(sim, shown, deltaMs, j, this.sound);
     this.seal.update(ARENAS.some((a) => arenaLocked(sim, a, shown)), this.sound);
+    // 060: a cinder vent in view flaring open.
+    this.vents.watch(sim, shown, this.scene.cameras.main.worldView, j, this.sound);
     const live = new Set<number>();
     for (const e of sim.enemies) {
       if (e.roomId !== shown) continue;

@@ -1,5 +1,6 @@
 import type { TileRect } from './tiles';
-import { laidOut } from './worldShape';
+import { EMBERWORKS } from './emberworks';
+import { laidOut, polar } from './worldShape';
 
 // The Ley Springs (030), apart from overworld.ts so the landmark data (032) can name them.
 
@@ -14,7 +15,7 @@ export interface SpringDef {
   /** Its landmark name (032), on the discovery banner. */
   readonly name: string;
   /** The danger ring (017) it sits in. */
-  readonly ring: 1 | 2 | 3;
+  readonly ring: 1 | 2 | 3 | 4;
   readonly tx: number;
   readonly ty: number;
   readonly radius: number;
@@ -43,7 +44,10 @@ export const SPRINGS: readonly SpringDef[] = (
     // Stonefall Hollows' (034): out in the ring, beside the road to the Bulwark's forum.
     { id: 'hollows-spring', name: 'Hollows Ley Spring', ring: 3, tx: 56, ty: 38, radius: SPRING_RADIUS },
   ] satisfies SpringDef[]
-).map(laidOut);
+)
+  .map((s): SpringDef => laidOut(s))
+  // 060: the Emberworks', on the far side of the ring from every ramp (EMBERWORKS.places).
+  .concat([{ id: 'emberworks-spring', name: 'Emberworks Ley Spring', ring: 4, ...polar(EMBERWORKS.places.spring.bearing, EMBERWORKS.places.spring.r), radius: SPRING_RADIUS }]);
 
 /** A spring's clearing (030): a square of open ground round its pool. */
 export function springClearing(s: { tx: number; ty: number }): TileRect {

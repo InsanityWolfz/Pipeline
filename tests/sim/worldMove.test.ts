@@ -8,11 +8,17 @@ import { worldOffsets } from './worldOffsets';
 // from main before the move (worldOffsets.json), and Region 1's generated ground is the same. 060's new places, roads
 // and the like are added after the old ones, so everything in the snapshot is still there, unchanged.
 
-/** Where `now` doesn't keep everything in `then`: each array entry at its index, each object key, each value. */
+/** An entry's id, if it has one. */
+const idOf = (v: unknown): unknown => (v !== null && typeof v === 'object' && 'id' in v ? v.id : undefined);
+
+/**
+ * Where `now` doesn't keep everything in `then`: each array entry (by its id if it has one, else at its index), each
+ * object key, each value.
+ */
 function unkept(now: unknown, then: unknown, path = ''): string[] {
   if (Array.isArray(then)) {
     if (!Array.isArray(now)) return [`${path}: not an array`];
-    return then.flatMap((v, i) => unkept(now[i], v, `${path}[${i}]`));
+    return then.flatMap((v, i) => unkept(idOf(v) === undefined ? now[i] : now.find((x) => idOf(x) === idOf(v)), v, `${path}[${String(idOf(v) ?? i)}]`));
   }
   if (then !== null && typeof then === 'object') {
     if (now === null || typeof now !== 'object') return [`${path}: not an object`];
@@ -31,7 +37,12 @@ describe('the world grows (060)', () => {
   });
 
   it('keeps every hand-placed tile at its offset from the centre', () => {
-    for (const k of ['landmarks', 'overworld', 'roads', 'roadPoints', 'pylons', 'arenas', 'hollows'] as const) expect(unkept(now[k], SNAPSHOT[k]), k).toEqual([]);
+    // But one: 060 slice 3 moved the Cistern Terrace's ley line's last stretch south to make room for the Ash Kilns'
+    // (it still starts at its pylon and ends on the ruin; tests/data/leyLines.test.ts holds it to the line rules).
+    const { 'cistern-terrace': moved, ...lines } = SNAPSHOT.overworld.leyLines;
+    const then = { ...SNAPSHOT, overworld: { ...SNAPSHOT.overworld, leyLines: lines } };
+    for (const k of ['landmarks', 'overworld', 'roads', 'roadPoints', 'pylons', 'arenas', 'hollows'] as const) expect(unkept(now[k], then[k]), k).toEqual([]);
+    expect(now.overworld.leyLines['cistern-terrace']?.[0]).toEqual(moved[0]);
   });
 
   it('generates the same Region 1 round the centre', () => {

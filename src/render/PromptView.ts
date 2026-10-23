@@ -8,6 +8,7 @@ import { dormant, fixtureInReach, pylonInReach } from '../sim/claims';
 import { fixtureDef } from '../sim/fixtures';
 import { usableInReach } from '../sim/foundryUse';
 import { nodeInReach } from '../sim/harvest';
+import { harvestable } from '../sim/nodes';
 import { currentObjectiveDef } from '../sim/objectives';
 import { roomById, type SimState } from '../sim/state';
 import { stoneInReach } from '../sim/tutorial';
@@ -97,7 +98,7 @@ export class PromptView {
       case 'node': {
         // Hidden while a harvest runs, so the prompt never sits on the harvest bar (018).
         if (sim.harvest) return undefined;
-        const node = nearest(sim.nodes.filter((n) => n.roomId === sim.roomId && n.uses > 0));
+        const node = nearest(sim.nodes.filter((n) => n.roomId === sim.roomId && harvestable(n)));
         return node ? { at: node, usable: nodeInReach(sim)?.id === node.id } : undefined;
       }
     }

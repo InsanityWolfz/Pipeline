@@ -294,6 +294,7 @@
     "state.nodes: array",
     "state.nodes[].id: number",
     "state.nodes[].nodeId: string",
+    "state.nodes[].phase: number",
     "state.nodes[].regrow: number",
     "state.nodes[].roomId: string",
     "state.nodes[].uses: number",

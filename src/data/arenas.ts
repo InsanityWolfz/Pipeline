@@ -1,3 +1,4 @@
+import { ANVIL_HALL } from './emberworksSites';
 import { HOLLOWS } from './hollows';
 import { SHRINE, SHRINE_DOOR, SHRINE_INSIDE } from './home';
 import { OVERWORLD_ROOM } from './overworld';
@@ -69,5 +70,8 @@ export const SHRINE_ARENA: ArenaDef = {
 /** The Bulwark's Sunken Forum (034), in the Hollows and in the sandbox's room. */
 export const FORUM_ARENA = { ...HOLLOWS.arena, rooms: [OVERWORLD_ROOM, SANDBOX_ROOM] as readonly string[] } satisfies ArenaDef;
 
+/** 060: the Forgewright's Anvil Hall, in the Emberworks (its boss comes with the Forgewright). */
+export const ANVIL_ARENA = { ...ANVIL_HALL, rooms: [OVERWORLD_ROOM] as readonly string[] } satisfies ArenaDef;
+
 /** Every arena with a door, the Warden's first. */
-export const ARENAS: readonly ArenaDef[] = [SHRINE_ARENA, FORUM_ARENA];
+export const ARENAS: readonly ArenaDef[] = [SHRINE_ARENA, FORUM_ARENA, ANVIL_ARENA];

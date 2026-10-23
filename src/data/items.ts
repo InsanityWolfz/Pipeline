@@ -1,4 +1,5 @@
 import { SPRITES } from './assets';
+import { EMBERWORKS_SPRITES } from './emberworksAssets';
 import { HOLLOWS_SPRITES } from './hollowsAssets';
 import { MINE_SPRITES } from './mineAssets';
 import { RESEARCH_ICONS } from './researchAssets';
@@ -46,6 +47,8 @@ const BASE_ITEMS: Readonly<Record<string, ItemDef>> = {
   'ley-iron': { id: 'ley-iron', name: 'Ley-iron', kind: 'raw', group: 'raw', icon: HOLLOWS_SPRITES.itemLeyIron },
   /** The frost rune's material (029), gathered at the Frozen Grotto's rime outcrops. */
   'rimestone': { id: 'rimestone', name: 'Rimestone', kind: 'raw', group: 'raw', icon: STAGE_SPRITES.itemRimestone },
+  /** 060: gathered at the Emberworks' cinder vents while they flare open, and sent home by the Ash Kilns' pylon. */
+  cinderite: { id: 'cinderite', name: 'Cinderite', kind: 'raw', group: 'raw', icon: EMBERWORKS_SPRITES.itemCinderite },
   shaft: { id: 'shaft', name: 'Shaft', kind: 'part', group: 'parts', icon: SPRITES.itemShaft },
   arrowhead: { id: 'arrowhead', name: 'Arrowhead', kind: 'part', group: 'parts', icon: SPRITES.itemArrowhead },
   rope: { id: 'rope', name: 'Rope', kind: 'part', group: 'parts', icon: SPRITES.itemRope },

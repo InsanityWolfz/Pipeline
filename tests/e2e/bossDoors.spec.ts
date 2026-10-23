@@ -18,6 +18,8 @@ test("a new game's arena doors are sealed until their gates open", async ({ page
   expect(s?.arenas.map((a) => ({ id: a.id, unlocked: a.unlocked }))).toEqual([
     { id: 'shrine', unlocked: false },
     { id: 'sunken-forum', unlocked: false },
+    // 060: the Anvil Hall's, unlocked by the Emberworks' barrier.
+    { id: 'anvil-hall', unlocked: false },
   ]);
   expect(errors).toEqual([]);
 });

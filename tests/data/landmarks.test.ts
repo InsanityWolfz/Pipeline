@@ -14,6 +14,7 @@ import { TEXT_STYLES } from '../../src/data/fonts';
 import { vectorFrames } from '../../src/render/vector/catalog';
 import { WORLD } from '../../src/sim/world';
 import { reachable, tileKey } from '../fixtures/reach';
+import { EMBERWORKS, inEmberworks } from '../../src/data/emberworks';
 import { HOLLOWS, inHollows } from '../../src/data/hollows';
 import { RUIN_AREA } from '../../src/data/home';
 import { fromCentre, polar, WORLD_SHAPE } from '../../src/data/worldShape';
@@ -30,8 +31,8 @@ const byId = (id: string): LandmarkDef => {
   if (!l) throw new Error(`no landmark ${id}`);
   return l;
 };
-/** Region 1's resource sites (032), each with its own pylon; Stonefall Hollows' (034) are tested in tests/data/hollows.test.ts. */
-const SITES = LANDMARK_LIST.filter((l) => l.kind === 'resource-site' && l.ring !== 3);
+/** Region 1's resource sites (032), each with its own pylon; Stonefall Hollows' (034) are tested in tests/data/hollows.test.ts, the Emberworks' (060) in tests/sim/emberworksSites.test.ts. */
+const SITES = LANDMARK_LIST.filter((l) => l.kind === 'resource-site' && l.ring !== 3 && l.ring !== 4);
 
 describe('landmark entries', () => {
   it('are typed with kebab-case ids, names and a known kind and marker', () => {
@@ -41,7 +42,7 @@ describe('landmark entries', () => {
       expect(l.id).toMatch(/^[a-z]+(-[a-z]+)*$/);
       expect(l.name.length).toBeGreaterThan(0);
       expect(['resource-site', 'frozen-grotto', 'ley-springs', 'ruined-cache', 'ruin']).toContain(l.kind);
-      expect(['site', 'grotto', 'spring', 'cache', 'aqueduct']).toContain(l.marker);
+      expect(['site', 'grotto', 'spring', 'cache', 'aqueduct', 'river']).toContain(l.marker);
     }
     // 034's (the Hollows' spring among the springs, then its three) after 032's; 049's Husk Hive after 032's sites.
     expect(ids).toEqual([
@@ -56,9 +57,15 @@ describe('landmark entries', () => {
       'south-east-spring',
       'north-spring',
       'hollows-spring',
+      // 060: the Emberworks' spring among the springs, then its places.
+      'emberworks-spring',
       'ley-iron-cut',
       'broken-aqueduct',
       'cistern-terrace',
+      'ash-kilns',
+      'cinder-vents',
+      'slag-river',
+      'outpost-forge',
     ]);
   });
 
@@ -116,13 +123,17 @@ describe('landmark entries', () => {
 });
 
 describe('landmark areas', () => {
-  it("lie wholly in their region: Region 1's clear of the barrier's band, the Hollows' clear of it and of the cliff edge", () => {
+  it("lie wholly in their region: Region 1's clear of the barrier's band, the Hollows' clear of it and of the cliff edge, the Emberworks' (060) clear of both its edges", () => {
     for (const { id, area: a } of LANDMARK_LIST) {
       const corners = [[a.x0, a.y0], [a.x1, a.y0], [a.x0, a.y1], [a.x1, a.y1]] as const;
       const hollows = inHollows(Math.round((a.x0 + a.x1) / 2), Math.round((a.y0 + a.y1) / 2));
+      const ember = inEmberworks(Math.round((a.x0 + a.x1) / 2), Math.round((a.y0 + a.y1) / 2));
       for (const [tx, ty] of corners) {
         const d = fromCentre(tx, ty);
-        if (hollows) {
+        if (ember) {
+          expect(d, id).toBeGreaterThan(EMBERWORKS.radii.inner + EMBERWORKS.wall);
+          expect(d, id).toBeLessThan(EMBERWORKS.radii.outer - EMBERWORKS.edge.ragged);
+        } else if (hollows) {
           expect(d, id).toBeGreaterThan(WORLD_SHAPE.region1 + 1);
           expect(d, id).toBeLessThan(WORLD_SHAPE.hollows - HOLLOWS.edge.ragged);
         } else expect(d, id).toBeLessThan(WORLD_SHAPE.region1 - 1);
@@ -181,12 +192,14 @@ describe('landmark areas', () => {
         }
       }
     }
-    // Stamped without landmarks, the same seed differs only in the areas, round the landmarks' own features, and
-    // where a removed pond lay.
+    // Stamped without landmarks, the same seed differs only in the areas, round the landmarks' own features, on their
+    // stamped tiles (060: the Slag River runs on past its area), and where a removed pond lay.
     const bare = generateOverworld(OVERWORLD.seed, []);
+    const stamped = new Set(LANDMARK_LIST.flatMap((l) => (l.stamps ?? []).map(tileKey)));
     const removed = (bare.terrain?.ponds ?? []).filter((p) => !(room.terrain?.ponds ?? []).some((q) => q.cx === p.cx && q.cy === p.cy));
     const near = (tx: number, ty: number) =>
       LANDMARK_LIST.some((l) => inside(l.area, { tx, ty }) || l.features.some((f) => Math.hypot(tx - f.cx, ty - f.cy) <= (f.kind === 'pond' ? Math.max(f.rx, f.ry) * 2 : f.r) + 1)) ||
+      stamped.has(`${tx},${ty}`) ||
       removed.some((p) => Math.hypot((tx - p.cx) / p.rx, (ty - p.cy) / p.ry) <= OVERWORLD.ponds.shore + 0.01);
     for (let ty = 0; ty < OVERWORLD.height; ty++) {
       for (let tx = 0; tx < OVERWORLD.width; tx++) if (!near(tx, ty)) expect(at(tx, ty), `${tx},${ty}`).toBe(bare.rows[ty]?.[tx]);
@@ -281,7 +294,12 @@ describe('resource sites', () => {
       ['husk-hive', 7, 'shrine'],
       // 034: the Hollows' one claimable site, behind the barrier the shrine's claim drops.
       ['cistern-terrace', 7, 'shrine'],
+      // 060: the Emberworks' one, behind the barrier the Bulwark's first kill drops.
+      ['ash-kilns', 7, 'shrine'],
     ]);
-    expect(WORLD[OVERWORLD.id]?.caches).toEqual([{ id: 'ruined-cache', ...byId('ruined-cache').cache }]);
+    expect(WORLD[OVERWORLD.id]?.caches).toEqual([
+      { id: 'ruined-cache', ...byId('ruined-cache').cache },
+      { id: 'outpost-forge', ...byId('outpost-forge').cache },
+    ]);
   });
 });

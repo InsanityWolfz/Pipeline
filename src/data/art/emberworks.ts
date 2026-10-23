@@ -1,4 +1,5 @@
 import { ASH_STONE, EMBERWORKS_SPRITES } from '../emberworksAssets';
+import { MAP_ICONS } from '../landmarkAssets';
 import { cliff, cliffTop } from './hollows';
 import { shadow } from './terrain';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSprite } from './types';
@@ -60,6 +61,77 @@ function chimney(variant: number): Shape[] {
   ];
 }
 
+/** 060: a length of the Anvil Hall's wall: soot-dark cut blocks, a lighter top, a lit edge and an ember vein. */
+const ANVIL_WALL: Shape[] = [
+  shadow(16, 4, -1),
+  rect(-16, -34, 32, 34, 2, solid('ash-dark')),
+  rect(-16, -42, 32, 10, 2, solid('ash')),
+  line([-15, -41, 15, -41], 1, 'ash-light'),
+  line([-16, -18, 16, -18], 1, { id: 'ink', alpha: 0.45 }),
+  line([0, -32, 0, -18], 1, { id: 'ink', alpha: 0.45 }),
+  line([-8, -18, -8, 0], 1, { id: 'ink', alpha: 0.45 }),
+  line([8, -18, 8, 0], 1, { id: 'ink', alpha: 0.45 }),
+  { ...line([3, -6, 6, -11, 9, -10, 12, -14], 1, 'cinder'), glow: { color: 'cinder', blur: 3 } },
+];
+
+/** A shard of cinderite: a glassy ember-red crystal, lit (glowing) or dull. */
+const shard = (x: number, y: number, h: number, lit: number): Shape[] => [
+  path(`M ${x - 2.2} ${y} L ${x - 0.6} ${y - h} L ${x + 1.4} ${y - h * 0.8} L ${x + 2.4} ${y} Z`, { fill: lit > 0 ? { linear: [x, y - h, x, y] as const, stops: [{ at: 0, color: 'cinder-light' }, { at: 0.5, color: 'cinder' }, { at: 1, color: 'flame-dark' }] } : 'rust-dark', outline: true, ...(lit > 0 ? { glow: { color: 'cinder', blur: 3 * lit } } : {}) }),
+  line([x - 0.4, y - h * 0.85, x + 0.2, y - 1], 0.6, { id: 'cinder-light', alpha: lit > 0 ? 0.9 : 0.25 }),
+];
+
+/** The vent's ash cone and its mouth (dark, or glowing at `heat` 0..1). */
+const cone = (heat: number): Shape[] => [
+  shadow(18, 4.5, -1),
+  path('M -18 0 Q -16 -8 -8 -11 Q 0 -13 8 -11 Q 16 -8 18 0 Z', { fill: { linear: [-12, -12, 12, 0], stops: [{ at: 0, color: 'ash-light' }, { at: 0.6, color: 'ash' }, { at: 1, color: 'ash-dark' }] }, outline: true }),
+  path('M -11 -6 Q -6 -9 -2 -8', trim({ id: 'ash-pale', alpha: 0.6 }, 1)),
+  ellipse(0, -10.5, 6, 2.2, solid('ash-dark')),
+  ...(heat > 0 ? [{ ...ellipse(0, -10.5, 5, 1.7, { fill: 'cinder', alpha: heat }), glow: { color: 'cinder', blur: 6 * heat } }] : []),
+];
+
+/** Cinderite crusting the cone's rim: up to five shards, the first `n`, lit or dull. */
+const crust = (n: number, lit: number, k = 1): Shape[] =>
+  ([
+    [-11, -4, 7],
+    [10, -4, 6],
+    [-6, -8, 5],
+    [6, -8, 5],
+    [-14, -1, 4],
+  ] as const)
+    .slice(0, n)
+    .flatMap(([x, y, h]) => shard(x, y, h * k, lit));
+
+/** The vent open, flaring: a fire plume out of its mouth, its crust lit. */
+const flare = (n: number): Shape[] => [
+  ...cone(1),
+  { ...path('M -5 -11 Q -8 -22 -2 -32 Q 0 -38 1 -30 Q 7 -22 5 -11 Z', { fill: { radial: [0, -14, 20] as const, stops: [{ at: 0, color: 'cinder-light' }, { at: 0.55, color: 'cinder' }, { at: 1, color: 'flame-dark' }] }, alpha: 0.9 }), glow: { color: 'cinder', blur: 8 } },
+  ellipse(0, -16, 2.5, 4, flat({ id: 'cinder-light', alpha: 0.8 })),
+  ...crust(n, 1),
+];
+
+/** A cinder vent (060): open (flaring) by uses left, then its spent cone, the crust growing back. Its closed and warning looks are below. */
+export const CINDER_VENT = {
+  size: [40, 46] as const,
+  anchor: [20, 40] as const,
+  uses: [flare(2), flare(3), flare(5)],
+  regrow: [[...cone(0)], [...cone(0), ...crust(2, 0, 0.4)], [...cone(0), ...crust(3, 0, 0.6)], [...cone(0), ...crust(5, 0, 0.8)]],
+};
+
+/** Closed: the cone cold and its crust dull, a thin wisp of smoke; warning: its mouth and crust glowing, heat shimmering. */
+const VENT_CLOSED: Shape[] = [...cone(0), ...crust(5, 0), ellipse(1, -16, 2, 2.5, flat({ id: 'ash-pale', alpha: 0.3 })), ellipse(3, -21, 3, 3, flat({ id: 'ash-pale', alpha: 0.18 }))];
+const VENT_WARNING: Shape[] = [...cone(1), ...crust(5, 0.6), { ...ellipse(0, -14, 9, 4, { fill: 'cinder', alpha: 0.25 }), glow: { color: 'cinder', blur: 10 } }];
+
+/** The cinderite item: a glassy ember-red crystal cluster with a dark core. */
+const CINDERITE: Shape[] = [
+  path('M -6 5 L -4 -2 L -1 -6 L 2 -1 L 0 5 Z', { fill: { linear: [-4, -6, 0, 5] as const, stops: [{ at: 0, color: 'cinder-light' }, { at: 0.5, color: 'cinder' }, { at: 1, color: 'flame-dark' }] }, outline: true }),
+  path('M 0 5 L 2 -1 L 5 -4 L 6.5 1 L 5 5.5 Z', { fill: { linear: [2, -4, 5, 5] as const, stops: [{ at: 0, color: 'cinder' }, { at: 1, color: 'rust-dark' }] }, outline: true }),
+  path('M -3.5 1 L -2 -3 L -0.5 -1 Z', flat({ id: 'ink', alpha: 0.35 })),
+  { ...line([-3, -2, -1, -5], 0.8, 'cinder-light'), glow: { color: 'cinder', blur: 3 } },
+];
+
+/** The minimap's Slag River: an ember channel under a bridge. */
+const ICON_RIVER: Shape[] = [rect(-5, -1.5, 10, 3, 0.8, { fill: 'cinder', outline: true }), rect(-1.5, -3.5, 3, 7, 0.5, solid('carve-light'))];
+
 /** Every Emberworks sprite, for the vector catalog. */
 export const EMBERWORKS_SPRITES_VECTOR: readonly VectorSprite[] = [
   one(EMBERWORKS_SPRITES.kiln, [36, 48], [18, 44], KILN),
@@ -67,4 +139,9 @@ export const EMBERWORKS_SPRITES_VECTOR: readonly VectorSprite[] = [
   ...EMBERWORKS_SPRITES.chimney.map((key, i) => one(key, [30, 92], [15, 88], chimney(i))),
   ...EMBERWORKS_SPRITES.cliffs.map((key, i) => one(key, [36, 44], [18, 40], cliff(i, ASH_STONE))),
   one(EMBERWORKS_SPRITES.cliffTop, [36, 44], [18, 40], cliffTop(ASH_STONE)),
+  one(EMBERWORKS_SPRITES.hallWall, [34, 52], [17, 48], ANVIL_WALL),
+  one(EMBERWORKS_SPRITES.vent.closed, CINDER_VENT.size, CINDER_VENT.anchor, VENT_CLOSED),
+  one(EMBERWORKS_SPRITES.vent.warning, CINDER_VENT.size, CINDER_VENT.anchor, VENT_WARNING),
+  one(EMBERWORKS_SPRITES.itemCinderite, [16, 16], [8, 8], CINDERITE),
+  one(MAP_ICONS.river, [12, 10], [6, 5], ICON_RIVER),
 ];

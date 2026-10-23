@@ -51,7 +51,11 @@ const ROUTES: Readonly<Record<string, LeyRoute>> = {
   // Out of the Hollows across Region 1's west, between the west and south roads.
   // 055: east of the north road, down to the ruin's north edge between that road and the shrine's line.
   'frozen-grotto': { via: [laidOut({ tx: 84, ty: 52 }), laidOut({ tx: 85, ty: 63 }), toward(355, APPROACH)], arrive: 355 },
-  'cistern-terrace': { via: [...[{ tx: 40, ty: 104 }, { tx: 55, ty: 100 }, { tx: 72, ty: 93 }].map(laidOut), toward(240, APPROACH)], arrive: 240 },
+  // 060: its last stretch moved south (240° to 225°) to make room for the Ash Kilns' line beside it.
+  'cistern-terrace': { via: [...[{ tx: 40, ty: 104 }, { tx: 55, ty: 100 }].map(laidOut), toward(225, APPROACH)], arrive: 225 },
+  // 060: out of the Emberworks over the cliffs north of the west ramp, north of the Hollows' Cut and the Cistern Terrace,
+  // south of the Quarry, in between the west road and the Cistern Terrace's line.
+  'ash-kilns': { via: [{ tx: 27, ty: 126 }, { tx: 40, ty: 121 }, { tx: 58, ty: 122 }, { tx: 77, ty: 123 }, { tx: 94, ty: 124 }, toward(240, APPROACH)], arrive: 240 },
 };
 
 const lineHome = (pylon: TilePos, route: LeyRoute): TilePos[] => smoothCurve([{ tx: pylon.tx, ty: pylon.ty }, ...route.via, ruinEdge(route.arrive)], 1);

@@ -1,5 +1,6 @@
 import { SITE_SAFE_RADIUS, SITE_WAKES } from '../data/claims';
 import { EMBERWORKS_GATE } from '../data/emberworks';
+import { ANVIL_HALL } from '../data/emberworksSites';
 import { HOLLOWS } from '../data/hollows';
 import { LANDMARK_LIST, type LandmarkDef } from '../data/landmarks';
 import { OVERWORLD, type Feature, type TileRect } from '../data/overworld';
@@ -164,7 +165,7 @@ export function generateOverworld(seed: number = OVERWORLD.seed, landmarks: read
   const areas = landmarks.map((l) => l.area);
   // 053: and any reaching a spring's clearing (030), which on the round map the generator can now reach.
   const kept = dropPonds(grid, ponds, [...areas, ...OVERWORLD.springs.map(springClearing)]);
-  for (const r of [...OVERWORLD.clearings, ...OVERWORLD.springs.map(springClearing), ...areas, ...HOLLOWS.clears]) fill(grid, r, TILE.floor);
+  for (const r of [...OVERWORLD.clearings, ...OVERWORLD.springs.map(springClearing), ...areas, ...HOLLOWS.clears, ANVIL_HALL.bounds]) fill(grid, r, TILE.floor);
   for (const p of OVERWORLD.paths) path(grid, p);
   for (const t of [...OVERWORLD.ruinField.walls, ...OVERWORLD.entrance.mound, ...landmarks.flatMap((l) => l.blocks ?? [])]) set(grid, t.tx, t.ty, TILE.ruinBlock);
   for (const t of OVERWORLD.shrine.walls) set(grid, t.tx, t.ty, TILE.wall);

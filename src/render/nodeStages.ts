@@ -1,5 +1,7 @@
 import { NODE_SPRITES } from '../data/assets';
+import { EMBERWORKS_SPRITES } from '../data/emberworksAssets';
 import { nodeDef, REGROW_STAGES } from '../data/nodes';
+import { ventState } from '../sim/nodes';
 
 // Which look a node shows (018), from the sim's uses and regrow timer, and which
 // node a claimed pylon reaches for when its supply port produces a raw. Pure, so
@@ -11,10 +13,12 @@ export function regrowStage(regrow: number, regrowTicks: number): number {
   return Math.min(REGROW_STAGES, Math.floor(progress * (REGROW_STAGES + 1)));
 }
 
-/** The vector frame a node shows. */
-export function nodeFrame(n: { nodeId: string; uses: number; regrow: number }): string {
+/** The vector frame a node shows: 060's cinder vent shows its closed and warning looks while it has uses. */
+export function nodeFrame(n: { nodeId: string; uses: number; regrow: number; phase?: number }): string {
   const frames = NODE_SPRITES[n.nodeId];
   if (!frames) throw new Error(`No frames for node '${n.nodeId}'`);
+  const vent = n.uses > 0 ? ventState({ nodeId: n.nodeId, phase: n.phase ?? 0 }) : null;
+  if (vent === 'closed' || vent === 'warning') return EMBERWORKS_SPRITES.vent[vent];
   const frame = n.uses > 0 ? frames.uses[Math.min(n.uses, frames.uses.length) - 1] : frames.regrow[regrowStage(n.regrow, nodeDef(n.nodeId).regrowTicks)];
   if (!frame) throw new Error(`No frame for node '${n.nodeId}' at ${n.uses} uses`);
   return frame;

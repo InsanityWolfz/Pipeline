@@ -1,4 +1,5 @@
 import { EMBERWORKS, rampTiles } from '../data/emberworks';
+import { ANVIL_HALL } from '../data/emberworksSites';
 import { ROADS } from '../data/roads';
 import { TILE } from '../data/rooms';
 import { fromCentre, WORLD_SHAPE } from '../data/worldShape';
@@ -66,7 +67,7 @@ export function generateEmberworks(grid: Grid, seed: number): void {
 
 /**
  * The Emberworks' hand-placed structure over the generated ground and the roads: the Hollows' cliff edge made whole
- * again where a road crossed it (only a ramp goes through), then the ramps up through the cliffs.
+ * again where a road crossed it (only a ramp goes through), then the ramps up through the cliffs, and the Anvil Hall.
  */
 export function stampEmberworks(grid: Grid): void {
   const ramps = EMBERWORKS.ramps.flatMap((r) => rampTiles(r));
@@ -78,4 +79,6 @@ export function stampEmberworks(grid: Grid): void {
     }
   }
   for (const t of ramps) set(grid, t.tx, t.ty, TILE.ramp);
+  // The Anvil Hall's walls and door (its floor is cleared with the landmarks').
+  for (const t of ANVIL_HALL.walls) set(grid, t.tx, t.ty, t.symbol);
 }

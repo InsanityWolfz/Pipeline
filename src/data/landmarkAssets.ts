@@ -31,6 +31,8 @@ export const MAP_ICONS = {
   spring: 'map-spring',
   cache: 'map-cache',
   aqueduct: 'map-aqueduct',
+  /** 060: the Slag River, an ember channel under a bridge. */
+  river: 'map-river',
   /** 051 (B.5): the foundry's stairs, the shrine's pylon and a boss arena, once each has been seen. */
   foundry: 'map-foundry',
   pylon: 'map-pylon',

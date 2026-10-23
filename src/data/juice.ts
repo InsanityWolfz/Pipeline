@@ -92,6 +92,8 @@ export const PARTICLES = {
   waveSpray: { colors: ['snow', 'hollow-pale', 'hollow-light'], count: 20, speed: [50, 130], gravity: -10, lifeMs: [250, 500], size: 2 },
   stompDust: { colors: ['hollow-pale', 'hollow-light', 'hollow'], count: 18, speed: [40, 110], gravity: -20, lifeMs: [300, 600], size: 2 },
   barrierShards: { colors: ['cyan', 'cyan-glow', 'snow'], count: 40, speed: [20, 90], gravity: 160, lifeMs: [500, 1000], size: 2, lift: 40 },
+  // 060: a cinder vent flaring open, embers and ash rising out of its mouth.
+  ventFlare: { colors: ['cinder-light', 'cinder', 'flame-dark', 'ash-pale'], count: 24, speed: [30, 110], gravity: -80, lifeMs: [400, 800], size: 2, lift: 18 },
   // 038: a landmine bursting (iron shards and ley sparks) and a cluster bomb's bomblets popping (a few embers).
   mineShards: { colors: ['iron-light', 'iron', 'cyan-glow', 'snow'], count: 30, speed: [60, 160], gravity: 200, lifeMs: [220, 480], size: 2, lift: 6 },
   bombletEmbers: { colors: ['cinder-light', 'cinder', 'gold-trim'], count: 12, speed: [30, 90], gravity: -30, lifeMs: [300, 600], size: 2 },
@@ -115,6 +117,8 @@ export const HARVEST_BURSTS: Readonly<Record<string, keyof typeof PARTICLES>> = 
   // 034: ley-iron chips like stone.
   'ley-iron-seam': 'harvestChips',
   'resin-seep': 'harvestResin',
+  // 060: cinderite breaking off a vent's crust in hot embers.
+  'cinder-vent': 'bombletEmbers',
 };
 
 /** While a node is worked: a small burst this often, ms; a tree shakes this far either way, px, this many times a second. */

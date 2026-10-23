@@ -3,6 +3,9 @@ import { EMBERWORKS, inEmberworks } from '../../data/emberworks';
 import { EMBERWORKS_GROUND } from '../../data/emberworksAssets';
 import { GROUND } from '../../data/art/ground';
 import { TILE } from '../../data/rooms';
+import { ANVIL_HALL } from '../../data/emberworksSites';
+import { LANDMARK_LIST } from '../../data/landmarks';
+import type { TileRect } from '../../data/tiles';
 import { bearingOf, fromCentre, WORLD_SHAPE } from '../../data/worldShape';
 import { inkCss } from '../vector/draw';
 
@@ -75,6 +78,38 @@ function ramp(c: CanvasRenderingContext2D, tx: number, ty: number): void {
   c.restore();
 }
 
+/** The Slag River's molten channel: a dark crust split by glowing seams, now and then a bright bubble. */
+function slag(c: CanvasRenderingContext2D, tx: number, ty: number, hash: number): void {
+  const S = G.slag;
+  const x = tx * T;
+  const y = ty * T;
+  fill(c, S.crust, 1, () => c.rect(x - 0.5, y - 0.5, T + 1, T + 1));
+  line(c, [x, y + 8 + (hash % 6), x + 12, y + 12, x + 20, y + 6 + (hash % 5), x + T, y + 10], 2.4, S.glow, S.seamAlpha);
+  line(c, [x, y + 24, x + 9, y + 20 + (hash % 4), x + 22, y + 26, x + T, y + 22], 1.6, S.glow, S.seamAlpha * 0.8);
+  if (hash % S.bubbleEvery === 0) fill(c, S.bright, 0.9, () => c.ellipse(x + 8 + ((hash >>> 4) % 16), y + 8 + ((hash >>> 8) % 16), 2.2, 1.6, 0, 0, Math.PI * 2));
+}
+
+/** A stone bridge over the slag: a deck of cut slabs, a rail where it meets the river's edge. */
+function bridge(c: CanvasRenderingContext2D, tx: number, ty: number, symbol: (tx: number, ty: number) => string | undefined): void {
+  const B = G.bridge;
+  const x = tx * T;
+  const y = ty * T;
+  slag(c, tx, ty, 0);
+  fill(c, B.deck, B.alpha, () => c.rect(x - 0.5, y - 0.5, T + 1, T + 1));
+  line(c, [x, y + T / 2, x + T, y + T / 2], 1, B.plank, 0.6);
+  line(c, [x + T / 2, y, x + T / 2, y + T], 1, B.plank, 0.6);
+  // A rail along each side the bridge meets slag.
+  if (symbol(tx, ty - 1) === TILE.slag) line(c, [x, y + 2, x + T, y + 2], 3, B.rail, 1);
+  if (symbol(tx, ty + 1) === TILE.slag) line(c, [x, y + T - 2, x + T, y + T - 2], 3, B.rail, 1);
+  if (symbol(tx - 1, ty) === TILE.slag) line(c, [x + 2, y, x + 2, y + T], 3, B.rail, 1);
+  if (symbol(tx + 1, ty) === TILE.slag) line(c, [x + T - 2, y, x + T - 2, y + T], 3, B.rail, 1);
+}
+
+/** The ash-paved floors: the landmarks paved in ash (the Ash Kilns, the Outpost Forge) and the Anvil Hall's. */
+const FLAGGED: readonly TileRect[] = [...LANDMARK_LIST.filter((l) => l.look?.paving === 'ash').map((l) => l.area), ANVIL_HALL.inside];
+const SCORCHED: readonly TileRect[] = LANDMARK_LIST.filter((l) => l.look?.scorched).map((l) => l.area);
+const inAny = (rs: readonly TileRect[], tx: number, ty: number): boolean => rs.some((r) => tx >= r.x0 && tx <= r.x1 && ty >= r.y0 && ty <= r.y1);
+
 /** Paints the Emberworks' ground and the ramps; `each` walks the chunk's tiles with their hash, `symbol` reads the map. */
 export function paintEmberworks(
   c: CanvasRenderingContext2D,
@@ -107,9 +142,18 @@ export function paintEmberworks(
       line(c, pts, 2.2, G.veinDeep, 0.5);
       line(c, pts, 0.9, G.vein, 0.85);
     }
-    if (s === TILE.terrace) {
+    if (s === TILE.slag) slag(c, tx, ty, hash);
+    else if (s === TILE.bridge) bridge(c, tx, ty, symbol);
+    else if (s === TILE.terrace) {
       fill(c, G.terrace.top, G.terrace.alpha, () => c.rect(x, y, T, T - 5));
       if (symbol(tx, ty + 1) !== TILE.terrace) fill(c, G.terrace.step, G.terrace.alpha, () => c.rect(x, y + T - 6, T, 6));
+    } else if (inAny(SCORCHED, tx, ty)) {
+      // A soft blotch per tile, a little bigger than it, so the scorch has no hard edge.
+      fill(c, G.scorch.color, G.scorch.alpha, () => c.ellipse(x + T / 2 + ((hash >>> 5) % 7) - 3, y + T / 2 + ((hash >>> 9) % 7) - 3, T * 0.75, T * 0.6, 0, 0, Math.PI * 2));
+      fill(c, G.speck, 0.8, () => c.ellipse(x + 6 + ((hash >>> 3) % 20), y + 6 + ((hash >>> 7) % 20), 1.1, 1.1, 0, 0, Math.PI * 2));
+    } else if (inAny(FLAGGED, tx, ty) && (s === TILE.floor || s === TILE.path) && hash % G.flags.gapEvery !== 0) {
+      fill(c, G.flags.color, G.flags.alpha, () => c.roundRect(x + 2, y + 2, T - 4, T - 4, 3));
+      line(c, [x + 2, y + T - 2, x + T - 2, y + T - 2], 1, G.flags.edge, G.flags.alpha);
     }
   });
 }

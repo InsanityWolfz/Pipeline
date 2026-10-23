@@ -3,9 +3,19 @@
 /**
  * Where a node type may stand (018), so every material visibly comes from somewhere:
  * in a grove, in a rock field, at a pond's shallow edge, on a ley line, in the Frozen Grotto (029), or at the foot of
- * a cliff or quarry face (034: the tile north of it is cliff), or in the Husk Hive (049).
+ * a cliff or quarry face (034: the tile north of it is cliff), or in the Husk Hive (049), or at the Cinder Vents (060).
  */
-export type Placement = 'grove' | 'rock-field' | 'pond-edge' | 'ley-line' | 'frozen-grotto' | 'cliff-seam' | 'hive';
+export type Placement = 'grove' | 'rock-field' | 'pond-edge' | 'ley-line' | 'frozen-grotto' | 'cliff-seam' | 'hive' | 'vent';
+
+/**
+ * A node that opens and shuts (060: a cinder vent): closed for `closedTicks`, a glowing telegraph for `warnTicks`, then
+ * open for `openTicks`, round and round; it can be gathered only while open. Each starts at its own point in the cycle.
+ */
+export interface NodeCycle {
+  readonly closedTicks: number;
+  readonly warnTicks: number;
+  readonly openTicks: number;
+}
 
 export interface NodeDef {
   id: string;
@@ -22,6 +32,8 @@ export interface NodeDef {
   regrowTicks: number;
   /** Solid box at the base, px, centred on the node's position. */
   feetBox: { w: number; h: number };
+  /** 060: it opens and shuts, and is gathered only while open. */
+  cycle?: NodeCycle;
 }
 
 const node = (id: string, name: string, itemId: string, placement: Placement, feetBox: NodeDef['feetBox']): NodeDef => ({
@@ -45,7 +57,12 @@ export const NODES: Readonly<Record<string, NodeDef>> = {
   'ley-iron-seam': node('ley-iron-seam', 'Ley-iron seam', 'ley-iron', 'cliff-seam', { w: 20, h: 10 }),
   // 049.3: a Region 1 stone node's numbers, giving Husk resin.
   'resin-seep': node('resin-seep', 'Resin seep', 'husk-resin', 'hive', { w: 18, h: 8 }),
+  // 060: a vent in the Emberworks' ash that flares open now and then, crusted with cinderite.
+  'cinder-vent': { ...node('cinder-vent', 'Cinder vent', 'cinderite', 'vent', { w: 20, h: 10 }), cycle: { closedTicks: 720, warnTicks: 90, openTicks: 360 } },
 };
+
+/** Where a node's cycle seeds come from (060): the map's seed mixed with this, so the main RNG stream is untouched. */
+export const NODE_CYCLE_SALT = 0x0c1d3e7;
 
 /** A depleted node's remains grow back through this many visible stages before the full node returns (018). */
 export const REGROW_STAGES = 3;

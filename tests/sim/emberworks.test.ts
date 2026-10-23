@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { EMBERWORKS, EMBERWORKS_GATE, inEmberworks, rampTiles } from '../../src/data/emberworks';
+import { SLAG_RIVER_TILES } from '../../src/data/emberworksSites';
 import { HOLLOWS, inHollows, regionAt } from '../../src/data/hollows';
 import { RING_XP } from '../../src/data/leveling';
 import { OVERWORLD, ringOf } from '../../src/data/overworld';
@@ -65,18 +66,23 @@ describe('the ring', () => {
   });
 
   it('ends past its outer radius in a ragged cliff edge out to the grid’s edge, never a bare wall', () => {
-    for (let ty = 0; ty < WORLD_SHAPE.size; ty++) for (let tx = 0; tx < WORLD_SHAPE.size; tx++) if (fromCentre(tx, ty) > outer) expect(at(tx, ty), `${tx},${ty}`).toBe(TILE.cliff);
+    // 060 slice 3: the Slag River runs half a tile into it, solid to feet too.
+    const river = new Set(SLAG_RIVER_TILES.map(tileKey));
+    for (let ty = 0; ty < WORLD_SHAPE.size; ty++) for (let tx = 0; tx < WORLD_SHAPE.size; tx++) if (fromCentre(tx, ty) > outer && !river.has(`${tx},${ty}`)) expect(at(tx, ty), `${tx},${ty}`).toBe(TILE.cliff);
+    for (const t of SLAG_RIVER_TILES) if (fromCentre(t.tx, t.ty) > outer) expect(t.symbol).toBe(TILE.slag);
     const band = room.rows.flatMap((row, ty) => [...row].map((s, tx) => ({ s, d: fromCentre(tx, ty) }))).filter((t) => t.d > outer - 1 && t.d <= outer);
     expect(band.some((t) => t.s === TILE.cliff)).toBe(true);
     expect(band.some((t) => t.s !== TILE.cliff)).toBe(true);
   });
 
-  it('keeps the Hollows’ cliff edge solid between the rings but for its ramps', () => {
+  it('keeps the Hollows’ cliff edge solid between the rings but for its ramps (and the Slag River’s slag at its foot)', () => {
     const ramps = new Set(EMBERWORKS.ramps.flatMap((r) => rampTiles(r)).map(tileKey));
+    for (const t of SLAG_RIVER_TILES) if (fromCentre(t.tx, t.ty) < inner + EMBERWORKS.wall) expect(t.symbol).toBe(TILE.slag);
+    const river = new Set(SLAG_RIVER_TILES.map(tileKey));
     for (let ty = 0; ty < WORLD_SHAPE.size; ty++) {
       for (let tx = 0; tx < WORLD_SHAPE.size; tx++) {
         const d = fromCentre(tx, ty);
-        if (d >= inner && d < inner + EMBERWORKS.wall && !ramps.has(`${tx},${ty}`)) expect(at(tx, ty), `${tx},${ty}`).toBe(TILE.cliff);
+        if (d >= inner && d < inner + EMBERWORKS.wall && !ramps.has(`${tx},${ty}`) && !river.has(`${tx},${ty}`)) expect(at(tx, ty), `${tx},${ty}`).toBe(TILE.cliff);
       }
     }
     expect(EMBERWORKS.ramps.length).toBeGreaterThanOrEqual(2);

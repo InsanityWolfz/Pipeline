@@ -1,11 +1,15 @@
 import { expect, test } from '@playwright/test';
+import { CLAIM_TICKS } from '../../src/data/claims';
 import { EMBERWORKS } from '../../src/data/emberworks';
+import { landmarkDef } from '../../src/data/landmarks';
 import { polar, WORLD_SHAPE } from '../../src/data/worldShape';
 import { boot, watchErrors } from './helpers';
 import { clickRow, flowIs } from './flowPage';
+import { step } from './foundryPage';
 
 // The Emberworks (060): its ley barrier stands across the top of each ramp up through the Hollows' cliff edge until
-// the Bulwark's first kill; then it collapses and the player walks up the ramp into ring 4, region 3.
+// the Bulwark's first kill; then it collapses and the player walks up the ramp into ring 4, region 3. Up there, the
+// Ash Kilns' pylon is claimed by holding E (no guards until 061), and sends cinderite home up its new port.
 
 const RAMP = EMBERWORKS.ramps.find((r) => r.id === 'west-ramp') ?? { bearing: 0 };
 const FOOT = polar(RAMP.bearing, EMBERWORKS.ramp.from + 1);
@@ -72,5 +76,33 @@ test('the Bulwark’s first kill drops the ramps’ barrier, and the player walk
   }, TOP);
   expect(up).toEqual({ tile: TOP, ring: 4, region: 3 });
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().emberworks))?.barrier, { timeout: 20_000 }).toBe('down');
+  expect(errors).toEqual([]);
+});
+
+test('claim the Ash Kilns: held E at its pylon, and its cinderite port counts it', async ({ page }) => {
+  test.setTimeout(180_000);
+  const errors = watchErrors(page);
+  await boot(page, '?start=hollows');
+  const pylon = landmarkDef('ash-kilns').pylon ?? { tx: 0, ty: 0 };
+  await page.evaluate(() => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    for (const e of g.getState().enemies) g.setEnemyHealth(e.id, 0);
+    g.step(1);
+  });
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.getState().gates.emberworks)) ?? false).toBe(true);
+  // 042: the Bulwark's first kill's end card shows 180 ticks on; Keep playing closes it.
+  await page.evaluate(() => window.__GAME__?.step(200));
+  if ((await page.evaluate(() => window.__GAME__?.flow().state)) === 'endCard') {
+    await clickRow(page, 'keepPlaying');
+    await flowIs(page, 'play');
+  }
+  await page.evaluate(([tx, ty]) => window.__helpers?.walkTo((tx + 0.5) * 32, (ty + 1.5) * 32), [pylon.tx, pylon.ty] as const);
+  const there = await step(page, 1, { interact: true });
+  expect(there.area).toMatchObject({ ring: 4, region: 3 });
+  const claimed = await step(page, CLAIM_TICKS + 2);
+  expect(claimed.claims).toContain('ash-kilns');
+  expect(claimed.landmarks.find((l) => l.id === 'ash-kilns')).toMatchObject({ claimed: true });
+  expect(claimed.ports.find((p) => p.raw === 'cinderite')).toMatchObject({ pylons: 1, perMinute: 15 });
   expect(errors).toEqual([]);
 });

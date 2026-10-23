@@ -78,7 +78,7 @@ describe('claiming the pylon', () => {
     expect(s.claimHold).toBeNull();
   });
 
-  it("claims after CLAIM_TICKS of standing still, adding the four ports and the waystone (not 034's ley-iron port, 049's resin port or 055's rimestone port: the shrine sends none of them)", () => {
+  it("claims after CLAIM_TICKS of standing still, adding the four ports and the waystone (not 034's ley-iron port, 049's resin port, 055's rimestone port or 060's cinderite port: the shrine sends none of them)", () => {
     const s = atPylon();
     run(s, 1, { interact: true });
     expect(s.claimHold).toEqual({ site: SHRINE_SITE, progress: 1 });
@@ -87,7 +87,7 @@ describe('claiming the pylon', () => {
     run(s, 1);
     expect(s.claims).toEqual([SHRINE_SITE]);
     expect(s.events.claims).toEqual([{ site: SHRINE_SITE }]);
-    expect(s.fixtures.map((f) => f.id).sort()).toEqual(FIXTURES.filter((f) => f.raw !== 'ley-iron' && f.raw !== 'husk-resin' && f.raw !== 'rimestone').map((f) => f.id).sort());
+    expect(s.fixtures.map((f) => f.id).sort()).toEqual(FIXTURES.filter((f) => f.raw !== 'ley-iron' && f.raw !== 'husk-resin' && f.raw !== 'rimestone' && f.raw !== 'cinderite').map((f) => f.id).sort());
     expect(summarize(s).claims).toEqual([SHRINE_SITE]);
   });
 

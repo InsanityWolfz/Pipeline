@@ -55,16 +55,20 @@ export const EMBERWORKS = {
   /** The boss whose first kill drops the barrier (060: the Bulwark). */
   opensOn: 'bulwark',
   /**
-   * Where its places stand, by bearing and distance (tiles) from the foundry's door: each ramp's road climbs to one of
-   * the three the goals send the player to (the Ash Kilns, the Cinder Vents, the Anvil Hall); the Ley Spring is on the
-   * far side of the ring from every ramp.
+   * Where its places stand (the middle of each one's area), by bearing and distance (tiles) from the foundry's door
+   * (src/data/emberworksSites.ts lays them out). The west ramp's road climbs to the Ash Kilns, its pylon overlooking the
+   * Cinder Vents behind it (as 034's Cistern Terrace overlooks the Cut); the north-west ramp's runs round to the Anvil
+   * Hall's door, where the ring is deep enough for the hall; the south ramp's to the Outpost Forge. The Slag River
+   * crosses the ring between the Kilns and the Hall (its place is its inner bridge, where a road reaches it); the Ley
+   * Spring is on the far side of the ring from every ramp, at the end of a road round the ring past the Hall.
    */
   places: {
-    ashKilns: { bearing: 258, r: 96 },
-    cinderVents: { bearing: 178, r: 97 },
-    anvilHall: { bearing: 325, r: 97 },
-    outpostForge: { bearing: 205, r: 95 },
-    spring: { bearing: 70, r: 95 },
+    ashKilns: { bearing: 259, r: 93 },
+    cinderVents: { bearing: 259, r: 102 },
+    anvilHall: { bearing: 345, r: 95 },
+    outpostForge: { bearing: 192, r: 95 },
+    slagRiver: { bearing: 290, r: 89 },
+    spring: { bearing: 70, r: 91 },
   },
 } as const;
 
