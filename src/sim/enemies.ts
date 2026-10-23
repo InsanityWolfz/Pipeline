@@ -5,19 +5,44 @@ import type { Ring } from '../data/ringScale';
 import { enemyDef } from '../data/enemies';
 import { defOf } from './champions';
 import { chillEnemy } from './cold';
+import { igniteEnemy } from './fire';
 import { straightAmmo } from '../data/ammo';
+import { FIRE } from '../data/tags';
 import { startKnock, type Knockable } from './knockback';
 import type { Facing } from './player';
 import type { SimState } from './state';
+import { createBellows, plated, type BellowsState } from './forgewrightParts';
+import { recordBlock } from './shield';
 
 // Enemies as plain data: creation, damage and hurtboxes. Their behaviour is in enemyAi.ts, separation in separation.ts.
 
 /**
  * `lob` and `throw` (034): the Bulwark rearing back, then holding the throw. 035: `stun`, a Charger dazed by a wall;
  * `dig`, a Burrower digging in; `peek`, a Sniper stepping out of cover to a clear line. 041: the Bulwark's `roar` as it
- * enrages, and its rear stomp's `stomp-windup`, `stomp` and `stomp-recover`.
+ * enrages, and its rear stomp's `stomp-windup`, `stomp` and `stomp-recover`. 060: the Forgewright's ember spray
+ * (`spray-windup`, `spray`), its Forge Flood (`flood-windup`, `flood`) and its `vent` stagger.
  */
-export type EnemyMode = 'idle' | 'chase' | 'windup' | 'swipe' | 'recover' | 'return' | 'lob' | 'throw' | 'stun' | 'dig' | 'peek' | 'roar' | 'stomp-windup' | 'stomp' | 'stomp-recover';
+export type EnemyMode =
+  | 'idle'
+  | 'chase'
+  | 'windup'
+  | 'swipe'
+  | 'recover'
+  | 'return'
+  | 'lob'
+  | 'throw'
+  | 'stun'
+  | 'dig'
+  | 'peek'
+  | 'roar'
+  | 'stomp-windup'
+  | 'stomp'
+  | 'stomp-recover'
+  | 'spray-windup'
+  | 'spray'
+  | 'flood-windup'
+  | 'flood'
+  | 'vent';
 
 export interface EnemyState extends Knockable {
   id: number;
@@ -57,13 +82,17 @@ export interface EnemyState extends Knockable {
   frozen: number;
   /** Ticks after a thaw in which cold hits add no stacks. */
   refreeze: number;
+  /** Fire (060): ticks of burn left (0: not burning), its damage a second, and ticks to its next once-a-second beat. */
+  burnTicks: number;
+  burnDps: number;
+  burnNext: number;
   /** A champion (032), by name, or null: the sim reads its scaled def (`defOf`). */
   champion: { name: string } | null;
   /** Its danger ring (041): its home tile's, set when it's created and kept as it walks. Its def is scaled by it. */
   ring: Ring;
   /** Its continuous facing, radians (034): a shielded enemy's shield points this way and turns, never snapping. */
   angle: number;
-  /** Ticks before its next bomb lob (034: the Bulwark's). */
+  /** Ticks before its next bomb lob (034: the Bulwark's), or its next ember spray (060: the Forgewright's). */
   lobCooldown: number;
   /** Ticks of shield flash left after a blocked hit (034), for render. */
   blockFlash: number;
@@ -93,6 +122,14 @@ export interface EnemyState extends Knockable {
   waveTicks: number;
   waveDirX: number;
   waveDirY: number;
+  /**
+   * The Forgewright (060, forgewrightParts.ts): its heat (0 to its def's max), ticks left venting (0: plated), its two
+   * bellows (none on anything else), and the half of its hall its Forge Flood is locked to (-1 west, 1 east, 0 none).
+   */
+  heat: number;
+  vent: number;
+  bellows: BellowsState[];
+  floodSide: number;
 }
 
 /** A home's danger ring (041, the rule 037's XP used): `ringOf` its tile in the overworld, 0 in any other room. */
@@ -125,10 +162,13 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     chillTicks: 0,
     frozen: 0,
     refreeze: 0,
+    burnTicks: 0,
+    burnDps: 0,
+    burnNext: 0,
     champion: null,
     ring,
     angle: Math.PI / 2,
-    lobCooldown: def.kind === 'bulwark' ? def.lob.cooldownTicks : 0,
+    lobCooldown: def.kind === 'bulwark' ? def.lob.cooldownTicks : def.kind === 'forgewright' ? def.spray.cooldownTicks : 0,
     blockFlash: 0,
     underground: false,
     spotX: at.x,
@@ -147,6 +187,10 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     waveTicks: 0,
     waveDirX: 0,
     waveDirY: 0,
+    heat: 0,
+    vent: 0,
+    bellows: createBellows(enemyId),
+    floodSide: 0,
     knockX: 0,
     knockY: 0,
     knockTicks: 0,
@@ -170,6 +214,8 @@ export interface HitStyle {
   melee?: boolean;
   /** A burning arrow (054): its hit event is marked so render flashes it; it changes no rule. */
   burning?: boolean;
+  /** 060: a burn's once-a-second beat. It never sets a burn going again; render shows it as a small number, with no hit stop or hit sound. */
+  burn?: boolean;
 }
 
 /** An arrow's hit, with its Knockback. */
@@ -185,14 +231,32 @@ export function damageEnemy(
   style: HitStyle = ARROW_HIT,
 ): void {
   const def = defOf(e);
+  // 060: the Forgewright's plating takes every hit on its body until it vents (its bellows' hits never come here).
+  if (plated(e)) {
+    recordBlock(state, e, e.x, e.y + def.hurtbox.offsetY);
+    if (e.mode === 'idle' || e.mode === 'return') aggro(e);
+    return;
+  }
   e.health = Math.max(0, e.health - amount);
   if (style.flash) e.flash = def.hitFlashTicks;
   // Knockback (039): the round's push times the enemy's weight (a boss weighs 0, frozen or not).
   const push = style.knock * def.weight;
   if (push > 0) startKnock(e, dirX, dirY, push, def.hitKnockTicks);
   if (style.damageType === 'cold' && e.health > 0) chillEnemy(state, e);
+  // 060: a fire hit sets it burning, the killing hit too (it dies burning, and its burn spreads); a burn's beat never does.
+  if (style.damageType === 'fire' && !style.burn) igniteEnemy(state, e, amount * FIRE.burnShare);
   if (e.mode === 'idle' || e.mode === 'return') aggro(e);
-  state.events.hits.push({ target: 'enemy', id: e.id, x: e.x, y: e.y, damage: amount, damageType: style.damageType, ...(style.melee ? { melee: true as const } : {}), ...(style.burning ? { burning: true as const } : {}) });
+  state.events.hits.push({
+    target: 'enemy',
+    id: e.id,
+    x: e.x,
+    y: e.y,
+    damage: amount,
+    damageType: style.damageType,
+    ...(style.melee ? { melee: true as const } : {}),
+    ...(style.burning ? { burning: true as const } : {}),
+    ...(style.burn ? { burn: true as const } : {}),
+  });
 }
 
 /**

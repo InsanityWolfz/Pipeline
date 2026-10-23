@@ -1,6 +1,7 @@
 // Asset keys. Render code loads and draws by these keys, never string literals.
 import { enemyAnims, type EnemyAnims } from './enemyAnims';
 import { HOLLOWS_ENEMY_ANIMS } from './hollowsEnemyAssets';
+import { FORGE_ANIMS } from './forgewrightAssets';
 
 /** Vector frames drawn at boot (016): one texture of shelf-packed canvas pages, holding every sprite frame by name. */
 export const VECTOR_KEY = 'vectors';
@@ -110,10 +111,12 @@ export const NODE_SPRITES: Readonly<Record<string, { uses: readonly string[]; re
   'rime-outcrop': nodeFrames('rime-outcrop', 3, 3),
   'ley-iron-seam': nodeFrames('ley-iron-seam', 3, 3),
   'resin-seep': nodeFrames('resin-seep', 3, 3),
+  // 060: open (by uses left) and spent; its closed and warning looks are EMBERWORKS_SPRITES.vent.
+  'cinder-vent': nodeFrames('cinder-vent', 3, 3),
 };
 
 /** The tube slot's frame (025) by how many rounds it shows: one for a carried round or the fist, up to one per intake entrance for a volley. */
-export const TUBE_SLOT_FRAMES = ['hud-tube-slot-1', 'hud-tube-slot-2', 'hud-tube-slot-3'] as const;
+export const TUBE_SLOT_FRAMES = ['hud-tube-slot-1', 'hud-tube-slot-2', 'hud-tube-slot-3', 'hud-tube-slot-4'] as const;
 
 /** The tube slot frame for `units` rounds (clamped to the frames there are). */
 export function tubeSlotFrame(units: number): string {
@@ -140,6 +143,7 @@ export const ENEMY_ANIMS: Readonly<Record<string, EnemyAnims>> = {
   warden: enemyAnims('warden', true),
   bulwark: enemyAnims('bulwark', true, ['turn', 'lob', 'throw', 'block', 'roar', 'brace', 'stomp']),
   ...HOLLOWS_ENEMY_ANIMS,
+  ...FORGE_ANIMS,
 };
 
 /** The sparkle played where an item is picked up. */
@@ -293,5 +297,3 @@ export const DEPTHS = {
 
 /** Bombs draw this far above their arc height, so they leave the hand at tube height, px. */
 export const BOMB_LIFT = 10;
-
-

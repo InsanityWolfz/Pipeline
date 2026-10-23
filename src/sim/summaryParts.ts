@@ -4,7 +4,7 @@ import type { ArrowState } from './arrows';
 import { burning } from './keystones';
 import type { BombState } from './bombs';
 import { immune, type EnemyMode, type EnemyState } from './enemies';
-import type { NodeState } from './nodes';
+import { ventState, type NodeState } from './nodes';
 import type { MachineStatus, PieceState } from './pieces';
 import type { Facing } from './player';
 import { kindSummary, round, type KindSummary } from './summaryKinds';
@@ -76,6 +76,8 @@ export interface EnemySummary extends KindSummary {
   /** Chill stacks from cold hits (029), and ticks left frozen. */
   chill: number;
   frozen: number;
+  /** Ticks of burn left (060: Fire), 0 when not burning. */
+  burn: number;
   /** Ticks left Stunned (039: by Rollbreaker or a Charger's wall). */
   stunned: number;
   /** Its weight against Knockback (039: a boss 0). */
@@ -112,6 +114,7 @@ export function enemySummary(state: SimState, e: EnemyState): EnemySummary {
     flash: e.flash,
     chill: e.chill,
     frozen: e.frozen,
+    burn: e.burnTicks,
     stunned: e.stunned,
     weight: defOf(e).weight,
     ...kindSummary(state, e),
@@ -127,10 +130,12 @@ export interface NodeSummary {
   uses: number;
   /** Ticks until it's back to full; 0 when not regrowing. */
   regrow: number;
+  /** 060: a cinder vent's place in its cycle (closed, warning or open); null for a node without one. */
+  vent: ReturnType<typeof ventState>;
 }
 
 export function nodeSummary(n: NodeState): NodeSummary {
-  return { id: n.id, nodeId: n.nodeId, room: n.roomId, x: round(n.x), y: round(n.y), uses: n.uses, regrow: n.regrow };
+  return { id: n.id, nodeId: n.nodeId, room: n.roomId, x: round(n.x), y: round(n.y), uses: n.uses, regrow: n.regrow, vent: ventState(n) };
 }
 
 export interface BombSummary {

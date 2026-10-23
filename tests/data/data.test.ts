@@ -124,8 +124,8 @@ describe('assets', () => {
     }
   });
 
-  it('has the fire burst, muzzle flash and deposit swirl as frames, and no burn flame (029)', () => {
-    expect(known.some((f) => f.startsWith('burn-flame'))).toBe(false);
+  it('has the fire burst, muzzle flash and deposit swirl as frames; no burn flame (029) but the burning enemy’s flames (060)', () => {
+    expect(known.filter((f) => f.startsWith('burn-flame'))).toEqual(['burn-flames/0', 'burn-flames/1', 'burn-flames/2']);
     for (const anim of [FIRE_BURST, MUZZLE_FLASH, DEPOSIT_SWIRL]) {
       expect(anim.key).toMatch(KEBAB);
       for (const frame of animFrames(anim)) expect(known).toContain(frame);
@@ -345,7 +345,8 @@ describe('build bar categories (026)', () => {
       // 033: the splitter, after the conduit.
       ['conduit', 'splitter', 'underground-entrance', 'underground-exit', 'hopper', 'crate'],
       // 029: each stage in its base ammo's group, after the chain that makes the ammo.
-      ['cutter', 'knapper', 'spinner', 'assembler', 'frost-rune'],
+      // 060: the Fire rune beside the frost rune (its tag's first family is arrows).
+      ['cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'fire-rune'],
       ['shaper', 'fuse-maker', 'packer', 'cluster-die'],
       ['grinder', 'focuser', 'ley-guide', 'prism-lens'],
       // 038: the landmine chain.
@@ -384,8 +385,8 @@ describe('spreads from the intake (024)', () => {
     expect(PLAYTEST_START.inventory['warden-core']).toBe(5);
   });
 
-  it('has three entrances on the mouth, the centre open, and starting numbers from the spec', () => {
-    expect(INTAKE.entrances).toHaveLength(3);
+  it('has four entrances on the mouth (060: was three), the second open, and starting numbers from the spec', () => {
+    expect(INTAKE.entrances).toHaveLength(4);
     expect(INTAKE.entrances.filter((e) => e.startsOpen)).toEqual([INTAKE.entrances[1]]);
     expect([ENTRANCE_CAPS[0], SPREAD_STEP]).toEqual([30, 15]);
   });
@@ -508,10 +509,11 @@ describe('the tutorial (012)', () => {
     const doorGates = Object.values(WORLD).flatMap((r) => (r.doorways ?? []).flatMap((d) => (d.gate ? [d.gate] : [])));
     expect(doorGates).toEqual(['foundry']);
     const tileGates = new Set((outside.gateTiles ?? []).map((t) => t.gate));
-    // 034: Stonefall Hollows' barrier seals its gap; 055: the shrine's gap is its arena's door, which the shrine gate unlocks.
-    expect([...tileGates]).toEqual(['hollows']);
+    // 034: Stonefall Hollows' barrier seals its gap; 055: the shrine's gap is its arena's door, which the shrine gate
+    // unlocks; 060: the Emberworks' barrier stands across the top of each ramp.
+    expect([...tileGates]).toEqual(['hollows', 'emberworks']);
     expect(SHRINE_ARENA.door.unlock).toBe('shrine');
-    for (const t of outside.gateTiles ?? []) expect(outside.rows[t.ty]?.[t.tx]).toBe(TILE.floor);
+    for (const t of outside.gateTiles ?? []) expect(outside.rows[t.ty]?.[t.tx]).toBe(t.gate === 'emberworks' ? TILE.ramp : TILE.floor);
     for (const r of Object.values(RECIPES)) if (r.requires) expect(r.requires).toBe('attuned');
     expect(TUTORIAL_START.room).toBe(OVERWORLD.id);
   });

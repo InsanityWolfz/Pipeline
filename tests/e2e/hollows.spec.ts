@@ -18,12 +18,12 @@ const ROW = HOLLOWS.crossing.ty;
 const GATE_X = Math.max(...HOLLOWS.gate.filter((t) => t.ty === ROW && t.tx < HOLLOWS.crossing.tx + 3).map((t) => t.tx));
 const TERRACE = HOLLOWS_SITES.find((l) => l.id === 'cistern-terrace')?.pylon ?? { tx: 0, ty: 0 };
 
-/** Kills every enemy but those of `keep`'s enemy ids, through the hook. */
+/** Kills every enemy but those of `keep`'s enemy ids (and 060's Forgewright, far off in its hall), through the hook. */
 async function quiet(page: Page, keep: readonly string[] = []): Promise<void> {
   await page.evaluate((k) => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    for (const e of g.getState().enemies) if (!k.includes(e.enemyId)) g.setEnemyHealth(e.id, 0);
+    for (const e of g.getState().enemies) if (!k.includes(e.enemyId) && e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
     g.step(1);
   }, keep);
 }
@@ -219,7 +219,7 @@ test('?start=hollows: the shield blocks arrows into its front; from behind they 
     const iron = first.inventory['ley-iron'] ?? 0;
     g.step(ticks);
     const s = g.getState();
-    return { summons: first.events.summons, iron, bosses: s.bosses.length, altar: s.altars[0]?.state };
+    return { summons: first.events.summons, iron, bosses: s.bosses.filter((b) => b.enemyId === 'bulwark').length, altar: s.altars[0]?.state };
   }, A.summonTicks);
   expect(summoned.summons).toEqual([{ altar: A.altar.id, boss: 'bulwark' }]);
   expect(summoned.bosses).toBe(1);

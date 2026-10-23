@@ -30,13 +30,15 @@ describe('inventory panel groups (031)', () => {
   it('maps the items as the spec lists them', () => {
     const byGroup = (g: string) => Object.values(ITEMS).filter((it) => it.group === g).map((it) => it.id).sort();
     // 034: ley-iron, the first metal, is a raw.
-    expect(byGroup('raw')).toEqual(['fiber', 'husk-resin', 'ley-crystal', 'ley-iron', 'rimestone', 'stone', 'wood']);
+    expect(byGroup('raw')).toEqual(['cinderite', 'fiber', 'husk-resin', 'ley-crystal', 'ley-iron', 'rimestone', 'stone', 'wood']);
     // 033: machine parts and schematics go in Parts, cores in Cores.
     expect(byGroup('parts')).toEqual([
       'ancient-gear',
       'aqueduct-valve',
       'arrowhead',
       'casing',
+      // 060: Region 3's machine part.
+      'forge-rivet',
       'fuse',
       // 038: the landmine chain's plate.
       'iron-plate',
@@ -46,10 +48,32 @@ describe('inventory panel groups (031)', () => {
       'schematic-reservoir-2',
       'shaft',
     ]);
-    // 039: the six Frost rounds of every family.
-    expect(byGroup('ammo')).toEqual(['arrow', 'arrow+frost', 'bomb', 'bomb+cluster', 'bomb+frost', 'bomb+frost+cluster', 'landmine', 'landmine+frost', 'ley-bolt', 'ley-bolt+frost', 'ley-bolt+frost+homing', 'ley-bolt+frost+split', 'ley-bolt+homing', 'ley-bolt+split']);
+    // 039: the six Frost rounds of every family. 060: the seven Fire rounds.
+    expect(byGroup('ammo')).toEqual([
+      'arrow',
+      'arrow+fire',
+      'arrow+frost',
+      'bomb',
+      'bomb+cluster',
+      'bomb+fire',
+      'bomb+fire+cluster',
+      'bomb+frost',
+      'bomb+frost+cluster',
+      'landmine',
+      'landmine+fire',
+      'landmine+frost',
+      'ley-bolt',
+      'ley-bolt+fire',
+      'ley-bolt+fire+homing',
+      'ley-bolt+fire+split',
+      'ley-bolt+frost',
+      'ley-bolt+frost+homing',
+      'ley-bolt+frost+split',
+      'ley-bolt+homing',
+      'ley-bolt+split',
+    ]);
     expect(byGroup('gear')).toEqual(['unidentified-armor']);
-    expect(byGroup('cores')).toEqual(['bulwark-core', 'warden-core']);
+    expect(byGroup('cores')).toEqual(['bulwark-core', 'forgewright-core', 'warden-core']);
     // The warden core's kind stays a part: only the panel's group places it.
     expect(ITEMS['warden-core']?.kind).toBe('part');
   });

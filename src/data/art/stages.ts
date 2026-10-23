@@ -5,6 +5,7 @@ import { ICON_LANDMINE } from './mines';
 import type { NodeLooks } from './nodes';
 import { shadow } from './terrain';
 import { ellipse, flat, line, path, solid, trim, type Shape, type ShapeStyle, type VectorSprite } from './types';
+import { BURN_FLAMES_VECTOR, FIRE_HEAD, flameBadge } from './fire';
 
 // 029's art, in the 020 style: the rimestone and the rime outcrop it's chipped
 // from, each tagged round's icon (its base's icon with its tag's badge), the Shard
@@ -91,6 +92,8 @@ const TAG_ART: Readonly<Record<string, { badge: readonly Shape[]; pairedBadge?: 
     pairedBadge: snowflake(-4.2),
     head: { fill: 'foam', outline: true, glow: { color: 'water-light', blur: 2 } },
   },
+  // 060: a flame, and a head of glowing ember.
+  fire: { badge: flameBadge(4.2), pairedBadge: flameBadge(-4.2), head: FIRE_HEAD },
   // A bending arrow.
   homing: {
     badge: [
@@ -193,4 +196,5 @@ export const STAGE_SPRITES_VECTOR: readonly VectorSprite[] = [
   sprite(STAGE_SPRITES.iceCaseCracked, [38, 50], [19, 46], iceCase(28, 40, true)),
   sprite(STAGE_SPRITES.iceCaseLarge, [64, 80], [32, 74], iceCase(50, 66, false)),
   sprite(STAGE_SPRITES.iceCaseLargeCracked, [64, 80], [32, 74], iceCase(50, 66, true)),
+  BURN_FLAMES_VECTOR,
 ];

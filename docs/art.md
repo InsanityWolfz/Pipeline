@@ -110,6 +110,10 @@ Every colour comes from the palette, by id. The source of truth is `src/data/pal
 | `iron-rust` | #9a4b2b |
 | `vein` | #5ef2ff |
 | `danger` | #e8322f |
+| `ash-dark` | #3d3735 |
+| `ash` | #5f5753 |
+| `ash-light` | #857b74 |
+| `ash-pale` | #b3a89e |
 | `snow` | #ffffff |
 | `hit-red` | #ff4d4d |
 

@@ -74,8 +74,8 @@ describe('the Hollows landmarks', () => {
 });
 
 describe('the Region 2 goals (034)', () => {
-  it("follow 049's Husk Hive goal, end with 028's \"Feed all three entrances\", all in Milestone 1 (058: \"Reach\")", () => {
-    const chain = OBJECTIVES.filter((o) => !o.cutIn);
+  it("follow 049's Husk Hive goal, end Milestone 1 with 028's \"Feed all three entrances\", all in Milestone 1 (058: \"Reach\"; 060's Milestone 2 follows)", () => {
+    const chain = OBJECTIVES.filter((o) => !o.cutIn && o.milestone !== 'm2');
     const i = chain.findIndex((o) => o.text === 'Find the Husk Hive and claim its pylon');
     expect(chain.slice(i).map((o) => [o.text, o.check, o.milestone])).toEqual([
       ['Find the Husk Hive and claim its pylon', { kind: 'claimed', site: 'husk-hive' }, 'm1'],

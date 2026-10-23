@@ -18,6 +18,22 @@ export function fill(grid: Grid, r: TileRect, symbol: string): void {
   for (let ty = r.y0; ty <= r.y1; ty++) for (let tx = r.x0; tx <= r.x1; tx++) set(grid, tx, ty, symbol);
 }
 
+/**
+ * The tiles within `k` of a road (034, 060): a road point covers its tile and the tiles right of and below it (as
+ * `path` lays it), keyed `ty * width + tx`. Generated ground keeps off them.
+ */
+export function nearRoads(roads: readonly (readonly TilePos[])[], k: number, width: number): Set<number> {
+  const out = new Set<number>();
+  for (const road of roads) {
+    for (const p of road) {
+      const x = Math.round(p.tx);
+      const y = Math.round(p.ty);
+      for (let ty = y - k; ty <= y + 1 + k; ty++) for (let tx = x - k; tx <= x + 1 + k; tx++) out.add(ty * width + tx);
+    }
+  }
+  return out;
+}
+
 /** Lays a two-tile-wide path along a tile polyline. */
 export function path(grid: Grid, points: readonly TilePos[]): void {
   for (let i = 0; i + 1 < points.length; i++) {

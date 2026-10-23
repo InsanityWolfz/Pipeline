@@ -53,7 +53,7 @@ test('the west cap restores with the warden core (E, then E again), two entrance
   await page.keyboard.press('e');
   await restored(page, 'entrance-2');
   let s = await state(page);
-  expect(s.intake.entrances.map((e) => e.open)).toEqual([true, true, false]);
+  expect(s.intake.entrances.map((e) => e.open)).toEqual([true, true, false, false]);
   expect(s.inventory['warden-core']).toBe(4);
   await expect.poll(async () => (await ui(page))?.restorePanel ?? null).toBeNull();
 
@@ -85,7 +85,7 @@ test('the west cap restores with the warden core (E, then E again), two entrance
   await page.mouse.click(p.x, p.y);
   await restored(page, 'entrance-3');
   s = await state(page);
-  expect(s.intake.entrances.map((e) => e.open)).toEqual([true, true, true]);
+  expect(s.intake.entrances.map((e) => e.open)).toEqual([true, true, true, false]);
   expect([s.inventory['warden-core'], s.inventory['bulwark-core']]).toEqual([4, 1]);
   expect(errors).toEqual([]);
 });

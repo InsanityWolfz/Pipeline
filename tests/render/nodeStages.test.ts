@@ -1,17 +1,28 @@
 import { describe, expect, it } from 'vitest';
 import { NODE_SPRITES } from '../../src/data/assets';
+import { EMBERWORKS_SPRITES } from '../../src/data/emberworksAssets';
 import { nodeDef, NODES, REGROW_STAGES } from '../../src/data/nodes';
 import { harvestTarget, nodeFrame, regrowStage } from '../../src/render/nodeStages';
 
 // 018: a node's look follows its uses and regrow timer; the pylon reaches for the nearest node of a raw.
 
 describe('node looks', () => {
-  it('shows one look per use left', () => {
+  it('shows one look per use left (060: a cinder vent while open)', () => {
     for (const id of Object.keys(NODES)) {
-      const looks = [3, 2, 1].map((uses) => nodeFrame({ nodeId: id, uses, regrow: 0 }));
+      const c = NODES[id]?.cycle;
+      const phase = c ? c.closedTicks + c.warnTicks : 0;
+      const looks = [3, 2, 1].map((uses) => nodeFrame({ nodeId: id, uses, regrow: 0, phase }));
       expect(new Set(looks).size).toBe(3);
       expect(looks[0]).toBe(NODE_SPRITES[id]?.uses[2]);
     }
+  });
+
+  it('shows a cinder vent closed and warning while it has uses, and its spent cone once used up, whatever its cycle (060)', () => {
+    const c = nodeDef('cinder-vent').cycle;
+    if (!c) throw new Error('no cycle');
+    expect(nodeFrame({ nodeId: 'cinder-vent', uses: 2, regrow: 0, phase: 0 })).toBe(EMBERWORKS_SPRITES.vent.closed);
+    expect(nodeFrame({ nodeId: 'cinder-vent', uses: 2, regrow: 0, phase: c.closedTicks })).toBe(EMBERWORKS_SPRITES.vent.warning);
+    expect(nodeFrame({ nodeId: 'cinder-vent', uses: 0, regrow: 10, phase: 0 })).toBe(NODE_SPRITES['cinder-vent']?.regrow[REGROW_STAGES]);
   });
 
   it('grows back through at least 3 stages after the bare remains', () => {

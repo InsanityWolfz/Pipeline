@@ -71,6 +71,17 @@ export const RESEARCH_NODES: readonly ResearchNode[] = [
     effect: { kind: 'entrance' },
   },
   {
+    // 060: the Forgewright's core restores the fourth.
+    id: 'entrance-4',
+    name: 'Fourth entrance',
+    description: 'Opens one more intake entrance.',
+    anchor: { kind: 'entrance' },
+    cost: { 'forgewright-core': 1 },
+    requires: ['entrance-3'],
+    reveal: 'start',
+    effect: { kind: 'entrance' },
+  },
+  {
     id: 'reservoir-1',
     name: 'Reservoir I',
     description: `Each entrance holds ${ENTRANCE_CAPS[1]} rounds.`,

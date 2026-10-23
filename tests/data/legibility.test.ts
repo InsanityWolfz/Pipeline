@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { AMMO } from '../../src/data/ammo';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { FONT_FILES } from '../../src/data/fonts';
-import { KEYWORDS, SCOPES, type KeywordId } from '../../src/data/keywords';
+import { KEYWORDS, SCOPES, withoutFireVerb, type KeywordId } from '../../src/data/keywords';
 import { BUILD_TAB, CHILD_NAMES, CHIP, GLOSSARY, GROUP_NAMES, LANE_NAMES, LEGIBILITY_WORDS, PARAM_STATS, TALENT_TABS, TIP, WHEN_LINES } from '../../src/data/legibility';
 import { paletteHex } from '../../src/data/palette';
 import { formatDamage, formatParam, formatSeconds, REF, renderTemplate, SLOT } from '../../src/data/rulesText';
@@ -97,7 +97,8 @@ describe('words follow 039’s rules', () => {
     // The Pool-burst is a child noun like Shard and Bomblet (039's spec writes it so): its "burst" is the noun's own.
     const nouns = Object.values(CHILD_NAMES) as readonly string[];
     for (const t of templates.filter((x) => !nouns.includes(x))) {
-      const bare = t.replace(REF, '').replace(SLOT, '');
+      // 060: "you fire" is the verb (FIRE_VERB_PHRASES), not the Fire keyword.
+      const bare = withoutFireVerb(t.replace(REF, '').replace(SLOT, ''));
       for (const n of names) expect(new RegExp(`\\b${n}`, 'i').test(bare), `"${t}" types "${n}"`).toBe(false);
     }
   });

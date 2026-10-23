@@ -1,10 +1,10 @@
-// The end of the demo (042): the card that shows after the Bulwark's first kill, `delayTicks` later (so its death and
+// The end of the demo (042): the card that shows after the last boss's first kill (060: the Forgewright's), `delayTicks` later (so its death and
 // drops play), then free play goes on. Its words are pending Shaun's rewrite; "What's next" comes from the drive
 // rant's theme 11 (docs/brainstorm/2026-10-19-drive-rant.md).
 
 export const END_CARD = {
-  /** The boss whose first kill ends the demo. */
-  boss: 'bulwark',
+  /** The boss whose first kill ends the demo (060: the Forgewright, was the Bulwark). */
+  boss: 'forgewright',
   delayTicks: 180,
   title: 'End of the playtest build',
   nextTitle: "What's next",

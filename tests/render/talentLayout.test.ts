@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { DAYLIGHT_PALETTE } from '../../src/data/palette';
-import { KEYSTONE_ICONS, LANE_ICONS, TALENT_PANEL, TALENT_SPRITES, talentHeader, levelUpLine } from '../../src/data/talentAssets';
+import { KEYSTONE_ICONS, LANE_ICONS, NODE_ICONS, TALENT_PANEL, TALENT_SPRITES, talentHeader, levelUpLine } from '../../src/data/talentAssets';
 import { TALENT_SPRITES_VECTOR } from '../../src/data/art/talents';
 import { inksOf } from '../../src/data/art/types';
 import { TALENTS } from '../../src/data/talents';
@@ -72,7 +72,7 @@ describe('the tree panel', () => {
 
   it('reads its header and the level-up line', () => {
     expect(talentHeader(7, 120, 240, 2)).toBe('Level 7 · 120 / 240 XP · 2 points');
-    expect(talentHeader(15, 0, 0, 1)).toBe('Level 15 · max level · 1 point');
+    expect(talentHeader(17, 0, 0, 1)).toBe('Level 17 · max level · 1 point');
     expect(levelUpLine(7)).toBe('Level 7 · talent point (T)');
   });
 });
@@ -82,7 +82,10 @@ describe('the talent art', () => {
     expect(TALENT_SPRITES_VECTOR.map((s) => s.key).sort()).toEqual(Object.values(TALENT_SPRITES).sort());
     const ids = new Set(DAYLIGHT_PALETTE.map((c) => c.id));
     for (const s of TALENT_SPRITES_VECTOR) for (const id of s.frames.flat().flatMap(inksOf)) expect(ids.has(id), `${s.key}: ${id}`).toBe(true);
-    for (const key of [...Object.values(LANE_ICONS), ...Object.values(KEYSTONE_ICONS)]) expect(Object.values(TALENT_SPRITES)).toContain(key);
+    for (const key of [...Object.values(LANE_ICONS), ...Object.values(KEYSTONE_ICONS), ...Object.values(NODE_ICONS)]) expect(Object.values(TALENT_SPRITES)).toContain(key);
+    // 060: the two Fire nodes show their own icons; a node's own icon is only ever a minor node's.
+    expect(Object.keys(NODE_ICONS)).toEqual(['b4', 'b5']);
+    for (const id of Object.keys(NODE_ICONS)) expect(TALENTS[id]?.kind).toBe('minor');
     for (const c of Object.values(TALENT_PANEL.colors)) expect(ids.has(c), c).toBe(true);
   });
 });

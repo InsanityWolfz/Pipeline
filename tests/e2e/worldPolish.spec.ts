@@ -21,7 +21,7 @@ test("walks behind the meadow's boulders through the top of their tiles, and is 
       const g = window.__GAME__;
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
-      for (const e of g.getState().enemies) g.setEnemyHealth(e.id, 0);
+      for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
       g.step(1);
       h.walkTo((x0 + 0.5) * 32, (row - 0.5) * 32);
       // Down into the boulders' row on the open tile left of them, then east along the top of their tiles.

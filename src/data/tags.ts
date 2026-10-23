@@ -33,6 +33,14 @@ export interface TagDef {
 export const COLD = { chillPerHit: 1, slowPerStack: 0.15, stacksToFreeze: 4, stackTicks: 120, freezeTicks: 90, bossFreezeTicks: 45, refreezeTicks: 120 } as const;
 
 /**
+ * Fire (060): each fire hit sets the enemy burning for `burnTicks`, dealing `burnShare` of that hit's damage each
+ * second (a beat every second of burning, and what's left of a second as it ends). A new fire hit restarts the timer
+ * at the stronger of the two burns; burns never stack. A burning enemy that dies passes its burn, at its damage a
+ * second and for the full `burnTicks`, to every living enemy within `spreadRadius` px.
+ */
+export const FIRE = { burnTicks: 180, burnShare: 0.25, spreadRadius: 64 } as const;
+
+/**
  * Homing: at launch it locks onto the living enemy nearest the cursor within `lockRadius` px, then turns toward it by
  * at most `turnDegrees` a tick. 054 (Shaun): it flies at `speedScale` of its base's speed, so it has time to home.
  */
@@ -54,6 +62,8 @@ export const CLUSTER = { delayTicks: 12, count: 4, distance: 40, damage: 8, radi
 export const TAGS: Readonly<Record<string, TagDef>> = {
   // 039 (Q12): an element tags any family; a shape stays with one.
   frost: { id: 'frost', slot: 'element', prefix: 'Frost', appliesTo: ['arrow', 'bomb', 'ley-bolt', 'landmine'], keyword: 'cold', damageType: 'cold' },
+  // 060: the Fire rune's element, on every family as Frost is.
+  fire: { id: 'fire', slot: 'element', prefix: 'Fire', appliesTo: ['arrow', 'bomb', 'ley-bolt', 'landmine'], keyword: 'fire', damageType: 'fire' },
   homing: { id: 'homing', slot: 'shape', prefix: 'Homing', appliesTo: ['ley-bolt'], keyword: 'homing', speedScale: HOMING.speedScale },
   split: { id: 'split', slot: 'shape', prefix: 'Split', appliesTo: ['ley-bolt'], keyword: 'split' },
   cluster: { id: 'cluster', slot: 'shape', prefix: 'Cluster', appliesTo: ['bomb'], keyword: 'cluster' },

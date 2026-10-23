@@ -4,17 +4,17 @@ import { ellipse, flat, line, path, rect, solid, type Shape, type VectorSprite }
 // The foundry intake (019): a waterslide-sized pipe built into the centre of the
 // north wall, matching the tube the player carries: a cyan body with dark ring
 // bands and brass collars, a highlight along its top. It rises from a wide flared
-// mouth across the three mouth tiles at floor level, up the wall face and out of
+// mouth across the four mouth tiles (060: was three) at floor level, up the wall face and out of
 // sight. Dormant it is grey-cyan; attuned, cyan. World px around the anchor, the
 // middle of the mouth's bottom edge (the line between the wall and the floor).
 
 /** The pipe's body: half-width, where it leaves the flare, and where it turns into the wall (up the wall row and the wall shown above it). */
 const BODY = { half: 20, bottom: -11, top: -72 } as const;
-/** The flare: half-width at the floor and where it narrows into the body. */
-const FLARE = { half: 50, neck: -11 } as const;
+/** The flare: half-width at the floor (060: wide enough for four inlets, 18 px past the outer ones) and where it narrows into the body. */
+const FLARE = { half: 66, neck: -11 } as const;
 
-/** The three inlet ports in the flare, one over each mouth tile (x offsets from the middle tile), and their height. */
-export const INTAKE_INLETS = [-32, 0, 32] as const;
+/** The four inlet ports in the flare, one over each mouth tile (x offsets from the mouth's middle, 060), and their height. */
+export const INTAKE_INLETS = [-48, -16, 16, 48] as const;
 const INLET_Y = -4.5;
 
 const body = (fill: string, shade: string, light: string): Shape[] => [
@@ -44,7 +44,7 @@ const flare = (fill: string, shade: string, rim: string): Shape[] => [
   ...INTAKE_INLETS.flatMap((x) => [ellipse(x, INLET_Y, 10, 3.6, solid('ink')), ellipse(x, INLET_Y - 0.7, 7, 2, flat('cyan-deep'))]),
 ];
 
-const frame = (key: string, shapes: Shape[]): VectorSprite => ({ key, size: [112, 86], anchor: [56, 80], frames: [shapes] });
+const frame = (key: string, shapes: Shape[]): VectorSprite => ({ key, size: [144, 86], anchor: [72, 80], frames: [shapes] });
 
 /**
  * The brass cap (024) seated over a capped side entrance's inlet: a domed lid with a rivet rim, two bolts and a
@@ -92,19 +92,27 @@ export const ENTRANCE_GAUGE_COLORS: Readonly<Record<string, string>> = {
   'ley-bolt+frost+homing': 'water-light',
   'ley-bolt+frost+split': 'water-light',
   'landmine+frost': 'water-light',
+  // 060: Fire rounds of every family glow flame red, apart from a plain bomb's ember.
+  'arrow+fire': 'flame-dark',
+  'bomb+fire': 'flame-dark',
+  'bomb+fire+cluster': 'flame-dark',
+  'ley-bolt+fire': 'flame-dark',
+  'ley-bolt+fire+homing': 'flame-dark',
+  'ley-bolt+fire+split': 'flame-dark',
+  'landmine+fire': 'flame-dark',
 };
 
 /**
  * The live lights on the pipe, px from the anchor:
  * - `bands`: the dark ring bands up the body; on attuning they light one by one (in time with the tube's attune), and stay lit.
- * - `gauge`: one column of small rings per entrance (024), west, centre and east up the body, each lit from the
+ * - `gauge`: one column of small rings per entrance (024; 060: four), west to east up the body, each lit from the
  *   bottom in proportion to its entrance's count, in its ammo's colour (`ENTRANCE_GAUGE_COLORS`), with a soft glow.
  * - `pulse`: a ring of light that runs up the body into the wall as each item goes in.
  * - `capLift`: a cap lifting off (024): how far it rises and how long it takes, and the ring of light at its inlet.
  */
 export const INTAKE_LOOK = {
   bands: { ys: [-17, -29, -41, -53, -65], height: 3, half: BODY.half, dark: 'dormant-dark', darkAlpha: 0.85, lit: 'cyan-glow', litAlpha: 0.5 },
-  gauge: { xs: [-11, 0, 11], bottom: -15, step: 5, half: 3.6, height: 2.4, dark: 'cyan-deep', darkAlpha: 0.7, litAlpha: 1, glowAlpha: 0.25, glowPad: 1 },
+  gauge: { xs: [-13.5, -4.5, 4.5, 13.5], bottom: -15, step: 5, half: 3.4, height: 2.4, dark: 'cyan-deep', darkAlpha: 0.7, litAlpha: 1, glowAlpha: 0.25, glowPad: 1 },
   pulse: { from: FLARE.neck, to: BODY.top, half: BODY.half + 3, height: 5, color: 'snow' },
   /** An entrance's fire pulse (028): a ring of light up its own gauge column as it fires a round, in its ammo's colour, over `ms`. */
   firePulse: { pad: 2, height: 4, ms: 300 },

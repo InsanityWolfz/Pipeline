@@ -31,9 +31,9 @@ const still = (s: Seen): Statted => ({ talents: s.talents, gear: s.gear, equippe
 const baseDamage = (a: AmmoDef): number => (a.kind === 'lob' ? a.burstDamage : a.damage);
 
 /** Where a keyword param resolves for this round: the round, its Shards, its Bomblets, or the status itself. */
-function emissionFor(k: KeywordId, on: 'shard' | 'bomblet' | undefined, ammoId: string): Emission {
+function emissionFor(k: KeywordId, on: 'shard' | 'bomblet' | 'status' | undefined, ammoId: string): Emission {
   const group = KEYWORDS[k].group;
-  if (group === 'status' || group === 'ground') return statusEmission(k);
+  if (group === 'status' || group === 'ground' || on === 'status') return statusEmission(k);
   if (on === 'shard') return shardEmissionOf(ammoId, true);
   if (on === 'bomblet') return bombletEmission(ammoId);
   return roundEmission(ammoId);
@@ -89,6 +89,8 @@ export function describeRound(seen: Seen, ammoId: string): Description {
   const head = fill(a.kind === 'straight' ? W.shotLine : W.burstLine, { damage: formatDamage(damage.final), rate: formatStat(rate.final, 'per-s') });
   const extras: string[] = [];
   if (kws.includes('freeze')) extras.push(fill(W.freezeIn, { hits: hitsToFreeze(s) }));
+  // 060: a Fire round's burn, its share of the hit each second, for its (resolved) time.
+  if (keywords.includes('fire')) extras.push(fill(W.burns, { damage: formatDamage(damage.final * value('fire', 'share')), time: formatSeconds(value('fire', 'duration')) }));
   if (keywords.includes('split')) extras.push(fill(W.shards, { count: Math.round(value('split', 'count')), damage: formatDamage(value('split', 'damage')) }));
   if (keywords.includes('cluster')) extras.push(fill(W.bomblets, { count: Math.round(value('cluster', 'count')), damage: formatDamage(value('cluster', 'damage')) }));
   if (a.kind === 'mine') extras.push(fill(W.arms, { time: formatSeconds(value('mine', 'arm')) }));
@@ -124,9 +126,9 @@ function breakdown(seen: Seen, a: AmmoDef, damage: Resolved, rate: Resolved, num
   for (const n of nums) {
     if (!n.resolved || !n.stat || bonusSources(n.resolved).length === 0 || (n.stat === 'damage' && PARAM_STATS[n.keyword]?.[n.name]?.on === undefined)) continue;
     const on = PARAM_STATS[n.keyword]?.[n.name]?.on;
-    const status = KEYWORDS[n.keyword].group === 'status' ? KEYWORDS[n.keyword].name : '';
-    // A Shard's or Bomblet's own number by its noun; a status's by its name (a Boss's shorter Freeze by both).
-    const prefix = on ? renderTemplate(`{{${on}}}`) : n.name.startsWith('boss') ? `${KEYWORDS.boss.name} ${status}` : status;
+    const status = KEYWORDS[n.keyword].group === 'status' || on === 'status' ? KEYWORDS[n.keyword].name : '';
+    // A Shard's or Bomblet's own number by its noun; a status's (or Fire's burn's) by its name (a Boss's shorter Freeze by both).
+    const prefix = on && on !== 'status' ? renderTemplate(`{{${on}}}`) : n.name.startsWith('boss') ? `${KEYWORDS.boss.name} ${status}` : status;
     const unit = KEYWORDS[n.keyword].params[n.name]?.unit ?? 'count';
     out.push(line(stepsText(statLabel(n.stat, prefix), n.resolved, (v) => paramValue(v, unit, n.stat ?? undefined))));
   }

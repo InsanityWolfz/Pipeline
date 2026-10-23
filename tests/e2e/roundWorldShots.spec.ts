@@ -29,7 +29,7 @@ async function quiet(page: Page): Promise<void> {
   await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark' && e.enemyId !== 'pylon-warden') g.setEnemyHealth(e.id, 0);
+    for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark' && e.enemyId !== 'pylon-warden' && e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
     g.step(1);
   });
 }

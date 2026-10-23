@@ -58,7 +58,8 @@ test('?sandbox shows only the two tabs; a click pops each panel out and a second
   await clickTab(page, 'loadout');
   await expect.poll(() => panelsOut(page)).toEqual({ loadout: true, spawn: false, sliding: false });
   const loadout = await ui(page);
-  expect(loadout?.rows.map((r) => r.id)).toEqual(expect.arrayContaining(['entrance-0', 'god', 'reset-bulwark']));
+  // 060: the boss resets moved under the spawn column's Clear.
+  expect(loadout?.rows.map((r) => r.id)).toEqual(expect.arrayContaining(['entrance-0', 'god']));
   expect(loadout?.keys).toEqual(keyListLines(DEFAULT_BINDINGS));
   // 057.4: the tab rides on the panel's outer edge.
   const lt = loadout?.tabs.find((t) => t.id === 'loadout');
@@ -67,6 +68,7 @@ test('?sandbox shows only the two tabs; a click pops each panel out and a second
   // The Spawn tab: its panel too.
   await clickTab(page, 'spawn');
   await expect.poll(() => panelsOut(page)).toEqual({ loadout: true, spawn: true, sliding: false });
+  expect((await ui(page))?.rows.map((r) => r.id)).toEqual(expect.arrayContaining(['spawn', 'clear', 'reset-bulwark', 'reset-forgewright']));
   // A row works with it open, and nothing pauses.
   await clickPanel(page, 'god');
   await expect.poll(() => page.evaluate(() => window.__GAME__?.getState().god)).toBe(true);

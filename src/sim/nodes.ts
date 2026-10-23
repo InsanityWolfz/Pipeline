@@ -1,6 +1,7 @@
-import { nodeDef } from '../data/nodes';
+import { NODE_CYCLE_SALT, nodeDef, type NodeCycle } from '../data/nodes';
 import type { Room } from '../data/rooms';
 import type { Rect } from './collision';
+import { createRng, nextInt } from './rng';
 import { tileCentre } from './tiles';
 
 // Gathering nodes as plain data: uses left and the regrow timer. Harvesting is in harvest.ts.
@@ -16,16 +17,35 @@ export interface NodeState {
   uses: number;
   /** Ticks until a depleted node is back to full; 0 when not regrowing. */
   regrow: number;
+  /** 060: ticks into its open-and-shut cycle (a cinder vent's); 0 for a node without one. */
+  phase: number;
 }
 
-export function createNode(id: number, nodeId: string, at: { x: number; y: number }, roomId: string): NodeState {
-  return { id, nodeId, roomId, x: at.x, y: at.y, uses: nodeDef(nodeId).uses, regrow: 0 };
+export function createNode(id: number, nodeId: string, at: { x: number; y: number }, roomId: string, phase = 0): NodeState {
+  return { id, nodeId, roomId, x: at.x, y: at.y, uses: nodeDef(nodeId).uses, regrow: 0, phase };
 }
 
-/** The rooms' nodes at full uses, ids in placement order, room by room. */
-export function createNodes(rooms: readonly Room[]): NodeState[] {
+/** A cycle's length, ticks. */
+const period = (c: NodeCycle): number => c.closedTicks + c.warnTicks + c.openTicks;
+
+/**
+ * The rooms' nodes at full uses, ids in placement order, room by room. A node with a cycle (060) starts at its own
+ * point in it, drawn in placement order from `seed`'s own stream for cycles, so the main stream is untouched.
+ */
+export function createNodes(rooms: readonly Room[], seed = 0): NodeState[] {
+  const rng = createRng((seed ^ NODE_CYCLE_SALT) >>> 0);
   const placed = rooms.flatMap((room) => (room.nodes ?? []).map((p) => ({ ...p, roomId: room.id })));
-  return placed.map((p, i) => createNode(i, p.nodeId, tileCentre(p), p.roomId));
+  return placed.map((p, i) => {
+    const cycle = nodeDef(p.nodeId).cycle;
+    return createNode(i, p.nodeId, tileCentre(p), p.roomId, cycle ? nextInt(rng, 0, period(cycle) - 1) : 0);
+  });
+}
+
+/** A cycling node's state (060): closed, its warning telegraph, or open; null for a node without a cycle. */
+export function ventState(n: Pick<NodeState, 'nodeId' | 'phase'>): 'closed' | 'warning' | 'open' | null {
+  const c = nodeDef(n.nodeId).cycle;
+  if (!c) return null;
+  return n.phase < c.closedTicks ? 'closed' : n.phase < c.closedTicks + c.warnTicks ? 'warning' : 'open';
 }
 
 /** The solid base of every node in a room, full or depleted. */
@@ -39,14 +59,16 @@ export function useNode(n: NodeState): void {
   if (n.uses === 0) n.regrow = nodeDef(n.nodeId).regrowTicks;
 }
 
-/** Counts down regrow timers; a node whose timer ends is back to full uses. */
+/** Counts down regrow timers; a node whose timer ends is back to full uses. A cycling node (060) moves on through its cycle. */
 export function stepNodes(nodes: NodeState[]): void {
   for (const n of nodes) {
+    const cycle = nodeDef(n.nodeId).cycle;
+    if (cycle) n.phase = (n.phase + 1) % period(cycle);
     if (n.regrow === 0) continue;
     n.regrow -= 1;
     if (n.regrow === 0) n.uses = nodeDef(n.nodeId).uses;
   }
 }
 
-/** 051 (B.4): a node that can be harvested now glows; a used-up one doesn't until it regrows. */
-export const harvestable = (n: Pick<NodeState, 'uses'>): boolean => n.uses > 0;
+/** 051 (B.4): a node that can be harvested now glows; a used-up one doesn't until it regrows, nor (060) a vent that isn't open. */
+export const harvestable = (n: Pick<NodeState, 'uses' | 'nodeId' | 'phase'>): boolean => n.uses > 0 && ventState(n) !== 'closed' && ventState(n) !== 'warning';

@@ -24,7 +24,7 @@ describe('the Hollows barrier', () => {
   it('is shut on every start, even with the tutorial gates open, until the shrine is claimed', () => {
     expect(createSim(1).gates.hollows).toBe(false);
     expect(createSim(1, { start: PLAYTEST_START }).gates.hollows).toBe(false);
-    expect(summarize(createSim(1)).gates).toEqual({ foundry: true, shrine: true, hollows: false });
+    expect(summarize(createSim(1)).gates).toEqual({ foundry: true, shrine: true, hollows: false, emberworks: false });
   });
 
   it('blocks the player walking west into it', () => {

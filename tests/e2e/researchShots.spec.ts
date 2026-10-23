@@ -46,12 +46,13 @@ test.describe('review screenshots (033)', () => {
     test.setTimeout(120_000);
     await boot(page, '?playtest');
     await standAt(page, 12, 4);
-    await expect.poll(async () => (await ui(page))?.research.diagrams.filter((d) => d.entrance !== null).length).toBe(2);
+    // 060: and on the fourth entrance's cap.
+    await expect.poll(async () => (await ui(page))?.research.diagrams.filter((d) => d.entrance !== null).length).toBe(3);
     await page.screenshot({ path: `${SHOTS}/01-intake-diagrams-on-both-caps.png` });
     await standAt(page, 11, 1);
     await restore(page, 'entrance-2');
     await standAt(page, 12, 4);
-    await expect.poll(async () => (await ui(page))?.intakeCaps).toBe(1);
+    await expect.poll(async () => (await ui(page))?.intakeCaps).toBe(2);
     await expect.poll(async () => (await ui(page))?.intakeLift ?? null).toBeNull();
     await page.screenshot({ path: `${SHOTS}/02-one-cap-restored-one-capped.png` });
   });

@@ -247,3 +247,16 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - A terrain piece smaller than its tile has a footprint box in `src/data/footprints.ts` (from its sprite's base, rounded out, clipped to the tile); a test checks each against its sprite. Feet, shots and every line across the grid (`src/sim/sightLine.ts`: punch reach, Charger runs, Sniper sight, cover and laser) read the same box; drops and spawning read whole tiles. Lookups are cached per room (`src/sim/footprints.ts`, a WeakMap).
   - Which sprite a tile shows is decided in `src/sim/tileLook.ts`, so drawing and collision can't disagree.
   - Roads draw in two passes, every edge then every dirt fill, so joins have no seams.
+
+- **060 the Emberworks:**
+  - The world grows round its centre: `WORLD_SHAPE.centre` is the grid's middle, and every hand-placed tile goes through one `WORLD_SHIFT`. `worldOffsets.json` pins each landmark, node, road, ley line, pylon and arena tile's offset from the centre, so a future growth is a pure move too. Rock and tree variants hash the old coordinates, so the look didn't change.
+  - Ground vs region: `inEmberworks` marks the ring's ground (terrain, render); `pastEmberworksBarrier` sets region 3 and ring 4, so ramp feet below the barrier stay the Hollows and no goal or HUD reads Emberworks before the barrier.
+  - Vents cycle on their own salted rng stream (`NODE_CYCLE_SALT`), so adding vents never shifts other draws.
+  - Burn lives in `src/sim/fire.ts`: ignition is one hook beside the chill in `damageEnemy` (every damage path), the beat carries `burn: true` so it never re-ignites, and spreading runs in `removeDead` before the dead are removed, skipping the dead, so it chains without looping. Fire's numbers read `statusEmission('fire')`; the spread talent uses its own `spread-radius` stat, so a Fire scope never widens Bursts.
+  - Stages can carry `shownAfter`; `REVEALING_ITEMS` covers stages as well as recipes.
+  - Enemy sub-parts: the Forgewright's bellows live on its state; `partAt`/`partsNear` route hits in `strike`, `blastArea` and the punch before the body. Part hits damage the part and pass statuses to the parent. Plating is checked in `damageEnemy` and `strike`, so it covers every path, burn beats included.
+  - Player-hurting ground hazards are a state list (`floodPools`, `src/sim/floodPools.ts`) that beats once a second.
+  - `arenaOf` and `arenaOfAltar` live in `src/data/arenas.ts` and look across every region boss's arena.
+  - The intake's middle is `INTAKE_MID_TX`, for any number of entrances.
+  - `SAVE_VERSION` 13, no migration.
+

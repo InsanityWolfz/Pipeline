@@ -32,7 +32,7 @@ async function quiet(page: Page, keepShrine = false): Promise<void> {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
     for (const e of g.getState().enemies) {
-      if (e.enemyId === 'bulwark' || e.enemyId === 'pylon-warden' || (keep && e.group === 'shrine')) continue;
+      if (e.enemyId === 'bulwark' || e.enemyId === 'pylon-warden' || e.enemyId === 'forgewright' || (keep && e.group === 'shrine')) continue;
       g.setEnemyHealth(e.id, 0);
     }
     g.step(1);

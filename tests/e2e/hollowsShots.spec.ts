@@ -28,7 +28,8 @@ async function quiet(page: Page, keep: readonly string[] = []): Promise<void> {
   await page.evaluate((k) => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    for (const e of g.getState().enemies) if (!k.includes(e.enemyId)) g.setEnemyHealth(e.id, 0);
+    // 060: the Forgewright spared too (its first kill is the end card's).
+    for (const e of g.getState().enemies) if (!k.includes(e.enemyId) && e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
     g.step(1);
   }, keep);
 }

@@ -12,8 +12,9 @@ describe('known rounds', () => {
     expect(all.slice(0, 2)).toEqual(['arrow', 'arrow+frost']);
     expect(all.indexOf('bomb')).toBeLessThan(all.indexOf('bomb+cluster'));
     expect(all.indexOf('bomb+frost+cluster')).toBeLessThan(all.indexOf('ley-bolt'));
-    expect(all[all.length - 1]).toBe('landmine+frost');
-    expect(all).toHaveLength(14);
+    // 060: the seven Fire rounds, each after its family's Frost one.
+    expect(all.slice(-2)).toEqual(['landmine+frost', 'landmine+fire']);
+    expect(all).toHaveLength(21);
   });
 
   it('knows a round once carried, and keeps it after it’s gone and through a KO', () => {

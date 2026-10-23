@@ -21,6 +21,9 @@ export const TALENT_SPRITES = {
   blastfletch: 'talent-blastfletch',
   shatterpoint: 'talent-shatterpoint',
   overpressure: 'talent-overpressure',
+  /** 060: the Bombs lane's two Fire nodes' own icons: a long-burning flame, and a flame leaping to two more. */
+  fireDuration: 'talent-fire-duration',
+  fireSpread: 'talent-fire-spread',
   /** The HUD's pip while points are unspent. */
   pip: 'talent-pip',
   /** The level-up ring flash round the player. */
@@ -44,6 +47,9 @@ export const LANE_ICONS: Readonly<Record<TalentLane, string>> = {
   survival: TALENT_SPRITES.laneSurvival,
   tube: TALENT_SPRITES.laneTube,
 };
+
+/** A minor node's own icon in place of its lane's (060: the Fire nodes show Fire, not a bomb). */
+export const NODE_ICONS: Readonly<Partial<Record<string, string>>> = { b4: TALENT_SPRITES.fireDuration, b5: TALENT_SPRITES.fireSpread };
 
 /** Each keystone's icon. */
 export const KEYSTONE_ICONS: Readonly<Record<KeystoneRule, string>> = {

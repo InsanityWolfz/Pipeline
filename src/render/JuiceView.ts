@@ -29,6 +29,8 @@ export class JuiceView {
   private recent: { x: number; y: number; at: number }[] = [];
   /** Every shake asked for, oldest first, up to SHAKE_LOG_MAX: the test hook reports it (021). */
   readonly shakes: ShakeSize[] = [];
+  /** Burn beats' small numbers shown since boot (060), for the test hook. */
+  burnNumbers = 0;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -54,9 +56,14 @@ export class JuiceView {
     this.particles.emit(burst, x, y, depth ?? DEPTHS.worldUi - 1);
   }
 
-  /** A number that pops up from a hit and floats away, outlined: white on enemies, ember on the player. */
-  damageNumber(amount: number, x: number, y: number, onPlayer: boolean): void {
-    const n = DAMAGE_NUMBERS;
+  /**
+   * A number that pops up from a hit and floats away, outlined: white on enemies, ember on the player. `small` (060): a
+   * burn's beat, smaller and in ember, and none for a sliver that rounds to nothing.
+   */
+  damageNumber(amount: number, x: number, y: number, onPlayer: boolean, small = false): void {
+    if (small && Math.round(amount) < 1) return;
+    if (small) this.burnNumbers += 1;
+    const n = small ? { ...DAMAGE_NUMBERS, scale: DAMAGE_NUMBERS.scale * DAMAGE_NUMBERS.burn.scale, pop: DAMAGE_NUMBERS.pop * DAMAGE_NUMBERS.burn.scale, enemy: DAMAGE_NUMBERS.burn.color } : DAMAGE_NUMBERS;
     const now = this.scene.time.now;
     this.recent = this.recent.filter((r) => now - r.at < n.stackMs);
     const top = y - (onPlayer ? n.playerAbove : n.enemyAbove);

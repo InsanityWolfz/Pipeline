@@ -75,7 +75,7 @@ test('the guided tutorial plays from leaving the foundry to its end', async ({ p
     const s = g.step(1, { restore: 'entrance-2' });
     return s.intake.entrances.map((e) => e.open);
   }, T);
-  expect(opened).toEqual([false, true, true]);
+  expect(opened).toEqual([false, true, true, false]);
   await expectGoal(page, 14);
 
   // 14. The ley bolt line, piece by piece on its ghosts, until ley bolts reach the right entrance.
@@ -158,14 +158,17 @@ test('the guided tutorial plays from leaving the foundry to its end', async ({ p
   await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark') g.setEnemyHealth(e.id, 0);
+    for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark' && e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
     g.step(1);
   });
   await trek(page, [[TERRACE.tx, TERRACE.ty + 5], [TERRACE.tx, TERRACE.ty + 1]]);
   await claimHere(page);
   await expectGoal(page, 23);
 
-  // 23. Into the Bulwark's arena by its door; it falls through the hook, and its core is picked up.
+  // 23. Into the Bulwark's arena by its door; it falls through the hook, and its core is picked up. 060: the way to the
+  // door can pass a Hollows pack (the roads up into the Emberworks moved where packs stand), so it's felled at the door too.
+  await fell(page, []);
+  await walk(page, [[HOLLOWS.arena.door.leaveTo.tx, HOLLOWS.arena.door.leaveTo.ty]]);
   await fell(page, []);
   await enterArena(page, HOLLOWS.arena);
   await page.evaluate(() => {
@@ -201,12 +204,12 @@ test('the guided tutorial plays from leaving the foundry to its end', async ({ p
     h.walkTo(11.5 * tile, 1.5 * tile);
     return g.step(1, { restore: 'entrance-3' }).intake.entrances.map((e) => e.open);
   }, T);
-  expect(third).toEqual([true, true, true]);
+  expect(third).toEqual([true, true, true, false]);
   await expectGoal(page, 25);
 
   // 25. Building is open: the left entrance's floor tile is reached by an underground pair from below the example
-  // line, fed from a hopper of ley bolts. All three entrances fed: the tutorial is over, and the goal panel and its
-  // arrows are gone for good (the minimap stays).
+  // line, fed from a hopper of ley bolts. All three entrances fed: Milestone 1 is over, and (060) the goal line moves on to
+  // Milestone 2's first goal, up into the Emberworks, its arrow at the foundry's door (the minimap stays).
   const end = await page.evaluate((tile) => {
     const g = window.__GAME__;
     const h = window.__helpers;
@@ -220,13 +223,12 @@ test('the guided tutorial plays from leaving the foundry to its end', async ({ p
     const bolts = g.getState().inventory['ley-bolt'] ?? 0;
     g.step(1, { deposit: { id: hopper.id, itemId: (g.getState().inventory.bomb ?? 0) > 0 ? 'bomb' : 'ley-bolt', amount: 'all' } });
     let s = g.step(1);
-    for (let t = 0; t < 2000 && s.objective.text !== ''; t++) s = g.step(1);
+    for (let t = 0; t < 2000 && s.objective.text !== 'Reach the Emberworks'; t++) s = g.step(1);
     return { bolts, objective: s.objective, volley: s.intake.volley.length };
   }, T);
-  expect(end.objective).toEqual({ index: null, text: '' });
+  expect(end.objective.text).toBe('Reach the Emberworks');
   expect(end.volley).toBe(3);
-  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui()))?.objective.text).toBe('');
-  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui()))?.waypoint).toBeNull();
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui()))?.objective.text).toBe('Reach the Emberworks');
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui()))?.foundryMap.shown).toBe(true);
   expect(errors).toEqual([]);
 });

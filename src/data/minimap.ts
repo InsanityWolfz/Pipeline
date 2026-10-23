@@ -1,4 +1,4 @@
-import { inHollows } from './hollows';
+import { regionAt } from './hollows';
 
 /**
  * The minimap (017): the overworld's terrain at `scale` view px per tile in the
@@ -6,8 +6,8 @@ import { inHollows } from './hollows';
  * enemies are shown.
  */
 export const MINIMAP = {
-  /** 053: the whole round world (168 tiles across) at this many view px a tile: about 100 px square. */
-  scale: 0.6,
+  /** 053: the whole round world at this many view px a tile: about 100 px square (060: 230 tiles across, so 0.43 keeps it clear of the objective band). */
+  scale: 0.43,
   margin: 6,
   /** The stone tablet framing it (020), px beyond the map. */
   frame: { width: 2 },
@@ -36,6 +36,25 @@ export const MINIMAP = {
   } as Readonly<Record<string, string>>,
   /** The Hollows' own colours (034), by symbol, over `terrain`: its open ground is stone, not grass (051: its scenery too). */
   hollowsTerrain: { '.': 'hollow-light', ':': 'hollow-light', '~': 'hollow-light', R: 'hollow-light', T: 'hollow-light', B: 'hollow-light' } as Readonly<Record<string, string>>,
+  /**
+   * The Emberworks' own colours (060), by symbol, over `terrain`: ash ground and terraces, soot-dark cliffs and
+   * chimneys, rust kilns, the ramps' pale steps, the Slag River's ember and its bridges; its scenery as its ground.
+   */
+  emberworksTerrain: {
+    '.': 'ash-light',
+    ':': 'ash-light',
+    '~': 'ash-light',
+    R: 'ash-light',
+    T: 'ash-light',
+    B: 'ash-light',
+    '=': 'ash-pale',
+    C: 'ash-dark',
+    K: 'rust',
+    H: 'ash-dark',
+    '^': 'ash-pale',
+    '%': 'cinder',
+    '+': 'carve-light',
+  } as Readonly<Record<string, string>>,
   /** 051 (B.5): a tile never on screen is fogged, this colour (palette id). */
   fog: 'hood-dark',
   markers: {
@@ -61,6 +80,8 @@ export const MINIMAP = {
 /** 051: the symbols that are scenery, drawn on the minimap as the ground round them (water, shallows, trees, ruin stones, boulders). */
 export const MINIMAP_SCENERY = [':', '~', 'T', 'R', 'B'] as const;
 
-/** The palette id the minimap draws an overworld tile in: the Hollows' own colour there (034), else Region 1's. */
-export const minimapColor = (symbol: string, tx: number, ty: number): string =>
-  (inHollows(tx, ty) ? MINIMAP.hollowsTerrain[symbol] : undefined) ?? MINIMAP.terrain[symbol] ?? 'grass-bright';
+/** Each region's own colours over `terrain` (Region 1 has none of its own). */
+const REGION_TERRAIN: Readonly<Record<number, Readonly<Record<string, string>>>> = { 2: MINIMAP.hollowsTerrain, 3: MINIMAP.emberworksTerrain };
+
+/** The palette id the minimap draws an overworld tile in: its region's own colour there (034: the Hollows', 060: the Emberworks'), else Region 1's. */
+export const minimapColor = (symbol: string, tx: number, ty: number): string => REGION_TERRAIN[regionAt(tx, ty)]?.[symbol] ?? MINIMAP.terrain[symbol] ?? 'grass-bright';

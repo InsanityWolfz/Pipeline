@@ -75,7 +75,8 @@ test.describe('review screenshots (042)', () => {
     await page.evaluate((n) => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
-      const b = g.getState().enemies.find((e) => e.enemyId === 'bulwark');
+      // 060: the Forgewright's first kill ends the demo.
+      const b = g.getState().enemies.find((e) => e.enemyId === 'forgewright');
       if (b) g.setEnemyHealth(b.id, 0);
       g.step(n + 1);
     }, END_CARD.delayTicks);

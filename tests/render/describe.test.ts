@@ -89,9 +89,32 @@ describe('a round', () => {
     expect(texts(describeRound(player(), 'landmine').summary)[0]).toBe('60 Burst dmg · 1.5/s · arms in 5.0 s');
     expect(texts(describeRound(player('l3'), 'ley-bolt+split').summary)[0]).toBe('9 dmg · 3.0/s · 7 Shards × 4.5'); // 041: was 14; 054: a Shard half the bolt (was 4)
   });
+
+  it('060: a Fire round’s summary shows its burn; its breakdown shows Fire’s rule with the burn and the spread', () => {
+    const bomb = describeRound(player(), 'bomb+fire');
+    expect(bomb.chips.map((c) => c.id)).toEqual(['bomb', 'lob', 'burst', 'fire']);
+    expect(texts(bomb.summary)[0]).toBe('12 Burst dmg · 1.5/s · burns 3/s for 3.0 s');
+    expect(texts(describeRound(player('a1'), 'arrow+fire').summary)[0]).toBe('15.4 dmg · 4.0/s · burns 3.9/s for 3.0 s');
+    expect(texts(bomb.breakdown).at(-1)).toBe(
+      'Fire: Each hit sets the enemy burning for 3.0 s, dealing 25% of that hit’s damage each second. A new hit restarts the burn at the stronger of the two; burns never stack. An enemy that dies burning passes its burn to every enemy within 64 px.',
+    );
+  });
 });
 
 describe('content', () => {
+  it('060: the Fire nodes say what they change, before → after, and a Fire round’s breakdown shows their steps', () => {
+    const s = player();
+    s.crafted.push('bomb+fire');
+    expect(texts(describeTalent(s, 'b4').summary)[0]).toBe('Fire: +50% duration');
+    expect(texts(describeTalent(s, 'b4').breakdown)[0]).toBe('Fire duration: 3.0 → 4.5 s');
+    expect(texts(describeTalent(s, 'b5').summary)[0]).toBe('Fire: +1 tile spread radius');
+    expect(texts(describeTalent(s, 'b5').breakdown)[0]).toBe('Fire spread radius: 2 → 3 tiles');
+    s.talents.push('b4', 'b5');
+    const d = describeRound(s, 'bomb+fire');
+    expect(texts(d.summary)).toEqual(['12 Burst dmg · 1.5/s · burns 3/s for 4.5 s', '2 bonuses · hold Shift']);
+    expect(texts(d.breakdown)).toEqual(expect.arrayContaining(['Fire duration 3.0 s × (1 + 50% Banked Embers) = 4.5 s', 'Fire spread radius 64 px + 32 px Kindling = 96 px']));
+  });
+
   it('Wide Casing’s breakdown lists the four Burst radii before → after; its summary reaches the known Burst rounds', () => {
     const d = describeTalent(player(), 'b2');
     expect(texts(d.breakdown)[0]).toBe('Burst radius: Bomb 48 → 55.2 px · Bomblet 20 → 23 px · Landmine 24 → 27.6 px · Pool-burst 24 → 27.6 px');
@@ -182,5 +205,8 @@ describe('enemy chips (040.4)', () => {
     const bulwark = createEnemy(1, 'bulwark', { x: 0, y: 0 }, 'field');
     bulwark.frozen = 30;
     expect(enemyChips(bulwark).map((c) => c.label)).toEqual(['Boss', 'Shield', 'Freeze']);
+    // 060: a burning enemy's Fire chip reads "Burning", after its Freeze and before its Stun.
+    husk.burnTicks = 40;
+    expect(enemyChips(husk).map((c) => [c.id, c.label])).toEqual([['chill', 'Chill 2'], ['fire', 'Burning'], ['stun', 'Stun']]);
   });
 });

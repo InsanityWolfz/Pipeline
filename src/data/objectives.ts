@@ -2,6 +2,7 @@ import type { GateId } from './rooms';
 import type { TargetDef } from './targets';
 import { GROTTO_GROUP } from './grotto';
 import type { GuidedId } from './guidedBuilds';
+import { ROUNDS, roundTags } from './tags';
 
 // The objectives: one ordered chain (028). The prototype's goals (012) run first,
 // in its beat order, then each milestone's, tagged by milestone; later specs append
@@ -49,8 +50,8 @@ export type ObjectiveCheck =
 /** Which key a goal's prompt shows, and what it floats over (see PromptView). */
 export type PromptTarget = 'tubeStone' | 'node' | 'bench' | 'pylon' | 'hopper' | 'player';
 
-/** Which milestone a goal belongs to (028): the prototype's, or Milestone 1's. */
-export type Milestone = 'prototype' | 'm1';
+/** Which milestone a goal belongs to (028): the prototype's, Milestone 1's, or (060) Milestone 2's: Region 3. */
+export type Milestone = 'prototype' | 'm1' | 'm2';
 
 export interface ObjectiveDef {
   text: string;
@@ -76,6 +77,9 @@ export interface ObjectiveDef {
    */
   cutIn?: true;
 }
+
+/** 060: every Fire round (each family's), any of which the fire-round goal takes. */
+export const FIRE_ROUNDS: readonly string[] = ROUNDS.filter((r) => roundTags(r).includes('fire'));
 
 /** 050: the research node whose entrance the second-line goal asks to feed, and its marker points at: the Warden core's. */
 export const NEW_ENTRANCE_NODE = 'entrance-2';
@@ -154,6 +158,14 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
   { text: "Restore the intake's third entrance (E with the Bulwark core)", milestone: 'm1', check: { kind: 'restored', node: 'entrance-3' }, target: { kind: 'caps' } },
   // 033: the third entrance needs the Bulwark's core, so feeding all three comes after restoring it. 058: the tutorial ends here.
   { text: 'Feed all three entrances', milestone: 'm1', check: { kind: 'volley', min: 3 }, target: { kind: 'intake' } },
+  // 060: Region 3, up the ramps the Bulwark's kill opens: in, cinderite, the Ash Kilns, fire, its boss, the fourth entrance.
+  { text: 'Reach the Emberworks', milestone: 'm2', check: { kind: 'inRegion', region: 3 }, target: { kind: 'ramps' } },
+  { text: 'Gather cinderite at the Cinder Vents', milestone: 'm2', check: { kind: 'gathered', items: ['cinderite'] }, target: { kind: 'nodes' } },
+  { text: "Claim the Ash Kilns' pylon", milestone: 'm2', check: { kind: 'claimed', site: 'ash-kilns' }, prompt: { key: 'E', over: 'pylon' }, target: { kind: 'pylon', site: 'ash-kilns' } },
+  { text: 'Craft a fire round (C)', milestone: 'm2', check: { kind: 'craftedAny', items: FIRE_ROUNDS }, target: { kind: 'collect' } },
+  { text: 'Defeat the Forgewright', milestone: 'm2', check: { kind: 'bossDefeated', boss: 'forgewright' }, target: { kind: 'boss', boss: 'forgewright' } },
+  { text: "Restore the intake's fourth entrance (E with the Forgewright core)", milestone: 'm2', check: { kind: 'restored', node: 'entrance-4' }, target: { kind: 'caps' } },
+  { text: 'Feed all four entrances', milestone: 'm2', check: { kind: 'volley', min: 4 }, target: { kind: 'intake' } },
   // 058: cuts in as the current goal once the first talent point comes (058.4: never during a guided build).
   { text: 'Press T to spend a talent point', milestone: 'm1', check: { kind: 'talentSpent' }, cutIn: true },
 ];

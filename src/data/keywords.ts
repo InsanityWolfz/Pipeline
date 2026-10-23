@@ -3,7 +3,7 @@ import { BULWARK } from './bulwark';
 import { BOSS_WEIGHT } from './combat';
 import { CHARGER, SHARDBACK } from './hollowsEnemies';
 import { ROLLBREAKER } from './relics';
-import { CLUSTER, COLD, HOMING, ROUNDS, roundTags, SPLIT } from './tags';
+import { CLUSTER, COLD, FIRE, HOMING, ROUNDS, roundTags, SPLIT } from './tags';
 import { BLASTFLETCH } from './talents';
 import type { StatId } from './statDefs';
 
@@ -100,7 +100,7 @@ const kw = (id: KeywordId, name: string, group: KeywordGroup, template: string, 
   ...more,
 });
 
-/** A reserved damage type (039: Fire, Lightning, Poison): its template is written from design.md when it ships. */
+/** A reserved damage type (039: Lightning, Poison; Fire shipped in 060): its template is written from design.md when it ships. */
 const reserved = (id: KeywordId, name: string): KeywordDef => ({ id, name, group: 'damage-type', state: 'reserved', template: '', params: {}, stats: [] });
 
 const FAMILY = 'Any round of this family, and every {{shard}}, {{bomblet}} and {{burst}} it makes.';
@@ -147,7 +147,16 @@ export const KEYWORD_LIST: readonly KeywordDef[] = [
   }, ['knockback']),
   kw('physical', 'Physical', 'damage-type', 'Plain damage, with no extra effect.'),
   kw('cold', 'Cold', 'damage-type', 'Each hit adds {chill} {{chill}}.', { chill: fixed('count', COLD.chillPerHit) }, [], { creates: ['chill'] }),
-  reserved('fire', 'Fire'),
+  // 060: the burn and its spread are Fire's own rule (no separate status), so its talents pay Fire off.
+  kw(
+    'fire',
+    'Fire',
+    'damage-type',
+    'Each hit sets the enemy burning for {duration}, dealing {share} of that hit’s damage each second. A new hit restarts the burn at the stronger of the two; burns never stack. An enemy that dies burning passes its burn to every enemy within {radius}.',
+    { duration: fixed('ticks', FIRE.burnTicks), share: fixed('fraction', FIRE.burnShare), radius: fixed('px', FIRE.spreadRadius) },
+    ['duration', 'spread-radius'],
+    { forms: { adj: 'Burning' } },
+  ),
   reserved('lightning', 'Lightning'),
   reserved('poison', 'Poison'),
   kw('chill', 'Chill', 'status', 'Stacks up to {stacks}. Each stack slows the enemy’s movement {slow}. Lasts {duration}, refreshed by each {{cold}} hit. At {stacks} it {{freeze}}s.', {
@@ -211,6 +220,15 @@ export const KEYWORD_DEBT: Readonly<Partial<Record<KeywordId, string>>> = {
   pool: 'Blastfletch makes and spends it; one payoff.',
   landmine: 'The landmine; only all-ammo talents reach it.',
 };
+
+/**
+ * 060: "fire" the verb, which the Fire keyword shares its word with. In these phrases it is the verb (a fire rate,
+ * holding fire, a round you fire) and never means Fire; the reserved-word scans read them as not typing Fire.
+ */
+export const FIRE_VERB_PHRASES: readonly string[] = ['fire rate', 'held fire', 'you fire'];
+
+/** Text with the verb phrases of FIRE_VERB_PHRASES taken out, for the reserved-word scans. */
+export const withoutFireVerb = (text: string): string => FIRE_VERB_PHRASES.reduce((t, p) => t.replace(new RegExp(`\\b${p}\\b`, 'gi'), ''), text);
 
 /** Tags derived from a round's keywords, never assigned by hand (039.13: data only for now, neither scopes nor chips). */
 export const DERIVED_TAGS = {

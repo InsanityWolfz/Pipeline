@@ -4,13 +4,16 @@
 // lines (leyLines.ts) laid without crossings. The ground round the foundry keeps 017's shapes, moved to the centre
 // (home.ts). Tile coordinates throughout. Numbers are tuning values.
 
+import { EMBERWORKS } from './emberworks';
+import { ANVIL_HALL } from './emberworksSites';
 import { GROTTO } from './grotto';
-import { HOLLOWS, inHollows } from './hollows';
+import { HOLLOWS, regionAt } from './hollows';
 import { ARRIVE, ENTRANCE, FIELD_WALLS, HOME_SHIFT, MEADOW_VEIN, MOUND, SHRINE, SHRINE_DOOR, SHRINE_PYLON, SHRINE_SHIFT, shrineWalls } from './home';
 import { LANDMARK_LIST } from './landmarks';
 import { LEY_LINES } from './leyLines';
 import { shiftRect, shiftTile } from './place';
 import { SAFE_RADIUS } from './population';
+import type { Ring } from './ringScale';
 import { ROADS } from './roads';
 import { SPRINGS } from './springs';
 import type { Feature, TilePos, TileRect } from './tiles';
@@ -102,6 +105,8 @@ export const OVERWORLD = {
     ...LANDMARK_LIST.flatMap((l) => l.guards.map((g) => ({ group: l.id, enemyId: g.enemyId, tx: g.tx, ty: g.ty, ...(g.champion ? { champion: true as const } : {}) }))),
     // The Bulwark at its start in the Sunken Forum (034), in the arena's group: back after a KO until its first kill.
     { group: HOLLOWS.arena.id, enemyId: HOLLOWS.arena.boss, tx: HOLLOWS.arena.start.tx, ty: HOLLOWS.arena.start.ty },
+    // 060: the Forgewright at its start in the Anvil Hall, in the hall's group, by the same rule.
+    { group: ANVIL_HALL.id, enemyId: ANVIL_HALL.boss, tx: ANVIL_HALL.start.tx, ty: ANVIL_HALL.start.ty },
   ],
   /**
    * Ley lines (018, 053): each pylon's line home, one smooth curve to the foundry's ruin, and the seams its veins stand
@@ -150,15 +155,19 @@ export const OVERWORLD = {
     shrine({ nodeId: 'reeds', tx: 112, ty: 13 }),
     shrine({ nodeId: 'rubble', tx: 103, ty: 5 }),
     // The landmarks' (032): the Frozen Grotto's rime outcrops (029) first, then each site's cluster.
-    ...LANDMARK_LIST.flatMap((l) => l.nodes),
+    ...LANDMARK_LIST.filter((l) => l.ring !== EMBERWORKS.ring).flatMap((l) => l.nodes),
     // Stonefall Hollows' seams outside its landmarks (034).
     ...HOLLOWS.nodes,
+    // 060: the Emberworks' landmarks' (the Cinder Vents'), last, so every earlier node keeps its index.
+    ...LANDMARK_LIST.filter((l) => l.ring === EMBERWORKS.ring).flatMap((l) => l.nodes),
   ],
 } as const;
 
-/** The ring a tile is in: 0 near the foundry, 1 the near field, 2 the shrine's ground out to the barrier, 3 anywhere in Stonefall Hollows (034). */
-export function ringOf(tx: number, ty: number): 0 | 1 | 2 | 3 {
-  if (inHollows(tx, ty)) return HOLLOWS.ring;
+/** The ring a tile is in: 0 near the foundry, 1 the near field, 2 the shrine's ground out to the barrier, 3 anywhere in Stonefall Hollows (034), 4 in the Emberworks (060), each its region's (regionAt). */
+export function ringOf(tx: number, ty: number): Ring {
+  const region = regionAt(tx, ty);
+  if (region === EMBERWORKS.region) return EMBERWORKS.ring;
+  if (region === HOLLOWS.region) return HOLLOWS.ring;
   const { bounds } = OVERWORLD.rings;
   const d = fromCentre(tx, ty);
   return d < bounds[0] ? 0 : d < bounds[1] ? 1 : 2;

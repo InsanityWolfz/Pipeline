@@ -3,7 +3,7 @@ import { FEET_BOX } from '../data/player';
 import { layItem, scatterPoint } from './drops';
 import type { Command } from './input';
 import { isRolling } from './movement';
-import { nodeRects, useNode, type NodeState } from './nodes';
+import { harvestable, nodeRects, useNode, type NodeState } from './nodes';
 import { roomById, type SimState } from './state';
 
 // Harvesting a gathering node with E: stand in reach and keep still until it's done.
@@ -30,7 +30,7 @@ export function nodeInReach(state: SimState): NodeState | undefined {
   let best: NodeState | undefined;
   let bestDist = Infinity;
   for (const n of state.nodes) {
-    if (n.roomId !== state.roomId || n.uses === 0 || gapTo(state, n) > HARVEST_REACH) continue;
+    if (n.roomId !== state.roomId || !harvestable(n) || gapTo(state, n) > HARVEST_REACH) continue;
     const d = Math.hypot(n.x - p.x, n.y - p.y);
     if (d < bestDist) {
       bestDist = d;
@@ -60,8 +60,13 @@ export function stepHarvest(state: SimState, cmd: Command): void {
   }
   const harvest = state.harvest;
   if (harvest) {
-    harvest.progress += 1;
     const n = state.nodes.find((node) => node.id === harvest.nodeId);
+    // 060: a vent that shuts mid-harvest loses it.
+    if (n && !harvestable(n)) {
+      cancelHarvest(state);
+      return;
+    }
+    harvest.progress += 1;
     if (n && harvest.progress >= nodeDef(n.nodeId).harvestTicks) complete(state, n);
     return;
   }

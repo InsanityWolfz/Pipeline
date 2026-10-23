@@ -239,8 +239,12 @@ describe('sim state', () => {
     const save = ['foundryArrivals'] as const;
     // 046: the first time machines make each item (the "+ shaft" popups).
     const onboarding = ['firstMade'] as const;
-    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save, ...onboarding, 'lost', 'ko', 'woke', 'tubeTaken'].sort());
-    for (const name of [...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save, ...onboarding]) expect(summary.events[name], name).toEqual([]);
+    // 060: enemies catching fire, and a burn passed on at a death.
+    const fire = ['ignites', 'spreads'] as const;
+    // 060: the Forgewright's bellows, vents, slam, spray and flood.
+    const forge = ['bellowsBreaks', 'bellowsPatches', 'vents', 'ventEnds', 'slams', 'sprays', 'floodStarts', 'floods'] as const;
+    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save, ...onboarding, ...fire, ...forge, 'lost', 'ko', 'woke', 'tubeTaken'].sort());
+    for (const name of [...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save, ...onboarding, ...fire, ...forge]) expect(summary.events[name], name).toEqual([]);
     expect(summary.events.ko).toBe(false);
     expect(summary.events.lost).toEqual({});
     expect(summary.events.tubeTaken).toBe(false);

@@ -105,6 +105,11 @@ export const DAYLIGHT_PALETTE: readonly VectorColor[] = [
   { id: 'iron-rust', hex: '#9a4b2b' },
   { id: 'vein', hex: '#5ef2ff' },
   { id: 'danger', hex: '#e8322f' },
+  // The Emberworks (060): warm ash-grey ground and soot-dark stone, under its rust and ember glow
+  { id: 'ash-dark', hex: '#3d3735' },
+  { id: 'ash', hex: '#5f5753' },
+  { id: 'ash-light', hex: '#857b74' },
+  { id: 'ash-pale', hex: '#b3a89e' },
   // Highlights
   { id: 'snow', hex: '#ffffff' },
   { id: 'hit-red', hex: '#ff4d4d' },

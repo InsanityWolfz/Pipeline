@@ -30,9 +30,9 @@ export interface StripLayout {
 
 /** Both columns' rows at the start (sandboxColumns): their counts never change in play, only their words. */
 const START_COLUMNS = sandboxColumns({ loadout: [...SANDBOX.loadout], god: false }, DEFAULT_PICK);
-/** The loadout's rows: each entrance, god mode, each boss reset. */
+/** The loadout's rows: each entrance and god mode. */
 export const LOADOUT_ROWS = START_COLUMNS[0].length;
-/** The spawn column's rows: enemy, ring, champion, count, Spawn, Clear. */
+/** The spawn column's rows: enemy, ring, champion, count, Spawn, Clear, each boss reset (060). */
 export const SPAWN_ROWS = START_COLUMNS[1].length;
 
 /** `n` rows' height with their gaps (the sandbox's rows have no sub lines; a test checks). */

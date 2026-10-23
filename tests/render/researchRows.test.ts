@@ -52,13 +52,14 @@ describe('the research list', () => {
     sim.research['machine-speed'] = 'restored';
     const groups = researchRows(sim);
     expect(groups.map((g) => [g.label, g.rows.map((r) => r.id)])).toEqual([
-      ['Intake', ['entrance-2', 'entrance-3', 'reservoir-1', 'reservoir-2']],
+      ['Intake', ['entrance-2', 'entrance-3', 'entrance-4', 'reservoir-1', 'reservoir-2']],
       ['Walls', ['machine-speed']],
       ['Sealed wing', ['sealed-wing']],
     ]);
     const row = (id: string) => groups.flatMap((g) => g.rows).find((r) => r.id === id);
     expect(row('entrance-2')).toMatchObject({ name: 'Second entrance', state: 'ready', where: 'on an intake cap' });
     expect(row('entrance-3')).toMatchObject({ state: 'revealed', cost: [{ itemId: 'bulwark-core', have: 0, need: 1 }] });
+    expect(row('entrance-4')).toMatchObject({ name: 'Fourth entrance', state: 'revealed', cost: [{ itemId: 'forgewright-core', have: 0, need: 1 }], where: 'on an intake cap' });
     expect(row('reservoir-1')).toMatchObject({ state: 'revealed', cost: [{ itemId: 'ancient-gear', have: 1, need: 4 }], where: 'on the intake pipe' });
     expect(row('reservoir-2')).toMatchObject({ name: 'Lost schematic', state: 'hidden', cost: [] });
     expect(row('machine-speed')).toMatchObject({ name: 'Machine speed', state: 'restored', cost: [], where: 'north wall, west' });

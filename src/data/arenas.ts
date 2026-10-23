@@ -1,3 +1,4 @@
+import { ANVIL_HALL } from './emberworksSites';
 import { HOLLOWS } from './hollows';
 import { SHRINE, SHRINE_DOOR, SHRINE_INSIDE } from './home';
 import { OVERWORLD_ROOM } from './overworld';
@@ -43,6 +44,19 @@ export interface ArenaDef {
   readonly rooms: readonly string[];
 }
 
+/**
+ * A region boss's arena (034, 060): an arena whose boss's first kill is a boss defeat, with an altar that summons it
+ * again for `offering` (carried), rising at `start` after `summonTicks`. `addTiles`: where its adds rise (041: the
+ * Bulwark's), if it has any.
+ */
+export interface BossArena extends ArenaDef {
+  readonly start: TilePos;
+  readonly altar: { readonly id: string; readonly tx: number; readonly ty: number };
+  readonly offering: Readonly<Record<string, number>>;
+  readonly summonTicks: number;
+  readonly addTiles?: readonly TilePos[];
+}
+
 /** The middle tile of the shrine's door. */
 const SHRINE_DOOR_MID: TilePos = SHRINE_DOOR[Math.floor(SHRINE_DOOR.length / 2)] ?? { tx: 0, ty: 0 };
 
@@ -67,7 +81,19 @@ export const SHRINE_ARENA: ArenaDef = {
 };
 
 /** The Bulwark's Sunken Forum (034), in the Hollows and in the sandbox's room. */
-export const FORUM_ARENA = { ...HOLLOWS.arena, rooms: [OVERWORLD_ROOM, SANDBOX_ROOM] as readonly string[] } satisfies ArenaDef;
+export const FORUM_ARENA = { ...HOLLOWS.arena, rooms: [OVERWORLD_ROOM, SANDBOX_ROOM] as readonly string[] } satisfies BossArena;
+
+/** 060: the Forgewright's Anvil Hall, in the Emberworks and in the sandbox's room. */
+export const ANVIL_ARENA = { ...ANVIL_HALL, rooms: [OVERWORLD_ROOM, SANDBOX_ROOM] as readonly string[] } satisfies BossArena;
 
 /** Every arena with a door, the Warden's first. */
-export const ARENAS: readonly ArenaDef[] = [SHRINE_ARENA, FORUM_ARENA];
+export const ARENAS: readonly ArenaDef[] = [SHRINE_ARENA, FORUM_ARENA, ANVIL_ARENA];
+
+/** The region bosses' arenas (034, 060), each with its altar: the Warden's shrine has none. */
+export const BOSS_ARENAS: readonly BossArena[] = [FORUM_ARENA, ANVIL_ARENA];
+
+/** The arena whose boss is this enemy (034: the Bulwark's Sunken Forum; 060: the Forgewright's Anvil Hall), if any. */
+export const arenaOf = (enemyId: string): BossArena | undefined => BOSS_ARENAS.find((a) => a.boss === enemyId);
+
+/** The arena whose altar this is (034, 060), if any. */
+export const arenaOfAltar = (altarId: string): BossArena | undefined => BOSS_ARENAS.find((a) => a.altar.id === altarId);

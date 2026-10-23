@@ -48,7 +48,11 @@ describe('the altar', () => {
     run(s, 1, { summon: ALTAR });
     expect(s.inventory['ley-iron']).toBe(OFFERING);
     expect(s.events.summons).toEqual([]);
-    expect(summarize(s).altars).toEqual([{ id: ALTAR, boss: 'bulwark', state: 'dim', summonTicks: 0 }]);
+    expect(summarize(s).altars).toEqual([
+      { id: ALTAR, boss: 'bulwark', state: 'dim', summonTicks: 0 },
+      // 060: the Anvil Hall's, dim too.
+      { id: 'anvil-altar', boss: 'forgewright', state: 'dim', summonTicks: 0 },
+    ]);
   });
 
   it('wakes on the first kill', () => {

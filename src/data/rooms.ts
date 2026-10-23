@@ -33,13 +33,23 @@ export const TILE = {
   terrace: '=',
   /** A boss arena's door (055): part of its wall, stopping feet and shots; E at it enters or leaves (src/sim/arenaLock.ts). */
   arenaDoor: 'G',
+  /** 060: an Emberworks kiln, in terraced rows: stops feet and straight shots. */
+  kiln: 'K',
+  /** 060: an Emberworks chimney stack: stops feet and straight shots. */
+  chimney: 'H',
+  /** 060: a ramp's stone steps up through the Hollows' cliff edge into the Emberworks: walkable. */
+  ramp: '^',
+  /** 060: the Slag River's molten channel: stops feet, not shots. */
+  slag: '%',
+  /** 060: a stone bridge over the Slag River: walkable. */
+  bridge: '+',
 } as const;
 
 /** Tiles feet can cross. Anything else, and outside the grid, is solid. */
-export const WALKABLE: readonly string[] = [TILE.floor, TILE.path, TILE.shallow, TILE.arch, TILE.terrace];
+export const WALKABLE: readonly string[] = [TILE.floor, TILE.path, TILE.shallow, TILE.arch, TILE.terrace, TILE.ramp, TILE.bridge];
 
 /** Tiles shots fly over though feet can't (017). */
-export const SHOT_THROUGH: readonly string[] = [TILE.water];
+export const SHOT_THROUGH: readonly string[] = [TILE.water, TILE.slag];
 
 export type TileSymbol = (typeof TILE)[keyof typeof TILE];
 
@@ -114,12 +124,13 @@ export interface Terrain {
 
 /**
  * The gates (012): the foundry opens when the field pack is dead, the shrine when the first line fills the tube, and
- * Stonefall Hollows' ley barrier (034) when the shrine's pylon is claimed.
+ * Stonefall Hollows' ley barrier (034) when the shrine's pylon is claimed, and the Emberworks' (060) on the Bulwark's
+ * first kill.
  */
-export type GateId = 'foundry' | 'shrine' | 'hollows';
+export type GateId = 'foundry' | 'shrine' | 'hollows' | 'emberworks';
 
-/** Gates whose sealed tiles stop shots too, not just feet (034: the Hollows' barrier stops every projectile). */
-export const SHOT_GATES: readonly GateId[] = ['hollows'];
+/** Gates whose sealed tiles stop shots too, not just feet (034: the Hollows' barrier stops every projectile; 060: and the Emberworks'). */
+export const SHOT_GATES: readonly GateId[] = ['hollows', 'emberworks'];
 
 /** Rooms written out by hand; the overworld is generated (src/sim/world.ts). */
 export const STATIC_ROOMS: Readonly<Record<string, Room>> = {

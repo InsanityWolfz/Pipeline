@@ -5,6 +5,7 @@ import { LANDMARK_SPRITES } from '../data/landmarkAssets';
 import { LANDMARK_LIST } from '../data/landmarks';
 import { OVERWORLD } from '../data/overworld';
 import { TILE, type Room } from '../data/rooms';
+import { WORLD_SHIFT } from '../data/worldShape';
 
 // Which sprite stands on a small terrain piece's tile (059): a rock, a ruin block, an aqueduct pillar or a fallen span.
 // Render draws these by it (src/render/overworld/OverworldView.ts, src/render/hollowsTiles.ts) and collision reads
@@ -17,6 +18,12 @@ export function tileHash(tx: number, ty: number): number {
   x = Math.imul(x ^ (x >>> 13), 1274126177) >>> 0;
   return (x ^ (x >>> 16)) >>> 0;
 }
+
+/**
+ * 060: the hash of an overworld tile (or the sandbox's forum) where 053 laid it out, before the grid grew, so every
+ * place kept its variants when the centre moved (`WORLD_SHIFT`).
+ */
+export const worldTileHash = (tx: number, ty: number): number => tileHash(tx - WORLD_SHIFT.dx, ty - WORLD_SHIFT.dy);
 
 /** Stonefall Hollows' own small pieces (034): an aqueduct pillar, a fallen span's heap, loose rubble. */
 export function hollowsPiece(symbol: string | undefined, hash: number): string | undefined {
@@ -36,7 +43,7 @@ export function hollowsPiece(symbol: string | undefined, hash: number): string |
 export function pieceFrame(room: Room, tx: number, ty: number): string | undefined {
   const symbol = room.rows[ty]?.[tx];
   if (symbol !== TILE.rock && symbol !== TILE.ruinBlock && symbol !== TILE.pillar && symbol !== TILE.fallen) return undefined;
-  const hash = tileHash(tx, ty);
+  const hash = worldTileHash(tx, ty);
   const overworld = room.terrain !== undefined;
   if (!overworld || inHollows(tx, ty)) {
     const hollows = hollowsPiece(symbol, hash);

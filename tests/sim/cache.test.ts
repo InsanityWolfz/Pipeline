@@ -195,7 +195,7 @@ describe('the Ruined Cache', () => {
     expect(summarize(s).landmarks.find((l) => l.id === CACHE.id)?.opened).toBe(true);
     expect(guards(s)).toEqual([]);
     // Out of view: it fills, and its guards are home again.
-    const far = tileCentre({ tx: 40, ty: 27 });
+    const far = tileCentre({ tx: 71, ty: 58 });
     movePlayer(s, far.x, far.y);
     run(s, 1);
     expect(summarize(s).landmarks.find((l) => l.id === CACHE.id)?.opened).toBe(false);
@@ -205,7 +205,7 @@ describe('the Ruined Cache', () => {
   it('does not re-arm a tick early', () => {
     const s = atCache();
     open(s);
-    const far = tileCentre({ tx: 40, ty: 27 });
+    const far = tileCentre({ tx: 71, ty: 58 });
     movePlayer(s, far.x, far.y);
     s.tick += LANDMARKS.cacheRearmTicks - 3;
     run(s, 1);

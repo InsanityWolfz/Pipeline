@@ -3,6 +3,7 @@ import { FEET_BOX } from '../data/player';
 import { OVERWORLD, ringOf } from '../data/overworld';
 import { POPULATION, type PackDef, type PopulatedRing } from '../data/population';
 import { ADDS_GROUP } from '../data/bulwark';
+import { EMBERWORKS } from '../data/emberworks';
 import { HOLLOWS } from '../data/hollows';
 import { LANDMARK_LIST } from '../data/landmarks';
 import { TILE, WALKABLE } from '../data/rooms';
@@ -172,7 +173,8 @@ const candidates: Record<PopulatedRing, { tx: number; ty: number }[]> = { 1: [],
 for (let ty = 1; ty < OVERWORLD.height - 1; ty++) {
   for (let tx = 1; tx < OVERWORLD.width - 1; tx++) {
     const ring = ringOf(tx, ty);
-    if (ring !== 0 && packGround(tx, ty)) candidates[ring].push({ tx, ty });
+    // Ring 0 stays calm, and the Emberworks (ring 4, 060) has no packs until 061.
+    if (ring !== 0 && ring !== EMBERWORKS.ring && packGround(tx, ty)) candidates[ring].push({ tx, ty });
   }
 }
 

@@ -26,9 +26,9 @@ function sourceEmission(k: KeywordId, source: string): Emission {
 }
 
 /** Where one of a keyword's params resolves: a status on itself, a Shard or Bomblet param on the carrier's child, else the source's emission. */
-function paramEmission(k: KeywordId, on: 'shard' | 'bomblet' | undefined, source: string): Emission {
+function paramEmission(k: KeywordId, on: 'shard' | 'bomblet' | 'status' | undefined, source: string): Emission {
   const group = KEYWORDS[k].group;
-  if (group === 'status' || group === 'ground') return statusEmission(k);
+  if (group === 'status' || group === 'ground' || on === 'status') return statusEmission(k);
   if (on === 'shard') return shardEmissionOf(carrier(k), true);
   if (on === 'bomblet') return bombletEmission(carrier(k));
   return sourceEmission(k, source);

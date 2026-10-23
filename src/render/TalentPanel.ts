@@ -1,7 +1,7 @@
 import { BlendModes, type GameObjects, type Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { respecHere } from '../sim/talents';
-import { KEYSTONE_ICONS, LANE_ICONS, TALENT_PANEL, TALENT_SPRITES, talentHeader } from '../data/talentAssets';
+import { KEYSTONE_ICONS, LANE_ICONS, NODE_ICONS, TALENT_PANEL, TALENT_SPRITES, talentHeader } from '../data/talentAssets';
 import { LANE_COLORS, TALENT_LIST, TALENTS, type TalentDef } from '../data/talents';
 import { linesText } from '../data/rulesText';
 import { xpToNext } from '../sim/leveling';
@@ -61,7 +61,7 @@ function looksOf(def: TalentDef): { stone: string; icon: string | null; scale: n
   const P = TALENT_PANEL;
   if (def.kind === 'start') return { stone: TALENT_SPRITES.start, icon: null, scale: P.iconScale.start };
   if (def.keystone) return { stone: TALENT_SPRITES.keystone, icon: KEYSTONE_ICONS[def.keystone], scale: P.iconScale.keystone };
-  return { stone: TALENT_SPRITES.node, icon: LANE_ICONS[def.lane], scale: P.iconScale.minor };
+  return { stone: TALENT_SPRITES.node, icon: NODE_ICONS[def.id] ?? LANE_ICONS[def.lane], scale: P.iconScale.minor };
 }
 
 // The tree panel (037, T): the constellation centred on a tablet, five lanes from the

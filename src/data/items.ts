@@ -1,4 +1,5 @@
 import { SPRITES } from './assets';
+import { EMBERWORKS_SPRITES } from './emberworksAssets';
 import { HOLLOWS_SPRITES } from './hollowsAssets';
 import { MINE_SPRITES } from './mineAssets';
 import { RESEARCH_ICONS } from './researchAssets';
@@ -46,6 +47,8 @@ const BASE_ITEMS: Readonly<Record<string, ItemDef>> = {
   'ley-iron': { id: 'ley-iron', name: 'Ley-iron', kind: 'raw', group: 'raw', icon: HOLLOWS_SPRITES.itemLeyIron },
   /** The frost rune's material (029), gathered at the Frozen Grotto's rime outcrops. */
   'rimestone': { id: 'rimestone', name: 'Rimestone', kind: 'raw', group: 'raw', icon: STAGE_SPRITES.itemRimestone },
+  /** 060: gathered at the Emberworks' cinder vents while they flare open, and sent home by the Ash Kilns' pylon. */
+  cinderite: { id: 'cinderite', name: 'Cinderite', kind: 'raw', group: 'raw', icon: EMBERWORKS_SPRITES.itemCinderite },
   shaft: { id: 'shaft', name: 'Shaft', kind: 'part', group: 'parts', icon: SPRITES.itemShaft },
   arrowhead: { id: 'arrowhead', name: 'Arrowhead', kind: 'part', group: 'parts', icon: SPRITES.itemArrowhead },
   rope: { id: 'rope', name: 'Rope', kind: 'part', group: 'parts', icon: SPRITES.itemRope },
@@ -59,10 +62,14 @@ const BASE_ITEMS: Readonly<Record<string, ItemDef>> = {
   'warden-core': { id: 'warden-core', name: 'Warden core', kind: 'part', group: 'cores', icon: SPRITES.itemWardenCore, research: 'core' },
   /** The Bulwark's core (034 drops it): the third entrance and the second reservoir cost one each (033). */
   'bulwark-core': { id: 'bulwark-core', name: 'Bulwark core', kind: 'part', group: 'cores', icon: RESEARCH_ICONS.bulwarkCore, research: 'core' },
+  /** The Forgewright's core (060): it restores the fourth intake entrance. */
+  'forgewright-core': { id: 'forgewright-core', name: 'Forgewright core', kind: 'part', group: 'cores', icon: EMBERWORKS_SPRITES.itemForgewrightCore, research: 'core' },
   /** Region 1's machine part (033): Husks, Wisps, champions and the Ruined Cache drop it; restoring spends it. */
   'ancient-gear': { id: 'ancient-gear', name: 'Ancient gear', kind: 'part', group: 'parts', icon: RESEARCH_ICONS.ancientGear, research: 'machinePart' },
   /** Region 2's machine part (034): a brass valve from the Hollows' waterworks. */
   'aqueduct-valve': { id: 'aqueduct-valve', name: 'Aqueduct valve', kind: 'part', group: 'parts', icon: RESEARCH_ICONS.aqueductValve, research: 'machinePart' },
+  /** Region 3's machine part (060): the Forgewright drops it; nothing spends it until a later spec's research. */
+  'forge-rivet': { id: 'forge-rivet', name: 'Forge rivet', kind: 'part', group: 'parts', icon: EMBERWORKS_SPRITES.itemForgeRivet, research: 'machinePart' },
   ...schematics({
     'schematic-reservoir-2': 'Reservoir II',
     'schematic-machine-speed': 'Machine speed',

@@ -10,10 +10,11 @@ import { OBJECTIVES } from '../../src/data/objectives';
 describe('the crafting tabs (047)', () => {
   it('are Arrows, Bombs, Ley and Landmines, each its whole chain then its tagged rounds', () => {
     expect(CRAFT_TABS.map((t) => [t.label, t.recipes])).toEqual([
-      ['Arrows', ['shaft', 'arrowhead', 'rope', 'arrow', 'frost-rune-arrow']],
-      ['Bombs', ['casing', 'fuse', 'ley-dust', 'bomb', 'frost-rune-bomb', 'cluster-die-bomb']],
-      ['Ley', ['ley-dust', 'ley-bolt', 'frost-rune-ley-bolt', 'ley-guide-ley-bolt', 'prism-lens-ley-bolt']],
-      ['Landmines', ['iron-plate', 'fuse', 'ley-dust', 'landmine', 'frost-rune-landmine']],
+      // 060: the Fire rune's rows beside the frost rune's (shown once cinderite is carried).
+      ['Arrows', ['shaft', 'arrowhead', 'rope', 'arrow', 'frost-rune-arrow', 'fire-rune-arrow']],
+      ['Bombs', ['casing', 'fuse', 'ley-dust', 'bomb', 'frost-rune-bomb', 'fire-rune-bomb', 'cluster-die-bomb']],
+      ['Ley', ['ley-dust', 'ley-bolt', 'frost-rune-ley-bolt', 'fire-rune-ley-bolt', 'ley-guide-ley-bolt', 'prism-lens-ley-bolt']],
+      ['Landmines', ['iron-plate', 'fuse', 'ley-dust', 'landmine', 'frost-rune-landmine', 'fire-rune-landmine']],
     ]);
   });
 

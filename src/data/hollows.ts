@@ -1,8 +1,9 @@
 import type { ArenaDoor } from './arenas';
+import { EMBERWORKS, pastEmberworksBarrier } from './emberworks';
 import { shiftRect, shiftTile, type Shift } from './place';
 import { TILE } from './rooms';
 import type { TilePos, TileRect } from './tiles';
-import { barrierTiles, fromCentre, WORLD_SHAPE } from './worldShape';
+import { barrierTiles, fromCentre, laidOut, WORLD_SHAPE, WORLD_SHIFT } from './worldShape';
 
 // Region 2, Stonefall Hollows (034): a collapsed quarry-city of the lost civilisation. Since 053 it is the ring
 // round Region 1 (Shaun: "the outer ring of the grass area, like a donut"), behind a ley barrier on the whole circle
@@ -10,8 +11,8 @@ import { barrierTiles, fromCentre, WORLD_SHAPE } from './worldShape';
 // settings after Region 1's, then the roads, the arena and the landmarks are stamped over it. Tiles throughout;
 // numbers are tuning values.
 
-/** 053: the Sunken Forum as 034 drew it, moved whole into the ring's north-west (bearing 315°, 62 tiles). */
-const FORUM_SHIFT: Shift = { dx: 28, dy: 4 };
+/** 053: the Sunken Forum as 034 drew it, moved whole into the ring's north-west (bearing 315°, 62 tiles; 060: and with the centre). */
+const FORUM_SHIFT: Shift = { dx: 28 + WORLD_SHIFT.dx, dy: 4 + WORLD_SHIFT.dy };
 const fx = (tx: number): number => tx + FORUM_SHIFT.dx;
 const fy = (ty: number): number => ty + FORUM_SHIFT.dy;
 
@@ -93,17 +94,17 @@ export const HOLLOWS = {
   /** The ley barrier (gate `hollows`, 053.2): the whole circle between the regions, sealed until the shrine is claimed. */
   gate: barrierTiles() satisfies TilePos[],
   /** Where the road west to the Cistern Terrace crosses the barrier: the goal's waypoint while it stands (051). */
-  crossing: { tx: 46, ty: 113 } satisfies TilePos,
+  crossing: laidOut({ tx: 46, ty: 113 }) satisfies TilePos,
   /** A second, smaller quarry wall by the terrace road with ley-iron in its face (the seams are in `nodes`). */
-  quarryWall: [36, 37, 38, 39, 40].map((tx) => ({ tx, ty: 114, symbol: TILE.cliff })) satisfies TileStamp[],
+  quarryWall: [36, 37, 38, 39, 40].map((tx) => laidOut({ tx, ty: 114, symbol: TILE.cliff })) satisfies TileStamp[],
   nodes: [
     { nodeId: 'ley-iron-seam', tx: 37, ty: 115 },
     { nodeId: 'ley-iron-seam', tx: 39, ty: 115 },
-  ],
+  ].map(laidOut),
   /** The site whose claim drops the barrier (round 9: the shrine, after beating the Warden). */
   opensOn: 'shrine',
   /** `?start=hollows` (034): just past the barrier on the road west to the Cistern Terrace (053). */
-  start: { tx: 44, ty: 115 } satisfies TilePos,
+  start: laidOut({ tx: 44, ty: 115 }) satisfies TilePos,
   /** The Bulwark's arena (034): a sunken plaza walled all round, its door in the north wall (055, was its open way in). */
   arena: {
     id: 'sunken-forum',
@@ -149,14 +150,16 @@ export const HOLLOWS = {
   },
 } as const;
 
-/** The arena whose boss is this enemy (034: the Bulwark's Sunken Forum), if any. */
-export const arenaOf = (enemyId: string): typeof HOLLOWS.arena | undefined => (HOLLOWS.arena.boss === enemyId ? HOLLOWS.arena : undefined);
+// 060: arenaOf and arenaOfAltar look across every region boss's arena (src/data/arenas.ts).
 
-/** The arena whose altar this is (034), if any. */
-export const arenaOfAltar = (altarId: string): typeof HOLLOWS.arena | undefined => (HOLLOWS.arena.altar.id === altarId ? HOLLOWS.arena : undefined);
+/** True if a tile is in the Hollows (053: from the barrier's circle out to its cliff edge; 060: the Emberworks past it). */
+export const inHollows = (tx: number, ty: number): boolean => {
+  const d = fromCentre(tx, ty);
+  return d >= HOLLOWS.radii.inner && d < HOLLOWS.radii.outer;
+};
 
-/** True if a tile is in the Hollows (053: anywhere from the barrier's circle out, the cliff edge included). */
-export const inHollows = (tx: number, ty: number): boolean => fromCentre(tx, ty) >= HOLLOWS.radii.inner;
-
-/** The region a tile is in: 2 in the Hollows, else 1 (033's schematic regions). */
-export const regionAt = (tx: number, ty: number): 1 | 2 => (inHollows(tx, ty) ? 2 : 1);
+/**
+ * The region a tile is in (033's schematic regions): 3 in the Emberworks past its barrier (060), 2 in the Hollows out to
+ * there (its cliff edge and the ramps' feet included), else 1.
+ */
+export const regionAt = (tx: number, ty: number): 1 | 2 | 3 => (pastEmberworksBarrier(tx, ty) ? EMBERWORKS.region : fromCentre(tx, ty) >= HOLLOWS.radii.inner ? HOLLOWS.region : 1);

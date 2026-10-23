@@ -48,14 +48,16 @@ export function describe(seen: Seen, src: TipSource): Description | null {
 
 /**
  * An enemy's chips on its hover name (040.4): its traits (Boss, Shield, Burrowed while underground), then its live
- * statuses ("Chill 2", "Freeze", "Stun"). Not clickable: a click in the world fires.
+ * statuses ("Chill 2", "Freeze", 060's "Burning", "Stun"). Not clickable: a click in the world fires.
  */
-export function enemyChips(e: Pick<EnemyState, 'enemyId' | 'chill' | 'frozen' | 'stunned' | 'underground'>): Chip[] {
+export function enemyChips(e: Pick<EnemyState, 'enemyId' | 'chill' | 'frozen' | 'stunned' | 'underground' | 'burnTicks'>): Chip[] {
   const def = enemyDef(e.enemyId);
   const ids: ChipId[] = [...(def.boss ? (['boss'] as const) : []), ...(def.shield ? (['shield'] as const) : []), ...(e.underground ? (['burrowed'] as const) : [])];
   const chips = ids.map(chipOf);
   if (e.chill > 0) chips.push({ ...chipOf('chill'), label: `${KEYWORDS.chill.name} ${e.chill}` });
   if (e.frozen > 0) chips.push(chipOf('freeze'));
+  // 060: a burning enemy's Fire chip reads "Burning".
+  if (e.burnTicks > 0) chips.push({ ...chipOf('fire'), label: KEYWORDS.fire.forms?.adj ?? KEYWORDS.fire.name });
   if (e.stunned > 0) chips.push(chipOf('stun'));
   return chips;
 }

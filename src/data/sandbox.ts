@@ -1,4 +1,6 @@
 import { TICK_RATE } from './config';
+import { EMBERWORKS } from './emberworks';
+import { ANVIL_HALL } from './emberworksSites';
 import { ENEMIES } from './enemies';
 import { AFFIXES, GEAR_NAMES, GEAR_SLOTS, RARITIES, SLOT_BASE, type Affix, type AffixKind, type GearPiece, type GearSlot, type GearWeight, type Rarity } from './gear';
 import { HOLLOWS } from './hollows';
@@ -41,8 +43,8 @@ export const ENEMY_REGIONS: Readonly<Record<string, number>> = {
   ...Object.fromEntries(Object.keys(HOLLOWS_ENEMIES).map((id) => [id, HOLLOWS.region])),
 };
 
-/** 044.3: each region's pens at the ring its enemies meet the player in the real game: Region 1 at 1, the Hollows at theirs (3). */
-export const REGION_RINGS: Readonly<Record<number, Ring>> = { 1: 1, [HOLLOWS.region]: HOLLOWS.ring };
+/** 044.3: each region's pens at the ring its enemies meet the player in the real game: Region 1 at 1, the Hollows at theirs (3), the Emberworks at its (4, 060). */
+export const REGION_RINGS: Readonly<Record<number, Ring>> = { 1: 1, [HOLLOWS.region]: HOLLOWS.ring, [EMBERWORKS.region]: EMBERWORKS.ring };
 
 /** A pen's ring, by its enemy's region. Throws for an enemy with no region, or a region with no ring, so neither lands at a ring silently. */
 function penRing(enemyId: string): Ring {
@@ -67,7 +69,7 @@ export const SANDBOX_PENS: readonly PenDef[] = Object.values(ENEMIES)
     };
   });
 
-/** A boss's arena in the sandbox: its boss and where it waits (its start); the walls are in WARDEN_ARENA and HOLLOWS.arena. */
+/** A boss's arena in the sandbox: its boss and where it waits (its start); the walls are in WARDEN_ARENA, HOLLOWS.arena and ANVIL_HALL. */
 export interface SandboxArena {
   boss: string;
   start: TilePos;
@@ -76,7 +78,8 @@ export interface SandboxArena {
 /**
  * The Warden's arena: a walled square beside the forum, open on its north side, the Warden waiting at its centre.
  * The Bulwark's is the Sunken Forum itself (044: "the Sunken Forum's layout, seal included"), at the same tiles as in
- * the Hollows, so its AI and the arena lock (043) read the same numbers.
+ * the Hollows, so its AI and the arena lock (043) read the same numbers; 060: the Forgewright's is the Anvil Hall, at its
+ * tiles in the Emberworks for the same reason, east of the open middle.
  */
 export const WARDEN_ARENA = {
   boss: 'pylon-warden',
@@ -85,14 +88,17 @@ export const WARDEN_ARENA = {
   start: { tx: 36, ty: 36 } satisfies TilePos,
 } as const;
 
-/** Both arenas, Warden first. */
+/** Every arena, Warden first. */
 export const SANDBOX_ARENAS: readonly SandboxArena[] = [
   { boss: WARDEN_ARENA.boss, start: WARDEN_ARENA.start },
   { boss: HOLLOWS.arena.boss, start: HOLLOWS.arena.start },
+  { boss: ANVIL_HALL.boss, start: ANVIL_HALL.start },
 ];
 
-/** The room's size: wide enough for every pen, tall enough for the forum below the open middle. */
-const WIDTH = PEN.x0 + SANDBOX_PENS.length * PEN.stride + PEN.x0;
+/** The pens' width: the open middle (the spawn and the bench) is centred on it. */
+const PENS_WIDTH = PEN.x0 + SANDBOX_PENS.length * PEN.stride + PEN.x0;
+/** The room's size: wide enough for every pen and (060) the Anvil Hall, tall enough for the forum below the open middle. */
+const WIDTH = Math.max(PENS_WIDTH, ANVIL_HALL.bounds.x1 + 4);
 const HEIGHT = HOLLOWS.arena.bounds.y1 + 3;
 
 export const SANDBOX = {
@@ -100,9 +106,9 @@ export const SANDBOX = {
   width: WIDTH,
   height: HEIGHT,
   /** Where the player starts and wakes (044.6), in the open middle with clear floor round it. */
-  spawn: { tx: Math.floor(WIDTH / 2), ty: 20 } satisfies TilePos,
+  spawn: { tx: Math.floor(PENS_WIDTH / 2), ty: 20 } satisfies TilePos,
   /** The identification bench (036): the gear and stages panel, so the stash's gear can be worn. A solid block. */
-  bench: { tx: Math.floor(WIDTH / 2) - 4, ty: 17 } satisfies TilePos,
+  bench: { tx: Math.floor(PENS_WIDTH / 2) - 4, ty: 17 } satisfies TilePos,
   /** 044.2: a cleared pen's enemy comes back this many ticks after the pen empties (5 s). */
   penRefillTicks: 5 * TICK_RATE,
   /**
@@ -110,12 +116,12 @@ export const SANDBOX = {
    * way they face; one that would stand in a wall is tried at `backSteps` even steps back toward the player.
    */
   place: { distance: 5, spacing: 2, backSteps: 20 },
-  /** The spawn panel's choices and where it starts: ring 1–3, champion or not, 1–10 at a time. */
-  rings: [1, 2, 3] as readonly Ring[],
+  /** The spawn panel's choices and where it starts: ring 1–4 (060: the Emberworks' 4), champion or not, 1–10 at a time. */
+  rings: [1, 2, 3, 4] as readonly Ring[],
   maxCount: 10,
   spawnDefaults: { enemyId: 'husk', ring: 1 as Ring, champion: false, count: 1 },
-  /** Each entrance's round at the start: plain arrows, the first volley (024). Null is empty. */
-  loadout: ['arrow', 'arrow', 'arrow'] as readonly (string | null)[],
+  /** Each entrance's round at the start: plain arrows, the first volley (024; 060: four entrances). Null is empty. */
+  loadout: ['arrow', 'arrow', 'arrow', 'arrow'] as readonly (string | null)[],
   /** 044.1: the panel's key, the backquote (unbound in the game), rebindable (042); 056.1: it hides and shows both strips. */
   panelKey: 'BACKTICK',
 } as const;
@@ -208,7 +214,8 @@ export const SANDBOX_PANEL = {
   slideEase: 3,
   /** 056.4: the pickup feed's gap right of the strip (057: of the Loadout tab), in the sandbox. */
   feed: { gap: 8 },
-  keys: { gap: 6, step: 9, label: { x: 10 }, value: { right: 176 }, rule: { inset: 6, color: 'brass', alpha: 0.5 } },
+  // 060: lines 8 px apart (were 9), so the strip still ends above the HP block with the fourth entrance's row.
+  keys: { gap: 6, step: 8, label: { x: 10 }, value: { right: 176 }, rule: { inset: 6, color: 'brass', alpha: 0.5 } },
 } as const;
 
 /**

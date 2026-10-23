@@ -130,6 +130,7 @@ export const BUILD_BAR: readonly string[] = [
   'spinner',
   'assembler',
   'frost-rune',
+  'fire-rune',
   'shaper',
   'fuse-maker',
   'packer',

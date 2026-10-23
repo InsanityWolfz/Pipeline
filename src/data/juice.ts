@@ -34,6 +34,8 @@ export const DAMAGE_NUMBERS = {
   stackPx: 12,
   stackMs: 400,
   stackNear: 24,
+  /** 060: a burn's beat, `scale` the size of a hit's, in ember. */
+  burn: { scale: 0.65, color: 'cinder-light' },
 } as const;
 
 export interface ParticleBurst {
@@ -58,6 +60,9 @@ export const PARTICLES = {
   hitPhysical: { colors: ['snow', 'rock-pale', 'gold-trim'], count: 14, speed: [60, 150], gravity: 220, lifeMs: [220, 380], size: 2, lift: 12 },
   // A cold hit (029): frost flakes that drift down.
   hitCold: { colors: ['foam', 'snow', 'water-light'], count: 14, speed: [40, 110], gravity: 90, lifeMs: [300, 520], size: 2, lift: 12 },
+  // 060: a fire hit throws sparks that rise; a burn's catch, a puff of embers.
+  hitFire: { colors: ['cinder-light', 'cinder', 'flame-dark'], count: 12, speed: [40, 110], gravity: -60, lifeMs: [260, 460], size: 2, lift: 12 },
+  ignite: { colors: ['cinder-light', 'cinder', 'gold-trim'], count: 8, speed: [15, 45], gravity: -90, lifeMs: [350, 600], size: 2, lift: 16 },
   // A frozen enemy cracking free (029): chips of ice flung out and falling.
   thawShards: { colors: ['foam', 'snow', 'water-light', 'rock-pale'], count: 18, speed: [50, 130], gravity: 240, lifeMs: [300, 520], size: 3, lift: 16 },
   // Rime flaking off a cluster as it's worked (029).
@@ -92,6 +97,12 @@ export const PARTICLES = {
   waveSpray: { colors: ['snow', 'hollow-pale', 'hollow-light'], count: 20, speed: [50, 130], gravity: -10, lifeMs: [250, 500], size: 2 },
   stompDust: { colors: ['hollow-pale', 'hollow-light', 'hollow'], count: 18, speed: [40, 110], gravity: -20, lifeMs: [300, 600], size: 2 },
   barrierShards: { colors: ['cyan', 'cyan-glow', 'snow'], count: 40, speed: [20, 90], gravity: 160, lifeMs: [500, 1000], size: 2, lift: 40 },
+  // 060: a cinder vent flaring open, embers and ash rising out of its mouth.
+  ventFlare: { colors: ['cinder-light', 'cinder', 'flame-dark', 'ash-pale'], count: 24, speed: [30, 110], gravity: -80, lifeMs: [400, 800], size: 2, lift: 18 },
+  /** 060: a Forgewright's bellows bursting (leather scraps and sparks), its hammer slam's dust, its flood spreading. */
+  bellowsBurst: { colors: ['leather', 'wood-light', 'cinder-light', 'cinder'], count: 26, speed: [50, 140], gravity: 160, lifeMs: [300, 600], size: 3, lift: 10 },
+  slamDust: { colors: ['ash-pale', 'ash-light', 'ash', 'cinder'], count: 34, speed: [60, 150], gravity: -20, lifeMs: [400, 800], size: 3 },
+  floodFlare: { colors: ['cinder-light', 'cinder', 'flame-dark'], count: 40, speed: [20, 90], gravity: -90, lifeMs: [500, 1000], size: 3, lift: 6 },
   // 038: a landmine bursting (iron shards and ley sparks) and a cluster bomb's bomblets popping (a few embers).
   mineShards: { colors: ['iron-light', 'iron', 'cyan-glow', 'snow'], count: 30, speed: [60, 160], gravity: 200, lifeMs: [220, 480], size: 2, lift: 6 },
   bombletEmbers: { colors: ['cinder-light', 'cinder', 'gold-trim'], count: 12, speed: [30, 90], gravity: -30, lifeMs: [300, 600], size: 2 },
@@ -115,6 +126,8 @@ export const HARVEST_BURSTS: Readonly<Record<string, keyof typeof PARTICLES>> = 
   // 034: ley-iron chips like stone.
   'ley-iron-seam': 'harvestChips',
   'resin-seep': 'harvestResin',
+  // 060: cinderite breaking off a vent's crust in hot embers.
+  'cinder-vent': 'bombletEmbers',
 };
 
 /** While a node is worked: a small burst this often, ms; a tree shakes this far either way, px, this many times a second. */

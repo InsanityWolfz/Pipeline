@@ -1,4 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
+import { FORGE_LOOK, FORGE_SPRITES } from '../data/forgewrightAssets';
 import { animFrames, DEPTHS } from '../data/assets';
 import { CLAIM_TICKS } from '../data/claims';
 import { TILE_SIZE } from '../data/config';
@@ -16,7 +17,7 @@ import { enemyDef } from '../data/enemies';
 
 // The claimable sites and what claiming brings (009): the room's pylons (032: several; dormant,
 // activating, or glowing once claimed) with the claim hold's bar, the foundry's
-// fixtures (with 010's bench), and Wisp orbs and (035) Sniper bolts in flight.
+// fixtures (with 010's bench), and Wisp orbs, (035) Sniper bolts and (060) the Forgewright's embers in flight.
 /** The frame a fixture shows first. */
 function fixtureFrame(kind: string): string {
   if (kind === 'stash') return FIXTURE_SPRITES.stash;
@@ -108,18 +109,22 @@ export class SiteView {
   private drawOrbs(sim: SimState, shown: string): void {
     const live = new Set<number>();
     for (const o of sim.orbs) {
-      if (o.roomId !== shown || enemyDef(o.enemyId).kind !== 'caster') continue;
+      const kind = enemyDef(o.enemyId).kind;
+      // A Wisp's orb, or (060) a Forgewright's ember, pointing along its flight.
+      if (o.roomId !== shown || (kind !== 'caster' && kind !== 'forgewright')) continue;
+      const ember = kind === 'forgewright';
+      const lift = ember ? FORGE_LOOK.ember.lift : ORB_SPRITES.lift;
       live.add(o.id);
       let d = this.orbs.get(o.id);
       if (!d) {
         d = {
-          shadow: addVector(this.scene, 0, 0, ORB_SPRITES.shadow).setDepth(DEPTHS.groundFx),
-          orb: addVector(this.scene, 0, 0, ORB_SPRITES.orb),
+          shadow: addVector(this.scene, 0, 0, ember ? FORGE_SPRITES.emberShadow : ORB_SPRITES.shadow).setDepth(DEPTHS.groundFx),
+          orb: addVector(this.scene, 0, 0, ember ? FORGE_SPRITES.ember : ORB_SPRITES.orb).setRotation(ember ? Math.atan2(o.dy, o.dx) : 0),
         };
         this.orbs.set(o.id, d);
       }
       d.shadow.setPosition(Math.round(o.x), Math.round(o.y));
-      d.orb.setPosition(Math.round(o.x), Math.round(o.y - ORB_SPRITES.lift)).setDepth(o.y + ORB_SPRITES.lift);
+      d.orb.setPosition(Math.round(o.x), Math.round(o.y - lift)).setDepth(o.y + lift);
     }
     for (const [id, d] of this.orbs) {
       if (live.has(id)) continue;

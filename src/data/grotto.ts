@@ -1,5 +1,6 @@
 import { shiftRect, shiftTile, type Shift } from './place';
 import type { TilePos, TileRect } from './tiles';
+import { WORLD_SHIFT } from './worldShape';
 
 // The Frozen Grotto, minimal (029): a hand-placed site in the overworld's north, in ring 2, the guarded source of
 // rimestone for the frost rune. A clearing with frosted ground, three rime outcrops and a guard pack in its own
@@ -10,8 +11,8 @@ import type { TilePos, TileRect } from './tiles';
 /** Its guards' group: its landmark id (032). */
 export const GROTTO_GROUP = 'frozen-grotto';
 
-/** 053: the Grotto's layout as 029 drew it, moved whole to the north of the round map (bearing 352°, 36 tiles). */
-const SHIFT: Shift = { dx: 25, dy: 39 };
+/** 053: the Grotto's layout as 029 drew it, moved whole to the north of the round map (bearing 352°, 36 tiles; 060: and with the centre). */
+const SHIFT: Shift = { dx: 25 + WORLD_SHIFT.dx, dy: 39 + WORLD_SHIFT.dy };
 
 export const GROTTO = {
   /** The Grotto's clearing, kept open and frosted. */

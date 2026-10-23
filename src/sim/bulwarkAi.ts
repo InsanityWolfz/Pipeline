@@ -1,6 +1,6 @@
 import { TILE_SIZE } from '../data/config';
-import type { BulwarkDef } from '../data/enemies';
-import { arenaOf } from '../data/hollows';
+import type { BulwarkDef, EnemyDef } from '../data/enemies';
+import { arenaOf } from '../data/arenas';
 import { enter, hold, startWindup, stepAttack, toward, walkHome } from './aiCommon';
 import { aggro, type EnemyState } from './enemies';
 import { countBehind, enrageIfDue, lobCooldownOf, resetFight, riseAddsIfDue, startStomp, stepRoar, stepStomp, stepWave, stompReady, turnRateOf, windupsOf } from './bulwarkPhases';
@@ -17,8 +17,8 @@ import type { SimState } from './state';
 // It never leaves its arena, and walks home to heal after the player has been out of it a while.
 // 041 adds the rear stomp, the enrage and the adds (bulwarkPhases.ts).
 
-/** A move, with each axis dropped that would carry the feet out of the arena (it never steps out). */
-function inArena(e: EnemyState, def: BulwarkDef, mx: number, my: number): [number, number] {
+/** A move, with each axis dropped that would carry the feet out of the arena (it never steps out; 060: the Forgewright's too). */
+export function inArena(e: EnemyState, def: EnemyDef, mx: number, my: number): [number, number] {
   const arena = arenaOf(e.enemyId);
   if (!arena) return [mx, my];
   const r = arena.inside;

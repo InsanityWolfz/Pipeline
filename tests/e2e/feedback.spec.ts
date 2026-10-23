@@ -58,14 +58,18 @@ test('F on the title (no snapshot), Cancel keeps nothing, and the notes go in th
 
 test('Leave feedback on the end card opens the note over it, and closing it returns to the card', async ({ page }) => {
   await boot(page, '?start=hollows');
-  await page.evaluate((n) => {
-    const g = window.__GAME__;
-    if (!g) throw new Error('no game');
-    g.step(0);
-    const b = g.getState().enemies.find((e) => e.enemyId === 'bulwark');
-    if (b) g.setEnemyHealth(b.id, 0);
-    g.step(n + 1);
-  }, END_CARD.delayTicks);
+  await page.evaluate(
+    ([n, boss]) => {
+      const g = window.__GAME__;
+      if (!g) throw new Error('no game');
+      g.step(0);
+      // 060: the Forgewright's first kill ends the demo.
+      const b = g.getState().enemies.find((e) => e.enemyId === boss);
+      if (b) g.setEnemyHealth(b.id, 0);
+      g.step(n + 1);
+    },
+    [END_CARD.delayTicks, END_CARD.boss] as const,
+  );
   await flowIs(page, 'endCard');
   await page.keyboard.press('f');
   await flowIs(page, 'feedback');

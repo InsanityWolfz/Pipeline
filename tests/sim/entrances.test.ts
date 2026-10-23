@@ -12,14 +12,14 @@ import type { SimState } from '../../src/sim/state';
 import { HALL, hold, movePlayer, run, runUntil, useAt, volleyAt } from './fight';
 import { foundry, put, stepOutside } from './foundryKit';
 
-// The intake's three entrances (024): each mouth tile is an entrance with its own
-// reservoir. Only the centre starts open; each side is restored at its cap (033,
+// The intake's entrances (024; 060: four): each mouth tile is an entrance with its own
+// reservoir. Only tx 12 starts open; each other is restored at its cap (033,
 // tests/sim/researchEntrances.test.ts). While fire
 // is held, each fed entrance fires at its own ammo's rate (028), down its own lane of the
 // fan (048, tests/sim/volleyLanes.test.ts).
 
 const [WEST, MIDDLE, EAST] = INTAKE.entrances;
-if (!WEST || !MIDDLE || !EAST) throw new Error('the intake needs three entrances');
+if (!WEST || !MIDDLE || !EAST) throw new Error('the intake needs its entrances');
 
 const ARROW_TICKS = ammoDef('arrow').fireTicks;
 const BOMB_TICKS = ammoDef('bomb').fireTicks;
@@ -65,14 +65,15 @@ function atIntake(s: SimState): void {
 }
 
 describe('the entrances', () => {
-  it('are the three mouth tiles, the centre open and the sides capped at the start', () => {
+  it('are the four mouth tiles (060), the second open and the others capped at the start', () => {
     const s = foundry();
     expect(s.link.entrances).toEqual([
       { open: false, ammoId: null, count: 0, cooldown: 0, node: null },
       { open: true, ammoId: null, count: 0, cooldown: 0, node: null },
       { open: false, ammoId: null, count: 0, cooldown: 0, node: null },
+      { open: false, ammoId: null, count: 0, cooldown: 0, node: null },
     ]);
-    expect(INTAKE.entrances.map((e) => e.startsOpen)).toEqual([false, true, false]);
+    expect(INTAKE.entrances.map((e) => e.startsOpen)).toEqual([false, true, false, false]);
     expect(ENTRANCE_CAPS[0]).toBe(30);
   });
 
@@ -119,9 +120,10 @@ describe('the entrances', () => {
     const s = foundry();
     const west = feed(s, 0, 'arrow');
     const east = feed(s, 2, 'arrow');
+    const fourth = feed(s, 3, 'arrow');
     run(s, 10);
-    expect([west.item, east.item]).toEqual(['arrow', 'arrow']);
-    expect(s.link.entrances.map((e) => e.count)).toEqual([0, 0, 0]);
+    expect([west.item, east.item, fourth.item]).toEqual(['arrow', 'arrow', 'arrow']);
+    expect(s.link.entrances.map((e) => e.count)).toEqual([0, 0, 0, 0]);
   });
 
   it('each open entrance fills its own reservoir', () => {
@@ -129,8 +131,9 @@ describe('the entrances', () => {
     feed(s, 0, 'arrow');
     feed(s, 1, 'bomb');
     feed(s, 2, 'arrow');
+    feed(s, 3, 'ley-bolt');
     run(s, 1);
-    expect(s.link.entrances.map((e) => [e.ammoId, e.count])).toEqual([['arrow', 1], ['bomb', 1], ['arrow', 1]]);
+    expect(s.link.entrances.map((e) => [e.ammoId, e.count])).toEqual([['arrow', 1], ['bomb', 1], ['arrow', 1], ['ley-bolt', 1]]);
   });
 });
 
@@ -151,7 +154,7 @@ describe('the intake in getState', () => {
       volley: ['arrow', 'bomb'],
       lanes: [-SPREAD_STEP / 2, SPREAD_STEP / 2],
     });
-    expect(summarize(foundry()).intake.entrances.map((e) => e.open)).toEqual([false, true, false]);
+    expect(summarize(foundry()).intake.entrances.map((e) => e.open)).toEqual([false, true, false, false]);
   });
 });
 
@@ -176,7 +179,7 @@ describe('the volley', () => {
   it('each round costs one from its own entrance, and an empty entrance is skipped', () => {
     const s = volley([['arrow', 5], null, ['arrow', 1]]);
     run(s, 1, volleyAt(600, 400));
-    expect(s.link.entrances.map((e) => [e.ammoId, e.count])).toEqual([['arrow', 4], [null, 0], [null, 0]]);
+    expect(s.link.entrances.map((e) => [e.ammoId, e.count])).toEqual([['arrow', 4], [null, 0], [null, 0], [null, 0]]);
     // The east entrance ran dry, so the next press is a single arrow from the west one.
     runUntil(s, (x) => x.tube.shotCount > 0, ARROW_TICKS + 2, volleyAt(600, 400));
     expect(s.tube.shotCount).toBe(1);
@@ -224,17 +227,17 @@ describe('the volley', () => {
     }
     expect(fans).toEqual([0, 15, 30, 45, 60, 75, 90, 105]);
     expect(bombs).toEqual([0, 40, 80]);
-    expect(s.link.entrances.map((e) => e.count)).toEqual([12, 17, 12]);
+    expect(s.link.entrances.map((e) => e.count)).toEqual([12, 17, 12, 0]);
   });
 
   it('an entrance on cooldown does not hold back a ready one', () => {
     const s = volley([['bomb', 5], ['arrow', 5], null]);
     run(s, 1, volleyAt(600, 400));
-    expect(s.link.entrances.map((e) => e.cooldown)).toEqual([BOMB_TICKS, ARROW_TICKS, 0]);
+    expect(s.link.entrances.map((e) => e.cooldown)).toEqual([BOMB_TICKS, ARROW_TICKS, 0, 0]);
     run(s, ARROW_TICKS, volleyAt(600, 400));
     // The arrow entrance fired again on its own; the bomb entrance is still cooling down.
     expect(s.tube.shotCount).toBe(1);
-    expect(s.link.entrances.map((e) => e.count)).toEqual([4, 3, 0]);
+    expect(s.link.entrances.map((e) => e.count)).toEqual([4, 3, 0, 0]);
     expect(s.link.entrances[0]?.cooldown).toBe(BOMB_TICKS - ARROW_TICKS);
     expect(s.events.entranceFires).toEqual([{ entrance: 1, ammoId: 'arrow' }]);
   });
@@ -266,7 +269,7 @@ describe('the volley', () => {
       const angles = fresh.map((a) => Math.round(((Math.atan2(a.dy, a.dx) * 180) / Math.PI) * 10) / 10).sort((a, b) => a - b);
       expect(angles).toEqual([-7.5, 7.5]);
     }
-    expect(s.link.entrances.map((e) => e.count)).toEqual([5, 0, 5]);
+    expect(s.link.entrances.map((e) => e.count)).toEqual([5, 0, 5, 0]);
   });
 
   it('a volley never holds back a carried round: right click keeps its own pace (047)', () => {
@@ -316,7 +319,7 @@ describe('the volley', () => {
     run(s, 1, volleyAt(600, 400));
     expect(s.tube.shotCount).toBe(2);
     expect(s.tube.fromReservoir).toBe(true);
-    expect(s.link.entrances.map((e) => e.count)).toEqual([0, 0, 0]);
+    expect(s.link.entrances.map((e) => e.count)).toEqual([0, 0, 0, 0]);
     // The entrances are empty: carried arrows and bombs stay put, and the press punches.
     expect(nextPress(s)).toEqual({ kind: 'melee' });
     expect(hudActive(s)).toEqual({ kind: 'melee' });
@@ -334,11 +337,11 @@ describe('the volley', () => {
     expect(nextPress(s)).toEqual({ kind: 'melee' });
   });
 
-  it('three ley bolt lines into the three entrances fire three bolts per press', () => {
+  it('four ley bolt lines into the four entrances (060) fire four bolts per press', () => {
     const s = opened();
     s.inventory = {};
     hold(s, 'ley-bolt');
-    // Three columns up into the three entrances: hopper → grinder → focuser → conduit.
+    // Four columns up into the four entrances: hopper → grinder → focuser → conduit.
     for (const e of INTAKE.entrances) {
       const h = put<HopperState>(s, 'hopper', e.tx, 4, 'up');
       h.item = 'ley-crystal';
@@ -351,8 +354,8 @@ describe('the volley', () => {
     stepOutside(s);
     movePlayer(s, 400, 400);
     run(s, 1, volleyAt(600, 400));
-    expect(s.tube.shotCount).toBe(3);
-    expect(arrowAngles(s)).toEqual([-15, 0, 15]);
+    expect(s.tube.shotCount).toBe(4);
+    expect(arrowAngles(s)).toEqual([-22.5, -7.5, 7.5, 22.5]);
     expect(s.arrows.every((a) => a.ammoId === 'ley-bolt')).toBe(true);
   });
 

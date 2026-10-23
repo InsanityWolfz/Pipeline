@@ -26,14 +26,15 @@ export type StatId =
   | 'move-speed'
   | 'firing-walk'
   | 'roll-cooldown'
-  | 'roll-distance';
+  | 'roll-distance'
+  | 'spread-radius';
 
 /**
  * How a stat's own value reads, for a `flat` change and for totals: `count` whole, `seconds` from ticks to 1 decimal,
  * `hp-per-s` to 1 decimal with "HP/s", `px` whole with "px" (breakdown only), `fraction` as a whole %, `deg-per-tick`
- * as °/s, `per-s` to 1 decimal with "/s".
+ * as °/s, `per-s` to 1 decimal with "/s", `tiles` px in tiles (060: "+1 tile", so a content line never shows px).
  */
-export type StatUnit = 'count' | 'seconds' | 'hp-per-s' | 'px' | 'fraction' | 'deg-per-tick' | 'per-s';
+export type StatUnit = 'count' | 'seconds' | 'hp-per-s' | 'px' | 'fraction' | 'deg-per-tick' | 'per-s' | 'tiles';
 
 export interface StatDef {
   id: StatId;
@@ -74,4 +75,6 @@ export const STATS: Readonly<Record<StatId, StatDef>> = {
   'firing-walk': stat('firing-walk', 'walk speed while firing', 'fraction', true),
   'roll-cooldown': stat('roll-cooldown', 'roll cooldown', 'seconds'),
   'roll-distance': stat('roll-distance', 'roll distance', 'px'),
+  // 060: how far a dying enemy's burn spreads (Fire's own; a Burst's `radius` would widen Fire bombs' bursts too).
+  'spread-radius': stat('spread-radius', 'spread radius', 'tiles'),
 };

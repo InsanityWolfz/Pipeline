@@ -1,5 +1,7 @@
 import { SHRINE_ARENA } from '../../src/data/arenas';
 import { describe, expect, it } from 'vitest';
+import { EMBERWORKS, rampTiles } from '../../src/data/emberworks';
+import { SLAG_RIVER_TILES } from '../../src/data/emberworksSites';
 import { HOLLOWS, inHollows, regionAt } from '../../src/data/hollows';
 import { LANDMARK_LIST } from '../../src/data/landmarks';
 import { OVERWORLD, ringOf } from '../../src/data/overworld';
@@ -55,8 +57,15 @@ describe('the shape', () => {
     }
   });
 
-  it('ends past the Hollows in a cliff edge: solid out to the grid edge, ragged inward, never a straight line', () => {
-    for (let ty = 0; ty < size; ty++) for (let tx = 0; tx < size; tx++) if (fromCentre(tx, ty) > hollows) expect(at(tx, ty), `${tx},${ty}`).toBe(TILE.cliff);
+  it('ends past the Hollows in a cliff edge: solid out to the Emberworks past it but for its ramps (060), ragged inward, never a straight line', () => {
+    // 060: and its Slag River's slag, which runs into it.
+    const ramps = new Set([...EMBERWORKS.ramps.flatMap((r) => rampTiles(r)), ...SLAG_RIVER_TILES].map(tileKey));
+    for (let ty = 0; ty < size; ty++) {
+      for (let tx = 0; tx < size; tx++) {
+        const d = fromCentre(tx, ty);
+        if (d > hollows && d < hollows + EMBERWORKS.wall && !ramps.has(`${tx},${ty}`)) expect(at(tx, ty), `${tx},${ty}`).toBe(TILE.cliff);
+      }
+    }
     // Ragged: inside the outer circle some edge tiles are cliff and some open.
     const band = room.rows.flatMap((row, ty) => [...row].map((s, tx) => ({ s, d: fromCentre(tx, ty) }))).filter((t) => t.d > hollows - 1 && t.d <= hollows);
     expect(band.some((t) => t.s === TILE.cliff)).toBe(true);
@@ -162,7 +171,7 @@ describe('places on the circle', () => {
     expect(pylons.length).toBeGreaterThan(0);
     for (const p of pylons) expect(has({ tx: p.tx, ty: p.ty + 1 }), p.site).toBe(true);
     for (const s of OVERWORLD.springs.filter(inside)) expect(has(s), s.id).toBe(true);
-    for (const l of LANDMARK_LIST.filter((l) => l.ring !== 3)) expect(has(l.pylon ? { tx: l.pylon.tx, ty: l.pylon.ty + 1 } : { tx: Math.floor(mid(l.area).tx), ty: Math.floor(mid(l.area).ty) }), l.id).toBe(true);
+    for (const l of LANDMARK_LIST.filter((l) => l.ring !== 3 && l.ring !== 4)) expect(has(l.pylon ? { tx: l.pylon.tx, ty: l.pylon.ty + 1 } : { tx: Math.floor(mid(l.area).tx), ty: Math.floor(mid(l.area).ty) }), l.id).toBe(true);
     expect(has(SHRINE_ARENA.door.enterTo)).toBe(true);
   });
 

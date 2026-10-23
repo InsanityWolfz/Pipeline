@@ -13,6 +13,7 @@ import type { SimState } from '../sim/state';
 import { colorOf } from './color';
 import { addVector, showFrame } from './vector/textures';
 import { drawCrackedCircle } from './crackedCircle';
+import { RingCurtain, type CurtainArc } from './ringCurtain';
 
 /** Stonefall Hollows' live things as drawn (034), for `ui().hollows`. */
 export interface HollowsShown {
@@ -32,23 +33,8 @@ export const NO_HOLLOWS_SHOWN: HollowsShown = { barrier: 'shut', barrierAlpha: 0
 const T = TILE_SIZE;
 const L = HOLLOWS_LOOK;
 
-/** The barrier's circle (053.2) in world px: its centre and radius, through the middle of its band of tiles. */
-const RING = {
-  x: (WORLD_SHAPE.centre.tx + 0.5) * TILE_SIZE,
-  y: (WORLD_SHAPE.centre.ty + 0.5) * TILE_SIZE,
-  r: WORLD_SHAPE.region1 * TILE_SIZE,
-};
-
-/** Fills the upright quad standing `h` px tall on the ground from a to b, in the graphics' current fill. */
-function quad(g: GameObjects.Graphics, a: { x: number; y: number }, b: { x: number; y: number }, h: number): void {
-  g.beginPath();
-  g.moveTo(a.x, a.y);
-  g.lineTo(b.x, b.y);
-  g.lineTo(b.x, b.y - h);
-  g.lineTo(a.x, a.y - h);
-  g.closePath();
-  g.fillPath();
-}
+/** The barrier's circle (053.2): the whole circle round Region 1, through the middle of its band of tiles. */
+const RING: readonly CurtainArc[] = [{ r: WORLD_SHAPE.region1, from: 0, to: 2 * Math.PI }];
 
 // Stonefall Hollows' live things (034): the ley barrier shimmering on the circle round Region 1 (053) until the
 // shrine is claimed, then collapsing (043's seal over the forum's door is ArenaDoorView's since 055); the forum's altar (dim,
@@ -56,8 +42,8 @@ function quad(g: GameObjects.Graphics, a: { x: number; y: number }, b: { x: numb
 // Bulwark's bombs, each a red ring with a disc growing inside it, the bomb arcing in first.
 export class HollowsView {
   private readonly scene: Scene;
-  /** 053: the barrier's curtain, one graphics per gate row in view (each at its row's depth), reused frame to frame. */
-  private readonly barrier: GameObjects.Graphics[] = [];
+  /** 053: the barrier's curtain round the circle (060: shared with the Emberworks' barrier, ringCurtain.ts). */
+  private readonly barrier: RingCurtain;
   private readonly altar: GameObjects.Image;
   private readonly summon: GameObjects.Graphics;
   private readonly circles: GameObjects.Graphics;
@@ -71,6 +57,7 @@ export class HollowsView {
 
   constructor(scene: Scene) {
     this.scene = scene;
+    this.barrier = new RingCurtain(scene);
     const a = HOLLOWS.arena.altar;
     this.altar = addVector(scene, (a.tx + 0.5) * T, (a.ty + 1) * T, HOLLOWS_SPRITES.altar.dim).setDepth((a.ty + 1) * T).setVisible(false);
     this.summon = scene.add.graphics().setDepth(DEPTHS.groundFx).setBlendMode(BlendModes.ADD).setVisible(false);
@@ -100,56 +87,24 @@ export class HollowsView {
     const state = here ? altarState(sim, HOLLOWS.arena.altar.id) : null;
     this.altar.setVisible(here);
     if (state) showFrame(this.altar, state === 'awake' ? HOLLOWS_SPRITES.altar.awake : state === 'summoning' ? HOLLOWS_SPRITES.altar.summoning : HOLLOWS_SPRITES.altar.dim);
-    if (sim.summoning === null && this.shownState.summonCircle) this.riseMs = L.summon.riseMs;
+    if (sim.summoning?.altar !== HOLLOWS.arena.altar.id && this.shownState.summonCircle) this.riseMs = L.summon.riseMs;
     this.riseMs = Math.max(0, this.riseMs - deltaMs);
-    const summoning = here && sim.summoning !== null;
+    // 060: the forum's own summon (the Anvil Hall's is EmberworksView's).
+    const summoning = here && sim.summoning?.altar === HOLLOWS.arena.altar.id;
     this.drawSummon(summoning ? (sim.summoning?.ticks ?? 0) / HOLLOWS.arena.summonTicks : null);
     const bombs = this.drawBombs(sim, arenaHere);
     this.shownState = { barrier: this.barrierState, barrierAlpha: alpha, altar: state, summonCircle: summoning, enemyBombs: bombs };
   }
 
-  /**
-   * The barrier (053.2: the whole circle round Region 1): a curtain of cyan light standing up from the circle, its top
-   * rim bright and its ripples climbing; collapsing, it flashes and fades. Drawn in short straight lengths, only those
-   * in view, each in a graphics at its foot's row so the curtain stands behind what's south of it. Returns its alpha.
-   */
+  /** The barrier (053.2: the whole circle round Region 1), standing, collapsing or gone (ringCurtain.ts). Returns its alpha. */
   private drawBarrier(here: boolean): number {
-    for (const g of this.barrier) g.clear().setVisible(false);
-    if (!here || this.barrierState === 'down') return 0;
-    const B = L.barrier;
-    const k = this.barrierState === 'collapsing' ? this.collapseMs / B.collapseMs : 0;
-    const alpha = this.barrierState === 'collapsing' ? Math.max(0, 1 - k) : 1;
-    const v = this.scene.cameras.main.worldView;
-    const color = colorOf(B.color);
-    const glow = colorOf(B.glow);
-    const shimmer = (Math.sin((this.time / B.shimmerMs) * Math.PI * 2) + 1) / 2;
-    const fill = B.fill * alpha * (1 - B.shimmerDip + B.shimmerDip * shimmer);
-    const n = Math.ceil((2 * Math.PI * RING.r) / B.segment);
-    const rows = new Map<number, GameObjects.Graphics>();
-    let used = 0;
-    const at = (i: number) => ({ x: RING.x + RING.r * Math.cos((i / n) * 2 * Math.PI), y: RING.y + RING.r * Math.sin((i / n) * 2 * Math.PI) });
-    for (let i = 0; i < n; i++) {
-      const a = at(i);
-      const b = at(i + 1);
-      if (Math.max(a.x, b.x) < v.x || Math.min(a.x, b.x) > v.x + v.width || Math.max(a.y, b.y) < v.y || Math.min(a.y, b.y) - B.height > v.y + v.height) continue;
-      const row = Math.floor(Math.max(a.y, b.y) / T);
-      let g = rows.get(row);
-      if (!g) {
-        g = this.barrier[used] ?? this.scene.add.graphics();
-        this.barrier[used++] = g;
-        g.setVisible(true).setDepth((row + 1) * T);
-        rows.set(row, g);
-      }
-      const fall = k > 0 ? k * k * B.shardFall : 0;
-      quad(g.fillStyle(color, fill), a, b, B.height);
-      if (k > 0) quad(g.fillStyle(glow, B.flash * Math.max(0, 1 - k * B.flashFade)), a, b, B.height);
-      g.lineStyle(B.rimWidth, color, B.rim * alpha).lineBetween(a.x, a.y - B.height, b.x, b.y - B.height);
-      for (let r = 0; r < B.ripples; r++) {
-        const f = (((this.time / B.shimmerMs + r / B.ripples + i * B.rippleSkew) % 1) + 1) % 1;
-        const h = f * B.height - fall * ((r % 2) + 1);
-        g.lineStyle(B.ripple.width, glow, (B.ripple.alpha - B.ripple.fade * f) * alpha).lineBetween(a.x, a.y - h, b.x, b.y - h);
-      }
+    if (!here || this.barrierState === 'down') {
+      this.barrier.clear();
+      return 0;
     }
+    const k = this.barrierState === 'collapsing' ? this.collapseMs / L.barrier.collapseMs : 0;
+    const alpha = this.barrierState === 'collapsing' ? Math.max(0, 1 - k) : 1;
+    this.barrier.draw(RING, this.time, k, alpha);
     return alpha;
   }
 

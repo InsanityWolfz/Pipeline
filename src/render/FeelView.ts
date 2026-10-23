@@ -19,6 +19,7 @@ import { SoundView } from './SoundView';
 import { attuneBeat } from './attune';
 import { intakeAnchor } from './foundryLayout';
 import { playHollows, SealSound } from './hollowsFeel';
+import { playEmberworks, VentFeel } from './emberworksFeel';
 import { ARENAS } from '../data/arenas';
 import { arenaLocked } from '../sim/arenaLock';
 import { playMines } from './mineFeel';
@@ -49,6 +50,7 @@ export class FeelView {
   private readonly hollowsEnemies = new HollowsEnemyFeel();
   /** 045: the arena seal's hum and drop (055: either arena's). */
   readonly seal = new SealSound();
+  private readonly vents = new VentFeel();
 
   static preload(scene: Scene): void {
     SoundView.preload(scene);
@@ -103,6 +105,9 @@ export class FeelView {
       j.burst('hitCold', f.x, f.y);
     }
     for (const t of ev.thaws) j.burst('thawShards', t.x, t.y);
+    // 060: an enemy catching fire (a hit's or a spread's) puffs embers; the crackle plays once a frame however many caught.
+    for (const i of ev.ignites) j.burst('ignite', i.x, i.y);
+    if (ev.ignites.length > 0) s.play(SOUNDS.burnCrackle, SOUND_LEVELS.quiet);
     if (ev.splits.length > 0) s.play(SOUNDS.split, SOUND_LEVELS.cue);
     // The relics (036): a relic identified at the bench, the ward breaking on a block, Last Ember's save.
     if (ev.identifies.some((piece) => piece.relic !== null)) s.play(SOUNDS.relicIdentify, SOUND_LEVELS.cue);
@@ -122,11 +127,14 @@ export class FeelView {
     // A punch (023) thuds on a hit, or whiffs; its hits otherwise land like any other.
     for (const m of ev.melees) s.play(m.hits.length > 0 ? SOUNDS.meleeHit : SOUNDS.meleeWhiff);
     for (const h of ev.hits) {
-      if (h.target === 'enemy') {
+      if (h.target === 'enemy' && h.burn) {
+        // 060: a burn's beat is a small number only: no hit sound, burst or hit stop.
+        j.damageNumber(h.damage, h.x, h.y, false, true);
+      } else if (h.target === 'enemy') {
         if (!h.melee) s.play(SOUNDS.hit);
         s.play(SOUNDS.enemyHurt, SOUND_LEVELS.under);
-        // Nothing deals fire until the fire rune (029); a fire hit gets its own burst when it comes back.
-        j.burst(h.damageType === 'cold' ? 'hitCold' : 'hitPhysical', h.x, h.y);
+        // 060: a fire hit throws rising sparks, as a cold one throws frost.
+        j.burst(h.damageType === 'cold' ? 'hitCold' : h.damageType === 'fire' ? 'hitFire' : 'hitPhysical', h.x, h.y);
         j.damageNumber(h.damage, h.x, h.y, false);
         this.freeze(h.id, HIT_STOP_MS);
       } else {
@@ -190,10 +198,12 @@ export class FeelView {
     if (ev.travels.length > 0) s.play(SOUNDS.travel);
     // 034: the Hollows' shield, bombs, pound, summon and barrier; the barrier's fall has its own sound.
     const barrier = playHollows(ev, j, s, this.scene.cameras.main.worldView);
+    // 060: the Emberworks' barrier across its ramps falls the same way.
+    const emberFell = playEmberworks(ev, j, s, this.scene.cameras.main.worldView);
     // 038: landmines arming and bursting, and the bomblets.
     playMines(ev, j, s);
     this.hollowsEnemies.events(ev, j, s);
-    if (ev.gates.length > (barrier ? 1 : 0)) {
+    if (ev.gates.length > (barrier ? 1 : 0) + (emberFell ? 1 : 0)) {
       s.play(SOUNDS.gateOpen);
       j.shake('medium');
     }
@@ -205,6 +215,8 @@ export class FeelView {
     const j = this.juice;
     this.hollowsEnemies.watch(sim, shown, deltaMs, j, this.sound);
     this.seal.update(ARENAS.some((a) => arenaLocked(sim, a, shown)), this.sound);
+    // 060: a cinder vent in view flaring open.
+    this.vents.watch(sim, shown, this.scene.cameras.main.worldView, j, this.sound);
     const live = new Set<number>();
     for (const e of sim.enemies) {
       if (e.roomId !== shown) continue;

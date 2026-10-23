@@ -85,8 +85,8 @@ describe('cliffs against shots', () => {
   it('stop arrows, while a bomb lands beyond them', () => {
     const s = arena();
     s.gates.hollows = true;
-    // The Cut's quarry face, from the south (034's tiles moved by 053: +96 rows).
-    const below = tileCentre({ tx: 25, ty: 103 });
+    // The Cut's quarry face, from the south (034's tiles moved by 053: +96 rows; 060: +31, +31).
+    const below = tileCentre({ tx: 56, ty: 134 });
     movePlayer(s, below.x, below.y);
     run(s, 1, fireAt(below.x, 0));
     let lastY = below.y;
@@ -94,15 +94,15 @@ describe('cliffs against shots', () => {
       lastY = s.arrows[0]?.y ?? lastY;
       return s.arrows.length === 0;
     }, 60);
-    expect(lastY).toBeGreaterThanOrEqual(101 * 32 - 8);
-    // A bomb over the aqueduct's fallen span lands on its far side (moved by 053: +65, +126).
-    const s2 = arena(undefined, tileCentre({ tx: 71, ty: 149 }));
+    expect(lastY).toBeGreaterThanOrEqual(132 * 32 - 8);
+    // A bomb over the aqueduct's fallen span lands on its far side (moved by 053: +65, +126; 060: +31, +31).
+    const s2 = arena(undefined, tileCentre({ tx: 102, ty: 180 }));
     s2.gates.hollows = true;
     s2.inventory = { bomb: 1 };
     hold(s2, 'bomb');
-    run(s2, 1, fireAt(tileCentre({ tx: 71, ty: 143 }).x, tileCentre({ tx: 71, ty: 143 }).y));
+    run(s2, 1, fireAt(tileCentre({ tx: 102, ty: 174 }).x, tileCentre({ tx: 102, ty: 174 }).y));
     runUntil(s2, () => s2.events.bursts.length > 0, 120);
-    expect(s2.events.bursts[0]?.y).toBeLessThan(145 * 32);
+    expect(s2.events.bursts[0]?.y).toBeLessThan(176 * 32);
   });
 });
 
@@ -138,6 +138,6 @@ describe('reachability', () => {
       expect(isSolid(room, a.bounds.x1, ty)).toBe(true);
     }
     for (let tx = a.bounds.x0; tx <= a.bounds.x1; tx++) expect(isSolid(room, tx, a.bounds.y1)).toBe(true);
-    expect(room.altars).toEqual([{ id: a.altar.id, tx: a.altar.tx, ty: a.altar.ty, boss: 'bulwark' }]);
+    expect(room.altars?.[0]).toEqual({ id: a.altar.id, tx: a.altar.tx, ty: a.altar.ty, boss: 'bulwark' });
   });
 });

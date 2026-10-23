@@ -27,6 +27,8 @@ export type TargetDef =
   | { kind: 'intake' }
   /** Stonefall Hollows' barrier gap (034). */
   | { kind: 'barrier' }
+  /** 060: the tops of the ramps up into the Emberworks, the nearest one. */
+  | { kind: 'ramps' }
   /** A region boss: where it stands, or its arena's start. */
   | { kind: 'boss'; boss: string };
 
@@ -59,6 +61,7 @@ export const TARGET_LIFT: Readonly<Record<TargetKind, number>> & { door: number;
   ghost: 30,
   intake: 4,
   barrier: 52,
+  ramps: 52,
   boss: 86,
   /** The door to another room (the foundry's, or its stairs outside). */
   door: 40,

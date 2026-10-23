@@ -5,10 +5,11 @@ import type { EnemyState } from '../sim/enemies';
 import { drawPound, drawRise, drawStomp, drawWave } from './bulwarkLook';
 import { colorOf } from './color';
 import { drawHollowsTelegraph } from './hollowsTelegraphs';
+import { drawForgeTelegraph } from './forgewrightLook';
 
 // Each enemy's wind-up telegraph on the ground, filling in as it runs (004, 009, 034, 035):
 // a Husk's swipe arc at its real reach and angle, a Wisp's tightening ring and aim line, the
-// Warden's slam circle at its real radius, the Bulwark's pound, and Region 2's four's.
+// Warden's slam circle at its real radius, the Bulwark's pound, Region 2's four's, and the Forgewright's (060).
 
 /** Draws it; returns whether the Bulwark's back wave was shaded (054), for `ui()`. */
 export function drawTelegraph(g: GameObjects.Graphics, e: EnemyState): boolean {
@@ -18,6 +19,8 @@ export function drawTelegraph(g: GameObjects.Graphics, e: EnemyState): boolean {
   drawRise(g, e);
   const waveShaded = drawWave(g, e);
   if (def.kind === 'bulwark' && e.mode === 'stomp-windup') drawStomp(g, e);
+  // 060: the Forgewright's slam circle, spray cone and flooded half.
+  else if (def.kind === 'forgewright') drawForgeTelegraph(g, e, def);
   else if (!drawHollowsTelegraph(g, e, def)) drawAttack(g, e, def);
   return waveShaded;
 }

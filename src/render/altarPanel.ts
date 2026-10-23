@@ -1,4 +1,4 @@
-import { arenaOfAltar } from '../data/hollows';
+import { arenaOfAltar } from '../data/arenas';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
 import { itemDef } from '../data/items';
 import { altarState, canOffer } from '../sim/altar';

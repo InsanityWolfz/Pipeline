@@ -75,6 +75,8 @@ export const FIXTURES: readonly FixtureDef[] = [
   { id: 'husk-resin-port', kind: 'port', name: 'Husk resin port', tx: 1, ty: 11, facing: 'right', raw: 'husk-resin' },
   // 055: below the resin port, the last free tile of the west wall's ports.
   { id: 'rimestone-port', kind: 'port', name: 'Rimestone port', tx: 1, ty: 12, facing: 'right', raw: 'rimestone' },
+  // 060: between the fiber and ley crystal ports, the floor tile left between them.
+  { id: 'cinderite-port', kind: 'port', name: 'Cinderite port', tx: 1, ty: 9, facing: 'right', raw: 'cinderite' },
   { id: 'waystone', kind: 'waystone', name: 'Waystone', tx: 22, ty: 4, facing: 'down', claim: 'shrine' },
 ];
 

@@ -17,9 +17,9 @@ const key = tileKey;
 
 describe('the Frozen Grotto', () => {
   it('sits in ring 2 in the north, kept as a clearing, with a road to its mouth', () => {
-    // 029's layout, moved whole by 053 (25, 39 from 029's tiles).
-    expect(GROTTO.area).toEqual({ x0: 74, y0: 44, x1: 84, y1: 52 });
-    expect(ringOf(79, 48)).toBe(2);
+    // 029's layout, moved whole by 053 (25, 39 from 029's tiles), and by 060 (31, 31 with the centre).
+    expect(GROTTO.area).toEqual({ x0: 105, y0: 75, x1: 115, y1: 83 });
+    expect(ringOf(110, 79)).toBe(2);
     expect(OVERWORLD.clearings).toContainEqual(GROTTO.area);
     expect(OVERWORLD.paths.some((p) => p.some((t) => Math.hypot(t.tx + 1 - GROTTO_MOUTH.tx, t.ty + 1 - GROTTO_MOUTH.ty) <= 2))).toBe(true);
     for (let ty = GROTTO.area.y0; ty <= GROTTO.area.y1; ty++) {
@@ -29,8 +29,8 @@ describe('the Frozen Grotto', () => {
 
   it('holds three rime outcrops at the spec tiles, each placed for the Grotto', () => {
     const rime = OVERWORLD.nodes.filter((n) => n.nodeId === 'rime-outcrop');
-    // 029's tiles (before 034's +40), moved by 053.
-    expect(rime.map(({ tx, ty }) => ({ tx: tx - 25 - 40, ty: ty - 39 }))).toEqual([
+    // 029's tiles (before 034's +40), moved by 053 and 060.
+    expect(rime.map(({ tx, ty }) => ({ tx: tx - 25 - 40 - 31, ty: ty - 39 - 31 }))).toEqual([
       { tx: 12, ty: 7 },
       { tx: 16, ty: 8 },
       { tx: 14, ty: 11 },

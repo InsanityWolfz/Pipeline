@@ -1,5 +1,8 @@
 import { smoothCurve } from './curves';
 import type { TilePos } from './tiles';
+import { EMBERWORKS, type RampDef } from './emberworks';
+import { ANVIL_HALL_ROAD_END } from './emberworksSites';
+import { laidOut, WORLD_SHAPE } from './worldShape';
 
 // The road network (053, D.3, Shaun: "it should just be one path"): dirt roads two tiles wide, laid as smooth curves
 // through hand-placed waypoints, without crossings or doubled-up strips. Five roads leave the foundry's courtyard (the
@@ -19,7 +22,24 @@ export interface RoadDef {
 /** The foundry's courtyard (053): the hub every road leaves from, round the stairs' door, this many tiles out. */
 export const COURTYARD = { radius: 11 } as const;
 
-const t = (tx: number, ty: number): TilePos => ({ tx, ty });
+/** A waypoint written in 053's coordinates, where it stands now (060: moved with the centre). */
+const t = (tx: number, ty: number): TilePos => laidOut({ tx, ty });
+
+/**
+ * 060: a road up a ramp: along its centre line from its foot to its top (a road point is its 2 × 2 block's top-left, so
+ * each sits half a tile up and left of the line), then on to `bearing` and `r` tiles out.
+ */
+function up(ramp: RampDef | undefined, bearing: number, r: number): TilePos[] {
+  if (!ramp) throw new Error('no such ramp');
+  const { from, to } = EMBERWORKS.ramp;
+  return [ring(ramp.bearing, from + 1), ring(ramp.bearing, (from + to) / 2), ring(ramp.bearing, to), ring(bearing, r)];
+}
+
+/** 060: the road point whose 2 × 2 block centres on the point `r` tiles out at `bearing`. */
+function ring(bearing: number, r: number): TilePos {
+  const a = (bearing * Math.PI) / 180;
+  return { tx: Math.round(WORLD_SHAPE.centre.tx + r * Math.sin(a) - 0.5), ty: Math.round(WORLD_SHAPE.centre.ty - r * Math.cos(a) - 0.5) };
+}
 
 export const ROAD_DEFS: readonly RoadDef[] = [
   // South: past the start stone's meadow, on through the barrier to the Broken Aqueduct.
@@ -45,6 +65,16 @@ export const ROAD_DEFS: readonly RoadDef[] = [
   { id: 'marsh', from: 'hive', waypoints: [t(105, 101), t(103, 106), t(101, 111)] },
   // On past the Hive to the South-east Ley Spring.
   { id: 'south-east-spring', from: 'hive', waypoints: [t(113, 107), t(110, 110)] },
+  // 060: up the ramps into the Emberworks. On from the aqueduct under its arch, up the south ramp to the Outpost Forge.
+  { id: 'outpost-forge', from: 'south', waypoints: [t(84, 141), t(86, 146), t(86, 152), ...up(EMBERWORKS.ramps[0], 188, 90)] },
+  // On from the Cistern Terrace, under its south side, up the west ramp to the Ash Kilns.
+  { id: 'ash-kilns', from: 'terrace', waypoints: [t(25, 113), t(16, 113), ...up(EMBERWORKS.ramps[1], 256, 90)] },
+  // From the forum road short of its door, up the north-west ramp and round the ring to the Anvil Hall's door.
+  { id: 'anvil-hall', from: 'forum', waypoints: [t(44, 31), t(42, 26), ...up(EMBERWORKS.ramps[2], 333, 88), ANVIL_HALL_ROAD_END] },
+  // From the north-west ramp's top, west round the ring to the Slag River's inner bridge.
+  { id: 'slag-river', from: 'anvil-hall', waypoints: [up(EMBERWORKS.ramps[2], 0, 0)[2] ?? ANVIL_HALL_ROAD_END, ...[312, 302, 293.5].map((b) => ring(b, 88))] },
+  // From the Anvil Hall's door, east round the ring to the Emberworks' Ley Spring, on the far side from every ramp.
+  { id: 'emberworks-spring', from: 'anvil-hall', waypoints: [ANVIL_HALL_ROAD_END, ...[355, 10, 25, 40, 55].map((b) => ring(b, 87)), ring(68, 88)] },
 ];
 
 /** Each road as laid: its smooth curve sampled about every tile, as top-left tiles (fractional between waypoints). */

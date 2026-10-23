@@ -1,4 +1,4 @@
-import { STAGE_RECIPES } from './stages';
+import { STAGE_RECIPES, STAGES } from './stages';
 
 // Hand-crafting recipes. Starting values from spec 005; tune in playtest. A stage's
 // recipe (029: hand-applied at the bench, run by its machine) is found here too.
@@ -38,8 +38,8 @@ export const RECIPES: Readonly<Record<string, RecipeDef>> = {
   landmine: { ...recipe('landmine', { 'iron-plate': 1, fuse: 1, 'ley-dust': 1 }, 'landmine', 2), shownAfter: 'ley-iron' },
 };
 
-/** Items whose first carrying reveals recipes (038), each remembered in `found`. */
-export const REVEALING_ITEMS: readonly string[] = [...new Set(Object.values(RECIPES).flatMap((r) => (r.shownAfter ? [r.shownAfter] : [])))];
+/** Items whose first carrying reveals recipes (038) or a stage's rows (060: the fire rune's, after cinderite), each remembered in `found`. */
+export const REVEALING_ITEMS: readonly string[] = [...new Set([...Object.values(RECIPES), ...Object.values(STAGES)].flatMap((r) => (r.shownAfter ? [r.shownAfter] : [])))];
 
 /** A hand-crafting recipe, or a stage's (029). */
 export function recipeDef(id: string): RecipeDef {

@@ -4,6 +4,7 @@ import { HOLLOWS_ENEMY_SOUND_RECIPES, HOLLOWS_ENEMY_SOUNDS, HOLLOWS_ENEMY_WINDUP
 import { GEAR_SOUND_RECIPES, GEAR_SOUNDS } from './gearSounds.ts';
 import { TALENT_SOUND_RECIPES, TALENT_SOUNDS } from './talentSounds.ts';
 import { MINE_SOUND_RECIPES, MINE_SOUNDS } from './mineSounds.ts';
+import { EMBERWORKS_SOUND_RECIPES, EMBERWORKS_SOUNDS, EMBERWORKS_WINDUPS } from './emberworksSounds.ts';
 
 // Sound effects and ambient loops (014), as synth recipes. `npm run sound` renders
 // each one to assets/build/sounds/<key>.wav; render plays them by these keys.
@@ -58,6 +59,7 @@ export const SOUNDS = {
   ...GEAR_SOUNDS,
   ...TALENT_SOUNDS,
   ...MINE_SOUNDS,
+  ...EMBERWORKS_SOUNDS,
   ambientClearing: 'ambient-clearing',
   ambientFoundry: 'ambient-foundry',
 } as const;
@@ -77,6 +79,7 @@ export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
   ...GEAR_SOUND_RECIPES,
   ...TALENT_SOUND_RECIPES,
   ...MINE_SOUND_RECIPES,
+  ...EMBERWORKS_SOUND_RECIPES,
   'fire-arrow': {
     layers: [
       { wave: 'noise', from: 6000, to: 1500, dur: 0.12, attack: 0.002, volume: 0.35 },
@@ -293,4 +296,5 @@ export const WINDUP_SOUNDS: Readonly<Record<string, SoundKey>> = {
   // 034: the Bulwark's stone grinds as it plants its shield (the pound lands with its own sound).
   bulwark: SOUNDS.bulwarkGrind,
   ...HOLLOWS_ENEMY_WINDUPS,
+  ...EMBERWORKS_WINDUPS,
 };

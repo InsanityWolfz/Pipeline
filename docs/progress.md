@@ -2,6 +2,24 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-23: 060 Region 3: the Emberworks and the Forgewright
+**Changed:** Shaun's spoken idea (material tiers: better raws from harder regions, so a build keeps its stages and talents) became a region brainstorm and interview (docs/brainstorm/2026-10-22-region-3.md), split like the Hollows into 060, 061 (its enemies) and 062 (the Smelter, the kiln, steel and glass rounds). 060 is built on `claude/060-emberworks` (InsanityWolfz/Pipeline#70) in eight slices (docs/plans/060-emberworks.md):
+- the world grows to 230 tiles (one `WORLD_SHIFT`, nothing moved relative to the centre);
+- the Emberworks, ring 4 (×4), behind ramp barriers the Bulwark's first kill drops; no packs until 061;
+- cinderite at Cinder Vents that flare open; the Ash Kilns' pylon and a cinderite port; the Slag River, the Outpost Forge and a Ley Spring;
+- the Fire rune on every family: a burn that spreads on death, with two Bombs-lane talents (21 nodes, level cap 17);
+- the Forgewright in the Anvil Hall: plated until both bellows break, a heat gauge slowed by Chill, the Forge Flood, slam and ember spray, altar refights;
+- its core restores the fourth intake entrance;
+- the Milestone 2 goals; the end card on the Forgewright; the sandbox's Anvil Hall. `SAVE_VERSION` 13.
+
+Reviewed: no blocking issues; six suggestions applied (the venting tick, no spread onto the plated boss, the region starting at the barrier, tidy-ups). `npm run check` 2021 tests; CI green. Raised for Shaun in the spec: 060.1–060.39.
+
+**Next:** Shaun's playtest from a New game (or `?sandbox`); his OK on 060.1–060.39; "merge 70".
+
+**Notes:**
+- `npm run measure`: the Forgewright's decent build wins 20/20 in 73.6 s with 0 KOs, taking no damage; the fight draws no randomness, so it may read easy. Recorded, not tuned.
+- A container restart mid-build cost nothing: the builder had committed slice 7 and resumed slice 8 from the working tree.
+
 ## 2026-10-22: 059 World and arena polish (058 and 059 merged)
 **Changed:** on `claude/059-world-polish` (InsanityWolfz/Pipeline#65): paths read as one shape where they cross or join (every road's edge drawn before any road's dirt); small rocks, rubble, ruin stones, pillars and the forum's columns block feet, shots and every sight line only over their drawn base (`src/data/footprints.ts`; 059.5 shots too, Shaun's call); the forum's walls drawn dark; arena enemies, the Warden included, wait until E puts the player through the door; no boss-door descriptions ("Sealed" when shut); the seal hum at half volume; the Grotto's pylon at 30 rimestone a minute. Also merged today: the New game after Quit fix (#66), the diagonal flicker fix (#67), per-branch preview queues (#68).
 
