@@ -1,16 +1,20 @@
+import type { Shift } from './place';
 import type { TilePos } from './tiles';
 
 // The round world (053, Shaun: "we don't want a square or rectangle. We want like a circle"): the overworld is a
 // square grid with the foundry's door at its centre. Region 1 is the disc round it, about twice the old Region 1's
 // 80 × 45 tiles; Stonefall Hollows (034) is the ring round that, like a donut, with the ley barrier on the circle
 // between them (053.2); past the Hollows the ground rises into a ragged cliff edge. Tiles throughout; distances are
-// straight lines between tile coordinates, as the danger rings (017) always measured them.
+// straight lines between tile coordinates, as the danger rings (017) always measured them. 060 grew the grid for the
+// Emberworks, the third ring, and moved the centre to its middle (`WORLD_SHIFT`).
+
+/** The grid's width and height (060: the Emberworks' outer radius, 110, plus its ragged edge and a margin, each side). */
+const SIZE = 230;
 
 export const WORLD_SHAPE = {
-  /** The grid's width and height. */
-  size: 168,
-  /** The foundry's door: the centre of every ring. */
-  centre: { tx: 84, ty: 84 } as TilePos,
+  size: SIZE,
+  /** The foundry's door: the centre of every ring, in the grid's middle. */
+  centre: { tx: SIZE / 2, ty: SIZE / 2 } as TilePos,
   /** Region 1's radius: the barrier stands on this circle. π × 48² ≈ 7,238 tiles, twice 80 × 45. */
   region1: 48,
   /** The Hollows' outer radius (053.2: the ring is as wide as Region 1's radius less ring 0's, 48 − 17). */
@@ -20,6 +24,18 @@ export const WORLD_SHAPE = {
   /** The barrier's band: every tile whose distance from the centre is within this of `region1` (√½, so the band has no diagonal gap). */
   barrierHalfWidth: 0.71,
 } as const;
+
+/** 053's centre, where the map's hand-placed tiles were laid out before 060 grew the grid. */
+const LAID_OUT_CENTRE = 84;
+
+/**
+ * 060: how far every tile laid out on 053's 168-tile grid moved when the grid grew: from 053's centre to the new one.
+ * Hand-placed data written in 053's coordinates goes through this, so each place keeps its offset from the centre.
+ */
+export const WORLD_SHIFT: Shift = { dx: WORLD_SHAPE.centre.tx - LAID_OUT_CENTRE, dy: WORLD_SHAPE.centre.ty - LAID_OUT_CENTRE };
+
+/** A tile written in 053's coordinates, where it stands now (060). */
+export const laidOut = <T extends TilePos>(t: T): T => ({ ...t, tx: t.tx + WORLD_SHIFT.dx, ty: t.ty + WORLD_SHIFT.dy });
 
 /** A tile's straight-line distance from the foundry's door, in tiles. */
 export const fromCentre = (tx: number, ty: number): number => Math.hypot(tx - WORLD_SHAPE.centre.tx, ty - WORLD_SHAPE.centre.ty);

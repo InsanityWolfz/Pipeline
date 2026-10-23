@@ -10,6 +10,7 @@ import type { SimEvents } from '../sim/events';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
 import { tileHash } from './roomTiles';
+import { WORLD_SHIFT } from '../data/worldShape';
 import type { Banner } from './Banner';
 import { addVector, showFrame } from './vector/textures';
 
@@ -126,7 +127,7 @@ export class LandmarkView {
       const onPath = OVERWORLD.paths.some((p) => nearAny(x, y, p, H.clear.path));
       if (nearAny(x, y, busy, H.clear.things) || onPath) continue;
       const frame = kind === 'frost' ? LANDMARK_SPRITES.lipFrost : LANDMARK_SPRITES.lip;
-      this.decals.push(addVector(this.scene, x, y, frame).setDepth(DEPTHS.floor + H.depth).setFlipX(tileHash(i, l.area.x0) % 2 === 0));
+      this.decals.push(addVector(this.scene, x, y, frame).setDepth(DEPTHS.floor + H.depth).setFlipX(tileHash(i, l.area.x0 - WORLD_SHIFT.dx) % 2 === 0));
       this.lipCount += 1;
     }
     const look = kind === 'frost' ? H.coldLight : H.leyLight;

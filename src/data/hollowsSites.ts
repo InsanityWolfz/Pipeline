@@ -3,6 +3,7 @@ import { shiftLandmark, type Shift } from './place';
 import type { LandmarkDef } from './landmarks';
 import { TILE } from './rooms';
 import type { TilePos } from './tiles';
+import { WORLD_SHIFT } from './worldShape';
 
 // Stonefall Hollows' landmarks (034): the Ley-iron Cut, the Broken Aqueduct and the
 // Cistern Terrace, the region's one claimable site, beside the Cut (the Hollows Ley Spring
@@ -107,8 +108,8 @@ const CISTERN_TERRACE: LandmarkDef = {
   look: { paving: 'terrace' },
 };
 
-/** 053: the Cut and the Terrace together in the ring's west-south-west (bearing 250°, 63 tiles), the aqueduct across its south. */
-const WEST: Shift = { dx: 0, dy: 96 };
-const SOUTH: Shift = { dx: 65, dy: 126 };
+/** 053: the Cut and the Terrace together in the ring's west-south-west (bearing 250°, 63 tiles), the aqueduct across its south (060: both moved with the centre). */
+const WEST: Shift = { dx: 0 + WORLD_SHIFT.dx, dy: 96 + WORLD_SHIFT.dy };
+const SOUTH: Shift = { dx: 65 + WORLD_SHIFT.dx, dy: 126 + WORLD_SHIFT.dy };
 
 export const HOLLOWS_SITES: readonly LandmarkDef[] = [shiftLandmark(LEY_IRON_CUT, WEST), shiftLandmark(BROKEN_AQUEDUCT, SOUTH), shiftLandmark(CISTERN_TERRACE, WEST)];

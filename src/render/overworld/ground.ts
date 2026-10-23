@@ -4,7 +4,7 @@ import { GROTTO } from '../../data/grotto';
 import { OVERWORLD } from '../../data/overworld';
 import { TILE, type Room } from '../../data/rooms';
 import { inkCss } from '../vector/draw';
-import { tileHash } from '../roomTiles';
+import { worldTileHash } from '../roomTiles';
 import { paintLandmarks } from './landmarkGround';
 import { paintHollows } from './hollowsGround';
 import { isPlateau } from './plateau';
@@ -63,7 +63,7 @@ function frost(c: CanvasRenderingContext2D, each: (fn: (tx: number, ty: number, 
   for (let ty = a.y0 - 1; ty <= a.y1 + 1; ty++) {
     for (let tx = a.x0 - 1; tx <= a.x1 + 1; tx++) {
       const inside = inRect(a, tx, ty);
-      const hash = tileHash(tx, ty);
+      const hash = worldTileHash(tx, ty);
       const r = inside ? f.edge + (hash % (f.jitter + 1)) : f.edge * 0.5 + (hash % (f.rimJitter + 1));
       if (!inside && hash % f.rimSkip === 0) continue;
       const [x, y] = centre({ tx, ty });
@@ -97,7 +97,7 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
   const tx1 = Math.min((room.rows[0]?.length ?? 0) - 1, Math.ceil((x0 + w) / T) + margin);
   const ty1 = Math.min(room.rows.length - 1, Math.ceil((y0 + h) / T) + margin);
   const each = (fn: (tx: number, ty: number, hash: number) => void): void => {
-    for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) fn(tx, ty, tileHash(tx, ty));
+    for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) fn(tx, ty, worldTileHash(tx, ty));
   };
 
   c.fillStyle = inkCss(GROUND.base);

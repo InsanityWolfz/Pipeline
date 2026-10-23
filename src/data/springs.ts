@@ -1,4 +1,5 @@
 import type { TileRect } from './tiles';
+import { laidOut } from './worldShape';
 
 // The Ley Springs (030), apart from overworld.ts so the landmark data (032) can name them.
 
@@ -32,14 +33,17 @@ export const SPRING_CLEARING = 3;
  * The round map's springs (030, moved by 053). West: beside the road west to the Hollows, above the Ruined Cache.
  * South-east: at the end of the south-east road's spur, past the Husk Hive. North: north-west of the ruin field,
  * between home and the Grotto, beside the north road, in its own clearing (to be cut if healing near home is too easy).
+ * Written in 053's coordinates, moved with the centre (060).
  */
-export const SPRINGS: readonly SpringDef[] = [
-  { id: 'west-spring', name: 'West Ley Spring', ring: 2, tx: 60, ty: 106, radius: SPRING_RADIUS },
-  { id: 'south-east-spring', name: 'South-east Ley Spring', ring: 2, tx: 111, ty: 114, radius: SPRING_RADIUS },
-  { id: 'north-spring', name: 'North Ley Spring', ring: 1, tx: 71, ty: 69, radius: SPRING_RADIUS },
-  // Stonefall Hollows' (034): out in the ring, beside the road to the Bulwark's forum.
-  { id: 'hollows-spring', name: 'Hollows Ley Spring', ring: 3, tx: 56, ty: 38, radius: SPRING_RADIUS },
-];
+export const SPRINGS: readonly SpringDef[] = (
+  [
+    { id: 'west-spring', name: 'West Ley Spring', ring: 2, tx: 60, ty: 106, radius: SPRING_RADIUS },
+    { id: 'south-east-spring', name: 'South-east Ley Spring', ring: 2, tx: 111, ty: 114, radius: SPRING_RADIUS },
+    { id: 'north-spring', name: 'North Ley Spring', ring: 1, tx: 71, ty: 69, radius: SPRING_RADIUS },
+    // Stonefall Hollows' (034): out in the ring, beside the road to the Bulwark's forum.
+    { id: 'hollows-spring', name: 'Hollows Ley Spring', ring: 3, tx: 56, ty: 38, radius: SPRING_RADIUS },
+  ] satisfies SpringDef[]
+).map(laidOut);
 
 /** A spring's clearing (030): a square of open ground round its pool. */
 export function springClearing(s: { tx: number; ty: number }): TileRect {

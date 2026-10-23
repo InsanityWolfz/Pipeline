@@ -6,8 +6,8 @@ import { inHollows } from './hollows';
  * enemies are shown.
  */
 export const MINIMAP = {
-  /** 053: the whole round world (168 tiles across) at this many view px a tile: about 100 px square. */
-  scale: 0.6,
+  /** 053: the whole round world at this many view px a tile: about 100 px square (060: 230 tiles across, so 0.43 keeps it clear of the objective band). */
+  scale: 0.43,
   margin: 6,
   /** The stone tablet framing it (020), px beyond the map. */
   frame: { width: 2 },

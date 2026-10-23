@@ -1,5 +1,6 @@
 import { smoothCurve } from './curves';
 import type { TilePos } from './tiles';
+import { laidOut } from './worldShape';
 
 // The road network (053, D.3, Shaun: "it should just be one path"): dirt roads two tiles wide, laid as smooth curves
 // through hand-placed waypoints, without crossings or doubled-up strips. Five roads leave the foundry's courtyard (the
@@ -19,7 +20,8 @@ export interface RoadDef {
 /** The foundry's courtyard (053): the hub every road leaves from, round the stairs' door, this many tiles out. */
 export const COURTYARD = { radius: 11 } as const;
 
-const t = (tx: number, ty: number): TilePos => ({ tx, ty });
+/** A waypoint written in 053's coordinates, where it stands now (060: moved with the centre). */
+const t = (tx: number, ty: number): TilePos => laidOut({ tx, ty });
 
 export const ROAD_DEFS: readonly RoadDef[] = [
   // South: past the start stone's meadow, on through the barrier to the Broken Aqueduct.

@@ -1,8 +1,8 @@
 import { FLOOR_VARIANTS, WALL_ALT_ONE_IN, WALL_SPRITES } from '../data/roomArt';
 import { TILE } from '../data/rooms';
-import { tileHash } from '../sim/tileLook';
+import { tileHash, worldTileHash } from '../sim/tileLook';
 
-export { tileHash };
+export { tileHash, worldTileHash };
 
 // Which tile art goes where (014). Pure, so tests can pin it down: variants come
 // from a fixed hash of the tile, so they never shimmer between draws.

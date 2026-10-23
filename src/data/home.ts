@@ -1,6 +1,6 @@
 import { shiftRect, shiftTile, type Shift } from './place';
 import type { TilePos, TileRect } from './tiles';
-import { WORLD_SHAPE } from './worldShape';
+import { WORLD_SHAPE, WORLD_SHIFT } from './worldShape';
 
 // The ground round the foundry and the shrine (017, 053): the foundry's entrance, a big ruined gatehouse over the
 // stairs (053, D.2), the ruin field's broken walls round its courtyard, and the walled shrine where the Pylon Warden
@@ -10,8 +10,8 @@ import { WORLD_SHAPE } from './worldShape';
 /** 053: how far 017's ground round the foundry moved: its old stairs (80, 20) to the round map's centre. */
 export const HOME_SHIFT: Shift = { dx: WORLD_SHAPE.centre.tx - 80, dy: WORLD_SHAPE.centre.ty - 20 };
 
-/** 053: the shrine's walled site as 017 drew it, moved whole to the north-east quadrant (bearing 40°, 31 tiles). */
-export const SHRINE_SHIFT: Shift = { dx: -2, dy: 51 };
+/** 053: the shrine's walled site as 017 drew it, moved whole to the north-east quadrant (bearing 40°, 31 tiles; 060: and with the centre). */
+export const SHRINE_SHIFT: Shift = { dx: -2 + WORLD_SHIFT.dx, dy: 51 + WORLD_SHIFT.dy };
 
 /** The foundry entrance: the stairs' door tile, and the tile you arrive on coming out. */
 export const ENTRANCE: TilePos = WORLD_SHAPE.centre;

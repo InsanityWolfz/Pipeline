@@ -8,7 +8,7 @@ import { LANDMARK_SPRITES } from '../../data/landmarkAssets';
 import { TILE, type Room } from '../../data/rooms';
 import type { SimState } from '../../sim/state';
 import { colorOf } from '../color';
-import { tileHash } from '../roomTiles';
+import { worldTileHash } from '../roomTiles';
 import { inkCss } from '../vector/draw';
 import { addVector, textureScale } from '../vector/textures';
 import { drawGround } from './ground';
@@ -160,7 +160,7 @@ export class OverworldView {
 
   /** A tile's standing sprite, if it has one, at the bottom centre of the tile. */
   private standing(room: Room, symbol: string, tx: number, ty: number): GameObjects.Image | null {
-    const hash = tileHash(tx, ty);
+    const hash = worldTileHash(tx, ty);
     const x = (tx + 0.5) * T;
     const bottom = (ty + 1) * T;
     // A landmark's own look (032): the Old Grove's old trees, the Quarry's cut blocks, the Husk Hive's nest stones (049).
