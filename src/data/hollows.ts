@@ -1,4 +1,5 @@
 import type { ArenaDoor } from './arenas';
+import { EMBERWORKS, inEmberworks } from './emberworks';
 import { shiftRect, shiftTile, type Shift } from './place';
 import { TILE } from './rooms';
 import type { TilePos, TileRect } from './tiles';
@@ -155,8 +156,11 @@ export const arenaOf = (enemyId: string): typeof HOLLOWS.arena | undefined => (H
 /** The arena whose altar this is (034), if any. */
 export const arenaOfAltar = (altarId: string): typeof HOLLOWS.arena | undefined => (HOLLOWS.arena.altar.id === altarId ? HOLLOWS.arena : undefined);
 
-/** True if a tile is in the Hollows (053: anywhere from the barrier's circle out, the cliff edge included). */
-export const inHollows = (tx: number, ty: number): boolean => fromCentre(tx, ty) >= HOLLOWS.radii.inner;
+/** True if a tile is in the Hollows (053: from the barrier's circle out to its cliff edge; 060: the Emberworks past it). */
+export const inHollows = (tx: number, ty: number): boolean => {
+  const d = fromCentre(tx, ty);
+  return d >= HOLLOWS.radii.inner && d < HOLLOWS.radii.outer;
+};
 
-/** The region a tile is in: 2 in the Hollows, else 1 (033's schematic regions). */
-export const regionAt = (tx: number, ty: number): 1 | 2 => (inHollows(tx, ty) ? 2 : 1);
+/** The region a tile is in: 3 in the Emberworks (060), 2 in the Hollows, else 1 (033's schematic regions). */
+export const regionAt = (tx: number, ty: number): 1 | 2 | 3 => (inEmberworks(tx, ty) ? EMBERWORKS.region : inHollows(tx, ty) ? 2 : 1);

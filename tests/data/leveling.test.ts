@@ -12,7 +12,7 @@ describe('leveling data', () => {
     expect(XP_CURVE).toEqual([40, 70, 100, 130, 160, 200, 240, 280, 330, 380, 440, 500, 570, 650]);
     expect(LEVEL_CAP).toBe(15);
     expect(XP_CURVE).toHaveLength(LEVEL_CAP - 1);
-    expect(RING_XP).toEqual([1, 1, 2, 3]);
+    expect(RING_XP).toEqual([1, 1, 2, 3, 4]);
     expect([CHAMPION_XP, CLAIM_XP, LANDMARK_XP, BOSS_REFIGHT_XP]).toEqual([3, 50, 25, 0.5]);
   });
 

@@ -40,7 +40,7 @@ describe('the tutorial start', () => {
     expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre(OVERWORLD.wake));
     expect(s.inventory).toEqual({});
     expect(s.hasTube).toBe(false);
-    expect(s.gates).toEqual({ foundry: false, shrine: false, hollows: false });
+    expect(s.gates).toEqual({ foundry: false, shrine: false, hollows: false, emberworks: false });
     expect(summarize(s).objective).toEqual({ index: 0, text: OBJECTIVES[0]?.text });
   });
 

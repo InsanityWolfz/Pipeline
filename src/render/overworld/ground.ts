@@ -7,9 +7,10 @@ import { inkCss } from '../vector/draw';
 import { worldTileHash } from '../roomTiles';
 import { paintLandmarks } from './landmarkGround';
 import { paintHollows } from './hollowsGround';
+import { paintEmberworks } from './emberworksGround';
 import { isPlateau } from './plateau';
 import { pathStrokes } from './pathStrokes';
-import { inHollows } from '../../data/hollows';
+import { regionAt } from '../../data/hollows';
 import { COURTYARD } from '../../data/roads';
 import { fromCentre } from '../../data/worldShape';
 
@@ -113,6 +114,8 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
   });
   // Stonefall Hollows' quarry stone over its columns (034), under the road.
   paintHollows(c, each, symbol, (tx, ty) => isPlateau(room, tx, ty));
+  // 060: the Emberworks' ash past the Hollows' cliff edge, and the ramps up through it.
+  paintEmberworks(c, each, symbol, (tx, ty) => isPlateau(room, tx, ty));
   // Sun dapple where the groves meet open grass.
   each((tx, ty, hash) => {
     if (symbol(tx, ty) !== TILE.floor || hash % GROUND.dappleEvery !== 0) return;
@@ -170,7 +173,7 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
   c.restore();
   // Tufts and flowers on open grass; in the Frozen Grotto, rimed tufts and no flowers (029).
   each((tx, ty, hash) => {
-    if (symbol(tx, ty) !== TILE.floor || inHollows(tx, ty)) return;
+    if (symbol(tx, ty) !== TILE.floor || regionAt(tx, ty) !== 1) return;
     const frozen = inRect(GROTTO.area, tx, ty);
     const [x, y] = centre({ tx, ty });
     const ox = ((hash >>> 6) % 20) - 10;

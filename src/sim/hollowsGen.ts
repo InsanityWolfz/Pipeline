@@ -3,7 +3,7 @@ import type { LandmarkDef } from '../data/landmarks';
 import { ROADS } from '../data/roads';
 import { TILE } from '../data/rooms';
 import { fromCentre, WORLD_SHAPE } from '../data/worldShape';
-import { inRect, set, type Grid } from './genGrid';
+import { inRect, nearRoads, set, type Grid } from './genGrid';
 import { createRng, nextFloat, nextInt, type RngState } from './rng';
 
 // Stonefall Hollows' terrain (034), generated into the overworld's grid after Region 1's, from the map's seed mixed
@@ -16,19 +16,7 @@ const C = WORLD_SHAPE.centre;
 const { inner, outer } = HOLLOWS.radii;
 
 /** Tiles within `roadClear` of a road (roads.ts): generated cliffs, rubble and terraces keep off them. */
-const nearRoad = ((): Set<number> => {
-  const out = new Set<number>();
-  const k = HOLLOWS.roadClear;
-  for (const road of ROADS) {
-    for (const p of road) {
-      // A road point covers its tile and the tiles right of and below it (genGrid's path).
-      const x = Math.round(p.tx);
-      const y = Math.round(p.ty);
-      for (let ty = y - k; ty <= y + 1 + k; ty++) for (let tx = x - k; tx <= x + 1 + k; tx++) out.add(ty * WORLD_SHAPE.size + tx);
-    }
-  }
-  return out;
-})();
+const nearRoad = nearRoads(ROADS, HOLLOWS.roadClear, WORLD_SHAPE.size);
 
 /** Ground generation may use: in the ring, `inset` tiles in from both its circles, clear of the kept-open rects and the roads. */
 function free(tx: number, ty: number): boolean {

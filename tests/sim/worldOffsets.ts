@@ -37,7 +37,7 @@ function hash(s: string): number {
 }
 
 /** The generated grid within SPAN of the centre (the tiles within `radius` of it, the rest blanked), hashed, with its symbol counts. */
-function ground(radius = Infinity): { hash: number; counts: Record<string, number> } {
+function ground(radius: number): { hash: number; counts: Record<string, number> } {
   const { tx: cx, ty: cy } = WORLD_SHAPE.centre;
   const rows = generateOverworld()
     .rows.slice(cy - SPAN, cy + SPAN)
@@ -62,8 +62,7 @@ export function worldOffsets(): unknown {
     pylons: offsets(overworldPylons()),
     arenas: offsets(ARENAS.map((a) => Object.fromEntries(Object.entries(a).filter(([k]) => k !== 'rooms')))),
     hollows: offsets(HOLLOWS),
-    /** Region 1 and its barrier, then the whole old grid. */
+    /** Region 1 and its barrier (060's roads and the Emberworks change the Hollows' ground, never Region 1's). */
     region1Ground: ground(WORLD_SHAPE.region1 + 1),
-    ground: ground(),
   };
 }

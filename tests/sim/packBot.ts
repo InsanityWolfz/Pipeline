@@ -141,12 +141,13 @@ export const at = (tx: number, ty: number): { x: number; y: number } => ({ x: (t
 /**
  * 041.8's ring-matched packs: each pack, the lines of its fitting volley, its centre tile, and the player's start 6 to 7
  * tiles off. 053: on the round map, open ground in each ring: south-west of the meadow (ring 1), by the south road
- * (ring 2), and the Cistern Terrace's flagstones (ring 3, where it was before, moved with the Terrace).
+ * (ring 2), and the Cistern Terrace's flagstones (ring 3, where it was before, moved with the Terrace). 060: +31 each
+ * way with the centre.
  */
 export const PACKS = {
-  1: { ids: ['husk', 'husk', 'husk', 'husk'], lines: ['arrow'], centre: { tx: 74, ty: 103 }, start: at(80, 103) },
-  2: { ids: ['husk', 'husk', 'husk', 'husk', 'wisp'], lines: ['arrow', 'arrow'], centre: { tx: 83, ty: 124 }, start: at(90, 124) },
-  3: { ids: ['shardback', 'charger', 'charger', 'burrower', 'sniper'], lines: ['bomb', 'arrow'], centre: { tx: 22, ty: 108 }, start: at(28, 108) },
+  1: { ids: ['husk', 'husk', 'husk', 'husk'], lines: ['arrow'], centre: { tx: 105, ty: 134 }, start: at(111, 134) },
+  2: { ids: ['husk', 'husk', 'husk', 'husk', 'wisp'], lines: ['arrow', 'arrow'], centre: { tx: 114, ty: 155 }, start: at(121, 155) },
+  3: { ids: ['shardback', 'charger', 'charger', 'burrower', 'sniper'], lines: ['bomb', 'arrow'], centre: { tx: 53, ty: 139 }, start: at(59, 139) },
 } as const;
 
 /** The longest a pack fight runs, ticks: 60 s. */

@@ -172,7 +172,8 @@ const candidates: Record<PopulatedRing, { tx: number; ty: number }[]> = { 1: [],
 for (let ty = 1; ty < OVERWORLD.height - 1; ty++) {
   for (let tx = 1; tx < OVERWORLD.width - 1; tx++) {
     const ring = ringOf(tx, ty);
-    if (ring !== 0 && packGround(tx, ty)) candidates[ring].push({ tx, ty });
+    // Ring 0 stays calm, and the Emberworks (ring 4, 060) has no packs until 061.
+    if (ring !== 0 && ring !== 4 && packGround(tx, ty)) candidates[ring].push({ tx, ty });
   }
 }
 

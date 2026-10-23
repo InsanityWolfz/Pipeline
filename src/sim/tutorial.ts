@@ -1,3 +1,4 @@
+import { EMBERWORKS } from '../data/emberworks';
 import { HOLLOWS } from '../data/hollows';
 import { STONE_REACH } from '../data/objectives';
 import { FEET_BOX } from '../data/player';
@@ -26,10 +27,15 @@ export interface Gates {
   shrine: boolean;
   /** Stonefall Hollows' ley barrier (034): down once the shrine is claimed, for good. */
   hollows: boolean;
+  /** The Emberworks' ley barrier across its ramps (060): down on the Bulwark's first kill, for good. */
+  emberworks: boolean;
 }
 
-/** The tutorial's gates all shut, or all open (the sandbox and playtest starts); the Hollows' barrier waits on the shrine's claim either way. */
-export const createGates = (open: boolean, hollows = false): Gates => ({ foundry: open, shrine: open, hollows });
+/**
+ * The tutorial's gates all shut, or all open (the sandbox and playtest starts); the Hollows' barrier waits on the
+ * shrine's claim and the Emberworks' on the Bulwark's first kill either way.
+ */
+export const createGates = (open: boolean, hollows = false): Gates => ({ foundry: open, shrine: open, hollows, emberworks: false });
 
 
 
@@ -148,7 +154,7 @@ function open(state: SimState, gate: GateId): void {
   state.events.gates.push({ gate });
 }
 
-/** Opens gates whose condition now holds: the hall clear, the first line full (an entrance at its current cap, 024, 033), the shrine claimed (034). */
+/** Opens gates whose condition now holds: the hall clear, the first line full (an entrance at its current cap, 024, 033), the shrine claimed (034), the Bulwark's first kill (060). */
 export function stepGates(state: SimState): void {
   const cap = entranceCap(state);
   if (!state.firstLineFull && state.link.entrances.some((e) => e.count >= cap)) {
@@ -160,6 +166,8 @@ export function stepGates(state: SimState): void {
   if (!state.gates.shrine && state.firstLineFull) open(state, 'shrine');
   // Claiming the shrine's pylon drops the Hollows' barrier (034); claims are for good, so it never comes back.
   if (!state.gates.hollows && state.claims.includes(HOLLOWS.opensOn)) open(state, 'hollows');
+  // 060: the Bulwark's first kill drops the Emberworks' barrier; boss defeats are for good, so it never comes back.
+  if (!state.gates.emberworks && state.bossDefeats.includes(EMBERWORKS.opensOn)) open(state, 'emberworks');
 }
 
 /** Where a death wakes the player: the start room until the foundry is open (012), then the foundry (011). */

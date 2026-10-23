@@ -13,7 +13,7 @@ export interface PackDef {
   limits?: Readonly<Record<string, number>>;
 }
 
-/** The rings that keep a population: ring 0 stays calm; ring 3 is Stonefall Hollows (034). */
+/** The rings that keep a population: ring 0 stays calm; ring 3 is Stonefall Hollows (034); ring 4, the Emberworks (060), has no packs until 061. */
 export type PopulatedRing = 1 | 2 | 3;
 
 /**

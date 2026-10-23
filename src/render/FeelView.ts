@@ -19,6 +19,7 @@ import { SoundView } from './SoundView';
 import { attuneBeat } from './attune';
 import { intakeAnchor } from './foundryLayout';
 import { playHollows, SealSound } from './hollowsFeel';
+import { playEmberworks } from './emberworksFeel';
 import { ARENAS } from '../data/arenas';
 import { arenaLocked } from '../sim/arenaLock';
 import { playMines } from './mineFeel';
@@ -190,10 +191,12 @@ export class FeelView {
     if (ev.travels.length > 0) s.play(SOUNDS.travel);
     // 034: the Hollows' shield, bombs, pound, summon and barrier; the barrier's fall has its own sound.
     const barrier = playHollows(ev, j, s, this.scene.cameras.main.worldView);
+    // 060: the Emberworks' barrier across its ramps falls the same way.
+    const emberFell = playEmberworks(ev, j, s, this.scene.cameras.main.worldView);
     // 038: landmines arming and bursting, and the bomblets.
     playMines(ev, j, s);
     this.hollowsEnemies.events(ev, j, s);
-    if (ev.gates.length > (barrier ? 1 : 0)) {
+    if (ev.gates.length > (barrier ? 1 : 0) + (emberFell ? 1 : 0)) {
       s.play(SOUNDS.gateOpen);
       j.shake('medium');
     }

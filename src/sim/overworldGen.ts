@@ -1,4 +1,5 @@
 import { SITE_SAFE_RADIUS, SITE_WAKES } from '../data/claims';
+import { EMBERWORKS_GATE } from '../data/emberworks';
 import { HOLLOWS } from '../data/hollows';
 import { LANDMARK_LIST, type LandmarkDef } from '../data/landmarks';
 import { OVERWORLD, type Feature, type TileRect } from '../data/overworld';
@@ -6,6 +7,7 @@ import { TILE, type Doorway, type PylonDef, type Pond, type Room } from '../data
 import { springClearing } from '../data/springs';
 import { fill, inRect, path, set, type Grid } from './genGrid';
 import { fromCentre, WORLD_SHAPE } from '../data/worldShape';
+import { generateEmberworks, stampEmberworks } from './emberworksGen';
 import { generateHollows, stampHollows } from './hollowsGen';
 import { createRng, nextFloat, nextInt, type RngState } from './rng';
 
@@ -13,7 +15,7 @@ import { createRng, nextFloat, nextInt, type RngState } from './rng';
 // and scattered ruin stones, then the hand-placed landmarks, roads and clearings on top. The same seed always gives
 // the same map, so it can be built once at load. Since 053 the map is round: Region 1's terrain fills the disc
 // inside the barrier's circle, keeping `keepOff` tiles clear of it; the Hollows' ring and the cliff edge past it are
-// generated after it from their own stream (hollowsGen.ts).
+// generated after it from their own stream (hollowsGen.ts), and since 060 the Emberworks past that (emberworksGen.ts).
 
 const C = WORLD_SHAPE.centre;
 /** Region 1's generated ground: inside this radius. */
@@ -154,6 +156,8 @@ export function generateOverworld(seed: number = OVERWORLD.seed, landmarks: read
     if (inRegion1(tx, ty) && open(tx, ty) && grid[ty]?.[tx] === TILE.floor) set(grid, tx, ty, TILE.ruinBlock);
   }
   generateHollows(grid, seed);
+  // 060: the Emberworks past the Hollows' cliff edge, from its own stream.
+  generateEmberworks(grid, seed);
 
   // Landmarks override the terrain: clearings, roads, walls, the ruin and the door. The landmarks' areas (032)
   // and the springs' clearings (030) are stamped here rather than steering the generator, so its stream is unchanged.
@@ -168,6 +172,8 @@ export function generateOverworld(seed: number = OVERWORLD.seed, landmarks: read
   for (const t of OVERWORLD.shrine.door) set(grid, t.tx, t.ty, TILE.arenaDoor);
   // The Hollows' cliffs, aqueduct and forum (034), over the road where they cross it.
   stampHollows(grid, landmarks);
+  // 060: the ramps up into the Emberworks, over the roads that climb them.
+  stampEmberworks(grid);
   const pylons = overworldPylons(landmarks);
   const caches = landmarks.flatMap((l) => (l.cache ? [{ id: l.id, ...l.cache }] : []));
   const altar = HOLLOWS.arena.altar;
@@ -194,7 +200,7 @@ export function generateOverworld(seed: number = OVERWORLD.seed, landmarks: read
     pylons,
     caches,
     // 055: the shrine's gate has no tiles any more; its door (TILE.arenaDoor) stands where they were.
-    gateTiles: HOLLOWS.gate.map((t) => ({ ...t, gate: 'hollows' as const })),
+    gateTiles: [...HOLLOWS.gate.map((t) => ({ ...t, gate: 'hollows' as const })), ...EMBERWORKS_GATE.map((t) => ({ ...t, gate: 'emberworks' as const }))],
     altars: [{ ...altar, boss: HOLLOWS.arena.boss }],
     terrain: { ponds: kept, paths: OVERWORLD.paths },
   };

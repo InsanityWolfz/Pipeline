@@ -14,6 +14,8 @@ import { addVector, textureScale } from '../vector/textures';
 import { drawGround } from './ground';
 import { inHollows } from '../../data/hollows';
 import { hollowsFrame } from '../hollowsTiles';
+import { emberworksFrame } from '../emberworksTiles';
+import { inEmberworks } from '../../data/emberworks';
 import { isPlateau } from './plateau';
 import { pieceFrame } from '../../sim/tileLook';
 
@@ -170,7 +172,10 @@ export class OverworldView {
     // Stonefall Hollows' own (034): cliffs, the aqueduct, rubble.
     // 053: the world's cliff edge away from its face is flat plateau in the ground, not sprites.
     const hollows = inHollows(tx, ty) && !isPlateau(room, tx, ty) ? hollowsFrame(symbol, tx, ty, hash, room) : undefined;
+    // 060: the Emberworks' own: kilns, chimneys and its cliffs.
+    const ember = inEmberworks(tx, ty) && !isPlateau(room, tx, ty) ? emberworksFrame(symbol, tx, ty, hash, room) : undefined;
     if (hollows) frame = hollows;
+    else if (ember) frame = ember;
     else if (symbol === TILE.tree && landmark?.look?.trees === 'old') frame = LANDMARK_SPRITES.oldTrees[hash % LANDMARK_SPRITES.oldTrees.length];
     else if (symbol === TILE.tree) {
       frame = OVERWORLD_SPRITES.trees[hash % OVERWORLD_SPRITES.trees.length];

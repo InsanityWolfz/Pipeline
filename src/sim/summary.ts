@@ -1,3 +1,4 @@
+import type { Ring } from '../data/ringScale';
 import type { GearPiece, GearSlot } from '../data/gear';
 import { playerStats, type PlayerStats } from './stats';
 import { wardReady } from './relics';
@@ -47,7 +48,7 @@ export interface SimSummary extends PlayerSummary, HollowsSummary, LevelingSumma
   /** The room the player is in. */
   room: string;
   /** Where the player is (017): the room, the overworld's ring there (null elsewhere: 3 in Stonefall Hollows, 034), its region (034), and live enemies in the room. */
-  area: { room: string; ring: 0 | 1 | 2 | 3 | null; region: number; liveEnemies: number };
+  area: { room: string; ring: Ring | null; region: number; liveEnemies: number };
   /** The living population is out (017), how many enemies are within a screen of the player, and how many the camera shows. */
   populated: boolean;
   nearPlayer: number;
@@ -129,8 +130,8 @@ export interface SimSummary extends PlayerSummary, HollowsSummary, LevelingSumma
   firstHuskDropped: boolean;
   /** The tutorial (012): the tube in hand, gates open, the first line full, the current goal, the end. */
   hasTube: boolean;
-  /** The gates (012), and Stonefall Hollows' barrier (034). */
-  gates: { foundry: boolean; shrine: boolean; hollows: boolean };
+  /** The gates (012), Stonefall Hollows' barrier (034) and the Emberworks' (060). */
+  gates: { foundry: boolean; shrine: boolean; hollows: boolean; emberworks: boolean };
   /** 046: the foundry's lines ran dry once (the refill goal shows), and what's been refilled by hand since. */
   lineRanDry: boolean;
   refilled: string[];

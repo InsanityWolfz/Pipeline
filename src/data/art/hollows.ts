@@ -11,32 +11,43 @@ import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSp
 
 const one = (key: string, size: readonly [number, number], anchor: readonly [number, number], shapes: readonly Shape[]): VectorSprite => ({ key, size, anchor, frames: [shapes] });
 
-const stoneFace = { linear: [0, -22, 0, 0] as const, stops: [{ at: 0, color: 'hollow' }, { at: 1, color: 'hollow-dark' }] };
-const stoneTop = { linear: [-16, -38, 16, -22] as const, stops: [{ at: 0, color: 'hollow-pale' }, { at: 1, color: 'hollow-light' }] };
+/** A cliff's stone, darkest to palest (palette ids): the Hollows' grey-blue, or (060) the Emberworks' ash. */
+export interface CliffStone {
+  readonly dark: string;
+  readonly mid: string;
+  readonly light: string;
+  readonly pale: string;
+}
+
+const HOLLOW_STONE: CliffStone = { dark: 'hollow-dark', mid: 'hollow', light: 'hollow-light', pale: 'hollow-pale' };
+
+const stoneFace = (s: CliffStone) => ({ linear: [0, -22, 0, 0] as const, stops: [{ at: 0, color: s.mid }, { at: 1, color: s.dark }] });
+const stoneTop = (s: CliffStone) => ({ linear: [-16, -38, 16, -22] as const, stops: [{ at: 0, color: s.pale }, { at: 1, color: s.light }] });
 
 /** A glinting cyan vein in rock: a jagged crack with a bright core. */
 const vein = (pts: readonly number[]): Shape[] => [line(pts, 1.6, { id: 'cyan-deep', alpha: 0.8 }), { ...line(pts, 0.7, 'vein'), glow: { color: 'vein', blur: 3 } }];
 
 /** A cliff block: its lit top, the lit top edge, and a strata-lined face with a rust stain and (by variant) a vein. */
-function cliff(variant: number): Shape[] {
+export function cliff(variant: number, s: CliffStone = HOLLOW_STONE): Shape[] {
   const stains: Shape[] = variant === 1 ? [path('M 4 -20 Q 6 -10 3 0 L 8 0 Q 9 -10 7 -20 Z', { fill: { id: 'iron-rust', alpha: 0.45 } })] : [];
   const veins = variant === 2 ? vein([-12, -6, -6, -11, -1, -9, 5, -14]) : variant === 0 ? vein([6, -3, 10, -8, 14, -7]) : [];
   return [
-    rect(-17, -22, 34, 22, 1, { fill: stoneFace, outline: true }),
-    line([-17, -14, 17, -15], 0.9, 'hollow-dark'),
-    line([-17, -7, 17, -6], 0.9, 'hollow-dark'),
-    line([-6, -22, -5, -14], 0.8, 'hollow-dark'),
-    line([8, -15, 9, -7], 0.8, 'hollow-dark'),
+    rect(-17, -22, 34, 22, 1, { fill: stoneFace(s), outline: true }),
+    line([-17, -14, 17, -15], 0.9, s.dark),
+    line([-17, -7, 17, -6], 0.9, s.dark),
+    line([-6, -22, -5, -14], 0.8, s.dark),
+    line([8, -15, 9, -7], 0.8, s.dark),
     ...stains,
     ...veins,
-    rect(-17, -38, 34, 17, 2, { fill: stoneTop, outline: true }),
-    line([-16, -21.5, 16, -21.5], 1.4, 'hollow-pale'),
+    rect(-17, -38, 34, 17, 2, { fill: stoneTop(s), outline: true }),
+    line([-16, -21.5, 16, -21.5], 1.4, s.pale),
     ellipse(-8, -33, 4, 1.6, flat({ id: 'snow', alpha: 0.25 })),
   ];
 }
 
 /** The top of a cliff whose face is hidden by another cliff in front: one even plateau. */
-const CLIFF_TOP: Shape[] = [rect(-17, -40, 34, 34, 2, { fill: stoneTop }), line([-12, -30, 2, -28], 0.7, { id: 'hollow', alpha: 0.6 })];
+export const cliffTop = (s: CliffStone = HOLLOW_STONE): Shape[] => [rect(-17, -40, 34, 34, 2, { fill: stoneTop(s) }), line([-12, -30, 2, -28], 0.7, { id: s.mid, alpha: 0.6 })];
+const CLIFF_TOP = cliffTop();
 
 /** 059: a length of the forum's wall, shaped like the shrine's (RUIN_WALL): dark cut blocks, a lighter top, a lit edge, a vein. */
 const W = FORUM_WALL_LOOK;
