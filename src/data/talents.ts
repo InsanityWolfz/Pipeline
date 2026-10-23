@@ -7,6 +7,7 @@
 
 import type { ContentLine, Scope, StatLine } from './lines';
 import type { StatId } from './statDefs';
+import { TILE_SIZE } from './config';
 
 export type TalentLane = 'centre' | 'arrows' | 'bombs' | 'ley' | 'survival' | 'tube';
 
@@ -50,6 +51,8 @@ function at(angle: number, step: 0 | 1 | 2 | 3): { x: number; y: number } {
 }
 
 const L = LANE_ANGLES;
+/** 060: how far round from the Bombs lane (degrees, toward Survival) its second Fire node sits. */
+const FIRE_FORK = -22;
 /** Between two lanes' directions. */
 const between = (a: number, b: number): number => (a + b) / 2;
 
@@ -93,6 +96,9 @@ const LINES: Readonly<Record<string, readonly ContentLine[]>> = {
   b1: [add('bomb', 'damage', 0.1)],
   b2: [add('burst', 'radius', 0.15)],
   b3: [add('lob', 'flight-time', -0.25)],
+  // 060: Fire's two payoffs, its burn half again as long, and spreading a tile further.
+  b4: [add('fire', 'duration', 0.5)],
+  b5: [flat('fire', 'spread-radius', TILE_SIZE)],
   l1: [add('ley', 'damage', 0.1)],
   l2: [add('homing', 'turn-rate', 0.3)],
   l3: [flat('split', 'shards', 2)],
@@ -126,7 +132,10 @@ export const TALENT_LIST: readonly TalentDef[] = [
   node('a3', 'Rimecraft', 'arrows', at(L.arrows, 2), ['a2', 'k1', 'k2']),
   node('b1', 'Black Powder', 'bombs', at(L.bombs, 0), ['start', 'b2']),
   node('b2', 'Wide Casing', 'bombs', at(L.bombs, 1), ['b1', 'b3']),
-  node('b3', 'Swift Arc', 'bombs', at(L.bombs, 2), ['b2', 'k1']),
+  node('b3', 'Swift Arc', 'bombs', at(L.bombs, 2), ['b2', 'k1', 'b4', 'b5']),
+  // 060: the Fire nodes fork from Swift Arc: one a step on along the lane, one beside it just below the lane.
+  node('b4', 'Banked Embers', 'bombs', at(L.bombs, 3), ['b3']),
+  node('b5', 'Kindling', 'bombs', at(L.bombs + FIRE_FORK, 3), ['b3']),
   node('l1', 'Attuned Crystal', 'ley', at(L.ley, 0), ['start', 'l2']),
   node('l2', "Seeker's Lens", 'ley', at(L.ley, 1), ['l1', 'l3']),
   node('l3', 'Splinter', 'ley', at(L.ley, 2), ['l2', 'k2']),

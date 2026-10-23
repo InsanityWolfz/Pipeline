@@ -17,8 +17,8 @@ const BEAT: HitStyle = { knock: 0, flash: false, damageType: 'fire', burn: true 
 /** A burn's length with the player's stats (060's talent: +50% duration, through resolveStat). */
 export const burnTicksOf = (state: Statted): number => Math.round(statOf(state, 'duration', statusEmission('fire'), FIRE.burnTicks));
 
-/** How far a burn spreads, px. */
-export const spreadRadiusOf = (): number => FIRE.spreadRadius;
+/** How far a burn spreads with the player's stats, px (060's talent: a tile further, through resolveStat). */
+export const spreadRadiusOf = (state: Statted): number => statOf(state, 'spread-radius', statusEmission('fire'), FIRE.spreadRadius);
 
 /** Sets an enemy burning at `dps` a second (a hit's share, or a dying enemy's burn): a first burn, or a refresh at the stronger. */
 export function igniteEnemy(state: SimState, e: EnemyState, dps: number): void {
@@ -53,7 +53,7 @@ export function stepBurns(state: SimState): void {
 /** A burning enemy that died passes its burn to every living, hittable enemy in its room within the spread radius. */
 export function spreadBurn(state: SimState, dead: EnemyState): void {
   if (dead.burnDps <= 0) return;
-  const radius = spreadRadiusOf();
+  const radius = spreadRadiusOf(state);
   const to: number[] = [];
   for (const e of state.enemies) {
     if (e === dead || e.roomId !== dead.roomId || e.health <= 0 || !targetable(e)) continue;

@@ -206,7 +206,7 @@ export const PARAM_STATS: Readonly<Partial<Record<KeywordId, Readonly<Record<str
   burst: { damage: { stat: 'damage' }, radius: { stat: 'radius' } },
   cluster: { count: { stat: 'bomblets' }, damage: { stat: 'damage', on: 'bomblet' }, radius: { stat: 'radius', on: 'bomblet' } },
   knockback: { push: { stat: 'knockback' } },
-  fire: { duration: { stat: 'duration', on: 'status' } },
+  fire: { duration: { stat: 'duration', on: 'status' }, radius: { stat: 'spread-radius', on: 'status' } },
   chill: { stacks: { stat: 'stacks-to-freeze' }, slow: { stat: 'slow' }, duration: { stat: 'duration' } },
   freeze: { duration: { stat: 'duration' }, bossDuration: { stat: 'duration' }, immune: { stat: 'immunity' } },
   stun: { duration: { stat: 'duration' } },

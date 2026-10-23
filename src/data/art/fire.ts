@@ -54,3 +54,20 @@ export const BURN_FLAMES_VECTOR: VectorSprite = {
   anchor: [18, 40],
   frames: Array.from({ length: BURN_FLAMES.frames }, (_, i) => flames(i / BURN_FLAMES.frames)),
 };
+
+/** 060's Fire talent icons (16×16 round the centre): a flame over an ember bed with a brass ring of time round it. */
+export const FIRE_DURATION_ICON: Shape[] = [
+  ellipse(0, 0, 6.6, 6.6, { stroke: { color: 'brass', width: 1 }, outline: true }),
+  path('M 0 -6.6 L 0 -5', { stroke: { color: 'brass-light', width: 1 } }),
+  ellipse(0, 4, 4, 1.4, { fill: 'flame-dark', alpha: 0.8 }),
+  ...tongue(0, 4.2, 9, 3, 0.6),
+];
+
+/** A flame leaping to two smaller ones at its sides. */
+export const FIRE_SPREAD_ICON: Shape[] = [
+  ...tongue(-4.6, 5.5, 6, 1.9, -1),
+  ...tongue(4.6, 5.5, 6, 1.9, 1),
+  ...tongue(0, 4, 10, 2.8, 0.4),
+  path('M -2.2 -1.6 Q -4 -3.4 -5 -0.6', { stroke: { color: 'cinder-light', width: 0.7 } }),
+  path('M 2.2 -1.6 Q 4 -3.4 5 -0.6', { stroke: { color: 'cinder-light', width: 0.7 } }),
+];

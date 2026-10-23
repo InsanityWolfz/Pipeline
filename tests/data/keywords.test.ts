@@ -153,17 +153,9 @@ describe('the new-keyword rule (039, Q17)', () => {
   const meets = (id: KeywordId) => (sources.get(id) ?? []).length >= 1 && (payoffs.get(id) ?? []).length >= 2;
   const ruled = KEYWORD_LIST.filter((k) => k.state === 'live' && k.group !== 'trait');
 
-  // 060, slice 4 only: Fire is live before its two talents land in slice 5, so for this one commit it is expected to
-  // fall short here. It is never in KEYWORD_DEBT.
-  const PENDING: readonly KeywordId[] = ['fire'];
-
   it('every live keyword outside the debt list has a source and two payoffs', () => {
     for (const k of ruled) {
       if (k.id in KEYWORD_DEBT) continue;
-      if (PENDING.includes(k.id)) {
-        expect(meets(k.id), `${k.name} now meets the rule: take it off PENDING`).toBe(false);
-        continue;
-      }
       expect(meets(k.id), `${k.name}: sources ${JSON.stringify(sources.get(k.id))}, payoffs ${JSON.stringify(payoffs.get(k.id))}`).toBe(true);
     }
   });
@@ -173,6 +165,9 @@ describe('the new-keyword rule (039, Q17)', () => {
     for (const id of Object.keys(KEYWORD_DEBT) as KeywordId[]) expect(meets(id), `${id} now meets the rule: take it off KEYWORD_DEBT`).toBe(false);
     expect(ruled.filter((k) => !(k.id in KEYWORD_DEBT)).map((k) => k.name)).toEqual(['Burst', 'Fire', 'Freeze', 'Arrow', 'Bomb', 'Ley']);
     expect(KEYWORD_DEBT.fire).toBeUndefined();
+    // 060: Fire's source is its tag; its payoffs the Bombs lane's two Fire nodes.
+    expect(sources.get('fire')).toContain('tag:fire');
+    expect(payoffs.get('fire')).toEqual(['b4', 'b5']);
   });
 
   it('every live keyword has at least one source', () => {

@@ -154,7 +154,7 @@ export const KEYWORD_LIST: readonly KeywordDef[] = [
     'damage-type',
     'Each hit sets the enemy burning for {duration}, dealing {share} of that hit’s damage each second. A new hit restarts the burn at the stronger of the two; burns never stack. An enemy that dies burning passes its burn to every enemy within {radius}.',
     { duration: fixed('ticks', FIRE.burnTicks), share: fixed('fraction', FIRE.burnShare), radius: fixed('px', FIRE.spreadRadius) },
-    ['duration'],
+    ['duration', 'spread-radius'],
     { forms: { adj: 'Burning' } },
   ),
   reserved('lightning', 'Lightning'),

@@ -1,4 +1,4 @@
-import { TICK_RATE } from './config';
+import { TICK_RATE, TILE_SIZE } from './config';
 import { itemDef } from './items';
 import { keywordDef, KEYWORDS, NOUNS, SCOPES, type KeywordId, type ParamUnit } from './keywords';
 import { isRuleLine, RULES, type ContentLine, type RuleLine, type Scope, type StatLine } from './lines';
@@ -84,6 +84,10 @@ export function formatStat(value: number, unit: StatUnit, precise = false): stri
       return formatParam(value, 'deg-per-tick');
     case 'per-s':
       return `${value.toFixed(1)}/s`;
+    case 'tiles': {
+      const tiles = trimNumber(value / TILE_SIZE, 1);
+      return `${tiles} ${tiles === '1' ? 'tile' : 'tiles'}`;
+    }
   }
 }
 

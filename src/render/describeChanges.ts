@@ -60,7 +60,7 @@ function buildTargets(): Target[] {
     round('landmine', { damage: mine.damage, 'fire-rate': TICK_RATE / mine.fireTicks, radius: mine.radius, range: mine.maxRange, 'arm-time': mine.armTicks }),
     { id: 'pool-burst', name: renderTemplate(CHILD_NAMES['pool-burst']), emission: poolBurstEmission('arrow'), bases: { radius: BLASTFLETCH.burstRadius } },
     // 060: Fire's burn, read on Fire alone as the sim reads it.
-    { id: 'fire', name: '', emission: statusEmission('fire'), bases: { duration: FIRE.burnTicks } },
+    { id: 'fire', name: '', emission: statusEmission('fire'), bases: { duration: FIRE.burnTicks, 'spread-radius': FIRE.spreadRadius } },
     { id: 'chill', name: '', emission: statusEmission('chill'), bases: { 'stacks-to-freeze': COLD.stacksToFreeze, duration: COLD.stackTicks, slow: COLD.slowPerStack } },
     { id: 'freeze', name: '', emission: statusEmission('freeze'), bases: { duration: COLD.freezeTicks, immunity: COLD.refreezeTicks } },
     { id: 'boss-freeze', name: KEYWORDS.boss.name, emission: statusEmission('freeze'), bases: { duration: COLD.bossFreezeTicks } },

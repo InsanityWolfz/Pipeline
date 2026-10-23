@@ -330,3 +330,53 @@ describe('spread on death', () => {
     expect(summarize(s).enemies[0]).toMatchObject({ burn: FIRE.burnTicks });
   });
 });
+
+describe('Fire’s two talents (060: the Bombs lane’s Fire nodes)', () => {
+  const taking = (s: SimState, ...ids: string[]): SimState => {
+    s.talents = [TALENT_START, ...ids];
+    return s;
+  };
+
+  it('+50% duration: a burn lasts 270 ticks and deals its damage a second for 4.5 s', () => {
+    const s = taking(arena(), 'b4');
+    const e = still(s, PLAYER_AT.x + 200, PLAYER_AT.y);
+    damageEnemy(s, e, 20, 0, 0, FIRE_HIT);
+    expect(e.burnTicks).toBe(270);
+    run(s, 270);
+    expect(e.burnTicks).toBe(0);
+    expect(e.health).toBe(10_000 - 20 - 5 * 4.5);
+  });
+
+  it('a tile further: a burn spreads to 96 px', () => {
+    const go = (...talents: string[]) => {
+      const s = taking(arena(), ...talents);
+      const dying = still(s, PLAYER_AT.x + 200, PLAYER_AT.y, 1);
+      const at90 = still(s, PLAYER_AT.x + 290, PLAYER_AT.y);
+      const at100 = still(s, PLAYER_AT.x + 200, PLAYER_AT.y + 100);
+      damageEnemy(s, dying, 20, 0, 0, FIRE_HIT);
+      run(s, 1);
+      return [at90.burnTicks > 0, at100.burnTicks > 0];
+    };
+    expect(go()).toEqual([false, false]);
+    expect(go('b5')).toEqual([true, false]);
+  });
+
+  it('touch nothing else: a Fire bomb’s Burst keeps its radius, and Chill and Freeze keep their times', () => {
+    const bursts = (...talents: string[]) => {
+      const s = taking(arena(), ...talents);
+      s.inventory = { 'bomb+fire': 2 };
+      still(s, PLAYER_AT.x + 100, PLAYER_AT.y);
+      hold(s, 'bomb');
+      run(s, 1, fireAt(PLAYER_AT.x + 100, PLAYER_AT.y));
+      runUntil(s, () => s.events.bursts.length > 0, 60);
+      return s.events.bursts[0]?.radius;
+    };
+    expect(bursts('b4', 'b5')).toBe(bursts());
+    const s = taking(arena(), 'b4', 'b5');
+    const e = still(s, PLAYER_AT.x + 200, PLAYER_AT.y);
+    damageEnemy(s, e, 1, 0, 0, { ...FIRE_HIT, damageType: 'cold' });
+    expect(e.chillTicks).toBe(120);
+    for (let i = 0; i < 3; i++) damageEnemy(s, e, 1, 0, 0, { ...FIRE_HIT, damageType: 'cold' });
+    expect(e.frozen).toBe(90);
+  });
+});

@@ -3,10 +3,10 @@
 // flagged for playtest; Shaun edits them after. An enemy's own XP is on its def.
 
 /** XP needed for each level, level 1→2 first: the curve's length is LEVEL_CAP − 1. */
-export const XP_CURVE: readonly number[] = [40, 70, 100, 130, 160, 200, 240, 280, 330, 380, 440, 500, 570, 650];
+export const XP_CURVE: readonly number[] = [40, 70, 100, 130, 160, 200, 240, 280, 330, 380, 440, 500, 570, 650, 740, 840];
 
 /** The highest level for now; raised as each region adds nodes. At the cap XP stops counting. */
-export const LEVEL_CAP = 15;
+export const LEVEL_CAP = 17;
 
 /** A kill's XP multiplier by its danger ring (017): ring 0 (no packs today), 1, 2, 3 (Stonefall Hollows, Region 2) and 4 (060: the Emberworks, Region 3). */
 export const RING_XP: readonly number[] = [1, 1, 2, 3, 4];

@@ -102,6 +102,19 @@ describe('a round', () => {
 });
 
 describe('content', () => {
+  it('060: the Fire nodes say what they change, before → after, and a Fire round’s breakdown shows their steps', () => {
+    const s = player();
+    s.crafted.push('bomb+fire');
+    expect(texts(describeTalent(s, 'b4').summary)[0]).toBe('Fire: +50% duration');
+    expect(texts(describeTalent(s, 'b4').breakdown)[0]).toBe('Fire duration: 3.0 → 4.5 s');
+    expect(texts(describeTalent(s, 'b5').summary)[0]).toBe('Fire: +1 tile spread radius');
+    expect(texts(describeTalent(s, 'b5').breakdown)[0]).toBe('Fire spread radius: 2 → 3 tiles');
+    s.talents.push('b4', 'b5');
+    const d = describeRound(s, 'bomb+fire');
+    expect(texts(d.summary)).toEqual(['12 Burst dmg · 1.5/s · burns 3/s for 4.5 s', '2 bonuses · hold Shift']);
+    expect(texts(d.breakdown)).toEqual(expect.arrayContaining(['Fire duration 3.0 s × (1 + 50% Banked Embers) = 4.5 s', 'Fire spread radius 64 px + 32 px Kindling = 96 px']));
+  });
+
   it('Wide Casing’s breakdown lists the four Burst radii before → after; its summary reaches the known Burst rounds', () => {
     const d = describeTalent(player(), 'b2');
     expect(texts(d.breakdown)[0]).toBe('Burst radius: Bomb 48 → 55.2 px · Bomblet 20 → 23 px · Landmine 24 → 27.6 px · Pool-burst 24 → 27.6 px');
