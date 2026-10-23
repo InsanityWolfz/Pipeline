@@ -22,6 +22,8 @@ const L = FORGE_LOOK;
 /** One Forgewright's pieces: its two bellows, the hoses and small bars, and its core's glow. */
 interface Rig {
   bellows: GameObjects.Image[];
+  /** Its hoses, just behind its body; its bellows' bars, over the world. */
+  hoses: GameObjects.Graphics;
   lines: GameObjects.Graphics;
   core: GameObjects.Graphics;
 }
@@ -62,6 +64,7 @@ export class ForgewrightView {
       if (live.has(id)) continue;
       rig.bellows.forEach((b) => b.destroy());
       rig.lines.destroy();
+      rig.hoses.destroy();
       rig.core.destroy();
       this.rigs.delete(id);
     }
@@ -71,6 +74,7 @@ export class ForgewrightView {
   private make(id: number): Rig {
     const rig: Rig = {
       bellows: [0, 1].map(() => addVector(this.scene, 0, 0, FORGE_SPRITES.bellows.whole)),
+      hoses: this.scene.add.graphics(),
       lines: this.scene.add.graphics(),
       core: this.scene.add.graphics().setBlendMode(BlendModes.ADD),
     };
@@ -81,8 +85,10 @@ export class ForgewrightView {
   /** Its bellows, hoses, bars and core for the frame. */
   private draw(rig: Rig, e: EnemyState, def: ForgewrightDef, now: number): Pick<ForgeShown, 'bellows' | 'core'> {
     const g = rig.lines.clear();
+    const hoses = rig.hoses.clear();
     const bottom = e.y + def.feetBox.h / 2;
     g.setDepth(DEPTHS.worldUi - 1);
+    hoses.setDepth(bottom - 1);
     const looks = e.bellows.map((b, i) => {
       const at = bellowsPoint(e, def, i);
       const look = lookOf(b.patch);
@@ -93,7 +99,7 @@ export class ForgewrightView {
         // Sorted by its ground point (behind the body on its far side); the left one flipped to face out.
         sprite.setPosition(at.x, at.y).setDepth(at.y).setFlipX(i === 0).setAlpha(e.health > 0 ? 1 : 0);
       }
-      this.drawHose(g, e.x, bottom, at);
+      this.drawHose(hoses, e.x, bottom, at);
       this.drawBar(g, e, def, i, b.health, b.patch);
       return look;
     });

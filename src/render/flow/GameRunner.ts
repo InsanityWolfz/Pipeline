@@ -20,7 +20,7 @@ export class GameRunner {
   scene: GameScene | null = null;
   /** This run's end card has been seen (042: saved in the envelope from the next foundry entry). */
   endCardSeen = false;
-  /** The tick the end card is due on, after the Bulwark's first kill, or null. */
+  /** The tick the end card is due on, after the last boss's first kill (060: the Forgewright's), or null. */
   private endCardAt: number | null = null;
 
   constructor(game: Game, saves: SaveStore, onTop: () => void, notice: (message: string) => void) {
@@ -52,7 +52,7 @@ export class GameRunner {
   }
 
   /**
-   * After each tick: the Bulwark's first kill sets the end card due `delayTicks` later, once per save (altar refights
+   * After each tick: END_CARD.boss's first kill (060: the Forgewright's) sets the end card due `delayTicks` later, once per save (altar refights
    * aren't first kills). Returns whether it's due now; the caller shows it and calls `endCardShown`.
    */
   endCardDue(sim: SimState): boolean {

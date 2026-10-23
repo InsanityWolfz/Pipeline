@@ -43,6 +43,14 @@ const TEXTS = [
   'Defeat the Bulwark',
   "Restore the intake's third entrance (E with the Bulwark core)",
   'Feed all three entrances',
+  // 060: Milestone 2's.
+  'Reach the Emberworks',
+  'Gather cinderite at the Cinder Vents',
+  "Claim the Ash Kilns' pylon",
+  'Craft a fire round (C)',
+  'Defeat the Forgewright',
+  "Restore the intake's fourth entrance (E with the Forgewright core)",
+  'Feed all four entrances',
 ];
 const REMOVED = [
   'Feed ammo into the new entrance',

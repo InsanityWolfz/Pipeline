@@ -16,12 +16,16 @@ const CHAIN = OBJECTIVES.filter((o) => !o.cutIn);
 /** The chain's last goal's index in OBJECTIVES (the talent cut-in may sit after it). */
 const LAST = OBJECTIVES.findIndex((o) => o === CHAIN.at(-1));
 const M1 = CHAIN.filter((o) => o.milestone === 'm1');
+/** 060: Milestone 2's goals follow Milestone 1's. */
+const M2_START = OBJECTIVES.findIndex((o) => o.milestone === 'm2');
 
 describe('the chain', () => {
   it('runs the prototype goals, ending with leaving the foundry, then the Milestone 1 goals', () => {
     expect(OBJECTIVES[LEAVE]?.text).toBe('Leave the foundry');
     expect(CHAIN.slice(0, LEAVE + 1).every((o) => o.milestone === 'prototype')).toBe(true);
-    expect(CHAIN.slice(LEAVE + 1).every((o) => o.milestone === 'm1')).toBe(true);
+    const m2 = CHAIN.findIndex((o) => o.milestone === 'm2');
+    expect(CHAIN.slice(LEAVE + 1, m2).every((o) => o.milestone === 'm1')).toBe(true);
+    expect(CHAIN.slice(m2).every((o) => o.milestone === 'm2')).toBe(true);
     expect(M1.map((o) => o.check)).toEqual([
       { kind: 'gathered', items: ['rimestone'] },
       { kind: 'claimed', site: 'frozen-grotto' },
@@ -34,8 +38,9 @@ describe('the chain', () => {
       { kind: 'restored', node: 'entrance-3' },
       { kind: 'volley', min: 3 },
     ]);
-    // The chain's last goal is the tutorial's end.
-    expect(CHAIN.at(-1)?.check).toEqual({ kind: 'volley', min: 3 });
+    // The chain's last goal is the tutorial's end: 060's feeding all four (Milestone 2's chain is goalsM2.test.ts's).
+    expect(M1.at(-1)?.check).toEqual({ kind: 'volley', min: 3 });
+    expect(CHAIN.at(-1)?.check).toEqual({ kind: 'volley', min: 4 });
   });
 });
 
@@ -86,13 +91,14 @@ describe('the goals', () => {
 
 describe('the line after the shrine', () => {
   it('shows the first unfinished goal, and agrees with the summary, whichever goals after the claim are done', () => {
-    const after = CHAIN.length - CLAIMED - 1;
+    // 060: the goals from the claim to Milestone 2's in every combination (2^n grows fast); Milestone 2's left open.
+    const after = M2_START - CLAIMED - 1;
     expect(after).toBeGreaterThan(0);
     expect(LAST).toBeGreaterThan(CLAIMED);
     const s = createSim(SEED);
     // The chain's last goal open, so the line isn't over; the rest after the claim in every combination.
-    for (let mask = 0; mask < 1 << (after - 1); mask++) {
-      s.objectives = OBJECTIVES.map((o, i) => !o.cutIn && i !== LAST && (i <= CLAIMED || ((mask >> (i - CLAIMED - 1)) & 1) === 1));
+    for (let mask = 0; mask < 1 << after; mask++) {
+      s.objectives = OBJECTIVES.map((o, i) => !o.cutIn && i !== LAST && i < M2_START && (i <= CLAIMED || ((mask >> (i - CLAIMED - 1)) & 1) === 1));
       const line = objectiveLine(s);
       const first = currentObjective(s);
       expect(first, `mask ${mask}`).not.toBeNull();

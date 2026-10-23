@@ -82,8 +82,9 @@ export class BossBar {
     const H = FORGE_LOOK.heat;
     const y = B.top + B.h + B.border * 2 + H.gap;
     const full = heat >= 1 && Math.floor(this.scene.time.now / H.pulseMs) % 2 === 0;
-    g.fillStyle(colorOf(H.back)).fillRect(x - B.border, y - B.border, B.w + B.border * 2, H.h + B.border * 2);
-    g.fillStyle(colorOf(full ? H.full : H.fill)).fillRect(x, y, Math.round(B.w * heat), H.h);
+    const w = B.w - 2 * H.inset;
+    g.fillStyle(colorOf(H.back)).fillRect(x + H.inset - B.border, y - B.border, w + B.border * 2, H.h + B.border * 2);
+    g.fillStyle(colorOf(full ? H.full : H.fill)).fillRect(x + H.inset, y, Math.round(w * heat), H.h);
   }
 
   private setVisible(on: boolean): void {

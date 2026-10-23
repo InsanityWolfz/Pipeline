@@ -10,7 +10,7 @@ import { widthOf } from './textFit';
 
 describe('end card data (042)', () => {
   it('ends the demo on the Bulwark, 180 ticks after its first kill', () => {
-    expect(END_CARD.boss).toBe('bulwark');
+    expect(END_CARD.boss).toBe('forgewright');
     expect(END_CARD.delayTicks).toBe(180);
   });
 

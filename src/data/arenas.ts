@@ -83,8 +83,8 @@ export const SHRINE_ARENA: ArenaDef = {
 /** The Bulwark's Sunken Forum (034), in the Hollows and in the sandbox's room. */
 export const FORUM_ARENA = { ...HOLLOWS.arena, rooms: [OVERWORLD_ROOM, SANDBOX_ROOM] as readonly string[] } satisfies BossArena;
 
-/** 060: the Forgewright's Anvil Hall, in the Emberworks. */
-export const ANVIL_ARENA = { ...ANVIL_HALL, rooms: [OVERWORLD_ROOM] as readonly string[] } satisfies BossArena;
+/** 060: the Forgewright's Anvil Hall, in the Emberworks and in the sandbox's room. */
+export const ANVIL_ARENA = { ...ANVIL_HALL, rooms: [OVERWORLD_ROOM, SANDBOX_ROOM] as readonly string[] } satisfies BossArena;
 
 /** Every arena with a door, the Warden's first. */
 export const ARENAS: readonly ArenaDef[] = [SHRINE_ARENA, FORUM_ARENA, ANVIL_ARENA];

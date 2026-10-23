@@ -1,7 +1,9 @@
 import { TILE_SIZE } from '../data/config';
 import { INTAKE } from '../data/foundry';
 import { arenaOf } from '../data/arenas';
+import { EMBERWORKS } from '../data/emberworks';
 import { HOLLOWS } from '../data/hollows';
+import { polar } from '../data/worldShape';
 import { nodeDef } from '../data/nodes';
 import { OBJECTIVES } from '../data/objectives';
 import { OVERWORLD_ROOM } from '../data/overworld';
@@ -132,6 +134,9 @@ export function targetPoints(state: SimState, target: TargetDef, goal: number): 
     case 'barrier':
       // 053: the barrier rings Region 1; the goal points where the road west to the Cistern Terrace crosses it.
       return [{ roomId: OVERWORLD_ROOM, ...tileBase(HOLLOWS.crossing), kind: k }];
+    case 'ramps':
+      // 060: the top of each ramp, where its barrier stands across it (the nearest is the arrow's).
+      return EMBERWORKS.ramps.map((r) => ({ roomId: OVERWORLD_ROOM, ...tileBase(polar(r.bearing, EMBERWORKS.ramp.gateAt)), kind: k }));
     case 'boss': {
       const foe = enemyPoints(state, (e) => e.enemyId === target.boss, k);
       const arena = arenaOf(target.boss);

@@ -7,9 +7,10 @@ import type { SandboxCommand, SandboxState } from '../sim/sandbox';
 import type { MenuHit, MenuRowSpec } from './flow/MenuColumn';
 
 // The Sandbox panel's rows (044), pure so they're unit tested: each entrance's round (every
-// AMMO id, so every base and tagged round, and Empty), god mode and the two boss resets; the
-// spawn choices (any enemy, ring 1–3, champion or not, 1–10), Spawn and Clear. A click turns
-// into the panel's next choices and, for anything the sim does, a command.
+// AMMO id, so every base and tagged round, and Empty) and god mode; the spawn choices (any enemy,
+// ring 1–4, champion or not, 1–10), Spawn and Clear, and each boss's reset (060: under Clear, so the
+// third boss's row fits the screen). A click turns into the panel's next choices and, for anything
+// the sim does, a command.
 
 /** What the spawn rows are set to: render's choice until Spawn sends it. */
 export interface SpawnPick {
@@ -30,12 +31,11 @@ export const ENEMY_CHOICES: readonly string[] = Object.keys(ENEMIES);
 const roundLabel = (round: string | null): string => (round === null ? SANDBOX_TEXT.empty : itemDef(round).name);
 const onOff = (on: boolean): string => (on ? SANDBOX_TEXT.on : SANDBOX_TEXT.off);
 
-/** The two columns: the loadout's (each entrance, god mode, the resets) and the spawn panel's. */
+/** The two columns: the loadout's (each entrance, god mode) and the spawn panel's (060: with the boss resets). */
 export function sandboxColumns(sb: Pick<SandboxState, 'loadout' | 'god'>, pick: SpawnPick): [MenuRowSpec[], MenuRowSpec[]] {
   const loadout: MenuRowSpec[] = [
     ...sb.loadout.map((round, i) => ({ id: `entrance-${i}`, label: roundLabel(round), value: '', stepper: true })),
     { id: 'god', label: SANDBOX_TEXT.god, value: onOff(sb.god) },
-    ...SANDBOX_ARENAS.map((a) => ({ id: `reset-${a.boss}`, label: SANDBOX_TEXT.reset(enemyDef(a.boss).name) })),
   ];
   const spawn: MenuRowSpec[] = [
     { id: 'enemy', label: enemyDef(pick.enemyId).name, value: '', stepper: true },
@@ -44,6 +44,7 @@ export function sandboxColumns(sb: Pick<SandboxState, 'loadout' | 'god'>, pick: 
     { id: 'count', label: SANDBOX_TEXT.count(pick.count), value: '', stepper: true },
     { id: 'spawn', label: SANDBOX_TEXT.spawn },
     { id: 'clear', label: SANDBOX_TEXT.clear },
+    ...SANDBOX_ARENAS.map((a) => ({ id: `reset-${a.boss}`, label: SANDBOX_TEXT.reset(enemyDef(a.boss).name) })),
   ];
   return [loadout, spawn];
 }
