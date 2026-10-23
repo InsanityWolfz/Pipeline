@@ -163,6 +163,9 @@ test('a ley bolt line built by hand fills its crate, and the bolts fire', async 
   // Just below the crate, well in reach (USE_REACH).
   const beside = { x: centre(12, 7).x, y: centre(12, 7).y - 8 };
   await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [beside.x, beside.y] as const);
+  // The hopper's screen is still open; walking out of its reach closes it on the next drawn frame. Wait for that, or
+  // an E pressed before the frame closes the hopper's screen (050) instead of opening the crate's.
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().inventory))?.open).toBe(false);
   // 047: E opens the crate's screen; Ctrl+click on its bolts takes the stack.
   await page.keyboard.press('e');
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().inventory))?.mode).toBe('crate');
