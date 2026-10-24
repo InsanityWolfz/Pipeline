@@ -14,7 +14,7 @@ Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
 Reviewed: no blocking issues; six suggestions applied (the venting tick, no spread onto the plated boss, the region starting at the barrier, tidy-ups). `npm run check` 2021 tests; CI green. Raised for Shaun in the spec: 060.1–060.39.
 
-**Next:** Shaun's playtest from a New game (or `?sandbox`); his OK on 060.1–060.39; "merge 70".
+**Next:** merged by Shaun ("Merge 70 and 71", 2026-10-23, with 060.1–060.39 as built), with the foundry e2e's crate-step fix (InsanityWolfz/Pipeline#71).
 
 **Notes:**
 - `npm run measure`: the Forgewright's decent build wins 20/20 in 73.6 s with 0 KOs, taking no damage; the fight draws no randomness, so it may read easy. Recorded, not tuned.
