@@ -49,7 +49,7 @@ The fun is the gradual switch: one steel lane in the middle while stone feeds th
 - [ ] `machine-speed` research applies to both.
 
 **Existing machines take either tier, by input (Shaun: the same machines)**
-- [ ] The knapper, shaper and plate press each make their stone part from stone or ley-iron, as today, and their steel part from ley-steel:
+- [ ] The knapper, shaper and plate press each make their stone part as today (the knapper and shaper from stone, the plate press from ley-iron), and their steel part from ley-steel:
   - knapper: 1 ley-steel → 2 steel arrowheads
   - shaper: 1 ley-steel → 1 steel casing
   - plate press: 1 ley-steel → 2 steel plates
