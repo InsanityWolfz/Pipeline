@@ -1,5 +1,7 @@
 # 061: Emberworks enemies
-status: draft
+status: approved
+
+Approved by Shaun in chat, 2026-10-24 ("Approve 61 and 62"), with the draft's listed decisions.
 
 Drafted from Shaun's 061 interview (docs/brainstorm/2026-10-22-region-3.md, "061 interview"), 2026-10-24.
 
