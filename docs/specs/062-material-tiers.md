@@ -1,5 +1,7 @@
 # 062: Material tiers: ley-steel and ley glass
-status: draft
+status: approved
+
+Approved by Shaun in chat, 2026-10-24 ("Approve 61 and 62"), with the draft's listed decisions.
 
 Drafted from Shaun's material-tier idea and the 062 interview (docs/brainstorm/2026-10-22-region-3.md: "Shaun's direction", "062 interview"), 2026-10-24.
 
