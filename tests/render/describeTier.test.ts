@@ -48,3 +48,12 @@ describe('a tiered round described (062)', () => {
     expect(bonusSources(r)).toEqual([]);
   });
 });
+
+describe('a tiered round’s summary when it runs long (062)', () => {
+  it('drops the tier note, then a burn’s time, in its short form', () => {
+    const d = describeRound(player(), 'bomb+steel+fire+cluster');
+    expect(d.summary[0]?.text).toBe('19.2 Burst dmg · 1.5/s · Steel ×1.6 dmg · burns 4.8/s for 3.0 s · 4 Bomblets × 12.8');
+    expect(d.summary[0]?.short).toBe('19.2 Burst · 1.5/s · burns 4.8/s · 4 Bomblets × 12.8');
+    expect(describeRound(player(), 'bomb+fire+cluster').summary[0]?.short).toBe('12 Burst · 1.5/s · burns 3/s for 3.0 s · 4 Bomblets × 8');
+  });
+});

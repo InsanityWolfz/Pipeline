@@ -131,6 +131,8 @@ export const LEGIBILITY_WORDS = {
   tierDamage: '{tier} {mul} dmg',
   /** 060: a Fire round's burn, each second and how long. */
   burns: 'burns {damage}/s for {time}',
+  /** 062: a burn's short form, when a tiered round's summary would run past its rows (its time is in the breakdown). */
+  burnsShort: 'burns {damage}/s',
   shards: '{count} {{shard}}s × {damage}',
   bomblets: '{count} {{bomblet}}s × {damage}',
   arms: 'arms in {time}',
