@@ -172,7 +172,7 @@ export class HudView {
     const ending = events.hints.some((h) => h.id === CARRIED_HINT.id);
     const before = this.tubeSlot.state;
     // 070: the fist says when right click has carried rounds to fire.
-    const fist = tubeCardLabel(active, { hasTube: sim.hasTube, attuned: sim.link.attuned, carriedReady: readyItem(sim) !== null }, settings().bindings.use);
+    const fist = tubeCardLabel(active, { hasTube: sim.hasTube, attuned: sim.link.attuned, carriedReady: readyItem(sim) !== null, building }, settings().bindings.use);
     this.tubeSlot.update(this.heldActive && sim.link.attunePulse > 0 && !ending ? this.heldActive : active, building, fist);
     if (ending) {
       this.carriedHint.swap(before, before.icons[0], sim.hotbar.selected, (a) => this.tubeSlot.setAlpha(a));

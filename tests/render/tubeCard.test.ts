@@ -8,7 +8,7 @@ import { tubeSlotBox } from '../../src/render/bottomHud';
 // carried" instead of "Melee"; with nothing carried it still reads "Melee".
 
 const RMB = DEFAULT_BINDINGS.use;
-const linked = { hasTube: true, attuned: true, carriedReady: true };
+const linked = { hasTube: true, attuned: true, carriedReady: true, building: false };
 
 describe('the empty tube card (070)', () => {
   it('reads that right click fires carried rounds when the tube is empty after attuning and a round is ready', () => {
@@ -19,6 +19,10 @@ describe('the empty tube card (070)', () => {
     expect(tubeCardLabel({ kind: 'melee' }, { ...linked, carriedReady: false }, RMB)).toBe(HUD_LAYOUT.tubeSlot.melee);
     expect(tubeCardLabel({ kind: 'melee' }, { ...linked, hasTube: false }, RMB)).toBe(HUD_LAYOUT.tubeSlot.melee);
     expect(tubeCardLabel({ kind: 'melee' }, { ...linked, attuned: false }, RMB)).toBe(HUD_LAYOUT.tubeSlot.melee);
+  });
+
+  it('while building (right click is the build tools there) it reads "Melee", with no use-key hint', () => {
+    expect(tubeCardLabel({ kind: 'melee' }, { ...linked, building: true }, RMB)).toBe(HUD_LAYOUT.tubeSlot.melee);
   });
 
   it('has no label of its own for a volley or a carried round (their counts show)', () => {

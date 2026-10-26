@@ -8,18 +8,19 @@ import { keyLabel } from './keyHint';
 // would fire a carried round (the carried bar's selected kind is carried), the card says so instead of "Melee". Pure,
 // from what the sim says, so tests/render checks it.
 
-/** What the label reads from the sim: the tube, its attunement, and whether right click has a carried round to use. */
+/** What the label reads from the sim: the tube, its attunement, whether right click has a carried round to use, and build mode (where it doesn't). */
 export interface TubeCardFacts {
   hasTube: boolean;
   attuned: boolean;
   carriedReady: boolean;
+  building: boolean;
 }
 
 /** The fist's label, or null when the card shows rounds (a volley's or a carried round's counts). `useBinding` is the use action's bound input. */
 export function tubeCardLabel(active: HudActive, facts: TubeCardFacts, useBinding: string): string | null {
   if (active.kind !== 'melee') return null;
   const S = HUD_LAYOUT.tubeSlot;
-  if (!facts.hasTube || !facts.attuned || !facts.carriedReady) return S.melee;
+  if (!facts.hasTube || !facts.attuned || !facts.carriedReady || facts.building) return S.melee;
   const key = MOUSE_INPUTS.includes(useBinding) ? S.mouseKey : keyLabel(useBinding);
   return S.tubeEmpty.replace('{key}', key);
 }
