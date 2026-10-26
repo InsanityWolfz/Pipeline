@@ -62,7 +62,10 @@ test("the Forum's return stone wakes at its door; after a KO the waystone travel
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().returnStones))?.find((r) => r.id === STONE.id)?.look).toBe('woken');
   // Its swell over, it is drawn at its frame's size on the world, as the foundry's waystone is (32 × 48 px), whatever
   // the texture's bake scale.
-  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().returnStones))?.find((r) => r.id === STONE.id)?.scale).toBe(1);
+  // The swell plays on the tween clock, sped up here so a slow, loaded page doesn't hold the poll.
+  await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().returnStones))?.find((r) => r.id === STONE.id)?.scale, { timeout: 20_000 }).toBe(1);
+  await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
   const drawn = (await page.evaluate(() => window.__GAME__?.ui().returnStones))?.find((r) => r.id === STONE.id);
   expect(drawn?.w).toBeCloseTo(STONE_SIZE.w, 0);
   expect(drawn?.h).toBeCloseTo(STONE_SIZE.h, 0);

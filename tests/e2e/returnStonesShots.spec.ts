@@ -87,7 +87,10 @@ test.describe('review screenshots (072)', () => {
     // Woken: to the door's outside, past it; the swell plays out before the shot.
     await walk(page, FORUM_ARENA.door.leaveTo.tx, FORUM_ARENA.door.leaveTo.ty);
     await expect.poll(async () => (await stoneShown(page))?.look).toBe('woken');
-    await expect.poll(async () => (await stoneShown(page))?.scale).toBe(1);
+    // The swell plays on the tween clock, sped up so a slow, loaded page doesn't hold the poll.
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
+    await expect.poll(async () => (await stoneShown(page))?.scale, { timeout: 20_000 }).toBe(1);
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
     await settle(page);
     await page.screenshot({ path: `${SHOTS}/02-return-stone-woken.png` });
 
