@@ -64,7 +64,7 @@ describe('save envelope (042)', () => {
   it('047.9: a version 4 save (before the carried items\' hint) reads as too old: no migration, by Shaun\'s rule', () => {
     const v4 = { ...makeEnvelope(snapshot(sim()), META), version: 4 };
     expect(readSave(text(v4)).status).toBe('too-old');
-    expect(SAVE_VERSION).toBe(20);
+    expect(SAVE_VERSION).toBe(21);
     expect(SAVE_MIGRATIONS[4]).toBeUndefined();
   });
 

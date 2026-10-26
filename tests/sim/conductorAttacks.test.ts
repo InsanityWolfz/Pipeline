@@ -7,7 +7,7 @@ import { movePlayer, run } from './fight';
 import { CONDUCTOR, spire, SPIRE_MIDDLE, topUp } from './spire';
 
 // The Conductor's attacks (064), picked in data order with their own cooldowns: the arc lash (a line from its rod to
-// the player, locked as its 45-tick wind-up starts, 50 with knockback on it), the storm call (3 circles of 40 px on and
+// the player, locked as its 45-tick wind-up starts, 50 with knockback on it), the storm call (068: 5 circles of 40 px on and
 // round the player, striking after 60 ticks for 40) and the rod chain (lines between neighbouring standing rods, a
 // 60-tick wind-up, then 30 ticks of lightning dealing 45 on a line).
 
@@ -56,22 +56,27 @@ describe('the arc lash', () => {
 });
 
 describe('the storm call', () => {
-  it('calls 3 circles of 40 px, one on the player and two round them, each striking after 60 ticks for 40', () => {
+  it('calls 5 circles of 40 px (068), one on the player and four round them at the same spread, each striking after 60 ticks for 40', () => {
     const { s, c } = spire(40);
     only(c, 1);
     run(s, 1);
-    expect(s.strikes).toHaveLength(3);
+    expect(s.strikes).toHaveLength(5);
     const p = s.player;
-    expect(s.strikes.map((k) => Math.round(Math.hypot(k.x - p.x, k.y - p.y)))).toEqual([0, CONDUCTOR.call.spread, CONDUCTOR.call.spread]);
+    const spread = CONDUCTOR.call.spread;
+    expect(spread).toBe(64);
+    expect(s.strikes.map((k) => Math.round(Math.hypot(k.x - p.x, k.y - p.y)))).toEqual([0, spread, spread, spread, spread]);
+    // The four round the player sit a quarter turn apart.
+    const at = s.strikes.slice(1).map((k) => Math.atan2(k.y - p.y, k.x - p.x));
+    for (const [i, a] of at.slice(1).entries()) expect(Math.abs(Math.cos(a - (at[i] ?? 0)))).toBeLessThan(1e-9);
     // Called down as the wind-up starts, a tick already gone: they land as it ends.
     expect(s.strikes.every((k) => k.r === 40 && k.damage === 40 && k.delayTicks === 60 && k.delay === 59)).toBe(true);
     const before = health(s);
     run(s, 58);
     expect(health(s)).toBe(before);
-    expect(s.strikes).toHaveLength(3);
+    expect(s.strikes).toHaveLength(5);
     run(s, 1);
     expect(s.strikes).toHaveLength(0);
-    expect(s.events.strikes).toHaveLength(3);
+    expect(s.events.strikes).toHaveLength(5);
     expect(health(s)).toBe(before - 40);
   });
 

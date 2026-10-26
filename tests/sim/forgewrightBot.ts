@@ -13,8 +13,8 @@ import { hall } from './hall';
 // tests/measure/forgewright.measure.ts: 041.7's decent build (level 7, its six talents and four Common pieces) with
 // three entrances fed by arrow lines, and a decent bot that plays the fight as the spec draws it.
 
-/** The spec's target: a decent three-entrance build kills it in about 60–90 s. */
-export const TARGET = { min: 60 * TICK_RATE, max: 90 * TICK_RATE } as const;
+/** 068's target: a decent three-entrance build kills it in about 90–120 s (060's was 60–90 s). */
+export const TARGET = { min: 90 * TICK_RATE, max: 120 * TICK_RATE } as const;
 
 /** What a fight came to. */
 export interface Fight {
@@ -25,29 +25,37 @@ export interface Fight {
   taken: number;
   share: number;
   vents: number;
+  /** 068: the Forge Floods it brought down. */
+  floods: number;
+  /** 068: the Forgewright's health left as it ended. */
+  left: number;
 }
 
 /** A bot: the command it sends each tick. */
 export type Bot = (s: SimState, f: EnemyState) => Parameters<typeof run>[2];
 
-/** Runs a fight for up to `limit` ticks from just inside the hall's door, the bot choosing each tick's command. */
-export function fight(seed: number, limit: number, bot: Bot): Fight {
+/** Runs a fight for up to `limit` ticks from just inside the hall's door, the bot choosing each tick's command (`keepUp`: the player's health kept full). */
+export function fight(seed: number, limit: number, bot: Bot, keepUp = false): Fight {
   const { s, f } = hall(130, seed);
   decentBuild(s);
   lines(s, 'arrow', 'arrow', 'arrow');
   const max = playerStats(s).maxHealth;
   let taken = 0;
   let vents = 0;
+  let floods = 0;
   for (let t = 1; t <= limit; t++) {
     feed(s);
     run(s, 1, bot(s, f));
+    // 068: the kill-time record keeps the player's health up, so a fight runs to its end.
+    if (keepUp) s.player.health = max;
     taken += takenThisTick(s);
     vents += s.events.vents.length;
-    const end = (won: boolean, ko: boolean): Fight => ({ won, ko, ticks: t, taken, share: Math.round((taken / max) * 100) / 100, vents });
+    floods += s.events.floodStarts.length;
+    const end = (won: boolean, ko: boolean): Fight => ({ won, ko, ticks: t, taken, share: Math.round((taken / max) * 100) / 100, vents, floods, left: Math.round(f.health) });
     if (s.bossDefeats.includes('forgewright')) return end(true, false);
     if (s.player.dying > 0) return end(false, true);
   }
-  return { won: false, ko: false, ticks: limit, taken, share: Math.round((taken / max) * 100) / 100, vents };
+  return { won: false, ko: false, ticks: limit, taken, share: Math.round((taken / max) * 100) / 100, vents, floods, left: Math.round(f.health) };
 }
 
 /** The decent bot's numbers: it keeps 7.5 tiles off, face-on, and stays this far inside the walls. */
@@ -67,7 +75,8 @@ function inHall(x: number, y: number, side: number): { x: number; y: number } {
  * The decent bot: it stands about 7.5 tiles from the Forgewright on the line between them (it turns to face the
  * player, so the three-lane fan's outer lanes find both bellows), circling along the walls when pinned, with fire held
  * at its body's middle. It reads the flood's red half once a quarter second has shown and walks to the other half,
- * keeps out of pools, and rolls through embers and the slam as they land (bots.ts's ROLLER).
+ * keeps out of pools, and rolls through embers and the slam as they land (bots.ts's ROLLER). 068: caught on the flooded
+ * half, it holds fire (walking at full pace) and rolls for the other half.
  */
 export function decentBot(): Bot {
   return (s, f) => {
@@ -83,6 +92,11 @@ export function decentBot(): Bot {
       bearing += (DECENT.circleDeg * Math.PI) / 180;
       goal = inHall(f.x + Math.cos(bearing) * DECENT.range, f.y + Math.sin(bearing) * DECENT.range, side);
     }
-    return { ...steer(s, goal, ROLLER).cmd, fire: true, aimX: f.x, aimY: f.y - 24 };
+    // 068: caught on the half it floods (heat now fills through vents, so floods come), it holds fire and rolls for the
+    // other half, as a player gets out of a fire they're standing in.
+    const caught = flooding ? Math.sign(p.x - mid) === f.floodSide : pool !== undefined && p.x >= pool.x0 && p.x <= pool.x1;
+    const cmd = steer(s, goal, ROLLER).cmd;
+    if (caught) return { ...cmd, fire: false, dodge: p.rollTick === 0 && p.cooldown === 0, aimX: f.x, aimY: f.y - 24 };
+    return { ...cmd, fire: true, aimX: f.x, aimY: f.y - 24 };
   };
 }

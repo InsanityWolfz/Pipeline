@@ -297,3 +297,8 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - The opening's gates are data on the start (`StartDef`): the real game starts with them shut; test starts open them but still record the field's clearing, so their goal chains move on. Only the land's populating waits on a shut-gate start.
   - A crafting row's `shownAfter` (raws carried at least once) is the single list of what reveals it; the player data reads the bomb row's list rather than repeating it.
   - The Warden's defeat is read from `killedBosses`, not `bossDefeats` (he has no altar), so unclaimed land and its guardian reset together on a KO.
+
+- **068 tougher late bosses:**
+  - A boss shield is the plating check (`plated`, `blockPlated` in `src/sim/bossParts.ts`): the Forgewright's plating and the Conductor's storm shield share every rule (piercing glances on, arcs and burn spread skip).
+  - An untargetable window (`blinkIn`) covers a boss's body only, never its parts; homing keeps its lock through it, so a blink doesn't drop every lock.
+  - Heat resets only on a flood (`floodPools.ts`), never on a vent.

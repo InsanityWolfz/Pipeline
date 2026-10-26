@@ -1,7 +1,8 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, ENEMY_FX, SPRITES } from '../data/assets';
 import { FORGE_LOOK } from '../data/forgewrightAssets';
-import { forgeDefOf, plated } from '../sim/forgewrightParts';
+import { forgeDefOf } from '../sim/forgewrightParts';
+import { plated } from '../sim/bossParts';
 import { addVector } from './vector/textures';
 import { VIEW_WIDTH } from '../data/config';
 import { enemyDef } from '../data/enemies';

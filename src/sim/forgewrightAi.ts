@@ -20,7 +20,8 @@ import { rotate } from './volley';
 // circle ahead of it; at range it sprays a fan of slow embers. Beside all that its heat fills (slowed by Chill as its
 // walk is, faster once enraged below half health); at full heat it raises its hammer while the half of the hall the
 // player stands in is shaded red, then floods it with fire pools (floodPools.ts). A vent (forgewrightParts.ts) staggers
-// it where it stands. It never leaves the hall, and walks home to heal after the player has been out of it a while.
+// it where it stands, its heat still filling (068). It never leaves the hall, and walks home to heal after the player
+// has been out of it a while.
 
 const RAD = Math.PI / 180;
 
@@ -42,7 +43,7 @@ export const heatFull = (e: Pick<EnemyState, 'heat'>, def: ForgewrightDef): bool
 export const heatRise = (state: SimState, e: EnemyState, def: ForgewrightDef): number =>
   (def.heat.max / def.heat.fillTicks) * chillScale(e, chillSlow(state)) * (e.enraged ? def.enrage.heatRate : 1);
 
-/** Its heat fills beside whatever else it does, but not through its flood (the wind-up, the blow, or its pools still out). */
+/** Its heat fills beside whatever else it does, a vent too (068), but not through its flood (the wind-up, the blow, or its pools still out). */
 function stepHeat(state: SimState, e: EnemyState, def: ForgewrightDef): void {
   if (e.mode === 'flood-windup' || e.mode === 'flood' || floodOut(state, e.id)) return;
   e.heat = Math.min(def.heat.max, e.heat + heatRise(state, e, def));
@@ -163,9 +164,10 @@ export function forgewrightThink(state: SimState, e: EnemyState, def: Forgewrigh
   if (e.lobCooldown > 0) e.lobCooldown -= 1;
   e.offScreenTicks = playerIn ? 0 : e.offScreenTicks + 1;
   if (!e.enraged && e.health < def.maxHealth * def.enrage.below) e.enraged = true;
-  // Venting it staggers where it stands (forgewrightParts.ts ends it); its heat is 0 and stays there.
-  if (e.mode === 'vent') return hold(e);
+  // 068: its heat fills through a vent too (only the flood resets it). Full mid-vent, the flood waits for the vent's end.
   stepHeat(state, e, def);
+  // Venting it staggers where it stands, unable to attack (forgewrightParts.ts ends it).
+  if (e.mode === 'vent') return hold(e);
   const flooding = stepFlood(state, e, def);
   if (flooding) return flooding;
   const spraying = stepSpray(state, e, def);
