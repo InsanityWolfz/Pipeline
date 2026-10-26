@@ -122,7 +122,8 @@ export class ConductorView {
     const seed = Math.floor(this.time);
     if (c) for (const l of ev.lashes) if (l.id === c.id) this.flashes.push({ kind: 'lash', ...l, age: 0, seed });
     if (c) for (const b of ev.blinks) if (b.id === c.id) this.flashes.push({ kind: 'blink', x0: b.fromX, y0: b.fromY, x1: b.toX, y1: b.toY, age: 0, seed });
-    for (const s of ev.strikes) if (c && s.id === c.id) this.flashes.push({ kind: 'strike', x0: s.x, y0: s.y - L.landing.drop, x1: s.x, y1: s.y, age: 0, seed: seed + s.x });
+    // 065: a storm sentinel's strikes land with the same bolt.
+    for (const s of ev.strikes) this.flashes.push({ kind: 'strike', x0: s.x, y0: s.y - L.landing.drop, x1: s.x, y1: s.y, age: 0, seed: seed + s.x });
   }
 
   /** With no Conductor on screen, the spire's rods stand (in the room it stands in), whole. */

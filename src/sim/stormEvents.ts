@@ -22,8 +22,10 @@ export interface StormEvents {
   /** 065: a static mite zapped (its point and the pulse's radius); a killed mite discharged (its point, radius, and the mites it hit, with their feet). */
   zaps: { id: number; x: number; y: number; radius: number }[];
   discharges: { id: number; x: number; y: number; radius: number; hit: { id: number; x: number; y: number }[] }[];
+  /** 065: a storm sentinel called a strike circle down (its id, the circle's centre and radius). */
+  sentinelCalls: { id: number; x: number; y: number; r: number }[];
 }
 
 export function createStormEvents(): StormEvents {
-  return { rodStrikes: [], arcs: [], strikes: [], rodBreaks: [], rodRegrows: [], blinkWarns: [], blinks: [], conductorWindups: [], lashes: [], chains: [], dives: [], zaps: [], discharges: [] };
+  return { rodStrikes: [], arcs: [], strikes: [], rodBreaks: [], rodRegrows: [], blinkWarns: [], blinks: [], conductorWindups: [], lashes: [], chains: [], dives: [], zaps: [], discharges: [], sentinelCalls: [] };
 }

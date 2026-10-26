@@ -109,8 +109,10 @@ function zoneOf(e: EnemyState, def: EnemyDef, left: (windup: number) => number):
     // 065: a static mite's pulse under it.
     case 'mite':
       return e.mode === 'windup' ? { kind: 'circle', x: e.x, y: e.y, r: def.zap.radius, left: left(def.zap.windupTicks) } : null;
+    // 065: a storm sentinel's circle is a strike, in dangerZones.
     case 'caster':
     case 'tender':
+    case 'sentinel':
       return null;
     // 064: the Conductor's lash, a lane from its rod (its chain's lines and the storm call's circles are in dangerZones).
     case 'conductor': {

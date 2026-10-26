@@ -1,7 +1,7 @@
 import { TICK_RATE } from '../data/config';
 import type { TenderDef } from '../data/emberworksEnemies';
 import { enemyDef } from '../data/enemies';
-import { engage, enter, hold, inAggroBox, leash, startWindup, toward } from './aiCommon';
+import { engage, enter, hold, inAggroBox, keepDistance, leash, startWindup } from './aiCommon';
 import { defOf } from './champions';
 import { targetable, type EnemyState } from './enemies';
 import { clearShot } from './sightLine';
@@ -55,15 +55,7 @@ export function tenderThink(state: SimState, e: EnemyState, def: TenderDef): [nu
     state.events.beams.push({ id: e.id, target: target.id });
     return [0, 0];
   }
-  return keepAway(e, def, p.x - e.x, p.y - e.y);
-}
-
-/** Its band from the player: back off when closer than `min`, close in when farther than `max`, else hold. */
-function keepAway(e: EnemyState, def: TenderDef, dx: number, dy: number): [number, number] {
-  const dist = Math.hypot(dx, dy);
-  if (dist < def.keep.min) return toward(-dx, -dy, def);
-  if (dist > def.keep.max) return toward(dx, dy, def);
-  return [0, 0];
+  return keepDistance(def, def.keep, p.x - e.x, p.y - e.y);
 }
 
 /** Its living packmate with the lowest share of its max health below full, in reach along a clear line, or null. */

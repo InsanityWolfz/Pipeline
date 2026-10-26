@@ -40,8 +40,22 @@ export interface MiteDef extends EnemyBase, ScreenLeashed {
   discharge: { radius: number; damage: number };
 }
 
+/** A storm sentinel: a slow rod-turret that keeps its distance and calls strikes down on the player from range. */
+export interface SentinelDef extends EnemyBase, ScreenLeashed {
+  kind: 'sentinel';
+  /** It keeps between `min` and `max` px from the player (061's keep-distance), backing off when closer. */
+  keep: { min: number; max: number };
+  /**
+   * With its cooldown ready, the player within `range` along a clear line, and none of its own circles still waiting,
+   * it calls a red strike circle of `radius` down on the player's feet (064's strikes), holding still as it calls
+   * (`windupTicks`, the circle's wait); the strike lands then for `damage` and `knockback` px out over `knockTicks` on
+   * feet inside (a roll's i-frames let it pass). Its call's pose shows `swipeTicks`, then it recovers `recoverTicks`.
+   */
+  strike: AttackTiming & { range: number; radius: number; damage: number; knockback: number; knockTicks: number };
+}
+
 /** The Stormcrown's enemies, as one union for EnemyDef. */
-export type StormcrownEnemyDef = HawkDef | MiteDef;
+export type StormcrownEnemyDef = HawkDef | MiteDef | SentinelDef;
 
 /** The base fields they share, as the Emberworks' (emberworksEnemies.ts). */
 const BASE = { boss: false, hitKnockTicks: 4, hitFlashTicks: 6, leashGraceTicks: 60, homeTolerance: 4 } as const;
@@ -125,7 +139,39 @@ export const STATIC_MITE: MiteDef = {
   anims: 'static-mite',
 };
 
+const KEEP = { min: 200, max: 300 } as const;
+
+export const STORM_SENTINEL: SentinelDef = {
+  ...BASE,
+  kind: 'sentinel',
+  id: 'storm-sentinel',
+  name: 'Storm sentinel',
+  maxHealth: 60,
+  walkSpeed: 20,
+  feetBox: { w: 22, h: 10 },
+  hurtbox: { w: 26, h: 34, offsetY: -14 },
+  weight: 1 / 2,
+  keep: KEEP,
+  strike: {
+    // It calls only from within its band's far edge.
+    range: KEEP.max,
+    radius: 36,
+    windupTicks: 60,
+    swipeTicks: 8,
+    recoverTicks: 30,
+    // Counted from the wind-up's start.
+    cooldownTicks: 120,
+    damage: 30,
+    knockback: 24,
+    knockTicks: 6,
+  },
+  drops: STORMCROWN_DROPS,
+  xp: 8,
+  anims: 'storm-sentinel',
+};
+
 export const STORMCROWN_ENEMIES = {
   thunderhawk: THUNDERHAWK,
   'static-mite': STATIC_MITE,
+  'storm-sentinel': STORM_SENTINEL,
 } as const;

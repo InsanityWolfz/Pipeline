@@ -21,6 +21,14 @@ export function toward(dx: number, dy: number, def: EnemyDef): [number, number] 
   return [ux * step, uy * step];
 }
 
+/** Its band from the player (061's kiln-tender, 065's storm sentinel): back off when closer than `min`, close in when farther than `max`, else hold. */
+export function keepDistance(def: EnemyDef, keep: { min: number; max: number }, dx: number, dy: number): [number, number] {
+  const dist = Math.hypot(dx, dy);
+  if (dist < keep.min) return toward(-dx, -dy, def);
+  if (dist > keep.max) return toward(dx, dy, def);
+  return [0, 0];
+}
+
 /** Walks home; once there it idles at full health. */
 export function walkHome(e: EnemyState, def: EnemyDef): [number, number] {
   const dx = e.homeX - e.x;

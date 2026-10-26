@@ -316,5 +316,7 @@ export function attackOf(def: EnemyDef): AttackTiming {
       return def.dive;
     case 'mite':
       return def.zap;
+    case 'sentinel':
+      return def.strike;
   }
 }

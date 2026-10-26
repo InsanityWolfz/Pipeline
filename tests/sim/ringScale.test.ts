@@ -63,6 +63,8 @@ function attackDamage(def: EnemyDef): number {
       return def.dive.damage;
     case 'mite':
       return def.zap.damage;
+    case 'sentinel':
+      return def.strike.damage;
   }
 }
 

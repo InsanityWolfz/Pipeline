@@ -7,4 +7,5 @@ import { enemyAnims } from './enemyAnims';
 export const STORM_ENEMY_ANIMS = {
   thunderhawk: enemyAnims('thunderhawk', true),
   'static-mite': enemyAnims('static-mite', true, [], 2),
+  'storm-sentinel': enemyAnims('storm-sentinel', true, [], 2),
 } as const;

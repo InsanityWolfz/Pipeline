@@ -75,5 +75,7 @@ function scaleAttack(def: EnemyDef, base: Pick<EnemyDef, 'feetBox' | 'hurtbox' |
     // 065: its discharge scales as its zap does (061.4's rule for a death burst).
     case 'mite':
       return { ...def, ...base, zap: { ...def.zap, damage: dmg(def.zap.damage) }, discharge: { ...def.discharge, damage: dmg(def.discharge.damage) } };
+    case 'sentinel':
+      return { ...def, ...base, strike: { ...def.strike, damage: dmg(def.strike.damage) } };
   }
 }
