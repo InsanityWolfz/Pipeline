@@ -14,6 +14,12 @@ import { roundsByFamily } from '../../src/sim/knownRounds';
 const STONE = ROUNDS.filter((r) => roundTier(r) === 'stone');
 const TIERED = ROUNDS.filter((r) => roundTier(r) !== 'stone');
 
+/** A round's armed look, if it's a mine (062: a tier's look is its own; tests/data/tierArt.test.ts). */
+const lookOf = (id: string): { armed?: string } => {
+  const def = ammoDef(id);
+  return def.kind === 'mine' ? { armed: def.armed } : {};
+};
+
 describe('material tiers (062)', () => {
   it('are steel for arrows, bombs and landmines, and glass for ley bolts, each ×1.6', () => {
     expect(Object.values(TIERS)).toEqual([
@@ -68,7 +74,7 @@ describe('material tiers (062)', () => {
   it('give a tiered round its stone round’s numbers, type and keywords: the tier is no keyword', () => {
     for (const id of TIERED) {
       const stone = withTier(id, 'stone');
-      expect({ ...ammoDef(id), id: stone, itemId: stone }).toEqual(ammoDef(stone));
+      expect({ ...ammoDef(id), id: stone, itemId: stone, sprite: ammoDef(stone).sprite, ...lookOf(stone) }).toEqual(ammoDef(stone));
       expect(roundKeywords(id)).toEqual(roundKeywords(stone));
     }
   });

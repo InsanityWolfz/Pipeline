@@ -31,6 +31,12 @@ function shoot(round: string, at: { x: number; y: number }, talents: readonly st
 
 const lost = (e: EnemyState): number => FULL - e.health;
 
+/** A round's armed look, if it's a mine (062: a tier's look is its own; tests/data/tierArt.test.ts). */
+const lookOf = (id: string): { armed?: string } => {
+  const def = ammoDef(id);
+  return def.kind === 'mine' ? { armed: def.armed } : {};
+};
+
 describe('a tiered round hits ×1.6 (062)', () => {
   it('is 1.6 for steel and for glass', () => {
     expect(TIER_DAMAGE).toEqual({ steel: 1.6, glass: 1.6 });
@@ -144,7 +150,7 @@ describe('a tiered round hits ×1.6 (062)', () => {
 describe('a tiered round is otherwise its stone version (062)', () => {
   it('has the stone round’s range, speed, radius, arm time and fire rate', () => {
     for (const [stone, tier] of [['arrow', 'arrow+steel'], ['ley-bolt+homing', 'ley-bolt+glass+homing'], ['bomb+cluster', 'bomb+steel+cluster'], ['landmine+frost', 'landmine+steel+frost']] as const) {
-      expect({ ...ammoDef(tier), id: stone, itemId: stone }).toEqual(ammoDef(stone));
+      expect({ ...ammoDef(tier), id: stone, itemId: stone, sprite: ammoDef(stone).sprite, ...lookOf(stone) }).toEqual(ammoDef(stone));
       const s = arena();
       expect(fireInterval(s, tier)).toBe(fireInterval(s, stone));
       for (const stat of ['range', 'speed', 'radius', 'arm-time', 'fire-rate'] as const) expect(statOf(s, stat, roundEmission(tier), 100)).toBe(statOf(s, stat, roundEmission(stone), 100));

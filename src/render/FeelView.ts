@@ -1,13 +1,12 @@
 import { isFlatKind } from '../data/pieces';
 import type { Scene } from 'phaser';
-import { AMMO } from '../data/ammo';
 import { STAGES } from '../data/stages';
 import { TILE_SIZE } from '../data/config';
 import { enemyDef } from '../data/enemies';
 import { INTAKE } from '../data/foundry';
 import { DUST, GLOWS, HARVEST_BURSTS, HARVEST_WORK, HIT_STOP_MS } from '../data/juice';
 import { FOUNDRY_ROOM } from '../data/rooms';
-import { FIRE_SOUNDS, SOUND_LEVELS, SOUNDS, WINDUP_SOUNDS } from '../data/sounds';
+import { SOUND_LEVELS, SOUNDS, WINDUP_SOUNDS } from '../data/sounds';
 import { isClaimed } from '../sim/claims';
 import { wornRelic } from '../sim/stats';
 import type { SimEvents } from '../sim/events';
@@ -23,6 +22,7 @@ import { playEmberworks, VentFeel } from './emberworksFeel';
 import { ARENAS } from '../data/arenas';
 import { arenaLocked } from '../sim/arenaLock';
 import { playMines } from './mineFeel';
+import { fireSoundOf, WorkFeel } from './tierFeel';
 import { HollowsEnemyFeel } from './hollowsEnemyFeel';
 
 // Look and feel (014), driven by what the sim did since the last draw and how
@@ -41,6 +41,7 @@ export class FeelView {
   /** Last frame's state, to catch changes the sim records no event for. */
   private modes = new Map<number, string>();
   private outputs = new Map<number, number>();
+  private readonly work = new WorkFeel();
   private rolling = false;
   private dustMs = 0;
   private workMs = 0;
@@ -94,9 +95,9 @@ export class FeelView {
     const j = this.juice;
     const s = this.sound;
     // No shake on firing (021): too jarring.
-    // A tagged round (029) fires with its base's sound.
+    // A tagged round (029) fires with its base's sound; 062: a steel one with its heavier one.
     for (const shot of ev.shots) {
-      const key = FIRE_SOUNDS[AMMO[shot.ammoId]?.base ?? shot.ammoId];
+      const key = fireSoundOf(shot.ammoId);
       if (key) s.play(key);
     }
     // Cold and the Split (029): a freeze rings and frosts, a thaw throws off ice, a Split chimes.
@@ -237,6 +238,7 @@ export class FeelView {
     }
     for (const id of [...this.modes.keys()]) if (!live.has(id)) this.modes.delete(id);
 
+    this.work.update(sim, shown, (key, level) => this.sound.play(key, level));
     const machines = new Set<number>();
     for (const p of sim.foundry.pieces) {
       if (p.kind !== 'machine') continue;
