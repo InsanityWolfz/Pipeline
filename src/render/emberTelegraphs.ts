@@ -7,11 +7,16 @@ import { colorOf } from './color';
 import { drawLane } from './hollowsTelegraphs';
 
 // The Emberworks enemies' telegraphs (061), all in the shared enemy red: a cinder mote's burst circle growing under it
-// as it swells; a bellows hound's lane, the Charger's. Returns whether the enemy was one of theirs.
+// as it swells; a bellows hound's lane, the Charger's; a slag golem's slam circle ahead of it. (A whelp's bite is the
+// Husk's arc.) Returns whether the enemy was one of theirs.
 
 export function drawEmberTelegraph(g: GameObjects.Graphics, e: EnemyState, def: EnemyDef): boolean {
   if (def.kind === 'mote') {
     if (e.mode === 'windup') drawGrowingCircle(g, e.x, e.y, def.swell.radius, Math.min(1, e.modeTicks / def.swell.windupTicks));
+    return true;
+  }
+  if (def.kind === 'golem') {
+    if (e.mode === 'windup') drawGrowingCircle(g, e.spotX, e.spotY, def.slam.radius, Math.min(1, e.modeTicks / def.slam.windupTicks));
     return true;
   }
   // The hound's lane is the Charger's (035).

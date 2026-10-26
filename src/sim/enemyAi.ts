@@ -8,6 +8,7 @@ import { shardThink } from './shardbackAi';
 import { snipeThink } from './sniperAi';
 import { moteThink } from './moteAi';
 import { houndThink } from './houndAi';
+import { golemThink } from './golemAi';
 import { defOf } from './champions';
 import { castThink } from './casterAi';
 import { chillScale, chillSlow, tickCold } from './cold';
@@ -97,6 +98,8 @@ function thinkOf(state: SimState, e: EnemyState, def: EnemyDef): [number, number
       return moteThink(state, e, def);
     case 'hound':
       return houndThink(state, e, def);
+    case 'golem':
+      return golemThink(state, e, def);
   }
 }
 
