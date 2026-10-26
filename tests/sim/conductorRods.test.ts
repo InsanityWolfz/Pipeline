@@ -68,15 +68,21 @@ describe('the rods', () => {
     expect(c.health).toBe(CONDUCTOR.maxHealth);
   });
 
-  it('a Burst hits each rod in reach, and the Conductor too if it’s in reach', () => {
+  it('a Burst hits each rod in reach, and the Conductor too if it’s in reach (068: once his storm shield is down)', () => {
     const { s, c } = spire();
     run(s, 1);
     const p = rodPoint(CROWN_SPIRE.startRod);
     blastArea(s, c.roomId, p.x, p.y, 30, 50, 'physical');
     expect(c.conductor.rods[CROWN_SPIRE.startRod]?.health).toBe(150);
     expect(c.health).toBe(CONDUCTOR.maxHealth);
+    // Six standing: the rod takes it, his shielded body blocks it.
     blastArea(s, c.roomId, (p.x + c.x) / 2, (p.y + c.y) / 2, 40, 50, 'physical');
     expect(c.conductor.rods[CROWN_SPIRE.startRod]?.health).toBe(100);
+    expect(c.health).toBe(CONDUCTOR.maxHealth);
+    // Two standing: both land.
+    for (const i of [0, 1, 2, 3, 4, 5].filter((r) => r !== CROWN_SPIRE.startRod).slice(0, 4)) hitRod(s, c, i, 200, PHYSICAL);
+    blastArea(s, c.roomId, (p.x + c.x) / 2, (p.y + c.y) / 2, 40, 50, 'physical');
+    expect(c.conductor.rods[CROWN_SPIRE.startRod]?.health).toBe(50);
     expect(c.health).toBe(CONDUCTOR.maxHealth - 50);
   });
 

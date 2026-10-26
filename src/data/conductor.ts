@@ -5,7 +5,7 @@ import { CONDUCTOR_XP } from './leveling';
 // The Conductor (064): the Stormcrown's boss, a robed storm construct with a rod staff in the Crown Spire, the design's
 // "evasive movement" boss. It stands at one of six arena rods and blinks between them, telegraphed by the target rod's
 // flash; a homing round follows it, and breaking rods leaves it fewer places to go (with fewer than 2 standing it is
-// grounded). It lashes a line at the player, calls lightning down on and round them, and runs lightning along the
+// grounded; 068: with 3 or more standing it is shielded, every hit on its body blocked). It lashes a line at the player, calls lightning down on and round them, and runs lightning along the
 // lines between its rods. All numbers are starting values from the spec, tuned in playtest; the ones the spec doesn't
 // give are marked (064's raised items).
 
@@ -24,6 +24,8 @@ export interface ConductorDef extends EnemyBase {
   homingRelock: true;
   /** Ticks with the player outside its arena before it goes home and heals (the Forgewright's rule). */
   leashTicks: number;
+  /** 068: the storm shield: while this many of its rods or more stand, every hit on its body is blocked (the Forgewright's plating's rule). */
+  shieldRods: number;
   /** The six arena rods: each a hurtbox (px, centred `offsetY` above its socket) and health; a broken one regrows after `regrowTicks`. */
   rods: { hurtbox: { w: number; h: number; offsetY: number }; health: number; regrowTicks: number };
   /** Every `everyTicks` it blinks to another standing rod (picked by the seeded rng, never its own), which flashes `warnTicks` first. With fewer than `minRods` standing it is grounded. */
@@ -56,6 +58,8 @@ export const CONDUCTOR: ConductorDef = {
   leashTicks: 300,
   // The spec's 200 health and 20 s regrowth; the box is 064's (raised).
   rods: { hurtbox: { w: 20, h: 60, offsetY: -30 }, health: 200, regrowTicks: 1200 },
+  // 068: shielded with 3 or more of its six rods standing.
+  shieldRods: 3,
   // The spec's 240 ticks (4 s) and 0.75 s flash; grounded below 2 standing rods.
   blink: { everyTicks: 240, warnTicks: 45, minRods: 2 },
   // The spec's 45-tick wind-up and 50 damage with knockback; its length, width, knock, hold, recovery and cooldown are 064's (raised).

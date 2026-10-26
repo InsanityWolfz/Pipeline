@@ -31,8 +31,8 @@ export function createBellows(enemyId: string): BellowsState[] {
   return def ? [0, 1].map(() => ({ health: def.bellows.health, patch: 0 })) : [];
 }
 
-/** True while its plating holds: the Forgewright, not venting. */
-export const plated = (e: Pick<EnemyState, 'enemyId' | 'vent'>): boolean => e.vent <= 0 && forgeDefOf(e) !== null;
+/** True while its plating holds: the Forgewright, not venting. Hits ask bossParts.ts's `plated`, which adds the Conductor's storm shield (068). */
+export const forgePlated = (e: Pick<EnemyState, 'enemyId' | 'vent'>): boolean => e.vent <= 0 && forgeDefOf(e) !== null;
 
 /** A bellows' ground point, px: 0 on its left as it faces, 1 on its right, `offset` px out square to its facing. */
 export function bellowsPoint(e: Pick<EnemyState, 'x' | 'y' | 'angle'>, def: ForgewrightDef, part: number): { x: number; y: number } {

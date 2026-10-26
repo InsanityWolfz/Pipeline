@@ -1,11 +1,18 @@
 import type { EnemyState, HitStyle } from './enemies';
-import { bellowsBox, bellowsPoint, forgeDefOf, hitPart as hitBellows, partAt as bellowsAt, partsNear as bellowsNear } from './forgewrightParts';
-import { conductorDefOf, hitRod, rodAt, rodBox, rodPoint, rodsNear, standing } from './conductorRods';
+import { bellowsBox, bellowsPoint, forgeDefOf, forgePlated, hitPart as hitBellows, partAt as bellowsAt, partsNear as bellowsNear } from './forgewrightParts';
+import { conductorDefOf, hitRod, rodAt, rodBox, rodPoint, rodsNear, standing, stormShielded } from './conductorRods';
 import type { SimState } from './state';
 
 // A boss's parts (064): the hit routing the Forgewright's bellows (060) and the Conductor's rods share. A round, a
 // Shard, a Burst in reach and a punch's arc find a part through here and hit it, before the body it belongs to;
 // each boss's own file says what a hit on its part does.
+
+/**
+ * The plating check every hit on a boss's body asks (060): true while its body blocks every hit (shots, Shards, Bursts,
+ * Bomblets, mines, punches, burn beats; Lightning arcs and spreading burns pass it by). The Forgewright not vented, or
+ * (068) the Conductor with its storm shield up.
+ */
+export const plated = (e: Pick<EnemyState, 'enemyId' | 'vent' | 'conductor'>): boolean => forgePlated(e) || stormShielded(e);
 
 /** A key for a part in an arrow's hit list (never an enemy id, which is never negative), so a piercing shot hits each part once. */
 export const partKey = (id: number, part: number): number => -(id * 8 + part) - 1;

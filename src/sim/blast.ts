@@ -1,7 +1,7 @@
 import type { DamageType } from '../data/ammo';
 import { damageEnemy, targetable, type EnemyState } from './enemies';
 import { chainFromBurst } from './lightning';
-import { plated } from './forgewrightParts';
+import { plated } from './bossParts';
 import { hitPart, partsNear } from './bossParts';
 import type { SimState } from './state';
 

@@ -11,7 +11,7 @@ import { fuseProgress } from './enemyBombs';
 import type { EnemyMode } from './enemies';
 import type { SimState } from './state';
 import { round } from './summaryParts';
-import { plated } from './forgewrightParts';
+import { plated } from './bossParts';
 import { grounded } from './conductorRods';
 import { degrees } from './summaryKinds';
 

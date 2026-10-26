@@ -8,7 +8,8 @@ import type { SimState } from './state';
 // has its own hurtbox and health, and takes the hits that land on it (a round's, a Shard's, a Burst's in reach, a
 // punch's), as the Forgewright's bellows do (060). A broken rod is shot through and regrows, whole, after
 // `regrowTicks`. The Conductor stands at one and blinks between the standing ones; with fewer than `minRods` standing,
-// it is grounded and can't blink.
+// it is grounded and can't blink. 068: with `shieldRods` or more standing, its storm shield blocks every hit on its body
+// (bossParts.ts's `plated`, the Forgewright's plating check).
 
 /** One rod: its health, and ticks left until it regrows (0 while standing). */
 export interface RodState {
@@ -71,6 +72,12 @@ export const standing = (e: Pick<EnemyState, 'conductor'>, rod: number): boolean
 
 /** How many of its rods stand. */
 export const standingRods = (e: Pick<EnemyState, 'conductor'>): number => e.conductor.rods.filter((r) => r.regrow <= 0).length;
+
+/** 068: its storm shield holds: the Conductor with `shieldRods` or more of its rods standing (every hit on its body blocked, as the Forgewright's plating). */
+export function stormShielded(e: Pick<EnemyState, 'enemyId' | 'conductor'>): boolean {
+  const def = conductorDefOf(e);
+  return def !== null && standingRods(e) >= def.shieldRods;
+}
 
 /** True while it can't blink: fewer than `minRods` of its rods stand. */
 export function grounded(e: Pick<EnemyState, 'enemyId' | 'conductor'>): boolean {

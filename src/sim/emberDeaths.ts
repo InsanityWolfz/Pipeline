@@ -4,7 +4,7 @@ import { boxHitsSolid } from './collision';
 import { roomById, type SimState } from './state';
 import { defOf } from './champions';
 import { aggro, createEnemy, damageEnemy, targetable, type EnemyState, type HitStyle } from './enemies';
-import { plated } from './forgewrightParts';
+import { plated } from './bossParts';
 
 // What the Emberworks' enemies do as they die (061), from removeDead (combat.ts): a killed cinder mote's death burst,
 // and a slag golem's split into whelps.

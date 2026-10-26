@@ -4,7 +4,7 @@ import { SPLIT } from '../data/tags';
 import { createShard, type ArrowState } from './arrows';
 import { aggro, damageEnemy, inHurtbox, targetable, type EnemyState, type HitStyle } from './enemies';
 import { recordBlock, shieldBlocks } from './shield';
-import { plated } from './forgewrightParts';
+import { plated } from './bossParts';
 import { hitPart, partAt, partKey } from './bossParts';
 import { onBossDeath } from './altar';
 import { killXp } from './leveling';
