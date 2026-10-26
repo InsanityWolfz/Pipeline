@@ -75,13 +75,17 @@ function ram(state: SimState, e: EnemyState, def: ChargerDef): [number, number] 
 
 /** Hits the player once per charge if their feet box touches its body (a circle half the lane's width round its feet), knocking them along the lane. */
 function strike(state: SimState, e: EnemyState, def: ChargerDef): void {
+  laneStrike(state, e, def.charge);
+}
+
+/** A lane run's strike (035, shared with 061's bellows hound): once per run, on a player whose feet box touches the runner's body. */
+export function laneStrike(state: SimState, e: EnemyState, lane: Pick<ChargerDef['charge'], 'width' | 'damage' | 'knockback' | 'knockTicks'>): void {
   if (e.struck || e.roomId !== state.roomId) return;
-  const { charge } = def;
   const p = state.player;
   const gapX = Math.max(0, Math.abs(p.x - e.x) - FEET_BOX.w / 2);
   const gapY = Math.max(0, Math.abs(p.y - e.y) - FEET_BOX.h / 2);
-  if (Math.hypot(gapX, gapY) > charge.width / 2) return;
-  if (damagePlayer(state, charge.damage, e.swipeDirX, e.swipeDirY, charge.knockback, charge.knockTicks)) e.struck = true;
+  if (Math.hypot(gapX, gapY) > lane.width / 2) return;
+  if (damagePlayer(state, lane.damage, e.swipeDirX, e.swipeDirY, lane.knockback, lane.knockTicks)) e.struck = true;
 }
 
 /** How far the charge has run down its lane, px (035: getState's lane). */

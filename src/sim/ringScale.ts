@@ -59,5 +59,7 @@ function scaleAttack(def: EnemyDef, base: Pick<EnemyDef, 'feetBox' | 'hurtbox' |
     // 061: its pool's beats and its death burst scale as its burst does.
     case 'mote':
       return { ...def, ...base, swell: { ...def.swell, damage: dmg(def.swell.damage) }, pool: { ...def.pool, damage: dmg(def.pool.damage) }, deathBurst: { ...def.deathBurst, damage: dmg(def.deathBurst.damage) } };
+    case 'hound':
+      return { ...def, ...base, dash: { ...def.dash, damage: dmg(def.dash.damage), speed: def.dash.speed * speed }, trail: { ...def.trail, damage: dmg(def.trail.damage) } };
   }
 }

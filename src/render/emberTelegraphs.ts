@@ -4,13 +4,19 @@ import type { EnemyDef } from '../data/enemies';
 import { EMBER_ENEMY_LOOK } from '../data/emberworksEnemyAssets';
 import type { EnemyState } from '../sim/enemies';
 import { colorOf } from './color';
+import { drawLane } from './hollowsTelegraphs';
 
 // The Emberworks enemies' telegraphs (061), all in the shared enemy red: a cinder mote's burst circle growing under it
-// as it swells. Returns whether the enemy was one of theirs.
+// as it swells; a bellows hound's lane, the Charger's. Returns whether the enemy was one of theirs.
 
 export function drawEmberTelegraph(g: GameObjects.Graphics, e: EnemyState, def: EnemyDef): boolean {
   if (def.kind === 'mote') {
     if (e.mode === 'windup') drawGrowingCircle(g, e.x, e.y, def.swell.radius, Math.min(1, e.modeTicks / def.swell.windupTicks));
+    return true;
+  }
+  // The hound's lane is the Charger's (035).
+  if (def.kind === 'hound') {
+    if (e.mode === 'windup') drawLane(g, e, def.dash.distance, def.dash.width, Math.min(1, e.modeTicks / def.dash.windupTicks));
     return true;
   }
   return false;

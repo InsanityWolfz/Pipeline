@@ -1,6 +1,7 @@
 import { charged } from './chargerAi';
 import { snipeLine, snipePhase, type SnipePhase } from './sniperAi';
 import { swellShown } from './moteAi';
+import { dashed } from './houndAi';
 import type { SimState } from './state';
 import { defOf } from './champions';
 import type { EnemyState } from './enemies';
@@ -48,5 +49,10 @@ export function kindSummary(state: SimState, e: EnemyState): KindSummary {
     out.snipe = { phase: snipePhase(state, e, def), line: line ? { x0: round(line.x0), y0: round(line.y0), x1: round(line.x1), y1: round(line.y1) } : null };
   }
   if (def.kind === 'mote') out.swell = swellShown(e, def);
+  // 061: a hound's lane, as the Charger's.
+  if (def.kind === 'hound') {
+    const showing = e.mode === 'windup' || e.mode === 'swipe';
+    out.lane = showing ? { x: round(e.spotX), y: round(e.spotY), dx: round(e.swipeDirX), dy: round(e.swipeDirY), length: def.dash.distance, width: def.dash.width, run: round(dashed(e, def)) } : null;
+  }
   return out;
 }

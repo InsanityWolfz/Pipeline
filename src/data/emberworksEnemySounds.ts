@@ -15,9 +15,10 @@ export const EMBERWORKS_ENEMY_SOUNDS = {
   tenderHum: 'tender-hum',
 } as const;
 
-/** Their wind-up cues, by enemy kind (joined into WINDUP_SOUNDS): the mote's swell. */
+/** Their wind-up cues, by enemy kind (joined into WINDUP_SOUNDS): the mote's swell, the Charger's snort for the hound. */
 export const EMBERWORKS_ENEMY_WINDUPS = {
   mote: EMBERWORKS_ENEMY_SOUNDS.moteSwell,
+  hound: 'charger-windup',
 } as const;
 
 export const EMBERWORKS_ENEMY_SOUND_RECIPES = {

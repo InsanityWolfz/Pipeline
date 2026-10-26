@@ -7,6 +7,7 @@ import { burrowThink } from './burrowerAi';
 import { shardThink } from './shardbackAi';
 import { snipeThink } from './sniperAi';
 import { moteThink } from './moteAi';
+import { houndThink } from './houndAi';
 import { defOf } from './champions';
 import { castThink } from './casterAi';
 import { chillScale, chillSlow, tickCold } from './cold';
@@ -94,6 +95,8 @@ function thinkOf(state: SimState, e: EnemyState, def: EnemyDef): [number, number
       return snipeThink(state, e, def);
     case 'mote':
       return moteThink(state, e, def);
+    case 'hound':
+      return houndThink(state, e, def);
   }
 }
 

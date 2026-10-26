@@ -50,6 +50,8 @@ function attackDamage(def: EnemyDef): number {
       return def.snipe.damage;
     case 'mote':
       return def.swell.damage;
+    case 'hound':
+      return def.dash.damage;
   }
 }
 

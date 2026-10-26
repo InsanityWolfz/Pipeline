@@ -4,9 +4,10 @@ import { enemyAnims } from './enemyAnims';
 // enemy red (ENEMY_FX.telegraphColor), the hazards they leave (drawn as 060's flood pools, smaller), and the
 // kiln-tender's beam in the kiln's orange. Palette ids, ms, world px, alphas 0..1.
 
-/** Their animation sets (joined into ENEMY_ANIMS): the mote's swell flickers over two frames. */
+/** Their animation sets (joined into ENEMY_ANIMS): the mote's swell flickers over two frames, and the hound's bellows heave as it plants. */
 export const EMBER_ENEMY_ANIMS = {
   'cinder-mote': enemyAnims('cinder-mote', false, [], 2),
+  'bellows-hound': enemyAnims('bellows-hound', true, [], 2),
 } as const;
 
 export const EMBER_ENEMY_LOOK = {

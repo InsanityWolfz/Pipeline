@@ -292,5 +292,7 @@ export function attackOf(def: EnemyDef): AttackTiming {
       return def.snipe;
     case 'mote':
       return def.swell;
+    case 'hound':
+      return def.dash;
   }
 }

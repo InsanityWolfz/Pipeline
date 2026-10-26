@@ -1,3 +1,4 @@
+import { TICK_RATE } from './config';
 import { REGION_3_PART } from './drops';
 import type { AttackTiming, DropTable, EnemyBase, ScreenLeashed } from './enemies';
 
@@ -27,8 +28,22 @@ export interface MoteDef extends EnemyBase, ScreenLeashed {
   deathBurst: { radius: number; damage: number };
 }
 
+/** A bellows hound: walks like the Charger (035), shows its lane, then dashes down it, leaving a burning trail. */
+export interface HoundDef extends EnemyBase, ScreenLeashed {
+  kind: 'hound';
+  /**
+   * The Charger's lane and ram (hollowsEnemies.ts' `charge`): with the player within `triggerRange` along a clear
+   * ground line and its cooldown ready, it winds up (`windupTicks`), the lane locked from its feet toward them,
+   * `distance` long and `width` wide, then dashes down it at `speed` px/s for at most `swipeTicks`, striking once a
+   * player its body touches. It stops at the lane's end or a wall (no stun, unlike the Charger) and recovers.
+   */
+  dash: AttackTiming & { triggerRange: number; distance: number; width: number; speed: number; damage: number; knockback: number; knockTicks: number };
+  /** The burning trail its dash leaves along the ground it covered, `width` wide, from the tick it sets off. */
+  trail: HazardDef & { width: number };
+}
+
 /** The Emberworks' enemies, as one union for EnemyDef. */
-export type EmberworksEnemyDef = MoteDef;
+export type EmberworksEnemyDef = MoteDef | HoundDef;
 
 /** The base fields they share, as the Hollows' (hollowsEnemies.ts). */
 const BASE = { boss: false, hitKnockTicks: 4, hitFlashTicks: 6, leashGraceTicks: 60, homeTolerance: 4 } as const;
@@ -74,4 +89,36 @@ export const CINDER_MOTE: MoteDef = {
   anims: 'cinder-mote',
 };
 
-export const EMBERWORKS_ENEMIES = { 'cinder-mote': CINDER_MOTE } as const;
+const DASH = { distance: 200, speed: 420 } as const;
+
+export const BELLOWS_HOUND: HoundDef = {
+  ...BASE,
+  kind: 'hound',
+  id: 'bellows-hound',
+  name: 'Bellows hound',
+  maxHealth: 45,
+  walkSpeed: 60,
+  feetBox: { w: 20, h: 10 },
+  hurtbox: { w: 28, h: 24, offsetY: -10 },
+  weight: 1 / 2,
+  dash: {
+    triggerRange: 220,
+    ...DASH,
+    width: 24,
+    windupTicks: 45,
+    // The run's length at full speed: the lane ends it, or a wall first.
+    swipeTicks: Math.ceil((DASH.distance / DASH.speed) * TICK_RATE),
+    recoverTicks: 40,
+    // Counted from the wind-up's start.
+    cooldownTicks: 180,
+    damage: 22,
+    knockback: 32,
+    knockTicks: 6,
+  },
+  trail: { width: 24, ticks: 180, damage: 8, everyTicks: 60 },
+  drops: EMBERWORKS_DROPS,
+  xp: 6,
+  anims: 'bellows-hound',
+};
+
+export const EMBERWORKS_ENEMIES = { 'cinder-mote': CINDER_MOTE, 'bellows-hound': BELLOWS_HOUND } as const;

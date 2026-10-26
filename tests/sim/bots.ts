@@ -93,6 +93,10 @@ function zoneOf(e: EnemyState, def: EnemyDef, left: (windup: number) => number):
     // 061: a mote's swell is its burst's circle round it.
     case 'mote':
       return e.mode === 'windup' ? { kind: 'circle', x: e.x, y: e.y, r: def.swell.radius, left: left(def.swell.windupTicks) } : null;
+    // 061: a hound's lane, as a Charger's.
+    case 'hound':
+      if (e.mode === 'windup') return { kind: 'lane', x: e.spotX, y: e.spotY, dirX: e.swipeDirX, dirY: e.swipeDirY, length: def.dash.distance, width: def.dash.width, left: left(def.dash.windupTicks) };
+      return e.mode === 'swipe' ? { kind: 'lane', x: e.x, y: e.y, dirX: e.swipeDirX, dirY: e.swipeDirY, length: def.dash.distance, width: def.dash.width + 8, left: 0 } : null;
     case 'caster':
       return null;
   }
