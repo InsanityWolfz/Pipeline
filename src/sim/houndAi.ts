@@ -1,10 +1,8 @@
-import { TICK_RATE } from '../data/config';
 import type { HoundDef } from '../data/emberworksEnemies';
 import { engage, enter, hold, inAggroBox, leash, startWindup, toward } from './aiCommon';
-import { laneStrike } from './chargerAi';
-import { boxHitsSolid } from './collision';
 import type { EnemyState } from './enemies';
 import { layPool } from './floodPools';
+import { laneRun } from './laneRun';
 import { clearGround } from './sightLine';
 import { roomById, type SimState } from './state';
 
@@ -46,22 +44,10 @@ export function houndThink(state: SimState, e: EnemyState, def: HoundDef): [numb
   return [0, 0];
 }
 
-/** One tick of the dash: the strike, the trail drawn up to its feet, then a wall or the lane's end stops it; otherwise the next step. */
+/** One tick of the dash: its trail drawn up to its feet, then the shared lane run (laneRun.ts), where a wall only ends it, with no stun. */
 function run(state: SimState, e: EnemyState, def: HoundDef): [number, number] {
-  const { dash } = def;
-  laneStrike(state, e, dash);
   extendTrail(state, e);
-  // A solid tile ahead ends the dash (a node only stops its feet, and it runs out its lane), with no stun.
-  const wall = e.modeTicks > 1 && e.bumped && boxHitsSolid(roomById(e.roomId), e.x + e.swipeDirX, e.y + e.swipeDirY, def.feetBox);
-  const step = dash.speed / TICK_RATE;
-  const travelled = (e.modeTicks - 1) * step;
-  if (wall || travelled >= dash.distance || e.modeTicks > dash.swipeTicks) {
-    enter(e, 'recover');
-    return [0, 0];
-  }
-  e.modeTicks += 1;
-  const go = Math.min(step, dash.distance - travelled);
-  return [e.swipeDirX * go, e.swipeDirY * go];
+  return laneRun(state, e, def.dash, def.feetBox, () => enter(e, 'recover'));
 }
 
 /** Its trail's far end follows its feet while it dashes. */
@@ -74,7 +60,3 @@ function extendTrail(state: SimState, e: EnemyState): void {
     return;
   }
 }
-
-/** How far the dash has run down its lane, px (getState's lane). */
-export const dashed = (e: Pick<EnemyState, 'mode' | 'modeTicks'>, def: HoundDef): number =>
-  e.mode === 'swipe' ? Math.min(def.dash.distance, (e.modeTicks - 1) * (def.dash.speed / TICK_RATE)) : 0;

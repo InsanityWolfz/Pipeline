@@ -60,14 +60,14 @@ function drawBeam(g: GameObjects.Graphics, e: EnemyState, sim: SimState, now: nu
     g.lineStyle(B.windupWidth, color, B.windupAlpha).lineBetween(x0, y0, x1, y1);
     return { target: t.id, channel };
   }
-  const flicker = 0.85 + 0.15 * Math.sin((now / B.flickerMs) * Math.PI * 2);
+  const flicker = B.flicker[0] + B.flicker[1] * Math.sin((now / B.flickerMs) * Math.PI * 2);
   g.lineStyle(B.width + B.glow, color, B.glowAlpha * flicker).lineBetween(x0, y0, x1, y1);
   g.lineStyle(B.width, color, B.alpha * flicker).lineBetween(x0, y0, x1, y1);
   g.lineStyle(B.coreWidth, colorOf(B.core), 1).lineBetween(x0, y0, x1, y1);
   const G = B.targetGlow;
   const pulse = (Math.sin((now / G.pulseMs) * Math.PI * 2) + 1) / 2;
   const r = G.radius * (t.champion ? CHAMPIONS.scale : 1) * Math.max(1, tdef.hurtbox.w / (G.radius * 2));
-  g.fillStyle(colorOf(G.color), G.alpha[0] + (G.alpha[1] - G.alpha[0]) * pulse).fillEllipse(x1, y1, r * 2, r * 1.6);
+  g.fillStyle(colorOf(G.color), G.alpha[0] + (G.alpha[1] - G.alpha[0]) * pulse).fillEllipse(x1, y1, r * 2, r * 2 * G.squash);
   return { target: t.id, channel };
 }
 

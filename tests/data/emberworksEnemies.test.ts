@@ -32,6 +32,18 @@ describe("the Emberworks' enemies", () => {
     for (const def of ALL) expect(ENEMY_CHOICES, def.id).toContain(def.id);
   });
 
+  it("a golem's split rises as a known enemy, never a boss or a golem", () => {
+    const golems = ALL.filter((d) => d.kind === 'golem');
+    expect(golems.length).toBeGreaterThan(0);
+    for (const def of golems) {
+      if (def.kind !== 'golem') continue;
+      const into = ENEMIES[def.split.into];
+      expect(into, def.id).toBeDefined();
+      expect(into?.boss, def.id).toBe(false);
+      expect(into?.kind, def.id).not.toBe('golem');
+    }
+  });
+
   it('each telegraphs for at least MIN_TELEGRAPH_TICKS', () => {
     for (const def of ALL) expect(attackOf(def).windupTicks, def.id).toBeGreaterThanOrEqual(MIN_TELEGRAPH_TICKS);
   });

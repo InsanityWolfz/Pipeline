@@ -20,7 +20,18 @@ export const EMBER_ENEMY_LOOK = {
    * The hazards (a mote's pool, a hound's trail): 060's flood pools' molten sheet (FORGE_LOOK.pools' colours), with
    * tongues of flame every `tongueEvery` px round their edge, `tongue` px tall, the last `fadeTicks` fading out.
    */
-  hazard: { tongueEvery: 14, tongue: 3, edgeWidth: 1.5, fadeTicks: 30 },
+  hazard: {
+    tongueEvery: 14,
+    tongue: 3,
+    edgeWidth: 1.5,
+    fadeTicks: 30,
+    /** The bright edge's alpha, and the tongues' (both times the fade). */
+    edgeAlpha: 0.9,
+    tongueAlpha: 0.7,
+    /** A circle's tongues: at least `minTongues` round it, set in at `tongueInset` of its radius. */
+    minTongues: 3,
+    tongueInset: 0.8,
+  },
   /**
    * The kiln-tender's beam, in the kiln's orange (not the enemy red: it never hurts the player), from its nozzle (per
    * view from its feet, side facing right) to its target's body: thin and faint through the wind-up, then a glowing
@@ -38,8 +49,11 @@ export const EMBER_ENEMY_LOOK = {
     glowAlpha: 0.3,
     coreWidth: 1,
     flickerMs: 90,
+    /** The channel's flicker: its glow and beam alpha swing between `flicker[0] - flicker[1]` and `flicker[0] + flicker[1]` of theirs. */
+    flicker: [0.85, 0.15] as const,
     nozzle: { side: [17, -30] as const, down: [12, -34] as const, up: [12, -34] as const },
-    targetGlow: { color: 'cinder', radius: 16, alpha: [0.22, 0.42] as const, pulseMs: 520 },
+    /** The target's glow: an ellipse of half-width `radius` px (at least half its hurtbox's width), `squash` × as tall as wide. */
+    targetGlow: { color: 'cinder', radius: 16, alpha: [0.22, 0.42] as const, pulseMs: 520, squash: 0.8 },
     hoverLine: 'Being repaired',
   },
 } as const;

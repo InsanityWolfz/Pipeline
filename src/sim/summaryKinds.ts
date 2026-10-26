@@ -1,7 +1,6 @@
-import { charged } from './chargerAi';
 import { snipeLine, snipePhase, type SnipePhase } from './sniperAi';
 import { swellShown } from './moteAi';
-import { dashed } from './houndAi';
+import { laneRunDone, type LaneDef } from './laneRun';
 import { slamShown } from './golemAi';
 import { beamShown } from './tenderAi';
 import type { SimState } from './state';
@@ -40,12 +39,7 @@ export function kindSummary(state: SimState, e: EnemyState): KindSummary {
   const def = defOf(e);
   const out: KindSummary = {};
   if (def.shield) out.angle = degrees(e.angle);
-  if (def.kind === 'charger') {
-    const showing = e.mode === 'windup' || e.mode === 'swipe';
-    out.lane = showing
-      ? { x: round(e.spotX), y: round(e.spotY), dx: round(e.swipeDirX), dy: round(e.swipeDirY), length: def.charge.distance, width: def.charge.width, run: round(charged(e, def)) }
-      : null;
-  }
+  if (def.kind === 'charger') out.lane = laneShown(e, def.charge);
   if (def.kind === 'burrower') {
     out.underground = e.underground;
     out.locked = e.mode === 'windup' || e.mode === 'swipe' ? { x: round(e.spotX), y: round(e.spotY), radius: def.burrow.radius } : null;
@@ -58,9 +52,12 @@ export function kindSummary(state: SimState, e: EnemyState): KindSummary {
   if (def.kind === 'golem') out.slam = slamShown(e, def);
   if (def.kind === 'tender') out.beam = beamShown(e);
   // 061: a hound's lane, as the Charger's.
-  if (def.kind === 'hound') {
-    const showing = e.mode === 'windup' || e.mode === 'swipe';
-    out.lane = showing ? { x: round(e.spotX), y: round(e.spotY), dx: round(e.swipeDirX), dy: round(e.swipeDirY), length: def.dash.distance, width: def.dash.width, run: round(dashed(e, def)) } : null;
-  }
+  if (def.kind === 'hound') out.lane = laneShown(e, def.dash);
   return out;
+}
+
+/** A lane runner's lane while it winds up or runs (the Charger's, the hound's), else null. */
+function laneShown(e: EnemyState, lane: Pick<LaneDef, 'distance' | 'width' | 'speed'>): NonNullable<KindSummary['lane']> | null {
+  if (e.mode !== 'windup' && e.mode !== 'swipe') return null;
+  return { x: round(e.spotX), y: round(e.spotY), dx: round(e.swipeDirX), dy: round(e.swipeDirY), length: lane.distance, width: lane.width, run: round(laneRunDone(e, lane)) };
 }

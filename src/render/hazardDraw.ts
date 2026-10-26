@@ -34,18 +34,18 @@ export function drawHazard(g: GameObjects.Graphics, p: FloodPool, now: number): 
   };
   g.fillStyle(colorOf(P.color), alpha);
   body();
-  g.lineStyle(H.edgeWidth, colorOf(P.bright), 0.9 * fade);
+  g.lineStyle(H.edgeWidth, colorOf(P.bright), H.edgeAlpha * fade);
   if (len <= 0) g.strokeCircle(p.x0, p.y0, p.r);
   else {
     g.lineBetween(p.x0 + nx, p.y0 + ny, p.x1 + nx, p.y1 + ny);
     g.lineBetween(p.x0 - nx, p.y0 - ny, p.x1 - nx, p.y1 - ny);
   }
   // Tongues of flame rising off it, every `tongueEvery` px along it (round a circle's rim), flickering out of step.
-  g.fillStyle(colorOf(P.light), 0.7 * fade);
+  g.fillStyle(colorOf(P.light), H.tongueAlpha * fade);
   const spots: { x: number; y: number }[] = [];
   if (len <= 0) {
-    const n = Math.max(3, Math.round((2 * Math.PI * p.r) / H.tongueEvery));
-    for (let i = 0; i < n; i++) spots.push({ x: p.x0 + Math.cos((i / n) * Math.PI * 2) * p.r * 0.8, y: p.y0 + Math.sin((i / n) * Math.PI * 2) * p.r * 0.8 });
+    const n = Math.max(H.minTongues, Math.round((2 * Math.PI * p.r) / H.tongueEvery));
+    for (let i = 0; i < n; i++) spots.push({ x: p.x0 + Math.cos((i / n) * Math.PI * 2) * p.r * H.tongueInset, y: p.y0 + Math.sin((i / n) * Math.PI * 2) * p.r * H.tongueInset });
   } else {
     for (let d = 0; d <= len; d += H.tongueEvery) spots.push({ x: p.x0 + (dx / len) * d, y: p.y0 + (dy / len) * d });
   }
