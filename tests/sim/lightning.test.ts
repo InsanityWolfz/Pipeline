@@ -135,4 +135,25 @@ describe('the chain', () => {
     ]);
     expect(outer.health).toBeLessThan(10_000);
   });
+
+  it('each lightning Bomblet chains once, from the enemy nearest its centre, however many it hit', () => {
+    const s = arena();
+    s.inventory = { 'bomb+lightning+cluster': 2 };
+    const centre = { x: PLAYER_AT.x + 120, y: PLAYER_AT.y };
+    // Out of the bomb's own Burst (48 px). The Bomblet 40 px on along the flight hits two; the one 40 px clockwise
+    // (below) hits one. Each starts one chain of two arcs: four arcs, not six.
+    const e1 = still(s, centre.x + 52, centre.y);
+    const e2 = still(s, centre.x + 58, centre.y + 4);
+    const e3 = still(s, centre.x, centre.y + 52);
+    hold(s, 'bomb');
+    run(s, 1, fireAt(centre.x, centre.y));
+    runUntil(s, () => s.events.bombletBursts.length > 0, 120);
+    expect(s.events.bombletBursts.every((b) => b.damageType === 'lightning')).toBe(true);
+    // Two chains: the first Bomblet's from e1 (nearest its centre; e2, hit too, starts none), the second's from e3.
+    const arcs = s.events.arcs;
+    expect(s.events.hits.some((h) => h.target === 'enemy' && h.id === e2.id && !h.arc)).toBe(true);
+    expect(arcs).toHaveLength(4);
+    expect([arcs[0]?.from, arcs[2]?.from]).toEqual([e1.id, e3.id]);
+    expect([arcs[1]?.from, arcs[3]?.from]).toEqual([arcs[0]?.to, arcs[2]?.to]);
+  });
 });

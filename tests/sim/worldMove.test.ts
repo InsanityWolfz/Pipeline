@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
+import { EMBERWORKS } from '../../src/data/emberworks';
+import { ROAD_DEFS, ROADS } from '../../src/data/roads';
+import { STORMCROWN, stormRampTiles } from '../../src/data/stormcrown';
 import { WORLD_SHAPE, WORLD_SHIFT } from '../../src/data/worldShape';
+import { nearRoads } from '../../src/sim/genGrid';
+import GROUND from './worldGround.json';
 import SNAPSHOT from './worldOffsets.json';
-import { worldOffsets } from './worldOffsets';
+import { groundRows, hash, SPAN, worldOffsets } from './worldOffsets';
 
 // 060 slice 1: the world grows to fit the Emberworks, and the centre moves to the grid's middle. The move is pure:
 // every landmark, node, pack, road, ley line, pylon and arena tile keeps its offset from the foundry's door, taken
@@ -55,5 +60,30 @@ describe('the world grows (060, 064)', () => {
     // Stormcrown's roads and ramps cross the Emberworks, whose generator keeps off roads, so its ground is held to them.
     expect(now.region1Ground).toEqual(SNAPSHOT.region1Ground);
     expect(now.hollowsGround).toEqual(SNAPSHOT.hollowsGround);
+  });
+
+  it('changes the Emberworks\' ground only within roadClear of the Stormcrown\'s new roads and ramps (064)', () => {
+    // worldGround.json is the snapshot's `ground` itself, row by row (taken at slice 1, after the move, before slice 2).
+    expect(hash(GROUND.rows.join('\n'))).toBe(SNAPSHOT.ground.hash);
+    const size = WORLD_SHAPE.size;
+    const k = STORMCROWN.roadClear;
+    const old = new Set(SNAPSHOT.roads.map((r) => r.id));
+    const near = nearRoads(ROADS.filter((_, i) => !old.has(ROAD_DEFS[i]?.id ?? '')), k, size);
+    for (const t of STORMCROWN.ramps.flatMap(stormRampTiles)) for (let ty = t.ty - k; ty <= t.ty + k; ty++) for (let tx = t.tx - k; tx <= t.tx + k; tx++) near.add(ty * size + tx);
+    const now = groundRows(EMBERWORKS.radii.outer - 1);
+    const { tx: cx, ty: cy } = WORLD_SHAPE.centre;
+    const changed: string[] = [];
+    const stray: string[] = [];
+    GROUND.rows.forEach((row, j) => {
+      for (let i = 0; i < row.length; i++) {
+        if (now[j]?.[i] === row[i]) continue;
+        const tx = cx - SPAN + i;
+        const ty = cy - SPAN + j;
+        changed.push(`${tx},${ty}`);
+        if (!near.has(ty * size + tx)) stray.push(`(${tx}, ${ty}): ${now[j]?.[i] ?? '?'}, was ${row[i] ?? '?'}`);
+      }
+    });
+    expect(changed.length).toBeGreaterThan(0);
+    expect(stray).toEqual([]);
   });
 });

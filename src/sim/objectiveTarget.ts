@@ -137,7 +137,7 @@ export function targetPoints(state: SimState, target: TargetDef, goal: number): 
       return [{ roomId: OVERWORLD_ROOM, ...tileBase(HOLLOWS.crossing), kind: k }];
     case 'ramps': {
       // 060: the top of each ramp, where its barrier stands across it (the nearest is the arrow's); 064: the Stormcrown's.
-      const region = target.region === 4 ? STORMCROWN : EMBERWORKS;
+      const region = target.region === STORMCROWN.region ? STORMCROWN : EMBERWORKS;
       return region.ramps.map((r) => ({ roomId: OVERWORLD_ROOM, ...tileBase(polar(r.bearing, region.ramp.gateAt)), kind: k }));
     }
     case 'boss': {

@@ -42,8 +42,8 @@ export const USE_REACH = 12;
 export const HOVER_USE_REACH = 3 * TILE_SIZE;
 
 /**
- * The foundry intake (019): the waterslide pipe built into the north wall. Its mouth is four wall tiles (060: was
- * three), each an entrance (024) with its own reservoir, fed from the floor tile directly south of it. Only tx 12
+ * The foundry intake (019): the waterslide pipe built into the north wall. Its mouth is five wall tiles (was three;
+ * 060: four; 064: five), each an entrance (024) with its own reservoir, fed from the floor tile directly south of it. Only tx 12
  * starts open; the others are capped until each is restored (033: a boss core apiece; 060: the fourth, east at tx 14,
  * a Forgewright core; 064: the fifth, at tx 15, a Conductor core). `lane`: its place in a volley's fan, west to east (048). `gaugeRings`: how many rings of each
  * entrance's gauge light as it fills; a ring of light runs up the pipe for `pulseMs` after each item.

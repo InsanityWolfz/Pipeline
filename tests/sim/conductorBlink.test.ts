@@ -1,22 +1,23 @@
 import { describe, expect, it } from 'vitest';
+import { FOUNDRY_ROOM } from '../../src/data/rooms';
 import { CROWN_SPIRE, standPoint } from '../../src/data/stormcrownSites';
 import { hitRod } from '../../src/sim/conductorRods';
-import type { EnemyState } from '../../src/sim/enemies';
+import { createEnemy, type EnemyState } from '../../src/sim/enemies';
 import type { SimState } from '../../src/sim/state';
 import { lines } from './builds';
-import { movePlayer, run, volleyAt } from './fight';
-import { CONDUCTOR, spire, topUp } from './spire';
+import { movePlayer, placeHusk, run, volleyAt } from './fight';
+import { CONDUCTOR, spire, SPIRE_MIDDLE, topUp } from './spire';
 
 // The Conductor's blink (064): every 240 ticks (150 enraged) it picks another standing rod by the seeded rng, never
 // its own; that rod's 45-tick warning, then it vanishes and appears there. Shots at its old place miss; a homing round
-// locked on it follows, and one with no target re-locks onto it within its lock radius. Grounded (fewer than 2
-// standing rods), it can't blink until one regrows.
+// locked on it follows, and one that has lost its target re-locks onto the nearest within its lock radius (one that
+// never locked flies straight). Grounded (fewer than 2 standing rods), it can't blink until one regrows.
 
 const PHYSICAL = { knock: 0, flash: true, damageType: 'physical' } as const;
 
 /** Its attacks held off, so only its blink runs. */
 const noAttacks = (c: EnemyState): void => {
-  c.attackCooldowns = [1e6, 1e6, 1e6];
+  c.conductor.attackCooldowns = [1e6, 1e6, 1e6];
 };
 
 /** A tick's command that keeps the player up. */
@@ -37,7 +38,7 @@ describe('the blink', () => {
       if (s.events.blinkWarns.length > 0) warnedAt = t;
     }
     expect(warnedAt).toBeGreaterThanOrEqual(CONDUCTOR.blink.everyTicks - 2);
-    const to = c.blinkTo;
+    const to = c.conductor.blinkTo;
     expect(to).not.toBe(CROWN_SPIRE.startRod);
     expect(to).toBeGreaterThanOrEqual(0);
     run(s, CONDUCTOR.blink.warnTicks - 1, safe);
@@ -45,7 +46,7 @@ describe('the blink', () => {
     run(s, 1, safe);
     expect(s.events.blinks).toEqual([expect.objectContaining({ id: c.id, rod: to })]);
     expect({ x: c.x, y: c.y }).toEqual(standPoint(to));
-    expect([c.rod, c.blinkTo]).toEqual([to, -1]);
+    expect([c.conductor.rod, c.conductor.blinkTo]).toEqual([to, -1]);
   });
 
   it('never picks its own rod or a broken one; the pick is the seed’s, the same twice', () => {
@@ -56,7 +57,7 @@ describe('the blink', () => {
       for (const i of [0, 2]) hitRod(s, c, i, 200, PHYSICAL);
       const out: number[] = [];
       for (let t = 0; t < 1100; t++) {
-        const own = c.rod;
+        const own = c.conductor.rod;
         run(s, 1, safe);
         for (const w of s.events.blinkWarns) {
           expect(w.rod).not.toBe(own);
@@ -106,13 +107,13 @@ describe('the blink', () => {
     const { s, c } = spire();
     noAttacks(c);
     run(s, 1);
-    c.blinkCooldown = 1;
+    c.conductor.blinkCooldown = 1;
     run(s, 1, safe);
-    const first = c.blinkTo;
+    const first = c.conductor.blinkTo;
     expect(first).toBeGreaterThanOrEqual(0);
     hitRod(s, c, first, 200, PHYSICAL);
     run(s, 1, safe);
-    expect(c.blinkTo).not.toBe(first);
+    expect(c.conductor.blinkTo).not.toBe(first);
     expect(s.events.blinkWarns).toHaveLength(1);
   });
 });
@@ -127,10 +128,10 @@ describe('shots and the blink', () => {
     const at = { x: c.x, y: c.y };
     movePlayer(s, at.x - 200, at.y - 40);
     run(s, 1, volleyAt(at.x, at.y - 24 - 40 / 5));
-    c.blinkTo = 2;
-    c.blinkWarn = 1;
+    c.conductor.blinkTo = 2;
+    c.conductor.blinkWarn = 1;
     run(s, 40, safe);
-    expect(c.rod).toBe(2);
+    expect(c.conductor.rod).toBe(2);
     expect(c.health).toBe(CONDUCTOR.maxHealth);
   });
 
@@ -143,14 +144,14 @@ describe('shots and the blink', () => {
     run(s, 1, volleyAt(c.x, c.y));
     const bolt = s.arrows[0];
     expect(bolt?.targetId).toBe(c.id);
-    c.blinkTo = 4;
-    c.blinkWarn = 1;
+    c.conductor.blinkTo = 4;
+    c.conductor.blinkWarn = 1;
     run(s, 1, safe);
-    expect(c.rod).toBe(4);
+    expect(c.conductor.rod).toBe(4);
     expect(s.arrows[0]?.targetId).toBe(c.id);
   });
 
-  it('a homing round with no target re-locks onto it when it comes within its lock radius', () => {
+  it('a homing round that never locked flies straight past it: no re-lock', () => {
     const { s, c } = spire();
     lines(s, 'ley-bolt+homing');
     noAttacks(c);
@@ -159,11 +160,49 @@ describe('shots and the blink', () => {
     movePlayer(s, c.x - 130, c.y - 40);
     run(s, 1, volleyAt(c.x + 400, c.y - 40));
     expect(s.arrows[0]?.targetId).toBeNull();
-    let locked = false;
-    for (let t = 0; t < 120 && !locked && s.arrows.length > 0; t++) {
+    for (let t = 0; t < 120 && s.arrows.length > 0; t++) {
       run(s, 1, safe);
-      locked = s.arrows[0]?.targetId === c.id;
+      expect(s.arrows[0]?.targetId ?? null).toBeNull();
     }
-    expect(locked).toBe(true);
+  });
+
+  /** A homing round fired at a Husk beside the spire's middle, locked on it, then the Husk gone: a lost target. */
+  const lostBolt = () => {
+    const { s, c } = spire();
+    lines(s, 'ley-bolt+homing');
+    noAttacks(c);
+    run(s, 1);
+    const husk = placeHusk(s, SPIRE_MIDDLE.x, SPIRE_MIDDLE.y + 40);
+    run(s, 1, volleyAt(husk.x, husk.y));
+    const bolt = s.arrows[0];
+    if (!bolt) throw new Error('no bolt');
+    expect(bolt.targetId).toBe(husk.id);
+    s.enemies = s.enemies.filter((e) => e !== husk);
+    return { s, c, bolt };
+  };
+
+  it('a homing round that lost its target re-locks onto it when it comes within its lock radius', () => {
+    const { s, c, bolt } = lostBolt();
+    // Set 30 px below its feet, flying away from it: clear of its hurtbox and its rods.
+    Object.assign(bolt, { x: c.x, y: c.y + 30, dx: 0, dy: 1 });
+    run(s, 1, safe);
+    expect(s.arrows[0]?.targetId).toBe(c.id);
+  });
+
+  it('re-locks onto the nearest Conductor in reach, not the first in the list', () => {
+    const { s, c, bolt } = lostBolt();
+    const far = createEnemy(s.nextEnemyId++, 'conductor', { x: c.x + 50, y: c.y + 30 }, c.roomId, c.group);
+    s.enemies.unshift(far);
+    Object.assign(bolt, { x: c.x, y: c.y + 30, dx: 0, dy: 1 });
+    run(s, 1, safe);
+    expect(s.arrows[0]?.targetId).toBe(c.id);
+  });
+
+  it('re-locks only in the player’s room', () => {
+    const { s, c, bolt } = lostBolt();
+    Object.assign(bolt, { x: c.x, y: c.y + 30, dx: 0, dy: 1 });
+    s.roomId = FOUNDRY_ROOM;
+    run(s, 1, safe);
+    expect(s.arrows[0]?.targetId ?? null).toBeNull();
   });
 });

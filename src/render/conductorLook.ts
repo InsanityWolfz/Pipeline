@@ -16,11 +16,11 @@ export type ConductorPose = 'idle' | 'windup' | 'swipe' | 'recover' | 'hit' | 'b
 
 /** Its pose for its attack and mode. */
 export function conductorPose(e: EnemyState): ConductorPose {
-  if (e.blinkTo >= 0) return 'blink';
-  if (e.attack >= 0 && e.mode === 'recover') return 'recover';
-  if (e.attack === 0 && (e.mode === 'windup' || e.mode === 'swipe')) return e.mode;
-  if (e.attack === 1 && (e.mode === 'windup' || e.mode === 'swipe')) return 'call';
-  if (e.attack === 2 && (e.mode === 'windup' || e.mode === 'swipe')) return 'chain';
+  if (e.conductor.blinkTo >= 0) return 'blink';
+  if (e.conductor.attack >= 0 && e.mode === 'recover') return 'recover';
+  if (e.conductor.attack === 0 && (e.mode === 'windup' || e.mode === 'swipe')) return e.mode;
+  if (e.conductor.attack === 1 && (e.mode === 'windup' || e.mode === 'swipe')) return 'call';
+  if (e.conductor.attack === 2 && (e.mode === 'windup' || e.mode === 'swipe')) return 'chain';
   return e.flash > 0 ? 'hit' : 'idle';
 }
 
@@ -34,11 +34,11 @@ function band(g: GameObjects.Graphics, s: { x0: number; y0: number; x1: number; 
 /** Draws its telegraph for the frame: the lash's line or the chain's lines through their wind-ups. */
 export function drawConductorTelegraph(g: GameObjects.Graphics, e: EnemyState, def: ConductorDef): void {
   if (e.mode !== 'windup') return;
-  if (e.attack === 0) {
+  if (e.conductor.attack === 0) {
     const L = CONDUCTOR_LOOK.lash;
     band(g, lashLine(e, def), def.lash.width, Math.min(1, e.modeTicks / def.lash.windupTicks), L.alpha, L.fillAlpha);
   }
-  if (e.attack === 2) {
+  if (e.conductor.attack === 2) {
     const C = CONDUCTOR_LOOK.chain;
     const k = Math.min(1, e.modeTicks / def.chain.windupTicks);
     for (const s of chainSegments(e)) band(g, s, def.chain.width, k, C.alpha, C.fillAlpha);

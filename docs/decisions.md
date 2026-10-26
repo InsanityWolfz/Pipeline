@@ -271,3 +271,10 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - The tier multiplier is a rule step on the emission (`Emission.tier`, `ruleMuls`), set on rounds, Split Shards and Bomblets only, so every hit gets it once; Pool-bursts, Shatter shards and burn derive from an already-multiplied hit. Never in `damageEnemy`, which melee and burn beats also pass through.
   - Machines can list recipe `variants`; `offer` accepts any variant's input, a craft picks the first full set by input order, and `machineRecipe` resolves from `made`, so hover, status and objectives agree.
 
+- **064 the Stormcrown:**
+  - Boss parts (the Forgewright's bellows, the Conductor's rods) share `src/sim/bossParts.ts`: hits route to a part's hurtbox before the body in strike, blastArea and melee.
+  - Lightning arcs are hits with `HitStyle.arc` through `damageEnemy` only, so they never arc again, Split or trigger keystones; a Burst or Bomblet starts one chain, from the enemy nearest its centre.
+  - Telegraphed strike circles (the storm call) live in `src/sim/strikes.ts` for reuse.
+  - A homing round that locked at launch re-locks onto the nearest Conductor in the player's room after a blink; rounds that never locked fly straight.
+  - The world's ground is pinned row by row (`tests/sim/worldGround.json`) as well as by offsets, so a world growth proves it moved nothing.
+

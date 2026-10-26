@@ -98,9 +98,9 @@ export class ConductorView {
     this.bars.clear();
     const rods = c && def ? this.drawRods(c, def) : this.idleRods(shown === OVERWORLD_ROOM);
     const strikes = this.drawStrikes(sim, shown);
-    const chain = c !== undefined && c.attack === 2 && c.mode === 'swipe';
+    const chain = c !== undefined && c.conductor.attack === 2 && c.mode === 'swipe';
     if (c && chain) this.drawChain(c);
-    if (c && c.blinkTo >= 0) this.drawTarget(c.blinkTo);
+    if (c && c.conductor.blinkTo >= 0) this.drawTarget(c.conductor.blinkTo);
     this.drawFlashes();
     const here = shown === OVERWORLD_ROOM;
     const state = here ? altarState(sim, CROWN_SPIRE.altar.id) : null;
@@ -110,7 +110,7 @@ export class ConductorView {
     if (!summoning && this.shownState.summonCircle) this.riseMs = HOLLOWS_LOOK.summon.riseMs;
     this.riseMs = Math.max(0, this.riseMs - deltaMs);
     this.drawSummon(summoning ? (sim.summoning?.ticks ?? 0) / CROWN_SPIRE.summonTicks : null);
-    this.shownState = { rods, target: c?.blinkTo ?? -1, strikes, chain, bolts: this.flashes.length, altar: state, summonCircle: summoning };
+    this.shownState = { rods, target: c?.conductor.blinkTo ?? -1, strikes, chain, bolts: this.flashes.length, altar: state, summonCircle: summoning };
   }
 
   private lifeOf(kind: Flash['kind']): number {
@@ -138,7 +138,7 @@ export class ConductorView {
   /** The six rods at their sockets, and each one's small bar once hurt. */
   private drawRods(c: EnemyState, def: ConductorDef): RodLook[] {
     const B = L.rod.bar;
-    return c.rods.map((r, i) => {
+    return c.conductor.rods.map((r, i) => {
       const look = lookOf(r.regrow);
       const sprite = this.rods[i];
       if (sprite) {

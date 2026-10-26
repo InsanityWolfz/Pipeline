@@ -119,8 +119,8 @@ function zoneOf(e: EnemyState, def: EnemyDef, left: (windup: number) => number):
       return null;
     // 064: the Conductor's lash, a lane from its rod (its chain's lines and the storm call's circles are in dangerZones).
     case 'conductor': {
-      if (e.attack !== 0 || e.mode !== 'windup') return null;
-      const o = rodPoint(e.rod);
+      if (e.conductor.attack !== 0 || e.mode !== 'windup') return null;
+      const o = rodPoint(e.conductor.rod);
       return { kind: 'lane', x: o.x, y: o.y, dirX: e.swipeDirX, dirY: e.swipeDirY, length: def.lash.length, width: def.lash.width, left: left(def.lash.windupTicks) };
     }
   }
@@ -143,7 +143,7 @@ export function dangerZones(s: SimState): Zone[] {
   // 064: the Conductor's rod chain (each line a lane, through its wind-up and its lightning) and the storm call's circles.
   for (const e of s.enemies) {
     const def = defOf(e);
-    if (def.kind !== 'conductor' || e.attack !== 2 || e.roomId !== s.roomId || e.mode === 'recover') continue;
+    if (def.kind !== 'conductor' || e.conductor.attack !== 2 || e.roomId !== s.roomId || e.mode === 'recover') continue;
     const left = e.mode === 'windup' ? Math.max(0, def.chain.windupTicks - e.modeTicks) : 0;
     for (const g of chainSegments(e)) {
       const len = Math.hypot(g.x1 - g.x0, g.y1 - g.y0) || 1;

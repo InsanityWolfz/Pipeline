@@ -25,7 +25,7 @@ const safe = (s: SimState): Record<string, never> => {
 describe('the rods', () => {
   it('stand at the six sockets, a hexagon round the middle, each with 200 health', () => {
     const { c } = spire();
-    expect(c.rods).toHaveLength(6);
+    expect(c.conductor.rods).toHaveLength(6);
     expect(CROWN_SPIRE.sockets).toHaveLength(6);
     for (const [i, p] of CROWN_SPIRE.sockets.entries()) {
       expect(Math.round(Math.hypot(p.x - SPIRE_MIDDLE.x, p.y - SPIRE_MIDDLE.y))).toBe(192);
@@ -34,24 +34,24 @@ describe('the rods', () => {
       expect(rodAt(c, box.x, box.y)).toBe(i);
       expect(partAt(c, box.x, box.y)).toBe(i);
     }
-    expect(c.rods.every((r) => r.health === 200)).toBe(true);
+    expect(c.conductor.rods.every((r) => r.health === 200)).toBe(true);
   });
 
   it('take a hit for their own health, not the Conductor’s; at 0 a rod breaks, is shot through, and regrows after 1200 ticks', () => {
     const { s, c } = spire();
     run(s, 1);
     hitRod(s, c, 0, 150, PHYSICAL);
-    expect([c.rods[0]?.health, c.health]).toEqual([50, CONDUCTOR.maxHealth]);
+    expect([c.conductor.rods[0]?.health, c.health]).toEqual([50, CONDUCTOR.maxHealth]);
     expect(s.events.hits).toContainEqual(expect.objectContaining({ id: c.id, damage: 150, part: 0 }));
     hitRod(s, c, 0, 60, PHYSICAL);
-    expect(c.rods[0]).toEqual({ health: 0, regrow: 1200 });
+    expect(c.conductor.rods[0]).toEqual({ health: 0, regrow: 1200 });
     expect(s.events.rodBreaks).toEqual([expect.objectContaining({ id: c.id, rod: 0 })]);
     const box = rodBox(CONDUCTOR, 0);
     expect(rodAt(c, box.x, box.y)).toBeNull();
     run(s, 1199, safe);
-    expect(c.rods[0]?.regrow).toBe(1);
+    expect(c.conductor.rods[0]?.regrow).toBe(1);
     run(s, 1, safe);
-    expect(c.rods[0]).toEqual({ health: 200, regrow: 0 });
+    expect(c.conductor.rods[0]).toEqual({ health: 200, regrow: 0 });
   });
 
   it('a straight shot at a rod hits the rod, not the Conductor', () => {
@@ -64,7 +64,7 @@ describe('the rods', () => {
     s.player.health = 100;
     run(s, 1, volleyAt(box.x, box.y));
     run(s, 40, () => ({}));
-    expect(c.rods[3]?.health).toBeLessThan(200);
+    expect(c.conductor.rods[3]?.health).toBeLessThan(200);
     expect(c.health).toBe(CONDUCTOR.maxHealth);
   });
 
@@ -73,10 +73,10 @@ describe('the rods', () => {
     run(s, 1);
     const p = rodPoint(CROWN_SPIRE.startRod);
     blastArea(s, c.roomId, p.x, p.y, 30, 50, 'physical');
-    expect(c.rods[CROWN_SPIRE.startRod]?.health).toBe(150);
+    expect(c.conductor.rods[CROWN_SPIRE.startRod]?.health).toBe(150);
     expect(c.health).toBe(CONDUCTOR.maxHealth);
     blastArea(s, c.roomId, (p.x + c.x) / 2, (p.y + c.y) / 2, 40, 50, 'physical');
-    expect(c.rods[CROWN_SPIRE.startRod]?.health).toBe(100);
+    expect(c.conductor.rods[CROWN_SPIRE.startRod]?.health).toBe(100);
     expect(c.health).toBe(CONDUCTOR.maxHealth - 50);
   });
 
@@ -88,7 +88,7 @@ describe('the rods', () => {
     s.tube.meleeCooldown = 0;
     s.tube.fireCooldown = 0;
     punch(s, -1, 0);
-    expect(c.rods[0]?.health).toBe(200 - MELEE.damage);
+    expect(c.conductor.rods[0]?.health).toBe(200 - MELEE.damage);
   });
 
   it('is grounded with fewer than 2 standing, until one regrows', () => {

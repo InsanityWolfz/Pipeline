@@ -25,7 +25,7 @@ export function hitPart(state: SimState, e: EnemyState, part: number, amount: nu
 /** Each whole part: its index, hurtbox and ground point (a punch's arc tests them). */
 export function wholeParts(e: EnemyState): { part: number; box: { x: number; y: number; w: number; h: number }; point: { x: number; y: number } }[] {
   const rods = conductorDefOf(e);
-  if (rods) return e.rods.flatMap((_, part) => (standing(e, part) ? [{ part, box: rodBox(rods, part), point: rodPoint(part) }] : []));
+  if (rods) return e.conductor.rods.flatMap((_, part) => (standing(e, part) ? [{ part, box: rodBox(rods, part), point: rodPoint(part) }] : []));
   const forge = forgeDefOf(e);
   if (!forge) return [];
   return e.bellows.flatMap((b, part) => (b.patch === 0 ? [{ part, box: bellowsBox(e, forge, part), point: bellowsPoint(e, forge, part) }] : []));

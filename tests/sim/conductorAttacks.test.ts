@@ -15,8 +15,8 @@ const PHYSICAL = { knock: 0, flash: true, damageType: 'physical' } as const;
 
 /** Only `attack` ready (the others held off), and no blink. */
 function only(c: EnemyState, attack: number): void {
-  c.attackCooldowns = [1e6, 1e6, 1e6].map((v, i) => (i === attack ? 0 : v));
-  c.blinkCooldown = 1e6;
+  c.conductor.attackCooldowns = [1e6, 1e6, 1e6].map((v, i) => (i === attack ? 0 : v));
+  c.conductor.blinkCooldown = 1e6;
 }
 
 const health = (s: SimState): number => s.player.health;
@@ -26,10 +26,10 @@ describe('the arc lash', () => {
     const { s, c } = spire(40);
     only(c, 0);
     run(s, 1);
-    expect([c.attack, c.mode]).toEqual([0, 'windup']);
+    expect([c.conductor.attack, c.mode]).toEqual([0, 'windup']);
     expect(s.events.conductorWindups).toEqual([{ id: c.id, attack: 0 }]);
     const line = lashLine(c, CONDUCTOR);
-    const o = rodPoint(c.rod);
+    const o = rodPoint(c.conductor.rod);
     expect([line.x0, line.y0]).toEqual([o.x, o.y]);
     // Still on the locked line at the end (it doesn't track): the player hasn't moved.
     const before = health(s);
@@ -102,7 +102,7 @@ describe('the rod chain', () => {
     movePlayer(s, (a.x + b.x) / 2, (a.y + b.y) / 2);
     only(c, 2);
     run(s, 1);
-    expect([c.attack, c.chainMask]).toEqual([2, 0b111111]);
+    expect([c.conductor.attack, c.conductor.chainMask]).toEqual([2, 0b111111]);
     expect(chainSegments(c)).toHaveLength(6);
     const before = health(s);
     run(s, CONDUCTOR.chain.windupTicks - 1);
@@ -128,20 +128,20 @@ describe('the rod chain', () => {
     const before = health(s);
     run(s, CONDUCTOR.chain.windupTicks + CONDUCTOR.chain.activeTicks);
     expect(health(s)).toBe(before);
-    expect(c.chainMask & 0b11).toBe(0);
+    expect(c.conductor.chainMask & 0b11).toBe(0);
   });
 });
 
 describe('picking attacks', () => {
   it('makes them in data order, each on its own cooldown', () => {
     const { s, c } = spire(60);
-    c.blinkCooldown = 1e6;
+    c.conductor.blinkCooldown = 1e6;
     const order: number[] = [];
     for (let t = 0; t < 900; t++) {
       topUp(s);
       run(s, 1);
       for (const w of s.events.conductorWindups) order.push(w.attack);
-      c.blinkCooldown = 1e6;
+      c.conductor.blinkCooldown = 1e6;
     }
     expect(order.slice(0, 2)).toEqual([0, 1]);
     expect(new Set(order)).toEqual(new Set([0, 1, 2]));
@@ -151,14 +151,14 @@ describe('picking attacks', () => {
 
   it('doesn’t attack during a blink’s warning', () => {
     const { s, c } = spire(60);
-    c.attackCooldowns = [1e6, 1e6, 1e6];
+    c.conductor.attackCooldowns = [1e6, 1e6, 1e6];
     run(s, 1);
-    c.blinkCooldown = 1;
+    c.conductor.blinkCooldown = 1;
     run(s, 1);
-    expect(c.blinkTo).toBeGreaterThanOrEqual(0);
-    c.attackCooldowns = [0, 0, 0];
+    expect(c.conductor.blinkTo).toBeGreaterThanOrEqual(0);
+    c.conductor.attackCooldowns = [0, 0, 0];
     run(s, CONDUCTOR.blink.warnTicks - 1);
     expect(s.events.conductorWindups).toEqual([]);
-    expect(c.attack).toBe(-1);
+    expect(c.conductor.attack).toBe(-1);
   });
 });

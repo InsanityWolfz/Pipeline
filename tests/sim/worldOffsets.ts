@@ -14,7 +14,7 @@ import { generateOverworld, overworldPylons } from '../../src/sim/overworldGen';
 // and ground.
 
 /** The span of the grid the snapshot covers round the centre: 060's 230-tile world. */
-const SPAN = 115;
+export const SPAN = 115;
 
 const r4 = (n: number): number => Math.round(n * 10000) / 10000;
 
@@ -34,19 +34,24 @@ export function offsets(v: unknown): unknown {
 }
 
 /** A 32-bit FNV-1a hash of a string. */
-function hash(s: string): number {
+export function hash(s: string): number {
   let h = 0x811c9dc5;
   for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 0x01000193) >>> 0;
   return h;
 }
 
-/** The generated grid within SPAN of the centre (the tiles within `radius` of it, the rest blanked), hashed, with its symbol counts. */
-function ground(radius: number): { hash: number; counts: Record<string, number> } {
+/** The generated grid within SPAN of the centre, a row a string from (centre - SPAN, centre - SPAN): the tiles within `radius` of it, the rest blanked. */
+export function groundRows(radius: number): string[] {
   const { tx: cx, ty: cy } = WORLD_SHAPE.centre;
   const rows = generateOverworld()
     .rows.slice(cy - SPAN, cy + SPAN)
     .map((r) => [...r.slice(cx - SPAN, cx + SPAN)]);
-  const kept = rows.map((r, j) => r.map((s, i) => (Math.hypot(i - SPAN, j - SPAN) <= radius ? s : ' ')).join(''));
+  return rows.map((r, j) => r.map((s, i) => (Math.hypot(i - SPAN, j - SPAN) <= radius ? s : ' ')).join(''));
+}
+
+/** `groundRows` hashed, with its symbol counts. */
+function ground(radius: number): { hash: number; counts: Record<string, number> } {
+  const kept = groundRows(radius);
   const counts: Record<string, number> = {};
   for (const r of kept) for (const s of r) if (s !== ' ') counts[s] = (counts[s] ?? 0) + 1;
   return { hash: hash(kept.join('\n')), counts: Object.fromEntries(Object.entries(counts).sort(([a], [b]) => a.localeCompare(b))) };
