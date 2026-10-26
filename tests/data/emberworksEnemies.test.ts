@@ -8,6 +8,7 @@ import { ITEMS } from '../../src/data/items';
 import { ENEMY_REGIONS } from '../../src/data/sandbox';
 import { EMBERWORKS } from '../../src/data/emberworks';
 import { ENEMY_ANIMS } from '../../src/data/assets';
+import { ENEMY_CHOICES } from '../../src/render/sandboxRows';
 
 // The Emberworks' enemies (061) as data: in ENEMIES, none a boss, every wind-up past the telegraph minimum, their
 // drops as the spec lists (a whelp's none), and every reference resolving.
@@ -25,6 +26,10 @@ describe("the Emberworks' enemies", () => {
       expect(ENEMY_ANIMS[def.anims], def.id).toBeDefined();
       expect(CHAMPIONS.names[def.id]?.length ?? 0, def.id).toBeGreaterThanOrEqual(3);
     }
+  });
+
+  it("are all on the sandbox's spawn panel (044), the whelp included", () => {
+    for (const def of ALL) expect(ENEMY_CHOICES, def.id).toContain(def.id);
   });
 
   it('each telegraphs for at least MIN_TELEGRAPH_TICKS', () => {
