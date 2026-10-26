@@ -26,6 +26,7 @@ import { NO_RELICS_SHOWN, RelicView } from './RelicView';
 import { NO_TALENT_FX, TalentFxView } from './TalentFxView';
 import { MineView, NO_MINES_SHOWN } from './MineView';
 import { ArenaDoorView } from './ArenaDoorView';
+import type { Occluders } from './occluders';
 import type { ScreenBox } from './bottomHud';
 
 /** What the room views report to the test hook's `ui()`. */
@@ -66,10 +67,11 @@ export class RoomViews {
   private readonly mines: MineView;
   private readonly arenaDoors: ArenaDoorView;
 
-  constructor(scene: Scene) {
+  /** `occluders` (070) takes the ruin blocks and grove trees that hide the player. */
+  constructor(scene: Scene, occluders?: Occluders) {
     this.scene = scene;
-    this.tiles = new RoomView(scene);
-    this.overworld = new OverworldView(scene);
+    this.tiles = new RoomView(scene, occluders);
+    this.overworld = new OverworldView(scene, occluders);
     this.minimap = new MinimapView(scene, roomById(OVERWORLD.id));
     this.foundryMap = new FoundryMapView(scene);
     this.supply = new SupplyView(scene);

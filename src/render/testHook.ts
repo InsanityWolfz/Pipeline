@@ -178,6 +178,8 @@ export interface UiState {
   camera: { x: number; y: number; player: { x: number; y: number }; fading: boolean };
   /** 065: the slow's wind curls are drawn round the player. */
   slowSwirl: boolean;
+  /** 070: the player shows as a silhouette (a ruin block, tree, the bench or a machine in front hides them). */
+  silhouette: boolean;
   /** The bottom HUD as drawn (025), view px: the hotbar row (and whether it shows) and the tube slot with each unit's icon frame and text. */
   hud: BottomHudState | null;
   /** The crafting menu as drawn (026): each recipe row's item names and counts with their boxes, and the group headers. */

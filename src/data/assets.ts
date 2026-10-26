@@ -275,6 +275,8 @@ export const DEPTHS = {
   supplyLine: 99_990,
   /** Soft ley light pooled on the floor (014), over shadows and under anything standing. */
   glow: 0.25,
+  /** 070: the player's silhouette while hidden behind a prop, over every prop and under the world's UI and motes. */
+  silhouette: 98_000,
   /** Drifting motes, over the world. */
   motes: 99_000,
   /** A room's dusk tint and vignette, over the world and under the HUD. */

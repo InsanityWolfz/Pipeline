@@ -12,6 +12,8 @@ import { roomById, type SimState } from '../sim/state';
 import { registerAnim } from './anims';
 import { colorOf } from './color';
 import { addVector, addVectorSprite } from './vector/textures';
+import { PLAYER_SILHOUETTE } from '../data/silhouette';
+import type { Occluders } from './occluders';
 import { drawBolts } from './hollowsEnemyArt';
 import { enemyDef } from '../data/enemies';
 
@@ -37,8 +39,12 @@ export class SiteView {
   /** Scene time until which the bench's lens flares. */
   private flareUntil = 0;
 
-  constructor(scene: Scene) {
+  private readonly occluders: Occluders | undefined;
+
+  /** `occluders` (070): the bench can hide the player. */
+  constructor(scene: Scene, occluders?: Occluders) {
     this.scene = scene;
+    this.occluders = occluders;
     registerAnim(scene, PYLON_SPRITES.activating);
     registerAnim(scene, PYLON_SPRITES.active);
     registerAnim(scene, FIXTURE_SPRITES.waystone);
@@ -97,6 +103,7 @@ export class SiteView {
         const bottom = (def.ty + 1) * TILE_SIZE;
         sprite = addVectorSprite(this.scene, x, bottom, fixtureFrame(def.kind)).setOrigin(0.5, 1).setDepth(bottom);
         if (def.kind === 'waystone') sprite.play(FIXTURE_SPRITES.waystone.key);
+        if (PLAYER_SILHOUETTE.fixtures.includes(def.kind)) this.occluders?.add(sprite);
         this.fixtures.set(f.id, sprite);
       }
       sprite.setVisible(true);
