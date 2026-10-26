@@ -21,8 +21,9 @@
  * (the world grew again and its centre moved, so every saved position and the fog's bitmap are on a new map; the
  * Stormcrown's gate; boss parts and the storm call's strikes). 18: 065's (the thunderhawk's dive event, enemies' mite
  * trios, the storm sentinel's strike knockback and the player's slow). 19: 063 merged onto main (its blueprints and
- * blueprint events joined with 062–065's shape). 22: 069's (the intake's rate window, and the purge event; other
- * branches took 20 and 21). All with no migration.
+ * blueprint events joined with 062–065's shape). 20: 067 (the foundry after the first boss: the ruin field's
+ * cleared flag; the refill goal's and the fast travel goal's flags gone; the goal chain's flags shift). 22: 069's (the
+ * intake's rate window, and the purge event; 21 is taken on another branch). All with no migration.
  */
 export const SAVE_VERSION = 22;
 

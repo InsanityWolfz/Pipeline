@@ -216,7 +216,8 @@ export const SITE_ICONS = { stash: 'emblem-stash', travel: 'emblem-travel' } as 
 export const TUTORIAL_SPRITES = {
   stone: 'tube-stone',
   stoneEmpty: 'tube-stone-empty',
-  rubble: 'door-rubble',
+  /** 067: the ley shimmer over the foundry's door while it's sealed (it was rubble). */
+  shimmer: 'door-shimmer',
   keyCap: 'key-cap',
   tick: 'objective-tick',
   /** The arrow marker over the intake for the conduit step (027). */
@@ -255,4 +256,7 @@ export const TUTORIAL_LAYOUT = {
   /** The hovering arrow (027, 051) bobs this far, px, over `bobMs`; how high it floats over each target is TARGET_LIFT (src/data/targets.ts). */
   marker: { bob: 3, bobMs: 900 },
   gateFadeMs: 500,
+  /** 067: the sealed door's shimmer pulses between these alphas over `shimmerMs` (each way). */
+  shimmerAlpha: [0.6, 1] as const,
+  shimmerMs: 900,
 } as const;

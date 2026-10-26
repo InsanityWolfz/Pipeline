@@ -108,7 +108,7 @@ describe('Husk death', () => {
       fireAt(at(1000).x, PLAYER_AT.y),
     );
     expect(s.inventory.arrow).toBe(26);
-    expect(deaths).toEqual([{ id: e.id, enemyId: 'husk', x: e.x, y: e.y, facing: e.facing }]);
+    expect(deaths).toEqual([{ id: e.id, enemyId: 'husk', group: e.group, x: e.x, y: e.y, facing: e.facing }]);
     expect(s.groundItems.length).toBeGreaterThanOrEqual(1);
     // 1–2 resin, maybe one raw, and the first Husk's guaranteed armor.
     expect(s.groundItems.length).toBeLessThanOrEqual(4);

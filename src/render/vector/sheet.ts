@@ -74,7 +74,7 @@ const FAMILIES: readonly [title: string, test: (name: string) => boolean][] = [
   ['Hoppers and crates', (n) => n.startsWith('hopper-') || n === 'crate'],
   ['Build arrows and status markers', (n) => n.includes('-arrow-') || n.startsWith('status-')],
   ['Items, ammo and emblems', (n) => n.startsWith('item-') || n.startsWith('icon-') || n.startsWith('emblem-')],
-  ['Fixtures, the pylon and the foundry', (n) => /^(identification-bench|stash|supply-port|doorway-side|waystone|pylon-|door-rubble|ley-crystal|intake-|floor-|wall|prop-|ruin-)/.test(n)],
+  ['Fixtures, the pylon and the foundry', (n) => /^(identification-bench|stash|supply-port|doorway-side|waystone|pylon-|door-shimmer|ley-crystal|intake-|floor-|wall|prop-|ruin-)/.test(n)],
   ['Gathering nodes', (n) => n.startsWith('node-')],
   ['Ley Springs', (n) => n.startsWith('ley-spring') || n.startsWith('spring-')],
   ['Landmarks (032): cut blocks, old trees, the marsh, hollow lips, the reliquary, map icons, the champion glow', (n) => /^(ow-cut-block|ow-old-tree|ow-marsh|ow-lily|ow-hollow|cache-|map-|champion-)/.test(n)],

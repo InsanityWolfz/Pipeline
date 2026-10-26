@@ -134,10 +134,9 @@ export interface SimSummary extends PlayerSummary, HollowsSummary, LevelingSumma
   hasTube: boolean;
   /** The gates (012), Stonefall Hollows' barrier (034), the Emberworks' (060) and the Stormcrown's (064). */
   gates: { foundry: boolean; shrine: boolean; hollows: boolean; emberworks: boolean; stormcrown: boolean };
-  /** 046: the foundry's lines ran dry once (the refill goal shows), and what's been refilled by hand since. */
-  lineRanDry: boolean;
-  refilled: string[];
   firstLineFull: boolean;
+  /** 067: the ruin field's pack killed to its last Husk once (the land's packs then come out). */
+  fieldCleared: boolean;
   /** The objective line (028): the current goal's index and text, or no index and no text once the tutorial is over (058). */
   objective: { index: number | null; text: string };
   prototypeComplete: boolean;
@@ -249,8 +248,7 @@ export function summarize(state: SimState): SimSummary {
     hasTube: state.hasTube,
     gates: { ...state.gates },
     firstLineFull: state.firstLineFull,
-    lineRanDry: state.lineRanDry,
-    refilled: [...state.refilled],
+    fieldCleared: state.fieldCleared,
     objective: objectiveLine(state),
     prototypeComplete: state.prototypeComplete,
     research: researchSummary(state),

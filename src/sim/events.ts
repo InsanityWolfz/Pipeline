@@ -22,6 +22,8 @@ export type HitEvent =
 export interface DeathEvent {
   id: number;
   enemyId: string;
+  /** 067: its pack's group (the ruin field's last Husk clears the field). */
+  group: string;
   x: number;
   y: number;
   facing: Facing;
@@ -136,6 +138,8 @@ export interface SimEvents extends ForgeEvents, BlueprintEvents, EmberEvents, St
   tubeTaken: boolean;
   /** A tutorial gate opened. */
   gates: { gate: GateId }[];
+  /** 067: E at a door its gate seals, or walking into it, this tick (the foundry's stairs: "Claim the shrine first"). */
+  sealedDoors: { gate: GateId }[];
   /** An objective completed (index into OBJECTIVES). */
   objectives: { index: number }[];
   /** An intake entrance was restored (033), so its cap lifts (024): its index into INTAKE.entrances. */
@@ -230,6 +234,7 @@ export function createEvents(): SimEvents {
     schematicReveals: [],
     tubeTaken: false,
     gates: [],
+    sealedDoors: [],
     objectives: [],
     identifies: [],
     equips: [],

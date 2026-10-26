@@ -61,17 +61,11 @@ const doorShown = (page: Page, id: string) => page.evaluate((i) => window.__GAME
 test.describe('review screenshots (055)', () => {
   test.skip(!process.env.REVIEW_SHOTS, 'set REVIEW_SHOTS=1 to capture docs/review/055');
 
-  test("the Warden's door, sealed (a new game) and open (the gates open), and inside it locked", async ({ page }) => {
+  // 01 (the Warden's door sealed on a new game) went with 067: the shrine's door is open from the start, so
+  // docs/review/055/01-warden-door-sealed.png stays as it was taken and can't be retaken.
+  test("the Warden's door open (the gates open), and inside it locked", async ({ page }) => {
     test.setTimeout(180_000);
-    await boot(page, '?start=tutorial');
-    await quiet(page);
     const W = SHRINE_ARENA;
-    await walk(page, [[W.door.leaveTo.tx + 1, W.door.leaveTo.ty + 2]]);
-    await settle(page);
-    expect((await doorShown(page, W.id))?.door).toBe('sealed');
-    await hoverDoor(page, W);
-    await page.screenshot({ path: `${SHOTS}/01-warden-door-sealed.png` });
-
     await boot(page, '?playtest');
     await quiet(page);
     await walk(page, [[W.door.leaveTo.tx + 1, W.door.leaveTo.ty + 2]]);

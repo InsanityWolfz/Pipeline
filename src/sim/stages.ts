@@ -105,7 +105,7 @@ function pullFromEntrances(state: SimState, itemId: string, n: number): void {
  * A tagged round's recipe shows once the shrine is claimed and its family's own ammo can be made (landmines after
  * ley-iron is found, 038.3), and its stage's own reveal has been carried (060: the fire rune's rows after cinderite).
  */
-export function taggedKnown(state: { found: readonly string[]; claims: readonly string[]; link: Pick<SimState['link'], 'attuned'>; gates: Pick<SimState['gates'], 'foundry'> }, row: StageRow): boolean {
+export function taggedKnown(state: { found: readonly string[]; claims: readonly string[] }, row: StageRow): boolean {
   const reveal = stageDef(row.stage).shownAfter;
   return stagesKnown(state) && knownRecipe(state, row.base) && (reveal === undefined || state.found.includes(reveal));
 }

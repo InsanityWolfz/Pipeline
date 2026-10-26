@@ -1,4 +1,4 @@
-// The living population (017): once the first line fills the tube, each ring of
+// The living population (017): once the ruin field is cleared (067), each ring of
 // the overworld keeps a number of packs alive. Ring 0 (round the foundry) stays
 // calm. Ticks at 60 Hz; distances in px. Numbers are tuning values.
 
