@@ -1,5 +1,5 @@
 # 065: Stormcrown enemies
-status: approved
+status: done
 
 Approved by Shaun in chat, 2026-10-26 ("Approve 64-66"), with the draft's listed decisions; its plan is pre-approved ("approve the plans of any other upcoming stuff").
 

@@ -2,6 +2,23 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-26: 065 Stormcrown enemies
+**Changed:** on `claude/065-stormcrown-enemies` (InsanityWolfz/Pipeline#76, stacked on 064; plan docs/plans/065-stormcrown-enemies.md, five slices):
+- flight (`flight.ts`): fliers cross terrain but never arena walls, safe zones or a shut ring barrier (a full circle), never push walkers, and their drops land on open ground;
+- the thunderhawk: orbits, dives down a locked line (061's `laneRun`), climbs away; homing tracks it;
+- static mites: trios counting as 3 pack members, a contact zap, a killed mite's discharge chaining through its trio (never the player); a trio drops like one enemy;
+- the storm sentinel: keeps its distance, calls 064's strike circles from range, one live circle;
+- the gale ram: a cone gust that pushes and slows; the slow is the first player status, on walk and roll distance;
+- ring 5's 12 packs once the barrier is down, the Weathervane's guards, champions in 1 in 3 packs.
+
+`SAVE_VERSION` 18. Reviewed: one blocking bug fixed (the Weathervane's guard hawks flew over the shut barrier and one-shot a player in the Emberworks) and six suggestions. `npm run check` 2342 tests; CI green. Raised for Shaun: 065.1–065.25.
+
+**Next:** Shaun's playtest; his OK on 065.1–065.25; "merge 76" after 72, 73 and 75.
+
+**Notes:**
+- Balance, for Shaun's call: at ring 5's ×10, every Stormcrown hit but the mite's zap one-shots a decent build (114 HP, armor 10), and even the best defensive gear (~195 HP, 32 armor) survives only the gust. `RING_SCALE` has separate health and damage values, so damage could be lowered while keeping ×10 health.
+- `npm run measure`: a ring 5 pack clears in 9.9–19.7 s with steel, 17.2–29.1 s with stone, no KOs (the bot is never hit).
+
 ## 2026-10-26: 064 Region 4: the Stormcrown and the Conductor
 **Changed:** on `claude/064-stormcrown` (InsanityWolfz/Pipeline#75, stacked on 062), from Shaun's Region 4 interview (docs/brainstorm/2026-10-26-region-4-interview.md; plan docs/plans/064-stormcrown.md, eight slices):
 - the world grows to 292 tiles as a pure move (offsets snapshot, and a row-by-row ground fixture);
