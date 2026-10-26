@@ -39,7 +39,7 @@ export const HOVER_USE_REACH = 3 * TILE_SIZE;
  * The foundry intake (019): the waterslide pipe built into the north wall. Its mouth is four wall tiles (060: was
  * three), each an entrance (024) with its own reservoir, fed from the floor tile directly south of it. Only tx 12
  * starts open; the others are capped until each is restored (033: a boss core apiece; 060: the fourth, east at tx 14,
- * a Forgewright core). `lane`: its place in a volley's fan, west to east (048). `gaugeRings`: how many rings of each
+ * a Forgewright core; 064: the fifth, at tx 15, a Conductor core). `lane`: its place in a volley's fan, west to east (048). `gaugeRings`: how many rings of each
  * entrance's gauge light as it fills; a ring of light runs up the pipe for `pulseMs` after each item.
  */
 export const INTAKE = {
@@ -48,6 +48,8 @@ export const INTAKE = {
     { tx: 12, ty: 0, startsOpen: true, lane: 1 },
     { tx: 13, ty: 0, startsOpen: false, lane: 2 },
     { tx: 14, ty: 0, startsOpen: false, lane: 3 },
+    // 064: the fifth and last, east at tx 15, a Conductor core.
+    { tx: 15, ty: 0, startsOpen: false, lane: 4 },
   ],
   gaugeRings: 10,
   pulseMs: 450,
@@ -55,7 +57,7 @@ export const INTAKE = {
   lookRise: 36,
 } as const;
 
-/** The middle of the intake's mouth, in tiles (060: whatever its count; 12.5, between tx 12 and 13, for four): where the pipe rises. */
+/** The middle of the intake's mouth, in tiles (060: whatever its count; 064: 13 for five): where the pipe rises. */
 export const INTAKE_MID_TX: number = INTAKE.entrances.reduce((n, e) => n + e.tx, 0) / INTAKE.entrances.length;
 
 /** Rounds each entrance holds, by reservoir tier (024, 033): 30 at the start, then each restored reservoir node's tier. */

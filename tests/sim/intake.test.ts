@@ -28,10 +28,10 @@ function feeding(itemId = 'arrow', mouth: { tx: number; ty: number } = MIDDLE, a
 }
 
 describe('the foundry intake', () => {
-  it('is four wall tiles (060: was three) along the north wall, with buildable floor in front', () => {
+  it('is five wall tiles (060: four; 064: five) along the north wall, with buildable floor in front', () => {
     const s = foundry();
-    expect(INTAKE.entrances.map((t) => t.ty)).toEqual([0, 0, 0, 0]);
-    expect(INTAKE.entrances.map((t) => t.tx)).toEqual([11, 12, 13, 14]);
+    expect(INTAKE.entrances.map((t) => t.ty)).toEqual([0, 0, 0, 0, 0]);
+    expect(INTAKE.entrances.map((t) => t.tx)).toEqual([11, 12, 13, 14, 15]);
     for (const t of INTAKE.entrances) {
       expect(canPlace(s, 'conduit', t.tx, t.ty, 'up')).not.toBeNull();
       expect(canPlace(s, 'conduit', t.tx, t.ty + 1, 'up')).toBeNull();
@@ -45,7 +45,7 @@ describe('the foundry intake', () => {
       for (const e of s.link.entrances) e.open = true;
       run(s, 1);
       expect(c.item).toBeNull();
-      expect(s.link.entrances.map((e) => e.count)).toEqual([0, 1, 2, 3].map((j) => (j === i ? 1 : 0)));
+      expect(s.link.entrances.map((e) => e.count)).toEqual([0, 1, 2, 3, 4].map((j) => (j === i ? 1 : 0)));
       expect(s.link.entrances[i]).toEqual({ open: true, ammoId: 'arrow', count: 1, cooldown: 0, node: null });
       expect(s.events.refills).toEqual([{ entrance: i, itemId: 'arrow' }]);
     }

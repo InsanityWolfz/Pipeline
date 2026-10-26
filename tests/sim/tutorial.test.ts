@@ -200,7 +200,7 @@ describe('objectives', () => {
     expect(s.objectives[open]).toBe(false);
     run(s, 1, { restore: 'entrance-2' });
     expect(s.objectives[open]).toBe(true);
-    expect(s.link.entrances.map((e) => e.open)).toEqual([true, true, false, false]);
+    expect(s.link.entrances.map((e) => e.open)).toEqual([true, true, false, false, false]);
   });
 
   it("leaving the foundry is the prototype's last goal, and ends the prototype", () => {

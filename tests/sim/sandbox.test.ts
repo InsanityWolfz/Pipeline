@@ -63,13 +63,13 @@ describe('the sandbox start and kit (044)', () => {
     for (const n of RESEARCH_NODES) expect(s.research[n.id], n.id).toBe('restored');
   });
 
-  it('is at the level cap with every talent point, the tube attuned to four open entrances (060)', () => {
+  it('is at the level cap with every talent point, the tube attuned to every entrance open (060: four; 064: five)', () => {
     const s = createSandboxSim(1);
     expect(s.level).toBe(LEVEL_CAP);
     expect(s.talentPoints).toBe(LEVEL_CAP - 1);
     expect(s.talentPoints).toBeLessThanOrEqual(TALENT_LIST.length);
     expect(s.hasTube && s.link.attuned).toBe(true);
-    expect(s.link.entrances.map((e) => e.open)).toEqual([true, true, true, true]);
+    expect(s.link.entrances.map((e) => e.open)).toEqual([true, true, true, true, true]);
   });
 
   it('holds every gear piece at each rarity and every relic, none worn (044.4)', () => {

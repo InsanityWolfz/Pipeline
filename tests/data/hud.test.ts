@@ -55,6 +55,8 @@ describe('inventory panel groups (031)', () => {
       'steel-arrowhead',
       'steel-casing',
       'steel-plate',
+      // 064: Region 4's machine part.
+      'storm-coil',
     ]);
     // 039: the six Frost rounds of every family. 060: the seven Fire rounds; 064: the seven Lightning. 062: each also at its tier, in Ammo too.
     expect(byGroup('ammo').filter((id) => roundTier(id) === 'stone')).toEqual([
@@ -89,7 +91,7 @@ describe('inventory panel groups (031)', () => {
     ]);
     expect(byGroup('ammo').filter((id) => roundTier(id) !== 'stone')).toEqual(ROUNDS.filter((id) => roundTier(id) !== 'stone').sort());
     expect(byGroup('gear')).toEqual(['unidentified-armor']);
-    expect(byGroup('cores')).toEqual(['bulwark-core', 'forgewright-core', 'warden-core']);
+    expect(byGroup('cores')).toEqual(['bulwark-core', 'conductor-core', 'forgewright-core', 'warden-core']);
     // The warden core's kind stays a part: only the panel's group places it.
     expect(ITEMS['warden-core']?.kind).toBe('part');
   });

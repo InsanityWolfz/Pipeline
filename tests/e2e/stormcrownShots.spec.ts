@@ -2,7 +2,8 @@ import { expect, test, type Page } from '@playwright/test';
 import { landmarkDef } from '../../src/data/landmarks';
 import { STORMCROWN } from '../../src/data/stormcrown';
 import { polar } from '../../src/data/worldShape';
-import { boot, cameraSettled } from './helpers';
+import { boot, cameraSettled, quietScreen } from './helpers';
+import { feedLines, restoreEntrance, ui } from './intakePage';
 import { clickRow, flowIs } from './flowPage';
 import { SPAWN_GROUP } from '../../src/sim/sandbox';
 import { bootSandbox, hidePanel, openPanel, setRound } from './sandboxPage';
@@ -127,5 +128,49 @@ test.describe('review screenshots (064)', () => {
     await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().lightningArcs ?? 0)).toBeGreaterThan(0);
     await page.screenshot({ path: `${SHOTS}/03-lightning-arc.png` });
     await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
+  });
+
+  test('the five-entrance intake, every cap restored and each entrance fed', async ({ page }) => {
+    test.setTimeout(150_000);
+    await boot(page, '?playtest');
+    for (const tx of [11, 13, 14, 15]) await restoreEntrance(page, tx);
+    await expect.poll(async () => (await ui(page))?.intakeCaps).toBe(0);
+    // Five ammo, five gauge colours, west to east.
+    await feedLines(page, [
+      { tx: 11, itemId: 'arrow', amount: 'half' },
+      { tx: 12, itemId: 'bomb', amount: 'all' },
+      { tx: 13, itemId: 'ley-bolt', amount: 'all' },
+      { tx: 14, itemId: 'landmine', amount: 'all' },
+      { tx: 15, itemId: 'arrow', amount: 'all' },
+    ], 12);
+    // South of the lines, the pipe in the top of the view, with the schematic banner played out.
+    await page.evaluate(() => {
+      window.__helpers?.walkTo(16.5 * 32, 5.5 * 32);
+      window.__GAME__?.step(1, { aimX: 13 * 32, aimY: 0 });
+    });
+    await quietScreen(page);
+    await cameraSettled(page);
+    await page.screenshot({ path: `${SHOTS}/04-five-entrance-intake.png` });
+  });
+
+  test('a five-lane volley', async ({ page }) => {
+    test.setTimeout(120_000);
+    await bootSandbox(page);
+    await hidePanel(page);
+    await cameraSettled(page, 20_000);
+    // An arrow, a ley bolt, a Fire arrow, a Frost arrow and a Lightning arrow, west to east: the design's five-arrow spread.
+    const fresh = await page.evaluate(() => {
+      const g = window.__GAME__;
+      if (!g) throw new Error('no game');
+      g.step(1, { sandbox: { kind: 'god', on: true } });
+      ['arrow', 'ley-bolt', 'arrow+fire', 'arrow+frost', 'arrow+lightning'].forEach((round, entrance) => g.step(1, { sandbox: { kind: 'loadout', entrance, round } }));
+      const p = g.step(1).player;
+      const known = new Set(g.step(0).arrows.map((a) => a.id));
+      const shot = g.step(1, { fire: true, aimX: p.x + 220, aimY: p.y });
+      g.step(10);
+      return shot.arrows.filter((a) => !known.has(a.id)).map((a) => a.ammoId);
+    });
+    expect(fresh).toEqual(['arrow', 'ley-bolt', 'arrow+fire', 'arrow+frost', 'arrow+lightning']);
+    await page.screenshot({ path: `${SHOTS}/05-five-lane-volley.png` });
   });
 });

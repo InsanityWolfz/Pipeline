@@ -15,6 +15,9 @@ export const STORMCROWN_SPRITES = {
   spireWall: 'ow-spire-wall',
   /** The stormglass item: a pale violet crystal shard with a cyan crackle inside. */
   itemStormglass: 'item-stormglass',
+  /** The Conductor's core (a slate-violet orb caged in brass with a lightning heart), and the storm coil, Region 4's machine part. */
+  itemConductorCore: 'item-conductor-core',
+  itemStormCoil: 'item-storm-coil',
   /**
    * A storm rod's looks while it isn't charged (it's charged in its node frames, by uses left): idle, its warning
    * (sparks crawling up it, its crown flashing) and the strike itself (a bolt down onto it, held `STORM_ROD_LOOK.strikeTicks`).

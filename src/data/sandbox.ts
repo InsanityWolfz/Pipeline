@@ -127,8 +127,8 @@ export const SANDBOX = {
   rings: [1, 2, 3, 4] as readonly Ring[],
   maxCount: 10,
   spawnDefaults: { enemyId: 'husk', ring: 1 as Ring, champion: false, count: 1 },
-  /** Each entrance's round at the start: plain arrows, the first volley (024; 060: four entrances). Null is empty. */
-  loadout: ['arrow', 'arrow', 'arrow', 'arrow'] as readonly (string | null)[],
+  /** Each entrance's round at the start: plain arrows, the first volley (024; 060: four entrances; 064: five). Null is empty. */
+  loadout: ['arrow', 'arrow', 'arrow', 'arrow', 'arrow'] as readonly (string | null)[],
   /** 044.1: the panel's key, the backquote (unbound in the game), rebindable (042); 056.1: it hides and shows both strips. */
   panelKey: 'BACKTICK',
 } as const;

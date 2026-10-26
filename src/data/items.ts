@@ -80,6 +80,10 @@ const BASE_ITEMS: Readonly<Record<string, ItemDef>> = {
   /** Region 2's machine part (034): a brass valve from the Hollows' waterworks. */
   'aqueduct-valve': { id: 'aqueduct-valve', name: 'Aqueduct valve', kind: 'part', group: 'parts', icon: RESEARCH_ICONS.aqueductValve, research: 'machinePart' },
   /** Region 3's machine part (060): the Forgewright drops it; nothing spends it until a later spec's research. */
+  /** The Conductor's core (064): it restores the fifth and last intake entrance. */
+  'conductor-core': { id: 'conductor-core', name: 'Conductor core', kind: 'part', group: 'cores', icon: STORMCROWN_SPRITES.itemConductorCore, research: 'core' },
+  /** Region 4's machine part (064): the Conductor drops it; nothing spends it until a later spec's research. */
+  'storm-coil': { id: 'storm-coil', name: 'Storm coil', kind: 'part', group: 'parts', icon: STORMCROWN_SPRITES.itemStormCoil, research: 'machinePart' },
   'forge-rivet': { id: 'forge-rivet', name: 'Forge rivet', kind: 'part', group: 'parts', icon: EMBERWORKS_SPRITES.itemForgeRivet, research: 'machinePart' },
   ...schematics({
     'schematic-reservoir-2': 'Reservoir II',

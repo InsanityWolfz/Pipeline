@@ -390,8 +390,8 @@ describe('spreads from the intake (024)', () => {
     expect(PLAYTEST_START.inventory['warden-core']).toBe(5);
   });
 
-  it('has four entrances on the mouth (060: was three), the second open, and starting numbers from the spec', () => {
-    expect(INTAKE.entrances).toHaveLength(4);
+  it('has five entrances on the mouth (060: four; 064: five), the second open, and starting numbers from the spec', () => {
+    expect(INTAKE.entrances).toHaveLength(5);
     expect(INTAKE.entrances.filter((e) => e.startsOpen)).toEqual([INTAKE.entrances[1]]);
     expect([ENTRANCE_CAPS[0], SPREAD_STEP]).toEqual([30, 15]);
   });

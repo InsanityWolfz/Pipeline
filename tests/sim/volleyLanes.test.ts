@@ -37,16 +37,17 @@ const landings = (s: SimState): [number, number][] =>
   s.bombs.map((b) => [deg(b.toX - AT.x, b.toY - AT.y), Math.round(Math.hypot(b.toX - AT.x, b.toY - AT.y) * 10) / 10]);
 
 describe('lanes', () => {
-  it('fan symmetrically about the cursor, SPREAD_STEP apart, for one, two, three and four (060) fed entrances (048.1)', () => {
+  it('fan symmetrically about the cursor, SPREAD_STEP apart, for one, two, three, four (060) and five (064) fed entrances (048.1)', () => {
     expect(SPREAD_STEP).toBe(15);
     expect(laneAngles(1)).toEqual([0]);
     expect(laneAngles(2)).toEqual([-7.5, 7.5]);
     expect(laneAngles(3)).toEqual([-15, 0, 15]);
     expect(laneAngles(4)).toEqual([-22.5, -7.5, 7.5, 22.5]);
+    expect(laneAngles(5)).toEqual([-30, -15, 0, 15, 30]);
   });
 
   it('are owned by the entrances in lane order, west to east: west fires left of the cursor, east right', () => {
-    expect(INTAKE.entrances.map((e) => e.lane)).toEqual([0, 1, 2, 3]);
+    expect(INTAKE.entrances.map((e) => e.lane)).toEqual([0, 1, 2, 3, 4]);
     const s = volley([['arrow', 5], ['ley-bolt', 5], ['arrow+frost', 5]]);
     run(s, 1, volleyAt(600, 400));
     expect(arrowAngles(s)).toEqual([

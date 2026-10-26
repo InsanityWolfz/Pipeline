@@ -56,7 +56,7 @@ describe('hudActive (025)', () => {
     expect(s.tube.shotCount).toBe(3);
     expect(s.arrows).toHaveLength(2);
     expect(s.bombs).toHaveLength(1);
-    expect(s.link.entrances.map((e) => e.count)).toEqual([11, 8, 3, 0]);
+    expect(s.link.entrances.map((e) => e.count)).toEqual([11, 8, 3, 0, 0]);
     expect(s.inventory).toEqual({ arrow: 5, bomb: 2 });
   });
 

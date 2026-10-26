@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CONDUIT_TICKS, ENTRANCE_CAPS, HOPPER_TICKS, INTAKE, INTAKE_MID_TX } from '../../src/data/foundry';
+import { CONDUIT_TICKS, ENTRANCE_CAPS, HOPPER_TICKS, INTAKE } from '../../src/data/foundry';
 import { machineDef } from '../../src/data/pieces';
 import { MACHINE_SPEED_MULT } from '../../src/data/research';
 import type { ConduitState, CrateState, HopperState, MachineState } from '../../src/sim/pieces';
@@ -29,7 +29,7 @@ const opens = (s: SimState) => s.link.entrances.map((e) => e.open);
 
 describe('restoring entrances (one core each)', () => {
   it('the warden core opens exactly the cap it is restored at, west or east', () => {
-    for (const [cap, i, expected] of [[WEST, 0, [true, true, false, false]], [EAST, 2, [false, true, true, false]]] as const) {
+    for (const [cap, i, expected] of [[WEST, 0, [true, true, false, false, false]], [EAST, 2, [false, true, true, false, false]]] as const) {
       const s = foundry();
       s.inventory['warden-core'] = 1;
       under(s, cap);
@@ -49,24 +49,26 @@ describe('restoring entrances (one core each)', () => {
     under(s, WEST);
     run(s, 1, { restore: 'entrance-2' });
     // The normal state now: two capped entrances (060: the fourth too) and two open ones (024's "can't occur").
-    expect(opens(s)).toEqual([true, true, false, false]);
+    expect(opens(s)).toEqual([true, true, false, false, false]);
     under(s, EAST);
     expect(diagrams(s).filter((d) => d.entrance !== null)).toEqual([
       expect.objectContaining({ node: 'entrance-3', entrance: 2, dimmed: false }),
       expect.objectContaining({ node: 'entrance-3', entrance: 3, dimmed: false }),
+      // 064: the fifth cap too.
+      expect.objectContaining({ node: 'entrance-3', entrance: 4, dimmed: false }),
     ]);
     expect(restoreFail(s, 'entrance-3')).toBe('cost');
     run(s, 1, { restore: 'entrance-3' });
     run(s, 1, { restore: 'entrance-2' });
-    expect(opens(s)).toEqual([true, true, false, false]);
+    expect(opens(s)).toEqual([true, true, false, false, false]);
     expect(s.inventory['warden-core']).toBe(1);
     s.inventory['bulwark-core'] = 1;
     run(s, 1, { restore: 'entrance-3' });
-    expect(opens(s)).toEqual([true, true, true, false]);
+    expect(opens(s)).toEqual([true, true, true, false, false]);
     expect(s.inventory).toMatchObject({ 'warden-core': 1, 'bulwark-core': 0 });
     expect(s.events.intakeOpens).toEqual([{ entrance: 2 }]);
-    // 060: the last cap now waits on the Forgewright's core.
-    expect(diagrams(s).filter((d) => d.entrance !== null)).toEqual([expect.objectContaining({ node: 'entrance-4', entrance: 3 })]);
+    // 060: the caps left now wait on the Forgewright's core (064: two of them).
+    expect(diagrams(s).filter((d) => d.entrance !== null)).toEqual([expect.objectContaining({ node: 'entrance-4', entrance: 3 }), expect.objectContaining({ node: 'entrance-4', entrance: 4 })]);
   });
 
   it('E alone restores nothing; nothing without a core, out of reach, outside the foundry, or before attuning', () => {
@@ -74,7 +76,7 @@ describe('restoring entrances (one core each)', () => {
     s.inventory['warden-core'] = 1;
     under(s, WEST);
     run(s, 1, { interact: true });
-    expect(opens(s)).toEqual([false, true, false, false]);
+    expect(opens(s)).toEqual([false, true, false, false, false]);
     const none = foundry();
     under(none, WEST);
     expect(restoreFail(none, 'entrance-2')).toBe('cost');
@@ -82,7 +84,7 @@ describe('restoring entrances (one core each)', () => {
     far.inventory['warden-core'] = 1;
     expect(restoreFail(far, 'entrance-2')).toBe('reach');
     run(far, 1, { restore: 'entrance-2' });
-    expect([opens(far), far.inventory['warden-core']]).toEqual([[false, true, false, false], 1]);
+    expect([opens(far), far.inventory['warden-core']]).toEqual([[false, true, false, false, false], 1]);
     const dormant = foundry();
     dormant.link.attuned = false;
     dormant.inventory['warden-core'] = 1;
@@ -103,7 +105,7 @@ describe('restoring entrances (one core each)', () => {
     Object.assign(s.link.entrances[0] ?? {}, { ammoId: 'bomb', count: 4 });
     stepOutside(s);
     die(s);
-    expect(opens(s)).toEqual([true, true, false, false]);
+    expect(opens(s)).toEqual([true, true, false, false, false]);
     expect(s.link.entrances[0]).toMatchObject({ ammoId: 'bomb', count: 4 });
     expect(s.research['entrance-2']).toBe('restored');
   });
@@ -120,7 +122,7 @@ describe('the reservoir', () => {
     expect(diagramInReach(s)?.node).toBe('reservoir-1');
     run(s, 1, { restore: 'reservoir-1' });
     expect([entranceCap(s), s.inventory['ancient-gear'], s.link.entrances[1]?.count]).toEqual([45, 1, 30]);
-    expect(summarize(s).intake.entrances.map((e) => e.cap)).toEqual([45, 45, 45, 45]);
+    expect(summarize(s).intake.entrances.map((e) => e.cap)).toEqual([45, 45, 45, 45, 45]);
     // Reservoir II waits on its schematic: no diagram until it's revealed.
     expect(diagrams(s).some((d) => d.node === 'reservoir-2')).toBe(false);
     s.research['reservoir-2'] = 'revealed';
@@ -154,8 +156,8 @@ describe('the reservoir', () => {
     s.research['reservoir-2'] = 'revealed';
     Object.assign(s.inventory, { 'schematic-reservoir-2': 1, 'aqueduct-valve': 4, 'bulwark-core': 1 });
     expect(restoreFail(s, 'reservoir-2')).toBe('requires');
-    // The pipe (060: at the mouth's middle, between tx 12 and 13) shows the first reservoir node not yet restored.
-    expect(diagrams(s).find((d) => d.rect.x === (INTAKE_MID_TX + 0.5) * 32)?.node).toBe('reservoir-1');
+    // The pipe (060: at the mouth's middle; 064: on the mouth tile that starts open, tx 12) shows the first reservoir node not yet restored.
+    expect(diagrams(s).find((d) => d.entrance === null && d.rect.x === 12.5 * 32)?.node).toBe('reservoir-1');
   });
 });
 

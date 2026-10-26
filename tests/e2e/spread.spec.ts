@@ -38,16 +38,16 @@ test('a warden core restores one entrance (033); two fed arrow entrances fire a 
   const errors = watchErrors(page);
   await boot(page, '?playtest');
   const before = await toIntake(page);
-  expect(before.intake.entrances.map((e) => e.open)).toEqual([false, true, false, false]);
-  // With a warden core carried, the prompt shows beside the pipe, and every capped entrance wears its cap (060: three).
+  expect(before.intake.entrances.map((e) => e.open)).toEqual([false, true, false, false, false]);
+  // With a warden core carried, the prompt shows beside the pipe, and every capped entrance wears its cap (060: three; 064: four).
   await expect.poll(async () => (await ui(page))?.intakePrompt).toBe('E: restore an entrance');
-  expect((await ui(page))?.intakeCaps).toBe(3);
+  expect((await ui(page))?.intakeCaps).toBe(4);
   const after = await restoreEntrance(page, 11);
   // One core, one entrance: the west cap lifts, the east ones stay.
-  expect(after.intake.entrances.map((e) => e.open)).toEqual([true, true, false, false]);
+  expect(after.intake.entrances.map((e) => e.open)).toEqual([true, true, false, false, false]);
   expect(after.inventory['warden-core']).toBe((before.inventory['warden-core'] ?? 0) - 1);
   expect(after.events.intakeOpens).toEqual([{ entrance: 0 }]);
-  await expect.poll(async () => (await ui(page))?.intakeCaps).toBe(2);
+  await expect.poll(async () => (await ui(page))?.intakeCaps).toBe(3);
   // The east cap now wants a Bulwark core, which ?playtest carries too, so the prompt stays.
   expect((await ui(page))?.intakePrompt).toBe('E: restore an entrance');
 
@@ -98,11 +98,11 @@ test.describe('review screenshots (024)', () => {
     await page.evaluate(() => window.__GAME__?.tweenSpeed(0));
     await page.screenshot({ path: `${SHOTS}/02-caps-lifting.png` });
     await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
-    // 060: the fourth entrance's cap stays on (it waits on the Forgewright's core).
-    await expect.poll(async () => (await ui(page))?.intakeCaps).toBe(2);
+    // 060: the fourth entrance's cap stays on (it waits on the Forgewright's core; 064: the fifth's too).
+    await expect.poll(async () => (await ui(page))?.intakeCaps).toBe(3);
     // The other cap takes a Bulwark core (?playtest carries two).
     await restoreEntrance(page, 11);
-    await expect.poll(async () => (await ui(page))?.intakeCaps).toBe(1);
+    await expect.poll(async () => (await ui(page))?.intakeCaps).toBe(2);
 
     // Opened and fed: arrows west and east, bombs in the centre, each gauge in its ammo's colour.
     await feedLines(page, [

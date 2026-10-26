@@ -42,7 +42,7 @@ test('entering the foundry attunes the tube once', async ({ page }) => {
   expect(s.link.attuned).toBe(true);
   expect(s.link.attunePulse).toBeGreaterThan(0);
   // The intake is the foundry's own, in the north wall: nothing to unlock or place (019). Only its centre entrance is open (024).
-  expect(s.intake.entrances.map((e) => e.open)).toEqual([false, true, false, false]);
+  expect(s.intake.entrances.map((e) => e.open)).toEqual([false, true, false, false, false]);
   expect(s.unlocked).not.toContain('tube-socket');
   expect(errors).toEqual([]);
 });

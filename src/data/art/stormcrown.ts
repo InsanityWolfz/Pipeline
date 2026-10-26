@@ -125,6 +125,25 @@ const STORMGLASS: Shape[] = [
   { ...line([-2.5, -3, -0.6, -0.5, -2, 2, -0.5, 4.5], 0.8, 'cyan-glow'), glow: { color: 'cyan', blur: 3 } },
 ];
 
+/** The Conductor core: a slate-violet orb in a brass cage, a forked lightning heart glowing through a cyan ley ring. */
+const CONDUCTOR_CORE: Shape[] = [
+  ellipse(0, 0, 6.4, 6.4, { fill: { radial: [-1.5, -1.5, 7] as const, stops: [{ at: 0, color: 'storm-pale' }, { at: 0.5, color: 'storm' }, { at: 1, color: 'storm-dark' }] }, outline: true }),
+  ellipse(0, 0, 3.6, 3.6, { stroke: { color: 'cyan', width: 0.8 }, glow: { color: 'cyan', blur: 2 } }),
+  { ...line([0.8, -3, -1, 0, 0.8, 0.4, -0.8, 3], 1, 'snow'), glow: { color: 'cyan-glow', blur: 3 } },
+  line([-6.4, 0, 6.4, 0], 0.9, 'brass'),
+  line([0, -6.4, 0, -4], 0.9, 'brass'),
+  line([0, 4, 0, 6.4], 0.9, 'brass'),
+  ellipse(-2.4, -3.4, 1, 0.7, flat({ id: 'snow', alpha: 0.6 })),
+];
+
+/** The storm coil: a brass coil wound round an iron core, its ends sparking cyan. */
+const STORM_COIL: Shape[] = [
+  rect(-1.4, -6.5, 2.8, 13, 0.6, { fill: ironBar, outline: true }),
+  ...[-4.5, -2, 0.5, 3].map((y) => rect(-4.6, y, 9.2, 2.2, 1, { fill: { linear: [-4, 0, 4, 0] as const, stops: [{ at: 0, color: 'brass-light' }, { at: 0.5, color: 'brass' }, { at: 1, color: 'brass-dark' }] }, outline: true })),
+  { ...ellipse(0, -6.8, 1.4, 1.4, { fill: 'cyan-glow' }), glow: { color: 'cyan', blur: 3 } },
+  { ...ellipse(0, 6.8, 1.4, 1.4, { fill: 'cyan-glow' }), glow: { color: 'cyan', blur: 3 } },
+];
+
 /** 064: a length of the Crown Spire's wall: slate blocks, a pale top, a brass band and a cyan rune course. */
 const SPIRE_WALL: Shape[] = [
   shadow(16, 4, -1),
@@ -154,5 +173,7 @@ export const STORMCROWN_SPRITES_VECTOR: readonly VectorSprite[] = [
   one(STORMCROWN_SPRITES.rod.warning, STORM_ROD_NODE.size, STORM_ROD_NODE.anchor, ROD_WARNING),
   one(STORMCROWN_SPRITES.rod.strike, STORM_ROD_NODE.size, STORM_ROD_NODE.anchor, ROD_STRIKE),
   one(STORMCROWN_SPRITES.itemStormglass, [16, 16], [8, 8], STORMGLASS),
+  one(STORMCROWN_SPRITES.itemConductorCore, [16, 16], [8, 8], CONDUCTOR_CORE),
+  one(STORMCROWN_SPRITES.itemStormCoil, [16, 16], [8, 8], STORM_COIL),
   one(MAP_ICONS.bridge, [12, 12], [6, 6], ICON_BRIDGE),
 ];
