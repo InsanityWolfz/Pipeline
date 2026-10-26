@@ -7,6 +7,7 @@
 import { EMBERWORKS } from './emberworks';
 import { STORMCROWN } from './stormcrown';
 import { ANVIL_HALL } from './emberworksSites';
+import { CROWN_SPIRE } from './stormcrownSites';
 import { GROTTO } from './grotto';
 import { HOLLOWS, regionAt } from './hollows';
 import { ARRIVE, ENTRANCE, FIELD_WALLS, HOME_SHIFT, MEADOW_VEIN, MOUND, SHRINE, SHRINE_DOOR, SHRINE_PYLON, SHRINE_SHIFT, shrineWalls } from './home';
@@ -108,6 +109,8 @@ export const OVERWORLD = {
     { group: HOLLOWS.arena.id, enemyId: HOLLOWS.arena.boss, tx: HOLLOWS.arena.start.tx, ty: HOLLOWS.arena.start.ty },
     // 060: the Forgewright at its start in the Anvil Hall, in the hall's group, by the same rule.
     { group: ANVIL_HALL.id, enemyId: ANVIL_HALL.boss, tx: ANVIL_HALL.start.tx, ty: ANVIL_HALL.start.ty },
+    // 064: the Conductor at its start rod in the Crown Spire, in the spire's group, by the same rule.
+    { group: CROWN_SPIRE.id, enemyId: CROWN_SPIRE.boss, tx: CROWN_SPIRE.start.tx, ty: CROWN_SPIRE.start.ty },
   ],
   /**
    * Ley lines (018, 053): each pylon's line home, one smooth curve to the foundry's ruin, and the seams its veins stand

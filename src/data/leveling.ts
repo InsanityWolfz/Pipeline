@@ -23,6 +23,9 @@ export const LANDMARK_XP = 25;
 /** The Forgewright's first kill (060). */
 export const FORGEWRIGHT_XP = 500;
 
+/** The Conductor's first kill (064). */
+export const CONDUCTOR_XP = 800;
+
 /** A boss killed again (034's altar refight) gives this share of its XP. */
 export const BOSS_REFIGHT_XP = 0.5;
 

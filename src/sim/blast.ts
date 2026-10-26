@@ -1,7 +1,8 @@
 import type { DamageType } from '../data/ammo';
 import { damageEnemy, targetable, type EnemyState } from './enemies';
 import { chainFromBurst } from './lightning';
-import { hitPart, partsNear, plated } from './forgewrightParts';
+import { plated } from './forgewrightParts';
+import { hitPart, partsNear } from './bossParts';
 import type { SimState } from './state';
 
 // A Burst's damage (029, 034, 037, 038, 039; 060: on the Forgewright's bellows too; 064: a lightning one chains once): a bomb's, a landmine's, a Bomblet's or an
@@ -15,7 +16,7 @@ export function blastArea(state: SimState, roomId: string, x: number, y: number,
   const struck: EnemyState[] = [];
   for (const e of state.enemies) {
     if (e.roomId !== roomId || e.health <= 0 || !targetable(e) || e.id === skip) continue;
-    // 060: each of the Forgewright's bellows in reach takes it; its plated body blocks it (damageEnemy). A Burst that
+    // 060: each of the Forgewright's bellows in reach takes it (064: each of the Conductor's rods); its plated body blocks it (damageEnemy). A Burst that
     // vents it, breaking its second bellows, spends itself there: only later hits land on the body it opened.
     const wasPlated = plated(e);
     for (const part of partsNear(e, x, y, radius)) hitPart(state, e, part, damage, style);

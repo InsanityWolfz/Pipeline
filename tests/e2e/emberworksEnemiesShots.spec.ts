@@ -22,7 +22,7 @@ async function emberworks(page: Page, at: { tx: number; ty: number }, keepGuards
     if (!g) throw new Error('no game');
     // The golem's whelps rise as it falls: again for them.
     for (let k = 0; k < 3; k++) {
-      for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright' && !(keep && e.group === 'ash-kilns')) g.setEnemyHealth(e.id, 0);
+      for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright' && e.enemyId !== 'conductor' && !(keep && e.group === 'ash-kilns')) g.setEnemyHealth(e.id, 0);
       g.step(1);
     }
     g.step(197);

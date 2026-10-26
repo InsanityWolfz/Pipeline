@@ -158,7 +158,7 @@ test('the guided tutorial plays from leaving the foundry to its end', async ({ p
   await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark' && e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
+    for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark' && e.enemyId !== 'forgewright' && e.enemyId !== 'conductor') g.setEnemyHealth(e.id, 0);
     g.step(1);
   });
   await trek(page, [[TERRACE.tx, TERRACE.ty + 5], [TERRACE.tx, TERRACE.ty + 1]]);

@@ -101,7 +101,8 @@ describe('the ring', () => {
       movePlayer(s, top.x, top.y);
       run(s, 300);
     }
-    expect(s.enemies.filter((e) => e.roomId === OVERWORLD.id && e.ring === 5)).toEqual([]);
+    // 064: only the Conductor, in its spire (a boss, not a pack).
+    expect(s.enemies.filter((e) => e.roomId === OVERWORLD.id && e.ring === 5).map((e) => [e.enemyId, e.group])).toEqual([['conductor', 'crown-spire']]);
     expect(s.population.slots.some((p) => (p.ring as number) === 5)).toBe(false);
   });
 });

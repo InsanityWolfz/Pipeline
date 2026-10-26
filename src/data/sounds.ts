@@ -5,7 +5,7 @@ import { GEAR_SOUND_RECIPES, GEAR_SOUNDS } from './gearSounds.ts';
 import { TALENT_SOUND_RECIPES, TALENT_SOUNDS } from './talentSounds.ts';
 import { MINE_SOUND_RECIPES, MINE_SOUNDS } from './mineSounds.ts';
 import { EMBERWORKS_SOUND_RECIPES, EMBERWORKS_SOUNDS, EMBERWORKS_WINDUPS } from './emberworksSounds.ts';
-import { STORMCROWN_SOUND_RECIPES, STORMCROWN_SOUNDS } from './stormcrownSounds.ts';
+import { STORMCROWN_SOUND_RECIPES, STORMCROWN_SOUNDS, STORMCROWN_WINDUPS } from './stormcrownSounds.ts';
 import { EMBERWORKS_ENEMY_SOUND_RECIPES, EMBERWORKS_ENEMY_SOUNDS, EMBERWORKS_ENEMY_WINDUPS } from './emberworksEnemySounds.ts';
 import { TIER_SOUND_RECIPES, TIER_SOUNDS } from './tierSounds.ts';
 import { AMBIENT_SOUND_RECIPES, AMBIENT_SOUNDS } from './ambientSounds.ts';
@@ -281,4 +281,5 @@ export const WINDUP_SOUNDS: Readonly<Record<string, SoundKey>> = {
   ...HOLLOWS_ENEMY_WINDUPS,
   ...EMBERWORKS_WINDUPS,
   ...EMBERWORKS_ENEMY_WINDUPS,
+  ...STORMCROWN_WINDUPS,
 };

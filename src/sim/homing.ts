@@ -1,4 +1,6 @@
 import { defOf } from './champions';
+import { enemyDef } from '../data/enemies';
+import { hasTagKeyword } from '../data/tags';
 import { HOMING } from '../data/tags';
 import type { ArrowState } from './arrows';
 import { targetable } from './enemies';
@@ -27,14 +29,26 @@ export function lockTarget(state: SimState, ammoId: string, x: number, y: number
   return best;
 }
 
-/** Steers each homing arrow toward its target's hurtbox, by at most its turn rate; drops a lost target for good. */
+/**
+ * 064: a homing round with no target re-locks onto an enemy that asks for it (the Conductor's `homingRelock`), when
+ * that enemy is within the round's lock radius of it (the homing rules' radius, from the round, not the cursor).
+ */
+function relock(state: SimState, arrow: ArrowState): number | null {
+  if (!hasTagKeyword(arrow.ammoId, 'homing')) return null;
+  const radius = statOf(state, 'lock-radius', roundEmission(arrow.ammoId), HOMING.lockRadius);
+  const e = state.enemies.find((en) => en.roomId === arrow.roomId && en.health > 0 && targetable(en) && 'homingRelock' in enemyDef(en.enemyId) && Math.hypot(en.x - arrow.x, en.y - arrow.y) <= radius);
+  return e ? e.id : null;
+}
+
+/** Steers each homing arrow toward its target's hurtbox, by at most its turn rate; drops a lost target (064: re-locking onto the Conductor in reach). */
 export function steerArrows(state: SimState): (arrow: ArrowState) => void {
   return (arrow) => {
+    if (arrow.targetId === null) arrow.targetId = relock(state, arrow);
     if (arrow.targetId === null) return;
     // A target gone under the ground (035) is lost like a dead one.
     const e = state.enemies.find((en) => en.id === arrow.targetId && en.roomId === arrow.roomId && en.health > 0 && targetable(en));
     if (!e) {
-      arrow.targetId = null;
+      arrow.targetId = relock(state, arrow);
       return;
     }
     const want = Math.atan2(e.y + defOf(e).hurtbox.offsetY - arrow.y, e.x - arrow.x);

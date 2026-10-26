@@ -1,5 +1,6 @@
 import { BULWARK, type BulwarkDef } from './bulwark';
 import { FORGEWRIGHT, type ForgewrightDef } from './forgewright';
+import { CONDUCTOR, type ConductorDef } from './conductor';
 import { BOSS_WEIGHT } from './combat';
 import { REGION_1_PART, type RarePart } from './drops';
 import { HOLLOWS_ENEMIES, type HollowsEnemyDef } from './hollowsEnemies';
@@ -133,8 +134,8 @@ export interface SlammerDef extends EnemyBase, ScreenLeashed {
 }
 
 /** The Bulwark (034) is in bulwark.ts, the Forgewright (060) in forgewright.ts; Region 2's four (035) are in hollowsEnemies.ts, Region 3's (061) in emberworksEnemies.ts. */
-export type { BulwarkDef, ForgewrightDef };
-export type EnemyDef = MeleeDef | CasterDef | SlammerDef | BulwarkDef | ForgewrightDef | HollowsEnemyDef | EmberworksEnemyDef;
+export type { BulwarkDef, ConductorDef, ForgewrightDef };
+export type EnemyDef = MeleeDef | CasterDef | SlammerDef | BulwarkDef | ForgewrightDef | ConductorDef | HollowsEnemyDef | EmberworksEnemyDef;
 
 /** Every attack's wind-up is at least this long (035): long enough to read and dodge. A data test holds every enemy to it. */
 export const MIN_TELEGRAPH_TICKS = 30;
@@ -245,6 +246,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
   },
   bulwark: BULWARK,
   forgewright: FORGEWRIGHT,
+  conductor: CONDUCTOR,
   ...HOLLOWS_ENEMIES,
   ...EMBERWORKS_ENEMIES,
 };
@@ -281,6 +283,9 @@ export function attackOf(def: EnemyDef): AttackTiming {
       return def.pound;
     case 'forgewright':
       return def.slam;
+    // 064: its first attack's timing; each of its three keeps its own (src/sim/conductorAi.ts).
+    case 'conductor':
+      return { windupTicks: def.lash.windupTicks, swipeTicks: def.lash.activeTicks, recoverTicks: def.lash.recoverTicks, cooldownTicks: def.lash.cooldownTicks };
     case 'charger':
       return def.charge;
     case 'burrower':

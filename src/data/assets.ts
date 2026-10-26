@@ -2,6 +2,7 @@
 import { enemyAnims, type EnemyAnims } from './enemyAnims';
 import { HOLLOWS_ENEMY_ANIMS } from './hollowsEnemyAssets';
 import { FORGE_ANIMS } from './forgewrightAssets';
+import { CONDUCTOR_ANIMS } from './conductorAssets';
 import { EMBER_ENEMY_ANIMS } from './emberworksEnemyAssets';
 
 /** Vector frames drawn at boot (016): one texture of shelf-packed canvas pages, holding every sprite frame by name. */
@@ -147,6 +148,7 @@ export const ENEMY_ANIMS: Readonly<Record<string, EnemyAnims>> = {
   bulwark: enemyAnims('bulwark', true, ['turn', 'lob', 'throw', 'block', 'roar', 'brace', 'stomp']),
   ...HOLLOWS_ENEMY_ANIMS,
   ...FORGE_ANIMS,
+  ...CONDUCTOR_ANIMS,
   ...EMBER_ENEMY_ANIMS,
 };
 

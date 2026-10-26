@@ -23,7 +23,7 @@ async function emberworks(page: Page): Promise<void> {
     // 060: the Forgewright spared, far off in its hall (its first kill is the end card's); 061: again for the whelps
     // the Ash Kilns' golem splits into.
     for (let k = 0; k < 3; k++) {
-      for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
+      for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright' && e.enemyId !== 'conductor') g.setEnemyHealth(e.id, 0);
       g.step(1);
     }
     g.step(197);

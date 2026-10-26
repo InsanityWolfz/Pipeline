@@ -44,6 +44,7 @@ export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   settleSummons(state);
   state.orbs = [];
   state.floodPools = [];
+  state.strikes = [];
   state.claimHold = null;
   state.cacheHold = null;
   state.building = false;

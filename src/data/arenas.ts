@@ -1,4 +1,5 @@
 import { ANVIL_HALL } from './emberworksSites';
+import { CROWN_SPIRE } from './stormcrownSites';
 import { HOLLOWS } from './hollows';
 import { SHRINE, SHRINE_DOOR, SHRINE_INSIDE } from './home';
 import { OVERWORLD_ROOM } from './overworld';
@@ -86,11 +87,14 @@ export const FORUM_ARENA = { ...HOLLOWS.arena, rooms: [OVERWORLD_ROOM, SANDBOX_R
 /** 060: the Forgewright's Anvil Hall, in the Emberworks and in the sandbox's room. */
 export const ANVIL_ARENA = { ...ANVIL_HALL, rooms: [OVERWORLD_ROOM, SANDBOX_ROOM] as readonly string[] } satisfies BossArena;
 
-/** Every arena with a door, the Warden's first. */
-export const ARENAS: readonly ArenaDef[] = [SHRINE_ARENA, FORUM_ARENA, ANVIL_ARENA];
+/** 064: the Conductor's Crown Spire, in the Stormcrown. */
+export const CROWN_ARENA = { ...CROWN_SPIRE, rooms: [OVERWORLD_ROOM] as readonly string[] } satisfies BossArena;
 
-/** The region bosses' arenas (034, 060), each with its altar: the Warden's shrine has none. */
-export const BOSS_ARENAS: readonly BossArena[] = [FORUM_ARENA, ANVIL_ARENA];
+/** Every arena with a door, the Warden's first. */
+export const ARENAS: readonly ArenaDef[] = [SHRINE_ARENA, FORUM_ARENA, ANVIL_ARENA, CROWN_ARENA];
+
+/** The region bosses' arenas (034, 060, 064), each with its altar: the Warden's shrine has none. */
+export const BOSS_ARENAS: readonly BossArena[] = [FORUM_ARENA, ANVIL_ARENA, CROWN_ARENA];
 
 /** The arena whose boss is this enemy (034: the Bulwark's Sunken Forum; 060: the Forgewright's Anvil Hall), if any. */
 export const arenaOf = (enemyId: string): BossArena | undefined => BOSS_ARENAS.find((a) => a.boss === enemyId);

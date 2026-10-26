@@ -5,6 +5,9 @@ import type { SoundRecipe } from './sounds.ts';
 // (a zipping snap out and in), its arc lash (a whip-crack of current), its storm call (a rising hum before thunder) and
 // its rod chain (a buzzing hum of current running rod to rod). Its barrier's collapse is the Hollows barrier's own (034).
 
+/** 064: the Conductor's wind-up cue (joined into WINDUP_SOUNDS): a crack of current as any attack begins (its storm call and rod chain add their own, stormcrownFeel.ts). */
+export const STORMCROWN_WINDUPS = { conductor: 'arc-lash' } as const;
+
 /** 064's sound keys (joined into SOUNDS). */
 export const STORMCROWN_SOUNDS = {
   rodStrike: 'rod-strike',

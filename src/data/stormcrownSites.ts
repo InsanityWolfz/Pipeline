@@ -140,6 +140,25 @@ function spireWalls(): TileStamp[] {
 /** How far the six rod sockets stand from the court's middle, px (6 tiles), and the first's bearing on screen (degrees, 0 east, clockwise). */
 const SOCKET_RING = { r: 192, first: 0 } as const;
 
+/** 064 (raised): the Conductor stands this far in from its rod toward the middle, px, so its body and the rod are hit apart; it starts at the north-east rod. */
+const STAND_IN = 40;
+const START_ROD = 5;
+
+const MIDDLE_PX = { x: (MIDDLE.tx + 0.5) * 32, y: (MIDDLE.ty + 0.5) * 32 };
+const SOCKETS = Array.from({ length: 6 }, (_, i) => {
+  const a = ((SOCKET_RING.first + i * 60) * Math.PI) / 180;
+  return { x: Math.round(MIDDLE_PX.x + Math.cos(a) * SOCKET_RING.r), y: Math.round(MIDDLE_PX.y + Math.sin(a) * SOCKET_RING.r) };
+});
+
+/** Where the Conductor stands at a rod: `STAND_IN` px from its socket toward the middle, px. */
+export function standPoint(rod: number): { x: number; y: number } {
+  const s = SOCKETS[rod] ?? MIDDLE_PX;
+  const d = Math.hypot(MIDDLE_PX.x - s.x, MIDDLE_PX.y - s.y) || 1;
+  return { x: s.x + ((MIDDLE_PX.x - s.x) / d) * STAND_IN, y: s.y + ((MIDDLE_PX.y - s.y) / d) * STAND_IN };
+}
+
+const START_AT = standPoint(START_ROD);
+
 /**
  * The Conductor's arena (064): walled all round, its door in the south wall (055's rules: sealed until the Stormcrown's
  * barrier falls, E in and out). Six rod sockets ring its middle, a hexagon `SOCKET_RING.r` px out, numbered clockwise
@@ -166,10 +185,10 @@ export const CROWN_SPIRE = {
   /** The court's middle tile. */
   middle: MIDDLE,
   /** The six rod sockets, px (each a rod's ground point), clockwise from the east. */
-  sockets: Array.from({ length: 6 }, (_, i) => {
-    const a = ((SOCKET_RING.first + i * 60) * Math.PI) / 180;
-    return { x: Math.round((MIDDLE.tx + 0.5) * 32 + Math.cos(a) * SOCKET_RING.r), y: Math.round((MIDDLE.ty + 0.5) * 32 + Math.sin(a) * SOCKET_RING.r) };
-  }),
+  sockets: SOCKETS,
+  /** The rod its boss starts at, and the tile it stands on there (it rises there, 034's altar rule). */
+  startRod: START_ROD,
+  start: { tx: Math.floor(START_AT.x / 32), ty: Math.floor(START_AT.y / 32) } as TilePos,
   /** Its altar stone in the north-west corner, clear of the rods. */
   altar: { id: 'spire-altar', ...spire({ tx: 2, ty: 2 }) },
   /** The spec's offering: 8 stormglass, from the carried inventory. */

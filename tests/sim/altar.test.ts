@@ -52,6 +52,8 @@ describe('the altar', () => {
       { id: ALTAR, boss: 'bulwark', state: 'dim', summonTicks: 0 },
       // 060: the Anvil Hall's, dim too.
       { id: 'anvil-altar', boss: 'forgewright', state: 'dim', summonTicks: 0 },
+      // 064: the Crown Spire's, dim too.
+      { id: 'spire-altar', boss: 'conductor', state: 'dim', summonTicks: 0 },
     ]);
   });
 

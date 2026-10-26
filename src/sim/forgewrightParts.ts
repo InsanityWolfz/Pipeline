@@ -70,9 +70,6 @@ export function partsNear(e: EnemyState, x: number, y: number, radius: number): 
   });
 }
 
-/** A key for a bellows in an arrow's hit list (never an enemy id, which is never negative), so a piercing shot hits each part once. */
-export const partKey = (id: number, part: number): number => -(id * 2 + part) - 1;
-
 /**
  * A hit on a bellows: it takes the damage (a hit number at it, marked as a part's), and a Cold hit chills, a Fire hit
  * burns, the Forgewright. At 0 it breaks; both broken at once, it vents.

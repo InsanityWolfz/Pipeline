@@ -123,7 +123,7 @@ test("the Bulwark's arena shows on the minimap once it has been on screen, named
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
-    for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark' && e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
+    for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark' && e.enemyId !== 'forgewright' && e.enemyId !== 'conductor') g.setEnemyHealth(e.id, 0);
     g.step(1);
     // 053: round to the forum's north side; 055: E at its door goes in.
     h.walkTo((way + 0.5) * 32, (door - 0.5) * 32);

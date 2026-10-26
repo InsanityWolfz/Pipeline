@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { landmarkDef } from '../../src/data/landmarks';
 import { STORMCROWN } from '../../src/data/stormcrown';
+import { CROWN_SPIRE } from '../../src/data/stormcrownSites';
 import { polar } from '../../src/data/worldShape';
 import { boot, cameraSettled, quietScreen } from './helpers';
 import { feedLines, restoreEntrance, ui } from './intakePage';
@@ -9,7 +10,7 @@ import { SPAWN_GROUP } from '../../src/sim/sandbox';
 import { bootSandbox, hidePanel, openPanel, setRound } from './sandboxPage';
 
 // Review screenshots for 064 (REVIEW_SHOTS=1, into docs/review/064): the Stormcrown from the top of a ramp and the Rod
-// Field charged. Later slices add the lightning arc, the Conductor and the five-entrance intake.
+// Field charged; the lightning arc; the five-entrance intake; the Conductor's blink, storm call and rod chain.
 
 const SHOTS = 'docs/review/064';
 
@@ -29,6 +30,40 @@ export async function stormcrown(page: Page): Promise<void> {
     await clickRow(page, 'keepPlaying');
     await flowIs(page, 'play');
   }
+}
+
+/** Into the Crown Spire by its door (E), the Conductor awake; then steps until `until` holds of its boss summary (the player kept up). */
+async function inSpire(page: Page, until: 'blink' | 'call' | 'chain'): Promise<boolean> {
+  await stormcrown(page);
+  await walkTo(page, CROWN_SPIRE.door.leaveTo);
+  await page.evaluate(() => window.__GAME__?.step(1, { interact: true }));
+  await bannersGone(page);
+  await page.evaluate((m) => window.__helpers?.walkTo((m.tx + 0.5) * 32, (m.ty - 2.5) * 32), CROWN_SPIRE.middle);
+  await cameraSettled(page, 20_000);
+  const spot = { x: (CROWN_SPIRE.middle.tx + 0.5) * 32, y: (CROWN_SPIRE.middle.ty - 2.5) * 32 };
+  return page.evaluate(
+    async ([want, at]) => {
+      const g = window.__GAME__;
+      if (!g) throw new Error('no game');
+      const toward = (d: number): -1 | 0 | 1 => (Math.abs(d) < 6 ? 0 : d > 0 ? 1 : -1);
+      for (let t = 0; t < 2400; t++) {
+        // A few ticks a frame, so only the last frames' bolts and flares are still on show.
+        if (t % 4 === 0) await new Promise((r) => requestAnimationFrame(r));
+        g.setPlayerHealth(100);
+        // Back to its spot after each knock, so the camera holds.
+        const p = g.getState().player;
+        const s = g.step(1, { moveX: toward(at.x - p.x), moveY: toward(at.y - p.y) });
+        const c = s.bosses.find((b) => b.enemyId === 'conductor');
+        // At a rod in the top of the view (the east, west and both north ones), so it's in the shot.
+        if (!c || ![0, 3, 4, 5].includes(c.rod)) continue;
+        if (want === 'blink' && [0, 3, 4, 5].includes(c.blinkTo) && c.blinkWarn <= 25) return true;
+        if (want === 'call' && c.attack === 1 && c.mode === 'windup' && c.modeTicks >= 30) return true;
+        if (want === 'chain' && c.attack === 2 && c.mode === 'swipe' && c.modeTicks >= 4) return true;
+      }
+      return false;
+    },
+    [until, spot] as const,
+  );
 }
 
 async function walkTo(page: Page, t: { tx: number; ty: number }): Promise<void> {
@@ -172,5 +207,26 @@ test.describe('review screenshots (064)', () => {
     });
     expect(fresh).toEqual(['arrow', 'ley-bolt', 'arrow+fire', 'arrow+frost', 'arrow+lightning']);
     await page.screenshot({ path: `${SHOTS}/05-five-lane-volley.png` });
+  });
+
+  test('the Conductor about to blink, the rod it goes to flashing', async ({ page }) => {
+    test.setTimeout(180_000);
+    expect(await inSpire(page, 'blink')).toBe(true);
+    await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().stormcrown.conductor.target ?? -1)).toBeGreaterThanOrEqual(0);
+    await page.screenshot({ path: `${SHOTS}/06-conductor-blink.png` });
+  });
+
+  test('the storm call’s circles on and round the player', async ({ page }) => {
+    test.setTimeout(180_000);
+    expect(await inSpire(page, 'call')).toBe(true);
+    await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().stormcrown.conductor.strikes ?? 0)).toBe(3);
+    await page.screenshot({ path: `${SHOTS}/07-storm-call.png` });
+  });
+
+  test('the rod chain’s lightning between the rods', async ({ page }) => {
+    test.setTimeout(180_000);
+    expect(await inSpire(page, 'chain')).toBe(true);
+    await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().stormcrown.conductor.chain ?? false)).toBe(true);
+    await page.screenshot({ path: `${SHOTS}/08-rod-chain.png` });
   });
 });

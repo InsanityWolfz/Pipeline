@@ -40,7 +40,7 @@ test('the Forgewright’s first kill drops the Stormcrown’s barrier, and the p
   await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark' && e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
+    for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark' && e.enemyId !== 'forgewright' && e.enemyId !== 'conductor') g.setEnemyHealth(e.id, 0);
     g.step(1);
   });
   expect(await fell(page, 'bulwark', 'emberworks')).toBe(true);
