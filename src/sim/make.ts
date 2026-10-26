@@ -18,9 +18,9 @@ export function batchesHeld(inventory: Inventory, recipe: RecipeDef): number {
 /**
  * Takes a recipe's inputs and gives its output, `batches` times over (070: craft max) as one craft, marking the output
  * hand-made (it unlocks the machine that makes it). The caller has checked the inputs. Its one event names the batches
- * only when there's more than one.
+ * of a craft max (`max`), however many; a plain craft's names none.
  */
-export function make(state: SimState, recipe: RecipeDef, batches = 1): void {
+export function make(state: SimState, recipe: RecipeDef, batches = 1, max = false): void {
   for (const [itemId, n] of Object.entries(recipe.inputs)) state.inventory[itemId] = count(state.inventory, itemId) - n * batches;
   const { itemId, count: made } = recipe.output;
   state.inventory[itemId] = count(state.inventory, itemId) + made * batches;
@@ -28,5 +28,5 @@ export function make(state: SimState, recipe: RecipeDef, batches = 1): void {
     state.crafted.push(itemId);
     state.crafted.sort();
   }
-  state.events.crafts.push(batches > 1 ? { recipeId: recipe.id, batches } : { recipeId: recipe.id });
+  state.events.crafts.push(max ? { recipeId: recipe.id, batches } : { recipeId: recipe.id });
 }

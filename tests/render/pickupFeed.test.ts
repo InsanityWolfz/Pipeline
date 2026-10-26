@@ -63,4 +63,8 @@ describe('a craft max in the feed (070)', () => {
     for (const m of made) lines = addPickup(lines, m.itemId, m.count);
     expect(shown(lines)).toEqual([['arrow', 32]]);
   });
+
+  it('a craft max of one batch still has its line', () => {
+    expect(craftFeed([{ recipeId: 'arrow', batches: 1 }])).toEqual([{ itemId: 'arrow', count: recipeDef('arrow').output.count }]);
+  });
 });

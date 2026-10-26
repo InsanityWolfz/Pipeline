@@ -112,11 +112,11 @@ export function taggedAffordable(state: TaggedStores, rowId: string): boolean {
  * from the intake's entrances, and gives the tagged rounds, so the round counts as hand-made and its stage machine
  * unlocks. The caller (crafting.ts) has checked it's known and affordable.
  */
-export function craftTagged(state: SimState, rowId: string, batches = 1): void {
+export function craftTagged(state: SimState, rowId: string, batches = 1, max = false): void {
   const row = stageRow(rowId);
   if (!row) throw new Error(`Unknown tagged round recipe '${rowId}'`);
   for (const [itemId, need] of Object.entries(row.recipe.inputs)) pullFromEntrances(state, itemId, need * batches - count(state.inventory, itemId));
-  make(state, row.recipe, batches);
+  make(state, row.recipe, batches, max);
 }
 
 /** Stage ids the player can build (any of their tagged rounds has been hand-made: 039, hand-applied once to any round), in stage order. */

@@ -68,7 +68,7 @@ export interface SimEvents extends ForgeEvents, BlueprintEvents, EmberEvents, St
   deaths: DeathEvent[];
   pickups: PickupEvent[];
   harvests: HarvestEvent[];
-  /** Hand crafts: one per click; a craft max (070) names its batches when it made more than one. */
+  /** Hand crafts: one per click; a craft max (070) names its batches, even one. */
   crafts: { recipeId: string; batches?: number }[];
   craftFails: { recipeId: string }[];
   bursts: BurstEvent[];

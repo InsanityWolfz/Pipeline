@@ -43,8 +43,8 @@ export function craftMax(state: SimState, recipeId: string): boolean {
     state.events.craftFails.push({ recipeId });
     return false;
   }
-  if (RECIPES[recipeId]) make(state, recipeDef(recipeId), batches);
-  else craftTagged(state, recipeId, batches);
+  if (RECIPES[recipeId]) make(state, recipeDef(recipeId), batches, true);
+  else craftTagged(state, recipeId, batches, true);
   return true;
 }
 

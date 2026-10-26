@@ -22,12 +22,12 @@ describe('craft max (070)', () => {
     expect(s.crafted).toEqual(['arrow']);
   });
 
-  it('with inputs for one batch, crafts one, as a plain click does', () => {
+  it('with inputs for one batch, crafts one, its event still naming its batch (one feed line)', () => {
     const s = arena();
     s.inventory = { shaft: 1, arrowhead: 1, rope: 3 };
     expect(craftMax(s, 'arrow')).toBe(true);
     expect(s.inventory).toMatchObject({ shaft: 0, arrowhead: 0, rope: 2, arrow: ARROW.output.count });
-    expect(s.events.crafts).toEqual([{ recipeId: 'arrow' }]);
+    expect(s.events.crafts).toEqual([{ recipeId: 'arrow', batches: 1 }]);
   });
 
   it('a plain craft still makes one batch', () => {
@@ -87,7 +87,7 @@ describe('craft max (070)', () => {
       expect(craftMax(s, 'frost-rune-arrow')).toBe(true);
       expect(s.inventory).toMatchObject({ arrow: 0, 'arrow+frost': made });
       expect(entrance.count).toBe(40 - (need('arrow') - 1));
-      expect(s.events.crafts).toEqual([{ recipeId: 'frost-rune-arrow' }]);
+      expect(s.events.crafts).toEqual([{ recipeId: 'frost-rune-arrow', batches: 1 }]);
     });
   });
 });

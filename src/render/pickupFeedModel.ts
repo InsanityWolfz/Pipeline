@@ -34,7 +34,7 @@ export function lineAlpha(line: FeedLine, tuning: Tuning = PICKUP_FEED): number 
 }
 
 /**
- * 070: the feed lines hand crafts add: a craft max (one with `batches`) is one line of everything it made. A plain
+ * 070: the feed lines hand crafts add: a craft max (one with `batches`, even one) is one line of everything it made. A plain
  * click's craft adds none (031 left hand crafts out of the feed).
  */
 export function craftFeed(crafts: readonly { recipeId: string; batches?: number }[]): { itemId: string; count: number }[] {
