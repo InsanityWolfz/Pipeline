@@ -2,6 +2,21 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-26: 066 The third tier: stormsteel and storm glass
+**Changed:** on `claude/066-stormsteel` (InsanityWolfz/Pipeline#77, stacked on 065; plan docs/plans/066-stormsteel.md, five slices):
+- two more tiers in 062's system, `stormsteel` (arrows, bombs, landmines) and `storm-glass` (ley bolts), at `TIER_DAMAGE` 2.56: one breakdown step, applied once per hit, burn and Lightning arcs following the hit; 28 derived rounds with icons and gauge colours;
+- the Tempering coil in the Forge group (ley-steel or ley glass + stormglass), every tiered machine's stormsteel variant, mixing and the jam status across three tiers;
+- a machine now unlocks once anything it makes is hand-crafted (design.md's rule), so a Steel plate or Steel landmine unlocks the plate press or mine packer;
+- three Milestone 3 goals; the coil's crackle and sharper stormsteel shots; crafting-row names kept clear of each other.
+
+`SAVE_VERSION` stays 18 (no shape change). Reviewed: one blocking finding fixed (066.1 now says exactly what the unlock change does, pinned by a test) and seven suggestions. `npm run check` 2419 tests; CI green. Raised for Shaun: 066.1–066.19.
+
+**Next:** Shaun's playtest; his OK on 066.1–066.19; "merge 77" last, after 72, 73, 75 and 76.
+
+**Notes:**
+- `npm run measure`: a ring 5 pack clears in 9.2 s with stormsteel against 14.6 s with steel, 20/20, no KOs.
+- The whole queue (061–066) is ready to play; the stack merges in order 72 → 73 → 75 → 76 → 77, with 74 (063) independent. Save versions: 061 14, 063 15, 062 16, 064 17, 065 18; merging 063 among them needs its save-version lines resolved.
+
 ## 2026-10-26: 065 Stormcrown enemies
 **Changed:** on `claude/065-stormcrown-enemies` (InsanityWolfz/Pipeline#76, stacked on 064; plan docs/plans/065-stormcrown-enemies.md, five slices):
 - flight (`flight.ts`): fliers cross terrain but never arena walls, safe zones or a shut ring barrier (a full circle), never push walkers, and their drops land on open ground;

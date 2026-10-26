@@ -283,3 +283,8 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - Enemy groups that act as one (mite trios) link at spawn (`linkTrios`) and count member by member toward a pack's size and wipe.
   - Player statuses (the slow) apply once per tick in `step.ts`, to walk speed and roll distance, never a roll's ticks.
 
+- **066 stormsteel:**
+  - A tier's `TIER_DAMAGE` is its total over stone (stormsteel 2.56), so the breakdown shows one step whatever the tier.
+  - A machine unlocks when any recipe it runs (any variant) has been hand-crafted, design.md's "crafting something by hand once unlocks the machine that makes it".
+  - Tier content (names, damage, families, fire sounds) is data in `src/data/tiers.ts` and `tierSounds.ts`; a fourth tier is new data.
+
