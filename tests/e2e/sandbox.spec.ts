@@ -16,7 +16,8 @@ import { bootSandbox, clickPanel, openPanel, setRound, spawnPack } from './sandb
 const SPAWN_AT = { x: (SANDBOX.spawn.tx + 0.5) * TILE_SIZE, y: (SANDBOX.spawn.ty + 0.5) * TILE_SIZE };
 
 test('boots ?sandbox into its room, and a mixed loadout fires from the panel', async ({ page }) => {
-  test.setTimeout(120_000);
+  // 064: about 40 panel clicks now that the round list holds the lightning rounds (57 choices).
+  test.setTimeout(240_000);
   const errors = watchErrors(page);
   await bootSandbox(page);
   const s = await page.evaluate(() => window.__GAME__?.getState());
