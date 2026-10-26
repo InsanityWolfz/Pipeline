@@ -18,8 +18,9 @@ const SPAWN_AT = { x: (SANDBOX.spawn.tx + 0.5) * TILE_SIZE, y: (SANDBOX.spawn.ty
 test('boots ?sandbox into its room, and a mixed loadout fires from the panel', async ({ page }) => {
   // 064: 44 panel clicks now that the round list holds the lightning rounds (57 choices; 062: 39 of 43), about 1.1 s a
   // click. Measured with another build's tests running beside it: 66–96 s here, against 47 s on 062's head.
-  // 066: 64 clicks now that it holds the storm rounds too (85 choices). Measured alone, one Playwright process: 58 s on
-  // the commit before (a2bc6de, 44 clicks), 90 s here; scaled by 064's loaded 96 s, about 140 s under load.
+  // 066: the storm rounds take it to 85 choices and 64 clicks (was 44). Measured alone, one Playwright process: 58 s on
+  // the commit before (a2bc6de) and 90 s here. Scaling 064's loaded 96 s by that measured time (96 × 90 / 58), not by
+  // the clicks, gives about 149 s under load; 220 s leaves room above it.
   test.setTimeout(220_000);
   const errors = watchErrors(page);
   await bootSandbox(page);

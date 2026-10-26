@@ -1,4 +1,5 @@
 import type { SoundRecipe } from './soundRecipe.ts';
+import type { Tier } from './tiers.ts';
 
 // 062's sounds, as synth recipes beside sounds.ts's: the Smelter's pour as it starts a craft (a hiss of molten metal
 // and a low gurgle), the kiln's roar (a rushing fire with a deep rumble), and a steel round's heavier shot: its
@@ -73,6 +74,15 @@ export const STEEL_FIRE_SOUNDS = { arrow: TIER_SOUNDS.fireArrowSteel, bomb: TIER
 
 /** 066: a stormsteel round fires with these, by its family: steel's, sharper. */
 export const STORMSTEEL_FIRE_SOUNDS = { arrow: TIER_SOUNDS.fireArrowStormsteel, bomb: TIER_SOUNDS.fireBombStormsteel, landmine: TIER_SOUNDS.fireBombStormsteel } as const;
+
+/** A sound key of this file's. */
+type TierSoundKey = (typeof TIER_SOUNDS)[keyof typeof TIER_SOUNDS];
+
+/**
+ * Each metal tier's own fire sounds, by family (062: steel's heavier; 066: stormsteel's sharper). A round of any other
+ * tier (stone, or a glass or storm glass bolt) fires with its family's own sound.
+ */
+export const TIER_FIRE_SOUNDS: Readonly<Partial<Record<Tier, Readonly<Record<string, TierSoundKey>>>>> = { steel: STEEL_FIRE_SOUNDS, stormsteel: STORMSTEEL_FIRE_SOUNDS };
 
 /** 062: the sound a Forge machine makes as it starts working a craft, by machine id (066: the coil's crackle). */
 export const WORK_SOUNDS = { smelter: TIER_SOUNDS.smelterPour, kiln: TIER_SOUNDS.kilnRoar, 'tempering-coil': TIER_SOUNDS.coilCrackle } as const;

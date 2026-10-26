@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { JAM_TICKS } from '../../src/data/foundry';
 import { machineDef } from '../../src/data/pieces';
 import { recipeDef } from '../../src/data/recipes';
 import type { CrateState, HopperState, MachineState } from '../../src/sim/pieces';
 import type { SimState } from '../../src/sim/state';
+import { statusRecipe } from '../../src/sim/flow';
 import { machineRecipe } from '../../src/sim/stages';
 import { run, runUntil } from './fight';
 import { foundry, put } from './foundryKit';
@@ -147,6 +149,22 @@ describe('machines make the storm tier, by input (066)', () => {
     const made = madeOver(s, 400);
     expect([...made].sort()).toEqual(['8 arrow+steel', '8 arrow+stormsteel']);
     expect(m.buffer).toEqual({ shaft: 0, rope: 0, 'steel-arrowhead': 0, 'stormsteel-arrowhead': 0 });
+  });
+
+  it('a knapper whose stormsteel arrowheads stop moving, with a stone set waiting, reads blocked after JAM_TICKS on the stone recipe', () => {
+    const s = foundry();
+    // Nothing in front: its output can't go out.
+    const m = put<MachineState>(s, 'knapper', 6, 5);
+    Object.assign(m, { made: 'stormsteel-arrowhead', output: 2 });
+    Object.assign(m.buffer, { stone: 1 });
+    run(s, 1);
+    // A hand-off at first: the stone set waits for the stormsteel arrowheads to go out (062).
+    expect(m).toMatchObject({ crafting: false, output: 2, status: 'working', missing: [] });
+    expect(statusRecipe(m)).toBe(recipeDef('arrowhead'));
+    run(s, JAM_TICKS);
+    expect(m).toMatchObject({ crafting: false, output: 2, made: 'stormsteel-arrowhead', status: 'blocked', missing: [] });
+    expect(statusRecipe(m)).toBe(recipeDef('arrowhead'));
+    expect(m.buffer).toEqual({ stone: 1 });
   });
 });
 

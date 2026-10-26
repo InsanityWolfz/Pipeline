@@ -53,4 +53,12 @@ describe('a crafting row’s item names (066)', () => {
     expect(spans[1]?.[1]).toBeLessThanOrEqual(L.rowWidth - L.input.x);
     expect(spans[0]?.[0]).toBe(L.input.x);
   });
+
+  it('inputs wider than the row together never push the output’s name past the row’s end', () => {
+    const widths = [60, 60, 60, 48];
+    expect(widths.slice(0, -1).reduce((a, b) => a + b + L.nameGap, 0)).toBeGreaterThan(L.rowWidth);
+    const spans = placed(ICONS3, widths);
+    expect(spans[3]?.[1]).toBeLessThanOrEqual(L.rowWidth - L.input.x);
+    for (const [x] of spans) expect(x).toBeGreaterThanOrEqual(L.input.x);
+  });
 });

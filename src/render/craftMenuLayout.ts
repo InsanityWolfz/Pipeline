@@ -46,27 +46,30 @@ export function craftTabRows(tab: number): (MenuBox & { id: string })[] {
   });
 }
 
-/** 066: the room kept between a row's item names, and between a name and the row's ends, px. */
-const NAME_GAP = 2;
-
 /**
  * Where a crafting row's item names sit, px from the row's left, given each icon's x and its name's width. Each sits as
  * 026 put it: centred under its icon, or from its left edge when wider. 066: a name that would run into the next one
- * (or past the row's end) moves left just enough, then one that would run into the name before it moves right past it,
- * so the storm tier's long names ("Stormsteel arrowhead") stay inside the row. A row whose names fit is unchanged.
+ * (`nameGap` px short of it) or past the row's end (`input.x` px short of it, the same margin as the row's start) moves
+ * left just enough, then one that would run into the name before it moves right past it, so the storm tier's long names
+ * ("Stormsteel arrowhead") stay inside the row. A row whose names fit is unchanged.
  */
 export function rowNameXs(names: readonly { iconX: number; w: number }[]): number[] {
   const L = CRAFT_MENU_LAYOUT;
+  const end = L.rowWidth - L.input.x;
   const xs = names.map((n) => n.iconX + Math.max(0, Math.round((L.iconSize - n.w) / 2)));
   for (let i = names.length - 1; i >= 0; i--) {
-    const limit = i === names.length - 1 ? L.rowWidth - L.input.x : (xs[i + 1] ?? 0) - NAME_GAP;
+    const limit = i === names.length - 1 ? end : (xs[i + 1] ?? 0) - L.nameGap;
     const w = names[i]?.w ?? 0;
     if ((xs[i] ?? 0) + w > limit) xs[i] = limit - w;
   }
   for (let i = 0; i < names.length; i++) {
-    const before = i === 0 ? L.input.x : (xs[i - 1] ?? 0) + (names[i - 1]?.w ?? 0) + NAME_GAP;
+    const before = i === 0 ? L.input.x : (xs[i - 1] ?? 0) + (names[i - 1]?.w ?? 0) + L.nameGap;
     xs[i] = Math.max(xs[i] ?? 0, before);
   }
+  // Inputs whose names alone are wider than the row would push the output's past its end: the output's name is the
+  // row's point, so it stays inside, ending at the row's end (over the last input's name), but never left of its start.
+  const last = names.length - 1;
+  if (last >= 0) xs[last] = Math.max(L.input.x, Math.min(xs[last] ?? 0, end - (names[last]?.w ?? 0)));
   return xs;
 }
 

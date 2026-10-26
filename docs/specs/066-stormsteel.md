@@ -124,14 +124,25 @@ build settled something the spec left open, it is raised below. `SAVE_VERSION` s
   - a coil line firing stormsteel arrows;
   - the hover and the breakdown step;
   - the crafting menu's storm rows, every name inside its row.
+- **Older review shots:** `rowNameXs` moves names in every crafting row and the build bar's groups sit closer, so the
+  older shot specs that draw the crafting menu or the build bar were run with REVIEW_SHOTS=1, one process each, and all
+  passed: menuLabels (026), ammoStagesShots (029), hudInventoryShots (031), researchShots (033), minesShots (038),
+  readabilityShots (045), inventoryHotbarsShots (047), guidedTutorialShots (058), materialTiersShots (062) and
+  shippableShots (042). Their images were restored afterwards, not committed.
 
 ## Raised after the build (OK them, or say what to change)
 Builder decisions the spec didn't settle.
 
 Machines and crafting:
-- 066.1 A machine now unlocks once anything it makes has been hand-crafted, not only its first recipe's output. That
-  makes storm glass at the bench unlock the coil, as the spec asks. It also means a stormsteel arrowhead unlocks the
-  knapper, which can't come first in play.
+- 066.1 A machine now unlocks once anything it makes has been hand-crafted, not only its first recipe's output (065's
+  rule). This follows design.md's "Crafting something by hand once unlocks the machine that makes it", and makes storm
+  glass at the bench unlock the coil, as the spec asks. It reaches past the coil:
+  - once ley-steel has been carried, a player who skipped landmines can hand-craft a Steel plate, which now unlocks the
+    plate press, or a Steel landmine, which now unlocks the mine packer. On 065 neither did;
+  - a steel or stormsteel part or round unlocks its machine the same way (a Stormsteel arrowhead the knapper);
+  - before any tier material has been carried nothing changes, so the guided tutorial unlocks nothing early.
+
+  Tests: tests/sim/unlockByCraft.test.ts.
 - 066.2 The coil's rows:
   - stormsteel shows once ley-steel and stormglass have been carried; storm glass once ley glass and stormglass have;
   - storm glass waits for the tube's attunement, as ley glass does (062.8);
@@ -145,6 +156,8 @@ Machines and crafting:
     run into the name before it moves right past it.
   - A row whose names already fit is drawn as before.
   - This also fixes 062's Steel arrow row, where "Steel arrowhead" overlapped "Rope" by 4 px.
+  - If a row's input names alone were ever wider than the row (none are), the output's name would still end inside
+    the row, over the last input's name, rather than being pushed past its end.
 
 Layout:
 - 066.5 To fit the 26th piece, the build bar's groups sit 3 px apart (062.5: 6). The bar now spans the 640 px view
@@ -190,5 +203,6 @@ Tests and kit:
   gives the new parts and every storm round, and its loadout offers them (Vitest).
 - 066.19 The sandbox's round list has 85 choices (was 57), so its mixed-loadout e2e makes 64 panel clicks (was 44).
   - Measured alone, one Playwright process: 58 s on the commit before (a2bc6de) and 90 s here.
-  - Scaled by 064's loaded 96 s, that is about 140 s under load, so its timeout goes from 150 s to 220 s.
+  - Scaling 064's loaded 96 s by that measured time (96 × 90 / 58), not by the clicks, gives about 149 s under load,
+    so its timeout goes from 150 s to 220 s.
 
