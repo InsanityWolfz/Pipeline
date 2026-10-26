@@ -31,25 +31,25 @@ test.describe('review screenshots (062)', () => {
     await quietScreen(page);
     await page.screenshot({ path: `${SHOTS}/01-smelter-arrow-line.png` });
 
-    // A mixed line: a knapper fed stone from behind and ley-steel from its side, out into a crate. It takes turns,
+    // A mixed line: a knapper fed stone from behind and ley-steel from below, out into a crate. It takes turns,
     // so both arrowheads come out; the shot waits for it to be working its steel set.
     const knapper = await page.evaluate(() => {
       const g = window.__GAME__;
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
-      for (const [pieceId, tx, ty, facing] of [['hopper', 15, 4, 'right'], ['knapper', 16, 4, 'right'], ['crate', 17, 4, 'right'], ['hopper', 16, 3, 'down']] as const) g.step(1, { place: { pieceId, tx, ty, facing } });
+      for (const [pieceId, tx, ty, facing] of [['hopper', 15, 7, 'right'], ['knapper', 16, 7, 'right'], ['crate', 17, 7, 'right'], ['hopper', 16, 8, 'up']] as const) g.step(1, { place: { pieceId, tx, ty, facing } });
       let s = g.step(1);
       const at = (tx: number, ty: number) => s.foundry.pieces.find((p) => p.tx === tx && p.ty === ty);
       // The kit carries ley-iron and cinderite, not ley-steel (062): smelted by hand first.
       for (let i = 0; i < 10; i++) g.craft('ley-steel');
-      h.walkTo(14.2 * 32, 4.5 * 32);
-      s = g.step(1, { deposit: { id: at(15, 4)?.id ?? -1, itemId: 'stone', amount: 'half' } });
-      h.walkTo(15.2 * 32, 3.5 * 32);
-      s = g.step(1, { deposit: { id: at(16, 3)?.id ?? -1, itemId: 'ley-steel', amount: 'half' } });
+      h.walkTo(14.2 * 32, 7.5 * 32);
+      s = g.step(1, { deposit: { id: at(15, 7)?.id ?? -1, itemId: 'stone', amount: 'half' } });
+      h.walkTo(15.2 * 32, 8.5 * 32);
+      s = g.step(1, { deposit: { id: at(16, 8)?.id ?? -1, itemId: 'ley-steel', amount: 'half' } });
       h.walkTo(8.5 * 32, 5.5 * 32);
       const made = new Set<string>();
       const steelNow = (): boolean => {
-        const k = at(16, 4);
+        const k = at(16, 7);
         return k?.kind === 'machine' && k.made === 'steel-arrowhead' && k.crafting;
       };
       for (let t = 0; t < 900 && !(made.size === 2 && steelNow()); t++) {
@@ -57,7 +57,7 @@ test.describe('review screenshots (062)', () => {
         for (const m of s.events.made) if (m.pieceId === 'knapper') made.add(m.itemId);
       }
       if (made.size !== 2) throw new Error(`the knapper made ${[...made].join(', ')}`);
-      const k = at(16, 4);
+      const k = at(16, 7);
       return { x: ((k?.tx ?? 0) + 0.5) * 32, y: ((k?.ty ?? 0) + 0.5) * 32 };
     });
     await cameraSettled(page);
