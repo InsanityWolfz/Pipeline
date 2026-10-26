@@ -3,6 +3,8 @@ status: approved
 
 Approved by Shaun in chat, 2026-10-26: he picked it from the agent-playtest proposals, built as written. Its plan is pre-approved.
 
+Plan pre-approved by Shaun in chat, 2026-10-26. Plan: docs/plans/070-handling-clarity.md.
+
 Drafted from the opening and Hollows playtesters' findings (docs/brainstorm/2026-10-26-agent-playtest.md) and the proposal Shaun approved.
 
 ## Goal
