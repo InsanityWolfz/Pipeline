@@ -26,9 +26,9 @@ export class HoverReadout {
   /**
    * Shows `lines` with the panel's bottom-centre at (x, bottom); no lines hides it.
    * It never rises above `minTop` (the top of the camera's view), so it stays on screen.
-   * Returns the panel's top and bottom, so a name can sit clear of it.
+   * Returns the panel's top and bottom, so a name can sit clear of it (069: and its left and width, so it never covers it).
    */
-  show(lines: readonly Line[], x: number, bottom: number, minTop = -Infinity): { top: number; bottom: number } {
+  show(lines: readonly Line[], x: number, bottom: number, minTop = -Infinity): { top: number; bottom: number; left: number; width: number } {
     const L = READOUT_LAYOUT;
     this.back.clear();
     // 069: the texts first, so the panel is as wide as its widest line (the intake's rates), never narrower than before.
@@ -53,6 +53,6 @@ export class HoverReadout {
       icon.setFrame(line[0]).setPosition(left + L.pad, y);
       text.moveTo(left + L.pad + L.count.x, y + L.count.y);
     }
-    return { top, bottom: top + h };
+    return { top, bottom: top + h, left, width };
   }
 }

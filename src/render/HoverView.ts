@@ -75,6 +75,8 @@ export class HoverView {
     let top = hit ? hit.y - hit.rise : 0;
     /** 050.1: where the tag goes: under the thing's feet (its ground point), or under the intake's readout. */
     let below = hit ? hit.y : 0;
+    /** 069: the readout's panel, which the name tag never covers (the intake's rates widen it). */
+    let panelBox: TagBox | null = null;
     // 069: the intake's lines carry each entrance's rates, as the sim measures them.
     const lines = piece ? pieceLines(piece) : hit?.intake ? intakeLines(sim.link.entrances, entranceCap(sim), entranceRates(sim)) : [];
     this.shownLines = lines.map((l) => l[1]);
@@ -83,11 +85,13 @@ export class HoverView {
       const spriteTop = topOf(piece.id) ?? r.y;
       const panel = this.readout.show(lines, r.x, spriteTop, viewTop);
       top = lines.length > 0 ? panel.top : spriteTop;
+      if (lines.length > 0) panelBox = { x: panel.left, y: panel.top, w: panel.width, h: panel.bottom - panel.top };
     } else if (hit?.intake) {
       // The intake (019, 024): each entrance's count over its mouth, kept on screen.
       const panel = this.readout.show(lines, hit.x, hit.y, viewTop);
       top = panel.top;
       below = panel.bottom;
+      panelBox = { x: panel.left, y: panel.top, w: panel.width, h: panel.bottom - panel.top };
     } else this.readout.show([], 0, 0);
     this.back.clear();
     const enemy = hit?.enemy !== undefined ? sim.enemies.find((e) => e.id === hit.enemy) : undefined;
@@ -127,6 +131,7 @@ export class HoverView {
       // The E prompt's key cap over whatever E acts on (045), wherever it is (beside the bench, 052.9).
       ...(prompt ? [{ x: promptCapX(prompt.kind, prompt.x, p.x) - cap.w / 2, y: prompt.y - INTERACT_PROMPTS[prompt.kind].rise - TUTORIAL_LAYOUT.promptLift - cap.h, w: cap.w, h: cap.h }] : []),
       ...(shown === OVERWORLD.id ? [minimapBox(view)] : []),
+      ...(panelBox ? [panelBox] : []),
     ];
     const halfW = piece ? pieceRect(piece).w / 2 : HOVER_NAME.node.w / 2;
     const at = placeNameTag({
