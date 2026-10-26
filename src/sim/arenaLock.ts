@@ -10,6 +10,7 @@ import { SANDBOX_ROOM } from '../data/rooms';
 import { engaged } from './bulwarkAi';
 import { resetFight } from './bulwarkPhases';
 import { resetForge } from './forgewrightAi';
+import { clearStrikes } from './strikes';
 import { gapTo } from './claims';
 import { createEnemy, type EnemyState } from './enemies';
 import type { Command } from './input';
@@ -68,6 +69,8 @@ export function resetBoss(state: SimState, boss: EnemyState): void {
   if (def.kind === 'bulwark') resetFight(state, boss, def);
   // 060: the Forgewright's pools dry and its embers go out.
   if (def.kind === 'forgewright') resetForge(state, boss, def);
+  // 064: the Conductor's storm call's strikes go.
+  if (def.kind === 'conductor') clearStrikes(state, boss.id);
   Object.assign(boss, createEnemy(boss.id, boss.enemyId, { x: boss.homeX, y: boss.homeY }, boss.roomId, boss.group));
   state.enemyBombs = state.enemyBombs.filter((b) => b.enemyId !== boss.enemyId || b.roomId !== boss.roomId);
   state.orbs = state.orbs.filter((o) => o.enemyId !== boss.enemyId || o.roomId !== boss.roomId);

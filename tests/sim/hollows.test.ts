@@ -85,8 +85,8 @@ describe('cliffs against shots', () => {
   it('stop arrows, while a bomb lands beyond them', () => {
     const s = arena();
     s.gates.hollows = true;
-    // The Cut's quarry face, from the south (034's tiles moved by 053: +96 rows; 060: +31, +31).
-    const below = tileCentre({ tx: 56, ty: 134 });
+    // The Cut's quarry face, from the south (034's tiles moved by 053: +96 rows; 060 and 064: +31, +31 each).
+    const below = tileCentre({ tx: 87, ty: 165 });
     movePlayer(s, below.x, below.y);
     run(s, 1, fireAt(below.x, 0));
     let lastY = below.y;
@@ -94,15 +94,15 @@ describe('cliffs against shots', () => {
       lastY = s.arrows[0]?.y ?? lastY;
       return s.arrows.length === 0;
     }, 60);
-    expect(lastY).toBeGreaterThanOrEqual(132 * 32 - 8);
-    // A bomb over the aqueduct's fallen span lands on its far side (moved by 053: +65, +126; 060: +31, +31).
-    const s2 = arena(undefined, tileCentre({ tx: 102, ty: 180 }));
+    expect(lastY).toBeGreaterThanOrEqual(163 * 32 - 8);
+    // A bomb over the aqueduct's fallen span lands on its far side (moved by 053: +65, +126; 060 and 064: +31, +31 each).
+    const s2 = arena(undefined, tileCentre({ tx: 133, ty: 211 }));
     s2.gates.hollows = true;
     s2.inventory = { bomb: 1 };
     hold(s2, 'bomb');
-    run(s2, 1, fireAt(tileCentre({ tx: 102, ty: 174 }).x, tileCentre({ tx: 102, ty: 174 }).y));
+    run(s2, 1, fireAt(tileCentre({ tx: 133, ty: 205 }).x, tileCentre({ tx: 133, ty: 205 }).y));
     runUntil(s2, () => s2.events.bursts.length > 0, 120);
-    expect(s2.events.bursts[0]?.y).toBeLessThan(176 * 32);
+    expect(s2.events.bursts[0]?.y).toBeLessThan(207 * 32);
   });
 });
 

@@ -37,6 +37,8 @@ export interface MachineState extends PieceCommon {
   buffer: Inventory;
   /** Finished items waiting to go out the front. */
   output: number;
+  /** 062: ticks the waiting output has gone unmoved at its front (at most JAM_TICKS); 0 once it moves or is gone. */
+  stalled: number;
   /** The item its output holds: its recipe's, or for a stage (029) the tagged round of the kind it's working on. */
   made: string;
   crafting: boolean;
@@ -134,7 +136,7 @@ export function createPiece(id: number, pieceId: string, tx: number, ty: number,
   if (kind === 'tunnel-out') return { ...common, kind, item: null, progress: 0, pair: null };
   if (kind === 'hopper') return { ...common, kind, item: null, count: 0, timer: 0 };
   if (kind === 'crate') return { ...common, kind, contents: {} };
-  return { ...common, kind, buffer: {}, output: 0, made: recipeDef(machineDef(pieceId).recipeId).output.itemId, crafting: false, progress: 0, status: 'idle', missing: [] };
+  return { ...common, kind, buffer: {}, output: 0, stalled: 0, made: recipeDef(machineDef(pieceId).recipeId).output.itemId, crafting: false, progress: 0, status: 'idle', missing: [] };
 }
 
 /** The tiles a piece covers. A 3x1 piece lies across its facing with (tx, ty) in the middle. */

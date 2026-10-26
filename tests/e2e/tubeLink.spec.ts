@@ -42,7 +42,7 @@ test('entering the foundry attunes the tube once', async ({ page }) => {
   expect(s.link.attuned).toBe(true);
   expect(s.link.attunePulse).toBeGreaterThan(0);
   // The intake is the foundry's own, in the north wall: nothing to unlock or place (019). Only its centre entrance is open (024).
-  expect(s.intake.entrances.map((e) => e.open)).toEqual([false, true, false, false]);
+  expect(s.intake.entrances.map((e) => e.open)).toEqual([false, true, false, false, false]);
   expect(s.unlocked).not.toContain('tube-socket');
   expect(errors).toEqual([]);
 });
@@ -131,7 +131,9 @@ test('?playtest starts with plenty of everything and every machine unlocked', as
   expect(s.inventory).toMatchObject({ arrow: 99, bomb: 99, 'ley-bolt': 99, wood: 99, stone: 99, fiber: 99, 'ley-crystal': 99, 'husk-resin': 99, shaft: 20, 'ley-dust': 20 });
   // 029: every stage machine too, and rimestone for the frost rune; 038: the Cluster die and the landmine chain.
   expect(s.unlocked).toEqual([
-    'conduit', 'splitter', 'underground-entrance', 'underground-exit', 'hopper', 'crate', 'cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'fire-rune', 'shaper', 'fuse-maker', 'packer', 'cluster-die', 'grinder', 'focuser', 'ley-guide', 'prism-lens', 'plate-press', 'mine-packer',
+    'conduit', 'splitter', 'underground-entrance', 'underground-exit', 'hopper', 'crate', 'cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'fire-rune', 'lightning-rune', 'shaper', 'fuse-maker', 'packer', 'cluster-die', 'grinder', 'focuser', 'ley-guide', 'prism-lens', 'plate-press', 'mine-packer',
+    // 062: the Forge's machines (066: and the Tempering coil).
+    'smelter', 'kiln', 'tempering-coil',
   ]);
   expect(s.inventory['rimestone']).toBe(99);
   expect(errors).toEqual([]);

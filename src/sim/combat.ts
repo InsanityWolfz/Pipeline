@@ -4,12 +4,16 @@ import { SPLIT } from '../data/tags';
 import { createShard, type ArrowState } from './arrows';
 import { aggro, damageEnemy, inHurtbox, targetable, type EnemyState, type HitStyle } from './enemies';
 import { recordBlock, shieldBlocks } from './shield';
-import { hitPart, partAt, partKey, plated } from './forgewrightParts';
+import { plated } from './forgewrightParts';
+import { hitPart, partAt, partKey } from './bossParts';
 import { onBossDeath } from './altar';
 import { killXp } from './leveling';
 import { afterKeystoneHit, burning, keystoneHit, takePool } from './keystones';
 import { spawnDrops } from './drops';
 import { spreadBurn } from './fire';
+import { chainLightning } from './lightning';
+import { onEmberDeath } from './emberDeaths';
+import { onStormDeath } from './stormDeaths';
 import type { SimState } from './state';
 import { rotate } from './volley';
 import { shardEmissionOf, shotEmission } from './emissions';
@@ -65,12 +69,14 @@ function strike(state: SimState, arrow: ArrowState, e: EnemyState, spawned: Arro
   // The keystones (037): a pooled arrow hits harder and bursts; a ley bolt shatters a frozen enemy.
   const hit = keystoneHit(state, arrow, e);
   damageEnemy(state, e, arrow.damage * hit.scale, arrow.dx, arrow.dy, arrowHit(arrow));
+  // 064: a lightning hit (a round's or a Shard's) arcs on.
+  if (arrow.damageType === 'lightning') chainLightning(state, e, arrow.damage * hit.scale);
   if (arrow.split) sendShards(state, arrow, e, spawned);
   afterKeystoneHit(state, arrow, e, hit, spawned);
   return true;
 }
 
-/** 060: a hit on one of the Forgewright's bellows: the bellows takes it (a Split still bursts, the keystones still act). */
+/** 060: a hit on one of the Forgewright's bellows (064: or the Conductor's rods): the part takes it (a Split still bursts, the keystones still act). */
 function strikePart(state: SimState, arrow: ArrowState, e: EnemyState, part: number, spawned: ArrowState[]): void {
   arrow.hitIds.push(partKey(e.id, part));
   const hit = keystoneHit(state, arrow, e);
@@ -79,7 +85,7 @@ function strikePart(state: SimState, arrow: ArrowState, e: EnemyState, part: num
   afterKeystoneHit(state, arrow, e, hit, spawned);
 }
 
-/** The bellows (060) under a point that this arrow hasn't hit yet, if any. */
+/** The bellows (060) or rod (064) under a point that this arrow hasn't hit yet, if any. */
 function freshPart(arrow: ArrowState, e: EnemyState): number | null {
   const part = partAt(e, arrow.x, arrow.y);
   return part !== null && !arrow.hitIds.includes(partKey(e.id, part)) ? part : null;
@@ -131,21 +137,39 @@ export function arrowHits(state: SimState, spawned: ArrowState[] = []): (arrow: 
   };
 }
 
-/** Removes dead enemies, recording their deaths, dropping their loot and giving their XP (037). */
+/**
+ * Removes dead enemies, recording their deaths, dropping their loot and giving their XP (037). A cinder mote that
+ * burst on its own (061: `spent`) just goes, passing on only its burn. A death rule (061: a killed mote's death burst, emberDeaths.ts; 065: a killed mite's discharge, stormDeaths.ts) can kill
+ * others, so it passes again until none is left dead.
+ */
 export function removeDead(state: SimState): void {
+  while (state.enemies.some((e) => e.health <= 0)) removeDeadOnce(state);
+}
+
+function removeDeadOnce(state: SimState): void {
   let kept = 0;
+  const dying: EnemyState[] = [];
   for (const e of state.enemies) {
-    if (e.health > 0) {
-      state.enemies[kept++] = e;
+    if (e.health > 0) state.enemies[kept++] = e;
+    else dying.push(e);
+  }
+  state.enemies.length = kept;
+  for (const e of dying) {
+    // 061.22: a mote spent on its own burst still passes its burn on (060), but drops nothing, gives no XP and has no death burst.
+    if (e.spent) {
+      spreadBurn(state, e);
       continue;
     }
+    const def = enemyDef(e.enemyId);
     state.events.deaths.push({ id: e.id, enemyId: e.enemyId, x: e.x, y: e.y, facing: e.facing, ...(e.champion ? { champion: true as const } : {}) });
-    spawnDrops(state, enemyDef(e.enemyId), e.x, e.y, e.roomId, e.champion !== null);
+    // A whelp (061) drops nothing at all.
+    if (!def.noLoot) spawnDrops(state, def, e.x, e.y, e.roomId, e.champion !== null);
     // Any kill gives XP (037): by ammo, burst or punch. Before the boss's own record, which drops a summoned boss.
     killXp(state, e);
     onBossDeath(state, e.enemyId);
-    // 060: a burning enemy passes its burn on as it dies (to the living: later ones in the list are checked as they come).
+    // 060: a burning enemy passes its burn on as it dies (to the living).
     spreadBurn(state, e);
+    onEmberDeath(state, e);
+    onStormDeath(state, e);
   }
-  state.enemies.length = kept;
 }

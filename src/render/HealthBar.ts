@@ -8,6 +8,7 @@ import { chunkOf, createHealthBar, pulseOf, stepHealthBar } from './healthBarMod
 import { healthBlockBox } from './healthLayout';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
+import { STORM_ENEMY_LOOK } from '../data/stormcrownEnemyAssets';
 
 /** The HP bar as drawn (031), for `ui().health`: the block's box, its text, and its states; `chunk` is the white part in HP. */
 export interface HealthShown {
@@ -16,6 +17,8 @@ export interface HealthShown {
   low: boolean;
   healing: boolean;
   chunk: number;
+  /** 065: the slow's wind streaks are on the fill. */
+  slowed: boolean;
   /** 037's XP row: "Lv 7", the bar's fill (0..1; full at the cap), the pip while points are unspent, and the gain tick's strength (0..1). */
   xp: { text: string; fill: number; pip: boolean; tick: number; bar: ScreenBox };
 }
@@ -37,6 +40,8 @@ export interface HealthInput {
   /** Total armor from every worn piece (036). */
   armor: number;
   xp: XpInput;
+  /** 065: the player is slowed (a gale ram's gust): wind streaks slide over the fill. */
+  slowed?: boolean;
 }
 
 // The HP bar (031): bottom-left, a carved frame round a 144x12 fill reading "72 / 100",
@@ -63,6 +68,9 @@ export class HealthBar {
   private tickMs = 0;
   private glowAlpha = 0;
   private healing = false;
+  private slowed = false;
+  /** Ms on the slow's streaks' slide. */
+  private slideMs = 0;
   private block: ScreenBox = healthBlockBox(null);
 
   constructor(scene: Scene) {
@@ -94,7 +102,7 @@ export class HealthBar {
   }
 
   get shown(): HealthShown {
-    return { box: { ...this.block }, text: this.text.obj.text, low: this.model.low, healing: this.healing, chunk: Math.round(chunkOf(this.model) * 100) / 100, xp: { ...this.xpShown } };
+    return { box: { ...this.block }, text: this.text.obj.text, low: this.model.low, healing: this.healing, chunk: Math.round(chunkOf(this.model) * 100) / 100, slowed: this.slowed, xp: { ...this.xpShown } };
   }
 
   /** `buildBar` is the build bar's box while building (the block rises over its labels if it reaches it), else null. */
@@ -123,6 +131,7 @@ export class HealthBar {
     if (pulse > 0) g.fillStyle(colorOf(L.chunkColor), pulse * HP_BAR.pulseBrighten).fillRect(left, top, filled, L.fill.h);
     const chunkEnd = px(m.top);
     if (chunkEnd > filled) g.fillStyle(colorOf(L.chunkColor)).fillRect(left + filled, top, chunkEnd - filled, L.fill.h);
+    this.drawSlow(g, input.slowed === true && !input.dying, left, top, dtMs);
 
     this.text.set(`${Math.ceil(input.health)} / ${input.max}`);
     this.text.moveTo(Math.round(cx - this.text.width / 2), y + L.textY);
@@ -132,6 +141,20 @@ export class HealthBar {
     this.shield.setPosition(shieldX, y + Math.round((L.frame.h - S.h) / 2)).setAlpha(alpha);
     this.value.set(String(input.armor)).moveTo(shieldX + S.w + S.valueGap, y + S.valueY).setAlpha(alpha);
     this.drawXp(input.xp, x, bottom + L.xp.gap, shieldX, dtMs);
+  }
+
+  /** 065: slowed, short pale wind streaks slant across the fill, sliding left to right. */
+  private drawSlow(g: GameObjects.Graphics, slowed: boolean, left: number, top: number, dtMs: number): void {
+    this.slowed = slowed;
+    if (!slowed) return;
+    const S = STORM_ENEMY_LOOK.slowBar;
+    const { w, h } = HUD_HEALTH_LAYOUT.fill;
+    this.slideMs = (this.slideMs + dtMs) % S.slideMs;
+    g.lineStyle(S.width, colorOf(S.color), S.alpha);
+    for (let i = 0; i < S.streaks; i++) {
+      const x = left + (((i / S.streaks + this.slideMs / S.slideMs) % 1) * (w - S.slant));
+      g.lineBetween(x, top + h - 2, x + S.slant, top + 2);
+    }
   }
 
   /** The XP row (037) at its top-left (x, y): the bar under the fill, ticking bright on a gain, and "Lv 7" with the pip under the shield. */

@@ -1,11 +1,12 @@
 import { EMBERWORKS } from '../data/emberworks';
+import { STORMCROWN } from '../data/stormcrown';
 import { HOLLOWS } from '../data/hollows';
 import { STONE_REACH } from '../data/objectives';
 import { FEET_BOX } from '../data/player';
 import { RESPAWN_ROOM } from '../data/player';
 import { SHOT_GATES, TILE, type GateId, type Room } from '../data/rooms';
 import { WORLD } from './world';
-import { recipeDef, REVEALING_ITEMS } from '../data/recipes';
+import { recipeDef, REVEALING_ITEMS, revealsOf } from '../data/recipes';
 import { count, type Inventory } from './inventory';
 import type { Rect } from './collision';
 import { tileRect } from './fixtures';
@@ -29,13 +30,15 @@ export interface Gates {
   hollows: boolean;
   /** The Emberworks' ley barrier across its ramps (060): down on the Bulwark's first kill, for good. */
   emberworks: boolean;
+  /** The Stormcrown's ley barrier across its ramps (064): down on the Forgewright's first kill, for good. */
+  stormcrown: boolean;
 }
 
 /**
  * The tutorial's gates all shut, or all open (the sandbox and playtest starts); the Hollows' barrier waits on the
- * shrine's claim and the Emberworks' on the Bulwark's first kill either way.
+ * shrine's claim, the Emberworks' on the Bulwark's first kill and the Stormcrown's on the Forgewright's either way.
  */
-export const createGates = (open: boolean, hollows = false): Gates => ({ foundry: open, shrine: open, hollows, emberworks: false });
+export const createGates = (open: boolean, hollows = false): Gates => ({ foundry: open, shrine: open, hollows, emberworks: false, stormcrown: false });
 
 
 
@@ -118,7 +121,7 @@ export function sealedRoom(state: Pick<SimState, 'gates'>, room: Room): Room {
 export function knownRecipe(state: { link: Pick<SimState['link'], 'attuned'>; found: readonly string[]; gates: Pick<Gates, 'foundry'> }, recipeId: string): boolean {
   const def = recipeDef(recipeId);
   const attuned = state.link.attuned || state.gates.foundry;
-  return (def.requires !== 'attuned' || attuned) && (def.shownAfter === undefined || state.found.includes(def.shownAfter));
+  return (def.requires !== 'attuned' || attuned) && revealsOf(def).every((id) => state.found.includes(id));
 }
 
 /** The revealing items (038) an inventory holds, in REVEALING_ITEMS order. */
@@ -168,6 +171,8 @@ export function stepGates(state: SimState): void {
   if (!state.gates.hollows && state.claims.includes(HOLLOWS.opensOn)) open(state, 'hollows');
   // 060: the Bulwark's first kill drops the Emberworks' barrier; boss defeats are for good, so it never comes back.
   if (!state.gates.emberworks && state.bossDefeats.includes(EMBERWORKS.opensOn)) open(state, 'emberworks');
+  // 064: the Forgewright's first kill drops the Stormcrown's, for good the same way.
+  if (!state.gates.stormcrown && state.bossDefeats.includes(STORMCROWN.opensOn)) open(state, 'stormcrown');
 }
 
 /** Where a death wakes the player: the start room until the foundry is open (012), then the foundry (011). */

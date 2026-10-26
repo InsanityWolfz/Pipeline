@@ -61,6 +61,8 @@ if (sideIdle) section('Wanderer: facing left', [wandererCell('idle', { ...sideId
 // by frame-name prefixes rather than the asset tables, which is fine for a review sheet that ships in no build.
 const FAMILIES: readonly [title: string, test: (name: string) => boolean][] = [
   ...MACHINE_IDS.map((id): [string, (n: string) => boolean] => [`Machine: ${id} (idle, jammed, working)`, (n) => n.startsWith(`machine-${id}-`)]),
+  ['The storm tier (066): stormsteel, storm glass, the stormsteel parts, every storm round, in flight and armed', (n) => /^(item-stormsteel|item-storm-glass|icon-[a-z-]*-(stormsteel|storm-glass)|arrow-stormsteel|bomb-stormsteel|landmine-stormsteel|landmine-armed-stormsteel|ley-bolt-storm-glass)/.test(n)],
+  ['Material tiers (062): ley-steel, ley glass, the steel parts, every steel and glass round, in flight and armed', (n) => /^(item-ley-steel|item-ley-glass|item-steel-|icon-[a-z-]*-(steel|glass)|arrow-steel|bomb-steel|landmine-steel|landmine-armed-steel|ley-bolt-glass)/.test(n)],
   ['Cold and the Split', (n) => n.startsWith('ice-case') || n.startsWith('split-') || n.startsWith('shard')],
   ['Restoration (033): diagrams, wall panels, the sealed wing, the splitter, research items, the pillar', (n) => /^(research-|splitter-|schematic-|map-schematic|item-ancient|item-aqueduct|item-bulwark|item-schematic|emblem-splitter)/.test(n)],
   ['Stonefall Hollows (034): cliffs, the aqueduct, rubble, ley-iron, the altar, the enemy bomb, the map icon', (n) => /^(ow-cliff|ow-aqueduct|ow-fallen|ow-rubble|item-ley-iron|node-ley-iron|altar-|enemy-bomb|map-aqueduct)/.test(n)],

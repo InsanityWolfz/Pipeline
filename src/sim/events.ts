@@ -7,14 +7,16 @@ import type { Facing } from './player';
 import type { XpSource } from '../data/leveling';
 import { createForgeEvents, type ForgeEvents } from './forgeEvents';
 import { createBlueprintEvents, type BlueprintEvents } from './blueprintEvents';
+import { createEmberEvents, type EmberEvents } from './emberEvents';
+import { createStormEvents, type StormEvents } from './stormEvents';
 
 // What happened on the last tick, for render effects and tests. Cleared at the
 // start of every tick, so render collects them after each step. Crafts happen
 // between ticks and land in the list of the tick before.
 
 export type HitEvent =
-  /** `melee` marks a punch's hit (023); `burning` a burning arrow's (054: through a Pool, for its flash); `burn` a burn's beat (060); `part` a Forgewright's bellows (060). */
-  | { target: 'enemy'; id: number; x: number; y: number; damage: number; damageType: DamageType; melee?: true; burning?: true; burn?: true; part?: number }
+  /** `melee` marks a punch's hit (023); `burning` a burning arrow's (054: through a Pool, for its flash); `burn` a burn's beat (060); `part` a Forgewright's bellows (060); `arc` a lightning arc's (064). */
+  | { target: 'enemy'; id: number; x: number; y: number; damage: number; damageType: DamageType; melee?: true; burning?: true; burn?: true; part?: number; arc?: true }
   | { target: 'player'; x: number; y: number; damage: number };
 
 export interface DeathEvent {
@@ -58,8 +60,8 @@ export interface MeleeEvent {
   hits: number[];
 }
 
-/** 060: the Forgewright's events are in forgeEvents.ts; 063: blueprints' in blueprintEvents.ts. */
-export interface SimEvents extends ForgeEvents, BlueprintEvents {
+/** 060: the Forgewright's events are in forgeEvents.ts; 063: blueprints' in blueprintEvents.ts; 064: the Stormcrown's in stormEvents.ts. */
+export interface SimEvents extends ForgeEvents, BlueprintEvents, EmberEvents, StormEvents {
   hits: HitEvent[];
   deaths: DeathEvent[];
   pickups: PickupEvent[];
@@ -200,6 +202,8 @@ export function createEvents(): SimEvents {
   return {
     ...createForgeEvents(),
     ...createBlueprintEvents(),
+    ...createEmberEvents(),
+    ...createStormEvents(),
     hits: [],
     deaths: [],
     pickups: [],

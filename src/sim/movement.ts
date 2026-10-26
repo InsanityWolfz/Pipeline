@@ -14,6 +14,7 @@ import { facingOf, facingVector, unit } from './direction';
 import type { Command } from './input';
 import { takeKnock } from './knockback';
 import type { PlayerState } from './player';
+import { tickSlow } from './slow';
 
 // Walking, the dodge roll and knockback, one tick at a time.
 
@@ -42,6 +43,8 @@ const BARE: MoveStats = { walkScale: 1, rollDistance: ROLL_DISTANCE, rollCooldow
 /** `moves.walkScale` scales the walk (heavy armor, gear speed, firing); rolls take its distance and cooldown, never its walk speed. */
 export function stepPlayer(p: PlayerState, room: Room, cmd: Command, obstacles: readonly Rect[] = [], moves: MoveStats = BARE): void {
   if (p.hurtTicks > 0) p.hurtTicks -= 1;
+  // 065: the slow counts down (this tick's move already has it).
+  tickSlow(p);
   if (p.rollTick >= ROLL_TICKS) endRoll(p, moves.rollCooldown);
 
   let rolling = isRolling(p);

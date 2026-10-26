@@ -31,6 +31,9 @@ function damageOf(d: EnemyDef): number {
       return d.pound.damage;
     case 'forgewright':
       return d.slam.damage;
+    // 064: its first attack, the lash.
+    case 'conductor':
+      return d.lash.damage;
     case 'charger':
       return d.charge.damage;
     case 'burrower':
@@ -39,6 +42,23 @@ function damageOf(d: EnemyDef): number {
       return d.bash.damage;
     case 'sniper':
       return d.snipe.damage;
+    case 'mote':
+      return d.swell.damage;
+    case 'hound':
+      return d.dash.damage;
+    case 'golem':
+      return d.slam.damage;
+    // 061: the tender has no attack (its heal scales as damage would).
+    case 'tender':
+      return d.beam.heal;
+    case 'hawk':
+      return d.dive.damage;
+    case 'mite':
+      return d.zap.damage;
+    case 'sentinel':
+      return d.strike.damage;
+    case 'ram':
+      return d.gust.damage;
   }
 }
 const pack = (ids: readonly string[]): EnemyState[] => ids.map((id, i) => createEnemy(i, id, { x: i * 40, y: 0 }, 'overworld', 'pop-1-0'));
@@ -115,7 +135,8 @@ describe('the champion roll', () => {
       const s = createSim(seed);
       for (const e of s.enemies) if (e.group === 'field' || e.group === 'shrine') expect(e.champion, `${seed} ${e.group}`).toBeNull();
       landmarkChamps += s.enemies.filter((e) => e.champion && LANDMARK_LIST.some((l) => l.id === e.group)).length;
-      for (const l of LANDMARK_LIST) expect(s.enemies.filter((e) => e.group === l.id && e.champion).length).toBeLessThanOrEqual(1);
+      // One champion a pack, counting a champion mite's trio (065) as one.
+      for (const l of LANDMARK_LIST) expect(new Set(s.enemies.filter((e) => e.group === l.id && e.champion).map((e) => (e.trio >= 0 ? e.trio : e.id))).size).toBeLessThanOrEqual(1);
     }
     expect(landmarkChamps).toBeGreaterThan(0);
   });

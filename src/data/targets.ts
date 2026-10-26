@@ -27,8 +27,8 @@ export type TargetDef =
   | { kind: 'intake' }
   /** Stonefall Hollows' barrier gap (034). */
   | { kind: 'barrier' }
-  /** 060: the tops of the ramps up into the Emberworks, the nearest one. */
-  | { kind: 'ramps' }
+  /** 060: the tops of the ramps up into the Emberworks, the nearest one (064: into the Stormcrown, with `region` 4). */
+  | { kind: 'ramps'; region?: 4 }
   /** A region boss: where it stands, or its arena's start. */
   | { kind: 'boss'; boss: string };
 

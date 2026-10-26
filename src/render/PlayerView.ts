@@ -6,6 +6,7 @@ import { MELEE } from '../data/combat';
 import { IDLE_SPEED } from '../data/config';
 import { DYING_TICKS, FEET_BOX, HIT_INVULN_TICKS } from '../data/player';
 import { ARMOR_TINTS } from '../data/hudLayout';
+import { STORM_ENEMY_LOOK } from '../data/stormcrownEnemyAssets';
 import { aimFacing } from '../sim/direction';
 import { shownFacing } from './playerFacing';
 import { wornPieces, wornRelic } from '../sim/stats';
@@ -73,6 +74,9 @@ export class PlayerView {
   private lastTime = -1;
   /** The facing drawn last frame, or null before the first. */
   private facing: Facing | null = null;
+  /** 065: the slow's wind curls round the legs, and whether they drew last frame (for `ui()`). */
+  private readonly swirl: GameObjects.Graphics;
+  swirling = false;
 
   constructor(scene: Scene) {
     this.scale = textureScale();
@@ -86,6 +90,7 @@ export class PlayerView {
       .image(0, 0, WANDERER_KEY)
       .setScale(1 / this.scale)
       .setOrigin(WANDERER.box.anchor[0] / w, WANDERER.box.anchor[1] / h);
+    this.swirl = scene.add.graphics();
   }
 
   /** Draws the player; `shown` false hides them (they're in a room not yet on screen). `hasTube` false (012) draws them empty-handed. */
@@ -100,6 +105,7 @@ export class PlayerView {
 
     this.pose = this.nextPose(p, tube, link, hasTube, dt);
     this.redraw(p);
+    this.drawSwirl(p, bottom, now, shown);
 
     // Hit invulnerability flickers between a white flash and normal, starting white.
     const elapsed = HIT_INVULN_TICKS - p.hurtTicks;
@@ -110,6 +116,29 @@ export class PlayerView {
       const body = colorOf(ARMOR_TINTS[armor]);
       this.sprite.setTint(UNTINTED, UNTINTED, body, body).setTintMode(TintModes.MULTIPLY);
     } else this.sprite.clearTint();
+  }
+
+  /** 065: slowed, pale wind curls circle the legs, fading over the slow's last ticks; in front of the legs, behind nothing else. */
+  private drawSwirl(p: PlayerState, bottom: number, now: number, shown: boolean): void {
+    const S = STORM_ENEMY_LOOK.slow;
+    const g = this.swirl.clear();
+    this.swirling = shown && p.slowTicks > 0 && p.dying === 0;
+    if (!this.swirling) return;
+    const alpha = S.alpha * Math.min(1, p.slowTicks / S.fadeTicks);
+    const turn = ((now % S.turnMs) / S.turnMs) * Math.PI * 2;
+    g.setDepth(bottom + 0.5).lineStyle(S.width, colorOf(S.color), alpha);
+    for (let i = 0; i < S.curls; i++) {
+      const a = turn + (i * Math.PI * 2) / S.curls;
+      g.beginPath();
+      for (let k = 0; k <= S.points; k++) {
+        const t = a + (k / S.points) * S.len;
+        const x = p.x + Math.cos(t) * S.radius;
+        const y = bottom - S.lift + Math.sin(t) * S.radius * S.squash - k * S.rise;
+        if (k === 0) g.moveTo(x, y);
+        else g.lineTo(x, y);
+      }
+      g.strokePath();
+    }
   }
 
   private nextPose(p: PlayerState, tube: TubeState, link: LinkState, hasTube: boolean, dt: number): WandererPose {

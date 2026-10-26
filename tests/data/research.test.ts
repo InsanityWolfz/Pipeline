@@ -47,8 +47,9 @@ describe('research nodes', () => {
     // Tagged as the spec says: the cores, the two regions' parts, the schematics (052: the merger's gone).
     const tagged = (tag: string) => Object.values(ITEMS).filter((it) => it.research === tag).map((it) => it.id).sort();
     // 060: the Forgewright's core and Region 3's forge rivet.
-    expect(tagged('core')).toEqual(['bulwark-core', 'forgewright-core', 'warden-core']);
-    expect(tagged('machinePart')).toEqual(['ancient-gear', 'aqueduct-valve', 'forge-rivet']);
+    // 064: the Conductor's core and Region 4's storm coil.
+    expect(tagged('core')).toEqual(['bulwark-core', 'conductor-core', 'forgewright-core', 'warden-core']);
+    expect(tagged('machinePart')).toEqual(['ancient-gear', 'aqueduct-valve', 'forge-rivet', 'storm-coil']);
     expect(tagged('schematic')).toEqual(['schematic-machine-speed', 'schematic-reservoir-2']);
     // Kinds unchanged (031 keeps cores a part); the schematics are the one new kind. Panel groups: cores in Cores, the rest in Parts.
     expect(ITEMS['warden-core']).toMatchObject({ kind: 'part', group: 'cores' });

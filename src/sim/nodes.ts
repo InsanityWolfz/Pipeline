@@ -1,7 +1,7 @@
 import { NODE_CYCLE_SALT, nodeDef, type NodeCycle } from '../data/nodes';
 import type { Room } from '../data/rooms';
 import type { Rect } from './collision';
-import { createRng, nextInt } from './rng';
+import { createRng, nextInt, type RngState } from './rng';
 import { tileCentre } from './tiles';
 
 // Gathering nodes as plain data: uses left and the regrow timer. Harvesting is in harvest.ts.
@@ -34,10 +34,18 @@ const period = (c: NodeCycle): number => c.closedTicks + c.warnTicks + c.openTic
  */
 export function createNodes(rooms: readonly Room[], seed = 0): NodeState[] {
   const rng = createRng((seed ^ NODE_CYCLE_SALT) >>> 0);
+  // 064: a kind with its own salt (the storm rods) draws from its own stream, so the vents' points stay as they were.
+  const own = new Map<number, RngState>();
+  const streamOf = (cycle: NodeCycle): RngState => {
+    if (cycle.salt === undefined) return rng;
+    const s = own.get(cycle.salt) ?? createRng((seed ^ cycle.salt) >>> 0);
+    own.set(cycle.salt, s);
+    return s;
+  };
   const placed = rooms.flatMap((room) => (room.nodes ?? []).map((p) => ({ ...p, roomId: room.id })));
   return placed.map((p, i) => {
     const cycle = nodeDef(p.nodeId).cycle;
-    return createNode(i, p.nodeId, tileCentre(p), p.roomId, cycle ? nextInt(rng, 0, period(cycle) - 1) : 0);
+    return createNode(i, p.nodeId, tileCentre(p), p.roomId, cycle ? nextInt(streamOf(cycle), 0, period(cycle) - 1) : 0);
   });
 }
 
@@ -59,11 +67,17 @@ export function useNode(n: NodeState): void {
   if (n.uses === 0) n.regrow = nodeDef(n.nodeId).regrowTicks;
 }
 
-/** Counts down regrow timers; a node whose timer ends is back to full uses. A cycling node (060) moves on through its cycle. */
-export function stepNodes(nodes: NodeState[]): void {
+/**
+ * Counts down regrow timers; a node whose timer ends is back to full uses. A cycling node (060) moves on through its
+ * cycle; lightning striking a storm rod (064) as it turns charged is recorded in `strikes`, and hurts nobody.
+ */
+export function stepNodes(nodes: NodeState[], strikes: { id: number; x: number; y: number }[] = []): void {
   for (const n of nodes) {
     const cycle = nodeDef(n.nodeId).cycle;
-    if (cycle) n.phase = (n.phase + 1) % period(cycle);
+    if (cycle) {
+      n.phase = (n.phase + 1) % period(cycle);
+      if (cycle.strikes && n.phase === cycle.closedTicks + cycle.warnTicks) strikes.push({ id: n.id, x: n.x, y: n.y });
+    }
     if (n.regrow === 0) continue;
     n.regrow -= 1;
     if (n.regrow === 0) n.uses = nodeDef(n.nodeId).uses;

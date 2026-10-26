@@ -85,6 +85,17 @@ export const RESEARCH_NODES: readonly ResearchNode[] = [
     effect: { kind: 'entrance' },
   },
   {
+    // 064: the Conductor's core restores the fifth and last.
+    id: 'entrance-5',
+    name: 'Fifth entrance',
+    description: 'Opens one more intake entrance.',
+    anchor: { kind: 'entrance' },
+    cost: { 'conductor-core': 1 },
+    requires: ['entrance-4'],
+    reveal: 'start',
+    effect: { kind: 'entrance' },
+  },
+  {
     id: 'reservoir-1',
     name: 'Reservoir I',
     description: `Each entrance holds ${ENTRANCE_CAPS[1]} rounds.`,

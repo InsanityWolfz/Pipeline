@@ -302,13 +302,14 @@ describe('the hook', () => {
     const s = inSpring('north-spring', 80);
     run(s, 1);
     const sum = summarize(s);
-    // 053's tiles on the round map, and the Hollows' spring (060: +31 each way with the centre).
+    // 053's tiles on the round map, and the Hollows' spring (060 and 064: +31 each way with the centre, each).
     expect(sum.springs).toEqual([
-      { id: 'west-spring', tx: 91, ty: 137, radius: 48, inside: false },
-      { id: 'south-east-spring', tx: 142, ty: 145, radius: 48, inside: false },
-      { id: 'north-spring', tx: 102, ty: 100, radius: 48, inside: true },
-      { id: 'hollows-spring', tx: 87, ty: 69, radius: 48, inside: false },
-      { id: 'emberworks-spring', tx: 201, ty: 84, radius: 48, inside: false },
+      { id: 'west-spring', tx: 122, ty: 168, radius: 48, inside: false },
+      { id: 'south-east-spring', tx: 173, ty: 176, radius: 48, inside: false },
+      { id: 'north-spring', tx: 133, ty: 131, radius: 48, inside: true },
+      { id: 'hollows-spring', tx: 118, ty: 100, radius: 48, inside: false },
+      { id: 'emberworks-spring', tx: 232, ty: 115, radius: 48, inside: false },
+      { id: 'stormcrown-spring', tx: 241, ty: 226, radius: 48, inside: false },
     ]);
     expect(sum.player.healing).toBe('spring');
     expect(sum.events.heals).toEqual([{ source: 'spring', kind: 'start' }]);

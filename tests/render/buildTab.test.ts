@@ -28,7 +28,7 @@ describe('the Build tab', () => {
 
   it('every round before Fire fits one column at 14 px a row', () => {
     const s = createSim(1);
-    s.crafted = roundsByFamily().filter((r) => !r.includes('fire'));
+    s.crafted = roundsByFamily().filter((r) => !r.includes('fire') && !r.includes('lightning'));
     const groups = buildTabGroups(s, named, named);
     const L = buildTabLayout(PANEL, groups);
     expect(L.columns).toBe(1);
@@ -40,13 +40,13 @@ describe('the Build tab', () => {
     }
   });
 
-  it('060: every round the game has (the Fire rounds too) takes two columns, every row inside the panel', () => {
+  it('060: every round the game has (the Fire rounds too; 064: and Lightning) takes two columns, every row inside the panel', () => {
     const s = createSim(1);
     s.crafted = roundsByFamily();
     const groups = buildTabGroups(s, named, named);
     const L = buildTabLayout(PANEL, groups);
     expect(L.columns).toBe(2);
-    expect(L.rows).toHaveLength(21);
+    expect(L.rows).toHaveLength(28);
     for (const r of L.rows) {
       expect(r.box.h).toBe(BUILD_TAB.rowH);
       expect(r.box.y + r.box.h).toBeLessThanOrEqual(PANEL.y + PANEL.h - TALENT_PANEL.pad);

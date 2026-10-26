@@ -171,7 +171,7 @@ describe('places on the circle', () => {
     expect(pylons.length).toBeGreaterThan(0);
     for (const p of pylons) expect(has({ tx: p.tx, ty: p.ty + 1 }), p.site).toBe(true);
     for (const s of OVERWORLD.springs.filter(inside)) expect(has(s), s.id).toBe(true);
-    for (const l of LANDMARK_LIST.filter((l) => l.ring !== 3 && l.ring !== 4)) expect(has(l.pylon ? { tx: l.pylon.tx, ty: l.pylon.ty + 1 } : { tx: Math.floor(mid(l.area).tx), ty: Math.floor(mid(l.area).ty) }), l.id).toBe(true);
+    for (const l of LANDMARK_LIST.filter((l) => l.ring < 3)) expect(has(l.pylon ? { tx: l.pylon.tx, ty: l.pylon.ty + 1 } : { tx: Math.floor(mid(l.area).tx), ty: Math.floor(mid(l.area).ty) }), l.id).toBe(true);
     expect(has(SHRINE_ARENA.door.enterTo)).toBe(true);
   });
 

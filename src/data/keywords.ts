@@ -3,7 +3,7 @@ import { BULWARK } from './bulwark';
 import { BOSS_WEIGHT } from './combat';
 import { CHARGER, SHARDBACK } from './hollowsEnemies';
 import { ROLLBREAKER } from './relics';
-import { CLUSTER, COLD, FIRE, HOMING, ROUNDS, roundTags, SPLIT } from './tags';
+import { CLUSTER, COLD, FIRE, HOMING, LIGHTNING, ROUNDS, roundTags, SPLIT } from './tags';
 import { BLASTFLETCH } from './talents';
 import type { StatId } from './statDefs';
 
@@ -100,7 +100,7 @@ const kw = (id: KeywordId, name: string, group: KeywordGroup, template: string, 
   ...more,
 });
 
-/** A reserved damage type (039: Lightning, Poison; Fire shipped in 060): its template is written from design.md when it ships. */
+/** A reserved damage type (039: Poison; Fire shipped in 060, Lightning in 064): its template is written from design.md when it ships. */
 const reserved = (id: KeywordId, name: string): KeywordDef => ({ id, name, group: 'damage-type', state: 'reserved', template: '', params: {}, stats: [] });
 
 const FAMILY = 'Any round of this family, and every {{shard}}, {{bomblet}} and {{burst}} it makes.';
@@ -157,7 +157,15 @@ export const KEYWORD_LIST: readonly KeywordDef[] = [
     ['duration', 'spread-radius'],
     { forms: { adj: 'Burning' } },
   ),
-  reserved('lightning', 'Lightning'),
+  // 064: the chain is Lightning's own rule (no separate status), so its talents pay Lightning off.
+  kw(
+    'lightning',
+    'Lightning',
+    'damage-type',
+    'Each hit arcs to the nearest enemy within {range} that its chain hasn’t hit, for {share} of that hit’s damage, then on from there, up to {chains} arcs. A {{burst}} or {{bomblet}} arcs once, from the enemy nearest its middle. Arcs pass {{shield}}s, skip {{burrowed}} enemies and plating, and never arc again.',
+    { range: fixed('px', LIGHTNING.chainRange), share: fixed('fraction', LIGHTNING.chainShare), chains: fixed('count', LIGHTNING.chains) },
+    ['chains', 'chain-range'],
+  ),
   reserved('poison', 'Poison'),
   kw('chill', 'Chill', 'status', 'Stacks up to {stacks}. Each stack slows the enemy’s movement {slow}. Lasts {duration}, refreshed by each {{cold}} hit. At {stacks} it {{freeze}}s.', {
     stacks: fixed('count', COLD.stacksToFreeze),

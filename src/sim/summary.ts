@@ -131,8 +131,8 @@ export interface SimSummary extends PlayerSummary, HollowsSummary, LevelingSumma
   firstHuskDropped: boolean;
   /** The tutorial (012): the tube in hand, gates open, the first line full, the current goal, the end. */
   hasTube: boolean;
-  /** The gates (012), Stonefall Hollows' barrier (034) and the Emberworks' (060). */
-  gates: { foundry: boolean; shrine: boolean; hollows: boolean; emberworks: boolean };
+  /** The gates (012), Stonefall Hollows' barrier (034), the Emberworks' (060) and the Stormcrown's (064). */
+  gates: { foundry: boolean; shrine: boolean; hollows: boolean; emberworks: boolean; stormcrown: boolean };
   /** 046: the foundry's lines ran dry once (the refill goal shows), and what's been refilled by hand since. */
   lineRanDry: boolean;
   refilled: string[];

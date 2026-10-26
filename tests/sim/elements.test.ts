@@ -153,7 +153,7 @@ describe('Cold on every family', () => {
 });
 
 describe('stages on every family (039.12)', () => {
-  it('the bench has a row per stage and family: Frost rune and Fire rune (060) × Arrow, Bomb, Ley bolt, Landmine; Ley guide; Prism lens; Cluster die', () => {
+  it('the bench has a row per stage and family: Frost rune, Fire rune (060) and Lightning rune (064) × Arrow, Bomb, Ley bolt, Landmine; Ley guide; Prism lens; Cluster die', () => {
     expect(STAGE_ROWS.map((r) => r.id)).toEqual([
       'frost-rune-arrow',
       'frost-rune-bomb',
@@ -163,6 +163,10 @@ describe('stages on every family (039.12)', () => {
       'fire-rune-bomb',
       'fire-rune-ley-bolt',
       'fire-rune-landmine',
+      'lightning-rune-arrow',
+      'lightning-rune-bomb',
+      'lightning-rune-ley-bolt',
+      'lightning-rune-landmine',
       'ley-guide-ley-bolt',
       'prism-lens-ley-bolt',
       'cluster-die-bomb',

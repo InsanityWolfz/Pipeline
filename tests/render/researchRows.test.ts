@@ -52,7 +52,7 @@ describe('the research list', () => {
     sim.research['machine-speed'] = 'restored';
     const groups = researchRows(sim);
     expect(groups.map((g) => [g.label, g.rows.map((r) => r.id)])).toEqual([
-      ['Intake', ['entrance-2', 'entrance-3', 'entrance-4', 'reservoir-1', 'reservoir-2']],
+      ['Intake', ['entrance-2', 'entrance-3', 'entrance-4', 'entrance-5', 'reservoir-1', 'reservoir-2']],
       ['Walls', ['machine-speed', 'blueprint-table']],
       ['Sealed wing', ['sealed-wing']],
     ]);

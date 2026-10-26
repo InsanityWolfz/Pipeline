@@ -50,7 +50,7 @@ function drawRing(g: GameObjects.Graphics, x: number, y: number, radius: number,
 }
 
 /** The lane: a band `width` wide from its start `length` along its locked direction, faint, its fill running out to `progress`, edged. */
-function drawLane(g: GameObjects.Graphics, e: EnemyState, length: number, width: number, progress: number): void {
+export function drawLane(g: GameObjects.Graphics, e: EnemyState, length: number, width: number, progress: number): void {
   const L = HOLLOWS_ENEMY_LOOK.lane;
   const color = colorOf(ENEMY_FX.telegraphColor);
   const band = (len: number) => {

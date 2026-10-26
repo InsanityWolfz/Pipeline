@@ -24,7 +24,7 @@ export function makeChampion(rng: RngState, e: EnemyState): void {
 
 /**
  * A pack spawning in `ring` rolls once against the ring's chance; on a hit, one member that isn't a boss, picked by
- * the RNG, becomes a champion. Returns it, or null.
+ * the RNG, becomes a champion (065: with its whole trio, a mite's). Returns it, or null.
  */
 export function rollChampions(rng: RngState, members: readonly EnemyState[], ring: number): EnemyState | null {
   const chance = CHAMPIONS.chanceByRing[ring] ?? 0;
@@ -34,6 +34,8 @@ export function rollChampions(rng: RngState, members: readonly EnemyState[], rin
   const pick = able[nextInt(rng, 0, able.length - 1)];
   if (!pick) return null;
   makeChampion(rng, pick);
+  // 065: a champion mite makes a champion trio.
+  if (pick.trio >= 0) for (const o of members) if (o !== pick && o.trio === pick.trio) makeChampion(rng, o);
   return pick;
 }
 

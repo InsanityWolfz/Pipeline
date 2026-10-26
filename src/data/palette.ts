@@ -110,6 +110,12 @@ export const DAYLIGHT_PALETTE: readonly VectorColor[] = [
   { id: 'ash', hex: '#5f5753' },
   { id: 'ash-light', hex: '#857b74' },
   { id: 'ash-pale', hex: '#b3a89e' },
+  // The Stormcrown (064): wind-scoured slate under a slate-violet glow, with cyan ley
+  { id: 'storm-dark', hex: '#2c2b44' },
+  { id: 'storm', hex: '#47466b' },
+  { id: 'storm-light', hex: '#6b6a92' },
+  { id: 'storm-pale', hex: '#a19fc4' },
+  { id: 'storm-glow', hex: '#9a86ec' },
   // Highlights
   { id: 'snow', hex: '#ffffff' },
   { id: 'hit-red', hex: '#ff4d4d' },

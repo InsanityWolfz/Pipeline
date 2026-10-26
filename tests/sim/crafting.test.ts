@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RECIPES } from '../../src/data/recipes';
+import { RECIPES, REVEALING_ITEMS } from '../../src/data/recipes';
 import { craft } from '../../src/sim/crafting';
 import { arena, die } from './fight';
 
@@ -7,8 +7,8 @@ describe('crafting', () => {
   it.each(Object.values(RECIPES))('$id takes its inputs and adds its output', (recipe) => {
     const s = arena();
     s.link.attuned = true;
-    // 038: the landmine chain shows once ley-iron has been carried.
-    s.found = ['ley-iron'];
+    // 038: the landmine chain shows once ley-iron has been carried; 062: the tiers' once ley-steel, ley glass and their inputs have.
+    s.found = [...REVEALING_ITEMS];
     s.inventory = { ...recipe.inputs };
     expect(craft(s, recipe.id)).toBe(true);
     for (const id of Object.keys(recipe.inputs)) if (id !== recipe.output.itemId) expect(s.inventory[id]).toBe(0);

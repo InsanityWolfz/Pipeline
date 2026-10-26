@@ -41,12 +41,12 @@ import { ITEMS } from '../../src/data/items';
 import { STARTING_INVENTORY, TUTORIAL_START } from '../../src/data/player';
 import { PLAYTEST_START } from '../../src/data/playtest';
 import { CARRIED_SLOTS } from '../../src/data/tube';
-import { RECIPES, recipeDef } from '../../src/data/recipes';
+import { RECIPES, recipeDef, revealsOf } from '../../src/data/recipes';
 import { CRAFT_TABS } from '../../src/data/craftTabs';
 import { STAGE_RECIPES, STAGE_ROWS, STAGES } from '../../src/data/stages';
 import { GUIDED_BUILDS } from '../../src/data/guidedBuilds';
 import { NODES } from '../../src/data/nodes';
-import { BUILD_BAR, PIECE_CATEGORIES, PIECES, pieceDef } from '../../src/data/pieces';
+import { BUILD_BAR, PIECE_CATEGORIES, PIECES, pieceDef, machineRecipeIds } from '../../src/data/pieces';
 import { ENTRANCE_CAPS, INTAKE, SPREAD_STEP } from '../../src/data/foundry';
 import { RESEARCH_NODES, researchNode } from '../../src/data/research';
 import { ENTRANCE_GAUGE_COLORS } from '../../src/data/art/intake';
@@ -185,8 +185,8 @@ describe('items and ammo', () => {
 });
 
 describe('item kinds, ammo slots and recipes', () => {
-  it('reveals recipes only after real items (038: shownAfter names an item)', () => {
-    for (const r of Object.values(RECIPES)) if (r.shownAfter !== undefined) expect(ITEMS[r.shownAfter], r.id).toBeDefined();
+  it('reveals recipes only after real items (038: shownAfter names an item; 062: or several)', () => {
+    for (const r of Object.values(RECIPES)) for (const id of revealsOf(r)) expect(ITEMS[id], r.id).toBeDefined();
   });
 
   it('gives every item a kind, and every ammo an ammo item', () => {
@@ -312,12 +312,13 @@ describe('foundry pieces', () => {
     for (const id of wide) {
       const def = PIECES[id];
       if (def?.kind !== 'machine') throw new Error(`${id} is not a machine`);
-      expect(Object.keys(RECIPES[def.recipeId]?.inputs ?? {})).toHaveLength(3);
+      // 062: its tier variants too.
+      for (const r of machineRecipeIds(def)) expect(Object.keys(RECIPES[r]?.inputs ?? {}), r).toHaveLength(3);
     }
   });
 
-  it('cover every recipe with exactly one machine', () => {
-    const run = Object.values(PIECES).flatMap((d) => (d.kind === 'machine' ? [d.recipeId] : []));
+  it('cover every recipe with exactly one machine (062: its own or a tier variant)', () => {
+    const run = Object.values(PIECES).flatMap((d) => (d.kind === 'machine' ? machineRecipeIds(d) : []));
     expect(run.sort()).toEqual([...Object.keys(RECIPES), ...Object.keys(STAGE_RECIPES)].sort());
   });
 
@@ -339,18 +340,22 @@ describe('build bar categories (026)', () => {
       ['bombs', 'Bombs'],
       ['ley', 'Ley'],
       ['mines', 'Mines'],
+      // 062: the Forge's material machines, after Mines.
+      ['forge', 'Forge'],
     ]);
     const grouped = PIECE_CATEGORIES.map((c) => BUILD_BAR.filter((id) => pieceDef(id).category === c.id));
     expect(grouped).toEqual([
       // 033: the splitter, after the conduit.
       ['conduit', 'splitter', 'underground-entrance', 'underground-exit', 'hopper', 'crate'],
       // 029: each stage in its base ammo's group, after the chain that makes the ammo.
-      // 060: the Fire rune beside the frost rune (its tag's first family is arrows).
-      ['cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'fire-rune'],
+      // 060: the Fire rune beside the frost rune (its tag's first family is arrows); 064: the Lightning rune after it.
+      ['cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'fire-rune', 'lightning-rune'],
       ['shaper', 'fuse-maker', 'packer', 'cluster-die'],
       ['grinder', 'focuser', 'ley-guide', 'prism-lens'],
       // 038: the landmine chain.
       ['plate-press', 'mine-packer'],
+      // 062: the Smelter and the kiln; 066: the Tempering coil.
+      ['smelter', 'kiln', 'tempering-coil'],
     ]);
     // In bar order the groups never interleave.
     expect([...BUILD_BAR]).toEqual(grouped.flat());
@@ -385,8 +390,8 @@ describe('spreads from the intake (024)', () => {
     expect(PLAYTEST_START.inventory['warden-core']).toBe(5);
   });
 
-  it('has four entrances on the mouth (060: was three), the second open, and starting numbers from the spec', () => {
-    expect(INTAKE.entrances).toHaveLength(4);
+  it('has five entrances on the mouth (060: four; 064: five), the second open, and starting numbers from the spec', () => {
+    expect(INTAKE.entrances).toHaveLength(5);
     expect(INTAKE.entrances.filter((e) => e.startsOpen)).toEqual([INTAKE.entrances[1]]);
     expect([ENTRANCE_CAPS[0], SPREAD_STEP]).toEqual([30, 15]);
   });
@@ -510,10 +515,10 @@ describe('the tutorial (012)', () => {
     expect(doorGates).toEqual(['foundry']);
     const tileGates = new Set((outside.gateTiles ?? []).map((t) => t.gate));
     // 034: Stonefall Hollows' barrier seals its gap; 055: the shrine's gap is its arena's door, which the shrine gate
-    // unlocks; 060: the Emberworks' barrier stands across the top of each ramp.
-    expect([...tileGates]).toEqual(['hollows', 'emberworks']);
+    // unlocks; 060: the Emberworks' barrier stands across the top of each ramp; 064: and the Stormcrown's across its own.
+    expect([...tileGates]).toEqual(['hollows', 'emberworks', 'stormcrown']);
     expect(SHRINE_ARENA.door.unlock).toBe('shrine');
-    for (const t of outside.gateTiles ?? []) expect(outside.rows[t.ty]?.[t.tx]).toBe(t.gate === 'emberworks' ? TILE.ramp : TILE.floor);
+    for (const t of outside.gateTiles ?? []) expect(outside.rows[t.ty]?.[t.tx]).toBe(t.gate === 'hollows' ? TILE.floor : TILE.ramp);
     for (const r of Object.values(RECIPES)) if (r.requires) expect(r.requires).toBe('attuned');
     expect(TUTORIAL_START.room).toBe(OVERWORLD.id);
   });

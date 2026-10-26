@@ -6,7 +6,7 @@ import { CRAFT_MENU_LAYOUT } from '../data/hudLayout';
 import { itemDef } from '../data/items';
 import { canCraft, craftHeld, craftKnown, type CraftStores } from '../sim/crafting';
 import { colorOf } from './color';
-import { craftPanelAt, craftTabBoxes, craftTabRows } from './craftMenuLayout';
+import { craftPanelAt, craftTabBoxes, craftTabRows, rowNameXs } from './craftMenuLayout';
 import { flashRow, RowHover, type RowFrames } from './menuFeedback';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
@@ -98,11 +98,8 @@ export class CraftMenuView {
       this.lines.push(line);
       return line;
     };
-    // An item's name under its icon at x: centred under it, or from its left edge when wider.
-    const name = (itemId: string, iconX: number, rowY: number): TextLine => {
-      const line = text(iconX, rowY + L.labelY, 'label').set(itemDef(itemId).name);
-      return line.moveTo(iconX + Math.max(0, Math.round((L.iconSize - line.width) / 2)), rowY + L.labelY);
-    };
+    // An item's name under its icon; placed once the row's names are all set (rowNameXs: 026's place, clear of each other).
+    const name = (itemId: string, iconX: number, rowY: number): TextLine => text(iconX, rowY + L.labelY, 'label').set(itemDef(itemId).name);
     const panel = craftPanelAt();
     add(panel.x, panel.y, SPRITES.craftPanel);
     // The title card: a carved tablet over the panel naming the menu.
@@ -148,6 +145,8 @@ export class CraftMenuView {
           outputId: recipe.output.itemId,
           outputName: name(recipe.output.itemId, outX, line.y),
         };
+        const names = [...inputs.map((input, i) => ({ line: input.name, iconX: L.input.x + i * L.input.step })), { line: row.outputName, iconX: L.output.x }];
+        rowNameXs(names.map((n) => ({ iconX: n.iconX, w: n.line.width }))).forEach((x, i) => names[i]?.line.moveTo(line.x + x, line.y + L.labelY));
         frame.on('pointerdown', () => {
           if (!this.open || this.tab !== row.tab || !canCraft(this.known, row.recipeId)) return;
           flashRow(scene, frame.x, frame.y, RECIPE_ROW_FRAMES.press);

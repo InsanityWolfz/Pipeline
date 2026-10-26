@@ -20,6 +20,8 @@ test("a new game's arena doors are sealed until their gates open", async ({ page
     { id: 'sunken-forum', unlocked: false },
     // 060: the Anvil Hall's, unlocked by the Emberworks' barrier.
     { id: 'anvil-hall', unlocked: false },
+    // 064: the Crown Spire's, unlocked by the Stormcrown's barrier.
+    { id: 'crown-spire', unlocked: false },
   ]);
   expect(errors).toEqual([]);
 });

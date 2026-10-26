@@ -38,7 +38,7 @@ export async function atLeyVein(page: Page): Promise<{ x: number; y: number }> {
     const vein = s.nodes.filter((n) => n.nodeId === 'ley-vein' && n.room === 'overworld').sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
     if (!vein) throw new Error('no ley vein');
     // 060: the Forgewright spared (its first kill is the end card's).
-    for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
+    for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright' && e.enemyId !== 'conductor') g.setEnemyHealth(e.id, 0);
     h.walkTo(vein.x - 20, vein.y);
     g.step(1);
     return { x: vein.x, y: vein.y };

@@ -49,7 +49,12 @@ describe('early ammo (046)', () => {
     expect(RECIPES['iron-plate']?.inputs).toEqual({ 'ley-iron': 1 });
     expect(perRaw('landmine', (r) => r.output.count)).toBe(perRaw('landmine', (r) => BEFORE[r.id] ?? r.output.count));
     for (const st of Object.values(STAGES)) expect(st.batch, st.id).toBe(4);
-    expect(Object.keys(RECIPES).sort()).toEqual(Object.keys(BEFORE).sort());
+    // 062's material tiers add their own recipes, after 046's (066: and the storm tier's).
+    const tiers = [
+      ...['ley-steel', 'steel-arrowhead', 'steel-arrow', 'steel-casing', 'steel-bomb', 'ley-glass', 'glass-bolt', 'steel-plate', 'steel-landmine'],
+      ...['stormsteel', 'stormsteel-arrowhead', 'stormsteel-arrow', 'stormsteel-casing', 'stormsteel-bomb', 'storm-glass', 'storm-glass-bolt', 'stormsteel-plate', 'stormsteel-landmine'],
+    ];
+    expect(Object.keys(RECIPES).filter((id) => !tiers.includes(id)).sort()).toEqual(Object.keys(BEFORE).sort());
   });
 
   it("keeps OUTPUT_CAP only as high as the biggest machine craft (a doubled arrow craft)", () => {

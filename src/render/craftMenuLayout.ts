@@ -36,7 +36,41 @@ export function craftTabBoxes(): (MenuBox & { ammoId: string; label: string })[]
 export function craftTabRows(tab: number): (MenuBox & { id: string })[] {
   const L = CRAFT_MENU_LAYOUT;
   const panel = craftPanelAt();
-  return (CRAFT_TABS[tab]?.recipes ?? []).map((id, i) => ({ id, x: panel.x + L.rowsAt.x, y: panel.y + L.rowsAt.y + i * (L.rowHeight + L.rowGap), w: L.rowWidth, h: L.rowHeight }));
+  const t = CRAFT_TABS[tab];
+  if (!t) return [];
+  // 062: the tier rows in their own column beside the stone ones, from the top.
+  return t.recipes.map((id, i) => {
+    const tier = i >= t.tierFrom;
+    const row = tier ? i - t.tierFrom : i;
+    return { id, x: panel.x + L.rowsAt.x + (tier ? L.tierColumnX : 0), y: panel.y + L.rowsAt.y + row * (L.rowHeight + L.rowGap), w: L.rowWidth, h: L.rowHeight };
+  });
+}
+
+/**
+ * Where a crafting row's item names sit, px from the row's left, given each icon's x and its name's width. Each sits as
+ * 026 put it: centred under its icon, or from its left edge when wider. 066: a name that would run into the next one
+ * (`nameGap` px short of it) or past the row's end (`input.x` px short of it, the same margin as the row's start) moves
+ * left just enough, then one that would run into the name before it moves right past it, so the storm tier's long names
+ * ("Stormsteel arrowhead") stay inside the row. A row whose names fit is unchanged.
+ */
+export function rowNameXs(names: readonly { iconX: number; w: number }[]): number[] {
+  const L = CRAFT_MENU_LAYOUT;
+  const end = L.rowWidth - L.input.x;
+  const xs = names.map((n) => n.iconX + Math.max(0, Math.round((L.iconSize - n.w) / 2)));
+  for (let i = names.length - 1; i >= 0; i--) {
+    const limit = i === names.length - 1 ? end : (xs[i + 1] ?? 0) - L.nameGap;
+    const w = names[i]?.w ?? 0;
+    if ((xs[i] ?? 0) + w > limit) xs[i] = limit - w;
+  }
+  for (let i = 0; i < names.length; i++) {
+    const before = i === 0 ? L.input.x : (xs[i - 1] ?? 0) + (names[i - 1]?.w ?? 0) + L.nameGap;
+    xs[i] = Math.max(xs[i] ?? 0, before);
+  }
+  // Inputs whose names alone are wider than the row would push the output's past its end: the output's name is the
+  // row's point, so it stays inside, ending at the row's end (over the last input's name), but never left of its start.
+  const last = names.length - 1;
+  if (last >= 0) xs[last] = Math.max(L.input.x, Math.min(xs[last] ?? 0, end - (names[last]?.w ?? 0)));
+  return xs;
 }
 
 /** The pause menu's rows (sound, volume, resume), centred on screen, px. */

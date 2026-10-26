@@ -260,8 +260,35 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - The intake's middle is `INTAKE_MID_TX`, for any number of entrances.
   - `SAVE_VERSION` 13, no migration.
 
+- **061 Emberworks enemies:**
+  - Ground hazards are one list (`floodPools`) of shaped pools (rect, circle, capsule), each carrying its own damage and beat; owner-specific rules (the Forgewright's heat reset) are keyed by the owner's kind.
+  - The Charger's and the hound's dashes share `src/sim/laneRun.ts`; the caller decides what a wall does.
+  - Death hooks in `removeDead`: spawned whelps are pushed after the list is cut, so they act from the next tick; a `spent` enemy (a mote that burst on its own) skips its death record, drops, XP and death burst but still spreads its burn; `noLoot` skips the schematic and armour rolls.
+  - Enemy heals scale by ring and champion like damage, so a heal keeps pace with the health it repairs.
+
+- **062 material tiers:**
+  - A tier is a `+` segment right after the base (`arrow+steel+frost`), kept in its own `TIERS` table, not `TAGS` (a tag needs a keyword); `roundBase` and icon frame names keep working, `roundTags` filters tiers out.
+  - The tier multiplier is a rule step on the emission (`Emission.tier`, `ruleMuls`), set on rounds, Split Shards and Bomblets only, so every hit gets it once; Pool-bursts, Shatter shards and burn derive from an already-multiplied hit. Never in `damageEnemy`, which melee and burn beats also pass through.
+  - Machines can list recipe `variants`; `offer` accepts any variant's input, a craft picks the first full set by input order, and `machineRecipe` resolves from `made`, so hover, status and objectives agree.
+
 - **063 blueprints:**
   - Blueprint rules live in sim and data: `piecesInBox` (whole footprints, no fixtures), `transformBlueprint` (turn and mirror, 3×1 pieces anchored on their middle tile), `stampPlan` (per piece: placed, or skipped as taken, fixture, wall or locked). Render only draws their results.
   - A stamped underground pair keeps its link only when the exit is in the entrance's reach (`tunnelReach`), as by hand; otherwise its ends pair by the usual rule.
   - Blueprints live in `SimState`, so they survive KOs and saves. Unlocks are found by research effect kind.
 
+- **064 the Stormcrown:**
+  - Boss parts (the Forgewright's bellows, the Conductor's rods) share `src/sim/bossParts.ts`: hits route to a part's hurtbox before the body in strike, blastArea and melee.
+  - Lightning arcs are hits with `HitStyle.arc` through `damageEnemy` only, so they never arc again, Split or trigger keystones; a Burst or Bomblet starts one chain, from the enemy nearest its centre.
+  - Telegraphed strike circles (the storm call) live in `src/sim/strikes.ts` for reuse.
+  - A homing round that locked at launch re-locks onto the nearest Conductor in the player's room after a blink; rounds that never locked fly straight.
+  - The world's ground is pinned row by row (`tests/sim/worldGround.json`) as well as by offsets, so a world growth proves it moved nothing.
+
+- **065 Stormcrown enemies:**
+  - Flight (`src/sim/flight.ts`): a flier ignores terrain tiles but keeps out of arena walls, safe zones and every shut ring barrier, treated as a whole circle, so it can't cross over the cliffs; a flier whose target is beyond a shut barrier doesn't wake, and an awake one goes home.
+  - Enemy groups that act as one (mite trios) link at spawn (`linkTrios`) and count member by member toward a pack's size and wipe.
+  - Player statuses (the slow) apply once per tick in `step.ts`, to walk speed and roll distance, never a roll's ticks.
+
+- **066 stormsteel:**
+  - A tier's `TIER_DAMAGE` is its total over stone (stormsteel 2.56), so the breakdown shows one step whatever the tier.
+  - A machine unlocks when any recipe it runs (any variant) has been hand-crafted, design.md's "crafting something by hand once unlocks the machine that makes it".
+  - Tier content (names, damage, families, fire sounds) is data in `src/data/tiers.ts` and `tierSounds.ts`; a fourth tier is new data.

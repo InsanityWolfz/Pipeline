@@ -1,7 +1,9 @@
 import { smoothCurve } from './curves';
 import type { TilePos } from './tiles';
-import { EMBERWORKS, type RampDef } from './emberworks';
+import { EMBERWORKS, type RampDef, type RampShape } from './emberworks';
 import { ANVIL_HALL_ROAD_END } from './emberworksSites';
+import { STORMCROWN as S } from './stormcrown';
+import { CROWN_SPIRE_ROAD_END, SKY_BRIDGE_ROAD_END, WEATHERVANE_ROAD_END } from './stormcrownSites';
 import { laidOut, WORLD_SHAPE } from './worldShape';
 
 // The road network (053, D.3, Shaun: "it should just be one path"): dirt roads two tiles wide, laid as smooth curves
@@ -29,9 +31,9 @@ const t = (tx: number, ty: number): TilePos => laidOut({ tx, ty });
  * 060: a road up a ramp: along its centre line from its foot to its top (a road point is its 2 × 2 block's top-left, so
  * each sits half a tile up and left of the line), then on to `bearing` and `r` tiles out.
  */
-function up(ramp: RampDef | undefined, bearing: number, r: number): TilePos[] {
+function up(ramp: RampDef | undefined, bearing: number, r: number, shape: RampShape = EMBERWORKS.ramp): TilePos[] {
   if (!ramp) throw new Error('no such ramp');
-  const { from, to } = EMBERWORKS.ramp;
+  const { from, to } = shape;
   return [ring(ramp.bearing, from + 1), ring(ramp.bearing, (from + to) / 2), ring(ramp.bearing, to), ring(bearing, r)];
 }
 
@@ -75,6 +77,16 @@ export const ROAD_DEFS: readonly RoadDef[] = [
   { id: 'slag-river', from: 'anvil-hall', waypoints: [up(EMBERWORKS.ramps[2], 0, 0)[2] ?? ANVIL_HALL_ROAD_END, ...[312, 302, 293.5].map((b) => ring(b, 88))] },
   // From the Anvil Hall's door, east round the ring to the Emberworks' Ley Spring, on the far side from every ramp.
   { id: 'emberworks-spring', from: 'anvil-hall', waypoints: [ANVIL_HALL_ROAD_END, ...[355, 10, 25, 40, 55].map((b) => ring(b, 87)), ring(68, 88)] },
+  // 064: up the ramps into the Stormcrown. From the Anvil Hall's road at the top of its ramp, round the hall's west side
+  // and up the north-west ramp to the Crown Spire's door.
+  { id: 'crown-spire', from: 'anvil-hall', waypoints: [ring(333, 88), ring(326, 97), ...up(S.ramps[0], 338, 115, S.ramp), CROWN_SPIRE_ROAD_END] },
+  // From the Emberworks spring road, up the north-east ramp to the Weathervane.
+  { id: 'weathervane', from: 'emberworks-spring', waypoints: [ring(55, 87), ring(58, 97), ...up(S.ramps[1], 70, 120, S.ramp), WEATHERVANE_ROAD_END] },
+  // From the Outpost Forge's road, up the south ramp and west round the ring to the Broken Sky-bridge.
+  { id: 'sky-bridge', from: 'outpost-forge', waypoints: [ring(188, 90), ring(196, 99), ...up(S.ramps[2], 212, 119, S.ramp), ...[225, 238].map((b) => ring(b, 122)), SKY_BRIDGE_ROAD_END] },
+  // From the south ramp's top, east round the ring to the Stormcrown's Ley Spring, on the far side from the nearest
+  // ramp (so it keeps clear of the Weathervane's ley line home).
+  { id: 'stormcrown-spring', from: 'sky-bridge', waypoints: [up(S.ramps[2], 0, 0, S.ramp)[2] ?? SKY_BRIDGE_ROAD_END, ...[188, 172, 156, 142].map((b) => ring(b, 120)), ring(132, 123)] },
 ];
 
 /** Each road as laid: its smooth curve sampled about every tile, as top-left tiles (fractional between waypoints). */

@@ -1,13 +1,12 @@
 import { isFlatKind } from '../data/pieces';
 import type { Scene } from 'phaser';
-import { AMMO } from '../data/ammo';
 import { STAGES } from '../data/stages';
 import { TILE_SIZE } from '../data/config';
 import { enemyDef } from '../data/enemies';
 import { INTAKE } from '../data/foundry';
 import { DUST, GLOWS, HARVEST_BURSTS, HARVEST_WORK, HIT_STOP_MS } from '../data/juice';
 import { FOUNDRY_ROOM } from '../data/rooms';
-import { FIRE_SOUNDS, SOUND_LEVELS, SOUNDS, WINDUP_SOUNDS } from '../data/sounds';
+import { SOUND_LEVELS, SOUNDS, WINDUP_SOUNDS } from '../data/sounds';
 import { isClaimed } from '../sim/claims';
 import { wornRelic } from '../sim/stats';
 import type { SimEvents } from '../sim/events';
@@ -20,9 +19,11 @@ import { attuneBeat } from './attune';
 import { intakeAnchor } from './foundryLayout';
 import { playHollows, SealSound } from './hollowsFeel';
 import { playEmberworks, VentFeel } from './emberworksFeel';
+import { playStormcrown } from './stormcrownFeel';
 import { ARENAS } from '../data/arenas';
 import { arenaLocked } from '../sim/arenaLock';
 import { playMines } from './mineFeel';
+import { playShots, WorkFeel } from './tierFeel';
 import { HollowsEnemyFeel } from './hollowsEnemyFeel';
 
 // Look and feel (014), driven by what the sim did since the last draw and how
@@ -41,6 +42,7 @@ export class FeelView {
   /** Last frame's state, to catch changes the sim records no event for. */
   private modes = new Map<number, string>();
   private outputs = new Map<number, number>();
+  private readonly work = new WorkFeel();
   private rolling = false;
   private dustMs = 0;
   private workMs = 0;
@@ -93,12 +95,8 @@ export class FeelView {
   private play(sim: SimState, ev: SimEvents): void {
     const j = this.juice;
     const s = this.sound;
-    // No shake on firing (021): too jarring.
-    // A tagged round (029) fires with its base's sound.
-    for (const shot of ev.shots) {
-      const key = FIRE_SOUNDS[AMMO[shot.ammoId]?.base ?? shot.ammoId];
-      if (key) s.play(key);
-    }
+    // No shake on firing (021): too jarring. Each shot's sound is its family's (tierFeel.ts).
+    playShots(ev.shots, (key) => s.play(key));
     // Cold and the Split (029): a freeze rings and frosts, a thaw throws off ice, a Split chimes.
     for (const f of ev.freezes) {
       s.play(SOUNDS.freeze);
@@ -134,7 +132,8 @@ export class FeelView {
         if (!h.melee) s.play(SOUNDS.hit);
         s.play(SOUNDS.enemyHurt, SOUND_LEVELS.under);
         // 060: a fire hit throws rising sparks, as a cold one throws frost.
-        j.burst(h.damageType === 'cold' ? 'hitCold' : h.damageType === 'fire' ? 'hitFire' : 'hitPhysical', h.x, h.y);
+        // 064: a lightning hit spits pale cyan sparks.
+        j.burst(h.damageType === 'cold' ? 'hitCold' : h.damageType === 'fire' ? 'hitFire' : h.damageType === 'lightning' ? 'hitLightning' : 'hitPhysical', h.x, h.y);
         j.damageNumber(h.damage, h.x, h.y, false);
         this.freeze(h.id, HIT_STOP_MS);
       } else {
@@ -201,10 +200,12 @@ export class FeelView {
     const barrier = playHollows(ev, j, s, this.scene.cameras.main.worldView);
     // 060: the Emberworks' barrier across its ramps falls the same way.
     const emberFell = playEmberworks(ev, j, s, this.scene.cameras.main.worldView);
+    // 064: and the Stormcrown's.
+    const stormFell = playStormcrown(ev, j, s, this.scene.cameras.main.worldView);
     // 038: landmines arming and bursting, and the bomblets.
     playMines(ev, j, s);
     this.hollowsEnemies.events(ev, j, s);
-    if (ev.gates.length > (barrier ? 1 : 0) + (emberFell ? 1 : 0)) {
+    if (ev.gates.length > (barrier ? 1 : 0) + (emberFell ? 1 : 0) + (stormFell ? 1 : 0)) {
       s.play(SOUNDS.gateOpen);
       j.shake('medium');
     }
@@ -238,6 +239,7 @@ export class FeelView {
     }
     for (const id of [...this.modes.keys()]) if (!live.has(id)) this.modes.delete(id);
 
+    this.work.update(sim, shown, (key, level) => this.sound.play(key, level));
     const machines = new Set<number>();
     for (const p of sim.foundry.pieces) {
       if (p.kind !== 'machine') continue;

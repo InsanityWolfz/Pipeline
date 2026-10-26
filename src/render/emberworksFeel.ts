@@ -6,6 +6,7 @@ import { ventState } from '../sim/nodes';
 import type { SimState } from '../sim/state';
 import type { JuiceView } from './JuiceView';
 import type { SoundView } from './SoundView';
+import { playEmberEnemies } from './emberEnemyFeel';
 
 // The Emberworks' feel (060), for FeelView: its barrier across the ramps breaking with the Hollows barrier's sound and
 // shards (034) (`playEmberworks` returns whether it fell this frame, so FeelView doesn't also play the tutorial gate's
@@ -13,6 +14,8 @@ import type { SoundView } from './SoundView';
 
 export function playEmberworks(ev: SimEvents, j: JuiceView, s: SoundView, v: { x: number; y: number; width: number; height: number }): boolean {
   playForge(ev, j, s);
+  // 061: the region's enemies.
+  playEmberEnemies(ev, j, s);
   const fell = ev.gates.some((g) => g.gate === 'emberworks');
   if (!fell) return false;
   s.play(SOUNDS.barrierCollapse);
@@ -66,6 +69,8 @@ export class VentFeel {
     let flared = false;
     for (const n of sim.nodes) {
       if (n.roomId !== shown) continue;
+      // 064: a storm rod's strike is its own event (stormcrownFeel.ts).
+      if (n.nodeId !== 'cinder-vent') continue;
       const now = ventState(n);
       if (now === null) continue;
       const before = this.was.get(n.id);

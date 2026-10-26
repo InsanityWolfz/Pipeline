@@ -19,6 +19,7 @@ import { createMines, type MinesState } from './mines';
 import { OBJECTIVES } from '../data/objectives';
 import type { OrbState } from './orbs';
 import type { FloodPool } from './floodPools';
+import type { Strike } from './strikes';
 import type { Inventory } from './inventory';
 import { createLink, type LinkState } from './link';
 import { type NodeState } from './nodes';
@@ -102,6 +103,8 @@ export interface SimState {
   nextOrbId: number;
   /** The Forgewright's Forge Flood pools on the ground (060). */
   floodPools: FloodPool[];
+  /** 064: strikes from above waiting to land (the Conductor's storm call). */
+  strikes: Strike[];
   /** Rooms claimed at their pylon (009). Kept through a KO. */
   claims: string[];
   /** The claim in progress, if any. */
@@ -224,6 +227,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     orbs: [],
     nextOrbId: 0,
     floodPools: [],
+    strikes: [],
     claims: [],
     claimHold: null,
     discovered: [],

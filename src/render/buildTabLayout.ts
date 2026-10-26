@@ -2,7 +2,8 @@ import { BUILD_TAB, LEGIBILITY_WORDS as W } from '../data/legibility';
 import { TALENT_PANEL } from '../data/talentAssets';
 import { KEYWORDS, type KeywordId } from '../data/keywords';
 import { BASE_FAMILY, roundKeywords } from '../data/roundKeywords';
-import { roundBase, roundTags, tagDef } from '../data/tags';
+import { roundBase, roundTags, roundTier, tagDef, withTier } from '../data/tags';
+import { TIERS } from '../data/tiers';
 import { knownRounds } from '../sim/knownRounds';
 import { describeRound, type Seen } from './describe';
 import { chipsOf, fill } from './statSteps';
@@ -12,7 +13,8 @@ import type { Chip } from './tipTypes';
 // The T panel's Build tab (040), pure: every round the player knows (040.2) under a header
 // per family (a family with none hidden), each row its shape and element chips, its final
 // damage, shots/s and how many talents, relics and affixes change it; laid out in the panel
-// at BUILD_TAB.rowH a row, in a second column only when one doesn't fit (031's rule).
+// at BUILD_TAB.rowH a row, in a second column only when one doesn't fit (031's rule). 062: a tiered round shares its
+// stone round's row (the stone round's while it's known, its name marked with each known tier), so every round fits.
 
 export interface BuildTabRow {
   round: string;
@@ -43,15 +45,23 @@ const shapeAndElement = (round: string): KeywordId[] => [
 /** The known rounds by family, each with its numbers from its description (resolveStat through describe). */
 export function buildTabGroups(seen: Seen, icon: (round: string) => string, name: (round: string) => string): BuildTabGroup[] {
   const known = knownRounds(seen);
+  // Each stone kind once, in order: its stone round's row if known, else its first known tiered round's.
+  const kinds = [...new Set(known.map((r) => withTier(r, 'stone')))];
   return Object.entries(BASE_FAMILY).flatMap(([base, family]) => {
-    const rows = known
+    const rows = kinds
       .filter((r) => roundBase(r) === base)
-      .map((round) => {
+      .map((stone) => {
+        const same = known.filter((r) => withTier(r, 'stone') === stone);
+        const round = same.includes(stone) ? stone : (same[0] ?? stone);
+        const tiers = same.filter((r) => r !== round).flatMap((r) => {
+          const t = roundTier(r);
+          return t === 'stone' ? [] : [TIERS[t].prefix];
+        });
         const d = describeRound(seen, round);
         const n = d.numbers ?? { damage: '', perSecond: '' };
         return {
           round,
-          name: name(round),
+          name: tiers.length > 0 ? fill(W.rowTiers, { name: name(round), tiers: tiers.join(', ') }) : name(round),
           icon: icon(round),
           chips: chipsOf(shapeAndElement(round)),
           damage: n.damage,

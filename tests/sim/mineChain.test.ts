@@ -24,11 +24,12 @@ describe('the landmine chain', () => {
     expect(itemDef('landmine')).toMatchObject({ name: 'Landmine', kind: 'ammo', group: 'ammo' });
   });
 
-  it('runs on a plate press (1×1, 60 ticks) and a mine packer (3×1, 90 ticks) in a Mines group at the bar\'s end', () => {
+  it('runs on a plate press (1×1, 60 ticks) and a mine packer (3×1, 90 ticks) in a Mines group, last of the ammo chains (062: the Forge group follows)', () => {
     expect(machineDef('plate-press')).toMatchObject({ name: 'Plate press', recipeId: 'iron-plate', footprint: '1x1', craftTicks: 60, category: 'mines' });
     expect(machineDef('mine-packer')).toMatchObject({ name: 'Mine packer', recipeId: 'landmine', footprint: '3x1', craftTicks: 90, category: 'mines' });
-    expect(PIECE_CATEGORIES.at(-1)).toEqual({ id: 'mines', label: 'Mines' });
-    expect(BUILD_BAR.slice(-2)).toEqual(['plate-press', 'mine-packer']);
+    // 062: the Forge group comes after it (066: its three machines).
+    expect(PIECE_CATEGORIES.at(-2)).toEqual({ id: 'mines', label: 'Mines' });
+    expect(BUILD_BAR.slice(-5, -3)).toEqual(['plate-press', 'mine-packer']);
     expect(pieceDef('cluster-die').category).toBe('bombs');
   });
 

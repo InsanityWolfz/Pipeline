@@ -9,9 +9,90 @@ Newest entry first. Entries before 050 are in docs/progress-archive.md.
 - 8 auto-named slots (P opens the list) keeping facings, conduit turns, splitter sides, stage rounds and tunnel links, never contents;
 - a ghost that R turns and G mirrors (F is feedback); one click places everything that fits, skipping taken, fixture, wall and locked tiles; the build lock refuses it whole.
 
-`SAVE_VERSION` 15 (061 took 14). Reviewed: three blocking findings fixed (a stamped tunnel pair could form under the wing's wall; the "Not unlocked" hover had no test; the save version collided with 061's), plus eight suggestions. `npm run check` 2076 tests; CI green. Raised for Shaun in the spec: 063.1–063.15. Built alongside 062 in its own worktree.
+`SAVE_VERSION` 15 (061 took 14); 19 once main (061, 062, 064–066) was merged in. Reviewed: three blocking findings fixed (a stamped tunnel pair could form under the wing's wall; the "Not unlocked" hover had no test; the save version collided with 061's), plus eight suggestions. `npm run check` 2076 tests; CI green. Raised for Shaun in the spec: 063.1–063.15. Built alongside 062 in its own worktree.
 
-**Next:** Shaun's playtest (`?playtest`, the sandbox can't reach the foundry); his OK on 063.1–063.15; "merge 74". Whichever of 061 and 063 merges second needs its save-version merge resolved.
+**Next:** Shaun's playtest (`?playtest`, the sandbox can't reach the foundry); his OK on 063.1–063.15; "merge 74".
+
+**Notes:**
+- Main merged in (061, 062, 064–066): docs, event lists, sounds and art joined; `SAVE_VERSION` 19. The Tools group still sits over the bar's right end, now above the Forge group, and the Blueprint table at (18, 0) stays clear of the five-cap intake. The clock tests moved to `tests/sim/clock.test.ts` to keep `sim.test.ts` under 300 lines. `npm run check` 2474 tests.
+
+## 2026-10-26: 066 The third tier: stormsteel and storm glass
+**Changed:** on `claude/066-stormsteel` (InsanityWolfz/Pipeline#77, stacked on 065; plan docs/plans/066-stormsteel.md, five slices):
+- two more tiers in 062's system, `stormsteel` (arrows, bombs, landmines) and `storm-glass` (ley bolts), at `TIER_DAMAGE` 2.56: one breakdown step, applied once per hit, burn and Lightning arcs following the hit; 28 derived rounds with icons and gauge colours;
+- the Tempering coil in the Forge group (ley-steel or ley glass + stormglass), every tiered machine's stormsteel variant, mixing and the jam status across three tiers;
+- a machine now unlocks once anything it makes is hand-crafted (design.md's rule), so a Steel plate or Steel landmine unlocks the plate press or mine packer;
+- three Milestone 3 goals; the coil's crackle and sharper stormsteel shots; crafting-row names kept clear of each other.
+
+`SAVE_VERSION` stays 18 (no shape change). Reviewed: one blocking finding fixed (066.1 now says exactly what the unlock change does, pinned by a test) and seven suggestions. `npm run check` 2419 tests; CI green. Raised for Shaun: 066.1–066.19.
+
+**Next:** Shaun's playtest; his OK on 066.1–066.19; "merge 77" last, after 72, 73, 75 and 76.
+
+**Notes:**
+- `npm run measure`: a ring 5 pack clears in 9.2 s with stormsteel against 14.6 s with steel, 20/20, no KOs.
+- The whole queue (061–066) is ready to play; the stack merges in order 72 → 73 → 75 → 76 → 77, with 74 (063) independent. Save versions: 061 14, 063 15, 062 16, 064 17, 065 18; merging 063 among them needs its save-version lines resolved.
+
+## 2026-10-26: 065 Stormcrown enemies
+**Changed:** on `claude/065-stormcrown-enemies` (InsanityWolfz/Pipeline#76, stacked on 064; plan docs/plans/065-stormcrown-enemies.md, five slices):
+- flight (`flight.ts`): fliers cross terrain but never arena walls, safe zones or a shut ring barrier (a full circle), never push walkers, and their drops land on open ground;
+- the thunderhawk: orbits, dives down a locked line (061's `laneRun`), climbs away; homing tracks it;
+- static mites: trios counting as 3 pack members, a contact zap, a killed mite's discharge chaining through its trio (never the player); a trio drops like one enemy;
+- the storm sentinel: keeps its distance, calls 064's strike circles from range, one live circle;
+- the gale ram: a cone gust that pushes and slows; the slow is the first player status, on walk and roll distance;
+- ring 5's 12 packs once the barrier is down, the Weathervane's guards, champions in 1 in 3 packs.
+
+`SAVE_VERSION` 18. Reviewed: one blocking bug fixed (the Weathervane's guard hawks flew over the shut barrier and one-shot a player in the Emberworks) and six suggestions. `npm run check` 2342 tests; CI green. Raised for Shaun: 065.1–065.25.
+
+**Next:** Shaun's playtest; his OK on 065.1–065.25; "merge 76" after 72, 73 and 75.
+
+**Notes:**
+- Balance, for Shaun's call: at ring 5's ×10, every Stormcrown hit but the mite's zap one-shots a decent build (114 HP, armor 10), and even the best defensive gear (~195 HP, 32 armor) survives only the gust. `RING_SCALE` has separate health and damage values, so damage could be lowered while keeping ×10 health.
+- `npm run measure`: a ring 5 pack clears in 9.9–19.7 s with steel, 17.2–29.1 s with stone, no KOs (the bot is never hit).
+
+## 2026-10-26: 064 Region 4: the Stormcrown and the Conductor
+**Changed:** on `claude/064-stormcrown` (InsanityWolfz/Pipeline#75, stacked on 062), from Shaun's Region 4 interview (docs/brainstorm/2026-10-26-region-4-interview.md; plan docs/plans/064-stormcrown.md, eight slices):
+- the world grows to 292 tiles as a pure move (offsets snapshot, and a row-by-row ground fixture);
+- the Stormcrown, ring 5 at ×10 (Shaun), region 4 from the barrier, opened by the Forgewright's first kill; no packs until 065;
+- stormglass from rods only in the seconds after a strike; the Weathervane's pylon; the Rod Field, the Sky-bridge, a spring, the Crown Spire;
+- the Lightning rune: each hit arcs to 2 more enemies within 3 tiles at half damage, one chain per Burst; two Ley-lane talents (Forked Bolt, Long Arc), 23 nodes, level cap 19;
+- the Conductor: blinks between six breakable rods (boss parts shared with the Forgewright's bellows), grounded below 2 rods; arc lash, storm call, rod chain; enrage; altar refights;
+- the fifth entrance and a five-lane fan; Milestone 3 goals; the end card on the Conductor.
+
+`SAVE_VERSION` 17. Reviewed: two blocking findings fixed (stray older shots; a test budget raised without a baseline: boot measured at 3–4 s on both 062 and 064, so the bigger world doesn't slow loading) and twelve suggestions (the measure bot's reaction delay, homing re-lock narrowed to rounds that locked at launch, nested rod state, tests). `npm run check` 2276 tests; CI green. Raised for Shaun: 064.1–064.29.
+
+**Next:** Shaun's playtest; his OK on 064.1–064.29; "merge 75" after 72 and 73.
+
+**Notes:**
+- `npm run measure`: the Conductor falls in about 58 s (20/20, 0 KOs) with homing bolts or plain arrows, against the 90–150 s target, so he likely reads easy. Recorded, not tuned.
+
+## 2026-10-26: 062 Material tiers: ley-steel and ley glass
+**Changed:** on `claude/062-material-tiers` (InsanityWolfz/Pipeline#73, stacked on 061), Shaun's material-tier idea (docs/plans/062-material-tiers.md, five slices):
+- tiered rounds as a `+` segment after the base (`arrow+steel+frost`), in `src/data/tiers.ts`; steel for arrows, bombs and landmines, glass for ley bolts; ×1.6 on every hit once, through the emission (direct hits, Split Shards, Bursts, Bomblets, mines; burn follows the hit);
+- the Smelter (ley-iron + cinderite → ley-steel) and the kiln (ley dust + cinderite → ley glass) in a new Forge group, unlocked by hand-crafting;
+- machines run tier variants by input (knapper, shaper, plate press, focuser, assembler, packer, mine packer), never mixing tiers in one craft; a stuck hand-off reads blocked after 1 s;
+- three Milestone 2 goals with a new `fired` check; tier icons and looks recoloured from the stone art; the Smelter's and kiln's sounds.
+
+`SAVE_VERSION` 16 (a machine's `stalled` counter; 15 is 063's). Reviewed: no blocking issues; seven suggestions applied. `npm run check` 2155 tests; CI green. Raised for Shaun in the spec: 062.1–062.15.
+
+**Next:** Shaun's playtest (`?playtest`); his OK on 062.1–062.15; "merge 73" after 72.
+
+**Notes:**
+- `npm run measure`: steel clears packs in about 67–69% of stone's time in rings 3 and 4 (14.1 → 9.4 s, 8.0 → 5.5 s), no KOs.
+- Save versions across the open stack: 061 14, 063 15, 062 16, 064 17.
+
+## 2026-10-26: 061 Emberworks enemies
+**Changed:** on `claude/061-emberworks-enemies` (InsanityWolfz/Pipeline#72), the Emberworks fills with four enemies (docs/plans/061-emberworks-enemies.md, five slices):
+- the cinder mote: swells and bursts into a fire pool; killed, it bursts and sets other enemies burning;
+- the bellows hound: the Charger's lane dash with no wall stun, leaving a burning trail;
+- the slag golem: a slam, and two slag whelps on death;
+- the kiln-tender: keeps its distance and beams heals onto its most hurt packmate; damage, a blocked line or a Stun breaks it.
+
+Ring 4 keeps 12 packs once the barrier is down, and the Ash Kilns have a guard pack to clear before claiming; champions in 1 in 4 packs. 060's flood pools became shared ground hazards (rect, circle, capsule). `SAVE_VERSION` 14. Reviewed: no blocking issues; seven suggestions applied (one shared lane run for the Charger and hound, a spent mote still spreads its burn, a Stun ends a tender's beam, tests and data tidy-ups). `npm run check` 2084 tests; CI green. Raised for Shaun in the spec: 061.1–061.22.
+
+**Next:** Shaun's playtest; his OK on 061.1–061.22; "merge 72". 062 builds next on its stacked branch, with 063 building alongside and 064–066 queued.
+
+**Notes:**
+- `npm run measure`: a ring 4 pack clears in 5.6–11.2 s with 0 KOs against the 15–30 s target, so packs may read easy. Recorded, not tuned.
+- The tender's heal scales with ring and champion multipliers like damage (061.4), 24 a second in ring 4.
 
 ## 2026-10-23: 060 Region 3: the Emberworks and the Forgewright
 **Changed:** Shaun's spoken idea (material tiers: better raws from harder regions, so a build keeps its stages and talents) became a region brainstorm and interview (docs/brainstorm/2026-10-22-region-3.md), split like the Hollows into 060, 061 (its enemies) and 062 (the Smelter, the kiln, steel and glass rounds). 060 is built on `claude/060-emberworks` (InsanityWolfz/Pipeline#70) in eight slices (docs/plans/060-emberworks.md):
@@ -25,7 +106,7 @@ Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
 Reviewed: no blocking issues; six suggestions applied (the venting tick, no spread onto the plated boss, the region starting at the barrier, tidy-ups). `npm run check` 2021 tests; CI green. Raised for Shaun in the spec: 060.1–060.39.
 
-**Next:** Shaun's playtest from a New game (or `?sandbox`); his OK on 060.1–060.39; "merge 70".
+**Next:** merged by Shaun ("Merge 70 and 71", 2026-10-23, with 060.1–060.39 as built), with the foundry e2e's crate-step fix (InsanityWolfz/Pipeline#71).
 
 **Notes:**
 - `npm run measure`: the Forgewright's decent build wins 20/20 in 73.6 s with 0 KOs, taking no damage; the fight draws no randomness, so it may read easy. Recorded, not tuned.

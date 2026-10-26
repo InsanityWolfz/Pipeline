@@ -163,7 +163,7 @@ Built on `claude/063-blueprints` (plan: docs/plans/063-blueprints.md). Where the
   - 05-stamped-line.png
   - 06-table-diagram.png
   - 07-table-restored.png
-- `SAVE_VERSION` is 14.
+- `SAVE_VERSION` is 19: 15 on its own branch (061 took 14), then 19 once main (061, 062, 064–066) was merged in.
 - Checks:
   - `npm run check` passes (2,067 unit tests).
   - Locally, one worker on its own port, these passed: blueprints, foundry, foundryFlow, tunnels, guidedTutorial, foundryTutorial, research, settings, stash, readability, hoverPress and hotbars (34 tests).
