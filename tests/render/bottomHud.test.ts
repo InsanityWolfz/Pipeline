@@ -155,8 +155,10 @@ describe('the crafting menu with labels (026)', () => {
       for (const [i, row] of rows.entries()) {
         expect(row.y + L.rowHeight).toBeLessThanOrEqual(panel.y + L.height);
         expect(row.x + L.rowWidth).toBeLessThanOrEqual(panel.x + L.width);
+        // 062: down each column (the stone rows, then the tier rows beside them), never overlapping.
         const next = rows[i + 1];
-        if (next) expect(next.y).toBeGreaterThanOrEqual(row.y + L.rowHeight);
+        if (next && next.x === row.x) expect(next.y).toBeGreaterThanOrEqual(row.y + L.rowHeight);
+        for (const other of rows) if (other !== row) expect(other.x >= row.x + L.rowWidth || other.x + L.rowWidth <= row.x || other.y >= row.y + L.rowHeight || other.y + L.rowHeight <= row.y).toBe(true);
       }
     }
   });

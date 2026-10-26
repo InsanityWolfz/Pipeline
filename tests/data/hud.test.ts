@@ -44,10 +44,16 @@ describe('inventory panel groups (031)', () => {
       // 038: the landmine chain's plate.
       'iron-plate',
       'ley-dust',
+      // 062: the material tiers' parts.
+      'ley-glass',
+      'ley-steel',
       'rope',
       'schematic-machine-speed',
       'schematic-reservoir-2',
       'shaft',
+      'steel-arrowhead',
+      'steel-casing',
+      'steel-plate',
     ]);
     // 039: the six Frost rounds of every family. 060: the seven Fire rounds. 062: each also at its tier, in Ammo too.
     expect(byGroup('ammo').filter((id) => roundTier(id) === 'stone')).toEqual([
