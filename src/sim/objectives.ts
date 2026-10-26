@@ -1,8 +1,5 @@
 import { OBJECTIVES, type ObjectiveCheck, type ObjectiveDef } from '../data/objectives';
 import { TALENT_START } from '../data/talents';
-import { machineRecipe, machineRecipes, stageOf } from './stages';
-import { count } from './inventory';
-import type { FoundryState } from './pieces';
 import { volleyRounds } from './volley';
 import type { SimState } from './state';
 import { FOUNDRY_ROOM } from '../data/rooms';
@@ -16,21 +13,6 @@ import { noteSubSteps } from './subSteps';
 // unfinished one, the talent cut-in (058) while it's due, and nothing once the chain's
 // last goal is done (058: the tutorial ends there); finishing the prototype's goals
 // marks the prototype complete.
-
-/**
- * The lines have run dry (046): no hopper holds anything, and no machine is crafting or holds a whole craft's inputs.
- * Parts left over in a buffer, finished items waiting to go out and items on carriers don't count, so leftovers stuck
- * in a line (one wood more than the stones and fibers it needs) never keep it from counting as dry.
- */
-export function foundryDry(foundry: FoundryState): boolean {
-  return foundry.pieces.every((p) => {
-    if (p.kind === 'hopper') return p.count === 0;
-    if (p.kind !== 'machine') return true;
-    // 062: none of its recipes (a tier variant's too) has a whole set.
-    const recipes = stageOf(p.pieceId) ? [machineRecipe(p)] : machineRecipes(p.pieceId);
-    return !p.crafting && !recipes.some((r) => Object.entries(r.inputs).every(([id, n]) => count(p.buffer, id) >= n));
-  });
-}
 
 /** Whether a check holds right now. `machineMade` reads the tally in state.machineMade. */
 function holds(state: SimState, check: ObjectiveCheck): boolean {
@@ -49,9 +31,8 @@ function holds(state: SimState, check: ObjectiveCheck): boolean {
       return state.roomId === check.room;
     case 'outside':
       return state.roomId !== FOUNDRY_ROOM;
-    case 'refilled':
-      // With no hopper left to refill (a save from before 046 has no example line), it counts as done.
-      return state.lineRanDry && (!state.foundry.pieces.some((p) => p.kind === 'hopper') || check.items.every((id) => state.refilled.includes(id)));
+    case 'fieldCleared':
+      return state.fieldCleared;
     case 'entranceFed':
       return state.link.entrances.some((e) => e.node === check.node && e.ammoId !== null && e.count > 0 && (check.ammo === undefined || e.ammoId === check.ammo));
     case 'machineMade':
@@ -62,8 +43,6 @@ function holds(state: SimState, check: ObjectiveCheck): boolean {
       return state.gear.length > 0;
     case 'equipped':
       return Object.values(state.equipped).some((id) => id !== null);
-    case 'travelled':
-      return state.travelled;
     case 'talentSpent':
       return state.talents.some((t) => t !== TALENT_START);
     case 'claimed':
@@ -75,7 +54,8 @@ function holds(state: SimState, check: ObjectiveCheck): boolean {
     case 'inRegion':
       return regionOf(state.roomId, state.player) === check.region;
     case 'bossDefeated':
-      return state.bossDefeats.includes(check.boss);
+      // 067: the Pylon Warden has no altar, so only `killedBosses` (037) records it.
+      return state.bossDefeats.includes(check.boss) || state.killedBosses.includes(check.boss);
     case 'fired':
       // 062: this tick's shots (the tube steps before the goals do).
       return state.events.shots.some((shot) => check.items.includes(shot.ammoId));
@@ -97,16 +77,10 @@ export function stepObjectives(state: SimState): void {
     if ((state.machineMade[m.itemId] ?? 0) === 0) state.events.firstMade.push({ id: m.id, itemId: m.itemId });
     state.machineMade[m.itemId] = (state.machineMade[m.itemId] ?? 0) + m.count;
   }
-  // 046: the lines' first running dry, then what the player puts back in hoppers by hand.
-  if (!state.lineRanDry && state.link.attuned && foundryDry(state.foundry)) state.lineRanDry = true;
-  else if (state.lineRanDry) for (const d of state.events.deposits) if (!state.refilled.includes(d.itemId)) state.refilled.push(d.itemId);
   for (const [i, def] of OBJECTIVES.entries()) {
     if (state.objectives[i] || !holds(state, def.check) || (def.inOrder && !before(state, i))) continue;
     state.objectives[i] = true;
     state.events.objectives.push({ index: i });
-    // 058: a goal that shows only if the lines ran dry by now is skipped, unseen, if they haven't (its trigger goal is
-    // `inOrder`, so this is decided when that goal is the current one).
-    if (!state.lineRanDry) for (const [k, other] of OBJECTIVES.entries()) if (other.skipUnlessDryAfter === def.check.kind) state.objectives[k] = true;
   }
   noteSubSteps(state, currentObjective(state));
   if (!state.prototypeComplete && OBJECTIVES.every((o, i) => o.milestone !== 'prototype' || state.objectives[i])) state.prototypeComplete = true;

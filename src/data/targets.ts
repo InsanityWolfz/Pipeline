@@ -14,8 +14,8 @@ export type TargetDef =
   | { kind: 'pack'; group: string }
   /** A room as a whole: from another room, the door that leads there; inside it, nothing more to point at. */
   | { kind: 'room'; room: string }
-  /** The foundry's hoppers; `unfilled`: only those whose raw hasn't been put back since the lines ran dry (046). */
-  | { kind: 'hoppers'; unfilled?: true }
+  /** The foundry's hoppers (067: the refill goal that marked each one's raw is gone). */
+  | { kind: 'hoppers' }
   | { kind: 'bench' }
   /** A site's pylon, by its claim id (found or not: the goal names it); unclaimed, or (058: fast travel) once `claimed`. */
   | { kind: 'pylon'; site: string; claimed?: true }

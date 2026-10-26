@@ -3,7 +3,10 @@ import { boot, cameraSettled, watchErrors } from './helpers';
 import { centre, state } from './foundryPage';
 import { EXAMPLE_LINE } from '../../src/data/exampleLine';
 import { OBJECTIVES } from '../../src/data/objectives';
-import { REFILL_GOAL, TRAVEL_GOAL } from '../fixtures/foundrySteps';
+import { TRAVEL_GOAL } from '../fixtures/foundrySteps';
+
+// 067: being rewritten for the new flow (the refill goal is gone).
+const REFILL_GOAL = 'Refill the hoppers in the foundry with wood, stone and fiber (E)';
 
 // 046 (note 10, 027): the foundry tutorial from the example line. A new game takes the tube, the ruin field's pack
 // falls (by the hook), and the first walk into the foundry finds a complete arrow line, which starts with the attune:
@@ -71,7 +74,7 @@ test('a new game finds the example line in the foundry, sees arrows go up the tu
   // Every goal before the fast travel home done (the hook): the line asks for the fast travel, not the refill.
   s = await page.evaluate((n) => window.__GAME__?.completeObjectives(n), REFILL - 1) ?? s;
   expect(s.objective.text).toBe(TRAVEL_GOAL);
-  expect(s.lineRanDry).toBe(false);
+  expect(s.intake.entrances.some((e) => e.count > 0)).toBe(true);
 
   // Out in the field, the tube fires until the line has sent up its last arrow.
   s = await page.evaluate(() => {
@@ -80,13 +83,13 @@ test('a new game finds the example line in the foundry, sees arrows go up the tu
     if (!g || !h) throw new Error('no game');
     h.toHall();
     let x = g.step(1);
-    for (let t = 0; t < 20000 && !x.lineRanDry; t++) {
+    for (let t = 0; t < 20000 && x.intake.entrances.some((e) => e.count > 0); t++) {
       if (t % 60 === 0) g.setPlayerHealth(100);
       x = g.step(1, { fire: true, aimX: x.player.x + 200, aimY: x.player.y });
     }
     return x;
   }) ?? s;
-  expect(s.lineRanDry).toBe(true);
+  expect(s.intake.entrances.some((e) => e.count > 0)).toBe(false);
   // The fast travel home (the hook marks it done): the line ran dry first, so the refill shows.
   s = await page.evaluate((n) => window.__GAME__?.completeObjectives(n), REFILL) ?? s;
   expect(s.objective).toEqual({ index: REFILL, text: REFILL_GOAL });
@@ -124,7 +127,7 @@ test('a new game finds the example line in the foundry, sees arrows go up the tu
     }
     return g.step(1);
   }) ?? s;
-  expect(s.refilled).toEqual(['wood', 'stone', 'fiber']);
+  
   expect(s.objective.text).not.toBe(REFILL_GOAL);
   expect(s.objective.index ?? OBJECTIVES.length).toBeGreaterThan(REFILL);
   expect(OBJECTIVES[REFILL + 1]?.text).toBe('Restore the right intake entrance (E with the warden core)');

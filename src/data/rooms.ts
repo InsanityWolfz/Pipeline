@@ -129,9 +129,9 @@ export interface Terrain {
 }
 
 /**
- * The gates (012): the foundry opens when the field pack is dead, the shrine when the first line fills the tube, and
- * Stonefall Hollows' ley barrier (034) when the shrine's pylon is claimed, and the Emberworks' (060) on the Bulwark's
- * first kill.
+ * The gates (012): the foundry and Stonefall Hollows' ley barrier (034) open when the shrine's pylon is claimed (067),
+ * the shrine's is open from the start (067), the Emberworks' (060) opens on the Bulwark's first kill and the
+ * Stormcrown's (064) on the Forgewright's.
  */
 export type GateId = 'foundry' | 'shrine' | 'hollows' | 'emberworks' | 'stormcrown';
 

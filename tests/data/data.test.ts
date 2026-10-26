@@ -501,7 +501,7 @@ describe('the tutorial (012)', () => {
     const machineOutputs = Object.values(PIECES).flatMap((p) => (p.kind === 'machine' ? [recipeDef(p.recipeId).output.itemId] : []));
     for (const [i, o] of OBJECTIVES.entries()) {
       const c = o.check;
-      if (c.kind === 'refilled') for (const id of c.items) expect(ITEMS[id], o.text).toBeDefined();
+      if (c.kind === 'gathered') for (const id of c.items) expect(ITEMS[id], o.text).toBeDefined();
       if (c.kind === 'machineMade') expect(machineOutputs, o.text).toContain(c.item);
       if (c.kind === 'entranceFed') expect(RESEARCH_NODES.some((n) => n.id === c.node), o.text).toBe(true);
       // 058: a guided build's pieces are on the bar; hidden pieces never show (026), so an earlier objective must have

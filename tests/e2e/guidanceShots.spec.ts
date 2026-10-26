@@ -60,7 +60,7 @@ test.describe('review screenshots (051)', () => {
       // Out in the field, the tube fires until the example line has sent up its last arrow (046).
       h.toHall();
       let x = g.step(1);
-      for (let t = 0; t < 20000 && !x.lineRanDry; t++) {
+      for (let t = 0; t < 20000 && x.intake.entrances.some((e) => e.count > 0); t++) {
         if (t % 60 === 0) g.setPlayerHealth(100);
         x = g.step(1, { fire: true, aimX: x.player.x + 200, aimY: x.player.y });
       }

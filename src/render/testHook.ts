@@ -167,6 +167,8 @@ export interface UiState {
   objective: { text: string; subSteps: SubStepShown[] };
   /** 058: the guided build's ghosts as drawn (the next first), the remove label and a refused placement's hint. */
   guided: GuidedShown;
+  /** 067: the line over a sealed door pushed into or E'd at ("Claim the shrine first") while it shows, else null. */
+  sealedDoor: string | null;
   /** The "+ shaft" popups still on screen (027), by text, with each one's box in view px (031: none overlap). */
   madePopups: MadePopupShown[];
   /** The objective line's finished-goal tick, its alpha (0 once faded): screenshots wait for it to go (028). */

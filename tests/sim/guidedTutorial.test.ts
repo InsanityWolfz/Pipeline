@@ -21,15 +21,16 @@ const TEXTS = [
   'Pick up the tube (E)',
   'Gather wood, stone and fiber (E)',
   'Craft arrows (C)',
-  'Clear the ruin field of Husks',
-  'Craft bombs and ley bolts (C)',
-  'Enter the foundry',
+  // 067: the foundry after the first boss.
+  'Craft bombs (C)',
+  'Craft ley bolts (C)',
+  'Clear the ruin field',
+  'Defeat the Pylon Warden at the shrine',
+  "Claim the shrine's pylon (E)",
+  'Travel to the foundry (E at the pylon)',
   'Wait for the tube to fill with arrows',
   'Identify your armor at the bench (E)',
   'Equip a piece of armor at the bench (E)',
-  "Claim the shrine's pylon",
-  'Fast-travel to the foundry from the pylon (E)',
-  'Refill the hoppers in the foundry with wood, stone and fiber (E)',
   'Restore the right intake entrance (E with the warden core)',
   'Put ley bolts into the second entrance (B)',
   'Leave the foundry',
@@ -79,14 +80,19 @@ const REMOVED = [
   'Explore beyond the shrine',
   'Fill the tube from your line',
   'Breach Stonefall Hollows',
+  // 067's.
+  'Refill the hoppers in the foundry with wood, stone and fiber (E)',
+  'Fast-travel to the foundry from the pylon (E)',
+  'Enter the foundry',
+  'Craft bombs and ley bolts (C)',
 ];
 const at = (text: string): number => OBJECTIVES.findIndex((o) => o.text === text);
 const TALENT = at('Press T to spend a talent point');
 const LEY = at('Put ley bolts into the second entrance (B)');
 const FROST = at('Build a frost rune into your arrow line');
-const TRAVEL = at('Fast-travel to the foundry from the pylon (E)');
-const REFILL = at('Refill the hoppers in the foundry with wood, stone and fiber (E)');
+const TRAVEL = at('Travel to the foundry (E at the pylon)');
 const LEAVE = at('Leave the foundry');
+const FIELD = at('Clear the ruin field');
 
 /** A new game standing in the foundry by its door with every goal before `goal` done, the tube attuned. */
 function tutorialAt(goal: number): SimState {
@@ -131,37 +137,22 @@ describe('the chain (058)', () => {
   });
 });
 
-describe('the refill step', () => {
-  it('shows after the fast travel when the line has run dry', () => {
+describe('the travel to the foundry (067)', () => {
+  it('is done the tick the player is in the foundry once it is current, and "Wait for the tube" follows', () => {
     const s = tutorialAt(TRAVEL);
-    s.lineRanDry = true;
-    s.travelled = true;
-    run(s, 1);
     expect(s.objectives[TRAVEL]).toBe(true);
-    expect(currentObjective(s)).toBe(REFILL);
+    expect(currentObjective(s)).toBe(TRAVEL + 1);
+    expect(OBJECTIVES[TRAVEL + 1]?.text).toBe('Wait for the tube to fill with arrows');
   });
 
-  it('is skipped when the line is still running as the fast travel lands', () => {
-    const s = tutorialAt(TRAVEL);
-    s.travelled = true;
-    run(s, 1);
-    expect(s.lineRanDry).toBe(false);
-    expect(s.objectives[REFILL]).toBe(true);
-    expect(currentObjective(s)).toBe(REFILL + 1);
-  });
-
-  it('is decided when the fast travel goal is current, not by a fast travel made earlier', () => {
+  it('is never done by a foundry visit before it is current', () => {
     const s = tutorialAt(TRAVEL - 2);
-    s.travelled = true;
-    run(s, 1);
+    expect(s.roomId).toBe(FOUNDRY_ROOM);
     expect(s.objectives[TRAVEL]).toBe(false);
-    expect(s.objectives[REFILL]).toBe(false);
-    s.lineRanDry = true;
     s.objectives[TRAVEL - 2] = true;
     s.objectives[TRAVEL - 1] = true;
     run(s, 1);
     expect(s.objectives[TRAVEL]).toBe(true);
-    expect(currentObjective(s)).toBe(REFILL);
   });
 });
 
@@ -184,16 +175,16 @@ describe('leaving the foundry', () => {
 
 describe('the talent cut-in', () => {
   it('cuts in with the first point, and the interrupted goal comes back once one is spent', () => {
-    const s = tutorialAt(3);
+    const s = tutorialAt(FIELD);
     s.roomId = OVERWORLD_ROOM;
-    expect(currentObjective(s)).toBe(3);
+    expect(currentObjective(s)).toBe(FIELD);
     s.talentPoints = 1;
     expect(currentObjective(s)).toBe(TALENT);
     s.talents.push('a-talent');
     s.talentPoints = 0;
     run(s, 1);
     expect(s.objectives[TALENT]).toBe(true);
-    expect(currentObjective(s)).toBe(3);
+    expect(currentObjective(s)).toBe(FIELD);
   });
 
   it('waits while a guided build is current (058.4)', () => {

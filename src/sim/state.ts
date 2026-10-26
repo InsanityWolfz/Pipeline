@@ -147,26 +147,22 @@ export interface SimState {
   hasTube: boolean;
   /** The tutorial's gates (012), true once open. Kept through a KO. */
   gates: Gates;
-  /** An entrance has filled from a line at least once (opens the shrine gate). */
+  /** An entrance has filled from a line at least once (058's "Wait for the tube to fill with arrows"). */
   firstLineFull: boolean;
-  /** The overworld's living population is out (017): from the first full line on, or from a populated start. Kept through a KO. */
+  /** 067: the ruin field's pack has been killed to its last Husk once. Kept through a KO (the pack comes back; this stays). */
+  fieldCleared: boolean;
+  /** The overworld's living population is out (017; 067: from the ruin field's clearing on), or from a populated start. Kept through a KO. */
   populated: boolean;
   /** The population's pack slots (017). */
   population: PopulationState;
   /** How many of each item machines have made (027), for the foundry steps; hand crafts never count. Kept through a KO. */
   machineMade: Record<string, number>;
-  /** 046: the foundry's lines ran dry once since the tube attuned (the example line's stock used up). Kept through a KO. */
-  lineRanDry: boolean;
-  /** 046: items put in a hopper by hand since the lines ran dry, for the refill goal. Kept through a KO. */
-  refilled: string[];
   /** Raw materials ever harvested, for the gathering objective. */
   gathered: string[];
   /** Which objectives are done, in OBJECTIVES order. */
   objectives: boolean[];
   /** 051 (B.3): the raws the current craft goal has lacked, for its sub-lines. */
   subSteps: SubStepState;
-  /** 058: the player has fast-travelled home from a pylon at least once, for its goal. Kept through a KO. */
-  travelled: boolean;
   /** Every objective done: the prototype's end. */
   prototypeComplete: boolean;
   /** What a death keeps (011): what the player held when they last entered the foundry or deposited at a pylon. */
@@ -253,15 +249,13 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     hasTube: start.hasTube,
     gates: createGates(start.gatesOpen),
     firstLineFull: false,
+    fieldCleared: false,
     populated: start.populated,
     population: createPopulation(),
     machineMade: {},
-    lineRanDry: false,
-    refilled: [],
     gathered: [],
     objectives: OBJECTIVES.map(() => false),
     subSteps: createSubSteps(),
-    travelled: false,
     prototypeComplete: false,
     building: false,
     events: createEvents(),

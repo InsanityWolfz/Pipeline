@@ -2,12 +2,10 @@ import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, OVERWORLD_SPRITES, OVERWORLD_TEXTURES } from '../../data/assets';
 import { GROUND, SITE_LOOK } from '../../data/art/ground';
 import { TILE_SIZE } from '../../data/config';
-import { OVERWORLD } from '../../data/overworld';
 import { LANDMARK_LIST } from '../../data/landmarks';
 import { LANDMARK_SPRITES } from '../../data/landmarkAssets';
 import { TILE, type Room } from '../../data/rooms';
 import type { SimState } from '../../sim/state';
-import { colorOf } from '../color';
 import { worldTileHash } from '../roomTiles';
 import { inkCss } from '../vector/draw';
 import { addVector, textureScale } from '../vector/textures';
@@ -22,13 +20,13 @@ import { isPlateau } from './plateau';
 import { pieceFrame } from '../../sim/tileLook';
 
 // Draws the overworld (017): its ground baked into chunk textures, then every tree, rock, ruin and the foundry's ruin
-// as vector sprites sorted by their feet; the ley barrier dome over the shrine site while its gate is shut; and
+// as vector sprites sorted by their feet (067: the shrine's barrier dome is gone, its door open from the start); and
 // greener ground with a ley ring round a claimed pylon. 053: the round map is too big to bake whole, so each chunk
 // (its ground and its standing sprites) is built as the camera nears it and dropped once it's far behind.
 
 const T = TILE_SIZE;
 
-const { dome: DOME, safe: SAFE } = SITE_LOOK;
+const { safe: SAFE } = SITE_LOOK;
 
 /** A built chunk: its ground image (and texture) and the sprites standing on its tiles. */
 interface Chunk {
@@ -40,17 +38,14 @@ export class OverworldView {
   private readonly scene: Scene;
   /** Built chunks by `cx,cy`. */
   private readonly chunks = new Map<string, Chunk>();
-  private readonly dome: GameObjects.Graphics;
   private readonly safe: GameObjects.Image[] = [];
   private built = false;
   private room: Room | null = null;
   private shown = false;
-  private domeOpen = false;
   private claims = '';
 
   constructor(scene: Scene) {
     this.scene = scene;
-    this.dome = scene.add.graphics().setVisible(false);
   }
 
   /** Shows the overworld's art, building it the first time; anything else hides it. */
@@ -59,7 +54,6 @@ export class OverworldView {
     this.shown = room !== null;
     for (const c of this.chunks.values()) for (const o of c.objects) o.setVisible(this.shown);
     for (const o of this.safe) o.setVisible(this.shown);
-    this.dome.setVisible(this.shown && !this.domeOpen);
   }
 
   /** The chunks built now, as `cx,cy` keys, for the test hook. */
@@ -70,10 +64,6 @@ export class OverworldView {
   update(sim: SimState): void {
     if (!this.built) return;
     if (this.shown) this.stream();
-    if (!this.domeOpen && sim.gates.shrine) {
-      this.domeOpen = true;
-      this.scene.tweens.add({ targets: this.dome, alpha: 0, duration: DOME.fadeMs, onComplete: () => this.dome.setVisible(false) });
-    }
     const claims = sim.claims.join(',');
     if (claims !== this.claims) {
       this.claims = claims;
@@ -84,7 +74,6 @@ export class OverworldView {
   private build(room: Room): void {
     this.built = true;
     this.room = room;
-    this.drawDome();
     this.stream();
   }
 
@@ -193,20 +182,6 @@ export class OverworldView {
     const image = addVector(this.scene, x + jitter, bottom, frame).setDepth(bottom);
     if (symbol === TILE.tree && (hash >>> 16) % 2 === 0) image.setFlipX(true);
     return image;
-  }
-
-  /** The ley barrier: a translucent dome over the shrine site, sealing its gap until the first line fills the tube. */
-  private drawDome(): void {
-    const a = OVERWORLD.shrine.area;
-    const cx = ((a.x0 + a.x1 + 1) / 2) * T;
-    const cy = ((a.y0 + a.y1 + 1) / 2) * T;
-    const rx = ((a.x1 - a.x0 + 3) / 2) * T;
-    const ry = ((a.y1 - a.y0 + 3) / 2) * T;
-    const color = colorOf(DOME.color);
-    this.dome.clear();
-    this.dome.fillStyle(color, DOME.fill).fillEllipse(cx, cy, rx * 2, ry * 2);
-    this.dome.lineStyle(DOME.rimWidth, color, DOME.rim).strokeEllipse(cx, cy, rx * 2, ry * 2);
-    this.dome.setDepth(DEPTHS.worldUi - 1);
   }
 
   /** Each claimed pylon's safe ground (032: every claimed pylon, at its own radius): a green wash and a ley ring. */

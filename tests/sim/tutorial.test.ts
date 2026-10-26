@@ -5,8 +5,9 @@ import { BOMB_RAWS, TUTORIAL_START } from '../../src/data/player';
 import { FOUNDRY_ROOM } from '../../src/data/rooms';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { WORLD } from '../../src/sim/world';
-import { ENTRANCE_CAPS, INTAKE, INTAKE_REACH } from '../../src/data/foundry';
+import { INTAKE, INTAKE_REACH } from '../../src/data/foundry';
 import { currentObjective } from '../../src/sim/objectives';
+import { claim } from '../../src/sim/claims';
 import { createSim, type SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
@@ -34,13 +35,13 @@ function atStone(): SimState {
 }
 
 describe('the tutorial start', () => {
-  it('wakes by the tube stone with nothing, no tube, and every gate shut', () => {
+  it("wakes by the tube stone with nothing, no tube, and every gate shut but the shrine's (067: open from the start)", () => {
     const s = tutorial();
     expect(s.roomId).toBe(CLEARING_ROOM);
     expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre(OVERWORLD.wake));
     expect(s.inventory).toEqual({});
     expect(s.hasTube).toBe(false);
-    expect(s.gates).toEqual({ foundry: false, shrine: false, hollows: false, emberworks: false, stormcrown: false });
+    expect(s.gates).toEqual({ foundry: false, shrine: true, hollows: false, emberworks: false, stormcrown: false });
     expect(summarize(s).objective).toEqual({ index: 0, text: OBJECTIVES[0]?.text });
   });
 
@@ -97,53 +98,26 @@ describe('the tube', () => {
 });
 
 describe('gates', () => {
-  it("the foundry's stairs are solid and do nothing until the ruin field's pack is dead, then stay open", () => {
+  it("the foundry's stairs are solid and do nothing until the shrine is claimed (067), then stay open", () => {
     const s = tutorial();
     s.hasTube = true;
     atEntrance(s);
+    // 067: the ruin field's pack dead no longer opens them.
+    for (const e of s.enemies) if (e.group === 'field') e.health = 0;
     run(s, 30, { moveY: -1 });
     expect(s.roomId).toBe(OVERWORLD_ROOM);
-    s.enemies = s.enemies.filter((e) => e.group !== 'field');
+    expect(s.gates.foundry).toBe(false);
+    claim(s, 'shrine');
     run(s, 1);
     expect(s.gates.foundry).toBe(true);
-    expect(s.events.gates).toEqual([{ gate: 'foundry' }]);
+    expect(s.events.gates).toContainEqual({ gate: 'foundry' });
     runUntil(s, (x) => x.roomId === FOUNDRY_ROOM, 60, { moveY: -1 });
     die(s);
     expect(s.gates.foundry).toBe(true);
     expect(s.enemies.some((e) => e.group === 'field')).toBe(true);
   });
 
-  it("the shrine site's door is sealed until its gate opens (017, 055: then E at it goes in)", () => {
-    const s = tutorial();
-    s.enemies = [];
-    const door = OVERWORLD.shrine.door[1];
-    if (!door) throw new Error('no door tile');
-    const below = tileCentre({ tx: door.tx, ty: door.ty + 1 });
-    movePlayer(s, below.x, below.y);
-    run(s, 40, { moveY: -1 });
-    run(s, 1, { interact: true });
-    expect(s.player.y).toBeGreaterThan(tileCentre(door).y);
-    s.gates.shrine = true;
-    run(s, 1, { interact: true });
-    expect(s.player.y).toBeLessThan(tileCentre(door).y);
-  });
-
-  it('the shrine opens the first time an entrance fills', () => {
-    const s = tutorial();
-    const middle = s.link.entrances[1];
-    if (!middle) throw new Error('no middle entrance');
-    Object.assign(middle, { ammoId: 'arrow', count: (ENTRANCE_CAPS[0] ?? 30) - 1 });
-    run(s, 1);
-    expect(s.gates.shrine).toBe(false);
-    middle.count = ENTRANCE_CAPS[0] ?? 30;
-    run(s, 1);
-    expect([s.firstLineFull, s.gates.shrine]).toEqual([true, true]);
-    middle.count = 0;
-    run(s, 1);
-    expect(s.gates.shrine).toBe(true);
-    die(s);
-    expect(s.gates.shrine).toBe(true);
-  });
+  // 067: the shrine's door opening to E from the start, and no longer on a full line: tests/sim/opening.test.ts.
 });
 
 describe('recipes', () => {
@@ -164,13 +138,15 @@ describe('objectives', () => {
     run(s, 1, { interact: true });
     expect(s.objectives[0]).toBe(true);
     expect(currentObjective(s)).toBe(1);
-    // Done out of order: entering the foundry ticks its goal (051: the fifth, after the bomb goal), the line still
-    // shows 1 (046: the example line, laid on this entry, ticks nothing itself).
-    s.roomId = FOUNDRY_ROOM;
+    // Done out of order: clearing the ruin field ticks its goal (067: the sixth, after the ley bolt goal), the line
+    // still shows 1.
+    const field = OBJECTIVES.findIndex((o) => o.check.kind === 'fieldCleared');
+    expect(field).toBe(5);
+    for (const e of s.enemies) if (e.group === 'field') e.health = 0;
     run(s, 1);
-    expect(s.objectives[5]).toBe(true);
+    expect(s.objectives[field]).toBe(true);
     expect(currentObjective(s)).toBe(1);
-    expect(s.events.objectives).toEqual([{ index: 5 }]);
+    expect(s.events.objectives).toEqual([{ index: field }]);
   });
 
   it('gathering counts each raw harvested', () => {

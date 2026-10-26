@@ -134,7 +134,7 @@ test('the guided tutorial plays from a New game until it leaves the foundry', as
       }
       g.step(1, { interact: true });
       g.step(130);
-      for (let t = 0; t < 6000 && !g.getState().lineRanDry; t++) {
+      for (let t = 0; t < 6000 && g.getState().intake.entrances.some((e) => e.count > 0); t++) {
         const p = g.getState().player;
         g.step(1, { fire: true, aimX: p.x, aimY: p.y - 96 });
       }
