@@ -2,78 +2,13 @@ import { BULWARK, type BulwarkDef } from './bulwark';
 import { FORGEWRIGHT, type ForgewrightDef } from './forgewright';
 import { CONDUCTOR, type ConductorDef } from './conductor';
 import { BOSS_WEIGHT } from './combat';
-import { REGION_1_PART, type RarePart } from './drops';
+import { REGION_1_PART } from './drops';
+import type { AttackTiming, EnemyBase, ScreenLeashed } from './enemyBase';
 import { HOLLOWS_ENEMIES, type HollowsEnemyDef } from './hollowsEnemies';
 import { EMBERWORKS_ENEMIES, type EmberworksEnemyDef } from './emberworksEnemies';
+import { STORMCROWN_ENEMIES, type StormcrownEnemyDef } from './stormcrownEnemies';
 
-// Enemies. Starting values from specs 004 and 009; tune in playtest.
-
-/** Items an enemy (or a Ruined Cache, 032) drops. */
-export interface DropTable {
-  /** Always dropped: `min`..`max` of the item, rolled. */
-  always: readonly { itemId: string; min: number; max: number }[];
-  /** Chance (0..1) of one extra item, picked evenly from `oneOf`. */
-  chance: number;
-  oneOf: readonly string[];
-  /** `min`..`max` items, rolled, each picked evenly from `items` (032: the cache's raws). */
-  picks?: readonly { items: readonly string[]; min: number; max: number }[];
-  /** Rare entries (032), each rolled once per death at its chance (0..1), a champion's at `championChance` (033). */
-  rare?: readonly RarePart[];
-}
-
-/** What every enemy has, whatever its attack. */
-export interface EnemyBase {
-  id: string;
-  name: string;
-  /** A boss (023) shrugs off the punch's knockback. */
-  boss: boolean;
-  maxHealth: number;
-  /** Walk speed, px per second. */
-  walkSpeed: number;
-  /** Collision box at the feet, px, centred on the feet position. */
-  feetBox: { w: number; h: number };
-  /** Box arrows hit, px, centred `offsetY` from the feet (negative is up). */
-  hurtbox: { w: number; h: number; offsetY: number };
-  /** Its weight against Knockback (039, Q11): a round's hit pushes it `knockback × weight` px over `hitKnockTicks`. A boss weighs BOSS_WEIGHT (0). */
-  weight: number;
-  hitKnockTicks: number;
-  hitFlashTicks: number;
-  /** Within this distance of home, px, a returning enemy is home. */
-  homeTolerance: number;
-  drops: DropTable;
-  /** XP for a kill (037): times its ring's and a champion's multiplier, or a boss's on its first kill. */
-  xp: number;
-  /** Key into ENEMY_ANIMS in src/data/assets.ts. */
-  anims: string;
-  /**
-   * A shield (034, shared with 035): straight shots and punches whose hit point lies within `arcDegrees / 2` of its
-   * facing are blocked. It turns toward the player at no more than `turnDegPerSec`.
-   */
-  shield?: ShieldDef;
-  /** It drops nothing at all (061: a slag whelp), the schematic and armor rolls included. */
-  noLoot?: boolean;
-}
-
-export interface ShieldDef {
-  arcDegrees: number;
-  turnDegPerSec: number;
-}
-
-/** The timing every attack shares: a telegraphed wind-up, the attack pose, a recovery, and a cooldown. */
-export interface AttackTiming {
-  windupTicks: number;
-  /** Ticks the attack pose holds; the attack lands on the first. */
-  swipeTicks: number;
-  recoverTicks: number;
-  /** Ticks from a wind-up starting before another can start. */
-  cooldownTicks: number;
-}
-
-/** Enemies that chase while on screen and head home after a grace period off it (the Bulwark leashes by its arena instead, 034). */
-export interface ScreenLeashed {
-  /** Ticks off screen before a chasing enemy heads home. */
-  leashGraceTicks: number;
-}
+// Enemies. Starting values from specs 004 and 009; tune in playtest. What every enemy shares is in enemyBase.ts.
 
 /** A Husk: walks up and swipes an arc in front of it. Aggros when on screen. */
 export interface MeleeDef extends EnemyBase, ScreenLeashed {
@@ -133,9 +68,9 @@ export interface SlammerDef extends EnemyBase, ScreenLeashed {
   };
 }
 
-/** The Bulwark (034) is in bulwark.ts, the Forgewright (060) in forgewright.ts; Region 2's four (035) are in hollowsEnemies.ts, Region 3's (061) in emberworksEnemies.ts. */
+/** The Bulwark (034) is in bulwark.ts, the Forgewright (060) in forgewright.ts; Region 2's four (035) are in hollowsEnemies.ts, Region 3's (061) in emberworksEnemies.ts, Region 4's (065) in stormcrownEnemies.ts. */
 export type { BulwarkDef, ConductorDef, ForgewrightDef };
-export type EnemyDef = MeleeDef | CasterDef | SlammerDef | BulwarkDef | ForgewrightDef | ConductorDef | HollowsEnemyDef | EmberworksEnemyDef;
+export type EnemyDef = MeleeDef | CasterDef | SlammerDef | BulwarkDef | ForgewrightDef | ConductorDef | HollowsEnemyDef | EmberworksEnemyDef | StormcrownEnemyDef;
 
 /** Every attack's wind-up is at least this long (035): long enough to read and dodge. A data test holds every enemy to it. */
 export const MIN_TELEGRAPH_TICKS = 30;
@@ -249,6 +184,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
   conductor: CONDUCTOR,
   ...HOLLOWS_ENEMIES,
   ...EMBERWORKS_ENEMIES,
+  ...STORMCROWN_ENEMIES,
 };
 
 /** Dropped items land within this distance of the corpse, px. */
@@ -303,5 +239,13 @@ export function attackOf(def: EnemyDef): AttackTiming {
       return def.slam;
     case 'tender':
       return def.beam;
+    case 'hawk':
+      return def.dive;
+    case 'mite':
+      return def.zap;
+    case 'sentinel':
+      return def.strike;
+    case 'ram':
+      return def.gust;
   }
 }

@@ -12,6 +12,7 @@ import type { SimState } from '../sim/state';
 import { colorOf } from './color';
 import { addVector, showFrame } from './vector/textures';
 import { destroyEmberArt, drawEmberArt, makeEmberArt, type BeamShown, type EmberArt } from './emberEnemyArt';
+import { destroyStormArt, drawStormArt, makeStormArt, type StormArt } from './stormEnemyArt';
 
 // What Region 2's four (035) show beyond their sprite and ground telegraph, for EnemyView:
 // a Burrower underground as its ripple, a moving mound of cracked earth, its body hidden;
@@ -26,6 +27,8 @@ export interface HollowsArt {
   laser?: LaserShown | null;
   /** 061: the Emberworks' enemies' extras (emberEnemyArt.ts). */
   ember?: EmberArt;
+  /** 065: the Stormcrown's enemies' extras (stormEnemyArt.ts). */
+  storm?: StormArt;
 }
 
 /** A Sniper's laser as drawn (035): whether locked, whether its blink is on, and its ends, world px. */
@@ -47,6 +50,8 @@ export interface HollowsEnemiesShown {
   waveShades: number;
   /** 061: each kiln-tender's beam drawn, by the tender's id. */
   beams: (BeamShown & { id: number })[];
+  /** 065: gale rams whose gust swirl drew this frame. */
+  gusts: number;
 }
 
 /** The extras an enemy of these kinds needs, made once with its sprite. */
@@ -55,13 +60,16 @@ export function makeHollowsArt(scene: Scene, def: EnemyDef): HollowsArt | undefi
   if (def.kind === 'shardback') return { light: scene.add.graphics().setBlendMode(BlendModes.ADD) };
   if (def.kind === 'sniper') return { light: scene.add.graphics().setDepth(LASER_DEPTH) };
   const ember = makeEmberArt(scene, def);
-  return ember ? { ember } : undefined;
+  if (ember) return { ember };
+  const storm = makeStormArt(scene, def);
+  return storm ? { storm } : undefined;
 }
 
 /** Shows the extras for this frame; hides the body while it's under the ground. */
 export function drawHollowsArt(art: HollowsArt | undefined, sprite: GameObjects.Sprite, e: EnemyState, def: EnemyDef, sim: SimState, now: number): void {
   sprite.setVisible(!e.underground);
   if (art?.ember) drawEmberArt(art.ember, sprite, e, def, sim, now);
+  if (art?.storm) drawStormArt(art.storm, e, def);
   if (art?.light && def.kind === 'shardback') drawFlare(art.light, e, def.bash.windupTicks, now);
   if (art?.light && def.kind === 'sniper') art.laser = drawLaser(art.light, e, def, sim);
   if (!art?.ripple) return;
@@ -122,6 +130,7 @@ export function shownOf(id: number, e: EnemyState, art: HollowsArt | undefined, 
   if (art?.light && !art.laser && e.mode === 'windup' && enemyDef(e.enemyId).kind === 'shardback') into.flares += 1;
   if (art?.laser) into.lasers.push({ id, ...art.laser });
   if (art?.ember?.beam) into.beams.push({ id, ...art.ember.beam });
+  if (art?.storm?.gusting) into.gusts += 1;
 }
 
 /** Sniper bolts in flight (the Wisp's orbs are SiteView's): a red streak with a white-hot core, raised off its ground point. */
@@ -142,4 +151,5 @@ export function destroyHollowsArt(art: HollowsArt | undefined): void {
   art?.ripple?.destroy();
   art?.light?.destroy();
   destroyEmberArt(art?.ember);
+  destroyStormArt(art?.storm);
 }

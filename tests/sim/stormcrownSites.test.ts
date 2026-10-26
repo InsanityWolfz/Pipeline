@@ -62,7 +62,7 @@ describe('the places (data)', () => {
     expect(rods.nodes.length).toBeGreaterThanOrEqual(5);
     for (const n of rods.nodes) expect(n.nodeId).toBe('storm-rod');
     expect(rods.pylon).toBeUndefined();
-    // No guards until 065.
+    // 065: the region's guards hold the Weathervane, not the Rod Field.
     expect(rods.guards).toEqual([]);
   });
 
@@ -70,7 +70,8 @@ describe('the places (data)', () => {
     expect(VANE.kind).toBe('resource-site');
     expect(PYLON).toMatchObject({ site: 'weathervane', supplies: ['stormglass'] });
     expect(SITE_SUPPLY.weathervane).toEqual(['stormglass']);
-    expect(VANE.guards).toEqual([]);
+    // 065: its guard pack (tests/sim/stormcrownPacks.test.ts holds it to the spec).
+    expect(VANE.guards.map((g) => g.enemyId).sort()).toEqual(['gale-ram', 'static-mite', 'static-mite', 'static-mite', 'storm-sentinel', 'thunderhawk', 'thunderhawk']);
     const rods = landmarkDef('rod-field').nodes;
     expect(rods.some((n) => Math.hypot(n.tx - PYLON.tx, n.ty - PYLON.ty) <= SITE_SAFE_RADIUS)).toBe(true);
     expect(LINES_HOME).toContain('weathervane');
@@ -142,7 +143,7 @@ describe('the places (sim)', () => {
     expect(s.events.xp).toContainEqual({ amount: LANDMARK_XP, source: 'landmark' });
   });
 
-  it('claim the Weathervane by held E (no guards until 065): it joins fast travel and supplies its new port', () => {
+  it('claim the Weathervane by held E (its guards gone): it joins fast travel and supplies its new port', () => {
     const s = stormcrown();
     const below = tileCentre({ tx: PYLON.tx, ty: PYLON.ty + 1 });
     movePlayer(s, below.x, below.y);

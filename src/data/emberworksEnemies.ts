@@ -1,6 +1,7 @@
 import { TICK_RATE } from './config';
 import { REGION_3_PART } from './drops';
-import type { AttackTiming, DropTable, EnemyBase, MeleeDef, ScreenLeashed } from './enemies';
+import type { MeleeDef } from './enemies';
+import type { AttackTiming, DropTable, EnemyBase, ScreenLeashed } from './enemyBase';
 
 // The Emberworks' enemies (061): each has its own read and its own answer. Starting values from the spec's table,
 // tuned in playtest, before ring 4's ×4 (060); ticks at 60 Hz, distances px. Their rules are in src/sim (moteAi.ts

@@ -1,5 +1,5 @@
 import { BOSS_WEIGHT } from './combat';
-import type { EnemyBase } from './enemies';
+import type { EnemyBase } from './enemyBase';
 import { CONDUCTOR_XP } from './leveling';
 
 // The Conductor (064): the Stormcrown's boss, a robed storm construct with a rod staff in the Crown Spire, the design's

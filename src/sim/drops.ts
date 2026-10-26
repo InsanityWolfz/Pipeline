@@ -1,4 +1,5 @@
-import { DROP_SCATTER, DROP_SCATTER_TRIES, type DropTable, type EnemyDef } from '../data/enemies';
+import { DROP_SCATTER, DROP_SCATTER_TRIES, type EnemyDef } from '../data/enemies';
+import type { DropTable } from '../data/enemyBase';
 import { FEET_BOX, MAGNET } from '../data/player';
 import { TICK_RATE, TILE_SIZE } from '../data/config';
 import { FIRST_ARMOR_ENEMY, UNIDENTIFIED_ARMOR } from '../data/gear';
@@ -11,7 +12,7 @@ import { rollArmorDrop } from './gear';
 import { standingRects } from './fixtures';
 import { nodeRects } from './nodes';
 import { roomById, type SimState } from './state';
-import { ANY_SCHEMATIC } from '../data/drops';
+import { ANY_SCHEMATIC, LANDING_REACH } from '../data/drops';
 import { ITEMS } from '../data/items';
 import { pickSchematic, rollSchematic } from './schematics';
 
@@ -99,6 +100,8 @@ export function scatterPoint(
  * 2–3 times and drops exactly its guaranteed armor instead of the usual chance. Then a separate schematic roll (033).
  */
 export function spawnDrops(state: SimState, def: EnemyDef, x: number, y: number, roomId: string, champion = false): void {
+  // 065: an enemy with a drop share (a static mite's third) drops at all only that share of the time.
+  if (def.dropShare !== undefined && nextFloat(state.rng) >= def.dropShare) return;
   const rolls = champion ? championDropRolls(state.rng) : 1;
   // A champion's rare entries roll once, at its own chance, not once per drop roll (032, 033).
   const items = [
@@ -111,7 +114,35 @@ export function spawnDrops(state: SimState, def: EnemyDef, x: number, y: number,
     if (def.id === FIRST_ARMOR_ENEMY) state.firstHuskDropped = true;
     for (let i = 0; i < CHAMPIONS.armor; i++) items.push(UNIDENTIFIED_ARMOR);
   } else if (rollArmorDrop(state, def.id)) items.push(UNIDENTIFIED_ARMOR);
-  scatterItems(state, items, roomId, x, y);
+  const at = landingPoint(roomById(roomId), x, y);
+  scatterItems(state, items, roomId, at.x, at.y);
+}
+
+/**
+ * Where a corpse's drops land (065): where it fell, or, over something solid (a flier killed over a rock or a chasm),
+ * the centre of the nearest open tile, ring by ring outward, nearest first; where it fell if none is within reach.
+ */
+export function landingPoint(room: Room, x: number, y: number): { x: number; y: number } {
+  const tx = Math.floor(x / TILE_SIZE);
+  const ty = Math.floor(y / TILE_SIZE);
+  if (!isSolid(room, tx, ty)) return { x, y };
+  for (let r = 1; r <= LANDING_REACH; r++) {
+    let best: { x: number; y: number } | null = null;
+    let bestD = Infinity;
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== r || isSolid(room, tx + dx, ty + dy)) continue;
+        const c = { x: (tx + dx + 0.5) * TILE_SIZE, y: (ty + dy + 0.5) * TILE_SIZE };
+        const d = Math.hypot(c.x - x, c.y - y);
+        if (d < bestD) {
+          bestD = d;
+          best = c;
+        }
+      }
+    }
+    if (best) return best;
+  }
+  return { x, y };
 }
 
 /**

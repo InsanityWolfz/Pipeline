@@ -8,6 +8,7 @@ import { AFFIXES, GEAR_NAMES, GEAR_SLOTS, RARITIES, SLOT_BASE, type Affix, type 
 import { HOLLOWS } from './hollows';
 import { HOLLOWS_ENEMIES } from './hollowsEnemies';
 import { EMBERWORKS_ENEMIES } from './emberworksEnemies';
+import { STORMCROWN_ENEMIES } from './stormcrownEnemies';
 import { ITEMS } from './items';
 import type { StartDef } from './player';
 import { ALL_CRAFTED } from './playtest';
@@ -39,12 +40,13 @@ export interface PenDef {
   home: TilePos;
 }
 
-/** Each non-boss enemy's region (033, 034): Region 1's two, then Stonefall Hollows' four, then (061) the Emberworks' five. A new enemy needs an entry (a data test checks). */
+/** Each non-boss enemy's region (033, 034): Region 1's two, then Stonefall Hollows' four, then (061) the Emberworks' five, then (065) the Stormcrown's four. A new enemy needs an entry (a data test checks). */
 export const ENEMY_REGIONS: Readonly<Record<string, number>> = {
   husk: 1,
   wisp: 1,
   ...Object.fromEntries(Object.keys(HOLLOWS_ENEMIES).map((id) => [id, HOLLOWS.region])),
   ...Object.fromEntries(Object.keys(EMBERWORKS_ENEMIES).map((id) => [id, EMBERWORKS.region])),
+  ...Object.fromEntries(Object.keys(STORMCROWN_ENEMIES).map((id) => [id, STORMCROWN.region])),
 };
 
 /** 044.3: each region's pens at the ring its enemies meet the player in the real game: Region 1 at 1, the Hollows at theirs (3), the Emberworks at its (4, 060), the Stormcrown at its (5, 064). */
@@ -124,9 +126,10 @@ export const SANDBOX = {
   penRefillTicks: 5 * TICK_RATE,
   /**
    * The spawn panel: spawned enemies stand `distance` tiles in front of the player, `spacing` tiles apart across the
-   * way they face; one that would stand in a wall is tried at `backSteps` even steps back toward the player.
+   * way they face; one that would stand in a wall is tried at `backSteps` even steps back toward the player. 065: a
+   * swarm (a mite's trio) stands `swarmGap` px apart along the row, in a pen as from the panel.
    */
-  place: { distance: 5, spacing: 2, backSteps: 20 },
+  place: { distance: 5, spacing: 2, backSteps: 20, swarmGap: 14 },
   /** The spawn panel's choices and where it starts: ring 1–5 (060: the Emberworks' 4; 064: the Stormcrown's 5), champion or not, 1–10 at a time. */
   rings: [1, 2, 3, 4, 5] as readonly Ring[],
   maxCount: 10,

@@ -26,6 +26,7 @@ import { stepHealing } from './healing';
 import { stepEnemies } from './enemyAi';
 import { NO_COMMAND, type Command } from './input';
 import { stepPlayer } from './movement';
+import { slowScale } from './slow';
 import { stepNodes } from './nodes';
 import { stepOrbs } from './orbs';
 import { stepFloodPools } from './floodPools';
@@ -77,7 +78,9 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   const bodies = bodiesOf(state);
   const here = bodies(state.roomId);
   const stats = playerStats(state);
-  stepPlayer(state.player, here.room, cmd, here.obstacles, { ...stats, walkScale: stats.walkScale * firingWalkScale(state) });
+  // 065: a slow (a gale ram's gust) takes its share of walk and roll speed.
+  const slowed = slowScale(state.player);
+  stepPlayer(state.player, here.room, cmd, here.obstacles, { ...stats, walkScale: stats.walkScale * firingWalkScale(state) * slowed, rollDistance: stats.rollDistance * slowed });
   // After the player moves and before enemies act (036): the ward builds, a roll stuns what it passes through.
   stepRelics(state);
   stepDoorways(state);

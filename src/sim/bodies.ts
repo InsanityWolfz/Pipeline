@@ -4,7 +4,7 @@ import { fixtureRects, standingRects } from './fixtures';
 import { nodeRects } from './nodes';
 import { solidRects } from './pieces';
 import { roomById, type SimState } from './state';
-import { sealedRoom, tutorialRects } from './tutorial';
+import { sealedRoom, shutShotGates, tutorialRects } from './tutorial';
 
 // What stands in a room's way: its tiles, plus the solid things on them.
 
@@ -15,5 +15,5 @@ export function roomBodies(state: SimState, roomId: string): RoomBodies {
   const pieces = roomId === FOUNDRY_ROOM ? [...solidRects(state.foundry), ...fixtureRects(state.fixtures)] : [];
   const pylon = standingRects(roomById(roomId));
   const tutorial = tutorialRects(state, roomId);
-  return { room, obstacles: [...nodeRects(state.nodes, roomId), ...pieces, ...pylon, ...tutorial] };
+  return { room, obstacles: [...nodeRects(state.nodes, roomId), ...pieces, ...pylon, ...tutorial], shut: shutShotGates(state, roomId) };
 }

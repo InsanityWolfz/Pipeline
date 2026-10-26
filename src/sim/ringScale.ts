@@ -69,5 +69,16 @@ function scaleAttack(def: EnemyDef, base: Pick<EnemyDef, 'feetBox' | 'hurtbox' |
       return { ...def, ...base, slam: { ...def.slam, damage: dmg(def.slam.damage) } };
     case 'hound':
       return { ...def, ...base, dash: { ...def.dash, damage: dmg(def.dash.damage), speed: def.dash.speed * speed }, trail: { ...def.trail, damage: dmg(def.trail.damage) } };
+    // 065: its dive speeds up with its flight, as the Charger's charge does.
+    case 'hawk':
+      return { ...def, ...base, dive: { ...def.dive, damage: dmg(def.dive.damage), speed: def.dive.speed * speed } };
+    // 065: its discharge scales as its zap does (061.4's rule for a death burst).
+    case 'mite':
+      return { ...def, ...base, zap: { ...def.zap, damage: dmg(def.zap.damage) }, discharge: { ...def.discharge, damage: dmg(def.discharge.damage) } };
+    case 'sentinel':
+      return { ...def, ...base, strike: { ...def.strike, damage: dmg(def.strike.damage) } };
+    // 065: its slow is a share and a time, never scaled.
+    case 'ram':
+      return { ...def, ...base, gust: { ...def.gust, damage: dmg(def.gust.damage) } };
   }
 }

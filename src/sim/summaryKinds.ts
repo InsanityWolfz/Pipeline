@@ -33,6 +33,11 @@ export interface KindSummary {
   slam?: { x: number; y: number; radius: number } | null;
   /** 061: a kiln-tender's beam while it winds up or channels (its target's id), else null. */
   beam?: { target: number; phase: 'windup' | 'channel' } | null;
+  /** 065: a static mite's zap pulse while it winds up (its radius, px, and ticks so far), else null; and its trio (its first mite's id). */
+  pulse?: { radius: number; ticks: number } | null;
+  trio?: number;
+  /** 065: a gale ram's gust cone while it winds up, else null: its feet, unit direction, reach (px) and width (degrees). */
+  cone?: { x: number; y: number; dx: number; dy: number; reach: number; degrees: number } | null;
 }
 
 export function kindSummary(state: SimState, e: EnemyState): KindSummary {
@@ -53,6 +58,15 @@ export function kindSummary(state: SimState, e: EnemyState): KindSummary {
   if (def.kind === 'tender') out.beam = beamShown(e);
   // 061: a hound's lane, as the Charger's.
   if (def.kind === 'hound') out.lane = laneShown(e, def.dash);
+  // 065: a thunderhawk's dive line, as a lane.
+  if (def.kind === 'hawk') out.lane = laneShown(e, def.dive);
+  // 065: a static mite's pulse while it winds up, and its trio.
+  if (def.kind === 'mite') {
+    out.pulse = e.mode === 'windup' ? { radius: def.zap.radius, ticks: e.modeTicks } : null;
+    out.trio = e.trio;
+  }
+  // 065: a gale ram's cone while it winds up (its feet, the locked direction, reach and width).
+  if (def.kind === 'ram') out.cone = e.mode === 'windup' ? { x: round(e.x), y: round(e.y), dx: round(e.swipeDirX), dy: round(e.swipeDirY), reach: def.gust.reach, degrees: def.gust.arcDegrees } : null;
   return out;
 }
 

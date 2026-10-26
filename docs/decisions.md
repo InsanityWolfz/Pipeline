@@ -278,3 +278,8 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - A homing round that locked at launch re-locks onto the nearest Conductor in the player's room after a blink; rounds that never locked fly straight.
   - The world's ground is pinned row by row (`tests/sim/worldGround.json`) as well as by offsets, so a world growth proves it moved nothing.
 
+- **065 Stormcrown enemies:**
+  - Flight (`src/sim/flight.ts`): a flier ignores terrain tiles but keeps out of arena walls, safe zones and every shut ring barrier, treated as a whole circle, so it can't cross over the cliffs; a flier whose target is beyond a shut barrier doesn't wake, and an awake one goes home.
+  - Enemy groups that act as one (mite trios) link at spawn (`linkTrios`) and count member by member toward a pack's size and wipe.
+  - Player statuses (the slow) apply once per tick in `step.ts`, to walk speed and roll distance, never a roll's ticks.
+

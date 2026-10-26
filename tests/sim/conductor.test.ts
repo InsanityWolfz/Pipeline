@@ -94,7 +94,7 @@ describe('waking and leaving', () => {
     const { s, c } = spire();
     run(s, 1);
     c.health = 1000;
-    s.strikes.push({ ownerId: c.id, enemyId: c.enemyId, roomId: c.roomId, x: 0, y: 0, r: 40, damage: 40, delay: 30, delayTicks: 60 });
+    s.strikes.push({ ownerId: c.id, enemyId: c.enemyId, roomId: c.roomId, x: 0, y: 0, r: 40, damage: 40, knockback: 0, knockTicks: 0, delay: 30, delayTicks: 60 });
     const door = CROWN_ARENA.door.tiles[2] ?? CROWN_ARENA.door.enterTo;
     movePlayer(s, tileCentre(door).x, tileCentre(door).y - 32);
     run(s, 1, { interact: true });

@@ -5,6 +5,9 @@ import { POPULATION, type PackDef, type PopulatedRing } from '../data/population
 import { ADDS_GROUP } from '../data/bulwark';
 import { EMBERWORKS, rampTiles } from '../data/emberworks';
 import { ANVIL_HALL } from '../data/emberworksSites';
+import { STORMCROWN, stormRampTiles } from '../data/stormcrown';
+import { CROWN_SPIRE } from '../data/stormcrownSites';
+import { linkTrios, swarmOf } from './miteAi';
 import { HOLLOWS } from '../data/hollows';
 import { LANDMARK_LIST } from '../data/landmarks';
 import { TILE, WALKABLE } from '../data/rooms';
@@ -36,7 +39,7 @@ export interface PopulationState {
 
 export function createPopulation(): PopulationState {
   const slots: PackSlot[] = [];
-  for (const ring of [1, 2, 3, 4] as const) {
+  for (const ring of [1, 2, 3, 4, 5] as const) {
     for (let i = 0; i < POPULATION.rings[ring].packs; i++) slots.push({ group: `pop-${ring}-${i}`, ring, respawnAt: 0, alive: false });
   }
   return { slots };
@@ -126,8 +129,8 @@ const SHRINE_GROUND = ((): TileRect => {
   return { x0: a.x0 - m.x, y0: a.y0 - m.y, x1: a.x1 + m.x, y1: a.y1 + m.y };
 })();
 
-/** Where packs never stand: the clearings (the meadow, the ruin field, the shrine site), the shrine's surroundings, the landmarks' areas (032), the Sunken Forum (034) and the Anvil Hall (061). */
-export const KEEP_OUT: readonly TileRect[] = [...OVERWORLD.clearings, SHRINE_GROUND, ...LANDMARK_LIST.map((l) => l.area), HOLLOWS.arena.bounds, ANVIL_HALL.bounds];
+/** Where packs never stand: the clearings (the meadow, the ruin field, the shrine site), the shrine's surroundings, the landmarks' areas (032), the Sunken Forum (034), the Anvil Hall (061) and the Crown Spire (065). */
+export const KEEP_OUT: readonly TileRect[] = [...OVERWORLD.clearings, SHRINE_GROUND, ...LANDMARK_LIST.map((l) => l.area), HOLLOWS.arena.bounds, ANVIL_HALL.bounds, CROWN_SPIRE.bounds];
 
 /** A ring's ground a pack can walk to from `starts` without leaving it: generated cliffs and kilns can wall off a pocket, and nothing spawns in one. */
 function reachIn(ring: number, starts: readonly { tx: number; ty: number }[]): Set<number> {
@@ -147,11 +150,15 @@ function reachIn(ring: number, starts: readonly { tx: number; ty: number }[]): S
   return seen;
 }
 
-/** Hollows ground reachable from the gap (034), and (061) Emberworks ground reachable from the tops of its ramps. */
+/** Hollows ground reachable from the gap (034), (061) Emberworks ground reachable from the tops of its ramps, and (065) the Stormcrown's from the tops of its. */
 const fromGap = reachIn(HOLLOWS.ring, [HOLLOWS.start]);
 const fromRamps = reachIn(
   EMBERWORKS.ring,
   EMBERWORKS.ramps.flatMap((r) => rampTiles(r)).filter((t) => ringOf(t.tx, t.ty) === EMBERWORKS.ring),
+);
+const fromStormRamps = reachIn(
+  STORMCROWN.ring,
+  STORMCROWN.ramps.flatMap((r) => stormRampTiles(r)).filter((t) => ringOf(t.tx, t.ty) === STORMCROWN.ring),
 );
 
 /**
@@ -174,16 +181,17 @@ export const packGround = (tx: number, ty: number): boolean => {
   if (byGate.has(ty * OVERWORLD.width + tx)) return false;
   if (ringOf(tx, ty) === HOLLOWS.ring && !fromGap.has(ty * OVERWORLD.width + tx)) return false;
   if (ringOf(tx, ty) === EMBERWORKS.ring && !fromRamps.has(ty * OVERWORLD.width + tx)) return false;
+  if (ringOf(tx, ty) === STORMCROWN.ring && !fromStormRamps.has(ty * OVERWORLD.width + tx)) return false;
   return !KEEP_OUT.some((r) => tx >= r.x0 && tx <= r.x1 && ty >= r.y0 && ty <= r.y1);
 };
 
 /** Open ground each ring offers a pack's centre, found once from the generated map. */
-const candidates: Record<PopulatedRing, { tx: number; ty: number }[]> = { 1: [], 2: [], 3: [], 4: [] };
+const candidates: Record<PopulatedRing, { tx: number; ty: number }[]> = { 1: [], 2: [], 3: [], 4: [], 5: [] };
 for (let ty = 1; ty < OVERWORLD.height - 1; ty++) {
   for (let tx = 1; tx < OVERWORLD.width - 1; tx++) {
     const ring = ringOf(tx, ty);
-    // Ring 0 stays calm; ring 5 (064, the Stormcrown) has no packs until 065.
-    if (ring !== 0 && ring !== 5 && packGround(tx, ty)) candidates[ring].push({ tx, ty });
+    // Ring 0 stays calm.
+    if (ring !== 0 && packGround(tx, ty)) candidates[ring].push({ tx, ty });
   }
 }
 
@@ -216,21 +224,34 @@ function spawn(state: SimState, slot: PackSlot): boolean {
       if (fits(s)) spots.push(s);
     }
     if (spots.length < size) continue;
-    const picked: string[] = [];
-    const members = spots.map((s) => {
-      // Only ids still under their pack limit (035); with no limits the pool, and the draws, are as before.
-      const pool = def.enemies.filter((id) => picked.filter((p) => p === id).length < (def.limits?.[id] ?? Infinity));
-      const enemyId = pool[nextInt(state.rng, 0, pool.length - 1)];
-      if (!enemyId) throw new Error(`Ring ${slot.ring} has no enemies to spawn`);
-      picked.push(enemyId);
-      return createEnemy(state.nextEnemyId++, enemyId, tileCentre(s), OVERWORLD.id, slot.group);
-    });
+    const ids = pickMembers(state, def, size, slot.ring);
+    const members = spots.map((s, i) => createEnemy(state.nextEnemyId++, ids[i] ?? '', tileCentre(s), OVERWORLD.id, slot.group));
+    // 065: its mites in trios.
+    linkTrios(members);
     // The pack may hold a champion (032).
     rollChampions(state.rng, members, slot.ring);
     state.enemies.push(...members);
     return true;
   }
   return false;
+}
+
+/**
+ * A pack's `size` members' ids, picked one by one with the seeded RNG from those still under their pack limit (035)
+ * (with no limits the pool, and the draws, are as before). 065: a swarm (a mite's trio) is picked only with room for
+ * all of it, and comes whole: its members count toward the size, and a limit counts picks.
+ */
+function pickMembers(state: SimState, def: PackDef, size: number, ring: number): string[] {
+  const ids: string[] = [];
+  const picked: string[] = [];
+  while (ids.length < size) {
+    const pool = def.enemies.filter((id) => picked.filter((p) => p === id).length < (def.limits?.[id] ?? Infinity) && swarmOf(id) <= size - ids.length);
+    const enemyId = pool[nextInt(state.rng, 0, pool.length - 1)];
+    if (!enemyId) throw new Error(`Ring ${ring} has no enemies to spawn`);
+    picked.push(enemyId);
+    for (let k = 0; k < swarmOf(enemyId); k++) ids.push(enemyId);
+  }
+  return ids;
 }
 
 /** Once per tick: keeps every ring's packs alive while the land is populated. */
@@ -241,6 +262,8 @@ export function stepPopulation(state: SimState): void {
     if (slot.ring === HOLLOWS.ring && !state.gates.hollows) continue;
     // 061: the Emberworks fill once theirs is down.
     if (slot.ring === EMBERWORKS.ring && !state.gates.emberworks) continue;
+    // 065: the Stormcrown fills once its barrier is down.
+    if (slot.ring === STORMCROWN.ring && !state.gates.stormcrown) continue;
     if (state.enemies.some((e) => e.group === slot.group)) {
       slot.alive = true;
       continue;

@@ -54,7 +54,7 @@ export const NO_HUD_PANELS: HudPanelsState = {
   inventory: { open: false, mode: null, containerId: null, scroll: 0, rows: 0, slots: [], container: [], stash: [], stashScroll: 0, stashRows: 0, sort: { x: 0, y: 0, w: 0, h: 0 }, footer: [], panel: { x: 0, y: 0, w: 0, h: 0 } },
   researchList: { open: false, groups: [] },
   pickupFeed: [],
-  health: { box: { x: 0, y: 0, w: 0, h: 0 }, text: '', low: false, healing: false, chunk: 0, xp: { text: '', fill: 0, pip: false, tick: 0, bar: { x: 0, y: 0, w: 0, h: 0 } } },
+  health: { box: { x: 0, y: 0, w: 0, h: 0 }, text: '', low: false, healing: false, chunk: 0, slowed: false, xp: { text: '', fill: 0, pip: false, tick: 0, bar: { x: 0, y: 0, w: 0, h: 0 } } },
   bossBar: null,
   talents: NO_TALENT_PANEL,
   talentPanel: { open: false, tab: 'talents', tabs: [], panel: { x: 0, y: 0, w: 0, h: 0 } },
@@ -177,7 +177,7 @@ export class HudView {
     const stats = playerStats(sim);
     const toNext = xpToNext(sim);
     const xp = { level: sim.level, fill: toNext > 0 ? sim.xp / toNext : 1, points: sim.talentPoints, gained: events.xp.length > 0 };
-    const input = { health: p.health, max: stats.maxHealth, healing: p.healing !== null, dying: p.dying > 0, armor: stats.armor, xp };
+    const input = { health: p.health, max: stats.maxHealth, healing: p.healing !== null, dying: p.dying > 0, armor: stats.armor, xp, slowed: p.slowTicks > 0 };
     this.health.update(input, building ? buildBarBox(unlockedPieces(sim)) : null, dt);
     this.edges.update(this.health.shown.low, this.health.pulse);
     // 056.4, 057: in the sandbox the feed sits right of the Loadout tab, which holds the top-left, and moves out with it.

@@ -4,6 +4,7 @@ import { HOLLOWS_ENEMY_ANIMS } from './hollowsEnemyAssets';
 import { FORGE_ANIMS } from './forgewrightAssets';
 import { CONDUCTOR_ANIMS } from './conductorAssets';
 import { EMBER_ENEMY_ANIMS } from './emberworksEnemyAssets';
+import { STORM_ENEMY_ANIMS } from './stormcrownEnemyAssets';
 
 /** Vector frames drawn at boot (016): one texture of shelf-packed canvas pages, holding every sprite frame by name. */
 export const VECTOR_KEY = 'vectors';
@@ -150,6 +151,7 @@ export const ENEMY_ANIMS: Readonly<Record<string, EnemyAnims>> = {
   ...FORGE_ANIMS,
   ...CONDUCTOR_ANIMS,
   ...EMBER_ENEMY_ANIMS,
+  ...STORM_ENEMY_ANIMS,
 };
 
 /** The sparkle played where an item is picked up. */

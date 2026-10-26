@@ -17,8 +17,8 @@ export const CHAMPIONS = {
   dropRolls: [2, 3] as const,
   /** Unidentified armor pieces it always drops, instead of the usual chance. */
   armor: 1,
-  /** A spawning pack's chance of holding one, by danger ring (ring 0 has no population). Later regions add theirs: Stonefall Hollows' ring 3, 1 in 4 (035); the Emberworks' ring 4, 1 in 4 (061). */
-  chanceByRing: { 1: 1 / 8, 2: 1 / 5, 3: 1 / 4, 4: 1 / 4 } as Readonly<Record<number, number>>,
+  /** A spawning pack's chance of holding one, by danger ring (ring 0 has no population). Later regions add theirs: Stonefall Hollows' ring 3, 1 in 4 (035); the Emberworks' ring 4, 1 in 4 (061); the Stormcrown's ring 5, 1 in 3 (065). */
+  chanceByRing: { 1: 1 / 8, 2: 1 / 5, 3: 1 / 4, 4: 1 / 4, 5: 1 / 3 } as Readonly<Record<number, number>>,
   /** The soft glow round its body: palette colour, radius px at 1× (scaled with it), a slow pulse between two alphas. */
   glow: { color: 'gold-trim', radius: 22, pulseMs: 1800, alpha: [0.3, 0.55] as const },
   /** The dev hook's champion pack (`spawnChampionPack`): its first member this many tiles right of the player, the rest `gap` tiles apart. */
@@ -40,5 +40,10 @@ export const CHAMPIONS = {
     'slag-golem': ['Clinkerback', 'Dross', 'Crustheart', 'Slagmaw', 'Magmafist'],
     'slag-whelp': ['Dribble', 'Clinker', 'Sputter'],
     'kiln-tender': ['Hearthkeep', 'Kindlewarden', 'Firemend', 'Brickbelly', 'Stokewell'],
+    // 065: the Stormcrown's.
+    thunderhawk: ['Galewing', 'Stormtalon', 'Boltbeak', 'Skyrend', 'Thunderclaw'],
+    'static-mite': ['Sparkjaw', 'Fizzle', 'Crackle', 'Zapper', 'Jolt'],
+    'storm-sentinel': ['Rodwarden', 'Stormeye', 'Boltcaller', 'Skywatch', 'Thunderlens'],
+    'gale-ram': ['Squallhorn', 'Gustbelly', 'Windmaw', 'Blusterhide', 'Tempestram'],
   } as Readonly<Record<string, readonly string[]>>,
 } as const;

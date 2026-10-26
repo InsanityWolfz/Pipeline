@@ -138,6 +138,8 @@ export interface EnemyState extends Knockable {
   /** A kiln-tender's beam (061): its target's id (-1: none), and its own health as the beam began (any less breaks it). */
   beamTarget: number;
   beamHeld: number;
+  /** 065: a static mite's trio, by its first mite's id (-1: none): a trio wakes together, and a champion's trio are all champions. */
+  trio: number;
 }
 
 /** A home's danger ring (041, the rule 037's XP used): `ringOf` its tile in the overworld, 0 in any other room. */
@@ -203,6 +205,7 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     conductor: createConductor(enemyId, at),
     beamTarget: -1,
     beamHeld: 0,
+    trio: -1,
     knockX: 0,
     knockY: 0,
     knockTicks: 0,
@@ -283,8 +286,10 @@ export const immune = (e: Pick<EnemyState, 'underground' | 'rising'>): boolean =
 /** Whether shots, punches and bursts can reach it: whenever it isn't immune (054). */
 export const targetable = (e: Pick<EnemyState, 'underground' | 'rising'>): boolean => !immune(e);
 
-/** It passes through other enemies (035): a Burrower underground, a Charger mid-charge (061: a hound mid-dash), an add rising (041). Separation leaves it be. */
-export const passesThrough = (e: EnemyState): boolean => e.underground || e.rising > 0 || (e.mode === 'swipe' && (defOf(e).kind === 'charger' || defOf(e).kind === 'hound'));
+/** It passes through other enemies (035): a Burrower underground, a Charger mid-charge (061: a hound mid-dash; 065: a hawk mid-dive), an add rising (041). Separation leaves it be. */
+export const passesThrough = (e: EnemyState): boolean => e.underground || e.rising > 0 || (e.mode === 'swipe' && LANE_RUNNERS.includes(defOf(e).kind));
+
+const LANE_RUNNERS: readonly string[] = ['charger', 'hound', 'hawk'];
 
 /** True if a ground point is inside the enemy's hurtbox. */
 export function inHurtbox(e: EnemyState, x: number, y: number): boolean {

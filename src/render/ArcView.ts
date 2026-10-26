@@ -43,6 +43,8 @@ export class ArcView {
   /** `events` are the ticks' since the last draw (only the shown room's arcs reach it); `deltaMs` the frame's time. */
   update(events: SimEvents, here: boolean, deltaMs: number): void {
     if (here) for (const a of events.arcs) this.bolts.push({ x0: a.fromX, y0: a.fromY - L.lift, x1: a.toX, y1: a.toY - L.lift, age: 0, seed: a.from * 7919 + a.to });
+    // 065: a killed static mite's discharge, a bolt to each mite it hit, low (mites are small).
+    if (here) for (const d of events.discharges) for (const h of d.hit) this.bolts.push({ x0: d.x, y0: d.y - L.miteLift, x1: h.x, y1: h.y - L.miteLift, age: 0, seed: d.id * 7919 + h.id });
     for (const b of this.bolts) b.age += deltaMs;
     this.bolts = this.bolts.filter((b) => b.age < L.ms);
     this.shownCount = this.bolts.length;

@@ -92,18 +92,26 @@ describe('the ring', () => {
     for (const r of STORMCROWN.ramps) for (const t of stormRampTiles(r)) expect(at(t.tx, t.ty), `${r.id} ${t.tx},${t.ty}`).toBe(TILE.ramp);
   });
 
-  it('has no packs until 065: none spawn in ring 5', () => {
+  it('has no packs while its barrier stands (065 fills ring 5 once it falls: stormcrownPacks.test.ts)', () => {
     const s = createSim(3, { start: HOLLOWS_START });
     s.populated = true;
-    s.bossDefeats.push('bulwark', 'forgewright');
+    s.bossDefeats.push('bulwark');
+    s.gates.emberworks = true;
+    // Each slot is due at once (its `respawnAt` is 0), so a tick by each ramp's top would fill any that could fill.
     for (const r of STORMCROWN.ramps) {
       const top = tileCentre(polar(r.bearing, outer - 12));
       movePlayer(s, top.x, top.y);
-      run(s, 300);
+      run(s, 2);
     }
-    // 064: only the Conductor, in its spire (a boss, not a pack).
-    expect(s.enemies.filter((e) => e.roomId === OVERWORLD.id && e.ring === 5).map((e) => [e.enemyId, e.group])).toEqual([['conductor', 'crown-spire']]);
-    expect(s.population.slots.some((p) => (p.ring as number) === 5)).toBe(false);
+    // 064: only the Conductor, in its spire (a boss, not a pack), and the Weathervane's guards (065).
+    expect(s.gates.stormcrown).toBe(false);
+    expect(s.enemies.filter((e) => e.roomId === OVERWORLD.id && e.ring === 5 && e.group !== 'weathervane').map((e) => [e.enemyId, e.group])).toEqual([['conductor', 'crown-spire']]);
+    expect(s.enemies.some((e) => e.group.startsWith('pop-5-'))).toBe(false);
+    expect(s.population.slots.filter((p) => p.ring === 5)).toHaveLength(12);
+    // The same tick with the barrier down fills ring 5 at once.
+    s.gates.stormcrown = true;
+    run(s, 1);
+    expect(s.enemies.some((e) => e.group.startsWith('pop-5-'))).toBe(true);
   });
 });
 
