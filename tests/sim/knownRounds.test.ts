@@ -13,8 +13,12 @@ describe('known rounds', () => {
     expect(all.indexOf('bomb')).toBeLessThan(all.indexOf('bomb+cluster'));
     expect(all.indexOf('bomb+frost+cluster')).toBeLessThan(all.indexOf('ley-bolt'));
     // 060: the seven Fire rounds, each after its family's Frost one (064: then its Lightning one). 062: then each family's tiered rounds.
-    expect(all.slice(-7)).toEqual(['landmine+frost', 'landmine+fire', 'landmine+lightning', 'landmine+steel', 'landmine+steel+frost', 'landmine+steel+fire', 'landmine+steel+lightning']);
-    expect(all).toHaveLength(56);
+    // 066: then its stormsteel ones.
+    expect(all.slice(-11)).toEqual([
+      'landmine+frost', 'landmine+fire', 'landmine+lightning', 'landmine+steel', 'landmine+steel+frost', 'landmine+steel+fire', 'landmine+steel+lightning',
+      'landmine+stormsteel', 'landmine+stormsteel+frost', 'landmine+stormsteel+fire', 'landmine+stormsteel+lightning',
+    ]);
+    expect(all).toHaveLength(84);
   });
 
   it('knows a round once carried, and keeps it after it’s gone and through a KO', () => {

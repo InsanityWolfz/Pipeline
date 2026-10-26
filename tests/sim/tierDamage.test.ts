@@ -39,7 +39,8 @@ const lookOf = (id: string): { armed?: string } => {
 
 describe('a tiered round hits ×1.6 (062)', () => {
   it('is 1.6 for steel and for glass', () => {
-    expect(TIER_DAMAGE).toEqual({ steel: 1.6, glass: 1.6 });
+    // 066: the storm tiers' ×2.56 (tests/sim/stormsteelDamage.test.ts).
+    expect(TIER_DAMAGE).toEqual({ steel: 1.6, glass: 1.6, stormsteel: 2.56, 'storm-glass': 2.56 });
   });
 
   it('a steel arrow’s direct hit, and a glass bolt’s', () => {

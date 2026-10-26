@@ -55,10 +55,10 @@ describe('tier art (062)', () => {
       expect(frames.has(own?.key ?? ''), own?.key).toBe(true);
       expect(own?.from).toBe(ammoDef(roundBase(id)).sprite);
     }
-    // A steel landmine lies armed in steel too.
+    // A steel landmine lies armed in steel too (066: a stormsteel one in stormsteel).
     for (const id of TIERED.filter((r) => roundBase(r) === 'landmine')) {
       const def = ammoDef(id);
-      expect(def.kind === 'mine' ? def.armed : null).toBe(TIER_ARMED['landmine+steel']?.key);
+      expect(def.kind === 'mine' ? def.armed : null).toBe(TIER_ARMED[withTier('landmine', roundTier(id))]?.key);
     }
     expect(frames.has(TIER_SPRITES.landmineArmedSteel)).toBe(true);
   });

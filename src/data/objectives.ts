@@ -86,8 +86,8 @@ export const FIRE_ROUNDS: readonly string[] = ROUNDS.filter((r) => roundTags(r).
 /** 064: every Lightning round (each family's), any of which the lightning-round goal takes. */
 export const LIGHTNING_ROUNDS: readonly string[] = ROUNDS.filter((r) => roundTags(r).includes('lightning'));
 
-/** 062: every steel and glass round, any of which the "Fire steel rounds" goal takes. */
-export const TIERED_ROUNDS: readonly string[] = ROUNDS.filter((r) => roundTier(r) !== 'stone');
+/** 062: every steel and glass round, any of which the "Fire steel rounds" goal takes (066: a storm round isn't steel). */
+export const TIERED_ROUNDS: readonly string[] = ROUNDS.filter((r) => roundTier(r) === 'steel' || roundTier(r) === 'glass');
 
 /** 050: the research node whose entrance the second-line goal asks to feed, and its marker points at: the Warden core's. */
 export const NEW_ENTRANCE_NODE = 'entrance-2';

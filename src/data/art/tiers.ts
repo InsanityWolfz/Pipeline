@@ -38,6 +38,25 @@ export const TIER_ART: Readonly<Record<TierId, TierArt>> = {
       line([-5.6, -5.6, -4.8, -6.6], 0.5, 'snow'),
     ],
   },
+  // 066: stormsteel, dark storm metal (stone and iron to the storm slates); its badge a dark ingot split by a
+  // violet-white vein of lightning.
+  stormsteel: {
+    swap: { 'rock-pale': 'storm-pale', 'rock-light': 'storm-light', rock: 'storm', 'rock-dark': 'storm-dark', 'iron-light': 'storm-light', iron: 'storm', 'iron-dark': 'storm-dark', 'iron-rust': 'storm-dark' },
+    alpha: 1,
+    mark: [
+      path('M -7.6 -3.6 L -6 -6.6 L -1.6 -6.6 L -3.2 -3.6 Z', { fill: { linear: [-7, -7, -2, -3], stops: [{ at: 0, color: 'storm' }, { at: 1, color: 'storm-dark' }] }, outline: true }),
+      { ...path('M -6.4 -4.2 L -5 -5.4 L -4.2 -4.8 L -2.8 -6', trim('storm-pale', 0.6)), glow: { color: 'storm-glow', blur: 2 } },
+    ],
+  },
+  // 066: storm glass, the ley bolt's light cleared further, a pale violet; its badge a clear diamond with a spark inside.
+  'storm-glass': {
+    swap: { 'cyan-deep': 'storm-glow', cyan: 'storm-pale', 'cyan-glow': 'foam' },
+    alpha: 0.8,
+    mark: [
+      path('M -4.8 -7.6 L -2.6 -5 L -4.8 -2.4 L -7 -5 Z', { fill: { id: 'foam', alpha: 0.55 }, outline: true, glow: { color: 'storm-pale', blur: 2 } }),
+      { ...path('M -4.8 -6.4 L -4.4 -5.4 L -3.6 -5 L -4.4 -4.6 L -4.8 -3.6 L -5.2 -4.6 L -6 -5 L -5.2 -5.4 Z', { fill: 'snow' }), glow: { color: 'storm-glow', blur: 2 } },
+    ],
+  },
 };
 
 const swapInk = (i: Ink, swap: Readonly<Record<string, string>>): Ink => (typeof i === 'string' ? (swap[i] ?? i) : { id: swap[i.id] ?? i.id, alpha: i.alpha });
