@@ -1,6 +1,6 @@
 import { ENEMIES } from '../data/enemies';
 import { CHAMPIONS } from '../data/champions';
-import type { Room } from '../data/rooms';
+import type { GateId, Room } from '../data/rooms';
 import { defOf } from './champions';
 import type { Rect } from './collision';
 import { flies, moveBody } from './flight';
@@ -12,6 +12,8 @@ import { passesThrough, type EnemyState } from './enemies';
 export interface RoomBodies {
   room: Room;
   obstacles: readonly Rect[];
+  /** Its shut barriers (065, review B1): a flier never crosses one's line. */
+  shut: readonly GateId[];
 }
 
 /** The largest side any enemy's feet box can have, px: a champion's scaled up (032), a boss's its own. */
@@ -60,7 +62,7 @@ export function separate(enemies: EnemyState[], bodies: (roomId: string) => Room
     if (!a || !b || a.roomId !== b.roomId || passesThrough(a) || passesThrough(b)) continue;
     // 065: a flier and a walker never touch (one is in the air); two fliers push apart over any terrain.
     if (flies(defOf(a)) !== flies(defOf(b))) continue;
-    const { room, obstacles } = bodies(a.roomId);
+    const near = bodies(a.roomId);
     const fa = defOf(a).feetBox;
     const fb = defOf(b).feetBox;
     const dx = b.x - a.x;
@@ -68,39 +70,24 @@ export function separate(enemies: EnemyState[], bodies: (roomId: string) => Room
     const ox = (fa.w + fb.w) / 2 - Math.abs(dx);
     const oy = (fa.h + fb.h) / 2 - Math.abs(dy);
     if (ox <= 0 || oy <= 0) continue;
-    if (ox <= oy) pushApart(room, obstacles, a, b, ox, dx < 0 ? -1 : 1, 0);
-    else pushApart(room, obstacles, a, b, oy, 0, dy < 0 ? -1 : 1);
+    if (ox <= oy) pushApart(near, a, b, ox, dx < 0 ? -1 : 1, 0);
+    else pushApart(near, a, b, oy, 0, dy < 0 ? -1 : 1);
   }
 }
 
-function pushApart(
-  room: Room,
-  obstacles: readonly Rect[],
-  a: EnemyState,
-  b: EnemyState,
-  amount: number,
-  ux: number,
-  uy: number,
-): void {
+function pushApart(near: RoomBodies, a: EnemyState, b: EnemyState, amount: number, ux: number, uy: number): void {
   const boxA = defOf(a).feetBox;
   const boxB = defOf(b).feetBox;
-  const movedA = shove(room, obstacles, a, boxA, -ux * (amount / 2), -uy * (amount / 2));
-  const movedB = shove(room, obstacles, b, boxB, ux * (amount - movedA), uy * (amount - movedA));
+  const movedA = shove(near, a, boxA, -ux * (amount / 2), -uy * (amount / 2));
+  const movedB = shove(near, b, boxB, ux * (amount - movedA), uy * (amount - movedA));
   const left = amount - movedA - movedB;
-  if (left > 0) shove(room, obstacles, a, boxA, -ux * left, -uy * left);
+  if (left > 0) shove(near, a, boxA, -ux * left, -uy * left);
 }
 
 /** Moves a body and returns how far it actually went. */
-function shove(
-  room: Room,
-  obstacles: readonly Rect[],
-  e: EnemyState,
-  box: { w: number; h: number },
-  dx: number,
-  dy: number,
-): number {
+function shove(near: RoomBodies, e: EnemyState, box: { w: number; h: number }, dx: number, dy: number): number {
   const x = e.x;
   const y = e.y;
-  moveBody(room, e, defOf(e), box, dx, dy, obstacles);
+  moveBody(near, e, defOf(e), box, dx, dy);
   return Math.hypot(e.x - x, e.y - y);
 }

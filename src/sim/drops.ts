@@ -1,4 +1,5 @@
-import { DROP_SCATTER, DROP_SCATTER_TRIES, type DropTable, type EnemyDef } from '../data/enemies';
+import { DROP_SCATTER, DROP_SCATTER_TRIES, type EnemyDef } from '../data/enemies';
+import type { DropTable } from '../data/enemyBase';
 import { FEET_BOX, MAGNET } from '../data/player';
 import { TICK_RATE, TILE_SIZE } from '../data/config';
 import { FIRST_ARMOR_ENEMY, UNIDENTIFIED_ARMOR } from '../data/gear';
@@ -11,7 +12,7 @@ import { rollArmorDrop } from './gear';
 import { standingRects } from './fixtures';
 import { nodeRects } from './nodes';
 import { roomById, type SimState } from './state';
-import { ANY_SCHEMATIC } from '../data/drops';
+import { ANY_SCHEMATIC, LANDING_REACH } from '../data/drops';
 import { ITEMS } from '../data/items';
 import { pickSchematic, rollSchematic } from './schematics';
 
@@ -116,9 +117,6 @@ export function spawnDrops(state: SimState, def: EnemyDef, x: number, y: number,
   const at = landingPoint(roomById(roomId), x, y);
   scatterItems(state, items, roomId, at.x, at.y);
 }
-
-/** How far out, in tiles, a corpse over solid ground looks for open ground to drop on (065). */
-const LANDING_REACH = 8;
 
 /**
  * Where a corpse's drops land (065): where it fell, or, over something solid (a flier killed over a rock or a chasm),

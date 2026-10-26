@@ -36,12 +36,12 @@ export function drawStormArt(art: StormArt, e: EnemyState, def: EnemyDef): void 
   for (let i = 0; i < G.streaks; i++) {
     // Each curl rides its own line through the cone, further out as the gust runs.
     const a = dir - half + ((i + 0.5) / G.streaks) * half * 2;
-    const r = def.gust.reach * (0.25 + 0.75 * ((k + i / G.streaks) % 1));
-    const cx = e.x + Math.cos(a) * r * 0.5;
-    const cy = e.y - G.lift + Math.sin(a) * r * 0.5;
+    const r = def.gust.reach * (G.from + (1 - G.from) * ((k + i / G.streaks) % 1));
+    const cx = e.x + Math.cos(a) * r * G.curl;
+    const cy = e.y - G.lift + Math.sin(a) * r * G.curl;
     g.lineStyle(G.width, color, G.alpha * (1 - k * 0.6));
     g.beginPath();
-    g.arc(cx, cy, r * 0.5, a - G.len / 2, a + G.len / 2, false);
+    g.arc(cx, cy, r * G.curl, a - G.len / 2, a + G.len / 2, false);
     g.strokePath();
   }
 }

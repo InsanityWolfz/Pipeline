@@ -1,5 +1,5 @@
 import type { SentinelDef } from '../data/stormcrownEnemies';
-import { engage, hold, inAggroBox, keepDistance, leash, startWindup, stepAttack } from './aiCommon';
+import { engage, inAggroBox, keepDistance, leash, startWindup, stepAttack } from './aiCommon';
 import type { EnemyState } from './enemies';
 import { clearShot } from './sightLine';
 import { roomById, type SimState } from './state';
@@ -16,7 +16,8 @@ export function sentinelThink(state: SimState, e: EnemyState, def: SentinelDef):
   const p = state.player;
   const idle = engage(state, e, inAggroBox(e, p));
   if (idle) return idle;
-  if (e.mode === 'windup' && e.modeTicks < strike.windupTicks) return hold(e);
+  // Its strike is called as the wind-up starts (below) and lands by itself as the wind-up ends (strikes.ts), so
+  // nothing lands as its call's pose starts: the pose and its recovery are just held.
   const attack = stepAttack(e, def, () => undefined);
   if (attack) return attack;
   const home = leash(e, def);

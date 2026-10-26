@@ -130,10 +130,10 @@ export class PlayerView {
     for (let i = 0; i < S.curls; i++) {
       const a = turn + (i * Math.PI * 2) / S.curls;
       g.beginPath();
-      for (let k = 0; k <= 6; k++) {
-        const t = a + (k / 6) * S.len;
+      for (let k = 0; k <= S.points; k++) {
+        const t = a + (k / S.points) * S.len;
         const x = p.x + Math.cos(t) * S.radius;
-        const y = bottom - S.lift + Math.sin(t) * S.radius * S.squash - k * 0.8;
+        const y = bottom - S.lift + Math.sin(t) * S.radius * S.squash - k * S.rise;
         if (k === 0) g.moveTo(x, y);
         else g.lineTo(x, y);
       }

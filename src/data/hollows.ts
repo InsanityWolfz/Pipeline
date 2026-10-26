@@ -2,7 +2,7 @@ import type { ArenaDoor } from './arenas';
 import { EMBERWORKS, pastEmberworksBarrier } from './emberworks';
 import { pastStormcrownBarrier, STORMCROWN } from './stormcrown';
 import { shiftRect, shiftTile, type Shift } from './place';
-import { TILE } from './rooms';
+import { TILE, type GateId } from './rooms';
 import type { TilePos, TileRect } from './tiles';
 import { barrierTiles, fromCentre, laidOut, WORLD_SHAPE, WORLD_SHIFT } from './worldShape';
 
@@ -165,3 +165,15 @@ export const inHollows = (tx: number, ty: number): boolean => {
  */
 export const regionAt = (tx: number, ty: number): 1 | 2 | 3 | 4 =>
   pastStormcrownBarrier(tx, ty) ? STORMCROWN.region : pastEmberworksBarrier(tx, ty) ? EMBERWORKS.region : fromCentre(tx, ty) >= HOLLOWS.radii.inner ? HOLLOWS.region : 1;
+
+/**
+ * Each ring barrier's line (065, review B1): true for a tile on its far side, from the barrier's whole circle out. A
+ * shut barrier stops feet across its band and the cliffs stop them elsewhere; a flier, which passes over cliffs, is
+ * kept from crossing the whole line instead. The other gates have no line: the foundry's is a door between rooms, and
+ * the shrine's is an arena's door, whose walls keep fliers out (flight.ts).
+ */
+export const PAST_BARRIER: Readonly<Partial<Record<GateId, (tx: number, ty: number) => boolean>>> = {
+  hollows: (tx, ty) => fromCentre(tx, ty) >= HOLLOWS.radii.inner,
+  emberworks: pastEmberworksBarrier,
+  stormcrown: pastStormcrownBarrier,
+};

@@ -25,7 +25,7 @@ const dist = (s: SimState, e: EnemyState) => Math.hypot(e.x - s.player.x, e.y - 
 describe('the thunderhawk', () => {
   it("has the spec's starting values", () => {
     expect(DEF).toMatchObject({ kind: 'hawk', flies: true, boss: false, maxHealth: 40, walkSpeed: 110, xp: 8 });
-    expect(orbit).toEqual({ radius: 160, turnDegPerSec: 180 });
+    expect(orbit).toEqual({ radius: 160, turnDegPerSec: 180, pull: 1.5 });
     expect(dive).toMatchObject({ distance: 260, width: 20, speed: 480, windupTicks: 45, recoverTicks: 60, cooldownTicks: 210, damage: 24, knockback: 32 });
   });
 

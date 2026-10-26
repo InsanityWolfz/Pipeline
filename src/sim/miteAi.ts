@@ -65,6 +65,12 @@ function land(state: SimState, e: EnemyState, def: MiteDef): void {
   damagePlayer(state, zap.damage, kx, ky, zap.knockback, zap.knockTicks);
 }
 
+/** A swarm's size (065: a static mite's trio), or 1: how many come when this enemy is picked for a pack or a pen. */
+export function swarmOf(enemyId: string): number {
+  const def = enemyDef(enemyId);
+  return def.kind === 'mite' ? def.swarm : 1;
+}
+
 /**
  * Links a pack's mites into trios (065), in their order: each run of a mite's `swarm` (three) shares its first's id.
  * Wherever a pack is made (population, a site's guards, the sandbox), its mites come in whole trios, listed together.

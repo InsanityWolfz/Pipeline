@@ -1,6 +1,6 @@
 import { TICK_RATE } from './config';
 import { REGION_2_PART } from './drops';
-import type { AttackTiming, DropTable, EnemyBase, ScreenLeashed, ShieldDef } from './enemies';
+import type { AttackTiming, DropTable, EnemyBase, ScreenLeashed, ShieldDef } from './enemyBase';
 
 // Stonefall Hollows' enemies (035): each asks for a different dodge. Starting values from
 // the spec's table, tuned in playtest; ticks at 60 Hz, distances px. Their rules are in
