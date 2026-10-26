@@ -68,7 +68,7 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 061 | Emberworks enemies: the cinder mote (swells and bursts; killed, it burns the pack), the bellows hound (lane dash, burning trail), the slag golem (splits into whelps), the kiln-tender (repair beam); ring 4 packs and the Ash Kilns' guards | approved |
 | 062 | Material tiers: the Smelter (ley-iron and cinderite into ley-steel) and the kiln (ley dust and cinderite into ley glass) in a Forge group; the same machines make steel arrowheads, casings and plates and glass bolts by input; steel and glass rounds deal ×1.6, keep their stages and talents; three Milestone 2 goals | approved |
 | 064 | Region 4, the Stormcrown: a fifth ring opened by the Forgewright's kill (×10, Shaun), stormglass from struck rods, the Weathervane's pylon, the Lightning rune (chains 2 at half) with two Ley-lane talents, the Conductor (blinks between six breakable rods), the fifth entrance | approved |
-| 065 | Stormcrown enemies: the thunderhawk (flies, dives), static mites (trios that discharge into each other), the storm sentinel (strike circles from range), the gale ram (gust that pushes and slows); ring 5 packs and the Weathervane's guards | draft |
+| 065 | Stormcrown enemies: the thunderhawk (flies, dives), static mites (trios that discharge into each other), the storm sentinel (strike circles from range), the gale ram (gust that pushes and slows); ring 5 packs and the Weathervane's guards | approved |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
 
