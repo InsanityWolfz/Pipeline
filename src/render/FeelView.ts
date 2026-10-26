@@ -19,6 +19,7 @@ import { attuneBeat } from './attune';
 import { intakeAnchor } from './foundryLayout';
 import { playHollows, SealSound } from './hollowsFeel';
 import { playEmberworks, VentFeel } from './emberworksFeel';
+import { playStormcrown } from './stormcrownFeel';
 import { ARENAS } from '../data/arenas';
 import { arenaLocked } from '../sim/arenaLock';
 import { playMines } from './mineFeel';
@@ -131,7 +132,8 @@ export class FeelView {
         if (!h.melee) s.play(SOUNDS.hit);
         s.play(SOUNDS.enemyHurt, SOUND_LEVELS.under);
         // 060: a fire hit throws rising sparks, as a cold one throws frost.
-        j.burst(h.damageType === 'cold' ? 'hitCold' : h.damageType === 'fire' ? 'hitFire' : 'hitPhysical', h.x, h.y);
+        // 064: a lightning hit spits pale cyan sparks.
+        j.burst(h.damageType === 'cold' ? 'hitCold' : h.damageType === 'fire' ? 'hitFire' : h.damageType === 'lightning' ? 'hitLightning' : 'hitPhysical', h.x, h.y);
         j.damageNumber(h.damage, h.x, h.y, false);
         this.freeze(h.id, HIT_STOP_MS);
       } else {
@@ -197,10 +199,12 @@ export class FeelView {
     const barrier = playHollows(ev, j, s, this.scene.cameras.main.worldView);
     // 060: the Emberworks' barrier across its ramps falls the same way.
     const emberFell = playEmberworks(ev, j, s, this.scene.cameras.main.worldView);
+    // 064: and the Stormcrown's.
+    const stormFell = playStormcrown(ev, j, s, this.scene.cameras.main.worldView);
     // 038: landmines arming and bursting, and the bomblets.
     playMines(ev, j, s);
     this.hollowsEnemies.events(ev, j, s);
-    if (ev.gates.length > (barrier ? 1 : 0) + (emberFell ? 1 : 0)) {
+    if (ev.gates.length > (barrier ? 1 : 0) + (emberFell ? 1 : 0) + (stormFell ? 1 : 0)) {
       s.play(SOUNDS.gateOpen);
       j.shake('medium');
     }

@@ -1,5 +1,6 @@
 import { SPRITES } from './assets';
 import { EMBERWORKS_SPRITES } from './emberworksAssets';
+import { STORMCROWN_SPRITES } from './stormcrownAssets';
 import { HOLLOWS_SPRITES } from './hollowsAssets';
 import { MINE_SPRITES } from './mineAssets';
 import { RESEARCH_ICONS } from './researchAssets';
@@ -50,6 +51,8 @@ const BASE_ITEMS: Readonly<Record<string, ItemDef>> = {
   'rimestone': { id: 'rimestone', name: 'Rimestone', kind: 'raw', group: 'raw', icon: STAGE_SPRITES.itemRimestone },
   /** 060: gathered at the Emberworks' cinder vents while they flare open, and sent home by the Ash Kilns' pylon. */
   cinderite: { id: 'cinderite', name: 'Cinderite', kind: 'raw', group: 'raw', icon: EMBERWORKS_SPRITES.itemCinderite },
+  // 064: the Stormcrown's raw, from storm rods in the moments after lightning strikes them.
+  stormglass: { id: 'stormglass', name: 'Stormglass', kind: 'raw', group: 'raw', icon: STORMCROWN_SPRITES.itemStormglass },
   shaft: { id: 'shaft', name: 'Shaft', kind: 'part', group: 'parts', icon: SPRITES.itemShaft },
   arrowhead: { id: 'arrowhead', name: 'Arrowhead', kind: 'part', group: 'parts', icon: SPRITES.itemArrowhead },
   rope: { id: 'rope', name: 'Rope', kind: 'part', group: 'parts', icon: SPRITES.itemRope },
@@ -77,6 +80,10 @@ const BASE_ITEMS: Readonly<Record<string, ItemDef>> = {
   /** Region 2's machine part (034): a brass valve from the Hollows' waterworks. */
   'aqueduct-valve': { id: 'aqueduct-valve', name: 'Aqueduct valve', kind: 'part', group: 'parts', icon: RESEARCH_ICONS.aqueductValve, research: 'machinePart' },
   /** Region 3's machine part (060): the Forgewright drops it; nothing spends it until a later spec's research. */
+  /** The Conductor's core (064): it restores the fifth and last intake entrance. */
+  'conductor-core': { id: 'conductor-core', name: 'Conductor core', kind: 'part', group: 'cores', icon: STORMCROWN_SPRITES.itemConductorCore, research: 'core' },
+  /** Region 4's machine part (064): the Conductor drops it; nothing spends it until a later spec's research. */
+  'storm-coil': { id: 'storm-coil', name: 'Storm coil', kind: 'part', group: 'parts', icon: STORMCROWN_SPRITES.itemStormCoil, research: 'machinePart' },
   'forge-rivet': { id: 'forge-rivet', name: 'Forge rivet', kind: 'part', group: 'parts', icon: EMBERWORKS_SPRITES.itemForgeRivet, research: 'machinePart' },
   ...schematics({
     'schematic-reservoir-2': 'Reservoir II',

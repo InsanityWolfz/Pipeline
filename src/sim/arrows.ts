@@ -38,6 +38,8 @@ export interface ArrowState {
   split: boolean;
   /** The enemy a homing round steers toward (029), or null to fly straight. */
   targetId: number | null;
+  /** It locked on at launch (064): only such a round, its target lost, may re-lock (homing.ts). */
+  lockedAtLaunch: boolean;
   /** Enemies it has hit (or, for a shard, may not hit), so it hits each only once. */
   hitIds: number[];
   /** Carries a charge from a bomb's blast (037: Blastfletch) to its next hit, and the Pools it has drawn from. */
@@ -67,7 +69,7 @@ export function createArrow(
 ): ArrowState {
   const { damage, damageType, speed, range, pierce, knockback } = straightAmmo(ammoId);
   const keywords = roundKeywords(ammoId);
-  return { id, ammoId, keywords, roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, knockback, pierce, split: hasTagKeyword(ammoId, 'split'), targetId, hitIds: [], pooled: false, pooledBy: [] };
+  return { id, ammoId, keywords, roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, knockback, pierce, split: hasTagKeyword(ammoId, 'split'), targetId, lockedAtLaunch: targetId !== null, hitIds: [], pooled: false, pooledBy: [] };
 }
 
 /** Whether a shot is a Shard (029, 037), not a round from the tube. */
@@ -77,7 +79,7 @@ export const isShard = (a: Pick<ArrowState, 'ammoId'>): boolean => a.ammoId === 
 export function createShard(id: number, parent: Pick<ArrowState, 'ammoId' | 'roomId' | 'knockback'>, x: number, y: number, dx: number, dy: number, struckId: number, def: ShardDef): ArrowState {
   const { speed, range, damage, damageType, fromSplit } = def;
   const keywords = shardKeywords(parent.ammoId, fromSplit);
-  return { id, ammoId: SPLIT.projectile, keywords, roomId: parent.roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, knockback: parent.knockback, pierce: false, split: false, targetId: null, hitIds: [struckId], pooled: false, pooledBy: [] };
+  return { id, ammoId: SPLIT.projectile, keywords, roomId: parent.roomId, x, y, dx, dy, travelled: 0, speed, range, damage, damageType, knockback: parent.knockback, pierce: false, split: false, targetId: null, lockedAtLaunch: false, hitIds: [struckId], pooled: false, pooledBy: [] };
 }
 
 /** Tries an arrow against targets at its current point; true if it hit one and is spent. */

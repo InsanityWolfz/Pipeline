@@ -12,7 +12,7 @@ import { frames, stepUntil } from './hollowsSandbox';
 const SHOTS = 'docs/review/061';
 
 /** Open ash in the Emberworks' north (tests/sim/packBot.ts' ring 4 pack ground), with room east for spawns. */
-const OPEN_ASH = { tx: 128, ty: 23 };
+const OPEN_ASH = { tx: 159, ty: 54 };
 
 /** `?start=hollows` with every enemy gone but the Forgewright (and, if `keepGuards`, the Ash Kilns' guards), the end card closed, the player at `at`. */
 async function emberworks(page: Page, at: { tx: number; ty: number }, keepGuards = false): Promise<void> {
@@ -22,7 +22,7 @@ async function emberworks(page: Page, at: { tx: number; ty: number }, keepGuards
     if (!g) throw new Error('no game');
     // The golem's whelps rise as it falls: again for them.
     for (let k = 0; k < 3; k++) {
-      for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright' && !(keep && e.group === 'ash-kilns')) g.setEnemyHealth(e.id, 0);
+      for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright' && e.enemyId !== 'conductor' && !(keep && e.group === 'ash-kilns')) g.setEnemyHealth(e.id, 0);
       g.step(1);
     }
     g.step(197);

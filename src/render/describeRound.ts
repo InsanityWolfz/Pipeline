@@ -98,6 +98,8 @@ export function describeRound(seen: Seen, ammoId: string): Description {
   // 060: a Fire round's burn, its share of the hit each second, for its (resolved) time.
   const burn = formatDamage(damage.final * value('fire', 'share'));
   if (keywords.includes('fire')) extras.push(fill(W.burns, { damage: burn, time: formatSeconds(value('fire', 'duration')) }));
+  // 064: a Lightning round's chain, its arcs and each arc's share of the hit.
+  if (keywords.includes('lightning')) extras.push(fill(W.arcs, { count: Math.round(value('lightning', 'chains')), damage: formatDamage(damage.final * value('lightning', 'share')) }));
   if (keywords.includes('split')) extras.push(fill(W.shards, { count: Math.round(value('split', 'count')), damage: formatDamage(value('split', 'damage')) }));
   if (keywords.includes('cluster')) extras.push(fill(W.bomblets, { count: Math.round(value('cluster', 'count')), damage: formatDamage(value('cluster', 'damage')) }));
   if (a.kind === 'mine') extras.push(fill(W.arms, { time: formatSeconds(value('mine', 'arm')) }));

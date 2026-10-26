@@ -53,6 +53,8 @@ function at(angle: number, step: 0 | 1 | 2 | 3): { x: number; y: number } {
 const L = LANE_ANGLES;
 /** 060: how far round from the Bombs lane (degrees, toward Survival) its second Fire node sits. */
 const FIRE_FORK = -22;
+/** 064: how far round from the Ley lane (degrees, toward Tube) its second Lightning node sits. */
+const LIGHTNING_FORK = 22;
 /** Between two lanes' directions. */
 const between = (a: number, b: number): number => (a + b) / 2;
 
@@ -102,6 +104,9 @@ const LINES: Readonly<Record<string, readonly ContentLine[]>> = {
   l1: [add('ley', 'damage', 0.1)],
   l2: [add('homing', 'turn-rate', 0.3)],
   l3: [flat('split', 'shards', 2)],
+  // 064: Lightning's two payoffs, a chain one arc longer, and each arc reaching a tile further.
+  l4: [flat('lightning', 'chains', 1)],
+  l5: [flat('lightning', 'chain-range', TILE_SIZE)],
   t1: [add('all-ammo', 'fire-rate', 0.08)],
   // 039.10: points of walk speed while firing, 70% to 80%.
   t2: [add('you', 'firing-walk', 0.1)],
@@ -138,7 +143,10 @@ export const TALENT_LIST: readonly TalentDef[] = [
   node('b5', 'Kindling', 'bombs', at(L.bombs + FIRE_FORK, 3), ['b3']),
   node('l1', 'Attuned Crystal', 'ley', at(L.ley, 0), ['start', 'l2']),
   node('l2', "Seeker's Lens", 'ley', at(L.ley, 1), ['l1', 'l3']),
-  node('l3', 'Splinter', 'ley', at(L.ley, 2), ['l2', 'k2']),
+  node('l3', 'Splinter', 'ley', at(L.ley, 2), ['l2', 'k2', 'l4', 'l5']),
+  // 064: the Lightning nodes fork from Splinter: one a step on along the lane, one beside it toward the Tube lane.
+  node('l4', 'Forked Bolt', 'ley', at(L.ley, 3), ['l3']),
+  node('l5', 'Long Arc', 'ley', at(L.ley + LIGHTNING_FORK, 3), ['l3']),
   node('t1', 'Oiled Breech', 'tube', at(L.tube, 0), ['start', 't2']),
   node('t2', 'Steady Grip', 'tube', at(L.tube, 1), ['t1', 't3']),
   node('t3', 'Hard Bore', 'tube', at(L.tube, 2), ['t2', 'k3']),

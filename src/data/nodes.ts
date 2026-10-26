@@ -5,7 +5,7 @@
  * in a grove, in a rock field, at a pond's shallow edge, on a ley line, in the Frozen Grotto (029), or at the foot of
  * a cliff or quarry face (034: the tile north of it is cliff), or in the Husk Hive (049), or at the Cinder Vents (060).
  */
-export type Placement = 'grove' | 'rock-field' | 'pond-edge' | 'ley-line' | 'frozen-grotto' | 'cliff-seam' | 'hive' | 'vent';
+export type Placement = 'grove' | 'rock-field' | 'pond-edge' | 'ley-line' | 'frozen-grotto' | 'cliff-seam' | 'hive' | 'vent' | 'rod-field';
 
 /**
  * A node that opens and shuts (060: a cinder vent): closed for `closedTicks`, a glowing telegraph for `warnTicks`, then
@@ -15,6 +15,10 @@ export interface NodeCycle {
   readonly closedTicks: number;
   readonly warnTicks: number;
   readonly openTicks: number;
+  /** 064: its starting points come from the map's seed mixed with this, a stream of its own kind's (none: the shared cycle stream's). */
+  readonly salt?: number;
+  /** 064: lightning strikes it as it opens (a storm rod's): an event, hurting nobody. */
+  readonly strikes?: true;
 }
 
 export interface NodeDef {
@@ -35,6 +39,12 @@ export interface NodeDef {
   /** 060: it opens and shuts, and is gathered only while open. */
   cycle?: NodeCycle;
 }
+
+/**
+ * A storm rod's cycle (064): idle for `idleTicks`, a flashing warning for `warnTicks`, then lightning strikes it and it
+ * stays charged for `chargedTicks`; stormglass is gathered only while charged. Each rod starts at its own seeded point.
+ */
+export const STORM_ROD = { idleTicks: 900, warnTicks: 90, chargedTicks: 240, salt: 0x5707d } as const;
 
 const node = (id: string, name: string, itemId: string, placement: Placement, feetBox: NodeDef['feetBox']): NodeDef => ({
   id,
@@ -59,6 +69,11 @@ export const NODES: Readonly<Record<string, NodeDef>> = {
   'resin-seep': node('resin-seep', 'Resin seep', 'husk-resin', 'hive', { w: 18, h: 8 }),
   // 060: a vent in the Emberworks' ash that flares open now and then, crusted with cinderite.
   'cinder-vent': { ...node('cinder-vent', 'Cinder vent', 'cinderite', 'vent', { w: 20, h: 10 }), cycle: { closedTicks: 720, warnTicks: 90, openTicks: 360 } },
+  // 064: a storm rod in the Rod Field, charged for a while after lightning strikes it, stormglass crusting its crown.
+  'storm-rod': {
+    ...node('storm-rod', 'Storm rod', 'stormglass', 'rod-field', { w: 16, h: 10 }),
+    cycle: { closedTicks: STORM_ROD.idleTicks, warnTicks: STORM_ROD.warnTicks, openTicks: STORM_ROD.chargedTicks, salt: STORM_ROD.salt, strikes: true },
+  },
 };
 
 /** Where a node's cycle seeds come from (060): the map's seed mixed with this, so the main RNG stream is untouched. */

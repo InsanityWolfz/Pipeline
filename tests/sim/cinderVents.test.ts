@@ -61,8 +61,8 @@ describe('a cinder vent’s cycle', () => {
     }
     expect(phases(3)).toEqual(a);
     expect(phases(4)).not.toEqual(a);
-    // Other nodes have no cycle.
-    for (const n of createNodes(rooms, 3)) if (n.nodeId !== 'cinder-vent') expect(n.phase).toBe(0);
+    // Other nodes have no cycle (064: but the storm rods, tests/sim/stormRods.test.ts).
+    for (const n of createNodes(rooms, 3)) if (n.nodeId !== 'cinder-vent' && n.nodeId !== 'storm-rod') expect(n.phase).toBe(0);
   });
 });
 

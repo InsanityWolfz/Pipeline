@@ -16,6 +16,8 @@ import { inHollows } from '../../data/hollows';
 import { hollowsFrame } from '../hollowsTiles';
 import { emberworksFrame } from '../emberworksTiles';
 import { inEmberworks } from '../../data/emberworks';
+import { inStormcrown } from '../../data/stormcrown';
+import { stormcrownFrame } from '../stormcrownTiles';
 import { isPlateau } from './plateau';
 import { pieceFrame } from '../../sim/tileLook';
 
@@ -174,8 +176,11 @@ export class OverworldView {
     const hollows = inHollows(tx, ty) && !isPlateau(room, tx, ty) ? hollowsFrame(symbol, tx, ty, hash, room) : undefined;
     // 060: the Emberworks' own: kilns, chimneys and its cliffs.
     const ember = inEmberworks(tx, ty) && !isPlateau(room, tx, ty) ? emberworksFrame(symbol, tx, ty, hash, room) : undefined;
+    // 064: the Stormcrown's own: iron rods, cairns and its cliffs.
+    const storm = inStormcrown(tx, ty) && !isPlateau(room, tx, ty) ? stormcrownFrame(symbol, tx, ty, hash, room) : undefined;
     if (hollows) frame = hollows;
     else if (ember) frame = ember;
+    else if (storm) frame = storm;
     else if (symbol === TILE.tree && landmark?.look?.trees === 'old') frame = LANDMARK_SPRITES.oldTrees[hash % LANDMARK_SPRITES.oldTrees.length];
     else if (symbol === TILE.tree) {
       frame = OVERWORLD_SPRITES.trees[hash % OVERWORLD_SPRITES.trees.length];

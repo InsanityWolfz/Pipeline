@@ -11,7 +11,7 @@ import { NODES } from '../../src/data/nodes';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { HOLLOWS_START } from '../../src/data/playtest';
 import { FOUNDRY_ROOM, SHOT_THROUGH, SHRINE_SITE, TILE, WALKABLE } from '../../src/data/rooms';
-import { fromCentre } from '../../src/data/worldShape';
+import { bearingOf, fromCentre } from '../../src/data/worldShape';
 import { claim, claimedPylons } from '../../src/sim/claims';
 import { createSim, type SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
@@ -103,7 +103,7 @@ describe('the places (data)', () => {
     if (!spring) throw new Error('no spring');
     expect(spring.ring).toBe(4);
     expect(inEmberworks(spring.tx, spring.ty)).toBe(true);
-    const bearing = (Math.atan2(spring.tx - 115, 115 - spring.ty) * 180) / Math.PI;
+    const bearing = bearingOf(spring.tx, spring.ty);
     for (const r of EMBERWORKS.ramps) expect(Math.abs((((bearing - r.bearing) % 360) + 540) % 360 - 180), r.id).toBeGreaterThan(90);
   });
 

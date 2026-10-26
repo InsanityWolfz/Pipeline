@@ -76,7 +76,7 @@ test('arrows and bombs in two entrances, held 120 frames, fire 8 arrows and 3 bo
   // 033: one core per entrance: the warden core restores the west, a Bulwark core the east.
   await restoreEntrance(page, 11);
   const opened = await restoreEntrance(page, 13);
-  expect(opened.intake.entrances.map((e) => e.open)).toEqual([true, true, true, false]);
+  expect(opened.intake.entrances.map((e) => e.open)).toEqual([true, true, true, false, false]);
   await feedLines(page, [
     { tx: 11, itemId: 'arrow', amount: 'all' },
     { tx: 13, itemId: 'bomb', amount: 'all' },

@@ -69,6 +69,8 @@ export class VentFeel {
     let flared = false;
     for (const n of sim.nodes) {
       if (n.roomId !== shown) continue;
+      // 064: a storm rod's strike is its own event (stormcrownFeel.ts).
+      if (n.nodeId !== 'cinder-vent') continue;
       const now = ventState(n);
       if (now === null) continue;
       const before = this.was.get(n.id);

@@ -55,6 +55,14 @@ const TEXTS = [
   'Smelt ley-steel at the bench (C)',
   'Build a Smelter into a line',
   'Fire steel rounds',
+  // 064: Milestone 3, the Stormcrown's.
+  'Reach the Stormcrown',
+  'Gather stormglass at the Rod Field',
+  "Claim the Weathervane's pylon",
+  'Craft a lightning round (C)',
+  'Defeat the Conductor',
+  "Restore the intake's fifth entrance (E with the Conductor core)",
+  'Feed all five entrances',
 ];
 const REMOVED = [
   'Feed ammo into the new entrance',
@@ -270,8 +278,8 @@ describe('the right entrance (058.5)', () => {
     const s = tutorialAt(LEY - 1);
     expect(diagrams(s).filter((d) => d.entrance !== null).map((d) => d.entrance)).toEqual([2]);
     const free = createSim(3, { start: PLAYTEST_START });
-    // 060: off the tutorial, any cap, the fourth entrance's too.
-    expect(diagrams(free).filter((d) => d.entrance !== null).map((d) => d.entrance)).toEqual([0, 2, 3]);
+    // 060: off the tutorial, any cap, the fourth entrance's too (064: and the fifth's).
+    expect(diagrams(free).filter((d) => d.entrance !== null).map((d) => d.entrance)).toEqual([0, 2, 3, 4]);
   });
 });
 

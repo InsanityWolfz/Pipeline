@@ -9,8 +9,8 @@ import { widthOf } from './textFit';
 // 042: the end card's words and size: three to five "What's next" lines, all of it on one 640×360 screen.
 
 describe('end card data (042)', () => {
-  it('ends the demo on the Bulwark, 180 ticks after its first kill', () => {
-    expect(END_CARD.boss).toBe('forgewright');
+  it('ends the demo on the last boss (064: the Conductor), 180 ticks after its first kill', () => {
+    expect(END_CARD.boss).toBe('conductor');
     expect(END_CARD.delayTicks).toBe(180);
   });
 

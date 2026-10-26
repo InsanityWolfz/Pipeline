@@ -40,6 +40,7 @@ const LINES = Object.values(OVERWORLD.leyLines);
 
 const HIVE = landmarkDef('husk-hive');
 const VENTS = landmarkDef('cinder-vents');
+const RODS = landmarkDef('rod-field');
 const inside = (r: TileRect, t: TilePos): boolean => t.tx >= r.x0 && t.tx <= r.x1 && t.ty >= r.y0 && t.ty <= r.y1;
 
 /** The node sits in a hand-placed feature of this kind (a grove or rock field's disc, a pond's shore), not just near stray terrain. */
@@ -65,6 +66,8 @@ const RULES: Record<Placement, (t: TilePos) => boolean> = {
   hive: (t) => inside(HIVE.area, t) && at(t.tx, t.ty) === TILE.floor,
   // 060: at the Cinder Vents, on their open ash.
   vent: (t) => inside(VENTS.area, t) && at(t.tx, t.ty) === TILE.floor,
+  // 064: in the Rod Field, on its open slate.
+  'rod-field': (t) => inside(RODS.area, t) && at(t.tx, t.ty) === TILE.floor,
 };
 
 describe('where nodes stand', () => {
@@ -89,11 +92,11 @@ describe('where nodes stand', () => {
     }
   });
 
-  it("the shrine's safe zone holds one node of each type but the Grotto's rime, the Hollows' ley-iron, the Hive's resin and the Emberworks' cinder vents (029, 034, 049, 060: gathered in their own places)", () => {
+  it("the shrine's safe zone holds one node of each type but the Grotto's rime, the Hollows' ley-iron, the Hive's resin, the Emberworks' cinder vents and the Stormcrown's storm rods (029, 034, 049, 060, 064: gathered in their own places)", () => {
     const pylon = OVERWORLD.shrine.pylon;
     const inZone = OVERWORLD.nodes.filter((n) => Math.hypot(n.tx - pylon.tx, n.ty - pylon.ty) <= SAFE_RADIUS);
     for (const def of Object.values(NODES)) {
-      if (def.placement !== 'frozen-grotto' && def.placement !== 'cliff-seam' && def.placement !== 'hive' && def.placement !== 'vent') expect(inZone.some((n) => n.nodeId === def.id), def.id).toBe(true);
+      if (def.placement !== 'frozen-grotto' && def.placement !== 'cliff-seam' && def.placement !== 'hive' && def.placement !== 'vent' && def.placement !== 'rod-field') expect(inZone.some((n) => n.nodeId === def.id), def.id).toBe(true);
     }
   });
 });

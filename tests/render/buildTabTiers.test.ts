@@ -29,6 +29,7 @@ describe('tiered rounds in the Build tab (062)', () => {
     s.crafted = roundsByFamily();
     const L = buildTabLayout(PANEL, buildTabGroups(s, named, named));
     expect(L.columns).toBe(2);
-    expect(L.rows).toHaveLength(21);
+    // 064: the seven Lightning rounds too.
+    expect(L.rows).toHaveLength(28);
   });
 });

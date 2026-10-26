@@ -12,6 +12,7 @@ import { startKnock, type Knockable } from './knockback';
 import type { Facing } from './player';
 import type { SimState } from './state';
 import { createBellows, plated, type BellowsState } from './forgewrightParts';
+import { createConductor, type ConductorState } from './conductorRods';
 import { recordBlock } from './shield';
 
 // Enemies as plain data: creation, damage and hurtboxes. Their behaviour is in enemyAi.ts, separation in separation.ts.
@@ -132,6 +133,8 @@ export interface EnemyState extends Knockable {
   floodSide: number;
   /** A cinder mote that burst on its own (061): it goes with no drop, XP or death burst. */
   spent: boolean;
+  /** The Conductor's rods, blink and attacks (064, conductorRods.ts); a still default on anything else. */
+  conductor: ConductorState;
   /** A kiln-tender's beam (061): its target's id (-1: none), and its own health as the beam began (any less breaks it). */
   beamTarget: number;
   beamHeld: number;
@@ -197,6 +200,7 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     bellows: createBellows(enemyId),
     floodSide: 0,
     spent: false,
+    conductor: createConductor(enemyId, at),
     beamTarget: -1,
     beamHeld: 0,
     knockX: 0,
@@ -224,6 +228,8 @@ export interface HitStyle {
   burning?: boolean;
   /** 060: a burn's once-a-second beat. It never sets a burn going again; render shows it as a small number, with no hit stop or hit sound. */
   burn?: boolean;
+  /** 064: a lightning arc's hit. It never arcs again; render draws it as a chained hit. */
+  arc?: boolean;
 }
 
 /** An arrow's hit, with its Knockback. */
@@ -264,6 +270,7 @@ export function damageEnemy(
     ...(style.melee ? { melee: true as const } : {}),
     ...(style.burning ? { burning: true as const } : {}),
     ...(style.burn ? { burn: true as const } : {}),
+    ...(style.arc ? { arc: true as const } : {}),
   });
 }
 

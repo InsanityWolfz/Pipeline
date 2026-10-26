@@ -29,11 +29,11 @@ function upTo(text: string): SimState {
 }
 
 describe('the material tier goals (062)', () => {
-  it('follow "Feed all four entrances", in order, tagged m2, and end the chain', () => {
+  it('follow "Feed all four entrances", in order, tagged m2, and end Milestone 2 (064: Milestone 3 follows)', () => {
     const first = at('Feed all four entrances') + 1;
     expect(OBJECTIVES.slice(first, first + 3).map((o) => o.text)).toEqual(TIERS);
     for (const t of TIERS) expect(OBJECTIVES[at(t)]?.milestone).toBe('m2');
-    expect(OBJECTIVES.filter((o) => !o.cutIn).at(-1)?.text).toBe('Fire steel rounds');
+    expect(OBJECTIVES.filter((o) => !o.cutIn && o.milestone !== 'm3').at(-1)?.text).toBe('Fire steel rounds');
     expect(OBJECTIVES[at(TIERS[0] ?? '')]).toMatchObject({ check: { kind: 'crafted', items: ['ley-steel'] }, target: { kind: 'collect' } });
     expect(OBJECTIVES[at(TIERS[1] ?? '')]).toMatchObject({ check: { kind: 'machineMade', item: 'ley-steel' }, target: { kind: 'room', room: 'foundry' } });
     expect(OBJECTIVES[at(TIERS[2] ?? '')]).toMatchObject({ check: { kind: 'fired', items: TIERED_ROUNDS }, target: { kind: 'intake' } });
@@ -66,9 +66,9 @@ describe('the material tier goals (062)', () => {
     }
   });
 
-  it('with the last done, the chain is over', () => {
+  it('with the last done, Milestone 3’s first goal is current (064; the chain was over)', () => {
     const s = upTo('Fire steel rounds');
     s.objectives[at('Fire steel rounds')] = true;
-    expect(currentObjective(s)).toBeNull();
+    expect(currentObjective(s)).toBe(at('Reach the Stormcrown'));
   });
 });

@@ -61,11 +61,13 @@ export async function clickPanel(page: Page, id: string, at: 'row' | 'down' | 'u
   await page.evaluate(() => window.__GAME__?.step(1));
 }
 
-/** Steps an entrance's row with + until it holds `round`. */
+/** Steps an entrance's row with + (or − when that's fewer clicks: 064's lightning rounds made the list longer) until it holds `round`. */
 export async function setRound(page: Page, entrance: number, round: string | null): Promise<void> {
   const now = (await page.evaluate((i) => window.__GAME__?.getState().loadout?.[i] ?? null, entrance)) ?? null;
-  const clicks = (ROUND_CHOICES.indexOf(round) - ROUND_CHOICES.indexOf(now) + ROUND_CHOICES.length) % ROUND_CHOICES.length;
-  for (let i = 0; i < clicks; i++) await clickPanel(page, `entrance-${entrance}`, 'up');
+  const n = ROUND_CHOICES.length;
+  const ups = (ROUND_CHOICES.indexOf(round) - ROUND_CHOICES.indexOf(now) + n) % n;
+  const [clicks, way] = ups <= n - ups ? [ups, 'up' as const] : [n - ups, 'down' as const];
+  for (let i = 0; i < clicks; i++) await clickPanel(page, `entrance-${entrance}`, way);
   await expect.poll(() => page.evaluate((i) => window.__GAME__?.getState().loadout?.[i] ?? null, entrance)).toBe(round);
 }
 

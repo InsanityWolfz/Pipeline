@@ -1,5 +1,6 @@
 import type { Box, Mechanism } from './mechanisms';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape } from './types';
+import { lightningRune } from './lightning';
 
 // Stage mechanisms (029), in the 020 style: what each stage machine visibly does in
 // its housing's window. Each takes the window box and its loop's phase `t` (0..1).
@@ -125,6 +126,7 @@ const prismLens: Mechanism = (b, t) => {
 export const STAGE_MECHANISMS: Readonly<Record<string, Mechanism>> = {
   'frost-rune': frostRune,
   'fire-rune': fireRune,
+  'lightning-rune': lightningRune,
   'ley-guide': leyGuide,
   'prism-lens': prismLens,
 };

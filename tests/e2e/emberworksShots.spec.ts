@@ -23,7 +23,7 @@ async function emberworks(page: Page): Promise<void> {
     // 060: the Forgewright spared, far off in its hall (its first kill is the end card's); 061: again for the whelps
     // the Ash Kilns' golem splits into.
     for (let k = 0; k < 3; k++) {
-      for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
+      for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright' && e.enemyId !== 'conductor') g.setEnemyHealth(e.id, 0);
       g.step(1);
     }
     g.step(197);
@@ -122,6 +122,8 @@ test.describe('review screenshots (060)', () => {
       g.step(1, { sandbox: { kind: 'loadout', entrance: 1, round: null } });
       g.step(1, { sandbox: { kind: 'loadout', entrance: 2, round: null } });
       g.step(1, { sandbox: { kind: 'loadout', entrance: 3, round: null } });
+      // 064: and the fifth.
+      g.step(1, { sandbox: { kind: 'loadout', entrance: 4, round: null } });
       g.step(1, { sandbox: { kind: 'god', on: true } });
       g.step(1, { sandbox: { kind: 'spawn', enemyId: 'husk', ring: 3, champion: false, count: 5 } });
     });
@@ -153,7 +155,8 @@ test.describe('review screenshots (060)', () => {
     test.setTimeout(120_000);
     await boot(page, '?playtest');
     for (const tx of [11, 13, 14]) await restoreEntrance(page, tx);
-    await expect.poll(async () => (await ui(page))?.intakeCaps).toBe(0);
+    // 064: the fifth's cap stays on.
+    await expect.poll(async () => (await ui(page))?.intakeCaps).toBe(1);
     // Four ammo, four gauge colours, west to east.
     await feedLines(page, [
       { tx: 11, itemId: 'arrow', amount: 'half' },
@@ -181,7 +184,8 @@ test.describe('review screenshots (060)', () => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
       g.step(1, { sandbox: { kind: 'god', on: true } });
-      ['arrow', 'ley-bolt', 'arrow+fire', 'arrow+frost'].forEach((round, entrance) => g.step(1, { sandbox: { kind: 'loadout', entrance, round } }));
+      // 064: the fifth entrance left empty, for 060's four-lane volley.
+      ['arrow', 'ley-bolt', 'arrow+fire', 'arrow+frost', null].forEach((round, entrance) => g.step(1, { sandbox: { kind: 'loadout', entrance, round } }));
       const p = g.step(1).player;
       const known = new Set(g.step(0).arrows.map((a) => a.id));
       const shot = g.step(1, { fire: true, aimX: p.x + 220, aimY: p.y });

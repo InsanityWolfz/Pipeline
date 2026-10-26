@@ -25,15 +25,17 @@ describe('Ley Springs', () => {
   it("three springs at their tiles and rings on the round map (053), and the Hollows' out in Region 2, each with a 1.5-tile pool", () => {
     expect(SPRING_RADIUS).toBe(1.5);
     expect(OVERWORLD.springs.map(({ id, tx, ty, radius }) => ({ id, tx, ty, radius }))).toEqual([
-      // 060: +31 each way with the centre.
-      { id: 'west-spring', tx: 91, ty: 137, radius: 1.5 },
-      { id: 'south-east-spring', tx: 142, ty: 145, radius: 1.5 },
-      { id: 'north-spring', tx: 102, ty: 100, radius: 1.5 },
-      { id: 'hollows-spring', tx: 87, ty: 69, radius: 1.5 },
+      // 060 and 064: +31 each way with the centre, each.
+      { id: 'west-spring', tx: 122, ty: 168, radius: 1.5 },
+      { id: 'south-east-spring', tx: 173, ty: 176, radius: 1.5 },
+      { id: 'north-spring', tx: 133, ty: 131, radius: 1.5 },
+      { id: 'hollows-spring', tx: 118, ty: 100, radius: 1.5 },
       // 060: the Emberworks', on the far side of the ring from every ramp.
-      { id: 'emberworks-spring', tx: 201, ty: 84, radius: 1.5 },
+      { id: 'emberworks-spring', tx: 232, ty: 115, radius: 1.5 },
+      // 064: the Stormcrown's, on the far side of the ring from the nearest ramp.
+      { id: 'stormcrown-spring', tx: 241, ty: 226, radius: 1.5 },
     ]);
-    expect(OVERWORLD.springs.map((s) => ringOf(s.tx, s.ty))).toEqual([2, 2, 1, 3, 4]);
+    expect(OVERWORLD.springs.map((s) => ringOf(s.tx, s.ty))).toEqual([2, 2, 1, 3, 4, 5]);
     for (const s of OVERWORLD.springs) expect(s.id).toMatch(/^[a-z]+(-[a-z]+)*$/);
   });
 

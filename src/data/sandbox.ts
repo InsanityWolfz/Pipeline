@@ -1,6 +1,8 @@
 import { TICK_RATE } from './config';
 import { EMBERWORKS } from './emberworks';
 import { ANVIL_HALL } from './emberworksSites';
+import { STORMCROWN } from './stormcrown';
+import { CROWN_SPIRE } from './stormcrownSites';
 import { ENEMIES } from './enemies';
 import { AFFIXES, GEAR_NAMES, GEAR_SLOTS, RARITIES, SLOT_BASE, type Affix, type AffixKind, type GearPiece, type GearSlot, type GearWeight, type Rarity } from './gear';
 import { HOLLOWS } from './hollows';
@@ -45,8 +47,8 @@ export const ENEMY_REGIONS: Readonly<Record<string, number>> = {
   ...Object.fromEntries(Object.keys(EMBERWORKS_ENEMIES).map((id) => [id, EMBERWORKS.region])),
 };
 
-/** 044.3: each region's pens at the ring its enemies meet the player in the real game: Region 1 at 1, the Hollows at theirs (3), the Emberworks at its (4, 060). */
-export const REGION_RINGS: Readonly<Record<number, Ring>> = { 1: 1, [HOLLOWS.region]: HOLLOWS.ring, [EMBERWORKS.region]: EMBERWORKS.ring };
+/** 044.3: each region's pens at the ring its enemies meet the player in the real game: Region 1 at 1, the Hollows at theirs (3), the Emberworks at its (4, 060), the Stormcrown at its (5, 064). */
+export const REGION_RINGS: Readonly<Record<number, Ring>> = { 1: 1, [HOLLOWS.region]: HOLLOWS.ring, [EMBERWORKS.region]: EMBERWORKS.ring, [STORMCROWN.region]: STORMCROWN.ring };
 
 /** A pen's ring, by its enemy's region. Throws for an enemy with no region, or a region with no ring, so neither lands at a ring silently. */
 function penRing(enemyId: string): Ring {
@@ -71,7 +73,7 @@ export const SANDBOX_PENS: readonly PenDef[] = Object.values(ENEMIES)
     };
   });
 
-/** A boss's arena in the sandbox: its boss and where it waits (its start); the walls are in WARDEN_ARENA, HOLLOWS.arena and ANVIL_HALL. */
+/** A boss's arena in the sandbox: its boss and where it waits (its start); the walls are in WARDEN_ARENA, HOLLOWS.arena, ANVIL_HALL and CROWN_SPIRE. */
 export interface SandboxArena {
   boss: string;
   start: TilePos;
@@ -81,7 +83,8 @@ export interface SandboxArena {
  * The Warden's arena: a walled square beside the forum, open on its north side, the Warden waiting at its centre.
  * The Bulwark's is the Sunken Forum itself (044: "the Sunken Forum's layout, seal included"), at the same tiles as in
  * the Hollows, so its AI and the arena lock (043) read the same numbers; 060: the Forgewright's is the Anvil Hall, at its
- * tiles in the Emberworks for the same reason, east of the open middle.
+ * tiles in the Emberworks for the same reason, east of the open middle; 064: the Conductor's is the Crown Spire, at its
+ * Stormcrown tiles (its rods' sockets are fixed there), north of the hall.
  */
 export const WARDEN_ARENA = {
   boss: 'pylon-warden',
@@ -95,6 +98,7 @@ export const SANDBOX_ARENAS: readonly SandboxArena[] = [
   { boss: WARDEN_ARENA.boss, start: WARDEN_ARENA.start },
   { boss: HOLLOWS.arena.boss, start: HOLLOWS.arena.start },
   { boss: ANVIL_HALL.boss, start: ANVIL_HALL.start },
+  { boss: CROWN_SPIRE.boss, start: CROWN_SPIRE.start },
 ];
 
 /** The pens' width. */
@@ -123,12 +127,12 @@ export const SANDBOX = {
    * way they face; one that would stand in a wall is tried at `backSteps` even steps back toward the player.
    */
   place: { distance: 5, spacing: 2, backSteps: 20 },
-  /** The spawn panel's choices and where it starts: ring 1–4 (060: the Emberworks' 4), champion or not, 1–10 at a time. */
-  rings: [1, 2, 3, 4] as readonly Ring[],
+  /** The spawn panel's choices and where it starts: ring 1–5 (060: the Emberworks' 4; 064: the Stormcrown's 5), champion or not, 1–10 at a time. */
+  rings: [1, 2, 3, 4, 5] as readonly Ring[],
   maxCount: 10,
   spawnDefaults: { enemyId: 'husk', ring: 1 as Ring, champion: false, count: 1 },
-  /** Each entrance's round at the start: plain arrows, the first volley (024; 060: four entrances). Null is empty. */
-  loadout: ['arrow', 'arrow', 'arrow', 'arrow'] as readonly (string | null)[],
+  /** Each entrance's round at the start: plain arrows, the first volley (024; 060: four entrances; 064: five). Null is empty. */
+  loadout: ['arrow', 'arrow', 'arrow', 'arrow', 'arrow'] as readonly (string | null)[],
   /** 044.1: the panel's key, the backquote (unbound in the game), rebindable (042); 056.1: it hides and shows both strips. */
   panelKey: 'BACKTICK',
 } as const;
@@ -205,8 +209,9 @@ export const SANDBOX_PANEL = {
   pad: 8,
   titleH: 20,
   titleY: 4,
+  // 064: rows 1 px apart (were 2), so the spawn column still fits the view with the Conductor's reset row.
   rows: {
-    gap: 2,
+    gap: 1,
     subH: 11,
     label: { x: 10, y: 6 },
     sub: { x: 10, y: 2 },

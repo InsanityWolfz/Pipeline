@@ -26,15 +26,15 @@ const opens = (s: SimState) => s.link.entrances.map((e) => e.open);
 const FOURTH = INTAKE.entrances[3] ?? { tx: 0, ty: 0 };
 
 describe('the fourth entrance', () => {
-  it('is a fourth mouth at tx 14, lane 3, capped at the start; the mouth’s middle sits between tx 12 and 13', () => {
-    expect(INTAKE.entrances).toEqual([
+  it('is a fourth mouth at tx 14, lane 3, capped at the start (064: a fifth beside it, tests/sim/fifthEntrance.test.ts)', () => {
+    expect(INTAKE.entrances.slice(0, 4)).toEqual([
       { tx: 11, ty: 0, startsOpen: false, lane: 0 },
       { tx: 12, ty: 0, startsOpen: true, lane: 1 },
       { tx: 13, ty: 0, startsOpen: false, lane: 2 },
       { tx: 14, ty: 0, startsOpen: false, lane: 3 },
     ]);
-    expect(INTAKE_MID_TX).toBe(12.5);
-    expect(opens(foundry())).toEqual([false, true, false, false]);
+    expect(INTAKE_MID_TX).toBe(13);
+    expect(opens(foundry())).toEqual([false, true, false, false, false]);
   });
 
   it('entrance-4 costs a Forgewright core and needs entrance-3', () => {
@@ -47,15 +47,17 @@ describe('the fourth entrance', () => {
     s.research['entrance-3'] = 'restored';
     for (const i of [0, 2]) Object.assign(s.link.entrances[i] ?? {}, { open: true });
     under(s, FOURTH);
-    expect(diagrams(s).filter((d) => d.entrance !== null)).toEqual([expect.objectContaining({ node: 'entrance-4', entrance: 3, dimmed: false })]);
+    // 064: on either cap left, the fifth's too (one core opens one cap, any cap).
+    expect(diagrams(s).filter((d) => d.entrance !== null)).toEqual([expect.objectContaining({ node: 'entrance-4', entrance: 3, dimmed: false }), expect.objectContaining({ node: 'entrance-4', entrance: 4 })]);
     expect(restoreFail(s, 'entrance-4')).toBe('cost');
     s.inventory['forgewright-core'] = 1;
     expect(diagramInReach(s)).toMatchObject({ node: 'entrance-4', entrance: 3 });
     run(s, 1, { restore: 'entrance-4' });
-    expect(opens(s)).toEqual([true, true, true, true]);
+    expect(opens(s)).toEqual([true, true, true, true, false]);
     expect(s.inventory['forgewright-core']).toBe(0);
     expect(s.events.intakeOpens).toEqual([{ entrance: 3 }]);
-    expect(diagrams(s).filter((d) => d.entrance !== null)).toEqual([]);
+    // 064: the fifth cap's node is the Conductor's now.
+    expect(diagrams(s).filter((d) => d.entrance !== null)).toEqual([expect.objectContaining({ node: 'entrance-5', entrance: 4 })]);
   });
 
   it('before entrance-3, the fourth cap’s next node is still the Bulwark’s (one core opens one cap, any cap)', () => {
@@ -72,7 +74,8 @@ describe('the fourth entrance', () => {
     expect(laneAngles(4)).toEqual([-22.5, -7.5, 7.5, 22.5]);
     const s = foundry();
     s.inventory = {};
-    s.link.entrances.forEach((e) => Object.assign(e, { open: true, ammoId: 'arrow', count: 5 }));
+    // 064: four of the five.
+    s.link.entrances.slice(0, 4).forEach((e) => Object.assign(e, { open: true, ammoId: 'arrow', count: 5 }));
     stepOutside(s);
     movePlayer(s, 400, 400);
     run(s, 1, volleyAt(600, 400));
@@ -88,11 +91,10 @@ describe('what the fourth entrance brings', () => {
     for (const id of ['forgewright-core', 'forge-rivet']) expect(ITEMS[id]?.icon).toMatch(/^item-/);
   });
 
-  it('the pipe draws four inlets, four gauge columns and four tube-slot frames; the sandbox loads four entrances', () => {
+  it('the pipe draws an inlet, a gauge column and a tube-slot frame for each entrance (064: five); the sandbox loads them all', () => {
     expect(INTAKE_INLETS).toEqual(INTAKE.entrances.map((e) => (e.tx - INTAKE_MID_TX) * 32));
-    expect(INTAKE_INLETS).toEqual([-48, -16, 16, 48]);
-    expect(INTAKE_LOOK.gauge.xs).toHaveLength(4);
-    expect(TUBE_SLOT_FRAMES).toHaveLength(4);
-    expect(SANDBOX.loadout).toEqual(['arrow', 'arrow', 'arrow', 'arrow']);
+    expect(INTAKE_LOOK.gauge.xs).toHaveLength(INTAKE.entrances.length);
+    expect(TUBE_SLOT_FRAMES).toHaveLength(INTAKE.entrances.length);
+    expect(SANDBOX.loadout).toHaveLength(INTAKE.entrances.length);
   });
 });

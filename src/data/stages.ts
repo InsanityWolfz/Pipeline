@@ -37,6 +37,8 @@ export const STAGES: Readonly<Record<string, StageDef>> = {
   // 060: 1 cinderite per 4 rounds; its rows show once cinderite has been carried. Beside the frost rune, so the
   // crafting menu lists the two elements together.
   'fire-rune': { ...stage('fire-rune', 'Fire rune', 'fire', 'cinderite', 1), shownAfter: 'cinderite' },
+  // 064: 1 stormglass per 4 rounds; its rows show once stormglass has been carried. After the fire rune, the three elements together.
+  'lightning-rune': { ...stage('lightning-rune', 'Lightning rune', 'lightning', 'stormglass', 1), shownAfter: 'stormglass' },
   'ley-guide': stage('ley-guide', 'Ley guide', 'homing', 'ley-crystal', 1),
   // Twice the guide's crystal: a Split bolt adds five projectiles (pillar 3).
   'prism-lens': stage('prism-lens', 'Prism lens', 'split', 'ley-crystal', 2),

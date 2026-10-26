@@ -17,6 +17,8 @@ async function fireBombs(page: Page): Promise<void> {
     g.step(1, { sandbox: { kind: 'loadout', entrance: 1, round: null } });
     g.step(1, { sandbox: { kind: 'loadout', entrance: 2, round: null } });
     g.step(1, { sandbox: { kind: 'loadout', entrance: 3, round: null } });
+    // 064: and the fifth.
+    g.step(1, { sandbox: { kind: 'loadout', entrance: 4, round: null } });
     g.step(1, { sandbox: { kind: 'god', on: true } });
     // A pack of Husks ahead, tough enough to burn a while (ring 3).
     g.step(1, { sandbox: { kind: 'spawn', enemyId: 'husk', ring: 3, champion: false, count: 5 } });
@@ -27,7 +29,7 @@ test('a Fire bomb sets a pack burning: flames on the enemies, and burn numbers o
   test.setTimeout(120_000);
   const errors = watchErrors(page);
   await fireBombs(page);
-  expect(await page.evaluate(() => window.__GAME__?.getState().loadout)).toEqual(['bomb+fire', null, null, null]);
+  expect(await page.evaluate(() => window.__GAME__?.getState().loadout)).toEqual(['bomb+fire', null, null, null, null]);
   // Lob at the pack's middle until one burns.
   await expect
     .poll(

@@ -72,8 +72,19 @@ export const EMBERWORKS = {
   },
 } as const;
 
-/** True if a tile is on the Emberworks' ground (060: anywhere from the Hollows' outer circle out, the cliff edge included). */
-export const inEmberworks = (tx: number, ty: number): boolean => fromCentre(tx, ty) >= EMBERWORKS.radii.inner;
+/** A ramp's shape (060; 064 shares it): its half-width and its run, tiles out from the centre, and where its gate stands. */
+export interface RampShape {
+  readonly halfWidth: number;
+  readonly from: number;
+  readonly to: number;
+  readonly gateAt: number;
+}
+
+/** True if a tile is on the Emberworks' ground (060: from the Hollows' outer circle out; 064: to the Stormcrown's, the cliff edge between them included). */
+export const inEmberworks = (tx: number, ty: number): boolean => {
+  const d = fromCentre(tx, ty);
+  return d >= EMBERWORKS.radii.inner && d < EMBERWORKS.radii.outer;
+};
 
 /**
  * True if a tile is in Region 3 and danger ring 4 (060, after the build): from its barrier's circle across the ramps
@@ -89,9 +100,9 @@ function offLine(ramp: RampDef, tx: number, ty: number): number {
   return Math.abs(dx * Math.cos(a) + dy * Math.sin(a));
 }
 
-/** Every tile of a ramp, row by row: within `halfWidth` of its centre line, between `from` and `to` tiles out. */
-export function rampTiles(ramp: RampDef): TilePos[] {
-  const { halfWidth, from, to } = EMBERWORKS.ramp;
+/** Every tile of a ramp, row by row: within `halfWidth` of its centre line, between `from` and `to` tiles out (064: of any ring's ramp shape). */
+export function rampTiles(ramp: RampDef, shape: RampShape = EMBERWORKS.ramp): TilePos[] {
+  const { halfWidth, from, to } = shape;
   const mid = polar(ramp.bearing, (from + to) / 2);
   const reach = Math.ceil((to - from) / 2 + halfWidth + 1);
   const out: TilePos[] = [];
@@ -107,7 +118,8 @@ export function rampTiles(ramp: RampDef): TilePos[] {
 }
 
 /** The barrier's band across a ramp: its tiles within √½ of `gateAt` tiles out, so the band has no diagonal gap. */
-export const rampGate = (ramp: RampDef): TilePos[] => rampTiles(ramp).filter((t) => Math.abs(fromCentre(t.tx, t.ty) - EMBERWORKS.ramp.gateAt) <= WORLD_SHAPE.barrierHalfWidth);
+export const rampGate = (ramp: RampDef, shape: RampShape = EMBERWORKS.ramp): TilePos[] =>
+  rampTiles(ramp, shape).filter((t) => Math.abs(fromCentre(t.tx, t.ty) - shape.gateAt) <= WORLD_SHAPE.barrierHalfWidth);
 
 /** The `emberworks` gate's tiles: the band across the top of every ramp. */
-export const EMBERWORKS_GATE: readonly TilePos[] = EMBERWORKS.ramps.flatMap(rampGate);
+export const EMBERWORKS_GATE: readonly TilePos[] = EMBERWORKS.ramps.flatMap((r) => rampGate(r));

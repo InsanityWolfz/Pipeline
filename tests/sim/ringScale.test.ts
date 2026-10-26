@@ -40,6 +40,9 @@ function attackDamage(def: EnemyDef): number {
       return def.pound.damage;
     case 'forgewright':
       return def.slam.damage;
+    // 064: its first attack, the lash.
+    case 'conductor':
+      return def.lash.damage;
     case 'charger':
       return def.charge.damage;
     case 'burrower':

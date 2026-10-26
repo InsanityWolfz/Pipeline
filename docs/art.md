@@ -114,6 +114,11 @@ Every colour comes from the palette, by id. The source of truth is `src/data/pal
 | `ash` | #5f5753 |
 | `ash-light` | #857b74 |
 | `ash-pale` | #b3a89e |
+| `storm-dark` | #2c2b44 |
+| `storm` | #47466b |
+| `storm-light` | #6b6a92 |
+| `storm-pale` | #a19fc4 |
+| `storm-glow` | #9a86ec |
 | `snow` | #ffffff |
 | `hit-red` | #ff4d4d |
 

@@ -6,6 +6,8 @@ import { defOf } from '../../src/sim/champions';
 import type { EnemyState } from '../../src/sim/enemies';
 import type { Command } from '../../src/sim/input';
 import type { SimState } from '../../src/sim/state';
+import { chainSegments } from '../../src/sim/conductorAi';
+import { rodPoint } from '../../src/sim/conductorRods';
 
 // Scripted players for 041's targets (test code): what a careful player reads from the
 // screen. Every telegraphed attack about to land is a danger zone (a Bulwark bomb's ring,
@@ -103,6 +105,12 @@ function zoneOf(e: EnemyState, def: EnemyDef, left: (windup: number) => number):
     case 'caster':
     case 'tender':
       return null;
+    // 064: the Conductor's lash, a lane from its rod (its chain's lines and the storm call's circles are in dangerZones).
+    case 'conductor': {
+      if (e.conductor.attack !== 0 || e.mode !== 'windup') return null;
+      const o = rodPoint(e.conductor.rod);
+      return { kind: 'lane', x: o.x, y: o.y, dirX: e.swipeDirX, dirY: e.swipeDirY, length: def.lash.length, width: def.lash.width, left: left(def.lash.windupTicks) };
+    }
   }
 }
 
@@ -120,6 +128,17 @@ export function dangerZones(s: SimState): Zone[] {
     if (def.kind !== 'bulwark' || e.waveTicks <= 0 || e.roomId !== s.roomId) continue;
     out.push({ kind: 'arc', x: e.x, y: e.y, r: def.wave.radius, dirX: e.waveDirX, dirY: e.waveDirY, deg: def.wave.arcDegrees, left: windupsOf(e, def).wave - e.waveTicks, age: e.waveTicks, rollProof: def.wave.rollProof });
   }
+  // 064: the Conductor's rod chain (each line a lane, through its wind-up and its lightning) and the storm call's circles.
+  for (const e of s.enemies) {
+    const def = defOf(e);
+    if (def.kind !== 'conductor' || e.conductor.attack !== 2 || e.roomId !== s.roomId || e.mode === 'recover') continue;
+    const left = e.mode === 'windup' ? Math.max(0, def.chain.windupTicks - e.modeTicks) : 0;
+    for (const g of chainSegments(e)) {
+      const len = Math.hypot(g.x1 - g.x0, g.y1 - g.y0) || 1;
+      out.push({ kind: 'lane', x: g.x0, y: g.y0, dirX: (g.x1 - g.x0) / len, dirY: (g.y1 - g.y0) / len, length: len, width: def.chain.width, left, age: e.mode === 'windup' ? e.modeTicks : 99 });
+    }
+  }
+  for (const k of s.strikes) if (k.roomId === s.roomId) out.push({ kind: 'circle', x: k.x, y: k.y, r: k.r, left: k.delay, age: k.delayTicks - k.delay });
   for (const b of s.enemyBombs) if (b.roomId === s.roomId) out.push({ kind: 'circle', x: b.x, y: b.y, r: b.radius, left: b.fuseTicks - b.fuse, age: b.fuse, rollProof: b.rollProof });
   for (const o of s.orbs) {
     if (o.roomId !== s.roomId) continue;

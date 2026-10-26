@@ -3,7 +3,7 @@ import { MEADOW_VEIN, RUIN_AREA, SHRINE_PYLON, SHRINE_SHIFT } from './home';
 import { LANDMARK_LIST } from './landmarks';
 import { shiftTile } from './place';
 import type { TilePos } from './tiles';
-import { laidOut, WORLD_SHAPE } from './worldShape';
+import { laidOut, laidOut060, WORLD_SHAPE } from './worldShape';
 
 // Ley lines (018, 053): glowing seams in the ground where ley comes near the surface. Since 053 (D.3, Shaun: "not
 // overlapping each other… one path") each pylon's line home is one smooth curve from the pylon to its own point on
@@ -44,18 +44,24 @@ const ROUTES: Readonly<Record<string, LeyRoute>> = {
   shrine: { via: [toward(30, APPROACH)], arrive: 30 },
   quarry: { via: [toward(282, APPROACH)], arrive: 282 },
   'old-grove': { via: [toward(305, APPROACH)], arrive: 305 },
-  'ley-grotto': { via: [toward(95, APPROACH)], arrive: 95 },
+  // 064: arriving at 86° (was 95°), and the Husk Hive's at 125° (was 118°) round a bend clear of the Hive's road, to
+  // make room at the ruin for the Weathervane's line between them.
+  'ley-grotto': { via: [toward(86, APPROACH)], arrive: 86 },
   // Through the meadow's vein, into the stairs' door.
   'reed-marsh': { via: [laidOut({ tx: 93, ty: 113 }), MEADOW_VEIN], arrive: 170 },
-  'husk-hive': { via: [toward(118, APPROACH)], arrive: 118 },
+  'husk-hive': { via: [toward(121, 22), toward(125, APPROACH)], arrive: 125 },
   // Out of the Hollows across Region 1's west, between the west and south roads.
   // 055: east of the north road, down to the ruin's north edge between that road and the shrine's line.
   'frozen-grotto': { via: [laidOut({ tx: 84, ty: 52 }), laidOut({ tx: 85, ty: 63 }), toward(355, APPROACH)], arrive: 355 },
   // 060: its last stretch moved south (240° to 225°) to make room for the Ash Kilns' line beside it.
   'cistern-terrace': { via: [...[{ tx: 40, ty: 104 }, { tx: 55, ty: 100 }].map(laidOut), toward(225, APPROACH)], arrive: 225 },
+  // 064: out of the Stormcrown east of the Weathervane's road and ramp, down the rings where no ring road runs, round
+  // the Ley Grotto's far side and in between its line and the Husk Hive's.
+  weathervane: { via: [toward(88, 110), toward(98, 80), toward(104, 52), toward(106, 30), toward(105.5, APPROACH)], arrive: 105.5 },
   // 060: out of the Emberworks over the cliffs north of the west ramp, north of the Hollows' Cut and the Cistern Terrace,
   // south of the Quarry, in between the west road and the Cistern Terrace's line.
-  'ash-kilns': { via: [{ tx: 27, ty: 126 }, { tx: 40, ty: 121 }, { tx: 58, ty: 122 }, { tx: 77, ty: 123 }, { tx: 94, ty: 124 }, toward(240, APPROACH)], arrive: 240 },
+  // Written in 060's coordinates (064: moved with the centre).
+  'ash-kilns': { via: [...[{ tx: 27, ty: 126 }, { tx: 40, ty: 121 }, { tx: 58, ty: 122 }, { tx: 77, ty: 123 }, { tx: 94, ty: 124 }].map(laidOut060), toward(240, APPROACH)], arrive: 240 },
 };
 
 const lineHome = (pylon: TilePos, route: LeyRoute): TilePos[] => smoothCurve([{ tx: pylon.tx, ty: pylon.ty }, ...route.via, ruinEdge(route.arrive)], 1);

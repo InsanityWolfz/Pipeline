@@ -4,12 +4,14 @@ import { SPLIT } from '../data/tags';
 import { createShard, type ArrowState } from './arrows';
 import { aggro, damageEnemy, inHurtbox, targetable, type EnemyState, type HitStyle } from './enemies';
 import { recordBlock, shieldBlocks } from './shield';
-import { hitPart, partAt, partKey, plated } from './forgewrightParts';
+import { plated } from './forgewrightParts';
+import { hitPart, partAt, partKey } from './bossParts';
 import { onBossDeath } from './altar';
 import { killXp } from './leveling';
 import { afterKeystoneHit, burning, keystoneHit, takePool } from './keystones';
 import { spawnDrops } from './drops';
 import { spreadBurn } from './fire';
+import { chainLightning } from './lightning';
 import { onEmberDeath } from './emberDeaths';
 import type { SimState } from './state';
 import { rotate } from './volley';
@@ -66,12 +68,14 @@ function strike(state: SimState, arrow: ArrowState, e: EnemyState, spawned: Arro
   // The keystones (037): a pooled arrow hits harder and bursts; a ley bolt shatters a frozen enemy.
   const hit = keystoneHit(state, arrow, e);
   damageEnemy(state, e, arrow.damage * hit.scale, arrow.dx, arrow.dy, arrowHit(arrow));
+  // 064: a lightning hit (a round's or a Shard's) arcs on.
+  if (arrow.damageType === 'lightning') chainLightning(state, e, arrow.damage * hit.scale);
   if (arrow.split) sendShards(state, arrow, e, spawned);
   afterKeystoneHit(state, arrow, e, hit, spawned);
   return true;
 }
 
-/** 060: a hit on one of the Forgewright's bellows: the bellows takes it (a Split still bursts, the keystones still act). */
+/** 060: a hit on one of the Forgewright's bellows (064: or the Conductor's rods): the part takes it (a Split still bursts, the keystones still act). */
 function strikePart(state: SimState, arrow: ArrowState, e: EnemyState, part: number, spawned: ArrowState[]): void {
   arrow.hitIds.push(partKey(e.id, part));
   const hit = keystoneHit(state, arrow, e);
@@ -80,7 +84,7 @@ function strikePart(state: SimState, arrow: ArrowState, e: EnemyState, part: num
   afterKeystoneHit(state, arrow, e, hit, spawned);
 }
 
-/** The bellows (060) under a point that this arrow hasn't hit yet, if any. */
+/** The bellows (060) or rod (064) under a point that this arrow hasn't hit yet, if any. */
 function freshPart(arrow: ArrowState, e: EnemyState): number | null {
   const part = partAt(e, arrow.x, arrow.y);
   return part !== null && !arrow.hitIds.includes(partKey(e.id, part)) ? part : null;

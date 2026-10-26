@@ -15,6 +15,7 @@ import { vectorFrames } from '../../src/render/vector/catalog';
 import { WORLD } from '../../src/sim/world';
 import { reachable, tileKey } from '../fixtures/reach';
 import { inEmberworks } from '../../src/data/emberworks';
+import { inStormcrown } from '../../src/data/stormcrown';
 import { HOLLOWS, inHollows } from '../../src/data/hollows';
 import { RUIN_AREA } from '../../src/data/home';
 import { fromCentre, polar, WORLD_SHAPE } from '../../src/data/worldShape';
@@ -31,8 +32,8 @@ const byId = (id: string): LandmarkDef => {
   if (!l) throw new Error(`no landmark ${id}`);
   return l;
 };
-/** Region 1's resource sites (032), each with its own pylon; Stonefall Hollows' (034) are tested in tests/data/hollows.test.ts, the Emberworks' (060) in tests/sim/emberworksSites.test.ts. */
-const SITES = LANDMARK_LIST.filter((l) => l.kind === 'resource-site' && l.ring !== 3 && l.ring !== 4);
+/** Region 1's resource sites (032), each with its own pylon; Stonefall Hollows' (034) are tested in tests/data/hollows.test.ts, the Emberworks' (060) in tests/sim/emberworksSites.test.ts, the Stormcrown's (064) in tests/sim/stormcrownSites.test.ts. */
+const SITES = LANDMARK_LIST.filter((l) => l.kind === 'resource-site' && l.ring < 3);
 
 describe('landmark entries', () => {
   it('are typed with kebab-case ids, names and a known kind and marker', () => {
@@ -42,7 +43,7 @@ describe('landmark entries', () => {
       expect(l.id).toMatch(/^[a-z]+(-[a-z]+)*$/);
       expect(l.name.length).toBeGreaterThan(0);
       expect(['resource-site', 'frozen-grotto', 'ley-springs', 'ruined-cache', 'ruin']).toContain(l.kind);
-      expect(['site', 'grotto', 'spring', 'cache', 'aqueduct', 'river']).toContain(l.marker);
+      expect(['site', 'grotto', 'spring', 'cache', 'aqueduct', 'river', 'bridge']).toContain(l.marker);
     }
     // 034's (the Hollows' spring among the springs, then its three) after 032's; 049's Husk Hive after 032's sites.
     expect(ids).toEqual([
@@ -59,6 +60,8 @@ describe('landmark entries', () => {
       'hollows-spring',
       // 060: the Emberworks' spring among the springs, then its places.
       'emberworks-spring',
+      // 064: the Stormcrown's spring, then its places.
+      'stormcrown-spring',
       'ley-iron-cut',
       'broken-aqueduct',
       'cistern-terrace',
@@ -66,6 +69,9 @@ describe('landmark entries', () => {
       'cinder-vents',
       'slag-river',
       'outpost-forge',
+      'weathervane',
+      'rod-field',
+      'sky-bridge',
     ]);
   });
 
@@ -84,8 +90,8 @@ describe('landmark entries', () => {
       expect({ tx: Math.floor((a.x0 + a.x1) / 2), ty: Math.floor((a.y0 + a.y1) / 2) }, id).toEqual(polar(bearing, r));
       expect(byId(id).ring, id).toBe(ring);
     }
-    // 029's Grotto, moved whole (+25, +39 from its tiles before 034) to the north, and +31 with the centre (060).
-    expect(byId('frozen-grotto').area).toEqual({ x0: 9 + 40 + 25 + 31, y0: 5 + 39 + 31, x1: 19 + 40 + 25 + 31, y1: 13 + 39 + 31 });
+    // 029's Grotto, moved whole (+25, +39 from its tiles before 034) to the north, and +31 with the centre twice (060, 064).
+    expect(byId('frozen-grotto').area).toEqual({ x0: 9 + 40 + 25 + 62, y0: 5 + 39 + 62, x1: 19 + 40 + 25 + 62, y1: 13 + 39 + 62 });
     expect(byId('frozen-grotto').ring).toBe(2);
     for (const s of OVERWORLD.springs) {
       const l = byId(s.id);
@@ -127,7 +133,7 @@ describe('landmark areas', () => {
     for (const { id, area: a } of LANDMARK_LIST) {
       const corners = [[a.x0, a.y0], [a.x1, a.y0], [a.x0, a.y1], [a.x1, a.y1]] as const;
       const mid = [Math.round((a.x0 + a.x1) / 2), Math.round((a.y0 + a.y1) / 2)] as const;
-      if (inEmberworks(...mid)) continue;
+      if (inEmberworks(...mid) || inStormcrown(...mid)) continue;
       const hollows = inHollows(...mid);
       for (const [tx, ty] of corners) {
         const d = fromCentre(tx, ty);
@@ -281,7 +287,8 @@ describe('resource sites', () => {
 
   it('put their pylons in the world as dormant until the shrine is claimed, at radius 7; the shrine keeps 10 (the Emberworks’ last, in emberworksLandmarks.test.ts)', () => {
     const pylons = WORLD[OVERWORLD.id]?.pylons ?? [];
-    expect(pylons.slice(0, -1).map((p) => [p.site, p.safeRadius, p.wakes ?? null])).toEqual([
+    // The Emberworks' (060) and the Stormcrown's (064) last, in their own tests.
+    expect(pylons.slice(0, -2).map((p) => [p.site, p.safeRadius, p.wakes ?? null])).toEqual([
       ['shrine', 10, null],
       // 055: the Frozen Grotto's, first of the landmarks (029's place in the list).
       ['frozen-grotto', 7, 'shrine'],

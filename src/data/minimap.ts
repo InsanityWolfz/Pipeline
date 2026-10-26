@@ -6,8 +6,8 @@ import { regionAt } from './hollows';
  * enemies are shown.
  */
 export const MINIMAP = {
-  /** 053: the whole round world at this many view px a tile: about 100 px square (060: 230 tiles across, so 0.43 keeps it clear of the objective band). */
-  scale: 0.43,
+  /** 053: the whole round world at this many view px a tile: about 100 px square (060: 230 tiles across, 0.43; 064: 292, so 0.34 keeps it clear of the objective band). */
+  scale: 0.34,
   margin: 6,
   /** The stone tablet framing it (020), px beyond the map. */
   frame: { width: 2 },
@@ -55,6 +55,24 @@ export const MINIMAP = {
     '%': 'cinder',
     '+': 'carve-light',
   } as Readonly<Record<string, string>>,
+  /**
+   * The Stormcrown's own colours (064), by symbol, over `terrain`: slate ground, storm-dark cliffs, iron rods, pale
+   * cairns, ink chasms, the ramps' pale steps and the Sky-bridge's deck; its scenery as its ground.
+   */
+  stormcrownTerrain: {
+    '.': 'storm-light',
+    ':': 'storm-light',
+    '~': 'storm-light',
+    R: 'storm-light',
+    T: 'storm-light',
+    B: 'storm-light',
+    C: 'storm-dark',
+    I: 'iron-dark',
+    Y: 'storm-pale',
+    V: 'ink',
+    '^': 'ash-pale',
+    '+': 'carve-light',
+  } as Readonly<Record<string, string>>,
   /** 051 (B.5): a tile never on screen is fogged, this colour (palette id). */
   fog: 'hood-dark',
   markers: {
@@ -81,7 +99,7 @@ export const MINIMAP = {
 export const MINIMAP_SCENERY = [':', '~', 'T', 'R', 'B'] as const;
 
 /** Each region's own colours over `terrain` (Region 1 has none of its own). */
-const REGION_TERRAIN: Readonly<Record<number, Readonly<Record<string, string>>>> = { 2: MINIMAP.hollowsTerrain, 3: MINIMAP.emberworksTerrain };
+const REGION_TERRAIN: Readonly<Record<number, Readonly<Record<string, string>>>> = { 2: MINIMAP.hollowsTerrain, 3: MINIMAP.emberworksTerrain, 4: MINIMAP.stormcrownTerrain };
 
-/** The palette id the minimap draws an overworld tile in: its region's own colour there (034: the Hollows', 060: the Emberworks'), else Region 1's. */
+/** The palette id the minimap draws an overworld tile in: its region's own colour there (034: the Hollows', 060: the Emberworks', 064: the Stormcrown's), else Region 1's. */
 export const minimapColor = (symbol: string, tx: number, ty: number): string => REGION_TERRAIN[regionAt(tx, ty)]?.[symbol] ?? MINIMAP.terrain[symbol] ?? 'grass-bright';

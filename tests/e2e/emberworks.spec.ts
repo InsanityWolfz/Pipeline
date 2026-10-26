@@ -25,7 +25,7 @@ test('the Bulwark’s first kill drops the ramps’ barrier, and the player walk
       const g = window.__GAME__;
       const h = window.__helpers;
       if (!g || !h) throw new Error('no game');
-      for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark' && e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
+      for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark' && e.enemyId !== 'forgewright' && e.enemyId !== 'conductor') g.setEnemyHealth(e.id, 0);
       g.step(1);
       h.walkTo((foot.tx + 0.5) * 32, (foot.ty + 0.5) * 32);
       // No way up while it stands: the walk gives up against it.
@@ -90,7 +90,7 @@ test('claim the Ash Kilns: held E at its pylon, and its cinderite port counts it
     // Every enemy but the Forgewright, in its hall (its first kill is the end card's since 060); 061: again for the
     // whelps the Ash Kilns' golem splits into, which hold its claim too.
     for (let k = 0; k < 3; k++) {
-      for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
+      for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright' && e.enemyId !== 'conductor') g.setEnemyHealth(e.id, 0);
       g.step(1);
     }
   });

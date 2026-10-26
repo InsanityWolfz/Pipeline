@@ -2,6 +2,22 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-26: 064 Region 4: the Stormcrown and the Conductor
+**Changed:** on `claude/064-stormcrown` (InsanityWolfz/Pipeline#75, stacked on 062), from Shaun's Region 4 interview (docs/brainstorm/2026-10-26-region-4-interview.md; plan docs/plans/064-stormcrown.md, eight slices):
+- the world grows to 292 tiles as a pure move (offsets snapshot, and a row-by-row ground fixture);
+- the Stormcrown, ring 5 at ×10 (Shaun), region 4 from the barrier, opened by the Forgewright's first kill; no packs until 065;
+- stormglass from rods only in the seconds after a strike; the Weathervane's pylon; the Rod Field, the Sky-bridge, a spring, the Crown Spire;
+- the Lightning rune: each hit arcs to 2 more enemies within 3 tiles at half damage, one chain per Burst; two Ley-lane talents (Forked Bolt, Long Arc), 23 nodes, level cap 19;
+- the Conductor: blinks between six breakable rods (boss parts shared with the Forgewright's bellows), grounded below 2 rods; arc lash, storm call, rod chain; enrage; altar refights;
+- the fifth entrance and a five-lane fan; Milestone 3 goals; the end card on the Conductor.
+
+`SAVE_VERSION` 17. Reviewed: two blocking findings fixed (stray older shots; a test budget raised without a baseline: boot measured at 3–4 s on both 062 and 064, so the bigger world doesn't slow loading) and twelve suggestions (the measure bot's reaction delay, homing re-lock narrowed to rounds that locked at launch, nested rod state, tests). `npm run check` 2276 tests; CI green. Raised for Shaun: 064.1–064.29.
+
+**Next:** Shaun's playtest; his OK on 064.1–064.29; "merge 75" after 72 and 73.
+
+**Notes:**
+- `npm run measure`: the Conductor falls in about 58 s (20/20, 0 KOs) with homing bolts or plain arrows, against the 90–150 s target, so he likely reads easy. Recorded, not tuned.
+
 ## 2026-10-26: 062 Material tiers: ley-steel and ley glass
 **Changed:** on `claude/062-material-tiers` (InsanityWolfz/Pipeline#73, stacked on 061), Shaun's material-tier idea (docs/plans/062-material-tiers.md, five slices):
 - tiered rounds as a `+` segment after the base (`arrow+steel+frost`), in `src/data/tiers.ts`; steel for arrows, bombs and landmines, glass for ley bolts; ×1.6 on every hit once, through the emission (direct hits, Split Shards, Bursts, Bomblets, mines; burn follows the hit);

@@ -1,5 +1,6 @@
 import { TILE_SIZE } from '../../data/config';
 import { EMBERWORKS, inEmberworks } from '../../data/emberworks';
+import { STORMCROWN } from '../../data/stormcrown';
 import { EMBERWORKS_GROUND } from '../../data/emberworksAssets';
 import { GROUND } from '../../data/art/ground';
 import { TILE } from '../../data/rooms';
@@ -44,11 +45,12 @@ const line = (c: CanvasRenderingContext2D, pts: readonly number[], width: number
   c.globalAlpha = 1;
 };
 
-/** The ramp a tile is on: the one whose bearing is nearest the tile's. */
+/** The ramp a tile is on: of its ring's ramps (064: the Stormcrown's past the Emberworks' middle), the one whose bearing is nearest the tile's. */
 function rampBearing(tx: number, ty: number): number {
   const b = bearingOf(tx, ty);
   const off = (r: number) => Math.abs((((b - r) % 360) + 540) % 360 - 180);
-  return EMBERWORKS.ramps.reduce((best, r) => (off(r.bearing) < off(best) ? r.bearing : best), EMBERWORKS.ramps[0]?.bearing ?? 0);
+  const ramps = fromCentre(tx, ty) > (EMBERWORKS.radii.inner + EMBERWORKS.radii.outer) / 2 ? STORMCROWN.ramps : EMBERWORKS.ramps;
+  return ramps.reduce((best, r) => (off(r.bearing) < off(best) ? r.bearing : best), ramps[0]?.bearing ?? 0);
 }
 
 /** A ramp tile: a pale cut slab, and risers across the climb every `step` px, lined up from tile to tile. */

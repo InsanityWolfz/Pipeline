@@ -114,8 +114,11 @@ export const CRAFT_MENU_LAYOUT = {
 export const BUILD_BAR_LAYOUT = {
   /** Distance from the screen's bottom edge to the cells' bottom. */
   bottom: HUD_LAYOUT.margin,
-  /** 062: 1 px closer than the hotbar's cells, and the groups 6 px apart (was 12), so the Forge group fits the view too. */
-  cellStep: CELL.step - 1,
+  /**
+   * 062: 1 px closer than the hotbar's cells, and the groups 6 px apart (was 12), so the Forge group fits the view too;
+   * 064: 2 px closer (the cells touch), so the Lightning rune's piece fits beside it.
+   */
+  cellStep: CELL.step - 2,
   cellWidth: CELL.w,
   cellHeight: CELL.h,
   icon: { x: 4, y: 6 },
