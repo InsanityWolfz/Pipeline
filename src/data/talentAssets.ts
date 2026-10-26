@@ -24,6 +24,9 @@ export const TALENT_SPRITES = {
   /** 060: the Bombs lane's two Fire nodes' own icons: a long-burning flame, and a flame leaping to two more. */
   fireDuration: 'talent-fire-duration',
   fireSpread: 'talent-fire-spread',
+  /** 064: the Ley lane's two Lightning nodes' own icons: a bolt forking in three, and a long bolt between two rods. */
+  lightningChains: 'talent-lightning-chains',
+  lightningRange: 'talent-lightning-range',
   /** The HUD's pip while points are unspent. */
   pip: 'talent-pip',
   /** The level-up ring flash round the player. */
@@ -49,7 +52,7 @@ export const LANE_ICONS: Readonly<Record<TalentLane, string>> = {
 };
 
 /** A minor node's own icon in place of its lane's (060: the Fire nodes show Fire, not a bomb). */
-export const NODE_ICONS: Readonly<Partial<Record<string, string>>> = { b4: TALENT_SPRITES.fireDuration, b5: TALENT_SPRITES.fireSpread };
+export const NODE_ICONS: Readonly<Partial<Record<string, string>>> = { b4: TALENT_SPRITES.fireDuration, b5: TALENT_SPRITES.fireSpread, l4: TALENT_SPRITES.lightningChains, l5: TALENT_SPRITES.lightningRange };
 
 /** Each keystone's icon. */
 export const KEYSTONE_ICONS: Readonly<Record<KeystoneRule, string>> = {

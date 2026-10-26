@@ -161,14 +161,8 @@ describe('the new-keyword rule (039, Q17)', () => {
   const ruled = KEYWORD_LIST.filter((k) => k.state === 'live' && k.group !== 'trait');
 
   it('every live keyword outside the debt list has a source and two payoffs', () => {
-    // 064 slice 4: Lightning's two talents come in slice 5; until then (one commit) it is expected to fail the rule, never in KEYWORD_DEBT.
-    const pending: readonly KeywordId[] = ['lightning'];
     for (const k of ruled) {
       if (k.id in KEYWORD_DEBT) continue;
-      if (pending.includes(k.id)) {
-        expect(meets(k.id), k.name).toBe(false);
-        continue;
-      }
       expect(meets(k.id), `${k.name}: sources ${JSON.stringify(sources.get(k.id))}, payoffs ${JSON.stringify(payoffs.get(k.id))}`).toBe(true);
     }
   });
@@ -182,6 +176,9 @@ describe('the new-keyword rule (039, Q17)', () => {
     // 060: Fire's source is its tag; its payoffs the Bombs lane's two Fire nodes.
     expect(sources.get('fire')).toContain('tag:fire');
     expect(payoffs.get('fire')).toEqual(['b4', 'b5']);
+    // 064: Lightning's source is its tag; its payoffs the Ley lane's two Lightning nodes.
+    expect(sources.get('lightning')).toContain('tag:lightning');
+    expect(payoffs.get('lightning')).toEqual(['l4', 'l5']);
   });
 
   it('every live keyword has at least one source', () => {

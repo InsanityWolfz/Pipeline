@@ -37,3 +37,20 @@ export const lightningRune: Mechanism = (b: Box, t: number) => {
     ellipse(cx, top - 0.4, 1, 1, { fill: 'cyan-glow', alpha: 0.4 + 0.6 * flick, glow: { color: 'cyan', blur: 2 } }),
   ];
 };
+
+/** 064's Lightning talent icons (16×16 round the centre): a bolt forking into three tines, each tipped with a spark. */
+export const LIGHTNING_CHAINS_ICON: Shape[] = [
+  ellipse(0, 0, 6.6, 6.6, { fill: 'storm', outline: true }),
+  { ...line([-1, -5.5, 1.2, -1.5, -0.8, 0.5, 0.6, 2.5], 1.2, 'cyan-glow'), glow: { color: 'cyan', blur: 2 } },
+  { ...line([0.6, 2.5, -3.6, 4.6], 0.9, 'cyan-glow'), glow: { color: 'cyan', blur: 1.5 } },
+  { ...line([0.6, 2.5, 0.6, 5.6], 0.9, 'cyan-glow'), glow: { color: 'cyan', blur: 1.5 } },
+  { ...line([0.6, 2.5, 4.4, 4.4], 0.9, 'cyan-glow'), glow: { color: 'cyan', blur: 1.5 } },
+  ...[[-3.6, 4.6], [0.6, 5.6], [4.4, 4.4]].map(([x = 0, y = 0]) => ellipse(x, y, 0.9, 0.9, { fill: 'snow' })),
+];
+
+/** A long bolt leaping between two brass-capped rods. */
+export const LIGHTNING_RANGE_ICON: Shape[] = [
+  ...[-5.2, 5.2].flatMap((x) => [rect(x - 0.8, -2, 1.6, 8, 0.4, { fill: 'iron', outline: true }), rect(x - 1.3, -3, 2.6, 1.2, 0.3, solid('brass'))]),
+  { ...line([-5.2, -3.5, -2.5, -0.5, -0.5, -4, 1.5, -0.8, 3.5, -4.2, 5.2, -3.5], 1, 'cyan-glow'), glow: { color: 'cyan', blur: 2 } },
+  line([-5.2, -3.5, -2.5, -0.5, -0.5, -4, 1.5, -0.8, 3.5, -4.2, 5.2, -3.5], 0.4, 'snow'),
+];

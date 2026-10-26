@@ -26,6 +26,8 @@ const EXPECTED: Readonly<Record<string, string>> = {
   // 060: Fire's two payoffs.
   b4: 'Fire: +50% duration',
   b5: 'Fire: +1 tile spread radius',
+  l4: 'Lightning: +1 chain',
+  l5: 'Lightning: +1 tile chain range',
   l1: 'Ley: +10% damage',
   l2: 'Homing: +30% turn rate',
   l3: 'Split: +2 Shards',

@@ -83,8 +83,8 @@ describe('the talent art', () => {
     const ids = new Set(DAYLIGHT_PALETTE.map((c) => c.id));
     for (const s of TALENT_SPRITES_VECTOR) for (const id of s.frames.flat().flatMap(inksOf)) expect(ids.has(id), `${s.key}: ${id}`).toBe(true);
     for (const key of [...Object.values(LANE_ICONS), ...Object.values(KEYSTONE_ICONS), ...Object.values(NODE_ICONS)]) expect(Object.values(TALENT_SPRITES)).toContain(key);
-    // 060: the two Fire nodes show their own icons; a node's own icon is only ever a minor node's.
-    expect(Object.keys(NODE_ICONS)).toEqual(['b4', 'b5']);
+    // 060: the two Fire nodes show their own icons (064: and the two Lightning nodes); a node's own icon is only ever a minor node's.
+    expect(Object.keys(NODE_ICONS)).toEqual(['b4', 'b5', 'l4', 'l5']);
     for (const id of Object.keys(NODE_ICONS)) expect(TALENTS[id]?.kind).toBe('minor');
     for (const c of Object.values(TALENT_PANEL.colors)) expect(ids.has(c), c).toBe(true);
   });

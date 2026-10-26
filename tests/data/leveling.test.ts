@@ -10,8 +10,9 @@ import { createEvents } from '../../src/sim/events';
 describe('leveling data', () => {
   it('has the spec’s curve, cap and multipliers', () => {
     // 060: two more steps for the Bombs lane's two Fire nodes, their rise growing by 10 as it did (+70, +80, then +90, +100).
-    expect(XP_CURVE).toEqual([40, 70, 100, 130, 160, 200, 240, 280, 330, 380, 440, 500, 570, 650, 740, 840]);
-    expect(LEVEL_CAP).toBe(17);
+    // 064: two more for the Ley lane's two Lightning nodes, the rise still growing by 10 (+110, +120).
+    expect(XP_CURVE).toEqual([40, 70, 100, 130, 160, 200, 240, 280, 330, 380, 440, 500, 570, 650, 740, 840, 950, 1070]);
+    expect(LEVEL_CAP).toBe(19);
     expect(XP_CURVE).toHaveLength(LEVEL_CAP - 1);
     expect(RING_XP).toEqual([1, 1, 2, 3, 4, 10]);
     expect([CHAMPION_XP, CLAIM_XP, LANDMARK_XP, BOSS_REFIGHT_XP]).toEqual([3, 50, 25, 0.5]);
