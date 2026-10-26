@@ -135,7 +135,7 @@ export class ArrowView {
     };
     if (a.ammoId === SPLIT.projectile) {
       d.shard = true;
-      d.trail = { g: this.scene.add.graphics(), look: a.damageType === 'cold' ? SHARD_TRAILS.cold : a.damageType === 'fire' ? SHARD_TRAILS.fire : SHARD_TRAILS.ley, points: [] };
+      d.trail = { g: this.scene.add.graphics(), look: a.damageType === 'cold' ? SHARD_TRAILS.cold : a.damageType === 'fire' ? SHARD_TRAILS.fire : a.damageType === 'lightning' ? SHARD_TRAILS.lightning : SHARD_TRAILS.ley, points: [] };
     }
     for (const tag of AMMO[a.ammoId]?.tags ?? []) {
       const look = ROUND_LOOKS[tag];

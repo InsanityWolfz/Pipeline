@@ -1,5 +1,6 @@
 import type { TileRect } from './tiles';
 import { EMBERWORKS } from './emberworks';
+import { STORMCROWN } from './stormcrown';
 import { laidOut, polar } from './worldShape';
 
 // The Ley Springs (030), apart from overworld.ts so the landmark data (032) can name them.
@@ -15,7 +16,7 @@ export interface SpringDef {
   /** Its landmark name (032), on the discovery banner. */
   readonly name: string;
   /** The danger ring (017) it sits in. */
-  readonly ring: 1 | 2 | 3 | 4;
+  readonly ring: 1 | 2 | 3 | 4 | 5;
   readonly tx: number;
   readonly ty: number;
   readonly radius: number;
@@ -47,7 +48,9 @@ export const SPRINGS: readonly SpringDef[] = (
 )
   .map((s): SpringDef => laidOut(s))
   // 060: the Emberworks', on the far side of the ring from every ramp (EMBERWORKS.places).
-  .concat([{ id: 'emberworks-spring', name: 'Emberworks Ley Spring', ring: 4, ...polar(EMBERWORKS.places.spring.bearing, EMBERWORKS.places.spring.r), radius: SPRING_RADIUS }]);
+  .concat([{ id: 'emberworks-spring', name: 'Emberworks Ley Spring', ring: 4, ...polar(EMBERWORKS.places.spring.bearing, EMBERWORKS.places.spring.r), radius: SPRING_RADIUS }])
+  // 064: the Stormcrown's, on the far side of the ring from the nearest ramp (STORMCROWN.places).
+  .concat([{ id: 'stormcrown-spring', name: 'Stormcrown Ley Spring', ring: 5, ...polar(STORMCROWN.places.spring.bearing, STORMCROWN.places.spring.r), radius: SPRING_RADIUS }]);
 
 /** A spring's clearing (030): a square of open ground round its pool. */
 export function springClearing(s: { tx: number; ty: number }): TileRect {

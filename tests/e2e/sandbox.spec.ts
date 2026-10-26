@@ -16,7 +16,8 @@ import { bootSandbox, clickPanel, openPanel, setRound, spawnPack } from './sandb
 const SPAWN_AT = { x: (SANDBOX.spawn.tx + 0.5) * TILE_SIZE, y: (SANDBOX.spawn.ty + 0.5) * TILE_SIZE };
 
 test('boots ?sandbox into its room, and a mixed loadout fires from the panel', async ({ page }) => {
-  test.setTimeout(120_000);
+  // 064: about 40 panel clicks now that the round list holds the lightning rounds (57 choices).
+  test.setTimeout(240_000);
   const errors = watchErrors(page);
   await bootSandbox(page);
   const s = await page.evaluate(() => window.__GAME__?.getState());
@@ -43,8 +44,8 @@ test('boots ?sandbox into its room, and a mixed loadout fires from the panel', a
   });
   expect(fired.seen).toEqual(expect.arrayContaining(['arrow+frost', 'ley-bolt+frost+homing']));
   expect(fired.bombs).toBeGreaterThan(0);
-  // 060: the fourth entrance keeps its plain arrows.
-  expect(fired.loadout).toEqual(['arrow+frost', 'ley-bolt+frost+homing', 'bomb+cluster', 'arrow']);
+  // 060: the fourth entrance keeps its plain arrows (064: and the fifth).
+  expect(fired.loadout).toEqual(['arrow+frost', 'ley-bolt+frost+homing', 'bomb+cluster', 'arrow', 'arrow']);
   expect(errors).toEqual([]);
 });
 

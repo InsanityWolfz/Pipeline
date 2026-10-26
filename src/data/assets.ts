@@ -2,6 +2,8 @@
 import { enemyAnims, type EnemyAnims } from './enemyAnims';
 import { HOLLOWS_ENEMY_ANIMS } from './hollowsEnemyAssets';
 import { FORGE_ANIMS } from './forgewrightAssets';
+import { CONDUCTOR_ANIMS } from './conductorAssets';
+import { EMBER_ENEMY_ANIMS } from './emberworksEnemyAssets';
 
 /** Vector frames drawn at boot (016): one texture of shelf-packed canvas pages, holding every sprite frame by name. */
 export const VECTOR_KEY = 'vectors';
@@ -113,10 +115,12 @@ export const NODE_SPRITES: Readonly<Record<string, { uses: readonly string[]; re
   'resin-seep': nodeFrames('resin-seep', 3, 3),
   // 060: open (by uses left) and spent; its closed and warning looks are EMBERWORKS_SPRITES.vent.
   'cinder-vent': nodeFrames('cinder-vent', 3, 3),
+  // 064: charged (by uses left) and spent; its idle, warning and strike looks are STORMCROWN_SPRITES.rod.
+  'storm-rod': nodeFrames('storm-rod', 3, 3),
 };
 
 /** The tube slot's frame (025) by how many rounds it shows: one for a carried round or the fist, up to one per intake entrance for a volley. */
-export const TUBE_SLOT_FRAMES = ['hud-tube-slot-1', 'hud-tube-slot-2', 'hud-tube-slot-3', 'hud-tube-slot-4'] as const;
+export const TUBE_SLOT_FRAMES = ['hud-tube-slot-1', 'hud-tube-slot-2', 'hud-tube-slot-3', 'hud-tube-slot-4', 'hud-tube-slot-5'] as const;
 
 /** The tube slot frame for `units` rounds (clamped to the frames there are). */
 export function tubeSlotFrame(units: number): string {
@@ -144,6 +148,8 @@ export const ENEMY_ANIMS: Readonly<Record<string, EnemyAnims>> = {
   bulwark: enemyAnims('bulwark', true, ['turn', 'lob', 'throw', 'block', 'roar', 'brace', 'stomp']),
   ...HOLLOWS_ENEMY_ANIMS,
   ...FORGE_ANIMS,
+  ...CONDUCTOR_ANIMS,
+  ...EMBER_ENEMY_ANIMS,
 };
 
 /** The sparkle played where an item is picked up. */

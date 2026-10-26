@@ -46,6 +46,9 @@ function scaleAttack(def: EnemyDef, base: Pick<EnemyDef, 'feetBox' | 'hurtbox' |
       return { ...def, ...base, slam: { ...def.slam, damage: dmg(def.slam.damage) } };
     case 'bulwark':
       return { ...def, ...base, lob: { ...def.lob, damage: dmg(def.lob.damage) }, pound: { ...def.pound, damage: dmg(def.pound.damage) } };
+    // 064: a boss is never scaled (above); its case keeps the switch whole.
+    case 'conductor':
+      return { ...def, ...base };
     case 'forgewright':
       return { ...def, ...base, slam: { ...def.slam, damage: dmg(def.slam.damage) }, spray: { ...def.spray, damage: dmg(def.spray.damage) } };
     case 'charger':
@@ -56,5 +59,15 @@ function scaleAttack(def: EnemyDef, base: Pick<EnemyDef, 'feetBox' | 'hurtbox' |
       return { ...def, ...base, bash: { ...def.bash, damage: dmg(def.bash.damage) } };
     case 'sniper':
       return { ...def, ...base, snipe: { ...def.snipe, damage: dmg(def.snipe.damage) } };
+    // 061: its pool's beats and its death burst scale as its burst does.
+    case 'mote':
+      return { ...def, ...base, swell: { ...def.swell, damage: dmg(def.swell.damage) }, pool: { ...def.pool, damage: dmg(def.pool.damage) }, deathBurst: { ...def.deathBurst, damage: dmg(def.deathBurst.damage) } };
+    // 061: its heal scales as damage does (ring and champion), so it keeps pace with the health it repairs.
+    case 'tender':
+      return { ...def, ...base, beam: { ...def.beam, heal: dmg(def.beam.heal) } };
+    case 'golem':
+      return { ...def, ...base, slam: { ...def.slam, damage: dmg(def.slam.damage) } };
+    case 'hound':
+      return { ...def, ...base, dash: { ...def.dash, damage: dmg(def.dash.damage), speed: def.dash.speed * speed }, trail: { ...def.trail, damage: dmg(def.trail.damage) } };
   }
 }

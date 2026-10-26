@@ -12,6 +12,7 @@ import { startKnock, type Knockable } from './knockback';
 import type { Facing } from './player';
 import type { SimState } from './state';
 import { createBellows, plated, type BellowsState } from './forgewrightParts';
+import { createRods, nearestRod, type RodState } from './conductorRods';
 import { recordBlock } from './shield';
 
 // Enemies as plain data: creation, damage and hurtboxes. Their behaviour is in enemyAi.ts, separation in separation.ts.
@@ -130,6 +131,26 @@ export interface EnemyState extends Knockable {
   vent: number;
   bellows: BellowsState[];
   floodSide: number;
+  /** A cinder mote that burst on its own (061): it goes with no drop, XP or death burst. */
+  spent: boolean;
+  /**
+   * The Conductor (064, conductorRods.ts, conductorAi.ts): its six arena rods (none on anything else); the rod it
+   * stands at and the rod a blink's warning names (-1: none); ticks to its next blink, and ticks left of a blink's
+   * warning; the attack it is making (-1: none; 0 lash, 1 storm call, 2 rod chain) and each attack's own cooldown; and
+   * its rod chain's lines, a bit per neighbouring pair of rods (rod i and i + 1), and whether the chain has struck.
+   */
+  rods: RodState[];
+  rod: number;
+  blinkTo: number;
+  blinkCooldown: number;
+  blinkWarn: number;
+  attack: number;
+  attackCooldowns: number[];
+  chainMask: number;
+  chainHit: boolean;
+  /** A kiln-tender's beam (061): its target's id (-1: none), and its own health as the beam began (any less breaks it). */
+  beamTarget: number;
+  beamHeld: number;
 }
 
 /** A home's danger ring (041, the rule 037's XP used): `ringOf` its tile in the overworld, 0 in any other room. */
@@ -191,6 +212,19 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     vent: 0,
     bellows: createBellows(enemyId),
     floodSide: 0,
+    spent: false,
+    rods: createRods(enemyId),
+    // 064: the Conductor's rod is the one nearest where it's placed (its start: the spire's start rod).
+    rod: def.kind === 'conductor' ? nearestRod(at) : -1,
+    blinkTo: -1,
+    blinkCooldown: def.kind === 'conductor' ? def.blink.everyTicks : 0,
+    blinkWarn: 0,
+    attack: -1,
+    attackCooldowns: def.kind === 'conductor' ? [0, 0, 0] : [],
+    chainMask: 0,
+    chainHit: false,
+    beamTarget: -1,
+    beamHeld: 0,
     knockX: 0,
     knockY: 0,
     knockTicks: 0,
@@ -216,6 +250,8 @@ export interface HitStyle {
   burning?: boolean;
   /** 060: a burn's once-a-second beat. It never sets a burn going again; render shows it as a small number, with no hit stop or hit sound. */
   burn?: boolean;
+  /** 064: a lightning arc's hit. It never arcs again; render draws it as a chained hit. */
+  arc?: boolean;
 }
 
 /** An arrow's hit, with its Knockback. */
@@ -256,6 +292,7 @@ export function damageEnemy(
     ...(style.melee ? { melee: true as const } : {}),
     ...(style.burning ? { burning: true as const } : {}),
     ...(style.burn ? { burn: true as const } : {}),
+    ...(style.arc ? { arc: true as const } : {}),
   });
 }
 
@@ -268,8 +305,8 @@ export const immune = (e: Pick<EnemyState, 'underground' | 'rising'>): boolean =
 /** Whether shots, punches and bursts can reach it: whenever it isn't immune (054). */
 export const targetable = (e: Pick<EnemyState, 'underground' | 'rising'>): boolean => !immune(e);
 
-/** It passes through other enemies (035): a Burrower underground, a Charger mid-charge, an add rising (041). Separation leaves it be. */
-export const passesThrough = (e: EnemyState): boolean => e.underground || e.rising > 0 || (e.mode === 'swipe' && defOf(e).kind === 'charger');
+/** It passes through other enemies (035): a Burrower underground, a Charger mid-charge (061: a hound mid-dash), an add rising (041). Separation leaves it be. */
+export const passesThrough = (e: EnemyState): boolean => e.underground || e.rising > 0 || (e.mode === 'swipe' && (defOf(e).kind === 'charger' || defOf(e).kind === 'hound'));
 
 /** True if a ground point is inside the enemy's hurtbox. */
 export function inHurtbox(e: EnemyState, x: number, y: number): boolean {

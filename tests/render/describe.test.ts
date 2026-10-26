@@ -115,6 +115,17 @@ describe('content', () => {
     expect(texts(d.breakdown)).toEqual(expect.arrayContaining(['Fire duration 3.0 s × (1 + 50% Banked Embers) = 4.5 s', 'Fire spread radius 64 px + 32 px Kindling = 96 px']));
   });
 
+  it('064: the Lightning nodes say what they change, before → after, and a Lightning round’s summary counts their arcs', () => {
+    const s = player();
+    s.crafted.push('arrow+lightning');
+    expect(texts(describeTalent(s, 'l4').summary)[0]).toBe('Lightning: +1 chain');
+    expect(texts(describeTalent(s, 'l4').breakdown)[0]).toBe('Lightning chain: 2 → 3');
+    expect(texts(describeTalent(s, 'l5').summary)[0]).toBe('Lightning: +1 tile chain range');
+    expect(texts(describeTalent(s, 'l5').breakdown)[0]).toBe('Lightning chain range: 3 → 4 tiles');
+    s.talents.push('l1', 'l2', 'l3', 'l4', 'l5');
+    expect(texts(describeRound(s, 'arrow+lightning').summary)[0]).toContain('arcs 3×');
+  });
+
   it('Wide Casing’s breakdown lists the four Burst radii before → after; its summary reaches the known Burst rounds', () => {
     const d = describeTalent(player(), 'b2');
     expect(texts(d.breakdown)[0]).toBe('Burst radius: Bomb 48 → 55.2 px · Bomblet 20 → 23 px · Landmine 24 → 27.6 px · Pool-burst 24 → 27.6 px');

@@ -1,6 +1,7 @@
 import type { GameObjects, Scene } from 'phaser';
 import { settings } from './flow/settingsStore';
 import { DEPTHS } from '../data/assets';
+import { mineAmmo } from '../data/ammo';
 import { MINE_LOOK, MINE_SPRITES } from '../data/mineAssets';
 import type { BurstEvent, SimEvents } from '../sim/events';
 import type { SimState } from '../sim/state';
@@ -91,7 +92,8 @@ export class MineView {
 
   /** An armed mine's image, in its round's tint (039.15: a Frost landmine is pale ice). */
   private armedImage(x: number, y: number, ammoId: string): GameObjects.Image {
-    const image = addVector(this.scene, x, y, MINE_SPRITES.armed).setDepth(DEPTHS.groundFx + MINE_LOOK.depth.mine);
+    // 062: a steel landmine lies armed in steel.
+    const image = addVector(this.scene, x, y, mineAmmo(ammoId).armed).setDepth(DEPTHS.groundFx + MINE_LOOK.depth.mine);
     const tint = roundTint(ammoId);
     return tint === null ? image : image.setTint(tint);
   }

@@ -7,7 +7,7 @@ import { RULES, type RuleLine, type StatLine } from '../data/lines';
 import { ROLLBREAKER } from '../data/relics';
 import { LINE_SEP, renderTemplate, ruleText, scopeName } from '../data/rulesText';
 import { STATS, type StatId } from '../data/statDefs';
-import { CLUSTER, COLD, FIRE, HOMING, SPLIT } from '../data/tags';
+import { CLUSTER, COLD, FIRE, LIGHTNING, HOMING, SPLIT } from '../data/tags';
 import { BLASTFLETCH } from '../data/talents';
 import { bombletEmission, poolBurstEmission, roundEmission, shardEmissionOf } from '../sim/emissions';
 import { playerStats, type PlayerStats } from '../sim/stats';
@@ -61,6 +61,8 @@ function buildTargets(): Target[] {
     { id: 'pool-burst', name: renderTemplate(CHILD_NAMES['pool-burst']), emission: poolBurstEmission('arrow'), bases: { radius: BLASTFLETCH.burstRadius } },
     // 060: Fire's burn, read on Fire alone as the sim reads it.
     { id: 'fire', name: '', emission: statusEmission('fire'), bases: { duration: FIRE.burnTicks, 'spread-radius': FIRE.spreadRadius } },
+    // 064: Lightning's chain, read on Lightning alone as the sim reads it.
+    { id: 'lightning', name: '', emission: statusEmission('lightning'), bases: { chains: LIGHTNING.chains, 'chain-range': LIGHTNING.chainRange } },
     { id: 'chill', name: '', emission: statusEmission('chill'), bases: { 'stacks-to-freeze': COLD.stacksToFreeze, duration: COLD.stackTicks, slow: COLD.slowPerStack } },
     { id: 'freeze', name: '', emission: statusEmission('freeze'), bases: { duration: COLD.freezeTicks, immunity: COLD.refreezeTicks } },
     { id: 'boss-freeze', name: KEYWORDS.boss.name, emission: statusEmission('freeze'), bases: { duration: COLD.bossFreezeTicks } },

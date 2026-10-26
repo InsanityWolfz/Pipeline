@@ -243,8 +243,12 @@ describe('sim state', () => {
     const fire = ['ignites', 'spreads'] as const;
     // 060: the Forgewright's bellows, vents, slam, spray and flood.
     const forge = ['bellowsBreaks', 'bellowsPatches', 'vents', 'ventEnds', 'slams', 'sprays', 'floodStarts', 'floods'] as const;
-    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save, ...onboarding, ...fire, ...forge, 'lost', 'ko', 'woke', 'tubeTaken'].sort());
-    for (const name of [...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save, ...onboarding, ...fire, ...forge]) expect(summary.events[name], name).toEqual([]);
+    // 061: the Emberworks' enemies: motes bursting, hounds dashing, golems slamming and splitting, tenders' beams.
+    const ember = ['moteBursts', 'deathBursts', 'dashes', 'golemSlams', 'golemSplits', 'beams', 'beamBreaks'] as const;
+    // 064: the Stormcrown's: lightning striking a storm rod, and lightning arcs; the Conductor's strikes, rods, blinks and attacks.
+    const storm = ['rodStrikes', 'arcs', 'strikes', 'rodBreaks', 'rodRegrows', 'blinkWarns', 'blinks', 'conductorWindups', 'lashes', 'chains'] as const;
+    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save, ...onboarding, ...fire, ...forge, ...ember, ...storm, 'lost', 'ko', 'woke', 'tubeTaken'].sort());
+    for (const name of [...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save, ...onboarding, ...fire, ...forge, ...ember, ...storm]) expect(summary.events[name], name).toEqual([]);
     expect(summary.events.ko).toBe(false);
     expect(summary.events.lost).toEqual({});
     expect(summary.events.tubeTaken).toBe(false);

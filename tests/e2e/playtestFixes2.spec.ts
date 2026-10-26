@@ -208,9 +208,9 @@ test('the end-of-playtest card shows the cursor over it (050 A.5)', async ({ pag
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
     g.step(0);
-    // 060: the Forgewright's first kill ends the demo.
-    const b = g.getState().enemies.find((e) => e.enemyId === 'forgewright');
-    if (!b) throw new Error('no Forgewright');
+    // 060: the Forgewright's first kill ends the demo (064: the Conductor's).
+    const b = g.getState().enemies.find((e) => e.enemyId === 'conductor');
+    if (!b) throw new Error('no Conductor');
     g.setEnemyHealth(b.id, 0);
     g.step(delay + 1);
   }, END_CARD.delayTicks);

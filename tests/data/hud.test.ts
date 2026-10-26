@@ -9,6 +9,7 @@ import { HP_BAR, HUD_HEALTH_LAYOUT } from '../../src/data/hudPanels';
 import { gridSize, INVENTORY_GRID, INVENTORY_GROUPS, inventoryPanelSize, PICKUP_FEED } from '../../src/data/hudPanels';
 import { widthOf } from './textFit';
 import { ITEMS } from '../../src/data/items';
+import { ROUNDS, roundTier } from '../../src/data/tags';
 import { DAYLIGHT_PALETTE } from '../../src/data/palette';
 
 // 031's data: every item's panel group, the panel's size and columns, the HP bar and
@@ -30,7 +31,8 @@ describe('inventory panel groups (031)', () => {
   it('maps the items as the spec lists them', () => {
     const byGroup = (g: string) => Object.values(ITEMS).filter((it) => it.group === g).map((it) => it.id).sort();
     // 034: ley-iron, the first metal, is a raw.
-    expect(byGroup('raw')).toEqual(['cinderite', 'fiber', 'husk-resin', 'ley-crystal', 'ley-iron', 'rimestone', 'stone', 'wood']);
+    // 064: stormglass.
+    expect(byGroup('raw')).toEqual(['cinderite', 'fiber', 'husk-resin', 'ley-crystal', 'ley-iron', 'rimestone', 'stone', 'stormglass', 'wood']);
     // 033: machine parts and schematics go in Parts, cores in Cores.
     expect(byGroup('parts')).toEqual([
       'ancient-gear',
@@ -43,25 +45,37 @@ describe('inventory panel groups (031)', () => {
       // 038: the landmine chain's plate.
       'iron-plate',
       'ley-dust',
+      // 062: the material tiers' parts.
+      'ley-glass',
+      'ley-steel',
       'rope',
       'schematic-machine-speed',
       'schematic-reservoir-2',
       'shaft',
+      'steel-arrowhead',
+      'steel-casing',
+      'steel-plate',
+      // 064: Region 4's machine part.
+      'storm-coil',
     ]);
-    // 039: the six Frost rounds of every family. 060: the seven Fire rounds.
-    expect(byGroup('ammo')).toEqual([
+    // 039: the six Frost rounds of every family. 060: the seven Fire rounds; 064: the seven Lightning. 062: each also at its tier, in Ammo too.
+    expect(byGroup('ammo').filter((id) => roundTier(id) === 'stone')).toEqual([
       'arrow',
       'arrow+fire',
       'arrow+frost',
+      'arrow+lightning',
       'bomb',
       'bomb+cluster',
       'bomb+fire',
       'bomb+fire+cluster',
       'bomb+frost',
       'bomb+frost+cluster',
+      'bomb+lightning',
+      'bomb+lightning+cluster',
       'landmine',
       'landmine+fire',
       'landmine+frost',
+      'landmine+lightning',
       'ley-bolt',
       'ley-bolt+fire',
       'ley-bolt+fire+homing',
@@ -70,10 +84,14 @@ describe('inventory panel groups (031)', () => {
       'ley-bolt+frost+homing',
       'ley-bolt+frost+split',
       'ley-bolt+homing',
+      'ley-bolt+lightning',
+      'ley-bolt+lightning+homing',
+      'ley-bolt+lightning+split',
       'ley-bolt+split',
     ]);
+    expect(byGroup('ammo').filter((id) => roundTier(id) !== 'stone')).toEqual(ROUNDS.filter((id) => roundTier(id) !== 'stone').sort());
     expect(byGroup('gear')).toEqual(['unidentified-armor']);
-    expect(byGroup('cores')).toEqual(['bulwark-core', 'forgewright-core', 'warden-core']);
+    expect(byGroup('cores')).toEqual(['bulwark-core', 'conductor-core', 'forgewright-core', 'warden-core']);
     // The warden core's kind stays a part: only the panel's group places it.
     expect(ITEMS['warden-core']?.kind).toBe('part');
   });

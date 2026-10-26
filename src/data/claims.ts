@@ -77,6 +77,8 @@ export const FIXTURES: readonly FixtureDef[] = [
   { id: 'rimestone-port', kind: 'port', name: 'Rimestone port', tx: 1, ty: 12, facing: 'right', raw: 'rimestone' },
   // 060: between the fiber and ley crystal ports, the floor tile left between them.
   { id: 'cinderite-port', kind: 'port', name: 'Cinderite port', tx: 1, ty: 9, facing: 'right', raw: 'cinderite' },
+  // 064: the last free floor tile of the west wall's ports, between the wood and stone ports.
+  { id: 'stormglass-port', kind: 'port', name: 'Stormglass port', tx: 1, ty: 5, facing: 'right', raw: 'stormglass' },
   { id: 'waystone', kind: 'waystone', name: 'Waystone', tx: 22, ty: 4, facing: 'down', claim: 'shrine' },
 ];
 

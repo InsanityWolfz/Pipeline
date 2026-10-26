@@ -7,8 +7,8 @@ import { stageBase, STAGES, type StageDef } from './stages';
 /** Tiles a piece covers: one, or three in a row across its facing (its tile is the middle one). */
 export type Footprint = '1x1' | '3x1';
 
-/** The build bar's groups (026): logistics, then one per ammo chain. */
-export type PieceCategory = 'logistics' | 'arrows' | 'bombs' | 'ley' | 'mines';
+/** The build bar's groups (026): logistics, then one per ammo chain, then (062) the Forge's material machines. */
+export type PieceCategory = 'logistics' | 'arrows' | 'bombs' | 'ley' | 'mines' | 'forge';
 
 /** The build bar's groups in order, left to right, each with the label shown over it (026). */
 export const PIECE_CATEGORIES: readonly { id: PieceCategory; label: string }[] = [
@@ -17,6 +17,7 @@ export const PIECE_CATEGORIES: readonly { id: PieceCategory; label: string }[] =
   { id: 'bombs', label: 'Bombs' },
   { id: 'ley', label: 'Ley' },
   { id: 'mines', label: 'Mines' },
+  { id: 'forge', label: 'Forge' },
 ];
 
 interface PieceBase {
@@ -38,6 +39,11 @@ export interface MachineDef extends PieceBase {
   recipeId: string;
   craftTicks: number;
   stage?: string;
+  /**
+   * 062: the other recipes it runs, by input: a tier's version of its own (the knapper's steel arrowheads from
+   * ley-steel). Each craft is one recipe's whole set; fed several, it takes turns in this order after `recipeId`.
+   */
+  variants?: readonly string[];
 }
 
 /**
@@ -72,6 +78,9 @@ const machine = (
   craftTicks,
 });
 
+/** 062: a machine that also runs these recipes, by what it's fed. */
+const tiered = (m: MachineDef, ...variants: string[]): MachineDef => ({ ...m, variants });
+
 const logistics = (kind: LogisticsDef['kind'], name: string, description: string, id: string = kind): LogisticsDef => ({
   kind,
   id,
@@ -99,18 +108,22 @@ export const PIECES: Readonly<Record<string, PieceDef>> = {
   'underground-exit': logistics('tunnel-out', 'Underground exit', 'Brings up what its entrance sends, out its front. Place it in line ahead, facing the same way.', 'underground-exit'),
   hopper: logistics('hopper', 'Hopper', 'Holds one kind of item, put in with E, and feeds it forward.'),
   crate: logistics('crate', 'Crate', 'Collects whatever reaches it from any side. E empties it.'),
+  // 062: each tier-aware machine makes its steel (or glass) version from the tier's part, by what it's fed.
   cutter: machine('cutter', 'Cutter', 'arrows', 'shaft', '1x1', 60, 'Cuts wood into shafts.'),
-  knapper: machine('knapper', 'Knapper', 'arrows', 'arrowhead', '1x1', 60, 'Chips stone into arrowheads.'),
+  knapper: tiered(machine('knapper', 'Knapper', 'arrows', 'arrowhead', '1x1', 60, 'Chips stone into arrowheads, and ley-steel into steel ones.'), 'steel-arrowhead'),
   spinner: machine('spinner', 'Spinner', 'arrows', 'rope', '1x1', 60, 'Spins fiber into rope.'),
-  assembler: machine('assembler', 'Assembler', 'arrows', 'arrow', '3x1', 90, 'Puts shafts, arrowheads and rope together into arrows.'),
-  shaper: machine('shaper', 'Shaper', 'bombs', 'casing', '1x1', 60, 'Shapes stone into bomb casings.'),
+  assembler: tiered(machine('assembler', 'Assembler', 'arrows', 'arrow', '3x1', 90, 'Puts shafts, arrowheads and rope together into arrows (steel ones from steel arrowheads).'), 'steel-arrow'),
+  shaper: tiered(machine('shaper', 'Shaper', 'bombs', 'casing', '1x1', 60, 'Shapes stone into bomb casings, and ley-steel into steel ones.'), 'steel-casing'),
   'fuse-maker': machine('fuse-maker', 'Fuse maker', 'bombs', 'fuse', '1x1', 60, 'Draws husk resin into fuses.'),
   grinder: machine('grinder', 'Grinder', 'ley', 'ley-dust', '1x1', 60, 'Grinds ley crystal into dust.'),
-  packer: machine('packer', 'Packer', 'bombs', 'bomb', '3x1', 90, 'Packs casings, fuses and ley dust into bombs.'),
-  focuser: machine('focuser', 'Focuser', 'ley', 'ley-bolt', '1x1', 60, 'Focuses ley dust into ley bolts.'),
+  packer: tiered(machine('packer', 'Packer', 'bombs', 'bomb', '3x1', 90, 'Packs casings, fuses and ley dust into bombs (steel ones from steel casings).'), 'steel-bomb'),
+  focuser: tiered(machine('focuser', 'Focuser', 'ley', 'ley-bolt', '1x1', 60, 'Focuses ley dust into ley bolts, and ley glass into glass bolts.'), 'glass-bolt'),
   // 038.1: the plate press as the cutter, the mine packer as the bomb packer (three inputs into a 3x1).
-  'plate-press': machine('plate-press', 'Plate press', 'mines', 'iron-plate', '1x1', 60, 'Presses ley-iron into iron plates.'),
-  'mine-packer': machine('mine-packer', 'Mine packer', 'mines', 'landmine', '3x1', 90, 'Packs iron plates, fuses and ley dust into landmines.'),
+  'plate-press': tiered(machine('plate-press', 'Plate press', 'mines', 'iron-plate', '1x1', 60, 'Presses ley-iron into iron plates, and ley-steel into steel ones.'), 'steel-plate'),
+  'mine-packer': tiered(machine('mine-packer', 'Mine packer', 'mines', 'landmine', '3x1', 90, 'Packs iron plates, fuses and ley dust into landmines (steel ones from steel plates).'), 'steel-landmine'),
+  // 062: the Forge's machines, made by hand once at the bench to unlock.
+  smelter: machine('smelter', 'Smelter', 'forge', 'ley-steel', '1x1', 60, 'Fuses ley-iron and cinderite into ley-steel.'),
+  kiln: machine('kiln', 'Kiln', 'forge', 'ley-glass', '1x1', 60, 'Fires ley dust and cinderite into ley glass.'),
   ...Object.fromEntries(Object.values(STAGES).map((st) => [st.id, stageMachine(st)])),
 };
 
@@ -131,6 +144,7 @@ export const BUILD_BAR: readonly string[] = [
   'assembler',
   'frost-rune',
   'fire-rune',
+  'lightning-rune',
   'shaper',
   'fuse-maker',
   'packer',
@@ -141,6 +155,8 @@ export const BUILD_BAR: readonly string[] = [
   'prism-lens',
   'plate-press',
   'mine-packer',
+  'smelter',
+  'kiln',
 ];
 
 export function pieceDef(id: string): PieceDef {
@@ -154,6 +170,9 @@ export function machineDef(id: string): MachineDef {
   if (def.kind !== 'machine') throw new Error(`Piece '${id}' is not a machine`);
   return def;
 }
+
+/** Every recipe a machine runs (062): its own, then its variants, in turn order. A stage's is its stage's id. */
+export const machineRecipeIds = (def: MachineDef): readonly string[] => [def.recipeId, ...(def.variants ?? [])];
 
 /** Pieces that lie flat on the floor (conduits, 033's splitter and 052's underground pair): the player walks over them. */
 export const isFlatKind = (kind: PieceKind): boolean => kind === 'conduit' || kind === 'splitter' || kind === 'tunnel-in' || kind === 'tunnel-out';

@@ -15,10 +15,11 @@ test('the fourth cap takes a Forgewright core, and four fed entrances fire a fou
   const before = await page.evaluate(() => window.__GAME__?.getState().inventory['forgewright-core'] ?? 0);
   const opened = await restoreEntrance(page, 14);
   expect(opened.research.nodes.find((n) => n.id === 'entrance-4')?.state).toBe('restored');
-  expect(opened.intake.entrances.map((e) => e.open)).toEqual([true, true, true, true]);
+  // 064: the fifth stays capped until a Conductor core.
+  expect(opened.intake.entrances.map((e) => e.open)).toEqual([true, true, true, true, false]);
   expect(opened.inventory['forgewright-core']).toBe(before - 1);
-  // Every cap has lifted off.
-  await expect.poll(async () => (await ui(page))?.intakeCaps).toBe(0);
+  // Every cap but the fifth's has lifted off.
+  await expect.poll(async () => (await ui(page))?.intakeCaps).toBe(1);
   await feedLines(page, [11, 12, 13, 14].map((tx) => ({ tx, itemId: 'arrow', amount: 'half' as const })), 3);
   const shot = await page.evaluate(() => {
     const g = window.__GAME__;

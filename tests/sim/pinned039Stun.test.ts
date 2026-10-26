@@ -93,8 +93,8 @@ describe('039 pins: Stun (the wall daze and Rollbreaker keep their own timing, 0
       run(s, 1, fireAt(PLAYER_AT.x + 137, PLAYER_AT.y + 41));
       expect(runUntil(s, () => s.events.mineArms.length > 0, 200)).toBe(40);
       expect(runUntil(s, () => s.events.mineBursts.length > 0, 600)).toBe(300);
-      // 053 moved the meadow +4, +64 tiles and 060 +31, +31: the pinned point (2713, 921) moved with it.
-      expect(s.events.mineBursts[0]).toMatchObject({ x: 2713 + (4 + 31) * 32, y: 921 + (64 + 31) * 32, radius: 24 });
+      // 053 moved the meadow +4, +64 tiles and 060 and 064 +31, +31 each: the pinned point (2713, 921) moved with it.
+      expect(s.events.mineBursts[0]).toMatchObject({ x: 2713 + (4 + 62) * 32, y: 921 + (64 + 62) * 32, radius: 24 });
     }
   });
 });

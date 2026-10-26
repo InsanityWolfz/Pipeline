@@ -1,7 +1,7 @@
 // Layouts for the HUD pieces and the crafting menu added in 005. Px values
 // tuned by eye; colours are palette ids.
 
-import { CRAFT_TAB_ROWS, CRAFT_TABS } from './craftTabs';
+import { CRAFT_TAB_COLUMNS, CRAFT_TAB_ROWS, CRAFT_TABS } from './craftTabs';
 
 /** The harvest progress bar over a node: size, gap above the sprite, and palette ids. */
 export const HARVEST_BAR = { w: 20, h: 3, gap: 2, border: 1, color: 'cyan', back: 'ink' } as const;
@@ -56,6 +56,9 @@ const CRAFT_ROWS_AT = { x: 6, y: 6 } as const;
 /** The crafting menu's tabs (047): a column down the panel's left, `w` x `h` each, `gap` px apart; icon and name inside. */
 const CRAFT_TAB = { w: 74, h: 22, gap: 2, icon: { x: 3, y: 3 }, name: { x: 22, y: 8 } } as const;
 const CRAFT_TAB_GAP = 6;
+/** 062: the gap between the stone rows' column and the tier rows' column beside it. */
+const CRAFT_COLUMN_GAP = 6;
+const craftRowsWidth = CRAFT_TAB_COLUMNS * CRAFT_ROW.w + (CRAFT_TAB_COLUMNS - 1) * CRAFT_COLUMN_GAP;
 const craftRowsHeight = CRAFT_TAB_ROWS * CRAFT_ROW.h + (CRAFT_TAB_ROWS - 1) * CRAFT_ROW.gap;
 const craftTabsHeight = CRAFT_TABS.length * CRAFT_TAB.h + (CRAFT_TABS.length - 1) * CRAFT_TAB.gap;
 
@@ -67,7 +70,7 @@ const craftTabsHeight = CRAFT_TABS.length * CRAFT_TAB.h + (CRAFT_TABS.length - 1
  * top-left, then from each row's or tab's top-left.
  */
 export const CRAFT_MENU_LAYOUT = {
-  width: CRAFT_ROWS_AT.x + CRAFT_TAB.w + CRAFT_TAB_GAP + CRAFT_ROW.w + CRAFT_ROWS_AT.x,
+  width: CRAFT_ROWS_AT.x + CRAFT_TAB.w + CRAFT_TAB_GAP + craftRowsWidth + CRAFT_ROWS_AT.x,
   height: CRAFT_ROWS_AT.y * 2 + Math.max(craftRowsHeight, craftTabsHeight),
   /** The tabs' column: its top-left inside the panel, each tab's size and gap, and where its icon and name sit. */
   tabsAt: CRAFT_ROWS_AT,
@@ -78,6 +81,8 @@ export const CRAFT_MENU_LAYOUT = {
   tabClosedAlpha: 0.7,
   /** First row's top-left inside the panel. */
   rowsAt: { x: CRAFT_ROWS_AT.x + CRAFT_TAB.w + CRAFT_TAB_GAP, y: CRAFT_ROWS_AT.y },
+  /** 062: a tab's tier rows stand in a second column, this far right of the first's left edge. */
+  tierColumnX: CRAFT_ROW.w + CRAFT_COLUMN_GAP,
   rowWidth: CRAFT_ROW.w,
   rowHeight: CRAFT_ROW.h,
   rowGap: CRAFT_ROW.gap,
@@ -109,11 +114,15 @@ export const CRAFT_MENU_LAYOUT = {
 export const BUILD_BAR_LAYOUT = {
   /** Distance from the screen's bottom edge to the cells' bottom. */
   bottom: HUD_LAYOUT.margin,
-  cellStep: CELL.step,
+  /**
+   * 062: 1 px closer than the hotbar's cells, and the groups 6 px apart (was 12), so the Forge group fits the view too;
+   * 064: 2 px closer (the cells touch), so the Lightning rune's piece fits beside it.
+   */
+  cellStep: CELL.step - 2,
   cellWidth: CELL.w,
   cellHeight: CELL.h,
   icon: { x: 4, y: 6 },
-  groupGap: 12,
+  groupGap: 6,
   /** The divider: a line this colour (palette id) and alpha, from the label row's top to `inset` px above the cells' bottom. */
   divider: { color: 'brass', alpha: 0.7, width: 1, inset: 2 },
   label: { h: 9, gap: 2 },

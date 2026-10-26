@@ -1,4 +1,4 @@
-import { machineDef, pieceDef } from '../data/pieces';
+import { machineDef, machineRecipeIds, pieceDef } from '../data/pieces';
 import { recipeDef, type RecipeDef } from '../data/recipes';
 import { SHRINE_SITE } from '../data/rooms';
 import { stageDef, stageRecipeFor, stageRow, STAGE_ROWS, STAGES, type StageDef, type StageRow } from '../data/stages';
@@ -23,10 +23,19 @@ export function stageOf(pieceId: string): StageDef | null {
 }
 
 
-/** The recipe a machine runs: its own, or for a stage the one on the round it's working on. */
+/** Every recipe an ordinary machine runs (062: its own, then its tier variants), in turn order. */
+export const machineRecipes = (pieceId: string): RecipeDef[] => machineRecipeIds(machineDef(pieceId)).map(recipeDef);
+
+/**
+ * The recipe a machine runs now (or last ran): for an ordinary machine the one of its recipes (062: its own or a tier
+ * variant) that makes what it's making, for a stage the one on the round it's working on.
+ */
 export function machineRecipe(m: Pick<MachineState, 'pieceId' | 'made'>): RecipeDef {
   const st = stageOf(m.pieceId);
-  if (!st) return recipeDef(machineDef(m.pieceId).recipeId);
+  if (!st) {
+    const all = machineRecipes(m.pieceId);
+    return all.find((r) => r.output.itemId === m.made) ?? recipeDef(machineDef(m.pieceId).recipeId);
+  }
   const r = stageRecipeFor(st, withoutTag(m.made, st.tag));
   if (!r) throw new Error(`Stage '${st.id}' can't make '${m.made}'`);
   return r;

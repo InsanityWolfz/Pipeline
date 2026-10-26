@@ -21,6 +21,7 @@ import { COLD } from '../data/tags';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
 import { bulwarkPose, drawSeam, riseShown } from './bulwarkLook';
 import { forgePose } from './forgewrightLook';
+import { conductorPose } from './conductorLook';
 import { drawTelegraph } from './telegraphs';
 import { destroyEnemyBar, drawEnemyBar, makeEnemyBar, type EnemyBar, type EnemyBarShown } from './enemyBar';
 import { destroyHollowsArt, drawHollowsArt, makeHollowsArt, shownOf, type HollowsArt, type HollowsEnemiesShown } from './hollowsEnemyArt';
@@ -66,7 +67,7 @@ interface Drawn {
 /** `ui()`'s enemy part before the scene has built its views. */
 export const NO_ENEMY_UI: { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown; enemyBars: EnemyBarShown[]; enemyFlames: number } = {
   champions: [],
-  hollowsEnemies: { ripples: 0, flares: 0, lasers: [], waveShades: 0 },
+  hollowsEnemies: { ripples: 0, flares: 0, lasers: [], waveShades: 0, beams: [] },
   enemyBars: [],
   enemyFlames: 0,
 };
@@ -126,7 +127,7 @@ export class EnemyView {
       if (d.angle !== undefined && Math.abs(d.angle - e.angle) > 1e-6) d.turnUntil = now + HOLLOWS_LOOK.turnHoldMs;
       d.angle = e.angle;
       // A shielded enemy (the Bulwark, 034; the Shardback, 035) shuffles round and rocks behind its shield on a block.
-      const pose = def.shield ? bulwarkPose(e, now < (d.turnUntil ?? 0)) : def.kind === 'forgewright' ? forgePose(e) : poseOf(e);
+      const pose = def.shield ? bulwarkPose(e, now < (d.turnUntil ?? 0)) : def.kind === 'forgewright' ? forgePose(e) : def.kind === 'conductor' ? conductorPose(e) : poseOf(e);
       // Enemies without a recover pose stand idle through it.
       // Optional poses (`recover`, and the Bulwark's extras, 034) fall back to idle where an enemy has none.
       const anim = anims[`${pose}-${view}`] ?? anims[`idle-${view}`];
@@ -249,7 +250,7 @@ export class EnemyView {
 
   /** What the test hook's `ui()` reads here: the champions (032), Region 2's four's extras (035) and the bars (054). */
   get ui(): { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown; enemyBars: EnemyBarShown[]; enemyFlames: number } {
-    const hollowsEnemies: HollowsEnemiesShown = { ripples: 0, flares: 0, lasers: [], waveShades: 0 };
+    const hollowsEnemies: HollowsEnemiesShown = { ripples: 0, flares: 0, lasers: [], waveShades: 0, beams: [] };
     for (const [id, d] of this.drawn) {
       if (this.last.has(id)) shownOf(id, this.last.get(id) as EnemyState, d.hollows, hollowsEnemies);
       if (d.waveShaded && d.telegraph.visible) hollowsEnemies.waveShades += 1;

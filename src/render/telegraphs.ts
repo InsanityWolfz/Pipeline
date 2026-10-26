@@ -6,10 +6,12 @@ import { drawPound, drawRise, drawStomp, drawWave } from './bulwarkLook';
 import { colorOf } from './color';
 import { drawHollowsTelegraph } from './hollowsTelegraphs';
 import { drawForgeTelegraph } from './forgewrightLook';
+import { drawConductorTelegraph } from './conductorLook';
+import { drawEmberTelegraph } from './emberTelegraphs';
 
 // Each enemy's wind-up telegraph on the ground, filling in as it runs (004, 009, 034, 035):
 // a Husk's swipe arc at its real reach and angle, a Wisp's tightening ring and aim line, the
-// Warden's slam circle at its real radius, the Bulwark's pound, Region 2's four's, and the Forgewright's (060).
+// Warden's slam circle at its real radius, the Bulwark's pound, Region 2's four's, the Forgewright's (060), the Emberworks' (061) and the Conductor's (064).
 
 /** Draws it; returns whether the Bulwark's back wave was shaded (054), for `ui()`. */
 export function drawTelegraph(g: GameObjects.Graphics, e: EnemyState): boolean {
@@ -21,7 +23,9 @@ export function drawTelegraph(g: GameObjects.Graphics, e: EnemyState): boolean {
   if (def.kind === 'bulwark' && e.mode === 'stomp-windup') drawStomp(g, e);
   // 060: the Forgewright's slam circle, spray cone and flooded half.
   else if (def.kind === 'forgewright') drawForgeTelegraph(g, e, def);
-  else if (!drawHollowsTelegraph(g, e, def)) drawAttack(g, e, def);
+  // 064: the Conductor's lash line and rod chain lines.
+  else if (def.kind === 'conductor') drawConductorTelegraph(g, e, def);
+  else if (!drawHollowsTelegraph(g, e, def) && !drawEmberTelegraph(g, e, def)) drawAttack(g, e, def);
   return waveShaded;
 }
 

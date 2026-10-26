@@ -5,8 +5,9 @@ import { worldOffsets } from './worldOffsets';
 
 // 060 slice 1: the world grows to fit the Emberworks, and the centre moves to the grid's middle. The move is pure:
 // every landmark, node, pack, road, ley line, pylon and arena tile keeps its offset from the foundry's door, taken
-// from main before the move (worldOffsets.json), and Region 1's generated ground is the same. 060's new places, roads
-// and the like are added after the old ones, so everything in the snapshot is still there, unchanged.
+// before the move (worldOffsets.json), and the generated ground is the same. 064 slice 1 did it again for the
+// Stormcrown, from a snapshot retaken before its move. New places, roads and the like are added after the old ones, so
+// everything in the snapshot is still there, unchanged.
 
 /** An entry's id, if it has one. */
 const idOf = (v: unknown): unknown => (v !== null && typeof v === 'object' && 'id' in v ? v.id : undefined);
@@ -27,25 +28,30 @@ function unkept(now: unknown, then: unknown, path = ''): string[] {
   return Object.is(now, then) ? [] : [`${path}: ${String(now)}, was ${String(then)}`];
 }
 
-describe('the world grows (060)', () => {
+describe('the world grows (060, 064)', () => {
   const now = worldOffsets() as typeof SNAPSHOT;
 
-  it('puts the centre in the middle of a grid grown for the Emberworks', () => {
-    expect(WORLD_SHAPE.size).toBe(230);
-    expect(WORLD_SHAPE.centre).toEqual({ tx: 115, ty: 115 });
-    expect(WORLD_SHIFT).toEqual({ dx: 31, dy: 31 });
+  it('puts the centre in the middle of a grid grown for the Stormcrown (064)', () => {
+    expect(WORLD_SHAPE.size).toBe(292);
+    expect(WORLD_SHAPE.centre).toEqual({ tx: 146, ty: 146 });
+    expect(WORLD_SHIFT).toEqual({ dx: 62, dy: 62 });
   });
 
   it('keeps every hand-placed tile at its offset from the centre', () => {
-    // But one: 060 slice 3 moved the Cistern Terrace's ley line's last stretch south to make room for the Ash Kilns'
-    // (it still starts at its pylon and ends on the ruin; tests/data/leyLines.test.ts holds it to the line rules).
-    const { 'cistern-terrace': moved, ...lines } = SNAPSHOT.overworld.leyLines;
+    // But two: 064 slice 3 moved the Ley Grotto's and the Husk Hive's ley lines' arrivals at the ruin apart, to make room
+    // for the Weathervane's between them (each still starts at its pylon and ends on the ruin; tests/data/leyLines.test.ts
+    // holds them to the line rules).
+    const { 'ley-grotto': grotto, 'husk-hive': hive, ...lines } = SNAPSHOT.overworld.leyLines;
     const then = { ...SNAPSHOT, overworld: { ...SNAPSHOT.overworld, leyLines: lines } };
-    for (const k of ['landmarks', 'overworld', 'roads', 'roadPoints', 'pylons', 'arenas', 'hollows'] as const) expect(unkept(now[k], then[k]), k).toEqual([]);
-    expect(now.overworld.leyLines['cistern-terrace']?.[0]).toEqual(moved[0]);
+    for (const k of ['landmarks', 'overworld', 'roads', 'roadPoints', 'pylons', 'arenas', 'hollows', 'emberworks'] as const) expect(unkept(now[k], then[k]), k).toEqual([]);
+    expect(now.overworld.leyLines['ley-grotto']?.[0]).toEqual(grotto[0]);
+    expect(now.overworld.leyLines['husk-hive']?.[0]).toEqual(hive[0]);
   });
 
-  it('generates the same Region 1 round the centre', () => {
+  it('generates the same ground round the centre, out to the Hollows\' edge', () => {
+    // The ground out to the Emberworks' edge was the same after the move itself (slice 1, `ground`); from slice 2 the
+    // Stormcrown's roads and ramps cross the Emberworks, whose generator keeps off roads, so its ground is held to them.
     expect(now.region1Ground).toEqual(SNAPSHOT.region1Ground);
+    expect(now.hollowsGround).toEqual(SNAPSHOT.hollowsGround);
   });
 });

@@ -27,7 +27,9 @@ export type StatId =
   | 'firing-walk'
   | 'roll-cooldown'
   | 'roll-distance'
-  | 'spread-radius';
+  | 'spread-radius'
+  | 'chains'
+  | 'chain-range';
 
 /**
  * How a stat's own value reads, for a `flat` change and for totals: `count` whole, `seconds` from ticks to 1 decimal,
@@ -77,4 +79,7 @@ export const STATS: Readonly<Record<StatId, StatDef>> = {
   'roll-distance': stat('roll-distance', 'roll distance', 'px'),
   // 060: how far a dying enemy's burn spreads (Fire's own; a Burst's `radius` would widen Fire bombs' bursts too).
   'spread-radius': stat('spread-radius', 'spread radius', 'tiles'),
+  // 064: Lightning's own, how many arcs a chain makes and how far each reaches (a Burst's `radius` would widen Lightning bombs' bursts).
+  chains: stat('chains', 'chain', 'count'),
+  'chain-range': stat('chain-range', 'chain range', 'tiles'),
 };

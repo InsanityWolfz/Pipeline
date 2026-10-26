@@ -75,7 +75,7 @@ test('the guided tutorial plays from leaving the foundry to its end', async ({ p
     const s = g.step(1, { restore: 'entrance-2' });
     return s.intake.entrances.map((e) => e.open);
   }, T);
-  expect(opened).toEqual([false, true, true, false]);
+  expect(opened).toEqual([false, true, true, false, false]);
   await expectGoal(page, 14);
 
   // 14. The ley bolt line, piece by piece on its ghosts, until ley bolts reach the right entrance.
@@ -158,7 +158,7 @@ test('the guided tutorial plays from leaving the foundry to its end', async ({ p
   await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark' && e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
+    for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark' && e.enemyId !== 'forgewright' && e.enemyId !== 'conductor') g.setEnemyHealth(e.id, 0);
     g.step(1);
   });
   await trek(page, [[TERRACE.tx, TERRACE.ty + 5], [TERRACE.tx, TERRACE.ty + 1]]);
@@ -204,7 +204,7 @@ test('the guided tutorial plays from leaving the foundry to its end', async ({ p
     h.walkTo(11.5 * tile, 1.5 * tile);
     return g.step(1, { restore: 'entrance-3' }).intake.entrances.map((e) => e.open);
   }, T);
-  expect(third).toEqual([true, true, true, false]);
+  expect(third).toEqual([true, true, true, false, false]);
   await expectGoal(page, 25);
 
   // 25. Building is open: the left entrance's floor tile is reached by an underground pair from below the example

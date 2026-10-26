@@ -2,10 +2,16 @@ import type { EnemyDef, MeleeDef } from '../data/enemies';
 import { bulwarkThink } from './bulwarkAi';
 import { forgewrightThink } from './forgewrightAi';
 import { stepBellows } from './forgewrightParts';
+import { conductorThink } from './conductorAi';
+import { stepRods } from './conductorRods';
 import { chargeThink } from './chargerAi';
 import { burrowThink } from './burrowerAi';
 import { shardThink } from './shardbackAi';
 import { snipeThink } from './sniperAi';
+import { moteThink } from './moteAi';
+import { houndThink } from './houndAi';
+import { golemThink } from './golemAi';
+import { tenderThink } from './tenderAi';
 import { defOf } from './champions';
 import { castThink } from './casterAi';
 import { chillScale, chillSlow, tickCold } from './cold';
@@ -50,6 +56,8 @@ export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBod
     if (e.blockFlash > 0) e.blockFlash -= 1;
     // 060: the Forgewright's vent and broken bellows count down whatever it does, frozen too.
     if (def.kind === 'forgewright') stepBellows(state, e, def);
+    // 064: the Conductor's broken rods regrow whatever it does, frozen too.
+    if (def.kind === 'conductor') stepRods(state, e, def);
     // A frozen enemy doesn't think (029): its wind-up pauses where it is. A chilled one walks slower.
     // A Stunned one (039) holds, then chases again; a Charger's wall daze is its own think's (stun.ts).
     const thought: [number, number] = stunHolds(e) ? holdStunned(e) : e.frozen > 0 ? [0, 0] : thinkOf(state, e, def);
@@ -62,15 +70,15 @@ export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBod
     e.vx = hitX ? 0 : mx;
     e.vy = hitY ? 0 : my;
     e.bumped = hitX || hitY;
-    // A shielded enemy (034), and the Forgewright (060), faces its continuous angle.
-    if (def.shield || def.kind === 'forgewright') e.facing = aimFacing(Math.cos(e.angle), Math.sin(e.angle), e.facing);
+    // A shielded enemy (034), the Forgewright (060) and the Conductor (064) face their continuous angle.
+    if (def.shield || def.kind === 'forgewright' || def.kind === 'conductor') e.facing = aimFacing(Math.cos(e.angle), Math.sin(e.angle), e.facing);
     else e.facing = attacking(e) ? aimFacing(e.swipeDirX, e.swipeDirY, e.facing) : aimFacing(e.vx, e.vy, e.facing);
     tickCold(state, e);
   }
   separate(state.enemies, bodies);
 }
 
-/** Each kind's AI: the Husk's here, the Wisp's, the Warden's, the Bulwark's (034) and Region 2's four (035) in their own files. */
+/** Each kind's AI: the Husk's here, the Wisp's, the Warden's, the Bulwark's (034), Region 2's four (035), the Emberworks' (061) and the Conductor's (064) in their own files. */
 function thinkOf(state: SimState, e: EnemyState, def: EnemyDef): [number, number] {
   switch (def.kind) {
     case 'melee':
@@ -91,6 +99,16 @@ function thinkOf(state: SimState, e: EnemyState, def: EnemyDef): [number, number
       return shardThink(state, e, def);
     case 'sniper':
       return snipeThink(state, e, def);
+    case 'mote':
+      return moteThink(state, e, def);
+    case 'hound':
+      return houndThink(state, e, def);
+    case 'golem':
+      return golemThink(state, e, def);
+    case 'tender':
+      return tenderThink(state, e, def);
+    case 'conductor':
+      return conductorThink(state, e, def);
   }
 }
 

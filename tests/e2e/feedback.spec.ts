@@ -63,7 +63,7 @@ test('Leave feedback on the end card opens the note over it, and closing it retu
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
       g.step(0);
-      // 060: the Forgewright's first kill ends the demo.
+      // 060: the Forgewright's first kill ends the demo (064: the Conductor's).
       const b = g.getState().enemies.find((e) => e.enemyId === boss);
       if (b) g.setEnemyHealth(b.id, 0);
       g.step(n + 1);

@@ -5,7 +5,9 @@
 // (home.ts). Tile coordinates throughout. Numbers are tuning values.
 
 import { EMBERWORKS } from './emberworks';
+import { STORMCROWN } from './stormcrown';
 import { ANVIL_HALL } from './emberworksSites';
+import { CROWN_SPIRE } from './stormcrownSites';
 import { GROTTO } from './grotto';
 import { HOLLOWS, regionAt } from './hollows';
 import { ARRIVE, ENTRANCE, FIELD_WALLS, HOME_SHIFT, MEADOW_VEIN, MOUND, SHRINE, SHRINE_DOOR, SHRINE_PYLON, SHRINE_SHIFT, shrineWalls } from './home';
@@ -107,6 +109,8 @@ export const OVERWORLD = {
     { group: HOLLOWS.arena.id, enemyId: HOLLOWS.arena.boss, tx: HOLLOWS.arena.start.tx, ty: HOLLOWS.arena.start.ty },
     // 060: the Forgewright at its start in the Anvil Hall, in the hall's group, by the same rule.
     { group: ANVIL_HALL.id, enemyId: ANVIL_HALL.boss, tx: ANVIL_HALL.start.tx, ty: ANVIL_HALL.start.ty },
+    // 064: the Conductor at its start rod in the Crown Spire, in the spire's group, by the same rule.
+    { group: CROWN_SPIRE.id, enemyId: CROWN_SPIRE.boss, tx: CROWN_SPIRE.start.tx, ty: CROWN_SPIRE.start.ty },
   ],
   /**
    * Ley lines (018, 053): each pylon's line home, one smooth curve to the foundry's ruin, and the seams its veins stand
@@ -155,17 +159,20 @@ export const OVERWORLD = {
     shrine({ nodeId: 'reeds', tx: 112, ty: 13 }),
     shrine({ nodeId: 'rubble', tx: 103, ty: 5 }),
     // The landmarks' (032): the Frozen Grotto's rime outcrops (029) first, then each site's cluster.
-    ...LANDMARK_LIST.filter((l) => l.ring !== EMBERWORKS.ring).flatMap((l) => l.nodes),
+    ...LANDMARK_LIST.filter((l) => l.ring < EMBERWORKS.ring).flatMap((l) => l.nodes),
     // Stonefall Hollows' seams outside its landmarks (034).
     ...HOLLOWS.nodes,
     // 060: the Emberworks' landmarks' (the Cinder Vents'), last, so every earlier node keeps its index.
     ...LANDMARK_LIST.filter((l) => l.ring === EMBERWORKS.ring).flatMap((l) => l.nodes),
+    // 064: the Stormcrown's (the Rod Field's storm rods), after them.
+    ...LANDMARK_LIST.filter((l) => l.ring === STORMCROWN.ring).flatMap((l) => l.nodes),
   ],
 } as const;
 
-/** The ring a tile is in: 0 near the foundry, 1 the near field, 2 the shrine's ground out to the barrier, 3 anywhere in Stonefall Hollows (034), 4 in the Emberworks (060), each its region's (regionAt). */
+/** The ring a tile is in: 0 near the foundry, 1 the near field, 2 the shrine's ground out to the barrier, 3 anywhere in Stonefall Hollows (034), 4 in the Emberworks (060), 5 in the Stormcrown (064), each its region's (regionAt). */
 export function ringOf(tx: number, ty: number): Ring {
   const region = regionAt(tx, ty);
+  if (region === STORMCROWN.region) return STORMCROWN.ring;
   if (region === EMBERWORKS.region) return EMBERWORKS.ring;
   if (region === HOLLOWS.region) return HOLLOWS.ring;
   const { bounds } = OVERWORLD.rings;

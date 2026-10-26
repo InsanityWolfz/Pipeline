@@ -52,6 +52,8 @@ test('the pause menu: Resume, Settings (back to the pause menu), and Quit to tit
 });
 
 test('settings persist across a reload: music 30%, flashes off, roll on Shift (and Shift rolls); a used key swaps', async ({ page }) => {
+  // 064: two boots and a new game on the bigger world run past the default 30 s on CI.
+  test.setTimeout(60_000);
   await bootTitle(page);
   await clickRow(page, 'settings');
   await flowIs(page, 'settings');

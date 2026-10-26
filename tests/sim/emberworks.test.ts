@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { EMBERWORKS, EMBERWORKS_GATE, inEmberworks, rampTiles } from '../../src/data/emberworks';
 import { SLAG_RIVER_TILES } from '../../src/data/emberworksSites';
+import { STORMCROWN, stormRampTiles } from '../../src/data/stormcrown';
+import { SKY_CHASM_TILES } from '../../src/data/stormcrownSites';
 import { HOLLOWS, inHollows, regionAt } from '../../src/data/hollows';
 import { RING_XP } from '../../src/data/leveling';
 import { OVERWORLD, ringOf } from '../../src/data/overworld';
@@ -34,12 +36,13 @@ describe('the ring', () => {
 
   it('is danger ring 4 and region 3 anywhere in it past its barrier; the Hollows’ ground stops at its edge', () => {
     for (let b = 0; b < 360; b += 15) {
-      for (const r of [EMBERWORKS.ramp.gateAt + 1, (inner + outer) / 2, outer - 1, outer + 2]) {
+      // 064: past `outer` is the Stormcrown's cliff edge, still ring 4 and region 3 to its barrier, in the Stormcrown's look (tests/sim/stormcrown.test.ts).
+      for (const r of [EMBERWORKS.ramp.gateAt + 1, (inner + outer) / 2, outer - 1, outer + 1]) {
         const t = polar(b, r);
         expect(ringOf(t.tx, t.ty), `${b}° ${r}`).toBe(4);
         expect(regionAt(t.tx, t.ty), `${b}° ${r}`).toBe(3);
         expect(inHollows(t.tx, t.ty), `${b}° ${r}`).toBe(false);
-        expect(inEmberworks(t.tx, t.ty), `${b}° ${r}`).toBe(true);
+        expect(inEmberworks(t.tx, t.ty), `${b}° ${r}`).toBe(r < outer);
       }
       const h = polar(b, inner - 1);
       expect([ringOf(h.tx, h.ty), regionAt(h.tx, h.ty), inHollows(h.tx, h.ty), inEmberworks(h.tx, h.ty)]).toEqual([3, 2, true, false]);
@@ -83,10 +86,11 @@ describe('the ring', () => {
     expect(WALKABLE).toContain(TILE.ramp);
   });
 
-  it('ends past its outer radius in a ragged cliff edge out to the grid’s edge, never a bare wall', () => {
-    // 060 slice 3: the Slag River runs half a tile into it, solid to feet too.
-    const river = new Set(SLAG_RIVER_TILES.map(tileKey));
-    for (let ty = 0; ty < WORLD_SHAPE.size; ty++) for (let tx = 0; tx < WORLD_SHAPE.size; tx++) if (fromCentre(tx, ty) > outer && !river.has(`${tx},${ty}`)) expect(at(tx, ty), `${tx},${ty}`).toBe(TILE.cliff);
+  it('ends past its outer radius in a ragged cliff edge, never a bare wall (064: the Stormcrown past it, up its ramps)', () => {
+    // 060 slice 3: the Slag River runs half a tile into it, solid to feet too (064: and the Sky-bridge's chasm).
+    const river = new Set([...SLAG_RIVER_TILES, ...SKY_CHASM_TILES, ...STORMCROWN.ramps.flatMap(stormRampTiles)].map(tileKey));
+    const foot = STORMCROWN.radii.inner + STORMCROWN.wall;
+    for (let ty = 0; ty < WORLD_SHAPE.size; ty++) for (let tx = 0; tx < WORLD_SHAPE.size; tx++) if (fromCentre(tx, ty) > outer && fromCentre(tx, ty) < foot && !river.has(`${tx},${ty}`)) expect(at(tx, ty), `${tx},${ty}`).toBe(TILE.cliff);
     for (const t of SLAG_RIVER_TILES) if (fromCentre(t.tx, t.ty) > outer) expect(t.symbol).toBe(TILE.slag);
     const band = room.rows.flatMap((row, ty) => [...row].map((s, tx) => ({ s, d: fromCentre(tx, ty) }))).filter((t) => t.d > outer - 1 && t.d <= outer);
     expect(band.some((t) => t.s === TILE.cliff)).toBe(true);
@@ -107,7 +111,7 @@ describe('the ring', () => {
     for (const r of EMBERWORKS.ramps) for (const t of rampTiles(r)) expect(at(t.tx, t.ty), `${r.id} ${t.tx},${t.ty}`).toBe(TILE.ramp);
   });
 
-  it('spawns no packs (061 brings its enemies): only the Forgewright, in its hall', () => {
+  it("holds only the Forgewright in its hall, the Ash Kilns' guards and (061) its own packs", () => {
     const s = createSim(3, { start: HOLLOWS_START });
     s.populated = true;
     s.bossDefeats.push('bulwark');
@@ -116,8 +120,11 @@ describe('the ring', () => {
       movePlayer(s, top.x, top.y);
       run(s, 300);
     }
-    expect(s.enemies.filter((e) => e.roomId === OVERWORLD.id && ringOf(Math.floor(e.x / 32), Math.floor(e.y / 32)) === 4).map((e) => [e.enemyId, e.group])).toEqual([['forgewright', 'anvil-hall']]);
-    expect(s.population.slots.every((p) => p.ring !== (4 as number))).toBe(true);
+    const ring4 = s.enemies.filter((e) => e.roomId === OVERWORLD.id && ringOf(Math.floor(e.x / 32), Math.floor(e.y / 32)) === 4);
+    expect(ring4.filter((e) => e.enemyId === 'forgewright').map((e) => e.group)).toEqual(['anvil-hall']);
+    for (const e of ring4.filter((x) => x.enemyId !== 'forgewright')) expect(e.group === 'ash-kilns' || e.group.startsWith('pop-4-'), e.group).toBe(true);
+    expect(s.population.slots.filter((p) => p.ring === 4).length).toBe(12);
+    expect(ring4.some((e) => e.group.startsWith('pop-4-'))).toBe(true);
   });
 });
 
@@ -171,7 +178,7 @@ describe('the barrier (060)', () => {
   it('is shut on every start, and reported', () => {
     expect(createSim(1).gates.emberworks).toBe(false);
     expect(createSim(1, { start: HOLLOWS_START }).gates.emberworks).toBe(false);
-    expect(summarize(createSim(1)).gates).toEqual({ foundry: true, shrine: true, hollows: false, emberworks: false });
+    expect(summarize(createSim(1)).gates).toEqual({ foundry: true, shrine: true, hollows: false, emberworks: false, stormcrown: false });
   });
 
   it('blocks the player walking up the ramp', () => {

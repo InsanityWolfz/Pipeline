@@ -18,7 +18,7 @@ export async function intoHall(page: Page): Promise<void> {
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     g.step(1, { sandbox: { kind: 'god', on: true } });
-    ['arrow', 'arrow', 'arrow', null].forEach((round, entrance) => g.step(1, { sandbox: { kind: 'loadout', entrance, round } }));
+    ['arrow', 'arrow', 'arrow', null, null].forEach((round, entrance) => g.step(1, { sandbox: { kind: 'loadout', entrance, round } }));
     h.enterArena('anvil-hall');
     h.walkTo(spot.x, spot.y);
   }, FAN_SPOT);

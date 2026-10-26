@@ -33,8 +33,8 @@ test('a hurt player heals in the west spring and stops on stepping out', async (
   // Standing in the pool, the motes rise and the pool's light swells under the player.
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().healing))?.motes ?? 0).toBeGreaterThan(0);
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().healing))?.poolGlow).toBe('west-spring');
-  // 030's three, the Hollows' (034) and the Emberworks' (060).
-  expect((await page.evaluate(() => window.__GAME__?.ui().healing))?.springs).toBe(5);
+  // 030's three, the Hollows' (034), the Emberworks' (060) and the Stormcrown's (064).
+  expect((await page.evaluate(() => window.__GAME__?.ui().healing))?.springs).toBe(6);
 
   const rising = await page.evaluate(() => {
     const g = window.__GAME__;

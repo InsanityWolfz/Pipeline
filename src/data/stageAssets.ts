@@ -54,18 +54,21 @@ export const ROUND_LOOKS: Readonly<Record<string, { tint?: string; trail?: { col
   frost: { tint: 'foam', trail: { color: 'water-light', core: 'snow', points: 7, width: 3, alpha: 0.75 } },
   // 060: a fire round glows ember with a short flickering flame trail.
   fire: { tint: 'cinder-light', trail: { color: 'flame-dark', core: 'cinder-light', points: 8, width: 3.2, alpha: 0.8 } },
+  // 064: a lightning round crackles pale cyan with a short bright violet-white trail.
+  lightning: { tint: 'cyan-glow', trail: { color: 'storm-glow', core: 'snow', points: 6, width: 2.6, alpha: 0.85 } },
   homing: { trail: { color: 'cyan', core: 'cyan-glow', points: 20, width: 4, alpha: 0.9 } },
 };
 
-/** 054: a Shard's short trail in flight (a Cold one's in frost, 060: a Fire one's in flame), in ROUND_LOOKS' style, so a star shot's Shards read. */
+/** 054: a Shard's short trail in flight (a Cold one's in frost, 060: a Fire one's in flame, 064: a Lightning one's in storm violet), in ROUND_LOOKS' style, so a star shot's Shards read. */
 export const SHARD_TRAILS = {
   ley: { color: 'cyan', core: 'cyan-glow', points: 6, width: 2.5, alpha: 0.85 },
   cold: { color: 'water-light', core: 'snow', points: 6, width: 2.5, alpha: 0.8 },
   fire: { color: 'flame-dark', core: 'cinder-light', points: 6, width: 2.5, alpha: 0.8 },
+  lightning: { color: 'storm-glow', core: 'snow', points: 6, width: 2.2, alpha: 0.85 },
 } as const;
 
 /** The Split's flash (029): grows from `from` to `to` scale and fades over `ms`, at shot height. */
 export const SPLIT_FLASH = { ms: 280, from: 1, to: 2.2 } as const;
 
 /** 039.15: a Burst of an element flashes in its colours, its flash tinted toward this palette colour (a Cold Burst frost, 060: a Fire one ember); a Physical one is drawn as it is. */
-export const BURST_TINTS: Readonly<Partial<Record<DamageType, string>>> = { cold: 'water-light', fire: 'cinder' };
+export const BURST_TINTS: Readonly<Partial<Record<DamageType, string>>> = { cold: 'water-light', fire: 'cinder', lightning: 'cyan-glow' };

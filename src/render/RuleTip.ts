@@ -146,7 +146,12 @@ export class RuleTip {
     const flow = flowChips(c.chips, (l) => this.labels.width(l), { x: 0, y: 1, firstX: nameW + TIP.nameGap, right: inner, rowStep: TIP.nameRow });
     this.chipRows = Math.max(1, flow.rows);
     // Each line wrapped (and its short form), then fitted: the hint always shows, a short form before any cut (tipFit).
-    const lines = c.lines.map((l) => ({ rows: this.wrap(l, inner), ...(l.short ? { short: this.wrap({ text: l.short, ...(l.tone ? { tone: l.tone } : {}) }, inner) } : {}), keep: l.tone === 'hint' }));
+    const form = (l: TipLine, text: string | undefined) => (text === undefined ? undefined : this.wrap({ text, ...(l.tone ? { tone: l.tone } : {}) }, inner));
+    const lines = c.lines.map((l) => {
+      const short = form(l, l.short);
+      const shorter = form(l, l.shorter);
+      return { rows: this.wrap(l, inner), ...(short ? { short } : {}), ...(shorter ? { shorter } : {}), keep: l.tone === 'hint' };
+    });
     const fit = fitRows(lines, textRoom(this.chipRows, c.maxRows, c.maxH), (row) => {
       const last = row[row.length - 1];
       return last ? [...row.slice(0, -1), { ...last, text: `${last.text}${TIP.more}` }] : row;

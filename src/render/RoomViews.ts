@@ -20,6 +20,8 @@ import { NO_RESEARCH_SHOWN, ResearchView } from './ResearchView';
 import { NO_SCHEMATICS_SHOWN, SchematicView } from './SchematicView';
 import { HollowsView, NO_HOLLOWS_SHOWN } from './HollowsView';
 import { EmberworksView, NO_EMBERWORKS_SHOWN } from './EmberworksView';
+import { NO_STORMCROWN_SHOWN, StormcrownView } from './StormcrownView';
+import { ArcView } from './ArcView';
 import { NO_RELICS_SHOWN, RelicView } from './RelicView';
 import { NO_TALENT_FX, TalentFxView } from './TalentFxView';
 import { MineView, NO_MINES_SHOWN } from './MineView';
@@ -27,10 +29,10 @@ import { ArenaDoorView } from './ArenaDoorView';
 import type { ScreenBox } from './bottomHud';
 
 /** What the room views report to the test hook's `ui()`. */
-export type RoomUiState = Pick<UiState, 'minimap' | 'foundryMap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows' | 'emberworks' | 'relics' | 'talentFx' | 'mines' | 'overworldChunks' | 'arenaDoors' | 'banners' | 'bannerAlpha'>;
+export type RoomUiState = Pick<UiState, 'minimap' | 'foundryMap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows' | 'emberworks' | 'stormcrown' | 'lightningArcs' | 'relics' | 'talentFx' | 'mines' | 'overworldChunks' | 'arenaDoors' | 'banners' | 'bannerAlpha'>;
 
 /** The room views' part of `ui()` before the scene has built them. */
-export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [], hover: null }, foundryMap: NO_FOUNDRY_MAP, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN, emberworks: NO_EMBERWORKS_SHOWN, relics: NO_RELICS_SHOWN, talentFx: NO_TALENT_FX, mines: NO_MINES_SHOWN, overworldChunks: [], arenaDoors: [], banners: [], bannerAlpha: 0 };
+export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [], hover: null }, foundryMap: NO_FOUNDRY_MAP, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN, emberworks: NO_EMBERWORKS_SHOWN, stormcrown: NO_STORMCROWN_SHOWN, lightningArcs: 0, relics: NO_RELICS_SHOWN, talentFx: NO_TALENT_FX, mines: NO_MINES_SHOWN, overworldChunks: [], arenaDoors: [], banners: [], bannerAlpha: 0 };
 
 // The ground on screen: a tiled room (the foundry) or the overworld's terrain
 // with its landmarks (017), plus the corner minimap while outside, and the
@@ -57,6 +59,8 @@ export class RoomViews {
   private readonly schematics: SchematicView;
   private readonly hollows: HollowsView;
   private readonly emberworks: EmberworksView;
+  private readonly stormcrown: StormcrownView;
+  private readonly arcs: ArcView;
   private readonly relics: RelicView;
   private readonly talentFx: TalentFxView;
   private readonly mines: MineView;
@@ -79,6 +83,8 @@ export class RoomViews {
     this.schematics = new SchematicView(scene, this.banner);
     this.hollows = new HollowsView(scene);
     this.emberworks = new EmberworksView(scene);
+    this.stormcrown = new StormcrownView(scene);
+    this.arcs = new ArcView(scene);
     this.relics = new RelicView(scene);
     this.talentFx = new TalentFxView(scene);
     this.mines = new MineView(scene);
@@ -121,6 +127,9 @@ export class RoomViews {
     this.schematics.update(sim, events, shown, tweenMs);
     this.hollows.update(sim, events, shown, tweenMs);
     this.emberworks.update(sim, events, shown, tweenMs);
+    this.stormcrown.update(sim, events, shown, tweenMs);
+    // 064: lightning arcs, on the tween clock so a screenshot can hold them.
+    this.arcs.update(events, shown === sim.roomId, tweenMs);
     this.arenaDoors.update(sim, shown, tweenMs);
     this.relics.update(sim, events, shown, tweenMs);
     this.talentFx.update(sim, events, shown, tweenMs);
@@ -150,6 +159,8 @@ export class RoomViews {
       schematics: this.schematics.shown,
       hollows: this.hollows.shown,
       emberworks: this.emberworks.shown,
+      stormcrown: this.stormcrown.shown,
+      lightningArcs: this.arcs.shown,
       relics: this.relics.shown,
       talentFx: this.talentFx.shown,
       mines: this.mines.shown,

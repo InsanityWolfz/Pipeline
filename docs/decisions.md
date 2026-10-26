@@ -260,3 +260,14 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - The intake's middle is `INTAKE_MID_TX`, for any number of entrances.
   - `SAVE_VERSION` 13, no migration.
 
+- **061 Emberworks enemies:**
+  - Ground hazards are one list (`floodPools`) of shaped pools (rect, circle, capsule), each carrying its own damage and beat; owner-specific rules (the Forgewright's heat reset) are keyed by the owner's kind.
+  - The Charger's and the hound's dashes share `src/sim/laneRun.ts`; the caller decides what a wall does.
+  - Death hooks in `removeDead`: spawned whelps are pushed after the list is cut, so they act from the next tick; a `spent` enemy (a mote that burst on its own) skips its death record, drops, XP and death burst but still spreads its burn; `noLoot` skips the schematic and armour rolls.
+  - Enemy heals scale by ring and champion like damage, so a heal keeps pace with the health it repairs.
+
+- **062 material tiers:**
+  - A tier is a `+` segment right after the base (`arrow+steel+frost`), kept in its own `TIERS` table, not `TAGS` (a tag needs a keyword); `roundBase` and icon frame names keep working, `roundTags` filters tiers out.
+  - The tier multiplier is a rule step on the emission (`Emission.tier`, `ruleMuls`), set on rounds, Split Shards and Bomblets only, so every hit gets it once; Pool-bursts, Shatter shards and burn derive from an already-multiplied hit. Never in `damageEnemy`, which melee and burn beats also pass through.
+  - Machines can list recipe `variants`; `offer` accepts any variant's input, a craft picks the first full set by input order, and `machineRecipe` resolves from `made`, so hover, status and objectives agree.
+
