@@ -134,7 +134,7 @@ export function arrowHits(state: SimState, spawned: ArrowState[] = []): (arrow: 
 
 /**
  * Removes dead enemies, recording their deaths, dropping their loot and giving their XP (037). A cinder mote that
- * burst on its own (061: `spent`) just goes. A death rule (061: a killed mote's death burst, emberDeaths.ts) can kill
+ * burst on its own (061: `spent`) just goes, passing on only its burn. A death rule (061: a killed mote's death burst, emberDeaths.ts) can kill
  * others, so it passes again until none is left dead.
  */
 export function removeDead(state: SimState): void {
@@ -150,7 +150,11 @@ function removeDeadOnce(state: SimState): void {
   }
   state.enemies.length = kept;
   for (const e of dying) {
-    if (e.spent) continue;
+    // 061.22: a mote spent on its own burst still passes its burn on (060), but drops nothing, gives no XP and has no death burst.
+    if (e.spent) {
+      spreadBurn(state, e);
+      continue;
+    }
     const def = enemyDef(e.enemyId);
     state.events.deaths.push({ id: e.id, enemyId: e.enemyId, x: e.x, y: e.y, facing: e.facing, ...(e.champion ? { champion: true as const } : {}) });
     // A whelp (061) drops nothing at all.

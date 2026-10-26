@@ -4,6 +4,7 @@ import type { TenderDef } from '../../src/data/emberworksEnemies';
 import { createEnemy, damageEnemy, type EnemyState } from '../../src/sim/enemies';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
+import { applyStun } from '../../src/sim/stun';
 import { repairing } from '../../src/sim/tenderAi';
 import { arena, HALL, homeTile, movePlayer, PLAYER_AT, run, runUntil } from './fight';
 
@@ -89,6 +90,26 @@ describe('the kiln-tender', () => {
     run(s, 5);
     expect(t.mode).not.toBe('windup');
     expect(t.beamTarget).toBe(-1);
+
+    // Behind a solid: the meadow's rock cluster (charger.test.ts) between it, north, and its packmate, south, in range.
+    const rocks = arena();
+    const rock = homeTile(70, 34);
+    movePlayer(rocks, rock.x + MID, rock.y - 64);
+    const t2 = createEnemy(rocks.nextEnemyId++, 'kiln-tender', { x: rock.x, y: rock.y - 64 }, HALL, 'pack');
+    rocks.enemies.push(t2);
+    const g = createEnemy(rocks.nextEnemyId++, 'slag-golem', { x: rock.x, y: rock.y + 64 }, HALL, 'pack');
+    g.frozen = 100_000;
+    g.health = 10;
+    rocks.enemies.push(g);
+    expect(Math.hypot(g.x - t2.x, g.y - t2.y)).toBeLessThan(beam.range);
+    run(rocks, 5);
+    expect(t2.mode).not.toBe('windup');
+    expect(t2.beamTarget).toBe(-1);
+    // Moved out from behind the rocks, it's picked.
+    g.x = rock.x + 60;
+    g.y = rock.y - 64;
+    run(rocks, 1);
+    expect(t2.beamTarget).toBe(g.id);
   });
 
   it('heals its target `heal` a second through the channel, never past max health, its cooldown from the wind-up start', () => {
@@ -136,6 +157,25 @@ describe('the kiln-tender', () => {
     run(dies, 1);
     expect(t2.mode).toBe('recover');
     expect(dies.events.beamBreaks).toEqual([{ id: t2.id, target: g2.id, reason: 'died' }]);
+  });
+
+  it('a Stun in its wind-up or its channel ends the beam (061.10), with its break', () => {
+    for (const into of [5, beam.windupTicks + 5]) {
+      const s = arena();
+      const t = place(s, 'kiln-tender', MID);
+      const g = hurt(s, 'slag-golem', MID + 40, 0, 60);
+      run(s, 1 + into);
+      expect(t.beamTarget).toBe(g.id);
+      expect(applyStun(s, t, 40)).toBe(true);
+      expect(t.beamTarget).toBe(-1);
+      expect(s.events.beamBreaks).toEqual([{ id: t.id, target: g.id, reason: 'stunned' }]);
+      expect(repairing(s, g.id)).toBe(false);
+      const healed = g.health;
+      run(s, 40);
+      expect(g.health).toBe(healed);
+      expect(t.beamTarget).toBe(-1);
+      expect(summarize(s).enemies.find((e) => e.id === t.id)?.beam).toBeNull();
+    }
   });
 
   it('breaks on a line a solid blocks', () => {

@@ -12,9 +12,9 @@ export interface EmberEvents {
   golemSlams: { id: number; x: number; y: number; radius: number }[];
   /** A slag golem died and split (`splits` is the Split round's): where, and its whelps' ids. */
   golemSplits: { id: number; x: number; y: number; whelps: number[] }[];
-  /** A kiln-tender's beam began its wind-up on a packmate, and its channel broke (`blocked`, `died`, `hurt`). */
+  /** A kiln-tender's beam began its wind-up on a packmate, and its beam broke (`blocked`, `died`, `hurt`, or a Stun's `stunned`). */
   beams: { id: number; target: number }[];
-  beamBreaks: { id: number; target: number; reason: 'blocked' | 'died' | 'hurt' }[];
+  beamBreaks: { id: number; target: number; reason: 'blocked' | 'died' | 'hurt' | 'stunned' }[];
 }
 
 export function createEmberEvents(): EmberEvents {

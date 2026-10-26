@@ -85,6 +85,24 @@ describe('the cinder mote', () => {
     expect(s.events.deaths).toEqual([]);
   });
 
+  it('burning as it bursts on its own, it still passes its burn on (060), with no drop, XP or death burst', () => {
+    const s = arena();
+    const e = placeMote(s, 30);
+    const near = still(s, PLAYER_AT.x + 80, PLAYER_AT.y);
+    const xp = s.xp;
+    run(s, 1);
+    damageEnemy(s, e, 4, 0, 0, { knock: 0, flash: false, damageType: 'fire' });
+    expect(e.burnDps).toBeGreaterThan(0);
+    untilGone(s, e);
+    expect(e.spent).toBe(true);
+    expect([near.burnTicks > 0, near.burnDps]).toEqual([true, e.burnDps]);
+    expect(s.events.spreads).toEqual([{ from: e.id, to: [near.id], x: e.x, y: e.y }]);
+    expect(s.events.deaths).toEqual([]);
+    expect(s.events.deathBursts).toEqual([]);
+    expect(s.groundItems).toEqual([]);
+    expect(s.xp).toBe(xp);
+  });
+
   it('its pool beats once a second on the player standing in it, and never hurts an enemy', () => {
     const s = arena();
     const husk = still(s, PLAYER_AT.x + 30, PLAYER_AT.y + 10, 40);

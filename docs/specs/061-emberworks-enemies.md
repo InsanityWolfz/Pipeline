@@ -206,4 +206,6 @@ Spawning, drops and the rest:
 - 061.20 The e2e's "pen of Husks" is two ring 4 Husks spawned from the sandbox panel, with the killed mote between them.
 - 061.21 `SAVE_VERSION` is 14: enemies gained `spent`, `beamTarget` and `beamHeld`, and pools gained a shape, a radius
   and their own damage and beat.
+- 061.22 A burning mote that bursts on its own still passes its burn on as it goes (Fire's rule, 060: a burning enemy
+  that dies spreads its burn). It still drops nothing, gives no XP and sets off no death burst.
 

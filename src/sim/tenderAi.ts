@@ -13,7 +13,7 @@ import { roomById, type SimState } from './state';
 // channel breaks on a blocked line, the target's death, or any damage to the tender; then it recovers. It never
 // heals a boss, itself, or an enemy of another pack.
 
-type BreakReason = 'blocked' | 'died' | 'hurt';
+type BreakReason = 'blocked' | 'died' | 'hurt' | 'stunned';
 
 /** Advances a tender's mode and returns this tick's own move, px. */
 export function tenderThink(state: SimState, e: EnemyState, def: TenderDef): [number, number] {
@@ -95,6 +95,13 @@ function endBeam(state: SimState, e: EnemyState, reason: BreakReason): [number, 
   e.beamTarget = -1;
   enter(e, 'recover');
   return [0, 0];
+}
+
+/** A Stun (039) that takes on a tender mid-beam (its wind-up or channel) ends the beam, with its break (061.10). */
+export function stunEndsBeam(state: SimState, e: EnemyState): void {
+  if (e.beamTarget < 0 || (e.mode !== 'windup' && e.mode !== 'swipe')) return;
+  state.events.beamBreaks.push({ id: e.id, target: e.beamTarget, reason: 'stunned' });
+  e.beamTarget = -1;
 }
 
 /** A tick of the channel: `heal` a second into the target, never past its max health (ring and champion scaled). */
