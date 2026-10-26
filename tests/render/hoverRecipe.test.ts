@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { itemDef } from '../../src/data/items';
-import { recipeDef } from '../../src/data/recipes';
-import { machineLines } from '../../src/render/readoutLines';
+import { RECIPES, recipeDef } from '../../src/data/recipes';
+import { INTAKE } from '../../src/data/foundry';
+import { intakeLines, machineLines, READOUT_MAX_LINES } from '../../src/render/readoutLines';
 import { statusRecipe } from '../../src/sim/flow';
 import type { MachineState } from '../../src/sim/pieces';
 import { run } from '../sim/fight';
@@ -36,5 +37,15 @@ describe('a tier-aware machine’s hover and status (062)', () => {
     expect(m.status).toBe('blocked');
     expect(machineLines(m).slice(0, -1).map((l) => l[0])).toEqual(icons(Object.keys(statusRecipe(m).inputs)));
     expect(machineLines(m).at(-1)).toEqual([itemDef('arrow').icon, String(m.output)]);
+  });
+});
+
+describe('the hover readout has a line for every intake entrance (fix-playtest-ui)', () => {
+  it('fits all five of the intake\'s rows, and every recipe\'s inputs and output', () => {
+    const s = foundry();
+    const lines = intakeLines(s.link.entrances, 30);
+    expect(lines).toHaveLength(INTAKE.entrances.length);
+    expect(READOUT_MAX_LINES).toBeGreaterThanOrEqual(INTAKE.entrances.length);
+    for (const r of Object.values(RECIPES)) expect(READOUT_MAX_LINES).toBeGreaterThanOrEqual(Object.keys(r.inputs).length + 1);
   });
 });

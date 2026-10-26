@@ -3,21 +3,30 @@ import type { SimState } from '../sim/state';
 import type { GearPanelState } from './GearPanel';
 import type { Box } from './gearPanelLayout';
 
-/** Where the bench screen's tutorial arrow points (058.7): the identified piece's slot tab, then its row, which wears it. */
+/**
+ * Where the bench screen's tutorial arrow points (058.7): the identified piece's slot tab, then its row, which wears it;
+ * fix-playtest-ui: before that, the Identify all button.
+ */
 export interface BenchGuide {
-  target: 'tab' | 'row';
-  /** The piece it leads to. */
-  id: number;
+  target: 'identify' | 'tab' | 'row';
+  /** The piece it leads to (none for the Identify button). */
+  id: number | null;
   box: Box;
 }
 
 /**
- * 058 (Shaun: "maybe you put some little arrows in the menu"): while the goal is to equip a piece, the first piece
- * not worn: on another tab, the arrow points at its slot's tab; on its own tab, at its row, whose click wears it.
+ * 058 (Shaun: "maybe you put some little arrows in the menu"): while the goal is to identify, the Identify all button;
+ * while it's to equip a piece, the first piece not worn: on another tab, the arrow points at its slot's tab; on its own tab, at its row, whose click wears it.
  * Null once one is worn, off that goal, or with the piece's row scrolled out of sight.
  */
 export function benchGuide(sim: SimState, shown: GearPanelState): BenchGuide | null {
-  if (currentObjectiveDef(sim)?.check.kind !== 'equipped') return null;
+  const goal = currentObjectiveDef(sim)?.check.kind;
+  // fix-playtest-ui (Shaun: "there's no arrow pointing to the identify all button"): while the goal is to identify.
+  if (goal === 'identified') {
+    const b = shown.identify;
+    return b ? { target: 'identify', id: null, box: { x: b.x, y: b.y, w: b.w, h: b.h } } : null;
+  }
+  if (goal !== 'equipped') return null;
   const piece = sim.gear.find((p) => sim.equipped[p.slot] !== p.id);
   if (!piece) return null;
   if (shown.tab !== piece.slot) {
