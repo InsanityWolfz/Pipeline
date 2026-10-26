@@ -4,7 +4,6 @@ import { FOUNDRY_ROOM } from '../data/rooms';
 import { ATTUNE_TICKS } from '../data/tube';
 import { CARRIED_HINT } from '../data/hints';
 import type { SimState } from './state';
-import { placeExampleLine } from './exampleLine';
 
 // The tube's link to the foundry: it attunes the first time the player walks
 // into the foundry, and from then on each open entrance of the foundry intake
@@ -39,7 +38,7 @@ export function createLink(): LinkState {
 }
 
 /**
- * Runs after doorways: the first entry into the foundry attunes the tube (and lays the example line, 046). Counts the
+ * Runs after doorways: the first entry into the foundry attunes the tube (067: after the shrine's claim). Counts the
  * pulse down; as it ends, left click becomes the volley, so the carried items' hint shows (047.9). The attune happens
  * once ever and its pulse is saved, so the hint shows once per save.
  */
@@ -53,8 +52,6 @@ export function stepLink(state: SimState): void {
   link.attuned = true;
   link.attunePulse = ATTUNE_TICKS;
   state.events.attunes.push({});
-  // 046: on the real game's start, the example line stands from this first entry and starts with the attune.
-  if (state.start.exampleLine) placeExampleLine(state);
 }
 
 /** The ammo a round of this item is, if it is ammo at all. */

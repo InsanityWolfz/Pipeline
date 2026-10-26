@@ -48,7 +48,8 @@ test('the bench screen points at the identified piece, then at what wears it (05
   await page.mouse.click(p.x, p.y);
   await expect.poll(async () => Object.values((await step(page, 1)).equipped).includes(piece.id)).toBe(true);
   // Worn: the goal moves on, and the arrow goes.
-  expect((await step(page, 1)).objective.text).toBe("Claim the shrine's pylon");
+  // 067: the bench comes after the shrine and the first arrow line; the Warden core's entrance is next.
+  expect((await step(page, 1)).objective.text).toBe('Restore the right intake entrance (E with the warden core)');
   await expect.poll(async () => (await ui(page))?.gearPanel?.guide ?? null).toBeNull();
   expect(errors).toEqual([]);
 });
@@ -57,7 +58,6 @@ test('in build mode the bar points at the next ghost piece; the rest is greyed a
   test.setTimeout(120_000);
   const errors = watchErrors(page);
   await newGameInFoundry(page);
-  await page.evaluate(() => window.__GAME__?.claim('shrine'));
   await goalTo(page, 'Put ley bolts into the second entrance (B)');
   await page.evaluate(([x, y]) => window.__helpers?.walkTo(x, y), [centre(STAND.tx, STAND.ty).x, centre(STAND.tx, STAND.ty).y] as const);
   await cameraSettled(page);
@@ -84,6 +84,20 @@ test('in build mode the bar points at the next ghost piece; the rest is greyed a
   expect(errors).toEqual([]);
 });
 
+test("067: on the first visit the arrow line's ghosts show from the wood port, and the bar points at a conduit", async ({ page }) => {
+  test.setTimeout(120_000);
+  const errors = watchErrors(page);
+  await newGameInFoundry(page);
+  await goalTo(page, 'Build an arrow line into the middle entrance (B)');
+  await expect.poll(async () => (await ui(page))?.guided.ghosts.length).toBe(GUIDED_BUILDS['arrow-line'].length);
+  expect((await ui(page))?.guided.ghosts[0]).toMatchObject({ pieceId: 'conduit', tx: 2, ty: 4, next: true });
+  expect((await ui(page))?.objective.subSteps.map((s) => s.text)).toEqual(['Place conduits 0/9']);
+  await toggleBuild(page);
+  await expect.poll(async () => (await ui(page))?.buildBar?.guide.arrow?.pieceId).toBe('conduit');
+  expect((await ui(page))?.buildBar?.guide.locked).toContain('splitter');
+  expect(errors).toEqual([]);
+});
+
 test('new recipes in the crafting menu show an "Unlocked" banner, several in one', async ({ page }) => {
   test.setTimeout(120_000);
   const errors = watchErrors(page);
@@ -94,12 +108,13 @@ test('new recipes in the crafting menu show an "Unlocked" banner, several in one
     const g = window.__GAME__;
     return !!g && g.ui().drawnTick === g.getState().tick;
   });
-  // The ruin field's pack felled: the foundry's stairs open, and bombs and ley bolts become craftable (051, B.3).
+  // 067: stone, Husk resin and ley crystal carried at once: the bomb and ley bolt chains' rows show together.
   await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    for (const e of g.getState().enemies.filter((x) => x.group === 'field')) g.setEnemyHealth(e.id, 0);
-    g.step(2);
+    const p = g.getState().player;
+    for (const raw of ['stone', 'husk-resin', 'ley-crystal']) g.drop(raw, p.x, p.y);
+    g.step(30);
   });
   await expect.poll(async () => (await ui(page))?.banners.find((b) => b.kind === 'unlock')).toMatchObject({ kicker: 'Unlocked' });
   const unlock = (await ui(page))?.banners.filter((b) => b.kind === 'unlock') ?? [];

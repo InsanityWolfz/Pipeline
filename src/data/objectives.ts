@@ -1,4 +1,4 @@
-import { FOUNDRY_ROOM, type GateId } from './rooms';
+import { FOUNDRY_ROOM } from './rooms';
 import type { TargetDef } from './targets';
 import { GROTTO_GROUP } from './grotto';
 import type { GuidedId } from './guidedBuilds';
@@ -18,12 +18,13 @@ export type ObjectiveCheck =
   | { kind: 'crafted'; items: readonly string[] }
   /** Any one of these items hand-crafted at least once (029). */
   | { kind: 'craftedAny'; items: readonly string[] }
-  | { kind: 'gate'; gate: GateId }
   | { kind: 'inRoom'; room: string }
   /** 058: the player is anywhere but the foundry. */
   | { kind: 'outside' }
-  /** 046: since the lines ran dry, each of these items has been put in a hopper by hand. */
-  | { kind: 'refilled'; items: readonly string[] }
+  /** 067: the ruin field's pack has been killed to its last Husk once. */
+  | { kind: 'fieldCleared' }
+  /** 067: every ghost of this guided build is matched by the foundry (built as it says). */
+  | { kind: 'built'; build: GuidedId }
   /** 050: the entrance this research node opened holds ammo (058: of this kind, when given). */
   | { kind: 'entranceFed'; node: string; ammo?: string }
   /** Machines have made at least one of this item (027); hand-crafting never counts. */
@@ -33,8 +34,6 @@ export type ObjectiveCheck =
   | { kind: 'identified' }
   /** 058: a piece of gear is worn. */
   | { kind: 'equipped' }
-  /** 058: the player has fast-travelled home from a pylon. */
-  | { kind: 'travelled' }
   /** 058: a talent has been taken. */
   | { kind: 'talentSpent' }
   | { kind: 'claimed'; site: string }
@@ -44,7 +43,7 @@ export type ObjectiveCheck =
   | { kind: 'volley'; min: number }
   /** The player stands in this region (034: Region 2, Stonefall Hollows, reached once its barrier is down). */
   | { kind: 'inRegion'; region: number }
-  /** A region boss has been killed at least once (034). */
+  /** A boss has been killed at least once (034; 067: the Pylon Warden too). */
   | { kind: 'bossDefeated'; boss: string }
   /** 062: any one of these rounds fired from the tube (in a volley or carried). */
   | { kind: 'fired'; items: readonly string[] };
@@ -69,10 +68,8 @@ export interface ObjectiveDef {
   subSteps?: 'collect';
   /** 058: a goal built piece by piece on ghosts (src/data/guidedBuilds.ts), with a sub-line for the next piece. */
   guided?: GuidedId;
-  /** 058: completes only once every goal before it is done (leaving the foundry would hold from the start; a fast travel could come early). */
+  /** 058: completes only once every goal before it is done (leaving the foundry would hold from the start). */
   inOrder?: true;
-  /** 058: done unseen (skipped) if the lines haven't run dry by the tick the goal of this check completes. */
-  skipUnlessDryAfter?: ObjectiveCheck['kind'];
   /**
    * 058: not in the chain's order: the current goal whenever its trigger holds (the first talent point) and it isn't
    * done, unless a guided build is current (058.4). The chain picks up where it was once it's done.
@@ -105,42 +102,39 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
     target: { kind: 'nodes' },
   },
   { text: 'Craft arrows (C)', milestone: 'prototype', check: { kind: 'crafted', items: ['arrow'] }, prompt: { key: 'C', over: 'player' }, target: { kind: 'collect' } },
-  { text: 'Clear the ruin field of Husks', milestone: 'prototype', check: { kind: 'gate', gate: 'foundry' }, target: { kind: 'pack', group: 'field' } },
-  // 051 (B.3, Shaun): bombs and ley bolts are crafted before the foundry, with a sub-line for each raw still lacking.
+  // 067: bombs and ley bolts by hand before the foundry, each row shown once its raws are carried, with a sub-line for
+  // each raw still lacking (051, B.3).
+  { text: 'Craft bombs (C)', milestone: 'prototype', check: { kind: 'crafted', items: ['bomb'] }, prompt: { key: 'C', over: 'player' }, target: { kind: 'collect' }, subSteps: 'collect' },
+  { text: 'Craft ley bolts (C)', milestone: 'prototype', check: { kind: 'crafted', items: ['ley-bolt'] }, prompt: { key: 'C', over: 'player' }, target: { kind: 'collect' }, subSteps: 'collect' },
+  // 067: the field cleared sends the land's packs out; then the first boss, and its pylon, which opens the foundry.
+  { text: 'Clear the ruin field', milestone: 'prototype', check: { kind: 'fieldCleared' }, target: { kind: 'pack', group: 'field' } },
+  { text: 'Defeat the Pylon Warden at the shrine', milestone: 'prototype', check: { kind: 'bossDefeated', boss: 'pylon-warden' }, target: { kind: 'boss', boss: 'pylon-warden' } },
+  { text: "Claim the shrine's pylon (E)", milestone: 'prototype', check: { kind: 'claimed', site: 'shrine' }, prompt: { key: 'E', over: 'pylon' }, target: { kind: 'pylon', site: 'shrine' } },
+  // 067: walking down the stairs or the pylon's fast travel (058's waypoints); the tube attunes as the player arrives.
   {
-    text: 'Craft bombs and ley bolts (C)',
+    text: 'Travel to the foundry (E at the pylon)',
     milestone: 'prototype',
-    check: { kind: 'crafted', items: ['bomb', 'ley-bolt'] },
-    prompt: { key: 'C', over: 'player' },
-    target: { kind: 'collect' },
-    subSteps: 'collect',
-  },
-  { text: 'Enter the foundry', milestone: 'prototype', check: { kind: 'inRoom', room: 'foundry' }, target: { kind: 'room', room: 'foundry' } },
-  // 046: the example line stands from the first entry and fills the tube on its own (058, Shaun: just wait for it).
-  { text: 'Wait for the tube to fill with arrows', milestone: 'prototype', check: { kind: 'lineFull' }, target: { kind: 'intake' } },
-  { text: 'Identify your armor at the bench (E)', milestone: 'prototype', check: { kind: 'identified' }, prompt: { key: 'E', over: 'bench' }, target: { kind: 'bench' } },
-  // 058: wear a piece, with arrows in the bench's screen on what to click.
-  { text: 'Equip a piece of armor at the bench (E)', milestone: 'prototype', check: { kind: 'equipped' }, prompt: { key: 'E', over: 'bench' }, target: { kind: 'bench' } },
-  { text: "Claim the shrine's pylon", milestone: 'prototype', check: { kind: 'claimed', site: 'shrine' }, prompt: { key: 'E', over: 'pylon' }, target: { kind: 'pylon', site: 'shrine' } },
-  // 058: the waypoints, taught from the first pylon.
-  {
-    text: 'Fast-travel to the foundry from the pylon (E)',
-    milestone: 'prototype',
-    check: { kind: 'travelled' },
-    // In order, so the refill's skip below is decided when this is the current goal, not by an earlier fast travel.
+    check: { kind: 'inRoom', room: FOUNDRY_ROOM },
     inOrder: true,
     prompt: { key: 'E', over: 'pylon' },
     target: { kind: 'pylon', site: 'shrine', claimed: true },
   },
-  // 046: once the example line has run dry, refill its hoppers; 058: only if it's dry when the fast travel lands.
+  // 067: the first arrow line, built piece by piece on ghosts (src/data/guidedBuilds.ts) from the supply ports the
+  // shrine's pylon fills; the build lock (058) holds from the first visit.
   {
-    text: 'Refill the hoppers in the foundry with wood, stone and fiber (E)',
+    text: 'Build an arrow line into the middle entrance (B)',
     milestone: 'prototype',
-    check: { kind: 'refilled', items: ['wood', 'stone', 'fiber'] },
-    skipUnlessDryAfter: 'travelled',
-    prompt: { key: 'E', over: 'hopper' },
-    target: { kind: 'hoppers', unfilled: true },
+    check: { kind: 'built', build: 'arrow-line' },
+    prompt: { key: 'B', over: 'player' },
+    target: { kind: 'ghost' },
+    guided: 'arrow-line',
   },
+  // 058 (Shaun: just wait for it); 067: the line is fed from the ports, so it never runs dry.
+  { text: 'Wait for the tube to fill with arrows', milestone: 'prototype', check: { kind: 'lineFull' }, target: { kind: 'intake' } },
+  // 067: the bench is in the foundry, so the gear found before it is identified and worn now.
+  { text: 'Identify your armor at the bench (E)', milestone: 'prototype', check: { kind: 'identified' }, prompt: { key: 'E', over: 'bench' }, target: { kind: 'bench' } },
+  // 058: wear a piece, with arrows in the bench's screen on what to click.
+  { text: 'Equip a piece of armor at the bench (E)', milestone: 'prototype', check: { kind: 'equipped' }, prompt: { key: 'E', over: 'bench' }, target: { kind: 'bench' } },
   // The prototype's one Warden drops one core (033: one entrance per core); 058.5: during the tutorial it fits the right cap only.
   { text: 'Restore the right intake entrance (E with the warden core)', milestone: 'prototype', check: { kind: 'restored', node: NEW_ENTRANCE_NODE }, target: { kind: 'caps' } },
   // 058: built piece by piece on ghosts (src/data/guidedBuilds.ts).

@@ -4,8 +4,8 @@ import type { SaveEnvelope } from './save';
 // Save version 2 → 3 (046: foundry onboarding). The Splitter is on the build bar from the start, so its research
 // node and its schematic are gone: a version 2 save's `research.splitter` and every `schematic-splitter` it holds
 // are dropped, with nothing refunded (046.5). The objectives, saved by index, are mapped from version 2's list onto
-// this one by text: 027's build steps are gone, and the refill goal counts as done where "Put wood in the hopper" was
-// (058 reworded it and dropped 046's second-line goal). A save keeps its start, so it never gets the example line (046.1).
+// this one by text: 027's build steps are gone (046's refill goal stood for "Put wood in the hopper" until 067 dropped
+// it; 058 dropped 046's second-line goal). A save keeps its start, so it never gets the example line (046.1).
 
 /** The item and the node 046 removed. */
 const GONE_ITEM = 'schematic-splitter';
@@ -48,16 +48,11 @@ const V2_OBJECTIVES: readonly string[] = [
   'Feed all three entrances',
 ];
 
-/** 046's new goals, each done in a version 2 save where the old goal it stands for was. */
-const STANDS_FOR: Readonly<Record<string, string>> = {
-  'Refill the hoppers in the foundry with wood, stone and fiber (E)': 'Put wood in the hopper (E)',
-};
-
 /** Version 2's done-list as this version's, by each goal's text. */
 function mapObjectives(old: unknown): unknown {
   if (!Array.isArray(old)) return old;
   const done = new Set(V2_OBJECTIVES.filter((_, i) => old[i] === true));
-  return OBJECTIVES.map((o) => done.has(o.text) || done.has(STANDS_FOR[o.text] ?? ''));
+  return OBJECTIVES.map((o) => done.has(o.text));
 }
 
 const isRecord = (v: unknown): v is Json => typeof v === 'object' && v !== null && !Array.isArray(v);

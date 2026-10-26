@@ -189,6 +189,17 @@ describe('item kinds, ammo slots and recipes', () => {
     for (const r of Object.values(RECIPES)) for (const id of revealsOf(r)) expect(ITEMS[id], r.id).toBeDefined();
   });
 
+  it('waits on no attunement (067), and shows the bomb and ley bolt chains once their raws are carried', () => {
+    for (const r of Object.values(RECIPES)) expect('requires' in r, r.id).toBe(false);
+    const shown = (id: string): readonly string[] => revealsOf(recipeDef(id));
+    expect(shown('casing')).toEqual(['stone']);
+    expect(shown('fuse')).toEqual(['husk-resin']);
+    expect(shown('ley-dust')).toEqual(['ley-crystal']);
+    expect(shown('ley-bolt')).toEqual(['ley-crystal']);
+    expect([...shown('bomb')].sort()).toEqual(['husk-resin', 'ley-crystal', 'stone']);
+    for (const id of ['shaft', 'arrowhead', 'rope', 'arrow']) expect(shown(id), id).toEqual([]);
+  });
+
   it('gives every item a kind, and every ammo an ammo item', () => {
     // 033: schematics are the one new kind.
     for (const item of Object.values(ITEMS)) expect(['raw', 'part', 'ammo', 'armor', 'schematic']).toContain(item.kind);
@@ -490,7 +501,7 @@ describe('the tutorial (012)', () => {
     const machineOutputs = Object.values(PIECES).flatMap((p) => (p.kind === 'machine' ? [recipeDef(p.recipeId).output.itemId] : []));
     for (const [i, o] of OBJECTIVES.entries()) {
       const c = o.check;
-      if (c.kind === 'refilled') for (const id of c.items) expect(ITEMS[id], o.text).toBeDefined();
+      if (c.kind === 'gathered') for (const id of c.items) expect(ITEMS[id], o.text).toBeDefined();
       if (c.kind === 'machineMade') expect(machineOutputs, o.text).toContain(c.item);
       if (c.kind === 'entranceFed') expect(RESEARCH_NODES.some((n) => n.id === c.node), o.text).toBe(true);
       // 058: a guided build's pieces are on the bar; hidden pieces never show (026), so an earlier objective must have
@@ -519,7 +530,6 @@ describe('the tutorial (012)', () => {
     expect([...tileGates]).toEqual(['hollows', 'emberworks', 'stormcrown']);
     expect(SHRINE_ARENA.door.unlock).toBe('shrine');
     for (const t of outside.gateTiles ?? []) expect(outside.rows[t.ty]?.[t.tx]).toBe(t.gate === 'hollows' ? TILE.floor : TILE.ramp);
-    for (const r of Object.values(RECIPES)) if (r.requires) expect(r.requires).toBe('attuned');
     expect(TUTORIAL_START.room).toBe(OVERWORLD.id);
   });
 });

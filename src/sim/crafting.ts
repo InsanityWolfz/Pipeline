@@ -12,8 +12,8 @@ import { batchesHeld, hasInputs, make } from './make';
 
 export { hasInputs, make } from './make';
 
-/** What deciding a craft reads: the inventory, the attunement and entrances, the revealing items found and the claims. */
-export type CraftStores = TaggedStores & { link: Pick<SimState['link'], 'attuned'>; found: readonly string[]; claims: readonly string[]; gates: Pick<SimState['gates'], 'foundry'> };
+/** What deciding a craft reads: the inventory and entrances, the revealing items found and the claims. */
+export type CraftStores = TaggedStores & { found: readonly string[]; claims: readonly string[] };
 
 /** Crafts one batch of a recipe or a tagged round. Returns false, changing nothing but the events, if it can't. */
 export function craft(state: SimState, recipeId: string): boolean {

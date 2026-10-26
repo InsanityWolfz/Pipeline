@@ -58,7 +58,7 @@ export function createSandboxSim(seed: number): SimState {
   while (state.level < LEVEL_CAP) gainXp(state, xpToNext(state), 'kill');
   state.events = createEvents();
   for (const n of RESEARCH_NODES) state.research[n.id] = 'restored';
-  // Its full entrances never count as the first full line, which would send the overworld's packs out (017).
+  // Its full entrances count as the first full line already (058's fill goal; 067: packs follow the ruin field, not this).
   state.firstLineFull = true;
   state.sandbox = { god: false, loadout: [...SANDBOX.loadout], pens: SANDBOX_PENS.map(() => null) };
   fill(state);

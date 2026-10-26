@@ -80,7 +80,7 @@ export class CraftMenuView {
   private readonly hover: RowHover;
   private open = false;
   private tab = 0;
-  private known: CraftStores = { inventory: {}, link: { attuned: false, entrances: [] }, found: [], claims: [], gates: { foundry: false } };
+  private known: CraftStores = { inventory: {}, link: { entrances: [] }, found: [], claims: [] };
   /** The title card's tablet, and the tabs' tablets. */
   private readonly card: GameObjects.Graphics;
   private readonly tabBacks: GameObjects.Graphics;
