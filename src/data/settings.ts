@@ -97,6 +97,8 @@ export interface Settings {
   muted: boolean;
   /** 042.10: off removes the bright flashes; telegraphs, damage numbers and the danger reds never change. */
   flashes: boolean;
+  /** 071: the red edge arrows toward enemies winding up on the player off screen. */
+  offscreenWarnings: boolean;
   bindings: Record<BindAction, string>;
 }
 
@@ -107,6 +109,7 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = {
   effects: 1,
   muted: false,
   flashes: true,
+  offscreenWarnings: true,
   bindings: { ...DEFAULT_BINDINGS },
 };
 
@@ -156,6 +159,7 @@ export const SETTINGS_TEXT = {
     effects: 'Effects volume',
     mute: 'Mute',
     flashes: 'Flashes',
+    offscreenWarnings: 'Off-screen warnings',
     keys: 'Key bindings',
     export: 'Export save',
     import: 'Import save',

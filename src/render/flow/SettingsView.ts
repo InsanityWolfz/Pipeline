@@ -66,6 +66,7 @@ export class SettingsView {
       { id: 'effects', label: T.effects, value: pct(s.effects), stepper: true },
       { id: 'mute', label: T.mute, value: onOff(s.muted) },
       { id: 'flashes', label: T.flashes, value: onOff(s.flashes) },
+      { id: 'offscreenWarnings', label: T.offscreenWarnings, value: onOff(s.offscreenWarnings) },
       { id: 'keys', label: T.keys },
       ...(m.saveRows ? [{ id: 'export', label: T.export, sub: SETTINGS_TEXT.notes(m.notes) }, { id: 'import', label: T.import }, ...(m.damaged ? [{ id: 'damaged', label: T.damaged }] : [])] : []),
       { id: 'back', label: T.back },

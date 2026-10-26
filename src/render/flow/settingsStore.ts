@@ -57,6 +57,7 @@ export function parseSettings(raw: string | null): Settings | null {
     effects: clampVolume(d.effects, D.effects),
     muted: typeof d.muted === 'boolean' ? d.muted : D.muted,
     flashes: typeof d.flashes === 'boolean' ? d.flashes : D.flashes,
+    offscreenWarnings: typeof d.offscreenWarnings === 'boolean' ? d.offscreenWarnings : D.offscreenWarnings,
     bindings: clean ? bindings : { ...D.bindings },
   };
 }

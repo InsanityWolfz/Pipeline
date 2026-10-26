@@ -1,39 +1,12 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { STORAGE_KEYS } from '../../src/data/save';
 import { THREAT_ARROW } from '../../src/data/threats';
 import { watchErrors } from './helpers';
 import { bootSandbox } from './sandboxPage';
+import { sniperAt, stepUntilThreat, toggleWarnings } from './threatsPage';
 
 // 071: an enemy off screen winding up on the player shows a pulsing red arrow at the screen's edge on the line from the
 // player to it, which fades once the attack lands. Every check reads the sim's state and the test hook's ui().
-
-/** A Sniper `dx`, `dy` px from the player, its cooldown ready; returns its id. */
-async function sniperAt(page: Page, dx: number, dy: number): Promise<number> {
-  return page.evaluate(
-    ([x, y]) => {
-      const g = window.__GAME__;
-      if (!g) throw new Error('no game');
-      const p = g.getState().player;
-      const s = g.spawnEnemy('sniper', p.x + x, p.y + y);
-      return s.enemies[s.enemies.length - 1]?.id ?? -1;
-    },
-    [dx, dy] as const,
-  );
-}
-
-/** Steps a tick at a time, the player kept topped up, until the sim lists `id` as an off-screen threat. */
-async function stepUntilThreat(page: Page, id: number): Promise<void> {
-  const ok = await page.evaluate((eid) => {
-    const g = window.__GAME__;
-    if (!g) throw new Error('no game');
-    for (let i = 0; i < 600; i++) {
-      if (g.getState().threats.some((t) => t.id === eid)) return true;
-      g.step(1);
-      g.setPlayerHealth(100);
-    }
-    return false;
-  }, id);
-  expect(ok, 'a threat').toBe(true);
-}
 
 test('a sandbox Sniper winding up off screen shows a red arrow at the edge toward it, gone once it fires', async ({ page }) => {
   const errors = watchErrors(page);
@@ -62,5 +35,21 @@ test('a sandbox Sniper winding up off screen shows a red arrow at the edge towar
   }, id);
   expect(await page.evaluate(() => window.__GAME__?.getState().threats)).toEqual([]);
   await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().threats.length)).toBe(0);
+  expect(errors).toEqual([]);
+});
+
+test('with Off-screen warnings off (kept in the stored settings), the same Sniper shows no arrow', async ({ page }) => {
+  const errors = watchErrors(page);
+  await bootSandbox(page);
+  await toggleWarnings(page);
+  const stored = await page.evaluate((k) => JSON.parse(localStorage.getItem(k) ?? '{}'), STORAGE_KEYS.settings);
+  expect(stored).toMatchObject({ offscreenWarnings: false });
+  await page.evaluate(() => window.__GAME__?.step(0));
+  const id = await sniperAt(page, 180, -240);
+  await stepUntilThreat(page, id);
+  // The sim still lists it; once a frame has drawn that tick, render shows nothing for it.
+  const tick = (await page.evaluate(() => window.__GAME__?.getState().tick)) ?? -1;
+  await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().drawnTick)).toBe(tick);
+  expect(await page.evaluate(() => window.__GAME__?.ui().threats)).toEqual([]);
   expect(errors).toEqual([]);
 });

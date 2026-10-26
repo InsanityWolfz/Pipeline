@@ -51,6 +51,18 @@ describe('settings store (042)', () => {
   });
 });
 
+describe('off-screen warnings (071)', () => {
+  it('starts on, and a stored file from before it reads as on', () => {
+    expect(DEFAULT_SETTINGS.offscreenWarnings).toBe(true);
+    expect(parseSettings(JSON.stringify({ version: 1, flashes: false }))).toMatchObject({ flashes: false, offscreenWarnings: true });
+  });
+
+  it('keeps a stored off, and takes the default for a bad value', () => {
+    expect(parseSettings(JSON.stringify({ offscreenWarnings: false }))?.offscreenWarnings).toBe(false);
+    expect(parseSettings(JSON.stringify({ offscreenWarnings: 'no' }))?.offscreenWarnings).toBe(true);
+  });
+});
+
 describe('actions added after a stored file (063)', () => {
   it("leaves the Area tool with no key when a stored binding has taken X, keeping the player's other keys", () => {
     const parsed = parseSettings(JSON.stringify({ bindings: { dodge: 'X' } }));

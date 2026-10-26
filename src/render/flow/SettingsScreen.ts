@@ -70,6 +70,7 @@ export class SettingsScreen {
       updateSettings({ [id]: stepVolume(s[id], hit.part === 'up' ? 1 : -1) });
     } else if (id === 'mute') updateSettings({ muted: !s.muted });
     else if (id === 'flashes') updateSettings({ flashes: !s.flashes });
+    else if (id === 'offscreenWarnings') updateSettings({ offscreenWarnings: !s.offscreenWarnings });
     else if (id === 'keys') return this.view.showKeys(s, null, this.act.sandbox);
     else if (id === 'export') this.act.exportSave();
     else if (id === 'import') this.act.importSave();

@@ -47,6 +47,7 @@ import { drawPointerUi } from './pointerUi';
 import { RoomFollow } from './roomFollow';
 import { BlueprintUi } from './BlueprintUi';
 import { ThreatView } from './ThreatView';
+import { settings } from './flow/settingsStore';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -266,7 +267,7 @@ export class GameScene extends Scene {
     const enemies = inRoom(sim.enemies, shown);
     this.enemyView?.update(enemies, sim);
     const clear = [this.tutorial?.objectiveBox, this.hud?.bossBox].flatMap((b) => (b ? [b] : []));
-    this.threatView?.update(sim, enemies, shown, [...hudBoxes, ...clear], true, this.game.loop.delta);
+    this.threatView?.update(sim, enemies, shown, [...hudBoxes, ...clear], settings().offscreenWarnings, this.game.loop.delta);
     // Through a door's fade the player is already in the next room; hide them until it shows.
     this.playerView?.update(sim.player, sim.tube, sim.link, bodyLook(sim), sim.hasTube, shown === sim.roomId);
     this.arrowView?.update(inRoom(sim.arrows, shown));

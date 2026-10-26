@@ -28,6 +28,7 @@ test('the pause menu: Resume, Settings (back to the pause menu), and Quit to tit
     'Effects volume',
     'Mute',
     'Flashes',
+    'Off-screen warnings',
     'Key bindings',
     'Export save',
     'Import save',

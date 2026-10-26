@@ -30,13 +30,13 @@ export const THREAT_WINDUPS: Readonly<Partial<Record<EnemyDef['kind'], readonly 
  * through the wind-up, and fades out over `fadeMs` once the attack lands or is cancelled.
  */
 export const THREAT_ARROW = {
-  length: 14,
-  width: 14,
-  outline: 1.5,
+  length: 18,
+  width: 18,
+  outline: 2,
   edgeInset: 6,
   mergeGap: 28,
   color: ENEMY_FX.telegraphColor,
   outlineColor: 'ink',
-  pulse: { min: 0.55, max: 1, ms: 500 },
+  pulse: { min: 0.7, max: 1, ms: 500 },
   fadeMs: 250,
 } as const;
