@@ -78,7 +78,7 @@ const machine = (
   craftTicks,
 });
 
-/** 062: a machine that also runs these recipes, by what it's fed. */
+/** 062: a machine that also runs these recipes, by what it's fed (066: a steel and a stormsteel one, in that order). */
 const tiered = (m: MachineDef, ...variants: string[]): MachineDef => ({ ...m, variants });
 
 const logistics = (kind: LogisticsDef['kind'], name: string, description: string, id: string = kind): LogisticsDef => ({
@@ -110,20 +110,22 @@ export const PIECES: Readonly<Record<string, PieceDef>> = {
   crate: logistics('crate', 'Crate', 'Collects whatever reaches it from any side. E empties it.'),
   // 062: each tier-aware machine makes its steel (or glass) version from the tier's part, by what it's fed.
   cutter: machine('cutter', 'Cutter', 'arrows', 'shaft', '1x1', 60, 'Cuts wood into shafts.'),
-  knapper: tiered(machine('knapper', 'Knapper', 'arrows', 'arrowhead', '1x1', 60, 'Chips stone into arrowheads, and ley-steel into steel ones.'), 'steel-arrowhead'),
+  knapper: tiered(machine('knapper', 'Knapper', 'arrows', 'arrowhead', '1x1', 60, 'Chips stone into arrowheads, and ley-steel or stormsteel into their own.'), 'steel-arrowhead', 'stormsteel-arrowhead'),
   spinner: machine('spinner', 'Spinner', 'arrows', 'rope', '1x1', 60, 'Spins fiber into rope.'),
-  assembler: tiered(machine('assembler', 'Assembler', 'arrows', 'arrow', '3x1', 90, 'Puts shafts, arrowheads and rope together into arrows (steel ones from steel arrowheads).'), 'steel-arrow'),
-  shaper: tiered(machine('shaper', 'Shaper', 'bombs', 'casing', '1x1', 60, 'Shapes stone into bomb casings, and ley-steel into steel ones.'), 'steel-casing'),
+  assembler: tiered(machine('assembler', 'Assembler', 'arrows', 'arrow', '3x1', 90, 'Puts shafts, arrowheads and rope together into arrows (steel or stormsteel ones from their arrowheads).'), 'steel-arrow', 'stormsteel-arrow'),
+  shaper: tiered(machine('shaper', 'Shaper', 'bombs', 'casing', '1x1', 60, 'Shapes stone into bomb casings, and ley-steel or stormsteel into their own.'), 'steel-casing', 'stormsteel-casing'),
   'fuse-maker': machine('fuse-maker', 'Fuse maker', 'bombs', 'fuse', '1x1', 60, 'Draws husk resin into fuses.'),
   grinder: machine('grinder', 'Grinder', 'ley', 'ley-dust', '1x1', 60, 'Grinds ley crystal into dust.'),
-  packer: tiered(machine('packer', 'Packer', 'bombs', 'bomb', '3x1', 90, 'Packs casings, fuses and ley dust into bombs (steel ones from steel casings).'), 'steel-bomb'),
-  focuser: tiered(machine('focuser', 'Focuser', 'ley', 'ley-bolt', '1x1', 60, 'Focuses ley dust into ley bolts, and ley glass into glass bolts.'), 'glass-bolt'),
+  packer: tiered(machine('packer', 'Packer', 'bombs', 'bomb', '3x1', 90, 'Packs casings, fuses and ley dust into bombs (steel or stormsteel ones from their casings).'), 'steel-bomb', 'stormsteel-bomb'),
+  focuser: tiered(machine('focuser', 'Focuser', 'ley', 'ley-bolt', '1x1', 60, 'Focuses ley dust into ley bolts, and ley glass or storm glass into their own.'), 'glass-bolt', 'storm-glass-bolt'),
   // 038.1: the plate press as the cutter, the mine packer as the bomb packer (three inputs into a 3x1).
-  'plate-press': tiered(machine('plate-press', 'Plate press', 'mines', 'iron-plate', '1x1', 60, 'Presses ley-iron into iron plates, and ley-steel into steel ones.'), 'steel-plate'),
-  'mine-packer': tiered(machine('mine-packer', 'Mine packer', 'mines', 'landmine', '3x1', 90, 'Packs iron plates, fuses and ley dust into landmines (steel ones from steel plates).'), 'steel-landmine'),
+  'plate-press': tiered(machine('plate-press', 'Plate press', 'mines', 'iron-plate', '1x1', 60, 'Presses ley-iron into iron plates, and ley-steel or stormsteel into their own.'), 'steel-plate', 'stormsteel-plate'),
+  'mine-packer': tiered(machine('mine-packer', 'Mine packer', 'mines', 'landmine', '3x1', 90, 'Packs iron plates, fuses and ley dust into landmines (steel or stormsteel ones from their plates).'), 'steel-landmine', 'stormsteel-landmine'),
   // 062: the Forge's machines, made by hand once at the bench to unlock.
   smelter: machine('smelter', 'Smelter', 'forge', 'ley-steel', '1x1', 60, 'Fuses ley-iron and cinderite into ley-steel.'),
   kiln: machine('kiln', 'Kiln', 'forge', 'ley-glass', '1x1', 60, 'Fires ley dust and cinderite into ley glass.'),
+  // 066: one coil makes both storm materials, by what it's fed.
+  'tempering-coil': tiered(machine('tempering-coil', 'Tempering coil', 'forge', 'stormsteel', '1x1', 60, 'Charges ley-steel or ley glass with stormglass into stormsteel or storm glass.'), 'storm-glass'),
   ...Object.fromEntries(Object.values(STAGES).map((st) => [st.id, stageMachine(st)])),
 };
 
@@ -157,6 +159,7 @@ export const BUILD_BAR: readonly string[] = [
   'mine-packer',
   'smelter',
   'kiln',
+  'tempering-coil',
 ];
 
 export function pieceDef(id: string): PieceDef {

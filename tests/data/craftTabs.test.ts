@@ -22,12 +22,13 @@ describe('the crafting tabs (047)', () => {
 
   it('062: then its tier’s chain, the Smelter’s or the kiln’s material first, in a column of their own', () => {
     expect(CRAFT_TABS.map((t) => [t.label, t.recipes.slice(t.tierFrom)])).toEqual([
-      ['Arrows', ['ley-steel', 'steel-arrowhead', 'steel-arrow']],
-      ['Bombs', ['ley-steel', 'steel-casing', 'steel-bomb']],
-      ['Ley', ['ley-glass', 'glass-bolt']],
-      ['Landmines', ['ley-steel', 'steel-plate', 'steel-landmine']],
+      // 066: then the storm tier's chain (the Tempering coil's material, the stormsteel part, the stormsteel round).
+      ['Arrows', ['ley-steel', 'steel-arrowhead', 'steel-arrow', 'stormsteel', 'stormsteel-arrowhead', 'stormsteel-arrow']],
+      ['Bombs', ['ley-steel', 'steel-casing', 'steel-bomb', 'stormsteel', 'stormsteel-casing', 'stormsteel-bomb']],
+      ['Ley', ['ley-glass', 'glass-bolt', 'storm-glass', 'storm-glass-bolt']],
+      ['Landmines', ['ley-steel', 'steel-plate', 'steel-landmine', 'stormsteel', 'stormsteel-plate', 'stormsteel-landmine']],
     ]);
-    // 064: the Bombs tab's eight.
+    // 064: the Bombs tab's eight (066: still the most; a tier column holds six).
     expect(CRAFT_TAB_ROWS).toBe(8);
     expect(CRAFT_TAB_COLUMNS).toBe(2);
   });

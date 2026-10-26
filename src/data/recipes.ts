@@ -47,6 +47,18 @@ export const RECIPES: Readonly<Record<string, RecipeDef>> = {
   'glass-bolt': { ...recipe('glass-bolt', { 'ley-glass': 1 }, 'ley-bolt+glass', 4), requires: 'attuned', shownAfter: 'ley-glass' },
   'steel-plate': { ...recipe('steel-plate', { 'ley-steel': 1 }, 'steel-plate', 2), shownAfter: 'ley-steel' },
   'steel-landmine': { ...recipe('steel-landmine', { 'steel-plate': 1, fuse: 1, 'ley-dust': 1 }, 'landmine+steel', 2), shownAfter: 'ley-steel' },
+  // 066: the storm tier. The Tempering coil's two show once their tier material and stormglass have been carried (storm
+  // glass, like ley glass, once the tube is attuned); each family's stormsteel part and round once stormsteel has (the
+  // storm glass bolt once storm glass has), in steel's counts.
+  stormsteel: { ...recipe('stormsteel', { 'ley-steel': 1, stormglass: 1 }, 'stormsteel', 1), shownAfter: ['ley-steel', 'stormglass'] },
+  'storm-glass': { ...recipe('storm-glass', { 'ley-glass': 1, stormglass: 1 }, 'storm-glass', 1), requires: 'attuned', shownAfter: ['ley-glass', 'stormglass'] },
+  'stormsteel-arrowhead': { ...recipe('stormsteel-arrowhead', { stormsteel: 1 }, 'stormsteel-arrowhead', 2), shownAfter: 'stormsteel' },
+  'stormsteel-arrow': { ...recipe('stormsteel-arrow', { shaft: 1, 'stormsteel-arrowhead': 1, rope: 1 }, 'arrow+stormsteel', 8), shownAfter: 'stormsteel' },
+  'stormsteel-casing': { ...recipe('stormsteel-casing', { stormsteel: 1 }, 'stormsteel-casing', 1), requires: 'attuned', shownAfter: 'stormsteel' },
+  'stormsteel-bomb': { ...recipe('stormsteel-bomb', { 'stormsteel-casing': 1, fuse: 1, 'ley-dust': 1 }, 'bomb+stormsteel', 4), requires: 'attuned', shownAfter: 'stormsteel' },
+  'storm-glass-bolt': { ...recipe('storm-glass-bolt', { 'storm-glass': 1 }, 'ley-bolt+storm-glass', 4), requires: 'attuned', shownAfter: 'storm-glass' },
+  'stormsteel-plate': { ...recipe('stormsteel-plate', { stormsteel: 1 }, 'stormsteel-plate', 2), shownAfter: 'stormsteel' },
+  'stormsteel-landmine': { ...recipe('stormsteel-landmine', { 'stormsteel-plate': 1, fuse: 1, 'ley-dust': 1 }, 'landmine+stormsteel', 2), shownAfter: 'stormsteel' },
 };
 
 /** The items a recipe's or stage's rows wait on (038; 062: one or several), each to have been carried. */

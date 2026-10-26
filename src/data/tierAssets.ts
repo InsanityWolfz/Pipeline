@@ -16,6 +16,12 @@ export const TIER_SPRITES = {
   landmineSteel: 'landmine-steel',
   landmineArmedSteel: 'landmine-armed-steel',
   leyBoltGlass: 'ley-bolt-glass',
+  // 066: the storm tier's parts' icons.
+  itemStormsteel: 'item-stormsteel',
+  itemStormGlass: 'item-storm-glass',
+  itemStormsteelArrowhead: 'item-stormsteel-arrowhead',
+  itemStormsteelCasing: 'item-stormsteel-casing',
+  itemStormsteelPlate: 'item-stormsteel-plate',
   // 066: the storm tiers' projectiles and the stormsteel landmine lying armed.
   arrowStormsteel: 'arrow-stormsteel',
   bombStormsteel: 'bomb-stormsteel',

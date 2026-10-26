@@ -57,6 +57,12 @@ describe('inventory panel groups (031)', () => {
       'steel-plate',
       // 064: Region 4's machine part.
       'storm-coil',
+      // 066: the storm tier's parts.
+      'storm-glass',
+      'stormsteel',
+      'stormsteel-arrowhead',
+      'stormsteel-casing',
+      'stormsteel-plate',
     ]);
     // 039: the six Frost rounds of every family. 060: the seven Fire rounds; 064: the seven Lightning. 062: each also at its tier, in Ammo too.
     expect(byGroup('ammo').filter((id) => roundTier(id) === 'stone')).toEqual([

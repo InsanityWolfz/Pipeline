@@ -41,7 +41,7 @@ export const TIER_ART: Readonly<Record<TierId, TierArt>> = {
   // 066: stormsteel, dark storm metal (stone and iron to the storm slates); its badge a dark ingot split by a
   // violet-white vein of lightning.
   stormsteel: {
-    swap: { 'rock-pale': 'storm-pale', 'rock-light': 'storm-light', rock: 'storm', 'rock-dark': 'storm-dark', 'iron-light': 'storm-light', iron: 'storm', 'iron-dark': 'storm-dark', 'iron-rust': 'storm-dark' },
+    swap: { 'rock-pale': 'storm-pale', 'rock-light': 'storm-light', rock: 'storm', 'rock-dark': 'storm-dark', 'iron-light': 'storm-light', iron: 'storm', 'iron-dark': 'storm-dark', 'iron-rust': 'storm-dark', vein: 'storm-pale' },
     alpha: 1,
     mark: [
       path('M -7.6 -3.6 L -6 -6.6 L -1.6 -6.6 L -3.2 -3.6 Z', { fill: { linear: [-7, -7, -2, -3], stops: [{ at: 0, color: 'storm' }, { at: 1, color: 'storm-dark' }] }, outline: true }),
@@ -131,6 +131,24 @@ const STEEL_PLATE: Shape[] = [
   { ...line([-5, -2.4, 0.8, -5.6], 0.5, { id: 'snow', alpha: 0.85 }), glow: { color: 'rock-pale', blur: 1 } },
 ];
 
+// 066: the storm tier's parts, each the steel (or glass) part tempered: stormsteel is the ley-steel bar in dark storm
+// metal, its vein violet-white (TIER_ART.stormsteel's swap); the stormsteel parts the steel parts likewise. Storm glass
+// is the pane of ley glass cleared further, with a spark of lightning caught inside it.
+const tempered = (shapes: readonly Shape[]): Shape[] => shapes.map((sh) => inTier(sh, 'stormsteel'));
+
+/** A four-point spark of lightning, white with a violet glow, round (x, y). */
+const spark = (x: number, y: number, r: number): Shape => ({
+  ...path(`M ${x} ${y - r} L ${x + r * 0.3} ${y - r * 0.3} L ${x + r} ${y} L ${x + r * 0.3} ${y + r * 0.3} L ${x} ${y + r} L ${x - r * 0.3} ${y + r * 0.3} L ${x - r} ${y} L ${x - r * 0.3} ${y - r * 0.3} Z`, flat('snow')),
+  glow: { color: 'storm-glow', blur: 3 },
+});
+
+const STORMSTEEL: Shape[] = [
+  ...tempered(LEY_STEEL),
+  // A second fork of the vein, so the bar reads as struck through with lightning.
+  { ...path('M -1 -2.4 L 0.6 -0.6 L 2.4 -0.8', trim('storm-pale', 0.5)), glow: { color: 'storm-glow', blur: 2 } },
+];
+const STORM_GLASS: Shape[] = [...LEY_GLASS.map((sh) => inTier(sh, 'storm-glass')), spark(0, 0, 2.6)];
+
 /** The stone sprites a tier recolours, by key. */
 const STONE_SPRITES = new Map([...VECTOR_SPRITES, ...MINE_SPRITES_VECTOR].map((s) => [s.key, s]));
 
@@ -150,4 +168,9 @@ export const TIER_SPRITES_VECTOR: readonly VectorSprite[] = [
   icon(TIER_SPRITES.itemSteelArrowhead, STEEL_ARROWHEAD),
   icon(TIER_SPRITES.itemSteelCasing, STEEL_CASING),
   icon(TIER_SPRITES.itemSteelPlate, STEEL_PLATE),
+  icon(TIER_SPRITES.itemStormsteel, STORMSTEEL),
+  icon(TIER_SPRITES.itemStormGlass, STORM_GLASS),
+  icon(TIER_SPRITES.itemStormsteelArrowhead, tempered(STEEL_ARROWHEAD)),
+  icon(TIER_SPRITES.itemStormsteelCasing, tempered(STEEL_CASING)),
+  icon(TIER_SPRITES.itemStormsteelPlate, tempered(STEEL_PLATE)),
 ];

@@ -203,8 +203,8 @@ describe('the playtest start', () => {
     // 029: every stage too, with rimestone to feed the frost rune and no tagged rounds carried; 038: the Cluster die and the landmine chain.
     expect(unlockedPieces(s)).toEqual([
       'conduit', 'splitter', 'underground-entrance', 'underground-exit', 'hopper', 'crate', 'cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'fire-rune', 'lightning-rune', 'shaper', 'fuse-maker', 'packer', 'cluster-die', 'grinder', 'focuser', 'ley-guide', 'prism-lens', 'plate-press', 'mine-packer',
-      // 062: the Forge's machines.
-      'smelter', 'kiln',
+      // 062: the Forge's machines (066: and the Tempering coil).
+      'smelter', 'kiln', 'tempering-coil',
     ]);
     expect(s.inventory['rimestone']).toBe(99);
     expect(s.inventory['arrow+frost']).toBeUndefined();

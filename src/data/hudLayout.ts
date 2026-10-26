@@ -116,13 +116,14 @@ export const BUILD_BAR_LAYOUT = {
   bottom: HUD_LAYOUT.margin,
   /**
    * 062: 1 px closer than the hotbar's cells, and the groups 6 px apart (was 12), so the Forge group fits the view too;
-   * 064: 2 px closer (the cells touch), so the Lightning rune's piece fits beside it.
+   * 064: 2 px closer (the cells touch), so the Lightning rune's piece fits beside it; 066: the groups 3 px apart, so
+   * the Tempering coil fits too.
    */
   cellStep: CELL.step - 2,
   cellWidth: CELL.w,
   cellHeight: CELL.h,
   icon: { x: 4, y: 6 },
-  groupGap: 6,
+  groupGap: 3,
   /** The divider: a line this colour (palette id) and alpha, from the label row's top to `inset` px above the cells' bottom. */
   divider: { color: 'brass', alpha: 0.7, width: 1, inset: 2 },
   label: { h: 9, gap: 2 },
