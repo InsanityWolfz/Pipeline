@@ -43,6 +43,34 @@ const PANEL: Shape[] = [
 /** The restored parts in brass: the cog train, on its panel. */
 const brassBack = rect(-8.6, -20.6, 17.2, 15.2, 1, { fill: { id: 'ink', alpha: 0.25 } });
 const RESTORED_SPEED: Shape[] = [...PANEL, brassBack, ...cog(-3, -14.5, 3.6, 8, 'brass'), ...cog(3.8, -9.6, 2.6, 6, 'brass')];
+
+/**
+ * 063's Blueprint table: a drafting table seen from the front, its board tilted up toward the viewer. As a diagram, its
+ * outline, a pinned sheet, a T-square and a compass in cyan linework; restored, a wooden board on brass legs holding a
+ * deep-blue vellum sheet with its own ley drawing, a brass straightedge and compass.
+ */
+const BOARD = 'M -8 -8.6 L -6.4 -20 L 6.4 -20 L 8 -8.6 Z';
+const DIAGRAM_TABLE: Shape[] = [
+  path(BOARD, ink),
+  path('M -5.2 -11 L -4.2 -18 L 4.2 -18 L 5.2 -11 Z', { stroke: { color: 'cyan-glow', width: 0.6, dash: [1.2, 0.9] }, glow: { color: 'cyan', blur: 1.5 } }),
+  glowLine([-6.6, -7.6, -6.6, -4.8], 0.8),
+  glowLine([6.6, -7.6, 6.6, -4.8], 0.8),
+  glowLine([-7.4, -12.6, 6, -12.6], 0.7),
+  glowLine([1.6, -17, 0, -12.4, 3.2, -12.4], 0.6),
+];
+const RESTORED_TABLE: Shape[] = [
+  ...PANEL,
+  line([-6.6, -8, -6.6, -4.6], 1.4, 'brass-dark', true),
+  line([6.6, -8, 6.6, -4.6], 1.4, 'brass-dark', true),
+  path(BOARD, { fill: { linear: [0, -20, 0, -8.6], stops: [{ at: 0, color: 'wood-light' }, { at: 1, color: 'wood' }] }, outline: true }),
+  path('M -5.4 -10.4 L -4.4 -18.4 L 4.4 -18.4 L 5.4 -10.4 Z', { fill: { linear: [0, -18, 0, -10], stops: [{ at: 0, color: 'water-deep' }, { at: 1, color: 'cyan-deep' }] } }),
+  { ...line([-3.4, -16.4, 2.6, -16.4, 2.6, -12.6], 0.6, 'cyan-glow'), glow: { color: 'cyan', blur: 1.5 } },
+  rect(-2.6, -15.4, 3, 2, 0.3, trim({ id: 'cyan-glow', alpha: 0.8 }, 0.5)),
+  line([-7.6, -12.4, 5.8, -12.4], 1, 'brass', true),
+  line([1.6, -17.4, 0.2, -12.8], 0.7, 'brass-light'),
+  line([1.6, -17.4, 3, -12.8], 0.7, 'brass-light'),
+  ellipse(1.6, -17.6, 0.8, 0.8, flat('brass')),
+];
 /** A capped entrance's diagram: the open inlet and its collar, as faint linework over the brass cap. */
 const DIAGRAM_CAP: Shape[] = [
   ellipse(0, 0.4, 14, 5.4, { stroke: { color: 'cyan-glow', width: 1.1 }, glow: { color: 'cyan', blur: 3 } }),
@@ -140,6 +168,8 @@ export const RESEARCH_SPRITES_VECTOR: readonly VectorSprite[] = [
   wall(W.panel, PANEL),
   wall(W.diagramWall.machineSpeed, [...cog(-3, -14.5, 3.6, 8, 'diagram'), ...cog(3.8, -9.6, 2.6, 6, 'diagram')]),
   wall(W.restoredWall.machineSpeed, RESTORED_SPEED),
+  wall(W.diagramWall.blueprintTable, DIAGRAM_TABLE),
+  wall(W.restoredWall.blueprintTable, RESTORED_TABLE),
   sprite(W.restoredPipe[0], [52, 50], [26, 67], [collars([-58, -27])]),
   sprite(W.restoredPipe[1], [52, 50], [26, 67], [collars([-58, -47, -37, -27])]),
   sprite(W.wingDoor, [60, 46], [30, 44], [WING_DOOR]),

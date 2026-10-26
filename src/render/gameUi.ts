@@ -7,6 +7,7 @@ import { NO_HUD_PANELS } from './HudView';
 import { NO_ENEMY_UI } from './EnemyView';
 import { NO_LEGIBILITY_UI } from './Legibility';
 import type { GameScene } from './GameScene';
+import { NO_BLUEPRINT_UI } from './BlueprintUi';
 import type { GameUiState } from './testHook';
 
 // What a game scene shows, for the test hook's ui() (split from GameScene in 042). Every view may be missing (before
@@ -46,6 +47,7 @@ export function gameUi(g: GameScene): GameUiState {
     ...(g.hud?.panels ?? NO_HUD_PANELS),
     craftMenu: g.menu?.state ?? null,
     buildBar: g.buildView?.state ?? null,
+    blueprints: g.blueprintUi?.shown ?? NO_BLUEPRINT_UI,
     tunnels: g.tunnelView?.marks ?? [],
     tagged: { splitFlashes: g.effects?.splitFlashes ?? 0, trails: g.arrowView?.trails ?? { count: 0, longest: 0 }, burning: g.arrowView?.burning ?? 0, shards: g.arrowView?.shards ?? 0 },
     ...(g.enemyView?.ui ?? NO_ENEMY_UI),

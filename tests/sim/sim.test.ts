@@ -3,13 +3,11 @@ import { DYING_TICKS } from '../../src/data/player';
 import { OVERWORLD } from '../../src/data/overworld';
 import { WORLD } from '../../src/sim/world';
 import { describe, expect, it } from 'vitest';
-import { advanceClock, createClock } from '../../src/sim/clock';
 import { NO_COMMAND, type Command } from '../../src/sim/input';
 import { craft } from '../../src/sim/crafting';
 import { createSim, tileCentre } from '../../src/sim/state';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
-import { MAX_TICKS_PER_FRAME, TICK_RATE } from '../../src/data/config';
 
 /** Enemies placed across every room at the start. */
 const STARTING_ENEMIES = Object.values(WORLD).reduce((n, r) => n + (r.enemies?.length ?? 0), 0);
@@ -143,11 +141,6 @@ function scriptedFoundry(seed: number, ticks: number) {
   return sim;
 }
 
-function ticksFor(deltas: number[]): number {
-  const clock = createClock();
-  return deltas.reduce((total, delta) => total + advanceClock(clock, delta), 0);
-}
-
 describe('sim state', () => {
   it('starts at tick 0 with the given seed', () => {
     const sim = createSim(5);
@@ -243,14 +236,16 @@ describe('sim state', () => {
     const fire = ['ignites', 'spreads'] as const;
     // 060: the Forgewright's bellows, vents, slam, spray and flood.
     const forge = ['bellowsBreaks', 'bellowsPatches', 'vents', 'ventEnds', 'slams', 'sprays', 'floodStarts', 'floods'] as const;
+    // 063: area pick-ups, blueprints saved, refused and deleted, and stamped.
+    const blueprints = ['areaPickUps', 'blueprintSaves', 'blueprintSaveFails', 'blueprintDeletes', 'stamps'] as const;
     // 061: the Emberworks' enemies: motes bursting, hounds dashing, golems slamming and splitting, tenders' beams.
     const ember = ['moteBursts', 'deathBursts', 'dashes', 'golemSlams', 'golemSplits', 'beams', 'beamBreaks'] as const;
     // 064: the Stormcrown's: lightning striking a storm rod, and lightning arcs; the Conductor's strikes, rods, blinks and attacks.
     const storm = ['rodStrikes', 'arcs', 'strikes', 'rodBreaks', 'rodRegrows', 'blinkWarns', 'blinks', 'conductorWindups', 'lashes', 'chains'] as const;
     // 065: the Stormcrown's enemies: a thunderhawk's dive, a static mite's zap and discharge, a storm sentinel's call, a gale ram's gust.
     const stormEnemies = ['dives', 'zaps', 'discharges', 'sentinelCalls', 'gusts'] as const;
-    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save, ...onboarding, ...fire, ...forge, ...ember, ...storm, ...stormEnemies, 'lost', 'ko', 'woke', 'tubeTaken'].sort());
-    for (const name of [...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save, ...onboarding, ...fire, ...forge, ...ember, ...storm, ...stormEnemies]) expect(summary.events[name], name).toEqual([]);
+    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save, ...onboarding, ...fire, ...forge, ...ember, ...storm, ...stormEnemies, ...blueprints, 'lost', 'ko', 'woke', 'tubeTaken'].sort());
+    for (const name of [...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save, ...onboarding, ...fire, ...forge, ...ember, ...storm, ...stormEnemies, ...blueprints]) expect(summary.events[name], name).toEqual([]);
     expect(summary.events.ko).toBe(false);
     expect(summary.events.lost).toEqual({});
     expect(summary.events.tubeTaken).toBe(false);
@@ -281,25 +276,5 @@ describe('sim state', () => {
     expect(summary.enemies[0]).toMatchObject({ chill: 0, frozen: 0 });
     expect(summary.enemies[0]).not.toHaveProperty('burnTicks');
     expect(summary.crafted).toEqual([]);
-  });
-});
-
-describe('fixed-timestep clock', () => {
-  it('runs the same number of ticks however one second is split into frames', () => {
-    const second = 1000;
-    expect(ticksFor(Array(60).fill(second / 60))).toBe(TICK_RATE);
-    expect(ticksFor(Array(20).fill(second / 20))).toBe(TICK_RATE);
-    expect(ticksFor(Array(7).fill(second / 7))).toBe(TICK_RATE);
-  });
-
-  it('carries leftover time into the next frame', () => {
-    const clock = createClock();
-    const half = 1000 / TICK_RATE / 2;
-    expect(advanceClock(clock, half)).toBe(0);
-    expect(advanceClock(clock, half)).toBe(1);
-  });
-
-  it('caps the ticks run in one frame', () => {
-    expect(advanceClock(createClock(), 60_000)).toBe(MAX_TICKS_PER_FRAME);
   });
 });

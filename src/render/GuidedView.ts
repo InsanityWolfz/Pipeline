@@ -3,6 +3,7 @@ import { DEPTHS } from '../data/assets';
 import { TILE_SIZE, VIEW_WIDTH } from '../data/config';
 import { FACING_ARROWS } from '../data/foundryAssets';
 import { GUIDED_TEXT, type Ghost } from '../data/guidedBuilds';
+import { BLUEPRINT_TEXT } from '../data/blueprints';
 import { GUIDED_LOOK } from '../data/hudLayout';
 import { isFlatKind, pieceDef } from '../data/pieces';
 import { FOUNDRY_ROOM } from '../data/rooms';
@@ -29,8 +30,9 @@ export interface GuidedShown {
 
 export const NO_GUIDED: GuidedShown = { ghosts: [], remove: null, hint: null };
 
-/** A refused placement or pick-up's hint (058.3): on the outline during a guided step, "Not yet" otherwise. */
-const hintFor = (reason: PlaceFail): string | null => (reason === 'ghost' ? GUIDED_TEXT.ghost : reason === 'tutorial' ? GUIDED_TEXT.locked : null);
+/** A refused placement or pick-up's hint (058.3): on the outline during a guided step, "Not yet" otherwise; 063: a full stash. */
+const hintFor = (reason: PlaceFail): string | null =>
+  reason === 'ghost' ? GUIDED_TEXT.ghost : reason === 'tutorial' ? GUIDED_TEXT.locked : reason === 'stash-full' ? BLUEPRINT_TEXT.stashFull : null;
 
 // The guided builds in the foundry (058): each piece still to build is a glowing outline on its tile, the next one
 // brighter with its piece drawn faintly, facing the way it must; a piece to remove gets "Right click to remove" beside

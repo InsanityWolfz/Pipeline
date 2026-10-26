@@ -8,7 +8,7 @@ import { SOUND_MIX } from './sounds';
 export const SETTINGS_VERSION = 1;
 
 /** The actions the key list rebinds, in display order. Esc, Tab and the mouse buttons are fixed. */
-export const BIND_ACTIONS = ['up', 'down', 'left', 'right', 'dodge', 'interact', 'menu', 'build', 'inventory', 'research', 'talents', 'rotate', 'flip', 'use', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5', 'feedback', 'sandbox'] as const;
+export const BIND_ACTIONS = ['up', 'down', 'left', 'right', 'dodge', 'interact', 'menu', 'build', 'inventory', 'research', 'talents', 'rotate', 'flip', 'area', 'blueprints', 'use', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5', 'feedback', 'sandbox'] as const;
 export type BindAction = (typeof BIND_ACTIONS)[number];
 
 export const ACTION_LABELS: Readonly<Record<BindAction, string>> = {
@@ -25,6 +25,8 @@ export const ACTION_LABELS: Readonly<Record<BindAction, string>> = {
   talents: 'Talents',
   rotate: 'Rotate piece',
   flip: 'Flip piece',
+  area: 'Area tool',
+  blueprints: 'Blueprints',
   use: 'Use carried item',
   slot1: 'Carried slot 1',
   slot2: 'Carried slot 2',
@@ -37,6 +39,12 @@ export const ACTION_LABELS: Readonly<Record<BindAction, string>> = {
 
 /** Actions the key list shows only in the sandbox (044): the shipped game has no way into it. */
 export const SANDBOX_ONLY: readonly BindAction[] = ['sandbox'];
+
+/**
+ * Actions added after players had stored bindings (044's sandbox panel, 063's Area tool and Blueprints list): one whose default key a
+ * stored binding has since taken is left with no key, rather than the clash resetting every binding.
+ */
+export const NEWER_ACTIONS: readonly BindAction[] = ['sandbox', 'area', 'blueprints'];
 
 /** The carried bar's slot actions (047), keys 1–5 in order. */
 export const SLOT_ACTIONS: readonly BindAction[] = ['slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
@@ -59,6 +67,9 @@ export const DEFAULT_BINDINGS: Readonly<Record<BindAction, string>> = {
   talents: 'T',
   rotate: 'R',
   flip: 'G',
+  // 063: build mode's Area tool and Blueprints list.
+  area: 'X',
+  blueprints: 'P',
   // 047: right click uses the carried bar's selected item; bound to a key, that key does instead.
   use: 'RIGHT_CLICK',
   slot1: 'ONE',

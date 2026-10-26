@@ -2,6 +2,20 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-26: 063 Blueprints and area pick-up
+**Changed:** on `claude/063-blueprints` (InsanityWolfz/Pipeline#74), from Shaun's blueprints interview (docs/brainstorm/2026-10-26-blueprints-interview.md; plan docs/plans/063-blueprints.md):
+- the Area tool (X, a Tools group on the build bar): drag a box over whole pieces (never fixtures), then Pick up (contents to the stash), Save blueprint, or both;
+- a Blueprint table on the north wall at (18, 0), restored for 4 ancient gears and 2 aqueduct valves, unlocks saving and placing;
+- 8 auto-named slots (P opens the list) keeping facings, conduit turns, splitter sides, stage rounds and tunnel links, never contents;
+- a ghost that R turns and G mirrors (F is feedback); one click places everything that fits, skipping taken, fixture, wall and locked tiles; the build lock refuses it whole.
+
+`SAVE_VERSION` 15 (061 took 14); 19 once main (061, 062, 064–066) was merged in. Reviewed: three blocking findings fixed (a stamped tunnel pair could form under the wing's wall; the "Not unlocked" hover had no test; the save version collided with 061's), plus eight suggestions. `npm run check` 2076 tests; CI green. Raised for Shaun in the spec: 063.1–063.15. Built alongside 062 in its own worktree.
+
+**Next:** Shaun's playtest (`?playtest`, the sandbox can't reach the foundry); his OK on 063.1–063.15; "merge 74".
+
+**Notes:**
+- Main merged in (061, 062, 064–066, then fix-ring5-damage): docs, event lists, sounds and art joined; `SAVE_VERSION` 19. The Tools group still sits over the bar's right end, now above the Forge group, and the Blueprint table at (18, 0) stays clear of the five-cap intake. The clock tests moved to `tests/sim/clock.test.ts` to keep `sim.test.ts` under 300 lines. `npm run check` 2475 tests.
+
 ## 2026-10-26: 066 The third tier: stormsteel and storm glass
 **Changed:** on `claude/066-stormsteel` (InsanityWolfz/Pipeline#77, stacked on 065; plan docs/plans/066-stormsteel.md, five slices):
 - two more tiers in 062's system, `stormsteel` (arrows, bombs, landmines) and `storm-glass` (ley bolts), at `TIER_DAMAGE` 2.56: one breakdown step, applied once per hit, burn and Lightning arcs following the hit; 28 derived rounds with icons and gauge colours;

@@ -6,6 +6,7 @@ import type { PlaceFail } from './pieces';
 import type { Facing } from './player';
 import type { XpSource } from '../data/leveling';
 import { createForgeEvents, type ForgeEvents } from './forgeEvents';
+import { createBlueprintEvents, type BlueprintEvents } from './blueprintEvents';
 import { createEmberEvents, type EmberEvents } from './emberEvents';
 import { createStormEvents, type StormEvents } from './stormEvents';
 
@@ -59,8 +60,8 @@ export interface MeleeEvent {
   hits: number[];
 }
 
-/** 060: the Forgewright's events are in forgeEvents.ts; 064: the Stormcrown's in stormEvents.ts. */
-export interface SimEvents extends ForgeEvents, EmberEvents, StormEvents {
+/** 060: the Forgewright's events are in forgeEvents.ts; 063: blueprints' in blueprintEvents.ts; 064: the Stormcrown's in stormEvents.ts. */
+export interface SimEvents extends ForgeEvents, BlueprintEvents, EmberEvents, StormEvents {
   hits: HitEvent[];
   deaths: DeathEvent[];
   pickups: PickupEvent[];
@@ -200,6 +201,7 @@ export interface SimEvents extends ForgeEvents, EmberEvents, StormEvents {
 export function createEvents(): SimEvents {
   return {
     ...createForgeEvents(),
+    ...createBlueprintEvents(),
     ...createEmberEvents(),
     ...createStormEvents(),
     hits: [],

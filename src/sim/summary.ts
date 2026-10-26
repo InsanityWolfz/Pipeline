@@ -14,6 +14,7 @@ import { volleyRounds, nextPress, hudActive, type HudActive, type NextPress } fr
 import { INTAKE } from '../data/foundry';
 import { entranceCap } from './research';
 import { researchSummary, type ResearchSummary } from './researchSummary';
+import { blueprintSummary } from './blueprints';
 import type { SimState } from './state';
 import {
   arrowSummary,
@@ -153,6 +154,8 @@ export interface SimSummary extends PlayerSummary, HollowsSummary, LevelingSumma
   atRisk: Record<string, number>;
   /** Research (033): each node's state and whether it's ready, the entrance cap and machine speed now, and the schematics carried and banked. */
   research: ResearchSummary;
+  /** 063: blueprints unlocked (the Blueprint table), and the saved ones in slot order. */
+  blueprints: ReturnType<typeof blueprintSummary>;
   /** 058: the guided tutorial's build lock and the current guided build's ghosts still to build. */
   guided: ReturnType<typeof guidedSummary>['guided'];
   /** What happened on the last tick. */
@@ -247,6 +250,7 @@ export function summarize(state: SimState): SimSummary {
     objective: objectiveLine(state),
     prototypeComplete: state.prototypeComplete,
     research: researchSummary(state),
+    blueprints: blueprintSummary(state),
     ...hollowsSummary(state),
     ...levelingSummary(state),
     ...minesSummary(state),

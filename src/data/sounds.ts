@@ -1,4 +1,5 @@
 import { RESEARCH_SOUND_RECIPES } from './researchSounds.ts';
+import { BLUEPRINT_SOUND_RECIPES, BLUEPRINT_SOUNDS } from './blueprintSounds.ts';
 import { HOLLOWS_SOUND_RECIPES, HOLLOWS_SOUNDS } from './hollowsSounds.ts';
 import { HOLLOWS_ENEMY_SOUND_RECIPES, HOLLOWS_ENEMY_SOUNDS, HOLLOWS_ENEMY_WINDUPS } from './hollowsEnemySounds.ts';
 import { GEAR_SOUND_RECIPES, GEAR_SOUNDS } from './gearSounds.ts';
@@ -66,6 +67,7 @@ export const SOUNDS = {
   ...MINE_SOUNDS,
   ...EMBERWORKS_SOUNDS,
   ...EMBERWORKS_ENEMY_SOUNDS,
+  ...BLUEPRINT_SOUNDS,
   ...TIER_SOUNDS,
   ...STORMCROWN_SOUNDS,
   ...STORMCROWN_ENEMY_SOUNDS,
@@ -76,6 +78,7 @@ export type SoundKey = (typeof SOUNDS)[keyof typeof SOUNDS];
 
 export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
   ...RESEARCH_SOUND_RECIPES,
+  ...BLUEPRINT_SOUND_RECIPES,
   ...HOLLOWS_SOUND_RECIPES,
   ...HOLLOWS_ENEMY_SOUND_RECIPES,
   ...GEAR_SOUND_RECIPES,

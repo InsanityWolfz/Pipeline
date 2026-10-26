@@ -47,7 +47,11 @@ const between = (a: Tile, b: Tile): number => Math.abs(a.tx - b.tx) + Math.abs(a
 export function pairOnPlace(foundry: FoundryState, p: PieceState): void {
   if (p.kind !== 'tunnel-in' && p.kind !== 'tunnel-out') return;
   const q = partnerFor(foundry, p);
-  if (!q) return;
+  if (q) pairEnds(p, q);
+}
+
+/** Pairs two tunnel ends (an entrance and its exit): each names the other, and the entrance's tunnel gets a slot per tile between. */
+export function pairEnds(p: TunnelEnd, q: TunnelEnd): void {
   p.pair = q.id;
   q.pair = p.id;
   const entrance = p.kind === 'tunnel-in' ? p : q.kind === 'tunnel-in' ? q : undefined;

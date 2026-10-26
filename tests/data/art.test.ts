@@ -181,7 +181,8 @@ describe('vector frame registration', () => {
     const forge = await import('../../src/data/forgewrightAssets');
     const conductor = await import('../../src/data/conductorAssets');
     const tiers = await import('../../src/data/tierAssets');
-    walk({ ...tiers, ...assets, ...foundry, ...room, ...props, ...stages, ...springs, ...landmarks, ...research, ...hollows, ...hollowsEnemies, ...gear, ...talents, ...mines, ...arenas, ...emberworks, ...stormcrown, ...forge, ...conductor });
+    const blueprints = await import('../../src/data/blueprintAssets');
+    walk({ ...tiers, ...assets, ...foundry, ...room, ...props, ...stages, ...springs, ...landmarks, ...research, ...hollows, ...hollowsEnemies, ...gear, ...talents, ...mines, ...arenas, ...emberworks, ...stormcrown, ...forge, ...conductor, ...blueprints });
     for (const f of vectorFrames()) expect(registered, f.name).toContain(f.name);
   });
 });

@@ -69,6 +69,12 @@ export function guidedShape(state: SimState, shape: PieceShape): PieceShape {
   return { ...shape, inFrom: g.inFrom ?? opposite(g.facing) };
 }
 
+/** Why the lock refuses a whole area pick-up or a blueprint's stamp (063): `ghost` during a guided step, `tutorial` otherwise; null when unlocked. */
+export function wholeRefusal(state: SimState): PlaceFail | null {
+  if (!buildLocked(state)) return null;
+  return currentGuided(state) ? 'ghost' : 'tutorial';
+}
+
 /** Why the lock refuses picking up the piece on this tile, or null if it allows it (058.6: only the piece to remove). */
 export function pickUpRefusal(state: SimState, tx: number, ty: number): PlaceFail | null {
   if (!buildLocked(state)) return null;

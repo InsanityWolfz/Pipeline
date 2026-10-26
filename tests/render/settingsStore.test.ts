@@ -51,6 +51,14 @@ describe('settings store (042)', () => {
   });
 });
 
+describe('actions added after a stored file (063)', () => {
+  it("leaves the Area tool with no key when a stored binding has taken X, keeping the player's other keys", () => {
+    const parsed = parseSettings(JSON.stringify({ bindings: { dodge: 'X' } }));
+    expect(parsed?.bindings).toMatchObject({ dodge: 'X', area: '' });
+    expect(parseSettings(JSON.stringify({ bindings: { dodge: 'SHIFT' } }))?.bindings.area).toBe(DEFAULT_BINDINGS.area);
+  });
+});
+
 describe('volume steps (042)', () => {
   it('steps 10% at a time, kept in 0..100%', () => {
     expect(stepVolume(0.7, 1)).toBe(0.8);

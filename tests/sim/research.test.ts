@@ -27,6 +27,8 @@ describe('node states', () => {
       'reservoir-1': 'revealed',
       'reservoir-2': 'hidden',
       'machine-speed': 'hidden',
+      // 063: the Blueprint table, from the start.
+      'blueprint-table': 'revealed',
       'sealed-wing': 'revealed',
     });
     const s = foundry();
@@ -47,6 +49,7 @@ describe('node states', () => {
       ['entrance-2', 3],
       ['entrance-2', 4],
       ['reservoir-1', null],
+      ['blueprint-table', null],
       ['sealed-wing', null],
     ]);
     s.research['machine-speed'] = 'revealed';

@@ -8,6 +8,7 @@ import type { CursorState } from './CursorView';
 import type { BottomHudState, HudPanelsState } from './HudView';
 import type { MadePopupShown } from './MadePopups';
 import type { BuildBarState } from './BuildView';
+import type { BlueprintUiShown } from './BlueprintUi';
 import type { CraftMenuState } from './CraftMenuView';
 import type { WaypointShown } from './WaypointView';
 import type { FoundryMapShown } from './FoundryMapView';
@@ -180,6 +181,8 @@ export interface UiState {
   craftMenu: CraftMenuState | null;
   /** The build bar as drawn (026): the unlocked pieces' cells, the shown groups' labels and the dividers. */
   buildBar: BuildBarState | null;
+  /** 063: build mode's tools: the tool in use, the area box and what it counts, its menu's rows, and the Tools cells. */
+  blueprints: BlueprintUiShown;
   /** 052: the underground pair's marks on the floor: a pair's tunnel (hovered, or the ghost that would pair) and an entrance's reach while placing. */
   tunnels: TunnelMark[];
   /**

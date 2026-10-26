@@ -75,8 +75,11 @@ export function conduitInFrom(state: SimState, tx: number, ty: number, facing: F
   return sides.length === 1 && sides[0] ? sides[0] : back;
 }
 
-/** Places a piece and returns it, or records why it can't go there and returns null. */
-export function place(state: SimState, pieceId: string, tx: number, ty: number, facing: Facing, shape: PieceShape = {}): PieceState | null {
+/**
+ * Places a piece and returns it, or records why it can't go there and returns null. An underground end pairs with the
+ * nearest free end in reach, unless `pair` is false (063: a stamped blueprint pairs its own ends by their saved link).
+ */
+export function place(state: SimState, pieceId: string, tx: number, ty: number, facing: Facing, shape: PieceShape = {}, pair = true): PieceState | null {
   const reason = canPlace(state, pieceId, tx, ty, facing);
   if (reason) {
     state.events.placeFails.push({ pieceId, tx, ty, reason });
@@ -88,7 +91,7 @@ export function place(state: SimState, pieceId: string, tx: number, ty: number, 
     kind === 'conduit' ? { inFrom: conduitInFrom(state, tx, ty, facing, guided.inFrom) } : kind === 'splitter' ? { mirrored: shape.mirrored ?? false } : {};
   const piece = createPiece(state.foundry.nextPieceId++, pieceId, tx, ty, facing, made);
   state.foundry.pieces.push(piece);
-  pairOnPlace(state.foundry, piece);
+  if (pair) pairOnPlace(state.foundry, piece);
   state.events.places.push({ id: piece.id, pieceId, tx, ty, facing });
   return piece;
 }
@@ -120,14 +123,18 @@ export function pickUp(state: SimState, tx: number, ty: number): void {
   else removePieceAt(state, tx, ty);
 }
 
-/** Removes the piece covering a foundry tile wherever the player is, putting what it held in the inventory. */
-export function removePieceAt(state: SimState, tx: number, ty: number): void {
+/**
+ * Removes the piece covering a foundry tile wherever the player is, putting what it held in the inventory, or (063: an
+ * area pick-up) the stash.
+ */
+export function removePieceAt(state: SimState, tx: number, ty: number, into: 'inventory' | 'stash' = 'inventory'): void {
   const piece = pieceAt(state.foundry, tx, ty);
   if (!piece) return;
   const items = pieceContents(piece);
   // An underground exit takes what's under the floor back with it (052.2).
   for (const [itemId, n] of Object.entries(unpair(state.foundry, piece))) items[itemId] = count(items, itemId) + n;
-  for (const [itemId, n] of Object.entries(items)) state.inventory[itemId] = count(state.inventory, itemId) + n;
+  const store = into === 'stash' ? state.stash : state.inventory;
+  for (const [itemId, n] of Object.entries(items)) store[itemId] = count(store, itemId) + n;
   state.foundry.pieces = state.foundry.pieces.filter((p) => p !== piece);
   state.events.pickUps.push({ id: piece.id, pieceId: piece.pieceId, items });
 }

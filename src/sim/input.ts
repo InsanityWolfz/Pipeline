@@ -1,11 +1,15 @@
 import type { Facing } from './player';
 import type { EquipRequest } from './gear';
 import type { SandboxCommand } from './sandbox';
+import type { AreaBox } from './area';
 
 // What the player asks for on one tick. Render builds these from the keyboard
 // and mouse; the sim never reads input devices.
 
 export type Axis = -1 | 0 | 1;
+
+/** What the area tool's release menu asks for (063). */
+export type AreaAction = 'pickUp' | 'save' | 'saveAndPickUp';
 
 /**
  * How many a hopper deposit or withdraw moves (022), like an inventory stack: one,
@@ -41,6 +45,18 @@ export interface Command {
   place: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing; mirrored?: boolean } | null;
   /** A tile whose piece to pick up this tick (an edge), or null. */
   pickUp: { tx: number; ty: number } | null;
+  /**
+   * The area tool's choice for a box this tick (an edge, 063), or null: pick up every piece wholly inside it, save them
+   * as a blueprint (into `slot`, overwriting it; left out, the next free slot), or both.
+   */
+  area: { box: AreaBox; action: AreaAction; slot?: number } | null;
+  /**
+   * Stamp the blueprint in `slot` this tick (an edge, 063), mirrored (if `mirrored`) then turned `turns` quarters
+   * clockwise, with its box's top-left on (tx, ty); or null.
+   */
+  stamp: { slot: number; tx: number; ty: number; turns: number; mirrored: boolean } | null;
+  /** Delete the blueprint in this slot this tick (an edge, 063), or null. */
+  deleteBlueprint: number | null;
   /**
    * Put some of a held item into a hopper (by piece id) that's empty or holds it, or into a crate (047), this tick (an
    * edge), or null. How many by `amount` (022) of the clicked stack's `stack` items (047; left out, all held).
@@ -96,6 +112,9 @@ export const NO_COMMAND: Readonly<Command> = {
   toggleBuild: false,
   place: null,
   pickUp: null,
+  area: null,
+  deleteBlueprint: null,
+  stamp: null,
   deposit: null,
   withdraw: null,
   sortInventory: false,

@@ -1,6 +1,9 @@
 import { FOUNDRY_ROOM } from '../data/rooms';
 import type { Command } from './input';
 import { pickUp, place } from './placement';
+import { areaPickUp } from './area';
+import { deleteBlueprint, saveBlueprint } from './blueprints';
+import { stamp } from './stamp';
 import type { SimState } from './state';
 
 // Build mode: toggled in the foundry. While it's on the player can still walk,
@@ -11,7 +14,7 @@ export function maskCommand(state: SimState, cmd: Command): Command {
   return state.building ? { ...cmd, fire: false, use: false, selectSlot: null } : cmd;
 }
 
-/** Toggles build mode, then places and picks up. All but the toggle only work in the foundry. */
+/** Toggles build mode, then places and picks up, one piece or a box of them (063). All but the toggle only work in the foundry. */
 export function stepBuild(state: SimState, cmd: Command): void {
   if (cmd.toggleBuild) state.building = !state.building && state.roomId === FOUNDRY_ROOM;
   if (cmd.place) {
@@ -19,4 +22,11 @@ export function stepBuild(state: SimState, cmd: Command): void {
     place(state, pieceId, tx, ty, facing, { ...(inFrom ? { inFrom } : {}), ...(mirrored ? { mirrored } : {}) });
   }
   if (cmd.pickUp) pickUp(state, cmd.pickUp.tx, cmd.pickUp.ty);
+  // 063: the area tool's box: saved first (so a save and pick-up keeps what it lifts), then picked up; a save and
+  // pick-up whose save fails (all slots full, none named) picks nothing up.
+  const area = cmd.area;
+  const saved = area && area.action !== 'pickUp' ? saveBlueprint(state, area.box, area.slot) : null;
+  if (area && (area.action === 'pickUp' || (area.action === 'saveAndPickUp' && saved !== null))) areaPickUp(state, area.box);
+  if (cmd.deleteBlueprint !== null) deleteBlueprint(state, cmd.deleteBlueprint);
+  if (cmd.stamp) stamp(state, cmd.stamp);
 }

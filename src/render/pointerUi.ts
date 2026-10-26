@@ -21,10 +21,12 @@ export interface PointerUiInput {
 // rows lit under it, the arrow or crosshair pointer, hover panels and the legibility tips. Holds no game rules.
 export function drawPointerUi(g: GameScene, sim: SimState, { controls, topOf, wakeShown, shown, inFoundry }: PointerUiInput): void {
   const cursor = controls && inFoundry && controls.overWorld() ? controls.cursorTile() : null;
+  // 063: the bar's piece ghost shows only while placing pieces, not with the Area tool or a blueprint held.
+  const placing = controls?.tools.mode === 'piece' ? cursor : null;
   g.buildView?.update(
     sim.building,
     unlockedPieces(sim),
-    cursor,
+    placing,
     controls?.facing ?? 'right',
     controls?.mirrored ?? false,
     (...a) => canPlace(sim, ...a),
@@ -32,14 +34,15 @@ export function drawPointerUi(g: GameScene, sim: SimState, { controls, topOf, wa
     highlightOf(sim),
     buildLocked(sim),
   );
-  g.tunnelView?.update(sim.foundry, inFoundry, { building: sim.building, selected: g.buildView?.selected ?? '', cursor, facing: controls?.facing ?? 'right' });
+  g.tunnelView?.update(sim.foundry, inFoundry, { building: sim.building, selected: g.buildView?.selected ?? '', cursor: placing, facing: controls?.facing ?? 'right' });
   // Menu rows light under the cursor (020).
   const pointer = controls?.viewPointer();
-  if (pointer) for (const menu of [g.siteMenus, g.pause, g.hud, g.sandboxPanel, g.roomViews]) menu?.pointAt(pointer.x, pointer.y);
+  if (controls) g.blueprintUi?.update(sim, controls.tools, inFoundry, cursor, pointer ?? null, g.feel?.sound);
+  if (pointer) for (const menu of [g.siteMenus, g.pause, g.hud, g.sandboxPanel, g.roomViews, g.blueprintUi]) menu?.pointAt(pointer.x, pointer.y);
   // The arrow pointer while a menu is open or over the build bar, else the crosshair (021).
   // 056: the sandbox's tabs are always up, so they turn the pointer to the arrow only under them.
   const inMenu = [g.menu, g.pause, g.siteMenus, g.hud?.inventory, g.hud?.talents, g.legibility].some((m) => m?.isOpen) || wakeShown();
-  g.cursorView?.update(inMenu || (pointer !== undefined && [g.buildView, g.legibility, g.sandboxPanel].some((v) => v?.overUi(pointer.x, pointer.y))));
+  g.cursorView?.update(inMenu || (pointer !== undefined && [g.buildView, g.blueprintUi, g.legibility, g.sandboxPanel].some((v) => v?.overUi(pointer.x, pointer.y))));
   const point = controls?.overWorld() ? controls.cursorPoint() : null;
   g.hover?.update(sim, shown, point, topOf, g.cameras.main.worldView);
   g.legibility?.update(sim, g.pause?.isOpen ? null : (pointer ?? null), controls?.shiftHeld() ?? false, g.game.loop.delta);

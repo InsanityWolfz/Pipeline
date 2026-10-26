@@ -28,7 +28,7 @@ export const NOTICE = { x: 8, y: 104, pad: 3, h: 14, textY: 4, alpha: 0.85, hold
 
 /** The Settings tablet: centred, its rows `FLOW_ROWS` apart under a title card. The key list: two columns of rows. */
 export const SETTINGS_PANEL = { y: 14, titleH: 24, titleY: 7, pad: 8 } as const;
-export const BINDINGS_PANEL = { y: 22, columnGap: 16, perColumn: 10, titleH: 34, titleY: 6, noteY: 21, pad: 8 } as const;
+export const BINDINGS_PANEL = { y: 22, columnGap: 16, perColumn: 12, titleH: 34, titleY: 6, noteY: 21, pad: 8 } as const;
 
 /** The note (042): a tablet with a title, a text box (an HTML textarea over the canvas) and Save note / Cancel under it. */
 export const NOTE_PANEL = { w: 360, x: 140, y: 40, pad: 10, titleY: 8, countY: 10, box: { y: 28, h: 150, padding: 3, zIndex: 10 }, buttonsGap: 8, fontPx: 8, lineHeight: 10 } as const;
