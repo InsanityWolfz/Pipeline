@@ -5,9 +5,9 @@ import { CONDUCTOR_XP } from './leveling';
 // The Conductor (064): the Stormcrown's boss, a robed storm construct with a rod staff in the Crown Spire, the design's
 // "evasive movement" boss. It stands at one of six arena rods and blinks between them, telegraphed by the target rod's
 // flash; a homing round follows it, and breaking rods leaves it fewer places to go (with fewer than 2 standing it is
-// grounded; 068: with 3 or more standing it is shielded, every hit on its body blocked). It lashes a line at the player, calls lightning down on and round them, and runs lightning along the
-// lines between its rods. All numbers are starting values from the spec, tuned in playtest; the ones the spec doesn't
-// give are marked (064's raised items).
+// grounded; 068: with 3 or more standing it is shielded, every hit on its body blocked). It lashes a line at the
+// player, calls lightning down on and round them, and runs lightning along the lines between its rods. All numbers are
+// starting values from the spec, tuned in playtest; the ones the spec doesn't give are marked (064's raised items).
 
 /** One of its attacks' shared timing: a wind-up (its telegraph), the strike held `activeTicks`, a recovery, and its own cooldown from the wind-up's start. */
 export interface ConductorAttack {

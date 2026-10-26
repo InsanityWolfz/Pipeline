@@ -65,6 +65,12 @@ const PATHS: Record<string, (s: SimState, c: EnemyState) => number> = {
     movePlayer(s, c.x + u.x * 160, c.y + u.y * 160);
     return blocksOver(s, c, 40, () => volleyAt(c.x, c.y + CONDUCTOR.hurtbox.offsetY));
   },
+  'a Lightning round’s direct hit': (s, c) => {
+    lines(s, 'ley-bolt+lightning');
+    const u = inward(s, c);
+    movePlayer(s, c.x + u.x * 160, c.y + u.y * 160);
+    return blocksOver(s, c, 40, () => volleyAt(c.x, c.y + CONDUCTOR.hurtbox.offsetY));
+  },
   'a Shard': (s, c) => {
     const u = inward(s, c);
     const at = { x: c.x + u.x * 30, y: c.y + CONDUCTOR.hurtbox.offsetY + u.y * 30 };

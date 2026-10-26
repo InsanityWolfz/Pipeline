@@ -2,7 +2,7 @@ import { describe, it } from 'vitest';
 import { carefulBot, fight, rodBreakerBot, TARGET, type Bot, type Fight } from '../sim/conductorBot';
 import { report, seconds, table } from './report';
 
-// The Conductor's target (068, docs/specs/068-late-boss-buffs.md; 064's was 120–180 s): a decent four-entrance
+// The Conductor's target (068, docs/specs/068-late-boss-buffs.md; 064's was 90–150 s): a decent four-entrance
 // homing-bolt build, breaking rods to drop his storm shield, kills it in about 120–180 s with at most 2 KOs over seeds
 // 1–20. Recorded beside it: a no-homing, no-rod-breaking build (plain arrows at his body), and plain arrows breaking
 // rods. Recorded, not tuned.

@@ -12,9 +12,8 @@ import { startKnock, type Knockable } from './knockback';
 import type { Facing } from './player';
 import type { SimState } from './state';
 import { createBellows, type BellowsState } from './forgewrightParts';
-import { plated } from './bossParts';
+import { blockPlated } from './bossParts';
 import { createConductor, type ConductorState } from './conductorRods';
-import { recordBlock } from './shield';
 
 // Enemies as plain data: creation, damage and hurtboxes. Their behaviour is in enemyAi.ts, separation in separation.ts.
 
@@ -248,14 +247,9 @@ export function damageEnemy(
   dirY: number,
   style: HitStyle = ARROW_HIT,
 ): void {
+  // 060: the Forgewright's plating, and (068) the Conductor's storm shield, take every hit on its body (bossParts.ts).
+  if (blockPlated(state, e)) return;
   const def = defOf(e);
-  // 060: the Forgewright's plating takes every hit on its body until it vents (its bellows' hits never come here); 068:
-  // the Conductor's storm shield too, while 3 or more of its rods stand.
-  if (plated(e)) {
-    recordBlock(state, e, e.x, e.y + def.hurtbox.offsetY);
-    if (e.mode === 'idle' || e.mode === 'return') aggro(e);
-    return;
-  }
   e.health = Math.max(0, e.health - amount);
   if (style.flash) e.flash = def.hitFlashTicks;
   // Knockback (039): the round's push times the enemy's weight (a boss weighs 0, frozen or not).

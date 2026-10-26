@@ -1,6 +1,8 @@
-import type { EnemyState, HitStyle } from './enemies';
+import { defOf } from './champions';
+import { aggro, type EnemyState, type HitStyle } from './enemies';
 import { bellowsBox, bellowsPoint, forgeDefOf, forgePlated, hitPart as hitBellows, partAt as bellowsAt, partsNear as bellowsNear } from './forgewrightParts';
 import { conductorDefOf, hitRod, rodAt, rodBox, rodPoint, rodsNear, standing, stormShielded } from './conductorRods';
+import { recordBlock } from './shield';
 import type { SimState } from './state';
 
 // A boss's parts (064): the hit routing the Forgewright's bellows (060) and the Conductor's rods share. A round, a
@@ -13,6 +15,17 @@ import type { SimState } from './state';
  * (068) the Conductor with its storm shield up.
  */
 export const plated = (e: Pick<EnemyState, 'enemyId' | 'vent' | 'conductor'>): boolean => forgePlated(e) || stormShielded(e);
+
+/**
+ * A hit on its body while `plated` (060: the Forgewright not vented; 068: the Conductor's storm shield, 3 or more rods
+ * standing; its parts' hits never come here): blocked, with a spark and clang, and it aggros. True if it was blocked.
+ */
+export function blockPlated(state: SimState, e: EnemyState): boolean {
+  if (!plated(e)) return false;
+  recordBlock(state, e, e.x, e.y + defOf(e).hurtbox.offsetY);
+  if (e.mode === 'idle' || e.mode === 'return') aggro(e);
+  return true;
+}
 
 /** A key for a part in an arrow's hit list (never an enemy id, which is never negative), so a piercing shot hits each part once. */
 export const partKey = (id: number, part: number): number => -(id * 8 + part) - 1;

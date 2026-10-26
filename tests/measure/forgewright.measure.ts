@@ -2,7 +2,7 @@ import { describe, it } from 'vitest';
 import { decentBot, fight, TARGET, type Fight } from '../sim/forgewrightBot';
 import { report, seconds, table } from './report';
 
-// The Forgewright's target (068, docs/specs/068-late-boss-buffs.md; 060's was 90–120 s): a decent three-entrance build
+// The Forgewright's target (068, docs/specs/068-late-boss-buffs.md; 060's was 60–90 s): a decent three-entrance build
 // kills it in about 90–120 s with at most 2 KOs over seeds 1–20. Recorded, not tuned in the build.
 
 const SEEDS = Array.from({ length: 20 }, (_, i) => i + 1);
