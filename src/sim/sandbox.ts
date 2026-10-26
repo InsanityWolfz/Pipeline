@@ -14,6 +14,7 @@ import type { Command } from './input';
 import { entranceCap } from './research';
 import { gainXp, xpToNext } from './leveling';
 import { createEvents } from './events';
+import { linkTrios } from './miteAi';
 import { spawnEnemy } from './spawn';
 import { createSim, resetWorld, roomById, type SimState } from './state';
 import { playerStats } from './stats';
@@ -73,9 +74,20 @@ function fill(state: SimState): void {
   for (const a of SANDBOX_ARENAS) spawnEnemy(state, a.boss, tileCentre(a.start), SANDBOX_ROOM, { group: ARENA_GROUP(a.boss) });
 }
 
+/** A pen's enemy at its home (065: a swarm, the mite's trio, side by side round it). */
 function fillPen(state: SimState, i: number): void {
   const pen = SANDBOX_PENS[i];
-  if (pen) spawnEnemy(state, pen.enemyId, tileCentre(pen.home), SANDBOX_ROOM, { group: PEN_GROUP(i), ring: pen.ring });
+  if (!pen) return;
+  const at = tileCentre(pen.home);
+  const n = swarmOf(pen.enemyId);
+  const members = Array.from({ length: n }, (_, k) => spawnEnemy(state, pen.enemyId, { x: at.x + (k - (n - 1) / 2) * SANDBOX.place.swarmGap, y: at.y }, SANDBOX_ROOM, { group: PEN_GROUP(i), ring: pen.ring }));
+  linkTrios(members);
+}
+
+/** A swarm's size (065: a static mite's trio), or 1. */
+function swarmOf(enemyId: string): number {
+  const def = ENEMIES[enemyId];
+  return def?.kind === 'mite' ? def.swarm : 1;
 }
 
 /** Each tick, before the tube fires: the panel's command, the pens, and every entrance full of its round. */
@@ -120,10 +132,17 @@ function spawnAhead(state: SimState, c: Extract<SandboxCommand, { kind: 'spawn' 
   const room = roomById(state.roomId);
   const box = defOf({ enemyId: c.enemyId, champion: champion ? { name: '' } : null, ring: c.ring }).feetBox;
   const { distance, spacing } = SANDBOX.place;
+  const swarm = swarmOf(c.enemyId);
   for (let i = 0; i < n; i++) {
     const across = (i - (n - 1) / 2) * spacing * TILE_SIZE;
     const target = { x: p.x + dx * distance * TILE_SIZE - dy * across, y: p.y + dy * distance * TILE_SIZE + dx * across };
-    spawnEnemy(state, c.enemyId, clear(room, p, target, box), state.roomId, { group: SPAWN_GROUP, ring: c.ring, champion });
+    const at = clear(room, p, target, box);
+    // 065: a mite comes as its trio, a little apart along the row, champions together.
+    const members = Array.from({ length: swarm }, (_, k) => {
+      const off = (k - (swarm - 1) / 2) * SANDBOX.place.swarmGap;
+      return spawnEnemy(state, c.enemyId, clear(room, p, { x: at.x - dy * off, y: at.y + dx * off }, box), state.roomId, { group: SPAWN_GROUP, ring: c.ring, champion });
+    });
+    linkTrios(members);
   }
 }
 

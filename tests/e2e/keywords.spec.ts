@@ -22,8 +22,9 @@ test('Frost bombs crafted from the Bombs tab chill a pack', async ({ page }) => 
   await openCraftTab(page, 'bomb');
   const menu = await page.evaluate(() => window.__GAME__?.ui().craftMenu);
   const tagged = (menu?.rows ?? []).filter((r) => r.shown && (r.labels[r.labels.length - 1]?.itemId.includes('+') ?? false));
-  // 060: the Fire bomb's row too, as the kit carries cinderite.
-  expect(tagged.map((r) => r.recipeId)).toEqual(['frost-rune-bomb', 'fire-rune-bomb', 'cluster-die-bomb']);
+  // 060: the Fire bomb's row too, as the kit carries cinderite. (062: the steel bomb's waits for ley-steel, which the
+  // kit leaves out.) 064: and the Lightning bomb's, as the kit carries stormglass.
+  expect(tagged.map((r) => r.recipeId)).toEqual(['frost-rune-bomb', 'fire-rune-bomb', 'lightning-rune-bomb', 'cluster-die-bomb']);
   await openCraftTab(page, 'landmine');
   await craftRow(page, 'frost-rune-landmine');
   await openCraftTab(page, 'bomb');

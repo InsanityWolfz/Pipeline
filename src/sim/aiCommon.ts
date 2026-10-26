@@ -1,5 +1,5 @@
 import { TICK_RATE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
-import { attackOf, type BulwarkDef, type EnemyDef, type ForgewrightDef } from '../data/enemies';
+import { attackOf, type BulwarkDef, type ConductorDef, type EnemyDef, type ForgewrightDef } from '../data/enemies';
 import { defOf } from './champions';
 import { unit } from './direction';
 import { arenaWaits } from './arenaWait';
@@ -19,6 +19,14 @@ export function toward(dx: number, dy: number, def: EnemyDef): [number, number] 
   const step = Math.min(def.walkSpeed / TICK_RATE, Math.hypot(dx, dy));
   const [ux, uy] = unit(dx, dy);
   return [ux * step, uy * step];
+}
+
+/** Its band from the player (061's kiln-tender, 065's storm sentinel): back off when closer than `min`, close in when farther than `max`, else hold. */
+export function keepDistance(def: EnemyDef, keep: { min: number; max: number }, dx: number, dy: number): [number, number] {
+  const dist = Math.hypot(dx, dy);
+  if (dist < keep.min) return toward(-dx, -dy, def);
+  if (dist > keep.max) return toward(dx, dy, def);
+  return [0, 0];
 }
 
 /** Walks home; once there it idles at full health. */
@@ -81,7 +89,7 @@ export function stepAttack(e: EnemyState, def: EnemyDef, land: () => void, windu
 }
 
 /** Past the off-screen grace, a chasing enemy heads home. Returns its move if so. */
-export function leash(e: EnemyState, def: Exclude<EnemyDef, BulwarkDef | ForgewrightDef>): [number, number] | null {
+export function leash(e: EnemyState, def: Exclude<EnemyDef, BulwarkDef | ForgewrightDef | ConductorDef>): [number, number] | null {
   if (e.offScreenTicks < def.leashGraceTicks) return null;
   e.mode = 'return';
   e.modeTicks = 0;

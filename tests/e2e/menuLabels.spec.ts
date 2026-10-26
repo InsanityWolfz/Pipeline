@@ -105,8 +105,10 @@ test('the crafting menu names every recipe item under its icon, on a tab per amm
     await openCraftTab(page, tab);
     const open = await page.evaluate(() => window.__GAME__?.ui().craftMenu);
     const shown = open?.rows.filter((r) => r.shown) ?? [];
-    // Only the open tab's plain recipes: tagged rounds wait for the shrine's claim.
-    expect(shown.map((r) => r.recipeId)).toEqual((CRAFT_TABS.find((t) => t.ammoId === tab)?.recipes ?? []).filter((id) => RECIPES[id]));
+    // Only the open tab's plain recipes: tagged rounds wait for the shrine's claim, and (062) the tier rows for
+    // ley-steel or ley glass to be carried.
+    const openTab = CRAFT_TABS.find((t) => t.ammoId === tab);
+    expect(shown.map((r) => r.recipeId)).toEqual((openTab?.recipes.slice(0, openTab.tierFrom) ?? []).filter((id) => RECIPES[id]));
     for (const row of shown) {
       const recipe = craftRecipeDef(row.recipeId);
       const items = [...Object.keys(recipe.inputs), recipe.output.itemId];

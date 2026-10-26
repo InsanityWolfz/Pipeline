@@ -26,6 +26,8 @@ const EXPECTED: Readonly<Record<string, string>> = {
   // 060: Fire's two payoffs.
   b4: 'Fire: +50% duration',
   b5: 'Fire: +1 tile spread radius',
+  l4: 'Lightning: +1 chain',
+  l5: 'Lightning: +1 tile chain range',
   l1: 'Ley: +10% damage',
   l2: 'Homing: +30% turn rate',
   l3: 'Split: +2 Shards',
@@ -48,6 +50,7 @@ const EXPECTED: Readonly<Record<string, string>> = {
   'prism-lens': 'Split: added to Ley rounds · 2 ley crystal per 4',
   'cluster-die': 'Cluster: added to Bomb rounds · 1 ley-iron per 4',
   'fire-rune': 'Fire: added to any round · 1 cinderite per 4',
+  'lightning-rune': 'Lightning: added to any round · 1 stormglass per 4',
 };
 
 describe('the expected text (039’s table, line for line)', () => {

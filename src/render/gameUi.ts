@@ -30,6 +30,7 @@ export function gameUi(g: GameScene): GameUiState {
     nodeGlow: g.nodeView?.glowing ?? [],
     shakes: [...(g.feel?.juice.shakes ?? [])],
     burnNumbers: g.feel?.juice.burnNumbers ?? 0,
+    particles: g.feel?.juice.particles.count ?? 0,
     cursor: g.cursorView?.state ?? null,
     sliding: g.groundItemView?.sliding ?? 0,
     groundItems: g.groundItemView?.shown ?? [],
@@ -39,6 +40,8 @@ export function gameUi(g: GameScene): GameUiState {
     // 042: the camera locks to the player: its centre, and the player's sprite point.
     // 046: `fading` while a door's fade runs, so screenshots can wait it out on state.
     camera: { x: main?.centerX ?? 0, y: main?.centerY ?? 0, player: { x: g.playerView?.sprite.x ?? 0, y: g.playerView?.sprite.y ?? 0 }, fading: g.cameras?.main?.fadeEffect.isRunning ?? false },
+    // 065: the slow's wind curls round the player.
+    slowSwirl: g.playerView?.swirling ?? false,
     hud: g.hud?.bottom ?? null,
     ...(g.hud?.panels ?? NO_HUD_PANELS),
     craftMenu: g.menu?.state ?? null,

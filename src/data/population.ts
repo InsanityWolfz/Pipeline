@@ -7,14 +7,14 @@ export interface PackDef {
   packs: number;
   /** Pack size range, inclusive. */
   size: readonly [number, number];
-  /** Enemy ids a pack member is picked from, in turn by the seeded RNG. */
+  /** Enemy ids a pack member is picked from, in turn by the seeded RNG (065: a swarm, the static mite's trio, is picked whole, counting as its members, only while that many places are left). */
   enemies: readonly string[];
   /** At most this many of an enemy id in one pack (035: so a pack can always be read); a member is picked from those still under. */
   limits?: Readonly<Record<string, number>>;
 }
 
-/** The rings that keep a population: ring 0 stays calm; ring 3 is Stonefall Hollows (034); ring 4, the Emberworks (060), has no packs until 061. */
-export type PopulatedRing = 1 | 2 | 3;
+/** The rings that keep a population: ring 0 stays calm; ring 3 is Stonefall Hollows (034); ring 4, the Emberworks (060, 061); ring 5, the Stormcrown (064, 065). */
+export type PopulatedRing = 1 | 2 | 3 | 4 | 5;
 
 /**
  * 053: the round world is about twice the old map's area, and the pack counts grew with it (4, 8, 6 before): rings 1
@@ -28,6 +28,10 @@ export const POPULATION = {
     2: { packs: 12, size: [4, 5], enemies: ['husk', 'husk', 'wisp'] },
     // Stonefall Hollows (035): its four, at most one Sniper and two Burrowers to a pack.
     3: { packs: 12, size: [4, 5], enemies: ['shardback', 'charger', 'charger', 'burrower', 'sniper'], limits: { sniper: 1, burrower: 2 } },
+    // The Emberworks (061): its four (a golem's whelps rise from it, never spawn), at most one tender and two golems to a pack.
+    4: { packs: 12, size: [4, 5], enemies: ['cinder-mote', 'cinder-mote', 'bellows-hound', 'bellows-hound', 'slag-golem', 'kiln-tender'], limits: { 'kiln-tender': 1, 'slag-golem': 2 } },
+    // The Stormcrown (065): its four, at most one sentinel and one ram to a pack; a picked mite brings its trio, three members.
+    5: { packs: 12, size: [4, 6], enemies: ['thunderhawk', 'thunderhawk', 'static-mite', 'storm-sentinel', 'gale-ram'], limits: { 'storm-sentinel': 1, 'gale-ram': 1 } },
   } satisfies Record<PopulatedRing, PackDef>,
   /** A pack spawns at least this far from the player (1.5 half-screens; see the spec's open question on "1.5 screens"). */
   spawnDistance: 480,

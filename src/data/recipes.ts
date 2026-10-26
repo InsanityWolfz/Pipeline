@@ -7,8 +7,8 @@ export interface RecipeDef {
   id: string;
   /** Unknown until this holds (012): bombs, ley bolts and their parts appear once the tube attunes. */
   requires?: 'attuned';
-  /** Unknown until this item has been carried (038: the landmine chain shows once ley-iron is picked up). */
-  shownAfter?: string;
+  /** Unknown until this item (062: each of these items) has been carried (038: the landmine chain shows once ley-iron is picked up). */
+  shownAfter?: string | readonly string[];
   /** Item id to count taken from the inventory. */
   inputs: Readonly<Record<string, number>>;
   output: { itemId: string; count: number };
@@ -36,10 +36,24 @@ export const RECIPES: Readonly<Record<string, RecipeDef>> = {
   // 038: the landmine chain, reusing the bomb chain's fuse and shard.
   'iron-plate': { ...recipe('iron-plate', { 'ley-iron': 1 }, 'iron-plate', 2), shownAfter: 'ley-iron' },
   landmine: { ...recipe('landmine', { 'iron-plate': 1, fuse: 1, 'ley-dust': 1 }, 'landmine', 2), shownAfter: 'ley-iron' },
+  // 062: the material tiers. The Smelter's and the kiln's materials show once both their inputs have been carried; each
+  // family's steel part and steel round once ley-steel has (the glass bolt once ley glass has), in stone's counts.
+  'ley-steel': { ...recipe('ley-steel', { 'ley-iron': 1, cinderite: 1 }, 'ley-steel', 1), shownAfter: ['ley-iron', 'cinderite'] },
+  'steel-arrowhead': { ...recipe('steel-arrowhead', { 'ley-steel': 1 }, 'steel-arrowhead', 2), shownAfter: 'ley-steel' },
+  'steel-arrow': { ...recipe('steel-arrow', { shaft: 1, 'steel-arrowhead': 1, rope: 1 }, 'arrow+steel', 8), shownAfter: 'ley-steel' },
+  'steel-casing': { ...recipe('steel-casing', { 'ley-steel': 1 }, 'steel-casing', 1), requires: 'attuned', shownAfter: 'ley-steel' },
+  'steel-bomb': { ...recipe('steel-bomb', { 'steel-casing': 1, fuse: 1, 'ley-dust': 1 }, 'bomb+steel', 4), requires: 'attuned', shownAfter: 'ley-steel' },
+  'ley-glass': { ...recipe('ley-glass', { 'ley-dust': 1, cinderite: 1 }, 'ley-glass', 1), requires: 'attuned', shownAfter: ['ley-dust', 'cinderite'] },
+  'glass-bolt': { ...recipe('glass-bolt', { 'ley-glass': 1 }, 'ley-bolt+glass', 4), requires: 'attuned', shownAfter: 'ley-glass' },
+  'steel-plate': { ...recipe('steel-plate', { 'ley-steel': 1 }, 'steel-plate', 2), shownAfter: 'ley-steel' },
+  'steel-landmine': { ...recipe('steel-landmine', { 'steel-plate': 1, fuse: 1, 'ley-dust': 1 }, 'landmine+steel', 2), shownAfter: 'ley-steel' },
 };
 
+/** The items a recipe's or stage's rows wait on (038; 062: one or several), each to have been carried. */
+export const revealsOf = (r: { shownAfter?: string | readonly string[] }): readonly string[] => (r.shownAfter === undefined ? [] : typeof r.shownAfter === 'string' ? [r.shownAfter] : r.shownAfter);
+
 /** Items whose first carrying reveals recipes (038) or a stage's rows (060: the fire rune's, after cinderite), each remembered in `found`. */
-export const REVEALING_ITEMS: readonly string[] = [...new Set([...Object.values(RECIPES), ...Object.values(STAGES)].flatMap((r) => (r.shownAfter ? [r.shownAfter] : [])))];
+export const REVEALING_ITEMS: readonly string[] = [...new Set([...Object.values(RECIPES), ...Object.values(STAGES)].flatMap(revealsOf))];
 
 /** A hand-crafting recipe, or a stage's (029). */
 export function recipeDef(id: string): RecipeDef {

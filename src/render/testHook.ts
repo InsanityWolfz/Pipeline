@@ -30,6 +30,7 @@ import type { RestorePanelState } from './RestorePanel';
 import type { ResearchListState } from './ResearchList';
 import type { HollowsShown } from './HollowsView';
 import type { EmberworksShown } from './EmberworksView';
+import type { StormcrownShown } from './StormcrownView';
 import type { ArenaDoorShown } from './ArenaDoorView';
 import type { HollowsEnemiesShown } from './hollowsEnemyArt';
 import type { EnemyBarShown } from './enemyBar';
@@ -130,6 +131,8 @@ export interface UiState {
   /** 060: burn beats' small numbers shown since boot, and enemies drawn with flames on them now. */
   burnNumbers: number;
   enemyFlames: number;
+  /** Particles flying now (064). */
+  particles: number;
   /** Which cursor shows (021: the menu pointer or the crosshair), its depth, and the highest depth of anything else. */
   cursor: CursorState | null;
   /** Picked-up items still sliding into the player (021). */
@@ -169,6 +172,8 @@ export interface UiState {
   objectiveTick: number;
   /** The centre of the world camera's view, world px (023: screenshots wait for it to settle on the player), and the player's sprite point it follows (042: locked to it). */
   camera: { x: number; y: number; player: { x: number; y: number }; fading: boolean };
+  /** 065: the slow's wind curls are drawn round the player. */
+  slowSwirl: boolean;
   /** The bottom HUD as drawn (025), view px: the hotbar row (and whether it shows) and the tube slot with each unit's icon frame and text. */
   hud: BottomHudState | null;
   /** The crafting menu as drawn (026): each recipe row's item names and counts with their boxes, and the group headers. */
@@ -220,6 +225,10 @@ export interface UiState {
   hollows: HollowsShown;
   /** 060: the Emberworks' barrier across its ramps, as drawn. */
   emberworks: EmberworksShown;
+  /** 064: the Stormcrown's barrier. */
+  stormcrown: StormcrownShown;
+  /** 064: lightning arcs on screen. */
+  lightningArcs: number;
   /** 055: each boss arena's door in the room on screen, sealed or open, and 043's seal over it while its boss fights. */
   arenaDoors: ArenaDoorShown[];
   /** 036: the bench's gear panel while open (its cells, tabs, rows with ids and boxes, page and totals), else null. */

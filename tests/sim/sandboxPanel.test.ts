@@ -30,8 +30,8 @@ const ofGroup = (s: SimState, group: string) => s.enemies.filter((e) => e.group 
 describe('the loadout (044)', () => {
   it('sets each entrance to any round, and the volley fires them all, bottomless', () => {
     const s = createSandboxSim(2);
-    // 060: four entrances, the fourth on Fire arrows.
-    const rounds = ['arrow+frost', 'ley-bolt+frost+homing', 'bomb+cluster', 'arrow+fire'];
+    // 060: four entrances, the fourth on Fire arrows; 064: five, the fifth on Lightning bombs.
+    const rounds = ['arrow+frost', 'ley-bolt+frost+homing', 'bomb+cluster', 'arrow+fire', 'bomb+lightning'];
     rounds.forEach((round, entrance) => once(s, { kind: 'loadout', entrance, round }));
     expect(s.sandbox?.loadout).toEqual(rounds);
     const fired = new Set<string>();
@@ -195,7 +195,8 @@ describe('god mode, the KO and the player tools (044)', () => {
     expect(s.inventory).toEqual(inventory);
     expect(s.sandbox).toBeDefined();
     expect(ofGroup(s, SPAWN_GROUP).length).toBe(0);
-    SANDBOX_PENS.forEach((_, i) => expect(ofGroup(s, PEN_GROUP(i)).length).toBe(1));
+    // 065: a static mite's pen holds its trio.
+    SANDBOX_PENS.forEach((p, i) => expect(ofGroup(s, PEN_GROUP(i)).length).toBe(p.enemyId === 'static-mite' ? 3 : 1));
     expect(s.enemies.every((e) => e.roomId === SANDBOX_ROOM)).toBe(true);
   });
 

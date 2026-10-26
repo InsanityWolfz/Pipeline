@@ -13,7 +13,7 @@ test('in at the Anvil Hall’s door, the Forgewright wakes plated: a blue boss b
   await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
+    for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright' && e.enemyId !== 'conductor') g.setEnemyHealth(e.id, 0);
     g.step(200);
   });
   // The first kill's end card, if it shows here, closes on Keep playing.

@@ -3,6 +3,7 @@ import type { DropTable } from './enemies';
 import { GROTTO, GROTTO_GROUP } from './grotto';
 import type { TileStamp } from './hollows';
 import { EMBERWORKS_SITES } from './emberworksSites';
+import { STORMCROWN_SITES } from './stormcrownSites';
 import { HOLLOWS_SITES } from './hollowsSites';
 import { SITES } from './landmarkSites';
 import { SPRINGS } from './springs';
@@ -19,7 +20,7 @@ import type { Feature, NodePlacement, TilePos, TileRect } from './tiles';
 export type LandmarkKind = 'resource-site' | 'frozen-grotto' | 'ley-springs' | 'ruined-cache' | 'ruin';
 
 /** A landmark's minimap icon (landmarkAssets' `MAP_ICONS`). */
-export type LandmarkMarker = 'site' | 'grotto' | 'spring' | 'cache' | 'aqueduct' | 'river';
+export type LandmarkMarker = 'site' | 'grotto' | 'spring' | 'cache' | 'aqueduct' | 'river' | 'bridge';
 
 /** A guard placed by hand; its group is its landmark's id. */
 export interface GuardPlacement {
@@ -43,7 +44,7 @@ export interface LandmarkDef {
   readonly name: string;
   readonly kind: LandmarkKind;
   /** The danger ring (017) it sits in: 3 in Stonefall Hollows (034), 4 in the Emberworks (060). */
-  readonly ring: 1 | 2 | 3 | 4;
+  readonly ring: 1 | 2 | 3 | 4 | 5;
   /** Kept clear of generated trees, rocks, water and stones; its own features are stamped over it. Seeing any of it discovers it. */
   readonly area: TileRect;
   readonly features: readonly Feature[];
@@ -61,7 +62,7 @@ export interface LandmarkDef {
   readonly stamps?: readonly TileStamp[];
   readonly marker: LandmarkMarker;
   /** How render dresses it (landmarkAssets): old trees on its tree tiles, cut stones (or 049's amber-crusted nest stones) for its blocks, a sunken hollow. */
-  readonly look?: { readonly trees?: 'old'; readonly blocks?: 'cut' | 'hive'; readonly hollow?: 'ley' | 'frost'; readonly quarry?: true; readonly paving?: 'terrace' | 'ash'; readonly scorched?: true };
+  readonly look?: { readonly trees?: 'old'; readonly blocks?: 'cut' | 'hive'; readonly hollow?: 'ley' | 'frost'; readonly quarry?: true; readonly paving?: 'terrace' | 'ash' | 'slate'; readonly scorched?: true; readonly stormy?: true };
 }
 
 /** The landmark tuning (032). Ticks at 60 Hz. */
@@ -127,7 +128,7 @@ const SPRING_LANDMARKS: readonly LandmarkDef[] = SPRINGS.map((s) => ({
 }));
 
 /** Every landmark, the Frozen Grotto first (its guards keep 029's place in the pack list), Stonefall Hollows' (034), then the Emberworks' (060) last. */
-export const LANDMARK_LIST: readonly LandmarkDef[] = [FROZEN_GROTTO, ...SITES, ...SPRING_LANDMARKS, ...HOLLOWS_SITES, ...EMBERWORKS_SITES];
+export const LANDMARK_LIST: readonly LandmarkDef[] = [FROZEN_GROTTO, ...SITES, ...SPRING_LANDMARKS, ...HOLLOWS_SITES, ...EMBERWORKS_SITES, ...STORMCROWN_SITES];
 
 export function landmarkDef(id: string): LandmarkDef {
   const def = LANDMARK_LIST.find((l) => l.id === id);

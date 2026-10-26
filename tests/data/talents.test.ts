@@ -3,16 +3,17 @@ import { DAYLIGHT_PALETTE } from '../../src/data/palette';
 import { BLASTFLETCH, LANE_ANGLES, LANE_COLORS, OVERPRESSURE, SHATTERPOINT, TALENT_LIST, TALENT_START, TALENTS } from '../../src/data/talents';
 
 // The tree as data (037): 19 nodes and the start, three keystones, links both ways to real
-// ids, every node reachable, no pierce or foundry effects. 060: two Fire nodes in the Bombs lane, 21 nodes.
+// ids, every node reachable, no pierce or foundry effects. 060: two Fire nodes in the Bombs lane, 21 nodes. 064: two
+// Lightning nodes in the Ley lane, 23.
 
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 describe('the talent tree', () => {
-  it('has the start and 21 nodes (037’s 19 and 060’s two Fire nodes), three of them keystones', () => {
-    expect(TALENT_LIST.map((t) => t.id)).toEqual(['start', 'a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'b4', 'b5', 'l1', 'l2', 'l3', 't1', 't2', 't3', 's1', 's2', 's3', 's4', 'k1', 'k2', 'k3']);
-    expect(TALENT_LIST.filter((t) => t.kind !== 'start')).toHaveLength(21);
+  it('has the start and 23 nodes (037’s 19, 060’s two Fire nodes and 064’s two Lightning nodes), three of them keystones', () => {
+    expect(TALENT_LIST.map((t) => t.id)).toEqual(['start', 'a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'b4', 'b5', 'l1', 'l2', 'l3', 'l4', 'l5', 't1', 't2', 't3', 's1', 's2', 's3', 's4', 'k1', 'k2', 'k3']);
+    expect(TALENT_LIST.filter((t) => t.kind !== 'start')).toHaveLength(23);
     expect(TALENT_LIST.filter((t) => t.kind === 'keystone').map((t) => t.name)).toEqual(['Blastfletch', 'Shatterpoint', 'Overpressure']);
-    expect(TALENT_LIST.filter((t) => t.kind === 'minor')).toHaveLength(18);
+    expect(TALENT_LIST.filter((t) => t.kind === 'minor')).toHaveLength(20);
     expect(TALENTS[TALENT_START]?.kind).toBe('start');
     for (const t of TALENT_LIST) expect(t.id).toMatch(KEBAB);
   });
@@ -34,6 +35,19 @@ describe('the talent tree', () => {
     expect(TALENTS.b3?.links).toEqual(['b2', 'k1', 'b4', 'b5']);
     expect(TALENTS.b4?.links).toEqual(['b3']);
     expect(TALENTS.b5?.links).toEqual(['b3']);
+    // 064: both Lightning nodes hang off Splinter, the Ley lane's last minor node.
+    expect(TALENTS.l3?.links).toEqual(['l2', 'k2', 'l4', 'l5']);
+    expect(TALENTS.l4?.links).toEqual(['l3']);
+    expect(TALENTS.l5?.links).toEqual(['l3']);
+  });
+
+  it('064: the two Lightning nodes in the Ley lane: +1 chain, and +1 tile chain range (never a Burst’s radius)', () => {
+    expect(TALENTS.l4).toMatchObject({ lane: 'ley', kind: 'minor', lines: [{ scope: 'lightning', stat: 'chains', op: 'flat', value: 1 }] });
+    expect(TALENTS.l5).toMatchObject({ lane: 'ley', kind: 'minor', lines: [{ scope: 'lightning', stat: 'chain-range', op: 'flat', value: 32 }] });
+    const p = (id: string) => TALENTS[id]?.pos ?? { x: NaN, y: NaN };
+    // Splinter's next step out along the lane, and beside it, toward the Tube lane.
+    expect(Math.hypot(p('l4').x, p('l4').y)).toBeGreaterThan(Math.hypot(p('l3').x, p('l3').y));
+    expect(p('l5').y).toBeGreaterThan(p('l4').y);
   });
 
   it('060: the two Fire nodes in the Bombs lane: +50% burn duration, and the burn spreading a tile further', () => {
@@ -63,7 +77,7 @@ describe('the talent tree', () => {
     const lines = TALENT_LIST.flatMap((t) => t.lines);
     for (const l of lines) expect(l.scope, JSON.stringify(l)).not.toBe('pierce');
     const stats = new Set(lines.flatMap((l) => ('stat' in l ? [l.stat] : [])));
-    for (const st of stats) expect(['damage', 'fire-rate', 'stacks-to-freeze', 'duration', 'radius', 'flight-time', 'turn-rate', 'shards', 'firing-walk', 'max-health', 'field-regen', 'armor', 'move-speed', 'spread-radius']).toContain(st);
+    for (const st of stats) expect(['damage', 'fire-rate', 'stacks-to-freeze', 'duration', 'radius', 'flight-time', 'turn-rate', 'shards', 'firing-walk', 'max-health', 'field-regen', 'armor', 'move-speed', 'spread-radius', 'chains', 'chain-range']).toContain(st);
     // Keystones are rule lines, one rule each but Blastfletch's two; only keystones carry rules.
     for (const t of TALENT_LIST) expect(t.lines.some((l) => 'rule' in l), t.id).toBe(t.kind === 'keystone');
   });

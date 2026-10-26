@@ -5,7 +5,7 @@ import { damageEnemy, targetable, type EnemyState, type HitStyle } from './enemi
 import { startKnock } from './knockback';
 import { sectorHitsBox, type Sector } from './sector';
 import { recordBlock, shieldBlocks } from './shield';
-import { bellowsBox, bellowsPoint, forgeDefOf, hitPart } from './forgewrightParts';
+import { hitPart, wholeParts } from './bossParts';
 import { roomById, type SimState } from './state';
 import { clearGround } from './sightLine';
 
@@ -15,14 +15,9 @@ import { clearGround } from './sightLine';
 /** A punch flashes and records physical damage; its push is its own, not Knockback (039.5). */
 const PUNCH_HIT: HitStyle = { knock: 0, flash: true, damageType: 'physical', melee: true };
 
-/** The Forgewright's whole bellows a punch's arc strikes, each over clear ground from the player to its own point (060). */
-function struckBellows(room: Room, arc: Sector, e: EnemyState): number[] {
-  const forge = forgeDefOf(e);
-  if (!forge) return [];
-  return e.bellows.flatMap((b, part) => {
-    const p = bellowsPoint(e, forge, part);
-    return b.patch === 0 && sectorHitsBox(arc, bellowsBox(e, forge, part)) && clearGround(room, arc.x, arc.y, p.x, p.y) ? [part] : [];
-  });
+/** A boss's whole parts a punch's arc strikes (060: the Forgewright's bellows; 064: the Conductor's rods), each over clear ground from the player to its own point. */
+function struckParts(room: Room, arc: Sector, e: EnemyState): number[] {
+  return wholeParts(e).flatMap(({ part, box, point }) => (sectorHitsBox(arc, box) && clearGround(room, arc.x, arc.y, point.x, point.y) ? [part] : []));
 }
 
 /**
@@ -44,7 +39,7 @@ export function punch(state: SimState, dirX: number, dirY: number): void {
     const { hurtbox } = def;
     // 060: each of the Forgewright's whole bellows in the arc takes the punch, which spends itself there: no clang on
     // its plated body, and nothing on the body a break just vented. Else its plated body blocks it (damageEnemy).
-    const parts = struckBellows(room, arc, e);
+    const parts = struckParts(room, arc, e);
     for (const part of parts) hitPart(state, e, part, MELEE.damage, PUNCH_HIT);
     if (parts.length > 0) continue;
     if (!sectorHitsBox(arc, { x: e.x, y: e.y + hurtbox.offsetY, w: hurtbox.w, h: hurtbox.h })) continue;

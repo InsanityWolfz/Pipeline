@@ -36,7 +36,14 @@ export function craftTabBoxes(): (MenuBox & { ammoId: string; label: string })[]
 export function craftTabRows(tab: number): (MenuBox & { id: string })[] {
   const L = CRAFT_MENU_LAYOUT;
   const panel = craftPanelAt();
-  return (CRAFT_TABS[tab]?.recipes ?? []).map((id, i) => ({ id, x: panel.x + L.rowsAt.x, y: panel.y + L.rowsAt.y + i * (L.rowHeight + L.rowGap), w: L.rowWidth, h: L.rowHeight }));
+  const t = CRAFT_TABS[tab];
+  if (!t) return [];
+  // 062: the tier rows in their own column beside the stone ones, from the top.
+  return t.recipes.map((id, i) => {
+    const tier = i >= t.tierFrom;
+    const row = tier ? i - t.tierFrom : i;
+    return { id, x: panel.x + L.rowsAt.x + (tier ? L.tierColumnX : 0), y: panel.y + L.rowsAt.y + row * (L.rowHeight + L.rowGap), w: L.rowWidth, h: L.rowHeight };
+  });
 }
 
 /** The pause menu's rows (sound, volume, resume), centred on screen, px. */

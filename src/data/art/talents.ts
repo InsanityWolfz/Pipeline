@@ -1,6 +1,7 @@
 import { TALENT_SPRITES } from '../talentAssets';
 import { ICON_ARROW, ICON_BOMB, ICON_LEY_BOLT } from './items';
 import { FIRE_DURATION_ICON, FIRE_SPREAD_ICON } from './fire';
+import { LIGHTNING_CHAINS_ICON, LIGHTNING_RANGE_ICON } from './lightning';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSprite } from './types';
 
 // The talent tree's art (037) in the 016 vector style: the panel's carved node sockets,
@@ -190,6 +191,8 @@ export const TALENT_SPRITES_VECTOR: readonly VectorSprite[] = [
   icon(TALENT_SPRITES.overpressure, OVERPRESSURE_ICON),
   icon(TALENT_SPRITES.fireDuration, FIRE_DURATION_ICON),
   icon(TALENT_SPRITES.fireSpread, FIRE_SPREAD_ICON),
+  icon(TALENT_SPRITES.lightningChains, LIGHTNING_CHAINS_ICON),
+  icon(TALENT_SPRITES.lightningRange, LIGHTNING_RANGE_ICON),
   sprite(TALENT_SPRITES.pip, [8, 8], [4, 4], PIP),
   sprite(TALENT_SPRITES.levelRing, [60, 34], [30, 17], LEVEL_RING),
   sprite(TALENT_SPRITES.pool, [52, 52], [26, 26], BLAST_CHARGE),

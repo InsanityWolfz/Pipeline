@@ -1,6 +1,7 @@
 import { SPRITES } from './assets';
 import { MINE_SPRITES } from './mineAssets';
-import { elementOf, ROUNDS, roundBase, roundTags, SPLIT, tagDef } from './tags';
+import { elementOf, ROUNDS, roundBase, roundTags, roundTier, SPLIT, tagDef, withTier } from './tags';
+import { TIER_ARMED, TIER_PROJECTILES } from './tierAssets';
 
 // Ammo the tube can fire. Starting values from specs 003, 005 and 029; tune in playtest.
 // Each tagged round (029) is derived from its base and its tags (src/data/tags.ts).
@@ -9,7 +10,7 @@ import { elementOf, ROUNDS, roundBase, roundTags, SPLIT, tagDef } from './tags';
  * Damage types from docs/design.md. Nothing deals fire in Milestone 1 (029: bombs are physical, with no burn), but it
  * stays in the type because design.md's damage types include it and Milestone 2's fire rune brings it back as a tag.
  */
-export type DamageType = 'physical' | 'fire' | 'cold';
+export type DamageType = 'physical' | 'fire' | 'cold' | 'lightning';
 
 interface AmmoBase {
   id: string;
@@ -151,13 +152,20 @@ const BASE_AMMO: Readonly<Record<string, AmmoDef>> = {
   },
 };
 
-/** A tagged round: its base's numbers (its speed scaled by its tags', 054), its own id and tags, and its element's damage type. */
+/** A tagged or tiered round: its base's numbers (its speed scaled by its tags', 054), its own id and tags, its element's damage type, and (062) its tier's look. */
 function tagged(round: string): AmmoDef {
   const base = BASE_AMMO[roundBase(round)];
   if (!base) throw new Error(`No base ammo for '${round}'`);
   const tags = roundTags(round);
   const speed = tags.reduce((v, t) => v * (tagDef(t).speedScale ?? 1), base.speed);
-  return { ...base, id: round, itemId: round, tags, speed, damageType: elementOf(round)?.damageType ?? base.damageType };
+  const def: AmmoDef = { ...base, id: round, itemId: round, tags, speed, damageType: elementOf(round)?.damageType ?? base.damageType };
+  // 062: a tiered round flies as its plain tiered round's recoloured projectile (a steel landmine lies armed in steel too).
+  const tier = roundTier(round);
+  if (tier === 'stone') return def;
+  const plain = withTier(base.id, tier);
+  const sprite = TIER_PROJECTILES[plain]?.key ?? def.sprite;
+  if (def.kind === 'mine') return { ...def, sprite, armed: TIER_ARMED[plain]?.key ?? def.armed };
+  return { ...def, sprite };
 }
 
 /** Every ammo: the four bases, then every legal tagged round (029). */

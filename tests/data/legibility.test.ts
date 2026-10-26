@@ -8,6 +8,7 @@ import { BUILD_TAB, CHILD_NAMES, CHIP, GLOSSARY, GROUP_NAMES, LANE_NAMES, LEGIBI
 import { paletteHex } from '../../src/data/palette';
 import { formatDamage, formatParam, formatSeconds, REF, renderTemplate, SLOT } from '../../src/data/rulesText';
 import { BASE_FAMILY } from '../../src/data/roundKeywords';
+import { roundTier } from '../../src/data/tags';
 import { STATS } from '../../src/data/statDefs';
 import { TALENT_PANEL } from '../../src/data/talentAssets';
 
@@ -42,7 +43,8 @@ describe('sizes', () => {
     expect(TALENT_PANEL.w).toBe(300);
     expect(TALENT_PANEL.h).toBe(300);
     expect(BUILD_TAB.rowH).toBe(14);
-    const rows = Object.keys(AMMO).length + Object.keys(BASE_FAMILY).length;
+    // 062: a tiered round shares its stone round's row (tests/render/buildTabTiers.test.ts), so each stone round is a row.
+    const rows = Object.keys(AMMO).filter((id) => roundTier(id) === 'stone').length + Object.keys(BASE_FAMILY).length;
     const perColumn = Math.floor((TALENT_PANEL.h - BUILD_TAB.top - TALENT_PANEL.pad) / BUILD_TAB.rowH);
     expect(Math.ceil(rows / perColumn)).toBeLessThanOrEqual(BUILD_TAB.columns);
   });

@@ -40,7 +40,7 @@ describe('the tutorial start', () => {
     expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre(OVERWORLD.wake));
     expect(s.inventory).toEqual({});
     expect(s.hasTube).toBe(false);
-    expect(s.gates).toEqual({ foundry: false, shrine: false, hollows: false, emberworks: false });
+    expect(s.gates).toEqual({ foundry: false, shrine: false, hollows: false, emberworks: false, stormcrown: false });
     expect(summarize(s).objective).toEqual({ index: 0, text: OBJECTIVES[0]?.text });
   });
 
@@ -200,7 +200,7 @@ describe('objectives', () => {
     expect(s.objectives[open]).toBe(false);
     run(s, 1, { restore: 'entrance-2' });
     expect(s.objectives[open]).toBe(true);
-    expect(s.link.entrances.map((e) => e.open)).toEqual([true, true, false, false]);
+    expect(s.link.entrances.map((e) => e.open)).toEqual([true, true, false, false, false]);
   });
 
   it("leaving the foundry is the prototype's last goal, and ends the prototype", () => {

@@ -10,7 +10,8 @@ describe('node looks', () => {
   it('shows one look per use left (060: a cinder vent while open)', () => {
     for (const id of Object.keys(NODES)) {
       const c = NODES[id]?.cycle;
-      const phase = c ? c.closedTicks + c.warnTicks : 0;
+      // Open, past a storm rod's strike (064).
+      const phase = c ? c.closedTicks + c.warnTicks + c.openTicks - 1 : 0;
       const looks = [3, 2, 1].map((uses) => nodeFrame({ nodeId: id, uses, regrow: 0, phase }));
       expect(new Set(looks).size).toBe(3);
       expect(looks[0]).toBe(NODE_SPRITES[id]?.uses[2]);

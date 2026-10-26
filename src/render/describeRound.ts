@@ -5,12 +5,14 @@ import { KEYWORDS, type KeywordId } from '../data/keywords';
 import { LEGIBILITY_WORDS as W, PARAM_STATS, WHEN_LINES } from '../data/legibility';
 import { formatDamage, formatParam, formatSeconds, formatStat, LINE_SEP, renderTemplate, textSources, trimNumber } from '../data/rulesText';
 import { roundKeywords } from '../data/roundKeywords';
+import { roundTier } from '../data/tags';
+import { TIER_DAMAGE, TIERS } from '../data/tiers';
 import type { StatId } from '../data/statDefs';
 import { bombletEmission, roundEmission, shardEmissionOf } from '../sim/emissions';
 import type { SimState } from '../sim/state';
 import { hitsToFreeze } from '../sim/cold';
 import { conditionalHits, rampedFireRate } from '../sim/keystones';
-import { resolveStat, statusEmission, type Emission, type Resolved, type Statted } from '../sim/statResolve';
+import { resolveStat, statusEmission, TIER_SOURCES, type Emission, type Resolved, type Statted } from '../sim/statResolve';
 import { linkedTo } from './describeLinks';
 import { bonusSources, chipsOf, fill, madeBy, paramValue, statLabel, stepsText } from './statSteps';
 import { line, type Description, type TipLine } from './tipTypes';
@@ -88,9 +90,16 @@ export function describeRound(seen: Seen, ammoId: string): Description {
   // The summary: damage · shots/s, then what its keywords add.
   const head = fill(a.kind === 'straight' ? W.shotLine : W.burstLine, { damage: formatDamage(damage.final), rate: formatStat(rate.final, 'per-s') });
   const extras: string[] = [];
+  // 062: a tiered round's material and its × (the breakdown shows it as its own damage step). Its name says it too, so
+  // a summary too long for its rows drops it first.
+  const tier = roundTier(ammoId);
+  const tierText = tier === 'stone' ? [] : [fill(W.tierDamage, { tier: TIERS[tier].prefix, mul: formatParam(TIER_DAMAGE[tier], 'multiplier') })];
   if (kws.includes('freeze')) extras.push(fill(W.freezeIn, { hits: hitsToFreeze(s) }));
   // 060: a Fire round's burn, its share of the hit each second, for its (resolved) time.
-  if (keywords.includes('fire')) extras.push(fill(W.burns, { damage: formatDamage(damage.final * value('fire', 'share')), time: formatSeconds(value('fire', 'duration')) }));
+  const burn = formatDamage(damage.final * value('fire', 'share'));
+  if (keywords.includes('fire')) extras.push(fill(W.burns, { damage: burn, time: formatSeconds(value('fire', 'duration')) }));
+  // 064: a Lightning round's chain, its arcs and each arc's share of the hit.
+  if (keywords.includes('lightning')) extras.push(fill(W.arcs, { count: Math.round(value('lightning', 'chains')), damage: formatDamage(damage.final * value('lightning', 'share')) }));
   if (keywords.includes('split')) extras.push(fill(W.shards, { count: Math.round(value('split', 'count')), damage: formatDamage(value('split', 'damage')) }));
   if (keywords.includes('cluster')) extras.push(fill(W.bomblets, { count: Math.round(value('cluster', 'count')), damage: formatDamage(value('cluster', 'damage')) }));
   if (a.kind === 'mine') extras.push(fill(W.arms, { time: formatSeconds(value('mine', 'arm')) }));
@@ -98,9 +107,15 @@ export function describeRound(seen: Seen, ammoId: string): Description {
   const shown = [damage, rate, ...nums.flatMap((n) => (n.resolved ? [n.resolved] : []))];
   const bonuses = new Set([...shown.flatMap(bonusSources), ...(ramp ? [ramp.source] : [])]).size;
   const numbers = { damage: formatDamage(damage.final), perSecond: formatStat(rate.final, 'per-s') };
-  // A Burst line too long for its row drops "dmg" before anything is cut (tipFit's short form).
-  const short = a.kind === 'straight' ? null : fill(W.burstShort, { damage: formatDamage(damage.final), rate: formatStat(rate.final, 'per-s') });
-  const summary: TipLine[] = [{ ...line([head, ...extras].join(LINE_SEP)), ...(short ? { short: [short, ...extras].join(LINE_SEP) } : {}) }];
+  // A Burst line too long for its row drops "dmg" before anything is cut (tipFit's short form). 062: a tier's note
+  // drops first; only if that still doesn't fit does "dmg" go, and a tiered Fire round's burn time (the breakdown has
+  // all three).
+  const shortHead = a.kind === 'straight' ? head : fill(W.burstShort, { damage: formatDamage(damage.final), rate: formatStat(rate.final, 'per-s') });
+  const burnShort = fill(W.burnsShort, { damage: burn });
+  const shortExtras = tierText.length > 0 ? extras.map((e) => (keywords.includes('fire') && e.startsWith(burnShort) ? burnShort : e)) : extras;
+  const forms = [[head, ...tierText, ...extras], [head, ...extras], [shortHead, ...shortExtras]].map((f) => f.join(LINE_SEP));
+  const [full = '', ...shorter] = forms.filter((f, i) => forms.indexOf(f) === i);
+  const summary: TipLine[] = [{ ...line(full), ...(shorter[0] ? { short: shorter[0] } : {}), ...(shorter[1] ? { shorter: shorter[1] } : {}) }];
   if (bonuses > 0) summary.push(line(fill(bonuses === 1 ? W.bonus : W.bonuses, { count: bonuses }), 'hint'));
   return {
     source: { kind: 'round', id: ammoId },
@@ -113,6 +128,9 @@ export function describeRound(seen: Seen, ammoId: string): Description {
   };
 }
 
+/** Whether a bonus, or (062) the round's material tier, changes a resolved number. */
+const changed = (r: Resolved): boolean => bonusSources(r).length > 0 || r.muls.some((m) => TIER_SOURCES.includes(m.source));
+
 /** The breakdown: each changed stat's steps, the ramp and "when" lines, Linked, then each keyword's rule with its final numbers. */
 function breakdown(seen: Seen, a: AmmoDef, damage: Resolved, rate: Resolved, nums: readonly ParamNumber[]): TipLine[] {
   const s = still(seen);
@@ -122,9 +140,10 @@ function breakdown(seen: Seen, a: AmmoDef, damage: Resolved, rate: Resolved, num
   // Overpressure: the rate at the ramp's full height, as resolveStat gives it with the ramp held to the top.
   const ramp = rampedFireRate(s, a.id);
   if (ramp) out.push(line(fill(W.ramp, { rate: trimNumber(ramp.mul), ramp: formatSeconds(ramp.ramp, true), final: perSec(ramp.rate) }), 'when'));
-  // Every other number a bonus changes, with its steps (a Burst's radius, Splinter's Shards, Rimecraft's Freeze).
+  // Every other number a bonus changes, with its steps (a Burst's radius, Splinter's Shards, Rimecraft's Freeze); 062:
+  // and every one its tier changes (its Shards' and Bomblets' damage), so the × shows there too.
   for (const n of nums) {
-    if (!n.resolved || !n.stat || bonusSources(n.resolved).length === 0 || (n.stat === 'damage' && PARAM_STATS[n.keyword]?.[n.name]?.on === undefined)) continue;
+    if (!n.resolved || !n.stat || !changed(n.resolved) || (n.stat === 'damage' && PARAM_STATS[n.keyword]?.[n.name]?.on === undefined)) continue;
     const on = PARAM_STATS[n.keyword]?.[n.name]?.on;
     const status = KEYWORDS[n.keyword].group === 'status' || on === 'status' ? KEYWORDS[n.keyword].name : '';
     // A Shard's or Bomblet's own number by its noun; a status's (or Fire's burn's) by its name (a Boss's shorter Freeze by both).

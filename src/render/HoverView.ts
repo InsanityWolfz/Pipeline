@@ -14,7 +14,8 @@ import { pieceRect } from '../sim/pieces';
 import type { SimState } from '../sim/state';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
-import { HoverReadout, intakeLines, pieceLines } from './HoverReadout';
+import { HoverReadout } from './HoverReadout';
+import { intakeLines, pieceLines } from './readoutLines';
 import { entranceCap } from '../sim/research';
 import { nameAt } from './hoverNames';
 import { enemyChips } from './describe';
@@ -89,7 +90,7 @@ export class HoverView {
     // 050 (review): a champion's nameplate (032) already names it over its head, so its tag shows only its chips.
     const named = !enemy?.champion;
     this.nameDrawn = named;
-    this.tagShown = hit !== null && (named || chips.length > 0);
+    this.tagShown = hit !== null && (named || chips.length > 0 || hit.description !== undefined);
     this.name.setVisible(hit !== null && named);
     this.description.setVisible(hit?.description !== undefined);
     if (!hit || !this.tagShown) {

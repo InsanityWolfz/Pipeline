@@ -61,6 +61,8 @@ export const PARTICLES = {
   // A cold hit (029): frost flakes that drift down.
   hitCold: { colors: ['foam', 'snow', 'water-light'], count: 14, speed: [40, 110], gravity: 90, lifeMs: [300, 520], size: 2, lift: 12 },
   // 060: a fire hit throws sparks that rise; a burn's catch, a puff of embers.
+  // 064: a lightning hit spits pale cyan sparks.
+  hitLightning: { colors: ['snow', 'cyan-glow', 'storm-glow'], count: 12, speed: [70, 160], gravity: 60, lifeMs: [160, 320], size: 2, lift: 12 },
   hitFire: { colors: ['cinder-light', 'cinder', 'flame-dark'], count: 12, speed: [40, 110], gravity: -60, lifeMs: [260, 460], size: 2, lift: 12 },
   ignite: { colors: ['cinder-light', 'cinder', 'gold-trim'], count: 8, speed: [15, 45], gravity: -90, lifeMs: [350, 600], size: 2, lift: 16 },
   // A frozen enemy cracking free (029): chips of ice flung out and falling.
@@ -99,6 +101,9 @@ export const PARTICLES = {
   barrierShards: { colors: ['cyan', 'cyan-glow', 'snow'], count: 40, speed: [20, 90], gravity: 160, lifeMs: [500, 1000], size: 2, lift: 40 },
   // 060: a cinder vent flaring open, embers and ash rising out of its mouth.
   ventFlare: { colors: ['cinder-light', 'cinder', 'flame-dark', 'ash-pale'], count: 24, speed: [30, 110], gravity: -80, lifeMs: [400, 800], size: 2, lift: 18 },
+  /** 064: a storm rod struck by lightning (sparks and glass glints off its crown), and its stormglass chipping off. */
+  rodStrike: { colors: ['snow', 'cyan-glow', 'cyan', 'storm-glow'], count: 26, speed: [60, 170], gravity: 120, lifeMs: [200, 500], size: 2, lift: 56 },
+  harvestStormglass: { colors: ['storm-pale', 'cyan-glow', 'storm-glow'], count: 10, speed: [30, 90], gravity: 200, lifeMs: [250, 450], size: 2, lift: 10 },
   /** 060: a Forgewright's bellows bursting (leather scraps and sparks), its hammer slam's dust, its flood spreading. */
   bellowsBurst: { colors: ['leather', 'wood-light', 'cinder-light', 'cinder'], count: 26, speed: [50, 140], gravity: 160, lifeMs: [300, 600], size: 3, lift: 10 },
   slamDust: { colors: ['ash-pale', 'ash-light', 'ash', 'cinder'], count: 34, speed: [60, 150], gravity: -20, lifeMs: [400, 800], size: 3 },
@@ -128,6 +133,8 @@ export const HARVEST_BURSTS: Readonly<Record<string, keyof typeof PARTICLES>> = 
   'resin-seep': 'harvestResin',
   // 060: cinderite breaking off a vent's crust in hot embers.
   'cinder-vent': 'bombletEmbers',
+  // 064: stormglass chipping off a charged rod in pale glints.
+  'storm-rod': 'harvestStormglass',
 };
 
 /** While a node is worked: a small burst this often, ms; a tree shakes this far either way, px, this many times a second. */

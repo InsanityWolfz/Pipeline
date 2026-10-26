@@ -1,6 +1,6 @@
 import { OBJECTIVES, type ObjectiveCheck, type ObjectiveDef } from '../data/objectives';
 import { TALENT_START } from '../data/talents';
-import { machineRecipe } from './stages';
+import { machineRecipe, machineRecipes, stageOf } from './stages';
 import { count } from './inventory';
 import type { FoundryState } from './pieces';
 import { volleyRounds } from './volley';
@@ -26,7 +26,9 @@ export function foundryDry(foundry: FoundryState): boolean {
   return foundry.pieces.every((p) => {
     if (p.kind === 'hopper') return p.count === 0;
     if (p.kind !== 'machine') return true;
-    return !p.crafting && !Object.entries(machineRecipe(p).inputs).every(([id, n]) => count(p.buffer, id) >= n);
+    // 062: none of its recipes (a tier variant's too) has a whole set.
+    const recipes = stageOf(p.pieceId) ? [machineRecipe(p)] : machineRecipes(p.pieceId);
+    return !p.crafting && !recipes.some((r) => Object.entries(r.inputs).every(([id, n]) => count(p.buffer, id) >= n));
   });
 }
 
@@ -74,6 +76,9 @@ function holds(state: SimState, check: ObjectiveCheck): boolean {
       return regionOf(state.roomId, state.player) === check.region;
     case 'bossDefeated':
       return state.bossDefeats.includes(check.boss);
+    case 'fired':
+      // 062: this tick's shots (the tube steps before the goals do).
+      return state.events.shots.some((shot) => check.items.includes(shot.ammoId));
   }
 }
 

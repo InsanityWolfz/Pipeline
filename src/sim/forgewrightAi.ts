@@ -61,7 +61,8 @@ function landFlood(state: SimState, e: EnemyState, def: ForgewrightDef): void {
   const arena = arenaOf(e.enemyId);
   if (!arena) return;
   const rect = floodRect(arena, e.floodSide);
-  state.floodPools.push({ ownerId: e.id, enemyId: e.enemyId, roomId: e.roomId, ...rect, age: 0, ticks: def.flood.floodTicks });
+  const { damage, everyTicks, floodTicks } = def.flood;
+  state.floodPools.push({ ownerId: e.id, enemyId: e.enemyId, roomId: e.roomId, shape: 'rect', ...rect, r: 0, damage, everyTicks, age: 0, ticks: floodTicks });
   state.events.floods.push({ id: e.id, ...rect });
 }
 

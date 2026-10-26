@@ -54,7 +54,8 @@ describe('the sandbox’s Emberworks (060)', () => {
 
   it('offers ring 4, the Emberworks’, and spawns the Forgewright at its own numbers there', () => {
     expect(REGION_RINGS[3]).toBe(4);
-    expect(SANDBOX.rings).toEqual([1, 2, 3, 4]);
+    // 064: and the Stormcrown's 5 (tests/sim/sandboxStorm.test.ts).
+    expect(SANDBOX.rings).toEqual([1, 2, 3, 4, 5]);
     const s = createSandboxSim(1);
     once(s, { kind: 'spawn', enemyId: 'forgewright', ring: 4, champion: false, count: 1 });
     const spawned = s.enemies.filter((e) => e.group === SPAWN_GROUP);

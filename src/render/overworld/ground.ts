@@ -8,6 +8,7 @@ import { worldTileHash } from '../roomTiles';
 import { paintLandmarks } from './landmarkGround';
 import { paintHollows } from './hollowsGround';
 import { paintEmberworks } from './emberworksGround';
+import { paintStormcrown } from './stormcrownGround';
 import { isPlateau } from './plateau';
 import { pathStrokes } from './pathStrokes';
 import { regionAt } from '../../data/hollows';
@@ -116,6 +117,8 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
   paintHollows(c, each, symbol, (tx, ty) => isPlateau(room, tx, ty));
   // 060: the Emberworks' ash past the Hollows' cliff edge, and the ramps up through it.
   paintEmberworks(c, each, symbol, (tx, ty) => isPlateau(room, tx, ty));
+  // 064: the Stormcrown's slate past the Emberworks' cliff edge.
+  paintStormcrown(c, each, symbol, (tx, ty) => isPlateau(room, tx, ty));
   // Sun dapple where the groves meet open grass.
   each((tx, ty, hash) => {
     if (symbol(tx, ty) !== TILE.floor || hash % GROUND.dappleEvery !== 0) return;

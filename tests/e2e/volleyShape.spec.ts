@@ -10,7 +10,7 @@ import { bootSandbox } from './sandboxPage';
 
 const SHOTS = 'docs/review/048';
 
-/** Sets the entrances' rounds (west to east; 060: four, so a three-lane volley leaves the fourth empty), god mode on, and returns the state. */
+/** Sets the entrances' rounds (west to east; 060: four, 064: five, so a three-lane volley leaves the last two empty), god mode on, and returns the state. */
 function load(page: Page, rounds: (string | null)[]) {
   return page.evaluate((rounds) => {
     const g = window.__GAME__;
@@ -47,7 +47,7 @@ function fire(page: Page, reach: number, settle: number) {
 test('an arrow, a bomb and an arrow fire as one fan: arrows at ±15°, the bomb on the aim point', async ({ page }) => {
   const errors = watchErrors(page);
   await bootSandbox(page);
-  const s = await load(page, ['arrow', 'bomb', 'arrow', null]);
+  const s = await load(page, ['arrow', 'bomb', 'arrow', null, null]);
   expect(s.intake.volley).toEqual(['arrow', 'bomb', 'arrow']);
   expect(s.intake.lanes).toEqual([-SPREAD_STEP, 0, SPREAD_STEP]);
   const out = await fire(page, 150, 0);
@@ -63,7 +63,7 @@ test('an arrow, a bomb and an arrow fire as one fan: arrows at ±15°, the bomb 
 test('two bombs and an arrow: the bombs land on the arc at the cursor’s distance, either side of the arrow', async ({ page }) => {
   const errors = watchErrors(page);
   await bootSandbox(page);
-  await load(page, ['bomb', 'arrow', 'bomb', null]);
+  await load(page, ['bomb', 'arrow', 'bomb', null, null]);
   const out = await fire(page, 150, 0);
   expect(out.fresh).toEqual([['arrow', 0]]);
   expect(out.landings).toEqual([
@@ -83,14 +83,14 @@ test.describe('review screenshots (048)', () => {
     await quietScreen(page);
 
     // An arrow west, a ley bolt centre, a frost arrow east: three lanes a few ticks out, each its own colour.
-    await load(page, ['arrow', 'ley-bolt', 'arrow+frost', null]);
+    await load(page, ['arrow', 'ley-bolt', 'arrow+frost', null, null]);
     const mixed = await fire(page, 220, 10);
     expect(mixed.fresh.map(([, a]) => a)).toEqual([-SPREAD_STEP, 0, SPREAD_STEP]);
     await page.screenshot({ path: `${SHOTS}/01-three-lane-mixed-volley.png` });
 
     // Clear the air, then three bombs on the arc, caught just before they land.
     await page.evaluate(() => window.__GAME__?.step(90));
-    await load(page, ['bomb', 'bomb', 'bomb', null]);
+    await load(page, ['bomb', 'bomb', 'bomb', null, null]);
     const arc = await fire(page, 160, 44);
     expect(arc.landings).toEqual([
       [-SPREAD_STEP, 160],

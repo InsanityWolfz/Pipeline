@@ -18,6 +18,13 @@ describe('fitRows', () => {
     expect(fitRows(lines, 3, cut)).toEqual({ rows: ['rule', '5 rounds', 'hint'], cut: false });
   });
 
+  it('062: uses a line’s shorter form only when its short form doesn’t fit either', () => {
+    const summary = { rows: ['full 1', 'full 2', 'full 3'], short: ['short 1', 'short 2'], shorter: ['shorter'] };
+    expect(fitRows([summary, { rows: ['hint'], keep: true }], 3, cut)).toEqual({ rows: ['short 1', 'short 2', 'hint'], cut: false });
+    expect(fitRows([summary, { rows: ['hint'], keep: true }], 2, cut)).toEqual({ rows: ['shorter', 'hint'], cut: false });
+    expect(fitRows([summary], 3, cut)).toEqual({ rows: ['full 1', 'full 2', 'full 3'], cut: false });
+  });
+
   it('cuts the rules rows, never the hint, when even the short forms don’t fit', () => {
     const lines = [{ rows: ['r1', 'r2', 'r3'] }, { rows: ['reach'], short: ['n'] }, { rows: ['hint'], keep: true }];
     expect(fitRows(lines, 3, cut)).toEqual({ rows: ['r1', 'r2…', 'hint'], cut: true });

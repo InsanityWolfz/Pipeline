@@ -26,9 +26,11 @@ import { stepHealing } from './healing';
 import { stepEnemies } from './enemyAi';
 import { NO_COMMAND, type Command } from './input';
 import { stepPlayer } from './movement';
+import { slowScale } from './slow';
 import { stepNodes } from './nodes';
 import { stepOrbs } from './orbs';
 import { stepFloodPools } from './floodPools';
+import { stepStrikes } from './strikes';
 import { stepBurns } from './fire';
 import { roomById, type SimState } from './state';
 import { firingWalkScale, stepTube } from './tube';
@@ -76,7 +78,9 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   const bodies = bodiesOf(state);
   const here = bodies(state.roomId);
   const stats = playerStats(state);
-  stepPlayer(state.player, here.room, cmd, here.obstacles, { ...stats, walkScale: stats.walkScale * firingWalkScale(state) });
+  // 065: a slow (a gale ram's gust) takes its share of walk and roll speed.
+  const slowed = slowScale(state.player);
+  stepPlayer(state.player, here.room, cmd, here.obstacles, { ...stats, walkScale: stats.walkScale * firingWalkScale(state) * slowed, rollDistance: stats.rollDistance * slowed });
   // After the player moves and before enemies act (036): the ward builds, a roll stuns what it passes through.
   stepRelics(state);
   stepDoorways(state);
@@ -89,7 +93,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   // Before enemies act, so a Bulwark bomb thrown this tick starts its fuse at 0 (034; its fuseTicks keep the word).
   stepEnemyBombs(state);
   stepEnemies(state, bodies);
-  stepNodes(state.nodes);
+  stepNodes(state.nodes, state.events.rodStrikes);
   // Before the tube, so fire this tick cancels a harvest in progress.
   // Build mode keeps E for hoppers and crates, not harvesting.
   // 045: a new E handler here adds its kind to INTERACT_KINDS (src/data/interact.ts) and to interactTarget
@@ -116,6 +120,8 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepOrbs(state);
   // 060: the Forge Flood's pools beat on the player standing in them.
   stepFloodPools(state);
+  // 064: strikes from above land on the player standing in them.
+  stepStrikes(state);
   // 060: burns beat after everything that hits this tick, so a burn's beat can kill before the dead are removed.
   stepBurns(state);
   removeDead(state);

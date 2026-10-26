@@ -1,5 +1,6 @@
 import { STAGE_MECHANISMS } from './stageMechanisms';
 import { MINE_MECHANISMS } from './mineMechanisms';
+import { FORGE_MECHANISMS } from './forgeMechanisms';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape } from './types';
 
 // Machine mechanisms (020): what each machine visibly does, drawn in its housing's
@@ -219,6 +220,7 @@ export const MECHANISMS: Readonly<Record<string, Mechanism>> = {
   focuser,
   ...STAGE_MECHANISMS,
   ...MINE_MECHANISMS,
+  ...FORGE_MECHANISMS,
 };
 
 /** Where a jammed machine is stuck in its loop, and the ember glint that says so. */

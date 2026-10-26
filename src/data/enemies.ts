@@ -1,8 +1,11 @@
 import { BULWARK, type BulwarkDef } from './bulwark';
 import { FORGEWRIGHT, type ForgewrightDef } from './forgewright';
+import { CONDUCTOR, type ConductorDef } from './conductor';
 import { BOSS_WEIGHT } from './combat';
 import { REGION_1_PART, type RarePart } from './drops';
 import { HOLLOWS_ENEMIES, type HollowsEnemyDef } from './hollowsEnemies';
+import { EMBERWORKS_ENEMIES, type EmberworksEnemyDef } from './emberworksEnemies';
+import { STORMCROWN_ENEMIES, type StormcrownEnemyDef } from './stormcrownEnemies';
 
 // Enemies. Starting values from specs 004 and 009; tune in playtest.
 
@@ -48,6 +51,15 @@ export interface EnemyBase {
    * facing are blocked. It turns toward the player at no more than `turnDegPerSec`.
    */
   shield?: ShieldDef;
+  /** It drops nothing at all (061: a slag whelp), the schematic and armor rolls included. */
+  noLoot?: boolean;
+  /**
+   * 065: it flies (the thunderhawk): it moves over walls, cliffs and chasms, never blocked by terrain (src/sim/flight.ts),
+   * and never pushes or is pushed by an enemy on the ground.
+   */
+  flies?: boolean;
+  /** 065: it drops at all only this share of the time (a static mite's third): its table, part, schematic and armor rolls together. */
+  dropShare?: number;
 }
 
 export interface ShieldDef {
@@ -129,9 +141,9 @@ export interface SlammerDef extends EnemyBase, ScreenLeashed {
   };
 }
 
-/** The Bulwark (034) is in bulwark.ts, the Forgewright (060) in forgewright.ts; Region 2's four (035) are in hollowsEnemies.ts. */
-export type { BulwarkDef, ForgewrightDef };
-export type EnemyDef = MeleeDef | CasterDef | SlammerDef | BulwarkDef | ForgewrightDef | HollowsEnemyDef;
+/** The Bulwark (034) is in bulwark.ts, the Forgewright (060) in forgewright.ts; Region 2's four (035) are in hollowsEnemies.ts, Region 3's (061) in emberworksEnemies.ts, Region 4's (065) in stormcrownEnemies.ts. */
+export type { BulwarkDef, ConductorDef, ForgewrightDef };
+export type EnemyDef = MeleeDef | CasterDef | SlammerDef | BulwarkDef | ForgewrightDef | ConductorDef | HollowsEnemyDef | EmberworksEnemyDef | StormcrownEnemyDef;
 
 /** Every attack's wind-up is at least this long (035): long enough to read and dodge. A data test holds every enemy to it. */
 export const MIN_TELEGRAPH_TICKS = 30;
@@ -242,7 +254,10 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
   },
   bulwark: BULWARK,
   forgewright: FORGEWRIGHT,
+  conductor: CONDUCTOR,
   ...HOLLOWS_ENEMIES,
+  ...EMBERWORKS_ENEMIES,
+  ...STORMCROWN_ENEMIES,
 };
 
 /** Dropped items land within this distance of the corpse, px. */
@@ -277,6 +292,9 @@ export function attackOf(def: EnemyDef): AttackTiming {
       return def.pound;
     case 'forgewright':
       return def.slam;
+    // 064: its first attack's timing; each of its three keeps its own (src/sim/conductorAi.ts).
+    case 'conductor':
+      return { windupTicks: def.lash.windupTicks, swipeTicks: def.lash.activeTicks, recoverTicks: def.lash.recoverTicks, cooldownTicks: def.lash.cooldownTicks };
     case 'charger':
       return def.charge;
     case 'burrower':
@@ -286,5 +304,21 @@ export function attackOf(def: EnemyDef): AttackTiming {
       return def.bash;
     case 'sniper':
       return def.snipe;
+    case 'mote':
+      return def.swell;
+    case 'hound':
+      return def.dash;
+    case 'golem':
+      return def.slam;
+    case 'tender':
+      return def.beam;
+    case 'hawk':
+      return def.dive;
+    case 'mite':
+      return def.zap;
+    case 'sentinel':
+      return def.strike;
+    case 'ram':
+      return def.gust;
   }
 }

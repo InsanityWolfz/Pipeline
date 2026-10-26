@@ -52,6 +52,10 @@ test('the pause menu: Resume, Settings (back to the pause menu), and Quit to tit
 });
 
 test('settings persist across a reload: music 30%, flashes off, roll on Shift (and Shift rolls); a used key swaps', async ({ page }) => {
+  // 064: no slowdown from the bigger world, measured with another build's tests running beside it: this test took
+  // 18–34 s on 062's head and 20–30 s here, a boot to the field 2.9–4.4 s on both. Near the default 30 s on both, and it
+  // ran past it once on CI, so it gets the measured time with room.
+  test.setTimeout(45_000);
   await bootTitle(page);
   await clickRow(page, 'settings');
   await flowIs(page, 'settings');

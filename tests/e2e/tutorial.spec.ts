@@ -174,7 +174,7 @@ test('the guided tutorial plays from a New game until it leaves the foundry', as
     const s = g.step(1, { restore: 'entrance-2' });
     return s.intake.entrances.map((e) => e.open);
   }, T);
-  expect(opened).toEqual([false, true, true, false]);
+  expect(opened).toEqual([false, true, true, false, false]);
   await expectGoal(page, 14);
 
   // 14. The ley bolt line, piece by piece on its ghosts, until ley bolts reach the right entrance.

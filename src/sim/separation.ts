@@ -2,7 +2,8 @@ import { ENEMIES } from '../data/enemies';
 import { CHAMPIONS } from '../data/champions';
 import type { Room } from '../data/rooms';
 import { defOf } from './champions';
-import { moveBox, type Rect } from './collision';
+import type { Rect } from './collision';
+import { flies, moveBody } from './flight';
 import { passesThrough, type EnemyState } from './enemies';
 
 // Enemy separation (split out of enemies.ts): overlapping same-room enemies pushed apart, half each.
@@ -57,6 +58,8 @@ export function separate(enemies: EnemyState[], bodies: (roomId: string) => Room
     const a = enemies[i];
     const b = enemies[j];
     if (!a || !b || a.roomId !== b.roomId || passesThrough(a) || passesThrough(b)) continue;
+    // 065: a flier and a walker never touch (one is in the air); two fliers push apart over any terrain.
+    if (flies(defOf(a)) !== flies(defOf(b))) continue;
     const { room, obstacles } = bodies(a.roomId);
     const fa = defOf(a).feetBox;
     const fb = defOf(b).feetBox;
@@ -98,6 +101,6 @@ function shove(
 ): number {
   const x = e.x;
   const y = e.y;
-  moveBox(room, e, box, dx, dy, obstacles);
+  moveBody(room, e, defOf(e), box, dx, dy, obstacles);
   return Math.hypot(e.x - x, e.y - y);
 }

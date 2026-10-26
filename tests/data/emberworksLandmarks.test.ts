@@ -20,9 +20,9 @@ describe('the Emberworks’ landmarks', () => {
     }
   });
 
-  it('put its pylon (the Ash Kilns’, behind the barrier the Bulwark’s first kill drops) and its cache (the Outpost Forge’s) last', () => {
+  it('put its pylon (the Ash Kilns’, behind the barrier the Bulwark’s first kill drops) and its cache (the Outpost Forge’s) last (064: but the Stormcrown’s pylon)', () => {
     const world = WORLD[OVERWORLD.id];
-    const pylon = world?.pylons?.at(-1);
+    const pylon = world?.pylons?.at(-2);
     expect(pylon && [pylon.site, pylon.safeRadius, pylon.wakes ?? null]).toEqual(['ash-kilns', 7, 'shrine']);
     const forge = LANDMARK_LIST.find((l) => l.id === 'outpost-forge');
     expect(world?.caches?.at(-1)).toEqual({ id: 'outpost-forge', ...forge?.cache });

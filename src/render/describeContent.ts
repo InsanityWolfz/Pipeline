@@ -6,7 +6,7 @@ import { isRuleLine, type ContentLine } from '../data/lines';
 import { pieceDef } from '../data/pieces';
 import { relicDef } from '../data/relics';
 import { lineText, linesText, LINE_SEP, renderTemplate, scopeName, stageCost, stageLineText } from '../data/rulesText';
-import { tagDef, withTag } from '../data/tags';
+import { roundTier, tagDef, withTag } from '../data/tags';
 import { stageDef } from '../data/stages';
 import { itemDef } from '../data/items';
 import { ammoDef } from '../data/ammo';
@@ -114,7 +114,10 @@ export function describeStage(seen: Seen, id: string): Description {
   const takes = knownRounds(seen).filter((r) => withTag(r, st.tag) !== null).map(name);
   const rules = [tag.keyword, ...madeBy([tag.keyword])].map((k) => ({ k, ...keywordRule(seen, k, 'final') }));
   const bonuses = new Set(rules.flatMap((r) => r.resolved.flatMap(bonusSources))).size;
-  const gives = roundsByFamily().flatMap((r) => {
+  // 062: every stone round, then the tiered rounds the player knows (a stage tags them as it tags their stone ones).
+  const known = knownRounds(seen);
+  const givers = [...roundsByFamily().filter((r) => roundTier(r) === 'stone'), ...known.filter((r) => roundTier(r) !== 'stone')];
+  const gives = givers.flatMap((r) => {
     const out = withTag(r, st.tag);
     return out ? [fill(W.gives, { from: name(r), to: name(out) })] : [];
   });

@@ -79,8 +79,13 @@ const tileBox = (tx: number, ty: number, w = 1): Rect => ({ x: (tx + w / 2) * TI
 const nextOf = (state: Research, kind: 'entrance' | 'pipe'): ResearchNode | undefined =>
   RESEARCH_NODES.find((n) => n.anchor.kind === kind && nodeState(state, n.id) === 'revealed');
 
-/** The middle of the mouth, where the pipe rises (060: between two tiles for four entrances). */
-const PIPE = { tx: INTAKE_MID_TX, ty: INTAKE.entrances[0]?.ty ?? 0 };
+/**
+ * Where the pipe's diagram sits: the middle of the mouth, where the pipe rises (060: between two tiles for four
+ * entrances); 064: with five the middle is a capped mouth tile's own, so it sits on the mouth tile that starts open
+ * instead (it never has a cap), and a cap and the pipe never share a tile.
+ */
+const START_OPEN = INTAKE.entrances.find((e) => e.startsOpen);
+const PIPE = Number.isInteger(INTAKE_MID_TX) && START_OPEN ? { tx: START_OPEN.tx, ty: START_OPEN.ty } : { tx: INTAKE_MID_TX, ty: INTAKE.entrances[0]?.ty ?? 0 };
 
 /** 058.5: in a guided game, the Warden core's entrance node fits only the right cap. */
 const capFits = (state: Pick<SimState, 'start' | 'sandbox'>, node: ResearchNode, i: number): boolean =>

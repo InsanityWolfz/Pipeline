@@ -11,10 +11,10 @@ import { hollowsFrame } from './hollowsTiles';
 /** Where the Emberworks' own ground starts: past the Hollows' cliff edge. */
 const FOOT = EMBERWORKS.radii.inner + EMBERWORKS.wall;
 
-/** An Emberworks tile's standing sprite, by its symbol, tile and hash. */
-export function emberworksFrame(symbol: string, tx: number, ty: number, hash: number, room: Room): string | undefined {
+/** An Emberworks tile's standing sprite, by its symbol, tile and hash (064: `outerEdge`, its own cliffs on the edge past it, under the Stormcrown). */
+export function emberworksFrame(symbol: string, tx: number, ty: number, hash: number, room: Room, outerEdge = false): string | undefined {
   const S = EMBERWORKS_SPRITES;
-  if (symbol === TILE.cliff && fromCentre(tx, ty) < FOOT) return hollowsFrame(symbol, tx, ty, hash, room);
+  if (symbol === TILE.cliff && !outerEdge && fromCentre(tx, ty) < FOOT) return hollowsFrame(symbol, tx, ty, hash, room);
   if (symbol === TILE.cliff) return room.rows[ty + 1]?.[tx] === TILE.cliff ? S.cliffTop : S.cliffs[hash % S.cliffs.length];
   if (symbol === TILE.kiln) return room.rows[ty + 1]?.[tx] === TILE.kiln ? S.kilnTop : S.kiln;
   if (symbol === TILE.chimney) return S.chimney[hash % S.chimney.length];
