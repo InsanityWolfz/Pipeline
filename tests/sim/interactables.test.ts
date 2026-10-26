@@ -9,6 +9,8 @@ import { FEET_BOX, TUTORIAL_START } from '../../src/data/player';
 import { HOLLOWS_START } from '../../src/data/playtest';
 import { interactTarget } from '../../src/sim/interactables';
 import { diagrams } from '../../src/sim/research';
+import { claim } from '../../src/sim/claims';
+import { SHRINE_SITE } from '../../src/data/rooms';
 import { createSim, roomOf, type SimState } from '../../src/sim/state';
 import { tileCentre } from '../../src/sim/tiles';
 import type { CrateState } from '../../src/sim/pieces';
@@ -182,6 +184,19 @@ describe('the in-reach E prompts (045)', () => {
     building.building = true;
     expect(interactTarget(building)).toBeNull();
     expect(interactTarget(arena())).toBeNull();
+  });
+
+  it("a guarded pylon has no prompt until its guards are gone (fix-playtest-ui, Shaun: \"Should only show E if it needs cleared\")", () => {
+    const s = createSim(7);
+    claim(s, SHRINE_SITE);
+    const pylon = landmarkDef('quarry').pylon;
+    if (!pylon) throw new Error('no quarry pylon');
+    s.roomId = OVERWORLD_ROOM;
+    below(s, pylon);
+    expect(s.enemies.some((e) => e.group === 'quarry')).toBe(true);
+    expect(interactTarget(s)).toBeNull();
+    s.enemies = s.enemies.filter((e) => e.group !== 'quarry');
+    expect(interactTarget(s)?.kind).toBe('pylon');
   });
 
   it('an opened cache has no prompt; a guarded one does (E says it is sealed)', () => {
