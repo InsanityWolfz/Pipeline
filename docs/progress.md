@@ -2,6 +2,20 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-26: 068 Tougher late bosses
+**Changed:** on `claude/068-late-boss-buffs` (InsanityWolfz/Pipeline#82), from Shaun's playtest calls (docs/brainstorm/2026-10-26-playtest-calls.md; plan docs/plans/068-late-boss-buffs.md):
+- the Forgewright: 6,000 health; heat keeps filling through vents (only a flood resets it); bellows of 300 that patch in 3 s; slam and spray 20% faster;
+- the Conductor: 8,000 health; a storm shield blocks every hit on his body while 3 or more rods stand (the plating check, `plated`, covers both bosses); a 30-tick blink-in window where shots pass through him but his rods still take hits; the storm call drops 5 circles.
+
+`SAVE_VERSION` 21 (067 took 20). Reviewed: no blocking findings; four suggestions applied (wrong targets in comments, `enemies.ts` back under 300 lines via `blockPlated`, a lightning round in the shield test). `npm run check` 2512 tests; CI green. Raised for Shaun: 068.1–068.12; 068.9–068.11 are balance calls.
+
+**Next:** Shaun's playtest (the sandbox's boss rooms, or `?playtest`); his calls on 068.9–068.11 and OK on the rest; "merge 82".
+
+**Notes:**
+- `npm run measure`, recorded not tuned: the Forgewright's decent bot is KO'd at 213.7 s with 1,209 health left on him (kept-up kill 253.4 s, target 90–120 s); the Conductor with homing bolts breaking rods 206–252 s (target 120–180 s), plain arrows breaking rods 92–135 s, arrows at his body only 0/20 in 360 s; the Bulwark 18.4 s.
+- CI's e2e jobs hung twice this session in `playwright install` (no job timeout); a re-run passed both times.
+- 064's "Conductor grounded" review shot now times out on the camera settling, likely from fix-playtest-ui's camera lift (068.12).
+
 ## 2026-10-26: 067 The foundry after the first boss
 **Changed:** on `claude/067-foundry-after-shrine` (InsanityWolfz/Pipeline#81), from Shaun's playtest calls (docs/brainstorm/2026-10-26-playtest-calls.md; plan docs/plans/067-foundry-after-shrine.md, four slices):
 - arrows, bombs and ley bolts are hand-crafted from the start, with no attunement; each row shows once its raws have been carried;

@@ -1,5 +1,5 @@
 # 068: Tougher late bosses: the Forgewright and the Conductor
-status: approved
+status: done
 
 Approved by Shaun in chat, 2026-10-26 ("approve 67 and 68"), with the draft's listed decisions; its plan is pre-approved.
 
