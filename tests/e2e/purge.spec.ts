@@ -40,6 +40,9 @@ test('E at a fed entrance offers Purge, and Purge empties it into the stash', as
   await expect.poll(async () => (await ui(page))?.interactPrompt?.kind).toBe('entrance');
   await page.keyboard.press('e');
   await expect.poll(async () => (await ui(page))?.purgeMenu?.map((r) => r.text)).toEqual(['Purge']);
+  // The cursor leaving the mouth for the menu (a tick aimed off it) keeps the menu open.
+  await step(page, 1, { aimX: (MOUTH.tx + 0.5) * 32, aimY: (MOUTH.ty + 6.5) * 32 });
+  await expect.poll(async () => (await ui(page))?.purgeMenu?.length).toBe(1);
   const row = (await ui(page))?.purgeMenu?.[0];
   if (!row) throw new Error('no row');
   const p = await screenPoint(page, row.x + row.w / 2, row.y + row.h / 2);

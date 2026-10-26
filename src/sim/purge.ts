@@ -36,8 +36,11 @@ function gapTo(state: Pick<SimState, 'player'>, i: number): number {
   return Math.hypot(gapX, gapY);
 }
 
-/** An entrance can be purged by the player now: in the foundry, open, holding rounds, its mouth in INTAKE_REACH. */
-function purgeable(state: Reach, i: number): boolean {
+/**
+ * An entrance can be purged by the player now: in the foundry, open, holding rounds, its mouth in INTAKE_REACH. (Its
+ * menu stays open while this holds, wherever the cursor goes.)
+ */
+export function purgeable(state: Reach, i: number): boolean {
   const e = state.link.entrances[i];
   return state.roomId === FOUNDRY_ROOM && e !== undefined && e.open && e.ammoId !== null && e.count > 0 && gapTo(state, i) <= INTAKE_REACH;
 }

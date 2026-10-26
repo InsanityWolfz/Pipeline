@@ -7,7 +7,7 @@ import { ChoiceMenu, type Choice } from './ChoiceMenu';
 import type { Controls } from './controls';
 import { RestorePanel } from './RestorePanel';
 import { diagramInReach } from '../sim/research';
-import { entranceTakesE } from '../sim/purge';
+import { entranceTakesE, purgeable } from '../sim/purge';
 import { PURGE_TEXT } from '../data/interact';
 import { itemDef } from '../data/items';
 import { ammoDef } from '../data/ammo';
@@ -190,9 +190,9 @@ export class SiteMenus {
     if (this.bench.isOpen && !fixtureInReach(sim, 'bench')) this.bench.close();
     // 047: the bench's Stages panel is gone; tagged rounds are crafted in the crafting menu (C).
     this.bench.update(sim);
-    // 069: the purge menu closes once its entrance is out of reach or empty.
+    // 069: the purge menu closes once its entrance is out of reach or empty (not as the cursor leaves the mouth for the menu).
     const e = this.purgeAt === null ? undefined : sim.link.entrances[this.purgeAt];
-    if (this.purge.isOpen && (entranceTakesE(sim) !== this.purgeAt || !e?.ammoId)) this.purge.close();
+    if (this.purge.isOpen && (this.purgeAt === null || !purgeable(sim, this.purgeAt))) this.purge.close();
     this.purge.show(this.purgeAt !== null && e?.ammoId ? [{ icons: [itemDef(ammoDef(e.ammoId).itemId).icon, SITE_ICONS.stash], text: PURGE_TEXT.row, value: this.purgeAt }] : []);
     if (this.waystone.isOpen && !fixtureInReach(sim, 'waystone')) this.waystone.close();
     this.waystone.show(claimedPylons(sim).map(({ pylon }) => ({ icons: [SITE_ICONS.travel], text: `Travel to ${pylon.name}`, value: { site: pylon.site } })));

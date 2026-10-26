@@ -209,6 +209,7 @@ export class Controls {
     for (const k of Object.keys(this.menuKeys) as (keyof Controls['menuKeys'])[]) this.menuKeys[k] = false;
     this.interactPress = false;
     this.wheelPending = 0;
+    this.pipettePending = false;
   }
 
   private clearPresses(): void {

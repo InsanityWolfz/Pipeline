@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { INTAKE } from '../../src/data/foundry';
 import { interactTarget } from '../../src/sim/interactables';
-import { entranceTakesE, purge } from '../../src/sim/purge';
+import { entranceTakesE, purge, purgeable } from '../../src/sim/purge';
 import { diagramInReach, diagrams } from '../../src/sim/research';
 import type { SimState } from '../../src/sim/state';
 import { tileCentre } from '../../src/sim/tiles';
@@ -86,6 +86,8 @@ describe('purging an intake entrance (069)', () => {
     s.player.aimY += 6 * 32;
     expect(entranceTakesE(s)).toBeNull();
     expect(interactTarget(s)?.kind).toBe('diagram');
+    // It can still be purged from here: its open menu stays open as the cursor moves onto the menu.
+    expect(purgeable(s, MIDDLE)).toBe(true);
     // With the cursor on the open entrance's mouth (or the pipe above it), it takes E.
     s.player.aimY = tileCentre(mouth).y - 20;
     expect(entranceTakesE(s)).toBe(MIDDLE);
