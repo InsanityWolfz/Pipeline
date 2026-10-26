@@ -6,6 +6,7 @@ import { grounded, hitRod, rodPoint, standingRods, stormShielded } from '../../s
 import { targetable, type EnemyState } from '../../src/sim/enemies';
 import { punch } from '../../src/sim/melee';
 import type { SimState } from '../../src/sim/state';
+import { summarize } from '../../src/sim/summary';
 import { movePlayer, run } from './fight';
 import { CONDUCTOR, spire, topUp } from './spire';
 
@@ -44,6 +45,7 @@ describe('the blink-in window (068)', () => {
     expect(CONDUCTOR.blinkInTicks).toBe(30);
     const { s, c } = blinkedIn();
     expect(c.conductor.blinkIn).toBe(CONDUCTOR.blinkInTicks);
+    expect(summarize(s).bosses).toEqual([expect.objectContaining({ enemyId: 'conductor', blinkIn: CONDUCTOR.blinkInTicks })]);
     expect(targetable(c)).toBe(false);
     run(s, CONDUCTOR.blinkInTicks - 1, calm(s, c));
     expect(targetable(c)).toBe(false);

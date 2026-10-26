@@ -20,8 +20,8 @@ export interface RodState {
 /**
  * The Conductor's own state (064), nested as the Forgewright's bellows are: its six arena rods (none on anything else);
  * the rod it stands at and the rod a blink's warning names (-1: none); ticks to its next blink, ticks left of a
- * blink's warning, and ticks left of its blink-in window (068); the attack it is making (-1: none; 0 lash, 1 storm call, 2 rod chain) and each attack's own cooldown;
- * and its rod chain's lines, a bit per neighbouring pair of rods (rod i and i + 1), and whether the chain has struck.
+ * blink's warning, and ticks left of its blink-in window (068); the attack it is making (-1: none; 0 lash, 1 storm
+ * call, 2 rod chain) and each attack's own cooldown; and its rod chain's lines, a bit per neighbouring pair of rods (rod i and i + 1), and whether the chain has struck.
  */
 export interface ConductorState {
   rods: RodState[];

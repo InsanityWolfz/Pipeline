@@ -1,8 +1,7 @@
 import type { DamageType } from '../data/ammo';
 import { damageEnemy, immune, targetable, type EnemyState } from './enemies';
 import { chainFromBurst } from './lightning';
-import { plated } from './bossParts';
-import { hitPart, partsNear } from './bossParts';
+import { hitPart, partsNear, plated } from './bossParts';
 import type { SimState } from './state';
 
 // A Burst's damage (029, 034, 037, 038, 039; 060: on the Forgewright's bellows too; 064: a lightning one chains once): a bomb's, a landmine's, a Bomblet's or an

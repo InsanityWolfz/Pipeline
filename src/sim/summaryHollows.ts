@@ -56,6 +56,8 @@ export interface HollowsSummary {
     rod: number;
     blinkTo: number;
     blinkWarn: number;
+    /** 068: ticks left of its blink-in window (it can't be hit while above 0). */
+    blinkIn: number;
     grounded: boolean;
     attack: number;
     chainMask: number;
@@ -108,6 +110,7 @@ export function hollowsSummary(state: SimState): HollowsSummary {
         rod: e.conductor.rod,
         blinkTo: e.conductor.blinkTo,
         blinkWarn: e.conductor.blinkWarn,
+        blinkIn: e.conductor.blinkIn,
         grounded: grounded(e),
         attack: e.conductor.attack,
         chainMask: e.conductor.chainMask,

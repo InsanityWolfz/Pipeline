@@ -20,7 +20,8 @@ import { rotate } from './volley';
 // circle ahead of it; at range it sprays a fan of slow embers. Beside all that its heat fills (slowed by Chill as its
 // walk is, faster once enraged below half health); at full heat it raises its hammer while the half of the hall the
 // player stands in is shaded red, then floods it with fire pools (floodPools.ts). A vent (forgewrightParts.ts) staggers
-// it where it stands, its heat still filling (068). It never leaves the hall, and walks home to heal after the player has been out of it a while.
+// it where it stands, its heat still filling (068). It never leaves the hall, and walks home to heal after the player
+// has been out of it a while.
 
 const RAD = Math.PI / 180;
 
