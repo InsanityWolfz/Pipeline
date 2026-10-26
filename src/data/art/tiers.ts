@@ -19,17 +19,24 @@ export interface TierArt {
 }
 
 export const TIER_ART: Readonly<Record<TierId, TierArt>> = {
-  // Stone and pale iron to dark steel; the landmine's iron goes a shade darker still.
+  // Stone and pale iron to dark steel (the landmine's iron a shade darker still); its badge, a little steel ingot with
+  // a bright sheen, in the icon's upper-left corner (tags' badges sit in the lower corners).
   steel: {
     swap: { 'rock-pale': 'iron-light', 'rock-light': 'iron-light', rock: 'iron', 'rock-dark': 'iron-dark', 'iron-light': 'iron', iron: 'iron-dark', 'iron-rust': 'iron-dark' },
     alpha: 1,
-    mark: [{ ...line([-1.2, -5.4, 4.8, -5.4], 0.6, { id: 'snow', alpha: 0.85 }), glow: { color: 'rock-pale', blur: 1.5 } }],
+    mark: [
+      path('M -7.6 -3.6 L -6 -6.6 L -1.6 -6.6 L -3.2 -3.6 Z', { fill: { linear: [-7, -7, -2, -3], stops: [{ at: 0, color: 'iron-light' }, { at: 1, color: 'iron-dark' }] }, outline: true }),
+      { ...line([-5.6, -6, -2.6, -6], 0.5, { id: 'snow', alpha: 0.9 }), glow: { color: 'rock-pale', blur: 1 } },
+    ],
   },
-  // The ley bolt's light, cleared to glass: paler, partly see-through, with a white glint.
+  // The ley bolt's light, cleared to glass: paler, partly see-through; its badge a small clear diamond of glass.
   glass: {
-    swap: { 'cyan-deep': 'cyan', cyan: 'water-light', 'cyan-glow': 'foam' },
-    alpha: 0.8,
-    mark: [ellipse(3.6, -4.4, 1.2, 0.7, { fill: 'snow', glow: { color: 'cyan-glow', blur: 2 } })],
+    swap: { 'cyan-deep': 'cyan', cyan: 'cyan-glow', 'cyan-glow': 'foam' },
+    alpha: 0.85,
+    mark: [
+      path('M -4.8 -7.6 L -2.6 -5 L -4.8 -2.4 L -7 -5 Z', { fill: { id: 'foam', alpha: 0.8 }, outline: true, glow: { color: 'cyan-glow', blur: 2 } }),
+      line([-5.6, -5.6, -4.8, -6.6], 0.5, 'snow'),
+    ],
   },
 };
 

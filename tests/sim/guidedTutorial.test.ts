@@ -51,6 +51,10 @@ const TEXTS = [
   'Defeat the Forgewright',
   "Restore the intake's fourth entrance (E with the Forgewright core)",
   'Feed all four entrances',
+  // 062: the material tiers'.
+  'Smelt ley-steel at the bench (C)',
+  'Build a Smelter into a line',
+  'Fire steel rounds',
 ];
 const REMOVED = [
   'Feed ammo into the new entrance',

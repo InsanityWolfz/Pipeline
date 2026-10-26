@@ -1,8 +1,8 @@
-import type { GateId } from './rooms';
+import { FOUNDRY_ROOM, type GateId } from './rooms';
 import type { TargetDef } from './targets';
 import { GROTTO_GROUP } from './grotto';
 import type { GuidedId } from './guidedBuilds';
-import { ROUNDS, roundTags } from './tags';
+import { ROUNDS, roundTags, roundTier } from './tags';
 
 // The objectives: one ordered chain (028). The prototype's goals (012) run first,
 // in its beat order, then each milestone's, tagged by milestone; later specs append
@@ -45,7 +45,9 @@ export type ObjectiveCheck =
   /** The player stands in this region (034: Region 2, Stonefall Hollows, reached once its barrier is down). */
   | { kind: 'inRegion'; region: number }
   /** A region boss has been killed at least once (034). */
-  | { kind: 'bossDefeated'; boss: string };
+  | { kind: 'bossDefeated'; boss: string }
+  /** 062: any one of these rounds fired from the tube (in a volley or carried). */
+  | { kind: 'fired'; items: readonly string[] };
 
 /** Which key a goal's prompt shows, and what it floats over (see PromptView). */
 export type PromptTarget = 'tubeStone' | 'node' | 'bench' | 'pylon' | 'hopper' | 'player';
@@ -80,6 +82,9 @@ export interface ObjectiveDef {
 
 /** 060: every Fire round (each family's), any of which the fire-round goal takes. */
 export const FIRE_ROUNDS: readonly string[] = ROUNDS.filter((r) => roundTags(r).includes('fire'));
+
+/** 062: every steel and glass round, any of which the "Fire steel rounds" goal takes. */
+export const TIERED_ROUNDS: readonly string[] = ROUNDS.filter((r) => roundTier(r) !== 'stone');
 
 /** 050: the research node whose entrance the second-line goal asks to feed, and its marker points at: the Warden core's. */
 export const NEW_ENTRANCE_NODE = 'entrance-2';
@@ -166,6 +171,11 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
   { text: 'Defeat the Forgewright', milestone: 'm2', check: { kind: 'bossDefeated', boss: 'forgewright' }, target: { kind: 'boss', boss: 'forgewright' } },
   { text: "Restore the intake's fourth entrance (E with the Forgewright core)", milestone: 'm2', check: { kind: 'restored', node: 'entrance-4' }, target: { kind: 'caps' } },
   { text: 'Feed all four entrances', milestone: 'm2', check: { kind: 'volley', min: 4 }, target: { kind: 'intake' } },
+  // 062: the material tiers: ley-steel by hand (it unlocks the Smelter), a Smelter making it, then any steel or glass round fired.
+  { text: 'Smelt ley-steel at the bench (C)', milestone: 'm2', check: { kind: 'crafted', items: ['ley-steel'] }, target: { kind: 'collect' } },
+  // Built in the foundry (its door from outside); fired from the intake, where a line's steel rounds go.
+  { text: 'Build a Smelter into a line', milestone: 'm2', check: { kind: 'machineMade', item: 'ley-steel' }, target: { kind: 'room', room: FOUNDRY_ROOM } },
+  { text: 'Fire steel rounds', milestone: 'm2', check: { kind: 'fired', items: TIERED_ROUNDS }, target: { kind: 'intake' } },
   // 058: cuts in as the current goal once the first talent point comes (058.4: never during a guided build).
   { text: 'Press T to spend a talent point', milestone: 'm1', check: { kind: 'talentSpent' }, cutIn: true },
 ];

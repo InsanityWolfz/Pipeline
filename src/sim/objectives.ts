@@ -76,6 +76,9 @@ function holds(state: SimState, check: ObjectiveCheck): boolean {
       return regionOf(state.roomId, state.player) === check.region;
     case 'bossDefeated':
       return state.bossDefeats.includes(check.boss);
+    case 'fired':
+      // 062: this tick's shots (the tube steps before the goals do).
+      return state.events.shots.some((shot) => check.items.includes(shot.ammoId));
   }
 }
 
