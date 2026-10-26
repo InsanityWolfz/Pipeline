@@ -4,9 +4,9 @@ import { ellipse, flat, line, path, rect, solid, trim, type Paint, type Shape, t
 
 // Fixtures and the pylon (020), in the 016 vector style: the identification
 // bench, the stash, the supply port, the foundry's exit arch, the waystone, the
-// pylon in its three states, the rubble that seals the door and the room's ley
-// crystal. Standing sprites are drawn round their bottom centre; the door arch
-// and rubble from their bottom-left, like the wall tiles they sit in.
+// pylon in its three states, the ley shimmer that seals the door (067) and the room's
+// ley crystal. Standing sprites are drawn round their bottom centre; the door arch
+// and shimmer from their bottom-left, like the wall tiles they sit in.
 
 const stand = (key: string, size: readonly [number, number], frames: readonly (readonly Shape[])[]): VectorSprite => ({ key, size, anchor: [size[0] / 2, size[1]], frames });
 const shadow = (rx: number): Shape => ellipse(0, -2, rx, 3.2, { fill: { id: 'ground-shade', alpha: 0.4 } });
@@ -137,19 +137,14 @@ const pylon = (lit: number, glow: number): Shape[] => [
   }),
 ];
 
-// The rubble that seals the foundry's door until the tutorial opens it: tumbled blocks in the doorway.
-const RUBBLE: Shape[] = [
-  ellipse(16, -2, 15, 3, { fill: { id: 'ground-shade', alpha: 0.4 } }),
-  ...(
-    [
-      [3, -14, 13, 12, 'rock'],
-      [15, -15, 14, 13, 'rock-light'],
-      [8, -26, 12, 11, 'rock-light'],
-      [19, -28, 10, 12, 'rock'],
-      [11, -38, 10, 10, 'rock-pale'],
-    ] as const
-  ).flatMap(([x, y, w, h, c]) => [rect(x, y, w, h, 2.4, { fill: vertical(c, 'rock-dark', y, y + h * 1.4), outline: true }), line([x + 2, y + 2, x + w - 3, y + 2], 0.6, 'rock-pale')]),
-  rune(14, -20, 1.6, 'rock-dark'),
+// 067: the ley shimmer that seals the foundry's door until the shrine's pylon is claimed: a translucent cyan curtain
+// filling the doorway's arch, its light strands running up it and a rune at its heart. Render pulses it.
+const ARCH = 'M 4 0 L 4 -30 Q 4 -43 16 -43 Q 28 -43 28 -30 L 28 0 Z';
+const SHIMMER: Shape[] = [
+  path(ARCH, { fill: { linear: [0, 0, 0, -43], stops: [{ at: 0, color: 'cyan' }, { at: 0.7, color: 'cyan-deep' }, { at: 1, color: 'cyan-glow' }] }, alpha: 0.5, glow: { color: 'cyan', blur: 6 } }),
+  ...[8, 12.5, 16, 19.5, 24].map((x, i) => glowLine([x, -1, x, i === 2 ? -41 : -34 + Math.abs(i - 2) * 1.5], 0.7, 'cyan-glow', 3)),
+  path('M 4 0 L 4 -30 Q 4 -43 16 -43 Q 28 -43 28 -30 L 28 0', trim('cyan-glow', 1.2)),
+  rune(16, -22, 2.2, 'cyan-glow'),
 ];
 
 // The ley crystal growing in the foundry: a cluster of cyan shards on a chip of stone.
@@ -176,6 +171,6 @@ export const FIXTURE_SPRITES_VECTOR: readonly VectorSprite[] = [
   stand(PYLON_SPRITES.off, [32, 80], [pylon(0, 0)]),
   stand(PYLON_SPRITES.activating.key, [32, 80], [0.25, 0.5, 0.75, 1].map((k) => pylon(k, k * 0.6))),
   stand(PYLON_SPRITES.active.key, [32, 80], [pylon(1, 0.8), pylon(1, 1)]),
-  { key: TUTORIAL_SPRITES.rubble, size: [32, 48], anchor: [0, 48], frames: [RUBBLE] },
+  { key: TUTORIAL_SPRITES.shimmer, size: [32, 48], anchor: [0, 48], frames: [SHIMMER] },
   stand(SPRITES.leyCrystal, [16, 20], [LEY_CRYSTAL]),
 ];

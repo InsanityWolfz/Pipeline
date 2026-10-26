@@ -1,6 +1,7 @@
 import { OVERWORLD } from './overworld';
 import { DEFAULT_ROOM, FOUNDRY_ROOM } from './rooms';
 import type { GearPiece } from './gear';
+import { RECIPES, revealsOf } from './recipes';
 
 // Player movement tuning. Starting values from spec 002; tune in playtest.
 
@@ -53,11 +54,14 @@ export interface StartDef {
   gear?: readonly GearPiece[];
   /** 044: the sandbox (`?sandbox`): its room, kit and tools; src/sim/sandbox.ts sets the rest up. Never in a save. */
   sandbox?: boolean;
-  /** 046: the example line (src/data/exampleLine.ts) stands in the foundry from the first entry. The real game's start only. */
-  exampleLine?: boolean;
   /** 058: the guided tutorial's builds and build lock (src/data/guidedBuilds.ts). The real game's start only. */
   guided?: boolean;
+  /** 067: revealing items (038) counted as already carried, so their recipes are known from the first tick. */
+  found?: readonly string[];
 }
+
+/** 067: the raws whose carrying shows the bomb and ley bolt rows (the bomb row's `shownAfter`); a start past the tutorial knows them. */
+export const BOMB_RAWS: readonly string[] = RECIPES.bomb ? revealsOf(RECIPES.bomb) : [];
 
 /**
  * The sandbox start: the meadow beside the ruin field (017), 30 arrows, the tube
@@ -73,9 +77,11 @@ export const DEFAULT_START: StartDef = {
   attuned: false,
   gatesOpen: true,
   populated: false,
+  // 067: past the tutorial, so the bomb and ley bolt rows are known as they were with the foundry's gate open.
+  found: BOMB_RAWS,
 };
 
-/** The real game's start (012): waking by the tube's stone in the overworld's meadow (017) with nothing, every gate shut; the example line waits in the foundry (046). */
+/** The real game's start (012): waking by the tube's stone in the overworld's meadow (017) with nothing, every gate but the shrine's shut (067). */
 export const TUTORIAL_START: StartDef = {
   room: DEFAULT_ROOM,
   spawn: OVERWORLD.wake,
@@ -85,7 +91,6 @@ export const TUTORIAL_START: StartDef = {
   attuned: false,
   gatesOpen: false,
   populated: false,
-  exampleLine: true,
   guided: true,
 };
 

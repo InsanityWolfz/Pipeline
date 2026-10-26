@@ -3,8 +3,9 @@ import { STORMCROWN } from '../data/stormcrown';
 import { HOLLOWS } from '../data/hollows';
 import { STONE_REACH } from '../data/objectives';
 import { FEET_BOX } from '../data/player';
+import { SEALED_DOOR_REACH } from '../data/hints';
 import { RESPAWN_ROOM } from '../data/player';
-import { SHOT_GATES, TILE, type GateId, type Room } from '../data/rooms';
+import { SHOT_GATES, SHRINE_SITE, TILE, type GateId, type Room } from '../data/rooms';
 import { WORLD } from './world';
 import { recipeDef, REVEALING_ITEMS, revealsOf } from '../data/recipes';
 import { count, type Inventory } from './inventory';
@@ -14,13 +15,13 @@ import type { Command } from './input';
 import { roomOf, type SimState } from './state';
 import { entranceCap } from './research';
 
-// The tutorial's rules (012): the tube waits on its stone until E takes it; the
-// foundry's stairs are sealed until the ruin field's whole pack is dead at once,
-// the shrine site's gap until the first line fills the tube; bomb and ley bolt recipes stay
-// unknown until the tube attunes. Gates and the tube stay once got, through a KO.
+// The tutorial's rules (012): the tube waits on its stone until E takes it; the foundry's stairs are sealed until the
+// shrine's pylon is claimed (067: the foundry comes after the first boss), saying so to E or a push; the shrine's door
+// is open from the start (067). The ruin field's clearing sends the land's packs out (067). Gates and the tube stay
+// once got, through a KO.
 
 
-/** The ruin field's pack (017): while any of it lives, rubble seals the foundry's stairs. */
+/** The ruin field's pack (017): killing its last Husk clears the field (067). */
 export const FIELD_GROUP = 'field';
 
 export interface Gates {
@@ -35,10 +36,11 @@ export interface Gates {
 }
 
 /**
- * The tutorial's gates all shut, or all open (the sandbox and playtest starts); the Hollows' barrier waits on the
- * shrine's claim, the Emberworks' on the Bulwark's first kill and the Stormcrown's on the Forgewright's either way.
+ * The foundry's gate shut, or open (the sandbox and playtest starts); the shrine's open on every start (067); the
+ * Hollows' barrier waits on the shrine's claim, the Emberworks' on the Bulwark's first kill and the Stormcrown's on the
+ * Forgewright's either way.
  */
-export const createGates = (open: boolean, hollows = false): Gates => ({ foundry: open, shrine: open, hollows, emberworks: false, stormcrown: false });
+export const createGates = (open: boolean, hollows = false): Gates => ({ foundry: open, shrine: true, hollows, emberworks: false, stormcrown: false });
 
 
 
@@ -114,14 +116,9 @@ export function sealedRoom(state: Pick<SimState, 'gates'>, room: Room): Room {
   return sealed;
 }
 
-/**
- * Recipes the player knows: those needing attunement once the tube is attuned or (051, B.3: bombs and ley bolts are
- * crafted before the foundry) once the foundry's stairs are open, and those shown after an item (038) once it's been carried.
- */
-export function knownRecipe(state: { link: Pick<SimState['link'], 'attuned'>; found: readonly string[]; gates: Pick<Gates, 'foundry'> }, recipeId: string): boolean {
-  const def = recipeDef(recipeId);
-  const attuned = state.link.attuned || state.gates.foundry;
-  return (def.requires !== 'attuned' || attuned) && revealsOf(def).every((id) => state.found.includes(id));
+/** Recipes the player knows: each once what it's shown after (038) has been carried (067: never waiting on attunement). */
+export function knownRecipe(state: { found: readonly string[] }, recipeId: string): boolean {
+  return revealsOf(recipeDef(recipeId)).every((id) => state.found.includes(id));
 }
 
 /** The revealing items (038) an inventory holds, in REVEALING_ITEMS order. */
@@ -157,22 +154,49 @@ function open(state: SimState, gate: GateId): void {
   state.events.gates.push({ gate });
 }
 
-/** Opens gates whose condition now holds: the hall clear, the first line full (an entrance at its current cap, 024, 033), the shrine claimed (034), the Bulwark's first kill (060). */
+/**
+ * Notes the first full line (an entrance at its current cap, 024, 033) and the ruin field's clearing (067), and opens
+ * gates whose condition now holds: the foundry's and the Hollows' on the shrine's claim (067, 034), the Emberworks' on
+ * the Bulwark's first kill (060), the Stormcrown's on the Forgewright's (064).
+ */
 export function stepGates(state: SimState): void {
   const cap = entranceCap(state);
-  if (!state.firstLineFull && state.link.entrances.some((e) => e.count >= cap)) {
-    state.firstLineFull = true;
-    // The world pushes back (017): from the first full line, the land fills with packs.
-    state.populated = true;
+  if (!state.firstLineFull && state.link.entrances.some((e) => e.count >= cap)) state.firstLineFull = true;
+  // 067: the field's last Husk killed (a death, not just an empty pack, so a start without the pack never counts), on
+  // every start. The world pushes back (017): from then on the land fills with packs, but only on the real game's start,
+  // whose gates start shut: the test starts past the tutorial keep their own `populated` (067.5: they start calm,
+  // whatever is killed).
+  if (!state.fieldCleared && state.events.deaths.some((d) => d.group === FIELD_GROUP) && !state.enemies.some((e) => e.group === FIELD_GROUP && e.health > 0)) {
+    state.fieldCleared = true;
+    if (!state.start.gatesOpen) state.populated = true;
   }
-  if (!state.gates.foundry && !state.enemies.some((e) => e.group === FIELD_GROUP)) open(state, 'foundry');
-  if (!state.gates.shrine && state.firstLineFull) open(state, 'shrine');
+  if (!state.gates.foundry && state.claims.includes(SHRINE_SITE)) open(state, 'foundry');
   // Claiming the shrine's pylon drops the Hollows' barrier (034); claims are for good, so it never comes back.
   if (!state.gates.hollows && state.claims.includes(HOLLOWS.opensOn)) open(state, 'hollows');
   // 060: the Bulwark's first kill drops the Emberworks' barrier; boss defeats are for good, so it never comes back.
   if (!state.gates.emberworks && state.bossDefeats.includes(EMBERWORKS.opensOn)) open(state, 'emberworks');
   // 064: the Forgewright's first kill drops the Stormcrown's, for good the same way.
   if (!state.gates.stormcrown && state.bossDefeats.includes(STORMCROWN.opensOn)) open(state, 'stormcrown');
+}
+
+/**
+ * 067: E at a door its gate seals, or a push into it, within SEALED_DOOR_REACH of its tile, says why (render shows the
+ * gate's SEALED_DOOR_TEXT). E isn't taken: the door does nothing, as a sealed arena door doesn't.
+ */
+export function stepSealedDoors(state: SimState, cmd: Command): void {
+  const p = state.player;
+  for (const d of roomOf(state).doorways ?? []) {
+    if (!d.gate || doorOpen(state, d.gate)) continue;
+    const r = tileRect(d);
+    const dx = r.x - p.x;
+    const dy = r.y - p.y;
+    const gapX = Math.max(0, Math.abs(dx) - (FEET_BOX.w + r.w) / 2);
+    const gapY = Math.max(0, Math.abs(dy) - (FEET_BOX.h + r.h) / 2);
+    if (Math.hypot(gapX, gapY) > SEALED_DOOR_REACH) continue;
+    // A push into it: the move points at the door along the side it's met from.
+    const pushed = gapY >= gapX ? Math.sign(cmd.moveY) === Math.sign(dy) && cmd.moveY !== 0 : Math.sign(cmd.moveX) === Math.sign(dx) && cmd.moveX !== 0;
+    if (cmd.interact || pushed) state.events.sealedDoors.push({ gate: d.gate });
+  }
 }
 
 /** Where a death wakes the player: the start room until the foundry is open (012), then the foundry (011). */

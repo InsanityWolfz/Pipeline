@@ -11,8 +11,12 @@ export const ITEM_ICON_SIZE = 16;
 
 /** Size of the hotbar cell (025), px: a tablet with a well, as the build bar's cells use too. */
 const CELL = { w: 24, h: 28, step: 26, key: { x: 3, y: 3 }, icon: { x: 6, y: 3 }, count: { x: 4, y: 20 } } as const;
-/** How much bigger the tube slot's icons and text are than the hotbar's (025). */
-const ACTIVE_SCALE = 1.4;
+/**
+ * How much bigger the tube slot's icons and text are than the hotbar's (025: 1.4). fix-playtest-ui (Shaun: the bottom
+ * HUD hid enemies, "maybe make the HUD not as large"): 1, the carried cells' size, so the HUD's top sits 3.6 tiles
+ * below the player's feet (was 3.2) and the five-round slot is 156 × 28 px (was 206 × 39).
+ */
+const ACTIVE_SCALE = 1;
 
 /**
  * The bottom HUD (025): the hotbar row of three cells (keys 1, 2 and 3: key number,
@@ -28,7 +32,7 @@ export const HUD_LAYOUT = {
   activeScale: ACTIVE_SCALE,
   cell: CELL,
   tubeSlot: {
-    /** The cell's width scaled, plus 4 px so the 1.4× "Melee" label (28 px) clears the ring with `labelPad` each side. */
+    /** The cell's width scaled, plus 4 px so the "Melee" label clears the ring with `labelPad` each side (025: 28 px at 1.4×). */
     w: Math.round(CELL.w * ACTIVE_SCALE) + 4,
     h: Math.round(CELL.h * ACTIVE_SCALE),
     /** The icon's top, and the count's or label's top (the top of its capitals), scaled from the cell's. */

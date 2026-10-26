@@ -110,6 +110,8 @@ test('a newer save written while a game runs (another tab) is never overwritten 
     if (!g || !h) throw new Error('no game');
     g.step(0);
     for (const e of g.getState().enemies) if (e.group === 'field') g.setEnemyHealth(e.id, 0);
+    // 067: the shrine's claim opens the foundry's stairs.
+    g.claim('shrine');
     g.step(3);
     h.toFoundry();
   });

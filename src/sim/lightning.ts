@@ -1,6 +1,6 @@
 import { LIGHTNING } from '../data/tags';
 import { damageEnemy, targetable, type EnemyState, type HitStyle } from './enemies';
-import { plated } from './forgewrightParts';
+import { plated } from './bossParts';
 import type { SimState } from './state';
 import { statOf, statusEmission, type Statted } from './statResolve';
 

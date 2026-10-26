@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { BOMB_RAWS } from '../../src/data/player';
 import { RECIPES } from '../../src/data/recipes';
 import { BUILD_BAR, machineDef, pieceDef, PIECE_CATEGORIES } from '../../src/data/pieces';
 import { itemDef } from '../../src/data/items';
@@ -55,7 +56,8 @@ describe('the landmine chain', () => {
 
   it('knows them from a start that carries ley-iron', () => {
     expect(createSim(1, { start: PLAYTEST_START }).found).toContain('ley-iron');
-    expect(createSim(1).found).toEqual([]);
+    // 067: the default start (past the tutorial) knows only the bomb chain's raws.
+    expect(createSim(1).found).toEqual(BOMB_RAWS);
   });
 
   it('unlocks the plate press and the mine packer by hand-crafting their parts once', () => {

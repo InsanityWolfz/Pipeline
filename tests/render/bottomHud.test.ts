@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
+import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { INTAKE } from '../../src/data/foundry';
 import { TEXT_STYLES } from '../../src/data/fonts';
 import { BUILD_BAR, PIECE_CATEGORIES, pieceDef } from '../../src/data/pieces';
@@ -42,8 +42,16 @@ describe('the bottom HUD layout', () => {
     }
   });
 
+  it('leaves at least 3.5 tiles of the play area below the player clear of the bottom HUD (fix-playtest-ui)', () => {
+    // The camera centres the player's feet; the view is 640×360 at every window size (1280×720 is 2×), so 5.6 tiles
+    // show below them in all. Before this fix the five-round tube slot's top was 103 px (3.2 tiles) below the feet.
+    const top = Math.min(hotbarBox().y, tubeSlotBox(INTAKE.entrances.length).y);
+    expect((top - VIEW_HEIGHT / 2) / TILE_SIZE).toBeGreaterThanOrEqual(3.5);
+  });
+
   it('makes the tube slot activeScale times the hotbar cell', () => {
-    expect(HUD_LAYOUT.activeScale).toBe(1.4);
+    // fix-playtest-ui (Shaun: "maybe make the HUD not as large"): the tube slot's rounds are now the carried cells' size (was 1.4).
+    expect(HUD_LAYOUT.activeScale).toBe(1);
     expect(HUD_LAYOUT.tubeSlot.w).toBeGreaterThanOrEqual(Math.round(HUD_LAYOUT.cell.w * HUD_LAYOUT.activeScale));
     expect(HUD_LAYOUT.tubeSlot.h).toBe(Math.round(HUD_LAYOUT.cell.h * HUD_LAYOUT.activeScale));
   });

@@ -73,7 +73,7 @@ export const SHRINE_ARENA: ArenaDef = {
     enterTo: { tx: SHRINE_DOOR_MID.tx, ty: SHRINE_DOOR_MID.ty - 2 },
     leaveTo: { tx: SHRINE_DOOR_MID.tx, ty: SHRINE_DOOR_MID.ty + 1 },
     reach: HOLLOWS.arena.door.reach,
-    // 012's shrine gate: open once the first line fills the tube (see the spec's 055.3).
+    // 012's shrine gate: open from the start since 067 (the Warden is fought before the foundry).
     unlock: 'shrine',
     name: 'Shrine door',
     sealed: 'Sealed',

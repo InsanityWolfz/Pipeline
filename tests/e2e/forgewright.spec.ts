@@ -52,6 +52,6 @@ test('in at the Anvil Hall’s door, the Forgewright wakes plated: a blue boss b
     }
     return { blocks, health: g.getState().bosses.find((b) => b.enemyId === 'forgewright')?.health };
   });
-  expect(blocked.health).toBe(4000);
+  expect(blocked.health).toBe(6000);
   expect(errors).toEqual([]);
 });

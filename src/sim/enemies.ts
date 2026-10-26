@@ -11,9 +11,9 @@ import { FIRE } from '../data/tags';
 import { startKnock, type Knockable } from './knockback';
 import type { Facing } from './player';
 import type { SimState } from './state';
-import { createBellows, plated, type BellowsState } from './forgewrightParts';
+import { createBellows, type BellowsState } from './forgewrightParts';
+import { blockPlated } from './bossParts';
 import { createConductor, type ConductorState } from './conductorRods';
-import { recordBlock } from './shield';
 
 // Enemies as plain data: creation, damage and hurtboxes. Their behaviour is in enemyAi.ts, separation in separation.ts.
 
@@ -247,13 +247,9 @@ export function damageEnemy(
   dirY: number,
   style: HitStyle = ARROW_HIT,
 ): void {
+  // 060: the Forgewright's plating, and (068) the Conductor's storm shield, take every hit on its body (bossParts.ts).
+  if (blockPlated(state, e)) return;
   const def = defOf(e);
-  // 060: the Forgewright's plating takes every hit on its body until it vents (its bellows' hits never come here).
-  if (plated(e)) {
-    recordBlock(state, e, e.x, e.y + def.hurtbox.offsetY);
-    if (e.mode === 'idle' || e.mode === 'return') aggro(e);
-    return;
-  }
   e.health = Math.max(0, e.health - amount);
   if (style.flash) e.flash = def.hitFlashTicks;
   // Knockback (039): the round's push times the enemy's weight (a boss weighs 0, frozen or not).
@@ -283,8 +279,12 @@ export function damageEnemy(
  */
 export const immune = (e: Pick<EnemyState, 'underground' | 'rising'>): boolean => e.underground || e.rising > 0;
 
-/** Whether shots, punches and bursts can reach it: whenever it isn't immune (054). */
-export const targetable = (e: Pick<EnemyState, 'underground' | 'rising'>): boolean => !immune(e);
+/**
+ * Whether shots, punches and bursts can reach its body: whenever it isn't immune (054), and (068) not the Conductor in
+ * its blink-in window. Shots pass through either, as through a burrowed enemy; its parts (the Conductor's rods) still
+ * take hits while it's only blinking in (combat.ts, blast.ts, melee.ts ask `immune` for those).
+ */
+export const targetable = (e: Pick<EnemyState, 'underground' | 'rising' | 'conductor'>): boolean => !immune(e) && e.conductor.blinkIn <= 0;
 
 /** It passes through other enemies (035): a Burrower underground, a Charger mid-charge (061: a hound mid-dash; 065: a hawk mid-dive), an add rising (041). Separation leaves it be. */
 export const passesThrough = (e: EnemyState): boolean => e.underground || e.rising > 0 || (e.mode === 'swipe' && LANE_RUNNERS.includes(defOf(e).kind));

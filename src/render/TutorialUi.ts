@@ -12,14 +12,15 @@ import { PromptView } from './PromptView';
 import { TutorialView } from './TutorialView';
 import { WaypointView } from './WaypointView';
 import { GuidedView, NO_GUIDED } from './GuidedView';
+import { SealedDoorView } from './SealedDoorView';
 import type { UiState } from './testHook';
 import type { ScreenBox } from './bottomHud';
 
 /** What the tutorial reports to the test hook's `ui()`. */
-export type TutorialUiState = Pick<UiState, 'intakePrompt' | 'prompt' | 'marker' | 'waypoint' | 'objective' | 'madePopups' | 'objectiveTick' | 'interactPrompt' | 'guided'>;
+export type TutorialUiState = Pick<UiState, 'intakePrompt' | 'prompt' | 'marker' | 'waypoint' | 'objective' | 'madePopups' | 'objectiveTick' | 'interactPrompt' | 'guided' | 'sealedDoor'>;
 
 /** The tutorial's part of `ui()` before the scene has built its views. */
-export const NO_TUTORIAL_UI: TutorialUiState = { intakePrompt: null, prompt: null, marker: null, waypoint: null, objective: { text: '', subSteps: [] }, madePopups: [], objectiveTick: 0, interactPrompt: null, guided: NO_GUIDED };
+export const NO_TUTORIAL_UI: TutorialUiState = { intakePrompt: null, prompt: null, marker: null, waypoint: null, objective: { text: '', subSteps: [], lines: 0, box: null, capWidth: 0 }, madePopups: [], objectiveTick: 0, interactPrompt: null, guided: NO_GUIDED, sealedDoor: null };
 
 /** The piece whose build-bar cell pulses (027) and takes the guide arrow (058): the guided step's next piece to place, or null. */
 export function highlightOf(sim: SimState): string | null {
@@ -29,7 +30,8 @@ export function highlightOf(sim: SimState): string | null {
 
 // Everything the tutorial (012) draws: the tube stone and sealed doors in the
 // world, the objective line, and the key prompts (the intake's own since 024);
-// the foundry steps' intake marker and "+ shaft" popups (027); and the in-reach E prompt (045).
+// the foundry steps' intake marker and "+ shaft" popups (027); the in-reach E prompt (045); and (067) a sealed
+// door's line.
 export class TutorialUi {
   private readonly world: TutorialView;
   private readonly objective: ObjectiveView;
@@ -39,6 +41,7 @@ export class TutorialUi {
   private readonly made: MadePopups;
   private readonly waypoint: WaypointView;
   private readonly guided: GuidedView;
+  private readonly sealed: SealedDoorView;
 
   constructor(scene: Scene) {
     this.world = new TutorialView(scene);
@@ -49,6 +52,7 @@ export class TutorialUi {
     this.made = new MadePopups(scene);
     this.waypoint = new WaypointView(scene);
     this.guided = new GuidedView(scene);
+    this.sealed = new SealedDoorView(scene);
   }
 
   /**
@@ -61,11 +65,12 @@ export class TutorialUi {
       prompt: this.prompt.shown,
       marker: this.waypoint.markerAt,
       waypoint: this.waypoint.shown,
-      objective: { text: this.objective.text, subSteps: this.objective.subSteps },
+      objective: { text: this.objective.text, subSteps: this.objective.subSteps, lines: this.objective.lines, box: this.objective.box, capWidth: this.objective.capWidth },
       madePopups: this.made.shown,
       objectiveTick: this.objective.tickAlpha,
       interactPrompt: this.interact.shown,
       guided: this.guided.shown,
+      sealedDoor: this.sealed.shown,
     };
   }
 
@@ -82,6 +87,7 @@ export class TutorialUi {
     this.made.play(events, sim.foundry, shown, topOf);
     this.world.update(sim, shown);
     this.guided.update(sim, shown, events, deltaMs);
+    this.sealed.update(sim, shown, events, deltaMs);
     this.objective.update(sim);
     this.prompt.update(sim, shown);
     const band = this.objective.box;

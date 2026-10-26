@@ -30,13 +30,15 @@ export interface EnemyBombState {
   rollProof: boolean;
 }
 
-/** Throws a lob's bombs from an enemy: one at the player's feet now, the rest within `scatter` of it (seeded). */
+/** Throws a lob's bombs from an enemy: one at the player's feet now, the rest within `scatter` of it (seeded); enraged, the enrage's count. */
 export function throwBombs(state: SimState, e: EnemyState): void {
   const def = defOf(e);
   if (def.kind !== 'bulwark') return;
   const { lob } = def;
   const p = state.player;
-  for (let i = 0; i < lob.count; i++) {
+  // fix-bulwark-ease: an enraged Bulwark throws its enrage's count (one), not the lob's.
+  const count = e.enraged ? def.enrage.lobCount : lob.count;
+  for (let i = 0; i < count; i++) {
     // A point evenly spread over the scatter disc (the square root keeps it from bunching in the middle).
     const angle = i === 0 ? 0 : nextFloat(state.rng) * 2 * Math.PI;
     const r = i === 0 ? 0 : Math.sqrt(nextFloat(state.rng)) * lob.scatter;
@@ -55,7 +57,7 @@ export function throwBombs(state: SimState, e: EnemyState): void {
       rollProof: e.enraged && def.enrage.rollProofLobs,
     });
   }
-  state.events.lobs.push({ id: e.id, count: lob.count });
+  state.events.lobs.push({ id: e.id, count });
 }
 
 /** Burns every fuse a tick; a bomb whose circle meets its ring bursts and is gone. Runs before enemies act, so a new bomb starts at 0. */

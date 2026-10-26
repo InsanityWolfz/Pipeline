@@ -8,7 +8,8 @@ import type { SimState } from './state';
 // has its own hurtbox and health, and takes the hits that land on it (a round's, a Shard's, a Burst's in reach, a
 // punch's), as the Forgewright's bellows do (060). A broken rod is shot through and regrows, whole, after
 // `regrowTicks`. The Conductor stands at one and blinks between the standing ones; with fewer than `minRods` standing,
-// it is grounded and can't blink.
+// it is grounded and can't blink. 068: with `shieldRods` or more standing, its storm shield blocks every hit on its body
+// (bossParts.ts's `plated`, the Forgewright's plating check).
 
 /** One rod: its health, and ticks left until it regrows (0 while standing). */
 export interface RodState {
@@ -18,9 +19,9 @@ export interface RodState {
 
 /**
  * The Conductor's own state (064), nested as the Forgewright's bellows are: its six arena rods (none on anything else);
- * the rod it stands at and the rod a blink's warning names (-1: none); ticks to its next blink, and ticks left of a
- * blink's warning; the attack it is making (-1: none; 0 lash, 1 storm call, 2 rod chain) and each attack's own cooldown;
- * and its rod chain's lines, a bit per neighbouring pair of rods (rod i and i + 1), and whether the chain has struck.
+ * the rod it stands at and the rod a blink's warning names (-1: none); ticks to its next blink, ticks left of a
+ * blink's warning, and ticks left of its blink-in window (068); the attack it is making (-1: none; 0 lash, 1 storm
+ * call, 2 rod chain) and each attack's own cooldown; and its rod chain's lines, a bit per neighbouring pair of rods (rod i and i + 1), and whether the chain has struck.
  */
 export interface ConductorState {
   rods: RodState[];
@@ -28,6 +29,8 @@ export interface ConductorState {
   blinkTo: number;
   blinkCooldown: number;
   blinkWarn: number;
+  /** 068: ticks left of its blink-in window (0: none): just appeared at a rod, it can't be hit. */
+  blinkIn: number;
   attack: number;
   attackCooldowns: number[];
   chainMask: number;
@@ -49,6 +52,7 @@ export function createConductor(enemyId: string, at: { x: number; y: number }): 
     blinkTo: -1,
     blinkCooldown: def ? def.blink.everyTicks : 0,
     blinkWarn: 0,
+    blinkIn: 0,
     attack: -1,
     attackCooldowns: def ? [0, 0, 0] : [],
     chainMask: 0,
@@ -71,6 +75,12 @@ export const standing = (e: Pick<EnemyState, 'conductor'>, rod: number): boolean
 
 /** How many of its rods stand. */
 export const standingRods = (e: Pick<EnemyState, 'conductor'>): number => e.conductor.rods.filter((r) => r.regrow <= 0).length;
+
+/** 068: its storm shield holds: the Conductor with `shieldRods` or more of its rods standing (every hit on its body blocked, as the Forgewright's plating). */
+export function stormShielded(e: Pick<EnemyState, 'enemyId' | 'conductor'>): boolean {
+  const def = conductorDefOf(e);
+  return def !== null && standingRods(e) >= def.shieldRods;
+}
 
 /** True while it can't blink: fewer than `minRods` of its rods stand. */
 export function grounded(e: Pick<EnemyState, 'enemyId' | 'conductor'>): boolean {
@@ -112,8 +122,9 @@ export function hitRod(state: SimState, e: EnemyState, rod: number, amount: numb
   state.events.rodBreaks.push({ id: e.id, rod, x: p.x, y: p.y });
 }
 
-/** Every tick, frozen or not: each broken rod regrows, back to full health as its time runs out. */
+/** Every tick, frozen or not: each broken rod regrows, back to full health as its time runs out; its blink-in window (068) runs out. */
 export function stepRods(state: SimState, e: EnemyState, def: ConductorDef): void {
+  if (e.conductor.blinkIn > 0) e.conductor.blinkIn -= 1;
   for (const [rod, r] of e.conductor.rods.entries()) {
     if (r.regrow <= 0) continue;
     r.regrow -= 1;

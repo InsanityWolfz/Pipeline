@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { watchErrors } from './helpers';
 import { enterArena } from './arenaHelpers';
 import { clickRow, flowIs } from './flowPage';
-import { craftLeyByHand, goalTo, newGameInFoundry } from './guidedPage';
+import { buildArrowLine, craftLeyByHand, goalTo, newGameInFoundry } from './guidedPage';
 import { buildGhosts, CHAIN, expectGoal, fell, harvestNear, installRunHelpers, T, trek, walk } from './tutorialPage';
 import { CLAIM_TICKS } from '../../src/data/claims';
 import { GROTTO, GROTTO_GROUP } from '../../src/data/grotto';
@@ -12,7 +12,8 @@ import { landmarkDef } from '../../src/data/landmarks';
 
 // The tutorial end to end (012; 058's chain), second file (tutorial.spec.ts plays a New game until it leaves the
 // foundry). A New game staged through the hook to the right entrance's goal (ley bolts crafted by hand, the shrine
-// claimed, a Warden core and what the first half would carry), the ley bolt line built on its ghosts again, then
+// claimed, 067's arrow line built on its ghosts, a Warden core and what the first half would carry), the ley bolt
+// line built on its ghosts again, then
 // every goal from leaving the foundry to the end: the frost rune on its ghosts with the first underground pair, and
 // from the Frozen Grotto on the guards and the Bulwark felled through the hook (hollows.spec.ts fights the Bulwark),
 // so the run stays inside its time.
@@ -53,6 +54,8 @@ test('the guided tutorial plays from leaving the foundry to its end', async ({ p
   test.setTimeout(600_000);
   const errors = watchErrors(page);
   await newGameInFoundry(page);
+  // 067: the first guided build, the arrow line from the ports, stands before the right entrance's goal.
+  await buildArrowLine(page);
   await craftLeyByHand(page);
   await installRunHelpers(page);
   await page.evaluate((carried) => {
@@ -63,10 +66,10 @@ test('the guided tutorial plays from leaving the foundry to its end', async ({ p
     for (const [id, n] of carried) for (let i = 0; i < n; i++) g.drop(id, p.x, p.y);
     g.step(30);
   }, CARRIED);
-  await goalTo(page, CHAIN[12] ?? '');
+  await goalTo(page, CHAIN[13] ?? '');
   expect((await page.evaluate(() => window.__GAME__?.getState()))?.inventory['warden-core']).toBe(1);
 
-  // 13. The Warden's core restores the right entrance: only its cap takes it during the tutorial (058.5).
+  // 14. The Warden's core restores the right entrance: only its cap takes it during the tutorial (058.5).
   const opened = await page.evaluate((tile) => {
     const g = window.__GAME__;
     const h = window.__helpers;
@@ -76,9 +79,9 @@ test('the guided tutorial plays from leaving the foundry to its end', async ({ p
     return s.intake.entrances.map((e) => e.open);
   }, T);
   expect(opened).toEqual([false, true, true, false, false]);
-  await expectGoal(page, 14);
+  await expectGoal(page, 15);
 
-  // 14. The ley bolt line, piece by piece on its ghosts, until ley bolts reach the right entrance.
+  // 15. The ley bolt line, piece by piece on its ghosts, until ley bolts reach the right entrance.
   const ley = await buildGhosts(page);
   expect(ley).toEqual({ placed: 25, refused: 1 });
   const bolts = await page.evaluate(() => {
@@ -88,55 +91,51 @@ test('the guided tutorial plays from leaving the foundry to its end', async ({ p
     return s?.intake.entrances[2]?.ammo;
   });
   expect(bolts).toBe('ley-bolt');
-  await expectGoal(page, 15);
+  await expectGoal(page, 16);
 
-  // 15. Out of the foundry: done on the step outside, and the Grotto's goal at once.
+  // 16. Out of the foundry: done on the step outside, and the Grotto's goal at once.
   await page.evaluate(() => (window as unknown as { through: (...a: unknown[]) => void }).through(23, 8, 1, 0, 'overworld'));
-  expect((await page.evaluate(() => window.__GAME__?.getState()))?.objective.text).toBe(CHAIN[15]);
+  expect((await page.evaluate(() => window.__GAME__?.getState()))?.objective.text).toBe(CHAIN[16]);
 
-  // 16. North to the Frozen Grotto, its guards felled, and its rimestone gathered.
+  // 17. North to the Frozen Grotto, its guards felled, and its rimestone gathered.
   await fell(page, [GROTTO_GROUP]);
   await trek(page, [[GROTTO.pylon.tx, GROTTO.area.y1 + 2]]);
   await fell(page, [GROTTO_GROUP]);
   await harvestNear(page, 'rime-outcrop', 2);
-  await expectGoal(page, 17);
-
-  // 17. Its pylon, claimed.
-  await walk(page, [[GROTTO.pylon.tx, GROTTO.pylon.ty + 1]]);
-  await claimHere(page);
   await expectGoal(page, 18);
 
-  // 18. Frost arrows by hand.
-  await page.evaluate(() => window.__GAME__?.craft('frost-rune-arrow'));
+  // 18. Its pylon, claimed.
+  await walk(page, [[GROTTO.pylon.tx, GROTTO.pylon.ty + 1]]);
+  await claimHere(page);
   await expectGoal(page, 19);
 
-  // 19. Home by the Grotto's pylon: the conduit out of the assembler comes out, the frost rune goes in, and the
-  // rimestone line runs to it under the ley line by the first underground pair. The example line gets raws to run on.
+  // 19. Frost arrows by hand.
+  await page.evaluate(() => window.__GAME__?.craft('frost-rune-arrow'));
+  await expectGoal(page, 20);
+
+  // 20. Home by the Grotto's pylon: the conduit out of the assembler comes out, the frost rune goes in, and the
+  // rimestone line runs to it under the ley line by the first underground pair. The ports feed the arrow line (067).
   await page.evaluate(() => {
     const g = window.__GAME__;
     g?.step(1, { pylon: 'travel' });
   });
   const frost = await buildGhosts(page);
-  expect(frost).toEqual({ placed: 21, refused: 1 });
+  expect(frost).toEqual({ placed: 25, refused: 1 });
   const made = await page.evaluate((tile) => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
     g.step(1, { takeStash: { itemId: null } });
-    for (const [tx, raw] of [[11, 'wood'], [12, 'stone'], [13, 'fiber']] as const) {
-      h.walkTo((tx + 0.5) * tile, 6.25 * tile);
-      const hopper = g.getState().foundry.pieces.find((p) => p.kind === 'hopper' && p.tx === tx && p.ty === 5);
-      if (hopper && (g.getState().inventory[raw] ?? 0) > 0) g.step(1, { deposit: { id: hopper.id, itemId: raw, amount: 'all' } });
-    }
+    h.walkTo(20.5 * tile, 13.5 * tile);
     let s = g.step(1);
     for (let t = 0; t < 8000 && s.guided.locked; t++) s = g.step(1);
     return { made: s.machineMade['arrow+frost'] ?? 0, locked: s.guided.locked };
   }, T);
   expect(made.locked).toBe(false);
   expect(made.made).toBeGreaterThan(0);
-  await expectGoal(page, 20);
+  await expectGoal(page, 21);
 
-  // 20. The Husk Hive, its guards felled, its pylon claimed.
+  // 21. The Husk Hive, its guards felled, its pylon claimed.
   await page.evaluate(() => (window as unknown as { through: (...a: unknown[]) => void }).through(23, 8, 1, 0, 'overworld'));
   await fell(page, ['husk-hive']);
   const hive = HIVE.pylon ?? { tx: 0, ty: 0 };
@@ -144,17 +143,17 @@ test('the guided tutorial plays from leaving the foundry to its end', async ({ p
   await fell(page, ['husk-hive']);
   await walk(page, [[hive.tx, hive.ty + 1]]);
   await claimHere(page);
-  await expectGoal(page, 21);
+  await expectGoal(page, 22);
 
-  // 21. West to the barrier's crossing (down since the shrine's claim) and over into Stonefall Hollows.
+  // 22. West to the barrier's crossing (down since the shrine's claim) and over into Stonefall Hollows.
   await trek(page, [[HOLLOWS.crossing.tx + 2, HOLLOWS.crossing.ty]]);
   await page.evaluate(() => {
     const g = window.__GAME__;
     for (let t = 0; t < 300 && g && g.getState().area.region !== 2; t++) g.step(1, { moveX: -1 });
   });
-  await expectGoal(page, 22);
+  await expectGoal(page, 23);
 
-  // 22. The Cistern Terrace's pylon, its guards felled (all but the Bulwark).
+  // 23. The Cistern Terrace's pylon, its guards felled (all but the Bulwark).
   await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
@@ -163,9 +162,9 @@ test('the guided tutorial plays from leaving the foundry to its end', async ({ p
   });
   await trek(page, [[TERRACE.tx, TERRACE.ty + 5], [TERRACE.tx, TERRACE.ty + 1]]);
   await claimHere(page);
-  await expectGoal(page, 23);
+  await expectGoal(page, 24);
 
-  // 23. Into the Bulwark's arena by its door; it falls through the hook, and its core is picked up. 060: the way to the
+  // 24. Into the Bulwark's arena by its door; it falls through the hook, and its core is picked up. 060: the way to the
   // door can pass a Hollows pack (the roads up into the Emberworks moved where packs stand), so it's felled at the door too.
   await fell(page, []);
   await walk(page, [[HOLLOWS.arena.door.leaveTo.tx, HOLLOWS.arena.door.leaveTo.ty]]);
@@ -188,9 +187,9 @@ test('the guided tutorial plays from leaving the foundry to its end', async ({ p
     await flowIs(page, 'play');
   }
   expect((await page.evaluate(() => window.__GAME__?.getState()))?.inventory['bulwark-core'] ?? 0).toBeGreaterThan(0);
-  await expectGoal(page, 24);
+  await expectGoal(page, 25);
 
-  // 24. Out of the arena, home by the Terrace's pylon, and the left cap restored with the Bulwark's core.
+  // 25. Out of the arena, home by the Terrace's pylon, and the left cap restored with the Bulwark's core.
   // Whatever is still near after the fight is felled first: a hit on the way stops the walk out.
   await fell(page, [], 900);
   await page.evaluate((id) => window.__helpers?.leaveArena(id), HOLLOWS.arena.id);
@@ -205,21 +204,20 @@ test('the guided tutorial plays from leaving the foundry to its end', async ({ p
     return g.step(1, { restore: 'entrance-3' }).intake.entrances.map((e) => e.open);
   }, T);
   expect(third).toEqual([true, true, true, false, false]);
-  await expectGoal(page, 25);
+  await expectGoal(page, 26);
 
-  // 25. Building is open: the left entrance's floor tile is reached by an underground pair from below the example
-  // line, fed from a hopper of ley bolts. All three entrances fed: Milestone 1 is over, and (060) the goal line moves on to
+  // 26. Building is open: a hopper of ley bolts on (11,2), beside the assembler (067: the frost line comes in from the
+  // east, so the tile is free), hands up a conduit on the left entrance's floor tile. All three entrances fed: Milestone 1 is over, and (060) the goal line moves on to
   // Milestone 2's first goal, up into the Emberworks, its arrow at the foundry's door (the minimap stays).
   const end = await page.evaluate((tile) => {
     const g = window.__GAME__;
     const h = window.__helpers;
     if (!g || !h) throw new Error('no game');
-    h.walkTo(13.5 * tile, 8.5 * tile);
-    g.step(1, { place: { pieceId: 'underground-entrance', tx: 11, ty: 6, facing: 'up' } });
-    g.step(1, { place: { pieceId: 'underground-exit', tx: 11, ty: 1, facing: 'up' } });
-    const hopper = g.step(1, { place: { pieceId: 'hopper', tx: 11, ty: 7, facing: 'up' } }).foundry.pieces.find((p) => p.tx === 11 && p.ty === 7);
+    h.walkTo(9.5 * tile, 2.5 * tile);
+    g.step(1, { place: { pieceId: 'conduit', tx: 11, ty: 1, facing: 'up' } });
+    const hopper = g.step(1, { place: { pieceId: 'hopper', tx: 11, ty: 2, facing: 'up' } }).foundry.pieces.find((p) => p.tx === 11 && p.ty === 2);
     if (!hopper) throw new Error('no hopper');
-    h.walkTo(11.5 * tile, 8.4 * tile);
+    h.walkTo(10.5 * tile, 2.5 * tile);
     const bolts = g.getState().inventory['ley-bolt'] ?? 0;
     g.step(1, { deposit: { id: hopper.id, itemId: (g.getState().inventory.bomb ?? 0) > 0 ? 'bomb' : 'ley-bolt', amount: 'all' } });
     let s = g.step(1);

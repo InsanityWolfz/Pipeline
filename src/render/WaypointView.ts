@@ -21,7 +21,7 @@ export interface WaypointShown {
   angle: number;
   via: 'door' | 'target';
   kind: string;
-  /** 051 (B.2): the refill goal's hoppers marked, each by its arrow's tip (world px), with the raw its icon shows. */
+  /** 051 (B.2): targets marked with a raw, each by its arrow's tip (world px) and the raw's icon (067: none since the refill goal went). */
   icons: { itemId: string; x: number; y: number }[];
 }
 
