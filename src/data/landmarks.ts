@@ -1,5 +1,5 @@
 import { CACHE_RARE } from './drops';
-import type { DropTable } from './enemies';
+import type { DropTable } from './enemyBase';
 import { GROTTO, GROTTO_GROUP } from './grotto';
 import type { TileStamp } from './hollows';
 import { EMBERWORKS_SITES } from './emberworksSites';

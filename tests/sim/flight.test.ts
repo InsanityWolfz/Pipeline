@@ -11,7 +11,7 @@ import { inSafeZone, safeZones } from '../../src/sim/population';
 import { separate } from '../../src/sim/separation';
 import type { SimState } from '../../src/sim/state';
 import { WORLD } from '../../src/sim/world';
-import { arena, fireAt, hold, HALL, movePlayer, PLAYER_AT, placeHusk, run, runUntil } from './fight';
+import { arena, fireAt, hold, HALL, movePlayer, PLAYER_AT, placeHusk, run, runUntil, SEED } from './fight';
 
 // Flight (065: the thunderhawk). A flier moves over walls, cliffs and chasms, never blocked by terrain; it stays on
 // its room's grid and out of a boss arena's walls; safe zones keep it out as anyone; it never pushes a walker or is
@@ -142,5 +142,32 @@ describe('flight', () => {
     };
     expect(shoot('ley-bolt+homing')).toBe(true);
     expect(shoot('ley-bolt')).toBe(false);
+  });
+
+  it("winds up no dive at a player inside a boss arena it can't enter (review S5)", () => {
+    const b = CROWN_SPIRE.bounds;
+    const s = arena(SEED, { x: (b.x0 + 8) * TILE_SIZE, y: (b.y1 - 1) * TILE_SIZE });
+    const hawk = placeHawk(s, (b.x0 + 8) * TILE_SIZE, (b.y1 + 3) * TILE_SIZE);
+    for (let t = 0; t < 300; t++) {
+      run(s, 1);
+      expect(s.events.dives).toEqual([]);
+    }
+    expect(hawk.mode).not.toBe('windup');
+  });
+
+  it("ends a dive that bumps into a boss arena's walls there, climbing away (review S5)", () => {
+    const b = CROWN_SPIRE.bounds;
+    const s = arena(SEED, { x: (b.x0 - 6) * TILE_SIZE, y: (b.y1 + 6) * TILE_SIZE });
+    // Placed so its 8 px steps stop it 6 px short of the walls' bounds, its box clear of their tiles.
+    const hawk = placeHawk(s, (b.x0 + 8) * TILE_SIZE, (b.y1 + 2) * TILE_SIZE + 6);
+    hawk.mode = 'swipe';
+    hawk.modeTicks = 1;
+    hawk.swipeDirX = 0;
+    hawk.swipeDirY = -1;
+    hawk.struck = false;
+    hawk.cooldown = 100_000;
+    // 480 px/s down a 260 px lane would run 33 ticks; the wall is a tile and a half away.
+    expect(runUntil(s, () => hawk.mode === 'recover', 33)).toBeLessThanOrEqual(6);
+    expect(hawk.y).toBeGreaterThanOrEqual((b.y1 + 1) * TILE_SIZE);
   });
 });

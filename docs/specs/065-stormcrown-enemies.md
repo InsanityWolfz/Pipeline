@@ -148,9 +148,16 @@ is met; where the build settled something the spec left open, it is raised below
 Builder decisions the spec didn't settle.
 
 Flight and the thunderhawk:
-- 065.1 A flier ignores every tile and anything standing in the way, a shut barrier too (packs only spawn once it's
-  open, so this shows only in the sandbox). It stays on its room's grid, never crosses into a boss arena's walls (unless
-  posted inside one), and keeps out of safe zones by position as anyone does.
+- 065.1 A flier ignores every tile and anything standing in the way, but never crosses a shut barrier (review B1: the
+  Weathervane's guard hawks spawn at every world reset, so before this they flew over the cliffs and the shut barrier
+  and dove on a player in ring 4). Its line is the barrier's whole circle, where its ring starts, not only the band
+  across the ramps, since a flier passes over the cliffs either side; this holds for every ring barrier (the Hollows',
+  the Emberworks', the Stormcrown's). A flier whose player stands beyond a shut barrier doesn't wake, and one awake
+  turns for home. It stays on its room's grid, never crosses into a boss arena's walls (unless posted inside one), and
+  keeps out of safe zones by position as anyone does.
+- 065.25 A hawk's dive ends where flight stops it (a boss arena's walls, a shut barrier, the grid's edge), and it
+  climbs away at once (review S5). It winds up no dive at a player inside a boss arena it isn't inside; it still
+  circles them from outside the walls.
 - 065.2 A flier and a walker never push each other apart (one is in the air); two fliers do, over any terrain.
 - 065.3 A hawk killed over something solid drops its loot on the nearest open tile (up to 8 tiles out).
 - 065.4 A punch in reach hits a flier as it would anything: the spec's "only by shots, Shards and Bursts that reach it"
@@ -206,4 +213,3 @@ Spawning, the sandbox and the rest:
   is the spec's ×10 and was not tuned.
 - 065.24 The measure's bot takes no damage in either build: it reads every telegraph. A player who misreads one at ×10
   is likely KO'd.
-

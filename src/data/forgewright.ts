@@ -1,5 +1,5 @@
 import { BOSS_WEIGHT } from './combat';
-import type { AttackTiming, EnemyBase } from './enemies';
+import type { AttackTiming, EnemyBase } from './enemyBase';
 import { FORGEWRIGHT_XP } from './leveling';
 
 // The Forgewright (060): the Emberworks' boss, a plated smith construct in the Anvil Hall. Its plating blocks every

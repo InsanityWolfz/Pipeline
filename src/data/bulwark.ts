@@ -1,5 +1,5 @@
 import { BOSS_WEIGHT } from './combat';
-import type { AttackTiming, EnemyBase, ShieldDef } from './enemies';
+import type { AttackTiming, EnemyBase, ShieldDef } from './enemyBase';
 
 // The Bulwark (034): Stonefall Hollows' boss, a slow-turning construct behind a shield
 // plate that blocks straight shots and punches into its front. It lobs bombs marked by

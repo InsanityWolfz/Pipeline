@@ -7,8 +7,7 @@ import { EMBERWORKS, rampTiles } from '../data/emberworks';
 import { ANVIL_HALL } from '../data/emberworksSites';
 import { STORMCROWN, stormRampTiles } from '../data/stormcrown';
 import { CROWN_SPIRE } from '../data/stormcrownSites';
-import { enemyDef } from '../data/enemies';
-import { linkTrios } from './miteAi';
+import { linkTrios, swarmOf } from './miteAi';
 import { HOLLOWS } from '../data/hollows';
 import { LANDMARK_LIST } from '../data/landmarks';
 import { TILE, WALKABLE } from '../data/rooms';
@@ -236,12 +235,6 @@ function spawn(state: SimState, slot: PackSlot): boolean {
   }
   return false;
 }
-
-/** A swarm's size (065: a static mite's trio), or 1. */
-const swarmOf = (id: string): number => {
-  const def = enemyDef(id);
-  return def.kind === 'mite' ? def.swarm : 1;
-};
 
 /**
  * A pack's `size` members' ids, picked one by one with the seeded RNG from those still under their pack limit (035)

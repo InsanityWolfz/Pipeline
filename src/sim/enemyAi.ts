@@ -53,7 +53,7 @@ export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBod
       if (e.rising === 0) aggro(e);
       continue;
     }
-    const { room, obstacles } = bodies(e.roomId);
+    const near = bodies(e.roomId);
     const def = defOf(e);
     if (e.cooldown > 0) e.cooldown -= 1;
     if (e.flash > 0) e.flash -= 1;
@@ -71,7 +71,7 @@ export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBod
     const [kx, ky] = takeKnock(e);
     const [dx, dy] = keepOut(state, e, mx + kx, my + ky);
     // 065: a flier flies over terrain (flight.ts).
-    const { hitX, hitY } = moveBody(room, e, def, def.feetBox, dx, dy, obstacles);
+    const { hitX, hitY } = moveBody(near, e, def, def.feetBox, dx, dy);
     e.vx = hitX ? 0 : mx;
     e.vy = hitY ? 0 : my;
     e.bumped = hitX || hitY;

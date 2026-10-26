@@ -1,6 +1,6 @@
 import { TICK_RATE } from './config';
 import { REGION_4_PART } from './drops';
-import type { AttackTiming, DropTable, EnemyBase, ScreenLeashed } from './enemies';
+import type { AttackTiming, DropTable, EnemyBase, ScreenLeashed } from './enemyBase';
 
 // The Stormcrown's enemies (065), built to test a late build: each has its own read and its own answer. Starting values
 // from the spec's table, tuned in playtest, before ring 5's ×10 (064); ticks at 60 Hz, distances px. Their rules are in
@@ -9,12 +9,13 @@ import type { AttackTiming, DropTable, EnemyBase, ScreenLeashed } from './enemie
 /**
  * A thunderhawk: a brass-and-slate storm bird construct that flies over walls (`flies`) and circles the player at
  * `orbit.radius`, turning at no more than `orbit.turnDegPerSec`, so straight shots lead it poorly and homing rounds
- * track it.
+ * track it. `orbit.pull` is how hard it steers back to its radius: a radius-sized miss turns its wanted heading
+ * `pull` × 45° toward the player (outside) or away (inside); 1.5 holds it at 75–125% of its radius (065.7).
  */
 export interface HawkDef extends EnemyBase, ScreenLeashed {
   kind: 'hawk';
   flies: true;
-  orbit: { radius: number; turnDegPerSec: number };
+  orbit: { radius: number; turnDegPerSec: number; pull: number };
   /**
    * With its cooldown ready and the player's feet within `distance`, it hovers and marks its dive line (`windupTicks`):
    * from where it hovers through the player's feet, locked at the wind-up's start, `distance` long and `width` wide.
@@ -97,7 +98,7 @@ export const THUNDERHAWK: HawkDef = {
   // It flies: its body is well off the ground, over its shadow.
   hurtbox: { w: 26, h: 20, offsetY: -30 },
   weight: 1,
-  orbit: { radius: 160, turnDegPerSec: 180 },
+  orbit: { radius: 160, turnDegPerSec: 180, pull: 1.5 },
   dive: {
     ...DIVE,
     width: 20,

@@ -14,7 +14,7 @@ import type { Command } from './input';
 import { entranceCap } from './research';
 import { gainXp, xpToNext } from './leveling';
 import { createEvents } from './events';
-import { linkTrios } from './miteAi';
+import { linkTrios, swarmOf } from './miteAi';
 import { spawnEnemy } from './spawn';
 import { createSim, resetWorld, roomById, type SimState } from './state';
 import { playerStats } from './stats';
@@ -82,12 +82,6 @@ function fillPen(state: SimState, i: number): void {
   const n = swarmOf(pen.enemyId);
   const members = Array.from({ length: n }, (_, k) => spawnEnemy(state, pen.enemyId, { x: at.x + (k - (n - 1) / 2) * SANDBOX.place.swarmGap, y: at.y }, SANDBOX_ROOM, { group: PEN_GROUP(i), ring: pen.ring }));
   linkTrios(members);
-}
-
-/** A swarm's size (065: a static mite's trio), or 1. */
-function swarmOf(enemyId: string): number {
-  const def = ENEMIES[enemyId];
-  return def?.kind === 'mite' ? def.swarm : 1;
 }
 
 /** Each tick, before the tube fires: the panel's command, the pens, and every entrance full of its round. */

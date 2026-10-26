@@ -2,7 +2,8 @@ import { TICK_RATE } from '../data/config';
 import type { HawkDef } from '../data/stormcrownEnemies';
 import { engage, enter, hold, inAggroBox, leash, startWindup } from './aiCommon';
 import type { EnemyState } from './enemies';
-import { laneRun } from './laneRun';
+import { barredFrom, walledFrom } from './flight';
+import { laneRun, laneStrike } from './laneRun';
 import type { SimState } from './state';
 
 // The thunderhawk (065): a brass-and-slate storm bird construct with lightning-veined wings. It flies (flight.ts), so
@@ -15,14 +16,17 @@ import type { SimState } from './state';
 /** Its orbit's side, by its id: half circle one way, half the other, so a pair doesn't fly as one. */
 const sideOf = (e: EnemyState): number => (e.id % 2 === 0 ? 1 : -1);
 
-/** How hard it steers back to its orbit's radius: a radius-sized miss turns it this far toward or away from the player (1: 45°). */
-const RADIAL_PULL = 1.5;
-
 /** Advances a hawk's mode and returns this tick's own move, px. */
 export function hawkThink(state: SimState, e: EnemyState, def: HawkDef): [number, number] {
   const { dive } = def;
   const p = state.player;
-  const idle = engage(state, e, inAggroBox(e, p));
+  // Beyond a shut barrier's line the player is out of its reach (review B1): it doesn't wake, and turns for home.
+  const barred = barredFrom(state, e);
+  if (barred && e.mode !== 'idle' && e.mode !== 'return') {
+    e.mode = 'return';
+    e.modeTicks = 0;
+  }
+  const idle = engage(state, e, inAggroBox(e, p) && !barred);
   if (idle) {
     if (idle[0] !== 0 || idle[1] !== 0) e.angle = Math.atan2(idle[1], idle[0]);
     return idle;
@@ -34,8 +38,16 @@ export function hawkThink(state: SimState, e: EnemyState, def: HawkDef): [number
     e.angle = Math.atan2(e.swipeDirY, e.swipeDirX);
     state.events.dives.push({ id: e.id, x: e.x, y: e.y, dx: e.swipeDirX, dy: e.swipeDirY, length: dive.distance });
   }
-  // A flier never meets a wall, so only the lane's end stops its dive.
-  if (e.mode === 'swipe') return laneRun(state, e, dive, def.feetBox, () => enter(e, 'recover'));
+  if (e.mode === 'swipe') {
+    // A flier never meets a wall: only the lane's end stops its dive, or a keep-out (an arena's walls, a shut
+    // barrier, the grid's edge) it bumped into last tick (review S5), where it climbs away at once.
+    if (e.modeTicks > 1 && e.bumped) {
+      laneStrike(state, e, dive);
+      enter(e, 'recover');
+      return [0, 0];
+    }
+    return laneRun(state, e, dive, def.feetBox, () => enter(e, 'recover'));
+  }
   // Climbing away, it flies on round its orbit.
   if (e.mode === 'recover') {
     if (e.modeTicks < dive.recoverTicks) {
@@ -52,7 +64,7 @@ export function hawkThink(state: SimState, e: EnemyState, def: HawkDef): [number
   }
   const dx = p.x - e.x;
   const dy = p.y - e.y;
-  if (e.cooldown === 0 && e.roomId === state.roomId && Math.hypot(dx, dy) <= dive.distance) {
+  if (e.cooldown === 0 && e.roomId === state.roomId && Math.hypot(dx, dy) <= dive.distance && !walledFrom(state, e)) {
     startWindup(e, def, dx, dy);
     e.spotX = e.x;
     e.spotY = e.y;
@@ -73,7 +85,7 @@ function circle(state: SimState, e: EnemyState, def: HawkDef): [number, number] 
   const ux = dx / r;
   const uy = dy / r;
   const side = sideOf(e);
-  const miss = Math.max(-1, Math.min(1, (r - def.orbit.radius) / def.orbit.radius)) * RADIAL_PULL;
+  const miss = Math.max(-1, Math.min(1, (r - def.orbit.radius) / def.orbit.radius)) * def.orbit.pull;
   const want = Math.atan2(ux * side - uy * miss, -uy * side - ux * miss);
   const max = (def.orbit.turnDegPerSec * Math.PI) / 180 / TICK_RATE;
   const diff = Math.atan2(Math.sin(want - e.angle), Math.cos(want - e.angle));

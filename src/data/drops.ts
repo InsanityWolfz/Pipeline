@@ -3,6 +3,12 @@
 // in src/sim/drops.ts and src/sim/schematics.ts.
 
 /**
+ * How far out, in tiles, a corpse over solid ground looks for open ground to drop its loot on (065: a flier killed
+ * over a rock or a chasm, 065.3); past it, the loot lands where it fell.
+ */
+export const LANDING_REACH = 8;
+
+/**
  * A drop table's rare entry naming this item means "one schematic", picked when it lands from those still lost
  * (not revealed, carried, on the ground or in the stash) whose regions allow the room it lands in; nothing when
  * none is (no duplicates).
