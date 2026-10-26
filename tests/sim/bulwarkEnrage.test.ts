@@ -9,8 +9,8 @@ import { movePlayer, run, runUntil } from './fight';
 import { DEF, forum, offFacing, START } from './forum';
 
 // The Bulwark's enrage (041.4): the first time its health drops below 30% in a fight, it
-// roars for 60 ticks starting no attack, then turns faster (110°/s since 041.7's tuning;
-// the spec's 70) and lobs every 160 ticks until it dies or resets. A wind-up already
+// roars for 60 ticks starting no attack, then turns slightly faster (45°/s; fix-bulwark-ease,
+// was 041.7's 110) and lobs one bomb every 210 ticks until it dies or resets. A wind-up already
 // running finishes first.
 
 const { enrage } = DEF;
@@ -35,8 +35,8 @@ function awake(): { s: SimState; b: EnemyState } {
   return f;
 }
 
-/** Ticks between its next two lob wind-ups, it held at its start and the player 150 px north of it, out of pound range. */
-function lobGap(s: SimState, b: EnemyState): number {
+/** Ticks between its next two lob wind-ups, it held at its start and the player 150 px north of it, out of pound range; each lob's bomb count goes into `lobs`. */
+function lobGap(s: SimState, b: EnemyState, lobs: number[] = []): number {
   const starts: number[] = [];
   let was = b.mode;
   for (let t = 0; t < 1200 && starts.length < 2; t++) {
@@ -44,6 +44,7 @@ function lobGap(s: SimState, b: EnemyState): number {
     b.y = START.y;
     movePlayer(s, START.x, START.y - 150);
     run(s, 1);
+    lobs.push(...s.events.lobs.map((l) => l.count));
     if (b.mode === 'lob' && was !== 'lob') starts.push(s.tick);
     was = b.mode;
   }
@@ -106,14 +107,16 @@ describe('the enrage', () => {
     expect(turn(true)).toBeCloseTo(enrage.turnDegPerSec, 6);
   });
 
-  it('then lobs every 160 ticks (from 240), the same count', () => {
+  it('then lobs every 210 ticks (from 240), one bomb a lob (fix-bulwark-ease: was the lob\'s 3)', () => {
     const before = awake();
     expect(lobGap(before.s, before.b)).toBe(DEF.lob.cooldownTicks);
     const { s, b } = awake();
     b.health = BELOW;
     run(s, enrage.roarTicks + 1, hold(b, 0, 150));
-    expect(lobGap(s, b)).toBe(enrage.lobCooldownTicks);
-    expect(s.enemyBombs.length % DEF.lob.count).toBe(0);
+    const lobs: number[] = [];
+    expect(lobGap(s, b, lobs)).toBe(enrage.lobCooldownTicks);
+    expect(lobs.length).toBeGreaterThan(0);
+    expect(lobs.every((n) => n === 1)).toBe(true);
   });
 
   it('stays enraged until it resets: healed above 30% it stays; a leash reset clears it', () => {

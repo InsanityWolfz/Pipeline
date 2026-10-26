@@ -24,3 +24,16 @@ export function arenaDoorFrames(tiles: number): ArenaDoorFrames {
 
 /** The door's look, world px: how tall it stands over its row's bottom edge, its jambs' and lintel's sizes. */
 export const ARENA_DOOR_LOOK = { height: 60, jamb: 9, lintel: 10, overhang: 3, medallion: 8 } as const;
+
+/**
+ * fix-playtest-ui (Shaun: "need to fix the boss bar covering the bosses"): while a boss fights, the camera eases up just
+ * enough that the boss's top (`heights` px over its feet, by enemy id, else `height`; the Conductor's counts the arena
+ * rod behind it) stays `clear` px below the boss bar, never more than `max` px off the player, easing over `easeMs`.
+ */
+export const BOSS_LOOK = {
+  height: 64,
+  heights: { forgewright: 76, conductor: 104 } as Readonly<Record<string, number>>,
+  clear: 4,
+  max: 96,
+  easeMs: 200,
+} as const;
