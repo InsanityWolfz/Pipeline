@@ -306,4 +306,4 @@ Each plan's build notes hold the detail; these are the lasting technical choices
 - **070 handling and clarity:**
   - A held key reaches the sim as its own command flag (`Command.interactHeld`) next to the press (`interact`); rules that chain on a hold read the flag, so a press alone still acts once.
   - Render-side checks that read pixels (the silhouette) cache on everything that can change the answer, including each prop's current frame, and look only at a spatial bucket round the player, never every prop each frame.
-  - A craft event carries `batches` whenever more than a single click's worth could have been made, so the feed and any later stats read one event per craft max.
+  - A craft max always carries `batches` on its one craft event (even for one batch); a plain click carries none, so the feed tells them apart.
