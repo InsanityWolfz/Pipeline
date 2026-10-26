@@ -64,7 +64,11 @@ Built on `claude/069-factory-numbers-tools` (plan: docs/plans/069-factory-number
 - Criteria: all met, two as raised (069.1, 069.10).
 - Sim (Vitest): tests/sim/intakeRates.test.ts, recipeCard.test.ts, purge.test.ts, pipette.test.ts; 022's hopperAmounts.test.ts and 063's area.test.ts and blueprintSave.test.ts updated to the new amounts and order; interactables.test.ts has the entrance's prompt.
 - Render (Vitest): tests/render/recipeCard.test.ts, pipette.test.ts, zoom.test.ts; hoverRecipe.test.ts (the intake's lines), clickInput.test.ts, describe.test.ts and settingsStore.test.ts updated.
-- Playwright: tests/e2e/purge.spec.ts, pipette.spec.ts, zoom.spec.ts; 022's hopperAmounts.spec.ts (click 10, Shift half, Ctrl the stack, in and out) and 063's blueprints.spec.ts (contents into the inventory) updated.
+- Playwright: tests/e2e/purge.spec.ts, pipette.spec.ts, zoom.spec.ts; 022's hopperAmounts.spec.ts (click 10, Shift half, Ctrl the stack, in and out) and 063's blueprints.spec.ts (contents into the inventory) updated. readability.spec.ts's stored bindings (a player's from before 069) no longer carry the pipette, whose Q they rebind to rotate.
+- Checks:
+  - `npm run check` passes (2,538 unit tests, after merging main's 067).
+  - Locally, one worker on port 5340: the six touched e2e files (13 passed), and the foundry's others: hoverPress, readability, playtestUi, legibility, foundry, foundryFlow, research, stash, settings, tunnels, tubeLink, fifthEntrance, guidedTutorial, foundryTutorial, playtestFixes2 and hudInventory (68 passed).
+  - Older shot specs that show the foundry, build mode or the hovers ran with REVIEW_SHOTS=1 (research, guidedTutorial, guidance, ammoStages, legibility, playtestFixes2, shippable, blueprints, readability, hudInventory, inventoryHotbars, materialTiers, stormsteel, hopperAmounts, stash: 70 passed), and their images were restored as on main. One failed: guidedTutorialShots' "07 the goal panel under the foundry minimap" (the waypoint reads "edge", not "over"), which fails the same way on main since 067.
 - Review shots, docs/review/069:
   - 01-machine-card.png
   - 02-build-bar-card.png
