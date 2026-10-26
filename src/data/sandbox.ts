@@ -126,9 +126,10 @@ export const SANDBOX = {
   penRefillTicks: 5 * TICK_RATE,
   /**
    * The spawn panel: spawned enemies stand `distance` tiles in front of the player, `spacing` tiles apart across the
-   * way they face; one that would stand in a wall is tried at `backSteps` even steps back toward the player.
+   * way they face; one that would stand in a wall is tried at `backSteps` even steps back toward the player. 065: a
+   * swarm (a mite's trio) stands `swarmGap` px apart along the row, in a pen as from the panel.
    */
-  place: { distance: 5, spacing: 2, backSteps: 20 },
+  place: { distance: 5, spacing: 2, backSteps: 20, swarmGap: 14 },
   /** The spawn panel's choices and where it starts: ring 1–5 (060: the Emberworks' 4; 064: the Stormcrown's 5), champion or not, 1–10 at a time. */
   rings: [1, 2, 3, 4, 5] as readonly Ring[],
   maxCount: 10,

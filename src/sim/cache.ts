@@ -10,6 +10,7 @@ import { tileCentre } from './tiles';
 import { standingRects } from './fixtures';
 import { nodeRects } from './nodes';
 import { createEnemy } from './enemies';
+import { linkTrios } from './miteAi';
 import { rollChampions } from './champions';
 import { inSafeZone } from './population';
 
@@ -114,7 +115,8 @@ export function stepCacheRearm(state: SimState): void {
       // Never inside a claimed pylon's safe zone, as at a world reset.
       return alive || inSafeZone(state, OVERWORLD_ROOM, home.x, home.y) ? [] : [createEnemy(state.nextEnemyId++, g.enemyId, home, OVERWORLD_ROOM, def.id)];
     });
-    // The guards coming back are a pack spawning: they may hold a champion.
+    // The guards coming back are a pack spawning: in trios (065), and they may hold a champion.
+    linkTrios(back);
     rollChampions(state.rng, back, def.ring);
     state.enemies.push(...back);
   }

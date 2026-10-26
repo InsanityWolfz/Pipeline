@@ -49,8 +49,17 @@ const WEATHERVANE: LandmarkDef = {
   area: { x0: 0, y0: 0, x1: 9, y1: 11 },
   features: [],
   nodes: [],
-  // 065 brings its guard pack.
-  guards: [],
+  // 065: a fixed pack holds it: the hawks over the west terrace, the mite trio by the mast, the sentinel at the back by
+  // the pylon (its circles reach the whole terrace), the ram on the way in. The trio is listed together (one trio).
+  guards: [
+    { enemyId: 'thunderhawk', tx: 2, ty: 3 },
+    { enemyId: 'thunderhawk', tx: 2, ty: 8 },
+    { enemyId: 'static-mite', tx: 5, ty: 4 },
+    { enemyId: 'static-mite', tx: 6, ty: 5 },
+    { enemyId: 'static-mite', tx: 5, ty: 6 },
+    { enemyId: 'storm-sentinel', tx: 8, ty: 8 },
+    { enemyId: 'gale-ram', tx: 3, ty: 5 },
+  ],
   pylon: { tx: 8, ty: 5, site: 'weathervane', supplies: ['stormglass'] },
   stamps: [
     ...[2, 3, 6, 7].map((tx) => stamp(TILE.cairn)({ tx, ty: 1 })),

@@ -43,7 +43,9 @@ describe('the world grows (060, 064)', () => {
     // holds them to the line rules).
     const { 'ley-grotto': grotto, 'husk-hive': hive, ...lines } = SNAPSHOT.overworld.leyLines;
     const then = { ...SNAPSHOT, overworld: { ...SNAPSHOT.overworld, leyLines: lines } };
-    for (const k of ['landmarks', 'overworld', 'roads', 'roadPoints', 'pylons', 'arenas', 'hollows', 'emberworks'] as const) expect(unkept(now[k], then[k]), k).toEqual([]);
+    // 065 placed the Weathervane's guards among the landmarks' packs, which the snapshot lists by index: they're left out (061's way).
+    const placed = { ...now, overworld: { ...now.overworld, packs: now.overworld.packs.filter((p) => p.group !== 'weathervane') } };
+    for (const k of ['landmarks', 'overworld', 'roads', 'roadPoints', 'pylons', 'arenas', 'hollows', 'emberworks'] as const) expect(unkept(placed[k], then[k]), k).toEqual([]);
     expect(now.overworld.leyLines['ley-grotto']?.[0]).toEqual(grotto[0]);
     expect(now.overworld.leyLines['husk-hive']?.[0]).toEqual(hive[0]);
   });

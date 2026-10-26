@@ -2,6 +2,7 @@ import { DEFAULT_ROOM } from '../data/rooms';
 import { LANDMARK_LIST } from '../data/landmarks';
 import { bossReturns, settleSummons } from './altar';
 import { makeChampion, rollChampions } from './champions';
+import { linkTrios } from './miteAi';
 import { createEnemy } from './enemies';
 import { clearMines } from './mines';
 import { createNodes } from './nodes';
@@ -64,6 +65,8 @@ export function resetWorld(state: SimState, spawnRoomId = DEFAULT_ROOM): void {
   // placed champion (049) draws none.
   for (const l of LANDMARK_LIST) {
     const pack = state.enemies.filter((e) => e.group === l.id);
+    // 065: its mites in trios, before a champion is drawn (a champion mite's trio are all champions).
+    linkTrios(pack);
     if (!pack.some((e) => e.champion !== null)) rollChampions(state.rng, pack, l.ring);
   }
   resetPopulation(state);

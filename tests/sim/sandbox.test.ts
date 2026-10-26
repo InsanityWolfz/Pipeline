@@ -120,10 +120,17 @@ describe('the room (044)', () => {
     for (const id of ['charger', 'burrower', 'shardback', 'sniper']) expect(SANDBOX_PENS.find((p) => p.enemyId === id)?.ring).toBe(3);
     SANDBOX_PENS.forEach((p, i) => {
       const held = ofGroup(s, PEN_GROUP(i));
-      expect(held.map((e) => e.enemyId)).toEqual([p.enemyId]);
-      expect(held[0]?.ring).toBe(p.ring);
-      expect(held[0]?.health).toBe(defOf({ enemyId: p.enemyId, champion: null, ring: p.ring }).maxHealth);
-      expect({ x: held[0]?.x, y: held[0]?.y }).toEqual(tileCentre(p.home));
+      // 065: a static mite's pen holds its trio, side by side round its home.
+      const def = ENEMIES[p.enemyId];
+      const swarm = def?.kind === 'mite' ? def.swarm : 1;
+      expect(held.map((e) => e.enemyId)).toEqual(Array.from({ length: swarm }, () => p.enemyId));
+      for (const e of held) {
+        expect(e.ring).toBe(p.ring);
+        expect(e.health).toBe(defOf({ enemyId: p.enemyId, champion: null, ring: p.ring }).maxHealth);
+      }
+      const mid = { x: held.reduce((n, e) => n + e.x, 0) / held.length, y: held.reduce((n, e) => n + e.y, 0) / held.length };
+      expect(mid).toEqual(tileCentre(p.home));
+      if (swarm > 1) expect(new Set(held.map((e) => e.trio))).toEqual(new Set([held[0]?.id]));
     });
   });
 

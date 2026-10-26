@@ -195,7 +195,8 @@ describe('god mode, the KO and the player tools (044)', () => {
     expect(s.inventory).toEqual(inventory);
     expect(s.sandbox).toBeDefined();
     expect(ofGroup(s, SPAWN_GROUP).length).toBe(0);
-    SANDBOX_PENS.forEach((_, i) => expect(ofGroup(s, PEN_GROUP(i)).length).toBe(1));
+    // 065: a static mite's pen holds its trio.
+    SANDBOX_PENS.forEach((p, i) => expect(ofGroup(s, PEN_GROUP(i)).length).toBe(p.enemyId === 'static-mite' ? 3 : 1));
     expect(s.enemies.every((e) => e.roomId === SANDBOX_ROOM)).toBe(true);
   });
 
