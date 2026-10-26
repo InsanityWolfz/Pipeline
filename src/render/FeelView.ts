@@ -196,6 +196,8 @@ export class FeelView {
     if (ev.schematicReveals.length > 0) s.play(SOUNDS.reveal);
     if (ev.claims.length > 0) s.play(SOUNDS.claim);
     if (ev.travels.length > 0) s.play(SOUNDS.travel);
+    // 072: a return stone waking chimes as a schematic's diagram appearing does.
+    if (ev.returnWakes.length > 0) s.play(SOUNDS.reveal);
     // 034: the Hollows' shield, bombs, pound, summon and barrier; the barrier's fall has its own sound.
     const barrier = playHollows(ev, j, s, this.scene.cameras.main.worldView);
     // 060: the Emberworks' barrier across its ramps falls the same way.

@@ -1,6 +1,8 @@
 import type { Scene } from 'phaser';
 import { SITE_ICONS } from '../data/foundryAssets';
-import { claimedPylonInReach, claimedPylons, fixtureInReach } from '../sim/claims';
+import { claimedPylonInReach, fixtureInReach, travelDestinations } from '../sim/claims';
+import { usableStoneInReach } from '../sim/returnStones';
+import { FOUNDRY_ROOM } from '../data/rooms';
 import { PYLON_MENU_TEXT } from '../data/claims';
 import type { SimState } from '../sim/state';
 import { ChoiceMenu, type Choice } from './ChoiceMenu';
@@ -13,14 +15,15 @@ import { offeringModel } from './altarPanel';
 import type { UiState } from './testHook';
 import type { TipHit } from './tipTypes';
 
-type PylonChoice = 'deposit' | 'travel';
+/** The claimed pylon's rows: send the inventory home, travel to the foundry, or (072) travel to a woken return stone. */
+type PylonChoice = 'deposit' | 'travel' | { stone: string };
 
 /** The site menus' part of `ui()`. */
-export type SiteUiState = Pick<UiState, 'siteOpen' | 'waystone' | 'restorePanel' | 'altarPanel' | 'gearPanel'>;
+export type SiteUiState = Pick<UiState, 'siteOpen' | 'waystone' | 'pylonMenu' | 'returnMenu' | 'restorePanel' | 'altarPanel' | 'gearPanel'>;
 
 /** The site menus' part of `ui()` before the scene has built them. */
-export const NO_SITE_UI: SiteUiState = { siteOpen: false, waystone: null, restorePanel: null, altarPanel: null, gearPanel: null };
-/** A waystone row (032): the claimed site to travel to. */
+export const NO_SITE_UI: SiteUiState = { siteOpen: false, waystone: null, pylonMenu: null, returnMenu: null, restorePanel: null, altarPanel: null, gearPanel: null };
+/** A waystone row (032): the destination to travel to, a claimed site or (072) a woken return stone, by id. */
 type WaystoneChoice = { site: string };
 
 // The claimed pylon's menu (send the inventory to the stash, travel to the foundry) and the waystone's
@@ -28,10 +31,15 @@ type WaystoneChoice = { site: string };
 // the stash's screen is the grid panel's, which the router opens), and the
 // identification bench's gear panel (036: identify all, wear or take off a piece per
 // slot).
+/** A travel row's words (032): "Travel to Shrine", (072) "Travel to Sunken Forum door". */
+const travelText = (name: string): string => `Travel to ${name}`;
+
 export class SiteMenus {
   private readonly pylon: ChoiceMenu<PylonChoice>;
   private readonly bench: GearPanel;
   private readonly waystone: ChoiceMenu<WaystoneChoice>;
+  /** 072: a woken return stone's menu, its one row "Travel to foundry". */
+  private readonly stone: ChoiceMenu<'home'>;
   /** The restore panel (033), opened by E at a diagram in the foundry. */
   private readonly restore: RestorePanel;
   /** The altar's offering (034), in the restore panel's style, opened by E at an awake altar. */
@@ -41,12 +49,13 @@ export class SiteMenus {
     this.pylon = new ChoiceMenu(scene);
     this.bench = new GearPanel(scene);
     this.waystone = new ChoiceMenu(scene);
+    this.stone = new ChoiceMenu(scene);
     this.restore = new RestorePanel(scene);
     this.offering = new RestorePanel(scene, offeringModel);
   }
 
   private get menus(): readonly ChoiceMenu<unknown>[] {
-    return [this.pylon, this.waystone];
+    return [this.pylon, this.waystone, this.stone];
   }
 
   /** 050 (A.13): the wheel scrolls the bench's gear list while it's open; returns whether it took the steps. */
@@ -118,8 +127,10 @@ export class SiteMenus {
     // An altar's offering (034): only once its boss has fallen (a dim altar does nothing).
     else if (altar && altarState(sim, altar.id) !== 'dim') this.offering.open(altar.id);
     else if (claimedPylonInReach(sim)) this.pylon.open();
-    // With two or more claimed pylons, the waystone offers them by landmark name (032); with one, the sim travels.
-    else if (fixtureInReach(sim, 'waystone') && claimedPylons(sim).length >= 2) this.waystone.open();
+    // With two or more destinations, the waystone offers them by name (032; 072: woken return stones too); with one, the sim travels.
+    else if (fixtureInReach(sim, 'waystone') && travelDestinations(sim).length >= 2) this.waystone.open();
+    // 072: a woken return stone offers the way home.
+    else if (usableStoneInReach(sim)) this.stone.open();
     else if (fixtureInReach(sim, 'stash')) return 'stash';
     else if (fixtureInReach(sim, 'bench') && !this.bench.isOpen) this.bench.open();
     return null;
@@ -130,6 +141,7 @@ export class SiteMenus {
     const p = this.pylon.valueAt(x, y);
     const gear = this.bench.click(x, y);
     const w = this.waystone.valueAt(x, y);
+    const home = this.stone.valueAt(x, y);
     const restore = this.restore.restoreAt(x, y);
     const summon = this.offering.restoreAt(x, y);
     if (summon) {
@@ -151,6 +163,8 @@ export class SiteMenus {
       return true;
     }
     if (w) controls.menus.travel(w.site);
+    else if (home) controls.menus.travel(FOUNDRY_ROOM);
+    else if (typeof p === 'object') controls.menus.travel(p.stone);
     else if (p) controls.menus.pylon(p);
     else return false;
     for (const m of this.menus) m.flashAt(x, y);
@@ -170,17 +184,26 @@ export class SiteMenus {
     const pylonRows: Choice<PylonChoice>[] = [
       { icons: [SITE_ICONS.stash], text: PYLON_MENU_TEXT.deposit(held), value: 'deposit' },
       { icons: [SITE_ICONS.travel], text: PYLON_MENU_TEXT.travel, value: 'travel' },
+      // 072: and every woken return stone, by its arena (looked up only while the menu is open).
+      ...(this.pylon.isOpen ? travelDestinations(sim).filter((d) => sim.returnStones.includes(d.id)) : []).map((d) => ({ icons: [SITE_ICONS.travel], text: travelText(d.name), value: { stone: d.id } })),
     ];
     this.pylon.show(pylonRows);
     if (this.bench.isOpen && !fixtureInReach(sim, 'bench')) this.bench.close();
     // 047: the bench's Stages panel is gone; tagged rounds are crafted in the crafting menu (C).
     this.bench.update(sim);
     if (this.waystone.isOpen && !fixtureInReach(sim, 'waystone')) this.waystone.close();
-    this.waystone.show(claimedPylons(sim).map(({ pylon }) => ({ icons: [SITE_ICONS.travel], text: `Travel to ${pylon.name}`, value: { site: pylon.site } })));
+    this.waystone.show((this.waystone.isOpen ? travelDestinations(sim) : []).map((d) => ({ icons: [SITE_ICONS.travel], text: travelText(d.name), value: { site: d.id } })));
+    if (this.stone.isOpen && !usableStoneInReach(sim)) this.stone.close();
+    this.stone.show([{ icons: [SITE_ICONS.travel], text: PYLON_MENU_TEXT.travel, value: 'home' }]);
   }
 
-  /** For the test hook: a site menu is open, and the waystone menu's rows as drawn (032), each row's text and box, or null while it's shut. */
+  /** For the test hook: a site menu is open, and the waystone menu's rows as drawn (032; 072: and the pylon's and a return stone's), each row's text and box, or null while it's shut. */
   get ui(): SiteUiState {
-    return { siteOpen: this.isOpen, waystone: this.waystone.isOpen ? this.waystone.rowsShown : null, restorePanel: this.restore.state, altarPanel: this.offering.state, gearPanel: this.bench.state };
+    return {
+      siteOpen: this.isOpen,
+      waystone: this.waystone.isOpen ? this.waystone.rowsShown : null,
+      pylonMenu: this.pylon.isOpen ? this.pylon.rowsShown : null,
+      returnMenu: this.stone.isOpen ? this.stone.rowsShown : null,
+      restorePanel: this.restore.state, altarPanel: this.offering.state, gearPanel: this.bench.state };
   }
 }

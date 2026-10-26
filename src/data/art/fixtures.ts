@@ -1,10 +1,10 @@
-import { DOORWAY_SPRITE, FIXTURE_SPRITES, PYLON_SPRITES, TUTORIAL_SPRITES } from '../foundryAssets';
+import { DOORWAY_SPRITE, FIXTURE_SPRITES, PYLON_SPRITES, RETURN_STONE_LOOK, TUTORIAL_SPRITES } from '../foundryAssets';
 import { SPRITES } from '../assets';
 import { ellipse, flat, line, path, rect, solid, trim, type Paint, type Shape, type VectorSprite } from './types';
 
 // Fixtures and the pylon (020), in the 016 vector style: the identification
 // bench, the stash, the supply port, the foundry's exit arch, the waystone, the
-// pylon in its three states, the ley shimmer that seals the door (067) and the room's
+// pylon in its three states, (072) the dormant return stone, the ley shimmer that seals the door (067) and the room's
 // ley crystal. Standing sprites are drawn round their bottom centre; the door arch
 // and shimmer from their bottom-left, like the wall tiles they sit in.
 
@@ -115,6 +115,20 @@ const waystone = (k: number): Shape[] => [
   }),
 ];
 
+// 072: a boss arena's return stone while dormant: the waystone's ring and plinth round a disc of dark, unlit stone,
+// its runes dull. Woken, it is the waystone itself (its shimmer).
+const DORMANT_STONE: Shape[] = [
+  shadow(13),
+  rect(-12, -8, 24, 7, 2, { fill: vertical('rock-light', 'rock', -8, -1), outline: true }),
+  ellipse(0, -26, 11, 16, { fill: { radial: [0, -26, 14], stops: [{ at: 0, color: 'dormant' }, { at: 1, color: 'dormant-dark' }] } }),
+  ellipse(0, -26, 11, 16, trim('rock', 5.4)),
+  ellipse(0, -26, 11, 16, { stroke: { color: 'rock-light', width: 3.6 } }),
+  ...[-60, 0, 60, 180].map((deg) => {
+    const a = ((deg - 90) * Math.PI) / 180;
+    return rune(Math.cos(a) * 11, -26 + Math.sin(a) * 16, 1.1, 'rock-dark');
+  }),
+];
+
 // The pylon: a tapered rune obelisk with a carved channel up its face and a crystal on top. Off, the channel is dark and the
 // crystal dull; activating, light climbs the channel; active, channel and crystal glow and pulse.
 const PYLON_BODY: Shape[] = [
@@ -168,6 +182,7 @@ export const FIXTURE_SPRITES_VECTOR: readonly VectorSprite[] = [
   stand(FIXTURE_SPRITES.port.key, [32, 36], [port(false), port(true)]),
   { key: DOORWAY_SPRITE, size: [32, 48], anchor: [0, 48], frames: [DOORWAY] },
   stand(FIXTURE_SPRITES.waystone.key, [32, 48], [waystone(0), waystone(1)]),
+  stand(RETURN_STONE_LOOK.dormant, [32, 48], [DORMANT_STONE]),
   stand(PYLON_SPRITES.off, [32, 80], [pylon(0, 0)]),
   stand(PYLON_SPRITES.activating.key, [32, 80], [0.25, 0.5, 0.75, 1].map((k) => pylon(k, k * 0.6))),
   stand(PYLON_SPRITES.active.key, [32, 80], [pylon(1, 0.8), pylon(1, 1)]),

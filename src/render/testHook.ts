@@ -1,3 +1,4 @@
+import type { ReturnStoneShown } from './ReturnStoneView';
 import type { TunnelMark } from './tunnelMarks';
 import type { GroundItemShown } from './GroundItemView';
 import type { InteractPromptState } from './InteractPrompt';
@@ -215,6 +216,9 @@ export interface UiState {
   enemyBars: EnemyBarShown[];
   /** 032: the waystone's menu while open (two or more claimed pylons): each row's text and box, view px; else null. */
   waystone: { text: string; x: number; y: number; w: number; h: number }[] | null;
+  /** 072: a claimed pylon's menu while open (its rows, with a row per woken return stone), and a woken return stone's; else null. */
+  pylonMenu: { text: string; x: number; y: number; w: number; h: number }[] | null;
+  returnMenu: { text: string; x: number; y: number; w: number; h: number }[] | null;
   /** 033: the diagrams drawn on the foundry, restored parts, running effects and the wing door. */
   research: ResearchShown;
   /** 058: the last few banners that started (discoveries, schematics, recipe unlocks), oldest first. */
@@ -238,6 +242,8 @@ export interface UiState {
   /** 064: lightning arcs on screen. */
   lightningArcs: number;
   /** 055: each boss arena's door in the room on screen, sealed or open, and 043's seal over it while its boss fights. */
+  /** 072: the return stones in the room on show: dormant or woken, and the scale of a wake's swell. */
+  returnStones: ReturnStoneShown[];
   arenaDoors: ArenaDoorShown[];
   /** 036: the bench's gear panel while open (its cells, tabs, rows with ids and boxes, page and totals), else null. */
   gearPanel: GearPanelState | null;

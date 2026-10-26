@@ -26,13 +26,14 @@ import { NO_RELICS_SHOWN, RelicView } from './RelicView';
 import { NO_TALENT_FX, TalentFxView } from './TalentFxView';
 import { MineView, NO_MINES_SHOWN } from './MineView';
 import { ArenaDoorView } from './ArenaDoorView';
+import { ReturnStoneView } from './ReturnStoneView';
 import type { ScreenBox } from './bottomHud';
 
 /** What the room views report to the test hook's `ui()`. */
-export type RoomUiState = Pick<UiState, 'minimap' | 'foundryMap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows' | 'emberworks' | 'stormcrown' | 'lightningArcs' | 'relics' | 'talentFx' | 'mines' | 'overworldChunks' | 'arenaDoors' | 'banners' | 'bannerAlpha'>;
+export type RoomUiState = Pick<UiState, 'minimap' | 'foundryMap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows' | 'emberworks' | 'stormcrown' | 'lightningArcs' | 'relics' | 'talentFx' | 'mines' | 'overworldChunks' | 'arenaDoors' | 'returnStones' | 'banners' | 'bannerAlpha'>;
 
 /** The room views' part of `ui()` before the scene has built them. */
-export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [], hover: null }, foundryMap: NO_FOUNDRY_MAP, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN, emberworks: NO_EMBERWORKS_SHOWN, stormcrown: NO_STORMCROWN_SHOWN, lightningArcs: 0, relics: NO_RELICS_SHOWN, talentFx: NO_TALENT_FX, mines: NO_MINES_SHOWN, overworldChunks: [], arenaDoors: [], banners: [], bannerAlpha: 0 };
+export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [], hover: null }, foundryMap: NO_FOUNDRY_MAP, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN, emberworks: NO_EMBERWORKS_SHOWN, stormcrown: NO_STORMCROWN_SHOWN, lightningArcs: 0, relics: NO_RELICS_SHOWN, talentFx: NO_TALENT_FX, mines: NO_MINES_SHOWN, overworldChunks: [], arenaDoors: [], returnStones: [], banners: [], bannerAlpha: 0 };
 
 // The ground on screen: a tiled room (the foundry) or the overworld's terrain
 // with its landmarks (017), plus the corner minimap while outside, and the
@@ -40,7 +41,7 @@ export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [], h
 // intake built into the foundry's north wall (019), the supply ports' faces and plates (028), the Ley
 // Springs with the signs of healing (030), the landmarks' dressing and discovery banner (032), and the
 // foundry's lost parts as diagrams and the schematics' light pillars and banners (033), and Stonefall Hollows'
-// barrier, altar and the Bulwark's bombs (034), and the Emberworks' barrier (060), and the relics' signs on the player and at the bench (036), and the
+// barrier, altar and the Bulwark's bombs (034), and the Emberworks' barrier (060), and the return stones (072), and the relics' signs on the player and at the bench (036), and the
 // level-up and the keystones' signs (037), and landmines and bomblets (038).
 export class RoomViews {
   private readonly scene: Scene;
@@ -65,6 +66,7 @@ export class RoomViews {
   private readonly talentFx: TalentFxView;
   private readonly mines: MineView;
   private readonly arenaDoors: ArenaDoorView;
+  private readonly returnStones: ReturnStoneView;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -89,6 +91,7 @@ export class RoomViews {
     this.talentFx = new TalentFxView(scene);
     this.mines = new MineView(scene);
     this.arenaDoors = new ArenaDoorView(scene);
+    this.returnStones = new ReturnStoneView(scene);
   }
 
   /** The pointer, view px: 051's minimap names the icon under it. */
@@ -131,6 +134,8 @@ export class RoomViews {
     // 064: lightning arcs, on the tween clock so a screenshot can hold them.
     this.arcs.update(events, shown === sim.roomId, tweenMs);
     this.arenaDoors.update(sim, shown, tweenMs);
+    // 072: the return stones outside the boss arenas' doors.
+    this.returnStones.update(sim, events, shown, tweenMs);
     this.relics.update(sim, events, shown, tweenMs);
     this.talentFx.update(sim, events, shown, tweenMs);
     this.mines.update(sim, events, shown, tweenMs);
@@ -165,6 +170,7 @@ export class RoomViews {
       talentFx: this.talentFx.shown,
       mines: this.mines.shown,
       arenaDoors: this.arenaDoors.shown,
+      returnStones: this.returnStones.shown,
       banners: this.banner.seen.map((b) => ({ kind: b.kind, kicker: b.kicker, name: b.name })),
       bannerAlpha: this.banner.current?.alpha ?? 0,
     };
