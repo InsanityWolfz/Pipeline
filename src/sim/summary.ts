@@ -13,7 +13,7 @@ import { objectiveLine } from './objectives';
 import { guidedSummary } from './guided';
 import { volleyRounds, nextPress, hudActive, type HudActive, type NextPress } from './volley';
 import { INTAKE } from '../data/foundry';
-import { entranceCap } from './research';
+import { entranceCap, machineSpeed } from './research';
 import { researchSummary, type ResearchSummary } from './researchSummary';
 import { blueprintSummary } from './blueprints';
 import type { SimState } from './state';
@@ -211,7 +211,7 @@ export function summarize(state: SimState): SimSummary {
     unlocked: unlockedPieces(state),
     stagesUnlocked: stagesUnlocked(state),
     building: state.building,
-    foundry: { pieces: state.foundry.pieces.map((p) => pieceSummary(p)) },
+    foundry: { pieces: state.foundry.pieces.map((p) => pieceSummary(p, machineSpeed(state))) },
     intake: {
       entrances: INTAKE.entrances.map((t, i) => {
         const e = state.link.entrances[i];

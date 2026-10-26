@@ -1,3 +1,4 @@
+import { machineCard, type MachineCard } from './recipeCard';
 import { roundKeywords } from '../data/roundKeywords';
 import { defOf } from './champions';
 import type { ArrowState } from './arrows';
@@ -176,6 +177,8 @@ export type PieceSummary = { id: number; pieceId: string; tx: number; ty: number
       progress: number;
       status: MachineStatus;
       missing: string[];
+      /** 069: its recipe card at the machine speed now (src/sim/recipeCard.ts). */
+      card: MachineCard;
     }
   | { kind: 'hopper'; item: string | null; count: number }
   | { kind: 'crate'; contents: Record<string, number> }
@@ -186,7 +189,8 @@ export type PieceSummary = { id: number; pieceId: string; tx: number; ty: number
   | { kind: 'tunnel-out'; item: string | null; progress: number; pair: number | null }
 );
 
-export function pieceSummary(p: PieceState): PieceSummary {
+/** A piece's summary; a machine's recipe card at `speed`, the machine-speed multiplier now (033). */
+export function pieceSummary(p: PieceState, speed = 1): PieceSummary {
   const common = { id: p.id, pieceId: p.pieceId, tx: p.tx, ty: p.ty, facing: p.facing };
   if (p.kind === 'conduit') return { ...common, kind: p.kind, inFrom: p.inFrom, item: p.item, progress: p.progress };
   if (p.kind === 'hopper') return { ...common, kind: p.kind, item: p.item, count: p.count };
@@ -195,5 +199,5 @@ export function pieceSummary(p: PieceState): PieceSummary {
   if (p.kind === 'tunnel-in') return { ...common, kind: p.kind, item: p.item, progress: p.progress, pair: p.pair, tunnel: p.tunnel.map((t) => t?.item ?? null) };
   if (p.kind === 'tunnel-out') return { ...common, kind: p.kind, item: p.item, progress: p.progress, pair: p.pair };
   const { buffer, output, made, crafting, progress, status, missing } = p;
-  return { ...common, kind: p.kind, buffer: { ...buffer }, output, made, crafting, progress, status, missing: [...missing] };
+  return { ...common, kind: p.kind, buffer: { ...buffer }, output, made, crafting, progress, status, missing: [...missing], card: machineCard(p, speed) };
 }

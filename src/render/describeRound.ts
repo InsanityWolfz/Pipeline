@@ -24,7 +24,8 @@ import { line, type Description, type TipLine } from './tipTypes';
 // breakdown shows as its own step.
 
 /** What a round is described from: the stats' sources (no tube, so no live ramp) and what the player knows. */
-export type Seen = Pick<SimState, 'talents' | 'gear' | 'equipped' | 'crafted' | 'machineMade' | 'carried'>;
+/** What a description reads of the sim; 069: the research, where given, for a recipe card's machine speed. */
+export type Seen = Pick<SimState, 'talents' | 'gear' | 'equipped' | 'crafted' | 'machineMade' | 'carried'> & Partial<Pick<SimState, 'research'>>;
 
 /** The stats' sources without the tube: a fire rate's held ramp is shown as its own step, never baked in. */
 const still = (s: Seen): Statted => ({ talents: s.talents, gear: s.gear, equipped: s.equipped });
