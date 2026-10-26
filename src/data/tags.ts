@@ -43,6 +43,13 @@ export const COLD = { chillPerHit: 1, slowPerStack: 0.15, stacksToFreeze: 4, sta
 export const FIRE = { burnTicks: 180, burnShare: 0.25, spreadRadius: 64 } as const;
 
 /**
+ * Lightning (064): each lightning hit arcs to the nearest living enemy within `chainRange` px (3 tiles) that its chain
+ * hasn't hit, for `chainShare` of the hit's damage, then arcs on from there, up to `chains` arcs. A Burst or Bomblet
+ * starts one chain, from the enemy nearest its centre.
+ */
+export const LIGHTNING = { chainRange: 96, chainShare: 0.5, chains: 2 } as const;
+
+/**
  * Homing: at launch it locks onto the living enemy nearest the cursor within `lockRadius` px, then turns toward it by
  * at most `turnDegrees` a tick. 054 (Shaun): it flies at `speedScale` of its base's speed, so it has time to home.
  */
@@ -66,6 +73,8 @@ export const TAGS: Readonly<Record<string, TagDef>> = {
   frost: { id: 'frost', slot: 'element', prefix: 'Frost', appliesTo: ['arrow', 'bomb', 'ley-bolt', 'landmine'], keyword: 'cold', damageType: 'cold' },
   // 060: the Fire rune's element, on every family as Frost is.
   fire: { id: 'fire', slot: 'element', prefix: 'Fire', appliesTo: ['arrow', 'bomb', 'ley-bolt', 'landmine'], keyword: 'fire', damageType: 'fire' },
+  // 064: the Lightning rune's element, on every family as Frost and Fire are.
+  lightning: { id: 'lightning', slot: 'element', prefix: 'Lightning', appliesTo: ['arrow', 'bomb', 'ley-bolt', 'landmine'], keyword: 'lightning', damageType: 'lightning' },
   homing: { id: 'homing', slot: 'shape', prefix: 'Homing', appliesTo: ['ley-bolt'], keyword: 'homing', speedScale: HOMING.speedScale },
   split: { id: 'split', slot: 'shape', prefix: 'Split', appliesTo: ['ley-bolt'], keyword: 'split' },
   cluster: { id: 'cluster', slot: 'shape', prefix: 'Cluster', appliesTo: ['bomb'], keyword: 'cluster' },

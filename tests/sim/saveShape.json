@@ -118,6 +118,7 @@
     "state.equipped.trinket: null",
     "state.equipped: object",
     "state.events.addsRise: array",
+    "state.events.arcs: array",
     "state.events.arenaEnters: array",
     "state.events.arenaLeaves: array",
     "state.events.attunes: array",

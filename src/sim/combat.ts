@@ -10,6 +10,7 @@ import { killXp } from './leveling';
 import { afterKeystoneHit, burning, keystoneHit, takePool } from './keystones';
 import { spawnDrops } from './drops';
 import { spreadBurn } from './fire';
+import { chainLightning } from './lightning';
 import { onEmberDeath } from './emberDeaths';
 import type { SimState } from './state';
 import { rotate } from './volley';
@@ -66,6 +67,8 @@ function strike(state: SimState, arrow: ArrowState, e: EnemyState, spawned: Arro
   // The keystones (037): a pooled arrow hits harder and bursts; a ley bolt shatters a frozen enemy.
   const hit = keystoneHit(state, arrow, e);
   damageEnemy(state, e, arrow.damage * hit.scale, arrow.dx, arrow.dy, arrowHit(arrow));
+  // 064: a lightning hit (a round's or a Shard's) arcs on.
+  if (arrow.damageType === 'lightning') chainLightning(state, e, arrow.damage * hit.scale);
   if (arrow.split) sendShards(state, arrow, e, spawned);
   afterKeystoneHit(state, arrow, e, hit, spawned);
   return true;

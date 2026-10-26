@@ -224,6 +224,8 @@ export interface HitStyle {
   burning?: boolean;
   /** 060: a burn's once-a-second beat. It never sets a burn going again; render shows it as a small number, with no hit stop or hit sound. */
   burn?: boolean;
+  /** 064: a lightning arc's hit. It never arcs again; render draws it as a chained hit. */
+  arc?: boolean;
 }
 
 /** An arrow's hit, with its Knockback. */
@@ -264,6 +266,7 @@ export function damageEnemy(
     ...(style.melee ? { melee: true as const } : {}),
     ...(style.burning ? { burning: true as const } : {}),
     ...(style.burn ? { burn: true as const } : {}),
+    ...(style.arc ? { arc: true as const } : {}),
   });
 }
 

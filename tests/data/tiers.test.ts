@@ -82,7 +82,7 @@ describe('material tiers (062)', () => {
 
   it('read correctly wherever a round id is parsed: by family, by tag', () => {
     const arrows = roundsByFamily().filter((r) => roundBase(r) === 'arrow');
-    expect(arrows).toEqual(['arrow', 'arrow+frost', 'arrow+fire', 'arrow+steel', 'arrow+steel+frost', 'arrow+steel+fire']);
+    expect(arrows).toEqual(['arrow', 'arrow+frost', 'arrow+fire', 'arrow+lightning', 'arrow+steel', 'arrow+steel+frost', 'arrow+steel+fire', 'arrow+steel+lightning']);
     expect(roundsByFamily()).toHaveLength(4 + ROUNDS.length);
     expect(FIRE_ROUNDS).toContain('arrow+steel+fire');
     expect(FIRE_ROUNDS).toContain('ley-bolt+glass+fire+split');

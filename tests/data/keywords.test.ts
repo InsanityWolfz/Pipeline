@@ -26,8 +26,8 @@ describe('the keyword list', () => {
       expect(GROUPS).toContain(k.group);
       expect(KEYWORDS[k.id]).toBe(k);
     }
-    // 060: Fire shipped; Lightning and Poison stay reserved.
-    expect(KEYWORD_LIST.filter((k) => k.state === 'reserved').map((k) => k.id)).toEqual(['lightning', 'poison']);
+    // 060: Fire shipped; 064: Lightning; Poison stays reserved.
+    expect(KEYWORD_LIST.filter((k) => k.state === 'reserved').map((k) => k.id)).toEqual(['poison']);
   });
 
   it('groups as the spec lists them', () => {
@@ -98,7 +98,7 @@ describe('round keywords (derived from data)', () => {
     expect(names(roundKeywords('ley-bolt+homing'))).toEqual(['Ley', 'Shot', 'Knockback', 'Homing', 'Physical']);
   });
 
-  it('the seventeen tagged rounds exist and nothing else (060: seven Fire rounds; 062: each also at its tier)', () => {
+  it('the twenty-four tagged rounds exist and nothing else (060: seven Fire rounds; 062: each also at its tier; 064: seven Lightning rounds)', () => {
     expect(ROUNDS.filter((r) => roundTier(r) === 'stone').sort()).toEqual(
       [
         'arrow+frost',
@@ -118,6 +118,13 @@ describe('round keywords (derived from data)', () => {
         'ley-bolt+fire+homing',
         'ley-bolt+fire+split',
         'landmine+fire',
+        'arrow+lightning',
+        'bomb+lightning',
+        'bomb+lightning+cluster',
+        'ley-bolt+lightning',
+        'ley-bolt+lightning+homing',
+        'ley-bolt+lightning+split',
+        'landmine+lightning',
       ].sort(),
     );
     const names = (ids: readonly KeywordId[]) => ids.map((id) => KEYWORDS[id].name);
@@ -154,8 +161,14 @@ describe('the new-keyword rule (039, Q17)', () => {
   const ruled = KEYWORD_LIST.filter((k) => k.state === 'live' && k.group !== 'trait');
 
   it('every live keyword outside the debt list has a source and two payoffs', () => {
+    // 064 slice 4: Lightning's two talents come in slice 5; until then (one commit) it is expected to fail the rule, never in KEYWORD_DEBT.
+    const pending: readonly KeywordId[] = ['lightning'];
     for (const k of ruled) {
       if (k.id in KEYWORD_DEBT) continue;
+      if (pending.includes(k.id)) {
+        expect(meets(k.id), k.name).toBe(false);
+        continue;
+      }
       expect(meets(k.id), `${k.name}: sources ${JSON.stringify(sources.get(k.id))}, payoffs ${JSON.stringify(payoffs.get(k.id))}`).toBe(true);
     }
   });
@@ -163,7 +176,8 @@ describe('the new-keyword rule (039, Q17)', () => {
   it('the debt is exactly the spec’s list, each still short (so the list only shrinks)', () => {
     expect(Object.keys(KEYWORD_DEBT).sort()).toEqual(['shot', 'lob', 'mine', 'pierce', 'homing', 'split', 'cluster', 'knockback', 'physical', 'cold', 'chill', 'stun', 'pool', 'landmine'].sort());
     for (const id of Object.keys(KEYWORD_DEBT) as KeywordId[]) expect(meets(id), `${id} now meets the rule: take it off KEYWORD_DEBT`).toBe(false);
-    expect(ruled.filter((k) => !(k.id in KEYWORD_DEBT)).map((k) => k.name)).toEqual(['Burst', 'Fire', 'Freeze', 'Arrow', 'Bomb', 'Ley']);
+    expect(ruled.filter((k) => !(k.id in KEYWORD_DEBT)).map((k) => k.name)).toEqual(['Burst', 'Fire', 'Lightning', 'Freeze', 'Arrow', 'Bomb', 'Ley']);
+    expect(KEYWORD_DEBT.lightning).toBeUndefined();
     expect(KEYWORD_DEBT.fire).toBeUndefined();
     // 060: Fire's source is its tag; its payoffs the Bombs lane's two Fire nodes.
     expect(sources.get('fire')).toContain('tag:fire');

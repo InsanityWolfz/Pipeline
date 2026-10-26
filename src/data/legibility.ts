@@ -133,6 +133,8 @@ export const LEGIBILITY_WORDS = {
   burns: 'burns {damage}/s for {time}',
   /** 062: a burn's short form, when a tiered round's summary would run past its rows (its time is in the breakdown). */
   burnsShort: 'burns {damage}/s',
+  /** 064: a Lightning round's chain: how many arcs, and each arc's damage. */
+  arcs: 'arcs {count}× for {damage}',
   shards: '{count} {{shard}}s × {damage}',
   bomblets: '{count} {{bomblet}}s × {damage}',
   arms: 'arms in {time}',
@@ -213,6 +215,7 @@ export const PARAM_STATS: Readonly<Partial<Record<KeywordId, Readonly<Record<str
   cluster: { count: { stat: 'bomblets' }, damage: { stat: 'damage', on: 'bomblet' }, radius: { stat: 'radius', on: 'bomblet' } },
   knockback: { push: { stat: 'knockback' } },
   fire: { duration: { stat: 'duration', on: 'status' }, radius: { stat: 'spread-radius', on: 'status' } },
+  lightning: { range: { stat: 'chain-range', on: 'status' }, chains: { stat: 'chains', on: 'status' } },
   chill: { stacks: { stat: 'stacks-to-freeze' }, slow: { stat: 'slow' }, duration: { stat: 'duration' } },
   freeze: { duration: { stat: 'duration' }, bossDuration: { stat: 'duration' }, immune: { stat: 'immunity' } },
   stun: { duration: { stat: 'duration' } },

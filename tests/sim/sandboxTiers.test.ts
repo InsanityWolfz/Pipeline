@@ -14,7 +14,8 @@ describe('the sandbox and the material tiers (062)', () => {
   it('carries the tier parts and every steel and glass round', () => {
     const s = createSandboxSim(1);
     for (const id of ['ley-steel', 'ley-glass', 'steel-arrowhead', 'steel-casing', 'steel-plate', ...TIERED_ROUNDS]) expect(s.inventory[id], id).toBe(KIT_COUNT);
-    expect(TIERED_ROUNDS).toHaveLength(21);
+    // 064: the seven Lightning rounds' tiered ones too.
+    expect(TIERED_ROUNDS).toHaveLength(28);
   });
 
   it('has the Smelter and the kiln unlocked, and every tier row known', () => {

@@ -48,6 +48,7 @@ const EXPECTED: Readonly<Record<string, string>> = {
   'prism-lens': 'Split: added to Ley rounds · 2 ley crystal per 4',
   'cluster-die': 'Cluster: added to Bomb rounds · 1 ley-iron per 4',
   'fire-rune': 'Fire: added to any round · 1 cinderite per 4',
+  'lightning-rune': 'Lightning: added to any round · 1 stormglass per 4',
 };
 
 describe('the expected text (039’s table, line for line)', () => {

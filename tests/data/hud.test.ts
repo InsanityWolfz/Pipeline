@@ -56,20 +56,24 @@ describe('inventory panel groups (031)', () => {
       'steel-casing',
       'steel-plate',
     ]);
-    // 039: the six Frost rounds of every family. 060: the seven Fire rounds. 062: each also at its tier, in Ammo too.
+    // 039: the six Frost rounds of every family. 060: the seven Fire rounds; 064: the seven Lightning. 062: each also at its tier, in Ammo too.
     expect(byGroup('ammo').filter((id) => roundTier(id) === 'stone')).toEqual([
       'arrow',
       'arrow+fire',
       'arrow+frost',
+      'arrow+lightning',
       'bomb',
       'bomb+cluster',
       'bomb+fire',
       'bomb+fire+cluster',
       'bomb+frost',
       'bomb+frost+cluster',
+      'bomb+lightning',
+      'bomb+lightning+cluster',
       'landmine',
       'landmine+fire',
       'landmine+frost',
+      'landmine+lightning',
       'ley-bolt',
       'ley-bolt+fire',
       'ley-bolt+fire+homing',
@@ -78,6 +82,9 @@ describe('inventory panel groups (031)', () => {
       'ley-bolt+frost+homing',
       'ley-bolt+frost+split',
       'ley-bolt+homing',
+      'ley-bolt+lightning',
+      'ley-bolt+lightning+homing',
+      'ley-bolt+lightning+split',
       'ley-bolt+split',
     ]);
     expect(byGroup('ammo').filter((id) => roundTier(id) !== 'stone')).toEqual(ROUNDS.filter((id) => roundTier(id) !== 'stone').sort());

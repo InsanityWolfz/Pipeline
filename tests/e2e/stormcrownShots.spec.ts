@@ -4,6 +4,8 @@ import { STORMCROWN } from '../../src/data/stormcrown';
 import { polar } from '../../src/data/worldShape';
 import { boot, cameraSettled } from './helpers';
 import { clickRow, flowIs } from './flowPage';
+import { SPAWN_GROUP } from '../../src/sim/sandbox';
+import { bootSandbox, hidePanel, openPanel, setRound } from './sandboxPage';
 
 // Review screenshots for 064 (REVIEW_SHOTS=1, into docs/review/064): the Stormcrown from the top of a ramp and the Rod
 // Field charged. Later slices add the lightning arc, the Conductor and the five-entrance intake.
@@ -86,5 +88,44 @@ test.describe('review screenshots (064)', () => {
     expect(charged).toBeGreaterThanOrEqual(1);
     await page.evaluate(() => window.__GAME__?.step(3));
     await page.screenshot({ path: `${SHOTS}/02-rod-field-charged.png` });
+  });
+
+  test('a lightning arc across a sandbox pack', async ({ page }) => {
+    test.setTimeout(120_000);
+    await bootSandbox(page);
+    await openPanel(page);
+    await setRound(page, 0, 'arrow+lightning');
+    await page.evaluate(() => {
+      const g = window.__GAME__;
+      if (!g) throw new Error('no game');
+      const n = g.getState().loadout?.length ?? 0;
+      for (let i = 1; i < n; i++) g.step(1, { sandbox: { kind: 'loadout', entrance: i, round: null } });
+      g.step(1, { sandbox: { kind: 'god', on: true } });
+      // Face east, so the pack stands beside the player, clear of the HUD.
+      g.step(4, { moveX: 1, aimX: g.getState().player.x + 200, aimY: g.getState().player.y });
+      g.step(1, { sandbox: { kind: 'spawn', enemyId: 'husk', ring: 3, champion: false, count: 5 } });
+    });
+    await hidePanel(page);
+    // Shoot the nearest until a hit arcs two on, then hold the bolts for the shot.
+    const arcs = await page.evaluate((group) => {
+      const g = window.__GAME__;
+      if (!g) throw new Error('no game');
+      for (let t = 0; t < 600; t++) {
+        const s = g.getState();
+        const p = s.player;
+        const pack = s.enemies.filter((e) => e.group === group);
+        const near = pack.reduce((a, b) => (Math.hypot(b.x - p.x, b.y - p.y) < Math.hypot(a.x - p.x, a.y - p.y) ? b : a), pack[0] ?? { x: p.x + 100, y: p.y });
+        const after = g.step(1, { fire: t % 2 === 0, aimX: near.x, aimY: near.y - 10 });
+        if (after.events.arcs.length >= 2) {
+          g.tweenSpeed(0.02);
+          return after.events.arcs.length;
+        }
+      }
+      return 0;
+    }, SPAWN_GROUP);
+    expect(arcs).toBeGreaterThanOrEqual(1);
+    await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().lightningArcs ?? 0)).toBeGreaterThan(0);
+    await page.screenshot({ path: `${SHOTS}/03-lightning-arc.png` });
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
   });
 });

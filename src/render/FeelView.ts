@@ -136,7 +136,8 @@ export class FeelView {
         if (!h.melee) s.play(SOUNDS.hit);
         s.play(SOUNDS.enemyHurt, SOUND_LEVELS.under);
         // 060: a fire hit throws rising sparks, as a cold one throws frost.
-        j.burst(h.damageType === 'cold' ? 'hitCold' : h.damageType === 'fire' ? 'hitFire' : 'hitPhysical', h.x, h.y);
+        // 064: a lightning hit spits pale cyan sparks.
+        j.burst(h.damageType === 'cold' ? 'hitCold' : h.damageType === 'fire' ? 'hitFire' : h.damageType === 'lightning' ? 'hitLightning' : 'hitPhysical', h.x, h.y);
         j.damageNumber(h.damage, h.x, h.y, false);
         this.freeze(h.id, HIT_STOP_MS);
       } else {

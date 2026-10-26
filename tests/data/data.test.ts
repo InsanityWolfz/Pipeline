@@ -348,8 +348,8 @@ describe('build bar categories (026)', () => {
       // 033: the splitter, after the conduit.
       ['conduit', 'splitter', 'underground-entrance', 'underground-exit', 'hopper', 'crate'],
       // 029: each stage in its base ammo's group, after the chain that makes the ammo.
-      // 060: the Fire rune beside the frost rune (its tag's first family is arrows).
-      ['cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'fire-rune'],
+      // 060: the Fire rune beside the frost rune (its tag's first family is arrows); 064: the Lightning rune after it.
+      ['cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'fire-rune', 'lightning-rune'],
       ['shaper', 'fuse-maker', 'packer', 'cluster-die'],
       ['grinder', 'focuser', 'ley-guide', 'prism-lens'],
       // 038: the landmine chain.

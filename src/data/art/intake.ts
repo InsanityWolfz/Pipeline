@@ -101,6 +101,14 @@ const STONE_GAUGE_COLORS: Readonly<Record<string, string>> = {
   'ley-bolt+fire+homing': 'flame-dark',
   'ley-bolt+fire+split': 'flame-dark',
   'landmine+fire': 'flame-dark',
+  // 064: Lightning rounds of every family glow storm violet.
+  'arrow+lightning': 'storm-glow',
+  'bomb+lightning': 'storm-glow',
+  'bomb+lightning+cluster': 'storm-glow',
+  'ley-bolt+lightning': 'storm-glow',
+  'ley-bolt+lightning+homing': 'storm-glow',
+  'ley-bolt+lightning+split': 'storm-glow',
+  'landmine+lightning': 'storm-glow',
 };
 
 /** The colour each entrance's gauge lights in, by the ammo it holds (024); 062: a tiered round lights as its stone round does. */

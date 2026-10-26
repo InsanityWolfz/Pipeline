@@ -14,8 +14,8 @@ import { createStormEvents, type StormEvents } from './stormEvents';
 // between ticks and land in the list of the tick before.
 
 export type HitEvent =
-  /** `melee` marks a punch's hit (023); `burning` a burning arrow's (054: through a Pool, for its flash); `burn` a burn's beat (060); `part` a Forgewright's bellows (060). */
-  | { target: 'enemy'; id: number; x: number; y: number; damage: number; damageType: DamageType; melee?: true; burning?: true; burn?: true; part?: number }
+  /** `melee` marks a punch's hit (023); `burning` a burning arrow's (054: through a Pool, for its flash); `burn` a burn's beat (060); `part` a Forgewright's bellows (060); `arc` a lightning arc's (064). */
+  | { target: 'enemy'; id: number; x: number; y: number; damage: number; damageType: DamageType; melee?: true; burning?: true; burn?: true; part?: number; arc?: true }
   | { target: 'player'; x: number; y: number; damage: number };
 
 export interface DeathEvent {

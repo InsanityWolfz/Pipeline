@@ -22,6 +22,13 @@ export const STORMCROWN_SPRITES = {
   rod: { idle: 'node-storm-rod-idle', warning: 'node-storm-rod-warning', strike: 'node-storm-rod-strike' },
 } as const;
 
+/**
+ * A lightning arc (064), drawn live by render for each arc event: a jagged bolt from the one enemy's middle to the
+ * next's, `segments` straight pieces, each joint knocked up to `jitter` px off the line (fresh every `flickerMs`), in a
+ * wide `glow` stroke under a thin bright `core`; it holds for `ms` then fades. `lift`: px above the feet it runs at.
+ */
+export const LIGHTNING_LOOK = { ms: 220, flickerMs: 50, segments: 7, jitter: 7, width: 3.2, core: 1.2, color: 'cyan-glow', glow: 'storm-glow', coreColor: 'snow', lift: 18 } as const;
+
 /** How a storm rod reads (064): its strike frame shows over the first `strikeTicks` of its charge; the warning flickers every `flickerMs`. */
 export const STORM_ROD_LOOK = { strikeTicks: 14 } as const;
 

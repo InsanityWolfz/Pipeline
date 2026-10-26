@@ -28,6 +28,8 @@ export function playStormcrown(ev: SimEvents, j: JuiceView, s: SoundView, v: Vie
     s.play(SOUNDS.rodStrike);
     j.shake('small');
   }
+  // A lightning arc leaping between enemies: its crackle, once a frame however many leapt.
+  if (ev.arcs.length > 0) s.play(SOUNDS.arcCrackle);
   const fell = ev.gates.some((g) => g.gate === 'stormcrown');
   if (!fell) return false;
   s.play(SOUNDS.barrierCollapse);

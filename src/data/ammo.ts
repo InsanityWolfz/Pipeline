@@ -10,7 +10,7 @@ import { TIER_ARMED, TIER_PROJECTILES } from './tierAssets';
  * Damage types from docs/design.md. Nothing deals fire in Milestone 1 (029: bombs are physical, with no burn), but it
  * stays in the type because design.md's damage types include it and Milestone 2's fire rune brings it back as a tag.
  */
-export type DamageType = 'physical' | 'fire' | 'cold';
+export type DamageType = 'physical' | 'fire' | 'cold' | 'lightning';
 
 interface AmmoBase {
   id: string;

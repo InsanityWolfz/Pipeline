@@ -223,6 +223,8 @@ export interface UiState {
   emberworks: EmberworksShown;
   /** 064: the Stormcrown's barrier. */
   stormcrown: StormcrownShown;
+  /** 064: lightning arcs on screen. */
+  lightningArcs: number;
   /** 055: each boss arena's door in the room on screen, sealed or open, and 043's seal over it while its boss fights. */
   arenaDoors: ArenaDoorShown[];
   /** 036: the bench's gear panel while open (its cells, tabs, rows with ids and boxes, page and totals), else null. */

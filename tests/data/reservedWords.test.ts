@@ -49,9 +49,10 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = {
   Cold: ['Coldlens'],
   // The Burrower is the enemy whose trait Burrowed is.
   Burrowed: ['Burrower'],
-  // The stages that add Cluster and Fire (060), and the machine that packs Mine rounds.
+  // The stages that add Cluster, Fire (060) and Lightning (064), and the machine that packs Mine rounds.
   Cluster: ['Cluster die'],
   Fire: ['Fire rune'],
+  Lightning: ['Lightning rune'],
   Mine: ['Mine packer'],
   // The ammo's own parts and chain.
   Arrow: ['Arrow'],

@@ -11,11 +11,12 @@ import { roundBase } from '../../src/data/tags';
 describe('the crafting tabs (047)', () => {
   it('are Arrows, Bombs, Ley and Landmines, each its whole chain then its tagged rounds', () => {
     expect(CRAFT_TABS.map((t) => [t.label, t.recipes.slice(0, t.tierFrom)])).toEqual([
-      // 060: the Fire rune's rows beside the frost rune's (shown once cinderite is carried).
-      ['Arrows', ['shaft', 'arrowhead', 'rope', 'arrow', 'frost-rune-arrow', 'fire-rune-arrow']],
-      ['Bombs', ['casing', 'fuse', 'ley-dust', 'bomb', 'frost-rune-bomb', 'fire-rune-bomb', 'cluster-die-bomb']],
-      ['Ley', ['ley-dust', 'ley-bolt', 'frost-rune-ley-bolt', 'fire-rune-ley-bolt', 'ley-guide-ley-bolt', 'prism-lens-ley-bolt']],
-      ['Landmines', ['iron-plate', 'fuse', 'ley-dust', 'landmine', 'frost-rune-landmine', 'fire-rune-landmine']],
+      // 060: the Fire rune's rows beside the frost rune's (shown once cinderite is carried); 064: the Lightning rune's
+      // after them (shown once stormglass is carried).
+      ['Arrows', ['shaft', 'arrowhead', 'rope', 'arrow', 'frost-rune-arrow', 'fire-rune-arrow', 'lightning-rune-arrow']],
+      ['Bombs', ['casing', 'fuse', 'ley-dust', 'bomb', 'frost-rune-bomb', 'fire-rune-bomb', 'lightning-rune-bomb', 'cluster-die-bomb']],
+      ['Ley', ['ley-dust', 'ley-bolt', 'frost-rune-ley-bolt', 'fire-rune-ley-bolt', 'lightning-rune-ley-bolt', 'ley-guide-ley-bolt', 'prism-lens-ley-bolt']],
+      ['Landmines', ['iron-plate', 'fuse', 'ley-dust', 'landmine', 'frost-rune-landmine', 'fire-rune-landmine', 'lightning-rune-landmine']],
     ]);
   });
 
@@ -26,7 +27,8 @@ describe('the crafting tabs (047)', () => {
       ['Ley', ['ley-glass', 'glass-bolt']],
       ['Landmines', ['ley-steel', 'steel-plate', 'steel-landmine']],
     ]);
-    expect(CRAFT_TAB_ROWS).toBe(7);
+    // 064: the Bombs tab's eight.
+    expect(CRAFT_TAB_ROWS).toBe(8);
     expect(CRAFT_TAB_COLUMNS).toBe(2);
   });
 

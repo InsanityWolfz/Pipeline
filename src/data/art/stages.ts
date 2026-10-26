@@ -7,6 +7,7 @@ import type { NodeLooks } from './nodes';
 import { shadow } from './terrain';
 import { ellipse, flat, line, path, solid, trim, type Shape, type ShapeStyle, type VectorSprite } from './types';
 import { BURN_FLAMES_VECTOR, FIRE_HEAD, flameBadge } from './fire';
+import { boltBadge, LIGHTNING_HEAD } from './lightning';
 
 // 029's art, in the 020 style: the rimestone and the rime outcrop it's chipped
 // from, each tagged round's icon (its base's icon with its tag's badge), the Shard
@@ -95,6 +96,8 @@ const TAG_ART: Readonly<Record<string, { badge: readonly Shape[]; pairedBadge?: 
   },
   // 060: a flame, and a head of glowing ember.
   fire: { badge: flameBadge(4.2), pairedBadge: flameBadge(-4.2), head: FIRE_HEAD },
+  // 064: a zigzag bolt, and a crackling cyan head.
+  lightning: { badge: boltBadge(4.2), pairedBadge: boltBadge(-4.2), head: LIGHTNING_HEAD },
   // A bending arrow.
   homing: {
     badge: [
