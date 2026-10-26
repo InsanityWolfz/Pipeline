@@ -48,6 +48,7 @@ import { rampOverpressure, stepPools } from './keystones';
 import { noteCarried } from './knownRounds';
 import { noteBag, sortBag } from './bag';
 import { stepSandbox } from './sandbox';
+import { stepReturnWake } from './returnStones';
 
 /** Each room's bodies, built once per tick on first use. */
 function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
@@ -89,6 +90,8 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepLink(state);
   // Enemies act after the player moves, so a swipe lands on where the player stands now.
   stepDiscovery(state);
+  // 072: a return stone wakes as the player comes by it.
+  stepReturnWake(state);
   stepFog(state);
   stepPopulation(state);
   stepCacheRearm(state);

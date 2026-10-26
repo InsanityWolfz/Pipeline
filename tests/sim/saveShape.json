@@ -1,5 +1,5 @@
 {
-  "version": 21,
+  "version": 23,
   "shape": [
     "state.activatePulse: number",
     "state.arrows: array",
@@ -215,6 +215,7 @@
     "state.events.refills: array",
     "state.events.respecs: array",
     "state.events.restores: array",
+    "state.events.returnWakes: array",
     "state.events.rodBreaks: array",
     "state.events.rodRegrows: array",
     "state.events.rodStrikes: array",
@@ -414,6 +415,8 @@
     "state.prototypeComplete: boolean",
     "state.research: object",
     "state.research{}: string",
+    "state.returnStones: array",
+    "state.returnStones[]: string",
     "state.rng: array",
     "state.rng[]: number",
     "state.roomId: string",

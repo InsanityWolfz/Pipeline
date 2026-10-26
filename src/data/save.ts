@@ -23,9 +23,10 @@
  * trios, the storm sentinel's strike knockback and the player's slow). 19: 063 merged onto main (its blueprints and
  * blueprint events joined with 062–065's shape). 20: 067 (the foundry after the first boss: the ruin field's
  * cleared flag; the refill goal's and the fast travel goal's flags gone; the goal chain's flags shift). 21: 068's (the
- * Conductor's blink-in window). All with no migration.
+ * Conductor's blink-in window). 22 is 069's. 23: 072's (the woken return stones and their wake event). All with no
+ * migration.
  */
-export const SAVE_VERSION = 21;
+export const SAVE_VERSION = 23;
 
 /** The envelope's and the export file's format tags. */
 export const SAVE_FORMAT = 'pipeline-save';

@@ -1,6 +1,7 @@
 import { ANVIL_HALL } from '../data/emberworksSites';
 import { CROWN_SPIRE } from '../data/stormcrownSites';
 import { HOLLOWS } from '../data/hollows';
+import { RETURN_STONES } from '../data/returnStones';
 import { TILE, type Room } from '../data/rooms';
 import { SANDBOX, SANDBOX_PENS, WARDEN_ARENA } from '../data/sandbox';
 import type { TileRect } from '../data/tiles';
@@ -10,7 +11,7 @@ import type { TileRect } from '../data/tiles';
 // south, the open middle with the spawn and the bench, the Warden's walled arena and the
 // Sunken Forum (its own cliffs, colonnade and columns, at the Hollows' tiles) along the
 // south, (060) the Anvil Hall east of the middle at the Emberworks' tiles, and (064) the Crown Spire north of it at the
-// Stormcrown's. No doors: the sandbox is its own world.
+// Stormcrown's, each with its return stone outside its door (072). No doors: the sandbox is its own world.
 
 type Grid = string[][];
 
@@ -48,5 +49,7 @@ export function buildSandboxRoom(): Room {
     rows: grid.map((r) => r.join('')),
     spawn: SANDBOX.spawn,
     props: [{ propId: 'bench', tx: SANDBOX.bench.tx, ty: SANDBOX.bench.ty }],
+    // 072: the return stones outside its arenas' doors, at the overworld's tiles.
+    returnStones: RETURN_STONES.map((s) => ({ id: s.id, tx: s.tx, ty: s.ty })),
   };
 }

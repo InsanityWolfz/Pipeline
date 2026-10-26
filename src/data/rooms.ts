@@ -83,6 +83,8 @@ export interface Room {
   gateTiles?: readonly { tx: number; ty: number; gate: GateId }[];
   /** Boss altars (034): solid stones, each by its arena, summoning its boss again after the first kill. */
   altars?: readonly { id: string; tx: number; ty: number; boss: string }[];
+  /** 072: the return waystones outside the boss arenas' doors, by id (src/data/returnStones.ts): solid. */
+  returnStones?: readonly { id: string; tx: number; ty: number }[];
   /** Generated ground features render draws (017): ponds and paths, in tiles. */
   terrain?: Terrain;
   /** Dressing (014): looks only, never collision (block props stand on B tiles, which are solid already). */
