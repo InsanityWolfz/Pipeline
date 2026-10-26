@@ -3,7 +3,7 @@ import { pauseRows } from '../../src/render/craftMenuLayout';
 import { clickRow, clickView, flowIs } from './flowPage';
 import { frames } from './hollowsSandbox';
 import { bootSandbox } from './sandboxPage';
-import { toggleWarnings } from './threatsPage';
+import { sniperAt, stepUntilThreat, toggleWarnings } from './threatsPage';
 
 // Review screenshots for 071 (REVIEW_SHOTS=1, into docs/review/071), in the sandbox's open middle: a Sniper's arrow
 // at the top edge while it paints the player from off screen; two Snipers side by side off screen, their arrows merged
@@ -14,23 +14,9 @@ const SHOTS = 'docs/review/071';
 
 /** Snipers at `dx`, `dy` px from the player, stepped until each is an off-screen threat, then frames drawn and the pulse held. */
 async function windUp(page: Page, at: readonly (readonly [number, number])[], arrows: number): Promise<void> {
-  const ok = await page.evaluate((list) => {
-    const g = window.__GAME__;
-    if (!g) throw new Error('no game');
-    const p = g.getState().player;
-    const ids = list.map(([x, y]) => {
-      const s = g.spawnEnemy('sniper', p.x + x, p.y + y);
-      return s.enemies[s.enemies.length - 1]?.id ?? -1;
-    });
-    for (let i = 0; i < 600; i++) {
-      const listed = g.getState().threats.map((t) => t.id);
-      if (ids.every((id) => listed.includes(id))) return true;
-      g.step(1);
-      g.setPlayerHealth(100);
-    }
-    return false;
-  }, at);
-  expect(ok, 'every Sniper winding up').toBe(true);
+  const ids: number[] = [];
+  for (const [dx, dy] of at) ids.push(await sniperAt(page, dx, dy));
+  for (const id of ids) await stepUntilThreat(page, id);
   await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().threats.length)).toBe(arrows);
   // Held at the pulse's top: the counter tween runs on, so wait for it near the max, then stop the tweens.
   await expect.poll(() => page.evaluate(() => (window.__GAME__?.ui().threats[0]?.alpha ?? 0) > 0.97), { timeout: 5000 }).toBe(true);
@@ -74,20 +60,7 @@ test.describe('review screenshots (071)', () => {
     await page.keyboard.press('Escape');
     await flowIs(page, 'play');
     await page.evaluate(() => window.__GAME__?.step(0));
-    const ok = await page.evaluate(() => {
-      const g = window.__GAME__;
-      if (!g) throw new Error('no game');
-      const p = g.getState().player;
-      const s = g.spawnEnemy('sniper', p.x + 180, p.y - 240);
-      const id = s.enemies[s.enemies.length - 1]?.id ?? -1;
-      for (let i = 0; i < 600; i++) {
-        if (g.getState().threats.some((t) => t.id === id)) return true;
-        g.step(1);
-        g.setPlayerHealth(100);
-      }
-      return false;
-    });
-    expect(ok).toBe(true);
+    await stepUntilThreat(page, await sniperAt(page, 180, -240));
     const tick = (await page.evaluate(() => window.__GAME__?.getState().tick)) ?? -1;
     await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().drawnTick)).toBe(tick);
     expect(await page.evaluate(() => window.__GAME__?.ui().threats)).toEqual([]);

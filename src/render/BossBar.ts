@@ -7,7 +7,7 @@ import { addVector } from './vector/textures';
 import { VIEW_WIDTH } from '../data/config';
 import { enemyDef } from '../data/enemies';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
-import { engagedBoss } from './bossLook';
+import { bossBarBottom, engagedBoss } from './bossLook';
 import { defOf } from '../sim/champions';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
@@ -68,8 +68,12 @@ export class BossBar {
     this.name.set(def.name);
     const top = B.top - B.nameGap - B.border * 2 - this.name.lineHeight;
     this.name.moveTo(Math.round((VIEW_WIDTH - this.name.width) / 2), top);
-    const bottom = B.top + B.h + B.border * 2 + (heat !== null ? FORGE_LOOK.heat.gap + FORGE_LOOK.heat.h + B.border : 0);
-    this.box = { x: x - B.border * 2, y: top, w: B.w + B.border * 4, h: bottom - top };
+    // Its frame, the name over it, the heat gauge under it, and the shield to its left while it shows.
+    const I = ENEMY_FX.immuneBar.icon;
+    const left = shielded ? x - B.border * 2 - I.gap - I.w : x - B.border * 2;
+    const iconBottom = shielded ? Math.round(B.top + B.h / 2 - I.h / 2) + I.h : 0;
+    const bottom = Math.max(bossBarBottom(heat !== null), iconBottom);
+    this.box = { x: left, y: top, w: x + B.w + B.border * 2 - left, h: bottom - top };
     this.setVisible(true);
   }
 

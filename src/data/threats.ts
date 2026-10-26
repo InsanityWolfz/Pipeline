@@ -25,8 +25,8 @@ export const THREAT_WINDUPS: Readonly<Partial<Record<EnemyDef['kind'], readonly 
 
 /**
  * The edge arrow, world px (a world px is a view px): a filled triangle `length` from tip to base and `width` across,
- * in the shared enemy red with an ink outline `outline` px wide, its tip `edgeInset` in from the view's edge (or a HUD
- * box's). Arrows whose tips are closer than `mergeGap` merge into one. It pulses between the alphas once per `pulseMs`
+ * in the shared enemy red with an ink outline `outline` px wide, its tip `edgeInset` plus half its width in from the
+ * view's edge (or out from a HUD box's), so no corner pokes past either. Arrows whose tips are closer than `mergeGap` merge into one. It pulses between the alphas once per `pulseMs`
  * through the wind-up, and fades out over `fadeMs` once the attack lands or is cancelled.
  */
 export const THREAT_ARROW = {

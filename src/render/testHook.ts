@@ -38,6 +38,7 @@ import type { EnemyBarShown } from './enemyBar';
 import type { Legibility, LegibilityUi } from './Legibility';
 import type { SandboxPanelState } from './SandboxPanel';
 import type { ThreatShown } from './ThreatView';
+import type { ScreenBox } from './bottomHud';
 
 export interface GameTestHook {
   /** The live game's summary; null on the title (042). */
@@ -183,6 +184,8 @@ export interface UiState {
   slowSwirl: boolean;
   /** 071: the off-screen threat arrows as drawn: each one's enemies, tip (world px), angle and alpha (fade × pulse). */
   threats: ThreatShown[];
+  /** 071: the HUD boxes (view px) the threat arrows keep clear of this frame: the bottom bars, the minimap, the objective band, the boss bar. */
+  threatClear: ScreenBox[];
   /** The bottom HUD as drawn (025), view px: the hotbar row (and whether it shows) and the tube slot with each unit's icon frame and text. */
   hud: BottomHudState | null;
   /** The crafting menu as drawn (026): each recipe row's item names and counts with their boxes, and the group headers. */

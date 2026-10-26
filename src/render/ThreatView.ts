@@ -7,9 +7,12 @@ import { offscreenThreats } from '../sim/threats';
 import type { ScreenBox } from './bottomHud';
 import { colorOf } from './color';
 import { Pulse } from './pulse';
-import { placeThreats, type PlacedThreat, type ThreatMark } from './threatPlace';
+import { arrowPoints, placeThreats, type PlacedThreat, type ThreatMark } from './threatPlace';
 import { boxesInView, type ViewRect } from './waypointPlace';
 import { scrollView } from './WaypointView';
+
+/** A camera view as a world rect. */
+const rectOf = (v: { x: number; y: number; width: number; height: number }): ViewRect => ({ x0: v.x, y0: v.y, x1: v.x + v.width, y1: v.y + v.height });
 
 /** The threat arrows as drawn (071), for `ui().threats`: each arrow's enemies, tip (world px), angle and alpha as drawn. */
 export type ThreatShown = PlacedThreat;
@@ -24,9 +27,11 @@ export class ThreatView {
   private readonly pulse: Pulse;
   /** Each threat showing, by enemy id: its enemy's last feet and its fade (1 while live, to 0 over `fadeMs` once gone). */
   private readonly marks = new Map<number, ThreatMark>();
-  /** This frame's player and HUD boxes (view px), for the follow update's placing. */
-  private frame: { from: { x: number; y: number }; hud: readonly ScreenBox[] } = { from: { x: 0, y: 0 }, hud: [] };
+  /** This frame's player, for the follow update's placing. */
+  private from = { x: 0, y: 0 };
   shown: ThreatShown[] = [];
+  /** The HUD boxes (view px) this frame's arrows keep clear of (also for `ui().threatClear`). */
+  hud: readonly ScreenBox[] = [];
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -42,7 +47,10 @@ export class ThreatView {
    */
   update(sim: SimState, enemies: readonly EnemyState[], shown: string, hud: readonly ScreenBox[], on: boolean, deltaMs: number): void {
     if (!on) this.marks.clear();
-    const live = on && shown === sim.roomId ? offscreenThreats(sim, enemies) : [];
+    // The sim decides against the view the camera really shows (its easing, a boss fight's lift), not its settled one.
+    const view = scrollView(this.scene.cameras.main);
+    const rect = rectOf(view);
+    const live = on && shown === sim.roomId ? offscreenThreats(sim, enemies, rect) : [];
     const now = new Set<number>();
     for (const t of live) {
       now.add(t.id);
@@ -53,8 +61,9 @@ export class ThreatView {
       m.alpha -= deltaMs / THREAT_ARROW.fadeMs;
       if (m.alpha <= 0) this.marks.delete(id);
     }
-    this.frame = { from: { x: sim.player.x, y: sim.player.y }, hud };
-    this.place(scrollView(this.scene.cameras.main));
+    this.from = { x: sim.player.x, y: sim.player.y };
+    this.hud = hud;
+    this.place(view);
   }
 
   /** The arrows against the camera's view (world px). */
@@ -65,19 +74,13 @@ export class ThreatView {
       this.shown = [];
       return;
     }
-    const rect: ViewRect = { x0: view.x, y0: view.y, x1: view.x + view.width, y1: view.y + view.height };
-    const placed = placeThreats(rect, this.frame.from, [...this.marks.values()], boxesInView(view, this.frame.hud));
+    const placed = placeThreats(rectOf(view), this.from, [...this.marks.values()], boxesInView(view, this.hud));
     const A = THREAT_ARROW;
     this.shown = placed.map((p) => ({ ...p, alpha: p.alpha * this.pulse.value }));
     for (const p of this.shown) {
-      const ux = Math.cos(p.angle);
-      const uy = Math.sin(p.angle);
-      const bx = p.x - ux * A.length;
-      const by = p.y - uy * A.length;
-      const px = -uy * (A.width / 2);
-      const py = ux * (A.width / 2);
-      g.fillStyle(colorOf(A.color), p.alpha).fillTriangle(p.x, p.y, bx + px, by + py, bx - px, by - py);
-      g.lineStyle(A.outline, colorOf(A.outlineColor), p.alpha).strokeTriangle(p.x, p.y, bx + px, by + py, bx - px, by - py);
+      const [t, l, r] = arrowPoints(p);
+      g.fillStyle(colorOf(A.color), p.alpha).fillTriangle(t.x, t.y, l.x, l.y, r.x, r.y);
+      g.lineStyle(A.outline, colorOf(A.outlineColor), p.alpha).strokeTriangle(t.x, t.y, l.x, l.y, r.x, r.y);
     }
   }
 }

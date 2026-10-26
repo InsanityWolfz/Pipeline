@@ -44,6 +44,7 @@ export function gameUi(g: GameScene): GameUiState {
     // 065: the slow's wind curls round the player.
     slowSwirl: g.playerView?.swirling ?? false,
     threats: g.threatView?.shown ?? [],
+    threatClear: [...(g.threatView?.hud ?? [])],
     hud: g.hud?.bottom ?? null,
     ...(g.hud?.panels ?? NO_HUD_PANELS),
     craftMenu: g.menu?.state ?? null,

@@ -65,6 +65,19 @@ describe('off-screen threats', () => {
     expect(ids(s)).toEqual([outside.id, east.id]);
   });
 
+  it("takes the camera's real view when render passes it (a boss fight's lift): a Bulwark lobbing inside it is no threat", () => {
+    const s = arena();
+    const v = viewRect(s);
+    // The camera lifted 96 px (BOSS_LOOK.max) to show a boss north of the player under its bar.
+    const lifted = { x0: v.x0, y0: v.y0 - 96, x1: v.x1, y1: v.y1 - 96 };
+    const boss = place(s, 'bulwark', 0, 0, 'lob');
+    boss.y = v.y0 - 40;
+    const south = place(s, 'sniper', 0, 0);
+    south.y = v.y1 - 40;
+    expect(ids(s)).toEqual([boss.id]);
+    expect(offscreenThreats(s, s.enemies, lifted).map((t) => t.id)).toEqual([south.id]);
+  });
+
   it('skips enemies in another room, and every one while the player is down', () => {
     const s = arena();
     place(s, 'sniper', 0, OFF_NORTH, 'windup', FOUNDRY_ROOM);
