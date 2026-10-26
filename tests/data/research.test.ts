@@ -129,7 +129,7 @@ describe('research nodes', () => {
     const tiles = RESEARCH_NODES.flatMap((n) =>
       n.anchor.kind === 'wall' ? [n.anchor] : n.anchor.kind === 'wing' ? Array.from({ length: n.anchor.w }, (_, i) => ({ tx: (n.anchor as { tx: number }).tx + i, ty: (n.anchor as { ty: number }).ty })) : [],
     );
-    expect(tiles.length).toBe(3);
+    expect(tiles.length).toBe(4);
     for (const t of tiles) {
       expect(at(t.tx, t.ty), `${t.tx},${t.ty}`).toBe(TILE.wall);
       expect(at(t.tx, t.ty + 1), `below ${t.tx},${t.ty}`).toBe(TILE.floor);

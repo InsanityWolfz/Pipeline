@@ -10,9 +10,9 @@ export function clickAmount(mods: { shift: boolean; ctrl: boolean }): HopperAmou
 }
 
 /** The commands that menus send: the hopper, pylon, stash and bench menus' choices. */
-export type MenuCommand = Pick<Command, 'area' | 'deposit' | 'withdraw' | 'sortInventory' | 'assignSlot' | 'pylon' | 'travel' | 'takeStash' | 'stashPut' | 'identify' | 'equip' | 'restore' | 'summon' | 'takeTalent' | 'respec' | 'sandbox'>;
+export type MenuCommand = Pick<Command, 'area' | 'deleteBlueprint' | 'deposit' | 'withdraw' | 'sortInventory' | 'assignSlot' | 'pylon' | 'travel' | 'takeStash' | 'stashPut' | 'identify' | 'equip' | 'restore' | 'summon' | 'takeTalent' | 'respec' | 'sandbox'>;
 
-const NONE: MenuCommand = { area: null, deposit: null, withdraw: null, sortInventory: false, assignSlot: null, pylon: null, travel: null, takeStash: null, stashPut: null, identify: false, equip: null, restore: null, summon: null, takeTalent: null, respec: false, sandbox: null };
+const NONE: MenuCommand = { area: null, deleteBlueprint: null, deposit: null, withdraw: null, sortInventory: false, assignSlot: null, pylon: null, travel: null, takeStash: null, stashPut: null, identify: false, equip: null, restore: null, summon: null, takeTalent: null, respec: false, sandbox: null };
 
 // Choices clicked in the world's menus, held until the next tick takes them.
 export class MenuRequests {
@@ -31,6 +31,11 @@ export class MenuRequests {
   /** The area tool's release menu (063): pick up, save, or both, for a box (a save into `slot`, overwriting it). */
   area(box: AreaBox, action: AreaAction, slot?: number): void {
     this.pending.area = { box, action, ...(slot !== undefined ? { slot } : {}) };
+  }
+
+  /** The blueprint list's confirmed delete (063). */
+  deleteBlueprint(slot: number): void {
+    this.pending.deleteBlueprint = slot;
   }
 
   /** The grid's Sort button (047). */

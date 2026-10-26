@@ -21,7 +21,8 @@ export type ResearchAnchor =
 
 /**
  * What restoring a node does: opens the capped entrance it's restored at; raises every entrance's cap to
- * `ENTRANCE_CAPS[tier]`; scales every machine's craft time by `MACHINE_SPEED_MULT`; adds a piece to the build bar.
+ * `ENTRANCE_CAPS[tier]`; scales every machine's craft time by `MACHINE_SPEED_MULT`; adds a piece to the build bar;
+ * unlocks saving and placing blueprints (063).
  * The sealed wing (`wing`) can't be restored in this spec: the Bulwark's first kill unseals it (034).
  */
 export type ResearchEffect =
@@ -29,6 +30,8 @@ export type ResearchEffect =
   | { kind: 'reservoir'; tier: number }
   | { kind: 'machineSpeed' }
   | { kind: 'unlockPiece'; piece: string }
+  /** 063: saving and placing blueprints. */
+  | { kind: 'blueprints' }
   | { kind: 'wing' };
 
 export interface ResearchNode {
@@ -110,6 +113,17 @@ export const RESEARCH_NODES: readonly ResearchNode[] = [
     requires: [],
     reveal: 'schematic-machine-speed',
     effect: { kind: 'machineSpeed' },
+  },
+  {
+    // 063: on the north wall's east side, between the east banner (16) and brazier (20), clear of the guided ley line.
+    id: 'blueprint-table',
+    name: 'Blueprint table',
+    description: 'Save a dragged area as a blueprint and place it again.',
+    anchor: { kind: 'wall', tx: 18, ty: WALL_Y, where: 'north wall, east' },
+    cost: { 'ancient-gear': 4, 'aqueduct-valve': 2 },
+    requires: [],
+    reveal: 'start',
+    effect: { kind: 'blueprints' },
   },
   {
     id: 'sealed-wing',

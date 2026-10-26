@@ -10,16 +10,35 @@ import type { UiState } from '../../src/render/testHook';
 
 const ui = (page: Page): Promise<UiState | undefined> => page.evaluate(() => window.__GAME__?.ui());
 
-/** Into the foundry from ?playtest, standing at STAND with the camera settled, in build mode. */
-async function buildAtStand(page: Page): Promise<void> {
-  await boot(page, '?playtest');
-  const at = centre(STAND.tx, STAND.ty);
+/** Walks to a world point in the foundry from ?playtest (in from the overworld first if need be). */
+async function walkTo(page: Page, x: number, y: number): Promise<void> {
   await page.evaluate(([x, y]) => {
-    window.__GAME__?.step(0);
-    window.__helpers?.toFoundry();
+    if (window.__GAME__?.step(0).room !== 'foundry') window.__helpers?.toFoundry();
     window.__helpers?.walkTo(x, y);
     window.__GAME__?.step(1);
-  }, [at.x, at.y] as const);
+  }, [x, y] as const);
+}
+
+/** Restores the Blueprint table at its diagram on the north wall: E opens its panel, E again restores (033). */
+async function restoreTable(page: Page): Promise<void> {
+  await walkTo(page, 18.5 * 32, 1.5 * 32);
+  await expect
+    .poll(async () => {
+      if ((await ui(page))?.restorePanel?.node === 'blueprint-table') return true;
+      await page.keyboard.press('e');
+      return (await ui(page))?.restorePanel?.node === 'blueprint-table';
+    })
+    .toBe(true);
+  await page.keyboard.press('e');
+  await expect.poll(async () => (await step(page, 1)).blueprints.unlocked).toBe(true);
+}
+
+/** Into the foundry from ?playtest (the Blueprint table restored first if `table`), at STAND with the camera settled, in build mode. */
+async function buildAtStand(page: Page, table = false): Promise<void> {
+  await boot(page, '?playtest');
+  if (table) await restoreTable(page);
+  const at = centre(STAND.tx, STAND.ty);
+  await walkTo(page, at.x, at.y);
   await cameraSettled(page);
   await toggleBuild(page);
   expect((await state(page)).building).toBe(true);
@@ -104,5 +123,36 @@ test('Esc backs out of the menu, then the Area tool, then build mode; a right cl
   await page.keyboard.press('Escape');
   await expect.poll(async () => (await step(page, 1)).building).toBe(false);
   expect((await state(page)).foundry.pieces.some((p) => p.tx === 6 && p.ty === 10)).toBe(true);
+  expect(errors).toEqual([]);
+});
+
+test('the restored Blueprint table adds Save rows; a save with all 8 slots full asks which to overwrite', async ({ page }) => {
+  test.setTimeout(90_000);
+  const errors = watchErrors(page);
+  await buildAtStand(page, true);
+  expect((await ui(page))?.blueprints.tools.cells.find((c) => c.tool === 'list')?.locked).toBe(false);
+  await put(page, [
+    { pieceId: 'cutter', tx: 6, ty: 10, facing: 'right' },
+    { pieceId: 'crate', tx: 7, ty: 10, facing: 'right' },
+  ]);
+  await page.keyboard.press('x');
+  await dragBox(page, [6, 10], [7, 10]);
+  await expect.poll(async () => (await ui(page))?.blueprints.menu?.map((r) => r.text)).toEqual(['Pick up', 'Save blueprint', 'Save and pick up', 'Cancel']);
+  await clickMenuRow(page, 'Save blueprint');
+  await expect.poll(async () => (await state(page)).blueprints.list.map((b) => [b.name, b.pieces.length])).toEqual([['Shafts', 2]]);
+  expect((await state(page)).foundry.pieces.filter((p) => p.ty === 10)).toHaveLength(2);
+  // Fill the other seven through the hook, then save from the menu again: it asks which to overwrite.
+  const box = { tx0: 6, ty0: 10, tx1: 7, ty1: 10 };
+  for (let i = 0; i < 7; i++) await step(page, 1, { area: { box, action: 'save' } });
+  expect((await state(page)).blueprints.list).toHaveLength(8);
+  await dragBox(page, [6, 10], [6, 10]);
+  await expect.poll(async () => (await ui(page))?.blueprints.menu?.length).toBe(4);
+  await clickMenuRow(page, 'Save and pick up');
+  await expect.poll(async () => (await ui(page))?.blueprints.menu?.map((r) => r.text)).toEqual(['Overwrite Shafts', ...[2, 3, 4, 5, 6, 7, 8].map((n) => `Overwrite Shafts ${n}`), 'Cancel']);
+  await clickMenuRow(page, 'Overwrite Shafts 3');
+  await expect.poll(async () => (await state(page)).blueprints.list.map((b) => b.pieces.length)).toEqual([2, 2, 1, 2, 2, 2, 2, 2]);
+  // Its name was its own to reuse; the cutter alone went to the stash.
+  expect((await state(page)).blueprints.list[2]?.name).toBe('Shafts 3');
+  expect((await state(page)).foundry.pieces.filter((p) => p.ty === 10).map((p) => p.pieceId)).toEqual(['crate']);
   expect(errors).toEqual([]);
 });

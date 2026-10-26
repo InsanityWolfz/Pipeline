@@ -2,6 +2,7 @@ import { FOUNDRY_ROOM } from '../data/rooms';
 import type { Command } from './input';
 import { pickUp, place } from './placement';
 import { areaPickUp } from './area';
+import { deleteBlueprint, saveBlueprint } from './blueprints';
 import type { SimState } from './state';
 
 // Build mode: toggled in the foundry. While it's on the player can still walk,
@@ -20,6 +21,9 @@ export function stepBuild(state: SimState, cmd: Command): void {
     place(state, pieceId, tx, ty, facing, { ...(inFrom ? { inFrom } : {}), ...(mirrored ? { mirrored } : {}) });
   }
   if (cmd.pickUp) pickUp(state, cmd.pickUp.tx, cmd.pickUp.ty);
-  // 063: the area tool's box.
-  if (cmd.area && cmd.area.action === 'pickUp') areaPickUp(state, cmd.area.box);
+  // 063: the area tool's box: saved first (so a save and pick-up keeps what it lifts), then picked up.
+  const area = cmd.area;
+  if (area && area.action !== 'pickUp') saveBlueprint(state, area.box, area.slot);
+  if (area && area.action !== 'save') areaPickUp(state, area.box);
+  if (cmd.deleteBlueprint !== null) deleteBlueprint(state, cmd.deleteBlueprint);
 }

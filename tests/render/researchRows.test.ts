@@ -53,7 +53,7 @@ describe('the research list', () => {
     const groups = researchRows(sim);
     expect(groups.map((g) => [g.label, g.rows.map((r) => r.id)])).toEqual([
       ['Intake', ['entrance-2', 'entrance-3', 'entrance-4', 'reservoir-1', 'reservoir-2']],
-      ['Walls', ['machine-speed']],
+      ['Walls', ['machine-speed', 'blueprint-table']],
       ['Sealed wing', ['sealed-wing']],
     ]);
     const row = (id: string) => groups.flatMap((g) => g.rows).find((r) => r.id === id);
@@ -64,6 +64,8 @@ describe('the research list', () => {
     expect(row('reservoir-2')).toMatchObject({ name: 'Lost schematic', state: 'hidden', cost: [] });
     expect(row('machine-speed')).toMatchObject({ name: 'Machine speed', state: 'restored', cost: [], where: 'north wall, west' });
     expect(row('sealed-wing')).toMatchObject({ state: 'revealed', where: 'the sealed door' });
+    // 063: the Blueprint table's row, under Walls.
+    expect(row('blueprint-table')).toMatchObject({ name: 'Blueprint table', state: 'revealed', cost: [{ itemId: 'ancient-gear', have: 1, need: 4 }, { itemId: 'aqueduct-valve', have: 0, need: 2 }], where: 'north wall, east' });
   });
 
   it('a node whose cost is carried but whose requires are not restored says what it needs', () => {

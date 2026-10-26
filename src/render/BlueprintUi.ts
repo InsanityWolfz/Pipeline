@@ -1,29 +1,33 @@
 import type { Scene } from 'phaser';
 import { BLUEPRINT_SPRITES } from '../data/blueprintAssets';
-import { AREA_MENU, BLUEPRINT_TABLE, type AreaMenuRow } from '../data/blueprints';
+import { AREA_MENU, BLUEPRINT_SLOTS, BLUEPRINT_TEXT, type AreaMenuRow } from '../data/blueprints';
 import { SOUNDS } from '../data/sounds';
 import { piecesInBox, type AreaBox } from '../sim/area';
-import { isRestored } from '../sim/research';
+import { blueprintsUnlocked } from '../sim/blueprints';
 import type { SimState } from '../sim/state';
 import { AreaView } from './AreaView';
-import type { BlueprintInput, ToolMode } from './blueprintInput';
+import { blueprintIcon } from './blueprintLayout';
+import type { BlueprintInput, ToolMode, ToolQuestion } from './blueprintInput';
 import { ChoiceMenu, type Choice } from './ChoiceMenu';
 import type { Controls } from './controls';
 import type { SoundView } from './SoundView';
 import { ToolCells, type ToolCellsShown } from './ToolCells';
-
-/** 063's build-mode UI as drawn, for `ui().blueprints`. */
-export const NO_BLUEPRINT_UI: BlueprintUiShown = { tool: 'piece', box: null, counted: [], menu: null, tools: { shown: false, cells: [], tip: null } };
 
 export interface BlueprintUiShown {
   tool: ToolMode;
   /** The area box on show (dragging, or its menu up), tiles; and the ids of the pieces it counts. */
   box: AreaBox | null;
   counted: number[];
-  /** The release menu's rows while it's up, view px. */
+  /** The menu's rows while it's up (the release menu, or a question: which slot to overwrite, or a delete), view px. */
   menu: { text: string; x: number; y: number; w: number; h: number }[] | null;
   tools: ToolCellsShown;
 }
+
+/** 063's build-mode UI as drawn, for `ui().blueprints`. */
+export const NO_BLUEPRINT_UI: BlueprintUiShown = { tool: 'piece', box: null, counted: [], menu: null, tools: { shown: false, cells: [], tip: null } };
+
+/** A menu row's meaning: a release menu row, or a slot a question names. */
+type MenuValue = AreaMenuRow | { slot: number };
 
 const ROW_ICONS: Readonly<Record<AreaMenuRow, readonly string[]>> = {
   pickUp: [BLUEPRINT_SPRITES.areaEmblem],
@@ -32,40 +36,56 @@ const ROW_ICONS: Readonly<Record<AreaMenuRow, readonly string[]>> = {
   cancel: [],
 };
 
-// Build mode's tools on screen (063): the Tools group's cells, the Area tool's box over the foundry, and the menu a
-// released box opens (Pick up; Save blueprint and Save and pick up once the Blueprint table is restored; Cancel; only
-// Cancel over a box with no pieces). The choice goes to the sim as the `area` command. Holds no game rules.
+const CANCEL: Choice<MenuValue> = { icons: [], text: AREA_MENU.cancel, value: 'cancel' };
+
+// Build mode's tools on screen (063): the Tools group's cells, the Area tool's box over the foundry, and the one small
+// menu they use. A released box opens it with Pick up; Save blueprint and Save and pick up once the Blueprint table is
+// restored; and Cancel (only Cancel over a box with no pieces). A save with all 8 slots full asks which to overwrite,
+// and a delete asks to confirm, in the same menu. Choices go to the sim as commands. Holds no game rules.
 export class BlueprintUi {
   private readonly cells: ToolCells;
   private readonly area: AreaView;
-  private readonly menu: ChoiceMenu<AreaMenuRow>;
+  private readonly menu: ChoiceMenu<MenuValue>;
   private tools: BlueprintInput | null = null;
-  shown: BlueprintUiShown = { tool: 'piece', box: null, counted: [], menu: null, tools: { shown: false, cells: [], tip: null } };
+  private sim: SimState | null = null;
+  shown: BlueprintUiShown = NO_BLUEPRINT_UI;
 
   constructor(scene: Scene) {
     this.cells = new ToolCells(scene);
     this.area = new AreaView(scene);
-    this.menu = new ChoiceMenu<AreaMenuRow>(scene);
+    this.menu = new ChoiceMenu<MenuValue>(scene);
   }
 
-  /** The menu's rows for the released box: what it can do with the pieces it counts. */
-  private rows(sim: SimState, box: AreaBox): Choice<AreaMenuRow>[] {
+  /** The release menu's rows for a box: what it can do with the pieces it counts. */
+  private releaseRows(sim: SimState, box: AreaBox): Choice<MenuValue>[] {
     const any = piecesInBox(sim.foundry, box).length > 0;
-    const saves = isRestored(sim, BLUEPRINT_TABLE);
-    const ids: AreaMenuRow[] = any ? ['pickUp', ...(saves ? (['save', 'saveAndPickUp'] as const) : []), 'cancel'] : ['cancel'];
+    const ids: AreaMenuRow[] = any ? ['pickUp', ...(blueprintsUnlocked(sim) ? (['save', 'saveAndPickUp'] as const) : []), 'cancel'] : ['cancel'];
     return ids.map((id) => ({ icons: ROW_ICONS[id], text: AREA_MENU[id], value: id }));
   }
 
+  /** A question's rows: every slot to overwrite, or the one to delete; then Cancel. */
+  private questionRows(sim: SimState, q: ToolQuestion): Choice<MenuValue>[] {
+    const row = (slot: number, text: (name: string) => string): Choice<MenuValue>[] => {
+      const bp = sim.blueprints[slot];
+      return bp ? [{ icons: [blueprintIcon(bp)], text: text(bp.name), value: { slot } }] : [];
+    };
+    const rows = q.kind === 'delete' ? row(q.slot, BLUEPRINT_TEXT.deleteRow) : sim.blueprints.flatMap((_, i) => row(i, BLUEPRINT_TEXT.overwriteRow));
+    return [...rows, CANCEL];
+  }
+
   update(sim: SimState, tools: BlueprintInput, inFoundry: boolean, pointer: { x: number; y: number } | null, sound: SoundView | undefined): void {
+    this.sim = sim;
     this.tools = tools;
     if (tools.takeRelease()) sound?.play(SOUNDS.areaRelease);
     const box = sim.building ? tools.box : null;
     this.area.update(box, sim.foundry, inFoundry);
+    const q = sim.building ? tools.question : null;
     const released = sim.building ? tools.released : null;
-    if (released && !this.menu.isOpen) this.menu.open();
-    if (!released && this.menu.isOpen) this.menu.close();
-    if (released) this.menu.show(this.rows(sim, released));
-    this.cells.update(sim.building, tools.mode === 'area' ? 'area' : null, !isRestored(sim, BLUEPRINT_TABLE), pointer);
+    const rows = q ? this.questionRows(sim, q) : released ? this.releaseRows(sim, released) : null;
+    if (rows && !this.menu.isOpen) this.menu.open();
+    if (!rows && this.menu.isOpen) this.menu.close();
+    if (rows) this.menu.show(rows);
+    this.cells.update(sim.building, tools.mode === 'area' ? 'area' : null, !blueprintsUnlocked(sim), pointer);
     this.shown = { tool: tools.mode, box, counted: this.area.counted, menu: this.menu.isOpen ? this.menu.rowsShown : null, tools: this.cells.shown };
   }
 
@@ -81,12 +101,10 @@ export class BlueprintUi {
   /** A left press on the menu or the Tools cells. Returns whether it landed on them. */
   click(controls: Controls, x: number, y: number): boolean {
     const tools = this.tools;
-    const box = tools?.released;
-    const row = this.menu.valueAt(x, y);
-    if (tools && box && row) {
+    const value = this.menu.valueAt(x, y);
+    if (tools && value !== undefined) {
       this.menu.flashAt(x, y);
-      if (row !== 'cancel') controls.menus.area(box, row);
-      tools.closeMenu();
+      this.choose(controls, tools, value);
       return true;
     }
     const tool = this.cells.toolAt(x, y);
@@ -94,8 +112,20 @@ export class BlueprintUi {
     return tool !== null || this.overUi(x, y);
   }
 
-  /** Whether the release menu is up. */
-  get menuOpen(): boolean {
-    return this.menu.isOpen;
+  /** A menu row was clicked: send its command, or ask which slot a save with every slot full overwrites. */
+  private choose(controls: Controls, tools: BlueprintInput, value: MenuValue): void {
+    const q = tools.question;
+    const box = tools.released;
+    tools.closeMenu();
+    tools.question = null;
+    if (value === 'cancel') return;
+    if (typeof value === 'object') {
+      if (q?.kind === 'delete') controls.menus.deleteBlueprint(value.slot);
+      if (q?.kind === 'overwrite') controls.menus.area(q.box, q.action, value.slot);
+      return;
+    }
+    if (!box) return;
+    if (value !== 'pickUp' && (this.sim?.blueprints.length ?? 0) >= BLUEPRINT_SLOTS) tools.ask({ kind: 'overwrite', box, action: value });
+    else controls.menus.area(box, value);
   }
 }

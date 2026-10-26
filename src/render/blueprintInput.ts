@@ -1,5 +1,6 @@
 import { boxOf, type AreaBox } from '../sim/area';
 import type { Tile } from '../sim/pieces';
+import type { AreaAction } from '../sim/input';
 
 /** What build mode's mouse does (063): place the bar's piece, drag the Area tool's box, or stamp a taken blueprint. */
 export type ToolMode = 'piece' | 'area' | 'ghost';
@@ -11,6 +12,9 @@ export interface GhostHold {
   mirrored: boolean;
 }
 
+/** A question the menus ask before acting (063): which slot a save overwrites (all 8 full), or whether to delete one. */
+export type ToolQuestion = { kind: 'overwrite'; box: AreaBox; action: Exclude<AreaAction, 'pickUp'> } | { kind: 'delete'; slot: number };
+
 // Build mode's tools (063), pure so Vitest can drive them: which tool the mouse uses, the Area tool's drag and the box
 // it released (waiting on the release menu), and the blueprint ghost held. Controls owns one; the pointer and keys
 // change it, the scene's views draw it. Esc, and a right click, back out one step at a time: the menu, then the ghost
@@ -21,6 +25,8 @@ export class BlueprintInput {
   drag: { from: Tile; to: Tile } | null = null;
   /** The box the drag released, while its menu is up. */
   released: AreaBox | null = null;
+  /** A question up (which slot to overwrite, or whether to delete one), or null. */
+  question: ToolQuestion | null = null;
   /** The blueprint ghost held, in ghost mode. */
   ghost: GhostHold | null = null;
   /** A box was released since the last call to `takeRelease` (its sound). */
@@ -31,7 +37,14 @@ export class BlueprintInput {
     this.mode = 'piece';
     this.drag = null;
     this.released = null;
+    this.question = null;
     this.ghost = null;
+  }
+
+  /** Asks a question (the release menu, if up, gives way to it). */
+  ask(question: ToolQuestion): void {
+    this.released = null;
+    this.question = question;
   }
 
   /** The Area tool's button or key: on, or off again. */
@@ -65,7 +78,7 @@ export class BlueprintInput {
 
   /** A left press over the world with the Area tool: a drag starts (not while a menu is up). */
   press(tile: Tile): void {
-    if (this.mode !== 'area' || this.released) return;
+    if (this.mode !== 'area' || this.released || this.question) return;
     this.drag = { from: tile, to: tile };
   }
 
@@ -100,11 +113,12 @@ export class BlueprintInput {
   }
 
   /**
-   * Esc or a right click: the menu goes, else a drag, else the ghost or the Area tool (back to the bar's piece).
+   * Esc or a right click: a question or the menu goes, else a drag, else the ghost or the Area tool (back to the bar's piece).
    * Returns whether there was anything to back out of (else Esc leaves build mode).
    */
   back(): boolean {
-    if (this.released) this.released = null;
+    if (this.question) this.question = null;
+    else if (this.released) this.released = null;
     else if (this.drag) this.drag = null;
     else if (this.mode !== 'piece') this.setPiece();
     else return false;

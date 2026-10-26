@@ -3,6 +3,9 @@ import { VIEW_WIDTH } from '../data/config';
 import { BUILD_BAR_LAYOUT } from '../data/hudLayout';
 import { buildBarLabelTop } from './bottomHud';
 import type { ScreenRect } from './foundryLayout';
+import { itemDef } from '../data/items';
+import { LOGISTICS_ICONS } from '../data/foundryAssets';
+import type { Blueprint } from '../sim/blueprints';
 
 // Where 063's HUD pieces sit, view px. No Phaser, so e2e tests can find them to click.
 
@@ -37,4 +40,9 @@ export function toolsBox(): ScreenRect {
   const label = toolsLabelBox();
   const first = toolCells()[0];
   return { x: label.x, y: label.y, w: label.w, h: (first ? first.y + first.h : label.y) - label.y };
+}
+
+/** A blueprint's icon: its named item's, or the conduit's emblem for Logistics. */
+export function blueprintIcon(bp: Pick<Blueprint, 'itemId'>): string {
+  return bp.itemId ? itemDef(bp.itemId).icon : (LOGISTICS_ICONS.conduit ?? '');
 }

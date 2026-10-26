@@ -140,7 +140,7 @@ export class PointerInput {
    */
   private toolPress(p: Input.Pointer, tile: Tile): boolean {
     const t = this.tools;
-    if (t.mode === 'piece' && !t.released) return false;
+    if (t.mode === 'piece' && !t.released && !t.question) return false;
     if (p.rightButtonDown()) t.back();
     else if (p.leftButtonDown() && t.mode === 'area') t.press(tile);
     else if (p.leftButtonDown() && t.mode === 'ghost') this.stampPress?.(tile);

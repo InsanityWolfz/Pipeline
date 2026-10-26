@@ -50,6 +50,8 @@ export interface Command {
    * as a blueprint (into `slot`, overwriting it; left out, the next free slot), or both.
    */
   area: { box: AreaBox; action: AreaAction; slot?: number } | null;
+  /** Delete the blueprint in this slot this tick (an edge, 063), or null. */
+  deleteBlueprint: number | null;
   /**
    * Put some of a held item into a hopper (by piece id) that's empty or holds it, or into a crate (047), this tick (an
    * edge), or null. How many by `amount` (022) of the clicked stack's `stack` items (047; left out, all held).
@@ -106,6 +108,7 @@ export const NO_COMMAND: Readonly<Command> = {
   place: null,
   pickUp: null,
   area: null,
+  deleteBlueprint: null,
   deposit: null,
   withdraw: null,
   sortInventory: false,

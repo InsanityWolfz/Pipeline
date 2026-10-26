@@ -29,6 +29,7 @@
     "state.bag[]: string",
     "state.banked: object",
     "state.banked{}: number",
+    "state.blueprints: array",
     "state.bombs: array",
     "state.bossDefeats: array",
     "state.bossDefeats[]: string",

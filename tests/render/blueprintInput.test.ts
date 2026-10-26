@@ -60,3 +60,21 @@ describe('the blueprint ghost (063)', () => {
     expect(t.ghost).toBeNull();
   });
 });
+
+describe('questions (063)', () => {
+  it('replace the release menu, block a new drag, and back out first', () => {
+    const t = new BlueprintInput();
+    t.toggleArea();
+    t.press({ tx: 1, ty: 1 });
+    t.release();
+    const box = t.released;
+    if (!box) throw new Error('no box');
+    t.ask({ kind: 'overwrite', box, action: 'save' });
+    expect(t.released).toBeNull();
+    t.press({ tx: 2, ty: 2 });
+    expect(t.drag).toBeNull();
+    expect(t.back()).toBe(true);
+    expect(t.question).toBeNull();
+    expect(t.mode).toBe('area');
+  });
+});

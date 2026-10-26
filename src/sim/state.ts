@@ -36,6 +36,7 @@ import { resetWorld } from './resetWorld';
 import type { SandboxState } from './sandbox';
 import { createSubSteps, type SubStepState } from './subSteps';
 import { createFog } from './fog';
+import type { Blueprint } from './blueprints';
 
 /** The whole sim: plain serializable data. */
 export interface SimState {
@@ -94,6 +95,8 @@ export interface SimState {
   found: string[];
   /** The buildable grid in the foundry room. Kept through a KO. */
   foundry: FoundryState;
+  /** 063: saved blueprints, in slot order (up to BLUEPRINT_SLOTS). Kept through a KO, and saved. */
+  blueprints: Blueprint[];
   /** Wisp orbs in flight (009). */
   orbs: OrbState[];
   nextOrbId: number;
@@ -217,6 +220,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     carried: [],
     found: foundIn(start.inventory),
     foundry: createFoundry(),
+    blueprints: [],
     orbs: [],
     nextOrbId: 0,
     floodPools: [],

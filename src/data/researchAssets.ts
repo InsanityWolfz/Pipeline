@@ -9,14 +9,14 @@ export const RESEARCH_SPRITES = {
   diagramCap: 'research-diagram-cap',
   /** A diagram on the intake pipe: a bigger reservoir's tank and bands drawn round the pipe. */
   diagramPipe: 'research-diagram-pipe',
-  /** A wall panel's diagram, by the effect it shows: machine speed (a cog train). */
-  diagramWall: { machineSpeed: 'research-diagram-speed' },
+  /** A wall panel's diagram, by the effect it shows: machine speed (a cog train), 063's Blueprint table (a drafting table). */
+  diagramWall: { machineSpeed: 'research-diagram-speed', blueprintTable: 'research-diagram-blueprints' },
   /** Which wall-panel art each wall node uses, by node id (046: mapped explicitly; a data test holds every wall node to one). */
-  wallArt: { 'machine-speed': 'machineSpeed' } as Readonly<Record<string, 'machineSpeed'>>,
+  wallArt: { 'machine-speed': 'machineSpeed', 'blueprint-table': 'blueprintTable' } as Readonly<Record<string, 'machineSpeed' | 'blueprintTable'>>,
   /** A bare wall panel: the carved stone frame every wall diagram sits in. */
   panel: 'research-panel',
   /** A restored wall panel: brass and stone, its part solid, by the same effects. */
-  restoredWall: { machineSpeed: 'research-restored-speed' },
+  restoredWall: { machineSpeed: 'research-restored-speed', blueprintTable: 'research-restored-blueprints' },
   /** The reservoir's restored collars: brass bands round the pipe, by restored tier (1, 2). */
   restoredPipe: ['research-restored-pipe-1', 'research-restored-pipe-2'],
   /** The sealed wing's door, two tiles wide in the north wall's notch. */
