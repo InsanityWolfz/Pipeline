@@ -1,51 +1,15 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
+import { INTAKE_EMPTY_ICON } from '../data/foundryAssets';
 import { READOUT_LAYOUT } from '../data/hudLayout';
-import { INTAKE_CAP_ICON, INTAKE_EMPTY_ICON } from '../data/foundryAssets';
-import { ammoDef } from '../data/ammo';
-import { CAPPED_LABEL } from '../data/objectives';
-import { itemDef } from '../data/items';
 import { RECIPES } from '../data/recipes';
-import { count } from '../sim/inventory';
-import type { EntranceState } from '../sim/link';
-import type { MachineState, PieceState } from '../sim/pieces';
-import { machineRecipe } from '../sim/stages';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
+import type { Line } from './readoutLines';
 
 /** The most lines a readout needs: the largest recipe's inputs, plus the output. */
 const MAX_LINES = Math.max(...Object.values(RECIPES).map((r) => Object.keys(r.inputs).length)) + 1;
-
-/** One readout line: an atlas frame for its icon, and the text beside it. */
-type Line = [frame: string, text: string];
-
-/** A machine's lines: each input with how many are buffered, then the output waiting to go out. */
-export function machineLines(m: MachineState): Line[] {
-  // A stage's recipe follows the round it's working on (029).
-  const recipe = machineRecipe(m);
-  return [
-    ...Object.keys(recipe.inputs).map((id): Line => [itemDef(id).icon, String(count(m.buffer, id))]),
-    [itemDef(m.made).icon, String(m.output)],
-  ];
-}
-
-/**
- * The intake's lines (019, 024), one per entrance west to east: its ammo (the tube emblem when empty) and its
- * count out of the cap, or the cap emblem and "capped" while it's shut.
- */
-export function intakeLines(entrances: readonly EntranceState[], cap: number): Line[] {
-  return entrances.map((e): Line => {
-    if (!e.open) return [INTAKE_CAP_ICON, CAPPED_LABEL];
-    const icon = e.ammoId ? itemDef(ammoDef(e.ammoId).itemId).icon : INTAKE_EMPTY_ICON;
-    return [icon, `${e.count}/${cap}`];
-  });
-}
-
-/** The readout for any piece: machines have one; other pieces show nothing. */
-export function pieceLines(p: PieceState): Line[] {
-  return p.kind === 'machine' ? machineLines(p) : [];
-}
 
 // Over the machine or intake under the cursor, a small panel of icon and text lines.
 export class HoverReadout {

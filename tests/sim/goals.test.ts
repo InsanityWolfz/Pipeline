@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { OBJECTIVES } from '../../src/data/objectives';
+import { OBJECTIVES, TIERED_ROUNDS } from '../../src/data/objectives';
 import { HOLLOWS_START, PLAYTEST_START } from '../../src/data/playtest';
 import { currentObjective, objectiveLine } from '../../src/sim/objectives';
 import { createSim } from '../../src/sim/state';
@@ -38,9 +38,10 @@ describe('the chain', () => {
       { kind: 'restored', node: 'entrance-3' },
       { kind: 'volley', min: 3 },
     ]);
-    // The chain's last goal is the tutorial's end: 060's feeding all four (Milestone 2's chain is goalsM2.test.ts's).
+    // The chain's last goal is the tutorial's end: 060's feeding all four, then (062) firing steel rounds (Milestone 2's
+    // chain is goalsM2.test.ts's and goalsTiers.test.ts's).
     expect(M1.at(-1)?.check).toEqual({ kind: 'volley', min: 3 });
-    expect(CHAIN.at(-1)?.check).toEqual({ kind: 'volley', min: 4 });
+    expect(CHAIN.at(-1)?.check).toEqual({ kind: 'fired', items: TIERED_ROUNDS });
   });
 });
 

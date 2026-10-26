@@ -31,6 +31,12 @@ const COUNTS = { ammo: AMMO_COUNT, raw: RAW_COUNT, part: PART_COUNT, armor: ARMO
 const OVERRIDES: Readonly<Record<string, number>> = { 'warden-core': 5, 'bulwark-core': 2, 'ancient-gear': 10, 'aqueduct-valve': 10 };
 
 /**
+ * 062: the material tiers' parts stay out of the kit, which fills the inventory's first screen already (its cores would
+ * scroll out of sight). They're smelted, fired and pressed from the raws it carries (ley-iron, cinderite, ley dust).
+ */
+export const LEFT_OUT_OF_KIT: readonly string[] = ['ley-steel', 'ley-glass', 'steel-arrowhead', 'steel-casing', 'steel-plate'];
+
+/**
  * Identified gear the playtest carries (036), none worn: a Rare piece in each slot and a relic, so the bench's panel
  * and every effect can be tried at once. Values sit inside the spec's ranges.
  */
@@ -53,7 +59,7 @@ export const PLAYTEST_START: StartDef = {
   hasTube: true,
   attuned: true,
   gatesOpen: true,
-  inventory: Object.fromEntries(Object.values(ITEMS).filter((it) => !ROUNDS.includes(it.id)).map((it) => [it.id, OVERRIDES[it.id] ?? COUNTS[it.kind]])),
+  inventory: Object.fromEntries(Object.values(ITEMS).filter((it) => !ROUNDS.includes(it.id) && !LEFT_OUT_OF_KIT.includes(it.id)).map((it) => [it.id, OVERRIDES[it.id] ?? COUNTS[it.kind]])),
   crafted: ALL_CRAFTED,
   gear: PLAYTEST_GEAR,
 };

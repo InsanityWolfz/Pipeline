@@ -32,6 +32,8 @@ export interface TipLine {
   parts?: readonly TipPart[];
   /** A shorter form for a summary that would run past its rows ("Reaches: 5 rounds"; the full list is in the breakdown). */
   short?: string;
+  /** 062: a shorter form still, tried only when the short one doesn't fit either. */
+  shorter?: string;
 }
 
 /** What a tablet can describe (040), the build bar's other pieces (015's tip, now the same tablet), and any carried item by name (050). */

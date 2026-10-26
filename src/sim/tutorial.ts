@@ -5,7 +5,7 @@ import { FEET_BOX } from '../data/player';
 import { RESPAWN_ROOM } from '../data/player';
 import { SHOT_GATES, TILE, type GateId, type Room } from '../data/rooms';
 import { WORLD } from './world';
-import { recipeDef, REVEALING_ITEMS } from '../data/recipes';
+import { recipeDef, REVEALING_ITEMS, revealsOf } from '../data/recipes';
 import { count, type Inventory } from './inventory';
 import type { Rect } from './collision';
 import { tileRect } from './fixtures';
@@ -118,7 +118,7 @@ export function sealedRoom(state: Pick<SimState, 'gates'>, room: Room): Room {
 export function knownRecipe(state: { link: Pick<SimState['link'], 'attuned'>; found: readonly string[]; gates: Pick<Gates, 'foundry'> }, recipeId: string): boolean {
   const def = recipeDef(recipeId);
   const attuned = state.link.attuned || state.gates.foundry;
-  return (def.requires !== 'attuned' || attuned) && (def.shownAfter === undefined || state.found.includes(def.shownAfter));
+  return (def.requires !== 'attuned' || attuned) && revealsOf(def).every((id) => state.found.includes(id));
 }
 
 /** The revealing items (038) an inventory holds, in REVEALING_ITEMS order. */

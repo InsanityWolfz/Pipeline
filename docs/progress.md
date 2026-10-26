@@ -2,6 +2,21 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-26: 062 Material tiers: ley-steel and ley glass
+**Changed:** on `claude/062-material-tiers` (InsanityWolfz/Pipeline#73, stacked on 061), Shaun's material-tier idea (docs/plans/062-material-tiers.md, five slices):
+- tiered rounds as a `+` segment after the base (`arrow+steel+frost`), in `src/data/tiers.ts`; steel for arrows, bombs and landmines, glass for ley bolts; ×1.6 on every hit once, through the emission (direct hits, Split Shards, Bursts, Bomblets, mines; burn follows the hit);
+- the Smelter (ley-iron + cinderite → ley-steel) and the kiln (ley dust + cinderite → ley glass) in a new Forge group, unlocked by hand-crafting;
+- machines run tier variants by input (knapper, shaper, plate press, focuser, assembler, packer, mine packer), never mixing tiers in one craft; a stuck hand-off reads blocked after 1 s;
+- three Milestone 2 goals with a new `fired` check; tier icons and looks recoloured from the stone art; the Smelter's and kiln's sounds.
+
+`SAVE_VERSION` 16 (a machine's `stalled` counter; 15 is 063's). Reviewed: no blocking issues; seven suggestions applied. `npm run check` 2155 tests; CI green. Raised for Shaun in the spec: 062.1–062.15.
+
+**Next:** Shaun's playtest (`?playtest`); his OK on 062.1–062.15; "merge 73" after 72.
+
+**Notes:**
+- `npm run measure`: steel clears packs in about 67–69% of stone's time in rings 3 and 4 (14.1 → 9.4 s, 8.0 → 5.5 s), no KOs.
+- Save versions across the open stack: 061 14, 063 15, 062 16, 064 17.
+
 ## 2026-10-26: 061 Emberworks enemies
 **Changed:** on `claude/061-emberworks-enemies` (InsanityWolfz/Pipeline#72), the Emberworks fills with four enemies (docs/plans/061-emberworks-enemies.md, five slices):
 - the cinder mote: swells and bursts into a fire pool; killed, it bursts and sets other enemies burning;

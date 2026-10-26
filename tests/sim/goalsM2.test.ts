@@ -30,6 +30,9 @@ const M2 = [
   'Feed all four entrances',
 ];
 
+/** 062's goals, which follow M2 and end the chain. */
+const TIER_GOALS = ['Smelt ley-steel at the bench (C)', 'Build a Smelter into a line', 'Fire steel rounds'];
+
 /** The Hollows start past the Bulwark, the land quiet, every goal before `text` done. */
 function upTo(text: string): SimState {
   const s = createSim(3, { start: HOLLOWS_START });
@@ -42,11 +45,12 @@ function upTo(text: string): SimState {
 }
 
 describe('the m2 goal chain (060)', () => {
-  it('follows "Feed all three entrances", in order, each tagged m2, and ends the chain', () => {
+  it('follows "Feed all three entrances", in order, each tagged m2 (062: the tier goals follow)', () => {
     const first = at('Feed all three entrances') + 1;
     expect(OBJECTIVES.slice(first, first + M2.length).map((o) => o.text)).toEqual(M2);
-    expect(OBJECTIVES.filter((o) => o.milestone === 'm2').map((o) => o.text)).toEqual(M2);
-    expect(OBJECTIVES.filter((o) => !o.cutIn).at(-1)?.text).toBe('Feed all four entrances');
+    // 062: then the material tiers' three (tests/sim/goalsTiers.test.ts), which end the chain.
+    expect(OBJECTIVES.filter((o) => o.milestone === 'm2').map((o) => o.text)).toEqual([...M2, ...TIER_GOALS]);
+    expect(OBJECTIVES.filter((o) => !o.cutIn).at(-4)?.text).toBe('Feed all four entrances');
     expect(FIRE_ROUNDS).toContain('arrow+fire');
     expect(FIRE_ROUNDS.length).toBeGreaterThanOrEqual(4);
   });
@@ -91,7 +95,7 @@ describe('the m2 goal chain (060)', () => {
     expect(s.objectives[at('Defeat the Forgewright')]).toBe(true);
   });
 
-  it('restoring the fourth entrance and feeding all four complete the chain', () => {
+  it('restoring the fourth entrance and feeding all four complete their goals', () => {
     const s = upTo("Restore the intake's fourth entrance (E with the Forgewright core)");
     s.research['entrance-4'] = 'restored';
     for (const e of s.link.entrances) e.open = true;
@@ -100,7 +104,10 @@ describe('the m2 goal chain (060)', () => {
     for (const [k, e] of s.link.entrances.entries()) Object.assign(e, { ammoId: 'arrow', count: 1 + k });
     run(s, 1);
     expect(s.objectives[at('Feed all four entrances')]).toBe(true);
-    expect(currentObjective(s)).toBeNull();
+    // 062: the material tiers' goals come next; this start counts ley-steel as hand-crafted already (062.12), so the
+    // Smelter's is the one now.
+    run(s, 1);
+    expect(currentObjective(s)).toBe(at('Build a Smelter into a line'));
   });
 });
 

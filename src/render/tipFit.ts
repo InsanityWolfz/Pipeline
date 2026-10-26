@@ -2,13 +2,15 @@ import { TIP } from '../data/legibility';
 
 // Fitting a tablet's rows (040), pure: at most `maxRows` drawn rows (the name's and chips'
 // included) and, given a height, no taller than it. A line that would run past uses its
-// short form first ("Reaches: 5 rounds"); if the rows still don't fit, the rules rows are
-// cut (the last kept ends with "…") but a kept line (the bonus hint) always shows.
+// short form first ("Reaches: 5 rounds"), then (062) its shorter one; if the rows still
+// don't fit, the rules rows are cut (the last kept ends with "…") but a kept line (the
+// bonus hint) always shows.
 
-/** A line's rows as wrapped, its short form's rows, and whether it must always show. */
+/** A line's rows as wrapped, its short (and 062: shorter) form's rows, and whether it must always show. */
 export interface FitLine<R> {
   rows: R[];
   short?: R[];
+  shorter?: R[];
   keep?: boolean;
 }
 
@@ -23,7 +25,9 @@ export function textRoom(chipRows: number, maxRows: number, maxH?: number): numb
 export function fitRows<R>(lines: readonly FitLine<R>[], room: number, cut: (row: R) => R): { rows: R[]; cut: boolean } {
   const count = (ls: readonly FitLine<R>[]) => ls.reduce((n, l) => n + l.rows.length, 0);
   if (count(lines) <= room) return { rows: lines.flatMap((l) => l.rows), cut: false };
-  const shortened = lines.map((l) => (l.short ? { ...l, rows: l.short } : l));
+  const short = lines.map((l) => (l.short ? { ...l, rows: l.short } : l));
+  if (count(short) <= room) return { rows: short.flatMap((l) => l.rows), cut: false };
+  const shortened = lines.map((l) => (l.shorter ? { ...l, rows: l.shorter } : l.short ? { ...l, rows: l.short } : l));
   if (count(shortened) <= room) return { rows: shortened.flatMap((l) => l.rows), cut: false };
   // Still too many: the kept lines' rows stay; the others fill what's left, in order, the last one cut.
   let left = room - count(shortened.filter((l) => l.keep));
