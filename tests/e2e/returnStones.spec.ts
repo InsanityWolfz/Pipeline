@@ -89,3 +89,14 @@ test("the Forum's return stone wakes at its door; after a KO the waystone travel
   expect((await state(page)).room).toBe('foundry');
   expect(errors).toEqual([]);
 });
+
+test('the sandbox shows all three return stones woken', async ({ page }) => {
+  test.setTimeout(120_000);
+  const errors = watchErrors(page);
+  await boot(page, '?sandbox');
+  const s = await page.evaluate(() => window.__GAME__?.step(1));
+  expect(s?.returnStones.map((r) => r.woken)).toEqual([true, true, true]);
+  // Each stands in the sandbox's room, outside its arena's door, drawn woken.
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().returnStones))?.map((r) => r.look)).toEqual(['woken', 'woken', 'woken']);
+  expect(errors).toEqual([]);
+});

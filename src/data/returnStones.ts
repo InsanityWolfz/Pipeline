@@ -2,7 +2,7 @@ import { BOSS_ARENAS, type BossArena } from './arenas';
 import { TILE_SIZE } from './config';
 import type { TilePos } from './tiles';
 
-// Boss return points (072, Shaun: "a KO means foundry, fast travel, door"): a return waystone just outside each boss
+// Boss return points (072: "a KO means foundry, fast travel, door"): a return waystone just outside each boss
 // arena's door. Dormant until the player first walks within reach of it outside the arena, then woken for good and in
 // fast travel's destinations, named after its arena. A travel point only: no safe zone, deposit or supply, and no XP.
 // The rules are in src/sim/returnStones.ts and src/sim/claims.ts. Tiles throughout.
