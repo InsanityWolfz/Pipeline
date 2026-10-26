@@ -156,3 +156,69 @@ test('the restored Blueprint table adds Save rows; a save with all 8 slots full 
   expect((await state(page)).foundry.pieces.filter((p) => p.ty === 10).map((p) => p.pieceId)).toEqual(['crate']);
   expect(errors).toEqual([]);
 });
+
+/** Clicks a view-px point on the canvas, then lets a tick take what it sent. */
+async function clickAt(page: Page, x: number, y: number): Promise<void> {
+  const p = await screenPoint(page, x, y);
+  await page.mouse.click(p.x, p.y);
+  await step(page, 1);
+}
+
+test('the Blueprints button waits on the table; then P opens the list, a row takes its ghost, and delete asks first', async ({ page }) => {
+  test.setTimeout(90_000);
+  const errors = watchErrors(page);
+  await buildAtStand(page);
+  // Before the table: greyed, its hover says so, and P opens nothing.
+  const cell = (await ui(page))?.blueprints.tools.cells.find((c) => c.tool === 'list');
+  if (!cell) throw new Error('no Blueprints cell');
+  expect(cell.locked).toBe(true);
+  const over = await screenPoint(page, cell.x + cell.w / 2, cell.y + cell.h / 2);
+  await page.mouse.move(over.x, over.y);
+  await expect.poll(async () => (await ui(page))?.blueprints.tools.tip).toBe('Restore the Blueprint table');
+  await page.keyboard.press('p');
+  await step(page, 1);
+  expect((await ui(page))?.blueprints.list.open).toBe(false);
+  await toggleBuild(page);
+
+  await restoreTable(page);
+  const at = centre(STAND.tx, STAND.ty);
+  await walkTo(page, at.x, at.y);
+  await cameraSettled(page);
+  await toggleBuild(page);
+  await put(page, [
+    { pieceId: 'frost-rune', tx: 6, ty: 10, facing: 'right' },
+    { pieceId: 'crate', tx: 7, ty: 10, facing: 'right' },
+    { pieceId: 'cutter', tx: 6, ty: 12, facing: 'right' },
+  ]);
+  const save = (tx0: number, ty0: number, tx1: number, ty1: number) => step(page, 1, { area: { box: { tx0, ty0, tx1, ty1 }, action: 'save' } });
+  await save(6, 10, 7, 10);
+  await save(6, 12, 6, 12);
+  await save(6, 10, 7, 12);
+  await page.keyboard.press('p');
+  await expect.poll(async () => (await ui(page))?.blueprints.list.rows.map((r) => [r.name, r.pieces])).toEqual([
+    ['Frost arrows', 2],
+    ['Shafts', 1],
+    ['Frost arrows 2', 3],
+  ]);
+  expect((await ui(page))?.blueprints.tools.cells.find((c) => c.tool === 'list')?.active).toBe(true);
+  // Delete asks first: Cancel keeps it, Delete removes it.
+  const del = async () => {
+    const row = (await ui(page))?.blueprints.list.rows[1];
+    if (!row) throw new Error('no row');
+    await clickAt(page, row.del.x + row.del.w / 2, row.del.y + row.del.h / 2);
+  };
+  await del();
+  await expect.poll(async () => (await ui(page))?.blueprints.menu?.map((r) => r.text)).toEqual(['Delete Shafts', 'Cancel']);
+  await clickMenuRow(page, 'Cancel');
+  expect((await state(page)).blueprints.list).toHaveLength(3);
+  await del();
+  await clickMenuRow(page, 'Delete Shafts');
+  await expect.poll(async () => (await state(page)).blueprints.list.map((b) => b.name)).toEqual(['Frost arrows', 'Frost arrows 2']);
+  // A row takes its blueprint as the ghost, and the list closes.
+  const row = (await ui(page))?.blueprints.list.rows[1];
+  if (!row) throw new Error('no row');
+  await clickAt(page, row.box.x + 40, row.box.y + row.box.h / 2);
+  await expect.poll(async () => (await ui(page))?.blueprints.tool).toBe('ghost');
+  expect((await ui(page))?.blueprints.list.open).toBe(false);
+  expect(errors).toEqual([]);
+});

@@ -12,6 +12,7 @@ import { ChoiceMenu, type Choice } from './ChoiceMenu';
 import type { Controls } from './controls';
 import type { SoundView } from './SoundView';
 import { ToolCells, type ToolCellsShown } from './ToolCells';
+import { BlueprintList, NO_BLUEPRINT_LIST, type BlueprintListShown } from './BlueprintList';
 
 export interface BlueprintUiShown {
   tool: ToolMode;
@@ -21,10 +22,11 @@ export interface BlueprintUiShown {
   /** The menu's rows while it's up (the release menu, or a question: which slot to overwrite, or a delete), view px. */
   menu: { text: string; x: number; y: number; w: number; h: number }[] | null;
   tools: ToolCellsShown;
+  list: BlueprintListShown;
 }
 
 /** 063's build-mode UI as drawn, for `ui().blueprints`. */
-export const NO_BLUEPRINT_UI: BlueprintUiShown = { tool: 'piece', box: null, counted: [], menu: null, tools: { shown: false, cells: [], tip: null } };
+export const NO_BLUEPRINT_UI: BlueprintUiShown = { tool: 'piece', box: null, counted: [], menu: null, tools: { shown: false, cells: [], tip: null }, list: NO_BLUEPRINT_LIST };
 
 /** A menu row's meaning: a release menu row, or a slot a question names. */
 type MenuValue = AreaMenuRow | { slot: number };
@@ -41,11 +43,12 @@ const CANCEL: Choice<MenuValue> = { icons: [], text: AREA_MENU.cancel, value: 'c
 // Build mode's tools on screen (063): the Tools group's cells, the Area tool's box over the foundry, and the one small
 // menu they use. A released box opens it with Pick up; Save blueprint and Save and pick up once the Blueprint table is
 // restored; and Cancel (only Cancel over a box with no pieces). A save with all 8 slots full asks which to overwrite,
-// and a delete asks to confirm, in the same menu. Choices go to the sim as commands. Holds no game rules.
+// and a delete asks to confirm, in the same menu. The Blueprints button opens the list (BlueprintList). Choices go to the sim as commands. Holds no game rules.
 export class BlueprintUi {
   private readonly cells: ToolCells;
   private readonly area: AreaView;
   private readonly menu: ChoiceMenu<MenuValue>;
+  private readonly list: BlueprintList;
   private tools: BlueprintInput | null = null;
   private sim: SimState | null = null;
   shown: BlueprintUiShown = NO_BLUEPRINT_UI;
@@ -53,6 +56,7 @@ export class BlueprintUi {
   constructor(scene: Scene) {
     this.cells = new ToolCells(scene);
     this.area = new AreaView(scene);
+    this.list = new BlueprintList(scene);
     this.menu = new ChoiceMenu<MenuValue>(scene);
   }
 
@@ -85,17 +89,21 @@ export class BlueprintUi {
     if (rows && !this.menu.isOpen) this.menu.open();
     if (!rows && this.menu.isOpen) this.menu.close();
     if (rows) this.menu.show(rows);
-    this.cells.update(sim.building, tools.mode === 'area' ? 'area' : null, !blueprintsUnlocked(sim), pointer);
-    this.shown = { tool: tools.mode, box, counted: this.area.counted, menu: this.menu.isOpen ? this.menu.rowsShown : null, tools: this.cells.shown };
+    tools.listLocked = !blueprintsUnlocked(sim);
+    if (tools.listLocked) tools.listOpen = false;
+    this.list.update(sim.building && tools.listOpen, sim.blueprints);
+    this.cells.update(sim.building, tools.mode === 'area' ? 'area' : tools.listOpen ? 'list' : null, tools.listLocked, pointer);
+    this.shown = { tool: tools.mode, box, counted: this.area.counted, menu: this.menu.isOpen ? this.menu.rowsShown : null, tools: this.cells.shown, list: this.list.shown };
   }
 
   overUi(x: number, y: number): boolean {
-    return this.menu.overUi(x, y) || this.cells.overUi(x, y);
+    return this.menu.overUi(x, y) || this.list.overUi(x, y) || this.cells.overUi(x, y);
   }
 
   /** The cursor at a view point: the menu's row under it lights. */
   pointAt(x: number, y: number): void {
     this.menu.pointAt(x, y);
+    this.list.pointAt(x, y);
   }
 
   /** A left press on the menu or the Tools cells. Returns whether it landed on them. */
@@ -107,8 +115,16 @@ export class BlueprintUi {
       this.choose(controls, tools, value);
       return true;
     }
+    // A list row takes its blueprint as the ghost; its delete mark asks to confirm.
+    const hit = this.list.hit(x, y);
+    if (tools && hit) {
+      if (hit.del) tools.ask({ kind: 'delete', slot: hit.slot });
+      else tools.takeGhost(hit.slot);
+      return true;
+    }
     const tool = this.cells.toolAt(x, y);
     if (tool === 'area') tools?.toggleArea();
+    if (tool === 'list') tools?.toggleList();
     return tool !== null || this.overUi(x, y);
   }
 

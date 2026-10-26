@@ -4,7 +4,7 @@ import { DEFAULT_BINDINGS, MOUSE_INPUTS, SLOT_ACTIONS, type BindAction } from '.
 // The keyboard's bindings: what each key does is in controls.ts. 042: the rebindable keys come from the settings
 // (src/data/settings.ts has today's defaults); Esc, Tab and Shift-for-tips are fixed.
 
-export type Key = 'up' | 'down' | 'left' | 'right' | 'dodge' | 'rotate' | 'flip' | 'area' | 'interact' | 'menu' | 'close' | 'build' | 'inventory' | 'inventoryTab' | 'research' | 'talents' | 'shift';
+export type Key = 'up' | 'down' | 'left' | 'right' | 'dodge' | 'rotate' | 'flip' | 'area' | 'blueprints' | 'interact' | 'menu' | 'close' | 'build' | 'inventory' | 'inventoryTab' | 'research' | 'talents' | 'shift';
 
 
 /** A key code name ("W", "SPACE") as its code; unknown names fall back to none (the action has no key). */
@@ -41,6 +41,7 @@ export function bindKeys(
     rotate: add('rotate'),
     flip: add('flip'),
     area: add('area'),
+    blueprints: add('blueprints'),
     interact: add('interact'),
     menu: add('menu'),
     close: keyboard.addKey(codes.ESC),
@@ -65,6 +66,8 @@ export interface KeyHandlers {
   flip(): void;
   /** 063: the Area tool, in build mode. */
   area(): void;
+  /** 063: the blueprint list, in build mode. */
+  blueprints(): void;
   interact(): void;
   /** C, Esc, I or Tab, J and T, and the sandbox panel's key (044): the menu keys the scene takes. */
   menu(key: 'menu' | 'close' | 'inventory' | 'research' | 'talents' | 'sandbox'): void;
@@ -80,6 +83,7 @@ export function listenKeys(keys: Record<Key, Input.Keyboard.Key>, ammo: readonly
   keys.rotate.on('down', () => h.rotate());
   keys.flip.on('down', () => h.flip());
   keys.area.on('down', () => h.area());
+  keys.blueprints.on('down', () => h.blueprints());
   keys.interact.on('down', () => h.interact());
   for (const m of ['menu', 'close', 'research', 'talents'] as const) keys[m].on('down', () => h.menu(m));
   for (const k of [keys.inventory, keys.inventoryTab]) k.on('down', () => h.menu('inventory'));

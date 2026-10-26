@@ -78,3 +78,20 @@ describe('questions (063)', () => {
     expect(t.mode).toBe('area');
   });
 });
+
+describe('the blueprint list (063)', () => {
+  it('opens only once the table is restored, closes on Esc, and taking a blueprint closes it', () => {
+    const t = new BlueprintInput();
+    t.toggleList();
+    expect(t.listOpen).toBe(false);
+    t.listLocked = false;
+    t.toggleList();
+    expect(t.listOpen).toBe(true);
+    expect(t.back()).toBe(true);
+    expect(t.listOpen).toBe(false);
+    t.toggleList();
+    t.takeGhost(0);
+    expect(t.listOpen).toBe(false);
+    expect(t.mode).toBe('ghost');
+  });
+});

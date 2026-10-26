@@ -6,6 +6,8 @@ export const BLUEPRINT_SPRITES = {
   /** The Tools group's emblems: a dashed cyan box with a pointer (the Area tool), a rolled ley-drawn sheet (Blueprints). */
   areaEmblem: 'emblem-area',
   listEmblem: 'emblem-blueprints',
+  /** A list row's delete mark: a small rust X in a carved round stone. */
+  deleteMark: 'blueprint-delete',
 } as const;
 
 /**
@@ -26,4 +28,25 @@ export const AREA_LOOK = {
   alpha: 0.95,
   fill: { color: 'cyan', alpha: 0.12 },
   piece: { color: 'cyan-glow', width: 1, alpha: 0.9, inset: 2 },
+} as const;
+
+/**
+ * The blueprint list (063): a tablet in the house panel style over the Tools group's label, `gap` px above it and
+ * right-aligned with it, `pad` px in round a title line and one menu row (`rowH` tall, `rowGap` apart, the menus'
+ * 184 px rows) per blueprint: its icon, its name, its piece count right-aligned before the delete mark at the row's
+ * right end. Px from the row's top-left; text at the top of its capitals.
+ */
+export const BLUEPRINT_LIST = {
+  gap: 4,
+  pad: 4,
+  rowW: 184,
+  rowH: 20,
+  rowGap: 1,
+  title: { h: 14, y: 3 },
+  icon: { x: 4, y: 2 },
+  name: { x: 24, y: 8 },
+  count: { right: 24, y: 9 },
+  del: { size: 14, right: 3, y: 3 },
+  /** The empty list's line, in the row's place. */
+  empty: { y: 8 },
 } as const;

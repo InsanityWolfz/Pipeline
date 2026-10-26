@@ -29,6 +29,10 @@ export class BlueprintInput {
   question: ToolQuestion | null = null;
   /** The blueprint ghost held, in ghost mode. */
   ghost: GhostHold | null = null;
+  /** The blueprint list is open. */
+  listOpen = false;
+  /** The list can't open: the Blueprint table isn't restored (the scene keeps this current). */
+  listLocked = true;
   /** A box was released since the last call to `takeRelease` (its sound). */
   private releasedNow = false;
 
@@ -39,6 +43,13 @@ export class BlueprintInput {
     this.released = null;
     this.question = null;
     this.ghost = null;
+    this.listOpen = false;
+  }
+
+  /** The Blueprints button or key: the list opens (only once the table is restored), or closes. */
+  toggleList(): void {
+    if (this.listOpen) this.listOpen = false;
+    else if (!this.listLocked) this.listOpen = true;
   }
 
   /** Asks a question (the release menu, if up, gives way to it). */
@@ -113,12 +124,13 @@ export class BlueprintInput {
   }
 
   /**
-   * Esc or a right click: a question or the menu goes, else a drag, else the ghost or the Area tool (back to the bar's piece).
+   * Esc or a right click: a question or the menu goes, else the list, else a drag, else the ghost or the Area tool (back to the bar's piece).
    * Returns whether there was anything to back out of (else Esc leaves build mode).
    */
   back(): boolean {
     if (this.question) this.question = null;
     else if (this.released) this.released = null;
+    else if (this.listOpen) this.listOpen = false;
     else if (this.drag) this.drag = null;
     else if (this.mode !== 'piece') this.setPiece();
     else return false;

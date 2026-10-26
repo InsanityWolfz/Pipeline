@@ -2,7 +2,7 @@ import { BLUEPRINT_SPRITES } from '../blueprintAssets';
 import { ellipse, line, path, rect, solid, trim, type Shape, type VectorSprite } from './types';
 
 // Blueprints' art (063), in the 020 vector style: the build bar's Tools emblems (the Area tool's dashed cyan box and
-// pointer, the Blueprints list's rolled ley-drawn sheet). 16x16 icons round their middle.
+// pointer, the Blueprints list's rolled ley-drawn sheet) and the list's delete mark. 16x16 icons round their middle.
 
 const icon = (key: string, shapes: readonly Shape[]): VectorSprite => ({ key, size: [16, 16], anchor: [8, 8], frames: [shapes] });
 
@@ -30,4 +30,16 @@ const LIST: Shape[] = [
   rect(-1.2, 3.6, 2.4, 2.2, 0.5, solid('brass')),
 ];
 
-export const BLUEPRINT_SPRITES_VECTOR: readonly VectorSprite[] = [icon(BLUEPRINT_SPRITES.areaEmblem, AREA), icon(BLUEPRINT_SPRITES.listEmblem, LIST)];
+/** A list row's delete mark: a carved round stone with a rust X across it. */
+const DELETE: Shape[] = [
+  ellipse(0, 0, 5.6, 5.6, { fill: { radial: [-1.6, -1.6, 7], stops: [{ at: 0, color: 'carve-light' }, { at: 1, color: 'carve-dark' }] }, outline: true }),
+  line([-2.6, -2.6, 2.6, 2.6], 1.8, 'rust', true),
+  line([2.6, -2.6, -2.6, 2.6], 1.8, 'rust', true),
+  line([-2.2, -2.6, 0, -0.4], 0.6, { id: 'rust-light', alpha: 0.9 }),
+];
+
+export const BLUEPRINT_SPRITES_VECTOR: readonly VectorSprite[] = [
+  icon(BLUEPRINT_SPRITES.areaEmblem, AREA),
+  icon(BLUEPRINT_SPRITES.listEmblem, LIST),
+  icon(BLUEPRINT_SPRITES.deleteMark, DELETE),
+];

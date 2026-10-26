@@ -85,6 +85,7 @@ export class Controls {
       rotate: () => void (this.mouse.build.building && (this.tools.ghost ? this.tools.turn() : (this.facing = rotateCw(this.facing)))),
       flip: () => void (this.mouse.build.building && (this.tools.ghost ? this.tools.mirror() : (this.mirrored = !this.mirrored))),
       area: () => void (this.mouse.build.building && this.tools.toggleArea()),
+      blueprints: () => void (this.mouse.build.building && this.tools.toggleList()),
       interact: () => (this.interactPending = this.interactPress = true),
       menu: (key) => (this.menuKeys[key] = true),
       build: () => (this.buildPending = true),
