@@ -89,6 +89,9 @@ export const LIGHTNING_ROUNDS: readonly string[] = ROUNDS.filter((r) => roundTag
 /** 062: every steel and glass round, any of which the "Fire steel rounds" goal takes (066: a storm round isn't steel). */
 export const TIERED_ROUNDS: readonly string[] = ROUNDS.filter((r) => roundTier(r) === 'steel' || roundTier(r) === 'glass');
 
+/** 066: every stormsteel and storm glass round, any of which the "Fire stormsteel rounds" goal takes. */
+export const STORM_TIERED_ROUNDS: readonly string[] = ROUNDS.filter((r) => roundTier(r) === 'stormsteel' || roundTier(r) === 'storm-glass');
+
 /** 050: the research node whose entrance the second-line goal asks to feed, and its marker points at: the Warden core's. */
 export const NEW_ENTRANCE_NODE = 'entrance-2';
 
@@ -187,6 +190,11 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
   { text: 'Defeat the Conductor', milestone: 'm3', check: { kind: 'bossDefeated', boss: 'conductor' }, target: { kind: 'boss', boss: 'conductor' } },
   { text: "Restore the intake's fifth entrance (E with the Conductor core)", milestone: 'm3', check: { kind: 'restored', node: 'entrance-5' }, target: { kind: 'caps' } },
   { text: 'Feed all five entrances', milestone: 'm3', check: { kind: 'volley', min: 5 }, target: { kind: 'intake' } },
+  // 066: the storm tier, as 062's: stormsteel by hand (it unlocks the Tempering coil), a coil making it, then any
+  // stormsteel or storm glass round fired. Built in the foundry (its door from outside); fired from the intake.
+  { text: 'Temper stormsteel at the bench (C)', milestone: 'm3', check: { kind: 'crafted', items: ['stormsteel'] }, target: { kind: 'collect' } },
+  { text: 'Build a Tempering coil into a line', milestone: 'm3', check: { kind: 'machineMade', item: 'stormsteel' }, target: { kind: 'room', room: FOUNDRY_ROOM } },
+  { text: 'Fire stormsteel rounds', milestone: 'm3', check: { kind: 'fired', items: STORM_TIERED_ROUNDS }, target: { kind: 'intake' } },
   // 058: cuts in as the current goal once the first talent point comes (058.4: never during a guided build).
   { text: 'Press T to spend a talent point', milestone: 'm1', check: { kind: 'talentSpent' }, cutIn: true },
 ];
