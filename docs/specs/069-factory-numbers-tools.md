@@ -58,7 +58,7 @@ Built on `claude/069-factory-numbers-tools` (plan: docs/plans/069-factory-number
 - **069.8 The pipette.** Q, rebindable as "Pipette" in Settings' key list (13 rows a column now, so the sandbox's 26 rows fit). A stored binding already on Q leaves it unbound (063.2's rule). Over a piece: that piece, its facing, a conduit's turn, a splitter's side and a stage's round; a click lays it (a conduit drag still lays its own corners), and R turns a held conduit's turn with it. Over nothing: an empty hand, with no ghost or bar highlight, where a click places nothing (right click still picks up); a bar cell or the wheel over the bar fills it again and drops the copied turn and round. A piece not on the bar leaves the hand as it is. An underground pair's link isn't copied (each end pairs by the usual rule).
 - **069.9 The wheel.** In build mode the wheel over the build bar still steps it (020); over the world it zooms. 020's test (menuLabels.spec) now wheels over the bar.
 - **069.10 0.75× fits the width.** The foundry is 24 × 16 tiles and 48 px of wall above (768 × 560 px). At 0.75× the view is 853 × 480 world px: its whole width fits, centred, but 15 of its 16 rows, and the HUD covers the bottom. About 0.6× would fit it all. Alternative: a third step, or 0.6× in place of 0.75×.
-- **069.11 Saves.** The rate window (`link.inflow`) and the purge event change the save's shape, so `SAVE_VERSION` is 22 (067 took 20 on main and 068 takes 21), with no migration.
+- **069.11 Saves.** The rate window (`link.inflow`) and the purge event change the save's shape, so `SAVE_VERSION` is 22 (067 took 20 and 068 21 on main), with no migration.
 
 ### Results
 - Criteria: all met, two as raised (069.1, 069.10).
@@ -66,7 +66,7 @@ Built on `claude/069-factory-numbers-tools` (plan: docs/plans/069-factory-number
 - Render (Vitest): tests/render/recipeCard.test.ts, pipette.test.ts, zoom.test.ts; hoverRecipe.test.ts (the intake's lines), clickInput.test.ts, describe.test.ts and settingsStore.test.ts updated.
 - Playwright: tests/e2e/purge.spec.ts, pipette.spec.ts, zoom.spec.ts; 022's hopperAmounts.spec.ts (click 10, Shift half, Ctrl the stack, in and out) and 063's blueprints.spec.ts (contents into the inventory) updated. readability.spec.ts's stored bindings (a player's from before 069) no longer carry the pipette, whose Q they rebind to rotate.
 - Checks:
-  - `npm run check` passes (2,538 unit tests, after merging main's 067).
+  - `npm run check` passes (2,567 unit tests, after merging main's 067, 068, #80 and #89).
   - Locally, one worker on port 5340: the six touched e2e files (13 passed), and the foundry's others: hoverPress, readability, playtestUi, legibility, foundry, foundryFlow, research, stash, settings, tunnels, tubeLink, fifthEntrance, guidedTutorial, foundryTutorial, playtestFixes2 and hudInventory (68 passed).
   - Older shot specs that show the foundry, build mode or the hovers ran with REVIEW_SHOTS=1 (research, guidedTutorial, guidance, ammoStages, legibility, playtestFixes2, shippable, blueprints, readability, hudInventory, inventoryHotbars, materialTiers, stormsteel, hopperAmounts, stash: 70 passed), and their images were restored as on main. One failed: guidedTutorialShots' "07 the goal panel under the foundry minimap" (the waypoint reads "edge", not "over"), which fails the same way on main since 067.
 - Review shots, docs/review/069:

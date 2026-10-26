@@ -18,11 +18,11 @@ import { CONDUCTOR, spire, SPIRE_DOOR_OUT, SPIRE_MIDDLE } from './spire';
 describe('the Conductor (data)', () => {
   it('is a boss with the spec’s starting values', () => {
     expect(ENEMIES.conductor).toBe(CONDUCTOR);
-    expect(CONDUCTOR).toMatchObject({ kind: 'conductor', boss: true, maxHealth: 6000, homingRelock: true });
+    expect(CONDUCTOR).toMatchObject({ kind: 'conductor', boss: true, maxHealth: 8000, homingRelock: true, shieldRods: 3, blinkInTicks: 30 });
     expect(CONDUCTOR.rods).toMatchObject({ health: 200, regrowTicks: 1200 });
     expect(CONDUCTOR.blink).toEqual({ everyTicks: 240, warnTicks: 45, minRods: 2 });
     expect(CONDUCTOR.lash).toMatchObject({ windupTicks: 45, damage: 50 });
-    expect(CONDUCTOR.call).toMatchObject({ windupTicks: 60, damage: 40, count: 3, radius: 40 });
+    expect(CONDUCTOR.call).toMatchObject({ windupTicks: 60, damage: 40, count: 5, radius: 40, spread: 64 });
     expect(CONDUCTOR.chain).toMatchObject({ windupTicks: 60, activeTicks: 30, damage: 45 });
     expect(CONDUCTOR.enrage).toEqual({ below: 0.5, blinkTicks: 150 });
     expect(CONDUCTOR.xp).toBe(CONDUCTOR_XP);
@@ -43,7 +43,7 @@ describe('the Conductor (data)', () => {
     expect(c.ring).toBe(5);
     expect(RING_SCALE[5]).toMatchObject({ health: 10, damage: 8 });
     expect(defOf(c)).toBe(CONDUCTOR);
-    expect(c.health).toBe(6000);
+    expect(c.health).toBe(8000);
   });
 
   it('has the Crown Spire as its arena, with an altar summoning it for 8 stormglass', () => {

@@ -73,6 +73,7 @@
     "state.enemies[].conductor.attackCooldowns: array",
     "state.enemies[].conductor.attackCooldowns[]: number",
     "state.enemies[].conductor.blinkCooldown: number",
+    "state.enemies[].conductor.blinkIn: number",
     "state.enemies[].conductor.blinkTo: number",
     "state.enemies[].conductor.blinkWarn: number",
     "state.enemies[].conductor.chainHit: boolean",

@@ -3,7 +3,7 @@ import { DEPTHS, ENEMY_FX, SPRITES } from '../data/assets';
 import { CHAMPIONS } from '../data/champions';
 import { defOf } from '../sim/champions';
 import { immune, type EnemyState } from '../sim/enemies';
-import { plated } from '../sim/forgewrightParts';
+import { plated } from '../sim/bossParts';
 import { colorOf } from './color';
 import { addVector } from './vector/textures';
 

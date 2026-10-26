@@ -15,9 +15,9 @@ import { insideTiles } from './tiles';
 // The Conductor (064): it stands at one of the Crown Spire's six rods and wakes when the player's feet enter the
 // spire (055's rule). Engaged, it faces the player and never walks. Every `blink.everyTicks` (enraged, the enrage's)
 // it picks another standing rod by the seeded rng, which flashes `warnTicks`, then it vanishes and appears there;
-// with fewer than `minRods` standing it is grounded until one regrows. Between blinks it makes its three attacks, in
-// data order, each on its own cooldown: the arc lash, the storm call (strikes.ts) and the rod chain. It never leaves
-// the spire; with the player out of it `leashTicks`, or down, its fight resets at once (it can't walk home).
+// with fewer than `minRods` standing it is grounded until one regrows. 068: for `blinkInTicks` after it appears it
+// can't be hit. Between blinks it makes its three attacks, in data order, each on its own cooldown: the arc lash, the
+// storm call (strikes.ts) and the rod chain. It never leaves the spire; with the player out of it `leashTicks`, or down, its fight resets at once (it can't walk home).
 
 /** Its attacks in data order: 0 the arc lash, 1 the storm call, 2 the rod chain. */
 const ATTACKS = ['lash', 'call', 'chain'] as const;
@@ -148,7 +148,8 @@ function stepBlink(state: SimState, e: EnemyState, def: ConductorDef): boolean {
     const from = { x: e.x, y: e.y };
     const to = standPoint(e.conductor.blinkTo);
     Object.assign(e, { x: to.x, y: to.y, vx: 0, vy: 0 });
-    Object.assign(e.conductor, { rod: e.conductor.blinkTo, blinkTo: -1 });
+    // 068: it can't be hit for `blinkInTicks` as it appears (enemies.ts's `targetable`).
+    Object.assign(e.conductor, { rod: e.conductor.blinkTo, blinkTo: -1, blinkIn: def.blinkInTicks });
     state.events.blinks.push({ id: e.id, rod: e.conductor.rod, fromX: from.x, fromY: from.y, toX: to.x, toY: to.y });
     return false;
   }

@@ -2,6 +2,20 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-26: 068 Tougher late bosses
+**Changed:** on `claude/068-late-boss-buffs` (InsanityWolfz/Pipeline#82), from Shaun's playtest calls (docs/brainstorm/2026-10-26-playtest-calls.md; plan docs/plans/068-late-boss-buffs.md):
+- the Forgewright: 6,000 health; heat keeps filling through vents (only a flood resets it); bellows of 300 that patch in 3 s; slam and spray 20% faster;
+- the Conductor: 8,000 health; a storm shield blocks every hit on his body while 3 or more rods stand (the plating check, `plated`, covers both bosses); a 30-tick blink-in window where shots pass through him but his rods still take hits; the storm call drops 5 circles.
+
+`SAVE_VERSION` 21 (067 took 20). Reviewed: no blocking findings; four suggestions applied (wrong targets in comments, `enemies.ts` back under 300 lines via `blockPlated`, a lightning round in the shield test). `npm run check` 2512 tests; CI green. Raised for Shaun: 068.1–068.12; 068.9–068.11 are balance calls.
+
+**Next:** Shaun's playtest (the sandbox's boss rooms, or `?playtest`); his calls on 068.9–068.11 and OK on the rest; "merge 82".
+
+**Notes:**
+- `npm run measure`, recorded not tuned: the Forgewright's decent bot is KO'd at 213.7 s with 1,209 health left on him (kept-up kill 253.4 s, target 90–120 s); the Conductor with homing bolts breaking rods 206–252 s (target 120–180 s), plain arrows breaking rods 92–135 s, arrows at his body only 0/20 in 360 s; the Bulwark 18.4 s.
+- CI's e2e jobs hung twice this session in `playwright install` (no job timeout); a re-run passed both times.
+- 064's "Conductor grounded" review shot now times out on the camera settling, likely from fix-playtest-ui's camera lift (068.12).
+
 ## 2026-10-26: 067 The foundry after the first boss
 **Changed:** on `claude/067-foundry-after-shrine` (InsanityWolfz/Pipeline#81), from Shaun's playtest calls (docs/brainstorm/2026-10-26-playtest-calls.md; plan docs/plans/067-foundry-after-shrine.md, four slices):
 - arrows, bombs and ley bolts are hand-crafted from the start, with no attunement; each row shows once its raws have been carried;
@@ -16,6 +30,14 @@ Newest entry first. Entries before 050 are in docs/progress-archive.md.
 **Notes:**
 - `src/sim/events.ts` sits at 302 lines; split it the next time it grows.
 - 058's and 051's older review shots that show the example line can't be retaken (067.13).
+
+## 2026-10-26: Merged 061–066, two fixes, and an agent playtest
+**Changed:** Shaun merged 061, 062, 064, 065 and 066 in stack order (InsanityWolfz/Pipeline#72, #73, #75, #76, #77) and 063 (#74, merged onto them with `SAVE_VERSION` 19). Two fixes merged: the Stormcrown's damage ×8 with "each region steps up more than the last" in design.md (#78), and the inventory leaving build mode plus the KO respawn and camera (#79). Four AI playtester agents played main; their combined report is docs/brainstorm/2026-10-26-agent-playtest.md.
+
+**Next:** Shaun picks which of the report's bugs to fix (a fix batch) and which balance and design calls become specs.
+
+**Notes:**
+- The heavy sim tests (exampleLine, emberworks' ring test, the fight harnesses, roads, sim replays) time out at Vitest's 5 s under load; they pass alone. Worth explicit measured budgets.
 
 ## 2026-10-26: 063 Blueprints and area pick-up
 **Changed:** on `claude/063-blueprints` (InsanityWolfz/Pipeline#74), from Shaun's blueprints interview (docs/brainstorm/2026-10-26-blueprints-interview.md; plan docs/plans/063-blueprints.md):
