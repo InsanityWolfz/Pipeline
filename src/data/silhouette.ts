@@ -6,10 +6,12 @@ export const PLAYER_SILHOUETTE = {
   alpha: 0.4,
   /** The pale outline round it: colour, alpha, and how far out it reaches, px. */
   rim: { color: 'ink', alpha: 0.55, px: 1.2 },
-  /** The body box the cover test uses, px: `w` wide, `h` tall, standing on the feet point. */
+  /** The body box the cover test samples, px: `w` wide, `h` tall, standing on the feet point; a `cols` × `rows` grid of points. */
   body: { w: 14, h: 30 },
-  /** The share of the body a single prop in front must cover to hide the player. */
+  samples: { cols: 3, rows: 5 },
+  /** The share of those points that props in front must cover (drawn pixels at least `alphaAtLeast` of 255) to hide the player. */
   cover: 0.3,
+  alphaAtLeast: 128,
   /** What hides the player (and nothing else): ruin blocks and grove trees (tiles), tree nodes, the bench and machines. */
   nodes: ['tree'] as readonly string[],
   fixtures: ['bench'] as readonly string[],

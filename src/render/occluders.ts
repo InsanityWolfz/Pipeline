@@ -3,36 +3,25 @@ import { PLAYER_SILHOUETTE } from '../data/silhouette';
 
 // 070: what can hide the player, and whether it does. Views register the sprites of the props that hide (ruin blocks,
 // grove trees, tree nodes, the bench, machines) as they make them; a registered sprite leaves when it's destroyed.
-// The cover test is pure: a prop hides the player when it sorts in front of them (its depth, its bottom, is deeper)
-// and covers at least a share of their body box.
+// The player is hidden when enough points spread over their body box land on a prop's drawn (opaque) pixels, a prop
+// that sorts in front of them (its depth, its bottom, is deeper). Pixels, not boxes: a round canopy's box has empty
+// corners that would hide a player standing beside it.
 
-/** A box in world px with its draw depth. */
-export interface PropBox {
-  x0: number;
-  y0: number;
-  x1: number;
-  y1: number;
-  depth: number;
+export interface Point {
+  x: number;
+  y: number;
 }
 
-/** The player's body box standing on the feet point (x, bottom), at the depth they sort by. */
-export function bodyBox(x: number, bottom: number): PropBox {
-  const B = PLAYER_SILHOUETTE.body;
-  return { x0: x - B.w / 2, y0: bottom - B.h, x1: x + B.w / 2, y1: bottom, depth: bottom };
+/** The points sampled over the player's body box standing on the feet point (x, bottom): a grid, cell centres. */
+export function bodySamples(x: number, bottom: number): Point[] {
+  const { w, h } = PLAYER_SILHOUETTE.body;
+  const { cols, rows } = PLAYER_SILHOUETTE.samples;
+  return Array.from({ length: cols * rows }, (_, i) => ({ x: x - w / 2 + ((i % cols) + 0.5) * (w / cols), y: bottom - h + (Math.floor(i / cols) + 0.5) * (h / rows) }));
 }
 
-/** The share of `body` that `prop` covers, 0..1. */
-export function coverShare(body: PropBox, prop: PropBox): number {
-  const w = Math.max(0, Math.min(body.x1, prop.x1) - Math.max(body.x0, prop.x0));
-  const h = Math.max(0, Math.min(body.y1, prop.y1) - Math.max(body.y0, prop.y0));
-  const area = (body.x1 - body.x0) * (body.y1 - body.y0);
-  return area > 0 ? (w * h) / area : 0;
-}
-
-/** True if any prop in front of the body covers at least `share` of it. */
-export function hiddenBehind(body: PropBox, props: Iterable<PropBox>, share: number): boolean {
-  for (const p of props) if (p.depth > body.depth && coverShare(body, p) >= share) return true;
-  return false;
+/** The share of the samples `covered` says a prop in front covers, 0..1. */
+export function hiddenShare(samples: readonly Point[], covered: (p: Point) => boolean): number {
+  return samples.length === 0 ? 0 : samples.filter(covered).length / samples.length;
 }
 
 type Prop = GameObjects.Image | GameObjects.Sprite;
@@ -47,14 +36,20 @@ export class Occluders {
     return o;
   }
 
-  /** The boxes of the shown props whose position is within `reach` px of (x, y) (a quick cut before measuring bounds). */
-  near(x: number, y: number, reach: number): PropBox[] {
-    const out: PropBox[] = [];
-    for (const o of this.props) {
-      if (!o.visible || Math.abs(o.x - x) > reach || Math.abs(o.y - y) > reach) continue;
+  /** The shown props in front of `depth` whose position is within `reach` px of (x, y). */
+  inFront(x: number, y: number, depth: number, reach: number): Prop[] {
+    return [...this.props].filter((o) => o.visible && o.depth > depth && Math.abs(o.x - x) <= reach && Math.abs(o.y - y) <= reach);
+  }
+
+  /** True if one of `props` draws an opaque pixel at the world point. */
+  static covers(props: readonly Prop[], p: Point): boolean {
+    return props.some((o) => {
       const b = o.getBounds();
-      out.push({ x0: b.x, y0: b.y, x1: b.x + b.width, y1: b.y + b.height, depth: o.depth });
-    }
-    return out;
+      if (p.x < b.x || p.x >= b.right || p.y < b.y || p.y >= b.bottom) return false;
+      const local = o.getLocalPoint(p.x, p.y);
+      const lx = o.flipX ? o.frame.width - local.x : local.x;
+      const alpha = o.scene.textures.getPixelAlpha(Math.floor(lx), Math.floor(local.y), o.texture.key, o.frame.name);
+      return (alpha ?? 0) >= PLAYER_SILHOUETTE.alphaAtLeast;
+    });
   }
 }

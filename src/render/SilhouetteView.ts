@@ -2,7 +2,7 @@ import { TintModes, type GameObjects, type Scene } from 'phaser';
 import { DEPTHS, WANDERER_KEY } from '../data/assets';
 import { PLAYER_SILHOUETTE } from '../data/silhouette';
 import { colorOf } from './color';
-import { bodyBox, hiddenBehind, type Occluders } from './occluders';
+import { bodySamples, hiddenShare, Occluders } from './occluders';
 
 /** How far from the feet a registered prop's position may be and still be measured, px (the tallest props' height). */
 const REACH = 96;
@@ -29,8 +29,8 @@ export class SilhouetteView {
 
   /** Follows the player's sprite; `visible` false (another room, or the KO's fall) hides it. */
   update(player: GameObjects.Image, visible: boolean): void {
-    const body = bodyBox(player.x, player.y);
-    this.shown = visible && player.visible && hiddenBehind(body, this.occluders.near(player.x, player.y, REACH), PLAYER_SILHOUETTE.cover);
+    const front = visible && player.visible ? this.occluders.inFront(player.x, player.y, player.depth, REACH) : [];
+    this.shown = front.length > 0 && hiddenShare(bodySamples(player.x, player.y), (p) => Occluders.covers(front, p)) >= PLAYER_SILHOUETTE.cover;
     this.rim.setVisible(this.shown);
     this.fill.setVisible(this.shown);
     if (!this.shown) return;
