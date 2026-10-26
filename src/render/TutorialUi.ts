@@ -19,7 +19,7 @@ import type { ScreenBox } from './bottomHud';
 export type TutorialUiState = Pick<UiState, 'intakePrompt' | 'prompt' | 'marker' | 'waypoint' | 'objective' | 'madePopups' | 'objectiveTick' | 'interactPrompt' | 'guided'>;
 
 /** The tutorial's part of `ui()` before the scene has built its views. */
-export const NO_TUTORIAL_UI: TutorialUiState = { intakePrompt: null, prompt: null, marker: null, waypoint: null, objective: { text: '', subSteps: [] }, madePopups: [], objectiveTick: 0, interactPrompt: null, guided: NO_GUIDED };
+export const NO_TUTORIAL_UI: TutorialUiState = { intakePrompt: null, prompt: null, marker: null, waypoint: null, objective: { text: '', subSteps: [], lines: 0, box: null, capWidth: 0 }, madePopups: [], objectiveTick: 0, interactPrompt: null, guided: NO_GUIDED };
 
 /** The piece whose build-bar cell pulses (027) and takes the guide arrow (058): the guided step's next piece to place, or null. */
 export function highlightOf(sim: SimState): string | null {
@@ -61,7 +61,7 @@ export class TutorialUi {
       prompt: this.prompt.shown,
       marker: this.waypoint.markerAt,
       waypoint: this.waypoint.shown,
-      objective: { text: this.objective.text, subSteps: this.objective.subSteps },
+      objective: { text: this.objective.text, subSteps: this.objective.subSteps, lines: this.objective.lines, box: this.objective.box, capWidth: this.objective.capWidth },
       madePopups: this.made.shown,
       objectiveTick: this.objective.tickAlpha,
       interactPrompt: this.interact.shown,

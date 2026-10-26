@@ -56,6 +56,31 @@ describe('gear drops (010, unchanged)', () => {
     expect(s.inventory[UNIDENTIFIED_ARMOR]).toBe(1);
   });
 
+  it('the first unidentified piece picked up survives a KO, kept like a banked item; a second is still at risk (fix-playtest-ui)', () => {
+    const s = arena();
+    s.groundItems.push({ id: 0, itemId: UNIDENTIFIED_ARMOR, roomId: HALL, x: PLAYER_AT.x, y: PLAYER_AT.y });
+    run(s, 1);
+    expect(s.inventory[UNIDENTIFIED_ARMOR]).toBe(1);
+    expect(summarize(s).atRisk[UNIDENTIFIED_ARMOR]).toBeUndefined();
+    s.groundItems.push({ id: 1, itemId: UNIDENTIFIED_ARMOR, roomId: HALL, x: PLAYER_AT.x, y: PLAYER_AT.y });
+    run(s, 1);
+    expect(s.inventory[UNIDENTIFIED_ARMOR]).toBe(2);
+    expect(summarize(s).atRisk[UNIDENTIFIED_ARMOR]).toBe(1);
+    s.player.health = 0;
+    for (let t = 0; t < 400 && !s.events.ko; t++) stepSim(s);
+    expect(s.events.ko).toBe(true);
+    expect(s.inventory[UNIDENTIFIED_ARMOR]).toBe(1);
+    expect(s.events.lost[UNIDENTIFIED_ARMOR]).toBe(1);
+  });
+
+  it('once a piece has been identified, a picked-up piece is at risk as before (fix-playtest-ui)', () => {
+    const s = arena();
+    s.gear = [piece(0, 'helm')];
+    s.groundItems.push({ id: 0, itemId: UNIDENTIFIED_ARMOR, roomId: HALL, x: PLAYER_AT.x, y: PLAYER_AT.y });
+    run(s, 1);
+    expect(summarize(s).atRisk[UNIDENTIFIED_ARMOR]).toBe(1);
+  });
+
   it('a deposit at a claimed pylon stashes unidentified gear too', () => {
     const s = createSim(SEED);
     claim(s, 'shrine');

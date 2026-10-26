@@ -48,6 +48,8 @@ export interface HoverName {
 /** A pylon's hover line: the shrine's (018), or a landmark pylon's naming its landmark and what it sends (032). */
 function pylonLine(sim: SimState, pylon: PylonDef): string {
   const claimed = sim.claims.includes(pylon.site);
+  // fix-playtest-ui: an awake pylon whose guards live says only that they must go.
+  if (!claimed && !dormant(sim, pylon) && occupied(sim, pylon.site)) return DESCRIPTIONS.pylonGuarded;
   const landmark = landmarkOfSite(pylon.site);
   if (!landmark?.pylon) return claimed ? DESCRIPTIONS.pylon : DESCRIPTIONS.pylonDormant;
   return sitePylonLine(landmark.name, landmark.pylon.supplies.map((id) => itemDef(id).name).join(' and '), claimed ? 'claimed' : dormant(sim, pylon) ? 'dormant' : 'awake');

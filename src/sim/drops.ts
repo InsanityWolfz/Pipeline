@@ -8,7 +8,7 @@ import { championDropRolls } from './champions';
 import type { Room } from '../data/rooms';
 import { isSolid, overlapsRect, type Rect } from './collision';
 import { nextFloat, nextInt, type RngState } from './rng';
-import { rollArmorDrop } from './gear';
+import { bankFirstPiece, rollArmorDrop } from './gear';
 import { standingRects } from './fixtures';
 import { nodeRects } from './nodes';
 import { roomById, type SimState } from './state';
@@ -210,6 +210,7 @@ export function stepPickups(state: SimState): void {
     item.speed = speed;
     if (gapToFeet(p, item.x, item.y) <= MAGNET.contact) {
       state.inventory[item.itemId] = (state.inventory[item.itemId] ?? 0) + 1;
+      bankFirstPiece(state, item.itemId);
       state.events.pickups.push({ id: item.id, itemId: item.itemId, x: item.x, y: item.y });
     } else {
       state.groundItems[kept++] = item;
