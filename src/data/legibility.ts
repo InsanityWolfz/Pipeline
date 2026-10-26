@@ -127,8 +127,12 @@ export const LEGIBILITY_WORDS = {
   /** A Burst line's short form, when the whole line would run the summary past its rows (its Burst chip already says it's damage). */
   burstShort: '{damage} {{burst}} · {rate}',
   freezeIn: '{{freeze}} in {hits} hits',
+  /** 062: a tiered round's material, and its × on every hit's damage. */
+  tierDamage: '{tier} {mul} dmg',
   /** 060: a Fire round's burn, each second and how long. */
   burns: 'burns {damage}/s for {time}',
+  /** 062: a burn's short form, when a tiered round's summary would run past its rows (its time is in the breakdown). */
+  burnsShort: 'burns {damage}/s',
   shards: '{count} {{shard}}s × {damage}',
   bomblets: '{count} {{bomblet}}s × {damage}',
   arms: 'arms in {time}',
@@ -166,6 +170,8 @@ export const LEGIBILITY_WORDS = {
   yours: '(yours: {value})',
   noStats: 'nothing yet',
   /** A Build tab row's count of what changes it. */
+  /** 062: a Build tab row's stone round, marked with the tiers of it also known (they share its row). */
+  rowTiers: '{name} · {tiers}',
   rowSource: '{count} source',
   rowSources: '{count} sources',
   /** Every gear affix, as one payoff of You. */

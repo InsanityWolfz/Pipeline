@@ -4,7 +4,7 @@ import { DERIVED_TAGS, KEYWORD_DEBT, KEYWORD_LIST, KEYWORDS, NOUNS, type Keyword
 import { keywordPayoffs, keywordSources } from '../../src/data/keywordGraph';
 import { REF, SLOT, textSources as paramSources, keywordText, refName } from '../../src/data/rulesText';
 import { bombletKeywords, poolBurstKeywords, roundKeywords, shardKeywords } from '../../src/data/roundKeywords';
-import { ROUNDS, SPLIT } from '../../src/data/tags';
+import { ROUNDS, roundTier, SPLIT } from '../../src/data/tags';
 import { keywordReport } from '../../src/data/keywordReport';
 import { STATS } from '../../src/data/statDefs';
 
@@ -98,8 +98,8 @@ describe('round keywords (derived from data)', () => {
     expect(names(roundKeywords('ley-bolt+homing'))).toEqual(['Ley', 'Shot', 'Knockback', 'Homing', 'Physical']);
   });
 
-  it('the seventeen tagged rounds exist and nothing else (060: seven Fire rounds)', () => {
-    expect([...ROUNDS].sort()).toEqual(
+  it('the seventeen tagged rounds exist and nothing else (060: seven Fire rounds; 062: each also at its tier)', () => {
+    expect(ROUNDS.filter((r) => roundTier(r) === 'stone').sort()).toEqual(
       [
         'arrow+frost',
         'bomb+frost',

@@ -10,6 +10,7 @@ import { killXp } from './leveling';
 import { afterKeystoneHit, burning, keystoneHit, takePool } from './keystones';
 import { spawnDrops } from './drops';
 import { spreadBurn } from './fire';
+import { onEmberDeath } from './emberDeaths';
 import type { SimState } from './state';
 import { rotate } from './volley';
 import { shardEmissionOf, shotEmission } from './emissions';
@@ -131,21 +132,38 @@ export function arrowHits(state: SimState, spawned: ArrowState[] = []): (arrow: 
   };
 }
 
-/** Removes dead enemies, recording their deaths, dropping their loot and giving their XP (037). */
+/**
+ * Removes dead enemies, recording their deaths, dropping their loot and giving their XP (037). A cinder mote that
+ * burst on its own (061: `spent`) just goes, passing on only its burn. A death rule (061: a killed mote's death burst, emberDeaths.ts) can kill
+ * others, so it passes again until none is left dead.
+ */
 export function removeDead(state: SimState): void {
+  while (state.enemies.some((e) => e.health <= 0)) removeDeadOnce(state);
+}
+
+function removeDeadOnce(state: SimState): void {
   let kept = 0;
+  const dying: EnemyState[] = [];
   for (const e of state.enemies) {
-    if (e.health > 0) {
-      state.enemies[kept++] = e;
+    if (e.health > 0) state.enemies[kept++] = e;
+    else dying.push(e);
+  }
+  state.enemies.length = kept;
+  for (const e of dying) {
+    // 061.22: a mote spent on its own burst still passes its burn on (060), but drops nothing, gives no XP and has no death burst.
+    if (e.spent) {
+      spreadBurn(state, e);
       continue;
     }
+    const def = enemyDef(e.enemyId);
     state.events.deaths.push({ id: e.id, enemyId: e.enemyId, x: e.x, y: e.y, facing: e.facing, ...(e.champion ? { champion: true as const } : {}) });
-    spawnDrops(state, enemyDef(e.enemyId), e.x, e.y, e.roomId, e.champion !== null);
+    // A whelp (061) drops nothing at all.
+    if (!def.noLoot) spawnDrops(state, def, e.x, e.y, e.roomId, e.champion !== null);
     // Any kill gives XP (037): by ammo, burst or punch. Before the boss's own record, which drops a summoned boss.
     killXp(state, e);
     onBossDeath(state, e.enemyId);
-    // 060: a burning enemy passes its burn on as it dies (to the living: later ones in the list are checked as they come).
+    // 060: a burning enemy passes its burn on as it dies (to the living).
     spreadBurn(state, e);
+    onEmberDeath(state, e);
   }
-  state.enemies.length = kept;
 }

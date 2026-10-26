@@ -4,6 +4,7 @@ import { HOLLOWS_SPRITES } from './hollowsAssets';
 import { MINE_SPRITES } from './mineAssets';
 import { RESEARCH_ICONS } from './researchAssets';
 import { ROUND_ICONS, STAGE_SPRITES } from './stageAssets';
+import { TIER_SPRITES } from './tierAssets';
 import { ROUNDS, roundBase, roundName } from './tags';
 
 // Items the player can carry, by kebab-case id.
@@ -57,6 +58,13 @@ const BASE_ITEMS: Readonly<Record<string, ItemDef>> = {
   'ley-dust': { id: 'ley-dust', name: 'Ley dust', kind: 'part', group: 'parts', icon: SPRITES.itemLeyDust },
   /** 038: pressed from ley-iron, a landmine's body. */
   'iron-plate': { id: 'iron-plate', name: 'Iron plate', kind: 'part', group: 'parts', icon: MINE_SPRITES.itemIronPlate },
+  // 062: the material tiers' parts. Ley-steel (the Smelter's) and ley glass (the kiln's), and the steel version of each
+  // family's one tiered part; the ley bolt's whole input is ley glass.
+  'ley-steel': { id: 'ley-steel', name: 'Ley-steel', kind: 'part', group: 'parts', icon: TIER_SPRITES.itemLeySteel },
+  'ley-glass': { id: 'ley-glass', name: 'Ley glass', kind: 'part', group: 'parts', icon: TIER_SPRITES.itemLeyGlass },
+  'steel-arrowhead': { id: 'steel-arrowhead', name: 'Steel arrowhead', kind: 'part', group: 'parts', icon: TIER_SPRITES.itemSteelArrowhead },
+  'steel-casing': { id: 'steel-casing', name: 'Steel casing', kind: 'part', group: 'parts', icon: TIER_SPRITES.itemSteelCasing },
+  'steel-plate': { id: 'steel-plate', name: 'Steel plate', kind: 'part', group: 'parts', icon: TIER_SPRITES.itemSteelPlate },
   'unidentified-armor': { id: 'unidentified-armor', name: 'Unidentified gear', kind: 'armor', group: 'gear', icon: SPRITES.itemUnidentifiedArmor },
   /** The Pylon Warden's core (009): it restores one intake entrance (033). Its kind stays a part; the panel lists it under Cores (031). */
   'warden-core': { id: 'warden-core', name: 'Warden core', kind: 'part', group: 'cores', icon: SPRITES.itemWardenCore, research: 'core' },

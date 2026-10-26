@@ -260,3 +260,9 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - The intake's middle is `INTAKE_MID_TX`, for any number of entrances.
   - `SAVE_VERSION` 13, no migration.
 
+- **061 Emberworks enemies:**
+  - Ground hazards are one list (`floodPools`) of shaped pools (rect, circle, capsule), each carrying its own damage and beat; owner-specific rules (the Forgewright's heat reset) are keyed by the owner's kind.
+  - The Charger's and the hound's dashes share `src/sim/laneRun.ts`; the caller decides what a wall does.
+  - Death hooks in `removeDead`: spawned whelps are pushed after the list is cut, so they act from the next tick; a `spent` enemy (a mote that burst on its own) skips its death record, drops, XP and death burst but still spreads its burn; `noLoot` skips the schematic and armour rolls.
+  - Enemy heals scale by ring and champion like damage, so a heal keeps pace with the health it repairs.
+

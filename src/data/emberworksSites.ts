@@ -52,8 +52,16 @@ const ASH_KILNS: LandmarkDef = {
   area: { x0: 0, y0: 0, x1: 9, y1: 11 },
   features: [],
   nodes: [],
-  // 060: no guarding pack until 061; it is claimed by holding E.
-  guards: [],
+  // 061: a fixed pack holds it: the motes out front, the hounds on the flanks with clear lanes, the golem by the
+  // pylon, the tender at the back by the east kilns. Motes are listed first, so a pack killed at once bursts before the golem splits.
+  guards: [
+    { enemyId: 'cinder-mote', tx: 7, ty: 3 },
+    { enemyId: 'cinder-mote', tx: 7, ty: 7 },
+    { enemyId: 'bellows-hound', tx: 4, ty: 3 },
+    { enemyId: 'bellows-hound', tx: 4, ty: 7 },
+    { enemyId: 'slag-golem', tx: 3, ty: 5 },
+    { enemyId: 'kiln-tender', tx: 8, ty: 5 },
+  ],
   pylon: { tx: 1, ty: 5, site: 'ash-kilns', supplies: ['cinderite'] },
   stamps: [...kilnRow(2, 1), ...[4, 5].map((tx) => ({ tx, ty: 5, symbol: TILE.kiln })), { tx: 6, ty: 5, symbol: TILE.chimney }, ...kilnRow(2, 9)],
   marker: 'site',

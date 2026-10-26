@@ -12,6 +12,8 @@ import { dormant, occupied } from '../sim/claims';
 import { portPerMinute, pylonsOf, supplyOf } from '../sim/claims';
 import { INTAKE } from '../data/foundry';
 import { enemyDef } from '../data/enemies';
+import { EMBER_ENEMY_LOOK } from '../data/emberworksEnemyAssets';
+import { repairing } from '../sim/tenderAi';
 import { CHAMPIONS } from '../data/champions';
 import { HOVER_NAME, WORLD_NAMES } from '../data/hudLayout';
 import { itemDef } from '../data/items';
@@ -109,7 +111,9 @@ export function nameAt(sim: SimState, roomId: string, px: number, py: number): H
     const k = e.champion ? CHAMPIONS.scale : 1;
     const box = { w: HOVER_NAME.enemy.w * k, h: HOVER_NAME.enemy.h * k };
     if (e.roomId === roomId && e.health > 0 && inBox(px, py, e.x, e.y, box)) {
-      return { name: e.champion?.name ?? enemyDef(e.enemyId).name, x: e.x, y: e.y, rise: HOVER_NAME.enemy.rise * k, enemy: e.id };
+      // 061: a kiln-tender's beam on it shows under its name.
+      const repaired = repairing(sim, e.id) ? { description: EMBER_ENEMY_LOOK.beam.hoverLine } : {};
+      return { name: e.champion?.name ?? enemyDef(e.enemyId).name, x: e.x, y: e.y, rise: HOVER_NAME.enemy.rise * k, enemy: e.id, ...repaired };
     }
   }
   for (const g of sim.groundItems) {

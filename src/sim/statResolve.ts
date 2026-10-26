@@ -4,6 +4,7 @@ import { isRuleLine, type ContentLine, type RuleId, type RuleLine, type Scope } 
 import { relicDef } from '../data/relics';
 import { STATS, type StatId } from '../data/statDefs';
 import { TALENTS } from '../data/talents';
+import { TIER_DAMAGE, TIERS, type TierId } from '../data/tiers';
 import type { SimState } from './state';
 import { wornPieces } from './worn';
 
@@ -14,12 +15,16 @@ import { wornPieces } from './worn';
 // the emission's keywords, `all-ammo` on any ammo, `you` on the player (039.1). Nothing
 // derived is rounded here; only text rounds.
 
-/** What a stat is read for: its keywords, whether it's ammo (All ammo reaches it), the player (You), or a Shard (Shard damage lines reach its damage). */
+/**
+ * What a stat is read for: its keywords, whether it's ammo (All ammo reaches it), the player (You), or a Shard (Shard
+ * damage lines reach its damage); 062: a tiered round's material tier, which multiplies its damage (no keyword).
+ */
 export interface Emission {
   keywords: readonly KeywordId[];
   ammo: boolean;
   you?: true;
   shard?: true;
+  tier?: TierId;
 }
 
 /** The player (039.1: scope You). */
@@ -100,9 +105,13 @@ function gearCaps(stat: StatId, affixAdds: readonly Contribution[]): Contributio
   return [];
 }
 
-/** Rule-made multipliers: heavy armor's walk (unless a rule lifts it) and a fire-rate ramp at its current height. */
+/** A material tier's damage step's source (062): its name, "Steel" or "Glass". Not a bonus: the breakdown shows it as a step only. */
+export const TIER_SOURCES: readonly string[] = Object.values(TIERS).map((t) => t.prefix);
+
+/** Rule-made multipliers: a tiered round's damage (062), heavy armor's walk (unless a rule lifts it) and a fire-rate ramp at its current height. */
 function ruleMuls(state: Statted, stat: StatId, e: Emission, lines: readonly Sourced[]): Contribution[] {
   const out: Contribution[] = [];
+  if (stat === 'damage' && e.tier) out.push({ source: TIERS[e.tier].prefix, value: TIER_DAMAGE[e.tier] });
   if (stat === 'move-speed' && e.you) {
     const body = wornPieces(state).find((p) => p.slot === 'body');
     const lift = lines.find((s) => isRuleLine(s.line) && s.line.rule === 'no-heavy-slow');

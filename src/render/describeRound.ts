@@ -5,6 +5,8 @@ import { KEYWORDS, type KeywordId } from '../data/keywords';
 import { LEGIBILITY_WORDS as W, PARAM_STATS, WHEN_LINES } from '../data/legibility';
 import { formatDamage, formatParam, formatSeconds, formatStat, LINE_SEP, renderTemplate, textSources, trimNumber } from '../data/rulesText';
 import { roundKeywords } from '../data/roundKeywords';
+import { roundTier } from '../data/tags';
+import { TIER_DAMAGE, TIERS } from '../data/tiers';
 import type { StatId } from '../data/statDefs';
 import { bombletEmission, roundEmission, shardEmissionOf } from '../sim/emissions';
 import type { SimState } from '../sim/state';
@@ -88,9 +90,14 @@ export function describeRound(seen: Seen, ammoId: string): Description {
   // The summary: damage · shots/s, then what its keywords add.
   const head = fill(a.kind === 'straight' ? W.shotLine : W.burstLine, { damage: formatDamage(damage.final), rate: formatStat(rate.final, 'per-s') });
   const extras: string[] = [];
+  // 062: a tiered round's material and its × (the breakdown shows it as its own damage step). Its name says it too, so
+  // a summary too long for its rows drops it first.
+  const tier = roundTier(ammoId);
+  const tierText = tier === 'stone' ? [] : [fill(W.tierDamage, { tier: TIERS[tier].prefix, mul: formatParam(TIER_DAMAGE[tier], 'multiplier') })];
   if (kws.includes('freeze')) extras.push(fill(W.freezeIn, { hits: hitsToFreeze(s) }));
   // 060: a Fire round's burn, its share of the hit each second, for its (resolved) time.
-  if (keywords.includes('fire')) extras.push(fill(W.burns, { damage: formatDamage(damage.final * value('fire', 'share')), time: formatSeconds(value('fire', 'duration')) }));
+  const burn = formatDamage(damage.final * value('fire', 'share'));
+  if (keywords.includes('fire')) extras.push(fill(W.burns, { damage: burn, time: formatSeconds(value('fire', 'duration')) }));
   if (keywords.includes('split')) extras.push(fill(W.shards, { count: Math.round(value('split', 'count')), damage: formatDamage(value('split', 'damage')) }));
   if (keywords.includes('cluster')) extras.push(fill(W.bomblets, { count: Math.round(value('cluster', 'count')), damage: formatDamage(value('cluster', 'damage')) }));
   if (a.kind === 'mine') extras.push(fill(W.arms, { time: formatSeconds(value('mine', 'arm')) }));
@@ -99,8 +106,12 @@ export function describeRound(seen: Seen, ammoId: string): Description {
   const bonuses = new Set([...shown.flatMap(bonusSources), ...(ramp ? [ramp.source] : [])]).size;
   const numbers = { damage: formatDamage(damage.final), perSecond: formatStat(rate.final, 'per-s') };
   // A Burst line too long for its row drops "dmg" before anything is cut (tipFit's short form).
-  const short = a.kind === 'straight' ? null : fill(W.burstShort, { damage: formatDamage(damage.final), rate: formatStat(rate.final, 'per-s') });
-  const summary: TipLine[] = [{ ...line([head, ...extras].join(LINE_SEP)), ...(short ? { short: [short, ...extras].join(LINE_SEP) } : {}) }];
+  // 062: so does a tier's note, and then a burn's time (the breakdown has both).
+  const shortHead = a.kind === 'straight' ? head : fill(W.burstShort, { damage: formatDamage(damage.final), rate: formatStat(rate.final, 'per-s') });
+  const shortExtras = tierText.length > 0 && keywords.includes('fire') ? extras.map((e) => (e.startsWith(fill(W.burnsShort, { damage: burn })) ? fill(W.burnsShort, { damage: burn }) : e)) : extras;
+  const full = [head, ...tierText, ...extras].join(LINE_SEP);
+  const short = [shortHead, ...shortExtras].join(LINE_SEP);
+  const summary: TipLine[] = [{ ...line(full), ...(short !== full ? { short } : {}) }];
   if (bonuses > 0) summary.push(line(fill(bonuses === 1 ? W.bonus : W.bonuses, { count: bonuses }), 'hint'));
   return {
     source: { kind: 'round', id: ammoId },

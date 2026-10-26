@@ -41,7 +41,9 @@ describe('the world grows (060)', () => {
     // (it still starts at its pylon and ends on the ruin; tests/data/leyLines.test.ts holds it to the line rules).
     const { 'cistern-terrace': moved, ...lines } = SNAPSHOT.overworld.leyLines;
     const then = { ...SNAPSHOT, overworld: { ...SNAPSHOT.overworld, leyLines: lines } };
-    for (const k of ['landmarks', 'overworld', 'roads', 'roadPoints', 'pylons', 'arenas', 'hollows'] as const) expect(unkept(now[k], then[k]), k).toEqual([]);
+    // 061 placed the Ash Kilns' guards among the landmarks' packs, which the snapshot lists by index: they're left out.
+    const placed = { ...now, overworld: { ...now.overworld, packs: now.overworld.packs.filter((p) => p.group !== 'ash-kilns') } };
+    for (const k of ['landmarks', 'overworld', 'roads', 'roadPoints', 'pylons', 'arenas', 'hollows'] as const) expect(unkept(placed[k], then[k]), k).toEqual([]);
     expect(now.overworld.leyLines['cistern-terrace']?.[0]).toEqual(moved[0]);
   });
 

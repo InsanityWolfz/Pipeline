@@ -87,9 +87,12 @@ test('claim the Ash Kilns: held E at its pylon, and its cinderite port counts it
   await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    // Every enemy but the Forgewright, in its hall (its first kill is the end card's since 060).
-    for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
-    g.step(1);
+    // Every enemy but the Forgewright, in its hall (its first kill is the end card's since 060); 061: again for the
+    // whelps the Ash Kilns' golem splits into, which hold its claim too.
+    for (let k = 0; k < 3; k++) {
+      for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
+      g.step(1);
+    }
   });
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.getState().gates.emberworks)) ?? false).toBe(true);
   // 042: the Bulwark's first kill's end card shows 180 ticks on; Keep playing closes it.

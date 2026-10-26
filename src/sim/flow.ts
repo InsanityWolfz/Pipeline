@@ -5,7 +5,7 @@ import { count } from './inventory';
 import { crateRoom } from './crateSlots';
 import type { SimEvents } from './events';
 import { fillEntrance, type EntranceState } from './link';
-import { machineRecipe, offerToStage, stageOf } from './stages';
+import { machineRecipe, machineRecipes, offerToStage, stageOf } from './stages';
 import { craftTicksAt } from './research';
 import { afterSplit, splitterOrder } from './splitter';
 import { advanceTunnel, transferTunnel } from './tunnels';
@@ -65,9 +65,23 @@ function hasInputs(m: MachineState, recipe: RecipeDef): boolean {
 /** A craft only starts when its whole output will fit. (A stage's output is always its recipe's kind: it takes a new round kind only once clear.) */
 const outputFits = (m: MachineState, recipe: RecipeDef): boolean => m.output + recipe.output.count <= OUTPUT_CAP;
 
+/**
+ * The recipes a machine may start next, in turn order (062): a stage's one; an ordinary machine's own and its tier
+ * variants, starting after the one it last made, so a machine fed both tiers takes turns and holds neither back.
+ */
+function turnOrder(m: MachineState): RecipeDef[] {
+  if (stageOf(m.pieceId)) return [machineRecipe(m)];
+  const all = machineRecipes(m.pieceId);
+  const last = all.findIndex((r) => r.output.itemId === m.made);
+  return last < 0 || all.length === 1 ? all : [...all.slice(last + 1), ...all.slice(0, last + 1)];
+}
+
+/** The next craft a machine has a whole set for, in turn order, or null. It waits for its output to clear before making another kind. */
+const nextCraft = (m: MachineState): RecipeDef | null => turnOrder(m).find((r) => hasInputs(m, r)) ?? null;
+
 function advanceMachine(m: MachineState, made: SimEvents['made'], speed: number): void {
-  const recipe = machineRecipe(m);
   if (m.crafting) {
+    const recipe = machineRecipe(m);
     m.progress += 1;
     if (m.progress >= craftTicksAt(m.pieceId, speed)) {
       m.crafting = false;
@@ -76,8 +90,12 @@ function advanceMachine(m: MachineState, made: SimEvents['made'], speed: number)
       made.push({ id: m.id, pieceId: m.pieceId, itemId: recipe.output.itemId, count: recipe.output.count });
     }
   }
-  if (m.crafting || !hasInputs(m, recipe) || !outputFits(m, recipe)) return;
+  if (m.crafting) return;
+  const recipe = nextCraft(m);
+  // One matching set a craft, never mixing (062); a different kind only once the last kind's output has gone.
+  if (!recipe || !outputFits(m, recipe) || (recipe.output.itemId !== m.made && m.output > 0)) return;
   for (const [itemId, n] of Object.entries(recipe.inputs)) m.buffer[itemId] = count(m.buffer, itemId) - n;
+  m.made = recipe.output.itemId;
   m.crafting = true;
   m.progress = 0;
 }
@@ -122,8 +140,8 @@ function offer(ctx: FlowContext, to: Tile, from: Tile, item: string): boolean {
   if (target.kind === 'machine') {
     const st = stageOf(target.pieceId);
     if (st) return offerToStage(target, st, item);
-    const need = machineRecipe(target).inputs[item];
-    if (need === undefined || count(target.buffer, item) >= INPUT_CAP) return false;
+    // 062: any of its recipes' inputs (a tier variant's too).
+    if (!machineRecipes(target.pieceId).some((r) => r.inputs[item] !== undefined) || count(target.buffer, item) >= INPUT_CAP) return false;
     target.buffer[item] = count(target.buffer, item) + 1;
     return true;
   }
@@ -179,13 +197,23 @@ function offerFromHopper(ctx: FlowContext, to: Tile, h: HopperState, item: strin
   if (h.count === 0) h.item = null;
 }
 
+/** The recipe a machine's status reads (062): the craft it has a set for, else the one whose inputs it holds most of (the one it makes now on a tie). */
+function statusRecipe(m: MachineState): RecipeDef {
+  const now = machineRecipe(m);
+  const order = [now, ...turnOrder(m).filter((r) => r.id !== now.id)];
+  const held = (r: RecipeDef): number => Object.entries(r.inputs).filter(([itemId]) => count(m.buffer, itemId) > 0).length;
+  return nextCraft(m) ?? order.reduce((best, r) => (held(r) > held(best) ? r : best), now);
+}
+
 function setStatus(m: MachineState): void {
-  const recipe = machineRecipe(m);
+  const recipe = m.crafting ? machineRecipe(m) : statusRecipe(m);
   const missing = Object.entries(recipe.inputs)
     .filter(([itemId, n]) => count(m.buffer, itemId) < n)
     .map(([itemId]) => itemId);
   const buffered = Object.values(m.buffer).some((n) => n > 0);
-  m.status = m.crafting ? 'working' : !outputFits(m, recipe) ? 'blocked' : buffered ? 'starved' : 'idle';
+  // 062: a set waiting for the last kind's output to go out is a hand-off, not a jam.
+  const switching = !m.crafting && hasInputs(m, recipe) && recipe.output.itemId !== m.made && m.output > 0 && outputFits(m, recipe);
+  m.status = m.crafting || switching ? 'working' : !outputFits(m, recipe) ? 'blocked' : buffered ? 'starved' : 'idle';
   m.missing = m.status === 'starved' ? missing : [];
 }
 

@@ -3,7 +3,8 @@ import { FEET_BOX } from '../data/player';
 import { OVERWORLD, ringOf } from '../data/overworld';
 import { POPULATION, type PackDef, type PopulatedRing } from '../data/population';
 import { ADDS_GROUP } from '../data/bulwark';
-import { EMBERWORKS } from '../data/emberworks';
+import { EMBERWORKS, rampTiles } from '../data/emberworks';
+import { ANVIL_HALL } from '../data/emberworksSites';
 import { HOLLOWS } from '../data/hollows';
 import { LANDMARK_LIST } from '../data/landmarks';
 import { TILE, WALKABLE } from '../data/rooms';
@@ -35,7 +36,7 @@ export interface PopulationState {
 
 export function createPopulation(): PopulationState {
   const slots: PackSlot[] = [];
-  for (const ring of [1, 2, 3] as const) {
+  for (const ring of [1, 2, 3, 4] as const) {
     for (let i = 0; i < POPULATION.rings[ring].packs; i++) slots.push({ group: `pop-${ring}-${i}`, ring, respawnAt: 0, alive: false });
   }
   return { slots };
@@ -125,26 +126,33 @@ const SHRINE_GROUND = ((): TileRect => {
   return { x0: a.x0 - m.x, y0: a.y0 - m.y, x1: a.x1 + m.x, y1: a.y1 + m.y };
 })();
 
-/** Where packs never stand: the clearings (the meadow, the ruin field, the shrine site), the shrine's surroundings, the landmarks' areas (032) and the Sunken Forum (034). */
-export const KEEP_OUT: readonly TileRect[] = [...OVERWORLD.clearings, SHRINE_GROUND, ...LANDMARK_LIST.map((l) => l.area), HOLLOWS.arena.bounds];
+/** Where packs never stand: the clearings (the meadow, the ruin field, the shrine site), the shrine's surroundings, the landmarks' areas (032), the Sunken Forum (034) and the Anvil Hall (061). */
+export const KEEP_OUT: readonly TileRect[] = [...OVERWORLD.clearings, SHRINE_GROUND, ...LANDMARK_LIST.map((l) => l.area), HOLLOWS.arena.bounds, ANVIL_HALL.bounds];
 
-/** Hollows ground a pack can walk to from the gap (034): the generated cliffs can wall off a pocket, and nothing spawns in one. */
-const fromGap = ((): Set<number> => {
+/** A ring's ground a pack can walk to from `starts` without leaving it: generated cliffs and kilns can wall off a pocket, and nothing spawns in one. */
+function reachIn(ring: number, starts: readonly { tx: number; ty: number }[]): Set<number> {
   const rows = WORLD[OVERWORLD.id]?.rows ?? [];
   const key = (tx: number, ty: number) => ty * OVERWORLD.width + tx;
-  const seen = new Set<number>([key(HOLLOWS.start.tx, HOLLOWS.start.ty)]);
-  const queue: [number, number][] = [[HOLLOWS.start.tx, HOLLOWS.start.ty]];
+  const seen = new Set<number>(starts.map((t) => key(t.tx, t.ty)));
+  const queue: [number, number][] = starts.map((t) => [t.tx, t.ty]);
   for (let i = 0; i < queue.length; i++) {
     const [tx, ty] = queue[i] ?? [0, 0];
     for (const [nx, ny] of [[tx + 1, ty], [tx - 1, ty], [tx, ty + 1], [tx, ty - 1]] as const) {
       const symbol = rows[ny]?.[nx];
-      if (symbol === undefined || !WALKABLE.includes(symbol) || ringOf(nx, ny) !== HOLLOWS.ring || seen.has(key(nx, ny))) continue;
+      if (symbol === undefined || !WALKABLE.includes(symbol) || ringOf(nx, ny) !== ring || seen.has(key(nx, ny))) continue;
       seen.add(key(nx, ny));
       queue.push([nx, ny]);
     }
   }
   return seen;
-})();
+}
+
+/** Hollows ground reachable from the gap (034), and (061) Emberworks ground reachable from the tops of its ramps. */
+const fromGap = reachIn(HOLLOWS.ring, [HOLLOWS.start]);
+const fromRamps = reachIn(
+  EMBERWORKS.ring,
+  EMBERWORKS.ramps.flatMap((r) => rampTiles(r)).filter((t) => ringOf(t.tx, t.ty) === EMBERWORKS.ring),
+);
 
 /**
  * Gate tiles and every tile touching one (053): the barrier's band is ring 2 floor on its inner half, but movers meet
@@ -165,16 +173,17 @@ export const packGround = (tx: number, ty: number): boolean => {
   if (symbol !== TILE.floor && symbol !== TILE.path) return false;
   if (byGate.has(ty * OVERWORLD.width + tx)) return false;
   if (ringOf(tx, ty) === HOLLOWS.ring && !fromGap.has(ty * OVERWORLD.width + tx)) return false;
+  if (ringOf(tx, ty) === EMBERWORKS.ring && !fromRamps.has(ty * OVERWORLD.width + tx)) return false;
   return !KEEP_OUT.some((r) => tx >= r.x0 && tx <= r.x1 && ty >= r.y0 && ty <= r.y1);
 };
 
 /** Open ground each ring offers a pack's centre, found once from the generated map. */
-const candidates: Record<PopulatedRing, { tx: number; ty: number }[]> = { 1: [], 2: [], 3: [] };
+const candidates: Record<PopulatedRing, { tx: number; ty: number }[]> = { 1: [], 2: [], 3: [], 4: [] };
 for (let ty = 1; ty < OVERWORLD.height - 1; ty++) {
   for (let tx = 1; tx < OVERWORLD.width - 1; tx++) {
     const ring = ringOf(tx, ty);
-    // Ring 0 stays calm, and the Emberworks (ring 4, 060) has no packs until 061.
-    if (ring !== 0 && ring !== EMBERWORKS.ring && packGround(tx, ty)) candidates[ring].push({ tx, ty });
+    // Ring 0 stays calm.
+    if (ring !== 0 && packGround(tx, ty)) candidates[ring].push({ tx, ty });
   }
 }
 
@@ -230,6 +239,8 @@ export function stepPopulation(state: SimState): void {
   for (const slot of state.population.slots) {
     // The Hollows (034) fill once their barrier is down; before that nobody can reach them.
     if (slot.ring === HOLLOWS.ring && !state.gates.hollows) continue;
+    // 061: the Emberworks fill once theirs is down.
+    if (slot.ring === EMBERWORKS.ring && !state.gates.emberworks) continue;
     if (state.enemies.some((e) => e.group === slot.group)) {
       slot.alive = true;
       continue;

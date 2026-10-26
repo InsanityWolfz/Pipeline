@@ -1,4 +1,5 @@
 import { INTAKE_SPRITES } from '../foundryAssets';
+import { ROUNDS, roundTier, withTier } from '../tags';
 import { ellipse, flat, line, path, rect, solid, type Shape, type VectorSprite } from './types';
 
 // The foundry intake (019): a waterslide-sized pipe built into the centre of the
@@ -73,8 +74,8 @@ export const INTAKE_SPRITES_VECTOR: readonly VectorSprite[] = [
   { key: INTAKE_SPRITES.cap, size: [28, 16], anchor: [14, 11], frames: [CAP] },
 ];
 
-/** The colour each entrance's gauge lights in, by the ammo it holds (024). */
-export const ENTRANCE_GAUGE_COLORS: Readonly<Record<string, string>> = {
+/** The colour each stone round's gauge lights in (024). */
+const STONE_GAUGE_COLORS: Readonly<Record<string, string>> = {
   arrow: 'straw-light',
   bomb: 'cinder',
   'ley-bolt': 'cyan-glow',
@@ -100,6 +101,15 @@ export const ENTRANCE_GAUGE_COLORS: Readonly<Record<string, string>> = {
   'ley-bolt+fire+homing': 'flame-dark',
   'ley-bolt+fire+split': 'flame-dark',
   'landmine+fire': 'flame-dark',
+};
+
+/** The colour each entrance's gauge lights in, by the ammo it holds (024); 062: a tiered round lights as its stone round does. */
+export const ENTRANCE_GAUGE_COLORS: Readonly<Record<string, string>> = {
+  ...STONE_GAUGE_COLORS,
+  ...Object.fromEntries(ROUNDS.filter((r) => roundTier(r) !== 'stone').flatMap((r) => {
+    const stone = STONE_GAUGE_COLORS[withTier(r, 'stone')];
+    return stone ? [[r, stone]] : [];
+  })),
 };
 
 /**

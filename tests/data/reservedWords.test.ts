@@ -44,7 +44,7 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = {
   Freeze: ['Frozen Grotto'],
   // The ley itself: the world's magic, its materials, nodes and places, never the Ley family's rule. Allowed as
   // content names (039.17, proposed: keep them), as 039.7 allows world names such as the Ley Springs.
-  Ley: ['Ley crystal', 'Ley-iron', 'Ley dust', 'Ley vein', 'Ley-iron seam', 'Ley conduit', 'Ley guide', 'Ley Grotto', 'Ley-iron Cut', ...LANDMARK_LIST.filter((l) => l.name.endsWith('Ley Spring')).map((l) => l.name)],
+  Ley: ['Ley crystal', 'Ley-iron', 'Ley dust', 'Ley vein', 'Ley-iron seam', 'Ley conduit', 'Ley guide', 'Ley Grotto', 'Ley-iron Cut', 'Ley-steel', 'Ley glass', ...LANDMARK_LIST.filter((l) => l.name.endsWith('Ley Spring')).map((l) => l.name)],
   // A sniper champion's name (039.7: an enemy's name never shows as a chip).
   Cold: ['Coldlens'],
   // The Burrower is the enemy whose trait Burrowed is.

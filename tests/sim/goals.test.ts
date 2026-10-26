@@ -38,9 +38,10 @@ describe('the chain', () => {
       { kind: 'restored', node: 'entrance-3' },
       { kind: 'volley', min: 3 },
     ]);
-    // The chain's last goal is the tutorial's end: 060's feeding all four (Milestone 2's chain is goalsM2.test.ts's).
+    // The chain's last goal is the tutorial's end: 060's feeding all four, then (062) firing steel rounds (Milestone 2's
+    // chain is goalsM2.test.ts's and goalsTiers.test.ts's).
     expect(M1.at(-1)?.check).toEqual({ kind: 'volley', min: 3 });
-    expect(CHAIN.at(-1)?.check).toEqual({ kind: 'volley', min: 4 });
+    expect(CHAIN.at(-1)?.check.kind).toBe('fired');
   });
 });
 

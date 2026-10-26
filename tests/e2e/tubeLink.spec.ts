@@ -132,6 +132,8 @@ test('?playtest starts with plenty of everything and every machine unlocked', as
   // 029: every stage machine too, and rimestone for the frost rune; 038: the Cluster die and the landmine chain.
   expect(s.unlocked).toEqual([
     'conduit', 'splitter', 'underground-entrance', 'underground-exit', 'hopper', 'crate', 'cutter', 'knapper', 'spinner', 'assembler', 'frost-rune', 'fire-rune', 'shaper', 'fuse-maker', 'packer', 'cluster-die', 'grinder', 'focuser', 'ley-guide', 'prism-lens', 'plate-press', 'mine-packer',
+    // 062: the Forge's machines.
+    'smelter', 'kiln',
   ]);
   expect(s.inventory['rimestone']).toBe(99);
   expect(errors).toEqual([]);

@@ -1,5 +1,6 @@
 import { ROUND_ICONS, STAGE_SPRITES } from '../stageAssets';
-import { ROUNDS, roundBase, roundTags } from '../tags';
+import { ROUNDS, roundBase, roundTags, roundTier } from '../tags';
+import { inTier, TIER_ART } from './tiers';
 import { ICON_ARROW, ICON_ARROW_HEAD, ICON_BOMB, ICON_LEY_BOLT } from './items';
 import { ICON_LANDMINE } from './mines';
 import type { NodeLooks } from './nodes';
@@ -137,14 +138,22 @@ const BASE_ICONS: Readonly<Record<string, { shapes: readonly Shape[]; head?: Sha
   landmine: { shapes: ICON_LANDMINE },
 };
 
-/** A tagged round's icon: its base's, its head restyled by any tag that restyles heads, then each tag's badge. */
+/**
+ * A tagged or tiered round's icon: its base's, in its tier's colours with the tier's mark (062: TIER_ART), its head
+ * restyled by any tag that restyles heads, then each tag's badge.
+ */
 function roundIcon(round: string): VectorSprite {
   const base = BASE_ICONS[roundBase(round)] ?? { shapes: [] };
+  const tier = roundTier(round);
   const art = roundTags(round).flatMap((t) => (TAG_ART[t] ? [TAG_ART[t]] : []));
   const head = art.find((a) => a.head)?.head;
-  const shapes = base.shapes.map((sh) => (head && sh === base.head ? ({ ...sh, ...head } as Shape) : sh));
+  const shapes = base.shapes.map((sh) => {
+    if (head && sh === base.head) return { ...sh, ...head } as Shape;
+    return tier === 'stone' ? sh : inTier(sh, tier);
+  });
+  const mark = tier === 'stone' ? [] : TIER_ART[tier].mark;
   const badges = art.flatMap((a) => (art.length > 1 && a.pairedBadge ? a.pairedBadge : a.badge));
-  return icon(ROUND_ICONS[round] ?? '', [...shapes, ...badges]);
+  return icon(ROUND_ICONS[round] ?? '', [...shapes, ...mark, ...badges]);
 }
 
 /** A Shard in flight (029), pointing right: a small ley crystal (054: bigger and brighter, so a star shot reads). */

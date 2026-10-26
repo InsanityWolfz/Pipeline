@@ -5,6 +5,7 @@ import { ENEMIES } from './enemies';
 import { AFFIXES, GEAR_NAMES, GEAR_SLOTS, RARITIES, SLOT_BASE, type Affix, type AffixKind, type GearPiece, type GearSlot, type GearWeight, type Rarity } from './gear';
 import { HOLLOWS } from './hollows';
 import { HOLLOWS_ENEMIES } from './hollowsEnemies';
+import { EMBERWORKS_ENEMIES } from './emberworksEnemies';
 import { ITEMS } from './items';
 import type { StartDef } from './player';
 import { ALL_CRAFTED } from './playtest';
@@ -36,11 +37,12 @@ export interface PenDef {
   home: TilePos;
 }
 
-/** Each non-boss enemy's region (033, 034): Region 1's two, then Stonefall Hollows' four. A new enemy needs an entry (a data test checks). */
+/** Each non-boss enemy's region (033, 034): Region 1's two, then Stonefall Hollows' four, then (061) the Emberworks' five. A new enemy needs an entry (a data test checks). */
 export const ENEMY_REGIONS: Readonly<Record<string, number>> = {
   husk: 1,
   wisp: 1,
   ...Object.fromEntries(Object.keys(HOLLOWS_ENEMIES).map((id) => [id, HOLLOWS.region])),
+  ...Object.fromEntries(Object.keys(EMBERWORKS_ENEMIES).map((id) => [id, EMBERWORKS.region])),
 };
 
 /** 044.3: each region's pens at the ring its enemies meet the player in the real game: Region 1 at 1, the Hollows at theirs (3), the Emberworks at its (4, 060). */
@@ -95,8 +97,13 @@ export const SANDBOX_ARENAS: readonly SandboxArena[] = [
   { boss: ANVIL_HALL.boss, start: ANVIL_HALL.start },
 ];
 
-/** The pens' width: the open middle (the spawn and the bench) is centred on it. */
+/** The pens' width. */
 const PENS_WIDTH = PEN.x0 + SANDBOX_PENS.length * PEN.stride + PEN.x0;
+/**
+ * 061: the open middle (the spawn and the bench) is centred on Region 1's and 2's pens, where it stood before the
+ * Emberworks' pens ran on east past the Anvil Hall (centred on them all, it would land inside the hall).
+ */
+const MIDDLE = (PEN.x0 + SANDBOX_PENS.filter((p) => (ENEMY_REGIONS[p.enemyId] ?? 0) <= HOLLOWS.region).length * PEN.stride + PEN.x0) / 2;
 /** The room's size: wide enough for every pen and (060) the Anvil Hall, tall enough for the forum below the open middle. */
 const WIDTH = Math.max(PENS_WIDTH, ANVIL_HALL.bounds.x1 + 4);
 const HEIGHT = HOLLOWS.arena.bounds.y1 + 3;
@@ -106,9 +113,9 @@ export const SANDBOX = {
   width: WIDTH,
   height: HEIGHT,
   /** Where the player starts and wakes (044.6), in the open middle with clear floor round it. */
-  spawn: { tx: Math.floor(PENS_WIDTH / 2), ty: 20 } satisfies TilePos,
+  spawn: { tx: Math.floor(MIDDLE), ty: 20 } satisfies TilePos,
   /** The identification bench (036): the gear and stages panel, so the stash's gear can be worn. A solid block. */
-  bench: { tx: Math.floor(PENS_WIDTH / 2) - 4, ty: 17 } satisfies TilePos,
+  bench: { tx: Math.floor(MIDDLE) - 4, ty: 17 } satisfies TilePos,
   /** 044.2: a cleared pen's enemy comes back this many ticks after the pen empties (5 s). */
   penRefillTicks: 5 * TICK_RATE,
   /**

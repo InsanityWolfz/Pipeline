@@ -4,7 +4,7 @@ import { ITEMS } from '../../src/data/items';
 import { BUILD_BAR, PIECES, pieceDef } from '../../src/data/pieces';
 import { recipeDef } from '../../src/data/recipes';
 import { STAGE_RECIPES, STAGES, stageLines } from '../../src/data/stages';
-import { COLD, FIRE, HOMING, ROUNDS, roundBase, roundId, roundTags, SPLIT, TAGS, withTag, type TagDef } from '../../src/data/tags';
+import { COLD, FIRE, HOMING, ROUNDS, roundBase, roundId, roundTags, roundTier, SPLIT, TAGS, withTag, type TagDef } from '../../src/data/tags';
 
 // Tags and stages as data (029): a round is its base ammo plus at most one element
 // tag and one shape tag; every legal combination's item and ammo are derived.
@@ -32,8 +32,9 @@ describe('tags', () => {
   });
 
   it('derive every legal round, each in AMMO and ITEMS', () => {
-    // 039: the frost tag on every family; shapes per family. 060: the fire tag on every family too.
-    expect([...ROUNDS]).toEqual([
+    // 039: the frost tag on every family; shapes per family. 060: the fire tag on every family too. 062: each also at
+    // its material tier (tests/data/tiers.test.ts), listed after its family's stone rounds.
+    expect(ROUNDS.filter((r) => roundTier(r) === 'stone')).toEqual([
       'arrow+frost',
       'arrow+fire',
       'bomb+frost',
@@ -142,7 +143,8 @@ describe('stages', () => {
     // 060: one Fire rune piece, in the Arrows group (its tag's first family) beside the frost rune.
     expect(pieceDef('fire-rune')).toMatchObject({ kind: 'machine', name: 'Fire rune', category: 'arrows', recipeId: 'fire-rune', footprint: '1x1', craftTicks: 60 });
     expect(BUILD_BAR.indexOf('fire-rune')).toBe(BUILD_BAR.indexOf('frost-rune') + 1);
-    expect(BUILD_BAR.slice(-4, -2)).toEqual(['ley-guide', 'prism-lens']);
+    // 062: before the Mines group's two and the Forge group's two.
+    expect(BUILD_BAR.slice(-6, -4)).toEqual(['ley-guide', 'prism-lens']);
     expect(pieceDef('cluster-die')).toMatchObject({ kind: 'machine', name: 'Cluster die', category: 'bombs', footprint: '1x1' });
     expect(Object.keys(PIECES)).toContain('prism-lens');
   });

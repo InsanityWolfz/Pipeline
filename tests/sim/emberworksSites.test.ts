@@ -68,7 +68,8 @@ describe('the places (data)', () => {
     expect(KILNS.kind).toBe('resource-site');
     expect(PYLON).toMatchObject({ site: 'ash-kilns', supplies: ['cinderite'] });
     expect(SITE_SUPPLY['ash-kilns']).toEqual(['cinderite']);
-    expect(KILNS.guards).toEqual([]);
+    // 061: its guards, the Emberworks' fixed pack (tests/sim/emberworksPacks.test.ts).
+    expect(KILNS.guards.map((g) => g.enemyId).sort()).toEqual(['bellows-hound', 'bellows-hound', 'cinder-mote', 'cinder-mote', 'kiln-tender', 'slag-golem']);
     const vents = landmarkDef('cinder-vents').nodes;
     expect(vents.some((n) => Math.hypot(n.tx - PYLON.tx, n.ty - PYLON.ty) <= SITE_SAFE_RADIUS)).toBe(true);
     expect(LINES_HOME).toContain('ash-kilns');
@@ -132,7 +133,7 @@ describe('the places (sim)', () => {
     expect(s.events.xp).toContainEqual({ amount: LANDMARK_XP, source: 'landmark' });
   });
 
-  it('claim the Ash Kilns by held E (no guards until 061): it joins fast travel and supplies its new port', () => {
+  it('claim the Ash Kilns by held E, its guards cleared (061): it joins fast travel and supplies its new port', () => {
     const s = emberworks();
     const below = tileCentre({ tx: PYLON.tx, ty: PYLON.ty + 1 });
     movePlayer(s, below.x, below.y);
