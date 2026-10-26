@@ -34,6 +34,7 @@ describe('banking', () => {
 
   it('a pylon deposit banks even when there was nothing to send', () => {
     const s = createSim(SEED);
+    s.link.attuned = true; // Past the first foundry entry: before it, a KO loses nothing (067.16).
     claim(s, SHRINE_SITE);
     atPylon(s);
     s.inventory = {};
@@ -88,6 +89,7 @@ describe('dying', () => {
 
   it('keeps what was banked and loses what came after, reporting the loss', () => {
     const s = arena();
+    s.link.attuned = true; // Past the first foundry entry: before it, a KO loses nothing (067.16).
     s.banked = { arrow: 10, wood: 2 };
     s.inventory = { arrow: 14, wood: 1, stone: 3, [UNIDENTIFIED_ARMOR]: 1 };
     die(s);

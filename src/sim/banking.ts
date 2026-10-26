@@ -6,7 +6,8 @@ import { rechargeEmber } from './relics';
 
 // Banking (011): what a death keeps. Walking into the foundry, by any way in,
 // and a pylon deposit set the banked snapshot to what the player holds; in the
-// foundry, gains are banked at once (050). Banking a schematic reveals its node (033).
+// foundry, gains are banked at once (050). Banking a schematic reveals its node (033). Until the tube attunes, on the
+// first foundry entry after the shrine's claim (067), nothing carried is at risk (067.16, Shaun 2026-10-26).
 
 /** Banks everything the player carries right now, recording it, reveals the nodes of carried schematics, and recharges Last Ember (036). */
 export function bank(state: SimState): void {
@@ -46,22 +47,26 @@ export interface ItemRisk {
   atRisk: number;
 }
 
+/** The parts of the state that decide what a death would take. */
+export type RiskState = Pick<SimState, 'inventory' | 'banked' | 'link'>;
+
 /**
  * Per carried item (count above 0): safe = min(held, banked), at risk = the rest (031).
  * A death keeps the safe counts and loses the at-risk ones (`wake()`); spending takes the
  * at-risk count down first. Identified gear isn't carried, so it never shows here.
+ * 067.16: before the tube attunes (the first foundry entry), everything carried is safe.
  */
-export function itemRisks(state: Pick<SimState, 'inventory' | 'banked'>): Record<string, ItemRisk> {
+export function itemRisks(state: RiskState): Record<string, ItemRisk> {
   const out: Record<string, ItemRisk> = {};
   for (const [itemId, held] of Object.entries(state.inventory)) {
     if (held <= 0) continue;
-    const safe = Math.min(held, count(state.banked, itemId));
+    const safe = state.link.attuned ? Math.min(held, count(state.banked, itemId)) : held;
     out[itemId] = { held, safe, atRisk: held - safe };
   }
   return out;
 }
 
 /** The items with at least one at risk, and how many (`getState().atRisk`). */
-export function atRiskCounts(state: Pick<SimState, 'inventory' | 'banked'>): Inventory {
+export function atRiskCounts(state: RiskState): Inventory {
   return Object.fromEntries(Object.entries(itemRisks(state)).flatMap(([id, r]) => (r.atRisk > 0 ? [[id, r.atRisk]] : [])));
 }
