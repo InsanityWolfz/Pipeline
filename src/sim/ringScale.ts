@@ -56,5 +56,8 @@ function scaleAttack(def: EnemyDef, base: Pick<EnemyDef, 'feetBox' | 'hurtbox' |
       return { ...def, ...base, bash: { ...def.bash, damage: dmg(def.bash.damage) } };
     case 'sniper':
       return { ...def, ...base, snipe: { ...def.snipe, damage: dmg(def.snipe.damage) } };
+    // 061: its pool's beats and its death burst scale as its burst does.
+    case 'mote':
+      return { ...def, ...base, swell: { ...def.swell, damage: dmg(def.swell.damage) }, pool: { ...def.pool, damage: dmg(def.pool.damage) }, deathBurst: { ...def.deathBurst, damage: dmg(def.deathBurst.damage) } };
   }
 }

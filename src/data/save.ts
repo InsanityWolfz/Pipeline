@@ -18,7 +18,7 @@
  * centre moved, so every saved position and the fog's bitmap are on a new map; the Emberworks' gate), again with no
  * migration.
  */
-export const SAVE_VERSION = 13;
+export const SAVE_VERSION = 14;
 
 /** The envelope's and the export file's format tags. */
 export const SAVE_FORMAT = 'pipeline-save';

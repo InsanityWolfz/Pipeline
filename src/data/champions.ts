@@ -34,5 +34,7 @@ export const CHAMPIONS = {
     burrower: ['Gritmaw', 'Delvetooth', 'Shalebore', 'Siltgnaw', 'Quakejaw'],
     shardback: ['Glintwall', 'Shardhide', 'Runeplate', 'Slabguard', 'Prismback'],
     sniper: ['Longsight', 'Coldlens', 'Farglint', 'Stillaim', 'Pinpoint'],
+    // 061: the Emberworks' (a whelp is never one, but has names so every non-boss does).
+    'cinder-mote': ['Emberwick', 'Sootspark', 'Cinderling', 'Ashflare', 'Slagglow'],
   } as Readonly<Record<string, readonly string[]>>,
 } as const;

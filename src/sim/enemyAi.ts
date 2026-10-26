@@ -6,6 +6,7 @@ import { chargeThink } from './chargerAi';
 import { burrowThink } from './burrowerAi';
 import { shardThink } from './shardbackAi';
 import { snipeThink } from './sniperAi';
+import { moteThink } from './moteAi';
 import { defOf } from './champions';
 import { castThink } from './casterAi';
 import { chillScale, chillSlow, tickCold } from './cold';
@@ -70,7 +71,7 @@ export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBod
   separate(state.enemies, bodies);
 }
 
-/** Each kind's AI: the Husk's here, the Wisp's, the Warden's, the Bulwark's (034) and Region 2's four (035) in their own files. */
+/** Each kind's AI: the Husk's here, the Wisp's, the Warden's, the Bulwark's (034), Region 2's four (035) and the Emberworks' (061) in their own files. */
 function thinkOf(state: SimState, e: EnemyState, def: EnemyDef): [number, number] {
   switch (def.kind) {
     case 'melee':
@@ -91,6 +92,8 @@ function thinkOf(state: SimState, e: EnemyState, def: EnemyDef): [number, number
       return shardThink(state, e, def);
     case 'sniper':
       return snipeThink(state, e, def);
+    case 'mote':
+      return moteThink(state, e, def);
   }
 }
 

@@ -1,5 +1,6 @@
 import { charged } from './chargerAi';
 import { snipeLine, snipePhase, type SnipePhase } from './sniperAi';
+import { swellShown } from './moteAi';
 import type { SimState } from './state';
 import { defOf } from './champions';
 import type { EnemyState } from './enemies';
@@ -24,6 +25,8 @@ export interface KindSummary {
   locked?: { x: number; y: number; radius: number } | null;
   /** A Sniper's phase, and its laser's ground line while it winds up (to the player's feet tracking; to the first solid or its range locked), else null. */
   snipe?: { phase: SnipePhase; line: { x0: number; y0: number; x1: number; y1: number } | null };
+  /** 061: a cinder mote's swell while it grows (its burst's radius, px, and ticks swelling so far), else null. */
+  swell?: { radius: number; ticks: number } | null;
 }
 
 export function kindSummary(state: SimState, e: EnemyState): KindSummary {
@@ -44,5 +47,6 @@ export function kindSummary(state: SimState, e: EnemyState): KindSummary {
     const line = snipeLine(state, e, def);
     out.snipe = { phase: snipePhase(state, e, def), line: line ? { x0: round(line.x0), y0: round(line.y0), x1: round(line.x1), y1: round(line.y1) } : null };
   }
+  if (def.kind === 'mote') out.swell = swellShown(e, def);
   return out;
 }

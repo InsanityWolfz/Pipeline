@@ -39,6 +39,8 @@ function damageOf(d: EnemyDef): number {
       return d.bash.damage;
     case 'sniper':
       return d.snipe.damage;
+    case 'mote':
+      return d.swell.damage;
   }
 }
 const pack = (ids: readonly string[]): EnemyState[] => ids.map((id, i) => createEnemy(i, id, { x: i * 40, y: 0 }, 'overworld', 'pop-1-0'));

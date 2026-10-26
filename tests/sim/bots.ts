@@ -90,6 +90,9 @@ function zoneOf(e: EnemyState, def: EnemyDef, left: (windup: number) => number):
       const r = def.slam.reach;
       return e.mode === 'windup' ? { kind: 'circle', x: e.x + e.swipeDirX * r, y: e.y + e.swipeDirY * r, r: def.slam.radius, left: left(def.slam.windupTicks) } : null;
     }
+    // 061: a mote's swell is its burst's circle round it.
+    case 'mote':
+      return e.mode === 'windup' ? { kind: 'circle', x: e.x, y: e.y, r: def.swell.radius, left: left(def.swell.windupTicks) } : null;
     case 'caster':
       return null;
   }

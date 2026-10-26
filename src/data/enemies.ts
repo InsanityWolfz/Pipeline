@@ -3,6 +3,7 @@ import { FORGEWRIGHT, type ForgewrightDef } from './forgewright';
 import { BOSS_WEIGHT } from './combat';
 import { REGION_1_PART, type RarePart } from './drops';
 import { HOLLOWS_ENEMIES, type HollowsEnemyDef } from './hollowsEnemies';
+import { EMBERWORKS_ENEMIES, type EmberworksEnemyDef } from './emberworksEnemies';
 
 // Enemies. Starting values from specs 004 and 009; tune in playtest.
 
@@ -48,6 +49,8 @@ export interface EnemyBase {
    * facing are blocked. It turns toward the player at no more than `turnDegPerSec`.
    */
   shield?: ShieldDef;
+  /** It drops nothing at all (061: a slag whelp), the schematic and armor rolls included. */
+  noLoot?: boolean;
 }
 
 export interface ShieldDef {
@@ -129,9 +132,9 @@ export interface SlammerDef extends EnemyBase, ScreenLeashed {
   };
 }
 
-/** The Bulwark (034) is in bulwark.ts, the Forgewright (060) in forgewright.ts; Region 2's four (035) are in hollowsEnemies.ts. */
+/** The Bulwark (034) is in bulwark.ts, the Forgewright (060) in forgewright.ts; Region 2's four (035) are in hollowsEnemies.ts, Region 3's (061) in emberworksEnemies.ts. */
 export type { BulwarkDef, ForgewrightDef };
-export type EnemyDef = MeleeDef | CasterDef | SlammerDef | BulwarkDef | ForgewrightDef | HollowsEnemyDef;
+export type EnemyDef = MeleeDef | CasterDef | SlammerDef | BulwarkDef | ForgewrightDef | HollowsEnemyDef | EmberworksEnemyDef;
 
 /** Every attack's wind-up is at least this long (035): long enough to read and dodge. A data test holds every enemy to it. */
 export const MIN_TELEGRAPH_TICKS = 30;
@@ -243,6 +246,7 @@ export const ENEMIES: Readonly<Record<string, EnemyDef>> = {
   bulwark: BULWARK,
   forgewright: FORGEWRIGHT,
   ...HOLLOWS_ENEMIES,
+  ...EMBERWORKS_ENEMIES,
 };
 
 /** Dropped items land within this distance of the corpse, px. */
@@ -286,5 +290,7 @@ export function attackOf(def: EnemyDef): AttackTiming {
       return def.bash;
     case 'sniper':
       return def.snipe;
+    case 'mote':
+      return def.swell;
   }
 }

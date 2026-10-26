@@ -11,6 +11,7 @@ import { snipeLine } from '../sim/sniperAi';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
 import { addVector, showFrame } from './vector/textures';
+import { destroyEmberArt, drawEmberArt, makeEmberArt, type EmberArt } from './emberEnemyArt';
 
 // What Region 2's four (035) show beyond their sprite and ground telegraph, for EnemyView:
 // a Burrower underground as its ripple, a moving mound of cracked earth, its body hidden;
@@ -23,6 +24,8 @@ export interface HollowsArt {
   light?: GameObjects.Graphics;
   /** The laser as last drawn, for the test hook. */
   laser?: LaserShown | null;
+  /** 061: the Emberworks' enemies' extras (emberEnemyArt.ts). */
+  ember?: EmberArt;
 }
 
 /** A Sniper's laser as drawn (035): whether locked, whether its blink is on, and its ends, world px. */
@@ -49,12 +52,14 @@ export function makeHollowsArt(scene: Scene, def: EnemyDef): HollowsArt | undefi
   if (def.kind === 'burrower') return { ripple: addVector(scene, 0, 0, HOLLOWS_ENEMY_SPRITES.ripple[0]).setVisible(false) };
   if (def.kind === 'shardback') return { light: scene.add.graphics().setBlendMode(BlendModes.ADD) };
   if (def.kind === 'sniper') return { light: scene.add.graphics().setDepth(LASER_DEPTH) };
-  return undefined;
+  const ember = makeEmberArt(scene, def);
+  return ember ? { ember } : undefined;
 }
 
 /** Shows the extras for this frame; hides the body while it's under the ground. */
 export function drawHollowsArt(art: HollowsArt | undefined, sprite: GameObjects.Sprite, e: EnemyState, def: EnemyDef, sim: SimState, now: number): void {
   sprite.setVisible(!e.underground);
+  if (art?.ember) drawEmberArt(art.ember, sprite, e, def);
   if (art?.light && def.kind === 'shardback') drawFlare(art.light, e, def.bash.windupTicks, now);
   if (art?.light && def.kind === 'sniper') art.laser = drawLaser(art.light, e, def, sim);
   if (!art?.ripple) return;
@@ -133,4 +138,5 @@ export function drawBolts(g: GameObjects.Graphics, orbs: readonly OrbState[], sh
 export function destroyHollowsArt(art: HollowsArt | undefined): void {
   art?.ripple?.destroy();
   art?.light?.destroy();
+  destroyEmberArt(art?.ember);
 }
