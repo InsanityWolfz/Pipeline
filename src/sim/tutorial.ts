@@ -162,12 +162,13 @@ function open(state: SimState, gate: GateId): void {
 export function stepGates(state: SimState): void {
   const cap = entranceCap(state);
   if (!state.firstLineFull && state.link.entrances.some((e) => e.count >= cap)) state.firstLineFull = true;
-  // 067: the field's last Husk killed (a death, not just an empty pack, so a start without the pack never counts); the
-  // world pushes back (017): from then on the land fills with packs. Only the real game's start, whose gates start shut:
-  // the test starts past the tutorial keep their own `populated` (they start calm, whatever is killed).
-  if (!state.fieldCleared && !state.start.gatesOpen && state.events.deaths.some((d) => d.group === FIELD_GROUP) && !state.enemies.some((e) => e.group === FIELD_GROUP && e.health > 0)) {
+  // 067: the field's last Husk killed (a death, not just an empty pack, so a start without the pack never counts), on
+  // every start. The world pushes back (017): from then on the land fills with packs, but only on the real game's start,
+  // whose gates start shut: the test starts past the tutorial keep their own `populated` (067.5: they start calm,
+  // whatever is killed).
+  if (!state.fieldCleared && state.events.deaths.some((d) => d.group === FIELD_GROUP) && !state.enemies.some((e) => e.group === FIELD_GROUP && e.health > 0)) {
     state.fieldCleared = true;
-    state.populated = true;
+    if (!state.start.gatesOpen) state.populated = true;
   }
   if (!state.gates.foundry && state.claims.includes(SHRINE_SITE)) open(state, 'foundry');
   // Claiming the shrine's pylon drops the Hollows' barrier (034); claims are for good, so it never comes back.

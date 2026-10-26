@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
-import { BOMB_RAWS, TUTORIAL_START } from '../../src/data/player';
+import { HOLLOWS_START, PLAYTEST_START } from '../../src/data/playtest';
+import { BOMB_RAWS, DEFAULT_START, TUTORIAL_START } from '../../src/data/player';
 import { FOUNDRY_ROOM } from '../../src/data/rooms';
 import { SEALED_DOOR_TEXT } from '../../src/data/hints';
 import { claim } from '../../src/sim/claims';
@@ -237,7 +238,7 @@ describe('the packs come out once the ruin field is cleared (067)', () => {
     expect([s.fieldCleared, s.populated]).toEqual([true, true]);
   });
 
-  it('never from enemies cleared by hand, in the sandbox, or on a test start past the tutorial (gates open)', () => {
+  it('never from enemies cleared by hand, or in the sandbox (no ruin field)', () => {
     const s = tutorial();
     s.enemies = [];
     run(s, 2);
@@ -246,10 +247,30 @@ describe('the packs come out once the ruin field is cleared (067)', () => {
     for (const e of sb.enemies) e.health = 0;
     run(sb, 2);
     expect([sb.fieldCleared, sb.populated]).toEqual([false, false]);
-    const past = createSim(SEED);
-    for (const e of past.enemies) if (e.group === 'field') e.health = 0;
-    run(past, 2);
-    expect([past.fieldCleared, past.populated]).toEqual([false, false]);
+  });
+
+  it('on a test start past the tutorial (gates open) the field clears and its goal completes, the start keeping its own packs (067.5)', () => {
+    for (const [name, start, populated] of [
+      ['?start=field', DEFAULT_START, false],
+      ['?start=hollows', HOLLOWS_START, false],
+      ['?playtest', PLAYTEST_START, true],
+    ] as const) {
+      const s = createSim(SEED, { start });
+      expect(s.enemies.some((e) => e.group === 'field'), name).toBe(true);
+      kill(s, 'field');
+      run(s, 1);
+      expect([s.fieldCleared, s.populated], name).toEqual([true, populated]);
+      expect(s.objectives[at('Clear the ruin field')], name).toBe(true);
+    }
+  });
+
+  it("on ?playtest the line moves past the field once it's cleared", () => {
+    const s = createSim(SEED, { start: PLAYTEST_START });
+    for (const id of ['wood', 'stone', 'fiber']) s.gathered.push(id);
+    run(s, 1);
+    expect(current(s)).toBe(at('Clear the ruin field'));
+    kill(s, 'field');
+    expect(current(s)).toBe(at('Defeat the Pylon Warden at the shrine'));
   });
 });
 
