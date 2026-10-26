@@ -57,7 +57,12 @@ export interface StartDef {
   exampleLine?: boolean;
   /** 058: the guided tutorial's builds and build lock (src/data/guidedBuilds.ts). The real game's start only. */
   guided?: boolean;
+  /** 067: revealing items (038) counted as already carried, so their recipes are known from the first tick. */
+  found?: readonly string[];
 }
+
+/** 067: the raws whose carrying shows the bomb and ley bolt rows; a start past the tutorial knows them. */
+export const BOMB_RAWS: readonly string[] = ['stone', 'husk-resin', 'ley-crystal'];
 
 /**
  * The sandbox start: the meadow beside the ruin field (017), 30 arrows, the tube
@@ -73,6 +78,8 @@ export const DEFAULT_START: StartDef = {
   attuned: false,
   gatesOpen: true,
   populated: false,
+  // 067: past the tutorial, so the bomb and ley bolt rows are known as they were with the foundry's gate open.
+  found: BOMB_RAWS,
 };
 
 /** The real game's start (012): waking by the tube's stone in the overworld's meadow (017) with nothing, every gate shut; the example line waits in the foundry (046). */

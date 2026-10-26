@@ -16,8 +16,8 @@ import { entranceCap } from './research';
 
 // The tutorial's rules (012): the tube waits on its stone until E takes it; the
 // foundry's stairs are sealed until the ruin field's whole pack is dead at once,
-// the shrine site's gap until the first line fills the tube; bomb and ley bolt recipes stay
-// unknown until the tube attunes. Gates and the tube stay once got, through a KO.
+// the shrine site's gap until the first line fills the tube. Gates and the tube stay once got,
+// through a KO.
 
 
 /** The ruin field's pack (017): while any of it lives, rubble seals the foundry's stairs. */
@@ -114,14 +114,9 @@ export function sealedRoom(state: Pick<SimState, 'gates'>, room: Room): Room {
   return sealed;
 }
 
-/**
- * Recipes the player knows: those needing attunement once the tube is attuned or (051, B.3: bombs and ley bolts are
- * crafted before the foundry) once the foundry's stairs are open, and those shown after an item (038) once it's been carried.
- */
-export function knownRecipe(state: { link: Pick<SimState['link'], 'attuned'>; found: readonly string[]; gates: Pick<Gates, 'foundry'> }, recipeId: string): boolean {
-  const def = recipeDef(recipeId);
-  const attuned = state.link.attuned || state.gates.foundry;
-  return (def.requires !== 'attuned' || attuned) && revealsOf(def).every((id) => state.found.includes(id));
+/** Recipes the player knows: each once what it's shown after (038) has been carried (067: never waiting on attunement). */
+export function knownRecipe(state: { found: readonly string[] }, recipeId: string): boolean {
+  return revealsOf(recipeDef(recipeId)).every((id) => state.found.includes(id));
 }
 
 /** The revealing items (038) an inventory holds, in REVEALING_ITEMS order. */

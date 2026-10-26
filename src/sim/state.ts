@@ -13,6 +13,7 @@ import { createCaches, type CacheHold, type CacheState } from './cache';
 import { startingFixtures, type FixtureState } from './fixtures';
 import type { HarvestState } from './harvest';
 import { createGates, foundIn, type Gates } from './tutorial';
+import { REVEALING_ITEMS } from '../data/recipes';
 import { HOLLOWS } from '../data/hollows';
 import { claim, type ClaimHold } from './claims';
 import { createMines, type MinesState } from './mines';
@@ -221,7 +222,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     summoning: null,
     crafted: [...start.crafted],
     carried: [],
-    found: foundIn(start.inventory),
+    found: REVEALING_ITEMS.filter((id) => (start.found ?? []).includes(id) || foundIn(start.inventory).includes(id)),
     foundry: createFoundry(),
     blueprints: [],
     orbs: [],

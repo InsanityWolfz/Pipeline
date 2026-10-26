@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { PLAYTEST_START } from '../../src/data/playtest';
-import { TUTORIAL_START } from '../../src/data/player';
+import { BOMB_RAWS, TUTORIAL_START } from '../../src/data/player';
 import { FOUNDRY_ROOM } from '../../src/data/rooms';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { WORLD } from '../../src/sim/world';
@@ -147,11 +147,13 @@ describe('gates', () => {
 });
 
 describe('recipes', () => {
-  it('only the arrow chain is known until the tube attunes', () => {
+  it("only the arrow chain is known until the bomb chain's raws are carried (067: attuning knows nothing new)", () => {
     const s = tutorial();
     const known = () => Object.keys(RECIPES).filter((id) => knownRecipe(s, id));
     expect(known()).toEqual(['shaft', 'arrowhead', 'rope', 'arrow']);
     s.link.attuned = true;
+    expect(known()).toHaveLength(4);
+    s.found = [...BOMB_RAWS];
     expect(known()).toHaveLength(9);
   });
 });

@@ -42,13 +42,15 @@ describe('the Tempering coil’s rows (066)', () => {
     expect(craftKnown(t, 'storm-glass')).toBe(true);
   });
 
-  it('storm glass waits for the tube’s attunement, as ley glass does', () => {
+  it('storm glass needs no attunement, as ley glass doesn’t (067): only its inputs carried', () => {
     const s = attuned();
     s.found = ['ley-glass', 'stormglass', 'ley-steel'];
     s.link.attuned = false;
     s.gates.foundry = false;
-    expect(craftKnown(s, 'storm-glass')).toBe(false);
+    expect(craftKnown(s, 'storm-glass')).toBe(true);
     expect(craftKnown(s, 'stormsteel')).toBe(true);
+    s.found = ['ley-glass', 'ley-steel'];
+    expect(craftKnown(s, 'storm-glass')).toBe(false);
   });
 
   it('hand-crafting stormsteel unlocks the coil; so does hand-crafting storm glass', () => {
