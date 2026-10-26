@@ -12,10 +12,10 @@ export const ANY_SCHEMATIC = 'any-schematic';
 /** A separate roll on every enemy's death (champions at their own rate); the Ruined Cache uses its own table's 20%. */
 export const SCHEMATIC_CHANCE = { enemy: 0.01, champion: 0.05 } as const;
 
-/** The regions each schematic can drop in: Reservoir II only in Region 2 (034, Stonefall Hollows). */
+/** The regions each schematic can drop in: Reservoir II only in Region 2 (034, Stonefall Hollows); 061: machine speed in the Emberworks (Region 3) too. */
 export const SCHEMATIC_REGIONS: Readonly<Record<string, readonly number[]>> = {
   'schematic-reservoir-2': [2],
-  'schematic-machine-speed': [1, 2],
+  'schematic-machine-speed': [1, 2, 3],
 };
 
 /** Which region a room is in; a room not listed is in DEFAULT_REGION. The overworld's west columns are Region 2 (034: src/sim/regions.ts). */

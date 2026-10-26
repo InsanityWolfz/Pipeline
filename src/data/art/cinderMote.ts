@@ -19,7 +19,7 @@ const blaze: EnemyPart = {
   id: 'blaze',
   role: 'charge',
   pivot: [0, CY],
-  shapes: [ellipse(0, CY, 10, 10, { fill: { radial: [0, CY, 10], stops: [{ at: 0, color: 'cinder-light' }, { at: 0.6, color: { id: 'cinder', alpha: 0.6 } }, { at: 1, color: { id: 'flame-dark', alpha: 0 } }] }, glow: { color: 'cinder-light', blur: 8 } })],
+  shapes: [ellipse(0, CY, 13, 13, { fill: { radial: [0, CY, 13], stops: [{ at: 0, color: 'cinder-light' }, { at: 0.6, color: { id: 'cinder', alpha: 0.6 } }, { at: 1, color: { id: 'flame-dark', alpha: 0 } }] }, glow: { color: 'cinder-light', blur: 8 } })],
 };
 
 /** A bent slag bar from the cap to the ring, bowed out by `bow` px. */

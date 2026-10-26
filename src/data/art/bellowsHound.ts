@@ -90,6 +90,7 @@ const bodyUp: EnemyPart = {
   shapes: [
     path('M -6 -38 L -8 -42 L -3 -38 Z', solid('iron')),
     path('M 6 -38 L 8 -42 L 3 -38 Z', solid('iron')),
+    path('M -6 -38.5 L 6 -38.5 Q 7.5 -32 4 -28 L -4 -28 Q -7.5 -32 -6 -38.5 Z', { fill: { linear: [0, -38, 0, -28], stops: [{ at: 0, color: 'iron-light' }, { at: 1, color: 'iron' }] }, outline: true }),
     ellipse(0, -21, 10, 8, { fill: leather, outline: true }),
     rect(-9, -30, 18, 14, 3, { fill: { linear: [0, -30, 0, -16], stops: [{ at: 0, color: 'iron-light' }, { at: 1, color: 'iron' }] }, outline: true }),
     ellipse(0, -27, 1.4, 1.4, { fill: 'cyan', glow: { color: 'cyan', blur: 3 } }),
