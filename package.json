@@ -11,6 +11,7 @@
     "measure": "vitest run --config vitest.measure.config.ts",
     "check": "npm run typecheck && npm run lint && npm run test",
     "test:e2e": "playwright test --pass-with-no-tests",
+    "test:prod": "npm run build && playwright test -c playwright.prod.config.ts",
     "sound": "node scripts/build-sound.ts"
   },
   "dependencies": {

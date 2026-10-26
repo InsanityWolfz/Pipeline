@@ -26,7 +26,7 @@ export interface MadePopupShown extends PopupBox {
 
 // The "+ shaft" popups (027): the first time machines ever make an item, its name pops
 // above the machine that made it, rises and fades (046: no longer tied to 027's build
-// steps, so the example line's first run shows +shaft, +arrowhead, +rope and +arrow).
+// steps; 067: the first guided arrow line's first run shows +shaft, +arrowhead, +rope and +arrow).
 // Each item pops once (and not at all if the player is away from the foundry then).
 // 031: a popup that would overlap a live one starts just above it, and they rise
 // together; the same machine and item twice in a short window merge into one with a count.

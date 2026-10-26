@@ -1,13 +1,13 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, ENEMY_FX, SPRITES } from '../data/assets';
 import { FORGE_LOOK } from '../data/forgewrightAssets';
-import { forgeDefOf, plated } from '../sim/forgewrightParts';
+import { forgeDefOf } from '../sim/forgewrightParts';
+import { plated } from '../sim/bossParts';
 import { addVector } from './vector/textures';
 import { VIEW_WIDTH } from '../data/config';
 import { enemyDef } from '../data/enemies';
-import { arenaOf } from '../data/arenas';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
-import { engaged } from '../sim/bulwarkAi';
+import { engagedBoss } from './bossLook';
 import { defOf } from '../sim/champions';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
@@ -41,7 +41,7 @@ export class BossBar {
   }
 
   update(sim: SimState): void {
-    const boss = sim.enemies.find((e) => e.roomId === sim.roomId && arenaOf(e.enemyId) !== undefined && engaged(e));
+    const boss = engagedBoss(sim);
     if (!boss) {
       this.shown = null;
       this.setVisible(false);

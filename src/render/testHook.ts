@@ -161,12 +161,17 @@ export interface UiState {
   interactPrompt: InteractPromptState | null;
   /** The waypoint arrow's tip over a target in the player's room (051; was 027's marker), world px, or null. */
   marker: { x: number; y: number } | null;
-  /** 051: the waypoint arrow as drawn: at the screen's edge or over its target, its tip (world px) and angle, through a door or not, and the refill goal's raw icons. */
+  /** 051: the waypoint arrow as drawn: at the screen's edge or over its target, its tip (world px) and angle, through a door or not, and any raw icons. */
   waypoint: WaypointShown | null;
-  /** 051 (B.3): the objective line's text and its sub-lines as drawn (raw, words, ticked, box). */
-  objective: { text: string; subSteps: SubStepShown[] };
+  /**
+   * 051 (B.3): the objective line's text and its sub-lines as drawn (raw, words, ticked, box); fix-playtest-ui: the
+   * lines its text wraps onto, its band (view px, null while none shows) and the corner map's width it's capped at.
+   */
+  objective: { text: string; subSteps: SubStepShown[]; lines: number; box: { x: number; y: number; w: number; h: number } | null; capWidth: number };
   /** 058: the guided build's ghosts as drawn (the next first), the remove label and a refused placement's hint. */
   guided: GuidedShown;
+  /** 067: the line over a sealed door pushed into or E'd at ("Claim the shrine first") while it shows, else null. */
+  sealedDoor: string | null;
   /** The "+ shaft" popups still on screen (027), by text, with each one's box in view px (031: none overlap). */
   madePopups: MadePopupShown[];
   /** The objective line's finished-goal tick, its alpha (0 once faded): screenshots wait for it to go (028). */
