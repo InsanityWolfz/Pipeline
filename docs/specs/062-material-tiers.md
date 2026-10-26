@@ -159,15 +159,17 @@ Names and the hover:
 - 062.1 Names follow today's casing, where every prefix is capitalised: "Steel Frost arrow", "Glass Homing ley bolt",
   "Steel Fire Cluster bomb" (the spec wrote "Steel frost arrow"). Old names are unchanged.
 - 062.2 The hover summary adds "Steel ×1.6 dmg" after the damage and rate. When a summary is too long for its four rows,
-  that note is the first thing dropped (the name still says Steel).
+  that note is the first thing dropped (the name still says Steel). If it's still too long, a Fire round's burn then
+  drops its time ("burns 4.8/s"); the breakdown keeps both. Only the Steel Fire Cluster bomb needs this.
 
 Layout, where the new rows didn't fit:
 - 062.3 The Build tab (040) gives a tiered round its stone round's row, its name marked with the known tier ("Frost
   arrow · Steel"). Every round the game has then still fits two columns. A tiered round known without its stone one
   has the row to itself. Its own hover is on the hotbar and inventory.
 - 062.4 The crafting menu shows each tab's tier chain (ley-steel, the steel part, the steel round; ley glass and glass
-  bolts under Ley) in a second column beside the stone rows. The menu is therefore wider, and that column is empty
-  until ley-steel or ley glass has been carried.
+  bolts under Ley) in a second column beside the stone rows. The menu is therefore wider (466 px, was 276), and that
+  column stays empty until ley-steel or ley glass has been carried, so early on the panel's right half is bare (026's
+  review shots, retaken here and not committed, show it). Sizing the panel to the rows shown would be a follow-up.
 - 062.5 To fit the Forge group into the 640 px view, the build bar's cells sit 1 px closer and its groups are 6 px apart
   (they were 12).
 
