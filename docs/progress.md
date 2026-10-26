@@ -31,6 +31,14 @@ Newest entry first. Entries before 050 are in docs/progress-archive.md.
 - `src/sim/events.ts` sits at 302 lines; split it the next time it grows.
 - 058's and 051's older review shots that show the example line can't be retaken (067.13).
 
+## 2026-10-26: Merged 061–066, two fixes, and an agent playtest
+**Changed:** Shaun merged 061, 062, 064, 065 and 066 in stack order (InsanityWolfz/Pipeline#72, #73, #75, #76, #77) and 063 (#74, merged onto them with `SAVE_VERSION` 19). Two fixes merged: the Stormcrown's damage ×8 with "each region steps up more than the last" in design.md (#78), and the inventory leaving build mode plus the KO respawn and camera (#79). Four AI playtester agents played main; their combined report is docs/brainstorm/2026-10-26-agent-playtest.md.
+
+**Next:** Shaun picks which of the report's bugs to fix (a fix batch) and which balance and design calls become specs.
+
+**Notes:**
+- The heavy sim tests (exampleLine, emberworks' ring test, the fight harnesses, roads, sim replays) time out at Vitest's 5 s under load; they pass alone. Worth explicit measured budgets.
+
 ## 2026-10-26: 063 Blueprints and area pick-up
 **Changed:** on `claude/063-blueprints` (InsanityWolfz/Pipeline#74), from Shaun's blueprints interview (docs/brainstorm/2026-10-26-blueprints-interview.md; plan docs/plans/063-blueprints.md):
 - the Area tool (X, a Tools group on the build bar): drag a box over whole pieces (never fixtures), then Pick up (contents to the stash), Save blueprint, or both;
