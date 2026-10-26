@@ -15,6 +15,9 @@ export interface GhostHold {
 /** A question the menus ask before acting (063): which slot a save overwrites (all 8 full), or whether to delete one. */
 export type ToolQuestion = { kind: 'overwrite'; box: AreaBox; action: Exclude<AreaAction, 'pickUp'> } | { kind: 'delete'; slot: number };
 
+/** The ghost's box top-left for the cursor's tile: the box centred on it (left and up of centre for an even size). */
+export const ghostOrigin = (cursor: Tile, w: number, h: number): Tile => ({ tx: cursor.tx - Math.floor((w - 1) / 2), ty: cursor.ty - Math.floor((h - 1) / 2) });
+
 // Build mode's tools (063), pure so Vitest can drive them: which tool the mouse uses, the Area tool's drag and the box
 // it released (waiting on the release menu), and the blueprint ghost held. Controls owns one; the pointer and keys
 // change it, the scene's views draw it. Esc, and a right click, back out one step at a time: the menu, then the ghost
@@ -29,6 +32,8 @@ export class BlueprintInput {
   question: ToolQuestion | null = null;
   /** The blueprint ghost held, in ghost mode. */
   ghost: GhostHold | null = null;
+  /** The held ghost's box size as turned now, tiles (the scene keeps this current from the blueprint). */
+  ghostSize = { w: 1, h: 1 };
   /** The blueprint list is open. */
   listOpen = false;
   /** The list can't open: the Blueprint table isn't restored (the scene keeps this current). */
@@ -72,6 +77,13 @@ export class BlueprintInput {
     this.setPiece();
     this.mode = 'ghost';
     this.ghost = { slot, turns: 0, mirrored: false };
+  }
+
+  /** A left press with the ghost held on a tile: the stamp it asks for, its box centred there; null with no ghost. */
+  stampAt(tile: Tile): { slot: number; tx: number; ty: number; turns: number; mirrored: boolean } | null {
+    if (!this.ghost) return null;
+    const at = ghostOrigin(tile, this.ghostSize.w, this.ghostSize.h);
+    return { slot: this.ghost.slot, ...at, turns: this.ghost.turns, mirrored: this.ghost.mirrored };
   }
 
   /** The rotate key: the ghost turns 90° clockwise. */

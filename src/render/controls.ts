@@ -191,6 +191,7 @@ export class Controls {
       toggleBuild: this.buildPending,
       place: action?.place ?? null,
       pickUp: action?.pickUp ?? null,
+      stamp: action?.stamp ?? null,
       ...this.menus.take(),
     };
     this.buildPending = false;

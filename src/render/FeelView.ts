@@ -166,8 +166,9 @@ export class FeelView {
       s.play(SOUNDS.harvest);
       j.burst(HARVEST_BURSTS[h.nodeId] ?? 'harvestChips', h.x, h.y);
     }
+    if (ev.stamps.some((st) => st.placed > 0)) s.play(SOUNDS.stamp); // 063: one stamp, not a place sound per piece
     for (const p of ev.places) {
-      s.play(SOUNDS.place);
+      if (ev.stamps.length === 0) s.play(SOUNDS.place);
       this.dropIn(p.id);
       const c = tileCentre(p.tx, p.ty);
       j.burst('place', c.x, c.y + TILE_SIZE / 2);

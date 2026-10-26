@@ -3,6 +3,7 @@ import type { Command } from './input';
 import { pickUp, place } from './placement';
 import { areaPickUp } from './area';
 import { deleteBlueprint, saveBlueprint } from './blueprints';
+import { stamp } from './stamp';
 import type { SimState } from './state';
 
 // Build mode: toggled in the foundry. While it's on the player can still walk,
@@ -26,4 +27,5 @@ export function stepBuild(state: SimState, cmd: Command): void {
   if (area && area.action !== 'pickUp') saveBlueprint(state, area.box, area.slot);
   if (area && area.action !== 'save') areaPickUp(state, area.box);
   if (cmd.deleteBlueprint !== null) deleteBlueprint(state, cmd.deleteBlueprint);
+  if (cmd.stamp) stamp(state, cmd.stamp);
 }

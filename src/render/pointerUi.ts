@@ -37,7 +37,7 @@ export function drawPointerUi(g: GameScene, sim: SimState, { controls, topOf, wa
   g.tunnelView?.update(sim.foundry, inFoundry, { building: sim.building, selected: g.buildView?.selected ?? '', cursor: placing, facing: controls?.facing ?? 'right' });
   // Menu rows light under the cursor (020).
   const pointer = controls?.viewPointer();
-  if (controls) g.blueprintUi?.update(sim, controls.tools, inFoundry, pointer ?? null, g.feel?.sound);
+  if (controls) g.blueprintUi?.update(sim, controls.tools, inFoundry, cursor, pointer ?? null, g.feel?.sound);
   if (pointer) for (const menu of [g.siteMenus, g.pause, g.hud, g.sandboxPanel, g.roomViews, g.blueprintUi]) menu?.pointAt(pointer.x, pointer.y);
   // The arrow pointer while a menu is open or over the build bar, else the crosshair (021).
   // 056: the sandbox's tabs are always up, so they turn the pointer to the arrow only under them.

@@ -1,40 +1,27 @@
 import type { GameObjects, Scene } from 'phaser';
-import { animFrames, DEPTHS, SPRITES } from '../data/assets';
-import { TILE_SIZE } from '../data/config';
-import {
-  CRATE_SPRITE,
-  FACING_ARROWS,
-  ICON_RISE,
-  HOPPER_SPRITES,
-  machineLook,
-} from '../data/foundryAssets';
+import { DEPTHS, SPRITES } from '../data/assets';
+import { FACING_ARROWS } from '../data/foundryAssets';
 import { BUILD_BAR_LAYOUT, BUILD_PULSE, GHOST } from '../data/hudLayout';
-import { BUILD_BAR, isFlatKind, pieceDef, TUNNEL_PIECES } from '../data/pieces';
-import { splitterLook, tunnelLook } from './flatPieces';
-import { pieceRect, type PlaceFail, type Tile } from '../sim/pieces';
+import { BUILD_BAR, pieceDef, TUNNEL_PIECES } from '../data/pieces';
+import type { PlaceFail, Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { colorOf } from './color';
 import { buildBarLabelTop } from './bottomHud';
-import { buildBarBox, buildBarCells, buildBarDividers, buildBarGroups, conduitLook, inRect, pieceIcon, type ScreenRect } from './foundryLayout';
-import { MAX_ARROWS, placeArrows, viewOf } from './FoundryView';
+import { buildBarBox, buildBarCells, buildBarDividers, buildBarGroups, inRect, pieceIcon, type ScreenRect } from './foundryLayout';
+import { MAX_ARROWS, placeArrows } from './FoundryView';
+import { bodyFrame, showGhost } from './ghostLook';
 import { toView } from './scale';
 import { Pulse } from './pulse';
 import { BuildStripView, type BuildStripState } from './BuildStripView';
 import { GuideBar, type GuideBarState } from './GuideBar';
 import { TextLine } from './textLine';
 import type { TipHit } from './tipTypes';
-import { addVector, showFrame } from './vector/textures';
+import { addVector } from './vector/textures';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
-/** The resting frame of a piece's body as placed with `facing`. */
-export function bodyFrame(pieceId: string, facing: Facing, inFrom: Facing): string {
-  const def = pieceDef(pieceId);
-  const view = viewOf(facing);
-  if (def.kind === 'machine') return machineLook(def.id, view).idle;
-  if (def.kind === 'conduit') return animFrames(conduitLook(facing, inFrom).anim)[0] ?? '';
-  return def.kind === 'hopper' ? HOPPER_SPRITES[view] : CRATE_SPRITE;
-}
+// 063: a piece's resting body frame moved to ghostLook.ts with the ghost's look; still reached from here.
+export { bodyFrame } from './ghostLook';
 
 /** The build bar as drawn (026), for `ui().buildBar`, view px. */
 export interface BuildBarState {
@@ -200,30 +187,9 @@ export class BuildView {
     // A conduit's ghost shows the shape it would take: a corner where it would join a side feeder,
     // or the held tile of a drag as it would be laid (013).
     const { facing, inFrom } = def.kind === 'conduit' ? shapeAt(cursor, ghostFacing) : { facing: ghostFacing, inFrom: ghostFacing };
-    const r = pieceRect({ pieceId, tx: cursor.tx, ty: cursor.ty, facing });
-    const bottom = r.y + r.h / 2;
-    if (def.kind === 'splitter') {
-      // 033: the splitter's ghost shows its side, which G flips.
-      const look = splitterLook(facing, mirrored);
-      showFrame(this.ghost, look.frame).setFlip(look.flipX, look.flipY);
-    } else if (def.kind === 'tunnel-in' || def.kind === 'tunnel-out') {
-      const look = tunnelLook(def.kind, facing);
-      showFrame(this.ghost, look.frame).setFlip(look.flipX, false);
-    } else {
-      const flip = def.kind === 'conduit' ? conduitLook(facing, inFrom).flip : facing === 'left';
-      showFrame(this.ghost, bodyFrame(pieceId, facing, inFrom)).setFlip(flip, false);
-    }
-    if (isFlatKind(def.kind)) this.ghost.setOrigin(0).setPosition(r.x - TILE_SIZE / 2, r.y - TILE_SIZE / 2);
-    else this.ghost.setOrigin(0.5, 1).setPosition(r.x, bottom);
     const tint = colorOf(canPlace(pieceId, cursor.tx, cursor.ty, facing) ? GHOST.badTint : GHOST.okTint);
-    this.ghost.setTint(tint);
+    showGhost(this.ghost, this.ghostIcon, { pieceId, tx: cursor.tx, ty: cursor.ty, facing, inFrom, mirrored }, tint);
     placeArrows(this.ghostArrows, { pieceId, tx: cursor.tx, ty: cursor.ty, facing, mirrored, ...(def.kind === 'conduit' ? { inFrom } : {}) });
-    const machine = def.kind === 'machine';
-    this.ghostIcon.setVisible(machine).setTint(tint);
-    if (machine) {
-      const rise = ICON_RISE[def.footprint][viewOf(facing)];
-      this.ghostIcon.setFrame(pieceIcon(pieceId)).setPosition(r.x, bottom - rise);
-    }
   }
 
   /** Redraws the bar for the unlocked pieces: their cells, each shown group's label, and the dividers between (026). */

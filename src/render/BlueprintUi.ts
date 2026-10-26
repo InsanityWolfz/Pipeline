@@ -7,12 +7,16 @@ import { blueprintsUnlocked } from '../sim/blueprints';
 import type { SimState } from '../sim/state';
 import { AreaView } from './AreaView';
 import { blueprintIcon } from './blueprintLayout';
-import type { BlueprintInput, ToolMode, ToolQuestion } from './blueprintInput';
+import { ghostOrigin, type BlueprintInput, type ToolMode, type ToolQuestion } from './blueprintInput';
 import { ChoiceMenu, type Choice } from './ChoiceMenu';
 import type { Controls } from './controls';
 import type { SoundView } from './SoundView';
 import { ToolCells, type ToolCellsShown } from './ToolCells';
 import { BlueprintList, NO_BLUEPRINT_LIST, type BlueprintListShown } from './BlueprintList';
+import { BlueprintGhost, NO_BLUEPRINT_GHOST, type BlueprintGhostShown } from './BlueprintGhost';
+import { transformBlueprint } from '../sim/blueprintTransform';
+import { stampPlan, type StampPiece } from '../sim/stamp';
+import type { Tile } from '../sim/pieces';
 
 export interface BlueprintUiShown {
   tool: ToolMode;
@@ -23,10 +27,11 @@ export interface BlueprintUiShown {
   menu: { text: string; x: number; y: number; w: number; h: number }[] | null;
   tools: ToolCellsShown;
   list: BlueprintListShown;
+  ghost: BlueprintGhostShown;
 }
 
 /** 063's build-mode UI as drawn, for `ui().blueprints`. */
-export const NO_BLUEPRINT_UI: BlueprintUiShown = { tool: 'piece', box: null, counted: [], menu: null, tools: { shown: false, cells: [], tip: null }, list: NO_BLUEPRINT_LIST };
+export const NO_BLUEPRINT_UI: BlueprintUiShown = { tool: 'piece', box: null, counted: [], menu: null, tools: { shown: false, cells: [], tip: null }, list: NO_BLUEPRINT_LIST, ghost: NO_BLUEPRINT_GHOST };
 
 /** A menu row's meaning: a release menu row, or a slot a question names. */
 type MenuValue = AreaMenuRow | { slot: number };
@@ -49,6 +54,7 @@ export class BlueprintUi {
   private readonly area: AreaView;
   private readonly menu: ChoiceMenu<MenuValue>;
   private readonly list: BlueprintList;
+  private readonly ghost: BlueprintGhost;
   private tools: BlueprintInput | null = null;
   private sim: SimState | null = null;
   shown: BlueprintUiShown = NO_BLUEPRINT_UI;
@@ -57,6 +63,7 @@ export class BlueprintUi {
     this.cells = new ToolCells(scene);
     this.area = new AreaView(scene);
     this.list = new BlueprintList(scene);
+    this.ghost = new BlueprintGhost(scene);
     this.menu = new ChoiceMenu<MenuValue>(scene);
   }
 
@@ -77,7 +84,25 @@ export class BlueprintUi {
     return [...rows, CANCEL];
   }
 
-  update(sim: SimState, tools: BlueprintInput, inFoundry: boolean, pointer: { x: number; y: number } | null, sound: SoundView | undefined): void {
+  /** The held ghost's stamp as it would go with its box centred on the cursor's tile, or null (no ghost, or off the grid). */
+  private plan(sim: SimState, tools: BlueprintInput, cursor: Tile | null): StampPiece[] | null {
+    const g = tools.ghost;
+    if (!g || !sim.building) return null;
+    const bp = sim.blueprints[g.slot];
+    if (!bp) {
+      // Its slot was emptied: the ghost goes.
+      tools.setPiece();
+      return null;
+    }
+    const shape = transformBlueprint(bp, g.turns, g.mirrored);
+    tools.ghostSize = { w: shape.w, h: shape.h };
+    if (!cursor) return null;
+    const at = ghostOrigin(cursor, shape.w, shape.h);
+    return stampPlan(sim, g.slot, at.tx, at.ty, g.turns, g.mirrored);
+  }
+
+  /** `cursor`: the foundry tile under the cursor while it's over the world, else null; `pointer` view px. */
+  update(sim: SimState, tools: BlueprintInput, inFoundry: boolean, cursor: Tile | null, pointer: { x: number; y: number } | null, sound: SoundView | undefined): void {
     this.sim = sim;
     this.tools = tools;
     if (tools.takeRelease()) sound?.play(SOUNDS.areaRelease);
@@ -92,8 +117,9 @@ export class BlueprintUi {
     tools.listLocked = !blueprintsUnlocked(sim);
     if (tools.listLocked) tools.listOpen = false;
     this.list.update(sim.building && tools.listOpen, sim.blueprints);
+    this.ghost.update(inFoundry ? this.plan(sim, tools, cursor) : null, cursor);
     this.cells.update(sim.building, tools.mode === 'area' ? 'area' : tools.listOpen ? 'list' : null, tools.listLocked, pointer);
-    this.shown = { tool: tools.mode, box, counted: this.area.counted, menu: this.menu.isOpen ? this.menu.rowsShown : null, tools: this.cells.shown, list: this.list.shown };
+    this.shown = { tool: tools.mode, box, counted: this.area.counted, menu: this.menu.isOpen ? this.menu.rowsShown : null, tools: this.cells.shown, list: this.list.shown, ghost: this.ghost.shown };
   }
 
   overUi(x: number, y: number): boolean {

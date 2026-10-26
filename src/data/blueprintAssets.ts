@@ -50,3 +50,10 @@ export const BLUEPRINT_LIST = {
   /** The empty list's line, in the row's place. */
   empty: { y: 8 },
 } as const;
+
+/**
+ * The blueprint ghost (063): every piece drawn at `alpha` in the build ghost's tints (GHOST: cyan where it goes, rust
+ * where it can't), each tile of a piece that can't go filled red (`tile`, `inset` px in). Hovering a piece not yet
+ * unlocked shows its line `hoverRise` px over the tile's top, in world px.
+ */
+export const BLUEPRINT_GHOST = { alpha: 0.6, tile: { color: 'danger', alpha: 0.32, inset: 1 }, hoverRise: 3 } as const;

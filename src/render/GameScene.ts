@@ -240,7 +240,8 @@ export class GameScene extends Scene {
     // 057: the sandbox's panels slide first, so the pickup feed beside the Loadout tab follows it this frame.
     this.sandboxPanel?.update(sim, this.game.loop.delta);
     this.hud?.update(sim, this.pending, this.game.loop.delta, this.sandboxPanel?.loadoutOut ?? 0);
-    this.buildView?.placed(this.pending.places.map((p) => p.pieceId));
+    // 063: a stamp's pieces don't switch the bar's tunnel end.
+    if (this.pending.stamps.length === 0) this.buildView?.placed(this.pending.places.map((p) => p.pieceId));
     clearEvents(this.pending);
     const inFoundry = shown === FOUNDRY_ROOM;
     this.foundryView?.update(sim.foundry, inFoundry, sim.building);

@@ -4,8 +4,8 @@ import type { Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
 import { dragTo, release, type ConduitLay, type HeldConduit } from './dragPath';
 
-/** A build action queued for a tick: a place or a pick-up. */
-export type BuildAction = Pick<Command, 'place' | 'pickUp'>;
+/** A build action queued for a tick: a place or a pick-up, or (063) a blueprint's stamp. */
+export type BuildAction = Pick<Command, 'place' | 'pickUp'> & { stamp?: Command['stamp'] };
 
 // Placing pieces with the mouse in build mode (split from controls.ts in 047): a click places the selected piece, a
 // right click picks one up; with a conduit selected, a click lays it on release with the ghost's facing, and a drag
@@ -26,6 +26,11 @@ export class BuildDrag {
   /** A right click on a tile: pick its piece up. */
   pickUp(tile: Tile): void {
     this.queue.push({ place: null, pickUp: tile });
+  }
+
+  /** A left press with a blueprint ghost held (063): its stamp. */
+  stamp(stamp: NonNullable<Command['stamp']>): void {
+    this.queue.push({ place: null, pickUp: null, stamp });
   }
 
   /** A left press on a tile with `pieceId` selected: a conduit waits for the drag, anything else is placed now. */

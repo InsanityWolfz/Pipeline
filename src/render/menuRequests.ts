@@ -116,10 +116,10 @@ export class MenuRequests {
 }
 
 /** Build and menu actions for one tick, merged into the command. */
-export type UiCommand = Pick<Command, 'toggleBuild' | 'place' | 'pickUp'> & MenuCommand;
+export type UiCommand = Pick<Command, 'toggleBuild' | 'place' | 'pickUp' | 'stamp'> & MenuCommand;
 
 /** No UI actions this tick. */
-export const NO_UI_COMMAND: UiCommand = { toggleBuild: false, place: null, pickUp: null, ...NONE };
+export const NO_UI_COMMAND: UiCommand = { toggleBuild: false, place: null, pickUp: null, stamp: null, ...NONE };
 
 /** A command with the UI's actions merged in: each one the command doesn't set itself comes from the UI (the test hook's steps). */
 export function withUi(cmd: Command, ui: UiCommand): Command {

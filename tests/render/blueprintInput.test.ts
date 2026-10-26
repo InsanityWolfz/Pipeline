@@ -95,3 +95,16 @@ describe('the blueprint list (063)', () => {
     expect(t.mode).toBe('ghost');
   });
 });
+
+describe('stamping from the ghost (063)', () => {
+  it('centres the box on the pressed tile, with its turn and mirror', () => {
+    const t = new BlueprintInput();
+    expect(t.stampAt({ tx: 5, ty: 5 })).toBeNull();
+    t.takeGhost(1);
+    t.turn();
+    t.ghostSize = { w: 2, h: 4 };
+    expect(t.stampAt({ tx: 10, ty: 8 })).toEqual({ slot: 1, tx: 10, ty: 7, turns: 1, mirrored: false });
+    t.ghostSize = { w: 3, h: 3 };
+    expect(t.stampAt({ tx: 10, ty: 8 })).toEqual({ slot: 1, tx: 9, ty: 7, turns: 1, mirrored: false });
+  });
+});

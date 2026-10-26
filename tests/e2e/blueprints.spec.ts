@@ -222,3 +222,73 @@ test('the Blueprints button waits on the table; then P opens the list, a row tak
   expect((await ui(page))?.blueprints.list.open).toBe(false);
   expect(errors).toEqual([]);
 });
+
+test('a frost arrow line saved, picked up, and placed again turned and mirrored, red where it can not go, runs', async ({ page }) => {
+  test.setTimeout(120_000);
+  const errors = watchErrors(page);
+  await buildAtStand(page, true);
+  // A frost arrow line: arrows in from the left, rimestone from below, a crate at its front.
+  await put(page, [
+    { pieceId: 'hopper', tx: 5, ty: 9, facing: 'right' },
+    { pieceId: 'frost-rune', tx: 6, ty: 9, facing: 'right' },
+    { pieceId: 'crate', tx: 7, ty: 9, facing: 'right' },
+    { pieceId: 'hopper', tx: 6, ty: 10, facing: 'up' },
+  ]);
+  await page.keyboard.press('x');
+  await dragBox(page, [5, 9], [7, 10]);
+  await expect.poll(async () => (await ui(page))?.blueprints.menu?.length).toBe(4);
+  await clickMenuRow(page, 'Save and pick up');
+  await expect.poll(async () => (await state(page)).blueprints.list.map((b) => b.name)).toEqual(['Frost arrows']);
+  expect((await state(page)).foundry.pieces.some((p) => p.pieceId === 'frost-rune')).toBe(false);
+
+  // From the list, as the ghost; R turns it, G (flip) mirrors it.
+  await page.keyboard.press('p');
+  await expect.poll(async () => (await ui(page))?.blueprints.list.rows.length).toBe(1);
+  const row = (await ui(page))?.blueprints.list.rows[0];
+  if (!row) throw new Error('no row');
+  const rp = await screenPoint(page, row.box.x + 40, row.box.y + row.box.h / 2);
+  await page.mouse.click(rp.x, rp.y);
+  await expect.poll(async () => (await ui(page))?.blueprints.tool).toBe('ghost');
+  await page.keyboard.press('r');
+  await page.keyboard.press('g');
+  // Over two conduits in the way: those tiles show red.
+  await put(page, [
+    { pieceId: 'conduit', tx: 13, ty: 4, facing: 'up' },
+    { pieceId: 'conduit', tx: 14, ty: 4, facing: 'up' },
+  ]);
+  const blocked = await tileOnCanvas(page, 13, 4);
+  await page.mouse.move(blocked.x, blocked.y);
+  await expect.poll(async () => (await ui(page))?.blueprints.ghost.red.length ?? 0).toBeGreaterThan(0);
+  const ghost = (await ui(page))?.blueprints.ghost.pieces ?? [];
+  expect(ghost.map((p) => [p.pieceId, p.facing])).toEqual([
+    ['hopper', 'down'],
+    ['frost-rune', 'down'],
+    ['crate', 'down'],
+    ['hopper', 'left'],
+  ]);
+  expect(ghost.some((p) => p.fail === 'occupied')).toBe(true);
+
+  // On a clear spot, a click places it all; the ghost stays for another.
+  const clear = await tileOnCanvas(page, 13, 9);
+  await page.mouse.move(clear.x, clear.y);
+  await expect.poll(async () => (await ui(page))?.blueprints.ghost.red.length).toBe(0);
+  await page.mouse.click(clear.x, clear.y);
+  await expect.poll(async () => (await step(page, 1)).foundry.pieces.filter((p) => p.pieceId === 'frost-rune').length).toBe(1);
+  expect((await ui(page))?.blueprints.tool).toBe('ghost');
+  const placed = (await state(page)).foundry.pieces.slice(-4);
+  const [arrows, , crate, rime] = placed;
+  if (!arrows || !crate || !rime) throw new Error('not placed');
+  // Fill its hoppers by hand and let it run: frost arrows reach its crate.
+  await page.keyboard.press('Escape');
+  await walkTo(page, (arrows.tx + 0.5) * 32, (arrows.ty - 0.5) * 32);
+  await step(page, 1, { deposit: { id: arrows.id, itemId: 'arrow', amount: 'all' } });
+  await step(page, 1, { deposit: { id: rime.id, itemId: 'rimestone', amount: 'all' } });
+  await expect
+    .poll(async () => {
+      const s = await step(page, 60);
+      const c = s.foundry.pieces.find((p) => p.id === crate.id);
+      return c?.kind === 'crate' ? (c.contents['arrow+frost'] ?? 0) : 0;
+    })
+    .toBeGreaterThanOrEqual(4);
+  expect(errors).toEqual([]);
+});

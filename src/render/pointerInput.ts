@@ -143,12 +143,12 @@ export class PointerInput {
     if (t.mode === 'piece' && !t.released && !t.question) return false;
     if (p.rightButtonDown()) t.back();
     else if (p.leftButtonDown() && t.mode === 'area') t.press(tile);
-    else if (p.leftButtonDown() && t.mode === 'ghost') this.stampPress?.(tile);
+    else if (p.leftButtonDown() && t.mode === 'ghost') {
+      const stamp = t.stampAt(tile);
+      if (stamp) this.drag.stamp(stamp);
+    }
     return true;
   }
-
-  /** 063: a left press with the blueprint ghost held, on the tile under the cursor (Controls queues the stamp). */
-  stampPress: ((tile: Tile) => void) | null = null;
 
   /** Release (inside the canvas or out): the held conduit is laid. */
   private endDrag(): void {

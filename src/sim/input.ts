@@ -50,6 +50,11 @@ export interface Command {
    * as a blueprint (into `slot`, overwriting it; left out, the next free slot), or both.
    */
   area: { box: AreaBox; action: AreaAction; slot?: number } | null;
+  /**
+   * Stamp the blueprint in `slot` this tick (an edge, 063), mirrored (if `mirrored`) then turned `turns` quarters
+   * clockwise, with its box's top-left on (tx, ty); or null.
+   */
+  stamp: { slot: number; tx: number; ty: number; turns: number; mirrored: boolean } | null;
   /** Delete the blueprint in this slot this tick (an edge, 063), or null. */
   deleteBlueprint: number | null;
   /**
@@ -109,6 +114,7 @@ export const NO_COMMAND: Readonly<Command> = {
   pickUp: null,
   area: null,
   deleteBlueprint: null,
+  stamp: null,
   deposit: null,
   withdraw: null,
   sortInventory: false,
