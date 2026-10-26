@@ -90,7 +90,8 @@ describe('the carried bar keys and right click (047)', () => {
   it('binds keys 1–5 to the carried bar and right click to use, both rebindable', () => {
     expect(['slot1', 'slot2', 'slot3', 'slot4', 'slot5'].map((a) => DEFAULT_BINDINGS[a as keyof typeof DEFAULT_BINDINGS])).toEqual(['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE']);
     expect(DEFAULT_BINDINGS.use).toBe('RIGHT_CLICK');
-    expect(rebind(DEFAULT_BINDINGS, 'use', 'Q')?.use).toBe('Q');
+    // A free key (069 took Q for the pipette).
+    expect(rebind(DEFAULT_BINDINGS, 'use', 'V')?.use).toBe('V');
     expect(rebind(DEFAULT_BINDINGS, 'slot1', 'Z')?.slot1).toBe('Z');
   });
 

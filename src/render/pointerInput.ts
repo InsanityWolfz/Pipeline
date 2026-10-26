@@ -9,10 +9,12 @@ import { clickMods, heldButtons, isLeftPress, type BuildInput } from './clickInp
 import { toView } from './scale';
 import type { BlueprintInput } from './blueprintInput';
 
-/** The build ghost's turn and flip, read when a press starts a place (they live on Controls). */
+/** The build ghost's turn and flip, and (069) a pipetted conduit's turn and stage's round, read when a press starts a place (they live on Controls). */
 export interface GhostPose {
   facing: Facing;
   mirrored: boolean;
+  turn: Facing | null;
+  round: string | null;
 }
 
 // The mouse for Controls (split out of controls.ts): the aim under the cursor, presses that land on the UI, and build
@@ -131,7 +133,7 @@ export class PointerInput {
     const tile = this.tileUnder(p);
     if (this.toolPress(p, tile)) return;
     if (p.rightButtonDown()) this.drag.pickUp(tile);
-    else if (p.leftButtonDown()) this.drag.press(tile, this.build.pieceId(), this.ghost.facing, this.ghost.mirrored);
+    else if (p.leftButtonDown()) this.drag.press(tile, this.build.pieceId(), this.ghost.facing, this.ghost.mirrored, { turn: this.ghost.turn, round: this.ghost.round });
   }
 
   /**

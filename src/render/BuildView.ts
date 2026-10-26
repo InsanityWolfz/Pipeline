@@ -144,7 +144,8 @@ export class BuildView {
     locked = false,
   ): void {
     if (unlocked.join() !== this.unlocked.join()) this.rebuild(unlocked);
-    if (!unlocked.includes(this.selected)) this.selected = unlocked[0] ?? FIRST_PIECE;
+    // 069: an empty hand ('', the pipette over nothing) stays empty until a piece is picked.
+    if (this.selected !== '' && !unlocked.includes(this.selected)) this.selected = unlocked[0] ?? FIRST_PIECE;
     this.setVisible(building);
     this.strip.update(building);
     const pointer = this.scene.input.activePointer;
@@ -157,8 +158,9 @@ export class BuildView {
     this.guide.update(building, cells, highlight, locked, this.tipShown);
     if (!building) return;
     const cell = buildBarCells(unlocked).find((c) => c.pieceId === this.selected);
+    this.highlight.setVisible(cell !== undefined);
     if (cell) this.highlight.setPosition(cell.x, cell.y);
-    this.drawGhost(cursor, facing, mirrored, canPlace, shapeAt);
+    this.drawGhost(this.selected === '' ? null : cursor, facing, mirrored, canPlace, shapeAt);
   }
 
   /** The ring over the named piece's cell, its alpha swinging gently; hidden when there's none. */
@@ -221,6 +223,11 @@ export class BuildView {
   placed(pieceIds: readonly string[]): void {
     const next = this.selected === TUNNEL_PIECES.in ? TUNNEL_PIECES.out : this.selected === TUNNEL_PIECES.out ? TUNNEL_PIECES.in : null;
     if (next && pieceIds.includes(this.selected) && this.unlocked.includes(next)) this.selected = next;
+  }
+
+  /** 069: the pipette's choice: a piece in hand, or null for an empty hand (no ghost; a click places nothing). */
+  select(pieceId: string | null): void {
+    this.selected = pieceId ?? '';
   }
 
   /** Clicking a cell selects its piece. Returns whether the click landed on the bar (its labels and gaps too). */

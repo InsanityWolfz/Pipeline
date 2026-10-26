@@ -41,6 +41,15 @@ export function machineRecipe(m: Pick<MachineState, 'pieceId' | 'made'>): Recipe
   return r;
 }
 
+/**
+ * 069: sets a just-placed stage machine's round (the pipette's copy, as a stamped blueprint's saved round, 063): only a
+ * tagged round this stage makes; any other round, or a machine that isn't a stage, is left as it is.
+ */
+export function setStageRound(m: MachineState, round: string): void {
+  const st = stageOf(m.pieceId);
+  if (st && round.length > 0 && stageRecipeFor(st, withoutTag(round, st.tag))?.output.itemId === round) m.made = round;
+}
+
 /** True if a stage holds no rounds, isn't crafting and has nothing waiting to go out: it may take another round kind. */
 function clear(m: MachineState, st: StageDef): boolean {
   return count(m.buffer, withoutTag(m.made, st.tag)) === 0 && !m.crafting && m.output === 0;

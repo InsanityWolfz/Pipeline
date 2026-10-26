@@ -19,6 +19,7 @@ import type { WakeView } from './WakeView';
 import type { GameHost } from './flow/host';
 import type { SandboxPanel } from './SandboxPanel';
 import { entranceTakesE } from '../sim/purge';
+import { pipette } from './pipette';
 
 /** The menus the router works, built by the scene. */
 export interface Menus {
@@ -128,8 +129,19 @@ export class MenuRouter {
         site.close();
       }
     }
+    // 069: Q in build mode copies the piece under the cursor into the hand, or empties it.
+    if (controls.takePipette() && this.sim.building) {
+      const picked = pipette(this.sim, controls);
+      if (picked !== undefined) {
+        controls.tools.setPiece();
+        build.select(picked);
+      }
+    }
     const steps = controls.takeWheel();
-    if (steps !== 0 && this.sim.building) build.step(steps);
+    if (steps !== 0 && this.sim.building) {
+      build.step(steps);
+      controls.clearHand();
+    }
     else if (steps !== 0 && !site.scrollGear(steps)) inventory.scroll(steps, controls.viewPointer());
     // E on a hopper or crate opens its screen (047); the sim does nothing with it. With the restore panel open, E again restores (033).
     const press = controls.takeInteractPress();
@@ -206,7 +218,10 @@ export class MenuRouter {
     }
     // 063: the area box's menu and the Tools cells; a piece picked on the bar puts down the Area tool or the ghost.
     const bar = build.click(x, y);
-    if (bar) controls.tools.setPiece();
+    if (bar) {
+      controls.tools.setPiece();
+      controls.clearHand();
+    }
     if (bar || this.m.blueprints.click(controls, x, y) || site.click(controls, x, y)) {
       sound.play(SOUNDS.menuClick);
       return;

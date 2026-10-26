@@ -16,6 +16,8 @@ export class BuildDrag {
   private dragTile: Tile | null = null;
   /** The conduit tile a drag is on, held back until the next tile says which way it faces (013). */
   private held: HeldConduit | null = null;
+  /** 069: a pipetted conduit's turn, laid by a click (a drag's own corners win). */
+  private turn: Facing | null = null;
 
   /** Leaving build mode drops a drag in progress. */
   reset(): void {
@@ -33,30 +35,36 @@ export class BuildDrag {
     this.queue.push({ place: null, pickUp: null, stamp });
   }
 
-  /** A left press on a tile with `pieceId` selected: a conduit waits for the drag, anything else is placed now. */
-  press(tile: Tile, pieceId: string, facing: Facing, mirrored: boolean): void {
+  /**
+   * A left press on a tile with `pieceId` selected: a conduit waits for the drag, anything else is placed now. 069: with
+   * an empty hand ('') nothing is placed; a pipetted conduit's `turn` and a stage's `round` go down with it.
+   */
+  press(tile: Tile, pieceId: string, facing: Facing, mirrored: boolean, hand: { turn?: Facing | null; round?: string | null } = {}): void {
     this.end(pieceId, facing);
+    if (pieceId === '') return;
     this.dragTile = tile;
+    this.turn = hand.turn ?? null;
+    const round = hand.round ? { round: hand.round } : {};
     if (pieceDef(pieceId).kind === 'conduit') this.held = { tile };
-    else this.queue.push({ place: { pieceId, ...tile, facing, ...(mirrored ? { mirrored: true } : {}) }, pickUp: null });
+    else this.queue.push({ place: { pieceId, ...tile, facing, ...(mirrored ? { mirrored: true } : {}), ...round }, pickUp: null });
   }
 
   /** Release (inside the canvas or out): the held conduit is laid. */
   end(pieceId: string, facing: Facing): void {
     this.dragTile = null;
-    if (this.held) this.lay(pieceId, release(this.held, facing));
+    if (this.held) this.lay(pieceId, release(this.held, facing, this.turn));
     this.held = null;
   }
 
   /** The conduit a drag is holding back, as it would be laid now; the ghost draws it. */
   heldLay(facing: Facing): ConduitLay | null {
-    return this.held ? release(this.held, facing) : null;
+    return this.held ? release(this.held, facing, this.turn) : null;
   }
 
   /** The cursor reached `tile` mid-drag with a conduit selected: lays one on every tile crossed. */
   move(tile: Tile, pieceId: string): void {
     const drag = this.dragTile;
-    if (!drag || pieceDef(pieceId).kind !== 'conduit') return;
+    if (!drag || pieceId === '' || pieceDef(pieceId).kind !== 'conduit') return;
     const step = dragTo(this.held ?? { tile: drag }, tile);
     for (const l of step.lay) this.lay(pieceId, l);
     this.held = step.held;

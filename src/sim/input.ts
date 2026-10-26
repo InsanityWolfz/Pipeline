@@ -40,9 +40,10 @@ export interface Command {
   /** A piece to place this tick (an edge), or null. */
   /**
    * `inFrom` shapes a conduit (013): left out, a single conduit joins a lone side
-   * feeder as a corner. `mirrored` makes a splitter's side its left (033).
+   * feeder as a corner. `mirrored` makes a splitter's side its left (033). 069: `round` sets a stage machine's round
+   * (the pipette's copy).
    */
-  place: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing; mirrored?: boolean } | null;
+  place: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing; mirrored?: boolean; round?: string } | null;
   /** A tile whose piece to pick up this tick (an edge), or null. */
   pickUp: { tx: number; ty: number } | null;
   /**
