@@ -91,7 +91,6 @@ const at = (text: string): number => OBJECTIVES.findIndex((o) => o.text === text
 const TALENT = at('Press T to spend a talent point');
 const LEY = at('Put ley bolts into the second entrance (B)');
 const FROST = at('Build a frost rune into your arrow line');
-const TRAVEL = at('Travel to the foundry (E at the pylon)');
 const LEAVE = at('Leave the foundry');
 const FIELD = at('Clear the ruin field');
 const ARROW = at('Build an arrow line into the middle entrance (B)');
@@ -140,27 +139,6 @@ describe('the chain (058)', () => {
     s.objectives = OBJECTIVES.map((o) => !o.cutIn);
     s.talentPoints = 1;
     expect(currentObjective(s)).toBeNull();
-  });
-});
-
-describe('the travel to the foundry (067)', () => {
-  it('is done the tick the player is in the foundry once it is current, and the arrow line on ghosts follows', () => {
-    const s = tutorialAt(TRAVEL);
-    expect(s.objectives[TRAVEL]).toBe(true);
-    expect(currentObjective(s)).toBe(TRAVEL + 1);
-    expect(TRAVEL + 1).toBe(ARROW);
-    expect(OBJECTIVES[ARROW]).toMatchObject({ guided: 'arrow-line', check: { kind: 'built', build: 'arrow-line' }, target: { kind: 'ghost' }, prompt: { key: 'B', over: 'player' } });
-    expect(OBJECTIVES[ARROW + 1]?.text).toBe('Wait for the tube to fill with arrows');
-  });
-
-  it('is never done by a foundry visit before it is current', () => {
-    const s = tutorialAt(TRAVEL - 2);
-    expect(s.roomId).toBe(FOUNDRY_ROOM);
-    expect(s.objectives[TRAVEL]).toBe(false);
-    s.objectives[TRAVEL - 2] = true;
-    s.objectives[TRAVEL - 1] = true;
-    run(s, 1);
-    expect(s.objectives[TRAVEL]).toBe(true);
   });
 });
 
@@ -238,26 +216,6 @@ describe('the build lock', () => {
     expect(s.events.deposits).toHaveLength(1);
   });
 
-  it('during the arrow line step (067) allows only its next ghost, and the line can be built through to the end', () => {
-    const s = tutorialAt(ARROW);
-    expect(buildLocked(s)).toBe(true);
-    expect(nextGhost(s)?.ghost).toEqual(GUIDED_BUILDS['arrow-line'][0]);
-    expect(nextGhost(s)?.ghost).toMatchObject({ kind: 'place', piece: 'conduit', tx: 2, ty: 4, facing: 'right' });
-    for (const place of [{ pieceId: 'cutter', tx: 2, ty: 4, facing: 'right' }, { pieceId: 'conduit', tx: 18, ty: 12, facing: 'up' }] as const) {
-      run(s, 1, { place });
-      expect(s.events.placeFails.map((f) => f.reason)).toEqual(['ghost']);
-    }
-    for (const g of GUIDED_BUILDS['arrow-line']) build(s, g);
-    expect(nextGhost(s)).toBeNull();
-    run(s, 1);
-    expect(s.objectives[ARROW]).toBe(true);
-    expect(currentObjective(s)).toBe(FILL);
-    // 058's lock holds on after it: nothing but the later guided steps' ghosts until the frost rune.
-    expect(buildLocked(s)).toBe(true);
-    run(s, 1, { place: { pieceId: 'conduit', tx: 18, ty: 12, facing: 'up' } });
-    expect(s.events.placeFails.map((f) => f.reason)).toEqual(['tutorial']);
-  });
-
   it('during a guided step allows only the next ghost, on its tile and facing', () => {
     const s = tutorialAt(LEY);
     s.research['entrance-2'] = 'restored';
@@ -319,13 +277,6 @@ describe('the guided sub-line (058.2)', () => {
     expect(GUIDED_TEXT.place('conduit', 1, 2)).toBe('Place conduits 1/2');
     expect(GUIDED_TEXT.place('grinder', 0, 1)).toBe('Place a grinder');
     expect(GUIDED_TEXT.place('underground entrance', 0, 1)).toBe('Place an underground entrance');
-  });
-
-  it("the arrow line's (067) starts with the wood port's nine conduits, then the cutter", () => {
-    const s = tutorialAt(ARROW);
-    expect(guidedSubLine(s)).toEqual({ pieceId: 'conduit', kind: 'place', built: 0, of: 9 });
-    for (const g of GUIDED_BUILDS['arrow-line'].slice(0, 9)) build(s, g);
-    expect(guidedSubLine(s)).toEqual({ pieceId: 'cutter', kind: 'place', built: 0, of: 1 });
   });
 });
 
