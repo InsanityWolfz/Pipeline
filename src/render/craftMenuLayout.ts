@@ -46,6 +46,30 @@ export function craftTabRows(tab: number): (MenuBox & { id: string })[] {
   });
 }
 
+/** 066: the room kept between a row's item names, and between a name and the row's ends, px. */
+const NAME_GAP = 2;
+
+/**
+ * Where a crafting row's item names sit, px from the row's left, given each icon's x and its name's width. Each sits as
+ * 026 put it: centred under its icon, or from its left edge when wider. 066: a name that would run into the next one
+ * (or past the row's end) moves left just enough, then one that would run into the name before it moves right past it,
+ * so the storm tier's long names ("Stormsteel arrowhead") stay inside the row. A row whose names fit is unchanged.
+ */
+export function rowNameXs(names: readonly { iconX: number; w: number }[]): number[] {
+  const L = CRAFT_MENU_LAYOUT;
+  const xs = names.map((n) => n.iconX + Math.max(0, Math.round((L.iconSize - n.w) / 2)));
+  for (let i = names.length - 1; i >= 0; i--) {
+    const limit = i === names.length - 1 ? L.rowWidth - L.input.x : (xs[i + 1] ?? 0) - NAME_GAP;
+    const w = names[i]?.w ?? 0;
+    if ((xs[i] ?? 0) + w > limit) xs[i] = limit - w;
+  }
+  for (let i = 0; i < names.length; i++) {
+    const before = i === 0 ? L.input.x : (xs[i - 1] ?? 0) + (names[i - 1]?.w ?? 0) + NAME_GAP;
+    xs[i] = Math.max(xs[i] ?? 0, before);
+  }
+  return xs;
+}
+
 /** The pause menu's rows (sound, volume, resume), centred on screen, px. */
 export function pauseRows(): { x: number; y: number; w: number; h: number }[] {
   const L = PICKER_LAYOUT;
