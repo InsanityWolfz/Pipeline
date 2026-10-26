@@ -260,3 +260,8 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - The intake's middle is `INTAKE_MID_TX`, for any number of entrances.
   - `SAVE_VERSION` 13, no migration.
 
+- **063 blueprints:**
+  - Blueprint rules live in sim and data: `piecesInBox` (whole footprints, no fixtures), `transformBlueprint` (turn and mirror, 3×1 pieces anchored on their middle tile), `stampPlan` (per piece: placed, or skipped as taken, fixture, wall or locked). Render only draws their results.
+  - A stamped underground pair keeps its link only when the exit is in the entrance's reach (`tunnelReach`), as by hand; otherwise its ends pair by the usual rule.
+  - Blueprints live in `SimState`, so they survive KOs and saves. Unlocks are found by research effect kind.
+
