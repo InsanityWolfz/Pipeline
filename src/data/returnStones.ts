@@ -17,9 +17,9 @@ export interface ReturnStoneDef {
   readonly tx: number;
   readonly ty: number;
   /**
-   * Where travel to it stands the player: the tile beside it on the side away from its door (below it outside a south
-   * wall's door, as a pylon's travel lands one below the pylon; above it outside the Forum's north wall), out of the
-   * door's E reach, so E there is the stone's.
+   * Where travel to it stands the player: the floor tile beside it on the side away from its door (west), out of the
+   * door's E reach so E there is the stone's, and never behind the stone's sprite. (A pylon's travel lands one below the
+   * pylon; below the Forum's stone is in its door's reach, and above it the stone hides the player.)
    */
   readonly arrive: TilePos;
 }
@@ -36,9 +36,7 @@ export const RETURN_STONE = {
 function stoneBy(arena: BossArena, dx: number): ReturnStoneDef {
   const tx = arena.door.leaveTo.tx + dx;
   const ty = arena.door.leaveTo.ty;
-  const doorRow = arena.door.tiles[0]?.ty ?? ty;
-  const away = Math.sign(ty - doorRow);
-  return { id: `${arena.id}-waystone`, arena: arena.id, name: `${arena.name} door`, tx, ty, arrive: { tx, ty: ty + away } };
+  return { id: `${arena.id}-waystone`, arena: arena.id, name: `${arena.name} door`, tx, ty, arrive: { tx: tx - 1, ty } };
 }
 
 /**

@@ -1,0 +1,130 @@
+import { expect, test, type Page } from '@playwright/test';
+import { FORUM_ARENA } from '../../src/data/arenas';
+import { FIXTURES } from '../../src/data/claims';
+import { OVERWORLD_ROOM } from '../../src/data/overworld';
+import { returnStoneDef } from '../../src/data/returnStones';
+import { SHRINE_SITE } from '../../src/data/rooms';
+import { menuRows } from '../../src/render/foundryLayout';
+import { WORLD } from '../../src/sim/world';
+import { clickRow, flowIs } from './flowPage';
+import { screenPoint, state } from './foundryPage';
+import { boot, cameraSettled, quietScreen } from './helpers';
+
+// Review screenshots for 072 (REVIEW_SHOTS=1, into docs/review/072): the Sunken Forum's return stone dormant, then
+// woken as the player reaches its door; after a KO, the foundry waystone's menu listing it; the shrine pylon's menu with
+// its row; and the stone's own menu, "Travel to foundry".
+
+const SHOTS = 'docs/review/072';
+const STONE = returnStoneDef('sunken-forum-waystone');
+const WAY = FIXTURES.find((f) => f.kind === 'waystone') ?? { tx: 0, ty: 0 };
+const SHRINE_PYLON = WORLD[OVERWORLD_ROOM]?.pylons?.find((p) => p.site === SHRINE_SITE) ?? { tx: 0, ty: 0 };
+
+async function walk(page: Page, tx: number, ty: number): Promise<void> {
+  await page.evaluate(([x, y]) => {
+    const h = window.__helpers;
+    const g = window.__GAME__;
+    if (!h || !g) throw new Error('no helpers');
+    h.walkTo((x + 0.5) * 32, (y + 0.5) * 32);
+    g.setPlayerHealth(100);
+  }, [tx, ty] as const);
+}
+
+/** 042: the Hollows start's goals are done, so the end card shows a little way in; Keep playing closes it. */
+async function noEndCard(page: Page): Promise<void> {
+  if ((await page.evaluate(() => window.__GAME__?.flow().state)) !== 'endCard') return;
+  await clickRow(page, 'keepPlaying');
+  await flowIs(page, 'play');
+}
+
+/** The camera at rest and nothing over the shot: the end card, or a banner (the walk finds several landmarks). */
+async function settle(page: Page): Promise<void> {
+  await noEndCard(page);
+  await cameraSettled(page, 20_000);
+  await quietScreen(page, 60_000);
+  await cameraSettled(page, 20_000);
+}
+
+/** Opens a site menu with E (pressed again while none is open: under load a press can miss a frame) and returns its rows' words. */
+async function openWith(page: Page, menu: 'waystone' | 'pylonMenu' | 'returnMenu'): Promise<string[] | undefined> {
+  if (!(await page.evaluate(() => window.__GAME__?.ui().siteOpen))) await page.keyboard.press('e');
+  await page.evaluate(() => window.__GAME__?.step(1));
+  return (await page.evaluate((m) => window.__GAME__?.ui()[m], menu))?.map((r) => r.text);
+}
+
+/** Clicks row `row` of the open `rows`-row menu until `done` says it took. */
+async function choose(page: Page, rows: number, row: number, done: () => Promise<boolean>): Promise<void> {
+  const r = menuRows(rows)[row];
+  if (!r) throw new Error('no row');
+  const p = await screenPoint(page, r.x + r.w / 2, r.y + r.h / 2);
+  for (let i = 0; i < 5 && !(await done()); i++) {
+    if (!(await page.evaluate(() => window.__GAME__?.ui().siteOpen))) await page.keyboard.press('e');
+    await expect.poll(async () => page.evaluate(() => window.__GAME__?.ui().siteOpen)).toBe(true);
+    await page.mouse.click(p.x, p.y);
+    await page.evaluate(() => window.__GAME__?.step(1));
+  }
+}
+
+const stoneShown = (page: Page) => page.evaluate((id) => window.__GAME__?.ui().returnStones.find((r) => r.id === id), STONE.id);
+
+test.describe('review screenshots (072)', () => {
+  test.skip(!process.env.REVIEW_SHOTS, 'set REVIEW_SHOTS=1 to capture docs/review/072');
+
+  test("the Forum's return stone dormant and woken, then the travel menus", async ({ page }) => {
+    test.setTimeout(300_000);
+    await boot(page, '?start=hollows');
+    await page.evaluate(() => {
+      const g = window.__GAME__;
+      if (!g) throw new Error('no game');
+      for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark') g.setEnemyHealth(e.id, 0);
+      g.step(1);
+    });
+    // Dormant: five tiles west of it, come from the west (the start is south-west), out of its wake reach.
+    await walk(page, STONE.tx - 5, STONE.ty - 1);
+    await settle(page);
+    expect((await stoneShown(page))?.look).toBe('dormant');
+    await page.screenshot({ path: `${SHOTS}/01-return-stone-dormant.png` });
+
+    // Woken: to the door's outside, past it; the swell plays out before the shot.
+    await walk(page, FORUM_ARENA.door.leaveTo.tx, FORUM_ARENA.door.leaveTo.ty);
+    await expect.poll(async () => (await stoneShown(page))?.look).toBe('woken');
+    await expect.poll(async () => (await stoneShown(page))?.scale).toBe(1);
+    await settle(page);
+    await page.screenshot({ path: `${SHOTS}/02-return-stone-woken.png` });
+
+    // A KO, then the foundry's waystone: its menu lists the Shrine and the Forum's door.
+    await page.evaluate(() => {
+      const g = window.__GAME__;
+      if (!g) throw new Error('no game');
+      g.setPlayerHealth(0);
+      let s = g.step(1);
+      for (let t = 0; t < 600 && !s.events.ko; t++) s = g.step(1);
+      g.step(1);
+    });
+    expect((await state(page)).room).toBe('foundry');
+    await walk(page, WAY.tx, WAY.ty + 1);
+    await noEndCard(page);
+    await quietScreen(page, 60_000);
+    // The wake's "You wake in the foundry" holds 3 s, then fades (it has no ui() state): not proof of anything, only so
+    // it doesn't cover the shot.
+    await page.waitForTimeout(4500);
+    await expect.poll(async () => openWith(page, 'waystone')).toEqual(['Travel to Shrine', 'Travel to Sunken Forum door']);
+    await cameraSettled(page, 20_000);
+    await page.screenshot({ path: `${SHOTS}/03-waystone-menu.png` });
+
+    // To the Shrine; its pylon's menu has a row for the Forum's door.
+    await choose(page, 2, 0, async () => (await state(page)).room === 'overworld');
+    await walk(page, SHRINE_PYLON.tx, SHRINE_PYLON.ty + 1);
+    await settle(page);
+    await expect.poll(async () => (await openWith(page, 'pylonMenu'))?.slice(1)).toEqual(['Travel to foundry', 'Travel to Sunken Forum door']);
+    await page.screenshot({ path: `${SHOTS}/04-pylon-menu.png` });
+
+    // Its row to the Forum's door; E at the stone offers the way home.
+    await choose(page, 3, 2, async () => {
+      const s = await state(page);
+      return s.player.x === (STONE.arrive.tx + 0.5) * 32 && s.player.y === (STONE.arrive.ty + 0.5) * 32;
+    });
+    await settle(page);
+    await expect.poll(async () => openWith(page, 'returnMenu')).toEqual(['Travel to foundry']);
+    await page.screenshot({ path: `${SHOTS}/05-return-stone-menu.png` });
+  });
+});

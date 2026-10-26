@@ -12,8 +12,8 @@ follows them.
   row 32, `leaveTo` 113,33). The road reaches the Forum from the north-east and the other two from the south-west.
   Each stone goes three tiles west of `leaveTo`, off the door's span and off the road, on floor in the overworld and in
   the sandbox's room (which holds the arenas at the same tiles): (99,94), (118,61), (110,33). Each has an `arrive` tile
-  beside it on the side away from its door (built: one below put the Forum's arrival within the door's E reach, so E
-  there entered the arena; now (99,93), (118,62), (110,34)).
+  beside it on the side away from its door, west (built: one below put the Forum's arrival within the door's E reach, so
+  E there entered the arena, and one above hid the player behind the stone; now (98,94), (117,61), (109,33)).
 - **Fast travel today** (src/sim/claims.ts): the foundry's waystone (a fixture, added by the shrine's claim) travels to
   `claimedPylons`; with exactly one it travels on E, with two or more render opens its menu (`cmd.travel` = site). A
   claimed pylon's menu (`cmd.pylon`) has only "Send inventory to stash" and "Travel to foundry". So:
