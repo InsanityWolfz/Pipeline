@@ -2,10 +2,9 @@ import { shardBaseDamage } from '../data/ammo';
 import { enemyDef } from '../data/enemies';
 import { SPLIT } from '../data/tags';
 import { createShard, type ArrowState } from './arrows';
-import { aggro, damageEnemy, inHurtbox, targetable, type EnemyState, type HitStyle } from './enemies';
+import { aggro, damageEnemy, immune, inHurtbox, targetable, type EnemyState, type HitStyle } from './enemies';
 import { recordBlock, shieldBlocks } from './shield';
-import { plated } from './forgewrightParts';
-import { hitPart, partAt, partKey } from './bossParts';
+import { hitPart, partAt, partKey, plated } from './bossParts';
 import { onBossDeath } from './altar';
 import { killXp } from './leveling';
 import { afterKeystoneHit, burning, keystoneHit, takePool } from './keystones';
@@ -103,14 +102,14 @@ export function arrowHits(state: SimState, spawned: ArrowState[] = []): (arrow: 
     takePool(state, arrow);
     if (arrow.pierce) {
       for (const en of state.enemies) {
-        if (en.roomId !== arrow.roomId || en.health <= 0 || !targetable(en)) continue;
-        // 060: a bellows first, each once, then the body.
+        if (en.roomId !== arrow.roomId || en.health <= 0 || immune(en)) continue;
+        // 060: a bellows first, each once, then the body (068: the body only while targetable, a part while not immune).
         const part = freshPart(arrow, en);
         if (part !== null) {
           strikePart(state, arrow, en, part, spawned);
           continue;
         }
-        if (arrow.hitIds.includes(en.id) || !inHurtbox(en, arrow.x, arrow.y)) continue;
+        if (!targetable(en) || arrow.hitIds.includes(en.id) || !inHurtbox(en, arrow.x, arrow.y)) continue;
         if (!strike(state, arrow, en, spawned)) return true;
       }
       return false;
@@ -119,10 +118,10 @@ export function arrowHits(state: SimState, spawned: ArrowState[] = []): (arrow: 
     let first = Infinity;
     let hitPartOf: number | null = null;
     for (const en of state.enemies) {
-      if (en.roomId !== arrow.roomId || en.health <= 0 || !targetable(en)) continue;
-      // 060: a bellows under the arrow is hit before the body it belongs to.
+      if (en.roomId !== arrow.roomId || en.health <= 0 || immune(en)) continue;
+      // 060: a bellows under the arrow is hit before the body it belongs to (068: a body only while targetable).
       const part = freshPart(arrow, en);
-      if (part === null && (arrow.hitIds.includes(en.id) || !inHurtbox(en, arrow.x, arrow.y))) continue;
+      if (part === null && (!targetable(en) || arrow.hitIds.includes(en.id) || !inHurtbox(en, arrow.x, arrow.y))) continue;
       const along = (en.x - arrow.x) * arrow.dx + (en.y - arrow.y) * arrow.dy;
       if (along < first) {
         first = along;

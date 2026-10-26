@@ -58,6 +58,7 @@ describe('gear drops (010, unchanged)', () => {
 
   it('the first unidentified piece picked up survives a KO, kept like a banked item; a second is still at risk (fix-playtest-ui)', () => {
     const s = arena();
+    s.link.attuned = true; // Past the first foundry entry: before it, a KO loses nothing (067.16).
     s.groundItems.push({ id: 0, itemId: UNIDENTIFIED_ARMOR, roomId: HALL, x: PLAYER_AT.x, y: PLAYER_AT.y });
     run(s, 1);
     expect(s.inventory[UNIDENTIFIED_ARMOR]).toBe(1);
@@ -75,6 +76,7 @@ describe('gear drops (010, unchanged)', () => {
 
   it('once a piece has been identified, a picked-up piece is at risk as before (fix-playtest-ui)', () => {
     const s = arena();
+    s.link.attuned = true; // Past the first foundry entry: before it, a KO loses nothing (067.16).
     s.gear = [piece(0, 'helm')];
     s.groundItems.push({ id: 0, itemId: UNIDENTIFIED_ARMOR, roomId: HALL, x: PLAYER_AT.x, y: PLAYER_AT.y });
     run(s, 1);

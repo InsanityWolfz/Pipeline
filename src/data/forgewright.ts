@@ -5,7 +5,7 @@ import { FORGEWRIGHT_XP } from './leveling';
 // The Forgewright (060): the Emberworks' boss, a plated smith construct in the Anvil Hall. Its plating blocks every
 // hit on its body until it is vented, by breaking both its bellows (one on each side of it, 2 tiles out, square to
 // its facing) at once, or one then the other before the first patches itself. A heat gauge fills toward its Forge
-// Flood; up close it slams its hammer, at range it sprays embers. All numbers are starting values from the spec,
+// Flood, vented or not (068: only the flood resets it); up close it slams its hammer, at range it sprays embers. All numbers are starting values from the spec,
 // tuned in playtest; the ones the spec doesn't give are marked (060's raised items).
 
 /** One bellows' numbers: where it sits, its hurtbox, its health and how long it stays broken. */
@@ -29,7 +29,7 @@ export interface ForgewrightDef extends EnemyBase {
   /** It stops walking at this fraction of the slam's trigger range from the player. */
   standOff: number;
   bellows: BellowsDef;
-  /** Both bellows broken at once: it staggers this long, plating open, heat to 0; then both come back whole. */
+  /** Both bellows broken at once: it staggers this long, plating open, its heat still filling (068); then both come back whole. */
   ventTicks: number;
   /** Its heat gauge, 0 to `max`, filling over `fillTicks` (each Chill stack slows it as it slows a walk). */
   heat: { max: number; fillTicks: number };
@@ -52,7 +52,8 @@ export const FORGEWRIGHT: ForgewrightDef = {
   id: 'forgewright',
   name: 'Forgewright',
   boss: true,
-  maxHealth: 4000,
+  // 068: 6,000 (060's 4,000).
+  maxHealth: 6000,
   // 060 (raised): "walking slowly"; a little slower than the Bulwark's 18.
   walkSpeed: 16,
   feetBox: { w: 40, h: 16 },
@@ -65,16 +66,18 @@ export const FORGEWRIGHT: ForgewrightDef = {
   turnDegPerSec: 60,
   leashTicks: 300,
   standOff: 0.75,
-  /** 2 tiles out each side (128 px apart face-on); the box is 060's (raised). */
-  bellows: { offset: 64, hurtbox: { w: 30, h: 30, offsetY: -24 }, health: 150, patchTicks: 240 },
+  /** 2 tiles out each side (128 px apart face-on); the box is 060's (raised). 068: 300 health (was 150), patched in 3 s (was 4). */
+  bellows: { offset: 64, hurtbox: { w: 30, h: 30, offsetY: -24 }, health: 300, patchTicks: 180 },
   ventTicks: 360,
   heat: { max: 100, fillTicks: 1800 },
   // The spec's 90-tick wind-up, 300 ticks of pools at 20 a second; the pose's hold and recovery are 060's (raised).
   flood: { windupTicks: 90, swipeTicks: 12, recoverTicks: 30, floodTicks: 300, damage: 20, everyTicks: 60 },
-  // The spec's 54-tick wind-up and 45 damage; its range, reach, radius, knock and cooldown are 060's (raised).
-  slam: { triggerRange: 80, reach: 40, radius: 48, windupTicks: 54, swipeTicks: 8, recoverTicks: 48, cooldownTicks: 150, damage: 45, knockback: 40, knockTicks: 8 },
-  // The spec's 7 embers over 45° at 120 px/s for 20 each after 45 ticks; their range, box, knock and cooldown are 060's (raised).
-  spray: { count: 7, coneDegrees: 45, speed: 120, damage: 20, range: 360, size: 10, knockback: 10, knockTicks: 4, windupTicks: 45, swipeTicks: 10, recoverTicks: 30, cooldownTicks: 180 },
+  // The spec's 54-tick wind-up and 45 damage; its range, reach, radius and knock are 060's (raised). 068: its cooldown
+  // 20% shorter, 120 (060's 150).
+  slam: { triggerRange: 80, reach: 40, radius: 48, windupTicks: 54, swipeTicks: 8, recoverTicks: 48, cooldownTicks: 120, damage: 45, knockback: 40, knockTicks: 8 },
+  // The spec's 7 embers over 45° at 120 px/s for 20 each after 45 ticks; their range, box and knock are 060's (raised).
+  // 068: its cooldown 20% shorter, 144 (060's 180).
+  spray: { count: 7, coneDegrees: 45, speed: 120, damage: 20, range: 360, size: 10, knockback: 10, knockTicks: 4, windupTicks: 45, swipeTicks: 10, recoverTicks: 30, cooldownTicks: 144 },
   enrage: { below: 0.5, heatRate: 1.5 },
   drops: {
     always: [

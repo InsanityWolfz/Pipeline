@@ -227,7 +227,7 @@ test.describe('review screenshots (064)', () => {
     // About 28 s here, with another build's tests running beside it (2026-10-26).
     test.setTimeout(90_000);
     expect(await inSpire(page, 'call')).toBe(true);
-    await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().stormcrown.conductor.strikes ?? 0)).toBe(3);
+    await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().stormcrown.conductor.strikes ?? 0)).toBe(5);
     await page.screenshot({ path: `${SHOTS}/07-storm-call.png` });
   });
 

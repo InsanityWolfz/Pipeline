@@ -3,7 +3,7 @@ import { TICK_RATE } from '../../src/data/config';
 import { decentBot, fight } from './forgewrightBot';
 
 // 060's Forgewright fight as a correctness check: the decent bot's fight runs on one seed and plays out the same
-// twice. The target (a decent three-entrance build kills it in about 60–90 s, at most 2 KOs over 20 seeds) is a
+// twice. The target (068: a decent three-entrance build kills it in about 90–120 s, at most 2 KOs over 20 seeds) is a
 // measurement, printed by `npm run measure` (tests/measure/forgewright.measure.ts), not a test here.
 
 /** Ticks the fight runs here: 30 s, past its first sprays, slams and vents. */

@@ -89,6 +89,7 @@ describe('the at-risk helper (031)', () => {
 
   it('lists only carried items: none held reads as nothing, whatever was banked', () => {
     const s = arena();
+    s.link.attuned = true; // Past the first foundry entry: before it, a KO loses nothing (067.16).
     s.inventory = { wood: 0, stone: 2 };
     s.banked = { wood: 5, fiber: 3 };
     expect(itemRisks(s)).toEqual({ stone: { held: 2, safe: 0, atRisk: 2 } });
@@ -122,6 +123,7 @@ describe('the at-risk helper (031)', () => {
 
   it('identified gear is never in the carried list, so a death never takes it', () => {
     const s = arena();
+    s.link.attuned = true; // Past the first foundry entry: before it, a KO loses nothing (067.16).
     wear(s, bodyPiece(1, 'light', 2));
     s.inventory = { wood: 1 };
     s.banked = {};
@@ -179,6 +181,7 @@ describe('gains in the foundry are banked at once (050)', () => {
 
   it('outside, a pickup is still at risk', () => {
     const s = arena();
+    s.link.attuned = true; // Past the first foundry entry: before it, a KO loses nothing (067.16).
     s.inventory = {};
     s.banked = {};
     pickUp(s, 'stone', 2);

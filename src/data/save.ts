@@ -22,10 +22,10 @@
  * Stormcrown's gate; boss parts and the storm call's strikes). 18: 065's (the thunderhawk's dive event, enemies' mite
  * trios, the storm sentinel's strike knockback and the player's slow). 19: 063 merged onto main (its blueprints and
  * blueprint events joined with 062–065's shape). 20: 067 (the foundry after the first boss: the ruin field's
- * cleared flag; the refill goal's and the fast travel goal's flags gone; the goal chain's flags shift). All with no
- * migration.
+ * cleared flag; the refill goal's and the fast travel goal's flags gone; the goal chain's flags shift). 21: 068's (the
+ * Conductor's blink-in window). All with no migration.
  */
-export const SAVE_VERSION = 20;
+export const SAVE_VERSION = 21;
 
 /** The envelope's and the export file's format tags. */
 export const SAVE_FORMAT = 'pipeline-save';

@@ -3,7 +3,7 @@ import { enemyDef } from '../data/enemies';
 import { hasTagKeyword } from '../data/tags';
 import { HOMING } from '../data/tags';
 import type { ArrowState } from './arrows';
-import { targetable } from './enemies';
+import { immune, type EnemyState } from './enemies';
 import type { SimState } from './state';
 import { rotate } from './volley';
 import { roundEmission, shotEmission } from './emissions';
@@ -15,12 +15,19 @@ import { statOf } from './statResolve';
 // no target, or once its target is dead or gone, it flies straight (064: unless it locked at launch and a Conductor is
 // in reach: relock below).
 
+/**
+ * Whether a homing round can lock onto or follow an enemy: any it can ever hit, so not an immune one (a Burrower gone
+ * under). 068: the Conductor in its blink-in window is followed though it can't be hit yet, so a round locked on it
+ * follows it through a blink (064.22) and lands once the window ends.
+ */
+const trackable = (e: EnemyState): boolean => !immune(e);
+
 /** The enemy a homing round fired at the cursor (x, y) locks onto, or null: the nearest within its lock radius (039: resolveStat). */
 export function lockTarget(state: SimState, ammoId: string, x: number, y: number): number | null {
   let best: number | null = null;
   let nearest = statOf(state, 'lock-radius', roundEmission(ammoId), HOMING.lockRadius);
   for (const e of state.enemies) {
-    if (e.roomId !== state.roomId || e.health <= 0 || !targetable(e)) continue;
+    if (e.roomId !== state.roomId || e.health <= 0 || !trackable(e)) continue;
     const d = Math.hypot(e.x - x, e.y - y);
     if (d <= nearest) {
       nearest = d;
@@ -40,7 +47,7 @@ function relock(state: SimState, arrow: ArrowState): number | null {
   let best: number | null = null;
   let nearest = statOf(state, 'lock-radius', roundEmission(arrow.ammoId), HOMING.lockRadius);
   for (const e of state.enemies) {
-    if (e.roomId !== arrow.roomId || e.health <= 0 || !targetable(e) || !('homingRelock' in enemyDef(e.enemyId))) continue;
+    if (e.roomId !== arrow.roomId || e.health <= 0 || !trackable(e) || !('homingRelock' in enemyDef(e.enemyId))) continue;
     const d = Math.hypot(e.x - arrow.x, e.y - arrow.y);
     if (d <= nearest) {
       nearest = d;
@@ -54,7 +61,7 @@ function relock(state: SimState, arrow: ArrowState): number | null {
 export function steerArrows(state: SimState): (arrow: ArrowState) => void {
   return (arrow) => {
     // A target gone under the ground (035) is lost like a dead one; a lost round keeps looking for a Conductor (064).
-    const e = arrow.targetId === null ? undefined : state.enemies.find((en) => en.id === arrow.targetId && en.roomId === arrow.roomId && en.health > 0 && targetable(en));
+    const e = arrow.targetId === null ? undefined : state.enemies.find((en) => en.id === arrow.targetId && en.roomId === arrow.roomId && en.health > 0 && trackable(en));
     if (!e) {
       arrow.targetId = relock(state, arrow);
       return;

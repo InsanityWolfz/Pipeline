@@ -79,6 +79,7 @@ describe('crafting', () => {
 
   it('keeps the crafted set through a death; the unbanked rope is lost', () => {
     const s = arena();
+    s.link.attuned = true; // Past the first foundry entry: before it, a KO loses nothing (067.16).
     s.inventory = { fiber: 1 };
     s.banked = {};
     craft(s, 'rope');

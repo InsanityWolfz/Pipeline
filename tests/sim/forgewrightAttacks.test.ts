@@ -107,19 +107,21 @@ describe('the Forge Flood', () => {
     expect(s.player.health).toBe(hp);
   });
 
-  it('a vent drops a flood’s wind-up and empties the heat', () => {
+  it('a vent drops a flood’s wind-up but keeps the heat (068): it floods again once the vent ends', () => {
     const { s, f } = hall(100);
     run(s, 1);
     f.heat = 100;
     run(s, 10, () => (topUp(s), {}));
     expect(f.mode).toBe('flood-windup');
     // Both broken at once.
-    hitPart(s, f, 0, 200, { knock: 0, flash: true, damageType: 'physical' });
-    hitPart(s, f, 1, 200, { knock: 0, flash: true, damageType: 'physical' });
+    hitPart(s, f, 0, FORGE.bellows.health, { knock: 0, flash: true, damageType: 'physical' });
+    hitPart(s, f, 1, FORGE.bellows.health, { knock: 0, flash: true, damageType: 'physical' });
     expect(f.mode).toBe('vent');
-    expect(f.heat).toBe(0);
+    expect(heatFull(f, FORGE)).toBe(true);
     hold(s, FORGE.flood.windupTicks);
     expect(s.floodPools).toEqual([]);
+    hold(s, FORGE.ventTicks - FORGE.flood.windupTicks + 1);
+    expect(f.mode).toBe('flood-windup');
   });
 });
 
