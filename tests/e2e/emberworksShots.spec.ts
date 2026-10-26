@@ -20,9 +20,13 @@ async function emberworks(page: Page): Promise<void> {
   await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    // 060: the Forgewright spared, far off in its hall (its first kill is the end card's).
-    for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
-    g.step(200);
+    // 060: the Forgewright spared, far off in its hall (its first kill is the end card's); 061: again for the whelps
+    // the Ash Kilns' golem splits into.
+    for (let k = 0; k < 3; k++) {
+      for (const e of g.getState().enemies) if (e.enemyId !== 'forgewright') g.setEnemyHealth(e.id, 0);
+      g.step(1);
+    }
+    g.step(197);
   });
   if ((await page.evaluate(() => window.__GAME__?.flow().state)) === 'endCard') {
     await clickRow(page, 'keepPlaying');

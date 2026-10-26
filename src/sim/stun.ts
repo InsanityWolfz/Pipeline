@@ -2,6 +2,7 @@ import { attackOf } from '../data/enemies';
 import { defOf } from './champions';
 import { targetable, type EnemyState } from './enemies';
 import type { SimState } from './state';
+import { stunEndsBeam } from './tenderAi';
 
 // Stun (039, round 3: it replaces 036's stagger): one status for every source. The enemy
 // can't move or act for its ticks and a wind-up is cancelled; a Boss or a Burrowed enemy
@@ -30,6 +31,7 @@ function holdLeft(e: EnemyState): number {
 export function applyStun(state: SimState, e: EnemyState, ticks: number, pose: 'recover' | 'stun' = 'recover'): boolean {
   if (defOf(e).boss || !targetable(e)) return false;
   const hold = Math.max(holdLeft(e), ticks);
+  stunEndsBeam(state, e);
   if (pose === 'stun') {
     e.mode = 'stun';
     e.modeTicks = 1;

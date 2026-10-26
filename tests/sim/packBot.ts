@@ -12,7 +12,7 @@ import { clearShot } from '../../src/sim/sightLine';
 import { tileCentre } from '../../src/sim/tiles';
 import { WORLD } from '../../src/sim/world';
 import { CAREFUL, steer, takenThisTick } from './bots';
-import { feed, lines } from './builds';
+import { decentBuild, feed, lines } from './builds';
 import { arena, run } from './fight';
 
 // A pack fight for 041's targets (test code): a pack placed as the population places one
@@ -114,13 +114,18 @@ export interface PackFight {
   taken: number;
 }
 
-/** Kites and shoots a pack until it's dead, the player KO'd, or `limit` ticks pass. `keep` is the distance it keeps from the nearest member, px. */
-export function fightPack(s: SimState, pack: readonly EnemyState[], home: { x: number; y: number }, limit: number, keep = 150): PackFight {
+/**
+ * Kites and shoots a pack until it's dead, the player KO'd, or `limit` ticks pass. `keep` is the distance it keeps from
+ * the nearest member, px. The pack is every enemy in its group (061: a golem's whelps join it as it splits).
+ */
+export function fightPack(s: SimState, placed: readonly EnemyState[], home: { x: number; y: number }, limit: number, keep = 150): PackFight {
   let first = 0;
   let taken = 0;
+  const group = placed[0]?.group;
   for (let t = 1; t <= limit; t++) {
     feed(s);
     const p = s.player;
+    const pack = s.enemies.filter((e) => e.group === group);
     const alive = pack.filter((e) => e.health > 0);
     const near = alive.slice().sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
     const target = targetOf(s, pack);
@@ -129,7 +134,7 @@ export function fightPack(s: SimState, pack: readonly EnemyState[], home: { x: n
     run(s, 1, target ? { ...cmd, fire: true, ...aimAt(s, target) } : cmd);
     if (first === 0 && s.events.shots.length > 0) first = t;
     taken += takenThisTick(s);
-    if (pack.every((e) => !s.enemies.includes(e))) return { cleared: true, ko: false, ticks: t - first, taken };
+    if (!s.enemies.some((e) => e.group === group)) return { cleared: true, ko: false, ticks: t - first, taken };
     if (s.player.dying > 0) return { cleared: false, ko: true, ticks: t - first, taken };
   }
   return { cleared: false, ko: false, ticks: limit, taken };
@@ -152,6 +157,26 @@ export const PACKS = {
 
 /** The longest a pack fight runs, ticks: 60 s. */
 export const PACK_LIMIT = 60 * TICK_RATE;
+
+/**
+ * 061's ring 4 pack: one of each of the four and a second mote (5, the most a pack holds), on open ash ground in the
+ * Emberworks' north; a decent four-entrance Fire build (041.7's level-7 talents and gear, two Fire arrow lines and two
+ * Fire bomb lines), the player 7 tiles off.
+ */
+export const EMBER_PACK = {
+  ids: ['cinder-mote', 'cinder-mote', 'bellows-hound', 'slag-golem', 'kiln-tender'],
+  lines: ['arrow+fire', 'bomb+fire', 'arrow+fire', 'bomb+fire'],
+  centre: { tx: 128, ty: 23 },
+  start: at(135, 23),
+} as const;
+
+/** The ring 4 pack fight on a seed, with the decent Fire build. */
+export function emberPackClear(seed: number): PackFight {
+  const s = arena(seed, EMBER_PACK.start);
+  decentBuild(s);
+  lines(s, ...EMBER_PACK.lines);
+  return fightPack(s, placePack(s, EMBER_PACK.ids, EMBER_PACK.centre), EMBER_PACK.start, PACK_LIMIT);
+}
 
 /** One ring's pack fight on a seed: no talents, nothing worn, only the volley's lines (041.8's arithmetic). */
 export function packClear(ring: keyof typeof PACKS, seed: number): PackFight {

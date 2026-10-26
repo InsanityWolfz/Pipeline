@@ -2,6 +2,21 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-26: 061 Emberworks enemies
+**Changed:** on `claude/061-emberworks-enemies` (InsanityWolfz/Pipeline#72), the Emberworks fills with four enemies (docs/plans/061-emberworks-enemies.md, five slices):
+- the cinder mote: swells and bursts into a fire pool; killed, it bursts and sets other enemies burning;
+- the bellows hound: the Charger's lane dash with no wall stun, leaving a burning trail;
+- the slag golem: a slam, and two slag whelps on death;
+- the kiln-tender: keeps its distance and beams heals onto its most hurt packmate; damage, a blocked line or a Stun breaks it.
+
+Ring 4 keeps 12 packs once the barrier is down, and the Ash Kilns have a guard pack to clear before claiming; champions in 1 in 4 packs. 060's flood pools became shared ground hazards (rect, circle, capsule). `SAVE_VERSION` 14. Reviewed: no blocking issues; seven suggestions applied (one shared lane run for the Charger and hound, a spent mote still spreads its burn, a Stun ends a tender's beam, tests and data tidy-ups). `npm run check` 2084 tests; CI green. Raised for Shaun in the spec: 061.1–061.22.
+
+**Next:** Shaun's playtest; his OK on 061.1–061.22; "merge 72". 062 builds next on its stacked branch, with 063 building alongside and 064–066 queued.
+
+**Notes:**
+- `npm run measure`: a ring 4 pack clears in 5.6–11.2 s with 0 KOs against the 15–30 s target, so packs may read easy. Recorded, not tuned.
+- The tender's heal scales with ring and champion multipliers like damage (061.4), 24 a second in ring 4.
+
 ## 2026-10-23: 060 Region 3: the Emberworks and the Forgewright
 **Changed:** Shaun's spoken idea (material tiers: better raws from harder regions, so a build keeps its stages and talents) became a region brainstorm and interview (docs/brainstorm/2026-10-22-region-3.md), split like the Hollows into 060, 061 (its enemies) and 062 (the Smelter, the kiln, steel and glass rounds). 060 is built on `claude/060-emberworks` (InsanityWolfz/Pipeline#70) in eight slices (docs/plans/060-emberworks.md):
 - the world grows to 230 tiles (one `WORLD_SHIFT`, nothing moved relative to the centre);
@@ -14,7 +29,7 @@ Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
 Reviewed: no blocking issues; six suggestions applied (the venting tick, no spread onto the plated boss, the region starting at the barrier, tidy-ups). `npm run check` 2021 tests; CI green. Raised for Shaun in the spec: 060.1–060.39.
 
-**Next:** Shaun's playtest from a New game (or `?sandbox`); his OK on 060.1–060.39; "merge 70".
+**Next:** merged by Shaun ("Merge 70 and 71", 2026-10-23, with 060.1–060.39 as built), with the foundry e2e's crate-step fix (InsanityWolfz/Pipeline#71).
 
 **Notes:**
 - `npm run measure`: the Forgewright's decent build wins 20/20 in 73.6 s with 0 KOs, taking no damage; the fight draws no randomness, so it may read easy. Recorded, not tuned.

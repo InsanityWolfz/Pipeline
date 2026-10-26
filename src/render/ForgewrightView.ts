@@ -7,6 +7,7 @@ import { bellowsBox, bellowsPoint, forgeDefOf } from '../sim/forgewrightParts';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
 import { addVector, showFrame } from './vector/textures';
+import { drawHazard } from './hazardDraw';
 
 /** The Forgewright's extras as drawn (060), for `ui().emberworks.forge`: each bellows' look, the pools on show, and whether its core glows. */
 export interface ForgeShown {
@@ -136,11 +137,12 @@ export class ForgewrightView {
     g.fillStyle(colorOf(patch > 0 ? B.patch : B.color)).fillRect(x, y, Math.max(1, Math.round(B.w * k)), B.h);
   }
 
-  /** The Forge Flood's pools in the room on screen. Returns how many it drew. */
+  /** The Forge Flood's pools in the room on screen (and 061's round hazards, hazardDraw.ts). Returns how many flood pools it drew. */
   private drawPools(sim: SimState, shown: string, now: number): number {
     const g = this.pools.clear();
     const P = L.pools;
-    const pools = sim.floodPools.filter((p) => p.roomId === shown);
+    for (const p of sim.floodPools) if (p.roomId === shown && p.shape !== 'rect') drawHazard(g, p, now);
+    const pools = sim.floodPools.filter((p) => p.roomId === shown && p.shape === 'rect');
     const flicker = (Math.sin((now / P.flickerMs) * Math.PI * 2) + 1) / 2;
     for (const p of pools) {
       const w = p.x1 - p.x0;

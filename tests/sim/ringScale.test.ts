@@ -48,6 +48,14 @@ function attackDamage(def: EnemyDef): number {
       return def.bash.damage;
     case 'sniper':
       return def.snipe.damage;
+    case 'mote':
+      return def.swell.damage;
+    case 'hound':
+      return def.dash.damage;
+    case 'golem':
+      return def.slam.damage;
+    case 'tender':
+      return def.beam.heal;
   }
 }
 
