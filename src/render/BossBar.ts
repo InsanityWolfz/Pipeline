@@ -66,8 +66,8 @@ export class BossBar {
     this.drawShield(shielded, x);
     if (heat !== null) this.drawHeat(g, x, heat);
     this.name.set(def.name);
-    this.name.moveTo(Math.round((VIEW_WIDTH - this.name.width) / 2), B.top - B.nameGap - B.border * 2 - this.name.lineHeight);
     const top = B.top - B.nameGap - B.border * 2 - this.name.lineHeight;
+    this.name.moveTo(Math.round((VIEW_WIDTH - this.name.width) / 2), top);
     const bottom = B.top + B.h + B.border * 2 + (heat !== null ? FORGE_LOOK.heat.gap + FORGE_LOOK.heat.h + B.border : 0);
     this.box = { x: x - B.border * 2, y: top, w: B.w + B.border * 4, h: bottom - top };
     this.setVisible(true);
