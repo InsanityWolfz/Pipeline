@@ -33,6 +33,8 @@ export const MAP_ICONS = {
   aqueduct: 'map-aqueduct',
   /** 060: the Slag River, an ember channel under a bridge. */
   river: 'map-river',
+  /** 064: the Broken Sky-bridge, a broken arch over a dark rift. */
+  bridge: 'map-sky-bridge',
   /** 051 (B.5): the foundry's stairs, the shrine's pylon and a boss arena, once each has been seen. */
   foundry: 'map-foundry',
   pylon: 'map-pylon',

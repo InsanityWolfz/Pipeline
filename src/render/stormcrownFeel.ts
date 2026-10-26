@@ -7,11 +7,27 @@ import type { SoundView } from './SoundView';
 
 // The Stormcrown's feel (064), for FeelView: its barrier across the ramps breaking with the Hollows barrier's sound and
 // shards (034), as the Emberworks' does (`playStormcrown` returns whether it fell this frame, so FeelView doesn't also
-// play the tutorial gate's sound for it).
+// play the tutorial gate's sound for it); and lightning striking a storm rod in view.
 
 type View = { x: number; y: number; width: number; height: number };
 
+/** How far above a rod's base its strike's sparks burst, px: its crown. */
+const CROWN = 56;
+
+const inView = (v: View, x: number, y: number): boolean => x >= v.x && x <= v.x + v.width && y >= v.y && y <= v.y + v.height;
+
 export function playStormcrown(ev: SimEvents, j: JuiceView, s: SoundView, v: View): boolean {
+  // Lightning striking a storm rod in view: its crack and rumble, sparks off its crown, a little shake.
+  let struck = false;
+  for (const r of ev.rodStrikes) {
+    if (!inView(v, r.x, r.y)) continue;
+    j.burst('rodStrike', r.x, r.y - CROWN);
+    struck = true;
+  }
+  if (struck) {
+    s.play(SOUNDS.rodStrike);
+    j.shake('small');
+  }
   const fell = ev.gates.some((g) => g.gate === 'stormcrown');
   if (!fell) return false;
   s.play(SOUNDS.barrierCollapse);

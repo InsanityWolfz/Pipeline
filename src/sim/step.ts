@@ -89,7 +89,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   // Before enemies act, so a Bulwark bomb thrown this tick starts its fuse at 0 (034; its fuseTicks keep the word).
   stepEnemyBombs(state);
   stepEnemies(state, bodies);
-  stepNodes(state.nodes);
+  stepNodes(state.nodes, state.events.rodStrikes);
   // Before the tube, so fire this tick cancels a harvest in progress.
   // Build mode keeps E for hoppers and crates, not harvesting.
   // 045: a new E handler here adds its kind to INTERACT_KINDS (src/data/interact.ts) and to interactTarget

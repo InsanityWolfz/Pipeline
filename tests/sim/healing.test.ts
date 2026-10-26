@@ -309,6 +309,7 @@ describe('the hook', () => {
       { id: 'north-spring', tx: 133, ty: 131, radius: 48, inside: true },
       { id: 'hollows-spring', tx: 118, ty: 100, radius: 48, inside: false },
       { id: 'emberworks-spring', tx: 232, ty: 115, radius: 48, inside: false },
+      { id: 'stormcrown-spring', tx: 241, ty: 226, radius: 48, inside: false },
     ]);
     expect(sum.player.healing).toBe('spring');
     expect(sum.events.heals).toEqual([{ source: 'spring', kind: 'start' }]);

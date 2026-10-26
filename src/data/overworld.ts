@@ -156,11 +156,13 @@ export const OVERWORLD = {
     shrine({ nodeId: 'reeds', tx: 112, ty: 13 }),
     shrine({ nodeId: 'rubble', tx: 103, ty: 5 }),
     // The landmarks' (032): the Frozen Grotto's rime outcrops (029) first, then each site's cluster.
-    ...LANDMARK_LIST.filter((l) => l.ring !== EMBERWORKS.ring).flatMap((l) => l.nodes),
+    ...LANDMARK_LIST.filter((l) => l.ring < EMBERWORKS.ring).flatMap((l) => l.nodes),
     // Stonefall Hollows' seams outside its landmarks (034).
     ...HOLLOWS.nodes,
     // 060: the Emberworks' landmarks' (the Cinder Vents'), last, so every earlier node keeps its index.
     ...LANDMARK_LIST.filter((l) => l.ring === EMBERWORKS.ring).flatMap((l) => l.nodes),
+    // 064: the Stormcrown's (the Rod Field's storm rods), after them.
+    ...LANDMARK_LIST.filter((l) => l.ring === STORMCROWN.ring).flatMap((l) => l.nodes),
   ],
 } as const;
 

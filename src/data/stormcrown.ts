@@ -56,7 +56,7 @@ export const STORMCROWN = {
   places: {
     crownSpire: { bearing: 345, r: 126 },
     weathervane: { bearing: 80, r: 122 },
-    rodField: { bearing: 80, r: 132 },
+    rodField: { bearing: 80, r: 131 },
     skyBridge: { bearing: 255, r: 126 },
     spring: { bearing: 130, r: 124 },
   },

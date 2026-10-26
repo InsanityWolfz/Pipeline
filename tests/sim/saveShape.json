@@ -184,6 +184,7 @@
     "state.events.refills: array",
     "state.events.respecs: array",
     "state.events.restores: array",
+    "state.events.rodStrikes: array",
     "state.events.roomChanges: array",
     "state.events.schematicDrops: array",
     "state.events.schematicReveals: array",

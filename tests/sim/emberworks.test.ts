@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { EMBERWORKS, EMBERWORKS_GATE, inEmberworks, rampTiles } from '../../src/data/emberworks';
 import { SLAG_RIVER_TILES } from '../../src/data/emberworksSites';
 import { STORMCROWN, stormRampTiles } from '../../src/data/stormcrown';
+import { SKY_CHASM_TILES } from '../../src/data/stormcrownSites';
 import { HOLLOWS, inHollows, regionAt } from '../../src/data/hollows';
 import { RING_XP } from '../../src/data/leveling';
 import { OVERWORLD, ringOf } from '../../src/data/overworld';
@@ -86,8 +87,8 @@ describe('the ring', () => {
   });
 
   it('ends past its outer radius in a ragged cliff edge, never a bare wall (064: the Stormcrown past it, up its ramps)', () => {
-    // 060 slice 3: the Slag River runs half a tile into it, solid to feet too.
-    const river = new Set([...SLAG_RIVER_TILES, ...STORMCROWN.ramps.flatMap(stormRampTiles)].map(tileKey));
+    // 060 slice 3: the Slag River runs half a tile into it, solid to feet too (064: and the Sky-bridge's chasm).
+    const river = new Set([...SLAG_RIVER_TILES, ...SKY_CHASM_TILES, ...STORMCROWN.ramps.flatMap(stormRampTiles)].map(tileKey));
     const foot = STORMCROWN.radii.inner + STORMCROWN.wall;
     for (let ty = 0; ty < WORLD_SHAPE.size; ty++) for (let tx = 0; tx < WORLD_SHAPE.size; tx++) if (fromCentre(tx, ty) > outer && fromCentre(tx, ty) < foot && !river.has(`${tx},${ty}`)) expect(at(tx, ty), `${tx},${ty}`).toBe(TILE.cliff);
     for (const t of SLAG_RIVER_TILES) if (fromCentre(t.tx, t.ty) > outer) expect(t.symbol).toBe(TILE.slag);

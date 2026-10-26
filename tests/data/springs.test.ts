@@ -32,8 +32,10 @@ describe('Ley Springs', () => {
       { id: 'hollows-spring', tx: 118, ty: 100, radius: 1.5 },
       // 060: the Emberworks', on the far side of the ring from every ramp.
       { id: 'emberworks-spring', tx: 232, ty: 115, radius: 1.5 },
+      // 064: the Stormcrown's, on the far side of the ring from the nearest ramp.
+      { id: 'stormcrown-spring', tx: 241, ty: 226, radius: 1.5 },
     ]);
-    expect(OVERWORLD.springs.map((s) => ringOf(s.tx, s.ty))).toEqual([2, 2, 1, 3, 4]);
+    expect(OVERWORLD.springs.map((s) => ringOf(s.tx, s.ty))).toEqual([2, 2, 1, 3, 4, 5]);
     for (const s of OVERWORLD.springs) expect(s.id).toMatch(/^[a-z]+(-[a-z]+)*$/);
   });
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EMBERWORKS, inEmberworks } from '../../src/data/emberworks';
 import { SLAG_RIVER_TILES } from '../../src/data/emberworksSites';
+import { SKY_CHASM_TILES } from '../../src/data/stormcrownSites';
 import { regionAt } from '../../src/data/hollows';
 import { RING_XP } from '../../src/data/leveling';
 import { OVERWORLD, ringOf } from '../../src/data/overworld';
@@ -79,8 +80,8 @@ describe('the ring', () => {
     expect(band.some((t) => t.s !== TILE.cliff)).toBe(true);
   });
 
-  it('keeps the Emberworks’ cliff edge solid between the rings but for its ramps (and the Slag River’s end, 060)', () => {
-    const ramps = new Set([...STORMCROWN.ramps.flatMap(stormRampTiles), ...SLAG_RIVER_TILES].map(tileKey));
+  it('keeps the Emberworks’ cliff edge solid between the rings but for its ramps (and the Slag River’s end, 060, and the Sky-bridge’s chasm’s)', () => {
+    const ramps = new Set([...STORMCROWN.ramps.flatMap(stormRampTiles), ...SLAG_RIVER_TILES, ...SKY_CHASM_TILES].map(tileKey));
     for (let ty = 0; ty < WORLD_SHAPE.size; ty++) {
       for (let tx = 0; tx < WORLD_SHAPE.size; tx++) {
         const d = fromCentre(tx, ty);

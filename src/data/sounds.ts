@@ -5,6 +5,7 @@ import { GEAR_SOUND_RECIPES, GEAR_SOUNDS } from './gearSounds.ts';
 import { TALENT_SOUND_RECIPES, TALENT_SOUNDS } from './talentSounds.ts';
 import { MINE_SOUND_RECIPES, MINE_SOUNDS } from './mineSounds.ts';
 import { EMBERWORKS_SOUND_RECIPES, EMBERWORKS_SOUNDS, EMBERWORKS_WINDUPS } from './emberworksSounds.ts';
+import { STORMCROWN_SOUND_RECIPES, STORMCROWN_SOUNDS } from './stormcrownSounds.ts';
 import { EMBERWORKS_ENEMY_SOUND_RECIPES, EMBERWORKS_ENEMY_SOUNDS, EMBERWORKS_ENEMY_WINDUPS } from './emberworksEnemySounds.ts';
 import { TIER_SOUND_RECIPES, TIER_SOUNDS } from './tierSounds.ts';
 
@@ -64,6 +65,7 @@ export const SOUNDS = {
   ...EMBERWORKS_SOUNDS,
   ...EMBERWORKS_ENEMY_SOUNDS,
   ...TIER_SOUNDS,
+  ...STORMCROWN_SOUNDS,
   ambientClearing: 'ambient-clearing',
   ambientFoundry: 'ambient-foundry',
 } as const;
@@ -86,6 +88,7 @@ export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
   ...EMBERWORKS_SOUND_RECIPES,
   ...EMBERWORKS_ENEMY_SOUND_RECIPES,
   ...TIER_SOUND_RECIPES,
+  ...STORMCROWN_SOUND_RECIPES,
   'fire-arrow': {
     layers: [
       { wave: 'noise', from: 6000, to: 1500, dur: 0.12, attack: 0.002, volume: 0.35 },

@@ -1,6 +1,7 @@
 import { ROADS } from '../data/roads';
 import { TILE } from '../data/rooms';
 import { STORMCROWN, stormRampTiles } from '../data/stormcrown';
+import { CROWN_SPIRE } from '../data/stormcrownSites';
 import { fromCentre, WORLD_SHAPE } from '../data/worldShape';
 import { nearRoads, set, type Grid } from './genGrid';
 import { createRng, nextFloat, nextInt, type RngState } from './rng';
@@ -77,4 +78,6 @@ export function stampStormcrown(grid: Grid): void {
     }
   }
   for (const t of STORMCROWN.ramps.flatMap(stormRampTiles)) set(grid, t.tx, t.ty, TILE.ramp);
+  // The Crown Spire's walls and door (its floor is cleared with the landmarks').
+  for (const t of CROWN_SPIRE.walls) set(grid, t.tx, t.ty, t.symbol);
 }

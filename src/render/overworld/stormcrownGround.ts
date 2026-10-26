@@ -5,6 +5,9 @@ import { inStormcrown, STORMCROWN } from '../../data/stormcrown';
 import { STORMCROWN_GROUND } from '../../data/stormcrownAssets';
 import { fromCentre } from '../../data/worldShape';
 import { inkCss } from '../vector/draw';
+import { LANDMARK_LIST } from '../../data/landmarks';
+import { CROWN_SPIRE } from '../../data/stormcrownSites';
+import type { TileRect } from '../../data/tiles';
 
 // The Stormcrown's ground (064), painted into the overworld's ground chunks over the grass: wind-scoured slate in
 // scored slabs with pale grit streaks along the wind, a slate-violet glow pooling, cracks and now and then a glinting
@@ -55,6 +58,32 @@ function chasm(c: CanvasRenderingContext2D, tx: number, ty: number, hash: number
   if (hash % 3 === 0) fill(c, C.glow, C.glowAlpha, () => c.ellipse(x + 16, y + 22, 12, 5, 0, 0, Math.PI * 2));
 }
 
+/** The Broken Sky-bridge's deck: the rift under it, worn slabs across, a broken parapet along each side it meets the rift. */
+function bridge(c: CanvasRenderingContext2D, tx: number, ty: number, hash: number, symbol: (tx: number, ty: number) => string | undefined): void {
+  const B = G.bridge;
+  const x = tx * T;
+  const y = ty * T;
+  chasm(c, tx, ty, hash, () => TILE.chasm);
+  fill(c, B.deck, B.alpha, () => c.rect(x - 0.5, y + 2, T + 1, T - 4));
+  line(c, [x + T / 2, y + 2, x + T / 2, y + T - 2], 1, B.seam, 0.7);
+  if (hash % 4 === 0) fill(c, B.seam, 0.5, () => c.ellipse(x + 8 + (hash % 14), y + 10 + ((hash >>> 4) % 12), 3, 2, 0, 0, Math.PI * 2));
+  // A parapet along each side the deck meets the rift, broken now and then.
+  const rail = (pts: readonly number[]): void => {
+    if (hash % 5 === 1) return;
+    line(c, pts, 3, B.parapet, 1);
+    line(c, pts, 1, B.cap, 0.8);
+  };
+  if (symbol(tx, ty - 1) === TILE.chasm) rail([x, y + 3, x + T, y + 3]);
+  if (symbol(tx, ty + 1) === TILE.chasm) rail([x, y + T - 3, x + T, y + T - 3]);
+  if (symbol(tx - 1, ty) === TILE.chasm) rail([x + 3, y, x + 3, y + T]);
+  if (symbol(tx + 1, ty) === TILE.chasm) rail([x + T - 3, y, x + T - 3, y + T]);
+}
+
+/** The slate-paved floors (the Weathervane's, the Crown Spire's) and the Rod Field's scarred slate. */
+const FLAGGED: readonly TileRect[] = [...LANDMARK_LIST.filter((l) => l.look?.paving === 'slate').map((l) => l.area), CROWN_SPIRE.inside];
+const SCARRED: readonly TileRect[] = LANDMARK_LIST.filter((l) => l.look?.stormy).map((l) => l.area);
+const inAny = (rs: readonly TileRect[], tx: number, ty: number): boolean => rs.some((r) => tx >= r.x0 && tx <= r.x1 && ty >= r.y0 && ty <= r.y1);
+
 /** Paints the Stormcrown's ground; `each` walks the chunk's tiles with their hash, `symbol` reads the map. */
 export function paintStormcrown(
   c: CanvasRenderingContext2D,
@@ -102,5 +131,13 @@ export function paintStormcrown(
       line(c, pts, 0.9, G.vein, 0.85);
     }
     if (s === TILE.chasm) chasm(c, tx, ty, hash, symbol);
+    else if (s === TILE.bridge) bridge(c, tx, ty, hash, symbol);
+    else if (inAny(SCARRED, tx, ty)) {
+      fill(c, G.scorch.color, G.scorch.alpha, () => c.ellipse(x + T / 2 + ((hash >>> 5) % 7) - 3, y + T / 2 + ((hash >>> 9) % 7) - 3, T * 0.75, T * 0.6, 0, 0, Math.PI * 2));
+      fill(c, G.scorch.grit, 0.7, () => c.ellipse(x + 6 + ((hash >>> 3) % 20), y + 6 + ((hash >>> 7) % 20), 0.9, 0.9, 0, 0, Math.PI * 2));
+    } else if (inAny(FLAGGED, tx, ty) && (s === TILE.floor || s === TILE.path) && hash % G.flags.gapEvery !== 0) {
+      fill(c, G.flags.color, G.flags.alpha, () => c.roundRect(x + 2, y + 2, T - 4, T - 4, 2));
+      line(c, [x + 2, y + T - 2, x + T - 2, y + T - 2], 1, G.flags.edge, G.flags.alpha);
+    }
   });
 }

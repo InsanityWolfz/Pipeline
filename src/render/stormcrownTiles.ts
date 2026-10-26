@@ -18,5 +18,7 @@ export function stormcrownFrame(symbol: string, tx: number, ty: number, hash: nu
   if (symbol === TILE.cliff) return room.rows[ty + 1]?.[tx] === TILE.cliff ? S.cliffTop : S.cliffs[hash % S.cliffs.length];
   if (symbol === TILE.ironRod) return S.ironRod[hash % S.ironRod.length];
   if (symbol === TILE.cairn) return room.rows[ty + 1]?.[tx] === TILE.cairn ? S.cairnTop : S.cairn[hash % S.cairn.length];
+  // The Crown Spire's walls (the only walls out here).
+  if (symbol === TILE.wall) return S.spireWall;
   return undefined;
 }

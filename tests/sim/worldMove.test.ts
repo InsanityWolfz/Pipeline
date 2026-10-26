@@ -38,7 +38,14 @@ describe('the world grows (060, 064)', () => {
   });
 
   it('keeps every hand-placed tile at its offset from the centre', () => {
-    for (const k of ['landmarks', 'overworld', 'roads', 'roadPoints', 'pylons', 'arenas', 'hollows', 'emberworks'] as const) expect(unkept(now[k], SNAPSHOT[k]), k).toEqual([]);
+    // But two: 064 slice 3 moved the Ley Grotto's and the Husk Hive's ley lines' arrivals at the ruin apart, to make room
+    // for the Weathervane's between them (each still starts at its pylon and ends on the ruin; tests/data/leyLines.test.ts
+    // holds them to the line rules).
+    const { 'ley-grotto': grotto, 'husk-hive': hive, ...lines } = SNAPSHOT.overworld.leyLines;
+    const then = { ...SNAPSHOT, overworld: { ...SNAPSHOT.overworld, leyLines: lines } };
+    for (const k of ['landmarks', 'overworld', 'roads', 'roadPoints', 'pylons', 'arenas', 'hollows', 'emberworks'] as const) expect(unkept(now[k], then[k]), k).toEqual([]);
+    expect(now.overworld.leyLines['ley-grotto']?.[0]).toEqual(grotto[0]);
+    expect(now.overworld.leyLines['husk-hive']?.[0]).toEqual(hive[0]);
   });
 
   it('generates the same ground round the centre, out to the Hollows\' edge', () => {

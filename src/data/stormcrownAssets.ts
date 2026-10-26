@@ -11,7 +11,19 @@ export const STORMCROWN_SPRITES = {
   /** The Stormcrown's own cliffs (its ragged foot and outer edge), in slate; `cliffTop` where another stands in front. */
   cliffs: ['ow-slate-cliff-0', 'ow-slate-cliff-1', 'ow-slate-cliff-2'],
   cliffTop: 'ow-slate-cliff-top',
+  /** A length of the Crown Spire's wall: slate blocks banded in brass, a cyan rune course. */
+  spireWall: 'ow-spire-wall',
+  /** The stormglass item: a pale violet crystal shard with a cyan crackle inside. */
+  itemStormglass: 'item-stormglass',
+  /**
+   * A storm rod's looks while it isn't charged (it's charged in its node frames, by uses left): idle, its warning
+   * (sparks crawling up it, its crown flashing) and the strike itself (a bolt down onto it, held `STORM_ROD_LOOK.strikeTicks`).
+   */
+  rod: { idle: 'node-storm-rod-idle', warning: 'node-storm-rod-warning', strike: 'node-storm-rod-strike' },
 } as const;
+
+/** How a storm rod reads (064): its strike frame shows over the first `strikeTicks` of its charge; the warning flickers every `flickerMs`. */
+export const STORM_ROD_LOOK = { strikeTicks: 14 } as const;
 
 /** The Stormcrown's cliffs' stone (art/hollows.ts `CliffStone`): cool slate. */
 export const SLATE_STONE = { dark: 'storm-dark', mid: 'storm', light: 'storm-light', pale: 'storm-pale' } as const;
@@ -41,4 +53,10 @@ export const STORMCROWN_GROUND = {
   plateauEdge: 'ink',
   /** A chasm: a dark rift, its lip lit pale where open rock lies north of it, a violet glow far down. */
   chasm: { depth: 'ink', wall: 'storm-dark', lip: 'storm-pale', glow: 'storm-glow', glowAlpha: 0.35 },
+  /** The Broken Sky-bridge's deck over the chasm: worn builders' slabs, a broken brass-capped parapet where it meets the rift. */
+  bridge: { deck: 'storm-pale', seam: 'storm', parapet: 'carve-dark', cap: 'brass', alpha: 1 },
+  /** Slate flagstones on the Weathervane's and the Crown Spire's floors. */
+  flags: { color: 'storm-pale', edge: 'storm', alpha: 0.5, gapEvery: 4 },
+  /** The Rod Field's storm-scarred slate: dark scorch blotches with pale glass grit. */
+  scorch: { color: 'storm-dark', alpha: 0.26, grit: 'cyan-glow' },
 } as const;

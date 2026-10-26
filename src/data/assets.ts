@@ -114,6 +114,8 @@ export const NODE_SPRITES: Readonly<Record<string, { uses: readonly string[]; re
   'resin-seep': nodeFrames('resin-seep', 3, 3),
   // 060: open (by uses left) and spent; its closed and warning looks are EMBERWORKS_SPRITES.vent.
   'cinder-vent': nodeFrames('cinder-vent', 3, 3),
+  // 064: charged (by uses left) and spent; its idle, warning and strike looks are STORMCROWN_SPRITES.rod.
+  'storm-rod': nodeFrames('storm-rod', 3, 3),
 };
 
 /** The tube slot's frame (025) by how many rounds it shows: one for a carried round or the fist, up to one per intake entrance for a volley. */

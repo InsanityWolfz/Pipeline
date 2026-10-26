@@ -31,7 +31,8 @@ describe('inventory panel groups (031)', () => {
   it('maps the items as the spec lists them', () => {
     const byGroup = (g: string) => Object.values(ITEMS).filter((it) => it.group === g).map((it) => it.id).sort();
     // 034: ley-iron, the first metal, is a raw.
-    expect(byGroup('raw')).toEqual(['cinderite', 'fiber', 'husk-resin', 'ley-crystal', 'ley-iron', 'rimestone', 'stone', 'wood']);
+    // 064: stormglass.
+    expect(byGroup('raw')).toEqual(['cinderite', 'fiber', 'husk-resin', 'ley-crystal', 'ley-iron', 'rimestone', 'stone', 'stormglass', 'wood']);
     // 033: machine parts and schematics go in Parts, cores in Cores.
     expect(byGroup('parts')).toEqual([
       'ancient-gear',

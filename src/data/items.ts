@@ -1,5 +1,6 @@
 import { SPRITES } from './assets';
 import { EMBERWORKS_SPRITES } from './emberworksAssets';
+import { STORMCROWN_SPRITES } from './stormcrownAssets';
 import { HOLLOWS_SPRITES } from './hollowsAssets';
 import { MINE_SPRITES } from './mineAssets';
 import { RESEARCH_ICONS } from './researchAssets';
@@ -50,6 +51,8 @@ const BASE_ITEMS: Readonly<Record<string, ItemDef>> = {
   'rimestone': { id: 'rimestone', name: 'Rimestone', kind: 'raw', group: 'raw', icon: STAGE_SPRITES.itemRimestone },
   /** 060: gathered at the Emberworks' cinder vents while they flare open, and sent home by the Ash Kilns' pylon. */
   cinderite: { id: 'cinderite', name: 'Cinderite', kind: 'raw', group: 'raw', icon: EMBERWORKS_SPRITES.itemCinderite },
+  // 064: the Stormcrown's raw, from storm rods in the moments after lightning strikes them.
+  stormglass: { id: 'stormglass', name: 'Stormglass', kind: 'raw', group: 'raw', icon: STORMCROWN_SPRITES.itemStormglass },
   shaft: { id: 'shaft', name: 'Shaft', kind: 'part', group: 'parts', icon: SPRITES.itemShaft },
   arrowhead: { id: 'arrowhead', name: 'Arrowhead', kind: 'part', group: 'parts', icon: SPRITES.itemArrowhead },
   rope: { id: 'rope', name: 'Rope', kind: 'part', group: 'parts', icon: SPRITES.itemRope },

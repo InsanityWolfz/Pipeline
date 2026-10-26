@@ -7,6 +7,7 @@ import type { Facing } from './player';
 import type { XpSource } from '../data/leveling';
 import { createForgeEvents, type ForgeEvents } from './forgeEvents';
 import { createEmberEvents, type EmberEvents } from './emberEvents';
+import { createStormEvents, type StormEvents } from './stormEvents';
 
 // What happened on the last tick, for render effects and tests. Cleared at the
 // start of every tick, so render collects them after each step. Crafts happen
@@ -58,8 +59,8 @@ export interface MeleeEvent {
   hits: number[];
 }
 
-/** 060: the Forgewright's events are in forgeEvents.ts. */
-export interface SimEvents extends ForgeEvents, EmberEvents {
+/** 060: the Forgewright's events are in forgeEvents.ts; 064: the Stormcrown's in stormEvents.ts. */
+export interface SimEvents extends ForgeEvents, EmberEvents, StormEvents {
   hits: HitEvent[];
   deaths: DeathEvent[];
   pickups: PickupEvent[];
@@ -200,6 +201,7 @@ export function createEvents(): SimEvents {
   return {
     ...createForgeEvents(),
     ...createEmberEvents(),
+    ...createStormEvents(),
     hits: [],
     deaths: [],
     pickups: [],
