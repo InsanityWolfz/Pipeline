@@ -36,9 +36,13 @@ const OVERRIDES: Readonly<Record<string, number>> = { 'warden-core': 5, 'bulwark
 /**
  * 062: the material tiers' parts stay out of the kit, which fills the inventory's first screen already (its cores would
  * scroll out of sight). They're smelted, fired and pressed from the raws it carries (ley-iron, cinderite, ley dust).
- * 064: and the storm coil, which nothing spends yet.
+ * 064: and the storm coil, which nothing spends yet. 066: and the storm tier's parts, tempered from ley-steel or ley
+ * glass and the stormglass it carries.
  */
-export const LEFT_OUT_OF_KIT: readonly string[] = ['ley-steel', 'ley-glass', 'steel-arrowhead', 'steel-casing', 'steel-plate', 'storm-coil'];
+export const LEFT_OUT_OF_KIT: readonly string[] = [
+  ...['ley-steel', 'ley-glass', 'steel-arrowhead', 'steel-casing', 'steel-plate', 'storm-coil'],
+  ...['stormsteel', 'storm-glass', 'stormsteel-arrowhead', 'stormsteel-casing', 'stormsteel-plate'],
+];
 
 /**
  * Identified gear the playtest carries (036), none worn: a Rare piece in each slot and a relic, so the bench's panel

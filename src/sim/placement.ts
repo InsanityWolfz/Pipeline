@@ -1,5 +1,5 @@
 import { FEET_BOX } from '../data/player';
-import { BUILD_BAR, isSolidPiece, pieceDef } from '../data/pieces';
+import { BUILD_BAR, isSolidPiece, machineRecipeIds, pieceDef } from '../data/pieces';
 import { recipeDef } from '../data/recipes';
 import { FOUNDRY_ROOM, TILE } from '../data/rooms';
 import { overlapsRect } from './collision';
@@ -18,7 +18,8 @@ import { guidedShape, lockRefusal, pickUpRefusal } from './guided';
 
 /**
  * Pieces the player can place, in build bar order: logistics always (046: the splitter from the start),
- * machines once their output is hand-crafted (a stage once any of its rounds is).
+ * machines once their output is hand-crafted (a stage once any of its rounds is; 066: an ordinary machine once any
+ * recipe it runs is, so either of the Tempering coil's materials unlocks it).
  */
 export function unlockedPieces(state: Pick<SimState, 'crafted' | 'research'>): string[] {
   const locked = lockedByResearch(state);
@@ -26,7 +27,7 @@ export function unlockedPieces(state: Pick<SimState, 'crafted' | 'research'>): s
     if (locked.includes(id)) return false;
     const def = pieceDef(id);
     // A stage once any of its rounds has been hand-made (039: hand-applied once to any family).
-    if (def.kind === 'machine') return def.stage ? stagesUnlocked(state).includes(def.stage) : state.crafted.includes(recipeDef(def.recipeId).output.itemId);
+    if (def.kind === 'machine') return def.stage ? stagesUnlocked(state).includes(def.stage) : machineRecipeIds(def).some((r) => state.crafted.includes(recipeDef(r).output.itemId));
     return true;
   });
 }
