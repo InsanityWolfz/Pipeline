@@ -19,9 +19,10 @@
  * migration. 061 made it 14 (enemies' spent and beam fields, pools' shapes and beats), again with no migration. 15: 063's
  * blueprints (another branch); 16: 062's machine stall counter; 17: 064's (the world grew again and its centre moved, so
  * every saved position and the fog's bitmap are on a new map; the Stormcrown's gate; boss parts and the storm call's
- * strikes). All with no migration.
+ * strikes). 18: 065's (the thunderhawk's dive event, enemies' mite trios, the storm sentinel's strike knockback and the
+ * player's slow). All with no migration.
  */
-export const SAVE_VERSION = 17;
+export const SAVE_VERSION = 18;
 
 /** The envelope's and the export file's format tags. */
 export const SAVE_FORMAT = 'pipeline-save';

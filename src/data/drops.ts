@@ -12,10 +12,10 @@ export const ANY_SCHEMATIC = 'any-schematic';
 /** A separate roll on every enemy's death (champions at their own rate); the Ruined Cache uses its own table's 20%. */
 export const SCHEMATIC_CHANCE = { enemy: 0.01, champion: 0.05 } as const;
 
-/** The regions each schematic can drop in: Reservoir II only in Region 2 (034, Stonefall Hollows); 061: machine speed in the Emberworks (Region 3) too. */
+/** The regions each schematic can drop in: Reservoir II only in Region 2 (034, Stonefall Hollows); 061: machine speed in the Emberworks (Region 3) too, and (065) the Stormcrown (Region 4). */
 export const SCHEMATIC_REGIONS: Readonly<Record<string, readonly number[]>> = {
   'schematic-reservoir-2': [2],
-  'schematic-machine-speed': [1, 2, 3],
+  'schematic-machine-speed': [1, 2, 3, 4],
 };
 
 /** Which region a room is in; a room not listed is in DEFAULT_REGION. The overworld's west columns are Region 2 (034: src/sim/regions.ts). */
@@ -37,6 +37,9 @@ export const REGION_2_PART: RarePart = { itemId: 'aqueduct-valve', chance: 0.04,
 
 /** Region 3's machine part (060, 061): the Emberworks' enemies drop the forge rivet at 4%, a champion rolls it once at 12% (3×, as the others'). */
 export const REGION_3_PART: RarePart = { itemId: 'forge-rivet', chance: 0.04, championChance: 0.12 };
+
+/** Region 4's machine part (064, 065): the Stormcrown's enemies drop the storm coil at 4%, a champion rolls it once at 12% (3×, as the others'). */
+export const REGION_4_PART: RarePart = { itemId: 'storm-coil', chance: 0.04, championChance: 0.12 };
 
 /** The Ruined Cache's rare entries (032's empty slot): its part at 50%, and a schematic at 20%. */
 export const CACHE_RARE: readonly RarePart[] = [

@@ -69,5 +69,8 @@ function scaleAttack(def: EnemyDef, base: Pick<EnemyDef, 'feetBox' | 'hurtbox' |
       return { ...def, ...base, slam: { ...def.slam, damage: dmg(def.slam.damage) } };
     case 'hound':
       return { ...def, ...base, dash: { ...def.dash, damage: dmg(def.dash.damage), speed: def.dash.speed * speed }, trail: { ...def.trail, damage: dmg(def.trail.damage) } };
+    // 065: its dive speeds up with its flight, as the Charger's charge does.
+    case 'hawk':
+      return { ...def, ...base, dive: { ...def.dive, damage: dmg(def.dive.damage), speed: def.dive.speed * speed } };
   }
 }

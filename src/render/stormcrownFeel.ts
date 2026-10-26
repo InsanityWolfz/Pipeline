@@ -4,6 +4,7 @@ import { SOUNDS } from '../data/sounds';
 import type { SimEvents } from '../sim/events';
 import type { JuiceView } from './JuiceView';
 import type { SoundView } from './SoundView';
+import { playStormEnemies } from './stormEnemyFeel';
 
 // The Stormcrown's feel (064), for FeelView: its barrier across the ramps breaking with the Hollows barrier's sound and
 // shards (034), as the Emberworks' does (`playStormcrown` returns whether it fell this frame, so FeelView doesn't also
@@ -48,6 +49,8 @@ export function playStormcrown(ev: SimEvents, j: JuiceView, s: SoundView, v: Vie
   // A lightning arc leaping between enemies: its crackle, once a frame however many leapt.
   if (ev.arcs.length > 0) s.play(SOUNDS.arcCrackle);
   playConductor(ev, j, s);
+  // 065: the region's enemies.
+  playStormEnemies(ev, j, s);
   const fell = ev.gates.some((g) => g.gate === 'stormcrown');
   if (!fell) return false;
   s.play(SOUNDS.barrierCollapse);

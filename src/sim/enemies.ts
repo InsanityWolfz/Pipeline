@@ -305,8 +305,10 @@ export const immune = (e: Pick<EnemyState, 'underground' | 'rising'>): boolean =
 /** Whether shots, punches and bursts can reach it: whenever it isn't immune (054). */
 export const targetable = (e: Pick<EnemyState, 'underground' | 'rising'>): boolean => !immune(e);
 
-/** It passes through other enemies (035): a Burrower underground, a Charger mid-charge (061: a hound mid-dash), an add rising (041). Separation leaves it be. */
-export const passesThrough = (e: EnemyState): boolean => e.underground || e.rising > 0 || (e.mode === 'swipe' && (defOf(e).kind === 'charger' || defOf(e).kind === 'hound'));
+/** It passes through other enemies (035): a Burrower underground, a Charger mid-charge (061: a hound mid-dash; 065: a hawk mid-dive), an add rising (041). Separation leaves it be. */
+export const passesThrough = (e: EnemyState): boolean => e.underground || e.rising > 0 || (e.mode === 'swipe' && LANE_RUNNERS.includes(defOf(e).kind));
+
+const LANE_RUNNERS: readonly string[] = ['charger', 'hound', 'hawk'];
 
 /** True if a ground point is inside the enemy's hurtbox. */
 export function inHurtbox(e: EnemyState, x: number, y: number): boolean {

@@ -53,6 +53,8 @@ export function kindSummary(state: SimState, e: EnemyState): KindSummary {
   if (def.kind === 'tender') out.beam = beamShown(e);
   // 061: a hound's lane, as the Charger's.
   if (def.kind === 'hound') out.lane = laneShown(e, def.dash);
+  // 065: a thunderhawk's dive line, as a lane.
+  if (def.kind === 'hawk') out.lane = laneShown(e, def.dive);
   return out;
 }
 

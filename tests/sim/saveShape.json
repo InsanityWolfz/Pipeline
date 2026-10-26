@@ -1,5 +1,5 @@
 {
-  "version": 17,
+  "version": 18,
   "shape": [
     "state.activatePulse: number",
     "state.arrows: array",
@@ -159,6 +159,7 @@
     "state.events.deaths: array",
     "state.events.deposits: array",
     "state.events.discoveries: array",
+    "state.events.dives: array",
     "state.events.emberSaves: array",
     "state.events.enemyBursts: array",
     "state.events.enrages: array",

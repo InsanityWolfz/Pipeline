@@ -17,8 +17,10 @@ export interface StormEvents {
   conductorWindups: { id: number; attack: number }[];
   lashes: { id: number; x0: number; y0: number; x1: number; y1: number }[];
   chains: { id: number }[];
+  /** 065: a thunderhawk set off down its dive line: its start, unit direction and the line's length. */
+  dives: { id: number; x: number; y: number; dx: number; dy: number; length: number }[];
 }
 
 export function createStormEvents(): StormEvents {
-  return { rodStrikes: [], arcs: [], strikes: [], rodBreaks: [], rodRegrows: [], blinkWarns: [], blinks: [], conductorWindups: [], lashes: [], chains: [] };
+  return { rodStrikes: [], arcs: [], strikes: [], rodBreaks: [], rodRegrows: [], blinkWarns: [], blinks: [], conductorWindups: [], lashes: [], chains: [], dives: [] };
 }

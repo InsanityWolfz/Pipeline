@@ -59,6 +59,8 @@ function attackDamage(def: EnemyDef): number {
       return def.slam.damage;
     case 'tender':
       return def.beam.heal;
+    case 'hawk':
+      return def.dive.damage;
   }
 }
 

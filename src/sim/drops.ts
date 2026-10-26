@@ -111,7 +111,38 @@ export function spawnDrops(state: SimState, def: EnemyDef, x: number, y: number,
     if (def.id === FIRST_ARMOR_ENEMY) state.firstHuskDropped = true;
     for (let i = 0; i < CHAMPIONS.armor; i++) items.push(UNIDENTIFIED_ARMOR);
   } else if (rollArmorDrop(state, def.id)) items.push(UNIDENTIFIED_ARMOR);
-  scatterItems(state, items, roomId, x, y);
+  const at = landingPoint(roomById(roomId), x, y);
+  scatterItems(state, items, roomId, at.x, at.y);
+}
+
+/** How far out, in tiles, a corpse over solid ground looks for open ground to drop on (065). */
+const LANDING_REACH = 8;
+
+/**
+ * Where a corpse's drops land (065): where it fell, or, over something solid (a flier killed over a rock or a chasm),
+ * the centre of the nearest open tile, ring by ring outward, nearest first; where it fell if none is within reach.
+ */
+export function landingPoint(room: Room, x: number, y: number): { x: number; y: number } {
+  const tx = Math.floor(x / TILE_SIZE);
+  const ty = Math.floor(y / TILE_SIZE);
+  if (!isSolid(room, tx, ty)) return { x, y };
+  for (let r = 1; r <= LANDING_REACH; r++) {
+    let best: { x: number; y: number } | null = null;
+    let bestD = Infinity;
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== r || isSolid(room, tx + dx, ty + dy)) continue;
+        const c = { x: (tx + dx + 0.5) * TILE_SIZE, y: (ty + dy + 0.5) * TILE_SIZE };
+        const d = Math.hypot(c.x - x, c.y - y);
+        if (d < bestD) {
+          bestD = d;
+          best = c;
+        }
+      }
+    }
+    if (best) return best;
+  }
+  return { x, y };
 }
 
 /**

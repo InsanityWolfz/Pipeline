@@ -40,5 +40,7 @@ export const CHAMPIONS = {
     'slag-golem': ['Clinkerback', 'Dross', 'Crustheart', 'Slagmaw', 'Magmafist'],
     'slag-whelp': ['Dribble', 'Clinker', 'Sputter'],
     'kiln-tender': ['Hearthkeep', 'Kindlewarden', 'Firemend', 'Brickbelly', 'Stokewell'],
+    // 065: the Stormcrown's.
+    thunderhawk: ['Galewing', 'Stormtalon', 'Boltbeak', 'Skyrend', 'Thunderclaw'],
   } as Readonly<Record<string, readonly string[]>>,
 } as const;

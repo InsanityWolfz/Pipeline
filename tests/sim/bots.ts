@@ -102,6 +102,10 @@ function zoneOf(e: EnemyState, def: EnemyDef, left: (windup: number) => number):
     // 061: a golem's slam circle ahead of it.
     case 'golem':
       return e.mode === 'windup' ? { kind: 'circle', x: e.spotX, y: e.spotY, r: def.slam.radius, left: left(def.slam.windupTicks) } : null;
+    // 065: a thunderhawk's dive line, as a hound's lane.
+    case 'hawk':
+      if (e.mode === 'windup') return { kind: 'lane', x: e.spotX, y: e.spotY, dirX: e.swipeDirX, dirY: e.swipeDirY, length: def.dive.distance, width: def.dive.width, left: left(def.dive.windupTicks) };
+      return e.mode === 'swipe' ? { kind: 'lane', x: e.x, y: e.y, dirX: e.swipeDirX, dirY: e.swipeDirY, length: def.dive.distance, width: def.dive.width + 8, left: 0 } : null;
     case 'caster':
     case 'tender':
       return null;

@@ -12,10 +12,11 @@ import { moteThink } from './moteAi';
 import { houndThink } from './houndAi';
 import { golemThink } from './golemAi';
 import { tenderThink } from './tenderAi';
+import { hawkThink } from './hawkAi';
+import { moveBody } from './flight';
 import { defOf } from './champions';
 import { castThink } from './casterAi';
 import { chillScale, chillSlow, tickCold } from './cold';
-import { moveBox } from './collision';
 import { aimFacing } from './direction';
 import { aggro, type EnemyState } from './enemies';
 import { separate, type RoomBodies } from './separation';
@@ -66,7 +67,8 @@ export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBod
     const [mx, my] = keepOut(state, e, thought[0] * slow, thought[1] * slow);
     const [kx, ky] = takeKnock(e);
     const [dx, dy] = keepOut(state, e, mx + kx, my + ky);
-    const { hitX, hitY } = moveBox(room, e, def.feetBox, dx, dy, obstacles);
+    // 065: a flier flies over terrain (flight.ts).
+    const { hitX, hitY } = moveBody(room, e, def, def.feetBox, dx, dy, obstacles);
     e.vx = hitX ? 0 : mx;
     e.vy = hitY ? 0 : my;
     e.bumped = hitX || hitY;
@@ -109,6 +111,8 @@ function thinkOf(state: SimState, e: EnemyState, def: EnemyDef): [number, number
       return tenderThink(state, e, def);
     case 'conductor':
       return conductorThink(state, e, def);
+    case 'hawk':
+      return hawkThink(state, e, def);
   }
 }
 
