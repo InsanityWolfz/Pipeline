@@ -42,6 +42,16 @@ export function rollArmorDrop(state: SimState, enemyId: string): boolean {
   return chance > 0 && nextFloat(state.rng) < chance;
 }
 
+/**
+ * fix-playtest-ui (Shaun: "make it so the first armor you get can't be lost on death"): the first unidentified piece
+ * picked up before any is identified is banked as it's picked up, so a KO keeps it like any banked item and the
+ * "Identify your armor" goal always has a piece to identify. Later pieces are at risk as before.
+ */
+export function bankFirstPiece(state: SimState, itemId: string): void {
+  if (itemId !== UNIDENTIFIED_ARMOR || state.gear.length > 0 || count(state.banked, UNIDENTIFIED_ARMOR) > 0) return;
+  state.banked[UNIDENTIFIED_ARMOR] = 1;
+}
+
 const pick = <T>(rng: RngState, list: readonly T[]): T => {
   const item = list[nextInt(rng, 0, list.length - 1)];
   if (item === undefined) throw new Error('pick from an empty list');

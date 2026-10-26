@@ -4,7 +4,7 @@ import { TILE_SIZE } from '../data/config';
 import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
 import { PROMPT_RANGE, type PromptTarget } from '../data/objectives';
 import { FOUNDRY_ROOM } from '../data/rooms';
-import { dormant, fixtureInReach, pylonInReach } from '../sim/claims';
+import { dormant, fixtureInReach, occupied, pylonInReach } from '../sim/claims';
 import { fixtureDef } from '../sim/fixtures';
 import { usableInReach } from '../sim/foundryUse';
 import { nodeInReach } from '../sim/harvest';
@@ -81,8 +81,10 @@ export class PromptView {
       case 'tubeStone':
         return room.tubeStone && !sim.hasTube ? { at: centre(room.tubeStone), usable: stoneInReach(sim) } : undefined;
       case 'pylon': {
-        // The shrine's goal: the nearest pylon that isn't dormant (032: the resource sites' wait on the shrine).
-        const pylon = nearest((room.pylons ?? []).filter((t) => !dormant(sim, t)).map((t) => ({ ...centre(t), site: t.site })));
+        // The shrine's goal: the nearest pylon that isn't dormant (032: the resource sites' wait on the shrine), nor
+        // guarded (fix-playtest-ui: no E while its guards live; its hover says to kill them).
+        const open = (room.pylons ?? []).filter((t) => !dormant(sim, t) && (sim.claims.includes(t.site) || !occupied(sim, t.site)));
+        const pylon = nearest(open.map((t) => ({ ...centre(t), site: t.site })));
         return pylon ? { at: pylon, usable: pylonInReach(sim)?.site === pylon.site } : undefined;
       }
       case 'bench': {

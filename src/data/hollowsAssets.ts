@@ -84,8 +84,8 @@ export const HOLLOWS_LOOK = {
   },
   /** The altar's offering row (in the 033 restore panel's style). */
   panel: { name: "The Bulwark's altar", effect: 'Offer to summon the Bulwark again.', action: 'Summon', spent: 'The Bulwark is here' },
-  /** The boss bar along the top of the screen while a boss fights: its width and height, view px, gap under the objective band, colours (041.15: unchanged by the enrage). */
-  bossBar: { w: 240, h: 8, top: 20, border: 1, fill: 'danger', back: 'ink', frame: 'brass', nameGap: 2 },
+  /** The boss bar along the top of the screen while a boss fights: its width and height, view px, gap under the objective band, colours (041.15: unchanged by the enrage). fix-playtest-ui: slimmer (was 8 tall, 20 down), so less of the arena hides under it. */
+  bossBar: { w: 240, h: 6, top: 16, border: 1, fill: 'danger', back: 'ink', frame: 'brass', nameGap: 2 },
   /**
    * The back wave's build-up (041.16, draft for Shaun's eye): `rings` arcs over its rear arc in danger red, rippling
    * outward from its feet to the arc's edge as the wind-up runs (rings only, unlike the stomp's filled half-disc); its

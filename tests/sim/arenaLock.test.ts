@@ -171,6 +171,41 @@ describe('E at the sealed door', () => {
     expect(b.health).toBe(DEF.maxHealth);
   });
 
+  // fix-bulwark-ease (Shaun: "make sure you can run from him. The door needs to work"; design.md: running away is
+  // always allowed): at any health, enraged or not, whatever it is winding up, E at the door leaves and resets it.
+  it('leaves at any health, enraged or not, mid lob, pound or stomp wind-up and with a bomb in the air', () => {
+    const leaves = (hp: number, enraged: boolean, mode: 'chase' | 'lob' | 'windup' | 'stomp-windup', bomb: boolean): void => {
+      const { s, b } = awake(96);
+      b.addsRisen = true;
+      b.addsCooldown = 100_000;
+      b.health = enraged ? Math.floor(DEF.maxHealth * DEF.enrage.below) - 1 : DEF.maxHealth;
+      b.enraged = enraged;
+      if (bomb) {
+        b.lobCooldown = 0;
+        runUntil(s, (x) => x.enemyBombs.length > 0, DEF.lob.windupTicks + 10, {});
+        expect(s.enemyBombs.length).toBeGreaterThan(0);
+      }
+      movePlayer(s, DOOR_X, INSIDE_DOOR_Y);
+      s.player.health = hp;
+      b.mode = mode;
+      b.modeTicks = 5;
+      run(s, 1, { interact: true });
+      const what = `${hp} HP, enraged ${enraged}, ${mode}, bomb ${bomb}`;
+      expect(s.events.arenaLeaves, what).toEqual([{ arena: A.id }]);
+      expect({ x: s.player.x, y: s.player.y }, what).toEqual(tileCentre(A.door.leaveTo));
+      expect(b, what).toMatchObject({ x: START.x, y: START.y, health: DEF.maxHealth, mode: 'idle', enraged: false });
+      expect(s.enemyBombs.filter((x) => x.enemyId === 'bulwark'), what).toEqual([]);
+      expect(sealedNow(s), what).toBe(false);
+      run(s, 120);
+      expect(s.player.health, what).toBe(hp);
+      expect(s.player.dying, what).toBe(0);
+    };
+    for (const hp of [1, 8, 100])
+      for (const enraged of [false, true])
+        for (const mode of ['chase', 'lob', 'windup', 'stomp-windup'] as const) leaves(hp, enraged, mode, false);
+    leaves(8, true, 'chase', true);
+  });
+
   it('does nothing away from the door; from outside the door, E goes in (055) and leaves the Bulwark asleep', () => {
     const { s, b } = awake(96);
     run(s, 1, { interact: true });

@@ -2,14 +2,10 @@ import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { INTAKE_EMPTY_ICON } from '../data/foundryAssets';
 import { READOUT_LAYOUT } from '../data/hudLayout';
-import { RECIPES } from '../data/recipes';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
-import type { Line } from './readoutLines';
-
-/** The most lines a readout needs: the largest recipe's inputs, plus the output. */
-const MAX_LINES = Math.max(...Object.values(RECIPES).map((r) => Object.keys(r.inputs).length)) + 1;
+import { READOUT_MAX_LINES as MAX_LINES, type Line } from './readoutLines';
 
 // Over the machine or intake under the cursor, a small panel of icon and text lines.
 export class HoverReadout {

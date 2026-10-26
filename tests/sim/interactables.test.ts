@@ -2,13 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { FIXTURES } from '../../src/data/claims';
 import { TILE_SIZE } from '../../src/data/config';
 import { HOLLOWS } from '../../src/data/hollows';
-import { INTERACT_KINDS, INTERACT_PROMPTS, type InteractKind } from '../../src/data/interact';
+import { INTERACT_KINDS, INTERACT_LABELS, INTERACT_PROMPTS, type InteractKind } from '../../src/data/interact';
 import { landmarkDef } from '../../src/data/landmarks';
 import { OVERWORLD_ROOM } from '../../src/data/overworld';
 import { FEET_BOX, TUTORIAL_START } from '../../src/data/player';
 import { HOLLOWS_START } from '../../src/data/playtest';
 import { interactTarget } from '../../src/sim/interactables';
 import { diagrams } from '../../src/sim/research';
+import { claim } from '../../src/sim/claims';
+import { SHRINE_SITE } from '../../src/data/rooms';
 import { createSim, roomOf, type SimState } from '../../src/sim/state';
 import { tileCentre } from '../../src/sim/tiles';
 import type { CrateState } from '../../src/sim/pieces';
@@ -150,7 +152,9 @@ describe('the in-reach E prompts (045)', () => {
     const x0 = (tiles[0]?.tx ?? 0) * TILE_SIZE;
     const x1 = ((tiles[tiles.length - 1]?.tx ?? 0) + 1) * TILE_SIZE;
     const prompt = { kind: 'arena-door', x: (x0 + x1) / 2, y: ((tiles[0]?.ty ?? 0) + 0.5) * TILE_SIZE };
-    expect(interactTarget(s)).toEqual(prompt);
+    // fix-bulwark-ease: while the fight is on, the prompt says E leaves and resets it.
+    expect(interactTarget(s)).toEqual({ ...prompt, label: 'leaveFight' });
+    expect(INTERACT_LABELS.leaveFight).toBe('Leave (resets the fight)');
     // 055: with the Bulwark gone, E still leaves.
     s.enemies = [];
     expect(interactTarget(s)).toEqual(prompt);
@@ -182,6 +186,19 @@ describe('the in-reach E prompts (045)', () => {
     building.building = true;
     expect(interactTarget(building)).toBeNull();
     expect(interactTarget(arena())).toBeNull();
+  });
+
+  it("a guarded pylon has no prompt until its guards are gone (fix-playtest-ui, Shaun: \"Should only show E if it needs cleared\")", () => {
+    const s = createSim(7);
+    claim(s, SHRINE_SITE);
+    const pylon = landmarkDef('quarry').pylon;
+    if (!pylon) throw new Error('no quarry pylon');
+    s.roomId = OVERWORLD_ROOM;
+    below(s, pylon);
+    expect(s.enemies.some((e) => e.group === 'quarry')).toBe(true);
+    expect(interactTarget(s)).toBeNull();
+    s.enemies = s.enemies.filter((e) => e.group !== 'quarry');
+    expect(interactTarget(s)?.kind).toBe('pylon');
   });
 
   it('an opened cache has no prompt; a guarded one does (E says it is sealed)', () => {
