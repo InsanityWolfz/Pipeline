@@ -15,6 +15,8 @@ export class SceneCameras {
   private readonly ui: Cameras.Scene2D.Camera;
   /** Whether the attune has the camera off the player (019). */
   private looking = false;
+  /** What waits for the running fade's dark point, in the order asked. */
+  private atDark: (() => void)[] = [];
 
   constructor(scene: Scene, fit: ScreenFit) {
     this.scene = scene;
@@ -29,15 +31,25 @@ export class SceneCameras {
     this.ui.setSize(fit.width, fit.height).setZoom(fit.scale);
   }
 
-  /** Fades both cameras out (the HUD fades with the world), calls `atDark`, then fades back in. */
-  fadeThrough(atDark: () => void): void {
+  /**
+   * Fades both cameras out (the HUD fades with the world), calls `atDark`, then fades back in: a door's fade by default,
+   * or a KO's (`ms` and colour). A fade asked for while one is still darkening joins it, its `atDark` run at the same
+   * dark point (fix-build-inventory-respawn: Phaser's fadeOut restarts a running fade and drops its callback, so walking
+   * out of the foundry during a KO's fade lost the KO's re-follow and the camera stayed by the door).
+   */
+  fadeThrough(atDark: () => void, ms = DOOR_FADE_MS, rgb: readonly [number, number, number] = [0, 0, 0]): void {
     const main = this.scene.cameras.main;
-    this.ui.fadeOut(DOOR_FADE_MS, 0, 0, 0);
-    main.fadeOut(DOOR_FADE_MS, 0, 0, 0, (_cam: unknown, progress: number) => {
+    this.atDark.push(atDark);
+    if (this.atDark.length > 1 && main.fadeEffect.isRunning && main.fadeEffect.direction) return;
+    const [r, g, b] = rgb;
+    this.ui.fadeOut(ms, r, g, b);
+    main.fadeOut(ms, r, g, b, (_cam: unknown, progress: number) => {
       if (progress < 1) return;
-      atDark();
-      main.fadeIn(DOOR_FADE_MS, 0, 0, 0);
-      this.ui.fadeIn(DOOR_FADE_MS, 0, 0, 0);
+      const due = this.atDark;
+      this.atDark = [];
+      for (const run of due) run();
+      main.fadeIn(ms, r, g, b);
+      this.ui.fadeIn(ms, r, g, b);
     });
   }
 

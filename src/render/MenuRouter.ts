@@ -78,6 +78,9 @@ export class MenuRouter {
       if (close) this.m.host.resume();
       return;
     }
+    // fix-build-inventory-respawn: which big centred panels were open before this frame's presses.
+    const big = [inventory, research, talents, craft];
+    const openBefore = big.map((p) => p.isOpen);
     // Esc closes the menus as everywhere else; 057.2: then the sandbox's open panels, before it pauses.
     if (close && talents.isOpen) talents.setOpen(false);
     else if (close && inventory.isOpen) inventory.setOpen(false);
@@ -158,8 +161,12 @@ export class MenuRouter {
     const open = inventory.container;
     if (open !== null && !stillUsable(this.sim, open)) inventory.close();
     if (inventory.stashOpen && !fixtureInReach(this.sim, 'stash')) inventory.close();
+    // fix-build-inventory-respawn (Shaun: "if in build mode and you go into your inventory you should exit build mode"):
+    // opening the inventory (I, Tab, a hopper's or crate's screen, the stash's), or another big centred panel that takes
+    // turns with it (crafting, research, talents), leaves build mode, as Esc does.
+    if (this.sim.building && big.some((p, i) => p.isOpen && !openBefore[i])) controls.requestBuildToggle();
     // 056.5: the sandbox's controls step aside while a big centred panel is open over them, and come back when it closes.
-    sandbox.setCovered([inventory, research, talents, craft].some((p) => p.isOpen) || site.isOpen);
+    sandbox.setCovered(big.some((p) => p.isOpen) || site.isOpen);
   }
 
   /**

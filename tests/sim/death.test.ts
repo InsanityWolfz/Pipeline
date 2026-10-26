@@ -7,6 +7,11 @@ import { OVERWORLD } from '../../src/data/overworld';
 import { claim } from '../../src/sim/claims';
 import type { ConduitState, HopperState } from '../../src/sim/pieces';
 import { createSim } from '../../src/sim/state';
+import { HOLLOWS } from '../../src/data/hollows';
+import { HOLLOWS_START } from '../../src/data/playtest';
+import { roomById } from '../../src/sim/roomLookup';
+import { regionOf } from '../../src/sim/regions';
+import { tileCentre } from '../../src/sim/tiles';
 import { defOf } from '../../src/sim/champions';
 import { stepSim } from '../../src/sim/step';
 import { summarize } from '../../src/sim/summary';
@@ -160,5 +165,22 @@ describe('dying', () => {
       return summarize(s);
     };
     expect(play()).toEqual(play());
+  });
+
+  it('a KO in Stonefall Hollows wakes on the foundry floor at its spawn, with the world grown round it (060, 064)', () => {
+    // fix-build-inventory-respawn: Shaun woke "outside of the foundry" after a death in the Hollows.
+    const s = createSim(SEED, { start: HOLLOWS_START });
+    expect(s.roomId).toBe('overworld');
+    expect(regionOf(s.roomId, s.player)).toBe(HOLLOWS.region);
+    s.player.health = 0;
+    // A move key held through the death: the sim takes no input while it plays.
+    runUntil(s, (x) => x.events.ko, DYING_TICKS + 3, { moveX: 1 });
+    expect(s.roomId).toBe(FOUNDRY_ROOM);
+    const room = roomById(FOUNDRY_ROOM);
+    expect({ x: s.player.x, y: s.player.y }).toEqual(tileCentre(room.spawn));
+    // Its spawn is open floor inside the foundry's walls, not a tile of the overworld's layout.
+    expect(room.rows[room.spawn.ty]?.[room.spawn.tx]).toBe('.');
+    expect(s.player.x).toBeLessThan((room.rows[0]?.length ?? 0) * 32);
+    expect(s.player.y).toBeLessThan(room.rows.length * 32);
   });
 });

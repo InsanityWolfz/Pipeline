@@ -41,6 +41,8 @@ export class Controls {
   private readonly menuKeys = { menu: false, close: false, inventory: false, research: false, talents: false, sandbox: false };
   private buildPending = false;
   private wheelPending = 0;
+  /** Set on waking (fix-build-inventory-respawn): move keys held since are ignored until all are let go. */
+  private moveHeldThroughWake = false;
   /** Choices clicked in the hopper, pylon, stash and bench menus. */
   readonly menus = new MenuRequests();
   /** The ghost's facing, sent with every place. */
@@ -154,6 +156,14 @@ export class Controls {
     return n;
   }
 
+  /**
+   * A KO's or Continue's wake: a move key still held from before is ignored until every move key is up, so it doesn't
+   * walk the player out of the foundry's door (its spawn is the tile beside it) before the wake's fade is over.
+   */
+  holdMoveThroughWake(): void {
+    this.moveHeldThroughWake = true;
+  }
+
   /** Toggles build mode on the next tick, as B does (Esc uses this to leave it). */
   requestBuildToggle(): void {
     this.buildPending = true;
@@ -207,10 +217,13 @@ export class Controls {
     const { x: aimX, y: aimY } = this.mouse.cursorPoint();
     const building = this.mouse.build.building;
     const uiPress = this.mouse.uiPress;
+    const { left, right, up, down } = this.keys;
+    if (![left, right, up, down].some((k) => k.isDown)) this.moveHeldThroughWake = false;
+    const still = this.moveHeldThroughWake;
     const command: Command = {
       ...NO_COMMAND,
-      moveX: axis(this.keys.left, this.keys.right),
-      moveY: axis(this.keys.up, this.keys.down),
+      moveX: still ? 0 : axis(left, right),
+      moveY: still ? 0 : axis(up, down),
       dodge: this.dodgePending,
       aimX,
       aimY,

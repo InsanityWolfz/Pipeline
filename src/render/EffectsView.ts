@@ -23,8 +23,10 @@ import { registerAnim } from './anims';
 import { colorOf } from './color';
 import { burstTint, tintBurst } from './roundLook';
 import { addVector, addVectorSprite } from './vector/textures';
-import { UI_CAMERA } from './scale';
 import { settings } from './flow/settingsStore';
+
+/** Fades both cameras out over `ms` in colour `rgb`, calls `atDark`, and fades back in (SceneCameras.fadeThrough). */
+export type FadeThrough = (atDark: () => void, ms: number, rgb: readonly [number, number, number]) => void;
 
 // One-shot effects driven by sim events: corpses, pickup sparkles,
 // fire bursts, muzzle flashes, the punch's swoosh, the deposit swirl, and the KO fade. Nothing here feeds back into the sim.
@@ -33,6 +35,8 @@ export class EffectsView {
   private readonly camera: Cameras.Scene2D.Camera;
   /** What the camera follows, re-followed after a KO. */
   private readonly followed: GameObjects.Image;
+  /** Both cameras' fade to dark and back (SceneCameras.fadeThrough), which the KO's fade shares with the doors'. */
+  private readonly fadeThrough: FadeThrough;
   /** Corpses still on screen; a KO clears them with the rest of the room. */
   private readonly corpses = new Set<GameObjects.Sprite>();
   /** Punch swooshes still drawn (023), for the test hook. */
@@ -40,8 +44,9 @@ export class EffectsView {
   /** Split flashes still drawn (029). */
   private flashes = 0;
 
-  constructor(scene: Scene, followed: GameObjects.Image) {
+  constructor(scene: Scene, followed: GameObjects.Image, fadeThrough: FadeThrough) {
     this.scene = scene;
+    this.fadeThrough = fadeThrough;
     this.camera = scene.cameras.main;
     this.followed = followed;
     registerAnim(scene, PICKUP_SPARKLE);
@@ -191,16 +196,10 @@ export class EffectsView {
       corpse.destroy();
     }
     this.camera.stopFollow();
-    const [r, g, b] = hexToRgb(paletteHex(INK_ID));
-    // The HUD fades with the world (016: it draws on its own camera).
-    const ui = this.scene.cameras.getCamera(UI_CAMERA);
-    ui?.fadeOut(KO_FADE_MS, r, g, b);
-    this.camera.fadeOut(KO_FADE_MS, r, g, b, (_cam: Cameras.Scene2D.Camera, progress: number) => {
-      if (progress < 1) return;
+    // The HUD fades with the world (016: it draws on its own camera); a door's fade asked for meanwhile joins this one.
+    this.fadeThrough(() => {
       this.camera.centerOn(player.x, player.y);
       this.camera.startFollow(this.followed, true, CAMERA_LERP, CAMERA_LERP);
-      this.camera.fadeIn(KO_FADE_MS, r, g, b);
-      ui?.fadeIn(KO_FADE_MS, r, g, b);
-    });
+    }, KO_FADE_MS, hexToRgb(paletteHex(INK_ID)));
   }
 }
