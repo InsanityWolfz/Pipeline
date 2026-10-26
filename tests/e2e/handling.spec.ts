@@ -155,8 +155,22 @@ test('the player shows as a silhouette behind a ruin block and a tree, and not i
   await expect.poll(async () => (await ui(page))?.silhouette).toBe(false);
   // Behind a grove tree's trunk.
   const tree = await nearestTree(page);
-  await page.evaluate((t) => window.__helpers?.walkTo(t.x, t.y - 28), tree);
+  // Settled (the walk ends still moving), so the player stands exactly still while cutting.
+  await page.evaluate((t) => {
+    window.__helpers?.walkTo(t.x, t.y - 28);
+    window.__GAME__?.step(30);
+  }, tree);
   await expect.poll(async () => (await ui(page))?.silhouette).toBe(true);
+  const still = (await state(page))?.player;
+  // Cut down to a stump from under its canopy without moving: nothing hides the player any more.
+  const stump = await page.evaluate(() => {
+    const g = window.__GAME__;
+    g?.step(1, { interact: true, interactHeld: true });
+    return g?.step(30 * 3, { interactHeld: true });
+  });
+  expect(stump?.nodes.find((n) => n.id === tree.id)?.uses).toBe(0);
+  expect({ x: stump?.player.x, y: stump?.player.y }).toEqual({ x: still?.x, y: still?.y });
+  await expect.poll(async () => (await ui(page))?.silhouette).toBe(false);
   expect(errors).toEqual([]);
 });
 

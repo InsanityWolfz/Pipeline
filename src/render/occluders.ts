@@ -24,6 +24,14 @@ export function hiddenShare(samples: readonly Point[], covered: (p: Point) => bo
   return samples.length === 0 ? 0 : samples.filter(covered).length / samples.length;
 }
 
+/**
+ * The cover test's cache key: the feet point and each prop in front with its frame, so a tree cut to a stump (NodeView
+ * swaps its frame on the same image) or regrown is tested again. '' with nothing in front.
+ */
+export function coverKey(x: number, y: number, props: readonly { x: number; y: number; frame: { name: string } }[]): string {
+  return props.length === 0 ? '' : `${Math.round(x)},${Math.round(y)}|${props.map((o) => `${Math.round(o.x)},${Math.round(o.y)},${o.frame.name}`).join('|')}`;
+}
+
 type Prop = GameObjects.Image | GameObjects.Sprite;
 
 /** The registry's buckets are this many px square (props stand still; a frame looks only at the buckets round the player). */

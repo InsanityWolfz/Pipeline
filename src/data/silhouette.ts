@@ -11,6 +11,8 @@ export const PLAYER_SILHOUETTE = {
   samples: { cols: 3, rows: 5 },
   /** The share of those points that props in front must cover (drawn pixels at least `alphaAtLeast` of 255) to hide the player. */
   cover: 0.3,
+  /** Props standing farther than this from the feet, px either way, are never tested (the tallest props' height). */
+  reach: 96,
   alphaAtLeast: 128,
   /** What hides the player (and nothing else): ruin blocks and grove trees (tiles), tree nodes, the bench and machines. */
   nodes: ['tree'] as readonly string[],

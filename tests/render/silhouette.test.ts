@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PLAYER_SILHOUETTE } from '../../src/data/silhouette';
 import { DEPTHS } from '../../src/data/assets';
-import { bodySamples, hiddenShare, type Point } from '../../src/render/occluders';
+import { bodySamples, coverKey, hiddenShare, type Point } from '../../src/render/occluders';
 
 // 070: the player shows as a soft silhouette while behind ruin blocks, trees, the bench or machines: enough points over
 // their body land on the drawn pixels of a prop sorted in front of them (the Occluders registry reads the pixels).
@@ -30,6 +30,19 @@ describe('the silhouette (070)', () => {
     expect(hiddenShare(samples, corner)).toBeLessThan(PLAYER_SILHOUETTE.cover);
     // Leaves over the upper half.
     expect(hiddenShare(samples, (p) => p.y < FEET.y - B.h / 2)).toBeGreaterThanOrEqual(PLAYER_SILHOUETTE.cover);
+  });
+
+  it("the cover test's cache key changes when a prop in front changes its frame (a tree cut to a stump, or regrown)", () => {
+    const tree = { x: 100, y: 230, frame: { name: 'tree-3' } };
+    const before = coverKey(FEET.x, FEET.y, [tree]);
+    expect(coverKey(FEET.x, FEET.y, [tree])).toBe(before);
+    expect(coverKey(FEET.x, FEET.y, [{ ...tree, frame: { name: 'tree-stump' } }])).not.toBe(before);
+    expect(coverKey(FEET.x + 1, FEET.y, [tree])).not.toBe(before);
+    expect(coverKey(FEET.x, FEET.y, [])).toBe('');
+  });
+
+  it('reaches as far as the tallest props stand from the feet', () => {
+    expect(PLAYER_SILHOUETTE.reach).toBeGreaterThanOrEqual(64);
   });
 
   it('draws over the world and under its UI, as a faint tint with a rim', () => {

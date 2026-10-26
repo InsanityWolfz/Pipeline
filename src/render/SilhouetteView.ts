@@ -2,10 +2,8 @@ import { TintModes, type GameObjects, type Scene } from 'phaser';
 import { DEPTHS, WANDERER_KEY } from '../data/assets';
 import { PLAYER_SILHOUETTE } from '../data/silhouette';
 import { colorOf } from './color';
-import { bodySamples, Occluders } from './occluders';
+import { bodySamples, coverKey, Occluders } from './occluders';
 
-/** How far from the feet a registered prop's position may be and still be measured, px (the tallest props' height). */
-const REACH = 96;
 
 // 070: while a ruin block, a grove tree, the bench or a machine stands in front of the player and hides them, the
 // player shows through it as a soft silhouette: the wanderer's own frame drawn again over every prop, filled with a
@@ -16,7 +14,7 @@ export class SilhouetteView {
   /** Whether it shows now (`ui().silhouette`). */
   shown = false;
   private readonly occluders: Occluders;
-  /** The last test's player point, depth and props in front: an unchanged one keeps its answer (the pixel reads cost). */
+  /** The last test's key (coverKey): an unchanged one keeps its answer (the pixel reads cost). */
   private last = '';
 
   /** Made after PlayerView, whose canvas texture it shares. */
@@ -31,8 +29,8 @@ export class SilhouetteView {
 
   /** Follows the player's sprite; `visible` false (another room, or the KO's fall) hides it. */
   update(player: GameObjects.Image, visible: boolean): void {
-    const front = visible && player.visible ? this.occluders.inFront(player.x, player.y, player.depth, REACH) : [];
-    const key = front.length === 0 ? '' : `${Math.round(player.x)},${Math.round(player.y)},${front.length}`;
+    const front = visible && player.visible ? this.occluders.inFront(player.x, player.y, player.depth, PLAYER_SILHOUETTE.reach) : [];
+    const key = coverKey(player.x, player.y, front);
     if (key !== this.last) {
       this.last = key;
       this.shown = front.length > 0 && Occluders.coveredShare(front, bodySamples(player.x, player.y)) >= PLAYER_SILHOUETTE.cover;
