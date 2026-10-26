@@ -13,6 +13,8 @@ export const INTERACT_KINDS = [
   'waystone',
   'stash',
   'bench',
+  // 072: a woken return stone outside a boss arena's door (E offers "Travel to foundry").
+  'return-stone',
   'cache',
   'diagram',
   'hopper',
@@ -56,6 +58,8 @@ export const INTERACT_PROMPTS: Readonly<Record<InteractKind, InteractPrompt>> = 
   // its middle's height, on the side away from the player (in the foundry, on the door's wall below the doorway),
   // never on the player's chest.
   bench: { key: 'E', rise: 0, beside: TILE_SIZE * 0.75 },
+  // 072: the stone stands as tall as the waystone.
+  'return-stone': { key: 'E', rise: OVER },
   cache: { key: 'E', rise: OVER },
   diagram: { key: 'E', rise: OVER },
   hopper: { key: 'E', rise: OVER },

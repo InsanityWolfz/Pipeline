@@ -11,6 +11,7 @@ import { interactTarget } from '../../src/sim/interactables';
 import { diagrams } from '../../src/sim/research';
 import { claim } from '../../src/sim/claims';
 import { SHRINE_SITE } from '../../src/data/rooms';
+import { RETURN_STONES } from '../../src/data/returnStones';
 import { createSim, roomOf, type SimState } from '../../src/sim/state';
 import { tileCentre } from '../../src/sim/tiles';
 import type { CrateState } from '../../src/sim/pieces';
@@ -83,6 +84,17 @@ const SCENES: Readonly<Record<InteractKind, () => SimState>> = {
     const s = foundry();
     const b = fixture('bench');
     const at = tileCentre({ tx: b.tx + 1, ty: b.ty });
+    movePlayer(s, at.x, at.y);
+    return s;
+  },
+  // 072: a woken return stone, the player on its arrive tile.
+  'return-stone': () => {
+    const s = createSim(5, { start: HOLLOWS_START });
+    s.enemies = [];
+    const stone = RETURN_STONES[0];
+    if (!stone) throw new Error('no return stone');
+    s.returnStones = [stone.id];
+    const at = tileCentre(stone.arrive);
     movePlayer(s, at.x, at.y);
     return s;
   },

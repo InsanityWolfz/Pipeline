@@ -3,6 +3,8 @@ import { ACTIVATE_TICKS, CLAIM_TICKS, FIXTURE_REACH, FIXTURES, PYLON_REACH, SITE
 import { TICK_RATE } from '../data/config';
 import { FEET_BOX } from '../data/player';
 import { FOUNDRY_ROOM, SANDBOX_ROOM, type PylonDef } from '../data/rooms';
+import { OVERWORLD_ROOM } from '../data/overworld';
+import { RETURN_STONES } from '../data/returnStones';
 import { SANDBOX } from '../data/sandbox';
 import type { Command } from './input';
 import { count } from './inventory';
@@ -54,6 +56,26 @@ export const dormant = (state: Pick<SimState, 'claims'>, p: PylonDef): boolean =
 export function claimedPylons(state: Pick<SimState, 'claims'>): { roomId: string; pylon: PylonDef }[] {
   const all = Object.values(WORLD).flatMap((room) => (room.pylons ?? []).map((pylon) => ({ roomId: room.id, pylon })));
   return state.claims.flatMap((site) => all.filter((p) => p.pylon.site === site));
+}
+
+/** A fast travel destination (032; 072): a claimed pylon by its site, or a woken return stone by its id. */
+export interface Destination {
+  id: string;
+  /** Its name in the travel menus: the pylon's landmark, or the stone's arena and "door". */
+  name: string;
+  roomId: string;
+  /** Where travel stands the player: one below the pylon, or the stone's `arrive` tile. */
+  tile: Tile;
+}
+
+/** Fast travel's destinations (072): the claimed pylons in claim order, then the woken return stones in wake order. */
+export function travelDestinations(state: Pick<SimState, 'claims' | 'returnStones'>): Destination[] {
+  const pylons = claimedPylons(state).map(({ roomId, pylon }) => ({ id: pylon.site, name: pylon.name, roomId, tile: { tx: pylon.tx, ty: pylon.ty + 1 } }));
+  const stones = state.returnStones.flatMap((id) => {
+    const s = RETURN_STONES.find((r) => r.id === id);
+    return s ? [{ id, name: s.name, roomId: OVERWORLD_ROOM, tile: s.arrive }] : [];
+  });
+  return [...pylons, ...stones];
 }
 
 /** The fixture of a kind in reach, if the player is in the foundry (044: or the bench's twin in the sandbox's room). */
@@ -114,7 +136,11 @@ export function stepClaims(state: SimState, cmd: Command): Command {
   if (state.activatePulse > 0) state.activatePulse -= 1;
   advanceHold(state, cmd);
   if (cmd.pylon) usePylon(state, cmd.pylon);
-  if (cmd.travel !== null && fixtureInReach(state, 'waystone')) travelToPylon(state, cmd.travel);
+  // The waystone's travel is spent here, so nothing later in the tick reads it again from where it landed (072).
+  if (cmd.travel !== null && fixtureInReach(state, 'waystone')) {
+    travelToDestination(state, cmd.travel);
+    cmd = { ...cmd, travel: null };
+  }
   if (!cmd.interact) return cmd;
   const pylon = pylonInReach(state);
   if (pylon) {
@@ -126,9 +152,10 @@ export function stepClaims(state: SimState, cmd: Command): Command {
     return { ...cmd, interact: false };
   }
   if (fixtureInReach(state, 'waystone')) {
-    // With two or more claimed pylons, render opens the waystone's menu (032), whose choice comes back as `travel`.
-    const [only, ...more] = claimedPylons(state);
-    if (only && more.length === 0) travelToPylon(state, only.pylon.site);
+    // With two or more destinations (claimed pylons, 072: and woken return stones), render opens the waystone's menu
+    // (032), whose choice comes back as `travel`.
+    const [only, ...more] = travelDestinations(state);
+    if (only && more.length === 0) travelToDestination(state, only.id);
     return { ...cmd, interact: false };
   }
   // E on the stash or the bench opens render's menu, whose choice comes back as a command.
@@ -192,10 +219,10 @@ function usePylon(state: SimState, action: 'deposit' | 'travel'): void {
   bank(state);
 }
 
-/** The waystone: to a claimed pylon by its site, standing one tile below it. */
-function travelToPylon(state: SimState, site: string): void {
-  const to = claimedPylons(state).find((p) => p.pylon.site === site);
-  if (to) travelTo(state, to.roomId, { tx: to.pylon.tx, ty: to.pylon.ty + 1 });
+/** To a destination by id (072: a claimed pylon's site, or a woken return stone's id); an unknown one does nothing. */
+export function travelToDestination(state: SimState, id: string): void {
+  const to = travelDestinations(state).find((d) => d.id === id);
+  if (to) travelTo(state, to.roomId, to.tile);
 }
 
 /** How many claimed sites supply a raw (028): its port's pylon count. `supply` defaults to the game's site table. */

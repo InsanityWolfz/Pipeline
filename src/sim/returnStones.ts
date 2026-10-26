@@ -1,14 +1,19 @@
 import { ARENAS } from '../data/arenas';
 import { RETURN_STONE, RETURN_STONES, type ReturnStoneDef } from '../data/returnStones';
 import { playerInside } from './arenaLock';
-import { gapTo } from './claims';
-import { roomOf } from './roomLookup';
+import { FIXTURE_REACH } from '../data/claims';
+import { FOUNDRY_ROOM } from '../data/rooms';
+import { claimedPylonInReach, gapTo, travelTo, travelToDestination } from './claims';
+import type { Command } from './input';
+import { roomById, roomOf } from './roomLookup';
 import type { SimState } from './state';
 
 // Boss return points (072): a return waystone just outside each boss arena's door (src/data/returnStones.ts). It is
 // dormant until the player first walks within its wake reach outside every arena, then woken for good (kept through a
 // KO and saved), with an event render glows and chimes on. A woken stone is a fast travel destination
-// (src/sim/claims.ts `travelDestinations`). No safe zone, deposit or supply, and no XP.
+// (src/sim/claims.ts `travelDestinations`), from the foundry's waystone and from a claimed pylon's menu, and E at it
+// offers "Travel to foundry" (`travel` = FOUNDRY_ROOM). No safe zone, deposit or supply, and no XP. The sandbox's stand
+// woken but travel nowhere: the sandbox has no way to the foundry.
 
 /** True once a return stone has woken. */
 export const isWoken = (state: Pick<SimState, 'returnStones'>, id: string): boolean => state.returnStones.includes(id);
@@ -32,4 +37,30 @@ export function stepReturnWake(state: SimState): void {
     state.returnStones.push(s.id);
     state.events.returnWakes.push({ id: s.id });
   }
+}
+
+/** The return stone in the player's room nearest their feet within E's reach (a fixture's), woken or not, if any. */
+export function returnStoneInReach(state: SimState): ReturnStoneDef | undefined {
+  let best: ReturnStoneDef | undefined;
+  for (const s of stonesHere(state)) if (gapTo(state, s) <= FIXTURE_REACH && (!best || gapTo(state, s) < gapTo(state, best))) best = s;
+  return best;
+}
+
+/** The woken return stone in reach whose E offers "Travel to foundry", if any: never the sandbox's. */
+export function usableStoneInReach(state: SimState): ReturnStoneDef | undefined {
+  const s = returnStoneInReach(state);
+  return s && !state.sandbox && isWoken(state, s.id) ? s : undefined;
+}
+
+/**
+ * After the pylons and fixtures: a woken stone's menu choice home (`travel` = FOUNDRY_ROOM), a claimed pylon's menu choice
+ * of a woken stone (`travel` = its id), and E at a woken stone, which opens render's menu (so it doesn't also harvest).
+ * Returns the command the rest of the tick sees.
+ */
+export function stepReturnStones(state: SimState, cmd: Command): Command {
+  if (cmd.travel !== null) {
+    if (cmd.travel === FOUNDRY_ROOM && usableStoneInReach(state)) travelTo(state, FOUNDRY_ROOM, roomById(FOUNDRY_ROOM).spawn);
+    else if (isWoken(state, cmd.travel) && claimedPylonInReach(state)) travelToDestination(state, cmd.travel);
+  }
+  return cmd.interact && usableStoneInReach(state) ? { ...cmd, interact: false } : cmd;
 }
