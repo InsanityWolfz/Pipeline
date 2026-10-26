@@ -104,3 +104,6 @@ Already fixed from this round: Shaun's two bugs, plus tester 2's exact repro of 
 - **The Forgewright's fan puzzle** clicks; venting it feels earned.
 - **The Hollows' look**, landmark discovery, the gear bench's "Identify all", and claiming the shrine all feel like rewards.
 - **Small touches:** the punch is viable with no ammo, and the hand-craft ratios feel generous.
+
+## Shaun's calls (see docs/brainstorm/2026-10-26-playtest-calls.md on spec 067's branch)
+Fixed and merged: the playtest UI batch (InsanityWolfz/Pipeline#88) and easing the Bulwark (#87; 900 HP, slight enrage). Shaun, 2026-10-26: an enraged lob keeps throwing 1 bomb ("keep 1 bomb"). Specs 067–072 approved.
