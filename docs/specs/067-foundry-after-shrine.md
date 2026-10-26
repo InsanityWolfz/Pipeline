@@ -1,5 +1,7 @@
 # 067: The foundry after the first boss
-status: draft
+status: approved
+
+Approved by Shaun in chat, 2026-10-26 ("approve 67 and 68"), with the draft's listed decisions; its plan is pre-approved.
 
 Drafted from Shaun's playtest calls and his OK of the proposal (docs/brainstorm/2026-10-26-playtest-calls.md, "The opening"), 2026-10-26.
 
