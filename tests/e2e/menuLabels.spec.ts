@@ -49,11 +49,13 @@ async function openBuildBar(page: Page): Promise<BuildBarState> {
 /** The build bar's selection, once the next frame has drawn it. */
 const selected = async (page: Page) => (await page.evaluate(() => window.__GAME__?.ui().buildBar))?.selected;
 
-/** One wheel notch down over the canvas, which steps the build bar one piece along. */
+/** One wheel notch down over the build bar (069: over the world the wheel zooms), which steps the bar one piece along. */
 async function wheel(page: Page, expected: string): Promise<void> {
   const box = await page.locator('canvas').boundingBox();
-  if (!box) throw new Error('no canvas');
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 3);
+  const cell = (await page.evaluate(() => window.__GAME__?.ui().buildBar))?.cells[0];
+  if (!box || !cell) throw new Error('no canvas or bar');
+  const k = box.width / VIEW_WIDTH;
+  await page.mouse.move(box.x + (cell.x + cell.w / 2) * k, box.y + (cell.y + cell.h / 2) * k);
   await page.mouse.wheel(0, 100);
   await expect.poll(() => selected(page)).toBe(expected);
 }

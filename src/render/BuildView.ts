@@ -10,7 +10,7 @@ import { buildBarLabelTop } from './bottomHud';
 import { buildBarBox, buildBarCells, buildBarDividers, buildBarGroups, inRect, pieceIcon, type ScreenRect } from './foundryLayout';
 import { MAX_ARROWS, placeArrows } from './FoundryView';
 import { bodyFrame, showGhost } from './ghostLook';
-import { toView } from './scale';
+import { toView, viewScale } from './scale';
 import { Pulse } from './pulse';
 import { BuildStripView, type BuildStripState } from './BuildStripView';
 import { GuideBar, type GuideBarState } from './GuideBar';
@@ -149,7 +149,7 @@ export class BuildView {
     this.setVisible(building);
     this.strip.update(building);
     const pointer = this.scene.input.activePointer;
-    const at = toView(pointer.x, pointer.y, this.scene.cameras.main.zoom);
+    const at = toView(pointer.x, pointer.y, viewScale(this.scene));
     const hovered = building ? buildBarCells(unlocked).find((c) => inRect(c, at.x, at.y)) : undefined;
     this.tipShown = hovered?.pieceId ?? null;
     this.showPulse(building ? buildBarCells(unlocked).find((c) => c.pieceId === highlight) : undefined);

@@ -28,6 +28,8 @@ export interface Menus {
   site: SiteMenus;
   /** 047: the carried bar's slot under a point (a dragged stack lands there). */
   carriedSlotAt: (x: number, y: number) => number | null;
+  /** 069: the wheel over the world in build mode steps the world's zoom. */
+  zoom: (steps: number) => void;
   build: BuildView;
   /** 063: the Tools group and the area box's menu. */
   blueprints: BlueprintUi;
@@ -49,7 +51,7 @@ export interface Menus {
 // what's open (the inventory or a hopper's or crate's screen, a site menu, the craft
 // menu, build mode), else opens or closes the pause menu, which stops the world; T the
 // talent tree (037), which takes turns with the inventory and the research list; the
-// wheel steps the build bar, or scrolls the open grid; E opens a hopper's or crate's
+// wheel steps the build bar (069: over the bar; over the world it zooms), or scrolls the open grid; E opens a hopper's or crate's
 // screen (047) or a site menu. These work under the test hook too; only ticking is left to it.
 export class MenuRouter {
   private readonly sim: SimState;
@@ -138,10 +140,12 @@ export class MenuRouter {
       }
     }
     const steps = controls.takeWheel();
-    if (steps !== 0 && this.sim.building) {
+    // 069: in build mode the wheel over the bar steps it (020); over the world it zooms.
+    const v = controls.viewPointer();
+    if (steps !== 0 && this.sim.building && build.overUi(v.x, v.y)) {
       build.step(steps);
       controls.clearHand();
-    }
+    } else if (steps !== 0 && this.sim.building) this.m.zoom(steps);
     else if (steps !== 0 && !site.scrollGear(steps)) inventory.scroll(steps, controls.viewPointer());
     // E on a hopper or crate opens its screen (047); the sim does nothing with it. With the restore panel open, E again restores (033).
     const press = controls.takeInteractPress();

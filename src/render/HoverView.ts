@@ -64,9 +64,9 @@ export class HoverView {
 
   /**
    * `point` is the world point under the cursor, or null when it's over UI;
-   * `topOf` gives a drawn foundry piece's sprite top; `view` (the camera's top left) keeps panels on screen.
+   * `topOf` gives a drawn foundry piece's sprite top; `view` (the camera's world view: its top left, and its size) keeps panels on screen.
    */
-  update(sim: SimState, shown: string, point: { x: number; y: number } | null, topOf: (id: number) => number | undefined, view: { x: number; y: number }): void {
+  update(sim: SimState, shown: string, point: { x: number; y: number } | null, topOf: (id: number) => number | undefined, view: { x: number; y: number; width?: number; height?: number }): void {
     const viewTop = view.y;
     const hit = point ? nameAt(sim, shown, point.x, point.y) : null;
     this.shown = hit?.name ?? null;
@@ -142,7 +142,8 @@ export class HoverView {
       w: w + 2 * pad,
       h: h + 2 * pad,
       avoid,
-      view: { x: view.x, y: viewTop, w: VIEW_WIDTH, h: VIEW_HEIGHT },
+      // 069: the world view's own size (larger in build mode's zoom out), else the view's.
+      view: { x: view.x, y: viewTop, w: view.width ?? VIEW_WIDTH, h: view.height ?? VIEW_HEIGHT },
       edge: 0,
     });
     const y = Math.round(at.y + pad);

@@ -109,7 +109,10 @@ export class GameScene extends Scene {
     this.host = host;
     this.room = new RoomFollow(sim.roomId, {
       playerRoom: () => this.sim.roomId,
-      show: (roomId) => this.roomViews?.show(roomById(roomId)),
+      show: (roomId) => {
+        this.roomViews?.show(roomById(roomId));
+        this.sceneCameras?.roomShown();
+      },
       fadeThrough: (atDark) => this.sceneCameras?.fadeThrough(atDark),
       centreOnPlayer: () => this.cameras.main.centerOn(this.sim.player.x, this.sim.player.y),
     });
@@ -161,7 +164,7 @@ export class GameScene extends Scene {
 
     this.controls = new Controls(this, this.sim.sandbox !== undefined);
     if (this.menu && this.pause && this.siteMenus && this.buildView && this.feel && this.hud && this.wake && this.legibility && this.sandboxPanel && this.blueprintUi)
-      this.router = new MenuRouter(this.sim, { blueprints: this.blueprintUi, craft: this.menu, pause: this.pause, site: this.siteMenus, carriedSlotAt: (x, y) => this.hud?.carriedSlotAt(x, y) ?? null, build: this.buildView, sound: this.feel.sound, inventory: this.hud.inventory, research: this.hud.research, talents: this.hud.talents, wake: this.wake, legibility: this.legibility, host: this.host, sandbox: this.sandboxPanel });
+      this.router = new MenuRouter(this.sim, { blueprints: this.blueprintUi, craft: this.menu, pause: this.pause, site: this.siteMenus, carriedSlotAt: (x, y) => this.hud?.carriedSlotAt(x, y) ?? null, zoom: (steps) => this.sceneCameras?.zoomBy(steps), build: this.buildView, sound: this.feel.sound, inventory: this.hud.inventory, research: this.hud.research, talents: this.hud.talents, wake: this.wake, legibility: this.legibility, host: this.host, sandbox: this.sandboxPanel });
   }
 
   /** Matches both cameras to the backbuffer (016). Called on boot and whenever the window changes. */
@@ -235,6 +238,8 @@ export class GameScene extends Scene {
     if (!this.effects) return;
     const sim = this.sim;
     this.room.follow(this.pending.woke);
+    // 069: build mode's zoom goes back to 1× as build mode ends.
+    if (!sim.building) this.sceneCameras?.resetZoom();
     if (!this.room.fading && this.playerView) this.sceneCameras?.attuneLook(sim, this.room.shownRoomId, this.playerView.sprite);
     this.sceneCameras?.bossLook(bossLookTarget(sim), this.game.loop.delta);
     this.effects.play(this.pending, sim.player);
