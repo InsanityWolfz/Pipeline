@@ -43,6 +43,7 @@ export function gameUi(g: GameScene): GameUiState {
     camera: { x: main?.centerX ?? 0, y: main?.centerY ?? 0, player: { x: g.playerView?.sprite.x ?? 0, y: g.playerView?.sprite.y ?? 0 }, fading: g.cameras?.main?.fadeEffect.isRunning ?? false },
     // 065: the slow's wind curls round the player.
     slowSwirl: g.playerView?.swirling ?? false,
+    threats: g.threatView?.shown ?? [],
     hud: g.hud?.bottom ?? null,
     ...(g.hud?.panels ?? NO_HUD_PANELS),
     craftMenu: g.menu?.state ?? null,

@@ -74,6 +74,11 @@ export class TutorialUi {
     };
   }
 
+  /** 071: the objective band's box while it shows (view px), else null. */
+  get objectiveBox(): ScreenBox | null {
+    return this.objective.box;
+  }
+
   /** True over the objective band, so a press there never fires (015). */
   overUi(x: number, y: number): boolean {
     return this.objective.overUi(x, y);

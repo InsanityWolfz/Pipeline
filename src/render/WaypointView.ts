@@ -1,6 +1,5 @@
 import { Cameras, type GameObjects, type Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
-import { VIEW_WIDTH } from '../data/config';
 import { TUTORIAL_LAYOUT, TUTORIAL_SPRITES } from '../data/foundryAssets';
 import { ITEM_ICON_SIZE } from '../data/hudLayout';
 import { itemDef } from '../data/items';
@@ -9,7 +8,7 @@ import { objectiveTargets, waypoint, type GoalPoint, type Waypoint } from '../si
 import type { SimState } from '../sim/state';
 import { Pulse } from './pulse';
 import { drawTablet } from './tablet';
-import { arrowTip, clearOfPrompts, placeArrow, viewAt, type ViewRect } from './waypointPlace';
+import { arrowTip, boxesInView, clearOfPrompts, placeArrow, viewAt, type ViewRect } from './waypointPlace';
 import { addVector, showFrame } from './vector/textures';
 import type { ScreenBox } from './bottomHud';
 
@@ -23,6 +22,13 @@ export interface WaypointShown {
   kind: string;
   /** 051 (B.2): targets marked with a raw, each by its arrow's tip (world px) and the raw's icon (067: none since the refill goal went). */
   icons: { itemId: string; x: number; y: number }[];
+}
+
+/** The view a camera's scroll gives now, kept inside its bounds (057.6; 071's threat arrows too). */
+export function scrollView(c: Cameras.Scene2D.Camera): { x: number; y: number; width: number; height: number } {
+  const sx = c.useBounds ? c.clampX(c.scrollX) : c.scrollX;
+  const sy = c.useBounds ? c.clampY(c.scrollY) : c.scrollY;
+  return viewAt(sx, sy, c.width, c.height, c.zoom);
 }
 
 interface Marked {
@@ -71,19 +77,14 @@ export class WaypointView {
     // 057.6: placed now against the view the camera's scroll gives, deliberately: while the camera isn't following
     // (the attune's look centres it by hand, stopFollow) no follow update comes. When it follows, the follow update
     // places it again once the view has moved this frame.
-    const c = this.scene.cameras.main;
-    const sx = c.useBounds ? c.clampX(c.scrollX) : c.scrollX;
-    const sy = c.useBounds ? c.clampY(c.scrollY) : c.scrollY;
-    this.place(viewAt(sx, sy, c.width, c.height, c.zoom));
+    this.place(scrollView(this.scene.cameras.main));
   }
 
   /** The arrow and the hoppers' marks against the camera's view (world px). */
   private place(view: { x: number; y: number; width: number; height: number }): void {
     const { wp, raws, hud, prompts } = this.goal;
     const rect: ViewRect = { x0: view.x, y0: view.y, x1: view.x + view.width, y1: view.y + view.height };
-    // A view px is a world px (both cameras share the screen's zoom), so a HUD box sits at the view's corner plus its own.
-    const z = view.width / VIEW_WIDTH;
-    const boxes: ViewRect[] = hud.map((b) => ({ x0: view.x + b.x * z, y0: view.y + b.y * z, x1: view.x + (b.x + b.w) * z, y1: view.y + (b.y + b.h) * z }));
+    const boxes = boxesInView(view, hud);
     const marked = raws.flatMap((p) => {
       const tip = clearOfPrompts(arrowTip(p), prompts);
       return p.itemId && placeArrow(rect, tip, boxes).mode === 'over' ? [{ itemId: p.itemId, ...tip, base: p.y }] : [];

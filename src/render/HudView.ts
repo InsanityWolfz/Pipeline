@@ -130,6 +130,11 @@ export class HudView {
     return boxes;
   }
 
+  /** 071: the boss bar's box while a boss fights (view px), else null. */
+  get bossBox(): ScreenBox | null {
+    return this.boss.box;
+  }
+
   /** A screen point on any part of the HUD or the open inventory panel: a press there never fires (015). */
   overUi(x: number, y: number): boolean {
     const parts = [this.tubeSlot.box, this.health.box, ...this.feed.boxes];

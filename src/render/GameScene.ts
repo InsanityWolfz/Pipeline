@@ -46,6 +46,7 @@ import { TunnelView } from './TunnelView';
 import { drawPointerUi } from './pointerUi';
 import { RoomFollow } from './roomFollow';
 import { BlueprintUi } from './BlueprintUi';
+import { ThreatView } from './ThreatView';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -65,6 +66,8 @@ export class GameScene extends Scene {
   arrowView?: ArrowView;
   hud?: HudView;
   enemyView?: EnemyView;
+  /** 071: the off-screen threat arrows. */
+  threatView?: ThreatView;
   groundItemView?: GroundItemView;
   effects?: EffectsView;
   nodeView?: NodeView;
@@ -132,6 +135,7 @@ export class GameScene extends Scene {
     this.groundItemView = new GroundItemView(this);
     this.enemyView = new EnemyView(this);
     this.playerView = new PlayerView(this);
+    this.threatView = new ThreatView(this);
     this.effects = new EffectsView(this, this.playerView.sprite, (atDark, ms, rgb) => this.sceneCameras?.fadeThrough(atDark, ms, rgb));
     this.arrowView = new ArrowView(this);
     this.bombView = new BombView(this);
@@ -258,7 +262,11 @@ export class GameScene extends Scene {
     this.foundryView?.update(sim.foundry, inFoundry, sim.building);
     this.nodeView?.update(inRoom(sim.nodes, shown), sim.harvest, this.game.loop.delta);
     this.groundItemView?.update(inRoom(sim.groundItems, shown), picked, sim.player, sim);
-    this.enemyView?.update(inRoom(sim.enemies, shown), sim);
+    // 071: the room's enemies, filtered once a frame for both views.
+    const enemies = inRoom(sim.enemies, shown);
+    this.enemyView?.update(enemies, sim);
+    const clear = [this.tutorial?.objectiveBox, this.hud?.bossBox].flatMap((b) => (b ? [b] : []));
+    this.threatView?.update(sim, enemies, shown, [...hudBoxes, ...clear], true, this.game.loop.delta);
     // Through a door's fade the player is already in the next room; hide them until it shows.
     this.playerView?.update(sim.player, sim.tube, sim.link, bodyLook(sim), sim.hasTube, shown === sim.roomId);
     this.arrowView?.update(inRoom(sim.arrows, shown));

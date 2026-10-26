@@ -37,6 +37,7 @@ import type { HollowsEnemiesShown } from './hollowsEnemyArt';
 import type { EnemyBarShown } from './enemyBar';
 import type { Legibility, LegibilityUi } from './Legibility';
 import type { SandboxPanelState } from './SandboxPanel';
+import type { ThreatShown } from './ThreatView';
 
 export interface GameTestHook {
   /** The live game's summary; null on the title (042). */
@@ -180,6 +181,8 @@ export interface UiState {
   camera: { x: number; y: number; player: { x: number; y: number }; fading: boolean };
   /** 065: the slow's wind curls are drawn round the player. */
   slowSwirl: boolean;
+  /** 071: the off-screen threat arrows as drawn: each one's enemies, tip (world px), angle and alpha (fade × pulse). */
+  threats: ThreatShown[];
   /** The bottom HUD as drawn (025), view px: the hotbar row (and whether it shows) and the tube slot with each unit's icon frame and text. */
   hud: BottomHudState | null;
   /** The crafting menu as drawn (026): each recipe row's item names and counts with their boxes, and the group headers. */

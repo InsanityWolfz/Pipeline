@@ -1,5 +1,7 @@
 import { TARGET_LIFT, WAYPOINT } from '../data/targets';
+import { VIEW_WIDTH } from '../data/config';
 import type { GoalPoint, Waypoint } from '../sim/objectiveTarget';
+import type { ScreenBox } from './bottomHud';
 
 // Where the waypoint arrow goes (051, B.1). Pure, so tests can check it: the tip's lift over a target's ground point,
 // and, from the camera's view, whether the arrow hovers over the target or sits at the screen's edge pointing at it.
@@ -42,6 +44,15 @@ export function viewAt(scrollX: number, scrollY: number, width: number, height: 
   return { x: scrollX + width / 2 - w / 2, y: scrollY + height / 2 - h / 2, width: w, height: h };
 }
 
+/**
+ * The fixed HUD boxes (view px) as world rects in a camera's view (world px): a view px is a world px (both cameras
+ * share the screen's zoom), so a box sits at the view's corner plus its own (071: shared by the threat arrows).
+ */
+export function boxesInView(view: { x: number; y: number; width: number }, hud: readonly ScreenBox[]): ViewRect[] {
+  const z = view.width / VIEW_WIDTH;
+  return hud.map((b) => ({ x0: view.x + b.x * z, y0: view.y + b.y * z, x1: view.x + (b.x + b.w) * z, y1: view.y + (b.y + b.h) * z }));
+}
+
 /** The arrow as placed: hovering over the tip (`over`, pointing down), or at the view's edge pointing at it (`edge`). */
 export interface ArrowPlace {
   mode: 'over' | 'edge';
@@ -53,7 +64,7 @@ export interface ArrowPlace {
 }
 
 /** Where the ray from `c` along `d` first enters `box` (as a multiple of `d`), or Infinity if it never does. */
-function entry(c: Point, d: Point, box: ViewRect): number {
+export function entry(c: Point, d: Point, box: ViewRect): number {
   let lo = -Infinity;
   let hi = Infinity;
   for (const [o, v, b0, b1] of [[c.x, d.x, box.x0, box.x1], [c.y, d.y, box.y0, box.y1]] as const) {
@@ -69,7 +80,7 @@ function entry(c: Point, d: Point, box: ViewRect): number {
   return lo <= hi && lo > 0 ? lo : Infinity;
 }
 
-const grow = (b: ViewRect, by: number): ViewRect => ({ x0: b.x0 - by, y0: b.y0 - by, x1: b.x1 + by, y1: b.y1 + by });
+export const grow = (b: ViewRect, by: number): ViewRect => ({ x0: b.x0 - by, y0: b.y0 - by, x1: b.x1 + by, y1: b.y1 + by });
 
 /**
  * Over the target while the whole arrow (tip to tail) is inside the view by `onScreenMargin` and clear of every fixed

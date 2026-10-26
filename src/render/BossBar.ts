@@ -12,6 +12,7 @@ import { defOf } from '../sim/champions';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
 import { TextLine } from './textLine';
+import type { ScreenBox } from './bottomHud';
 
 /**
  * The boss bar as drawn (034), for `ui().bossBar`: the boss's name, health and max, and whether it's enraged (041), or
@@ -32,6 +33,8 @@ export class BossBar {
   private readonly name: TextLine;
   private icon?: GameObjects.Image;
   shown: BossBarShown = null;
+  /** 071: the bar, its name and its heat gauge's box while it shows (view px), which the threat arrows keep clear of. */
+  box: ScreenBox | null = null;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -44,6 +47,7 @@ export class BossBar {
     const boss = engagedBoss(sim);
     if (!boss) {
       this.shown = null;
+      this.box = null;
       this.setVisible(false);
       return;
     }
@@ -63,6 +67,9 @@ export class BossBar {
     if (heat !== null) this.drawHeat(g, x, heat);
     this.name.set(def.name);
     this.name.moveTo(Math.round((VIEW_WIDTH - this.name.width) / 2), B.top - B.nameGap - B.border * 2 - this.name.lineHeight);
+    const top = B.top - B.nameGap - B.border * 2 - this.name.lineHeight;
+    const bottom = B.top + B.h + B.border * 2 + (heat !== null ? FORGE_LOOK.heat.gap + FORGE_LOOK.heat.h + B.border : 0);
+    this.box = { x: x - B.border * 2, y: top, w: B.w + B.border * 4, h: bottom - top };
     this.setVisible(true);
   }
 
