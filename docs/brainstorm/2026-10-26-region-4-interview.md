@@ -36,3 +36,8 @@ Oct 26, 2026 · Shaun's answers (AskUserQuestion), for specs 064–066. Shaun: "
     - Three goals after the Conductor.
 
 Claude's note at the interview: at ×10, the Stormcrown is 2.5× tougher than the Emberworks while stormsteel adds 1.6× over steel. Fights there run about 1.6× longer even fully equipped, by design.
+
+## After the playtest build (2026-10-26)
+
+11. Ring 5's damage: Shaun: "yes lower to x7 or x8 I want the difficulty to start to be increased more per area not just a linear increase every region". He picked ×8 damage, with health staying ×10.
+12. Scaling rule: each region steps up by more than the region before. Written into design.md ("Difficulty by distance") with his OK. Today's steps: health ×1.56 (the Hollows), ×1.6 (the Emberworks), ×2.5 (the Stormcrown); damage the same, then ×2.

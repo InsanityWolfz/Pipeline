@@ -140,7 +140,7 @@ test.describe('review screenshots (065)', () => {
 
   test('the slowed player', async ({ page }) => {
     test.setTimeout(180_000);
-    // In the sandbox with god mode on, so ring 5's gust (×10) lands without a KO.
+    // In the sandbox with god mode on, so ring 5's gust (×8 damage) lands without a KO.
     await bootSandbox(page);
     await page.evaluate(() => window.__GAME__?.step(1, { sandbox: { kind: 'god', on: true } }));
     const id = await page.evaluate(() => {
