@@ -302,3 +302,8 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - A boss shield is the plating check (`plated`, `blockPlated` in `src/sim/bossParts.ts`): the Forgewright's plating and the Conductor's storm shield share every rule (piercing glances on, arcs and burn spread skip).
   - An untargetable window (`blinkIn`) covers a boss's body only, never its parts; homing keeps its lock through it, so a blink doesn't drop every lock.
   - Heat resets only on a flood (`floodPools.ts`), never on a vent.
+
+- **070 handling and clarity:**
+  - A held key reaches the sim as its own command flag (`Command.interactHeld`) next to the press (`interact`); rules that chain on a hold read the flag, so a press alone still acts once.
+  - Render-side checks that read pixels (the silhouette) cache on everything that can change the answer, including each prop's current frame, and look only at a spatial bucket round the player, never every prop each frame.
+  - A craft event carries `batches` whenever more than a single click's worth could have been made, so the feed and any later stats read one event per craft max.

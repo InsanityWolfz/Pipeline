@@ -2,6 +2,23 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-26: 070 Handling and clarity
+**Changed:** on `claude/070-handling-clarity` (InsanityWolfz/Pipeline#84), from the agent-playtest proposals Shaun picked (plan docs/plans/070-handling-clarity.md, six slices):
+- hold E to harvest: channels chain while E is held and the player stays in reach; release, a knockback or build mode ends the chain;
+- Shift-click crafts as many batches as carried raws afford, with one feed line ("+32 Arrow");
+- the empty-tube card names what right click does ("Melee" when nothing carried can fire, or in build mode); empty carried slots grey out;
+- a silhouette shows the player behind ruin blocks, trees, the bench and machines (drawn pixels, cached per prop frame);
+- a tree is in reach from under its canopy, behind the trunk.
+
+`SAVE_VERSION` stays 21 (no shape change). Reviewed: one blocking finding fixed (the silhouette stayed on over a tree cut to a stump), plus five suggestions (build mode ends the chain, a one-batch craft max gets its line, the build-mode card, `reach` to data, a knockback test). `npm run check` 2556 tests; CI green. Raised for Shaun: 070.1–070.9; 070.2, 070.3, 070.5 and 070.6 need his call.
+
+**Next:** Shaun's playtest; his calls on 070.2, 070.3, 070.5, 070.6; "merge 84".
+
+**Notes:**
+- `newGameAfterQuit.spec.ts` now polls 20 s for the new game's ticks (070.9): beside landmarks.spec on a busy runner it failed on main too; what it checks is unchanged.
+- The silhouette's first version scanned every prop each frame and cost about 40% of the tick rate; it now looks only at nearby buckets and reads pixels only when its key changes.
+- Shaun kept 068's balance as is (068.9–068.11), recorded in its spec and docs/brainstorm/2026-10-26-playtest-calls.md.
+
 ## 2026-10-26: 068 Tougher late bosses
 **Changed:** on `claude/068-late-boss-buffs` (InsanityWolfz/Pipeline#82), from Shaun's playtest calls (docs/brainstorm/2026-10-26-playtest-calls.md; plan docs/plans/068-late-boss-buffs.md):
 - the Forgewright: 6,000 health; heat keeps filling through vents (only a flood resets it); bellows of 300 that patch in 3 s; slam and spray 20% faster;

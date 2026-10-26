@@ -47,5 +47,7 @@ Gone: the pre-built example line and the "refill the hoppers" goal.
 
 Banking before the claim (067.16): "Just make it so you don't lose things on death before you get to the foundry." Built in fix-keep-items-before-foundry: until the tube attunes on the first foundry entry, a KO loses nothing carried.
 
+Late-boss balance (068.9–068.11: the Forgewright about 253 s against 90–120 s, arrows beating homing on the Conductor): "Keep it as is for now."
+
 ## Next
 After these, an art and animation pass. Shaun will give a long description of the art style he wants, then a spec interview.
