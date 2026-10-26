@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { FEET_BOX } from '../../src/data/player';
 import { nodeDef } from '../../src/data/nodes';
 import { heldPart, NO_COMMAND } from '../../src/sim/input';
-import { arena, placeNode, PLAYER_AT, run } from './fight';
+import { arena, movePlayer, placeNode, PLAYER_AT, run } from './fight';
 
 // 070: holding E on a node keeps harvesting, one use per channel, until the node is empty, the player moves or E is
 // released. A single press still harvests once.
@@ -75,6 +75,26 @@ describe('hold E to harvest (070)', () => {
     run(s, CHANNEL * 2, HELD);
     expect(s.harvest).toBeNull();
     expect(n.uses).toBe(TREE.uses);
+  });
+
+  it('pushed out of reach mid-channel (as a knockback does), the chain ends when that channel does', () => {
+    const { s, n } = beside();
+    run(s, 1, PRESS);
+    run(s, 10, HELD);
+    movePlayer(s, PLAYER_AT.x - 80, PLAYER_AT.y);
+    run(s, CHANNEL * 2, HELD);
+    expect(n.uses).toBe(TREE.uses - 1);
+    expect(s.harvest).toBeNull();
+  });
+
+  it('build mode keeps E for hoppers and crates: a running chain starts no new channel', () => {
+    const { s, n } = beside();
+    run(s, 1, PRESS);
+    run(s, 10, HELD);
+    s.building = true;
+    run(s, CHANNEL * 2, HELD);
+    expect(n.uses).toBe(TREE.uses - 1);
+    expect(s.harvest).toBeNull();
   });
 
   it('E held without a press starts nothing', () => {
