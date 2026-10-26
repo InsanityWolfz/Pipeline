@@ -302,3 +302,7 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - A boss shield is the plating check (`plated`, `blockPlated` in `src/sim/bossParts.ts`): the Forgewright's plating and the Conductor's storm shield share every rule (piercing glances on, arcs and burn spread skip).
   - An untargetable window (`blinkIn`) covers a boss's body only, never its parts; homing keeps its lock through it, so a blink doesn't drop every lock.
   - Heat resets only on a flood (`floodPools.ts`), never on a vent.
+
+- **071 off-screen threat markers:**
+  - Which threats get a marker is a sim rule (`offscreenThreats`, wind-ups listed as data in `THREAT_WINDUPS`); render passes in the camera's real world rect as the view, since only render knows the boss camera's lift and easing. `getState()` uses the sim's own `viewRect`.
+  - Arrow placement (merging, HUD clearance) is render-only and works from the boxes the scene hands it (`ui().threatClear`).

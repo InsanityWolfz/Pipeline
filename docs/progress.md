@@ -2,6 +2,19 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-26: 071 Off-screen threat markers
+**Changed:** on `claude/071-offscreen-threats` (InsanityWolfz/Pipeline#85), from the agent-playtest proposals Shaun picked (plan docs/plans/071-offscreen-threats.md):
+- an enemy winding up one of the spec's seven attacks outside the camera's view gets a red arrow at the screen edge pointing at it; close arrows merge into one;
+- arrows keep clear of the HUD, the minimap, the objective banner and the boss bar (with its heat gauge and shield), and stay whole on screen;
+- an "Off-screen warnings" setting turns them off; none while knocked out.
+
+`SAVE_VERSION` stays 21 (no shape change). Reviewed: one blocking finding fixed (the boss camera's lift gave a visible Bulwark a false arrow: off screen is now the camera's real view, passed into the sim's `offscreenThreats`), plus five suggestions. `npm run check` 2540 tests; CI green. Raised for Shaun: 071.1–071.9; 071.1, 071.4 and 071.5 need his call.
+
+**Next:** Shaun's playtest; his calls on 071.1 (more boss attacks), 071.4 (merged arrows show no count), 071.5 (the arrow's red); "merge 85".
+
+**Notes:**
+- `newGameAfterQuit` failed 2 of 5 local runs under load (7–8 on 4 cores); 070 raises its poll to 20 s.
+
 ## 2026-10-26: 068 Tougher late bosses
 **Changed:** on `claude/068-late-boss-buffs` (InsanityWolfz/Pipeline#82), from Shaun's playtest calls (docs/brainstorm/2026-10-26-playtest-calls.md; plan docs/plans/068-late-boss-buffs.md):
 - the Forgewright: 6,000 health; heat keeps filling through vents (only a flood resets it); bellows of 300 that patch in 3 s; slam and spray 20% faster;

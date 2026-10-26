@@ -1,5 +1,5 @@
 # 071: Off-screen threat markers
-status: approved
+status: done
 
 Approved by Shaun in chat, 2026-10-26: he picked it from the agent-playtest proposals, built as written. Its plan is pre-approved.
 
