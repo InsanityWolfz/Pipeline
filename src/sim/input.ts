@@ -31,6 +31,8 @@ export interface Command {
   use: boolean;
   /** Interact (harvest) was pressed this tick (an edge, not held). */
   interact: boolean;
+  /** 070: interact (E) is held: a harvest started by the press goes on to the node's next use at each channel's end. */
+  interactHeld: boolean;
   /** A carried bar slot picked this tick (keys 1–5, an edge, 047), or null. */
   selectSlot: number | null;
   /** A stack dragged onto a carried bar slot this tick (an edge, 047): its kind goes on the slot; or null. */
@@ -107,6 +109,7 @@ export const NO_COMMAND: Readonly<Command> = {
   fire: false,
   use: false,
   interact: false,
+  interactHeld: false,
   selectSlot: null,
   assignSlot: null,
   toggleBuild: false,
@@ -131,5 +134,5 @@ export const NO_COMMAND: Readonly<Command> = {
   sandbox: null,
 };
 
-/** A command's held part (stick, aim, fire and use) with every one-tick edge cleared: what a held command is after its first tick. */
-export const heldPart = (cmd: Command): Command => ({ ...NO_COMMAND, moveX: cmd.moveX, moveY: cmd.moveY, aimX: cmd.aimX, aimY: cmd.aimY, fire: cmd.fire, use: cmd.use });
+/** A command's held part (stick, aim, fire, use and E held, 070) with every one-tick edge cleared: what a held command is after its first tick. */
+export const heldPart = (cmd: Command): Command => ({ ...NO_COMMAND, moveX: cmd.moveX, moveY: cmd.moveY, aimX: cmd.aimX, aimY: cmd.aimY, fire: cmd.fire, use: cmd.use, interactHeld: cmd.interactHeld });

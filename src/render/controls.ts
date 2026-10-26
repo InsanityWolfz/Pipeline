@@ -231,6 +231,8 @@ export class Controls {
       // 047: right click (or the key `use` is bound to) uses the carried bar's selected item.
       use: (this.useKey ? this.useKey.isDown : held.right && !uiPress && this.overWorld()) && !building,
       interact: this.interactPending,
+      // 070: E held keeps a harvest going to the node's next use.
+      interactHeld: this.keys.interact.isDown,
       selectSlot: this.selectPending,
       ...ui,
     };
