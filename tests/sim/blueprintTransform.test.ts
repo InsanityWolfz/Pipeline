@@ -56,3 +56,29 @@ describe('mirroring (063)', () => {
     expect(transformBlueprint(transformBlueprint(BP, 0, true), 0, true)).toEqual(BP);
   });
 });
+
+describe('turned and mirrored together (063)', () => {
+  it("keeps an underground pair's link and facing in line, and flips each splitter's side", () => {
+    const pair: Pick<Blueprint, 'w' | 'h' | 'pieces'> = {
+      w: 4,
+      h: 2,
+      pieces: [
+        { pieceId: 'underground-entrance', dx: 0, dy: 0, facing: 'right', link: 1 },
+        { pieceId: 'underground-exit', dx: 3, dy: 0, facing: 'right', link: 0 },
+        { pieceId: 'splitter', dx: 1, dy: 1, facing: 'right' },
+        { pieceId: 'splitter', dx: 2, dy: 1, facing: 'down', mirrored: true },
+      ],
+    };
+    // Mirrored (the pair now runs left, entrance on the right), then turned once: it runs up, entrance at the bottom.
+    expect(transformBlueprint(pair, 1, true)).toEqual({
+      w: 2,
+      h: 4,
+      pieces: [
+        { pieceId: 'underground-entrance', dx: 1, dy: 3, facing: 'up', link: 1 },
+        { pieceId: 'underground-exit', dx: 1, dy: 0, facing: 'up', link: 0 },
+        { pieceId: 'splitter', dx: 0, dy: 2, facing: 'up', mirrored: true },
+        { pieceId: 'splitter', dx: 0, dy: 1, facing: 'left' },
+      ],
+    });
+  });
+});

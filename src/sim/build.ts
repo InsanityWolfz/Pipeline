@@ -22,10 +22,11 @@ export function stepBuild(state: SimState, cmd: Command): void {
     place(state, pieceId, tx, ty, facing, { ...(inFrom ? { inFrom } : {}), ...(mirrored ? { mirrored } : {}) });
   }
   if (cmd.pickUp) pickUp(state, cmd.pickUp.tx, cmd.pickUp.ty);
-  // 063: the area tool's box: saved first (so a save and pick-up keeps what it lifts), then picked up.
+  // 063: the area tool's box: saved first (so a save and pick-up keeps what it lifts), then picked up; a save and
+  // pick-up whose save fails (all slots full, none named) picks nothing up.
   const area = cmd.area;
-  if (area && area.action !== 'pickUp') saveBlueprint(state, area.box, area.slot);
-  if (area && area.action !== 'save') areaPickUp(state, area.box);
+  const saved = area && area.action !== 'pickUp' ? saveBlueprint(state, area.box, area.slot) : null;
+  if (area && (area.action === 'pickUp' || (area.action === 'saveAndPickUp' && saved !== null))) areaPickUp(state, area.box);
   if (cmd.deleteBlueprint !== null) deleteBlueprint(state, cmd.deleteBlueprint);
   if (cmd.stamp) stamp(state, cmd.stamp);
 }

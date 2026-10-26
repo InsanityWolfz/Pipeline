@@ -46,7 +46,7 @@ describe('the area tool (063)', () => {
 describe('the blueprint ghost (063)', () => {
   it('turns clockwise and mirrors as it shows: mirror after turns flips the turns', () => {
     const t = new BlueprintInput();
-    t.takeGhost(2);
+    t.takeGhost(2, { w: 4, h: 2 });
     t.turn();
     expect(t.ghost).toEqual({ slot: 2, turns: 1, mirrored: false });
     t.mirror();
@@ -90,7 +90,7 @@ describe('the blueprint list (063)', () => {
     expect(t.back()).toBe(true);
     expect(t.listOpen).toBe(false);
     t.toggleList();
-    t.takeGhost(0);
+    t.takeGhost(0, { w: 1, h: 1 });
     expect(t.listOpen).toBe(false);
     expect(t.mode).toBe('ghost');
   });
@@ -100,11 +100,57 @@ describe('stamping from the ghost (063)', () => {
   it('centres the box on the pressed tile, with its turn and mirror', () => {
     const t = new BlueprintInput();
     expect(t.stampAt({ tx: 5, ty: 5 })).toBeNull();
-    t.takeGhost(1);
+    t.takeGhost(1, { w: 4, h: 2 });
     t.turn();
-    t.ghostSize = { w: 2, h: 4 };
+    expect(t.ghostSize).toEqual({ w: 2, h: 4 });
     expect(t.stampAt({ tx: 10, ty: 8 })).toEqual({ slot: 1, tx: 10, ty: 7, turns: 1, mirrored: false });
-    t.ghostSize = { w: 3, h: 3 };
+    t.takeGhost(1, { w: 3, h: 3 });
+    t.turn();
     expect(t.stampAt({ tx: 10, ty: 8 })).toEqual({ slot: 1, tx: 9, ty: 7, turns: 1, mirrored: false });
+  });
+
+  it('uses the size as turned at the press itself: a turn and a click in the same frame stamp where the ghost shows', () => {
+    const t = new BlueprintInput();
+    t.takeGhost(0, { w: 4, h: 2 });
+    expect(t.stampAt({ tx: 10, ty: 8 })).toEqual({ slot: 0, tx: 9, ty: 8, turns: 0, mirrored: false });
+    t.turn();
+    expect(t.stampAt({ tx: 10, ty: 8 })).toEqual({ slot: 0, tx: 10, ty: 7, turns: 1, mirrored: false });
+    t.mirror();
+    expect(t.ghostSize).toEqual({ w: 2, h: 4 });
+  });
+
+  it('a world press stamps, but not while a question is up; nor does it start a drag', () => {
+    const t = new BlueprintInput();
+    t.takeGhost(0, { w: 1, h: 1 });
+    expect(t.worldPress({ tx: 5, ty: 5 })).toEqual({ slot: 0, tx: 5, ty: 5, turns: 0, mirrored: false });
+    t.listLocked = false;
+    t.toggleList();
+    t.ask({ kind: 'delete', slot: 1 });
+    expect(t.worldPress({ tx: 5, ty: 5 })).toBeNull();
+    expect(t.drag).toBeNull();
+    t.back();
+    expect(t.worldPress({ tx: 5, ty: 5 })).not.toBeNull();
+  });
+});
+
+describe('a held ghost and the questions (063)', () => {
+  it('a delete or an overwrite answered drops the ghost; a cancelled one keeps it', () => {
+    const t = new BlueprintInput();
+    t.takeGhost(3, { w: 2, h: 2 });
+    t.listLocked = false;
+    t.toggleList();
+    t.ask({ kind: 'delete', slot: 0 });
+    t.back();
+    expect(t.ghost).toEqual({ slot: 3, turns: 0, mirrored: false });
+    t.ask({ kind: 'delete', slot: 0 });
+    expect(t.confirm()).toEqual({ kind: 'delete', slot: 0 });
+    expect(t.question).toBeNull();
+    expect(t.ghost).toBeNull();
+    expect(t.mode).toBe('piece');
+    expect(t.listOpen).toBe(true);
+    t.takeGhost(1, { w: 1, h: 1 });
+    t.ask({ kind: 'overwrite', box: { tx0: 0, ty0: 0, tx1: 1, ty1: 1 }, action: 'save' });
+    t.confirm();
+    expect(t.ghost).toBeNull();
   });
 });

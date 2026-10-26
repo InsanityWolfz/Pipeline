@@ -141,6 +141,17 @@ describe('slots (063)', () => {
     expect(s.foundry.pieces).toEqual([]);
     expect(s.stash.arrow).toBe(3);
   });
+
+  it('Save and pick up picks nothing up when the save fails (all 8 slots full, none named)', () => {
+    const s = table();
+    put(s, 'cutter', 3, 3, 'right');
+    for (let i = 0; i < BLUEPRINT_SLOTS; i++) saveBlueprint(s, ALL);
+    run(s, 1, { area: { box: ALL, action: 'saveAndPickUp' } });
+    expect(s.events.blueprintSaveFails).toEqual([{ reason: 'full' }]);
+    expect(s.foundry.pieces.map((p) => p.pieceId)).toEqual(['cutter']);
+    run(s, 1, { area: { box: ALL, action: 'saveAndPickUp', slot: 0 } });
+    expect(s.foundry.pieces).toEqual([]);
+  });
 });
 
 describe('keeping blueprints (063)', () => {

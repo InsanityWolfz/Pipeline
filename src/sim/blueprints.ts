@@ -1,7 +1,8 @@
-import { BLUEPRINT_NAMING, BLUEPRINT_SLOTS, BLUEPRINT_TABLE } from '../data/blueprints';
+import { BLUEPRINT_NAMING, BLUEPRINT_SLOTS } from '../data/blueprints';
 import { itemDef } from '../data/items';
 import { machineDef, pieceDef } from '../data/pieces';
 import { recipeDef } from '../data/recipes';
+import { RESEARCH_NODES } from '../data/research';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { roundTags } from '../data/tags';
 import { piecesInBox, type AreaBox } from './area';
@@ -41,8 +42,8 @@ export interface Blueprint {
   pieces: BlueprintPiece[];
 }
 
-/** Saving and placing blueprints are unlocked: the Blueprint table is restored. */
-export const blueprintsUnlocked = (state: Pick<SimState, 'research'>): boolean => isRestored(state, BLUEPRINT_TABLE);
+/** Saving and placing blueprints are unlocked: a node with the blueprints effect (the Blueprint table) is restored. */
+export const blueprintsUnlocked = (state: Pick<SimState, 'research'>): boolean => RESEARCH_NODES.some((n) => n.effect.kind === 'blueprints' && isRestored(state, n.id));
 
 /** A box's pieces as a blueprint's (no name yet). */
 export function captureBlueprint(foundry: SimState['foundry'], box: AreaBox): Omit<Blueprint, 'name' | 'itemId'> {

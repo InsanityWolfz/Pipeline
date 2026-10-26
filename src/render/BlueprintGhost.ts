@@ -9,6 +9,7 @@ import type { StampPiece } from '../sim/stamp';
 import { colorOf } from './color';
 import { bodyFrame, showGhost } from './ghostLook';
 import { pieceIcon } from './foundryLayout';
+import { ghostHover } from './blueprintLayout';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
 
@@ -60,13 +61,13 @@ export class BlueprintGhost {
     const red = pieces.filter((p) => p.fail).flatMap((p) => footprint(p.pieceId, p.tx, p.ty, p.facing));
     this.tiles.clear().fillStyle(colorOf(T.color), T.alpha);
     for (const t of red) this.tiles.fillRect(t.tx * TILE_SIZE + T.inset, t.ty * TILE_SIZE + T.inset, TILE_SIZE - 2 * T.inset, TILE_SIZE - 2 * T.inset);
-    const locked = cursor ? pieces.find((p) => p.fail === 'locked' && footprint(p.pieceId, p.tx, p.ty, p.facing).some((t) => t.tx === cursor.tx && t.ty === cursor.ty)) : undefined;
-    this.hover.setVisible(locked !== undefined && cursor !== null);
-    if (locked && cursor) this.hover.moveTo(Math.round((cursor.tx + 0.5) * TILE_SIZE - this.hover.width / 2), cursor.ty * TILE_SIZE - BLUEPRINT_GHOST.hoverRise - this.hover.lineHeight);
+    const hover = ghostHover(pieces, cursor);
+    this.hover.setVisible(hover !== null);
+    if (hover !== null && cursor) this.hover.moveTo(Math.round((cursor.tx + 0.5) * TILE_SIZE - this.hover.width / 2), cursor.ty * TILE_SIZE - BLUEPRINT_GHOST.hoverRise - this.hover.lineHeight);
     this.shown = {
       pieces: pieces.map((p) => ({ pieceId: p.pieceId, tx: p.tx, ty: p.ty, facing: p.facing, fail: p.fail })),
       red,
-      hover: locked ? BLUEPRINT_TEXT.notUnlocked : null,
+      hover,
     };
   }
 }

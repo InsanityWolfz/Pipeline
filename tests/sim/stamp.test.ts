@@ -4,7 +4,7 @@ import { LOCK_UNTIL } from '../../src/data/guidedBuilds';
 import { boxOf } from '../../src/sim/area';
 import { saveBlueprint } from '../../src/sim/blueprints';
 import { guidedGoal } from '../../src/sim/guided';
-import type { ConduitState, CrateState, HopperState, MachineState, PieceState, SplitterState, TunnelInState } from '../../src/sim/pieces';
+import type { ConduitState, CrateState, HopperState, MachineState, PieceState, SplitterState, TunnelInState, TunnelOutState } from '../../src/sim/pieces';
 import { stampPlan } from '../../src/sim/stamp';
 import type { SimState } from '../../src/sim/state';
 import { run } from './fight';
@@ -126,4 +126,38 @@ describe('stamping (063)', () => {
     run(s, 400);
     expect(crate.contents['arrow+frost'] ?? 0).toBeGreaterThanOrEqual(4);
   });
+
+  it("pairs a stamped pair's linked ends only within the entrance's reach, never under a wall", () => {
+    const s = table();
+    put(s, 'underground-entrance', 8, 3, 'right');
+    put(s, 'underground-exit', 11, 3, 'right');
+    const slot = saveBlueprint(s, boxOf({ tx: 8, ty: 3 }, { tx: 11, ty: 3 })) ?? -1;
+    // Row 1's wall notch at (9, 1) and (10, 1) lies between where the ends land.
+    expect(stampPlan(s, slot, 8, 1, 0, false)?.map((p) => p.fail)).toEqual([null, null]);
+    run(s, 1, { stamp: { slot, tx: 8, ty: 1, turns: 0, mirrored: false } });
+    const tin = at(s, 8, 1) as TunnelInState;
+    const tout = at(s, 11, 1) as TunnelOutState;
+    expect([tin.kind, tout.kind]).toEqual(['tunnel-in', 'tunnel-out']);
+    expect([tin.pair, tout.pair]).toEqual([null, null]);
+    expect(tin.tunnel).toEqual([]);
+  });
+
+  it('stamps an underground pair and a splitter turned and mirrored, the pair linked and the side flipped', () => {
+    const s = table();
+    put(s, 'underground-entrance', 3, 4, 'right');
+    put(s, 'underground-exit', 6, 4, 'right');
+    put(s, 'splitter', 4, 5, 'right');
+    const slot = saveBlueprint(s, boxOf({ tx: 3, ty: 4 }, { tx: 6, ty: 5 })) ?? -1;
+    // Mirrored then turned once: the 4x2 box stands 2 wide and 4 tall, the pair running up from (11, 9) to (11, 6).
+    run(s, 1, { stamp: { slot, tx: 10, ty: 6, turns: 1, mirrored: true } });
+    expect(s.events.stamps).toEqual([{ slot, placed: 3, skipped: 0 }]);
+    const tin = at(s, 11, 9) as TunnelInState;
+    const tout = at(s, 11, 6) as TunnelOutState;
+    expect([tin.kind, tin.facing, tout.kind, tout.facing]).toEqual(['tunnel-in', 'up', 'tunnel-out', 'up']);
+    expect([tin.pair, tout.pair]).toEqual([tout.id, tin.id]);
+    expect(tin.tunnel).toHaveLength(2);
+    const sp = at(s, 10, 8) as SplitterState;
+    expect([sp.kind, sp.facing, sp.mirrored]).toEqual(['splitter', 'up', true]);
+  });
 });
+

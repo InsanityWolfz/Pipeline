@@ -136,15 +136,15 @@ export class PointerInput {
 
   /**
    * 063: a press with a tool: right click backs out (the menu, the drag, the tool); with the Area tool a left press
-   * starts a box, with the ghost it stamps. Returns whether a tool took it (else it places or picks up a piece).
+   * starts a box, with the ghost it stamps, unless a menu or question is up. Returns whether a tool took it (else it places or picks up a piece).
    */
   private toolPress(p: Input.Pointer, tile: Tile): boolean {
     const t = this.tools;
     if (t.mode === 'piece' && !t.released && !t.question) return false;
     if (p.rightButtonDown()) t.back();
-    else if (p.leftButtonDown() && t.mode === 'area') t.press(tile);
-    else if (p.leftButtonDown() && t.mode === 'ghost') {
-      const stamp = t.stampAt(tile);
+    else if (p.leftButtonDown()) {
+      // A drag or a stamp, but neither while the release menu or a question is up.
+      const stamp = t.worldPress(tile);
       if (stamp) this.drag.stamp(stamp);
     }
     return true;

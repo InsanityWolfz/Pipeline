@@ -140,6 +140,10 @@ Built on `claude/063-blueprints` (plan: docs/plans/063-blueprints.md). Where the
   - Picking a piece on the bar puts the ghost down, as Esc and right click do.
   - Deleting a blueprint moves the later ones up a slot.
 - **063.11 The questions.** With all 8 slots full, Save lists "Overwrite <name>" for each slot, then Cancel; the overwritten slot's own name is free to reuse. Delete asks "Delete <name>" or Cancel. Both use the same small menu.
+- **063.12 A stamped underground pair pairs only in reach.** Its saved link holds only if the exit lies in the entrance's reach, as building by hand needs (up to the first tile that isn't floor). Stamped across a wall, as over the wing's notch on row 1, the ends pair by the usual rule instead, so no pair runs under a wall.
+- **063.13 A delete or an overwrite drops a held ghost.** Deleting moves the later blueprints up a slot, so a held ghost would otherwise turn into another blueprint. Cancelling the question keeps it.
+- **063.14 A question blocks the world.** While a delete or overwrite question (or the release menu) is up, a left click on the foundry neither stamps nor starts a box; a right click or Esc backs out of the question first.
+- **063.15 "Save and pick up" needs the save.** If the save fails (all 8 slots full and no slot named), nothing is picked up. (063.5's other way round stands: the save keeps even if the pick-up is refused.)
 
 ### Results
 - Criteria: all met, two as raised (063.1, 063.5).

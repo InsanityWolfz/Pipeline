@@ -93,7 +93,7 @@ export class BlueprintList {
       const bp = list[r.slot];
       if (!bp) continue;
       const icon = blueprintIcon(bp);
-      const half = (BLUEPRINT_LIST.del.size - 16) / 2;
+      const half = (B.del.size - B.del.mark) / 2;
       const images = [add(r.x, r.y, SPRITES.craftRow, DEPTHS.menu), add(r.x + B.icon.x, r.y + B.icon.y, icon, DEPTHS.menu + 1), add(r.del.x + half, r.del.y + half, BLUEPRINT_SPRITES.deleteMark, DEPTHS.menu + 1)];
       const name = new TextLine(this.scene, r.x + B.name.x, r.y + B.name.y, DEPTHS.menu + 1).set(bp.name);
       const count = new TextLine(this.scene, 0, r.y + B.count.y, DEPTHS.menu + 1, false, 'label').set(BLUEPRINT_TEXT.pieces(bp.pieces.length));

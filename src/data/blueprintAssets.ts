@@ -46,7 +46,8 @@ export const BLUEPRINT_LIST = {
   icon: { x: 4, y: 2 },
   name: { x: 24, y: 8 },
   count: { right: 24, y: 9 },
-  del: { size: 14, right: 3, y: 3 },
+  /** The delete mark's box (`size` px square); `mark` is its 16 px icon's art size, centred on that box. */
+  del: { size: 14, right: 3, y: 3, mark: 16 },
   /** The empty list's line, in the row's place. */
   empty: { y: 8 },
 } as const;

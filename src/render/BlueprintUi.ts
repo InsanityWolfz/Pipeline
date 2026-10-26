@@ -95,7 +95,6 @@ export class BlueprintUi {
       return null;
     }
     const shape = transformBlueprint(bp, g.turns, g.mirrored);
-    tools.ghostSize = { w: shape.w, h: shape.h };
     if (!cursor) return null;
     const at = ghostOrigin(cursor, shape.w, shape.h);
     return stampPlan(sim, g.slot, at.tx, at.ty, g.turns, g.mirrored);
@@ -145,7 +144,10 @@ export class BlueprintUi {
     const hit = this.list.hit(x, y);
     if (tools && hit) {
       if (hit.del) tools.ask({ kind: 'delete', slot: hit.slot });
-      else tools.takeGhost(hit.slot);
+      else {
+        const bp = this.sim?.blueprints[hit.slot];
+        if (bp) tools.takeGhost(hit.slot, bp);
+      }
       return true;
     }
     const tool = this.cells.toolAt(x, y);
@@ -154,14 +156,19 @@ export class BlueprintUi {
     return tool !== null || this.overUi(x, y);
   }
 
-  /** A menu row was clicked: send its command, or ask which slot a save with every slot full overwrites. */
+  /**
+   * A menu row was clicked: send its command, or ask which slot a save with every slot full overwrites. A delete or an
+   * overwrite drops a held ghost (the slots shift or change under it).
+   */
   private choose(controls: Controls, tools: BlueprintInput, value: MenuValue): void {
-    const q = tools.question;
     const box = tools.released;
     tools.closeMenu();
-    tools.question = null;
-    if (value === 'cancel') return;
+    if (value === 'cancel') {
+      tools.question = null;
+      return;
+    }
     if (typeof value === 'object') {
+      const q = tools.confirm();
       if (q?.kind === 'delete') controls.menus.deleteBlueprint(value.slot);
       if (q?.kind === 'overwrite') controls.menus.area(q.box, q.action, value.slot);
       return;

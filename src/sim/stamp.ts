@@ -7,14 +7,15 @@ import { canPlace, place } from './placement';
 import { stageOf } from './stages';
 import type { SimState } from './state';
 import type { Command } from './input';
-import { pairEnds, pairOnPlace } from './tunnels';
+import { pairEnds, pairOnPlace, tunnelReach } from './tunnels';
 
 // Placing a blueprint (063): the taken blueprint, mirrored and turned as its ghost shows, goes down with its box's
 // top-left on a tile. Every piece that fits is placed at once, new and empty; the rest are skipped (a taken tile, a
 // fixture, a wall or off the floor, a piece not unlocked, the player's feet under a solid piece: placing's own rules).
 // Settings come with them: a conduit's corner, a splitter's side, a stage machine's round, and an underground pair's
-// link (ends whose partner was skipped pair by the usual rule). Needs the Blueprint table; the build lock refuses it
-// whole. Pieces are free, so nothing is spent.
+// link (only while the exit is in the entrance's reach, so never under a wall; else, as for ends whose partner was
+// skipped, the usual rule). Needs the Blueprint table; the build lock refuses it whole. Pieces are free, so nothing
+// is spent.
 
 /** A blueprint piece on the grid, and why it can't go there (null if it can). */
 export interface StampPiece extends BlueprintPiece {
@@ -54,11 +55,13 @@ export function stamp(state: SimState, cmd: NonNullable<Command['stamp']>): bool
     if (piece?.kind === 'machine' && p.made !== undefined && stageOf(piece.pieceId)) piece.made = p.made;
     return piece;
   });
-  // Linked ends pair with each other first; an end whose partner was skipped then pairs by the usual rule.
+  // Linked ends pair with each other first, if the exit is in the entrance's reach (as building by hand needs); an end
+  // whose partner was skipped or out of reach then pairs by the usual rule.
   const ends = placed.flatMap((piece, i) => (piece?.kind === 'tunnel-in' || piece?.kind === 'tunnel-out' ? [{ piece, link: plan[i]?.link }] : []));
   for (const { piece, link } of ends) {
     const partner = link !== undefined ? placed[link] : undefined;
-    if (piece.pair === null && (partner?.kind === 'tunnel-in' || partner?.kind === 'tunnel-out') && partner.pair === null) pairEnds(piece, partner);
+    if (piece.kind !== 'tunnel-in' || piece.pair !== null || partner?.kind !== 'tunnel-out' || partner.pair !== null) continue;
+    if (tunnelReach(piece).some((t) => t.tx === partner.tx && t.ty === partner.ty)) pairEnds(piece, partner);
   }
   for (const { piece } of ends) if (piece.pair === null) pairOnPlace(state.foundry, piece);
   const down = placed.filter((p) => p !== undefined).length;

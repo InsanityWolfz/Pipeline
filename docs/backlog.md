@@ -67,7 +67,7 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 060 | Region 3, the Emberworks: a third ring up the cliffs opened by the Bulwark's kill (×4), cinderite at flaring vents, the Ash Kilns' pylon, the Fire rune (burn that spreads on death) with two Bombs-lane talents, the Forgewright (plated, vented by breaking both bellows), the fourth entrance | done |
 | 061 | Emberworks enemies: the cinder mote, bellows hound, slag golem and kiln-tender, and the region's packs | idea |
 | 062 | Material tiers: the Smelter (ley-iron and cinderite into ley-steel), steel arrowheads, casings and plates, the kiln and glass bolts; ×1.6 per tier, stages and talents kept | idea |
-| 063 | Blueprints and area pick-up: drag a box in build mode to pick up a line (contents to the stash); a restored Blueprint table (4 gears, 2 valves) saves areas as 8 auto-named blueprints, placed at once, turned (R) or mirrored (F), skipping taken tiles | approved |
+| 063 | Blueprints and area pick-up: drag a box in build mode to pick up a line (contents to the stash); a restored Blueprint table (4 gears, 2 valves) saves areas as 8 auto-named blueprints, placed at once, turned (R) or mirrored (G), skipping taken tiles | approved |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
 

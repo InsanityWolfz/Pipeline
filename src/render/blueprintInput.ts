@@ -32,8 +32,8 @@ export class BlueprintInput {
   question: ToolQuestion | null = null;
   /** The blueprint ghost held, in ghost mode. */
   ghost: GhostHold | null = null;
-  /** The held ghost's box size as turned now, tiles (the scene keeps this current from the blueprint). */
-  ghostSize = { w: 1, h: 1 };
+  /** The held ghost's blueprint's own box size, unturned, tiles (given when it's taken). */
+  private ghostBase = { w: 1, h: 1 };
   /** The blueprint list is open. */
   listOpen = false;
   /** The list can't open: the Blueprint table isn't restored (the scene keeps this current). */
@@ -72,18 +72,50 @@ export class BlueprintInput {
     }
   }
 
-  /** A blueprint taken from the list as the ghost, unturned. */
-  takeGhost(slot: number): void {
+  /** A blueprint taken from the list as the ghost, unturned; `size` its own box size. */
+  takeGhost(slot: number, size: { w: number; h: number }): void {
     this.setPiece();
     this.mode = 'ghost';
     this.ghost = { slot, turns: 0, mirrored: false };
+    this.ghostBase = { w: size.w, h: size.h };
+  }
+
+  /** The held ghost's box size as turned now, tiles (an odd number of quarter turns swaps it; a mirror keeps it). */
+  get ghostSize(): { w: number; h: number } {
+    const b = this.ghostBase;
+    return this.ghost && this.ghost.turns % 2 === 1 ? { w: b.h, h: b.w } : { w: b.w, h: b.h };
   }
 
   /** A left press with the ghost held on a tile: the stamp it asks for, its box centred there; null with no ghost. */
   stampAt(tile: Tile): { slot: number; tx: number; ty: number; turns: number; mirrored: boolean } | null {
     if (!this.ghost) return null;
-    const at = ghostOrigin(tile, this.ghostSize.w, this.ghostSize.h);
+    const size = this.ghostSize;
+    const at = ghostOrigin(tile, size.w, size.h);
     return { slot: this.ghost.slot, ...at, turns: this.ghost.turns, mirrored: this.ghost.mirrored };
+  }
+
+  /**
+   * A left press over the world: with the Area tool a drag starts, with the ghost the stamp it asks for is returned.
+   * Nothing happens while the release menu or a question is up.
+   */
+  worldPress(tile: Tile): ReturnType<BlueprintInput['stampAt']> {
+    if (this.released || this.question) return null;
+    if (this.mode === 'area') this.press(tile);
+    return this.mode === 'ghost' ? this.stampAt(tile) : null;
+  }
+
+  /**
+   * A question was answered with a slot (a delete or an overwrite): it goes, and so does a held ghost, since the slots
+   * it names may shift or change under it. Returns the question answered.
+   */
+  confirm(): ToolQuestion | null {
+    const q = this.question;
+    this.question = null;
+    if (q && this.mode === 'ghost') {
+      this.mode = 'piece';
+      this.ghost = null;
+    }
+    return q;
   }
 
   /** The rotate key: the ghost turns 90° clockwise. */

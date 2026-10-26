@@ -6,6 +6,9 @@ import type { ScreenRect } from './foundryLayout';
 import { itemDef } from '../data/items';
 import { LOGISTICS_ICONS } from '../data/foundryAssets';
 import type { Blueprint } from '../sim/blueprints';
+import { BLUEPRINT_TEXT } from '../data/blueprints';
+import { footprint, type Tile } from '../sim/pieces';
+import type { StampPiece } from '../sim/stamp';
 
 // Where 063's HUD pieces sit, view px. No Phaser, so e2e tests can find them to click.
 
@@ -45,4 +48,11 @@ export function toolsBox(): ScreenRect {
 /** A blueprint's icon: its named item's, or the conduit's emblem for Logistics. */
 export function blueprintIcon(bp: Pick<Blueprint, 'itemId'>): string {
   return bp.itemId ? itemDef(bp.itemId).icon : (LOGISTICS_ICONS.conduit ?? '');
+}
+
+/** The blueprint ghost's hover (063): "Not unlocked" while the cursor is over a piece the player hasn't unlocked, else null. */
+export function ghostHover(pieces: readonly StampPiece[], cursor: Tile | null): string | null {
+  if (!cursor) return null;
+  const over = (p: StampPiece): boolean => footprint(p.pieceId, p.tx, p.ty, p.facing).some((t) => t.tx === cursor.tx && t.ty === cursor.ty);
+  return pieces.some((p) => p.fail === 'locked' && over(p)) ? BLUEPRINT_TEXT.notUnlocked : null;
 }
