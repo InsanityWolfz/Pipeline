@@ -45,5 +45,7 @@ Until then the foundry door stays sealed ("Claim the shrine first"). After the c
 
 Gone: the pre-built example line and the "refill the hoppers" goal.
 
+Banking before the claim (067.16): "Just make it so you don't lose things on death before you get to the foundry." Built in fix-keep-items-before-foundry: until the tube attunes on the first foundry entry, a KO loses nothing carried.
+
 ## Next
 After these, an art and animation pass. Shaun will give a long description of the art style he wants, then a spec interview.
