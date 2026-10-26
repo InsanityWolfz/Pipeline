@@ -67,7 +67,7 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 060 | Region 3, the Emberworks: a third ring up the cliffs opened by the Bulwark's kill (×4), cinderite at flaring vents, the Ash Kilns' pylon, the Fire rune (burn that spreads on death) with two Bombs-lane talents, the Forgewright (plated, vented by breaking both bellows), the fourth entrance | done |
 | 061 | Emberworks enemies: the cinder mote (swells and bursts; killed, it burns the pack), the bellows hound (lane dash, burning trail), the slag golem (splits into whelps), the kiln-tender (repair beam); ring 4 packs and the Ash Kilns' guards | done |
 | 062 | Material tiers: the Smelter (ley-iron and cinderite into ley-steel) and the kiln (ley dust and cinderite into ley glass) in a Forge group; the same machines make steel arrowheads, casings and plates and glass bolts by input; steel and glass rounds deal ×1.6, keep their stages and talents; three Milestone 2 goals | done |
-| 064 | Region 4, the Stormcrown: a fifth ring opened by the Forgewright's kill (×10, Shaun), stormglass from struck rods, the Weathervane's pylon, the Lightning rune (chains 2 at half) with two Ley-lane talents, the Conductor (blinks between six breakable rods), the fifth entrance | approved |
+| 064 | Region 4, the Stormcrown: a fifth ring opened by the Forgewright's kill (×10, Shaun), stormglass from struck rods, the Weathervane's pylon, the Lightning rune (chains 2 at half) with two Ley-lane talents, the Conductor (blinks between six breakable rods), the fifth entrance | done |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
 
