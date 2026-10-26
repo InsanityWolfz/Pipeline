@@ -2,7 +2,7 @@ import { TintModes, type GameObjects, type Scene } from 'phaser';
 import { DEPTHS, WANDERER_KEY } from '../data/assets';
 import { PLAYER_SILHOUETTE } from '../data/silhouette';
 import { colorOf } from './color';
-import { bodySamples, hiddenShare, Occluders } from './occluders';
+import { bodySamples, Occluders } from './occluders';
 
 /** How far from the feet a registered prop's position may be and still be measured, px (the tallest props' height). */
 const REACH = 96;
@@ -16,6 +16,8 @@ export class SilhouetteView {
   /** Whether it shows now (`ui().silhouette`). */
   shown = false;
   private readonly occluders: Occluders;
+  /** The last test's player point, depth and props in front: an unchanged one keeps its answer (the pixel reads cost). */
+  private last = '';
 
   /** Made after PlayerView, whose canvas texture it shares. */
   constructor(scene: Scene, occluders: Occluders) {
@@ -30,7 +32,11 @@ export class SilhouetteView {
   /** Follows the player's sprite; `visible` false (another room, or the KO's fall) hides it. */
   update(player: GameObjects.Image, visible: boolean): void {
     const front = visible && player.visible ? this.occluders.inFront(player.x, player.y, player.depth, REACH) : [];
-    this.shown = front.length > 0 && hiddenShare(bodySamples(player.x, player.y), (p) => Occluders.covers(front, p)) >= PLAYER_SILHOUETTE.cover;
+    const key = front.length === 0 ? '' : `${Math.round(player.x)},${Math.round(player.y)},${front.length}`;
+    if (key !== this.last) {
+      this.last = key;
+      this.shown = front.length > 0 && Occluders.coveredShare(front, bodySamples(player.x, player.y)) >= PLAYER_SILHOUETTE.cover;
+    }
     this.rim.setVisible(this.shown);
     this.fill.setVisible(this.shown);
     if (!this.shown) return;
