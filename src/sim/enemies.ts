@@ -285,8 +285,12 @@ export function damageEnemy(
  */
 export const immune = (e: Pick<EnemyState, 'underground' | 'rising'>): boolean => e.underground || e.rising > 0;
 
-/** Whether shots, punches and bursts can reach it: whenever it isn't immune (054). */
-export const targetable = (e: Pick<EnemyState, 'underground' | 'rising'>): boolean => !immune(e);
+/**
+ * Whether shots, punches and bursts can reach its body: whenever it isn't immune (054), and (068) not the Conductor in
+ * its blink-in window. Shots pass through either, as through a burrowed enemy; its parts (the Conductor's rods) still
+ * take hits while it's only blinking in (combat.ts, blast.ts, melee.ts ask `immune` for those).
+ */
+export const targetable = (e: Pick<EnemyState, 'underground' | 'rising' | 'conductor'>): boolean => !immune(e) && e.conductor.blinkIn <= 0;
 
 /** It passes through other enemies (035): a Burrower underground, a Charger mid-charge (061: a hound mid-dash; 065: a hawk mid-dive), an add rising (041). Separation leaves it be. */
 export const passesThrough = (e: EnemyState): boolean => e.underground || e.rising > 0 || (e.mode === 'swipe' && LANE_RUNNERS.includes(defOf(e).kind));

@@ -1,5 +1,5 @@
 import type { DamageType } from '../data/ammo';
-import { damageEnemy, targetable, type EnemyState } from './enemies';
+import { damageEnemy, immune, targetable, type EnemyState } from './enemies';
 import { chainFromBurst } from './lightning';
 import { plated } from './bossParts';
 import { hitPart, partsNear } from './bossParts';
@@ -15,12 +15,13 @@ export function blastArea(state: SimState, roomId: string, x: number, y: number,
   const style = { knock: 0, flash: true, damageType } as const;
   const struck: EnemyState[] = [];
   for (const e of state.enemies) {
-    if (e.roomId !== roomId || e.health <= 0 || !targetable(e) || e.id === skip) continue;
+    if (e.roomId !== roomId || e.health <= 0 || immune(e) || e.id === skip) continue;
     // 060: each of the Forgewright's bellows in reach takes it (064: each of the Conductor's rods); its plated body blocks it (damageEnemy). A Burst that
     // vents it, breaking its second bellows, spends itself there: only later hits land on the body it opened.
     const wasPlated = plated(e);
     for (const part of partsNear(e, x, y, radius)) hitPart(state, e, part, damage, style);
-    if (wasPlated && !plated(e)) continue;
+    // 068: a body it can't reach yet (the Conductor blinking in) takes nothing; its rods did.
+    if ((wasPlated && !plated(e)) || !targetable(e)) continue;
     if (Math.hypot(e.x - x, e.y - y) > radius) continue;
     damageEnemy(state, e, damage, e.x - x, e.y - y, style);
     if (!plated(e)) struck.push(e);
