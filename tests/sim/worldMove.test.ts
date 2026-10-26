@@ -5,8 +5,9 @@ import { worldOffsets } from './worldOffsets';
 
 // 060 slice 1: the world grows to fit the Emberworks, and the centre moves to the grid's middle. The move is pure:
 // every landmark, node, pack, road, ley line, pylon and arena tile keeps its offset from the foundry's door, taken
-// from main before the move (worldOffsets.json), and Region 1's generated ground is the same. 060's new places, roads
-// and the like are added after the old ones, so everything in the snapshot is still there, unchanged.
+// before the move (worldOffsets.json), and the generated ground is the same. 064 slice 1 did it again for the
+// Stormcrown, from a snapshot retaken before its move. New places, roads and the like are added after the old ones, so
+// everything in the snapshot is still there, unchanged.
 
 /** An entry's id, if it has one. */
 const idOf = (v: unknown): unknown => (v !== null && typeof v === 'object' && 'id' in v ? v.id : undefined);
@@ -27,27 +28,21 @@ function unkept(now: unknown, then: unknown, path = ''): string[] {
   return Object.is(now, then) ? [] : [`${path}: ${String(now)}, was ${String(then)}`];
 }
 
-describe('the world grows (060)', () => {
+describe('the world grows (060, 064)', () => {
   const now = worldOffsets() as typeof SNAPSHOT;
 
-  it('puts the centre in the middle of a grid grown for the Emberworks', () => {
-    expect(WORLD_SHAPE.size).toBe(230);
-    expect(WORLD_SHAPE.centre).toEqual({ tx: 115, ty: 115 });
-    expect(WORLD_SHIFT).toEqual({ dx: 31, dy: 31 });
+  it('puts the centre in the middle of a grid grown for the Stormcrown (064)', () => {
+    expect(WORLD_SHAPE.size).toBe(292);
+    expect(WORLD_SHAPE.centre).toEqual({ tx: 146, ty: 146 });
+    expect(WORLD_SHIFT).toEqual({ dx: 62, dy: 62 });
   });
 
   it('keeps every hand-placed tile at its offset from the centre', () => {
-    // But one: 060 slice 3 moved the Cistern Terrace's ley line's last stretch south to make room for the Ash Kilns'
-    // (it still starts at its pylon and ends on the ruin; tests/data/leyLines.test.ts holds it to the line rules).
-    const { 'cistern-terrace': moved, ...lines } = SNAPSHOT.overworld.leyLines;
-    const then = { ...SNAPSHOT, overworld: { ...SNAPSHOT.overworld, leyLines: lines } };
-    // 061 placed the Ash Kilns' guards among the landmarks' packs, which the snapshot lists by index: they're left out.
-    const placed = { ...now, overworld: { ...now.overworld, packs: now.overworld.packs.filter((p) => p.group !== 'ash-kilns') } };
-    for (const k of ['landmarks', 'overworld', 'roads', 'roadPoints', 'pylons', 'arenas', 'hollows'] as const) expect(unkept(placed[k], then[k]), k).toEqual([]);
-    expect(now.overworld.leyLines['cistern-terrace']?.[0]).toEqual(moved[0]);
+    for (const k of ['landmarks', 'overworld', 'roads', 'roadPoints', 'pylons', 'arenas', 'hollows', 'emberworks'] as const) expect(unkept(now[k], SNAPSHOT[k]), k).toEqual([]);
   });
 
-  it('generates the same Region 1 round the centre', () => {
+  it('generates the same ground round the centre, out to the Emberworks\' edge', () => {
     expect(now.region1Ground).toEqual(SNAPSHOT.region1Ground);
+    expect(now.ground).toEqual(SNAPSHOT.ground);
   });
 });

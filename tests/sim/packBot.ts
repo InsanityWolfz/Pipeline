@@ -146,13 +146,13 @@ export const at = (tx: number, ty: number): { x: number; y: number } => ({ x: (t
 /**
  * 041.8's ring-matched packs: each pack, the lines of its fitting volley, its centre tile, and the player's start 6 to 7
  * tiles off. 053: on the round map, open ground in each ring: south-west of the meadow (ring 1), by the south road
- * (ring 2), and the Cistern Terrace's flagstones (ring 3, where it was before, moved with the Terrace). 060: +31 each
- * way with the centre.
+ * (ring 2), and the Cistern Terrace's flagstones (ring 3, where it was before, moved with the Terrace). 060 and 064: +31
+ * each way with the centre, each.
  */
 export const PACKS = {
-  1: { ids: ['husk', 'husk', 'husk', 'husk'], lines: ['arrow'], centre: { tx: 105, ty: 134 }, start: at(111, 134) },
-  2: { ids: ['husk', 'husk', 'husk', 'husk', 'wisp'], lines: ['arrow', 'arrow'], centre: { tx: 114, ty: 155 }, start: at(121, 155) },
-  3: { ids: ['shardback', 'charger', 'charger', 'burrower', 'sniper'], lines: ['bomb', 'arrow'], centre: { tx: 53, ty: 139 }, start: at(59, 139) },
+  1: { ids: ['husk', 'husk', 'husk', 'husk'], lines: ['arrow'], centre: { tx: 136, ty: 165 }, start: at(142, 165) },
+  2: { ids: ['husk', 'husk', 'husk', 'husk', 'wisp'], lines: ['arrow', 'arrow'], centre: { tx: 145, ty: 186 }, start: at(152, 186) },
+  3: { ids: ['shardback', 'charger', 'charger', 'burrower', 'sniper'], lines: ['bomb', 'arrow'], centre: { tx: 84, ty: 170 }, start: at(90, 170) },
 } as const;
 
 /** The longest a pack fight runs, ticks: 60 s. */
@@ -160,14 +160,14 @@ export const PACK_LIMIT = 60 * TICK_RATE;
 
 /**
  * 061's ring 4 pack: one of each of the four and a second mote (5, the most a pack holds), on open ash ground in the
- * Emberworks' north; a decent four-entrance Fire build (041.7's level-7 talents and gear, two Fire arrow lines and two
+ * Emberworks' north (064: +31 each way with the centre); a decent four-entrance Fire build (041.7's level-7 talents and gear, two Fire arrow lines and two
  * Fire bomb lines), the player 7 tiles off.
  */
 export const EMBER_PACK = {
   ids: ['cinder-mote', 'cinder-mote', 'bellows-hound', 'slag-golem', 'kiln-tender'],
   lines: ['arrow+fire', 'bomb+fire', 'arrow+fire', 'bomb+fire'],
-  centre: { tx: 128, ty: 23 },
-  start: at(135, 23),
+  centre: { tx: 159, ty: 54 },
+  start: at(166, 54),
 } as const;
 
 /** The ring 4 pack fight on a seed, with the decent Fire build. */

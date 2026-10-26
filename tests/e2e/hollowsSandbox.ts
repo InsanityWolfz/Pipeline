@@ -7,7 +7,7 @@ import { boot, cameraSettled } from './helpers';
 // stepped tick by tick until an enemy reaches a mode.
 
 /** Open Hollows ground on the round map (053): the tile the sandbox stands the player on, with room east for spawns. */
-const OPEN_GROUND = { tx: 67, ty: 149 };
+const OPEN_GROUND = { tx: 98, ty: 180 };
 
 /** The `?start=hollows` sandbox with its guards gone, the player on the road just past the barrier, banners played out and the camera still. */
 export async function sandbox(page: Page): Promise<{ x: number; y: number }> {

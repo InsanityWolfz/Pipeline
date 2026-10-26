@@ -84,8 +84,8 @@ describe('landmark entries', () => {
       expect({ tx: Math.floor((a.x0 + a.x1) / 2), ty: Math.floor((a.y0 + a.y1) / 2) }, id).toEqual(polar(bearing, r));
       expect(byId(id).ring, id).toBe(ring);
     }
-    // 029's Grotto, moved whole (+25, +39 from its tiles before 034) to the north, and +31 with the centre (060).
-    expect(byId('frozen-grotto').area).toEqual({ x0: 9 + 40 + 25 + 31, y0: 5 + 39 + 31, x1: 19 + 40 + 25 + 31, y1: 13 + 39 + 31 });
+    // 029's Grotto, moved whole (+25, +39 from its tiles before 034) to the north, and +31 with the centre twice (060, 064).
+    expect(byId('frozen-grotto').area).toEqual({ x0: 9 + 40 + 25 + 62, y0: 5 + 39 + 62, x1: 19 + 40 + 25 + 62, y1: 13 + 39 + 62 });
     expect(byId('frozen-grotto').ring).toBe(2);
     for (const s of OVERWORLD.springs) {
       const l = byId(s.id);

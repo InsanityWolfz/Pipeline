@@ -6,10 +6,10 @@ import type { TilePos } from './tiles';
 // 80 × 45 tiles; Stonefall Hollows (034) is the ring round that, like a donut, with the ley barrier on the circle
 // between them (053.2); past the Hollows the ground rises into a ragged cliff edge. Tiles throughout; distances are
 // straight lines between tile coordinates, as the danger rings (017) always measured them. 060 grew the grid for the
-// Emberworks, the third ring, and moved the centre to its middle (`WORLD_SHIFT`).
+// Emberworks, the third ring, and moved the centre to its middle (`WORLD_SHIFT`); 064 grew it again for the Stormcrown.
 
-/** The grid's width and height (060: the Emberworks' outer radius, 110, plus its ragged edge and a margin, each side). */
-const SIZE = 230;
+/** The grid's width and height (064: the Stormcrown's outer radius, 141, plus its ragged edge and a margin, each side; 060's was 230). */
+const SIZE = 292;
 
 export const WORLD_SHAPE = {
   size: SIZE,
@@ -31,13 +31,20 @@ export const WORLD_SHAPE = {
 const LAID_OUT_CENTRE = 84;
 
 /**
- * 060: how far every tile laid out on 053's 168-tile grid moved when the grid grew: from 053's centre to the new one.
+ * 060: how far every tile laid out on 053's 168-tile grid moved when the grid grew: from 053's centre to the new one
+ * (064: +62, the second growth's +31 on 060's +31). Everything 060 and later placed stands round the centre (`polar`).
  * Hand-placed data written in 053's coordinates goes through this, so each place keeps its offset from the centre.
  */
 export const WORLD_SHIFT: Shift = { dx: WORLD_SHAPE.centre.tx - LAID_OUT_CENTRE, dy: WORLD_SHAPE.centre.ty - LAID_OUT_CENTRE };
 
 /** A tile written in 053's coordinates, where it stands now (060). */
 export const laidOut = <T extends TilePos>(t: T): T => ({ ...t, tx: t.tx + WORLD_SHIFT.dx, ty: t.ty + WORLD_SHIFT.dy });
+
+/** 060's centre, on its 230-tile grid, where 060's few hand-placed waypoints were written. */
+const CENTRE_060 = 115;
+
+/** 064: a tile written in 060's coordinates (its grid's centre at 115), where it stands now. */
+export const laidOut060 = <T extends TilePos>(t: T): T => ({ ...t, tx: t.tx + WORLD_SHAPE.centre.tx - CENTRE_060, ty: t.ty + WORLD_SHAPE.centre.ty - CENTRE_060 });
 
 /** A tile's straight-line distance from the foundry's door, in tiles. */
 export const fromCentre = (tx: number, ty: number): number => Math.hypot(tx - WORLD_SHAPE.centre.tx, ty - WORLD_SHAPE.centre.ty);

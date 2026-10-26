@@ -3,7 +3,7 @@ import { MEADOW_VEIN, RUIN_AREA, SHRINE_PYLON, SHRINE_SHIFT } from './home';
 import { LANDMARK_LIST } from './landmarks';
 import { shiftTile } from './place';
 import type { TilePos } from './tiles';
-import { laidOut, WORLD_SHAPE } from './worldShape';
+import { laidOut, laidOut060, WORLD_SHAPE } from './worldShape';
 
 // Ley lines (018, 053): glowing seams in the ground where ley comes near the surface. Since 053 (D.3, Shaun: "not
 // overlapping each other… one path") each pylon's line home is one smooth curve from the pylon to its own point on
@@ -55,7 +55,8 @@ const ROUTES: Readonly<Record<string, LeyRoute>> = {
   'cistern-terrace': { via: [...[{ tx: 40, ty: 104 }, { tx: 55, ty: 100 }].map(laidOut), toward(225, APPROACH)], arrive: 225 },
   // 060: out of the Emberworks over the cliffs north of the west ramp, north of the Hollows' Cut and the Cistern Terrace,
   // south of the Quarry, in between the west road and the Cistern Terrace's line.
-  'ash-kilns': { via: [{ tx: 27, ty: 126 }, { tx: 40, ty: 121 }, { tx: 58, ty: 122 }, { tx: 77, ty: 123 }, { tx: 94, ty: 124 }, toward(240, APPROACH)], arrive: 240 },
+  // Written in 060's coordinates (064: moved with the centre).
+  'ash-kilns': { via: [...[{ tx: 27, ty: 126 }, { tx: 40, ty: 121 }, { tx: 58, ty: 122 }, { tx: 77, ty: 123 }, { tx: 94, ty: 124 }].map(laidOut060), toward(240, APPROACH)], arrive: 240 },
 };
 
 const lineHome = (pylon: TilePos, route: LeyRoute): TilePos[] => smoothCurve([{ tx: pylon.tx, ty: pylon.ty }, ...route.via, ruinEdge(route.arrive)], 1);
