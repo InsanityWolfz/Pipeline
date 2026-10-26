@@ -292,3 +292,8 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - A tier's `TIER_DAMAGE` is its total over stone (stormsteel 2.56), so the breakdown shows one step whatever the tier.
   - A machine unlocks when any recipe it runs (any variant) has been hand-crafted, design.md's "crafting something by hand once unlocks the machine that makes it".
   - Tier content (names, damage, families, fire sounds) is data in `src/data/tiers.ts` and `tierSounds.ts`; a fourth tier is new data.
+
+- **067 the foundry after the first boss:**
+  - The opening's gates are data on the start (`StartDef`): the real game starts with them shut; test starts open them but still record the field's clearing, so their goal chains move on. Only the land's populating waits on a shut-gate start.
+  - A crafting row's `shownAfter` (raws carried at least once) is the single list of what reveals it; the player data reads the bomb row's list rather than repeating it.
+  - The Warden's defeat is read from `killedBosses`, not `bossDefeats` (he has no altar), so unclaimed land and its guardian reset together on a KO.
