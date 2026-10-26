@@ -197,4 +197,5 @@ Goals and tests:
 - 062.13 The e2e builds its Smelter line with `?playtest`, not the sandbox, because the sandbox's room has no foundry to
   build in. The sandbox does give the parts and every tiered round, and its loadout offers them (Vitest).
 - 062.14 Measure: ring 4's stone build already clears in 8 s, under 061's 15–30 s band, before steel.
-
+- 062.15 The `?playtest` kit leaves out ley-steel, ley glass and the three steel parts: its bag's first screen was full,
+  and new parts pushed its cores out of sight. It still carries the raws they're made from (ley-iron, cinderite, ley dust).

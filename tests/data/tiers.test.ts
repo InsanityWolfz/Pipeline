@@ -7,6 +7,7 @@ import { elementOf, ROUNDS, roundBase, roundId, roundName, roundTags, roundTier,
 import { TIER_DAMAGE, TIERS } from '../../src/data/tiers';
 import { FIRE_ROUNDS } from '../../src/data/objectives';
 import { roundsByFamily } from '../../src/sim/knownRounds';
+import { LEFT_OUT_OF_KIT, PLAYTEST_START } from '../../src/data/playtest';
 
 // 062: material tiers as data. A round's tier is a third slot beside its element and shape, a `+` segment straight
 // after its base, never a tag: every tiered round is derived alongside the stone ones.
@@ -85,5 +86,12 @@ describe('material tiers (062)', () => {
     expect(roundsByFamily()).toHaveLength(4 + ROUNDS.length);
     expect(FIRE_ROUNDS).toContain('arrow+steel+fire');
     expect(FIRE_ROUNDS).toContain('ley-bolt+glass+fire+split');
+  });
+});
+
+describe('the playtest kit (062)', () => {
+  it('leaves the tier parts out, carrying the raws they are made from', () => {
+    for (const id of LEFT_OUT_OF_KIT) expect(PLAYTEST_START.inventory[id], id).toBeUndefined();
+    for (const id of ['ley-iron', 'cinderite', 'ley-dust']) expect(PLAYTEST_START.inventory[id], id).toBeGreaterThan(0);
   });
 });

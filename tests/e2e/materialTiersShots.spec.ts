@@ -40,6 +40,8 @@ test.describe('review screenshots (062)', () => {
       for (const [pieceId, tx, ty, facing] of [['hopper', 15, 4, 'right'], ['knapper', 16, 4, 'right'], ['crate', 17, 4, 'right'], ['hopper', 16, 3, 'down']] as const) g.step(1, { place: { pieceId, tx, ty, facing } });
       let s = g.step(1);
       const at = (tx: number, ty: number) => s.foundry.pieces.find((p) => p.tx === tx && p.ty === ty);
+      // The kit carries ley-iron and cinderite, not ley-steel (062): smelted by hand first.
+      for (let i = 0; i < 10; i++) g.craft('ley-steel');
       h.walkTo(14.2 * 32, 4.5 * 32);
       s = g.step(1, { deposit: { id: at(15, 4)?.id ?? -1, itemId: 'stone', amount: 'half' } });
       h.walkTo(15.2 * 32, 3.5 * 32);
