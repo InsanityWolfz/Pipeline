@@ -7,6 +7,7 @@ import { RETURN_STONE, RETURN_STONES, returnStoneDef } from '../../src/data/retu
 import { FOUNDRY_ROOM, SANDBOX_ROOM, WALKABLE } from '../../src/data/rooms';
 import type { TilePos } from '../../src/data/tiles';
 import { gapTo } from '../../src/sim/claims';
+import { packGround } from '../../src/sim/population';
 import { createSandboxSim } from '../../src/sim/sandbox';
 import { makeEnvelope, readSave, snapshot } from '../../src/sim/save';
 import { createSim, type SimState } from '../../src/sim/state';
@@ -156,5 +157,29 @@ describe('return stones (072): waking', () => {
     expect(sb.returnStones).toEqual(RETURN_STONES.map((s) => s.id));
     expect(summarize(sb).returnStones.every((r) => r.woken)).toBe(true);
     expect(createSim(SEED).returnStones).toEqual([]);
+  });
+});
+
+describe('return stones (072): the spawn margin', () => {
+  it('no pack spawns within the margin of a stone (data), so arriving is never an ambush', () => {
+    const m = RETURN_STONE.packMargin;
+    expect(m).toBeGreaterThan(0);
+    for (const s of RETURN_STONES) {
+      for (let dy = -m; dy <= m; dy++) for (let dx = -m; dx <= m; dx++) expect(packGround(s.tx + dx, s.ty + dy), `${s.id} ${dx},${dy}`).toBe(false);
+    }
+  });
+
+  it('a pack that spawns lands outside every margin', () => {
+    const s = hollowsAt(FORUM.arrive);
+    s.populated = true;
+    s.gates.emberworks = true;
+    s.gates.stormcrown = true;
+    // Far from every stone's view, so their ground isn't kept out by the camera.
+    s.roomId = FOUNDRY_ROOM;
+    run(s, 2);
+    const m = RETURN_STONE.packMargin * 32;
+    const packs = s.enemies.filter((e) => e.group.startsWith('pop-'));
+    expect(packs.length).toBeGreaterThan(0);
+    for (const e of packs) for (const r of RETURN_STONES) expect(Math.max(Math.abs(e.homeX - tileCentre(r).x), Math.abs(e.homeY - tileCentre(r).y))).toBeGreaterThan(m);
   });
 });
