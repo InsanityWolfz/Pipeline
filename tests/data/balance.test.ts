@@ -148,15 +148,16 @@ describe('ring scaling (041)', () => {
 describe('the Bulwark (041)', () => {
   const B = BULWARK;
 
-  it('has 3,800 HP (041.16: under its raised ceiling of about 5,000); its lob and pound are as before', () => {
-    expect(B.maxHealth).toBe(3800); // was 900
+  it('has 900 HP (fix-bulwark-ease, Shaun: "900 health is fine"; 041 had 3,800); its lob and pound are as before', () => {
+    expect(B.maxHealth).toBe(900); // was 3,800
     expect(B.lob).toMatchObject({ cooldownTicks: 240, windupTicks: 30, count: 3, damage: 25 });
     expect(B.pound).toMatchObject({ windupTicks: 60, damage: 35, cooldownTicks: 300 });
   });
 
   it('enrages below 30%, punishes circling with a rear stomp, and calls a Shardback and a Charger at 50%', () => {
-    // 041.7 tuning: the enrage turns 110°/s (spec 70) and the stomp comes after 120 ticks behind (spec 180).
-    expect(B.enrage).toMatchObject({ below: 0.3, roarTicks: 60, turnDegPerSec: 110, lobCooldownTicks: 160, rollProofLobs: true });
+    // fix-bulwark-ease (Shaun: "he does speed up a slight amount, but nothing crazy"): the enrage turns 45°/s (was 110)
+    // and lobs every 210 ticks (was 160), one bomb a lob (was the lob's 3). 041.7: the stomp comes after 120 ticks behind.
+    expect(B.enrage).toMatchObject({ below: 0.3, roarTicks: 60, turnDegPerSec: 45, lobCooldownTicks: 210, lobCount: 1, rollProofLobs: true });
     // 041.12 (Shaun): the pound's shockwave and the enraged lobs ignore a roll's i-frames.
     expect(B.pound.rollProof).toBe(true);
     expect(B.stomp).toEqual({ range: 160, behindTicks: 120, behindDecay: 2, windupTicks: 40, swipeTicks: 8, radius: 96, arcDegrees: 180, damage: 30, knockback: 40, knockTicks: 8, recoverTicks: 40, cooldownTicks: 360 });
@@ -171,6 +172,23 @@ describe('the Bulwark (041)', () => {
     // Enraged, each is shorter or as short (never longer).
     const w = B.enrage.windups;
     expect([w.pound <= B.pound.windupTicks, w.lob <= B.lob.windupTicks, w.stomp <= B.stomp.windupTicks, w.wave <= B.wave.windupTicks, w.fuse <= B.lob.fuseTicks]).toEqual([true, true, true, true, true]);
+  });
+
+  it('enraged, it speeds up only slightly: each speed-up 10–15% (a telegraph already at MIN_TELEGRAPH_TICKS stays), one bomb a lob (fix-bulwark-ease)', () => {
+    const e = B.enrage;
+    // Faster by a ratio of the unenraged to the enraged value: at least 1.10 and at most 1.15.
+    const slight = (ratio: number, k: string) => {
+      expect(ratio, k).toBeGreaterThanOrEqual(1.1);
+      expect(ratio, k).toBeLessThanOrEqual(1.15);
+    };
+    slight(e.turnDegPerSec / B.shield.turnDegPerSec, 'turn');
+    slight(B.lob.cooldownTicks / e.lobCooldownTicks, 'lob cooldown');
+    const plain = { pound: B.pound.windupTicks, lob: B.lob.windupTicks, stomp: B.stomp.windupTicks, wave: B.wave.windupTicks, fuse: B.lob.fuseTicks };
+    for (const [k, enraged] of Object.entries(e.windups) as [keyof typeof plain, number][]) {
+      if (plain[k] === MIN_TELEGRAPH_TICKS) expect(enraged, k).toBe(MIN_TELEGRAPH_TICKS);
+      else slight(plain[k] / enraged, k);
+    }
+    expect(e.lobCount).toBe(1);
   });
 
   it('its add tiles are open floor inside the arena, the first two either side of its start, more than a pair (041.17)', () => {

@@ -1,4 +1,5 @@
 import type { Cameras, GameObjects, Scene } from 'phaser';
+import { BOSS_LOOK } from '../data/arenaAssets';
 import { CAMERA_LERP, DOOR_FADE_MS } from '../data/config';
 import { INTAKE } from '../data/foundry';
 import { FOUNDRY_ROOM } from '../data/rooms';
@@ -17,6 +18,8 @@ export class SceneCameras {
   private looking = false;
   /** What waits for the running fade's dark point, in the order asked. */
   private atDark: (() => void)[] = [];
+  /** How far up the camera sits off the player now, view px (fix-playtest-ui: eased toward a fighting boss's bossLookShift). */
+  private lift = 0;
 
   constructor(scene: Scene, fit: ScreenFit) {
     this.scene = scene;
@@ -76,6 +79,16 @@ export class SceneCameras {
       main.centerOn(player.x, player.y);
       main.startFollow(followed, true, CAMERA_LERP, CAMERA_LERP);
     }
+  }
+
+  /**
+   * fix-playtest-ui: eases the camera's follow `target` px up off the player (a fighting boss's bossLookTarget, 0 with
+   * none), so the boss bar doesn't cover the boss. Set every frame: a restarted follow (a KO, the attune) resets it.
+   */
+  bossLook(target: number, deltaMs: number): void {
+    this.lift += (target - this.lift) * (1 - Math.exp(-Math.max(0, deltaMs) / BOSS_LOOK.easeMs));
+    if (Math.abs(target - this.lift) < 0.5) this.lift = target;
+    this.scene.cameras.main.setFollowOffset(0, Math.round(this.lift));
   }
 
   /** Where the main camera's centre lands when asked to centre on `p`, kept inside its bounds. */

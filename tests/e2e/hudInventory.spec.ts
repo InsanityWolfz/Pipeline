@@ -130,7 +130,8 @@ test('wood picked up in the foundry is safe at once (050); 3 picked up back outs
 test('a deposit at the claimed shrine pylon leaves nothing carried and nothing at risk', async ({ page }) => {
   test.setTimeout(90_000);
   const errors = watchErrors(page);
-  await boot(page);
+  // Past the first foundry entry, so what's carried is at risk until it goes home (067.16).
+  await boot(page, '?start=field&attuned');
   const s = await page.evaluate(([tx, ty]) => {
     const g = window.__GAME__;
     const h = window.__helpers;

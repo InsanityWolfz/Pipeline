@@ -9,8 +9,8 @@ import { boot, cameraSettled, watchErrors } from './helpers';
 // the foundry's door; the bomb goal's sub-lines (B.3); the minimap's icons named on hover, and the arena's once seen (B.5).
 
 const T = 32;
-const CRAFT = OBJECTIVES.findIndex((o) => o.text === 'Craft bombs and ley bolts (C)');
-const SHRINE = OBJECTIVES.findIndex((o) => o.text === "Claim the shrine's pylon");
+const CRAFT = OBJECTIVES.findIndex((o) => o.text === 'Craft bombs (C)');
+const SHRINE = OBJECTIVES.findIndex((o) => o.text === "Claim the shrine's pylon (E)");
 
 test('an off-screen goal gets an edge arrow pointing at it; on screen the arrow hovers over it', async ({ page }) => {
   const errors = watchErrors(page);
@@ -72,7 +72,7 @@ test('inside the foundry a goal outside points at the door; the bomb goal lists 
     window.__GAME__?.completeObjectives(n);
     window.__GAME__?.step(2);
   }, CRAFT);
-  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().objective))?.text).toBe('Craft bombs and ley bolts (C)');
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().objective))?.text).toBe('Craft bombs (C)');
   const lines = await page.evaluate(() => window.__GAME__?.ui().objective);
   expect(lines?.subSteps.map((s) => [s.text, s.done])).toEqual([
     ['Collect stone', false],

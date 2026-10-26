@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { RECIPES, REVEALING_ITEMS } from '../../src/data/recipes';
-import { craft } from '../../src/sim/crafting';
-import { arena, die } from './fight';
+import { TUTORIAL_START } from '../../src/data/player';
+import { craft, craftKnown } from '../../src/sim/crafting';
+import { createSim } from '../../src/sim/state';
+import { arena, die, run, SEED } from './fight';
 
 describe('crafting', () => {
   it.each(Object.values(RECIPES))('$id takes its inputs and adds its output', (recipe) => {
@@ -30,18 +32,30 @@ describe('crafting', () => {
     expect(s.inventory.bomb).toBe(4);
   });
 
-  it('refuses bomb and ley bolt recipes until the tube attunes (012) or the foundry opens (051: crafted before it)', () => {
-    const s = arena();
-    s.gates.foundry = false;
-    s.inventory = { 'ley-crystal': 2, stone: 1 };
-    expect(craft(s, 'ley-dust')).toBe(false);
-    expect(craft(s, 'casing')).toBe(false);
-    expect(s.events.craftFails).toEqual([{ recipeId: 'ley-dust' }, { recipeId: 'casing' }]);
-    s.gates.foundry = true;
-    expect(craft(s, 'casing')).toBe(true);
-    s.gates.foundry = false;
-    s.link.attuned = true;
-    expect(craft(s, 'ley-dust')).toBe(true);
+  it('knows the bomb and ley bolt chains from the start once their raws have been carried, with no attunement (067)', () => {
+    const s = createSim(SEED, { start: TUTORIAL_START });
+    const chain = ['casing', 'fuse', 'ley-dust', 'bomb', 'ley-bolt'];
+    const known = () => chain.filter((r) => craftKnown(s, r));
+    expect(known()).toEqual([]);
+    s.inventory = { stone: 1 };
+    run(s, 1);
+    expect(known()).toEqual(['casing']);
+    s.inventory = { stone: 1, 'husk-resin': 1, 'ley-crystal': 2 };
+    run(s, 1);
+    expect(known()).toEqual(chain);
+    expect([s.link.attuned, s.gates.foundry]).toEqual([false, false]);
+    for (const r of ['casing', 'fuse', 'ley-dust', 'ley-dust', 'bomb', 'ley-bolt']) expect(craft(s, r), r).toBe(true);
+    expect(s.inventory).toMatchObject({ bomb: 4, 'ley-bolt': 4 });
+    // Known for good: the raws spent and a KO taken.
+    die(s);
+    expect(known()).toEqual(chain);
+  });
+
+  it('every recipe is known once what it is shown after has been carried, never waiting on attunement (067)', () => {
+    const s = createSim(SEED, { start: TUTORIAL_START });
+    s.found = [...REVEALING_ITEMS];
+    expect(s.link.attuned).toBe(false);
+    for (const id of Object.keys(RECIPES)) expect(craftKnown(s, id), id).toBe(true);
   });
 
   it('does nothing when any input is short, and records the failure', () => {
@@ -65,6 +79,7 @@ describe('crafting', () => {
 
   it('keeps the crafted set through a death; the unbanked rope is lost', () => {
     const s = arena();
+    s.link.attuned = true; // Past the first foundry entry: before it, a KO loses nothing (067.16).
     s.inventory = { fiber: 1 };
     s.banked = {};
     craft(s, 'rope');

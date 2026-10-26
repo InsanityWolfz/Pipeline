@@ -135,6 +135,7 @@ describe('unknown until banked', () => {
 
   it('a KO before banking loses it, and its node stays hidden', () => {
     const s = arena();
+    s.link.attuned = true; // Past the first foundry entry: before it, a KO loses nothing (067.16).
     s.inventory['schematic-machine-speed'] = 1;
     die(s);
     expect(s.inventory['schematic-machine-speed'] ?? 0).toBe(0);

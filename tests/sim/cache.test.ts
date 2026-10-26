@@ -100,6 +100,7 @@ describe('the Ruined Cache', () => {
 
   it('picks up as normal, and what it gave is at risk until banked', () => {
     const s = atCache();
+    s.link.attuned = true; // Past the first foundry entry: before it, a KO loses nothing (067.16).
     s.banked = {};
     const gave = open(s);
     for (let t = 0; t < 300 && s.groundItems.length > 0; t++) {

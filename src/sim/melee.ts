@@ -1,7 +1,7 @@
 import { MELEE } from '../data/combat';
 import type { Room } from '../data/rooms';
 import { defOf } from './champions';
-import { damageEnemy, targetable, type EnemyState, type HitStyle } from './enemies';
+import { damageEnemy, immune, targetable, type EnemyState, type HitStyle } from './enemies';
 import { startKnock } from './knockback';
 import { sectorHitsBox, type Sector } from './sector';
 import { recordBlock, shieldBlocks } from './shield';
@@ -34,14 +34,15 @@ export function punch(state: SimState, dirX: number, dirY: number): void {
   const arc = { x: player.x, y: player.y, dirX, dirY, reach: MELEE.reach, arcDegrees: MELEE.arcDegrees };
   const hits: number[] = [];
   for (const e of state.enemies) {
-    if (e.roomId !== state.roomId || e.health <= 0 || !targetable(e)) continue;
+    if (e.roomId !== state.roomId || e.health <= 0 || immune(e)) continue;
     const def = defOf(e);
     const { hurtbox } = def;
     // 060: each of the Forgewright's whole bellows in the arc takes the punch, which spends itself there: no clang on
     // its plated body, and nothing on the body a break just vented. Else its plated body blocks it (damageEnemy).
     const parts = struckParts(room, arc, e);
     for (const part of parts) hitPart(state, e, part, MELEE.damage, PUNCH_HIT);
-    if (parts.length > 0) continue;
+    // 068: a body it can't reach yet (the Conductor blinking in) takes nothing.
+    if (parts.length > 0 || !targetable(e)) continue;
     if (!sectorHitsBox(arc, { x: e.x, y: e.y + hurtbox.offsetY, w: hurtbox.w, h: hurtbox.h })) continue;
     if (!clearGround(room, player.x, player.y, e.x, e.y)) continue;
     // Into a shield's front (034): no damage, no knockback, a block between them.

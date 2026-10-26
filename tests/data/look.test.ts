@@ -91,7 +91,6 @@ describe('feel and sound references', () => {
       DAMAGE_NUMBERS.player,
       DAMAGE_NUMBERS.outline,
       ...AMBIENT.moteColors,
-      SITE_LOOK.dome.color,
       SITE_LOOK.safe.color,
       SITE_LOOK.safe.ringColor,
       SUPPLY_LOOK.tendrilColor,

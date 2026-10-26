@@ -15,7 +15,7 @@ export function parseStart(search: string): StartDef {
   const params = new URLSearchParams(search);
   if (params.has('sandbox')) return SANDBOX_START;
   if (params.has('playtest')) return PLAYTEST_START;
-  // `&attuned` too: the sandbox with every recipe known, for tests of the bomb and ley bolt chains.
+  // `&attuned` too: the field start with the tube already attuned (067: recipes no longer wait on it).
   if (params.get('start') === 'hollows') return HOLLOWS_START;
   if (params.get('start') === 'field') return params.has('attuned') ? { ...DEFAULT_START, attuned: true } : DEFAULT_START;
   return TUTORIAL_START;

@@ -41,6 +41,7 @@ import { CursorView } from './CursorView';
 import { Legibility } from './Legibility';
 import { IDLE_HOST, type GameHost } from './flow/host';
 import { SandboxPanel } from './SandboxPanel';
+import { bossLookTarget } from './bossLook';
 import { TunnelView } from './TunnelView';
 import { drawPointerUi } from './pointerUi';
 import { RoomFollow } from './roomFollow';
@@ -94,6 +95,8 @@ export class GameScene extends Scene {
   private readonly pending: SimEvents = createEvents();
   /** Set by the test hook: the real-time loop stops advancing the sim (the menu still opens and crafts). */
   manualStepping = false;
+  /** The page's `data-game` is set (fix-playtest-ui). */
+  private marked = false;
   /** The sim tick the last drawn frame showed, or -1 before the first (for ui().drawnTick: tests wait on it, not on time). */
   drawnTick = -1;
   /** The screen fit (016): cameras zoom by its scale so the same 640×360 of the world fills a full-resolution backbuffer. */
@@ -194,6 +197,11 @@ export class GameScene extends Scene {
       }
     }
     this.draw();
+    // fix-playtest-ui: once a frame has drawn, the page says which game runs, for the production build's smoke test (tests/prod).
+    if (!this.marked) {
+      this.marked = true;
+      document.getElementById('game')?.setAttribute('data-game', this.sim.sandbox ? 'sandbox' : 'play');
+    }
   }
 
   /** What the render shows, for the test hook (015; gameUi.ts). */
@@ -228,6 +236,7 @@ export class GameScene extends Scene {
     const sim = this.sim;
     this.room.follow(this.pending.woke);
     if (!this.room.fading && this.playerView) this.sceneCameras?.attuneLook(sim, this.room.shownRoomId, this.playerView.sprite);
+    this.sceneCameras?.bossLook(bossLookTarget(sim), this.game.loop.delta);
     this.effects.play(this.pending, sim.player);
     if (this.pending.identifies.length > 0) this.site?.identified();
     if (this.pending.woke) this.wake?.show(this.pending.lost, sim);

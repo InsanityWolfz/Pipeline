@@ -1,10 +1,10 @@
-import type { InteractKind } from '../data/interact';
+import type { InteractKind, InteractLabel } from '../data/interact';
 import { SANDBOX } from '../data/sandbox';
 import { SANDBOX_ROOM } from '../data/rooms';
 import { altarInReach, altarState } from './altar';
-import { doorInReach, doorUse } from './arenaLock';
+import { arenaLocked, doorInReach, doorUse } from './arenaLock';
 import { cacheInReach, isOpened } from './cache';
-import { claimedPylons, dormant, fixtureInReach, pylonInReach } from './claims';
+import { claimedPylons, dormant, fixtureInReach, isClaimed, occupied, pylonInReach } from './claims';
 import { fixtureDef } from './fixtures';
 import { usableInReach } from './foundryUse';
 import { nodeInReach } from './harvest';
@@ -16,13 +16,15 @@ import { stoneInReach } from './tutorial';
 
 // What E would act on right now (045): the thing in reach that takes an E press, in the order the sim takes one
 // (src/sim/step.ts), and the world point its prompt floats over. Nothing while a harvest, claim or cache hold runs
-// (018: the prompt never sits on a hold's bar), or where E would do nothing: a dormant pylon, a dim altar, an opened
+// (018: the prompt never sits on a hold's bar), or where E would do nothing: a dormant or guarded pylon, a dim altar, an opened
 // cache, an empty crate, the waystone with no pylon claimed, and in build mode a node (E there is for pieces).
 
 export interface InteractTarget {
   kind: InteractKind;
   x: number;
   y: number;
+  /** Words its prompt shows beside the key (src/data/interact.ts), if any. */
+  label?: InteractLabel;
 }
 
 const at = (kind: InteractKind, p: { x: number; y: number }): InteractTarget => ({ kind, x: p.x, y: p.y });
@@ -37,12 +39,17 @@ export function interactTarget(state: SimState): InteractTarget | null {
   if (door && doorUse(state, door)) {
     const first = door.door.tiles[0];
     const last = door.door.tiles[door.door.tiles.length - 1];
-    if (first && last) return at('arena-door', tileCentre({ tx: (first.tx + last.tx) / 2, ty: first.ty }));
+    if (first && last) {
+      const target = at('arena-door', tileCentre({ tx: (first.tx + last.tx) / 2, ty: first.ty }));
+      // fix-bulwark-ease: from inside while its boss fights, the prompt says E leaves and resets the fight (043's lock).
+      return arenaLocked(state, door, state.roomId) ? { ...target, label: 'leaveFight' } : target;
+    }
   }
   const altar = altarInReach(state);
   if (altar) return altarState(state, altar.id) === 'dim' ? null : at('altar', tileCentre(altar));
   const pylon = pylonInReach(state);
-  if (pylon) return dormant(state, pylon) ? null : at('pylon', tileCentre(pylon));
+  // fix-playtest-ui (Shaun: "Should only show E if it needs cleared"): a pylon whose guards live has none; its hover says why.
+  if (pylon) return dormant(state, pylon) || (!isClaimed(state, pylon.site) && occupied(state, pylon.site)) ? null : at('pylon', tileCentre(pylon));
   for (const kind of ['waystone', 'stash', 'bench'] as const) {
     const f = fixtureInReach(state, kind);
     if (!f) continue;

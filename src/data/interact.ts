@@ -32,6 +32,15 @@ export interface InteractPrompt {
   beside?: number;
 }
 
+/**
+ * Words some prompts show beside their key cap (fix-bulwark-ease, Shaun: "make sure you can run from him"): from inside
+ * an arena while its boss fights, E at the door leaves and the fight starts over, and the prompt says so.
+ */
+export const INTERACT_LABELS = {
+  leaveFight: 'Leave (resets the fight)',
+} as const;
+export type InteractLabel = keyof typeof INTERACT_LABELS;
+
 /** The objective prompt's height (012): a tile over the thing's centre. */
 const OVER = TILE_SIZE;
 

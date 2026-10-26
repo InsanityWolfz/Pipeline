@@ -130,6 +130,18 @@ describe('landmark hovers (032)', () => {
     expect(nameAt(s, HALL, p.x, p.y)?.description).toBe('Quarry pylon: sends stone home.');
   });
 
+  it('says to kill all enemies over a pylon whose guards remain (fix-playtest-ui)', () => {
+    const s = createSim(SEED, { roomId: HALL });
+    claim(s, SHRINE_SITE);
+    const pylon = landmarkDef('quarry').pylon;
+    if (!pylon) throw new Error('no pylon');
+    expect(s.enemies.some((e) => e.group === 'quarry')).toBe(true);
+    const p = centre(pylon.tx, pylon.ty);
+    expect(nameAt(s, HALL, p.x, p.y)?.description).toBe(DESCRIPTIONS.pylonGuarded);
+    s.enemies = s.enemies.filter((e) => e.group !== 'quarry');
+    expect(nameAt(s, HALL, p.x, p.y)?.description).toBe('Quarry pylon: claim it to send stone home.');
+  });
+
   it('names the Ruined Cache: sealed while a guard lives, ready, then empty once opened', () => {
     const s = createSim(SEED, { roomId: HALL });
     const at = landmarkDef('ruined-cache').cache;

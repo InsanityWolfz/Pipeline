@@ -19,7 +19,7 @@ import type { SimState } from './state';
 import { tileCentre } from './tiles';
 import { WORLD } from './world';
 
-// The living population (017). Once the first line fills the tube, every ring
+// The living population (017). Once the ruin field is cleared (067), every ring
 // of the overworld but the calm ring 0 keeps its packs alive: a pack wiped out
 // comes back after a delay, out of view, never in a claimed pylon's safe zone and
 // never while the screen is already full. Claimed ground stays safe for good.

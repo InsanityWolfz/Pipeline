@@ -54,7 +54,8 @@ export function damagePlayer(
  * Death (011). At 0 health the player starts dying: no input, no hits, enemies
  * lose them. When the animation ends they wake in the foundry at full health (the stats' max, 036),
  * keeping only what was banked of what they carry; the rest is lost and
- * reported on the KO. Unclaimed rooms reset; everything kept by design stays.
+ * reported on the KO. Until the tube attunes (the first foundry entry), nothing carried is lost (067.16).
+ * Unclaimed rooms reset; everything kept by design stays.
  */
 export function checkKo(state: SimState): void {
   const p = state.player;
@@ -81,7 +82,7 @@ function wake(state: SimState): void {
   }
   const lost: Inventory = {};
   const kept: Inventory = {};
-  // The at-risk helper (031) is the rule: the safe part is kept, the at-risk part lost.
+  // The at-risk helper (031) is the rule: the safe part is kept, the at-risk part lost (before the foundry, all safe: 067.16).
   for (const [itemId, r] of Object.entries(itemRisks(state))) {
     if (r.safe > 0) kept[itemId] = r.safe;
     if (r.atRisk > 0) lost[itemId] = r.atRisk;

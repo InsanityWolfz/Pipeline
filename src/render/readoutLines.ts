@@ -1,6 +1,8 @@
 import { INTAKE_CAP_ICON, INTAKE_EMPTY_ICON } from '../data/foundryAssets';
 import { ammoDef } from '../data/ammo';
 import { CAPPED_LABEL } from '../data/objectives';
+import { INTAKE } from '../data/foundry';
+import { RECIPES } from '../data/recipes';
 import { itemDef } from '../data/items';
 import { statusRecipe } from '../sim/flow';
 import { count } from '../sim/inventory';
@@ -11,6 +13,12 @@ import type { MachineState, PieceState } from '../sim/pieces';
 
 /** One readout line: an atlas frame for its icon, and the text beside it. */
 export type Line = [frame: string, text: string];
+
+/**
+ * The most lines a readout needs: the largest recipe's inputs plus its output, or the intake's rows, one per entrance
+ * (fix-playtest-ui: the fifth entrance's row was cut off when this counted recipes only).
+ */
+export const READOUT_MAX_LINES = Math.max(INTAKE.entrances.length, ...Object.values(RECIPES).map((r) => Object.keys(r.inputs).length + 1));
 
 /**
  * A machine's lines: each input of the recipe its status reads (062: so the hover and the status's missing inputs

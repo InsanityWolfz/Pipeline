@@ -5,8 +5,9 @@ import type { AttackTiming, EnemyBase, ShieldDef } from './enemyBase';
 // plate that blocks straight shots and punches into its front. It lobs bombs marked by
 // two red circles and pounds the ground round itself up close. Starting values from the
 // spec, tuned in playtest so triple arrows from behind kill it in about 30–45 s. 041 made
-// it a real fight: 3,000 HP, an enrage below 30%, a rear stomp that punishes circling,
-// and adds at half health (bulwarkPhases.ts).
+// it a real fight: an enrage below 30%, a rear stomp that punishes circling, and adds at
+// half health (bulwarkPhases.ts). fix-bulwark-ease (Shaun's playtest: "ridiculously hard…
+// just nerf him"): back to 900 HP, one bomb a lob enraged, and only a slight enraged speed-up.
 
 /** The Bulwark (034): a shielded wall that lobs bombs and pounds up close, guarding its arena. Its values are below. */
 export interface BulwarkDef extends EnemyBase {
@@ -43,6 +44,8 @@ export interface BulwarkDef extends EnemyBase {
     roarTicks: number;
     turnDegPerSec: number;
     lobCooldownTicks: number;
+    /** fix-bulwark-ease: the bombs each enraged lob throws (Shaun: "single bombs"), in place of `lob.count`. */
+    lobCount: number;
     rollProofLobs: boolean;
     /** 041.16: each attack's telegraph while enraged, ticks (never under MIN_TELEGRAPH_TICKS): the pound's, lob's, stomp's and back wave's wind-ups and its bombs' fuse. */
     windups: { pound: number; lob: number; stomp: number; wave: number; fuse: number };
@@ -77,11 +80,11 @@ export const BULWARK: BulwarkDef = {
   name: 'Bulwark',
   boss: true,
   /**
-   * 041: 3,800 (was 900). 041.16 (Shaun) raised its ceiling to about 5,000; with the back wave, the enrage's shorter
-   * telegraphs and the adds that keep coming (at most four, 041.17), 3,800 is where the most seeds of a decent build's
-   * fight land in 60–90 s, taking real damage (041.7, tests/sim/bulwarkFight.test.ts).
+   * fix-bulwark-ease (Shaun, playtest: "900 health is fine"): 900, as 034 had it. 041 had raised it to 3,800 for a
+   * 60–90 s fight; with that and the rest of 041's retune he found it "ridiculously hard". Later regions' bosses are
+   * to be tougher than this second region's.
    */
-  maxHealth: 3800,
+  maxHealth: 900,
   walkSpeed: 18,
   feetBox: { w: 36, h: 14 },
   hurtbox: { w: 44, h: 54, offsetY: -22 },
@@ -111,18 +114,22 @@ export const BULWARK: BulwarkDef = {
   /**
    * Once per fight, when its health first drops below `below` of its max (041.4), it enrages at its next free moment
    * (a wind-up already running finishes first): it roars `roarTicks`, starting no attack, then until it dies or resets
-   * its shield turns at `turnDegPerSec` and its lob cooldown is `lobCooldownTicks`; with `rollProofLobs` (041.12) the
-   * bombs it lobs then ignore a roll's i-frames. 041.16 (Shaun): its telegraphs shorten to `windups`, never under
-   * MIN_TELEGRAPH_TICKS.
+   * its shield turns at `turnDegPerSec`, its lob cooldown is `lobCooldownTicks` and each lob throws `lobCount` bombs;
+   * with `rollProofLobs` (041.12) the bombs it lobs then ignore a roll's i-frames. 041.16 (Shaun): its telegraphs
+   * shorten to `windups`, never under MIN_TELEGRAPH_TICKS.
    */
-  // 041.7 tuning: 110°/s (the spec's 70 still let a decent build win in under 60 s).
+  // fix-bulwark-ease (Shaun: "he does speed up a slight amount, but nothing crazy"): every speed-up is 10–15% over
+  // its unenraged value (the turn 40 → 45°/s, was 110; the lob cooldown 240 → 210, was 160; the pound's wind-up
+  // 60 → 53, was 36; the stomp's 40 → 35, was 30; the back wave's 36 → 32, was 30; the fuse 90 → 80, was 45); the
+  // lob's wind-up stays at MIN_TELEGRAPH_TICKS (30). One bomb a lob (was the lob's 3: "he just throws single bombs").
   enrage: {
     below: 0.3,
     roarTicks: 60,
-    turnDegPerSec: 110,
-    lobCooldownTicks: 160,
+    turnDegPerSec: 45,
+    lobCooldownTicks: 210,
+    lobCount: 1,
     rollProofLobs: true,
-    windups: { pound: 36, lob: 30, stomp: 30, wave: 30, fuse: 45 },
+    windups: { pound: 53, lob: 30, stomp: 35, wave: 32, fuse: 80 },
   },
   /**
    * Its back wave (041.16, Shaun: standing behind it always costs something): every `everyTicks` while it fights, a

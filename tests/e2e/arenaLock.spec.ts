@@ -56,3 +56,55 @@ test('?start=hollows: E at the door goes in, the forum locks as the Bulwark wake
   await expect.poll(async () => forumDoor(await page.evaluate(() => window.__GAME__?.ui())), { timeout: 20_000 }).toBe('down');
   expect(errors).toEqual([]);
 });
+
+// fix-bulwark-ease (Shaun: "make sure you can run from him. The door needs to work"): a playtester at 8 HP couldn't
+// leave. In live play (keys, not the hook's commands), hurt, with the Bulwark enraged and a lob winding up, the E
+// prompt over the door reads "Leave (resets the fight)" and E there puts the player outside with the fight reset.
+test('live play: hurt to 8 HP, the Bulwark enraged mid-lob, E at the door leaves and resets it', async ({ page }) => {
+  test.setTimeout(120_000);
+  const errors = watchErrors(page);
+  await intoForum(page);
+  // A real hit first: standing still by the door, its lob lands on the player's feet.
+  const hit = await page.evaluate(() => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    const full = g.getState().player.health;
+    for (let t = 0; t < 1200; t++) if (g.step(1).player.health < full) return true;
+    return false;
+  });
+  expect(hit).toBe(true);
+  // Back against the door (a burst knocks the player off it), the Bulwark enraged and its next lob winding up.
+  const ready = await page.evaluate(
+    ([x, row, hp]) => {
+      const g = window.__GAME__;
+      const h = window.__helpers;
+      if (!g || !h) throw new Error('no game');
+      g.setPlayerHealth(100);
+      h.walkTo((x + 0.5) * 32, (row + 1.5) * 32);
+      const id = g.getState().bosses[0]?.id ?? -1;
+      g.setEnemyHealth(id, hp);
+      for (let t = 0; t < 900; t++) {
+        const b = g.step(1).bosses[0];
+        g.setPlayerHealth(100);
+        if (b?.enraged && b.mode === 'lob') break;
+      }
+      g.setPlayerHealth(8);
+      return g.step(1);
+    },
+    [A.door.leaveTo.tx, SEAL_ROW, Math.floor(BULWARK.maxHealth * 0.25)] as const,
+  );
+  expect(ready.bosses[0]).toMatchObject({ enraged: true, mode: 'lob', engaged: true });
+  expect(ready.player.health).toBe(8);
+  expect(ready.arenas.find((a) => a.id === A.id)?.locked).toBe(true);
+  // The prompt over the door says what E does here.
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui()))?.interactPrompt).toMatchObject({ kind: 'arena-door', key: 'E', label: 'Leave (resets the fight)' });
+  // Live ticks from here: E reaches the sim as play sends it.
+  await page.evaluate(() => window.__GAME__?.resume());
+  await page.keyboard.press('e');
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.getState()))?.player.y, { timeout: 20_000 }).toBeLessThan(SEAL_ROW * T);
+  const after = await page.evaluate(() => window.__GAME__?.getState());
+  expect(after?.player.dying).toBe(0);
+  expect(after?.bosses[0]).toMatchObject({ health: BULWARK.maxHealth, engaged: false, enraged: false, addsRisen: false });
+  expect(after?.arenas.find((a) => a.id === A.id)?.locked).toBe(false);
+  expect(errors).toEqual([]);
+});

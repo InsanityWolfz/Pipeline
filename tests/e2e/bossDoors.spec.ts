@@ -4,19 +4,19 @@ import { enemyDef } from '../../src/data/enemies';
 import { boot, watchErrors } from './helpers';
 import { enterArena } from './arenaHelpers';
 
-// The boss doors (055, D.5): the Warden's walled shrine has a door, sealed in the tutorial until the first line fills
-// the tube; with the gates open (?playtest), E at it goes in, the Warden wakes and the shrine locks (043's seal over the
+// The boss doors (055, D.5): the Warden's walled shrine has a door, open from a New game's start (067: the Warden comes
+// before the foundry); the later arenas' are sealed until their gates open. E at it goes in (with ?playtest here), the Warden wakes and the shrine locks (043's seal over the
 // door); E at the door leaves, and the Warden is back at its start at full health.
 
 const W = SHRINE_ARENA;
 const MAX = enemyDef(W.boss).maxHealth;
 
-test("a new game's arena doors are sealed until their gates open", async ({ page }) => {
+test("a new game's arena doors are sealed until their gates open, but the shrine's (067)", async ({ page }) => {
   const errors = watchErrors(page);
   await boot(page, '?start=tutorial');
   const s = await page.evaluate(() => window.__GAME__?.step(1));
   expect(s?.arenas.map((a) => ({ id: a.id, unlocked: a.unlocked }))).toEqual([
-    { id: 'shrine', unlocked: false },
+    { id: 'shrine', unlocked: true },
     { id: 'sunken-forum', unlocked: false },
     // 060: the Anvil Hall's, unlocked by the Emberworks' barrier.
     { id: 'anvil-hall', unlocked: false },
