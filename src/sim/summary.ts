@@ -41,6 +41,7 @@ import { levelingSummary, type LevelingSummary } from './summaryLeveling';
 import { minesSummary, type MinesSummary } from './summaryMines';
 import { sandboxSummary, type SandboxSummary } from './summarySandbox';
 import { playerSummary, type PlayerSummary } from './summaryPlayer';
+import { offscreenThreats, type Threat } from './threats';
 
 /** The compact JSON summary that window.__GAME__.getState() returns. The player and springs (`player`, `springs`) are in summaryPlayer.ts. Stonefall Hollows' part (034) is in summaryHollows.ts, landmines' (038) in summaryMines.ts. */
 export interface SimSummary extends PlayerSummary, HollowsSummary, LevelingSummary, MinesSummary, SandboxSummary {
@@ -85,6 +86,8 @@ export interface SimSummary extends PlayerSummary, HollowsSummary, LevelingSumma
   /** Arrows and ley bolts in flight; x, y is the ground point. */
   arrows: ArrowSummary[];
   enemies: EnemySummary[];
+  /** 071: enemies off screen winding up on the player (src/sim/threats.ts), each by its feet. */
+  threats: Threat[];
   groundItems: { id: number; itemId: string; room: string; x: number; y: number }[];
   nodes: NodeSummary[];
   /** The harvest in progress: the node's id and ticks into it. */
@@ -197,6 +200,7 @@ export function summarize(state: SimState): SimSummary {
     },
     arrows: state.arrows.map(arrowSummary),
     enemies: state.enemies.map((e) => enemySummary(state, e)),
+    threats: offscreenThreats(state).map((t) => ({ ...t, x: round(t.x), y: round(t.y) })),
     groundItems: state.groundItems.map((g) => ({ id: g.id, itemId: g.itemId, room: g.roomId, x: round(g.x), y: round(g.y) })),
     nodes: state.nodes.map(nodeSummary),
     harvest: state.harvest ? { ...state.harvest } : null,
