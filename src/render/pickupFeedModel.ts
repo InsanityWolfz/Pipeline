@@ -1,3 +1,4 @@
+import { craftRecipeDef } from '../data/craftTabs';
 import { PICKUP_FEED } from '../data/hudPanels';
 
 // The pickup feed (031), pure: a line per item picked up, newest on top. A pickup of
@@ -30,4 +31,16 @@ export function ageFeed(lines: readonly FeedLine[], dtMs: number, tuning: Tuning
 export function lineAlpha(line: FeedLine, tuning: Tuning = PICKUP_FEED): number {
   if (line.ageMs <= tuning.holdMs) return 1;
   return Math.max(0, 1 - (line.ageMs - tuning.holdMs) / tuning.fadeMs);
+}
+
+/**
+ * 070: the feed lines hand crafts add: a craft max (one with `batches`) is one line of everything it made. A plain
+ * click's craft adds none (031 left hand crafts out of the feed).
+ */
+export function craftFeed(crafts: readonly { recipeId: string; batches?: number }[]): { itemId: string; count: number }[] {
+  return crafts.flatMap((c) => {
+    if (c.batches === undefined) return [];
+    const out = craftRecipeDef(c.recipeId).output;
+    return [{ itemId: out.itemId, count: out.count * c.batches }];
+  });
 }

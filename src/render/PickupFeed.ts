@@ -17,7 +17,7 @@ interface Slot {
 
 // The pickup feed (031): top-left, where the materials column was, a line per item
 // picked up ("[icon] +3 Wood"), repeats merged, newest on top, each fading after a
-// hold. Driven by the sim's `pickups` events only. Fixed to the screen.
+// hold. Driven by the sim's `pickups` events, and (070) a craft max's one line. Fixed to the screen.
 export class PickupFeed {
   private lines: FeedLine[] = [];
   /** The first line's top-left: PICKUP_FEED's, or 056.4's in the sandbox (right of its controls' strip). */
@@ -46,13 +46,13 @@ export class PickupFeed {
   }
 
   /**
-   * Pickups since the last frame join the feed, by the key each shows under (033: unknown schematics share one); the
+   * Pickups since the last frame (and 070's craft-max lines, each with its count) join the feed, by the key each shows under (033: unknown schematics share one); the
    * lines age `dtMs`. `at` moves the first line's top-left (056.4: the sandbox's), else PICKUP_FEED's.
    */
-  update(pickups: readonly string[], dtMs: number, at: { x: number; y: number } | null = null): void {
+  update(pickups: readonly { key: string; count: number }[], dtMs: number, at: { x: number; y: number } | null = null): void {
     this.at = at ?? { x: PICKUP_FEED.x, y: PICKUP_FEED.y };
     this.lines = ageFeed(this.lines, dtMs);
-    for (const key of pickups) this.lines = addPickup(this.lines, key);
+    for (const p of pickups) this.lines = addPickup(this.lines, p.key, p.count);
     this.draw();
   }
 

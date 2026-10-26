@@ -1,4 +1,4 @@
-import type { GameObjects, Scene } from 'phaser';
+import type { GameObjects, Input, Scene } from 'phaser';
 import { ammoDef } from '../data/ammo';
 import { DEPTHS, SPRITES } from '../data/assets';
 import { CRAFT_TABS, craftRecipeDef } from '../data/craftTabs';
@@ -71,7 +71,7 @@ const box = (line: TextLine): TextBox => ({ text: line.obj.text, ...line.at, w: 
 // The crafting menu (026; 047): a tab per ammo family down the left (Arrows, Bombs, Ley, Landmines), the open tab's
 // recipes to the right, its whole chain (parts included) then its tagged rounds. Each row shows its inputs
 // (held/needed) and what it makes and how many of that are held, every item's name under its icon. Clicking an
-// affordable row crafts it once; clicking a tab opens it. Reads sim state; crafting goes through `onCraft`.
+// affordable row crafts it once (070: Shift-click, as many as it can); clicking a tab opens it. Reads sim state; crafting goes through `onCraft`.
 export class CraftMenuView {
   private readonly objects: (GameObjects.Image & GameObjects.Components.Visible)[] = [];
   private readonly lines: TextLine[] = [];
@@ -85,7 +85,7 @@ export class CraftMenuView {
   private readonly card: GameObjects.Graphics;
   private readonly tabBacks: GameObjects.Graphics;
 
-  constructor(scene: Scene, onCraft: (recipeId: string) => void) {
+  constructor(scene: Scene, onCraft: (recipeId: string, max: boolean) => void) {
     const L = CRAFT_MENU_LAYOUT;
     this.hover = new RowHover(scene, RECIPE_ROW_FRAMES);
     const add = (x: number, y: number, frame: string, depth: number = DEPTHS.menu): GameObjects.Image => {
@@ -147,10 +147,11 @@ export class CraftMenuView {
         };
         const names = [...inputs.map((input, i) => ({ line: input.name, iconX: L.input.x + i * L.input.step })), { line: row.outputName, iconX: L.output.x }];
         rowNameXs(names.map((n) => ({ iconX: n.iconX, w: n.line.width }))).forEach((x, i) => names[i]?.line.moveTo(line.x + x, line.y + L.labelY));
-        frame.on('pointerdown', () => {
+        frame.on('pointerdown', (pointer: Input.Pointer) => {
           if (!this.open || this.tab !== row.tab || !canCraft(this.known, row.recipeId)) return;
           flashRow(scene, frame.x, frame.y, RECIPE_ROW_FRAMES.press);
-          onCraft(row.recipeId);
+          // 070: Shift-click crafts as many as the inventory affords.
+          onCraft(row.recipeId, pointer.event.shiftKey);
         });
         const index = this.rows.length;
         frame.on('pointerover', () => this.hover.set(index, canCraft(this.known, row.recipeId)));

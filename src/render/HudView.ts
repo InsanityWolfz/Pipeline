@@ -15,6 +15,7 @@ import { ResearchList, type ResearchListState } from './ResearchList';
 import { PickupFeed } from './PickupFeed';
 import { sandboxFeedAt } from './sandboxPopout';
 import { shownKey } from './itemShown';
+import { craftFeed } from './pickupFeedModel';
 import { TubeSlotView, type TubeSlotState } from './TubeSlotView';
 import { CarriedHintView, type CarriedHintShown } from './CarriedHintView';
 import { CARRIED_HINT } from '../data/hints';
@@ -181,7 +182,9 @@ export class HudView {
     this.health.update(input, building ? buildBarBox(unlockedPieces(sim)) : null, dt);
     this.edges.update(this.health.shown.low, this.health.pulse);
     // 056.4, 057: in the sandbox the feed sits right of the Loadout tab, which holds the top-left, and moves out with it.
-    this.feed.update(events.pickups.map((p) => shownKey(sim, p.itemId)), dt, sim.sandbox ? sandboxFeedAt(loadoutOut) : null);
+    // 070: a craft max adds one line of everything it made.
+    const gained = [...events.pickups.map((p) => ({ key: shownKey(sim, p.itemId), count: 1 })), ...craftFeed(events.crafts).map((c) => ({ key: shownKey(sim, c.itemId), count: c.count }))];
+    this.feed.update(gained, dt, sim.sandbox ? sandboxFeedAt(loadoutOut) : null);
     // A KO closes the panel: the wake panel takes the screen (and the panel can't open again while it shows).
     if (events.woke) {
       this.inventory.setOpen(false);

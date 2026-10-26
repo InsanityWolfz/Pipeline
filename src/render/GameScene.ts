@@ -4,7 +4,7 @@ import { BUILD_BAR } from '../data/pieces';
 import { SOUNDS } from '../data/sounds';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { advanceClock, createClock } from '../sim/clock';
-import { craft } from '../sim/crafting';
+import { craft, craftMax } from '../sim/crafting';
 import { clearEvents, createEvents, type SimEvents } from '../sim/events';
 import type { Command } from '../sim/input';
 import { roomById, type SimState } from '../sim/state';
@@ -144,7 +144,7 @@ export class GameScene extends Scene {
     this.siteMenus = new SiteMenus(this);
     this.wake = new WakeView(this);
     this.tutorial = new TutorialUi(this);
-    this.menu = new CraftMenuView(this, (recipeId) => this.craft(recipeId));
+    this.menu = new CraftMenuView(this, (recipeId, max) => this.craft(recipeId, max));
     this.pause = new PauseMenuView(this);
     this.sandboxPanel = new SandboxPanel(this);
     this.legibility = new Legibility(this, [this.hud, this.siteMenus, this.buildView]);
@@ -209,10 +209,13 @@ export class GameScene extends Scene {
     return gameUi(this);
   }
 
-  /** Crafts once, between ticks. The test hook crafts through here too. Crafting has no drawn effects. */
-  craft(recipeId: string): void {
+  /** Crafts once (070: `max`, as many as it can, as one craft and one sound), between ticks. The test hook crafts through here too. */
+  craft(recipeId: string, max = false): void {
     const before = this.sim.events.crafts.length;
-    craft(this.sim, recipeId);
+    if (max) craftMax(this.sim, recipeId);
+    else craft(this.sim, recipeId);
+    // The next tick clears the sim's events, so the draw keeps this craft's (070: a craft max's feed line).
+    this.pending.crafts.push(...this.sim.events.crafts.slice(before));
     this.feel?.sound.play(this.sim.events.crafts.length > before ? SOUNDS.craft : SOUNDS.menuClick);
   }
 
