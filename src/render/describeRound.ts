@@ -5,6 +5,8 @@ import { KEYWORDS, type KeywordId } from '../data/keywords';
 import { LEGIBILITY_WORDS as W, PARAM_STATS, WHEN_LINES } from '../data/legibility';
 import { formatDamage, formatParam, formatSeconds, formatStat, LINE_SEP, renderTemplate, textSources, trimNumber } from '../data/rulesText';
 import { roundKeywords } from '../data/roundKeywords';
+import { roundTier } from '../data/tags';
+import { TIER_DAMAGE, TIERS } from '../data/tiers';
 import type { StatId } from '../data/statDefs';
 import { bombletEmission, roundEmission, shardEmissionOf } from '../sim/emissions';
 import type { SimState } from '../sim/state';
@@ -88,6 +90,9 @@ export function describeRound(seen: Seen, ammoId: string): Description {
   // The summary: damage · shots/s, then what its keywords add.
   const head = fill(a.kind === 'straight' ? W.shotLine : W.burstLine, { damage: formatDamage(damage.final), rate: formatStat(rate.final, 'per-s') });
   const extras: string[] = [];
+  // 062: a tiered round's material and its × (the breakdown shows it as its own damage step).
+  const tier = roundTier(ammoId);
+  if (tier !== 'stone') extras.push(fill(W.tierDamage, { tier: TIERS[tier].prefix, mul: formatParam(TIER_DAMAGE[tier], 'multiplier') }));
   if (kws.includes('freeze')) extras.push(fill(W.freezeIn, { hits: hitsToFreeze(s) }));
   // 060: a Fire round's burn, its share of the hit each second, for its (resolved) time.
   if (keywords.includes('fire')) extras.push(fill(W.burns, { damage: formatDamage(damage.final * value('fire', 'share')), time: formatSeconds(value('fire', 'duration')) }));

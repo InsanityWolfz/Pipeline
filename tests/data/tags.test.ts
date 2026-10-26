@@ -4,7 +4,7 @@ import { ITEMS } from '../../src/data/items';
 import { BUILD_BAR, PIECES, pieceDef } from '../../src/data/pieces';
 import { recipeDef } from '../../src/data/recipes';
 import { STAGE_RECIPES, STAGES, stageLines } from '../../src/data/stages';
-import { COLD, FIRE, HOMING, ROUNDS, roundBase, roundId, roundTags, SPLIT, TAGS, withTag, type TagDef } from '../../src/data/tags';
+import { COLD, FIRE, HOMING, ROUNDS, roundBase, roundId, roundTags, roundTier, SPLIT, TAGS, withTag, type TagDef } from '../../src/data/tags';
 
 // Tags and stages as data (029): a round is its base ammo plus at most one element
 // tag and one shape tag; every legal combination's item and ammo are derived.
@@ -32,8 +32,9 @@ describe('tags', () => {
   });
 
   it('derive every legal round, each in AMMO and ITEMS', () => {
-    // 039: the frost tag on every family; shapes per family. 060: the fire tag on every family too.
-    expect([...ROUNDS]).toEqual([
+    // 039: the frost tag on every family; shapes per family. 060: the fire tag on every family too. 062: each also at
+    // its material tier (tests/data/tiers.test.ts), listed after its family's stone rounds.
+    expect(ROUNDS.filter((r) => roundTier(r) === 'stone')).toEqual([
       'arrow+frost',
       'arrow+fire',
       'bomb+frost',

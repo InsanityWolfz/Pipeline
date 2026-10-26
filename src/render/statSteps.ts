@@ -2,7 +2,7 @@ import { KEYWORDS, type KeywordId, type ParamUnit } from '../data/keywords';
 import { type ChipId } from '../data/legibility';
 import { formatDamage, formatParam, formatStat, renderTemplate, scopeName, signOf, trimNumber } from '../data/rulesText';
 import { STATS, type StatId } from '../data/statDefs';
-import type { Contribution, Resolved } from '../sim/statResolve';
+import { TIER_SOURCES, type Contribution, type Resolved } from '../sim/statResolve';
 import type { Chip } from './tipTypes';
 
 // The breakdown's numbers (040), pure: a stat's value in its unit, and a stat's steps from
@@ -46,8 +46,8 @@ export function stepsText(label: string, r: Resolved, fmt: (v: number) => string
   return `${label} ${text} = ${fmt(r.final)}`;
 }
 
-/** The talents, relics and gear that change a resolved stat, by name (a gear cap is no bonus). */
-export const bonusSources = (r: Resolved): string[] => [...r.adds, ...r.muls, ...r.flats].map((c) => c.source).filter((s) => s !== 'gear cap');
+/** The talents, relics and gear that change a resolved stat, by name (a gear cap is no bonus, nor 062's material tier: it is the round's own). */
+export const bonusSources = (r: Resolved): string[] => [...r.adds, ...r.muls, ...r.flats].map((c) => c.source).filter((s) => s !== 'gear cap' && !TIER_SOURCES.includes(s));
 
 /** A chip for a keyword or scope: its name and its group's colour. */
 export function chipOf(id: ChipId): Chip {

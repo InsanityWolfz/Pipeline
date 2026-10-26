@@ -9,6 +9,7 @@ import { HP_BAR, HUD_HEALTH_LAYOUT } from '../../src/data/hudPanels';
 import { gridSize, INVENTORY_GRID, INVENTORY_GROUPS, inventoryPanelSize, PICKUP_FEED } from '../../src/data/hudPanels';
 import { widthOf } from './textFit';
 import { ITEMS } from '../../src/data/items';
+import { ROUNDS, roundTier } from '../../src/data/tags';
 import { DAYLIGHT_PALETTE } from '../../src/data/palette';
 
 // 031's data: every item's panel group, the panel's size and columns, the HP bar and
@@ -48,8 +49,8 @@ describe('inventory panel groups (031)', () => {
       'schematic-reservoir-2',
       'shaft',
     ]);
-    // 039: the six Frost rounds of every family. 060: the seven Fire rounds.
-    expect(byGroup('ammo')).toEqual([
+    // 039: the six Frost rounds of every family. 060: the seven Fire rounds. 062: each also at its tier, in Ammo too.
+    expect(byGroup('ammo').filter((id) => roundTier(id) === 'stone')).toEqual([
       'arrow',
       'arrow+fire',
       'arrow+frost',
@@ -72,6 +73,7 @@ describe('inventory panel groups (031)', () => {
       'ley-bolt+homing',
       'ley-bolt+split',
     ]);
+    expect(byGroup('ammo').filter((id) => roundTier(id) !== 'stone')).toEqual(ROUNDS.filter((id) => roundTier(id) !== 'stone').sort());
     expect(byGroup('gear')).toEqual(['unidentified-armor']);
     expect(byGroup('cores')).toEqual(['bulwark-core', 'forgewright-core', 'warden-core']);
     // The warden core's kind stays a part: only the panel's group places it.
