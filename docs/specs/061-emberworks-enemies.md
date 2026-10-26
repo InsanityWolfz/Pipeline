@@ -1,5 +1,5 @@
 # 061: Emberworks enemies
-status: approved
+status: done
 
 Approved by Shaun in chat, 2026-10-24 ("Approve 61 and 62"), with the draft's listed decisions; plan approved 2026-10-26 ("Approve the plans").
 
