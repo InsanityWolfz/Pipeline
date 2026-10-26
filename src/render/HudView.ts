@@ -16,6 +16,9 @@ import { PickupFeed } from './PickupFeed';
 import { sandboxFeedAt } from './sandboxPopout';
 import { shownKey } from './itemShown';
 import { craftFeed } from './pickupFeedModel';
+import { tubeCardLabel } from './tubeCard';
+import { readyItem } from '../sim/hotbar';
+import { settings } from './flow/settingsStore';
 import { TubeSlotView, type TubeSlotState } from './TubeSlotView';
 import { CarriedHintView, type CarriedHintShown } from './CarriedHintView';
 import { CARRIED_HINT } from '../data/hints';
@@ -168,7 +171,9 @@ export class HudView {
     if (events.attunes.length > 0 && this.lastActive?.kind === 'carried') this.heldActive = this.lastActive;
     const ending = events.hints.some((h) => h.id === CARRIED_HINT.id);
     const before = this.tubeSlot.state;
-    this.tubeSlot.update(this.heldActive && sim.link.attunePulse > 0 && !ending ? this.heldActive : active, building);
+    // 070: the fist says when right click has carried rounds to fire.
+    const fist = tubeCardLabel(active, { hasTube: sim.hasTube, attuned: sim.link.attuned, carriedReady: readyItem(sim) !== null }, settings().bindings.use);
+    this.tubeSlot.update(this.heldActive && sim.link.attunePulse > 0 && !ending ? this.heldActive : active, building, fist);
     if (ending) {
       this.carriedHint.swap(before, before.icons[0], sim.hotbar.selected, (a) => this.tubeSlot.setAlpha(a));
       this.heldActive = null;
