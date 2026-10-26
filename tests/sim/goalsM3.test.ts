@@ -44,11 +44,11 @@ function upTo(text: string): SimState {
 }
 
 describe('the m3 goal chain (064)', () => {
-  it('follows 062’s "Fire steel rounds", in order, each tagged m3, and ends the chain', () => {
+  it('follows 062’s "Fire steel rounds", in order, each tagged m3 (066: then the storm tier’s three end the chain)', () => {
     const first = at('Fire steel rounds') + 1;
     expect(OBJECTIVES.slice(first, first + M3.length).map((o) => o.text)).toEqual(M3);
-    expect(OBJECTIVES.filter((o) => o.milestone === 'm3').map((o) => o.text)).toEqual(M3);
-    expect(OBJECTIVES.filter((o) => !o.cutIn).at(-1)?.text).toBe('Feed all five entrances');
+    expect(OBJECTIVES.filter((o) => o.milestone === 'm3').map((o) => o.text)).toEqual([...M3, 'Temper stormsteel at the bench (C)', 'Build a Tempering coil into a line', 'Fire stormsteel rounds']);
+    expect(OBJECTIVES.filter((o) => !o.cutIn).at(-1)?.text).toBe('Fire stormsteel rounds');
     expect(LIGHTNING_ROUNDS).toContain('arrow+lightning');
     expect(LIGHTNING_ROUNDS.length).toBeGreaterThanOrEqual(4);
   });
@@ -92,7 +92,7 @@ describe('the m3 goal chain (064)', () => {
     expect(s.objectives[at('Defeat the Conductor')]).toBe(true);
   });
 
-  it('restoring the fifth entrance and feeding all five complete their goals, and the chain is over', () => {
+  it('restoring the fifth entrance and feeding all five complete their goals; 066: the storm tier’s goals follow', () => {
     const s = upTo("Restore the intake's fifth entrance (E with the Conductor core)");
     s.research['entrance-5'] = 'restored';
     for (const e of s.link.entrances) e.open = true;
@@ -102,7 +102,7 @@ describe('the m3 goal chain (064)', () => {
     for (const [k, e] of s.link.entrances.entries()) Object.assign(e, { ammoId: 'arrow', count: 1 + k });
     run(s, 1);
     expect(s.objectives[at('Feed all five entrances')]).toBe(true);
-    expect(currentObjective(s)).toBeNull();
+    expect(currentObjective(s)).toBe(at('Temper stormsteel at the bench (C)'));
   });
 });
 

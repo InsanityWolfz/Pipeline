@@ -68,6 +68,13 @@ const BASE_ITEMS: Readonly<Record<string, ItemDef>> = {
   'steel-arrowhead': { id: 'steel-arrowhead', name: 'Steel arrowhead', kind: 'part', group: 'parts', icon: TIER_SPRITES.itemSteelArrowhead },
   'steel-casing': { id: 'steel-casing', name: 'Steel casing', kind: 'part', group: 'parts', icon: TIER_SPRITES.itemSteelCasing },
   'steel-plate': { id: 'steel-plate', name: 'Steel plate', kind: 'part', group: 'parts', icon: TIER_SPRITES.itemSteelPlate },
+  // 066: the storm tier's parts. Stormsteel and storm glass (the Tempering coil's, from ley-steel and ley glass with
+  // stormglass), and the stormsteel version of each family's tiered part; the ley bolt's whole input is storm glass.
+  stormsteel: { id: 'stormsteel', name: 'Stormsteel', kind: 'part', group: 'parts', icon: TIER_SPRITES.itemStormsteel },
+  'storm-glass': { id: 'storm-glass', name: 'Storm glass', kind: 'part', group: 'parts', icon: TIER_SPRITES.itemStormGlass },
+  'stormsteel-arrowhead': { id: 'stormsteel-arrowhead', name: 'Stormsteel arrowhead', kind: 'part', group: 'parts', icon: TIER_SPRITES.itemStormsteelArrowhead },
+  'stormsteel-casing': { id: 'stormsteel-casing', name: 'Stormsteel casing', kind: 'part', group: 'parts', icon: TIER_SPRITES.itemStormsteelCasing },
+  'stormsteel-plate': { id: 'stormsteel-plate', name: 'Stormsteel plate', kind: 'part', group: 'parts', icon: TIER_SPRITES.itemStormsteelPlate },
   'unidentified-armor': { id: 'unidentified-armor', name: 'Unidentified gear', kind: 'armor', group: 'gear', icon: SPRITES.itemUnidentifiedArmor },
   /** The Pylon Warden's core (009): it restores one intake entrance (033). Its kind stays a part; the panel lists it under Cores (031). */
   'warden-core': { id: 'warden-core', name: 'Warden core', kind: 'part', group: 'cores', icon: SPRITES.itemWardenCore, research: 'core' },

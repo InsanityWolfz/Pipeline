@@ -55,10 +55,10 @@ describe('tier art (062)', () => {
       expect(frames.has(own?.key ?? ''), own?.key).toBe(true);
       expect(own?.from).toBe(ammoDef(roundBase(id)).sprite);
     }
-    // A steel landmine lies armed in steel too.
+    // A steel landmine lies armed in steel too (066: a stormsteel one in stormsteel).
     for (const id of TIERED.filter((r) => roundBase(r) === 'landmine')) {
       const def = ammoDef(id);
-      expect(def.kind === 'mine' ? def.armed : null).toBe(TIER_ARMED['landmine+steel']?.key);
+      expect(def.kind === 'mine' ? def.armed : null).toBe(TIER_ARMED[withTier('landmine', roundTier(id))]?.key);
     }
     expect(frames.has(TIER_SPRITES.landmineArmedSteel)).toBe(true);
   });
@@ -85,7 +85,8 @@ describe('tier sounds (062)', () => {
   });
 
   it('give the Smelter its pour and the kiln its roar, each a real sound', () => {
-    expect(WORK_SOUNDS).toEqual({ smelter: SOUNDS.smelterPour, kiln: SOUNDS.kilnRoar });
+    // 066: and the Tempering coil its crackle (tests/data/stormsteelSound.test.ts).
+    expect(WORK_SOUNDS).toEqual({ smelter: SOUNDS.smelterPour, kiln: SOUNDS.kilnRoar, 'tempering-coil': SOUNDS.coilCrackle });
     for (const key of Object.values(WORK_SOUNDS)) expect(SOUND_RECIPES[key]).toBeDefined();
   });
 });

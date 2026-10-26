@@ -354,8 +354,8 @@ describe('build bar categories (026)', () => {
       ['grinder', 'focuser', 'ley-guide', 'prism-lens'],
       // 038: the landmine chain.
       ['plate-press', 'mine-packer'],
-      // 062: the Smelter and the kiln.
-      ['smelter', 'kiln'],
+      // 062: the Smelter and the kiln; 066: the Tempering coil.
+      ['smelter', 'kiln', 'tempering-coil'],
     ]);
     // In bar order the groups never interleave.
     expect([...BUILD_BAR]).toEqual(grouped.flat());

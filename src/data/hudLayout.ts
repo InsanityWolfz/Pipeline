@@ -94,6 +94,11 @@ export const CRAFT_MENU_LAYOUT = {
   input: { x: 2, step: 40, textX: 17, textY: 7 },
   arrow: { x: 122, y: 8 },
   output: { x: 134, textX: 18, madeY: 3, ownedY: 11 },
+  /**
+   * 066: the room kept between two item names in a row, px, so a long one ("Stormsteel arrowhead") moves clear of the
+   * next. A name keeps `input.x` px from the row's ends, as the first icon does.
+   */
+  nameGap: 2,
   /** Alpha of the icons on a row the player can't afford; its names and counts stay readable at `greyTextAlpha`. */
   greyAlpha: 0.35,
   greyTextAlpha: 0.8,
@@ -116,13 +121,14 @@ export const BUILD_BAR_LAYOUT = {
   bottom: HUD_LAYOUT.margin,
   /**
    * 062: 1 px closer than the hotbar's cells, and the groups 6 px apart (was 12), so the Forge group fits the view too;
-   * 064: 2 px closer (the cells touch), so the Lightning rune's piece fits beside it.
+   * 064: 2 px closer (the cells touch), so the Lightning rune's piece fits beside it; 066: the groups 3 px apart, so
+   * the Tempering coil fits too.
    */
   cellStep: CELL.step - 2,
   cellWidth: CELL.w,
   cellHeight: CELL.h,
   icon: { x: 4, y: 6 },
-  groupGap: 6,
+  groupGap: 3,
   /** The divider: a line this colour (palette id) and alpha, from the label row's top to `inset` px above the cells' bottom. */
   divider: { color: 'brass', alpha: 0.7, width: 1, inset: 2 },
   label: { h: 9, gap: 2 },

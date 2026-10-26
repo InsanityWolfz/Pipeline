@@ -16,6 +16,18 @@ export const TIER_SPRITES = {
   landmineSteel: 'landmine-steel',
   landmineArmedSteel: 'landmine-armed-steel',
   leyBoltGlass: 'ley-bolt-glass',
+  // 066: the storm tier's parts' icons.
+  itemStormsteel: 'item-stormsteel',
+  itemStormGlass: 'item-storm-glass',
+  itemStormsteelArrowhead: 'item-stormsteel-arrowhead',
+  itemStormsteelCasing: 'item-stormsteel-casing',
+  itemStormsteelPlate: 'item-stormsteel-plate',
+  // 066: the storm tiers' projectiles and the stormsteel landmine lying armed.
+  arrowStormsteel: 'arrow-stormsteel',
+  bombStormsteel: 'bomb-stormsteel',
+  landmineStormsteel: 'landmine-stormsteel',
+  landmineArmedStormsteel: 'landmine-armed-stormsteel',
+  leyBoltStormGlass: 'ley-bolt-storm-glass',
 } as const;
 
 /** A sprite in a tier's colours: its key, and the stone sprite it's recoloured from. */
@@ -30,9 +42,14 @@ export const TIER_PROJECTILES: Readonly<Record<string, TierSprite>> = {
   'bomb+steel': { key: TIER_SPRITES.bombSteel, from: SPRITES.bomb },
   'landmine+steel': { key: TIER_SPRITES.landmineSteel, from: MINE_SPRITES.landmine },
   'ley-bolt+glass': { key: TIER_SPRITES.leyBoltGlass, from: SPRITES.leyBolt },
+  'arrow+stormsteel': { key: TIER_SPRITES.arrowStormsteel, from: SPRITES.arrow },
+  'bomb+stormsteel': { key: TIER_SPRITES.bombStormsteel, from: SPRITES.bomb },
+  'landmine+stormsteel': { key: TIER_SPRITES.landmineStormsteel, from: MINE_SPRITES.landmine },
+  'ley-bolt+storm-glass': { key: TIER_SPRITES.leyBoltStormGlass, from: SPRITES.leyBolt },
 };
 
-/** The steel landmine lying armed, by its plain tiered id. */
+/** The steel (066: and stormsteel) landmine lying armed, by its plain tiered id. */
 export const TIER_ARMED: Readonly<Record<string, TierSprite>> = {
   'landmine+steel': { key: TIER_SPRITES.landmineArmedSteel, from: MINE_SPRITES.armed },
+  'landmine+stormsteel': { key: TIER_SPRITES.landmineArmedStormsteel, from: MINE_SPRITES.armed },
 };

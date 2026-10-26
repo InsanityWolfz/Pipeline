@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { OBJECTIVES, TIERED_ROUNDS } from '../../src/data/objectives';
+import { OBJECTIVES, STORM_TIERED_ROUNDS, TIERED_ROUNDS } from '../../src/data/objectives';
 import { HOLLOWS_START, PLAYTEST_START } from '../../src/data/playtest';
 import { currentObjective, objectiveLine } from '../../src/sim/objectives';
 import { createSim } from '../../src/sim/state';
@@ -45,7 +45,9 @@ describe('the chain', () => {
     // feeding all five (Milestone 2's chain is goalsM2.test.ts's and goalsTiers.test.ts's, Milestone 3's goalsM3.test.ts's).
     expect(M1.at(-1)?.check).toEqual({ kind: 'volley', min: 3 });
     expect(CHAIN.slice(0, m3).at(-1)?.check).toEqual({ kind: 'fired', items: TIERED_ROUNDS });
-    expect(CHAIN.at(-1)?.check).toEqual({ kind: 'volley', min: 5 });
+    // 066: then the storm tier's goals, ending at any storm round fired (goalsStormsteel.test.ts).
+    expect(CHAIN.find((o) => o.check.kind === 'volley' && o.check.min === 5)?.milestone).toBe('m3');
+    expect(CHAIN.at(-1)?.check).toEqual({ kind: 'fired', items: STORM_TIERED_ROUNDS });
   });
 });
 

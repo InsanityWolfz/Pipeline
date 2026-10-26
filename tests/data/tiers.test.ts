@@ -22,12 +22,15 @@ const lookOf = (id: string): { armed?: string } => {
 };
 
 describe('material tiers (062)', () => {
-  it('are steel for arrows, bombs and landmines, and glass for ley bolts, each ×1.6', () => {
+  it('are steel for arrows, bombs and landmines, and glass for ley bolts, each ×1.6 (066: then the storm tiers, ×2.56)', () => {
     expect(Object.values(TIERS)).toEqual([
       { id: 'steel', prefix: 'Steel', appliesTo: ['arrow', 'bomb', 'landmine'] },
       { id: 'glass', prefix: 'Glass', appliesTo: ['ley-bolt'] },
+      // 066: the storm tiers (tests/data/stormsteelTiers.test.ts).
+      { id: 'stormsteel', prefix: 'Stormsteel', appliesTo: ['arrow', 'bomb', 'landmine'] },
+      { id: 'storm-glass', prefix: 'Storm glass', appliesTo: ['ley-bolt'] },
     ]);
-    expect(TIER_DAMAGE).toEqual({ steel: 1.6, glass: 1.6 });
+    expect(TIER_DAMAGE).toEqual({ steel: 1.6, glass: 1.6, stormsteel: 2.56, 'storm-glass': 2.56 });
   });
 
   it('give every stone round, plain or tagged, its tiered version in ROUNDS, AMMO and ITEMS', () => {
@@ -43,7 +46,8 @@ describe('material tiers (062)', () => {
       expect(ROUND_ICONS[id]).toBe(`icon-${id.replace(/\+/g, '-')}`);
       expect(withTier(id, 'stone')).toBe(stone);
     }
-    expect(TIERED).toHaveLength(bases.length + STONE.length);
+    // 066: each also at its storm tier.
+    expect(TIERED).toHaveLength(2 * (bases.length + STONE.length));
     expect(TIERED.slice(0, 3)).toEqual(['arrow+steel', 'arrow+steel+frost', 'arrow+steel+fire']);
   });
 
@@ -82,7 +86,11 @@ describe('material tiers (062)', () => {
 
   it('read correctly wherever a round id is parsed: by family, by tag', () => {
     const arrows = roundsByFamily().filter((r) => roundBase(r) === 'arrow');
-    expect(arrows).toEqual(['arrow', 'arrow+frost', 'arrow+fire', 'arrow+lightning', 'arrow+steel', 'arrow+steel+frost', 'arrow+steel+fire', 'arrow+steel+lightning']);
+    expect(arrows).toEqual([
+      'arrow', 'arrow+frost', 'arrow+fire', 'arrow+lightning', 'arrow+steel', 'arrow+steel+frost', 'arrow+steel+fire', 'arrow+steel+lightning',
+      // 066: stormsteel after steel.
+      'arrow+stormsteel', 'arrow+stormsteel+frost', 'arrow+stormsteel+fire', 'arrow+stormsteel+lightning',
+    ]);
     expect(roundsByFamily()).toHaveLength(4 + ROUNDS.length);
     expect(FIRE_ROUNDS).toContain('arrow+steel+fire');
     expect(FIRE_ROUNDS).toContain('ley-bolt+glass+fire+split');

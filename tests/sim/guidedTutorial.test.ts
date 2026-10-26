@@ -63,6 +63,10 @@ const TEXTS = [
   'Defeat the Conductor',
   "Restore the intake's fifth entrance (E with the Conductor core)",
   'Feed all five entrances',
+  // 066: the storm tier's.
+  'Temper stormsteel at the bench (C)',
+  'Build a Tempering coil into a line',
+  'Fire stormsteel rounds',
 ];
 const REMOVED = [
   'Feed ammo into the new entrance',

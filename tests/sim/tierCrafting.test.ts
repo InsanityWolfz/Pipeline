@@ -66,6 +66,8 @@ describe('the tier rows in the family tabs (062)', () => {
     expect(craftKnown(s, 'glass-bolt')).toBe(true);
     // Every tab's tier rows, the kiln's ley glass once ley dust has been carried too.
     carry(s, { 'ley-dust': 1 });
+    // 066: and the storm tier's rows, once stormglass, stormsteel and storm glass have been carried too.
+    carry(s, { stormglass: 1, stormsteel: 1, 'storm-glass': 1 });
     const tierRows = CRAFT_TABS.flatMap((t) => t.recipes.slice(t.tierFrom));
     for (const id of tierRows) expect(craftKnown(s, id), id).toBe(true);
   });

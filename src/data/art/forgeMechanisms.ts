@@ -5,7 +5,8 @@ import { ellipse, flat, line, path, rect, solid, trim, type Shape } from './type
 // - the Smelter: a small crucible furnace with a pour spout. The crucible glows over its fire, tips, and pours a
 //   stream of molten ley-steel into an ingot mould, which cools to a dark steel bar with a cyan vein;
 // - the kiln: a domed brick kiln with a glowing mouth. Its fire roars up (the mouth flares and embers rise), and a
-//   bead of clear cyan ley glass swells on the hearth before it.
+//   bead of clear cyan ley glass swells on the hearth before it;
+// - 066's Tempering coil: a brass coil round a crucible, lightning crackling between its turns while it works.
 // Each takes the window box and its loop's phase `t` (0..1); idle draws t = 0.
 
 const TAU = Math.PI * 2;
@@ -99,5 +100,45 @@ const kiln: Mechanism = (b, t) => {
   ];
 };
 
-/** 062's Forge machines' mechanisms, by machine id. */
-export const FORGE_MECHANISMS: Readonly<Record<string, Mechanism>> = { smelter, kiln };
+/**
+ * 066's Tempering coil: a clay crucible on the hearth wound with a brass coil. Working, its charge glows violet-white in
+ * the crucible and lightning crackles between the coil's turns, a different jump each frame; idle, it stands cold.
+ */
+const temperingCoil: Mechanism = (b, t) => {
+  const [cx] = centre(b);
+  const floor = b.y + b.h - 2;
+  const potTop = b.y + 4;
+  const potW = 4.6;
+  const live = t > 0;
+  const charge = live ? 0.5 + 0.5 * Math.sin(t * TAU * 2) : 0;
+  // The coil's turns, back halves behind the crucible and front halves over it.
+  const turns = [0.25, 0.5, 0.75].map((k) => potTop + 1 + (floor - potTop - 2) * k);
+  const back = turns.map((y) => path(`M ${cx - potW - 1.4} ${y} Q ${cx} ${y - 2.2} ${cx + potW + 1.4} ${y}`, trim('brass-dark', 0.9)));
+  const front = turns.map((y) => path(`M ${cx - potW - 1.4} ${y} Q ${cx} ${y + 2.2} ${cx + potW + 1.4} ${y}`, trim('brass-light', 1)));
+  // Lightning between two turns at a side, jumping round with the loop's phase.
+  const arcs: Shape[] = live
+    ? [0, 1].map((k) => {
+        const side = (Math.floor(t * 4) + k) % 2 === 0 ? -1 : 1;
+        const x = cx + side * (potW + 1.4);
+        const y0 = turns[k] ?? floor;
+        const y1 = turns[k + 1] ?? floor;
+        const kink = side * (1.4 + 0.8 * Math.sin(t * TAU * 3 + k));
+        return { ...path(`M ${x} ${y0} L ${x + kink} ${(y0 * 2 + y1) / 3} L ${x - kink * 0.5} ${(y0 + y1 * 2) / 3} L ${x} ${y1}`, trim('storm-pale', 0.6)), glow: { color: 'storm-glow', blur: 3 } };
+      })
+    : [];
+  return [
+    line([b.x + 2, floor + 0.5, b.x + b.w - 2, floor + 0.5], 1, 'brass-dark'),
+    ...back,
+    // The crucible: clay, its mouth holding the charge.
+    path(`M ${cx - potW} ${potTop} L ${cx - potW + 0.8} ${floor - 0.6} Q ${cx} ${floor + 0.6} ${cx + potW - 0.8} ${floor - 0.6} L ${cx + potW} ${potTop} Z`, {
+      fill: { linear: [cx, potTop, cx, floor], stops: [{ at: 0, color: 'rust-light' }, { at: 1, color: 'rust-dark' }] },
+      outline: true,
+    }),
+    ellipse(cx, potTop, potW - 0.4, 1.2, live ? { fill: 'storm-pale', glow: { color: 'storm-glow', blur: 2 + 3 * charge } } : flat('storm-dark')),
+    ...front,
+    ...arcs,
+  ];
+};
+
+/** 062's Forge machines' mechanisms, by machine id (066: and the Tempering coil). */
+export const FORGE_MECHANISMS: Readonly<Record<string, Mechanism>> = { smelter, kiln, 'tempering-coil': temperingCoil };
