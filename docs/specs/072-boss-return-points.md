@@ -3,6 +3,8 @@ status: approved
 
 Approved by Shaun in chat, 2026-10-26: he picked it from the agent-playtest proposals, built as written. Its plan is pre-approved.
 
+Plan pre-approved by Shaun in chat, 2026-10-26. The plan: docs/plans/072-boss-return-points.md.
+
 Drafted from the Hollows playtester's findings (a KO at the Bulwark meant a 100 s walk back; docs/brainstorm/2026-10-26-agent-playtest.md) and the proposal Shaun approved.
 
 ## Goal
