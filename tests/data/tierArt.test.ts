@@ -85,7 +85,8 @@ describe('tier sounds (062)', () => {
   });
 
   it('give the Smelter its pour and the kiln its roar, each a real sound', () => {
-    expect(WORK_SOUNDS).toEqual({ smelter: SOUNDS.smelterPour, kiln: SOUNDS.kilnRoar });
+    // 066: and the Tempering coil its crackle (tests/data/stormsteelSound.test.ts).
+    expect(WORK_SOUNDS).toEqual({ smelter: SOUNDS.smelterPour, kiln: SOUNDS.kilnRoar, 'tempering-coil': SOUNDS.coilCrackle });
     for (const key of Object.values(WORK_SOUNDS)) expect(SOUND_RECIPES[key]).toBeDefined();
   });
 });
