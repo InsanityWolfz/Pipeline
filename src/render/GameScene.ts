@@ -129,7 +129,7 @@ export class GameScene extends Scene {
     this.groundItemView = new GroundItemView(this);
     this.enemyView = new EnemyView(this);
     this.playerView = new PlayerView(this);
-    this.effects = new EffectsView(this, this.playerView.sprite);
+    this.effects = new EffectsView(this, this.playerView.sprite, (atDark, ms, rgb) => this.sceneCameras?.fadeThrough(atDark, ms, rgb));
     this.arrowView = new ArrowView(this);
     this.bombView = new BombView(this);
     this.hud = new HudView(this);
@@ -216,6 +216,8 @@ export class GameScene extends Scene {
   /** Steps the sim one tick and keeps its events for the next draw. The test hook steps through here too. */
   stepOnce(cmd: Command): void {
     stepSim(this.sim, cmd);
+    // fix-build-inventory-respawn: a move key held through the death doesn't carry the player out of the foundry.
+    if (this.sim.events.woke) this.controls?.holdMoveThroughWake();
     mergeEvents(this.pending, this.sim.events);
     this.host.afterTick(this.sim);
   }
