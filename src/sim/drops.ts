@@ -99,6 +99,8 @@ export function scatterPoint(
  * 2–3 times and drops exactly its guaranteed armor instead of the usual chance. Then a separate schematic roll (033).
  */
 export function spawnDrops(state: SimState, def: EnemyDef, x: number, y: number, roomId: string, champion = false): void {
+  // 065: an enemy with a drop share (a static mite's third) drops at all only that share of the time.
+  if (def.dropShare !== undefined && nextFloat(state.rng) >= def.dropShare) return;
   const rolls = champion ? championDropRolls(state.rng) : 1;
   // A champion's rare entries roll once, at its own chance, not once per drop roll (032, 033).
   const items = [

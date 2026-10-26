@@ -106,6 +106,9 @@ function zoneOf(e: EnemyState, def: EnemyDef, left: (windup: number) => number):
     case 'hawk':
       if (e.mode === 'windup') return { kind: 'lane', x: e.spotX, y: e.spotY, dirX: e.swipeDirX, dirY: e.swipeDirY, length: def.dive.distance, width: def.dive.width, left: left(def.dive.windupTicks) };
       return e.mode === 'swipe' ? { kind: 'lane', x: e.x, y: e.y, dirX: e.swipeDirX, dirY: e.swipeDirY, length: def.dive.distance, width: def.dive.width + 8, left: 0 } : null;
+    // 065: a static mite's pulse under it.
+    case 'mite':
+      return e.mode === 'windup' ? { kind: 'circle', x: e.x, y: e.y, r: def.zap.radius, left: left(def.zap.windupTicks) } : null;
     case 'caster':
     case 'tender':
       return null;

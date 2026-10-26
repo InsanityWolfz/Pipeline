@@ -13,6 +13,7 @@ import { spawnDrops } from './drops';
 import { spreadBurn } from './fire';
 import { chainLightning } from './lightning';
 import { onEmberDeath } from './emberDeaths';
+import { onStormDeath } from './stormDeaths';
 import type { SimState } from './state';
 import { rotate } from './volley';
 import { shardEmissionOf, shotEmission } from './emissions';
@@ -138,7 +139,7 @@ export function arrowHits(state: SimState, spawned: ArrowState[] = []): (arrow: 
 
 /**
  * Removes dead enemies, recording their deaths, dropping their loot and giving their XP (037). A cinder mote that
- * burst on its own (061: `spent`) just goes, passing on only its burn. A death rule (061: a killed mote's death burst, emberDeaths.ts) can kill
+ * burst on its own (061: `spent`) just goes, passing on only its burn. A death rule (061: a killed mote's death burst, emberDeaths.ts; 065: a killed mite's discharge, stormDeaths.ts) can kill
  * others, so it passes again until none is left dead.
  */
 export function removeDead(state: SimState): void {
@@ -169,5 +170,6 @@ function removeDeadOnce(state: SimState): void {
     // 060: a burning enemy passes its burn on as it dies (to the living).
     spreadBurn(state, e);
     onEmberDeath(state, e);
+    onStormDeath(state, e);
   }
 }

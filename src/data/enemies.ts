@@ -58,6 +58,8 @@ export interface EnemyBase {
    * and never pushes or is pushed by an enemy on the ground.
    */
   flies?: boolean;
+  /** 065: it drops at all only this share of the time (a static mite's third): its table, part, schematic and armor rolls together. */
+  dropShare?: number;
 }
 
 export interface ShieldDef {
@@ -312,5 +314,7 @@ export function attackOf(def: EnemyDef): AttackTiming {
       return def.beam;
     case 'hawk':
       return def.dive;
+    case 'mite':
+      return def.zap;
   }
 }

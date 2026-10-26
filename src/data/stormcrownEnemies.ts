@@ -25,8 +25,23 @@ export interface HawkDef extends EnemyBase, ScreenLeashed {
   dive: AttackTiming & { distance: number; width: number; speed: number; damage: number; knockback: number; knockTicks: number };
 }
 
+/** A static mite: a tiny spark-beetle that always comes in a swarm of `swarm` (a trio), running at the player to zap them. */
+export interface MiteDef extends EnemyBase, ScreenLeashed {
+  kind: 'mite';
+  /** It spawns and moves with this many of its kind (065: a trio), each one pack member; they wake together. */
+  swarm: number;
+  /**
+   * With the player's feet within `triggerRange` (contact) and its cooldown ready, it stops and winds up a red pulse of
+   * `radius` under it (`windupTicks`), then zaps: `damage` and `knockback` px out over `knockTicks` on feet inside,
+   * unless a roll's i-frames run. The zap shows `swipeTicks`; then it backs off from the player for `recoverTicks`.
+   */
+  zap: AttackTiming & { triggerRange: number; radius: number; damage: number; knockback: number; knockTicks: number };
+  /** Killed, it discharges: `damage` lightning into every other mite within `radius` (which can kill them in turn, chaining), never the player. */
+  discharge: { radius: number; damage: number };
+}
+
 /** The Stormcrown's enemies, as one union for EnemyDef. */
-export type StormcrownEnemyDef = HawkDef;
+export type StormcrownEnemyDef = HawkDef | MiteDef;
 
 /** The base fields they share, as the Emberworks' (emberworksEnemies.ts). */
 const BASE = { boss: false, hitKnockTicks: 4, hitFlashTicks: 6, leashGraceTicks: 60, homeTolerance: 4 } as const;
@@ -76,6 +91,41 @@ export const THUNDERHAWK: HawkDef = {
   anims: 'thunderhawk',
 };
 
+/** A mite drops at a third of the rate (065), so a trio drops like one enemy. */
+const MITE_DROP_SHARE = 1 / 3;
+
+export const STATIC_MITE: MiteDef = {
+  ...BASE,
+  kind: 'mite',
+  id: 'static-mite',
+  name: 'Static mite',
+  maxHealth: 12,
+  walkSpeed: 90,
+  feetBox: { w: 10, h: 6 },
+  hurtbox: { w: 14, h: 12, offsetY: -5 },
+  weight: 4 / 3,
+  swarm: 3,
+  zap: {
+    triggerRange: 16,
+    radius: 20,
+    windupTicks: 30,
+    swipeTicks: 6,
+    // It backs off.
+    recoverTicks: 40,
+    // Counted from the wind-up's start.
+    cooldownTicks: 60,
+    damage: 8,
+    knockback: 8,
+    knockTicks: 4,
+  },
+  discharge: { radius: 40, damage: 12 },
+  drops: STORMCROWN_DROPS,
+  dropShare: MITE_DROP_SHARE,
+  xp: 3,
+  anims: 'static-mite',
+};
+
 export const STORMCROWN_ENEMIES = {
   thunderhawk: THUNDERHAWK,
+  'static-mite': STATIC_MITE,
 } as const;

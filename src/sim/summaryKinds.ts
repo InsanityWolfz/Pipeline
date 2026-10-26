@@ -33,6 +33,9 @@ export interface KindSummary {
   slam?: { x: number; y: number; radius: number } | null;
   /** 061: a kiln-tender's beam while it winds up or channels (its target's id), else null. */
   beam?: { target: number; phase: 'windup' | 'channel' } | null;
+  /** 065: a static mite's zap pulse while it winds up (its radius, px, and ticks so far), else null; and its trio (its first mite's id). */
+  pulse?: { radius: number; ticks: number } | null;
+  trio?: number;
 }
 
 export function kindSummary(state: SimState, e: EnemyState): KindSummary {
@@ -55,6 +58,11 @@ export function kindSummary(state: SimState, e: EnemyState): KindSummary {
   if (def.kind === 'hound') out.lane = laneShown(e, def.dash);
   // 065: a thunderhawk's dive line, as a lane.
   if (def.kind === 'hawk') out.lane = laneShown(e, def.dive);
+  // 065: a static mite's pulse while it winds up, and its trio.
+  if (def.kind === 'mite') {
+    out.pulse = e.mode === 'windup' ? { radius: def.zap.radius, ticks: e.modeTicks } : null;
+    out.trio = e.trio;
+  }
   return out;
 }
 

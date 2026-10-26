@@ -19,6 +19,7 @@ export const STORMCROWN_ENEMY_SOUNDS = {
 /** Their wind-up cues, by enemy kind (joined into WINDUP_SOUNDS): the hawk's screech, the mite's buzz, the sentinel's call, and the ram drawing breath (its gust's own whoosh plays as it lands). */
 export const STORMCROWN_ENEMY_WINDUPS = {
   hawk: STORMCROWN_ENEMY_SOUNDS.hawkScreech,
+  mite: STORMCROWN_ENEMY_SOUNDS.miteBuzz,
 } as const;
 
 export const STORMCROWN_ENEMY_SOUND_RECIPES = {

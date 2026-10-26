@@ -131,7 +131,7 @@ export interface NameParts {
 }
 
 /** Chance (0..1) each enemy kind drops an unidentified piece. The first Husk ever killed always does. Region 2's four at the Husk's 10% (035). */
-export const ARMOR_DROP_CHANCE: Readonly<Record<string, number>> = { husk: 0.1, wisp: 0.15, 'pylon-warden': 1, charger: 0.1, burrower: 0.1, shardback: 0.1, sniper: 0.1, 'cinder-mote': 0.1, 'bellows-hound': 0.1, 'slag-golem': 0.1, 'kiln-tender': 0.1, thunderhawk: 0.1 };
+export const ARMOR_DROP_CHANCE: Readonly<Record<string, number>> = { husk: 0.1, wisp: 0.15, 'pylon-warden': 1, charger: 0.1, burrower: 0.1, shardback: 0.1, sniper: 0.1, 'cinder-mote': 0.1, 'bellows-hound': 0.1, 'slag-golem': 0.1, 'kiln-tender': 0.1, thunderhawk: 0.1, 'static-mite': 0.1 };
 
 /** The enemy whose first kill always drops a piece. */
 export const FIRST_ARMOR_ENEMY = 'husk';

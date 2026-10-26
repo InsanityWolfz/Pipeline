@@ -6,4 +6,5 @@ import { enemyAnims } from './enemyAnims';
 /** Their animation sets (joined into ENEMY_ANIMS): the hawk's climb is its recover pose. */
 export const STORM_ENEMY_ANIMS = {
   thunderhawk: enemyAnims('thunderhawk', true),
+  'static-mite': enemyAnims('static-mite', true, [], 2),
 } as const;

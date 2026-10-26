@@ -19,8 +19,11 @@ export interface StormEvents {
   chains: { id: number }[];
   /** 065: a thunderhawk set off down its dive line: its start, unit direction and the line's length. */
   dives: { id: number; x: number; y: number; dx: number; dy: number; length: number }[];
+  /** 065: a static mite zapped (its point and the pulse's radius); a killed mite discharged (its point, radius, and the mites it hit, with their feet). */
+  zaps: { id: number; x: number; y: number; radius: number }[];
+  discharges: { id: number; x: number; y: number; radius: number; hit: { id: number; x: number; y: number }[] }[];
 }
 
 export function createStormEvents(): StormEvents {
-  return { rodStrikes: [], arcs: [], strikes: [], rodBreaks: [], rodRegrows: [], blinkWarns: [], blinks: [], conductorWindups: [], lashes: [], chains: [], dives: [] };
+  return { rodStrikes: [], arcs: [], strikes: [], rodBreaks: [], rodRegrows: [], blinkWarns: [], blinks: [], conductorWindups: [], lashes: [], chains: [], dives: [], zaps: [], discharges: [] };
 }

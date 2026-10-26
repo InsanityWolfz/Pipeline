@@ -151,6 +151,8 @@ export interface EnemyState extends Knockable {
   /** A kiln-tender's beam (061): its target's id (-1: none), and its own health as the beam began (any less breaks it). */
   beamTarget: number;
   beamHeld: number;
+  /** 065: a static mite's trio, by its first mite's id (-1: none): a trio wakes together, and a champion's trio are all champions. */
+  trio: number;
 }
 
 /** A home's danger ring (041, the rule 037's XP used): `ringOf` its tile in the overworld, 0 in any other room. */
@@ -225,6 +227,7 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     chainHit: false,
     beamTarget: -1,
     beamHeld: 0,
+    trio: -1,
     knockX: 0,
     knockY: 0,
     knockTicks: 0,
