@@ -41,8 +41,10 @@ describe('the world grows (060, 064)', () => {
     for (const k of ['landmarks', 'overworld', 'roads', 'roadPoints', 'pylons', 'arenas', 'hollows', 'emberworks'] as const) expect(unkept(now[k], SNAPSHOT[k]), k).toEqual([]);
   });
 
-  it('generates the same ground round the centre, out to the Emberworks\' edge', () => {
+  it('generates the same ground round the centre, out to the Hollows\' edge', () => {
+    // The ground out to the Emberworks' edge was the same after the move itself (slice 1, `ground`); from slice 2 the
+    // Stormcrown's roads and ramps cross the Emberworks, whose generator keeps off roads, so its ground is held to them.
     expect(now.region1Ground).toEqual(SNAPSHOT.region1Ground);
-    expect(now.ground).toEqual(SNAPSHOT.ground);
+    expect(now.hollowsGround).toEqual(SNAPSHOT.hollowsGround);
   });
 });

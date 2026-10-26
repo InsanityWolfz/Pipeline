@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EMBERWORKS, EMBERWORKS_GATE, inEmberworks, rampTiles } from '../../src/data/emberworks';
 import { SLAG_RIVER_TILES } from '../../src/data/emberworksSites';
+import { STORMCROWN, stormRampTiles } from '../../src/data/stormcrown';
 import { HOLLOWS, inHollows, regionAt } from '../../src/data/hollows';
 import { RING_XP } from '../../src/data/leveling';
 import { OVERWORLD, ringOf } from '../../src/data/overworld';
@@ -34,12 +35,13 @@ describe('the ring', () => {
 
   it('is danger ring 4 and region 3 anywhere in it past its barrier; the Hollows’ ground stops at its edge', () => {
     for (let b = 0; b < 360; b += 15) {
-      for (const r of [EMBERWORKS.ramp.gateAt + 1, (inner + outer) / 2, outer - 1, outer + 2]) {
+      // 064: past `outer` is the Stormcrown's cliff edge, still ring 4 and region 3 to its barrier, in the Stormcrown's look (tests/sim/stormcrown.test.ts).
+      for (const r of [EMBERWORKS.ramp.gateAt + 1, (inner + outer) / 2, outer - 1, outer + 1]) {
         const t = polar(b, r);
         expect(ringOf(t.tx, t.ty), `${b}° ${r}`).toBe(4);
         expect(regionAt(t.tx, t.ty), `${b}° ${r}`).toBe(3);
         expect(inHollows(t.tx, t.ty), `${b}° ${r}`).toBe(false);
-        expect(inEmberworks(t.tx, t.ty), `${b}° ${r}`).toBe(true);
+        expect(inEmberworks(t.tx, t.ty), `${b}° ${r}`).toBe(r < outer);
       }
       const h = polar(b, inner - 1);
       expect([ringOf(h.tx, h.ty), regionAt(h.tx, h.ty), inHollows(h.tx, h.ty), inEmberworks(h.tx, h.ty)]).toEqual([3, 2, true, false]);
@@ -83,10 +85,11 @@ describe('the ring', () => {
     expect(WALKABLE).toContain(TILE.ramp);
   });
 
-  it('ends past its outer radius in a ragged cliff edge out to the grid’s edge, never a bare wall', () => {
+  it('ends past its outer radius in a ragged cliff edge, never a bare wall (064: the Stormcrown past it, up its ramps)', () => {
     // 060 slice 3: the Slag River runs half a tile into it, solid to feet too.
-    const river = new Set(SLAG_RIVER_TILES.map(tileKey));
-    for (let ty = 0; ty < WORLD_SHAPE.size; ty++) for (let tx = 0; tx < WORLD_SHAPE.size; tx++) if (fromCentre(tx, ty) > outer && !river.has(`${tx},${ty}`)) expect(at(tx, ty), `${tx},${ty}`).toBe(TILE.cliff);
+    const river = new Set([...SLAG_RIVER_TILES, ...STORMCROWN.ramps.flatMap(stormRampTiles)].map(tileKey));
+    const foot = STORMCROWN.radii.inner + STORMCROWN.wall;
+    for (let ty = 0; ty < WORLD_SHAPE.size; ty++) for (let tx = 0; tx < WORLD_SHAPE.size; tx++) if (fromCentre(tx, ty) > outer && fromCentre(tx, ty) < foot && !river.has(`${tx},${ty}`)) expect(at(tx, ty), `${tx},${ty}`).toBe(TILE.cliff);
     for (const t of SLAG_RIVER_TILES) if (fromCentre(t.tx, t.ty) > outer) expect(t.symbol).toBe(TILE.slag);
     const band = room.rows.flatMap((row, ty) => [...row].map((s, tx) => ({ s, d: fromCentre(tx, ty) }))).filter((t) => t.d > outer - 1 && t.d <= outer);
     expect(band.some((t) => t.s === TILE.cliff)).toBe(true);
@@ -174,7 +177,7 @@ describe('the barrier (060)', () => {
   it('is shut on every start, and reported', () => {
     expect(createSim(1).gates.emberworks).toBe(false);
     expect(createSim(1, { start: HOLLOWS_START }).gates.emberworks).toBe(false);
-    expect(summarize(createSim(1)).gates).toEqual({ foundry: true, shrine: true, hollows: false, emberworks: false });
+    expect(summarize(createSim(1)).gates).toEqual({ foundry: true, shrine: true, hollows: false, emberworks: false, stormcrown: false });
   });
 
   it('blocks the player walking up the ramp', () => {

@@ -111,8 +111,8 @@ describe('ring scaling (041)', () => {
     return [d.maxHealth, hit];
   };
 
-  it('RING_SCALE: ×1, ×1, ×1.6, ×2.5 on health and damage, separate fields (060: and ×4 in the Emberworks)', () => {
-    expect(RING_SCALE).toEqual({ 0: { health: 1, damage: 1 }, 1: { health: 1, damage: 1 }, 2: { health: 1.6, damage: 1.6 }, 3: { health: 2.5, damage: 2.5 }, 4: { health: 4, damage: 4 } });
+  it('RING_SCALE: ×1, ×1, ×1.6, ×2.5 on health and damage, separate fields (060: and ×4 in the Emberworks; 064: ×10 in the Stormcrown)', () => {
+    expect(RING_SCALE).toEqual({ 0: { health: 1, damage: 1 }, 1: { health: 1, damage: 1 }, 2: { health: 1.6, damage: 1.6 }, 3: { health: 2.5, damage: 2.5 }, 4: { health: 4, damage: 4 }, 5: { health: 10, damage: 10 } });
   });
 
   it('gives the spec’s table, champion column included', () => {

@@ -1,5 +1,5 @@
 {
-  "version": 14,
+  "version": 17,
   "shape": [
     "state.activatePulse: number",
     "state.arrows: array",
@@ -256,6 +256,7 @@
     "state.gates.foundry: boolean",
     "state.gates.hollows: boolean",
     "state.gates.shrine: boolean",
+    "state.gates.stormcrown: boolean",
     "state.gates: object",
     "state.gathered: array",
     "state.gear: array",

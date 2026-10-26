@@ -182,8 +182,8 @@ const candidates: Record<PopulatedRing, { tx: number; ty: number }[]> = { 1: [],
 for (let ty = 1; ty < OVERWORLD.height - 1; ty++) {
   for (let tx = 1; tx < OVERWORLD.width - 1; tx++) {
     const ring = ringOf(tx, ty);
-    // Ring 0 stays calm.
-    if (ring !== 0 && packGround(tx, ty)) candidates[ring].push({ tx, ty });
+    // Ring 0 stays calm; ring 5 (064, the Stormcrown) has no packs until 065.
+    if (ring !== 0 && ring !== 5 && packGround(tx, ty)) candidates[ring].push({ tx, ty });
   }
 }
 

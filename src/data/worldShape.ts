@@ -21,6 +21,8 @@ export const WORLD_SHAPE = {
   hollows: 79,
   /** 060: the Emberworks' outer radius, the third ring as wide as the Hollows (31 tiles) past its cliff edge. */
   emberworks: 110,
+  /** 064: the Stormcrown's outer radius, the fifth ring as wide as the Emberworks (31 tiles) past its cliff edge. */
+  stormcrown: 141,
   /** Region 1's danger rings (017, 041), concentric: ring 0 inside the first bound, ring 1 inside the second, ring 2 to the barrier. */
   rings: [17, 30] as const,
   /** The barrier's band: every tile whose distance from the centre is within this of `region1` (√½, so the band has no diagonal gap). */

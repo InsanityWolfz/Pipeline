@@ -515,10 +515,10 @@ describe('the tutorial (012)', () => {
     expect(doorGates).toEqual(['foundry']);
     const tileGates = new Set((outside.gateTiles ?? []).map((t) => t.gate));
     // 034: Stonefall Hollows' barrier seals its gap; 055: the shrine's gap is its arena's door, which the shrine gate
-    // unlocks; 060: the Emberworks' barrier stands across the top of each ramp.
-    expect([...tileGates]).toEqual(['hollows', 'emberworks']);
+    // unlocks; 060: the Emberworks' barrier stands across the top of each ramp; 064: and the Stormcrown's across its own.
+    expect([...tileGates]).toEqual(['hollows', 'emberworks', 'stormcrown']);
     expect(SHRINE_ARENA.door.unlock).toBe('shrine');
-    for (const t of outside.gateTiles ?? []) expect(outside.rows[t.ty]?.[t.tx]).toBe(t.gate === 'emberworks' ? TILE.ramp : TILE.floor);
+    for (const t of outside.gateTiles ?? []) expect(outside.rows[t.ty]?.[t.tx]).toBe(t.gate === 'hollows' ? TILE.floor : TILE.ramp);
     for (const r of Object.values(RECIPES)) if (r.requires) expect(r.requires).toBe('attuned');
     expect(TUTORIAL_START.room).toBe(OVERWORLD.id);
   });

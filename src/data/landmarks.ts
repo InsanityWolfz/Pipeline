@@ -43,7 +43,7 @@ export interface LandmarkDef {
   readonly name: string;
   readonly kind: LandmarkKind;
   /** The danger ring (017) it sits in: 3 in Stonefall Hollows (034), 4 in the Emberworks (060). */
-  readonly ring: 1 | 2 | 3 | 4;
+  readonly ring: 1 | 2 | 3 | 4 | 5;
   /** Kept clear of generated trees, rocks, water and stones; its own features are stamped over it. Seeing any of it discovers it. */
   readonly area: TileRect;
   readonly features: readonly Feature[];

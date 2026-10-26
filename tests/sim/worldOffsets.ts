@@ -72,5 +72,7 @@ export function worldOffsets(): unknown {
     emberworks: offsets({ gate: EMBERWORKS_GATE, ramps: EMBERWORKS.ramps.map((r) => rampTiles(r)), hall: ANVIL_HALL, river: SLAG_RIVER_TILES }),
     /** 064: every ring's ground out to the Emberworks' outer edge, before the Stormcrown's ramps cut through it. */
     ground: ground(EMBERWORKS.radii.outer - 1),
+    /** 064 slice 2: every ring's ground out to the Hollows' outer edge (the Stormcrown's roads change the Emberworks' after slice 1, taken there). */
+    hollowsGround: ground(HOLLOWS.radii.outer - 1),
   };
 }

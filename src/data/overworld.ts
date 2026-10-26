@@ -5,6 +5,7 @@
 // (home.ts). Tile coordinates throughout. Numbers are tuning values.
 
 import { EMBERWORKS } from './emberworks';
+import { STORMCROWN } from './stormcrown';
 import { ANVIL_HALL } from './emberworksSites';
 import { GROTTO } from './grotto';
 import { HOLLOWS, regionAt } from './hollows';
@@ -163,9 +164,10 @@ export const OVERWORLD = {
   ],
 } as const;
 
-/** The ring a tile is in: 0 near the foundry, 1 the near field, 2 the shrine's ground out to the barrier, 3 anywhere in Stonefall Hollows (034), 4 in the Emberworks (060), each its region's (regionAt). */
+/** The ring a tile is in: 0 near the foundry, 1 the near field, 2 the shrine's ground out to the barrier, 3 anywhere in Stonefall Hollows (034), 4 in the Emberworks (060), 5 in the Stormcrown (064), each its region's (regionAt). */
 export function ringOf(tx: number, ty: number): Ring {
   const region = regionAt(tx, ty);
+  if (region === STORMCROWN.region) return STORMCROWN.ring;
   if (region === EMBERWORKS.region) return EMBERWORKS.ring;
   if (region === HOLLOWS.region) return HOLLOWS.ring;
   const { bounds } = OVERWORLD.rings;

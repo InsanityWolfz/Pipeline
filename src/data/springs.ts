@@ -15,7 +15,7 @@ export interface SpringDef {
   /** Its landmark name (032), on the discovery banner. */
   readonly name: string;
   /** The danger ring (017) it sits in. */
-  readonly ring: 1 | 2 | 3 | 4;
+  readonly ring: 1 | 2 | 3 | 4 | 5;
   readonly tx: number;
   readonly ty: number;
   readonly radius: number;

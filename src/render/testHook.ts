@@ -30,6 +30,7 @@ import type { RestorePanelState } from './RestorePanel';
 import type { ResearchListState } from './ResearchList';
 import type { HollowsShown } from './HollowsView';
 import type { EmberworksShown } from './EmberworksView';
+import type { StormcrownShown } from './StormcrownView';
 import type { ArenaDoorShown } from './ArenaDoorView';
 import type { HollowsEnemiesShown } from './hollowsEnemyArt';
 import type { EnemyBarShown } from './enemyBar';
@@ -220,6 +221,8 @@ export interface UiState {
   hollows: HollowsShown;
   /** 060: the Emberworks' barrier across its ramps, as drawn. */
   emberworks: EmberworksShown;
+  /** 064: the Stormcrown's barrier. */
+  stormcrown: StormcrownShown;
   /** 055: each boss arena's door in the room on screen, sealed or open, and 043's seal over it while its boss fights. */
   arenaDoors: ArenaDoorShown[];
   /** 036: the bench's gear panel while open (its cells, tabs, rows with ids and boxes, page and totals), else null. */

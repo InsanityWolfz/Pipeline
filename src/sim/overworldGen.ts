@@ -9,6 +9,8 @@ import { springClearing } from '../data/springs';
 import { fill, inRect, path, set, type Grid } from './genGrid';
 import { fromCentre, WORLD_SHAPE } from '../data/worldShape';
 import { generateEmberworks, stampEmberworks } from './emberworksGen';
+import { generateStormcrown, stampStormcrown } from './stormcrownGen';
+import { STORMCROWN_GATE } from '../data/stormcrown';
 import { generateHollows, stampHollows } from './hollowsGen';
 import { createRng, nextFloat, nextInt, type RngState } from './rng';
 
@@ -159,6 +161,8 @@ export function generateOverworld(seed: number = OVERWORLD.seed, landmarks: read
   generateHollows(grid, seed);
   // 060: the Emberworks past the Hollows' cliff edge, from its own stream.
   generateEmberworks(grid, seed);
+  // 064: the Stormcrown past the Emberworks' cliff edge, from its own stream.
+  generateStormcrown(grid, seed);
 
   // Landmarks override the terrain: clearings, roads, walls, the ruin and the door. The landmarks' areas (032)
   // and the springs' clearings (030) are stamped here rather than steering the generator, so its stream is unchanged.
@@ -175,6 +179,8 @@ export function generateOverworld(seed: number = OVERWORLD.seed, landmarks: read
   stampHollows(grid, landmarks);
   // 060: the ramps up into the Emberworks, over the roads that climb them.
   stampEmberworks(grid);
+  // 064: the ramps up into the Stormcrown.
+  stampStormcrown(grid);
   const pylons = overworldPylons(landmarks);
   const caches = landmarks.flatMap((l) => (l.cache ? [{ id: l.id, ...l.cache }] : []));
   const altar = HOLLOWS.arena.altar;
@@ -202,7 +208,10 @@ export function generateOverworld(seed: number = OVERWORLD.seed, landmarks: read
     pylons,
     caches,
     // 055: the shrine's gate has no tiles any more; its door (TILE.arenaDoor) stands where they were.
-    gateTiles: [...HOLLOWS.gate.map((t) => ({ ...t, gate: 'hollows' as const })), ...EMBERWORKS_GATE.map((t) => ({ ...t, gate: 'emberworks' as const }))],
+    gateTiles: [
+      ...HOLLOWS.gate.map((t) => ({ ...t, gate: 'hollows' as const })), ...EMBERWORKS_GATE.map((t) => ({ ...t, gate: 'emberworks' as const })),
+      ...STORMCROWN_GATE.map((t) => ({ ...t, gate: 'stormcrown' as const })),
+    ],
     altars: [
       { ...altar, boss: HOLLOWS.arena.boss },
       { ...anvilAltar, boss: ANVIL_HALL.boss },

@@ -41,15 +41,21 @@ export const TILE = {
   ramp: '^',
   /** 060: the Slag River's molten channel: stops feet, not shots. */
   slag: '%',
-  /** 060: a stone bridge over the Slag River: walkable. */
+  /** 060: a stone bridge over the Slag River: walkable (064: and the Broken Sky-bridge's deck over its chasm). */
   bridge: '+',
+  /** 064: a Stormcrown iron rod, one of the builders' storm-works: stops feet and straight shots. */
+  ironRod: 'I',
+  /** 064: a Stormcrown cairn of wind-cut stones: stops feet and straight shots. */
+  cairn: 'Y',
+  /** 064: a Stormcrown chasm, a rift in the rock: stops feet, not shots. */
+  chasm: 'V',
 } as const;
 
 /** Tiles feet can cross. Anything else, and outside the grid, is solid. */
 export const WALKABLE: readonly string[] = [TILE.floor, TILE.path, TILE.shallow, TILE.arch, TILE.terrace, TILE.ramp, TILE.bridge];
 
 /** Tiles shots fly over though feet can't (017). */
-export const SHOT_THROUGH: readonly string[] = [TILE.water, TILE.slag];
+export const SHOT_THROUGH: readonly string[] = [TILE.water, TILE.slag, TILE.chasm];
 
 export type TileSymbol = (typeof TILE)[keyof typeof TILE];
 
@@ -127,10 +133,10 @@ export interface Terrain {
  * Stonefall Hollows' ley barrier (034) when the shrine's pylon is claimed, and the Emberworks' (060) on the Bulwark's
  * first kill.
  */
-export type GateId = 'foundry' | 'shrine' | 'hollows' | 'emberworks';
+export type GateId = 'foundry' | 'shrine' | 'hollows' | 'emberworks' | 'stormcrown';
 
-/** Gates whose sealed tiles stop shots too, not just feet (034: the Hollows' barrier stops every projectile; 060: and the Emberworks'). */
-export const SHOT_GATES: readonly GateId[] = ['hollows', 'emberworks'];
+/** Gates whose sealed tiles stop shots too, not just feet (034: the Hollows' barrier stops every projectile; 060: and the Emberworks'; 064: and the Stormcrown's). */
+export const SHOT_GATES: readonly GateId[] = ['hollows', 'emberworks', 'stormcrown'];
 
 /** Rooms written out by hand; the overworld is generated (src/sim/world.ts). */
 export const STATIC_ROOMS: Readonly<Record<string, Room>> = {

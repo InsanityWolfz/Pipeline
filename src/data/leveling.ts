@@ -8,8 +8,8 @@ export const XP_CURVE: readonly number[] = [40, 70, 100, 130, 160, 200, 240, 280
 /** The highest level for now; raised as each region adds nodes. At the cap XP stops counting. */
 export const LEVEL_CAP = 17;
 
-/** A kill's XP multiplier by its danger ring (017): ring 0 (no packs today), 1, 2, 3 (Stonefall Hollows, Region 2) and 4 (060: the Emberworks, Region 3). */
-export const RING_XP: readonly number[] = [1, 1, 2, 3, 4];
+/** A kill's XP multiplier by its danger ring (017): ring 0 (no packs today), 1, 2, 3 (Stonefall Hollows, Region 2), 4 (060: the Emberworks, Region 3) and 5 (064: the Stormcrown, Region 4). */
+export const RING_XP: readonly number[] = [1, 1, 2, 3, 4, 10];
 
 /** A champion's kill (032) gives this many times its XP. */
 export const CHAMPION_XP = 3;

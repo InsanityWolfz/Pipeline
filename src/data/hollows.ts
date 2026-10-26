@@ -1,5 +1,6 @@
 import type { ArenaDoor } from './arenas';
 import { EMBERWORKS, pastEmberworksBarrier } from './emberworks';
+import { pastStormcrownBarrier, STORMCROWN } from './stormcrown';
 import { shiftRect, shiftTile, type Shift } from './place';
 import { TILE } from './rooms';
 import type { TilePos, TileRect } from './tiles';
@@ -159,7 +160,8 @@ export const inHollows = (tx: number, ty: number): boolean => {
 };
 
 /**
- * The region a tile is in (033's schematic regions): 3 in the Emberworks past its barrier (060), 2 in the Hollows out to
- * there (its cliff edge and the ramps' feet included), else 1.
+ * The region a tile is in (033's schematic regions): 4 in the Stormcrown past its barrier (064), 3 in the Emberworks past
+ * its barrier (060), 2 in the Hollows out to there (its cliff edge and the ramps' feet included), else 1.
  */
-export const regionAt = (tx: number, ty: number): 1 | 2 | 3 => (pastEmberworksBarrier(tx, ty) ? EMBERWORKS.region : fromCentre(tx, ty) >= HOLLOWS.radii.inner ? HOLLOWS.region : 1);
+export const regionAt = (tx: number, ty: number): 1 | 2 | 3 | 4 =>
+  pastStormcrownBarrier(tx, ty) ? STORMCROWN.region : pastEmberworksBarrier(tx, ty) ? EMBERWORKS.region : fromCentre(tx, ty) >= HOLLOWS.radii.inner ? HOLLOWS.region : 1;
