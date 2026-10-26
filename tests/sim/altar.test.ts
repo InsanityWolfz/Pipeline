@@ -123,7 +123,7 @@ describe('the altar', () => {
     die(s);
     run(s, 1);
     const back = s.enemies.find((e) => e.enemyId === 'bulwark');
-    expect(back?.health).toBe(3800); // 041: its 3,800 (was 900)
+    expect(back?.health).toBe(900); // fix-bulwark-ease: its 900 (041 had 3,800)
     expect(altarState(s, ALTAR)).toBe('spent');
     expect(s.inventory['ley-iron'] ?? 0).toBe(0);
   });

@@ -1,8 +1,8 @@
-import type { InteractKind } from '../data/interact';
+import type { InteractKind, InteractLabel } from '../data/interact';
 import { SANDBOX } from '../data/sandbox';
 import { SANDBOX_ROOM } from '../data/rooms';
 import { altarInReach, altarState } from './altar';
-import { doorInReach, doorUse } from './arenaLock';
+import { arenaLocked, doorInReach, doorUse } from './arenaLock';
 import { cacheInReach, isOpened } from './cache';
 import { claimedPylons, dormant, fixtureInReach, pylonInReach } from './claims';
 import { fixtureDef } from './fixtures';
@@ -23,6 +23,8 @@ export interface InteractTarget {
   kind: InteractKind;
   x: number;
   y: number;
+  /** Words its prompt shows beside the key (src/data/interact.ts), if any. */
+  label?: InteractLabel;
 }
 
 const at = (kind: InteractKind, p: { x: number; y: number }): InteractTarget => ({ kind, x: p.x, y: p.y });
@@ -37,7 +39,11 @@ export function interactTarget(state: SimState): InteractTarget | null {
   if (door && doorUse(state, door)) {
     const first = door.door.tiles[0];
     const last = door.door.tiles[door.door.tiles.length - 1];
-    if (first && last) return at('arena-door', tileCentre({ tx: (first.tx + last.tx) / 2, ty: first.ty }));
+    if (first && last) {
+      const target = at('arena-door', tileCentre({ tx: (first.tx + last.tx) / 2, ty: first.ty }));
+      // fix-bulwark-ease: from inside while its boss fights, the prompt says E leaves and resets the fight (043's lock).
+      return arenaLocked(state, door, state.roomId) ? { ...target, label: 'leaveFight' } : target;
+    }
   }
   const altar = altarInReach(state);
   if (altar) return altarState(state, altar.id) === 'dim' ? null : at('altar', tileCentre(altar));
