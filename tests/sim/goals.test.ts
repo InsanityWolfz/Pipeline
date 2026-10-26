@@ -25,7 +25,10 @@ describe('the chain', () => {
     expect(CHAIN.slice(0, LEAVE + 1).every((o) => o.milestone === 'prototype')).toBe(true);
     const m2 = CHAIN.findIndex((o) => o.milestone === 'm2');
     expect(CHAIN.slice(LEAVE + 1, m2).every((o) => o.milestone === 'm1')).toBe(true);
-    expect(CHAIN.slice(m2).every((o) => o.milestone === 'm2')).toBe(true);
+    // 064: Milestone 3's follow Milestone 2's.
+    const m3 = CHAIN.findIndex((o) => o.milestone === 'm3');
+    expect(CHAIN.slice(m2, m3).every((o) => o.milestone === 'm2')).toBe(true);
+    expect(CHAIN.slice(m3).every((o) => o.milestone === 'm3')).toBe(true);
     expect(M1.map((o) => o.check)).toEqual([
       { kind: 'gathered', items: ['rimestone'] },
       { kind: 'claimed', site: 'frozen-grotto' },
@@ -38,10 +41,11 @@ describe('the chain', () => {
       { kind: 'restored', node: 'entrance-3' },
       { kind: 'volley', min: 3 },
     ]);
-    // The chain's last goal is the tutorial's end: 060's feeding all four, then (062) firing steel rounds (Milestone 2's
-    // chain is goalsM2.test.ts's and goalsTiers.test.ts's).
+    // The chain's last goal is the tutorial's end: 060's feeding all four, then (062) firing steel rounds, then (064)
+    // feeding all five (Milestone 2's chain is goalsM2.test.ts's and goalsTiers.test.ts's, Milestone 3's goalsM3.test.ts's).
     expect(M1.at(-1)?.check).toEqual({ kind: 'volley', min: 3 });
-    expect(CHAIN.at(-1)?.check).toEqual({ kind: 'fired', items: TIERED_ROUNDS });
+    expect(CHAIN.slice(0, m3).at(-1)?.check).toEqual({ kind: 'fired', items: TIERED_ROUNDS });
+    expect(CHAIN.at(-1)?.check).toEqual({ kind: 'volley', min: 5 });
   });
 });
 

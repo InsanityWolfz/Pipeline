@@ -8,9 +8,10 @@ import { feedLines, restoreEntrance, ui } from './intakePage';
 import { clickRow, flowIs } from './flowPage';
 import { SPAWN_GROUP } from '../../src/sim/sandbox';
 import { bootSandbox, hidePanel, openPanel, setRound } from './sandboxPage';
+import { breakFiveRods, intoSpire } from './conductorPage';
 
 // Review screenshots for 064 (REVIEW_SHOTS=1, into docs/review/064): the Stormcrown from the top of a ramp and the Rod
-// Field charged; the lightning arc; the five-entrance intake; the Conductor's blink, storm call and rod chain.
+// Field charged; the lightning arc; the five-entrance intake; the Conductor's blink, storm call, rod chain and grounding.
 
 const SHOTS = 'docs/review/064';
 
@@ -228,5 +229,17 @@ test.describe('review screenshots (064)', () => {
     expect(await inSpire(page, 'chain')).toBe(true);
     await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().stormcrown.conductor.chain ?? false)).toBe(true);
     await page.screenshot({ path: `${SHOTS}/08-rod-chain.png` });
+  });
+
+  test('the Conductor grounded, five of its rods broken', async ({ page }) => {
+    test.setTimeout(180_000);
+    await intoSpire(page);
+    expect((await breakFiveRods(page)).grounded).toBe(true);
+    // Back by the middle, the Conductor and its broken rods in view.
+    await page.evaluate((m) => window.__helpers?.walkTo((m.tx + 0.5) * 32, (m.ty - 1.5) * 32), CROWN_SPIRE.middle);
+    await cameraSettled(page);
+    // The breaks' sparks and the blinks' flares (all drawn in one frame, the sim stepped ahead) fade first.
+    await page.waitForTimeout(1500);
+    await page.screenshot({ path: `${SHOTS}/09-conductor-grounded.png` });
   });
 });

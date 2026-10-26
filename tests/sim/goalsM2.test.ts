@@ -50,7 +50,7 @@ describe('the m2 goal chain (060)', () => {
     expect(OBJECTIVES.slice(first, first + M2.length).map((o) => o.text)).toEqual(M2);
     // 062: then the material tiers' three (tests/sim/goalsTiers.test.ts), which end the chain.
     expect(OBJECTIVES.filter((o) => o.milestone === 'm2').map((o) => o.text)).toEqual([...M2, ...TIER_GOALS]);
-    expect(OBJECTIVES.filter((o) => !o.cutIn).at(-4)?.text).toBe('Feed all four entrances');
+    expect(OBJECTIVES.filter((o) => !o.cutIn && o.milestone !== 'm3').at(-4)?.text).toBe('Feed all four entrances');
     expect(FIRE_ROUNDS).toContain('arrow+fire');
     expect(FIRE_ROUNDS.length).toBeGreaterThanOrEqual(4);
   });
@@ -98,10 +98,12 @@ describe('the m2 goal chain (060)', () => {
   it('restoring the fourth entrance and feeding all four complete their goals', () => {
     const s = upTo("Restore the intake's fourth entrance (E with the Forgewright core)");
     s.research['entrance-4'] = 'restored';
-    for (const e of s.link.entrances) e.open = true;
+    // 064: four of the five (all five fed would end the chain, with Milestone 3's last goal).
+    const four = s.link.entrances.slice(0, 4);
+    for (const e of four) e.open = true;
     run(s, 1);
     expect(s.objectives[at("Restore the intake's fourth entrance (E with the Forgewright core)")]).toBe(true);
-    for (const [k, e] of s.link.entrances.entries()) Object.assign(e, { ammoId: 'arrow', count: 1 + k });
+    for (const [k, e] of four.entries()) Object.assign(e, { ammoId: 'arrow', count: 1 + k });
     run(s, 1);
     expect(s.objectives[at('Feed all four entrances')]).toBe(true);
     // 062: the material tiers' goals come next; this start counts ley-steel as hand-crafted already (062.12), so the
@@ -111,8 +113,8 @@ describe('the m2 goal chain (060)', () => {
   });
 });
 
-describe('the end card (042, 060)', () => {
-  it('comes after the Forgewright’s first kill, not the Bulwark’s', () => {
-    expect(END_CARD.boss).toBe('forgewright');
+describe('the end card (042, 060, 064)', () => {
+  it('comes after the Conductor’s first kill (064), not the Forgewright’s or the Bulwark’s', () => {
+    expect(END_CARD.boss).toBe('conductor');
   });
 });

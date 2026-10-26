@@ -52,7 +52,7 @@ export class GameRunner {
   }
 
   /**
-   * After each tick: END_CARD.boss's first kill (060: the Forgewright's) sets the end card due `delayTicks` later, once per save (altar refights
+   * After each tick: END_CARD.boss's first kill (060: the Forgewright's; 064: the Conductor's) sets the end card due `delayTicks` later, once per save (altar refights
    * aren't first kills). Returns whether it's due now; the caller shows it and calls `endCardShown`.
    */
   endCardDue(sim: SimState): boolean {

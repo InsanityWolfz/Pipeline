@@ -55,6 +55,14 @@ const TEXTS = [
   'Smelt ley-steel at the bench (C)',
   'Build a Smelter into a line',
   'Fire steel rounds',
+  // 064: Milestone 3, the Stormcrown's.
+  'Reach the Stormcrown',
+  'Gather stormglass at the Rod Field',
+  "Claim the Weathervane's pylon",
+  'Craft a lightning round (C)',
+  'Defeat the Conductor',
+  "Restore the intake's fifth entrance (E with the Conductor core)",
+  'Feed all five entrances',
 ];
 const REMOVED = [
   'Feed ammo into the new entrance',

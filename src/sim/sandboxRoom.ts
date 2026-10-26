@@ -1,4 +1,5 @@
 import { ANVIL_HALL } from '../data/emberworksSites';
+import { CROWN_SPIRE } from '../data/stormcrownSites';
 import { HOLLOWS } from '../data/hollows';
 import { TILE, type Room } from '../data/rooms';
 import { SANDBOX, SANDBOX_PENS, WARDEN_ARENA } from '../data/sandbox';
@@ -8,7 +9,8 @@ import type { TileRect } from '../data/tiles';
 // overworld is generated: an outer wall, the pens along the north wall each open to the
 // south, the open middle with the spawn and the bench, the Warden's walled arena and the
 // Sunken Forum (its own cliffs, colonnade and columns, at the Hollows' tiles) along the
-// south, and (060) the Anvil Hall east of the middle at the Emberworks' tiles. No doors: the sandbox is its own world.
+// south, (060) the Anvil Hall east of the middle at the Emberworks' tiles, and (064) the Crown Spire north of it at the
+// Stormcrown's. No doors: the sandbox is its own world.
 
 type Grid = string[][];
 
@@ -38,6 +40,8 @@ export function buildSandboxRoom(): Room {
   for (const t of HOLLOWS.arena.walls) set(grid, t.tx, t.ty, t.symbol);
   // 060: the Anvil Hall, its walls and door at the Emberworks' tiles.
   for (const t of ANVIL_HALL.walls) set(grid, t.tx, t.ty, t.symbol);
+  // 064: the Crown Spire, its walls and door at the Stormcrown's tiles.
+  for (const t of CROWN_SPIRE.walls) set(grid, t.tx, t.ty, t.symbol);
   set(grid, SANDBOX.bench.tx, SANDBOX.bench.ty, TILE.ruinBlock);
   return {
     id: SANDBOX.room,

@@ -23,10 +23,10 @@ describe('the Sandbox panel rows (044)', () => {
 
   it('lays out the loadout column and the spawn column', () => {
     const [loadout, spawn] = sandboxColumns(sb, DEFAULT_PICK);
-    // 060: the boss resets (the Forgewright's too) under Clear in the spawn column.
+    // 060: the boss resets (the Forgewright's too; 064: the Conductor's) under Clear in the spawn column.
     expect(loadout.map((r) => r.id)).toEqual(['entrance-0', 'entrance-1', 'entrance-2', 'god']);
     expect(loadout.map((r) => r.label).slice(0, 3)).toEqual(['Arrow', 'Empty', 'Cluster bomb']);
-    expect(spawn.map((r) => r.id)).toEqual(['enemy', 'ring', 'champion', 'count', 'spawn', 'clear', 'reset-pylon-warden', 'reset-bulwark', 'reset-forgewright']);
+    expect(spawn.map((r) => r.id)).toEqual(['enemy', 'ring', 'champion', 'count', 'spawn', 'clear', 'reset-pylon-warden', 'reset-bulwark', 'reset-forgewright', 'reset-conductor']);
   });
 
   it('steps an entrance through the rounds, wrapping round', () => {
@@ -49,8 +49,8 @@ describe('the Sandbox panel rows (044)', () => {
     pick = sandboxClick(up('enemy'), sb, pick).pick;
     expect(pick.enemyId).toBe(ENEMY_CHOICES[1]);
     pick = sandboxClick(down('ring'), sb, pick).pick;
-    // Down from ring 1 wraps to the last: 060's ring 4.
-    expect(pick.ring).toBe(4);
+    // Down from ring 1 wraps to the last: 060's ring 4 (064: ring 5).
+    expect(pick.ring).toBe(5);
     pick = sandboxClick(row('champion'), sb, pick).pick;
     expect(pick.champion).toBe(true);
     for (let i = 0; i < 20; i++) pick = sandboxClick(up('count'), sb, pick).pick;
@@ -58,7 +58,7 @@ describe('the Sandbox panel rows (044)', () => {
     for (let i = 0; i < 20; i++) pick = sandboxClick(down('count'), sb, pick).pick;
     expect(pick.count).toBe(1);
     expect(sandboxClick(up('ring'), sb, pick).command).toBeNull();
-    expect(sandboxClick(row('spawn'), sb, pick).command).toEqual({ kind: 'spawn', enemyId: ENEMY_CHOICES[1], ring: 4, champion: true, count: 1 });
+    expect(sandboxClick(row('spawn'), sb, pick).command).toEqual({ kind: 'spawn', enemyId: ENEMY_CHOICES[1], ring: 5, champion: true, count: 1 });
     expect(sandboxClick(row('clear'), sb, pick).command).toEqual({ kind: 'clear' });
   });
 });
