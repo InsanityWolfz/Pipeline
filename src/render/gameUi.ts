@@ -30,6 +30,7 @@ export function gameUi(g: GameScene): GameUiState {
     nodeGlow: g.nodeView?.glowing ?? [],
     shakes: [...(g.feel?.juice.shakes ?? [])],
     burnNumbers: g.feel?.juice.burnNumbers ?? 0,
+    particles: g.feel?.juice.particles.count ?? 0,
     cursor: g.cursorView?.state ?? null,
     sliding: g.groundItemView?.sliding ?? 0,
     groundItems: g.groundItemView?.shown ?? [],

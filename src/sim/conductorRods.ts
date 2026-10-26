@@ -16,16 +16,44 @@ export interface RodState {
   regrow: number;
 }
 
+/**
+ * The Conductor's own state (064), nested as the Forgewright's bellows are: its six arena rods (none on anything else);
+ * the rod it stands at and the rod a blink's warning names (-1: none); ticks to its next blink, and ticks left of a
+ * blink's warning; the attack it is making (-1: none; 0 lash, 1 storm call, 2 rod chain) and each attack's own cooldown;
+ * and its rod chain's lines, a bit per neighbouring pair of rods (rod i and i + 1), and whether the chain has struck.
+ */
+export interface ConductorState {
+  rods: RodState[];
+  rod: number;
+  blinkTo: number;
+  blinkCooldown: number;
+  blinkWarn: number;
+  attack: number;
+  attackCooldowns: number[];
+  chainMask: number;
+  chainHit: boolean;
+}
+
 /** The Conductor's def if this enemy is one. */
 export function conductorDefOf(e: Pick<EnemyState, 'enemyId'>): ConductorDef | null {
   const def = enemyDef(e.enemyId);
   return def.kind === 'conductor' ? def : null;
 }
 
-/** Fresh rods for an enemy: six standing ones for the Conductor, none for anything else. */
-export function createRods(enemyId: string): RodState[] {
+/** Fresh state for an enemy placed at `at`: for the Conductor, six standing rods, its rod the one nearest (its start: the spire's start rod), its blink a full wait off; for anything else, no rods. */
+export function createConductor(enemyId: string, at: { x: number; y: number }): ConductorState {
   const def = conductorDefOf({ enemyId });
-  return def ? CROWN_SPIRE.sockets.map(() => ({ health: def.rods.health, regrow: 0 })) : [];
+  return {
+    rods: def ? CROWN_SPIRE.sockets.map(() => ({ health: def.rods.health, regrow: 0 })) : [],
+    rod: def ? nearestRod(at) : -1,
+    blinkTo: -1,
+    blinkCooldown: def ? def.blink.everyTicks : 0,
+    blinkWarn: 0,
+    attack: -1,
+    attackCooldowns: def ? [0, 0, 0] : [],
+    chainMask: 0,
+    chainHit: false,
+  };
 }
 
 /** A rod's ground point (its socket), px. */
@@ -39,13 +67,13 @@ export function rodBox(def: ConductorDef, rod: number): { x: number; y: number; 
 }
 
 /** True while a rod stands (whole, not regrowing). */
-export const standing = (e: Pick<EnemyState, 'rods'>, rod: number): boolean => (e.rods[rod]?.regrow ?? 1) <= 0;
+export const standing = (e: Pick<EnemyState, 'conductor'>, rod: number): boolean => (e.conductor.rods[rod]?.regrow ?? 1) <= 0;
 
 /** How many of its rods stand. */
-export const standingRods = (e: Pick<EnemyState, 'rods'>): number => e.rods.filter((r) => r.regrow <= 0).length;
+export const standingRods = (e: Pick<EnemyState, 'conductor'>): number => e.conductor.rods.filter((r) => r.regrow <= 0).length;
 
 /** True while it can't blink: fewer than `minRods` of its rods stand. */
-export function grounded(e: Pick<EnemyState, 'enemyId' | 'rods'>): boolean {
+export function grounded(e: Pick<EnemyState, 'enemyId' | 'conductor'>): boolean {
   const def = conductorDefOf(e);
   return def !== null && standingRods(e) < def.blink.minRods;
 }
@@ -54,7 +82,7 @@ export function grounded(e: Pick<EnemyState, 'enemyId' | 'rods'>): boolean {
 export function rodAt(e: EnemyState, x: number, y: number): number | null {
   const def = conductorDefOf(e);
   if (!def) return null;
-  for (const i of e.rods.keys()) {
+  for (const i of e.conductor.rods.keys()) {
     if (!standing(e, i)) continue;
     const box = rodBox(def, i);
     if (Math.abs(x - box.x) <= box.w / 2 && Math.abs(y - box.y) <= box.h / 2) return i;
@@ -65,13 +93,13 @@ export function rodAt(e: EnemyState, x: number, y: number): number | null {
 /** The standing rods whose socket is within `radius` of a point (a Burst's reach). */
 export function rodsNear(e: EnemyState, x: number, y: number, radius: number): number[] {
   if (!conductorDefOf(e)) return [];
-  return [...e.rods.keys()].filter((i) => standing(e, i) && Math.hypot(rodPoint(i).x - x, rodPoint(i).y - y) <= radius);
+  return [...e.conductor.rods.keys()].filter((i) => standing(e, i) && Math.hypot(rodPoint(i).x - x, rodPoint(i).y - y) <= radius);
 }
 
 /** A hit on a rod: it takes the damage (a hit number at it, marked as a part's); a Cold hit chills the Conductor. At 0 it breaks. */
 export function hitRod(state: SimState, e: EnemyState, rod: number, amount: number, style: HitStyle): void {
   const def = conductorDefOf(e);
-  const r = e.rods[rod];
+  const r = e.conductor.rods[rod];
   if (!def || !r || r.regrow > 0) return;
   r.health = Math.max(0, r.health - amount);
   if (style.damageType === 'cold' && e.health > 0) chillEnemy(state, e);
@@ -86,7 +114,7 @@ export function hitRod(state: SimState, e: EnemyState, rod: number, amount: numb
 
 /** Every tick, frozen or not: each broken rod regrows, back to full health as its time runs out. */
 export function stepRods(state: SimState, e: EnemyState, def: ConductorDef): void {
-  for (const [rod, r] of e.rods.entries()) {
+  for (const [rod, r] of e.conductor.rods.entries()) {
     if (r.regrow <= 0) continue;
     r.regrow -= 1;
     if (r.regrow > 0) continue;

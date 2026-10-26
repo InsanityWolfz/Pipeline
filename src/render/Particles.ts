@@ -27,6 +27,11 @@ export class Particles {
     this.scene = scene;
   }
 
+  /** How many particles are flying now, for the test hook (064: a shot waits for a burst's sparks to go). */
+  get count(): number {
+    return this.live.length;
+  }
+
   /** Throws a burst from a ground point; it draws `lift` px up and sorts just in front of it. */
   emit(burst: ParticleBurst, x: number, y: number, depth = y + 1): void {
     for (let i = 0; i < burst.count; i++) {

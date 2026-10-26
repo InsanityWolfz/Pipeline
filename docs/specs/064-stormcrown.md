@@ -185,11 +185,18 @@ build settled something the spec left open, it is raised below. `SAVE_VERSION` i
 - **Measure** (`npm run measure`, tests/measure/conductor.measure.ts, recorded, not tuned): 041.7's decent build (level
   7, its six talents and four Common pieces) with four entrances fed, and a careful bot that keeps near the spire's
   middle (inside the rod chain's hexagon), walks off the lash's line and out of the storm call's circles, and holds fire
-  at the Conductor's body.
-  - Four homing ley-bolt lines: 20/20 won in 52–55 s, 0 KOs, no damage taken; 11–12 blinks a fight. Under the
-    spec's 90–150 s target (MISSED, recorded).
-  - Four plain arrow lines (no homing): 20/20 won in 51–60 s, 0 KOs, no damage taken. Homing gives no edge here: the
-    Conductor stands still between blinks and the bot fires at its body, so straight shots land as well (064.28).
+  at the Conductor's body. It reads the Conductor as a player does (041's bot rule): after a blink it keeps aiming at
+  the old spot until the new one has shown for its 15-tick reaction delay.
+  - Four homing ley-bolt lines: 20/20 won in 55.7–59.1 s (mean 57.6), 0 KOs, no damage taken; 12–13 blinks a fight.
+    Under the spec's 90–150 s target (MISSED, recorded).
+  - Four plain arrow lines (no homing): 20/20 won in 54.0–63.5 s (mean 58.0), 0 KOs, no damage taken; 12–14 blinks.
+    Homing gives only a small edge here (064.28).
+- **Boot and e2e budgets**, measured against 062's head (60dd4bb) one Playwright process at a time, with another
+  build's tests running beside them. The bigger world doesn't slow the game's boot: a boot to the field took 2.9–4.4 s
+  on both, and settings.spec's reload test 18–34 s on 062 and 20–30 s here; it gets 45 s
+  (it ran past the default 30 s once on CI). The sandbox's mixed-loadout test makes 44 panel clicks (062: 39) at about
+  1.1 s each, 66–96 s here against 47 s on 062, and gets 150 s. The Conductor's sandbox test (about 8 s) and the walk up
+  into ring 5 (about 15 s) get 60 s; the review shots 45–180 s, about three times what each took.
 - **Review shots** in docs/review/064:
   - the Stormcrown from the top of the north-west ramp, and the Rod Field charged with a rod just struck;
   - a lightning arc across a sandbox pack;
@@ -261,9 +268,9 @@ The Conductor:
   Its first lash starts the tick it wakes.
 - 064.21 It can't walk, so running away or a downed player resets its fight at once (back at its start, healed, rods
   whole, strikes gone), where the Forgewright walks home first.
-- 064.22 Homing's re-lock: any homing round with no target (lost, or never locked at launch) locks onto the Conductor
-  once it comes within the round's lock radius (measured from the round). A round locked on it follows it through a
-  blink.
+- 064.22 Homing's re-lock: a homing round that locked on at launch and has lost its target re-locks onto the nearest
+  Conductor within the round's lock radius (measured from the round), in the player's room. A round that never locked
+  flies straight, as ever. A round locked on it follows it through a blink.
 - 064.23 The rig (draft for your review): a tall robed storm construct in slate violet, a faceless hood with cyan eyes,
   a storm rod for a staff. Its blink is a gathering pose with a flicker while the rod flashes, then a column of light
   where it leaves and where it appears. The arena rods are their own sprites, each with a small bar once hurt (cyan,
@@ -279,6 +286,9 @@ Goals, sandbox and kit:
   Conductor spawned from the panel stands where it's placed; its rods are always the Crown Spire's.
 - 064.27 The `?playtest` kit carries one stack of stormglass (a raw's is two) and leaves out the storm coil, so its
   cores stay on the bag's first screen (062.15's rule).
-- 064.28 The measure's target is missed (about 54 s, not 90–150): the careful bot takes no damage and both builds win
-  as fast. Recorded, not tuned.
-
+- 064.28 The measure's target is missed (about 58 s, not 90–150): the careful bot takes no damage and both builds win
+  about as fast. With the bot's reaction delay after a blink, homing's edge is small: a mean 57.6 s against 58.0 s for
+  plain arrows, and its slowest fight 59.1 s against 63.5 s. The Conductor stands still between blinks, so straight shots
+  land as well once the bot has turned to him. Recorded, not tuned.
+- 064.29 The arc lash starts at the socket of the rod he stands at, even when that rod is broken (the spec doesn't say
+  what a broken rod should do to it). Left as built.

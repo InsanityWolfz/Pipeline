@@ -12,7 +12,7 @@ import { startKnock, type Knockable } from './knockback';
 import type { Facing } from './player';
 import type { SimState } from './state';
 import { createBellows, plated, type BellowsState } from './forgewrightParts';
-import { createRods, nearestRod, type RodState } from './conductorRods';
+import { createConductor, type ConductorState } from './conductorRods';
 import { recordBlock } from './shield';
 
 // Enemies as plain data: creation, damage and hurtboxes. Their behaviour is in enemyAi.ts, separation in separation.ts.
@@ -133,21 +133,8 @@ export interface EnemyState extends Knockable {
   floodSide: number;
   /** A cinder mote that burst on its own (061): it goes with no drop, XP or death burst. */
   spent: boolean;
-  /**
-   * The Conductor (064, conductorRods.ts, conductorAi.ts): its six arena rods (none on anything else); the rod it
-   * stands at and the rod a blink's warning names (-1: none); ticks to its next blink, and ticks left of a blink's
-   * warning; the attack it is making (-1: none; 0 lash, 1 storm call, 2 rod chain) and each attack's own cooldown; and
-   * its rod chain's lines, a bit per neighbouring pair of rods (rod i and i + 1), and whether the chain has struck.
-   */
-  rods: RodState[];
-  rod: number;
-  blinkTo: number;
-  blinkCooldown: number;
-  blinkWarn: number;
-  attack: number;
-  attackCooldowns: number[];
-  chainMask: number;
-  chainHit: boolean;
+  /** The Conductor's rods, blink and attacks (064, conductorRods.ts); a still default on anything else. */
+  conductor: ConductorState;
   /** A kiln-tender's beam (061): its target's id (-1: none), and its own health as the beam began (any less breaks it). */
   beamTarget: number;
   beamHeld: number;
@@ -213,16 +200,7 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     bellows: createBellows(enemyId),
     floodSide: 0,
     spent: false,
-    rods: createRods(enemyId),
-    // 064: the Conductor's rod is the one nearest where it's placed (its start: the spire's start rod).
-    rod: def.kind === 'conductor' ? nearestRod(at) : -1,
-    blinkTo: -1,
-    blinkCooldown: def.kind === 'conductor' ? def.blink.everyTicks : 0,
-    blinkWarn: 0,
-    attack: -1,
-    attackCooldowns: def.kind === 'conductor' ? [0, 0, 0] : [],
-    chainMask: 0,
-    chainHit: false,
+    conductor: createConductor(enemyId, at),
     beamTarget: -1,
     beamHeld: 0,
     knockX: 0,

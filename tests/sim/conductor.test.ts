@@ -57,7 +57,7 @@ describe('the Conductor (data)', () => {
 describe('waking and leaving', () => {
   it('stands at its start rod and wakes only when the player is inside the spire, then faces them', () => {
     const { s, c } = spire();
-    expect(c.rod).toBe(CROWN_SPIRE.startRod);
+    expect(c.conductor.rod).toBe(CROWN_SPIRE.startRod);
     // On its start tile, by its start rod's stand point; it blinks to the stand points.
     expect({ x: c.x, y: c.y }).toEqual(tileCentre(CROWN_SPIRE.start));
     expect(Math.hypot(c.x - standPoint(CROWN_SPIRE.startRod).x, c.y - standPoint(CROWN_SPIRE.startRod).y)).toBeLessThan(16);
@@ -71,18 +71,22 @@ describe('waking and leaving', () => {
     expect(summarize(s).bosses).toEqual([expect.objectContaining({ enemyId: 'conductor', engaged: true, rod: CROWN_SPIRE.startRod, grounded: false, rods: CROWN_SPIRE.sockets.map(() => ({ health: 200, regrow: 0 })) })]);
   });
 
-  it('resets at once after the player is out of the spire a while: home, healed, rods whole, strikes gone', () => {
+  it('resets at once after the player is out of the spire a while: home, healed, calm, rods whole, strikes gone', () => {
     const { s, c } = spire();
     run(s, 1);
     c.health = 900;
-    c.rods[0] = { health: 0, regrow: 100 };
-    c.rod = 2;
+    c.conductor.rods[0] = { health: 0, regrow: 100 };
+    c.conductor.rod = 2;
+    c.enraged = true;
+    c.conductor.blinkCooldown = 5;
     movePlayer(s, SPIRE_DOOR_OUT.x, SPIRE_DOOR_OUT.y + 64);
     run(s, CONDUCTOR.leashTicks + 1);
     expect(c.mode).toBe('idle');
     expect(c.health).toBe(CONDUCTOR.maxHealth);
-    expect(c.rod).toBe(CROWN_SPIRE.startRod);
-    expect(c.rods.every((r) => r.health === 200 && r.regrow === 0)).toBe(true);
+    expect(c.conductor.rod).toBe(CROWN_SPIRE.startRod);
+    expect(c.conductor.rods.every((r) => r.health === 200 && r.regrow === 0)).toBe(true);
+    expect(c.enraged).toBe(false);
+    expect(c.conductor.blinkCooldown).toBe(CONDUCTOR.blink.everyTicks);
     expect(s.strikes).toEqual([]);
   });
 
@@ -144,7 +148,7 @@ describe('its kill and the altar', () => {
     expect(s.inventory.stormglass).toBe(0);
     run(s, CROWN_ARENA.summonTicks + 1);
     const back = s.enemies.find((e) => e.enemyId === 'conductor');
-    expect(back).toMatchObject({ health: CONDUCTOR.maxHealth, group: 'crown-spire', rod: CROWN_SPIRE.startRod });
+    expect(back).toMatchObject({ health: CONDUCTOR.maxHealth, group: 'crown-spire', conductor: { rod: CROWN_SPIRE.startRod } });
     expect({ x: back?.x, y: back?.y }).toEqual(tileCentre(CROWN_SPIRE.start));
   });
 });

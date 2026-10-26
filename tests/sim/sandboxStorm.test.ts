@@ -48,7 +48,7 @@ describe('the sandbox’s Stormcrown (064)', () => {
     once(s, { kind: 'reset', boss: 'conductor' });
     const again = conductors(s)[0];
     expect(again).toMatchObject({ health: CONDUCTOR.maxHealth, mode: 'idle' });
-    expect(again?.rods.every((r) => r.health === 200 && r.regrow === 0)).toBe(true);
+    expect(again?.conductor.rods.every((r) => r.health === 200 && r.regrow === 0)).toBe(true);
   });
 
   it('carries the new items and every Lightning round', () => {

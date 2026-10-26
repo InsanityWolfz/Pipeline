@@ -34,7 +34,8 @@ async function fell(page: import('@playwright/test').Page, boss: string, gate: s
 }
 
 test('the Forgewright’s first kill drops the Stormcrown’s barrier, and the player walks up into ring 5', async ({ page }) => {
-  test.setTimeout(240_000);
+  // About 15 s here, with another build's tests running beside it (2026-10-26).
+  test.setTimeout(60_000);
   const errors = watchErrors(page);
   await boot(page, '?start=hollows');
   await page.evaluate(() => {

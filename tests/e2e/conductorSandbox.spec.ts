@@ -7,7 +7,8 @@ import { breakFiveRods, intoSpire } from './conductorPage';
 // broken; then they regrow.
 
 test('arrows break five rods and ground the Conductor; it stops blinking until one regrows', async ({ page }) => {
-  test.setTimeout(240_000);
+  // About 8 s here, with another build's tests running beside it (2026-10-26).
+  test.setTimeout(60_000);
   const errors = watchErrors(page);
   await intoSpire(page);
   const awake = await page.evaluate(() => window.__GAME__?.step(1).bosses.find((b) => b.enemyId === 'conductor'));

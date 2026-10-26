@@ -94,7 +94,8 @@ test.describe('review screenshots (064)', () => {
   test.skip(!process.env.REVIEW_SHOTS, 'set REVIEW_SHOTS=1 to capture docs/review/064');
 
   test('the Stormcrown from the top of the north-west ramp', async ({ page }) => {
-    test.setTimeout(180_000);
+    // About 16.5 s here, with another build's tests running beside it (2026-10-26).
+    test.setTimeout(60_000);
     await stormcrown(page);
     const ramp = STORMCROWN.ramps.find((r) => r.id === 'storm-north-ramp') ?? { bearing: 0 };
     await walkTo(page, polar(ramp.bearing, STORMCROWN.ramp.to));
@@ -104,7 +105,8 @@ test.describe('review screenshots (064)', () => {
   });
 
   test('the Rod Field charged, a rod struck', async ({ page }) => {
-    test.setTimeout(180_000);
+    // About 20.5 s here, with another build's tests running beside it (2026-10-26).
+    test.setTimeout(60_000);
     await stormcrown(page);
     const rods = landmarkDef('rod-field');
     await walkTo(page, { tx: rods.area.x0 + 3, ty: rods.area.y0 + 7 });
@@ -128,7 +130,8 @@ test.describe('review screenshots (064)', () => {
   });
 
   test('a lightning arc across a sandbox pack', async ({ page }) => {
-    test.setTimeout(120_000);
+    // About 30 s here, with another build's tests running beside it (2026-10-26).
+    test.setTimeout(90_000);
     await bootSandbox(page);
     await openPanel(page);
     await setRound(page, 0, 'arrow+lightning');
@@ -167,7 +170,8 @@ test.describe('review screenshots (064)', () => {
   });
 
   test('the five-entrance intake, every cap restored and each entrance fed', async ({ page }) => {
-    test.setTimeout(150_000);
+    // About 14.8 s here, with another build's tests running beside it (2026-10-26).
+    test.setTimeout(60_000);
     await boot(page, '?playtest');
     for (const tx of [11, 13, 14, 15]) await restoreEntrance(page, tx);
     await expect.poll(async () => (await ui(page))?.intakeCaps).toBe(0);
@@ -190,7 +194,8 @@ test.describe('review screenshots (064)', () => {
   });
 
   test('a five-lane volley', async ({ page }) => {
-    test.setTimeout(120_000);
+    // About 6.7 s here, with another build's tests running beside it (2026-10-26).
+    test.setTimeout(45_000);
     await bootSandbox(page);
     await hidePanel(page);
     await cameraSettled(page, 20_000);
@@ -211,6 +216,7 @@ test.describe('review screenshots (064)', () => {
   });
 
   test('the Conductor about to blink, the rod it goes to flashing', async ({ page }) => {
+    // About 56.6 s here, with another build's tests running beside it (2026-10-26).
     test.setTimeout(180_000);
     expect(await inSpire(page, 'blink')).toBe(true);
     await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().stormcrown.conductor.target ?? -1)).toBeGreaterThanOrEqual(0);
@@ -218,28 +224,31 @@ test.describe('review screenshots (064)', () => {
   });
 
   test('the storm call’s circles on and round the player', async ({ page }) => {
-    test.setTimeout(180_000);
+    // About 28 s here, with another build's tests running beside it (2026-10-26).
+    test.setTimeout(90_000);
     expect(await inSpire(page, 'call')).toBe(true);
     await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().stormcrown.conductor.strikes ?? 0)).toBe(3);
     await page.screenshot({ path: `${SHOTS}/07-storm-call.png` });
   });
 
   test('the rod chain’s lightning between the rods', async ({ page }) => {
-    test.setTimeout(180_000);
+    // About 22.3 s here, with another build's tests running beside it (2026-10-26).
+    test.setTimeout(90_000);
     expect(await inSpire(page, 'chain')).toBe(true);
     await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().stormcrown.conductor.chain ?? false)).toBe(true);
     await page.screenshot({ path: `${SHOTS}/08-rod-chain.png` });
   });
 
   test('the Conductor grounded, five of its rods broken', async ({ page }) => {
-    test.setTimeout(180_000);
+    // About 18.1 s here, with another build's tests running beside it (2026-10-26).
+    test.setTimeout(60_000);
     await intoSpire(page);
     expect((await breakFiveRods(page)).grounded).toBe(true);
     // Back by the middle, the Conductor and its broken rods in view.
     await page.evaluate((m) => window.__helpers?.walkTo((m.tx + 0.5) * 32, (m.ty - 1.5) * 32), CROWN_SPIRE.middle);
     await cameraSettled(page);
     // The breaks' sparks and the blinks' flares (all drawn in one frame, the sim stepped ahead) fade first.
-    await page.waitForTimeout(1500);
+    await expect.poll(() => page.evaluate(() => (window.__GAME__?.ui().particles ?? 1) + (window.__GAME__?.ui().stormcrown.conductor.bolts ?? 1)), { timeout: 20_000 }).toBe(0);
     await page.screenshot({ path: `${SHOTS}/09-conductor-grounded.png` });
   });
 });
