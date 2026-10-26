@@ -1,6 +1,7 @@
 import { OVERWORLD } from './overworld';
 import { DEFAULT_ROOM, FOUNDRY_ROOM } from './rooms';
 import type { GearPiece } from './gear';
+import { RECIPES, revealsOf } from './recipes';
 
 // Player movement tuning. Starting values from spec 002; tune in playtest.
 
@@ -59,8 +60,8 @@ export interface StartDef {
   found?: readonly string[];
 }
 
-/** 067: the raws whose carrying shows the bomb and ley bolt rows; a start past the tutorial knows them. */
-export const BOMB_RAWS: readonly string[] = ['stone', 'husk-resin', 'ley-crystal'];
+/** 067: the raws whose carrying shows the bomb and ley bolt rows (the bomb row's `shownAfter`); a start past the tutorial knows them. */
+export const BOMB_RAWS: readonly string[] = RECIPES.bomb ? revealsOf(RECIPES.bomb) : [];
 
 /**
  * The sandbox start: the meadow beside the ruin field (017), 30 arrows, the tube

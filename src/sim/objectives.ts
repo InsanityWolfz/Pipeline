@@ -27,8 +27,6 @@ function holds(state: SimState, check: ObjectiveCheck): boolean {
       return check.items.every((id) => state.crafted.includes(id));
     case 'craftedAny':
       return check.items.some((id) => state.crafted.includes(id));
-    case 'gate':
-      return state.gates[check.gate];
     case 'inRoom':
       return state.roomId === check.room;
     case 'outside':

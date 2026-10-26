@@ -1,4 +1,4 @@
-import { FOUNDRY_ROOM, type GateId } from './rooms';
+import { FOUNDRY_ROOM } from './rooms';
 import type { TargetDef } from './targets';
 import { GROTTO_GROUP } from './grotto';
 import type { GuidedId } from './guidedBuilds';
@@ -18,7 +18,6 @@ export type ObjectiveCheck =
   | { kind: 'crafted'; items: readonly string[] }
   /** Any one of these items hand-crafted at least once (029). */
   | { kind: 'craftedAny'; items: readonly string[] }
-  | { kind: 'gate'; gate: GateId }
   | { kind: 'inRoom'; room: string }
   /** 058: the player is anywhere but the foundry. */
   | { kind: 'outside' }
