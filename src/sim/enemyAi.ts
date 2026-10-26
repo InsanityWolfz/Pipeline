@@ -9,6 +9,7 @@ import { snipeThink } from './sniperAi';
 import { moteThink } from './moteAi';
 import { houndThink } from './houndAi';
 import { golemThink } from './golemAi';
+import { tenderThink } from './tenderAi';
 import { defOf } from './champions';
 import { castThink } from './casterAi';
 import { chillScale, chillSlow, tickCold } from './cold';
@@ -100,6 +101,8 @@ function thinkOf(state: SimState, e: EnemyState, def: EnemyDef): [number, number
       return houndThink(state, e, def);
     case 'golem':
       return golemThink(state, e, def);
+    case 'tender':
+      return tenderThink(state, e, def);
   }
 }
 

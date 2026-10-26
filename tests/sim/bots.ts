@@ -101,6 +101,7 @@ function zoneOf(e: EnemyState, def: EnemyDef, left: (windup: number) => number):
     case 'golem':
       return e.mode === 'windup' ? { kind: 'circle', x: e.spotX, y: e.spotY, r: def.slam.radius, left: left(def.slam.windupTicks) } : null;
     case 'caster':
+    case 'tender':
       return null;
   }
 }

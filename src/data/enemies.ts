@@ -296,5 +296,7 @@ export function attackOf(def: EnemyDef): AttackTiming {
       return def.dash;
     case 'golem':
       return def.slam;
+    case 'tender':
+      return def.beam;
   }
 }

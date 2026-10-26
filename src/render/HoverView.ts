@@ -89,7 +89,7 @@ export class HoverView {
     // 050 (review): a champion's nameplate (032) already names it over its head, so its tag shows only its chips.
     const named = !enemy?.champion;
     this.nameDrawn = named;
-    this.tagShown = hit !== null && (named || chips.length > 0);
+    this.tagShown = hit !== null && (named || chips.length > 0 || hit.description !== undefined);
     this.name.setVisible(hit !== null && named);
     this.description.setVisible(hit?.description !== undefined);
     if (!hit || !this.tagShown) {

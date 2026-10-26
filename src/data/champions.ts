@@ -39,5 +39,6 @@ export const CHAMPIONS = {
     'bellows-hound': ['Gustfang', 'Sootmaw', 'Ashrunner', 'Bellowjaw', 'Cinderpaw'],
     'slag-golem': ['Clinkerback', 'Dross', 'Crustheart', 'Slagmaw', 'Magmafist'],
     'slag-whelp': ['Dribble', 'Clinker', 'Sputter'],
+    'kiln-tender': ['Hearthkeep', 'Kindlewarden', 'Firemend', 'Brickbelly', 'Stokewell'],
   } as Readonly<Record<string, readonly string[]>>,
 } as const;

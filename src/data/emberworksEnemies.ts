@@ -56,8 +56,22 @@ export interface GolemDef extends EnemyBase, ScreenLeashed {
   split: { into: string; count: number; apart: number };
 }
 
+/** A kiln-tender: keeps its distance and repairs its packmates with a beam; it has no attack of its own. */
+export interface TenderDef extends EnemyBase, ScreenLeashed {
+  kind: 'tender';
+  /** It keeps between `min` and `max` px from the player, backing off when closer and closing in when farther. */
+  keep: { min: number; max: number };
+  /**
+   * Every `cooldownTicks` (from the wind-up's start) it picks the living packmate, not itself and never a boss, with
+   * the lowest share of its max health below full, within `range` px along a clear line; winds up `windupTicks` (a
+   * thin beam to it); then channels for up to `swipeTicks`, healing it `heal` a second, never past its max. The
+   * channel breaks on a blocked line, the target's death, or any damage to the tender; then it recovers `recoverTicks`.
+   */
+  beam: AttackTiming & { range: number; heal: number };
+}
+
 /** The Emberworks' enemies, as one union for EnemyDef (the slag whelp is a MeleeDef, the Husk's kind). */
-export type EmberworksEnemyDef = MoteDef | HoundDef | GolemDef;
+export type EmberworksEnemyDef = MoteDef | HoundDef | GolemDef | TenderDef;
 
 /** The base fields they share, as the Hollows' (hollowsEnemies.ts). */
 const BASE = { boss: false, hitKnockTicks: 4, hitFlashTicks: 6, leashGraceTicks: 60, homeTolerance: 4 } as const;
@@ -194,4 +208,36 @@ export const SLAG_WHELP: MeleeDef = {
   anims: 'slag-whelp',
 };
 
-export const EMBERWORKS_ENEMIES = { 'cinder-mote': CINDER_MOTE, 'bellows-hound': BELLOWS_HOUND, 'slag-golem': SLAG_GOLEM, 'slag-whelp': SLAG_WHELP } as const;
+export const KILN_TENDER: TenderDef = {
+  ...BASE,
+  kind: 'tender',
+  id: 'kiln-tender',
+  name: 'Kiln-tender',
+  maxHealth: 40,
+  walkSpeed: 45,
+  feetBox: { w: 16, h: 8 },
+  hurtbox: { w: 22, h: 28, offsetY: -12 },
+  weight: 1,
+  keep: { min: 160, max: 240 },
+  beam: {
+    range: 200,
+    heal: 6,
+    windupTicks: 30,
+    // The channel's longest run.
+    swipeTicks: 180,
+    recoverTicks: 30,
+    // Counted from the wind-up's start.
+    cooldownTicks: 240,
+  },
+  drops: EMBERWORKS_DROPS,
+  xp: 6,
+  anims: 'kiln-tender',
+};
+
+export const EMBERWORKS_ENEMIES = {
+  'cinder-mote': CINDER_MOTE,
+  'bellows-hound': BELLOWS_HOUND,
+  'slag-golem': SLAG_GOLEM,
+  'slag-whelp': SLAG_WHELP,
+  'kiln-tender': KILN_TENDER,
+} as const;

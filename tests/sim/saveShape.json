@@ -50,6 +50,8 @@
     "state.enemies[].addsCooldown: number",
     "state.enemies[].addsRisen: boolean",
     "state.enemies[].angle: number",
+    "state.enemies[].beamHeld: number",
+    "state.enemies[].beamTarget: number",
     "state.enemies[].behind: number",
     "state.enemies[].bellows: array",
     "state.enemies[].bellows[].health: number",

@@ -3,6 +3,7 @@ import { snipeLine, snipePhase, type SnipePhase } from './sniperAi';
 import { swellShown } from './moteAi';
 import { dashed } from './houndAi';
 import { slamShown } from './golemAi';
+import { beamShown } from './tenderAi';
 import type { SimState } from './state';
 import { defOf } from './champions';
 import type { EnemyState } from './enemies';
@@ -31,6 +32,8 @@ export interface KindSummary {
   swell?: { radius: number; ticks: number } | null;
   /** 061: a slag golem's slam circle while it winds up (its locked centre and radius, px), else null. */
   slam?: { x: number; y: number; radius: number } | null;
+  /** 061: a kiln-tender's beam while it winds up or channels (its target's id), else null. */
+  beam?: { target: number; phase: 'windup' | 'channel' } | null;
 }
 
 export function kindSummary(state: SimState, e: EnemyState): KindSummary {
@@ -53,6 +56,7 @@ export function kindSummary(state: SimState, e: EnemyState): KindSummary {
   }
   if (def.kind === 'mote') out.swell = swellShown(e, def);
   if (def.kind === 'golem') out.slam = slamShown(e, def);
+  if (def.kind === 'tender') out.beam = beamShown(e);
   // 061: a hound's lane, as the Charger's.
   if (def.kind === 'hound') {
     const showing = e.mode === 'windup' || e.mode === 'swipe';

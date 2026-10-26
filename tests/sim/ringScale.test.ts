@@ -54,6 +54,8 @@ function attackDamage(def: EnemyDef): number {
       return def.dash.damage;
     case 'golem':
       return def.slam.damage;
+    case 'tender':
+      return def.beam.heal;
   }
 }
 

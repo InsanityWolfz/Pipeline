@@ -11,6 +11,7 @@ import { SNIPER_RIG } from './sniper';
 import { CINDER_MOTE_RIG } from './cinderMote';
 import { BELLOWS_HOUND_RIG } from './bellowsHound';
 import { SLAG_GOLEM_RIG, SLAG_WHELP_RIG } from './slagGolem';
+import { KILN_TENDER_RIG } from './kilnTender';
 
 /** Every enemy rig (016), one per `anims` key in src/data/enemies.ts. A new enemy is a new entry. */
-export const ENEMY_RIGS: readonly EnemyRigDef[] = [HUSK_RIG, WISP_RIG, WARDEN_RIG, BULWARK_RIG, CHARGER_RIG, BURROWER_RIG, SHARDBACK_RIG, SNIPER_RIG, FORGEWRIGHT_RIG, CINDER_MOTE_RIG, BELLOWS_HOUND_RIG, SLAG_GOLEM_RIG, SLAG_WHELP_RIG];
+export const ENEMY_RIGS: readonly EnemyRigDef[] = [HUSK_RIG, WISP_RIG, WARDEN_RIG, BULWARK_RIG, CHARGER_RIG, BURROWER_RIG, SHARDBACK_RIG, SNIPER_RIG, FORGEWRIGHT_RIG, CINDER_MOTE_RIG, BELLOWS_HOUND_RIG, SLAG_GOLEM_RIG, SLAG_WHELP_RIG, KILN_TENDER_RIG];

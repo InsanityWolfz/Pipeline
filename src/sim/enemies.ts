@@ -132,6 +132,9 @@ export interface EnemyState extends Knockable {
   floodSide: number;
   /** A cinder mote that burst on its own (061): it goes with no drop, XP or death burst. */
   spent: boolean;
+  /** A kiln-tender's beam (061): its target's id (-1: none), and its own health as the beam began (any less breaks it). */
+  beamTarget: number;
+  beamHeld: number;
 }
 
 /** A home's danger ring (041, the rule 037's XP used): `ringOf` its tile in the overworld, 0 in any other room. */
@@ -194,6 +197,8 @@ export function createEnemy(id: number, enemyId: string, at: { x: number; y: num
     bellows: createBellows(enemyId),
     floodSide: 0,
     spent: false,
+    beamTarget: -1,
+    beamHeld: 0,
     knockX: 0,
     knockY: 0,
     knockTicks: 0,

@@ -59,6 +59,9 @@ function scaleAttack(def: EnemyDef, base: Pick<EnemyDef, 'feetBox' | 'hurtbox' |
     // 061: its pool's beats and its death burst scale as its burst does.
     case 'mote':
       return { ...def, ...base, swell: { ...def.swell, damage: dmg(def.swell.damage) }, pool: { ...def.pool, damage: dmg(def.pool.damage) }, deathBurst: { ...def.deathBurst, damage: dmg(def.deathBurst.damage) } };
+    // 061: its heal scales as damage does (ring and champion), so it keeps pace with the health it repairs.
+    case 'tender':
+      return { ...def, ...base, beam: { ...def.beam, heal: dmg(def.beam.heal) } };
     case 'golem':
       return { ...def, ...base, slam: { ...def.slam, damage: dmg(def.slam.damage) } };
     case 'hound':

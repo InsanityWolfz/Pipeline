@@ -45,6 +45,9 @@ function damageOf(d: EnemyDef): number {
       return d.dash.damage;
     case 'golem':
       return d.slam.damage;
+    // 061: the tender has no attack (its heal scales as damage would).
+    case 'tender':
+      return d.beam.heal;
   }
 }
 const pack = (ids: readonly string[]): EnemyState[] => ids.map((id, i) => createEnemy(i, id, { x: i * 40, y: 0 }, 'overworld', 'pop-1-0'));

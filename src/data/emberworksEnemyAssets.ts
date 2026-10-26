@@ -10,6 +10,7 @@ export const EMBER_ENEMY_ANIMS = {
   'bellows-hound': enemyAnims('bellows-hound', true, [], 2),
   'slag-golem': enemyAnims('slag-golem', true),
   'slag-whelp': enemyAnims('slag-whelp'),
+  'kiln-tender': enemyAnims('kiln-tender', true),
 } as const;
 
 export const EMBER_ENEMY_LOOK = {
@@ -20,4 +21,25 @@ export const EMBER_ENEMY_LOOK = {
    * tongues of flame every `tongueEvery` px round their edge, `tongue` px tall, the last `fadeTicks` fading out.
    */
   hazard: { tongueEvery: 14, tongue: 3, edgeWidth: 1.5, fadeTicks: 30 },
+  /**
+   * The kiln-tender's beam, in the kiln's orange (not the enemy red: it never hurts the player), from its nozzle (per
+   * view from its feet, side facing right) to its target's body: thin and faint through the wind-up, then a glowing
+   * beam with a hot core flickering every `flickerMs` while it channels. Its target glows soft orange round its body,
+   * pulsing every `pulseMs`; hovering it reads `hoverLine`.
+   */
+  beam: {
+    color: 'cinder',
+    core: 'cinder-light',
+    windupWidth: 1,
+    windupAlpha: 0.55,
+    width: 2.5,
+    alpha: 0.85,
+    glow: 5,
+    glowAlpha: 0.3,
+    coreWidth: 1,
+    flickerMs: 90,
+    nozzle: { side: [17, -30] as const, down: [12, -34] as const, up: [12, -34] as const },
+    targetGlow: { color: 'cinder', radius: 16, alpha: [0.22, 0.42] as const, pulseMs: 520 },
+    hoverLine: 'Being repaired',
+  },
 } as const;
