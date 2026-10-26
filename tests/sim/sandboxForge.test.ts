@@ -44,7 +44,7 @@ describe('the sandbox’s Emberworks (060)', () => {
     f.bellows[0] = { health: 0, patch: 100 };
     once(s, { kind: 'reset', boss: 'forgewright' });
     const again = forge(s)[0];
-    expect(again).toMatchObject({ health: FORGE.maxHealth, heat: 0, mode: 'idle', bellows: [{ health: 150, patch: 0 }, { health: 150, patch: 0 }] });
+    expect(again).toMatchObject({ health: FORGE.maxHealth, heat: 0, mode: 'idle', bellows: [{ health: 300, patch: 0 }, { health: 300, patch: 0 }] });
   });
 
   it('carries the new items and every Fire round', () => {

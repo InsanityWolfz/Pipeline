@@ -10,7 +10,8 @@ import type { SimState } from './state';
 // one each side of it `offset` px out, square to its facing, are parts with their own hurtbox and health. A hit on a
 // bellows damages the bellows and passes a Cold hit's chill and a Fire hit's burn to the Forgewright. A broken one
 // stays broken for `patchTicks`, then patches itself back to full; both broken at the same moment vents it: it
-// staggers for `ventTicks`, its plating open, its heat back to 0, and both come back whole as the vent ends.
+// staggers for `ventTicks`, its plating open, and both come back whole as the vent ends. 068: a vent leaves its heat
+// alone (it goes on filling; only the Forge Flood resets it).
 
 /** One bellows: its health, and ticks left broken (0 while whole). */
 export interface BellowsState {
@@ -90,12 +91,11 @@ export function hitPart(state: SimState, e: EnemyState, part: number, amount: nu
   if (e.bellows.every((x) => x.patch > 0)) startVent(state, e, def);
 }
 
-/** Both bellows broken: it vents, staggering where it stands, any attack it was making dropped; its heat goes to 0. */
+/** Both bellows broken: it vents, staggering where it stands, any attack it was making dropped; its heat is kept (068). */
 function startVent(state: SimState, e: EnemyState, def: ForgewrightDef): void {
   e.vent = def.ventTicks;
   e.mode = 'vent';
   e.modeTicks = 1;
-  e.heat = 0;
   state.events.vents.push({ id: e.id, x: e.x, y: e.y });
 }
 
