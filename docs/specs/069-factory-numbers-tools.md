@@ -3,6 +3,8 @@ status: approved
 
 Approved by Shaun in chat, 2026-10-26: he picked it from the agent-playtest proposals, built as written. Its plan is pre-approved.
 
+Plan pre-approved by Shaun, 2026-10-26.
+
 Drafted from the factory playtester's findings (docs/brainstorm/2026-10-26-agent-playtest.md, "Quality of life") and the proposal Shaun approved (docs/brainstorm/2026-10-26-playtest-calls.md).
 
 ## Goal
