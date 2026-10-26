@@ -21,9 +21,10 @@
  * (the world grew again and its centre moved, so every saved position and the fog's bitmap are on a new map; the
  * Stormcrown's gate; boss parts and the storm call's strikes). 18: 065's (the thunderhawk's dive event, enemies' mite
  * trios, the storm sentinel's strike knockback and the player's slow). 19: 063 merged onto main (its blueprints and
- * blueprint events joined with 062–065's shape). All with no migration.
+ * blueprint events joined with 062–065's shape). 22: 069's (the intake's rate window, and the purge event; other
+ * branches took 20 and 21). All with no migration.
  */
-export const SAVE_VERSION = 19;
+export const SAVE_VERSION = 22;
 
 /** The envelope's and the export file's format tags. */
 export const SAVE_FORMAT = 'pipeline-save';

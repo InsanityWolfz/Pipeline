@@ -1,3 +1,4 @@
+import { entranceRates } from './intakeRates';
 import type { Ring } from '../data/ringScale';
 import type { GearPiece, GearSlot } from '../data/gear';
 import { playerStats, type PlayerStats } from './stats';
@@ -143,9 +144,10 @@ export interface SimSummary extends PlayerSummary, HollowsSummary, LevelingSumma
   /**
    * The foundry intake (019, 024): each entrance's mouth tile, whether it's open, the ammo it holds and how many;
    * and the volley the reservoirs fire once no round of the selected ammo is carried, as ammo ids (one per fed entrance, west to east),
-   * with each one's lane beside it, degrees off the aim (048).
+   * with each one's lane beside it, degrees off the aim (048). 069: each entrance's measured rounds a second in, and its
+   * round's shots a second (null while empty or capped).
    */
-  intake: { entrances: { tx: number; ty: number; open: boolean; ammo: string | null; count: number; cap: number; cooldown: number }[]; volley: string[]; lanes: number[] };
+  intake: { entrances: { tx: number; ty: number; open: boolean; ammo: string | null; count: number; cap: number; cooldown: number; inPerSecond: number; firesPerSecond: number | null }[]; volley: string[]; lanes: number[] };
   /** The supply ports standing (028): each one's raw, tile, pylon count, raws a minute, and whether a refused raw waits in it. */
   ports: { id: string; raw: string; tx: number; ty: number; pylons: number; perMinute: number; waiting: boolean }[];
   /** What a death keeps: the inventory as last banked. */
@@ -165,6 +167,7 @@ export interface SimSummary extends PlayerSummary, HollowsSummary, LevelingSumma
 export function summarize(state: SimState): SimSummary {
   const { player: p, tube } = state;
   const volley = volleyRounds(state);
+  const rates = entranceRates(state);
   return {
     tick: state.tick,
     seed: state.seed,
@@ -212,7 +215,8 @@ export function summarize(state: SimState): SimSummary {
     intake: {
       entrances: INTAKE.entrances.map((t, i) => {
         const e = state.link.entrances[i];
-        return { tx: t.tx, ty: t.ty, open: e?.open ?? false, ammo: e?.ammoId ?? null, count: e?.count ?? 0, cap: entranceCap(state), cooldown: e?.cooldown ?? 0 };
+        const r = rates[i];
+        return { tx: t.tx, ty: t.ty, open: e?.open ?? false, ammo: e?.ammoId ?? null, count: e?.count ?? 0, cap: entranceCap(state), cooldown: e?.cooldown ?? 0, inPerSecond: r?.inPerSecond ?? 0, firesPerSecond: r?.firesPerSecond ?? null };
       }),
       volley: volley.map((r) => r.ammoId),
       lanes: volley.map((r) => r.lane),

@@ -17,6 +17,7 @@ import { TextLine } from './textLine';
 import { HoverReadout } from './HoverReadout';
 import { intakeLines, pieceLines } from './readoutLines';
 import { entranceCap } from '../sim/research';
+import { entranceRates } from '../sim/intakeRates';
 import { nameAt } from './hoverNames';
 import { enemyChips } from './describe';
 import { ChipLabels, drawChip, flowChips } from './KeywordChip';
@@ -24,7 +25,7 @@ import { CHIP } from '../data/legibility';
 import type { PlacedChip } from './tipTypes';
 
 /** What the hover name shows, for `ui()`: the name, its description (018) and an enemy's chips (040.4); whether the tag draws the name (050: not over a champion). */
-export const NO_HOVER_UI = { hoverName: null as string | null, hoverDescription: null as string | null, hoverChips: [] as string[], hoverBox: null as TagBox | null, hoverNameDrawn: false };
+export const NO_HOVER_UI = { hoverName: null as string | null, hoverDescription: null as string | null, hoverChips: [] as string[], hoverBox: null as TagBox | null, hoverNameDrawn: false, hoverLines: [] as string[] };
 
 // What the cursor is over in the world (015): its name, and over a machine or the
 // intake (019, 024), the readout of what it holds (006) under the name.
@@ -38,8 +39,11 @@ export class HoverView {
   shown: string | null = null;
   shownDescription: string | null = null;
   get ui(): typeof NO_HOVER_UI {
-    return { hoverName: this.shown, hoverDescription: this.shownDescription, hoverChips: this.shownChips, hoverBox: this.shown === null || !this.tagShown ? null : this.box, hoverNameDrawn: this.shown !== null && this.nameDrawn };
+    return { hoverName: this.shown, hoverDescription: this.shownDescription, hoverChips: this.shownChips, hoverBox: this.shown === null || !this.tagShown ? null : this.box, hoverNameDrawn: this.shown !== null && this.nameDrawn, hoverLines: this.shownLines };
   }
+
+  /** 069: the readout's lines on show, for the test hook. */
+  private shownLines: string[] = [];
 
   /** An enemy's chips under its name (040.4: traits, then live statuses), by their words. Not clickable: a click there fires. */
   shownChips: string[] = [];
@@ -71,7 +75,9 @@ export class HoverView {
     let top = hit ? hit.y - hit.rise : 0;
     /** 050.1: where the tag goes: under the thing's feet (its ground point), or under the intake's readout. */
     let below = hit ? hit.y : 0;
-    const lines = piece ? pieceLines(piece) : hit?.intake ? intakeLines(sim.link.entrances, entranceCap(sim)) : [];
+    // 069: the intake's lines carry each entrance's rates, as the sim measures them.
+    const lines = piece ? pieceLines(piece) : hit?.intake ? intakeLines(sim.link.entrances, entranceCap(sim), entranceRates(sim)) : [];
+    this.shownLines = lines.map((l) => l[1]);
     if (piece) {
       const r = pieceRect(piece);
       const spriteTop = topOf(piece.id) ?? r.y;

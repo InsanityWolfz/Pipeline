@@ -80,3 +80,9 @@ export const SPREAD_STEP = 15;
  * than a tile, so a piece built in front of the mouth doesn't put it out of reach.
  */
 export const INTAKE_REACH = 40;
+
+/**
+ * 069: the intake's supply rate in is measured, not computed, so it shows real bottlenecks: the rounds each entrance
+ * took over the last `windowSeconds` whole seconds (it changes once a second), over that many seconds.
+ */
+export const INTAKE_RATE = { windowSeconds: 5 } as const;

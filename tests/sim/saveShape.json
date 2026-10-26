@@ -1,5 +1,5 @@
 {
-  "version": 19,
+  "version": 22,
   "shape": [
     "state.activatePulse: number",
     "state.arrows: array",
@@ -347,6 +347,9 @@
     "state.link.entrances[].node: null",
     "state.link.entrances[].open: boolean",
     "state.link.entrances[]: object",
+    "state.link.inflow: array",
+    "state.link.inflow[]: array",
+    "state.link.inflow[][]: number",
     "state.link: object",
     "state.machineMade: object",
     "state.mines.armed: array",

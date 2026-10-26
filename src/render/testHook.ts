@@ -258,6 +258,8 @@ export interface UiState {
   hoverBox: { x: number; y: number; w: number; h: number } | null;
   /** 050: whether the hover tag draws the name line (not over a champion, whose nameplate names it). */
   hoverNameDrawn: boolean;
+  /** 069: the hover readout's lines as drawn over a machine or the intake (each line's text), empty while none shows. */
+  hoverLines: string[];
   /** 042: the flow screens as drawn (the title's rows, a card's lines and buttons, Settings, the note). */
   flow: FlowUi;
   /** 044: the Sandbox panel as drawn (056, 057: its tabs, the rows of each panel all the way out with their boxes, the key list, every box drawn), or null outside the sandbox. */

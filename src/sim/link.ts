@@ -1,5 +1,5 @@
 import { AMMO } from '../data/ammo';
-import { ENTRANCE_CAPS, INTAKE } from '../data/foundry';
+import { ENTRANCE_CAPS, INTAKE, INTAKE_RATE } from '../data/foundry';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { ATTUNE_TICKS } from '../data/tube';
 import { CARRIED_HINT } from '../data/hints';
@@ -28,6 +28,11 @@ export interface LinkState {
   attunePulse: number;
   /** One per mouth tile, in INTAKE.entrances order (west, centre, east). */
   entrances: EntranceState[];
+  /**
+   * 069: rounds each entrance took, in one-second buckets (the rate window's whole seconds and the one running now), in
+   * INTAKE.entrances order: src/sim/intakeRates.ts measures the supply rate in from them.
+   */
+  inflow: number[][];
 }
 
 export function createLink(): LinkState {
@@ -35,6 +40,7 @@ export function createLink(): LinkState {
     attuned: false,
     attunePulse: 0,
     entrances: INTAKE.entrances.map((e) => ({ open: e.startsOpen, ammoId: null, count: 0, cooldown: 0, node: null })),
+    inflow: INTAKE.entrances.map(() => Array.from({ length: INTAKE_RATE.windowSeconds + 1 }, () => 0)),
   };
 }
 
