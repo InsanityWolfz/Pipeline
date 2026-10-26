@@ -1,5 +1,6 @@
 import type { EquipRequest } from '../sim/gear';
-import type { Command, HopperAmount } from '../sim/input';
+import type { AreaAction, Command, HopperAmount } from '../sim/input';
+import type { AreaBox } from '../sim/area';
 import type { SandboxCommand } from '../sim/sandbox';
 
 /** How many a click on a stack moves (022, 047): Ctrl+click the whole stack (Ctrl wins over Shift), Shift+click half, a plain click one. */
@@ -9,9 +10,9 @@ export function clickAmount(mods: { shift: boolean; ctrl: boolean }): HopperAmou
 }
 
 /** The commands that menus send: the hopper, pylon, stash and bench menus' choices. */
-export type MenuCommand = Pick<Command, 'deposit' | 'withdraw' | 'sortInventory' | 'assignSlot' | 'pylon' | 'travel' | 'takeStash' | 'stashPut' | 'identify' | 'equip' | 'restore' | 'summon' | 'takeTalent' | 'respec' | 'sandbox'>;
+export type MenuCommand = Pick<Command, 'area' | 'deposit' | 'withdraw' | 'sortInventory' | 'assignSlot' | 'pylon' | 'travel' | 'takeStash' | 'stashPut' | 'identify' | 'equip' | 'restore' | 'summon' | 'takeTalent' | 'respec' | 'sandbox'>;
 
-const NONE: MenuCommand = { deposit: null, withdraw: null, sortInventory: false, assignSlot: null, pylon: null, travel: null, takeStash: null, stashPut: null, identify: false, equip: null, restore: null, summon: null, takeTalent: null, respec: false, sandbox: null };
+const NONE: MenuCommand = { area: null, deposit: null, withdraw: null, sortInventory: false, assignSlot: null, pylon: null, travel: null, takeStash: null, stashPut: null, identify: false, equip: null, restore: null, summon: null, takeTalent: null, respec: false, sandbox: null };
 
 // Choices clicked in the world's menus, held until the next tick takes them.
 export class MenuRequests {
@@ -25,6 +26,11 @@ export class MenuRequests {
   /** Takes one, half or the whole of a hopper's or crate's clicked stack into the inventory (022; 047: the container's click). */
   withdraw(id: number, amount: HopperAmount, itemId?: string, stack?: number): void {
     this.pending.withdraw = { id, amount, ...(itemId !== undefined ? { itemId } : {}), ...(stack !== undefined ? { stack } : {}) };
+  }
+
+  /** The area tool's release menu (063): pick up, save, or both, for a box (a save into `slot`, overwriting it). */
+  area(box: AreaBox, action: AreaAction, slot?: number): void {
+    this.pending.area = { box, action, ...(slot !== undefined ? { slot } : {}) };
   }
 
   /** The grid's Sort button (047). */

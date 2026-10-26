@@ -4,6 +4,7 @@ import { stillUsable, usableInReach } from '../sim/foundryUse';
 import { diagramInReach } from '../sim/research';
 import type { SimState } from '../sim/state';
 import type { BuildView } from './BuildView';
+import type { BlueprintUi } from './BlueprintUi';
 import type { ClickMods } from './clickInput';
 import type { Controls } from './controls';
 import type { CraftMenuView } from './CraftMenuView';
@@ -27,6 +28,8 @@ export interface Menus {
   /** 047: the carried bar's slot under a point (a dragged stack lands there). */
   carriedSlotAt: (x: number, y: number) => number | null;
   build: BuildView;
+  /** 063: the Tools group and the area box's menu. */
+  blueprints: BlueprintUi;
   sound: SoundView;
   inventory: InventoryPanel;
   research: ResearchList;
@@ -81,6 +84,8 @@ export class MenuRouter {
     else if (close && research.isOpen) research.setOpen(false);
     else if (close && site.isOpen) site.close();
     else if (close && craft.isOpen) craft.setOpen(false);
+    // 063: Esc backs out of the area menu, the drag, the Area tool or the blueprint ghost before it leaves build mode.
+    else if (close && this.sim.building && controls.tools.back()) this.m.sound.play(SOUNDS.menuClick);
     else if (close && this.sim.building) controls.requestBuildToggle();
     else if (close && sandbox.closeOpen()) this.m.sound.play(SOUNDS.menuClick);
     else if (close) this.m.host.pause();
@@ -187,7 +192,14 @@ export class MenuRouter {
       return;
     }
     // 047: the crafting menu's tabs (its rows craft from their own press handlers).
-    if (craft.click(x, y) || build.click(x, y) || site.click(controls, x, y)) {
+    if (craft.click(x, y)) {
+      sound.play(SOUNDS.menuClick);
+      return;
+    }
+    // 063: the area box's menu and the Tools cells; a piece picked on the bar puts down the Area tool or the ghost.
+    const bar = build.click(x, y);
+    if (bar) controls.tools.setPiece();
+    if (bar || this.m.blueprints.click(controls, x, y) || site.click(controls, x, y)) {
       sound.play(SOUNDS.menuClick);
       return;
     }

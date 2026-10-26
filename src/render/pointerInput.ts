@@ -7,6 +7,7 @@ import type { ConduitLay } from './dragPath';
 import { BuildDrag } from './buildDrag';
 import { clickMods, heldButtons, isLeftPress, type BuildInput } from './clickInput';
 import { toView } from './scale';
+import type { BlueprintInput } from './blueprintInput';
 
 /** The build ghost's turn and flip, read when a press starts a place (they live on Controls). */
 export interface GhostPose {
@@ -36,9 +37,12 @@ export class PointerInput {
 
   /** Read live: Controls turns and flips it with R and G. */
   private readonly ghost: GhostPose;
+  /** 063: the Area tool and the blueprint ghost. */
+  private readonly tools: BlueprintInput;
 
-  constructor(scene: Scene, ghost: GhostPose) {
+  constructor(scene: Scene, ghost: GhostPose, tools: BlueprintInput) {
     this.ghost = ghost;
+    this.tools = tools;
     this.pointer = scene.input.activePointer;
     this.camera = scene.cameras.main;
     scene.input.mouse?.disableContextMenu();
@@ -53,6 +57,7 @@ export class PointerInput {
     this.build = build;
     if (!build.building) {
       this.drag.reset();
+      if (this.tools.mode !== 'piece') this.tools.setPiece();
     }
     // The camera moves every frame, so the cursor's world point does too.
     const world = this.camera.getWorldPoint(this.pointer.x, this.pointer.y);
@@ -105,6 +110,7 @@ export class PointerInput {
     this.uiPress = false;
     this.leftUiPress = false;
     this.endDrag();
+    this.tools.release();
   }
 
   private pointerDown(p: Input.Pointer): void {
@@ -123,9 +129,26 @@ export class PointerInput {
     }
     if (!this.build.building) return;
     const tile = this.tileUnder(p);
+    if (this.toolPress(p, tile)) return;
     if (p.rightButtonDown()) this.drag.pickUp(tile);
     else if (p.leftButtonDown()) this.drag.press(tile, this.build.pieceId(), this.ghost.facing, this.ghost.mirrored);
   }
+
+  /**
+   * 063: a press with a tool: right click backs out (the menu, the drag, the tool); with the Area tool a left press
+   * starts a box, with the ghost it stamps. Returns whether a tool took it (else it places or picks up a piece).
+   */
+  private toolPress(p: Input.Pointer, tile: Tile): boolean {
+    const t = this.tools;
+    if (t.mode === 'piece' && !t.released) return false;
+    if (p.rightButtonDown()) t.back();
+    else if (p.leftButtonDown() && t.mode === 'area') t.press(tile);
+    else if (p.leftButtonDown() && t.mode === 'ghost') this.stampPress?.(tile);
+    return true;
+  }
+
+  /** 063: a left press with the blueprint ghost held, on the tile under the cursor (Controls queues the stamp). */
+  stampPress: ((tile: Tile) => void) | null = null;
 
   /** Release (inside the canvas or out): the held conduit is laid. */
   private endDrag(): void {
@@ -139,6 +162,8 @@ export class PointerInput {
 
   /** Dragging with a conduit selected lays one on every tile the cursor crosses, however fast it moves. */
   private pointerMove(p: Input.Pointer): void {
+    // 063: the Area tool's box follows the cursor.
+    if (this.tools.drag && p.leftButtonDown()) this.tools.move(this.tileUnder(p));
     if (!this.drag.dragging || !this.build.building || !p.leftButtonDown()) return;
     const v = this.view(p);
     if (this.build.overUi(v.x, v.y)) return;

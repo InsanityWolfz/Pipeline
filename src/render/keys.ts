@@ -4,7 +4,7 @@ import { DEFAULT_BINDINGS, MOUSE_INPUTS, SLOT_ACTIONS, type BindAction } from '.
 // The keyboard's bindings: what each key does is in controls.ts. 042: the rebindable keys come from the settings
 // (src/data/settings.ts has today's defaults); Esc, Tab and Shift-for-tips are fixed.
 
-export type Key = 'up' | 'down' | 'left' | 'right' | 'dodge' | 'rotate' | 'flip' | 'interact' | 'menu' | 'close' | 'build' | 'inventory' | 'inventoryTab' | 'research' | 'talents' | 'shift';
+export type Key = 'up' | 'down' | 'left' | 'right' | 'dodge' | 'rotate' | 'flip' | 'area' | 'interact' | 'menu' | 'close' | 'build' | 'inventory' | 'inventoryTab' | 'research' | 'talents' | 'shift';
 
 
 /** A key code name ("W", "SPACE") as its code; unknown names fall back to none (the action has no key). */
@@ -30,7 +30,8 @@ export function bindKeys(
   sandbox = false,
 ): { keys: Record<Key, Input.Keyboard.Key>; ammo: Input.Keyboard.Key[]; use: Input.Keyboard.Key | null; sandbox: Input.Keyboard.Key | null } {
   const codes = Input.Keyboard.KeyCodes;
-  const add = (action: BindAction): Input.Keyboard.Key => keyboard.addKey(codeOf(bindings[action]) ?? codeOf(DEFAULT_BINDINGS[action]) ?? 0);
+  // An action left with no key ('', 063: a newer action whose default a stored binding took) gets code 0, which no key sends.
+  const add = (action: BindAction): Input.Keyboard.Key => keyboard.addKey(bindings[action] === '' ? 0 : (codeOf(bindings[action]) ?? codeOf(DEFAULT_BINDINGS[action]) ?? 0));
   const keys: Record<Key, Input.Keyboard.Key> = {
     up: add('up'),
     down: add('down'),
@@ -39,6 +40,7 @@ export function bindKeys(
     dodge: add('dodge'),
     rotate: add('rotate'),
     flip: add('flip'),
+    area: add('area'),
     interact: add('interact'),
     menu: add('menu'),
     close: keyboard.addKey(codes.ESC),
@@ -61,6 +63,8 @@ export interface KeyHandlers {
   dodge(): void;
   rotate(): void;
   flip(): void;
+  /** 063: the Area tool, in build mode. */
+  area(): void;
   interact(): void;
   /** C, Esc, I or Tab, J and T, and the sandbox panel's key (044): the menu keys the scene takes. */
   menu(key: 'menu' | 'close' | 'inventory' | 'research' | 'talents' | 'sandbox'): void;
@@ -75,6 +79,7 @@ export function listenKeys(keys: Record<Key, Input.Keyboard.Key>, ammo: readonly
   keys.dodge.on('down', () => h.dodge());
   keys.rotate.on('down', () => h.rotate());
   keys.flip.on('down', () => h.flip());
+  keys.area.on('down', () => h.area());
   keys.interact.on('down', () => h.interact());
   for (const m of ['menu', 'close', 'research', 'talents'] as const) keys[m].on('down', () => h.menu(m));
   for (const k of [keys.inventory, keys.inventoryTab]) k.on('down', () => h.menu('inventory'));

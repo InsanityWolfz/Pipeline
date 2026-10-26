@@ -64,8 +64,13 @@ describe('save envelope (042)', () => {
   it('047.9: a version 4 save (before the carried items\' hint) reads as too old: no migration, by Shaun\'s rule', () => {
     const v4 = { ...makeEnvelope(snapshot(sim()), META), version: 4 };
     expect(readSave(text(v4)).status).toBe('too-old');
-    expect(SAVE_VERSION).toBe(13);
+    expect(SAVE_VERSION).toBe(14);
     expect(SAVE_MIGRATIONS[4]).toBeUndefined();
+  });
+
+  it("063: a version 13 save (before blueprints) reads as too old: no migration, by Shaun's rule", () => {
+    const v13 = { ...makeEnvelope(snapshot(sim()), META), version: 13 };
+    expect(readSave(text(v13)).status).toBe('too-old');
   });
 
   it("049: a version 5 save (before the Husk Hive's goal) reads as too old: no migration, by Shaun's rule", () => {

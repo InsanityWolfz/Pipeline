@@ -178,7 +178,8 @@ describe('vector frame registration', () => {
     const arenas = await import('../../src/data/arenaAssets');
     const emberworks = await import('../../src/data/emberworksAssets');
     const forge = await import('../../src/data/forgewrightAssets');
-    walk({ ...assets, ...foundry, ...room, ...props, ...stages, ...springs, ...landmarks, ...research, ...hollows, ...hollowsEnemies, ...gear, ...talents, ...mines, ...arenas, ...emberworks, ...forge });
+    const blueprints = await import('../../src/data/blueprintAssets');
+    walk({ ...assets, ...foundry, ...room, ...props, ...stages, ...springs, ...landmarks, ...research, ...hollows, ...hollowsEnemies, ...gear, ...talents, ...mines, ...arenas, ...emberworks, ...forge, ...blueprints });
     for (const f of vectorFrames()) expect(registered, f.name).toContain(f.name);
   });
 });

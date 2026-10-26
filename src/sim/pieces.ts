@@ -108,8 +108,11 @@ export interface PieceShape {
   mirrored?: boolean;
 }
 
-/** Why a piece can't be placed (058: `ghost` off the guided step's next ghost, `tutorial` while building is locked). */
-export type PlaceFail = 'locked' | 'not-foundry' | 'blocked' | 'occupied' | 'player' | 'ghost' | 'tutorial';
+/**
+ * Why a piece can't be placed or picked up (058: `ghost` off the guided step's next ghost, `tutorial` while building is
+ * locked; 063: `stash-full`, an area pick-up the stash can't hold).
+ */
+export type PlaceFail = 'locked' | 'not-foundry' | 'blocked' | 'occupied' | 'player' | 'ghost' | 'tutorial' | 'stash-full';
 
 export interface FoundryState {
   /** In placement order, which is also the order they act in. */

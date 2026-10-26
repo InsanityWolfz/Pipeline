@@ -44,6 +44,7 @@ import { SandboxPanel } from './SandboxPanel';
 import { TunnelView } from './TunnelView';
 import { drawPointerUi } from './pointerUi';
 import { RoomFollow } from './roomFollow';
+import { BlueprintUi } from './BlueprintUi';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -69,6 +70,8 @@ export class GameScene extends Scene {
   private bombView?: BombView;
   private foundryView?: FoundryView;
   buildView?: BuildView;
+  /** 063: the Tools group, the area box and its menu. */
+  blueprintUi?: BlueprintUi;
   /** 052: the underground pair's tunnels and reach on the floor. */
   tunnelView?: TunnelView;
   hover?: HoverView;
@@ -131,6 +134,7 @@ export class GameScene extends Scene {
     this.bombView = new BombView(this);
     this.hud = new HudView(this);
     this.buildView = new BuildView(this);
+    this.blueprintUi = new BlueprintUi(this);
     this.tunnelView = new TunnelView(this);
     this.hover = new HoverView(this);
     this.site = new SiteView(this);
@@ -153,8 +157,8 @@ export class GameScene extends Scene {
     camera.startFollow(this.playerView.sprite, true, CAMERA_LERP, CAMERA_LERP);
 
     this.controls = new Controls(this, this.sim.sandbox !== undefined);
-    if (this.menu && this.pause && this.siteMenus && this.buildView && this.feel && this.hud && this.wake && this.legibility && this.sandboxPanel)
-      this.router = new MenuRouter(this.sim, { craft: this.menu, pause: this.pause, site: this.siteMenus, carriedSlotAt: (x, y) => this.hud?.carriedSlotAt(x, y) ?? null, build: this.buildView, sound: this.feel.sound, inventory: this.hud.inventory, research: this.hud.research, talents: this.hud.talents, wake: this.wake, legibility: this.legibility, host: this.host, sandbox: this.sandboxPanel });
+    if (this.menu && this.pause && this.siteMenus && this.buildView && this.feel && this.hud && this.wake && this.legibility && this.sandboxPanel && this.blueprintUi)
+      this.router = new MenuRouter(this.sim, { blueprints: this.blueprintUi, craft: this.menu, pause: this.pause, site: this.siteMenus, carriedSlotAt: (x, y) => this.hud?.carriedSlotAt(x, y) ?? null, build: this.buildView, sound: this.feel.sound, inventory: this.hud.inventory, research: this.hud.research, talents: this.hud.talents, wake: this.wake, legibility: this.legibility, host: this.host, sandbox: this.sandboxPanel });
   }
 
   /** Matches both cameras to the backbuffer (016). Called on boot and whenever the window changes. */
@@ -170,7 +174,7 @@ export class GameScene extends Scene {
         building: this.sim.building,
         pieceId: () => this.buildView?.selected ?? FIRST_PIECE,
         // Under a flow screen (042) the whole screen is that screen's: nothing reaches the world or the menus.
-        overUi: (x, y) => this.host.covered || [this.pause, this.menu, this.buildView, this.siteMenus, this.hud, this.tutorial, this.legibility, this.sandboxPanel].some((v) => v?.overUi(x, y)),
+        overUi: (x, y) => this.host.covered || [this.pause, this.menu, this.buildView, this.blueprintUi, this.siteMenus, this.hud, this.tutorial, this.legibility, this.sandboxPanel].some((v) => v?.overUi(x, y)),
         clickUi: (x, y, mods) => void (this.host.covered || this.router?.click(controls, x, y, mods)),
         releaseUi: (x, y) => void (this.host.covered || this.router?.release(controls, x, y)),
       });

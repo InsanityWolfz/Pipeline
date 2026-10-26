@@ -1,6 +1,7 @@
 import { FOUNDRY_ROOM } from '../data/rooms';
 import type { Command } from './input';
 import { pickUp, place } from './placement';
+import { areaPickUp } from './area';
 import type { SimState } from './state';
 
 // Build mode: toggled in the foundry. While it's on the player can still walk,
@@ -11,7 +12,7 @@ export function maskCommand(state: SimState, cmd: Command): Command {
   return state.building ? { ...cmd, fire: false, use: false, selectSlot: null } : cmd;
 }
 
-/** Toggles build mode, then places and picks up. All but the toggle only work in the foundry. */
+/** Toggles build mode, then places and picks up, one piece or a box of them (063). All but the toggle only work in the foundry. */
 export function stepBuild(state: SimState, cmd: Command): void {
   if (cmd.toggleBuild) state.building = !state.building && state.roomId === FOUNDRY_ROOM;
   if (cmd.place) {
@@ -19,4 +20,6 @@ export function stepBuild(state: SimState, cmd: Command): void {
     place(state, pieceId, tx, ty, facing, { ...(inFrom ? { inFrom } : {}), ...(mirrored ? { mirrored } : {}) });
   }
   if (cmd.pickUp) pickUp(state, cmd.pickUp.tx, cmd.pickUp.ty);
+  // 063: the area tool's box.
+  if (cmd.area && cmd.area.action === 'pickUp') areaPickUp(state, cmd.area.box);
 }

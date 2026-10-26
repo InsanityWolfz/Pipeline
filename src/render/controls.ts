@@ -10,6 +10,7 @@ import { bindKeys, listenKeys, type Key } from './keys';
 import { onSettings, settings } from './flow/settingsStore';
 import { MenuRequests, type UiCommand } from './menuRequests';
 import { PointerInput } from './pointerInput';
+import { BlueprintInput } from './blueprintInput';
 
 export type { BuildInput } from './clickInput';
 
@@ -46,6 +47,8 @@ export class Controls {
   facing: Facing = 'right';
   /** Flip (G since 042, F before) turns a splitter's ghost to send items out its left (033); sent with every place. */
   mirrored = false;
+  /** 063: build mode's tools: the Area tool's box and the blueprint ghost. */
+  readonly tools = new BlueprintInput();
 
   /** 044: in the sandbox only, the panel's key is bound (the shipped game never captures it). */
   private readonly sandbox: boolean;
@@ -55,7 +58,7 @@ export class Controls {
     const keyboard = scene.input.keyboard;
     if (!keyboard) throw new Error('Keyboard input is unavailable');
     this.keyboard = keyboard;
-    this.mouse = new PointerInput(scene, this);
+    this.mouse = new PointerInput(scene, this, this.tools);
     this.bindAll();
     // 042: a rebind in Settings takes effect at once.
     const off = onSettings(() => this.bindAll());
@@ -78,9 +81,10 @@ export class Controls {
     this.useKey = use;
     listenKeys(keys, ammo, {
       dodge: () => (this.dodgePending = true),
-      // R and G only turn and flip the ghost in build mode.
-      rotate: () => void (this.mouse.build.building && (this.facing = rotateCw(this.facing))),
-      flip: () => void (this.mouse.build.building && (this.mirrored = !this.mirrored)),
+      // R and G only turn and flip the ghost in build mode (063: the blueprint ghost, while one is held).
+      rotate: () => void (this.mouse.build.building && (this.tools.ghost ? this.tools.turn() : (this.facing = rotateCw(this.facing)))),
+      flip: () => void (this.mouse.build.building && (this.tools.ghost ? this.tools.mirror() : (this.mirrored = !this.mirrored))),
+      area: () => void (this.mouse.build.building && this.tools.toggleArea()),
       interact: () => (this.interactPending = this.interactPress = true),
       menu: (key) => (this.menuKeys[key] = true),
       build: () => (this.buildPending = true),

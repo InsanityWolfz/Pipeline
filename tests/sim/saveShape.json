@@ -1,5 +1,5 @@
 {
-  "version": 13,
+  "version": 14,
   "shape": [
     "state.activatePulse: number",
     "state.arrows: array",
@@ -115,6 +115,7 @@
     "state.equipped.trinket: null",
     "state.equipped: object",
     "state.events.addsRise: array",
+    "state.events.areaPickUps: array",
     "state.events.arenaEnters: array",
     "state.events.arenaLeaves: array",
     "state.events.attunes: array",
@@ -123,6 +124,9 @@
     "state.events.bellowsBreaks: array",
     "state.events.bellowsPatches: array",
     "state.events.blocked: array",
+    "state.events.blueprintDeletes: array",
+    "state.events.blueprintSaveFails: array",
+    "state.events.blueprintSaves: array",
     "state.events.bombletBursts: array",
     "state.events.bossDefeats: array",
     "state.events.bursts: array",
@@ -186,6 +190,7 @@
     "state.events.splits: array",
     "state.events.sprays: array",
     "state.events.spreads: array",
+    "state.events.stamps: array",
     "state.events.stashDeposits: array",
     "state.events.stomps: array",
     "state.events.stuns: array",
