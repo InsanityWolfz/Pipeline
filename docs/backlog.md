@@ -71,6 +71,7 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 064 | Region 4, the Stormcrown: a fifth ring opened by the Forgewright's kill (×10, Shaun), stormglass from struck rods, the Weathervane's pylon, the Lightning rune (chains 2 at half) with two Ley-lane talents, the Conductor (blinks between six breakable rods), the fifth entrance | done |
 | 065 | Stormcrown enemies: the thunderhawk (flies, dives), static mites (trios that discharge into each other), the storm sentinel (strike circles from range), the gale ram (gust that pushes and slows); ring 5 packs and the Weathervane's guards | done |
 | 066 | The third tier: a Tempering coil charges ley-steel and ley glass with stormglass into stormsteel and storm glass; the same machines make stormsteel parts and storm glass bolts by input; ×1.6 over steel; three Milestone 3 goals | done |
+| 068 | Tougher late bosses: the Forgewright at 6,000 HP with heat filling through vents (the Flood on rhythm) and 300-HP bellows; the Conductor at 8,000 HP with a storm shield while 3+ rods stand, a 0.5 s blink-in window and a 5-circle storm call | draft |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
 
