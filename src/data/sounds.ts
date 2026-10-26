@@ -8,8 +8,9 @@ import { EMBERWORKS_SOUND_RECIPES, EMBERWORKS_SOUNDS, EMBERWORKS_WINDUPS } from 
 import { STORMCROWN_SOUND_RECIPES, STORMCROWN_SOUNDS } from './stormcrownSounds.ts';
 import { EMBERWORKS_ENEMY_SOUND_RECIPES, EMBERWORKS_ENEMY_SOUNDS, EMBERWORKS_ENEMY_WINDUPS } from './emberworksEnemySounds.ts';
 import { TIER_SOUND_RECIPES, TIER_SOUNDS } from './tierSounds.ts';
+import { AMBIENT_SOUND_RECIPES, AMBIENT_SOUNDS } from './ambientSounds.ts';
 
-// Sound effects and ambient loops (014), as synth recipes. `npm run sound` renders
+// Sound effects and ambient loops (014, ambientSounds.ts), as synth recipes. `npm run sound` renders
 // each one to assets/build/sounds/<key>.wav; render plays them by these keys.
 
 export type { SoundLayer, SoundRecipe } from './soundRecipe.ts';
@@ -66,17 +67,10 @@ export const SOUNDS = {
   ...EMBERWORKS_ENEMY_SOUNDS,
   ...TIER_SOUNDS,
   ...STORMCROWN_SOUNDS,
-  ambientClearing: 'ambient-clearing',
-  ambientFoundry: 'ambient-foundry',
+  ...AMBIENT_SOUNDS,
 } as const;
 
 export type SoundKey = (typeof SOUNDS)[keyof typeof SOUNDS];
-
-const birds = (times: readonly number[], pitch: number): SoundLayer[] =>
-  times.flatMap((t, i) => [
-    { wave: 'sine', from: pitch + i * 140, to: pitch + 900 + i * 90, delay: t, dur: 0.07, attack: 0.01, volume: 0.12 },
-    { wave: 'sine', from: pitch + 700 + i * 60, to: pitch + 200, delay: t + 0.09, dur: 0.09, attack: 0.01, volume: 0.1 },
-  ]);
 
 export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
   ...RESEARCH_SOUND_RECIPES,
@@ -89,6 +83,7 @@ export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
   ...EMBERWORKS_ENEMY_SOUND_RECIPES,
   ...TIER_SOUND_RECIPES,
   ...STORMCROWN_SOUND_RECIPES,
+  ...AMBIENT_SOUND_RECIPES,
   'fire-arrow': {
     layers: [
       { wave: 'noise', from: 6000, to: 1500, dur: 0.12, attack: 0.002, volume: 0.35 },
@@ -253,31 +248,10 @@ export const SOUND_RECIPES: Readonly<Record<SoundKey, SoundRecipe>> = {
       { wave: 'triangle', from: 440, to: 440, dur: 0.6, attack: 0.08, volume: 0.04, lowpass: 1200 },
     ],
   },
-  'ambient-clearing': {
-    loop: 8,
-    layers: [
-      { wave: 'noise', from: 500, to: 500, dur: 8, attack: 0, volume: 0.12, tremolo: { rate: 0.25, depth: 0.6 } },
-      ...birds([0.8, 1.15, 4.6, 6.9, 7.2], 2400),
-    ],
-  },
-  'ambient-foundry': {
-    loop: 8,
-    layers: [
-      { wave: 'sine', from: 55, to: 55, dur: 8, attack: 0, volume: 0.22, tremolo: { rate: 0.5, depth: 0.3 } },
-      { wave: 'sine', from: 110, to: 110, dur: 8, attack: 0, volume: 0.1, tremolo: { rate: 0.375, depth: 0.4 } },
-      { wave: 'noise', from: 200, to: 200, dur: 8, attack: 0, volume: 0.05 },
-    ],
-  },
 };
 
-/** The ambient loop for each room; rooms not listed are silent. */
-export const ROOM_AMBIENCE: Readonly<Record<string, SoundKey>> = {
-  // Wind and birds outside (017).
-  overworld: SOUNDS.ambientClearing,
-  foundry: SOUNDS.ambientFoundry,
-  // 044: the sandbox's room, open to the sky, as outside.
-  sandbox: SOUNDS.ambientClearing,
-};
+/** The ambient loop for each room (ambientSounds.ts); rooms not listed are silent. */
+export { ROOM_AMBIENCE } from './ambientSounds.ts';
 
 /** Mixing: master volume to start with, how loud loops sit under effects, and the room crossfade. */
 export const SOUND_MIX = { volume: 0.7, ambient: 0.45, crossfadeMs: 1200 } as const;

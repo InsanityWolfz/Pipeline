@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { CONDUIT_TICKS, INTAKE } from '../../src/data/foundry';
 import { machineDef } from '../../src/data/pieces';
 import { recipeDef } from '../../src/data/recipes';
 import type { CrateState, HopperState, MachineState } from '../../src/sim/pieces';
@@ -142,5 +143,42 @@ describe('stage machines tag tiered rounds (062)', () => {
     runUntil(s, () => (crate.contents['arrow+steel+frost'] ?? 0) === 4, 400);
     expect(machineRecipe(m).inputs).toEqual({ 'arrow+steel': 4, rimestone: 1 });
     expect(m.buffer.rimestone).toBe(0);
+  });
+});
+
+describe('a machine switching tiers, as its status reads (062)', () => {
+  const STEEL_SET = { 'steel-casing': 1, fuse: 1, 'ley-dust': 1 };
+
+  it('reads working while its last kind’s output goes out down a line, then makes the other kind', () => {
+    const s = foundry();
+    const m = put<MachineState>(s, 'packer', 6, 5);
+    put(s, 'conduit', 7, 5);
+    const crate = put<CrateState>(s, 'crate', 8, 5);
+    Object.assign(m, { made: 'bomb', output: 4 });
+    Object.assign(m.buffer, STEEL_SET);
+    const seen = new Set<string>();
+    runUntil(s, () => {
+      seen.add(m.status);
+      return m.crafting;
+    }, 200);
+    expect([...seen]).toEqual(['working']);
+    expect(m.made).toBe('bomb+steel');
+    runUntil(s, () => crate.contents.bomb === 4, CONDUIT_TICKS + 1);
+  });
+
+  it('reads blocked, not working, when that output can’t go out: a mixed line into one entrance jams', () => {
+    const s = foundry();
+    const mouth = INTAKE.entrances[1] ?? { tx: 12, ty: 0 };
+    const m = put<MachineState>(s, 'packer', mouth.tx, mouth.ty + 3, 'up');
+    put(s, 'conduit', mouth.tx, mouth.ty + 2, 'up');
+    put(s, 'conduit', mouth.tx, mouth.ty + 1, 'up');
+    const e = s.link.entrances[1];
+    if (!e) throw new Error('no middle entrance');
+    Object.assign(e, { open: true, ammoId: 'bomb+steel', count: 5 });
+    Object.assign(m, { made: 'bomb', output: 4 });
+    Object.assign(m.buffer, STEEL_SET);
+    run(s, 300);
+    expect(m).toMatchObject({ crafting: false, output: 2, status: 'blocked', missing: [] });
+    expect(e).toMatchObject({ ammoId: 'bomb+steel', count: 5 });
   });
 });

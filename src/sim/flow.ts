@@ -1,4 +1,4 @@
-import { CONDUIT_TICKS, ENTRANCE_CAPS, HOPPER_FLOW_CAP, HOPPER_TICKS, INPUT_CAP, INTAKE, OUTPUT_CAP } from '../data/foundry';
+import { CONDUIT_TICKS, ENTRANCE_CAPS, HOPPER_FLOW_CAP, HOPPER_TICKS, INPUT_CAP, INTAKE, JAM_TICKS, OUTPUT_CAP } from '../data/foundry';
 import type { RecipeDef } from '../data/recipes';
 import { opposite } from './direction';
 import { count } from './inventory';
@@ -183,7 +183,9 @@ function transfer(ctx: FlowContext, p: PieceState): void {
   } else if (p.kind === 'hopper') {
     if (p.item && p.timer >= HOPPER_TICKS) offerFromHopper(ctx, to, p, p.item);
   } else if (p.kind === 'machine') {
-    if (p.output > 0 && offer(ctx, to, p, p.made)) p.output -= 1;
+    const moved = p.output > 0 && offer(ctx, to, p, p.made);
+    if (moved) p.output -= 1;
+    p.stalled = p.output === 0 || moved ? 0 : Math.min(p.stalled + 1, JAM_TICKS);
   }
 }
 
@@ -197,23 +199,29 @@ function offerFromHopper(ctx: FlowContext, to: Tile, h: HopperState, item: strin
   if (h.count === 0) h.item = null;
 }
 
-/** The recipe a machine's status reads (062): the craft it has a set for, else the one whose inputs it holds most of (the one it makes now on a tie). */
-function statusRecipe(m: MachineState): RecipeDef {
+/**
+ * The recipe a machine's status and its hover read (062): the craft it's making; else the one it has a set for, else
+ * the one whose inputs it holds most of (the one it made last on a tie).
+ */
+export function statusRecipe(m: MachineState): RecipeDef {
   const now = machineRecipe(m);
+  if (m.crafting) return now;
   const order = [now, ...turnOrder(m).filter((r) => r.id !== now.id)];
   const held = (r: RecipeDef): number => Object.entries(r.inputs).filter(([itemId]) => count(m.buffer, itemId) > 0).length;
   return nextCraft(m) ?? order.reduce((best, r) => (held(r) > held(best) ? r : best), now);
 }
 
 function setStatus(m: MachineState): void {
-  const recipe = m.crafting ? machineRecipe(m) : statusRecipe(m);
+  const recipe = statusRecipe(m);
   const missing = Object.entries(recipe.inputs)
     .filter(([itemId, n]) => count(m.buffer, itemId) < n)
     .map(([itemId]) => itemId);
   const buffered = Object.values(m.buffer).some((n) => n > 0);
-  // 062: a set waiting for the last kind's output to go out is a hand-off, not a jam.
-  const switching = !m.crafting && hasInputs(m, recipe) && recipe.output.itemId !== m.made && m.output > 0 && outputFits(m, recipe);
-  m.status = m.crafting || switching ? 'working' : !outputFits(m, recipe) ? 'blocked' : buffered ? 'starved' : 'idle';
+  // 062: a set waiting for the last kind's output to go out is a hand-off, until that output stops moving: then, as
+  // for a machine with its output full, it's a jam, whatever it holds.
+  const set = !m.crafting && hasInputs(m, recipe);
+  const jammed = !outputFits(m, recipe) || (set && m.stalled >= JAM_TICKS);
+  m.status = m.crafting ? 'working' : jammed ? 'blocked' : set ? 'working' : buffered ? 'starved' : 'idle';
   m.missing = m.status === 'starved' ? missing : [];
 }
 

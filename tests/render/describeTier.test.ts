@@ -38,6 +38,17 @@ describe('a tiered round described (062)', () => {
     expect(texts(d.summary)[0]).toBe('14.4 dmg · 3.0/s · Glass ×1.6 dmg · 5 Shards × 7.2');
   });
 
+  it('its Shift breakdown shows its Shards’ and Bomblets’ damage with the ×1.6, though no bonus changes them', () => {
+    const bolt = texts(describeRound(player(), 'ley-bolt+glass+split').breakdown);
+    expect(bolt.slice(0, 3)).toEqual(['Damage 9 × 1.6 Glass = 14.4', 'Fire rate 3.0/s · one every 0.33 s', 'Shard damage 4.5 × 1.6 Glass = 7.2']);
+    const bomb = texts(describeRound(player(), 'bomb+steel+fire+cluster').breakdown);
+    expect(bomb.slice(0, 3)).toEqual(['Damage 12 × 1.6 Steel = 19.2', 'Fire rate 1.5/s · one every 0.67 s', 'Bomblet damage 8 × 1.6 Steel = 12.8']);
+    // With a bonus too, the pool then the tier, on one line.
+    expect(texts(describeRound(player('b1'), 'bomb+steel+cluster').breakdown)[2]).toBe('Bomblet damage 8 × (1 + 10% Black Powder) × 1.6 Steel = 14.1');
+    // A stone round's Shards still show only when a bonus changes them (040).
+    expect(texts(describeRound(player(), 'ley-bolt+split').breakdown).some((l) => l.startsWith('Shard damage'))).toBe(false);
+  });
+
   it('a stone round says no tier', () => {
     expect(texts(describeRound(player(), 'arrow').summary)).toEqual(['14 dmg · 4.0/s']);
   });
@@ -50,10 +61,19 @@ describe('a tiered round described (062)', () => {
 });
 
 describe('a tiered round’s summary when it runs long (062)', () => {
-  it('drops the tier note, then a burn’s time, in its short form', () => {
+  it('drops the tier note first (its short form), then "dmg" and a burn’s time only in its shorter one', () => {
     const d = describeRound(player(), 'bomb+steel+fire+cluster');
     expect(d.summary[0]?.text).toBe('19.2 Burst dmg · 1.5/s · Steel ×1.6 dmg · burns 4.8/s for 3.0 s · 4 Bomblets × 12.8');
-    expect(d.summary[0]?.short).toBe('19.2 Burst · 1.5/s · burns 4.8/s · 4 Bomblets × 12.8');
-    expect(describeRound(player(), 'bomb+fire+cluster').summary[0]?.short).toBe('12 Burst · 1.5/s · burns 3/s for 3.0 s · 4 Bomblets × 8');
+    expect(d.summary[0]?.short).toBe('19.2 Burst dmg · 1.5/s · burns 4.8/s for 3.0 s · 4 Bomblets × 12.8');
+    expect(d.summary[0]?.shorter).toBe('19.2 Burst · 1.5/s · burns 4.8/s · 4 Bomblets × 12.8');
+    // A stone round has no tier note: its one short form drops "dmg", as before 062.
+    expect(describeRound(player(), 'bomb+fire+cluster').summary[0]).toMatchObject({ short: '12 Burst · 1.5/s · burns 3/s for 3.0 s · 4 Bomblets × 8' });
+    expect(describeRound(player(), 'bomb+fire+cluster').summary[0]?.shorter).toBeUndefined();
+  });
+
+  it('a tiered Shot drops only its tier note: it has no "dmg" to drop and no burn', () => {
+    const d = describeRound(player(), 'arrow+steel+frost');
+    expect(d.summary[0]?.short).toBe('22.4 dmg · 4.0/s · Freeze in 4 hits');
+    expect(d.summary[0]?.shorter).toBeUndefined();
   });
 });

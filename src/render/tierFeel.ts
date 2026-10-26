@@ -3,6 +3,7 @@ import { FOUNDRY_ROOM } from '../data/rooms';
 import { FIRE_SOUNDS, SOUND_LEVELS, type SoundKey } from '../data/sounds';
 import { roundTier } from '../data/tags';
 import { STEEL_FIRE_SOUNDS, WORK_SOUNDS } from '../data/tierSounds';
+import type { SimEvents } from '../sim/events';
 import type { SimState } from '../sim/state';
 
 // 062's feel: a steel round fires with its family's heavier sound (a glass bolt as a ley bolt), and a Forge machine
@@ -13,6 +14,14 @@ export function fireSoundOf(ammoId: string): SoundKey | undefined {
   const base = AMMO[ammoId]?.base ?? ammoId;
   const steel = roundTier(ammoId) === 'steel' ? (STEEL_FIRE_SOUNDS as Readonly<Record<string, SoundKey>>)[base] : undefined;
   return steel ?? FIRE_SOUNDS[base];
+}
+
+/** Plays each shot's fire sound (029: a tagged round's base's; 062: a steel one's heavier). */
+export function playShots(shots: SimEvents['shots'], play: (key: SoundKey) => void): void {
+  for (const shot of shots) {
+    const key = fireSoundOf(shot.ammoId);
+    if (key) play(key);
+  }
 }
 
 const WORKS = WORK_SOUNDS as Readonly<Record<string, SoundKey>>;
