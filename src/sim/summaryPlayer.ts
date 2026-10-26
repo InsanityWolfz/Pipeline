@@ -35,6 +35,8 @@ export interface PlayerSummary {
     dying: number;
     /** What raised health this tick (030), or null: 031's HP bar glows cyan while it's set. */
     healing: HealSource | null;
+    /** 065: slowed (a gale ram's gust): the share of walk and roll speed taken and ticks left, else null. */
+    slow: { share: number; ticks: number } | null;
   };
   /** The Ley Springs (030): each one's centre tile, pool radius px, and whether the player's feet are in it. */
   springs: { id: string; tx: number; ty: number; radius: number; inside: boolean }[];
@@ -59,6 +61,7 @@ export function playerSummary(state: SimState): PlayerSummary {
       ko: state.events.ko,
       dying: p.dying,
       healing: p.healing,
+      slow: p.slowTicks > 0 ? { share: p.slow, ticks: p.slowTicks } : null,
     },
     springs: OVERWORLD.springs.map((sp) => ({ id: sp.id, tx: sp.tx, ty: sp.ty, radius: sp.radius * TILE_SIZE, inside: springAt(state.roomId, p.x, p.y)?.id === sp.id })),
   };

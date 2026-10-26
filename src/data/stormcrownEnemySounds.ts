@@ -21,6 +21,7 @@ export const STORMCROWN_ENEMY_WINDUPS = {
   hawk: STORMCROWN_ENEMY_SOUNDS.hawkScreech,
   mite: STORMCROWN_ENEMY_SOUNDS.miteBuzz,
   sentinel: STORMCROWN_ENEMY_SOUNDS.sentinelCall,
+  ram: 'charger-windup',
 } as const;
 
 export const STORMCROWN_ENEMY_SOUND_RECIPES = {

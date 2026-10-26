@@ -44,5 +44,6 @@ export const CHAMPIONS = {
     thunderhawk: ['Galewing', 'Stormtalon', 'Boltbeak', 'Skyrend', 'Thunderclaw'],
     'static-mite': ['Sparkjaw', 'Fizzle', 'Crackle', 'Zapper', 'Jolt'],
     'storm-sentinel': ['Rodwarden', 'Stormeye', 'Boltcaller', 'Skywatch', 'Thunderlens'],
+    'gale-ram': ['Squallhorn', 'Gustbelly', 'Windmaw', 'Blusterhide', 'Tempestram'],
   } as Readonly<Record<string, readonly string[]>>,
 } as const;

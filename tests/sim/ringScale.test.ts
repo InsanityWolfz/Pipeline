@@ -65,6 +65,8 @@ function attackDamage(def: EnemyDef): number {
       return def.zap.damage;
     case 'sentinel':
       return def.strike.damage;
+    case 'ram':
+      return def.gust.damage;
   }
 }
 

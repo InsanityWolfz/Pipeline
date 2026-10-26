@@ -15,6 +15,7 @@ import { tenderThink } from './tenderAi';
 import { hawkThink } from './hawkAi';
 import { miteThink } from './miteAi';
 import { sentinelThink } from './sentinelAi';
+import { ramThink } from './ramAi';
 import { moveBody } from './flight';
 import { defOf } from './champions';
 import { castThink } from './casterAi';
@@ -119,6 +120,8 @@ function thinkOf(state: SimState, e: EnemyState, def: EnemyDef): [number, number
       return miteThink(state, e, def);
     case 'sentinel':
       return sentinelThink(state, e, def);
+    case 'ram':
+      return ramThink(state, e, def);
   }
 }
 

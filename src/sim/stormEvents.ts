@@ -24,8 +24,10 @@ export interface StormEvents {
   discharges: { id: number; x: number; y: number; radius: number; hit: { id: number; x: number; y: number }[] }[];
   /** 065: a storm sentinel called a strike circle down (its id, the circle's centre and radius). */
   sentinelCalls: { id: number; x: number; y: number; r: number }[];
+  /** 065: a gale ram gusted: its feet and the cone's unit direction. */
+  gusts: { id: number; x: number; y: number; dx: number; dy: number }[];
 }
 
 export function createStormEvents(): StormEvents {
-  return { rodStrikes: [], arcs: [], strikes: [], rodBreaks: [], rodRegrows: [], blinkWarns: [], blinks: [], conductorWindups: [], lashes: [], chains: [], dives: [], zaps: [], discharges: [], sentinelCalls: [] };
+  return { rodStrikes: [], arcs: [], strikes: [], rodBreaks: [], rodRegrows: [], blinkWarns: [], blinks: [], conductorWindups: [], lashes: [], chains: [], dives: [], zaps: [], discharges: [], sentinelCalls: [], gusts: [] };
 }

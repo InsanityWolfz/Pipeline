@@ -54,8 +54,20 @@ export interface SentinelDef extends EnemyBase, ScreenLeashed {
   strike: AttackTiming & { range: number; radius: number; damage: number; knockback: number; knockTicks: number };
 }
 
+/** A gale ram: a heavy, broad fan-faced wind construct that walks at the player and gusts them back, slowing them. */
+export interface RamDef extends EnemyBase, ScreenLeashed {
+  kind: 'ram';
+  /**
+   * With the player's feet within `range` and its cooldown ready, it winds up (`windupTicks`) a red cone in front of it,
+   * `arcDegrees` wide and `reach` px long, locked at the wind-up's start. Then it gusts (the pose holds `swipeTicks`):
+   * a player whose feet are inside, unless a roll's i-frames run, takes `damage`, is pushed back `push` px out from it
+   * over `pushTicks`, and is slowed by `slow` (a share of walk and roll speed) for `slowTicks`. Then it recovers.
+   */
+  gust: AttackTiming & { range: number; arcDegrees: number; reach: number; damage: number; push: number; pushTicks: number; slow: number; slowTicks: number };
+}
+
 /** The Stormcrown's enemies, as one union for EnemyDef. */
-export type StormcrownEnemyDef = HawkDef | MiteDef | SentinelDef;
+export type StormcrownEnemyDef = HawkDef | MiteDef | SentinelDef | RamDef;
 
 /** The base fields they share, as the Emberworks' (emberworksEnemies.ts). */
 const BASE = { boss: false, hitKnockTicks: 4, hitFlashTicks: 6, leashGraceTicks: 60, homeTolerance: 4 } as const;
@@ -170,8 +182,40 @@ export const STORM_SENTINEL: SentinelDef = {
   anims: 'storm-sentinel',
 };
 
+export const GALE_RAM: RamDef = {
+  ...BASE,
+  kind: 'ram',
+  id: 'gale-ram',
+  name: 'Gale ram',
+  maxHealth: 140,
+  walkSpeed: 35,
+  feetBox: { w: 28, h: 12 },
+  hurtbox: { w: 34, h: 36, offsetY: -14 },
+  weight: 1 / 3,
+  gust: {
+    range: 80,
+    arcDegrees: 70,
+    reach: 96,
+    windupTicks: 54,
+    swipeTicks: 10,
+    recoverTicks: 48,
+    // Counted from the wind-up's start.
+    cooldownTicks: 180,
+    damage: 20,
+    push: 120,
+    // A long shove: 8 px a tick, under a tile, so it never carries the player through a wall.
+    pushTicks: 15,
+    slow: 0.4,
+    slowTicks: 120,
+  },
+  drops: STORMCROWN_DROPS,
+  xp: 8,
+  anims: 'gale-ram',
+};
+
 export const STORMCROWN_ENEMIES = {
   thunderhawk: THUNDERHAWK,
   'static-mite': STATIC_MITE,
   'storm-sentinel': STORM_SENTINEL,
+  'gale-ram': GALE_RAM,
 } as const;

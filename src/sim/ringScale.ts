@@ -77,5 +77,8 @@ function scaleAttack(def: EnemyDef, base: Pick<EnemyDef, 'feetBox' | 'hurtbox' |
       return { ...def, ...base, zap: { ...def.zap, damage: dmg(def.zap.damage) }, discharge: { ...def.discharge, damage: dmg(def.discharge.damage) } };
     case 'sentinel':
       return { ...def, ...base, strike: { ...def.strike, damage: dmg(def.strike.damage) } };
+    // 065: its slow is a share and a time, never scaled.
+    case 'ram':
+      return { ...def, ...base, gust: { ...def.gust, damage: dmg(def.gust.damage) } };
   }
 }

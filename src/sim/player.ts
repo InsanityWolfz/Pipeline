@@ -40,6 +40,9 @@ export interface PlayerState extends Knockable {
   emberSpent: boolean;
   /** Enemies this roll has stunned (036: Rollbreaker Greaves, once each a roll). */
   rollStunned: number[];
+  /** 065: slowed (a gale ram's gust): the share of walk and roll speed taken (0: none), and ticks left of it. */
+  slow: number;
+  slowTicks: number;
 }
 
 export function createPlayer(at: { x: number; y: number }): PlayerState {
@@ -64,6 +67,8 @@ export function createPlayer(at: { x: number; y: number }): PlayerState {
     wardTicks: 0,
     emberSpent: false,
     rollStunned: [],
+    slow: 0,
+    slowTicks: 0,
     knockX: 0,
     knockY: 0,
     knockTicks: 0,

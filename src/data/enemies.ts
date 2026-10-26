@@ -318,5 +318,7 @@ export function attackOf(def: EnemyDef): AttackTiming {
       return def.zap;
     case 'sentinel':
       return def.strike;
+    case 'ram':
+      return def.gust;
   }
 }

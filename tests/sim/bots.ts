@@ -110,6 +110,9 @@ function zoneOf(e: EnemyState, def: EnemyDef, left: (windup: number) => number):
     case 'mite':
       return e.mode === 'windup' ? { kind: 'circle', x: e.x, y: e.y, r: def.zap.radius, left: left(def.zap.windupTicks) } : null;
     // 065: a storm sentinel's circle is a strike, in dangerZones.
+    // 065: a gale ram's cone.
+    case 'ram':
+      return e.mode === 'windup' ? { kind: 'arc', x: e.x, y: e.y, r: def.gust.reach, dirX: e.swipeDirX, dirY: e.swipeDirY, deg: def.gust.arcDegrees, left: left(def.gust.windupTicks) } : null;
     case 'caster':
     case 'tender':
     case 'sentinel':

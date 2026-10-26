@@ -67,7 +67,7 @@ interface Drawn {
 /** `ui()`'s enemy part before the scene has built its views. */
 export const NO_ENEMY_UI: { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown; enemyBars: EnemyBarShown[]; enemyFlames: number } = {
   champions: [],
-  hollowsEnemies: { ripples: 0, flares: 0, lasers: [], waveShades: 0, beams: [] },
+  hollowsEnemies: { ripples: 0, flares: 0, lasers: [], waveShades: 0, beams: [], gusts: 0 },
   enemyBars: [],
   enemyFlames: 0,
 };
@@ -250,7 +250,7 @@ export class EnemyView {
 
   /** What the test hook's `ui()` reads here: the champions (032), Region 2's four's extras (035) and the bars (054). */
   get ui(): { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown; enemyBars: EnemyBarShown[]; enemyFlames: number } {
-    const hollowsEnemies: HollowsEnemiesShown = { ripples: 0, flares: 0, lasers: [], waveShades: 0, beams: [] };
+    const hollowsEnemies: HollowsEnemiesShown = { ripples: 0, flares: 0, lasers: [], waveShades: 0, beams: [], gusts: 0 };
     for (const [id, d] of this.drawn) {
       if (this.last.has(id)) shownOf(id, this.last.get(id) as EnemyState, d.hollows, hollowsEnemies);
       if (d.waveShaded && d.telegraph.visible) hollowsEnemies.waveShades += 1;
