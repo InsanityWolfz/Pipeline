@@ -1,4 +1,4 @@
-import { HOVER_USE_REACH, USE_REACH } from '../data/foundry';
+import { HOPPER_CLICK, HOVER_USE_REACH, USE_REACH } from '../data/foundry';
 import { crateRoom } from './crateSlots';
 import { FEET_BOX } from '../data/player';
 import { FOUNDRY_ROOM } from '../data/rooms';
@@ -11,7 +11,7 @@ import type { SimState } from './state';
 // E on a hopper or a crate opens render's screen (047: its own slots over the grid
 // inventory); its clicks arrive as deposit (put some of a held item in) and withdraw
 // (take some out) commands. Deposits and withdraws move one, half (rounded up) or all
-// of the stack clicked (022, 047).
+// of the stack clicked (022, 047); 069: a hopper screen's plain click moves ten (all, if fewer).
 
 type Usable = HopperState | CrateState;
 
@@ -69,10 +69,11 @@ export function usableInReach(state: SimState): Usable | undefined {
   return best;
 }
 
-/** How many of a stack of `n` an amount moves: one, half rounded up, or all; never more than `n`. */
+/** How many of a stack of `n` an amount moves: one, ten (069), half rounded up, or all; never more than `n`. */
 export function amountOf(amount: HopperAmount, n: number): number {
   if (n <= 0) return 0;
   if (amount === 'one') return 1;
+  if (amount === 'ten') return Math.min(HOPPER_CLICK, n);
   if (amount === 'half') return Math.ceil(n / 2);
   return n;
 }

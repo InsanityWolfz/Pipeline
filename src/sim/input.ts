@@ -13,9 +13,9 @@ export type AreaAction = 'pickUp' | 'save' | 'saveAndPickUp';
 
 /**
  * How many a hopper deposit or withdraw moves (022), like an inventory stack: one,
- * half the stack (rounded up), or all of it.
+ * half the stack (rounded up), or all of it. 069: or ten (all, if fewer), a hopper screen's plain click.
  */
-export type HopperAmount = 'one' | 'half' | 'all';
+export type HopperAmount = 'one' | 'ten' | 'half' | 'all';
 
 export interface Command {
   moveX: Axis;

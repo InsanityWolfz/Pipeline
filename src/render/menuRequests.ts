@@ -3,10 +3,14 @@ import type { AreaAction, Command, HopperAmount } from '../sim/input';
 import type { AreaBox } from '../sim/area';
 import type { SandboxCommand } from '../sim/sandbox';
 
-/** How many a click on a stack moves (022, 047): Ctrl+click the whole stack (Ctrl wins over Shift), Shift+click half, a plain click one. */
-export function clickAmount(mods: { shift: boolean; ctrl: boolean }): HopperAmount {
+/**
+ * How many a click on a stack moves (022, 047): Ctrl+click the whole stack (Ctrl wins over Shift), Shift+click half, a
+ * plain click one; 069: on a hopper's screen, a plain click ten (or all, if fewer).
+ */
+export function clickAmount(mods: { shift: boolean; ctrl: boolean }, screen: 'hopper' | 'crate' | 'stash' | null = null): HopperAmount {
   if (mods.ctrl) return 'all';
-  return mods.shift ? 'half' : 'one';
+  if (mods.shift) return 'half';
+  return screen === 'hopper' ? 'ten' : 'one';
 }
 
 /** The commands that menus send: the hopper, pylon, stash and bench menus' choices. */

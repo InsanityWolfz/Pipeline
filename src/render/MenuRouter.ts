@@ -12,7 +12,6 @@ import type { InventoryPanel } from './InventoryPanel';
 import type { Legibility } from './Legibility';
 import type { ResearchList } from './ResearchList';
 import type { TalentPanel } from './TalentPanel';
-import { clickAmount } from './menuRequests';
 import type { PauseAction, PauseMenuView } from './PauseMenuView';
 import type { SiteMenus } from './SiteMenus';
 import type { SoundView } from './SoundView';
@@ -210,7 +209,7 @@ export class MenuRouter {
       sound.play(SOUNDS.menuClick);
       return;
     }
-    if (inventory.pressAt(x, y, clickAmount(mods)) === 'sort') {
+    if (inventory.pressAt(x, y, mods) === 'sort') {
       sound.play(SOUNDS.menuClick);
       controls.menus.sortInventory();
     }
