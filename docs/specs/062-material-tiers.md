@@ -137,8 +137,8 @@ where the build settled something the spec left open, it is raised below.
 
 - **Tier:** a round's tier is a segment after its base (`arrow+steel+frost`). Rounds, Split Shards and Bomblets carry it
   into the stat path as its own ×1.6 damage step, so direct hits, Shards, Bursts, Bomblets, mines and burn all take it
-  once; Pool-bursts and Shatter's Shards take it from their already-multiplied hit. `SAVE_VERSION` stays 14: the save's
-  shape didn't change.
+  once; Pool-bursts and Shatter's Shards take it from their already-multiplied hit. `SAVE_VERSION` goes to 16 (15 is 063's, on another branch): each
+  machine keeps a count of the ticks its waiting output hasn't moved (062.6).
 - **Machines:** each tier-aware machine lists its tier recipe as a variant and runs whichever set it holds.
 - **Measure** (`npm run measure`, tests/measure/tiers.measure.ts, recorded, not tuned): the same pack fights with every
   line's round at steel against stone.
@@ -159,8 +159,10 @@ Names and the hover:
 - 062.1 Names follow today's casing, where every prefix is capitalised: "Steel Frost arrow", "Glass Homing ley bolt",
   "Steel Fire Cluster bomb" (the spec wrote "Steel frost arrow"). Old names are unchanged.
 - 062.2 The hover summary adds "Steel ×1.6 dmg" after the damage and rate. When a summary is too long for its four rows,
-  that note is the first thing dropped (the name still says Steel). If it's still too long, a Fire round's burn then
-  drops its time ("burns 4.8/s"); the breakdown keeps both. Only the Steel Fire Cluster bomb needs this.
+  that note is the first thing dropped (the name still says Steel). Only if it's still too long does a Burst round drop
+  "dmg" (as stone ones already do) and a Fire round's burn drop its time ("burns 4.8/s"); the breakdown keeps all of
+  them. Only the Steel Fire Cluster bomb needs this. The breakdown also shows a tiered round's Shard and Bomblet damage,
+  with the ×1.6, even when no bonus changes them.
 
 Layout, where the new rows didn't fit:
 - 062.3 The Build tab (040) gives a tiered round its stone round's row, its name marked with the known tier ("Frost
@@ -175,8 +177,12 @@ Layout, where the new rows didn't fit:
 
 Machines and crafting:
 - 062.6 Mixing: a machine fed both tiers takes turns, starting after the kind it made last. Before it starts the other
-  kind, it waits for the last kind's output to go out; it reads as working while it waits. Its hover shows the recipe
-  it is running, or ran last.
+  kind, it waits for the last kind's output to go out, and reads as working while that output moves. If the output
+  can't go out (it hasn't moved for 1 s, `JAM_TICKS`), the machine reads as blocked, with the jam glint, whatever it
+  holds. So a mixed line into one entrance jams: once the entrance holds one kind, the other kind's output sits at
+  the machine, which shows blocked, until the reservoir runs dry. Its hover shows the recipe its status reads: the
+  craft it's making, else the set it holds, else the recipe it holds the most inputs of (so its missing inputs match),
+  and the output still waiting to go out.
 - 062.7 Only the plain tier rounds and parts are hand-crafted. Steel or glass rounds with tags (a Steel Frost arrow) come
   from stage machines only: the crafting menu's tagged rows stay on stone rounds.
 - 062.8 Ley glass waits for the tube's attunement, as ley dust does. Each machine's build-bar text names its steel or

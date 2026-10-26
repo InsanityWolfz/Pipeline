@@ -12,6 +12,12 @@ export const INPUT_CAP = 4;
 export const OUTPUT_CAP = 8;
 
 /**
+ * 062: a machine holding a whole set of another tier waits for its last kind's output to go out first; once that
+ * output has sat unmoved at its front this many ticks (a flowing line takes one every CONDUIT_TICKS), it reads as jammed.
+ */
+export const JAM_TICKS = 60;
+
+/**
  * The underground pair (052): at most this many tiles between an entrance and its exit, in a straight line (Shaun).
  * A tunnel holds one item per tile it spans, each crossing a tile in CONDUIT_TICKS, like a conduit that long (052.1).
  */

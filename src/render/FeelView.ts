@@ -22,7 +22,7 @@ import { playEmberworks, VentFeel } from './emberworksFeel';
 import { ARENAS } from '../data/arenas';
 import { arenaLocked } from '../sim/arenaLock';
 import { playMines } from './mineFeel';
-import { fireSoundOf, WorkFeel } from './tierFeel';
+import { playShots, WorkFeel } from './tierFeel';
 import { HollowsEnemyFeel } from './hollowsEnemyFeel';
 
 // Look and feel (014), driven by what the sim did since the last draw and how
@@ -94,12 +94,8 @@ export class FeelView {
   private play(sim: SimState, ev: SimEvents): void {
     const j = this.juice;
     const s = this.sound;
-    // No shake on firing (021): too jarring.
-    // A tagged round (029) fires with its base's sound; 062: a steel one with its heavier one.
-    for (const shot of ev.shots) {
-      const key = fireSoundOf(shot.ammoId);
-      if (key) s.play(key);
-    }
+    // No shake on firing (021): too jarring. Each shot's sound is its family's (tierFeel.ts).
+    playShots(ev.shots, (key) => s.play(key));
     // Cold and the Split (029): a freeze rings and frosts, a thaw throws off ice, a Split chimes.
     for (const f of ev.freezes) {
       s.play(SOUNDS.freeze);

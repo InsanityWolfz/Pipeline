@@ -169,9 +169,9 @@ export const LEGIBILITY_WORDS = {
   more: '(more: None yet)',
   yours: '(yours: {value})',
   noStats: 'nothing yet',
-  /** A Build tab row's count of what changes it. */
   /** 062: a Build tab row's stone round, marked with the tiers of it also known (they share its row). */
   rowTiers: '{name} · {tiers}',
+  /** A Build tab row's count of what changes it. */
   rowSource: '{count} source',
   rowSources: '{count} sources',
   /** Every gear affix, as one payoff of You. */
