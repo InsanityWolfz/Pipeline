@@ -25,8 +25,15 @@ function gapTo(state: SimState, n: NodeState): number {
   return Math.hypot(gapX, gapY);
 }
 
-/** The node is in reach of the player's feet. */
-const inReach = (state: SimState, n: NodeState): boolean => gapTo(state, n) <= HARVEST_REACH;
+/** 070: the player's feet stand under the node's canopy (a tree's), if it has one. */
+function underCanopy(state: SimState, n: NodeState): boolean {
+  const c = nodeDef(n.nodeId).canopy;
+  const p = state.player;
+  return c !== undefined && p.y <= n.y && n.y - p.y <= c.up && Math.abs(p.x - n.x) <= c.w / 2;
+}
+
+/** The node is in reach of the player's feet: its base within HARVEST_REACH, or (070) the feet under its canopy. */
+const inReach = (state: SimState, n: NodeState): boolean => gapTo(state, n) <= HARVEST_REACH || underCanopy(state, n);
 
 /** The nearest harvestable node in reach in the player's room, by centre distance; the first placed wins ties. */
 export function nodeInReach(state: SimState): NodeState | undefined {
