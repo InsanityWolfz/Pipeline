@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { TUTORIAL_START } from '../../src/data/player';
 import { TILE_SIZE } from '../../src/data/config';
 import { OVERWORLD, ringOf } from '../../src/data/overworld';
 import { POPULATION, SAFE_RADIUS } from '../../src/data/population';
@@ -28,7 +29,7 @@ function populated(): SimState {
 
 describe('the living population', () => {
   it('is out only once the ruin field is cleared (067: no longer the first full line)', () => {
-    const s = createSim(SEED);
+    const s = createSim(SEED, { start: TUTORIAL_START });
     run(s, 120);
     expect(pop(s)).toEqual([]);
     expect(summarize(s).populated).toBe(false);

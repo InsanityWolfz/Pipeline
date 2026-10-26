@@ -9,6 +9,8 @@ import { FILL_GOAL, TRAVEL_GOAL } from '../fixtures/foundrySteps';
 import { craft } from '../../src/sim/crafting';
 import { die, run, runUntil } from './fight';
 import { foundry, put } from './foundryKit';
+import { layArrowLine } from './guidedKit';
+import { claim } from '../../src/sim/claims';
 
 // 046 (note 10, 027): the foundry tutorial's first goal is to wait for the tube to fill with arrows (058). 067: the
 // foundry comes after the shrine's claim and the travel there; the refill goal is gone (its line is fed from the
@@ -33,10 +35,13 @@ describe('the foundry goals (046, 058, 067)', () => {
 
 describe('first-made popups (046)', () => {
   it("record the first time machines ever make each item, by the machine, and never again", () => {
+    // 067: the guided arrow line standing, fed from the ports the shrine's claim brings.
     const s = createSim(3, { start: TUTORIAL_START });
+    claim(s, 'shrine');
     s.roomId = FOUNDRY_ROOM;
+    layArrowLine(s);
     const firsts: { id: number; itemId: string }[] = [];
-    for (let t = 0; t < 900; t++) {
+    for (let t = 0; t < 1500; t++) {
       run(s, 1);
       firsts.push(...s.events.firstMade);
     }

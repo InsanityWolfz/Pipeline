@@ -6,14 +6,14 @@ import { PLAYTEST_START } from '../../src/data/playtest';
 import { TUTORIAL_START } from '../../src/data/player';
 import { FOUNDRY_ROOM } from '../../src/data/rooms';
 import { OVERWORLD_ROOM } from '../../src/data/overworld';
-import { placeExampleLine } from '../../src/sim/exampleLine';
 import { buildLocked, guidedSubLine, nextGhost } from '../../src/sim/guided';
 import { currentObjective, objectiveLine } from '../../src/sim/objectives';
-import type { HopperState } from '../../src/sim/pieces';
+import { createPiece, type HopperState } from '../../src/sim/pieces';
 import { diagrams } from '../../src/sim/research';
 import { createSim, roomById, type SimState } from '../../src/sim/state';
 import { tileCentre } from '../../src/sim/tiles';
 import { movePlayer, run } from './fight';
+import { layArrowLine } from './guidedKit';
 
 // 058: the guided tutorial's chain, its talent cut-in, and the build lock around its two guided builds.
 
@@ -28,6 +28,7 @@ const TEXTS = [
   'Defeat the Pylon Warden at the shrine',
   "Claim the shrine's pylon (E)",
   'Travel to the foundry (E at the pylon)',
+  'Build an arrow line into the middle entrance (B)',
   'Wait for the tube to fill with arrows',
   'Identify your armor at the bench (E)',
   'Equip a piece of armor at the bench (E)',
@@ -93,8 +94,13 @@ const FROST = at('Build a frost rune into your arrow line');
 const TRAVEL = at('Travel to the foundry (E at the pylon)');
 const LEAVE = at('Leave the foundry');
 const FIELD = at('Clear the ruin field');
+const ARROW = at('Build an arrow line into the middle entrance (B)');
+const FILL = at('Wait for the tube to fill with arrows');
 
-/** A new game standing in the foundry by its door with every goal before `goal` done, the tube attuned. */
+/**
+ * A new game standing in the foundry by its door with every goal before `goal` done, the tube attuned, the shrine
+ * claimed; the arrow line (067) standing once its goal is behind.
+ */
 function tutorialAt(goal: number): SimState {
   const s = createSim(3, { start: TUTORIAL_START });
   s.objectives = OBJECTIVES.map((o, i) => i < goal && !o.cutIn);
@@ -103,8 +109,8 @@ function tutorialAt(goal: number): SimState {
   movePlayer(s, p.x, p.y);
   s.link.attuned = true;
   s.hasTube = true;
-  s.crafted = ['arrow', 'ley-dust', 'ley-bolt', 'bomb', 'arrow+frost'];
-  placeExampleLine(s);
+  s.crafted = ['shaft', 'arrowhead', 'rope', 'arrow', 'ley-dust', 'ley-bolt', 'bomb', 'arrow+frost'];
+  if (goal > ARROW) layArrowLine(s);
   run(s, 1);
   return s;
 }
@@ -138,11 +144,13 @@ describe('the chain (058)', () => {
 });
 
 describe('the travel to the foundry (067)', () => {
-  it('is done the tick the player is in the foundry once it is current, and "Wait for the tube" follows', () => {
+  it('is done the tick the player is in the foundry once it is current, and the arrow line on ghosts follows', () => {
     const s = tutorialAt(TRAVEL);
     expect(s.objectives[TRAVEL]).toBe(true);
     expect(currentObjective(s)).toBe(TRAVEL + 1);
-    expect(OBJECTIVES[TRAVEL + 1]?.text).toBe('Wait for the tube to fill with arrows');
+    expect(TRAVEL + 1).toBe(ARROW);
+    expect(OBJECTIVES[ARROW]).toMatchObject({ guided: 'arrow-line', check: { kind: 'built', build: 'arrow-line' }, target: { kind: 'ghost' }, prompt: { key: 'B', over: 'player' } });
+    expect(OBJECTIVES[ARROW + 1]?.text).toBe('Wait for the tube to fill with arrows');
   });
 
   it('is never done by a foundry visit before it is current', () => {
@@ -188,7 +196,7 @@ describe('the talent cut-in', () => {
   });
 
   it('waits while a guided build is current (058.4)', () => {
-    for (const goal of [LEY, FROST]) {
+    for (const goal of [ARROW, LEY, FROST]) {
       const s = tutorialAt(goal);
       s.talentPoints = 1;
       expect(currentObjective(s)).toBe(goal);
@@ -200,7 +208,7 @@ describe('the talent cut-in', () => {
 
 describe('the build lock', () => {
   it('refuses placing and picking up in a guided game until the frost rune step is done', () => {
-    const s = tutorialAt(7);
+    const s = tutorialAt(FILL);
     expect(buildLocked(s)).toBe(true);
     run(s, 1, { place: { pieceId: 'conduit', tx: 18, ty: 12, facing: 'up' } });
     expect(s.events.placeFails[0]?.reason).toBe('tutorial');
@@ -220,13 +228,34 @@ describe('the build lock', () => {
   });
 
   it('still lets hoppers be filled while locked', () => {
-    const s = tutorialAt(7);
-    const h = s.foundry.pieces.find((p): p is HopperState => p.kind === 'hopper' && p.tx === 11);
-    if (!h) throw new Error('no hopper');
+    const s = tutorialAt(FILL);
+    // 067: the guided lines have no hopper; one standing in the foundry (laid as a test fixture) still takes raws.
+    const h = createPiece(s.foundry.nextPieceId++, 'hopper', 18, 6, 'up') as HopperState;
+    s.foundry.pieces.push(h);
     s.inventory.wood = 2;
-    movePlayer(s, 11.5 * 32, 6.25 * 32);
+    movePlayer(s, 18.5 * 32, 7.25 * 32);
     run(s, 1, { deposit: { id: h.id, itemId: 'wood', amount: 'all' } });
     expect(s.events.deposits).toHaveLength(1);
+  });
+
+  it('during the arrow line step (067) allows only its next ghost, and the line can be built through to the end', () => {
+    const s = tutorialAt(ARROW);
+    expect(buildLocked(s)).toBe(true);
+    expect(nextGhost(s)?.ghost).toEqual(GUIDED_BUILDS['arrow-line'][0]);
+    expect(nextGhost(s)?.ghost).toMatchObject({ kind: 'place', piece: 'conduit', tx: 2, ty: 4, facing: 'right' });
+    for (const place of [{ pieceId: 'cutter', tx: 2, ty: 4, facing: 'right' }, { pieceId: 'conduit', tx: 18, ty: 12, facing: 'up' }] as const) {
+      run(s, 1, { place });
+      expect(s.events.placeFails.map((f) => f.reason)).toEqual(['ghost']);
+    }
+    for (const g of GUIDED_BUILDS['arrow-line']) build(s, g);
+    expect(nextGhost(s)).toBeNull();
+    run(s, 1);
+    expect(s.objectives[ARROW]).toBe(true);
+    expect(currentObjective(s)).toBe(FILL);
+    // 058's lock holds on after it: nothing but the later guided steps' ghosts until the frost rune.
+    expect(buildLocked(s)).toBe(true);
+    run(s, 1, { place: { pieceId: 'conduit', tx: 18, ty: 12, facing: 'up' } });
+    expect(s.events.placeFails.map((f) => f.reason)).toEqual(['tutorial']);
   });
 
   it('during a guided step allows only the next ghost, on its tile and facing', () => {
@@ -245,7 +274,8 @@ describe('the build lock', () => {
       run(s, 1, { place });
       expect(s.events.placeFails.map((f) => f.reason)).toEqual(['ghost']);
     }
-    expect(s.foundry.pieces.some((p) => p.tx === 2)).toBe(false);
+    // 067: the arrow line's port conduits stand in column 2 (rows 4, 6, 8); nothing went on the ley line's tiles.
+    expect(s.foundry.pieces.some((p) => p.tx === 2 && p.ty >= 10)).toBe(false);
     build(s, GUIDED_BUILDS['ley-line'][0] as Ghost);
     expect(nextGhost(s)?.index).toBe(1);
   });
@@ -289,6 +319,13 @@ describe('the guided sub-line (058.2)', () => {
     expect(GUIDED_TEXT.place('conduit', 1, 2)).toBe('Place conduits 1/2');
     expect(GUIDED_TEXT.place('grinder', 0, 1)).toBe('Place a grinder');
     expect(GUIDED_TEXT.place('underground entrance', 0, 1)).toBe('Place an underground entrance');
+  });
+
+  it("the arrow line's (067) starts with the wood port's nine conduits, then the cutter", () => {
+    const s = tutorialAt(ARROW);
+    expect(guidedSubLine(s)).toEqual({ pieceId: 'conduit', kind: 'place', built: 0, of: 9 });
+    for (const g of GUIDED_BUILDS['arrow-line'].slice(0, 9)) build(s, g);
+    expect(guidedSubLine(s)).toEqual({ pieceId: 'cutter', kind: 'place', built: 0, of: 1 });
   });
 });
 

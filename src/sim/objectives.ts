@@ -1,5 +1,7 @@
 import { OBJECTIVES, type ObjectiveCheck, type ObjectiveDef } from '../data/objectives';
+import { GUIDED_BUILDS } from '../data/guidedBuilds';
 import { TALENT_START } from '../data/talents';
+import { ghostDone } from './guided';
 import { volleyRounds } from './volley';
 import type { SimState } from './state';
 import { FOUNDRY_ROOM } from '../data/rooms';
@@ -33,6 +35,8 @@ function holds(state: SimState, check: ObjectiveCheck): boolean {
       return state.roomId !== FOUNDRY_ROOM;
     case 'fieldCleared':
       return state.fieldCleared;
+    case 'built':
+      return GUIDED_BUILDS[check.build].every((g) => ghostDone(state.foundry, g));
     case 'entranceFed':
       return state.link.entrances.some((e) => e.node === check.node && e.ammoId !== null && e.count > 0 && (check.ammo === undefined || e.ammoId === check.ammo));
     case 'machineMade':

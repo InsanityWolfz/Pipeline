@@ -71,7 +71,7 @@ export const TARGET_LIFT: Readonly<Record<TargetKind, number>> & { door: number;
 /**
  * The waypoint arrow (051): at the screen's edge `edgeInset` px in from it while the target's off screen, and hovering
  * over it (bobbing as 027's marker) while it's on screen, its tip `onScreenMargin` px inside the edge at least; at the
- * edge it's drawn `edgeScale` times bigger. The refill goal's raw icon sits in a plate `plate.gap` px in front of
+ * edge it's drawn `edgeScale` times bigger. A target's raw icon (051's refill goal's, gone in 067) sits in a plate `plate.gap` px in front of
  * (below) the hopper's base, where the player stands to fill it.
  */
 export const WAYPOINT = {

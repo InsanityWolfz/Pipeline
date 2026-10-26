@@ -237,7 +237,7 @@ describe('the packs come out once the ruin field is cleared (067)', () => {
     expect([s.fieldCleared, s.populated]).toEqual([true, true]);
   });
 
-  it('never from enemies cleared by hand, or in the sandbox', () => {
+  it('never from enemies cleared by hand, in the sandbox, or on a test start past the tutorial (gates open)', () => {
     const s = tutorial();
     s.enemies = [];
     run(s, 2);
@@ -246,5 +246,31 @@ describe('the packs come out once the ruin field is cleared (067)', () => {
     for (const e of sb.enemies) e.health = 0;
     run(sb, 2);
     expect([sb.fieldCleared, sb.populated]).toEqual([false, false]);
+    const past = createSim(SEED);
+    for (const e of past.enemies) if (e.group === 'field') e.health = 0;
+    run(past, 2);
+    expect([past.fieldCleared, past.populated]).toEqual([false, false]);
+  });
+});
+
+describe('the tube attunes on the first foundry entry, after the claim (067)', () => {
+  it('fires hand-loaded rounds unattuned before; walking in attunes it and lays nothing (no example line)', () => {
+    const s = tutorial();
+    s.hasTube = true;
+    s.inventory = { arrow: 8 };
+    run(s, 1);
+    const p = s.player;
+    run(s, 20, { fire: true, aimX: p.x + 100, aimY: p.y });
+    expect(s.link.attuned).toBe(false);
+    expect(s.arrows.length + s.events.shots.length).toBeGreaterThan(0);
+    claim(s, 'shrine');
+    run(s, 1);
+    atEntrance(s);
+    runUntil(s, (x) => x.roomId === FOUNDRY_ROOM, 60, { moveY: -1 });
+    run(s, 1);
+    expect(s.link.attuned).toBe(true);
+    expect(s.foundry.pieces).toEqual([]);
+    // The shrine's pylon already sends wood, stone and fiber to their ports (028).
+    expect(s.fixtures.map((f) => f.id)).toEqual(expect.arrayContaining(['wood-port', 'stone-port', 'fiber-port']));
   });
 });

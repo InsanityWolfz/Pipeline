@@ -10,10 +10,10 @@ import { FOUNDRY_ROOM, SHRINE_SITE } from '../../src/data/rooms';
 import { claim } from '../../src/sim/claims';
 import { objectiveTargets, targetPoints, waypoint } from '../../src/sim/objectiveTarget';
 import { currentObjective } from '../../src/sim/objectives';
-import { placeExampleLine } from '../../src/sim/exampleLine';
 import { createSim, type SimState } from '../../src/sim/state';
 import { SEED } from './fight';
 import { put } from './foundryKit';
+import { layArrowLine } from './guidedKit';
 
 // 051 (B.1, B.2, 051.2): every goal names a target, and the waypoint arrow goes to the nearest of its points in the
 // player's room, or to the door that leads to them.
@@ -148,6 +148,12 @@ describe('the intake goals (051)', () => {
     expect(targetPoints(s, { kind: 'intake' }, f).map((p) => p.x)).toEqual([base(INTAKE.entrances[2] ?? { tx: 0, ty: 0 }).x]);
   });
 
+  it('the arrow line goal (067) points at its first ghost, in front of the wood port', () => {
+    const s = upTo('Build an arrow line into the middle entrance (B)');
+    s.roomId = FOUNDRY_ROOM;
+    expect(waypoint(s)).toMatchObject({ via: 'target', ...base({ tx: 2, ty: 4 }), target: { kind: 'ghost' } });
+  });
+
   it('a guided goal points at its next ghost', () => {
     const s = upTo('Put ley bolts into the second entrance (B)');
     s.roomId = FOUNDRY_ROOM;
@@ -189,7 +195,7 @@ describe('the other targets (051.4, 051.5)', () => {
     s.roomId = OVERWORLD_ROOM;
     expect(waypoint(s)).toMatchObject({ via: 'door', ...base(OVERWORLD.entrance.door) });
     s.roomId = FOUNDRY_ROOM;
-    placeExampleLine(s);
+    layArrowLine(s);
     expect(waypoint(s)).toMatchObject({ via: 'target', ...base({ tx: 12, ty: 2 }), target: { kind: 'ghost' } });
   });
 });

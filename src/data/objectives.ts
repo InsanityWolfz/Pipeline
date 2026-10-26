@@ -24,6 +24,8 @@ export type ObjectiveCheck =
   | { kind: 'outside' }
   /** 067: the ruin field's pack has been killed to its last Husk once. */
   | { kind: 'fieldCleared' }
+  /** 067: every ghost of this guided build is matched by the foundry (built as it says). */
+  | { kind: 'built'; build: GuidedId }
   /** 050: the entrance this research node opened holds ammo (058: of this kind, when given). */
   | { kind: 'entranceFed'; node: string; ammo?: string }
   /** Machines have made at least one of this item (027); hand-crafting never counts. */
@@ -118,7 +120,17 @@ export const OBJECTIVES: readonly ObjectiveDef[] = [
     prompt: { key: 'E', over: 'pylon' },
     target: { kind: 'pylon', site: 'shrine', claimed: true },
   },
-  // 046: the example line stands from the first entry and fills the tube on its own (058, Shaun: just wait for it).
+  // 067: the first arrow line, built piece by piece on ghosts (src/data/guidedBuilds.ts) from the supply ports the
+  // shrine's pylon fills; the build lock (058) holds from the first visit.
+  {
+    text: 'Build an arrow line into the middle entrance (B)',
+    milestone: 'prototype',
+    check: { kind: 'built', build: 'arrow-line' },
+    prompt: { key: 'B', over: 'player' },
+    target: { kind: 'ghost' },
+    guided: 'arrow-line',
+  },
+  // 058 (Shaun: just wait for it); 067: the line is fed from the ports, so it never runs dry.
   { text: 'Wait for the tube to fill with arrows', milestone: 'prototype', check: { kind: 'lineFull' }, target: { kind: 'intake' } },
   // 067: the bench is in the foundry, so the gear found before it is identified and worn now.
   { text: 'Identify your armor at the bench (E)', milestone: 'prototype', check: { kind: 'identified' }, prompt: { key: 'E', over: 'bench' }, target: { kind: 'bench' } },

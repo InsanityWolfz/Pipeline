@@ -161,7 +161,7 @@ export interface UiState {
   interactPrompt: InteractPromptState | null;
   /** The waypoint arrow's tip over a target in the player's room (051; was 027's marker), world px, or null. */
   marker: { x: number; y: number } | null;
-  /** 051: the waypoint arrow as drawn: at the screen's edge or over its target, its tip (world px) and angle, through a door or not, and the refill goal's raw icons. */
+  /** 051: the waypoint arrow as drawn: at the screen's edge or over its target, its tip (world px) and angle, through a door or not, and any raw icons. */
   waypoint: WaypointShown | null;
   /**
    * 051 (B.3): the objective line's text and its sub-lines as drawn (raw, words, ticked, box); fix-playtest-ui: the

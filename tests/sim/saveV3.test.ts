@@ -91,7 +91,7 @@ describe('version 2 → 3 objectives (046)', () => {
     const read = readSave(text, V3);
     if (read.status !== 'ok') throw new Error(read.reason);
     const s = read.state;
-    expect(s.start.exampleLine).toBeUndefined();
+    // 067: no start has the example line any more; the old flag, read from an old save, lays nothing.
     s.roomId = FOUNDRY_ROOM;
     stepSim(s);
     expect(s.link.attuned).toBe(true);
