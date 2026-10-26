@@ -178,7 +178,6 @@ function usePylon(state: SimState, action: 'deposit' | 'travel'): void {
   if (action === 'travel') {
     const door = roomById(FOUNDRY_ROOM).spawn;
     travelTo(state, FOUNDRY_ROOM, door);
-    state.travelled = true;
     return;
   }
   const items: Record<string, number> = {};

@@ -48,11 +48,11 @@ describe('the storm tier’s parts (066)', () => {
       if (!r || !s) throw new Error(`no ${storm} or ${steel}`);
       expect(r.inputs, storm).toEqual(Object.fromEntries(Object.entries(s.inputs).map(([k, n]) => [swap(k), n])));
       expect(r.output.count, storm).toBe(s.output.count);
-      expect(r.requires, storm).toBe(s.requires);
     }
     expect(RECIPES['stormsteel-arrow']?.output.itemId).toBe('arrow+stormsteel');
     expect(RECIPES['storm-glass-bolt']?.output.itemId).toBe('ley-bolt+storm-glass');
-    expect(RECIPES['storm-glass']?.requires).toBe('attuned');
+    // 067: no recipe waits on attunement; storm glass shows once ley glass and stormglass have been carried.
+    expect(RECIPES['storm-glass']?.shownAfter).toEqual(['ley-glass', 'stormglass']);
   });
 });
 

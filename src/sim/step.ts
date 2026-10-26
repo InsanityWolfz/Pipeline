@@ -35,7 +35,7 @@ import { stepBurns } from './fire';
 import { roomById, type SimState } from './state';
 import { firingWalkScale, stepTube } from './tube';
 import { stepObjectives } from './objectives';
-import { noteFound, shotSealed, stepGates, stepTubeStone } from './tutorial';
+import { noteFound, shotSealed, stepGates, stepSealedDoors, stepTubeStone } from './tutorial';
 import { roomBodies } from './bodies';
 import { stepPopulation } from './population';
 import { entranceCap, machineSpeed, restore } from './research';
@@ -84,6 +84,8 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   // After the player moves and before enemies act (036): the ward builds, a roll stuns what it passes through.
   stepRelics(state);
   stepDoorways(state);
+  // 067: a sealed door pushed into or E'd at says why.
+  stepSealedDoors(state, cmd);
   stepLink(state);
   // Enemies act after the player moves, so a swipe lands on where the player stands now.
   stepDiscovery(state);

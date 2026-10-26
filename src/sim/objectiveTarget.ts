@@ -10,11 +10,8 @@ import { OBJECTIVES } from '../data/objectives';
 import { OVERWORLD_ROOM } from '../data/overworld';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { COLLECT_FROM, type TargetDef, type TargetKind } from '../data/targets';
-import { facingVector } from './direction';
 import { fixtureDef } from './fixtures';
 import { currentObjective } from './objectives';
-import { pieceAt, type HopperState } from './pieces';
-import { machineRecipe } from './stages';
 import { roomById, roomOf, type SimState } from './state';
 import { goalLacks } from './subSteps';
 import { tileCentre } from './tiles';
@@ -34,7 +31,7 @@ export interface GoalPoint {
   kind: TargetKind;
   /** What stands there, for the arrow's lift: a node or an enemy type. */
   ref?: string;
-  /** 051 (B.2): the raw a hopper takes, for its icon (the refill goal's hoppers only). */
+  /** 051 (B.2): a raw to show in an icon over the point (067: no goal marks one since the refill goal went). */
   itemId?: string;
   /** A room as a whole (the foundry, or outside): reached once the player is in it. */
   whole?: true;
@@ -50,14 +47,6 @@ export interface Waypoint {
 }
 
 const tileBase = (t: { tx: number; ty: number }): { x: number; y: number } => ({ x: (t.tx + 0.5) * TILE_SIZE, y: (t.ty + 1) * TILE_SIZE });
-
-/** The raw a hopper takes (051, B.2): the first input of the machine its front feeds, else what it last held. */
-export function hopperRaw(state: Pick<SimState, 'foundry'>, h: HopperState): string | null {
-  const [dx, dy] = facingVector(h.facing);
-  const front = pieceAt(state.foundry, h.tx + dx, h.ty + dy);
-  const input = front?.kind === 'machine' ? Object.keys(machineRecipe(front).inputs)[0] : undefined;
-  return input ?? h.item;
-}
 
 /** Harvestable nodes of these raws (any room); with none harvestable, the spent ones, as they'll grow back. */
 function nodesOf(state: SimState, items: readonly string[], kind: TargetKind): GoalPoint[] {
@@ -108,10 +97,7 @@ export function targetPoints(state: SimState, target: TargetDef, goal: number): 
     case 'hoppers':
       return state.foundry.pieces.flatMap((p) => {
         if (p.kind !== 'hopper') return [];
-        const raw = hopperRaw(state, p);
-        if (target.unfilled && raw !== null && state.refilled.includes(raw)) return [];
-        // Only the refill goal shows each hopper's raw (B.2); the next goal keeps a plain arrow.
-        return [{ roomId: FOUNDRY_ROOM, ...tileBase(p), kind: k, ...(raw && target.unfilled ? { itemId: raw } : {}) }];
+        return [{ roomId: FOUNDRY_ROOM, ...tileBase(p), kind: k }];
       });
     case 'bench':
       return state.fixtures.flatMap((f) => {
